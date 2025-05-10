@@ -1,0 +1,154 @@
+---
+title:  "phyloimpute: Simulated & Real‑Data Walk‑Through"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{phyloimpute Tutorial (Simulated + AVONET)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, message = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7)
+#library(pigauto)
+library(ape)
+library(dplyr)
+library(ggplot2)
+library(phytools)
+```
+
+# 1  Introduction
+
+`phyloimpute` fills missing trait values by borrowing information from  
+*phylogenetic relatives* **and** *environmental covariates* through three deep‑learning approaches:
+
+| Method | Strength | Uncertainty |
+|--------|----------|-------------|
+| **VGAE** (Variational Graph AE) | uses the tree explicitly | latent sampling |
+| **MC Dropout AE** | simple, fast | Monte‑Carlo dropout variance |
+| **Ensemble AE** | robust aggregation | between‑model variance |
+
+We illustrate both a **simulated** dataset (to verify recovery of known values) and a **real** subset of the **AVONET** bird trait database.
+
+---
+
+# 2  Simulation Example
+
+## 2.1  Simulate phylogeny + traits
+
+```{r simulate-data}
+set.seed(42)
+tree_sim  <- rtree(60)
+trait_mat <- data.frame(
+  Mass      = fastBM(tree_sim, sig2 = 1),
+  BeakLen   = fastBM(tree_sim, sig2 = 0.5),
+  Diet      = factor(sample(c("Insect","Fruit","Seed"), 60, TRUE)),
+  Habitat   = factor(sample(c("Forest","Grass","Desert"), 60, TRUE))
+)
+env_sim <- data.frame(
+  Temp = rnorm(60, 15, 7),
+  NDVI = runif(60, 0.3, 0.8)
+)
+```
+
+## 2.2  Mask 20 % at random
+
+```{r mask}
+mask_idx <- sample(length(unlist(trait_mat)), 0.2*length(unlist(trait_mat)))
+trait_na <- trait_mat
+trait_na[mask_idx] <- NA
+mean(is.na(trait_na))
+```
+
+## 2.3  Impute with the three methods
+
+```{r impute-sim, eval = FALSE}
+imp_vgae  <- impute_vgae(trait_na, tree_sim, env_sim, epochs = 80)
+imp_drop  <- impute_mc_dropout(trait_na, env_sim, epochs = 80, mc = 30)
+imp_ens   <- impute_ensemble(trait_na, env_sim, epochs = 80, n_models = 5)
+```
+
+## 2.4  Accuracy for one trait
+
+```{r accuracy, eval = FALSE}
+truth <- trait_mat$Mass[is.na(trait_na$Mass)]
+predV <- imp_vgae $Mass[is.na(trait_na$Mass)]
+predD <- imp_drop $Mass[is.na(trait_na$Mass)]
+predE <- imp_ens  $Mass[is.na(trait_na$Mass)]
+data.frame(Method = c("VGAE","Drop","Ens"),
+           RMSE   = sqrt(c(mean((predV-truth)^2),
+                           mean((predD-truth)^2),
+                           mean((predE-truth)^2))))
+```
+
+## 2.5  Visualise uncertainty (MC Dropout)
+
+```{r uncert-plot, eval = FALSE}
+unc <- attr(imp_drop, "sd")[, "Mass"]
+ggplot(data.frame(Truth = trait_mat$Mass, Pred = imp_drop$Mass, SD = unc),
+       aes(Truth, Pred, colour = SD)) +
+  geom_point(size = 2) + geom_abline(lty = 2) +
+  scale_colour_viridis_c() + theme_minimal()
+```
+
+---
+
+# 3  Real‑Data Example (AVONET + WorldClim)
+
+```{r load-real}
+data(avonet300); data(env300); data(tree300)
+dim(avonet300)
+```
+
+## 3.1  Create additional missingness
+
+```{r miss-real}
+set.seed(21)
+na_rows <- sample(nrow(avonet300), 30)
+avonet_miss <- avonet300
+avonet_miss$WingLen[na_rows] <- NA
+```
+
+## 3.2  Run VGAE
+
+```{r vgae-real, eval = FALSE}
+imp_vgae_real <- impute_vgae(avonet_miss, tree300, env300, epochs = 100)
+```
+
+## 3.3  Compare observed vs imputed distribution
+
+```{r density, eval = FALSE}
+ggplot() +
+  geom_density(aes(avonet300$WingLen), fill = "grey80") +
+  geom_density(aes(imp_vgae_real$WingLen), colour = "blue") +
+  labs(x = "Wing length (mm)", y = "Density",
+       title = "Observed vs imputed distribution (VGAE)")
+```
+
+## 3.4  Timing summary
+
+```{r timing, eval = FALSE}
+bench::mark(
+  VGAE    = impute_vgae(avonet_miss, tree300, env300, epochs = 60),
+  Dropout = impute_mc_dropout(avonet_miss, env300, epochs = 60),
+  Ensemble= impute_ensemble(avonet_miss, env300, epochs = 60, n_models = 3),
+  iterations = 1
+)[,1:5]
+```
+
+---
+
+# 4  Saving a trained model
+
+```{r save-model, eval = FALSE}
+fit <- impute_vgae(avonet_miss, tree300, env300, epochs = 120)
+saveRDS(fit, "vgae_birds.rds")
+fit2 <- readRDS("vgae_birds.rds")
+```
+
+---
+
+# 5  Session info
+
+```{r session}
+sessionInfo()
+```

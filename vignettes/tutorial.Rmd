@@ -1,0 +1,211 @@
+---
+title: "phyloimpute: Extensive Tutorial"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{phyloimpute Tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, message=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+#library(phyloimpute)
+library(ape)
+library(ggplot2)
+library(dplyr)
+library(phytools)
+```
+
+# 1 Introduction
+
+`phyloimpute` fills missing ecological trait data by combining *phylogenetic
+relationships* and *environmental covariates* in deep autoencoder models.
+This vignette shows **end‑to‑end usage** on a simulated dataset:
+
+1. Simulate a phylogeny, traits, and environment  
+2. Introduce missing values under different patterns  
+3. Impute with the three methods (`vgae`, `mc_dropout`, `bootstrap`)  
+4. Inspect completed data and uncertainty  
+5. Evaluate performance (because truth is known)  
+6. Visualise latent space & uncertainty heatmaps  
+
+> **Note:** Internal autoencoder functions are *placeholders* until the full
+torch implementations are added (see package README).  
+Still, the workflow below illustrates **how you will interact with the final
+package** — once the models are in place, the same code will produce real
+imputations and uncertainties.
+
+# 2 Simulating Data
+
+```{r simulate}
+set.seed(2025)
+
+# 2.1 Phylogeny with 40 species
+n_sp  <- 40
+tree  <- rtree(n_sp)
+tree$tip.label <- paste0("sp", seq_len(n_sp))
+
+# 2.2 Continuous traits with phylogenetic signal (Brownian motion)
+trait_cont1 <- fastBM(tree, sig2 = 1)
+trait_cont2 <- fastBM(tree, sig2 = 0.5)
+
+# 2.3 Ordinal trait derived from latent BM + noise
+latent_ord  <- fastBM(tree)
+breaks      <- quantile(latent_ord, probs = c(0.33, 0.66))
+trait_ord   <- cut(latent_ord,
+                   breaks = c(-Inf, breaks, Inf),
+                   labels = c("small", "medium", "large"),
+                   ordered_result = TRUE)
+
+# 2.4 Nominal trait correlated with clade (simulate using tip numbers)
+trait_nom   <- factor(ifelse(as.numeric(sub("sp","",tree$tip.label)) <= 20,
+                             "A", "B"))
+
+# 2.5 Binary presence/absence depending on trait_cont1
+prob_bin    <- plogis(trait_cont1)
+trait_bin   <- rbinom(n_sp, 1, prob_bin)
+
+# 2.6 Environmental covariate (numeric temperature & categorical biome)
+env_temp    <- rnorm(n_sp, 15, 5)
+env_biome   <- factor(sample(c("forest","grassland"), n_sp, TRUE))
+
+# 2.7 Assemble data frames
+traits_full <- data.frame(
+  species = tree$tip.label,
+  mass    = trait_cont1,
+  length  = trait_cont2,
+  sizecat = trait_ord,
+  clade   = trait_nom,
+  presence= factor(trait_bin, labels = c("absent","present"))
+)
+
+env_full <- data.frame(
+  temp  = env_temp,
+  biome = env_biome
+)
+
+head(traits_full)
+```
+
+## 2.8 Introduce Missingness
+
+We remove 25 % of entries completely at random **plus** all `mass`
+values for one sub‑clade (species 31–40) to mimic a real clade gap.
+
+```{r missingness}
+traits_miss <- traits_full
+# random 25% NAs
+set.seed(1)
+miss_mat <- matrix(runif(prod(dim(traits_miss[,-1]))) < 0.25,
+                   nrow=n_sp)
+for(j in seq_len(ncol(traits_miss)-1)) {
+  traits_miss[-1][[j]][ miss_mat[,j] ] <- NA
+}
+# clade gap for mass
+traits_miss$mass[31:40] <- NA
+
+summary(is.na(traits_miss))
+```
+
+# 3 Imputation Workflows
+
+We demonstrate **all three methods**.  
+*(With placeholders each method currently falls back to simple column means or modes;
+once torch models are implemented, they will run full training loops).*
+
+```{r impute}
+species_id <- traits_miss$species
+
+res_vgae  <- impute_phylo(traits_miss[,-1], tree,
+                          env_data = env_full,
+                          species_id = species_id,
+                          method = "vgae",
+                          latent_dim = 8,
+                          epochs = 100)
+
+res_drop  <- impute_phylo(traits_miss[,-1], tree,
+                          env_data = env_full,
+                          species_id = species_id,
+                          method = "mc_dropout")
+
+res_boot  <- impute_phylo(traits_miss[,-1], tree,
+                          env_data = env_full,
+                          species_id = species_id,
+                          method = "bootstrap")
+```
+
+# 4 Completed Data
+
+```{r completed}
+completed <- res_vgae$completed_data
+head(completed)
+```
+
+# 5 Quick Accuracy Check (Continuous traits)
+
+Because we know the truth, let’s compute RMSE for `mass` after imputation.
+
+```{r rmse}
+rmse <- sqrt(mean((completed$mass - traits_full$mass)^2))
+cat("RMSE (mass) placeholder:", rmse, "\n")
+```
+
+With full models you would expect a **substantial reduction** vs. mean
+imputation, especially for the clade with all missing data.
+
+# 6 Visualising Imputed vs. True (mass)
+
+```{r scatter}
+ggplot(data.frame(true = traits_full$mass,
+                  imp  = completed$mass,
+                  group = ifelse(is.na(traits_miss$mass), "missing","observed")),
+       aes(true, imp, colour = group)) +
+  geom_point(size = 2) +
+  geom_abline(linetype = "dashed") +
+  theme_minimal() +
+  labs(title = "Imputed vs. true (continuous trait 'mass')")
+```
+
+# 7 Uncertainty Heatmap
+
+```{r heatmap, eval=FALSE}
+# enable once uncertainty implemented
+# plot_uncertainty(res_vgae)
+```
+
+# 8 Latent Space (VGAE)
+
+When the variational graph autoencoder is fully implemented, you will be
+able to extract and plot the latent embedding (e.g. first two dims) as a
+`ggplot2` scatter coloured by traits or environment to inspect clustering.
+
+# 9 Runtime Benchmarks
+
+```{r benchmark, eval=FALSE}
+# timings <- bench::mark(
+#   vgae = impute_phylo(...),
+#   dropout = impute_phylo(...),
+#   bootstrap = impute_phylo(..., n_models=5)
+# )
+# timings
+```
+
+# 10 Next Steps
+
+The placeholder functions demonstrate the *interface*.  
+To deploy production‑grade imputation:
+
+1. Implement full torch training loops in `models_vgae.R`,
+   `models_dropout.R`, and `models_ensemble.R`.
+2. Add trait‑type decoding logic (continuous, ordinal, nominal, binary).
+3. Re‑build and run this vignette — all analysis and visualisations will
+   use the **true model outputs**.
+
+For details, see package README and function documentation.
+
+```{r session}
+sessionInfo()
+```

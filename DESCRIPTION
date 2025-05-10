@@ -1,0 +1,29 @@
+Package: pigauto
+Title: Phylogenetic Imputation via Graph Autoencoders
+Version: 0.2.0
+Authors@R:
+    person("Shinichi", "Name", role = c("aut", "cre"), email = "itchyshin@gmail.com")
+Description: Impute missing species trait data with Variational Graph Autoencoders,
+    Monte Carlo Dropout, or Deep Ensemble autoencoders, integrating phylogeny
+    (bird phylogenetic tree) and environmental features. Includes a 300‑species
+    AVONET subset with climate, NDVI, elevation, and a matching pruned BirdTree
+    phylogeny for real‑data demonstration.
+License: MIT
+Encoding: UTF-8
+LazyData: true
+Depends: R (>= 4.1)
+Imports:
+    torch,
+    keras,
+    ape,
+    dplyr,
+    tidyr,
+    ggplot2,
+    stats
+Suggests:
+    testthat,
+    knitr,
+    rmarkdown,
+    ggtree
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.0
