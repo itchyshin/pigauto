@@ -254,7 +254,7 @@ impute_phylo <- function(trait_data,
 set.seed(42)
 
 # A) phylogeny + phylo-correlation
-n_sp <- 500
+n_sp <- 5000
 tree <- rtree(n_sp)
 V_phy <- cov2cor(vcv(tree))
 
@@ -293,9 +293,9 @@ res <- impute_phylo(
   phylo_tree   = tree,
   env_data     = as.data.frame(env_data),
   species_id   = tree$tip.label,
-  latent_dim   = 32,
-  epochs       = 500,
-  n_samples    = 100,
+  latent_dim   = 128,
+  epochs       = 20000,
+  n_samples    = 1000,
   dropout_rate = 0.2
 )
 

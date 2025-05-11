@@ -1,3 +1,4 @@
+# compare to cont1 - I am trying to implement more complex DL models here 
 
 library(torch)
 library(ape)
@@ -63,25 +64,23 @@ make_mlp <- function(in_dim, hidden_dim, out_dim,
 
 ## ── 1. tensors ────────────────────────────────────────────────────────────
 prepare_tensors <- function(trait_data, env_data, species_id, A_hat) {
-  
-  # raw matrix with zeros in place of NAs
+  # 1) raw numeric matrix, impute NAs with 0
   X     <- as.matrix(trait_data)
   M_obs <- !is.na(X)
   X[!M_obs] <- 0
   
-  # --- **only float tensors** ---
+  # 2) turn *everything* into FLOAT tensors
   X_t   <- torch_tensor(X,    dtype = torch_float(), device = device)
   M_t   <- torch_tensor(M_obs * 1, dtype = torch_float(), device = device)
-  
   E_t   <- torch_tensor(as.matrix(env_data),
                         dtype = torch_float(), device = device)
   
-  # species indices (long)
+  # 3) species indexing
   sp_f   <- factor(species_id, levels = unique(species_id))
   sp_idx <- torch_tensor(as.integer(sp_f),
                          dtype = torch_long(), device = device)
   
-  # aggregate to species level
+  # 4) species‐level averages
   sp_lev <- levels(sp_f)
   Xsp    <- t(sapply(sp_lev, function(s) {
     rows <- which(species_id == s)
@@ -89,11 +88,10 @@ prepare_tensors <- function(trait_data, env_data, species_id, A_hat) {
   }))
   M_sp   <- !is.na(Xsp)
   Xsp[!M_sp] <- 0
-  
   X_sp_t <- torch_tensor(Xsp, dtype = torch_float(), device = device)
   M_sp_t <- torch_tensor(M_sp * 1, dtype = torch_float(), device = device)
   
-  # adjacency for species
+  # 5) adjacency
   idx   <- match(sp_lev, rownames(A_hat))
   if (any(is.na(idx))) idx <- seq_along(sp_lev)
   A_sub <- A_hat[idx, idx, drop = FALSE]
@@ -109,7 +107,6 @@ prepare_tensors <- function(trait_data, env_data, species_id, A_hat) {
     A      = A_t
   )
 }
-
 #— 4. Masked MSE (stable) ----------------------------------------------------
 masked_mse <- function(pred, target, mask) {
   diffsq <- (pred - target)$pow(2)
