@@ -235,48 +235,7 @@ impute_phylo <- function(trait_data, phylo_tree, env_data, species_id,
 # Example quick test  (comment out if using in a package)
 # ===================================================================
 
-res <- impute_phylo(
-  trait_data  = obs_traits,
-  phylo_tree  = tree,
-  env_data    = data.frame(env = env),
-  species_id  = species_id,
-  latent_dim  = 8,
-  epochs      = 250,
-  n_samples   = 100
-)
 
-
-
-
-
-
-
-####################
-
-# example
-
-
-
-# Load your data (example with toy simulation)
-library(ape); set.seed(1)
-tree <- rtree(40); sp <- tree$tip.label
-env  <- data.frame(temp = rnorm(80))
-traits <- data.frame(x = rnorm(80)); traits$x[sample(80,10)] <- NA
-res_mc <- impute_phylo(traits, tree, env, species_id = sample(sp,80,TRUE),
-                       method = "mc_dropout", epochs = 150, n_samples = 50)
-head(res_mc$completed_data); head(res_mc$uncertainty)
-
-
-
-
-
-
-##########
-# source("phyloimpute.R")
-
-# simulate as in the vignette:
-library(ape)
-library(phytools)
 n_sp <- 30; n_obs <- 80
 tree   <- rtree(n_sp); tree$tip.label <- paste0("sp",1:n_sp)
 trait1 <- fastBM(tree); trait2 <- fastBM(tree, sig2=0.5)
@@ -295,14 +254,11 @@ for (col in names(obs_traits)) {
 res <- impute_phylo(
   trait_data  = obs_traits,
   phylo_tree  = tree,
-  env_data    = data.frame(env=env),
+  env_data    = data.frame(env = env),
   species_id  = species_id,
   latent_dim  = 8,
   epochs      = 250,
-  uncertainty = TRUE,
   n_samples   = 100
 )
 
-head(res$completed_data)
-head(res$uncertainty)
 
