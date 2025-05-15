@@ -93,25 +93,30 @@ masked_mse <- function(pred, target, mask) {
 }
 
 #— 5. Encoder & Decoder -----------------------------------------------------
+# ---- encoders with dropout layers ---------------------------------
 VGAE_Encoder <- nn_module(
-  initialize = function(inp, hid, lat) {
-    self$gc1 <- nn_linear(inp, hid)
-    self$mu  <- nn_linear(hid, lat)
-    self$lv  <- nn_linear(hid, lat)
+  initialize = function(inp, hid, lat, p_drop = 0.3) {
+    self$g1   <- nn_linear(inp, hid)
+    self$drop <- nn_dropout(p = p_drop)
+    self$mu   <- nn_linear(hid, lat)
+    self$lv   <- nn_linear(hid, lat)
   },
   forward = function(X_sp, A) {
-    H <- torch_relu(self$gc1(torch_matmul(A, X_sp)))
-    list(mu = self$mu(H), logvar = self$lv(H))
+    h  <- torch_relu(self$g1(torch_matmul(A, X_sp)))
+    h  <- self$drop(h)       # regulariser – active only in $train()
+    list(mu = self$mu(h), logvar = self$lv(h))
   }
 )
 
 EnvEncoder <- nn_module(
-  initialize = function(envdim, hid, lat) {
-    self$f1 <- nn_linear(envdim, hid)
-    self$f2 <- nn_linear(hid, lat)
+  initialize = function(envdim, hid, lat, p_drop = 0.3) {
+    self$f1   <- nn_linear(envdim, hid)
+    self$drop <- nn_dropout(p = p_drop)
+    self$f2   <- nn_linear(hid, lat)
   },
   forward = function(e) {
     h <- torch_relu(self$f1(e))
+    h <- self$drop(h)
     self$f2(h)
   }
 )
@@ -147,6 +152,8 @@ train_vgae_mc <- function(prep, lat, epochs, nsamp, dropout_rate = 0.3) {
       torch_exp(0.5 * Rphy$logvar) * torch_randn_like(Rphy$mu)
     zobs <- zsp$index_select(1, prep$sp_idx) + Renv
     
+    zobs <- nnf_dropout(zobs, p = dropout_rate, training = TRUE)
+    
     out      <- dec(zobs)
     loss_rec <- masked_mse(out, prep$X, prep$M)
     loss_kl  <- -0.5 * torch_mean(1 + Rphy$logvar -
@@ -174,12 +181,10 @@ train_vgae_mc <- function(prep, lat, epochs, nsamp, dropout_rate = 0.3) {
       torch_exp(0.5 * Rphy$logvar) * torch_randn_like(Rphy$mu)
     zobs <- zsp$index_select(1, prep$sp_idx) + Renv
     
-    # manual MC-dropout on zobs:
+    # # manual MC-dropout on zobs:
     # mask  <- torch_rand(zobs$size(), device = device) > dropout_rate
     # mask_f <- mask$to(dtype = torch_float())
     # zdrop <- (mask_f * zobs) / (1 - dropout_rate)
-    # 
-    # pmat[i,,] <- as_array(dec(zdrop))
     
     pmat[i,,] <- as_array(dec(zobs))
   }
@@ -298,7 +303,7 @@ res <- impute_phylo(
   latent_dim   = 32,
   epochs       = 2000,
   n_samples    = 100,
-  dropout_rate = 0
+  dropout_rate = 0.3
 )
 
 # Full completed matrix
