@@ -290,7 +290,6 @@ train_mixed <- function(prep, latent_dim, epochs, nsamp) {
   #— 7. Inference (MC sampling) --------------------------------------------
   enc_phy$eval(); enc_env$eval(); lapply(decoders, function(d) d$eval())
   n_obs   <- prep$X_num$size(1)
-  num_idx <- which(prep$col_types %in% c("continuous","proportion","count"))
   n_contpr <- sum(prep$col_types[num_idx] != "count")
   
   cont_prop_out <- array(NA_real_, c(nsamp, n_obs, n_contpr))

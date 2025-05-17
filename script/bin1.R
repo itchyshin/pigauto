@@ -1,16 +1,3 @@
-###############################################################################
-## Phylogenetic VGAE imputer w/ per‐trait standardisation + MC‐dropout
-##   + Early‐stopping + Model checkpointing + History
-##   + Configurable number of hidden layers
-###############################################################################
-
-library(torch)
-library(ape)
-library(MASS)     # mvrnorm
-library(Matrix)   # nearPD
-library(Metrics)  # rmse
-library(ggplot2)
-
 # conceputal
 
 # trait_data ──▶|         |─▶ zsp (phylo latent) ──┐
@@ -248,33 +235,129 @@ train_vgae_mc <- function(prep,
   )
 }
 
-#— 7) Wrapper: standardise ↔ train ↔ back-transform --------------------------
-#’ Impute missing trait values using a phylogenetic VGAE with flexible depth
-#’ @param n_hidden_layers Number of hidden layers in each encoder (default 1)
-impute_phylo <- function(trait_data,
-                         phylo_tree,
-                         env_data,
-                         species_id,
-                         latent_dim     = 32,
-                         epochs         = 1000,
-                         n_samples      = 100,
-                         lr             = 1e-2,
-                         patience       = 50,
-                         ckpt_path      = "checkpoints",
-                         n_hidden_layers = 1,
-                         mask_obs_uncertainty = TRUE,
-                         restore_observed     = TRUE) {
+
+
+# binary 
+
+# ---- Helper loss function for binary traits ----
+masked_bce <- function(logit, target, mask) {
+  # Target must be float (0/1), logit is real-valued
+  m <- mask$to(dtype = torch_float())
+  # nnf_binary_cross_entropy_with_logits expects float inputs
+  loss <- nnf_binary_cross_entropy_with_logits(
+    logit, target$to(dtype = torch_float()), reduction = "none"
+  )
+  torch_mean(loss * m)
+}
+
+# ---- Wrapper for binary phylogenetic imputation ----
+impute_phylo_binary <- function(trait_data,
+                                phylo_tree,
+                                env_data,
+                                species_id,
+                                latent_dim     = 32,
+                                epochs         = 1000,
+                                n_samples      = 100,
+                                lr             = 1e-2,
+                                patience       = 50,
+                                ckpt_path      = "checkpoints_bin",
+                                n_hidden_layers = 1,
+                                mask_obs_uncertainty = TRUE,
+                                restore_observed     = TRUE) {
   validate_inputs(trait_data, phylo_tree, env_data, species_id)
   
+  # Check all columns are binary (0/1)
   X_raw <- as.matrix(trait_data)
-  mu    <- colMeans( X_raw, na.rm = TRUE)
-  sigma <- apply( X_raw, 2, sd, na.rm = TRUE)
-  X_std <- sweep(sweep(X_raw, 2, mu, "-"), 2, sigma, "/")
+  if (!all(na.omit(as.vector(X_raw)) %in% 0:1)) stop("All values must be 0/1.")
+  
+  # NO standardisation for binary
+  X_bin <- X_raw
   
   A_hat <- normalize_adj(tree_to_graph(phylo_tree))
-  prep  <- prepare_tensors(X_std, env_data, species_id, A_hat)
+  prep  <- prepare_tensors(X_bin, env_data, species_id, A_hat)
   
-  fit <- train_vgae_mc(
+  # --- Modified train loop for binary ---
+  train_vgae_binary <- function(prep,
+                                latent_dim,
+                                epochs,
+                                n_samp,
+                                lr             = 1e-2,
+                                patience       = 50,
+                                ckpt_path      = NULL,
+                                n_hidden_layers = 1) {
+    p       <- as.integer(prep$X$size(2))
+    h       <- as.integer(p * 2)
+    lat     <- as.integer(latent_dim)
+    env_dim <- as.integer(prep$env$size(2))
+    enc_phy <- VGAE_Encoder(p, h, lat, n_hidden_layers)$to(device = device)
+    enc_env <- EnvEncoder(env_dim, h, lat, n_hidden_layers)$to(device = device)
+    dec     <- Decoder(lat, p)$to(device = device)
+    opt <- optim_adam(
+      c(enc_phy$parameters, enc_env$parameters, dec$parameters),
+      lr = lr
+    )
+    if (!is.null(ckpt_path)) {
+      dir.create(ckpt_path, recursive = TRUE, showWarnings = FALSE)
+      best_file <- file.path(ckpt_path, "best_state.pt")
+    }
+    history <- numeric(epochs)
+    best_loss <- Inf
+    wait <- 0
+    stopped_epoch <- epochs
+    for (ep in seq_len(epochs)) {
+      enc_phy$train(); enc_env$train(); dec$train()
+      Rphy <- enc_phy(prep$X_sp, prep$A)
+      Renv <- enc_env(prep$env)
+      zsp  <- Rphy$mu + torch_exp(0.5 * Rphy$logvar) * torch_randn_like(Rphy$mu)
+      zobs <- zsp$index_select(1, prep$sp_idx) + Renv
+      logits <- dec(zobs)
+      loss_rec <- masked_bce(logits, prep$X, prep$M)
+      loss_kl <- -0.5 * torch_mean(1 + Rphy$logvar - Rphy$mu$pow(2) - torch_exp(Rphy$logvar))
+      loss <- loss_rec + loss_kl
+      opt$zero_grad(); loss$backward(); opt$step()
+      cur_loss <- loss$item()
+      history[ep] <- cur_loss
+      if (cur_loss < best_loss) {
+        best_loss <- cur_loss
+        wait <- 0
+        stopped_epoch <- ep
+        if (!is.null(ckpt_path)) {
+          torch_save(
+            list(
+              enc_phy = enc_phy$state_dict(),
+              enc_env = enc_env$state_dict(),
+              dec     = dec$state_dict()
+            ),
+            best_file
+          )
+        }
+      } else {
+        wait <- wait + 1
+        if (wait >= patience) {
+          cat(sprintf("Early stopping at epoch %d (best=%.4f)\n", ep, best_loss))
+          break
+        }
+      }
+      if (ep %% 200 == 0) {
+        cat(sprintf("Epoch %4d | loss=%.4f\n", ep, cur_loss))
+      }
+    }
+    if (!is.null(ckpt_path)) {
+      st <- torch_load(best_file)
+      enc_phy$load_state_dict(st$enc_phy)
+      enc_env$load_state_dict(st$enc_env)
+      dec$load_state_dict(st$dec)
+    }
+    list(
+      enc_phy = enc_phy,
+      enc_env = enc_env,
+      dec     = dec,
+      history = history[seq_len(ep)],
+      stopped = stopped_epoch
+    )
+  }
+  
+  fit <- train_vgae_binary(
     prep,
     latent_dim      = latent_dim,
     epochs          = epochs,
@@ -284,156 +367,91 @@ impute_phylo <- function(trait_data,
     ckpt_path       = ckpt_path,
     n_hidden_layers = n_hidden_layers
   )
-  
   enc_phy <- fit$enc_phy; enc_env <- fit$enc_env; dec <- fit$dec
-  
   enc_phy$eval(); enc_env$eval(); dec$eval()
   n_obs <- prep$X$size(1)
-  pmat  <- array(NA_real_, c(n_samples, n_obs, length(mu)))
+  pmat  <- array(NA_real_, c(n_samples, n_obs, ncol(X_bin)))
   for (i in seq_len(n_samples)) {
     Rphy <- enc_phy(prep$X_sp, prep$A)
     Renv <- enc_env(prep$env)
-    zsp  <- Rphy$mu +
-      torch_exp(0.5 * Rphy$logvar) * torch_randn_like(Rphy$mu)
+    zsp  <- Rphy$mu + torch_exp(0.5 * Rphy$logvar) * torch_randn_like(Rphy$mu)
     zobs <- zsp$index_select(1, prep$sp_idx) + Renv
-    pmat[i,,] <- as_array(dec(zobs))
+    logits <- dec(zobs)
+    pmat[i,,] <- as_array(torch_sigmoid(logits))  # Get probabilities
   }
-  
-  mean_std <- apply(pmat, 2:3, mean)
-  sd_std   <- apply(pmat, 2:3, sd)
-  mean_m   <- sweep(sweep(mean_std, 2, sigma, "*"), 2, mu, "+")
-  sd_m     <- sweep(sd_std,   2, sigma, "*")
-  
-  obs_mask <- !is.na(X_raw)
-  if (mask_obs_uncertainty) sd_m  [obs_mask] <- 0
-  if (restore_observed)    mean_m[obs_mask] <- X_raw[obs_mask]
-  
-  miss_idx <- which(is.na(X_raw), arr.ind = TRUE)
+  # Average predictions, then threshold at 0.5 (or return probabilities)
+  prob_m <- apply(pmat, 2:3, mean)
+  imp_m  <- ifelse(prob_m >= 0.5, 1, 0)
+  obs_mask <- !is.na(X_bin)
+  if (restore_observed) imp_m[obs_mask] <- X_bin[obs_mask]
+  miss_idx <- which(is.na(X_bin), arr.ind = TRUE)
   imputed_missing <- data.frame(
     obs_id      = miss_idx[,1],
     species_id  = species_id[ miss_idx[,1] ],
     trait       = colnames(trait_data)[ miss_idx[,2] ],
-    imputed     = mean_m[miss_idx],
-    uncertainty = sd_m  [miss_idx],
+    imputed     = imp_m[miss_idx],
+    prob        = prob_m[miss_idx],
     stringsAsFactors = FALSE
   )
-  
   list(
-    original_data   = as.data.frame(X_raw),
-    completed_data  = as.data.frame(mean_m),
-    uncertainty     = as.data.frame(sd_m),
+    original_data   = as.data.frame(X_bin),
+    completed_data  = as.data.frame(imp_m),
+    prob            = as.data.frame(prob_m),
     imputed_missing = imputed_missing,
     history         = fit$history,
     stopped_epoch   = fit$stopped
   )
 }
 
+# test
 
-#
-#— 8) Quick test on simulated data ------------------------------------------
-# set.seed(42)
-# n_sp <- 500
-# tree <- rtree(n_sp)
-# V_phy <- cov2cor(vcv(tree))
-# 
-# # simulate env
-# p_env <- 10
-# R_env <- (matrix(runif(p_env^2, .05, .8), p_env, p_env) +
-#             t(matrix(runif(p_env^2, .05, .8), p_env, p_env))) / 2
-# diag(R_env) <- 1
-# env_data <- as.data.frame(mvrnorm(n_sp, rep(0,p_env), nearPD(R_env)$mat))
-# 
-# # simulate phylo‐traits + env effects
-# p_tr <- 10
-# Z    <- sapply(1:p_tr, function(i) mvrnorm(1, rep(0, n_sp), V_phy))
-# Sigma_tr <- nearPD((matrix(runif(p_tr^2, .05, .8), p_tr, p_tr) +
-#                       t(matrix(runif(p_tr^2, .05, .8), p_tr, p_tr))) / 2)$mat
-# Xsp <- Z %*% chol(Sigma_tr)
-# B   <- matrix(runif(p_tr*p_env, -1,1), p_tr, p_env)
-# obs_traits <- Xsp + as.matrix(env_data) %*% t(B) +
-#   matrix(rnorm(n_sp*p_tr,0, .1), n_sp, p_tr)
-# colnames(obs_traits) <- paste0("trait", 1:p_tr)
-# 
-# # mask 30%
-# mask_mat <- matrix(runif(n_sp*p_tr), n_sp, p_tr) < 0.50
-# obs_traits_mask <- obs_traits
-# obs_traits_mask[mask_mat] <- NA
-
-# impute & evaluate
-# impute & evaluate
-obs_traits_mask_mat <- as.matrix(obs_traits_mask)
-
-res <- impute_phylo(
-  trait_data   = as.data.frame(traits_df_miss[,1:5]),
+# Example: trait_data is a data.frame of 0/1 (NA allowed)
+res_bin <- impute_phylo_binary(
+  trait_data   =  as.data.frame(traits_df_miss[,6:8]),        # Data frame of binary (0/1) traits
   phylo_tree   = tree,
   env_data     = env_data,
   species_id   = tree$tip.label,
-  latent_dim   = 128,
-  epochs       = 6000,
-  n_samples    = 1000,
-  lr           = 1e-2,
-  patience     = 300,
-  ckpt_path    = "checkpoints",
-  n_hidden_layers = 1
+  latent_dim   = 16,
+  epochs       = 4000,
+  n_samples    = 500,
+  patience     = 500
 )
 
-# star phylogeny
-res2 <- impute_phylo(
-  trait_data   = as.data.frame(traits_df_miss[,1:5]),
+res_bin2 <- impute_phylo_binary(
+  trait_data   =  as.data.frame(traits_df_miss[,6:8]),        # Data frame of binary (0/1) traits
   phylo_tree   = tree2,
   env_data     = env_data,
   species_id   = tree2$tip.label,
-  latent_dim   = 128,
-  epochs       = 6000,
-  n_samples    = 1000,
-  lr           = 1e-2,
-  patience     = 300,
-  ckpt_path    = "checkpoints",
-  n_hidden_layers = 1
+  latent_dim   = 16,
+  epochs       = 4000,
+  n_samples    = 500,
+  patience     = 500
 )
 
-# look
-#head(res$completed_data)
-#head(res$imputed_missing)
+completed_bin  <- as.matrix(res_bin$completed_data)
+completed_bin2 <- as.matrix(res_bin2$completed_data)
+truth_bin     <- traits_df[,6:8]
+# RMSE only on masked entries (where miss_mat == TRUE)
+cat("RMSE (tree):     ", rmse(truth_bin[miss_mat[,6:8]], completed_bin[miss_mat[,6:8]]), "\n")
+cat("RMSE (star):     ", rmse(truth_bin[miss_mat[,6:8]], completed_bin2[miss_mat[,6:8]]), "\n")
 
-# RMSE
-completed <- as.matrix(res$completed_data)
-completed2 <- as.matrix(res2$completed_data)
-truth     <- traits_df[,1:5]
-cat("RMSE on masked entries:", rmse(truth[miss_mat[,1:5]], completed[miss_mat[,1:5]]), "\n")
-cat("RMSE on masked entries:", rmse(truth[miss_mat[,1:5]], completed2[miss_mat[,1:5]]), "\n")
+# # For comparison, mean imputation (threshold colMeans at 0.5)
+# mean_imp_bin <- matrix(
+#   as.numeric(rep(colMeans(truth_bin, na.rm=TRUE), each=nrow(truth_bin)) >= 0.6),
+#   nrow=nrow(truth_bin)
+# )
+# cat("RMSE (mean imp): ", rmse(truth_bin[miss_mat[,6:8]], mean_imp_bin[miss_mat[,6:8]]), "\n")
 
-# mean imputation
-mean_imp <- matrix(rep(colMeans(truth, na.rm=TRUE), each=nrow(truth)), nrow=nrow(truth))
-cat("RMSE (mean imputation):", rmse(truth[miss_mat[,1:5]], mean_imp[miss_mat[,1:5]]), "\n")
 
-# scatterplot
-df_mask <- data.frame(
-  truth   = truth[miss_mat[,1:5]],
-  imputed = completed[miss_mat[,1:5]]
+##
+
+df_mask_bin <- data.frame(
+  truth   = truth_bin[miss_mat[,6:8]],
+  imputed = completed_bin[miss_mat[,6:8]]
 )
-p1 <- ggplot(df_mask, aes(x=truth, y=imputed)) +
-  geom_point(alpha=0.4) +
+ggplot(df_mask_bin, aes(x=truth, y=imputed)) +
+  geom_jitter(alpha=0.3, width=0.2, height=0.2) +
   geom_abline(slope=1, intercept=0, linetype="dashed") +
   coord_equal() + theme_minimal() +
-  labs(title="Imputed vs True (masked entries)",
-       x="True", y="Imputed")
-
-# scatterplot
-df_mask <- data.frame(
-  truth   = truth[miss_mat[,1:5]],
-  imputed = completed2[miss_mat[,1:5]]
-)
-p2 <- ggplot(df_mask, aes(x=truth, y=imputed)) +
-  geom_point(alpha=0.4) +
-  geom_abline(slope=1, intercept=0, linetype="dashed") +
-  coord_equal() + theme_minimal() +
-  labs(title="Imputed vs True (masked entries)",
-              x="True", y="Imputed")
-
-library(patchwork)
-
-p1 + p2 +
-  plot_annotation(title = "Imputed vs True (masked entries)",
-                  theme = theme(plot.title = element_text(hjust = 0.5)))
+  labs(title="Imputed vs True (masked, binary)", x="True", y="Imputed (0/1)")
 
