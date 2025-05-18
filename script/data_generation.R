@@ -23,26 +23,26 @@ tree <- compute.brlen(tree) # ensure all branches are positive
 V_phy  <- cov2cor(vcv(tree))
 
 #library(ape)
-
-make_star_phylogeny <- function(n_tips, tip_length = 1) {
-  # Create a phylo object for a star tree (all branches from the root)
-  tree <- list()
-  tree$edge <- cbind(rep(n_tips + 1, n_tips), 1:n_tips)
-  tree$Nnode <- 1
-  tree$tip.label <- paste0("sp", seq_len(n_tips))
-  tree$edge.length <- rep(tip_length, n_tips)
-  class(tree) <- "phylo"
-  tree
-}
-
-# Example:
-tree2 <- make_star_phylogeny(n_tips = 300, tip_length = 1)
+# 
+# make_star_phylogeny <- function(n_tips, tip_length = 1) {
+#   # Create a phylo object for a star tree (all branches from the root)
+#   tree <- list()
+#   tree$edge <- cbind(rep(n_tips + 1, n_tips), 1:n_tips)
+#   tree$Nnode <- 1
+#   tree$tip.label <- paste0("sp", seq_len(n_tips))
+#   tree$edge.length <- rep(tip_length, n_tips)
+#   class(tree) <- "phylo"
+#   tree
+# }
+# 
+# # Example:
+# tree2 <- make_star_phylogeny(n_tips = 300, tip_length = 1)
 
 # Plot to confirm it's a star:
-plot(star_tree, show.tip.label = FALSE, main="Star Phylogeny")
+#plot(star_tree, show.tip.label = FALSE, main="Star Phylogeny")
 
 # Example:
-star_tree <- make_star_phylogeny(n_tips = 300, tip_length = 1)
+#star_tree <- make_star_phylogeny(n_tips = 300, tip_length = 1)
 
 ## 3. ENVIRONMENT
 Sigma_env <- diag(p_env)
@@ -56,7 +56,7 @@ Z_phy <- sapply(Sigma_list, function(Sig) mvrnorm(n = 1, mu = rep(0, n_sp), Sigm
 B_cts <- matrix(runif(p_cts * p_env, -1, 1), p_cts, p_env)
 set.seed(42)
 cts_traits <- Z_phy +
-  as.matrix(env_data) %*% t(B_cts) + #  t(B_cts +
+  as.matrix(env_data) %*% t(B_cts*0) + #  t(B_cts +
   matrix(rnorm(n_sp * p_cts, 0, 0.1), n_sp, p_cts)
 colnames(cts_traits) <- paste0("cnt", 1:p_cts)
 

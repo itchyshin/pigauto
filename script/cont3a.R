@@ -168,9 +168,11 @@ train_vgae_mc <- function(prep,
   
   opt <- optim_adam(
     c(enc_phy$parameters, enc_env$parameters, dec$parameters),
-    lr = lr#,
+    lr = 1e-3    #,
     #weight_decay = 1e-4
   )
+  #scheduler <- lr_scheduler_exponential(opt, gamma = 0.95)
+  #scheduler$step()
   
   if (!is.null(ckpt_path)) {
     dir.create(ckpt_path, recursive = TRUE, showWarnings = FALSE)
@@ -196,7 +198,8 @@ train_vgae_mc <- function(prep,
     loss_kl  <- -0.5 * torch_mean(
       1 + Rphy$logvar - Rphy$mu$pow(2) - torch_exp(Rphy$logvar)
     )
-    loss     <- loss_rec + loss_kl
+    beta <- 0.05
+    loss     <- loss_rec + beta*loss_kl
     
     opt$zero_grad(); loss$backward(); opt$step()
     
@@ -259,7 +262,7 @@ impute_phylo <- function(trait_data,
                          epochs         = 1000,
                          n_samples      = 100,
                          lr             = 1e-2,
-                         patience       = 50,
+                         patience       = epochs,
                          ckpt_path      = "checkpoints",
                          n_hidden_layers = 1,
                          mask_obs_uncertainty = TRUE,
@@ -363,6 +366,12 @@ impute_phylo <- function(trait_data,
 # impute & evaluate
 obs_traits_mask_mat <- as.matrix(obs_traits_mask)
 
+star_tree <- tree
+star_tree$edge.length[] <- max(branching.times(tree)) # make all tips equidistant
+
+
+env_data <- data.frame(rep(0,dim(traits_df_miss)[1]))
+
 res <- impute_phylo(
   trait_data   = as.data.frame(traits_df_miss[,1:5]),
   phylo_tree   = tree,
@@ -372,7 +381,7 @@ res <- impute_phylo(
   epochs       = 6000,
   n_samples    = 1000,
   lr           = 1e-2,
-  patience     = 300,
+  patience     = 6000,
   ckpt_path    = "checkpoints",
   n_hidden_layers = 1
 )
@@ -380,14 +389,14 @@ res <- impute_phylo(
 # star phylogeny
 res2 <- impute_phylo(
   trait_data   = as.data.frame(traits_df_miss[,1:5]),
-  phylo_tree   = tree2,
+  phylo_tree   = star_tree,
   env_data     = env_data,
-  species_id   = tree2$tip.label,
+  species_id   = star_tree$tip.label,
   latent_dim   = 128,
   epochs       = 6000,
   n_samples    = 1000,
   lr           = 1e-2,
-  patience     = 300,
+  patience     = 6000,
   ckpt_path    = "checkpoints",
   n_hidden_layers = 1
 )
