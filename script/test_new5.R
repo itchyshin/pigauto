@@ -68,51 +68,58 @@ rphylopars_impute_with_se <- function(tree, obs_trait, env_vec, model = "BM") {
   list(mu = mu_all, se = se_all)
 }
 
-# ── 3. The Calibrated Model (Dual-Head Output) ───────────────────────────────
+# ── 3. The Calibrated ResNet Model (Improved Architecture) ───────────────────
 PhyloDAE_Calibrated <- nn_module(
   "PhyloDAE_Calibrated",
   initialize = function(input_dim, hidden_dim, coord_dim, cov_dim) {
     total_input <- input_dim + coord_dim + cov_dim
     
-    # Shared Encoder
+    # ── THE DEEP PART (Non-Linear) ──
     self$enc1 <- nn_linear(total_input, hidden_dim)
     self$enc2 <- nn_linear(hidden_dim, hidden_dim)
     self$graph_mix <- nn_linear(hidden_dim, hidden_dim)
     self$dec1 <- nn_linear(hidden_dim, hidden_dim)
     
-    # HEAD 1: Value Prediction (Mean)
-    self$head_mu <- nn_linear(hidden_dim, input_dim)
+    # Heads for the Deep Path
+    self$head_mu_deep <- nn_linear(hidden_dim, input_dim)
+    self$head_var <- nn_linear(hidden_dim, input_dim) # Uncertainty comes from deep features
     
-    # HEAD 2: Uncertainty Prediction (Log Variance)
-    self$head_var <- nn_linear(hidden_dim, input_dim)
+    # ── THE SHORTCUT (Linear Baseline) ──
+    # This layer mimics Rphylopars. It connects Input -> Output directly.
+    self$linear_shortcut <- nn_linear(total_input, input_dim)
     
     self$act  <- nn_relu()
-    self$drop <- nn_dropout(0.5)
+    self$drop <- nn_dropout(0.2) # Reduced dropout (0.5 was too high for N=200)
   },
   
   forward = function(x, coords, covs, adj) {
     combined <- torch_cat(list(x, coords, covs), dim = 2)
     
-    # Encode
+    # Path A: The Linear Shortcut (Simple & Robust)
+    linear_pred <- self$linear_shortcut(combined)
+    
+    # Path B: The Deep Network (Complex & Flexible)
     h <- self$enc1(combined); h <- self$act(h); h <- self$drop(h)
     h <- self$enc2(h); h <- self$act(h)
     
-    # Mix
-    neighbor_info <- torch_matmul(adj, h)
-    h_mix <- self$graph_mix(neighbor_info)
+    # Graph Mixing
+    h_mix <- self$graph_mix(torch_matmul(adj, h))
     h <- h + h_mix
     
     # Decode
     h <- self$dec1(h); h <- self$act(h)
+    deep_resid <- self$head_mu_deep(h) # This is the "correction"
     
-    # Dual Output
-    mu     <- self$head_mu(h)
+    # ── FINAL PREDICTION ──
+    # Result = Linear Guess + Non-Linear Correction
+    mu <- linear_pred + deep_resid
+    
+    # Uncertainty
     logvar <- self$head_var(h)
     
-    list(mu = mu, logvar = logvar)
+    return(list(mu = mu, logvar = logvar))
   }
 )
-
 # ── 4. The Heteroscedastic Loss Function (NLL) ───────────────────────────────
 gaussian_nll_loss <- function(pred_mu, pred_logvar, target, mask) {
   # NLL = 0.5 * [ exp(-logvar)*(y-y_hat)^2 + logvar ]

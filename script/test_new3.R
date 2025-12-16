@@ -237,7 +237,6 @@ run_benchmark <- function(n_sims = 5, n_sp = 200) {
     cat(sprintf("[Sim %d/%d] ", i, n_sims))
     
     # 1. Simulate "S-Curve" Data
-    # The trait depends on the environment via a Sigmoid function (10 / 1+e^-x)
     # This is non-linear. Rphylopars (Linear) hates this.
     tree <- rtree(n_sp)
     tree$edge.length <- tree$edge.length + 1e-5 # prevent singular matrix crash
