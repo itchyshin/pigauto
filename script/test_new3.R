@@ -245,7 +245,7 @@ run_benchmark <- function(n_sims = 5, n_sp = 200) {
     env_std <- as.numeric(scale(env))
     phylo_noise <- rTraitCont(tree, model = "BM", sigma = 0.2)
     
-    true_trait <- 10 / (1 + exp(-3 * env_std)) + phylo_noise
+    true_trait <- 10 / (1 + exp(-1.2 * env_std)) + phylo_noise
     
     obs_trait <- true_trait
     missing_idx <- sample(1:n_sp, size = 0.3 * n_sp)
