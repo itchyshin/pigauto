@@ -1,12 +1,14 @@
 # ==============================================================================
 # PURE PHYLO-DAE (FIXED): denoising GAE with categorical + continuous covariates
+# + ULTRAMETRIC TREE in simulation
 # ==============================================================================
-# Key fixes vs your original:
+# Key fixes:
 #  1) mask token (NOT 0) + mask indicator covariate
 #  2) corruption only among truly observed tips (never NA placeholders)
 #  3) correct spectral embedding: smallest non-zero Laplacian eigenvectors
 #  4) stable adjacency: symmetric normalized kernel + self loops
 #  5) optional categorical covariates (one-hot) + env^2 expansion
+#  6) NEW: ultrametric tree creation (robust)
 # ==============================================================================
 
 library(torch)
@@ -35,6 +37,32 @@ one_hot <- function(f) {
   mm <- model.matrix(~ f - 1)
   colnames(mm) <- gsub("^f", "", colnames(mm))
   mm
+}
+
+# Robust ultrametric conversion
+make_ultrametric <- function(tree) {
+  # if already ultrametric, keep
+  if (is.ultrametric(tree)) return(tree)
+  
+  # try chronos first
+  tr2 <- tryCatch({
+    # lambda=0 often OK but can fail; let chronos choose smoothing if needed
+    chronos(tree, lambda = 0)
+  }, error = function(e) NULL)
+  
+  if (!is.null(tr2) && is.ultrametric(tr2)) return(tr2)
+  
+  # fallback: Grafen branch lengths + force ultrametric
+  tr3 <- tryCatch({
+    trg <- compute.brlen(tree, method = "Grafen")
+    force.ultrametric(trg, method = "extend")
+  }, error = function(e) NULL)
+  
+  if (!is.null(tr3) && is.ultrametric(tr3)) return(tr3)
+  
+  # last resort: extend original (may still work)
+  tr4 <- force.ultrametric(tree, method = "extend")
+  tr4
 }
 
 # Correct spectral features: smallest non-zero eigenvectors
@@ -78,7 +106,7 @@ PhyloDAE <- nn_module(
     self$enc1 <- nn_linear(total_input, hidden_dim)
     self$enc2 <- nn_linear(hidden_dim, hidden_dim)
     
-    self$msg  <- nn_linear(hidden_dim, hidden_dim)
+    self$msg   <- nn_linear(hidden_dim, hidden_dim)
     self$alpha <- nn_parameter(torch_tensor(0.10, device = device)) # message strength
     
     self$dec1 <- nn_linear(hidden_dim, hidden_dim)
@@ -87,7 +115,6 @@ PhyloDAE <- nn_module(
     self$act  <- nn_relu()
     self$drop <- nn_dropout(0.15)
     
-    # learned mask token for x
     self$mask_token <- nn_parameter(torch_zeros(1, 1, device = device))
   },
   
@@ -121,17 +148,14 @@ impute_phylo_dae <- function(sim_data,
   
   is_missing <- is.na(trait_vec)
   
-  # Fill missing with mean only as placeholder (training never uses NA targets)
   mu_global <- mean(trait_vec, na.rm = TRUE)
   X_filled <- trait_vec
   X_filled[is_missing] <- mu_global
   
-  # scale
   x_mean <- mean(X_filled)
   x_sd <- sd(X_filled); if (x_sd == 0) x_sd <- 1
   X_scaled <- (X_filled - x_mean) / x_sd
   
-  # Covariates: env, env^2, (optional) one-hot(cat)
   env1 <- env_cont
   env2 <- env_cont^2
   cov_mat <- cbind(env1, env2)
@@ -140,7 +164,6 @@ impute_phylo_dae <- function(sim_data,
     cov_mat <- cbind(cov_mat, one_hot(env_cat))
   }
   
-  # tensors
   X_full <- torch_tensor(matrix(X_scaled, ncol = 1), dtype = torch_float(), device = device)
   Cov_t  <- torch_tensor(cov_mat, dtype = torch_float(), device = device)
   M_obs  <- torch_tensor(matrix(!is_missing, ncol = 1), dtype = torch_bool(), device = device)
@@ -148,8 +171,7 @@ impute_phylo_dae <- function(sim_data,
   coords_t <- get_spectral_features(tree, k = k_eigen)
   adj_t    <- get_adj_symnorm(tree)
   
-  # add mask-indicator feature
-  cov_dim <- ncol(cov_mat) + 1
+  cov_dim <- ncol(cov_mat) + 1  # + mask indicator
   
   model <- PhyloDAE(input_dim = 1, hidden_dim = hidden_dim, coord_dim = k_eigen, cov_dim = cov_dim)
   model$to(device = device)
@@ -160,7 +182,6 @@ impute_phylo_dae <- function(sim_data,
     model$train()
     opt$zero_grad()
     
-    # corrupt ONLY among observed entries
     u <- torch_rand_like(X_full)
     masked_bool <- (u < corruption_rate) & M_obs
     
@@ -168,12 +189,9 @@ impute_phylo_dae <- function(sim_data,
       Mask_t <- masked_bool$to(dtype = torch_float())
       covs_t <- torch_cat(list(Cov_t, Mask_t), dim = 2)
       
-      # apply mask token to x where masked
       X_in <- torch_where(masked_bool, model$mask_token$expand_as(X_full), X_full)
-      
       pred <- model(X_in, coords_t, covs_t, adj_t)
       
-      # denoising loss only on masked observed entries
       loss <- nnf_mse_loss(pred[masked_bool], X_full[masked_bool])
       loss$backward()
       
@@ -185,7 +203,6 @@ impute_phylo_dae <- function(sim_data,
   }
   cat("\n")
   
-  # inference: iterative refinement on true missing entries
   model$eval()
   with_no_grad({
     Mask0 <- torch_zeros_like(X_full)
@@ -206,29 +223,27 @@ impute_phylo_dae <- function(sim_data,
   (final_scaled * x_sd) + x_mean
 }
 
-# ── Benchmark with categorical covariate in simulation ────────────────────────
+# ── Benchmark with ULTRAMETRIC tree ───────────────────────────────────────────
 run_benchmark_cat <- function(n_sims = 5, n_sp = 200) {
   
   results <- data.frame()
-  cat(sprintf("Running pure Phylo-DAE benchmark with categorical covariate (N=%d)\n", n_sp))
+  cat(sprintf("Running pure Phylo-DAE benchmark (ultrametric tree; N=%d)\n", n_sp))
   
   for (i in 1:n_sims) {
     cat(sprintf("[Sim %d/%d] ", i, n_sims))
     
-    tree <- rtree(n_sp) ; tree$edge.length <- tree$edge.length + 1e-5
-    tree <- chronos(tree, lambda = 0)
+    tree <- rtree(n_sp)
+    tree <- make_ultrametric(tree)  # <---- ULTRAMETRIC HERE
     
     env_cont <- as.numeric(scale(rTraitCont(tree, model = "BM", sigma = 0.6)))
     env_cat  <- factor(sample(c("A","B","C"), n_sp, replace = TRUE))
     
-    # strong category + nonlinearity + phylo effect
     cat_shift <- c(A = 6, B = -6, C = 0)
     mu <- cat_shift[env_cat] + 4 * tanh(1.4 * env_cont) + 2 * sin(2 * env_cont) * (env_cat == "B")
     
     phy_eff <- rTraitCont(tree, model = "BM", sigma = 0.8)
     true_trait <- mu + phy_eff + rnorm(n_sp, 0, 1.5)
     
-    # missingness depends on category (harder, and makes cat matter)
     p_miss <- ifelse(env_cat=="A", 0.15, ifelse(env_cat=="B", 0.55, 0.25))
     missing_idx <- which(runif(n_sp) < p_miss)
     
@@ -237,7 +252,6 @@ run_benchmark_cat <- function(n_sims = 5, n_sp = 200) {
     
     dat <- list(tree = tree, env_cont = env_cont, env_cat = env_cat, obs_trait = obs_trait)
     
-    # Rphylopars baseline: env_cont only (misspecified on purpose)
     cat("Rphylopars... ")
     phy_pred <- tryCatch({
       df <- data.frame(species = tree$tip.label, trait = obs_trait, env = env_cont)
@@ -245,7 +259,6 @@ run_benchmark_cat <- function(n_sims = 5, n_sp = 200) {
       as.numeric(p$anc_recon[1:n_sp, 1])[missing_idx]
     }, error = function(e) rep(NA, length(missing_idx)))
     
-    # Pure Phylo-DAE with env_cont + env_cat
     cat("Phylo-DAE... ")
     dae_full <- impute_phylo_dae(dat, epochs = 2500, lr = 0.003,
                                  corruption_rate = 0.60, refine_steps = 10,
@@ -257,10 +270,9 @@ run_benchmark_cat <- function(n_sims = 5, n_sp = 200) {
     rmse_phy <- sqrt(mean((truth - phy_pred)^2, na.rm = TRUE))
     rmse_dae <- sqrt(mean((truth - dae_pred)^2))
     
-    cor_phy <- cor(truth, phy_pred, use = "complete.obs")
-    cor_dae <- cor(truth, dae_pred)
+    cor_phy <- if (sum(is.finite(truth) & is.finite(phy_pred)) >= 2) cor(truth, phy_pred, use="complete.obs") else NA
+    cor_dae <- if (sum(is.finite(truth) & is.finite(dae_pred)) >= 2) cor(truth, dae_pred, use="complete.obs") else NA
     
-    # diagnostic: if ~0, your NN is collapsing to the baseline-like solution
     mean_abs_diff <- mean(abs(dae_pred - phy_pred), na.rm = TRUE)
     
     results <- rbind(results, data.frame(
@@ -271,7 +283,7 @@ run_benchmark_cat <- function(n_sims = 5, n_sp = 200) {
       MeanAbsDiffPred = c(mean_abs_diff, mean_abs_diff)
     ))
     
-    cat(sprintf("Done. mean|DAE-Rphy|=%.3f\n", mean_abs_diff))
+    cat(sprintf("Done. ultrametric=%s; mean|DAE-Rphy|=%.3f\n", is.ultrametric(tree), mean_abs_diff))
   }
   
   results
@@ -281,10 +293,7 @@ run_benchmark_cat <- function(n_sims = 5, n_sp = 200) {
 final_res <- run_benchmark_cat(n_sims = 5, n_sp = 200)
 
 cat("\n--- FINAL SCOREBOARD ---\n")
-print(aggregate(cbind(RMSE, Cor) ~ Method, data = final_res, mean))
-
-cat("\nDiagnostic: mean |DAE - Rphylopars| on missing entries (should NOT be ~0)\n")
-print(aggregate(MeanAbsDiffPred ~ Sim, data = final_res, mean))
+print(aggregate(cbind(RMSE, Cor) ~ Method, data = final_res, mean, na.rm = TRUE))
 
 p1 <- ggplot(final_res, aes(x = Method, y = RMSE, fill = Method)) +
   geom_boxplot(alpha=0.6) + geom_jitter(width=0.1) +
