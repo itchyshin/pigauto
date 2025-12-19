@@ -49,3 +49,5 @@ po/*~
 rsconnect/
 avonet/phylo_cache.rds
 avonet/.DS_Store
+avonet/phylo_attn_cache.rds
+avonet/phylo_cache_morpho.rds
