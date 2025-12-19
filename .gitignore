@@ -48,3 +48,4 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 avonet/phylo_cache.rds
+avonet/.DS_Store
