@@ -88,7 +88,7 @@ cat("Rphylopars RMSE:", round(rmse_rphylo, 4), "\n")
 # ── 5. Phylo-DAE V2 Definition ────────────────────────────────────────────────
 PhyloDAE_V2 <- nn_module(
   "PhyloDAE_V2",
-  initialize = function(n_traits, n_phylo, hidden_dim = 256) {
+  initialize = function(n_traits, n_phylo, hidden_dim = 512) {
     input_dim <- n_traits + n_traits + n_phylo 
     
     self$enc_in <- nn_linear(input_dim, hidden_dim)
@@ -136,7 +136,7 @@ t_mask <- torch_tensor(mask_true, dtype=torch_float(), device=device)
 model <- PhyloDAE_V2(n_traits=4, n_phylo=16, hidden_dim=512)$to(device=device)
 optimizer <- optim_adamw(model$parameters, lr = 1e-3, weight_decay = 1e-4)
 
-n_epochs <- 5000
+n_epochs <- 10000
 scheduler <- lr_one_cycle(optimizer, max_lr = 0.005, epochs = n_epochs, steps_per_epoch = 1)
 
 cat("\n--- Training Phylo-DAE V2 ---\n")
