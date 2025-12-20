@@ -1,5 +1,5 @@
 # ==============================================================================
-# AVONET BENCHMARK: Rphylopars vs. Phylo-GNN-DAE (With Caching)
+# PHYLO-DAE V2: FULL BENCHMARK SCRIPT
 # ==============================================================================
 
 library(torch)
@@ -10,98 +10,66 @@ library(ggplot2)
 library(dplyr)
 library(here)
 
-# ── 1. Device & Data Loading ─────────────────────────────────────────────────
+# ── 1. Device & Data Setup ────────────────────────────────────────────────────
 device <- if (cuda_is_available()) torch_device("cuda") else torch_device("cpu")
 cat("Using device:", as.character(device), "\n")
 
-# Load Data
-tree <- read.tree(here("avonet","Stage2_Hackett_MCC_no_neg.tre"))
+# Load Data (Adjust paths as necessary)
+tree  <- read.tree(here("avonet","Stage2_Hackett_MCC_no_neg.tre"))
 avonet <- read.csv(here("avonet","AVONET3_BirdTree.csv"))
 
-# Clean Names
+# Clean & Match
 avonet$Species_Key <- gsub(" ", "_", avonet$Species3)
-
-# Select Traits (Multivariate)
 trait_cols <- c("Mass", "Beak.Length_Culmen", "Tarsus.Length", "Wing.Length")
 df_traits <- na.omit(avonet[, c("Species_Key", trait_cols)])
 
-# Match Tree
 common <- intersect(tree$tip.label, df_traits$Species_Key)
 tree_pruned <- keep.tip(tree, common)
 df_final <- df_traits[match(tree_pruned$tip.label, df_traits$Species_Key), ]
 
-# Preprocessing (Log + Scale)
-X_raw <- as.matrix(df_final[, trait_cols])
-X_log <- log(X_raw)
-X_mean <- colMeans(X_log)
-X_sd   <- apply(X_log, 2, sd)
-X_truth <- scale(X_log)
+# Preprocessing
+X_raw   <- as.matrix(df_final[, trait_cols])
+X_log   <- log(X_raw)
+X_truth <- scale(X_log) # Standardized for NN stability
 
-cat("Data Loaded: ", nrow(X_truth), "species x", ncol(X_truth), "traits.\n")
+# ── 2. Tree Feature Engineering (With Caching) ───────────────────────────────
+cache_path <- here("avonet", "phylo_cache.rds")
 
-# ── 2. CACHING LOGIC: Tree Features ──────────────────────────────────────────
-# We calculate these as R matrices first, save them, then convert to Tensors.
-
-cache_file <- here("avonet", "phylo_cache.rds")
-
-# Helper Functions (Modified to return R Matrices, not Tensors)
-calc_adj_symnorm <- function(tree) {
-  cat("  -> Calculating Cophenetic Distance (Slow)...\n")
-  D <- cophenetic(tree)
-  sigma <- median(D) * 0.5
-  cat("  -> Constructing Adjacency...\n")
-  A <- exp(- (D^2) / (2 * sigma^2))
-  diag(A) <- 1 # Self loops
-  rs <- rowSums(A) + 1e-8
-  Dinv_sqrt <- diag(1 / sqrt(rs))
-  A_norm <- Dinv_sqrt %*% A %*% Dinv_sqrt
-  return(as.matrix(A_norm))
-}
-
-calc_spectral_features <- function(tree, k = 8) {
-  cat("  -> Calculating Laplacian Eigenmaps...\n")
-  D <- cophenetic(tree)
-  sigma <- median(D) * 0.5
-  A <- exp(- (D^2) / (2 * sigma^2)); diag(A) <- 0
-  L <- diag(rowSums(A)) - A
-  eig <- eigen(L, symmetric = TRUE)
-  # Smallest non-zero eigenvectors
-  coords <- eig$vectors[, (nrow(A)-k):(nrow(A)-1)] 
-  return(as.matrix(coords))
-}
-
-if (file.exists(cache_file)) {
-  cat("\n--- Loading Cached Phylogenetic Features ---\n")
-  cached_data <- readRDS(cache_file)
-  
-  # Verify cache matches current tree size
-  if (nrow(cached_data$phylo_emb) != nrow(df_final)) {
-    stop("Cache file dimensions do not match current dataset! Delete 'phylo_cache.rds' and rerun.")
-  }
-  
-  phylo_emb_mat <- cached_data$phylo_emb
-  adj_mat       <- cached_data$adj
-  cat("Loaded successfully from:", cache_file, "\n")
-  
+if (file.exists(cache_path)) {
+  cat("Loading phylogenetic features from cache...\n")
+  cache <- readRDS(cache_path)
+  phylo_mat <- cache$phylo
+  adj_mat   <- cache$adj
 } else {
-  cat("\n--- Computing Phylogenetic Features (First Run Only) ---\n")
-  cat("This process involves large matrix decompositions and may take time...\n")
+  cat("Computing tree features (this may take a while)...\n")
   
-  phylo_emb_mat <- calc_spectral_features(tree_pruned, k = 8)
-  adj_mat       <- calc_adj_symnorm(tree_pruned)
+  # A) Adjacency Matrix (Gaussian Kernel)
+  D <- cophenetic(tree_pruned)
+  sigma <- median(D) * 0.35
+  A <- exp(- (D^2) / (2 * sigma^2))
+  diag(A) <- 1
+  rs <- rowSums(A) + 1e-8
+  Dinv <- diag(1 / sqrt(rs))
+  adj_mat <- Dinv %*% A %*% Dinv
   
-  # Save to disk
-  saveRDS(list(phylo_emb = phylo_emb_mat, adj = adj_mat), cache_file)
-  cat("Calculations complete. Saved to:", cache_file, "\n")
+  # B) Spectral Features (Laplacian Eigenmaps)
+  A_spec <- A; diag(A_spec) <- 0
+  L <- diag(rowSums(A_spec)) - A_spec
+  eig <- eigen(L, symmetric = TRUE)
+  k <- 16 
+  phylo_mat <- eig$vectors[, (nrow(A)-k):(nrow(A)-1)]
+  
+  # Save for future tuning sessions
+  saveRDS(list(phylo = phylo_mat, adj = adj_mat), cache_path)
+  cat("Tree features cached to:", cache_path, "\n")
 }
 
-# Convert R Matrices to Torch Tensors
-t_phylo <- torch_tensor(phylo_emb_mat, dtype = torch_float(), device = device)
-t_adj   <- torch_tensor(adj_mat, dtype = torch_float(), device = device)
+# Move to device
+t_phylo <- torch_tensor(phylo_mat, dtype=torch_float(), device=device)
+t_adj   <- torch_tensor(adj_mat, dtype=torch_float(), device=device)
 
-
-# ── 3. Artificial Missingness ────────────────────────────────────────────────
-set.seed(123)
+# ── 3. Artificial Missingness (25%) ───────────────────────────────────────────
+set.seed(555)
 missing_frac <- 0.25
 mask_true <- matrix(1, nrow=nrow(X_truth), ncol=ncol(X_truth))
 missing_idx <- sample(length(X_truth), floor(missing_frac * length(X_truth)))
@@ -109,110 +77,112 @@ mask_true[missing_idx] <- 0
 X_with_NA <- X_truth
 X_with_NA[missing_idx] <- NA
 
-# ── 4. Method 1: Rphylopars (Baseline) ───────────────────────────────────────
-cat("\n--- Running Rphylopars ---\n")
+# ── 4. Baseline: Rphylopars ───────────────────────────────────────────────────
+cat("\n--- Running Rphylopars (ML Baseline) ---\n")
 df_rphylo <- data.frame(species = df_final$Species_Key, X_with_NA)
-res_rphylo <- phylopars(trait_data = df_rphylo, tree = tree_pruned, model = "BM", pheno_error = FALSE)
+res_rphylo <- phylopars(trait_data = df_rphylo, tree = tree_pruned, model = "BM")
 X_pred_rphylo <- res_rphylo$anc_recon[df_final$Species_Key, trait_cols]
 rmse_rphylo <- sqrt(mean((X_truth[missing_idx] - X_pred_rphylo[missing_idx])^2))
 cat("Rphylopars RMSE:", round(rmse_rphylo, 4), "\n")
 
-# ── 5. Method 2: Phylo-DAE (GNN-DAE) ─────────────────────────────────────────
-cat("\n--- Running Phylo-DAE (GNN-DAE) ---\n")
-
-# Define Module
-PhyloDAE <- nn_module(
-  "PhyloDAE",
-  initialize = function(n_traits, n_phylo, hidden_dim = 64) {
+# ── 5. Phylo-DAE V2 Definition ────────────────────────────────────────────────
+PhyloDAE_V2 <- nn_module(
+  "PhyloDAE_V2",
+  initialize = function(n_traits, n_phylo, hidden_dim = 256) {
     input_dim <- n_traits + n_traits + n_phylo 
-    self$enc1 <- nn_linear(input_dim, hidden_dim)
-    self$enc2 <- nn_linear(hidden_dim, hidden_dim)
-    self$msg   <- nn_linear(hidden_dim, hidden_dim)
-    self$alpha <- nn_parameter(torch_tensor(0.1, device = device))
-    self$dec1 <- nn_linear(hidden_dim, hidden_dim)
-    self$dec2 <- nn_linear(hidden_dim, n_traits)
-    self$act  <- nn_relu()
-    self$drop <- nn_dropout(0.2)
-    self$mask_token <- nn_parameter(torch_zeros(1, n_traits, device = device))
+    
+    self$enc_in <- nn_linear(input_dim, hidden_dim)
+    self$layer1 <- nn_linear(hidden_dim, hidden_dim)
+    
+    # Gated Message Passing (Captures evolutionary context)
+    self$graph_weight <- nn_linear(hidden_dim, hidden_dim)
+    self$graph_gate   <- nn_linear(hidden_dim, hidden_dim)
+    
+    self$dec_hidden <- nn_linear(hidden_dim * 2, hidden_dim)
+    self$dec_out    <- nn_linear(hidden_dim, n_traits)
+    
+    self$act  <- nn_gelu()
+    self$dropout <- nn_dropout(0.15)
+    self$mask_token <- nn_parameter(torch_randn(1, n_traits))
   },
+  
   forward = function(x, m, p, adj) {
-    combined <- torch_cat(list(x, m, p), dim = 2)
-    h <- self$enc1(combined); h <- self$act(h); h <- self$drop(h)
-    h <- self$enc2(h);        h <- self$act(h)
-    m_agg <- torch_matmul(adj, h)
-    h <- h + self$alpha * self$msg(m_agg)
-    h <- self$dec1(h); h <- self$act(h)
-    self$dec2(h)
+    # Replace NAs with learnable mask token
+    x_input <- x * m + (1 - m) * self$mask_token
+    
+    h_local <- self$enc_in(torch_cat(list(x_input, m, p), dim = 2)) %>% 
+      self$act() %>% self$dropout()
+    h_local <- self$layer1(h_local) %>% self$act()
+    
+    # Aggregate neighbors in phylogenetic space
+    h_graph <- torch_matmul(adj, h_local)
+    h_graph <- self$graph_weight(h_graph)
+    
+    # Gate decides reliance on phylogeny vs individual trait correlation
+    gate <- torch_sigmoid(self$graph_gate(h_local))
+    h_combined <- torch_cat(list(h_local, gate * h_graph), dim = 2)
+    
+    out <- self$dec_hidden(h_combined) %>% self$act() %>% self$dec_out()
+    return(out)
   }
 )
 
-# Prepare Tensors
+# ── 6. Training with OneCycleLR ───────────────────────────────────────────────
 X_fill <- X_with_NA
 X_fill[is.na(X_fill)] <- 0
-t_X          <- torch_tensor(X_fill, dtype = torch_float(), device = device)
-t_mask_fixed <- torch_tensor(mask_true, dtype = torch_float(), device = device)
+t_X    <- torch_tensor(X_fill, dtype=torch_float(), device=device)
+t_mask <- torch_tensor(mask_true, dtype=torch_float(), device=device)
 
-# Train Loop
-model <- PhyloDAE(n_traits = ncol(X_truth), n_phylo = ncol(t_phylo), hidden_dim = 96)
-model$to(device = device)
-optimizer <- optim_adam(model$parameters, lr = 0.005)
+model <- PhyloDAE_V2(n_traits=4, n_phylo=16, hidden_dim=512)$to(device=device)
+optimizer <- optim_adamw(model$parameters, lr = 1e-3, weight_decay = 1e-4)
 
-cat("Training with Dynamic Corruption...\n")
-n_epochs <- 1500
-corruption_rate <- 0.3
+n_epochs <- 5000
+scheduler <- lr_one_cycle(optimizer, max_lr = 0.005, epochs = n_epochs, steps_per_epoch = 1)
 
-for (i in 1:n_epochs) {
+cat("\n--- Training Phylo-DAE V2 ---\n")
+for (epoch in 1:n_epochs) {
   model$train()
   optimizer$zero_grad()
   
+  # Dynamic Masking Strategy
   u <- torch_rand_like(t_X)
-  is_corrupted <- (u < corruption_rate) & (t_mask_fixed == 1)
+  training_mask <- (u < 0.2) & (t_mask == 1)
+  current_input_mask <- t_mask * (1 - training_mask$to(dtype=torch_float()))
   
-  if (as.numeric(is_corrupted$sum()$cpu()) > 0) {
-    # Fix for R logical NOT: use (1 - float)
-    is_corrupted_float <- is_corrupted$to(dtype = torch_float())
-    mask_dynamic <- t_mask_fixed * (1 - is_corrupted_float)
-    
-    X_corrupted <- torch_where(is_corrupted, model$mask_token$expand_as(t_X), t_X)
-    pred <- model(X_corrupted, mask_dynamic, t_phylo, t_adj)
-    
-    loss <- nnf_mse_loss(pred[is_corrupted], t_X[is_corrupted])
-    loss$backward()
-    optimizer$step()
-    
-    if (i %% 200 == 0) cat(sprintf("Epoch %d | Loss: %.4f\n", i, loss$item()))
-  }
+  preds <- model(t_X, current_input_mask, t_phylo, t_adj)
+  loss  <- nnf_mse_loss(preds[training_mask], t_X[training_mask])
+  
+  loss$backward()
+  optimizer$step()
+  scheduler$step()
+  
+  if (epoch %% 500 == 0) cat(sprintf("Epoch %d | Loss: %.6f\n", epoch, loss$item()))
 }
 
-# Final Prediction
+# ── 7. Inference & Refinement ─────────────────────────────────────────────────
+cat("\nRefining Predictions...\n")
 model$eval()
 with_no_grad({
-  final_pred <- model(t_X, t_mask_fixed, t_phylo, t_adj)
-  X_pred_dae <- as.matrix(final_pred$cpu())
+  final_preds <- model(t_X, t_mask, t_phylo, t_adj)
+  X_refined <- t_X * t_mask + final_preds * (1 - t_mask)
+  # Recurrent refinement loop
+  for(i in 1:5) {
+    final_preds <- model(X_refined, t_mask, t_phylo, t_adj)
+    X_refined <- t_X * t_mask + final_preds * (1 - t_mask)
+  }
+  X_pred_dae <- as.matrix(X_refined$cpu())
 })
 
-# ── 6. Comparison ────────────────────────────────────────────────────────────
+# ── 8. Comparison ─────────────────────────────────────────────────────────────
 rmse_dae <- sqrt(mean((X_truth[missing_idx] - X_pred_dae[missing_idx])^2))
 
 cat("\n=========================================\n")
-cat(" FINAL RESULTS (RMSE) \n")
-cat("=========================================\n")
-cat(sprintf("Rphylopars: %.4f\n", rmse_rphylo))
-cat(sprintf("Phylo-DAE : %.4f\n", rmse_dae))
+cat(sprintf("Rphylopars RMSE: %.4f\n", rmse_rphylo))
+cat(sprintf("Phylo-DAE V2 RMSE: %.4f\n", rmse_dae))
 cat("=========================================\n")
 
-# Visualization
-df_plot <- data.frame(
-  Truth = c(X_truth[missing_idx], X_truth[missing_idx]),
-  Prediction = c(X_pred_rphylo[missing_idx], X_pred_dae[missing_idx]),
-  Method = rep(c("Rphylopars", "Phylo-DAE"), each = length(missing_idx))
-)
-
-p <- ggplot(df_plot, aes(x = Truth, y = Prediction, color = Method)) +
-  geom_point(alpha = 0.3) +
-  geom_abline(color="black", linetype="dashed") +
-  facet_wrap(~Method) +
-  theme_minimal() +
-  labs(title = "Imputation Performance: AVONET",
-       subtitle = paste0("Phylo-DAE RMSE: ", round(rmse_dae, 3)))
-print(p)
+if (rmse_dae < rmse_rphylo) {
+  cat(">> SUCCESS: Phylo-DAE outperformed Rphylopars! <<\n")
+} else {
+  cat(">> Rphylopars still leads. Increasing hidden_dim or epochs may help. <<\n")
+}
