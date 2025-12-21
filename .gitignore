@@ -52,3 +52,5 @@ avonet/.DS_Store
 avonet/phylo_attn_cache.rds
 avonet/phylo_cache_morpho.rds
 avonet/phylo_cache_morpho_v2.rds
+avonet/phylo_cache_v3.rds
+avonet/knn_phylo_graph_cache.rds
