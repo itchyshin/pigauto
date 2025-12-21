@@ -1,12 +1,9 @@
 # ==============================================================================
 # Distilled Phylo-DAE + categorical predictors (one-hot)  [BM-RESIDUAL + FAST MODE]
-# - BM teacher + denoising
-# - Adds one-hot categorical covariates to DAE ONLY
-# - SAFE residual-on-BM: pred = BM + res_scale * residual_net(...)
-#     * starts near BM, only deviates if it helps
-# - Early stopping on held-out (val) cells
-# - Robust to missing categorical columns + robust file paths
-# - FAST mode via n_sub (subset tips to speed up dense adjacency)
+# + Improvements:
+#   (1) Bounded positive residual scale: res_scale = sigmoid(res_raw) * res_cap
+#   (2) Supervised train-missing uses extra observed-input dropout (prevents leakage)
+#   (3) Finer early stopping (eval_every=20) + shorter max_epochs
 # ==============================================================================
 
 library(torch)
@@ -19,37 +16,72 @@ library(here)
 
 # ----------------------------- USER SETTINGS ----------------------------------
 
-# If too slow: n_sub <- 500 or 300.  NULL uses all tips (slow with dense adj).
 n_sub <- 1200
+cat_cols_requested <- c("Diet", "Migration")
 
-# Requested categorical predictors (script drops those that don't exist)
-cat_cols_requested <- c("Diet", "Migration")  # <-- edit
-
-# Paths: script tries ./avonet/... then /mnt/data/...
 tree_path_A <- here("avonet","Stage2_Hackett_MCC_no_neg.tre")
 csv_path_A  <- here("avonet","AVONET3_BirdTree.csv")
-
 tree_path_B <- "/mnt/data/Stage2_Hackett_MCC_no_neg.tre"
 csv_path_B  <- "/mnt/data/AVONET3_BirdTree.csv"
+
+trait_cols <- c("Mass", "Beak.Length_Culmen", "Tarsus.Length", "Wing.Length")
+
+missing_frac   <- 0.25
+val_frac_miss  <- 0.25
+test_frac_miss <- 0.25
+
+k_eigen    <- 12
+sigma_mult <- 0.35
+
+CFG <- list(
+  hidden = 192,
+  dropout = 0.10,
+  lr = 2e-3,
+  weight_decay = 1e-5,
+  corrupt_p = 0.30,
+  
+  # losses
+  lambda_anchor = 0.05,
+  lambda_trainmiss = 0.50,   # << was 1.00; start lower to reduce overfit
+  lambda_resid = 0.50,       # << stronger shrink to BM on missing cells
+  lambda_distill_obs = 0.00,
+  
+  # NEW: supervised leakage control + bounded residual scale
+  sup_observe_drop = 0.15,   # drop 15% of observed cells from input during supervised step
+  res_cap = 0.30,            # max deviation multiplier on residual net
+  lambda_scale = 0.00,       # optional extra penalty on res_scale^2 (try 0.01 if needed)
+  
+  max_epochs = 600,
+  eval_every = 20,
+  patience = 15,
+  clip_norm = 1.0,
+  seed = 1
+)
 
 # ----------------------------- helpers ----------------------------------------
 rmse_vec <- function(truth, pred) sqrt(mean((truth - pred)^2))
 
-make_missing_splits <- function(X, missing_frac = 0.25, val_frac = 0.25, seed = 555) {
+rmse_torch <- function(pred, truth, mask_bool) {
+  d <- (pred - truth)
+  torch_sqrt(torch_mean(d[mask_bool]$pow(2)))
+}
+
+make_missing_splits3 <- function(X, missing_frac=0.25, val_frac=0.25, test_frac=0.25, seed=555) {
+  stopifnot(val_frac + test_frac < 1)
   set.seed(seed)
   n <- nrow(X); p <- ncol(X)
   all_idx <- seq_len(n * p)
   m <- floor(missing_frac * length(all_idx))
   miss <- sample(all_idx, m)
-  m_val <- floor(val_frac * length(miss))
-  val_idx <- miss[seq_len(m_val)]
-  test_idx <- miss[(m_val + 1):length(miss)]
-  list(val_idx = val_idx, test_idx = test_idx)
-}
-
-rmse_torch <- function(pred, truth, mask_bool) {
-  d <- (pred - truth)
-  torch_sqrt(torch_mean(d[mask_bool]$pow(2)))
+  
+  m_val  <- floor(val_frac  * length(miss))
+  m_test <- floor(test_frac * length(miss))
+  
+  val_idx   <- miss[seq_len(m_val)]
+  test_idx  <- miss[(m_val + 1):(m_val + m_test)]
+  train_idx <- miss[(m_val + m_test + 1):length(miss)]
+  
+  list(train_idx=train_idx, val_idx=val_idx, test_idx=test_idx)
 }
 
 all_grads_finite <- function(parameters) {
@@ -63,7 +95,6 @@ all_grads_finite <- function(parameters) {
   TRUE
 }
 
-# robust one-hot builder (drops high-cardinality + handles NA)
 make_onehot <- function(df, cat_cols, max_levels = 40) {
   cat_cols <- intersect(cat_cols, names(df))
   if (length(cat_cols) == 0) stop("No categorical columns found in df after intersect().")
@@ -90,14 +121,13 @@ make_onehot <- function(df, cat_cols, max_levels = 40) {
     dd[[j]] <- factor(x)
   }
   
-  mm <- model.matrix(~ . - 1, data = dd) # one-hot, no intercept
+  mm <- model.matrix(~ . - 1, data = dd)
   mm <- as.matrix(mm)
   storage.mode(mm) <- "double"
   list(mat = mm, colnames = colnames(mm), kept = names(dd))
 }
 
-# tree features: spectral coords + dense normalized adjacency (cached)
-get_spectral_features <- function(tree, k = 16, sigma_mult = 0.35) {
+get_spectral_features <- function(tree, k = 12, sigma_mult = 0.35) {
   D <- cophenetic(tree)
   sigma <- median(D) * sigma_mult
   A <- exp(-(D^2) / (2 * sigma^2))
@@ -105,7 +135,8 @@ get_spectral_features <- function(tree, k = 16, sigma_mult = 0.35) {
   L <- diag(rowSums(A)) - A
   eig <- eigen(L, symmetric = TRUE)
   n <- nrow(A)
-  eig$vectors[, (n - k + 1):n, drop = FALSE]
+  idx <- (n - k):(n - 1)  # smallest non-zero eigenvectors
+  eig$vectors[, idx, drop = FALSE]
 }
 
 get_stable_adj <- function(tree, sigma_mult = 0.35) {
@@ -120,6 +151,7 @@ get_stable_adj <- function(tree, sigma_mult = 0.35) {
 # ----------------------------- device -----------------------------------------
 device <- if (cuda_is_available()) torch_device("cuda") else torch_device("cpu")
 cat("Using device:", as.character(device), "\n")
+set.seed(CFG$seed); torch_manual_seed(CFG$seed)
 
 # ----------------------------- data loading -----------------------------------
 tree_path <- if (file.exists(tree_path_A)) tree_path_A else tree_path_B
@@ -135,15 +167,12 @@ tree <- read.tree(tree_path)
 avonet <- read.csv(csv_path)
 avonet$Species_Key <- gsub(" ", "_", avonet$Species3)
 
-trait_cols <- c("Mass", "Beak.Length_Culmen", "Tarsus.Length", "Wing.Length")
-
 df_traits <- na.omit(avonet[, c("Species_Key", trait_cols)])
 common <- intersect(tree$tip.label, df_traits$Species_Key)
 tree_pruned <- keep.tip(tree, common)
 df_final <- df_traits[match(tree_pruned$tip.label, df_traits$Species_Key), ]
 stopifnot(all(df_final$Species_Key == tree_pruned$tip.label))
 
-# align categorical data
 cat_cols_found <- intersect(cat_cols_requested, names(avonet))
 if (length(cat_cols_found) == 0) {
   message("None of requested categorical columns were found. You asked for: ",
@@ -161,12 +190,10 @@ df_cat <- avonet[match(df_final$Species_Key, avonet$Species_Key),
                  c("Species_Key", cat_cols_found), drop = FALSE]
 stopifnot(all(df_cat$Species_Key == df_final$Species_Key))
 
-# FAST MODE: subset tips (speeds up dense adj massively)
 if (!is.null(n_sub) && n_sub < nrow(df_final)) {
-  set.seed(1)
+  set.seed(CFG$seed)
   keep_species <- sample(df_final$Species_Key, n_sub)
   tree_pruned <- keep.tip(tree_pruned, keep_species)
-  
   df_final <- df_final[match(tree_pruned$tip.label, df_final$Species_Key), ]
   df_cat   <- df_cat[match(df_final$Species_Key, df_cat$Species_Key), ]
   stopifnot(all(df_final$Species_Key == tree_pruned$tip.label))
@@ -182,16 +209,25 @@ X_truth <- scale(X_log)
 
 n <- nrow(X_truth); p <- ncol(X_truth)
 
-# ----------------------------- missingness ------------------------------------
-splits <- make_missing_splits(X_truth, missing_frac = 0.25, val_frac = 0.25, seed = 555)
-val_idx  <- splits$val_idx
-test_idx <- splits$test_idx
+# ----------------------------- missingness split --------------------------------
+splits <- make_missing_splits3(
+  X_truth,
+  missing_frac = missing_frac,
+  val_frac = val_frac_miss,
+  test_frac = test_frac_miss,
+  seed = 555
+)
+
+train_idx <- splits$train_idx
+val_idx   <- splits$val_idx
+test_idx  <- splits$test_idx
 
 mask_input <- matrix(1, nrow=n, ncol=p)
-mask_input[c(val_idx, test_idx)] <- 0
+mask_input[c(train_idx, val_idx, test_idx)] <- 0
 
 X_in <- X_truth
-X_in[c(val_idx, test_idx)] <- NA
+X_in[c(train_idx, val_idx, test_idx)] <- NA
+
 X_fill <- X_in
 X_fill[is.na(X_fill)] <- 0
 
@@ -199,10 +235,13 @@ t_X     <- torch_tensor(X_fill, dtype=torch_float(), device=device)
 t_mask  <- torch_tensor(mask_input, dtype=torch_float(), device=device)
 t_truth <- torch_tensor(X_truth, dtype=torch_float(), device=device)
 
-val_mask_mat <- matrix(FALSE, nrow=n, ncol=p);  val_mask_mat[val_idx]  <- TRUE
-test_mask_mat <- matrix(FALSE, nrow=n, ncol=p); test_mask_mat[test_idx] <- TRUE
-t_val_mask  <- torch_tensor(val_mask_mat, dtype=torch_bool(), device=device)
-t_test_mask <- torch_tensor(test_mask_mat, dtype=torch_bool(), device=device)
+train_mask_mat <- matrix(FALSE, nrow=n, ncol=p); train_mask_mat[train_idx] <- TRUE
+val_mask_mat   <- matrix(FALSE, nrow=n, ncol=p); val_mask_mat[val_idx]     <- TRUE
+test_mask_mat  <- matrix(FALSE, nrow=n, ncol=p); test_mask_mat[test_idx]   <- TRUE
+
+t_train_mask <- torch_tensor(train_mask_mat, dtype=torch_bool(), device=device)
+t_val_mask   <- torch_tensor(val_mask_mat,   dtype=torch_bool(), device=device)
+t_test_mask  <- torch_tensor(test_mask_mat,  dtype=torch_bool(), device=device)
 
 # ----------------------------- baseline: Rphylopars (BM) ----------------------
 cat("\n--- Running Rphylopars (BM) ---\n")
@@ -210,14 +249,17 @@ df_rphylo <- data.frame(species = df_final$Species_Key, X_in)
 res_rphylo <- phylopars(trait_data=df_rphylo, tree=tree_pruned, model="BM", pheno_error=FALSE)
 X_pred_rphylo <- res_rphylo$anc_recon[df_final$Species_Key, trait_cols]
 
-rmse_val_rphylo  <- rmse_vec(X_truth[val_idx],  X_pred_rphylo[val_idx])
-rmse_test_rphylo <- rmse_vec(X_truth[test_idx], X_pred_rphylo[test_idx])
-cat(sprintf("Rphylopars RMSE | val: %.4f | test: %.4f\n", rmse_val_rphylo, rmse_test_rphylo))
+rmse_train_rphylo <- rmse_vec(X_truth[train_idx], X_pred_rphylo[train_idx])
+rmse_val_rphylo   <- rmse_vec(X_truth[val_idx],   X_pred_rphylo[val_idx])
+rmse_test_rphylo  <- rmse_vec(X_truth[test_idx],  X_pred_rphylo[test_idx])
+
+cat(sprintf("Rphylopars RMSE | train-miss: %.4f | val-miss: %.4f | test-miss: %.4f\n",
+            rmse_train_rphylo, rmse_val_rphylo, rmse_test_rphylo))
 
 t_bm <- torch_tensor(as.matrix(X_pred_rphylo), dtype=torch_float(), device=device)
 
 # ----------------------------- tree features (cached) -------------------------
-cache_file <- paste0("phylo_dae_cache_cat_", n, ".rds")
+cache_file <- paste0("phylo_dae_cache_cat_", n, "_k", k_eigen, "_s", sigma_mult, ".rds")
 cat("\n--- Building tree features (spectral + adjacency) ---\n")
 t_feat0 <- Sys.time()
 
@@ -227,21 +269,20 @@ if (file.exists(cache_file)) {
     coords <- cache$coords; adj <- cache$adj
   } else {
     file.remove(cache_file)
-    coords <- get_spectral_features(tree_pruned, k=16, sigma_mult=0.35)
-    adj <- get_stable_adj(tree_pruned, sigma_mult=0.35)
+    coords <- get_spectral_features(tree_pruned, k=k_eigen, sigma_mult=sigma_mult)
+    adj <- get_stable_adj(tree_pruned, sigma_mult=sigma_mult)
     saveRDS(list(coords=coords, adj=adj), cache_file)
   }
 } else {
-  coords <- get_spectral_features(tree_pruned, k=16, sigma_mult=0.35)
-  adj <- get_stable_adj(tree_pruned, sigma_mult=0.35)
+  coords <- get_spectral_features(tree_pruned, k=k_eigen, sigma_mult=sigma_mult)
+  adj <- get_stable_adj(tree_pruned, sigma_mult=sigma_mult)
   saveRDS(list(coords=coords, adj=adj), cache_file)
 }
 
 cat(sprintf("Tree features ready in %.2fs\n", as.numeric(difftime(Sys.time(), t_feat0, units="secs"))))
 
-k_eigen <- ncol(coords)
 t_coords <- torch_tensor(coords, dtype=torch_float(), device=device)
-t_adj    <- torch_tensor(adj, dtype=torch_float(), device=device)
+t_adj    <- torch_tensor(adj,    dtype=torch_float(), device=device)
 
 # ----------------------------- categorical one-hot ----------------------------
 oh <- make_onehot(df_cat, cat_cols_found, max_levels = 40)
@@ -252,13 +293,10 @@ cat("One-hot dim:", ncol(C_mat), "\n")
 t_cat <- torch_tensor(C_mat, dtype=torch_float(), device=device)
 q_cat <- ncol(C_mat)
 
-# ----------------------------- model: SAFE residual-on-BM ---------------------
-# Output: pred = BM + res_scale * residual
-# res_scale starts small (0.01) so the model begins very close to BM.
-
+# ----------------------------- model: bounded residual-on-BM ------------------
 DistilledPhyloDAE_cat_residBM <- nn_module(
   "DistilledPhyloDAE_cat_residBM",
-  initialize = function(n_traits, k_eigen, q_cat, hidden=192, dropout=0.10) {
+  initialize = function(n_traits, k_eigen, q_cat, hidden=192, dropout=0.10, res_cap=0.30) {
     input_dim <- n_traits + n_traits + k_eigen + q_cat
     self$enc1 <- nn_linear(input_dim, hidden)
     self$enc2 <- nn_linear(hidden, hidden)
@@ -270,11 +308,13 @@ DistilledPhyloDAE_cat_residBM <- nn_module(
     self$drop <- nn_dropout(dropout)
     
     self$mask_token <- nn_parameter(torch_zeros(1, n_traits))
-    self$res_scale  <- nn_parameter(torch_tensor(0.01, dtype=torch_float()))  # << key
+    
+    # NEW: bounded positive scale
+    self$res_raw <- nn_parameter(torch_tensor(-4, dtype=torch_float()))  # sigmoid(-4) ~ 0.018
+    self$res_cap <- res_cap
   },
   
   forward = function(x, m, coords, cats, adj, bm) {
-    # x,m,bm: (n x p); coords: (n x k); cats: (n x q); adj: (n x n)
     z <- torch_cat(list(x, m, coords, cats), dim=2)
     
     h <- self$enc1(z)
@@ -292,30 +332,37 @@ DistilledPhyloDAE_cat_residBM <- nn_module(
     
     resid <- self$dec2(h)
     
-    # SAFE residual-on-BM
-    out <- bm + self$res_scale * resid
-    out
+    rs <- torch_sigmoid(self$res_raw) * self$res_cap
+    bm + rs * resid
+  },
+  
+  get_res_scale = function() {
+    as.numeric((torch_sigmoid(self$res_raw) * self$res_cap)$detach()$cpu()$item())
   }
 )
 
-# ----------------------------- runner -----------------------------------------
-run_distilled_phylo_dae_cat <- function(
-    hidden=192, dropout=0.10,
-    lr=2e-3, weight_decay=1e-5,
-    corrupt_p=0.30,
-    lambda_distill=0.10,     # lower is ok now (residual structure is safe)
-    lambda_anchor=0.05,
-    lambda_resid = 0.20,     # << shrinkage: keep pred close to BM unless helpful
-    max_epochs=1200, eval_every=100, patience=8,
-    refine_steps=0,
-    clip_norm=1.0,
-    seed=1, verbose=TRUE
+# ----------------------------- trainer ----------------------------------------
+run_model <- function(
+    hidden=CFG$hidden, dropout=CFG$dropout,
+    lr=CFG$lr, weight_decay=CFG$weight_decay,
+    corrupt_p=CFG$corrupt_p,
+    lambda_anchor=CFG$lambda_anchor,
+    lambda_trainmiss=CFG$lambda_trainmiss,
+    lambda_resid=CFG$lambda_resid,
+    lambda_distill_obs=CFG$lambda_distill_obs,
+    sup_observe_drop=CFG$sup_observe_drop,
+    res_cap=CFG$res_cap,
+    lambda_scale=CFG$lambda_scale,
+    max_epochs=CFG$max_epochs, eval_every=CFG$eval_every, patience=CFG$patience,
+    clip_norm=CFG$clip_norm,
+    seed=CFG$seed,
+    verbose=TRUE
 ) {
   set.seed(seed); torch_manual_seed(seed)
   
   model <- DistilledPhyloDAE_cat_residBM(
-    n_traits=p, k_eigen=k_eigen, q_cat=q_cat,
-    hidden=hidden, dropout=dropout
+    n_traits=p, k_eigen=ncol(coords), q_cat=q_cat,
+    hidden=hidden, dropout=dropout, res_cap=res_cap
   )
   model$to(device=device)
   opt <- optim_adamw(model$parameters, lr=lr, weight_decay=weight_decay)
@@ -325,43 +372,78 @@ run_distilled_phylo_dae_cat <- function(
   patience_left <- patience
   t0 <- Sys.time()
   
+  missing_bool <- (t_mask == 0)
+  
   for (epoch in 1:max_epochs) {
     model$train()
     opt$zero_grad()
     
-    # corrupt only observed entries
+    # Corrupt only observed entries
     u <- torch_rand_like(t_X)
     corrupt <- (u < corrupt_p) & (t_mask == 1)
     if (as.numeric(corrupt$sum()$cpu()$item()) == 0) next
-    
     corrupt_f <- corrupt$to(dtype=torch_float())
     
-    # mask token
     mtok <- model$mask_token$to(device=device)$expand_as(t_X)
-    X_in_t <- torch_where(corrupt, mtok, t_X)
     
+    # Base input: missing -> token; corrupted observed -> token
+    X_in_t <- torch_where(missing_bool, mtok, t_X)
+    X_in_t <- torch_where(corrupt, mtok, X_in_t)
+    
+    # Base dynamic mask: observed & not corrupted
     mask_dyn <- t_mask * (1 - corrupt_f)
     
-    pred <- model(X_in_t, mask_dyn, t_coords, t_cat, t_adj, t_bm)
+    # -------- NEW: extra observed dropout used for supervised signal ----------
+    # We hide additional observed cells to prevent train-missing leakage.
+    if (sup_observe_drop > 0) {
+      u2 <- torch_rand_like(t_X)
+      extra_drop <- (u2 < sup_observe_drop) & (mask_dyn == 1)
+      extra_drop_f <- extra_drop$to(dtype=torch_float())
+      
+      X_in_sup <- torch_where(extra_drop, mtok, X_in_t)
+      mask_sup <- mask_dyn * (1 - extra_drop_f)
+    } else {
+      X_in_sup <- X_in_t
+      mask_sup <- mask_dyn
+    }
     
-    # 1) denoise loss on corrupted
+    # Forward pass (use the supervised-masked version)
+    pred <- model(X_in_sup, mask_sup, t_coords, t_cat, t_adj, t_bm)
+    
+    # 1) denoise loss on corrupted observed cells (still valid)
     loss_rec <- nnf_mse_loss(pred[corrupt], t_X[corrupt])
     
-    # 2) anchor on observed & not corrupted
-    anchor_idx <- (mask_dyn == 1)
+    # 2) anchor on observed & not corrupted & not extra-dropped
+    anchor_idx <- (mask_sup == 1)
     loss_anchor <- nnf_mse_loss(pred[anchor_idx], t_X[anchor_idx])
     
-    # 3) distill toward BM on (true-missing OR corrupted)
-    distill_idx <- (t_mask == 0) | corrupt
-    loss_distill <- nnf_mse_loss(pred[distill_idx], t_bm[distill_idx])
+    # 3) supervised learning on TRAIN-missing cells
+    loss_trainmiss <- nnf_mse_loss(pred[t_train_mask], t_truth[t_train_mask])
     
-    # 4) shrink residual globally (keeps you close to BM unless necessary)
-    loss_resid <- torch_mean((pred - t_bm)$pow(2))
+    # 4) shrink deviation from BM on missing cells
+    loss_resid <- torch_mean((pred[missing_bool] - t_bm[missing_bool])$pow(2))
+    
+    # 5) optional distill on observed cells
+    if (lambda_distill_obs > 0) {
+      loss_distill_obs <- nnf_mse_loss(pred[t_mask == 1], t_bm[t_mask == 1])
+    } else {
+      loss_distill_obs <- torch_tensor(0, device=device)
+    }
+    
+    # 6) optional penalty on residual scale itself
+    if (lambda_scale > 0) {
+      rs_t <- (torch_sigmoid(model$res_raw) * model$res_cap)
+      loss_scale <- rs_t$pow(2)
+    } else {
+      loss_scale <- torch_tensor(0, device=device)
+    }
     
     loss <- loss_rec +
-      lambda_anchor * loss_anchor +
-      lambda_distill * loss_distill +
-      lambda_resid * loss_resid
+      lambda_anchor      * loss_anchor +
+      lambda_trainmiss   * loss_trainmiss +
+      lambda_resid       * loss_resid +
+      lambda_distill_obs * loss_distill_obs +
+      lambda_scale       * loss_scale
     
     loss$backward()
     
@@ -375,18 +457,15 @@ run_distilled_phylo_dae_cat <- function(
     if (epoch %% eval_every == 0) {
       model$eval()
       with_no_grad({
-        pred0 <- model(t_X, t_mask, t_coords, t_cat, t_adj, t_bm)
+        mtok_eval <- model$mask_token$to(device=device)$expand_as(t_X)
+        X_eval_in <- torch_where(missing_bool, mtok_eval, t_X)
+        
+        pred0 <- model(X_eval_in, t_mask, t_coords, t_cat, t_adj, t_bm)
         Xcurr <- t_X * t_mask + pred0 * (1 - t_mask)
         
-        if (refine_steps > 0) {
-          for (k in 1:refine_steps) {
-            pk <- model(Xcurr, t_mask, t_coords, t_cat, t_adj, t_bm)
-            Xcurr <- t_X * t_mask + pk * (1 - t_mask)
-          }
-        }
-        
-        val_rmse <- as.numeric(rmse_torch(Xcurr, t_truth, t_val_mask)$cpu()$item())
-        rs <- as.numeric(model$res_scale$detach()$cpu()$item())
+        train_rmse <- as.numeric(rmse_torch(Xcurr, t_truth, t_train_mask)$cpu()$item())
+        val_rmse   <- as.numeric(rmse_torch(Xcurr, t_truth, t_val_mask)$cpu()$item())
+        rs <- model$get_res_scale()
       })
       
       if (val_rmse + 1e-6 < best_val) {
@@ -400,10 +479,10 @@ run_distilled_phylo_dae_cat <- function(
       if (verbose) {
         elapsed <- as.numeric(difftime(Sys.time(), t0, units="secs"))
         cat(sprintf(
-          "epoch %4d | rec %.5f | anc %.5f | dist %.5f | resid %.5f | res_scale %.4f | valRMSE %.4f | best %.4f | pat %d | t=%.1fs\n",
+          "epoch %4d | rec %.5f | anc %.5f | trainMiss %.5f | residReg %.5f | rs %.4f | trainRMSE %.4f | valRMSE %.4f | best %.4f | pat %d | t=%.1fs\n",
           epoch,
-          loss_rec$item(), loss_anchor$item(), loss_distill$item(), loss_resid$item(),
-          rs, val_rmse, best_val, patience_left, elapsed
+          loss_rec$item(), loss_anchor$item(), loss_trainmiss$item(), loss_resid$item(),
+          rs, train_rmse, val_rmse, best_val, patience_left, elapsed
         ))
       }
       if (patience_left <= 0) break
@@ -414,25 +493,34 @@ run_distilled_phylo_dae_cat <- function(
   
   model$eval()
   with_no_grad({
-    pred0 <- model(t_X, t_mask, t_coords, t_cat, t_adj, t_bm)
+    mtok_eval <- model$mask_token$to(device=device)$expand_as(t_X)
+    missing_bool <- (t_mask == 0)
+    X_eval_in <- torch_where(missing_bool, mtok_eval, t_X)
+    
+    pred0 <- model(X_eval_in, t_mask, t_coords, t_cat, t_adj, t_bm)
     Xcurr <- t_X * t_mask + pred0 * (1 - t_mask)
     
-    val_rmse  <- as.numeric(rmse_torch(Xcurr, t_truth, t_val_mask)$cpu()$item())
-    test_rmse <- as.numeric(rmse_torch(Xcurr, t_truth, t_test_mask)$cpu()$item())
+    train_rmse <- as.numeric(rmse_torch(Xcurr, t_truth, t_train_mask)$cpu()$item())
+    val_rmse   <- as.numeric(rmse_torch(Xcurr, t_truth, t_val_mask)$cpu()$item())
+    test_rmse  <- as.numeric(rmse_torch(Xcurr, t_truth, t_test_mask)$cpu()$item())
+    
     pred_mat <- as.matrix(Xcurr$cpu())
-    res_scale_final <- as.numeric(model$res_scale$detach()$cpu()$item())
+    res_scale_final <- model$get_res_scale()
   })
   
-  list(pred=pred_mat, val_rmse=val_rmse, test_rmse=test_rmse, res_scale=res_scale_final)
+  list(pred=pred_mat,
+       train_rmse=train_rmse, val_rmse=val_rmse, test_rmse=test_rmse,
+       res_scale=res_scale_final)
 }
 
-# ----------------------------- run a few configs ------------------------------
-cat("\n--- Running Distilled Phylo-DAE + categorical predictors (ONE-HOT, residual-on-BM) ---\n")
+# ----------------------------- run a small sweep ------------------------------
+cat("\n--- Running improved Phylo-DAE + cats (bounded rs + supervised leakage control) ---\n")
 
 cand <- list(
-  # safer defaults; should never explode away from BM
-  list(hidden=192, dropout=0.10, lr=2e-3, corrupt_p=0.30, lambda_distill=0.10, lambda_anchor=0.05, lambda_resid=0.20),
-  list(hidden=256, dropout=0.10, lr=1e-3, corrupt_p=0.35, lambda_distill=0.05, lambda_anchor=0.05, lambda_resid=0.30)
+  list(lambda_trainmiss=0.5, lambda_resid=0.5, sup_observe_drop=0.10),
+  list(lambda_trainmiss=0.5, lambda_resid=1.0, sup_observe_drop=0.10),
+  list(lambda_trainmiss=0.2, lambda_resid=0.5, sup_observe_drop=0.15),
+  list(lambda_trainmiss=0.5, lambda_resid=0.5, sup_observe_drop=0.20)
 )
 
 best <- NULL
@@ -440,16 +528,24 @@ best_val <- Inf
 
 for (i in seq_along(cand)) {
   cfg <- cand[[i]]
-  cat(sprintf(
-    "  [%d/%d] hidden=%d drop=%.2f lr=%.0e corrupt=%.2f dist=%.2f anc=%.2f resid=%.2f\n",
-    i, length(cand), cfg$hidden, cfg$dropout, cfg$lr, cfg$corrupt_p,
-    cfg$lambda_distill, cfg$lambda_anchor, cfg$lambda_resid
-  ))
+  cat(sprintf("  [%d/%d] trainMissW=%.2f residW=%.2f supDrop=%.2f\n",
+              i, length(cand), cfg$lambda_trainmiss, cfg$lambda_resid, cfg$sup_observe_drop))
   
-  r <- do.call(run_distilled_phylo_dae_cat, c(cfg, list(
-    max_epochs=1200, eval_every=100, patience=8, refine_steps=0, seed=1, verbose=TRUE
+  r <- do.call(run_model, c(cfg, list(
+    hidden=CFG$hidden, dropout=CFG$dropout,
+    lr=CFG$lr, weight_decay=CFG$weight_decay,
+    corrupt_p=CFG$corrupt_p,
+    lambda_anchor=CFG$lambda_anchor,
+    lambda_distill_obs=CFG$lambda_distill_obs,
+    res_cap=CFG$res_cap, lambda_scale=CFG$lambda_scale,
+    max_epochs=CFG$max_epochs, eval_every=CFG$eval_every, patience=CFG$patience,
+    clip_norm=CFG$clip_norm,
+    seed=CFG$seed,
+    verbose=TRUE
   )))
-  cat(sprintf("      val RMSE %.4f | test RMSE %.4f | res_scale %.4f\n", r$val_rmse, r$test_rmse, r$res_scale))
+  
+  cat(sprintf("      trainMiss RMSE %.4f | valMiss RMSE %.4f | testMiss RMSE %.4f | res_scale %.4f\n",
+              r$train_rmse, r$val_rmse, r$test_rmse, r$res_scale))
   
   if (r$val_rmse < best_val) { best_val <- r$val_rmse; best <- r }
 }
@@ -459,28 +555,29 @@ X_pred_dae_cat <- best$pred
 cat("\n=========================================\n")
 cat(" RESULTS (RMSE on Standardized Log Data)\n")
 cat("=========================================\n")
-cat(sprintf("Rphylopars (BM)                 | val: %.4f | test: %.4f\n", rmse_val_rphylo, rmse_test_rphylo))
-cat(sprintf("Phylo-DAE + cats (OH, resid-BM) | val: %.4f | test: %.4f\n", best$val_rmse, best$test_rmse))
+cat(sprintf("Rphylopars (BM)                 | train-miss: %.4f | val-miss: %.4f | test-miss: %.4f\n",
+            rmse_train_rphylo, rmse_val_rphylo, rmse_test_rphylo))
+cat(sprintf("Improved Phylo-DAE + cats        | train-miss: %.4f | val-miss: %.4f | test-miss: %.4f | res_scale %.4f\n",
+            best$train_rmse, best$val_rmse, best$test_rmse, best$res_scale))
 cat("=========================================\n")
 
 # ----------------------------- visualization ---------------------------------
 df_plot <- rbind(
   data.frame(Truth = X_truth[test_idx], Prediction = X_pred_rphylo[test_idx], Method = "Rphylopars (BM)"),
-  data.frame(Truth = X_truth[test_idx], Prediction = X_pred_dae_cat[test_idx], Method = "Phylo-DAE + cats (OH, resid-BM)")
+  data.frame(Truth = X_truth[test_idx], Prediction = X_pred_dae_cat[test_idx], Method = "Improved Phylo-DAE + cats")
 )
 
 p_plot <- ggplot(df_plot, aes(x=Truth, y=Prediction)) +
   geom_point(alpha=0.25, size=1) +
   geom_abline(linetype="dashed") +
-  facet_wrap(~Method, scales="fixed") +   # fixed scales = honest comparison
+  facet_wrap(~Method, scales="fixed") +
   theme_minimal() +
   labs(
-    title="Imputation on Held-out Cells (test split only)",
-    subtitle=sprintf("Test RMSE: DAE+cats=%.3f vs BM=%.3f (n=%d)", best$test_rmse, rmse_test_rphylo, n)
+    title="Imputation on Held-out Cells (TEST missing cells only)",
+    subtitle=sprintf("Test-miss RMSE: DAE=%.3f vs BM=%.3f (n=%d)", best$test_rmse, rmse_test_rphylo, n)
   )
 print(p_plot)
 
-# Optional quick diagnostic: how far did we move from BM on test cells?
 diff_mat <- X_pred_dae_cat - X_pred_rphylo
-cat(sprintf("\nmean(|DAE - BM|) on TEST cells: %.6f\n", mean(abs(diff_mat[test_idx]))))
-cat(sprintf("sd(DAE - BM) on TEST cells: %.6f\n", sd(as.numeric(diff_mat[test_idx]))))
+cat(sprintf("\nmean(|DAE - BM|) on TEST-missing cells: %.6f\n", mean(abs(diff_mat[test_idx]))))
+cat(sprintf("sd(DAE - BM) on TEST-missing cells: %.6f\n", sd(as.numeric(diff_mat[test_idx]))))

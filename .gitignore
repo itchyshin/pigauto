@@ -55,3 +55,5 @@ avonet/phylo_cache_morpho_v2.rds
 avonet/phylo_cache_v3.rds
 avonet/knn_phylo_graph_cache.rds
 phylo_dae_cache_cat_1200.rds
+phylo_dae_cache_cat_1200_k12_s0.35.rds
+phylo_dae_cache_cov_1200_k12_s0.35.rds

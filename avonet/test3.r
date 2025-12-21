@@ -119,7 +119,7 @@ TreeDAE_distill <- nn_module(
 
 # ----------------------------- training function ------------------------------
 
-run_distilled_phylo_dae <- function(hidden=192, K=4, lr=1e-3, lambda_bm=5, lambda_distill=0.2, refine_steps=5, seed=1) {
+run_distilled_phylo_dae <- function(hidden=192, K=4, lr=5e-4, lambda_bm=5, lambda_distill=0.5, refine_steps=5, seed=1) {
   set.seed(seed); torch_manual_seed(seed)
   
   # Tree setup
