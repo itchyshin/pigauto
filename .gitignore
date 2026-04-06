@@ -1,61 +1,54 @@
-# History files
+# R session & user files
 .Rhistory
 .Rapp.history
-
-# Session Data files
 .RData
 .RDataTmp
-
-# User-specific files
 .Ruserdata
-
-# Example code in package build process
+.Rproj.user/
+.Renviron
 *-Ex.R
 
-# Output files from R CMD build
+# Build outputs
 /*.tar.gz
-
-# Output files from R CMD check
 /*.Rcheck/
+/doc/
+/Meta/
 
-# RStudio files
-.Rproj.user/
-
-# produced vignettes
+# Vignette outputs
 vignettes/*.html
 vignettes/*.pdf
 
-# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
-.httr-oauth
-
-# knitr and R markdown default cache directories
+# Cache directories
 *_cache/
 /cache/
 
-# Temporary files created by R markdown
+# Temp files from R Markdown / knitr
 *.utf8.md
 *.knit.md
 
-# R Environment Variables
-.Renviron
+# macOS
+.DS_Store
 
-# pkgdown site
+# Model checkpoints (binary, regenerable)
+checkpoints/
+checkpoints_bin/
+
+# Cached graph files
+*.rds
+!data/*.rda
+
+# pkgdown / rsconnect
 docs/
+rsconnect/
 
-# translation temp files
+# OAuth
+.httr-oauth
+
+# Translation temp
 po/*~
 
-# RStudio Connect folder
-rsconnect/
-avonet/phylo_cache.rds
-avonet/.DS_Store
-avonet/phylo_attn_cache.rds
-avonet/phylo_cache_morpho.rds
-avonet/phylo_cache_morpho_v2.rds
-avonet/phylo_cache_v3.rds
-avonet/knn_phylo_graph_cache.rds
-phylo_dae_cache_cat_1200.rds
-phylo_dae_cache_cat_1200_k12_s0.35.rds
-phylo_dae_cache_cov_1200_k12_s0.35.rds
-/doc/
-/Meta/
+# BACE is a separate package (reference copy)
+BACE/
+
+# Claude workspace
+.claude/
