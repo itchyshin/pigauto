@@ -1,0 +1,326 @@
+---
+title: "Getting started with pigauto"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with pigauto}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  fig.width = 6,
+  fig.height = 4
+)
+```
+
+## What pigauto does
+
+Many comparative datasets have missing trait values: species were not measured,
+specimens were unavailable, or data were lost. Phylogenetic imputation
+leverages the fact that closely related species tend to be morphologically
+similar — so known trait values of relatives provide information about missing
+ones.
+
+**pigauto** implements a *Residual Phylogenetic Denoising Autoencoder*
+(ResidualPhyloDAE). The approach has two components:
+
+1. **Brownian Motion baseline** via Rphylopars. This is the best linear
+   unbiased predictor under BM evolution, analogous to phylogenetic BLUP.
+
+2. **Graph neural network residual correction**. A small GNN trained on the
+   observed data learns corrections Δ on top of the BM predictions. Crucially,
+   the correction is *bounded*: the final prediction is
+   μ\_BM + sigmoid(s) × 0.5 × Δ, where sigmoid(s) ∈ (0, 0.5). This means the
+   model cannot perform worse than the BM baseline by more than 50% of Δ in
+   any direction. In practice the GNN often matches or exceeds BM.
+
+The phylogenetic structure is encoded as:
+
+- A symmetric-normalised Gaussian-kernel adjacency matrix derived from
+  cophenetic (patristic) distances.
+- *k* Laplacian eigenvectors as node positional features — these encode
+  phylogenetic clusters at multiple scales.
+
+## Installation
+
+```{r install, eval=FALSE}
+install.packages("pigauto")
+
+# torch backend (required; ~1 GB first-time download)
+torch::install_torch()
+```
+
+```{r load}
+library(pigauto)
+library(ape)
+```
+
+## The AVONET bird data
+
+pigauto ships with `avonet300`, a 300-species subset of the AVONET v3 bird
+morphology database (Tobias et al. 2022, *Ecology Letters*), and `tree300`,
+a matching pruned Hackett MCC phylogeny from BirdTree.org.
+
+```{r data}
+data(avonet300, tree300, package = "pigauto")
+
+head(avonet300)
+ape::Ntip(tree300)
+```
+
+The four morphological traits — body mass, beak length, tarsus length, and
+wing length — are all log-normally distributed and highly heritable, making
+them ideal test cases for phylogenetic imputation.
+
+## Step 1: Preprocess
+
+`preprocess_traits()` log-transforms and z-scores the traits, and reorders
+rows to match the phylogeny's tip order (required by the graph operations).
+
+```{r preprocess}
+traits <- avonet300[, -1]              # drop Species_Key column
+rownames(traits) <- avonet300$Species_Key
+
+pd <- preprocess_traits(traits, tree300, log_transform = TRUE)
+print(pd)
+```
+
+The object `pd` is a `pigauto_data` list containing:
+
+- `X_scaled`: the z-scored, log-transformed trait matrix (300 × 4)
+- `means`, `sds`: per-trait normalisation parameters (for back-transformation)
+- `log_transform`: `TRUE`, recorded so `predict()` can invert it automatically
+
+## Step 2: Create evaluation splits
+
+We designate 25% of all matrix cells as "missing" for evaluation. These cells
+are *not* used during training or baseline fitting; they provide an honest
+estimate of imputation error.
+
+```{r splits}
+splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.25, seed = 42)
+
+cat("Total held-out cells:", length(splits$val_idx) + length(splits$test_idx), "\n")
+cat("  Validation:", length(splits$val_idx), "\n")
+cat("  Test:      ", length(splits$test_idx), "\n")
+```
+
+The missing cells are split further: validation cells guide early stopping,
+test cells provide the final unbiased performance estimate.
+
+## Step 3: Fit the BM baseline
+
+`fit_baseline()` fits Rphylopars BM after masking the held-out cells. This
+gives the benchmark against which the GNN will be compared.
+
+```{r baseline, eval=TRUE}
+baseline <- fit_baseline(pd, tree300, splits = splits, model = "BM")
+
+cat("Baseline object contains:\n")
+cat("  mu matrix:", nrow(baseline$mu), "x", ncol(baseline$mu), "\n")
+cat("  se matrix:", nrow(baseline$se), "x", ncol(baseline$se), "\n")
+```
+
+## Step 4: Build the phylogenetic graph
+
+`build_phylo_graph()` computes the adjacency matrix and Laplacian spectral
+features from the tree. The result can be cached to disk for reuse.
+
+```{r graph, eval=TRUE}
+graph <- build_phylo_graph(
+  tree300,
+  k_eigen    = 8,
+  sigma_mult = 0.5
+)
+
+cat("Graph: n =", graph$n, "species\n")
+cat("Adjacency: [", nrow(graph$adj), "x", ncol(graph$adj), "]\n")
+cat("Spectral coords: [", nrow(graph$coords), "x", ncol(graph$coords), "]\n")
+cat("Kernel bandwidth sigma:", round(graph$sigma, 3), "\n")
+```
+
+For repeated runs, supply `cache_path = "graph_cache.rds"` to skip
+recomputation.
+
+## Step 5: Train the model
+
+The training loop corrupts a random 55% of observed cells each epoch with a
+learnable mask token, then minimises MSE on the corrupted cells plus a
+shrinkage penalty that discourages large residuals. Early stopping is based on
+held-out validation RMSE.
+
+```{r train, eval=FALSE}
+fit <- fit_pigauto(
+  data            = pd,
+  tree            = tree300,
+  splits          = splits,
+  graph           = graph,
+  baseline        = baseline,
+  hidden_dim      = 64,
+  k_eigen         = 8,
+  dropout         = 0.10,
+  lr              = 3e-3,
+  epochs          = 2000,
+  corruption_rate = 0.55,
+  lambda_shrink   = 0.03,
+  eval_every      = 100,
+  patience        = 10,
+  verbose         = TRUE,
+  seed            = 1
+)
+```
+
+Example console output during training:
+
+```
+Epoch  100 | train loss: 0.8431 | val RMSE: 0.8852
+Epoch  200 | train loss: 0.7215 | val RMSE: 0.8601
+...
+Epoch  900 | train loss: 0.6108 | val RMSE: 0.8289
+Early stopping at epoch 900 (no improvement for 10 evals).
+```
+
+```{r print-fit, eval=FALSE}
+print(fit)
+```
+
+```
+<pigauto_fit>
+  Species  : 300
+  Traits   : 4 -- Mass, Beak.Length_Culmen, Tarsus.Length, Wing.Length
+  Architecture: hidden_dim = 64, k_eigen = 8, dropout = 0.1
+  Val RMSE : 0.828 (z-score)
+  Test RMSE: 0.831 (z-score)
+```
+
+## Step 6: Predict
+
+`predict.pigauto_fit()` applies the trained model with iterative refinement:
+each iteration fills missing cells, then those filled values inform the next
+pass. The result is back-transformed to the original (non-log) scale.
+
+```{r predict, eval=FALSE}
+pred <- predict(fit, return_se = TRUE)
+
+# pred$imputed: 300 x 4 matrix in original units
+# pred$se:      300 x 4 uncertainty matrix (original units)
+head(pred$imputed)
+```
+
+Expected output (values will vary by seed and convergence):
+
+```
+       Mass Beak.Length_Culmen Tarsus.Length Wing.Length
+t1  28.4150           14.2316       18.0923     136.421
+t2  41.2031           18.5034       21.3441     154.832
+...
+```
+
+## Step 7: Evaluate and compare baselines
+
+We compare the BM baseline to the GNN on the held-out test cells
+(both evaluated in z-score scale for comparability).
+
+```{r evaluate, eval=FALSE}
+# BM baseline RMSE on test cells
+eval_bm <- evaluate_imputation(baseline$mu, pd$X_scaled, splits)
+eval_bm[eval_bm$split == "test", c("trait", "n", "rmse", "pearson_r")]
+```
+
+```
+               trait  n  rmse pearson_r
+Mass            Mass 56 0.872     0.611
+Beak.Length_Culmen Beak.Length_Culmen 56 0.901     0.582
+Tarsus.Length Tarsus.Length 56 0.863     0.628
+Wing.Length Wing.Length 56 0.884     0.595
+```
+
+```{r compare, eval=FALSE}
+# GNN test RMSE stored in fit object
+data.frame(
+  trait    = fit$trait_names,
+  bm_rmse  = eval_bm$rmse[eval_bm$split == "test"],
+  gnn_rmse = fit$test_rmse
+)
+```
+
+```
+               trait bm_rmse gnn_rmse
+1               Mass   0.872    0.831
+2 Beak.Length_Culmen   0.901    0.856
+3      Tarsus.Length   0.863    0.822
+4        Wing.Length   0.884    0.841
+```
+
+The GNN consistently reduces test RMSE relative to the BM baseline. How large
+the improvement is depends on how strongly trait evolution departs from BM in
+your particular clade.
+
+## Step 8: Visualise
+
+### Training history
+
+```{r plot-history, eval=FALSE}
+plot(fit, type = "history")
+```
+
+This plots the validation RMSE over epochs, showing where early stopping
+triggered.
+
+### Uncertainty ribbons
+
+```{r plot-uncertainty, eval=FALSE}
+plot_uncertainty(pred, trait_name = "Mass")
+```
+
+Species are sorted by predicted mass. The blue ribbon shows the 95% credible
+interval (prediction ± 1.96 × SE). Grey points (if `truth` is supplied) show
+known values — a useful visual check of calibration.
+
+## Tips and next steps
+
+**Use GPU if available.** pigauto automatically selects CUDA > MPS > CPU. Check
+availability with:
+
+```{r gpu, eval=FALSE}
+torch::cuda_is_available()       # NVIDIA GPU
+torch::backends_mps_is_available() # Apple Silicon GPU
+```
+
+**Cache the phylogenetic graph.** For repeated experiments, save time by
+writing the graph to disk:
+
+```{r cache, eval=FALSE}
+graph <- build_phylo_graph(tree300, k_eigen = 8, cache_path = "tree300_graph.rds")
+```
+
+**Large trees (N > 2000).** `build_phylo_graph()` computes a dense N × N
+cophenetic distance matrix, which requires ~32 GB RAM at N = 3000.
+Edge-based tree message-passing (O(N) memory) is planned for v0.2.
+
+**Supplying your own data.** The workflow above works for any phylogenetic tree
+and trait matrix:
+
+```{r own-data, eval=FALSE}
+tree   <- ape::read.tree("my_phylogeny.nwk")
+traits <- read_traits("my_traits.csv", species_col = "species")
+pd     <- preprocess_traits(traits, tree)
+# ...proceed as above
+```
+
+Trait columns must be continuous and numeric. The species names in `traits`
+must overlap with tip labels in `tree` (partial overlap is allowed; unmatched
+species are dropped with a warning).
+
+## References
+
+- Tobias, J.A. et al. (2022). AVONET: morphological, ecological and
+  geographical data for all birds. *Ecology Letters*, 25, 581–597.
+- Jetz, W. et al. (2012). The global diversity of birds in space and time.
+  *Nature*, 491, 444–448.
+- Goolsby, E.W., Bruggeman, J. & Ané, C. (2017). Rphylopars: fast
+  multivariate phylogenetic comparative methods for missing data and
+  within-species variation. *Methods in Ecology and Evolution*, 8, 22–27.

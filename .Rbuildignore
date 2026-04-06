@@ -1,2 +1,13 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^useful$
+^script$
+^avonet$
+^checkpoints$
+^checkpoints_bin$
+^misc$
+^data-raw$
+^\.Rhistory$
+^NEWS\.md$
+^doc$
+^Meta$

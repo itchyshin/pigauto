@@ -57,3 +57,5 @@ avonet/knn_phylo_graph_cache.rds
 phylo_dae_cache_cat_1200.rds
 phylo_dae_cache_cat_1200_k12_s0.35.rds
 phylo_dae_cache_cov_1200_k12_s0.35.rds
+/doc/
+/Meta/

@@ -1,29 +1,32 @@
 Package: pigauto
 Title: Phylogenetic Imputation via Graph Autoencoders
-Version: 0.2.0
+Version: 0.1.0
 Authors@R:
-    person("Shinichi", "Name", role = c("aut", "cre"), email = "itchyshin@gmail.com")
-Description: Impute missing species trait data with Variational Graph Autoencoders,
-    Monte Carlo Dropout, or Deep Ensemble autoencoders, integrating phylogeny
-    (bird phylogenetic tree) and environmental features. Includes a 300‑species
-    AVONET subset with climate, NDVI, elevation, and a matching pruned BirdTree
-    phylogeny for real‑data demonstration.
-License: MIT
+    person("Shinichi", "Nakagawa", role = c("aut", "cre"), email = "itchyshin@gmail.com")
+Description: Imputes missing species trait data using a Residual Phylogenetic
+    Denoising Autoencoder (ResidualPhyloDAE) that combines Brownian-Motion
+    phylogenetic imputation (via Rphylopars) with a graph neural network
+    residual correction. Because the neural network is constrained to learn
+    bounded corrections on top of the BM baseline, imputation quality cannot
+    regress below Rphylopars. Includes a 300-species AVONET bird morphology
+    subset and a matching BirdTree phylogeny for real-data demonstration.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends: R (>= 4.1)
 Imports:
     torch,
-    keras,
     ape,
-    dplyr,
-    tidyr,
     ggplot2,
-    stats
+    rlang,
+    stats,
+    Rphylopars
 Suggests:
     testthat,
     knitr,
     rmarkdown,
     ggtree
+VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.0
+RoxygenNote: 7.3.2
+Config/testthat/edition: 3
