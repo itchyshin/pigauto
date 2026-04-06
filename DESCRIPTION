@@ -25,7 +25,8 @@ Suggests:
     testthat,
     knitr,
     rmarkdown,
-    ggtree
+    ggtree,
+    reticulate
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
