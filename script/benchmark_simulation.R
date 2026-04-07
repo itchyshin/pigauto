@@ -145,36 +145,62 @@ run_one_replicate <- function(scenario, rep_id) {
   cat(sprintf("\n--- Scenario %s (%s), rep %d, seed %d ---\n",
               sc_id, scenario$description, rep_id, seed))
 
-  # -- 3a. Simulate data via BACE ----------------------------------------------
-  n_vars   <- 1L + length(scenario$predictor_types)
-  ps_vec   <- rep(scenario$phylo_signal, length.out = n_vars)
-  miss_vec <- rep(0, n_vars)  # no BACE missingness; pigauto handles masking
+  # -- 3a. Simulate data --------------------------------------------------------
+  sim_type <- scenario$sim_type %||% "BM"
 
-  set.seed(seed)
-  sim <- tryCatch(
-    sim_bace(
-      response_type  = scenario$response_type,
-      predictor_types = scenario$predictor_types,
-      phylo_signal   = ps_vec,
-      n_cases        = scenario$n_species,
-      n_species      = scenario$n_species,
-      missingness    = miss_vec
-    ),
-    error = function(e) {
-      cat("  [ERROR] sim_bace failed:", conditionMessage(e), "\n")
-      NULL
-    }
-  )
-  if (is.null(sim)) return(NULL)
+  adapted <- NULL
+  if (sim_type == "BM") {
+    # BACE sim_bace path (scenarios 1-8)
+    n_vars   <- 1L + length(scenario$predictor_types)
+    ps_vec   <- rep(scenario$phylo_signal, length.out = n_vars)
+    miss_vec <- rep(0, n_vars)
 
-  # -- 3b. Adapt to pigauto format ---------------------------------------------
-  adapted <- tryCatch(
-    adapt_sim_for_pigauto(sim, scenario),
-    error = function(e) {
-      cat("  [ERROR] adapt_sim_for_pigauto failed:", conditionMessage(e), "\n")
-      NULL
-    }
-  )
+    set.seed(seed)
+    sim <- tryCatch(
+      sim_bace(
+        response_type  = scenario$response_type,
+        predictor_types = scenario$predictor_types,
+        phylo_signal   = ps_vec,
+        n_cases        = scenario$n_species,
+        n_species      = scenario$n_species,
+        missingness    = miss_vec
+      ),
+      error = function(e) {
+        cat("  [ERROR] sim_bace failed:", conditionMessage(e), "\n")
+        NULL
+      }
+    )
+    if (is.null(sim)) return(NULL)
+
+    adapted <- tryCatch(
+      adapt_sim_for_pigauto(sim, scenario),
+      error = function(e) {
+        cat("  [ERROR] adapt_sim_for_pigauto failed:", conditionMessage(e), "\n")
+        NULL
+      }
+    )
+  } else {
+    # Non-BM simulation path (scenarios 9+)
+    set.seed(seed)
+    tree <- ape::rtree(scenario$n_species)
+    traits <- tryCatch(
+      simulate_non_bm(
+        tree       = tree,
+        n_traits   = scenario$n_traits %||% 4L,
+        scenario   = sim_type,
+        alpha      = scenario$alpha %||% 2.0,
+        sigma      = scenario$sigma %||% 1.0,
+        shift_magnitude = scenario$shift_magnitude %||% 2.0,
+        seed       = seed
+      ),
+      error = function(e) {
+        cat("  [ERROR] simulate_non_bm failed:", conditionMessage(e), "\n")
+        NULL
+      }
+    )
+    if (is.null(traits)) return(NULL)
+    adapted <- list(traits = traits, tree = tree)
+  }
   if (is.null(adapted)) return(NULL)
 
   cat(sprintf("  Adapted data: %d species, %d traits\n",
@@ -356,6 +382,44 @@ scenarios <- list(
     predictor_types = c("gaussian", "binary", "multinomial3", "threshold3"),
     phylo_signal    = 0.4,
     n_species       = 150L
+  ),
+
+  # ---- Non-BM scenarios (9-12): where the GNN should add value ----------------
+
+  list(
+    id              = 9L,
+    description     = "OU, moderate pull (alpha=2)",
+    sim_type        = "OU",
+    alpha           = 2.0,
+    sigma           = 1.0,
+    n_species       = 150L,
+    n_traits        = 4L
+  ),
+  list(
+    id              = 10L,
+    description     = "OU, strong pull (alpha=5)",
+    sim_type        = "OU",
+    alpha           = 5.0,
+    sigma           = 1.0,
+    n_species       = 150L,
+    n_traits        = 4L
+  ),
+  list(
+    id              = 11L,
+    description     = "Regime shift (bimodal)",
+    sim_type        = "regime_shift",
+    shift_magnitude = 2.0,
+    sigma           = 1.0,
+    n_species       = 150L,
+    n_traits        = 4L
+  ),
+  list(
+    id              = 12L,
+    description     = "Non-linear correlations",
+    sim_type        = "nonlinear",
+    sigma           = 1.0,
+    n_species       = 150L,
+    n_traits        = 4L
   )
 )
 

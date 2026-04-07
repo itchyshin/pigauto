@@ -73,12 +73,14 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   trait_map <- object$trait_map
   has_trait_map <- !is.null(trait_map)
 
-  # Reconstruct model
+  # Reconstruct model (per_column_rs for backward compat with old saves)
+  per_col <- isTRUE(cfg$per_column_rs)
   model <- ResidualPhyloDAE(
-    input_dim  = as.integer(cfg$input_dim),
-    hidden_dim = as.integer(cfg$hidden_dim),
-    coord_dim  = as.integer(cfg$k_eigen),
-    cov_dim    = as.integer(cfg$cov_dim)
+    input_dim     = as.integer(cfg$input_dim),
+    hidden_dim    = as.integer(cfg$hidden_dim),
+    coord_dim     = as.integer(cfg$k_eigen),
+    cov_dim       = as.integer(cfg$cov_dim),
+    per_column_rs = per_col
   )
   model$to(device = device)
   model$load_state_dict(object$model_state)
@@ -118,15 +120,15 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
       for (step in seq_len(cfg$refine_steps)) {
         covs0 <- torch::torch_cat(list(t_MU, mask_ind0), dim = 2L)
         out   <- model(X_iter, t_coords, covs0, t_adj)
-        pred  <- t_MU + out$rs * out$delta
+        pred  <- (1 - out$rs) * t_MU + out$rs * out$delta
         X_iter <- pred
       }
     })
     latent_runs[[m]] <- as.matrix(X_iter$cpu())
   }
 
-  # Residual scale (scalar parameter, same across runs)
-  rs_val <- as.numeric(out$rs$cpu()$item())
+  # Residual scale (per-column vector or legacy scalar)
+  rs_val <- as.numeric(out$rs$cpu()$squeeze())
 
   # ---- Legacy path: no trait_map (old pigauto_fit objects) -----------------
   if (!has_trait_map) {

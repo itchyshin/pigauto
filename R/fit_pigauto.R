@@ -1,17 +1,26 @@
 #' Fit a Residual Phylo-DAE model for trait imputation
 #'
-#' Trains a \code{ResidualPhyloDAE} that learns a bounded residual correction
-#' on top of a baseline.  Supports continuous, binary, categorical, ordinal,
-#' and count traits via a unified latent space.
+#' Trains a \code{ResidualPhyloDAE} that blends a phylogenetic baseline with
+#' a learned graph-based predictor.  Supports continuous, binary, categorical,
+#' ordinal, and count traits via a unified latent space.
 #'
 #' @details
+#' **Blend formulation:**
+#' The prediction is \eqn{\hat{x} = (1-r)\mu + r\delta}, where \eqn{\mu} is
+#' the BM baseline, \eqn{\delta} is the model's direct prediction, and
+#' \eqn{r = \sigma(\rho) \times 0.5} is a per-column learnable gate bounded
+#' in (0, 0.5).  When \eqn{r = 0}, the prediction collapses to the baseline.
+#' The gate is regularised toward zero via the shrinkage penalty on
+#' \eqn{\delta - \mu}, so the model defaults to the baseline unless the
+#' GNN's correction demonstrably helps on the validation set.
+#'
 #' **Training objective** (per epoch):
 #' \enumerate{
 #'   \item A random subset of observed cells is corrupted with a learnable
 #'     mask token.
-#'   \item The model predicts the residual \eqn{\delta = X - \mu_{baseline}}.
+#'   \item The model predicts \eqn{\delta} from graph context.
 #'   \item Loss = type-specific reconstruction on corrupted cells +
-#'     \code{lambda_shrink} * MSE toward zero.
+#'     \code{lambda_shrink} * MSE of \eqn{\delta - \mu}.
 #' }
 #'
 #' **Type-specific losses:**
@@ -160,10 +169,11 @@ fit_pigauto <- function(
   # ---- Model ----------------------------------------------------------------
   cov_dim <- p + 1L
   model <- ResidualPhyloDAE(
-    input_dim  = p,
-    hidden_dim = as.integer(hidden_dim),
-    coord_dim  = as.integer(k_eigen),
-    cov_dim    = as.integer(cov_dim)
+    input_dim      = p,
+    hidden_dim     = as.integer(hidden_dim),
+    coord_dim      = as.integer(k_eigen),
+    cov_dim        = as.integer(cov_dim),
+    per_column_rs  = TRUE
   )
   model$to(device = device)
   opt <- torch::optim_adamw(model$parameters, lr = lr,
@@ -214,6 +224,7 @@ fit_pigauto <- function(
     mask_ind <- Mask_t$any(dim = 2L, keepdim = TRUE)$to(
       dtype = torch::torch_float()
     )
+
     covs_t   <- torch::torch_cat(list(t_MU, mask_ind), dim = 2L)
 
     tok   <- model$mask_token$expand(c(n, p))
@@ -223,7 +234,14 @@ fit_pigauto <- function(
     delta <- out$delta
     rs    <- out$rs
 
-    pred_scaled <- t_MU + rs * delta
+    # Blend formulation: pred = (1-rs)*MU + rs*delta.
+    # The BM baseline exactly reproduces observed values, so the
+    # additive formula  MU + rs*delta  has zero training signal
+    # (delta must be 0 for all training cells).  The blend formula
+    # makes optimal delta = X_truth (not zero), giving the model
+    # genuine gradient.  At inference, rs controls how much the
+    # model's own prediction overrides the baseline.
+    pred_scaled <- (1 - rs) * t_MU + rs * delta
 
     # ---- Loss ---------------------------------------------------------------
     if (has_trait_map) {
@@ -234,10 +252,11 @@ fit_pigauto <- function(
       )
     }
 
-    loss_shrink <- torch::nnf_mse_loss(
-      delta[masked_bool],
-      torch::torch_zeros_like(delta[masked_bool])
-    )
+    # Shrinkage penalises deviation from the baseline: delta far from
+    # MU means a large correction.  This biases toward the baseline
+    # when the model has insufficient signal.
+    deviation <- (delta - t_MU)[masked_bool]
+    loss_shrink <- torch::torch_mean(deviation$pow(2))
     loss <- loss_rec + lambda_shrink * loss_shrink
     loss$backward()
 
@@ -256,7 +275,7 @@ fit_pigauto <- function(
           mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
           covs0     <- torch::torch_cat(list(t_MU, mask_ind0), dim = 2L)
           out0      <- model(t_X, t_coords, covs0, t_adj)
-          pred0     <- t_MU + out0$rs * out0$delta
+          pred0     <- (1 - out0$rs) * t_MU + out0$rs * out0$delta
         })
         if (has_trait_map) {
           val_loss_val <- composite_val_loss(pred0, t_truth_safe, t_val,
@@ -317,7 +336,7 @@ fit_pigauto <- function(
       mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
       covs0     <- torch::torch_cat(list(t_MU, mask_ind0), dim = 2L)
       out0      <- model(t_X, t_coords, covs0, t_adj)
-      pred0     <- t_MU + out0$rs * out0$delta
+      pred0     <- (1 - out0$rs) * t_MU + out0$rs * out0$delta
       t_truth_f <- torch::torch_tensor(X_truth, dtype = torch::torch_float(),
                                        device = device)
       t_truth_f[t_truth_f$isnan()] <- 0
@@ -338,7 +357,8 @@ fit_pigauto <- function(
     dropout         = dropout,
     refine_steps    = refine_steps,
     cov_dim         = cov_dim,
-    input_dim       = p
+    input_dim       = p,
+    per_column_rs   = TRUE
   )
 
   # Backward-compat: store val_rmse and test_rmse names

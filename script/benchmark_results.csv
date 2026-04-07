@@ -7,14 +7,18 @@
 1,"All continuous, low signal",1,"BM_baseline","x1","continuous","pearson_r",-0.20816283842566
 1,"All continuous, low signal",1,"BM_baseline","x2","continuous","pearson_r",0.404626807343645
 1,"All continuous, low signal",1,"BM_baseline","x3","continuous","pearson_r",0.12595670950983
-1,"All continuous, low signal",1,"pigauto_GNN","y","continuous","rmse",1.37246777293214
-1,"All continuous, low signal",1,"pigauto_GNN","x1","continuous","rmse",1.30956021895567
-1,"All continuous, low signal",1,"pigauto_GNN","x2","continuous","rmse",1.11686627338718
-1,"All continuous, low signal",1,"pigauto_GNN","x3","continuous","rmse",1.23302250186878
-1,"All continuous, low signal",1,"pigauto_GNN","y","continuous","pearson_r",0.306591184213921
-1,"All continuous, low signal",1,"pigauto_GNN","x1","continuous","pearson_r",-0.208164361525962
-1,"All continuous, low signal",1,"pigauto_GNN","x2","continuous","pearson_r",0.404633262908233
-1,"All continuous, low signal",1,"pigauto_GNN","x3","continuous","pearson_r",0.125958213980487
+1,"All continuous, low signal",1,"pigauto_GNN","y","continuous","rmse",1.37246747355801
+1,"All continuous, low signal",1,"pigauto_GNN","x1","continuous","rmse",1.30956029247505
+1,"All continuous, low signal",1,"pigauto_GNN","x2","continuous","rmse",1.11686615704902
+1,"All continuous, low signal",1,"pigauto_GNN","x3","continuous","rmse",1.23302127336885
+1,"All continuous, low signal",1,"pigauto_GNN","y","continuous","pearson_r",0.306591214476882
+1,"All continuous, low signal",1,"pigauto_GNN","x1","continuous","pearson_r",-0.208164002852386
+1,"All continuous, low signal",1,"pigauto_GNN","x2","continuous","pearson_r",0.404627757418457
+1,"All continuous, low signal",1,"pigauto_GNN","x3","continuous","pearson_r",0.125956689674103
+1,"All continuous, low signal",1,"pigauto_GNN","y","continuous","coverage_95",0.970588235294118
+1,"All continuous, low signal",1,"pigauto_GNN","x1","continuous","coverage_95",0.814814814814815
+1,"All continuous, low signal",1,"pigauto_GNN","x2","continuous","coverage_95",0.875
+1,"All continuous, low signal",1,"pigauto_GNN","x3","continuous","coverage_95",0.928571428571429
 1,"All continuous, low signal",2,"BM_baseline","y","continuous","rmse",1.01795113211456
 1,"All continuous, low signal",2,"BM_baseline","x1","continuous","rmse",0.670200564681261
 1,"All continuous, low signal",2,"BM_baseline","x2","continuous","rmse",1.04303973349185
@@ -23,14 +27,18 @@
 1,"All continuous, low signal",2,"BM_baseline","x1","continuous","pearson_r",0.693338294535569
 1,"All continuous, low signal",2,"BM_baseline","x2","continuous","pearson_r",0.530974318221078
 1,"All continuous, low signal",2,"BM_baseline","x3","continuous","pearson_r",-0.00843303980961569
-1,"All continuous, low signal",2,"pigauto_GNN","y","continuous","rmse",1.01795007357873
-1,"All continuous, low signal",2,"pigauto_GNN","x1","continuous","rmse",0.670198350823259
-1,"All continuous, low signal",2,"pigauto_GNN","x2","continuous","rmse",1.04303780857677
-1,"All continuous, low signal",2,"pigauto_GNN","x3","continuous","rmse",1.30530416772014
-1,"All continuous, low signal",2,"pigauto_GNN","y","continuous","pearson_r",0.491362523476817
-1,"All continuous, low signal",2,"pigauto_GNN","x1","continuous","pearson_r",0.693339311368488
-1,"All continuous, low signal",2,"pigauto_GNN","x2","continuous","pearson_r",0.530975485802996
-1,"All continuous, low signal",2,"pigauto_GNN","x3","continuous","pearson_r",-0.00843201462367776
+1,"All continuous, low signal",2,"pigauto_GNN","y","continuous","rmse",1.01795001234754
+1,"All continuous, low signal",2,"pigauto_GNN","x1","continuous","rmse",0.670198047477669
+1,"All continuous, low signal",2,"pigauto_GNN","x2","continuous","rmse",1.04304003123168
+1,"All continuous, low signal",2,"pigauto_GNN","x3","continuous","rmse",1.30530391069098
+1,"All continuous, low signal",2,"pigauto_GNN","y","continuous","pearson_r",0.49136214856586
+1,"All continuous, low signal",2,"pigauto_GNN","x1","continuous","pearson_r",0.693338307227209
+1,"All continuous, low signal",2,"pigauto_GNN","x2","continuous","pearson_r",0.530975109830604
+1,"All continuous, low signal",2,"pigauto_GNN","x3","continuous","pearson_r",-0.00843288067204007
+1,"All continuous, low signal",2,"pigauto_GNN","y","continuous","coverage_95",0.838709677419355
+1,"All continuous, low signal",2,"pigauto_GNN","x1","continuous","coverage_95",0.896551724137931
+1,"All continuous, low signal",2,"pigauto_GNN","x2","continuous","coverage_95",0.91304347826087
+1,"All continuous, low signal",2,"pigauto_GNN","x3","continuous","coverage_95",0.866666666666667
 1,"All continuous, low signal",3,"BM_baseline","y","continuous","rmse",0.996364875995595
 1,"All continuous, low signal",3,"BM_baseline","x1","continuous","rmse",1.18244514076464
 1,"All continuous, low signal",3,"BM_baseline","x2","continuous","rmse",0.90466749256359
@@ -39,14 +47,18 @@
 1,"All continuous, low signal",3,"BM_baseline","x1","continuous","pearson_r",0.388774318460455
 1,"All continuous, low signal",3,"BM_baseline","x2","continuous","pearson_r",0.632865262366178
 1,"All continuous, low signal",3,"BM_baseline","x3","continuous","pearson_r",-0.0750973641737036
-1,"All continuous, low signal",3,"pigauto_GNN","y","continuous","rmse",0.996358086741387
-1,"All continuous, low signal",3,"pigauto_GNN","x1","continuous","rmse",1.18244344873366
-1,"All continuous, low signal",3,"pigauto_GNN","x2","continuous","rmse",0.904654912954584
-1,"All continuous, low signal",3,"pigauto_GNN","x3","continuous","rmse",1.36604580089145
-1,"All continuous, low signal",3,"pigauto_GNN","y","continuous","pearson_r",0.592160276537463
-1,"All continuous, low signal",3,"pigauto_GNN","x1","continuous","pearson_r",0.388777064987281
-1,"All continuous, low signal",3,"pigauto_GNN","x2","continuous","pearson_r",0.632861693430256
-1,"All continuous, low signal",3,"pigauto_GNN","x3","continuous","pearson_r",-0.0750974623233219
+1,"All continuous, low signal",3,"pigauto_GNN","y","continuous","rmse",0.996363124132174
+1,"All continuous, low signal",3,"pigauto_GNN","x1","continuous","rmse",1.18244537595788
+1,"All continuous, low signal",3,"pigauto_GNN","x2","continuous","rmse",0.904666531392483
+1,"All continuous, low signal",3,"pigauto_GNN","x3","continuous","rmse",1.36604615740649
+1,"All continuous, low signal",3,"pigauto_GNN","y","continuous","pearson_r",0.592159445293224
+1,"All continuous, low signal",3,"pigauto_GNN","x1","continuous","pearson_r",0.38877452616383
+1,"All continuous, low signal",3,"pigauto_GNN","x2","continuous","pearson_r",0.632864367889618
+1,"All continuous, low signal",3,"pigauto_GNN","x3","continuous","pearson_r",-0.075097300966506
+1,"All continuous, low signal",3,"pigauto_GNN","y","continuous","coverage_95",0.9
+1,"All continuous, low signal",3,"pigauto_GNN","x1","continuous","coverage_95",0.769230769230769
+1,"All continuous, low signal",3,"pigauto_GNN","x2","continuous","coverage_95",0.962962962962963
+1,"All continuous, low signal",3,"pigauto_GNN","x3","continuous","coverage_95",0.8
 2,"All continuous, high signal",1,"BM_baseline","y","continuous","rmse",0.92262763701178
 2,"All continuous, high signal",1,"BM_baseline","x1","continuous","rmse",0.979210368109911
 2,"All continuous, high signal",1,"BM_baseline","x2","continuous","rmse",1.1980463589766
@@ -55,14 +67,18 @@
 2,"All continuous, high signal",1,"BM_baseline","x1","continuous","pearson_r",0.583434999311098
 2,"All continuous, high signal",1,"BM_baseline","x2","continuous","pearson_r",0.393037154398365
 2,"All continuous, high signal",1,"BM_baseline","x3","continuous","pearson_r",0.662675798795684
-2,"All continuous, high signal",1,"pigauto_GNN","y","continuous","rmse",0.922628544372739
-2,"All continuous, high signal",1,"pigauto_GNN","x1","continuous","rmse",0.979212205861195
-2,"All continuous, high signal",1,"pigauto_GNN","x2","continuous","rmse",1.19805007301507
-2,"All continuous, high signal",1,"pigauto_GNN","x3","continuous","rmse",0.874395157535857
-2,"All continuous, high signal",1,"pigauto_GNN","y","continuous","pearson_r",0.345906663874763
-2,"All continuous, high signal",1,"pigauto_GNN","x1","continuous","pearson_r",0.583433514724112
-2,"All continuous, high signal",1,"pigauto_GNN","x2","continuous","pearson_r",0.393037287031268
-2,"All continuous, high signal",1,"pigauto_GNN","x3","continuous","pearson_r",0.662676379761531
+2,"All continuous, high signal",1,"pigauto_GNN","y","continuous","rmse",0.922628412945074
+2,"All continuous, high signal",1,"pigauto_GNN","x1","continuous","rmse",0.979210846532898
+2,"All continuous, high signal",1,"pigauto_GNN","x2","continuous","rmse",1.19804723051607
+2,"All continuous, high signal",1,"pigauto_GNN","x3","continuous","rmse",0.874399208657037
+2,"All continuous, high signal",1,"pigauto_GNN","y","continuous","pearson_r",0.345904925531398
+2,"All continuous, high signal",1,"pigauto_GNN","x1","continuous","pearson_r",0.583434826194624
+2,"All continuous, high signal",1,"pigauto_GNN","x2","continuous","pearson_r",0.393037978544004
+2,"All continuous, high signal",1,"pigauto_GNN","x3","continuous","pearson_r",0.662675320674281
+2,"All continuous, high signal",1,"pigauto_GNN","y","continuous","coverage_95",0.80952380952381
+2,"All continuous, high signal",1,"pigauto_GNN","x1","continuous","coverage_95",0.851851851851852
+2,"All continuous, high signal",1,"pigauto_GNN","x2","continuous","coverage_95",0.896551724137931
+2,"All continuous, high signal",1,"pigauto_GNN","x3","continuous","coverage_95",0.888888888888889
 2,"All continuous, high signal",2,"BM_baseline","y","continuous","rmse",0.728960790459857
 2,"All continuous, high signal",2,"BM_baseline","x1","continuous","rmse",0.993538584850609
 2,"All continuous, high signal",2,"BM_baseline","x2","continuous","rmse",1.0277234885496
@@ -71,14 +87,18 @@
 2,"All continuous, high signal",2,"BM_baseline","x1","continuous","pearson_r",0.598656914720392
 2,"All continuous, high signal",2,"BM_baseline","x2","continuous","pearson_r",0.405909531490918
 2,"All continuous, high signal",2,"BM_baseline","x3","continuous","pearson_r",0.415230492166956
-2,"All continuous, high signal",2,"pigauto_GNN","y","continuous","rmse",0.72895792443368
-2,"All continuous, high signal",2,"pigauto_GNN","x1","continuous","rmse",0.993535202342187
-2,"All continuous, high signal",2,"pigauto_GNN","x2","continuous","rmse",1.02772318372462
-2,"All continuous, high signal",2,"pigauto_GNN","x3","continuous","rmse",1.17467586656756
-2,"All continuous, high signal",2,"pigauto_GNN","y","continuous","pearson_r",0.74406166916031
-2,"All continuous, high signal",2,"pigauto_GNN","x1","continuous","pearson_r",0.598658725345205
-2,"All continuous, high signal",2,"pigauto_GNN","x2","continuous","pearson_r",0.40590880328741
-2,"All continuous, high signal",2,"pigauto_GNN","x3","continuous","pearson_r",0.415228333173033
+2,"All continuous, high signal",2,"pigauto_GNN","y","continuous","rmse",0.728960576122104
+2,"All continuous, high signal",2,"pigauto_GNN","x1","continuous","rmse",0.993537765147259
+2,"All continuous, high signal",2,"pigauto_GNN","x2","continuous","rmse",1.02772515450515
+2,"All continuous, high signal",2,"pigauto_GNN","x3","continuous","rmse",1.17467228317459
+2,"All continuous, high signal",2,"pigauto_GNN","y","continuous","pearson_r",0.744060808805088
+2,"All continuous, high signal",2,"pigauto_GNN","x1","continuous","pearson_r",0.59865756341939
+2,"All continuous, high signal",2,"pigauto_GNN","x2","continuous","pearson_r",0.405908936198432
+2,"All continuous, high signal",2,"pigauto_GNN","x3","continuous","pearson_r",0.41523054575825
+2,"All continuous, high signal",2,"pigauto_GNN","y","continuous","coverage_95",0.838709677419355
+2,"All continuous, high signal",2,"pigauto_GNN","x1","continuous","coverage_95",0.65625
+2,"All continuous, high signal",2,"pigauto_GNN","x2","continuous","coverage_95",0.892857142857143
+2,"All continuous, high signal",2,"pigauto_GNN","x3","continuous","coverage_95",0.818181818181818
 2,"All continuous, high signal",3,"BM_baseline","y","continuous","rmse",0.973539584583114
 2,"All continuous, high signal",3,"BM_baseline","x1","continuous","rmse",0.774359765783912
 2,"All continuous, high signal",3,"BM_baseline","x2","continuous","rmse",0.775741278360252
@@ -87,14 +107,18 @@
 2,"All continuous, high signal",3,"BM_baseline","x1","continuous","pearson_r",0.679831237635649
 2,"All continuous, high signal",3,"BM_baseline","x2","continuous","pearson_r",0.696778667675654
 2,"All continuous, high signal",3,"BM_baseline","x3","continuous","pearson_r",0.512345200914185
-2,"All continuous, high signal",3,"pigauto_GNN","y","continuous","rmse",0.973537053449528
-2,"All continuous, high signal",3,"pigauto_GNN","x1","continuous","rmse",0.77435756898945
-2,"All continuous, high signal",3,"pigauto_GNN","x2","continuous","rmse",0.775741158678533
-2,"All continuous, high signal",3,"pigauto_GNN","x3","continuous","rmse",0.87938419250864
-2,"All continuous, high signal",3,"pigauto_GNN","y","continuous","pearson_r",0.537182434192779
-2,"All continuous, high signal",3,"pigauto_GNN","x1","continuous","pearson_r",0.679833165476338
-2,"All continuous, high signal",3,"pigauto_GNN","x2","continuous","pearson_r",0.69677853114662
-2,"All continuous, high signal",3,"pigauto_GNN","x3","continuous","pearson_r",0.512344036991898
+2,"All continuous, high signal",3,"pigauto_GNN","y","continuous","rmse",0.973536219836093
+2,"All continuous, high signal",3,"pigauto_GNN","x1","continuous","rmse",0.774357640785242
+2,"All continuous, high signal",3,"pigauto_GNN","x2","continuous","rmse",0.775741773590906
+2,"All continuous, high signal",3,"pigauto_GNN","x3","continuous","rmse",0.879382802911164
+2,"All continuous, high signal",3,"pigauto_GNN","y","continuous","pearson_r",0.537184604223118
+2,"All continuous, high signal",3,"pigauto_GNN","x1","continuous","pearson_r",0.679831882836154
+2,"All continuous, high signal",3,"pigauto_GNN","x2","continuous","pearson_r",0.696778158384715
+2,"All continuous, high signal",3,"pigauto_GNN","x3","continuous","pearson_r",0.512345544900723
+2,"All continuous, high signal",3,"pigauto_GNN","y","continuous","coverage_95",0.833333333333333
+2,"All continuous, high signal",3,"pigauto_GNN","x1","continuous","coverage_95",0.888888888888889
+2,"All continuous, high signal",3,"pigauto_GNN","x2","continuous","coverage_95",0.866666666666667
+2,"All continuous, high signal",3,"pigauto_GNN","x3","continuous","coverage_95",0.875
 3,"Mixed (cont+binary+count), low signal",1,"BM_baseline","y","continuous","rmse",2.16190985287712
 3,"Mixed (cont+binary+count), low signal",1,"BM_baseline","x1","continuous","rmse",1.23712931847891
 3,"Mixed (cont+binary+count), low signal",1,"BM_baseline","x3","count","rmse",1.11000178515087
@@ -104,15 +128,17 @@
 3,"Mixed (cont+binary+count), low signal",1,"BM_baseline","x3","count","mae",0.813023593002329
 3,"Mixed (cont+binary+count), low signal",1,"BM_baseline","x2","binary","accuracy",0.571428571428571
 3,"Mixed (cont+binary+count), low signal",1,"BM_baseline","x2","binary","brier",0.247328910419207
-3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","y","continuous","rmse",2.16025598817158
-3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","x1","continuous","rmse",1.2369704629195
-3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","x3","count","rmse",1.11016611322102
-3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","y","continuous","pearson_r",0.238363254350633
-3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","x1","continuous","pearson_r",0.0223536604890954
-3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","x3","count","pearson_r",0.534284202457478
-3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","x3","count","mae",0.813100880082594
-3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","x2","binary","accuracy",0.464285714285714
-3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","x2","binary","brier",0.252260733299752
+3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","y","continuous","rmse",2.16193578232822
+3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","x1","continuous","rmse",1.23712611517292
+3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","x3","count","rmse",1.11001711652799
+3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","y","continuous","pearson_r",0.23819326421361
+3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","x1","continuous","pearson_r",0.0221974454000163
+3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","x3","count","pearson_r",0.534281571574495
+3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","y","continuous","coverage_95",0.964285714285714
+3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","x1","continuous","coverage_95",0.909090909090909
+3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","x3","count","mae",0.813030921536705
+3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","x2","binary","accuracy",0.535714285714286
+3,"Mixed (cont+binary+count), low signal",1,"pigauto_GNN","x2","binary","brier",0.253345251409189
 3,"Mixed (cont+binary+count), low signal",2,"BM_baseline","y","continuous","rmse",0.579384326999999
 3,"Mixed (cont+binary+count), low signal",2,"BM_baseline","x1","continuous","rmse",1.26442988200446
 3,"Mixed (cont+binary+count), low signal",2,"BM_baseline","x3","count","rmse",0.740261609491307
@@ -122,15 +148,17 @@
 3,"Mixed (cont+binary+count), low signal",2,"BM_baseline","x3","count","mae",0.501121712203561
 3,"Mixed (cont+binary+count), low signal",2,"BM_baseline","x2","binary","accuracy",0.586206896551724
 3,"Mixed (cont+binary+count), low signal",2,"BM_baseline","x2","binary","brier",0.242580879185654
-3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","y","continuous","rmse",0.579377398177984
-3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","x1","continuous","rmse",1.26479486165943
-3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","x3","count","rmse",0.740302339286157
-3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","y","continuous","pearson_r",0.25472877127085
-3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","x1","continuous","pearson_r",0.141493066437422
-3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","x3","count","pearson_r",0.546949789497436
-3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","x3","count","mae",0.501194243112
+3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","y","continuous","rmse",0.579379577465221
+3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","x1","continuous","rmse",1.26441285695534
+3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","x3","count","rmse",0.740265747764314
+3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","y","continuous","pearson_r",0.254537762321799
+3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","x1","continuous","pearson_r",0.141719913591832
+3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","x3","count","pearson_r",0.546942978817613
+3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","y","continuous","coverage_95",0.956521739130435
+3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","x1","continuous","coverage_95",0.967741935483871
+3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","x3","count","mae",0.501125599298669
 3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","x2","binary","accuracy",0.586206896551724
-3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","x2","binary","brier",0.248665546321884
+3,"Mixed (cont+binary+count), low signal",2,"pigauto_GNN","x2","binary","brier",0.245552274295846
 3,"Mixed (cont+binary+count), low signal",3,"BM_baseline","y","continuous","rmse",0.761172682099238
 3,"Mixed (cont+binary+count), low signal",3,"BM_baseline","x1","continuous","rmse",1.29847107446182
 3,"Mixed (cont+binary+count), low signal",3,"BM_baseline","x3","count","rmse",0.74414737928245
@@ -140,15 +168,17 @@
 3,"Mixed (cont+binary+count), low signal",3,"BM_baseline","x3","count","mae",0.542976466541512
 3,"Mixed (cont+binary+count), low signal",3,"BM_baseline","x2","binary","accuracy",0.444444444444444
 3,"Mixed (cont+binary+count), low signal",3,"BM_baseline","x2","binary","brier",0.274022038567493
-3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","y","continuous","rmse",0.761302587057917
-3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","x1","continuous","rmse",1.29796827813096
-3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","x3","count","rmse",0.744114273432305
-3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","y","continuous","pearson_r",0.636880416639036
-3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","x1","continuous","pearson_r",0.121963848949747
-3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","x3","count","pearson_r",0.600909934152865
-3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","x3","count","mae",0.542888229117589
+3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","y","continuous","rmse",0.761199491391573
+3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","x1","continuous","rmse",1.29846296758621
+3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","x3","count","rmse",0.744147172377134
+3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","y","continuous","pearson_r",0.637146627487299
+3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","x1","continuous","pearson_r",0.121557230940855
+3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","x3","count","pearson_r",0.600791462033563
+3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","y","continuous","coverage_95",0.863636363636364
+3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","x1","continuous","coverage_95",0.861111111111111
+3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","x3","count","mae",0.542976546570385
 3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","x2","binary","accuracy",0.444444444444444
-3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","x2","binary","brier",0.279170782446341
+3,"Mixed (cont+binary+count), low signal",3,"pigauto_GNN","x2","binary","brier",0.280820447309137
 4,"Mixed (cont+binary+count), high signal",1,"BM_baseline","y","continuous","rmse",0.828882073422396
 4,"Mixed (cont+binary+count), high signal",1,"BM_baseline","x1","continuous","rmse",1.09401880985824
 4,"Mixed (cont+binary+count), high signal",1,"BM_baseline","x3","count","rmse",1.03435464499294
@@ -158,15 +188,17 @@
 4,"Mixed (cont+binary+count), high signal",1,"BM_baseline","x3","count","mae",0.810604514547999
 4,"Mixed (cont+binary+count), high signal",1,"BM_baseline","x2","binary","accuracy",0.941176470588235
 4,"Mixed (cont+binary+count), high signal",1,"BM_baseline","x2","binary","brier",0.0572147583313161
-4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","y","continuous","rmse",0.828846284795707
-4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","x1","continuous","rmse",1.09390113147386
-4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","x3","count","rmse",1.03491911810607
-4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","y","continuous","pearson_r",0.734673620952243
-4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","x1","continuous","pearson_r",0.393050651871164
-4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","x3","count","pearson_r",0.554639672918307
-4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","x3","count","mae",0.811091703075802
+4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","y","continuous","rmse",0.828881178321187
+4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","x1","continuous","rmse",1.09402702894938
+4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","x3","count","rmse",1.03435905870925
+4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","y","continuous","pearson_r",0.734631747829688
+4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","x1","continuous","pearson_r",0.392769360974468
+4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","x3","count","pearson_r",0.554877339303004
+4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","y","continuous","coverage_95",0.777777777777778
+4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","x1","continuous","coverage_95",0.96
+4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","x3","count","mae",0.810603005309027
 4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","x2","binary","accuracy",0.941176470588235
-4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","x2","binary","brier",0.058379866598755
+4,"Mixed (cont+binary+count), high signal",1,"pigauto_GNN","x2","binary","brier",0.0585409798694023
 4,"Mixed (cont+binary+count), high signal",2,"BM_baseline","y","continuous","rmse",0.809825449184066
 4,"Mixed (cont+binary+count), high signal",2,"BM_baseline","x1","continuous","rmse",0.912138789239677
 4,"Mixed (cont+binary+count), high signal",2,"BM_baseline","x3","count","rmse",0.983442924571822
@@ -176,15 +208,17 @@
 4,"Mixed (cont+binary+count), high signal",2,"BM_baseline","x3","count","mae",0.762179852400706
 4,"Mixed (cont+binary+count), high signal",2,"BM_baseline","x2","binary","accuracy",0.61764705882353
 4,"Mixed (cont+binary+count), high signal",2,"BM_baseline","x2","binary","brier",0.240792316926771
-4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","y","continuous","rmse",0.811646715873426
-4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","x1","continuous","rmse",0.912066325611685
-4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","x3","count","rmse",0.983246912578044
-4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","y","continuous","pearson_r",0.555427414310236
-4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","x1","continuous","pearson_r",0.312709555255341
-4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","x3","count","pearson_r",0.507573549305461
-4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","x3","count","mae",0.762376190602163
+4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","y","continuous","rmse",0.8097832594912
+4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","x1","continuous","rmse",0.912137195589869
+4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","x3","count","rmse",0.983431659362641
+4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","y","continuous","pearson_r",0.55548709949788
+4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","x1","continuous","pearson_r",0.312598899702315
+4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","x3","count","pearson_r",0.507557194680182
+4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","y","continuous","coverage_95",0.892857142857143
+4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","x1","continuous","coverage_95",0.9
+4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","x3","count","mae",0.762169589366988
 4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","x2","binary","accuracy",0.61764705882353
-4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","x2","binary","brier",0.245994255058236
+4,"Mixed (cont+binary+count), high signal",2,"pigauto_GNN","x2","binary","brier",0.24574752898775
 4,"Mixed (cont+binary+count), high signal",3,"BM_baseline","y","continuous","rmse",0.270162886050287
 4,"Mixed (cont+binary+count), high signal",3,"BM_baseline","x1","continuous","rmse",0.91660526416755
 4,"Mixed (cont+binary+count), high signal",3,"BM_baseline","x3","count","rmse",2.23282011316503
@@ -194,15 +228,17 @@
 4,"Mixed (cont+binary+count), high signal",3,"BM_baseline","x3","count","mae",0.876460493354048
 4,"Mixed (cont+binary+count), high signal",3,"BM_baseline","x2","binary","accuracy",0.590909090909091
 4,"Mixed (cont+binary+count), high signal",3,"BM_baseline","x2","binary","brier",0.244091300827871
-4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","y","continuous","rmse",0.269313596859631
-4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","x1","continuous","rmse",0.91655408383635
-4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","x3","count","rmse",2.23246668843425
-4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","y","continuous","pearson_r",0.839447616489275
-4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","x1","continuous","pearson_r",0.304652859430491
-4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","x3","count","pearson_r",0.74742967480975
-4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","x3","count","mae",0.876006614493686
-4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","x2","binary","accuracy",0.636363636363636
-4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","x2","binary","brier",0.244845261121483
+4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","y","continuous","rmse",0.270159361944678
+4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","x1","continuous","rmse",0.916602184212086
+4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","x3","count","rmse",2.23275277836857
+4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","y","continuous","pearson_r",0.838781679606632
+4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","x1","continuous","pearson_r",0.304571832162353
+4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","x3","count","pearson_r",0.747342613324408
+4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","y","continuous","coverage_95",0.933333333333333
+4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","x1","continuous","coverage_95",0.92
+4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","x3","count","mae",0.87644432178473
+4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","x2","binary","accuracy",0.590909090909091
+4,"Mixed (cont+binary+count), high signal",3,"pigauto_GNN","x2","binary","brier",0.240743692494104
 5,"Mixed + categorical",1,"BM_baseline","y","continuous","rmse",1.15504461698947
 5,"Mixed + categorical",1,"BM_baseline","x1","continuous","rmse",1.74447041509265
 5,"Mixed + categorical",1,"BM_baseline","y","continuous","pearson_r",0.22205648388003
@@ -210,13 +246,15 @@
 5,"Mixed + categorical",1,"BM_baseline","x2","categorical","accuracy",0.387096774193548
 5,"Mixed + categorical",1,"BM_baseline","x3","binary","accuracy",0.578947368421053
 5,"Mixed + categorical",1,"BM_baseline","x3","binary","brier",0.249343499006117
-5,"Mixed + categorical",1,"pigauto_GNN","y","continuous","rmse",1.15514338633636
-5,"Mixed + categorical",1,"pigauto_GNN","x1","continuous","rmse",1.74377050607596
-5,"Mixed + categorical",1,"pigauto_GNN","y","continuous","pearson_r",0.221718597668188
-5,"Mixed + categorical",1,"pigauto_GNN","x1","continuous","pearson_r",-0.0345880806809026
-5,"Mixed + categorical",1,"pigauto_GNN","x2","categorical","accuracy",0.32258064516129
+5,"Mixed + categorical",1,"pigauto_GNN","y","continuous","rmse",1.15503628938775
+5,"Mixed + categorical",1,"pigauto_GNN","x1","continuous","rmse",1.74446670201555
+5,"Mixed + categorical",1,"pigauto_GNN","y","continuous","pearson_r",0.222060617759245
+5,"Mixed + categorical",1,"pigauto_GNN","x1","continuous","pearson_r",-0.0348054133708026
+5,"Mixed + categorical",1,"pigauto_GNN","y","continuous","coverage_95",0.787878787878788
+5,"Mixed + categorical",1,"pigauto_GNN","x1","continuous","coverage_95",0.9
+5,"Mixed + categorical",1,"pigauto_GNN","x2","categorical","accuracy",0.258064516129032
 5,"Mixed + categorical",1,"pigauto_GNN","x3","binary","accuracy",0.526315789473684
-5,"Mixed + categorical",1,"pigauto_GNN","x3","binary","brier",0.259164712825595
+5,"Mixed + categorical",1,"pigauto_GNN","x3","binary","brier",0.246630456986447
 5,"Mixed + categorical",2,"BM_baseline","y","continuous","rmse",1.00364949423141
 5,"Mixed + categorical",2,"BM_baseline","x1","continuous","rmse",0.903962134587258
 5,"Mixed + categorical",2,"BM_baseline","y","continuous","pearson_r",0.368977782675053
@@ -224,13 +262,15 @@
 5,"Mixed + categorical",2,"BM_baseline","x2","categorical","accuracy",0.366666666666667
 5,"Mixed + categorical",2,"BM_baseline","x3","binary","accuracy",0.65
 5,"Mixed + categorical",2,"BM_baseline","x3","binary","brier",0.231189809439246
-5,"Mixed + categorical",2,"pigauto_GNN","y","continuous","rmse",1.00401719772819
-5,"Mixed + categorical",2,"pigauto_GNN","x1","continuous","rmse",0.904361295057566
-5,"Mixed + categorical",2,"pigauto_GNN","y","continuous","pearson_r",0.368916928313435
-5,"Mixed + categorical",2,"pigauto_GNN","x1","continuous","pearson_r",0.433881438639159
+5,"Mixed + categorical",2,"pigauto_GNN","y","continuous","rmse",1.00364821247701
+5,"Mixed + categorical",2,"pigauto_GNN","x1","continuous","rmse",0.9039591190146
+5,"Mixed + categorical",2,"pigauto_GNN","y","continuous","pearson_r",0.368978049435018
+5,"Mixed + categorical",2,"pigauto_GNN","x1","continuous","pearson_r",0.434031229994918
+5,"Mixed + categorical",2,"pigauto_GNN","y","continuous","coverage_95",0.925925925925926
+5,"Mixed + categorical",2,"pigauto_GNN","x1","continuous","coverage_95",0.916666666666667
 5,"Mixed + categorical",2,"pigauto_GNN","x2","categorical","accuracy",0.366666666666667
 5,"Mixed + categorical",2,"pigauto_GNN","x3","binary","accuracy",0.65
-5,"Mixed + categorical",2,"pigauto_GNN","x3","binary","brier",0.205106055119099
+5,"Mixed + categorical",2,"pigauto_GNN","x3","binary","brier",0.227657263400211
 5,"Mixed + categorical",3,"BM_baseline","y","continuous","rmse",1.52522624828322
 5,"Mixed + categorical",3,"BM_baseline","x1","continuous","rmse",0.96789508164336
 5,"Mixed + categorical",3,"BM_baseline","y","continuous","pearson_r",-0.265205786069962
@@ -238,13 +278,15 @@
 5,"Mixed + categorical",3,"BM_baseline","x2","categorical","accuracy",0.482758620689655
 5,"Mixed + categorical",3,"BM_baseline","x3","binary","accuracy",0.533333333333333
 5,"Mixed + categorical",3,"BM_baseline","x3","binary","brier",0.263581267217631
-5,"Mixed + categorical",3,"pigauto_GNN","y","continuous","rmse",1.52503529133963
-5,"Mixed + categorical",3,"pigauto_GNN","x1","continuous","rmse",0.96813953648405
-5,"Mixed + categorical",3,"pigauto_GNN","y","continuous","pearson_r",-0.265292331552
-5,"Mixed + categorical",3,"pigauto_GNN","x1","continuous","pearson_r",0.297806159821713
-5,"Mixed + categorical",3,"pigauto_GNN","x2","categorical","accuracy",0.344827586206897
+5,"Mixed + categorical",3,"pigauto_GNN","y","continuous","rmse",1.52524706804251
+5,"Mixed + categorical",3,"pigauto_GNN","x1","continuous","rmse",0.967903603585029
+5,"Mixed + categorical",3,"pigauto_GNN","y","continuous","pearson_r",-0.265196847571504
+5,"Mixed + categorical",3,"pigauto_GNN","x1","continuous","pearson_r",0.297776119341253
+5,"Mixed + categorical",3,"pigauto_GNN","y","continuous","coverage_95",0.7
+5,"Mixed + categorical",3,"pigauto_GNN","x1","continuous","coverage_95",0.88235294117647
+5,"Mixed + categorical",3,"pigauto_GNN","x2","categorical","accuracy",0.379310344827586
 5,"Mixed + categorical",3,"pigauto_GNN","x3","binary","accuracy",0.533333333333333
-5,"Mixed + categorical",3,"pigauto_GNN","x3","binary","brier",0.259650494681128
+5,"Mixed + categorical",3,"pigauto_GNN","x3","binary","brier",0.280615564527418
 6,"High missingness (50%)",1,"BM_baseline","y","continuous","rmse",2.11460226383517
 6,"High missingness (50%)",1,"BM_baseline","x1","continuous","rmse",1.09116922515747
 6,"High missingness (50%)",1,"BM_baseline","x2","continuous","rmse",1.32981817426122
@@ -253,14 +295,18 @@
 6,"High missingness (50%)",1,"BM_baseline","x1","continuous","pearson_r",0.354823016468488
 6,"High missingness (50%)",1,"BM_baseline","x2","continuous","pearson_r",0.032329513606464
 6,"High missingness (50%)",1,"BM_baseline","x3","continuous","pearson_r",0.219818149637365
-6,"High missingness (50%)",1,"pigauto_GNN","y","continuous","rmse",2.11460611168547
-6,"High missingness (50%)",1,"pigauto_GNN","x1","continuous","rmse",1.09117178221369
-6,"High missingness (50%)",1,"pigauto_GNN","x2","continuous","rmse",1.32981733629837
-6,"High missingness (50%)",1,"pigauto_GNN","x3","continuous","rmse",1.36227673124421
-6,"High missingness (50%)",1,"pigauto_GNN","y","continuous","pearson_r",-0.242875730486007
-6,"High missingness (50%)",1,"pigauto_GNN","x1","continuous","pearson_r",0.354821371500877
-6,"High missingness (50%)",1,"pigauto_GNN","x2","continuous","pearson_r",0.0323321146181411
-6,"High missingness (50%)",1,"pigauto_GNN","x3","continuous","pearson_r",0.219819143945091
+6,"High missingness (50%)",1,"pigauto_GNN","y","continuous","rmse",2.11460655815376
+6,"High missingness (50%)",1,"pigauto_GNN","x1","continuous","rmse",1.09117004823459
+6,"High missingness (50%)",1,"pigauto_GNN","x2","continuous","rmse",1.32981841697187
+6,"High missingness (50%)",1,"pigauto_GNN","x3","continuous","rmse",1.36227745294314
+6,"High missingness (50%)",1,"pigauto_GNN","y","continuous","pearson_r",-0.242875413962561
+6,"High missingness (50%)",1,"pigauto_GNN","x1","continuous","pearson_r",0.354822359577505
+6,"High missingness (50%)",1,"pigauto_GNN","x2","continuous","pearson_r",0.0323304504215788
+6,"High missingness (50%)",1,"pigauto_GNN","x3","continuous","pearson_r",0.219818475517887
+6,"High missingness (50%)",1,"pigauto_GNN","y","continuous","coverage_95",0.75
+6,"High missingness (50%)",1,"pigauto_GNN","x1","continuous","coverage_95",0.705882352941177
+6,"High missingness (50%)",1,"pigauto_GNN","x2","continuous","coverage_95",0.803030303030303
+6,"High missingness (50%)",1,"pigauto_GNN","x3","continuous","coverage_95",0.884615384615385
 6,"High missingness (50%)",2,"BM_baseline","y","continuous","rmse",1.22702728123623
 6,"High missingness (50%)",2,"BM_baseline","x1","continuous","rmse",1.09136635553498
 6,"High missingness (50%)",2,"BM_baseline","x2","continuous","rmse",1.04553136464298
@@ -269,14 +315,18 @@
 6,"High missingness (50%)",2,"BM_baseline","x1","continuous","pearson_r",0.267092884617994
 6,"High missingness (50%)",2,"BM_baseline","x2","continuous","pearson_r",0.337442048259425
 6,"High missingness (50%)",2,"BM_baseline","x3","continuous","pearson_r",-0.0457560317784506
-6,"High missingness (50%)",2,"pigauto_GNN","y","continuous","rmse",1.2270260922772
-6,"High missingness (50%)",2,"pigauto_GNN","x1","continuous","rmse",1.09136519371654
-6,"High missingness (50%)",2,"pigauto_GNN","x2","continuous","rmse",1.0455323929417
-6,"High missingness (50%)",2,"pigauto_GNN","x3","continuous","rmse",1.52624487858217
-6,"High missingness (50%)",2,"pigauto_GNN","y","continuous","pearson_r",-0.115299017936789
-6,"High missingness (50%)",2,"pigauto_GNN","x1","continuous","pearson_r",0.267093179342994
-6,"High missingness (50%)",2,"pigauto_GNN","x2","continuous","pearson_r",0.337442946532852
-6,"High missingness (50%)",2,"pigauto_GNN","x3","continuous","pearson_r",-0.0457541417160638
+6,"High missingness (50%)",2,"pigauto_GNN","y","continuous","rmse",1.22702684588588
+6,"High missingness (50%)",2,"pigauto_GNN","x1","continuous","rmse",1.09136567764352
+6,"High missingness (50%)",2,"pigauto_GNN","x2","continuous","rmse",1.04553147375695
+6,"High missingness (50%)",2,"pigauto_GNN","x3","continuous","rmse",1.52624331876348
+6,"High missingness (50%)",2,"pigauto_GNN","y","continuous","pearson_r",-0.115300642775522
+6,"High missingness (50%)",2,"pigauto_GNN","x1","continuous","pearson_r",0.267093245990421
+6,"High missingness (50%)",2,"pigauto_GNN","x2","continuous","pearson_r",0.337442765584326
+6,"High missingness (50%)",2,"pigauto_GNN","x3","continuous","pearson_r",-0.0457568618373952
+6,"High missingness (50%)",2,"pigauto_GNN","y","continuous","coverage_95",0.875
+6,"High missingness (50%)",2,"pigauto_GNN","x1","continuous","coverage_95",0.877551020408163
+6,"High missingness (50%)",2,"pigauto_GNN","x2","continuous","coverage_95",0.969230769230769
+6,"High missingness (50%)",2,"pigauto_GNN","x3","continuous","coverage_95",0.890909090909091
 6,"High missingness (50%)",3,"BM_baseline","y","continuous","rmse",1.24050493678295
 6,"High missingness (50%)",3,"BM_baseline","x1","continuous","rmse",1.3211864576878
 6,"High missingness (50%)",3,"BM_baseline","x2","continuous","rmse",1.29229858756149
@@ -285,14 +335,18 @@
 6,"High missingness (50%)",3,"BM_baseline","x1","continuous","pearson_r",0.022692599245658
 6,"High missingness (50%)",3,"BM_baseline","x2","continuous","pearson_r",0.272383592821543
 6,"High missingness (50%)",3,"BM_baseline","x3","continuous","pearson_r",0.0169100663692162
-6,"High missingness (50%)",3,"pigauto_GNN","y","continuous","rmse",1.24050351068999
-6,"High missingness (50%)",3,"pigauto_GNN","x1","continuous","rmse",1.3211883784388
-6,"High missingness (50%)",3,"pigauto_GNN","x2","continuous","rmse",1.29229020594757
-6,"High missingness (50%)",3,"pigauto_GNN","x3","continuous","rmse",1.32288306851428
-6,"High missingness (50%)",3,"pigauto_GNN","y","continuous","pearson_r",0.206138651753804
-6,"High missingness (50%)",3,"pigauto_GNN","x1","continuous","pearson_r",0.0226924521453669
-6,"High missingness (50%)",3,"pigauto_GNN","x2","continuous","pearson_r",0.272386061773137
-6,"High missingness (50%)",3,"pigauto_GNN","x3","continuous","pearson_r",0.0169121477689554
+6,"High missingness (50%)",3,"pigauto_GNN","y","continuous","rmse",1.24050470603666
+6,"High missingness (50%)",3,"pigauto_GNN","x1","continuous","rmse",1.32118720284503
+6,"High missingness (50%)",3,"pigauto_GNN","x2","continuous","rmse",1.29229361432996
+6,"High missingness (50%)",3,"pigauto_GNN","x3","continuous","rmse",1.32288593596166
+6,"High missingness (50%)",3,"pigauto_GNN","y","continuous","pearson_r",0.206138151550111
+6,"High missingness (50%)",3,"pigauto_GNN","x1","continuous","pearson_r",0.0226922874438996
+6,"High missingness (50%)",3,"pigauto_GNN","x2","continuous","pearson_r",0.272384986225211
+6,"High missingness (50%)",3,"pigauto_GNN","x3","continuous","pearson_r",0.0169108145344987
+6,"High missingness (50%)",3,"pigauto_GNN","y","continuous","coverage_95",0.796296296296296
+6,"High missingness (50%)",3,"pigauto_GNN","x1","continuous","coverage_95",0.725806451612903
+6,"High missingness (50%)",3,"pigauto_GNN","x2","continuous","coverage_95",0.826923076923077
+6,"High missingness (50%)",3,"pigauto_GNN","x3","continuous","coverage_95",0.824561403508772
 7,"Near-zero phylogenetic signal",1,"BM_baseline","y","continuous","rmse",1.15367149968779
 7,"Near-zero phylogenetic signal",1,"BM_baseline","x1","continuous","rmse",1.67836362883044
 7,"Near-zero phylogenetic signal",1,"BM_baseline","x2","continuous","rmse",0.753616592120893
@@ -301,14 +355,18 @@
 7,"Near-zero phylogenetic signal",1,"BM_baseline","x1","continuous","pearson_r",0.0497139532641635
 7,"Near-zero phylogenetic signal",1,"BM_baseline","x2","continuous","pearson_r",0.445263279238688
 7,"Near-zero phylogenetic signal",1,"BM_baseline","x3","continuous","pearson_r",0.0174206871629573
-7,"Near-zero phylogenetic signal",1,"pigauto_GNN","y","continuous","rmse",1.15367144189355
-7,"Near-zero phylogenetic signal",1,"pigauto_GNN","x1","continuous","rmse",1.6783660606628
-7,"Near-zero phylogenetic signal",1,"pigauto_GNN","x2","continuous","rmse",0.75361536738311
-7,"Near-zero phylogenetic signal",1,"pigauto_GNN","x3","continuous","rmse",1.28366966861832
-7,"Near-zero phylogenetic signal",1,"pigauto_GNN","y","continuous","pearson_r",0.269032925733221
-7,"Near-zero phylogenetic signal",1,"pigauto_GNN","x1","continuous","pearson_r",0.0497149154000201
-7,"Near-zero phylogenetic signal",1,"pigauto_GNN","x2","continuous","pearson_r",0.445262331881481
-7,"Near-zero phylogenetic signal",1,"pigauto_GNN","x3","continuous","pearson_r",0.0174218332437208
+7,"Near-zero phylogenetic signal",1,"pigauto_GNN","y","continuous","rmse",1.15367112312719
+7,"Near-zero phylogenetic signal",1,"pigauto_GNN","x1","continuous","rmse",1.67836397210436
+7,"Near-zero phylogenetic signal",1,"pigauto_GNN","x2","continuous","rmse",0.753616448413023
+7,"Near-zero phylogenetic signal",1,"pigauto_GNN","x3","continuous","rmse",1.28366955564206
+7,"Near-zero phylogenetic signal",1,"pigauto_GNN","y","continuous","pearson_r",0.26903413493956
+7,"Near-zero phylogenetic signal",1,"pigauto_GNN","x1","continuous","pearson_r",0.0497146190744842
+7,"Near-zero phylogenetic signal",1,"pigauto_GNN","x2","continuous","pearson_r",0.445262346037572
+7,"Near-zero phylogenetic signal",1,"pigauto_GNN","x3","continuous","pearson_r",0.0174216836932765
+7,"Near-zero phylogenetic signal",1,"pigauto_GNN","y","continuous","coverage_95",0.862068965517241
+7,"Near-zero phylogenetic signal",1,"pigauto_GNN","x1","continuous","coverage_95",0.892857142857143
+7,"Near-zero phylogenetic signal",1,"pigauto_GNN","x2","continuous","coverage_95",0.904761904761905
+7,"Near-zero phylogenetic signal",1,"pigauto_GNN","x3","continuous","coverage_95",0.857142857142857
 7,"Near-zero phylogenetic signal",2,"BM_baseline","y","continuous","rmse",2.04907989749145
 7,"Near-zero phylogenetic signal",2,"BM_baseline","x1","continuous","rmse",1.47602211549232
 7,"Near-zero phylogenetic signal",2,"BM_baseline","x2","continuous","rmse",1.27888691042341
@@ -317,14 +375,18 @@
 7,"Near-zero phylogenetic signal",2,"BM_baseline","x1","continuous","pearson_r",-0.178297830775392
 7,"Near-zero phylogenetic signal",2,"BM_baseline","x2","continuous","pearson_r",-0.0442888117062177
 7,"Near-zero phylogenetic signal",2,"BM_baseline","x3","continuous","pearson_r",0.375233247151103
-7,"Near-zero phylogenetic signal",2,"pigauto_GNN","y","continuous","rmse",2.0490818304883
-7,"Near-zero phylogenetic signal",2,"pigauto_GNN","x1","continuous","rmse",1.47602212826858
-7,"Near-zero phylogenetic signal",2,"pigauto_GNN","x2","continuous","rmse",1.27888284665547
-7,"Near-zero phylogenetic signal",2,"pigauto_GNN","x3","continuous","rmse",1.14167116197157
-7,"Near-zero phylogenetic signal",2,"pigauto_GNN","y","continuous","pearson_r",-0.0349960043397563
-7,"Near-zero phylogenetic signal",2,"pigauto_GNN","x1","continuous","pearson_r",-0.178295677895405
-7,"Near-zero phylogenetic signal",2,"pigauto_GNN","x2","continuous","pearson_r",-0.0442874777644222
-7,"Near-zero phylogenetic signal",2,"pigauto_GNN","x3","continuous","pearson_r",0.375232889332029
+7,"Near-zero phylogenetic signal",2,"pigauto_GNN","y","continuous","rmse",2.04908070937635
+7,"Near-zero phylogenetic signal",2,"pigauto_GNN","x1","continuous","rmse",1.47602102472161
+7,"Near-zero phylogenetic signal",2,"pigauto_GNN","x2","continuous","rmse",1.27888717284427
+7,"Near-zero phylogenetic signal",2,"pigauto_GNN","x3","continuous","rmse",1.14166917412999
+7,"Near-zero phylogenetic signal",2,"pigauto_GNN","y","continuous","pearson_r",-0.0349953056525371
+7,"Near-zero phylogenetic signal",2,"pigauto_GNN","x1","continuous","pearson_r",-0.17829733989562
+7,"Near-zero phylogenetic signal",2,"pigauto_GNN","x2","continuous","pearson_r",-0.044289212841701
+7,"Near-zero phylogenetic signal",2,"pigauto_GNN","x3","continuous","pearson_r",0.375233190658285
+7,"Near-zero phylogenetic signal",2,"pigauto_GNN","y","continuous","coverage_95",0.967741935483871
+7,"Near-zero phylogenetic signal",2,"pigauto_GNN","x1","continuous","coverage_95",0.848484848484849
+7,"Near-zero phylogenetic signal",2,"pigauto_GNN","x2","continuous","coverage_95",0.96
+7,"Near-zero phylogenetic signal",2,"pigauto_GNN","x3","continuous","coverage_95",0.791666666666667
 7,"Near-zero phylogenetic signal",3,"BM_baseline","y","continuous","rmse",1.51247302728788
 7,"Near-zero phylogenetic signal",3,"BM_baseline","x1","continuous","rmse",1.54055777567588
 7,"Near-zero phylogenetic signal",3,"BM_baseline","x2","continuous","rmse",1.1967258389676
@@ -333,14 +395,18 @@
 7,"Near-zero phylogenetic signal",3,"BM_baseline","x1","continuous","pearson_r",-0.149543124552412
 7,"Near-zero phylogenetic signal",3,"BM_baseline","x2","continuous","pearson_r",0.228319797217784
 7,"Near-zero phylogenetic signal",3,"BM_baseline","x3","continuous","pearson_r",0.355887457544419
-7,"Near-zero phylogenetic signal",3,"pigauto_GNN","y","continuous","rmse",1.51247245415468
-7,"Near-zero phylogenetic signal",3,"pigauto_GNN","x1","continuous","rmse",1.54055220130978
-7,"Near-zero phylogenetic signal",3,"pigauto_GNN","x2","continuous","rmse",1.19672721363628
-7,"Near-zero phylogenetic signal",3,"pigauto_GNN","x3","continuous","rmse",1.02143266045841
-7,"Near-zero phylogenetic signal",3,"pigauto_GNN","y","continuous","pearson_r",0.152330881181044
-7,"Near-zero phylogenetic signal",3,"pigauto_GNN","x1","continuous","pearson_r",-0.149546566394909
-7,"Near-zero phylogenetic signal",3,"pigauto_GNN","x2","continuous","pearson_r",0.228318026519993
-7,"Near-zero phylogenetic signal",3,"pigauto_GNN","x3","continuous","pearson_r",0.355888808872801
+7,"Near-zero phylogenetic signal",3,"pigauto_GNN","y","continuous","rmse",1.51247255604291
+7,"Near-zero phylogenetic signal",3,"pigauto_GNN","x1","continuous","rmse",1.54055524803791
+7,"Near-zero phylogenetic signal",3,"pigauto_GNN","x2","continuous","rmse",1.19672669052041
+7,"Near-zero phylogenetic signal",3,"pigauto_GNN","x3","continuous","rmse",1.02143585082251
+7,"Near-zero phylogenetic signal",3,"pigauto_GNN","y","continuous","pearson_r",0.152330101712135
+7,"Near-zero phylogenetic signal",3,"pigauto_GNN","x1","continuous","pearson_r",-0.14954532058666
+7,"Near-zero phylogenetic signal",3,"pigauto_GNN","x2","continuous","pearson_r",0.228319701828986
+7,"Near-zero phylogenetic signal",3,"pigauto_GNN","x3","continuous","pearson_r",0.355887605405752
+7,"Near-zero phylogenetic signal",3,"pigauto_GNN","y","continuous","coverage_95",0.727272727272727
+7,"Near-zero phylogenetic signal",3,"pigauto_GNN","x1","continuous","coverage_95",0.971428571428571
+7,"Near-zero phylogenetic signal",3,"pigauto_GNN","x2","continuous","coverage_95",0.774193548387097
+7,"Near-zero phylogenetic signal",3,"pigauto_GNN","x3","continuous","coverage_95",0.88
 8,"All 5 types",1,"BM_baseline","y","count","rmse",1.06637286963226
 8,"All 5 types",1,"BM_baseline","x1","continuous","rmse",1.67884522791914
 8,"All 5 types",1,"BM_baseline","x4","ordinal","rmse",1.02538730963508
@@ -351,16 +417,17 @@
 8,"All 5 types",1,"BM_baseline","x2","binary","accuracy",0.478260869565217
 8,"All 5 types",1,"BM_baseline","x3","categorical","accuracy",0.464285714285714
 8,"All 5 types",1,"BM_baseline","x2","binary","brier",0.261179754950111
-8,"All 5 types",1,"pigauto_GNN","y","count","rmse",1.06635513629288
-8,"All 5 types",1,"pigauto_GNN","x1","continuous","rmse",1.6784910300228
-8,"All 5 types",1,"pigauto_GNN","x4","ordinal","rmse",1.02518263755054
-8,"All 5 types",1,"pigauto_GNN","y","count","pearson_r",0.356004779222151
-8,"All 5 types",1,"pigauto_GNN","x1","continuous","pearson_r",-0.141445656041561
-8,"All 5 types",1,"pigauto_GNN","y","count","mae",0.854742811575274
+8,"All 5 types",1,"pigauto_GNN","y","count","rmse",1.06637474555134
+8,"All 5 types",1,"pigauto_GNN","x1","continuous","rmse",1.67884715838118
+8,"All 5 types",1,"pigauto_GNN","x4","ordinal","rmse",1.02538585608515
+8,"All 5 types",1,"pigauto_GNN","y","count","pearson_r",0.356104786106194
+8,"All 5 types",1,"pigauto_GNN","x1","continuous","pearson_r",-0.141432047639769
+8,"All 5 types",1,"pigauto_GNN","x1","continuous","coverage_95",0.93939393939394
+8,"All 5 types",1,"pigauto_GNN","y","count","mae",0.854730575726242
 8,"All 5 types",1,"pigauto_GNN","x4","ordinal","spearman_rho",0.124721912892465
-8,"All 5 types",1,"pigauto_GNN","x2","binary","accuracy",0.478260869565217
-8,"All 5 types",1,"pigauto_GNN","x3","categorical","accuracy",0.392857142857143
-8,"All 5 types",1,"pigauto_GNN","x2","binary","brier",0.265009388752084
+8,"All 5 types",1,"pigauto_GNN","x2","binary","accuracy",0.521739130434783
+8,"All 5 types",1,"pigauto_GNN","x3","categorical","accuracy",0.5
+8,"All 5 types",1,"pigauto_GNN","x2","binary","brier",0.264443020253209
 8,"All 5 types",2,"BM_baseline","y","count","rmse",1.23181726101874
 8,"All 5 types",2,"BM_baseline","x1","continuous","rmse",1.1094339080432
 8,"All 5 types",2,"BM_baseline","x4","ordinal","rmse",1.13896790402604
@@ -371,16 +438,17 @@
 8,"All 5 types",2,"BM_baseline","x2","binary","accuracy",0.565217391304348
 8,"All 5 types",2,"BM_baseline","x3","categorical","accuracy",0.5
 8,"All 5 types",2,"BM_baseline","x2","binary","brier",0.261898636480576
-8,"All 5 types",2,"pigauto_GNN","y","count","rmse",1.23154142862576
-8,"All 5 types",2,"pigauto_GNN","x1","continuous","rmse",1.10912610453169
-8,"All 5 types",2,"pigauto_GNN","x4","ordinal","rmse",1.13927561669966
-8,"All 5 types",2,"pigauto_GNN","y","count","pearson_r",0.310381882780847
-8,"All 5 types",2,"pigauto_GNN","x1","continuous","pearson_r",0.472882114422407
-8,"All 5 types",2,"pigauto_GNN","y","count","mae",0.891490929887753
+8,"All 5 types",2,"pigauto_GNN","y","count","rmse",1.23181532924729
+8,"All 5 types",2,"pigauto_GNN","x1","continuous","rmse",1.10943016964637
+8,"All 5 types",2,"pigauto_GNN","x4","ordinal","rmse",1.13897349794246
+8,"All 5 types",2,"pigauto_GNN","y","count","pearson_r",0.310292066348378
+8,"All 5 types",2,"pigauto_GNN","x1","continuous","pearson_r",0.472515946779556
+8,"All 5 types",2,"pigauto_GNN","x1","continuous","coverage_95",0.848484848484849
+8,"All 5 types",2,"pigauto_GNN","y","count","mae",0.891624485903543
 8,"All 5 types",2,"pigauto_GNN","x4","ordinal","spearman_rho",0.345172122057615
 8,"All 5 types",2,"pigauto_GNN","x2","binary","accuracy",0.565217391304348
 8,"All 5 types",2,"pigauto_GNN","x3","categorical","accuracy",0.321428571428571
-8,"All 5 types",2,"pigauto_GNN","x2","binary","brier",0.256221127931026
+8,"All 5 types",2,"pigauto_GNN","x2","binary","brier",0.253769190120496
 8,"All 5 types",3,"BM_baseline","y","count","rmse",1.11643976662033
 8,"All 5 types",3,"BM_baseline","x1","continuous","rmse",0.817476211566462
 8,"All 5 types",3,"BM_baseline","x4","ordinal","rmse",1.28824348635181
@@ -391,13 +459,14 @@
 8,"All 5 types",3,"BM_baseline","x2","binary","accuracy",0.548387096774194
 8,"All 5 types",3,"BM_baseline","x3","categorical","accuracy",0.310344827586207
 8,"All 5 types",3,"BM_baseline","x2","binary","brier",0.249042416435616
-8,"All 5 types",3,"pigauto_GNN","y","count","rmse",1.11645470084137
-8,"All 5 types",3,"pigauto_GNN","x1","continuous","rmse",0.816434751384051
-8,"All 5 types",3,"pigauto_GNN","x4","ordinal","rmse",1.28754883966845
-8,"All 5 types",3,"pigauto_GNN","y","count","pearson_r",0.0990590198383602
-8,"All 5 types",3,"pigauto_GNN","x1","continuous","pearson_r",0.70864969187081
-8,"All 5 types",3,"pigauto_GNN","y","count","mae",0.826109403391214
-8,"All 5 types",3,"pigauto_GNN","x4","ordinal","spearman_rho",0.239025421605973
-8,"All 5 types",3,"pigauto_GNN","x2","binary","accuracy",0.354838709677419
-8,"All 5 types",3,"pigauto_GNN","x3","categorical","accuracy",0.344827586206897
-8,"All 5 types",3,"pigauto_GNN","x2","binary","brier",0.254829022051256
+8,"All 5 types",3,"pigauto_GNN","y","count","rmse",1.11643255290158
+8,"All 5 types",3,"pigauto_GNN","x1","continuous","rmse",0.817495628846334
+8,"All 5 types",3,"pigauto_GNN","x4","ordinal","rmse",1.28819842064227
+8,"All 5 types",3,"pigauto_GNN","y","count","pearson_r",0.0989341064820846
+8,"All 5 types",3,"pigauto_GNN","x1","continuous","pearson_r",0.708974957297492
+8,"All 5 types",3,"pigauto_GNN","x1","continuous","coverage_95",1
+8,"All 5 types",3,"pigauto_GNN","y","count","mae",0.825582412373775
+8,"All 5 types",3,"pigauto_GNN","x4","ordinal","spearman_rho",0.24726767752342
+8,"All 5 types",3,"pigauto_GNN","x2","binary","accuracy",0.483870967741935
+8,"All 5 types",3,"pigauto_GNN","x3","categorical","accuracy",0.275862068965517
+8,"All 5 types",3,"pigauto_GNN","x2","binary","brier",0.252454851205795
