@@ -4,30 +4,58 @@
 \alias{evaluate_imputation}
 \title{Evaluate imputation performance against known values}
 \usage{
-evaluate_imputation(pred, truth, splits, pred_se = NULL)
+evaluate_imputation(pred, truth, splits, pred_se = NULL, trait_map = NULL)
 }
 \arguments{
-\item{pred}{matrix of predicted values (in z-score scale, as returned by
-the internal model, not back-transformed).}
+\item{pred}{predicted values: either a numeric matrix in latent scale
+(same dimensions as \code{truth}), or a \code{"pigauto_pred"} object
+from \code{\link{predict.pigauto_fit}}.}
 
-\item{truth}{matrix of true values (in z-score scale).}
+\item{truth}{numeric matrix of true values in latent scale (from
+\code{pigauto_data$X_scaled}).}
 
 \item{splits}{list (output of \code{\link{make_missing_splits}}).}
 
-\item{pred_se}{numeric matrix of prediction standard errors (same scale as
-\code{pred}). When supplied, 95\% interval coverage is computed.}
+\item{pred_se}{numeric matrix of prediction SEs (same scale as
+\code{pred}).  Used for 95\\% coverage of continuous traits.  Ignored
+when \code{pred} is a \code{pigauto_pred} (uses \code{pred$se}).}
+
+\item{trait_map}{list of trait descriptors (from \code{pigauto_data}).
+If \code{NULL} and \code{pred} is not a \code{pigauto_pred}, the
+v0.1 all-continuous evaluation is used.}
 }
 \value{
 A \code{data.frame} with columns \code{split}, \code{trait},
-\code{n}, \code{rmse}, \code{pearson_r}, and (if \code{pred_se} is
-provided) \code{coverage_95}.
+\code{type}, \code{n}, and type-specific metric columns.
 }
 \description{
-Computes RMSE, Pearson correlation, and 95\% interval coverage for the
-validation and test splits, returning one row per trait per split.
+Computes type-specific metrics for each trait on the validation and test
+splits.  When a \code{trait_map} is supplied, metrics are dispatched per
+trait type; otherwise the function falls back to continuous-only metrics
+(RMSE, Pearson r, 95\% coverage).
+}
+\details{
+\strong{Metrics by trait type:}
+\describe{
+\item{continuous}{RMSE, Pearson r, 95\\% interval coverage (if SE
+supplied)}
+\item{count}{RMSE, MAE, Pearson r}
+\item{ordinal}{RMSE, Spearman rho}
+\item{binary}{Accuracy, Brier score}
+\item{categorical}{Accuracy}
+}
+
+For binary and categorical traits the function accepts either a
+\code{pigauto_pred} object (preferred, gives access to probabilities) or
+raw matrices (latent scale).
 }
 \examples{
 \dontrun{
-eval_df <- evaluate_imputation(bl$mu, pd$X_scaled, splits)
+# From pigauto_pred object
+eval_df <- evaluate_imputation(pred_obj, pd$X_scaled, splits)
+
+# From raw latent matrix
+eval_df <- evaluate_imputation(bl$mu, pd$X_scaled, splits,
+                                trait_map = pd$trait_map)
 }
 }

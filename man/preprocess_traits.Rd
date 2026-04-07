@@ -2,56 +2,100 @@
 % Please edit documentation in R/preprocess_traits.R
 \name{preprocess_traits}
 \alias{preprocess_traits}
-\title{Preprocess trait data: align to tree, optionally log-transform, z-score}
+\title{Preprocess trait data: align to tree, encode into latent space}
 \usage{
 preprocess_traits(
   traits,
   tree,
+  trait_types = NULL,
+  log_cols = NULL,
   log_transform = TRUE,
   center = TRUE,
   scale = TRUE
 )
 }
 \arguments{
-\item{traits}{\code{data.frame} with species as row names and numeric traits
-as columns (output of \code{\link{read_traits}}).}
+\item{traits}{\code{data.frame} with species as row names.  Columns may
+be numeric, integer, factor, ordered, character, or logical.}
 
 \item{tree}{object of class \code{"phylo"}.}
 
-\item{log_transform}{logical. Apply \code{log()} before z-scoring? Default
-\code{TRUE}; appropriate for most morphological measurements.}
+\item{trait_types}{named character vector overriding auto-detection,
+e.g. \code{c(Mass = "continuous", Diet = "categorical")}.
+Valid types: \code{"continuous"}, \code{"binary"}, \code{"categorical"},
+\code{"ordinal"}, \code{"count"}.  Unspecified traits are auto-detected.}
 
-\item{center}{logical. Subtract column means? Default \code{TRUE}.}
+\item{log_cols}{character vector of continuous trait names to
+log-transform.  Default \code{NULL} means auto-detect (log if all
+observed values are positive).  Set to \code{character(0)} to disable.}
 
-\item{scale}{logical. Divide by column standard deviations? Default
-\code{TRUE}.}
+\item{log_transform}{logical.  Legacy parameter: if \code{TRUE} and
+\code{log_cols} is \code{NULL}, log-transform all continuous traits
+with all-positive values.  Overridden by \code{log_cols} when both
+are supplied.}
+
+\item{center}{logical. Subtract column means for continuous/count/ordinal?
+Default \code{TRUE}.}
+
+\item{scale}{logical. Divide by column SDs for continuous/count/ordinal?
+Default \code{TRUE}.}
 }
 \value{
 A list of class \code{"pigauto_data"} with components:
 \describe{
-\item{X_scaled}{Numeric matrix (n_species x n_traits), z-scored.}
-\item{X_raw}{Numeric matrix (n_species x n_traits), after optional log
-but before z-scoring.}
-\item{means}{Named numeric vector of column means used for
-standardisation (on the log scale if \code{log_transform = TRUE}).}
+\item{X_scaled}{Numeric matrix (n_species x p_latent), latent encoding.}
+\item{X_raw}{Numeric matrix of continuous traits after optional log
+but before z-scoring (for backward compatibility).}
+\item{X_original}{Original data.frame (aligned to tree, before encoding).}
+\item{means}{Named numeric vector of column means used for z-scoring
+(continuous/count/ordinal traits only).}
 \item{sds}{Named numeric vector of column SDs.}
 \item{species_names}{Character vector matching \code{tree$tip.label}
 order.}
-\item{trait_names}{Character vector of trait column names.}
-\item{log_transform}{Logical, whether log was applied.}
+\item{trait_names}{Character vector of original trait names.}
+\item{latent_names}{Character vector of latent column names.}
+\item{trait_map}{List of trait descriptors (see Details).}
+\item{p_latent}{Integer, total number of latent columns.}
+\item{log_transform}{Logical, legacy field (TRUE if any continuous
+trait was log-transformed).}
 }
 }
 \description{
-Aligns species in the trait data frame to the tree, drops species missing
-from the tree (with a warning), optionally log-transforms and z-scores each
-trait column. The output rows are reordered to match \code{tree$tip.label}
-order, which is required for downstream graph operations.
+Aligns species in the trait data frame to the tree, detects or accepts
+trait types (continuous, binary, categorical, ordinal, count), and
+encodes each trait into a continuous latent matrix.  The output rows
+are reordered to match \code{tree$tip.label} order, which is required
+for downstream graph operations.
+}
+\details{
+\strong{Type detection} (when \code{trait_types = NULL}) follows the column
+class of each trait:
+\describe{
+\item{\code{numeric} (non-integer)}{continuous}
+\item{\code{integer}}{count}
+\item{\code{factor} with 2 levels}{binary}
+\item{\code{factor} (unordered) with >2 levels}{categorical}
+\item{\code{ordered} factor}{ordinal}
+\item{\code{character}}{converted to \code{factor}, then classified}
+\item{\code{logical}}{converted to binary (FALSE = 0, TRUE = 1)}
+}
+
+\strong{Latent encoding} per type:
+\describe{
+\item{continuous}{optional \code{log()}, then z-score (1 latent column)}
+\item{binary}{0/1 encoding (1 latent column)}
+\item{count}{\code{log1p()}, then z-score (1 latent column)}
+\item{ordinal}{integer coding (0 to K-1), then z-score (1 latent column)}
+\item{categorical}{one-hot encoding (K latent columns)}
+}
 }
 \examples{
+# All-numeric (backward compatible)
 data(avonet300, tree300, package = "pigauto")
 traits <- avonet300
 rownames(traits) <- traits$Species_Key
 traits$Species_Key <- NULL
 pd <- preprocess_traits(traits, tree300)
 dim(pd$X_scaled)   # 300 x 4
+
 }

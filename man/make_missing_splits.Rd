@@ -2,45 +2,59 @@
 % Please edit documentation in R/mask_missing.R
 \name{make_missing_splits}
 \alias{make_missing_splits}
-\title{Split all matrix cells into train/val/test for imputation evaluation}
+\title{Split cells into train/val/test for imputation evaluation}
 \usage{
-make_missing_splits(X, missing_frac = 0.25, val_frac = 0.25, seed = 555)
+make_missing_splits(
+  X,
+  missing_frac = 0.25,
+  val_frac = 0.25,
+  seed = 555,
+  trait_map = NULL
+)
 }
 \arguments{
-\item{X}{numeric matrix (species x traits). Used only for dimensions.}
+\item{X}{numeric matrix (species x latent columns from
+\code{\link{preprocess_traits}}).  Used only for dimensions.}
 
-\item{missing_frac}{numeric. Fraction of all cells to designate as missing
-(default \code{0.25}).}
+\item{missing_frac}{numeric. Fraction of all (species, trait) cells to
+designate as missing (default \code{0.25}).}
 
-\item{val_frac}{numeric. Fraction of missing cells to use for validation
+\item{val_frac}{numeric. Fraction of missing cells for validation
 (default \code{0.25}); the rest become the test set.}
 
 \item{seed}{integer. Random seed for reproducibility (default \code{555}).}
+
+\item{trait_map}{list of trait descriptors (from \code{pigauto_data}).
+If \code{NULL}, masking is applied per latent column (v0.1 behaviour).}
 }
 \value{
 A list with:
 \describe{
-\item{val_idx}{Integer vector of linear cell indices for validation.}
-\item{test_idx}{Integer vector of linear cell indices for test.}
-\item{n}{Integer. Number of species (rows).}
-\item{p}{Integer. Number of traits (columns).}
-\item{mask}{Logical matrix (n x p). \code{TRUE} = observed (not in
-val or test).}
+\item{val_idx}{Integer vector of linear indices (latent space).}
+\item{test_idx}{Integer vector of linear indices (latent space).}
+\item{val_idx_trait}{Integer vector in original-trait space (if
+\code{trait_map} supplied).}
+\item{test_idx_trait}{Integer vector in original-trait space (if
+\code{trait_map} supplied).}
+\item{n}{Number of species (rows).}
+\item{p}{Number of latent columns.}
+\item{n_traits}{Number of original traits.}
+\item{mask}{Logical matrix (n x p_latent). \code{TRUE} = observed.}
 }
 }
 \description{
 Randomly designates a fraction of cells as "missing" and splits them into
-validation and test sets. The remaining cells are treated as observed.
-Masking is applied to \emph{all} cells uniformly (not conditioned on whether
-values are already \code{NA} in \code{X}).
+validation and test sets.  When a \code{trait_map} is supplied, masking
+operates at the \strong{original trait level} -- all latent columns belonging
+to one trait are held out together (important for categorical traits).
 }
 \details{
-The returned index vectors use linear (column-major) indexing into the
-flattened matrix, consistent with \code{which()}, \code{[]} single-index
-subsetting, and \code{torch_tensor} flattening order.
+The returned index vectors use linear (column-major) indexing.  Both
+original-trait-space and latent-space indices are returned when a
+\code{trait_map} is present.
 }
 \examples{
 X <- matrix(rnorm(100), nrow = 20)
 splits <- make_missing_splits(X, missing_frac = 0.25, seed = 1)
-length(splits$val_idx)   # ~25\% of 20 cells designated as val
+length(splits$val_idx)
 }

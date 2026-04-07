@@ -4,32 +4,78 @@
 \alias{predict.pigauto_fit}
 \title{Impute missing traits using a fitted Residual Phylo-DAE}
 \usage{
-\method{predict}{pigauto_fit}(object, newdata = NULL, return_se = TRUE, ...)
+\method{predict}{pigauto_fit}(object, newdata = NULL, return_se = TRUE, n_imputations = 1L, ...)
 }
 \arguments{
 \item{object}{object of class \code{"pigauto_fit"}.}
 
 \item{newdata}{\code{NULL} (use the training data) or a
-\code{"pigauto_data"} object for new species.  When \code{newdata} is
-supplied, a new BM baseline is fitted internally.}
+\code{"pigauto_data"} object for new species.}
 
-\item{return_se}{logical. Return standard errors? (default \code{TRUE})}
+\item{return_se}{logical. Compute standard errors? (default \code{TRUE}).}
+
+\item{n_imputations}{integer. Number of MC dropout forward passes (default
+\code{1L}).  Set to e.g. 10 or 20 for proper multiple imputation with
+between-imputation variance.}
 
 \item{...}{ignored.}
 }
 \value{
-If \code{return_se = FALSE}: a numeric matrix of imputed values in
-original (back-transformed) units. If \code{return_se = TRUE}: a list
-with \code{imputed} and \code{se} matrices, both in original units.
+A list of class \code{"pigauto_pred"} with:
+\describe{
+\item{imputed}{data.frame of imputed values in original scale with
+proper R types (numeric, integer, factor, ordered).}
+\item{imputed_latent}{Numeric matrix (n x p_latent) of predictions in
+latent scale.}
+\item{se}{Numeric matrix (n x n_original_traits) of per-cell
+uncertainty.  Continuous/count: SE in original scale.
+Binary: Bernoulli SD \code{sqrt(p*(1-p))}.
+Categorical: entropy of probability distribution.
+Ordinal: SE in integer scale.  \code{NULL} if
+\code{return_se = FALSE}.}
+\item{probabilities}{Named list.  Binary traits: numeric probability
+vector.  Categorical traits: n x K probability matrix.  Other
+types: not present.}
+\item{imputed_datasets}{List of M data.frames when
+\code{n_imputations > 1}; \code{NULL} otherwise.}
+\item{trait_map}{Trait map from the fitted model.}
+\item{species_names}{Character vector.}
+\item{trait_names}{Character vector.}
+\item{n_imputations}{Integer, number of imputations performed.}
+}
 }
 \description{
 Runs iterative refinement on the fitted model and returns imputed trait
-values back-transformed to the original scale.
+values back-transformed to the original scale.  Supports all trait types
+(continuous, binary, categorical, ordinal, count) and MC dropout for
+multiple imputation.
+}
+\details{
+When \code{n_imputations > 1}, the model runs in train mode (dropout
+active) to generate M stochastic forward passes.  Point estimates are
+computed as the mean (continuous, count) or mode (binary, categorical,
+ordinal) across passes.  Between-imputation variance provides proper
+uncertainty estimates following Rubin's rules.  The M complete datasets
+are returned in \code{imputed_datasets} for downstream pooling.
+
+\strong{Decoding per type:}
+\describe{
+\item{continuous}{reverse z-score, then \code{exp()} if log-transformed}
+\item{binary}{\code{sigmoid(latent)} to probability, round to 0/1}
+\item{count}{reverse z-score of log1p, \code{expm1()}, round, clip >= 0}
+\item{ordinal}{reverse z-score, round to nearest valid integer level}
+\item{categorical}{\code{softmax()} over K latent columns, argmax}
+}
 }
 \examples{
 \dontrun{
 pred <- predict(fit, return_se = TRUE)
-pred$imputed   # matrix, original scale
-pred$se        # matrix, uncertainty (original scale)
+pred$imputed        # data.frame, original scale
+pred$se             # matrix, uncertainty
+pred$probabilities  # list of prob vectors/matrices
+
+# Multiple imputation (MC dropout)
+pred10 <- predict(fit, n_imputations = 10)
+pred10$imputed_datasets  # 10 complete data.frames
 }
 }

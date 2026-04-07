@@ -32,14 +32,12 @@ fit_pigauto(
 \item{tree}{object of class \code{"phylo"}.}
 
 \item{splits}{list (output of \code{\link{make_missing_splits}}) or
-\code{NULL}. Needed for validation-based early stopping.}
+\code{NULL}.}
 
 \item{graph}{list (output of \code{\link{build_phylo_graph}}) or
-\code{NULL} (computed automatically with \code{k_eigen} and
-\code{sigma_mult = 0.5}).}
+\code{NULL}.}
 
-\item{baseline}{list (output of \code{\link{fit_baseline}}) or \code{NULL}
-(computed automatically using BM).}
+\item{baseline}{list (output of \code{\link{fit_baseline}}) or \code{NULL}.}
 
 \item{hidden_dim}{integer. Hidden layer width (default \code{64}).}
 
@@ -80,31 +78,23 @@ An object of class \code{"pigauto_fit"}.
 }
 \description{
 Trains a \code{ResidualPhyloDAE} that learns a bounded residual correction
-on top of a Brownian Motion baseline from \pkg{Rphylopars}.  Because the
-residual scale is initialised near zero and constrained to \eqn{(0, 0.5)},
-the model cannot perform substantially worse than the BM baseline.
+on top of a baseline.  Supports continuous, binary, categorical, ordinal,
+and count traits via a unified latent space.
 }
 \details{
 \strong{Training objective} (per epoch):
 \enumerate{
 \item A random subset of observed cells is corrupted with a learnable
 mask token.
-\item The model predicts the residual \eqn{\delta = X - \mu_{BM}}.
-\item Loss = MSE on corrupted cells + \code{lambda_shrink} * MSE toward
-zero (shrinks the residual toward the BM baseline).
+\item The model predicts the residual \eqn{\delta = X - \mu_{baseline}}.
+\item Loss = type-specific reconstruction on corrupted cells +
+\code{lambda_shrink} * MSE toward zero.
 }
 
-\strong{Early stopping} is based on RMSE on the validation cells supplied in
-\code{splits}.
-}
-\examples{
-\dontrun{
-data(avonet300, tree300, package = "pigauto")
-traits <- avonet300; rownames(traits) <- traits$Species_Key
-traits$Species_Key <- NULL
-pd     <- preprocess_traits(traits, tree300)
-splits <- make_missing_splits(pd$X_scaled)
-fit    <- fit_pigauto(pd, tree300, splits, epochs = 500, verbose = FALSE)
-print(fit)
+\strong{Type-specific losses:}
+\describe{
+\item{continuous/count/ordinal}{MSE}
+\item{binary}{BCE with logits}
+\item{categorical}{cross-entropy over K latent columns}
 }
 }

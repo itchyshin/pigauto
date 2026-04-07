@@ -1,32 +1,33 @@
 #' Fit a Residual Phylo-DAE model for trait imputation
 #'
 #' Trains a \code{ResidualPhyloDAE} that learns a bounded residual correction
-#' on top of a Brownian Motion baseline from \pkg{Rphylopars}.  Because the
-#' residual scale is initialised near zero and constrained to \eqn{(0, 0.5)},
-#' the model cannot perform substantially worse than the BM baseline.
+#' on top of a baseline.  Supports continuous, binary, categorical, ordinal,
+#' and count traits via a unified latent space.
 #'
 #' @details
 #' **Training objective** (per epoch):
 #' \enumerate{
 #'   \item A random subset of observed cells is corrupted with a learnable
 #'     mask token.
-#'   \item The model predicts the residual \eqn{\delta = X - \mu_{BM}}.
-#'   \item Loss = MSE on corrupted cells + \code{lambda_shrink} * MSE toward
-#'     zero (shrinks the residual toward the BM baseline).
+#'   \item The model predicts the residual \eqn{\delta = X - \mu_{baseline}}.
+#'   \item Loss = type-specific reconstruction on corrupted cells +
+#'     \code{lambda_shrink} * MSE toward zero.
 #' }
 #'
-#' **Early stopping** is based on RMSE on the validation cells supplied in
-#' \code{splits}.
+#' **Type-specific losses:**
+#' \describe{
+#'   \item{continuous/count/ordinal}{MSE}
+#'   \item{binary}{BCE with logits}
+#'   \item{categorical}{cross-entropy over K latent columns}
+#' }
 #'
 #' @param data object of class \code{"pigauto_data"}.
 #' @param tree object of class \code{"phylo"}.
 #' @param splits list (output of \code{\link{make_missing_splits}}) or
-#'   \code{NULL}. Needed for validation-based early stopping.
+#'   \code{NULL}.
 #' @param graph list (output of \code{\link{build_phylo_graph}}) or
-#'   \code{NULL} (computed automatically with \code{k_eigen} and
-#'   \code{sigma_mult = 0.5}).
-#' @param baseline list (output of \code{\link{fit_baseline}}) or \code{NULL}
-#'   (computed automatically using BM).
+#'   \code{NULL}.
+#' @param baseline list (output of \code{\link{fit_baseline}}) or \code{NULL}.
 #' @param hidden_dim integer. Hidden layer width (default \code{64}).
 #' @param k_eigen integer. Number of spectral node features (default
 #'   \code{8}).
@@ -48,16 +49,6 @@
 #' @param verbose logical. Print training progress (default \code{TRUE}).
 #' @param seed integer. Random seed (default \code{1}).
 #' @return An object of class \code{"pigauto_fit"}.
-#' @examples
-#' \dontrun{
-#' data(avonet300, tree300, package = "pigauto")
-#' traits <- avonet300; rownames(traits) <- traits$Species_Key
-#' traits$Species_Key <- NULL
-#' pd     <- preprocess_traits(traits, tree300)
-#' splits <- make_missing_splits(pd$X_scaled)
-#' fit    <- fit_pigauto(pd, tree300, splits, epochs = 500, verbose = FALSE)
-#' print(fit)
-#' }
 #' @importFrom torch torch_tensor torch_float torch_bool torch_long
 #' @importFrom torch optim_adam with_no_grad nn_utils_clip_grad_norm_
 #' @importFrom torch nnf_mse_loss torch_rand_like torch_where torch_zeros_like
@@ -101,28 +92,43 @@ fit_pigauto <- function(
 
   # ---- Baseline -------------------------------------------------------------
   if (is.null(baseline)) {
-    if (verbose) message("Fitting Rphylopars BM baseline...")
+    if (verbose) message("Fitting baseline...")
     baseline <- fit_baseline(data, tree, splits = splits)
   }
+
+  # ---- Trait map ------------------------------------------------------------
+  trait_map <- data$trait_map
+  has_trait_map <- !is.null(trait_map)
 
   # ---- Data preparation ----------------------------------------------------
   n <- nrow(data$X_scaled)
   p <- ncol(data$X_scaled)
 
-  X_truth <- data$X_scaled          # n x p, z-score scale, NAs possible
-  MU      <- baseline$mu            # n x p, BM predictions
+  X_truth <- data$X_scaled          # n x p_latent
+  MU      <- baseline$mu            # n x p_latent
 
-  # Fill truly missing cells with BM predictions
+  # Fill missing cells with baseline predictions
   X_fill <- X_truth
   X_fill[is.na(X_fill)] <- MU[is.na(X_fill)]
 
-  DELTA_tgt <- X_fill - MU          # residual target (n x p)
+  DELTA_tgt <- X_fill - MU          # residual target
 
   # Observed mask (TRUE = actually observed, not just filled)
   M_obs_mat <- !is.na(X_truth)
   if (!is.null(splits)) M_obs_mat[c(splits$val_idx, splits$test_idx)] <- FALSE
 
-  # Tensors
+  # ---- Trait-level corruption mask expansion --------------------------------
+  # For categorical traits: corrupt all K latent columns together
+  if (has_trait_map) {
+    # Build mapping from latent column -> trait index (for grouped corruption)
+    latent_to_trait <- integer(p)
+    for (i in seq_along(trait_map)) {
+      latent_to_trait[trait_map[[i]]$latent_cols] <- i
+    }
+    n_orig_traits <- length(trait_map)
+  }
+
+  # ---- Tensors ---------------------------------------------------------------
   t_X      <- torch::torch_tensor(X_fill,    dtype = torch::torch_float(),
                                   device = device)
   t_MU     <- torch::torch_tensor(MU,        dtype = torch::torch_float(),
@@ -136,20 +142,22 @@ fit_pigauto <- function(
   t_coords <- torch::torch_tensor(graph$coords, dtype = torch::torch_float(),
                                   device = device)
 
-  # Val / test boolean masks for RMSE in torch
+  # Val / test masks
   if (!is.null(splits)) {
     val_mat <- matrix(FALSE, n, p); val_mat[splits$val_idx]  <- TRUE
     t_val   <- torch::torch_tensor(val_mat, dtype = torch::torch_bool(),
                                    device = device)
     t_truth <- torch::torch_tensor(X_truth, dtype = torch::torch_float(),
                                    device = device)
+    # Replace NaN in truth with 0 (won't affect masked evaluation)
+    t_truth_safe <- t_truth$clone()
+    t_truth_safe[t_truth$isnan()] <- 0
     has_val <- TRUE
   } else {
     has_val <- FALSE
   }
 
   # ---- Model ----------------------------------------------------------------
-  # cov_dim = p (mu_BM per trait) + 1 (per-species mask indicator)
   cov_dim <- p + 1L
   model <- ResidualPhyloDAE(
     input_dim  = p,
@@ -167,20 +175,42 @@ fit_pigauto <- function(
   patience_left <- patience
   history       <- data.frame(
     epoch = integer(0), loss_rec = double(0),
-    loss_shrink = double(0), val_rmse = double(0)
+    loss_shrink = double(0), val_loss = double(0)
   )
 
   for (epoch in seq_len(epochs)) {
     model$train()
     opt$zero_grad()
 
-    # Corrupt only truly observed cells
-    u            <- torch::torch_rand_like(t_X)
-    masked_bool  <- (u < corruption_rate) & t_M_obs
+    # ---- Corruption masking -------------------------------------------------
+    if (has_trait_map) {
+      # Corrupt at trait level, then expand to latent columns
+      u_trait <- matrix(stats::runif(n * n_orig_traits), n, n_orig_traits)
+      corrupt_trait <- u_trait < corruption_rate
+      # Only corrupt where observed
+      obs_trait <- matrix(FALSE, n, n_orig_traits)
+      for (i in seq_along(trait_map)) {
+        lc <- trait_map[[i]]$latent_cols
+        obs_trait[, i] <- as.logical(M_obs_mat[, lc[1]])
+      }
+      corrupt_trait <- corrupt_trait & obs_trait
+      # Expand to latent columns
+      corrupt_latent <- matrix(FALSE, n, p)
+      for (i in seq_along(trait_map)) {
+        for (lc in trait_map[[i]]$latent_cols) {
+          corrupt_latent[, lc] <- corrupt_trait[, i]
+        }
+      }
+      masked_bool <- torch::torch_tensor(corrupt_latent, dtype = torch::torch_bool(),
+                                          device = device)
+    } else {
+      u           <- torch::torch_rand_like(t_X)
+      masked_bool <- (u < corruption_rate) & t_M_obs
+    }
+
     if (as.numeric(masked_bool$sum()$cpu()$item()) == 0L) next
 
-    Mask_t  <- masked_bool$to(dtype = torch::torch_float())  # per-cell
-    # Per-species mask indicator: 1 if any trait corrupted for that species
+    Mask_t  <- masked_bool$to(dtype = torch::torch_float())
     mask_ind <- Mask_t$any(dim = 2L, keepdim = TRUE)$to(
       dtype = torch::torch_float()
     )
@@ -195,9 +225,15 @@ fit_pigauto <- function(
 
     pred_scaled <- t_MU + rs * delta
 
-    loss_rec    <- torch::nnf_mse_loss(
-      pred_scaled[masked_bool], t_X[masked_bool]
-    )
+    # ---- Loss ---------------------------------------------------------------
+    if (has_trait_map) {
+      loss_rec <- compute_mixed_loss(pred_scaled, t_X, masked_bool, trait_map)
+    } else {
+      loss_rec <- torch::nnf_mse_loss(
+        pred_scaled[masked_bool], t_X[masked_bool]
+      )
+    }
+
     loss_shrink <- torch::nnf_mse_loss(
       delta[masked_bool],
       torch::torch_zeros_like(delta[masked_bool])
@@ -213,7 +249,7 @@ fit_pigauto <- function(
 
     # ---- Evaluation ---------------------------------------------------------
     if (epoch %% eval_every == 0L) {
-      val_rmse <- NA_real_
+      val_loss_val <- NA_real_
       if (has_val) {
         model$eval()
         torch::with_no_grad({
@@ -221,37 +257,40 @@ fit_pigauto <- function(
           covs0     <- torch::torch_cat(list(t_MU, mask_ind0), dim = 2L)
           out0      <- model(t_X, t_coords, covs0, t_adj)
           pred0     <- t_MU + out0$rs * out0$delta
-          Xcurr     <- t_X * (!t_M_obs)$logical_not()$to(
-            dtype = torch::torch_float()
-          ) + pred0 * (!t_M_obs)$to(dtype = torch::torch_float())
         })
-        val_rmse <- as.numeric(
-          rmse_torch(Xcurr, t_truth, t_val)$cpu()$item()
-        )
+        if (has_trait_map) {
+          val_loss_val <- composite_val_loss(pred0, t_truth_safe, t_val,
+                                             trait_map)
+        } else {
+          val_loss_val <- as.numeric(
+            rmse_torch(pred0, t_truth_safe, t_val)$cpu()$item()
+          )
+        }
       }
 
       history <- rbind(history, data.frame(
         epoch       = epoch,
-        loss_rec    = loss_rec$item(),
-        loss_shrink = loss_shrink$item(),
-        val_rmse    = if (is.na(val_rmse)) NA_real_ else val_rmse
+        loss_rec    = as.numeric(loss_rec$item()),
+        loss_shrink = as.numeric(loss_shrink$item()),
+        val_loss    = if (is.na(val_loss_val)) NA_real_ else val_loss_val
       ))
 
       if (verbose) {
         msg <- sprintf(
           "epoch %4d | rec %.4f | shrink %.4f",
-          epoch, loss_rec$item(), loss_shrink$item()
+          epoch, as.numeric(loss_rec$item()),
+          as.numeric(loss_shrink$item())
         )
-        if (!is.na(val_rmse)) {
+        if (!is.na(val_loss_val)) {
           msg <- paste0(msg, sprintf(" | val %.4f | best %.4f | pat %d",
-                                     val_rmse, best_val, patience_left))
+                                     val_loss_val, best_val, patience_left))
         }
         message(msg)
       }
 
-      if (!is.na(val_rmse)) {
-        if (val_rmse + 1e-6 < best_val) {
-          best_val      <- val_rmse
+      if (!is.na(val_loss_val)) {
+        if (val_loss_val + 1e-6 < best_val) {
+          best_val      <- val_loss_val
           best_state    <- model$state_dict()
           patience_left <- patience
         } else {
@@ -267,8 +306,8 @@ fit_pigauto <- function(
 
   if (!is.null(best_state)) model$load_state_dict(best_state)
 
-  # ---- Final test RMSE -------------------------------------------------------
-  test_rmse <- NA_real_
+  # ---- Final test loss -------------------------------------------------------
+  test_loss <- NA_real_
   if (!is.null(splits) && length(splits$test_idx) > 0L) {
     test_mat <- matrix(FALSE, n, p); test_mat[splits$test_idx] <- TRUE
     t_test   <- torch::torch_tensor(test_mat, dtype = torch::torch_bool(),
@@ -279,14 +318,17 @@ fit_pigauto <- function(
       covs0     <- torch::torch_cat(list(t_MU, mask_ind0), dim = 2L)
       out0      <- model(t_X, t_coords, covs0, t_adj)
       pred0     <- t_MU + out0$rs * out0$delta
-      Xcurr     <- t_X * t_M_obs$to(dtype = torch::torch_float()) +
-        pred0 * (!t_M_obs)$to(dtype = torch::torch_float())
       t_truth_f <- torch::torch_tensor(X_truth, dtype = torch::torch_float(),
                                        device = device)
+      t_truth_f[t_truth_f$isnan()] <- 0
     })
-    test_rmse <- as.numeric(
-      rmse_torch(Xcurr, t_truth_f, t_test)$cpu()$item()
-    )
+    if (has_trait_map) {
+      test_loss <- composite_val_loss(pred0, t_truth_f, t_test, trait_map)
+    } else {
+      test_loss <- as.numeric(
+        rmse_torch(pred0, t_truth_f, t_test)$cpu()$item()
+      )
+    }
   }
 
   # ---- Build result object ---------------------------------------------------
@@ -299,6 +341,7 @@ fit_pigauto <- function(
     input_dim       = p
   )
 
+  # Backward-compat: store val_rmse and test_rmse names
   structure(
     list(
       model_state   = model$state_dict(),
@@ -312,10 +355,12 @@ fit_pigauto <- function(
       ),
       species_names = data$species_names,
       trait_names   = data$trait_names,
+      latent_names  = data$latent_names,
+      trait_map     = trait_map,
       splits        = splits,
       history       = history,
       val_rmse      = best_val,
-      test_rmse     = test_rmse
+      test_rmse     = test_loss
     ),
     class = "pigauto_fit"
   )

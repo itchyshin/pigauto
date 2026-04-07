@@ -217,7 +217,7 @@ build_trait_map <- function(traits, types, log_set, center, scale) {
   col_offset <- 0L
 
   for (nm in colnames(traits)) {
-    tp <- types[nm]
+    tp <- unname(types[nm])
     x  <- traits[[nm]][!is.na(traits[[nm]])]
 
     entry <- list(name = nm, type = tp)

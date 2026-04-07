@@ -7,11 +7,11 @@
 plot_uncertainty(pred_result, truth = NULL, trait_name)
 }
 \arguments{
-\item{pred_result}{list with \code{imputed} and \code{se} matrices
+\item{pred_result}{list with \code{imputed} and \code{se} components
 (output of \code{predict.pigauto_fit}).}
 
-\item{truth}{matrix of true values (same scale as \code{pred_result}), or
-\code{NULL}.}
+\item{truth}{matrix or data.frame of true values (same scale as
+\code{pred_result$imputed}), or \code{NULL}.}
 
 \item{trait_name}{character. Which trait to plot (must match column name).}
 }
@@ -20,5 +20,7 @@ A \code{ggplot} object.
 }
 \description{
 Plots 95\\% credible intervals around imputed values, sorted by predicted
-value. If \code{truth} is supplied, observed values are overlaid as points.
+value.  If \code{truth} is supplied, observed values are overlaid as
+points.  Works for continuous, count, and ordinal traits.  For binary
+traits, plots predicted probabilities with CI ribbon.
 }

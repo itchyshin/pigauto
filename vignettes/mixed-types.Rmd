@@ -1,0 +1,159 @@
+---
+title: "Mixed-Type Trait Imputation"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Mixed-Type Trait Imputation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = torch::torch_is_installed()
+)
+```
+
+## Overview
+
+pigauto supports five trait types for phylogenetic imputation:
+
+| Type | R class | Latent encoding | Loss | Example |
+|------|---------|-----------------|------|---------|
+| Continuous | `numeric` | log (optional) + z-score | MSE | Body mass |
+| Count | `integer` | log1p + z-score | MSE | Clutch size |
+| Binary | `factor` (2 levels) | 0/1 | BCE with logits | Migratory |
+| Categorical | `factor` (>2 levels) | One-hot (K columns) | Cross-entropy | Diet type |
+| Ordinal | `ordered` | Integer (0 to K-1) + z-score | MSE | Threat status |
+
+All types are encoded into a continuous latent space.  The GNN
+(ResidualPhyloDAE) operates in this space without modification.
+Type-specific logic appears only at encoding, loss computation, and
+decoding.
+
+## Synthetic example
+
+```{r simulate}
+library(pigauto)
+library(ape)
+
+set.seed(42)
+n <- 60
+tree <- rtree(n)
+
+traits <- data.frame(
+  row.names = tree$tip.label,
+  mass      = exp(rnorm(n, 3, 0.5)),
+  clutch    = as.integer(rpois(n, 3) + 1L),
+  migr      = factor(sample(c("no", "yes"), n, replace = TRUE)),
+  diet      = factor(sample(c("herb", "carn", "omni"), n, replace = TRUE)),
+  threat    = ordered(sample(c("LC", "VU", "EN"), n, replace = TRUE),
+                      levels = c("LC", "VU", "EN"))
+)
+```
+
+## Preprocessing
+
+`preprocess_traits()` auto-detects column types from R classes:
+
+```{r preprocess}
+pd <- preprocess_traits(traits, tree)
+print(pd)
+```
+
+The `trait_map` records each trait's type, levels, latent column
+indices, and normalisation parameters:
+
+```{r trait_map}
+str(pd$trait_map, max.level = 1)
+pd$trait_map$diet
+```
+
+## Creating splits
+
+When `trait_map` is supplied, `make_missing_splits()` operates at the
+original-trait level.  For categorical traits, all K one-hot columns
+are held out together:
+
+```{r splits}
+spl <- make_missing_splits(pd$X_scaled, missing_frac = 0.20,
+                           seed = 1, trait_map = pd$trait_map)
+cat("Val cells (latent):", length(spl$val_idx), "\n")
+cat("Test cells (latent):", length(spl$test_idx), "\n")
+```
+
+## Baseline fitting
+
+The BM baseline uses Rphylopars for continuous, count, and ordinal
+traits.  Binary traits receive the logit of the observed proportion;
+categorical traits receive log marginal frequencies:
+
+```{r baseline}
+bl <- fit_baseline(pd, tree, splits = spl)
+dim(bl$mu)
+```
+
+## Training
+
+`fit_pigauto()` uses type-specific losses and trait-level corruption
+masking automatically when a `trait_map` is present:
+
+```{r train, message = FALSE}
+fit <- fit_pigauto(
+  pd, tree,
+  splits = spl,
+  epochs = 200L,
+  eval_every = 50L,
+  patience = 5L,
+  verbose = FALSE,
+  seed = 1
+)
+print(fit)
+```
+
+## Prediction and decoding
+
+`predict()` decodes latent predictions back to original types:
+
+```{r predict}
+pred <- predict(fit, return_se = TRUE)
+head(pred$imputed)
+```
+
+For binary and categorical traits, class probabilities are available:
+
+```{r probs}
+# Binary: probability of "yes"
+head(pred$probabilities$migr)
+
+# Categorical: probability of each diet class
+head(pred$probabilities$diet)
+```
+
+The SE matrix provides type-appropriate uncertainty:
+
+```{r se}
+head(pred$se)
+```
+
+## Evaluation
+
+`evaluate_imputation()` dispatches type-specific metrics:
+
+```{r evaluate}
+ev <- evaluate_imputation(pred, pd$X_scaled, spl)
+print(ev)
+```
+
+## Multiple imputation (MC dropout)
+
+Set `n_imputations > 1` to run M stochastic forward passes with
+dropout active.  This produces M complete datasets for proper multiple
+imputation:
+
+```{r mc_dropout}
+pred_mc <- predict(fit, n_imputations = 5L)
+cat("Imputed datasets:", length(pred_mc$imputed_datasets), "\n")
+head(pred_mc$se)  # between-imputation SD
+```

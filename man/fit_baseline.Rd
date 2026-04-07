@@ -7,14 +7,12 @@
 fit_baseline(data, tree, splits = NULL, model = "BM")
 }
 \arguments{
-\item{data}{object of class \code{"pigauto_data"} (output of
-\code{\link{preprocess_traits}}).}
+\item{data}{object of class \code{"pigauto_data"}.}
 
 \item{tree}{object of class \code{"phylo"}.}
 
 \item{splits}{list (output of \code{\link{make_missing_splits}}) or
-\code{NULL}. When provided, val and test cells are masked before
-fitting.}
+\code{NULL}.}
 
 \item{model}{character. Evolutionary model: \code{"BM"} (default) or
 \code{"OU"}.}
@@ -22,25 +20,24 @@ fitting.}
 \value{
 A list with:
 \describe{
-\item{mu}{Numeric matrix (n_species x n_traits), imputed means in
-z-score scale.}
-\item{se}{Numeric matrix (n_species x n_traits), standard errors
-(square root of ancestral variance).}
+\item{mu}{Numeric matrix (n_species x p_latent), baseline means in
+latent scale.}
+\item{se}{Numeric matrix (n_species x p_latent), standard errors.}
 }
 }
 \description{
 Fits a Brownian Motion (or OU) model with \pkg{Rphylopars} and returns
-imputed means and standard errors for every species, including those with
-missing trait values.
+imputed means and standard errors for every species.
 }
 \details{
 When \code{splits} is supplied the val and test cells are masked to
 \code{NA} before fitting, so the baseline is evaluated under the same
 conditions as \code{\link{fit_pigauto}}.
 
-If \pkg{Rphylopars} throws an error (typically a singular covariance
-matrix from near-zero branch lengths), a small jitter of \code{1e-6} is
-added to all branch lengths and the fit is retried once.
+For mixed-type data, Rphylopars is applied only to continuous, count,
+and ordinal traits (which are continuous in latent space).  Binary
+traits receive the population-level logit proportion as baseline;
+categorical traits receive log marginal frequencies.
 }
 \examples{
 \dontrun{
@@ -48,8 +45,7 @@ data(avonet300, tree300, package = "pigauto")
 traits <- avonet300; rownames(traits) <- traits$Species_Key
 traits$Species_Key <- NULL
 pd     <- preprocess_traits(traits, tree300)
-splits <- make_missing_splits(pd$X_scaled)
+splits <- make_missing_splits(pd$X_scaled, trait_map = pd$trait_map)
 bl     <- fit_baseline(pd, tree300, splits)
-dim(bl$mu)   # 300 x 4
 }
 }

@@ -20,9 +20,9 @@
 A \code{ggplot} object.
 }
 \description{
-Produces either a validation RMSE training curve (\code{type = "history"})
-or a scatter plot of BM baseline predictions against themselves for the
-selected split (\code{type = "scatter"}).
+Produces either a validation loss training curve (\code{type = "history"})
+or a scatter plot of observed vs predicted values for the selected split
+(\code{type = "scatter"}).
 }
 \examples{
 \dontrun{

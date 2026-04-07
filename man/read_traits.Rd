@@ -4,7 +4,13 @@
 \alias{read_traits}
 \title{Read trait data from a CSV file or data frame}
 \usage{
-read_traits(x, species_col = "species", trait_cols = NULL)
+read_traits(
+  x,
+  species_col = "species",
+  trait_cols = NULL,
+  factor_cols = NULL,
+  ordered_cols = NULL
+)
 }
 \arguments{
 \item{x}{character path to a CSV file, or a \code{data.frame}.}
@@ -12,19 +18,21 @@ read_traits(x, species_col = "species", trait_cols = NULL)
 \item{species_col}{character. Name of the column containing species names
 (default \code{"species"}).}
 
-\item{trait_cols}{character vector of trait column names to include. If
-\code{NULL} (default), all numeric columns except \code{species_col} are
-used.}
+\item{trait_cols}{character vector of column names to include. If
+\code{NULL} (default), all columns except \code{species_col} are used.}
+
+\item{factor_cols}{character vector of columns to coerce to \code{factor}.}
+
+\item{ordered_cols}{character vector of columns to coerce to \code{ordered}.}
 }
 \value{
-A \code{data.frame} with species names as row names and numeric
-trait columns.
+A \code{data.frame} with species names as row names.
 }
 \description{
-Loads trait data and sets species names as row names. If a CSV path is
-supplied, it is read with \code{read.csv}. Numeric trait columns can be
-selected explicitly; by default all numeric columns except the species
-identifier are returned.
+Loads trait data and sets species names as row names.  If a CSV path is
+supplied, it is read with \code{read.csv}.  By default, all non-species
+columns are returned (numeric, factor, integer, etc.).  Use
+\code{trait_cols} to select a subset.
 }
 \examples{
 df <- data.frame(species = c("Sp_a", "Sp_b"), mass = c(10, 20))

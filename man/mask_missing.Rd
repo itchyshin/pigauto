@@ -7,7 +7,7 @@
 mask_missing(X)
 }
 \arguments{
-\item{X}{numeric matrix (species x traits).}
+\item{X}{numeric matrix (species x traits or species x latent columns).}
 }
 \value{
 Logical matrix, \code{TRUE} = observed.
