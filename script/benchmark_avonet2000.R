@@ -14,6 +14,7 @@
 #   1. BM (Rphylopars via pigauto)  -- phylogenetic BM baseline only
 #   2. pigauto (BM + GNN)           -- residual GNN on top of BM baseline
 #   3. Rphylopars (standalone)      -- direct Rphylopars on log-scale data
+#   4. TabPFN (optional)            -- tabular foundation model (no phylogeny)
 #
 # All evaluation is on the original (un-logged, un-scaled) scale, matching
 # the truth CSV values.
@@ -54,7 +55,14 @@ library(ggplot2)
 
 cat("torch available:", torch::torch_is_installed(), "\n")
 cat("CUDA available: ", torch::cuda_is_available(), "\n")
-cat("MPS available:  ", torch::backends_mps_is_available(), "\n\n")
+cat("MPS available:  ", torch::backends_mps_is_available(), "\n")
+
+# Check TabPFN availability
+TABPFN_OK <- tryCatch({
+  requireNamespace("reticulate", quietly = TRUE) &&
+    { reticulate::import("tabimpute.interface"); TRUE }
+}, error = function(e) FALSE)
+cat("TabPFN available:", TABPFN_OK, "\n\n")
 
 # 1a. Masked trait data
 masked_path <- file.path(data_dir, "avonet_2000_masked.csv")
@@ -395,6 +403,38 @@ for (i in seq_len(nrow(compare_df))) {
 }
 compare_df$rphylopars_pred <- rp_pred_original
 
+# 6d. TabPFN predictions (no phylogeny, if available)
+bl_tab <- NULL
+if (TABPFN_OK) {
+  cat("--- Fitting TabPFN baseline (2000 species) ---\n")
+  bl_tab <- tryCatch({
+    fit_baseline_tabpfn(pd, splits = splits)
+  }, error = function(e) {
+    cat("  TabPFN failed (may exceed memory at 2000 species):",
+        conditionMessage(e), "\n")
+    NULL
+  })
+
+  if (!is.null(bl_tab)) {
+    tabpfn_pred_original <- numeric(nrow(compare_df))
+    for (i in seq_len(nrow(compare_df))) {
+      sp <- compare_df$species_tip[i]
+      tr <- compare_df$trait[i]
+      tm <- pd$trait_map[[tr]]
+      row_idx <- match(sp, species_order)
+      col_idx <- tm$latent_cols[1]
+      val_log <- bl_tab$mu[row_idx, col_idx] * tm$sd + tm$mean
+      if (isTRUE(tm$log_transform)) {
+        tabpfn_pred_original[i] <- exp(val_log)
+      } else {
+        tabpfn_pred_original[i] <- val_log
+      }
+    }
+    compare_df$tabpfn_pred <- tabpfn_pred_original
+    cat("TabPFN predictions extracted.\n\n")
+  }
+}
+
 cat("Comparison data frame:", nrow(compare_df), "rows\n")
 cat("Columns:", paste(names(compare_df), collapse = ", "), "\n\n")
 
@@ -470,6 +510,13 @@ for (tr in sort(unique(test_df$trait))) {
   results_list[[length(results_list) + 1L]] <- compute_metrics(
     sub$true_value, sub$rphylopars_pred, "Rphylopars", tr, nrow(sub)
   )
+
+  # TabPFN (if available)
+  if ("tabpfn_pred" %in% names(sub)) {
+    results_list[[length(results_list) + 1L]] <- compute_metrics(
+      sub$true_value, sub$tabpfn_pred, "TabPFN", tr, nrow(sub)
+    )
+  }
 }
 
 results_table <- do.call(rbind, results_list)
@@ -485,7 +532,11 @@ cat("Overall metrics (pooled across all traits, TEST split):\n")
 cat("----------------------------------------------------------\n")
 
 overall_list <- list()
-for (method in c("BM (pigauto)", "pigauto (BM+GNN)", "Rphylopars")) {
+all_methods <- c("BM (pigauto)", "pigauto (BM+GNN)", "Rphylopars")
+if ("tabpfn_pred" %in% names(compare_df)) {
+  all_methods <- c(all_methods, "TabPFN")
+}
+for (method in all_methods) {
   method_rows <- results_table[results_table$method == method, ]
   if (nrow(method_rows) == 0) next
 
@@ -575,6 +626,19 @@ rp_part <- data.frame(
 )
 scatter_long <- rbind(scatter_long, rp_part)
 
+# TabPFN
+if ("tabpfn_pred" %in% names(test_df)) {
+  tab_part <- data.frame(
+    species    = test_df$species_tip,
+    trait      = test_df$trait,
+    true_value = test_df$true_value,
+    predicted  = test_df$tabpfn_pred,
+    method     = "TabPFN",
+    stringsAsFactors = FALSE
+  )
+  scatter_long <- rbind(scatter_long, tab_part)
+}
+
 # Remove rows with non-finite values
 scatter_long <- scatter_long[is.finite(scatter_long$true_value) &
                                is.finite(scatter_long$predicted), ]
@@ -582,7 +646,8 @@ scatter_long <- scatter_long[is.finite(scatter_long$true_value) &
 method_colours <- c(
   "BM (pigauto)"     = "#e41a1c",
   "pigauto (BM+GNN)" = "#377eb8",
-  "Rphylopars"       = "#4daf4a"
+  "Rphylopars"       = "#4daf4a",
+  "TabPFN"           = "#984ea3"
 )
 
 p_scatter <- ggplot(scatter_long,

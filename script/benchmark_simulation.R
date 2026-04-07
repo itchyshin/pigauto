@@ -2,10 +2,17 @@
 # Simulation benchmark for pigauto
 # ============================================================================
 #
-# Generates phylogenetic data with known truth via BACE's sim_bace(), masks
-# values with pigauto's own masking, then compares BM baseline vs.
-# pigauto (BM + GNN) imputation across 8 scenarios covering all 5 trait
-# types and varying phylogenetic signal strengths.
+# Generates phylogenetic data with known truth via BACE's sim_bace() and
+# pigauto's simulate_non_bm(), masks values with pigauto's own masking,
+# then compares up to 4 imputation methods across 12 scenarios:
+#
+#   1. BM_baseline   — Rphylopars BM imputation (phylogenetic)
+#   2. pigauto_GNN   — BM baseline + graph autoencoder correction
+#   3. TabPFN        — Tabular foundation model (no phylogeny)
+#   4. TabPFN_GNN    — TabPFN baseline + graph autoencoder correction
+#
+# Scenarios 1–8: BM-generated data (BACE sim_bace), all 5 trait types.
+# Scenarios 9–12: non-BM data (OU, regime shift, nonlinear).
 #
 # Requirements:
 #   - pigauto (loaded or installed)
@@ -26,6 +33,7 @@ EPOCHS        <- 500L    # GNN training epochs (increase to 2000 for real study)
 EVAL_EVERY    <- 50L     # validation evaluation interval
 K_EIGEN       <- 8L      # spectral node features
 OUTPUT_CSV    <- "script/benchmark_results.csv"
+USE_TABPFN    <- TRUE    # include TabPFN methods (skipped if unavailable)
 
 
 # ---- Section 1: Load packages ------------------------------------------------
@@ -37,6 +45,16 @@ cat("Loading BACE via devtools::load_all...\n")
 devtools::load_all("BACE/")
 
 cat("torch available:", torch::torch_is_installed(), "\n")
+
+# Check TabPFN availability
+TABPFN_OK <- FALSE
+if (USE_TABPFN) {
+  TABPFN_OK <- tryCatch({
+    requireNamespace("reticulate", quietly = TRUE) &&
+      { reticulate::import("tabimpute.interface"); TRUE }
+  }, error = function(e) FALSE)
+}
+cat("TabPFN available:", TABPFN_OK, "\n")
 
 
 # ---- Section 2: adapt_sim_for_pigauto() -------------------------------------
@@ -277,7 +295,49 @@ run_one_replicate <- function(scenario, rep_id) {
     cat("  [ERROR] pigauto GNN failed:", conditionMessage(e), "\n")
   })
 
-  # -- 3g. Collect results -------------------------------------------------------
+  # -- 3g. Method 3: TabPFN (no phylogeny) --------------------------------------
+  eval_tab <- NULL
+  if (TABPFN_OK) {
+    tryCatch({
+      cat("  Fitting TabPFN baseline...\n")
+      bl_tab <- fit_baseline_tabpfn(pd, splits = splits)
+      eval_tab <- evaluate_imputation(bl_tab$mu, truth, splits,
+                                      trait_map = pd$trait_map)
+    }, error = function(e) {
+      cat("  [ERROR] TabPFN baseline failed:", conditionMessage(e), "\n")
+    })
+  }
+
+  # -- 3h. Method 4: pigauto (TabPFN + GNN) ------------------------------------
+  eval_tab_gnn <- NULL
+  if (TABPFN_OK && !is.null(eval_tab)) {
+    tryCatch({
+      # Build graph if not already done
+      if (!exists("graph", inherits = FALSE)) {
+        graph <- build_phylo_graph(adapted$tree, k_eigen = K_EIGEN)
+      }
+      cat(sprintf("  Training pigauto with TabPFN baseline (epochs = %d)...\n",
+                  EPOCHS))
+      fit_tg <- fit_pigauto(
+        data     = pd,
+        tree     = adapted$tree,
+        splits   = splits,
+        graph    = graph,
+        baseline = bl_tab,
+        epochs   = EPOCHS,
+        eval_every = EVAL_EVERY,
+        verbose  = FALSE,
+        seed     = seed
+      )
+      cat("  Predicting (TabPFN+GNN)...\n")
+      pred_tg <- predict(fit_tg, return_se = TRUE)
+      eval_tab_gnn <- evaluate_imputation(pred_tg, truth, splits)
+    }, error = function(e) {
+      cat("  [ERROR] pigauto TabPFN+GNN failed:", conditionMessage(e), "\n")
+    })
+  }
+
+  # -- 3i. Collect results -------------------------------------------------------
   collect_results <- function(eval_df, method_name) {
     if (is.null(eval_df)) return(NULL)
     # Only keep test split
@@ -309,8 +369,10 @@ run_one_replicate <- function(scenario, rep_id) {
   }
 
   rbind(
-    collect_results(eval_bl,  "BM_baseline"),
-    collect_results(eval_gnn, "pigauto_GNN")
+    collect_results(eval_bl,      "BM_baseline"),
+    collect_results(eval_gnn,     "pigauto_GNN"),
+    collect_results(eval_tab,     "TabPFN"),
+    collect_results(eval_tab_gnn, "TabPFN_GNN")
   )
 }
 
@@ -499,38 +561,43 @@ if (nrow(results_df) > 0) {
                                  summary_df$metric, summary_df$method), ]
   print(summary_df, row.names = FALSE)
 
-  # -- Compute improvement: (baseline - pigauto) / baseline * 100 ---------------
+  # -- Compute improvement: each method vs BM baseline --------------------------
   cat("\n")
   cat(strrep("-", 70), "\n")
-  cat("IMPROVEMENT: % reduction in error (GNN vs baseline)\n")
-  cat("  Positive = GNN better; computed for RMSE, MAE, Brier\n")
+  cat("IMPROVEMENT: % change vs BM baseline (all methods)\n")
+  cat("  Positive = method better; for RMSE/MAE/Brier lower is better\n")
   cat(strrep("-", 70), "\n")
 
-  # For metrics where lower is better
-  lower_better <- c("rmse", "mae", "brier")
-  # For metrics where higher is better
+  lower_better  <- c("rmse", "mae", "brier")
   higher_better <- c("pearson_r", "accuracy", "spearman_rho")
 
-  bl_rows  <- summary_df[summary_df$method == "BM_baseline", ]
-  gnn_rows <- summary_df[summary_df$method == "pigauto_GNN", ]
-
+  bl_rows   <- summary_df[summary_df$method == "BM_baseline", ]
   merge_key <- c("scenario", "type", "metric")
-  comp <- merge(
-    bl_rows[, c(merge_key, "description", "mean")],
-    gnn_rows[, c(merge_key, "mean")],
-    by = merge_key, suffixes = c("_bl", "_gnn")
-  )
 
-  comp$improvement_pct <- ifelse(
-    comp$metric %in% lower_better,
-    (comp$mean_bl - comp$mean_gnn) / abs(comp$mean_bl) * 100,
-    (comp$mean_gnn - comp$mean_bl) / pmax(abs(comp$mean_bl), 1e-8) * 100
-  )
+  # Compare each non-baseline method to BM
+  other_methods <- setdiff(unique(summary_df$method), "BM_baseline")
+  comp_list <- list()
+  for (meth in other_methods) {
+    m_rows <- summary_df[summary_df$method == meth, ]
+    cc <- merge(
+      bl_rows[, c(merge_key, "description", "mean")],
+      m_rows[, c(merge_key, "mean")],
+      by = merge_key, suffixes = c("_bl", "_method")
+    )
+    cc$method <- meth
+    cc$improvement_pct <- ifelse(
+      cc$metric %in% lower_better,
+      (cc$mean_bl - cc$mean_method) / abs(cc$mean_bl) * 100,
+      (cc$mean_method - cc$mean_bl) / pmax(abs(cc$mean_bl), 1e-8) * 100
+    )
+    comp_list[[length(comp_list) + 1L]] <- cc
+  }
+  comp <- do.call(rbind, comp_list)
+  comp <- comp[order(comp$scenario, comp$type, comp$metric, comp$method), ]
 
-  comp <- comp[order(comp$scenario, comp$type, comp$metric), ]
   cat("\n")
-  print(comp[, c("scenario", "description", "type", "metric",
-                  "mean_bl", "mean_gnn", "improvement_pct")],
+  print(comp[, c("scenario", "description", "method", "type", "metric",
+                  "mean_bl", "mean_method", "improvement_pct")],
         row.names = FALSE, digits = 3)
 
 } else {
@@ -596,7 +663,7 @@ if (nrow(results_df) > 0 && requireNamespace("ggplot2", quietly = TRUE)) {
     cat("  Saved: script/benchmark_accuracy_discrete.pdf\n")
   }
 
-  # -- 7c. Improvement plot (% improvement of GNN over baseline) -----------------
+  # -- 7c. Improvement plot (% improvement over BM baseline, all methods) --------
   if (exists("comp") && nrow(comp) > 0) {
     comp_plot <- comp[comp$metric %in% c(lower_better, higher_better), ]
 
@@ -607,17 +674,18 @@ if (nrow(results_df) > 0 && requireNamespace("ggplot2", quietly = TRUE)) {
                    aes(x = reorder(label, improvement_pct),
                        y = improvement_pct, fill = metric)) +
         geom_col(position = position_dodge(width = 0.7), width = 0.6) +
+        facet_wrap(~ method) +
         geom_hline(yintercept = 0, linetype = "dashed", colour = "grey40") +
         coord_flip() +
-        labs(x = NULL, y = "% improvement (GNN over BM baseline)",
-             title = "Relative improvement by scenario and trait type",
+        labs(x = NULL, y = "% improvement over BM baseline",
+             title = "Relative improvement by scenario, type, and method",
              fill = "Metric") +
-        theme_minimal(base_size = 12) +
+        theme_minimal(base_size = 11) +
         theme(legend.position = "bottom")
       print(p3)
 
       ggsave("script/benchmark_improvement.pdf", p3,
-             width = 9, height = 7)
+             width = 10, height = 8)
       cat("  Saved: script/benchmark_improvement.pdf\n")
     }
   }

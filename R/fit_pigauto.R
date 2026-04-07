@@ -20,8 +20,15 @@
 #'     mask token.
 #'   \item The model predicts \eqn{\delta} from graph context.
 #'   \item Loss = type-specific reconstruction on corrupted cells +
-#'     \code{lambda_shrink} * MSE of \eqn{\delta - \mu}.
+#'     \code{lambda_shrink} * MSE(\eqn{\delta - \mu}) +
+#'     \code{lambda_gate} * MSE(\eqn{r}).
 #' }
+#'
+#' The gate penalty on \eqn{r} is necessary because when \eqn{\delta =
+#' \mu} (the BM-optimal solution for observed cells), the reconstruction
+#' and shrinkage losses both equal zero regardless of \eqn{r}, leaving no
+#' gradient to close the gate.  The explicit penalty ensures gates default
+#' toward zero when the GNN correction provides no benefit.
 #'
 #' **Type-specific losses:**
 #' \describe{
@@ -50,6 +57,9 @@
 #'   (default \code{8}).
 #' @param lambda_shrink numeric. Weight on the residual shrinkage loss
 #'   (default \code{0.03}).
+#' @param lambda_gate numeric. Weight on the gate regularisation penalty
+#'   that pushes learnable gates toward zero.  Prevents gates from staying
+#'   open when the GNN provides no useful correction (default \code{0.01}).
 #' @param eval_every integer. Evaluate on val every N epochs (default
 #'   \code{100}).
 #' @param patience integer. Early-stopping patience in eval cycles (default
@@ -77,6 +87,7 @@ fit_pigauto <- function(
     corruption_rate = 0.55,
     refine_steps    = 8L,
     lambda_shrink   = 0.03,
+    lambda_gate     = 0.01,
     eval_every      = 100L,
     patience        = 10L,
     clip_norm       = 1.0,
@@ -175,6 +186,25 @@ fit_pigauto <- function(
     cov_dim        = as.integer(cov_dim),
     per_column_rs  = TRUE
   )
+
+  # Type-aware gate init: discrete columns get res_raw = -6 (gate ≈ 0.001)
+  # so the GNN correction is essentially off unless the training signal
+  # actively pushes the gate open.  Continuous columns keep -1.0 (gate ≈
+  # 0.135) for gradient flow.
+  if (has_trait_map) {
+    init_vals <- rep(-1.0, p)
+    for (tm in trait_map) {
+      if (tm$type %in% c("binary", "categorical", "ordinal")) {
+        init_vals[tm$latent_cols] <- -6.0
+      }
+    }
+    torch::with_no_grad({
+      model$res_raw$copy_(
+        torch::torch_tensor(init_vals, dtype = torch::torch_float())
+      )
+    })
+  }
+
   model$to(device = device)
   opt <- torch::optim_adamw(model$parameters, lr = lr,
                              weight_decay = weight_decay)
@@ -185,7 +215,8 @@ fit_pigauto <- function(
   patience_left <- patience
   history       <- data.frame(
     epoch = integer(0), loss_rec = double(0),
-    loss_shrink = double(0), val_loss = double(0)
+    loss_shrink = double(0), loss_gate = double(0),
+    val_loss = double(0)
   )
 
   for (epoch in seq_len(epochs)) {
@@ -257,7 +288,15 @@ fit_pigauto <- function(
     # when the model has insufficient signal.
     deviation <- (delta - t_MU)[masked_bool]
     loss_shrink <- torch::torch_mean(deviation$pow(2))
-    loss <- loss_rec + lambda_shrink * loss_shrink
+
+    # Gate regularisation pushes rs toward zero.  When delta ≈ MU
+    # (the BM-optimal solution), the reconstruction loss is the same
+    # for any rs value, so rs receives zero gradient from rec and
+    # shrinkage losses.  Without this term, gates stay at their init
+    # and corrupt discrete predictions at inference.
+    loss_gate <- torch::torch_mean(rs$pow(2))
+
+    loss <- loss_rec + lambda_shrink * loss_shrink + lambda_gate * loss_gate
     loss$backward()
 
     if (!all_grads_finite(model$parameters)) {
@@ -291,14 +330,16 @@ fit_pigauto <- function(
         epoch       = epoch,
         loss_rec    = as.numeric(loss_rec$item()),
         loss_shrink = as.numeric(loss_shrink$item()),
+        loss_gate   = as.numeric(loss_gate$item()),
         val_loss    = if (is.na(val_loss_val)) NA_real_ else val_loss_val
       ))
 
       if (verbose) {
         msg <- sprintf(
-          "epoch %4d | rec %.4f | shrink %.4f",
+          "epoch %4d | rec %.4f | shrink %.4f | gate %.4f",
           epoch, as.numeric(loss_rec$item()),
-          as.numeric(loss_shrink$item())
+          as.numeric(loss_shrink$item()),
+          as.numeric(loss_gate$item())
         )
         if (!is.na(val_loss_val)) {
           msg <- paste0(msg, sprintf(" | val %.4f | best %.4f | pat %d",
