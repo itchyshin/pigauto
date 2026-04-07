@@ -1,0 +1,25 @@
+"trait","method","n","rmse","mae","pearson_r","coverage_95"
+"Beak.Length_Culmen","BM (pigauto)",165,5.9031,3.5623,0.9399,NA
+"Beak.Length_Culmen","pigauto (BM+GNN)",165,5.9031,3.5623,0.9399,"94.5%"
+"Beak.Length_Culmen","Rphylopars",165,5.903,3.5623,0.9399,NA
+"Centroid.Latitude","BM (pigauto)",147,17.2764,11.6965,0.5875,NA
+"Centroid.Latitude","pigauto (BM+GNN)",147,17.2764,11.6965,0.5875,"93.9%"
+"Centroid.Latitude","Rphylopars",147,17.2762,11.6964,0.5875,NA
+"Centroid.Longitude","BM (pigauto)",153,59.627,40.0863,0.7355,NA
+"Centroid.Longitude","pigauto (BM+GNN)",153,59.627,40.0863,0.7355,"90.2%"
+"Centroid.Longitude","Rphylopars",153,59.6266,40.0861,0.7355,NA
+"Mass","BM (pigauto)",145,204.886,60.1014,0.9474,NA
+"Mass","pigauto (BM+GNN)",145,204.8847,60.101,0.9474,"91%"
+"Mass","Rphylopars",145,204.8902,60.1022,0.9474,NA
+"Range.Size","BM (pigauto)",151,11623809.3505,2911631.1895,0.0094,NA
+"Range.Size","pigauto (BM+GNN)",151,11623814.0189,2911632.3002,0.0094,"76.8%"
+"Range.Size","Rphylopars",151,11624552.7635,2911871.8734,0.0094,NA
+"Tail.Length","BM (pigauto)",146,21.304,12.0485,0.9134,NA
+"Tail.Length","pigauto (BM+GNN)",146,21.304,12.0485,0.9134,"95.2%"
+"Tail.Length","Rphylopars",146,21.3036,12.0484,0.9134,NA
+"Tarsus.Length","BM (pigauto)",133,12.1843,4.1801,0.9423,NA
+"Tarsus.Length","pigauto (BM+GNN)",133,12.1843,4.1801,0.9423,"94.7%"
+"Tarsus.Length","Rphylopars",133,12.1844,4.1801,0.9423,NA
+"Wing.Length","BM (pigauto)",156,24.3093,9.5179,0.9653,NA
+"Wing.Length","pigauto (BM+GNN)",156,24.3094,9.5179,0.9653,"96.2%"
+"Wing.Length","Rphylopars",156,24.3093,9.5179,0.9653,NA

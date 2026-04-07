@@ -52,15 +52,13 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
     trait_map <- pred$trait_map
     probs     <- pred$probabilities
     pred_mat  <- pred$imputed_latent
-    if (is.null(pred_se) && !is.null(pred$se)) {
-      pred_se_orig <- pred$se
-    } else {
-      pred_se_orig <- NULL
+    # Use latent-scale SE for coverage computation (matches truth scale)
+    if (is.null(pred_se) && !is.null(pred$se_latent)) {
+      pred_se <- pred$se_latent
     }
   } else {
-    pred_mat     <- pred
-    probs        <- NULL
-    pred_se_orig <- NULL
+    pred_mat <- pred
+    probs    <- NULL
   }
 
   if (!is.matrix(pred_mat) || !is.matrix(truth)) {

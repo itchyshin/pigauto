@@ -158,14 +158,24 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
 
   # ---- SE ------------------------------------------------------------------
   se_mat <- NULL
+  se_latent_mat <- NULL
   if (return_se) {
     if (n_imp > 1L) {
-      se_mat <- compute_mc_se(decode_results, trait_map, object$species_names)
+      se_mat <- compute_mc_se(decode_results, trait_map,
+                              object$baseline$se, latent_runs[[1]],
+                              object$species_names)
     } else {
       se_mat <- compute_single_se(latent_runs[[1]], probs, trait_map,
-                                  object$baseline$se, rs_val,
+                                  object$baseline$se,
                                   object$species_names)
     }
+
+    # Latent-scale SE for coverage computation in evaluate_imputation.
+    # For continuous/count/ordinal: baseline SE in latent (z-score) units.
+    # For MC dropout: combine baseline + MC dropout latent SEs.
+    se_latent_mat <- compute_latent_se(latent_runs, trait_map,
+                                       object$baseline$se,
+                                       object$species_names)
   }
 
   # ---- Imputed datasets for multiple imputation ----------------------------
@@ -178,6 +188,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
       imputed          = imputed,
       imputed_latent   = latent_pred,
       se               = se_mat,
+      se_latent        = se_latent_mat,
       probabilities    = probs,
       imputed_datasets = imputed_datasets,
       trait_map        = trait_map,
@@ -221,20 +232,28 @@ decode_continuous_legacy <- function(latent_runs, object, rs_val,
         if (is_log) bt <- exp(bt)
         bt
       })
-      se_out <- matrix(NA_real_, nrow(imputed), ncol(imputed),
-                       dimnames = dimnames(imputed))
+      se_mc <- matrix(NA_real_, nrow(imputed), ncol(imputed),
+                      dimnames = dimnames(imputed))
       for (j in seq_len(ncol(imputed))) {
         vals <- sapply(all_bt, function(m) m[, j])
-        se_out[, j] <- apply(vals, 1, stats::sd)
+        se_mc[, j] <- apply(vals, 1, stats::sd)
       }
-    } else {
-      bm_se   <- object$baseline$se
-      se_z    <- bm_se * rs_val
-      se_orig <- sweep(se_z, 2, sds, "*")
+      # Add baseline SE in quadrature
+      bm_se <- object$baseline$se
+      se_bm_orig <- sweep(bm_se, 2, sds, "*")
       if (is_log) {
         pred_log <- sweep(pred_scaled, 2, sds, "*")
         pred_log <- sweep(pred_log, 2, means, "+")
-        se_orig  <- exp(pred_log) * se_orig
+        se_bm_orig <- exp(pred_log) * se_bm_orig
+      }
+      se_out <- sqrt(se_bm_orig^2 + se_mc^2)
+    } else {
+      bm_se   <- object$baseline$se
+      se_orig <- sweep(bm_se, 2, sds, "*")
+      if (is_log) {
+        pred_log <- sweep(pred_scaled, 2, sds, "*")
+        pred_log <- sweep(pred_log, 2, means, "+")
+        se_orig  <- exp(pred_log) * se_orig  # delta method
       }
       rownames(se_orig) <- object$species_names
       colnames(se_orig) <- object$trait_names
@@ -351,7 +370,12 @@ pool_imputations <- function(decode_results, latent_runs, trait_map) {
 
 # ---- Internal: MC dropout SE computation ----------------------------------------
 
-compute_mc_se <- function(decode_results, trait_map, species_names) {
+compute_mc_se <- function(decode_results, trait_map, baseline_se,
+                          latent_mean, species_names) {
+  # Combines two sources of uncertainty:
+  # 1. Baseline (Rphylopars) SE — phylogenetic imputation uncertainty
+  # 2. MC dropout between-imputation SD — GNN correction uncertainty
+  # Combined in quadrature: SE_total = sqrt(SE_BM^2 + SE_MC^2)
   M <- length(decode_results)
   n <- nrow(decode_results[[1]]$imputed)
   n_traits <- length(trait_map)
@@ -362,22 +386,45 @@ compute_mc_se <- function(decode_results, trait_map, species_names) {
 
   for (tm in trait_map) {
     nm <- tm$name
+    lc <- tm$latent_cols
 
     if (tm$type %in% c("continuous", "count")) {
+      # MC dropout between-imputation SD in original scale
       vals <- sapply(decode_results, function(dr) as.numeric(dr$imputed[[nm]]))
-      se_mat[, nm] <- apply(vals, 1, stats::sd)
+      se_mc <- apply(vals, 1, stats::sd)
+
+      # Baseline SE in original scale
+      se_latent <- baseline_se[, lc[1]]
+      se_bm_orig <- se_latent * tm$sd
+      if (tm$type == "continuous" && isTRUE(tm$log_transform)) {
+        pred_log <- latent_mean[, lc[1]] * tm$sd + tm$mean
+        se_bm_orig <- exp(pred_log) * se_bm_orig
+      } else if (tm$type == "count") {
+        pred_log1p <- latent_mean[, lc[1]] * tm$sd + tm$mean
+        se_bm_orig <- exp(pred_log1p) * se_bm_orig
+      }
+
+      # Combine in quadrature
+      se_mat[, nm] <- sqrt(se_bm_orig^2 + se_mc^2)
 
     } else if (tm$type == "ordinal") {
       vals <- sapply(decode_results, function(dr) {
         as.integer(dr$imputed[[nm]]) - 1L
       })
-      se_mat[, nm] <- apply(vals, 1, stats::sd)
+      se_mc <- apply(vals, 1, stats::sd)
+
+      se_latent <- baseline_se[, lc[1]]
+      se_bm_orig <- se_latent * tm$sd
+
+      se_mat[, nm] <- sqrt(se_bm_orig^2 + se_mc^2)
 
     } else if (tm$type == "binary") {
+      # Between-imputation SD of probabilities
       prob_vals <- sapply(decode_results, function(dr) dr$probabilities[[nm]])
       se_mat[, nm] <- apply(prob_vals, 1, stats::sd)
 
     } else if (tm$type == "categorical") {
+      # Entropy of mean probability distribution
       prob_mats <- lapply(decode_results, function(dr) dr$probabilities[[nm]])
       avg_prob <- Reduce("+", prob_mats) / M
       entropy <- -rowSums(avg_prob * log(pmax(avg_prob, 1e-10)))
@@ -391,7 +438,10 @@ compute_mc_se <- function(decode_results, trait_map, species_names) {
 # ---- Internal: single-run SE computation ----------------------------------------
 
 compute_single_se <- function(latent_mat, probs, trait_map, baseline_se,
-                              rs_val, species_names) {
+                              species_names) {
+  # Propagate baseline (Rphylopars) SE to original scale.
+  # The baseline SE captures phylogenetic imputation uncertainty.
+  # This uncertainty is always present, regardless of GNN correction magnitude.
   n <- nrow(latent_mat)
   n_traits <- length(trait_map)
 
@@ -404,35 +454,77 @@ compute_single_se <- function(latent_mat, probs, trait_map, baseline_se,
     lc <- tm$latent_cols
 
     if (tm$type == "continuous") {
-      se_latent <- baseline_se[, lc] * rs_val
+      # Baseline SE in latent (z-score) scale -> original scale
+      se_latent <- baseline_se[, lc]
       se_orig <- se_latent * tm$sd
-      if (tm$log_transform) {
+      if (isTRUE(tm$log_transform)) {
         pred_log <- latent_mat[, lc] * tm$sd + tm$mean
-        se_orig <- exp(pred_log) * se_orig
+        se_orig <- exp(pred_log) * se_orig  # delta method
       }
       se_mat[, nm] <- se_orig
 
     } else if (tm$type == "count") {
-      se_latent <- baseline_se[, lc] * rs_val
+      se_latent <- baseline_se[, lc]
       se_log1p <- se_latent * tm$sd
       pred_log1p <- latent_mat[, lc] * tm$sd + tm$mean
-      se_mat[, nm] <- exp(pred_log1p) * se_log1p
+      se_mat[, nm] <- exp(pred_log1p) * se_log1p  # delta method
 
     } else if (tm$type == "ordinal") {
-      se_latent <- baseline_se[, lc] * rs_val
+      se_latent <- baseline_se[, lc]
       se_mat[, nm] <- se_latent * tm$sd
 
     } else if (tm$type == "binary") {
+      # Bernoulli SD from predicted probability
       prob <- probs[[nm]]
       se_mat[, nm] <- sqrt(prob * (1 - prob))
 
     } else if (tm$type == "categorical") {
+      # Entropy of probability distribution
       prob_mat <- probs[[nm]]
       entropy <- -rowSums(prob_mat * log(pmax(prob_mat, 1e-10)))
       se_mat[, nm] <- entropy
     }
   }
   se_mat
+}
+
+
+# ---- Internal: latent-scale SE for coverage computation --------------------------
+#
+# Returns an n x p_latent matrix of SE in latent (z-score) scale.
+# For continuous/count/ordinal: baseline SE from Rphylopars.
+# For binary/categorical: NA (coverage is not computed for discrete types).
+# When multiple imputations exist, combines baseline SE with between-imputation
+# SD in latent scale via quadrature.
+
+compute_latent_se <- function(latent_runs, trait_map, baseline_se,
+                              species_names) {
+  n <- nrow(latent_runs[[1]])
+  p_latent <- ncol(latent_runs[[1]])
+  n_imp <- length(latent_runs)
+
+  se_lat <- matrix(NA_real_, nrow = n, ncol = p_latent)
+  rownames(se_lat) <- species_names
+
+  for (tm in trait_map) {
+    lc <- tm$latent_cols
+
+    if (tm$type %in% c("continuous", "count", "ordinal")) {
+      for (j in lc) {
+        se_bm <- baseline_se[, j]
+
+        if (n_imp > 1L) {
+          vals <- sapply(latent_runs, function(lr) lr[, j])
+          se_mc <- apply(vals, 1, stats::sd)
+          se_lat[, j] <- sqrt(se_bm^2 + se_mc^2)
+        } else {
+          se_lat[, j] <- se_bm
+        }
+      }
+    }
+    # binary/categorical: leave as NA (coverage not applicable)
+  }
+  se_lat
 }
 
 

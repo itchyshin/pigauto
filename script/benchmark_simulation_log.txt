@@ -1,0 +1,568 @@
+Loading BACE via devtools::load_all...
+ℹ Loading BACE
+
+Loading the 'BACE' package (version 0.0.0.9000). For an
+introduction and vignette to the package please see: https://daniel1noble.github.io/BACE/
+
+To cite BACE in publications, use:
+
+Nakagawa S, Drobniak S, Noble D (2026). _BACE: Bayesian Augmentation
+using Chained Equations_. R package version 0.0.0.9000,
+<https://github.com/daniel1noble/BACE>.
+
+Hadfield J (2010). “MCMC methods for multi-response generalized linear
+mixed models: the MCMCglmm R package.” _Journal of Statistical
+Software_, *33*(2), 1-22. doi:10.18637/jss.v033.i02
+<https://doi.org/10.18637/jss.v033.i02>.
+torch available: TRUE 
+
+====================================================================== 
+PIGAUTO SIMULATION BENCHMARK
+Scenarios: 8 | Replicates: 3 | Epochs: 500 | Missing: 25%
+====================================================================== 
+
+[1/24] 
+--- Scenario 1 (All continuous, low signal), rep 1, seed 1001 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: -0.073, 0.388, -0.494
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 37, Test cells: 113
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[2/24] 
+--- Scenario 1 (All continuous, low signal), rep 2, seed 2001 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: -0.347, -0.126, 0.119
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 37, Test cells: 113
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[3/24] 
+--- Scenario 1 (All continuous, low signal), rep 3, seed 3001 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: 0.471, -0.013, 0.229
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 37, Test cells: 113
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[4/24] 
+--- Scenario 2 (All continuous, high signal), rep 1, seed 1002 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: -0.126, 0.211, 0.472
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 37, Test cells: 113
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[5/24] 
+--- Scenario 2 (All continuous, high signal), rep 2, seed 2002 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: 0.417, 0.294, 0.259
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 37, Test cells: 113
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[6/24] 
+--- Scenario 2 (All continuous, high signal), rep 3, seed 3002 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: 0.407, -0.229, 0.077
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 37, Test cells: 113
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[7/24] 
+--- Scenario 3 (Mixed (cont+binary+count), low signal), rep 1, seed 1003 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: 0.327, 0.498, 0.245
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 37, Test cells: 113
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[8/24] 
+--- Scenario 3 (Mixed (cont+binary+count), low signal), rep 2, seed 2003 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: -0.105, 0.423, 0.358
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 37, Test cells: 113
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[9/24] 
+--- Scenario 3 (Mixed (cont+binary+count), low signal), rep 3, seed 3003 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: 0.29, 0.214, -0.449
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 37, Test cells: 113
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[10/24] 
+--- Scenario 4 (Mixed (cont+binary+count), high signal), rep 1, seed 1004 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: -0.065, 0.414, -0.011
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 37, Test cells: 113
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[11/24] 
+--- Scenario 4 (Mixed (cont+binary+count), high signal), rep 2, seed 2004 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: 0.067, 0.07, 0.141
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 37, Test cells: 113
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[12/24] 
+--- Scenario 4 (Mixed (cont+binary+count), high signal), rep 3, seed 3004 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: 0.479, 0.081, -0.477
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 37, Test cells: 113
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[13/24] 
+--- Scenario 5 (Mixed + categorical), rep 1, seed 1005 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: 0.047, 0.06, 0.13
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 7
+  Val cells: 55, Test cells: 206
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[14/24] 
+--- Scenario 5 (Mixed + categorical), rep 2, seed 2005 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: 0.182, 0.197, 0.202
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 7
+  Val cells: 70, Test cells: 203
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[15/24] 
+--- Scenario 5 (Mixed + categorical), rep 3, seed 3005 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: -0.403, 0.396, 0.199
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 7
+  Val cells: 58, Test cells: 200
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[16/24] 
+--- Scenario 6 (High missingness (50%)), rep 1, seed 1006 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: -0.224, -0.342, 0.295
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 75, Test cells: 225
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[17/24] 
+--- Scenario 6 (High missingness (50%)), rep 2, seed 2006 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: -0.301, 0.285, 0.205
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 75, Test cells: 225
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[18/24] 
+--- Scenario 6 (High missingness (50%)), rep 3, seed 3006 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: 0.277, 0.086, 0.261
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 75, Test cells: 225
+  Fitting BM baseline...
+
+warning: solve(): system is singular (rcond: 2.44769e-18); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.44769e-18); attempting approx solution
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[19/24] 
+--- Scenario 7 (Near-zero phylogenetic signal), rep 1, seed 1007 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: -0.483, 0.402, -0.075
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 37, Test cells: 113
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[20/24] 
+--- Scenario 7 (Near-zero phylogenetic signal), rep 2, seed 2007 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: 0.126, -0.085, -0.379
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 37, Test cells: 113
+  Fitting BM baseline...
+
+warning: solve(): system is singular (rcond: 8.20486e-20); attempting approx solution
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[21/24] 
+--- Scenario 7 (Near-zero phylogenetic signal), rep 3, seed 3007 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: 0.033, -0.476, -0.339
+  Adapted data: 150 species, 4 traits
+  Latent matrix: 150 x 4
+  Val cells: 37, Test cells: 113
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[22/24] 
+--- Scenario 8 (All 5 types), rep 1, seed 1008 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: -0.136, 0.346, 0.488, 0.069
+  Adapted data: 150 species, 5 traits
+  Latent matrix: 150 x 7
+  Val cells: 60, Test cells: 197
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[23/24] 
+--- Scenario 8 (All 5 types), rep 2, seed 2008 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: 0.273, 0.127, -0.325, -0.179
+  Adapted data: 150 species, 5 traits
+  Latent matrix: 150 x 7
+  Val cells: 72, Test cells: 197
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+
+[24/24] 
+--- Scenario 8 (All 5 types), rep 3, seed 3008 ---
+Generated default beta_matrix with pre-set sparsity
+Generated default beta_resp: 0.439, -0.467, -0.454, -0.325
+  Adapted data: 150 species, 5 traits
+  Latent matrix: 150 x 7
+  Val cells: 68, Test cells: 199
+  Fitting BM baseline...
+  Building phylo graph...
+  Training pigauto (epochs = 500)...
+  Predicting...
+Warning message:
+In decode_from_latent(lat, trait_map, object$species_names) :
+  NAs introduced by coercion to integer range
+
+Results saved to script/benchmark_results.csv (402 rows)
+
+====================================================================== 
+SUMMARY: Mean +/- SD per (scenario, method, type, metric)
+====================================================================== 
+ scenario                            description      method        type
+        1             All continuous, low signal BM_baseline  continuous
+        1             All continuous, low signal pigauto_GNN  continuous
+        1             All continuous, low signal BM_baseline  continuous
+        1             All continuous, low signal pigauto_GNN  continuous
+        2            All continuous, high signal BM_baseline  continuous
+        2            All continuous, high signal pigauto_GNN  continuous
+        2            All continuous, high signal BM_baseline  continuous
+        2            All continuous, high signal pigauto_GNN  continuous
+        3  Mixed (cont+binary+count), low signal BM_baseline      binary
+        3  Mixed (cont+binary+count), low signal pigauto_GNN      binary
+        3  Mixed (cont+binary+count), low signal BM_baseline      binary
+        3  Mixed (cont+binary+count), low signal pigauto_GNN      binary
+        3  Mixed (cont+binary+count), low signal BM_baseline  continuous
+        3  Mixed (cont+binary+count), low signal pigauto_GNN  continuous
+        3  Mixed (cont+binary+count), low signal BM_baseline  continuous
+        3  Mixed (cont+binary+count), low signal pigauto_GNN  continuous
+        3  Mixed (cont+binary+count), low signal BM_baseline       count
+        3  Mixed (cont+binary+count), low signal pigauto_GNN       count
+        3  Mixed (cont+binary+count), low signal BM_baseline       count
+        3  Mixed (cont+binary+count), low signal pigauto_GNN       count
+        3  Mixed (cont+binary+count), low signal BM_baseline       count
+        3  Mixed (cont+binary+count), low signal pigauto_GNN       count
+        4 Mixed (cont+binary+count), high signal BM_baseline      binary
+        4 Mixed (cont+binary+count), high signal pigauto_GNN      binary
+        4 Mixed (cont+binary+count), high signal BM_baseline      binary
+        4 Mixed (cont+binary+count), high signal pigauto_GNN      binary
+        4 Mixed (cont+binary+count), high signal BM_baseline  continuous
+        4 Mixed (cont+binary+count), high signal pigauto_GNN  continuous
+        4 Mixed (cont+binary+count), high signal BM_baseline  continuous
+        4 Mixed (cont+binary+count), high signal pigauto_GNN  continuous
+        4 Mixed (cont+binary+count), high signal BM_baseline       count
+        4 Mixed (cont+binary+count), high signal pigauto_GNN       count
+        4 Mixed (cont+binary+count), high signal BM_baseline       count
+        4 Mixed (cont+binary+count), high signal pigauto_GNN       count
+        4 Mixed (cont+binary+count), high signal BM_baseline       count
+        4 Mixed (cont+binary+count), high signal pigauto_GNN       count
+        5                    Mixed + categorical BM_baseline      binary
+        5                    Mixed + categorical pigauto_GNN      binary
+        5                    Mixed + categorical BM_baseline      binary
+        5                    Mixed + categorical pigauto_GNN      binary
+        5                    Mixed + categorical BM_baseline categorical
+        5                    Mixed + categorical pigauto_GNN categorical
+        5                    Mixed + categorical BM_baseline  continuous
+        5                    Mixed + categorical pigauto_GNN  continuous
+        5                    Mixed + categorical BM_baseline  continuous
+        5                    Mixed + categorical pigauto_GNN  continuous
+        6                 High missingness (50%) BM_baseline  continuous
+        6                 High missingness (50%) pigauto_GNN  continuous
+        6                 High missingness (50%) BM_baseline  continuous
+        6                 High missingness (50%) pigauto_GNN  continuous
+        7          Near-zero phylogenetic signal BM_baseline  continuous
+        7          Near-zero phylogenetic signal pigauto_GNN  continuous
+        7          Near-zero phylogenetic signal BM_baseline  continuous
+        7          Near-zero phylogenetic signal pigauto_GNN  continuous
+        8                            All 5 types BM_baseline      binary
+        8                            All 5 types pigauto_GNN      binary
+        8                            All 5 types BM_baseline      binary
+        8                            All 5 types pigauto_GNN      binary
+        8                            All 5 types BM_baseline categorical
+        8                            All 5 types pigauto_GNN categorical
+        8                            All 5 types BM_baseline  continuous
+        8                            All 5 types pigauto_GNN  continuous
+        8                            All 5 types BM_baseline  continuous
+        8                            All 5 types pigauto_GNN  continuous
+        8                            All 5 types BM_baseline       count
+        8                            All 5 types pigauto_GNN       count
+        8                            All 5 types BM_baseline       count
+        8                            All 5 types pigauto_GNN       count
+        8                            All 5 types BM_baseline       count
+        8                            All 5 types pigauto_GNN       count
+        8                            All 5 types BM_baseline     ordinal
+        8                            All 5 types pigauto_GNN     ordinal
+        8                            All 5 types BM_baseline     ordinal
+        8                            All 5 types pigauto_GNN     ordinal
+       metric      mean          sd
+    pearson_r 0.3229131 0.298139753
+    pearson_r 0.3229138 0.298140000
+         rmse 1.1264948 0.211281046
+         rmse 1.1264925 0.211283138
+    pearson_r 0.5479207 0.134498618
+    pearson_r 0.5479208 0.134498868
+         rmse 0.9418502 0.148347266
+         rmse 0.9418498 0.148349227
+     accuracy 0.5340266 0.077931551
+     accuracy 0.4983124 0.076762668
+        brier 0.2546439 0.016949009
+        brier 0.2600324 0.016671560
+    pearson_r 0.2358913 0.213995856
+    pearson_r 0.2359638 0.213842005
+         rmse 1.2170829 0.550723015
+         rmse 1.2167783 0.550126042
+          mae 0.6190406 0.169292673
+          mae 0.6190611 0.169331536
+    pearson_r 0.5606780 0.035311516
+    pearson_r 0.5607146 0.035381498
+         rmse 0.8648036 0.212356753
+         rmse 0.8648609 0.212449089
+     accuracy 0.7165775 0.194967278
+     accuracy 0.7317291 0.181628033
+        brier 0.1806995 0.106953608
+        brier 0.1830731 0.107989060
+    pearson_r 0.5231389 0.225608844
+    pearson_r 0.5233270 0.225734397
+         rmse 0.8052722 0.280752653
+         rmse 0.8053880 0.281049184
+          mae 0.8164150 0.057361460
+          mae 0.8164915 0.057007339
+    pearson_r 0.6032540 0.127004930
+    pearson_r 0.6032143 0.127091939
+         rmse 1.4168726 0.707089674
+         rmse 1.4168776 0.706793257
+     accuracy 0.5874269 0.058793746
+     accuracy 0.5698830 0.069471986
+        brier 0.2480382 0.016235132
+        brier 0.2413071 0.031351955
+     accuracy 0.4121740 0.061975694
+     accuracy 0.3446916 0.022043325
+    pearson_r 0.1704713 0.268212541
+    pearson_r 0.1704071 0.268158643
+         rmse 1.2167080 0.341359289
+         rmse 1.2167445 0.340950120
+    pearson_r 0.1104749 0.192088238
+    pearson_r 0.1104758 0.192088049
+         rmse 1.3304094 0.281267074
+         rmse 1.3304088 0.281268150
+    pearson_r 0.1238397 0.210951801
+    pearson_r 0.1238397 0.210951736
+         rmse 1.3405144 0.337446352
+         rmse 1.3405138 0.337447056
+     accuracy 0.5306218 0.046120103
+     accuracy 0.4661057 0.105714754
+        brier 0.2573736 0.007223967
+        brier 0.2586865 0.005519833
+     accuracy 0.4248768 0.100782266
+     accuracy 0.3530378 0.036415182
+    pearson_r 0.3466866 0.438942216
+    pearson_r 0.3466954 0.438871101
+         rmse 1.2019184 0.438068703
+         rmse 1.2013506 0.438365463
+          mae 0.8573141 0.033095238
+          mae 0.8574477 0.032774584
+    pearson_r 0.2551114 0.137175833
+    pearson_r 0.2551486 0.137088733
+         rmse 1.1382100 0.084843490
+         rmse 1.1381171 0.084696943
+         rmse 1.1508662 0.131831408
+         rmse 1.1506690 0.131553652
+ spearman_rho 0.2390539 0.110454394
+ spearman_rho 0.2363065 0.110250252
+
+---------------------------------------------------------------------- 
+IMPROVEMENT: % reduction in error (GNN vs baseline)
+  Positive = GNN better; computed for RMSE, MAE, Brier
+---------------------------------------------------------------------- 
+
+ scenario                            description        type       metric
+        1             All continuous, low signal  continuous    pearson_r
+        1             All continuous, low signal  continuous         rmse
+        2            All continuous, high signal  continuous    pearson_r
+        2            All continuous, high signal  continuous         rmse
+        3  Mixed (cont+binary+count), low signal      binary     accuracy
+        3  Mixed (cont+binary+count), low signal      binary        brier
+        3  Mixed (cont+binary+count), low signal  continuous    pearson_r
+        3  Mixed (cont+binary+count), low signal  continuous         rmse
+        3  Mixed (cont+binary+count), low signal       count          mae
+        3  Mixed (cont+binary+count), low signal       count    pearson_r
+        3  Mixed (cont+binary+count), low signal       count         rmse
+        4 Mixed (cont+binary+count), high signal      binary     accuracy
+        4 Mixed (cont+binary+count), high signal      binary        brier
+        4 Mixed (cont+binary+count), high signal  continuous    pearson_r
+        4 Mixed (cont+binary+count), high signal  continuous         rmse
+        4 Mixed (cont+binary+count), high signal       count          mae
+        4 Mixed (cont+binary+count), high signal       count    pearson_r
+        4 Mixed (cont+binary+count), high signal       count         rmse
+        5                    Mixed + categorical      binary     accuracy
+        5                    Mixed + categorical      binary        brier
+        5                    Mixed + categorical categorical     accuracy
+        5                    Mixed + categorical  continuous    pearson_r
+        5                    Mixed + categorical  continuous         rmse
+        6                 High missingness (50%)  continuous    pearson_r
+        6                 High missingness (50%)  continuous         rmse
+        7          Near-zero phylogenetic signal  continuous    pearson_r
+        7          Near-zero phylogenetic signal  continuous         rmse
+        8                            All 5 types      binary     accuracy
+        8                            All 5 types      binary        brier
+        8                            All 5 types categorical     accuracy
+        8                            All 5 types  continuous    pearson_r
+        8                            All 5 types  continuous         rmse
+        8                            All 5 types       count          mae
+        8                            All 5 types       count    pearson_r
+        8                            All 5 types       count         rmse
+        8                            All 5 types     ordinal         rmse
+        8                            All 5 types     ordinal spearman_rho
+ mean_bl mean_gnn improvement_pct
+   0.323    0.323        2.09e-04
+   1.126    1.126        2.06e-04
+   0.548    0.548        1.87e-05
+   0.942    0.942        4.22e-05
+   0.534    0.498       -6.69e+00
+   0.255    0.260       -2.12e+00
+   0.236    0.236        3.07e-02
+   1.217    1.217        2.50e-02
+   0.619    0.619       -3.32e-03
+   0.561    0.561        6.53e-03
+   0.865    0.865       -6.63e-03
+   0.717    0.732        2.11e+00
+   0.181    0.183       -1.31e+00
+   0.523    0.523        3.60e-02
+   0.805    0.805       -1.44e-02
+   0.816    0.816       -9.38e-03
+   0.603    0.603       -6.59e-03
+   1.417    1.417       -3.54e-04
+   0.587    0.570       -2.99e+00
+   0.248    0.241        2.71e+00
+   0.412    0.345       -1.64e+01
+   0.170    0.170       -3.76e-02
+   1.217    1.217       -3.00e-03
+   0.110    0.110        8.10e-04
+   1.330    1.330        4.50e-05
+   0.124    0.124        8.00e-06
+   1.341    1.341        4.82e-05
+   0.531    0.466       -1.22e+01
+   0.257    0.259       -5.10e-01
+   0.425    0.353       -1.69e+01
+   0.347    0.347        2.53e-03
+   1.202    1.201        4.72e-02
+   0.857    0.857       -1.56e-02
+   0.255    0.255        1.46e-02
+   1.138    1.138        8.16e-03
+   1.151    1.151        1.71e-02
+   0.239    0.236       -1.15e+00
+
+====================================================================== 
+GENERATING FIGURES
+====================================================================== 
+  Saved: script/benchmark_rmse_continuous.pdf
+  Saved: script/benchmark_accuracy_discrete.pdf
+  Saved: script/benchmark_improvement.pdf
+
+====================================================================== 
+BENCHMARK COMPLETE
+====================================================================== 

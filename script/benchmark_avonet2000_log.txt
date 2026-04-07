@@ -1,0 +1,218 @@
+==========================================================
+pigauto vs Rphylopars benchmark: AVONET 2000 species
+==========================================================
+Data directory: /Users/z3437171/Dropbox/Github Local/BACE/dev/testing_data 
+Output directory: /Users/z3437171/Dropbox/Github Local/pigauto/script 
+
+torch available: TRUE 
+CUDA available:  FALSE 
+MPS available:   TRUE 
+
+Masked data loaded: 2000 species x 8 traits
+Truth data loaded: 1594 held-out entries
+  Traits in truth: Beak.Length_Culmen, Centroid.Latitude, Centroid.Longitude, Mass, Range.Size, Tail.Length, Tarsus.Length, Wing.Length 
+Tree already has branch lengths.
+Tree: 2000 tips
+
+--- Preparing data for pigauto ---
+Trait columns: Mass, Wing.Length, Beak.Length_Culmen, Tarsus.Length, Tail.Length, Range.Size, Centroid.Latitude, Centroid.Longitude 
+pigauto_data
+  Species: 2000 
+  Traits:  8 
+  Types:   continuous=8 
+  Latent columns: 8 
+  Missing values: 10.4 %
+  Log-transformed: Mass 
+  Log-transformed: Wing.Length 
+  Log-transformed: Beak.Length_Culmen 
+  Log-transformed: Tarsus.Length 
+  Log-transformed: Tail.Length 
+  Log-transformed: Range.Size 
+  Not logged:      Centroid.Latitude 
+  Not logged:      Centroid.Longitude 
+
+--- Building val/test splits from truth CSV ---
+Truth entries matched to X_scaled: 1594 of 1594 
+Validation cells: 398 
+Test cells:       1196 
+Observed (train): 14337 of 16000 total cells
+
+==========================================================
+SECTION 4: pigauto pipeline
+==========================================================
+
+--- Fitting BM baseline via Rphylopars ---
+
+warning: solve(): system is singular (rcond: 2.8278e-18); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.1557e-30); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.94721e-69); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.59196e-19); attempting approx solution
+
+warning: solve(): system is singular (rcond: 8.21436e-146); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.51865e-30); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.21563e-118); attempting approx solution
+
+warning: solve(): system is singular (rcond: 7.66009e-30); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.24503e-26); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.72809e-30); attempting approx solution
+
+warning: solve(): system is singular (rcond: 4.00626e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.10943e-16); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.61413e-18); attempting approx solution
+BM baseline fitted. mu: 2000 x 8 
+
+--- Building phylogenetic graph (2000 tips) ---
+Graph: adj 2000 x 2000 | coords 2000 x 8 
+
+--- Training pigauto GNN (epochs = 2000) ---
+Using device: mps
+epoch  100 | rec 0.0000 | shrink 0.0000 | val 0.7594 | best Inf | pat 10
+epoch  200 | rec 0.0000 | shrink 0.0000 | val 0.7594 | best 0.7594 | pat 10
+epoch  300 | rec 0.0000 | shrink 0.0000 | val 0.7594 | best 0.7594 | pat 9
+epoch  400 | rec 0.0000 | shrink 0.0000 | val 0.7594 | best 0.7594 | pat 8
+epoch  500 | rec 0.0000 | shrink 0.0000 | val 0.7594 | best 0.7594 | pat 7
+epoch  600 | rec 0.0000 | shrink 0.0000 | val 0.7594 | best 0.7594 | pat 6
+epoch  700 | rec 0.0000 | shrink 0.0000 | val 0.7594 | best 0.7594 | pat 5
+epoch  800 | rec 0.0000 | shrink 0.0000 | val 0.7594 | best 0.7594 | pat 4
+epoch  900 | rec 0.0000 | shrink 0.0000 | val 0.7594 | best 0.7594 | pat 3
+epoch 1000 | rec 0.0000 | shrink 0.0000 | val 0.7594 | best 0.7594 | pat 2
+epoch 1100 | rec 0.0000 | shrink 0.0000 | val 0.7594 | best 0.7594 | pat 1
+Early stopping at epoch 1100
+
+--- Generating pigauto predictions (MC dropout, 5 imputations) ---
+Predictions generated.
+
+==========================================================
+SECTION 5: Standalone Rphylopars
+==========================================================
+
+Traits to log-transform for Rphylopars: Mass, Wing.Length, Beak.Length_Culmen, Tarsus.Length, Tail.Length, Range.Size 
+Running Rphylopars (BM, no phenotypic error)...
+
+warning: solve(): system is singular (rcond: 2.83888e-18); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.20203e-30); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.52272e-69); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.59646e-19); attempting approx solution
+
+warning: solve(): system is singular (rcond: 4.93523e-146); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.35647e-29); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.78595e-118); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.39644e-30); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.18227e-26); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.4167e-30); attempting approx solution
+
+warning: solve(): system is singular (rcond: 4.5356e-19); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.85021e-16); attempting approx solution
+
+warning: solve(): system is singular (rcond: 9.86443e-18); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.01284e-16); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.13703e-16); attempting approx solution
+Rphylopars completed in 79.7 seconds.
+Rphylopars predictions extracted for 2000 species.
+
+==========================================================
+SECTION 6: Merge predictions with truth
+==========================================================
+
+Comparison data frame: 1594 rows
+Columns: species_tip, trait, true_value, split, bm_pred, pigauto_pred, pigauto_se, rphylopars_pred 
+
+==========================================================
+SECTION 7: Compute metrics
+==========================================================
+
+Per-trait comparison (TEST split, original scale):
+----------------------------------------------------------
+ trait              method           n   rmse         mae          pearson_r
+ Beak.Length_Culmen BM (pigauto)     165 5.903100e+00       3.5623 0.9399   
+ Beak.Length_Culmen pigauto (BM+GNN) 165 5.903100e+00       3.5623 0.9399   
+ Beak.Length_Culmen Rphylopars       165 5.903000e+00       3.5623 0.9399   
+ Centroid.Latitude  BM (pigauto)     147 1.727640e+01      11.6965 0.5875   
+ Centroid.Latitude  pigauto (BM+GNN) 147 1.727640e+01      11.6965 0.5875   
+ Centroid.Latitude  Rphylopars       147 1.727620e+01      11.6964 0.5875   
+ Centroid.Longitude BM (pigauto)     153 5.962700e+01      40.0863 0.7355   
+ Centroid.Longitude pigauto (BM+GNN) 153 5.962700e+01      40.0863 0.7355   
+ Centroid.Longitude Rphylopars       153 5.962660e+01      40.0861 0.7355   
+ Mass               BM (pigauto)     145 2.048860e+02      60.1014 0.9474   
+ Mass               pigauto (BM+GNN) 145 2.048832e+02      60.1006 0.9474   
+ Mass               Rphylopars       145 2.048902e+02      60.1022 0.9474   
+ Range.Size         BM (pigauto)     151 1.162381e+07 2911631.1895 0.0094   
+ Range.Size         pigauto (BM+GNN) 151 1.162382e+07 2911636.1516 0.0094   
+ Range.Size         Rphylopars       151 1.162455e+07 2911871.8734 0.0094   
+ Tail.Length        BM (pigauto)     146 2.130400e+01      12.0485 0.9134   
+ Tail.Length        pigauto (BM+GNN) 146 2.130400e+01      12.0485 0.9134   
+ Tail.Length        Rphylopars       146 2.130360e+01      12.0484 0.9134   
+ Tarsus.Length      BM (pigauto)     133 1.218430e+01       4.1801 0.9423   
+ Tarsus.Length      pigauto (BM+GNN) 133 1.218430e+01       4.1801 0.9423   
+ Tarsus.Length      Rphylopars       133 1.218440e+01       4.1801 0.9423   
+ Wing.Length        BM (pigauto)     156 2.430930e+01       9.5179 0.9653   
+ Wing.Length        pigauto (BM+GNN) 156 2.430940e+01       9.5179 0.9653   
+ Wing.Length        Rphylopars       156 2.430930e+01       9.5179 0.9653   
+ coverage_95
+ <NA>       
+ 0%         
+ <NA>       
+ <NA>       
+ 0%         
+ <NA>       
+ <NA>       
+ 0%         
+ <NA>       
+ <NA>       
+ 0%         
+ <NA>       
+ <NA>       
+ 0%         
+ <NA>       
+ <NA>       
+ 0%         
+ <NA>       
+ <NA>       
+ 0%         
+ <NA>       
+ <NA>       
+ 0%         
+ <NA>       
+
+Overall metrics (pooled across all traits, TEST split):
+----------------------------------------------------------
+ method           n_total mean_rmse mean_mae mean_r
+ BM (pigauto)     1196    1467597   367623.1 0.8646
+ pigauto (BM+GNN) 1196    1467599   367623.8 0.8646
+ Rphylopars       1196    1467691   367653.5 0.8646
+
+==========================================================
+SECTION 8: Save results and figures
+==========================================================
+
+Results saved to: /Users/z3437171/Dropbox/Github Local/pigauto/script/benchmark_avonet2000_results.csv 
+Overall metrics saved to: /Users/z3437171/Dropbox/Github Local/pigauto/script/benchmark_avonet2000_overall.csv 
+
+Scatter plot saved to: /Users/z3437171/Dropbox/Github Local/pigauto/script/benchmark_avonet2000_scatter.pdf 
+Uncertainty ribbon plots saved to: /Users/z3437171/Dropbox/Github Local/pigauto/script/benchmark_avonet2000_uncertainty.pdf 
+RMSE bar chart saved to: /Users/z3437171/Dropbox/Github Local/pigauto/script/benchmark_avonet2000_rmse_bar.pdf 
+Training history saved to: /Users/z3437171/Dropbox/Github Local/pigauto/script/benchmark_avonet2000_training_history.pdf 
+
+==========================================================
+Benchmark complete.
+==========================================================
