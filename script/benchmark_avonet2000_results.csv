@@ -1,25 +1,25 @@
 "trait","method","n","rmse","mae","pearson_r","coverage_95"
 "Beak.Length_Culmen","BM (pigauto)",165,5.9031,3.5623,0.9399,NA
-"Beak.Length_Culmen","pigauto (BM+GNN)",165,6.1616,3.6127,0.9401,"92.1%"
+"Beak.Length_Culmen","pigauto (BM+GNN)",165,6.1065,3.6331,0.9409,"93.3%"
 "Beak.Length_Culmen","Rphylopars",165,5.903,3.5623,0.9399,NA
 "Centroid.Latitude","BM (pigauto)",147,17.2764,11.6965,0.5875,NA
-"Centroid.Latitude","pigauto (BM+GNN)",147,17.119,11.7048,0.5887,"93.9%"
+"Centroid.Latitude","pigauto (BM+GNN)",147,17.1,11.7134,0.5884,"93.9%"
 "Centroid.Latitude","Rphylopars",147,17.2762,11.6964,0.5875,NA
 "Centroid.Longitude","BM (pigauto)",153,59.627,40.0863,0.7355,NA
-"Centroid.Longitude","pigauto (BM+GNN)",153,59.2272,40.9791,0.7363,"90.2%"
+"Centroid.Longitude","pigauto (BM+GNN)",153,59.2361,41.4325,0.7361,"90.2%"
 "Centroid.Longitude","Rphylopars",153,59.6266,40.0861,0.7355,NA
 "Mass","BM (pigauto)",145,204.886,60.1014,0.9474,NA
-"Mass","pigauto (BM+GNN)",145,205.4253,57.5382,0.9487,"88.3%"
+"Mass","pigauto (BM+GNN)",145,204.1275,58.5882,0.948,"90.3%"
 "Mass","Rphylopars",145,204.8902,60.1022,0.9474,NA
 "Range.Size","BM (pigauto)",151,11623809.3505,2911631.1895,0.0094,NA
-"Range.Size","pigauto (BM+GNN)",151,11389816.2229,2812241.8608,0.0113,"77.5%"
+"Range.Size","pigauto (BM+GNN)",151,11361633.4253,2795661.6704,0.0121,"76.8%"
 "Range.Size","Rphylopars",151,11624552.7635,2911871.8734,0.0094,NA
 "Tail.Length","BM (pigauto)",146,21.304,12.0485,0.9134,NA
-"Tail.Length","pigauto (BM+GNN)",146,21.4534,12.1832,0.9139,"95.2%"
+"Tail.Length","pigauto (BM+GNN)",146,21.3177,12.0846,0.9138,"95.2%"
 "Tail.Length","Rphylopars",146,21.3036,12.0484,0.9134,NA
 "Tarsus.Length","BM (pigauto)",133,12.1843,4.1801,0.9423,NA
-"Tarsus.Length","pigauto (BM+GNN)",133,13.2109,4.2903,0.941,"94%"
+"Tarsus.Length","pigauto (BM+GNN)",133,13.093,4.3702,0.941,"93.2%"
 "Tarsus.Length","Rphylopars",133,12.1844,4.1801,0.9423,NA
 "Wing.Length","BM (pigauto)",156,24.3093,9.5179,0.9653,NA
-"Wing.Length","pigauto (BM+GNN)",156,25.1683,9.7909,0.9652,"96.2%"
+"Wing.Length","pigauto (BM+GNN)",156,24.5186,9.5131,0.9656,"95.5%"
 "Wing.Length","Rphylopars",156,24.3093,9.5179,0.9653,NA

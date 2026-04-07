@@ -111,3 +111,15 @@ composite_val_loss <- function(pred, truth, val_mask, trait_map) {
   if (length(losses) == 0) return(Inf)
   mean(losses)
 }
+
+
+# Cosine annealing LR with linear warmup.
+# Returns the scheduled learning rate for the given epoch.
+cosine_lr <- function(epoch, warmup, total, lr_max, lr_min = 1e-5) {
+  if (warmup > 0 && epoch <= warmup) {
+    return(lr_max * epoch / warmup)
+  }
+  if (total <= warmup) return(lr_max)
+  progress <- (epoch - warmup) / (total - warmup)
+  lr_min + 0.5 * (lr_max - lr_min) * (1 + cos(pi * progress))
+}

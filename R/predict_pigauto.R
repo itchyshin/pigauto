@@ -73,14 +73,18 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   trait_map <- object$trait_map
   has_trait_map <- !is.null(trait_map)
 
-  # Reconstruct model (per_column_rs for backward compat with old saves)
-  per_col <- isTRUE(cfg$per_column_rs)
+  # Reconstruct model (backward compat with old saves that lack new params)
+  per_col      <- isTRUE(cfg$per_column_rs)
+  n_gnn_layers <- cfg$n_gnn_layers %||% 1L
+  gate_cap     <- cfg$gate_cap %||% 0.5
   model <- ResidualPhyloDAE(
     input_dim     = as.integer(cfg$input_dim),
     hidden_dim    = as.integer(cfg$hidden_dim),
     coord_dim     = as.integer(cfg$k_eigen),
     cov_dim       = as.integer(cfg$cov_dim),
-    per_column_rs = per_col
+    per_column_rs = per_col,
+    n_gnn_layers  = as.integer(n_gnn_layers),
+    gate_cap      = gate_cap
   )
   model$to(device = device)
   model$load_state_dict(object$model_state)

@@ -3,37 +3,54 @@
 # Architecture:
 #   Input  : x (n x p), coords (n x k), covs (n x cov_dim)
 #   Encoder: two linear layers with ReLU + dropout
-#   Message: one-step graph message passing with learnable strength alpha
+#   Message: n_gnn_layers steps of graph message passing, each with
+#            layer norm, ReLU, dropout, and per-layer learnable alpha
 #   Decoder: two linear layers -> delta (n x p)
-#   Output : (1-rs) * BM_baseline + rs * delta,  rs = sigmoid(res_raw) * 0.5
+#   Output : (1-rs) * BM_baseline + rs * delta,  rs = sigmoid(res_raw) * cap
 #
 # res_raw is a per-column vector (length p), so each latent column has
-# its own learnable gate.  Initialised at -1.0 (sigmoid(-1)*0.5 ≈ 0.135)
-# to allow gradient flow through rs*delta; the shrinkage penalty on delta
-# drives unused columns toward zero correction.
+# its own learnable gate.  Continuous columns init at ~0.135 effective
+# gate; discrete columns init near 0.  Safety comes from lambda_gate
+# regularisation, not the architectural cap.
 
 ResidualPhyloDAE <- torch::nn_module(
   "ResidualPhyloDAE",
   initialize = function(input_dim, hidden_dim, coord_dim, cov_dim,
-                        per_column_rs = TRUE) {
+                        per_column_rs = TRUE, n_gnn_layers = 2L,
+                        gate_cap = 0.8) {
     total_input <- input_dim + coord_dim + cov_dim
 
     self$enc1 <- torch::nn_linear(total_input, hidden_dim)
     self$enc2 <- torch::nn_linear(hidden_dim,  hidden_dim)
 
-    # Graph message passing: alpha gates the neighbourhood signal
-    self$msg   <- torch::nn_linear(hidden_dim, hidden_dim)
-    self$alpha <- torch::nn_parameter(torch::torch_tensor(0.05))
+    # Multi-layer graph message passing: each layer has its own
+    # linear transform, layer norm, and learnable alpha gate.
+    self$n_gnn_layers <- as.integer(n_gnn_layers)
+    self$msg_layers  <- torch::nn_module_list(lapply(
+      seq_len(n_gnn_layers), function(i) torch::nn_linear(hidden_dim, hidden_dim)
+    ))
+    self$layer_norms <- torch::nn_module_list(lapply(
+      seq_len(n_gnn_layers), function(i) torch::nn_layer_norm(hidden_dim)
+    ))
+    # Per-layer learnable alpha gates (init 0.05)
+    self$alphas <- torch::nn_module_list(lapply(
+      seq_len(n_gnn_layers), function(i) {
+        m <- torch::nn_module("AlphaHolder",
+          initialize = function() {
+            self$val <- torch::nn_parameter(torch::torch_tensor(0.05))
+          }
+        )
+        m()
+      }
+    ))
 
     self$dec1 <- torch::nn_linear(hidden_dim,  hidden_dim)
     self$dec2 <- torch::nn_linear(hidden_dim,  input_dim)   # outputs delta
 
-    # Learnable residual scale: sigmoid(res_raw) * 0.5 caps correction at 50%.
+    # Learnable residual scale: sigmoid(res_raw) * gate_cap.
     # Per-column vector allows each latent column to have its own gate.
-    # Init at -1.0 → sigmoid(-1)*0.5 ≈ 0.135 — enough for reconstruction
-    # gradient to flow through rs*delta, while shrinkage on delta still
-    # drives unused columns toward zero correction.
     self$per_column_rs <- per_column_rs
+    self$gate_cap      <- gate_cap
     if (per_column_rs) {
       self$res_raw <- torch::nn_parameter(
         torch::torch_full(input_dim, -1.0, dtype = torch::torch_float())
@@ -58,19 +75,25 @@ ResidualPhyloDAE <- torch::nn_module(
     h <- self$enc2(h)
     h <- self$act(h)
 
-    # One-step message passing: h <- h + alpha * msg(A h)
-    m <- torch::torch_matmul(adj, h)
-    h <- h + self$alpha * self$msg(m)
+    # Multi-step message passing with gated residual connections
+    for (l in seq_len(self$n_gnn_layers)) {
+      m <- torch::torch_matmul(adj, h)
+      m <- self$msg_layers[[l]](m)
+      m <- self$layer_norms[[l]](m)
+      m <- self$act(m)
+      m <- self$drop(m)
+      h <- h + self$alphas[[l]]$val * m
+    }
 
     h     <- self$dec1(h)
     h     <- self$act(h)
     delta <- self$dec2(h)
 
-    # Bounded residual scale in (0, 0.5)
+    # Bounded residual scale in (0, gate_cap)
     if (self$per_column_rs) {
-      rs <- torch::torch_sigmoid(self$res_raw)$unsqueeze(1L) * 0.5
+      rs <- torch::torch_sigmoid(self$res_raw)$unsqueeze(1L) * self$gate_cap
     } else {
-      rs <- torch::torch_sigmoid(self$res_raw) * 0.5
+      rs <- torch::torch_sigmoid(self$res_raw) * self$gate_cap
     }
 
     list(delta = delta, rs = rs)

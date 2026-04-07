@@ -8,8 +8,9 @@
 #' **Blend formulation:**
 #' The prediction is \eqn{\hat{x} = (1-r)\mu + r\delta}, where \eqn{\mu} is
 #' the BM baseline, \eqn{\delta} is the model's direct prediction, and
-#' \eqn{r = \sigma(\rho) \times 0.5} is a per-column learnable gate bounded
-#' in (0, 0.5).  When \eqn{r = 0}, the prediction collapses to the baseline.
+#' \eqn{r = \sigma(\rho) \times \mathrm{cap}} is a per-column learnable gate
+#' bounded in \eqn{(0, \mathrm{gate\_cap})}.  When \eqn{r = 0}, the prediction
+#' collapses to the baseline.
 #' The gate is regularised toward zero via the shrinkage penalty on
 #' \eqn{\delta - \mu}, so the model defaults to the baseline unless the
 #' GNN's correction demonstrably helps on the validation set.
@@ -51,8 +52,20 @@
 #' @param lr numeric. AdamW learning rate (default \code{0.003}).
 #' @param weight_decay numeric. AdamW weight decay (default \code{1e-4}).
 #' @param epochs integer. Maximum training epochs (default \code{3000}).
-#' @param corruption_rate numeric. Fraction of observed cells corrupted per
+#' @param n_gnn_layers integer. Number of graph message-passing layers
+#'   (default \code{2}).  Each layer has its own learnable alpha gate,
+#'   layer normalisation, and residual connection.
+#' @param gate_cap numeric. Upper bound for the per-column residual gate
+#'   (default \code{0.8}).  Safety comes from regularisation, not the cap.
+#' @param corruption_rate numeric. Final corruption fraction if
+#'   \code{corruption_ramp > 0}; otherwise the fixed corruption rate per
 #'   epoch (default \code{0.55}).
+#' @param corruption_start numeric. Initial corruption fraction for the
+#'   curriculum schedule (default \code{0.20}).  Ignored if
+#'   \code{corruption_ramp = 0}.
+#' @param corruption_ramp integer. Epochs over which corruption linearly
+#'   ramps from \code{corruption_start} to \code{corruption_rate}
+#'   (default \code{500}).  Set to \code{0} for fixed corruption.
 #' @param refine_steps integer. Iterative refinement steps at inference
 #'   (default \code{8}).
 #' @param lambda_shrink numeric. Weight on the residual shrinkage loss
@@ -60,6 +73,12 @@
 #' @param lambda_gate numeric. Weight on the gate regularisation penalty
 #'   that pushes learnable gates toward zero.  Prevents gates from staying
 #'   open when the GNN provides no useful correction (default \code{0.01}).
+#' @param warmup_epochs integer. Linear learning-rate warmup over the first
+#'   N epochs (default \code{200}).  After warmup, a cosine schedule decays
+#'   the LR to \code{1e-5}.
+#' @param edge_dropout numeric. Fraction of adjacency edges randomly zeroed
+#'   each training epoch for graph regularisation (default \code{0.1}).
+#'   Set to \code{0} to disable.
 #' @param eval_every integer. Evaluate on val every N epochs (default
 #'   \code{100}).
 #' @param patience integer. Early-stopping patience in eval cycles (default
@@ -75,24 +94,30 @@
 fit_pigauto <- function(
     data,
     tree,
-    splits          = NULL,
-    graph           = NULL,
-    baseline        = NULL,
-    hidden_dim      = 64L,
-    k_eigen         = 8L,
-    dropout         = 0.10,
-    lr              = 0.003,
-    weight_decay    = 1e-4,
-    epochs          = 3000L,
-    corruption_rate = 0.55,
-    refine_steps    = 8L,
-    lambda_shrink   = 0.03,
-    lambda_gate     = 0.01,
-    eval_every      = 100L,
-    patience        = 10L,
-    clip_norm       = 1.0,
-    verbose         = TRUE,
-    seed            = 1L
+    splits            = NULL,
+    graph             = NULL,
+    baseline          = NULL,
+    hidden_dim        = 64L,
+    k_eigen           = 8L,
+    n_gnn_layers      = 2L,
+    gate_cap          = 0.8,
+    dropout           = 0.10,
+    lr                = 0.003,
+    weight_decay      = 1e-4,
+    epochs            = 3000L,
+    corruption_rate   = 0.55,
+    corruption_start  = 0.20,
+    corruption_ramp   = 500L,
+    refine_steps      = 8L,
+    lambda_shrink     = 0.03,
+    lambda_gate       = 0.01,
+    warmup_epochs     = 200L,
+    edge_dropout      = 0.1,
+    eval_every        = 100L,
+    patience          = 10L,
+    clip_norm         = 1.0,
+    verbose           = TRUE,
+    seed              = 1L
 ) {
   if (!inherits(data, "pigauto_data")) {
     stop("'data' must be a pigauto_data object.")
@@ -184,26 +209,35 @@ fit_pigauto <- function(
     hidden_dim     = as.integer(hidden_dim),
     coord_dim      = as.integer(k_eigen),
     cov_dim        = as.integer(cov_dim),
-    per_column_rs  = TRUE
+    per_column_rs  = TRUE,
+    n_gnn_layers   = as.integer(n_gnn_layers),
+    gate_cap       = gate_cap
   )
 
-  # Type-aware gate init: discrete columns get res_raw = -6 (gate ≈ 0.001)
-  # so the GNN correction is essentially off unless the training signal
-  # actively pushes the gate open.  Continuous columns keep -1.0 (gate ≈
-  # 0.135) for gradient flow.
+  # Type-aware gate init: set res_raw so effective gate ≈ 0.135 for
+
+  # continuous columns and ≈ 0.001 for discrete columns, regardless of
+  # gate_cap.  logit(target / gate_cap) gives the correct res_raw value.
+  cont_target <- 0.135
+  disc_target <- 0.001
+  cont_raw <- log(cont_target / gate_cap / (1 - cont_target / gate_cap))
+  disc_raw <- log(disc_target / gate_cap / (1 - disc_target / gate_cap))
+
   if (has_trait_map) {
-    init_vals <- rep(-1.0, p)
+    init_vals <- rep(cont_raw, p)
     for (tm in trait_map) {
       if (tm$type %in% c("binary", "categorical", "ordinal")) {
-        init_vals[tm$latent_cols] <- -6.0
+        init_vals[tm$latent_cols] <- disc_raw
       }
     }
-    torch::with_no_grad({
-      model$res_raw$copy_(
-        torch::torch_tensor(init_vals, dtype = torch::torch_float())
-      )
-    })
+  } else {
+    init_vals <- rep(cont_raw, p)
   }
+  torch::with_no_grad({
+    model$res_raw$copy_(
+      torch::torch_tensor(init_vals, dtype = torch::torch_float())
+    )
+  })
 
   model$to(device = device)
   opt <- torch::optim_adamw(model$parameters, lr = lr,
@@ -216,18 +250,43 @@ fit_pigauto <- function(
   history       <- data.frame(
     epoch = integer(0), loss_rec = double(0),
     loss_shrink = double(0), loss_gate = double(0),
-    val_loss = double(0)
+    val_loss = double(0), lr = double(0)
   )
 
   for (epoch in seq_len(epochs)) {
     model$train()
     opt$zero_grad()
 
+    # ---- Learning rate schedule (warmup + cosine decay) --------------------
+    scheduled_lr <- cosine_lr(epoch, warmup_epochs, epochs, lr)
+    opt$param_groups[[1]]$lr <- scheduled_lr
+
+    # ---- Adaptive corruption rate ------------------------------------------
+    if (corruption_ramp > 0L) {
+      eff_corruption <- corruption_start +
+        (corruption_rate - corruption_start) *
+        min(epoch / corruption_ramp, 1.0)
+    } else {
+      eff_corruption <- corruption_rate
+    }
+
+    # ---- Edge dropout (graph regularisation) --------------------------------
+    if (edge_dropout > 0 && model$training) {
+      edge_mask <- torch::torch_rand_like(t_adj) > edge_dropout
+      t_adj_train <- t_adj * edge_mask$to(dtype = torch::torch_float())
+      # Renormalise rows to maintain expected message scale
+      row_sums <- t_adj_train$sum(dim = 2L, keepdim = TRUE)$clamp(min = 1e-8)
+      orig_sums <- t_adj$sum(dim = 2L, keepdim = TRUE)$clamp(min = 1e-8)
+      t_adj_train <- t_adj_train * (orig_sums / row_sums)
+    } else {
+      t_adj_train <- t_adj
+    }
+
     # ---- Corruption masking -------------------------------------------------
     if (has_trait_map) {
       # Corrupt at trait level, then expand to latent columns
       u_trait <- matrix(stats::runif(n * n_orig_traits), n, n_orig_traits)
-      corrupt_trait <- u_trait < corruption_rate
+      corrupt_trait <- u_trait < eff_corruption
       # Only corrupt where observed
       obs_trait <- matrix(FALSE, n, n_orig_traits)
       for (i in seq_along(trait_map)) {
@@ -246,7 +305,7 @@ fit_pigauto <- function(
                                           device = device)
     } else {
       u           <- torch::torch_rand_like(t_X)
-      masked_bool <- (u < corruption_rate) & t_M_obs
+      masked_bool <- (u < eff_corruption) & t_M_obs
     }
 
     if (as.numeric(masked_bool$sum()$cpu()$item()) == 0L) next
@@ -261,7 +320,7 @@ fit_pigauto <- function(
     tok   <- model$mask_token$expand(c(n, p))
     X_in  <- torch::torch_where(masked_bool, tok, t_X)
 
-    out   <- model(X_in, t_coords, covs_t, t_adj)
+    out   <- model(X_in, t_coords, covs_t, t_adj_train)
     delta <- out$delta
     rs    <- out$rs
 
@@ -331,15 +390,17 @@ fit_pigauto <- function(
         loss_rec    = as.numeric(loss_rec$item()),
         loss_shrink = as.numeric(loss_shrink$item()),
         loss_gate   = as.numeric(loss_gate$item()),
-        val_loss    = if (is.na(val_loss_val)) NA_real_ else val_loss_val
+        val_loss    = if (is.na(val_loss_val)) NA_real_ else val_loss_val,
+        lr          = scheduled_lr
       ))
 
       if (verbose) {
         msg <- sprintf(
-          "epoch %4d | rec %.4f | shrink %.4f | gate %.4f",
+          "epoch %4d | rec %.4f | shrink %.4f | gate %.4f | lr %.1e",
           epoch, as.numeric(loss_rec$item()),
           as.numeric(loss_shrink$item()),
-          as.numeric(loss_gate$item())
+          as.numeric(loss_gate$item()),
+          scheduled_lr
         )
         if (!is.na(val_loss_val)) {
           msg <- paste0(msg, sprintf(" | val %.4f | best %.4f | pat %d",
@@ -395,6 +456,8 @@ fit_pigauto <- function(
   model_config <- list(
     hidden_dim      = hidden_dim,
     k_eigen         = k_eigen,
+    n_gnn_layers    = n_gnn_layers,
+    gate_cap        = gate_cap,
     dropout         = dropout,
     refine_steps    = refine_steps,
     cov_dim         = cov_dim,
