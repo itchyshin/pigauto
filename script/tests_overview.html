@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pigauto &mdash; test index</title>
+<style>
+  :root { --fg:#111827; --muted:#6b7280; --line:#e5e7eb; --soft:#f3f4f6;
+          --accent:#059669; --badge:#eef2ff; --badge-fg:#3730a3; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         max-width: 880px; margin: 2em auto; padding: 0 1.5em; color: var(--fg);
+         line-height: 1.55; }
+  h1 { border-bottom: 2px solid var(--fg); padding-bottom: .25em; }
+  h3 { margin: 0; font-size: 16px; }
+  h3 code { background: var(--soft); padding: 2px 8px; border-radius: 4px;
+            font-size: 15px; }
+  section { margin: 1.5em 0; padding: 1em 1.2em; border: 1px solid var(--line);
+            border-radius: 6px; background: #fff; }
+  .filehead { display: flex; align-items: baseline; justify-content: space-between;
+              gap: 1em; }
+  .count { background: var(--badge); color: var(--badge-fg); padding: 2px 10px;
+           border-radius: 999px; font-size: 13px; font-weight: 600; }
+  .area { color: var(--muted); margin: .4em 0 .8em 0; font-size: 13px; }
+  ol { margin: 0; padding-left: 1.5em; font-size: 14px; }
+  li { margin: 4px 0; }
+  .lineref { color: var(--muted); font-size: 12px; margin-left: 6px; }
+  .empty { color: var(--muted); font-style: italic; list-style: none;
+           margin-left: -1.5em; }
+  .summary { background: #ecfdf5; border-left: 4px solid var(--accent);
+             padding: 1em 1.2em; border-radius: 4px; margin: 1.5em 0; }
+  .summary b { color: #065f46; }
+  .meta { color: var(--muted); font-size: 13px; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 3em;
+           border-top: 1px solid var(--line); padding-top: 1em; }
+</style>
+</head>
+<body>
+
+<h1>pigauto &mdash; test index</h1>
+<p class="meta">Static index of every <code>test_that()</code> block in <code>tests/testthat/</code>.
+Generated 2026-04-08 17:10. Does not run the tests &mdash; use <code>devtools::test()</code> for pass/fail status.</p>
+
+<div class="summary">
+<b>66 tests</b> across <b>7 files</b>.
+</div>
+
+<section>
+  <div class="filehead">
+    <h3><code>test-fit-predict.R</code></h3>
+    <span class="count">13 tests</span>
+  </div>
+  <p class="area">Training, prediction, attention, conformal, impute()</p>
+  <ol>
+    <li>fit_pigauto returns a pigauto_fit object <span class="lineref">(line 14)</span></li>
+    <li>predict.pigauto_fit returns pigauto_pred with correct dimensions <span class="lineref">(line 30)</span></li>
+    <li>predicted values are finite <span class="lineref">(line 46)</span></li>
+    <li>evaluate_imputation returns data.frame with expected columns <span class="lineref">(line 58)</span></li>
+    <li>predict with n_imputations &gt; 1 returns multiple datasets <span class="lineref">(line 68)</span></li>
+    <li>fit_pigauto and predict work with multi-obs data <span class="lineref">(line 87)</span></li>
+    <li>impute() works end-to-end with rownames (single-obs) <span class="lineref">(line 124)</span></li>
+    <li>impute() works with species_col (multi-obs) <span class="lineref">(line 133)</span></li>
+    <li>fit_pigauto with attention produces valid fit <span class="lineref">(line 150)</span></li>
+    <li>fit_pigauto stores calibrated_gates and conformal_scores <span class="lineref">(line 164)</span></li>
+    <li>predict with conformal scores returns intervals <span class="lineref">(line 178)</span></li>
+    <li>phylo label propagation gives species-specific discrete baselines <span class="lineref">(line 194)</span></li>
+    <li>attention + calibration + conformal work with mixed types <span class="lineref">(line 217)</span></li>
+  </ol>
+</section>
+
+<section>
+  <div class="filehead">
+    <h3><code>test-graph.R</code></h3>
+    <span class="count">5 tests</span>
+  </div>
+  <p class="area">Phylogenetic graph, adjacency, spectral coordinates</p>
+  <ol>
+    <li>build_phylo_graph returns list with adj and coords <span class="lineref">(line 1)</span></li>
+    <li>build_phylo_graph adj is square and n matches ntips <span class="lineref">(line 9)</span></li>
+    <li>build_phylo_graph coords has k_eigen columns <span class="lineref">(line 18)</span></li>
+    <li>build_phylo_graph adj is symmetric and entries are in (0, 1) <span class="lineref">(line 26)</span></li>
+    <li>build_phylo_graph caching returns identical results <span class="lineref">(line 37)</span></li>
+  </ol>
+</section>
+
+<section>
+  <div class="filehead">
+    <h3><code>test-masking.R</code></h3>
+    <span class="count">5 tests</span>
+  </div>
+  <p class="area">Missing-data splits and observed-cell masks</p>
+  <ol>
+    <li>mask_missing returns logical matrix of correct dimensions <span class="lineref">(line 1)</span></li>
+    <li>make_missing_splits val and test indices are disjoint <span class="lineref">(line 10)</span></li>
+    <li>make_missing_splits produces approximately the right missing fraction <span class="lineref">(line 16)</span></li>
+    <li>make_missing_splits is deterministic given seed <span class="lineref">(line 24)</span></li>
+    <li>make_missing_splits mask is TRUE for non-missing cells <span class="lineref">(line 32)</span></li>
+  </ol>
+</section>
+
+<section>
+  <div class="filehead">
+    <h3><code>test-mixed-types.R</code></h3>
+    <span class="count">5 tests</span>
+  </div>
+  <p class="area">5-type detection, encode/decode round-trip</p>
+  <ol>
+    <li>preprocess_traits detects all 5 trait types <span class="lineref">(line 23)</span></li>
+    <li>make_missing_splits with trait_map works at trait level <span class="lineref">(line 38)</span></li>
+    <li>fit_baseline handles all trait types <span class="lineref">(line 50)</span></li>
+    <li>evaluate_imputation returns type-specific metrics <span class="lineref">(line 62)</span></li>
+    <li>encode and decode round-trip preserves continuous values <span class="lineref">(line 77)</span></li>
+  </ol>
+</section>
+
+<section>
+  <div class="filehead">
+    <h3><code>test-new-features.R</code></h3>
+    <span class="count">19 tests</span>
+  </div>
+  <p class="area">evaluate, summary, plot, report, CV, benchmark, save/load</p>
+  <ol>
+    <li>evaluate returns a data.frame with expected columns <span class="lineref">(line 33)</span></li>
+    <li>evaluate errors when data is missing <span class="lineref">(line 52)</span></li>
+    <li>summary.pigauto_fit runs without error and prints header <span class="lineref">(line 60)</span></li>
+    <li>summary.pigauto_fit with data prints trait metrics <span class="lineref">(line 66)</span></li>
+    <li>summary.pigauto_fit returns evaluation invisibly <span class="lineref">(line 76)</span></li>
+    <li>plot.pigauto_fit history produces plots without error <span class="lineref">(line 90)</span></li>
+    <li>plot.pigauto_fit gates produces plots without error <span class="lineref">(line 99)</span></li>
+    <li>plot.pigauto_fit conformal produces plots without error <span class="lineref">(line 111)</span></li>
+    <li>pigauto_report creates an HTML file from pigauto_result <span class="lineref">(line 126)</span></li>
+    <li>pigauto_report works with a pigauto_fit object and data <span class="lineref">(line 146)</span></li>
+    <li>build_phylo_graph auto k_eigen scales with tree size <span class="lineref">(line 163)</span></li>
+    <li>build_phylo_graph auto k_eigen is capped at 32 <span class="lineref">(line 177)</span></li>
+    <li>build_phylo_graph auto k_eigen floors at 4 for small trees <span class="lineref">(line 184)</span></li>
+    <li>cross_validate returns pigauto_cv object <span class="lineref">(line 194)</span></li>
+    <li>cross_validate results have expected structure <span class="lineref">(line 221)</span></li>
+    <li>cross_validate print and summary methods work <span class="lineref">(line 255)</span></li>
+    <li>simulate_benchmark runs and returns expected structure <span class="lineref">(line 277)</span></li>
+    <li>save_pigauto and load_pigauto round-trip correctly <span class="lineref">(line 299)</span></li>
+    <li>simulate_benchmark mixed scenario handles discrete traits <span class="lineref">(line 321)</span></li>
+  </ol>
+</section>
+
+<section>
+  <div class="filehead">
+    <h3><code>test-preprocess.R</code></h3>
+    <span class="count">13 tests</span>
+  </div>
+  <p class="area">Trait preprocessing, type detection, multi-obs alignment</p>
+  <ol>
+    <li>read_traits returns data.frame with row names <span class="lineref">(line 1)</span></li>
+    <li>read_traits errors on missing species column <span class="lineref">(line 9)</span></li>
+    <li>preprocess_traits output has correct dimensions <span class="lineref">(line 14)</span></li>
+    <li>preprocess_traits rows match tree tip order <span class="lineref">(line 30)</span></li>
+    <li>preprocess_traits with negative values skips log-transform <span class="lineref">(line 39)</span></li>
+    <li>preprocess_traits warns about species not in tree <span class="lineref">(line 48)</span></li>
+    <li>preprocess_traits creates trait_map <span class="lineref">(line 56)</span></li>
+    <li>preprocess_traits handles factor columns <span class="lineref">(line 71)</span></li>
+    <li>preprocess_traits with species_col single-obs <span class="lineref">(line 91)</span></li>
+    <li>preprocess_traits with species_col multi-obs <span class="lineref">(line 107)</span></li>
+    <li>preprocess_traits backward compatible (no species_col, no multi_obs) <span class="lineref">(line 128)</span></li>
+    <li>avonet300 contains categorical and ordinal traits <span class="lineref">(line 143)</span></li>
+    <li>avonet300 preprocesses with mixed types <span class="lineref">(line 156)</span></li>
+  </ol>
+</section>
+
+<section>
+  <div class="filehead">
+    <h3><code>test-tabpfn.R</code></h3>
+    <span class="count">6 tests</span>
+  </div>
+  <p class="area">TabPFN baseline wrapper and stacking integration</p>
+  <ol>
+    <li>fit_baseline_tabpfn errors without reticulate <span class="lineref">(line 24)</span></li>
+    <li>fit_baseline_tabpfn returns correct structure <span class="lineref">(line 34)</span></li>
+    <li>fit_baseline_tabpfn predictions are finite <span class="lineref">(line 52)</span></li>
+    <li>fit_baseline_tabpfn works with evaluate_imputation <span class="lineref">(line 63)</span></li>
+    <li>fit_baseline_tabpfn can serve as baseline for fit_pigauto <span class="lineref">(line 78)</span></li>
+    <li>se_method='none' returns NA matrix <span class="lineref">(line 99)</span></li>
+  </ol>
+</section>
+
+<footer>
+Generator: <code>script/make_tests_html.R</code> &middot;
+To run the tests: <code>devtools::test()</code> from the pigauto root.
+</footer>
+
+</body>
+</html>
+

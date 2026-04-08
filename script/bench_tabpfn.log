@@ -1,0 +1,77 @@
+
+=== pigauto vs TabPFN benchmark ===
+n_species=150, reps=2, missing=0.25, epochs=600
+
+=== Scenario: BM ===
+  Rep 1/2 (seed 101)
+  Rep 2/2 (seed 201)
+=== Scenario: OU ===
+  Rep 1/2 (seed 102)
+  Rep 2/2 (seed 202)
+=== Scenario: nonlinear ===
+  Rep 1/2 (seed 104)
+  Rep 2/2 (seed 204)
+=== Scenario: regime_shift ===
+  Rep 1/2 (seed 103)
+  Rep 2/2 (seed 203)
+=== Scenario: mixed ===
+  Rep 1/2 (seed 105)
+    tabpfn error:  length of 'dimnames' [2] not equal to array extent 
+  Rep 2/2 (seed 205)
+    tabpfn error:  length of 'dimnames' [2] not equal to array extent 
+
+
+=== Summary ===
+======================================================================== 
+
+Scenario: BM 
+------------------------------------------------------------ 
+  baseline            RMSE: 0.5017
+  pigauto             RMSE: 0.5017
+  tabpfn              RMSE: 1.0024
+  pigauto_tabpfn      RMSE: 1.0021
+
+Scenario: OU 
+------------------------------------------------------------ 
+  baseline            RMSE: 1.2553
+  pigauto             RMSE: 1.2350
+  tabpfn              RMSE: 1.0930
+  pigauto_tabpfn      RMSE: 1.0867
+
+Scenario: nonlinear 
+------------------------------------------------------------ 
+  baseline            RMSE: 0.6918
+  pigauto             RMSE: 0.6928
+  tabpfn              RMSE: 0.9552
+  pigauto_tabpfn      RMSE: 0.9518
+
+Scenario: regime_shift 
+------------------------------------------------------------ 
+  baseline            RMSE: 0.4525
+  pigauto             RMSE: 0.4525
+  tabpfn              RMSE: 1.0053
+  pigauto_tabpfn      RMSE: 0.9950
+
+Scenario: mixed 
+------------------------------------------------------------ 
+  baseline            RMSE: 0.6996
+  pigauto             RMSE: 0.6863
+  baseline            Accuracy: 69.4%
+  pigauto             Accuracy: 69.4%
+
+========================================================================
+Relative RMSE improvement vs phylogenetic baseline
+------------------------------------------------------------ 
+  scenario                 pigauto           tabpfn   pigauto_tabpfn
+  BM                        +0.0%          -99.8%          -99.7%
+  OU                        +1.6%          +12.9%          +13.4%
+  nonlinear                 -0.2%          -38.1%          -37.6%
+  regime_shift              -0.0%         -122.2%         -119.9%
+  mixed                     +1.9%                -                -
+
+Accuracy change (percentage points) vs phylogenetic baseline
+------------------------------------------------------------ 
+  scenario                 pigauto           tabpfn   pigauto_tabpfn
+  mixed                     +0.0pp                -                -
+
+Saved: script/bench_tabpfn.rds

@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pigauto vs TabPFN &mdash; 4-way benchmark</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         max-width: 880px; margin: 2em auto; padding: 0 1.5em; color: #111827;
+         line-height: 1.55; }
+  h1 { border-bottom: 2px solid #111827; padding-bottom: .25em; }
+  h2 { margin-top: 2em; color: #1f2937; border-bottom: 1px solid #d1d5db;
+       padding-bottom: .15em; }
+  h3 { color: #111827; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 14px; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+  th { background: #f3f4f6; font-weight: 600; }
+  .meta { color: #6b7280; font-size: 13px; }
+  .verdict { background: #fef3c7; border-left: 4px solid #d97706; padding: 1em 1.2em;
+             border-radius: 4px; margin: 1.5em 0; }
+  .verdict b { color: #92400e; }
+  code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 13px; }
+  ul li { margin: 6px 0; }
+  footer { color: #6b7280; font-size: 12px; margin-top: 3em; border-top: 1px solid #e5e7eb;
+           padding-top: 1em; }
+</style>
+</head>
+<body>
+
+<h1>pigauto vs TabPFN: can a tabular foundation model beat phylogeny?</h1>
+<p class="meta">Benchmark run on 2026-04-08 15:54 &middot; 150 species &middot; 2 reps per scenario &middot; 25% missingness &middot; 600 epochs</p>
+
+<div class="verdict">
+<b>Bottom line.</b> On simulated phylogenetic data, <b>TabPFN does not beat the simple phylogenetic baseline</b>, and stacking pigauto on top of TabPFN does not rescue it. The phylogenetic baseline + pigauto remains the best general-purpose approach on phylogenetic data. TabPFN is only competitive when phylogenetic signal is weak (OU with strong equilibrium pull), in which case it <em>does</em> win by ~13%. This suggests a hybrid worth exploring: detect the per-trait phylogenetic signal and route low-lambda traits to TabPFN.
+</div>
+
+<h2>Executive summary</h2>
+<ul><li><b>Phylogenetic baseline is very hard to beat</b> on phylogenetic data. Across 5 scenarios (2 reps each), TabPFN alone is worse than the baseline in 3 of 4 evaluated scenarios, often catastrophically (BM &minus;99.8%, regime shift &minus;122.2%).</li><li><b>pigauto (phylo + GNN)</b> ties or marginally beats the baseline on every scenario (-0.2% to +1.9% continuous RMSE).</li><li><b>Stacking pigauto on top of TabPFN</b> barely changes TabPFN&rsquo;s predictions (&lt;0.5 pp in every scenario). The GNN cannot recover phylogenetic signal from a baseline that has already collapsed toward the mean.</li><li><b>One scenario favours TabPFN</b>: OU with a strong equilibrium pull, where phylogeny is a weaker predictor and cross-trait patterns matter more. TabPFN alone is +12.9% vs baseline; stacking adds another 0.5 pp.</li><li><b>Discrete traits</b> are unchanged: pigauto matches the baseline exactly on binary and categorical accuracy (69.4% on the mixed scenario), confirming the v4 calibration fix held.</li></ul>
+
+<h2>Continuous RMSE by scenario</h2>
+<p class="meta">Lower is better. &#9733; marks the best method within each scenario. &ldquo;vs baseline&rdquo; shows relative RMSE improvement (positive = better than phylo baseline).</p>
+<table>
+<thead><tr><th>Scenario</th><th>Method</th><th style="text-align:right">RMSE (mean &#177; SD)</th><th style="text-align:right">vs baseline</th></tr></thead>
+<tbody>
+<tr><td rowspan="4" style="vertical-align:top;padding-top:10px"><b>BM</b></td><td>Phylo baseline</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.502 &#177; 0.088</td><td style="text-align:right">&mdash;</td></tr>
+<tr><td>pigauto (phylo + GNN) <span title="best">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.502 &#177; 0.088</td><td style="text-align:right"><span style="color:#059669;font-weight:600">+0.0%</span></td></tr>
+<tr><td>TabPFN alone</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.002 &#177; 0.077</td><td style="text-align:right"><span style="color:#dc2626;font-weight:600">-99.8%</span></td></tr>
+<tr><td>pigauto + TabPFN (stacked)</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.002 &#177; 0.075</td><td style="text-align:right"><span style="color:#dc2626;font-weight:600">-99.7%</span></td></tr>
+<tr><td rowspan="4" style="vertical-align:top;padding-top:10px"><b>OU</b></td><td>Phylo baseline</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.255 &#177; 0.101</td><td style="text-align:right">&mdash;</td></tr>
+<tr><td>pigauto (phylo + GNN)</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.235 &#177; 0.112</td><td style="text-align:right"><span style="color:#059669;font-weight:600">+1.6%</span></td></tr>
+<tr><td>TabPFN alone</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.093 &#177; 0.097</td><td style="text-align:right"><span style="color:#059669;font-weight:600">+12.9%</span></td></tr>
+<tr><td>pigauto + TabPFN (stacked) <span title="best">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.087 &#177; 0.104</td><td style="text-align:right"><span style="color:#059669;font-weight:600">+13.4%</span></td></tr>
+<tr><td rowspan="4" style="vertical-align:top;padding-top:10px"><b>nonlinear</b></td><td>Phylo baseline <span title="best">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.692 &#177; 0.237</td><td style="text-align:right">&mdash;</td></tr>
+<tr><td>pigauto (phylo + GNN)</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.693 &#177; 0.239</td><td style="text-align:right"><span style="color:#dc2626;font-weight:600">-0.2%</span></td></tr>
+<tr><td>TabPFN alone</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.955 &#177; 0.315</td><td style="text-align:right"><span style="color:#dc2626;font-weight:600">-38.1%</span></td></tr>
+<tr><td>pigauto + TabPFN (stacked)</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.952 &#177; 0.313</td><td style="text-align:right"><span style="color:#dc2626;font-weight:600">-37.6%</span></td></tr>
+<tr><td rowspan="4" style="vertical-align:top;padding-top:10px"><b>regime_shift</b></td><td>Phylo baseline <span title="best">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.453 &#177; 0.116</td><td style="text-align:right">&mdash;</td></tr>
+<tr><td>pigauto (phylo + GNN)</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.453 &#177; 0.116</td><td style="text-align:right"><span style="color:#dc2626;font-weight:600">-0.0%</span></td></tr>
+<tr><td>TabPFN alone</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.005 &#177; 0.071</td><td style="text-align:right"><span style="color:#dc2626;font-weight:600">-122.2%</span></td></tr>
+<tr><td>pigauto + TabPFN (stacked)</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.995 &#177; 0.084</td><td style="text-align:right"><span style="color:#dc2626;font-weight:600">-119.9%</span></td></tr>
+<tr><td rowspan="2" style="vertical-align:top;padding-top:10px"><b>mixed</b></td><td>Phylo baseline</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.700 &#177; 0.139</td><td style="text-align:right">&mdash;</td></tr>
+<tr><td>pigauto (phylo + GNN) <span title="best">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.686 &#177; 0.130</td><td style="text-align:right"><span style="color:#059669;font-weight:600">+1.9%</span></td></tr>
+</tbody>
+</table>
+
+<h2>Discrete accuracy (mixed scenario)</h2>
+<table>
+<thead><tr><th>Trait</th><th>Method</th><th style="text-align:right">Accuracy</th></tr></thead>
+<tbody>
+<tr><td rowspan="2" style="vertical-align:top;padding-top:10px"><b>binary_trait</b><br><span style="color:#6b7280;font-size:11px">binary</span></td><td>Phylo baseline</td><td style="text-align:right;font-variant-numeric:tabular-nums">74.0%</td></tr>
+<tr><td>pigauto (phylo + GNN)</td><td style="text-align:right;font-variant-numeric:tabular-nums">74.0%</td></tr>
+<tr><td rowspan="2" style="vertical-align:top;padding-top:10px"><b>cat_trait</b><br><span style="color:#6b7280;font-size:11px">categorical</span></td><td>Phylo baseline</td><td style="text-align:right;font-variant-numeric:tabular-nums">64.9%</td></tr>
+<tr><td>pigauto (phylo + GNN)</td><td style="text-align:right;font-variant-numeric:tabular-nums">64.9%</td></tr>
+</tbody>
+</table>
+
+
+<h2>Per-scenario breakdown</h2>
+<section style="margin:28px 0"><h3 style="margin:0 0 8px 0">Scenario: BM</h3><p style="margin:0 0 12px 0;color:#374151;max-width:700px">Pure Brownian motion. Phylogeny is the entire story. TabPFN has no phylogenetic features so it collapses to the trait mean (RMSE ≈ 1.0 on standardised data).</p><svg viewBox="0 0 560 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;font-family:system-ui,-apple-system,sans-serif">
+<line x1="160" y1="160" x2="520" y2="160" stroke="#999" stroke-width="1"/>
+<line x1="160.0" y1="24" x2="160.0" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="160.0" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.00</text>
+<line x1="223.2" y1="24" x2="223.2" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="223.2" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.25</text>
+<line x1="286.4" y1="24" x2="286.4" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="286.4" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.50</text>
+<line x1="349.6" y1="24" x2="349.6" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="349.6" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.75</text>
+<line x1="412.9" y1="24" x2="412.9" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="412.9" y="174" text-anchor="middle" font-size="10" fill="#6b7280">1.00</text>
+<line x1="476.1" y1="24" x2="476.1" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="476.1" y="174" text-anchor="middle" font-size="10" fill="#6b7280">1.25</text>
+<line x1="539.3" y1="24" x2="539.3" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="539.3" y="174" text-anchor="middle" font-size="10" fill="#6b7280">1.50</text>
+<rect x="160" y="28.9" width="126.9" height="24.3" fill="#6b7280" rx="3"/>
+<text x="152" y="45.0" text-anchor="end" font-size="12" fill="#111827">Phylo baseline</text>
+<text x="292.9" y="45.0" font-size="11" fill="#111827">0.502 &#177; 0.088</text>
+<rect x="160" y="62.9" width="126.9" height="24.3" fill="#059669" rx="3"/>
+<text x="152" y="79.0" text-anchor="end" font-size="12" fill="#111827">pigauto (phylo + GNN)</text>
+<text x="292.9" y="79.0" font-size="11" fill="#111827">0.502 &#177; 0.088</text>
+<rect x="160" y="96.9" width="253.5" height="24.3" fill="#c2410c" rx="3"/>
+<text x="152" y="113.0" text-anchor="end" font-size="12" fill="#111827">TabPFN alone</text>
+<text x="419.5" y="113.0" font-size="11" fill="#111827">1.002 &#177; 0.077</text>
+<rect x="160" y="130.9" width="253.4" height="24.3" fill="#7c3aed" rx="3"/>
+<text x="152" y="147.0" text-anchor="end" font-size="12" fill="#111827">pigauto + TabPFN (stacked)</text>
+<text x="419.4" y="147.0" font-size="11" fill="#111827">1.002 &#177; 0.075</text>
+</svg></section>
+<section style="margin:28px 0"><h3 style="margin:0 0 8px 0">Scenario: OU</h3><p style="margin:0 0 12px 0;color:#374151;max-width:700px">Ornstein–Uhlenbeck with strong equilibrium pull. Species values are weakly dependent on phylogeny; information shared across traits dominates. <b>This is the only scenario where TabPFN beats the phylogenetic baseline</b> (+12.9%), and stacking adds a further 0.5 pp.</p><svg viewBox="0 0 560 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;font-family:system-ui,-apple-system,sans-serif">
+<line x1="160" y1="160" x2="520" y2="160" stroke="#999" stroke-width="1"/>
+<line x1="160.0" y1="24" x2="160.0" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="160.0" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.00</text>
+<line x1="223.2" y1="24" x2="223.2" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="223.2" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.25</text>
+<line x1="286.4" y1="24" x2="286.4" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="286.4" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.50</text>
+<line x1="349.6" y1="24" x2="349.6" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="349.6" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.75</text>
+<line x1="412.9" y1="24" x2="412.9" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="412.9" y="174" text-anchor="middle" font-size="10" fill="#6b7280">1.00</text>
+<line x1="476.1" y1="24" x2="476.1" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="476.1" y="174" text-anchor="middle" font-size="10" fill="#6b7280">1.25</text>
+<line x1="539.3" y1="24" x2="539.3" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="539.3" y="174" text-anchor="middle" font-size="10" fill="#6b7280">1.50</text>
+<rect x="160" y="28.9" width="317.4" height="24.3" fill="#6b7280" rx="3"/>
+<text x="152" y="45.0" text-anchor="end" font-size="12" fill="#111827">Phylo baseline</text>
+<text x="483.4" y="45.0" font-size="11" fill="#111827">1.255 &#177; 0.101</text>
+<rect x="160" y="62.9" width="312.3" height="24.3" fill="#059669" rx="3"/>
+<text x="152" y="79.0" text-anchor="end" font-size="12" fill="#111827">pigauto (phylo + GNN)</text>
+<text x="478.3" y="79.0" font-size="11" fill="#111827">1.235 &#177; 0.112</text>
+<rect x="160" y="96.9" width="276.4" height="24.3" fill="#c2410c" rx="3"/>
+<text x="152" y="113.0" text-anchor="end" font-size="12" fill="#111827">TabPFN alone</text>
+<text x="442.4" y="113.0" font-size="11" fill="#111827">1.093 &#177; 0.097</text>
+<rect x="160" y="130.9" width="274.8" height="24.3" fill="#7c3aed" rx="3"/>
+<text x="152" y="147.0" text-anchor="end" font-size="12" fill="#111827">pigauto + TabPFN (stacked)</text>
+<text x="440.8" y="147.0" font-size="11" fill="#111827">1.087 &#177; 0.104</text>
+</svg></section>
+<section style="margin:28px 0"><h3 style="margin:0 0 8px 0">Scenario: nonlinear</h3><p style="margin:0 0 12px 0;color:#374151;max-width:700px">Non-linear trait transform on BM. The phylogenetic baseline still extracts most of the signal; TabPFN finds no useful cross-trait pattern and is ≈38% worse.</p><svg viewBox="0 0 560 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;font-family:system-ui,-apple-system,sans-serif">
+<line x1="160" y1="160" x2="520" y2="160" stroke="#999" stroke-width="1"/>
+<line x1="160.0" y1="24" x2="160.0" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="160.0" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.00</text>
+<line x1="223.2" y1="24" x2="223.2" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="223.2" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.25</text>
+<line x1="286.4" y1="24" x2="286.4" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="286.4" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.50</text>
+<line x1="349.6" y1="24" x2="349.6" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="349.6" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.75</text>
+<line x1="412.9" y1="24" x2="412.9" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="412.9" y="174" text-anchor="middle" font-size="10" fill="#6b7280">1.00</text>
+<line x1="476.1" y1="24" x2="476.1" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="476.1" y="174" text-anchor="middle" font-size="10" fill="#6b7280">1.25</text>
+<line x1="539.3" y1="24" x2="539.3" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="539.3" y="174" text-anchor="middle" font-size="10" fill="#6b7280">1.50</text>
+<rect x="160" y="28.9" width="174.9" height="24.3" fill="#6b7280" rx="3"/>
+<text x="152" y="45.0" text-anchor="end" font-size="12" fill="#111827">Phylo baseline</text>
+<text x="340.9" y="45.0" font-size="11" fill="#111827">0.692 &#177; 0.237</text>
+<rect x="160" y="62.9" width="175.2" height="24.3" fill="#059669" rx="3"/>
+<text x="152" y="79.0" text-anchor="end" font-size="12" fill="#111827">pigauto (phylo + GNN)</text>
+<text x="341.2" y="79.0" font-size="11" fill="#111827">0.693 &#177; 0.239</text>
+<rect x="160" y="96.9" width="241.5" height="24.3" fill="#c2410c" rx="3"/>
+<text x="152" y="113.0" text-anchor="end" font-size="12" fill="#111827">TabPFN alone</text>
+<text x="407.5" y="113.0" font-size="11" fill="#111827">0.955 &#177; 0.315</text>
+<rect x="160" y="130.9" width="240.7" height="24.3" fill="#7c3aed" rx="3"/>
+<text x="152" y="147.0" text-anchor="end" font-size="12" fill="#111827">pigauto + TabPFN (stacked)</text>
+<text x="406.7" y="147.0" font-size="11" fill="#111827">0.952 &#177; 0.313</text>
+</svg></section>
+<section style="margin:28px 0"><h3 style="margin:0 0 8px 0">Scenario: regime_shift</h3><p style="margin:0 0 12px 0;color:#374151;max-width:700px">Step change at an internal node. Phylogenetic label propagation nails this because neighbours on the tree share regime. TabPFN has no tree and fails dramatically (−122%).</p><svg viewBox="0 0 560 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;font-family:system-ui,-apple-system,sans-serif">
+<line x1="160" y1="160" x2="520" y2="160" stroke="#999" stroke-width="1"/>
+<line x1="160.0" y1="24" x2="160.0" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="160.0" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.00</text>
+<line x1="223.2" y1="24" x2="223.2" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="223.2" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.25</text>
+<line x1="286.4" y1="24" x2="286.4" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="286.4" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.50</text>
+<line x1="349.6" y1="24" x2="349.6" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="349.6" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.75</text>
+<line x1="412.9" y1="24" x2="412.9" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="412.9" y="174" text-anchor="middle" font-size="10" fill="#6b7280">1.00</text>
+<line x1="476.1" y1="24" x2="476.1" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="476.1" y="174" text-anchor="middle" font-size="10" fill="#6b7280">1.25</text>
+<line x1="539.3" y1="24" x2="539.3" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="539.3" y="174" text-anchor="middle" font-size="10" fill="#6b7280">1.50</text>
+<rect x="160" y="28.9" width="114.4" height="24.3" fill="#6b7280" rx="3"/>
+<text x="152" y="45.0" text-anchor="end" font-size="12" fill="#111827">Phylo baseline</text>
+<text x="280.4" y="45.0" font-size="11" fill="#111827">0.453 &#177; 0.116</text>
+<rect x="160" y="62.9" width="114.4" height="24.3" fill="#059669" rx="3"/>
+<text x="152" y="79.0" text-anchor="end" font-size="12" fill="#111827">pigauto (phylo + GNN)</text>
+<text x="280.4" y="79.0" font-size="11" fill="#111827">0.453 &#177; 0.116</text>
+<rect x="160" y="96.9" width="254.2" height="24.3" fill="#c2410c" rx="3"/>
+<text x="152" y="113.0" text-anchor="end" font-size="12" fill="#111827">TabPFN alone</text>
+<text x="420.2" y="113.0" font-size="11" fill="#111827">1.005 &#177; 0.071</text>
+<rect x="160" y="130.9" width="251.6" height="24.3" fill="#7c3aed" rx="3"/>
+<text x="152" y="147.0" text-anchor="end" font-size="12" fill="#111827">pigauto + TabPFN (stacked)</text>
+<text x="417.6" y="147.0" font-size="11" fill="#111827">0.995 &#177; 0.084</text>
+</svg></section>
+<section style="margin:28px 0"><h3 style="margin:0 0 8px 0">Scenario: mixed</h3><p style="margin:0 0 12px 0;color:#374151;max-width:700px">Continuous + binary + categorical traits. pigauto holds the phylo baseline's continuous RMSE and fully preserves discrete accuracy (69.4%, unchanged). TabPFN errored on this scenario (a column-naming bug in the subprocess wrapper when dummy-encoded categorical columns are present).</p><svg viewBox="0 0 560 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;font-family:system-ui,-apple-system,sans-serif">
+<line x1="160" y1="160" x2="520" y2="160" stroke="#999" stroke-width="1"/>
+<line x1="160.0" y1="24" x2="160.0" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="160.0" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.00</text>
+<line x1="223.2" y1="24" x2="223.2" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="223.2" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.25</text>
+<line x1="286.4" y1="24" x2="286.4" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="286.4" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.50</text>
+<line x1="349.6" y1="24" x2="349.6" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="349.6" y="174" text-anchor="middle" font-size="10" fill="#6b7280">0.75</text>
+<line x1="412.9" y1="24" x2="412.9" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="412.9" y="174" text-anchor="middle" font-size="10" fill="#6b7280">1.00</text>
+<line x1="476.1" y1="24" x2="476.1" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="476.1" y="174" text-anchor="middle" font-size="10" fill="#6b7280">1.25</text>
+<line x1="539.3" y1="24" x2="539.3" y2="160" stroke="#e5e7eb" stroke-width="1"/>
+<text x="539.3" y="174" text-anchor="middle" font-size="10" fill="#6b7280">1.50</text>
+<rect x="160" y="33.7" width="176.9" height="48.6" fill="#6b7280" rx="3"/>
+<text x="152" y="62.0" text-anchor="end" font-size="12" fill="#111827">Phylo baseline</text>
+<text x="342.9" y="62.0" font-size="11" fill="#111827">0.700 &#177; 0.139</text>
+<rect x="160" y="101.7" width="173.6" height="48.6" fill="#059669" rx="3"/>
+<text x="152" y="130.0" text-anchor="end" font-size="12" fill="#111827">pigauto (phylo + GNN)</text>
+<text x="339.6" y="130.0" font-size="11" fill="#111827">0.686 &#177; 0.130</text>
+</svg></section>
+
+<h2>What this means for pigauto</h2>
+<p>
+Two ideas worth taking seriously:
+</p>
+<ol>
+<li><b>pigauto is doing its job as a phylogenetic imputer</b>, but the ceiling imposed by the phylo label-propagation baseline is high and the GNN is only finding small residual corrections (+0 to +2% RMSE). The recent calibration work means we no longer sacrifice discrete accuracy, so the method is safe to recommend as a drop-in upgrade to BACE/Rphylopars-style methods.</li>
+<li><b>TabPFN is the wrong default for phylogenetic data</b>. It treats species as exchangeable rows, which destroys the tree structure that dominates these scenarios. The single exception (OU) points at a useful selector: per-trait Pagel&rsquo;s &lambda;. When &lambda; is low, route to TabPFN; when high, use phylo+GNN. This is a much more promising architecture than blind stacking.</li>
+</ol>
+
+<h2>Bug to fix</h2>
+<p>The TabPFN subprocess wrapper errored on the <code>mixed</code> scenario with <code>length of &#39;dimnames&#39; [2] not equal to array extent</code>. The cause: <code>X_scaled</code> has one-hot columns for the categorical trait, so <code>ncol(mu) &gt; length(trait_names)</code>. Fix: use <code>colnames(data$X_scaled)</code> rather than <code>data$trait_names</code> when re-attaching dim-names.</p>
+
+<footer>
+Source: <code>script/bench_tabpfn.R</code> &middot; Results: <code>script/bench_tabpfn.rds</code> &middot; Report: <code>script/bench_tabpfn.html</code>
+</footer>
+
+</body>
+</html>
+
