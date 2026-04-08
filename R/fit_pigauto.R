@@ -57,6 +57,8 @@
 #'   layer normalisation, and residual connection.
 #' @param gate_cap numeric. Upper bound for the per-column residual gate
 #'   (default \code{0.8}).  Safety comes from regularisation, not the cap.
+#' @param use_attention logical. Use attention in the GNN layers (default
+#'   \code{TRUE}).
 #' @param corruption_rate numeric. Final corruption fraction if
 #'   \code{corruption_ramp > 0}; otherwise the fixed corruption rate per
 #'   epoch (default \code{0.55}).
@@ -98,9 +100,10 @@ fit_pigauto <- function(
     graph             = NULL,
     baseline          = NULL,
     hidden_dim        = 64L,
-    k_eigen           = 8L,
+    k_eigen           = "auto",
     n_gnn_layers      = 2L,
     gate_cap          = 0.8,
+    use_attention     = TRUE,
     dropout           = 0.10,
     lr                = 0.003,
     weight_decay      = 1e-4,
@@ -134,6 +137,8 @@ fit_pigauto <- function(
     if (verbose) message("Computing phylogenetic graph...")
     graph <- build_phylo_graph(tree, k_eigen = k_eigen)
   }
+  # Use the actual k_eigen from the graph (may differ from input if "auto")
+  k_eigen <- ncol(graph$coords)
 
   # ---- Baseline -------------------------------------------------------------
   if (is.null(baseline)) {
@@ -145,18 +150,33 @@ fit_pigauto <- function(
   trait_map <- data$trait_map
   has_trait_map <- !is.null(trait_map)
 
+  # ---- Multi-obs handling --------------------------------------------------
+  multi_obs  <- isTRUE(data$multi_obs)
+  n_obs      <- nrow(data$X_scaled)
+  n_species  <- data$n_species %||% n_obs
+  obs_to_sp  <- data$obs_to_species  # NULL when single-obs
+
   # ---- Data preparation ----------------------------------------------------
-  n <- nrow(data$X_scaled)
+  n <- n_obs                           # n = n_obs (rows in X)
   p <- ncol(data$X_scaled)
 
-  X_truth <- data$X_scaled          # n x p_latent
-  MU      <- baseline$mu            # n x p_latent
+  X_truth <- data$X_scaled             # n_obs x p_latent
+
+  # Baseline mu is at species level (n_species x p).
+  # For multi-obs, expand to observation level.
+  MU_species <- baseline$mu            # n_species x p_latent
+  if (multi_obs) {
+    MU <- MU_species[obs_to_sp, , drop = FALSE]
+    rownames(MU) <- NULL
+  } else {
+    MU <- MU_species
+  }
 
   # Fill missing cells with baseline predictions
   X_fill <- X_truth
   X_fill[is.na(X_fill)] <- MU[is.na(X_fill)]
 
-  DELTA_tgt <- X_fill - MU          # residual target
+  DELTA_tgt <- X_fill - MU            # residual target
 
   # Observed mask (TRUE = actually observed, not just filled)
   M_obs_mat <- !is.na(X_truth)
@@ -187,6 +207,16 @@ fit_pigauto <- function(
   t_coords <- torch::torch_tensor(graph$coords, dtype = torch::torch_float(),
                                   device = device)
 
+  # Observation-to-species mapping for multi-obs (1-indexed for torch-R)
+  if (multi_obs) {
+    t_obs_to_sp <- torch::torch_tensor(
+      as.integer(obs_to_sp),
+      dtype = torch::torch_long(), device = device
+    )
+  } else {
+    t_obs_to_sp <- NULL
+  }
+
   # Val / test masks
   if (!is.null(splits)) {
     val_mat <- matrix(FALSE, n, p); val_mat[splits$val_idx]  <- TRUE
@@ -211,15 +241,18 @@ fit_pigauto <- function(
     cov_dim        = as.integer(cov_dim),
     per_column_rs  = TRUE,
     n_gnn_layers   = as.integer(n_gnn_layers),
-    gate_cap       = gate_cap
+    gate_cap       = gate_cap,
+    use_attention  = use_attention
   )
 
-  # Type-aware gate init: set res_raw so effective gate ≈ 0.135 for
-
-  # continuous columns and ≈ 0.001 for discrete columns, regardless of
-  # gate_cap.  logit(target / gate_cap) gives the correct res_raw value.
+  # Type-aware gate init: set res_raw so effective gate starts at a
+  # non-trivial value for all trait types.  Discrete traits previously
+  # started near 0 (disc_target = 0.001), which killed gradient flow
+  # through the sigmoid and prevented the GNN from learning discrete
+  # corrections.  Starting at 0.10 gives a healthy gradient in both
+  # directions.  logit(target / gate_cap) gives the correct res_raw.
   cont_target <- 0.135
-  disc_target <- 0.001
+  disc_target <- 0.10
   cont_raw <- log(cont_target / gate_cap / (1 - cont_target / gate_cap))
   disc_raw <- log(disc_target / gate_cap / (1 - disc_target / gate_cap))
 
@@ -320,7 +353,7 @@ fit_pigauto <- function(
     tok   <- model$mask_token$expand(c(n, p))
     X_in  <- torch::torch_where(masked_bool, tok, t_X)
 
-    out   <- model(X_in, t_coords, covs_t, t_adj_train)
+    out   <- model(X_in, t_coords, covs_t, t_adj_train, t_obs_to_sp)
     delta <- out$delta
     rs    <- out$rs
 
@@ -372,7 +405,7 @@ fit_pigauto <- function(
         torch::with_no_grad({
           mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
           covs0     <- torch::torch_cat(list(t_MU, mask_ind0), dim = 2L)
-          out0      <- model(t_X, t_coords, covs0, t_adj)
+          out0      <- model(t_X, t_coords, covs0, t_adj, t_obs_to_sp)
           pred0     <- (1 - out0$rs) * t_MU + out0$rs * out0$delta
         })
         if (has_trait_map) {
@@ -427,6 +460,191 @@ fit_pigauto <- function(
 
   if (!is.null(best_state)) model$load_state_dict(best_state)
 
+  # ---- Post-training gate calibration (validation set) --------------------
+  calibrated_gates <- NULL
+  if (has_val && has_trait_map) {
+    if (verbose) message("Calibrating gates on validation set...")
+    model$eval()
+
+    calibrated_gates <- numeric(p)
+    # 9-point grid reduces multiple-testing inflation versus the previous
+    # 17-point grid while still covering the gate_cap range.
+    gate_grid <- seq(0, gate_cap, length.out = 9L)
+
+    torch::with_no_grad({
+      mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
+      covs0     <- torch::torch_cat(list(t_MU, mask_ind0), dim = 2L)
+      out_cal   <- model(t_X, t_coords, covs0, t_adj, t_obs_to_sp)
+      delta_cal <- as.matrix(out_cal$delta$cpu())
+      mu_cal    <- as.matrix(t_MU$cpu())
+    })
+
+    X_truth_r <- X_truth  # original data with NAs
+    val_mask_mat <- matrix(FALSE, n, p)
+    val_mask_mat[splits$val_idx] <- TRUE
+
+    # --- Per-trait calibration (one shared gate value per trait, selected
+    #     by a paired one-sided t-test on per-cell losses) ---------------------
+    #
+    # For each candidate gate on the grid, compute the per-cell loss at
+    # gate=0 and at that gate.  Accept the gate if the paired difference
+    # (loss_0 - loss_g) is positive AND statistically significant
+    # (alpha = `cal_alpha`, one-sided) OR if the sample is very small
+    # (n < 5) and a minimum relative improvement of `cal_min_rel_gain`
+    # is observed.  This adapts automatically to sample size: small
+    # validation sets need large effects, large validation sets detect
+    # modest ones.
+    cal_alpha         <- 0.10    # one-sided significance level
+    cal_min_rel_gain  <- 0.02    # fallback threshold for tiny val sets
+
+    for (tm in trait_map) {
+      lc <- tm$latent_cols
+      # Which validation cells are present AND observed for this trait?
+      # Exclude rows where any latent column of this trait is NA in the
+      # truth matrix (should not happen after the splits fix, but kept
+      # as a safety net).
+      val_cells <- val_mask_mat[, lc[1]]
+      if (length(lc) > 1L) {
+        truth_ok <- rowSums(is.na(X_truth_r[, lc, drop = FALSE])) == 0L
+      } else {
+        truth_ok <- !is.na(X_truth_r[, lc[1]])
+      }
+      val_cells <- val_cells & truth_ok
+      n_val <- sum(val_cells)
+      if (n_val == 0) {
+        calibrated_gates[lc] <- 0
+        next
+      }
+
+      # Helper: compute per-cell loss vector for a given gate value
+      cal_loss_vec <- function(g) {
+        if (tm$type %in% c("continuous", "count", "ordinal")) {
+          pred_j <- (1 - g) * mu_cal[val_cells, lc[1]] +
+                    g * delta_cal[val_cells, lc[1]]
+          return((pred_j - X_truth_r[val_cells, lc[1]])^2)
+
+        } else if (tm$type == "binary") {
+          pred_j <- (1 - g) * mu_cal[val_cells, lc[1]] +
+                    g * delta_cal[val_cells, lc[1]]
+          prob <- 1 / (1 + exp(-pred_j))
+          prob <- pmin(pmax(prob, 1e-7), 1 - 1e-7)
+          truth_j <- X_truth_r[val_cells, lc[1]]
+          return(-(truth_j * log(prob) + (1 - truth_j) * log(1 - prob)))
+
+        } else if (tm$type == "categorical") {
+          logits <- (1 - g) * mu_cal[val_cells, lc, drop = FALSE] +
+                    g * delta_cal[val_cells, lc, drop = FALSE]
+          logits_shifted <- logits - apply(logits, 1, max)
+          exp_logits <- exp(logits_shifted)
+          prob_mat <- exp_logits / rowSums(exp_logits)
+          prob_mat <- pmin(pmax(prob_mat, 1e-7), 1 - 1e-7)
+          truth_mat <- X_truth_r[val_cells, lc, drop = FALSE]
+          return(-rowSums(truth_mat * log(prob_mat)))
+        }
+        rep(Inf, n_val)
+      }
+
+      # Baseline per-cell losses (gate = 0)
+      loss_0_vec   <- cal_loss_vec(0)
+      loss_0_mean  <- mean(loss_0_vec)
+
+      best_gate    <- 0
+      best_score   <- 0   # signed improvement score (higher = better)
+
+      for (g in gate_grid) {
+        if (g == 0) next
+        loss_g_vec <- cal_loss_vec(g)
+        diffs      <- loss_0_vec - loss_g_vec   # positive = g better
+        mean_d     <- mean(diffs)
+
+        if (!is.finite(mean_d) || mean_d <= 0) next
+
+        accept <- FALSE
+        if (n_val >= 5L) {
+          sd_d <- stats::sd(diffs)
+          if (is.finite(sd_d) && sd_d > 0) {
+            t_stat   <- mean_d / (sd_d / sqrt(n_val))
+            crit     <- stats::qt(1 - cal_alpha, df = n_val - 1L)
+            accept   <- t_stat > crit
+            score    <- t_stat
+          } else if (sd_d == 0 && mean_d > 0) {
+            # All cells improved by the same amount -> trivially significant
+            accept <- TRUE
+            score  <- Inf
+          } else {
+            score  <- -Inf
+          }
+        } else {
+          # Very small sample: fall back to a minimum relative improvement
+          rel <- mean_d / max(loss_0_mean, 1e-12)
+          accept <- rel >= cal_min_rel_gain
+          score  <- rel
+        }
+
+        if (accept && is.finite(score) && score > best_score) {
+          best_gate  <- g
+          best_score <- score
+        }
+      }
+
+      # Assign the same calibrated gate to all latent columns of this trait
+      calibrated_gates[lc] <- best_gate
+    }
+
+    if (verbose) {
+      gate_summary <- round(calibrated_gates, 3)
+      names(gate_summary) <- if (!is.null(data$latent_names)) data$latent_names else paste0("col", seq_len(p))
+      message("Calibrated gates: ", paste(names(gate_summary), gate_summary, sep = "=", collapse = ", "))
+    }
+  }
+
+  # ---- Conformal prediction scores (validation set) -----------------------
+  conformal_scores <- NULL
+  if (has_val && has_trait_map) {
+    if (verbose) message("Computing conformal prediction scores...")
+
+    # Use calibrated gates if available, otherwise learned gates
+    if (!is.null(calibrated_gates)) {
+      gates_to_use <- calibrated_gates
+    } else {
+      gates_to_use <- as.numeric(out_cal$rs$cpu()$squeeze())
+    }
+
+    # Compute calibrated predictions on validation set
+    pred_cal <- matrix(0, n, p)
+    for (j in seq_len(p)) {
+      pred_cal[, j] <- (1 - gates_to_use[j]) * mu_cal[, j] +
+                        gates_to_use[j] * delta_cal[, j]
+    }
+
+    conformal_scores <- rep(NA_real_, length(trait_map))
+    names(conformal_scores) <- vapply(trait_map, "[[", character(1), "name")
+
+    for (tm in trait_map) {
+      if (!(tm$type %in% c("continuous", "count", "ordinal"))) next
+      lc <- tm$latent_cols
+      val_cells <- val_mask_mat[, lc[1]]
+      if (sum(val_cells) == 0) next
+
+      residuals <- abs(X_truth_r[val_cells, lc[1]] - pred_cal[val_cells, lc[1]])
+      residuals <- residuals[is.finite(residuals)]
+      n_val <- length(residuals)
+      if (n_val == 0L) next
+      # Conformal quantile: ceil((1-alpha)(1+1/n_val))-th value
+      alpha <- 0.05
+      q_level <- min(ceiling((1 - alpha) * (n_val + 1)) / n_val, 1)
+      conformal_scores[tm$name] <- as.numeric(
+        stats::quantile(residuals, q_level, na.rm = TRUE)
+      )
+    }
+
+    if (verbose) {
+      cs_print <- round(conformal_scores[!is.na(conformal_scores)], 4)
+      message("Conformal scores (latent scale): ",
+              paste(names(cs_print), cs_print, sep = "=", collapse = ", "))
+    }
+  }
+
   # ---- Final test loss -------------------------------------------------------
   test_loss <- NA_real_
   if (!is.null(splits) && length(splits$test_idx) > 0L) {
@@ -437,7 +655,7 @@ fit_pigauto <- function(
     torch::with_no_grad({
       mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
       covs0     <- torch::torch_cat(list(t_MU, mask_ind0), dim = 2L)
-      out0      <- model(t_X, t_coords, covs0, t_adj)
+      out0      <- model(t_X, t_coords, covs0, t_adj, t_obs_to_sp)
       pred0     <- (1 - out0$rs) * t_MU + out0$rs * out0$delta
       t_truth_f <- torch::torch_tensor(X_truth, dtype = torch::torch_float(),
                                        device = device)
@@ -458,6 +676,7 @@ fit_pigauto <- function(
     k_eigen         = k_eigen,
     n_gnn_layers    = n_gnn_layers,
     gate_cap        = gate_cap,
+    use_attention   = use_attention,
     dropout         = dropout,
     refine_steps    = refine_steps,
     cov_dim         = cov_dim,
@@ -468,23 +687,30 @@ fit_pigauto <- function(
   # Backward-compat: store val_rmse and test_rmse names
   structure(
     list(
-      model_state   = model$state_dict(),
-      model_config  = model_config,
-      graph         = graph,
-      baseline      = baseline,
-      norm          = list(
+      model_state    = model$state_dict(),
+      model_config   = model_config,
+      graph          = graph,
+      baseline       = baseline,
+      norm           = list(
         means         = data$means,
         sds           = data$sds,
         log_transform = data$log_transform
       ),
-      species_names = data$species_names,
-      trait_names   = data$trait_names,
-      latent_names  = data$latent_names,
-      trait_map     = trait_map,
-      splits        = splits,
-      history       = history,
-      val_rmse      = best_val,
-      test_rmse     = test_loss
+      species_names  = data$species_names,
+      obs_species    = data$obs_species,
+      obs_to_species = data$obs_to_species,
+      n_species      = n_species,
+      n_obs          = n_obs,
+      multi_obs      = multi_obs,
+      trait_names    = data$trait_names,
+      latent_names   = data$latent_names,
+      trait_map      = trait_map,
+      splits         = splits,
+      history        = history,
+      val_rmse         = best_val,
+      test_rmse        = test_loss,
+      calibrated_gates = calibrated_gates,
+      conformal_scores = conformal_scores
     ),
     class = "pigauto_fit"
   )

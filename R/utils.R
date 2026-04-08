@@ -8,7 +8,15 @@ all_grads_finite <- function(parameters) {
   for (pp in parameters) {
     g <- pp$grad
     if (!is.null(g)) {
-      if (!isTRUE(torch::torch_isfinite(g)$all()$item())) return(FALSE)
+      ok <- tryCatch(
+        isTRUE(torch::torch_isfinite(g)$all()$item()),
+        error = function(e) {
+          # Some parameter types (e.g. 0-d tensors on certain backends)
+          # do not support isfinite; assume finite if we cannot check.
+          TRUE
+        }
+      )
+      if (!ok) return(FALSE)
     }
   }
   TRUE

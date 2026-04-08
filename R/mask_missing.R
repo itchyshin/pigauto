@@ -64,15 +64,20 @@ make_missing_splits <- function(X, missing_frac = 0.25, val_frac = 0.25,
 
   if (is.null(trait_map)) {
     # ---- v0.1 behaviour: mask per latent column ----------------------------
-    all_idx <- seq_len(n * p)
+    # Only sample from cells that are actually observed (non-NA).
+    observed_idx <- which(!is.na(X))
+    if (length(observed_idx) == 0L) {
+      stop("No observed cells in X; cannot create splits.")
+    }
     set.seed(seed)
-    n_miss   <- floor(missing_frac * length(all_idx))
-    miss     <- sample(all_idx, n_miss)
+    n_miss   <- floor(missing_frac * length(observed_idx))
+    miss     <- sample(observed_idx, n_miss)
     n_val    <- floor(val_frac * length(miss))
     val_idx  <- miss[seq_len(n_val)]
     test_idx <- miss[(n_val + 1L):length(miss)]
 
     mask <- matrix(TRUE, nrow = n, ncol = p)
+    mask[!is.na(X)] <- TRUE  # observed cells stay TRUE
     mask[c(val_idx, test_idx)] <- FALSE
 
     return(list(
@@ -86,12 +91,24 @@ make_missing_splits <- function(X, missing_frac = 0.25, val_frac = 0.25,
   }
 
   # ---- Trait-level masking (mixed types) -----------------------------------
+  # Build a (n_species x n_traits) observation mask: a cell is observed
+  # when ALL its latent columns are non-NA in X.
   n_traits <- length(trait_map)
-  n_cells  <- n * n_traits  # one cell per (species, original trait)
+  obs_trait <- matrix(TRUE, nrow = n, ncol = n_traits)
+  for (j in seq_len(n_traits)) {
+    tm <- trait_map[[j]]
+    for (lc in tm$latent_cols) {
+      obs_trait[, j] <- obs_trait[, j] & !is.na(X[, lc])
+    }
+  }
+  observed_trait_idx <- which(obs_trait)
+  if (length(observed_trait_idx) == 0L) {
+    stop("No observed (species, trait) cells; cannot create splits.")
+  }
 
   set.seed(seed)
-  n_miss   <- floor(missing_frac * n_cells)
-  miss     <- sample(seq_len(n_cells), n_miss)
+  n_miss   <- floor(missing_frac * length(observed_trait_idx))
+  miss     <- sample(observed_trait_idx, n_miss)
   n_val    <- floor(val_frac * length(miss))
   val_trait   <- miss[seq_len(n_val)]
   test_trait  <- miss[(n_val + 1L):length(miss)]

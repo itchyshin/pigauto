@@ -1,98 +1,35 @@
-#' Plot training history or observed-vs-predicted scatter
+#' Plot training history (ggplot2, deprecated)
 #'
 #' @description
-#' Produces either a validation loss training curve (\code{type = "history"})
-#' or a scatter plot of observed vs predicted values for the selected split
-#' (\code{type = "scatter"}).
+#' Deprecated. Use the base-R S3 method instead:
+#' \code{plot(fit, type = "history")}.
+#'
+#' Produces a ggplot2 validation loss training curve.
 #'
 #' @param x object of class \code{"pigauto_fit"}.
-#' @param type \code{"scatter"} (default) or \code{"history"}.
-#' @param split which split to use for scatter: \code{"val"} (default) or
-#'   \code{"test"}.
 #' @param ... ignored.
 #' @return A \code{ggplot} object.
-#' @examples
-#' \dontrun{
-#' plot(fit)
-#' plot(fit, type = "history")
-#' }
 #' @importFrom ggplot2 ggplot aes geom_point geom_abline facet_wrap
 #' @importFrom ggplot2 theme_minimal labs geom_line geom_ribbon
 #' @importFrom rlang .data
 #' @export
-plot.pigauto_fit <- function(x, type = "scatter", split = "val", ...) {
-  type  <- match.arg(type,  c("scatter", "history"))
-  split <- match.arg(split, c("val", "test"))
-
-  if (type == "history") {
-    if (nrow(x$history) == 0L) stop("No training history available.")
-
-    # Support both old (val_rmse) and new (val_loss) column names
-    val_col <- if ("val_loss" %in% names(x$history)) "val_loss" else "val_rmse"
-    df <- x$history[is.finite(x$history[[val_col]]), ]
-
-    ggplot2::ggplot(df, ggplot2::aes(x = .data$epoch, y = .data[[val_col]])) +
-      ggplot2::geom_line(colour = "#1f78b4") +
-      ggplot2::geom_point(size = 1.5, colour = "#1f78b4") +
-      ggplot2::theme_minimal() +
-      ggplot2::labs(
-        title = "Training history",
-        x = "Epoch", y = "Validation loss"
-      )
-  } else {
-    splits <- x$splits
-    if (is.null(splits)) stop("No splits stored; cannot produce scatter plot.")
-    idx <- if (split == "val") splits$val_idx else splits$test_idx
-    if (length(idx) == 0L) stop("No ", split, " cells available.")
-
-    # Only plot continuous/count/ordinal traits (numeric in latent space)
-    trait_map <- x$trait_map
-    n <- length(x$species_names)
-    p <- if (!is.null(x$baseline$mu)) ncol(x$baseline$mu) else length(x$trait_names)
-
-    row_j <- ((idx - 1L) %% n) + 1L
-    col_j <- ceiling(idx / n)
-
-    # Determine which latent columns are plottable (continuous-like)
-    if (!is.null(trait_map)) {
-      cont_lc <- integer(0)
-      cont_names_map <- character(0)
-      for (tm in trait_map) {
-        if (tm$type %in% c("continuous", "count", "ordinal")) {
-          cont_lc <- c(cont_lc, tm$latent_cols)
-          cont_names_map <- c(cont_names_map, rep(tm$name, tm$n_latent))
-        }
-      }
-      keep <- col_j %in% cont_lc
-      if (sum(keep) == 0L) {
-        stop("No continuous/count/ordinal traits to scatter-plot.")
-      }
-      row_j <- row_j[keep]
-      col_j <- col_j[keep]
-      trait_labels <- cont_names_map[match(col_j, cont_lc)]
-    } else {
-      trait_labels <- x$trait_names[col_j]
-    }
-
-    bm_vals <- mapply(function(r, c) x$baseline$mu[r, c], row_j, col_j)
-
-    df <- data.frame(
-      bm    = bm_vals,
-      trait = trait_labels,
-      stringsAsFactors = FALSE
-    )
-
-    ggplot2::ggplot(df, ggplot2::aes(x = .data$bm, y = .data$bm)) +
-      ggplot2::geom_point(alpha = 0.3, size = 1) +
-      ggplot2::geom_abline(linetype = "dashed", colour = "grey40") +
-      ggplot2::facet_wrap(~ .data$trait, scales = "free") +
-      ggplot2::theme_minimal() +
-      ggplot2::labs(
-        title = paste("BM baseline:", split, "split"),
-        x = "BM prediction (latent scale)",
-        y = "BM prediction (latent scale)"
-      )
+plot_history_gg <- function(x, ...) {
+  if (!inherits(x, "pigauto_fit")) {
+    stop("'x' must be a pigauto_fit object.")
   }
+  if (nrow(x$history) == 0L) stop("No training history available.")
+
+  val_col <- if ("val_loss" %in% names(x$history)) "val_loss" else "val_rmse"
+  df <- x$history[is.finite(x$history[[val_col]]), ]
+
+  ggplot2::ggplot(df, ggplot2::aes(x = .data$epoch, y = .data[[val_col]])) +
+    ggplot2::geom_line(colour = "#1f78b4") +
+    ggplot2::geom_point(size = 1.5, colour = "#1f78b4") +
+    ggplot2::theme_minimal() +
+    ggplot2::labs(
+      title = "Training history",
+      x = "Epoch", y = "Validation loss"
+    )
 }
 
 

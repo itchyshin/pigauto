@@ -10,8 +10,10 @@
 #'
 #' For mixed-type data, Rphylopars is applied only to continuous, count,
 #' and ordinal traits (which are continuous in latent space).  Binary
-#' traits receive the population-level logit proportion as baseline;
-#' categorical traits receive log marginal frequencies.
+#' and categorical traits use phylogenetic label propagation: each
+#' species receives a personalised baseline computed as the
+#' phylo-similarity-weighted average of observed values, using a
+#' Gaussian kernel on cophenetic distances.
 #'
 #' @param data object of class \code{"pigauto_data"}.
 #' @param tree object of class \code{"phylo"}.
@@ -43,9 +45,31 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM") {
   if (!inherits(tree, "phylo")) stop("'tree' must be a phylo object.")
 
   X   <- data$X_scaled
-  n   <- nrow(X)
   p   <- ncol(X)
-  spp <- data$species_names
+
+  multi_obs <- isTRUE(data$multi_obs)
+  if (multi_obs) {
+    # Multi-obs: X is n_obs x p, species_names is n_species
+    n_obs     <- data$n_obs
+    n_species <- data$n_species
+    spp       <- data$species_names          # unique species (n_species)
+    obs_spp   <- data$obs_species            # species per obs (n_obs)
+    obs_to_sp <- data$obs_to_species         # integer mapping (n_obs)
+  } else {
+    n_obs     <- nrow(X)
+    n_species <- n_obs
+    spp       <- data$species_names
+    obs_spp   <- spp
+    obs_to_sp <- NULL
+  }
+
+  # ---- Phylogenetic similarity for discrete-trait label propagation ------
+  D_phylo  <- ape::cophenetic.phylo(tree)
+  # Reorder to match species order
+  D_phylo  <- D_phylo[spp, spp]
+  sigma_lp <- stats::median(D_phylo) * 0.5
+  sim_phylo <- exp(-(D_phylo^2) / (2 * sigma_lp^2))
+  diag(sim_phylo) <- 0  # exclude self for label propagation
 
   # Mask val + test cells before fitting
   if (!is.null(splits)) {
@@ -54,8 +78,10 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM") {
   }
 
   trait_map <- data$trait_map
-  mu <- matrix(0, nrow = n, ncol = p)
-  se <- matrix(0, nrow = n, ncol = p)
+
+  # Output at species level (n_species x p)
+  mu <- matrix(0, nrow = n_species, ncol = p)
+  se <- matrix(0, nrow = n_species, ncol = p)
   dimnames(mu) <- list(spp, data$latent_names)
   dimnames(se) <- list(spp, data$latent_names)
 
@@ -71,7 +97,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM") {
   if (length(bm_cols) > 0) {
     X_bm <- X[, bm_cols, drop = FALSE]
     df_ph <- as.data.frame(X_bm)
-    df_ph <- cbind(species = spp, df_ph)
+    # Use observation-level species names (allows duplicates for multi-obs)
+    df_ph <- cbind(species = obs_spp, df_ph)
 
     fit_rphylo <- function(tr) {
       suppressWarnings(
@@ -110,37 +137,89 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM") {
     se[, bm_cols] <- se_bm
   }
 
-  # ---- Binary baseline: logit of observed proportion ------------------------
+  # ---- Binary baseline: phylogenetic label propagation -------------------
   for (tm in trait_map) {
     if (tm$type != "binary") next
     lc   <- tm$latent_cols
-    vals <- X[, lc]
-    obs  <- vals[!is.na(vals)]
-    prop <- if (length(obs) > 0) mean(obs) else 0.5
-    mu[, lc] <- logit(prop)
+
+    # Get species-level observations
+    if (multi_obs) {
+      sp_vals <- tapply(X[, lc], obs_spp, function(v) {
+        v <- v[!is.na(v)]
+        if (length(v) == 0) NA_real_ else mean(v)
+      })
+      vals_species <- rep(NA_real_, n_species)
+      names(vals_species) <- spp
+      vals_species[names(sp_vals)] <- as.numeric(sp_vals)
+    } else {
+      vals_species <- X[, lc]
+      names(vals_species) <- spp
+    }
+
+    observed <- !is.na(vals_species)
+    if (sum(observed) == 0) {
+      mu[, lc] <- logit(0.5)
+      se[, lc] <- 0
+      next
+    }
+
+    # Phylo-weighted probability for each species
+    sim_obs <- sim_phylo[, observed, drop = FALSE]
+    row_weights <- rowSums(sim_obs)
+    row_weights[row_weights < 1e-10] <- 1e-10
+    probs <- as.numeric(sim_obs %*% vals_species[observed]) / row_weights
+    probs <- pmin(pmax(probs, 0.01), 0.99)  # clip for stability
+
+    mu[, lc] <- logit(probs)
     se[, lc] <- 0
   }
 
-  # ---- Categorical baseline: log marginal frequencies -----------------------
+  # ---- Categorical baseline: phylogenetic label propagation ---------------
   for (tm in trait_map) {
     if (tm$type != "categorical") next
     K    <- tm$n_latent
     lc   <- tm$latent_cols
-    oh   <- X[, lc, drop = FALSE]  # n x K one-hot (with NAs)
+    oh   <- X[, lc, drop = FALSE]  # n_obs x K one-hot (with NAs)
 
-    # Compute marginal frequencies from observed species
-    obs_rows <- which(complete.cases(oh))
-    if (length(obs_rows) > 0) {
-      freqs <- colMeans(oh[obs_rows, , drop = FALSE])
-      freqs <- pmax(freqs, 1e-6)  # avoid log(0)
-      freqs <- freqs / sum(freqs)
+    # Get species-level one-hot observations
+    if (multi_obs) {
+      # Average one-hot within species (handles multiple obs)
+      oh_species <- matrix(NA_real_, n_species, K)
+      for (s in seq_len(n_species)) {
+        rows <- which(obs_to_sp == s)
+        obs_rows <- rows[complete.cases(oh[rows, , drop = FALSE])]
+        if (length(obs_rows) > 0) {
+          oh_species[s, ] <- colMeans(oh[obs_rows, , drop = FALSE])
+        }
+      }
     } else {
-      freqs <- rep(1 / K, K)
+      oh_species <- oh
     }
-    log_freqs <- log(freqs)
+
+    # Which species have observed values
+    observed <- complete.cases(oh_species)
+    if (sum(observed) == 0) {
+      freqs <- rep(1 / K, K)
+      log_freqs <- log(freqs)
+      for (k in seq_len(K)) mu[, lc[k]] <- log_freqs[k]
+      se[, lc] <- 0
+      next
+    }
+
+    # Phylo-weighted category probabilities per species
+    sim_obs <- sim_phylo[, observed, drop = FALSE]
+    row_weights <- rowSums(sim_obs)
+    row_weights[row_weights < 1e-10] <- 1e-10
+
+    # Weighted category probs: (n_species x K)
+    weighted_probs <- (sim_obs %*% oh_species[observed, , drop = FALSE]) /
+      row_weights
+    # Add small floor and renormalise
+    weighted_probs <- pmax(weighted_probs, 1e-6)
+    weighted_probs <- weighted_probs / rowSums(weighted_probs)
 
     for (k in seq_len(K)) {
-      mu[, lc[k]] <- log_freqs[k]
+      mu[, lc[k]] <- log(weighted_probs[, k])
     }
     se[, lc] <- 0
   }

@@ -11,14 +11,22 @@ fit_pigauto(
   graph = NULL,
   baseline = NULL,
   hidden_dim = 64L,
-  k_eigen = 8L,
+  k_eigen = "auto",
+  n_gnn_layers = 2L,
+  gate_cap = 0.8,
+  use_attention = TRUE,
   dropout = 0.1,
   lr = 0.003,
   weight_decay = 1e-04,
   epochs = 3000L,
   corruption_rate = 0.55,
+  corruption_start = 0.2,
+  corruption_ramp = 500L,
   refine_steps = 8L,
   lambda_shrink = 0.03,
+  lambda_gate = 0.01,
+  warmup_epochs = 200L,
+  edge_dropout = 0.1,
   eval_every = 100L,
   patience = 10L,
   clip_norm = 1,
@@ -44,6 +52,16 @@ fit_pigauto(
 \item{k_eigen}{integer. Number of spectral node features (default
 \code{8}).}
 
+\item{n_gnn_layers}{integer. Number of graph message-passing layers
+(default \code{2}).  Each layer has its own learnable alpha gate,
+layer normalisation, and residual connection.}
+
+\item{gate_cap}{numeric. Upper bound for the per-column residual gate
+(default \code{0.8}).  Safety comes from regularisation, not the cap.}
+
+\item{use_attention}{logical. Use attention in the GNN layers (default
+\code{TRUE}).}
+
 \item{dropout}{numeric. Dropout rate (default \code{0.10}).}
 
 \item{lr}{numeric. AdamW learning rate (default \code{0.003}).}
@@ -52,14 +70,35 @@ fit_pigauto(
 
 \item{epochs}{integer. Maximum training epochs (default \code{3000}).}
 
-\item{corruption_rate}{numeric. Fraction of observed cells corrupted per
+\item{corruption_rate}{numeric. Final corruption fraction if
+\code{corruption_ramp > 0}; otherwise the fixed corruption rate per
 epoch (default \code{0.55}).}
+
+\item{corruption_start}{numeric. Initial corruption fraction for the
+curriculum schedule (default \code{0.20}).  Ignored if
+\code{corruption_ramp = 0}.}
+
+\item{corruption_ramp}{integer. Epochs over which corruption linearly
+ramps from \code{corruption_start} to \code{corruption_rate}
+(default \code{500}).  Set to \code{0} for fixed corruption.}
 
 \item{refine_steps}{integer. Iterative refinement steps at inference
 (default \code{8}).}
 
 \item{lambda_shrink}{numeric. Weight on the residual shrinkage loss
 (default \code{0.03}).}
+
+\item{lambda_gate}{numeric. Weight on the gate regularisation penalty
+that pushes learnable gates toward zero.  Prevents gates from staying
+open when the GNN provides no useful correction (default \code{0.01}).}
+
+\item{warmup_epochs}{integer. Linear learning-rate warmup over the first
+N epochs (default \code{200}).  After warmup, a cosine schedule decays
+the LR to \code{1e-5}.}
+
+\item{edge_dropout}{numeric. Fraction of adjacency edges randomly zeroed
+each training epoch for graph regularisation (default \code{0.1}).
+Set to \code{0} to disable.}
 
 \item{eval_every}{integer. Evaluate on val every N epochs (default
 \code{100}).}
@@ -77,19 +116,36 @@ epoch (default \code{0.55}).}
 An object of class \code{"pigauto_fit"}.
 }
 \description{
-Trains a \code{ResidualPhyloDAE} that learns a bounded residual correction
-on top of a baseline.  Supports continuous, binary, categorical, ordinal,
-and count traits via a unified latent space.
+Trains a \code{ResidualPhyloDAE} that blends a phylogenetic baseline with
+a learned graph-based predictor.  Supports continuous, binary, categorical,
+ordinal, and count traits via a unified latent space.
 }
 \details{
+\strong{Blend formulation:}
+The prediction is \eqn{\hat{x} = (1-r)\mu + r\delta}, where \eqn{\mu} is
+the BM baseline, \eqn{\delta} is the model's direct prediction, and
+\eqn{r = \sigma(\rho) \times \mathrm{cap}} is a per-column learnable gate
+bounded in \eqn{(0, \mathrm{gate\_cap})}.  When \eqn{r = 0}, the prediction
+collapses to the baseline.
+The gate is regularised toward zero via the shrinkage penalty on
+\eqn{\delta - \mu}, so the model defaults to the baseline unless the
+GNN's correction demonstrably helps on the validation set.
+
 \strong{Training objective} (per epoch):
 \enumerate{
 \item A random subset of observed cells is corrupted with a learnable
 mask token.
-\item The model predicts the residual \eqn{\delta = X - \mu_{baseline}}.
+\item The model predicts \eqn{\delta} from graph context.
 \item Loss = type-specific reconstruction on corrupted cells +
-\code{lambda_shrink} * MSE toward zero.
+\code{lambda_shrink} * MSE(\eqn{\delta - \mu}) +
+\code{lambda_gate} * MSE(\eqn{r}).
 }
+
+The gate penalty on \eqn{r} is necessary because when \eqn{\delta =
+\mu} (the BM-optimal solution for observed cells), the reconstruction
+and shrinkage losses both equal zero regardless of \eqn{r}, leaving no
+gradient to close the gate.  The explicit penalty ensures gates default
+toward zero when the GNN correction provides no benefit.
 
 \strong{Type-specific losses:}
 \describe{

@@ -61,8 +61,10 @@ get_adj_symnorm_internal <- function(tree, sigma_mult) {
 #' cluster structure of the phylogeny.
 #'
 #' @param tree object of class \code{"phylo"}.
-#' @param k_eigen integer. Number of Laplacian eigenvectors to use as node
-#'   features (default \code{8}).
+#' @param k_eigen integer or \code{"auto"}. Number of Laplacian eigenvectors
+#'   to use as node features.  When \code{"auto"} (default), scales with tree
+#'   size: \code{min(max(ceiling(n/20), 4), 32)}, giving 4 for very small
+#'   trees, 8 for 100–160 tips, 15 for 300 tips, and 32 for 640+ tips.
 #' @param sigma_mult numeric. Bandwidth multiplier:
 #'   \eqn{\sigma = \mathrm{median}(D) \times \code{sigma_mult}}
 #'   (default \code{0.5}).
@@ -84,10 +86,17 @@ get_adj_symnorm_internal <- function(tree, sigma_mult) {
 #' dim(g$coords) # 30 x 4
 #' @importFrom ape cophenetic.phylo
 #' @export
-build_phylo_graph <- function(tree, k_eigen = 8L, sigma_mult = 0.5,
+build_phylo_graph <- function(tree, k_eigen = "auto", sigma_mult = 0.5,
                                cache_path = NULL) {
   if (!inherits(tree, "phylo")) stop("'tree' must be a phylo object.")
   n <- length(tree$tip.label)
+
+  # Adaptive k_eigen: scales with tree size
+
+  if (identical(k_eigen, "auto") || identical(k_eigen, "Auto")) {
+    k_eigen <- as.integer(min(max(ceiling(n / 20), 4L), 32L))
+  }
+  k_eigen <- as.integer(k_eigen)
 
   if (n > 2000L) {
     warning(

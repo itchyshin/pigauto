@@ -13,6 +13,8 @@
 #
 # Scenarios 1–8: BM-generated data (BACE sim_bace), all 5 trait types.
 # Scenarios 9–12: non-BM data (OU, regime shift, nonlinear).
+# Scenarios 13–16: Extended BACE (variable signal, large trees,
+#                  multi-obs per species, interaction terms).
 #
 # Requirements:
 #   - pigauto (loaded or installed)
@@ -154,6 +156,57 @@ adapt_sim_for_pigauto <- function(sim_result, scenario) {
 }
 
 
+# ---- Section 2b: adapt_sim_for_pigauto_multiobs() ---------------------------
+#
+# Keeps multiple observations per species (no aggregation).
+# Returns a data.frame with a species column (not rownames) and proper types.
+
+adapt_sim_for_pigauto_multiobs <- function(sim_result, scenario) {
+  cd   <- sim_result$complete_data
+  tree <- sim_result$tree
+
+  all_types <- c(scenario$response_type, scenario$predictor_types)
+  var_names <- sim_result$params$var_names
+
+  # Build data.frame with proper types (observation-level)
+  out <- data.frame(species = cd$species, stringsAsFactors = FALSE)
+
+  for (k in seq_along(var_names)) {
+    col_name <- var_names[k]
+    col_type <- all_types[k]
+    vals     <- cd[[col_name]]
+
+    if (col_type == "gaussian") {
+      out[[col_name]] <- as.numeric(vals)
+    } else if (col_type == "poisson") {
+      out[[col_name]] <- as.integer(as.numeric(vals))
+    } else if (col_type == "binary") {
+      int_vals <- as.integer(as.character(vals))
+      out[[col_name]] <- factor(int_vals, levels = c(0L, 1L))
+    } else if (grepl("^multinomial", col_type)) {
+      levs <- levels(vals)
+      if (is.null(levs)) levs <- sort(unique(as.character(vals)))
+      out[[col_name]] <- factor(as.character(vals), levels = levs)
+    } else if (grepl("^threshold", col_type)) {
+      int_vals <- as.integer(as.character(vals))
+      n_cats   <- as.integer(gsub("threshold", "", col_type))
+      levs     <- as.character(seq_len(n_cats))
+      out[[col_name]] <- ordered(as.character(int_vals), levels = levs)
+    }
+  }
+
+  # Prune tree
+  keep <- intersect(tree$tip.label, unique(out$species))
+  out  <- out[out$species %in% keep, , drop = FALSE]
+  drop_tips <- setdiff(tree$tip.label, keep)
+  if (length(drop_tips) > 0) {
+    tree <- ape::drop.tip(tree, drop_tips)
+  }
+
+  list(traits = out, tree = tree, multi_obs = TRUE)
+}
+
+
 # ---- Section 3: run_one_replicate() ------------------------------------------
 
 run_one_replicate <- function(scenario, rep_id) {
@@ -167,22 +220,36 @@ run_one_replicate <- function(scenario, rep_id) {
   sim_type <- scenario$sim_type %||% "BM"
 
   adapted <- NULL
-  if (sim_type == "BM") {
-    # BACE sim_bace path (scenarios 1-8)
+  is_multi_obs <- (sim_type == "BM_multi_obs")
+
+  if (sim_type %in% c("BM", "BM_multi_obs")) {
+    # BACE sim_bace path (scenarios 1-8 and 13-16)
     n_vars   <- 1L + length(scenario$predictor_types)
     ps_vec   <- rep(scenario$phylo_signal, length.out = n_vars)
     miss_vec <- rep(0, n_vars)
+    n_cases  <- scenario$n_cases %||% scenario$n_species
+
+    # Interaction terms (scenario 16)
+    extra_args <- list()
+    if (isTRUE(scenario$use_interactions)) {
+      n_pred <- length(scenario$predictor_types)
+      ix_mat <- matrix(0, n_pred, n_pred)
+      # Add a couple of pairwise interactions
+      if (n_pred >= 2) { ix_mat[1, 2] <- 1; ix_mat[2, 1] <- 1 }
+      extra_args$ix_matrix <- ix_mat
+      extra_args$beta_ix   <- 0.5
+    }
 
     set.seed(seed)
     sim <- tryCatch(
-      sim_bace(
+      do.call(sim_bace, c(list(
         response_type  = scenario$response_type,
         predictor_types = scenario$predictor_types,
         phylo_signal   = ps_vec,
-        n_cases        = scenario$n_species,
+        n_cases        = n_cases,
         n_species      = scenario$n_species,
         missingness    = miss_vec
-      ),
+      ), extra_args)),
       error = function(e) {
         cat("  [ERROR] sim_bace failed:", conditionMessage(e), "\n")
         NULL
@@ -190,13 +257,26 @@ run_one_replicate <- function(scenario, rep_id) {
     )
     if (is.null(sim)) return(NULL)
 
-    adapted <- tryCatch(
-      adapt_sim_for_pigauto(sim, scenario),
-      error = function(e) {
-        cat("  [ERROR] adapt_sim_for_pigauto failed:", conditionMessage(e), "\n")
-        NULL
-      }
-    )
+    if (is_multi_obs) {
+      # Multi-obs: pass raw data with species column to pigauto
+      adapted <- tryCatch(
+        adapt_sim_for_pigauto_multiobs(sim, scenario),
+        error = function(e) {
+          cat("  [ERROR] adapt_sim_for_pigauto_multiobs failed:",
+              conditionMessage(e), "\n")
+          NULL
+        }
+      )
+    } else {
+      adapted <- tryCatch(
+        adapt_sim_for_pigauto(sim, scenario),
+        error = function(e) {
+          cat("  [ERROR] adapt_sim_for_pigauto failed:",
+              conditionMessage(e), "\n")
+          NULL
+        }
+      )
+    }
   } else {
     # Non-BM simulation path (scenarios 9+)
     set.seed(seed)
@@ -221,17 +301,25 @@ run_one_replicate <- function(scenario, rep_id) {
   }
   if (is.null(adapted)) return(NULL)
 
-  cat(sprintf("  Adapted data: %d species, %d traits\n",
-              nrow(adapted$traits), ncol(adapted$traits)))
+  use_multi_obs <- isTRUE(adapted$multi_obs)
+  cat(sprintf("  Adapted data: %d rows, %d cols%s\n",
+              nrow(adapted$traits), ncol(adapted$traits),
+              if (use_multi_obs) sprintf(" (multi-obs, %d species)",
+                                         length(unique(adapted$traits$species)))
+              else ""))
 
   # -- 3c. Preprocess -----------------------------------------------------------
-  pd <- tryCatch(
-    preprocess_traits(adapted$traits, adapted$tree, log_transform = FALSE),
-    error = function(e) {
-      cat("  [ERROR] preprocess_traits failed:", conditionMessage(e), "\n")
-      NULL
+  pd <- tryCatch({
+    if (use_multi_obs) {
+      preprocess_traits(adapted$traits, adapted$tree,
+                        species_col = "species", log_transform = FALSE)
+    } else {
+      preprocess_traits(adapted$traits, adapted$tree, log_transform = FALSE)
     }
-  )
+  }, error = function(e) {
+    cat("  [ERROR] preprocess_traits failed:", conditionMessage(e), "\n")
+    NULL
+  })
   if (is.null(pd)) return(NULL)
 
   cat(sprintf("  Latent matrix: %d x %d\n", nrow(pd$X_scaled), ncol(pd$X_scaled)))
@@ -482,6 +570,50 @@ scenarios <- list(
     sigma           = 1.0,
     n_species       = 150L,
     n_traits        = 4L
+  ),
+
+  # ---- Extended BACE scenarios (13-16) ----------------------------------------
+  # These use BACE's richer simulation capabilities:
+  # - Variable phylogenetic signal across traits
+  # - Complex inter-trait dependencies
+  # - Multi-observation per species data
+  # - Larger species counts
+
+  list(
+    id              = 13L,
+    description     = "Variable phylo signal (0.1-0.9)",
+    response_type   = "gaussian",
+    predictor_types = c("gaussian", "gaussian", "binary", "poisson"),
+    phylo_signal    = c(0.1, 0.3, 0.5, 0.7, 0.9),
+    n_species       = 150L
+  ),
+  list(
+    id              = 14L,
+    description     = "Large tree (300 species), all types",
+    response_type   = "gaussian",
+    predictor_types = c("gaussian", "binary", "multinomial4", "threshold3",
+                        "poisson"),
+    phylo_signal    = 0.5,
+    n_species       = 300L
+  ),
+  list(
+    id              = 15L,
+    description     = "Multi-obs (3 per species), mixed types",
+    sim_type        = "BM_multi_obs",
+    response_type   = "gaussian",
+    predictor_types = c("gaussian", "binary", "poisson"),
+    phylo_signal    = 0.5,
+    n_species       = 100L,
+    n_cases         = 300L   # 3 per species on average
+  ),
+  list(
+    id              = 16L,
+    description     = "Complex dependencies (interaction terms)",
+    response_type   = "gaussian",
+    predictor_types = c("gaussian", "gaussian", "gaussian"),
+    phylo_signal    = 0.5,
+    n_species       = 150L,
+    use_interactions = TRUE
   )
 )
 

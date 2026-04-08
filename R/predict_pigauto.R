@@ -77,6 +77,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   per_col      <- isTRUE(cfg$per_column_rs)
   n_gnn_layers <- cfg$n_gnn_layers %||% 1L
   gate_cap     <- cfg$gate_cap %||% 0.5
+  use_attention <- cfg$use_attention %||% FALSE
   model <- ResidualPhyloDAE(
     input_dim     = as.integer(cfg$input_dim),
     hidden_dim    = as.integer(cfg$hidden_dim),
@@ -84,36 +85,71 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     cov_dim       = as.integer(cfg$cov_dim),
     per_column_rs = per_col,
     n_gnn_layers  = as.integer(n_gnn_layers),
-    gate_cap      = gate_cap
+    gate_cap      = gate_cap,
+    use_attention = use_attention
   )
   model$to(device = device)
   model$load_state_dict(object$model_state)
 
+  # Calibrated gates override learned gates
+  calibrated_gates <- object$calibrated_gates  # NULL if not available
+  use_calibrated   <- !is.null(calibrated_gates)
+
   # Prepare data
+  multi_obs <- isTRUE(object$multi_obs)
   if (is.null(newdata)) {
-    X_fill <- object$baseline$mu
-    mu_bm  <- object$baseline$mu
-    coords <- object$graph$coords
-    adj    <- object$graph$adj
+    MU_species <- object$baseline$mu    # n_species x p
+    coords     <- object$graph$coords   # n_species x k
+    adj        <- object$graph$adj      # n_species x n_species
+    obs_to_sp  <- object$obs_to_species # NULL or integer vector
   } else {
     stop("newdata support not yet implemented.")
   }
 
-  n <- nrow(X_fill)
-  p <- ncol(X_fill)
+  # For multi-obs, expand baseline to observation level
+  if (multi_obs) {
+    n_obs     <- object$n_obs
+    n_species <- object$n_species
+    MU <- MU_species[obs_to_sp, , drop = FALSE]
+    rownames(MU) <- NULL
+  } else {
+    n_obs     <- nrow(MU_species)
+    n_species <- n_obs
+    MU        <- MU_species
+    obs_to_sp <- NULL
+  }
+
+  n <- n_obs   # rows in output
+  p <- ncol(MU)
   n_imp <- as.integer(n_imputations)
 
-  t_X_fill <- torch::torch_tensor(X_fill, dtype = torch::torch_float(),
+  t_X_fill <- torch::torch_tensor(MU, dtype = torch::torch_float(),
                                   device = device)
-  t_MU     <- torch::torch_tensor(mu_bm,  dtype = torch::torch_float(),
+  t_MU     <- torch::torch_tensor(MU, dtype = torch::torch_float(),
                                   device = device)
   t_coords <- torch::torch_tensor(coords, dtype = torch::torch_float(),
                                   device = device)
   t_adj    <- torch::torch_tensor(adj,    dtype = torch::torch_float(),
                                   device = device)
 
+  # Observation-to-species mapping tensor
+  if (multi_obs) {
+    t_obs_to_sp <- torch::torch_tensor(
+      as.integer(obs_to_sp), dtype = torch::torch_long(), device = device
+    )
+  } else {
+    t_obs_to_sp <- NULL
+  }
+
   # ---- Inference (single or MC dropout) ------------------------------------
   latent_runs <- vector("list", n_imp)
+
+  # Pre-create calibrated gates tensor (once, outside the loop)
+  if (use_calibrated) {
+    t_cal_gates <- torch::torch_tensor(
+      calibrated_gates, dtype = torch::torch_float(), device = device
+    )$unsqueeze(1L)
+  }
 
   for (m in seq_len(n_imp)) {
     if (n_imp == 1L) model$eval() else model$train()
@@ -123,8 +159,12 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
       mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
       for (step in seq_len(cfg$refine_steps)) {
         covs0 <- torch::torch_cat(list(t_MU, mask_ind0), dim = 2L)
-        out   <- model(X_iter, t_coords, covs0, t_adj)
-        pred  <- (1 - out$rs) * t_MU + out$rs * out$delta
+        out   <- model(X_iter, t_coords, covs0, t_adj, t_obs_to_sp)
+        if (use_calibrated) {
+          pred <- (1 - t_cal_gates) * t_MU + t_cal_gates * out$delta
+        } else {
+          pred <- (1 - out$rs) * t_MU + out$rs * out$delta
+        }
         X_iter <- pred
       }
     })
@@ -141,8 +181,9 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   }
 
   # ---- Mixed-type decoding -------------------------------------------------
+  row_labels <- if (multi_obs) object$obs_species else object$species_names
   decode_results <- lapply(latent_runs, function(lat) {
-    decode_from_latent(lat, trait_map, object$species_names)
+    decode_from_latent(lat, trait_map, row_labels)
   })
 
   if (n_imp == 1L) {
@@ -156,7 +197,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     latent_pred <- pool$latent_mean
   }
 
-  rownames(latent_pred) <- object$species_names
+  rownames(latent_pred) <- row_labels
   lat_names <- latent_names_from_map(trait_map)
   if (length(lat_names) == ncol(latent_pred)) {
     colnames(latent_pred) <- lat_names
@@ -166,22 +207,80 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   se_mat <- NULL
   se_latent_mat <- NULL
   if (return_se) {
+    # Expand species-level baseline SE to obs level if multi_obs
+    bse <- object$baseline$se
+    if (multi_obs) {
+      bse <- bse[obs_to_sp, , drop = FALSE]
+      rownames(bse) <- NULL
+    }
+    # Row names for output
+    row_names <- if (multi_obs) object$obs_species else object$species_names
+
     if (n_imp > 1L) {
       se_mat <- compute_mc_se(decode_results, trait_map,
-                              object$baseline$se, latent_runs[[1]],
-                              object$species_names)
+                              bse, latent_runs[[1]],
+                              row_names)
     } else {
       se_mat <- compute_single_se(latent_runs[[1]], probs, trait_map,
-                                  object$baseline$se,
-                                  object$species_names)
+                                  bse, row_names)
     }
 
-    # Latent-scale SE for coverage computation in evaluate_imputation.
-    # For continuous/count/ordinal: baseline SE in latent (z-score) units.
-    # For MC dropout: combine baseline + MC dropout latent SEs.
     se_latent_mat <- compute_latent_se(latent_runs, trait_map,
-                                       object$baseline$se,
-                                       object$species_names)
+                                       bse, row_names)
+  }
+
+  # ---- Conformal prediction intervals -----------------------------------
+  conformal_lower <- NULL
+  conformal_upper <- NULL
+  conformal_scores_out <- object$conformal_scores
+
+  if (!is.null(conformal_scores_out) && has_trait_map) {
+    n_traits <- length(trait_map)
+    conformal_lower <- matrix(NA_real_, nrow = n, ncol = n_traits)
+    conformal_upper <- matrix(NA_real_, nrow = n, ncol = n_traits)
+    colnames(conformal_lower) <- vapply(trait_map, "[[", character(1), "name")
+    colnames(conformal_upper) <- vapply(trait_map, "[[", character(1), "name")
+    rownames(conformal_lower) <- row_labels
+    rownames(conformal_upper) <- row_labels
+
+    for (tm in trait_map) {
+      nm <- tm$name
+      lc <- tm$latent_cols
+
+      if (!(tm$type %in% c("continuous", "count", "ordinal"))) next
+      if (is.na(conformal_scores_out[nm])) next
+
+      q <- conformal_scores_out[nm]
+
+      if (tm$type == "continuous") {
+        # Convert conformal score from latent to original scale
+        pred_latent <- latent_pred[, lc[1]]
+        pred_low  <- (pred_latent - q) * tm$sd + tm$mean
+        pred_high <- (pred_latent + q) * tm$sd + tm$mean
+        if (isTRUE(tm$log_transform)) {
+          conformal_lower[, nm] <- exp(pred_low)
+          conformal_upper[, nm] <- exp(pred_high)
+        } else {
+          conformal_lower[, nm] <- pred_low
+          conformal_upper[, nm] <- pred_high
+        }
+
+      } else if (tm$type == "count") {
+        pred_latent <- latent_pred[, lc[1]]
+        pred_low  <- (pred_latent - q) * tm$sd + tm$mean
+        pred_high <- (pred_latent + q) * tm$sd + tm$mean
+        conformal_lower[, nm] <- pmax(expm1(pred_low), 0)
+        conformal_upper[, nm] <- expm1(pred_high)
+
+      } else if (tm$type == "ordinal") {
+        pred_latent <- latent_pred[, lc[1]]
+        pred_low  <- (pred_latent - q) * tm$sd + tm$mean
+        pred_high <- (pred_latent + q) * tm$sd + tm$mean
+        K <- length(tm$levels)
+        conformal_lower[, nm] <- pmax(round(pred_low), 0)
+        conformal_upper[, nm] <- pmin(round(pred_high), K - 1L)
+      }
+    }
   }
 
   # ---- Imputed datasets for multiple imputation ----------------------------
@@ -197,8 +296,15 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
       se_latent        = se_latent_mat,
       probabilities    = probs,
       imputed_datasets = imputed_datasets,
+      conformal_lower  = conformal_lower,
+      conformal_upper  = conformal_upper,
+      conformal_scores = conformal_scores_out,
+      calibrated_gates = calibrated_gates,
       trait_map        = trait_map,
       species_names    = object$species_names,
+      obs_species      = if (multi_obs) object$obs_species else NULL,
+      obs_to_species   = obs_to_sp,
+      multi_obs        = multi_obs,
       trait_names      = object$trait_names,
       n_imputations    = n_imp
     ),
@@ -275,7 +381,8 @@ decode_continuous_legacy <- function(latent_runs, object, rs_val,
 
 decode_from_latent <- function(latent_mat, trait_map, species_names) {
   n <- nrow(latent_mat)
-  imputed <- data.frame(row.names = species_names)
+  # Use make.unique for multi-obs (species_names may have duplicates)
+  imputed <- data.frame(row.names = make.unique(species_names, sep = "."))
   probs <- list()
 
   for (tm in trait_map) {
@@ -574,6 +681,13 @@ print.pigauto_fit <- function(x, ...) {
   if (!is.na(x$test_rmse)) {
     cat("  Test loss     :", round(x$test_rmse, 4), "\n")
   }
+  if (!is.null(x$calibrated_gates)) {
+    cat("  Gate calibration: yes\n")
+  }
+  if (!is.null(x$conformal_scores)) {
+    cs <- x$conformal_scores[!is.na(x$conformal_scores)]
+    cat("  Conformal scores:", length(cs), "traits\n")
+  }
   invisible(x)
 }
 
@@ -595,6 +709,9 @@ print.pigauto_pred <- function(x, ...) {
   if (!is.null(x$probabilities) && length(x$probabilities) > 0) {
     cat("  Probability traits:",
         paste(names(x$probabilities), collapse = ", "), "\n")
+  }
+  if (!is.null(x$conformal_lower)) {
+    cat("  Conformal 95% intervals: yes\n")
   }
   invisible(x)
 }

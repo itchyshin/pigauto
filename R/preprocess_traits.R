@@ -2,9 +2,13 @@
 #'
 #' Aligns species in the trait data frame to the tree, detects or accepts
 #' trait types (continuous, binary, categorical, ordinal, count), and
-#' encodes each trait into a continuous latent matrix.  The output rows
-#' are reordered to match \code{tree$tip.label} order, which is required
-#' for downstream graph operations.
+#' encodes each trait into a continuous latent matrix.
+#'
+#' When each species has one observation (the default), output rows match
+#' \code{tree$tip.label} order.  When \code{species_col} is supplied,
+#' multiple observations per species are supported: the output matrix has
+#' one row per observation, plus an \code{obs_to_species} mapping for the
+#' GNN (which operates at species level).
 #'
 #' @details
 #' **Type detection** (when \code{trait_types = NULL}) follows the column
@@ -28,9 +32,15 @@
 #'   \item{categorical}{one-hot encoding (K latent columns)}
 #' }
 #'
-#' @param traits \code{data.frame} with species as row names.  Columns may
-#'   be numeric, integer, factor, ordered, character, or logical.
+#' @param traits \code{data.frame} with species as row names (one row per
+#'   species), or with a species column identified by \code{species_col}
+#'   (potentially multiple rows per species).  Columns may be numeric,
+#'   integer, factor, ordered, character, or logical.
 #' @param tree object of class \code{"phylo"}.
+#' @param species_col character.  Name of the column in \code{traits} that
+#'   identifies species.  When supplied, \code{traits} may have multiple
+#'   rows per species.  The column is removed from trait columns before
+#'   encoding.  Default \code{NULL} uses row names (one row per species).
 #' @param trait_types named character vector overriding auto-detection,
 #'   e.g. \code{c(Mass = "continuous", Diet = "categorical")}.
 #'   Valid types: \code{"continuous"}, \code{"binary"}, \code{"categorical"},
@@ -48,15 +58,27 @@
 #'   Default \code{TRUE}.
 #' @return A list of class \code{"pigauto_data"} with components:
 #'   \describe{
-#'     \item{X_scaled}{Numeric matrix (n_species x p_latent), latent encoding.}
+#'     \item{X_scaled}{Numeric matrix (n_obs x p_latent), latent encoding.
+#'       When \code{species_col} is \code{NULL}, n_obs = n_species.}
 #'     \item{X_raw}{Numeric matrix of continuous traits after optional log
 #'       but before z-scoring (for backward compatibility).}
 #'     \item{X_original}{Original data.frame (aligned to tree, before encoding).}
 #'     \item{means}{Named numeric vector of column means used for z-scoring
 #'       (continuous/count/ordinal traits only).}
 #'     \item{sds}{Named numeric vector of column SDs.}
-#'     \item{species_names}{Character vector matching \code{tree$tip.label}
-#'       order.}
+#'     \item{species_names}{Character vector of unique species matching
+#'       \code{tree$tip.label} order (length = n_species).}
+#'     \item{obs_species}{Character vector of species labels per observation
+#'       (length = n_obs).  When multi-obs, can have duplicates.
+#'       \code{NULL} when \code{species_col} is \code{NULL}.}
+#'     \item{obs_to_species}{Integer vector (length = n_obs) mapping each
+#'       observation to its species index in \code{species_names}.
+#'       \code{NULL} when \code{species_col} is \code{NULL}.}
+#'     \item{n_species}{Integer, number of unique species.}
+#'     \item{n_obs}{Integer, number of observations (= n_species when
+#'       single-obs).}
+#'     \item{multi_obs}{Logical, \code{TRUE} when multiple observations
+#'       per species are present.}
 #'     \item{trait_names}{Character vector of original trait names.}
 #'     \item{latent_names}{Character vector of latent column names.}
 #'     \item{trait_map}{List of trait descriptors (see Details).}
@@ -65,31 +87,55 @@
 #'       trait was log-transformed).}
 #'   }
 #' @examples
-#' # All-numeric (backward compatible)
+#' # Single-obs per species (backward compatible)
 #' data(avonet300, tree300, package = "pigauto")
 #' traits <- avonet300
 #' rownames(traits) <- traits$Species_Key
 #' traits$Species_Key <- NULL
 #' pd <- preprocess_traits(traits, tree300)
-#' dim(pd$X_scaled)   # 300 x 4
+#' dim(pd$X_scaled)   # 300 x p_latent
+#'
+#' # Multi-obs per species (via species_col)
+#' pd2 <- preprocess_traits(avonet300, tree300, species_col = "Species_Key")
+#' pd2$n_obs      # number of observations
+#' pd2$n_species  # number of unique species
 #'
 #' @importFrom ape keep.tip
 #' @export
-preprocess_traits <- function(traits, tree, trait_types = NULL,
+preprocess_traits <- function(traits, tree, species_col = NULL,
+                              trait_types = NULL,
                               log_cols = NULL, log_transform = TRUE,
                               center = TRUE, scale = TRUE) {
   if (!is.data.frame(traits)) stop("'traits' must be a data.frame.")
   if (!inherits(tree, "phylo")) stop("'tree' must be a phylo object.")
-  if (is.null(rownames(traits))) stop("'traits' must have species as row names.")
+
+  # ---- Determine species identity per row -----------------------------------
+  multi_obs <- !is.null(species_col)
+  if (multi_obs) {
+    if (!species_col %in% names(traits)) {
+      stop("species_col '", species_col, "' not found in traits.")
+    }
+    obs_species_raw <- as.character(traits[[species_col]])
+    traits[[species_col]] <- NULL  # remove from trait columns
+  } else {
+    if (is.null(rownames(traits))) {
+      stop("'traits' must have species as row names (or supply species_col).")
+    }
+    obs_species_raw <- rownames(traits)
+  }
 
   # ---- Align species to tree ------------------------------------------------
-  in_tree  <- rownames(traits) %in% tree$tip.label
-  in_data  <- tree$tip.label %in% rownames(traits)
+  unique_species <- unique(obs_species_raw)
+  in_tree  <- unique_species %in% tree$tip.label
+  in_data  <- tree$tip.label %in% unique_species
 
-  n_dropped <- sum(!in_tree)
-  if (n_dropped > 0) {
-    warning(n_dropped, " species in traits not found in tree -- dropped.")
-    traits <- traits[in_tree, , drop = FALSE]
+  n_dropped_sp <- sum(!in_tree)
+  if (n_dropped_sp > 0) {
+    warning(n_dropped_sp, " species in traits not found in tree -- dropped.")
+    keep_rows <- obs_species_raw %in% tree$tip.label
+    traits <- traits[keep_rows, , drop = FALSE]
+    obs_species_raw <- obs_species_raw[keep_rows]
+    unique_species <- unique(obs_species_raw)
   }
   n_missing_from_data <- sum(!in_data)
   if (n_missing_from_data > 0) {
@@ -97,9 +143,43 @@ preprocess_traits <- function(traits, tree, trait_types = NULL,
             " tree tip(s) have no trait data and will have all-NA rows.")
   }
 
-  idx <- match(tree$tip.label, rownames(traits))
-  traits <- traits[idx, , drop = FALSE]
-  rownames(traits) <- tree$tip.label
+  if (multi_obs) {
+    # Order by tree tip order; within species, preserve original row order
+    sp_order <- tree$tip.label[tree$tip.label %in% unique_species]
+    sp_rank  <- setNames(seq_along(sp_order), sp_order)
+    row_order <- order(sp_rank[obs_species_raw])
+    traits <- traits[row_order, , drop = FALSE]
+    obs_species_raw <- obs_species_raw[row_order]
+    rownames(traits) <- NULL
+
+    # Add all-NA rows for tree tips missing from data
+    missing_tips <- tree$tip.label[!in_data]
+    if (length(missing_tips) > 0) {
+      na_rows <- traits[rep(NA, length(missing_tips)), , drop = FALSE]
+      rownames(na_rows) <- NULL
+      traits <- rbind(traits, na_rows)
+      obs_species_raw <- c(obs_species_raw, missing_tips)
+    }
+
+    # Build species-level outputs
+    species_names <- tree$tip.label[tree$tip.label %in%
+                                      c(unique_species, missing_tips)]
+    obs_to_species <- match(obs_species_raw, species_names)
+    n_obs <- nrow(traits)
+    n_species <- length(species_names)
+    obs_species <- obs_species_raw
+  } else {
+    # Single-obs path: reorder rows to match tree$tip.label exactly
+    idx <- match(tree$tip.label, rownames(traits))
+    traits <- traits[idx, , drop = FALSE]
+    rownames(traits) <- tree$tip.label
+
+    species_names <- tree$tip.label
+    obs_species <- NULL
+    obs_to_species <- NULL
+    n_obs <- nrow(traits)
+    n_species <- n_obs
+  }
 
   # ---- Convert convenience types -------------------------------------------
   for (nm in names(traits)) {
@@ -158,17 +238,22 @@ preprocess_traits <- function(traits, tree, trait_types = NULL,
 
   structure(
     list(
-      X_scaled      = latent$X,
-      X_raw         = X_raw,
-      X_original    = X_original,
-      means         = all_means,
-      sds           = all_sds,
-      species_names = tree$tip.label,
-      trait_names   = colnames(traits),
-      latent_names  = colnames(latent$X),
-      trait_map     = trait_map,
-      p_latent      = ncol(latent$X),
-      log_transform = length(log_set) > 0
+      X_scaled       = latent$X,
+      X_raw          = X_raw,
+      X_original     = X_original,
+      means          = all_means,
+      sds            = all_sds,
+      species_names  = species_names,
+      obs_species    = obs_species,
+      obs_to_species = obs_to_species,
+      n_species      = n_species,
+      n_obs          = n_obs,
+      multi_obs      = multi_obs,
+      trait_names    = colnames(traits),
+      latent_names   = colnames(latent$X),
+      trait_map      = trait_map,
+      p_latent       = ncol(latent$X),
+      log_transform  = length(log_set) > 0
     ),
     class = "pigauto_data"
   )
@@ -350,7 +435,13 @@ encode_to_latent <- function(traits, trait_map) {
 #' @export
 print.pigauto_data <- function(x, ...) {
   cat("pigauto_data\n")
-  cat("  Species:", length(x$species_names), "\n")
+  cat("  Species:", x$n_species %||% length(x$species_names), "\n")
+  if (isTRUE(x$multi_obs)) {
+    cat("  Observations:", x$n_obs, "\n")
+    obs_per_sp <- table(x$obs_to_species)
+    cat("  Obs/species: min=", min(obs_per_sp), " median=",
+        stats::median(obs_per_sp), " max=", max(obs_per_sp), "\n", sep = "")
+  }
   cat("  Traits: ", length(x$trait_names), "\n")
 
   if (!is.null(x$trait_map)) {

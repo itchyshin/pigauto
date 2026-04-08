@@ -36,8 +36,10 @@ conditions as \code{\link{fit_pigauto}}.
 
 For mixed-type data, Rphylopars is applied only to continuous, count,
 and ordinal traits (which are continuous in latent space).  Binary
-traits receive the population-level logit proportion as baseline;
-categorical traits receive log marginal frequencies.
+and categorical traits use phylogenetic label propagation: each
+species receives a personalised baseline computed as the
+phylo-similarity-weighted average of observed values, using a
+Gaussian kernel on cophenetic distances.
 }
 \examples{
 \dontrun{

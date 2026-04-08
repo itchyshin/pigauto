@@ -3,9 +3,9 @@
 \docType{data}
 \name{avonet300}
 \alias{avonet300}
-\title{AVONET morphological trait data for 300 bird species}
+\title{AVONET morphological and ecological trait data for 300 bird species}
 \format{
-A data frame with 300 rows and 5 variables:
+A data frame with 300 rows and 8 variables:
 \describe{
 \item{Species_Key}{Character. Species name in BirdTree format (spaces
 replaced by underscores).}
@@ -13,6 +13,12 @@ replaced by underscores).}
 \item{Beak.Length_Culmen}{Numeric. Beak length from culmen (mm).}
 \item{Tarsus.Length}{Numeric. Tarsus length (mm).}
 \item{Wing.Length}{Numeric. Wing length (mm).}
+\item{Trophic.Level}{Factor. Dietary category: Carnivore, Herbivore,
+Omnivore, or Scavenger.}
+\item{Primary.Lifestyle}{Factor. Lifestyle category: Aerial, Aquatic,
+Generalist, Insessorial, or Terrestrial.}
+\item{Migration}{Ordered factor. Migration strategy: Resident < Partial
+< Full.}
 }
 }
 \source{
@@ -24,9 +30,10 @@ BirdTree backbone: Hackett et al. MCC tree via BirdTree.org.
 avonet300
 }
 \description{
-A data frame with 300 rows and 5 columns: Species_Key (character), Mass,
-Beak.Length_Culmen, Tarsus.Length, Wing.Length (all numeric, in original
-units). Log-transformed and z-scored values are created by
-\code{\link{preprocess_traits}}.
+A data frame with 300 rows and 8 columns: 4 continuous morphometric traits
+and 3 ecological traits (2 categorical, 1 ordinal) for demonstrating
+mixed-type imputation.  Species names are in the \code{Species_Key}
+column.  Set \code{rownames(df) <- df$Species_Key; df$Species_Key <- NULL}
+before passing to \code{\link{preprocess_traits}}.
 }
 \keyword{datasets}

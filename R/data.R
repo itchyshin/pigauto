@@ -1,11 +1,12 @@
-#' AVONET morphological trait data for 300 bird species
+#' AVONET morphological and ecological trait data for 300 bird species
 #'
-#' A data frame with 300 rows and 5 columns: Species_Key (character), Mass,
-#' Beak.Length_Culmen, Tarsus.Length, Wing.Length (all numeric, in original
-#' units). Log-transformed and z-scored values are created by
-#' \code{\link{preprocess_traits}}.
+#' A data frame with 300 rows and 8 columns: 4 continuous morphometric traits
+#' and 3 ecological traits (2 categorical, 1 ordinal) for demonstrating
+#' mixed-type imputation.  Species names are in the \code{Species_Key}
+#' column.  Set \code{rownames(df) <- df$Species_Key; df$Species_Key <- NULL}
+#' before passing to \code{\link{preprocess_traits}}.
 #'
-#' @format A data frame with 300 rows and 5 variables:
+#' @format A data frame with 300 rows and 8 variables:
 #' \describe{
 #'   \item{Species_Key}{Character. Species name in BirdTree format (spaces
 #'     replaced by underscores).}
@@ -13,6 +14,12 @@
 #'   \item{Beak.Length_Culmen}{Numeric. Beak length from culmen (mm).}
 #'   \item{Tarsus.Length}{Numeric. Tarsus length (mm).}
 #'   \item{Wing.Length}{Numeric. Wing length (mm).}
+#'   \item{Trophic.Level}{Factor. Dietary category: Carnivore, Herbivore,
+#'     Omnivore, or Scavenger.}
+#'   \item{Primary.Lifestyle}{Factor. Lifestyle category: Aerial, Aquatic,
+#'     Generalist, Insessorial, or Terrestrial.}
+#'   \item{Migration}{Ordered factor. Migration strategy: Resident < Partial
+#'     < Full.}
 #' }
 #' @source Tobias et al. (2022) AVONET: morphological, ecological and
 #'   geographical data for all birds. \emph{Ecology Letters}, 25, 581-597.

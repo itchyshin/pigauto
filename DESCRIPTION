@@ -1,15 +1,18 @@
 Package: pigauto
 Title: Phylogenetic Imputation via Graph Autoencoders
-Version: 0.2.0
+Version: 0.3.0
 Authors@R:
     person("Shinichi", "Nakagawa", role = c("aut", "cre"), email = "itchyshin@gmail.com")
 Description: Imputes missing species trait data using a Residual Phylogenetic
     Denoising Autoencoder (ResidualPhyloDAE) that combines Brownian-Motion
-    phylogenetic imputation (via Rphylopars) with a graph neural network
-    residual correction. Because the neural network is constrained to learn
-    bounded corrections on top of the BM baseline, imputation quality cannot
-    regress below Rphylopars. Includes a 300-species AVONET bird morphology
-    subset and a matching BirdTree phylogeny for real-data demonstration.
+    phylogenetic imputation (via Rphylopars) with an attention-based graph
+    neural network. Features validation-calibrated per-trait gates to prevent
+    GNN overshoot, conformal prediction intervals with guaranteed coverage,
+    phylogenetic label propagation for discrete traits, and adaptive spectral
+    encoding that scales with tree size. Supports continuous, binary,
+    categorical, ordinal, and count traits in a unified latent space, with
+    optional multiple observations per species. Includes a 300-species AVONET
+    bird morphology subset and a matching BirdTree phylogeny.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -20,6 +23,9 @@ Imports:
     ggplot2,
     rlang,
     stats,
+    utils,
+    graphics,
+    grDevices,
     Rphylopars
 Suggests:
     testthat,

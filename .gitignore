@@ -52,3 +52,7 @@ BACE/
 
 # Claude workspace
 .claude/
+
+# Stray plot output
+Rplots.pdf
+inst/doc/

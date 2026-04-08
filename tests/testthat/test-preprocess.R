@@ -84,3 +84,87 @@ test_that("preprocess_traits handles factor columns", {
   expect_equal(pd$trait_map$migr$n_latent, 1L)
   expect_equal(pd$p_latent, 4L)  # 3 (diet one-hot) + 1 (migr binary)
 })
+
+
+# ---- Multi-observation per species tests ------------------------------------
+
+test_that("preprocess_traits with species_col single-obs", {
+  set.seed(10)
+  tree <- ape::rtree(10)
+  df <- data.frame(
+    sp = tree$tip.label,
+    mass = abs(rnorm(10)) + 0.1
+  )
+  pd <- preprocess_traits(df, tree, species_col = "sp")
+  expect_true(pd$multi_obs)
+  expect_equal(pd$n_obs, 10L)
+  expect_equal(pd$n_species, 10L)
+  expect_equal(nrow(pd$X_scaled), 10)
+  expect_equal(length(pd$obs_to_species), 10)
+  expect_equal(range(pd$obs_to_species), c(1L, 10L))
+})
+
+test_that("preprocess_traits with species_col multi-obs", {
+  set.seed(11)
+  tree <- ape::rtree(5)
+  # 3 obs per species = 15 rows
+  df <- data.frame(
+    species = rep(tree$tip.label, each = 3),
+    mass = abs(rnorm(15)) + 0.1
+  )
+  pd <- preprocess_traits(df, tree, species_col = "species")
+  expect_true(pd$multi_obs)
+  expect_equal(pd$n_obs, 15L)
+  expect_equal(pd$n_species, 5L)
+  expect_equal(nrow(pd$X_scaled), 15)
+  expect_equal(length(pd$obs_to_species), 15)
+  expect_equal(length(pd$obs_species), 15)
+  expect_equal(length(pd$species_names), 5)
+  # Each species should map to unique index
+  sp_idx <- tapply(pd$obs_to_species, pd$obs_species, unique)
+  expect_true(all(lengths(sp_idx) == 1))
+})
+
+test_that("preprocess_traits backward compatible (no species_col, no multi_obs)", {
+  set.seed(12)
+  tree <- ape::rtree(8)
+  df <- data.frame(row.names = tree$tip.label, tr = rnorm(8))
+  pd <- preprocess_traits(df, tree)
+  expect_false(pd$multi_obs)
+  expect_null(pd$obs_species)
+  expect_null(pd$obs_to_species)
+  expect_equal(pd$n_obs, 8L)
+  expect_equal(pd$n_species, 8L)
+})
+
+
+# ---- avonet300 categorical variables ----------------------------------------
+
+test_that("avonet300 contains categorical and ordinal traits", {
+  data(avonet300, package = "pigauto")
+  expect_true("Trophic.Level" %in% names(avonet300))
+  expect_true("Primary.Lifestyle" %in% names(avonet300))
+  expect_true("Migration" %in% names(avonet300))
+  expect_true(is.factor(avonet300$Trophic.Level))
+  expect_true(is.factor(avonet300$Primary.Lifestyle))
+  expect_true(is.ordered(avonet300$Migration))
+  expect_equal(nlevels(avonet300$Trophic.Level), 4)
+  expect_equal(nlevels(avonet300$Primary.Lifestyle), 5)
+  expect_equal(nlevels(avonet300$Migration), 3)
+})
+
+test_that("avonet300 preprocesses with mixed types", {
+  data(avonet300, tree300, package = "pigauto")
+  df <- avonet300
+  rownames(df) <- df$Species_Key
+  df$Species_Key <- NULL
+  pd <- preprocess_traits(df, tree300)
+  expect_s3_class(pd, "pigauto_data")
+  types <- vapply(pd$trait_map, "[[", character(1), "type")
+  expect_true("categorical" %in% types)
+  expect_true("ordinal" %in% types)
+  expect_true("continuous" %in% types)
+  # 4 continuous + 4 (Trophic.Level one-hot) + 5 (Primary.Lifestyle one-hot)
+  # + 1 (Migration ordinal) = 14
+  expect_equal(pd$p_latent, 14L)
+})
