@@ -182,6 +182,18 @@ fit_pigauto <- function(
   M_obs_mat <- !is.na(X_truth)
   if (!is.null(splits)) M_obs_mat[c(splits$val_idx, splits$test_idx)] <- FALSE
 
+  # Held-out-masked input: like X_fill but with val/test cells replaced
+  # with the baseline prediction.  This is what the model SHOULD see at
+  # val/test evaluation time and at gate calibration time, so that it
+  # does not have direct access to the held-out truth values.  Without
+  # this masking, val cells' true values leak into the model input and
+  # the calibration signal becomes meaningless.
+  X_fill_heldout <- X_fill
+  if (!is.null(splits)) {
+    hold_idx <- c(splits$val_idx, splits$test_idx)
+    X_fill_heldout[hold_idx] <- MU[hold_idx]
+  }
+
   # ---- Trait-level corruption mask expansion --------------------------------
   # For categorical traits: corrupt all K latent columns together
   if (has_trait_map) {
@@ -195,6 +207,8 @@ fit_pigauto <- function(
 
   # ---- Tensors ---------------------------------------------------------------
   t_X      <- torch::torch_tensor(X_fill,    dtype = torch::torch_float(),
+                                  device = device)
+  t_X_eval <- torch::torch_tensor(X_fill_heldout, dtype = torch::torch_float(),
                                   device = device)
   t_MU     <- torch::torch_tensor(MU,        dtype = torch::torch_float(),
                                   device = device)
@@ -357,38 +371,46 @@ fit_pigauto <- function(
     delta <- out$delta
     rs    <- out$rs
 
-    # Blend formulation: pred = (1-rs)*MU + rs*delta.
-    # The BM baseline exactly reproduces observed values, so the
-    # additive formula  MU + rs*delta  has zero training signal
-    # (delta must be 0 for all training cells).  The blend formula
-    # makes optimal delta = X_truth (not zero), giving the model
-    # genuine gradient.  At inference, rs controls how much the
-    # model's own prediction overrides the baseline.
-    pred_scaled <- (1 - rs) * t_MU + rs * delta
-
-    # ---- Loss ---------------------------------------------------------------
+    # Direct prediction loss: train delta to predict the truth directly.
+    # This gives delta a full-strength gradient signal on every corrupted
+    # cell, unlike the earlier blend formulation where the effective
+    # gradient on delta was scaled by rs (approx 0.1 to 0.2), causing
+    # delta to stay close to the baseline and calibration to fall back
+    # to gate = 0.
     if (has_trait_map) {
-      loss_rec <- compute_mixed_loss(pred_scaled, t_X, masked_bool, trait_map)
+      loss_rec <- compute_mixed_loss(delta, t_X, masked_bool, trait_map)
     } else {
       loss_rec <- torch::nnf_mse_loss(
-        pred_scaled[masked_bool], t_X[masked_bool]
+        delta[masked_bool], t_X[masked_bool]
       )
     }
 
-    # Shrinkage penalises deviation from the baseline: delta far from
-    # MU means a large correction.  This biases toward the baseline
-    # when the model has insufficient signal.
+    # Auxiliary blend loss: (1-rs)*mu + rs*delta against the truth.
+    # This gives rs a gradient signal so that the model can learn which
+    # columns benefit from the GNN, but with a small weight so it doesn't
+    # dominate the direct supervision on delta.  Post-hoc calibration on
+    # the validation set still has the final say over the gate.
+    pred_blend <- (1 - rs) * t_MU + rs * delta
+    if (has_trait_map) {
+      loss_blend <- compute_mixed_loss(pred_blend, t_X, masked_bool, trait_map)
+    } else {
+      loss_blend <- torch::nnf_mse_loss(
+        pred_blend[masked_bool], t_X[masked_bool]
+      )
+    }
+
+    # Shrinkage: keep delta from drifting to extreme values on cells with
+    # very weak supervision.  Lighter than before because direct
+    # supervision handles most of the regularisation.
     deviation <- (delta - t_MU)[masked_bool]
     loss_shrink <- torch::torch_mean(deviation$pow(2))
 
-    # Gate regularisation pushes rs toward zero.  When delta ≈ MU
-    # (the BM-optimal solution), the reconstruction loss is the same
-    # for any rs value, so rs receives zero gradient from rec and
-    # shrinkage losses.  Without this term, gates stay at their init
-    # and corrupt discrete predictions at inference.
+    # Gate regularisation pushes rs toward zero by default, so the model
+    # only opens a gate when the direct delta signal is clearly helpful.
     loss_gate <- torch::torch_mean(rs$pow(2))
 
-    loss <- loss_rec + lambda_shrink * loss_shrink + lambda_gate * loss_gate
+    loss <- loss_rec + 0.1 * loss_blend +
+            lambda_shrink * loss_shrink + lambda_gate * loss_gate
     loss$backward()
 
     if (!all_grads_finite(model$parameters)) {
@@ -405,7 +427,9 @@ fit_pigauto <- function(
         torch::with_no_grad({
           mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
           covs0     <- torch::torch_cat(list(t_MU, mask_ind0), dim = 2L)
-          out0      <- model(t_X, t_coords, covs0, t_adj, t_obs_to_sp)
+          # Use t_X_eval (val/test cells replaced with baseline) so
+          # that held-out truth does not leak into the model input.
+          out0      <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp)
           pred0     <- (1 - out0$rs) * t_MU + out0$rs * out0$delta
         })
         if (has_trait_map) {
@@ -474,7 +498,10 @@ fit_pigauto <- function(
     torch::with_no_grad({
       mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
       covs0     <- torch::torch_cat(list(t_MU, mask_ind0), dim = 2L)
-      out_cal   <- model(t_X, t_coords, covs0, t_adj, t_obs_to_sp)
+      # Use t_X_eval so val-cell truths do not leak into the model input
+      # during gate calibration (otherwise the GNN trivially reconstructs
+      # them and every gate looks "helpful").
+      out_cal   <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp)
       delta_cal <- as.matrix(out_cal$delta$cpu())
       mu_cal    <- as.matrix(t_MU$cpu())
     })
@@ -483,26 +510,20 @@ fit_pigauto <- function(
     val_mask_mat <- matrix(FALSE, n, p)
     val_mask_mat[splits$val_idx] <- TRUE
 
-    # --- Per-trait calibration (one shared gate value per trait, selected
-    #     by a paired one-sided t-test on per-cell losses) ---------------------
+    # --- Per-trait calibration with split-validation cross-check ----------
     #
-    # For each candidate gate on the grid, compute the per-cell loss at
-    # gate=0 and at that gate.  Accept the gate if the paired difference
-    # (loss_0 - loss_g) is positive AND statistically significant
-    # (alpha = `cal_alpha`, one-sided) OR if the sample is very small
-    # (n < 5) and a minimum relative improvement of `cal_min_rel_gain`
-    # is observed.  This adapts automatically to sample size: small
-    # validation sets need large effects, large validation sets detect
-    # modest ones.
-    cal_alpha         <- 0.10    # one-sided significance level
-    cal_min_rel_gain  <- 0.02    # fallback threshold for tiny val sets
+    # The validation set is split in half.  Half A is used to pick the
+    # best gate by argmin val loss, and half B is used to verify that
+    # the chosen gate actually improves over the baseline.  The gate
+    # is only accepted if BOTH halves agree that it helps.  This simple
+    # sample-splitting guard prevents the calibrator from locking onto
+    # gates that happen to look good on the full val set by chance --
+    # the leading cause of val to test generalisation failures (e.g.
+    # BM degrading by 2% or mixed categorical accuracy dropping 8+ pp).
+    cal_min_rel_gain <- 0.02    # 2% relative improvement required
 
     for (tm in trait_map) {
       lc <- tm$latent_cols
-      # Which validation cells are present AND observed for this trait?
-      # Exclude rows where any latent column of this trait is NA in the
-      # truth matrix (should not happen after the splits fix, but kept
-      # as a safety net).
       val_cells <- val_mask_mat[, lc[1]]
       if (length(lc) > 1L) {
         truth_ok <- rowSums(is.na(X_truth_r[, lc, drop = FALSE])) == 0L
@@ -510,85 +531,104 @@ fit_pigauto <- function(
         truth_ok <- !is.na(X_truth_r[, lc[1]])
       }
       val_cells <- val_cells & truth_ok
-      n_val <- sum(val_cells)
+      val_row_idx <- which(val_cells)
+      n_val <- length(val_row_idx)
       if (n_val == 0) {
         calibrated_gates[lc] <- 0
         next
       }
 
-      # Helper: compute per-cell loss vector for a given gate value
-      cal_loss_vec <- function(g) {
+      # Split val row indices into two halves (deterministic given seed)
+      set.seed(seed + 17L)
+      perm <- sample(n_val)
+      half_a <- val_row_idx[perm[seq_len(floor(n_val / 2))]]
+      half_b <- val_row_idx[perm[(floor(n_val / 2) + 1L):n_val]]
+      if (length(half_a) == 0L || length(half_b) == 0L) {
+        # Tiny val set: fall back to using the full set for both
+        half_a <- val_row_idx
+        half_b <- val_row_idx
+      }
+
+      # Helper: mean loss on a given set of row indices.
+      # For binary/categorical we calibrate against 0-1 loss (the metric the
+      # user actually sees) rather than cross-entropy.  CE and accuracy can
+      # disagree on small validation sets: a gate that improves CE may
+      # nudge several borderline probabilities the wrong way and degrade
+      # argmax accuracy.  Calibrating against 0-1 loss makes the val signal
+      # match the test metric, which is critical when n_val is small.
+      cal_mean_loss <- function(g, rows) {
+        if (length(rows) == 0L) return(Inf)
         if (tm$type %in% c("continuous", "count", "ordinal")) {
-          pred_j <- (1 - g) * mu_cal[val_cells, lc[1]] +
-                    g * delta_cal[val_cells, lc[1]]
-          return((pred_j - X_truth_r[val_cells, lc[1]])^2)
+          pred_j <- (1 - g) * mu_cal[rows, lc[1]] +
+                    g * delta_cal[rows, lc[1]]
+          mean((pred_j - X_truth_r[rows, lc[1]])^2)
 
         } else if (tm$type == "binary") {
-          pred_j <- (1 - g) * mu_cal[val_cells, lc[1]] +
-                    g * delta_cal[val_cells, lc[1]]
-          prob <- 1 / (1 + exp(-pred_j))
-          prob <- pmin(pmax(prob, 1e-7), 1 - 1e-7)
-          truth_j <- X_truth_r[val_cells, lc[1]]
-          return(-(truth_j * log(prob) + (1 - truth_j) * log(1 - prob)))
+          pred_j <- (1 - g) * mu_cal[rows, lc[1]] +
+                    g * delta_cal[rows, lc[1]]
+          # 0-1 loss using probability threshold 0.5 (i.e. logit > 0).
+          pred_class <- as.numeric(pred_j > 0)
+          truth_j    <- X_truth_r[rows, lc[1]]
+          mean(pred_class != truth_j)
 
         } else if (tm$type == "categorical") {
-          logits <- (1 - g) * mu_cal[val_cells, lc, drop = FALSE] +
-                    g * delta_cal[val_cells, lc, drop = FALSE]
-          logits_shifted <- logits - apply(logits, 1, max)
-          exp_logits <- exp(logits_shifted)
-          prob_mat <- exp_logits / rowSums(exp_logits)
-          prob_mat <- pmin(pmax(prob_mat, 1e-7), 1 - 1e-7)
-          truth_mat <- X_truth_r[val_cells, lc, drop = FALSE]
-          return(-rowSums(truth_mat * log(prob_mat)))
+          logits <- (1 - g) * mu_cal[rows, lc, drop = FALSE] +
+                    g * delta_cal[rows, lc, drop = FALSE]
+          # Argmax-based 0-1 loss against the one-hot truth.
+          pred_class  <- max.col(logits, ties.method = "first")
+          truth_mat   <- X_truth_r[rows, lc, drop = FALSE]
+          truth_class <- max.col(truth_mat, ties.method = "first")
+          mean(pred_class != truth_class)
+        } else {
+          Inf
         }
-        rep(Inf, n_val)
       }
 
-      # Baseline per-cell losses (gate = 0)
-      loss_0_vec   <- cal_loss_vec(0)
-      loss_0_mean  <- mean(loss_0_vec)
+      # For discrete traits we also require an absolute minimum cell-level
+      # improvement, because relative gains on 0-1 loss are deceptively
+      # small (a 2% relative gain over baseline 0.35 is only 0.007 ~ 0.2
+      # cells out of 30, easily noise).
+      is_discrete <- tm$type %in% c("binary", "categorical")
+      min_abs_a <- if (is_discrete) 2 / max(length(half_a), 1L) else 0
+      min_abs_b <- if (is_discrete) 1 / max(length(half_b), 1L) else 0
 
-      best_gate    <- 0
-      best_score   <- 0   # signed improvement score (higher = better)
-
+      # 1. On half A: find the gate that minimises val loss, subject to
+      #    the relative-gain floor and (for discrete) the absolute floor.
+      loss_a_0  <- cal_mean_loss(0, half_a)
+      best_g    <- 0
+      best_la   <- loss_a_0
       for (g in gate_grid) {
         if (g == 0) next
-        loss_g_vec <- cal_loss_vec(g)
-        diffs      <- loss_0_vec - loss_g_vec   # positive = g better
-        mean_d     <- mean(diffs)
-
-        if (!is.finite(mean_d) || mean_d <= 0) next
-
-        accept <- FALSE
-        if (n_val >= 5L) {
-          sd_d <- stats::sd(diffs)
-          if (is.finite(sd_d) && sd_d > 0) {
-            t_stat   <- mean_d / (sd_d / sqrt(n_val))
-            crit     <- stats::qt(1 - cal_alpha, df = n_val - 1L)
-            accept   <- t_stat > crit
-            score    <- t_stat
-          } else if (sd_d == 0 && mean_d > 0) {
-            # All cells improved by the same amount -> trivially significant
-            accept <- TRUE
-            score  <- Inf
-          } else {
-            score  <- -Inf
-          }
-        } else {
-          # Very small sample: fall back to a minimum relative improvement
-          rel <- mean_d / max(loss_0_mean, 1e-12)
-          accept <- rel >= cal_min_rel_gain
-          score  <- rel
-        }
-
-        if (accept && is.finite(score) && score > best_score) {
-          best_gate  <- g
-          best_score <- score
+        loss_a_g <- cal_mean_loss(g, half_a)
+        if (!is.finite(loss_a_g)) next
+        rel <- (loss_a_0 - loss_a_g) / max(loss_a_0, 1e-12)
+        abs_gain <- loss_a_0 - loss_a_g
+        if (rel >= cal_min_rel_gain && abs_gain >= min_abs_a &&
+            loss_a_g < best_la) {
+          best_g  <- g
+          best_la <- loss_a_g
         }
       }
 
-      # Assign the same calibrated gate to all latent columns of this trait
-      calibrated_gates[lc] <- best_gate
+      # 2. On half B: verify that the chosen gate actually helps.  If it
+      #    does not, fall back to gate = 0 (baseline).
+      if (best_g > 0) {
+        loss_b_0 <- cal_mean_loss(0,     half_b)
+        loss_b_g <- cal_mean_loss(best_g, half_b)
+        rel_b    <- (loss_b_0 - loss_b_g) / max(loss_b_0, 1e-12)
+        abs_b    <- loss_b_0 - loss_b_g
+        # The verification threshold is half the calibration threshold:
+        # we only require the improvement to persist, not to re-pass the
+        # strict bar on the second half.  Discrete traits also need the
+        # absolute cell floor.
+        if (!is.finite(rel_b) ||
+            rel_b < (cal_min_rel_gain / 2) ||
+            abs_b < min_abs_b) {
+          best_g <- 0
+        }
+      }
+
+      calibrated_gates[lc] <- best_g
     }
 
     if (verbose) {
@@ -655,7 +695,8 @@ fit_pigauto <- function(
     torch::with_no_grad({
       mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
       covs0     <- torch::torch_cat(list(t_MU, mask_ind0), dim = 2L)
-      out0      <- model(t_X, t_coords, covs0, t_adj, t_obs_to_sp)
+      # Use t_X_eval so held-out test cells are not leaked to the model.
+      out0      <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp)
       pred0     <- (1 - out0$rs) * t_MU + out0$rs * out0$delta
       t_truth_f <- torch::torch_tensor(X_truth, dtype = torch::torch_float(),
                                        device = device)

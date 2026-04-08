@@ -1,0 +1,58 @@
+ℹ Testing pigauto
+
+warning: solve(): system is singular (rcond: 1.98902e-23); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.05219e-58); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.08763e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 6.52549e-67); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.01327e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.59649e-50); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.1875e-97); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.70126e-30); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.79801e-36); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.11249e-31); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.80083e-98); attempting approx solution
+
+warning: solve(): system is singular (rcond: 9.28427e-33); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.67298e-68); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.67298e-68); attempting approx solution
+
+warning: solve(): system is singular (rcond: 8.60494e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 8.60494e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.14071e-87); attempting approx solution
+
+warning: solve(): system is singular (rcond: 6.74573e-23); attempting approx solution
+
+warning: solve(): system is singular (rcond: 9.64314e-18); attempting approx solution
+
+warning: solve(): system is singular (rcond: 9.66408e-18); attempting approx solution
+Model saved to /var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpAFszVu/file6c2516ef8e8c.pigauto (123,225 bytes)
+SKIP: 'test-tabpfn.R:35:3' ------------------------
+Reason: tabimpute Python package not available
+
+SKIP: 'test-tabpfn.R:53:3' ------------------------
+Reason: tabimpute Python package not available
+
+SKIP: 'test-tabpfn.R:64:3' ------------------------
+Reason: tabimpute Python package not available
+
+SKIP: 'test-tabpfn.R:79:3' ------------------------
+Reason: tabimpute Python package not available
+
+SKIP: 'test-tabpfn.R:100:3' -----------------------
+Reason: tabimpute Python package not available
+
+[ FAIL 0 | WARN 0 | SKIP 5 | PASS 217 ]

@@ -1,0 +1,287 @@
+
+=== pigauto benchmark v2: direct delta training ===
+
+
+=== Scenario: BM ===
+  Rep 1/2 (seed 101)
+  Rep 2/2 (seed 201)
+
+=== Scenario: OU ===
+  Rep 1/2 (seed 102)
+  Rep 2/2 (seed 202)
+
+=== Scenario: nonlinear ===
+  Rep 1/2 (seed 104)
+  Rep 2/2 (seed 204)
+
+=== Scenario: regime_shift ===
+  Rep 1/2 (seed 103)
+  Rep 2/2 (seed 203)
+
+=== Scenario: mixed ===
+  Rep 1/2 (seed 105)
+  Rep 2/2 (seed 205)
+
+
+=== Summary ===
+pigauto simulation benchmark summary
+============================================================ 
+
+Scenario:  BM 
+-------------------------------------------------- 
+  baseline  RMSE: 0.5017 (+/- 0.0919)
+   pigauto  RMSE: 0.5131 (+/- 0.1079)
+
+Scenario:  OU 
+-------------------------------------------------- 
+  baseline  RMSE: 1.2553 (+/- 0.1251)
+   pigauto  RMSE: 1.2301 (+/- 0.1234)
+
+Scenario:  nonlinear 
+-------------------------------------------------- 
+  baseline  RMSE: 0.6918 (+/- 0.1480)
+   pigauto  RMSE: 0.6885 (+/- 0.1475)
+
+Scenario:  regime_shift 
+-------------------------------------------------- 
+  baseline  RMSE: 0.4525 (+/- 0.0815)
+   pigauto  RMSE: 0.4525 (+/- 0.0815)
+
+Scenario:  mixed 
+-------------------------------------------------- 
+  baseline  RMSE: 0.6996 (+/- 0.1084)
+  baseline  Accuracy: 69.4% (+/- 5.6%)
+   pigauto  RMSE: 0.6916 (+/- 0.1116)
+   pigauto  Accuracy: 60.8% (+/- 8.5%)
+
+ ============================================================ 
+Relative improvement (pigauto vs baseline):
+-------------------------------------------------- 
+                  BM: -2.3% RMSE
+                  OU: +2.0% RMSE
+           nonlinear: +0.5% RMSE
+        regime_shift: -0.0% RMSE
+               mixed: +1.1% RMSE
+
+        scenario   method        trait        type                metric
+1             BM baseline       trait1  continuous                   mae
+2             BM baseline       trait1  continuous             pearson_r
+3             BM baseline       trait1  continuous                  rmse
+4             BM baseline       trait2  continuous                   mae
+5             BM baseline       trait2  continuous             pearson_r
+6             BM baseline       trait2  continuous                  rmse
+7             BM baseline       trait3  continuous                   mae
+8             BM baseline       trait3  continuous             pearson_r
+9             BM baseline       trait3  continuous                  rmse
+10            BM  pigauto       trait1  continuous conformal_coverage_95
+11            BM  pigauto       trait1  continuous                   mae
+12            BM  pigauto       trait1  continuous             pearson_r
+13            BM  pigauto       trait1  continuous                  rmse
+14            BM  pigauto       trait2  continuous conformal_coverage_95
+15            BM  pigauto       trait2  continuous                   mae
+16            BM  pigauto       trait2  continuous             pearson_r
+17            BM  pigauto       trait2  continuous                  rmse
+18            BM  pigauto       trait3  continuous conformal_coverage_95
+19            BM  pigauto       trait3  continuous                   mae
+20            BM  pigauto       trait3  continuous             pearson_r
+21            BM  pigauto       trait3  continuous                  rmse
+22         mixed baseline binary_trait      binary              accuracy
+23         mixed baseline binary_trait      binary                 brier
+24         mixed baseline    cat_trait categorical              accuracy
+25         mixed baseline    cat_trait categorical            accuracy_A
+26         mixed baseline    cat_trait categorical            accuracy_B
+27         mixed baseline    cat_trait categorical            accuracy_C
+28         mixed baseline        cont1  continuous                   mae
+29         mixed baseline        cont1  continuous             pearson_r
+30         mixed baseline        cont1  continuous                  rmse
+31         mixed baseline        cont2  continuous                   mae
+32         mixed baseline        cont2  continuous             pearson_r
+33         mixed baseline        cont2  continuous                  rmse
+34         mixed  pigauto binary_trait      binary              accuracy
+35         mixed  pigauto binary_trait      binary                 brier
+36         mixed  pigauto    cat_trait categorical              accuracy
+37         mixed  pigauto    cat_trait categorical            accuracy_A
+38         mixed  pigauto    cat_trait categorical            accuracy_B
+39         mixed  pigauto    cat_trait categorical            accuracy_C
+40         mixed  pigauto        cont1  continuous conformal_coverage_95
+41         mixed  pigauto        cont1  continuous                   mae
+42         mixed  pigauto        cont1  continuous             pearson_r
+43         mixed  pigauto        cont1  continuous                  rmse
+44         mixed  pigauto        cont2  continuous conformal_coverage_95
+45         mixed  pigauto        cont2  continuous                   mae
+46         mixed  pigauto        cont2  continuous             pearson_r
+47         mixed  pigauto        cont2  continuous                  rmse
+48     nonlinear baseline       trait1  continuous                   mae
+49     nonlinear baseline       trait1  continuous             pearson_r
+50     nonlinear baseline       trait1  continuous                  rmse
+51     nonlinear baseline       trait2  continuous                   mae
+52     nonlinear baseline       trait2  continuous             pearson_r
+53     nonlinear baseline       trait2  continuous                  rmse
+54     nonlinear baseline       trait3  continuous                   mae
+55     nonlinear baseline       trait3  continuous             pearson_r
+56     nonlinear baseline       trait3  continuous                  rmse
+57     nonlinear  pigauto       trait1  continuous conformal_coverage_95
+58     nonlinear  pigauto       trait1  continuous                   mae
+59     nonlinear  pigauto       trait1  continuous             pearson_r
+60     nonlinear  pigauto       trait1  continuous                  rmse
+61     nonlinear  pigauto       trait2  continuous conformal_coverage_95
+62     nonlinear  pigauto       trait2  continuous                   mae
+63     nonlinear  pigauto       trait2  continuous             pearson_r
+64     nonlinear  pigauto       trait2  continuous                  rmse
+65     nonlinear  pigauto       trait3  continuous conformal_coverage_95
+66     nonlinear  pigauto       trait3  continuous                   mae
+67     nonlinear  pigauto       trait3  continuous             pearson_r
+68     nonlinear  pigauto       trait3  continuous                  rmse
+69            OU baseline       trait1  continuous                   mae
+70            OU baseline       trait1  continuous             pearson_r
+71            OU baseline       trait1  continuous                  rmse
+72            OU baseline       trait2  continuous                   mae
+73            OU baseline       trait2  continuous             pearson_r
+74            OU baseline       trait2  continuous                  rmse
+75            OU baseline       trait3  continuous                   mae
+76            OU baseline       trait3  continuous             pearson_r
+77            OU baseline       trait3  continuous                  rmse
+78            OU  pigauto       trait1  continuous conformal_coverage_95
+79            OU  pigauto       trait1  continuous                   mae
+80            OU  pigauto       trait1  continuous             pearson_r
+81            OU  pigauto       trait1  continuous                  rmse
+82            OU  pigauto       trait2  continuous conformal_coverage_95
+83            OU  pigauto       trait2  continuous                   mae
+84            OU  pigauto       trait2  continuous             pearson_r
+85            OU  pigauto       trait2  continuous                  rmse
+86            OU  pigauto       trait3  continuous conformal_coverage_95
+87            OU  pigauto       trait3  continuous                   mae
+88            OU  pigauto       trait3  continuous             pearson_r
+89            OU  pigauto       trait3  continuous                  rmse
+90  regime_shift baseline       trait1  continuous                   mae
+91  regime_shift baseline       trait1  continuous             pearson_r
+92  regime_shift baseline       trait1  continuous                  rmse
+93  regime_shift baseline       trait2  continuous                   mae
+94  regime_shift baseline       trait2  continuous             pearson_r
+95  regime_shift baseline       trait2  continuous                  rmse
+96  regime_shift baseline       trait3  continuous                   mae
+97  regime_shift baseline       trait3  continuous             pearson_r
+98  regime_shift baseline       trait3  continuous                  rmse
+99  regime_shift  pigauto       trait1  continuous conformal_coverage_95
+100 regime_shift  pigauto       trait1  continuous                   mae
+101 regime_shift  pigauto       trait1  continuous             pearson_r
+102 regime_shift  pigauto       trait1  continuous                  rmse
+103 regime_shift  pigauto       trait2  continuous conformal_coverage_95
+104 regime_shift  pigauto       trait2  continuous                   mae
+105 regime_shift  pigauto       trait2  continuous             pearson_r
+106 regime_shift  pigauto       trait2  continuous                  rmse
+107 regime_shift  pigauto       trait3  continuous conformal_coverage_95
+108 regime_shift  pigauto       trait3  continuous                   mae
+109 regime_shift  pigauto       trait3  continuous             pearson_r
+110 regime_shift  pigauto       trait3  continuous                  rmse
+           mean          sd n_reps
+1    0.34964816 0.009181615      2
+2    0.87910462 0.007865749      2
+3    0.45816458 0.024228090      2
+4    0.41832740 0.093664177      2
+5    0.84265502 0.103566987      2
+6    0.53495305 0.132943110      2
+7    0.40929530 0.076329142      2
+8    0.80554221 0.021250151      2
+9    0.51201801 0.118380127      2
+10   0.98148148 0.026189140      2
+11   0.38556665 0.059978034      2
+12   0.87805370 0.009351983      2
+13   0.48340446 0.059922673      2
+14   0.93750000 0.088388348      2
+15   0.41832740 0.093664179      2
+16   0.84265502 0.103566988      2
+17   0.53495305 0.132943113      2
+18   0.97619048 0.033671751      2
+19   0.41928192 0.090452355      2
+20   0.80777303 0.024405010      2
+21   0.52092080 0.130970577      2
+22   0.73958333 0.103119739      2
+23   0.19661717 0.019531666      2
+24   0.64901478 0.008708212      2
+25   0.85833333 0.082495791      2
+26   0.00000000 0.000000000      2
+27   0.75000000 0.117851130      2
+28   0.59951762 0.059566775      2
+29   0.53434653 0.245253110      2
+30   0.77083457 0.023477524      2
+31   0.49348665 0.162425985      2
+32   0.82381215 0.101127671      2
+33   0.62834009 0.193386290      2
+34   0.70833333 0.058925565      2
+35   0.20271772 0.010904195      2
+36   0.50738916 0.111465108      2
+37   1.00000000 0.000000000      2
+38   0.10000000 0.141421356      2
+39   0.25000000 0.117851130      2
+40   0.92554859 0.041007760      2
+41   0.60195103 0.056125406      2
+42   0.53780742 0.240358675      2
+43   0.74404051 0.014414985      2
+44   0.93275862 0.046327686      2
+45   0.49283764 0.161508140      2
+46   0.81067944 0.119700125      2
+47   0.63923352 0.208791912      2
+48   0.53280775 0.243639659      2
+49   0.68883825 0.175441833      2
+50   0.71713582 0.263665007      2
+51   0.36422662 0.078633406      2
+52   0.66031418 0.326741222      2
+53   0.45888051 0.098640432      2
+54   0.66201156 0.013665125      2
+55   0.67126241 0.201088164      2
+56   0.89923899 0.081601316      2
+57   0.98076923 0.027196415      2
+58   0.53094536 0.242730261      2
+59   0.68366524 0.185461740      2
+60   0.71577268 0.272823304      2
+61   0.90857143 0.072730983      2
+62   0.35123356 0.087437906      2
+63   0.65843497 0.327635120      2
+64   0.45059734 0.088126814      2
+65   0.93214286 0.045456865      2
+66   0.66201156 0.013665124      2
+67   0.67126242 0.201088162      2
+68   0.89923898 0.081601315      2
+69   1.00164842 0.085899609      2
+70   0.06135513 0.348494212      2
+71   1.27120039 0.154787499      2
+72   1.02232742 0.119985748      2
+73  -0.01288944 0.041818853      2
+74   1.25083750 0.082247255      2
+75   1.00828223 0.089929142      2
+76  -0.11437710 0.080303554      2
+77   1.24380361 0.138134373      2
+78   0.89016603 0.106562708      2
+79   0.97673941 0.098147888      2
+80   0.05956782 0.336413940      2
+81   1.25501996 0.163724568      2
+82   0.86206897 0.048765985      2
+83   1.01079192 0.103672083      2
+84  -0.01038564 0.038277953      2
+85   1.24228622 0.070153910      2
+86   0.78159341 0.145695079      2
+87   0.96565414 0.075271163      2
+88  -0.11413350 0.084995185      2
+89   1.19287513 0.136246909      2
+90   0.34172947 0.101289283      2
+91   0.90029849 0.067411454      2
+92   0.41599966 0.114620948      2
+93   0.44344889 0.040002755      2
+94   0.80686012 0.066738368      2
+95   0.57037313 0.093281261      2
+96   0.29409213 0.030264951      2
+97   0.93079663 0.028909028      2
+98   0.37116623 0.036473798      2
+99   0.91969697 0.027855722      2
+100  0.34172947 0.101289273      2
+101  0.90029849 0.067411451      2
+102  0.41599966 0.114620939      2
+103  0.90660920 0.014223412      2
+104  0.44344889 0.040002756      2
+105  0.80686012 0.066738367      2
+106  0.57037314 0.093281260      2
+107  0.92148148 0.058663674      2
+108  0.29409213 0.030264939      2
+109  0.93079663 0.028909022      2
+110  0.37116624 0.036473781      2
