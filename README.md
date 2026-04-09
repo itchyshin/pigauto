@@ -61,6 +61,72 @@ result$prediction$probabilities$Trophic.Level  # categorical probabilities
 pigauto_report(result)
 ```
 
+## Multiple imputation for downstream analysis
+
+Imputation is a *means*, not an end. The reason to fill in missing cells
+is almost always to run a downstream analysis — a phylogenetic
+regression, a comparative study of trait evolution, a trait-environment
+test. Plugging point-estimate imputations directly into a regression
+underestimates standard errors, because it treats imputed cells as if
+they were observed. The consequences are well documented for ecological
+and phylogenetic datasets in Nakagawa & Freckleton
+([2008, *TREE*](https://doi.org/10.1016/j.tree.2008.06.014)) and
+([2011, *Behav Ecol Sociobiol*](https://doi.org/10.1007/s00265-010-1044-7)).
+
+The remedy, due to Rubin (1987), is **multiple imputation**: generate
+`M` stochastic completions of the trait matrix, fit the downstream
+model on each, and pool the `M` outputs via Rubin's rules. pigauto
+exposes this workflow as three functions:
+
+```r
+library(pigauto)
+library(glmmTMB)   # attach so propto() is visible to the formula parser
+library(ape)
+
+data(avonet300, tree300)
+df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
+
+# 1. Generate 100 complete datasets (MC-dropout sampling from the GNN)
+mi <- multi_impute(df, tree300, m = 100)
+
+# 2. Fit a phylogenetic mixed model on each imputation
+Vphy <- ape::vcv(tree300)
+fits <- with_imputations(mi, function(d) {
+  d$species <- factor(rownames(d), levels = rownames(Vphy))
+  d$dummy   <- factor(1)
+  glmmTMB(
+    log(Mass) ~ log(Wing.Length) + Trophic.Level +
+      propto(0 + species | dummy, Vphy),
+    data = d
+  )
+})
+
+# 3. Pool with Rubin's rules
+pool_mi(
+  fits,
+  coef_fun = function(f) fixef(f)$cond,
+  vcov_fun = function(f) vcov(f)$cond
+)
+#>               term estimate std.error   df statistic p.value conf.low conf.high    fmi   riv
+#>        (Intercept)   ...
+#>   log(Wing.Length)   ...
+#>     Trophic.LevelC   ...
+```
+
+The pooled table reports `fmi` (fraction of missing information) and
+`riv` (relative increase in variance due to non-response) for each
+coefficient. A rule of thumb from Rubin is `M ≥ 100 × fmi`: small `fmi`
+(< 0.1) means `M = 20` is plenty, but `fmi > 0.3` on any coefficient
+means you should push `M` into the hundreds before the pooled standard
+errors stop drifting.
+
+`pool_mi()` uses Rubin's rules, which are the correct tool for
+frequentist fits (`lm`, `nlme::gls`, `glmmTMB`, `phylolm`, etc.). For
+a fully Bayesian workflow you want to concatenate posterior samples
+across imputations instead; see the companion **BACE** package's
+`pool_posteriors()` on top of `MCMCglmm`. `pool_mi()` deliberately
+rejects `MCMCglmm` fits to keep the two paradigms from being mixed.
+
 ## Pipeline functions
 
 For fine-grained control:

@@ -78,8 +78,11 @@ preprocess_traits()  →  build_phylo_graph()  →  fit_baseline()  →  fit_pig
 | `pigauto_result` | `impute()` | wraps the above plus `completed` and `imputed_mask` |
 | `pigauto_benchmark` | `simulate_benchmark()` | multi-scenario results data.frame |
 | `pigauto_cv` | `cross_validate()` | per-fold metrics |
+| `pigauto_mi` | `multi_impute()` | `datasets` (list of M), `m`, `pooled_point`, `se`, `imputed_mask`, `fit`, `tree` |
+| `pigauto_mi_fits` | `with_imputations()` | list of M downstream fits (or `pigauto_mi_error` for failed draws) |
+| `pigauto_pooled` | `pool_mi()` | tidy data.frame with Rubin's-rules pooled coefficients (`estimate`, `std.error`, `df`, `fmi`, `riv`, ...) |
 
-The pipeline functions are for fine-grained control and for writing benchmarks.
+The pipeline functions are for fine-grained control and for writing benchmarks. For the multiple-imputation → downstream-inference workflow, see `R/multi_impute.R` → `R/with_imputations.R` → `R/pool_mi.R` (Rubin 1987; Barnard & Rubin 1999; Nakagawa & Freckleton 2008, 2011).
 
 ### Trait-type handling
 

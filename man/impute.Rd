@@ -51,8 +51,16 @@ to skip splitting (all cells used for training, no evaluation).}
 \value{
 An object of class \code{"pigauto_result"} with components:
 \describe{
+\item{completed}{The input \code{traits} data.frame with observed
+values preserved and only missing cells filled in.  This is the
+primary output — typically what users want.}
+\item{imputed_mask}{Logical matrix (same shape as \code{completed})
+that is \code{TRUE} for cells that were imputed (originally
+\code{NA}) and \code{FALSE} for observed cells.}
 \item{prediction}{A \code{pigauto_pred} object from
-\code{\link{predict.pigauto_fit}}.}
+\code{\link{predict.pigauto_fit}} containing raw model
+predictions for every cell (observed + missing), standard errors,
+class probabilities, and conformal intervals.}
 \item{fit}{The trained \code{pigauto_fit} object.}
 \item{baseline}{The phylogenetic baseline.}
 \item{data}{The preprocessed \code{pigauto_data} object.}
@@ -69,8 +77,14 @@ individual functions (\code{\link{preprocess_traits}},
 }
 \examples{
 \dontrun{
-result <- impute(avonet300, tree300)
-result$prediction$imputed$Mass       # imputed values
-result$prediction$se[, "Mass"]       # standard errors
+# Simple case: fill in missing values
+result <- impute(my_traits, my_tree)
+result$completed              # observed preserved, NAs filled
+result$imputed_mask           # which cells were imputed
+
+# Diagnostic: raw predictions for every cell
+result$prediction$imputed     # model's prediction everywhere
+result$prediction$se          # per-cell uncertainty
+result$prediction$probabilities$diet  # class probabilities
 }
 }

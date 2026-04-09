@@ -176,6 +176,81 @@ message passing, then broadcasts back to observation level. Rphylopars
 handles within-species replication natively in the baseline.
 </p>
 
+<h2>Why impute? Downstream analysis with multiple imputation</h2>
+<p>
+Imputation is a <i>means</i>, not an end. The reason to fill in missing
+cells is almost always to run a downstream analysis &mdash; a phylogenetic
+regression, a comparative study of trait evolution, a trait-environment
+test. Plugging point-estimate imputations directly into a regression
+underestimates standard errors, because it treats imputed cells as if
+they were observed. The consequences are well documented for ecological
+and phylogenetic datasets in Nakagawa &amp; Freckleton
+(<a href="https://doi.org/10.1016/j.tree.2008.06.014">2008, <i>TREE</i></a>)
+and Nakagawa &amp; Freckleton
+(<a href="https://doi.org/10.1007/s00265-010-1044-7">2011, <i>Behav Ecol Sociobiol</i></a>).
+</p>
+<p>
+The remedy, due to Rubin (1987), is <b>multiple imputation</b>: generate
+<code>M</code> stochastic completions of the trait matrix, fit the
+downstream model on each, and pool the <code>M</code> model outputs via
+Rubin&rsquo;s rules. pigauto exposes this workflow as three functions:
+</p>
+<pre><code>library(pigauto)
+library(glmmTMB)   # attach so propto() is visible to the formula parser
+library(ape)
+
+data(avonet300, tree300)
+df &lt;- avonet300; rownames(df) &lt;- df$Species_Key; df$Species_Key &lt;- NULL
+
+# 1. Generate 100 complete datasets (MC-dropout sampling from the GNN)
+mi &lt;- multi_impute(df, tree300, m = 100)
+
+# 2. Fit a phylogenetic mixed model on each imputation
+Vphy &lt;- ape::vcv(tree300)
+fits &lt;- with_imputations(mi, function(d) {
+  d$species &lt;- factor(rownames(d), levels = rownames(Vphy))
+  d$dummy   &lt;- factor(1)
+  glmmTMB(
+    log(Mass) ~ log(Wing.Length) + Trophic.Level +
+      propto(0 + species | dummy, Vphy),
+    data = d
+  )
+})
+
+# 3. Pool with Rubin&rsquo;s rules (Barnard-Rubin df optional)
+pool_mi(
+  fits,
+  coef_fun = function(f) fixef(f)$cond,
+  vcov_fun = function(f) vcov(f)$cond
+)
+#&gt;               term estimate std.error    df statistic p.value  conf.low  conf.high    fmi   riv
+#&gt;        (Intercept)   ...
+#&gt;   log(Wing.Length)   ...
+#&gt;     Trophic.LevelC   ...</code></pre>
+<p>
+The pooled table carries a few diagnostics worth reading. <code>fmi</code>
+is the <i>fraction of missing information</i> for each coefficient &mdash;
+the share of total variance that comes from imputation noise rather than
+sampling. <code>riv</code> is the relative increase in variance due to
+non-response. A good rule of thumb from Rubin is
+<code>M &ge; 100 &times; fmi</code>; when <code>fmi</code> is small
+(say &lt; 0.1), even <code>M = 20</code> is plenty, but if some
+coefficients show <code>fmi &gt; 0.3</code> the pooled SEs continue to
+drift until <code>M</code> is in the hundreds.
+</p>
+<div class="note">
+<b>Bayesian alternative.</b> <code>pool_mi()</code> uses Rubin&rsquo;s rules,
+which are the right tool for frequentist fits (<code>lm</code>,
+<code>nlme::gls</code>, <code>glmmTMB</code>, <code>phylolm</code>, etc.).
+For a fully Bayesian workflow you want to concatenate posterior samples
+across imputations rather than decompose variance. The companion
+<b>BACE</b> package (bundled in this repo) implements that via
+<code>pool_posteriors()</code> on top of <code>MCMCglmm</code>; see
+<code>BACE/R/pool_posteriors.R</code>. <code>pool_mi()</code> deliberately
+rejects <code>MCMCglmm</code> fits so you do not accidentally mix the two
+paradigms.
+</div>
+
 <h2>What&rsquo;s in the box</h2>
 <ul>
 <li><code>avonet300</code> &mdash; 300 bird species with 4 continuous morphometric traits

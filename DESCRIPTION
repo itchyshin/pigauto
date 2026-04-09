@@ -34,7 +34,8 @@ Suggests:
     ggtree,
     reticulate,
     BACE,
-    MCMCglmm
+    MCMCglmm,
+    glmmTMB
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
