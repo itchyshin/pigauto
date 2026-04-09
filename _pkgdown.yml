@@ -43,19 +43,23 @@ navbar:
         - text: "Mixed-type traits"
           href: articles/mixed-types.html
         - text: "-------"
-        - text: "Static HTML walk-throughs"
+        - text: "Walk-throughs"
         - text: "Intro (architecture overview)"
           href: pigauto_intro.html
-        - text: "Continuous-trait workflow"
-          href: pigauto_workflow.html
         - text: "Mixed-type workflow (Paths A / B / C)"
           href: pigauto_workflow_mixed.html
+        - text: "-------"
+        - text: "Benchmarks"
+        - text: "Simulation scenarios (BM / OU / nonlinear / mixed)"
+          href: dev/benchmark_report.html
+        - text: "AVONET 300 (real-data benchmark)"
+          href: dev/benchmark_final_report.html
+        - text: "pigauto vs TabPFN"
+          href: dev/bench_tabpfn.html
         - text: "-------"
         - text: "Developer reports"
         - text: "Test catalogue"
           href: dev/tests_overview.html
-        - text: "TabPFN benchmark"
-          href: dev/bench_tabpfn.html
 
 reference:
   - title: "One-call entry point"

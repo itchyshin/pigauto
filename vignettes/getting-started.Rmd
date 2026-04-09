@@ -298,8 +298,9 @@ graph <- build_phylo_graph(tree300, k_eigen = 8, cache_path = "tree300_graph.rds
 ```
 
 **Large trees (N > 2000).** `build_phylo_graph()` computes a dense N × N
-cophenetic distance matrix, which requires ~32 GB RAM at N = 3000.
-Edge-based tree message-passing (O(N) memory) is planned for v0.2.
+cophenetic distance matrix, which requires ~32 GB RAM at N = 3000. Run
+on a machine with enough memory, or prune the tree to a taxonomic
+subset before calling `impute()`.
 
 **Supplying your own data.** The workflow above works for any phylogenetic tree
 and trait matrix:
@@ -311,9 +312,11 @@ pd     <- preprocess_traits(traits, tree)
 # ...proceed as above
 ```
 
-Trait columns must be continuous and numeric. The species names in `traits`
-must overlap with tip labels in `tree` (partial overlap is allowed; unmatched
-species are dropped with a warning).
+Trait columns can be any mix of `numeric` (continuous), `integer` (count),
+`factor` (binary / categorical), and `ordered` (ordinal) — pigauto reads
+column classes to decide how each trait is encoded and imputed. The
+species names in `traits` must overlap with tip labels in `tree` (partial
+overlap is allowed; unmatched species are dropped with a warning).
 
 ## References
 

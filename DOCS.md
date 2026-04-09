@@ -36,6 +36,7 @@ artefact.
 | First imputation, end-to-end | Live: [articles/getting-started.html](https://itchyshin.github.io/pigauto/articles/getting-started.html) · source: [`vignettes/getting-started.Rmd`](vignettes/getting-started.Rmd) |
 | Why does pigauto work this way? | Live: [pigauto_intro.html](https://itchyshin.github.io/pigauto/pigauto_intro.html) · source: [`script/make_intro_html.R`](script/make_intro_html.R) |
 | The full PCM workflow, mixed-type traits | Live: [pigauto_workflow_mixed.html](https://itchyshin.github.io/pigauto/pigauto_workflow_mixed.html) · source: [`script/make_workflow_mixed_html.R`](script/make_workflow_mixed_html.R) |
+| How well does it actually work? | Section [4. Benchmarks](#4-benchmarks) below, or live: [simulation scenarios](https://itchyshin.github.io/pigauto/dev/benchmark_report.html) / [AVONET 300](https://itchyshin.github.io/pigauto/dev/benchmark_final_report.html) / [pigauto vs TabPFN](https://itchyshin.github.io/pigauto/dev/bench_tabpfn.html) |
 | Package internals and gotchas | [`CLAUDE.md`](CLAUDE.md) |
 
 ---
@@ -55,8 +56,7 @@ copy-pasted into an R session.
 | Getting started | [articles/getting-started.html](https://itchyshin.github.io/pigauto/articles/getting-started.html) | [`vignettes/getting-started.Rmd`](vignettes/getting-started.Rmd) | `inst/doc/getting-started.html` | First imputation on the bundled AVONET 300 dataset; how to read `pigauto_result` |
 | Mixed-type traits | [articles/mixed-types.html](https://itchyshin.github.io/pigauto/articles/mixed-types.html) | [`vignettes/mixed-types.Rmd`](vignettes/mixed-types.Rmd) | `inst/doc/mixed-types.html` | Continuous + count + ordinal + binary + categorical in one model; round-trip encoding |
 | Intro (architecture overview) | [pigauto_intro.html](https://itchyshin.github.io/pigauto/pigauto_intro.html) | [`script/make_intro_html.R`](script/make_intro_html.R) | `inst/doc/pigauto_intro.html` | Why a residual BM + GNN blend? Gate calibration, conformal intervals, trait-type handling |
-| Continuous-trait PCM workflow | [pigauto_workflow.html](https://itchyshin.github.io/pigauto/pigauto_workflow.html) | [`script/make_workflow_html.R`](script/make_workflow_html.R) | `inst/doc/pigauto_workflow.html` | Data → reconcile tree → impute → downstream fit (glmmTMB) → Rubin's rules |
-| Mixed-type PCM workflow | [pigauto_workflow_mixed.html](https://itchyshin.github.io/pigauto/pigauto_workflow_mixed.html) | [`script/make_workflow_mixed_html.R`](script/make_workflow_mixed_html.R) | `inst/doc/pigauto_workflow_mixed.html` | Same as above with mixed trait types, plus all three analysis paths (A/B/C) |
+| Mixed-type PCM workflow | [pigauto_workflow_mixed.html](https://itchyshin.github.io/pigauto/pigauto_workflow_mixed.html) | [`script/make_workflow_mixed_html.R`](script/make_workflow_mixed_html.R) | `inst/doc/pigauto_workflow_mixed.html` | Full multiple-imputation pipeline on mixed trait types, plus all three analysis paths (A/B/C) |
 
 ### The three analysis paths
 
@@ -81,7 +81,33 @@ explicit in the tutorial and informal in the rest of the docs:
 
 ---
 
-## 3. Function reference
+## 3. Benchmarks
+
+Three rendered HTML reports let you read pigauto's reported
+performance without re-running anything locally. The first two are
+the primary evidence behind the summary tables in
+[`README.md`](README.md); the third compares pigauto against TabPFN
+as a drop-in tabular imputer. All three are physically hosted under
+`pkgdown/assets/dev/`; the "Benchmarks" submenu on the live site's
+Articles dropdown links straight to them.
+
+| Report | Live link | Source / inputs | What it shows |
+|---|---|---|---|
+| **Simulation scenarios** | [dev/benchmark_report.html](https://itchyshin.github.io/pigauto/dev/benchmark_report.html) | Frozen snapshot at `script/benchmark_report.html` (built by `script/benchmark_simulation.R`) | 12 synthetic scenarios × 3 replicates: BM low/high signal, OU (α=0.5, 2, 10), variable phylo signal, mixed types, large tree (300 spp), non-linear correlations. Per-scenario RMSE for continuous and count traits, accuracy for discrete traits, vs BM baseline |
+| **AVONET 300 (real data)** | [dev/benchmark_final_report.html](https://itchyshin.github.io/pigauto/dev/benchmark_final_report.html) | Frozen snapshot at `script/benchmark_final_report.html` (built by `script/benchmark_final.R`) | 7 traits (4 continuous + 2 categorical + 1 ordinal), 5 replicates. Per-trait RMSE, Pearson r, calibrated gate, and conformal coverage (94–100% across continuous/ordinal traits) |
+| **pigauto vs TabPFN** | [dev/bench_tabpfn.html](https://itchyshin.github.io/pigauto/dev/bench_tabpfn.html) | [`script/make_bench_tabpfn_html.R`](script/make_bench_tabpfn_html.R) + `script/bench_tabpfn.rds` | 5 scenarios × 2 replicates comparing pigauto's GNN correction against TabPFN (a tabular transformer imputer) run via subprocess. Shows where pigauto wins, loses, and ties |
+
+For the authoritative numerical summary with discussion, see
+[`README.md` → Benchmark results](README.md#benchmark-results). The
+interactive `simulate_benchmark()` function in
+[`R/simulate_benchmark.R`](R/simulate_benchmark.R) lets you regenerate
+the simulation scenarios end-to-end; the AVONET real-data benchmark
+is less modular because it depends on the bundled
+`avonet300` / `tree300` splits.
+
+---
+
+## 4. Function reference
 
 The full auto-generated reference lives at the pkgdown site
 <https://itchyshin.github.io/pigauto/reference/>. A copy of every
@@ -101,7 +127,7 @@ exported function's `.Rd` page is also in `man/`.
 
 ---
 
-## 4. Design notes and architecture
+## 5. Design notes and architecture
 
 For contributors, reviewers, and anyone trying to understand what
 pigauto does under the hood:
@@ -140,31 +166,31 @@ R/
 
 ---
 
-## 5. Developer reports
+## 6. Developer reports
 
 These HTML reports are dev artefacts living under `script/`. They do
 not ship with the installed package (`^script$` is in `.Rbuildignore`)
 but are committed to the repo and mirrored into `pkgdown/assets/dev/`
-so the live site can serve them as rendered web pages.
+so the live site can serve them as rendered web pages. The three
+benchmark reports (simulation, AVONET, TabPFN) are also listed here
+because they are technically developer artefacts, but the primary
+place to find them is section 3 above.
 
 | Report | Live link | Source |
 |---|---|---|
 | Test catalogue (77 tests × 8 files) | [dev/tests_overview.html](https://itchyshin.github.io/pigauto/dev/tests_overview.html) | [`script/make_tests_html.R`](script/make_tests_html.R) |
-| TabPFN benchmark | [dev/bench_tabpfn.html](https://itchyshin.github.io/pigauto/dev/bench_tabpfn.html) | [`script/make_bench_tabpfn_html.R`](script/make_bench_tabpfn_html.R) (results from `script/bench_tabpfn.rds`) |
-| Benchmark report (simulation) | [dev/benchmark_report.html](https://itchyshin.github.io/pigauto/dev/benchmark_report.html) | Frozen snapshot at `script/benchmark_report.html` (no live builder) |
-| Benchmark final report | [dev/benchmark_final_report.html](https://itchyshin.github.io/pigauto/dev/benchmark_final_report.html) | Frozen snapshot at `script/benchmark_final_report.html` (no live builder) |
 | Test run report | [dev/test_report.html](https://itchyshin.github.io/pigauto/dev/test_report.html) | Frozen snapshot at `script/test_report.html` (no live builder) |
 
 ---
 
-## 6. Changelog
+## 7. Changelog
 
 - [`NEWS.md`](NEWS.md) — release history, user-facing changes per version.
 - Web version on the live site: <https://itchyshin.github.io/pigauto/news/index.html>.
 
 ---
 
-## 7. Citation and license
+## 8. Citation and license
 
 - [`DESCRIPTION`](DESCRIPTION) — package metadata, authors, version.
 - [`LICENSE`](LICENSE) — MIT.
@@ -176,7 +202,7 @@ so the live site can serve them as rendered web pages.
 
 ---
 
-## 8. How this site is built (appendix)
+## 9. How this site is built (appendix)
 
 The live pkgdown site is produced by two things:
 
@@ -184,20 +210,22 @@ The live pkgdown site is produced by two things:
    (navbar, reference groups, articles menu, template).
 2. **`.github/workflows/pkgdown.yaml`** runs
    `pkgdown::build_site_github_pages()` on every push to `main` and
-   deploys the `docs/` output to the `gh-pages` branch. GitHub Pages
-   serves `gh-pages` at <https://itchyshin.github.io/pigauto>.
+   deploys the `docs/` output via GitHub Pages' workflow-based
+   deployment (`actions/upload-pages-artifact` +
+   `actions/deploy-pages`). The site is served at
+   <https://itchyshin.github.io/pigauto>.
 
 ### Static HTML tutorials: the dual-write pattern
 
-The three `script/make_*_html.R` scripts (`make_intro_html.R`,
-`make_workflow_html.R`, `make_workflow_mixed_html.R`) and the two dev
-report builders (`make_tests_html.R`, `make_bench_tabpfn_html.R`) each
-write their output to **two places**:
+The two `script/make_*_html.R` tutorial scripts (`make_intro_html.R`,
+`make_workflow_mixed_html.R`) and the two dev report builders
+(`make_tests_html.R`, `make_bench_tabpfn_html.R`) each write their
+output to **two places**:
 
 - `inst/doc/xxx.html` (or `script/xxx.html` for dev reports) —
   the canonical location. For tutorials this is what ships with the
   installed package; readers open it via
-  `browseURL(system.file("doc", "pigauto_workflow.html", package = "pigauto"))`.
+  `browseURL(system.file("doc", "pigauto_workflow_mixed.html", package = "pigauto"))`.
 - `pkgdown/assets/xxx.html` (or `pkgdown/assets/dev/xxx.html` for dev
   reports) — `pkgdown` copies `pkgdown/assets/*` verbatim into the
   `docs/` build output, so the same HTML becomes accessible on the
@@ -210,9 +238,8 @@ one `Rscript script/make_workflow_mixed_html.R` rebuild touches both.
 ### Rebuilding the whole site locally
 
 ```r
-# regenerate all five static HTML tutorials + dev reports
+# regenerate static HTML tutorials + dev reports
 Rscript script/make_intro_html.R
-Rscript script/make_workflow_html.R
 Rscript script/make_workflow_mixed_html.R
 Rscript script/make_tests_html.R
 Rscript script/make_bench_tabpfn_html.R   # requires script/bench_tabpfn.rds
@@ -236,7 +263,6 @@ the static HTMLs from `pkgdown/assets/`, the function reference from
 | `inst/doc/getting-started.html` | `vignettes/getting-started.Rmd` | `devtools::build_vignettes()` |
 | `inst/doc/mixed-types.html` | `vignettes/mixed-types.Rmd` | `devtools::build_vignettes()` |
 | `inst/doc/pigauto_intro.html` | `script/make_intro_html.R` | `Rscript script/make_intro_html.R` |
-| `inst/doc/pigauto_workflow.html` | `script/make_workflow_html.R` | `Rscript script/make_workflow_html.R` |
 | `inst/doc/pigauto_workflow_mixed.html` | `script/make_workflow_mixed_html.R` | `Rscript script/make_workflow_mixed_html.R` |
 | `script/tests_overview.html` | `script/make_tests_html.R` | `Rscript script/make_tests_html.R` |
 | `script/bench_tabpfn.html` | `script/make_bench_tabpfn_html.R` | `Rscript script/make_bench_tabpfn_html.R` |

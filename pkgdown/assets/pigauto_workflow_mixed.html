@@ -60,21 +60,31 @@
 <p class="tagline">Multiple imputation of continuous, categorical, and ordinal traits &mdash; three downstream paths.</p>
 <p class="meta">Generated 2026-04-09 &middot; scripts/<code>make_workflow_mixed_html.R</code></p>
 
-<p>This tutorial is the mixed-type companion to
-<code>pigauto_workflow.html</code>. The earlier tutorial uses a
-continuous-only example and focuses on tree-and-data reconciliation
-with <code>prepR4pcm</code>; it is the right place to start if you are
-new to the pipeline. This one assumes you have already seen that one
-and drills into two things it did not cover:</p>
+<p>This tutorial walks through the full pigauto multiple-imputation
+pipeline on a genuinely mixed-type dataset, then runs the three
+downstream analysis paths that convert <i>M</i> completed trait
+matrices into pooled inference. It is self-contained &mdash; every
+code block can be copy-pasted into a fresh R session and uses only
+the <code>avonet300</code> data and <code>tree300</code> phylogeny
+bundled with pigauto, plus <code>glmmTMB</code>, <code>MCMCglmm</code>,
+and <code>BACE</code> for the downstream fits.</p>
+
+<p>If you are completely new to pigauto, the quickest on-ramp is
+<code>vignette(&quot;getting-started&quot;, package = &quot;pigauto&quot;)</code>
+(live: <a href="articles/getting-started.html">Get started</a>), which
+runs a single-shot <code>impute()</code> call before returning here
+for the full multiple-imputation workflow.</p>
+
+<p>The tutorial drills into two things the single-call
+<code>impute()</code> example does not cover:</p>
 
 <ol>
 <li><b>Mixed-type imputation.</b> Most real phylogenetic datasets mix
 continuous morphometrics with categorical ecology (trophic level, habitat,
 migration strategy). pigauto is designed to handle all five trait types
 &mdash; continuous, count, ordinal, binary, categorical &mdash; in one
-model, but the previous tutorial only exercised the continuous path.
-Here every trait type is actually imputed and actually used in the
-downstream regression.</li>
+model. Here every trait type is actually imputed and actually used
+in the downstream regression.</li>
 <li><b>Three analysis paths, not two.</b> Multiple imputation is a way
 to propagate uncertainty into whatever downstream model you prefer. The
 classical split is frequentist (Rubin&rsquo;s rules) vs Bayesian
@@ -101,8 +111,8 @@ downstream inference:</p>
     <td><b>Path C</b>: <code>BACE::bace()</code> &rarr; <code>pool_posteriors()</code></td></tr>
 </table>
 
-<p>All three paths share sections&nbsp;1&ndash;5 (data, missing data, tree,
-matching, multiple imputation). Only from section&nbsp;6 onwards do they
+<p>All three paths share sections&nbsp;1&ndash;4 (data, missing data, tree,
+multiple imputation). Only from section&nbsp;5 onwards do they
 diverge.</p>
 
 <div class="toc">
@@ -110,8 +120,7 @@ diverge.</p>
 <ol>
 <li><a href="#data">Data: a genuinely mixed-type trait matrix</a></li>
 <li><a href="#missing">Missing data across all trait types</a></li>
-<li><a href="#tree">Tree</a></li>
-<li><a href="#match">Matching tree and data with <code>prepR4pcm</code></a></li>
+<li><a href="#tree">Tree and name matching</a></li>
 <li><a href="#mi">Multiple imputation of all five trait types</a></li>
 <li><a href="#patha">Path&nbsp;A: pigauto + <code>glmmTMB</code> + Rubin&rsquo;s rules</a></li>
 <li><a href="#pathb">Path&nbsp;B: pigauto + <code>MCMCglmm</code> + posterior concatenation</a></li>
@@ -208,9 +217,9 @@ mean(is.na(df[, trait_cols]))
 
 <p>The key point: <i>every</i> trait type has missing cells, including
 the two categorical factors and the ordered factor. This is what makes
-the rest of the tutorial a genuine mixed-type demonstration rather than
-a continuous-only pipeline with factor side-columns carried along for
-decoration.</p>
+the rest of the tutorial a genuine mixed-type demonstration rather
+than a continuous-only pipeline with factor columns carried along
+for decoration.</p>
 
 <div class="note">
 <b>MNAR vs MAR for factor columns.</b> Random injection gives
@@ -225,7 +234,7 @@ informative missingness, say so in your methods section and sensitivity-
 check with a different imputer.
 </div>
 
-<h2 id="tree"><span class="num">3.</span> Tree</h2>
+<h2 id="tree"><span class="num">3.</span> Tree and name matching</h2>
 
 <p>The phylogeny is <code>tree300</code>, a 300-tip pruned BirdTree
 subset aligned with <code>avonet300</code>:</p>
@@ -240,60 +249,35 @@ ape::Ntip(tree300)               # 300
 ape::is.ultrametric(tree300)     # TRUE
 </code></pre>
 
-<p>For details on ultrametricity, branch-length assumptions, and when
-to force-ultrametricise, see section&nbsp;3 of the continuous-only
-tutorial (<code>pigauto_workflow.html</code>).</p>
+<p>Because <code>avonet300</code> ships pre-aligned with
+<code>tree300</code>, the species keys on the rows of <code>df</code>
+match the tip labels of <code>tree300</code> exactly. You can confirm
+this in one line:</p>
 
-<h2 id="match"><span class="num">4.</span> Matching tree and data with <code>prepR4pcm</code></h2>
+<pre><code>stopifnot(setequal(rownames(df), tree300$tip.label))
+#&gt; (silent: all 300 species present on both sides)
 
-<p><code>avonet300</code> is already aligned with <code>tree300</code> by
-construction &mdash; the species keys use the same
-<code>Genus_species</code> format and every row has a matching tip.
-Running the reconciliation anyway is a cheap sanity check that does not
-drop anything:</p>
-
-<pre><code>library(prepR4pcm)
-
-# df now has species as rownames; reconcile_tree wants a species column,
-# so temporarily re-add it.
-df_with_key &lt;- cbind(Species_Key = rownames(df), df)
-rec &lt;- reconcile_tree(
-  x         = df_with_key,
-  tree      = tree300,
-  x_species = "Species_Key",
-  fuzzy     = FALSE,
-  resolve   = "flag"
-)
-rec
-#&gt; -- Reconciliation: data vs tree ------------------------------------
-#&gt; i Match coverage: [####################] 100% (300/300)
-#&gt; -- Match summary --
-#&gt;   * Exact      : 300 (100.0%)
-
-aligned &lt;- reconcile_apply(
-  rec,
-  data            = df_with_key,
-  tree            = tree300,
-  species_col     = "Species_Key",
-  drop_unresolved = TRUE
-)
-dat  &lt;- aligned$data
-tree &lt;- aligned$tree
-rownames(dat) &lt;- dat$Species_Key
-dat$Species_Key &lt;- NULL
+dat  &lt;- df
+tree &lt;- tree300
 </code></pre>
 
 <div class="tip">
-<b>Deliberate no-op.</b> This tutorial uses a pre-aligned dataset so the
-reconciliation step is a formality. For a realistic example where
-<code>reconcile_tree()</code> actually resolves 28&nbsp;% of unresolved
-species via normalisation, synonym lookup, and fuzzy matching, see
-section&nbsp;4 of <code>pigauto_workflow.html</code>. Matching real
-messy data against a published tree is the <i>normal</i> case; we
-skip it here to keep the focus on mixed-type imputation.
+<b>Real datasets rarely match this cleanly.</b> A published phylogeny
+and a trait table usually disagree on spelling, taxonomy, and coverage:
+one side has <code>Parus_major</code> and the other <code>Cyanistes
+caeruleus</code>, or the tree covers 2000 tips and the trait table
+only 800. The minimum-viable reconciliation is
+<code>keep &lt;- intersect(rownames(dat), tree$tip.label)</code> followed
+by <code>dat &lt;- dat[keep, , drop = FALSE]</code> and
+<code>tree &lt;- ape::drop.tip(tree, setdiff(tree$tip.label, keep))</code>;
+for fuzzy matching, synonym lookup, and genus-level fallbacks you
+will want a dedicated tool, but that work sits <i>outside</i> pigauto
+and is not re-taught here. From <code>impute()</code>&rsquo;s point
+of view the only contract is that <code>rownames(dat)</code> is a
+subset of <code>tree$tip.label</code>.
 </div>
 
-<h2 id="mi"><span class="num">5.</span> Multiple imputation of all five trait types</h2>
+<h2 id="mi"><span class="num">4.</span> Multiple imputation of all five trait types</h2>
 
 <p>Now call <code>multi_impute()</code> to generate M complete datasets.
 The function chains preprocessing, the Brownian-motion baseline
@@ -429,7 +413,7 @@ read a factor column, not for formal posterior inference over class
 labels.
 </div>
 
-<h2 id="patha"><span class="num">6.</span> Path A &mdash; pigauto + <code>glmmTMB</code> + Rubin&rsquo;s rules</h2>
+<h2 id="patha"><span class="num">5.</span> Path A &mdash; pigauto + <code>glmmTMB</code> + Rubin&rsquo;s rules</h2>
 
 <p>Suppose we want a phylogenetic regression: does mass scale with wing
 length, and does that relationship differ across trophic levels or
@@ -490,7 +474,7 @@ variance. The <code>Trophic.Level</code> rows have much smaller
 <code>fmi&nbsp;&asymp; 0.04</code>, inherited from the continuous
 covariates&rsquo; imputations rather than from variability in
 <code>Trophic.Level</code> itself (see the warning box in
-section&nbsp;5 above). This is exactly the regime in which Path&nbsp;B
+section&nbsp;4 above). This is exactly the regime in which Path&nbsp;B
 or C becomes more informative than Path&nbsp;A.</p>
 
 <div class="trouble">
@@ -512,7 +496,7 @@ drop failed fits before pooling.</li>
 </ul>
 </div>
 
-<h2 id="pathb"><span class="num">7.</span> Path B &mdash; pigauto + <code>MCMCglmm</code> + posterior concatenation</h2>
+<h2 id="pathb"><span class="num">6.</span> Path B &mdash; pigauto + <code>MCMCglmm</code> + posterior concatenation</h2>
 
 <p>If your lab uses <code>MCMCglmm</code> for inference &mdash; formal
 prior specification, full posterior propagation, BPMM/DIC comparisons
@@ -641,7 +625,7 @@ fits before concatenating.</li>
 </ul>
 </div>
 
-<h2 id="pathc"><span class="num">8.</span> Path C &mdash; BACE integrated chained-equation MCMC</h2>
+<h2 id="pathc"><span class="num">7.</span> Path C &mdash; BACE integrated chained-equation MCMC</h2>
 
 <div class="warnbox">
 <b>Runtime warning.</b> <code>bace()</code> on 300 species with
@@ -728,7 +712,7 @@ argument.</li>
 </ul>
 </div>
 
-<h2 id="choose"><span class="num">9.</span> Which path should I take?</h2>
+<h2 id="choose"><span class="num">8.</span> Which path should I take?</h2>
 
 <p>The decision tree is: frequentist shop or Bayesian shop? If
 Bayesian, fast GNN imputer (Path&nbsp;B) or integrated chained-equation
@@ -786,7 +770,7 @@ familiar), but you do not want to wait 6 hours for BACE&rsquo;s
 chained-equation imputer. Path&nbsp;B gets you a Bayesian posterior on
 the downstream parameters in 1&ndash;4 hours with pigauto doing the
 imputation work. The trade-off is the approximation highlighted in the
-callout in section&nbsp;7: the MC-dropout draws are treated as
+callout in section&nbsp;6: the MC-dropout draws are treated as
 approximate posterior predictive samples, not as a literal joint
 Bayesian posterior over parameters and missing cells. For
 Nakagawa&nbsp;&amp;&nbsp;Freckleton-style applied comparative analyses,

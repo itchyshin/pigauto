@@ -82,7 +82,7 @@ preprocess_traits()  →  build_phylo_graph()  →  fit_baseline()  →  fit_pig
 | `pigauto_mi_fits` | `with_imputations()` | list of M downstream fits (or `pigauto_mi_error` for failed draws) |
 | `pigauto_pooled` | `pool_mi()` | tidy data.frame with Rubin's-rules pooled coefficients (`estimate`, `std.error`, `df`, `fmi`, `riv`, ...) |
 
-The pipeline functions are for fine-grained control and for writing benchmarks. For the multiple-imputation → downstream-inference workflow, see `R/multi_impute.R` → `R/with_imputations.R` → `R/pool_mi.R` (Rubin 1987; Barnard & Rubin 1999; Nakagawa & Freckleton 2008, 2011). User-facing tutorials: `inst/doc/pigauto_workflow.html` is the continuous-only walkthrough (reconciliation, Path A, Path C); `inst/doc/pigauto_workflow_mixed.html` covers mixed-type imputation (continuous + categorical + ordinal) and all three analysis paths (Path A = pigauto+glmmTMB+Rubin; Path B = pigauto+MCMCglmm+posterior concatenation; Path C = BACE integrated).
+The pipeline functions are for fine-grained control and for writing benchmarks. For the multiple-imputation → downstream-inference workflow, see `R/multi_impute.R` → `R/with_imputations.R` → `R/pool_mi.R` (Rubin 1987; Barnard & Rubin 1999; Nakagawa & Freckleton 2008, 2011). User-facing tutorial: `inst/doc/pigauto_workflow_mixed.html` (source: `script/make_workflow_mixed_html.R`) is the self-contained walk-through on the bundled AVONET 300 mixed-type dataset, covering all three analysis paths (Path A = pigauto+glmmTMB+Rubin; Path B = pigauto+MCMCglmm+posterior concatenation; Path C = BACE integrated). There is no continuous-only sibling tutorial — it was removed in the v0.3.0 docs cleanup because the mixed-type walk-through strictly covers it.
 
 ### Trait-type handling
 

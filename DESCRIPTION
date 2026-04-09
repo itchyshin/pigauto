@@ -34,7 +34,6 @@ Suggests:
     knitr,
     rmarkdown,
     pkgdown,
-    ggtree,
     reticulate,
     BACE,
     MCMCglmm,
