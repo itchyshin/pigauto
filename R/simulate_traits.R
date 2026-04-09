@@ -4,7 +4,7 @@
 # providing scenarios where the GNN's residual correction can add value over
 # the BM baseline.
 #
-# Not exported — used by script/benchmark_simulation.R only.
+# Not exported -- used by script/benchmark_simulation.R only.
 
 #' Simulate non-BM trait data for benchmarking
 #'

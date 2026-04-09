@@ -1,7 +1,7 @@
 #' Pool downstream model fits across multiple imputations (Rubin's rules)
 #'
-#' Combine regression coefficients from `M` model fits — one per imputed
-#' dataset — into a single pooled table using Rubin's rules. The pooled
+#' Combine regression coefficients from `M` model fits -- one per imputed
+#' dataset -- into a single pooled table using Rubin's rules. The pooled
 #' standard errors properly account for *both* within-imputation sampling
 #' variance and between-imputation variance, so downstream inference
 #' propagates the uncertainty introduced by imputation.
@@ -10,13 +10,13 @@
 #'   implementing `coef()` and `vcov()` works (e.g. [`stats::lm`],
 #'   [`nlme::gls`], [`lme4::lmer`], `glmmTMB::glmmTMB`, `phylolm::phylolm`,
 #'   `phylolm::phyloglm`). The output of [with_imputations()] is accepted
-#'   directly. `MCMCglmm` fits are rejected — see Details.
+#'   directly. `MCMCglmm` fits are rejected -- see Details.
 #' @param conf.level Confidence level for the pooled interval (default
 #'   `0.95`).
 #' @param coef_fun Function extracting a named numeric coefficient vector
 #'   from one fit. Defaults to [stats::coef()]. Supply a custom extractor
 #'   for models where `coef()` returns a list (e.g. `glmmTMB` with multiple
-#'   components) — see Examples.
+#'   components) -- see Examples.
 #' @param vcov_fun Function extracting the variance-covariance matrix of
 #'   the fixed-effect coefficients. Defaults to [stats::vcov()]. Must
 #'   return a square matrix whose row/column names match `coef_fun(fit)`.
@@ -64,7 +64,7 @@
 #' tool for posterior samples: variance decomposition does not generalise
 #' cleanly to posterior distributions. For a Bayesian pigauto workflow
 #' (pigauto as imputer, MCMCglmm as inference engine), concatenate the
-#' posterior samples across imputations manually — stack `fit$Sol` and
+#' posterior samples across imputations manually -- stack `fit$Sol` and
 #' `fit$VCV` row-wise with `do.call(rbind, ...)` and wrap the result in
 #' `coda::as.mcmc()`. See section 7 of the `pigauto_workflow_mixed`
 #' tutorial (`system.file("doc", "pigauto_workflow_mixed.html",
@@ -78,15 +78,15 @@
 #' Wiley.
 #'
 #' Barnard J, Rubin DB (1999). "Small-sample degrees of freedom with
-#' multiple imputation." *Biometrika* 86(4): 948–955.
+#' multiple imputation." *Biometrika* 86(4): 948-955.
 #'
 #' Nakagawa S, Freckleton RP (2008). "Missing inaction: the dangers of
 #' ignoring missing data." *Trends in Ecology & Evolution* 23(11):
-#' 592–596.
+#' 592-596.
 #'
 #' Nakagawa S, Freckleton RP (2011). "Model averaging, missing data and
 #' multiple imputation: a case study for behavioural ecology."
-#' *Behavioral Ecology and Sociobiology* 65(1): 103–116.
+#' *Behavioral Ecology and Sociobiology* 65(1): 103-116.
 #'
 #' @seealso [multi_impute()], [with_imputations()]
 #'
@@ -134,7 +134,7 @@ pool_mi <- function(fits,
     stop("Need at least 2 fits to pool; got ", M, ".", call. = FALSE)
   }
 
-  # MCMCglmm detection — Rubin's rules don't apply cleanly to posteriors.
+  # MCMCglmm detection -- Rubin's rules don't apply cleanly to posteriors.
   if (inherits(fits[[1]], "MCMCglmm")) {
     stop(
       "pool_mi() applies Rubin's rules and is not appropriate for ",
@@ -163,7 +163,7 @@ pool_mi <- function(fits,
   if (!all(coef_classes)) {
     stop("`coef_fun()` must return a named numeric vector for every fit. ",
          "If your model returns a list (e.g. glmmTMB), supply a custom ",
-         "`coef_fun` — see the Examples section of ?pool_mi.",
+         "`coef_fun` -- see the Examples section of ?pool_mi.",
          call. = FALSE)
   }
 

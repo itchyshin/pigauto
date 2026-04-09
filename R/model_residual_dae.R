@@ -1,4 +1,4 @@
-# ResidualPhyloDAE — internal nn_module, not exported.
+# ResidualPhyloDAE -- internal nn_module, not exported.
 #
 # Architecture:
 #   Input  : x (n_obs x p), coords (n_species x k), covs (n_obs x cov_dim)
@@ -102,11 +102,11 @@ ResidualPhyloDAE <- torch::nn_module(
   },
 
   forward = function(x, coords, covs, adj, obs_to_species = NULL) {
-    # x:     (n_obs x p)      — input traits (possibly with mask tokens)
-    # coords: (n_species x k) — spectral coordinates (species-level)
-    # covs:  (n_obs x cov_dim) — covariates (baseline + mask indicator)
-    # adj:   (n_species x n_species) — phylogenetic adjacency
-    # obs_to_species: long tensor (n_obs,) — maps obs to species index.
+    # x:     (n_obs x p)      -- input traits (possibly with mask tokens)
+    # coords: (n_species x k) -- spectral coordinates (species-level)
+    # covs:  (n_obs x cov_dim) -- covariates (baseline + mask indicator)
+    # adj:   (n_species x n_species) -- phylogenetic adjacency
+    # obs_to_species: long tensor (n_obs,) -- maps obs to species index.
     #   NULL when single-obs (n_obs = n_species).
 
     multi_obs <- !is.null(obs_to_species)

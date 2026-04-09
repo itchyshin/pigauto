@@ -32,7 +32,7 @@
 #' \dontrun{
 #' mi <- multi_impute(df, tree, m = 50)
 #'
-#' # nlme::gls example — zero new dependencies
+#' # nlme::gls example -- zero new dependencies
 #' fits <- with_imputations(mi, function(d) {
 #'   d$species <- rownames(d)
 #'   nlme::gls(

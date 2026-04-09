@@ -298,9 +298,13 @@ graph <- build_phylo_graph(tree300, k_eigen = 8, cache_path = "tree300_graph.rds
 ```
 
 **Large trees (N > 2000).** `build_phylo_graph()` computes a dense N × N
-cophenetic distance matrix, which requires ~32 GB RAM at N = 3000. Run
-on a machine with enough memory, or prune the tree to a taxonomic
-subset before calling `impute()`.
+cophenetic distance matrix (about 800 MB at N = 10,000) and then a
+dense Laplacian eigendecomposition. The real bottleneck at large N is
+CPU time on the eigendecomposition, which is O(N^3) and takes hours
+at N = 10,000 on the current implementation, not memory. If you need
+pigauto on trees larger than a few thousand tips, prune to a clade of
+interest before calling `impute()`, or watch for a future release that
+switches to a sparse Lanczos eigensolver.
 
 **Supplying your own data.** The workflow above works for any phylogenetic tree
 and trait matrix:

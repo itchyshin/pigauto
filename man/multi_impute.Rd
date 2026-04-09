@@ -61,7 +61,7 @@ to \code{\link[=with_imputations]{with_imputations()}} to fit downstream models.
 \item{\code{m}}{Number of imputations.}
 \item{\code{pooled_point}}{A single data.frame whose missing cells
 are replaced by the MC-averaged point estimate. Convenient for
-reporting but does \emph{not} propagate imputation uncertainty —
+reporting but does \emph{not} propagate imputation uncertainty --
 use \code{datasets} + \code{\link[=pool_mi]{pool_mi()}} for inference.}
 \item{\code{se}}{Matrix of per-cell standard errors combining the
 baseline SE and the between-imputation standard deviation.}
@@ -129,11 +129,11 @@ Wiley.
 
 Nakagawa S, Freckleton RP (2008). "Missing inaction: the dangers of
 ignoring missing data." \emph{Trends in Ecology & Evolution} 23(11):
-592–596.
+592-596.
 
 Nakagawa S, Freckleton RP (2011). "Model averaging, missing data and
 multiple imputation: a case study for behavioural ecology."
-\emph{Behavioral Ecology and Sociobiology} 65(1): 103–116.
+\emph{Behavioral Ecology and Sociobiology} 65(1): 103-116.
 }
 \seealso{
 \code{\link[=impute]{impute()}} for single-point imputation, \code{\link[=with_imputations]{with_imputations()}}

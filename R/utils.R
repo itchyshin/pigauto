@@ -1,4 +1,4 @@
-# Internal utility functions — not exported
+# Internal utility functions -- not exported
 
 rmse_vec <- function(truth, pred) {
   sqrt(mean((truth - pred)^2, na.rm = TRUE))

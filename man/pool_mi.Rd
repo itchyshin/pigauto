@@ -17,7 +17,7 @@ pool_mi(
 implementing \code{coef()} and \code{vcov()} works (e.g. \code{\link[stats:lm]{stats::lm}},
 \code{\link[nlme:gls]{nlme::gls}}, \code{\link[lme4:lmer]{lme4::lmer}}, \code{glmmTMB::glmmTMB}, \code{phylolm::phylolm},
 \code{phylolm::phyloglm}). The output of \code{\link[=with_imputations]{with_imputations()}} is accepted
-directly. \code{MCMCglmm} fits are rejected — see Details.}
+directly. \code{MCMCglmm} fits are rejected -- see Details.}
 
 \item{conf.level}{Confidence level for the pooled interval (default
 \code{0.95}).}
@@ -25,7 +25,7 @@ directly. \code{MCMCglmm} fits are rejected — see Details.}
 \item{coef_fun}{Function extracting a named numeric coefficient vector
 from one fit. Defaults to \code{\link[stats:coef]{stats::coef()}}. Supply a custom extractor
 for models where \code{coef()} returns a list (e.g. \code{glmmTMB} with multiple
-components) — see Examples.}
+components) -- see Examples.}
 
 \item{vcov_fun}{Function extracting the variance-covariance matrix of
 the fixed-effect coefficients. Defaults to \code{\link[stats:vcov]{stats::vcov()}}. Must
@@ -54,8 +54,8 @@ supplied, else classical Rubin).}
 }
 }
 \description{
-Combine regression coefficients from \code{M} model fits — one per imputed
-dataset — into a single pooled table using Rubin's rules. The pooled
+Combine regression coefficients from \code{M} model fits -- one per imputed
+dataset -- into a single pooled table using Rubin's rules. The pooled
 standard errors properly account for \emph{both} within-imputation sampling
 variance and between-imputation variance, so downstream inference
 propagates the uncertainty introduced by imputation.
@@ -83,7 +83,7 @@ Barnard-Rubin (1999) correction combines
 tool for posterior samples: variance decomposition does not generalise
 cleanly to posterior distributions. For a Bayesian pigauto workflow
 (pigauto as imputer, MCMCglmm as inference engine), concatenate the
-posterior samples across imputations manually — stack \code{fit$Sol} and
+posterior samples across imputations manually -- stack \code{fit$Sol} and
 \code{fit$VCV} row-wise with \code{do.call(rbind, ...)} and wrap the result in
 \code{coda::as.mcmc()}. See section 7 of the \code{pigauto_workflow_mixed}
 tutorial (\code{system.file("doc", "pigauto_workflow_mixed.html", package = "pigauto")}) for a worked example. For an integrated
@@ -112,15 +112,15 @@ Rubin DB (1987). \emph{Multiple Imputation for Nonresponse in Surveys.}
 Wiley.
 
 Barnard J, Rubin DB (1999). "Small-sample degrees of freedom with
-multiple imputation." \emph{Biometrika} 86(4): 948–955.
+multiple imputation." \emph{Biometrika} 86(4): 948-955.
 
 Nakagawa S, Freckleton RP (2008). "Missing inaction: the dangers of
 ignoring missing data." \emph{Trends in Ecology & Evolution} 23(11):
-592–596.
+592-596.
 
 Nakagawa S, Freckleton RP (2011). "Model averaging, missing data and
 multiple imputation: a case study for behavioural ecology."
-\emph{Behavioral Ecology and Sociobiology} 65(1): 103–116.
+\emph{Behavioral Ecology and Sociobiology} 65(1): 103-116.
 }
 \seealso{
 \code{\link[=multi_impute]{multi_impute()}}, \code{\link[=with_imputations]{with_imputations()}}

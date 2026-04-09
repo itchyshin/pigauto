@@ -12,7 +12,7 @@ build_phylo_graph(tree, k_eigen = "auto", sigma_mult = 0.5, cache_path = NULL)
 \item{k_eigen}{integer or \code{"auto"}. Number of Laplacian eigenvectors
 to use as node features.  When \code{"auto"} (default), scales with tree
 size: \code{min(max(ceiling(n/20), 4), 32)}, giving 4 for very small
-trees, 8 for 100–160 tips, 15 for 300 tips, and 32 for 640+ tips.}
+trees, 8 for 100-160 tips, 15 for 300 tips, and 32 for 640+ tips.}
 
 \item{sigma_mult}{numeric. Bandwidth multiplier:
 \eqn{\sigma = \mathrm{median}(D) \times \code{sigma_mult}}

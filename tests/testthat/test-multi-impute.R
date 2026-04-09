@@ -324,7 +324,7 @@ test_that("pool_mi() works end-to-end with glmmTMB + propto()", {
 # ---- 10. pool_mi() rejects MCMCglmm fits ------------------------------------
 
 test_that("pool_mi() errors cleanly when passed MCMCglmm fits", {
-  # Fake MCMCglmm-classed objects — no need to actually run MCMCglmm.
+  # Fake MCMCglmm-classed objects -- no need to actually run MCMCglmm.
   fake <- structure(list(), class = "MCMCglmm")
   expect_error(
     pool_mi(list(fake, fake)),

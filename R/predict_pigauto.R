@@ -486,8 +486,8 @@ pool_imputations <- function(decode_results, latent_runs, trait_map) {
 compute_mc_se <- function(decode_results, trait_map, baseline_se,
                           latent_mean, species_names) {
   # Combines two sources of uncertainty:
-  # 1. Baseline (Rphylopars) SE — phylogenetic imputation uncertainty
-  # 2. MC dropout between-imputation SD — GNN correction uncertainty
+  # 1. Baseline (Rphylopars) SE -- phylogenetic imputation uncertainty
+  # 2. MC dropout between-imputation SD -- GNN correction uncertainty
   # Combined in quadrature: SE_total = sqrt(SE_BM^2 + SE_MC^2)
   M <- length(decode_results)
   n <- nrow(decode_results[[1]]$imputed)

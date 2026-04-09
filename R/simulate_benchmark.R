@@ -9,14 +9,14 @@
 #' @details
 #' **Available scenarios:**
 #' \describe{
-#'   \item{\code{"BM"}}{Pure Brownian motion — the baseline is exact,
+#'   \item{\code{"BM"}}{Pure Brownian motion -- the baseline is exact,
 #'     so the GNN should tie or slightly improve via inter-trait
 #'     correlations.}
-#'   \item{\code{"OU"}}{Ornstein-Uhlenbeck — stabilising selection
+#'   \item{\code{"OU"}}{Ornstein-Uhlenbeck -- stabilising selection
 #'     constrains variation.  BM over-estimates evolutionary variance.}
-#'   \item{\code{"regime_shift"}}{Two-regime BM — clade-specific optima
+#'   \item{\code{"regime_shift"}}{Two-regime BM -- clade-specific optima
 #'     create bimodal distributions that BM cannot capture.}
-#'   \item{\code{"nonlinear"}}{Non-linear inter-trait relationships —
+#'   \item{\code{"nonlinear"}}{Non-linear inter-trait relationships --
 #'     the GNN's multi-layer message passing can capture quadratic and
 #'     interaction effects that BM's linear covariance misses.}
 #'   \item{\code{"mixed"}}{Mixed trait types: 2 continuous + 1 binary +

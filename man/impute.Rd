@@ -53,7 +53,7 @@ An object of class \code{"pigauto_result"} with components:
 \describe{
 \item{completed}{The input \code{traits} data.frame with observed
 values preserved and only missing cells filled in.  This is the
-primary output — typically what users want.}
+primary output -- typically what users want.}
 \item{imputed_mask}{Logical matrix (same shape as \code{completed})
 that is \code{TRUE} for cells that were imputed (originally
 \code{NA}) and \code{FALSE} for observed cells.}

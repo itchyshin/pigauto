@@ -1,4 +1,4 @@
-# Internal torch helpers — not exported
+# Internal torch helpers -- not exported
 
 # Detect best available device (CUDA > MPS > CPU)
 get_device <- function() {

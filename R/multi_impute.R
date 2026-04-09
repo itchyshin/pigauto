@@ -42,7 +42,7 @@
 #'     \item{`m`}{Number of imputations.}
 #'     \item{`pooled_point`}{A single data.frame whose missing cells
 #'       are replaced by the MC-averaged point estimate. Convenient for
-#'       reporting but does *not* propagate imputation uncertainty —
+#'       reporting but does *not* propagate imputation uncertainty --
 #'       use `datasets` + [pool_mi()] for inference.}
 #'     \item{`se`}{Matrix of per-cell standard errors combining the
 #'       baseline SE and the between-imputation standard deviation.}
@@ -77,11 +77,11 @@
 #'
 #' Nakagawa S, Freckleton RP (2008). "Missing inaction: the dangers of
 #' ignoring missing data." *Trends in Ecology & Evolution* 23(11):
-#' 592–596.
+#' 592-596.
 #'
 #' Nakagawa S, Freckleton RP (2011). "Model averaging, missing data and
 #' multiple imputation: a case study for behavioural ecology."
-#' *Behavioral Ecology and Sociobiology* 65(1): 103–116.
+#' *Behavioral Ecology and Sociobiology* 65(1): 103-116.
 #'
 #' @seealso [impute()] for single-point imputation, [with_imputations()]
 #'   for applying a model-fitting function across the `M` datasets,
@@ -139,7 +139,7 @@ multi_impute <- function(traits, tree, m = 100L,
   pred <- res$prediction
   if (is.null(pred$imputed_datasets) || length(pred$imputed_datasets) != m) {
     stop("predict.pigauto_fit() did not return ", m,
-         " imputed datasets. This is an internal error — please report.",
+         " imputed datasets. This is an internal error -- please report.",
          call. = FALSE)
   }
 
