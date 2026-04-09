@@ -77,16 +77,34 @@ html <- paste0(
 phylogenetic comparative methods (PCM) pipeline: load the raw data,
 inspect missingness, load a phylogeny, reconcile species names, impute
 missing trait values with uncertainty, fit the downstream model, and
-pool the results. Two analysis paths are shown side by side:</p>
+pool the results. Three analysis paths are sketched below; this
+tutorial shows Path&nbsp;A and Path&nbsp;C in full on a continuous-only
+example, and points at the mixed-type companion tutorial for
+Path&nbsp;B and a worked mixed-type example of all three.</p>
 
 <ul>
-<li><b>Frequentist path</b> &mdash; <code>pigauto::multi_impute()</code> &rarr;
-<code>glmmTMB</code> with <code>propto()</code> &rarr; Rubin&rsquo;s rules via
-<code>pigauto::pool_mi()</code>.</li>
-<li><b>Bayesian path</b> &mdash; <code>BACE::bace()</code> (Bayesian chained
-equations on MCMCglmm) &rarr; posterior concatenation via
-<code>BACE::pool_posteriors()</code>.</li>
+<li><b>Path A &mdash; frequentist.</b> <code>pigauto::multi_impute()</code>
+&rarr; <code>glmmTMB</code> with <code>propto()</code> &rarr;
+Rubin&rsquo;s rules via <code>pigauto::pool_mi()</code>.</li>
+<li><b>Path B &mdash; Bayesian with pigauto as imputer.</b>
+<code>pigauto::multi_impute()</code> &rarr; <code>MCMCglmm</code> on
+each imputed dataset &rarr; posterior concatenation. This is the
+Nakagawa&nbsp;&amp;&nbsp;Freckleton&nbsp;(2011) recipe for Bayesian
+multiple imputation in comparative analyses; pigauto supplies the
+imputer, <code>MCMCglmm</code> supplies the inference engine.</li>
+<li><b>Path C &mdash; integrated Bayesian.</b> <code>BACE::bace()</code>
+does chained-equation imputation and inference in a single
+<code>MCMCglmm</code>-based engine, then <code>pool_posteriors()</code>
+concatenates the final runs.</li>
 </ul>
+
+<p>Paths&nbsp;A, B, and C are three distinct recipes. Paths&nbsp;A and
+B share the same imputer (pigauto) and differ in the downstream
+inference engine; Paths&nbsp;B and C share the same downstream engine
+(<code>MCMCglmm</code>) and differ in the imputer. For a worked
+mixed-type example that exercises all three paths on categorical and
+ordinal traits, see the companion tutorial
+<code>pigauto_workflow_mixed.html</code>.</p>
 
 <p>Three R packages are involved. They are complementary:</p>
 
@@ -388,11 +406,17 @@ single pooled posterior that captures both within- and
 between-imputation variance (Nakagawa &amp; Freckleton 2008, 2011;
 Zhang, Parnell, Hadfield &amp; Pohl, 2020+).</p>
 
-<p>The important thing to notice is that in the Bayesian path,
-imputation and inference happen <b>inside the same MCMC engine</b>
-(<code>MCMCglmm</code>). You do not feed pigauto draws into BACE; BACE
-does its own imputation. Pigauto and BACE are alternative first-stage
-imputers, not partners in a single pipeline.</p>
+<p>BACE runs chained-equation imputation and inference inside the same
+<code>MCMCglmm</code>-based engine; its <code>pool_posteriors()</code>
+concatenates the posterior samples from the final runs for you. Note
+that BACE is a <i>different</i> recipe from feeding pigauto&rsquo;s
+multiple imputations into <code>MCMCglmm</code> fits (Path&nbsp;B in
+the mixed-type companion tutorial). Both are valid Bayesian multiple-
+imputation workflows: pigauto&nbsp;+&nbsp;MCMCglmm is faster and uses
+pigauto&rsquo;s GNN as the first-stage imputer; BACE is a single
+integrated sampler. See
+<code>pigauto_workflow_mixed.html</code> section&nbsp;7 for a worked
+Path&nbsp;B example and section&nbsp;8 for Path&nbsp;C.</p>
 
 <pre class="bayes"><code>library(BACE)
 
@@ -424,50 +448,65 @@ each draw reflects both parameter uncertainty and imputation
 uncertainty.</p>
 
 <div class="bayesbox">
-<b>Why not just use pigauto draws as input to MCMCglmm?</b> You can,
-and it will run, but it is not the same thing. Feeding pigauto&rsquo;s
-100 completions into 100 separate <code>MCMCglmm</code> fits and
-concatenating the Sol chains is a hybrid that assumes the first-stage
-imputation distribution is already Bayesian-valid under your prior.
-For a clean Bayesian workflow, use <code>BACE</code> end-to-end. For a
-clean frequentist workflow, use <code>pigauto</code>+<code>glmmTMB</code>+
-<code>pool_mi</code>. Mix them only with a concrete reason.
+<b>Can I use pigauto draws as input to MCMCglmm?</b> Yes &mdash; and
+that is Path&nbsp;B. Feeding <code>pigauto::multi_impute()</code>
+completions into <code>M</code> separate <code>MCMCglmm</code> fits
+and concatenating the <code>$Sol</code> chains is the canonical
+Bayesian multiple-imputation recipe of
+Nakagawa&nbsp;&amp;&nbsp;Freckleton&nbsp;(2011), with pigauto playing
+the role of the first-stage imputer. BACE is a <i>different</i>
+Bayesian recipe (chained-equation imputation and inference in one
+engine); neither is a substitute for the other. The mixed-type
+companion tutorial (<code>pigauto_workflow_mixed.html</code>) works
+through both Path&nbsp;B (section&nbsp;7) and Path&nbsp;C
+(section&nbsp;8) on a genuinely mixed dataset, alongside Path&nbsp;A.
 </div>
 
 <h2 id="choose"><span class="num">8.</span> Which path should I take?</h2>
 
 <table>
 <tr><th></th>
-    <th>Frequentist path</th>
-    <th>Bayesian path</th></tr>
+    <th>Path A<br><span class="meta">pigauto + glmmTMB + Rubin</span></th>
+    <th>Path B<br><span class="meta">pigauto + MCMCglmm + concat</span></th>
+    <th>Path C<br><span class="meta">BACE integrated</span></th></tr>
 <tr><td><b>Imputer</b></td>
-    <td><code>pigauto::multi_impute()</code></td>
-    <td><code>BACE::bace()</code></td></tr>
+    <td><code>pigauto::multi_impute()</code> (GNN)</td>
+    <td><code>pigauto::multi_impute()</code> (GNN)</td>
+    <td><code>BACE::bace()</code> (chained-equation MCMC)</td></tr>
 <tr><td><b>Downstream model</b></td>
     <td><code>glmmTMB</code> / <code>gls</code> / <code>phylolm</code> / any fit with <code>coef()</code> + <code>vcov()</code></td>
-    <td><code>MCMCglmm</code></td></tr>
+    <td><code>MCMCglmm</code></td>
+    <td><code>MCMCglmm</code> (inside BACE)</td></tr>
 <tr><td><b>Pooling</b></td>
     <td>Rubin&rsquo;s rules via <code>pigauto::pool_mi()</code></td>
-    <td>Posterior concatenation via <code>BACE::pool_posteriors()</code></td></tr>
+    <td>Posterior concatenation (stack <code>$Sol</code> across M fits)</td>
+    <td><code>BACE::pool_posteriors()</code></td></tr>
 <tr><td><b>Mixed trait types</b></td>
-    <td>Native (continuous, count, ordinal, binary, categorical)</td>
-    <td>Handled through <code>MCMCglmm</code> families</td></tr>
+    <td>Native in pigauto; regression via <code>glmmTMB</code> families</td>
+    <td>Native in pigauto; regression via <code>MCMCglmm</code> families</td>
+    <td>Native in BACE; regression via <code>MCMCglmm</code> families</td></tr>
 <tr><td><b>Runtime</b></td>
-    <td>Minutes to a few hours on CPU</td>
-    <td>Hours to overnight</td></tr>
+    <td>Minutes to a few hours</td>
+    <td>1&ndash;4 hours (per-fit MCMC)</td>
+    <td>Hours to overnight (chained-equation MCMC)</td></tr>
 <tr><td><b>Uncertainty returned</b></td>
-    <td>Standard errors, <code>fmi</code>, <code>riv</code>, Barnard&ndash;Rubin df</td>
-    <td>Full posterior with HPD intervals</td></tr>
+    <td>SE, <code>fmi</code>, <code>riv</code>, Barnard&ndash;Rubin df</td>
+    <td>Full posterior with HPD intervals</td>
+    <td>Full posterior with HPD intervals, DIC</td></tr>
 <tr><td><b>When to prefer</b></td>
-    <td>Fast iteration, larger trees, reporting CIs and p-values in a regression table</td>
-    <td>Strong priors, formal Bayesian workflow, posterior-predictive checks, small datasets where MCMC is tractable</td></tr>
+    <td>Fast iteration, reporting CIs and p-values in a regression table, continuous response</td>
+    <td>You already use <code>MCMCglmm</code> for inference but want pigauto&rsquo;s fast GNN as the imputer (Nakagawa&nbsp;&amp;&nbsp;Freckleton&nbsp;2011 recipe)</td>
+    <td>Formal Bayesian workflow with informative priors; categorical uncertainty needs to flow through posteriors</td></tr>
 </table>
 
-<p>Both paths share the first four steps (data, missing data, tree,
-matching). Only from step&nbsp;5 onwards do they diverge. In practice, it is
-worth running both on a new dataset the first time, comparing the
-pooled coefficient estimates, and reporting the path whose assumptions
-you are most willing to defend.</p>
+<p>All three paths share the first four steps (data, missing data,
+tree, matching). Only from step&nbsp;5 onwards do they diverge. This
+tutorial walks through Path&nbsp;A and Path&nbsp;C in full on a
+continuous-only example. For a worked Path&nbsp;B example &mdash;
+<code>pigauto::multi_impute()</code> &rarr;
+<code>MCMCglmm</code> &rarr; posterior concatenation &mdash; and for
+all three paths side by side on a <i>mixed-type</i> trait matrix, see
+the companion tutorial <code>pigauto_workflow_mixed.html</code>.</p>
 
 <h2>References</h2>
 <ul>

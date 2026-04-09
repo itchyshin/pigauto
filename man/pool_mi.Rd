@@ -81,9 +81,15 @@ Barnard-Rubin (1999) correction combines
 
 \strong{MCMCglmm fits} are rejected because Rubin's rules are not the right
 tool for posterior samples: variance decomposition does not generalise
-cleanly to posterior distributions. For a fully Bayesian alternative,
-concatenate posterior samples across imputations — see
-\code{BACE::pool_posteriors()} in the companion BACE package.
+cleanly to posterior distributions. For a Bayesian pigauto workflow
+(pigauto as imputer, MCMCglmm as inference engine), concatenate the
+posterior samples across imputations manually — stack \code{fit$Sol} and
+\code{fit$VCV} row-wise with \code{do.call(rbind, ...)} and wrap the result in
+\code{coda::as.mcmc()}. See section 7 of the \code{pigauto_workflow_mixed}
+tutorial (\code{system.file("doc", "pigauto_workflow_mixed.html", package = "pigauto")}) for a worked example. For an integrated
+chained-equation MCMC workflow where imputation and inference happen
+in a single engine, use the companion BACE package end-to-end
+(\code{BACE::bace()} + \code{BACE::pool_posteriors()}).
 }
 \examples{
 \dontrun{
