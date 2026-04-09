@@ -4,7 +4,7 @@
 \alias{fit_baseline}
 \title{Fit a phylogenetic BM baseline using Rphylopars}
 \usage{
-fit_baseline(data, tree, splits = NULL, model = "BM")
+fit_baseline(data, tree, splits = NULL, model = "BM", graph = NULL)
 }
 \arguments{
 \item{data}{object of class \code{"pigauto_data"}.}
@@ -16,6 +16,13 @@ fit_baseline(data, tree, splits = NULL, model = "BM")
 
 \item{model}{character. Evolutionary model: \code{"BM"} (default) or
 \code{"OU"}.}
+
+\item{graph}{optional list returned by \code{\link{build_phylo_graph}}.
+When supplied, the cophenetic distance matrix stored in
+\code{graph$D} is reused for label propagation instead of
+recomputing it from \code{tree}. This saves an \eqn{O(n^2)} matrix
+allocation on large trees. When \code{NULL} (default), the
+distance matrix is computed here via \code{ape::cophenetic.phylo}.}
 }
 \value{
 A list with:

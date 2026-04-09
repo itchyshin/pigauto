@@ -1,35 +1,90 @@
 # Internal helpers -------------------------------------------------------
 
-# Correct spectral features: smallest non-zero Laplacian eigenvectors.
-# Returns plain R matrix (n x k); tensors are created in fit_pigauto().
-# Source: script/test_new6.R lines 34-56 (fixed ordering).
-get_spectral_features_internal <- function(tree, k, sigma_mult) {
-  D     <- ape::cophenetic.phylo(tree)
+# Smallest non-zero Laplacian eigenvectors from a precomputed distance matrix.
+#
+# Given a cophenetic distance matrix `D`, this builds the Gaussian-kernel
+# graph Laplacian and returns the (k+1) smallest eigenvectors. The first
+# eigenvector (~constant, eigenvalue ~0) is dropped and the remaining `k`
+# are returned as an (n x k) matrix.
+#
+# Uses RSpectra::eigs_sym (sparse Lanczos) when the package is available and
+# n > `dense_threshold`, which is O(n * k * iters) instead of O(n^3).
+# Falls back to base::eigen() for small trees or when RSpectra is absent,
+# so the package works without RSpectra installed.
+#
+# Why the threshold is 7500 and not smaller: on highly symmetric ultrametric
+# trees (e.g. those produced by ape::rcoal) the Laplacian spectrum has tight
+# degenerate clusters, and Lanczos needs many iterations to separate
+# eigenvalues inside those clusters. Empirically, dense eigen() is faster
+# than sparse eigs_sym() on rcoal trees up to ~7500 tips, and only clearly
+# wins above that. On realistic asymmetric phylogenies (variable branch
+# lengths, cherries of different ages) the crossover is much earlier -- the
+# AVONET BirdTree Stage2 Hackett MCC tree (9,993 tips) solves in ~40s
+# sparse vs >400s dense, a 10x speedup. The conservative threshold ensures
+# the sparse path is only used where it reliably wins even on worst-case
+# ultrametric trees, while still unlocking the scaling path for real 10k+
+# phylogenies.
+spectral_features_from_D <- function(D, k, sigma_mult,
+                                     dense_threshold = 7500L) {
   sigma <- stats::median(D) * sigma_mult
   A     <- exp(-(D^2) / (2 * sigma^2))
   diag(A) <- 0
-
-  L   <- diag(rowSums(A)) - A
-  eig <- eigen(L, symmetric = TRUE)
-
-  # eigen() returns eigenvalues in DECREASING order for symmetric matrices;
-  # re-sort ascending to get smallest first.
-  ord  <- order(eig$values, decreasing = FALSE)
-  vecs <- eig$vectors[, ord, drop = FALSE]
 
   n <- nrow(A)
   if (k + 1L > n) {
     stop("k_eigen (", k, ") is too large for a tree with ", n, " tips. ",
          "Use k_eigen < ", n - 1L, ".")
   }
-  # Skip vector 1 (constant, eigenvalue ~0); take next k.
+
+  L <- diag(rowSums(A)) - A
+
+  use_rspectra <- n > dense_threshold &&
+    requireNamespace("RSpectra", quietly = TRUE)
+
+  if (use_rspectra) {
+    # Direct Lanczos via `which = "SA"` (smallest algebraic). This is
+    # robust on positive-semidefinite matrices with a zero eigenvalue,
+    # unlike shift-and-invert with sigma near zero (which makes the
+    # shifted operator nearly singular) or `which = "SM"` (which uses
+    # shift-and-invert internally and suffers from the same problem).
+    #
+    # On highly symmetric ultrametric trees (e.g. ape::rcoal) the
+    # Laplacian spectrum contains tight degenerate clusters; Lanczos
+    # needs a larger Krylov subspace to resolve enough eigenvalues from
+    # inside a cluster. We use `ncv = max(4*(k+1) + 1, 20)` which is
+    # conservative enough to converge on rcoal trees from n = 600 to
+    # n = 10,000, empirically in a few seconds.
+    ncv <- as.integer(min(n, max(4L * (k + 1L) + 1L, 20L)))
+    eig <- tryCatch(
+      RSpectra::eigs_sym(L, k = k + 1L, which = "SA",
+                         opts = list(maxitr = 10000L, tol = 1e-9,
+                                     ncv = ncv)),
+      warning = function(w) NULL,
+      error   = function(e) NULL
+    )
+    if (!is.null(eig) && length(eig$values) == k + 1L) {
+      ord  <- order(eig$values, decreasing = FALSE)
+      vecs <- eig$vectors[, ord, drop = FALSE]
+      return(vecs[, 2L:(k + 1L), drop = FALSE])
+    }
+    # If RSpectra failed or returned fewer eigenvalues than requested,
+    # fall through to the dense path.
+    warning("RSpectra::eigs_sym did not converge with k = ", k + 1L,
+            " eigenvalues; falling back to dense eigen().",
+            call. = FALSE)
+  }
+
+  # Dense fallback: base::eigen() is O(n^3) but rock-solid for small n
+  # and is the reference implementation we test against.
+  eig  <- eigen(L, symmetric = TRUE)
+  ord  <- order(eig$values, decreasing = FALSE)
+  vecs <- eig$vectors[, ord, drop = FALSE]
   vecs[, 2L:(k + 1L), drop = FALSE]
 }
 
-# Symmetric-normalised Gaussian kernel adjacency + self-loops.
-# Source: script/test_new6.R lines 58-72.
-get_adj_symnorm_internal <- function(tree, sigma_mult) {
-  D     <- ape::cophenetic.phylo(tree)
+# Symmetric-normalised Gaussian kernel adjacency + self-loops,
+# computed from a precomputed cophenetic distance matrix.
+adj_symnorm_from_D <- function(D, sigma_mult) {
   sigma <- stats::median(D) * sigma_mult
   A     <- exp(-(D^2) / (2 * sigma^2))
   diag(A) <- 1  # self-loops for stability
@@ -60,6 +115,27 @@ get_adj_symnorm_internal <- function(tree, sigma_mult) {
 #' eigenvectors of the unnormalised Laplacian, which encode the broad
 #' cluster structure of the phylogeny.
 #'
+#' @section Scaling:
+#' For trees with more than 7500 tips, \code{build_phylo_graph()} uses
+#' \pkg{RSpectra}'s sparse Lanczos eigensolver (\code{eigs_sym}) instead
+#' of the dense \code{base::eigen()}. This reduces the spectral step
+#' from \eqn{O(n^3)} (hours at \eqn{n = 10{,}000}) to \eqn{O(n \cdot k
+#' \cdot \mathrm{iters})} (seconds to a minute). The threshold is
+#' conservative because the dense eigensolver is competitive on small
+#' and mid-size trees, and on pathological ultrametric simulations
+#' (\code{ape::rcoal}) the Laplacian spectrum has tight degenerate
+#' clusters that slow down Lanczos until the tree is fairly large. On
+#' realistic asymmetric phylogenies with variable branch lengths
+#' (e.g. the AVONET BirdTree Stage2 Hackett tree) the sparse path wins
+#' much earlier, and at \eqn{n = 9{,}993} it delivers a ~10x speedup
+#' over dense. The dense path is kept as the default for smaller trees
+#' and as a fallback when \pkg{RSpectra} is not installed, or if
+#' Lanczos fails to converge. The cophenetic distance matrix is
+#' computed once per call and reused for both the adjacency and the
+#' spectral features; it is also returned in the result so that
+#' downstream consumers (notably \code{\link{fit_baseline}}) can skip
+#' recomputation.
+#'
 #' @param tree object of class \code{"phylo"}.
 #' @param k_eigen integer or \code{"auto"}. Number of Laplacian eigenvectors
 #'   to use as node features.  When \code{"auto"} (default), scales with tree
@@ -77,6 +153,10 @@ get_adj_symnorm_internal <- function(tree, sigma_mult) {
 #'     \item{coords}{Numeric matrix (n x k_eigen). Spectral node features.}
 #'     \item{n}{Integer. Number of tips.}
 #'     \item{sigma}{Numeric. Bandwidth used.}
+#'     \item{D}{Numeric matrix (n x n). Cophenetic (patristic) distances
+#'       between tips, row/column-ordered by \code{tree$tip.label}.
+#'       Returned so downstream functions can reuse it instead of calling
+#'       \code{ape::cophenetic.phylo()} again.}
 #'   }
 #' @examples
 #' set.seed(1)
@@ -84,6 +164,7 @@ get_adj_symnorm_internal <- function(tree, sigma_mult) {
 #' g <- build_phylo_graph(tree, k_eigen = 4)
 #' dim(g$adj)    # 30 x 30
 #' dim(g$coords) # 30 x 4
+#' dim(g$D)      # 30 x 30
 #' @importFrom ape cophenetic.phylo
 #' @export
 build_phylo_graph <- function(tree, k_eigen = "auto", sigma_mult = 0.5,
@@ -98,12 +179,12 @@ build_phylo_graph <- function(tree, k_eigen = "auto", sigma_mult = 0.5,
   }
   k_eigen <- as.integer(k_eigen)
 
-  if (n > 2000L) {
+  if (n > 10000L) {
     warning(
       "build_phylo_graph: tree has ", n, " tips. ",
       "cophenetic() requires O(n^2) memory (~",
       round(n^2 * 8 / 1e6), " MB). ",
-      "Consider subsetting your tree for large datasets."
+      "Consider subsetting your tree for very large datasets."
     )
   }
 
@@ -111,16 +192,28 @@ build_phylo_graph <- function(tree, k_eigen = "auto", sigma_mult = 0.5,
   if (!is.null(cache_path) && file.exists(cache_path)) {
     cache <- readRDS(cache_path)
     if (isTRUE(nrow(cache$adj) == n) && isTRUE(ncol(cache$coords) == k_eigen)) {
+      # Older caches may not have $D; backfill so downstream code can rely
+      # on its presence.
+      if (is.null(cache$D)) {
+        cache$D <- ape::cophenetic.phylo(tree)
+      }
       return(cache)
     }
     message("Cache dimensions mismatch -- recomputing.")
   }
 
-  adj    <- get_adj_symnorm_internal(tree, sigma_mult)
-  coords <- get_spectral_features_internal(tree, k_eigen, sigma_mult)
-  sigma  <- stats::median(ape::cophenetic.phylo(tree)) * sigma_mult
+  # Compute the cophenetic distance matrix exactly once and reuse it for
+  # the adjacency, the spectral features, and sigma. The previous
+  # implementation computed cophenetic() three times inside this function
+  # and a fourth time inside fit_baseline(); caching D here collapses all
+  # four calls into one.
+  D <- ape::cophenetic.phylo(tree)
 
-  result <- list(adj = adj, coords = coords, n = n, sigma = sigma)
+  adj    <- adj_symnorm_from_D(D, sigma_mult)
+  coords <- spectral_features_from_D(D, k_eigen, sigma_mult)
+  sigma  <- stats::median(D) * sigma_mult
+
+  result <- list(adj = adj, coords = coords, n = n, sigma = sigma, D = D)
 
   if (!is.null(cache_path)) {
     saveRDS(result, cache_path)

@@ -29,6 +29,10 @@ A list with:
 \item{coords}{Numeric matrix (n x k_eigen). Spectral node features.}
 \item{n}{Integer. Number of tips.}
 \item{sigma}{Numeric. Bandwidth used.}
+\item{D}{Numeric matrix (n x n). Cophenetic (patristic) distances
+between tips, row/column-ordered by \code{tree$tip.label}.
+Returned so downstream functions can reuse it instead of calling
+\code{ape::cophenetic.phylo()} again.}
 }
 }
 \description{
@@ -48,10 +52,34 @@ Spectral node features are the \code{k_eigen} smallest non-zero
 eigenvectors of the unnormalised Laplacian, which encode the broad
 cluster structure of the phylogeny.
 }
+\section{Scaling}{
+
+For trees with more than 7500 tips, \code{build_phylo_graph()} uses
+\pkg{RSpectra}'s sparse Lanczos eigensolver (\code{eigs_sym}) instead
+of the dense \code{base::eigen()}. This reduces the spectral step
+from \eqn{O(n^3)} (hours at \eqn{n = 10{,}000}) to \eqn{O(n \cdot k
+\cdot \mathrm{iters})} (seconds to a minute). The threshold is
+conservative because the dense eigensolver is competitive on small
+and mid-size trees, and on pathological ultrametric simulations
+(\code{ape::rcoal}) the Laplacian spectrum has tight degenerate
+clusters that slow down Lanczos until the tree is fairly large. On
+realistic asymmetric phylogenies with variable branch lengths
+(e.g. the AVONET BirdTree Stage2 Hackett tree) the sparse path wins
+much earlier, and at \eqn{n = 9{,}993} it delivers a ~10x speedup
+over dense. The dense path is kept as the default for smaller trees
+and as a fallback when \pkg{RSpectra} is not installed, or if
+Lanczos fails to converge. The cophenetic distance matrix is
+computed once per call and reused for both the adjacency and the
+spectral features; it is also returned in the result so that
+downstream consumers (notably \code{\link{fit_baseline}}) can skip
+recomputation.
+}
+
 \examples{
 set.seed(1)
 tree <- ape::rtree(30)
 g <- build_phylo_graph(tree, k_eigen = 4)
 dim(g$adj)    # 30 x 30
 dim(g$coords) # 30 x 4
+dim(g$D)      # 30 x 30
 }

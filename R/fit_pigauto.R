@@ -143,7 +143,9 @@ fit_pigauto <- function(
   # ---- Baseline -------------------------------------------------------------
   if (is.null(baseline)) {
     if (verbose) message("Fitting baseline...")
-    baseline <- fit_baseline(data, tree, splits = splits)
+    # Pass graph through so fit_baseline can reuse graph$D instead of
+    # calling ape::cophenetic.phylo() a second time on the same tree.
+    baseline <- fit_baseline(data, tree, splits = splits, graph = graph)
   }
 
   # ---- Trait map ------------------------------------------------------------
@@ -220,6 +222,16 @@ fit_pigauto <- function(
                                   device = device)
   t_coords <- torch::torch_tensor(graph$coords, dtype = torch::torch_float(),
                                   device = device)
+
+  # Drop the cophenetic distance matrix from fit_pigauto's local view of
+  # the graph now that we have the torch tensors we need. This keeps the
+  # fit object slim on disk (predict() only reads $adj and $coords), but
+  # does NOT free memory at the caller's scope -- R's copy-on-modify
+  # means the caller still holds the original list. Callers that want
+  # to free memory during training should set graph$D <- NULL before
+  # calling fit_pigauto(); impute() already does this, and the
+  # bundled benchmark scripts do the same.
+  graph$D <- NULL
 
   # Observation-to-species mapping for multi-obs (1-indexed for torch-R)
   if (multi_obs) {
@@ -726,6 +738,9 @@ fit_pigauto <- function(
   )
 
   # Backward-compat: store val_rmse and test_rmse names
+  # (graph$D was stripped earlier, right after tensor creation, so the
+  # graph stored here is already the slim version without the cophenetic
+  # distance matrix.)
   structure(
     list(
       model_state    = model$state_dict(),

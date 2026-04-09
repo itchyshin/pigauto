@@ -78,11 +78,22 @@ impute <- function(traits, tree, species_col = NULL,
     splits <- NULL
   }
 
-  # 3. Build phylogenetic graph (auto k_eigen scales with tree size)
+  # 3. Build phylogenetic graph (auto k_eigen scales with tree size).
+  #    The graph object carries the cophenetic distance matrix in
+  #    graph$D; we pass it to fit_baseline() below so that it is
+  #    computed exactly once for the whole pipeline.
   graph <- build_phylo_graph(tree, k_eigen = "auto")
 
-  # 4. Fit phylogenetic baseline
-  baseline <- fit_baseline(pd, tree, splits = splits)
+  # 4. Fit phylogenetic baseline (reuses graph$D for label propagation)
+  baseline <- fit_baseline(pd, tree, splits = splits, graph = graph)
+
+  # Free the cached cophenetic distance matrix: fit_pigauto() only
+  # needs graph$adj and graph$coords, and at n = 10,000 the ~800 MB
+  # D matrix held in R memory during training caused a large
+  # per-epoch slowdown. This is safe because no downstream caller
+  # reads graph$D -- see the v0.3.1 NEWS entry.
+  graph$D <- NULL
+  invisible(gc(full = TRUE, verbose = FALSE))
 
   # 5. Train GNN
   fit <- fit_pigauto(

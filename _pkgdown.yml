@@ -50,6 +50,8 @@ navbar:
           href: pigauto_workflow_mixed.html
         - text: "-------"
         - text: "Benchmarks"
+        - text: "Scaling to 10,000 tips (v0.3.1)"
+          href: dev/scaling.html
         - text: "Simulation scenarios (BM / OU / nonlinear / mixed)"
           href: dev/benchmark_report.html
         - text: "AVONET 300 (real-data benchmark)"

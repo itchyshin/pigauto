@@ -21,6 +21,12 @@
 #'   \code{NULL}.
 #' @param model character. Evolutionary model: \code{"BM"} (default) or
 #'   \code{"OU"}.
+#' @param graph optional list returned by \code{\link{build_phylo_graph}}.
+#'   When supplied, the cophenetic distance matrix stored in
+#'   \code{graph$D} is reused for label propagation instead of
+#'   recomputing it from \code{tree}. This saves an \eqn{O(n^2)} matrix
+#'   allocation on large trees. When \code{NULL} (default), the
+#'   distance matrix is computed here via \code{ape::cophenetic.phylo}.
 #' @return A list with:
 #'   \describe{
 #'     \item{mu}{Numeric matrix (n_species x p_latent), baseline means in
@@ -38,7 +44,8 @@
 #' }
 #' @importFrom stats complete.cases
 #' @export
-fit_baseline <- function(data, tree, splits = NULL, model = "BM") {
+fit_baseline <- function(data, tree, splits = NULL, model = "BM",
+                         graph = NULL) {
   if (!inherits(data, "pigauto_data")) {
     stop("'data' must be a pigauto_data object (output of preprocess_traits).")
   }
@@ -64,7 +71,15 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM") {
   }
 
   # ---- Phylogenetic similarity for discrete-trait label propagation ------
-  D_phylo  <- ape::cophenetic.phylo(tree)
+  # Reuse build_phylo_graph()'s cached D if supplied; otherwise compute.
+  # At n = 10,000 each cophenetic() call is ~15 seconds and ~800 MB of
+  # allocation, so caching through `graph` is a meaningful speedup even
+  # though this stage is not the dominant scaling bottleneck.
+  if (!is.null(graph) && !is.null(graph$D)) {
+    D_phylo <- graph$D
+  } else {
+    D_phylo <- ape::cophenetic.phylo(tree)
+  }
   # Reorder to match species order
   D_phylo  <- D_phylo[spp, spp]
   sigma_lp <- stats::median(D_phylo) * 0.5
