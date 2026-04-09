@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-`pigauto` is an R package (version 0.3.1) for phylogenetic trait imputation. It fits a Residual Phylogenetic Denoising Autoencoder (ResidualPhyloDAE) that blends a Brownian-motion baseline with a graph neural network correction. See `README.md` for the user-facing API; this file documents the internals.
+`pigauto` is an R package (version 0.3.2) for phylogenetic trait imputation. It fits a Residual Phylogenetic Denoising Autoencoder (ResidualPhyloDAE) that blends a Brownian-motion baseline with a graph neural network correction. See `README.md` for the user-facing API; this file documents the internals.
 
 ## Common commands
 

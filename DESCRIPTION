@@ -1,6 +1,6 @@
 Package: pigauto
 Title: Phylogenetic Imputation via Graph Autoencoders
-Version: 0.3.1
+Version: 0.3.2
 Authors@R:
     person("Shinichi", "Nakagawa", role = c("aut", "cre"), email = "itchyshin@gmail.com")
 Description: Imputes missing species trait data using a Residual Phylogenetic
@@ -11,8 +11,9 @@ Description: Imputes missing species trait data using a Residual Phylogenetic
     phylogenetic label propagation for discrete traits, and adaptive spectral
     encoding that scales with tree size. Supports continuous, binary,
     categorical, ordinal, and count traits in a unified latent space, with
-    optional multiple observations per species. Includes a 300-species AVONET
-    bird morphology subset and a matching BirdTree phylogeny.
+    optional multiple observations per species. Includes both a 300-species
+    AVONET bird morphology subset and the full 9,993-species AVONET + BirdTree
+    bundled datasets for examples and scale benchmarks.
 License: MIT + file LICENSE
 URL: https://itchyshin.github.io/pigauto, https://github.com/itchyshin/pigauto
 BugReports: https://github.com/itchyshin/pigauto/issues

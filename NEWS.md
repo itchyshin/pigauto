@@ -1,3 +1,56 @@
+# pigauto 0.3.2
+
+## New bundled dataset: `avonet_full` / `tree_full`
+
+The full AVONET3 + BirdTree Stage2 Hackett MCC phylogeny, aligned to
+9,993 species with 7 mixed-type traits (4 continuous morphometric +
+2 categorical + 1 ordinal) and native missingness preserved.
+Complements the 300-species `avonet300` / `tree300` bundled data:
+
+- `avonet300` / `tree300` remain the right choice for quick examples,
+  unit tests, and the getting-started vignette.
+- `avonet_full` / `tree_full` are the right choice for scale
+  benchmarks, realistic-missingness experiments, and anything that
+  wants to exercise the v0.3.1 sparse Lanczos / cophenetic caching
+  code paths on a real-world phylogeny.
+
+The schemas are identical, so any code that runs on `avonet300` runs
+on `avonet_full` with no modification. Combined tarball increment is
+~328 KB (xz-9).
+
+## New benchmark: AVONET missingness sweep (20 / 50 / 80%)
+
+*Articles -> Benchmarks -> AVONET missingness sweep* is a new pkgdown
+page comparing three methods on the full `avonet_full` dataset at
+three MCAR missingness levels:
+
+- **mean / mode** — column mean (continuous, ordinal) or class
+  frequency (categorical). No phylogeny.
+- **BM baseline** — Rphylopars Brownian-motion for continuous /
+  ordinal, phylogenetic label propagation for discrete traits.
+- **pigauto** — full pipeline (BM baseline + calibrated GNN delta
+  + conformal intervals).
+
+Per-trait RMSE, Pearson r, Spearman rho, and accuracy on held-out
+test cells. Single seed per cell, trait-level masking so categorical
+traits are held out as whole groups. Hyperparameters match the
+`validate_avonet_full.R` scaling run for comparability.
+
+## Docs cleanup
+
+- Regenerated `pigauto_intro` and `pigauto_workflow_mixed` HTML
+  tutorials against the v0.3.2 package state.
+- Removed stale v0.3.0-era benchmark pages from the navbar
+  (`benchmark_report.html`, `benchmark_final_report.html`,
+  `test_report.html`) and from `pkgdown/assets/dev/`.
+- Pruned 45 orphan files from `script/` (trial artefacts from
+  pre-v0.3.1 benchmarking phases: `bench_v2/v3/v4.*`,
+  `benchmark_avonet2000.*`, `benchmark_final.*`,
+  `benchmark_simulation.*`, scaling duplicates, and Apr-6 demo
+  artefacts).
+- `README.md` citation now points at 0.3.2.
+- `DESCRIPTION` updated to mention both bundled datasets.
+
 # pigauto 0.3.1
 
 ## Scaling to 10,000 tips

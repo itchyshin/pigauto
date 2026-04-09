@@ -285,8 +285,14 @@ BM baseline is optimal, calibrated gates → 0.
   ecological traits (Trophic.Level [categorical], Primary.Lifestyle
   [categorical], Migration [ordinal])
 - `tree300`: pruned BirdTree phylogeny matching `avonet300`
+- `avonet_full`: the same 7-trait schema extended to all 9,993 bird
+  species for which AVONET3 and the BirdTree Stage2 Hackett MCC tree
+  agree. Native missingness is preserved (24 NA cells) so users see
+  the real-world missingness pattern. Use this for scale benchmarks;
+  use `avonet300` for quick examples and unit tests.
+- `tree_full`: the matching 9,993-tip BirdTree phylogeny.
 
 ## Citation
 
 Nakagawa S (2026). pigauto: Phylogenetic Imputation via Graph
-Autoencoder. R package version 0.3.0.
+Autoencoder. R package version 0.3.2.
