@@ -1,30 +1,4 @@
-#!/usr/bin/env Rscript
-# Build a self-contained HTML tutorial walking through the full pigauto
-# PCM workflow on a **mixed-type** dataset (continuous + categorical +
-# ordinal), and showing all three sensible analysis paths:
-#
-#   Path A: pigauto + glmmTMB + Rubin's rules        (frequentist)
-#   Path B: pigauto + MCMCglmm + posterior concat    (Bayesian, pigauto as imputer)
-#   Path C: BACE::bace() + pool_posteriors()         (Bayesian, BACE as imputer)
-#
-# Companion to script/make_workflow_html.R, which uses a continuous-only
-# example and focuses on reconciliation. This file assumes the reader has
-# already seen that tutorial; it does not re-teach reconcile_tree().
-#
-# Writes to inst/doc/ so it ships with the installed package and can be
-# opened in RStudio via:
-#   browseURL(system.file("doc", "pigauto_workflow_mixed.html", package = "pigauto"))
-
-out <- "inst/doc/pigauto_workflow_mixed.html"
-dir.create(dirname(out), showWarnings = FALSE, recursive = TRUE)
-
-desc      <- readLines("DESCRIPTION")
-ver_line  <- grep("^Version:", desc, value = TRUE)
-version   <- if (length(ver_line)) sub("^Version:\\s*", "", ver_line) else "?"
-timestamp <- format(Sys.time(), "%Y-%m-%d")
-
-html <- paste0(
-'<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -82,9 +56,9 @@ html <- paste0(
 </head>
 <body>
 
-<h1>pigauto: mixed-type PCM workflow <span class="badge">v', version, '</span></h1>
+<h1>pigauto: mixed-type PCM workflow <span class="badge">v0.3.0</span></h1>
 <p class="tagline">Multiple imputation of continuous, categorical, and ordinal traits &mdash; three downstream paths.</p>
-<p class="meta">Generated ', timestamp, ' &middot; scripts/<code>make_workflow_mixed_html.R</code></p>
+<p class="meta">Generated 2026-04-09 &middot; scripts/<code>make_workflow_mixed_html.R</code></p>
 
 <p>This tutorial is the mixed-type companion to
 <code>pigauto_workflow.html</code>. The earlier tutorial uses a
@@ -345,7 +319,7 @@ mi
 #&gt;
 #&gt;   Access imputation draws:  mi$datasets[[i]]
 #&gt;   Fit downstream models:    with_imputations(mi, fit_fun)
-#&gt;   Pool with Rubin\'s rules:  pool_mi(fits)
+#&gt;   Pool with Rubin's rules:  pool_mi(fits)
 </code></pre>
 
 <h3>Verification 1 &mdash; Type preservation</h3>
@@ -867,14 +841,4 @@ Installed path: <code>system.file("doc", "pigauto_workflow_mixed.html", package 
 
 </body>
 </html>
-')
 
-# Dual-write: one copy ships with the installed package (inst/doc/),
-# one copy lives under pkgdown/assets/ so pkgdown::build_site() picks
-# it up and exposes it on the web site.
-targets <- c(out, "pkgdown/assets/pigauto_workflow_mixed.html")
-for (t in targets) {
-  dir.create(dirname(t), showWarnings = FALSE, recursive = TRUE)
-  writeLines(html, t)
-  cat("Wrote ", t, "\n", sep = "")
-}

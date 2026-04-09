@@ -1,22 +1,4 @@
-#!/usr/bin/env Rscript
-# Build a self-contained HTML introduction to pigauto, drawn from README.md
-# and the architecture summary in CLAUDE.md. Writes to inst/doc/ so it ships
-# with the installed package and can be found via:
-#   system.file("doc", "pigauto_intro.html", package = "pigauto")
-
-out <- "inst/doc/pigauto_intro.html"
-dir.create(dirname(out), showWarnings = FALSE, recursive = TRUE)
-
-# Pull version from DESCRIPTION so the badge stays in sync with the source of
-# truth without re-parsing at load time.
-desc    <- readLines("DESCRIPTION")
-ver_line <- grep("^Version:", desc, value = TRUE)
-version <- if (length(ver_line)) sub("^Version:\\s*", "", ver_line) else "?"
-
-timestamp <- format(Sys.time(), "%Y-%m-%d")
-
-html <- paste0(
-'<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -56,9 +38,9 @@ html <- paste0(
 </head>
 <body>
 
-<h1>pigauto <span class="badge">v', version, '</span></h1>
+<h1>pigauto <span class="badge">v0.3.0</span></h1>
 <p class="tagline">Phylogenetic trait imputation via graph neural network.</p>
-<p class="meta">Generated ', timestamp, ' from <code>README.md</code> and <code>CLAUDE.md</code>.</p>
+<p class="meta">Generated 2026-04-09 from <code>README.md</code> and <code>CLAUDE.md</code>.</p>
 
 <h2>What it does</h2>
 <p>
@@ -274,7 +256,7 @@ Rphylopars is the right tool.
 <li><code>README.md</code> &mdash; full user guide, benchmarks, and plotting examples.</li>
 <li><code>CLAUDE.md</code> &mdash; architecture reference for contributors.</li>
 <li><code>vignettes/</code> &mdash; getting-started and mixed-types vignettes.</li>
-<li>Citation: Nakagawa S (2026). <i>pigauto: Phylogenetic Imputation via Graph Autoencoder.</i> R package version ', version, '.</li>
+<li>Citation: Nakagawa S (2026). <i>pigauto: Phylogenetic Imputation via Graph Autoencoder.</i> R package version 0.3.0.</li>
 </ul>
 
 <footer>
@@ -284,14 +266,4 @@ Installed path: <code>system.file("doc", "pigauto_intro.html", package = "pigaut
 
 </body>
 </html>
-')
 
-# Dual-write: one copy ships with the installed package (inst/doc/),
-# one copy lives under pkgdown/assets/ so pkgdown::build_site() picks
-# it up and exposes it on the web site.
-targets <- c(out, "pkgdown/assets/pigauto_intro.html")
-for (t in targets) {
-  dir.create(dirname(t), showWarnings = FALSE, recursive = TRUE)
-  writeLines(html, t)
-  cat("Wrote ", t, "\n", sep = "")
-}

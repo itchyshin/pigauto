@@ -26,6 +26,22 @@ ordinal, and count traits in a unified latent space.
 - **Auto-generated HTML reports**: `pigauto_report()` produces interactive
   benchmark reports with Chart.js
 
+## Documentation
+
+- **Live site**: <https://itchyshin.github.io/pigauto> — tutorials,
+  function reference, and changelog as clickable web pages, rebuilt
+  on every push to `main`.
+- **Documentation index**: [`DOCS.md`](DOCS.md) — the full map of
+  every README / tutorial / vignette / man page / benchmark report
+  in this repo, with in-repo paths and live-site URLs side by side.
+- **First-stop tutorial**: `vignettes/getting-started.Rmd` (rendered
+  at [articles/getting-started.html](https://itchyshin.github.io/pigauto/articles/getting-started.html)).
+- **Full PCM workflow** on mixed-type traits (continuous + categorical
+  + ordinal): live site at
+  [pigauto_workflow_mixed.html](https://itchyshin.github.io/pigauto/pigauto_workflow_mixed.html),
+  source at [`script/make_workflow_mixed_html.R`](script/make_workflow_mixed_html.R).
+- **Architecture notes** for contributors: [`CLAUDE.md`](CLAUDE.md).
+
 ## Installation
 
 ```r

@@ -155,6 +155,13 @@ To run the tests: <code>devtools::test()</code> from the pigauto root.
 </html>
 ')
 
-out <- "script/tests_overview.html"
-writeLines(html, out)
-cat("Wrote ", out, " (", total_tests, " tests across ", n_files, " files)\n", sep = "")
+# Dual-write: one copy in script/ (dev artefact), one copy in
+# pkgdown/assets/dev/ so pkgdown::build_site() exposes it on the web.
+targets <- c("script/tests_overview.html",
+             "pkgdown/assets/dev/tests_overview.html")
+for (t in targets) {
+  dir.create(dirname(t), showWarnings = FALSE, recursive = TRUE)
+  writeLines(html, t)
+  cat("Wrote ", t, " (", total_tests, " tests across ", n_files,
+      " files)\n", sep = "")
+}

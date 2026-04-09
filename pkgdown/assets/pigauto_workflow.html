@@ -1,24 +1,4 @@
-#!/usr/bin/env Rscript
-# Build a self-contained HTML tutorial walking through the full
-# pigauto + prepR4pcm + BACE workflow:
-#
-#   Data -> Missing Data -> Tree -> Matching Tree & Data ->
-#   Multiple Imputation -> Downstream Inference (frequentist & Bayesian)
-#
-# Writes to inst/doc/ so it ships with the installed package and can be
-# opened in RStudio via:
-#   browseURL(system.file("doc", "pigauto_workflow.html", package = "pigauto"))
-
-out <- "inst/doc/pigauto_workflow.html"
-dir.create(dirname(out), showWarnings = FALSE, recursive = TRUE)
-
-desc     <- readLines("DESCRIPTION")
-ver_line <- grep("^Version:", desc, value = TRUE)
-version  <- if (length(ver_line)) sub("^Version:\\s*", "", ver_line) else "?"
-timestamp <- format(Sys.time(), "%Y-%m-%d")
-
-html <- paste0(
-'<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -69,9 +49,9 @@ html <- paste0(
 </head>
 <body>
 
-<h1>pigauto: the full PCM workflow <span class="badge">v', version, '</span></h1>
+<h1>pigauto: the full PCM workflow <span class="badge">v0.3.0</span></h1>
 <p class="tagline">From messy species names to pooled phylogenetic inference.</p>
-<p class="meta">Generated ', timestamp, ' &middot; scripts/<code>make_workflow_html.R</code></p>
+<p class="meta">Generated 2026-04-09 &middot; scripts/<code>make_workflow_html.R</code></p>
 
 <p>This tutorial walks a single realistic dataset through the full
 phylogenetic comparative methods (PCM) pipeline: load the raw data,
@@ -539,14 +519,4 @@ Installed path: <code>system.file("doc", "pigauto_workflow.html", package = "pig
 
 </body>
 </html>
-')
 
-# Dual-write: one copy ships with the installed package (inst/doc/),
-# one copy lives under pkgdown/assets/ so pkgdown::build_site() picks
-# it up and exposes it on the web site.
-targets <- c(out, "pkgdown/assets/pigauto_workflow.html")
-for (t in targets) {
-  dir.create(dirname(t), showWarnings = FALSE, recursive = TRUE)
-  writeLines(html, t)
-  cat("Wrote ", t, "\n", sep = "")
-}

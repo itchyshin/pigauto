@@ -14,6 +14,8 @@ Description: Imputes missing species trait data using a Residual Phylogenetic
     optional multiple observations per species. Includes a 300-species AVONET
     bird morphology subset and a matching BirdTree phylogeny.
 License: MIT + file LICENSE
+URL: https://itchyshin.github.io/pigauto, https://github.com/itchyshin/pigauto
+BugReports: https://github.com/itchyshin/pigauto/issues
 Encoding: UTF-8
 LazyData: true
 Depends: R (>= 4.1)
@@ -31,6 +33,7 @@ Suggests:
     testthat,
     knitr,
     rmarkdown,
+    pkgdown,
     ggtree,
     reticulate,
     BACE,

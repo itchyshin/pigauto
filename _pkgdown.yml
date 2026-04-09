@@ -1,0 +1,133 @@
+url: https://itchyshin.github.io/pigauto
+
+destination: docs
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#059669"
+    base_font: {google: "Inter"}
+    heading_font: {google: "Inter"}
+    code_font: {google: "JetBrains Mono"}
+
+home:
+  title: "pigauto: phylogenetic trait imputation with a residual graph autoencoder"
+  description: >
+    Impute missing species trait data by blending a Brownian-motion baseline
+    with an attention-based graph neural network correction. Handles
+    continuous, binary, categorical, ordinal, and count traits in a single
+    latent space, with conformal prediction intervals and multiple-imputation
+    support for downstream inference.
+  links:
+    - text: Documentation index (DOCS.md)
+      href: https://github.com/itchyshin/pigauto/blob/main/DOCS.md
+    - text: Source code
+      href: https://github.com/itchyshin/pigauto
+    - text: Report a bug
+      href: https://github.com/itchyshin/pigauto/issues
+
+navbar:
+  structure:
+    left:  [intro, articles, reference, news]
+    right: [search, github]
+  components:
+    intro:
+      text: Get started
+      href: articles/getting-started.html
+    articles:
+      text: Articles
+      menu:
+        - text: "Knitted vignettes"
+        - text: "Getting started"
+          href: articles/getting-started.html
+        - text: "Mixed-type traits"
+          href: articles/mixed-types.html
+        - text: "-------"
+        - text: "Static HTML walk-throughs"
+        - text: "Intro (architecture overview)"
+          href: pigauto_intro.html
+        - text: "Continuous-trait workflow"
+          href: pigauto_workflow.html
+        - text: "Mixed-type workflow (Paths A / B / C)"
+          href: pigauto_workflow_mixed.html
+        - text: "-------"
+        - text: "Developer reports"
+        - text: "Test catalogue"
+          href: dev/tests_overview.html
+        - text: "TabPFN benchmark"
+          href: dev/bench_tabpfn.html
+
+reference:
+  - title: "One-call entry point"
+    desc: >
+      The main user-facing function. Runs the full pipeline
+      (`preprocess_traits` → `build_phylo_graph` → `fit_baseline` →
+      `fit_pigauto` → `predict` → `evaluate`) and returns a completed
+      data frame.
+    contents:
+      - impute
+
+  - title: "Multiple imputation for downstream inference"
+    desc: >
+      Three functions that compose into the canonical
+      multiple-imputation → regression → Rubin's-rules workflow
+      (Rubin 1987; Nakagawa & Freckleton 2008, 2011). See
+      `vignette("mixed-types")` and the static HTML walk-throughs for
+      end-to-end examples.
+    contents:
+      - multi_impute
+      - with_imputations
+      - pool_mi
+
+  - title: "Pipeline — fine-grained control"
+    desc: >
+      Individual steps of the `impute()` pipeline, exposed for
+      benchmarking and custom workflows.
+    contents:
+      - preprocess_traits
+      - build_phylo_graph
+      - make_missing_splits
+      - mask_missing
+      - fit_baseline
+      - fit_baseline_bace
+      - fit_baseline_tabpfn
+      - fit_pigauto
+      - predict.pigauto_fit
+      - evaluate
+      - evaluate_imputation
+
+  - title: "Benchmarks and cross-validation"
+    contents:
+      - simulate_benchmark
+      - simulate_non_bm
+      - cross_validate
+      - compare_methods
+
+  - title: "Reporting and plotting"
+    contents:
+      - pigauto_report
+      - plot.pigauto_fit
+      - plot.pigauto_pred
+      - plot.pigauto_benchmark
+      - plot_comparison
+      - plot_history_gg
+      - plot_uncertainty
+      - summary.pigauto_fit
+      - calibration_df
+      - confusion_matrix
+
+  - title: "I/O helpers"
+    contents:
+      - read_traits
+      - read_tree
+      - save_pigauto
+      - load_pigauto
+
+  - title: "Python backend setup"
+    contents:
+      - setup_tabpfn
+
+  - title: "Bundled data"
+    contents:
+      - avonet300
+      - tree300

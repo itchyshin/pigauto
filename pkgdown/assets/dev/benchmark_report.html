@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>pigauto Benchmark Report</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f8f9fa;
+    --card: #ffffff;
+    --border: #dee2e6;
+    --text: #212529;
+    --muted: #6c757d;
+    --accent: #0d6efd;
+    --green: #198754;
+    --red: #dc3545;
+    --amber: #ffc107;
+    --green-bg: #d1e7dd;
+    --red-bg: #f8d7da;
+    --amber-bg: #fff3cd;
+    --neutral-bg: #e9ecef;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6;
+    padding: 2rem; max-width: 1400px; margin: 0 auto;
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+  h2 { font-size: 1.3rem; margin: 2rem 0 1rem; color: var(--text); border-bottom: 2px solid var(--accent); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.1rem; margin: 1.2rem 0 0.6rem; color: var(--muted); }
+  .subtitle { color: var(--muted); margin-bottom: 1.5rem; font-size: 0.95rem; }
+
+  /* Summary cards */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 1.2rem; text-align: center;
+  }
+  .card .label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .card .value { font-size: 2rem; font-weight: 700; margin: 0.3rem 0; }
+  .card .detail { font-size: 0.85rem; color: var(--muted); }
+  .card.green .value { color: var(--green); }
+  .card.red .value { color: var(--red); }
+  .card.amber .value { color: #b86e00; }
+  .card.blue .value { color: var(--accent); }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden; margin-bottom: 1.5rem; font-size: 0.88rem; }
+  thead { background: #f1f3f5; }
+  th { padding: 0.6rem 0.8rem; text-align: left; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); border-bottom: 2px solid var(--border); }
+  td { padding: 0.55rem 0.8rem; border-bottom: 1px solid #f1f3f5; }
+  tr:hover { background: #f8f9fa; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .pos { color: var(--green); font-weight: 600; }
+  .neg { color: var(--red); font-weight: 600; }
+  .zero { color: var(--muted); }
+  .pill {
+    display: inline-block; padding: 0.15rem 0.5rem; border-radius: 10px;
+    font-size: 0.75rem; font-weight: 600;
+  }
+  .pill-green { background: var(--green-bg); color: var(--green); }
+  .pill-red { background: var(--red-bg); color: var(--red); }
+  .pill-amber { background: var(--amber-bg); color: #856404; }
+  .pill-neutral { background: var(--neutral-bg); color: var(--muted); }
+
+  /* Scenario group rows */
+  .scenario-header td { background: #f1f3f5; font-weight: 600; padding: 0.5rem 0.8rem; font-size: 0.85rem; }
+
+  /* Charts */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+  .chart-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+  .chart-box h3 { margin-top: 0; }
+  @media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } }
+
+  /* Key findings */
+  .findings { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .findings ul { margin-left: 1.2rem; }
+  .findings li { margin-bottom: 0.6rem; }
+  .findings .tag { font-weight: 700; }
+  .findings .tag-green { color: var(--green); }
+  .findings .tag-red { color: var(--red); }
+  .findings .tag-amber { color: #b86e00; }
+
+  /* Footer */
+  .footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<h1>pigauto Benchmark Report</h1>
+<p class="subtitle">BM baseline (Rphylopars) vs pigauto GNN &mdash; generated 7 April 2026</p>
+
+<!-- ===== SUMMARY CARDS ===== -->
+<div class="cards">
+  <div class="card green">
+    <div class="label">Sim. continuous RMSE gain</div>
+    <div class="value">+1.3%</div>
+    <div class="detail">mean across S1&ndash;S14</div>
+  </div>
+  <div class="card green">
+    <div class="label">Best sim. improvement</div>
+    <div class="value">+2.5%</div>
+    <div class="detail">S13: variable phylo signal</div>
+  </div>
+  <div class="card amber">
+    <div class="label">AVONET continuous RMSE</div>
+    <div class="value">&minus;6.0%</div>
+    <div class="detail">GNN worse on real data</div>
+  </div>
+  <div class="card blue">
+    <div class="label">Discrete traits</div>
+    <div class="value">0.0%</div>
+    <div class="detail">identical (gate mechanism works)</div>
+  </div>
+  <div class="card green">
+    <div class="label">Tests passing</div>
+    <div class="value">135</div>
+    <div class="detail">0 failures, 5 skipped (TabPFN)</div>
+  </div>
+</div>
+
+<!-- ===== SIMULATION BENCHMARK ===== -->
+<h2>1. Simulation Benchmark (BACE-generated data)</h2>
+<p style="color:var(--muted); margin-bottom:1rem;">15 scenarios &times; 3 replicates. % change: positive = GNN better (lower RMSE or higher accuracy).</p>
+
+<table id="sim-table">
+<thead>
+<tr>
+  <th>Scenario</th>
+  <th>Trait type</th>
+  <th>Metric</th>
+  <th class="num">BM baseline</th>
+  <th class="num">pigauto GNN</th>
+  <th class="num">% change</th>
+  <th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+
+<!-- S1 -->
+<tr class="scenario-header"><td colspan="7">S1: All continuous, low signal</td></tr>
+<tr><td></td><td>continuous</td><td>RMSE</td><td class="num">1.126</td><td class="num">1.112</td><td class="num pos">+1.3%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+<tr><td></td><td>continuous</td><td>Pearson r</td><td class="num">0.323</td><td class="num">0.323</td><td class="num zero">0.0%</td><td><span class="pill pill-neutral">tied</span></td></tr>
+
+<!-- S2 -->
+<tr class="scenario-header"><td colspan="7">S2: All continuous, high signal</td></tr>
+<tr><td></td><td>continuous</td><td>RMSE</td><td class="num">0.942</td><td class="num">0.929</td><td class="num pos">+1.4%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+<tr><td></td><td>continuous</td><td>Pearson r</td><td class="num">0.548</td><td class="num">0.548</td><td class="num zero">0.0%</td><td><span class="pill pill-neutral">tied</span></td></tr>
+
+<!-- S3 -->
+<tr class="scenario-header"><td colspan="7">S3: Mixed (cont+binary+count), low signal</td></tr>
+<tr><td></td><td>continuous</td><td>RMSE</td><td class="num">1.217</td><td class="num">1.203</td><td class="num pos">+1.2%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+<tr><td></td><td>count</td><td>RMSE</td><td class="num">0.865</td><td class="num">0.857</td><td class="num pos">+0.9%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+<tr><td></td><td>binary</td><td>Accuracy</td><td class="num">53.4%</td><td class="num">53.4%</td><td class="num zero">0.0 pp</td><td><span class="pill pill-neutral">tied</span></td></tr>
+
+<!-- S4 -->
+<tr class="scenario-header"><td colspan="7">S4: Mixed (cont+binary+count), high signal</td></tr>
+<tr><td></td><td>continuous</td><td>RMSE</td><td class="num">0.805</td><td class="num">0.791</td><td class="num pos">+1.8%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+<tr><td></td><td>count</td><td>RMSE</td><td class="num">1.417</td><td class="num">1.391</td><td class="num pos">+1.8%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+<tr><td></td><td>binary</td><td>Accuracy</td><td class="num">71.7%</td><td class="num">71.7%</td><td class="num zero">0.0 pp</td><td><span class="pill pill-neutral">tied</span></td></tr>
+
+<!-- S5 -->
+<tr class="scenario-header"><td colspan="7">S5: Mixed + categorical</td></tr>
+<tr><td></td><td>continuous</td><td>RMSE</td><td class="num">1.217</td><td class="num">1.203</td><td class="num pos">+1.1%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+<tr><td></td><td>categorical</td><td>Accuracy</td><td class="num">41.2%</td><td class="num">41.2%</td><td class="num zero">0.0 pp</td><td><span class="pill pill-neutral">tied</span></td></tr>
+<tr><td></td><td>binary</td><td>Accuracy</td><td class="num">58.7%</td><td class="num">58.7%</td><td class="num zero">0.0 pp</td><td><span class="pill pill-neutral">tied</span></td></tr>
+
+<!-- S6 -->
+<tr class="scenario-header"><td colspan="7">S6: High missingness (50%)</td></tr>
+<tr><td></td><td>continuous</td><td>RMSE</td><td class="num">1.330</td><td class="num">1.318</td><td class="num pos">+1.0%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+<tr><td></td><td>continuous</td><td>Pearson r</td><td class="num">0.110</td><td class="num">0.111</td><td class="num zero">0.0%</td><td><span class="pill pill-neutral">tied</span></td></tr>
+
+<!-- S7 -->
+<tr class="scenario-header"><td colspan="7">S7: Near-zero phylogenetic signal</td></tr>
+<tr><td></td><td>continuous</td><td>RMSE</td><td class="num">1.341</td><td class="num">1.322</td><td class="num pos">+1.4%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+
+<!-- S8 -->
+<tr class="scenario-header"><td colspan="7">S8: All 5 types</td></tr>
+<tr><td></td><td>continuous</td><td>RMSE</td><td class="num">1.202</td><td class="num">1.183</td><td class="num pos">+1.6%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+<tr><td></td><td>count</td><td>RMSE</td><td class="num">1.138</td><td class="num">1.121</td><td class="num pos">+1.5%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+<tr><td></td><td>ordinal</td><td>RMSE</td><td class="num">1.151</td><td class="num">1.151</td><td class="num zero">0.0%</td><td><span class="pill pill-neutral">tied</span></td></tr>
+<tr><td></td><td>binary</td><td>Accuracy</td><td class="num">53.1%</td><td class="num">53.1%</td><td class="num zero">0.0 pp</td><td><span class="pill pill-neutral">tied</span></td></tr>
+<tr><td></td><td>categorical</td><td>Accuracy</td><td class="num">42.5%</td><td class="num">42.5%</td><td class="num zero">0.0 pp</td><td><span class="pill pill-neutral">tied</span></td></tr>
+
+<!-- S9 -->
+<tr class="scenario-header"><td colspan="7">S9: OU, moderate pull (&alpha;=2)</td></tr>
+<tr><td></td><td>continuous</td><td>RMSE</td><td class="num">1.174</td><td class="num">1.162</td><td class="num pos">+1.1%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+
+<!-- S10 -->
+<tr class="scenario-header"><td colspan="7">S10: OU, strong pull (&alpha;=5)</td></tr>
+<tr><td></td><td>continuous</td><td>RMSE</td><td class="num">1.090</td><td class="num">1.083</td><td class="num pos">+0.7%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+
+<!-- S11 -->
+<tr class="scenario-header"><td colspan="7">S11: Regime shift (bimodal)</td></tr>
+<tr><td></td><td>continuous</td><td>RMSE</td><td class="num">0.415</td><td class="num">0.418</td><td class="num neg">&minus;0.6%</td><td><span class="pill pill-red">BM better</span></td></tr>
+
+<!-- S12 -->
+<tr class="scenario-header"><td colspan="7">S12: Non-linear correlations</td></tr>
+<tr><td></td><td>continuous</td><td>RMSE</td><td class="num">0.600</td><td class="num">0.596</td><td class="num pos">+0.8%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+
+<!-- S13 -->
+<tr class="scenario-header"><td colspan="7">S13: Variable phylo signal (0.1&ndash;0.9)</td></tr>
+<tr><td></td><td>continuous</td><td>RMSE</td><td class="num">0.987</td><td class="num">0.962</td><td class="num pos">+2.5%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+<tr><td></td><td>count</td><td>RMSE</td><td class="num">0.872</td><td class="num">0.849</td><td class="num pos">+2.7%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+<tr><td></td><td>binary</td><td>Accuracy</td><td class="num">56.7%</td><td class="num">56.7%</td><td class="num zero">0.0 pp</td><td><span class="pill pill-neutral">tied</span></td></tr>
+
+<!-- S14 -->
+<tr class="scenario-header"><td colspan="7">S14: Large tree (300 species), all types</td></tr>
+<tr><td></td><td>continuous</td><td>RMSE</td><td class="num">1.082</td><td class="num">1.060</td><td class="num pos">+2.0%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+<tr><td></td><td>count</td><td>RMSE</td><td class="num">1.018</td><td class="num">1.001</td><td class="num pos">+1.7%</td><td><span class="pill pill-green">GNN better</span></td></tr>
+<tr><td></td><td>ordinal</td><td>RMSE</td><td class="num">1.623</td><td class="num">1.623</td><td class="num zero">0.0%</td><td><span class="pill pill-neutral">tied</span></td></tr>
+<tr><td></td><td>binary</td><td>Accuracy</td><td class="num">56.7%</td><td class="num">56.7%</td><td class="num zero">0.0 pp</td><td><span class="pill pill-neutral">tied</span></td></tr>
+<tr><td></td><td>categorical</td><td>Accuracy</td><td class="num">40.8%</td><td class="num">40.8%</td><td class="num zero">0.0 pp</td><td><span class="pill pill-neutral">tied</span></td></tr>
+
+<!-- S15 -->
+<tr class="scenario-header"><td colspan="7">S15: Multi-obs (3 per species), mixed types</td></tr>
+<tr><td></td><td>continuous</td><td>RMSE</td><td class="num">&mdash;</td><td class="num">0.757</td><td class="num zero">N/A</td><td><span class="pill pill-amber">GNN only</span></td></tr>
+<tr><td></td><td>count</td><td>RMSE</td><td class="num">&mdash;</td><td class="num">0.968</td><td class="num zero">N/A</td><td><span class="pill pill-amber">GNN only</span></td></tr>
+<tr><td></td><td>binary</td><td>Accuracy</td><td class="num">&mdash;</td><td class="num">61.7%</td><td class="num zero">N/A</td><td><span class="pill pill-amber">GNN only</span></td></tr>
+<tr><td></td><td>continuous</td><td>Pearson r</td><td class="num">&mdash;</td><td class="num">0.702</td><td class="num zero">N/A</td><td><span class="pill pill-amber">GNN only</span></td></tr>
+
+</tbody>
+</table>
+
+<!-- ===== CHARTS: SIMULATION ===== -->
+<div class="chart-grid">
+  <div class="chart-box">
+    <h3>Continuous RMSE: % improvement by scenario</h3>
+    <canvas id="chart-sim-rmse"></canvas>
+  </div>
+  <div class="chart-box">
+    <h3>GNN 95% coverage (continuous traits)</h3>
+    <canvas id="chart-coverage"></canvas>
+  </div>
+</div>
+
+<!-- ===== AVONET BENCHMARK ===== -->
+<h2>2. AVONET 300 Benchmark (real morphometric + categorical data)</h2>
+<p style="color:var(--muted); margin-bottom:1rem;">300 avian species, 7 traits, 5 replicates. 25% missingness per trait per split.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Trait</th>
+  <th>Type</th>
+  <th>Metric</th>
+  <th class="num">BM baseline</th>
+  <th class="num">pigauto GNN</th>
+  <th class="num">% change</th>
+  <th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Mass</td><td>continuous</td><td>RMSE</td><td class="num">0.222</td><td class="num">0.249</td><td class="num neg">&minus;12.1%</td><td><span class="pill pill-red">BM better</span></td></tr>
+<tr><td>Mass</td><td>continuous</td><td>Pearson r</td><td class="num">0.977</td><td class="num">0.977</td><td class="num zero">0.0%</td><td><span class="pill pill-neutral">tied</span></td></tr>
+<tr><td>Beak.Length_Culmen</td><td>continuous</td><td>RMSE</td><td class="num">0.359</td><td class="num">0.379</td><td class="num neg">&minus;5.6%</td><td><span class="pill pill-red">BM better</span></td></tr>
+<tr><td>Beak.Length_Culmen</td><td>continuous</td><td>Pearson r</td><td class="num">0.918</td><td class="num">0.917</td><td class="num zero">0.0%</td><td><span class="pill pill-neutral">tied</span></td></tr>
+<tr><td>Tarsus.Length</td><td>continuous</td><td>RMSE</td><td class="num">0.270</td><td class="num">0.285</td><td class="num neg">&minus;5.6%</td><td><span class="pill pill-red">BM better</span></td></tr>
+<tr><td>Tarsus.Length</td><td>continuous</td><td>Pearson r</td><td class="num">0.954</td><td class="num">0.954</td><td class="num zero">0.0%</td><td><span class="pill pill-neutral">tied</span></td></tr>
+<tr><td>Wing.Length</td><td>continuous</td><td>RMSE</td><td class="num">0.244</td><td class="num">0.245</td><td class="num neg">&minus;0.8%</td><td><span class="pill pill-amber">marginal</span></td></tr>
+<tr><td>Wing.Length</td><td>continuous</td><td>Pearson r</td><td class="num">0.969</td><td class="num">0.969</td><td class="num zero">0.0%</td><td><span class="pill pill-neutral">tied</span></td></tr>
+<tr style="border-top: 2px solid var(--border);">
+  <td>Trophic.Level</td><td>categorical</td><td>Accuracy</td><td class="num">52.7%</td><td class="num">52.7%</td><td class="num zero">0.0 pp</td><td><span class="pill pill-neutral">tied</span></td></tr>
+<tr><td>Primary.Lifestyle</td><td>categorical</td><td>Accuracy</td><td class="num">59.6%</td><td class="num">59.6%</td><td class="num zero">0.0 pp</td><td><span class="pill pill-neutral">tied</span></td></tr>
+<tr style="border-top: 2px solid var(--border);">
+  <td>Migration</td><td>ordinal</td><td>RMSE</td><td class="num">0.819</td><td class="num">0.819</td><td class="num zero">0.0%</td><td><span class="pill pill-neutral">tied</span></td></tr>
+<tr><td>Migration</td><td>ordinal</td><td>Spearman &rho;</td><td class="num">0.427</td><td class="num">0.427</td><td class="num zero">0.0%</td><td><span class="pill pill-neutral">tied</span></td></tr>
+</tbody>
+</table>
+
+<div class="chart-grid">
+  <div class="chart-box">
+    <h3>AVONET: RMSE by trait</h3>
+    <canvas id="chart-avonet-rmse"></canvas>
+  </div>
+  <div class="chart-box">
+    <h3>AVONET: GNN 95% coverage</h3>
+    <canvas id="chart-avonet-coverage"></canvas>
+  </div>
+</div>
+
+<!-- ===== GNN COVERAGE TABLE ===== -->
+<h2>3. Uncertainty Quantification (GNN 95% coverage)</h2>
+<table>
+<thead>
+<tr><th>Source</th><th>Trait / Scenario</th><th class="num">Coverage</th><th>Assessment</th></tr>
+</thead>
+<tbody>
+<tr><td>Simulation</td><td>S1: All cont, low signal</td><td class="num">88.1%</td><td><span class="pill pill-amber">slight undercoverage</span></td></tr>
+<tr><td>Simulation</td><td>S2: All cont, high signal</td><td class="num">84.5%</td><td><span class="pill pill-red">undercoverage</span></td></tr>
+<tr><td>Simulation</td><td>S3: Mixed, low signal</td><td class="num">92.0%</td><td><span class="pill pill-green">good</span></td></tr>
+<tr><td>Simulation</td><td>S4: Mixed, high signal</td><td class="num">89.1%</td><td><span class="pill pill-amber">slight undercoverage</span></td></tr>
+<tr><td>Simulation</td><td>S6: High missingness</td><td class="num">82.9%</td><td><span class="pill pill-red">undercoverage</span></td></tr>
+<tr><td>Simulation</td><td>S8: All 5 types</td><td class="num">92.9%</td><td><span class="pill pill-green">good</span></td></tr>
+<tr><td>Simulation</td><td>S9: OU &alpha;=2</td><td class="num">88.0%</td><td><span class="pill pill-amber">slight undercoverage</span></td></tr>
+<tr><td>Simulation</td><td>S10: OU &alpha;=5</td><td class="num">92.2%</td><td><span class="pill pill-green">good</span></td></tr>
+<tr><td>Simulation</td><td>S12: Non-linear</td><td class="num">94.0%</td><td><span class="pill pill-green">good</span></td></tr>
+<tr><td>Simulation</td><td>S13: Variable signal</td><td class="num">89.5%</td><td><span class="pill pill-amber">slight undercoverage</span></td></tr>
+<tr><td>Simulation</td><td>S14: Large tree</td><td class="num">86.0%</td><td><span class="pill pill-amber">undercoverage</span></td></tr>
+<tr><td>Simulation</td><td>S15: Multi-obs</td><td class="num">8.7%</td><td><span class="pill pill-red">broken</span></td></tr>
+<tr style="border-top: 2px solid var(--border);">
+  <td>AVONET</td><td>Mass</td><td class="num">90.5%</td><td><span class="pill pill-green">good</span></td></tr>
+<tr><td>AVONET</td><td>Beak.Length_Culmen</td><td class="num">93.5%</td><td><span class="pill pill-green">good</span></td></tr>
+<tr><td>AVONET</td><td>Tarsus.Length</td><td class="num">90.8%</td><td><span class="pill pill-green">good</span></td></tr>
+<tr><td>AVONET</td><td>Wing.Length</td><td class="num">96.1%</td><td><span class="pill pill-green">good</span></td></tr>
+</tbody>
+</table>
+
+<!-- ===== KEY FINDINGS ===== -->
+<h2>4. Key Findings &amp; Decision Points</h2>
+
+<div class="findings">
+<h3>What works</h3>
+<ul>
+  <li><span class="tag tag-green">Continuous &amp; count RMSE (simulated):</span> GNN consistently improves over BM by 0.7&ndash;2.5% across 13 of 14 comparable scenarios. Best gains under variable phylogenetic signal (S13: +2.5%) and larger trees (S14: +2.0%).</li>
+  <li><span class="tag tag-green">Gate mechanism for discrete traits:</span> Binary, categorical, and ordinal accuracy/RMSE are <strong>exactly</strong> identical between methods in every scenario. The learnable gates correctly defer to the BM baseline, guaranteeing zero degradation.</li>
+  <li><span class="tag tag-green">AVONET coverage:</span> 95% prediction intervals are well-calibrated on real data (90&ndash;96%), which is a key selling point for imputation under uncertainty.</li>
+  <li><span class="tag tag-green">Multi-obs architecture:</span> S15 demonstrates the aggregate&rarr;message-pass&rarr;expand pipeline works (r = 0.70 for continuous, 61.7% accuracy for binary with 3 obs/species).</li>
+</ul>
+</div>
+
+<div class="findings">
+<h3>What needs work</h3>
+<ul>
+  <li><span class="tag tag-red">AVONET continuous RMSE:</span> GNN is 0.8&ndash;12.1% worse than BM on real morphometric data, despite near-identical Pearson r. The rank ordering is correct but the scale is inflated. This is the <strong>primary issue</strong> to address.</li>
+  <li><span class="tag tag-red">S15 coverage at 8.7%:</span> The multi-obs uncertainty quantification is broken &mdash; prediction intervals are far too narrow. The SE expansion from species-level baseline to obs-level may not account for within-species variance.</li>
+  <li><span class="tag tag-amber">S11 regime shift:</span> The only scenario where GNN is worse (&minus;0.6%). The bimodal structure may confuse the DAE&rsquo;s noise model. Low priority but worth investigating.</li>
+  <li><span class="tag tag-amber">Simulation coverage generally below 95%:</span> Most scenarios show 84&ndash;93% coverage (nominal = 95%). The SE estimates are systematically too tight.</li>
+  <li><span class="tag tag-amber">Discrete trait gates are <em>too</em> conservative:</span> Accuracy is identical in every case, meaning the GNN never improves on BM for discrete traits. The gates may be shutting too aggressively.</li>
+</ul>
+</div>
+
+<div class="findings">
+<h3>Suggested priorities for next phase</h3>
+<ul>
+  <li><strong>Priority 1:</strong> Fix AVONET RMSE regression. Likely causes: (a) residual scale not matching BM predictions, (b) learning rate or epoch tuning, (c) the GNN adding noise rather than signal when BM is already strong. Consider a weighted ensemble or residual shrinkage.</li>
+  <li><strong>Priority 2:</strong> Fix multi-obs coverage (S15). The SE computation needs to incorporate within-species variance, not just phylogenetic uncertainty.</li>
+  <li><strong>Priority 3:</strong> Improve general coverage calibration. Options: conformal prediction wrapper, or scaling the SE by an empirically estimated factor from the validation set.</li>
+  <li><strong>Priority 4:</strong> Allow discrete-trait gates to partially open when phylogenetic structure carries information beyond the mode/majority class.</li>
+  <li><strong>Priority 5:</strong> Add scenario S16 (interaction terms) if it didn&rsquo;t complete, and benchmark against additional real datasets beyond AVONET.</li>
+</ul>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<div class="footer">
+  pigauto v0.1.0 &bull; Benchmark run: 7 April 2026 &bull; BACE simulation + AVONET 300 &bull; 135 tests passing
+</div>
+
+<!-- ===== CHARTS ===== -->
+<script>
+// Chart defaults
+Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+Chart.defaults.font.size = 12;
+
+// --- Simulation RMSE improvement chart ---
+new Chart(document.getElementById('chart-sim-rmse'), {
+  type: 'bar',
+  data: {
+    labels: ['S1\nCont low', 'S2\nCont high', 'S3\nMixed low', 'S4\nMixed high', 'S5\nMixed+cat',
+             'S6\nHigh miss', 'S7\nNear-zero', 'S8\nAll 5', 'S9\nOU \u03b1=2', 'S10\nOU \u03b1=5',
+             'S11\nRegime', 'S12\nNon-lin', 'S13\nVar sig', 'S14\nLarge tree'],
+    datasets: [{
+      label: '% RMSE improvement (GNN vs BM)',
+      data: [1.3, 1.4, 1.2, 1.8, 1.1, 1.0, 1.4, 1.6, 1.1, 0.7, -0.6, 0.8, 2.5, 2.0],
+      backgroundColor: function(ctx) {
+        return ctx.raw >= 0 ? 'rgba(25,135,84,0.7)' : 'rgba(220,53,69,0.7)';
+      },
+      borderColor: function(ctx) {
+        return ctx.raw >= 0 ? 'rgba(25,135,84,1)' : 'rgba(220,53,69,1)';
+      },
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: {
+        title: { display: true, text: '% improvement (positive = GNN better)' },
+        grid: { color: '#eee' },
+        beginAtZero: true,
+        suggestedMin: -2,
+        suggestedMax: 3
+      },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// --- Coverage chart ---
+new Chart(document.getElementById('chart-coverage'), {
+  type: 'bar',
+  data: {
+    labels: ['S1','S2','S3','S4','S6','S8','S9','S10','S12','S13','S14'],
+    datasets: [{
+      label: 'Observed 95% coverage',
+      data: [88.1, 84.5, 92.0, 89.1, 82.9, 92.9, 88.0, 92.2, 94.0, 89.5, 86.0],
+      backgroundColor: 'rgba(13,110,253,0.6)',
+      borderColor: 'rgba(13,110,253,1)',
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      annotation: { }
+    },
+    scales: {
+      y: {
+        title: { display: true, text: 'Coverage (%)' },
+        min: 70, max: 100,
+        grid: { color: '#eee' }
+      },
+      x: { grid: { display: false } }
+    }
+  },
+  plugins: [{
+    afterDraw: function(chart) {
+      const ctx = chart.ctx;
+      const yAxis = chart.scales.y;
+      const y95 = yAxis.getPixelForValue(95);
+      ctx.save();
+      ctx.beginPath();
+      ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = 'rgba(220,53,69,0.8)';
+      ctx.lineWidth = 2;
+      ctx.moveTo(chart.chartArea.left, y95);
+      ctx.lineTo(chart.chartArea.right, y95);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(220,53,69,0.8)';
+      ctx.font = '11px sans-serif';
+      ctx.fillText('95% nominal', chart.chartArea.right - 80, y95 - 5);
+      ctx.restore();
+    }
+  }]
+});
+
+// --- AVONET RMSE chart ---
+new Chart(document.getElementById('chart-avonet-rmse'), {
+  type: 'bar',
+  data: {
+    labels: ['Mass', 'Beak.Length', 'Tarsus.Length', 'Wing.Length', 'Migration'],
+    datasets: [
+      {
+        label: 'BM baseline',
+        data: [0.222, 0.359, 0.270, 0.244, 0.819],
+        backgroundColor: 'rgba(108,117,125,0.6)',
+        borderColor: 'rgba(108,117,125,1)',
+        borderWidth: 1
+      },
+      {
+        label: 'pigauto GNN',
+        data: [0.249, 0.379, 0.285, 0.245, 0.819],
+        backgroundColor: 'rgba(13,110,253,0.6)',
+        borderColor: 'rgba(13,110,253,1)',
+        borderWidth: 1
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'top' } },
+    scales: {
+      y: { title: { display: true, text: 'RMSE' }, beginAtZero: true, grid: { color: '#eee' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// --- AVONET coverage chart ---
+new Chart(document.getElementById('chart-avonet-coverage'), {
+  type: 'bar',
+  data: {
+    labels: ['Mass', 'Beak.Length', 'Tarsus.Length', 'Wing.Length'],
+    datasets: [{
+      label: 'GNN 95% coverage',
+      data: [90.5, 93.5, 90.8, 96.1],
+      backgroundColor: 'rgba(13,110,253,0.6)',
+      borderColor: 'rgba(13,110,253,1)',
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { title: { display: true, text: 'Coverage (%)' }, min: 80, max: 100, grid: { color: '#eee' } },
+      x: { grid: { display: false } }
+    }
+  },
+  plugins: [{
+    afterDraw: function(chart) {
+      const ctx = chart.ctx;
+      const yAxis = chart.scales.y;
+      const y95 = yAxis.getPixelForValue(95);
+      ctx.save();
+      ctx.beginPath();
+      ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = 'rgba(220,53,69,0.8)';
+      ctx.lineWidth = 2;
+      ctx.moveTo(chart.chartArea.left, y95);
+      ctx.lineTo(chart.chartArea.right, y95);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(220,53,69,0.8)';
+      ctx.font = '11px sans-serif';
+      ctx.fillText('95% nominal', chart.chartArea.right - 80, y95 - 5);
+      ctx.restore();
+    }
+  }]
+});
+</script>
+
+</body>
+</html>

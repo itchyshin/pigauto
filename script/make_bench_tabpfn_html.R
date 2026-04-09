@@ -291,5 +291,12 @@ Source: <code>script/bench_tabpfn.R</code> &middot; Results: <code>script/bench_
 </html>
 ')
 
-writeLines(html, "script/bench_tabpfn.html")
-cat("Wrote script/bench_tabpfn.html\n")
+# Dual-write: one copy in script/ (dev artefact), one copy in
+# pkgdown/assets/dev/ so pkgdown::build_site() exposes it on the web.
+targets <- c("script/bench_tabpfn.html",
+             "pkgdown/assets/dev/bench_tabpfn.html")
+for (t in targets) {
+  dir.create(dirname(t), showWarnings = FALSE, recursive = TRUE)
+  writeLines(html, t)
+  cat("Wrote ", t, "\n", sep = "")
+}

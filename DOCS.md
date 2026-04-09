@@ -1,0 +1,244 @@
+# pigauto — documentation index
+
+> **Live site**: <https://itchyshin.github.io/pigauto>
+> **Source**: <https://github.com/itchyshin/pigauto>
+> **One-line summary**: phylogenetic trait imputation via a residual
+> graph autoencoder that blends a Brownian-motion baseline with an
+> attention-based graph neural network.
+
+This file is the single entry point for everything that ships with the
+pigauto repository: tutorials, function reference, design notes,
+changelog, and benchmark reports. Start here when you are trying to
+find something and are not sure where to look.
+
+The **live site** above is built automatically from this repo on every
+push to `main` (GitHub Actions → `pkgdown`). It is the most convenient
+way to browse tutorials, function reference, and the changelog as
+clickable web pages. Everything linked from the live site also lives
+in this repo, and the tables below give both the live URL (web-viewable)
+and the in-repo source file (which you use to rebuild it) for each
+artefact.
+
+> **Note on in-repo HTML files.** The rendered HTML tutorials live at
+> `inst/doc/*.html` and `docs/*.html`, but both directories are
+> `.gitignore`d — they are *build outputs*, not committed source.
+> Click the live-site links for the rendered page; click the "Source"
+> column to see the script that generates it. To rebuild all HTMLs
+> locally, see the "How this site is built" appendix at the bottom.
+
+---
+
+## 1. Start here
+
+| What you want | Where to go |
+|---|---|
+| A one-page pitch and installation | [`README.md`](README.md) |
+| First imputation, end-to-end | Live: [articles/getting-started.html](https://itchyshin.github.io/pigauto/articles/getting-started.html) · source: [`vignettes/getting-started.Rmd`](vignettes/getting-started.Rmd) |
+| Why does pigauto work this way? | Live: [pigauto_intro.html](https://itchyshin.github.io/pigauto/pigauto_intro.html) · source: [`script/make_intro_html.R`](script/make_intro_html.R) |
+| The full PCM workflow, mixed-type traits | Live: [pigauto_workflow_mixed.html](https://itchyshin.github.io/pigauto/pigauto_workflow_mixed.html) · source: [`script/make_workflow_mixed_html.R`](script/make_workflow_mixed_html.R) |
+| Package internals and gotchas | [`CLAUDE.md`](CLAUDE.md) |
+
+---
+
+## 2. Tutorials
+
+The tutorials come in two shapes. **Knitted vignettes** (`*.Rmd` in
+`vignettes/`) are built by `devtools::build_vignettes()` and become
+`inst/doc/*.html`. **Static HTML walk-throughs** (`script/make_*_html.R`)
+are hand-written R scripts that write pre-formatted HTML directly into
+`inst/doc/` — they are faster to iterate on than Rmd because they do
+not need to execute the code, but reader code snippets need to be
+copy-pasted into an R session.
+
+| Tutorial | Live link | Source (committed) | Rendered output (gitignored) | Covers |
+|---|---|---|---|---|
+| Getting started | [articles/getting-started.html](https://itchyshin.github.io/pigauto/articles/getting-started.html) | [`vignettes/getting-started.Rmd`](vignettes/getting-started.Rmd) | `inst/doc/getting-started.html` | First imputation on the bundled AVONET 300 dataset; how to read `pigauto_result` |
+| Mixed-type traits | [articles/mixed-types.html](https://itchyshin.github.io/pigauto/articles/mixed-types.html) | [`vignettes/mixed-types.Rmd`](vignettes/mixed-types.Rmd) | `inst/doc/mixed-types.html` | Continuous + count + ordinal + binary + categorical in one model; round-trip encoding |
+| Intro (architecture overview) | [pigauto_intro.html](https://itchyshin.github.io/pigauto/pigauto_intro.html) | [`script/make_intro_html.R`](script/make_intro_html.R) | `inst/doc/pigauto_intro.html` | Why a residual BM + GNN blend? Gate calibration, conformal intervals, trait-type handling |
+| Continuous-trait PCM workflow | [pigauto_workflow.html](https://itchyshin.github.io/pigauto/pigauto_workflow.html) | [`script/make_workflow_html.R`](script/make_workflow_html.R) | `inst/doc/pigauto_workflow.html` | Data → reconcile tree → impute → downstream fit (glmmTMB) → Rubin's rules |
+| Mixed-type PCM workflow | [pigauto_workflow_mixed.html](https://itchyshin.github.io/pigauto/pigauto_workflow_mixed.html) | [`script/make_workflow_mixed_html.R`](script/make_workflow_mixed_html.R) | `inst/doc/pigauto_workflow_mixed.html` | Same as above with mixed trait types, plus all three analysis paths (A/B/C) |
+
+### The three analysis paths
+
+The mixed-type workflow tutorial is organised around three ways of
+turning M imputed datasets into pooled inference. This framing is
+explicit in the tutorial and informal in the rest of the docs:
+
+- **Path A — pigauto + glmmTMB + Rubin's rules** (frequentist). Fast
+  iteration, regression-table output, works with any `coef()` +
+  `vcov()` fit. Use `multi_impute()` → `with_imputations()` →
+  `pool_mi()`.
+- **Path B — pigauto + MCMCglmm + posterior concatenation** (Bayesian,
+  pigauto as imputer). Use `multi_impute()` → `with_imputations()`
+  with an `MCMCglmm()` call inside, then concatenate the `$Sol`
+  chains. `pool_mi()` explicitly rejects `MCMCglmm` fits because
+  Rubin's rules do not apply to posterior samples.
+- **Path C — BACE integrated** (Bayesian, chained-equation MCMC).
+  Use `BACE::bace()` + `BACE::pool_posteriors()` end-to-end. BACE is
+  a separate in-tree package (`BACE/`); `pigauto::fit_baseline_bace()`
+  wraps it as an alternative baseline but the integrated inference
+  workflow lives in the BACE package itself.
+
+---
+
+## 3. Function reference
+
+The full auto-generated reference lives at the pkgdown site
+<https://itchyshin.github.io/pigauto/reference/>. A copy of every
+exported function's `.Rd` page is also in `man/`.
+
+| Group | Key functions | Purpose |
+|---|---|---|
+| One-call entry point | [`impute()`](man/impute.Rd) | Runs the full pipeline and returns a completed data frame |
+| Multiple imputation | [`multi_impute()`](man/multi_impute.Rd), [`with_imputations()`](man/with_imputations.Rd), [`pool_mi()`](man/pool_mi.Rd) | Generate M datasets → fit M models → pool with Rubin's rules |
+| Fine-grained pipeline | [`preprocess_traits()`](man/preprocess_traits.Rd), [`build_phylo_graph()`](man/build_phylo_graph.Rd), [`fit_baseline()`](man/fit_baseline.Rd), [`fit_pigauto()`](man/fit_pigauto.Rd), [`predict.pigauto_fit()`](man/predict.pigauto_fit.Rd), [`evaluate()`](man/evaluate.Rd) | The six stages `impute()` runs internally |
+| Alternative baselines | [`fit_baseline_bace()`](man/fit_baseline_bace.Rd), [`fit_baseline_tabpfn()`](man/fit_baseline_tabpfn.Rd) | BACE (Bayesian chained-equation) or TabPFN (tabular transformer) as the baseline |
+| Cross-validation and benchmarks | [`cross_validate()`](man/cross_validate.Rd), [`compare_methods()`](man/compare_methods.Rd), [`simulate_benchmark()`](man/simulate_benchmark.Rd), [`simulate_non_bm()`](man/simulate_non_bm.Rd) | Evaluation infrastructure |
+| Reporting and plotting | [`pigauto_report()`](man/pigauto_report.Rd), [`plot.pigauto_fit()`](man/plot.pigauto_fit.Rd), [`plot.pigauto_pred()`](man/plot.pigauto_pred.Rd), [`plot.pigauto_benchmark()`](man/plot.pigauto_benchmark.Rd), [`summary.pigauto_fit()`](man/summary.pigauto_fit.Rd), [`calibration_df()`](man/calibration_df.Rd), [`confusion_matrix()`](man/confusion_matrix.Rd) | Interactive HTML reports + diagnostic plots |
+| I/O | [`read_traits()`](man/read_traits.Rd), [`read_tree()`](man/read_tree.Rd), [`save_pigauto()`](man/save_pigauto.Rd), [`load_pigauto()`](man/load_pigauto.Rd) | Data loading and fit persistence |
+| Setup | [`setup_tabpfn()`](man/setup_tabpfn.Rd) | One-time Python venv setup for the TabPFN baseline |
+| Bundled data | [`avonet300`](man/avonet300.Rd), [`tree300`](man/tree300.Rd) | 300-species AVONET + matching BirdTree phylogeny |
+
+---
+
+## 4. Design notes and architecture
+
+For contributors, reviewers, and anyone trying to understand what
+pigauto does under the hood:
+
+- [`CLAUDE.md`](CLAUDE.md) — the canonical architecture reference.
+  S3 class table, data flow, trait-type handling, gate initialisation,
+  post-training calibration and conformal, multi-obs code path, and
+  the gotchas that are easy to miss on a cold read of the source. Also
+  documents the `BACE/` in-tree package and how it relates to pigauto.
+- [`README.md`](README.md) — user-facing tour plus benchmark summary
+  tables.
+- [`NEWS.md`](NEWS.md) — per-version release notes.
+
+Source-code map:
+
+```
+R/
+├── impute.R                one-call entry point
+├── multi_impute.R          M-dataset generator + pigauto_mi class
+├── with_imputations.R      map a user fit function over M datasets
+├── pool_mi.R               Rubin's rules + Barnard-Rubin df
+├── preprocess_traits.R     trait-type detection + latent matrix
+├── build_phylo_graph.R     adjacency + spectral coords
+├── fit_baseline.R          Rphylopars BM + phylo label propagation
+├── fit_baseline_bace.R     BACE wrapper (Suggests:)
+├── fit_baseline_tabpfn.R   TabPFN wrapper (Suggests:)
+├── fit_pigauto.R           training loop + post-training calibration
+├── model_residual_dae.R    ResidualPhyloDAE torch::nn_module
+├── predict_pigauto.R       MC-dropout sampling + conformal intervals
+├── evaluate.R              per-trait metrics
+├── cross_validate.R        k-fold CV driver
+├── simulate_benchmark.R    synthetic benchmark scenarios
+├── report.R                interactive HTML report builder
+└── plot.R                  diagnostic plots
+```
+
+---
+
+## 5. Developer reports
+
+These HTML reports are dev artefacts living under `script/`. They do
+not ship with the installed package (`^script$` is in `.Rbuildignore`)
+but are committed to the repo and mirrored into `pkgdown/assets/dev/`
+so the live site can serve them as rendered web pages.
+
+| Report | Live link | Source |
+|---|---|---|
+| Test catalogue (77 tests × 8 files) | [dev/tests_overview.html](https://itchyshin.github.io/pigauto/dev/tests_overview.html) | [`script/make_tests_html.R`](script/make_tests_html.R) |
+| TabPFN benchmark | [dev/bench_tabpfn.html](https://itchyshin.github.io/pigauto/dev/bench_tabpfn.html) | [`script/make_bench_tabpfn_html.R`](script/make_bench_tabpfn_html.R) (results from `script/bench_tabpfn.rds`) |
+| Benchmark report (simulation) | [dev/benchmark_report.html](https://itchyshin.github.io/pigauto/dev/benchmark_report.html) | Frozen snapshot at `script/benchmark_report.html` (no live builder) |
+| Benchmark final report | [dev/benchmark_final_report.html](https://itchyshin.github.io/pigauto/dev/benchmark_final_report.html) | Frozen snapshot at `script/benchmark_final_report.html` (no live builder) |
+| Test run report | [dev/test_report.html](https://itchyshin.github.io/pigauto/dev/test_report.html) | Frozen snapshot at `script/test_report.html` (no live builder) |
+
+---
+
+## 6. Changelog
+
+- [`NEWS.md`](NEWS.md) — release history, user-facing changes per version.
+- Web version on the live site: <https://itchyshin.github.io/pigauto/news/index.html>.
+
+---
+
+## 7. Citation and license
+
+- [`DESCRIPTION`](DESCRIPTION) — package metadata, authors, version.
+- [`LICENSE`](LICENSE) — MIT.
+- Canonical citation (BibTeX friendly):
+
+  > Nakagawa S (2026). *pigauto: Phylogenetic Imputation via Graph
+  > Autoencoder*. R package version 0.3.0.
+  > <https://github.com/itchyshin/pigauto>.
+
+---
+
+## 8. How this site is built (appendix)
+
+The live pkgdown site is produced by two things:
+
+1. **`_pkgdown.yml`** at the repo root configures the site structure
+   (navbar, reference groups, articles menu, template).
+2. **`.github/workflows/pkgdown.yaml`** runs
+   `pkgdown::build_site_github_pages()` on every push to `main` and
+   deploys the `docs/` output to the `gh-pages` branch. GitHub Pages
+   serves `gh-pages` at <https://itchyshin.github.io/pigauto>.
+
+### Static HTML tutorials: the dual-write pattern
+
+The three `script/make_*_html.R` scripts (`make_intro_html.R`,
+`make_workflow_html.R`, `make_workflow_mixed_html.R`) and the two dev
+report builders (`make_tests_html.R`, `make_bench_tabpfn_html.R`) each
+write their output to **two places**:
+
+- `inst/doc/xxx.html` (or `script/xxx.html` for dev reports) —
+  the canonical location. For tutorials this is what ships with the
+  installed package; readers open it via
+  `browseURL(system.file("doc", "pigauto_workflow.html", package = "pigauto"))`.
+- `pkgdown/assets/xxx.html` (or `pkgdown/assets/dev/xxx.html` for dev
+  reports) — `pkgdown` copies `pkgdown/assets/*` verbatim into the
+  `docs/` build output, so the same HTML becomes accessible on the
+  live site at
+  `https://itchyshin.github.io/pigauto/xxx.html`.
+
+This keeps the installed-package copy and the web copy in lockstep:
+one `Rscript script/make_workflow_mixed_html.R` rebuild touches both.
+
+### Rebuilding the whole site locally
+
+```r
+# regenerate all five static HTML tutorials + dev reports
+Rscript script/make_intro_html.R
+Rscript script/make_workflow_html.R
+Rscript script/make_workflow_mixed_html.R
+Rscript script/make_tests_html.R
+Rscript script/make_bench_tabpfn_html.R   # requires script/bench_tabpfn.rds
+
+# build vignettes (knitted from vignettes/*.Rmd)
+devtools::build_vignettes()
+
+# build the pkgdown site into docs/
+pkgdown::build_site()
+```
+
+`pkgdown::build_site()` will pick up the vignettes from `vignettes/`,
+the static HTMLs from `pkgdown/assets/`, the function reference from
+`man/`, and `NEWS.md` for the changelog, and assemble them into
+`docs/`. Open `docs/index.html` in a browser to preview before pushing.
+
+### Artefact → source map
+
+| Artefact | Source | Rebuild command |
+|---|---|---|
+| `inst/doc/getting-started.html` | `vignettes/getting-started.Rmd` | `devtools::build_vignettes()` |
+| `inst/doc/mixed-types.html` | `vignettes/mixed-types.Rmd` | `devtools::build_vignettes()` |
+| `inst/doc/pigauto_intro.html` | `script/make_intro_html.R` | `Rscript script/make_intro_html.R` |
+| `inst/doc/pigauto_workflow.html` | `script/make_workflow_html.R` | `Rscript script/make_workflow_html.R` |
+| `inst/doc/pigauto_workflow_mixed.html` | `script/make_workflow_mixed_html.R` | `Rscript script/make_workflow_mixed_html.R` |
+| `script/tests_overview.html` | `script/make_tests_html.R` | `Rscript script/make_tests_html.R` |
+| `script/bench_tabpfn.html` | `script/make_bench_tabpfn_html.R` | `Rscript script/make_bench_tabpfn_html.R` |
+| `docs/` (pkgdown site) | `_pkgdown.yml` + everything above | `pkgdown::build_site()` locally, or push to `main` for CI build |
+| `man/*.Rd` | roxygen blocks in `R/*.R` | `devtools::document()` |

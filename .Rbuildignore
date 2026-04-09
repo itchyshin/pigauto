@@ -15,3 +15,8 @@
 ^NEWS\.md$
 ^BACE$
 ^Rplots\.pdf$
+^_pkgdown\.yml$
+^pkgdown$
+^docs$
+^\.github$
+^DOCS\.md$
