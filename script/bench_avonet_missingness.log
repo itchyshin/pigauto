@@ -49,3 +49,149 @@ warning: solve(): system is singular (rcond: 1.0796e-27); attempting approx solu
 warning: solve(): system is singular (rcond: 3.5644e-18); attempting approx solution
 
 warning: solve(): system is singular (rcond: 4.17233e-19); attempting approx solution
+[ 177.9s] [baseline_20pct           ] wall =   134.3s  maxR =   4460 MB
+Using device: mps
+epoch   25 | rec 1.1168 | shrink 6.3373 | gate 0.0123 | lr 3.8e-04 | val 0.3901 | best Inf | pat 4
+epoch   50 | rec 0.7969 | shrink 4.9695 | gate 0.0120 | lr 7.5e-04 | val 0.3861 | best 0.3901 | pat 4
+epoch   75 | rec 0.4882 | shrink 0.6953 | gate 0.0117 | lr 1.1e-03 | val 0.3836 | best 0.3861 | pat 4
+epoch  100 | rec 0.3950 | shrink 0.1939 | gate 0.0114 | lr 1.5e-03 | val 0.3830 | best 0.3836 | pat 4
+epoch  125 | rec 0.3422 | shrink 0.1321 | gate 0.0110 | lr 1.9e-03 | val 0.3820 | best 0.3830 | pat 4
+epoch  150 | rec 0.2966 | shrink 0.1389 | gate 0.0108 | lr 2.3e-03 | val 0.3804 | best 0.3820 | pat 4
+epoch  175 | rec 0.2691 | shrink 0.2484 | gate 0.0109 | lr 2.6e-03 | val 0.3778 | best 0.3804 | pat 4
+epoch  200 | rec 0.2535 | shrink 0.3051 | gate 0.0115 | lr 3.0e-03 | val 0.3761 | best 0.3778 | pat 4
+epoch  225 | rec 0.2334 | shrink 0.3378 | gate 0.0125 | lr 2.9e-03 | val 0.3726 | best 0.3761 | pat 4
+epoch  250 | rec 0.2168 | shrink 0.4015 | gate 0.0140 | lr 2.8e-03 | val 0.3702 | best 0.3726 | pat 4
+epoch  275 | rec 0.2116 | shrink 0.4242 | gate 0.0158 | lr 2.6e-03 | val 0.3687 | best 0.3702 | pat 4
+epoch  300 | rec 0.2006 | shrink 0.4782 | gate 0.0177 | lr 2.3e-03 | val 0.3676 | best 0.3687 | pat 4
+epoch  325 | rec 0.1971 | shrink 0.4816 | gate 0.0196 | lr 1.9e-03 | val 0.3671 | best 0.3676 | pat 4
+epoch  350 | rec 0.1916 | shrink 0.5057 | gate 0.0213 | lr 1.5e-03 | val 0.3636 | best 0.3671 | pat 4
+epoch  375 | rec 0.1884 | shrink 0.5080 | gate 0.0226 | lr 1.1e-03 | val 0.3619 | best 0.3636 | pat 4
+epoch  400 | rec 0.1879 | shrink 0.5005 | gate 0.0236 | lr 7.6e-04 | val 0.3610 | best 0.3619 | pat 4
+epoch  425 | rec 0.1850 | shrink 0.5119 | gate 0.0242 | lr 4.5e-04 | val 0.3600 | best 0.3610 | pat 4
+epoch  450 | rec 0.1832 | shrink 0.5327 | gate 0.0246 | lr 2.1e-04 | val 0.3595 | best 0.3600 | pat 4
+epoch  475 | rec 0.1860 | shrink 0.5177 | gate 0.0247 | lr 6.1e-05 | val 0.3594 | best 0.3595 | pat 4
+epoch  500 | rec 0.1837 | shrink 0.5250 | gate 0.0247 | lr 1.0e-05 | val 0.3594 | best 0.3594 | pat 4
+Calibrating gates on validation set...
+Calibrated gates: Mass=0, Beak.Length_Culmen=0, Tarsus.Length=0, Wing.Length=0, Trophic.Level=Carnivore=0.8, Trophic.Level=Herbivore=0.8, Trophic.Level=Omnivore=0.8, Trophic.Level=Scavenger=0.8, Primary.Lifestyle=Aerial=0.7, Primary.Lifestyle=Aquatic=0.7, Primary.Lifestyle=Generalist=0.7, Primary.Lifestyle=Insessorial=0.7, Primary.Lifestyle=Terrestrial=0.7, Migration=0
+Computing conformal prediction scores...
+Conformal scores (latent scale): Mass=0.3012, Beak.Length_Culmen=0.4475, Tarsus.Length=0.3607, Wing.Length=0.3141, Migration=1.8499
+[ 865.3s] [pigauto_train_20pct      ] wall =   686.9s  maxR =   1652 MB
+[ 871.7s] [pigauto_pred_20pct       ] wall =     6.1s  maxR =   1608 MB
+[ 871.8s] === missing_frac = 0.50 ===
+[ 874.1s] [splits_50pct             ] wall =     1.9s  maxR =   4460 MB
+[ 874.4s] [mean_50pct               ] wall =     0.0s  maxR =   1588 MB
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok], method = "spearman") :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok], method = "spearman") :
+  the standard deviation is zero
+
+warning: solve(): system is singular (rcond: 3.81511e-50); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.12149e-42); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.92869e-16); attempting approx solution
+
+warning: solve(): system is singular (rcond: 6.60531e-20); attempting approx solution
+[ 961.6s] [baseline_50pct           ] wall =    86.8s  maxR =   4460 MB
+Using device: mps
+epoch   25 | rec 1.1152 | shrink 6.6036 | gate 0.0123 | lr 3.8e-04 | val 0.4268 | best Inf | pat 4
+epoch   50 | rec 0.8068 | shrink 5.2641 | gate 0.0120 | lr 7.5e-04 | val 0.4233 | best 0.4268 | pat 4
+epoch   75 | rec 0.4986 | shrink 0.8619 | gate 0.0117 | lr 1.1e-03 | val 0.4210 | best 0.4233 | pat 4
+epoch  100 | rec 0.3894 | shrink 0.1941 | gate 0.0113 | lr 1.5e-03 | val 0.4210 | best 0.4210 | pat 4
+epoch  125 | rec 0.3376 | shrink 0.1337 | gate 0.0110 | lr 1.9e-03 | val 0.4201 | best 0.4210 | pat 3
+epoch  150 | rec 0.2962 | shrink 0.1579 | gate 0.0108 | lr 2.3e-03 | val 0.4186 | best 0.4201 | pat 4
+epoch  175 | rec 0.2686 | shrink 0.2424 | gate 0.0109 | lr 2.6e-03 | val 0.4171 | best 0.4186 | pat 4
+epoch  200 | rec 0.2526 | shrink 0.2866 | gate 0.0115 | lr 3.0e-03 | val 0.4159 | best 0.4171 | pat 4
+epoch  225 | rec 0.2326 | shrink 0.3296 | gate 0.0126 | lr 2.9e-03 | val 0.4167 | best 0.4159 | pat 4
+epoch  250 | rec 0.2148 | shrink 0.4154 | gate 0.0141 | lr 2.8e-03 | val 0.4196 | best 0.4159 | pat 3
+epoch  275 | rec 0.2102 | shrink 0.4370 | gate 0.0159 | lr 2.6e-03 | val 0.4201 | best 0.4159 | pat 2
+epoch  300 | rec 0.1993 | shrink 0.4783 | gate 0.0178 | lr 2.3e-03 | val 0.4195 | best 0.4159 | pat 1
+Early stopping at epoch 300
+Calibrating gates on validation set...
+Calibrated gates: Mass=0, Beak.Length_Culmen=0, Tarsus.Length=0, Wing.Length=0, Trophic.Level=Carnivore=0.1, Trophic.Level=Herbivore=0.1, Trophic.Level=Omnivore=0.1, Trophic.Level=Scavenger=0.1, Primary.Lifestyle=Aerial=0.3, Primary.Lifestyle=Aquatic=0.3, Primary.Lifestyle=Generalist=0.3, Primary.Lifestyle=Insessorial=0.3, Primary.Lifestyle=Terrestrial=0.3, Migration=0
+Computing conformal prediction scores...
+Conformal scores (latent scale): Mass=0.3629, Beak.Length_Culmen=0.494, Tarsus.Length=0.4324, Wing.Length=0.3548, Migration=1.94
+[1729.9s] [pigauto_train_50pct      ] wall =   767.8s  maxR =   1664 MB
+[1738.3s] [pigauto_pred_50pct       ] wall =     7.7s  maxR =   1617 MB
+[1738.5s] === missing_frac = 0.80 ===
+[1744.1s] [splits_80pct             ] wall =     5.3s  maxR =   4460 MB
+[1744.4s] [mean_80pct               ] wall =     0.0s  maxR =   1589 MB
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok], method = "spearman") :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok], method = "spearman") :
+  the standard deviation is zero
+
+warning: solve(): system is singular (rcond: 2.21769e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.19726e-63); attempting approx solution
+
+warning: solve(): system is singular (rcond: 7.02142e-19); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.40659e-24); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.82044e-131); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.03249e-34); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.61937e-43); attempting approx solution
+
+warning: solve(): system is singular (rcond: 7.94521e-39); attempting approx solution
+[1871.5s] [baseline_80pct           ] wall =   126.7s  maxR =   4460 MB
+Using device: mps
+epoch   25 | rec 1.1199 | shrink 15.7399 | gate 0.0123 | lr 3.8e-04 | val 0.4536 | best Inf | pat 4
+epoch   50 | rec 0.8592 | shrink 13.4378 | gate 0.0120 | lr 7.5e-04 | val 0.4524 | best 0.4536 | pat 4
+epoch   75 | rec 0.5350 | shrink 2.5198 | gate 0.0117 | lr 1.1e-03 | val 0.4486 | best 0.4524 | pat 4
+epoch  100 | rec 0.4428 | shrink 0.3849 | gate 0.0114 | lr 1.5e-03 | val 0.4474 | best 0.4486 | pat 4
+epoch  125 | rec 0.3805 | shrink 0.2264 | gate 0.0110 | lr 1.9e-03 | val 0.4473 | best 0.4474 | pat 4
+epoch  150 | rec 0.3367 | shrink 0.1869 | gate 0.0107 | lr 2.3e-03 | val 0.4466 | best 0.4473 | pat 4
+epoch  175 | rec 0.3157 | shrink 0.2016 | gate 0.0104 | lr 2.6e-03 | val 0.4456 | best 0.4466 | pat 4
+epoch  200 | rec 0.2871 | shrink 0.2427 | gate 0.0104 | lr 3.0e-03 | val 0.4454 | best 0.4456 | pat 4
+epoch  225 | rec 0.2726 | shrink 0.3106 | gate 0.0107 | lr 2.9e-03 | val 0.4456 | best 0.4454 | pat 4
+epoch  250 | rec 0.2638 | shrink 0.3161 | gate 0.0112 | lr 2.8e-03 | val 0.4455 | best 0.4454 | pat 3
+epoch  275 | rec 0.2485 | shrink 0.3373 | gate 0.0121 | lr 2.6e-03 | val 0.4440 | best 0.4454 | pat 2
+epoch  300 | rec 0.2371 | shrink 0.3646 | gate 0.0132 | lr 2.3e-03 | val 0.4449 | best 0.4440 | pat 4
+epoch  325 | rec 0.2373 | shrink 0.3912 | gate 0.0144 | lr 1.9e-03 | val 0.4457 | best 0.4440 | pat 3
+epoch  350 | rec 0.2274 | shrink 0.3920 | gate 0.0155 | lr 1.5e-03 | val 0.4451 | best 0.4440 | pat 2
+epoch  375 | rec 0.2144 | shrink 0.4663 | gate 0.0164 | lr 1.1e-03 | val 0.4449 | best 0.4440 | pat 1
+Early stopping at epoch 375
+Calibrating gates on validation set...
+Calibrated gates: Mass=0, Beak.Length_Culmen=0, Tarsus.Length=0, Wing.Length=0, Trophic.Level=Carnivore=0.2, Trophic.Level=Herbivore=0.2, Trophic.Level=Omnivore=0.2, Trophic.Level=Scavenger=0.2, Primary.Lifestyle=Aerial=0.3, Primary.Lifestyle=Aquatic=0.3, Primary.Lifestyle=Generalist=0.3, Primary.Lifestyle=Insessorial=0.3, Primary.Lifestyle=Terrestrial=0.3, Migration=0
+Computing conformal prediction scores...
+Conformal scores (latent scale): Mass=0.4828, Beak.Length_Culmen=0.6683, Tarsus.Length=0.5677, Wing.Length=0.4941, Migration=2.0376
+[3556.3s] [pigauto_train_80pct      ] wall =  1684.3s  maxR =   1660 MB
+[3566.6s] [pigauto_pred_80pct       ] wall =     9.4s  maxR =   1615 MB
+[3566.9s] Total wall: 3566.8s (59.4 min)
+[3567.0s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_avonet_missingness.md
+[3567.0s] done
