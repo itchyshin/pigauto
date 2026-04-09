@@ -1,0 +1,82 @@
+[   0.0s] bench_scaling starting at 2026-04-09 10:05:13
+[   0.0s] n_grid = 300, 1000, 2000, 3000, 5000, 7500, 10000
+[   0.0s] stage budget = 1800s, overall budget = 10800s
+[   0.0s] ===== n = 300 =====
+[   0.2s] [n=  300] preprocess ok      wall=    0.0s  maxR=    18 MB
+[   0.4s] [n=  300] graph      ok      wall=    0.0s  maxR=    42 MB
+[   0.6s] [n=  300] splits     ok      wall=    0.0s  maxR=    19 MB
+[   2.4s] [n=  300] baseline   ok      wall=    1.5s  maxR=    62 MB
+[  19.6s] [n=  300] train      ok      wall=   16.9s  maxR=    48 MB
+[  20.1s] [n=  300] predict    ok      wall=    0.2s  maxR=    44 MB
+[  20.1s] ===== n = 1000 =====
+[  20.4s] [n= 1000] preprocess ok      wall=    0.0s  maxR=    40 MB
+[  21.2s] [n= 1000] graph      ok      wall=    0.4s  maxR=   116 MB
+[  21.5s] [n= 1000] splits     ok      wall=    0.0s  maxR=    49 MB
+[  25.0s] [n= 1000] baseline   ok      wall=    3.2s  maxR=   118 MB
+[  44.6s] [n= 1000] train      ok      wall=   19.2s  maxR=    54 MB
+[  45.2s] [n= 1000] predict    ok      wall=    0.2s  maxR=    53 MB
+[  45.2s] ===== n = 2000 =====
+[  45.6s] [n= 2000] preprocess ok      wall=    0.0s  maxR=    40 MB
+[  48.1s] [n= 2000] graph      ok      wall=    2.2s  maxR=   345 MB
+[  48.4s] [n= 2000] splits     ok      wall=    0.0s  maxR=    78 MB
+
+warning: solve(): system is singular (rcond: 1.03309e-27); attempting approx solution
+[  53.4s] [n= 2000] baseline   ok      wall=    4.6s  maxR=   223 MB
+[  75.1s] [n= 2000] train      ok      wall=   21.4s  maxR=    84 MB
+[  75.7s] [n= 2000] predict    ok      wall=    0.3s  maxR=    80 MB
+[  75.7s] ===== n = 3000 =====
+[  76.2s] [n= 3000] preprocess ok      wall=    0.0s  maxR=    41 MB
+Warning in build_phylo_graph(tree, k_eigen = 8L, sigma_mult = 0.5) :
+  build_phylo_graph: tree has 3000 tips. cophenetic() requires O(n^2) memory (~72 MB). Consider subsetting your tree for large datasets.
+[  82.5s] [n= 3000] graph      ok      wall=    6.0s  maxR=   727 MB
+[  82.8s] [n= 3000] splits     ok      wall=    0.0s  maxR=   126 MB
+
+warning: solve(): system is singular (rcond: 9.26289e-20); attempting approx solution
+[  91.7s] [n= 3000] baseline   ok      wall=    8.6s  maxR=   383 MB
+[ 123.4s] [n= 3000] train      ok      wall=   31.3s  maxR=   121 MB
+[ 124.1s] [n= 3000] predict    ok      wall=    0.4s  maxR=   120 MB
+[ 124.1s] ===== n = 5000 =====
+[ 124.7s] [n= 5000] preprocess ok      wall=    0.0s  maxR=    42 MB
+Warning in build_phylo_graph(tree, k_eigen = 8L, sigma_mult = 0.5) :
+  build_phylo_graph: tree has 5000 tips. cophenetic() requires O(n^2) memory (~200 MB). Consider subsetting your tree for large datasets.
+[ 151.1s] [n= 5000] graph      ok      wall=   26.0s  maxR=  1566 MB
+[ 151.5s] [n= 5000] splits     ok      wall=    0.0s  maxR=   278 MB
+
+warning: solve(): system is singular (rcond: 1.65374e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 6.71954e-36); attempting approx solution
+[ 163.1s] [n= 5000] baseline   ok      wall=   11.3s  maxR=   479 MB
+[ 220.6s] [n= 5000] train      ok      wall=   57.1s  maxR=   253 MB
+[ 221.4s] [n= 5000] predict    ok      wall=    0.5s  maxR=   247 MB
+[ 221.4s] ===== n = 7500 =====
+[ 222.2s] [n= 7500] preprocess ok      wall=    0.0s  maxR=    43 MB
+Warning in build_phylo_graph(tree, k_eigen = 8L, sigma_mult = 0.5) :
+  build_phylo_graph: tree has 7500 tips. cophenetic() requires O(n^2) memory (~450 MB). Consider subsetting your tree for large datasets.
+[ 308.4s] [n= 7500] graph      ok      wall=   85.8s  maxR=  3474 MB
+[ 308.8s] [n= 7500] splits     ok      wall=    0.0s  maxR=   576 MB
+
+warning: solve(): system is singular (rcond: 1.43853e-39); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.99031e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.2912e-17); attempting approx solution
+[ 327.5s] [n= 7500] baseline   ok      wall=   18.4s  maxR=   918 MB
+[ 389.5s] [n= 7500] train      ok      wall=   61.6s  maxR=   497 MB
+[ 390.9s] [n= 7500] predict    ok      wall=    1.1s  maxR=   492 MB
+[ 390.9s] ===== n = 10000 =====
+[ 392.3s] [n=10000] preprocess ok      wall=    0.0s  maxR=    45 MB
+Warning in build_phylo_graph(tree, k_eigen = 8L, sigma_mult = 0.5) :
+  build_phylo_graph: tree has 10000 tips. cophenetic() requires O(n^2) memory (~800 MB). Consider subsetting your tree for large datasets.
+[ 792.7s] [n=10000] graph      ok      wall=  400.0s  maxR=  5385 MB
+[ 793.1s] [n=10000] splits     ok      wall=    0.1s  maxR=   992 MB
+[ 817.6s] [n=10000] baseline   ok      wall=   24.1s  maxR=  1590 MB
+[ 901.9s] [n=10000] train      ok      wall=   83.9s  maxR=   836 MB
+[ 903.9s] [n=10000] predict    ok      wall=    1.6s  maxR=   834 MB
+[ 903.9s] loop finished at 2026-04-09 10:20:17 (total elapsed 904s)
+Warning in ggplot2::scale_y_log10() :
+  log-10 transformation introduced infinite values.
+Warning in ggplot2::scale_y_log10() :
+  log-10 transformation introduced infinite values.
+[ 904.2s] plot written to /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_scaling.png
+[ 904.6s] summary written to /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_scaling_summary.md
+[ 904.6s] done
