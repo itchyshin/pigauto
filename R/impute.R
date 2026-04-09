@@ -78,11 +78,14 @@ impute <- function(traits, tree, species_col = NULL,
     splits <- NULL
   }
 
-  # 3. Build phylogenetic graph (auto k_eigen scales with tree size)
+  # 3. Build phylogenetic graph (auto k_eigen scales with tree size).
+  #    The graph object carries the cophenetic distance matrix in
+  #    graph$D; we pass it to fit_baseline() below so that it is
+  #    computed exactly once for the whole pipeline.
   graph <- build_phylo_graph(tree, k_eigen = "auto")
 
-  # 4. Fit phylogenetic baseline
-  baseline <- fit_baseline(pd, tree, splits = splits)
+  # 4. Fit phylogenetic baseline (reuses graph$D for label propagation)
+  baseline <- fit_baseline(pd, tree, splits = splits, graph = graph)
 
   # 5. Train GNN
   fit <- fit_pigauto(

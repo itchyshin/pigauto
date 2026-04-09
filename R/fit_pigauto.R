@@ -143,7 +143,9 @@ fit_pigauto <- function(
   # ---- Baseline -------------------------------------------------------------
   if (is.null(baseline)) {
     if (verbose) message("Fitting baseline...")
-    baseline <- fit_baseline(data, tree, splits = splits)
+    # Pass graph through so fit_baseline can reuse graph$D instead of
+    # calling ape::cophenetic.phylo() a second time on the same tree.
+    baseline <- fit_baseline(data, tree, splits = splits, graph = graph)
   }
 
   # ---- Trait map ------------------------------------------------------------
