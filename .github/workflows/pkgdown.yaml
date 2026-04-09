@@ -1,4 +1,8 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Adapted to use the modern GitHub Pages deployment actions
+# (actions/upload-pages-artifact + actions/deploy-pages), matching the
+# repository's Pages configuration (build_type: workflow).
+#
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
   push:
@@ -10,18 +14,26 @@ on:
 
 name: pkgdown.yaml
 
-permissions: read-all
+# Permissions required for the modern GitHub Pages deployment path.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, but do not cancel in-progress runs
+# as we want to let production deployments complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   pkgdown:
     runs-on: ubuntu-latest
-    # Only restrict concurrency for non-PR jobs
-    concurrency:
-      group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -31,19 +43,29 @@ jobs:
         with:
           use-public-rspm: true
 
+      # Install only hard dependencies (Depends/Imports/LinkingTo) of the
+      # local package, plus pkgdown. Skipping Suggests is essential because
+      # pigauto's Suggests list includes BACE, which is an in-tree sibling
+      # package (BACE/) not available on CRAN. knitr + rmarkdown are still
+      # installed transitively because pkgdown Imports rmarkdown which
+      # Imports knitr.
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::pkgdown, local::.
           needs: website
+          dependencies: '"hard"'
 
       - name: Build site
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
 
-      - name: Deploy to GitHub pages 🚀
+      - name: Upload artifact
         if: github.event_name != 'pull_request'
-        uses: JamesIves/github-pages-deploy-action@v4.5.0
+        uses: actions/upload-pages-artifact@v3
         with:
-          clean: false
-          branch: gh-pages
-          folder: docs
+          path: docs
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        if: github.event_name != 'pull_request'
+        uses: actions/deploy-pages@v4
