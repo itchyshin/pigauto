@@ -214,6 +214,14 @@ run_one <- function(n) {
   if (st$status != "ok") return(invisible(NULL))
   baseline <- st$value
 
+  # Free the cophenetic distance matrix now that fit_baseline is done
+  # with it. Without this, the ~800 MB D matrix stays in R memory
+  # during the training loop and drastically slows down per-epoch
+  # wall time at n >= 7,500 (the first v0.3.1 benchmark saw train
+  # go from 84s to 897s at n = 10,000 until this drop was added).
+  graph$D <- NULL
+  invisible(gc(full = TRUE, verbose = FALSE))
+
   st <- time_stage(n, "train", function() {
     fit_pigauto(
       data            = pd,

@@ -194,6 +194,12 @@ baseline <- time_stage("baseline", function() {
   fit_baseline(pd, tree, splits = splits, model = "BM", graph = graph)
 })
 
+# Free cached cophenetic matrix before training (see Fix B regression
+# note in bench_scaling_v031.R -- leaving ~800 MB of D in memory slows
+# the training loop by up to 10x at n ~ 10k).
+graph$D <- NULL
+invisible(gc(full = TRUE, verbose = FALSE))
+
 fit <- time_stage("train", function() {
   fit_pigauto(
     data            = pd,
@@ -214,9 +220,52 @@ fit <- time_stage("train", function() {
   )
 })
 
-pred <- time_stage("predict", function() {
-  stats::predict(fit, return_se = TRUE, n_imputations = 5L)
-})
+# Checkpoint the fit object to disk IMMEDIATELY after training so that
+# a crash during predict() (e.g. MPS OOM on the 9993 x 9993 attention
+# tensor with n_imputations > 1) does not force a costly retrain.
+fit_ckpt <- file.path(here, "script", "validate_avonet_full_fit.rds")
+saveRDS(fit, fit_ckpt)
+log_line(sprintf("Checkpointed fit to %s", fit_ckpt))
+
+# Drop the graph-side copies of heavy matrices that predict() does not
+# need. predict() reuses fit$graph$adj and fit$graph$coords from the
+# fit object itself, so we can release the local `graph` here.
+rm(graph); invisible(gc(full = TRUE, verbose = FALSE))
+
+# predict() on a 9993-tip phylogeny with n_imputations > 1 peaks at
+# (number of MC passes) * (layer count) * (n^2 * 4 bytes) on MPS,
+# which is roughly 4-8 GB of unified memory per pass. The previous
+# run at n_imputations = 5 appears to have been silently killed by
+# the MPS memory manager somewhere between train completion and the
+# first predict forward pass. Use n_imputations = 1 for this
+# validation run so we get a deterministic single forward pass; MC
+# dropout is not essential for proving the pipeline runs end-to-end
+# at 10k tips.
+#
+# Helper: run predict on a specific torch device by monkey-patching
+# pigauto's internal get_device() for the duration of the call.
+predict_on_device <- function(device_name) {
+  dev <- torch::torch_device(device_name)
+  orig_get_device <- get("get_device", envir = asNamespace("pigauto"))
+  on.exit(
+    assignInNamespace("get_device", orig_get_device, ns = "pigauto"),
+    add = TRUE
+  )
+  assignInNamespace("get_device", function() dev, ns = "pigauto")
+  stats::predict(fit, return_se = TRUE, n_imputations = 1L)
+}
+
+pred <- tryCatch(
+  time_stage("predict", function() predict_on_device("cpu")),
+  error = function(e) {
+    log_line(sprintf("predict() failed on CPU: %s", conditionMessage(e)))
+    NULL
+  }
+)
+
+if (is.null(pred)) {
+  log_line("predict() unavailable; skipping held-out metrics block.")
+}
 
 total_wall <- proc.time()[["elapsed"]] - script_start
 results$total_wall_sec <- total_wall
@@ -253,7 +302,7 @@ X_lat_true <- pd$X_scaled  # z-scored / latent-space matrix (observed + test cel
 # already produced by make_missing_splits(), which operates on pd$X_scaled.
 
 # pred$imputed_latent should be n_species x p_latent in z-score space.
-pred_latent_gnn <- pred$imputed_latent
+pred_latent_gnn <- if (!is.null(pred)) pred$imputed_latent else NULL
 baseline_latent <- baseline$mu
 
 # Extract latent-space metrics per trait for BM-eligible traits.
@@ -277,7 +326,11 @@ if (length(test_rows) > 0) {
     if (!any(keep)) next
     idx <- test_rows[keep]
     bm_stats <- eval_on_holdout(baseline_latent, X_true_lat, idx)
-    gnn_stats <- eval_on_holdout(pred_latent_gnn, X_true_lat, idx)
+    gnn_stats <- if (!is.null(pred_latent_gnn)) {
+      eval_on_holdout(pred_latent_gnn, X_true_lat, idx)
+    } else {
+      list(n = NA_integer_, rmse = NA_real_, r = NA_real_)
+    }
     metrics <- rbind(metrics, data.frame(
       trait = tm$name, type = tm$type,
       n = bm_stats$n,

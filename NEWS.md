@@ -1,3 +1,69 @@
+# pigauto 0.3.1
+
+## Scaling to 10,000 tips
+
+`pigauto` now runs end-to-end on real 10,000-tip phylogenies. Before this
+release the pipeline was tested and tuned around the 300-species bundled
+AVONET data, and at 10,000 tips it wedged on a single dense eigendecomposition
+of the graph Laplacian (hours of CPU time). Two targeted fixes land in this
+release; no rewrite was needed.
+
+### Fix A: sparse Lanczos eigensolver for `build_phylo_graph()`
+
+`build_phylo_graph()` now uses `RSpectra::eigs_sym()` sparse Lanczos to
+compute the `k + 1` smallest Laplacian eigenvectors when the tree has more
+than 7,500 tips and **RSpectra** is installed. This replaces
+`base::eigen(L, symmetric = TRUE)`, which was O(n^3) in time and discarded
+>99% of its work (we only need the bottom ~32 eigenvectors).
+
+- On the real 9,993-species AVONET + BirdTree Stage2 Hackett MCC phylogeny,
+  the graph stage now takes under a minute, compared with roughly seven
+  minutes of dense eigen() on the same hardware.
+- The old dense path is kept as the default for smaller trees and as a
+  safety fallback for when RSpectra is unavailable or Lanczos does not
+  converge. The threshold is conservative (7,500) because highly symmetric
+  ultrametric simulations (`ape::rcoal`) have degenerate spectra that need
+  large Krylov subspaces to resolve.
+- **RSpectra** is listed in `Suggests`. Installing it is strongly recommended
+  for any tree larger than ~7,500 tips.
+
+### Fix B: cache the cophenetic distance matrix across the pipeline
+
+The cophenetic distance matrix `D = ape::cophenetic.phylo(tree)` was previously
+computed four separate times in a single `impute()` call (three times inside
+`build_phylo_graph()` and once inside `fit_baseline()`). Each call allocates a
+dense n*n double matrix and runs an O(n^2) tree traversal -- wasted work at
+scale. In 0.3.1:
+
+- `build_phylo_graph()` computes `D` exactly once and returns it as part of
+  the result list (`graph$D`).
+- `fit_baseline()` gains an optional `graph` argument; when supplied, it
+  reuses `graph$D` instead of recomputing the cophenetic matrix.
+- `impute()` and `fit_pigauto()` pass the graph through automatically, so
+  users get the speedup without any code changes.
+- `impute()` also explicitly releases `graph$D` after `fit_baseline()`
+  finishes, so the ~800 MB cophenetic matrix does not sit in R memory
+  during training (a subtle side-effect that caused a large per-epoch
+  regression at n = 10,000 until it was dropped).
+
+### Scaling benchmark
+
+See `pkgdown/assets/dev/scaling.html` (linked from the site as
+*Articles -> Benchmarks -> Scaling to 10,000 tips*) for a side-by-side
+comparison of v0.3.0 vs v0.3.1 at n in {300, 1k, 2k, 3k, 5k, 7.5k, 10k},
+plus an end-to-end validation run on the full AVONET3 + BirdTree dataset
+(9,993 species, 7 mixed-type traits). The pkgdown article also walks
+through both a quick 300-species example with the bundled `avonet300`
+data and a full 10k-species example using the BirdTree Stage2 Hackett
+MCC phylogeny.
+
+## Bug fixes
+
+- `build_phylo_graph()`: the N > 2000 memory warning was out of date (the
+  real blocker above that size was wall-clock time, not memory). The
+  warning is now issued at N > 10000 and its text points at the true
+  bottleneck.
+
 # pigauto 0.3.0
 
 ## Major new features

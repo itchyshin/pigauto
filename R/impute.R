@@ -87,6 +87,14 @@ impute <- function(traits, tree, species_col = NULL,
   # 4. Fit phylogenetic baseline (reuses graph$D for label propagation)
   baseline <- fit_baseline(pd, tree, splits = splits, graph = graph)
 
+  # Free the cached cophenetic distance matrix: fit_pigauto() only
+  # needs graph$adj and graph$coords, and at n = 10,000 the ~800 MB
+  # D matrix held in R memory during training caused a large
+  # per-epoch slowdown. This is safe because no downstream caller
+  # reads graph$D -- see the v0.3.1 NEWS entry.
+  graph$D <- NULL
+  invisible(gc(full = TRUE, verbose = FALSE))
+
   # 5. Train GNN
   fit <- fit_pigauto(
     data     = pd,

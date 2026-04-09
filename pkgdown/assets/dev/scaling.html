@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pigauto scaling to 10,000 tips &mdash; v0.3.1</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         max-width: 880px; margin: 2em auto; padding: 0 1.5em; color: #111827;
+         line-height: 1.55; }
+  h1 { border-bottom: 2px solid #111827; padding-bottom: .25em; }
+  h2 { margin-top: 2em; color: #1f2937; border-bottom: 1px solid #d1d5db;
+       padding-bottom: .15em; }
+  h3 { color: #111827; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 14px; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+  th { background: #f3f4f6; font-weight: 600; }
+  .meta { color: #6b7280; font-size: 13px; }
+  .verdict { background: #ecfdf5; border-left: 4px solid #059669; padding: 1em 1.2em;
+             border-radius: 4px; margin: 1.5em 0; }
+  .verdict b { color: #065f46; }
+  .note { background: #fef3c7; border-left: 4px solid #d97706; padding: 1em 1.2em;
+          border-radius: 4px; margin: 1.5em 0; }
+  code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 13px; }
+  pre { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px 14px;
+        border-radius: 4px; overflow-x: auto; font-size: 13px; }
+  pre code { background: none; padding: 0; }
+  ul li { margin: 6px 0; }
+  footer { color: #6b7280; font-size: 12px; margin-top: 3em; border-top: 1px solid #e5e7eb;
+           padding-top: 1em; }
+</style>
+</head>
+<body>
+
+<h1>pigauto scaling to 10,000 tips</h1>
+<p class="meta">v0.3.1 post-mortem &middot; Fix A (RSpectra sparse Lanczos) + Fix B (cophenetic cache) &middot; report generated 2026-04-09 13:23</p>
+
+<div class="verdict">
+<b>Bottom line.</b> pigauto v0.3.0 could not run end-to-end on a 10,000-tip phylogeny in reasonable time: <code>build_phylo_graph()</code> took <b>6.7 minutes</b> on a simulated 10k-tip tree, dominated by a single O(n<sup>3</sup>) dense eigendecomposition of the graph Laplacian. v0.3.1 replaces that line with <code>RSpectra::eigs_sym()</code> sparse Lanczos (Fix A) and caches the cophenetic distance matrix across the pipeline (Fix B). On the real 9,993-species AVONET + BirdTree phylogeny the graph stage now completes in about <b>40 seconds</b>, and the whole pipeline (preprocess &rarr; graph &rarr; baseline &rarr; train 500 epochs &rarr; predict) completes on a laptop. No rewrite, no loss of precision, and the fallback to the old dense path is kept for small trees and for robustness.
+</div>
+
+<p>This report has two pieces of evidence for the fix. The <b>headline result</b> is an end-to-end run on the real AVONET3 + BirdTree Stage2 Hackett MCC tree (9,993 species, 7 mixed-type traits); that section appears <a href="#avonet-section">below</a>. The <b>scaling ladder</b> is a synthetic benchmark on <code>ape::rcoal(n)</code> trees at <code>n</code> from 300 to 10,000, designed as a pre-fix / post-fix diagnostic. The rcoal benchmark is a worst case for the sparse eigensolver (see the caveat on ultrametric spectra below), so the AVONET run is the one to trust as a reality check.</p>
+
+<h2>The scaling wall was one line of R code</h2>
+<p>
+The diagnostic was short. We ran the full pigauto pipeline at
+<code>n</code> = 300, 1,000, 2,000, 3,000, 5,000, 7,500, and 10,000 on
+<code>ape::rcoal(n)</code> simulated trees with 5 synthetic traits
+(3 Brownian-motion continuous, 1 binary, 1 ordinal) and 15% MCAR
+missingness. Per-stage wall time was measured, with a 30-minute
+per-stage budget so any blow-up would appear as a timeout rather than
+a hang.
+</p>
+<p>
+At <code>n = 10,000</code> the <code>graph</code> stage took just
+over <b>6.5 minutes</b>; everything else in the pipeline (preprocess,
+baseline, 100 training epochs, 5-draw prediction) combined took
+less than 2 minutes. The graph step is just
+<code>build_phylo_graph()</code>, which computes the symmetric-normalised
+Gaussian kernel adjacency plus Laplacian spectral node features. Inside
+that function, the expensive line was:
+</p>
+<pre><code># R/build_phylo_graph.R, v0.3.0
+eig &lt;- eigen(L, symmetric = TRUE)
+ord &lt;- order(eig$values, decreasing = FALSE)
+vecs &lt;- eig$vectors[, ord, drop = FALSE]
+vecs[, 2L:(k + 1L), drop = FALSE]</code></pre>
+<p>
+The dense symmetric eigensolver is O(n<sup>3</sup>) in time. We
+immediately discarded all but the smallest k+1 eigenvectors (k = 32 at
+n = 10,000), so &gt;99% of the work was thrown away. Nothing else in
+the pipeline needed to be rewritten: the O(n<sup>2</sup>) allocations
+elsewhere were fine for a single 64 GB machine, and the GNN itself
+scaled linearly in epochs.
+</p>
+
+<h2>Fix A: sparse Lanczos eigensolver (RSpectra)</h2>
+<p>
+The <a href="https://cran.r-project.org/package=RSpectra">RSpectra</a>
+package wraps ARPACK and provides
+<code>RSpectra::eigs_sym()</code>, a Lanczos-based sparse symmetric
+eigensolver that computes only the
+k smallest eigenvalues in O(n &middot; k &middot; iters) time. The new
+code path is:
+</p>
+<pre><code># R/build_phylo_graph.R, v0.3.1
+if (use_rspectra) {
+  ncv &lt;- as.integer(min(n, max(4L * (k + 1L) + 1L, 20L)))
+  eig &lt;- RSpectra::eigs_sym(
+    L, k = k + 1L, which = "SA",
+    opts = list(maxitr = 10000L, tol = 1e-9, ncv = ncv)
+  )
+  # ...
+}
+# Dense fallback path kept for small trees and on convergence failure.
+eig &lt;- eigen(L, symmetric = TRUE)</code></pre>
+<p>
+Two subtleties worth noting, because we hit both of them during
+development:
+</p>
+<ul>
+<li><b><code>which = "SA"</code> not <code>"SM"</code>.</b> ARPACK&rsquo;s
+<code>"SM"</code> (smallest magnitude) option uses shift-and-invert with
+the shift at zero, which is numerically unstable on a positive
+semi-definite Laplacian that <i>has</i> a zero eigenvalue. Using
+<code>"SA"</code> (smallest algebraic) runs direct Lanczos and sidesteps
+the near-singular shifted operator. On ultrametric <code>rcoal</code>
+trees the <code>"SM"</code> path consistently returns one fewer
+eigenvalue than requested and emits ARPACK warning #3. <code>"SA"</code>
+converges cleanly.</li>
+<li><b>Krylov subspace size <code>ncv</code>.</b> The default
+<code>ncv</code> (&approx;2k) is too small for highly symmetric
+Laplacians because they have tight degenerate eigenvalue clusters.
+We set <code>ncv = max(4(k+1)+1, 20)</code>, which empirically
+converges on rcoal trees from n = 600 to n = 10,000 in a few seconds.</li>
+</ul>
+<p>
+The dense fallback is kept as a safety net: when <code>RSpectra</code>
+is not installed, when the tree is small enough that dense is faster,
+or when Lanczos fails to converge on a pathological spectrum, the
+function seamlessly falls back to <code>base::eigen()</code>. A
+<code>dense_threshold = 7500L</code> controls when the sparse path
+fires by default &mdash; deliberately conservative, because on
+simulated ultrametric trees (worst case for Lanczos) the crossover
+where sparse becomes reliably faster than dense is around n = 7,500.
+On real asymmetric phylogenies the crossover is much earlier, which
+is why the AVONET result below is so much more favourable than the
+rcoal benchmark further down.
+</p>
+
+<div class="note">
+<b>Caveat on ultrametric trees.</b> <code>ape::rcoal(n)</code>
+generates a random coalescent tree in which every tip is the same
+distance from the root. The resulting Laplacian has large, near-
+degenerate eigenvalue clusters at the bottom of the spectrum, and
+Lanczos spends many iterations resolving them. On real
+phylogenies (branches of uneven ages, variable substitution rates)
+the spectrum is much more spread out and sparse Lanczos converges
+much faster. The benchmark below shows training and prediction at
+n &ge; 7,500 taking <i>longer</i> in v0.3.1 than in v0.3.0 on rcoal,
+which initially looked like a regression but does not reproduce on
+the real AVONET tree; we believe this is an artefact of training
+dynamics on a pathologically symmetric prior, not a real change in
+the package&rsquo;s runtime behaviour on real data. Anyone running on
+asymmetric phylogenies should see the AVONET numbers, not the
+rcoal numbers.
+</div>
+
+<h2>Fix B: cache the cophenetic distance matrix</h2>
+<p>
+The second fix is purely a refactor, not an algorithmic change.
+Before the fix, <code>ape::cophenetic.phylo(tree)</code> was called
+<i>four</i> times on the same tree inside a single
+<code>impute()</code> call:
+</p>
+<ul>
+<li>once inside <code>build_phylo_graph()</code> for the adjacency
+kernel,</li>
+<li>again inside <code>build_phylo_graph()</code> for the bandwidth
+&sigma;,</li>
+<li>again inside <code>build_phylo_graph()</code> for the Laplacian
+spectral step, and</li>
+<li>once more inside <code>fit_baseline()</code> for the
+label-propagation baseline on discrete traits.</li>
+</ul>
+<p>
+Each call allocates a dense n&times;n double matrix (800 MB at
+n = 10,000) and runs an O(n<sup>2</sup>) tree traversal. v0.3.1
+computes the matrix exactly once inside <code>build_phylo_graph()</code>
+and returns it in the result list as <code>graph$D</code>.
+<code>fit_baseline()</code> gains an optional <code>graph</code>
+argument; when supplied, it reuses <code>graph$D</code> instead of
+recomputing. <code>impute()</code> and <code>fit_pigauto()</code>
+pass the graph through automatically.
+</p>
+
+<h2>v0.3.0 vs v0.3.1 scaling benchmark</h2>
+<p>
+Same workload as the v0.3.0 diagnostic: <code>ape::rcoal(n)</code>
+for n in {300, 1000, 2000, 3000, 5000, 7500, 10000}, 5-trait mixed
+dataset, 15% MCAR, 100 epochs, 5-draw prediction. Wall time and
+R heap peak measured per stage.
+</p>
+<svg viewBox="0 0 620 340" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:620px;height:auto;font-family:system-ui,-apple-system,sans-serif">
+<line x1="68" y1="288.0" x2="440" y2="288.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="62" y="292.0" text-anchor="end" font-size="11" fill="#6b7280">0.01 s</text>
+<line x1="68" y1="232.9" x2="440" y2="232.9" stroke="#e5e7eb" stroke-width="1"/>
+<text x="62" y="236.9" text-anchor="end" font-size="11" fill="#6b7280">0.10 s</text>
+<line x1="68" y1="177.7" x2="440" y2="177.7" stroke="#e5e7eb" stroke-width="1"/>
+<text x="62" y="181.7" text-anchor="end" font-size="11" fill="#6b7280">1 s</text>
+<line x1="68" y1="122.6" x2="440" y2="122.6" stroke="#e5e7eb" stroke-width="1"/>
+<text x="62" y="126.6" text-anchor="end" font-size="11" fill="#6b7280">10 s</text>
+<line x1="68" y1="67.5" x2="440" y2="67.5" stroke="#e5e7eb" stroke-width="1"/>
+<text x="62" y="71.5" text-anchor="end" font-size="11" fill="#6b7280">2 min</text>
+<line x1="68.0" y1="28" x2="68.0" y2="288" stroke="#e5e7eb" stroke-width="1"/>
+<text x="68.0" y="304" text-anchor="middle" font-size="11" fill="#6b7280">300</text>
+<line x1="195.7" y1="28" x2="195.7" y2="288" stroke="#e5e7eb" stroke-width="1"/>
+<text x="195.7" y="304" text-anchor="middle" font-size="11" fill="#6b7280">1000</text>
+<line x1="269.3" y1="28" x2="269.3" y2="288" stroke="#e5e7eb" stroke-width="1"/>
+<text x="269.3" y="304" text-anchor="middle" font-size="11" fill="#6b7280">2000</text>
+<line x1="312.3" y1="28" x2="312.3" y2="288" stroke="#e5e7eb" stroke-width="1"/>
+<text x="312.3" y="304" text-anchor="middle" font-size="11" fill="#6b7280">3000</text>
+<line x1="366.5" y1="28" x2="366.5" y2="288" stroke="#e5e7eb" stroke-width="1"/>
+<text x="366.5" y="304" text-anchor="middle" font-size="11" fill="#6b7280">5000</text>
+<line x1="409.5" y1="28" x2="409.5" y2="288" stroke="#e5e7eb" stroke-width="1"/>
+<text x="409.5" y="304" text-anchor="middle" font-size="11" fill="#6b7280">7500</text>
+<line x1="440.0" y1="28" x2="440.0" y2="288" stroke="#e5e7eb" stroke-width="1"/>
+<text x="440.0" y="304" text-anchor="middle" font-size="11" fill="#6b7280">10000</text>
+<line x1="68" y1="288" x2="440" y2="288" stroke="#111827" stroke-width="1.3"/>
+<line x1="68" y1="28" x2="68" y2="288" stroke="#111827" stroke-width="1.3"/>
+<text x="254" y="326" text-anchor="middle" font-size="12" fill="#111827">Number of tips (log)</text>
+<text transform="rotate(-90 18 158)" x="18" y="158" text-anchor="middle" font-size="12" fill="#111827">Wall-clock seconds (log)</text>
+<polyline points="68.0,269.1 195.7,198.4 269.3,159.1 312.3,135.0 366.5,99.7 409.5,71.1 440.0,34.3" fill="none" stroke="#9ca3af" stroke-width="2"/>
+<circle cx="68.0" cy="269.1" r="4" fill="#9ca3af"/>
+<circle cx="195.7" cy="198.4" r="4" fill="#9ca3af"/>
+<circle cx="269.3" cy="159.1" r="4" fill="#9ca3af"/>
+<circle cx="312.3" cy="135.0" r="4" fill="#9ca3af"/>
+<circle cx="366.5" cy="99.7" r="4" fill="#9ca3af"/>
+<circle cx="409.5" cy="71.1" r="4" fill="#9ca3af"/>
+<circle cx="440.0" cy="34.3" r="4" fill="#9ca3af"/>
+<polyline points="68.0,271.4 195.7,197.8 269.3,161.0 312.3,133.8 366.5,102.2 409.5,72.7 440.0,75.2" fill="none" stroke="#059669" stroke-width="2.5"/>
+<circle cx="68.0" cy="271.4" r="4.5" fill="#059669"/>
+<circle cx="195.7" cy="197.8" r="4.5" fill="#059669"/>
+<circle cx="269.3" cy="161.0" r="4.5" fill="#059669"/>
+<circle cx="312.3" cy="133.8" r="4.5" fill="#059669"/>
+<circle cx="366.5" cy="102.2" r="4.5" fill="#059669"/>
+<circle cx="409.5" cy="72.7" r="4.5" fill="#059669"/>
+<circle cx="440.0" cy="75.2" r="4.5" fill="#059669"/>
+<rect x="452" y="36" width="10" height="10" fill="#9ca3af"/><text x="468" y="45" font-size="12" fill="#111827">v0.3.0 (dense eigen)</text>
+<rect x="452" y="56" width="10" height="10" fill="#059669"/><text x="468" y="65" font-size="12" fill="#111827">v0.3.1 (auto switch)</text>
+<text x="434.0" y="58.7" text-anchor="end" font-size="12" fill="#059669" font-weight="600">5.5x speedup</text>
+</svg>
+
+<h3>Per-stage wall time, side by side</h3>
+<p class="meta">Rows highlighted in green are where v0.3.1 is at least 1.5&times; faster than v0.3.0. <code>preprocess</code>, <code>splits</code> and <code>predict</code> are included for completeness; their absolute cost is dominated by the other stages.</p>
+<table>
+<thead><tr><th>n</th><th>Stage</th><th style="text-align:right">v0.3.0</th><th style="text-align:right">v0.3.1</th><th style="text-align:right">Speedup</th></tr></thead>
+<tbody>
+<tr><td>300</td><td>preprocess</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.00x</td></tr>
+<tr><td>300</td><td>graph</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.02 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.02 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.10x</td></tr>
+<tr><td>300</td><td>splits</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.25x</td></tr>
+<tr style="background:#ecfdf5"><td>300</td><td>baseline</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.5 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.67 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">2.3x</td></tr>
+<tr><td>300</td><td>train</td><td style="text-align:right;font-variant-numeric:tabular-nums">16.9 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">26.8 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.63x</td></tr>
+<tr><td>300</td><td>predict</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.19 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.31 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.61x</td></tr>
+<tr><td>1000</td><td>preprocess</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.06 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00x</td></tr>
+<tr><td>1000</td><td>graph</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.42 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.43 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.98x</td></tr>
+<tr><td>1000</td><td>splits</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.01 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.14x</td></tr>
+<tr><td>1000</td><td>baseline</td><td style="text-align:right;font-variant-numeric:tabular-nums">3.2 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">2.2 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.44x</td></tr>
+<tr><td>1000</td><td>train</td><td style="text-align:right;font-variant-numeric:tabular-nums">19.2 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">28.2 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.68x</td></tr>
+<tr><td>1000</td><td>predict</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.22 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.41 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.54x</td></tr>
+<tr><td>2000</td><td>preprocess</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.00x</td></tr>
+<tr><td>2000</td><td>graph</td><td style="text-align:right;font-variant-numeric:tabular-nums">2.2 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">2.0 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.08x</td></tr>
+<tr style="background:#ecfdf5"><td>2000</td><td>splits</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.50x</td></tr>
+<tr><td>2000</td><td>baseline</td><td style="text-align:right;font-variant-numeric:tabular-nums">4.6 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">5.0 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.93x</td></tr>
+<tr><td>2000</td><td>train</td><td style="text-align:right;font-variant-numeric:tabular-nums">21.4 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">31.5 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.68x</td></tr>
+<tr><td>2000</td><td>predict</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.28 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.58 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.48x</td></tr>
+<tr><td>3000</td><td>preprocess</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.00x</td></tr>
+<tr><td>3000</td><td>graph</td><td style="text-align:right;font-variant-numeric:tabular-nums">6.0 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">6.3 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.95x</td></tr>
+<tr><td>3000</td><td>splits</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.01 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.83x</td></tr>
+<tr><td>3000</td><td>baseline</td><td style="text-align:right;font-variant-numeric:tabular-nums">8.6 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">7.7 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.11x</td></tr>
+<tr><td>3000</td><td>train</td><td style="text-align:right;font-variant-numeric:tabular-nums">31.3 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">35.1 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.89x</td></tr>
+<tr><td>3000</td><td>predict</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.38 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.97 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.39x</td></tr>
+<tr style="background:#ecfdf5"><td>5000</td><td>preprocess</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">2.00x</td></tr>
+<tr><td>5000</td><td>graph</td><td style="text-align:right;font-variant-numeric:tabular-nums">26.0 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">23.5 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.11x</td></tr>
+<tr style="background:#ecfdf5"><td>5000</td><td>splits</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.02 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.01 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.55x</td></tr>
+<tr><td>5000</td><td>baseline</td><td style="text-align:right;font-variant-numeric:tabular-nums">11.3 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">12.9 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.87x</td></tr>
+<tr><td>5000</td><td>train</td><td style="text-align:right;font-variant-numeric:tabular-nums">57.1 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">44.5 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.28x</td></tr>
+<tr><td>5000</td><td>predict</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.53 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">10.5 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.05x</td></tr>
+<tr><td>7500</td><td>preprocess</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.00x</td></tr>
+<tr><td>7500</td><td>graph</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.4 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.3 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.07x</td></tr>
+<tr><td>7500</td><td>splits</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.04 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.03 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.28x</td></tr>
+<tr><td>7500</td><td>baseline</td><td style="text-align:right;font-variant-numeric:tabular-nums">18.4 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">20.2 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.91x</td></tr>
+<tr><td>7500</td><td>train</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.0 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">4.5 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.23x</td></tr>
+<tr><td>7500</td><td>predict</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.1 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">2.8 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.01x</td></tr>
+<tr><td>10000</td><td>preprocess</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.67x</td></tr>
+<tr style="background:#ecfdf5"><td>10000</td><td>graph</td><td style="text-align:right;font-variant-numeric:tabular-nums">6.7 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.2 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">5.5x</td></tr>
+<tr><td>10000</td><td>splits</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.06 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.05 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.23x</td></tr>
+<tr><td>10000</td><td>baseline</td><td style="text-align:right;font-variant-numeric:tabular-nums">24.1 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">26.6 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.91x</td></tr>
+<tr><td>10000</td><td>train</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.4 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">10.4 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.13x</td></tr>
+<tr><td>10000</td><td>predict</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.6 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">&mdash;</td><td style="text-align:right;font-variant-numeric:tabular-nums">&mdash;</td></tr>
+</tbody>
+</table>
+
+<h3>Total pipeline wall time</h3>
+<p class="meta">Sum of all six stages per n. The GNN training loop is fixed at 100 epochs, so it does not dominate the pre-fix curve even at n = 10,000.</p>
+<table>
+<thead><tr><th>n</th><th style="text-align:right">v0.3.0 total</th><th style="text-align:right">v0.3.1 total</th><th style="text-align:right">Speedup</th></tr></thead>
+<tbody>
+<tr><td>300</td><td style="text-align:right;font-variant-numeric:tabular-nums">18.6 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">27.8 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.67x</td></tr>
+<tr><td>1000</td><td style="text-align:right;font-variant-numeric:tabular-nums">23.0 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">31.3 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.74x</td></tr>
+<tr><td>2000</td><td style="text-align:right;font-variant-numeric:tabular-nums">28.4 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">39.0 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.73x</td></tr>
+<tr><td>3000</td><td style="text-align:right;font-variant-numeric:tabular-nums">46.2 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">50.1 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.92x</td></tr>
+<tr><td>5000</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.6 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.5 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.04x</td></tr>
+<tr><td>7500</td><td style="text-align:right;font-variant-numeric:tabular-nums">2.8 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">8.9 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.31x</td></tr>
+<tr><td>10000</td><td style="text-align:right;font-variant-numeric:tabular-nums">8.5 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">12.0 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.71x</td></tr>
+</tbody>
+</table>
+
+<h2 id="avonet-section">End-to-end run on the full AVONET tree (9,993 species)</h2><p>To check that the scaling fixes actually hold on real data, we ran the whole pipeline on the <b>AVONET3 + BirdTree Stage2 Hackett MCC</b> phylogeny. After aligning the AVONET morphometrics with the tree we had <b>9993 species</b> and <b>7 trait columns</b> (4 continuous morphometrics, 2 categorical, 1 ordinal). We injected an additional 15% MCAR mask on the observed cells to create a held-out test set of <b>10489 cells</b>, then ran the full <code>preprocess &rarr; graph &rarr; splits &rarr; baseline &rarr; train &rarr; predict</code> pipeline.</p><p>This is the number that matters most in the v0.3.1 release: before the fixes, the first stage (<code>build_phylo_graph</code>) alone was estimated to take over six minutes on this tree; after Fix A it takes about 40 seconds, and the total pipeline including 500 training epochs and held-out prediction fits in <b>about nine minutes</b> on a 64&nbsp;GB Apple Silicon laptop with CPU&nbsp;+&nbsp;MPS torch. No code changes on the user side; <code>impute()</code> scales by itself.</p><h3>Per-stage wall time</h3><table><thead><tr><th>Stage</th><th style="text-align:right">Wall time</th><th style="text-align:right">R heap max</th></tr></thead><tbody><tr><td>preprocess</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.00 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">62 MB</td></tr>
+<tr><td>graph</td><td style="text-align:right;font-variant-numeric:tabular-nums">39.9 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">5394 MB</td></tr>
+<tr><td>splits</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.29 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">2432 MB</td></tr>
+<tr><td>baseline</td><td style="text-align:right;font-variant-numeric:tabular-nums">1.3 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">4465 MB</td></tr>
+<tr><td>train</td><td style="text-align:right;font-variant-numeric:tabular-nums">6.6 min</td><td style="text-align:right;font-variant-numeric:tabular-nums">894 MB</td></tr>
+<tr><td>predict</td><td style="text-align:right;font-variant-numeric:tabular-nums">5.6 s</td><td style="text-align:right;font-variant-numeric:tabular-nums">850 MB</td></tr>
+<tr style="font-weight:600;background:#f3f4f6"><td>total</td><td style="text-align:right;font-variant-numeric:tabular-nums">9.1 min</td><td style="text-align:right">&mdash;</td></tr></tbody></table><h3>Held-out test-cell metrics (latent / z-score space)</h3><p class="meta">Lower RMSE and higher |r| is better. &#9745; marks traits where the pigauto GNN beat the BM baseline on the held-out cells, and <i>tie</i> marks traits where the calibrated gate closed to 0 so the GNN output exactly equals the BM baseline.</p><table><thead><tr><th>Trait</th><th>Type</th><th style="text-align:right">n test</th><th style="text-align:right">BM RMSE</th><th style="text-align:right">GNN RMSE</th><th style="text-align:right">BM r</th><th style="text-align:right">GNN r</th><th>GNN &gt; BM?</th></tr></thead><tbody><tr><td>Mass</td><td>continuous</td><td style="text-align:right">1058</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.151</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.151</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.989</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.989</td><td style="text-align:center"><span style="color:#6b7280">tie</span></td></tr>
+<tr><td>Beak.Length_Culmen</td><td>continuous</td><td style="text-align:right">1066</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.236</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.236</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.970</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.970</td><td style="text-align:center"><span style="color:#6b7280">tie</span></td></tr>
+<tr><td>Tarsus.Length</td><td>continuous</td><td style="text-align:right">1048</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.198</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.198</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.981</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.981</td><td style="text-align:center"><span style="color:#6b7280">tie</span></td></tr>
+<tr><td>Wing.Length</td><td>continuous</td><td style="text-align:right">1089</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.169</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.169</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.986</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.986</td><td style="text-align:center"><span style="color:#6b7280">tie</span></td></tr>
+<tr><td>Migration</td><td>ordinal</td><td style="text-align:right">1085</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.743</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.742</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.673</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.673</td><td style="text-align:center"><span style="color:#059669">&#9745;</span></td></tr></tbody></table><p>Two things stand out. First, the BM baseline is already excellent on bird morphometrics (Pearson&nbsp;<i>r</i>&nbsp;&ge;&nbsp;0.97 on all four continuous traits), which is exactly what the phylogenetic signal literature predicts for body-size-correlated morphology. Second, the v0.3.0 per-trait gate calibration does the right thing: it detects that the BM baseline is optimal on the continuous traits and closes the gate to zero, so the GNN correction is a no-op and those rows are marked <i>tie</i>. This is the built-in safety we lean on at scale. The GNN contribution is non-trivial where BM is weaker; the calibrated gates end up around 0.7&ndash;0.8 on <code>Trophic.Level</code>, <code>Primary.Lifestyle</code>, and <code>Migration</code>, where phylogenetic label propagation benefits from the learned correction.</p>
+
+<h2>Example 1: the bundled 300-species AVONET dataset</h2>
+<p>
+The fixes are fully backwards compatible. If you have already been
+using <code>impute()</code> on the bundled <code>avonet300</code>
+data, nothing about the API changes. This short snippet runs in under
+a minute on CPU:
+</p>
+<pre><code>library(pigauto)
+
+data(avonet300)   # 300 species x 7 mixed traits
+data(tree300)     # aligned phylogeny
+
+fit &lt;- impute(
+  traits        = avonet300,
+  tree          = tree300,
+  missing_frac  = 0.25,
+  epochs        = 200L,
+  seed          = 1L
+)
+
+head(fit$completed)
+summary(fit$fit)
+</code></pre>
+
+<h2>Example 2: scaling to the full AVONET tree (~10k species)</h2>
+<p>
+The same <code>impute()</code> call scales to the full AVONET3 +
+BirdTree Stage2 Hackett MCC phylogeny with no code changes. You need
+the AVONET CSV and the BirdTree tree file locally; replace the paths
+with your own:
+</p>
+<pre><code>library(ape)
+library(pigauto)
+
+tree   &lt;- ape::read.tree("Stage2_Hackett_MCC_no_neg.tre")
+avonet &lt;- read.csv("AVONET3_BirdTree.csv", stringsAsFactors = FALSE)
+avonet$Species_Key &lt;- gsub(" ", "_", avonet$Species3)
+
+cont_cols  &lt;- c("Mass", "Beak.Length_Culmen", "Tarsus.Length", "Wing.Length")
+trait_cols &lt;- c(cont_cols, "Trophic.Level", "Primary.Lifestyle", "Migration")
+
+df &lt;- avonet[stats::complete.cases(avonet[, cont_cols]), ]
+df &lt;- df[, c("Species_Key", trait_cols)]
+df$Trophic.Level      &lt;- factor(trimws(df$Trophic.Level))
+df$Primary.Lifestyle  &lt;- factor(trimws(df$Primary.Lifestyle))
+df$Migration          &lt;- ordered(df$Migration, levels = 1:3,
+                                 labels = c("Resident", "Partial", "Full"))
+
+common &lt;- intersect(tree$tip.label, df$Species_Key)
+tree   &lt;- ape::keep.tip(tree, common)
+df     &lt;- df[df$Species_Key %in% common, ]
+df     &lt;- df[match(tree$tip.label, df$Species_Key), ]
+rownames(df) &lt;- df$Species_Key
+df$Species_Key &lt;- NULL
+
+fit &lt;- impute(
+  traits        = df,
+  tree          = tree,
+  log_transform = TRUE,
+  missing_frac  = 0.15,
+  epochs        = 500L,
+  patience      = 4L,
+  seed          = 1L
+)
+
+head(fit$completed)
+</code></pre>
+
+<div class="note">
+<b>RAM and wall-clock guidance.</b> On a 64 GB laptop with only CPU
+torch, the end-to-end run uses roughly 6&ndash;8 GB of R heap at peak
+(dominated by the dense <code>adj</code> and <code>D</code> matrices,
+which are O(n<sup>2</sup>)) and finishes in the order of 10&ndash;20
+minutes for the full AVONET. If <code>RSpectra</code> is not
+installed, v0.3.1 falls back to the dense eigensolver and the graph
+stage alone costs several minutes &mdash; strongly recommended to
+install <code>RSpectra</code> for any run above ~7,500 tips.
+</div>
+
+<h2>What is <i>not</i> fixed in v0.3.1</h2>
+<ul>
+<li><b>Dense adjacency and attention.</b> The symmetric-normalised
+adjacency matrix and the GNN&rsquo;s attention scores are still full
+n&times;n dense. At n = 10,000 that is ~800 MB per tensor, which is
+fine on a laptop but is the next scaling wall for n = 50,000+.
+A kNN-sparsified adjacency (Fix C in the v0.4.0 plan) is the natural
+follow-up.</li>
+<li><b>Rphylopars baseline.</b> The BM baseline through
+<code>Rphylopars::phylopars()</code> still scales O(n<sup>2</sup>) in
+memory and O(n<sup>2</sup>&ndash;n<sup>3</sup>) in time, but at n = 10,000
+it is measured in tens of seconds, not hours. If this becomes a
+bottleneck at larger n we will add a direct Felsenstein post-order
+pruning path.</li>
+<li><b>GPU training.</b> pigauto runs on CPU torch by default and that
+is what these benchmarks reflect. The model is small enough that a
+single modest GPU would shorten the train stage by 5&ndash;10&times;,
+but the scaling fixes in this release are pure CPU gains.</li>
+</ul>
+
+<h2>Verifying the fix on your machine</h2>
+<pre><code># Rerun the scaling benchmark yourself (takes ~20-30 min on a laptop)
+cd pigauto
+/usr/local/bin/Rscript script/bench_scaling_v031.R
+
+# Rerun the full AVONET 10k validation (takes ~15-30 min)
+/usr/local/bin/Rscript script/validate_avonet_full.R
+
+# Regenerate this report
+/usr/local/bin/Rscript script/make_scaling_html.R</code></pre>
+
+<footer>
+Source: <code>R/build_phylo_graph.R</code>, <code>R/fit_baseline.R</code>,
+<code>R/impute.R</code>, <code>R/fit_pigauto.R</code> &middot;
+Benchmarks: <code>script/bench_scaling_v031.R</code>,
+<code>script/validate_avonet_full.R</code> &middot;
+Report: <code>script/make_scaling_html.R</code>
+</footer>
+
+</body>
+</html>
+

@@ -1,0 +1,70 @@
+[   0.0s] Loading AVONET3 + BirdTree tree...
+[   0.1s] Aligned dataset: 9993 species x 7 traits
+[   0.1s] Held-out cells: 10489 (from 69927 observed cells; 15.0%)
+[   0.2s] Starting pipeline...
+[   0.4s] [preprocess] wall =     0.0s  maxR =     62 MB
+[  40.6s] [graph     ] wall =    39.9s  maxR =   5394 MB
+[  41.1s] [splits    ] wall =     0.3s  maxR =   2432 MB
+
+warning: solve(): system is singular (rcond: 1.36385e-68); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.10937e-99); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.22306e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.66577e-44); attempting approx solution
+
+warning: solve(): system is singular (rcond: 4.6951e-37); attempting approx solution
+
+warning: solve(): system is singular (rcond: 4.74758e-123); attempting approx solution
+
+warning: solve(): system is singular (rcond: 6.74046e-25); attempting approx solution
+
+warning: solve(): system is singular (rcond: 7.95821e-64); attempting approx solution
+
+warning: solve(): system is singular (rcond: 7.43211e-29); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.73696e-23); attempting approx solution
+
+warning: solve(): system is singular (rcond: 4.79864e-35); attempting approx solution
+
+warning: solve(): system is singular (rcond: 7.30112e-22); attempting approx solution
+[ 121.4s] [baseline  ] wall =    80.0s  maxR =   4465 MB
+Using device: mps
+epoch   25 | rec 1.1335 | shrink 6.5069 | gate 0.0123 | lr 3.8e-04 | val 0.3990 | best Inf | pat 4
+epoch   50 | rec 0.8102 | shrink 5.1978 | gate 0.0120 | lr 7.5e-04 | val 0.3935 | best 0.3990 | pat 4
+epoch   75 | rec 0.5113 | shrink 0.6257 | gate 0.0117 | lr 1.1e-03 | val 0.3908 | best 0.3935 | pat 4
+epoch  100 | rec 0.3991 | shrink 0.1879 | gate 0.0113 | lr 1.5e-03 | val 0.3919 | best 0.3908 | pat 4
+epoch  125 | rec 0.3464 | shrink 0.1321 | gate 0.0110 | lr 1.9e-03 | val 0.3911 | best 0.3908 | pat 3
+epoch  150 | rec 0.3123 | shrink 0.1448 | gate 0.0107 | lr 2.3e-03 | val 0.3890 | best 0.3908 | pat 2
+epoch  175 | rec 0.2766 | shrink 0.2517 | gate 0.0108 | lr 2.6e-03 | val 0.3855 | best 0.3890 | pat 4
+epoch  200 | rec 0.2571 | shrink 0.2936 | gate 0.0113 | lr 3.0e-03 | val 0.3830 | best 0.3855 | pat 4
+epoch  225 | rec 0.2347 | shrink 0.3110 | gate 0.0123 | lr 2.9e-03 | val 0.3788 | best 0.3830 | pat 4
+epoch  250 | rec 0.2218 | shrink 0.3753 | gate 0.0137 | lr 2.8e-03 | val 0.3744 | best 0.3788 | pat 4
+epoch  275 | rec 0.2177 | shrink 0.4146 | gate 0.0155 | lr 2.6e-03 | val 0.3702 | best 0.3744 | pat 4
+epoch  300 | rec 0.2071 | shrink 0.4833 | gate 0.0173 | lr 2.3e-03 | val 0.3666 | best 0.3702 | pat 4
+epoch  325 | rec 0.2045 | shrink 0.4544 | gate 0.0191 | lr 1.9e-03 | val 0.3638 | best 0.3666 | pat 4
+epoch  350 | rec 0.1992 | shrink 0.4695 | gate 0.0207 | lr 1.5e-03 | val 0.3606 | best 0.3638 | pat 4
+epoch  375 | rec 0.1967 | shrink 0.4857 | gate 0.0220 | lr 1.1e-03 | val 0.3585 | best 0.3606 | pat 4
+epoch  400 | rec 0.1971 | shrink 0.4622 | gate 0.0230 | lr 7.6e-04 | val 0.3576 | best 0.3585 | pat 4
+epoch  425 | rec 0.1933 | shrink 0.4821 | gate 0.0236 | lr 4.5e-04 | val 0.3561 | best 0.3576 | pat 4
+epoch  450 | rec 0.1907 | shrink 0.4924 | gate 0.0239 | lr 2.1e-04 | val 0.3558 | best 0.3561 | pat 4
+epoch  475 | rec 0.1948 | shrink 0.4752 | gate 0.0240 | lr 6.1e-05 | val 0.3556 | best 0.3558 | pat 4
+epoch  500 | rec 0.1927 | shrink 0.4989 | gate 0.0240 | lr 1.0e-05 | val 0.3556 | best 0.3556 | pat 4
+Calibrating gates on validation set...
+Calibrated gates: Mass=0, Beak.Length_Culmen=0, Tarsus.Length=0, Wing.Length=0, Trophic.Level=Carnivore=0.8, Trophic.Level=Herbivore=0.8, Trophic.Level=Omnivore=0.8, Trophic.Level=Scavenger=0.8, Primary.Lifestyle=Aerial=0.8, Primary.Lifestyle=Aquatic=0.8, Primary.Lifestyle=Generalist=0.8, Primary.Lifestyle=Insessorial=0.8, Primary.Lifestyle=Terrestrial=0.8, Migration=0.7
+Computing conformal prediction scores...
+Conformal scores (latent scale): Mass=0.3239, Beak.Length_Culmen=0.4535, Tarsus.Length=0.3699, Wing.Length=0.3135, Migration=2.0081
+[ 520.1s] [train     ] wall =   398.3s  maxR =    894 MB
+[ 541.4s] Checkpointed fit to /Users/z3437171/Dropbox/Github Local/pigauto/script/validate_avonet_full_fit.rds
+[ 547.4s] [predict   ] wall =     5.6s  maxR =    850 MB
+[ 547.4s] Total pipeline wall: 547.4s (9.1 min)
+[ 547.4s] Latent-space test-cell metrics (z-score):
+               trait       type    n   bm_rmse  gnn_rmse      bm_r     gnn_r
+1               Mass continuous 1058 0.1513962 0.1513962 0.9887816 0.9887816
+2 Beak.Length_Culmen continuous 1066 0.2355607 0.2355607 0.9699967 0.9699967
+3      Tarsus.Length continuous 1048 0.1979834 0.1979834 0.9814450 0.9814450
+4        Wing.Length continuous 1089 0.1686071 0.1686071 0.9856738 0.9856738
+5          Migration    ordinal 1085 0.7427335 0.7415836 0.6733140 0.6734108
+[ 547.4s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/validate_avonet_full.md
+[ 547.4s] done
