@@ -11,12 +11,14 @@ template:
     code_font: {google: "JetBrains Mono"}
 
 home:
-  title: "pigauto: phylogenetic trait imputation with a residual graph autoencoder"
+  title: "pigauto: phylogenetic trait imputation via a gated baseline + GNN ensemble"
   description: >
-    Impute missing species trait data by blending a Brownian-motion baseline
-    with an attention-based graph neural network correction. Handles
-    continuous, binary, categorical, ordinal, and count traits in a single
-    latent space, with conformal prediction intervals and multiple-imputation
+    Impute missing species trait data with a gated ensemble of a
+    phylogenetic baseline (Brownian motion via Rphylopars for continuous
+    traits; phylogenetic label propagation for discrete traits) and an
+    attention-based graph neural network correction. Handles continuous,
+    binary, categorical, ordinal, and count traits in a single latent
+    space, with conformal prediction intervals and multiple-imputation
     support for downstream inference.
   links:
     - text: Documentation index (DOCS.md)

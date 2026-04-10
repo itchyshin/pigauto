@@ -2,9 +2,11 @@
 
 > **Live site**: <https://itchyshin.github.io/pigauto>
 > **Source**: <https://github.com/itchyshin/pigauto>
-> **One-line summary**: phylogenetic trait imputation via a residual
-> graph autoencoder that blends a Brownian-motion baseline with an
-> attention-based graph neural network.
+> **One-line summary**: phylogenetic trait imputation via a gated
+> ensemble of a phylogenetic baseline (Brownian motion for
+> continuous/count/ordinal traits; label propagation for
+> binary/categorical traits) and an attention-based graph neural
+> network correction.
 
 This file is the single entry point for everything that ships with the
 pigauto repository: tutorials, function reference, design notes,
@@ -55,7 +57,7 @@ copy-pasted into an R session.
 |---|---|---|---|---|
 | Getting started | [articles/getting-started.html](https://itchyshin.github.io/pigauto/articles/getting-started.html) | [`vignettes/getting-started.Rmd`](vignettes/getting-started.Rmd) | `inst/doc/getting-started.html` | First imputation on the bundled AVONET 300 dataset; how to read `pigauto_result` |
 | Mixed-type traits | [articles/mixed-types.html](https://itchyshin.github.io/pigauto/articles/mixed-types.html) | [`vignettes/mixed-types.Rmd`](vignettes/mixed-types.Rmd) | `inst/doc/mixed-types.html` | Continuous + count + ordinal + binary + categorical in one model; round-trip encoding |
-| Intro (architecture overview) | [pigauto_intro.html](https://itchyshin.github.io/pigauto/pigauto_intro.html) | [`script/make_intro_html.R`](script/make_intro_html.R) | `inst/doc/pigauto_intro.html` | Why a residual BM + GNN blend? Gate calibration, conformal intervals, trait-type handling |
+| Intro (architecture overview) | [pigauto_intro.html](https://itchyshin.github.io/pigauto/pigauto_intro.html) | [`script/make_intro_html.R`](script/make_intro_html.R) | `inst/doc/pigauto_intro.html` | The gated baseline + GNN ensemble, gate calibration, conformal intervals, trait-type handling |
 | Mixed-type PCM workflow | [pigauto_workflow_mixed.html](https://itchyshin.github.io/pigauto/pigauto_workflow_mixed.html) | [`script/make_workflow_mixed_html.R`](script/make_workflow_mixed_html.R) | `inst/doc/pigauto_workflow_mixed.html` | Full multiple-imputation pipeline on mixed trait types, plus all three analysis paths (A/B/C) |
 
 ### The three analysis paths

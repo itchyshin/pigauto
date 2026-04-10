@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-`pigauto` is an R package (version 0.3.2) for phylogenetic trait imputation. It fits a Residual Phylogenetic Denoising Autoencoder (ResidualPhyloDAE) that blends a Brownian-motion baseline with a graph neural network correction. See `README.md` for the user-facing API; this file documents the internals.
+`pigauto` is an R package (version 0.3.3) for phylogenetic trait imputation. It fits a gated ensemble of a phylogenetic baseline and an attention-based graph neural network correction. For continuous/count/ordinal traits the baseline is Brownian motion (via `Rphylopars`); for binary/categorical traits it is phylogenetic label propagation. Prediction is the per-trait blend `(1 - r_cal) * baseline + r_cal * delta_GNN`, with `r_cal` calibrated on a held-out validation split. See `README.md` for the user-facing API; this file documents the internals.
+
+**A note on "residual"**: the internal torch class is named `ResidualPhyloDAE` because its GNN layers use ResNet-style residual skip connections. The GNN output `delta` is **not** a statistical residual `y - baseline` — it is a full per-cell prediction trained end-to-end via type-appropriate loss (MSE / BCE / cross-entropy) on the blend, not on `y - baseline`. Do not re-introduce user-facing prose that describes the GNN as "learning a residual from the baseline".
 
 ## Common commands
 
@@ -49,12 +51,12 @@ where `r_cal` is a **per-latent-column gate** (vector of length `p_latent`) that
 
 ### The model (`R/model_residual_dae.R`)
 
-`ResidualPhyloDAE` is an internal `torch::nn_module`:
+`ResidualPhyloDAE` is an internal `torch::nn_module`. The "Residual" in the class name refers to the ResNet-style skip connections inside the GNN layers, not to a statistical residual.
 
 - **Input**: `x` (`n_obs × p_latent` with corrupted cells replaced by a learnable mask token), `coords` (`n_species × k_eigen` spectral features from the Laplacian), `covs` (`n_obs × cov_dim` — currently baseline mean + NA-mask indicator; no user covariates yet), `adj` (`n_species × n_species` symmetric-normalised Gaussian kernel).
 - **Encoder**: 2 linear layers + ReLU + dropout, concatenating `x`, `coords`, `covs`.
-- **Message passing**: `n_gnn_layers` (default 2) graph layers. `use_attention = TRUE` (default) uses scaled dot-product attention with a learnable log-adjacency bias, so the model starts close to the phylogenetic prior and learns deviations. Each layer has its own learnable alpha gate, LayerNorm, and residual.
-- **Decoder**: 2 linear layers → `delta` (`n_obs × p_latent`).
+- **Message passing**: `n_gnn_layers` (default 2) graph layers. `use_attention = TRUE` (default) uses scaled dot-product attention with a learnable log-adjacency bias, so the model starts close to the phylogenetic prior and learns deviations. Each layer has its own learnable alpha gate, LayerNorm, and ResNet-style skip connection.
+- **Decoder**: 2 linear layers → `delta` (`n_obs × p_latent`). Note: `delta` is a full per-cell prediction, not `y - baseline`.
 - **Output**: `(1 - rs) * baseline_mu + rs * delta`, where `rs` is the per-column sigmoid gate bounded in `(0, gate_cap)`.
 
 ### Data flow

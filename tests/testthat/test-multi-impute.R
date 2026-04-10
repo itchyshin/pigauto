@@ -291,7 +291,10 @@ test_that("pool_mi() works end-to-end with glmmTMB + propto()", {
     patience     = 5L
   )
   tree <- mi$tree
-  Vphy <- ape::vcv(tree)
+  # Vphy must be a CORRELATION matrix, not a covariance: propto() in
+  # glmmTMB estimates sigma^2 freely, so the raw vcv(tree) (diagonal
+  # = tree height) would double-count the variance scale.
+  Vphy <- cov2cor(ape::vcv(tree))
 
   fits <- suppressWarnings(with_imputations(mi, function(d) {
     d$species <- factor(rownames(d), levels = rownames(Vphy))

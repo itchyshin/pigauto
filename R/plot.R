@@ -129,7 +129,7 @@ plot.pigauto_fit <- function(x, type = "history", ...) {
     on.exit(par(op), add = TRUE)
     nms <- x$latent_names %||% paste0("col", seq_along(gates))
     barplot(gates, names.arg = nms, col = .pigauto_colours$gnn,
-            ylab = "Calibrated gate", main = "Per-column residual gates",
+            ylab = "Calibrated gate", main = "Per-column blend gates",
             border = NA, ...)
     return(invisible(NULL))
   }
@@ -153,7 +153,7 @@ plot.pigauto_fit <- function(x, type = "history", ...) {
 
   bp <- barplot(gate_vals, names.arg = trait_names, col = colours,
                 ylab = "Calibrated gate value", border = NA,
-                main = "Residual gate per trait",
+                main = "Blend gate per trait",
                 ylim = c(0, max(gate_vals, 0.01) * 1.15), ...)
 
   # Reference line at gate_cap

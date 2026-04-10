@@ -1,8 +1,8 @@
 # Internal: non-BM trait simulation for benchmarking
 #
 # Generates species trait data under models that deviate from Brownian Motion,
-# providing scenarios where the GNN's residual correction can add value over
-# the BM baseline.
+# providing scenarios where the GNN correction can add value over the BM
+# baseline.
 #
 # Not exported -- used by script/benchmark_simulation.R only.
 

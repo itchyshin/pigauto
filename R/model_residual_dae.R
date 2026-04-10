@@ -1,10 +1,24 @@
 # ResidualPhyloDAE -- internal nn_module, not exported.
 #
+# NAME CLARIFICATION. "Residual" in the class name refers to the
+# ResNet-style residual skip connections used INSIDE each GNN layer
+# (h_next = norm(h + alpha * msg)). It does NOT mean that the module
+# predicts a statistical residual (y - baseline). The output `delta`
+# is a full per-cell prediction; it is blended with the baseline
+# externally via `(1 - rs) * baseline + rs * delta`, and the loss
+# (MSE / BCE / cross-entropy, dispatched by trait type in
+# compute_mixed_loss) is computed on the BLEND, not on (y - baseline).
+# The shrinkage penalty lambda_shrink * MSE(delta - baseline) is a
+# regularisation choice that keeps `delta` close to the baseline when
+# the GNN provides no useful correction -- it is not a statistical
+# residual model.
+#
 # Architecture:
 #   Input  : x (n_obs x p), coords (n_species x k), covs (n_obs x cov_dim)
 #   Encoder: two linear layers with ReLU + dropout
 #   Message: n_gnn_layers steps of graph message passing, each with
-#            layer norm, ReLU, dropout, and per-layer learnable alpha.
+#            layer norm, ReLU, dropout, and per-layer learnable alpha
+#            (ResNet-style skip: h_next = norm(h + alpha * msg)).
 #            Two modes: simple adjacency multiplication (default) or
 #            attention-based message passing (use_attention = TRUE).
 #            Attention uses scaled dot-product with a learnable
@@ -13,12 +27,12 @@
 #            When multi_obs=TRUE, observations are aggregated to species
 #            before message passing, then broadcast back.
 #   Decoder: two linear layers -> delta (n_obs x p)
-#   Output : (1-rs) * BM_baseline + rs * delta,  rs = sigmoid(res_raw) * cap
+#   Output : (1-rs) * baseline + rs * delta,  rs = sigmoid(res_raw) * cap
 #
 # res_raw is a per-column vector (length p), so each latent column has
-# its own learnable gate.  Continuous columns init at ~0.135 effective
-# gate; discrete columns init near 0.  Safety comes from lambda_gate
-# regularisation, not the architectural cap.
+# its own learnable blend gate.  Continuous columns init at ~0.135
+# effective gate; discrete columns init near 0.  Safety comes from
+# lambda_gate regularisation, not the architectural cap.
 
 ResidualPhyloDAE <- torch::nn_module(
   "ResidualPhyloDAE",
@@ -82,7 +96,9 @@ ResidualPhyloDAE <- torch::nn_module(
     self$dec1 <- torch::nn_linear(hidden_dim,  hidden_dim)
     self$dec2 <- torch::nn_linear(hidden_dim,  input_dim)   # outputs delta
 
-    # Learnable residual scale: sigmoid(res_raw) * gate_cap.
+    # Learnable blend gate: sigmoid(res_raw) * gate_cap. Historically
+    # named "residual scale" because it weights the GNN branch of the
+    # blend; it is NOT a statistical residual coefficient.
     # Per-column vector allows each latent column to have its own gate.
     self$per_column_rs <- per_column_rs
     self$gate_cap      <- gate_cap
@@ -177,7 +193,7 @@ ResidualPhyloDAE <- torch::nn_module(
     h     <- self$act(h)
     delta <- self$dec2(h)
 
-    # Bounded residual scale in (0, gate_cap)
+    # Bounded blend gate in (0, gate_cap)
     if (self$per_column_rs) {
       rs <- torch::torch_sigmoid(self$res_raw)$unsqueeze(1L) * self$gate_cap
     } else {

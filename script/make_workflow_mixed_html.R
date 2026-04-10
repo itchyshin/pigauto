@@ -452,7 +452,11 @@ model with <code>glmmTMB</code> on each imputed dataset, then pools with
 <pre><code># Requires: install.packages("glmmTMB")
 library(glmmTMB)   # propto() is internal; must be attached
 
-Vphy &lt;- ape::vcv(tree)
+# Vphy must be a CORRELATION matrix (diag = 1), not a covariance:
+# glmmTMB&rsquo;s propto() estimates sigma^2 freely, so passing
+# vcv(tree) (diagonal = tree height) would rescale the variance
+# component.
+Vphy &lt;- cov2cor(ape::vcv(tree))
 
 fits_A &lt;- with_imputations(mi, function(d) {
   d$species &lt;- factor(rownames(d), levels = rownames(Vphy))

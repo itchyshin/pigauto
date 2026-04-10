@@ -1,3 +1,84 @@
+# pigauto 0.3.3
+
+## Correctness fix: Vphy must be a correlation matrix in `glmmTMB`'s `propto()`
+
+The multiple-imputation example in `README.md`, the two HTML
+tutorials (`pigauto_intro.html`, `pigauto_workflow_mixed.html`), and
+`tests/testthat/test-multi-impute.R` all constructed the phylogenetic
+random-effect structure with
+
+```r
+Vphy <- ape::vcv(tree)            # WRONG: covariance, diag = tree height
+glmmTMB(... + propto(0 + species | dummy, Vphy), ...)
+```
+
+`propto()` estimates `sigma^2` freely, so passing the raw covariance
+matrix (whose diagonal is the tree height) silently rescales the
+phylogenetic variance component by tree height. The correct usage
+passes a *correlation* matrix:
+
+```r
+Vphy <- cov2cor(ape::vcv(tree))   # diag = 1
+```
+
+All four sites are now fixed. Thanks to the user who flagged this.
+
+## Honest framing: the GNN is a gated ensemble, not a residual model
+
+The user-facing prose throughout the package historically described
+pigauto as a *Residual Phylogenetic Denoising Autoencoder
+(ResidualPhyloDAE) that learns a residual correction on top of a BM
+baseline*. This wording was misleading for binary and categorical
+traits in two ways:
+
+1. The "baseline" for those types is **phylogenetic label propagation**
+   (a similarity-weighted average of observed labels using a Gaussian
+   kernel on the cophenetic distance) — not a generalised linear model
+   that produces residuals on a link scale.
+2. The GNN is trained **end-to-end** by minimising the type-appropriate
+   loss (MSE for continuous/count/ordinal, BCE for binary,
+   cross-entropy for categorical) on the **blended output**, not on
+   `y - baseline`. So the GNN's output `delta` is a full per-cell
+   prediction, not a statistical residual.
+
+What pigauto actually is, in honest terms, is a **gated ensemble** of
+two predictors:
+
+- A phylogenetic **baseline** (Brownian motion via Rphylopars for
+  continuous/count/ordinal traits; phylogenetic label propagation for
+  binary/categorical traits).
+- A **graph neural network correction** (an internal torch module that
+  produces a full per-cell prediction `delta` from spectral node
+  features and an attention-biased message passing over the
+  phylogeny).
+
+Prediction is the per-trait blend
+`(1 - r_cal) * baseline + r_cal * delta`, where `r_cal` is calibrated
+on a held-out validation split (with a split-validation cross-check
+for discrete traits). When the baseline is already optimal the gate
+closes and the GNN becomes a no-op.
+
+The internal torch class name `ResidualPhyloDAE` is preserved because
+its GNN layers use ResNet-style residual skip connections — that is a
+correct, well-defined ML term. But user-facing prose no longer
+describes the GNN as "learning a residual on top of the baseline".
+
+Files updated: `README.md`, `DESCRIPTION`, `CLAUDE.md`, `_pkgdown.yml`,
+`DOCS.md`, `vignettes/getting-started.Rmd`, `vignettes/mixed-types.Rmd`,
+`R/fit_pigauto.R` (roxygen), `R/predict_pigauto.R` (roxygen),
+`R/model_residual_dae.R` (clarifying header comment),
+`R/simulate_traits.R`, `R/plot.R` (plot titles), and
+`script/make_intro_html.R`.
+
+## Tracking issue for v0.4.0 architectural work
+
+The honest fix above is a documentation correction, not a model
+change. A genuinely *residual* baseline for binary and ordinal traits
+would require a liability-scale model (threshold BM, `phylolm::phyloglm`,
+or `MCMCglmm` with `family = "threshold"`) — a design decision that
+should be made deliberately rather than rolled into a same-day patch.
+A v0.4.0 tracking issue lays out the trade-offs.
+
 # pigauto 0.3.2
 
 ## New bundled dataset: `avonet_full` / `tree_full`

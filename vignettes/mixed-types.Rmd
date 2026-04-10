@@ -27,10 +27,11 @@ pigauto supports five trait types for phylogenetic imputation:
 | Categorical | `factor` (>2 levels) | One-hot (K columns) | Cross-entropy | Diet type |
 | Ordinal | `ordered` | Integer (0 to K-1) + z-score | MSE | Threat status |
 
-All types are encoded into a continuous latent space.  The GNN
-(ResidualPhyloDAE) operates in this space without modification.
-Type-specific logic appears only at encoding, loss computation, and
-decoding.
+All types are encoded into a continuous latent space.  The gated
+ensemble of phylogenetic baseline and GNN correction (the internal
+`ResidualPhyloDAE` torch module) operates in this space without
+modification.  Type-specific logic appears only at encoding, loss
+computation, and decoding.
 
 ## Synthetic example
 

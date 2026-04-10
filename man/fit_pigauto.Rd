@@ -2,7 +2,7 @@
 % Please edit documentation in R/fit_pigauto.R
 \name{fit_pigauto}
 \alias{fit_pigauto}
-\title{Fit a Residual Phylo-DAE model for trait imputation}
+\title{Fit a pigauto model for trait imputation}
 \usage{
 fit_pigauto(
   data,
@@ -54,9 +54,9 @@ fit_pigauto(
 
 \item{n_gnn_layers}{integer. Number of graph message-passing layers
 (default \code{2}).  Each layer has its own learnable alpha gate,
-layer normalisation, and residual connection.}
+layer normalisation, and ResNet-style skip connection.}
 
-\item{gate_cap}{numeric. Upper bound for the per-column residual gate
+\item{gate_cap}{numeric. Upper bound for the per-column blend gate
 (default \code{0.8}).  Safety comes from regularisation, not the cap.}
 
 \item{use_attention}{logical. Use attention in the GNN layers (default
@@ -85,8 +85,9 @@ ramps from \code{corruption_start} to \code{corruption_rate}
 \item{refine_steps}{integer. Iterative refinement steps at inference
 (default \code{8}).}
 
-\item{lambda_shrink}{numeric. Weight on the residual shrinkage loss
-(default \code{0.03}).}
+\item{lambda_shrink}{numeric. Weight on the shrinkage penalty
+\code{||delta - baseline||^2} that keeps the GNN correction close
+to the phylogenetic baseline (default \code{0.03}).}
 
 \item{lambda_gate}{numeric. Weight on the gate regularisation penalty
 that pushes learnable gates toward zero.  Prevents gates from staying
@@ -116,9 +117,14 @@ Set to \code{0} to disable.}
 An object of class \code{"pigauto_fit"}.
 }
 \description{
-Trains a \code{ResidualPhyloDAE} that blends a phylogenetic baseline with
-a learned graph-based predictor.  Supports continuous, binary, categorical,
-ordinal, and count traits via a unified latent space.
+Trains a pigauto model: a gated ensemble of a phylogenetic baseline
+and an attention-based graph neural network correction, implemented
+as an internal torch module (\code{ResidualPhyloDAE}; "Residual" here
+refers to the ResNet-style skip connections in the GNN layers, not
+to a statistical residual). For continuous, count, and ordinal traits
+the baseline is Brownian motion (via \code{Rphylopars}); for binary
+and categorical traits it is phylogenetic label propagation. Supports
+all five trait types via a unified latent space.
 }
 \details{
 \strong{Blend formulation:}

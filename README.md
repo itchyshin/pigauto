@@ -1,10 +1,15 @@
 # pigauto
 
-Phylogenetic trait imputation via graph neural network. Combines a
-phylogenetic baseline (Brownian motion via Rphylopars) with a residual
-graph autoencoder that learns corrections from tree topology and
-inter-trait correlations. Supports continuous, binary, categorical,
-ordinal, and count traits in a unified latent space.
+Phylogenetic trait imputation via a gated ensemble of a phylogenetic
+baseline and an attention-based graph neural network correction. The
+baseline is Brownian motion (via Rphylopars) for continuous, count, and
+ordinal traits and phylogenetic label propagation for binary and
+categorical traits; the GNN learns a correction from tree topology and
+inter-trait correlations. A per-trait gate calibrated on a held-out
+validation set blends the two predictors, so when the baseline is
+already optimal the neural correction becomes a no-op. Supports
+continuous, binary, categorical, ordinal, and count traits in a unified
+latent space.
 
 ## Key features
 
@@ -105,8 +110,11 @@ df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
 # 1. Generate 100 complete datasets (MC-dropout sampling from the GNN)
 mi <- multi_impute(df, tree300, m = 100)
 
-# 2. Fit a phylogenetic mixed model on each imputation
-Vphy <- ape::vcv(tree300)
+# 2. Fit a phylogenetic mixed model on each imputation.
+#    Vphy must be a CORRELATION matrix, not a covariance: glmmTMB's
+#    propto() estimates sigma^2 freely, so passing the raw vcv(tree)
+#    (diagonal = tree height) would rescale the variance component.
+Vphy <- cov2cor(ape::vcv(tree300))
 fits <- with_imputations(mi, function(d) {
   d$species <- factor(rownames(d), levels = rownames(Vphy))
   d$dummy   <- factor(1)
@@ -226,13 +234,38 @@ baseline.
 
 ## Architecture
 
-**ResidualPhyloDAE**: encoder (2 layers) → attention-based graph message
-passing (2 layers with layer normalisation, phylogenetic attention bias)
-→ decoder (2 layers) → per-column gated blending with phylogenetic
-baseline.
+pigauto is a **gated ensemble of two predictors**:
 
-Prediction: `pred = (1 - r_cal) * BM_baseline + r_cal * GNN_delta`,
-where `r_cal` is a per-trait gate optimised on the validation set.
+1. A **phylogenetic baseline** with one branch per trait type:
+   Brownian motion (via Rphylopars) for continuous, count, and ordinal
+   traits; Gaussian-kernel phylogenetic label propagation for binary and
+   categorical traits.
+2. A **graph neural network correction** — an internal torch module
+   (`ResidualPhyloDAE`: encoder → 2 attention-based message-passing
+   layers with layer norm and ResNet-style skip connections → decoder)
+   that produces a full per-cell prediction from spectral node features,
+   the corrupted latent matrix, and an adjacency-biased attention over
+   the phylogeny.
+
+Prediction is the blend
+
+    pred = (1 - r_cal) * baseline + r_cal * delta_GNN
+
+where `r_cal` is a **per-trait** gate. The GNN and baseline are not
+competitors: the GNN is trained end-to-end by minimising the
+type-appropriate loss (MSE for continuous/count/ordinal, BCE for
+binary, cross-entropy for categorical) on the blend, with a shrinkage
+penalty on `delta - baseline` and an L2 penalty on the gate that keeps
+the GNN close to the baseline unless it demonstrably helps. After
+training, `r_cal` is grid-searched per trait on a held-out validation
+split; for discrete traits a split-validation cross-check prevents the
+GNN from degrading baseline accuracy.
+
+> **Note.** The internal module name `ResidualPhyloDAE` retains the
+> word "residual" because its GNN layers use ResNet-style residual skip
+> connections. The GNN's output `delta` is *not* a statistical residual
+> `y - baseline`: it is a full prediction that is blended with the
+> baseline at inference time.
 
 Post-training pipeline:
 1. Gate values are **calibrated** on the validation set (grid search per trait)
@@ -295,4 +328,4 @@ BM baseline is optimal, calibrated gates → 0.
 ## Citation
 
 Nakagawa S (2026). pigauto: Phylogenetic Imputation via Graph
-Autoencoder. R package version 0.3.2.
+Autoencoder. R package version 0.3.3.

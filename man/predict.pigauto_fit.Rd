@@ -2,7 +2,7 @@
 % Please edit documentation in R/predict_pigauto.R
 \name{predict.pigauto_fit}
 \alias{predict.pigauto_fit}
-\title{Impute missing traits using a fitted Residual Phylo-DAE}
+\title{Impute missing traits using a fitted pigauto model}
 \usage{
 \method{predict}{pigauto_fit}(object, newdata = NULL, return_se = TRUE, n_imputations = 1L, ...)
 }
@@ -45,10 +45,13 @@ types: not present.}
 }
 }
 \description{
-Runs iterative refinement on the fitted model and returns imputed trait
-values back-transformed to the original scale.  Supports all trait types
-(continuous, binary, categorical, ordinal, count) and MC dropout for
-multiple imputation.
+Runs iterative refinement on the fitted model and returns imputed
+trait values back-transformed to the original scale.  Supports all
+trait types (continuous, binary, categorical, ordinal, count) and MC
+dropout for multiple imputation. The fitted model is a gated ensemble
+of a phylogenetic baseline and a graph neural network correction;
+prediction is the per-trait blend
+\code{(1 - r_cal) * baseline + r_cal * delta_GNN}.
 }
 \details{
 When \code{n_imputations > 1}, the model runs in train mode (dropout

@@ -1,8 +1,13 @@
-#' Fit a Residual Phylo-DAE model for trait imputation
+#' Fit a pigauto model for trait imputation
 #'
-#' Trains a \code{ResidualPhyloDAE} that blends a phylogenetic baseline with
-#' a learned graph-based predictor.  Supports continuous, binary, categorical,
-#' ordinal, and count traits via a unified latent space.
+#' Trains a pigauto model: a gated ensemble of a phylogenetic baseline
+#' and an attention-based graph neural network correction, implemented
+#' as an internal torch module (\code{ResidualPhyloDAE}; "Residual" here
+#' refers to the ResNet-style skip connections in the GNN layers, not
+#' to a statistical residual). For continuous, count, and ordinal traits
+#' the baseline is Brownian motion (via \code{Rphylopars}); for binary
+#' and categorical traits it is phylogenetic label propagation. Supports
+#' all five trait types via a unified latent space.
 #'
 #' @details
 #' **Blend formulation:**
@@ -54,8 +59,8 @@
 #' @param epochs integer. Maximum training epochs (default \code{3000}).
 #' @param n_gnn_layers integer. Number of graph message-passing layers
 #'   (default \code{2}).  Each layer has its own learnable alpha gate,
-#'   layer normalisation, and residual connection.
-#' @param gate_cap numeric. Upper bound for the per-column residual gate
+#'   layer normalisation, and ResNet-style skip connection.
+#' @param gate_cap numeric. Upper bound for the per-column blend gate
 #'   (default \code{0.8}).  Safety comes from regularisation, not the cap.
 #' @param use_attention logical. Use attention in the GNN layers (default
 #'   \code{TRUE}).
@@ -70,8 +75,9 @@
 #'   (default \code{500}).  Set to \code{0} for fixed corruption.
 #' @param refine_steps integer. Iterative refinement steps at inference
 #'   (default \code{8}).
-#' @param lambda_shrink numeric. Weight on the residual shrinkage loss
-#'   (default \code{0.03}).
+#' @param lambda_shrink numeric. Weight on the shrinkage penalty
+#'   \code{||delta - baseline||^2} that keeps the GNN correction close
+#'   to the phylogenetic baseline (default \code{0.03}).
 #' @param lambda_gate numeric. Weight on the gate regularisation penalty
 #'   that pushes learnable gates toward zero.  Prevents gates from staying
 #'   open when the GNN provides no useful correction (default \code{0.01}).
@@ -178,7 +184,10 @@ fit_pigauto <- function(
   X_fill <- X_truth
   X_fill[is.na(X_fill)] <- MU[is.na(X_fill)]
 
-  DELTA_tgt <- X_fill - MU            # residual target
+  DELTA_tgt <- X_fill - MU            # observed - baseline (legacy
+                                       # tensor t_DELTA below; kept for
+                                       # backward compatibility, not
+                                       # used as a training target)
 
   # Observed mask (TRUE = actually observed, not just filled)
   M_obs_mat <- !is.na(X_truth)

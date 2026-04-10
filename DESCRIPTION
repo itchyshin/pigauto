@@ -1,18 +1,21 @@
 Package: pigauto
 Title: Phylogenetic Imputation via Graph Autoencoders
-Version: 0.3.2
+Version: 0.3.3
 Authors@R:
     person("Shinichi", "Nakagawa", role = c("aut", "cre"), email = "itchyshin@gmail.com")
-Description: Imputes missing species trait data using a Residual Phylogenetic
-    Denoising Autoencoder (ResidualPhyloDAE) that combines Brownian-Motion
-    phylogenetic imputation (via Rphylopars) with an attention-based graph
-    neural network. Features validation-calibrated per-trait gates to prevent
-    GNN overshoot, conformal prediction intervals with guaranteed coverage,
-    phylogenetic label propagation for discrete traits, and adaptive spectral
-    encoding that scales with tree size. Supports continuous, binary,
-    categorical, ordinal, and count traits in a unified latent space, with
-    optional multiple observations per species. Includes both a 300-species
-    AVONET bird morphology subset and the full 9,993-species AVONET + BirdTree
+Description: Imputes missing species trait data via a gated ensemble of a
+    phylogenetic baseline and an attention-based graph neural network
+    correction. For continuous, count, and ordinal traits the baseline is
+    Brownian motion (via Rphylopars); for binary and categorical traits it
+    is phylogenetic label propagation. The two predictors are blended by a
+    per-trait gate that is calibrated on a held-out validation set, so when
+    the baseline is already optimal the neural correction is zeroed out.
+    Features conformal prediction intervals with guaranteed coverage for
+    continuous/count/ordinal traits and adaptive spectral encoding that
+    scales with tree size. Supports continuous, binary, categorical,
+    ordinal, and count traits in a unified latent space, with optional
+    multiple observations per species. Includes both a 300-species AVONET
+    bird morphology subset and the full 9,993-species AVONET + BirdTree
     bundled datasets for examples and scale benchmarks.
 License: MIT + file LICENSE
 URL: https://itchyshin.github.io/pigauto, https://github.com/itchyshin/pigauto

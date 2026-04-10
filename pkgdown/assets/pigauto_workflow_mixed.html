@@ -56,7 +56,7 @@
 </head>
 <body>
 
-<h1>pigauto: mixed-type PCM workflow <span class="badge">v0.3.2</span></h1>
+<h1>pigauto: mixed-type PCM workflow <span class="badge">v0.3.3</span></h1>
 <p class="tagline">Multiple imputation of continuous, categorical, and ordinal traits &mdash; three downstream paths.</p>
 <p class="meta">Generated 2026-04-09 &middot; scripts/<code>make_workflow_mixed_html.R</code></p>
 
@@ -424,7 +424,11 @@ model with <code>glmmTMB</code> on each imputed dataset, then pools with
 <pre><code># Requires: install.packages("glmmTMB")
 library(glmmTMB)   # propto() is internal; must be attached
 
-Vphy &lt;- ape::vcv(tree)
+# Vphy must be a CORRELATION matrix (diag = 1), not a covariance:
+# glmmTMB&rsquo;s propto() estimates sigma^2 freely, so passing
+# vcv(tree) (diagonal = tree height) would rescale the variance
+# component.
+Vphy &lt;- cov2cor(ape::vcv(tree))
 
 fits_A &lt;- with_imputations(mi, function(d) {
   d$species &lt;- factor(rownames(d), levels = rownames(Vphy))

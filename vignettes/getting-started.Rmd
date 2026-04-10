@@ -24,18 +24,35 @@ leverages the fact that closely related species tend to be morphologically
 similar — so known trait values of relatives provide information about missing
 ones.
 
-**pigauto** implements a *Residual Phylogenetic Denoising Autoencoder*
-(ResidualPhyloDAE). The approach has two components:
+**pigauto** implements a *gated ensemble of a phylogenetic baseline and
+an attention-based graph neural network correction*. The approach has
+two components:
 
-1. **Brownian Motion baseline** via Rphylopars. This is the best linear
-   unbiased predictor under BM evolution, analogous to phylogenetic BLUP.
+1. **Phylogenetic baseline**. For continuous, count, and ordinal traits,
+   the baseline is Brownian motion fitted with `Rphylopars` (the best
+   linear unbiased predictor under BM, analogous to phylogenetic BLUP).
+   For binary and categorical traits it is Gaussian-kernel phylogenetic
+   label propagation: a species-specific log-probability built from the
+   similarity-weighted labels of its neighbours on the tree.
 
-2. **Graph neural network residual correction**. A small GNN trained on the
-   observed data learns corrections Δ on top of the BM predictions. Crucially,
-   the correction is *bounded*: the final prediction is
-   μ\_BM + sigmoid(s) × 0.5 × Δ, where sigmoid(s) ∈ (0, 0.5). This means the
-   model cannot perform worse than the BM baseline by more than 50% of Δ in
-   any direction. In practice the GNN often matches or exceeds BM.
+2. **Graph neural network correction**. A small attention-based GNN
+   operates on the same latent matrix and produces a full per-cell
+   prediction `delta`. The final prediction is the per-trait blend
+   `(1 - r) * baseline + r * delta`, where `r` is a per-trait gate. The
+   GNN is trained end-to-end to minimise the type-appropriate loss (MSE
+   for continuous / count / ordinal, BCE for binary, cross-entropy for
+   categorical) on the *blend*, with an L2 penalty on `r` and a
+   shrinkage penalty on `delta - baseline` that keep the GNN near the
+   baseline unless it can demonstrably do better. After training, `r`
+   is grid-searched per trait on a held-out validation set — for
+   discrete traits a split-validation cross-check prevents the GNN from
+   degrading baseline accuracy. The result: the GNN can only override
+   the baseline when there is held-out evidence that it should.
+
+> **Note.** Despite the legacy class name `ResidualPhyloDAE`, the GNN
+> output `delta` is not a statistical residual `y - baseline`: it is a
+> full prediction. The word "Residual" in the class name refers to the
+> ResNet-style skip connections inside the GNN layers.
 
 The phylogenetic structure is encoded as:
 
@@ -148,9 +165,10 @@ recomputation.
 ## Step 5: Train the model
 
 The training loop corrupts a random 55% of observed cells each epoch with a
-learnable mask token, then minimises MSE on the corrupted cells plus a
-shrinkage penalty that discourages large residuals. Early stopping is based on
-held-out validation RMSE.
+learnable mask token, then minimises the type-appropriate loss on the
+corrupted cells plus a shrinkage penalty on `delta - baseline` that
+pulls the GNN toward the baseline. Early stopping is based on held-out
+validation RMSE.
 
 ```{r train, eval=FALSE}
 fit <- fit_pigauto(

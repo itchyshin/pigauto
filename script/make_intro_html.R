@@ -62,13 +62,29 @@ html <- paste0(
 
 <h2>What it does</h2>
 <p>
-<code>pigauto</code> fits a Residual Phylogenetic Denoising Autoencoder
-(ResidualPhyloDAE) that combines a Brownian-motion phylogenetic baseline
-(via <code>Rphylopars</code>) with a residual graph autoencoder. The GNN
-learns corrections from tree topology and inter-trait correlations.
-Continuous, binary, categorical, ordinal, and count traits all live in a
-single unified latent space.
+<code>pigauto</code> fits a <b>gated ensemble</b> of two predictors: a
+phylogenetic baseline and an attention-based graph neural network
+correction. For continuous, count, and ordinal traits the baseline is
+Brownian motion (via <code>Rphylopars</code>); for binary and
+categorical traits it is phylogenetic label propagation. The GNN
+operates on the same latent matrix and produces a full per-cell
+prediction <code>delta</code>; final predictions are the per-trait
+blend
+<code>(1 &minus; r) &times; baseline + r &times; delta</code>, where
+<code>r</code> is a per-trait gate calibrated on a held-out validation
+split. When the baseline is already optimal the gate closes and the GNN
+becomes a no-op. Continuous, binary, categorical, ordinal, and count
+traits all live in a single unified latent space.
 </p>
+<div class="note">
+<b>A note on &ldquo;residual&rdquo;.</b> The internal torch module is
+named <code>ResidualPhyloDAE</code>, but the &ldquo;Residual&rdquo;
+refers to the ResNet-style skip connections inside the GNN layers, not
+to a statistical residual. The GNN&rsquo;s output <code>delta</code> is
+a full prediction, not <code>y &minus; baseline</code>; it is trained
+end-to-end via the type-appropriate loss (MSE / BCE / cross-entropy)
+on the blend.
+</div>
 <ul>
 <li><b>Mixed-type traits</b> &mdash; continuous, binary, categorical, ordinal, and count in one model.</li>
 <li><b>Attention-based message passing</b> with a learnable phylogenetic adjacency bias &mdash; the model attends to informative neighbours rather than treating all species equally.</li>
@@ -205,8 +221,12 @@ df &lt;- avonet300; rownames(df) &lt;- df$Species_Key; df$Species_Key &lt;- NULL
 # 1. Generate 100 complete datasets (MC-dropout sampling from the GNN)
 mi &lt;- multi_impute(df, tree300, m = 100)
 
-# 2. Fit a phylogenetic mixed model on each imputation
-Vphy &lt;- ape::vcv(tree300)
+# 2. Fit a phylogenetic mixed model on each imputation.
+#    Vphy must be a CORRELATION matrix (diag = 1), not a covariance:
+#    glmmTMB&rsquo;s propto() estimates sigma^2 freely, so passing
+#    vcv(tree) (diagonal = tree height) would rescale the variance
+#    component.
+Vphy &lt;- cov2cor(ape::vcv(tree300))
 fits &lt;- with_imputations(mi, function(d) {
   d$species &lt;- factor(rownames(d), levels = rownames(Vphy))
   d$dummy   &lt;- factor(1)
