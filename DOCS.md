@@ -38,7 +38,7 @@ artefact.
 | First imputation, end-to-end | Live: [articles/getting-started.html](https://itchyshin.github.io/pigauto/articles/getting-started.html) · source: [`vignettes/getting-started.Rmd`](vignettes/getting-started.Rmd) |
 | Why does pigauto work this way? | Live: [pigauto_intro.html](https://itchyshin.github.io/pigauto/pigauto_intro.html) · source: [`script/make_intro_html.R`](script/make_intro_html.R) |
 | The full PCM workflow, mixed-type traits | Live: [pigauto_workflow_mixed.html](https://itchyshin.github.io/pigauto/pigauto_workflow_mixed.html) · source: [`script/make_workflow_mixed_html.R`](script/make_workflow_mixed_html.R) |
-| How well does it actually work? | Section [4. Benchmarks](#4-benchmarks) below, or live: [simulation scenarios](https://itchyshin.github.io/pigauto/dev/benchmark_report.html) / [AVONET 300](https://itchyshin.github.io/pigauto/dev/benchmark_final_report.html) / [pigauto vs TabPFN](https://itchyshin.github.io/pigauto/dev/bench_tabpfn.html) |
+| How well does it actually work? | Section [3. Benchmarks](#3-benchmarks) below, or live: [scaling to 10,000 tips](https://itchyshin.github.io/pigauto/dev/scaling.html) / [AVONET missingness sweep](https://itchyshin.github.io/pigauto/dev/bench_avonet_missingness.html) |
 | Package internals and gotchas | [`CLAUDE.md`](CLAUDE.md) |
 
 ---
@@ -85,27 +85,21 @@ explicit in the tutorial and informal in the rest of the docs:
 
 ## 3. Benchmarks
 
-Three rendered HTML reports let you read pigauto's reported
-performance without re-running anything locally. The first two are
-the primary evidence behind the summary tables in
-[`README.md`](README.md); the third compares pigauto against TabPFN
-as a drop-in tabular imputer. All three are physically hosted under
+Two rendered HTML reports let you read pigauto's reported performance
+without re-running anything locally. Both are physically hosted under
 `pkgdown/assets/dev/`; the "Benchmarks" submenu on the live site's
 Articles dropdown links straight to them.
 
 | Report | Live link | Source / inputs | What it shows |
 |---|---|---|---|
-| **Simulation scenarios** | [dev/benchmark_report.html](https://itchyshin.github.io/pigauto/dev/benchmark_report.html) | Frozen snapshot at `script/benchmark_report.html` (built by `script/benchmark_simulation.R`) | 12 synthetic scenarios × 3 replicates: BM low/high signal, OU (α=0.5, 2, 10), variable phylo signal, mixed types, large tree (300 spp), non-linear correlations. Per-scenario RMSE for continuous and count traits, accuracy for discrete traits, vs BM baseline |
-| **AVONET 300 (real data)** | [dev/benchmark_final_report.html](https://itchyshin.github.io/pigauto/dev/benchmark_final_report.html) | Frozen snapshot at `script/benchmark_final_report.html` (built by `script/benchmark_final.R`) | 7 traits (4 continuous + 2 categorical + 1 ordinal), 5 replicates. Per-trait RMSE, Pearson r, calibrated gate, and conformal coverage (94–100% across continuous/ordinal traits) |
-| **pigauto vs TabPFN** | [dev/bench_tabpfn.html](https://itchyshin.github.io/pigauto/dev/bench_tabpfn.html) | [`script/make_bench_tabpfn_html.R`](script/make_bench_tabpfn_html.R) + `script/bench_tabpfn.rds` | 5 scenarios × 2 replicates comparing pigauto's GNN correction against TabPFN (a tabular transformer imputer) run via subprocess. Shows where pigauto wins, loses, and ties |
+| **Scaling to 10,000 tips** | [dev/scaling.html](https://itchyshin.github.io/pigauto/dev/scaling.html) | [`script/make_scaling_html.R`](script/make_scaling_html.R) + `script/bench_scaling_v030.rds` + `script/bench_scaling_v031.rds` | Side-by-side v0.3.0 vs v0.3.1 wall-clock and peak memory at n ∈ {300, 1k, 2k, 3k, 5k, 7.5k, 10k}, plus an end-to-end validation run on the full AVONET3 + BirdTree dataset (9,993 species, 7 mixed-type traits). |
+| **AVONET missingness sweep** | [dev/bench_avonet_missingness.html](https://itchyshin.github.io/pigauto/dev/bench_avonet_missingness.html) | [`script/make_avonet_missingness_html.R`](script/make_avonet_missingness_html.R) + `script/bench_avonet_missingness.rds` | Three methods (mean / mode, BM baseline, pigauto) × three MCAR missingness levels (20% / 50% / 80%) on the full 9,993-species bundled `avonet_full` dataset. Per-trait RMSE, Pearson r, accuracy. |
 
 For the authoritative numerical summary with discussion, see
 [`README.md` → Benchmark results](README.md#benchmark-results). The
 interactive `simulate_benchmark()` function in
 [`R/simulate_benchmark.R`](R/simulate_benchmark.R) lets you regenerate
-the simulation scenarios end-to-end; the AVONET real-data benchmark
-is less modular because it depends on the bundled
-`avonet300` / `tree300` splits.
+the synthetic simulation scenarios end-to-end.
 
 ---
 
@@ -120,12 +114,11 @@ exported function's `.Rd` page is also in `man/`.
 | One-call entry point | [`impute()`](man/impute.Rd) | Runs the full pipeline and returns a completed data frame |
 | Multiple imputation | [`multi_impute()`](man/multi_impute.Rd), [`with_imputations()`](man/with_imputations.Rd), [`pool_mi()`](man/pool_mi.Rd) | Generate M datasets → fit M models → pool with Rubin's rules |
 | Fine-grained pipeline | [`preprocess_traits()`](man/preprocess_traits.Rd), [`build_phylo_graph()`](man/build_phylo_graph.Rd), [`fit_baseline()`](man/fit_baseline.Rd), [`fit_pigauto()`](man/fit_pigauto.Rd), [`predict.pigauto_fit()`](man/predict.pigauto_fit.Rd), [`evaluate()`](man/evaluate.Rd) | The six stages `impute()` runs internally |
-| Alternative baselines | [`fit_baseline_bace()`](man/fit_baseline_bace.Rd), [`fit_baseline_tabpfn()`](man/fit_baseline_tabpfn.Rd) | BACE (Bayesian chained-equation) or TabPFN (tabular transformer) as the baseline |
+| Alternative baseline | [`fit_baseline_bace()`](man/fit_baseline_bace.Rd) | BACE (Bayesian chained-equation multiple imputation) as an alternative to the default Rphylopars BM baseline |
 | Cross-validation and benchmarks | [`cross_validate()`](man/cross_validate.Rd), [`compare_methods()`](man/compare_methods.Rd), [`simulate_benchmark()`](man/simulate_benchmark.Rd), [`simulate_non_bm()`](man/simulate_non_bm.Rd) | Evaluation infrastructure |
 | Reporting and plotting | [`pigauto_report()`](man/pigauto_report.Rd), [`plot.pigauto_fit()`](man/plot.pigauto_fit.Rd), [`plot.pigauto_pred()`](man/plot.pigauto_pred.Rd), [`plot.pigauto_benchmark()`](man/plot.pigauto_benchmark.Rd), [`summary.pigauto_fit()`](man/summary.pigauto_fit.Rd), [`calibration_df()`](man/calibration_df.Rd), [`confusion_matrix()`](man/confusion_matrix.Rd) | Interactive HTML reports + diagnostic plots |
 | I/O | [`read_traits()`](man/read_traits.Rd), [`read_tree()`](man/read_tree.Rd), [`save_pigauto()`](man/save_pigauto.Rd), [`load_pigauto()`](man/load_pigauto.Rd) | Data loading and fit persistence |
-| Setup | [`setup_tabpfn()`](man/setup_tabpfn.Rd) | One-time Python venv setup for the TabPFN baseline |
-| Bundled data | [`avonet300`](man/avonet300.Rd), [`tree300`](man/tree300.Rd) | 300-species AVONET + matching BirdTree phylogeny |
+| Bundled data | [`avonet300`](man/avonet300.Rd), [`tree300`](man/tree300.Rd), [`avonet_full`](man/avonet_full.Rd), [`tree_full`](man/tree_full.Rd) | 300-species and 9,993-species AVONET + matching BirdTree phylogenies |
 
 ---
 
@@ -155,7 +148,6 @@ R/
 ├── build_phylo_graph.R     adjacency + spectral coords
 ├── fit_baseline.R          Rphylopars BM + phylo label propagation
 ├── fit_baseline_bace.R     BACE wrapper (Suggests:)
-├── fit_baseline_tabpfn.R   TabPFN wrapper (Suggests:)
 ├── fit_pigauto.R           training loop + post-training calibration
 ├── model_residual_dae.R    ResidualPhyloDAE torch::nn_module
 ├── predict_pigauto.R       MC-dropout sampling + conformal intervals
@@ -173,15 +165,14 @@ R/
 These HTML reports are dev artefacts living under `script/`. They do
 not ship with the installed package (`^script$` is in `.Rbuildignore`)
 but are committed to the repo and mirrored into `pkgdown/assets/dev/`
-so the live site can serve them as rendered web pages. The three
-benchmark reports (simulation, AVONET, TabPFN) are also listed here
+so the live site can serve them as rendered web pages. The two
+benchmark reports (scaling, AVONET missingness) are also listed here
 because they are technically developer artefacts, but the primary
 place to find them is section 3 above.
 
 | Report | Live link | Source |
 |---|---|---|
-| Test catalogue (77 tests × 8 files) | [dev/tests_overview.html](https://itchyshin.github.io/pigauto/dev/tests_overview.html) | [`script/make_tests_html.R`](script/make_tests_html.R) |
-| Test run report | [dev/test_report.html](https://itchyshin.github.io/pigauto/dev/test_report.html) | Frozen snapshot at `script/test_report.html` (no live builder) |
+| Test catalogue | [dev/tests_overview.html](https://itchyshin.github.io/pigauto/dev/tests_overview.html) | [`script/make_tests_html.R`](script/make_tests_html.R) |
 
 ---
 
@@ -199,7 +190,7 @@ place to find them is section 3 above.
 - Canonical citation (BibTeX friendly):
 
   > Nakagawa S (2026). *pigauto: Phylogenetic Imputation via Graph
-  > Autoencoder*. R package version 0.3.0.
+  > Autoencoder*. R package version 0.4.0.
   > <https://github.com/itchyshin/pigauto>.
 
 ---
@@ -220,9 +211,10 @@ The live pkgdown site is produced by two things:
 ### Static HTML tutorials: the dual-write pattern
 
 The two `script/make_*_html.R` tutorial scripts (`make_intro_html.R`,
-`make_workflow_mixed_html.R`) and the two dev report builders
-(`make_tests_html.R`, `make_bench_tabpfn_html.R`) each write their
-output to **two places**:
+`make_workflow_mixed_html.R`) and the dev report builders
+(`make_tests_html.R`, `make_scaling_html.R`,
+`make_avonet_missingness_html.R`) each write their output to **two
+places**:
 
 - `inst/doc/xxx.html` (or `script/xxx.html` for dev reports) —
   the canonical location. For tutorials this is what ships with the
@@ -244,7 +236,8 @@ one `Rscript script/make_workflow_mixed_html.R` rebuild touches both.
 Rscript script/make_intro_html.R
 Rscript script/make_workflow_mixed_html.R
 Rscript script/make_tests_html.R
-Rscript script/make_bench_tabpfn_html.R   # requires script/bench_tabpfn.rds
+Rscript script/make_scaling_html.R                 # requires bench_scaling_v03*.rds
+Rscript script/make_avonet_missingness_html.R      # requires bench_avonet_missingness.rds
 
 # build vignettes (knitted from vignettes/*.Rmd)
 devtools::build_vignettes()
@@ -267,6 +260,7 @@ the static HTMLs from `pkgdown/assets/`, the function reference from
 | `inst/doc/pigauto_intro.html` | `script/make_intro_html.R` | `Rscript script/make_intro_html.R` |
 | `inst/doc/pigauto_workflow_mixed.html` | `script/make_workflow_mixed_html.R` | `Rscript script/make_workflow_mixed_html.R` |
 | `script/tests_overview.html` | `script/make_tests_html.R` | `Rscript script/make_tests_html.R` |
-| `script/bench_tabpfn.html` | `script/make_bench_tabpfn_html.R` | `Rscript script/make_bench_tabpfn_html.R` |
+| `script/scaling.html` | `script/make_scaling_html.R` | `Rscript script/make_scaling_html.R` |
+| `script/bench_avonet_missingness.html` | `script/make_avonet_missingness_html.R` | `Rscript script/make_avonet_missingness_html.R` |
 | `docs/` (pkgdown site) | `_pkgdown.yml` + everything above | `pkgdown::build_site()` locally, or push to `main` for CI build |
 | `man/*.Rd` | roxygen blocks in `R/*.R` | `devtools::document()` |

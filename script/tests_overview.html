@@ -37,10 +37,10 @@
 
 <h1>pigauto &mdash; test index</h1>
 <p class="meta">Static index of every <code>test_that()</code> block in <code>tests/testthat/</code>.
-Generated 2026-04-09 07:12. Does not run the tests &mdash; use <code>devtools::test()</code> for pass/fail status.</p>
+Generated 2026-04-09 18:51. Does not run the tests &mdash; use <code>devtools::test()</code> for pass/fail status.</p>
 
 <div class="summary">
-<b>77 tests</b> across <b>8 files</b>.
+<b>74 tests</b> across <b>7 files</b>.
 </div>
 
 <section>
@@ -69,7 +69,7 @@ Generated 2026-04-09 07:12. Does not run the tests &mdash; use <code>devtools::t
 <section>
   <div class="filehead">
     <h3><code>test-graph.R</code></h3>
-    <span class="count">5 tests</span>
+    <span class="count">8 tests</span>
   </div>
   <p class="area">Phylogenetic graph, adjacency, spectral coordinates</p>
   <ol>
@@ -78,6 +78,9 @@ Generated 2026-04-09 07:12. Does not run the tests &mdash; use <code>devtools::t
     <li>build_phylo_graph coords has k_eigen columns <span class="lineref">(line 18)</span></li>
     <li>build_phylo_graph adj is symmetric and entries are in (0, 1) <span class="lineref">(line 26)</span></li>
     <li>build_phylo_graph caching returns identical results <span class="lineref">(line 37)</span></li>
+    <li>build_phylo_graph returns the cophenetic distance matrix in $D <span class="lineref">(line 48)</span></li>
+    <li>sparse (RSpectra) and dense eigensolvers agree up to sign flips <span class="lineref">(line 62)</span></li>
+    <li>fit_baseline reuses graph$D when supplied instead of recomputing <span class="lineref">(line 111)</span></li>
   </ol>
 </section>
 
@@ -116,7 +119,7 @@ Generated 2026-04-09 07:12. Does not run the tests &mdash; use <code>devtools::t
     <h3><code>test-multi-impute.R</code></h3>
     <span class="count">11 tests</span>
   </div>
-  <p class="area">&amp;mdash;</p>
+  <p class="area">multi_impute(), with_imputations(), pool_mi() (Rubin's rules)</p>
   <ol>
     <li>multi_impute returns pigauto_mi with M datasets of the right shape <span class="lineref">(line 46)</span></li>
     <li>all M datasets have matching rownames, colnames, and column classes <span class="lineref">(line 73)</span></li>
@@ -127,8 +130,8 @@ Generated 2026-04-09 07:12. Does not run the tests &mdash; use <code>devtools::t
     <li>pool_mi() on lm fits returns a data.frame with Rubin's rules columns <span class="lineref">(line 184)</span></li>
     <li>pool_mi() matches a hand-computed Rubin's rules reference (M=3, p=2) <span class="lineref">(line 212)</span></li>
     <li>pool_mi() works end-to-end with glmmTMB + propto() <span class="lineref">(line 267)</span></li>
-    <li>pool_mi() errors cleanly when passed MCMCglmm fits <span class="lineref">(line 326)</span></li>
-    <li>pool_mi() errors when fits have inconsistent coefficient names <span class="lineref">(line 338)</span></li>
+    <li>pool_mi() errors cleanly when passed MCMCglmm fits <span class="lineref">(line 329)</span></li>
+    <li>pool_mi() errors when fits have inconsistent coefficient names <span class="lineref">(line 341)</span></li>
   </ol>
 </section>
 
@@ -181,22 +184,6 @@ Generated 2026-04-09 07:12. Does not run the tests &mdash; use <code>devtools::t
     <li>preprocess_traits backward compatible (no species_col, no multi_obs) <span class="lineref">(line 128)</span></li>
     <li>avonet300 contains categorical and ordinal traits <span class="lineref">(line 143)</span></li>
     <li>avonet300 preprocesses with mixed types <span class="lineref">(line 156)</span></li>
-  </ol>
-</section>
-
-<section>
-  <div class="filehead">
-    <h3><code>test-tabpfn.R</code></h3>
-    <span class="count">6 tests</span>
-  </div>
-  <p class="area">TabPFN baseline wrapper and stacking integration</p>
-  <ol>
-    <li>fit_baseline_tabpfn errors without reticulate <span class="lineref">(line 24)</span></li>
-    <li>fit_baseline_tabpfn returns correct structure <span class="lineref">(line 34)</span></li>
-    <li>fit_baseline_tabpfn predictions are finite <span class="lineref">(line 52)</span></li>
-    <li>fit_baseline_tabpfn works with evaluate_imputation <span class="lineref">(line 63)</span></li>
-    <li>fit_baseline_tabpfn can serve as baseline for fit_pigauto <span class="lineref">(line 78)</span></li>
-    <li>se_method='none' returns NA matrix <span class="lineref">(line 99)</span></li>
   </ol>
 </section>
 

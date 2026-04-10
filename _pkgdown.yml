@@ -56,8 +56,6 @@ navbar:
           href: dev/scaling.html
         - text: "AVONET missingness sweep (20/50/80%)"
           href: dev/bench_avonet_missingness.html
-        - text: "pigauto vs TabPFN"
-          href: dev/bench_tabpfn.html
         - text: "-------"
         - text: "Developer reports"
         - text: "Test catalogue"
@@ -96,7 +94,6 @@ reference:
       - mask_missing
       - fit_baseline
       - fit_baseline_bace
-      - fit_baseline_tabpfn
       - fit_pigauto
       - predict.pigauto_fit
       - evaluate
@@ -128,10 +125,6 @@ reference:
       - read_tree
       - save_pigauto
       - load_pigauto
-
-  - title: "Python backend setup"
-    contents:
-      - setup_tabpfn
 
   - title: "Bundled data"
     contents:

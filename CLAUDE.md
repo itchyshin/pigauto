@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-`pigauto` is an R package (version 0.3.3) for phylogenetic trait imputation. It fits a gated ensemble of a phylogenetic baseline and an attention-based graph neural network correction. For continuous/count/ordinal traits the baseline is Brownian motion (via `Rphylopars`); for binary/categorical traits it is phylogenetic label propagation. Prediction is the per-trait blend `(1 - r_cal) * baseline + r_cal * delta_GNN`, with `r_cal` calibrated on a held-out validation split. See `README.md` for the user-facing API; this file documents the internals.
+`pigauto` is an R package (version 0.4.0) for phylogenetic trait imputation. It fits a gated ensemble of a phylogenetic baseline and an attention-based graph neural network correction. For continuous/count/ordinal traits the baseline is Brownian motion (via `Rphylopars`); for binary/categorical traits it is phylogenetic label propagation. Prediction is the per-trait blend `(1 - r_cal) * baseline + r_cal * delta_GNN`, with `r_cal` calibrated on a held-out validation split. See `README.md` for the user-facing API; this file documents the internals.
 
 **A note on "residual"**: the internal torch class is named `ResidualPhyloDAE` because its GNN layers use ResNet-style residual skip connections. The GNN output `delta` is **not** a statistical residual `y - baseline` — it is a full per-cell prediction trained end-to-end via type-appropriate loss (MSE / BCE / cross-entropy) on the blend, not on `y - baseline`. Do not re-introduce user-facing prose that describes the GNN as "learning a residual from the baseline".
 
@@ -23,15 +23,6 @@ testthat::test_file("tests/testthat/test-mixed-types.R")  # single file, no relo
 devtools::check()                                 # R CMD check before commits
 devtools::document()                              # regenerate NAMESPACE/man after roxygen edits
 ```
-
-Optional one-time setup for the TabPFN benchmark (only needed to run `script/bench_tabpfn.R`). Must use pyenv Python 3.10 with SSL; `reticulate::virtualenv_create` fails for this use case — create the venv directly:
-
-```sh
-~/.pyenv/versions/3.10.16/bin/python -m venv ~/.virtualenvs/r-tabpfn
-~/.virtualenvs/r-tabpfn/bin/pip install tabimpute
-```
-
-`R/setup_tabpfn.R` exposes an R wrapper but currently uses `reticulate::py_install()` which fails on Python 3.13; prefer the shell recipe above until that is fixed.
 
 Tests live in `tests/testthat/` (testthat 3rd edition). There is no linter or formatter configured — match surrounding style.
 
@@ -115,17 +106,13 @@ After the training loop:
 ## Repository layout
 
 - `R/` — package source (~7100 lines). Everything with an `@export` tag is user-facing.
-- `tests/testthat/` — testthat 3rd edition. One test file per broad area: preprocess, graph, masking, fit-predict, mixed-types, tabpfn, new-features.
+- `tests/testthat/` — testthat 3rd edition. One test file per broad area: preprocess, graph, masking, fit-predict, mixed-types, multi-impute, new-features.
 - `BACE/` — a **separate, self-contained R package** (Bayesian phylogenetic imputation via MCMCglmm) kept in-tree as a reference implementation and comparison baseline. It has its own `R/`, `tests/`, `vignettes/`, and `DESCRIPTION`. `Grep` and `Glob` results for generic terms (`impute`, `phylo`, `trait`) will include BACE files — always check the path prefix. Pigauto wraps BACE only in `R/fit_baseline_bace.R`. BACE is `Suggests:`-only, `^BACE$` is in `.Rbuildignore`, and BACE's own tests are not part of pigauto's test suite. Do not modify BACE as part of pigauto work.
-- `script/` — benchmark drivers, logs, and HTML/RDS outputs. Ignored by `R CMD build`. **Only `bench_tabpfn.R` (with `run_tabpfn.py` and `make_bench_tabpfn_html.R`) is current.** Everything named `bench_v2.*`, `bench_v3.*`, `bench_v4.*`, or `benchmark_*` is a stale snapshot from earlier phases kept for provenance — do not treat them as reference implementations.
+- `script/` — benchmark drivers, logs, and HTML/RDS outputs. Ignored by `R CMD build`. The current entries are `validate_avonet_full.{R,log,md,rds}` (full-scale validation), `bench_scaling_v031.{R,log,rds}` (scaling benchmark), `bench_avonet_missingness.{R,rds,md}` + `make_avonet_missingness_html.R` (missingness sweep), and the `make_*_html.R` generators for the published HTML pages. Anything named `bench_v2.*`, `bench_v3.*`, `bench_v4.*`, or `benchmark_*` is a stale snapshot from earlier phases — do not treat them as reference implementations.
 - `dev/` — scratch experiments. Ignored by `R CMD build`.
 - `avonet/`, `data/`, `data-raw/` — the bundled AVONET 300-species dataset and its build scripts.
 
 ## Non-obvious gotchas
-
-### R torch ↔ Python torch cannot share a process
-
-`fit_baseline_tabpfn.R` / `script/bench_tabpfn.R` run `tabimpute` via a **subprocess** (`script/run_tabpfn.py`) called with `system2()`. Loading R `torch` and Python `torch` in the same R session causes libtorch symbol clashes (`__ZN2at17toDLPackVersioned...`) regardless of load order. The subprocess at `~/.virtualenvs/r-tabpfn/` (Python 3.10.16 + tabimpute) is the only supported way to use TabPFN. **Do not try to call `tabimpute` directly via `reticulate` in a session that has also loaded `torch`.**
 
 ### `.Rbuildignore` is wide
 

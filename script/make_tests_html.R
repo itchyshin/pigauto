@@ -13,13 +13,13 @@ files <- sort(files)
 
 # ---- Human-readable area for each file ------------------------------------
 area_map <- list(
-  "test-preprocess.R"   = "Trait preprocessing, type detection, multi-obs alignment",
-  "test-graph.R"        = "Phylogenetic graph, adjacency, spectral coordinates",
-  "test-masking.R"      = "Missing-data splits and observed-cell masks",
-  "test-fit-predict.R"  = "Training, prediction, attention, conformal, impute()",
-  "test-mixed-types.R"  = "5-type detection, encode/decode round-trip",
-  "test-new-features.R" = "evaluate, summary, plot, report, CV, benchmark, save/load",
-  "test-tabpfn.R"       = "TabPFN baseline wrapper and stacking integration"
+  "test-preprocess.R"    = "Trait preprocessing, type detection, multi-obs alignment",
+  "test-graph.R"         = "Phylogenetic graph, adjacency, spectral coordinates",
+  "test-masking.R"       = "Missing-data splits and observed-cell masks",
+  "test-fit-predict.R"   = "Training, prediction, attention, conformal, impute()",
+  "test-mixed-types.R"   = "5-type detection, encode/decode round-trip",
+  "test-multi-impute.R"  = "multi_impute(), with_imputations(), pool_mi() (Rubin's rules)",
+  "test-new-features.R"  = "evaluate, summary, plot, report, CV, benchmark, save/load"
 )
 
 # ---- Extract test descriptions --------------------------------------------

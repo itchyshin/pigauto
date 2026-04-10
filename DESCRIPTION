@@ -1,6 +1,6 @@
 Package: pigauto
 Title: Phylogenetic Imputation via Graph Autoencoders
-Version: 0.3.3
+Version: 0.4.0
 Authors@R:
     person("Shinichi", "Nakagawa", role = c("aut", "cre"), email = "itchyshin@gmail.com")
 Description: Imputes missing species trait data via a gated ensemble of a
@@ -38,7 +38,6 @@ Suggests:
     knitr,
     rmarkdown,
     pkgdown,
-    reticulate,
     RSpectra,
     BACE,
     MCMCglmm,

@@ -1,3 +1,50 @@
+# pigauto 0.4.0
+
+## Breaking: TabPFN baseline removed
+
+`fit_baseline_tabpfn()` and `setup_tabpfn()` are gone, along with the
+`reticulate` suggested dependency, the `script/bench_tabpfn.*` files,
+`script/run_tabpfn.py`, `tests/testthat/test-tabpfn.R`, and the
+`dev/bench_tabpfn.html` benchmark page. The TabPFN wrapper was
+originally added as a curiosity — a test of whether a general-purpose
+tabular transformer could compete with pigauto as a drop-in baseline.
+In practice it is a poor fit for what pigauto is trying to do:
+
+1. **It is not phylogenetic.** TabPFN treats rows as exchangeable and
+   cannot use the tree at all. The whole point of pigauto is that the
+   tree carries information about trait evolution; feeding traits
+   through a tree-blind model throws that away.
+2. **Quadratic attention does not scale.** TabPFN's attention is
+   O(n²) in the number of rows. At `n = 9,993` species (the full
+   AVONET dataset) this is already near the edge of what a single
+   GPU can handle, and most users of pigauto care precisely about
+   scales at which a baseline must be cheap.
+3. **The cross-language subprocess architecture was fragile.** R
+   `torch` and Python `torch` share `libtorch` and cannot coexist in
+   the same process, so TabPFN had to run via `system2()` on a
+   separately-installed Python venv. Every time the user's Python,
+   `tabimpute`, or `torch` versions drifted, the wrapper broke. This
+   is not maintenance the project can afford.
+4. **Keeping the benchmark page gave a misleading impression of
+   relevance.** Users who hit the "pigauto vs TabPFN" page came away
+   thinking TabPFN was a first-class supported baseline in pigauto.
+   It never was.
+
+Users who still want to benchmark pigauto against TabPFN can install
+`tabimpute` separately and call it directly from Python. The removal
+simplifies pigauto's installation, CI, and documentation.
+
+## Docs cleanup (carried over from v0.3.3 work)
+
+- `DOCS.md`: rewritten benchmark and developer-reports sections to
+  reflect the v0.3.2+ benchmark set (scaling to 10,000 tips and the
+  AVONET missingness sweep). Dropped the obsolete `benchmark_report`
+  and `benchmark_final_report` links that v0.3.2 had already pruned
+  from `_pkgdown.yml` but had not yet removed from `DOCS.md`.
+- `CLAUDE.md`: removed the TabPFN Python-venv setup recipe and the
+  "R torch ↔ Python torch cannot share a process" gotcha (no longer
+  applicable). Version line bumped to 0.4.0.
+
 # pigauto 0.3.3
 
 ## Correctness fix: Vphy must be a correlation matrix in `glmmTMB`'s `propto()`
