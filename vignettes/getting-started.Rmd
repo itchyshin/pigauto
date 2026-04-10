@@ -18,41 +18,35 @@ knitr::opts_chunk$set(
 
 ## What pigauto does
 
-Many comparative datasets have missing trait values: species were not measured,
-specimens were unavailable, or data were lost. Phylogenetic imputation
-leverages the fact that closely related species tend to be morphologically
-similar — so known trait values of relatives provide information about missing
-ones.
+Many comparative datasets have missing trait values: species were not
+measured, specimens were unavailable, or data were lost. pigauto fills
+in those gaps using two sources of information:
 
-**pigauto** implements a *gated ensemble of a phylogenetic baseline and
-an attention-based graph neural network correction*. The approach has
-two components:
+1. **The phylogenetic tree.** Closely related species tend to share
+   similar traits, so known values of relatives are informative about
+   missing ones.
+2. **Cross-trait correlations.** If body mass predicts beak length,
+   then observed masses help impute missing beak lengths even when the
+   species itself was never measured for that trait.
 
-1. **Phylogenetic baseline**. For continuous, count, and ordinal traits,
-   the baseline is Brownian motion fitted with `Rphylopars` (the best
-   linear unbiased predictor under BM, analogous to phylogenetic BLUP).
-   For binary and categorical traits it is Gaussian-kernel phylogenetic
-   label propagation: a species-specific log-probability built from the
-   similarity-weighted labels of its neighbours on the tree.
+The package handles continuous measurements, counts, binary variables,
+ordered categories, and unordered categories — all in a single call to
+`impute()`.
 
-2. **Graph neural network correction**. A small attention-based GNN
-   operates on the same latent matrix and produces a full per-cell
-   prediction `delta`. The final prediction is the per-trait blend
-   `(1 - r) * baseline + r * delta`, where `r` is a per-trait gate. The
-   GNN is trained end-to-end to minimise the type-appropriate loss (MSE
-   for continuous / count / ordinal, BCE for binary, cross-entropy for
-   categorical) on the *blend*, with an L2 penalty on `r` and a
-   shrinkage penalty on `delta - baseline` that keep the GNN near the
-   baseline unless it can demonstrably do better. After training, `r`
-   is grid-searched per trait on a held-out validation set — for
-   discrete traits a split-validation cross-check prevents the GNN from
-   degrading baseline accuracy. The result: the GNN can only override
-   the baseline when there is held-out evidence that it should.
+### How it works (briefly)
 
-> **Note.** Despite the legacy class name `ResidualPhyloDAE`, the GNN
-> output `delta` is not a statistical residual `y - baseline`: it is a
-> full prediction. The word "Residual" in the class name refers to the
-> ResNet-style skip connections inside the GNN layers.
+pigauto combines a phylogenetic baseline with a graph neural network
+(GNN) correction. The baseline is Brownian-motion imputation for
+continuous / count / ordinal traits (via `Rphylopars`) and phylogenetic
+label propagation for binary / categorical traits. The GNN learns
+additional patterns from tree topology and cross-trait structure. A
+per-trait gate controls how much the GNN contributes: when the baseline
+is already good enough, the gate closes and the GNN stays out of the
+way. This is verified on held-out data after training.
+
+> **Technical note.** The internal class name `ResidualPhyloDAE` refers
+> to the ResNet-style skip connections inside the GNN layers, not to a
+> statistical residual `y - baseline`.
 
 The phylogenetic structure is encoded as:
 

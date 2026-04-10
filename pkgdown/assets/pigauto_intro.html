@@ -39,41 +39,47 @@
 <body>
 
 <h1>pigauto <span class="badge">v0.4.0</span></h1>
-<p class="tagline">Phylogenetic trait imputation via graph neural network.</p>
-<p class="meta">Generated 2026-04-09 from <code>README.md</code> and <code>CLAUDE.md</code>.</p>
+<p class="tagline">Fill in missing species traits using a phylogenetic tree.</p>
+<p class="meta">Generated 2026-04-10 from <code>README.md</code> and <code>CLAUDE.md</code>.</p>
 
 <h2>What it does</h2>
 <p>
-<code>pigauto</code> fits a <b>gated ensemble</b> of two predictors: a
-phylogenetic baseline and an attention-based graph neural network
-correction. For continuous, count, and ordinal traits the baseline is
-Brownian motion (via <code>Rphylopars</code>); for binary and
-categorical traits it is phylogenetic label propagation. The GNN
-operates on the same latent matrix and produces a full per-cell
-prediction <code>delta</code>; final predictions are the per-trait
-blend
-<code>(1 &minus; r) &times; baseline + r &times; delta</code>, where
-<code>r</code> is a per-trait gate calibrated on a held-out validation
-split. When the baseline is already optimal the gate closes and the GNN
-becomes a no-op. Continuous, binary, categorical, ordinal, and count
-traits all live in a single unified latent space.
+Comparative analyses often fail because trait databases are incomplete.
+<code>pigauto</code> fills in the gaps by combining two sources of
+information: <b>(1)</b> the phylogenetic tree, which tells us that
+closely related species tend to share similar traits, and <b>(2)</b>
+correlations among the traits themselves, which let observed traits
+inform predictions of missing ones. The package handles continuous
+measurements, counts, binary variables, ordered categories, and
+unordered categories &mdash; all in a single call.
+</p>
+<h3>How it works</h3>
+<p>
+Under the hood, pigauto blends a <b>phylogenetic baseline</b>
+(Brownian-motion imputation for continuous traits, phylogenetic label
+propagation for discrete traits) with a <b>graph neural network</b>
+that learns additional patterns from tree structure and cross-trait
+correlations. A per-trait gate calibrated on held-out data controls how
+much the GNN contributes: when the baseline is already good enough, the
+gate closes and the network stays out of the way. The final prediction
+is the blend
+<code>(1 &minus; r) &times; baseline + r &times; GNN</code>.
 </p>
 <div class="note">
-<b>A note on &ldquo;residual&rdquo;.</b> The internal torch module is
-named <code>ResidualPhyloDAE</code>, but the &ldquo;Residual&rdquo;
-refers to the ResNet-style skip connections inside the GNN layers, not
-to a statistical residual. The GNN&rsquo;s output <code>delta</code> is
-a full prediction, not <code>y &minus; baseline</code>; it is trained
-end-to-end via the type-appropriate loss (MSE / BCE / cross-entropy)
-on the blend.
+<b>Technical note.</b> The internal torch module is named
+<code>ResidualPhyloDAE</code>; the &ldquo;Residual&rdquo; refers to
+ResNet-style skip connections inside the GNN layers, not to a
+statistical residual. The GNN&rsquo;s output is a full prediction
+trained end-to-end, not <code>y &minus; baseline</code>.
 </div>
 <ul>
-<li><b>Mixed-type traits</b> &mdash; continuous, binary, categorical, ordinal, and count in one model.</li>
-<li><b>Attention-based message passing</b> with a learnable phylogenetic adjacency bias &mdash; the model attends to informative neighbours rather than treating all species equally.</li>
-<li><b>Validation-calibrated gates</b> &mdash; post-training gate optimisation prevents the GNN from adding noise when the baseline is already strong.</li>
-<li><b>Conformal prediction intervals</b> &mdash; distribution-free 95% coverage guarantees for continuous/count/ordinal traits.</li>
-<li><b>Adaptive spectral encoding</b> &mdash; <code>k_eigen</code> scales automatically with tree size (4 for ~30 tips up to 32 for 640+).</li>
-<li><b>Multiple observations per species</b> &mdash; aggregates individual-level data before phylogenetic message passing.</li>
+<li><b>Any trait type</b> &mdash; continuous, binary, categorical, ordinal, and count in one model.</li>
+<li><b>Uses the phylogeny</b> &mdash; closely related species inform predictions, as you would expect from a comparative method.</li>
+<li><b>Cross-trait patterns</b> &mdash; if body mass predicts beak length, observed masses help impute missing beak lengths.</li>
+<li><b>Safe by default</b> &mdash; the per-trait gate prevents the neural network from degrading traits the baseline already handles well.</li>
+<li><b>Uncertainty quantification</b> &mdash; conformal prediction intervals give 95% coverage for continuous/count/ordinal traits.</li>
+<li><b>Multiple imputation</b> &mdash; <code>multi_impute()</code> &rarr; <code>with_imputations()</code> &rarr; <code>pool_mi()</code> for downstream inference via Rubin&rsquo;s rules.</li>
+<li><b>Scales to large trees</b> &mdash; tested up to 10,000 species on a laptop.</li>
 </ul>
 
 <h2>Installation</h2>

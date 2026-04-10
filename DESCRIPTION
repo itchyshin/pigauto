@@ -1,22 +1,21 @@
 Package: pigauto
-Title: Phylogenetic Imputation via Graph Autoencoders
+Title: Fill in Missing Species Traits Using a Phylogenetic Tree
 Version: 0.4.0
 Authors@R:
     person("Shinichi", "Nakagawa", role = c("aut", "cre"), email = "itchyshin@gmail.com")
-Description: Imputes missing species trait data via a gated ensemble of a
-    phylogenetic baseline and an attention-based graph neural network
-    correction. For continuous, count, and ordinal traits the baseline is
-    Brownian motion (via Rphylopars); for binary and categorical traits it
-    is phylogenetic label propagation. The two predictors are blended by a
-    per-trait gate that is calibrated on a held-out validation set, so when
-    the baseline is already optimal the neural correction is zeroed out.
-    Features conformal prediction intervals with guaranteed coverage for
-    continuous/count/ordinal traits and adaptive spectral encoding that
-    scales with tree size. Supports continuous, binary, categorical,
-    ordinal, and count traits in a unified latent space, with optional
-    multiple observations per species. Includes both a 300-species AVONET
-    bird morphology subset and the full 9,993-species AVONET + BirdTree
-    bundled datasets for examples and scale benchmarks.
+Description: Imputes missing species trait data for comparative analyses
+    by combining phylogenetic similarity (closely related species share
+    similar traits) with cross-trait correlations (observed traits inform
+    missing ones). Handles continuous measurements, counts, binary
+    variables, ordered categories, and unordered categories in a single
+    call. The method blends a phylogenetic baseline with a graph neural
+    network correction; a per-trait gate calibrated on held-out data
+    ensures the network only contributes when it improves on the baseline.
+    Provides conformal prediction intervals (95% coverage) for continuous,
+    count, and ordinal traits and supports Rubin's-rules multiple
+    imputation for downstream inference. Tested up to 10,000 species.
+    Bundled datasets include a 300-species and a 9,993-species AVONET bird
+    trait + BirdTree phylogeny subset.
 License: MIT + file LICENSE
 URL: https://itchyshin.github.io/pigauto, https://github.com/itchyshin/pigauto
 BugReports: https://github.com/itchyshin/pigauto/issues

@@ -1,35 +1,40 @@
 # pigauto
 
-Phylogenetic trait imputation via a gated ensemble of a phylogenetic
-baseline and an attention-based graph neural network correction. The
-baseline is Brownian motion (via Rphylopars) for continuous, count, and
-ordinal traits and phylogenetic label propagation for binary and
-categorical traits; the GNN learns a correction from tree topology and
-inter-trait correlations. A per-trait gate calibrated on a held-out
-validation set blends the two predictors, so when the baseline is
-already optimal the neural correction becomes a no-op. Supports
-continuous, binary, categorical, ordinal, and count traits in a unified
-latent space.
+**Fill in missing species traits using a phylogenetic tree.**
+
+Comparative analyses often fail because trait databases are incomplete.
+pigauto imputes the gaps by combining two sources of information:
+(1) the phylogenetic tree, which tells us that closely related species
+tend to share similar traits, and (2) correlations among the traits
+themselves, which let observed traits inform predictions of missing
+ones. The package handles continuous measurements, counts, binary
+variables, ordered categories, and unordered categories — all in a
+single call.
+
+Under the hood pigauto blends a phylogenetic baseline (Brownian-motion
+imputation for continuous traits, phylogenetic label propagation for
+discrete traits) with a graph neural network that learns additional
+patterns from tree structure and inter-trait correlations. A
+validation-calibrated gate controls how much the neural network
+contributes: when the phylogenetic baseline is already good enough,
+the gate closes and the network stays out of the way.
 
 ## Key features
 
-- **Mixed-type traits**: continuous, binary, categorical, ordinal, and count
-  in a single model
-- **Attention-based message passing**: learned phylogenetic attention with
-  adjacency-prior bias — the model attends to informative neighbours
-  rather than treating all equally
-- **Phylogenetic label propagation**: species-specific baselines for
-  discrete traits using phylogenetic similarity, not flat frequencies
-- **Validation-calibrated gates**: post-training gate optimisation prevents
-  the GNN from adding noise when the baseline is already strong
-- **Conformal prediction intervals**: distribution-free 95% coverage
-  guarantees for continuous/count/ordinal traits
-- **Adaptive spectral encoding**: `k_eigen` scales automatically with tree
-  size (4 for 30 tips → 15 for 300 → 32 for 640+)
-- **Multiple observations per species**: aggregates individual-level data
-  before phylogenetic message passing
-- **Auto-generated HTML reports**: `pigauto_report()` produces interactive
-  benchmark reports with Chart.js
+- **Any trait type**: continuous, binary, categorical, ordinal, and
+  count traits in a single model — no need to run separate analyses
+- **Uses the phylogeny**: closely related species inform predictions,
+  exactly as you would expect from a comparative method
+- **Learns cross-trait patterns**: if body mass predicts beak length,
+  observed masses help impute missing beak lengths
+- **Safe by default**: a per-trait gate prevents the neural network
+  from degrading traits the phylogenetic baseline already handles well
+- **Uncertainty quantification**: conformal prediction intervals give
+  95% coverage for continuous, count, and ordinal traits
+- **Multiple imputation**: `multi_impute()` → `with_imputations()` →
+  `pool_mi()` implements Rubin's rules for downstream inference
+- **Scales to large trees**: tested up to 10,000 species on a laptop
+- **Multiple observations per species**: handles intraspecific data
 
 ## Documentation
 

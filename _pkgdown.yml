@@ -11,15 +11,16 @@ template:
     code_font: {google: "JetBrains Mono"}
 
 home:
-  title: "pigauto: phylogenetic trait imputation via a gated baseline + GNN ensemble"
+  title: "pigauto: fill in missing species traits using a phylogenetic tree"
   description: >
-    Impute missing species trait data with a gated ensemble of a
-    phylogenetic baseline (Brownian motion via Rphylopars for continuous
-    traits; phylogenetic label propagation for discrete traits) and an
-    attention-based graph neural network correction. Handles continuous,
-    binary, categorical, ordinal, and count traits in a single latent
-    space, with conformal prediction intervals and multiple-imputation
-    support for downstream inference.
+    pigauto imputes missing trait data for comparative analyses by
+    combining phylogenetic similarity (closely related species share
+    similar traits) with cross-trait correlations (observed traits
+    inform missing ones). It handles continuous measurements, counts,
+    binary variables, ordered categories, and unordered categories in
+    a single call. Uncertainty is quantified via conformal prediction
+    intervals and Rubin's-rules multiple imputation. Tested up to
+    10,000 species on a laptop.
   links:
     - text: Documentation index (DOCS.md)
       href: https://github.com/itchyshin/pigauto/blob/main/DOCS.md

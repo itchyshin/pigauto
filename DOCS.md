@@ -2,11 +2,10 @@
 
 > **Live site**: <https://itchyshin.github.io/pigauto>
 > **Source**: <https://github.com/itchyshin/pigauto>
-> **One-line summary**: phylogenetic trait imputation via a gated
-> ensemble of a phylogenetic baseline (Brownian motion for
-> continuous/count/ordinal traits; label propagation for
-> binary/categorical traits) and an attention-based graph neural
-> network correction.
+> **One-line summary**: fill in missing species traits using a
+> phylogenetic tree and cross-trait correlations. Handles continuous
+> measurements, counts, binary, ordinal, and categorical variables
+> in a single call.
 
 This file is the single entry point for everything that ships with the
 pigauto repository: tutorials, function reference, design notes,

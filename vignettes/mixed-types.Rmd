@@ -17,21 +17,24 @@ knitr::opts_chunk$set(
 
 ## Overview
 
-pigauto supports five trait types for phylogenetic imputation:
+Real comparative datasets contain many kinds of traits: body mass
+(continuous), clutch size (count), migratory status (yes/no), diet type
+(carnivore/herbivore/omnivore), threat status (LC < VU < EN). pigauto
+handles all of them in a single model — you do not need separate
+imputation runs for different column types.
 
-| Type | R class | Latent encoding | Loss | Example |
-|------|---------|-----------------|------|---------|
-| Continuous | `numeric` | log (optional) + z-score | MSE | Body mass |
-| Count | `integer` | log1p + z-score | MSE | Clutch size |
-| Binary | `factor` (2 levels) | 0/1 | BCE with logits | Migratory |
-| Categorical | `factor` (>2 levels) | One-hot (K columns) | Cross-entropy | Diet type |
-| Ordinal | `ordered` | Integer (0 to K-1) + z-score | MSE | Threat status |
+| Type | R class | Example |
+|------|---------|---------|
+| Continuous | `numeric` | Body mass, wing length |
+| Count | `integer` | Clutch size, litter size |
+| Binary | `factor` (2 levels) | Migratory yes/no |
+| Categorical | `factor` (>2 levels) | Diet type, lifestyle |
+| Ordinal | `ordered` | Threat status (LC < VU < EN) |
 
-All types are encoded into a continuous latent space.  The gated
-ensemble of phylogenetic baseline and GNN correction (the internal
-`ResidualPhyloDAE` torch module) operates in this space without
-modification.  Type-specific logic appears only at encoding, loss
-computation, and decoding.
+Each type is automatically detected from the R column class and encoded
+into a shared latent space. The phylogenetic baseline and GNN correction
+both operate in this space; type-specific logic appears only at encoding,
+loss computation, and decoding.
 
 ## Synthetic example
 
