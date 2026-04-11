@@ -1,3 +1,77 @@
+# pigauto 0.5.0
+
+## Three sources of information
+
+pigauto now explicitly combines three sources of information for
+imputation: (1) the phylogenetic tree, (2) cross-trait correlations,
+and (3) optional environmental covariates. The `covariates` argument
+is accepted by `impute()`, `multi_impute()`, `multi_impute_trees()`,
+and the lower-level pipeline functions. Covariates are threaded
+through the GNN with the same gated safety that protects against
+GNN degradation — they only contribute when they demonstrably
+improve accuracy.
+
+## Internal BM baseline (Rphylopars no longer required)
+
+The Brownian-motion baseline for continuous, count, ordinal, and
+proportion traits is now computed internally using conditional
+multivariate normal imputation on the phylogenetic correlation matrix
+`R = cov2cor(vcv(tree))` (Goolsby et al. 2017). This removes the
+hard dependency on `Rphylopars`, which is now in `Suggests` only.
+The internal implementation (`R/bm_internal.R`) uses univariate
+per-column imputation with Cholesky decomposition and nugget
+regularisation for near-singular submatrices. Validation against
+`Rphylopars` shows r = 0.97–0.98 (expected given univariate vs
+multivariate difference).
+
+## Tree-uncertainty MI via `multi_impute_trees()`
+
+New function `multi_impute_trees()` performs multiple imputation
+across a posterior sample of phylogenetic trees, so that phylogenetic
+uncertainty propagates into downstream standard errors via Rubin's
+rules. Demonstrated with the bundled `trees300` dataset (10 BirdTree
+posterior trees). Benchmark results show SE inflation of 1.1–2.1x
+and fraction of missing information (FMI) rising from ~0.03
+(single-tree) to 0.22–0.79 (multi-tree) depending on missingness
+level.
+
+## New bundled datasets
+
+- `trees300`: 10 posterior trees from the BirdTree Hackett backbone,
+  pruned to the same 300 tips as `tree300`
+- `delhey5809`: plumage lightness and 4 environmental covariates
+  (absolute latitude, mean temperature, mean precipitation,
+  tree cover) for 5,809 bird species (Delhey 2019)
+- `tree_delhey`: matching BirdTree phylogeny for `delhey5809`
+
+## Benchmark suite
+
+Thirteen benchmark reports are now accessible from the pkgdown site
+under Articles > Benchmarks:
+
+- Per-type benchmarks: continuous, binary, ordinal, count,
+  categorical, proportion, zero-inflated counts
+- Missingness mechanisms: MCAR vs MAR (trait/phylo) vs MNAR
+- Tree uncertainty: single-tree vs multi-tree MI
+- Environmental covariates: Delhey 5,809-species real data
+  (high phylo signal, covariates give ~zero lift) and simulation
+  sweep (4 lambda x beta scenarios; 8–15% RMSE reduction when
+  env effects are strong, ~0% when phylo signal dominates)
+
+Each report is a self-contained HTML page generated from
+`script/make_bench_*_html.R` and backed by reproducible
+`script/bench_*.R` drivers.
+
+## Documentation
+
+- All user-facing prose updated from "two sources" to "three
+  sources" of information
+- Rphylopars references replaced with "phylogenetic BM" or
+  "internal conditional-MVN baseline" throughout
+- `DOCS.md` updated with new benchmarks, datasets, and functions
+
+---
+
 # pigauto 0.4.0
 
 ## Breaking: TabPFN baseline removed
