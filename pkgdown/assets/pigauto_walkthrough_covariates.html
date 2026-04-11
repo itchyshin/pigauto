@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comparative study with covariates &mdash; pigauto walkthrough</title>
+<style>
+  :root { --primary: #059669; }
+  body { font-family: system-ui, sans-serif; color: #1e293b; background: #f8fafb;
+         line-height: 1.65; padding: 4rem 1rem; }
+  .container { max-width: 48rem; margin: 0 auto; }
+  h1 { font-size: 1.85rem; color: var(--primary); margin-bottom: .5rem; }
+  .note { background: #ecfdf5; border-left: 4px solid var(--primary);
+          padding: 1rem 1.2rem; margin: 2rem 0; border-radius: 0 4px 4px 0; }
+  p { margin-bottom: .75rem; }
+  code { font-family: monospace; background: #e2e8f0;
+         padding: .15em .4em; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Comparative study with environmental covariates</h1>
+<p style="color:#64748b">pigauto &mdash; walkthrough being prepared</p>
+<div class="note">
+<strong>Coming soon.</strong> This walkthrough demonstrates the full pipeline
+for a comparative study where traits are the response and environmental
+variables (temperature, precipitation, habitat) are covariates. It uses the
+bundled <code>delhey5809</code> dataset (5,809 bird species, Delhey 2019),
+covering Gloger's rule: the tendency for species in warmer, wetter environments
+to have darker plumage.
+<br><br>
+The walkthrough covers: imputation with and without covariates,
+multiple imputation (<code>multi_impute()</code>), downstream phylogenetic
+regression, and pooling with Rubin's rules (<code>pool_mi()</code>).
+It will appear here automatically once the precomputed results are ready.
+</div>
+<p>In the meantime, see the
+<a href="pigauto_walkthrough_multi_obs.html">multi-observation walkthrough</a>
+for a complete worked example with observation-level covariates.</p>
+</div>
+</body>
+</html>
