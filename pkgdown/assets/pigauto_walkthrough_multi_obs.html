@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multi-observation per species &mdash; pigauto walkthrough</title>
+<style>
+
+  :root { --primary: #059669; --bg: #f8fafb; --text: #1e293b; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Inter", system-ui, sans-serif; color: var(--text);
+         background: var(--bg); line-height: 1.65; padding: 2rem 1rem; }
+  .container { max-width: 56rem; margin: 0 auto; }
+  h1 { font-size: 1.85rem; color: var(--primary); margin-bottom: .3rem; }
+  h2 { font-size: 1.35rem; color: var(--primary); margin: 2.2rem 0 .8rem;
+       border-bottom: 2px solid #d1fae5; padding-bottom: .25rem; }
+  h3 { font-size: 1.1rem; color: #374151; margin: 1.2rem 0 .4rem; }
+  p, li { margin-bottom: .75rem; }
+  ul, ol { padding-left: 1.4rem; }
+  code { font-family: "JetBrains Mono", monospace; font-size: 0.88em;
+         background: #e2e8f0; padding: 0.15em 0.4em; border-radius: 3px; }
+  pre { background: #1e293b; color: #e2e8f0; padding: 1rem 1.2rem;
+        border-radius: 6px; overflow-x: auto; margin: .8rem 0 1.2rem;
+        font-size: 0.85rem; line-height: 1.5; }
+  pre code { background: none; padding: 0; color: inherit; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.9rem; }
+  th { background: var(--primary); color: #fff; padding: .55rem .7rem; text-align: left; }
+  td { padding: .45rem .7rem; border-bottom: 1px solid #e2e8f0; }
+  tr:nth-child(even) { background: #f1f5f9; }
+  .subtitle { color: #64748b; font-size: 0.95rem; margin-bottom: 1.5rem; }
+  .note { background: #ecfdf5; border-left: 4px solid var(--primary);
+          padding: .8rem 1rem; margin: 1rem 0; border-radius: 0 4px 4px 0;
+          font-size: 0.92rem; }
+  .warning { background: #fef9c3; border-left: 4px solid #eab308;
+             padding: .8rem 1rem; margin: 1rem 0; border-radius: 0 4px 4px 0;
+             font-size: 0.92rem; }
+  .footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;
+            font-size: 0.82rem; color: #94a3b8; }
+  .highlight { color: var(--primary); font-weight: 600; }
+  .diagram { background: #f1f5f9; padding: 1rem; border-radius: 6px;
+             margin: 1rem 0; font-family: "JetBrains Mono", monospace;
+             font-size: 0.82rem; line-height: 1.7; white-space: pre; }
+
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Multi-observation per species</h1>
+<p class="subtitle">pigauto v0.6.0 &mdash; observation-level covariate imputation &mdash; generated 2026-04-11 09:24</p>
+<h2>1. The problem</h2>
+<p>Comparative datasets increasingly have <strong>multiple data points per species</strong> measured under different conditions. Examples include: critical thermal maximum (CTmax) at different acclimation temperatures (Pottier et al. 2025, <em>Nature</em>), metabolic rate at different body temperatures, or growth rate across populations.</p>
+<p>Missing data is ubiquitous in these datasets &mdash; many species are entirely unobserved, and even measured species have incomplete coverage. The imputation challenge is two-fold:</p>
+<ol>
+<li>Species-level: use the phylogenetic tree to predict trait values for unobserved species (the classical comparative imputation problem).</li>
+<li>Observation-level: use <em>observation-level covariates</em> (e.g., acclimation temperature) to produce covariate-conditional predictions within species. A species measured at 20&deg;C and 30&deg;C acclimation should get different imputed CTmax values.</li>
+</ol>
+<p>pigauto (v0.6.0+) handles both levels through its <strong>observation-level refinement</strong> architecture.</p>
+<h2>2. The bundled dataset: <code>ctmax_sim</code></h2>
+<p>pigauto ships a simulated multi-observation CTmax dataset for tutorials and testing. The data-generating process is:</p>
+<pre><code>CTmax_ij = 38 + phylo_i + 0.10 * acclim_temp_ij + epsilon_ij</code></pre>
+<p>where <code>phylo_i</code> follows Brownian motion on <code>tree300</code> and <code>epsilon ~ N(0, 1.5)</code>.</p>
+<table>
+<tr><th>Property</th><th>Value</th></tr>
+<tr><td>Species</td><td>300</td></tr>
+<tr><td>Total observations</td><td>1,464</td></tr>
+<tr><td>Obs per species</td><td>4.9 (range 1&ndash;11)</td></tr>
+<tr><td>Missing CTmax cells</td><td>617 (42.1%)</td></tr>
+<tr><td>Entirely unobserved species</td><td>91 (30%)</td></tr>
+<tr><td>Observation-level covariate</td><td><code>acclim_temp</code></td></tr>
+</table>
+<pre><code>data(ctmax_sim, tree300)
+head(ctmax_sim)
+#>   species acclim_temp CTmax
+#> 1     t28        22.1 39.82
+#> 2     t28        17.5    NA
+#> 3     t28        30.8 41.03
+#> ...</code></pre>
+<h2>3. Imputation: with and without covariates</h2>
+<h3>Without covariates</h3>
+<pre><code>traits &lt;- ctmax_sim[, c("species", "CTmax")]
+
+result_no_cov &lt;- impute(traits, tree300, species_col = "species")</code></pre>
+<p>Runtime: 59.6 seconds (200 epochs, 300 species, 1,464 observations).</p>
+<h3>With observation-level covariates</h3>
+<pre><code>covs &lt;- data.frame(acclim_temp = ctmax_sim$acclim_temp)
+
+result_cov &lt;- impute(traits, tree300, species_col = "species",
+                     covariates = covs)</code></pre>
+<p>Runtime: 54.3 seconds.</p>
+<h3>RMSE comparison on held-out cells</h3>
+<table>
+<tr><th>Method</th><th>Obs-level RMSE</th><th>Pearson r</th><th>N imputed</th></tr>
+<tr><td>pigauto (no covariates)</td><td>2.373</td><td>0.564</td><td>617</td></tr>
+<tr style="font-weight:600;"><td>pigauto (with covariates)</td><td>2.325</td><td>0.592</td><td>617</td></tr>
+</table>
+<h2>4. Architecture: observation-level refinement</h2>
+<p>The key challenge is that the GNN operates at <strong>species level</strong>: observations are aggregated via <code>scatter_mean</code> before phylogenetic message passing, then broadcast back. Without the refinement layer, all observations of the same species receive the identical prediction.</p>
+<div class="diagram">
+Observations (n_obs x p)
+  |
+  v
+Encoder: concat(X, spectral_coords, covariates) -> h    [obs-level]
+  |
+  v
+scatter_mean(h, species_index) -> h_species              [AGGREGATION]
+  |
+  v
+GNN message passing (2 layers) -> h_species              [species-level]
+  |
+  v
+broadcast(h_species, species_index) -> h_obs             [species -> obs]
+  |
+  v
+<span class="highlight">h_obs + obs_refine(cat(h_obs, user_covs)) -> h_refined</span>    [NEW]
+  |
+  v
+Decoder -> delta (obs-specific predictions)
+</div>
+<p>The <code>obs_refine</code> MLP (hidden_dim + n_cov &rarr; hidden_dim &rarr; hidden_dim) uses a <strong>residual connection</strong>: it adjusts the species-level representation rather than replacing it. The phylogenetic signal from message passing is preserved; the covariate adjustment is additive.</p>
+<div class="note">
+<strong>Backward compatible.</strong> When no covariates are supplied or in single-obs mode, no <code>obs_refine</code> MLP is created. The model architecture is identical to v0.5.0 in those cases.
+</div>
+<div class="note">
+<strong>Verification.</strong> In this run, observations of the same species with different acclimation temperatures received <em>different</em> predicted CTmax values &mdash; confirming that the refinement layer produces covariate-conditional predictions.
+</div>
+<h2>5. Typical usage pattern</h2>
+<pre><code>library(pigauto)
+library(glmmTMB)
+library(ape)
+
+data(ctmax_sim, tree300)
+
+# 1. Separate traits from covariates
+traits &lt;- ctmax_sim[, c("species", "CTmax")]
+covs   &lt;- data.frame(acclim_temp = ctmax_sim$acclim_temp)
+
+# 2. Multiple imputation (M = 50)
+mi &lt;- multi_impute(traits, tree300, m = 50L,
+                   species_col = "species",
+                   covariates = covs)
+
+# 3. Downstream regression on each imputed dataset
+Vphy &lt;- cov2cor(ape::vcv(tree300))
+fits &lt;- with_imputations(mi, function(d) {
+  d$acclim   &lt;- covs$acclim_temp
+  d$sp       &lt;- factor(d$species, levels = rownames(Vphy))
+  d$dummy    &lt;- factor(1)
+  glmmTMB(
+    CTmax ~ acclim +
+      propto(0 + sp | dummy, Vphy),
+    data = d
+  )
+})
+
+# 4. Pool with Rubin's rules
+pool_mi(fits,
+        coef_fun = function(f) fixef(f)$cond,
+        vcov_fun = function(f) vcov(f)$cond)</code></pre>
+<h2>6. When to use pigauto vs BACE</h2>
+<table>
+<tr><th>Feature</th><th>pigauto</th><th>BACE</th></tr>
+<tr><td>Paradigm</td><td>Frequentist (GNN + Rubin's rules)</td>
+    <td>Bayesian (MCMCglmm)</td></tr>
+<tr><td>Speed (1,000 species)</td><td>Minutes</td><td>Hours</td></tr>
+<tr><td>Speed (5,000+ species)</td><td>5&ndash;15 min</td><td>Days</td></tr>
+<tr><td>Trait types</td><td>All 7 types in one call</td>
+    <td>Continuous + binary (Gaussian/ordinal family)</td></tr>
+<tr><td>Obs-level covariates</td><td>Yes (v0.6.0+, refinement MLP)</td>
+    <td>Yes (MCMCglmm fixed effects)</td></tr>
+<tr><td>Phylo uncertainty</td><td><code>multi_impute_trees()</code></td>
+    <td>Via posterior tree sampling</td></tr>
+<tr><td>Downstream inference</td><td>Rubin's rules via <code>pool_mi()</code></td>
+    <td>Posterior concatenation</td></tr>
+</table>
+<p><strong>Recommendation:</strong> Use pigauto when you need speed, mixed trait types, or datasets with &gt;1,000 species. Use BACE when you want a fully Bayesian workflow or need integrated uncertainty quantification from the imputation model itself.</p>
+<h2>7. Summary</h2>
+<ul>
+<li>Comparative datasets with multiple observations per species are increasingly common (AmphiTherm, AnAge, metabolic databases).</li>
+<li>pigauto's <code>species_col</code> parameter handles multi-obs data; adding <code>covariates</code> enables observation-level predictions.</li>
+<li>The <code>obs_refine</code> MLP re-injects covariates after phylogenetic message passing via a residual connection, preserving between-species phylogenetic signal while enabling within-species covariate-conditional predictions.</li>
+<li>The full MI workflow (<code>multi_impute()</code> &rarr; <code>with_imputations()</code> &rarr; <code>pool_mi()</code>) works seamlessly with multi-obs data.</li>
+</ul>
+<div class="footer">
+<p>Generated by <code>script/make_walkthrough_multi_obs_html.R</code>
+pigauto v0.6.0 &middot; Nakagawa S (2026).<br>
+Data: bundled <code>ctmax_sim</code> + <code>tree300</code>.</p>
+</div>
+</div>
+</body>
+</html>

@@ -98,6 +98,35 @@ result$prediction$probabilities$Trophic.Level  # categorical probabilities
 pigauto_report(result)
 ```
 
+## Using environmental covariates
+
+When trait variation has a strong environmental component, supplying
+covariates can improve imputation accuracy. The same covariates
+typically serve as predictors in the downstream regression — pigauto
+uses them for both purposes:
+
+```r
+data(delhey5809, tree_delhey)
+df <- delhey5809
+rownames(df) <- df$Species_Key
+
+# Traits to impute (some lightness values missing)
+traits <- df[, c("lightness_male", "lightness_female")]
+
+# Covariates: fully observed, help imputation AND are regression predictors
+covs <- df[, c("annual_mean_temperature", "annual_precipitation",
+               "percent_tree_cover", "midLatitude")]
+
+# Impute with all three information sources
+result <- impute(traits, tree_delhey, covariates = covs)
+```
+
+Covariates must be fully observed (no NAs) and numeric. The gated
+safety ensures they never degrade imputation — when phylogenetic
+signal already explains the data well, the covariate pathway closes
+automatically. See the [comparative study walkthrough](https://itchyshin.github.io/pigauto/pigauto_walkthrough_covariates.html)
+for a complete example with downstream regression and Rubin's rules.
+
 ## Multiple imputation for downstream analysis
 
 Imputation is a *means*, not an end. The reason to fill in missing cells
@@ -230,21 +259,35 @@ plot(pred, data = pd, splits = splits, type = "intervals", trait = "Mass")
 ## Multiple observations per species
 
 When trait data has multiple rows per species (e.g. individual-level
-measurements), use `species_col` to identify the species column:
+measurements at different conditions), use `species_col` to identify
+the species column.  Observation-level covariates are handled
+naturally: the GNN's refinement layer re-injects covariate information
+after phylogenetic message passing so that each observation gets its
+own prediction:
 
 ```r
-# traits_df has columns: species, mass, wing_length, ...
-# Multiple rows per species are allowed
-result <- impute(traits_df, tree, species_col = "species")
+data(ctmax_sim, tree300)
 
-# Or with the lower-level API
-pd <- preprocess_traits(traits_df, tree, species_col = "species")
-pd$n_obs      # number of observations
-pd$n_species  # number of unique species
+# ctmax_sim has columns: species, acclim_temp, CTmax
+# Multiple observations per species at different acclimation temperatures
+# Observation-level covariate: acclim_temp varies within species
+
+traits <- ctmax_sim[, c("species", "CTmax")]
+covs   <- data.frame(acclim_temp = ctmax_sim$acclim_temp)
+
+result <- impute(traits, tree300, species_col = "species",
+                 covariates = covs)
+
+# Each observation gets a covariate-conditional prediction:
+# CTmax at 20°C acclimation ≠ CTmax at 30°C acclimation, even
+# for the same species.
 ```
 
 The GNN aggregates observations to species level before phylogenetic
-message passing, then broadcasts back to observation level.
+message passing, then broadcasts back to observation level.  When
+covariates are supplied, the observation-level refinement MLP
+re-injects covariate values after the broadcast, enabling
+covariate-conditional predictions within species.
 
 ## Architecture
 
@@ -343,8 +386,11 @@ BM baseline is optimal, calibrated gates → 0.
 - `delhey5809`: plumage lightness and 4 environmental covariates for
   5,809 bird species (Delhey 2019) — for covariate benchmarks
 - `tree_delhey`: matching BirdTree phylogeny for `delhey5809`
+- `ctmax_sim`: simulated multi-observation CTmax data (1,464 obs across
+  300 species, with acclimation temperature as an observation-level
+  covariate) — for multi-obs + covariates examples; uses `tree300`
 
 ## Citation
 
 Nakagawa S (2026). pigauto: Phylogenetic Imputation via Graph
-Autoencoder. R package version 0.5.0.
+Autoencoder. R package version 0.6.0.

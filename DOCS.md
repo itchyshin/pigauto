@@ -58,6 +58,8 @@ copy-pasted into an R session.
 | Mixed-type traits | [articles/mixed-types.html](https://itchyshin.github.io/pigauto/articles/mixed-types.html) | [`vignettes/mixed-types.Rmd`](vignettes/mixed-types.Rmd) | `inst/doc/mixed-types.html` | Continuous + count + ordinal + binary + categorical in one model; round-trip encoding |
 | Intro (architecture overview) | [pigauto_intro.html](https://itchyshin.github.io/pigauto/pigauto_intro.html) | [`script/make_intro_html.R`](script/make_intro_html.R) | `inst/doc/pigauto_intro.html` | The gated baseline + GNN ensemble, gate calibration, conformal intervals, trait-type handling |
 | Mixed-type PCM workflow | [pigauto_workflow_mixed.html](https://itchyshin.github.io/pigauto/pigauto_workflow_mixed.html) | [`script/make_workflow_mixed_html.R`](script/make_workflow_mixed_html.R) | `inst/doc/pigauto_workflow_mixed.html` | Full multiple-imputation pipeline on mixed trait types, plus all three analysis paths (A/B/C) |
+| Comparative study with covariates | [pigauto_walkthrough_covariates.html](https://itchyshin.github.io/pigauto/pigauto_walkthrough_covariates.html) | [`script/make_walkthrough_covariates_html.R`](script/make_walkthrough_covariates_html.R) | `inst/doc/pigauto_walkthrough_covariates.html` | Gloger's rule on 5,809 species: impute plumage lightness using phylogeny + environment, then phylogenetic regression with Rubin's rules |
+| Multi-observation per species | [pigauto_walkthrough_multi_obs.html](https://itchyshin.github.io/pigauto/pigauto_walkthrough_multi_obs.html) | [`script/make_walkthrough_multi_obs_html.R`](script/make_walkthrough_multi_obs_html.R) | `inst/doc/pigauto_walkthrough_multi_obs.html` | CTmax-like multi-obs imputation with observation-level covariates; covariate-conditional predictions within species |
 
 ### The three analysis paths
 
@@ -104,6 +106,7 @@ Articles dropdown links straight to them.
 | **Tree uncertainty** | [dev/bench_tree_uncertainty.html](https://itchyshin.github.io/pigauto/dev/bench_tree_uncertainty.html) | `script/bench_tree_uncertainty.R` + `script/make_bench_tree_uncertainty_html.R` | `multi_impute_trees()` with 10 posterior trees vs single-tree MI. SE inflation (1.1–2.1×) and FMI rising with missingness. |
 | **Environmental covariates (Delhey)** | [dev/bench_delhey.html](https://itchyshin.github.io/pigauto/dev/bench_delhey.html) | `script/bench_delhey.R` + `script/make_bench_delhey_html.R` | Real-data test: plumage lightness in 5,809 bird species with 4 environmental covariates (Delhey 2019). Covariates give ~zero lift when phylogenetic signal dominates. |
 | **Covariate effectiveness** | [dev/bench_covariate_sim.html](https://itchyshin.github.io/pigauto/dev/bench_covariate_sim.html) | `script/bench_covariate_sim.R` + `script/make_bench_covariate_sim_html.R` | Simulated traits with varying phylogenetic signal (λ) and environmental effect (β). Covariates reduce RMSE by 8–15% when env effects are strong; ~0% when phylo signal dominates (gated safety). |
+| **Multi-observation imputation** | [dev/bench_multi_obs.html](https://itchyshin.github.io/pigauto/dev/bench_multi_obs.html) | `script/bench_multi_obs.R` + `script/make_bench_multi_obs_html.R` | CTmax-like simulation: 200 species × variable obs/species × phylo signal × ARR sweep. species_mean vs pigauto (no cov) vs pigauto (with cov). Observation-level RMSE advantage with covariates when within-species effects are strong. |
 
 For the authoritative numerical summary with discussion, see
 [`README.md` → Benchmark results](README.md#benchmark-results). The
@@ -128,7 +131,7 @@ exported function's `.Rd` page is also in `man/`.
 | Cross-validation and benchmarks | [`cross_validate()`](man/cross_validate.Rd), [`compare_methods()`](man/compare_methods.Rd), [`simulate_benchmark()`](man/simulate_benchmark.Rd), [`simulate_non_bm()`](man/simulate_non_bm.Rd) | Evaluation infrastructure |
 | Reporting and plotting | [`pigauto_report()`](man/pigauto_report.Rd), [`plot.pigauto_fit()`](man/plot.pigauto_fit.Rd), [`plot.pigauto_pred()`](man/plot.pigauto_pred.Rd), [`plot.pigauto_benchmark()`](man/plot.pigauto_benchmark.Rd), [`summary.pigauto_fit()`](man/summary.pigauto_fit.Rd), [`calibration_df()`](man/calibration_df.Rd), [`confusion_matrix()`](man/confusion_matrix.Rd) | Interactive HTML reports + diagnostic plots |
 | I/O | [`read_traits()`](man/read_traits.Rd), [`read_tree()`](man/read_tree.Rd), [`save_pigauto()`](man/save_pigauto.Rd), [`load_pigauto()`](man/load_pigauto.Rd) | Data loading and fit persistence |
-| Bundled data | [`avonet300`](man/avonet300.Rd), [`tree300`](man/tree300.Rd), [`trees300`](man/trees300.Rd), [`avonet_full`](man/avonet_full.Rd), [`tree_full`](man/tree_full.Rd), [`delhey5809`](man/delhey5809.Rd), [`tree_delhey`](man/tree_delhey.Rd) | 300-species and 9,993-species AVONET + 5,809-species Delhey plumage + matching BirdTree phylogenies |
+| Bundled data | [`avonet300`](man/avonet300.Rd), [`tree300`](man/tree300.Rd), [`trees300`](man/trees300.Rd), [`avonet_full`](man/avonet_full.Rd), [`tree_full`](man/tree_full.Rd), [`delhey5809`](man/delhey5809.Rd), [`tree_delhey`](man/tree_delhey.Rd), [`ctmax_sim`](man/ctmax_sim.Rd) | 300-species and 9,993-species AVONET + 5,809-species Delhey plumage + simulated multi-obs CTmax + matching BirdTree phylogenies |
 
 ---
 
@@ -246,6 +249,7 @@ one `Rscript script/make_workflow_mixed_html.R` rebuild touches both.
 # regenerate static HTML tutorials + dev reports
 Rscript script/make_intro_html.R
 Rscript script/make_workflow_mixed_html.R
+Rscript script/make_walkthrough_covariates_html.R  # requires walkthrough_covariates.rds
 Rscript script/make_tests_html.R
 Rscript script/make_scaling_html.R                 # requires bench_scaling_v03*.rds
 Rscript script/make_avonet_missingness_html.R      # requires bench_avonet_missingness.rds
@@ -270,6 +274,7 @@ the static HTMLs from `pkgdown/assets/`, the function reference from
 | `inst/doc/mixed-types.html` | `vignettes/mixed-types.Rmd` | `devtools::build_vignettes()` |
 | `inst/doc/pigauto_intro.html` | `script/make_intro_html.R` | `Rscript script/make_intro_html.R` |
 | `inst/doc/pigauto_workflow_mixed.html` | `script/make_workflow_mixed_html.R` | `Rscript script/make_workflow_mixed_html.R` |
+| `inst/doc/pigauto_walkthrough_covariates.html` | `script/make_walkthrough_covariates_html.R` | `Rscript script/make_walkthrough_covariates_html.R` |
 | `script/tests_overview.html` | `script/make_tests_html.R` | `Rscript script/make_tests_html.R` |
 | `script/scaling.html` | `script/make_scaling_html.R` | `Rscript script/make_scaling_html.R` |
 | `script/bench_avonet_missingness.html` | `script/make_avonet_missingness_html.R` | `Rscript script/make_avonet_missingness_html.R` |

@@ -1,3 +1,38 @@
+# pigauto 0.6.0
+
+## Observation-level covariate refinement for multi-obs data
+
+When datasets have multiple observations per species measured under
+different conditions (e.g. CTmax at different acclimation temperatures),
+the GNN now produces **covariate-conditional predictions within species**.
+A new refinement MLP (`obs_refine`) re-injects user-supplied covariates
+after species-level phylogenetic message passing, so that different
+observations of the same species receive different predicted values
+based on their covariate context. This is controlled by a residual
+connection that preserves the phylogenetic signal from message passing.
+
+- `R/model_residual_dae.R`: new `n_user_cov` parameter and `obs_refine`
+  MLP (activated only when `species_col` + `covariates` are both supplied)
+- `R/fit_pigauto.R`: `n_user_cov` stored in model config
+- `R/predict_pigauto.R`: backward-compatible model reconstruction
+
+## New bundled dataset: `ctmax_sim`
+
+Simulated multi-observation-per-species CTmax data (1,464 observations
+across 300 species, with acclimation temperature as an observation-level
+covariate). 30% of species are entirely unobserved. Uses `tree300`.
+See `data-raw/make_ctmax_sim.R` for the generation script.
+
+## New benchmark: multi-observation imputation
+
+`script/bench_multi_obs.R` simulates CTmax-like datasets under varying
+phylogenetic signal and within-species acclimation response ratios,
+comparing species_mean, pigauto (no covariates), and pigauto (with
+covariates). The observation-level refinement gives measurable RMSE
+improvement when within-species covariate effects are strong.
+
+---
+
 # pigauto 0.5.0
 
 ## Three sources of information

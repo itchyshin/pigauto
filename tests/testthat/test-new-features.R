@@ -397,3 +397,186 @@ test_that("covariates with wrong row count are rejected", {
     regexp = "rows"
   )
 })
+
+
+# ---- Multi-obs + covariates (Phase 1 validation) ----------------------------
+# These tests validate the current behaviour of species_col + covariates
+# used together, establishing a baseline before the Phase 2 architecture
+# improvement (observation-level refinement MLP).
+
+test_that("impute() with species_col + covariates runs end-to-end", {
+  set.seed(600)
+  tree <- ape::rtree(20)
+  n_obs <- 60  # 3 obs per species
+
+  df <- data.frame(
+    species = rep(tree$tip.label, each = 3),
+    y1 = abs(rnorm(n_obs)) + 0.5,
+    y2 = abs(rnorm(n_obs)) + 0.5
+  )
+  # Introduce some missingness
+  df$y1[sample(n_obs, 12)] <- NA
+  df$y2[sample(n_obs, 12)] <- NA
+
+  covs <- data.frame(
+    temperature   = rnorm(n_obs, 20, 5),
+    precipitation = rnorm(n_obs, 1000, 200)
+  )
+
+  result <- impute(df, tree, species_col = "species",
+                   covariates = covs,
+                   epochs = 20L, verbose = FALSE, seed = 600L,
+                   eval_every = 10L, patience = 5L)
+
+  expect_s3_class(result, "pigauto_result")
+
+  # Predictions at observation level (n_obs, not n_species)
+  expect_equal(nrow(result$prediction$imputed), n_obs)
+  expect_true(result$prediction$multi_obs)
+
+  # Covariates stored correctly
+  expect_true(!is.null(result$data$covariates))
+  expect_equal(ncol(result$data$covariates), 2L)
+  expect_equal(nrow(result$data$covariates), n_obs)
+  expect_equal(result$data$cov_names, c("temperature", "precipitation"))
+
+  # Covariates stored in fit for predict()
+  expect_true(!is.null(result$fit$covariates))
+  expect_equal(ncol(result$fit$covariates), 2L)
+  expect_equal(nrow(result$fit$covariates), n_obs)
+
+  # Model config has expanded cov_dim: p_latent + 1 (mask_ind) + 2 (user covs)
+  base_cov_dim <- result$data$p_latent + 1L
+  expect_equal(result$fit$model_config$cov_dim, base_cov_dim + 2L)
+
+  # All imputed values are finite
+  imp <- result$prediction$imputed
+  expect_true(all(sapply(imp, function(col) all(is.finite(col)))))
+})
+
+test_that("multi_impute() with species_col + covariates runs end-to-end", {
+  set.seed(601)
+  tree <- ape::rtree(15)
+  n_obs <- 45  # 3 obs per species
+
+  df <- data.frame(
+    sp = rep(tree$tip.label, each = 3),
+    trait1 = abs(rnorm(n_obs)) + 0.5
+  )
+  df$trait1[sample(n_obs, 9)] <- NA
+
+  covs <- data.frame(acclim_temp = rnorm(n_obs, 25, 5))
+
+  mi <- multi_impute(df, tree, m = 3L, species_col = "sp",
+                     covariates = covs,
+                     epochs = 20L, verbose = FALSE, seed = 601L,
+                     eval_every = 10L, patience = 5L)
+
+  expect_s3_class(mi, "pigauto_mi")
+  expect_equal(mi$m, 3L)
+  expect_equal(length(mi$datasets), 3L)
+
+  # Each imputed dataset has observation-level rows
+  for (d in mi$datasets) {
+    expect_equal(nrow(d), n_obs)
+    expect_true(all(is.finite(d$trait1)))
+  }
+
+  # Pooled point estimate also at obs level
+  expect_equal(nrow(mi$pooled_point), n_obs)
+})
+
+test_that("multi-obs + covariates: obs-level refinement produces within-species variation", {
+  # After the Phase 2 architecture change (obs_refine MLP), observations
+  # of the same species with different covariate values should receive
+  # different predictions.  The refinement layer re-injects user
+  # covariates after the species-level GNN broadcast, enabling
+  # covariate-conditional predictions within species.
+
+  set.seed(602)
+  tree <- ape::rtree(10)
+
+  # 4 observations per species — varied covariate values within species
+  df <- data.frame(
+    species = rep(tree$tip.label, each = 4),
+    y = abs(rnorm(40)) + 0.5
+  )
+  covs <- data.frame(
+    temp = rep(c(10, 20, 30, 40), times = 10)  # systematic within-species variation
+  )
+
+  result <- impute(df, tree, species_col = "species",
+                   covariates = covs,
+                   epochs = 30L, verbose = FALSE, seed = 602L,
+                   eval_every = 10L, patience = 5L,
+                   missing_frac = 0.25)
+
+  pred <- result$prediction$imputed
+  # Check a few species: obs with different covariates should now get
+  # different predictions (non-zero within-species range)
+  any_varies <- FALSE
+  for (sp in tree$tip.label[1:3]) {
+    sp_rows <- which(df$species == sp)
+    sp_preds <- pred$y[sp_rows]
+    rng <- max(sp_preds) - min(sp_preds)
+    if (rng > 1e-6) any_varies <- TRUE
+  }
+  expect_true(any_varies,
+              label = "At least one species should have within-species prediction variation")
+})
+
+test_that("multi-obs WITHOUT covariates: within-species predictions are uniform", {
+  # Without user covariates, no obs_refine MLP is created, so the
+  # species-level broadcast produces identical predictions per species.
+  set.seed(604)
+  tree <- ape::rtree(10)
+
+  df <- data.frame(
+    species = rep(tree$tip.label, each = 4),
+    y = abs(rnorm(40)) + 0.5
+  )
+  # No covariates supplied
+
+  result <- impute(df, tree, species_col = "species",
+                   epochs = 30L, verbose = FALSE, seed = 604L,
+                   eval_every = 10L, patience = 5L,
+                   missing_frac = 0.25)
+
+  pred <- result$prediction$imputed
+  for (sp in tree$tip.label[1:3]) {
+    sp_rows <- which(df$species == sp)
+    sp_preds <- pred$y[sp_rows]
+    expect_equal(max(sp_preds) - min(sp_preds), 0,
+                 tolerance = 1e-6,
+                 label = paste("Within-species range for", sp, "(no covariates)"))
+  }
+})
+
+test_that("multi-obs + covariates: fit stores multi_obs flag and obs metadata", {
+  set.seed(603)
+  tree <- ape::rtree(15)
+  n_obs <- 30
+
+  df <- data.frame(
+    sp = rep(tree$tip.label, each = 2),
+    val = abs(rnorm(n_obs)) + 0.5
+  )
+  covs <- data.frame(env = rnorm(n_obs))
+
+  result <- impute(df, tree, species_col = "sp",
+                   covariates = covs,
+                   epochs = 20L, verbose = FALSE, seed = 603L,
+                   eval_every = 10L, patience = 5L)
+
+  fit <- result$fit
+  expect_true(fit$multi_obs)
+  expect_equal(length(fit$obs_species), n_obs)
+  expect_equal(length(unique(fit$obs_species)), 15L)  # 15 species
+  expect_equal(length(fit$species_names), 15L)
+
+  # predict() from the fit also returns obs-level output
+  pred2 <- predict(fit, return_se = TRUE)
+  expect_equal(nrow(pred2$imputed), n_obs)
+  expect_equal(nrow(pred2$se), n_obs)
+  expect_true(pred2$multi_obs)
+})

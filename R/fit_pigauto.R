@@ -279,6 +279,12 @@ fit_pigauto <- function(
 
   # ---- Model ----------------------------------------------------------------
   cov_dim <- p + 1L + n_cov_cols
+  # n_user_cov tells the model how many observation-level user covariates
+  # exist (the last n_cov_cols columns of the covs tensor).  When multi_obs
+  # is TRUE and n_user_cov > 0, the model's obs_refine MLP re-injects
+  # these covariates after species-level GNN message passing so that
+  # different observations of the same species get distinct predictions.
+  n_user_cov <- if (multi_obs) n_cov_cols else 0L
   model <- ResidualPhyloDAE(
     input_dim      = p,
     hidden_dim     = as.integer(hidden_dim),
@@ -287,7 +293,8 @@ fit_pigauto <- function(
     per_column_rs  = TRUE,
     n_gnn_layers   = as.integer(n_gnn_layers),
     gate_cap       = gate_cap,
-    use_attention  = use_attention
+    use_attention  = use_attention,
+    n_user_cov     = as.integer(n_user_cov)
   )
 
   # Type-aware gate init: set res_raw so effective gate starts at a
@@ -785,7 +792,8 @@ fit_pigauto <- function(
     refine_steps    = refine_steps,
     cov_dim         = cov_dim,
     input_dim       = p,
-    per_column_rs   = TRUE
+    per_column_rs   = TRUE,
+    n_user_cov      = n_user_cov
   )
 
   # Backward-compat: store val_rmse and test_rmse names

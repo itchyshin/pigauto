@@ -81,6 +81,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   n_gnn_layers <- cfg$n_gnn_layers %||% 1L
   gate_cap     <- cfg$gate_cap %||% 0.5
   use_attention <- cfg$use_attention %||% FALSE
+  n_user_cov   <- cfg$n_user_cov %||% 0L
   model <- ResidualPhyloDAE(
     input_dim     = as.integer(cfg$input_dim),
     hidden_dim    = as.integer(cfg$hidden_dim),
@@ -89,7 +90,8 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     per_column_rs = per_col,
     n_gnn_layers  = as.integer(n_gnn_layers),
     gate_cap      = gate_cap,
-    use_attention = use_attention
+    use_attention = use_attention,
+    n_user_cov    = as.integer(n_user_cov)
   )
   model$to(device = device)
   model$load_state_dict(object$model_state)

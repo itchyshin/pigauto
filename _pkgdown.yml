@@ -53,6 +53,10 @@ navbar:
           href: pigauto_intro.html
         - text: "Mixed-type workflow (Paths A / B / C)"
           href: pigauto_workflow_mixed.html
+        - text: "Comparative study with covariates"
+          href: pigauto_walkthrough_covariates.html
+        - text: "Multi-observation per species"
+          href: pigauto_walkthrough_multi_obs.html
         - text: "-------"
         - text: "Benchmarks"
         - text: "Scaling to 10,000 tips"
@@ -81,6 +85,8 @@ navbar:
           href: dev/bench_delhey.html
         - text: "Covariate effectiveness (simulation sweep)"
           href: dev/bench_covariate_sim.html
+        - text: "Multi-observation imputation (CTmax-like)"
+          href: dev/bench_multi_obs.html
         - text: "-------"
         - text: "Developer reports"
         - text: "Test catalogue"
@@ -161,3 +167,4 @@ reference:
       - tree_full
       - delhey5809
       - tree_delhey
+      - ctmax_sim

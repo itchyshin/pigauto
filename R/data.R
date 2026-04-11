@@ -150,3 +150,35 @@
 #' @source BirdTree.org (Jetz et al. 2012, Hackett et al. backbone).
 #' @seealso \code{\link{delhey5809}}
 "tree_delhey"
+
+
+#' Simulated multi-observation-per-species CTmax data
+#'
+#' A simulated dataset mimicking a thermal tolerance study where each species
+#' has multiple measurements of critical thermal maximum (CTmax) taken at
+#' different acclimation temperatures.  The data-generating process is
+#'
+#' \deqn{CTmax_{ij} = 38 + phylo_i + 0.10 \times acclim\_temp_{ij} + \epsilon_{ij}}
+#'
+#' where \eqn{phylo_i} follows Brownian motion on \code{\link{tree300}},
+#' the within-species acclimation response ratio is 0.10, and
+#' \eqn{\epsilon_{ij} \sim N(0, 1.5)}.  Thirty percent of species are entirely
+#' unobserved (all CTmax values are NA), and an additional 15\% of remaining
+#' observations are missing at random.
+#'
+#' This dataset demonstrates pigauto's multi-observation and observation-level
+#' covariate support.  Use with \code{\link{tree300}} and set
+#' \code{species_col = "species"} in \code{\link{impute}}.
+#'
+#' @format A data frame with 1,464 rows and 3 variables:
+#' \describe{
+#'   \item{species}{Character. Species name matching \code{\link{tree300}} tips.}
+#'   \item{acclim_temp}{Numeric. Acclimation temperature (degrees C).
+#'     This is an observation-level covariate that varies within species.}
+#'   \item{CTmax}{Numeric. Critical thermal maximum (degrees C). Contains
+#'     NA values for unobserved species and MCAR missingness.}
+#' }
+#' @source Simulated.  See \code{data-raw/make_ctmax_sim.R} for the
+#'   generation script.
+#' @seealso \code{\link{tree300}}, \code{\link{impute}}
+"ctmax_sim"

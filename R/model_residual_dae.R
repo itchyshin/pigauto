@@ -38,8 +38,10 @@ ResidualPhyloDAE <- torch::nn_module(
   "ResidualPhyloDAE",
   initialize = function(input_dim, hidden_dim, coord_dim, cov_dim,
                         per_column_rs = TRUE, n_gnn_layers = 2L,
-                        gate_cap = 0.8, use_attention = FALSE) {
+                        gate_cap = 0.8, use_attention = FALSE,
+                        n_user_cov = 0L) {
     total_input <- input_dim + coord_dim + cov_dim
+    self$n_user_cov <- as.integer(n_user_cov)
 
     self$enc1 <- torch::nn_linear(total_input, hidden_dim)
     self$enc2 <- torch::nn_linear(hidden_dim,  hidden_dim)
@@ -91,6 +93,21 @@ ResidualPhyloDAE <- torch::nn_module(
         }
       ))
       self$attn_drop <- torch::nn_dropout(0.10)
+    }
+
+    # Observation-level refinement MLP (multi-obs + user covariates only).
+    # After species-level GNN message passing, observations are broadcast
+    # back to obs-level but lose within-species covariate variation.  This
+    # small MLP re-injects user covariates via a residual connection so
+    # that different observations of the same species (e.g. CTmax at
+    # different acclimation temperatures) can receive different predictions.
+    # When n_user_cov = 0, this module is not created and forward() skips it.
+    if (n_user_cov > 0L) {
+      self$obs_refine <- torch::nn_sequential(
+        torch::nn_linear(hidden_dim + as.integer(n_user_cov), hidden_dim),
+        torch::nn_relu(),
+        torch::nn_linear(hidden_dim, hidden_dim)
+      )
     }
 
     self$dec1 <- torch::nn_linear(hidden_dim,  hidden_dim)
@@ -185,6 +202,18 @@ ResidualPhyloDAE <- torch::nn_module(
     if (multi_obs) {
       # Expand back from species to observation level
       h <- h_species$index_select(1L, obs_to_species)
+
+      # Observation-level refinement: re-inject user covariates so that
+      # different observations of the same species get distinct predictions.
+      # The residual connection preserves the phylogenetic signal from
+      # message passing while allowing covariate-conditional adjustment.
+      if (self$n_user_cov > 0L && !is.null(self$obs_refine)) {
+        # User covariates occupy the last n_user_cov columns of covs
+        total_cov <- as.integer(covs$size(2))
+        user_covs <- covs$narrow(2L, total_cov - self$n_user_cov + 1L,
+                                 self$n_user_cov)
+        h <- h + self$obs_refine(torch::torch_cat(list(h, user_covs), dim = 2L))
+      }
     } else {
       h <- h_species
     }
