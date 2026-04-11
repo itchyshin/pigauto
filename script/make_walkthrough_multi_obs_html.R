@@ -202,7 +202,7 @@ h('<p>pigauto (v0.6.0+) handles both levels through its',
 h('<h2>2. The bundled dataset: <code>ctmax_sim</code></h2>')
 h('<p>pigauto ships a simulated multi-observation CTmax dataset for',
   ' tutorials and testing. The data-generating process is:</p>')
-h('<pre><code>CTmax_ij = 38 + phylo_i + 0.10 * acclim_temp_ij + epsilon_ij</code></pre>')
+h('<pre><code>CTmax_ij = 38 + phylo_i + 0.50 * acclim_temp_ij + epsilon_ij</code></pre>')
 h('<p>where <code>phylo_i</code> follows Brownian motion on',
   ' <code>tree300</code> and <code>epsilon ~ N(0, 1.5)</code>.</p>')
 

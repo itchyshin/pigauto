@@ -30,7 +30,7 @@ n_species <- length(species)
 # ---- Parameters -----------------------------------------------------------
 mu    <- 38.0          # global mean CTmax (degrees C)
 sigma <- 3.0           # BM process SD
-beta  <- 0.10          # ARR: CTmax increases by 0.10 per degree acclimation
+beta  <- 0.50          # ARR: CTmax increases by 0.50 per degree acclimation
 sigma_eps <- 1.5       # residual (within-species) SD
 
 # ---- Phylogenetic species effects (BM) -----------------------------------
