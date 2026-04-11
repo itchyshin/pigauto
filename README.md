@@ -1,9 +1,11 @@
 # pigauto
 
-**Fill in missing species traits using a phylogenetic tree.**
+**Missing trait data should not stop a comparative analysis.**
 
-Comparative analyses often fail because trait databases are incomplete.
-pigauto imputes the gaps by combining three sources of information:
+Most trait databases are incomplete. Existing imputation tools handle one
+trait type at a time, ignore cross-trait correlations, or lack uncertainty
+quantification suitable for downstream inference. pigauto addresses all three
+gaps by combining three sources of information:
 (1) the **phylogenetic tree**, which tells us that closely related
 species tend to share similar traits, (2) **correlations among the
 traits themselves**, which let observed traits inform predictions of

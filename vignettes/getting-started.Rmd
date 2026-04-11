@@ -73,6 +73,23 @@ library(pigauto)
 library(ape)
 ```
 
+## Quick start
+
+For most users, a single function call is all you need:
+
+```{r quickstart, eval=FALSE}
+result <- impute(traits, tree)
+
+result$completed    # data.frame: observed values preserved, NAs filled
+result$imputed_mask # logical matrix: TRUE where a cell was imputed
+result$prediction$se # per-cell uncertainty (original units)
+```
+
+`impute()` runs the full pipeline internally — preprocessing, baseline fitting,
+graph construction, GNN training, calibration, and prediction. The rest of this
+vignette walks through each step individually for users who need fine-grained
+control, want to cache intermediate objects, or are benchmarking components.
+
 ## The AVONET bird data
 
 pigauto ships with `avonet300`, a 300-species subset of the AVONET v3 bird
@@ -214,9 +231,10 @@ print(fit)
 
 ## Step 6: Predict
 
-`predict.pigauto_fit()` applies the trained model with iterative refinement:
-each iteration fills missing cells, then those filled values inform the next
-pass. The result is back-transformed to the original (non-log) scale.
+`predict.pigauto_fit()` runs a single forward pass through the trained model,
+optionally repeated with MC dropout to generate multiple stochastic completions
+for uncertainty quantification. The result is back-transformed to the original
+(non-log) scale.
 
 ```{r predict, eval=FALSE}
 pred <- predict(fit, return_se = TRUE)
@@ -314,13 +332,13 @@ graph <- build_phylo_graph(tree300, k_eigen = 8, cache_path = "tree300_graph.rds
 ```
 
 **Large trees (N > 2000).** `build_phylo_graph()` computes a dense N × N
-cophenetic distance matrix (about 800 MB at N = 10,000) and then a
-dense Laplacian eigendecomposition. The real bottleneck at large N is
-CPU time on the eigendecomposition, which is O(N^3) and takes hours
-at N = 10,000 on the current implementation, not memory. If you need
-pigauto on trees larger than a few thousand tips, prune to a clade of
-interest before calling `impute()`, or watch for a future release that
-switches to a sparse Lanczos eigensolver.
+cophenetic distance matrix and a Laplacian eigendecomposition. The eigendecomposition
+is O(N³) in the worst case, but `k_eigen = "auto"` caps the number of eigenvectors
+at 32 (the default for all trees), which keeps computation tractable in practice —
+pigauto has been tested up to 10,000 species on a standard laptop. The main
+cost at very large N is memory for the N × N distance matrix (~800 MB at
+N = 10,000). If memory is tight, prune to a clade of interest or watch for a
+future release that switches to a sparse Lanczos eigensolver.
 
 **Supplying your own data.** The workflow above works for any phylogenetic tree
 and trait matrix:

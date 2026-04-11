@@ -23,13 +23,15 @@ Real comparative datasets contain many kinds of traits: body mass
 handles all of them in a single model — you do not need separate
 imputation runs for different column types.
 
-| Type | R class | Example |
-|------|---------|---------|
-| Continuous | `numeric` | Body mass, wing length |
-| Count | `integer` | Clutch size, litter size |
-| Binary | `factor` (2 levels) | Migratory yes/no |
-| Categorical | `factor` (>2 levels) | Diet type, lifestyle |
-| Ordinal | `ordered` | Threat status (LC < VU < EN) |
+| Type | R class | Example | Notes |
+|------|---------|---------|-------|
+| Continuous | `numeric` | Body mass, wing length | Auto-detected |
+| Count | `integer` | Clutch size, litter size | Auto-detected |
+| Binary | `factor` (2 levels) | Migratory yes/no | Auto-detected |
+| Categorical | `factor` (>2 levels) | Diet type, lifestyle | Auto-detected |
+| Ordinal | `ordered` | Threat status (LC < VU < EN) | Auto-detected |
+| Proportion | `numeric` (0–1) | Habitat cover, diet fraction | Requires `trait_types = "proportion"` override |
+| ZI count | `integer` (zero-inflated) | Parasite load, rare behaviour | Requires `trait_types = "zi_count"` override; experimental — accuracy more variable than other types |
 
 Each type is automatically detected from the R column class and encoded
 into a shared latent space. The phylogenetic baseline and GNN correction
