@@ -5,7 +5,7 @@
 #' as an internal torch module (\code{ResidualPhyloDAE}; "Residual" here
 #' refers to the ResNet-style skip connections in the GNN layers, not
 #' to a statistical residual). For continuous, count, and ordinal traits
-#' the baseline is Brownian motion (via \code{Rphylopars}); for binary
+#' the baseline is Brownian motion (phylogenetic correlation matrix); for binary
 #' and categorical traits it is phylogenetic label propagation. Supports
 #' all five trait types via a unified latent space.
 #'
@@ -267,8 +267,18 @@ fit_pigauto <- function(
     has_val <- FALSE
   }
 
+  # ---- Covariates (environmental conditioners) ------------------------------
+  has_covariates <- !is.null(data$covariates)
+  n_cov_cols     <- if (has_covariates) ncol(data$covariates) else 0L
+  t_covariates   <- NULL
+  if (has_covariates) {
+    t_covariates <- torch::torch_tensor(
+      data$covariates, dtype = torch::torch_float(), device = device
+    )
+  }
+
   # ---- Model ----------------------------------------------------------------
-  cov_dim <- p + 1L
+  cov_dim <- p + 1L + n_cov_cols
   model <- ResidualPhyloDAE(
     input_dim      = p,
     hidden_dim     = as.integer(hidden_dim),
@@ -296,7 +306,13 @@ fit_pigauto <- function(
     for (tm in trait_map) {
       if (tm$type %in% c("binary", "categorical", "ordinal")) {
         init_vals[tm$latent_cols] <- disc_raw
+      } else if (tm$type == "zi_count") {
+        # Gate column (col 1): like binary (start closed)
+        init_vals[tm$latent_cols[1]] <- disc_raw
+        # Magnitude column (col 2): like count (start slightly open)
+        init_vals[tm$latent_cols[2]] <- cont_raw
       }
+      # proportion: uses cont_raw (default), no special case needed
     }
   } else {
     init_vals <- rep(cont_raw, p)
@@ -383,7 +399,9 @@ fit_pigauto <- function(
       dtype = torch::torch_float()
     )
 
-    covs_t   <- torch::torch_cat(list(t_MU, mask_ind), dim = 2L)
+    cov_parts <- list(t_MU, mask_ind)
+    if (has_covariates) cov_parts[[length(cov_parts) + 1L]] <- t_covariates
+    covs_t   <- torch::torch_cat(cov_parts, dim = 2L)
 
     tok   <- model$mask_token$expand(c(n, p))
     X_in  <- torch::torch_where(masked_bool, tok, t_X)
@@ -447,7 +465,9 @@ fit_pigauto <- function(
         model$eval()
         torch::with_no_grad({
           mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
-          covs0     <- torch::torch_cat(list(t_MU, mask_ind0), dim = 2L)
+          cov_parts0 <- list(t_MU, mask_ind0)
+          if (has_covariates) cov_parts0[[length(cov_parts0) + 1L]] <- t_covariates
+          covs0     <- torch::torch_cat(cov_parts0, dim = 2L)
           # Use t_X_eval (val/test cells replaced with baseline) so
           # that held-out truth does not leak into the model input.
           out0      <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp)
@@ -518,7 +538,9 @@ fit_pigauto <- function(
 
     torch::with_no_grad({
       mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
-      covs0     <- torch::torch_cat(list(t_MU, mask_ind0), dim = 2L)
+      cov_parts0 <- list(t_MU, mask_ind0)
+      if (has_covariates) cov_parts0[[length(cov_parts0) + 1L]] <- t_covariates
+      covs0     <- torch::torch_cat(cov_parts0, dim = 2L)
       # Use t_X_eval so val-cell truths do not leak into the model input
       # during gate calibration (otherwise the GNN trivially reconstructs
       # them and every gate looks "helpful").
@@ -579,7 +601,7 @@ fit_pigauto <- function(
       # match the test metric, which is critical when n_val is small.
       cal_mean_loss <- function(g, rows) {
         if (length(rows) == 0L) return(Inf)
-        if (tm$type %in% c("continuous", "count", "ordinal")) {
+        if (tm$type %in% c("continuous", "count", "ordinal", "proportion")) {
           pred_j <- (1 - g) * mu_cal[rows, lc[1]] +
                     g * delta_cal[rows, lc[1]]
           mean((pred_j - X_truth_r[rows, lc[1]])^2)
@@ -600,6 +622,24 @@ fit_pigauto <- function(
           truth_mat   <- X_truth_r[rows, lc, drop = FALSE]
           truth_class <- max.col(truth_mat, ties.method = "first")
           mean(pred_class != truth_class)
+
+        } else if (tm$type == "zi_count") {
+          # Coupled gate: single g for both columns.
+          # Calibrate on MSE of expected value in original count scale.
+          gate_pred <- (1 - g) * mu_cal[rows, lc[1]] +
+                       g * delta_cal[rows, lc[1]]
+          mag_pred  <- (1 - g) * mu_cal[rows, lc[2]] +
+                       g * delta_cal[rows, lc[2]]
+          p_nz <- expit(gate_pred)
+          count_hat <- pmax(expm1(mag_pred * tm$sd + tm$mean), 0)
+          pred_ev <- p_nz * count_hat
+          # Reconstruct truth counts
+          truth_gate <- X_truth_r[rows, lc[1]]
+          truth_mag  <- X_truth_r[rows, lc[2]]
+          truth_ev <- rep(0, length(rows))
+          nz <- which(truth_gate > 0.5 & is.finite(truth_mag))
+          truth_ev[nz] <- expm1(truth_mag[nz] * tm$sd + tm$mean)
+          mean((pred_ev - truth_ev)^2)
         } else {
           Inf
         }
@@ -682,7 +722,7 @@ fit_pigauto <- function(
     names(conformal_scores) <- vapply(trait_map, "[[", character(1), "name")
 
     for (tm in trait_map) {
-      if (!(tm$type %in% c("continuous", "count", "ordinal"))) next
+      if (!(tm$type %in% c("continuous", "count", "ordinal", "proportion"))) next
       lc <- tm$latent_cols
       val_cells <- val_mask_mat[, lc[1]]
       if (sum(val_cells) == 0) next
@@ -715,7 +755,9 @@ fit_pigauto <- function(
     model$eval()
     torch::with_no_grad({
       mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
-      covs0     <- torch::torch_cat(list(t_MU, mask_ind0), dim = 2L)
+      cov_parts0 <- list(t_MU, mask_ind0)
+      if (has_covariates) cov_parts0[[length(cov_parts0) + 1L]] <- t_covariates
+      covs0     <- torch::torch_cat(cov_parts0, dim = 2L)
       # Use t_X_eval so held-out test cells are not leaked to the model.
       out0      <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp)
       pred0     <- (1 - out0$rs) * t_MU + out0$rs * out0$delta
@@ -775,7 +817,11 @@ fit_pigauto <- function(
       val_rmse         = best_val,
       test_rmse        = test_loss,
       calibrated_gates = calibrated_gates,
-      conformal_scores = conformal_scores
+      conformal_scores = conformal_scores,
+      covariates       = data$covariates,
+      cov_means        = data$cov_means,
+      cov_sds          = data$cov_sds,
+      cov_names        = data$cov_names
     ),
     class = "pigauto_fit"
   )

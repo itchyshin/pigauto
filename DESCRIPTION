@@ -30,14 +30,14 @@ Imports:
     stats,
     utils,
     graphics,
-    grDevices,
-    Rphylopars
+    grDevices
 Suggests:
     testthat,
     knitr,
     rmarkdown,
     pkgdown,
     RSpectra,
+    Rphylopars,
     BACE,
     MCMCglmm,
     glmmTMB

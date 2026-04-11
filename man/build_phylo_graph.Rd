@@ -33,6 +33,9 @@ A list with:
 between tips, row/column-ordered by \code{tree$tip.label}.
 Returned so downstream functions can reuse it instead of calling
 \code{ape::cophenetic.phylo()} again.}
+\item{R_phy}{Numeric matrix (n x n). Phylogenetic correlation matrix
+\code{cov2cor(ape::vcv(tree))} (diagonal = 1). Used by
+\code{\link{fit_baseline}} for BM conditional imputation.}
 }
 }
 \description{

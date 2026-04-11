@@ -2,7 +2,7 @@
 % Please edit documentation in R/fit_baseline.R
 \name{fit_baseline}
 \alias{fit_baseline}
-\title{Fit a phylogenetic BM baseline using Rphylopars}
+\title{Fit a phylogenetic BM baseline}
 \usage{
 fit_baseline(data, tree, splits = NULL, model = "BM", graph = NULL)
 }
@@ -18,11 +18,11 @@ fit_baseline(data, tree, splits = NULL, model = "BM", graph = NULL)
 \code{"OU"}.}
 
 \item{graph}{optional list returned by \code{\link{build_phylo_graph}}.
-When supplied, the cophenetic distance matrix stored in
-\code{graph$D} is reused for label propagation instead of
-recomputing it from \code{tree}. This saves an \eqn{O(n^2)} matrix
-allocation on large trees. When \code{NULL} (default), the
-distance matrix is computed here via \code{ape::cophenetic.phylo}.}
+When supplied, \code{graph$D} (cophenetic distances) is reused for
+label propagation and \code{graph$R_phy} (phylogenetic correlation
+matrix) is reused for BM imputation, avoiding duplicate \eqn{O(n^2)}
+allocations. When \code{NULL} (default), both matrices are computed
+here.}
 }
 \value{
 A list with:
@@ -33,20 +33,23 @@ latent scale.}
 }
 }
 \description{
-Fits a Brownian Motion (or OU) model with \pkg{Rphylopars} and returns
-imputed means and standard errors for every species.
+Fits an internal univariate Brownian Motion baseline using the
+phylogenetic correlation matrix \eqn{R = \mathrm{cov2cor}(\mathrm{vcv}(\mathrm{tree}))}
+and returns imputed means and standard errors for every species.
 }
 \details{
 When \code{splits} is supplied the val and test cells are masked to
 \code{NA} before fitting, so the baseline is evaluated under the same
 conditions as \code{\link{fit_pigauto}}.
 
-For mixed-type data, Rphylopars is applied only to continuous, count,
-and ordinal traits (which are continuous in latent space).  Binary
-and categorical traits use phylogenetic label propagation: each
-species receives a personalised baseline computed as the
-phylo-similarity-weighted average of observed values, using a
-Gaussian kernel on cophenetic distances.
+For continuous, count, ordinal, and proportion traits (which are
+continuous in latent space), each column is imputed independently
+via conditional multivariate normal on the phylogenetic correlation
+matrix: GLS phylogenetic mean, REML variance, and conditional
+\eqn{E[y_m | y_o]}.  Binary and categorical traits use phylogenetic
+label propagation: each species receives a personalised baseline
+computed as the phylo-similarity-weighted average of observed values,
+using a Gaussian kernel on cophenetic distances.
 }
 \examples{
 \dontrun{

@@ -12,7 +12,8 @@ preprocess_traits(
   log_cols = NULL,
   log_transform = TRUE,
   center = TRUE,
-  scale = TRUE
+  scale = TRUE,
+  covariates = NULL
 )
 }
 \arguments{
@@ -31,7 +32,9 @@ encoding.  Default \code{NULL} uses row names (one row per species).}
 \item{trait_types}{named character vector overriding auto-detection,
 e.g. \code{c(Mass = "continuous", Diet = "categorical")}.
 Valid types: \code{"continuous"}, \code{"binary"}, \code{"categorical"},
-\code{"ordinal"}, \code{"count"}.  Unspecified traits are auto-detected.}
+\code{"ordinal"}, \code{"count"}, \code{"proportion"}, \code{"zi_count"}.
+Proportion and zi_count are override-only (not auto-detected).
+Unspecified traits are auto-detected.}
 
 \item{log_cols}{character vector of continuous trait names to
 log-transform.  Default \code{NULL} means auto-detect (log if all
@@ -47,6 +50,12 @@ Default \code{TRUE}.}
 
 \item{scale}{logical. Divide by column SDs for continuous/count/ordinal?
 Default \code{TRUE}.}
+
+\item{covariates}{data.frame or numeric matrix of environmental covariates
+(fully observed, no NAs).  Covariates are conditioners that help predict
+missing traits but are not themselves imputed.  Must have the same number
+of rows as \code{traits} (after alignment to the tree).  Each column is
+z-scored internally.  Default \code{NULL} (no covariates).}
 }
 \value{
 A list of class \code{"pigauto_data"} with components:
@@ -82,8 +91,8 @@ trait was log-transformed).}
 }
 \description{
 Aligns species in the trait data frame to the tree, detects or accepts
-trait types (continuous, binary, categorical, ordinal, count), and
-encodes each trait into a continuous latent matrix.
+trait types (continuous, binary, categorical, ordinal, count, proportion,
+zi_count), and encodes each trait into a continuous latent matrix.
 }
 \details{
 When each species has one observation (the default), output rows match
@@ -111,6 +120,8 @@ class of each trait:
 \item{count}{\code{log1p()}, then z-score (1 latent column)}
 \item{ordinal}{integer coding (0 to K-1), then z-score (1 latent column)}
 \item{categorical}{one-hot encoding (K latent columns)}
+\item{proportion}{\code{qlogis(clamp(x, 0.001, 0.999))}, then z-score (1 latent column)}
+\item{zi_count}{gate (0/1) + \code{log1p}-z of non-zeros (2 latent columns)}
 }
 }
 \examples{

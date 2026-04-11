@@ -1,0 +1,11 @@
+[   0.0s] Resuming: 14 / 50 cells already done, 36 remaining
+[   0.0s] Running 36 cells across 16 cores (PSOCK cluster)
+[   0.0s] Starting PSOCK cluster...
+[   6.6s] Cluster ready. Dispatching cells...
+[ 610.2s] Cluster stopped.
+[ 610.2s] Completed: 36 good, 0 errors
+[ 610.2s] Total wall: 610.2s (10.2 min)
+Error in aggregate.data.frame(lhs, mf[-1L], FUN = FUN, ...) : 
+  no rows to aggregate
+Calls: aggregate -> aggregate.formula -> aggregate.data.frame
+Execution halted

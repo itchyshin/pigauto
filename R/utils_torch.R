@@ -30,7 +30,7 @@ compute_mixed_loss <- function(pred, truth, corrupt_mask, trait_map) {
     lc <- tm$latent_cols
     tp <- tm$type
 
-    if (tp %in% c("continuous", "count", "ordinal")) {
+    if (tp %in% c("continuous", "count", "ordinal", "proportion")) {
       # MSE loss on corrupted cells for this trait's latent column
       m <- corrupt_mask[, lc]
       if (as.numeric(m$sum()$item()) == 0) next
@@ -65,6 +65,35 @@ compute_mixed_loss <- function(pred, truth, corrupt_mask, trait_map) {
       loss_t <- torch::nnf_cross_entropy(logits_corrupt, targets)
       loss_total <- loss_total + loss_t
       n_traits <- n_traits + 1L
+
+    } else if (tp == "zi_count") {
+      # Dual loss: BCE on gate (col 1) + conditional MSE on magnitude (col 2)
+      # Gate loss (BCE)
+      m_gate <- corrupt_mask[, lc[1]]
+      n_gate <- as.numeric(m_gate$sum()$item())
+      loss_gate <- torch::torch_tensor(0.0, device = pred$device)
+      if (n_gate > 0) {
+        loss_gate <- torch::nnf_binary_cross_entropy_with_logits(
+          pred[, lc[1]][m_gate], truth[, lc[1]][m_gate]
+        )
+      }
+      # Magnitude loss (MSE, only for non-zero cells where truth is finite)
+      m_mag <- corrupt_mask[, lc[2]]
+      truth_mag <- truth[, lc[2]]
+      # finite_mask: corrupted AND truth is finite (non-zero observations)
+      finite_mask <- m_mag & torch::torch_isfinite(truth_mag)
+      n_finite <- as.numeric(finite_mask$sum()$item())
+      loss_mag <- torch::torch_tensor(0.0, device = pred$device)
+      if (n_finite > 0) {
+        loss_mag <- torch::nnf_mse_loss(
+          pred[, lc[2]][finite_mask], truth_mag[finite_mask]
+        )
+      }
+      # Average gate and magnitude losses (each counts as half a trait)
+      if (n_gate > 0 || n_finite > 0) {
+        loss_total <- loss_total + 0.5 * loss_gate + 0.5 * loss_mag
+        n_traits <- n_traits + 1L
+      }
     }
   }
 
@@ -80,7 +109,7 @@ composite_val_loss <- function(pred, truth, val_mask, trait_map) {
     lc <- tm$latent_cols
     tp <- tm$type
 
-    if (tp %in% c("continuous", "count", "ordinal")) {
+    if (tp %in% c("continuous", "count", "ordinal", "proportion")) {
       m <- val_mask[, lc]
       if (as.numeric(m$sum()$item()) == 0) next
       l <- as.numeric(torch::nnf_mse_loss(
@@ -105,6 +134,31 @@ composite_val_loss <- function(pred, truth, val_mask, trait_map) {
       targets    <- truth_oh$argmax(dim = 2L)
       l <- as.numeric(torch::nnf_cross_entropy(logits_val, targets)$item())
       losses <- c(losses, l)
+
+    } else if (tp == "zi_count") {
+      # Gate: BCE
+      m_gate <- val_mask[, lc[1]]
+      n_gate <- as.numeric(m_gate$sum()$item())
+      l_gate <- 0
+      if (n_gate > 0) {
+        l_gate <- as.numeric(torch::nnf_binary_cross_entropy_with_logits(
+          pred[, lc[1]][m_gate], truth[, lc[1]][m_gate]
+        )$item())
+      }
+      # Magnitude: conditional MSE
+      m_mag <- val_mask[, lc[2]]
+      truth_mag <- truth[, lc[2]]
+      finite_mask <- m_mag & torch::torch_isfinite(truth_mag)
+      n_finite <- as.numeric(finite_mask$sum()$item())
+      l_mag <- 0
+      if (n_finite > 0) {
+        l_mag <- as.numeric(torch::nnf_mse_loss(
+          pred[, lc[2]][finite_mask], truth_mag[finite_mask]
+        )$item())
+      }
+      if (n_gate > 0 || n_finite > 0) {
+        losses <- c(losses, 0.5 * l_gate + 0.5 * l_mag)
+      }
     }
   }
 

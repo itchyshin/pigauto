@@ -144,6 +144,15 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     t_obs_to_sp <- NULL
   }
 
+  # ---- Covariates (environmental conditioners) ------------------------------
+  has_covariates <- !is.null(object$covariates)
+  t_covariates   <- NULL
+  if (has_covariates) {
+    t_covariates <- torch::torch_tensor(
+      object$covariates, dtype = torch::torch_float(), device = device
+    )
+  }
+
   # ---- Inference (single or MC dropout) ------------------------------------
   latent_runs <- vector("list", n_imp)
 
@@ -161,7 +170,9 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     torch::with_no_grad({
       mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
       for (step in seq_len(cfg$refine_steps)) {
-        covs0 <- torch::torch_cat(list(t_MU, mask_ind0), dim = 2L)
+        cov_parts0 <- list(t_MU, mask_ind0)
+        if (has_covariates) cov_parts0[[length(cov_parts0) + 1L]] <- t_covariates
+        covs0 <- torch::torch_cat(cov_parts0, dim = 2L)
         out   <- model(X_iter, t_coords, covs0, t_adj, t_obs_to_sp)
         if (use_calibrated) {
           pred <- (1 - t_cal_gates) * t_MU + t_cal_gates * out$delta
@@ -424,6 +435,22 @@ decode_from_latent <- function(latent_mat, trait_map, species_names) {
       probs[[nm]] <- prob_mat
       pred_idx <- apply(prob_mat, 1, which.max)
       imputed[[nm]] <- factor(tm$levels[pred_idx], levels = tm$levels)
+
+    } else if (tm$type == "proportion") {
+      # Inverse logit: latent -> logit scale -> (0,1)
+      vals_logit <- latent_mat[, lc] * tm$sd + tm$mean
+      vals <- stats::plogis(vals_logit)
+      imputed[[nm]] <- vals
+
+    } else if (tm$type == "zi_count") {
+      # Expected value: E[X] = P(non-zero) * E[count | non-zero]
+      p_nz <- expit(latent_mat[, lc[1]])
+      count_logscale <- latent_mat[, lc[2]] * tm$sd + tm$mean
+      count_hat <- expm1(count_logscale)
+      count_hat <- pmax(count_hat, 0)
+      ev <- p_nz * count_hat
+      imputed[[nm]] <- as.integer(pmax(round(ev), 0L))
+      probs[[nm]] <- p_nz  # probability of non-zero
     }
   }
 
@@ -477,6 +504,22 @@ pool_imputations <- function(decode_results, latent_runs, trait_map) {
       probs[[nm]] <- avg_prob
       pred_idx <- apply(avg_prob, 1, which.max)
       imputed[[nm]] <- factor(tm$levels[pred_idx], levels = tm$levels)
+
+    } else if (tm$type == "proportion") {
+      vals <- rowMeans(sapply(decode_results, function(dr) dr$imputed[[nm]]))
+      imputed[[nm]] <- vals
+
+    } else if (tm$type == "zi_count") {
+      # Average the expected values across imputations
+      vals <- rowMeans(sapply(decode_results, function(dr) {
+        as.numeric(dr$imputed[[nm]])
+      }))
+      imputed[[nm]] <- as.integer(pmax(round(vals), 0L))
+      # Average the P(non-zero) probabilities
+      avg_pnz <- rowMeans(sapply(decode_results, function(dr) {
+        dr$probabilities[[nm]]
+      }))
+      probs[[nm]] <- avg_pnz
     }
   }
 
@@ -489,7 +532,7 @@ pool_imputations <- function(decode_results, latent_runs, trait_map) {
 compute_mc_se <- function(decode_results, trait_map, baseline_se,
                           latent_mean, species_names) {
   # Combines two sources of uncertainty:
-  # 1. Baseline (Rphylopars) SE -- phylogenetic imputation uncertainty
+  # 1. Baseline (BM) SE -- phylogenetic imputation uncertainty
   # 2. MC dropout between-imputation SD -- GNN correction uncertainty
   # Combined in quadrature: SE_total = sqrt(SE_BM^2 + SE_MC^2)
   M <- length(decode_results)
@@ -545,6 +588,23 @@ compute_mc_se <- function(decode_results, trait_map, baseline_se,
       avg_prob <- Reduce("+", prob_mats) / M
       entropy <- -rowSums(avg_prob * log(pmax(avg_prob, 1e-10)))
       se_mat[, nm] <- entropy
+
+    } else if (tm$type == "proportion") {
+      # Between-imputation SD on (0,1) scale + baseline SE via delta method
+      vals <- sapply(decode_results, function(dr) as.numeric(dr$imputed[[nm]]))
+      se_mc <- apply(vals, 1, stats::sd)
+      # Baseline SE on logit scale -> (0,1) via delta method: se * p * (1-p)
+      se_latent <- baseline_se[, lc[1]]
+      se_logit <- se_latent * tm$sd
+      pred_logit <- latent_mean[, lc[1]] * tm$sd + tm$mean
+      pred_p <- stats::plogis(pred_logit)
+      se_bm_orig <- se_logit * pred_p * (1 - pred_p)
+      se_mat[, nm] <- sqrt(se_bm_orig^2 + se_mc^2)
+
+    } else if (tm$type == "zi_count") {
+      # Between-imputation SD of expected values
+      vals <- sapply(decode_results, function(dr) as.numeric(dr$imputed[[nm]]))
+      se_mat[, nm] <- apply(vals, 1, stats::sd)
     }
   }
   se_mat
@@ -555,7 +615,7 @@ compute_mc_se <- function(decode_results, trait_map, baseline_se,
 
 compute_single_se <- function(latent_mat, probs, trait_map, baseline_se,
                               species_names) {
-  # Propagate baseline (Rphylopars) SE to original scale.
+  # Propagate baseline (BM) SE to original scale.
   # The baseline SE captures phylogenetic imputation uncertainty.
   # This uncertainty is always present, regardless of GNN correction magnitude.
   n <- nrow(latent_mat)
@@ -599,6 +659,27 @@ compute_single_se <- function(latent_mat, probs, trait_map, baseline_se,
       prob_mat <- probs[[nm]]
       entropy <- -rowSums(prob_mat * log(pmax(prob_mat, 1e-10)))
       se_mat[, nm] <- entropy
+
+    } else if (tm$type == "proportion") {
+      # Baseline SE on logit scale -> (0,1) via delta method
+      se_latent <- baseline_se[, lc]
+      se_logit <- se_latent * tm$sd
+      pred_logit <- latent_mat[, lc] * tm$sd + tm$mean
+      pred_p <- stats::plogis(pred_logit)
+      se_mat[, nm] <- se_logit * pred_p * (1 - pred_p)
+
+    } else if (tm$type == "zi_count") {
+      # Approximate SE via Bernoulli SD of the gate * count magnitude
+      p_nz <- expit(latent_mat[, lc[1]])
+      # Gate uncertainty
+      se_gate <- sqrt(p_nz * (1 - p_nz))
+      # Magnitude SE from baseline
+      se_mag_latent <- baseline_se[, lc[2]]
+      pred_log1p <- latent_mat[, lc[2]] * tm$sd + tm$mean
+      count_hat <- pmax(expm1(pred_log1p), 0)
+      se_mag_orig <- exp(pred_log1p) * se_mag_latent * tm$sd
+      # Combined SE: delta method for product p_nz * count_hat
+      se_mat[, nm] <- sqrt((count_hat * se_gate)^2 + (p_nz * se_mag_orig)^2)
     }
   }
   se_mat
@@ -608,7 +689,7 @@ compute_single_se <- function(latent_mat, probs, trait_map, baseline_se,
 # ---- Internal: latent-scale SE for coverage computation --------------------------
 #
 # Returns an n x p_latent matrix of SE in latent (z-score) scale.
-# For continuous/count/ordinal: baseline SE from Rphylopars.
+# For continuous/count/ordinal: baseline SE from BM.
 # For binary/categorical: NA (coverage is not computed for discrete types).
 # When multiple imputations exist, combines baseline SE with between-imputation
 # SD in latent scale via quadrature.
@@ -625,7 +706,7 @@ compute_latent_se <- function(latent_runs, trait_map, baseline_se,
   for (tm in trait_map) {
     lc <- tm$latent_cols
 
-    if (tm$type %in% c("continuous", "count", "ordinal")) {
+    if (tm$type %in% c("continuous", "count", "ordinal", "proportion")) {
       for (j in lc) {
         se_bm <- baseline_se[, j]
 
@@ -636,6 +717,17 @@ compute_latent_se <- function(latent_runs, trait_map, baseline_se,
         } else {
           se_lat[, j] <- se_bm
         }
+      }
+    } else if (tm$type == "zi_count") {
+      # Only magnitude column (col 2) gets latent SE
+      j <- lc[2]
+      se_bm <- baseline_se[, j]
+      if (n_imp > 1L) {
+        vals <- sapply(latent_runs, function(lr) lr[, j])
+        se_mc <- apply(vals, 1, stats::sd)
+        se_lat[, j] <- sqrt(se_bm^2 + se_mc^2)
+      } else {
+        se_lat[, j] <- se_bm
       }
     }
     # binary/categorical: leave as NA (coverage not applicable)
@@ -651,6 +743,8 @@ latent_names_from_map <- function(trait_map) {
   for (tm in trait_map) {
     if (tm$type == "categorical") {
       nms <- c(nms, paste0(tm$name, "=", tm$levels))
+    } else if (tm$type == "zi_count") {
+      nms <- c(nms, paste0(tm$name, "_gate"), paste0(tm$name, "_mag"))
     } else {
       nms <- c(nms, tm$name)
     }

@@ -11,6 +11,7 @@ multi_impute(
   species_col = NULL,
   log_transform = TRUE,
   missing_frac = 0.25,
+  covariates = NULL,
   epochs = 2000L,
   verbose = TRUE,
   seed = 1L,
@@ -40,6 +41,10 @@ observations per species. See \code{\link[=impute]{impute()}} for details.}
 \item{missing_frac}{numeric. Fraction of observed cells held out for
 validation/test during training (default \code{0.25}). Passed through
 to \code{\link[=impute]{impute()}}.}
+
+\item{covariates}{data.frame or matrix of environmental covariates
+(fully observed, numeric). Passed through to \code{\link[=impute]{impute()}}.
+Default \code{NULL} (no covariates).}
 
 \item{epochs}{integer. Maximum GNN training epochs (default \code{2000}).}
 

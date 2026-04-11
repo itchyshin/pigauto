@@ -194,7 +194,7 @@ test_that("build_phylo_graph auto k_eigen floors at 4 for small trees", {
 test_that("cross_validate returns pigauto_cv object", {
   # k must be >= 3 so that at least one fold remains as training data
   # (with k=2 the test + val folds mask all cells, leaving nothing for
-  # the Rphylopars baseline).  Use 50 species and 3 traits.
+  # the BM baseline).  Use 50 species and 3 traits.
   set.seed(301)
   tree <- ape::rtree(50)
   df <- data.frame(
@@ -328,4 +328,72 @@ test_that("simulate_benchmark mixed scenario handles discrete traits", {
   # Should have categorical and binary traits
   types <- unique(bench$results$type)
   expect_true("binary" %in% types || "categorical" %in% types)
+})
+
+
+# ---- Environmental covariates -----------------------------------------------
+
+test_that("impute() accepts covariates and threads them through the pipeline", {
+  n <- 40
+  set.seed(500)
+  tree <- ape::rtree(n)
+  sp   <- tree$tip.label
+
+  df <- data.frame(
+    row.names = sp,
+    y  = abs(rnorm(n)) + 0.5,
+    x1 = abs(rnorm(n)) + 0.5
+  )
+  df$y[sample(n, 8)] <- NA
+
+  covs <- data.frame(
+    temperature   = rnorm(n, 20, 5),
+    precipitation = rnorm(n, 1000, 200)
+  )
+
+  res <- impute(df, tree, covariates = covs, epochs = 20L,
+                verbose = FALSE, seed = 500L,
+                eval_every = 10L, patience = 5L)
+
+  expect_s3_class(res, "pigauto_result")
+  expect_equal(sum(res$imputed_mask), 8L)
+
+  # Covariates stored in data object
+  expect_true(!is.null(res$data$covariates))
+  expect_equal(ncol(res$data$covariates), 2L)
+  expect_equal(res$data$cov_names, c("temperature", "precipitation"))
+
+  # Covariates stored in fit object (for predict)
+  expect_true(!is.null(res$fit$covariates))
+  expect_equal(ncol(res$fit$covariates), 2L)
+
+  # Model config has larger cov_dim
+  base_cov_dim <- res$data$p_latent + 1L  # baseline + mask_ind
+  expect_equal(res$fit$model_config$cov_dim, base_cov_dim + 2L)
+})
+
+test_that("covariates with NAs are rejected", {
+  set.seed(501)
+  tree <- ape::rtree(20)
+  sp <- tree$tip.label
+  df <- data.frame(row.names = sp, y = rnorm(20))
+
+  covs_bad <- data.frame(temp = c(NA, rnorm(19)))
+  expect_error(
+    impute(df, tree, covariates = covs_bad, epochs = 10L, verbose = FALSE),
+    regexp = "fully observed"
+  )
+})
+
+test_that("covariates with wrong row count are rejected", {
+  set.seed(502)
+  tree <- ape::rtree(20)
+  sp <- tree$tip.label
+  df <- data.frame(row.names = sp, y = rnorm(20))
+
+  covs_bad <- data.frame(temp = rnorm(10))  # wrong n
+  expect_error(
+    impute(df, tree, covariates = covs_bad, epochs = 10L, verbose = FALSE),
+    regexp = "rows"
+  )
 })

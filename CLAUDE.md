@@ -79,7 +79,7 @@ The pipeline functions are for fine-grained control and for writing benchmarks. 
 
 ### Trait-type handling
 
-All five types live in a single latent matrix:
+All seven types live in a single latent matrix:
 
 | R class    | pigauto type | Latent cols | Loss          | Baseline                                  |
 |------------|-------------|-------------|---------------|-------------------------------------------|
@@ -88,6 +88,10 @@ All five types live in a single latent matrix:
 | ordered    | ordinal     | 1 (integer + z) | MSE        | Rphylopars BM                             |
 | factor(2)  | binary      | 1 (0/1)     | BCE           | Phylogenetic label propagation            |
 | factor(>2) | categorical | K (one-hot) | cross-entropy | Phylogenetic label propagation            |
+| numeric(0–1) | proportion | 1 (logit + z) | MSE       | Rphylopars BM                             |
+| integer(ZI) | zi_count   | 2 (gate 0/1 + log1p-z) | BCE + cond. MSE | LP (gate) + BM (magnitude) |
+
+Proportion and zi_count require explicit `trait_types` overrides — they are not auto-detected. ZI count uses two latent columns: column 1 is a binary gate (0=zero, 1=non-zero), column 2 is the log1p-z magnitude (NA when observed value is zero). Expected value prediction: `E[X] = P(non-zero) * E[count | non-zero]`.
 
 `trait_map` (list of descriptors) is the single source of truth for type, latent-column range, levels, mean, sd, and log-transform flag. `preprocess_traits()` builds it; `fit_baseline()`, `fit_pigauto()`, `predict()`, and `evaluate()` all use it. **When touching encoding or decoding, change the encoder and decoder in sync and update every consumer of `trait_map`**.
 
@@ -108,7 +112,7 @@ After the training loop:
 - `R/` — package source (~7100 lines). Everything with an `@export` tag is user-facing.
 - `tests/testthat/` — testthat 3rd edition. One test file per broad area: preprocess, graph, masking, fit-predict, mixed-types, multi-impute, new-features.
 - `BACE/` — a **separate, self-contained R package** (Bayesian phylogenetic imputation via MCMCglmm) kept in-tree as a reference implementation and comparison baseline. It has its own `R/`, `tests/`, `vignettes/`, and `DESCRIPTION`. `Grep` and `Glob` results for generic terms (`impute`, `phylo`, `trait`) will include BACE files — always check the path prefix. Pigauto wraps BACE only in `R/fit_baseline_bace.R`. BACE is `Suggests:`-only, `^BACE$` is in `.Rbuildignore`, and BACE's own tests are not part of pigauto's test suite. Do not modify BACE as part of pigauto work.
-- `script/` — benchmark drivers, logs, and HTML/RDS outputs. Ignored by `R CMD build`. The current entries are `validate_avonet_full.{R,log,md,rds}` (full-scale validation), `bench_scaling_v031.{R,log,rds}` (scaling benchmark), `bench_avonet_missingness.{R,rds,md}` + `make_avonet_missingness_html.R` (missingness sweep), and the `make_*_html.R` generators for the published HTML pages. Anything named `bench_v2.*`, `bench_v3.*`, `bench_v4.*`, or `benchmark_*` is a stale snapshot from earlier phases — do not treat them as reference implementations.
+- `script/` — benchmark drivers, logs, and HTML/RDS outputs. Ignored by `R CMD build`. Key entries: `validate_avonet_full.{R,log,md,rds}` (full-scale validation), `bench_scaling_v031.{R,log,rds}` (scaling benchmark), `bench_avonet_missingness.{R,rds,md}` + `make_avonet_missingness_html.R` (missingness sweep), and the per-type benchmark suite: `bench_{continuous,binary,ordinal,count,categorical,proportion,zi_count,missingness_mechanism}.R` (drivers) + `make_bench_*_html.R` (HTML generators). Each driver outputs `.rds` + `.md`; each HTML generator outputs to both `script/` and `pkgdown/assets/dev/`. Anything named `bench_v2.*`, `bench_v3.*`, `bench_v4.*`, or `benchmark_*` is a stale snapshot from earlier phases — do not treat them as reference implementations.
 - `dev/` — scratch experiments. Ignored by `R CMD build`.
 - `avonet/`, `data/`, `data-raw/` — the bundled AVONET 300-species dataset and its build scripts.
 
@@ -124,7 +128,7 @@ After the training loop:
 
 ### Gate initialisation depends on trait type
 
-Continuous columns initialise `res_raw` at `-1` (effective gate ≈ 0.135 × gate_cap). Binary/categorical columns initialise near 0 (fully closed). This is deliberate: discrete traits should rely entirely on phylogenetic label propagation until the GNN earns the right to contribute. Preserve this when editing `ResidualPhyloDAE$initialize`.
+Continuous/count/ordinal/proportion columns initialise `res_raw` at `-1` (effective gate ≈ 0.135 × gate_cap). Binary/categorical columns initialise near 0 (fully closed). ZI count: column 1 (gate) initialises like binary (near 0), column 2 (magnitude) like continuous (-1). This is deliberate: discrete traits should rely entirely on phylogenetic label propagation until the GNN earns the right to contribute. Preserve this when editing `ResidualPhyloDAE$initialize`.
 
 ### Multi-obs code path in `fit_pigauto.R`
 

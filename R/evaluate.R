@@ -140,7 +140,7 @@ eval_test_cells <- function(pred_latent, pred_obj, truth_latent,
     tp <- tm$type
     lc <- tm$latent_cols
 
-    if (tp %in% c("continuous", "count", "ordinal")) {
+    if (tp %in% c("continuous", "count", "ordinal", "proportion")) {
       # Single latent column per trait
       keep <- which(col_j == lc[1])
       ri   <- row_i[keep]
@@ -153,7 +153,7 @@ eval_test_cells <- function(pred_latent, pred_obj, truth_latent,
 
       n_ok <- sum(ok)
 
-      if (tp == "continuous") {
+      if (tp %in% c("continuous", "proportion")) {
         rmse_val <- rmse_vec(t_j[ok], p_j[ok])
         mae_val  <- mae_vec(t_j[ok], p_j[ok])
         r_val    <- if (n_ok > 2L) stats::cor(t_j[ok], p_j[ok]) else NA_real_
@@ -288,6 +288,81 @@ eval_test_cells <- function(pred_latent, pred_obj, truth_latent,
                      stringsAsFactors = FALSE)
         ))
       }
+
+    } else if (tp == "zi_count") {
+      # ZI count: evaluate on the gate column (col 1)
+      keep <- which(col_j == lc[1])
+      ri   <- row_i[keep]
+      if (length(ri) == 0L) next
+
+      # Gate evaluation: truth column 1 is 0/1
+      t_gate <- truth_latent[ri, lc[1]]
+      ok_gate <- is.finite(t_gate)
+      if (sum(ok_gate) == 0L) next
+      n_ok <- sum(ok_gate)
+
+      # Predicted expected value (from pred_obj or latent decode)
+      if (!is.null(pred_obj) && !is.null(pred_obj$probabilities[[nm]])) {
+        p_nz <- pred_obj$probabilities[[nm]][ri]
+      } else {
+        p_nz <- expit(pred_latent[ri, lc[1]])
+      }
+
+      # Zero-accuracy: predict zero if p_nz < 0.5
+      pred_zero <- as.integer(p_nz < 0.5)
+      truth_zero <- as.integer(t_gate < 0.5)
+      zero_acc <- mean(pred_zero[ok_gate] == truth_zero[ok_gate])
+
+      # Brier score on the gate
+      brier_val <- brier_vec(t_gate[ok_gate], p_nz[ok_gate])
+
+      # RMSE on expected value (latent scale is less interpretable for ZI)
+      # Use column 1 presence + column 2 magnitude to compute EV
+      pred_ev <- rep(0, length(ri))
+      truth_ev <- rep(0, length(ri))
+      # Truth: reconstruct integer values
+      for (idx in seq_along(ri)) {
+        if (ok_gate[idx]) {
+          if (truth_latent[ri[idx], lc[1]] > 0.5) {
+            # Non-zero: reconstruct count
+            mag_val <- truth_latent[ri[idx], lc[2]]
+            if (is.finite(mag_val)) {
+              truth_ev[idx] <- expm1(mag_val * tm$sd + tm$mean)
+            }
+          }
+          # Predicted EV
+          mag_pred <- pred_latent[ri[idx], lc[2]]
+          if (is.finite(mag_pred)) {
+            count_hat <- pmax(expm1(mag_pred * tm$sd + tm$mean), 0)
+            pred_ev[idx] <- p_nz[idx] * count_hat
+          }
+        }
+      }
+      rmse_val <- rmse_vec(truth_ev[ok_gate], pred_ev[ok_gate])
+      mae_val  <- mae_vec(truth_ev[ok_gate], pred_ev[ok_gate])
+      r_val    <- if (n_ok > 2L) {
+        stats::cor(truth_ev[ok_gate], pred_ev[ok_gate])
+      } else {
+        NA_real_
+      }
+
+      rows <- c(rows, list(
+        data.frame(method = method, trait = nm, type = tp,
+                   metric = "rmse", value = rmse_val, n_test = n_ok,
+                   stringsAsFactors = FALSE),
+        data.frame(method = method, trait = nm, type = tp,
+                   metric = "mae", value = mae_val, n_test = n_ok,
+                   stringsAsFactors = FALSE),
+        data.frame(method = method, trait = nm, type = tp,
+                   metric = "pearson_r", value = r_val, n_test = n_ok,
+                   stringsAsFactors = FALSE),
+        data.frame(method = method, trait = nm, type = tp,
+                   metric = "zero_accuracy", value = zero_acc, n_test = n_ok,
+                   stringsAsFactors = FALSE),
+        data.frame(method = method, trait = nm, type = tp,
+                   metric = "brier", value = brier_val, n_test = n_ok,
+                   stringsAsFactors = FALSE)
+      ))
     }
   }
 

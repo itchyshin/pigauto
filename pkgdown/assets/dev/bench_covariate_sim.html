@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pigauto benchmark: Covariate effectiveness simulation</title>
+<style>
+body{font-family:Inter,system-ui,sans-serif;max-width:1000px;margin:2rem auto;padding:0 1rem;color:#1f2937;line-height:1.6}
+h1{color:#059669;border-bottom:2px solid #059669;padding-bottom:.3rem}
+h2{color:#374151;margin-top:2rem}
+h3{color:#6b7280}
+table{border-collapse:collapse;width:100%;margin:1rem 0}
+th,td{border:1px solid #d1d5db;padding:6px 10px;text-align:right}
+th{background:#f3f4f6;text-align:center}
+td:first-child,th:first-child{text-align:left}
+.best{font-weight:700;color:#059669}
+.neutral{color:#6b7280}
+.worse{color:#dc2626}
+.summary-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:1rem 1.5rem;margin:1rem 0}
+.key-number{font-size:1.8rem;font-weight:700;color:#059669}
+</style>
+</head><body>
+<h1>Covariate effectiveness simulation</h1>
+<p>This benchmark simulates traits with varying levels of phylogenetic signal (&lambda;) and environmental effect (&beta;) to demonstrate <strong>when environmental covariates improve imputation accuracy</strong>. Covariates help most when phylogenetic signal is low and environmental effects are strong.</p>
+<h3>Setup</h3>
+<ul>
+<li>Tree: 300 species (tree300, BirdTree Hackett MCC)</li>
+<li>Traits: 3 continuous (simulated per scenario)</li>
+<li>Covariates: 3 (uncorrelated normal, fully observed)</li>
+<li>Missingness: 20%, 40%, 60% MCAR</li>
+<li>Replicates: 3 per cell</li>
+<li>Epochs: 300</li>
+<li>Wall time: 91.3 min</li>
+</ul>
+<div class="summary-box">
+<strong>Key finding:</strong> Covariates reduce RMSE by up to 
+<span class="key-number">14%</span>
+ in the Low phylo, strong env (λ=0.1, β=1.5) scenario (
+&lambda;=0.1, &beta;=1.5, 60% missing
+). When phylogenetic signal is high and environmental effects are absent, 
+covariates provide zero lift (ratio &asymp; 1.0), confirming the gated safety.
+</div>
+<h2>RMSE by scenario, missingness, and method</h2>
+<table>
+<tr><th>Scenario</th><th>&lambda;</th><th>&beta;</th><th>Miss %</th><th>Method</th><th>RMSE</th><th>Pearson r</th></tr>
+<tr><td>Low phylo, strong env (λ=0.1, β=1.5)</td><td>0.1</td><td>1.5</td><td>20%</td>
+<td>pigauto</td><td>3.1543</td><td>0.0414</td></tr>
+<tr><td>Low phylo, strong env (λ=0.1, β=1.5)</td><td>0.1</td><td>1.5</td><td>20%</td>
+<td class="best">pigauto + covs</td><td>2.9053</td><td>0.1940</td></tr>
+<tr><td>Low phylo, strong env (λ=0.1, β=1.5)</td><td>0.1</td><td>1.5</td><td>40%</td>
+<td>pigauto</td><td>3.2042</td><td>0.0172</td></tr>
+<tr><td>Low phylo, strong env (λ=0.1, β=1.5)</td><td>0.1</td><td>1.5</td><td>40%</td>
+<td class="best">pigauto + covs</td><td>2.8244</td><td>0.2841</td></tr>
+<tr><td>Low phylo, strong env (λ=0.1, β=1.5)</td><td>0.1</td><td>1.5</td><td>60%</td>
+<td>pigauto</td><td>3.1681</td><td>0.0174</td></tr>
+<tr><td>Low phylo, strong env (λ=0.1, β=1.5)</td><td>0.1</td><td>1.5</td><td>60%</td>
+<td class="best">pigauto + covs</td><td>2.7102</td><td>0.3352</td></tr>
+<tr><td>Moderate phylo, strong env (λ=0.3, β=1.0)</td><td>0.3</td><td>1.0</td><td>20%</td>
+<td>pigauto</td><td>1.5618</td><td>0.0667</td></tr>
+<tr><td>Moderate phylo, strong env (λ=0.3, β=1.0)</td><td>0.3</td><td>1.0</td><td>20%</td>
+<td class="best">pigauto + covs</td><td>1.5080</td><td>0.1291</td></tr>
+<tr><td>Moderate phylo, strong env (λ=0.3, β=1.0)</td><td>0.3</td><td>1.0</td><td>40%</td>
+<td>pigauto</td><td>1.5627</td><td>0.0813</td></tr>
+<tr><td>Moderate phylo, strong env (λ=0.3, β=1.0)</td><td>0.3</td><td>1.0</td><td>40%</td>
+<td class="best">pigauto + covs</td><td>1.5006</td><td>0.1628</td></tr>
+<tr><td>Moderate phylo, strong env (λ=0.3, β=1.0)</td><td>0.3</td><td>1.0</td><td>60%</td>
+<td>pigauto</td><td>1.6277</td><td>0.0379</td></tr>
+<tr><td>Moderate phylo, strong env (λ=0.3, β=1.0)</td><td>0.3</td><td>1.0</td><td>60%</td>
+<td class="best">pigauto + covs</td><td>1.5551</td><td>0.1214</td></tr>
+<tr><td>High phylo, moderate env (λ=0.7, β=0.5)</td><td>0.7</td><td>0.5</td><td>20%</td>
+<td>pigauto</td><td>1.4569</td><td>0.2193</td></tr>
+<tr><td>High phylo, moderate env (λ=0.7, β=0.5)</td><td>0.7</td><td>0.5</td><td>20%</td>
+<td class="best">pigauto + covs</td><td>1.4261</td><td>0.2605</td></tr>
+<tr><td>High phylo, moderate env (λ=0.7, β=0.5)</td><td>0.7</td><td>0.5</td><td>40%</td>
+<td>pigauto</td><td>1.4036</td><td>0.2507</td></tr>
+<tr><td>High phylo, moderate env (λ=0.7, β=0.5)</td><td>0.7</td><td>0.5</td><td>40%</td>
+<td class="best">pigauto + covs</td><td>1.3626</td><td>0.2938</td></tr>
+<tr><td>High phylo, moderate env (λ=0.7, β=0.5)</td><td>0.7</td><td>0.5</td><td>60%</td>
+<td>pigauto</td><td>1.4211</td><td>0.1460</td></tr>
+<tr><td>High phylo, moderate env (λ=0.7, β=0.5)</td><td>0.7</td><td>0.5</td><td>60%</td>
+<td class="best">pigauto + covs</td><td>1.3676</td><td>0.2203</td></tr>
+<tr><td>High phylo, no env (λ=0.9, β=0)</td><td>0.9</td><td>0.0</td><td>20%</td>
+<td>pigauto</td><td>0.5658</td><td>0.5853</td></tr>
+<tr><td>High phylo, no env (λ=0.9, β=0)</td><td>0.9</td><td>0.0</td><td>20%</td>
+<td class="best">pigauto + covs</td><td>0.5650</td><td>0.5842</td></tr>
+<tr><td>High phylo, no env (λ=0.9, β=0)</td><td>0.9</td><td>0.0</td><td>40%</td>
+<td>pigauto</td><td>0.6092</td><td>0.6276</td></tr>
+<tr><td>High phylo, no env (λ=0.9, β=0)</td><td>0.9</td><td>0.0</td><td>40%</td>
+<td class="best">pigauto + covs</td><td>0.6097</td><td>0.6280</td></tr>
+<tr><td>High phylo, no env (λ=0.9, β=0)</td><td>0.9</td><td>0.0</td><td>60%</td>
+<td>pigauto</td><td>0.6400</td><td>0.5974</td></tr>
+<tr><td>High phylo, no env (λ=0.9, β=0)</td><td>0.9</td><td>0.0</td><td>60%</td>
+<td class="best">pigauto + covs</td><td>0.6392</td><td>0.5981</td></tr>
+</table>
+<h2>Covariate lift (RMSE ratio: with covariates / without)</h2>
+<p>Ratio &lt; 1.0 means covariates <strong>improve</strong> imputation; ratio &asymp; 1.0 means no effect.</p>
+<table>
+<tr><th>Scenario</th><th>&lambda;</th><th>&beta;</th><th>Miss %</th><th>RMSE (no cov)</th><th>RMSE (cov)</th><th>Ratio</th><th>Improvement</th></tr>
+<tr><td>Low phylo, strong env (λ=0.1, β=1.5)</td><td>0.1</td><td>1.5</td><td>20%</td>
+<td>3.1543</td><td>2.9053</td>
+<td class="best">0.921</td>
+<td class="best">7.9%</td></tr>
+<tr><td>Low phylo, strong env (λ=0.1, β=1.5)</td><td>0.1</td><td>1.5</td><td>40%</td>
+<td>3.2042</td><td>2.8244</td>
+<td class="best">0.881</td>
+<td class="best">11.9%</td></tr>
+<tr><td>Low phylo, strong env (λ=0.1, β=1.5)</td><td>0.1</td><td>1.5</td><td>60%</td>
+<td>3.1681</td><td>2.7102</td>
+<td class="best">0.855</td>
+<td class="best">14.5%</td></tr>
+<tr><td>Moderate phylo, strong env (λ=0.3, β=1.0)</td><td>0.3</td><td>1.0</td><td>20%</td>
+<td>1.5618</td><td>1.5080</td>
+<td class="neutral">0.966</td>
+<td class="neutral">3.4%</td></tr>
+<tr><td>Moderate phylo, strong env (λ=0.3, β=1.0)</td><td>0.3</td><td>1.0</td><td>40%</td>
+<td>1.5627</td><td>1.5006</td>
+<td class="neutral">0.960</td>
+<td class="neutral">4.0%</td></tr>
+<tr><td>Moderate phylo, strong env (λ=0.3, β=1.0)</td><td>0.3</td><td>1.0</td><td>60%</td>
+<td>1.6277</td><td>1.5551</td>
+<td class="neutral">0.955</td>
+<td class="neutral">4.5%</td></tr>
+<tr><td>High phylo, moderate env (λ=0.7, β=0.5)</td><td>0.7</td><td>0.5</td><td>20%</td>
+<td>1.4569</td><td>1.4261</td>
+<td class="neutral">0.979</td>
+<td class="neutral">2.1%</td></tr>
+<tr><td>High phylo, moderate env (λ=0.7, β=0.5)</td><td>0.7</td><td>0.5</td><td>40%</td>
+<td>1.4036</td><td>1.3626</td>
+<td class="neutral">0.971</td>
+<td class="neutral">2.9%</td></tr>
+<tr><td>High phylo, moderate env (λ=0.7, β=0.5)</td><td>0.7</td><td>0.5</td><td>60%</td>
+<td>1.4211</td><td>1.3676</td>
+<td class="neutral">0.962</td>
+<td class="neutral">3.8%</td></tr>
+<tr><td>High phylo, no env (λ=0.9, β=0)</td><td>0.9</td><td>0.0</td><td>20%</td>
+<td>0.5658</td><td>0.5650</td>
+<td class="worse">0.999</td>
+<td class="worse">0.1%</td></tr>
+<tr><td>High phylo, no env (λ=0.9, β=0)</td><td>0.9</td><td>0.0</td><td>40%</td>
+<td>0.6092</td><td>0.6097</td>
+<td class="worse">1.001</td>
+<td class="worse">-0.1%</td></tr>
+<tr><td>High phylo, no env (λ=0.9, β=0)</td><td>0.9</td><td>0.0</td><td>60%</td>
+<td>0.6400</td><td>0.6392</td>
+<td class="worse">0.999</td>
+<td class="worse">0.1%</td></tr>
+</table>
+<h2>Interpretation</h2>
+<ul>
+<li><strong>Low phylogenetic signal + strong environmental effects</strong> (&lambda;=0.1, &beta;=1.5): Covariates provide substantial RMSE reduction. The GNN learns to use environmental information to predict trait values that phylogeny alone cannot explain.</li>
+<li><strong>High phylogenetic signal, no environmental effects</strong> (&lambda;=0.9, &beta;=0): Covariates provide ~zero improvement. The gated safety correctly keeps the covariate pathway closed, preventing noise injection. This matches the Delhey 2019 real-data result.</li>
+<li><strong>Crossover</strong>: The benefit appears when the environmental component is strong relative to phylogenetic signal. Moderate phylo + strong env (&lambda;=0.3, &beta;=1.0) already shows clear improvement.</li>
+</ul>
+<hr>
+<p style="color:#9ca3af;font-size:0.85rem">Generated 2026-04-11 07:11 by 
+<code>script/make_bench_covariate_sim_html.R</code></p>
+</body></html>

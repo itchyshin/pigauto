@@ -11,6 +11,7 @@ impute(
   log_transform = TRUE,
   missing_frac = 0.25,
   n_imputations = 1L,
+  covariates = NULL,
   epochs = 2000L,
   verbose = TRUE,
   seed = 1L,
@@ -39,6 +40,11 @@ to skip splitting (all cells used for training, no evaluation).}
 
 \item{n_imputations}{integer. Number of MC-dropout imputation sets
 (default \code{1}).  Values > 1 enable between-imputation uncertainty.}
+
+\item{covariates}{data.frame or matrix of environmental covariates
+(fully observed, numeric, same number of rows as \code{traits}).
+Covariates are conditioners: they inform imputation but are not
+themselves imputed. Default \code{NULL} (no covariates).}
 
 \item{epochs}{integer. Maximum GNN training epochs (default \code{2000}).}
 

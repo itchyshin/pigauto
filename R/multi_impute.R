@@ -26,6 +26,9 @@
 #' @param missing_frac numeric. Fraction of observed cells held out for
 #'   validation/test during training (default `0.25`). Passed through
 #'   to [impute()].
+#' @param covariates data.frame or matrix of environmental covariates
+#'   (fully observed, numeric). Passed through to [impute()].
+#'   Default `NULL` (no covariates).
 #' @param epochs integer. Maximum GNN training epochs (default `2000`).
 #' @param verbose logical. Print progress (default `TRUE`).
 #' @param seed integer. Random seed (default `1`).
@@ -114,6 +117,7 @@ multi_impute <- function(traits, tree, m = 100L,
                          species_col = NULL,
                          log_transform = TRUE,
                          missing_frac = 0.25,
+                         covariates = NULL,
                          epochs = 2000L, verbose = TRUE, seed = 1L, ...) {
 
   m <- as.integer(m)
@@ -130,6 +134,7 @@ multi_impute <- function(traits, tree, m = 100L,
     log_transform = log_transform,
     missing_frac  = missing_frac,
     n_imputations = m,
+    covariates    = covariates,
     epochs        = as.integer(epochs),
     verbose       = verbose,
     seed          = as.integer(seed),

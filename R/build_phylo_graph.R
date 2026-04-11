@@ -157,6 +157,9 @@ adj_symnorm_from_D <- function(D, sigma_mult) {
 #'       between tips, row/column-ordered by \code{tree$tip.label}.
 #'       Returned so downstream functions can reuse it instead of calling
 #'       \code{ape::cophenetic.phylo()} again.}
+#'     \item{R_phy}{Numeric matrix (n x n). Phylogenetic correlation matrix
+#'       \code{cov2cor(ape::vcv(tree))} (diagonal = 1). Used by
+#'       \code{\link{fit_baseline}} for BM conditional imputation.}
 #'   }
 #' @examples
 #' set.seed(1)
@@ -197,6 +200,9 @@ build_phylo_graph <- function(tree, k_eigen = "auto", sigma_mult = 0.5,
       if (is.null(cache$D)) {
         cache$D <- ape::cophenetic.phylo(tree)
       }
+      if (is.null(cache$R_phy)) {
+        cache$R_phy <- phylo_cor_matrix(tree)
+      }
       return(cache)
     }
     message("Cache dimensions mismatch -- recomputing.")
@@ -209,11 +215,18 @@ build_phylo_graph <- function(tree, k_eigen = "auto", sigma_mult = 0.5,
   # four calls into one.
   D <- ape::cophenetic.phylo(tree)
 
+  # Phylogenetic correlation matrix: R = cov2cor(vcv(tree)).
+
+  # Used by fit_baseline() for the internal BM imputation.
+  # Cached here alongside D to avoid a second O(n^2) computation.
+  R_phy <- phylo_cor_matrix(tree)
+
   adj    <- adj_symnorm_from_D(D, sigma_mult)
   coords <- spectral_features_from_D(D, k_eigen, sigma_mult)
   sigma  <- stats::median(D) * sigma_mult
 
-  result <- list(adj = adj, coords = coords, n = n, sigma = sigma, D = D)
+  result <- list(adj = adj, coords = coords, n = n, sigma = sigma,
+                 D = D, R_phy = R_phy)
 
   if (!is.null(cache_path)) {
     saveRDS(result, cache_path)

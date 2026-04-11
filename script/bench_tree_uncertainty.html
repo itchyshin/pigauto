@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pigauto benchmark: tree uncertainty</title>
+<style>
+body{font-family:Inter,system-ui,sans-serif;max-width:900px;margin:2rem auto;padding:0 1rem;color:#1f2937;line-height:1.6}
+h1{color:#059669;border-bottom:2px solid #059669;padding-bottom:.3rem}
+h2{color:#374151;margin-top:2rem}
+table{border-collapse:collapse;width:100%;margin:1rem 0}
+th,td{border:1px solid #d1d5db;padding:6px 10px;text-align:right}
+th{background:#f3f4f6;text-align:center}
+td:first-child,th:first-child{text-align:left}
+.best{font-weight:700;color:#059669}
+.note{font-size:.85rem;color:#6b7280;margin-top:.5rem}
+</style>
+</head><body>
+<h1>Tree uncertainty benchmark</h1>
+<p>Comparison of single-tree MI vs multi-tree MI on <strong>avonet300</strong> (300 species, mixed-type traits).</p>
+<p>Downstream model: <code>log(Mass) ~ log(Wing.Length) + log(Beak.Length_Culmen)</code></p>
+<p>Single-tree: MCC tree, m = 50 MC-dropout draws.<br>
+Multi-tree: 10 posterior trees &times; 5 draws = 50 total datasets.</p>
+<h2>Pooled estimates (Rubin's rules)</h2>
+<h3>Missing fraction: 20%</h3>
+<table>
+<tr><th>Term</th><th>Method</th><th>Estimate</th><th>SE</th><th>df</th><th>FMI</th><th>RIV</th></tr>
+<tr>
+<td>(Intercept)</td>
+<td style="color:#2563eb">Single-tree MI</td>
+<td>-8.0608</td>
+<td>0.2366</td>
+<td>49.0</td>
+<td>0.038</td>
+<td>0.000</td>
+</tr>
+<tr>
+<td>(Intercept)</td>
+<td style="color:#059669">Multi-tree MI (50 trees)</td>
+<td>-7.9818</td>
+<td>0.2654</td>
+<td>6275.3</td>
+<td>0.221</td>
+<td>0.309</td>
+</tr>
+<tr>
+<td>log(Wing.Length)</td>
+<td style="color:#2563eb">Single-tree MI</td>
+<td>2.3830</td>
+<td>0.0826</td>
+<td>49.0</td>
+<td>0.038</td>
+<td>0.000</td>
+</tr>
+<tr>
+<td>log(Wing.Length)</td>
+<td style="color:#059669">Multi-tree MI (50 trees)</td>
+<td>2.3602</td>
+<td>0.0960</td>
+<td>2832.3</td>
+<td>0.260</td>
+<td>0.400</td>
+</tr>
+<tr>
+<td>log(Beak.Length_Culmen)</td>
+<td style="color:#2563eb">Single-tree MI</td>
+<td>0.2854</td>
+<td>0.0813</td>
+<td>49.0</td>
+<td>0.038</td>
+<td>0.000</td>
+</tr>
+<tr>
+<td>log(Beak.Length_Culmen)</td>
+<td style="color:#059669">Multi-tree MI (50 trees)</td>
+<td>0.2938</td>
+<td>0.0969</td>
+<td>947.9</td>
+<td>0.294</td>
+<td>0.437</td>
+</tr>
+</table>
+<h3>Missing fraction: 40%</h3>
+<table>
+<tr><th>Term</th><th>Method</th><th>Estimate</th><th>SE</th><th>df</th><th>FMI</th><th>RIV</th></tr>
+<tr>
+<td>(Intercept)</td>
+<td style="color:#2563eb">Single-tree MI</td>
+<td>-8.1749</td>
+<td>0.2203</td>
+<td>49.0</td>
+<td>0.038</td>
+<td>0.000</td>
+</tr>
+<tr>
+<td>(Intercept)</td>
+<td style="color:#059669">Multi-tree MI (50 trees)</td>
+<td>-7.9115</td>
+<td>0.3038</td>
+<td>270.1</td>
+<td>0.431</td>
+<td>0.744</td>
+</tr>
+<tr>
+<td>log(Wing.Length)</td>
+<td style="color:#2563eb">Single-tree MI</td>
+<td>2.5378</td>
+<td>0.0826</td>
+<td>49.0</td>
+<td>0.038</td>
+<td>0.000</td>
+</tr>
+<tr>
+<td>log(Wing.Length)</td>
+<td style="color:#059669">Multi-tree MI (50 trees)</td>
+<td>2.3742</td>
+<td>0.1040</td>
+<td>952.3</td>
+<td>0.310</td>
+<td>0.486</td>
+</tr>
+<tr>
+<td>log(Beak.Length_Culmen)</td>
+<td style="color:#2563eb">Single-tree MI</td>
+<td>0.0808</td>
+<td>0.0855</td>
+<td>49.0</td>
+<td>0.038</td>
+<td>0.000</td>
+</tr>
+<tr>
+<td>log(Beak.Length_Culmen)</td>
+<td style="color:#059669">Multi-tree MI (50 trees)</td>
+<td>0.2402</td>
+<td>0.1029</td>
+<td>1752.5</td>
+<td>0.259</td>
+<td>0.373</td>
+</tr>
+</table>
+<h3>Missing fraction: 60%</h3>
+<table>
+<tr><th>Term</th><th>Method</th><th>Estimate</th><th>SE</th><th>df</th><th>FMI</th><th>RIV</th></tr>
+<tr>
+<td>(Intercept)</td>
+<td style="color:#2563eb">Single-tree MI</td>
+<td>-7.8253</td>
+<td>0.2313</td>
+<td>1017765.4</td>
+<td>0.027</td>
+<td>0.001</td>
+</tr>
+<tr>
+<td>(Intercept)</td>
+<td style="color:#059669">Multi-tree MI (50 trees)</td>
+<td>-8.0709</td>
+<td>0.4339</td>
+<td>110.3</td>
+<td>0.710</td>
+<td>3.252</td>
+</tr>
+<tr>
+<td>log(Wing.Length)</td>
+<td style="color:#2563eb">Single-tree MI</td>
+<td>2.3951</td>
+<td>0.0894</td>
+<td>1506952.5</td>
+<td>0.027</td>
+<td>0.001</td>
+</tr>
+<tr>
+<td>log(Wing.Length)</td>
+<td style="color:#059669">Multi-tree MI (50 trees)</td>
+<td>2.4146</td>
+<td>0.1776</td>
+<td>97.2</td>
+<td>0.742</td>
+<td>3.617</td>
+</tr>
+<tr>
+<td>log(Beak.Length_Culmen)</td>
+<td style="color:#2563eb">Single-tree MI</td>
+<td>0.2110</td>
+<td>0.0891</td>
+<td>1170037.9</td>
+<td>0.027</td>
+<td>0.001</td>
+</tr>
+<tr>
+<td>log(Beak.Length_Culmen)</td>
+<td style="color:#059669">Multi-tree MI (50 trees)</td>
+<td>0.2282</td>
+<td>0.1900</td>
+<td>82.0</td>
+<td>0.786</td>
+<td>4.023</td>
+</tr>
+</table>
+<h2>SE ratio (multi-tree / single-tree)</h2>
+<p>Values > 1 indicate that phylogenetic uncertainty widens standard errors beyond what single-tree MI provides.</p>
+<table>
+<tr><th>Missing %</th><th>Term</th><th>SE (single)</th><th>SE (multi)</th><th>Ratio</th></tr>
+<tr>
+<td>20%</td>
+<td>(Intercept)</td>
+<td>0.2366</td>
+<td>0.2654</td>
+<td class="best">1.12</td>
+</tr>
+<tr>
+<td>20%</td>
+<td>log(Wing.Length)</td>
+<td>0.0826</td>
+<td>0.0960</td>
+<td class="best">1.16</td>
+</tr>
+<tr>
+<td>20%</td>
+<td>log(Beak.Length_Culmen)</td>
+<td>0.0813</td>
+<td>0.0969</td>
+<td class="best">1.19</td>
+</tr>
+<tr>
+<td>40%</td>
+<td>(Intercept)</td>
+<td>0.2203</td>
+<td>0.3038</td>
+<td class="best">1.38</td>
+</tr>
+<tr>
+<td>40%</td>
+<td>log(Wing.Length)</td>
+<td>0.0826</td>
+<td>0.1040</td>
+<td class="best">1.26</td>
+</tr>
+<tr>
+<td>40%</td>
+<td>log(Beak.Length_Culmen)</td>
+<td>0.0855</td>
+<td>0.1029</td>
+<td class="best">1.20</td>
+</tr>
+<tr>
+<td>60%</td>
+<td>(Intercept)</td>
+<td>0.2313</td>
+<td>0.4339</td>
+<td class="best">1.88</td>
+</tr>
+<tr>
+<td>60%</td>
+<td>log(Wing.Length)</td>
+<td>0.0894</td>
+<td>0.1776</td>
+<td class="best">1.99</td>
+</tr>
+<tr>
+<td>60%</td>
+<td>log(Beak.Length_Culmen)</td>
+<td>0.0891</td>
+<td>0.1900</td>
+<td class="best">2.13</td>
+</tr>
+</table>
+<p class="note">Wall time: 149.2 min. Generated: 2026-04-10 16:36</p>
+<p class="note">Reference: Nakagawa S, de Villemereuil P (2019). <em>Systematic Biology</em> 68(4): 632-641.</p>
+</body></html>

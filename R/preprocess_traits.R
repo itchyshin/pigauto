@@ -1,8 +1,8 @@
 #' Preprocess trait data: align to tree, encode into latent space
 #'
 #' Aligns species in the trait data frame to the tree, detects or accepts
-#' trait types (continuous, binary, categorical, ordinal, count), and
-#' encodes each trait into a continuous latent matrix.
+#' trait types (continuous, binary, categorical, ordinal, count, proportion,
+#' zi_count), and encodes each trait into a continuous latent matrix.
 #'
 #' When each species has one observation (the default), output rows match
 #' \code{tree$tip.label} order.  When \code{species_col} is supplied,
@@ -30,6 +30,8 @@
 #'   \item{count}{\code{log1p()}, then z-score (1 latent column)}
 #'   \item{ordinal}{integer coding (0 to K-1), then z-score (1 latent column)}
 #'   \item{categorical}{one-hot encoding (K latent columns)}
+#'   \item{proportion}{\code{qlogis(clamp(x, 0.001, 0.999))}, then z-score (1 latent column)}
+#'   \item{zi_count}{gate (0/1) + \code{log1p}-z of non-zeros (2 latent columns)}
 #' }
 #'
 #' @param traits \code{data.frame} with species as row names (one row per
@@ -44,7 +46,9 @@
 #' @param trait_types named character vector overriding auto-detection,
 #'   e.g. \code{c(Mass = "continuous", Diet = "categorical")}.
 #'   Valid types: \code{"continuous"}, \code{"binary"}, \code{"categorical"},
-#'   \code{"ordinal"}, \code{"count"}.  Unspecified traits are auto-detected.
+#'   \code{"ordinal"}, \code{"count"}, \code{"proportion"}, \code{"zi_count"}.
+#'   Proportion and zi_count are override-only (not auto-detected).
+#'   Unspecified traits are auto-detected.
 #' @param log_cols character vector of continuous trait names to
 #'   log-transform.  Default \code{NULL} means auto-detect (log if all
 #'   observed values are positive).  Set to \code{character(0)} to disable.
@@ -56,6 +60,11 @@
 #'   Default \code{TRUE}.
 #' @param scale logical. Divide by column SDs for continuous/count/ordinal?
 #'   Default \code{TRUE}.
+#' @param covariates data.frame or numeric matrix of environmental covariates
+#'   (fully observed, no NAs).  Covariates are conditioners that help predict
+#'   missing traits but are not themselves imputed.  Must have the same number
+#'   of rows as \code{traits} (after alignment to the tree).  Each column is
+#'   z-scored internally.  Default \code{NULL} (no covariates).
 #' @return A list of class \code{"pigauto_data"} with components:
 #'   \describe{
 #'     \item{X_scaled}{Numeric matrix (n_obs x p_latent), latent encoding.
@@ -105,7 +114,8 @@
 preprocess_traits <- function(traits, tree, species_col = NULL,
                               trait_types = NULL,
                               log_cols = NULL, log_transform = TRUE,
-                              center = TRUE, scale = TRUE) {
+                              center = TRUE, scale = TRUE,
+                              covariates = NULL) {
   if (!is.data.frame(traits)) stop("'traits' must be a data.frame.")
   if (!inherits(tree, "phylo")) stop("'tree' must be a phylo object.")
 
@@ -236,6 +246,48 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
   }, numeric(1))
   names(all_sds) <- names(all_means)
 
+  # ---- Environmental covariates (conditioners, not imputed) ------------------
+  cov_scaled <- NULL
+  cov_means  <- NULL
+  cov_sds    <- NULL
+  cov_names  <- NULL
+
+  if (!is.null(covariates)) {
+    if (!is.data.frame(covariates) && !is.matrix(covariates)) {
+      stop("`covariates` must be a data.frame or matrix.", call. = FALSE)
+    }
+    cov_mat <- as.matrix(covariates)
+    storage.mode(cov_mat) <- "double"
+
+    if (!is.numeric(cov_mat)) {
+      stop("`covariates` must contain only numeric columns.", call. = FALSE)
+    }
+    if (any(is.na(cov_mat))) {
+      stop("`covariates` must be fully observed (no NAs). ",
+           "Covariates are conditioners, not imputation targets.",
+           call. = FALSE)
+    }
+    if (nrow(cov_mat) != n_obs) {
+      stop("`covariates` has ", nrow(cov_mat), " rows but traits has ",
+           n_obs, " rows after alignment. They must match.", call. = FALSE)
+    }
+
+    cov_names <- colnames(cov_mat)
+    if (is.null(cov_names)) {
+      cov_names <- paste0("cov", seq_len(ncol(cov_mat)))
+    }
+
+    # Z-score each covariate column for stable training
+    cov_means <- colMeans(cov_mat)
+    cov_sds   <- apply(cov_mat, 2, stats::sd)
+    cov_sds[cov_sds < 1e-12] <- 1  # guard against constant columns
+
+    cov_scaled <- scale(cov_mat, center = cov_means, scale = cov_sds)
+    attr(cov_scaled, "scaled:center") <- NULL
+    attr(cov_scaled, "scaled:scale")  <- NULL
+    colnames(cov_scaled) <- cov_names
+  }
+
   structure(
     list(
       X_scaled       = latent$X,
@@ -253,7 +305,11 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
       latent_names   = colnames(latent$X),
       trait_map      = trait_map,
       p_latent       = ncol(latent$X),
-      log_transform  = length(log_set) > 0
+      log_transform  = length(log_set) > 0,
+      covariates     = cov_scaled,
+      cov_means      = cov_means,
+      cov_sds        = cov_sds,
+      cov_names      = cov_names
     ),
     class = "pigauto_data"
   )
@@ -272,7 +328,8 @@ detect_trait_types <- function(traits, overrides = NULL) {
     if (!is.null(overrides) && nm %in% names(overrides)) {
       types[nm] <- match.arg(overrides[nm],
                              c("continuous", "binary", "categorical",
-                               "ordinal", "count"))
+                               "ordinal", "count", "proportion",
+                               "zi_count"))
       next
     }
     if (is.ordered(x)) {
@@ -365,6 +422,34 @@ build_trait_map <- function(traits, types, log_set, center, scale) {
       entry$log_transform <- FALSE
       entry$mean          <- NA_real_
       entry$sd            <- NA_real_
+
+    } else if (tp == "proportion") {
+      # Logit transform: qlogis(clamp(x, 0.001, 0.999)), then z-score
+      vals <- stats::qlogis(pmin(pmax(as.numeric(x), 0.001), 0.999))
+      m <- if (center && length(vals) > 0) mean(vals) else 0
+      s <- if (scale && length(vals) > 1) stats::sd(vals) else 1
+      if (s == 0) s <- 1
+      entry$n_latent      <- 1L
+      entry$latent_cols   <- col_offset + 1L
+      entry$levels        <- NULL
+      entry$log_transform <- FALSE
+      entry$mean          <- m
+      entry$sd            <- s
+
+    } else if (tp == "zi_count") {
+      # Two latent columns: gate (binary 0/1) + magnitude (log1p-z of non-zeros)
+      nz <- x[x > 0]
+      nz_log <- if (length(nz) > 0) log1p(as.numeric(nz)) else numeric(0)
+      m_nz <- if (center && length(nz_log) > 0) mean(nz_log) else 0
+      s_nz <- if (scale && length(nz_log) > 1) stats::sd(nz_log) else 1
+      if (s_nz == 0) s_nz <- 1
+      entry$n_latent      <- 2L
+      entry$latent_cols   <- col_offset + 1:2
+      entry$levels        <- NULL
+      entry$log_transform <- FALSE
+      entry$mean          <- m_nz      # for magnitude column z-scoring
+      entry$sd            <- s_nz
+      entry$zero_frac     <- sum(x == 0) / length(x)
     }
 
     col_offset <- col_offset + entry$n_latent
@@ -423,6 +508,31 @@ encode_to_latent <- function(traits, trait_map) {
         X[, tm$latent_cols[k]] <- vals
         lat_names[tm$latent_cols[k]] <- paste0(nm, "=", levs[k])
       }
+
+    } else if (tm$type == "proportion") {
+      vals <- as.numeric(col)
+      vals <- stats::qlogis(pmin(pmax(vals, 0.001), 0.999))
+      vals <- (vals - tm$mean) / tm$sd
+      X[, tm$latent_cols] <- vals
+      lat_names[tm$latent_cols] <- nm
+
+    } else if (tm$type == "zi_count") {
+      lc <- tm$latent_cols
+      raw <- as.numeric(col)
+      # Column 1 (gate): 0 = zero, 1 = non-zero, NA = missing
+      gate <- rep(NA_real_, length(raw))
+      gate[!is.na(raw) & raw == 0] <- 0
+      gate[!is.na(raw) & raw > 0]  <- 1
+      X[, lc[1]] <- gate
+      lat_names[lc[1]] <- paste0(nm, "_gate")
+      # Column 2 (magnitude): log1p-z of non-zero values, NA otherwise
+      mag <- rep(NA_real_, length(raw))
+      nz_idx <- !is.na(raw) & raw > 0
+      if (any(nz_idx)) {
+        mag[nz_idx] <- (log1p(raw[nz_idx]) - tm$mean) / tm$sd
+      }
+      X[, lc[2]] <- mag
+      lat_names[lc[2]] <- paste0(nm, "_mag")
     }
   }
 

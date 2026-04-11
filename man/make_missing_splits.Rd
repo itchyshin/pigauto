@@ -9,7 +9,10 @@ make_missing_splits(
   missing_frac = 0.25,
   val_frac = 0.25,
   seed = 555,
-  trait_map = NULL
+  trait_map = NULL,
+  mechanism = c("MCAR", "MAR_trait", "MAR_phylo", "MNAR"),
+  mechanism_args = list(),
+  tree = NULL
 )
 }
 \arguments{
@@ -26,6 +29,35 @@ designate as missing (default \code{0.25}).}
 
 \item{trait_map}{list of trait descriptors (from \code{pigauto_data}).
 If \code{NULL}, masking is applied per latent column (v0.1 behaviour).}
+
+\item{mechanism}{character. Missingness mechanism:
+\code{"MCAR"} (default, uniform random),
+\code{"MAR_trait"} (trait-dependent),
+\code{"MAR_phylo"} (clade-structured), or
+\code{"MNAR"} (value-dependent).}
+
+\item{mechanism_args}{named list of mechanism-specific parameters:
+\describe{
+\item{For \code{"MAR_trait"}:}{
+\code{driver_col} (integer, column index in \code{X} that drives
+missingness; default 1),
+\code{beta} (numeric, severity; default 2.0).
+}
+\item{For \code{"MAR_phylo"}:}{
+\code{n_clades} (integer, number of high-missingness clades;
+default 2),
+\code{p_clade} (numeric, within-clade missingness probability;
+default 0.7),
+\code{p_base} (numeric, background missingness probability;
+default 0.1).
+}
+\item{For \code{"MNAR"}:}{
+\code{beta} (numeric, severity; default 2.0).
+}
+}}
+
+\item{tree}{object of class \code{"phylo"}.  Required for
+\code{mechanism = "MAR_phylo"}, ignored otherwise.}
 }
 \value{
 A list with:
@@ -40,6 +72,7 @@ A list with:
 \item{p}{Number of latent columns.}
 \item{n_traits}{Number of original traits.}
 \item{mask}{Logical matrix (n x p_latent). \code{TRUE} = observed.}
+\item{mechanism}{Character string of the mechanism used.}
 }
 }
 \description{
@@ -57,4 +90,8 @@ original-trait-space and latent-space indices are returned when a
 X <- matrix(rnorm(100), nrow = 20)
 splits <- make_missing_splits(X, missing_frac = 0.25, seed = 1)
 length(splits$val_idx)
+
+# MAR: missingness depends on another trait
+splits_mar <- make_missing_splits(X, mechanism = "MAR_trait",
+  mechanism_args = list(driver_col = 1, beta = 2))
 }

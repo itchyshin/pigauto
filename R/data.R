@@ -87,3 +87,66 @@
 #' @source BirdTree.org (Jetz et al. 2012, Hackett et al. backbone).
 #' @seealso \code{\link{tree300}}, \code{\link{avonet_full}}
 "tree_full"
+
+
+#' 50 posterior phylogenies for the 300 species in \code{avonet300}
+#'
+#' A \code{multiPhylo} list of 50 phylogenetic trees randomly sampled from the
+#' BirdTree Hackett backbone posterior (Jetz et al. 2012), each pruned to the
+#' 300 species in \code{\link{avonet300}}.  These trees capture phylogenetic
+#' uncertainty: topologies and branch lengths vary across the posterior sample.
+#'
+#' Use with \code{\link{multi_impute_trees}} to propagate phylogenetic
+#' uncertainty through trait imputation and downstream inference via Rubin's
+#' rules (Nakagawa & de Villemereuil 2019).
+#'
+#' @format An object of class \code{multiPhylo} containing 50 \code{phylo}
+#'   objects, each with 300 tips.
+#' @source BirdTree.org posterior (Jetz et al. 2012, Hackett et al. backbone),
+#'   pruned from \code{megatrees::tree_bird_n100}.
+#' @seealso \code{\link{tree300}}, \code{\link{avonet300}},
+#'   \code{\link{multi_impute_trees}}
+"trees300"
+
+
+#' Delhey et al. (2019) plumage lightness data for 5,809 passerine species
+#'
+#' Plumage lightness measurements and environmental covariates for 5,809
+#' passerine bird species. This dataset demonstrates environmental-covariate
+#' support in pigauto: climate variables are fully observed conditioners that
+#' improve imputation of lightness traits.
+#'
+#' @format A data frame with 5,809 rows and 10 variables:
+#' \describe{
+#'   \item{Species_Key}{Character. Species name in BirdTree format.}
+#'   \item{family}{Character. Taxonomic family.}
+#'   \item{annual_mean_temperature}{Numeric. Annual mean temperature
+#'     (BIO1, degrees C x 10).}
+#'   \item{annual_precipitation}{Numeric. Annual precipitation (mm).}
+#'   \item{percent_tree_cover}{Numeric. Percent tree cover.}
+#'   \item{mean_temperature_of_warmest_quarter}{Numeric. Mean temperature
+#'     of warmest quarter (BIO10, degrees C x 10).}
+#'   \item{precipitation_of_warmest_quarter}{Numeric. Precipitation of
+#'     warmest quarter (mm).}
+#'   \item{midLatitude}{Numeric. Mid-latitude of species range.}
+#'   \item{lightness_male}{Numeric. Average plumage lightness for males.}
+#'   \item{lightness_female}{Numeric. Average plumage lightness for females.}
+#' }
+#' @source Delhey K, Dale J, Valcu M, Kempenaers B (2019). "Reconciling
+#'   ecogeographical rules: rainfall and temperature predict global colour
+#'   variation in the largest bird radiation." \emph{Ecology Letters},
+#'   22(5): 726-736.
+#' @seealso \code{\link{tree_delhey}}
+"delhey5809"
+
+
+#' Pruned BirdTree phylogeny for the 5,809 species in \code{delhey5809}
+#'
+#' An object of class \code{'phylo'} from the \pkg{ape} package. The tree is
+#' the Stage2_Hackett_MCC Maximum Clade Credibility tree, pruned to the 5,809
+#' passerine species in \code{\link{delhey5809}}.
+#'
+#' @format An object of class \code{phylo} with 5,809 tips.
+#' @source BirdTree.org (Jetz et al. 2012, Hackett et al. backbone).
+#' @seealso \code{\link{delhey5809}}
+"tree_delhey"

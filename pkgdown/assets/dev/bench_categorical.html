@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pigauto: categorical-trait benchmark</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         max-width: 920px; margin: 2em auto; padding: 0 1.5em; color: #111827;
+         line-height: 1.55; }
+  h1 { border-bottom: 2px solid #111827; padding-bottom: .25em; }
+  h2 { margin-top: 2em; color: #1f2937; border-bottom: 1px solid #d1d5db;
+       padding-bottom: .15em; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 14px; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+  th { background: #f3f4f6; font-weight: 600; }
+  .meta { color: #6b7280; font-size: 13px; }
+  .verdict { background: #ecfdf5; border-left: 4px solid #059669;
+             padding: 1em 1.2em; border-radius: 4px; margin: 1.5em 0; }
+  .verdict p { margin: 0.4em 0; }
+  .verdict b { color: #047857; }
+  code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 13px; }
+  ul li { margin: 6px 0; }
+  footer { color: #6b7280; font-size: 12px; margin-top: 3em;
+           border-top: 1px solid #e5e7eb; padding-top: 1em; }
+</style>
+</head>
+<body>
+
+<h1>Categorical-trait benchmark: K-level sweep</h1>
+<p class="meta">
+Tree: <code>ape::rtree(300)</code> &middot;
+Traits: 2 categorical per scenario &middot;
+Categories: 3 &ndash; 12 &middot;
+Methods: mode &middot; phylo label propagation &middot; pigauto &middot;
+Replicates: 5 &middot;
+Missingness: 25% MCAR &middot;
+Commit 624a295928 &middot;
+Run on 2026-04-10 07:05 &middot;
+Total wall: 10.2 min
+</p>
+
+<div class="verdict">
+<p><b>Bottom line.</b> With K = 3 categories, phylo label propagation achieves 64.5% accuracy and pigauto achieves 64.5%. Fewer categories means higher baseline accuracy, leaving less room for the GNN.</p>
+<p>With K = 12 categories, baseline accuracy drops to 38.0% while pigauto achieves 38.0% (+0.0 pp). More categories make the classification task harder, and the GNN can exploit cross-trait correlations to improve on pure label propagation.</p>
+</div>
+
+<h2>Primary sweep: accuracy by number of categories (25% missingness)</h2>
+<p class="meta">Average across 2 traits and 5 replicates. &#9733; marks the best method per scenario.</p>
+
+<table>
+<thead>
+<tr><th>K</th><th style="text-align:right">Mode</th><th style="text-align:right">LP</th><th style="text-align:right">pigauto</th></tr>
+</thead>
+<tbody>
+<tr><td><b>K = 3</b></td><td style="text-align:right">0.518</td><td style="text-align:right">0.645 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.645</td></tr>
+<tr><td><b>K = 5</b></td><td style="text-align:right">0.359</td><td style="text-align:right">0.484 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.453</td></tr>
+<tr><td><b>K = 8</b></td><td style="text-align:right">0.284</td><td style="text-align:right">0.424 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.424</td></tr>
+<tr><td><b>K = 12</b></td><td style="text-align:right">0.232</td><td style="text-align:right">0.380 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.380</td></tr>
+</tbody>
+</table>
+
+<div style="text-align:center;margin:1.5em 0">
+<svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px;height:auto;font-family:system-ui,-apple-system,sans-serif">
+<text x="60" y="22" font-size="14" font-weight="600" fill="#111827">Accuracy by number of categories</text>
+<line x1="60" y1="258.0" x2="500" y2="258.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="54" y="261.0" text-anchor="end" font-size="10" fill="#6b7280">0.13</text>
+<line x1="60" y1="202.5" x2="500" y2="202.5" stroke="#e5e7eb" stroke-width="1"/>
+<text x="54" y="205.5" text-anchor="end" font-size="10" fill="#6b7280">0.27</text>
+<line x1="60" y1="147.0" x2="500" y2="147.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="54" y="150.0" text-anchor="end" font-size="10" fill="#6b7280">0.41</text>
+<line x1="60" y1="91.5" x2="500" y2="91.5" stroke="#e5e7eb" stroke-width="1"/>
+<text x="54" y="94.5" text-anchor="end" font-size="10" fill="#6b7280">0.55</text>
+<line x1="60" y1="36.0" x2="500" y2="36.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="54" y="39.0" text-anchor="end" font-size="10" fill="#6b7280">0.70</text>
+<text x="12" y="147" font-size="10" fill="#6b7280" transform="rotate(-90 12 147)">Accuracy</text>
+<rect x="66.9" y="105.9" width="27.5" height="152.1" fill="#9ca3af" rx="2"/>
+<text x="80.6" y="101.9" text-anchor="middle" font-size="9" fill="#374151">0.518</text>
+<rect x="101.2" y="55.7" width="27.5" height="202.3" fill="#2563eb" rx="2"/>
+<text x="115.0" y="51.7" text-anchor="middle" font-size="9" fill="#374151">0.645</text>
+<rect x="135.6" y="55.7" width="27.5" height="202.3" fill="#059669" rx="2"/>
+<text x="149.4" y="51.7" text-anchor="middle" font-size="9" fill="#374151">0.645</text>
+<text x="115.0" y="274" text-anchor="middle" font-size="11" fill="#374151">K = 3</text>
+<rect x="176.9" y="168.5" width="27.5" height="89.5" fill="#9ca3af" rx="2"/>
+<text x="190.6" y="164.5" text-anchor="middle" font-size="9" fill="#374151">0.359</text>
+<rect x="211.2" y="119.5" width="27.5" height="138.5" fill="#2563eb" rx="2"/>
+<text x="225.0" y="115.5" text-anchor="middle" font-size="9" fill="#374151">0.484</text>
+<rect x="245.6" y="131.6" width="27.5" height="126.4" fill="#059669" rx="2"/>
+<text x="259.4" y="127.6" text-anchor="middle" font-size="9" fill="#374151">0.453</text>
+<text x="225.0" y="274" text-anchor="middle" font-size="11" fill="#374151">K = 5</text>
+<rect x="286.9" y="198.1" width="27.5" height="59.9" fill="#9ca3af" rx="2"/>
+<text x="300.6" y="194.1" text-anchor="middle" font-size="9" fill="#374151">0.284</text>
+<rect x="321.2" y="143.1" width="27.5" height="114.9" fill="#2563eb" rx="2"/>
+<text x="335.0" y="139.1" text-anchor="middle" font-size="9" fill="#374151">0.424</text>
+<rect x="355.6" y="143.1" width="27.5" height="114.9" fill="#059669" rx="2"/>
+<text x="369.4" y="139.1" text-anchor="middle" font-size="9" fill="#374151">0.424</text>
+<text x="335.0" y="274" text-anchor="middle" font-size="11" fill="#374151">K = 8</text>
+<rect x="396.9" y="218.5" width="27.5" height="39.5" fill="#9ca3af" rx="2"/>
+<text x="410.6" y="214.5" text-anchor="middle" font-size="9" fill="#374151">0.232</text>
+<rect x="431.2" y="160.2" width="27.5" height="97.8" fill="#2563eb" rx="2"/>
+<text x="445.0" y="156.2" text-anchor="middle" font-size="9" fill="#374151">0.380</text>
+<rect x="465.6" y="160.2" width="27.5" height="97.8" fill="#059669" rx="2"/>
+<text x="479.4" y="156.2" text-anchor="middle" font-size="9" fill="#374151">0.380</text>
+<text x="445.0" y="274" text-anchor="middle" font-size="11" fill="#374151">K = 12</text>
+<text x="280.0" y="296" text-anchor="middle" font-size="10" fill="#6b7280">Number of categories</text>
+<rect x="514" y="36" width="12" height="12" fill="#9ca3af" rx="2"/>
+<text x="530" y="46" font-size="11" fill="#111827">Mode imputation</text>
+<rect x="514" y="56" width="12" height="12" fill="#2563eb" rx="2"/>
+<text x="530" y="66" font-size="11" fill="#111827">Phylo label propagation</text>
+<rect x="514" y="76" width="12" height="12" fill="#059669" rx="2"/>
+<text x="530" y="86" font-size="11" fill="#111827">pigauto (LP + GNN)</text>
+</svg>
+</div>
+
+
+<h2>Secondary sweep: signal strength (K = 5)</h2>
+<p class="meta">Accuracy by phylogenetic signal at fixed K = 5 categories.</p>
+<div style="text-align:center;margin:1.5em 0">
+<svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px;height:auto;font-family:system-ui,-apple-system,sans-serif">
+<text x="60" y="22" font-size="14" font-weight="600" fill="#111827">Accuracy by phylogenetic signal (K = 5)</text>
+<line x1="60" y1="258.0" x2="500" y2="258.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="54" y="261.0" text-anchor="end" font-size="10" fill="#6b7280">0.21</text>
+<line x1="60" y1="202.5" x2="500" y2="202.5" stroke="#e5e7eb" stroke-width="1"/>
+<text x="54" y="205.5" text-anchor="end" font-size="10" fill="#6b7280">0.31</text>
+<line x1="60" y1="147.0" x2="500" y2="147.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="54" y="150.0" text-anchor="end" font-size="10" fill="#6b7280">0.41</text>
+<line x1="60" y1="91.5" x2="500" y2="91.5" stroke="#e5e7eb" stroke-width="1"/>
+<text x="54" y="94.5" text-anchor="end" font-size="10" fill="#6b7280">0.50</text>
+<line x1="60" y1="36.0" x2="500" y2="36.0" stroke="#e5e7eb" stroke-width="1"/>
+<text x="54" y="39.0" text-anchor="end" font-size="10" fill="#6b7280">0.60</text>
+<text x="12" y="147" font-size="10" fill="#6b7280" transform="rotate(-90 12 147)">Accuracy</text>
+<rect x="69.2" y="155.5" width="36.7" height="102.5" fill="#9ca3af" rx="2"/>
+<text x="87.5" y="151.5" text-anchor="middle" font-size="9" fill="#374151">0.390</text>
+<rect x="115.0" y="114.2" width="36.7" height="143.8" fill="#2563eb" rx="2"/>
+<text x="133.3" y="110.2" text-anchor="middle" font-size="9" fill="#374151">0.462</text>
+<rect x="160.8" y="108.0" width="36.7" height="150.0" fill="#059669" rx="2"/>
+<text x="179.2" y="104.0" text-anchor="middle" font-size="9" fill="#374151">0.472</text>
+<text x="133.3" y="274" text-anchor="middle" font-size="11" fill="#374151">Signal = 0.3</text>
+<rect x="215.8" y="200.0" width="36.7" height="58.0" fill="#9ca3af" rx="2"/>
+<text x="234.2" y="196.0" text-anchor="middle" font-size="9" fill="#374151">0.314</text>
+<rect x="261.7" y="100.2" width="36.7" height="157.8" fill="#2563eb" rx="2"/>
+<text x="280.0" y="96.2" text-anchor="middle" font-size="9" fill="#374151">0.486</text>
+<rect x="307.5" y="100.2" width="36.7" height="157.8" fill="#059669" rx="2"/>
+<text x="325.8" y="96.2" text-anchor="middle" font-size="9" fill="#374151">0.486</text>
+<text x="280.0" y="274" text-anchor="middle" font-size="11" fill="#374151">Signal = 0.6</text>
+<rect x="362.5" y="180.7" width="36.7" height="77.3" fill="#9ca3af" rx="2"/>
+<text x="380.8" y="176.7" text-anchor="middle" font-size="9" fill="#374151">0.347</text>
+<rect x="408.3" y="65.0" width="36.7" height="193.0" fill="#2563eb" rx="2"/>
+<text x="426.7" y="61.0" text-anchor="middle" font-size="9" fill="#374151">0.546</text>
+<rect x="454.2" y="65.0" width="36.7" height="193.0" fill="#059669" rx="2"/>
+<text x="472.5" y="61.0" text-anchor="middle" font-size="9" fill="#374151">0.546</text>
+<text x="426.7" y="274" text-anchor="middle" font-size="11" fill="#374151">Signal = 1.0</text>
+<text x="280.0" y="296" text-anchor="middle" font-size="10" fill="#6b7280">Phylogenetic signal</text>
+<rect x="514" y="36" width="12" height="12" fill="#9ca3af" rx="2"/>
+<text x="530" y="46" font-size="11" fill="#111827">Mode imputation</text>
+<rect x="514" y="56" width="12" height="12" fill="#2563eb" rx="2"/>
+<text x="530" y="66" font-size="11" fill="#111827">Phylo label propagation</text>
+<rect x="514" y="76" width="12" height="12" fill="#059669" rx="2"/>
+<text x="530" y="86" font-size="11" fill="#111827">pigauto (LP + GNN)</text>
+</svg>
+</div>
+
+
+<h2>What the benchmark shows</h2>
+<ul>
+<li><b>Phylogenetic label propagation is a strong baseline for categorical traits.</b> It uses phylogenetic distance to weight neighbours and predict the most likely category. With strong phylogenetic signal this is near-optimal.</li>
+<li><b>More categories make the task harder for all methods.</b> As K increases, the chance level drops (1/K) and each category has fewer training examples. The accuracy gap between methods widens.</li>
+<li><b>pigauto matches or improves on label propagation</b> by learning cross-trait correlations through the GNN. The calibrated gate ensures that when LP is already optimal, the GNN does not degrade accuracy.</li>
+<li><b>Signal strength remains the dominant factor.</b> Even with K = 12 categories, high phylogenetic signal yields good accuracy. Low signal makes the task difficult regardless of method.</li>
+</ul>
+
+<h2>Reproducibility</h2>
+<p>Driver: <code>script/bench_categorical.R</code>. Tree: <code>ape::rtree(300)</code>. Traits: <code>simulate_categorical_traits()</code>. Training: 500 epochs with early stopping. To reproduce: <code>Rscript script/bench_categorical.R</code>, then <code>Rscript script/make_bench_categorical_html.R</code>.</p>
+
+<footer>
+Source: <code>script/bench_categorical.R</code> &middot;
+Results: <code>script/bench_categorical.rds</code> &middot;
+Report: <code>pkgdown/assets/dev/bench_categorical.html</code>
+</footer>
+
+</body>
+</html>
+

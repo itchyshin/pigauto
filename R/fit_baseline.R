@@ -1,19 +1,22 @@
-#' Fit a phylogenetic BM baseline using Rphylopars
+#' Fit a phylogenetic BM baseline
 #'
-#' Fits a Brownian Motion (or OU) model with \pkg{Rphylopars} and returns
-#' imputed means and standard errors for every species.
+#' Fits an internal univariate Brownian Motion baseline using the
+#' phylogenetic correlation matrix \eqn{R = \mathrm{cov2cor}(\mathrm{vcv}(\mathrm{tree}))}
+#' and returns imputed means and standard errors for every species.
 #'
 #' @details
 #' When \code{splits} is supplied the val and test cells are masked to
 #' \code{NA} before fitting, so the baseline is evaluated under the same
 #' conditions as \code{\link{fit_pigauto}}.
 #'
-#' For mixed-type data, Rphylopars is applied only to continuous, count,
-#' and ordinal traits (which are continuous in latent space).  Binary
-#' and categorical traits use phylogenetic label propagation: each
-#' species receives a personalised baseline computed as the
-#' phylo-similarity-weighted average of observed values, using a
-#' Gaussian kernel on cophenetic distances.
+#' For continuous, count, ordinal, and proportion traits (which are
+#' continuous in latent space), each column is imputed independently
+#' via conditional multivariate normal on the phylogenetic correlation
+#' matrix: GLS phylogenetic mean, REML variance, and conditional
+#' \eqn{E[y_m | y_o]}.  Binary and categorical traits use phylogenetic
+#' label propagation: each species receives a personalised baseline
+#' computed as the phylo-similarity-weighted average of observed values,
+#' using a Gaussian kernel on cophenetic distances.
 #'
 #' @param data object of class \code{"pigauto_data"}.
 #' @param tree object of class \code{"phylo"}.
@@ -22,11 +25,11 @@
 #' @param model character. Evolutionary model: \code{"BM"} (default) or
 #'   \code{"OU"}.
 #' @param graph optional list returned by \code{\link{build_phylo_graph}}.
-#'   When supplied, the cophenetic distance matrix stored in
-#'   \code{graph$D} is reused for label propagation instead of
-#'   recomputing it from \code{tree}. This saves an \eqn{O(n^2)} matrix
-#'   allocation on large trees. When \code{NULL} (default), the
-#'   distance matrix is computed here via \code{ape::cophenetic.phylo}.
+#'   When supplied, \code{graph$D} (cophenetic distances) is reused for
+#'   label propagation and \code{graph$R_phy} (phylogenetic correlation
+#'   matrix) is reused for BM imputation, avoiding duplicate \eqn{O(n^2)}
+#'   allocations. When \code{NULL} (default), both matrices are computed
+#'   here.
 #' @return A list with:
 #'   \describe{
 #'     \item{mu}{Numeric matrix (n_species x p_latent), baseline means in
@@ -102,54 +105,63 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
 
   # ---- Identify BM-eligible columns (continuous in latent space) -----------
   bm_cols <- integer(0)
+  zi_mag_fallback <- integer(0)  # ZI magnitude cols with too few non-zero obs
   for (tm in trait_map) {
-    if (tm$type %in% c("continuous", "count", "ordinal")) {
+    if (tm$type %in% c("continuous", "count", "ordinal", "proportion")) {
       bm_cols <- c(bm_cols, tm$latent_cols)
+    } else if (tm$type == "zi_count") {
+      # Magnitude column (col 2) is BM-eligible if enough non-zero obs
+      mag_col <- tm$latent_cols[2]
+      n_finite <- sum(is.finite(X[, mag_col]))
+      if (n_finite >= 5L) {
+        bm_cols <- c(bm_cols, mag_col)
+      } else {
+        # Fallback: constant imputation (global mean of non-zero values)
+        zi_mag_fallback <- c(zi_mag_fallback, mag_col)
+        finite_vals <- X[is.finite(X[, mag_col]), mag_col]
+        mu[, mag_col] <- if (length(finite_vals) > 0) mean(finite_vals) else 0
+        se[, mag_col] <- if (length(finite_vals) > 1) stats::sd(finite_vals) else 0
+      }
     }
   }
 
-  # ---- Fit Rphylopars on BM-eligible columns --------------------------------
-  if (length(bm_cols) > 0) {
-    X_bm <- X[, bm_cols, drop = FALSE]
-    df_ph <- as.data.frame(X_bm)
-    # Use observation-level species names (allows duplicates for multi-obs)
-    df_ph <- cbind(species = obs_spp, df_ph)
+  # ---- Internal BM imputation on BM-eligible columns -----------------------
+  if (model == "OU") {
+    message("OU not yet supported by the internal BM baseline; using BM. ",
+            "Install Rphylopars for OU support.")
+  }
 
-    fit_rphylo <- function(tr) {
-      suppressWarnings(
-        Rphylopars::phylopars(
-          trait_data  = df_ph,
-          tree        = tr,
-          model       = model,
-          pheno_error = FALSE
-        )
-      )
+  if (length(bm_cols) > 0) {
+    # Retrieve or compute the phylogenetic correlation matrix
+    if (!is.null(graph) && !is.null(graph$R_phy)) {
+      R_phy <- graph$R_phy
+    } else {
+      R_phy <- phylo_cor_matrix(tree)
+    }
+    R_phy <- R_phy[spp, spp]
+
+    # Aggregate multi-obs to species-level means for BM imputation
+    if (multi_obs) {
+      X_sp <- matrix(NA_real_, n_species, length(bm_cols))
+      colnames(X_sp) <- colnames(X)[bm_cols]
+      for (j in seq_along(bm_cols)) {
+        col_vals <- X[, bm_cols[j]]
+        sp_means <- tapply(col_vals, obs_spp, function(v) {
+          v <- v[!is.na(v)]
+          if (length(v) == 0L) NA_real_ else mean(v)
+        })
+        X_sp[match(names(sp_means), spp), j] <- as.numeric(sp_means)
+      }
+    } else {
+      X_sp <- X[, bm_cols, drop = FALSE]
     }
 
-    fit <- tryCatch(
-      fit_rphylo(tree),
-      error = function(e) {
-        message("Rphylopars failed (", conditionMessage(e),
-                "). Retrying with branch-length jitter.")
-        tree_j <- tree
-        tree_j$edge.length <- tree_j$edge.length + 1e-6
-        tryCatch(
-          fit_rphylo(tree_j),
-          error = function(e2) {
-            stop("Rphylopars failed after jitter retry: ",
-                 conditionMessage(e2))
-          }
-        )
-      }
-    )
-
-    bm_names <- colnames(X_bm)
-    mu_bm  <- as.matrix(fit$anc_recon[spp, bm_names, drop = FALSE])
-    var_bm <- as.matrix(fit$anc_var[spp,  bm_names, drop = FALSE])
-    se_bm  <- sqrt(pmax(var_bm, 0))
-
-    mu[, bm_cols] <- mu_bm
-    se[, bm_cols] <- se_bm
+    # Impute each BM-eligible column independently
+    for (j in seq_along(bm_cols)) {
+      res_j <- bm_impute_col(X_sp[, j], R_phy)
+      mu[, bm_cols[j]] <- res_j$mu
+      se[, bm_cols[j]] <- res_j$se
+    }
   }
 
   # ---- Binary baseline: phylogenetic label propagation -------------------
@@ -237,6 +249,43 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       mu[, lc[k]] <- log(weighted_probs[, k])
     }
     se[, lc] <- 0
+  }
+
+  # ---- ZI count gate baseline: phylogenetic label propagation ---------------
+  for (tm in trait_map) {
+    if (tm$type != "zi_count") next
+    lc_gate <- tm$latent_cols[1]
+
+    # Get species-level gate values (0 = zero, 1 = non-zero)
+    if (multi_obs) {
+      sp_vals <- tapply(X[, lc_gate], obs_spp, function(v) {
+        v <- v[!is.na(v)]
+        if (length(v) == 0) NA_real_ else mean(v)
+      })
+      vals_species <- rep(NA_real_, n_species)
+      names(vals_species) <- spp
+      vals_species[names(sp_vals)] <- as.numeric(sp_vals)
+    } else {
+      vals_species <- X[, lc_gate]
+      names(vals_species) <- spp
+    }
+
+    observed <- !is.na(vals_species)
+    if (sum(observed) == 0) {
+      mu[, lc_gate] <- logit(0.5)
+      se[, lc_gate] <- 0
+      next
+    }
+
+    # Phylo-weighted non-zero probability
+    sim_obs <- sim_phylo[, observed, drop = FALSE]
+    row_weights <- rowSums(sim_obs)
+    row_weights[row_weights < 1e-10] <- 1e-10
+    probs <- as.numeric(sim_obs %*% vals_species[observed]) / row_weights
+    probs <- pmin(pmax(probs, 0.01), 0.99)
+
+    mu[, lc_gate] <- logit(probs)
+    se[, lc_gate] <- 0
   }
 
   list(mu = mu, se = se)

@@ -357,3 +357,112 @@ test_that("pool_mi() errors when fits have inconsistent coefficient names", {
     regexp = "names differ|Rubin"
   )
 })
+
+
+# ---- 12. multi_impute_trees() structural shape --------------------------------
+
+test_that("multi_impute_trees returns pigauto_mi_trees with T*m datasets", {
+  # Build 3 small random trees sharing the same tip labels
+  n <- 40
+  set.seed(200)
+  tree1 <- ape::rtree(n)
+  sp <- tree1$tip.label
+
+  # Make 2 more trees by randomly perturbing edge lengths
+  tree2 <- tree1; tree2$edge.length <- tree1$edge.length * stats::runif(length(tree1$edge.length), 0.5, 1.5)
+  tree3 <- tree1; tree3$edge.length <- tree1$edge.length * stats::runif(length(tree1$edge.length), 0.5, 1.5)
+  trees <- list(tree1, tree2, tree3)
+  class(trees) <- "multiPhylo"
+
+  df <- data.frame(
+    row.names = sp,
+    tr1 = abs(stats::rnorm(n)) + 0.5,
+    tr2 = abs(stats::rnorm(n)) + 0.5,
+    tr3 = abs(stats::rnorm(n)) + 0.5
+  )
+  # Punch some holes
+  m <- as.matrix(df)
+  idx <- sample.int(n * 3, 15)
+  m[idx] <- NA
+  df <- as.data.frame(m); rownames(df) <- sp
+
+  mi_t <- multi_impute_trees(
+    traits       = df,
+    trees        = trees,
+    m_per_tree   = 2L,
+    epochs       = 20L,
+    missing_frac = 0.25,
+    verbose      = FALSE,
+    seed         = 200L,
+    eval_every   = 10L,
+    patience     = 5L
+  )
+
+  # Class hierarchy
+
+  expect_s3_class(mi_t, "pigauto_mi_trees")
+  expect_s3_class(mi_t, "pigauto_mi")
+
+  # Structure
+  expect_equal(mi_t$m, 6L)           # 3 trees * 2 imputations
+  expect_equal(mi_t$n_trees, 3L)
+  expect_equal(mi_t$m_per_tree, 2L)
+  expect_equal(length(mi_t$datasets), 6L)
+  expect_equal(length(mi_t$tree_index), 6L)
+  expect_equal(mi_t$tree_index, c(1L, 1L, 2L, 2L, 3L, 3L))
+
+  # Each dataset has correct shape
+  for (d in mi_t$datasets) {
+    expect_s3_class(d, "data.frame")
+    expect_equal(nrow(d), n)
+    expect_equal(ncol(d), 3L)
+    expect_equal(names(d), c("tr1", "tr2", "tr3"))
+  }
+
+  # Fits list has one per tree
+  expect_equal(length(mi_t$fits), 3L)
+  for (f in mi_t$fits) {
+    expect_s3_class(f, "pigauto_fit")
+  }
+})
+
+
+# ---- 13. multi_impute_trees() compatible with with_imputations() + pool_mi() --
+
+test_that("multi_impute_trees result works with with_imputations() and pool_mi()", {
+  n <- 40
+  set.seed(210)
+  tree1 <- ape::rtree(n)
+  sp <- tree1$tip.label
+  tree2 <- tree1; tree2$edge.length <- tree1$edge.length * stats::runif(length(tree1$edge.length), 0.5, 1.5)
+  trees <- list(tree1, tree2)
+
+  df <- data.frame(
+    row.names = sp,
+    tr1 = abs(stats::rnorm(n)) + 0.5,
+    tr2 = abs(stats::rnorm(n)) + 0.5
+  )
+  m <- as.matrix(df); idx <- sample.int(n * 2, 10); m[idx] <- NA
+  df <- as.data.frame(m); rownames(df) <- sp
+
+  mi_t <- multi_impute_trees(
+    traits = df, trees = trees, m_per_tree = 2L,
+    epochs = 20L, missing_frac = 0.25, verbose = FALSE,
+    seed = 210L, eval_every = 10L, patience = 5L
+  )
+
+  # with_imputations should accept it via pigauto_mi inheritance
+  fits <- with_imputations(mi_t, function(d) {
+    stats::lm(tr1 ~ tr2, data = d)
+  }, .progress = FALSE)
+
+  expect_s3_class(fits, "pigauto_mi_fits")
+  expect_equal(length(fits), 4L)  # 2 trees * 2 imputations
+
+  pooled <- pool_mi(fits)
+  expect_s3_class(pooled, "pigauto_pooled")
+  expect_equal(nrow(pooled), 2L)  # (Intercept) + tr2
+  expect_true(all(is.finite(pooled$estimate)))
+  expect_true(all(pooled$std.error > 0))
+  expect_equal(attr(pooled, "m"), 4L)
+})

@@ -57,6 +57,28 @@ navbar:
           href: dev/scaling.html
         - text: "AVONET missingness sweep (20/50/80%)"
           href: dev/bench_avonet_missingness.html
+        - text: "Continuous traits (BM / OU / regime / nonlinear)"
+          href: dev/bench_continuous.html
+        - text: "Binary traits (signal strength sweep)"
+          href: dev/bench_binary.html
+        - text: "Ordinal traits (level count sweep)"
+          href: dev/bench_ordinal.html
+        - text: "Count traits (Poisson / NegBin)"
+          href: dev/bench_count.html
+        - text: "Categorical traits (K-level sweep)"
+          href: dev/bench_categorical.html
+        - text: "Proportion traits (signal sweep)"
+          href: dev/bench_proportion.html
+        - text: "Zero-inflated counts (zero fraction sweep)"
+          href: dev/bench_zi_count.html
+        - text: "Missingness mechanisms (MCAR / MAR / MNAR)"
+          href: dev/bench_missingness_mechanism.html
+        - text: "Tree uncertainty (Rubin's rules, 10 posterior trees)"
+          href: dev/bench_tree_uncertainty.html
+        - text: "Environmental covariates (Delhey 5,809 spp)"
+          href: dev/bench_delhey.html
+        - text: "Covariate effectiveness (simulation sweep)"
+          href: dev/bench_covariate_sim.html
         - text: "-------"
         - text: "Developer reports"
         - text: "Test catalogue"
@@ -81,6 +103,7 @@ reference:
       end-to-end examples.
     contents:
       - multi_impute
+      - multi_impute_trees
       - with_imputations
       - pool_mi
 
@@ -131,5 +154,8 @@ reference:
     contents:
       - avonet300
       - tree300
+      - trees300
       - avonet_full
       - tree_full
+      - delhey5809
+      - tree_delhey

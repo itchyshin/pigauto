@@ -10,10 +10,14 @@
 #' \describe{
 #'   \item{continuous}{RMSE, Pearson r, 95\% interval coverage (if SE
 #'     supplied)}
+#'   \item{proportion}{RMSE, Pearson r, 95\% interval coverage (if SE
+#'     supplied)}
 #'   \item{count}{RMSE, MAE, Pearson r}
 #'   \item{ordinal}{RMSE, Spearman rho}
 #'   \item{binary}{Accuracy, Brier score}
 #'   \item{categorical}{Accuracy}
+#'   \item{zi_count}{RMSE, MAE, Pearson r, zero-accuracy, Brier score
+#'     (on gate)}
 #' }
 #'
 #' For binary and categorical traits the function accepts either a
@@ -89,7 +93,7 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
       tp <- tm$type
       lc <- tm$latent_cols
 
-      if (tp %in% c("continuous", "count", "ordinal")) {
+      if (tp %in% c("continuous", "count", "ordinal", "proportion")) {
         # Single latent column per trait
         keep <- which(col_j == lc[1])
         ri   <- row_i[keep]
@@ -102,7 +106,7 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
 
         rmse_val <- rmse_vec(t_j[ok], p_j[ok])
 
-        if (tp == "continuous") {
+        if (tp %in% c("continuous", "proportion")) {
           r_val <- if (sum(ok) > 1L) stats::cor(t_j[ok], p_j[ok]) else NA_real_
 
           cov95 <- NA_real_
@@ -118,6 +122,7 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
             rmse = rmse_val, pearson_r = r_val, coverage_95 = cov95,
             mae = NA_real_, spearman_rho = NA_real_,
             accuracy = NA_real_, brier = NA_real_,
+            zero_accuracy = NA_real_,
             stringsAsFactors = FALSE
           )
 
@@ -130,6 +135,7 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
             rmse = rmse_val, pearson_r = r_val, coverage_95 = NA_real_,
             mae = mae_val, spearman_rho = NA_real_,
             accuracy = NA_real_, brier = NA_real_,
+            zero_accuracy = NA_real_,
             stringsAsFactors = FALSE
           )
 
@@ -146,6 +152,7 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
             rmse = rmse_val, pearson_r = NA_real_, coverage_95 = NA_real_,
             mae = NA_real_, spearman_rho = rho_val,
             accuracy = NA_real_, brier = NA_real_,
+            zero_accuracy = NA_real_,
             stringsAsFactors = FALSE
           )
         }
@@ -172,6 +179,7 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
           rmse = NA_real_, pearson_r = NA_real_, coverage_95 = NA_real_,
           mae = NA_real_, spearman_rho = NA_real_,
           accuracy = acc_val, brier = brier_val,
+          zero_accuracy = NA_real_,
           stringsAsFactors = FALSE
         )
 
@@ -199,6 +207,72 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
           rmse = NA_real_, pearson_r = NA_real_, coverage_95 = NA_real_,
           mae = NA_real_, spearman_rho = NA_real_,
           accuracy = acc_val, brier = NA_real_,
+          zero_accuracy = NA_real_,
+          stringsAsFactors = FALSE
+        )
+
+      } else if (tp == "zi_count") {
+        # ZI count: 2 latent columns (gate + magnitude)
+        keep <- which(col_j == lc[1])
+        ri   <- row_i[keep]
+        if (length(ri) == 0L) next
+
+        # Gate column truth (0/1)
+        t_gate <- truth[ri, lc[1]]
+        ok_gate <- is.finite(t_gate)
+        if (sum(ok_gate) == 0L) next
+        n_ok <- sum(ok_gate)
+
+        # Gate probability: sigmoid of latent
+        if (!is.null(probs) && !is.null(probs[[nm]])) {
+          p_nz <- probs[[nm]][ri]
+        } else {
+          p_nz <- expit(pred_mat[ri, lc[1]])
+        }
+
+        # Zero-accuracy: predict zero if p_nz < 0.5
+        pred_zero  <- as.integer(p_nz < 0.5)
+        truth_zero <- as.integer(t_gate < 0.5)
+        zero_acc   <- mean(pred_zero[ok_gate] == truth_zero[ok_gate])
+
+        # Brier score on the gate
+        brier_val <- brier_vec(t_gate[ok_gate], p_nz[ok_gate])
+
+        # RMSE / MAE / Pearson r on expected value (original count scale)
+        pred_ev  <- rep(0, length(ri))
+        truth_ev <- rep(0, length(ri))
+        for (idx in seq_along(ri)) {
+          if (ok_gate[idx]) {
+            # Truth EV
+            if (truth[ri[idx], lc[1]] > 0.5) {
+              mag_val <- truth[ri[idx], lc[2]]
+              if (is.finite(mag_val)) {
+                truth_ev[idx] <- expm1(mag_val * tm$sd + tm$mean)
+              }
+            }
+            # Predicted EV = p(non-zero) * count_hat
+            mag_pred <- pred_mat[ri[idx], lc[2]]
+            if (is.finite(mag_pred)) {
+              count_hat <- pmax(expm1(mag_pred * tm$sd + tm$mean), 0)
+              pred_ev[idx] <- p_nz[idx] * count_hat
+            }
+          }
+        }
+
+        rmse_val <- rmse_vec(truth_ev[ok_gate], pred_ev[ok_gate])
+        mae_val  <- mae_vec(truth_ev[ok_gate], pred_ev[ok_gate])
+        r_val    <- if (n_ok > 2L) {
+          stats::cor(truth_ev[ok_gate], pred_ev[ok_gate])
+        } else {
+          NA_real_
+        }
+
+        rows[[length(rows) + 1L]] <- data.frame(
+          split = label, trait = nm, type = tp, n = n_ok,
+          rmse = rmse_val, pearson_r = r_val, coverage_95 = NA_real_,
+          mae = mae_val, spearman_rho = NA_real_,
+          accuracy = NA_real_, brier = brier_val,
+          zero_accuracy = zero_acc,
           stringsAsFactors = FALSE
         )
       }
@@ -222,7 +296,7 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
       split = character(0), trait = character(0), type = character(0),
       n = integer(0), rmse = double(0), pearson_r = double(0),
       coverage_95 = double(0), mae = double(0), spearman_rho = double(0),
-      accuracy = double(0), brier = double(0),
+      accuracy = double(0), brier = double(0), zero_accuracy = double(0),
       stringsAsFactors = FALSE
     )
   }
@@ -267,7 +341,7 @@ evaluate_continuous_legacy <- function(pred, truth, splits, pred_se) {
         split = label, trait = trait_names[j], type = "continuous",
         n = sum(ok), rmse = rmse_j, pearson_r = r_j,
         coverage_95 = cov95, mae = NA_real_, spearman_rho = NA_real_,
-        accuracy = NA_real_, brier = NA_real_,
+        accuracy = NA_real_, brier = NA_real_, zero_accuracy = NA_real_,
         stringsAsFactors = FALSE
       )
     }) |>

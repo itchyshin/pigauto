@@ -21,6 +21,10 @@
 #'   to skip splitting (all cells used for training, no evaluation).
 #' @param n_imputations integer. Number of MC-dropout imputation sets
 #'   (default \code{1}).  Values > 1 enable between-imputation uncertainty.
+#' @param covariates data.frame or matrix of environmental covariates
+#'   (fully observed, numeric, same number of rows as \code{traits}).
+#'   Covariates are conditioners: they inform imputation but are not
+#'   themselves imputed. Default \code{NULL} (no covariates).
 #' @param epochs integer. Maximum GNN training epochs (default \code{2000}).
 #' @param verbose logical. Print progress (default \code{TRUE}).
 #' @param seed integer. Random seed (default \code{1}).
@@ -60,11 +64,13 @@
 impute <- function(traits, tree, species_col = NULL,
                    log_transform = TRUE,
                    missing_frac = 0.25, n_imputations = 1L,
+                   covariates = NULL,
                    epochs = 2000L, verbose = TRUE, seed = 1L, ...) {
 
   # 1. Preprocess
   pd <- preprocess_traits(traits, tree, species_col = species_col,
-                          log_transform = log_transform)
+                          log_transform = log_transform,
+                          covariates = covariates)
 
   # 2. Create val/test splits (unless user opts out).  We give the
   #    validation set a larger share (50%) than the default so that
@@ -92,7 +98,8 @@ impute <- function(traits, tree, species_col = NULL,
   # D matrix held in R memory during training caused a large
   # per-epoch slowdown. This is safe because no downstream caller
   # reads graph$D -- see the v0.3.1 NEWS entry.
-  graph$D <- NULL
+  graph$D     <- NULL
+  graph$R_phy <- NULL
   invisible(gc(full = TRUE, verbose = FALSE))
 
   # 5. Train GNN

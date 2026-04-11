@@ -122,7 +122,7 @@ and an attention-based graph neural network correction, implemented
 as an internal torch module (\code{ResidualPhyloDAE}; "Residual" here
 refers to the ResNet-style skip connections in the GNN layers, not
 to a statistical residual). For continuous, count, and ordinal traits
-the baseline is Brownian motion (via \code{Rphylopars}); for binary
+the baseline is Brownian motion (phylogenetic correlation matrix); for binary
 and categorical traits it is phylogenetic label propagation. Supports
 all five trait types via a unified latent space.
 }

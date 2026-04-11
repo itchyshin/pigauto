@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pigauto benchmark: Delhey plumage lightness (covariates)</title>
+<style>
+body{font-family:Inter,system-ui,sans-serif;max-width:960px;margin:2rem auto;padding:0 1rem;color:#1f2937;line-height:1.6}
+h1{color:#059669;border-bottom:2px solid #059669;padding-bottom:.3rem}
+h2{color:#374151;margin-top:2rem}
+h3{color:#6b7280}
+table{border-collapse:collapse;width:100%;margin:1rem 0}
+th,td{border:1px solid #d1d5db;padding:6px 10px;text-align:right}
+th{background:#f3f4f6;text-align:center}
+td:first-child,th:first-child{text-align:left}
+.best{font-weight:700;color:#059669}
+.note{font-size:.85rem;color:#6b7280;margin-top:.5rem}
+</style>
+</head><body>
+<h1>Delhey plumage lightness benchmark</h1>
+<p>Environmental covariates for trait imputation on <strong>5809</strong> passerine species (Delhey et al. 2019).</p>
+<p>Traits: <code>lightness_male, lightness_female</code></p>
+<p>Covariates: <code>annual_mean_temperature, annual_precipitation, percent_tree_cover, mean_temperature_of_warmest_quarter, precipitation_of_warmest_quarter, midLatitude</code></p>
+<h2>Test-set RMSE</h2>
+<h3>Missing: 20%</h3>
+<table>
+<tr><th>Trait</th>
+<th style="color:#9ca3af">Mean imputation</th>
+<th style="color:#2563eb">BM baseline</th>
+<th style="color:#7c3aed">pigauto (no covariates)</th>
+<th style="color:#059669">pigauto + covariates</th>
+</tr>
+<tr><td>lightness_male</td>
+<td>1.0062</td>
+<td>0.5961</td>
+<td class="best">0.5955</td>
+<td>0.5955</td>
+</tr>
+<tr><td>lightness_female</td>
+<td>1.0139</td>
+<td>0.6259</td>
+<td class="best">0.6250</td>
+<td>0.6252</td>
+</tr>
+</table>
+<h3>Missing: 40%</h3>
+<table>
+<tr><th>Trait</th>
+<th style="color:#9ca3af">Mean imputation</th>
+<th style="color:#2563eb">BM baseline</th>
+<th style="color:#7c3aed">pigauto (no covariates)</th>
+<th style="color:#059669">pigauto + covariates</th>
+</tr>
+<tr><td>lightness_male</td>
+<td>1.0239</td>
+<td class="best">0.6473</td>
+<td>0.6498</td>
+<td class="best">0.6473</td>
+</tr>
+<tr><td>lightness_female</td>
+<td>0.9911</td>
+<td>0.7063</td>
+<td class="best">0.7056</td>
+<td>0.7063</td>
+</tr>
+</table>
+<h3>Missing: 60%</h3>
+<table>
+<tr><th>Trait</th>
+<th style="color:#9ca3af">Mean imputation</th>
+<th style="color:#2563eb">BM baseline</th>
+<th style="color:#7c3aed">pigauto (no covariates)</th>
+<th style="color:#059669">pigauto + covariates</th>
+</tr>
+<tr><td>lightness_male</td>
+<td>0.9807</td>
+<td class="best">0.6943</td>
+<td class="best">0.6943</td>
+<td class="best">0.6943</td>
+</tr>
+<tr><td>lightness_female</td>
+<td>0.9757</td>
+<td>0.7273</td>
+<td class="best">0.7263</td>
+<td>0.7264</td>
+</tr>
+</table>
+<h2>Test-set Pearson r</h2>
+<h3>Missing: 20%</h3>
+<table>
+<tr><th>Trait</th>
+<th style="color:#9ca3af">Mean imputation</th>
+<th style="color:#2563eb">BM baseline</th>
+<th style="color:#7c3aed">pigauto (no covariates)</th>
+<th style="color:#059669">pigauto + covariates</th>
+</tr>
+<tr><td>lightness_male</td>
+<td>&ndash;</td>
+<td>0.8067</td>
+<td class="best">0.8069</td>
+<td>0.8064</td>
+</tr>
+<tr><td>lightness_female</td>
+<td>&ndash;</td>
+<td>0.7890</td>
+<td class="best">0.7905</td>
+<td>0.7884</td>
+</tr>
+</table>
+<h3>Missing: 40%</h3>
+<table>
+<tr><th>Trait</th>
+<th style="color:#9ca3af">Mean imputation</th>
+<th style="color:#2563eb">BM baseline</th>
+<th style="color:#7c3aed">pigauto (no covariates)</th>
+<th style="color:#059669">pigauto + covariates</th>
+</tr>
+<tr><td>lightness_male</td>
+<td>&ndash;</td>
+<td class="best">0.7759</td>
+<td>0.7752</td>
+<td class="best">0.7759</td>
+</tr>
+<tr><td>lightness_female</td>
+<td>&ndash;</td>
+<td class="best">0.7120</td>
+<td>0.7113</td>
+<td class="best">0.7120</td>
+</tr>
+</table>
+<h3>Missing: 60%</h3>
+<table>
+<tr><th>Trait</th>
+<th style="color:#9ca3af">Mean imputation</th>
+<th style="color:#2563eb">BM baseline</th>
+<th style="color:#7c3aed">pigauto (no covariates)</th>
+<th style="color:#059669">pigauto + covariates</th>
+</tr>
+<tr><td>lightness_male</td>
+<td>&ndash;</td>
+<td class="best">0.7151</td>
+<td class="best">0.7151</td>
+<td class="best">0.7151</td>
+</tr>
+<tr><td>lightness_female</td>
+<td>&ndash;</td>
+<td class="best">0.6842</td>
+<td>0.6840</td>
+<td>0.6836</td>
+</tr>
+</table>
+<h2>Covariate lift summary</h2>
+<p>RMSE ratio of <span style="color:#059669">pigauto + covariates</span> relative to <span style="color:#7c3aed">pigauto (no covariates)</span>. Values &lt; 1 indicate covariates help.</p>
+<table>
+<tr><th>Missing %</th><th>Trait</th><th>RMSE (no cov)</th><th>RMSE (with cov)</th><th>Ratio</th></tr>
+<tr>
+<td>20%</td>
+<td>lightness_female</td>
+<td>0.6250</td>
+<td>0.6252</td>
+<td>1.000</td>
+</tr>
+<tr>
+<td>20%</td>
+<td>lightness_male</td>
+<td>0.5955</td>
+<td>0.5955</td>
+<td>1.000</td>
+</tr>
+<tr>
+<td>40%</td>
+<td>lightness_female</td>
+<td>0.7056</td>
+<td>0.7063</td>
+<td>1.001</td>
+</tr>
+<tr>
+<td>40%</td>
+<td>lightness_male</td>
+<td>0.6498</td>
+<td>0.6473</td>
+<td>0.996</td>
+</tr>
+<tr>
+<td>60%</td>
+<td>lightness_female</td>
+<td>0.7263</td>
+<td>0.7264</td>
+<td>1.000</td>
+</tr>
+<tr>
+<td>60%</td>
+<td>lightness_male</td>
+<td>0.6943</td>
+<td>0.6943</td>
+<td>1.000</td>
+</tr>
+</table>
+<p class="note">Wall time: 107.7 min. Generated: 2026-04-10 12:15</p>
+<p class="note">Reference: Delhey K, Dale J, Valcu M, Kempenaers B (2019). <em>Ecology Letters</em>, 22(5): 726-736.</p>
+</body></html>

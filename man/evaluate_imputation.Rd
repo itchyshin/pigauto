@@ -39,10 +39,14 @@ trait type; otherwise the function falls back to continuous-only metrics
 \describe{
 \item{continuous}{RMSE, Pearson r, 95\\% interval coverage (if SE
 supplied)}
+\item{proportion}{RMSE, Pearson r, 95\\% interval coverage (if SE
+supplied)}
 \item{count}{RMSE, MAE, Pearson r}
 \item{ordinal}{RMSE, Spearman rho}
 \item{binary}{Accuracy, Brier score}
 \item{categorical}{Accuracy}
+\item{zi_count}{RMSE, MAE, Pearson r, zero-accuracy, Brier score
+(on gate)}
 }
 
 For binary and categorical traits the function accepts either a
