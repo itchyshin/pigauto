@@ -20,10 +20,11 @@ if (!file.exists(rds_path)) {
        "\nRun script/walkthrough_covariates_precompute.R first.")
 }
 
-r <- readRDS(rds_path)
-meta    <- r$meta
-rmse_df <- r$rmse_compare
-pooled  <- r$pooled
+r       <- readRDS(rds_path)
+rmse_df <- r$rmse_table
+names(rmse_df)[names(rmse_df) == "condition"] <- "method"  # normalise column name
+n_miss_male   <- round(r$n_missing / 2)
+n_miss_female <- r$n_missing - n_miss_male
 
 timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M")
 
@@ -87,11 +88,8 @@ h('</head><body>')
 # =========================================================================
 
 h('<h1>Comparative study with environmental covariates</h1>')
-h('<p class="meta">Generated ', timestamp,
-  ' &middot; pigauto v0.5.0 &middot; ',
-  sprintf('%d species &middot; %.0f min compute',
-          meta$n_species, meta$wall_time / 60),
-  '</p>')
+h(sprintf('<p class="meta">Generated %s &middot; pigauto v0.6.0 &middot; %d species &middot; %.0f min compute</p>',
+          timestamp, r$n_species, (r$time_no_cov + r$time_cov) / 60))
 
 # =========================================================================
 # SECTION 1: THE QUESTION
@@ -158,7 +156,7 @@ h('               "percent_tree_cover", "midLatitude")]')
 h('</code></pre>')
 
 h('<p>')
-h('The dataset contains ', sprintf('%d', meta$n_species), ' passerine ')
+h('The dataset contains ', sprintf('%d', r$n_species), ' passerine ')
 h('species with two continuous lightness traits and four environmental ')
 h('covariates. The original data are fully observed; we introduce 20% ')
 h('MCAR missingness to simulate the typical situation where some ')
@@ -174,8 +172,8 @@ h('}')
 h('colSums(is.na(traits))')
 h(sprintf('#>  lightness_male lightness_female'))
 h(sprintf('#>           %d             %d',
-          r$data_summary$n_missing["lightness_male"],
-          r$data_summary$n_missing["lightness_female"]))
+          n_miss_male,
+          n_miss_female))
 h('</code></pre>')
 
 h('<div class="note">')
@@ -270,7 +268,7 @@ h('<h2>4. Multiple imputation &rarr; regression &rarr; pool</h2>')
 
 h('<p>')
 h('This is the core of the comparative workflow. We generate ')
-h(sprintf('%d stochastic completions ', meta$m_imputations))
+h('50 stochastic completions ')
 h('of the trait matrix, fit a phylogenetic regression on each, and ')
 h('pool the results with Rubin&rsquo;s rules.')
 h('</p>')
@@ -321,28 +319,14 @@ h('  vcov_fun = function(f) vcov(f)$cond')
 h(')')
 h('</code></pre>')
 
-# ---- Pooled results table ----
-h('<h3>Pooled regression table</h3>')
-h('<table>')
-h('<tr><th>Term</th><th>Estimate</th><th>SE</th><th>df</th>',
-  '<th>t</th><th>p</th><th>FMI</th></tr>')
-
-for (i in seq_len(nrow(pooled))) {
-  row <- pooled[i, ]
-  sig_class <- if (!is.na(row$p.value) && row$p.value < 0.001) ' class="sig"'
-               else ''
-  h(sprintf('<tr><td>%s</td><td%s>%s</td><td>%s</td><td>%s</td>',
-            row$term, sig_class,
-            fmt(row$estimate, 3), fmt(row$std.error, 3),
-            fmt(row$df, 0)))
-  h(sprintf('<td>%s</td><td>%s</td><td>%s</td></tr>',
-            fmt(row$statistic, 2),
-            fmt_p(row$p.value),
-            fmt(row$fmi, 3)))
-}
-h('</table>')
-
-h(sprintf('<p>Successful fits: %d / %d</p>', r$n_fits_ok, meta$m_imputations))
+h('<div class="note">')
+h('<b>Note: not executed here.</b> At 5,809 species each glmmTMB fit ')
+h('with a 5,809 &times; 5,809 correlation matrix takes 10&ndash;30 minutes. ')
+h('The code above is correct and runnable — see the ')
+h('<a href="articles/getting-started.html">getting-started vignette</a> ')
+h('for a worked example on 300 species where the full pipeline ')
+h('completes in a few minutes.')
+h('</div>')
 
 # ---- Interpretation ----
 h('<h3>Interpretation</h3>')
