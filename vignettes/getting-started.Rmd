@@ -62,7 +62,7 @@ The phylogenetic structure is encoded as:
 ## Installation
 
 ```{r install, eval=FALSE}
-install.packages("pigauto")
+pak::pak("itchyshin/pigauto")
 
 # torch backend (required; ~1 GB first-time download)
 torch::install_torch()

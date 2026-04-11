@@ -68,8 +68,7 @@ contribute when they demonstrably improve imputation accuracy.
 ## Installation
 
 ```r
-# Install from local source
-devtools::install()
+pak::pak("itchyshin/pigauto")
 
 # First-time torch setup (required)
 torch::install_torch()

@@ -103,8 +103,7 @@ trained end-to-end, not <code>y &minus; baseline</code>.
 </ul>
 
 <h2>Installation</h2>
-<pre><code># Install from local source
-devtools::install()
+<pre><code>pak::pak("itchyshin/pigauto")
 
 # First-time torch setup (required)
 torch::install_torch()</code></pre>
