@@ -93,7 +93,7 @@ statistical residual. The GNN&rsquo;s output is a full prediction
 trained end-to-end, not <code>y &minus; baseline</code>.
 </div>
 <ul>
-<li><b>Any trait type</b> &mdash; continuous, binary, categorical, ordinal, and count in one model.</li>
+<li><b>Multiple trait types</b> &mdash; continuous, binary, categorical, ordinal, count, and proportion in one model.</li>
 <li><b>Uses the phylogeny</b> &mdash; closely related species inform predictions, as you would expect from a comparative method.</li>
 <li><b>Cross-trait patterns</b> &mdash; if body mass predicts beak length, observed masses help impute missing beak lengths.</li>
 <li><b>Safe by default</b> &mdash; the per-trait gate prevents the neural network from degrading traits the baseline already handles well.</li>

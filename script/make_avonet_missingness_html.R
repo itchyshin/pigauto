@@ -397,7 +397,7 @@ verdict_lines <- c(
   sprintf("At <b>%d%% missingness</b> pigauto and the BM baseline are effectively tied on continuous traits (RMSE %.3f vs %.3f on the latent z-score scale), both of them dramatically better than column-mean imputation (%.3f). This matches the validated scaling benchmark at 15%% missingness.",
           as.integer(round(100 * missingness_levels[1])),
           v20[["pigauto"]], v20[["BM"]], v20[["mean"]]),
-  sprintf("At <b>%d%% missingness</b> all three methods degrade, but the ordering is preserved: pigauto %.3f, BM %.3f, mean %.3f. BM still carries most of the phylogenetic signal; the GNN delta is a small residual on top.",
+  sprintf("At <b>%d%% missingness</b> all three methods degrade, but the ordering is preserved: pigauto %.3f, BM %.3f, mean %.3f. BM still carries most of the phylogenetic signal; the GNN contributes an adjustment on top of the baseline when the validation data support it.",
           as.integer(round(100 * missingness_levels[length(missingness_levels)])),
           v_hi[["pigauto"]], v_hi[["BM"]], v_hi[["mean"]]),
   "Categorical traits (Trophic.Level, Primary.Lifestyle) are dominated by phylogenetic label propagation in the BM baseline; the GNN is calibrated to leave them alone, so pigauto matches BM exactly on those rows. This is the calibrated-gate safety from v0.3.0 doing its job."
@@ -508,7 +508,7 @@ html <- paste0(html, '
 <h2>What the sweep shows</h2>
 <ul>
 <li><b>Phylogeny is the dominant signal.</b> Even at 80% missingness the BM baseline keeps continuous RMSE well below the mean-imputation floor (~1.0 on z-score scale). Morphometric bird traits have very high phylogenetic signal and a single Brownian-motion component of variance captures most of it.</li>
-<li><b>pigauto rides the baseline carefully.</b> At low missingness the validation set is small and the GNN correction is calibrated close to zero (pigauto &asymp; BM). At higher missingness there is more validation data for gate calibration and the GNN can find a small residual signal, but the BM component remains the backbone.</li>
+<li><b>pigauto rides the baseline carefully.</b> At low missingness the validation set is small and the GNN correction is calibrated close to zero (pigauto &asymp; BM). At higher missingness there is more validation data for gate calibration and the GNN can extract additional structure beyond phylogeny, but the BM component remains the backbone.</li>
 <li><b>Categorical traits are never degraded.</b> The v0.3.0 calibrated-gate logic (with the absolute cell floor and half-split cross-check documented in <code>CLAUDE.md</code>) prevents the GNN from hurting discrete-trait accuracy. pigauto matches the BM baseline exactly on Trophic.Level and Primary.Lifestyle at every missingness level.</li>
 <li><b>Mean / mode is a proper null baseline.</b> It shows how much of the trait variance is predictable from phylogeny alone &mdash; the gap between the mean line and the BM line is the phylogenetic signal, and the (small) gap between BM and pigauto is the extra structure the GNN extracts from cross-trait correlations.</li>
 </ul>

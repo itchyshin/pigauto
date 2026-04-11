@@ -45,10 +45,10 @@ types: not present.}
 }
 }
 \description{
-Runs iterative refinement on the fitted model and returns imputed
+Runs a single forward pass through the fitted model and returns imputed
 trait values back-transformed to the original scale.  Supports all
-trait types (continuous, binary, categorical, ordinal, count) and MC
-dropout for multiple imputation. The fitted model is a gated ensemble
+trait types (continuous, binary, categorical, ordinal, count, proportion)
+and MC dropout for multiple imputation (when \code{n_imputations > 1}). The fitted model is a gated ensemble
 of a phylogenetic baseline and a graph neural network correction;
 prediction is the per-trait blend
 \code{(1 - r_cal) * baseline + r_cal * delta_GNN}.

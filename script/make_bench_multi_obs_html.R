@@ -151,7 +151,7 @@ h('</head><body>')
 # =========================================================================
 
 h('<h1>Multi-observation imputation benchmark</h1>')
-h('<p class="meta">pigauto v0.5.0 &mdash; observation-level covariates')
+h('<p class="meta">pigauto v0.6.0 &mdash; observation-level covariates')
 if (!is.null(meta$n_species)) {
   h(sprintf(' &middot; %d species', meta$n_species))
 }

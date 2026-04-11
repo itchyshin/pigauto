@@ -27,8 +27,8 @@ contribute when they demonstrably improve imputation accuracy.
 
 ## Key features
 
-- **Any trait type**: continuous, binary, categorical, ordinal, and
-  count traits in a single model — no need to run separate analyses
+- **Multiple trait types**: continuous, binary, categorical, ordinal,
+  count, and proportion — all in a single model, no separate analyses
 - **Uses the phylogeny**: closely related species inform predictions,
   exactly as you would expect from a comparative method
 - **Learns cross-trait patterns**: if body mass predicts beak length,
@@ -333,13 +333,15 @@ Post-training pipeline:
 
 ## Trait types
 
-| R class    | pigauto type | Encoding         | Loss          | Baseline                   |
-|------------|-------------|------------------|---------------|----------------------------|
-| numeric    | continuous  | optional log + z | MSE           | Phylogenetic BM            |
-| integer    | count       | log1p + z        | MSE           | Phylogenetic BM            |
-| factor(2)  | binary      | 0/1              | BCE           | Phylo label propagation    |
-| factor(>2) | categorical | one-hot (K cols) | cross-entropy | Phylo label propagation    |
-| ordered    | ordinal     | integer + z      | MSE           | Phylogenetic BM            |
+| R class    | pigauto type | Encoding         | Loss          | Baseline                   | Notes                      |
+|------------|-------------|------------------|---------------|----------------------------|----------------------------|
+| numeric    | continuous  | optional log + z | MSE           | Phylogenetic BM            | Auto-detected              |
+| integer    | count       | log1p + z        | MSE           | Phylogenetic BM            | Auto-detected              |
+| factor(2)  | binary      | 0/1              | BCE           | Phylo label propagation    | Auto-detected              |
+| factor(>2) | categorical | one-hot (K cols) | cross-entropy | Phylo label propagation    | Auto-detected              |
+| ordered    | ordinal     | integer + z      | MSE           | Phylogenetic BM            | Auto-detected              |
+| numeric(0–1) | proportion | logit + z       | MSE           | Phylogenetic BM            | Requires `trait_types` override |
+| integer(ZI) | zi_count   | gate + log1p + z | BCE + MSE    | LP + BM                    | Experimental; requires `trait_types` override |
 
 ## Benchmark results
 
