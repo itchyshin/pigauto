@@ -63,13 +63,15 @@ html <- paste0(
 <h2>What it does</h2>
 <p>
 Comparative analyses often fail because trait databases are incomplete.
-<code>pigauto</code> fills in the gaps by combining two sources of
+<code>pigauto</code> fills in the gaps by combining three sources of
 information: <b>(1)</b> the phylogenetic tree, which tells us that
-closely related species tend to share similar traits, and <b>(2)</b>
+closely related species tend to share similar traits, <b>(2)</b>
 correlations among the traits themselves, which let observed traits
-inform predictions of missing ones. The package handles continuous
-measurements, counts, binary variables, ordered categories, and
-unordered categories &mdash; all in a single call.
+inform predictions of missing ones, and <b>(3)</b> optional
+environmental covariates (climate, habitat, geography), which capture
+trait variation that phylogeny alone cannot explain. The package
+handles continuous measurements, counts, binary variables, ordered
+categories, and unordered categories &mdash; all in a single call.
 </p>
 <h3>How it works</h3>
 <p>
@@ -142,11 +144,11 @@ pigauto_report(result)</code></pre>
 <th>Baseline</th>
 </tr></thead>
 <tbody>
-<tr><td><code>numeric</code></td>   <td>continuous</td><td>optional log + z-score</td><td>MSE</td>          <td>Rphylopars BM</td></tr>
-<tr><td><code>integer</code></td>   <td>count</td>     <td><code>log1p</code> + z-score</td><td>MSE</td> <td>Rphylopars BM</td></tr>
+<tr><td><code>numeric</code></td>   <td>continuous</td><td>optional log + z-score</td><td>MSE</td>          <td>Phylogenetic BM</td></tr>
+<tr><td><code>integer</code></td>   <td>count</td>     <td><code>log1p</code> + z-score</td><td>MSE</td> <td>Phylogenetic BM</td></tr>
 <tr><td><code>factor(2)</code></td> <td>binary</td>    <td>0/1</td>              <td>BCE</td>          <td>Phylo label propagation</td></tr>
 <tr><td><code>factor(&gt;2)</code></td><td>categorical</td><td>one-hot (K cols)</td><td>cross-entropy</td><td>Phylo label propagation</td></tr>
-<tr><td><code>ordered</code></td>   <td>ordinal</td>   <td>integer + z-score</td><td>MSE</td>          <td>Rphylopars BM</td></tr>
+<tr><td><code>ordered</code></td>   <td>ordinal</td>   <td>integer + z-score</td><td>MSE</td>          <td>Phylogenetic BM</td></tr>
 </tbody>
 </table>
 
@@ -194,8 +196,7 @@ pd$n_obs      # number of observations
 pd$n_species  # number of unique species</code></pre>
 <p>
 The GNN aggregates observations to species level before phylogenetic
-message passing, then broadcasts back to observation level. Rphylopars
-handles within-species replication natively in the baseline.
+message passing, then broadcasts back to observation level.
 </p>
 
 <h2>Why impute? Downstream analysis with multiple imputation</h2>
@@ -292,7 +293,7 @@ you want a single calibrated model covering all trait types and do not
 want to wait hours for MCMC. For formal Bayesian multiple imputation with
 posterior pooling, consider the BACE package. For small continuous-only
 datasets where interpretability of a specific evolutionary model matters,
-Rphylopars is the right tool.
+a dedicated phylogenetic comparative-methods package may be more appropriate.
 </div>
 
 <h2>Further reading</h2>

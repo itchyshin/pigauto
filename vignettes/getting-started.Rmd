@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 
 Many comparative datasets have missing trait values: species were not
 measured, specimens were unavailable, or data were lost. pigauto fills
-in those gaps using two sources of information:
+in those gaps using three sources of information:
 
 1. **The phylogenetic tree.** Closely related species tend to share
    similar traits, so known values of relatives are informative about
@@ -28,6 +28,9 @@ in those gaps using two sources of information:
 2. **Cross-trait correlations.** If body mass predicts beak length,
    then observed masses help impute missing beak lengths even when the
    species itself was never measured for that trait.
+3. **Environmental covariates** (optional). Climate, habitat, or
+   geographic variables can improve imputation when trait variation
+   has a strong environmental component beyond phylogenetic signal.
 
 The package handles continuous measurements, counts, binary variables,
 ordered categories, and unordered categories — all in a single call to
@@ -36,9 +39,10 @@ ordered categories, and unordered categories — all in a single call to
 ### How it works (briefly)
 
 pigauto combines a phylogenetic baseline with a graph neural network
-(GNN) correction. The baseline is Brownian-motion imputation for
-continuous / count / ordinal traits (via `Rphylopars`) and phylogenetic
-label propagation for binary / categorical traits. The GNN learns
+(GNN) correction. The baseline is Brownian-motion imputation (using
+the phylogenetic correlation matrix) for continuous / count / ordinal
+traits and phylogenetic label propagation for binary / categorical
+traits. The GNN learns
 additional patterns from tree topology and cross-trait structure. A
 per-trait gate controls how much the GNN contributes: when the baseline
 is already good enough, the gate closes and the GNN stays out of the
@@ -124,7 +128,7 @@ test cells provide the final unbiased performance estimate.
 
 ## Step 3: Fit the BM baseline
 
-`fit_baseline()` fits Rphylopars BM after masking the held-out cells. This
+`fit_baseline()` fits the phylogenetic BM baseline after masking the held-out cells. This
 gives the benchmark against which the GNN will be compared.
 
 ```{r baseline, eval=TRUE}
@@ -343,3 +347,5 @@ overlap is allowed; unmatched species are dropped with a warning).
 - Goolsby, E.W., Bruggeman, J. & Ané, C. (2017). Rphylopars: fast
   multivariate phylogenetic comparative methods for missing data and
   within-species variation. *Methods in Ecology and Evolution*, 8, 22–27.
+  (pigauto's internal BM baseline implements the same conditional-MVN
+  approach.)

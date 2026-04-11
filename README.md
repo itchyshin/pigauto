@@ -3,21 +3,25 @@
 **Fill in missing species traits using a phylogenetic tree.**
 
 Comparative analyses often fail because trait databases are incomplete.
-pigauto imputes the gaps by combining two sources of information:
-(1) the phylogenetic tree, which tells us that closely related species
-tend to share similar traits, and (2) correlations among the traits
-themselves, which let observed traits inform predictions of missing
-ones. The package handles continuous measurements, counts, binary
-variables, ordered categories, and unordered categories — all in a
-single call.
+pigauto imputes the gaps by combining three sources of information:
+(1) the **phylogenetic tree**, which tells us that closely related
+species tend to share similar traits, (2) **correlations among the
+traits themselves**, which let observed traits inform predictions of
+missing ones, and (3) **environmental covariates** (climate,
+geography, habitat), which capture trait variation that phylogeny alone
+cannot explain. The package handles continuous measurements, counts,
+binary variables, ordered categories, and unordered categories — all
+in a single call.
 
 Under the hood pigauto blends a phylogenetic baseline (Brownian-motion
 imputation for continuous traits, phylogenetic label propagation for
 discrete traits) with a graph neural network that learns additional
-patterns from tree structure and inter-trait correlations. A
-validation-calibrated gate controls how much the neural network
-contributes: when the phylogenetic baseline is already good enough,
-the gate closes and the network stays out of the way.
+patterns from tree topology, inter-trait correlations, and any
+user-supplied covariates. A validation-calibrated gate controls how
+much the neural network contributes: when the phylogenetic baseline is
+already good enough, the gate closes and the network stays out of the
+way. The same gated safety applies to covariates — they only
+contribute when they demonstrably improve imputation accuracy.
 
 ## Key features
 
@@ -27,12 +31,19 @@ the gate closes and the network stays out of the way.
   exactly as you would expect from a comparative method
 - **Learns cross-trait patterns**: if body mass predicts beak length,
   observed masses help impute missing beak lengths
+- **Environmental covariates**: supply climate, habitat, or geographic
+  variables to improve imputation when trait variation has a strong
+  environmental component beyond phylogenetic signal
 - **Safe by default**: a per-trait gate prevents the neural network
-  from degrading traits the phylogenetic baseline already handles well
+  from degrading traits the phylogenetic baseline already handles well;
+  the same gated safety applies to covariates
 - **Uncertainty quantification**: conformal prediction intervals give
   95% coverage for continuous, count, and ordinal traits
 - **Multiple imputation**: `multi_impute()` → `with_imputations()` →
   `pool_mi()` implements Rubin's rules for downstream inference
+- **Tree uncertainty**: `multi_impute_trees()` imputes across a
+  posterior sample of trees so that phylogenetic uncertainty propagates
+  into standard errors via Rubin's rules
 - **Scales to large trees**: tested up to 10,000 species on a laptop
 - **Multiple observations per species**: handles intraspecific data
 
@@ -234,23 +245,21 @@ pd$n_species  # number of unique species
 
 The GNN aggregates observations to species level before phylogenetic
 message passing, then broadcasts back to observation level.
-Rphylopars handles within-species replication natively in the
-baseline.
 
 ## Architecture
 
 pigauto is a **gated ensemble of two predictors**:
 
 1. A **phylogenetic baseline** with one branch per trait type:
-   Brownian motion (via Rphylopars) for continuous, count, and ordinal
-   traits; Gaussian-kernel phylogenetic label propagation for binary and
-   categorical traits.
+   Brownian motion (conditional on the phylogenetic correlation matrix)
+   for continuous, count, and ordinal traits; Gaussian-kernel
+   phylogenetic label propagation for binary and categorical traits.
 2. A **graph neural network correction** — an internal torch module
    (`ResidualPhyloDAE`: encoder → 2 attention-based message-passing
    layers with layer norm and ResNet-style skip connections → decoder)
    that produces a full per-cell prediction from spectral node features,
-   the corrupted latent matrix, and an adjacency-biased attention over
-   the phylogeny.
+   the corrupted latent matrix, any user-supplied covariates, and an
+   adjacency-biased attention over the phylogeny.
 
 Prediction is the blend
 
@@ -281,11 +290,11 @@ Post-training pipeline:
 
 | R class    | pigauto type | Encoding         | Loss          | Baseline                   |
 |------------|-------------|------------------|---------------|----------------------------|
-| numeric    | continuous  | optional log + z | MSE           | Rphylopars BM              |
-| integer    | count       | log1p + z        | MSE           | Rphylopars BM              |
+| numeric    | continuous  | optional log + z | MSE           | Phylogenetic BM            |
+| integer    | count       | log1p + z        | MSE           | Phylogenetic BM            |
 | factor(2)  | binary      | 0/1              | BCE           | Phylo label propagation    |
 | factor(>2) | categorical | one-hot (K cols) | cross-entropy | Phylo label propagation    |
-| ordered    | ordinal     | integer + z      | MSE           | Rphylopars BM              |
+| ordered    | ordinal     | integer + z      | MSE           | Phylogenetic BM            |
 
 ## Benchmark results
 
@@ -323,14 +332,19 @@ BM baseline is optimal, calibrated gates → 0.
   ecological traits (Trophic.Level [categorical], Primary.Lifestyle
   [categorical], Migration [ordinal])
 - `tree300`: pruned BirdTree phylogeny matching `avonet300`
+- `trees300`: 10 posterior trees from the BirdTree Hackett backbone,
+  pruned to the same 300 tips — for `multi_impute_trees()` examples
 - `avonet_full`: the same 7-trait schema extended to all 9,993 bird
   species for which AVONET3 and the BirdTree Stage2 Hackett MCC tree
   agree. Native missingness is preserved (24 NA cells) so users see
   the real-world missingness pattern. Use this for scale benchmarks;
   use `avonet300` for quick examples and unit tests.
 - `tree_full`: the matching 9,993-tip BirdTree phylogeny.
+- `delhey5809`: plumage lightness and 4 environmental covariates for
+  5,809 bird species (Delhey 2019) — for covariate benchmarks
+- `tree_delhey`: matching BirdTree phylogeny for `delhey5809`
 
 ## Citation
 
 Nakagawa S (2026). pigauto: Phylogenetic Imputation via Graph
-Autoencoder. R package version 0.4.0.
+Autoencoder. R package version 0.5.0.

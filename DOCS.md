@@ -3,9 +3,9 @@
 > **Live site**: <https://itchyshin.github.io/pigauto>
 > **Source**: <https://github.com/itchyshin/pigauto>
 > **One-line summary**: fill in missing species traits using a
-> phylogenetic tree and cross-trait correlations. Handles continuous
-> measurements, counts, binary, ordinal, and categorical variables
-> in a single call.
+> phylogenetic tree, cross-trait correlations, and optional
+> environmental covariates. Handles continuous measurements, counts,
+> binary, ordinal, and categorical variables in a single call.
 
 This file is the single entry point for everything that ships with the
 pigauto repository: tutorials, function reference, design notes,
@@ -101,6 +101,9 @@ Articles dropdown links straight to them.
 | **Proportion traits** | [dev/bench_proportion.html](https://itchyshin.github.io/pigauto/dev/bench_proportion.html) | `script/bench_proportion.R` + `script/make_bench_proportion_html.R` | Signal sweep (0.2–1.0) × boundary density sweep. Mean vs BM vs pigauto. |
 | **Zero-inflated counts** | [dev/bench_zi_count.html](https://itchyshin.github.io/pigauto/dev/bench_zi_count.html) | `script/bench_zi_count.R` + `script/make_bench_zi_count_html.R` | Zero fraction sweep (0.2–0.8) × mean non-zero count sweep. Mean vs LP+BM vs pigauto. |
 | **Missingness mechanisms** | [dev/bench_missingness_mechanism.html](https://itchyshin.github.io/pigauto/dev/bench_missingness_mechanism.html) | `script/bench_missingness_mechanism.R` + `script/make_bench_missingness_mechanism_html.R` | MCAR vs MAR_trait vs MAR_phylo vs MNAR on mixed-type data. Cross-cutting validation of all types under realistic missingness. |
+| **Tree uncertainty** | [dev/bench_tree_uncertainty.html](https://itchyshin.github.io/pigauto/dev/bench_tree_uncertainty.html) | `script/bench_tree_uncertainty.R` + `script/make_bench_tree_uncertainty_html.R` | `multi_impute_trees()` with 10 posterior trees vs single-tree MI. SE inflation (1.1–2.1×) and FMI rising with missingness. |
+| **Environmental covariates (Delhey)** | [dev/bench_delhey.html](https://itchyshin.github.io/pigauto/dev/bench_delhey.html) | `script/bench_delhey.R` + `script/make_bench_delhey_html.R` | Real-data test: plumage lightness in 5,809 bird species with 4 environmental covariates (Delhey 2019). Covariates give ~zero lift when phylogenetic signal dominates. |
+| **Covariate effectiveness** | [dev/bench_covariate_sim.html](https://itchyshin.github.io/pigauto/dev/bench_covariate_sim.html) | `script/bench_covariate_sim.R` + `script/make_bench_covariate_sim_html.R` | Simulated traits with varying phylogenetic signal (λ) and environmental effect (β). Covariates reduce RMSE by 8–15% when env effects are strong; ~0% when phylo signal dominates (gated safety). |
 
 For the authoritative numerical summary with discussion, see
 [`README.md` → Benchmark results](README.md#benchmark-results). The
@@ -119,13 +122,13 @@ exported function's `.Rd` page is also in `man/`.
 | Group | Key functions | Purpose |
 |---|---|---|
 | One-call entry point | [`impute()`](man/impute.Rd) | Runs the full pipeline and returns a completed data frame |
-| Multiple imputation | [`multi_impute()`](man/multi_impute.Rd), [`with_imputations()`](man/with_imputations.Rd), [`pool_mi()`](man/pool_mi.Rd) | Generate M datasets → fit M models → pool with Rubin's rules |
+| Multiple imputation | [`multi_impute()`](man/multi_impute.Rd), [`multi_impute_trees()`](man/multi_impute_trees.Rd), [`with_imputations()`](man/with_imputations.Rd), [`pool_mi()`](man/pool_mi.Rd) | Generate M datasets → fit M models → pool with Rubin's rules (including tree-uncertainty propagation) |
 | Fine-grained pipeline | [`preprocess_traits()`](man/preprocess_traits.Rd), [`build_phylo_graph()`](man/build_phylo_graph.Rd), [`fit_baseline()`](man/fit_baseline.Rd), [`fit_pigauto()`](man/fit_pigauto.Rd), [`predict.pigauto_fit()`](man/predict.pigauto_fit.Rd), [`evaluate()`](man/evaluate.Rd) | The six stages `impute()` runs internally |
-| Alternative baseline | [`fit_baseline_bace()`](man/fit_baseline_bace.Rd) | BACE (Bayesian chained-equation multiple imputation) as an alternative to the default Rphylopars BM baseline |
+| Alternative baseline | [`fit_baseline_bace()`](man/fit_baseline_bace.Rd) | BACE (Bayesian chained-equation multiple imputation) as an alternative to the default phylogenetic BM baseline |
 | Cross-validation and benchmarks | [`cross_validate()`](man/cross_validate.Rd), [`compare_methods()`](man/compare_methods.Rd), [`simulate_benchmark()`](man/simulate_benchmark.Rd), [`simulate_non_bm()`](man/simulate_non_bm.Rd) | Evaluation infrastructure |
 | Reporting and plotting | [`pigauto_report()`](man/pigauto_report.Rd), [`plot.pigauto_fit()`](man/plot.pigauto_fit.Rd), [`plot.pigauto_pred()`](man/plot.pigauto_pred.Rd), [`plot.pigauto_benchmark()`](man/plot.pigauto_benchmark.Rd), [`summary.pigauto_fit()`](man/summary.pigauto_fit.Rd), [`calibration_df()`](man/calibration_df.Rd), [`confusion_matrix()`](man/confusion_matrix.Rd) | Interactive HTML reports + diagnostic plots |
 | I/O | [`read_traits()`](man/read_traits.Rd), [`read_tree()`](man/read_tree.Rd), [`save_pigauto()`](man/save_pigauto.Rd), [`load_pigauto()`](man/load_pigauto.Rd) | Data loading and fit persistence |
-| Bundled data | [`avonet300`](man/avonet300.Rd), [`tree300`](man/tree300.Rd), [`avonet_full`](man/avonet_full.Rd), [`tree_full`](man/tree_full.Rd) | 300-species and 9,993-species AVONET + matching BirdTree phylogenies |
+| Bundled data | [`avonet300`](man/avonet300.Rd), [`tree300`](man/tree300.Rd), [`trees300`](man/trees300.Rd), [`avonet_full`](man/avonet_full.Rd), [`tree_full`](man/tree_full.Rd), [`delhey5809`](man/delhey5809.Rd), [`tree_delhey`](man/tree_delhey.Rd) | 300-species and 9,993-species AVONET + 5,809-species Delhey plumage + matching BirdTree phylogenies |
 
 ---
 
@@ -153,7 +156,8 @@ R/
 ├── pool_mi.R               Rubin's rules + Barnard-Rubin df
 ├── preprocess_traits.R     trait-type detection + latent matrix
 ├── build_phylo_graph.R     adjacency + spectral coords
-├── fit_baseline.R          Rphylopars BM + phylo label propagation
+├── bm_internal.R           internal phylogenetic BM baseline
+├── fit_baseline.R          BM + phylo label propagation
 ├── fit_baseline_bace.R     BACE wrapper (Suggests:)
 ├── fit_pigauto.R           training loop + post-training calibration
 ├── model_residual_dae.R    ResidualPhyloDAE torch::nn_module
@@ -197,7 +201,7 @@ place to find them is section 3 above.
 - Canonical citation (BibTeX friendly):
 
   > Nakagawa S (2026). *pigauto: Phylogenetic Imputation via Graph
-  > Autoencoder*. R package version 0.4.0.
+  > Autoencoder*. R package version 0.5.0.
   > <https://github.com/itchyshin/pigauto>.
 
 ---

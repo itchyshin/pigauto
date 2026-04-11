@@ -14,13 +14,15 @@ home:
   title: "pigauto: fill in missing species traits using a phylogenetic tree"
   description: >
     pigauto imputes missing trait data for comparative analyses by
-    combining phylogenetic similarity (closely related species share
-    similar traits) with cross-trait correlations (observed traits
-    inform missing ones). It handles continuous measurements, counts,
-    binary variables, ordered categories, and unordered categories in
-    a single call. Uncertainty is quantified via conformal prediction
-    intervals and Rubin's-rules multiple imputation. Tested up to
-    10,000 species on a laptop.
+    combining three sources of information: phylogenetic similarity
+    (closely related species share similar traits), cross-trait
+    correlations (observed traits inform missing ones), and optional
+    environmental covariates (climate, habitat, geography). It handles
+    continuous measurements, counts, binary variables, ordered
+    categories, and unordered categories in a single call. Uncertainty
+    is quantified via conformal prediction intervals and Rubin's-rules
+    multiple imputation, with tree-uncertainty propagation via
+    posterior tree samples. Tested up to 10,000 species on a laptop.
   links:
     - text: Documentation index (DOCS.md)
       href: https://github.com/itchyshin/pigauto/blob/main/DOCS.md

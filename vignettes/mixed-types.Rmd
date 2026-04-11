@@ -89,8 +89,8 @@ cat("Test cells (latent):", length(spl$test_idx), "\n")
 
 ## Baseline fitting
 
-The BM baseline uses Rphylopars for continuous, count, and ordinal
-traits.  Binary traits receive the logit of the observed proportion;
+The BM baseline uses phylogenetic conditional MVN for continuous, count,
+and ordinal traits.  Binary traits receive the logit of the observed proportion;
 categorical traits receive log marginal frequencies:
 
 ```{r baseline}

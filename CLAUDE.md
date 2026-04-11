@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-`pigauto` is an R package (version 0.4.0) for phylogenetic trait imputation. It fits a gated ensemble of a phylogenetic baseline and an attention-based graph neural network correction. For continuous/count/ordinal traits the baseline is Brownian motion (via `Rphylopars`); for binary/categorical traits it is phylogenetic label propagation. Prediction is the per-trait blend `(1 - r_cal) * baseline + r_cal * delta_GNN`, with `r_cal` calibrated on a held-out validation split. See `README.md` for the user-facing API; this file documents the internals.
+`pigauto` is an R package (version 0.5.0) for phylogenetic trait imputation. It fits a gated ensemble of a phylogenetic baseline and an attention-based graph neural network correction. For continuous/count/ordinal traits the baseline is Brownian motion (via an internal conditional-MVN implementation using the phylogenetic correlation matrix `R = cov2cor(vcv(tree))`; see `R/bm_internal.R`); for binary/categorical traits it is phylogenetic label propagation. Optional environmental covariates are threaded through the GNN with gated safety. Prediction is the per-trait blend `(1 - r_cal) * baseline + r_cal * delta_GNN`, with `r_cal` calibrated on a held-out validation split. See `README.md` for the user-facing API; this file documents the internals.
 
 **A note on "residual"**: the internal torch class is named `ResidualPhyloDAE` because its GNN layers use ResNet-style residual skip connections. The GNN output `delta` is **not** a statistical residual `y - baseline` — it is a full per-cell prediction trained end-to-end via type-appropriate loss (MSE / BCE / cross-entropy) on the blend, not on `y - baseline`. Do not re-introduce user-facing prose that describes the GNN as "learning a residual from the baseline".
 
@@ -83,12 +83,12 @@ All seven types live in a single latent matrix:
 
 | R class    | pigauto type | Latent cols | Loss          | Baseline                                  |
 |------------|-------------|-------------|---------------|-------------------------------------------|
-| numeric    | continuous  | 1 (z-score, optional log) | MSE | Rphylopars BM                             |
-| integer    | count       | 1 (log1p + z) | MSE          | Rphylopars BM                             |
-| ordered    | ordinal     | 1 (integer + z) | MSE        | Rphylopars BM                             |
+| numeric    | continuous  | 1 (z-score, optional log) | MSE | Internal phylogenetic BM                  |
+| integer    | count       | 1 (log1p + z) | MSE          | Internal phylogenetic BM                  |
+| ordered    | ordinal     | 1 (integer + z) | MSE        | Internal phylogenetic BM                  |
 | factor(2)  | binary      | 1 (0/1)     | BCE           | Phylogenetic label propagation            |
 | factor(>2) | categorical | K (one-hot) | cross-entropy | Phylogenetic label propagation            |
-| numeric(0–1) | proportion | 1 (logit + z) | MSE       | Rphylopars BM                             |
+| numeric(0–1) | proportion | 1 (logit + z) | MSE       | Internal phylogenetic BM                  |
 | integer(ZI) | zi_count   | 2 (gate 0/1 + log1p-z) | BCE + cond. MSE | LP (gate) + BM (magnitude) |
 
 Proportion and zi_count require explicit `trait_types` overrides — they are not auto-detected. ZI count uses two latent columns: column 1 is a binary gate (0=zero, 1=non-zero), column 2 is the log1p-z magnitude (NA when observed value is zero). Expected value prediction: `E[X] = P(non-zero) * E[count | non-zero]`.
