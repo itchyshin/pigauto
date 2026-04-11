@@ -350,9 +350,11 @@ pd     <- preprocess_traits(traits, tree)
 # ...proceed as above
 ```
 
-Trait columns can be any mix of `numeric` (continuous), `integer` (count),
-`factor` (binary / categorical), and `ordered` (ordinal) — pigauto reads
-column classes to decide how each trait is encoded and imputed. The
+Trait columns can be any of the five auto-detected types — `numeric`
+(continuous), `integer` (count), `factor` (binary / categorical), and
+`ordered` (ordinal) — or `numeric` with a `trait_types = "proportion"`
+override for proportions bounded in (0, 1). pigauto reads column classes
+to decide how each trait is encoded and imputed. The
 species names in `traits` must overlap with tip labels in `tree` (partial
 overlap is allowed; unmatched species are dropped with a warning).
 
