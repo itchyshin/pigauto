@@ -22,8 +22,30 @@ if (!file.exists(rds_path)) {
 
 r <- readRDS(rds_path)
 res  <- r$results
-meta <- r$meta
 stopifnot(is.data.frame(res), nrow(res) > 0L)
+
+# ---- Adapt actual RDS column names to what the generator expects -----------
+# bench_multi_obs.R stores: obs_rmse, sp_rmse, obs_pearson_r, lambda, beta,
+# sp_missing_frac, rep, method (species_mean / pigauto_no_cov / pigauto_cov)
+# Generator expects: rmse, pearson_r, scenario, method (mean / ...)
+
+if (!"rmse"      %in% names(res)) res$rmse      <- res$obs_rmse
+if (!"pearson_r" %in% names(res)) res$pearson_r <- res$obs_pearson_r
+if (!"scenario"  %in% names(res)) {
+  res$scenario <- sprintf("lambda=%.1f beta=%.1f miss=%.0f%%",
+                          res$lambda, res$beta, 100 * res$sp_missing_frac)
+}
+res$method[res$method == "species_mean"] <- "mean"
+
+# Build meta from top-level RDS fields
+meta <- list(
+  n_species        = r$n_species %||% 200L,
+  n_obs_per_species = r$obs_lambda_pois %||% 5L,
+  n_reps           = r$n_reps %||% 2L,
+  wall_time        = r$total_wall,
+  epochs           = r$epochs
+)
+`%||%` <- function(a, b) if (!is.null(a)) a else b
 
 timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M")
 
