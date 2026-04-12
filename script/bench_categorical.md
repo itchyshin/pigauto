@@ -1,9 +1,9 @@
 # Categorical-trait benchmark
 
-Run on: 2026-04-10 07:05:04
+Run on: 2026-04-12 06:51:51
 Machine: Darwin 25.4.0 (arm64), R 4.5.2
 Species: 300, traits: 2, reps: 5, missing_frac: 0.25
-Total wall: 10.2 min
+Total wall: 0.0 min
 
 ## Methods
 

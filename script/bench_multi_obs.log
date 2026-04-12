@@ -1,0 +1,212 @@
+[   0.0s] Total cells to run: 24
+[   0.0s] Grid: 2 lambda x 3 beta x 2 sp_miss x 2 reps
+[   0.0s] 
+--- Cell 1 / 24 ---
+[   0.1s] === lambda=0.5, beta=0.0, sp_miss=0.5, rep=1 (seed=1100) ===
+[   0.1s]   n_obs = 987, obs/species: mean=4.9, range=[1, 12]
+[   0.1s]   Missing obs: 581 / 987 (58.9%), missing species: 100 / 200
+[   0.1s]   [1/3] species_mean...
+[   0.1s]     Done in 0.0s
+[   0.1s]   [2/3] pigauto_no_cov...
+[  85.1s]     Done in 85.0s
+[  85.1s]   [3/3] pigauto_cov...
+[ 166.5s]     Done in 81.5s
+[ 166.7s] 
+--- Cell 2 / 24 ---
+[ 166.7s] === lambda=0.9, beta=0.0, sp_miss=0.5, rep=1 (seed=1140) ===
+[ 166.7s]   n_obs = 975, obs/species: mean=4.9, range=[1, 10]
+[ 166.7s]   Missing obs: 585 / 975 (60.0%), missing species: 100 / 200
+[ 166.7s]   [1/3] species_mean...
+[ 166.7s]     Done in 0.0s
+[ 166.7s]   [2/3] pigauto_no_cov...
+[ 244.4s]     Done in 77.7s
+[ 244.4s]   [3/3] pigauto_cov...
+[ 324.4s]     Done in 80.1s
+[ 324.6s] 
+--- Cell 3 / 24 ---
+[ 324.6s] === lambda=0.5, beta=0.5, sp_miss=0.5, rep=1 (seed=1105) ===
+[ 324.6s]   n_obs = 1006, obs/species: mean=5.0, range=[1, 11]
+[ 324.6s]   Missing obs: 611 / 1006 (60.7%), missing species: 100 / 200
+[ 324.6s]   [1/3] species_mean...
+[ 324.6s]     Done in 0.0s
+[ 324.6s]   [2/3] pigauto_no_cov...
+[ 402.4s]     Done in 77.8s
+[ 402.4s]   [3/3] pigauto_cov...
+[ 494.2s]     Done in 91.8s
+[ 494.4s] 
+--- Cell 4 / 24 ---
+[ 494.4s] === lambda=0.9, beta=0.5, sp_miss=0.5, rep=1 (seed=1145) ===
+[ 494.4s]   n_obs = 996, obs/species: mean=5.0, range=[1, 11]
+[ 494.4s]   Missing obs: 588 / 996 (59.0%), missing species: 100 / 200
+[ 494.4s]   [1/3] species_mean...
+[ 494.4s]     Done in 0.0s
+[ 494.4s]   [2/3] pigauto_no_cov...
+[ 567.6s]     Done in 73.2s
+[ 567.6s]   [3/3] pigauto_cov...
+[ 673.1s]     Done in 105.5s
+[ 673.1s]   Saved partial results (4 / 24 cells)
+[ 673.3s] 
+--- Cell 5 / 24 ---
+[ 673.3s] === lambda=0.5, beta=1.0, sp_miss=0.5, rep=1 (seed=1110) ===
+[ 673.3s]   n_obs = 979, obs/species: mean=4.9, range=[1, 12]
+[ 673.3s]   Missing obs: 601 / 979 (61.4%), missing species: 100 / 200
+[ 673.3s]   [1/3] species_mean...
+[ 673.3s]     Done in 0.0s
+[ 673.3s]   [2/3] pigauto_no_cov...
+[ 777.6s]     Done in 104.3s
+[ 777.6s]   [3/3] pigauto_cov...
+[ 916.3s]     Done in 138.7s
+[ 916.5s] 
+--- Cell 6 / 24 ---
+[ 916.5s] === lambda=0.9, beta=1.0, sp_miss=0.5, rep=1 (seed=1150) ===
+[ 916.5s]   n_obs = 1027, obs/species: mean=5.1, range=[1, 11]
+[ 916.5s]   Missing obs: 613 / 1027 (59.7%), missing species: 100 / 200
+[ 916.5s]   [1/3] species_mean...
+[ 916.5s]     Done in 0.0s
+[ 916.5s]   [2/3] pigauto_no_cov...
+[1015.9s]     Done in 99.4s
+[1015.9s]   [3/3] pigauto_cov...
+[1130.8s]     Done in 114.9s
+[1131.2s] 
+--- Cell 7 / 24 ---
+[1131.2s] === lambda=0.5, beta=0.0, sp_miss=0.8, rep=1 (seed=1130) ===
+[1131.2s]   n_obs = 1005, obs/species: mean=5.0, range=[1, 12]
+[1131.2s]   Missing obs: 846 / 1005 (84.2%), missing species: 160 / 200
+[1131.2s]   [1/3] species_mean...
+[1131.2s]     Done in 0.0s
+[1131.2s]   [2/3] pigauto_no_cov...
+[1234.1s]     Done in 103.0s
+[1234.1s]   [3/3] pigauto_cov...
+[1340.8s]     Done in 106.7s
+[1341.2s] 
+--- Cell 8 / 24 ---
+[1341.2s] === lambda=0.9, beta=0.0, sp_miss=0.8, rep=1 (seed=1170) ===
+[1341.2s]   n_obs = 988, obs/species: mean=4.9, range=[1, 11]
+[1341.2s]   Missing obs: 825 / 988 (83.5%), missing species: 160 / 200
+[1341.2s]   [1/3] species_mean...
+[1341.2s]     Done in 0.0s
+[1341.2s]   [2/3] pigauto_no_cov...
+[1467.4s]     Done in 126.2s
+[1467.4s]   [3/3] pigauto_cov...
+[1606.1s]     Done in 138.7s
+[1606.2s]   Saved partial results (8 / 24 cells)
+[1606.8s] 
+--- Cell 9 / 24 ---
+[1606.8s] === lambda=0.5, beta=0.5, sp_miss=0.8, rep=1 (seed=1135) ===
+[1606.8s]   n_obs = 988, obs/species: mean=4.9, range=[1, 10]
+[1606.8s]   Missing obs: 832 / 988 (84.2%), missing species: 160 / 200
+[1606.8s]   [1/3] species_mean...
+[1606.8s]     Done in 0.0s
+[1606.8s]   [2/3] pigauto_no_cov...
+[1729.7s]     Done in 122.8s
+[1729.7s]   [3/3] pigauto_cov...
+[1861.4s]     Done in 131.8s
+[1861.6s] 
+--- Cell 10 / 24 ---
+[1861.6s] === lambda=0.9, beta=0.5, sp_miss=0.8, rep=1 (seed=1175) ===
+[1861.6s]   n_obs = 1034, obs/species: mean=5.2, range=[1, 12]
+[1861.6s]   Missing obs: 870 / 1034 (84.1%), missing species: 160 / 200
+[1861.6s]   [1/3] species_mean...
+[1861.6s]     Done in 0.0s
+[1861.6s]   [2/3] pigauto_no_cov...
+[1981.2s]     Done in 119.5s
+[1981.2s]   [3/3] pigauto_cov...
+[2108.0s]     Done in 126.8s
+[2108.4s] 
+--- Cell 11 / 24 ---
+[2108.4s] === lambda=0.5, beta=1.0, sp_miss=0.8, rep=1 (seed=1140) ===
+[2108.4s]   n_obs = 975, obs/species: mean=4.9, range=[1, 10]
+[2108.4s]   Missing obs: 807 / 975 (82.8%), missing species: 160 / 200
+[2108.4s]   [1/3] species_mean...
+[2108.4s]     Done in 0.0s
+[2108.4s]   [2/3] pigauto_no_cov...
+[2217.3s]     Done in 108.9s
+[2217.3s]   [3/3] pigauto_cov...
+[2332.0s]     Done in 114.7s
+[2332.3s] 
+--- Cell 12 / 24 ---
+[2332.3s] === lambda=0.9, beta=1.0, sp_miss=0.8, rep=1 (seed=1180) ===
+[2332.3s]   n_obs = 984, obs/species: mean=4.9, range=[1, 13]
+[2332.3s]   Missing obs: 831 / 984 (84.5%), missing species: 160 / 200
+[2332.3s]   [1/3] species_mean...
+[2332.4s]     Done in 0.0s
+[2332.4s]   [2/3] pigauto_no_cov...
+[2436.8s]     Done in 104.5s
+[2436.8s]   [3/3] pigauto_cov...
+[2553.3s]     Done in 116.5s
+[2553.3s]   Saved partial results (12 / 24 cells)
+[2554.0s] 
+--- Cell 13 / 24 ---
+[2554.0s] === lambda=0.5, beta=0.0, sp_miss=0.5, rep=2 (seed=2100) ===
+[2554.0s]   n_obs = 978, obs/species: mean=4.9, range=[1, 12]
+[2554.0s]   Missing obs: 574 / 978 (58.7%), missing species: 100 / 200
+[2554.0s]   [1/3] species_mean...
+[2554.0s]     Done in 0.0s
+[2554.0s]   [2/3] pigauto_no_cov...
+[2681.3s]     Done in 127.3s
+[2681.3s]   [3/3] pigauto_cov...
+[2798.4s]     Done in 117.1s
+[2798.7s] 
+--- Cell 14 / 24 ---
+[2798.7s] === lambda=0.9, beta=0.0, sp_miss=0.5, rep=2 (seed=2140) ===
+[2798.7s]   n_obs = 1025, obs/species: mean=5.1, range=[1, 13]
+[2798.7s]   Missing obs: 599 / 1025 (58.4%), missing species: 100 / 200
+[2798.7s]   [1/3] species_mean...
+[2798.8s]     Done in 0.0s
+[2798.8s]   [2/3] pigauto_no_cov...
+[2907.4s]     Done in 108.6s
+[2907.4s]   [3/3] pigauto_cov...
+[3023.4s]     Done in 116.1s
+[3023.8s] 
+--- Cell 15 / 24 ---
+[3023.8s] === lambda=0.5, beta=0.5, sp_miss=0.5, rep=2 (seed=2105) ===
+[3023.8s]   n_obs = 998, obs/species: mean=5.0, range=[1, 12]
+[3023.8s]   Missing obs: 606 / 998 (60.7%), missing species: 100 / 200
+[3023.8s]   [1/3] species_mean...
+[3023.8s]     Done in 0.0s
+[3023.8s]   [2/3] pigauto_no_cov...
+[3142.9s]     Done in 119.1s
+[3142.9s]   [3/3] pigauto_cov...
+[3248.1s]     Done in 105.1s
+[3248.2s] 
+--- Cell 16 / 24 ---
+[3248.2s] === lambda=0.9, beta=0.5, sp_miss=0.5, rep=2 (seed=2145) ===
+[3248.2s]   n_obs = 1025, obs/species: mean=5.1, range=[1, 12]
+[3248.2s]   Missing obs: 641 / 1025 (62.5%), missing species: 100 / 200
+[3248.2s]   [1/3] species_mean...
+[3248.2s]     Done in 0.0s
+[3248.2s]   [2/3] pigauto_no_cov...
+[3330.9s]     Done in 82.7s
+[3330.9s]   [3/3] pigauto_cov...
+[3424.5s]     Done in 93.6s
+[3424.5s]   Saved partial results (16 / 24 cells)
+[3424.7s] 
+--- Cell 17 / 24 ---
+[3424.7s] === lambda=0.5, beta=1.0, sp_miss=0.5, rep=2 (seed=2110) ===
+[3424.7s]   n_obs = 1007, obs/species: mean=5.0, range=[1, 12]
+[3424.7s]   Missing obs: 622 / 1007 (61.8%), missing species: 100 / 200
+[3424.7s]   [1/3] species_mean...
+[3424.7s]     Done in 0.0s
+[3424.7s]   [2/3] pigauto_no_cov...
+[3516.1s]     Done in 91.4s
+[3516.1s]   [3/3] pigauto_cov...
+[3621.6s]     Done in 105.5s
+[3621.8s] 
+--- Cell 18 / 24 ---
+[3621.8s] === lambda=0.9, beta=1.0, sp_miss=0.5, rep=2 (seed=2150) ===
+[3621.8s]   n_obs = 999, obs/species: mean=5.0, range=[1, 12]
+[3621.8s]   Missing obs: 595 / 999 (59.6%), missing species: 100 / 200
+[3621.8s]   [1/3] species_mean...
+[3621.8s]     Done in 0.0s
+[3621.8s]   [2/3] pigauto_no_cov...
+[3707.4s]     Done in 85.6s
+[3707.4s]   [3/3] pigauto_cov...
+[3811.1s]     Done in 103.7s
+[3811.6s] 
+--- Cell 19 / 24 ---
+[3811.6s] === lambda=0.5, beta=0.0, sp_miss=0.8, rep=2 (seed=2130) ===
+[3811.6s]   n_obs = 963, obs/species: mean=4.8, range=[1, 11]
+[3811.6s]   Missing obs: 815 / 963 (84.6%), missing species: 160 / 200
+[3811.6s]   [1/3] species_mean...
+[3811.6s]     Done in 0.0s
+[3811.6s]   [2/3] pigauto_no_cov...

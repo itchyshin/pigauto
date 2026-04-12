@@ -47,7 +47,7 @@ suppressPackageStartupMessages({
 here    <- "/Users/z3437171/Dropbox/Github Local/pigauto"
 out_rds <- file.path(here, "script", "bench_binary.rds")
 out_md  <- file.path(here, "script", "bench_binary.md")
-MC_CORES <- 16L
+MC_CORES <- as.integer(Sys.getenv("MC_CORES", unset = "16"))
 
 script_start <- proc.time()[["elapsed"]]
 

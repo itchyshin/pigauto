@@ -46,7 +46,7 @@ suppressPackageStartupMessages({
 here    <- "/Users/z3437171/Dropbox/Github Local/pigauto"
 out_rds <- file.path(here, "script", "bench_continuous.rds")
 out_md  <- file.path(here, "script", "bench_continuous.md")
-MC_CORES <- 16L
+MC_CORES <- as.integer(Sys.getenv("MC_CORES", unset = "16"))
 
 script_start <- proc.time()[["elapsed"]]
 
@@ -304,17 +304,22 @@ md <- c(
 test_df <- all_results[all_results$split == "test", ]
 show_cols <- c("method", "scenario", "trait", "rmse", "pearson_r", "mae")
 
+safe_aggregate <- function(sub, methods) {
+  avail_m <- intersect(c("rmse", "pearson_r", "mae"),
+    names(sub)[vapply(sub, function(x) is.numeric(x) && any(is.finite(x)), logical(1))])
+  if (!length(avail_m)) return(NULL)
+  fm <- as.formula(paste0("cbind(", paste(avail_m, collapse = ","), ") ~ method + trait"))
+  avg <- aggregate(fm, data = sub, FUN = mean, na.rm = TRUE)
+  avg[order(avg$trait, match(avg$method, methods)), ]
+}
+
 for (scen in scenarios_primary) {
   md <- c(md, sprintf("### %s", scen), "")
   sub <- test_df[test_df$scenario == scen &
                    test_df$missing_frac == primary_frac, show_cols, drop = FALSE]
-  if (nrow(sub) == 0L) {
-    md <- c(md, "(no data)", "")
-    next
-  }
-  avg <- aggregate(cbind(rmse, pearson_r, mae) ~ method + trait,
-                   data = sub, FUN = mean, na.rm = TRUE)
-  avg <- avg[order(avg$trait, match(avg$method, c("mean", "BM", "pigauto"))), ]
+  if (nrow(sub) == 0L) { md <- c(md, "(no data)", ""); next }
+  avg <- safe_aggregate(sub, c("mean", "BM", "pigauto"))
+  if (is.null(avg)) { md <- c(md, "(no data)", ""); next }
   md <- c(md, "```", capture.output(print(avg, row.names = FALSE)), "```", "")
 }
 
@@ -324,13 +329,9 @@ for (scen in secondary_scenarios) {
     md <- c(md, sprintf("### %s, missing_frac = %.2f", scen, frac), "")
     sub <- test_df[test_df$scenario == scen &
                      test_df$missing_frac == frac, show_cols, drop = FALSE]
-    if (nrow(sub) == 0L) {
-      md <- c(md, "(no data)", "")
-      next
-    }
-    avg <- aggregate(cbind(rmse, pearson_r, mae) ~ method + trait,
-                     data = sub, FUN = mean, na.rm = TRUE)
-    avg <- avg[order(avg$trait, match(avg$method, c("mean", "BM", "pigauto"))), ]
+    if (nrow(sub) == 0L) { md <- c(md, "(no data)", ""); next }
+    avg <- safe_aggregate(sub, c("mean", "BM", "pigauto"))
+    if (is.null(avg)) { md <- c(md, "(no data)", ""); next }
     md <- c(md, "```", capture.output(print(avg, row.names = FALSE)), "```", "")
   }
 }

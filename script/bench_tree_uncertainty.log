@@ -1,0 +1,16 @@
+[   0.3s] === frac=0.20, rep=1 (seed=1020) ===
+[   0.3s]   Missing cells in continuous traits: 240 / 1200 (20.0%)
+[   0.3s]   Single-tree MI (m=50)...
+[ 205.6s]     Done in 205.3s
+[ 205.7s]     Fits: 50/50 succeeded
+[ 205.7s]   Multi-tree MI (10 trees x 5)...
+[3144.5s]     Done in 2938.8s (49.0 min)
+[3144.6s]     Fits: 50/50 succeeded
+[3144.8s]   Cell done.
+
+[3144.8s] === frac=0.20, rep=2 (seed=2020) ===
+[3144.8s]   Missing cells in continuous traits: 240 / 1200 (20.0%)
+[3144.8s]   Single-tree MI (m=50)...
+[3401.7s]     Done in 256.9s
+[3401.8s]     Fits: 50/50 succeeded
+[3401.8s]   Multi-tree MI (10 trees x 5)...

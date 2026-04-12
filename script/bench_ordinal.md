@@ -1,9 +1,9 @@
 # Ordinal-trait benchmark
 
-Run on: 2026-04-10 06:47:33
+Run on: 2026-04-12 06:51:53
 Machine: Darwin 25.4.0 (arm64), R 4.5.2
 Species: 300, traits: 3, reps: 5, missing_frac: 0.25
-Total wall: 8.9 min
+Total wall: 0.0 min
 
 ## Methods
 

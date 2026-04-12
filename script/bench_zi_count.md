@@ -1,8 +1,8 @@
 # Zero-inflated count benchmark
 
-Run on: 2026-04-10 08:21:28
+Run on: 2026-04-12 06:51:55
 Species: 300, traits: 3, reps: 5
-Total wall: 54.6 min
+Total wall: 0.0 min
 
 ### zf_0.2
 

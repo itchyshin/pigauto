@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pigauto v0.6.0 &mdash; Validation Suite</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         max-width: 1040px; margin: 2em auto; padding: 0 1.5em; color: #111827;
+         line-height: 1.55; }
+  h1 { border-bottom: 2px solid #111827; padding-bottom: .25em; }
+  h2 { margin-top: 2em; color: #1f2937; border-bottom: 1px solid #d1d5db;
+       padding-bottom: .15em; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 13px; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
+  th { background: #f3f4f6; font-weight: 600; }
+  .meta { color: #6b7280; font-size: 13px; }
+  .note { background: #fef3c7; border-left: 4px solid #d97706;
+         padding: 1em 1.2em; border-radius: 4px; margin: 1.5em 0; }
+  .note b { color: #92400e; }
+  .badge { display: inline-block; background: #eef2ff; color: #3730a3;
+           padding: 2px 10px; border-radius: 999px; font-size: 13px;
+           font-weight: 600; margin-left: 8px; vertical-align: middle; }
+  code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  a { color: #2563eb; }
+  footer { color: #6b7280; font-size: 12px; margin-top: 3em;
+           border-top: 1px solid #e5e7eb; padding-top: 1em; }
+</style>
+</head>
+<body>
+<h1>pigauto <span class="badge">v0.6.0</span> &mdash; Validation Suite</h1>
+<p class="meta">Generated 2026-04-12 07:07 &middot; Commit dff4c7c8ea</p>
+<p>
+This page summarises 14 benchmark experiments validating pigauto v0.6.0 across all
+supported trait types, multiple real datasets, and a range of missingness scenarios.
+Each row links to a full benchmark report with per-scenario tables, bar charts, and
+methodology notes. Benchmarks were run with <code>devtools::load_all()</code> against
+the current working tree.
+</p>
+<h2>Per-trait-type benchmarks</h2>
+<p class="meta">Simulated data: <code>ape::rtree(300)</code>, 25% MCAR, 5 replicates,
+500 epochs. Improvement = (baseline &minus; pigauto) / baseline &times; 100%.
+Positive values (green) indicate pigauto reduces error.</p>
+<table>
+<thead><tr>
+<th>Benchmark</th><th>Type</th><th>Dataset</th><th>Baseline vs</th>
+<th>Baseline</th><th>pigauto</th><th>Improvement</th><th>Metric</th>
+</tr></thead>
+<tbody>
+<tr><td>Binary traits</td><td><em>binary</em></td><td>Simulated</td><td colspan="4" style="color:#9ca3af;font-style:italic">pending &mdash; script not yet run</td><td>&mdash;</td></tr>
+<tr><td>Categorical traits</td><td><em>categorical</em></td><td>Simulated</td><td colspan="4" style="color:#9ca3af;font-style:italic">pending &mdash; script not yet run</td><td>&mdash;</td></tr>
+<tr><td>Continuous traits</td><td><em>continuous</em></td><td>Simulated</td><td colspan="4" style="color:#9ca3af;font-style:italic">pending &mdash; script not yet run</td><td>&mdash;</td></tr>
+<tr><td>Count traits</td><td><em>count</em></td><td>Simulated</td><td colspan="4" style="color:#9ca3af;font-style:italic">pending &mdash; script not yet run</td><td>&mdash;</td></tr>
+<tr><td>Ordinal traits</td><td><em>ordinal</em></td><td>Simulated</td><td colspan="4" style="color:#9ca3af;font-style:italic">pending &mdash; script not yet run</td><td>&mdash;</td></tr>
+<tr><td>Proportion traits</td><td><em>proportion</em></td><td>Simulated</td><td colspan="4" style="color:#9ca3af;font-style:italic">pending &mdash; script not yet run</td><td>&mdash;</td></tr>
+<tr><td>ZI count traits</td><td><em>zi_count</em></td><td>Simulated</td><td colspan="4" style="color:#9ca3af;font-style:italic">pending &mdash; script not yet run</td><td>&mdash;</td></tr>
+<tr><td>Missingness mechanisms</td><td><em>mixed</em></td><td>Simulated</td><td colspan="4" style="color:#9ca3af;font-style:italic">pending &mdash; script not yet run</td><td>&mdash;</td></tr>
+</tbody></table>
+<h2>Real-data and feature benchmarks</h2>
+<p class="meta">Uses bundled datasets. See individual reports for full details.</p>
+<table>
+<thead><tr>
+<th>Benchmark</th><th>Type</th><th>Dataset</th><th>Question</th>
+<th>Method A</th><th>Method B</th><th>Improvement</th><th>Metric</th>
+</tr></thead>
+<tbody>
+<tr><td><a href="dev/bench_avonet_missingness.html">Avonet full (9,993 sp.)</a></td><td><em>mixed (7 traits)</em></td><td>AVONET + BirdTree (n=9,993)</td><td>BM vs pigauto</td><td>0.348</td><td>0.348</td><td><span style="color:#059669">&#9650; 0.0%</span></td><td>RMSE at 50% miss.</td></tr>
+<tr><td><a href="dev/bench_delhey.html">Delhey covariate study</a></td><td><em>continuous</em></td><td>Delhey 2019 (n=5,809)</td><td>BM vs pigauto</td><td>0.677</td><td>0.678</td><td><span style="color:#dc2626">&#9660; 0.1%</span></td><td>RMSE at 40% miss.</td></tr>
+<tr><td><a href="dev/bench_covariate_sim.html">Covariate benefit (sim)</a></td><td><em>continuous</em></td><td>Simulated (n=300)</td><td>pigauto vs +covariates</td><td>1.563</td><td>1.501</td><td><span style="color:#059669">&#9650; 4.0%</span></td><td>RMSE (mod_env, 40% miss)</td></tr>
+<tr><td><a href="dev/bench_multi_obs.html">Multi-obs + covariates</a></td><td><em>continuous</em></td><td>Simulated CTmax (multi-obs)</td><td>no-cov vs cov</td><td>3.210</td><td>2.825</td><td><span style="color:#059669">&#9650; 12.0%</span></td><td>Obs-level RMSE (mean)</td></tr>
+<tr><td><a href="dev/bench_tree_uncertainty.html">Tree uncertainty</a></td><td><em>continuous</em></td><td>AVONET300 + BirdTree (50 trees)</td><td>single-tree vs multi-tree MI</td><td colspan="2">Mean FMI = 0.038</td><td>&mdash;</td><td>FMI (pooled coefs)</td></tr>
+<tr><td><a href="dev/bench_scaling_v031.html">Scaling (v0.3.1 fix)</a></td><td><em>mixed</em></td><td>Simulated (up to 300 species)</td><td>wall time per N</td><td colspan="2">Max N = 300 (4/4 stages ok)</td><td>&mdash;</td><td>Wall time (s)</td></tr>
+</tbody></table>
+<div class="note">
+<b>How to read the Improvement column.</b> For RMSE metrics, positive values (
+<span style="color:#059669">&#9650;</span>) mean pigauto achieved lower error than the baseline.
+For accuracy metrics, positive values mean pigauto achieved higher accuracy.
+A value near zero is expected when phylogenetic signal dominates and the calibrated gate
+closes to zero &mdash; in that case pigauto falls back to the baseline by design.
+</div>
+<h2>Reproducibility</h2>
+<ul>
+<li>Package version: <code>pigauto 0.6.0</code></li>
+<li>Commit: <code>dff4c7c8ea</code></li>
+<li>Run on: 2026-04-12 07:07</li>
+<li>All scripts in <code>script/bench_*.R</code>; generators in <code>script/make_bench_*_html.R</code></li>
+<li>All .rds result files checked into <code>script/</code></li>
+</ul>
+<footer>
+Generator: <code>script/make_validation_suite_html.R</code>
+</footer>
+</body>
+</html>

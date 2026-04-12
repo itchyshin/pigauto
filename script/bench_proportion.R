@@ -27,7 +27,7 @@ suppressPackageStartupMessages({
 here    <- "/Users/z3437171/Dropbox/Github Local/pigauto"
 out_rds <- file.path(here, "script", "bench_proportion.rds")
 out_md  <- file.path(here, "script", "bench_proportion.md")
-MC_CORES <- 16L
+MC_CORES <- as.integer(Sys.getenv("MC_CORES", unset = "16"))
 
 script_start <- proc.time()[["elapsed"]]
 
@@ -283,7 +283,7 @@ for (scen in c(scenarios_primary, secondary_scenarios)) {
     next
   }
   avail_metrics <- intersect(c("rmse", "pearson_r", "mae"),
-                             names(sub)[vapply(sub, is.numeric, logical(1))])
+    names(sub)[vapply(sub, function(x) is.numeric(x) && any(is.finite(x)), logical(1))])
   fm <- as.formula(paste("cbind(",
                          paste(avail_metrics, collapse = ", "),
                          ") ~ method + trait"))

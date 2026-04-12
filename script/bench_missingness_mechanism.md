@@ -1,8 +1,8 @@
 # Missingness-mechanism benchmark (MCAR vs MAR vs MNAR)
 
-Run on: 2026-04-10 08:34:36
+Run on: 2026-04-12 06:51:56
 Species: 300, reps: 5
-Total wall: 11.7 min
+Total wall: 0.0 min
 
 ### MCAR
 

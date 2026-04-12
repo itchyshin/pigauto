@@ -1,0 +1,14 @@
+[   0.0s] Data: 5809 species, 2 traits, 6 covariates
+[   0.1s] === frac=0.20, rep=1 (seed=1020) ===
+[   0.1s]   Missing cells: 2324 / 11618 (20.0%)
+[  94.7s]   mean...
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+[  95.7s]   BM baseline...
+[ 100.5s]   pigauto (no covariates)...
