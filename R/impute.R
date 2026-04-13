@@ -8,8 +8,10 @@
 #' @param traits data.frame with species as rownames and trait columns,
 #'   or (when \code{species_col} is supplied) a data.frame with a species
 #'   column that may have multiple rows per species.
-#'   Supported column types: numeric (continuous), integer (count),
-#'   factor (binary/categorical), ordered (ordinal), logical (binary).
+#'   Supported column types: \code{numeric} (continuous), \code{integer}
+#'   (count), \code{factor} (binary/categorical), \code{ordered} (ordinal),
+#'   \code{character} (factor → binary/categorical), \code{logical} (binary).
+#'   See the \strong{Trait type auto-detection} section below.
 #' @param tree object of class \code{"phylo"}.
 #' @param species_col character. Name of the column in \code{traits} that
 #'   identifies species.  When supplied, multiple observations per species
@@ -48,12 +50,41 @@
 #'       \code{missing_frac = 0}).}
 #'     \item{evaluation}{Evaluation metrics on test set (or \code{NULL}).}
 #'   }
+#' @section Trait type auto-detection:
+#' pigauto infers each trait's type from its R class — no \code{trait_types}
+#' argument is needed for most data:
+#' \tabular{ll}{
+#'   \strong{R class} \tab \strong{pigauto type} \cr
+#'   \code{numeric} \tab continuous (auto-log if all-positive) \cr
+#'   \code{integer} \tab count \cr
+#'   \code{factor} with 2 levels \tab binary \cr
+#'   \code{factor} (unordered) with >2 levels \tab categorical \cr
+#'   \code{ordered} / \code{factor(..., ordered = TRUE)} \tab ordinal \cr
+#'   \code{character} \tab → factor → binary or categorical \cr
+#'   \code{logical} \tab binary \cr
+#' }
+#' Two types cannot be inferred from class alone and \emph{must} be declared
+#' via \code{trait_types}:
+#' \describe{
+#'   \item{\code{"proportion"}}{A \code{numeric} bounded 0–1, e.g. survival
+#'     rate: \code{trait_types = c(Survival = "proportion")}.}
+#'   \item{\code{"zi_count"}}{An \code{integer} with excess zeros, e.g.
+#'     parasite count: \code{trait_types = c(Parasites = "zi_count")}.}
+#' }
+#' Pass \code{trait_types} through \code{...} — it is forwarded to
+#' \code{\link{preprocess_traits}}.
+#'
 #' @examples
 #' \dontrun{
-#' # Simple case: fill in missing values
+#' # Simple case: fill in missing values — type detection is automatic
 #' result <- impute(my_traits, my_tree)
 #' result$completed              # observed preserved, NAs filled
 #' result$imputed_mask           # which cells were imputed
+#'
+#' # Proportion and zi_count must be declared explicitly
+#' result <- impute(my_traits, my_tree,
+#'                  trait_types = c(Survival  = "proportion",
+#'                                  Parasites = "zi_count"))
 #'
 #' # Diagnostic: raw predictions for every cell
 #' result$prediction$imputed     # model's prediction everywhere

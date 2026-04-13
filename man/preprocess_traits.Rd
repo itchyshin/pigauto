@@ -101,16 +101,46 @@ multiple observations per species are supported: the output matrix has
 one row per observation, plus an \code{obs_to_species} mapping for the
 GNN (which operates at species level).
 
-\strong{Type detection} (when \code{trait_types = NULL}) follows the column
-class of each trait:
+\strong{Automatic type detection} (when \code{trait_types = NULL}) follows the
+R class of each column — no user input is required for most data:
+\tabular{ll}{
+\strong{R class} \tab \strong{pigauto type} \cr
+\code{numeric} (non-integer) \tab continuous \cr
+\code{integer} \tab count \cr
+\code{factor} with 2 levels \tab binary \cr
+\code{factor} (unordered) with >2 levels \tab categorical \cr
+\code{ordered} / \code{factor(..., ordered = TRUE)} \tab ordinal \cr
+\code{character} \tab converted to \code{factor}, then binary or categorical \cr
+\code{logical} \tab binary (FALSE = 0, TRUE = 1) \cr
+}
+
+\strong{Two types require an explicit override} because they cannot be
+distinguished from their R class alone:
 \describe{
-\item{\code{numeric} (non-integer)}{continuous}
-\item{\code{integer}}{count}
-\item{\code{factor} with 2 levels}{binary}
-\item{\code{factor} (unordered) with >2 levels}{categorical}
-\item{\code{ordered} factor}{ordinal}
-\item{\code{character}}{converted to \code{factor}, then classified}
-\item{\code{logical}}{converted to binary (FALSE = 0, TRUE = 1)}
+\item{\code{"proportion"}}{A \code{numeric} column bounded 0–1 looks
+identical to continuous.  Declare it explicitly:
+\code{trait_types = c(SurvivalRate = "proportion")}.
+Encoded via \code{qlogis(clamp(x, 0.001, 0.999))}.}
+\item{\code{"zi_count"}}{An \code{integer} column with excess zeros
+looks identical to count.  Declare it explicitly:
+\code{trait_types = c(Parasites = "zi_count")}.
+Encoded as a binary zero/non-zero gate plus \code{log1p}-z magnitude.}
+}
+
+\strong{Practical examples of type assignment:}
+\itemize{
+\item Body mass (\code{numeric}, all positive) → \code{continuous},
+auto-log-transformed.
+\item Clutch size (\code{integer}) → \code{count}.
+\item Migratory (\code{factor} with levels "Yes"/"No") → \code{binary}.
+\item Diet (\code{factor} with >2 levels) → \code{categorical}.
+\item IUCN status (\code{ordered} factor, LC < NT < VU < EN < CR) →
+\code{ordinal}.  If left as an unordered factor, it becomes
+\code{categorical} — both are valid depending on the question.
+\item Parasite load (\code{integer} with many zeros) → needs
+\code{trait_types = c(Parasites = "zi_count")}.
+\item Survival rate (\code{numeric}, values in \link{0, 1}) → needs
+\code{trait_types = c(Survival = "proportion")}.
 }
 
 \strong{Latent encoding} per type:

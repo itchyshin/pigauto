@@ -332,6 +332,56 @@ Post-training pipeline:
 
 ## Trait types
 
+### Automatic type detection
+
+pigauto infers each trait's type from its R class — **no `trait_types` argument
+is needed for most data**. Just ensure your columns have the right R class:
+
+| R class | pigauto type | How to set in R |
+|---|---|---|
+| `numeric` | continuous | default for `read.csv()` numeric columns |
+| `integer` | count | `as.integer(x)` or `read.csv(..., colClasses = "integer")` |
+| `factor` (2 levels) | binary | `factor(x)` — levels auto-detected |
+| `factor` (>2 levels) | categorical | `factor(x)` — levels auto-detected |
+| `ordered` factor | ordinal | `ordered(x, levels = c("low","mid","high"))` |
+| `character` | → factor → binary/categorical | auto-converted |
+| `logical` | binary | `as.logical(x)` |
+
+**Two types require an explicit `trait_types` override** because they cannot
+be distinguished from their R class:
+
+- **`proportion`** — a `numeric` column bounded 0–1 looks like continuous.
+  Declare it: `impute(traits, tree, trait_types = c(Survival = "proportion"))`
+- **`zi_count`** — an `integer` with excess zeros looks like count.
+  Declare it: `impute(traits, tree, trait_types = c(Parasites = "zi_count"))`
+
+**Practical examples:**
+
+```r
+df$Mass        <- as.numeric(df$Mass)          # continuous (auto-logged if all-positive)
+df$ClutchSize  <- as.integer(df$ClutchSize)    # count
+df$Migratory   <- factor(df$Migratory)         # binary (2 levels)
+df$Diet        <- factor(df$Diet)              # categorical (>2 levels)
+df$IUCNstatus  <- ordered(df$IUCNstatus,
+                    levels = c("LC","NT","VU","EN","CR"))  # ordinal
+
+# Proportion and zi_count: declare explicitly
+result <- impute(df, tree,
+                 trait_types = c(Survival  = "proportion",
+                                 Parasites = "zi_count"))
+```
+
+> **Trait vs. covariate — a functional distinction.**  A trait is something
+> you want to impute (NA values allowed). A covariate is something you use to
+> improve imputation accuracy (must be fully observed, not imputed). The same
+> variable can be either depending on your question: IUCN status with known
+> values for all species → pass as a covariate; IUCN status unknown for Data
+> Deficient species → put it in `traits` as an `ordered` factor and let pigauto
+> impute it. Covariates are for things exogenous to the trait space (climate,
+> geography, experimental treatment).
+
+### Full type reference
+
 | R class    | pigauto type | Encoding         | Loss          | Baseline                   | Notes                      |
 |------------|-------------|------------------|---------------|----------------------------|----------------------------|
 | numeric    | continuous  | optional log + z | MSE           | Phylogenetic BM            | Auto-detected              |
