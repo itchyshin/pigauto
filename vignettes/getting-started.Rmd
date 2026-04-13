@@ -1,5 +1,5 @@
 ---
-title: "Getting started with pigauto"
+title: "Getting started with pigauto: Phylogenetic Imputation via Graph AUTO-encoders"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Getting started with pigauto}

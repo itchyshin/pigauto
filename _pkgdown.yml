@@ -12,7 +12,7 @@ template:
 
 home:
   logo: man/figures/logo.png
-  title: "pigauto: fill in missing species traits using a phylogenetic tree"
+  title: "pigauto: Phylogenetic Imputation via Graph AUTO-encoders"
   description: >
     pigauto imputes missing trait data for comparative analyses by
     combining three sources of information: phylogenetic similarity
