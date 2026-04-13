@@ -252,67 +252,72 @@ make_subplot <- function(pal) {
                 aes(x0 = x, y0 = y, r = r),
                 fill = pal$node, colour = NA, alpha = 0.75) +
 
-    # ── mini cladogram above pig head (7 tips, asymmetric with polytomy) ─────
-    # Left clade: 4 tips, 2 levels of bifurcation.
-    # Right clade: 3-tip hard polytomy (realistic — common in unresolved trees).
-    # Root at (cx, 0.628); tips at y = 0.835.  Gold = NN-node / leaf motif.
+    # ── mini cladogram above pig head (7 tips, fully bifurcating) ────────────
+    # Left clade : 4 tips, 2 levels of bifurcation (symmetric).
+    # Right clade: 3 tips, pectinate (asymmetric) — one branch stays as a
+    #   single tip, the other bifurcates into 2.  No polytomies.
+    # Root at (cx, 0.628); all tips at y = 0.835.  Gold = leaf / NN-node motif.
     {
       cx <- fc[1]   # = -0.06
       tr_segs <- data.frame(
         x = c(
-          cx,          # 1  stem V
-          cx-0.22,     # 2  root H left
-          cx-0.22,     # 3  left-node V
-          cx-0.34,     # 4  left fork H left
-          cx-0.34,     # 5  LL-node V
-          cx-0.40,     # 6  LL fork H left
-          cx-0.40,     # 7  tip1 V
-          cx-0.28,     # 8  tip2 V
-          cx-0.10,     # 9  LR-node V
-          cx-0.16,     # 10 LR fork H left
-          cx-0.16,     # 11 tip3 V
-          cx-0.04,     # 12 tip4 V
-          cx+0.14,     # 13 right-node V
-          cx+0.05,     # 14 polytomy H left
-          cx+0.05,     # 15 tip5 V
-          cx+0.155,    # 16 tip6 V
-          cx+0.26      # 17 tip7 V
+          cx,          #  1  stem V
+          cx-0.22,     #  2  root H (horizontal fork at root)
+          cx-0.22,     #  3  L-node V
+          cx-0.34,     #  4  L-fork H
+          cx-0.34,     #  5  LL-node V
+          cx-0.40,     #  6  LL-fork H
+          cx-0.40,     #  7  tip1 V
+          cx-0.28,     #  8  tip2 V
+          cx-0.10,     #  9  LR-node V
+          cx-0.16,     # 10  LR-fork H
+          cx-0.16,     # 11  tip3 V
+          cx-0.04,     # 12  tip4 V
+          cx+0.14,     # 13  R-node V
+          cx+0.04,     # 14  R-fork H (lone tip left, splitting branch right)
+          cx+0.04,     # 15  lone-tip V  ← one branch stays, does NOT split
+          cx+0.23,     # 16  Ri-node V   ← other branch goes up and splits
+          cx+0.15,     # 17  Ri-fork H
+          cx+0.15,     # 18  tip6 V
+          cx+0.31      # 19  tip7 V
         ),
         xend = c(
           cx,
-          cx+0.14,     # 2  root H right
+          cx+0.14,     #  2  root H right end
           cx-0.22,
-          cx-0.10,     # 4  left fork H right
+          cx-0.10,     #  4  L-fork H right end
           cx-0.34,
-          cx-0.28,     # 6  LL fork H right
+          cx-0.28,     #  6  LL-fork H right end
           cx-0.40,
           cx-0.28,
           cx-0.10,
-          cx-0.04,     # 10 LR fork H right
+          cx-0.04,     # 10  LR-fork H right end
           cx-0.16,
           cx-0.04,
           cx+0.14,
-          cx+0.26,     # 14 polytomy H right
-          cx+0.05,
-          cx+0.155,
-          cx+0.26
+          cx+0.23,     # 14  R-fork H right end
+          cx+0.04,
+          cx+0.23,
+          cx+0.31,     # 17  Ri-fork H right end
+          cx+0.15,
+          cx+0.31
         ),
         y = c(
           0.628,
           0.688, 0.688, 0.748, 0.748, 0.793, 0.793, 0.793,
           0.748, 0.793, 0.793, 0.793,
-          0.688, 0.748, 0.748, 0.748, 0.748
+          0.688, 0.748, 0.748, 0.748, 0.793, 0.793, 0.793
         ),
         yend = c(
           0.688,
           0.688, 0.748, 0.748, 0.793, 0.793, 0.835, 0.835,
           0.793, 0.793, 0.835, 0.835,
-          0.748, 0.748, 0.835, 0.835, 0.835
+          0.748, 0.748, 0.835, 0.793, 0.793, 0.835, 0.835
         )
       )
       tr_tips <- data.frame(
         x = c(cx-0.40, cx-0.28, cx-0.16, cx-0.04,
-              cx+0.05, cx+0.155, cx+0.26),
+              cx+0.04, cx+0.15, cx+0.31),
         y = rep(0.835, 7),
         r = 0.022
       )
@@ -345,9 +350,9 @@ make_sticker <- function(pal, filename) {
     p_family = ttf,
     p_fontface = "bold",
     p_x      = 1.00,
-    p_y      = 0.38,
+    p_y      = 0.45,
     s_x      = 1.00,
-    s_y      = 0.85,
+    s_y      = 0.87,
     s_width  = 1.55,
     s_height = 1.55,
     h_fill   = pal$bg,
