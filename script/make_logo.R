@@ -4,7 +4,8 @@
 # "pigauto" = pig + auto (automobile).
 # A pink pig in driving goggles pilots an open-top cartoon car.
 # The pig is large and prominent (fr = 0.28), with ears peeking above the
-# car body.  Gold wheels echo the neural-network motif.  No phylo tree.
+# car body.  A small 4-tip gold cladogram floats above the pig's head.
+# Gold colour unifies: wheels (NN nodes) + cladogram tips (phylo leaves).
 #
 # Run from the package root:
 #   Rscript script/make_logo.R
@@ -250,6 +251,42 @@ make_subplot <- function(pal) {
     geom_circle(data = exh_df,
                 aes(x0 = x, y0 = y, r = r),
                 fill = pal$node, colour = NA, alpha = 0.75) +
+
+    # ── mini cladogram above pig head (4 tips, symmetric) ────────────────────
+    # Root at (cx, 0.635); tips at y = 0.835.  Gold colour = leaf/node motif.
+    {
+      cx <- fc[1]   # same horizontal centre as pig face = -0.06
+      tr_segs <- data.frame(
+        #           1-stem       2-root-H       3-Lnode-V    4-Lfork-H
+        x    = c(cx,       cx-0.18,  cx-0.18,  cx-0.28,
+        #           5-tip1-V     6-tip2-V     7-Rnode-V    8-Rfork-H
+                 cx-0.28,  cx-0.08,  cx+0.18,  cx+0.08,
+        #           9-tip3-V     10-tip4-V
+                 cx+0.08,  cx+0.28),
+        xend = c(cx,       cx+0.18,  cx-0.18,  cx-0.08,
+                 cx-0.28,  cx-0.08,  cx+0.18,  cx+0.28,
+                 cx+0.08,  cx+0.28),
+        y    = c(0.635,    0.695,    0.695,    0.755,
+                 0.755,    0.755,    0.695,    0.755,
+                 0.755,    0.755),
+        yend = c(0.695,    0.695,    0.755,    0.755,
+                 0.835,    0.835,    0.755,    0.755,
+                 0.835,    0.835)
+      )
+      tr_tips <- data.frame(
+        x = c(cx-0.28, cx-0.08, cx+0.08, cx+0.28),
+        y = rep(0.835, 4),
+        r = 0.026
+      )
+      list(
+        geom_segment(data = tr_segs,
+                     aes(x = x, xend = xend, y = y, yend = yend),
+                     colour = pal$node, linewidth = 0.80, alpha = 0.88),
+        geom_circle(data = tr_tips,
+                    aes(x0 = x, y0 = y, r = r),
+                    fill = pal$node, colour = NA, alpha = 0.88)
+      )
+    } +
 
     coord_fixed(xlim = c(-1, 1), ylim = c(-1, 1), expand = FALSE) +
     theme_void() +
