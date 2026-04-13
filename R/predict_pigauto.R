@@ -9,12 +9,20 @@
 #' \code{(1 - r_cal) * baseline + r_cal * delta_GNN}.
 #'
 #' @details
-#' When \code{n_imputations > 1}, the model runs in train mode (dropout
-#' active) to generate M stochastic forward passes.  Point estimates are
-#' computed as the mean (continuous, count) or mode (binary, categorical,
-#' ordinal) across passes.  Between-imputation variance provides proper
-#' uncertainty estimates following Rubin's rules.  The M complete datasets
-#' are returned in \code{imputed_datasets} for downstream pooling.
+#' When \code{n_imputations > 1}, each imputation \code{m} draws a BM
+#' posterior sample \code{t_BM_draw ~ N(BM_mu, BM_se)} on the latent scale
+#' for originally-missing cells (\code{BM_se = 0} for observed cells so they
+#' are never perturbed).  The model runs in train mode (GNN dropout active)
+#' using \code{t_BM_draw} as input.  The final blend is
+#' \code{(1 - r_cal) * t_BM_draw + r_cal * GNN_delta(t_BM_draw)}: when the
+#' calibrated gate is zero the imputation is a pure BM posterior draw; when
+#' \code{r_cal > 0} both BM draws and GNN dropout contribute variance.  Point
+#' estimates are the mean (continuous, count) or mode (binary, categorical,
+#' ordinal) across passes.  The M complete datasets are returned in
+#' \code{imputed_datasets} for Rubin's-rules pooling.  For the user-facing
+#' multiple-imputation workflow, prefer \code{multi_impute()} which offers
+#' \code{draws_method = "conformal"} (calibrated, narrower) or
+#' \code{"mc_dropout"} (BM posterior draws + GNN dropout, wider).
 #'
 #' **Decoding per type:**
 #' \describe{
@@ -29,9 +37,10 @@
 #' @param newdata \code{NULL} (use the training data) or a
 #'   \code{"pigauto_data"} object for new species.
 #' @param return_se logical. Compute standard errors? (default \code{TRUE}).
-#' @param n_imputations integer. Number of MC dropout forward passes (default
-#'   \code{1L}).  Set to e.g. 10 or 20 for proper multiple imputation with
-#'   between-imputation variance.
+#' @param n_imputations integer. Number of stochastic imputation draws —
+#'   BM posterior samples plus GNN dropout — (default \code{1L}).  Set to
+#'   e.g. 10 or 20 for proper multiple imputation with between-imputation
+#'   variance.
 #' @param ... ignored.
 #' @return A list of class \code{"pigauto_pred"} with:
 #'   \describe{
@@ -40,11 +49,12 @@
 #'     \item{imputed_latent}{Numeric matrix (n x p_latent) of predictions in
 #'       latent scale.}
 #'     \item{se}{Numeric matrix (n x n_original_traits) of per-cell
-#'       uncertainty.  Continuous/count: SE in original scale.
-#'       Binary: Bernoulli SD \code{sqrt(p*(1-p))}.
-#'       Categorical: entropy of probability distribution.
-#'       Ordinal: SE in integer scale.  \code{NULL} if
-#'       \code{return_se = FALSE}.}
+#'       uncertainty.  Continuous/count/ordinal: SE in original scale (BM
+#'       conditional SD, delta-method back-transformed).
+#'       Binary: \code{min(p, 1-p)} — probability of being wrong (0 = certain,
+#'       0.5 = maximally uncertain); \strong{not} a Gaussian SE.
+#'       Categorical: \code{1 - max(p_k)} — margin from certainty; \strong{not}
+#'       a Gaussian SE.  \code{NULL} if \code{return_se = FALSE}.}
 #'     \item{probabilities}{Named list.  Binary traits: numeric probability
 #'       vector.  Categorical traits: n x K probability matrix.  Other
 #'       types: not present.}
@@ -62,7 +72,7 @@
 #' pred$se             # matrix, uncertainty
 #' pred$probabilities  # list of prob vectors/matrices
 #'
-#' # Multiple imputation (MC dropout)
+#' # Multiple imputation (BM posterior draws + GNN dropout)
 #' pred10 <- predict(fit, n_imputations = 10)
 #' pred10$imputed_datasets  # 10 complete data.frames
 #' }

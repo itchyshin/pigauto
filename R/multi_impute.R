@@ -271,43 +271,47 @@ multi_impute <- function(traits, tree, m = 100L,
             NULL
 
     if (tm$type == "continuous") {
-      mu  <- imp[[nm]][rows]
-      # cs is in latent (z-score) scale; convert to original scale
+      mu       <- imp[[nm]][rows]           # original-scale point estimate
+      # s_latent = SE in z-score (latent) space
       s_latent <- if (!is.null(cs)) cs else pred$se[rows, nm] / tm$sd
-      s_orig <- s_latent * tm$sd
       if (isTRUE(tm$log_transform)) {
-        se_log <- s_orig / pmax(mu, .Machine$double.eps)
-        imp[[nm]][rows] <- exp(rnorm(N, log(pmax(mu, .Machine$double.eps)),
-                                     se_log))
+        # Draw on the z-score scale then back-transform to avoid the
+        # delta-method approximation error (s_orig/mu is tiny when mu >> 1).
+        z_mu  <- (log(pmax(mu, .Machine$double.eps)) - tm$mean) / tm$sd
+        z_drw <- rnorm(N, z_mu, s_latent)
+        imp[[nm]][rows] <- exp(z_drw * tm$sd + tm$mean)
       } else {
-        imp[[nm]][rows] <- rnorm(N, mu, s_orig)
+        # Non-log: draw directly in original scale (s_orig = s_latent * sd)
+        imp[[nm]][rows] <- rnorm(N, mu, s_latent * tm$sd)
       }
 
     } else if (tm$type == "count") {
+      # log1p transform: draw on z-score scale, back via expm1
       mu       <- as.numeric(imp[[nm]][rows])
       s_latent <- if (!is.null(cs)) cs else pred$se[rows, nm] / tm$sd
-      s_orig   <- s_latent * tm$sd
-      se_log1p <- s_orig / pmax(mu + 1, .Machine$double.eps)
-      log1p_mu <- log1p(pmax(mu, 0))
-      draw     <- pmax(round(expm1(rnorm(N, log1p_mu, se_log1p))), 0L)
+      z_mu  <- (log1p(pmax(mu, 0)) - tm$mean) / tm$sd
+      z_drw <- rnorm(N, z_mu, s_latent)
+      draw  <- pmax(round(expm1(z_drw * tm$sd + tm$mean)), 0L)
       imp[[nm]][rows] <- as.integer(draw)
 
     } else if (tm$type == "ordinal") {
       K        <- length(tm$levels)
       int_mu   <- as.integer(imp[[nm]][rows]) - 1L
       s_latent <- if (!is.null(cs)) cs else pred$se[rows, nm] / tm$sd
-      s_orig   <- s_latent * tm$sd
+      s_orig   <- s_latent * tm$sd   # ordinal is integer-scale, no transform
       draw_i   <- pmin(pmax(round(rnorm(N, int_mu, s_orig)), 0L), K - 1L)
       imp[[nm]][rows] <- factor(tm$levels[as.integer(draw_i) + 1L],
                                 levels = tm$levels, ordered = TRUE)
 
     } else if (tm$type == "proportion") {
+      # logit transform: draw on z-score scale, back via plogis
       mu       <- imp[[nm]][rows]
       s_latent <- if (!is.null(cs)) cs else pred$se[rows, nm] / tm$sd
-      s_orig   <- s_latent * tm$sd
       p_mu     <- pmin(pmax(mu, 1e-6), 1 - 1e-6)
-      se_logit <- s_orig / pmax(p_mu * (1 - p_mu), .Machine$double.eps)
-      imp[[nm]][rows] <- stats::plogis(rnorm(N, stats::qlogis(p_mu), se_logit))
+      logit_mu <- stats::qlogis(p_mu)
+      z_mu     <- (logit_mu - tm$mean) / tm$sd
+      z_drw    <- rnorm(N, z_mu, s_latent)
+      imp[[nm]][rows] <- stats::plogis(z_drw * tm$sd + tm$mean)
 
     } else if (tm$type == "binary") {
       p   <- probs[[nm]][rows]

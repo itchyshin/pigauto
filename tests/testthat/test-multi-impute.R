@@ -24,12 +24,13 @@ make_mi_test_data <- function(n = 40, p = 3, miss_frac = 0.15, seed = 123) {
   list(tree = tree, df = df, n_missing = n_missing)
 }
 
-quick_mi <- function(m = 3L, seed = 123) {
+quick_mi <- function(m = 3L, seed = 123, draws_method = "conformal") {
   td <- make_mi_test_data(seed = seed)
   mi <- multi_impute(
     traits        = td$df,
     tree          = td$tree,
     m             = m,
+    draws_method  = draws_method,
     epochs        = 20L,
     missing_frac  = 0.25,
     verbose       = FALSE,
@@ -37,7 +38,8 @@ quick_mi <- function(m = 3L, seed = 123) {
     eval_every    = 10L,
     patience      = 5L
   )
-  list(mi = mi, td = td)
+  # Include traits_with_na so tests can identify originally-missing cells
+  list(mi = mi, td = td, traits_with_na = td$df)
 }
 
 
@@ -128,10 +130,10 @@ test_that("cells that were originally missing vary across at least some datasets
   expect_equal(nrow(mat_stack), 3L)
 
   # At least one missing cell should have non-zero variance across M draws.
-  # (MC dropout makes this almost certain even after a short training run.)
+  # (BM posterior draws guarantee this even when calibrated gates are 0.)
   col_sds <- apply(mat_stack, 2, stats::sd, na.rm = TRUE)
   expect_true(any(col_sds > 1e-10),
-              info = "MC dropout should produce varying imputations")
+              info = "draws should produce varying imputations")
 })
 
 
@@ -465,4 +467,31 @@ test_that("multi_impute_trees result works with with_imputations() and pool_mi()
   expect_true(all(is.finite(pooled$estimate)))
   expect_true(all(pooled$std.error > 0))
   expect_equal(attr(pooled, "m"), 4L)
+})
+
+
+# ---- 14. draws_method = "conformal" explicitly ----------------------------
+
+test_that("draws_method='conformal' stores method and produces non-zero between-dataset variance", {
+  setup <- quick_mi(m = 5L, seed = 77L, draws_method = "conformal")
+  mi    <- setup$mi
+
+  expect_equal(mi$draws_method, "conformal")
+
+  # Collect values at originally-missing positions
+  miss <- is.na(setup$traits_with_na[["tr1"]])
+  if (sum(miss) == 0L) skip("no missing cells in test data")
+
+  mat_stack <- do.call(rbind, lapply(mi$datasets, function(d) {
+    as.numeric(d[["tr1"]][miss])
+  }))
+  col_sds <- apply(mat_stack, 2, stats::sd, na.rm = TRUE)
+  expect_true(any(col_sds > 1e-10),
+              info = "conformal draws should produce non-zero between-dataset variance")
+
+  # Observed cells must be identical across all M datasets
+  obs_vals <- lapply(mi$datasets, function(d) d[["tr1"]][!miss])
+  for (i in seq_along(obs_vals)[-1])
+    expect_identical(obs_vals[[i]], obs_vals[[1]],
+                     info = paste("dataset", i, "should not alter observed cells"))
 })
