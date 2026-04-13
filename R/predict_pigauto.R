@@ -165,10 +165,41 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     )$unsqueeze(1L)
   }
 
-  for (m in seq_len(n_imp)) {
-    if (n_imp == 1L) model$eval() else model$train()
+  # BM SE tensor for MC dropout BM-draw injection (latent / z-score scale).
+  # BM_SE = 0 for observed cells → observed values never perturbed.
+  # BM_SE > 0 for originally-missing cells → t_BM_draw ~ N(BM_mu, BM_se)
+  # per imputation, held fixed across refine steps so each m draws ONE
+  # consistent BM posterior sample.  The blend then uses t_BM_draw instead
+  # of t_MU in the (1 - gate) term:
+  #   pred = (1-r)*t_BM_draw + r*delta_dropout
+  # → when gate=0: pred = t_BM_draw  ← proper BM posterior draw, non-zero variance
+  # → when gate>0: both BM draws and GNN dropout contribute variance
+  if (n_imp > 1L) {
+    bse_mat <- object$baseline$se            # n_species x p_latent
+    if (multi_obs) bse_mat <- bse_mat[obs_to_sp, , drop = FALSE]
+    t_BM_SE <- torch::torch_tensor(
+      bse_mat, dtype = torch::torch_float(), device = device
+    )
+  }
 
-    X_iter <- t_X_fill$clone()
+  # Default: deterministic baseline for n_imp == 1 path (same as t_MU).
+  # Overwritten each iteration when n_imp > 1.
+  t_BM_draw <- t_MU
+
+  for (m in seq_len(n_imp)) {
+    if (n_imp == 1L) {
+      model$eval()
+      X_iter <- t_X_fill$clone()
+      # t_BM_draw stays as t_MU  → blend is identical to original single-pass
+    } else {
+      model$train()   # activates dropout on GNN hidden layers
+      # Draw one BM posterior sample for this imputation.
+      # BM_SE = 0 for observed cells → X_iter unchanged at observed positions.
+      noise     <- torch::torch_randn(c(n, p), dtype = torch::torch_float(),
+                                     device = device)
+      t_BM_draw <- t_MU + noise * t_BM_SE   # fixed BM draw for this m
+      X_iter    <- t_BM_draw$clone()          # GNN input starts from BM draw
+    }
     torch::with_no_grad({
       mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
       for (step in seq_len(cfg$refine_steps)) {
@@ -176,10 +207,12 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
         if (has_covariates) cov_parts0[[length(cov_parts0) + 1L]] <- t_covariates
         covs0 <- torch::torch_cat(cov_parts0, dim = 2L)
         out   <- model(X_iter, t_coords, covs0, t_adj, t_obs_to_sp)
+        # Use t_BM_draw (the BM posterior sample) in the baseline term so that
+        # between-imputation variance is non-zero even when the gate is 0.
         if (use_calibrated) {
-          pred <- (1 - t_cal_gates) * t_MU + t_cal_gates * out$delta
+          pred <- (1 - t_cal_gates) * t_BM_draw + t_cal_gates * out$delta
         } else {
-          pred <- (1 - out$rs) * t_MU + out$rs * out$delta
+          pred <- (1 - out$rs) * t_BM_draw + out$rs * out$delta
         }
         X_iter <- pred
       }
@@ -580,16 +613,18 @@ compute_mc_se <- function(decode_results, trait_map, baseline_se,
       se_mat[, nm] <- sqrt(se_bm_orig^2 + se_mc^2)
 
     } else if (tm$type == "binary") {
-      # Between-imputation SD of probabilities
+      # Uncertainty = min(p, 1-p) of the mean probability across MC runs.
+      # Between-imputation SD of probabilities is also available but
+      # min(p, 1-p) is more interpretable (probability of being wrong).
       prob_vals <- sapply(decode_results, function(dr) dr$probabilities[[nm]])
-      se_mat[, nm] <- apply(prob_vals, 1, stats::sd)
+      avg_prob  <- rowMeans(prob_vals)
+      se_mat[, nm] <- pmin(avg_prob, 1 - avg_prob)
 
     } else if (tm$type == "categorical") {
-      # Entropy of mean probability distribution
+      # Uncertainty = 1 - max class probability of the mean prob across runs.
       prob_mats <- lapply(decode_results, function(dr) dr$probabilities[[nm]])
-      avg_prob <- Reduce("+", prob_mats) / M
-      entropy <- -rowSums(avg_prob * log(pmax(avg_prob, 1e-10)))
-      se_mat[, nm] <- entropy
+      avg_prob  <- Reduce("+", prob_mats) / M
+      se_mat[, nm] <- 1 - apply(avg_prob, 1, max)
 
     } else if (tm$type == "proportion") {
       # Between-imputation SD on (0,1) scale + baseline SE via delta method
@@ -652,15 +687,20 @@ compute_single_se <- function(latent_mat, probs, trait_map, baseline_se,
       se_mat[, nm] <- se_latent * tm$sd
 
     } else if (tm$type == "binary") {
-      # Bernoulli SD from predicted probability
+      # Uncertainty = probability of the non-modal (less likely) class.
+      # Ranges 0 (certain) to 0.5 (maximally uncertain).
+      # sqrt(p*(1-p)) is the Bernoulli SD of a *single draw*, not the SE of
+      # the estimated probability, so we report min(p, 1-p) instead.
       prob <- probs[[nm]]
-      se_mat[, nm] <- sqrt(prob * (1 - prob))
+      se_mat[, nm] <- pmin(prob, 1 - prob)
 
     } else if (tm$type == "categorical") {
-      # Entropy of probability distribution
+      # Uncertainty = 1 - max class probability (margin from certainty).
+      # Ranges 0 (certain) to (K-1)/K (maximally uncertain).
+      # Entropy would also work but has different units; 1-max(p) is
+      # interpretable as the probability of being wrong.
       prob_mat <- probs[[nm]]
-      entropy <- -rowSums(prob_mat * log(pmax(prob_mat, 1e-10)))
-      se_mat[, nm] <- entropy
+      se_mat[, nm] <- 1 - apply(prob_mat, 1, max)
 
     } else if (tm$type == "proportion") {
       # Baseline SE on logit scale -> (0,1) via delta method

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>pigauto — Logo Gallery</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    margin: 0;
+    padding: 2rem 1.5rem 4rem;
+    max-width: 860px;
+    margin-inline: auto;
+  }
+  h1 { font-size: 1.7rem; margin-bottom: 0.25rem; }
+  .subtitle { color: #64748b; margin-bottom: 2rem; font-size: 0.95rem; line-height: 1.6; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  .card img {
+    width: 220px;
+    height: auto;
+    display: block;
+  }
+  .card-label {
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-align: center;
+  }
+  .swatches {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+  }
+  .swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #e2e8f0;
+    title: attr(data-name);
+  }
+  .code-block {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    margin-top: 2.5rem;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .note {
+    margin-top: 2rem;
+    padding: 0.9rem 1.1rem;
+    background: #f0fdf4;
+    border-left: 3px solid #059669;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  a { color: #059669; }
+</style>
+</head>
+<body>
+
+<h1>pigauto — Logo Gallery</h1>
+<p class="subtitle">
+  Four colour variants of the hex sticker. The design: a pink pig in driving
+  goggles pilots a cartoon car — <em>pig&nbsp;+&nbsp;auto</em>. The front grille
+  is a mini-cladogram; the gold wheels echo neural-network leaf nodes.
+  Pick your favourite, then copy it to <code>man/figures/logo.png</code> and
+  run <code>pkgdown::build_site()</code>.
+</p>
+
+<div class="grid">
+
+  <div class="card">
+    <img src="logo_v1.png" alt="Logo variant 1: Classic navy / orange">
+    <div class="card-label">v1 &mdash; Classic</div>
+    <div class="swatches">
+      <div class="swatch" style="background:#0d1b2a" title="bg: #0d1b2a"></div>
+      <div class="swatch" style="background:#ff6f3c" title="border: #ff6f3c"></div>
+      <div class="swatch" style="background:#1e5f8a" title="car: #1e5f8a"></div>
+      <div class="swatch" style="background:#f7c948" title="nodes: #f7c948"></div>
+      <div class="swatch" style="background:#f4a0b0" title="pig: #f4a0b0"></div>
+    </div>
+    <small style="color:#64748b;text-align:center">deep navy · warm orange<br>steel-blue car · gold wheels</small>
+  </div>
+
+  <div class="card">
+    <img src="logo_v2.png" alt="Logo variant 2: Regal purple / gold">
+    <div class="card-label">v2 &mdash; Regal</div>
+    <div class="swatches">
+      <div class="swatch" style="background:#1a1a2e" title="bg: #1a1a2e"></div>
+      <div class="swatch" style="background:#f7c948" title="border: #f7c948"></div>
+      <div class="swatch" style="background:#16213e" title="car: #16213e"></div>
+      <div class="swatch" style="background:#f7c948" title="nodes: #f7c948"></div>
+      <div class="swatch" style="background:#f4a0b0" title="pig: #f4a0b0"></div>
+    </div>
+    <small style="color:#64748b;text-align:center">deep purple · gold border<br>midnight car · gold wheels</small>
+  </div>
+
+  <div class="card">
+    <img src="logo_v3.png" alt="Logo variant 3: Ecological forest / mint">
+    <div class="card-label">v3 &mdash; Ecological</div>
+    <div class="swatches">
+      <div class="swatch" style="background:#1b4332" title="bg: #1b4332"></div>
+      <div class="swatch" style="background:#95d5b2" title="border: #95d5b2"></div>
+      <div class="swatch" style="background:#2d6a4f" title="car: #2d6a4f"></div>
+      <div class="swatch" style="background:#f7c948" title="nodes: #f7c948"></div>
+      <div class="swatch" style="background:#f4a0b0" title="pig: #f4a0b0"></div>
+    </div>
+    <small style="color:#64748b;text-align:center">forest green · mint border<br>dark-green car · gold wheels</small>
+  </div>
+
+  <div class="card">
+    <img src="logo_v4.png" alt="Logo variant 4: Punchy charcoal / hot-pink">
+    <div class="card-label">v4 &mdash; Punchy</div>
+    <div class="swatches">
+      <div class="swatch" style="background:#2d2d2d" title="bg: #2d2d2d"></div>
+      <div class="swatch" style="background:#ff4d6d" title="border: #ff4d6d"></div>
+      <div class="swatch" style="background:#4a4e69" title="car: #4a4e69"></div>
+      <div class="swatch" style="background:#f7c948" title="nodes: #f7c948"></div>
+      <div class="swatch" style="background:#f4a0b0" title="pig: #f4a0b0"></div>
+    </div>
+    <small style="color:#64748b;text-align:center">charcoal · hot-pink border<br>grey-violet car · gold wheels</small>
+  </div>
+
+</div>
+
+<div class="note">
+  <strong>To adopt a variant:</strong> copy the chosen PNG to
+  <code>man/figures/logo.png</code>, then run
+  <code>pkgdown::build_site()</code>.  The logo appears automatically in the
+  navbar and on the home page.<br><br>
+  <strong>To regenerate:</strong> <code>Rscript script/make_logo.R</code>
+  (requires <code>hexSticker</code>, <code>ggplot2</code>,
+  <code>ggforce</code> — optionally <code>showtext</code> +
+  <code>sysfonts</code> for the Fredoka One font).
+</div>
+
+<div class="code-block"># adopt v1 as the package logo
+file.copy("man/figures/logo_v1.png", "man/figures/logo.png", overwrite = TRUE)
+pkgdown::build_site()
+</div>
+
+</body>
+</html>

@@ -14,10 +14,30 @@
 #'   numeric, integer, factor, ordered factor, and logical.
 #' @param tree object of class `phylo` aligned with `traits`.
 #' @param m integer. Number of imputation datasets to generate
-#'   (default `100`). Internally draws are produced by Monte Carlo
-#'   dropout of the GNN, so each dataset differs only at cells that
-#'   were missing in the input; observed cells are identical across
-#'   all `M` datasets.
+#'   (default `100`). Observed cells are identical across all `M`
+#'   datasets; only originally-missing cells vary.
+#' @param draws_method character. How stochastic draws are generated for
+#'   missing cells. One of:
+#'   \describe{
+#'     \item{`"conformal"`}{(default) Run the model once, then sample each
+#'       originally-missing cell from a Normal distribution centred on the
+#'       point estimate with SD = conformal_score / 1.96. The conformal score
+#'       is the empirical 97.5th percentile of held-out absolute residuals,
+#'       so the draw width is calibrated against actual prediction error —
+#'       not a model assumption. Falls back to BM-SE-based Normal sampling
+#'       when conformal scores are unavailable, and to Bernoulli / Categorical
+#'       draws for discrete traits. **Preferred default for pigauto** because
+#'       MC dropout gives zero variance whenever the calibrated gate is zero
+#'       (i.e. whenever the BM baseline already fits well), which is common
+#'       for continuous traits with strong phylogenetic signal.}
+#'     \item{`"mc_dropout"`}{Run `M` stochastic GNN forward passes in training
+#'       mode (dropout active). Useful when the calibrated gate is open
+#'       (r_cal > 0, i.e. GNN meaningfully corrects the BM baseline). When
+#'       all gates are zero — as is typical for continuous traits on datasets
+#'       with strong phylogenetic signal — MC dropout is deterministic and
+#'       falls back silently to the BM-only point estimate for every draw.
+#'       Check `mi$fit$calibrated_gates` before using this method.}
+#'   }
 #' @param species_col character or `NULL`. If set, marks the column
 #'   in `traits` containing species identifiers and enables multiple
 #'   observations per species. See [impute()] for details.
@@ -70,6 +90,26 @@
 #' the results. `multi_impute()` + [with_imputations()] + [pool_mi()]
 #' implement this workflow end to end.
 #'
+#' **`draws_method = "conformal"` (default)**: Run the model once; missing
+#' cells are sampled from
+#' \eqn{x_{ij}^{(k)} \sim \mathrm{N}(\hat\mu_{ij},\; q_{j}/1.96)}
+#' where \eqn{q_j} is the trait-level conformal score (the empirical
+#' 97.5th percentile of held-out absolute residuals, in latent z-score
+#' units back-transformed to the original scale). The draw width is
+#' therefore calibrated against actual prediction error regardless of
+#' whether the BM or GNN term dominates. For discrete traits (binary,
+#' categorical) it uses Bernoulli / categorical draws from the estimated
+#' probability vector. This is the preferred default for pigauto.
+#'
+#' **`draws_method = "mc_dropout"`**: Run `M` GNN forward passes in
+#' training mode (dropout active). **Caution**: when the per-trait
+#' calibrated gate `r_cal = 0` (which happens whenever the BM baseline
+#' already fits well, typically for continuous traits with strong
+#' phylogenetic signal), every MC pass is identical to the BM point
+#' estimate and draws have zero between-imputation variance. Check
+#' `mi$fit$calibrated_gates` after fitting — if all gates for the traits
+#' of interest are zero, use `draws_method = "conformal"` instead.
+#'
 #' Nakagawa & Freckleton (2008, 2011) review the consequences of
 #' ignoring missing data in ecological and comparative analyses and
 #' argue for multiple imputation as the default.
@@ -114,51 +154,82 @@
 #'
 #' @export
 multi_impute <- function(traits, tree, m = 100L,
+                         draws_method = c("conformal", "mc_dropout"),
                          species_col = NULL,
                          log_transform = TRUE,
                          missing_frac = 0.25,
                          covariates = NULL,
                          epochs = 2000L, verbose = TRUE, seed = 1L, ...) {
 
+  draws_method <- match.arg(draws_method)
   m <- as.integer(m)
   if (!is.finite(m) || m < 2L) {
     stop("`m` must be an integer >= 2 (multiple imputation needs at least ",
          "two draws). Got m = ", m, ".", call. = FALSE)
   }
 
-  # 1. Run the full pipeline with MC dropout sampling.
-  res <- impute(
-    traits        = traits,
-    tree          = tree,
-    species_col   = species_col,
-    log_transform = log_transform,
-    missing_frac  = missing_frac,
-    n_imputations = m,
-    covariates    = covariates,
-    epochs        = as.integer(epochs),
-    verbose       = verbose,
-    seed          = as.integer(seed),
-    ...
-  )
+  if (draws_method == "mc_dropout") {
+    # ---- MC dropout: M stochastic GNN forward passes (training mode) --------
+    # Run the pipeline with n_imputations = m so predict() runs the model M
+    # times with dropout active. Each pass yields a different latent matrix;
+    # the M decoded data.frames are returned in pred$imputed_datasets.
+    res <- impute(
+      traits        = traits,
+      tree          = tree,
+      species_col   = species_col,
+      log_transform = log_transform,
+      missing_frac  = missing_frac,
+      n_imputations = m,
+      covariates    = covariates,
+      epochs        = as.integer(epochs),
+      verbose       = verbose,
+      seed          = as.integer(seed),
+      ...
+    )
 
-  pred <- res$prediction
-  if (is.null(pred$imputed_datasets) || length(pred$imputed_datasets) != m) {
-    stop("predict.pigauto_fit() did not return ", m,
-         " imputed datasets. This is an internal error -- please report.",
-         call. = FALSE)
+    pred <- res$prediction
+    if (is.null(pred$imputed_datasets) || length(pred$imputed_datasets) != m) {
+      stop("predict.pigauto_fit() did not return ", m,
+           " imputed datasets. This is an internal error -- please report.",
+           call. = FALSE)
+    }
+    datasets <- lapply(pred$imputed_datasets, function(imp_df) {
+      build_completed(traits, imp_df, species_col)$completed
+    })
+
+  } else {
+    # ---- Conformal: single pass + conformal-width Normal sampling -----------
+    # Run once to get point estimates, conformal scores, and probabilities.
+    res <- impute(
+      traits        = traits,
+      tree          = tree,
+      species_col   = species_col,
+      log_transform = log_transform,
+      missing_frac  = missing_frac,
+      n_imputations = 1L,
+      covariates    = covariates,
+      epochs        = as.integer(epochs),
+      verbose       = verbose,
+      seed          = as.integer(seed),
+      ...
+    )
+
+    pred      <- res$prediction
+    trait_map <- res$fit$trait_map
+    imask     <- res$imputed_mask
+
+    datasets <- lapply(seq_len(m), function(i) {
+      imp_df <- .sample_conformal_draw(pred, imask, trait_map,
+                                       seed_i = as.integer(seed) + i)
+      build_completed(traits, imp_df, species_col)$completed
+    })
   }
-
-  # 2. Merge each raw imputation with observed cells via build_completed().
-  #    build_completed() lives in R/impute.R and is unexported; we reach
-  #    it directly because we are in the same package.
-  datasets <- lapply(pred$imputed_datasets, function(imp_df) {
-    build_completed(traits, imp_df, species_col)$completed
-  })
 
   structure(
     list(
       datasets     = datasets,
       m            = m,
+      draws_method = draws_method,
       pooled_point = res$completed,
       se           = pred$se,
       imputed_mask = res$imputed_mask,
@@ -173,6 +244,99 @@ multi_impute <- function(traits, tree, m = 100L,
 }
 
 
+# ---- Internal: one conformal-width draw -------------------------------------
+# Samples missing cells from N(mu, conformal_score / 1.96) for continuous
+# types (on the appropriate transformed scale), and from Bernoulli /
+# Categorical for discrete types. Falls back to BM SE when conformal score
+# is not available for a trait.
+.sample_conformal_draw <- function(pred, imputed_mask, trait_map, seed_i) {
+  set.seed(seed_i)
+  imp    <- pred$imputed
+  probs  <- pred$probabilities
+  cscores <- pred$conformal_scores  # named vector, NA for discrete traits
+
+  for (tm in trait_map) {
+    nm   <- tm$name
+    if (!(nm %in% names(imp))) next
+    if (!(nm %in% colnames(imputed_mask))) next
+    rows <- which(imputed_mask[, nm])
+    if (length(rows) == 0L) next
+    N    <- length(rows)
+
+    # Conformal half-width → approximate 1-sigma SD
+    cs <- if (!is.null(cscores) && nm %in% names(cscores) &&
+               is.finite(cscores[nm]))
+            cscores[nm] / 1.96
+          else
+            NULL
+
+    if (tm$type == "continuous") {
+      mu  <- imp[[nm]][rows]
+      # cs is in latent (z-score) scale; convert to original scale
+      s_latent <- if (!is.null(cs)) cs else pred$se[rows, nm] / tm$sd
+      s_orig <- s_latent * tm$sd
+      if (isTRUE(tm$log_transform)) {
+        se_log <- s_orig / pmax(mu, .Machine$double.eps)
+        imp[[nm]][rows] <- exp(rnorm(N, log(pmax(mu, .Machine$double.eps)),
+                                     se_log))
+      } else {
+        imp[[nm]][rows] <- rnorm(N, mu, s_orig)
+      }
+
+    } else if (tm$type == "count") {
+      mu       <- as.numeric(imp[[nm]][rows])
+      s_latent <- if (!is.null(cs)) cs else pred$se[rows, nm] / tm$sd
+      s_orig   <- s_latent * tm$sd
+      se_log1p <- s_orig / pmax(mu + 1, .Machine$double.eps)
+      log1p_mu <- log1p(pmax(mu, 0))
+      draw     <- pmax(round(expm1(rnorm(N, log1p_mu, se_log1p))), 0L)
+      imp[[nm]][rows] <- as.integer(draw)
+
+    } else if (tm$type == "ordinal") {
+      K        <- length(tm$levels)
+      int_mu   <- as.integer(imp[[nm]][rows]) - 1L
+      s_latent <- if (!is.null(cs)) cs else pred$se[rows, nm] / tm$sd
+      s_orig   <- s_latent * tm$sd
+      draw_i   <- pmin(pmax(round(rnorm(N, int_mu, s_orig)), 0L), K - 1L)
+      imp[[nm]][rows] <- factor(tm$levels[as.integer(draw_i) + 1L],
+                                levels = tm$levels, ordered = TRUE)
+
+    } else if (tm$type == "proportion") {
+      mu       <- imp[[nm]][rows]
+      s_latent <- if (!is.null(cs)) cs else pred$se[rows, nm] / tm$sd
+      s_orig   <- s_latent * tm$sd
+      p_mu     <- pmin(pmax(mu, 1e-6), 1 - 1e-6)
+      se_logit <- s_orig / pmax(p_mu * (1 - p_mu), .Machine$double.eps)
+      imp[[nm]][rows] <- stats::plogis(rnorm(N, stats::qlogis(p_mu), se_logit))
+
+    } else if (tm$type == "binary") {
+      p   <- probs[[nm]][rows]
+      idx <- rbinom(N, 1L, pmin(pmax(p, 0), 1)) + 1L
+      imp[[nm]][rows] <- factor(tm$levels[idx], levels = tm$levels)
+
+    } else if (tm$type == "categorical") {
+      pm  <- probs[[nm]][rows, , drop = FALSE]
+      idx <- apply(pm, 1L, function(p) {
+        p <- pmax(p, 0); p <- p / sum(p)
+        sample.int(length(p), 1L, prob = p)
+      })
+      imp[[nm]][rows] <- factor(tm$levels[idx], levels = tm$levels)
+
+    } else if (tm$type == "zi_count") {
+      p_nz    <- pmin(pmax(probs[[nm]][rows], 0), 1)
+      gate    <- rbinom(N, 1L, p_nz)
+      mu      <- as.numeric(imp[[nm]][rows])
+      s       <- pred$se[rows, nm]
+      cond_mu <- ifelse(p_nz > 0.01, mu / p_nz, mu)
+      draw_c  <- as.integer(pmax(round(rnorm(N, cond_mu, s)), 0L))
+      draw_c[gate == 0L] <- 0L
+      imp[[nm]][rows] <- draw_c
+    }
+  }
+  imp
+}
+
+
 #' @export
 print.pigauto_mi <- function(x, ...) {
   n_sp  <- length(x$data$species_names)
@@ -184,7 +348,12 @@ print.pigauto_mi <- function(x, ...) {
   pct <- if (total_cells > 0) 100 * n_imp_cells / total_cells else 0
 
   cat("pigauto multiple imputation\n")
-  cat(sprintf("  M        : %d imputations (MC dropout)\n", x$m))
+  method_label <- switch(x$draws_method %||% "mc_dropout",
+    mc_dropout = "MC dropout",
+    conformal  = "conformal-width sampling",
+    x$draws_method
+  )
+  cat(sprintf("  M        : %d imputations (%s)\n", x$m, method_label))
   cat(sprintf("  Species  : %d\n", n_sp))
   cat(sprintf("  Traits   : %d -- %s\n", p,
               paste(traits, collapse = ", ")))

@@ -1,4 +1,4 @@
-# pigauto
+# pigauto <img src="man/figures/logo.png" align="right" height="139" alt="pigauto logo"/>
 
 **Missing trait data should not stop a comparative analysis.**
 

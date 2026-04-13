@@ -310,8 +310,11 @@ subset of <code>tree$tip.label</code>.
 <p>Now call <code>multi_impute()</code> to generate M complete datasets.
 The function chains preprocessing, the Brownian-motion baseline
 (continuous/count/ordinal) and phylogenetic label propagation
-(binary/categorical), GNN training, per-trait gate calibration, and
-Monte-Carlo-dropout sampling into one call.</p>
+(binary/categorical), GNN training, and per-trait gate calibration into
+one call, then generates M stochastic completions by sampling each
+originally-missing cell from its posterior predictive distribution using
+the calibrated SE (Normal draws for continuous / count / ordinal /
+proportion; Bernoulli for binary; Categorical for multi-level factors).</p>
 
 <pre><code>mi &lt;- multi_impute(
   traits        = dat,
@@ -323,7 +326,7 @@ Monte-Carlo-dropout sampling into one call.</p>
 )
 mi
 #&gt; pigauto multiple imputation
-#&gt;   M        : 20 imputations (MC dropout)
+#&gt;   M        : 20 imputations (SE-based draws)
 #&gt;   Species  : 300
 #&gt;   Traits   : 7 -- Mass, Beak.Length_Culmen, Tarsus.Length, Wing.Length,
 #&gt;                  Trophic.Level, Primary.Lifestyle, Migration
@@ -363,7 +366,7 @@ single fit. Nothing silently turns into an integer code.</p>
 <h3>Verification 2 &mdash; Continuous draws vary across imputations</h3>
 
 <p>Multiple imputation is pointless if the M draws are identical. For a
-continuous trait like <code>Mass</code>, MC dropout produces real
+continuous trait like <code>Mass</code>, SE-based sampling produces real
 variation across draws at originally-missing cells &mdash; this is the
 between-imputation variance <code>B</code> that Rubin&rsquo;s rules use
 to inflate standard errors.</p>
@@ -601,7 +604,7 @@ coda::HPDinterval(sol_pooled)
 
 <div class="bayesbox">
 <b>What does concatenation actually do?</b> Stacking the M posterior
-matrices treats pigauto&rsquo;s MC-dropout draws as approximate
+matrices treats pigauto&rsquo;s SE-based imputation draws as approximate
 posterior predictive samples for the missing cells. This is the same
 approximation Nakagawa&nbsp;&amp;&nbsp;Freckleton&nbsp;(2011) make when
 they use mice-style multiple imputation with <code>MCMCglmm</code>
@@ -802,7 +805,7 @@ familiar), but you do not want to wait 6 hours for BACE&rsquo;s
 chained-equation imputer. Path&nbsp;B gets you a Bayesian posterior on
 the downstream parameters in 1&ndash;4 hours with pigauto doing the
 imputation work. The trade-off is the approximation highlighted in the
-callout in section&nbsp;6: the MC-dropout draws are treated as
+callout in section&nbsp;6: the SE-based imputation draws are treated as
 approximate posterior predictive samples, not as a literal joint
 Bayesian posterior over parameters and missing cells. For
 Nakagawa&nbsp;&amp;&nbsp;Freckleton-style applied comparative analyses,

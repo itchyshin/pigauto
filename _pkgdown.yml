@@ -11,6 +11,7 @@ template:
     code_font: {google: "JetBrains Mono"}
 
 home:
+  logo: man/figures/logo.png
   title: "pigauto: fill in missing species traits using a phylogenetic tree"
   description: >
     pigauto imputes missing trait data for comparative analyses by
@@ -91,6 +92,8 @@ navbar:
         - text: "Developer reports"
         - text: "Test catalogue"
           href: dev/tests_overview.html
+        - text: "Logo gallery"
+          href: logo_gallery.html
 
 reference:
   - title: "One-call entry point"

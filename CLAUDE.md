@@ -118,6 +118,38 @@ After the training loop:
 - `dev/` — scratch experiments. Ignored by `R CMD build`.
 - `avonet/`, `data/`, `data-raw/` — the bundled AVONET 300-species dataset and its build scripts.
 
+## Uncertainty quantification design
+
+pigauto uses **three distinct uncertainty mechanisms** — do not conflate them:
+
+### 1. Baseline SE (analytic, BM conditional MVN)
+Source: `R/bm_internal.R` → `bm_impute_col()`.  
+For continuous/count/ordinal/proportion traits: standard conditional-MVN formula,
+`SE = sqrt(σ² (1 - h_i))` where `h_i = diag(R_mo R_oo⁻¹ R_om)`.  
+**Validity**: exact under Brownian motion; model-dependent (assumes BM is the true process).  
+**Used in**: `pred$se` for these trait types (after delta-method back-transformation).
+
+### 2. Conformal prediction intervals (distribution-free, empirically calibrated)
+Source: `R/fit_helpers.R` → `compute_conformal_scores()`.  
+After training, on the held-out validation set: `score_j = quantile(|truth - blended_pred|, ⌈(1−α)(1+1/n)⌉/n)`.  
+**Validity**: split conformal guarantee — exactly ≥95% marginal coverage regardless of model assumptions or trait distribution. No Gaussianity needed.  
+**Used in**: `pred$conformal_lower`, `pred$conformal_upper`. This is the primary 95% CI.
+
+### 3. Multiple-imputation draws (`multi_impute()`)
+Two methods selectable via `draws_method`:
+- **`"conformal"` (default)**: Single pass; missing cells sampled from N(μ, conformal_score/1.96) on the appropriate transformed scale. Falls back to BM-SE-based Normal sampling when conformal scores are missing, and to Bernoulli/Categorical for discrete types. Preferred because conformal scores are calibrated against actual held-out residuals regardless of gate value.
+- **`"mc_dropout"`**: M GNN forward passes in training mode (dropout active). Each imputation `m` draws `t_BM_draw ~ N(BM_mu, BM_se)` on the latent scale (held fixed for all refine steps of that imputation), then blends `pred = (1 - r_cal) * t_BM_draw + r_cal * GNN_dropout(t_BM_draw)`. When `r_cal = 0` (gate closed — BM dominates): `pred = t_BM_draw` → between-imputation variance = BM posterior variance, non-zero ✓. When `r_cal > 0`: both BM draws and GNN dropout contribute variance. `BM_se = 0` for observed cells so they are never perturbed. **Note on conservatism**: BM-draw MI is wider than conformal MI (AVONET300: Mass MC SD ≈ 290 vs conformal/1.96 ≈ 23) because BM SE reflects prior uncertainty while conformal reflects actual prediction error. For downstream Rubin's rules, conformal is better calibrated. Implementation: `predict_pigauto.R` lines 168–211.
+
+### 4. `pred$se` for discrete types — uncertainty scores, not SEs
+Binary: `min(p, 1-p)` — probability of being wrong (0 = certain, 0.5 = maximally uncertain).  
+Categorical: `1 - max(p_k)` — margin from certainty (0 = certain, (K-1)/K = maximally uncertain).  
+**These are not standard errors in the Gaussian sense.** Do not use them in Rubin's rules arithmetic. They are uncertainty scores for ranking/reporting. For MI draws, binary/categorical always use Bernoulli/Categorical sampling from the probability vector, not Normal draws.
+
+### What NOT to do
+- Do not use `pred$se` for binary/categorical as if it were a Normal SE.
+- Do not back-calculate a "±1.96×SE" interval for discrete types.
+- Do not use BM SE alone as a 95% CI — use the conformal interval instead (it is wider and better calibrated when the GNN adds prediction error beyond BM).
+
 ## Non-obvious gotchas
 
 ### `.Rbuildignore` is wide
