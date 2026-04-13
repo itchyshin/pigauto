@@ -396,4 +396,4 @@ BM baseline is optimal, calibrated gates → 0.
 ## Citation
 
 Nakagawa S (2026). pigauto: Phylogenetic Imputation via Graph
-Autoencoder. R package version 0.6.0.
+Autoencoder. R package version 0.6.1.

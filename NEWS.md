@@ -1,3 +1,36 @@
+# pigauto 0.6.1
+
+## Bug fixes
+
+- **MC dropout zero variance fixed** (`R/predict_pigauto.R`): when
+  `n_imputations > 1`, the blend equation now uses a BM posterior draw
+  `t_BM_draw ~ N(BM_mu, BM_se)` instead of the deterministic `t_MU`.
+  When the calibrated gate is zero (BM dominates), each imputation now
+  samples from the correct BM posterior rather than returning the same
+  point estimate, giving non-zero between-imputation variance.
+
+- **Conformal draw scale bug fixed** (`R/multi_impute.R`): for
+  log-transformed traits (Mass, Wing length, etc.), draws are now made
+  on the latent z-score scale and back-transformed, avoiding near-zero
+  variance caused by dividing a log-scale SE by an original-scale value.
+  The same fix applies to log1p-scaled counts and logit-scaled
+  proportions.
+
+## New features
+
+- `draws_method = "conformal"` is now the default for `multi_impute()`.
+  Draws sample from the split-conformal calibrated uncertainty
+  distribution (better calibrated than MC dropout for downstream
+  Rubin's-rules pooling).
+- `draws_method = "mc_dropout"` remains available and is now correct
+  (see bug fix above).
+
+## Hex sticker
+
+- New `man/figures/logo.png`: pink pig driving a car with a 7-tip
+  ultrametric pectinate cladogram above the pig's head. Forest green /
+  mint palette (v3) selected as the official sticker.
+
 # pigauto 0.6.0
 
 ## Observation-level covariate refinement for multi-obs data
