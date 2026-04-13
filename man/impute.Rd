@@ -44,9 +44,11 @@ to skip splitting (all cells used for training, no evaluation).}
 (default \code{1}).  Values > 1 enable between-imputation uncertainty.}
 
 \item{covariates}{data.frame or matrix of environmental covariates
-(fully observed, numeric, same number of rows as \code{traits}).
-Covariates are conditioners: they inform imputation but are not
-themselves imputed. Default \code{NULL} (no covariates).}
+(fully observed — no NAs).  Covariates are conditioners: they inform
+imputation but are not themselves imputed.  Numeric/integer columns are
+z-scored; factor/ordered columns are one-hot encoded automatically.
+If a variable has missing values, include it in \code{traits} instead.
+Same number of rows as \code{traits}. Default \code{NULL} (no covariates).}
 
 \item{epochs}{integer. Maximum GNN training epochs (default \code{2000}).}
 

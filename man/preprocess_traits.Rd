@@ -51,11 +51,18 @@ Default \code{TRUE}.}
 \item{scale}{logical. Divide by column SDs for continuous/count/ordinal?
 Default \code{TRUE}.}
 
-\item{covariates}{data.frame or numeric matrix of environmental covariates
-(fully observed, no NAs).  Covariates are conditioners that help predict
-missing traits but are not themselves imputed.  Must have the same number
-of rows as \code{traits} (after alignment to the tree).  Each column is
-z-scored internally.  Default \code{NULL} (no covariates).}
+\item{covariates}{data.frame or numeric matrix of environmental covariates.
+Covariates are conditioners: they inform imputation but are not themselves
+imputed, so they must be \strong{fully observed} (no NAs — if a variable
+has missing values, put it in \code{traits} instead).  Must have the same
+number of rows as \code{traits} after alignment to the tree.
+\describe{
+\item{Numeric / integer columns}{z-scored automatically.}
+\item{Factor / ordered columns}{one-hot encoded (K binary columns per
+factor with K levels).  Column names become \code{"var.level"}.}
+\item{Character / logical columns}{coerced to factor, then one-hot.}
+}
+Default \code{NULL} (no covariates).}
 }
 \value{
 A list of class \code{"pigauto_data"} with components:

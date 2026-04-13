@@ -90,11 +90,18 @@
 #'   Default \code{TRUE}.
 #' @param scale logical. Divide by column SDs for continuous/count/ordinal?
 #'   Default \code{TRUE}.
-#' @param covariates data.frame or numeric matrix of environmental covariates
-#'   (fully observed, no NAs).  Covariates are conditioners that help predict
-#'   missing traits but are not themselves imputed.  Must have the same number
-#'   of rows as \code{traits} (after alignment to the tree).  Each column is
-#'   z-scored internally.  Default \code{NULL} (no covariates).
+#' @param covariates data.frame or numeric matrix of environmental covariates.
+#'   Covariates are conditioners: they inform imputation but are not themselves
+#'   imputed, so they must be \strong{fully observed} (no NAs — if a variable
+#'   has missing values, put it in \code{traits} instead).  Must have the same
+#'   number of rows as \code{traits} after alignment to the tree.
+#'   \describe{
+#'     \item{Numeric / integer columns}{z-scored automatically.}
+#'     \item{Factor / ordered columns}{one-hot encoded (K binary columns per
+#'       factor with K levels).  Column names become \code{"var.level"}.}
+#'     \item{Character / logical columns}{coerced to factor, then one-hot.}
+#'   }
+#'   Default \code{NULL} (no covariates).
 #' @return A list of class \code{"pigauto_data"} with components:
 #'   \describe{
 #'     \item{X_scaled}{Numeric matrix (n_obs x p_latent), latent encoding.
@@ -277,6 +284,9 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
   names(all_sds) <- names(all_means)
 
   # ---- Environmental covariates (conditioners, not imputed) ------------------
+  # Supports: numeric columns (z-scored), factor/ordered columns (one-hot).
+  # No NAs allowed — covariates are conditioning variables, not imputation
+  # targets.  If a variable has missing values, put it in `traits` instead.
   cov_scaled <- NULL
   cov_means  <- NULL
   cov_sds    <- NULL
@@ -286,36 +296,77 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
     if (!is.data.frame(covariates) && !is.matrix(covariates)) {
       stop("`covariates` must be a data.frame or matrix.", call. = FALSE)
     }
-    cov_mat <- as.matrix(covariates)
-    storage.mode(cov_mat) <- "double"
+    # Coerce matrix to data.frame so column classes are preserved
+    if (is.matrix(covariates)) {
+      covariates <- as.data.frame(covariates)
+    }
 
-    if (!is.numeric(cov_mat)) {
-      stop("`covariates` must contain only numeric columns.", call. = FALSE)
-    }
-    if (any(is.na(cov_mat))) {
-      stop("`covariates` must be fully observed (no NAs). ",
-           "Covariates are conditioners, not imputation targets.",
-           call. = FALSE)
-    }
-    if (nrow(cov_mat) != n_obs) {
-      stop("`covariates` has ", nrow(cov_mat), " rows but traits has ",
+    if (nrow(covariates) != n_obs) {
+      stop("`covariates` has ", nrow(covariates), " rows but traits has ",
            n_obs, " rows after alignment. They must match.", call. = FALSE)
     }
-
-    cov_names <- colnames(cov_mat)
-    if (is.null(cov_names)) {
-      cov_names <- paste0("cov", seq_len(ncol(cov_mat)))
+    if (any(vapply(covariates, anyNA, logical(1)))) {
+      stop("`covariates` must be fully observed (no NAs). ",
+           "If a covariate has missing values, include it in `traits` ",
+           "instead so pigauto can impute it jointly.",
+           call. = FALSE)
     }
 
-    # Z-score each covariate column for stable training
-    cov_means <- colMeans(cov_mat)
-    cov_sds   <- apply(cov_mat, 2, stats::sd)
-    cov_sds[cov_sds < 1e-12] <- 1  # guard against constant columns
+    # Encode each covariate column -----------------------------------------
+    # numeric/integer  → z-score (1 column)
+    # factor/ordered   → one-hot (K columns, column names = "var.levelK")
+    # character/logical → coerced to factor then one-hot
+    cov_parts      <- list()
+    cov_means_list <- list()   # only for numeric cols
+    cov_sds_list   <- list()
 
-    cov_scaled <- scale(cov_mat, center = cov_means, scale = cov_sds)
-    attr(cov_scaled, "scaled:center") <- NULL
-    attr(cov_scaled, "scaled:scale")  <- NULL
-    colnames(cov_scaled) <- cov_names
+    raw_names <- colnames(covariates)
+    if (is.null(raw_names))
+      raw_names <- paste0("cov", seq_len(ncol(covariates)))
+
+    for (j in seq_along(raw_names)) {
+      nm  <- raw_names[j]
+      col <- covariates[[j]]
+
+      if (is.character(col) || is.logical(col)) col <- factor(col)
+
+      if (is.factor(col) || is.ordered(col)) {
+        # One-hot encoding (drop-none; model learns to handle collinearity)
+        levs   <- levels(col)
+        K      <- length(levs)
+        oh_mat <- matrix(0.0, nrow = n_obs, ncol = K)
+        colnames(oh_mat) <- paste0(nm, ".", levs)
+        for (k in seq_len(K)) oh_mat[, k] <- as.numeric(col == levs[k])
+        cov_parts[[nm]] <- oh_mat
+        # No z-score means/sds for one-hot columns
+        cov_means_list[[nm]] <- rep(NA_real_, K)
+        cov_sds_list[[nm]]   <- rep(NA_real_, K)
+
+      } else if (is.numeric(col) || is.integer(col)) {
+        col   <- as.double(col)
+        cmean <- mean(col)
+        csd   <- stats::sd(col)
+        if (!is.finite(csd) || csd < 1e-12) csd <- 1.0  # constant column
+        scaled_col <- (col - cmean) / csd
+        mat <- matrix(scaled_col, ncol = 1, dimnames = list(NULL, nm))
+        cov_parts[[nm]]      <- mat
+        cov_means_list[[nm]] <- cmean
+        cov_sds_list[[nm]]   <- csd
+
+      } else {
+        stop("Column '", nm, "' in `covariates` has unsupported class '",
+             paste(class(col), collapse = "/"), "'. ",
+             "Use numeric, integer, factor, ordered, character, or logical.",
+             call. = FALSE)
+      }
+    }
+
+    cov_scaled <- do.call(cbind, cov_parts)
+    cov_names  <- colnames(cov_scaled)
+    cov_means  <- unlist(cov_means_list)
+    cov_sds    <- unlist(cov_sds_list)
+    names(cov_means) <- cov_names
+    names(cov_sds)   <- cov_names
   }
 
   structure(
