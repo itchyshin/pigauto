@@ -242,6 +242,11 @@ pred <- predict(fit, return_se = TRUE)
 # pred$imputed: 300 x 4 matrix in original units
 # pred$se:      300 x 4 uncertainty matrix (original units)
 head(pred$imputed)
+
+# Conformal prediction intervals (95% marginal coverage guarantee)
+pred$conformal_lower[["Mass"]]    # lower bound per species (original units)
+pred$conformal_upper[["Mass"]]    # upper bound per species (original units)
+pred$conformal_coverage           # empirical coverage on val set (target ≈ 0.95)
 ```
 
 Expected output (values will vary by seed and convergence):
@@ -313,6 +318,60 @@ plot_uncertainty(pred, trait_name = "Mass")
 Species are sorted by predicted mass. The blue ribbon shows the 95% credible
 interval (prediction ± 1.96 × SE). Grey points (if `truth` is supplied) show
 known values — a useful visual check of calibration.
+
+## Multiple imputation for downstream inference
+
+The single completed dataset from `impute()` ignores imputation uncertainty —
+downstream standard errors will be too small. Use `multi_impute()` to generate
+M stochastic complete datasets, each a draw from the model's calibrated
+uncertainty distribution, then pool coefficients with Rubin's rules.
+
+```{r mi-workflow, eval=FALSE}
+# Step 1: generate M = 50 complete datasets
+# draws_method = "conformal" (default in v0.6.1) draws from conformal-calibrated
+# uncertainty — properly calibrated against held-out residuals.
+mi <- multi_impute(traits, tree, m = 50L)
+
+# Step 2: fit your downstream model to each imputed dataset
+fits <- with_imputations(mi, function(d) {
+  lm(log(Wing.Length) ~ log(Mass) + Trophic.Level, data = d)
+})
+
+# Step 3: pool with Rubin's rules
+pool_mi(fits)
+# Returns a tidy data.frame with estimate, std.error, statistic, p.value,
+# df (Barnard-Rubin degrees of freedom), fmi (fraction of missing information),
+# and riv (relative increase in variance) per coefficient.
+```
+
+Choose M ≥ 50 for stable pooled SEs; M ≥ 100 × max(fmi) for reliable p-values.
+The `fmi` column directly tells you how much each coefficient is affected by
+missing data — if `fmi < 0.05`, imputation uncertainty is negligible for that term.
+
+## Phylogenetic tree uncertainty
+
+A single fixed tree ignores phylogenetic uncertainty. `multi_impute_trees()`
+propagates a posterior sample of trees through imputation and downstream
+analysis in a single Rubin's-rules step — combining imputation uncertainty
+**and** tree topology uncertainty.
+
+```{r tree-uncertainty, eval=FALSE}
+# trees300: 10 posterior trees from the BirdTree Hackett backbone (bundled)
+data(trees300, package = "pigauto")
+
+mi_trees <- multi_impute_trees(traits, trees300, m = 5L)
+# m = 5 datasets per tree × 10 trees = 50 total imputations
+
+fits <- with_imputations(mi_trees, function(d) {
+  lm(log(Wing.Length) ~ log(Mass), data = d)
+})
+pool_mi(fits)
+```
+
+This is a novel capability: no other R imputation package propagates phylogenetic
+tree uncertainty through to pooled downstream coefficients in one step. It is
+especially important for clades where the posterior tree distribution is diffuse
+(e.g. poorly resolved rapid radiations).
 
 ## Tips and next steps
 

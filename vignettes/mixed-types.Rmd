@@ -152,14 +152,35 @@ ev <- evaluate_imputation(pred, pd$X_scaled, spl)
 print(ev)
 ```
 
-## Multiple imputation (MC dropout)
+## Multiple imputation for downstream inference
 
-Set `n_imputations > 1` to run M stochastic forward passes with
-dropout active.  This produces M complete datasets for proper multiple
-imputation:
+The recommended workflow uses `multi_impute()` to generate M complete datasets
+from the model's calibrated uncertainty distribution, then pools downstream
+coefficients with Rubin's rules via `with_imputations()` and `pool_mi()`.
 
-```{r mc_dropout}
-pred_mc <- predict(fit, n_imputations = 5L)
-cat("Imputed datasets:", length(pred_mc$imputed_datasets), "\n")
-head(pred_mc$se)  # between-imputation SD
+In **v0.6.1**, `draws_method = "conformal"` is the default: missing cells are
+drawn from Normal distributions centred on the point estimate with width set by
+the split-conformal calibration score — properly calibrated against held-out
+residuals. The alternative `draws_method = "mc_dropout"` runs M stochastic
+GNN forward passes with dropout active and BM posterior draws as the blend
+baseline; it is available for comparison.
+
+```{r mi_workflow, eval=FALSE}
+# Generate M = 20 stochastic complete datasets
+mi <- multi_impute(fit$data$X_original, tree, m = 20L)
+
+# Fit a downstream model to each
+fits <- with_imputations(mi, function(d) {
+  glm(Migratory ~ log(Mass) + Diet, data = d, family = binomial)
+})
+
+# Pool with Rubin's rules
+pool_mi(fits)
 ```
+
+`pool_mi()` returns a tidy data.frame with `estimate`, `std.error`, `p.value`,
+`df` (Barnard-Rubin degrees of freedom), `fmi` (fraction of missing information),
+and `riv` (relative increase in variance) per coefficient.
+
+For reference, the lower-level `predict(fit, n_imputations = 5L)` interface
+returns M complete datasets directly (without downstream pooling):

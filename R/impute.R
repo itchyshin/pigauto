@@ -76,6 +76,30 @@
 #' Pass \code{trait_types} through \code{...} — it is forwarded to
 #' \code{\link{preprocess_traits}}.
 #'
+#' @section Traits vs covariates:
+#' The distinction is \strong{functional, not ontological}: a trait is something
+#' you want to impute (NA values allowed in \code{traits}); a covariate is
+#' something you use to sharpen imputation accuracy (must be fully observed,
+#' passed via \code{covariates}).  The same variable can be either depending on
+#' the scientific question.
+#'
+#' Examples:
+#' \itemize{
+#'   \item \strong{IUCN status with Data Deficient species} → put it in
+#'     \code{traits} as \code{ordered(c("LC","NT","VU","EN","CR"))} so
+#'     pigauto predicts the unknown categories.
+#'   \item \strong{IUCN status fully known for all species} → pass as a
+#'     covariate to inform imputation of other traits (e.g. body mass,
+#'     range size).
+#'   \item \strong{Realm / biome (factor)} → pass as a covariate; pigauto
+#'     one-hot encodes factor columns automatically (v0.6.1+).
+#' }
+#'
+#' Variables that belong in \code{traits}: anything with missing values you
+#' care about predicting.  Variables that belong in \code{covariates}: fully
+#' observed, exogenous to the trait space (geography, climate, habitat,
+#' experimental treatment).
+#'
 #' @examples
 #' \dontrun{
 #' # Simple case: fill in missing values — type detection is automatic
