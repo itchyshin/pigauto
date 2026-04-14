@@ -1,6 +1,9 @@
 {
   "name": "pigauto-benchmarks",
   "image": "ghcr.io/rocker-org/devcontainer/tidyverse:4.4",
+  "features": {
+    "ghcr.io/devcontainers/features/sshd:1": { "version": "latest" }
+  },
   "hostRequirements": {
     "cpus": 4,
     "memory": "16gb",
