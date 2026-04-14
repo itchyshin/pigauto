@@ -297,29 +297,21 @@ show_cols <- c("method", "scenario", "trait", "type", "rmse", "pearson_r",
 
 for (scen in c(scenarios_primary, secondary_scenarios)) {
   md <- c(md, sprintf("### %s", scen), "")
-  sub <- test_df[test_df$scenario == scen, intersect(show_cols, names(test_df)),
-                 drop = FALSE]
-  if (nrow(sub) == 0L) {
-    md <- c(md, "(no data)", "")
-    next
-  }
-  avail_metrics <- intersect(c("rmse", "pearson_r", "accuracy", "brier", "spearman_rho"),
-                             names(sub)[vapply(sub, is.numeric, logical(1))])
-  if (length(avail_metrics) == 0L) {
-    md <- c(md, "(no numeric metrics)", "")
-    next
-  }
-  fm <- as.formula(paste("cbind(",
-                         paste(avail_metrics, collapse = ", "),
-                         ") ~ method + trait"))
-  avg <- tryCatch(
-    aggregate(fm, data = sub, FUN = mean, na.rm = TRUE),
-    error = function(e) NULL
-  )
-  if (is.null(avg)) {
-    md <- c(md, "(aggregate failed)", "")
-    next
-  }
+  sub <- test_df[test_df$scenario == scen, , drop = FALSE]
+  if (nrow(sub) == 0L) { md <- c(md, "(no data)", ""); next }
+  metrics <- c("rmse", "pearson_r", "accuracy", "brier", "spearman_rho")
+  agg_list <- lapply(metrics, function(m) {
+    if (!m %in% names(sub)) return(NULL)
+    col <- sub[[m]]
+    if (all(is.na(col))) return(NULL)
+    ag <- aggregate(col ~ sub$method + sub$trait, FUN = mean, na.rm = TRUE)
+    names(ag) <- c("method", "trait", m)
+    ag
+  })
+  agg_list <- Filter(Negate(is.null), agg_list)
+  if (length(agg_list) == 0L) { md <- c(md, "(no numeric metrics)", ""); next }
+  avg <- Reduce(function(a, b) merge(a, b, by = c("method", "trait"), all = TRUE),
+                agg_list)
   avg <- avg[order(avg$trait, match(avg$method, c("mean", "baseline", "pigauto"))), ]
   md <- c(md, "```", capture.output(print(avg, row.names = FALSE)), "```", "")
 }

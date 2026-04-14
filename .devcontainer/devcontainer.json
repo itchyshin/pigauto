@@ -1,0 +1,15 @@
+{
+  "name": "pigauto-benchmarks",
+  "image": "ghcr.io/rocker-org/devcontainer/tidyverse:4.4",
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "16gb",
+    "storage": "32gb"
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": ["REditorSupport.r"]
+    }
+  }
+}
