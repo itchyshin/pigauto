@@ -33,19 +33,20 @@ options(warn = 1, stringsAsFactors = FALSE)
 # IMPORTANT: load the dev tree, not the installed package. This script
 # lives on the fix/scaling-rspectra-cophenetic-cache branch and depends
 # on Fix A + Fix B which are not yet in the installed v0.3.0 build.
+# Resolve project root: env PIGAUTO_ROOT > local Dropbox path > /workspaces/pigauto
+here <- Sys.getenv("PIGAUTO_ROOT", unset = NA_character_)
+if (is.na(here) || !dir.exists(here)) {
+  cands <- c("/Users/z3437171/Dropbox/Github Local/pigauto",
+             "/workspaces/pigauto",
+             ".")
+  here <- Find(function(p) file.exists(file.path(p, "DESCRIPTION")), cands)
+  if (is.null(here)) stop("Cannot find pigauto project root")
+}
+
 suppressPackageStartupMessages({
   library(ape)
-  devtools::load_all(
-    "/Users/z3437171/Dropbox/Github Local/pigauto",
-    quiet = TRUE
-  )
+  devtools::load_all(here, quiet = TRUE)
 })
-
-# -------------------------------------------------------------------------
-# Paths and state
-# -------------------------------------------------------------------------
-
-here       <- "/Users/z3437171/Dropbox/Github Local/pigauto"
 out_rds    <- file.path(here, "script", "bench_scaling_v031.rds")
 out_png    <- file.path(here, "script", "bench_scaling_v031.png")
 out_md     <- file.path(here, "script", "bench_scaling_v031_summary.md")
