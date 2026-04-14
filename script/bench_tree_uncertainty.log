@@ -1,16 +1,94 @@
 [   0.3s] === frac=0.20, rep=1 (seed=1020) ===
 [   0.3s]   Missing cells in continuous traits: 240 / 1200 (20.0%)
 [   0.3s]   Single-tree MI (m=50)...
-[ 205.6s]     Done in 205.3s
-[ 205.7s]     Fits: 50/50 succeeded
-[ 205.7s]   Multi-tree MI (10 trees x 5)...
-[3144.5s]     Done in 2938.8s (49.0 min)
-[3144.6s]     Fits: 50/50 succeeded
-[3144.8s]   Cell done.
+[ 121.5s]     Done in 121.2s
+[ 121.5s]     Fits: 50/50 succeeded
+[ 121.5s]   Multi-tree MI (10 trees x 5)...
+[1136.5s]     Done in 1015.0s (16.9 min)
+[1136.6s]     Fits: 50/50 succeeded
+[1136.6s]   Cell done.
 
-[3144.8s] === frac=0.20, rep=2 (seed=2020) ===
-[3144.8s]   Missing cells in continuous traits: 240 / 1200 (20.0%)
-[3144.8s]   Single-tree MI (m=50)...
-[3401.7s]     Done in 256.9s
-[3401.8s]     Fits: 50/50 succeeded
-[3401.8s]   Multi-tree MI (10 trees x 5)...
+[1136.6s] === frac=0.20, rep=2 (seed=2020) ===
+[1136.6s]   Missing cells in continuous traits: 240 / 1200 (20.0%)
+[1136.6s]   Single-tree MI (m=50)...
+[1235.7s]     Done in 99.1s
+[1235.7s]     Fits: 50/50 succeeded
+[1235.7s]   Multi-tree MI (10 trees x 5)...
+[2205.2s]     Done in 969.4s (16.2 min)
+[2205.2s]     Fits: 50/50 succeeded
+[2205.2s]   Cell done.
+
+[2205.2s] === frac=0.20, rep=3 (seed=3020) ===
+[2205.2s]   Missing cells in continuous traits: 240 / 1200 (20.0%)
+[2205.2s]   Single-tree MI (m=50)...
+[2312.0s]     Done in 106.8s
+[2312.1s]     Fits: 50/50 succeeded
+[2312.1s]   Multi-tree MI (10 trees x 5)...
+[3225.9s]     Done in 913.8s (15.2 min)
+[3225.9s]     Fits: 50/50 succeeded
+[3225.9s]   Cell done.
+
+[3225.9s] === frac=0.40, rep=1 (seed=1040) ===
+[3225.9s]   Missing cells in continuous traits: 480 / 1200 (40.0%)
+[3225.9s]   Single-tree MI (m=50)...
+[3324.5s]     Done in 98.6s
+[3324.5s]     Fits: 50/50 succeeded
+[3324.5s]   Multi-tree MI (10 trees x 5)...
+[4253.5s]     Done in 929.0s (15.5 min)
+[4253.5s]     Fits: 50/50 succeeded
+[4253.5s]   Cell done.
+
+[4253.5s] === frac=0.40, rep=2 (seed=2040) ===
+[4253.5s]   Missing cells in continuous traits: 480 / 1200 (40.0%)
+[4253.5s]   Single-tree MI (m=50)...
+[4356.1s]     Done in 102.5s
+[4356.1s]     Fits: 50/50 succeeded
+[4356.1s]   Multi-tree MI (10 trees x 5)...
+[5299.1s]     Done in 943.0s (15.7 min)
+[5299.1s]     Fits: 50/50 succeeded
+[5299.1s]   Cell done.
+
+[5299.1s] === frac=0.40, rep=3 (seed=3040) ===
+[5299.1s]   Missing cells in continuous traits: 480 / 1200 (40.0%)
+[5299.1s]   Single-tree MI (m=50)...
+[5388.6s]     Done in 89.5s
+[5388.6s]     Fits: 50/50 succeeded
+[5388.6s]   Multi-tree MI (10 trees x 5)...
+[6201.8s]     Done in 813.1s (13.6 min)
+[6201.8s]     Fits: 50/50 succeeded
+[6201.8s]   Cell done.
+
+[6201.8s] === frac=0.60, rep=1 (seed=1060) ===
+[6201.8s]   Missing cells in continuous traits: 720 / 1200 (60.0%)
+[6201.8s]   Single-tree MI (m=50)...
+[6282.5s]     Done in 80.8s
+[6282.6s]     Fits: 50/50 succeeded
+[6282.6s]   Multi-tree MI (10 trees x 5)...
+[7141.2s]     Done in 858.6s (14.3 min)
+[7141.2s]     Fits: 50/50 succeeded
+[7141.2s]   Cell done.
+
+[7141.2s] === frac=0.60, rep=2 (seed=2060) ===
+[7141.2s]   Missing cells in continuous traits: 720 / 1200 (60.0%)
+[7141.2s]   Single-tree MI (m=50)...
+[7221.7s]     Done in 80.5s
+[7221.7s]     Fits: 50/50 succeeded
+[7221.8s]   Multi-tree MI (10 trees x 5)...
+[8056.0s]     Done in 834.2s (13.9 min)
+[8056.0s]     Fits: 50/50 succeeded
+[8056.0s]   Cell done.
+
+[8056.0s] === frac=0.60, rep=3 (seed=3060) ===
+[8056.0s]   Missing cells in continuous traits: 720 / 1200 (60.0%)
+[8056.0s]   Single-tree MI (m=50)...
+[8139.1s]     Done in 83.1s
+[8139.1s]     Fits: 50/50 succeeded
+[8139.1s]   Multi-tree MI (10 trees x 5)...
+[8972.2s]     Done in 833.1s (13.9 min)
+[8972.2s]     Fits: 50/50 succeeded
+[8972.2s]   Cell done.
+
+[8972.2s] Total rows: 54
+[8972.2s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_tree_uncertainty.rds
+[8972.3s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_tree_uncertainty.md
+[8972.3s] done

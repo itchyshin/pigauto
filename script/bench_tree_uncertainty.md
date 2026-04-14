@@ -6,45 +6,45 @@
 - Downstream model: log(Mass) ~ log(Wing.Length) + log(Beak.Length_Culmen)
 - Missingness fracs: 0.2, 0.4, 0.6
 - Replicates: 3
-- Total wall time: 149.2 min
+- Total wall time: 149.5 min
 
 ## Pooled SE comparison
 
 | method | miss_frac | term | mean_estimate | mean_SE | mean_FMI | mean_df |
 |--------|-----------|------|---------------|---------|----------|---------|
-| multi_tree | 0.20 | (Intercept) | -7.9818 | 0.2654 | 0.221 | 6275.3 |
-| single_tree | 0.20 | (Intercept) | -8.0608 | 0.2366 | 0.038 | 49.0 |
-| multi_tree | 0.20 | log(Beak.Length_Culmen) | 0.2938 | 0.0969 | 0.294 | 947.9 |
-| single_tree | 0.20 | log(Beak.Length_Culmen) | 0.2854 | 0.0813 | 0.038 | 49.0 |
-| multi_tree | 0.20 | log(Wing.Length) | 2.3602 | 0.0960 | 0.260 | 2832.3 |
-| single_tree | 0.20 | log(Wing.Length) | 2.3830 | 0.0826 | 0.038 | 49.0 |
-| multi_tree | 0.40 | (Intercept) | -7.9115 | 0.3038 | 0.431 | 270.1 |
-| single_tree | 0.40 | (Intercept) | -8.1749 | 0.2203 | 0.038 | 49.0 |
-| multi_tree | 0.40 | log(Beak.Length_Culmen) | 0.2402 | 0.1029 | 0.259 | 1752.5 |
-| single_tree | 0.40 | log(Beak.Length_Culmen) | 0.0808 | 0.0855 | 0.038 | 49.0 |
-| multi_tree | 0.40 | log(Wing.Length) | 2.3742 | 0.1040 | 0.310 | 952.3 |
-| single_tree | 0.40 | log(Wing.Length) | 2.5378 | 0.0826 | 0.038 | 49.0 |
-| multi_tree | 0.60 | (Intercept) | -8.0709 | 0.4339 | 0.710 | 110.3 |
-| single_tree | 0.60 | (Intercept) | -7.8253 | 0.2313 | 0.027 | 1017765.4 |
-| multi_tree | 0.60 | log(Beak.Length_Culmen) | 0.2282 | 0.1900 | 0.786 | 82.0 |
-| single_tree | 0.60 | log(Beak.Length_Culmen) | 0.2110 | 0.0891 | 0.027 | 1170037.9 |
-| multi_tree | 0.60 | log(Wing.Length) | 2.4146 | 0.1776 | 0.742 | 97.2 |
-| single_tree | 0.60 | log(Wing.Length) | 2.3951 | 0.0894 | 0.027 | 1506952.5 |
+| multi_tree | 0.20 | (Intercept) | -6.9852 | 0.6131 | 0.669 | 114.7 |
+| single_tree | 0.20 | (Intercept) | -6.2273 | 0.6011 | 0.420 | 306.8 |
+| multi_tree | 0.20 | log(Beak.Length_Culmen) | 0.5196 | 0.1758 | 0.648 | 124.9 |
+| single_tree | 0.20 | log(Beak.Length_Culmen) | 0.5527 | 0.1655 | 0.465 | 256.5 |
+| multi_tree | 0.20 | log(Wing.Length) | 1.9912 | 0.2143 | 0.746 | 92.9 |
+| single_tree | 0.20 | log(Wing.Length) | 1.8237 | 0.1724 | 0.468 | 249.7 |
+| multi_tree | 0.40 | (Intercept) | -5.8061 | 0.8071 | 0.698 | 103.4 |
+| single_tree | 0.40 | (Intercept) | -5.2676 | 0.6114 | 0.371 | 372.0 |
+| multi_tree | 0.40 | log(Beak.Length_Culmen) | 0.6206 | 0.1968 | 0.650 | 122.3 |
+| single_tree | 0.40 | log(Beak.Length_Culmen) | 0.5729 | 0.1612 | 0.468 | 254.8 |
+| multi_tree | 0.40 | log(Wing.Length) | 1.6633 | 0.2537 | 0.788 | 81.0 |
+| single_tree | 0.40 | log(Wing.Length) | 1.5861 | 0.1672 | 0.471 | 255.8 |
+| multi_tree | 0.60 | (Intercept) | -4.7812 | 0.8371 | 0.577 | 154.5 |
+| single_tree | 0.60 | (Intercept) | -4.3014 | 0.7062 | 0.386 | 404.3 |
+| multi_tree | 0.60 | log(Beak.Length_Culmen) | 0.6728 | 0.2403 | 0.719 | 98.6 |
+| single_tree | 0.60 | log(Beak.Length_Culmen) | 0.8197 | 0.1675 | 0.412 | 304.9 |
+| multi_tree | 0.60 | log(Wing.Length) | 1.4090 | 0.2458 | 0.721 | 95.9 |
+| single_tree | 0.60 | log(Wing.Length) | 1.2229 | 0.1675 | 0.409 | 312.6 |
 
 ## SE ratio (multi_tree / single_tree)
 
 | miss_frac | term | SE_single | SE_multi | ratio |
 |-----------|------|-----------|----------|-------|
-| 0.20 | (Intercept) | 0.2366 | 0.2654 | 1.12 |
-| 0.20 | log(Beak.Length_Culmen) | 0.0813 | 0.0969 | 1.19 |
-| 0.20 | log(Wing.Length) | 0.0826 | 0.0960 | 1.16 |
-| 0.40 | (Intercept) | 0.2203 | 0.3038 | 1.38 |
-| 0.40 | log(Beak.Length_Culmen) | 0.0855 | 0.1029 | 1.20 |
-| 0.40 | log(Wing.Length) | 0.0826 | 0.1040 | 1.26 |
-| 0.60 | (Intercept) | 0.2313 | 0.4339 | 1.88 |
-| 0.60 | log(Beak.Length_Culmen) | 0.0891 | 0.1900 | 2.13 |
-| 0.60 | log(Wing.Length) | 0.0894 | 0.1776 | 1.99 |
+| 0.20 | (Intercept) | 0.6011 | 0.6131 | 1.02 |
+| 0.20 | log(Beak.Length_Culmen) | 0.1655 | 0.1758 | 1.06 |
+| 0.20 | log(Wing.Length) | 0.1724 | 0.2143 | 1.24 |
+| 0.40 | (Intercept) | 0.6114 | 0.8071 | 1.32 |
+| 0.40 | log(Beak.Length_Culmen) | 0.1612 | 0.1968 | 1.22 |
+| 0.40 | log(Wing.Length) | 0.1672 | 0.2537 | 1.52 |
+| 0.60 | (Intercept) | 0.7062 | 0.8371 | 1.19 |
+| 0.60 | log(Beak.Length_Culmen) | 0.1675 | 0.2403 | 1.43 |
+| 0.60 | log(Wing.Length) | 0.1675 | 0.2458 | 1.47 |
 
 ---
 Generated:
-2026-04-10 16:36
+2026-04-13 17:37

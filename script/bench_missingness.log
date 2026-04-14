@@ -1,0 +1,8 @@
+[   0.0s] Running 40 cells across 2 cores (PSOCK cluster)
+[   0.0s] Starting PSOCK cluster...
+[   3.9s] Cluster ready. Dispatching cells...
+[3349.7s] Cluster stopped.
+[3349.7s] Completed: 40 good, 0 errors
+[3349.7s] Total wall: 3349.7s (55.8 min)
+[3349.8s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_missingness_mechanism.md
+[3349.8s] done

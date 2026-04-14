@@ -1,9 +1,9 @@
 # Categorical-trait benchmark
 
-Run on: 2026-04-12 06:51:51
+Run on: 2026-04-13 13:00:33
 Machine: Darwin 25.4.0 (arm64), R 4.5.2
 Species: 300, traits: 2, reps: 5, missing_frac: 0.25
-Total wall: 0.0 min
+Total wall: 43.9 min
 
 ## Methods
 
@@ -34,7 +34,7 @@ Total wall: 0.0 min
   pigauto  cat1 0.5043528
      mode  cat2 0.3097127
  baseline  cat2 0.4626480
-  pigauto  cat2 0.4013577
+  pigauto  cat2 0.4626480
 ```
 
 ### K_8
@@ -72,7 +72,7 @@ Total wall: 0.0 min
   pigauto  cat1 0.4182690
      mode  cat2 0.4491975
  baseline  cat2 0.5048619
-  pigauto  cat2 0.5264003
+  pigauto  cat2 0.5140926
 ```
 
 ### signal_0.6
@@ -111,13 +111,13 @@ Total wall: 0.0 min
   pigauto        K_3 0.6451101
      mode        K_5 0.3593370
  baseline        K_5 0.4835004
-  pigauto        K_5 0.4528552
+  pigauto        K_5 0.4835004
      mode        K_8 0.2843022
  baseline        K_8 0.4237672
   pigauto        K_8 0.4237672
      mode signal_0.3 0.3902967
  baseline signal_0.3 0.4615655
-  pigauto signal_0.3 0.4723347
+  pigauto signal_0.3 0.4661808
      mode signal_0.6 0.3135755
  baseline signal_0.6 0.4856471
   pigauto signal_0.6 0.4856471

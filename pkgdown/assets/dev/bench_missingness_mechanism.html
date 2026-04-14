@@ -34,14 +34,14 @@ Mechanisms: MCAR &middot; MAR (trait) &middot; MAR (phylo) &middot; MNAR &middot
 Methods: mean / mode &middot; phylo baseline &middot; pigauto &middot;
 Replicates: 5 &middot;
 Missingness: 25% &middot;
-Commit 624a295928 &middot;
-Run on 2026-04-10 08:38 &middot;
-Total wall: 11.7 min
+Commit 00afa8384a &middot;
+Run on 2026-04-14 10:50 &middot;
+Total wall: 55.8 min
 </p>
 
 <div class="verdict">
-<p><b>Bottom line.</b> MNAR increases baseline RMSE by +6.5% relative to MCAR (0.578 vs 0.543). Non-random missingness violates the assumptions underlying phylogenetic imputation, but the phylogenetic signal still provides useful information.</p>
-<p>Discrete accuracy under MCAR: baseline 60.6%, pigauto 61.8%. Under MNAR: baseline 67.1%, pigauto 67.1%. The GNN maintains its relative advantage across mechanisms.</p>
+<p><b>Bottom line.</b> MNAR increases baseline RMSE by +6.6% relative to MCAR (0.574 vs 0.538). Non-random missingness violates the assumptions underlying phylogenetic imputation, but the phylogenetic signal still provides useful information.</p>
+<p>Discrete accuracy under MCAR: baseline 60.6%, pigauto 61.6%. Under MNAR: baseline 67.1%, pigauto 67.1%. The GNN maintains its relative advantage across mechanisms.</p>
 </div>
 
 <h2>Primary sweep: metrics by missingness mechanism (25% missingness)</h2>
@@ -52,13 +52,13 @@ Total wall: 11.7 min
 <tr><th>Mechanism</th><th>Metric</th><th style="text-align:right">Mean / mode</th><th style="text-align:right">Phylo baseline</th><th style="text-align:right">pigauto</th></tr>
 </thead>
 <tbody>
-<tr><td rowspan="2"><b>MCAR</b></td><td>Avg RMSE (continuous)</td><td style="text-align:right">1.002</td><td style="text-align:right">0.543</td><td style="text-align:right">0.539 <span style="color:#059669">&#9733;</span></td></tr>
-<tr><td>Avg accuracy (discrete)</td><td style="text-align:right">0.476</td><td style="text-align:right">0.606</td><td style="text-align:right">0.618 <span style="color:#059669">&#9733;</span></td></tr>
-<tr><td rowspan="2"><b>MAR (trait-driven)</b></td><td>Avg RMSE (continuous)</td><td style="text-align:right">1.038</td><td style="text-align:right">0.587</td><td style="text-align:right">0.586 <span style="color:#059669">&#9733;</span></td></tr>
-<tr><td>Avg accuracy (discrete)</td><td style="text-align:right">0.554</td><td style="text-align:right">0.672</td><td style="text-align:right">0.674 <span style="color:#059669">&#9733;</span></td></tr>
-<tr><td rowspan="2"><b>MAR (phylo-clade)</b></td><td>Avg RMSE (continuous)</td><td style="text-align:right">1.039</td><td style="text-align:right">0.575 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.579</td></tr>
+<tr><td rowspan="2"><b>MCAR</b></td><td>Avg RMSE (continuous)</td><td style="text-align:right">1.002</td><td style="text-align:right">0.538</td><td style="text-align:right">0.537 <span style="color:#059669">&#9733;</span></td></tr>
+<tr><td>Avg accuracy (discrete)</td><td style="text-align:right">0.476</td><td style="text-align:right">0.606</td><td style="text-align:right">0.616 <span style="color:#059669">&#9733;</span></td></tr>
+<tr><td rowspan="2"><b>MAR (trait-driven)</b></td><td>Avg RMSE (continuous)</td><td style="text-align:right">1.038</td><td style="text-align:right">0.588</td><td style="text-align:right">0.588 <span style="color:#059669">&#9733;</span></td></tr>
+<tr><td>Avg accuracy (discrete)</td><td style="text-align:right">0.554</td><td style="text-align:right">0.672</td><td style="text-align:right">0.677 <span style="color:#059669">&#9733;</span></td></tr>
+<tr><td rowspan="2"><b>MAR (phylo-clade)</b></td><td>Avg RMSE (continuous)</td><td style="text-align:right">1.039</td><td style="text-align:right">0.570 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.575</td></tr>
 <tr><td>Avg accuracy (discrete)</td><td style="text-align:right">0.557</td><td style="text-align:right">0.713 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.713</td></tr>
-<tr><td rowspan="2"><b>MNAR</b></td><td>Avg RMSE (continuous)</td><td style="text-align:right">1.051</td><td style="text-align:right">0.578 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.578</td></tr>
+<tr><td rowspan="2"><b>MNAR</b></td><td>Avg RMSE (continuous)</td><td style="text-align:right">1.051</td><td style="text-align:right">0.574 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.576</td></tr>
 <tr><td>Avg accuracy (discrete)</td><td style="text-align:right">0.508</td><td style="text-align:right">0.671 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.671</td></tr>
 </tbody>
 </table>
@@ -79,31 +79,31 @@ Total wall: 11.7 min
 <text x="12" y="147" font-size="10" fill="#6b7280" transform="rotate(-90 12 147)">Avg RMSE (continuous)</text>
 <rect x="66.9" y="73.8" width="27.5" height="184.2" fill="#9ca3af" rx="2"/>
 <text x="80.6" y="69.8" text-anchor="middle" font-size="9" fill="#374151">1.002</text>
-<rect x="101.2" y="158.3" width="27.5" height="99.7" fill="#2563eb" rx="2"/>
-<text x="115.0" y="154.3" text-anchor="middle" font-size="9" fill="#374151">0.543</text>
-<rect x="135.6" y="158.9" width="27.5" height="99.1" fill="#059669" rx="2"/>
-<text x="149.4" y="154.9" text-anchor="middle" font-size="9" fill="#374151">0.539</text>
+<rect x="101.2" y="159.1" width="27.5" height="98.9" fill="#2563eb" rx="2"/>
+<text x="115.0" y="155.1" text-anchor="middle" font-size="9" fill="#374151">0.538</text>
+<rect x="135.6" y="159.4" width="27.5" height="98.6" fill="#059669" rx="2"/>
+<text x="149.4" y="155.4" text-anchor="middle" font-size="9" fill="#374151">0.537</text>
 <text x="115.0" y="274" text-anchor="middle" font-size="11" fill="#374151">MCAR</text>
 <rect x="176.9" y="67.3" width="27.5" height="190.7" fill="#9ca3af" rx="2"/>
 <text x="190.6" y="63.3" text-anchor="middle" font-size="9" fill="#374151">1.038</text>
-<rect x="211.2" y="150.2" width="27.5" height="107.8" fill="#2563eb" rx="2"/>
-<text x="225.0" y="146.2" text-anchor="middle" font-size="9" fill="#374151">0.587</text>
-<rect x="245.6" y="150.4" width="27.5" height="107.6" fill="#059669" rx="2"/>
-<text x="259.4" y="146.4" text-anchor="middle" font-size="9" fill="#374151">0.586</text>
+<rect x="211.2" y="149.9" width="27.5" height="108.1" fill="#2563eb" rx="2"/>
+<text x="225.0" y="145.9" text-anchor="middle" font-size="9" fill="#374151">0.588</text>
+<rect x="245.6" y="150.0" width="27.5" height="108.0" fill="#059669" rx="2"/>
+<text x="259.4" y="146.0" text-anchor="middle" font-size="9" fill="#374151">0.588</text>
 <text x="225.0" y="274" text-anchor="middle" font-size="11" fill="#374151">MAR (trait-driven)</text>
 <rect x="286.9" y="67.1" width="27.5" height="190.9" fill="#9ca3af" rx="2"/>
 <text x="300.6" y="63.1" text-anchor="middle" font-size="9" fill="#374151">1.039</text>
-<rect x="321.2" y="152.3" width="27.5" height="105.7" fill="#2563eb" rx="2"/>
-<text x="335.0" y="148.3" text-anchor="middle" font-size="9" fill="#374151">0.575</text>
-<rect x="355.6" y="151.6" width="27.5" height="106.4" fill="#059669" rx="2"/>
-<text x="369.4" y="147.6" text-anchor="middle" font-size="9" fill="#374151">0.579</text>
+<rect x="321.2" y="153.3" width="27.5" height="104.7" fill="#2563eb" rx="2"/>
+<text x="335.0" y="149.3" text-anchor="middle" font-size="9" fill="#374151">0.570</text>
+<rect x="355.6" y="152.3" width="27.5" height="105.7" fill="#059669" rx="2"/>
+<text x="369.4" y="148.3" text-anchor="middle" font-size="9" fill="#374151">0.575</text>
 <text x="335.0" y="274" text-anchor="middle" font-size="11" fill="#374151">MAR (phylo-clade)</text>
 <rect x="396.9" y="65.0" width="27.5" height="193.0" fill="#9ca3af" rx="2"/>
 <text x="410.6" y="61.0" text-anchor="middle" font-size="9" fill="#374151">1.051</text>
-<rect x="431.2" y="151.8" width="27.5" height="106.2" fill="#2563eb" rx="2"/>
-<text x="445.0" y="147.8" text-anchor="middle" font-size="9" fill="#374151">0.578</text>
-<rect x="465.6" y="151.8" width="27.5" height="106.2" fill="#059669" rx="2"/>
-<text x="479.4" y="147.8" text-anchor="middle" font-size="9" fill="#374151">0.578</text>
+<rect x="431.2" y="152.6" width="27.5" height="105.4" fill="#2563eb" rx="2"/>
+<text x="445.0" y="148.6" text-anchor="middle" font-size="9" fill="#374151">0.574</text>
+<rect x="465.6" y="152.1" width="27.5" height="105.9" fill="#059669" rx="2"/>
+<text x="479.4" y="148.1" text-anchor="middle" font-size="9" fill="#374151">0.576</text>
 <text x="445.0" y="274" text-anchor="middle" font-size="11" fill="#374151">MNAR</text>
 <text x="280.0" y="296" text-anchor="middle" font-size="10" fill="#6b7280">Missingness mechanism</text>
 <rect x="514" y="36" width="12" height="12" fill="#9ca3af" rx="2"/>
@@ -133,15 +133,15 @@ Total wall: 11.7 min
 <text x="80.6" y="196.6" text-anchor="middle" font-size="9" fill="#374151">0.476</text>
 <rect x="101.2" y="126.3" width="27.5" height="131.7" fill="#2563eb" rx="2"/>
 <text x="115.0" y="122.3" text-anchor="middle" font-size="9" fill="#374151">0.606</text>
-<rect x="135.6" y="119.6" width="27.5" height="138.4" fill="#059669" rx="2"/>
-<text x="149.4" y="115.6" text-anchor="middle" font-size="9" fill="#374151">0.618</text>
+<rect x="135.6" y="120.7" width="27.5" height="137.3" fill="#059669" rx="2"/>
+<text x="149.4" y="116.7" text-anchor="middle" font-size="9" fill="#374151">0.616</text>
 <text x="115.0" y="274" text-anchor="middle" font-size="11" fill="#374151">MCAR</text>
 <rect x="176.9" y="155.9" width="27.5" height="102.1" fill="#9ca3af" rx="2"/>
 <text x="190.6" y="151.9" text-anchor="middle" font-size="9" fill="#374151">0.554</text>
 <rect x="211.2" y="88.3" width="27.5" height="169.7" fill="#2563eb" rx="2"/>
 <text x="225.0" y="84.3" text-anchor="middle" font-size="9" fill="#374151">0.672</text>
-<rect x="245.6" y="86.9" width="27.5" height="171.1" fill="#059669" rx="2"/>
-<text x="259.4" y="82.9" text-anchor="middle" font-size="9" fill="#374151">0.674</text>
+<rect x="245.6" y="85.5" width="27.5" height="172.5" fill="#059669" rx="2"/>
+<text x="259.4" y="81.5" text-anchor="middle" font-size="9" fill="#374151">0.677</text>
 <text x="225.0" y="274" text-anchor="middle" font-size="11" fill="#374151">MAR (trait-driven)</text>
 <rect x="286.9" y="154.5" width="27.5" height="103.5" fill="#9ca3af" rx="2"/>
 <text x="300.6" y="150.5" text-anchor="middle" font-size="9" fill="#374151">0.557</text>
@@ -186,31 +186,31 @@ Total wall: 11.7 min
 <text x="12" y="147" font-size="10" fill="#6b7280" transform="rotate(-90 12 147)">Avg RMSE (continuous)</text>
 <rect x="66.9" y="69.9" width="27.5" height="188.1" fill="#9ca3af" rx="2"/>
 <text x="80.6" y="65.9" text-anchor="middle" font-size="9" fill="#374151">0.993</text>
-<rect x="101.2" y="145.7" width="27.5" height="112.3" fill="#2563eb" rx="2"/>
-<text x="115.0" y="141.7" text-anchor="middle" font-size="9" fill="#374151">0.593</text>
-<rect x="135.6" y="146.1" width="27.5" height="111.9" fill="#059669" rx="2"/>
-<text x="149.4" y="142.1" text-anchor="middle" font-size="9" fill="#374151">0.591</text>
+<rect x="101.2" y="146.1" width="27.5" height="111.9" fill="#2563eb" rx="2"/>
+<text x="115.0" y="142.1" text-anchor="middle" font-size="9" fill="#374151">0.591</text>
+<rect x="135.6" y="146.3" width="27.5" height="111.7" fill="#059669" rx="2"/>
+<text x="149.4" y="142.3" text-anchor="middle" font-size="9" fill="#374151">0.589</text>
 <text x="115.0" y="274" text-anchor="middle" font-size="11" fill="#374151">β = 0.5</text>
 <rect x="176.9" y="65.6" width="27.5" height="192.4" fill="#9ca3af" rx="2"/>
 <text x="190.6" y="61.6" text-anchor="middle" font-size="9" fill="#374151">1.016</text>
-<rect x="211.2" y="148.4" width="27.5" height="109.6" fill="#2563eb" rx="2"/>
-<text x="225.0" y="144.4" text-anchor="middle" font-size="9" fill="#374151">0.579</text>
-<rect x="245.6" y="148.0" width="27.5" height="110.0" fill="#059669" rx="2"/>
-<text x="259.4" y="144.0" text-anchor="middle" font-size="9" fill="#374151">0.581</text>
+<rect x="211.2" y="148.6" width="27.5" height="109.4" fill="#2563eb" rx="2"/>
+<text x="225.0" y="144.6" text-anchor="middle" font-size="9" fill="#374151">0.577</text>
+<rect x="245.6" y="148.1" width="27.5" height="109.9" fill="#059669" rx="2"/>
+<text x="259.4" y="144.1" text-anchor="middle" font-size="9" fill="#374151">0.580</text>
 <text x="225.0" y="274" text-anchor="middle" font-size="11" fill="#374151">β = 1.0</text>
 <rect x="286.9" y="65.2" width="27.5" height="192.8" fill="#9ca3af" rx="2"/>
 <text x="300.6" y="61.2" text-anchor="middle" font-size="9" fill="#374151">1.018</text>
-<rect x="321.2" y="147.2" width="27.5" height="110.8" fill="#2563eb" rx="2"/>
-<text x="335.0" y="143.2" text-anchor="middle" font-size="9" fill="#374151">0.585</text>
-<rect x="355.6" y="146.9" width="27.5" height="111.1" fill="#059669" rx="2"/>
-<text x="369.4" y="142.9" text-anchor="middle" font-size="9" fill="#374151">0.586</text>
+<rect x="321.2" y="147.4" width="27.5" height="110.6" fill="#2563eb" rx="2"/>
+<text x="335.0" y="143.4" text-anchor="middle" font-size="9" fill="#374151">0.583</text>
+<rect x="355.6" y="147.5" width="27.5" height="110.5" fill="#059669" rx="2"/>
+<text x="369.4" y="143.5" text-anchor="middle" font-size="9" fill="#374151">0.583</text>
 <text x="335.0" y="274" text-anchor="middle" font-size="11" fill="#374151">β = 2.0</text>
 <rect x="396.9" y="65.0" width="27.5" height="193.0" fill="#9ca3af" rx="2"/>
 <text x="410.6" y="61.0" text-anchor="middle" font-size="9" fill="#374151">1.019</text>
-<rect x="431.2" y="139.8" width="27.5" height="118.2" fill="#2563eb" rx="2"/>
-<text x="445.0" y="135.8" text-anchor="middle" font-size="9" fill="#374151">0.624</text>
-<rect x="465.6" y="139.9" width="27.5" height="118.1" fill="#059669" rx="2"/>
-<text x="479.4" y="135.9" text-anchor="middle" font-size="9" fill="#374151">0.623</text>
+<rect x="431.2" y="140.8" width="27.5" height="117.2" fill="#2563eb" rx="2"/>
+<text x="445.0" y="136.8" text-anchor="middle" font-size="9" fill="#374151">0.618</text>
+<rect x="465.6" y="141.0" width="27.5" height="117.0" fill="#059669" rx="2"/>
+<text x="479.4" y="137.0" text-anchor="middle" font-size="9" fill="#374151">0.618</text>
 <text x="445.0" y="274" text-anchor="middle" font-size="11" fill="#374151">β = 4.0</text>
 <text x="280.0" y="296" text-anchor="middle" font-size="10" fill="#6b7280">MAR severity</text>
 <rect x="514" y="36" width="12" height="12" fill="#9ca3af" rx="2"/>

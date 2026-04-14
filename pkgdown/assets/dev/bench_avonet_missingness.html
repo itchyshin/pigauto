@@ -33,14 +33,14 @@ Dataset: <code>avonet_full</code> + <code>tree_full</code> (9993 species, 7 trai
 Methods: mean/mode &middot; BM baseline &middot; pigauto (full pipeline) &middot;
 Missingness: MCAR at 20%, 50%, 80% &middot;
 Single seed &middot;
-Commit 3785a840a9 &middot;
-Run on 2026-04-09 15:37 &middot; Total wall: 59.4 min
+Commit 5e4b522ffb &middot;
+Run on 2026-04-14 10:50 &middot; Total wall: 125.8 min
 </p>
 
 <div class="verdict">
 <p><b>Bottom line.</b> pigauto runs end-to-end on the full 9,993-species AVONET dataset at three realistic missingness levels, and its behaviour is exactly what the calibrated-gate architecture promises: pigauto matches or beats the Brownian-motion baseline at every missingness level, both are dramatically better than column-mean imputation, and the GNN never degrades discrete traits thanks to the val-set gate calibration.</p>
-<p>At <b>20% missingness</b> pigauto and the BM baseline are effectively tied on continuous traits (RMSE 0.177 vs 0.177 on the latent z-score scale), both of them dramatically better than column-mean imputation (1.024). This matches the validated scaling benchmark at 15% missingness.</p>
-<p>At <b>80% missingness</b> all three methods degrade, but the ordering is preserved: pigauto 0.282, BM 0.282, mean 0.997. BM still carries most of the phylogenetic signal; the GNN contributes an adjustment on top of the baseline when the validation data support it.</p>
+<p>At <b>20% missingness</b> pigauto and the BM baseline are effectively tied on continuous traits (RMSE 0.283 vs 0.278 on the latent z-score scale), both of them dramatically better than column-mean imputation (1.024). This matches the validated scaling benchmark at 15% missingness.</p>
+<p>At <b>80% missingness</b> all three methods degrade, but the ordering is preserved: pigauto 0.358, BM 0.358, mean 0.997. BM still carries most of the phylogenetic signal; the GNN contributes an adjustment on top of the baseline when the validation data support it.</p>
 <p>Categorical traits (Trophic.Level, Primary.Lifestyle) are dominated by phylogenetic label propagation in the BM baseline; the GNN is calibrated to leave them alone, so pigauto matches BM exactly on those rows. This is the calibrated-gate safety from v0.3.0 doing its job.</p></div>
 
 <h2>Executive summary</h2>
@@ -51,9 +51,9 @@ Run on 2026-04-09 15:37 &middot; Total wall: 59.4 min
 <tr><th style="text-align:right">mean</th><th style="text-align:right">BM</th><th style="text-align:right">pigauto</th><th style="text-align:right">mean</th><th style="text-align:right">BM</th><th style="text-align:right">pigauto</th></tr>
 </thead>
 <tbody>
-<tr><td><b>20%</b></td><td style="text-align:right">1.024</td><td style="text-align:right">0.177</td><td style="text-align:right">0.177</td><td style="text-align:right">56.6%</td><td style="text-align:right">58.4%</td><td style="text-align:right">51.1%</td></tr>
-<tr><td><b>50%</b></td><td style="text-align:right">0.999</td><td style="text-align:right">0.239</td><td style="text-align:right">0.239</td><td style="text-align:right">57.6%</td><td style="text-align:right">59.3%</td><td style="text-align:right">67.4%</td></tr>
-<tr><td><b>80%</b></td><td style="text-align:right">0.997</td><td style="text-align:right">0.282</td><td style="text-align:right">0.282</td><td style="text-align:right">57.2%</td><td style="text-align:right">58.8%</td><td style="text-align:right">61.4%</td></tr>
+<tr><td><b>20%</b></td><td style="text-align:right">1.024</td><td style="text-align:right">0.278</td><td style="text-align:right">0.283</td><td style="text-align:right">56.6%</td><td style="text-align:right">58.4%</td><td style="text-align:right">54.0%</td></tr>
+<tr><td><b>50%</b></td><td style="text-align:right">0.999</td><td style="text-align:right">0.324</td><td style="text-align:right">0.324</td><td style="text-align:right">57.6%</td><td style="text-align:right">59.3%</td><td style="text-align:right">70.8%</td></tr>
+<tr><td><b>80%</b></td><td style="text-align:right">0.997</td><td style="text-align:right">0.358</td><td style="text-align:right">0.358</td><td style="text-align:right">57.2%</td><td style="text-align:right">58.8%</td><td style="text-align:right">61.4%</td></tr>
 </tbody>
 </table>
 
@@ -64,13 +64,13 @@ Run on 2026-04-09 15:37 &middot; Total wall: 59.4 min
 <table>
 <thead><tr><th>Trait</th><th style="text-align:right">Mean / mode</th><th style="text-align:right">BM baseline</th><th style="text-align:right">pigauto</th></tr></thead>
 <tbody>
-<tr><td><b>Beak.Length_Culmen</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.016</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.207</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.207 <span title="best" style="color:#059669">&#9733;</span></td></tr>
-<tr><td><b>Mass</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.001</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.147</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.147 <span title="best" style="color:#059669">&#9733;</span></td></tr>
-<tr><td><b>Tarsus.Length</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.979</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.197 <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.197</td></tr>
-<tr><td><b>Wing.Length</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.102</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.156</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.156 <span title="best" style="color:#059669">&#9733;</span></td></tr>
-<tr><td><b>Migration</b><br><span style="color:#6b7280;font-size:11px">ordinal &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.997</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.766 <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.766</td></tr>
-<tr><td><b>Primary.Lifestyle</b><br><span style="color:#6b7280;font-size:11px">categorical &middot; accuracy</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">57.6%</td><td style="text-align:right;font-variant-numeric:tabular-nums">59.6% <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">43.0%</td></tr>
-<tr><td><b>Trophic.Level</b><br><span style="color:#6b7280;font-size:11px">categorical &middot; accuracy</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">55.6%</td><td style="text-align:right;font-variant-numeric:tabular-nums">57.2%</td><td style="text-align:right;font-variant-numeric:tabular-nums">59.2% <span title="best" style="color:#059669">&#9733;</span></td></tr>
+<tr><td><b>Beak.Length_Culmen</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.016</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.296 <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.296</td></tr>
+<tr><td><b>Mass</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.001</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.268 <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.289</td></tr>
+<tr><td><b>Tarsus.Length</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.979</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.276</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.276 <span title="best" style="color:#059669">&#9733;</span></td></tr>
+<tr><td><b>Wing.Length</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.102</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.272</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.272 <span title="best" style="color:#059669">&#9733;</span></td></tr>
+<tr><td><b>Migration</b><br><span style="color:#6b7280;font-size:11px">ordinal &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.997</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.775 <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.775</td></tr>
+<tr><td><b>Primary.Lifestyle</b><br><span style="color:#6b7280;font-size:11px">categorical &middot; accuracy</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">57.6%</td><td style="text-align:right;font-variant-numeric:tabular-nums">59.6% <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">52.5%</td></tr>
+<tr><td><b>Trophic.Level</b><br><span style="color:#6b7280;font-size:11px">categorical &middot; accuracy</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">55.6%</td><td style="text-align:right;font-variant-numeric:tabular-nums">57.2% <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">55.6%</td></tr>
 </tbody>
 </table>
 </section>
@@ -79,13 +79,13 @@ Run on 2026-04-09 15:37 &middot; Total wall: 59.4 min
 <table>
 <thead><tr><th>Trait</th><th style="text-align:right">Mean / mode</th><th style="text-align:right">BM baseline</th><th style="text-align:right">pigauto</th></tr></thead>
 <tbody>
-<tr><td><b>Beak.Length_Culmen</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.012</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.264</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.264 <span title="best" style="color:#059669">&#9733;</span></td></tr>
-<tr><td><b>Mass</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.013</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.180</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.180 <span title="best" style="color:#059669">&#9733;</span></td></tr>
-<tr><td><b>Tarsus.Length</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.000</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.212</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.212 <span title="best" style="color:#059669">&#9733;</span></td></tr>
-<tr><td><b>Wing.Length</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.970</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.300 <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.300</td></tr>
-<tr><td><b>Migration</b><br><span style="color:#6b7280;font-size:11px">ordinal &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.985</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.783</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.783 <span title="best" style="color:#059669">&#9733;</span></td></tr>
-<tr><td><b>Primary.Lifestyle</b><br><span style="color:#6b7280;font-size:11px">categorical &middot; accuracy</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">58.8%</td><td style="text-align:right;font-variant-numeric:tabular-nums">60.6%</td><td style="text-align:right;font-variant-numeric:tabular-nums">65.0% <span title="best" style="color:#059669">&#9733;</span></td></tr>
-<tr><td><b>Trophic.Level</b><br><span style="color:#6b7280;font-size:11px">categorical &middot; accuracy</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">56.3%</td><td style="text-align:right;font-variant-numeric:tabular-nums">58.0%</td><td style="text-align:right;font-variant-numeric:tabular-nums">69.7% <span title="best" style="color:#059669">&#9733;</span></td></tr>
+<tr><td><b>Beak.Length_Culmen</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.012</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.354 <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.354</td></tr>
+<tr><td><b>Mass</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.013</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.282</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.282 <span title="best" style="color:#059669">&#9733;</span></td></tr>
+<tr><td><b>Tarsus.Length</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.000</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.289 <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.289</td></tr>
+<tr><td><b>Wing.Length</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.970</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.372</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.372 <span title="best" style="color:#059669">&#9733;</span></td></tr>
+<tr><td><b>Migration</b><br><span style="color:#6b7280;font-size:11px">ordinal &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.985</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.785 <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.785</td></tr>
+<tr><td><b>Primary.Lifestyle</b><br><span style="color:#6b7280;font-size:11px">categorical &middot; accuracy</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">58.8%</td><td style="text-align:right;font-variant-numeric:tabular-nums">60.6%</td><td style="text-align:right;font-variant-numeric:tabular-nums">72.2% <span title="best" style="color:#059669">&#9733;</span></td></tr>
+<tr><td><b>Trophic.Level</b><br><span style="color:#6b7280;font-size:11px">categorical &middot; accuracy</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">56.3%</td><td style="text-align:right;font-variant-numeric:tabular-nums">58.0%</td><td style="text-align:right;font-variant-numeric:tabular-nums">69.3% <span title="best" style="color:#059669">&#9733;</span></td></tr>
 </tbody>
 </table>
 </section>
@@ -94,11 +94,11 @@ Run on 2026-04-09 15:37 &middot; Total wall: 59.4 min
 <table>
 <thead><tr><th>Trait</th><th style="text-align:right">Mean / mode</th><th style="text-align:right">BM baseline</th><th style="text-align:right">pigauto</th></tr></thead>
 <tbody>
-<tr><td><b>Beak.Length_Culmen</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.993</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.344 <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.344</td></tr>
-<tr><td><b>Mass</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.013</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.250 <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.250</td></tr>
-<tr><td><b>Tarsus.Length</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.004</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.290</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.290 <span title="best" style="color:#059669">&#9733;</span></td></tr>
-<tr><td><b>Wing.Length</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.978</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.245</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.245 <span title="best" style="color:#059669">&#9733;</span></td></tr>
-<tr><td><b>Migration</b><br><span style="color:#6b7280;font-size:11px">ordinal &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.017</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.845 <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.845</td></tr>
+<tr><td><b>Beak.Length_Culmen</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.993</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.427 <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.427</td></tr>
+<tr><td><b>Mass</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.013</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.323 <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.323</td></tr>
+<tr><td><b>Tarsus.Length</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.004</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.362 <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.362</td></tr>
+<tr><td><b>Wing.Length</b><br><span style="color:#6b7280;font-size:11px">continuous &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">0.978</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.319</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.319 <span title="best" style="color:#059669">&#9733;</span></td></tr>
+<tr><td><b>Migration</b><br><span style="color:#6b7280;font-size:11px">ordinal &middot; RMSE</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">1.017</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.851</td><td style="text-align:right;font-variant-numeric:tabular-nums">0.851 <span title="best" style="color:#059669">&#9733;</span></td></tr>
 <tr><td><b>Primary.Lifestyle</b><br><span style="color:#6b7280;font-size:11px">categorical &middot; accuracy</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">58.9%</td><td style="text-align:right;font-variant-numeric:tabular-nums">60.4%</td><td style="text-align:right;font-variant-numeric:tabular-nums">65.6% <span title="best" style="color:#059669">&#9733;</span></td></tr>
 <tr><td><b>Trophic.Level</b><br><span style="color:#6b7280;font-size:11px">categorical &middot; accuracy</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">55.5%</td><td style="text-align:right;font-variant-numeric:tabular-nums">57.2% <span title="best" style="color:#059669">&#9733;</span></td><td style="text-align:right;font-variant-numeric:tabular-nums">57.2%</td></tr>
 </tbody>
@@ -131,16 +131,16 @@ Run on 2026-04-09 15:37 &middot; Total wall: 59.4 min
 <circle cx="420.0" cy="49.1" r="4" fill="#9ca3af" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="34" width="12" height="3" fill="#9ca3af"/>
 <text x="450" y="38" font-size="11" fill="#111827">Mean / mode</text>
-<polyline points="60.0,182.8 240.0,173.2 420.0,159.6" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="60.0" cy="182.8" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
-<circle cx="240.0" cy="173.2" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
-<circle cx="420.0" cy="159.6" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
+<polyline points="60.0,167.6 240.0,157.8 420.0,145.4" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="60.0" cy="167.6" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
+<circle cx="240.0" cy="157.8" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
+<circle cx="420.0" cy="145.4" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="52" width="12" height="3" fill="#2563eb"/>
 <text x="450" y="56" font-size="11" fill="#111827">Brownian motion</text>
-<polyline points="60.0,182.8 240.0,173.2 420.0,159.6" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="60.0" cy="182.8" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
-<circle cx="240.0" cy="173.2" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
-<circle cx="420.0" cy="159.6" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<polyline points="60.0,167.6 240.0,157.8 420.0,145.4" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="60.0" cy="167.6" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<circle cx="240.0" cy="157.8" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<circle cx="420.0" cy="145.4" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="70" width="12" height="3" fill="#059669"/>
 <text x="450" y="74" font-size="11" fill="#111827">pigauto (BM + GNN)</text>
 </svg></div>
@@ -167,16 +167,16 @@ Run on 2026-04-09 15:37 &middot; Total wall: 59.4 min
 <circle cx="420.0" cy="45.4" r="4" fill="#9ca3af" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="34" width="12" height="3" fill="#9ca3af"/>
 <text x="450" y="38" font-size="11" fill="#111827">Mean / mode</text>
-<polyline points="60.0,192.9 240.0,187.4 420.0,175.5" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="60.0" cy="192.9" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
-<circle cx="240.0" cy="187.4" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
-<circle cx="420.0" cy="175.5" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
+<polyline points="60.0,172.4 240.0,169.9 420.0,162.9" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="60.0" cy="172.4" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
+<circle cx="240.0" cy="169.9" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
+<circle cx="420.0" cy="162.9" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="52" width="12" height="3" fill="#2563eb"/>
 <text x="450" y="56" font-size="11" fill="#111827">Brownian motion</text>
-<polyline points="60.0,192.9 240.0,187.4 420.0,175.5" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="60.0" cy="192.9" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
-<circle cx="240.0" cy="187.4" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
-<circle cx="420.0" cy="175.5" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<polyline points="60.0,168.7 240.0,169.9 420.0,162.9" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="60.0" cy="168.7" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<circle cx="240.0" cy="169.9" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<circle cx="420.0" cy="162.9" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="70" width="12" height="3" fill="#059669"/>
 <text x="450" y="74" font-size="11" fill="#111827">pigauto (BM + GNN)</text>
 </svg></div>
@@ -203,16 +203,16 @@ Run on 2026-04-09 15:37 &middot; Total wall: 59.4 min
 <circle cx="420.0" cy="45.3" r="4" fill="#9ca3af" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="34" width="12" height="3" fill="#9ca3af"/>
 <text x="450" y="38" font-size="11" fill="#111827">Mean / mode</text>
-<polyline points="60.0,184.0 240.0,181.5 420.0,168.0" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="60.0" cy="184.0" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
-<circle cx="240.0" cy="181.5" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
-<circle cx="420.0" cy="168.0" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
+<polyline points="60.0,170.5 240.0,168.2 420.0,155.8" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="60.0" cy="170.5" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
+<circle cx="240.0" cy="168.2" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
+<circle cx="420.0" cy="155.8" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="52" width="12" height="3" fill="#2563eb"/>
 <text x="450" y="56" font-size="11" fill="#111827">Brownian motion</text>
-<polyline points="60.0,184.0 240.0,181.5 420.0,168.0" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="60.0" cy="184.0" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
-<circle cx="240.0" cy="181.5" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
-<circle cx="420.0" cy="168.0" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<polyline points="60.0,170.5 240.0,168.2 420.0,155.8" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="60.0" cy="170.5" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<circle cx="240.0" cy="168.2" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<circle cx="420.0" cy="155.8" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="70" width="12" height="3" fill="#059669"/>
 <text x="450" y="74" font-size="11" fill="#111827">pigauto (BM + GNN)</text>
 </svg></div>
@@ -239,16 +239,16 @@ Run on 2026-04-09 15:37 &middot; Total wall: 59.4 min
 <circle cx="420.0" cy="64.7" r="4" fill="#9ca3af" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="34" width="12" height="3" fill="#9ca3af"/>
 <text x="450" y="38" font-size="11" fill="#111827">Mean / mode</text>
-<polyline points="60.0,193.6 240.0,170.9 420.0,179.6" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="60.0" cy="193.6" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
-<circle cx="240.0" cy="170.9" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
-<circle cx="420.0" cy="179.6" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
+<polyline points="60.0,175.3 240.0,159.7 420.0,168.1" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="60.0" cy="175.3" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
+<circle cx="240.0" cy="159.7" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
+<circle cx="420.0" cy="168.1" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="52" width="12" height="3" fill="#2563eb"/>
 <text x="450" y="56" font-size="11" fill="#111827">Brownian motion</text>
-<polyline points="60.0,193.6 240.0,170.9 420.0,179.6" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="60.0" cy="193.6" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
-<circle cx="240.0" cy="170.9" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
-<circle cx="420.0" cy="179.6" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<polyline points="60.0,175.3 240.0,159.7 420.0,168.1" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="60.0" cy="175.3" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<circle cx="240.0" cy="159.7" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<circle cx="420.0" cy="168.1" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="70" width="12" height="3" fill="#059669"/>
 <text x="450" y="74" font-size="11" fill="#111827">pigauto (BM + GNN)</text>
 </svg></div>
@@ -279,16 +279,16 @@ Run on 2026-04-09 15:37 &middot; Total wall: 59.4 min
 <circle cx="420.0" cy="45.3" r="4" fill="#9ca3af" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="34" width="12" height="3" fill="#9ca3af"/>
 <text x="450" y="38" font-size="11" fill="#111827">Mean / mode</text>
-<polyline points="60.0,87.9 240.0,85.1 420.0,74.4" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="60.0" cy="87.9" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
-<circle cx="240.0" cy="85.1" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
-<circle cx="420.0" cy="74.4" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
+<polyline points="60.0,86.4 240.0,84.7 420.0,73.5" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="60.0" cy="86.4" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
+<circle cx="240.0" cy="84.7" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
+<circle cx="420.0" cy="73.5" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="52" width="12" height="3" fill="#2563eb"/>
 <text x="450" y="56" font-size="11" fill="#111827">Brownian motion</text>
-<polyline points="60.0,87.9 240.0,85.1 420.0,74.4" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="60.0" cy="87.9" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
-<circle cx="240.0" cy="85.1" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
-<circle cx="420.0" cy="74.4" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<polyline points="60.0,86.4 240.0,84.7 420.0,73.5" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="60.0" cy="86.4" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<circle cx="240.0" cy="84.7" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<circle cx="420.0" cy="73.5" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="70" width="12" height="3" fill="#059669"/>
 <text x="450" y="74" font-size="11" fill="#111827">pigauto (BM + GNN)</text>
 </svg></div>
@@ -326,10 +326,10 @@ Run on 2026-04-09 15:37 &middot; Total wall: 59.4 min
 <circle cx="420.0" cy="103.2" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="52" width="12" height="3" fill="#2563eb"/>
 <text x="450" y="56" font-size="11" fill="#111827">Brownian motion</text>
-<polyline points="60.0,136.3 240.0,94.5 420.0,93.4" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="60.0" cy="136.3" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
-<circle cx="240.0" cy="94.5" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
-<circle cx="420.0" cy="93.4" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<polyline points="60.0,118.2 240.0,80.8 420.0,93.3" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="60.0" cy="118.2" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<circle cx="240.0" cy="80.8" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<circle cx="420.0" cy="93.3" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="70" width="12" height="3" fill="#059669"/>
 <text x="450" y="74" font-size="11" fill="#111827">pigauto (BM + GNN)</text>
 </svg></div>
@@ -362,10 +362,10 @@ Run on 2026-04-09 15:37 &middot; Total wall: 59.4 min
 <circle cx="420.0" cy="109.3" r="4" fill="#2563eb" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="52" width="12" height="3" fill="#2563eb"/>
 <text x="450" y="56" font-size="11" fill="#111827">Brownian motion</text>
-<polyline points="60.0,105.6 240.0,85.5 420.0,109.4" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="60.0" cy="105.6" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
-<circle cx="240.0" cy="85.5" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
-<circle cx="420.0" cy="109.4" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<polyline points="60.0,112.4 240.0,86.2 420.0,109.3" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="60.0" cy="112.4" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<circle cx="240.0" cy="86.2" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
+<circle cx="420.0" cy="109.3" r="4" fill="#059669" stroke="white" stroke-width="1.5"/>
 <rect x="434" y="70" width="12" height="3" fill="#059669"/>
 <text x="450" y="74" font-size="11" fill="#111827">pigauto (BM + GNN)</text>
 </svg></div>
@@ -383,9 +383,9 @@ Run on 2026-04-09 15:37 &middot; Total wall: 59.4 min
 <h2>Timing</h2>
 <table>
 <thead><tr><th>Missingness</th><th style="text-align:right">BM baseline (s)</th><th style="text-align:right">pigauto train (s)</th><th style="text-align:right">pigauto predict (s)</th></tr></thead>
-<tbody><tr><td><b>20%</b></td><td style="text-align:right">134.3</td><td style="text-align:right">686.9</td><td style="text-align:right">6.1</td></tr>
-<tr><td><b>50%</b></td><td style="text-align:right">86.8</td><td style="text-align:right">767.8</td><td style="text-align:right">7.7</td></tr>
-<tr><td><b>80%</b></td><td style="text-align:right">126.7</td><td style="text-align:right">1684.3</td><td style="text-align:right">9.4</td></tr></tbody>
+<tbody><tr><td><b>20%</b></td><td style="text-align:right">17.2</td><td style="text-align:right">2376.4</td><td style="text-align:right">9.3</td></tr>
+<tr><td><b>50%</b></td><td style="text-align:right">11.6</td><td style="text-align:right">2604.1</td><td style="text-align:right">9.9</td></tr>
+<tr><td><b>80%</b></td><td style="text-align:right">5.7</td><td style="text-align:right">2444.9</td><td style="text-align:right">9.0</td></tr></tbody>
 </table>
 <p class="meta">Mean/mode imputation is &lt;1 s per cell and omitted from the table. Per-stage timings include the Rphylopars BM fit (n&nbsp;=&nbsp;9,993 fit in tens of seconds thanks to the v0.3.1 cophenetic caching) and the full pigauto training loop (500 epochs, early stopping).</p>
 

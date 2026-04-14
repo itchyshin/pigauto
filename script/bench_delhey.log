@@ -1,7 +1,7 @@
 [   0.0s] Data: 5809 species, 2 traits, 6 covariates
 [   0.1s] === frac=0.20, rep=1 (seed=1020) ===
 [   0.1s]   Missing cells: 2324 / 11618 (20.0%)
-[  94.7s]   mean...
+[  63.4s]   mean...
 Warning in stats::cor(t_j[ok], p_j[ok]) :
   the standard deviation is zero
 Warning in stats::cor(t_j[ok], p_j[ok]) :
@@ -10,5 +10,158 @@ Warning in stats::cor(t_j[ok], p_j[ok]) :
   the standard deviation is zero
 Warning in stats::cor(t_j[ok], p_j[ok]) :
   the standard deviation is zero
-[  95.7s]   BM baseline...
-[ 100.5s]   pigauto (no covariates)...
+[  63.4s]   BM baseline...
+[  65.4s]   pigauto (no covariates)...
+[ 445.8s]     Done in 380.5s
+[ 445.8s]   pigauto (with covariates)...
+[ 841.0s]     Done in 395.2s
+[ 841.0s]   Cell done.
+
+[ 841.0s] === frac=0.20, rep=2 (seed=2020) ===
+[ 841.0s]   Missing cells: 2324 / 11618 (20.0%)
+[ 901.8s]   mean...
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+[ 901.8s]   BM baseline...
+[ 904.3s]   pigauto (no covariates)...
+[1336.9s]     Done in 432.6s
+[1336.9s]   pigauto (with covariates)...
+[1742.6s]     Done in 405.7s
+[1742.6s]   Cell done.
+
+[1742.6s] === frac=0.20, rep=3 (seed=3020) ===
+[1742.6s]   Missing cells: 2324 / 11618 (20.0%)
+[1804.3s]   mean...
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+[1804.3s]   BM baseline...
+[1806.8s]   pigauto (no covariates)...
+[2166.6s]     Done in 359.8s
+[2166.6s]   pigauto (with covariates)...
+[2555.4s]     Done in 388.8s
+[2555.4s]   Cell done.
+
+[2555.4s] === frac=0.40, rep=1 (seed=1040) ===
+[2555.4s]   Missing cells: 4648 / 11618 (40.0%)
+[2617.7s]   mean...
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+[2617.8s]   BM baseline...
+[2619.9s]   pigauto (no covariates)...
+[3005.1s]     Done in 385.1s
+[3005.1s]   pigauto (with covariates)...
+[3384.7s]     Done in 379.6s
+[3384.7s]   Cell done.
+
+[3384.7s] === frac=0.40, rep=2 (seed=2040) ===
+[3384.7s]   Missing cells: 4648 / 11618 (40.0%)
+[3448.5s]   mean...
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+[3448.5s]   BM baseline...
+[3450.3s]   pigauto (no covariates)...
+[3835.6s]     Done in 385.2s
+[3835.6s]   pigauto (with covariates)...
+[4241.5s]     Done in 405.9s
+[4241.5s]   Cell done.
+
+[4241.5s] === frac=0.40, rep=3 (seed=3040) ===
+[4241.5s]   Missing cells: 4648 / 11618 (40.0%)
+[4306.5s]   mean...
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+[4306.5s]   BM baseline...
+[4308.7s]   pigauto (no covariates)...
+[4717.4s]     Done in 408.7s
+[4717.4s]   pigauto (with covariates)...
+[5185.4s]     Done in 467.9s
+[5185.4s]   Cell done.
+
+[5185.4s] === frac=0.60, rep=1 (seed=1060) ===
+[5185.4s]   Missing cells: 6970 / 11618 (60.0%)
+[5250.7s]   mean...
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+[5250.7s]   BM baseline...
+[5252.4s]   pigauto (no covariates)...
+[5698.4s]     Done in 445.9s
+[5698.4s]   pigauto (with covariates)...
+[6161.0s]     Done in 462.6s
+[6161.0s]   Cell done.
+
+[6161.0s] === frac=0.60, rep=2 (seed=2060) ===
+[6161.0s]   Missing cells: 6970 / 11618 (60.0%)
+[6225.8s]   mean...
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+[6225.8s]   BM baseline...
+[6227.6s]   pigauto (no covariates)...
+[6652.9s]     Done in 425.4s
+[6652.9s]   pigauto (with covariates)...
+[7089.1s]     Done in 436.1s
+[7089.1s]   Cell done.
+
+[7089.1s] === frac=0.60, rep=3 (seed=3060) ===
+[7089.1s]   Missing cells: 6970 / 11618 (60.0%)
+[7155.7s]   mean...
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+[7155.7s]   BM baseline...
+[7157.4s]   pigauto (no covariates)...
+[7575.0s]     Done in 417.6s
+[7575.0s]   pigauto (with covariates)...
+[7883.6s]     Done in 308.6s
+[7883.6s]   Cell done.
+
+[7883.7s] Total rows: 144
+[7883.7s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_delhey.rds
+[7883.7s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_delhey.md
+[7883.7s] done

@@ -1,3 +1,8 @@
 [   0.0s] Running 35 cells across 2 cores (PSOCK cluster)
 [   0.0s] Starting PSOCK cluster...
-[   4.6s] Cluster ready. Dispatching cells...
+[   3.9s] Cluster ready. Dispatching cells...
+[3067.1s] Cluster stopped.
+[3067.1s] Completed: 35 good, 0 errors
+[3067.2s] Total wall: 3067.1s (51.1 min)
+[3067.2s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_zi_count.md
+[3067.2s] done

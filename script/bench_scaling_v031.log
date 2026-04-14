@@ -1,44 +1,36 @@
-[   0.0s] bench_scaling_v031 starting at 2026-04-12 07:07:04
+[   0.0s] bench_scaling_v031 starting at 2026-04-14 15:42:10
 [   0.0s] RSpectra available: TRUE
-[   0.0s] n_grid = 300, 1000, 2000, 3000, 5000, 7500, 10000
+[   0.0s] n_grid = 300, 1000, 2000, 3000
 [   0.0s] stage budget = 1800s, overall budget = 10800s
-[   0.1s] ===== n = 300 =====
-[   0.8s] [n=  300] preprocess ok      wall=    0.0s  maxR=    51 MB
-[   1.5s] [n=  300] graph      ok      wall=    0.1s  maxR=    71 MB
-[   1.9s] [n=  300] splits     ok      wall=    0.0s  maxR=    53 MB
-[   2.5s] [n=  300] baseline   ok      wall=    0.0s  maxR=    69 MB
-[  93.7s] [n=  300] train      ok      wall=   90.3s  maxR=    61 MB
-[  95.1s] [n=  300] predict    ok      wall=    0.9s  maxR=    57 MB
-[  95.1s] ===== n = 1000 =====
-[  95.7s] [n= 1000] preprocess ok      wall=    0.1s  maxR=    57 MB
-[  97.2s] [n= 1000] graph      ok      wall=    1.0s  maxR=   128 MB
-[  97.7s] [n= 1000] splits     ok      wall=    0.0s  maxR=    78 MB
-[  98.8s] [n= 1000] baseline   ok      wall=    0.5s  maxR=   156 MB
-[ 256.0s] [n= 1000] train      ok      wall=  154.5s  maxR=    80 MB
-[ 260.6s] [n= 1000] predict    ok      wall=    3.9s  maxR=    76 MB
-[ 260.6s] ===== n = 2000 =====
-[ 261.4s] [n= 2000] preprocess ok      wall=    0.0s  maxR=    52 MB
-[ 266.2s] [n= 2000] graph      ok      wall=    4.2s  maxR=   373 MB
-[ 266.9s] [n= 2000] splits     ok      wall=    0.0s  maxR=   150 MB
-[ 268.4s] [n= 2000] baseline   ok      wall=    1.1s  maxR=   447 MB
-[ 416.1s] [n= 2000] train      ok      wall=  146.0s  maxR=   125 MB
-[ 422.7s] [n= 2000] predict    ok      wall=    6.0s  maxR=   124 MB
-[ 422.7s] ===== n = 3000 =====
-[ 423.5s] [n= 3000] preprocess ok      wall=    0.0s  maxR=    53 MB
-[ 434.3s] [n= 3000] graph      ok      wall=   10.2s  maxR=   740 MB
-[ 434.8s] [n= 3000] splits     ok      wall=    0.0s  maxR=   272 MB
-[ 436.8s] [n= 3000] baseline   ok      wall=    1.5s  maxR=   755 MB
-[ 944.0s] [n= 3000] train      ok      wall=  505.6s  maxR=   207 MB
-[ 962.0s] [n= 3000] predict    ok      wall=   17.3s  maxR=   204 MB
-[ 962.0s] ===== n = 5000 =====
-[ 963.3s] [n= 5000] preprocess ok      wall=    0.0s  maxR=    54 MB
-[1014.3s] [n= 5000] graph      ok      wall=   49.9s  maxR=  1962 MB
-[1014.8s] [n= 5000] splits     ok      wall=    0.1s  maxR=   660 MB
-[1022.0s] [n= 5000] baseline   ok      wall=    6.6s  maxR=  2402 MB
-[2261.3s] [n= 5000] train      ok      wall= 1236.6s  maxR=   459 MB
-[2531.1s] [n= 5000] predict    ok      wall=  268.3s  maxR=   451 MB
-[2531.1s] ===== n = 7500 =====
-[2533.7s] [n= 7500] preprocess ok      wall=    0.0s  maxR=    55 MB
-[2665.5s] [n= 7500] graph      ok      wall=  131.1s  maxR=  4347 MB
-[2666.1s] [n= 7500] splits     ok      wall=    0.2s  maxR=  1419 MB
-[2680.3s] [n= 7500] baseline   ok      wall=   12.9s  maxR=  5312 MB
+[   0.0s] ===== n = 300 =====
+[   0.4s] [n=  300] preprocess ok      wall=    0.0s  maxR=    51 MB
+[   0.7s] [n=  300] graph      ok      wall=    0.0s  maxR=    72 MB
+[   1.0s] [n=  300] splits     ok      wall=    0.0s  maxR=    53 MB
+[   1.4s] [n=  300] baseline   ok      wall=    0.0s  maxR=    69 MB
+[  34.4s] [n=  300] train      ok      wall=   32.6s  maxR=    61 MB
+[  35.1s] [n=  300] predict    ok      wall=    0.4s  maxR=    57 MB
+[  35.1s] ===== n = 1000 =====
+[  35.6s] [n= 1000] preprocess ok      wall=    0.1s  maxR=    58 MB
+[  36.3s] [n= 1000] graph      ok      wall=    0.4s  maxR=   128 MB
+[  36.7s] [n= 1000] splits     ok      wall=    0.0s  maxR=    78 MB
+[  37.2s] [n= 1000] baseline   ok      wall=    0.2s  maxR=   156 MB
+[  74.5s] [n= 1000] train      ok      wall=   36.7s  maxR=    80 MB
+[  75.3s] [n= 1000] predict    ok      wall=    0.5s  maxR=    77 MB
+[  75.3s] ===== n = 2000 =====
+[  75.7s] [n= 2000] preprocess ok      wall=    0.0s  maxR=    53 MB
+[  78.1s] [n= 2000] graph      ok      wall=    2.1s  maxR=   373 MB
+[  78.5s] [n= 2000] splits     ok      wall=    0.0s  maxR=   150 MB
+[  79.2s] [n= 2000] baseline   ok      wall=    0.4s  maxR=   447 MB
+[ 130.3s] [n= 2000] train      ok      wall=   50.6s  maxR=   125 MB
+[ 131.4s] [n= 2000] predict    ok      wall=    0.7s  maxR=   124 MB
+[ 131.4s] ===== n = 3000 =====
+[ 131.8s] [n= 3000] preprocess ok      wall=    0.0s  maxR=    53 MB
+[ 137.8s] [n= 3000] graph      ok      wall=    5.7s  maxR=   740 MB
+[ 138.1s] [n= 3000] splits     ok      wall=    0.0s  maxR=   272 MB
+[ 139.1s] [n= 3000] baseline   ok      wall=    0.6s  maxR=   755 MB
+[ 198.5s] [n= 3000] train      ok      wall=   59.0s  maxR=   207 MB
+[ 200.9s] [n= 3000] predict    ok      wall=    2.1s  maxR=   205 MB
+[ 200.9s] loop finished at 2026-04-14 15:45:30 (total elapsed 201s)
+[ 201.2s] plot written to /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_scaling_v031.png
+[ 201.3s] summary written to /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_scaling_v031_summary.md
+[ 201.3s] done

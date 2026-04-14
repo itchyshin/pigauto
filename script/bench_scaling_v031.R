@@ -51,7 +51,11 @@ out_rds    <- file.path(here, "script", "bench_scaling_v031.rds")
 out_png    <- file.path(here, "script", "bench_scaling_v031.png")
 out_md     <- file.path(here, "script", "bench_scaling_v031_summary.md")
 
-n_grid             <- c(300L, 1000L, 2000L, 3000L, 5000L, 7500L, 10000L)
+# n_grid capped at 3000 for CPU-only runs (codespace 16GB, local co-resident);
+# at n=5000 train torch allocations exceed 12GB and get OOM-killed.
+# Large-n scaling evidence lives in the real-data benchmarks:
+#   bench_avonet_missingness (n=9993), bench_delhey (n=5809).
+n_grid             <- c(300L, 1000L, 2000L, 3000L)
 stage_budget_sec   <- 30 * 60      # 30 minutes per stage
 overall_budget_sec <- 3 * 3600     # 3 hours total
 

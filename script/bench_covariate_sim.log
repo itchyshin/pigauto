@@ -1,93 +1,292 @@
 [   0.0s] === high_phylo_no_env, frac=0.20, rep=1 ===
 [   0.1s]   Missing: 180 / 900 (20.0%)
 [   0.1s]   pigauto (no covariates)...
-[ 130.2s]     Done in 130.1s
-[ 130.2s]   pigauto (with covariates)...
-[ 251.9s]     Done in 121.7s
-[ 251.9s]   Cell done.
+[  86.4s]     Done in 86.3s
+[  86.4s]   pigauto (with covariates)...
+[ 162.2s]     Done in 75.8s
+[ 162.2s]   Cell done.
 
-[ 251.9s] === high_phylo_no_env, frac=0.20, rep=2 ===
-[ 251.9s]   Missing: 180 / 900 (20.0%)
-[ 251.9s]   pigauto (no covariates)...
-[ 370.8s]     Done in 118.9s
-[ 370.8s]   pigauto (with covariates)...
-[ 503.5s]     Done in 132.7s
-[ 503.5s]   Cell done.
+[ 162.2s] === high_phylo_no_env, frac=0.20, rep=2 ===
+[ 162.2s]   Missing: 180 / 900 (20.0%)
+[ 162.2s]   pigauto (no covariates)...
+[ 240.0s]     Done in 77.8s
+[ 240.0s]   pigauto (with covariates)...
+[ 315.6s]     Done in 75.6s
+[ 315.6s]   Cell done.
 
-[ 503.5s] === high_phylo_no_env, frac=0.20, rep=3 ===
-[ 503.5s]   Missing: 180 / 900 (20.0%)
-[ 503.5s]   pigauto (no covariates)...
-[ 623.3s]     Done in 119.8s
-[ 623.3s]   pigauto (with covariates)...
-[ 795.7s]     Done in 172.4s
-[ 795.7s]   Cell done.
+[ 315.6s] === high_phylo_no_env, frac=0.20, rep=3 ===
+[ 315.6s]   Missing: 180 / 900 (20.0%)
+[ 315.6s]   pigauto (no covariates)...
+[ 392.4s]     Done in 76.8s
+[ 392.4s]   pigauto (with covariates)...
+[ 466.2s]     Done in 73.8s
+[ 466.2s]   Cell done.
 
-[ 795.7s] === high_phylo_no_env, frac=0.40, rep=1 ===
-[ 795.7s]   Missing: 360 / 900 (40.0%)
-[ 795.7s]   pigauto (no covariates)...
-[ 987.5s]     Done in 191.7s
-[ 987.5s]   pigauto (with covariates)...
-[1141.3s]     Done in 153.8s
-[1141.3s]   Cell done.
+[ 466.2s] === high_phylo_no_env, frac=0.40, rep=1 ===
+[ 466.2s]   Missing: 360 / 900 (40.0%)
+[ 466.2s]   pigauto (no covariates)...
+[ 539.7s]     Done in 73.5s
+[ 539.7s]   pigauto (with covariates)...
+[ 612.7s]     Done in 73.0s
+[ 612.7s]   Cell done.
 
-[1141.3s] === high_phylo_no_env, frac=0.40, rep=2 ===
-[1141.3s]   Missing: 360 / 900 (40.0%)
-[1141.3s]   pigauto (no covariates)...
-[1315.3s]     Done in 174.0s
-[1315.3s]   pigauto (with covariates)...
-[1511.7s]     Done in 196.4s
-[1511.7s]   Cell done.
+[ 612.7s] === high_phylo_no_env, frac=0.40, rep=2 ===
+[ 612.7s]   Missing: 360 / 900 (40.0%)
+[ 612.7s]   pigauto (no covariates)...
+[ 684.9s]     Done in 72.2s
+[ 684.9s]   pigauto (with covariates)...
+[ 758.3s]     Done in 73.4s
+[ 758.3s]   Cell done.
 
-[1511.7s] === high_phylo_no_env, frac=0.40, rep=3 ===
-[1511.7s]   Missing: 360 / 900 (40.0%)
-[1511.7s]   pigauto (no covariates)...
-[1711.6s]     Done in 199.9s
-[1711.6s]   pigauto (with covariates)...
-[1900.0s]     Done in 188.4s
-[1900.1s]   Cell done.
+[ 758.3s] === high_phylo_no_env, frac=0.40, rep=3 ===
+[ 758.3s]   Missing: 360 / 900 (40.0%)
+[ 758.3s]   pigauto (no covariates)...
+[ 831.5s]     Done in 73.2s
+[ 831.5s]   pigauto (with covariates)...
+[ 905.3s]     Done in 73.8s
+[ 905.3s]   Cell done.
 
-[1900.1s] === high_phylo_no_env, frac=0.60, rep=1 ===
-[1900.1s]   Missing: 540 / 900 (60.0%)
-[1900.1s]   pigauto (no covariates)...
-[2095.9s]     Done in 195.7s
-[2095.9s]   pigauto (with covariates)...
-[2269.2s]     Done in 173.3s
-[2269.2s]   Cell done.
+[ 905.3s] === high_phylo_no_env, frac=0.60, rep=1 ===
+[ 905.3s]   Missing: 540 / 900 (60.0%)
+[ 905.3s]   pigauto (no covariates)...
+[ 978.1s]     Done in 72.8s
+[ 978.1s]   pigauto (with covariates)...
+[1052.1s]     Done in 74.0s
+[1052.1s]   Cell done.
 
-[2269.2s] === high_phylo_no_env, frac=0.60, rep=2 ===
-[2269.2s]   Missing: 540 / 900 (60.0%)
-[2269.2s]   pigauto (no covariates)...
-[2438.9s]     Done in 169.7s
-[2438.9s]   pigauto (with covariates)...
-[2614.3s]     Done in 175.4s
-[2614.4s]   Cell done.
+[1052.1s] === high_phylo_no_env, frac=0.60, rep=2 ===
+[1052.1s]   Missing: 540 / 900 (60.0%)
+[1052.1s]   pigauto (no covariates)...
+[1123.4s]     Done in 71.3s
+[1123.4s]   pigauto (with covariates)...
+[1199.0s]     Done in 75.6s
+[1199.0s]   Cell done.
 
-[2614.4s] === high_phylo_no_env, frac=0.60, rep=3 ===
-[2614.5s]   Missing: 540 / 900 (60.0%)
-[2614.5s]   pigauto (no covariates)...
-[2802.0s]     Done in 187.5s
-[2802.0s]   pigauto (with covariates)...
-[2963.0s]     Done in 161.1s
-[2963.0s]   Cell done.
+[1199.0s] === high_phylo_no_env, frac=0.60, rep=3 ===
+[1199.0s]   Missing: 540 / 900 (60.0%)
+[1199.0s]   pigauto (no covariates)...
+[1268.9s]     Done in 69.9s
+[1268.9s]   pigauto (with covariates)...
+[1340.9s]     Done in 72.1s
+[1340.9s]   Cell done.
 
-[2963.0s] === high_phylo_mod_env, frac=0.20, rep=1 ===
-[2963.1s]   Missing: 180 / 900 (20.0%)
-[2963.1s]   pigauto (no covariates)...
-[3151.5s]     Done in 188.5s
-[3151.5s]   pigauto (with covariates)...
-[3297.7s]     Done in 146.2s
-[3297.7s]   Cell done.
+[1340.9s] === high_phylo_mod_env, frac=0.20, rep=1 ===
+[1340.9s]   Missing: 180 / 900 (20.0%)
+[1340.9s]   pigauto (no covariates)...
+[1416.8s]     Done in 75.9s
+[1416.8s]   pigauto (with covariates)...
+[1498.8s]     Done in 82.0s
+[1498.8s]   Cell done.
 
-[3297.7s] === high_phylo_mod_env, frac=0.20, rep=2 ===
-[3297.7s]   Missing: 180 / 900 (20.0%)
-[3297.7s]   pigauto (no covariates)...
-[3430.7s]     Done in 132.9s
-[3430.7s]   pigauto (with covariates)...
-[3577.5s]     Done in 146.9s
-[3577.6s]   Cell done.
+[1498.8s] === high_phylo_mod_env, frac=0.20, rep=2 ===
+[1498.8s]   Missing: 180 / 900 (20.0%)
+[1498.8s]   pigauto (no covariates)...
+[1579.0s]     Done in 80.2s
+[1579.0s]   pigauto (with covariates)...
+[1651.6s]     Done in 72.6s
+[1651.6s]   Cell done.
 
-[3577.6s] === high_phylo_mod_env, frac=0.20, rep=3 ===
-[3577.6s]   Missing: 180 / 900 (20.0%)
-[3577.6s]   pigauto (no covariates)...
-[3721.7s]     Done in 144.2s
-[3721.7s]   pigauto (with covariates)...
+[1651.6s] === high_phylo_mod_env, frac=0.20, rep=3 ===
+[1651.6s]   Missing: 180 / 900 (20.0%)
+[1651.6s]   pigauto (no covariates)...
+[1721.5s]     Done in 69.9s
+[1721.5s]   pigauto (with covariates)...
+[1787.3s]     Done in 65.7s
+[1787.3s]   Cell done.
+
+[1787.3s] === high_phylo_mod_env, frac=0.40, rep=1 ===
+[1787.3s]   Missing: 360 / 900 (40.0%)
+[1787.3s]   pigauto (no covariates)...
+[1852.3s]     Done in 65.0s
+[1852.3s]   pigauto (with covariates)...
+[1919.9s]     Done in 67.6s
+[1919.9s]   Cell done.
+
+[1919.9s] === high_phylo_mod_env, frac=0.40, rep=2 ===
+[1919.9s]   Missing: 360 / 900 (40.0%)
+[1919.9s]   pigauto (no covariates)...
+[1986.1s]     Done in 66.1s
+[1986.1s]   pigauto (with covariates)...
+[2065.8s]     Done in 79.7s
+[2065.8s]   Cell done.
+
+[2065.8s] === high_phylo_mod_env, frac=0.40, rep=3 ===
+[2065.8s]   Missing: 360 / 900 (40.0%)
+[2065.8s]   pigauto (no covariates)...
+[2147.5s]     Done in 81.7s
+[2147.5s]   pigauto (with covariates)...
+[2232.4s]     Done in 84.9s
+[2232.4s]   Cell done.
+
+[2232.4s] === high_phylo_mod_env, frac=0.60, rep=1 ===
+[2232.4s]   Missing: 540 / 900 (60.0%)
+[2232.4s]   pigauto (no covariates)...
+[2315.5s]     Done in 83.1s
+[2315.5s]   pigauto (with covariates)...
+[2389.7s]     Done in 74.2s
+[2389.7s]   Cell done.
+
+[2389.7s] === high_phylo_mod_env, frac=0.60, rep=2 ===
+[2389.7s]   Missing: 540 / 900 (60.0%)
+[2389.7s]   pigauto (no covariates)...
+[2460.1s]     Done in 70.4s
+[2460.1s]   pigauto (with covariates)...
+[2528.2s]     Done in 68.2s
+[2528.2s]   Cell done.
+
+[2528.2s] === high_phylo_mod_env, frac=0.60, rep=3 ===
+[2528.2s]   Missing: 540 / 900 (60.0%)
+[2528.2s]   pigauto (no covariates)...
+[2597.9s]     Done in 69.6s
+[2597.9s]   pigauto (with covariates)...
+[2664.9s]     Done in 67.0s
+[2664.9s]   Cell done.
+
+[2664.9s] === mod_phylo_strong_env, frac=0.20, rep=1 ===
+[2664.9s]   Missing: 180 / 900 (20.0%)
+[2664.9s]   pigauto (no covariates)...
+[2729.4s]     Done in 64.5s
+[2729.4s]   pigauto (with covariates)...
+[2794.0s]     Done in 64.6s
+[2794.0s]   Cell done.
+
+[2794.0s] === mod_phylo_strong_env, frac=0.20, rep=2 ===
+[2794.0s]   Missing: 180 / 900 (20.0%)
+[2794.0s]   pigauto (no covariates)...
+[2858.6s]     Done in 64.6s
+[2858.6s]   pigauto (with covariates)...
+[2923.2s]     Done in 64.6s
+[2923.2s]   Cell done.
+
+[2923.2s] === mod_phylo_strong_env, frac=0.20, rep=3 ===
+[2923.2s]   Missing: 180 / 900 (20.0%)
+[2923.2s]   pigauto (no covariates)...
+[2994.0s]     Done in 70.7s
+[2994.0s]   pigauto (with covariates)...
+[3065.0s]     Done in 71.1s
+[3065.0s]   Cell done.
+
+[3065.0s] === mod_phylo_strong_env, frac=0.40, rep=1 ===
+[3065.0s]   Missing: 360 / 900 (40.0%)
+[3065.0s]   pigauto (no covariates)...
+[3142.3s]     Done in 77.3s
+[3142.3s]   pigauto (with covariates)...
+[3215.1s]     Done in 72.7s
+[3215.1s]   Cell done.
+
+[3215.1s] === mod_phylo_strong_env, frac=0.40, rep=2 ===
+[3215.1s]   Missing: 360 / 900 (40.0%)
+[3215.1s]   pigauto (no covariates)...
+[3288.7s]     Done in 73.7s
+[3288.7s]   pigauto (with covariates)...
+[3366.3s]     Done in 77.5s
+[3366.3s]   Cell done.
+
+[3366.3s] === mod_phylo_strong_env, frac=0.40, rep=3 ===
+[3366.3s]   Missing: 360 / 900 (40.0%)
+[3366.3s]   pigauto (no covariates)...
+[3434.0s]     Done in 67.7s
+[3434.0s]   pigauto (with covariates)...
+[3499.8s]     Done in 65.8s
+[3499.8s]   Cell done.
+
+[3499.8s] === mod_phylo_strong_env, frac=0.60, rep=1 ===
+[3499.8s]   Missing: 540 / 900 (60.0%)
+[3499.8s]   pigauto (no covariates)...
+[3565.7s]     Done in 65.9s
+[3565.7s]   pigauto (with covariates)...
+[3632.0s]     Done in 66.3s
+[3632.0s]   Cell done.
+
+[3632.0s] === mod_phylo_strong_env, frac=0.60, rep=2 ===
+[3632.0s]   Missing: 540 / 900 (60.0%)
+[3632.0s]   pigauto (no covariates)...
+[3699.2s]     Done in 67.2s
+[3699.2s]   pigauto (with covariates)...
+[3774.8s]     Done in 75.6s
+[3774.8s]   Cell done.
+
+[3774.8s] === mod_phylo_strong_env, frac=0.60, rep=3 ===
+[3774.8s]   Missing: 540 / 900 (60.0%)
+[3774.8s]   pigauto (no covariates)...
+[3841.6s]     Done in 66.8s
+[3841.6s]   pigauto (with covariates)...
+[3908.3s]     Done in 66.6s
+[3908.3s]   Cell done.
+
+[3908.3s] === low_phylo_strong_env, frac=0.20, rep=1 ===
+[3908.3s]   Missing: 180 / 900 (20.0%)
+[3908.3s]   pigauto (no covariates)...
+[3983.3s]     Done in 75.0s
+[3983.3s]   pigauto (with covariates)...
+[4063.3s]     Done in 80.0s
+[4063.3s]   Cell done.
+
+[4063.3s] === low_phylo_strong_env, frac=0.20, rep=2 ===
+[4063.4s]   Missing: 180 / 900 (20.0%)
+[4063.4s]   pigauto (no covariates)...
+[4137.1s]     Done in 73.7s
+[4137.1s]   pigauto (with covariates)...
+[4211.3s]     Done in 74.2s
+[4211.3s]   Cell done.
+
+[4211.3s] === low_phylo_strong_env, frac=0.20, rep=3 ===
+[4211.3s]   Missing: 180 / 900 (20.0%)
+[4211.3s]   pigauto (no covariates)...
+[4289.4s]     Done in 78.1s
+[4289.4s]   pigauto (with covariates)...
+[4366.6s]     Done in 77.2s
+[4366.6s]   Cell done.
+
+[4366.6s] === low_phylo_strong_env, frac=0.40, rep=1 ===
+[4366.6s]   Missing: 360 / 900 (40.0%)
+[4366.6s]   pigauto (no covariates)...
+[4439.3s]     Done in 72.7s
+[4439.3s]   pigauto (with covariates)...
+[4508.0s]     Done in 68.7s
+[4508.0s]   Cell done.
+
+[4508.0s] === low_phylo_strong_env, frac=0.40, rep=2 ===
+[4508.0s]   Missing: 360 / 900 (40.0%)
+[4508.0s]   pigauto (no covariates)...
+[4574.3s]     Done in 66.3s
+[4574.3s]   pigauto (with covariates)...
+[4642.1s]     Done in 67.8s
+[4642.1s]   Cell done.
+
+[4642.1s] === low_phylo_strong_env, frac=0.40, rep=3 ===
+[4642.1s]   Missing: 360 / 900 (40.0%)
+[4642.1s]   pigauto (no covariates)...
+[4709.2s]     Done in 67.1s
+[4709.2s]   pigauto (with covariates)...
+[4782.0s]     Done in 72.8s
+[4782.0s]   Cell done.
+
+[4782.0s] === low_phylo_strong_env, frac=0.60, rep=1 ===
+[4782.0s]   Missing: 540 / 900 (60.0%)
+[4782.0s]   pigauto (no covariates)...
+[4854.2s]     Done in 72.1s
+[4854.2s]   pigauto (with covariates)...
+[4925.6s]     Done in 71.4s
+[4925.6s]   Cell done.
+
+[4925.6s] === low_phylo_strong_env, frac=0.60, rep=2 ===
+[4925.6s]   Missing: 540 / 900 (60.0%)
+[4925.6s]   pigauto (no covariates)...
+[4993.8s]     Done in 68.2s
+[4993.8s]   pigauto (with covariates)...
+[5062.0s]     Done in 68.2s
+[5062.0s]   Cell done.
+
+[5062.0s] === low_phylo_strong_env, frac=0.60, rep=3 ===
+[5062.0s]   Missing: 540 / 900 (60.0%)
+[5062.0s]   pigauto (no covariates)...
+[5130.0s]     Done in 68.0s
+[5130.0s]   pigauto (with covariates)...
+[5205.1s]     Done in 75.0s
+[5205.1s]   Cell done.
+
+[5205.1s] Total rows: 216
+[5205.1s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_covariate_sim.rds
+[5205.1s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_covariate_sim.md
+[5205.1s] done
