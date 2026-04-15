@@ -137,3 +137,28 @@ test_that("build_liability_matrix masks val/test split cells to NA", {
     expect_true(is.na(out$X_liab[row_i[k], local_col[k]]))
   }
 })
+
+test_that("fit_joint_threshold_baseline treats 1-non-NA columns as unfit", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(44)
+  tree <- ape::rtree(20)
+  df <- data.frame(
+    x = rnorm(20),
+    y = factor(sample(c("A", "B"), 20, TRUE), levels = c("A", "B")),
+    row.names = tree$tip.label
+  )
+  # Leave exactly 1 observed y; NA the rest.
+  keep_row <- 7L
+  y_keep   <- df$y[keep_row]
+  df$y     <- factor(rep(NA, 20), levels = c("A", "B"))
+  df$y[keep_row] <- y_keep
+  pd <- preprocess_traits(df, tree)
+
+  res <- fit_joint_threshold_baseline(pd, tree, splits = NULL)
+
+  # Continuous column should fit normally
+  expect_true(all(is.finite(res$mu_liab[, "x"])))
+  # Binary column has only 1 non-NA -> treated as unfit -> all-NA output
+  expect_true(all(is.na(res$mu_liab[, "y"])))
+  expect_true(all(is.na(res$se_liab[, "y"])))
+})

@@ -103,9 +103,9 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL) {
 
   spp <- if (!is.null(data$species_names)) data$species_names else rownames(data$X_scaled)
 
-  # Identify columns with at least one observation; an all-NA column would be
-  # silently dropped by Rphylopars::phylopars() producing a dimension mismatch.
-  has_obs <- apply(X_liab, 2, function(col) any(!is.na(col)))
+  # Phylopars needs >= 2 non-NA observations per column; treat anything fewer
+  # the same as all-NA: excluded from the fit, left as NA in the output.
+  has_obs <- apply(X_liab, 2, function(col) sum(!is.na(col)) >= 2L)
   fit_cols <- which(has_obs)
 
   n_species  <- nrow(X_liab)
@@ -132,8 +132,9 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL) {
     mu_fit   <- fit$anc_recon[tip_rows, , drop = FALSE]
     se_fit   <- sqrt(fit$anc_var[tip_rows, , drop = FALSE])
 
-    # Validate shape: if Rphylopars still drops columns despite filtering
-    # (e.g. trait name collision), fail loudly rather than mis-align.
+    # Validate shape: if Rphylopars still drops or duplicates columns, fail
+    # loudly rather than mis-align. has_obs already filters columns with < 2
+    # observations (phylopars errors on those internally).
     if (ncol(mu_fit) != length(fit_cols)) {
       stop("fit_joint_threshold_baseline: Rphylopars returned ",
            ncol(mu_fit), " columns but ", length(fit_cols),
