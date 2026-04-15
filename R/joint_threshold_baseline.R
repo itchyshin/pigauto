@@ -82,3 +82,47 @@ build_liability_matrix <- function(data, splits = NULL) {
 
   list(X_liab = X_liab, liab_cols = liab_cols, liab_types = liab_types)
 }
+
+#' Fit a joint MVN BM on liability-scale columns (Phase 3)
+#'
+#' Runs `build_liability_matrix()` then delegates to `Rphylopars::phylopars()`.
+#' Returns raw liability-scale posterior. Decoding to per-type output scale
+#' happens upstream in the caller / in `fit_baseline()` glue.
+#'
+#' @inheritParams fit_joint_mvn_baseline
+#' @return list(mu_liab, se_liab, liab_cols, liab_types).
+#' @keywords internal
+#' @noRd
+fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL) {
+  stopifnot(joint_mvn_available())
+
+  built <- build_liability_matrix(data, splits = splits)
+  X_liab     <- built$X_liab
+  liab_cols  <- built$liab_cols
+  liab_types <- built$liab_types
+
+  spp <- if (!is.null(data$species_names)) data$species_names else rownames(data$X_scaled)
+
+  df_in          <- as.data.frame(X_liab)
+  df_in$species  <- spp
+  df_in          <- df_in[, c("species", colnames(X_liab)), drop = FALSE]
+
+  fit <- Rphylopars::phylopars(
+    trait_data = df_in,
+    tree       = tree,
+    model      = "BM"
+  )
+
+  tip_rows <- match(spp, rownames(fit$anc_recon))
+  mu_liab  <- fit$anc_recon[tip_rows, , drop = FALSE]
+  se_liab  <- sqrt(fit$anc_var[tip_rows, , drop = FALSE])
+  rownames(mu_liab) <- spp
+  rownames(se_liab) <- spp
+  colnames(mu_liab) <- colnames(X_liab)
+  colnames(se_liab) <- colnames(X_liab)
+
+  list(mu_liab    = mu_liab,
+       se_liab    = se_liab,
+       liab_cols  = liab_cols,
+       liab_types = liab_types)
+}

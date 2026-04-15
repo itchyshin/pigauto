@@ -36,6 +36,33 @@ test_that("build_liability_matrix fills observed binary cells via truncated-Gaus
   expect_equal(out$liab_types, c("continuous", "binary"))
 })
 
+test_that("fit_joint_threshold_baseline returns liability-scale posterior for every tip", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(7)
+  tree <- ape::rtree(30)
+  df <- data.frame(
+    x1 = rnorm(30),
+    x2 = rnorm(30),
+    row.names = tree$tip.label
+  )
+  df$x1[c(3, 17)] <- NA
+  pd <- preprocess_traits(df, tree)
+
+  res <- fit_joint_threshold_baseline(pd, tree, splits = NULL)
+
+  # Expected shape: list(mu_liab, se_liab) each n_species x n_liab_cols
+  expect_named(res, c("mu_liab", "se_liab", "liab_cols", "liab_types"))
+  expect_equal(dim(res$mu_liab), c(30, 2))
+  expect_equal(dim(res$se_liab), c(30, 2))
+  expect_true(all(is.finite(res$mu_liab)))
+  expect_true(all(res$se_liab >= 0))
+
+  # Observed x1 cells should have posterior close to the truth
+  obs_idx <- which(!is.na(df$x1))
+  expect_lt(max(abs(res$mu_liab[obs_idx, "x1"] -
+                      pd$X_scaled[obs_idx, "x1"])), 0.5)
+})
+
 test_that("build_liability_matrix masks val/test split cells to NA", {
   skip_if_not_installed("Rphylopars")
   set.seed(11)
