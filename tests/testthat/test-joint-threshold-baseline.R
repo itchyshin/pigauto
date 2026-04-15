@@ -190,3 +190,28 @@ test_that("decode_binary_liability returns logit(pnorm(mu/sqrt(1+se^2)))", {
   expect_length(res$mu_logit, 3)
   expect_length(res$p, 3)
 })
+
+test_that("fit_baseline uses threshold-joint path for mixed continuous+binary", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(1)
+  tree <- ape::rtree(40)
+  df <- data.frame(
+    x  = rnorm(40),
+    y  = factor(sample(c("A", "B"), 40, replace = TRUE),
+                levels = c("A", "B")),
+    row.names = tree$tip.label
+  )
+  df$x[c(5, 20)] <- NA
+  df$y[c(10, 30)] <- NA
+  pd     <- preprocess_traits(df, tree)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.1,
+                                 seed = 1, trait_map = pd$trait_map)
+  bl <- fit_baseline(pd, tree, splits = splits)
+
+  # Continuous col: mu on z-score scale, finite
+  expect_true(all(is.finite(bl$mu[, "x"])))
+  # Binary col: mu on logit scale, within clipped range
+  expect_true(all(is.finite(bl$mu[, "y"])))
+  expect_true(all(bl$mu[, "y"] >= qlogis(0.01) - 1e-6))
+  expect_true(all(bl$mu[, "y"] <= qlogis(0.99) + 1e-6))
+})

@@ -129,17 +129,70 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     }
   }
 
-  # ---- Level-C Phase 2: joint MVN dispatch --------------------------------
-  # When we have 2+ BM-eligible columns AND Rphylopars is available, use
-  # the joint multivariate baseline to capture cross-trait correlation.
-  # Single-trait case keeps the existing per-column path (covered by
-  # Phase 2.3 back-compat test).
-  # multi_proportion traits use CLR-space BM but Rphylopars' multi-trait
-  # solver has not been validated on CLR data in this codebase, so we
-  # fall through to per-column BM whenever any multi_proportion trait is
-  # present.
-  if (length(bm_cols) >= 2L && !has_multi_proportion && !multi_obs &&
-      joint_mvn_available()) {
+  # ---- Level-C Phase 2 & 3: joint baseline dispatch ----------------------
+  # Phase 3 (threshold joint): when binary cols are present alongside
+  #   >=1 continuous-family col and Rphylopars is available, take the
+  #   threshold-joint path (covers both continuous and binary in one fit).
+  # Phase 2 (continuous joint): when >=2 continuous-family cols are
+  #   present without any binary, take the pure-MVN path.
+  # Single-trait continuous case keeps the existing per-column path
+  # (covered by Phase 2.3 back-compat test).
+  # multi_proportion and multi-obs are out of scope for joint dispatch;
+  # they fall through to the per-column loop below.
+  binary_cols <- integer(0)
+  for (tm in trait_map) {
+    if (tm$type == "binary") binary_cols <- c(binary_cols, tm$latent_cols)
+  }
+
+  use_threshold_joint <- length(binary_cols) >= 1L &&
+    length(bm_cols) >= 1L &&
+    !has_multi_proportion && !multi_obs &&
+    joint_mvn_available()
+
+  use_continuous_joint <- !use_threshold_joint &&
+    length(bm_cols) >= 2L &&
+    !has_multi_proportion && !multi_obs &&
+    joint_mvn_available()
+
+  if (use_threshold_joint) {
+    jt <- fit_joint_threshold_baseline(data, tree, splits = splits,
+                                       graph = graph)
+
+    populated_cols <- integer(0)
+
+    # Continuous cols: mu_liab is already on the z-scored latent scale
+    cont_cols_in_jt <- which(jt$liab_types != "binary")
+    for (idx in cont_cols_in_jt) {
+      col <- jt$liab_cols[idx]
+      # Only copy if phylopars actually fit this column (non-NA posterior)
+      if (any(!is.na(jt$mu_liab[, idx]))) {
+        mu[, col] <- jt$mu_liab[, idx]
+        se[, col] <- jt$se_liab[, idx]
+        populated_cols <- c(populated_cols, col)
+      }
+    }
+    # Binary cols: decode liability -> logit(P(y=1))
+    bin_cols_in_jt <- which(jt$liab_types == "binary")
+    for (idx in bin_cols_in_jt) {
+      col <- jt$liab_cols[idx]
+      # Skip unfit columns (all-NA posterior from <2-obs filter)
+      if (all(is.na(jt$mu_liab[, idx]))) next
+      dec <- decode_binary_liability(mu_liab = jt$mu_liab[, idx],
+                                     se_liab = jt$se_liab[, idx])
+      mu[, col] <- dec$mu_logit
+      se[, col] <- 0   # LP path also sets se=0 for binary; match convention
+      populated_cols <- c(populated_cols, col)
+    }
+
+    # Remove populated cols from bm_cols / binary_cols so the downstream
+    # per-column loops skip them. Any unpopulated cols (e.g. <2 observations,
+    # filtered out inside fit_joint_threshold_baseline) stay in bm_cols /
+    # binary_cols and fall through to the per-column BM / LP paths for
+    # graceful fallback.
+    bm_cols     <- setdiff(bm_cols, populated_cols)
+    binary_cols <- setdiff(binary_cols, populated_cols)
+
+  } else if (use_continuous_joint) {
     joint <- fit_joint_mvn_baseline(data, tree, splits = splits, graph = graph)
     mu[, bm_cols] <- joint$mu[, bm_cols]
     se[, bm_cols] <- joint$se[, bm_cols]
@@ -190,6 +243,11 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   for (tm in trait_map) {
     if (tm$type != "binary") next
     lc   <- tm$latent_cols
+    # If the Phase 3 threshold-joint populated this col, skip LP.
+    # binary_cols is the set of UNpopulated binary latent cols after the
+    # threshold dispatch; if our `lc` is not in binary_cols, the joint
+    # fit already handled it.
+    if (!all(lc %in% binary_cols)) next
 
     # Get species-level observations
     if (multi_obs) {
