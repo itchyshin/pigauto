@@ -62,6 +62,9 @@
 #'   \item{categorical}{one-hot encoding (K latent columns)}
 #'   \item{proportion}{\code{qlogis(clamp(x, 0.001, 0.999))}, then z-score (1 latent column)}
 #'   \item{zi_count}{gate (0/1) + \code{log1p}-z of non-zeros (2 latent columns)}
+#'   \item{multi_proportion}{centred log-ratio (CLR) + per-component z-score
+#'     (K latent columns per group).  Rows must sum to 1.  Declared via the
+#'     \code{multi_proportion_groups} argument, not \code{trait_types}.}
 #' }
 #'
 #' @param traits \code{data.frame} with species as row names (one row per
@@ -78,7 +81,16 @@
 #'   Valid types: \code{"continuous"}, \code{"binary"}, \code{"categorical"},
 #'   \code{"ordinal"}, \code{"count"}, \code{"proportion"}, \code{"zi_count"}.
 #'   Proportion and zi_count are override-only (not auto-detected).
-#'   Unspecified traits are auto-detected.
+#'   Unspecified traits are auto-detected.  Note that
+#'   \code{"multi_proportion"} is NOT set here — use
+#'   \code{multi_proportion_groups} instead.
+#' @param multi_proportion_groups named list declaring compositional
+#'   (multi-proportion) trait groups.  Each element is a character vector
+#'   of column names whose row-wise values sum to 1 (e.g.
+#'   \code{list(diet = c("plants", "insects", "fish"))}).  The group
+#'   name becomes a single trait in the output, encoded via centred
+#'   log-ratio (CLR) + per-component z-score.  Group names must NOT
+#'   match any column in \code{traits}.  Default \code{NULL}.
 #' @param log_cols character vector of continuous trait names to
 #'   log-transform.  Default \code{NULL} means auto-detect (log if all
 #'   observed values are positive).  Set to \code{character(0)} to disable.
@@ -150,11 +162,52 @@
 #' @export
 preprocess_traits <- function(traits, tree, species_col = NULL,
                               trait_types = NULL,
+                              multi_proportion_groups = NULL,
                               log_cols = NULL, log_transform = TRUE,
                               center = TRUE, scale = TRUE,
                               covariates = NULL) {
   if (!is.data.frame(traits)) stop("'traits' must be a data.frame.")
   if (!inherits(tree, "phylo")) stop("'tree' must be a phylo object.")
+
+  # ---- Validate multi_proportion_groups -------------------------------------
+  if (!is.null(multi_proportion_groups)) {
+    if (!is.list(multi_proportion_groups) ||
+        is.null(names(multi_proportion_groups)) ||
+        any(names(multi_proportion_groups) == "")) {
+      stop("'multi_proportion_groups' must be a named list, e.g. ",
+           "list(colour = c('black','blue','red')).", call. = FALSE)
+    }
+    all_group_cols <- unlist(multi_proportion_groups, use.names = FALSE)
+    if (anyDuplicated(all_group_cols)) {
+      stop("Columns appear in more than one multi_proportion group: ",
+           paste(all_group_cols[duplicated(all_group_cols)], collapse = ", "),
+           call. = FALSE)
+    }
+    if (any(names(multi_proportion_groups) %in% colnames(traits))) {
+      bad <- intersect(names(multi_proportion_groups), colnames(traits))
+      stop("multi_proportion group name(s) collide with existing column(s): ",
+           paste(bad, collapse = ", "),
+           ". Pick group names that are NOT column names in `traits`.",
+           call. = FALSE)
+    }
+    missing_cols <- setdiff(all_group_cols, colnames(traits))
+    if (length(missing_cols) > 0) {
+      stop("multi_proportion_groups references columns not in `traits`: ",
+           paste(missing_cols, collapse = ", "), call. = FALSE)
+    }
+    for (gnm in names(multi_proportion_groups)) {
+      gcols <- multi_proportion_groups[[gnm]]
+      if (length(gcols) < 2L) {
+        stop("multi_proportion group '", gnm, "' needs >= 2 columns.",
+             call. = FALSE)
+      }
+      sub <- traits[, gcols, drop = FALSE]
+      if (!all(vapply(sub, is.numeric, logical(1)))) {
+        stop("multi_proportion group '", gnm, "' has non-numeric columns.",
+             call. = FALSE)
+      }
+    }
+  }
 
   # ---- Determine species identity per row -----------------------------------
   multi_obs <- !is.null(species_col)
@@ -238,7 +291,13 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
   X_original <- traits  # save before encoding
 
   # ---- Detect trait types ---------------------------------------------------
-  types <- detect_trait_types(traits, trait_types)
+  # Columns that belong to a multi_proportion group are excluded from
+  # the per-column type detection — they're handled as a single group entry
+  # in build_trait_map below.
+  group_member_cols <- unlist(multi_proportion_groups, use.names = FALSE)
+  standalone_cols   <- setdiff(colnames(traits), group_member_cols)
+  types <- detect_trait_types(traits[, standalone_cols, drop = FALSE],
+                              trait_types)
 
   # ---- Determine which continuous traits to log-transform -------------------
   cont_names <- names(types)[types == "continuous"]
@@ -257,7 +316,9 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
   }
 
   # ---- Build trait map and encode to latent ---------------------------------
-  trait_map <- build_trait_map(traits, types, log_set, center, scale)
+  # Pass multi_proportion_groups so build_trait_map can add one entry per group
+  trait_map <- build_trait_map(traits, types, log_set, center, scale,
+                               multi_proportion_groups = multi_proportion_groups)
   latent    <- encode_to_latent(traits, trait_map)
 
   # ---- Backward-compat X_raw (continuous traits only) -----------------------
@@ -273,13 +334,25 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
   }
 
   # ---- Backward-compat means/sds vectors ------------------------------------
+  # Note: multi_proportion traits have K-vector mean/sd (one per component),
+  # not a scalar — we store NA_real_ in these scalar-per-trait back-compat
+  # vectors since no downstream code legitimately consumes a scalar mean/sd
+  # for multi_proportion. The full mean/sd lives in trait_map[[gnm]]$mean.
   all_means <- vapply(trait_map, function(tm) {
-    if (!is.null(tm$mean) && !is.na(tm$mean)) tm$mean else NA_real_
+    if (!is.null(tm$mean) && length(tm$mean) == 1L && !is.na(tm$mean)) {
+      tm$mean
+    } else {
+      NA_real_
+    }
   }, numeric(1))
   names(all_means) <- vapply(trait_map, "[[", character(1), "name")
 
   all_sds <- vapply(trait_map, function(tm) {
-    if (!is.null(tm$sd) && !is.na(tm$sd)) tm$sd else NA_real_
+    if (!is.null(tm$sd) && length(tm$sd) == 1L && !is.na(tm$sd)) {
+      tm$sd
+    } else {
+      NA_real_
+    }
   }, numeric(1))
   names(all_sds) <- names(all_means)
 
@@ -434,12 +507,17 @@ detect_trait_types <- function(traits, overrides = NULL) {
 
 # ---- Internal: build trait map ----------------------------------------------
 
+#' Internal: build trait map from type labels
 #' @keywords internal
-build_trait_map <- function(traits, types, log_set, center, scale) {
+#' @noRd
+build_trait_map <- function(traits, types, log_set, center, scale,
+                            multi_proportion_groups = NULL) {
   tmap <- list()
   col_offset <- 0L
+  group_member_cols <- unlist(multi_proportion_groups, use.names = FALSE)
 
-  for (nm in colnames(traits)) {
+  # Iterate over named columns of `types` (which excludes group members)
+  for (nm in names(types)) {
     tp <- unname(types[nm])
     x  <- traits[[nm]][!is.na(traits[[nm]])]
 
@@ -536,6 +614,59 @@ build_trait_map <- function(traits, types, log_set, center, scale) {
     col_offset <- col_offset + entry$n_latent
     tmap[[nm]] <- entry
   }
+
+  # ---- Multi-proportion group entries (CLR + per-component z-scoring) ----
+  # Each group becomes ONE trait_map entry with K latent columns.
+  if (!is.null(multi_proportion_groups)) {
+    eps <- 1e-6   # for log-safety on observed zeros
+    for (gnm in names(multi_proportion_groups)) {
+      gcols <- multi_proportion_groups[[gnm]]
+      K <- length(gcols)
+      mat_raw <- as.matrix(traits[, gcols, drop = FALSE])
+      storage.mode(mat_raw) <- "double"
+
+      # Only use rows with NO NAs across the group for fitting mean/sd
+      complete_rows <- stats::complete.cases(mat_raw)
+      mat_fit <- mat_raw[complete_rows, , drop = FALSE]
+
+      # Handle zeros: replace with eps, re-normalise so rows still sum to ~1
+      if (nrow(mat_fit) > 0L) {
+        mat_fit <- pmax(mat_fit, eps)
+        rs <- rowSums(mat_fit)
+        mat_fit <- mat_fit / rs
+        # CLR: log(x) - mean(log(x)) row-wise
+        log_mat <- log(mat_fit)
+        gmean_row <- rowMeans(log_mat)
+        clr_mat <- log_mat - gmean_row
+      } else {
+        clr_mat <- matrix(NA_real_, 0L, K)
+      }
+
+      mu <- if (center && nrow(clr_mat) > 0L) colMeans(clr_mat) else rep(0, K)
+      sd_vec <- if (scale && nrow(clr_mat) > 1L) {
+        apply(clr_mat, 2L, stats::sd)
+      } else {
+        rep(1, K)
+      }
+      sd_vec[sd_vec == 0] <- 1
+
+      entry <- list(
+        name          = gnm,
+        type          = "multi_proportion",
+        n_latent      = K,
+        latent_cols   = col_offset + seq_len(K),
+        levels        = gcols,      # component names
+        input_cols    = gcols,      # original column names in traits
+        log_transform = FALSE,
+        mean          = mu,         # K-vector
+        sd            = sd_vec,     # K-vector
+        epsilon       = eps
+      )
+      col_offset <- col_offset + K
+      tmap[[gnm]] <- entry
+    }
+  }
+
   tmap
 }
 
@@ -596,6 +727,36 @@ encode_to_latent <- function(traits, trait_map) {
       vals <- (vals - tm$mean) / tm$sd
       X[, tm$latent_cols] <- vals
       lat_names[tm$latent_cols] <- nm
+
+    } else if (tm$type == "multi_proportion") {
+      # K CLR columns, per-component z-score, small epsilon for zeros
+      mat_raw <- as.matrix(traits[, tm$input_cols, drop = FALSE])
+      storage.mode(mat_raw) <- "double"
+      K  <- tm$n_latent
+      lc <- tm$latent_cols
+      eps <- tm$epsilon
+
+      complete_rows <- stats::complete.cases(mat_raw)
+
+      # Replace zeros/small values with epsilon and re-normalise
+      mat <- mat_raw
+      mat[complete_rows, ] <- pmax(mat_raw[complete_rows, , drop = FALSE], eps)
+      rs <- rowSums(mat[complete_rows, , drop = FALSE])
+      mat[complete_rows, ] <- mat[complete_rows, , drop = FALSE] / rs
+
+      # CLR
+      clr <- matrix(NA_real_, nrow(mat_raw), K)
+      if (any(complete_rows)) {
+        log_mat <- log(mat[complete_rows, , drop = FALSE])
+        clr[complete_rows, ] <- log_mat - rowMeans(log_mat)
+      }
+      # Per-component z-score
+      for (k in seq_len(K)) {
+        clr[, k] <- (clr[, k] - tm$mean[k]) / tm$sd[k]
+      }
+      X[, lc] <- clr
+      lat_names[lc] <- paste0(tm$name, "=", tm$levels)
+      next
 
     } else if (tm$type == "zi_count") {
       lc <- tm$latent_cols

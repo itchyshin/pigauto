@@ -496,6 +496,24 @@ decode_from_latent <- function(latent_mat, trait_map, species_names) {
       ev <- p_nz * count_hat
       imputed[[nm]] <- as.integer(pmax(round(ev), 0L))
       probs[[nm]] <- p_nz  # probability of non-zero
+
+    } else if (tm$type == "multi_proportion") {
+      # K latent CLR columns -> undo z-score -> sum-to-zero projection
+      # -> softmax -> proportions on the simplex.
+      clr_mat <- latent_mat[, lc, drop = FALSE]
+      for (k in seq_len(tm$n_latent)) {
+        clr_mat[, k] <- clr_mat[, k] * tm$sd[k] + tm$mean[k]
+      }
+      clr_mat <- clr_mat - rowMeans(clr_mat)            # enforce sum=0
+      prop_mat <- softmax_rows(clr_mat)
+      colnames(prop_mat) <- tm$levels
+      rownames(prop_mat) <- rownames(imputed)
+      probs[[nm]] <- prop_mat
+      # Return each component as its own column for convenience; also add the
+      # whole matrix under the group name as an attribute-less list entry.
+      for (k in seq_along(tm$levels)) {
+        imputed[[tm$levels[k]]] <- prop_mat[, k]
+      }
     }
   }
 

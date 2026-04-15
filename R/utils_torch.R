@@ -38,6 +38,21 @@ compute_mixed_loss <- function(pred, truth, corrupt_mask, trait_map) {
       loss_total <- loss_total + loss_t
       n_traits <- n_traits + 1L
 
+    } else if (tp == "multi_proportion") {
+      # MSE in CLR space, averaged across K latent columns.
+      # Corruption treats the group as one trait: species is corrupted
+      # if ANY component column is corrupted. The K CLR columns are
+      # always corrupted together in preprocess (rows are complete or
+      # not), so we just use lc[1] as the row mask.
+      species_mask <- corrupt_mask[, lc[1]]
+      n_corrupt <- as.numeric(species_mask$sum()$item())
+      if (n_corrupt == 0) next
+      pred_sub  <- pred[species_mask, ][, lc]
+      truth_sub <- truth[species_mask, ][, lc]
+      loss_t <- torch::nnf_mse_loss(pred_sub, truth_sub)
+      loss_total <- loss_total + loss_t
+      n_traits <- n_traits + 1L
+
     } else if (tp == "binary") {
       # BCE with logits on corrupted cells
       m <- corrupt_mask[, lc]
@@ -114,6 +129,15 @@ composite_val_loss <- function(pred, truth, val_mask, trait_map) {
       if (as.numeric(m$sum()$item()) == 0) next
       l <- as.numeric(torch::nnf_mse_loss(
         pred[, lc][m], truth[, lc][m]
+      )$item())
+      losses <- c(losses, l)
+
+    } else if (tp == "multi_proportion") {
+      species_mask <- val_mask[, lc[1]]
+      n_val <- as.numeric(species_mask$sum()$item())
+      if (n_val == 0) next
+      l <- as.numeric(torch::nnf_mse_loss(
+        pred[species_mask, ][, lc], truth[species_mask, ][, lc]
       )$item())
       losses <- c(losses, l)
 

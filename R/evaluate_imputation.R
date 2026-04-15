@@ -123,7 +123,8 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
             mae = NA_real_, spearman_rho = NA_real_,
             accuracy = NA_real_, brier = NA_real_,
             zero_accuracy = NA_real_,
-            stringsAsFactors = FALSE
+            aitchison = NA_real_, rmse_clr = NA_real_, simplex_mae = NA_real_,
+          stringsAsFactors = FALSE
           )
 
         } else if (tp == "count") {
@@ -136,7 +137,8 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
             mae = mae_val, spearman_rho = NA_real_,
             accuracy = NA_real_, brier = NA_real_,
             zero_accuracy = NA_real_,
-            stringsAsFactors = FALSE
+            aitchison = NA_real_, rmse_clr = NA_real_, simplex_mae = NA_real_,
+          stringsAsFactors = FALSE
           )
 
         } else {
@@ -153,7 +155,8 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
             mae = NA_real_, spearman_rho = rho_val,
             accuracy = NA_real_, brier = NA_real_,
             zero_accuracy = NA_real_,
-            stringsAsFactors = FALSE
+            aitchison = NA_real_, rmse_clr = NA_real_, simplex_mae = NA_real_,
+          stringsAsFactors = FALSE
           )
         }
 
@@ -180,6 +183,7 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
           mae = NA_real_, spearman_rho = NA_real_,
           accuracy = acc_val, brier = brier_val,
           zero_accuracy = NA_real_,
+          aitchison = NA_real_, rmse_clr = NA_real_, simplex_mae = NA_real_,
           stringsAsFactors = FALSE
         )
 
@@ -208,6 +212,7 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
           mae = NA_real_, spearman_rho = NA_real_,
           accuracy = acc_val, brier = NA_real_,
           zero_accuracy = NA_real_,
+          aitchison = NA_real_, rmse_clr = NA_real_, simplex_mae = NA_real_,
           stringsAsFactors = FALSE
         )
 
@@ -273,6 +278,53 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
           mae = mae_val, spearman_rho = NA_real_,
           accuracy = NA_real_, brier = brier_val,
           zero_accuracy = zero_acc,
+          aitchison = NA_real_, rmse_clr = NA_real_, simplex_mae = NA_real_,
+          stringsAsFactors = FALSE
+        )
+
+      } else if (tp == "multi_proportion") {
+        # Row-level: all K CLR cells of a held-out row are held out together.
+        # Use column lc[1] as the proxy row selector.
+        keep <- which(col_j == lc[1])
+        ri   <- row_i[keep]
+        if (length(ri) == 0L) next
+
+        truth_clr <- truth[ri, lc, drop = FALSE]
+        ok <- stats::complete.cases(truth_clr)
+        if (sum(ok) == 0L) next
+        n_ok <- sum(ok)
+        ri_ok <- ri[ok]
+        pred_clr  <- pred_mat[ri_ok, lc, drop = FALSE]
+        truth_clr <- truth_clr[ok, , drop = FALSE]
+
+        # Aitchison distance on UN-z-scored CLR values
+        pred_un  <- pred_clr
+        truth_un <- truth_clr
+        for (k in seq_len(tm$n_latent)) {
+          pred_un[, k]  <- pred_clr[, k]  * tm$sd[k] + tm$mean[k]
+          truth_un[, k] <- truth_clr[, k] * tm$sd[k] + tm$mean[k]
+        }
+        aitch_mean <- mean(sqrt(rowSums((pred_un - truth_un)^2)))
+
+        # RMSE on z-scored CLR
+        rmse_val <- rmse_vec(as.vector(truth_clr), as.vector(pred_clr))
+
+        # Simplex MAE after softmax decode
+        pred_un  <- pred_un  - rowMeans(pred_un)
+        truth_un <- truth_un - rowMeans(truth_un)
+        ex_p <- exp(pred_un  - apply(pred_un,  1, max))
+        ex_t <- exp(truth_un - apply(truth_un, 1, max))
+        prop_p <- ex_p / rowSums(ex_p)
+        prop_t <- ex_t / rowSums(ex_t)
+        simplex_mae <- mean(abs(prop_p - prop_t))
+
+        rows[[length(rows) + 1L]] <- data.frame(
+          split = label, trait = nm, type = tp, n = n_ok,
+          rmse = NA_real_, pearson_r = NA_real_, coverage_95 = NA_real_,
+          mae = NA_real_, spearman_rho = NA_real_,
+          accuracy = NA_real_, brier = NA_real_, zero_accuracy = NA_real_,
+          aitchison = aitch_mean, rmse_clr = rmse_val,
+          simplex_mae = simplex_mae,
           stringsAsFactors = FALSE
         )
       }
@@ -342,7 +394,8 @@ evaluate_continuous_legacy <- function(pred, truth, splits, pred_se) {
         n = sum(ok), rmse = rmse_j, pearson_r = r_j,
         coverage_95 = cov95, mae = NA_real_, spearman_rho = NA_real_,
         accuracy = NA_real_, brier = NA_real_, zero_accuracy = NA_real_,
-        stringsAsFactors = FALSE
+        aitchison = NA_real_, rmse_clr = NA_real_, simplex_mae = NA_real_,
+          stringsAsFactors = FALSE
       )
     }) |>
       (\(lst) do.call(rbind, lst[!sapply(lst, is.null)]))()

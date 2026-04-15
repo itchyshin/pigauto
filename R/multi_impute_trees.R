@@ -20,6 +20,8 @@
 #' a `corBrownian` on `trees[[ mi$tree_index[i] ]]`), then pool the
 #' T × M fits with [pool_mi()].
 #'
+#' @importFrom utils head
+#'
 #' @param traits data.frame. Same format as [multi_impute()] and [impute()].
 #' @param trees list of `phylo` objects (class `multiPhylo` or plain list).
 #'   Each tree must contain the species in `traits` as tips. Posterior
