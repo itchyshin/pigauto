@@ -103,23 +103,47 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL) {
 
   spp <- if (!is.null(data$species_names)) data$species_names else rownames(data$X_scaled)
 
-  df_in          <- as.data.frame(X_liab)
-  df_in$species  <- spp
-  df_in          <- df_in[, c("species", colnames(X_liab)), drop = FALSE]
+  # Identify columns with at least one observation; an all-NA column would be
+  # silently dropped by Rphylopars::phylopars() producing a dimension mismatch.
+  has_obs <- apply(X_liab, 2, function(col) any(!is.na(col)))
+  fit_cols <- which(has_obs)
 
-  fit <- Rphylopars::phylopars(
-    trait_data = df_in,
-    tree       = tree,
-    model      = "BM"
-  )
+  n_species  <- nrow(X_liab)
+  n_all_cols <- ncol(X_liab)
+  mu_liab    <- matrix(NA_real_, nrow = n_species, ncol = n_all_cols,
+                        dimnames = list(spp, colnames(X_liab)))
+  se_liab    <- matrix(NA_real_, nrow = n_species, ncol = n_all_cols,
+                        dimnames = list(spp, colnames(X_liab)))
 
-  tip_rows <- match(spp, rownames(fit$anc_recon))
-  mu_liab  <- fit$anc_recon[tip_rows, , drop = FALSE]
-  se_liab  <- sqrt(fit$anc_var[tip_rows, , drop = FALSE])
-  rownames(mu_liab) <- spp
-  rownames(se_liab) <- spp
-  colnames(mu_liab) <- colnames(X_liab)
-  colnames(se_liab) <- colnames(X_liab)
+  if (length(fit_cols) >= 1L) {
+    X_fit <- X_liab[, fit_cols, drop = FALSE]
+
+    df_in          <- as.data.frame(X_fit)
+    df_in$species  <- spp
+    df_in          <- df_in[, c("species", colnames(X_fit)), drop = FALSE]
+
+    fit <- Rphylopars::phylopars(
+      trait_data = df_in,
+      tree       = tree,
+      model      = "BM"
+    )
+
+    tip_rows <- match(spp, rownames(fit$anc_recon))
+    mu_fit   <- fit$anc_recon[tip_rows, , drop = FALSE]
+    se_fit   <- sqrt(fit$anc_var[tip_rows, , drop = FALSE])
+
+    # Validate shape: if Rphylopars still drops columns despite filtering
+    # (e.g. trait name collision), fail loudly rather than mis-align.
+    if (ncol(mu_fit) != length(fit_cols)) {
+      stop("fit_joint_threshold_baseline: Rphylopars returned ",
+           ncol(mu_fit), " columns but ", length(fit_cols),
+           " were passed. Column alignment would be ambiguous.",
+           call. = FALSE)
+    }
+
+    mu_liab[, fit_cols] <- mu_fit
+    se_liab[, fit_cols] <- se_fit
+  }
 
   list(mu_liab    = mu_liab,
        se_liab    = se_liab,

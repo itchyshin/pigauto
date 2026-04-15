@@ -63,6 +63,52 @@ test_that("fit_joint_threshold_baseline returns liability-scale posterior for ev
                       pd$X_scaled[obs_idx, "x1"])), 0.5)
 })
 
+test_that("fit_joint_threshold_baseline handles mixed continuous + binary", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(21)
+  tree <- ape::rtree(40)
+  df <- data.frame(
+    x = rnorm(40),
+    y = factor(sample(c("A", "B"), 40, TRUE), levels = c("A", "B")),
+    row.names = tree$tip.label
+  )
+  df$y[c(5, 10, 15)] <- NA
+  pd <- preprocess_traits(df, tree)
+
+  res <- fit_joint_threshold_baseline(pd, tree, splits = NULL)
+
+  expect_equal(dim(res$mu_liab), c(40, 2))
+  expect_equal(res$liab_types, c("continuous", "binary"))
+  # All-finite posterior (no NA columns since observed cells exist in both)
+  expect_true(all(is.finite(res$mu_liab)))
+  expect_true(all(res$se_liab >= 0))
+  # Posterior for missing binary cells is between the A and B class means
+  # on the liability scale (cross-trait correlation keeps them in range).
+  expect_true(all(abs(res$mu_liab[c(5, 10, 15), "y"]) < 5))
+})
+
+test_that("fit_joint_threshold_baseline handles all-NA liability columns gracefully", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(33)
+  tree <- ape::rtree(15)
+  df <- data.frame(
+    x = rnorm(15),
+    y = factor(sample(c("A", "B"), 15, TRUE), levels = c("A", "B")),
+    row.names = tree$tip.label
+  )
+  # Make ALL y cells missing so the binary liability column is all-NA
+  df$y <- factor(rep(NA, 15), levels = c("A", "B"))
+  pd <- preprocess_traits(df, tree)
+
+  res <- fit_joint_threshold_baseline(pd, tree, splits = NULL)
+
+  # Continuous column fits normally; binary column stays all-NA in output
+  expect_equal(dim(res$mu_liab), c(15, 2))
+  expect_true(all(is.finite(res$mu_liab[, "x"])))
+  expect_true(all(is.na(res$mu_liab[, "y"])))
+  expect_true(all(is.na(res$se_liab[, "y"])))
+})
+
 test_that("build_liability_matrix masks val/test split cells to NA", {
   skip_if_not_installed("Rphylopars")
   set.seed(11)
