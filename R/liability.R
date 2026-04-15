@@ -137,7 +137,14 @@ estep_liability <- function(tm, observed, mu_prior, sd_prior) {
                            mu_prior = mu_prior, sd_prior = sd_prior)
   } else if (tp == "ordinal") {
     info <- liability_info(tm)
-    estep_liability_ordinal(k = as.integer(observed) + 1L,  # encoded = (k-1)
+    # `observed` is z-scored in X_scaled: preprocess_traits encoded it as
+    # (integer_class - 1 - mean) / sd. Un-z-score before recovering the
+    # class index. Clamp to 1..K to guard against rounding drift at the
+    # extremes (e.g. an observed value many SDs from the mean).
+    K <- length(tm$levels)
+    k <- as.integer(round(observed * tm$sd + tm$mean)) + 1L
+    k <- max(1L, min(K, k))
+    estep_liability_ordinal(k = k,
                             thresholds = info$thresholds,
                             mu_prior = mu_prior, sd_prior = sd_prior)
   } else if (tp == "categorical") {

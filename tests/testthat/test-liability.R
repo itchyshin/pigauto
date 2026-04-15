@@ -160,3 +160,35 @@ test_that("whole trait_map can be processed via estep_liability", {
     expect_true(all(res$var >= 0))
   }
 })
+
+
+test_that("estep_liability recovers ordinal class through z-score roundtrip", {
+  # Regression test for a bug in the dispatcher's ordinal branch: when
+  # `observed` is a z-scored value from X_scaled, as.integer() drops the
+  # scaling and gives the wrong class (sometimes out-of-range, crashing
+  # estep_liability_ordinal). Fix: un-z-score before taking integer.
+  tm <- list(
+    type     = "ordinal",
+    n_latent = 1L,
+    levels   = c("LC", "NT", "VU"),  # K = 3
+    mean     = 1.0,
+    sd       = 0.8
+  )
+  # encoded = (int_class - 1 - mean) / sd; class 2 -> integer 1 -> z = 0
+  observed_class2 <- (1 - tm$mean) / tm$sd
+  res2 <- estep_liability(tm, observed = observed_class2,
+                          mu_prior = 0, sd_prior = 1)
+  # For thresholds c(0.5, 1.5) (from liability_info: seq_len(K-1) - 0.5),
+  # class 2 corresponds to interval (0.5, 1.5]. Standard N(0,1) truncated
+  # to that interval has mean ~0.68 (> 0.5, < 1.5).
+  expect_gt(res2$mean, 0.5)
+  expect_lt(res2$mean, 1.5)
+  expect_lt(res2$var, 1)
+
+  # Class 1 (most negative z-score). Previously crashed because
+  # as.integer(negative z) + 1 = 0, an invalid class index.
+  observed_class1 <- (0 - tm$mean) / tm$sd  # = -1.25
+  res1 <- estep_liability(tm, observed = observed_class1,
+                          mu_prior = 0, sd_prior = 1)
+  expect_lt(res1$mean, 0.5)  # class 1: liability <= 0.5 threshold
+})
