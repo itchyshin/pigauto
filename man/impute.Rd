@@ -8,6 +8,8 @@ impute(
   traits,
   tree,
   species_col = NULL,
+  trait_types = NULL,
+  multi_proportion_groups = NULL,
   log_transform = TRUE,
   missing_frac = 0.25,
   n_imputations = 1L,

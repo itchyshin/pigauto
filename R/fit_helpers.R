@@ -105,6 +105,13 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
                   g       * delta_cal[rows, lc[1]]
         mean((pred_j - X_truth_r[rows, lc[1]])^2)
 
+      } else if (tm$type == "multi_proportion") {
+        # MSE in CLR space, averaged across K components.
+        pred_mat  <- (1 - g) * mu_cal[rows, lc, drop = FALSE] +
+                     g       * delta_cal[rows, lc, drop = FALSE]
+        truth_mat <- X_truth_r[rows, lc, drop = FALSE]
+        mean((pred_mat - truth_mat)^2)
+
       } else if (tm$type == "binary") {
         pred_j     <- (1 - g) * mu_cal[rows, lc[1]] +
                       g       * delta_cal[rows, lc[1]]

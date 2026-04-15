@@ -119,6 +119,8 @@
 #' }
 #' @export
 impute <- function(traits, tree, species_col = NULL,
+                   trait_types = NULL,
+                   multi_proportion_groups = NULL,
                    log_transform = TRUE,
                    missing_frac = 0.25, n_imputations = 1L,
                    covariates = NULL,
@@ -126,6 +128,8 @@ impute <- function(traits, tree, species_col = NULL,
 
   # 1. Preprocess
   pd <- preprocess_traits(traits, tree, species_col = species_col,
+                          trait_types = trait_types,
+                          multi_proportion_groups = multi_proportion_groups,
                           log_transform = log_transform,
                           covariates = covariates)
 

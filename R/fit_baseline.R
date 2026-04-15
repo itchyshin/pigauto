@@ -45,7 +45,7 @@
 #' splits <- make_missing_splits(pd$X_scaled, trait_map = pd$trait_map)
 #' bl     <- fit_baseline(pd, tree300, splits)
 #' }
-#' @importFrom stats complete.cases
+#' @importFrom stats complete.cases rnorm rbinom
 #' @export
 fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                          graph = NULL) {
@@ -107,7 +107,9 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   bm_cols <- integer(0)
   zi_mag_fallback <- integer(0)  # ZI magnitude cols with too few non-zero obs
   for (tm in trait_map) {
-    if (tm$type %in% c("continuous", "count", "ordinal", "proportion")) {
+    if (tm$type %in% c("continuous", "count", "ordinal", "proportion",
+                       "multi_proportion")) {
+      # multi_proportion: K independent BM fits, one per CLR column
       bm_cols <- c(bm_cols, tm$latent_cols)
     } else if (tm$type == "zi_count") {
       # Magnitude column (col 2) is BM-eligible if enough non-zero obs

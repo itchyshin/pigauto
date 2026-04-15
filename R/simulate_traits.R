@@ -395,3 +395,52 @@ simulate_zi_count_traits <- function(tree, n_traits = 3L, zero_frac = 0.5,
   }
   df
 }
+
+
+# ---- Multi-proportion traits: correlated BM on CLR space → softmax ---------
+#
+# Simulates compositional (K-category) data. Evolution is modelled as
+# correlated Brownian motion on K-1 dimensional CLR space (the K CLR
+# coordinates are constrained to sum to zero, so we simulate K independent
+# BMs and project onto the sum-zero hyperplane, which is equivalent).
+#
+# @param tree   phylo object.
+# @param K      Number of categories (integer >= 2).
+# @param signal Numeric in (0, 1): proportion of variance from phylogeny.
+# @param sigma  BM rate on CLR scale.
+# @param seed   Integer or NULL.
+# @return data.frame with K numeric columns (names cat1, ..., catK),
+#         rows summing to 1. Rownames = tree$tip.label.
+# @noRd
+simulate_multi_proportion_traits <- function(tree, K = 5L, signal = 0.6,
+                                             sigma = 1.0, seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  sp <- tree$tip.label
+  n  <- length(sp)
+
+  # Simulate K independent BMs
+  clr_mat <- matrix(0, n, K)
+  for (k in seq_len(K)) {
+    tr <- ape::rTraitCont(tree, model = "BM", sigma = sigma,
+                          root.value = 0)
+    clr_mat[, k] <- as.numeric(tr[sp])
+  }
+
+  # Add Gaussian noise to control phylogenetic signal
+  if (signal < 1) {
+    noise_sd <- sqrt((1 - signal) / max(signal, 1e-6)) * stats::sd(clr_mat)
+    clr_mat <- clr_mat + matrix(stats::rnorm(n * K, 0, noise_sd), n, K)
+  }
+
+  # Project to sum-zero (CLR constraint)
+  clr_mat <- clr_mat - rowMeans(clr_mat)
+
+  # Softmax to simplex
+  ex <- exp(clr_mat - apply(clr_mat, 1, max))
+  prop <- ex / rowSums(ex)
+
+  df <- as.data.frame(prop)
+  names(df) <- paste0("cat", seq_len(K))
+  rownames(df) <- sp
+  df
+}

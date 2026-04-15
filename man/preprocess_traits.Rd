@@ -9,6 +9,7 @@ preprocess_traits(
   tree,
   species_col = NULL,
   trait_types = NULL,
+  multi_proportion_groups = NULL,
   log_cols = NULL,
   log_transform = TRUE,
   center = TRUE,
@@ -34,7 +35,17 @@ e.g. \code{c(Mass = "continuous", Diet = "categorical")}.
 Valid types: \code{"continuous"}, \code{"binary"}, \code{"categorical"},
 \code{"ordinal"}, \code{"count"}, \code{"proportion"}, \code{"zi_count"}.
 Proportion and zi_count are override-only (not auto-detected).
-Unspecified traits are auto-detected.}
+Unspecified traits are auto-detected.  Note that
+\code{"multi_proportion"} is NOT set here — use
+\code{multi_proportion_groups} instead.}
+
+\item{multi_proportion_groups}{named list declaring compositional
+(multi-proportion) trait groups.  Each element is a character vector
+of column names whose row-wise values sum to 1 (e.g.
+\code{list(diet = c("plants", "insects", "fish"))}).  The group
+name becomes a single trait in the output, encoded via centred
+log-ratio (CLR) + per-component z-score.  Group names must NOT
+match any column in \code{traits}.  Default \code{NULL}.}
 
 \item{log_cols}{character vector of continuous trait names to
 log-transform.  Default \code{NULL} means auto-detect (log if all
@@ -159,6 +170,9 @@ auto-log-transformed.
 \item{categorical}{one-hot encoding (K latent columns)}
 \item{proportion}{\code{qlogis(clamp(x, 0.001, 0.999))}, then z-score (1 latent column)}
 \item{zi_count}{gate (0/1) + \code{log1p}-z of non-zeros (2 latent columns)}
+\item{multi_proportion}{centred log-ratio (CLR) + per-component z-score
+(K latent columns per group).  Rows must sum to 1.  Declared via the
+\code{multi_proportion_groups} argument, not \code{trait_types}.}
 }
 }
 \examples{

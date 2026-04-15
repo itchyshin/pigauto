@@ -198,6 +198,25 @@ result <- impute(df, tree,
                                  Parasites = "zi_count"))
 ```
 
+**Compositional (multi-proportion) data** — K columns per row summing to 1
+(e.g. plumage-colour proportions, diet composition, microbiome relative
+abundances). Declare the group separately because these columns belong
+to ONE trait, not K independent ones:
+
+```r
+# df has columns black, blue, red, ..., yellow (12 colours that sum to 1)
+result <- impute(df, tree,
+                 multi_proportion_groups = list(
+                   colour = c("black", "blue", "red", "rufous",
+                              "white", "yellow", ...)))
+
+# imputed compositions sum to 1 per row:
+result$prediction$probabilities$colour   # n_species x K matrix
+```
+
+Encoding is centred log-ratio (CLR) + per-component z-score; baseline is
+Brownian motion on CLR space; decode is softmax back to the simplex.
+
 ### Full type reference
 
 | R class | pigauto type | Encoding | Loss | Baseline |
@@ -209,6 +228,7 @@ result <- impute(df, tree,
 | ordered | ordinal | integer + z | MSE | Phylogenetic BM |
 | numeric(0–1) | proportion | logit + z | MSE | Phylogenetic BM |
 | integer(ZI) | zi_count | gate + log1p + z | BCE + MSE | LP + BM |
+| K numeric cols summing to 1 | multi_proportion | CLR + per-component z | MSE (CLR) | Per-component BM |
 
 > **Trait vs covariate.** A trait is something you want to impute (NAs
 > allowed). A covariate is something that helps imputation (must be fully

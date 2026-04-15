@@ -363,6 +363,60 @@ eval_test_cells <- function(pred_latent, pred_obj, truth_latent,
                    metric = "brier", value = brier_val, n_test = n_ok,
                    stringsAsFactors = FALSE)
       ))
+
+    } else if (tp == "multi_proportion") {
+      # Row-level evaluation: a held-out row has ALL K latent cells missing
+      # together (group-corruption). We evaluate the full composition.
+      keep <- which(col_j == lc[1])
+      ri   <- row_i[keep]
+      if (length(ri) == 0L) next
+
+      # Truth in CLR space: the first CLR column as a row-selector proxy.
+      truth_clr <- truth_latent[ri, lc, drop = FALSE]
+      ok <- stats::complete.cases(truth_clr)
+      if (sum(ok) == 0L) next
+      n_ok <- sum(ok)
+      ri_ok <- ri[ok]
+
+      pred_clr  <- pred_latent[ri_ok, lc, drop = FALSE]
+      truth_clr <- truth_clr[ok, , drop = FALSE]
+
+      # Aitchison distance = Euclidean distance in CLR space (per cell).
+      # We report the average Aitchison distance across held-out rows,
+      # calculated on the un-z-scored CLR values.
+      pred_clr_un  <- pred_clr
+      truth_clr_un <- truth_clr
+      for (k in seq_len(tm$n_latent)) {
+        pred_clr_un[, k]  <- pred_clr[, k]  * tm$sd[k] + tm$mean[k]
+        truth_clr_un[, k] <- truth_clr[, k] * tm$sd[k] + tm$mean[k]
+      }
+      aitch <- sqrt(rowSums((pred_clr_un - truth_clr_un)^2))
+      aitch_mean <- mean(aitch)
+
+      # RMSE on z-scored CLR (directly comparable to continuous traits)
+      rmse_val <- rmse_vec(as.vector(truth_clr), as.vector(pred_clr))
+
+      # MAE on the simplex after softmax decode
+      #   pred probabilities:
+      pred_clr_un <- pred_clr_un - rowMeans(pred_clr_un)
+      truth_clr_un <- truth_clr_un - rowMeans(truth_clr_un)
+      ex_p <- exp(pred_clr_un  - apply(pred_clr_un,  1, max))
+      ex_t <- exp(truth_clr_un - apply(truth_clr_un, 1, max))
+      prop_pred  <- ex_p / rowSums(ex_p)
+      prop_truth <- ex_t / rowSums(ex_t)
+      simplex_mae <- mean(abs(prop_pred - prop_truth))
+
+      rows <- c(rows, list(
+        data.frame(method = method, trait = nm, type = tp,
+                   metric = "aitchison", value = aitch_mean, n_test = n_ok,
+                   stringsAsFactors = FALSE),
+        data.frame(method = method, trait = nm, type = tp,
+                   metric = "rmse_clr", value = rmse_val, n_test = n_ok,
+                   stringsAsFactors = FALSE),
+        data.frame(method = method, trait = nm, type = tp,
+                   metric = "simplex_mae", value = simplex_mae, n_test = n_ok,
+                   stringsAsFactors = FALSE)
+      ))
     }
   }
 

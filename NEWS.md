@@ -1,3 +1,47 @@
+# pigauto 0.7.0
+
+## New trait type: multi_proportion (compositional data)
+
+- **`multi_proportion`**: a new trait type for compositional data — K columns
+  per row that sum to 1 (e.g. plumage-colour proportions, diet composition,
+  microbiome relative abundances, allele frequencies). Declared via a new
+  `multi_proportion_groups = list(colour = c("black", ..., "yellow"))`
+  argument to `impute()`, `preprocess_traits()`, and `multi_impute()`.
+
+- **Encoding**: centred log-ratio (CLR) + per-component z-score. Small
+  epsilon (`1e-6`) is applied to zero components before log to keep the
+  transform safe; rows are re-normalised so the composition is preserved.
+
+- **Baseline**: K independent Brownian-motion imputations on the CLR
+  columns. BM is well-defined on CLR space (Euclidean), unlike the raw
+  simplex.
+
+- **GNN output**: K logits projected to sum-zero, then softmax at decode
+  time — guaranteed to lie on the simplex.
+
+- **Loss**: MSE on CLR columns (averaged across K), applied group-wise so
+  the whole composition is masked together during DAE corruption.
+
+- **Metrics**: Aitchison distance (the natural compositional-data metric),
+  RMSE on CLR space (comparable to continuous traits), and simplex MAE
+  (mean absolute error on decoded proportions).
+
+- **Benchmark**: `script/bench_multi_proportion.R` with 5-scenario
+  signal sweep and K ∈ {3, 5, 8, 12} secondary sweep. Report rendered
+  by `script/make_bench_multi_proportion_html.R`.
+
+- **Tests**: `tests/testthat/test-multi-proportion.R` (5 test blocks,
+  20 expectations) — encoding, validation, baseline, end-to-end `impute()`.
+
+## Internal
+
+- `evaluate_imputation()` output adds three columns: `aitchison`,
+  `rmse_clr`, `simplex_mae`. Existing metrics columns are unchanged.
+
+- `impute()` gains explicit `trait_types` and `multi_proportion_groups`
+  arguments (previously `trait_types` was documented as passed through
+  `...` but was not actually forwarded; this fixes that).
+
 # pigauto 0.6.2
 
 ## Documentation

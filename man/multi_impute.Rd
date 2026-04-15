@@ -8,6 +8,7 @@ multi_impute(
   traits,
   tree,
   m = 100L,
+  draws_method = c("conformal", "mc_dropout"),
   species_col = NULL,
   log_transform = TRUE,
   missing_frac = 0.25,
@@ -26,10 +27,31 @@ numeric, integer, factor, ordered factor, and logical.}
 \item{tree}{object of class \code{phylo} aligned with \code{traits}.}
 
 \item{m}{integer. Number of imputation datasets to generate
-(default \code{100}). Internally draws are produced by Monte Carlo
-dropout of the GNN, so each dataset differs only at cells that
-were missing in the input; observed cells are identical across
-all \code{M} datasets.}
+(default \code{100}). Observed cells are identical across all \code{M}
+datasets; only originally-missing cells vary.}
+
+\item{draws_method}{character. How stochastic draws are generated for
+missing cells. One of:
+\describe{
+\item{\code{"conformal"}}{(default) Run the model once, then sample each
+originally-missing cell from a Normal distribution centred on the
+point estimate with SD = conformal_score / 1.96. The conformal score
+is the empirical 97.5th percentile of held-out absolute residuals,
+so the draw width is calibrated against actual prediction error —
+not a model assumption. Falls back to BM-SE-based Normal sampling
+when conformal scores are unavailable, and to Bernoulli / Categorical
+draws for discrete traits. \strong{Preferred default for pigauto} because
+MC dropout gives zero variance whenever the calibrated gate is zero
+(i.e. whenever the BM baseline already fits well), which is common
+for continuous traits with strong phylogenetic signal.}
+\item{\code{"mc_dropout"}}{Run \code{M} stochastic GNN forward passes in training
+mode (dropout active). Useful when the calibrated gate is open
+(r_cal > 0, i.e. GNN meaningfully corrects the BM baseline). When
+all gates are zero — as is typical for continuous traits on datasets
+with strong phylogenetic signal — MC dropout is deterministic and
+falls back silently to the BM-only point estimate for every draw.
+Check \code{mi$fit$calibrated_gates} before using this method.}
+}}
 
 \item{species_col}{character or \code{NULL}. If set, marks the column
 in \code{traits} containing species identifiers and enables multiple
@@ -100,6 +122,26 @@ The standard remedy, due to Rubin (1987), is to generate \code{M}
 stochastic completions, fit the downstream model on each, and pool
 the results. \code{multi_impute()} + \code{\link[=with_imputations]{with_imputations()}} + \code{\link[=pool_mi]{pool_mi()}}
 implement this workflow end to end.
+
+\strong{\code{draws_method = "conformal"} (default)}: Run the model once; missing
+cells are sampled from
+\eqn{x_{ij}^{(k)} \sim \mathrm{N}(\hat\mu_{ij},\; q_{j}/1.96)}
+where \eqn{q_j} is the trait-level conformal score (the empirical
+97.5th percentile of held-out absolute residuals, in latent z-score
+units back-transformed to the original scale). The draw width is
+therefore calibrated against actual prediction error regardless of
+whether the BM or GNN term dominates. For discrete traits (binary,
+categorical) it uses Bernoulli / categorical draws from the estimated
+probability vector. This is the preferred default for pigauto.
+
+\strong{\code{draws_method = "mc_dropout"}}: Run \code{M} GNN forward passes in
+training mode (dropout active). \strong{Caution}: when the per-trait
+calibrated gate \code{r_cal = 0} (which happens whenever the BM baseline
+already fits well, typically for continuous traits with strong
+phylogenetic signal), every MC pass is identical to the BM point
+estimate and draws have zero between-imputation variance. Check
+\code{mi$fit$calibrated_gates} after fitting — if all gates for the traits
+of interest are zero, use \code{draws_method = "conformal"} instead.
 
 Nakagawa & Freckleton (2008, 2011) review the consequences of
 ignoring missing data in ecological and comparative analyses and
