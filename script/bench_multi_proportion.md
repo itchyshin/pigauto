@@ -1,8 +1,8 @@
 # Multi-proportion trait benchmark (compositional data)
 
-Run on: 2026-04-15 08:03:59
-Species: 300, reps: 5
-Total wall: 25.3 min
+Run on: 2026-04-15 08:36:06
+Species: 300, reps: 3
+Total wall: 32.4 min
 
 ## Methods
 
@@ -37,10 +37,6 @@ Metrics:
 (no metrics)
 
 ### K_3
-
-(no metrics)
-
-### K_5
 
 (no metrics)
 
