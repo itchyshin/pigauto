@@ -243,3 +243,117 @@ test_that("fit_baseline falls back to LP when Rphylopars not installed", {
   # Continuous col: still finite (per-column BM fallback)
   expect_true(all(is.finite(bl$mu[, "x"])))
 })
+
+test_that("build_liability_matrix fills observed categorical cells via K-dim E-step", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(50)
+  tree <- ape::rtree(15)
+  df <- data.frame(
+    x = rnorm(15),
+    z = factor(sample(c("P", "Q", "R"), 15, replace = TRUE),
+               levels = c("P", "Q", "R")),
+    row.names = tree$tip.label
+  )
+  df$z[c(3, 7, 11)] <- NA
+  pd <- preprocess_traits(df, tree)
+
+  out <- build_liability_matrix(pd, splits = NULL)
+
+  # Expected: 1 continuous col + K=3 categorical cols = 4 total
+  expect_equal(ncol(out$X_liab), 4)
+  expect_equal(out$liab_types, c("continuous", "categorical", "categorical", "categorical"))
+
+  # Continuous col: passes through
+  expect_equal(unname(out$X_liab[, "x"]), unname(pd$X_scaled[, "x"]))
+
+  # Categorical cols: observed rows have sum-zero K-vector; missing rows all-NA
+  K <- 3L
+  cat_col_names <- grep("^z=", colnames(pd$X_scaled), value = TRUE)
+  obs_rows <- which(!is.na(df$z))
+  for (i in obs_rows) {
+    liab_row <- out$X_liab[i, cat_col_names]
+    expect_false(any(is.na(liab_row)))
+    expect_equal(sum(liab_row), 0, tolerance = 1e-9)   # sum-zero constraint
+    # Observed class should have max posterior mean
+    obs_class_idx <- as.integer(df$z[i])              # 1=P, 2=Q, 3=R
+    expect_equal(unname(which.max(liab_row)), obs_class_idx)
+  }
+  miss_rows <- which(is.na(df$z))
+  for (i in miss_rows) {
+    expect_true(all(is.na(out$X_liab[i, cat_col_names])))
+  }
+})
+
+test_that("build_liability_matrix joint_K encodes categorical as K-dim sum-zero", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(50)
+  tree <- ape::rtree(15)
+  df <- data.frame(
+    x = rnorm(15),
+    z = factor(sample(c("P", "Q", "R"), 15, replace = TRUE),
+               levels = c("P", "Q", "R")),
+    row.names = tree$tip.label
+  )
+  df$z[c(3, 7, 11)] <- NA
+  pd <- preprocess_traits(df, tree)
+
+  out <- build_liability_matrix(pd, splits = NULL, cat_encoding = "joint_K")
+
+  expect_equal(ncol(out$X_liab), 4)
+  expect_equal(out$liab_types, c("continuous", "categorical", "categorical", "categorical"))
+  cat_col_names <- grep("^z=", colnames(pd$X_scaled), value = TRUE)
+  obs_rows <- which(!is.na(df$z))
+  for (i in obs_rows) {
+    liab_row <- out$X_liab[i, cat_col_names]
+    expect_false(any(is.na(liab_row)))
+    expect_equal(sum(liab_row), 0, tolerance = 1e-9)
+    expect_equal(which.max(liab_row), as.integer(df$z[i]))
+  }
+  miss_rows <- which(is.na(df$z))
+  for (i in miss_rows) expect_true(all(is.na(out$X_liab[i, cat_col_names])))
+})
+
+test_that("build_liability_matrix OVR encodes each K col as independent binary", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(51)
+  tree <- ape::rtree(15)
+  df <- data.frame(
+    x = rnorm(15),
+    z = factor(sample(c("P", "Q", "R"), 15, replace = TRUE),
+               levels = c("P", "Q", "R")),
+    row.names = tree$tip.label
+  )
+  df$z[c(2, 6, 10)] <- NA
+  pd <- preprocess_traits(df, tree)
+
+  out <- build_liability_matrix(pd, splits = NULL, cat_encoding = "ovr")
+
+  expect_equal(ncol(out$X_liab), 4)
+  expect_equal(out$liab_types, c("continuous", "categorical", "categorical", "categorical"))
+  cat_col_names <- grep("^z=", colnames(pd$X_scaled), value = TRUE)
+  obs_rows <- which(!is.na(df$z))
+  for (i in obs_rows) {
+    liab_row <- out$X_liab[i, cat_col_names]
+    expect_false(any(is.na(liab_row)))
+    obs_class_idx <- as.integer(df$z[i])
+    expect_gt(liab_row[obs_class_idx], 0)
+    non_obs <- setdiff(seq_along(liab_row), obs_class_idx)
+    expect_true(all(liab_row[non_obs] < 0))
+  }
+  miss_rows <- which(is.na(df$z))
+  for (i in miss_rows) expect_true(all(is.na(out$X_liab[i, cat_col_names])))
+})
+
+test_that("build_liability_matrix default cat_encoding works without arg", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(52)
+  tree <- ape::rtree(12)
+  df <- data.frame(
+    x = rnorm(12),
+    z = factor(sample(c("A","B","C"), 12, TRUE), levels = c("A","B","C")),
+    row.names = tree$tip.label
+  )
+  pd <- preprocess_traits(df, tree)
+  out <- build_liability_matrix(pd, splits = NULL)
+  expect_equal(ncol(out$X_liab), 4)
+})

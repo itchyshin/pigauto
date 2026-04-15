@@ -6,13 +6,17 @@
 #'   - binary: apply truncated-Gaussian E-step with a vague N(0,1) prior so
 #'     observed y=1 cells get a positive posterior mean and y=0 cells a
 #'     negative one.
+#'   - categorical: K latent cols per trait; observed rows go through the
+#'     K-dim plug-in E-step (`estep_liability_categorical`) producing a
+#'     sum-zero K-vector posterior mean. Missing rows stay NA in all K
+#'     cols (row-level missingness: the whole one-hot is observed or
+#'     none of it is).
 #'
 #' Cells that are missing (NA in X_scaled) or held out by `splits` are set to
 #' NA so Rphylopars marginalises over them.
 #'
-#' Categorical, multi_proportion, and zi_count columns are NOT included in
-#' Phase 3 — they are handled by the existing label-propagation / BM paths
-#' and skipped here.
+#' multi_proportion and zi_count columns are NOT included in Phase 4 — they
+#' are handled by the existing label-propagation / BM paths and skipped here.
 #'
 #' Single-observation mode only. Multi-obs datasets should take the
 #' per-column baseline path; the dispatcher in `fit_baseline()` already
@@ -26,8 +30,10 @@
 #'   liab_cols.
 #' @keywords internal
 #' @noRd
-build_liability_matrix <- function(data, splits = NULL) {
+build_liability_matrix <- function(data, splits = NULL,
+                                    cat_encoding = c("joint_K", "ovr")) {
   stopifnot(!isTRUE(data$multi_obs))
+  cat_encoding <- match.arg(cat_encoding)
   trait_map <- data$trait_map
   X         <- data$X_scaled
   n         <- nrow(X)
@@ -50,13 +56,28 @@ build_liability_matrix <- function(data, splits = NULL) {
       liab_cols  <- c(liab_cols, tm$latent_cols)
       liab_types <- c(liab_types, "binary")
       liab_tms   <- c(liab_tms, list(tm))
+    } else if (tm$type == "categorical") {
+      # K latent cols per categorical trait; ALL K cols join the joint
+      # liability. Use the same `tm` entry for every one so downstream
+      # decoding knows which cols group together.
+      K <- tm$n_latent
+      for (kk in seq_len(K)) {
+        liab_cols  <- c(liab_cols, tm$latent_cols[kk])
+        liab_types <- c(liab_types, "categorical")
+        liab_tms   <- c(liab_tms, list(tm))
+      }
     }
-    # categorical / multi_proportion / zi_count: skipped in Phase 3
+    # multi_proportion / zi_count: skipped in Phase 4
   }
 
   X_liab <- matrix(NA_real_, nrow = n, ncol = length(liab_cols))
   colnames(X_liab) <- colnames(X)[liab_cols]
   rownames(X_liab) <- rownames(X)
+
+  # For joint_K categorical: populate K cols at once per trait — not per
+  # column. Track which categorical trait cols we've already handled so we
+  # skip them on subsequent iterations of the per-column loop.
+  cat_cols_done <- integer(0)
 
   for (j in seq_along(liab_cols)) {
     col_idx <- liab_cols[j]
@@ -64,7 +85,32 @@ build_liability_matrix <- function(data, splits = NULL) {
     tm_j    <- liab_tms[[j]]
     src_col <- X[, col_idx]
 
-    if (tp == "binary") {
+    if (tp == "categorical" && cat_encoding == "joint_K") {
+      if (col_idx %in% cat_cols_done) next
+      K       <- tm_j$n_latent
+      k_cols  <- tm_j$latent_cols
+      k_local <- match(k_cols, liab_cols)
+      for (i in seq_len(n)) {
+        obs_K <- X[i, k_cols]
+        if (any(is.na(obs_K))) next
+        post <- estep_liability(tm_j,
+                                 observed = obs_K,
+                                 mu_prior = rep(0, K),
+                                 sd_prior = rep(1, K))
+        X_liab[i, k_local] <- post$mean
+      }
+      cat_cols_done <- c(cat_cols_done, k_cols)
+
+    } else if (tp == "categorical" && cat_encoding == "ovr") {
+      for (i in seq_len(n)) {
+        v <- src_col[i]
+        if (is.na(v)) next
+        post <- estep_liability_binary(y = as.integer(round(v)),
+                                        mu_prior = 0, sd_prior = 1)
+        X_liab[i, j] <- post$mean
+      }
+
+    } else if (tp == "binary") {
       # Observed 0/1 -> truncated-Gaussian posterior mean with N(0,1) prior.
       # Route through the estep_liability() dispatcher so the contract stays
       # consistent across trait types (CLAUDE.md mandates dispatcher use).
@@ -74,6 +120,7 @@ build_liability_matrix <- function(data, splits = NULL) {
         post <- estep_liability(tm_j, observed = v, mu_prior = 0, sd_prior = 1)
         X_liab[i, j] <- post$mean
       }
+
     } else {
       # Continuous-family: pass through
       X_liab[, j] <- src_col
