@@ -134,6 +134,25 @@ calling `estep_liability_ordinal()` directly.
 Nothing in `fit_baseline()` / `fit_pigauto()` consumes this module yet —
 Phase 2 will wire the joint multivariate-BM baseline on top.
 
+### Joint multivariate baseline (Phase 2 of Level C — v0.8.0-alpha)
+
+`R/joint_mvn_baseline.R` replaces per-column BM with a single joint MVN
+fit across all BM-eligible latent columns (continuous, count, ordinal,
+proportion, zi_count magnitude) via `Rphylopars::phylopars()`. Captures
+cross-trait phylogenetic correlation in the baseline — pigauto's gate
+now closes onto a strictly better floor. Dispatch lives in
+`fit_baseline.R`:
+
+- Requires `Rphylopars` installed AND `length(bm_cols) >= 2L` AND no
+  `multi_proportion` traits AND not multi-obs mode. Otherwise falls back
+  to the per-column path unchanged.
+- `joint_mvn_available()` is the gate; `fit_joint_mvn_baseline()` is the
+  delegate.
+- Single-trait data reproduces the per-column result within 1e-3.
+
+Bench: `script/bench_joint_baseline.R` shows 33.7% RMSE lift on correlated
+simulated BM data.
+
 ### Post-training (`fit_pigauto.R`)
 
 After the training loop:
