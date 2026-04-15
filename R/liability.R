@@ -43,6 +43,37 @@ liability_info <- function(tm) {
   }
 }
 
+# Posterior mean and variance of a Gaussian liability constrained to
+# an interval [t_{k-1}, t_k] by the observed ordinal class k.
+# thresholds: length-(K-1) vector of ordered cut-points.
+# k: observed class in 1..K.
+#
+# @keywords internal
+# @noRd
+estep_liability_ordinal <- function(k, thresholds, mu_prior, sd_prior) {
+  K <- length(thresholds) + 1L
+  lower <- if (k == 1L) -Inf else thresholds[k - 1L]
+  upper <- if (k == K)   Inf else thresholds[k]
+  # Standardised truncation bounds
+  a <- (lower - mu_prior) / sd_prior
+  b <- (upper - mu_prior) / sd_prior
+  # Truncated-normal moments (Johnson-Kotz-Balakrishnan):
+  #   Z = Phi(b) - Phi(a)
+  #   E = mu + sigma * (phi(a) - phi(b)) / Z
+  #   Var = sigma^2 * (1 + (a*phi(a) - b*phi(b))/Z - ((phi(a)-phi(b))/Z)^2)
+  phi_a <- if (is.finite(a)) stats::dnorm(a) else 0
+  phi_b <- if (is.finite(b)) stats::dnorm(b) else 0
+  Z     <- stats::pnorm(b) - stats::pnorm(a)
+  Z     <- max(Z, 1e-300)
+  m     <- (phi_a - phi_b) / Z
+  ap    <- if (is.finite(a)) a * phi_a else 0
+  bp    <- if (is.finite(b)) b * phi_b else 0
+  var_z <- 1 + (ap - bp) / Z - m^2
+  list(mean = mu_prior + sd_prior * m,
+       var  = max(sd_prior^2 * var_z, 0))
+}
+
+
 # Posterior mean and variance of a Gaussian liability truncated by a
 # binary observation. Uses standard truncated-normal formulas.
 # y = 1 means liability > 0; y = 0 means liability <= 0.

@@ -70,3 +70,25 @@ test_that("estep_liability_binary returns posterior mean/var on truncated Gaussi
   expect_lt(abs(res2$mean - 3), 0.05)  # truncation barely bites
   expect_lt(abs(res2$var - 1), 0.02)   # analytic value ≈ 0.987; 0-pt is 3 SDs away
 })
+
+
+test_that("estep_liability_ordinal returns interval-truncated posterior", {
+  thresholds <- c(-1, 0, 1)  # K = 4 classes, 3 thresholds
+
+  # Class k=2 means liability in (-1, 0]. Standard N(0,1): should be moderately negative.
+  res <- estep_liability_ordinal(k = 2L, thresholds = thresholds,
+                                 mu_prior = 0, sd_prior = 1)
+  expect_lt(res$mean, 0)
+  expect_gt(res$mean, -1)
+  expect_lt(res$var, 1)
+
+  # Edge class k=1 (liability < -1): posterior mean should be less than -1
+  res1 <- estep_liability_ordinal(k = 1L, thresholds = thresholds,
+                                  mu_prior = 0, sd_prior = 1)
+  expect_lt(res1$mean, -1)
+
+  # Edge class k=4 (liability > 1): posterior mean > 1
+  res4 <- estep_liability_ordinal(k = 4L, thresholds = thresholds,
+                                  mu_prior = 0, sd_prior = 1)
+  expect_gt(res4$mean, 1)
+})
