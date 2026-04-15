@@ -357,3 +357,29 @@ test_that("build_liability_matrix default cat_encoding works without arg", {
   out <- build_liability_matrix(pd, splits = NULL)
   expect_equal(ncol(out$X_liab), 4)
 })
+
+test_that("fit_joint_threshold_baseline accepts cat_encoding param and forwards it", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(55)
+  tree <- ape::rtree(30)
+  df <- data.frame(
+    x = rnorm(30),
+    z = factor(sample(c("A","B","C"), 30, TRUE), levels = c("A","B","C")),
+    row.names = tree$tip.label
+  )
+  pd <- preprocess_traits(df, tree)
+
+  res_joint <- fit_joint_threshold_baseline(pd, tree, splits = NULL,
+                                             cat_encoding = "joint_K")
+  res_ovr   <- fit_joint_threshold_baseline(pd, tree, splits = NULL,
+                                             cat_encoding = "ovr")
+
+  expect_equal(dim(res_joint$mu_liab), c(30, 4))
+  expect_equal(dim(res_ovr$mu_liab),   c(30, 4))
+
+  cat_col_names <- grep("^z=", colnames(pd$X_scaled), value = TRUE)
+  for (cn in cat_col_names) {
+    diff <- max(abs(res_joint$mu_liab[, cn] - res_ovr$mu_liab[, cn]))
+    expect_gt(diff, 1e-3)
+  }
+})
