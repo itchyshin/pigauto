@@ -14,6 +14,10 @@
 #' Phase 3 — they are handled by the existing label-propagation / BM paths
 #' and skipped here.
 #'
+#' Single-observation mode only. Multi-obs datasets should take the
+#' per-column baseline path; the dispatcher in `fit_baseline()` already
+#' enforces this.
+#'
 #' @param data pigauto_data from preprocess_traits.
 #' @param splits output of make_missing_splits() or NULL.
 #' @return list(X_liab, liab_cols, liab_types) where X_liab is
@@ -23,6 +27,7 @@
 #' @keywords internal
 #' @noRd
 build_liability_matrix <- function(data, splits = NULL) {
+  stopifnot(!isTRUE(data$multi_obs))
   trait_map <- data$trait_map
   X         <- data$X_scaled
   n         <- nrow(X)
@@ -35,13 +40,16 @@ build_liability_matrix <- function(data, splits = NULL) {
 
   liab_cols  <- integer(0)
   liab_types <- character(0)
+  liab_tms   <- list()
   for (tm in trait_map) {
     if (tm$type %in% c("continuous", "count", "ordinal", "proportion")) {
       liab_cols  <- c(liab_cols, tm$latent_cols)
       liab_types <- c(liab_types, tm$type)
+      liab_tms   <- c(liab_tms, list(tm))
     } else if (tm$type == "binary") {
       liab_cols  <- c(liab_cols, tm$latent_cols)
       liab_types <- c(liab_types, "binary")
+      liab_tms   <- c(liab_tms, list(tm))
     }
     # categorical / multi_proportion / zi_count: skipped in Phase 3
   }
@@ -53,15 +61,17 @@ build_liability_matrix <- function(data, splits = NULL) {
   for (j in seq_along(liab_cols)) {
     col_idx <- liab_cols[j]
     tp      <- liab_types[j]
+    tm_j    <- liab_tms[[j]]
     src_col <- X[, col_idx]
 
     if (tp == "binary") {
-      # Observed 0/1 -> truncated-Gaussian posterior mean with N(0,1) prior
+      # Observed 0/1 -> truncated-Gaussian posterior mean with N(0,1) prior.
+      # Route through the estep_liability() dispatcher so the contract stays
+      # consistent across trait types (CLAUDE.md mandates dispatcher use).
       for (i in seq_len(n)) {
         v <- src_col[i]
         if (is.na(v)) next
-        post <- estep_liability_binary(y = as.integer(v),
-                                        mu_prior = 0, sd_prior = 1)
+        post <- estep_liability(tm_j, observed = v, mu_prior = 0, sd_prior = 1)
         X_liab[i, j] <- post$mean
       }
     } else {
