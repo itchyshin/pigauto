@@ -419,3 +419,49 @@ test_that("decode_categorical_liability OVR returns log(normalise(pnorm_probs))"
                                         cat_encoding = "ovr")
   expect_equal(res$log_probs, rep(log(1/3), 3), tolerance = 1e-9)
 })
+
+test_that("fit_baseline threshold-joint handles continuous + binary + categorical (joint_K)", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(70)
+  tree <- ape::rtree(40)
+  df <- data.frame(
+    x = rnorm(40),
+    y = factor(sample(c("A","B"), 40, TRUE), levels = c("A","B")),
+    z = factor(sample(c("P","Q","R","S"), 40, TRUE),
+               levels = c("P","Q","R","S")),
+    row.names = tree$tip.label
+  )
+  df$y[c(5, 10)] <- NA
+  df$z[c(7, 15, 20)] <- NA
+  pd     <- preprocess_traits(df, tree)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.1,
+                                 seed = 70, trait_map = pd$trait_map)
+  bl <- fit_baseline(pd, tree, splits = splits, cat_encoding = "joint_K")
+
+  expect_true(all(is.finite(bl$mu[, "x"])))
+  expect_true(all(is.finite(bl$mu[, "y"])))
+  cat_col_names <- grep("^z=", colnames(pd$X_scaled), value = TRUE)
+  expect_length(cat_col_names, 4L)
+  row_probs_sums <- rowSums(exp(bl$mu[, cat_col_names]))
+  expect_true(all(abs(row_probs_sums - 1) < 1e-6))
+})
+
+test_that("fit_baseline threshold-joint handles continuous + binary + categorical (OVR)", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(71)
+  tree <- ape::rtree(40)
+  df <- data.frame(
+    x = rnorm(40),
+    y = factor(sample(c("A","B"), 40, TRUE), levels = c("A","B")),
+    z = factor(sample(c("P","Q","R"), 40, TRUE), levels = c("P","Q","R")),
+    row.names = tree$tip.label
+  )
+  pd     <- preprocess_traits(df, tree)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.1,
+                                 seed = 71, trait_map = pd$trait_map)
+  bl <- fit_baseline(pd, tree, splits = splits, cat_encoding = "ovr")
+
+  cat_col_names <- grep("^z=", colnames(pd$X_scaled), value = TRUE)
+  row_probs_sums <- rowSums(exp(bl$mu[, cat_col_names]))
+  expect_true(all(abs(row_probs_sums - 1) < 1e-6))
+})
