@@ -1,3 +1,26 @@
+# pigauto unreleased (v0.8.0-alpha — Level C baseline)
+
+## Infrastructure
+
+- New internal module `R/liability.R` with the liability-encoding contract for
+  all 8 trait types. `liability_info()` returns the per-type schema
+  (`n_liability`, `kind`, `thresholds`). `estep_liability()` computes the
+  posterior mean and variance of a Gaussian liability given an observed value,
+  dispatching over continuous (point-mass), binary (truncated Gaussian),
+  ordinal (interval-truncated), and categorical (plug-in argmax boost).
+  Exact Gibbs E-step for categorical deferred to Phase 6 EM.
+
+- The ordinal dispatcher correctly un-z-scores observations from `X_scaled`
+  before recovering the integer class index, and clamps to `[1..K]`. A
+  regression test (`test-liability.R`) covers this path for both mid-range
+  and edge-of-distribution classes.
+
+## Internal (not user-facing yet)
+
+- These functions are the foundation for the Phase 2+ joint multivariate
+  baseline. No behavioural change in this release — nothing new is called
+  from `fit_baseline()` or `fit_pigauto()` yet.
+
 # pigauto 0.7.0
 
 ## New trait type: multi_proportion (compositional data)
