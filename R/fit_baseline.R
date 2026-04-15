@@ -142,7 +142,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     }
   }
 
-  use_threshold_joint <- length(binary_cols) >= 1L &&
+  use_threshold_joint <- (length(binary_cols) + length(cat_cols)) >= 1L &&
     length(bm_cols) >= 1L &&
     !has_multi_proportion && !multi_obs &&
     joint_mvn_available()
