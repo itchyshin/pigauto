@@ -280,14 +280,35 @@ decode_binary_liability <- function(mu_liab, se_liab) {
 decode_categorical_liability <- function(mu_K, se_K = NULL,
                                           cat_encoding = c("joint_K", "ovr")) {
   cat_encoding <- match.arg(cat_encoding)
+  K <- length(mu_K)
   if (cat_encoding == "joint_K") {
-    mu_max    <- max(mu_K)
-    log_denom <- mu_max + log(sum(exp(mu_K - mu_max)))
+    mu_max    <- max(mu_K, na.rm = TRUE)
+    log_denom <- mu_max + log(sum(exp(mu_K - mu_max), na.rm = TRUE))
     probs     <- exp(mu_K - log_denom)
+    # NAs (if any) get the per-class uniform residual
+    if (any(is.na(probs))) {
+      na_mask <- is.na(probs)
+      residual <- max(0, 1 - sum(probs[!na_mask]))
+      probs[na_mask] <- residual / sum(na_mask)
+    }
   } else {
-    if (is.null(se_K)) se_K <- rep(0, length(mu_K))
-    probs <- stats::pnorm(mu_K / sqrt(1 + se_K^2))
-    probs <- probs / sum(probs)
+    # OVR: drop-col reconstruction. Compute pnorm on non-NA K-1 liabilities,
+    # assign the residual probability to any NA col(s) (shared equally).
+    if (is.null(se_K)) se_K <- rep(0, K)
+    probs <- rep(NA_real_, K)
+    na_mask <- is.na(mu_K)
+    probs[!na_mask] <- stats::pnorm(mu_K[!na_mask] /
+                                      sqrt(1 + se_K[!na_mask]^2))
+    if (any(na_mask)) {
+      # Scale the observed-col probs so their sum is <= 0.99, leaving
+      # at least 0.01 * n_NA for the dropped class(es).
+      s <- sum(probs[!na_mask])
+      cap <- 1 - 0.01 * sum(na_mask)
+      if (s > cap) probs[!na_mask] <- probs[!na_mask] * cap / s
+      probs[na_mask] <- (1 - sum(probs[!na_mask])) / sum(na_mask)
+    } else {
+      probs <- probs / sum(probs)
+    }
   }
   probs <- pmax(probs, 0.01)
   probs <- probs / sum(probs)
