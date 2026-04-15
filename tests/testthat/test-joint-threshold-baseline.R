@@ -383,3 +383,35 @@ test_that("fit_joint_threshold_baseline accepts cat_encoding param and forwards 
     expect_gt(diff, 1e-3)
   }
 })
+
+test_that("decode_categorical_liability joint_K returns log(softmax(mu))", {
+  mu_K <- c(-1, 2, -1)
+  res <- decode_categorical_liability(mu_K = mu_K, se_K = rep(0.1, 3),
+                                        cat_encoding = "joint_K")
+  expect_length(res$log_probs, 3)
+  expect_true(all(is.finite(res$log_probs)))
+  expect_lt(abs(sum(exp(res$log_probs)) - 1), 1e-9)
+  expect_equal(which.max(res$log_probs), 2L)
+
+  res <- decode_categorical_liability(mu_K = c(0, 0, 0), se_K = c(1, 1, 1),
+                                        cat_encoding = "joint_K")
+  expect_equal(res$log_probs, rep(log(1/3), 3), tolerance = 1e-9)
+
+  res <- decode_categorical_liability(mu_K = c(-100, 0, 0), se_K = rep(0, 3),
+                                        cat_encoding = "joint_K")
+  expect_equal(res$log_probs[1], log(0.01), tolerance = 1e-6)
+})
+
+test_that("decode_categorical_liability OVR returns log(normalise(pnorm_probs))", {
+  mu_K <- c(-2, 3, -2)
+  res <- decode_categorical_liability(mu_K = mu_K, se_K = rep(0.1, 3),
+                                        cat_encoding = "ovr")
+  expect_length(res$log_probs, 3)
+  expect_true(all(is.finite(res$log_probs)))
+  expect_lt(abs(sum(exp(res$log_probs)) - 1), 1e-9)
+  expect_equal(which.max(res$log_probs), 2L)
+
+  res <- decode_categorical_liability(mu_K = c(0, 0, 0), se_K = c(1, 1, 1),
+                                        cat_encoding = "ovr")
+  expect_equal(res$log_probs, rep(log(1/3), 3), tolerance = 1e-9)
+})

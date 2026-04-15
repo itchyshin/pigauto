@@ -221,3 +221,35 @@ decode_binary_liability <- function(mu_liab, se_liab) {
   p <- pmin(pmax(p, 0.01), 0.99)
   list(p = p, mu_logit = stats::qlogis(p))
 }
+
+#' Decode K-dim liability posterior to log-probabilities for categorical traits
+#'
+#' Two encodings:
+#'   joint_K: K-dim sum-zero liability -> log-softmax over posterior means.
+#'   ovr:     K independent probit probabilities -> renormalised across K.
+#'
+#' Both paths clip each class probability at 0.01 and renormalise so probs
+#' sum to 1. Output matches the LP baseline's log-probability convention.
+#'
+#' @param mu_K numeric length K posterior mean.
+#' @param se_K numeric length K posterior SD (optional).
+#' @param cat_encoding "joint_K" or "ovr".
+#' @return list(log_probs = K-length numeric vector).
+#' @keywords internal
+#' @noRd
+decode_categorical_liability <- function(mu_K, se_K = NULL,
+                                          cat_encoding = c("joint_K", "ovr")) {
+  cat_encoding <- match.arg(cat_encoding)
+  if (cat_encoding == "joint_K") {
+    mu_max    <- max(mu_K)
+    log_denom <- mu_max + log(sum(exp(mu_K - mu_max)))
+    probs     <- exp(mu_K - log_denom)
+  } else {
+    if (is.null(se_K)) se_K <- rep(0, length(mu_K))
+    probs <- stats::pnorm(mu_K / sqrt(1 + se_K^2))
+    probs <- probs / sum(probs)
+  }
+  probs <- pmax(probs, 0.01)
+  probs <- probs / sum(probs)
+  list(log_probs = log(probs))
+}
