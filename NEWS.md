@@ -21,6 +21,16 @@
   baseline. No behavioural change in this release — nothing new is called
   from `fit_baseline()` or `fit_pigauto()` yet.
 
+- New `R/joint_mvn_baseline.R`: when `Rphylopars` is installed and the data
+  has 2+ BM-eligible latent columns, `fit_baseline()` delegates to a joint
+  multivariate-BM baseline via `Rphylopars::phylopars()`. Captures cross-trait
+  phylogenetic correlation that the per-column path missed. Falls back
+  gracefully to per-column BM when `Rphylopars` is unavailable, when any
+  `multi_proportion` trait is present, or in multi-obs mode. Single-trait
+  case reproduces current output within 1e-3 (tested). Benchmark on
+  correlated simulated BM data: **33.7% RMSE lift** vs per-column BM
+  (`script/bench_joint_baseline.R`, n=100 tips × 10 reps).
+
 # pigauto 0.7.0
 
 ## New trait type: multi_proportion (compositional data)
