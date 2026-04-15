@@ -111,3 +111,46 @@ estep_liability_categorical <- function(k, mu_prior, sd_prior) {
   m <- m - mean(m)             # sum-to-zero (CLR-consistent)
   list(mean = m, var = sd_prior^2)  # prior-scale variance; refined in Phase 6
 }
+
+# Dispatcher: given a trait_map entry, the observed value (in the latent
+# representation produced by preprocess_traits), and the current prior on
+# this trait's liability, return the E-step posterior mean and variance.
+#
+# For continuous-ish types (continuous/count/proportion/multi_proportion)
+# the observed value IS the liability - posterior is a point mass.
+# For discrete types (binary/ordinal/categorical) the liability is latent;
+# posterior follows the appropriate truncated/argmax distribution.
+#
+# @keywords internal
+# @noRd
+estep_liability <- function(tm, observed, mu_prior, sd_prior) {
+  if (is.na(observed[1])) {
+    # Truly missing - return prior
+    return(list(mean = mu_prior, var = sd_prior^2))
+  }
+  tp <- tm$type
+  if (tp %in% c("continuous", "count", "proportion")) {
+    # Observed value IS the liability (on the preprocessed latent scale).
+    list(mean = as.numeric(observed), var = rep(0, length(observed)))
+  } else if (tp == "binary") {
+    estep_liability_binary(y = as.integer(observed),
+                           mu_prior = mu_prior, sd_prior = sd_prior)
+  } else if (tp == "ordinal") {
+    info <- liability_info(tm)
+    estep_liability_ordinal(k = as.integer(observed) + 1L,  # encoded = (k-1)
+                            thresholds = info$thresholds,
+                            mu_prior = mu_prior, sd_prior = sd_prior)
+  } else if (tp == "categorical") {
+    # observed is one-hot in the latent matrix; extract the class index
+    k <- which(observed == 1)[1]
+    estep_liability_categorical(k = k, mu_prior = mu_prior,
+                                 sd_prior = sd_prior)
+  } else if (tp %in% c("multi_proportion", "zi_count")) {
+    # Phase 5 handles these; for now return prior with zero variance
+    # (matches continuous semantics) - upstream callers should skip
+    # these types until Phase 5 lands.
+    list(mean = as.numeric(observed), var = rep(0, length(observed)))
+  } else {
+    stop("estep_liability: unsupported type '", tp, "'", call. = FALSE)
+  }
+}

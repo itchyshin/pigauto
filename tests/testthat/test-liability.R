@@ -106,3 +106,23 @@ test_that("estep_liability_categorical plug-in: observed class gets boosted mean
   # Sum-to-zero projection: the predictions operate on a CLR-like space
   expect_equal(sum(res$mean), 0, tolerance = 1e-6)
 })
+
+test_that("estep_liability dispatches correctly on trait type", {
+  # Binary
+  tm_bin <- list(type = "binary", n_latent = 1L, levels = c("A","B"))
+  # Observed "B" (2nd level) -> y = 1 in encoded form
+  res <- estep_liability(tm_bin, observed = 1, mu_prior = 0, sd_prior = 1)
+  expect_equal(res$mean, sqrt(2 / pi), tolerance = 1e-6)
+
+  # Continuous: liability = observed value directly
+  tm_cont <- list(type = "continuous", n_latent = 1L)
+  res_c <- estep_liability(tm_cont, observed = 1.5, mu_prior = 0, sd_prior = 1)
+  expect_equal(res_c$mean, 1.5)
+  expect_equal(res_c$var, 0)  # observed directly -> zero posterior variance
+
+  # NA observed (truly missing): returns prior
+  res_na <- estep_liability(tm_cont, observed = NA_real_,
+                            mu_prior = 0, sd_prior = 1)
+  expect_equal(res_na$mean, 0)
+  expect_equal(res_na$var, 1)
+})
