@@ -28,7 +28,7 @@
   <strong>Reps:</strong> 3.
   <strong>Missing fraction:</strong> 0.25.
   <strong>Epochs:</strong> 300.
-  <strong>Wall time:</strong> 32.4 min.
+  <strong>Wall time:</strong> 27.1 min.
 </div>
 
 <h2>Metrics</h2>
@@ -69,15 +69,15 @@ compositional data is either complete for a row or missing &mdash; you cannot ob
 <text x="175.4" y="125.9" text-anchor="middle" font-size="9" fill="#374151">6.405</text>
 <rect x="192.3" y="129.5" width="22.6" height="126.5" fill="#2563eb" rx="2"/>
 <text x="203.6" y="125.5" text-anchor="middle" font-size="9" fill="#374151">6.425</text>
-<rect x="220.6" y="129.4" width="22.6" height="126.6" fill="#059669" rx="2"/>
-<text x="231.9" y="125.4" text-anchor="middle" font-size="9" fill="#374151">6.429</text>
+<rect x="220.6" y="129.6" width="22.6" height="126.4" fill="#059669" rx="2"/>
+<text x="231.9" y="125.6" text-anchor="middle" font-size="9" fill="#374151">6.420</text>
 <text x="203.6" y="278" text-anchor="middle" font-size="11" fill="#374151">Signal = 0.4</text>
 <rect x="254.5" y="162.3" width="22.6" height="93.7" fill="#9ca3af" rx="2"/>
 <text x="265.8" y="158.3" text-anchor="middle" font-size="9" fill="#374151">4.760</text>
 <rect x="282.7" y="171.7" width="22.6" height="84.3" fill="#2563eb" rx="2"/>
 <text x="294.0" y="167.7" text-anchor="middle" font-size="9" fill="#374151">4.283</text>
 <rect x="311.0" y="171.2" width="22.6" height="84.8" fill="#059669" rx="2"/>
-<text x="322.3" y="167.2" text-anchor="middle" font-size="9" fill="#374151">4.306</text>
+<text x="322.3" y="167.2" text-anchor="middle" font-size="9" fill="#374151">4.305</text>
 <text x="294.0" y="278" text-anchor="middle" font-size="11" fill="#374151">Signal = 0.6</text>
 <rect x="344.9" y="174.8" width="22.6" height="81.2" fill="#9ca3af" rx="2"/>
 <text x="356.2" y="170.8" text-anchor="middle" font-size="9" fill="#374151">4.125</text>
@@ -104,17 +104,35 @@ compositional data is either complete for a row or missing &mdash; you cannot ob
 <h2>Summary table (test split, averaged across reps)</h2>
 <table>
 <thead>
-<tr><th rowspan="2">Scenario</th><th colspan="3">Aitchison distance</th><th colspan="3">RMSE (CLR)</th><th colspan="3">Simplex MAE</th></tr>
-<tr><th>mean</th><th>baseline</th><th>pigauto</th><th>mean</th><th>baseline</th><th>pigauto</th><th>mean</th><th>baseline</th><th>pigauto</th></tr>
+<tr>
+  <th rowspan="2">Scenario</th>
+  <th colspan="3">Argmax accuracy</th>
+  <th colspan="3">Aitchison distance</th>
+  <th colspan="3">R&sup2; (CLR)</th>
+  <th colspan="2">Lift vs mean</th>
+  <th colspan="3">Simplex MAE</th>
+</tr>
+<tr>
+  <th>mean</th><th>BM</th><th>pigauto</th>
+  <th>mean</th><th>BM</th><th>pigauto</th>
+  <th>mean</th><th>BM</th><th>pigauto</th>
+  <th>BM</th><th>pigauto</th>
+  <th>mean</th><th>BM</th><th>pigauto</th>
+</tr>
 </thead>
 <tbody>
-<tr><td>Signal = 0.2</td><td>8.819<span style="color:#059669">&#9733;</span></td><td>9.299</td><td>9.299</td><td>0.989</td><td>1.063</td><td>1.063</td><td>0.274</td><td>0.272</td><td>0.272</td></tr>
-<tr><td>Signal = 0.4</td><td>6.405<span style="color:#059669">&#9733;</span></td><td>6.425</td><td>6.429</td><td>1.019</td><td>1.030</td><td>1.032</td><td>0.229</td><td>0.207</td><td>0.206</td></tr>
-<tr><td>Signal = 0.6</td><td>4.760</td><td>4.283<span style="color:#059669">&#9733;</span></td><td>4.306</td><td>0.990</td><td>0.904</td><td>0.906</td><td>0.213</td><td>0.167</td><td>0.169</td></tr>
-<tr><td>Signal = 0.8</td><td>4.125</td><td>3.005<span style="color:#059669">&#9733;</span></td><td>3.005</td><td>1.007</td><td>0.739</td><td>0.739</td><td>0.192</td><td>0.131</td><td>0.131</td></tr>
-<tr><td>Signal = 1.0</td><td>3.856</td><td>1.858</td><td>1.858<span style="color:#059669">&#9733;</span></td><td>1.004</td><td>0.512</td><td>0.512</td><td>0.195</td><td>0.090</td><td>0.090</td></tr>
+<tr><td>Signal = 0.2</td><td>19.3%</td><td>25.7%</td><td>25.7%</td><td>8.819<span style="color:#059669">&#9733;</span></td><td>9.299</td><td>9.299</td><td>0.02</td><td>-0.13</td><td>-0.13</td><td>-5.4%</td><td>-5.4%</td><td>0.274</td><td>0.272</td><td>0.272</td></tr>
+<tr><td>Signal = 0.4</td><td>33.3%</td><td>46.8%</td><td>46.2%</td><td>6.405<span style="color:#059669">&#9733;</span></td><td>6.425</td><td>6.420</td><td>-0.04</td><td>-0.06</td><td>-0.06</td><td>-0.3%</td><td>-0.2%</td><td>0.229</td><td>0.207</td><td>0.206</td></tr>
+<tr><td>Signal = 0.6</td><td>31.6%</td><td>49.7%</td><td>50.3%</td><td>4.760</td><td>4.283<span style="color:#059669">&#9733;</span></td><td>4.305</td><td>0.02</td><td>0.18</td><td>0.18</td><td>10.0%</td><td>9.6%</td><td>0.213</td><td>0.167</td><td>0.169</td></tr>
+<tr><td>Signal = 0.8</td><td>42.1%</td><td>54.4%</td><td>54.4%</td><td>4.125</td><td>3.005<span style="color:#059669">&#9733;</span></td><td>3.005</td><td>-0.01</td><td>0.45</td><td>0.45</td><td>27.2%</td><td>27.2%</td><td>0.192</td><td>0.131</td><td>0.131</td></tr>
+<tr><td>Signal = 1.0</td><td>32.2%</td><td>70.8%</td><td>70.8%</td><td>3.856</td><td>1.858</td><td>1.858<span style="color:#059669">&#9733;</span></td><td>-0.01</td><td>0.74</td><td>0.74</td><td>51.8%</td><td>51.8%</td><td>0.195</td><td>0.090</td><td>0.090</td></tr>
 </tbody></table>
-<p><small>&#9733; = best method for that scenario (lowest Aitchison distance).</small></p>
+<p><small>
+&#9733; = best method on Aitchison distance for that scenario.
+<strong>Argmax accuracy</strong>: fraction of held-out rows where predicted dominant component matches truth.
+<strong>R&sup2; (CLR)</strong>: 1 &minus; RMSE&sup2; on z-scored CLR; negative means worse than column-mean null.
+<strong>Lift vs mean</strong>: % reduction in Aitchison distance relative to naive column-mean.
+</small></p>
 
 <svg viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;height:auto;font-family:system-ui,-apple-system,sans-serif">
 <text x="68" y="24" font-size="14" font-weight="600" fill="#111827">Simplex MAE by signal strength</text>
@@ -140,15 +158,15 @@ compositional data is either complete for a row or missing &mdash; you cannot ob
 <text x="175.4" y="98.9" text-anchor="middle" font-size="9" fill="#374151">0.229</text>
 <rect x="192.3" y="117.3" width="22.6" height="138.7" fill="#2563eb" rx="2"/>
 <text x="203.6" y="113.3" text-anchor="middle" font-size="9" fill="#374151">0.207</text>
-<rect x="220.6" y="118.5" width="22.6" height="137.5" fill="#059669" rx="2"/>
-<text x="231.9" y="114.5" text-anchor="middle" font-size="9" fill="#374151">0.206</text>
+<rect x="220.6" y="118.6" width="22.6" height="137.4" fill="#059669" rx="2"/>
+<text x="231.9" y="114.6" text-anchor="middle" font-size="9" fill="#374151">0.206</text>
 <text x="203.6" y="278" text-anchor="middle" font-size="11" fill="#374151">Signal = 0.4</text>
 <rect x="254.5" y="113.6" width="22.6" height="142.4" fill="#9ca3af" rx="2"/>
 <text x="265.8" y="109.6" text-anchor="middle" font-size="9" fill="#374151">0.213</text>
 <rect x="282.7" y="144.0" width="22.6" height="112.0" fill="#2563eb" rx="2"/>
 <text x="294.0" y="140.0" text-anchor="middle" font-size="9" fill="#374151">0.167</text>
-<rect x="311.0" y="143.1" width="22.6" height="112.9" fill="#059669" rx="2"/>
-<text x="322.3" y="139.1" text-anchor="middle" font-size="9" fill="#374151">0.169</text>
+<rect x="311.0" y="143.2" width="22.6" height="112.8" fill="#059669" rx="2"/>
+<text x="322.3" y="139.2" text-anchor="middle" font-size="9" fill="#374151">0.169</text>
 <text x="294.0" y="278" text-anchor="middle" font-size="11" fill="#374151">Signal = 0.6</text>
 <rect x="344.9" y="127.5" width="22.6" height="128.5" fill="#9ca3af" rx="2"/>
 <text x="356.2" y="123.5" text-anchor="middle" font-size="9" fill="#374151">0.192</text>
@@ -191,21 +209,21 @@ compositional data is either complete for a row or missing &mdash; you cannot ob
 <rect x="124.5" y="202.4" width="37.7" height="53.6" fill="#2563eb" rx="2"/>
 <text x="143.3" y="198.4" text-anchor="middle" font-size="9" fill="#374151">2.622</text>
 <rect x="171.6" y="202.8" width="37.7" height="53.2" fill="#059669" rx="2"/>
-<text x="190.4" y="198.8" text-anchor="middle" font-size="9" fill="#374151">2.605</text>
+<text x="190.4" y="198.8" text-anchor="middle" font-size="9" fill="#374151">2.604</text>
 <text x="143.3" y="278" text-anchor="middle" font-size="11" fill="#374151">K = 3</text>
 <rect x="228.1" y="115.5" width="37.7" height="140.5" fill="#9ca3af" rx="2"/>
 <text x="246.9" y="111.5" text-anchor="middle" font-size="9" fill="#374151">6.878</text>
 <rect x="275.2" y="138.4" width="37.7" height="117.6" fill="#2563eb" rx="2"/>
 <text x="294.0" y="134.4" text-anchor="middle" font-size="9" fill="#374151">5.759</text>
-<rect x="322.2" y="137.8" width="37.7" height="118.2" fill="#059669" rx="2"/>
-<text x="341.1" y="133.8" text-anchor="middle" font-size="9" fill="#374151">5.789</text>
+<rect x="322.2" y="137.7" width="37.7" height="118.3" fill="#059669" rx="2"/>
+<text x="341.1" y="133.7" text-anchor="middle" font-size="9" fill="#374151">5.790</text>
 <text x="294.0" y="278" text-anchor="middle" font-size="11" fill="#374151">K = 8</text>
 <rect x="378.8" y="72.9" width="37.7" height="183.1" fill="#9ca3af" rx="2"/>
 <text x="397.6" y="68.9" text-anchor="middle" font-size="9" fill="#374151">8.962</text>
 <rect x="425.8" y="97.3" width="37.7" height="158.7" fill="#2563eb" rx="2"/>
 <text x="444.7" y="93.3" text-anchor="middle" font-size="9" fill="#374151">7.771</text>
 <rect x="472.9" y="96.6" width="37.7" height="159.4" fill="#059669" rx="2"/>
-<text x="491.7" y="92.6" text-anchor="middle" font-size="9" fill="#374151">7.806</text>
+<text x="491.7" y="92.6" text-anchor="middle" font-size="9" fill="#374151">7.802</text>
 <text x="444.7" y="278" text-anchor="middle" font-size="11" fill="#374151">K = 12</text>
 <rect x="532" y="60" width="14" height="10" fill="#9ca3af" rx="2"/>
 <text x="550" y="69" font-size="11" fill="#374151">Mean imputation (no phylo)</text>
@@ -227,7 +245,7 @@ correlations that the independent-per-component BM misses.</p>
 <pre><code>cd pigauto &amp;&amp; Rscript script/bench_multi_proportion.R
 Rscript script/make_bench_multi_proportion_html.R</code></pre>
 
-<p><small>Generated from <code>script/bench_multi_proportion.rds</code> on 2026-04-15 09:56:39. Git commit: <code>05b486a</code>.</small></p>
+<p><small>Generated from <code>script/bench_multi_proportion.rds</code> on 2026-04-15 10:38:41. Git commit: <code>09bb716</code>.</small></p>
 
 </body></html>
 

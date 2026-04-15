@@ -279,7 +279,7 @@ for (scen in c(scenarios_primary, secondary_scenarios)) {
   md <- c(md, sprintf("### %s", scen), "")
   sub <- test_df[test_df$scenario == scen, , drop = FALSE]
   if (nrow(sub) == 0L) { md <- c(md, "(no data)", ""); next }
-  metrics <- c("aitchison", "rmse_clr", "simplex_mae")
+  metrics <- c("aitchison", "rmse_clr", "simplex_mae", "accuracy")
   agg_list <- lapply(metrics, function(m) {
     if (!m %in% names(sub)) return(NULL)
     col <- sub[[m]]

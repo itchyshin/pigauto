@@ -139,6 +139,10 @@ chart_K     <- if (length(secondary_scenarios) > 0L) {
             secondary_scenarios)
 } else ""
 
+fmt_pct <- function(x, digits = 1) {
+  ifelse(is.na(x), "&ndash;", paste0(formatC(100 * x, digits = digits, format = "f"), "%"))
+}
+
 rows <- character()
 for (s in scenarios_primary) {
   ait      <- setNames(vapply(method_order, function(m)
@@ -147,17 +151,35 @@ for (s in scenarios_primary) {
     avg_metric(m, s, primary_frac, "rmse_clr"), numeric(1)), method_order)
   smae     <- setNames(vapply(method_order, function(m)
     avg_metric(m, s, primary_frac, "simplex_mae"), numeric(1)), method_order)
+  argmax   <- setNames(vapply(method_order, function(m)
+    avg_metric(m, s, primary_frac, "accuracy"), numeric(1)), method_order)
+
+  # R-squared on z-scored CLR: 1 - rmse_clr^2 (null baseline has RMSE = 1 on z-scored data).
+  # Negative R^2 means the method is WORSE than predicting the column mean.
+  r2 <- setNames(1 - rmse_clr^2, method_order)
+
+  # Lift over mean baseline on Aitchison distance: positive = better than mean.
+  lift_bl <- (ait["mean"] - ait["baseline"]) / ait["mean"]
+  lift_pg <- (ait["mean"] - ait["pigauto"])  / ait["mean"]
+
   best <- names(which.min(ait))
   star <- function(m, b) if (!is.null(b) && m == b)
     '<span style="color:#059669">&#9733;</span>' else ''
   rows <- c(rows, sprintf(
-    '<tr><td>%s</td><td>%s%s</td><td>%s%s</td><td>%s%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
+    paste0('<tr><td>%s</td>',
+           '<td>%s</td><td>%s</td><td>%s</td>',                 # argmax acc
+           '<td>%s%s</td><td>%s%s</td><td>%s%s</td>',             # Aitchison + winner
+           '<td>%s</td><td>%s</td><td>%s</td>',                  # R^2 (CLR)
+           '<td>%s</td><td>%s</td>',                              # lift (BM/pigauto vs mean)
+           '<td>%s</td><td>%s</td><td>%s</td></tr>'),             # simplex MAE
     scen_label[s],
+    fmt_pct(argmax["mean"]), fmt_pct(argmax["baseline"]), fmt_pct(argmax["pigauto"]),
     fmt(ait["mean"]),     star("mean", best),
     fmt(ait["baseline"]), star("baseline", best),
     fmt(ait["pigauto"]),  star("pigauto", best),
-    fmt(rmse_clr["mean"]), fmt(rmse_clr["baseline"]), fmt(rmse_clr["pigauto"]),
-    fmt(smae["mean"]),     fmt(smae["baseline"]),     fmt(smae["pigauto"])
+    fmt(r2["mean"], 2), fmt(r2["baseline"], 2), fmt(r2["pigauto"], 2),
+    fmt_pct(lift_bl), fmt_pct(lift_pg),
+    fmt(smae["mean"]), fmt(smae["baseline"]), fmt(smae["pigauto"])
   ))
 }
 
@@ -224,13 +246,31 @@ compositional data is either complete for a row or missing &mdash; you cannot ob
 <h2>Summary table (test split, averaged across reps)</h2>
 <table>
 <thead>
-<tr><th rowspan="2">Scenario</th><th colspan="3">Aitchison distance</th><th colspan="3">RMSE (CLR)</th><th colspan="3">Simplex MAE</th></tr>
-<tr><th>mean</th><th>baseline</th><th>pigauto</th><th>mean</th><th>baseline</th><th>pigauto</th><th>mean</th><th>baseline</th><th>pigauto</th></tr>
+<tr>
+  <th rowspan="2">Scenario</th>
+  <th colspan="3">Argmax accuracy</th>
+  <th colspan="3">Aitchison distance</th>
+  <th colspan="3">R&sup2; (CLR)</th>
+  <th colspan="2">Lift vs mean</th>
+  <th colspan="3">Simplex MAE</th>
+</tr>
+<tr>
+  <th>mean</th><th>BM</th><th>pigauto</th>
+  <th>mean</th><th>BM</th><th>pigauto</th>
+  <th>mean</th><th>BM</th><th>pigauto</th>
+  <th>BM</th><th>pigauto</th>
+  <th>mean</th><th>BM</th><th>pigauto</th>
+</tr>
 </thead>
 <tbody>
 ', paste(rows, collapse = "\n"), '
 </tbody></table>
-<p><small>&#9733; = best method for that scenario (lowest Aitchison distance).</small></p>
+<p><small>
+&#9733; = best method on Aitchison distance for that scenario.
+<strong>Argmax accuracy</strong>: fraction of held-out rows where predicted dominant component matches truth.
+<strong>R&sup2; (CLR)</strong>: 1 &minus; RMSE&sup2; on z-scored CLR; negative means worse than column-mean null.
+<strong>Lift vs mean</strong>: % reduction in Aitchison distance relative to naive column-mean.
+</small></p>
 
 ', chart_mae, '
 

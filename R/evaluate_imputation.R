@@ -309,7 +309,10 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
         # RMSE on z-scored CLR
         rmse_val <- rmse_vec(as.vector(truth_clr), as.vector(pred_clr))
 
-        # Simplex MAE after softmax decode
+        # Simplex MAE + argmax accuracy after softmax decode.
+        # argmax in CLR space = argmax of softmax-decoded proportions
+        # (monotonic transform), so we can compute argmax accuracy directly
+        # on the CLR predictions without materialising softmax.
         pred_un  <- pred_un  - rowMeans(pred_un)
         truth_un <- truth_un - rowMeans(truth_un)
         ex_p <- exp(pred_un  - apply(pred_un,  1, max))
@@ -318,11 +321,18 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
         prop_t <- ex_t / rowSums(ex_t)
         simplex_mae <- mean(abs(prop_p - prop_t))
 
+        # Argmax accuracy: fraction of rows where the predicted dominant
+        # component matches the true dominant component. Interpretable like
+        # a categorical accuracy — useful when rows have a clear mode.
+        pred_argmax  <- max.col(pred_un,  ties.method = "first")
+        truth_argmax <- max.col(truth_un, ties.method = "first")
+        argmax_acc   <- mean(pred_argmax == truth_argmax)
+
         rows[[length(rows) + 1L]] <- data.frame(
           split = label, trait = nm, type = tp, n = n_ok,
           rmse = NA_real_, pearson_r = NA_real_, coverage_95 = NA_real_,
           mae = NA_real_, spearman_rho = NA_real_,
-          accuracy = NA_real_, brier = NA_real_, zero_accuracy = NA_real_,
+          accuracy = argmax_acc, brier = NA_real_, zero_accuracy = NA_real_,
           aitchison = aitch_mean, rmse_clr = rmse_val,
           simplex_mae = simplex_mae,
           stringsAsFactors = FALSE
