@@ -177,3 +177,37 @@ test_that("fit_baseline dispatches to joint MVN when trait count >= 2 and Rphylo
   expect_equal(bl$mu, bl_direct$mu, tolerance = 1e-8)
   expect_equal(bl$se, bl_direct$se, tolerance = 1e-8)
 })
+
+test_that("fit_baseline falls back cleanly when Rphylopars is unavailable", {
+  skip_on_cran()
+  # Use testthat::local_mocked_bindings to shadow joint_mvn_available()
+  # for this test only. testthat 3.1+ syntax.
+  testthat::local_mocked_bindings(
+    joint_mvn_available = function() FALSE,
+    .package = "pigauto"
+  )
+  # Sanity check the mock took effect
+  expect_false(joint_mvn_available())
+
+  set.seed(19)
+  tree <- ape::rcoal(30)
+  C <- ape::vcv(tree)
+  L <- chol(C)
+  x1 <- as.numeric(t(L) %*% stats::rnorm(30))
+  x2 <- as.numeric(t(L) %*% stats::rnorm(30))
+  df <- data.frame(t1 = x1, t2 = x2)
+  rownames(df) <- tree$tip.label
+  df$t1[sample(30, 5)] <- NA
+
+  pd <- preprocess_traits(df, tree)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.1,
+                                val_frac = 0.5, seed = 1,
+                                trait_map = pd$trait_map)
+  graph <- build_phylo_graph(tree, k_eigen = 4L)
+
+  # Should succeed without Rphylopars by falling back to per-column BM
+  bl <- fit_baseline(pd, tree, splits = splits, graph = graph)
+  expect_equal(dim(bl$mu), c(30L, 2L))
+  expect_false(any(is.na(bl$mu)))
+  expect_false(any(is.na(bl$se)))
+})
