@@ -30,6 +30,12 @@
 #' @param m_per_tree integer. Number of MC-dropout imputations per tree
 #'   (default `5`). Total datasets = `length(trees) * m_per_tree`.
 #' @param species_col character or `NULL`. See [impute()].
+#' @param trait_types named character vector overriding auto-detected
+#'   trait types. Required for `"proportion"` and `"zi_count"`. See
+#'   [impute()] / [preprocess_traits()]. Default `NULL` (auto-detect).
+#' @param multi_proportion_groups named list declaring compositional
+#'   trait groups (rows summing to 1), forwarded to [impute()] /
+#'   [preprocess_traits()]. Default `NULL`.
 #' @param log_transform logical. Auto-log positive continuous columns
 #'   (default `TRUE`).
 #' @param missing_frac numeric. Fraction held out for validation/test
@@ -156,6 +162,8 @@
 #' @export
 multi_impute_trees <- function(traits, trees, m_per_tree = 5L,
                                species_col = NULL,
+                               trait_types = NULL,
+                               multi_proportion_groups = NULL,
                                log_transform = TRUE,
                                missing_frac = 0.25,
                                covariates = NULL,
@@ -217,6 +225,8 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 5L,
       traits        = traits,
       tree          = trees[[t]],
       species_col   = species_col,
+      trait_types   = trait_types,
+      multi_proportion_groups = multi_proportion_groups,
       log_transform = log_transform,
       missing_frac  = missing_frac,
       n_imputations = m_per_tree,

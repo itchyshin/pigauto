@@ -41,6 +41,14 @@
 #' @param species_col character or `NULL`. If set, marks the column
 #'   in `traits` containing species identifiers and enables multiple
 #'   observations per species. See [impute()] for details.
+#' @param trait_types named character vector overriding auto-detected
+#'   trait types for specific columns. Required for `"proportion"` and
+#'   `"zi_count"`. See [impute()] and [preprocess_traits()]. Default
+#'   `NULL` (auto-detect).
+#' @param multi_proportion_groups named list declaring compositional
+#'   trait groups (rows summing to 1), e.g.
+#'   `list(diet = c("plant", "invert", "vert"))`. Forwarded to
+#'   [impute()] / [preprocess_traits()]. Default `NULL`.
 #' @param log_transform logical. Auto-log positive continuous columns
 #'   (default `TRUE`).
 #' @param missing_frac numeric. Fraction of observed cells held out for
@@ -156,6 +164,8 @@
 multi_impute <- function(traits, tree, m = 100L,
                          draws_method = c("conformal", "mc_dropout"),
                          species_col = NULL,
+                         trait_types = NULL,
+                         multi_proportion_groups = NULL,
                          log_transform = TRUE,
                          missing_frac = 0.25,
                          covariates = NULL,
@@ -177,6 +187,8 @@ multi_impute <- function(traits, tree, m = 100L,
       traits        = traits,
       tree          = tree,
       species_col   = species_col,
+      trait_types   = trait_types,
+      multi_proportion_groups = multi_proportion_groups,
       log_transform = log_transform,
       missing_frac  = missing_frac,
       n_imputations = m,
@@ -204,6 +216,8 @@ multi_impute <- function(traits, tree, m = 100L,
       traits        = traits,
       tree          = tree,
       species_col   = species_col,
+      trait_types   = trait_types,
+      multi_proportion_groups = multi_proportion_groups,
       log_transform = log_transform,
       missing_frac  = missing_frac,
       n_imputations = 1L,

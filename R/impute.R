@@ -16,6 +16,19 @@
 #' @param species_col character. Name of the column in \code{traits} that
 #'   identifies species.  When supplied, multiple observations per species
 #'   are supported.  Default \code{NULL} uses row names (one row per species).
+#' @param trait_types named character vector overriding the auto-detected
+#'   type for specific trait columns, e.g.
+#'   \code{c(Survival = "proportion", Parasites = "zi_count")}. Required for
+#'   the two types that cannot be inferred from R class (see
+#'   \strong{Trait type auto-detection} below). Default \code{NULL} (auto).
+#' @param multi_proportion_groups named list declaring compositional
+#'   (\code{multi_proportion}) traits, e.g.
+#'   \code{list(colour = c("black", "blue", "red", "yellow"))}. Each list
+#'   element names a group and gives the K trait columns that form a
+#'   simplex (rows summing to 1). Encoded via CLR + per-component z-score.
+#'   Multi_proportion traits \emph{cannot} be declared through
+#'   \code{trait_types} — use this argument instead. Default \code{NULL}
+#'   (no multi_proportion groups).
 #' @param log_transform logical. Auto-log positive continuous columns
 #'   (default \code{TRUE}).
 #' @param missing_frac numeric. Fraction of observed cells held out for
@@ -73,8 +86,8 @@
 #'   \item{\code{"zi_count"}}{An \code{integer} with excess zeros, e.g.
 #'     parasite count: \code{trait_types = c(Parasites = "zi_count")}.}
 #' }
-#' Pass \code{trait_types} through \code{...} — it is forwarded to
-#' \code{\link{preprocess_traits}}.
+#' Use the \code{trait_types} argument directly (it is an explicit
+#' parameter, not a \code{...} pass-through).
 #'
 #' @section Traits vs covariates:
 #' The distinction is \strong{functional, not ontological}: a trait is something

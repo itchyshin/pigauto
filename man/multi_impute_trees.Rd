@@ -9,6 +9,8 @@ multi_impute_trees(
   trees,
   m_per_tree = 5L,
   species_col = NULL,
+  trait_types = NULL,
+  multi_proportion_groups = NULL,
   log_transform = TRUE,
   missing_frac = 0.25,
   covariates = NULL,
@@ -30,6 +32,14 @@ samples from BirdTree.org (Jetz et al. 2012) are ideal; the bundled
 (default \code{5}). Total datasets = \code{length(trees) * m_per_tree}.}
 
 \item{species_col}{character or \code{NULL}. See \code{\link[=impute]{impute()}}.}
+
+\item{trait_types}{named character vector overriding auto-detected
+trait types. Required for \code{"proportion"} and \code{"zi_count"}. See
+\code{\link[=impute]{impute()}} / \code{\link[=preprocess_traits]{preprocess_traits()}}. Default \code{NULL} (auto-detect).}
+
+\item{multi_proportion_groups}{named list declaring compositional
+trait groups (rows summing to 1), forwarded to \code{\link[=impute]{impute()}} /
+\code{\link[=preprocess_traits]{preprocess_traits()}}. Default \code{NULL}.}
 
 \item{log_transform}{logical. Auto-log positive continuous columns
 (default \code{TRUE}).}

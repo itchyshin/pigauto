@@ -10,6 +10,8 @@ multi_impute(
   m = 100L,
   draws_method = c("conformal", "mc_dropout"),
   species_col = NULL,
+  trait_types = NULL,
+  multi_proportion_groups = NULL,
   log_transform = TRUE,
   missing_frac = 0.25,
   covariates = NULL,
@@ -56,6 +58,16 @@ Check \code{mi$fit$calibrated_gates} before using this method.}
 \item{species_col}{character or \code{NULL}. If set, marks the column
 in \code{traits} containing species identifiers and enables multiple
 observations per species. See \code{\link[=impute]{impute()}} for details.}
+
+\item{trait_types}{named character vector overriding auto-detected
+trait types for specific columns. Required for \code{"proportion"} and
+\code{"zi_count"}. See \code{\link[=impute]{impute()}} and \code{\link[=preprocess_traits]{preprocess_traits()}}. Default
+\code{NULL} (auto-detect).}
+
+\item{multi_proportion_groups}{named list declaring compositional
+trait groups (rows summing to 1), e.g.
+\code{list(diet = c("plant", "invert", "vert"))}. Forwarded to
+\code{\link[=impute]{impute()}} / \code{\link[=preprocess_traits]{preprocess_traits()}}. Default \code{NULL}.}
 
 \item{log_transform}{logical. Auto-log positive continuous columns
 (default \code{TRUE}).}
