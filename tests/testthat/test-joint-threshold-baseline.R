@@ -215,3 +215,31 @@ test_that("fit_baseline uses threshold-joint path for mixed continuous+binary", 
   expect_true(all(bl$mu[, "y"] >= qlogis(0.01) - 1e-6))
   expect_true(all(bl$mu[, "y"] <= qlogis(0.99) + 1e-6))
 })
+
+test_that("fit_baseline falls back to LP when Rphylopars not installed", {
+  skip_if_not(joint_mvn_available(),
+              "This test checks the fallback path; run with Rphylopars removed to exercise it.")
+  # When Rphylopars IS installed, simulate absence by stubbing joint_mvn_available
+  set.seed(2)
+  tree <- ape::rtree(30)
+  df <- data.frame(
+    x = rnorm(30),
+    y = factor(sample(c("A","B"), 30, TRUE), levels = c("A","B")),
+    row.names = tree$tip.label
+  )
+  pd <- preprocess_traits(df, tree)
+
+  # Stub joint_mvn_available to FALSE for this test
+  orig <- pigauto:::joint_mvn_available
+  assignInNamespace("joint_mvn_available", function() FALSE, ns = "pigauto")
+  on.exit(assignInNamespace("joint_mvn_available", orig, ns = "pigauto"))
+
+  bl <- fit_baseline(pd, tree, splits = NULL)
+
+  # LP path returns logit(probs) for binary; within clip range
+  expect_true(all(is.finite(bl$mu[, "y"])))
+  expect_true(all(bl$mu[, "y"] >= qlogis(0.01) - 1e-6))
+  expect_true(all(bl$mu[, "y"] <= qlogis(0.99) + 1e-6))
+  # Continuous col: still finite (per-column BM fallback)
+  expect_true(all(is.finite(bl$mu[, "x"])))
+})
