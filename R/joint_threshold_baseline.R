@@ -165,11 +165,32 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
                         dimnames = list(spp, colnames(X_liab)))
 
   if (length(fit_cols) >= 1L) {
-    X_fit <- X_liab[, fit_cols, drop = FALSE]
+    # Categorical K-col groups are rank-(K-1) in the liability matrix (sum-zero
+    # or constant-row-sum for OVR), so Rphylopars would hit a singular cov
+    # matrix. Drop the last column of every categorical group from the
+    # Rphylopars call; reconstruct afterwards.
+    cat_drop_local <- integer(0)
+    for (tm in data$trait_map) {
+      if (tm$type != "categorical") next
+      k_local <- match(tm$latent_cols, liab_cols)
+      k_fit   <- k_local[k_local %in% fit_cols]
+      if (length(k_fit) >= 2L) {
+        cat_drop_local <- c(cat_drop_local, tail(k_fit, 1L))
+      }
+    }
+    fit_cols_sub <- setdiff(fit_cols, cat_drop_local)
+
+    X_fit <- X_liab[, fit_cols_sub, drop = FALSE]
+
+    # Rphylopars rejects column names with '=' (e.g. "z=A"). Sanitise to
+    # safe names for the Rphylopars call and restore originals afterwards.
+    orig_colnames   <- colnames(X_fit)
+    safe_colnames   <- make.names(orig_colnames, unique = TRUE)
+    colnames(X_fit) <- safe_colnames
 
     df_in          <- as.data.frame(X_fit)
     df_in$species  <- spp
-    df_in          <- df_in[, c("species", colnames(X_fit)), drop = FALSE]
+    df_in          <- df_in[, c("species", safe_colnames), drop = FALSE]
 
     fit <- Rphylopars::phylopars(
       trait_data = df_in,
@@ -181,18 +202,37 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
     mu_fit   <- fit$anc_recon[tip_rows, , drop = FALSE]
     se_fit   <- sqrt(fit$anc_var[tip_rows, , drop = FALSE])
 
-    # Validate shape: if Rphylopars still drops or duplicates columns, fail
-    # loudly rather than mis-align. has_obs already filters columns with < 2
-    # observations (phylopars errors on those internally).
-    if (ncol(mu_fit) != length(fit_cols)) {
+    # Validate shape
+    if (ncol(mu_fit) != length(fit_cols_sub)) {
       stop("fit_joint_threshold_baseline: Rphylopars returned ",
-           ncol(mu_fit), " columns but ", length(fit_cols),
+           ncol(mu_fit), " columns but ", length(fit_cols_sub),
            " were passed. Column alignment would be ambiguous.",
            call. = FALSE)
     }
 
-    mu_liab[, fit_cols] <- mu_fit
-    se_liab[, fit_cols] <- se_fit
+    # Restore original column names before writing back to output matrices
+    colnames(mu_fit) <- orig_colnames
+    colnames(se_fit) <- orig_colnames
+
+    mu_liab[, fit_cols_sub] <- mu_fit
+    se_liab[, fit_cols_sub] <- se_fit
+
+    # Reconstruct dropped categorical columns.
+    # joint_K: dropped col = -(sum of fitted K-1 cols) to preserve sum-zero.
+    # ovr:     leave as NA (decode_categorical_liability renormalises anyway).
+    if (cat_encoding == "joint_K" && length(cat_drop_local) > 0L) {
+      for (tm in data$trait_map) {
+        if (tm$type != "categorical") next
+        k_local <- match(tm$latent_cols, liab_cols)
+        k_fit   <- k_local[k_local %in% fit_cols]
+        if (length(k_fit) < 2L) next
+        drop_col   <- tail(k_fit, 1L)
+        fitted_cols <- head(k_fit, length(k_fit) - 1L)
+        if (!(drop_col %in% cat_drop_local)) next
+        mu_liab[, drop_col] <- -rowSums(mu_liab[, fitted_cols, drop = FALSE])
+        se_liab[, drop_col] <- sqrt(rowSums(se_liab[, fitted_cols, drop = FALSE]^2))
+      }
+    }
   }
 
   list(mu_liab    = mu_liab,

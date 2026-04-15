@@ -307,7 +307,7 @@ test_that("build_liability_matrix joint_K encodes categorical as K-dim sum-zero"
     liab_row <- out$X_liab[i, cat_col_names]
     expect_false(any(is.na(liab_row)))
     expect_equal(sum(liab_row), 0, tolerance = 1e-9)
-    expect_equal(which.max(liab_row), as.integer(df$z[i]))
+    expect_equal(unname(which.max(liab_row)), as.integer(df$z[i]))
   }
   miss_rows <- which(is.na(df$z))
   for (i in miss_rows) expect_true(all(is.na(out$X_liab[i, cat_col_names])))
@@ -377,7 +377,9 @@ test_that("fit_joint_threshold_baseline accepts cat_encoding param and forwards 
   expect_equal(dim(res_joint$mu_liab), c(30, 4))
   expect_equal(dim(res_ovr$mu_liab),   c(30, 4))
 
-  cat_col_names <- grep("^z=", colnames(pd$X_scaled), value = TRUE)
+  # Compare the K-1 fitted categorical columns (the last is dropped for
+  # Rphylopars rank safety; joint_K reconstructs it, OVR leaves it NA).
+  cat_col_names <- head(grep("^z=", colnames(pd$X_scaled), value = TRUE), -1L)
   for (cn in cat_col_names) {
     diff <- max(abs(res_joint$mu_liab[, cn] - res_ovr$mu_liab[, cn]))
     expect_gt(diff, 1e-3)
@@ -399,7 +401,9 @@ test_that("decode_categorical_liability joint_K returns log(softmax(mu))", {
 
   res <- decode_categorical_liability(mu_K = c(-100, 0, 0), se_K = rep(0, 3),
                                         cat_encoding = "joint_K")
-  expect_equal(res$log_probs[1], log(0.01), tolerance = 1e-6)
+  # Class 1 gets clipped to 0.01 before renormalisation; after renorm it is
+  # 0.01 / (0.01 + 0.5 + 0.5) = 0.01/1.01. Verify by checking against log(0.01/sum).
+  expect_equal(res$log_probs[1], log(0.01 / sum(c(0.01, 0.5, 0.5))), tolerance = 1e-4)
 })
 
 test_that("decode_categorical_liability OVR returns log(normalise(pnorm_probs))", {
