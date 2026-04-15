@@ -126,3 +126,37 @@ test_that("estep_liability dispatches correctly on trait type", {
   expect_equal(res_na$mean, 0)
   expect_equal(res_na$var, 1)
 })
+
+
+test_that("whole trait_map can be processed via estep_liability", {
+  skip_on_cran()
+  set.seed(1)
+  tree <- ape::rcoal(30)
+
+  # Mixed-type synthetic data
+  df <- data.frame(
+    mass    = stats::rnorm(30),
+    clutch  = rpois(30, 5),
+    diet    = factor(sample(c("insect", "plant", "fish"), 30, replace = TRUE)),
+    threat  = ordered(sample(c("LC", "NT", "VU"), 30, replace = TRUE),
+                      levels = c("LC","NT","VU"))
+  )
+  rownames(df) <- tree$tip.label
+
+  pd <- preprocess_traits(df, tree, trait_types = c(clutch = "count"))
+
+  # For each trait-map entry, call estep_liability with a prior and a
+  # sample observed row.
+  X <- pd$X_scaled
+  for (tm in pd$trait_map) {
+    lc <- tm$latent_cols
+    observed <- X[1, lc]
+    mu_prior <- rep(0, length(lc))
+    sd_prior <- rep(1, length(lc))
+    res <- estep_liability(tm, observed, mu_prior, sd_prior)
+    expect_length(res$mean, length(lc))
+    expect_length(res$var,  length(lc))
+    expect_true(all(is.finite(res$mean)))
+    expect_true(all(res$var >= 0))
+  }
+})
