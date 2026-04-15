@@ -162,3 +162,31 @@ test_that("fit_joint_threshold_baseline treats 1-non-NA columns as unfit", {
   expect_true(all(is.na(res$mu_liab[, "y"])))
   expect_true(all(is.na(res$se_liab[, "y"])))
 })
+
+test_that("decode_binary_liability returns logit(pnorm(mu/sqrt(1+se^2)))", {
+  # Large positive liability -> P near 1 -> large positive logit
+  res <- decode_binary_liability(mu_liab = 2, se_liab = 0.1)
+  expect_lt(abs(res$p - pnorm(2 / sqrt(1 + 0.01))), 1e-6)
+  expect_lt(abs(res$mu_logit - qlogis(res$p)), 1e-6)
+  expect_gt(res$mu_logit, 2)
+
+  # Large negative liability -> P near 0 -> large negative logit
+  res <- decode_binary_liability(mu_liab = -2, se_liab = 0.1)
+  expect_lt(abs(res$p - pnorm(-2 / sqrt(1 + 0.01))), 1e-6)
+  expect_lt(res$mu_logit, -2)
+
+  # Zero liability -> P = 0.5 -> logit = 0
+  res <- decode_binary_liability(mu_liab = 0, se_liab = 1)
+  expect_equal(res$p, 0.5, tolerance = 1e-9)
+  expect_equal(res$mu_logit, 0, tolerance = 1e-9)
+
+  # Clipping guard: huge liability should not produce Inf logit
+  res <- decode_binary_liability(mu_liab = 50, se_liab = 0)
+  expect_equal(res$mu_logit, qlogis(0.99))
+
+  # Vectorised: accepts numeric vectors
+  res <- decode_binary_liability(mu_liab = c(-3, 0, 3),
+                                  se_liab = c(0.1, 1, 0.1))
+  expect_length(res$mu_logit, 3)
+  expect_length(res$p, 3)
+})

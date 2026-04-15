@@ -151,3 +151,24 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL) {
        liab_cols  = liab_cols,
        liab_types = liab_types)
 }
+
+#' Decode liability-scale posterior to logit(P(y=1)) for binary traits
+#'
+#' Given posterior N(mu_liab, se_liab^2) for a latent liability L and the
+#' threshold model y = 1 iff L > 0, the marginal probability is
+#'   P(y=1) = pnorm(mu_liab / sqrt(1 + se_liab^2)).
+#' We return the logit of this clipped to [0.01, 0.99] so downstream code
+#' (GNN blending, BCE loss) stays numerically stable. Matches the clip used
+#' by the label-propagation path in `fit_baseline()`.
+#'
+#' @param mu_liab numeric (possibly vectorised) posterior mean on liability scale.
+#' @param se_liab numeric (same length) posterior SD on liability scale.
+#' @return list(p, mu_logit) each the same length as the inputs.
+#' @keywords internal
+#' @noRd
+decode_binary_liability <- function(mu_liab, se_liab) {
+  sigma_marg <- sqrt(1 + se_liab^2)
+  p <- stats::pnorm(mu_liab / sigma_marg)
+  p <- pmin(pmax(p, 0.01), 0.99)
+  list(p = p, mu_logit = stats::qlogis(p))
+}
