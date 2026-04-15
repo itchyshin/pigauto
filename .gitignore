@@ -53,6 +53,9 @@ BACE/
 # Claude workspace
 .claude/
 
+# Git worktrees (parallel feature branches)
+.worktrees/
+
 # Stray plot output
 Rplots.pdf
 inst/doc/
