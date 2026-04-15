@@ -45,15 +45,15 @@ log_line <- function(...) {
 # -------------------------------------------------------------------------
 
 n_species <- 300L
-n_reps    <- 5L
-epochs    <- 500L
+n_reps    <- 3L
+epochs    <- 300L
 
 # Primary sweep: signal strength (fixed K = 5)
 scenarios_primary <- c("signal_0.2", "signal_0.4", "signal_0.6",
                        "signal_0.8", "signal_1.0")
 
 # Secondary sweep: number of components (fixed signal = 0.6)
-secondary_scenarios <- c("K_3", "K_5", "K_8", "K_12")
+secondary_scenarios <- c("K_3", "K_8", "K_12")
 
 all_scenarios <- c(scenarios_primary, secondary_scenarios)
 scenario_index <- setNames(seq_along(all_scenarios), all_scenarios)
@@ -192,30 +192,19 @@ log_line(sprintf("Running %d cells across %d cores (PSOCK cluster)",
 if (n_remaining > 0L) {
   cell_list <- split(cells, seq_len(n_remaining))
 
-  log_line("Starting PSOCK cluster...")
-  cl <- parallel::makeCluster(min(MC_CORES, n_remaining))
-
-  parallel::clusterExport(cl, c("run_one_cell", "mean_composition_impute",
-                                 "tag_rows", "n_species", "epochs",
-                                 "scenario_index"),
-                          envir = environment())
-  parallel::clusterEvalQ(cl, {
-    suppressPackageStartupMessages({
-      library(ape)
-      devtools::load_all(
-        "/Users/z3437171/Dropbox/Github Local/pigauto",
-        quiet = TRUE
-      )
-    })
-  })
-  log_line("Cluster ready. Dispatching cells...")
-
-  par_results <- parallel::parLapply(cl, cell_list, function(row) {
-    run_one_cell(row$scenario, row$frac, row$rep_id)
-  })
-
-  parallel::stopCluster(cl)
-  log_line("Cluster stopped.")
+  # Sequential loop. PSOCK has intermittent issues on macOS when torch
+  # and devtools::load_all are mixed across workers; for 45 cells at
+  # n_species = 300 this runs in ~40 minutes anyway.
+  log_line(sprintf("Running %d cells sequentially", n_remaining))
+  par_results <- vector("list", n_remaining)
+  for (i in seq_along(cell_list)) {
+    row <- cell_list[[i]]
+    log_line(sprintf("  [%d/%d] %s (rep %d)", i, n_remaining,
+                     row$scenario, row$rep_id))
+    t0 <- proc.time()[["elapsed"]]
+    par_results[[i]] <- run_one_cell(row$scenario, row$frac, row$rep_id)
+    log_line(sprintf("    done in %.1fs", proc.time()[["elapsed"]] - t0))
+  }
 
   good <- list(); errs <- list()
   for (i in seq_along(par_results)) {
@@ -284,16 +273,19 @@ md <- c(
 )
 
 test_df <- all_results[all_results$split == "test", ]
+# evaluate_imputation() returns WIDE format: metrics are columns, not a
+# `metric` column. Aggregate each wide metric directly by method+trait.
 for (scen in c(scenarios_primary, secondary_scenarios)) {
   md <- c(md, sprintf("### %s", scen), "")
   sub <- test_df[test_df$scenario == scen, , drop = FALSE]
   if (nrow(sub) == 0L) { md <- c(md, "(no data)", ""); next }
   metrics <- c("aitchison", "rmse_clr", "simplex_mae")
   agg_list <- lapply(metrics, function(m) {
-    sub_m <- sub[sub$metric == m, , drop = FALSE]
-    if (nrow(sub_m) == 0L) return(NULL)
-    ag <- aggregate(value ~ method + trait, data = sub_m, FUN = mean, na.rm = TRUE)
-    names(ag)[3] <- m
+    if (!m %in% names(sub)) return(NULL)
+    col <- sub[[m]]
+    if (all(is.na(col))) return(NULL)
+    ag <- aggregate(col ~ sub$method + sub$trait, FUN = mean, na.rm = TRUE)
+    names(ag) <- c("method", "trait", m)
     ag
   })
   agg_list <- Filter(Negate(is.null), agg_list)

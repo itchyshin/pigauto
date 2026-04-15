@@ -28,6 +28,14 @@ concurrency:
 
 jobs:
   pkgdown:
+    # Skip on pull_request events: the job attaches to the github-pages
+    # environment (line below), which has a protection rule allowing only
+    # main to deploy. That check fires BEFORE any step runs, so PR runs
+    # always fail at the environment gate even though the deploy steps
+    # themselves are conditionally skipped on PRs. Skipping the whole job
+    # on PRs avoids the spurious red X. Build-on-PR can be re-added as a
+    # separate job if/when we want PR authors to see "did pkgdown build?".
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
