@@ -92,3 +92,17 @@ test_that("estep_liability_ordinal returns interval-truncated posterior", {
                                   mu_prior = 0, sd_prior = 1)
   expect_gt(res4$mean, 1)
 })
+
+test_that("estep_liability_categorical plug-in: observed class gets boosted mean", {
+  mu_prior <- c(0, 0, 0, 0)   # K=4 liabilities, prior means
+  sd_prior <- c(1, 1, 1, 1)
+  res <- estep_liability_categorical(k = 2L, mu_prior = mu_prior,
+                                     sd_prior = sd_prior)
+  expect_length(res$mean, 4L)
+  expect_length(res$var, 4L)
+  expect_gt(res$mean[2], res$mean[1])   # observed class is highest
+  expect_gt(res$mean[2], res$mean[3])
+  expect_gt(res$mean[2], res$mean[4])
+  # Sum-to-zero projection: the predictions operate on a CLR-like space
+  expect_equal(sum(res$mean), 0, tolerance = 1e-6)
+})

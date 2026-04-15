@@ -96,3 +96,18 @@ estep_liability_binary <- function(y, mu_prior, sd_prior) {
   var_post <- max(var_post, 0)  # numerical guard
   list(mean = mean_post, var = var_post)
 }
+
+# Plug-in E-step approximation for categorical liabilities.
+# Observed-class liability gets +1 SD above the others, then project to
+# sum-zero (CLR-consistent). Exact Gibbs version lives in Phase 6 EM.
+#
+# @keywords internal
+# @noRd
+estep_liability_categorical <- function(k, mu_prior, sd_prior) {
+  K <- length(mu_prior)
+  stopifnot(K == length(sd_prior), k >= 1L, k <= K)
+  m <- mu_prior
+  m[k] <- m[k] + sd_prior[k]   # boost observed class
+  m <- m - mean(m)             # sum-to-zero (CLR-consistent)
+  list(mean = m, var = sd_prior^2)  # prior-scale variance; refined in Phase 6
+}
