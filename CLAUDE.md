@@ -153,6 +153,38 @@ now closes onto a strictly better floor. Dispatch lives in
 Bench: `script/bench_joint_baseline.R` shows 33.7% RMSE lift on correlated
 simulated BM data.
 
+### Binary via threshold-joint baseline (Phase 3 of Level C — unreleased / v0.8.0-alpha)
+
+`R/joint_threshold_baseline.R` extends the joint MVN baseline to binary
+traits. Pipeline:
+
+1. `build_liability_matrix()` applies `estep_liability(tm, observed,
+   mu_prior = 0, sd_prior = 1)` to every observed binary cell (dispatcher
+   routes to `estep_liability_binary`), leaving the posterior mean in a
+   continuous liability column. Continuous cells pass through unchanged.
+   Split-masked and missing cells are NA. Single-obs only.
+2. `fit_joint_threshold_baseline()` filters columns with fewer than 2
+   observations (phylopars errors on those internally) and delegates the
+   rest to `Rphylopars::phylopars()` on the combined liability matrix.
+3. `decode_binary_liability()` converts posterior `N(mu, se^2)` back to
+   `logit(pnorm(mu / sqrt(1 + se^2)))`, clipped to [0.01, 0.99],
+   matching the LP path's output convention.
+
+The dispatcher in `fit_baseline()` chooses threshold-joint when binary
+cols coexist with >=1 continuous col and Rphylopars is available;
+otherwise the Phase-2 continuous-only joint or the original per-column
+paths fire. Unpopulated cols (filtered by the <2-obs guard) fall
+through to the per-column BM / LP paths via `setdiff`, giving per-column
+graceful fallback. Ordinal stays on the Phase-2 path (z-scored integer
+as a continuous stand-in) — full threshold ordinal lands in Phase 6 EM.
+
+Nothing in `fit_pigauto()` / GNN changed: the baseline's `mu` for
+binary cols is still logit-scale, so BCE and gate math are transparent.
+
+The plug-in prior `N(0, 1)` is a standard first-iteration choice for
+threshold models; Phase 6 EM will replace this with an iterated,
+Σ-aware prior.
+
 ### Post-training (`fit_pigauto.R`)
 
 After the training loop:
