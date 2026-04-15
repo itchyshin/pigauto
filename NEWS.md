@@ -31,6 +31,33 @@
   correlated simulated BM data: **33.7% RMSE lift** vs per-column BM
   (`script/bench_joint_baseline.R`, n=100 tips × 10 reps).
 
+### Level C Phase 3 — BINARY via threshold joint baseline
+
+- `fit_baseline()` now dispatches to `fit_joint_threshold_baseline()`
+  when BINARY cols are present alongside continuous cols and
+  `Rphylopars` is available. Observed binary cells are transformed to
+  truncated-Gaussian posterior means via `estep_liability_binary`
+  (Phase 1), combined with continuous latents, and jointly fit by
+  `Rphylopars::phylopars()`. Binary output is decoded back to
+  `logit(P(y=1))` so downstream BCE and gate math are unchanged.
+- New file: `R/joint_threshold_baseline.R`
+  (`build_liability_matrix`, `fit_joint_threshold_baseline`,
+  `decode_binary_liability`).
+- New test file: `tests/testthat/test-joint-threshold-baseline.R`
+  (6 new test blocks, 56 expectations covering builder, fitter,
+  decoder, dispatcher, graceful fallback, and the <2-obs edge case).
+- New benchmark: `script/bench_binary_joint.R` — A/B on correlated
+  continuous+binary BM simulations. **Result: 3/3 scenarios with lift
+  >= 2pp**, peaking at 16pp at rho = 0.6 (moderate cross-trait
+  correlation where LP has the least same-trait phylo signal to
+  exploit).
+- Graceful fallback: when `Rphylopars` is unavailable the LP baseline
+  runs unchanged (verified by `test-joint-threshold-baseline.R`).
+  Per-column fallback when a binary col has <2 observations.
+- Ordinal threshold decoding is deferred to a later phase (Phase 6 EM).
+  Ordinal still rides in the Phase-2 MVN via its z-scored integer
+  encoding.
+
 # pigauto 0.7.0
 
 ## New trait type: multi_proportion (compositional data)
