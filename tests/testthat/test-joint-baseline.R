@@ -143,3 +143,37 @@ test_that("joint baseline does not leak val/test cells into BM fit", {
     skip("not enough differentiating cells between splits_a and splits_b")
   }
 })
+
+test_that("fit_baseline dispatches to joint MVN when trait count >= 2 and Rphylopars available", {
+  skip_on_cran()
+  skip_if_not(joint_mvn_available())
+  set.seed(17)
+  tree <- ape::rcoal(30)
+  # Two independent BM traits
+  C <- ape::vcv(tree)
+  L <- chol(C)
+  x1 <- as.numeric(t(L) %*% stats::rnorm(30))
+  x2 <- as.numeric(t(L) %*% stats::rnorm(30))
+  df <- data.frame(t1 = x1, t2 = x2)
+  rownames(df) <- tree$tip.label
+  # Punch holes to make imputation meaningful
+  df$t1[sample(30, 4)] <- NA
+  df$t2[sample(30, 5)] <- NA
+
+  pd <- preprocess_traits(df, tree)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.1,
+                                val_frac = 0.5, seed = 1,
+                                trait_map = pd$trait_map)
+  graph <- build_phylo_graph(tree, k_eigen = 4L)
+
+  # Call fit_baseline() — should internally use joint MVN path
+  bl <- fit_baseline(pd, tree, splits = splits, graph = graph)
+  expect_equal(dim(bl$mu), c(30L, 2L))
+  expect_equal(dim(bl$se), c(30L, 2L))
+  expect_false(any(is.na(bl$mu)))
+
+  # Compare to the direct joint call — should be identical (same path)
+  bl_direct <- fit_joint_mvn_baseline(pd, tree, splits = splits, graph = graph)
+  expect_equal(bl$mu, bl_direct$mu, tolerance = 1e-8)
+  expect_equal(bl$se, bl_direct$se, tolerance = 1e-8)
+})
