@@ -115,6 +115,25 @@ When `preprocess_traits(traits, tree, species_col = "species")` is used, `data$X
 
 **Observation-level refinement** (v0.6.0+): when `covariates` are supplied in multi-obs mode, the model creates an `obs_refine` MLP (`nn_sequential(linear(hidden + n_user_cov, hidden), relu, linear(hidden, hidden))`) that re-injects user covariates after the species-level broadcast via a residual connection: `h = h + obs_refine(cat(h, user_covs))`. This allows different observations of the same species to receive different predictions based on their covariate context (e.g., CTmax at 20°C vs 30°C acclimation). The refinement is controlled by `n_user_cov` in model_config; when 0, no refinement MLP is created. The bundled `ctmax_sim` dataset + `tree300` exercises this code path. Benchmark: `script/bench_multi_obs.R`.
 
+### Liability encoding (Phase 1 of Level C — unreleased / v0.8.0-alpha)
+
+`R/liability.R` formalises the liability interpretation of each trait type
+as the foundation for a future joint multivariate-BM baseline. Continuous
+types ARE their liability (identity / log1p / logit / CLR on the
+preprocessed latent scale). Binary uses a 1D threshold at 0. Ordinal uses
+K-1 thresholds. Categorical uses K liabilities with an argmax constraint
+(plug-in approximation; exact Gibbs in Phase 6 EM).
+
+`estep_liability(tm, observed, mu_prior, sd_prior)` is the single dispatcher
+that all Phase 2+ code should call to compute per-cell posterior mean/var
+of a liability given an observation. One non-obvious detail: for `ordinal`,
+`observed` comes z-scored from `X_scaled`, so the dispatcher un-z-scores
+before recovering the integer class index. Do not bypass this step when
+calling `estep_liability_ordinal()` directly.
+
+Nothing in `fit_baseline()` / `fit_pigauto()` consumes this module yet —
+Phase 2 will wire the joint multivariate-BM baseline on top.
+
 ### Post-training (`fit_pigauto.R`)
 
 After the training loop:
