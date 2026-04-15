@@ -58,3 +58,42 @@ test_that("fit_joint_mvn_baseline recovers cross-trait structure on correlated B
   naive_rmse <- sqrt(mean((col_mean_pred       - x2_true_latent)^2))
   expect_lt(joint_rmse, naive_rmse)
 })
+
+test_that("joint baseline matches per-column BM on single-trait data", {
+  skip_on_cran()
+  skip_if_not(joint_mvn_available())
+  set.seed(7)
+  tree <- ape::rcoal(30)
+  # Simulate a single BM trait directly via Cholesky of vcv(tree)
+  C  <- ape::vcv(tree)
+  L  <- chol(C)
+  x1 <- as.numeric(t(L) %*% stats::rnorm(30))
+  df <- data.frame(trait = x1)
+  rownames(df) <- tree$tip.label
+  df$trait[sample(30, 6)] <- NA
+
+  pd     <- preprocess_traits(df, tree)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.1,
+                                val_frac = 0.5, seed = 1,
+                                trait_map = pd$trait_map)
+  graph  <- build_phylo_graph(tree, k_eigen = 4L)
+
+  # Path A: current per-column BM
+  bl_old <- fit_baseline(pd, tree, splits = splits, graph = graph)
+
+  # Path B: joint MVN (single trait should collapse to the same math)
+  bl_new <- fit_joint_mvn_baseline(pd, tree, splits = splits, graph = graph)
+
+  # Report max absolute diff for diagnostic purposes even when within tolerance.
+  max_mu_diff <- max(abs(bl_new$mu - bl_old$mu), na.rm = TRUE)
+  max_se_diff <- max(abs(bl_new$se - bl_old$se), na.rm = TRUE)
+  message(sprintf("single-trait back-compat: max |mu diff| = %.2e, max |se diff| = %.2e",
+                  max_mu_diff, max_se_diff))
+
+  # Tolerance reflects Rphylopars' REML solver vs our Cholesky nugget; they
+  # should agree within ~1e-3 in practice for n=30.  SE may diverge slightly
+  # more than mu because the two paths use different variance estimators
+  # (profile REML vs plug-in σ²), so SE tolerance is kept at 1e-2.
+  expect_equal(bl_new$mu, bl_old$mu, tolerance = 1e-3)
+  expect_equal(bl_new$se, bl_old$se, tolerance = 1e-2)
+})
