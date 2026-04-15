@@ -1,5 +1,4 @@
 test_that("liability_info() returns schema for each trait type", {
-  skip_if_not(exists("liability_info", mode = "function"))
   # continuous: 1 liability, no threshold
   info <- liability_info(list(type = "continuous", n_latent = 1L))
   expect_equal(info$n_liability, 1L)
@@ -42,4 +41,15 @@ test_that("liability_info() returns schema for each trait type", {
   info <- liability_info(list(type = "zi_count", n_latent = 2L))
   expect_equal(info$n_liability, 2L)
   expect_equal(info$kind, "mixed_2")
+})
+
+
+test_that("liability_info() errors on unknown type", {
+  # Catches accidental omission when a new trait type is added upstream
+  # but the liability contract is not updated.
+  expect_error(
+    liability_info(list(type = "not_a_real_type", n_latent = 1L)),
+    "No liability contract defined for type 'not_a_real_type'",
+    fixed = TRUE
+  )
 })
