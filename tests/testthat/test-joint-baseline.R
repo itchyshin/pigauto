@@ -97,3 +97,49 @@ test_that("joint baseline matches per-column BM on single-trait data", {
   expect_equal(bl_new$mu, bl_old$mu, tolerance = 1e-3)
   expect_equal(bl_new$se, bl_old$se, tolerance = 1e-2)
 })
+
+test_that("joint baseline does not leak val/test cells into BM fit", {
+  skip_on_cran()
+  skip_if_not(joint_mvn_available())
+  set.seed(11)
+  tree <- ape::rcoal(30)
+  # Two independent BM traits (no cross-correlation — so the joint is just
+  # two independent BMs, making the leak detection clean)
+  C <- ape::vcv(tree)
+  L <- chol(C)
+  x1 <- as.numeric(t(L) %*% stats::rnorm(30))
+  x2 <- as.numeric(t(L) %*% stats::rnorm(30))
+  df <- data.frame(t1 = x1, t2 = x2)
+  rownames(df) <- tree$tip.label
+
+  pd <- preprocess_traits(df, tree)
+  # Two splits that differ only in which cells are held out; the BM
+  # prediction at cells held out in ONE but observed in the OTHER must
+  # differ between the two runs.
+  splits_a <- make_missing_splits(pd$X_scaled, missing_frac = 0.2,
+                                  val_frac = 0.5, seed = 1,
+                                  trait_map = pd$trait_map)
+  splits_b <- make_missing_splits(pd$X_scaled, missing_frac = 0.2,
+                                  val_frac = 0.5, seed = 99,
+                                  trait_map = pd$trait_map)
+  graph <- build_phylo_graph(tree, k_eigen = 4L)
+
+  bl_a <- fit_joint_mvn_baseline(pd, tree, splits = splits_a, graph = graph)
+  bl_b <- fit_joint_mvn_baseline(pd, tree, splits = splits_b, graph = graph)
+
+  # Cells held out in splits_a but NOT in splits_b — at these cells
+  # bl_a had to predict (observed cell was masked), but bl_b saw the
+  # observed value, so predictions should differ (observed != smoothed).
+  held_a <- c(splits_a$val_idx, splits_a$test_idx)
+  held_b <- c(splits_b$val_idx, splits_b$test_idx)
+  diff_cells <- setdiff(held_a, held_b)
+  if (length(diff_cells) >= 3) {
+    vals_a <- bl_a$mu[diff_cells]
+    vals_b <- bl_b$mu[diff_cells]
+    expect_gt(max(abs(vals_a - vals_b)), 1e-6)
+  } else {
+    # Rare — splits aligned too closely. Test is still valid but useless;
+    # emit a skip with a note.
+    skip("not enough differentiating cells between splits_a and splits_b")
+  }
+})
