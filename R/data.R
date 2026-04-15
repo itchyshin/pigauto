@@ -96,9 +96,14 @@
 #' 300 species in \code{\link{avonet300}}.  These trees capture phylogenetic
 #' uncertainty: topologies and branch lengths vary across the posterior sample.
 #'
-#' Use with \code{\link{multi_impute_trees}} to propagate phylogenetic
-#' uncertainty through trait imputation and downstream inference via Rubin's
-#' rules (Nakagawa & de Villemereuil 2019).
+#' Use with \code{\link{multi_impute_trees}} for the imputation half
+#' (step 1) of the two-step workflow for propagating phylogenetic
+#' uncertainty.  The analysis half (step 2) is the user's responsibility:
+#' refit the downstream comparative model on each
+#' \code{(imputation, trees300[[mi$tree_index[i]]])} pair and pool the
+#' T x M fits with \code{\link{pool_mi}}
+#' (Nakagawa & de Villemereuil 2019).  See
+#' \code{?multi_impute_trees} for a complete code example.
 #'
 #' @format An object of class \code{multiPhylo} containing 50 \code{phylo}
 #'   objects, each with 300 tips.

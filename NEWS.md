@@ -1,3 +1,26 @@
+# pigauto 0.6.2
+
+## Documentation
+
+- **Tree uncertainty workflow clarified.** `multi_impute_trees()`,
+  `trees300`, the README, and `vignette("getting-started")` now all
+  describe the two-step workflow explicitly: step 1 is tree-aware
+  imputation (pigauto's job — already done correctly); step 2 is
+  tree-aware downstream analysis (the user's responsibility,
+  following Nakagawa & de Villemereuil 2019, *Syst. Biol.* 68:632–641).
+  Every doc now includes a complete `Map()`-over-`mi$tree_index` code
+  example showing how to run the corresponding tree in the downstream
+  model.
+- **Compute-cost table added** to the tree-uncertainty docs: wall-clock
+  budgets at `n` = 300 / 5,000 / 10,000 species with `T` = 10 / 50
+  trees, plus guidance on reducing `T` for large trees and
+  parallelising across machines.
+
+## Internal
+
+- No API changes; no numerical changes to any fitted model. Doc-only
+  patch release.
+
 # pigauto 0.6.1
 
 ## Bug fixes

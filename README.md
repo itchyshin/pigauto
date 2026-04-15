@@ -107,6 +107,72 @@ closes automatically. See the
 [covariate walkthrough](https://itchyshin.github.io/pigauto/pigauto_walkthrough_covariates.html)
 for a complete example.
 
+## Phylogenetic tree uncertainty
+
+If you have a posterior sample of trees (e.g. 50 trees from BirdTree),
+tree uncertainty enters the analysis at **two** places — and pigauto
+handles them separately because they are conceptually distinct.
+
+**Step 1 — imputation** (pigauto's job).
+`multi_impute_trees()` runs a full pigauto fit on each posterior tree,
+so each completed dataset is conditional on a *different* tree:
+
+```r
+data(avonet300, trees300)   # trees300 = 50 posterior trees
+df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
+
+mi <- multi_impute_trees(df, trees = trees300, m_per_tree = 5L)
+#> 50 trees × 5 imputations = 250 completed datasets
+#> mi$tree_index[i]  →  which posterior tree produced dataset i
+```
+
+**Step 2 — analysis** (Nakagawa & de Villemereuil 2019).
+For each completed dataset, fit the downstream comparative model
+using the *same* tree that produced that dataset, then pool the
+T × M fits with Rubin's rules:
+
+```r
+fits <- Map(
+  function(dat, t_idx) {
+    dat$species <- rownames(dat)
+    nlme::gls(
+      log(Mass) ~ log(Wing.Length),
+      correlation = ape::corBrownian(phy = trees300[[t_idx]], form = ~species),
+      data = dat, method = "ML"
+    )
+  },
+  mi$datasets,
+  mi$tree_index
+)
+pool_mi(fits)
+```
+
+The pooled standard errors now reflect imputation uncertainty,
+phylogenetic tree uncertainty, and their interaction — all in one
+Rubin's-rules step. Reference: Nakagawa S, de Villemereuil P (2019).
+*Systematic Biology* 68(4):632–641. doi:
+[10.1093/sysbio/syy089](https://doi.org/10.1093/sysbio/syy089).
+
+### Compute cost scales linearly with T
+
+Each posterior tree requires a fresh pigauto fit (no caching possible —
+the tree *is* the model). Rough budget on a modern CPU laptop:
+
+| Species n | 1 fit | T = 50 | T = 10 |
+|---:|---:|---:|---:|
+| 300 | ~30–60 s | 25–50 min | 5–10 min |
+| 5,000 | ~5–10 min | 4–8 hr | ~1 hr |
+| 10,000 | ~20–40 min | 17–33 hr | 3–7 hr |
+
+**Guidance for large trees.** The 2019 paper notes that 10–20 posterior
+trees are usually enough (use the "relative efficiency" index in
+`pool_mi()$fmi` to check convergence). For 10,000-species datasets we
+recommend T = 10–20, or parallelising the T fits across machines
+(each fit is independent — good HPC / cloud use case).
+If you have no posterior tree sample, use a single MCC tree via
+`impute()` or `multi_impute()` and note the tree-uncertainty caveat in
+your paper.
+
 ## Trait types
 
 ### Automatic type detection

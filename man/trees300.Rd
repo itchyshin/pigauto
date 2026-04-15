@@ -22,9 +22,14 @@ BirdTree Hackett backbone posterior (Jetz et al. 2012), each pruned to the
 uncertainty: topologies and branch lengths vary across the posterior sample.
 }
 \details{
-Use with \code{\link{multi_impute_trees}} to propagate phylogenetic
-uncertainty through trait imputation and downstream inference via Rubin's
-rules (Nakagawa & de Villemereuil 2019).
+Use with \code{\link{multi_impute_trees}} for the imputation half
+(step 1) of the two-step workflow for propagating phylogenetic
+uncertainty.  The analysis half (step 2) is the user's responsibility:
+refit the downstream comparative model on each
+\code{(imputation, trees300[[mi$tree_index[i]]])} pair and pool the
+T x M fits with \code{\link{pool_mi}}
+(Nakagawa & de Villemereuil 2019).  See
+\code{?multi_impute_trees} for a complete code example.
 }
 \seealso{
 \code{\link{tree300}}, \code{\link{avonet300}},

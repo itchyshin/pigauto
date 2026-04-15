@@ -1,15 +1,24 @@
-#' Propagate phylogenetic uncertainty through multiple imputation
+#' Tree-aware multiple imputation (step 1 of 2)
 #'
-#' Run pigauto's imputation pipeline on each of `T` posterior phylogenies,
-#' generating `m_per_tree` stochastic completions per tree for a total of
-#' `T * m_per_tree` completed datasets.
+#' Run pigauto's full imputation pipeline on each of `T` posterior
+#' phylogenies, generating `m_per_tree` stochastic completions per tree
+#' for a total of `T * m_per_tree` completed datasets. Each completed
+#' dataset is conditional on a specific posterior tree
+#' (recorded in `mi$tree_index`).
 #'
-#' The key insight (Nakagawa & de Villemereuil 2019) is that phylogenetic
-#' uncertainty can be folded into the multiple-imputation framework by
-#' treating each (tree, imputation) pair as one completed dataset and
-#' applying Rubin's rules across all of them. The resulting pooled standard
-#' errors propagate *both* imputation uncertainty (missing trait values) and
-#' phylogenetic uncertainty (unknown tree topology and branch lengths).
+#' **This is step 1 of the two-step workflow for propagating tree
+#' uncertainty.** Step 2 — varying the *downstream analysis tree* in
+#' lockstep with the imputation tree — is the user's responsibility
+#' and is described in the Examples section and in
+#' `vignette("getting-started")`.
+#'
+#' `multi_impute_trees()` handles the imputation half (step 1) cleanly:
+#' every completed dataset carries a different tree's signal so that
+#' between-tree variation propagates into the pooled standard errors.
+#' Step 2 is where Nakagawa & de Villemereuil (2019) enters: for each
+#' completed dataset, fit the downstream model (e.g. `nlme::gls()` with
+#' a `corBrownian` on `trees[[ mi$tree_index[i] ]]`), then pool the
+#' T × M fits with [pool_mi()].
 #'
 #' @param traits data.frame. Same format as [multi_impute()] and [impute()].
 #' @param trees list of `phylo` objects (class `multiPhylo` or plain list).
@@ -72,15 +81,28 @@
 #' **Variance decomposition.** The between-imputation variance from
 #' Rubin's rules has two sources: (1) within-tree sampling variance
 #' (MC-dropout noise), and (2) between-tree variance (phylogenetic
-#' uncertainty). The fraction of missing information (FMI) reported by
-#' [pool_mi()] reflects both. To decompose them, compare FMI from
-#' `multi_impute()` (single tree) with FMI from `multi_impute_trees()`.
+#' uncertainty at the imputation step). The fraction of missing
+#' information (FMI) reported by [pool_mi()] reflects both. To decompose
+#' them, compare FMI from [multi_impute()] (single tree) with FMI from
+#' `multi_impute_trees()`.
 #'
-#' **Computation time.** Each tree requires a full retrain (~3 s for
-#' 300 species). 50 trees x 5 imputations takes ~2.5 minutes on a
-#' modern laptop. Increase `m_per_tree` if the within-tree FMI is large
-#' (many missing cells); increase the number of trees if the between-tree
-#' FMI is large (deep phylogenetic uncertainty).
+#' **Computation time — linear in T.** Each tree requires a fresh
+#' pigauto fit; there is no caching across trees because the tree *is*
+#' the model. Rough budget on a modern CPU laptop:
+#'
+#' \tabular{rrrr}{
+#'   Species n \tab 1 fit \tab T = 50 \tab T = 10 \cr
+#'   300 \tab ~30-60 s \tab 25-50 min \tab 5-10 min \cr
+#'   5,000 \tab ~5-10 min \tab 4-8 hr \tab ~1 hr \cr
+#'   10,000 \tab ~20-40 min \tab 17-33 hr \tab 3-7 hr
+#' }
+#'
+#' For large trees (n >= 5,000) we recommend reducing `T` to 10-20
+#' posterior trees. The 2019 paper's "relative efficiency" index
+#' (visible as `fmi` in the pooled output of [pool_mi()]) typically
+#' shows convergence well before T = 50. Alternatively, parallelise
+#' the T fits across machines — each tree fit is independent and well
+#' suited to HPC / cloud workflows.
 #'
 #' @references
 #' Nakagawa S, de Villemereuil P (2019). "A general method for
@@ -101,20 +123,31 @@
 #' data(avonet300, trees300)
 #' df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
 #'
+#' # ---- Step 1: tree-aware imputation --------------------------------
 #' # 50 trees x 5 imputations = 250 completed datasets
-#' mi_trees <- multi_impute_trees(df, trees300, m_per_tree = 5)
-#' print(mi_trees)
+#' mi <- multi_impute_trees(df, trees300, m_per_tree = 5L)
+#' print(mi)
 #'
-#' # Downstream: phylogenetic GLS, pooled with Rubin's rules
-#' fits <- with_imputations(mi_trees, function(d) {
-#'   d$species <- rownames(d)
-#'   nlme::gls(
-#'     log(Mass) ~ log(Wing.Length),
-#'     correlation = ape::corBrownian(
-#'       phy = trees300[[1]], form = ~species),
-#'     data = d, method = "ML"
-#'   )
-#' })
+#' # ---- Step 2: tree-aware analysis (Nakagawa & de Villemereuil 2019)
+#' # For each completed dataset, fit the downstream model using the SAME
+#' # tree that produced that dataset. `mi$tree_index[i]` gives the tree
+#' # index (1..T) for dataset `i`.
+#' fits <- Map(
+#'   function(dat, t_idx) {
+#'     dat$species <- rownames(dat)
+#'     nlme::gls(
+#'       log(Mass) ~ log(Wing.Length),
+#'       correlation = ape::corBrownian(
+#'         phy = trees300[[t_idx]], form = ~species),
+#'       data = dat, method = "ML"
+#'     )
+#'   },
+#'   mi$datasets,
+#'   mi$tree_index
+#' )
+#'
+#' # Rubin's rules: pooled SEs include both trait-imputation and
+#' # phylogenetic-tree uncertainty.
 #' pool_mi(fits)
 #' }
 #'
