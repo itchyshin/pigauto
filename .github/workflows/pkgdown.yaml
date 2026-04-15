@@ -45,6 +45,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # igraph is pulled in transitively and needs libglpk at load time;
+      # without libglpk40 on the runner pkgdown fails with
+      # "libglpk.so.40: cannot open shared object file".
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libglpk40 libglpk-dev
+
       - uses: r-lib/actions/setup-pandoc@v2
 
       - uses: r-lib/actions/setup-r@v2
