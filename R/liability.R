@@ -42,3 +42,26 @@ liability_info <- function(tm) {
     stop("No liability contract defined for type '", tp, "'", call. = FALSE)
   }
 }
+
+# Posterior mean and variance of a Gaussian liability truncated by a
+# binary observation. Uses standard truncated-normal formulas.
+# y = 1 means liability > 0; y = 0 means liability <= 0.
+#
+# @keywords internal
+# @noRd
+estep_liability_binary <- function(y, mu_prior, sd_prior) {
+  # Standardise the truncation point
+  alpha <- (0 - mu_prior) / sd_prior
+  z     <- stats::dnorm(alpha) / stats::pnorm(alpha, lower.tail = (y == 0))
+  sign  <- if (y == 1) 1 else -1
+  # Truncated-normal mean (Johnson-Kotz-Balakrishnan):
+  #   E[X | X > 0] = mu + sigma * phi(alpha) / (1 - Phi(alpha))
+  #   E[X | X < 0] = mu - sigma * phi(alpha) / Phi(alpha)
+  mean_post <- mu_prior + sign * sd_prior * z
+  # Truncated-normal variance:
+  #   Var = sigma^2 * (1 + alpha*z - z^2)   for y = 1 with alpha = (0-mu)/sigma
+  # (alpha is negated for y = 0; sign above handles location).
+  var_post <- sd_prior^2 * (1 + sign * alpha * z - z^2)
+  var_post <- max(var_post, 0)  # numerical guard
+  list(mean = mean_post, var = var_post)
+}

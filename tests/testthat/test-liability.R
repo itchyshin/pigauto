@@ -53,3 +53,20 @@ test_that("liability_info() errors on unknown type", {
     fixed = TRUE
   )
 })
+
+
+test_that("estep_liability_binary returns posterior mean/var on truncated Gaussian", {
+  # If y = 1, liability ~ truncated N(0, 1) from below at 0 → mean = sqrt(2/π) ≈ 0.7979
+  res <- estep_liability_binary(y = 1, mu_prior = 0, sd_prior = 1)
+  expect_equal(res$mean, sqrt(2 / pi), tolerance = 1e-6)
+  expect_lt(res$var, 1)  # truncation always reduces variance
+
+  # y = 0 → mean = -sqrt(2/π)
+  res0 <- estep_liability_binary(y = 0, mu_prior = 0, sd_prior = 1)
+  expect_equal(res0$mean, -sqrt(2 / pi), tolerance = 1e-6)
+
+  # Very positive prior + y = 1: posterior mean close to prior mean (not much truncation)
+  res2 <- estep_liability_binary(y = 1, mu_prior = 3, sd_prior = 1)
+  expect_lt(abs(res2$mean - 3), 0.05)  # truncation barely bites
+  expect_lt(abs(res2$var - 1), 0.02)   # analytic value ≈ 0.987; 0-pt is 3 SDs away
+})
