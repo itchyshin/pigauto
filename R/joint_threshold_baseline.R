@@ -1,3 +1,120 @@
+#' Aggregate a multi-obs X_scaled matrix to species-level with per-type semantics
+#'
+#' For multi-obs pigauto_data, the Level-C helpers need species-level input.
+#' Collapses obs rows per species using the appropriate aggregator per trait
+#' type: mean for continuous-family, threshold-at-0.5 for binary/ZI-gate,
+#' argmax-one-hot for categorical. Single-obs data passes through unchanged.
+#'
+#' Splits are masked in obs space first, then re-derived in species space:
+#' a species cell is held-out iff any of its obs cells was held-out.
+#'
+#' @param data pigauto_data (single- or multi-obs).
+#' @param splits optional output of make_missing_splits (obs-level).
+#' @return list(X_species, splits_species, species_names).
+#' @keywords internal
+#' @noRd
+aggregate_to_species <- function(data, splits = NULL) {
+  if (!isTRUE(data$multi_obs)) {
+    # Single-obs: still need to apply split masking to match prior behaviour
+    # of build_liability_matrix(), which masked val/test cells up front.
+    X_single <- data$X_scaled
+    if (!is.null(splits)) {
+      X_single[splits$val_idx]  <- NA
+      X_single[splits$test_idx] <- NA
+    }
+    return(list(X_species      = X_single,
+                splits_species = splits,
+                species_names  = data$species_names %||% rownames(data$X_scaled)))
+  }
+
+  trait_map <- data$trait_map
+  X         <- data$X_scaled
+  n_obs     <- data$n_obs
+  n_species <- data$n_species
+  spp       <- data$species_names
+  obs_to_sp <- data$obs_to_species
+
+  # Apply split mask first (in obs space) so aggregation propagates NA correctly
+  obs_original <- !is.na(X)
+  if (!is.null(splits)) {
+    X[splits$val_idx]  <- NA
+    X[splits$test_idx] <- NA
+  }
+
+  # Per-column trait-type map (zi_count expands: gate=binary, mag=continuous)
+  type_by_col <- rep(NA_character_, ncol(X))
+  for (tm in trait_map) {
+    if (tm$type == "zi_count") {
+      type_by_col[tm$latent_cols[1]] <- "binary"
+      type_by_col[tm$latent_cols[2]] <- "continuous"
+    } else {
+      type_by_col[tm$latent_cols] <- tm$type
+    }
+  }
+
+  X_species <- matrix(NA_real_, nrow = n_species, ncol = ncol(X),
+                      dimnames = list(spp, colnames(X)))
+
+  for (j in seq_len(ncol(X))) {
+    tp <- type_by_col[j]
+    sp_vals <- tapply(X[, j], obs_to_sp, function(v) {
+      v <- v[!is.na(v)]
+      if (length(v) == 0L) NA_real_ else mean(v)
+    })
+    # Reorder to spp order via integer index
+    sp_vals <- sp_vals[as.character(seq_len(n_species))]
+    if (tp == "binary") {
+      X_species[, j] <- ifelse(is.na(sp_vals), NA_real_,
+                                as.numeric(sp_vals >= 0.5))
+    } else {
+      X_species[, j] <- unname(sp_vals)
+    }
+  }
+
+  # Re-enforce one-hot for categorical via argmax
+  for (tm in trait_map) {
+    if (tm$type != "categorical") next
+    k_cols <- tm$latent_cols
+    for (s in seq_len(n_species)) {
+      props <- X_species[s, k_cols]
+      if (all(is.na(props))) next
+      winner <- which.max(props)
+      X_species[s, k_cols] <- 0
+      X_species[s, k_cols[winner]] <- 1
+    }
+  }
+
+  # Re-derive splits in species space
+  splits_species <- NULL
+  if (!is.null(splits)) {
+    sp_originally_observed <- matrix(FALSE, nrow = n_species, ncol = ncol(X))
+    for (s in seq_len(n_species)) {
+      rows <- which(obs_to_sp == s)
+      sp_originally_observed[s, ] <- apply(obs_original[rows, , drop = FALSE], 2, any)
+    }
+    sp_held  <- sp_originally_observed & is.na(X_species)
+    held_lin <- which(sp_held)
+    n_val  <- length(splits$val_idx)
+    n_test <- length(splits$test_idx)
+    if (length(held_lin) > 0L && (n_val + n_test) > 0L) {
+      n_val_sp <- round(length(held_lin) * n_val / (n_val + n_test))
+      val_sp  <- held_lin[seq_len(n_val_sp)]
+      test_sp <- held_lin[setdiff(seq_along(held_lin), seq_len(n_val_sp))]
+    } else {
+      val_sp  <- integer(0)
+      test_sp <- integer(0)
+    }
+    mask_species <- !is.na(X_species)
+    splits_species <- list(val_idx  = val_sp,
+                           test_idx = test_sp,
+                           mask     = mask_species)
+  }
+
+  list(X_species      = X_species,
+       splits_species = splits_species,
+       species_names  = spp)
+}
+
 #' Assemble liability-scale input matrix for the threshold-model joint baseline
 #'
 #' For each trait type:
@@ -17,9 +134,9 @@
 #' multi_proportion columns are also skipped — they have the same
 #' rank-(K-1) phylopars instability as categorical K-col groups.
 #'
-#' Single-observation mode only. Multi-obs datasets should take the
-#' per-column baseline path; the dispatcher in `fit_baseline()` already
-#' enforces this.
+#' Multi-obs datasets are aggregated to species-level via
+#' `aggregate_to_species()` at the entry point; downstream logic is
+#' single-obs from there on.
 #'
 #' @param data pigauto_data from preprocess_traits.
 #' @param splits output of make_missing_splits() or NULL.
@@ -30,16 +147,14 @@
 #' @keywords internal
 #' @noRd
 build_liability_matrix <- function(data, splits = NULL) {
-  stopifnot(!isTRUE(data$multi_obs))
   trait_map <- data$trait_map
-  X         <- data$X_scaled
-  n         <- nrow(X)
-
-  # Apply split masking up front (same leakage protection as Phase 2)
-  if (!is.null(splits)) {
-    X[splits$val_idx]  <- NA
-    X[splits$test_idx] <- NA
-  }
+  # Collapse multi-obs to species level (no-op for single-obs). Splits are
+  # masked internally in obs space before aggregation, so no separate
+  # masking step is needed below.
+  agg    <- aggregate_to_species(data, splits = splits)
+  X      <- agg$X_species
+  splits <- agg$splits_species
+  n      <- nrow(X)
 
   liab_cols  <- integer(0)
   liab_types <- character(0)

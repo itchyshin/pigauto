@@ -1,0 +1,65 @@
+test_that("aggregate_to_species produces n_species rows with correct per-type semantics", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(1)
+  tree <- ape::rtree(6)
+  df <- data.frame(
+    species = rep(tree$tip.label, each = 3),
+    x = rnorm(18),
+    y = factor(sample(c("A", "B"), 18, TRUE), levels = c("A", "B")),
+    z = factor(sample(c("P", "Q", "R"), 18, TRUE), levels = c("P", "Q", "R"))
+  )
+  df$x[c(5, 6)] <- NA
+  pd <- preprocess_traits(df, tree, species_col = "species")
+  expect_true(isTRUE(pd$multi_obs))
+  expect_equal(pd$n_species, 6L)
+  expect_equal(pd$n_obs, 18L)
+
+  agg <- aggregate_to_species(pd)
+  expect_equal(nrow(agg$X_species), 6L)
+  expect_equal(ncol(agg$X_species), ncol(pd$X_scaled))
+
+  x_col <- which(colnames(pd$X_scaled) == "x")
+  for (s in seq_len(6)) {
+    obs_rows <- which(pd$obs_to_species == s)
+    expected <- mean(pd$X_scaled[obs_rows, x_col], na.rm = TRUE)
+    if (is.nan(expected)) expected <- NA_real_
+    expect_equal(agg$X_species[s, x_col], expected, tolerance = 1e-9)
+  }
+
+  y_col <- which(colnames(pd$X_scaled) == "y")
+  for (s in seq_len(6)) {
+    obs_rows <- which(pd$obs_to_species == s)
+    prop <- mean(pd$X_scaled[obs_rows, y_col], na.rm = TRUE)
+    expected <- if (is.nan(prop)) NA_real_ else as.numeric(prop >= 0.5)
+    expect_equal(agg$X_species[s, y_col], expected, tolerance = 1e-9)
+  }
+
+  cat_col_names <- grep("^z=", colnames(pd$X_scaled), value = TRUE)
+  cat_col_idx   <- which(colnames(pd$X_scaled) %in% cat_col_names)
+  for (s in seq_len(6)) {
+    obs_rows <- which(pd$obs_to_species == s)
+    props <- colMeans(pd$X_scaled[obs_rows, cat_col_idx, drop = FALSE], na.rm = TRUE)
+    if (all(is.nan(props))) {
+      expect_true(all(is.na(agg$X_species[s, cat_col_idx])))
+    } else {
+      expected <- rep(0, length(cat_col_idx))
+      expected[which.max(props)] <- 1
+      expect_equal(unname(agg$X_species[s, cat_col_idx]), expected, tolerance = 1e-9)
+    }
+  }
+})
+
+test_that("build_liability_matrix accepts multi-obs data", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(2)
+  tree <- ape::rtree(10)
+  df <- data.frame(
+    species = rep(tree$tip.label, each = 3),
+    x = rnorm(30),
+    y = factor(sample(c("A", "B"), 30, TRUE), levels = c("A", "B"))
+  )
+  pd <- preprocess_traits(df, tree, species_col = "species")
+  out <- build_liability_matrix(pd, splits = NULL)
+  expect_equal(nrow(out$X_liab), 10L)
+  expect_true(all(is.finite(out$X_liab)))
+})
