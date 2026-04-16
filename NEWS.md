@@ -1,3 +1,43 @@
+# pigauto unreleased (v0.9.0-alpha — Graph Transformer GNN)
+
+## Phase 9: Graph Transformer backbone for the GNN
+
+- New internal module `R/graph_transformer_block.R`. `GraphTransformerBlock`
+  is a standard transformer-encoder block adapted for graph inputs:
+  multi-head attention with a learnable per-head `log(adjacency + eps)`
+  bias (the phylo prior carries through to each head), FFN with
+  configurable width multiplier, pre-norm, residual skips. The FFN
+  output projection initialises to zero so each block is near-identity
+  at step 0 — the stacked composition is still near-identity, preserving
+  pigauto's gate-closed-at-init safety property.
+
+- `ResidualPhyloDAE` now accepts `use_transformer_blocks = TRUE` (new
+  default), `n_heads = 4L`, and `ffn_mult = 4L`. When the flag is on,
+  the 2-layer single-head attention stack is replaced by `n_gnn_layers`
+  instances of `GraphTransformerBlock`. The legacy architecture is fully
+  preserved behind `use_transformer_blocks = FALSE` and reproduces
+  pre-Phase-9 numbers exactly.
+
+- `fit_pigauto()` gains the same three arguments and threads them into
+  the model constructor. `predict.pigauto_fit()` reads
+  `use_transformer_blocks` from `model_config` with an implicit
+  `FALSE` fallback, so pre-Phase-9 saved fits reconstruct via the legacy
+  path without any user-visible breakage.
+
+- Bench (`script/bench_discriminative_phase9.R`): on 4 mixed-signal
+  simulation scenarios (n=200, reps=2, epochs=100), transformer and
+  legacy GNN produce identical predictions in high-signal scenarios
+  (gate closes to zero — the architecture below the gate is irrelevant)
+  and the transformer shows small RMSE lift in moderate/low signal
+  scenarios where the gate stays partly open. Runtime ~25–30% slower
+  per fit (not 2–4× as initially feared).
+
+- Larger transformer gains likely need bigger data plus self-supervised
+  pretraining (strategic roadmap option B). Phase 9 ships the
+  architecture and the plumbing; the ceiling lift is future work.
+
+---
+
 # pigauto unreleased (v0.8.0-alpha — Level C baseline)
 
 ## Infrastructure

@@ -221,6 +221,40 @@ this is still fast relative to GNN training. For larger K consider LP.
 The `include_categorical` / `cat_encoding` arguments from Phase 4 are
 retired — OVR K-fits is the one path and there is no knob.
 
+### Graph Transformer backbone (Phase 9 — unreleased / v0.9.0-alpha)
+
+`R/graph_transformer_block.R` defines `GraphTransformerBlock`, a
+standard transformer-encoder block adapted for graph inputs:
+multi-head attention with learnable per-head `log(adj + eps)` bias
+(so the phylo prior is respected by each head independently), FFN,
+pre-norm, two residual skips. FFN output projection initialises to
+zero so each block starts near-identity — preserves the gate-closed-
+at-init safety when blocks are stacked.
+
+`ResidualPhyloDAE` accepts three new hyperparams (defaults in parens):
+- `use_transformer_blocks = TRUE` (new default)
+- `n_heads = 4L`
+- `ffn_mult = 4L`
+
+When `use_transformer_blocks = TRUE`, the `n_gnn_layers` attention
+layers are replaced by `n_gnn_layers` `GraphTransformerBlock`
+instances. When `FALSE`, the legacy 2-layer single-head attention
+stack runs unchanged. Both paths coexist — switching is cheap and
+pre-Phase-9 saved `pigauto_fit` objects reconstruct via the legacy
+path (via `cfg$use_transformer_blocks %||% FALSE` in
+`predict.pigauto_fit`).
+
+Runtime cost of the transformer path is ~25–30% slower per fit at
+n=200 / 100 epochs. Benchmark (`bench_discriminative_phase9.R`):
+transformer shows small RMSE lift in moderate/low signal scenarios
+where the gate stays partly open; transformer and legacy produce
+identical predictions in high-signal scenarios because the calibrated
+gate closes and the delta contribution is zero regardless of arch.
+
+Future work: self-supervised pretraining on a large tree corpus
+(strategic roadmap option B) is expected to unlock bigger transformer
+gains. Phase 9 ships the architecture; ceiling lift is future.
+
 ### Post-training (`fit_pigauto.R`)
 
 After the training loop:
