@@ -63,3 +63,19 @@ test_that("build_liability_matrix accepts multi-obs data", {
   expect_equal(nrow(out$X_liab), 10L)
   expect_true(all(is.finite(out$X_liab)))
 })
+
+test_that("fit_ovr_categorical_fits runs on multi-obs data", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(3)
+  tree <- ape::rtree(20)
+  df <- data.frame(
+    species = rep(tree$tip.label, each = 3),
+    x = rnorm(60),
+    z = factor(sample(c("P", "Q", "R"), 60, TRUE), levels = c("P", "Q", "R"))
+  )
+  pd <- preprocess_traits(df, tree, species_col = "species")
+  probs <- fit_ovr_categorical_fits(pd, tree, trait_name = "z", splits = NULL)
+  expect_equal(dim(probs), c(20L, 3L))
+  finite_vals <- probs[!is.na(probs) & is.finite(probs)]
+  expect_true(all(finite_vals >= 0 & finite_vals <= 1))
+})

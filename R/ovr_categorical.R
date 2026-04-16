@@ -22,6 +22,20 @@ fit_ovr_categorical_fits <- function(data, tree, trait_name,
                                       splits = NULL, graph = NULL) {
   stopifnot(joint_mvn_available())
 
+  # If multi-obs: aggregate X to species level + build a single-obs pigauto_data
+  # shell. The K-loop's reduced pd_k objects are then naturally single-obs.
+  if (isTRUE(data$multi_obs)) {
+    agg <- aggregate_to_species(data, splits = splits)
+    data_single <- data
+    data_single$X_scaled       <- agg$X_species
+    data_single$multi_obs      <- FALSE
+    data_single$n_obs          <- data$n_species
+    data_single$obs_to_species <- NULL
+    data_single$obs_species    <- NULL
+    data   <- data_single
+    splits <- agg$splits_species
+  }
+
   # Locate the categorical trait_map entry by matching column name prefix
   tm_cat <- NULL
   for (tm in data$trait_map) {
