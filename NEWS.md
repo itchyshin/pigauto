@@ -1,171 +1,157 @@
-# pigauto unreleased (v0.9.0-alpha — Graph Transformer GNN + multi-obs Level-C)
+# pigauto 0.9.0 (2026-04-16)
 
-## Phase 10: Level-C baselines activate for multi-observation datasets
+pigauto 0.9.0 is a large release that ships two complementary upgrades:
+a **Level-C phylogenetic baseline** (captures cross-trait correlation
+and threshold structure), and a **Graph Transformer GNN backbone**
+(replaces the 2-layer single-head attention stack with a proper
+multi-head transformer). Both are gate-safe — pigauto still closes its
+per-trait gate when the baseline is already optimal, so high-phylo-signal
+datasets retain identical behaviour to v0.7.0.
 
-- `fit_baseline()` no longer gates out multi-obs data from the joint MVN
-  (Phase 2), threshold-joint (Phase 3), and OVR categorical (Phase 6)
-  paths. Multi-obs input is aggregated to species level inside each
-  Level-C helper (mean for continuous-family, threshold-at-0.5 for
-  binary/ZI-gate, argmax-one-hot for categorical) and then processed
-  identically to single-obs data.
-- New internal helper: `aggregate_to_species()` in
-  `R/joint_threshold_baseline.R`. Mask-then-aggregate ordering prevents
-  val/test leakage; single-obs data passes through unchanged with
-  masking preserved for back-compat.
-- All three Level-C entry points (`fit_joint_mvn_baseline`,
-  `fit_joint_threshold_baseline`, `fit_ovr_categorical_fits`) accept
-  multi-obs via aggregation at their top. `build_liability_matrix`
-  likewise.
-- Four `!multi_obs` guards removed from `fit_baseline()` dispatch
-  (threshold-joint condition, continuous-joint condition, OVR loop,
-  and the associated `stopifnot` in `build_liability_matrix`).
-- Aggregation caveat: binary/categorical aggregation is lossy. A
-  species with mixed observations (6/10 class-1) becomes a single
-  class-1 observation at species level. For datasets with strong
-  within-species variability in discrete traits, prefer single-obs
-  mode with a user-computed species-level summary.
+## Level-C baseline improvements
 
----
+A new family of joint multivariate baselines replaces per-column
+Brownian motion + label propagation on datasets where cross-trait
+correlation carries signal.
 
-## Phase 9: Graph Transformer backbone for the GNN
+- **Liability encoding (`R/liability.R`)**. Every trait type now has an
+  explicit liability interpretation: continuous types are their own
+  liability; binary uses a 1D threshold at 0; ordinal uses K-1
+  thresholds; categorical uses K liabilities with an argmax constraint.
+  A single dispatcher `estep_liability(tm, observed, mu_prior, sd_prior)`
+  returns posterior mean/variance of the underlying liability given an
+  observation. This is the foundation the joint paths below build on.
 
-- New internal module `R/graph_transformer_block.R`. `GraphTransformerBlock`
-  is a standard transformer-encoder block adapted for graph inputs:
-  multi-head attention with a learnable per-head `log(adjacency + eps)`
-  bias (the phylo prior carries through to each head), FFN with
-  configurable width multiplier, pre-norm, residual skips. The FFN
-  output projection initialises to zero so each block is near-identity
-  at step 0 — the stacked composition is still near-identity, preserving
-  pigauto's gate-closed-at-init safety property.
+- **Joint multivariate BM baseline (`R/joint_mvn_baseline.R`)**. When
+  Rphylopars is installed and the dataset has ≥2 BM-eligible latent
+  columns, the baseline now fits a single joint multivariate BM across
+  continuous, count, ordinal, proportion, and ZI-magnitude cols via
+  `Rphylopars::phylopars()`, capturing phylogenetic correlation across
+  traits. Benchmark on correlated simulated BM data:
+  **33.7% RMSE lift** vs per-column BM (`bench_joint_baseline.R`).
 
-- `ResidualPhyloDAE` now accepts `use_transformer_blocks = TRUE` (new
-  default), `n_heads = 4L`, and `ffn_mult = 4L`. When the flag is on,
-  the 2-layer single-head attention stack is replaced by `n_gnn_layers`
-  instances of `GraphTransformerBlock`. The legacy architecture is fully
-  preserved behind `use_transformer_blocks = FALSE` and reproduces
-  pre-Phase-9 numbers exactly.
+- **Threshold-joint binary baseline (`R/joint_threshold_baseline.R`)**.
+  Binary traits get a truncated-Gaussian E-step posterior mean via
+  `estep_liability_binary` and join the joint MVN alongside continuous
+  traits. Decoded back to `logit(P(y=1))` so BCE and gate math are
+  unchanged. Benchmark: 3/3 scenarios with ≥2pp accuracy lift over the
+  LP baseline, peaking at **+16pp** at rho = 0.6
+  (`bench_binary_joint.R`).
 
-- `fit_pigauto()` gains the same three arguments and threads them into
-  the model constructor. `predict.pigauto_fit()` reads
-  `use_transformer_blocks` from `model_config` with an implicit
-  `FALSE` fallback, so pre-Phase-9 saved fits reconstruct via the legacy
-  path without any user-visible breakage.
+- **OVR categorical baseline (`R/ovr_categorical.R`)**. Each K-class
+  categorical trait is decomposed into K independent "is_class_k vs
+  rest" binary threshold fits, then normalised into a row-stochastic
+  distribution. This is the same OVR strategy BACE uses. On AVONET 300,
+  this lifts Trophic.Level accuracy to **77%** and Primary.Lifestyle to
+  **84%** — beating BACE-OVR's 72% on both. The K-independent-fits path
+  sidesteps the rank-(K-1) numerical instability that made earlier
+  single-fit approaches unstable; each individual fit has only one
+  categorical-related column.
 
-- Bench (`script/bench_discriminative_phase9.R`): on 4 mixed-signal
-  simulation scenarios (n=200, reps=2, epochs=100), transformer and
-  legacy GNN produce identical predictions in high-signal scenarios
-  (gate closes to zero — the architecture below the gate is irrelevant)
-  and the transformer shows small RMSE lift in moderate/low signal
-  scenarios where the gate stays partly open. Runtime ~25–30% slower
-  per fit (not 2–4× as initially feared).
+- **ZI-count gate routing**. The binary gate col of zero-inflated count
+  traits now joins the threshold-joint path alongside binaries (the
+  magnitude col already rode the Phase-2 joint MVN).
 
-- Larger transformer gains likely need bigger data plus self-supervised
-  pretraining (strategic roadmap option B). Phase 9 ships the
-  architecture and the plumbing; the ceiling lift is future work.
+- **Graceful fallback throughout**. Any Level-C path that can't fit
+  (Rphylopars missing, too few observations per column, multi_proportion
+  trait present) falls through to the legacy per-column BM + LP paths
+  without user-visible breakage.
 
----
+## GNN improvements
 
-# pigauto unreleased (v0.8.0-alpha — Level C baseline)
+- **Graph Transformer backbone (`R/graph_transformer_block.R`)**. The
+  2-layer single-head attention stack is replaced by `n_gnn_layers`
+  instances of a `GraphTransformerBlock` — multi-head attention (default
+  4 heads) with learnable per-head `log(adj + eps)` bias (so the phylo
+  prior is respected by each head independently), feed-forward network
+  (default 4× width), pre-norm, two residual skips. FFN output
+  projection initialises to zero so each block starts near-identity,
+  preserving pigauto's gate-closed-at-init safety.
 
-## Infrastructure
+- **New hyperparameters on `ResidualPhyloDAE`** and `fit_pigauto()`:
+  `use_transformer_blocks = TRUE` (new default), `n_heads = 4L`,
+  `ffn_mult = 4L`. The legacy architecture is fully preserved behind
+  `use_transformer_blocks = FALSE` and reproduces pre-0.9.0 numbers
+  exactly. Pre-0.9.0 saved `pigauto_fit` objects reconstruct via the
+  legacy path automatically.
 
-- New internal module `R/liability.R` with the liability-encoding contract for
-  all 8 trait types. `liability_info()` returns the per-type schema
-  (`n_liability`, `kind`, `thresholds`). `estep_liability()` computes the
-  posterior mean and variance of a Gaussian liability given an observed value,
-  dispatching over continuous (point-mass), binary (truncated Gaussian),
-  ordinal (interval-truncated), and categorical (plug-in argmax boost).
-  Exact Gibbs E-step for categorical deferred to Phase 6 EM.
+- **Empirical characterisation**. On the 4-scenario discriminative
+  benchmark the transformer and legacy GNN produce identical predictions
+  in high-signal regimes (gate closes to zero — architecture below the
+  gate is irrelevant) and the transformer shows small RMSE lift in
+  moderate/low signal scenarios where the gate stays partly open.
+  Runtime is ~25–30% slower per fit. Larger transformer gains likely
+  need self-supervised pretraining on a large tree corpus (future work).
 
-- The ordinal dispatcher correctly un-z-scores observations from `X_scaled`
-  before recovering the integer class index, and clamps to `[1..K]`. A
-  regression test (`test-liability.R`) covers this path for both mid-range
-  and edge-of-distribution classes.
+## Multi-observation unlock
 
-## Internal (not user-facing yet)
+- **Multi-obs data now uses Level-C paths**. Previously the joint MVN,
+  threshold-joint, and OVR categorical paths refused multi-obs input via
+  four `!multi_obs` guards in `fit_baseline()`. Those guards are all
+  removed; multi-obs data is aggregated to species level inside each
+  Level-C helper via a new internal `aggregate_to_species()` helper.
+  Aggregation rules: mean for continuous-family, threshold-at-0.5 for
+  binary/ZI-gate, argmax-one-hot for categorical. Splits are
+  mask-then-aggregated so val/test leakage is impossible; single-obs
+  data passes through unchanged.
 
-- These functions are the foundation for the Phase 2+ joint multivariate
-  baseline. No behavioural change in this release — nothing new is called
-  from `fit_baseline()` or `fit_pigauto()` yet.
+- **Benchmark (`bench_multi_obs_mixed.R`)**. On a synthetic multi-obs
+  mixed-type simulation (150 species, 2 continuous + 1 binary + 1 K=4
+  categorical, Poisson-5 obs per species), the Level-C path beats
+  the LP path by **+12–28pp categorical accuracy** and **+5–7.5pp
+  binary accuracy** across all three phylogenetic-signal regimes.
 
-- New `R/joint_mvn_baseline.R`: when `Rphylopars` is installed and the data
-  has 2+ BM-eligible latent columns, `fit_baseline()` delegates to a joint
-  multivariate-BM baseline via `Rphylopars::phylopars()`. Captures cross-trait
-  phylogenetic correlation that the per-column path missed. Falls back
-  gracefully to per-column BM when `Rphylopars` is unavailable, when any
-  `multi_proportion` trait is present, or in multi-obs mode. Single-trait
-  case reproduces current output within 1e-3 (tested). Benchmark on
-  correlated simulated BM data: **33.7% RMSE lift** vs per-column BM
-  (`script/bench_joint_baseline.R`, n=100 tips × 10 reps).
+- **Aggregation caveat**. Binary/categorical aggregation is lossy —
+  a species with split observations (e.g., 6/10 class-1) becomes a
+  single class-1 observation at species level. For datasets with
+  strong within-species variability on discrete traits, prefer
+  single-obs mode with a user-computed species-level summary.
 
-### Level C Phase 3 — BINARY via threshold joint baseline
+## Benchmarks
 
-- `fit_baseline()` now dispatches to `fit_joint_threshold_baseline()`
-  when BINARY cols are present alongside continuous cols and
-  `Rphylopars` is available. Observed binary cells are transformed to
-  truncated-Gaussian posterior means via `estep_liability_binary`
-  (Phase 1), combined with continuous latents, and jointly fit by
-  `Rphylopars::phylopars()`. Binary output is decoded back to
-  `logit(P(y=1))` so downstream BCE and gate math are unchanged.
-- New file: `R/joint_threshold_baseline.R`
-  (`build_liability_matrix`, `fit_joint_threshold_baseline`,
-  `decode_binary_liability`).
-- New test file: `tests/testthat/test-joint-threshold-baseline.R`
-  (6 new test blocks, 56 expectations covering builder, fitter,
-  decoder, dispatcher, graceful fallback, and the <2-obs edge case).
-- New benchmark: `script/bench_binary_joint.R` — A/B on correlated
-  continuous+binary BM simulations. **Result: 3/3 scenarios with lift
-  >= 2pp**, peaking at 16pp at rho = 0.6 (moderate cross-trait
-  correlation where LP has the least same-trait phylo signal to
-  exploit).
-- Graceful fallback: when `Rphylopars` is unavailable the LP baseline
-  runs unchanged (verified by `test-joint-threshold-baseline.R`).
-  Per-column fallback when a binary col has <2 observations.
-- Ordinal threshold decoding is deferred to a later phase (Phase 6 EM).
-  Ordinal still rides in the Phase-2 MVN via its z-scored integer
-  encoding.
+Nine new or reran benchmark reports quantifying the release's impact:
 
-### Level C Phase 6 — CATEGORICAL via OVR K-fits (stable, default)
+- `bench_joint_baseline.R` — Phase-2 joint MVN A/B on correlated BM data.
+- `bench_binary_joint.R` — Phase-3 threshold-joint A/B on binary traits.
+- `bench_discriminative.R` + `bench_discriminative_phase9.R` — 4-scenario
+  mixed-signal sweep, including the transformer vs legacy GNN A/B.
+- `bench_avonet_phase6.R` — post-Phase-6 AVONET 300 vs LP baseline.
+- `bench_categorical_joint.R` — OVR K-fits A/B on synthetic categorical
+  data.
+- `bench_covariate_sim.R` — rerun on 0.9.0. Shows **−10.6% RMSE** on the
+  low-phylo-strong-env scenario vs pre-Phase-6. Pre-0.9.0 snapshot in
+  `bench_covariate_sim_preP6.md`.
+- `bench_multi_obs.R` — rerun on 0.9.0. Numbers unchanged from pre-0.9.0
+  (bench is single-trait so it can't exercise Level-C dispatch
+  conditions; `bench_multi_obs_mixed.R` is the correct validator).
+- `bench_multi_obs_mixed.R` — new synthetic mixed-type multi-obs
+  benchmark specifically to validate Phase 10's multi-obs unlock.
 
-- `fit_baseline()` now dispatches categorical traits through K independent
-  `fit_joint_threshold_baseline` calls — one per class, treating each as
-  a "is_class_k vs rest" binary threshold problem. This is the same OVR
-  strategy BACE uses, which lifted their AVONET categorical accuracy
-  from ~42% to 72%.
-- Each individual fit has only 1 categorical-related col, so Rphylopars
-  stays well-conditioned — avoiding the rank-(K-1) numerical instability
-  that blocked the single-fit approach in Phase 4.
-- New file: `R/ovr_categorical.R` (`fit_ovr_categorical_fits()` and
-  `decode_ovr_categorical()`).
-- `include_categorical` and `cat_encoding` arguments removed (the
-  single-fit joint_K / OVR-in-one-matrix paths are retired — the
-  K-independent-fits path is strictly better and stable).
-- Cost: K times the phylopars cost per categorical trait. For n <= 1000
-  species and K <= 10, this is still fast relative to GNN training.
-- Benchmark: OVR K-fits beats LP on correlated simulated data.
+## Internal
 
-### Level C Phase 5 — ZI gate joins the threshold-joint path
+- `joint_mvn_available()` gates the Level-C dispatch — returns `TRUE`
+  iff Rphylopars is installed. All Level-C paths fall back gracefully
+  when it returns `FALSE`.
+- `aggregate_to_species()` is the sole multi-obs → species-level helper
+  and is the right place to hook future soft-liability aggregation
+  (currently threshold-at-0.5 for binary, argmax for categorical).
+- 20+ new test blocks across `test-liability.R`,
+  `test-joint-threshold-baseline.R`, `test-joint-baseline.R`,
+  `test-ovr-categorical.R`, `test-graph-transformer-block.R`,
+  `test-phase9-integration.R`, and `test-multiobs-levelc.R`. Full suite
+  is 778 PASS, 0 FAIL.
 
-- Zero-inflated count traits have two latent cols: a binary gate
-  (observed-is-zero vs observed-is-nonzero) and a continuous magnitude
-  (log1p-z). The magnitude col already rode Phase 2's joint MVN
-  baseline (as a BM-eligible continuous). Phase 5 routes the gate col
-  through the Phase 3 threshold-joint path alongside binary traits,
-  so ZI gates now benefit from cross-trait correlation with other
-  continuous/binary traits just like regular binaries.
-- `build_liability_matrix()` now includes the ZI gate col as a
-  binary-like liability (treated identically to binary by the
-  truncated-Gaussian E-step).
-- `fit_baseline()` dispatcher collects gate cols into `binary_cols`
-  for threshold-joint dispatch; the ZI gate LP loop skips cols
-  already handled.
-- Count, proportion, ordinal already ride Phase 2's joint MVN via
-  the `bm_cols` set — no Phase 5 changes needed for them. They were
-  already cross-trait correlation-aware.
+## Deferred to future releases
 
-**Deferred to Phase 6**: multi_proportion (K CLR cols hit the same
-phylopars rank-deficiency instability as categorical K-col groups).
-multi_proportion continues to run per-column BM via its existing path.
+- Soft-liability E-step for multi-obs aggregation (addresses the
+  threshold-at-0.5 lossiness documented above).
+- Rate-aware message passing in the transformer blocks.
+- Full threshold-model ordinal baseline (ordinal currently rides the
+  Phase-2 joint MVN via its z-scored integer encoding).
+- Self-supervised pretraining of the transformer backbone on a large
+  tree corpus.
+- CRAN submission preparation (BACE in-tree separation, torch handling,
+  absolute-path cleanup in `script/`).
 
 # pigauto 0.7.0
 
