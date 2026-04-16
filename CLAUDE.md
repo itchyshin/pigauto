@@ -252,6 +252,25 @@ species becomes a single class-1 observation), users with strong
 within-species discrete-trait variability should prefer single-obs
 mode with a user-computed species summary.
 
+### Soft-liability E-step for multi-obs aggregation (B1 — v0.9.0.9000-dev)
+
+Phase 10's `aggregate_to_species()` threshold-at-0.5 / argmax-one-hot
+rules lose evidence strength — a 6/10 class-1 species becomes a hard
+class-1, identical to a 10/10. B1 adds an opt-in soft path via:
+
+- `estep_liability_binary_soft(p, mu_prior, sd_prior)`: Rao-Blackwell
+  convex combination `p * E[L|L>0] + (1-p) * E[L|L<0]`. Reduces to
+  `estep_liability_binary` at `p ∈ {0, 1}`.
+- `estep_liability_categorical_soft(p_vec, mu_prior, sd_prior)`:
+  convex combination of K hard-E-step outputs; preserves sum-zero.
+
+Activated via `multi_obs_aggregation = "soft"` on `impute()` /
+`fit_baseline()`. Default remains `"hard"` for v0.9.0 back-compat.
+
+Bench: binary accuracy consistently +1.4–2.4pp across all signal
+regimes when using soft aggregation. Categorical mixed (helps high
+signal, neutral/slight hurt at moderate).
+
 ### Graph Transformer backbone (Phase 9 — unreleased / v0.9.0-alpha)
 
 `R/graph_transformer_block.R` defines `GraphTransformerBlock`, a

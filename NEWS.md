@@ -1,3 +1,27 @@
+# pigauto 0.9.0.9000 (dev)
+
+## Soft-liability E-step for multi-obs aggregation (B1)
+
+- New argument `multi_obs_aggregation = c("hard", "soft")` on `impute()`
+  and `fit_baseline()`. Default `"hard"` preserves v0.9.0 behaviour.
+  `"soft"` uses Rao-Blackwell convex-combination E-step for binary and
+  categorical traits: a species with 6/10 class-1 observations now
+  produces a less-extreme posterior liability than 10/10, fixing the
+  threshold-at-0.5 / argmax-one-hot information loss from Phase 10.
+- New helpers: `estep_liability_binary_soft(p, mu_prior, sd_prior)` and
+  `estep_liability_categorical_soft(p_vec, mu_prior, sd_prior)` in
+  `R/liability.R`. Both reduce to their hard counterparts at boundary
+  (one-hot) proportions; both return the prior mean at maximum ambiguity
+  (p = 0.5 for binary, uniform for categorical).
+- `aggregate_to_species()` gains `soft_aggregate` flag: when TRUE,
+  preserves species-level proportions instead of thresholding/argmax.
+- Benchmark: binary accuracy consistently improves +1.4–2.4pp across
+  all 3 phylogenetic-signal regimes. Categorical shows +2.0pp at high
+  signal but mixed results at moderate/low signal (hard threshold
+  sometimes snaps to the correct majority class by luck).
+
+---
+
 # pigauto 0.9.0 (2026-04-16)
 
 pigauto 0.9.0 is a large release that ships two complementary upgrades:
