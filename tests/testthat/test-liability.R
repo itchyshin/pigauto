@@ -162,6 +162,35 @@ test_that("whole trait_map can be processed via estep_liability", {
 })
 
 
+test_that("estep_liability_binary_soft reduces to hard E-step at boundary proportions", {
+  res_soft_1 <- estep_liability_binary_soft(p = 1, mu_prior = 0, sd_prior = 1)
+  res_hard_1 <- estep_liability_binary(y = 1L, mu_prior = 0, sd_prior = 1)
+  expect_equal(res_soft_1$mean, res_hard_1$mean, tolerance = 1e-9)
+  expect_equal(res_soft_1$var,  res_hard_1$var,  tolerance = 1e-9)
+
+  res_soft_0 <- estep_liability_binary_soft(p = 0, mu_prior = 0, sd_prior = 1)
+  res_hard_0 <- estep_liability_binary(y = 0L, mu_prior = 0, sd_prior = 1)
+  expect_equal(res_soft_0$mean, res_hard_0$mean, tolerance = 1e-9)
+  expect_equal(res_soft_0$var,  res_hard_0$var,  tolerance = 1e-9)
+})
+
+test_that("estep_liability_binary_soft returns prior mean at p = 0.5", {
+  res <- estep_liability_binary_soft(p = 0.5, mu_prior = 0, sd_prior = 1)
+  expect_equal(res$mean, 0, tolerance = 1e-9)
+  expect_gt(res$var, 0)
+  expect_lte(res$var, 1 + 1e-9)
+})
+
+test_that("estep_liability_binary_soft interpolates monotonically in p", {
+  ps <- c(0.1, 0.3, 0.5, 0.7, 0.9)
+  means <- vapply(ps, function(p) {
+    estep_liability_binary_soft(p = p, mu_prior = 0, sd_prior = 1)$mean
+  }, numeric(1))
+  expect_true(all(diff(means) > 0))
+  expect_equal(means[1], -means[5], tolerance = 1e-9)
+  expect_equal(means[2], -means[4], tolerance = 1e-9)
+})
+
 test_that("estep_liability recovers ordinal class through z-score roundtrip", {
   # Regression test for a bug in the dispatcher's ordinal branch: when
   # `observed` is a z-scored value from X_scaled, as.integer() drops the

@@ -97,6 +97,27 @@ estep_liability_binary <- function(y, mu_prior, sd_prior) {
   list(mean = mean_post, var = var_post)
 }
 
+# Soft E-step for a binary liability given proportion p in [0, 1].
+# Rao-Blackwell convex combination of truncated-Gaussian posteriors.
+# At p in {0, 1} reduces to estep_liability_binary.
+# At p = 0.5 with symmetric prior returns the prior mean.
+#
+# @param p numeric in [0, 1].
+# @param mu_prior numeric scalar.
+# @param sd_prior positive numeric scalar.
+# @return list(mean, var).
+# @keywords internal
+# @noRd
+estep_liability_binary_soft <- function(p, mu_prior, sd_prior) {
+  if (isTRUE(p == 1)) return(estep_liability_binary(y = 1L, mu_prior = mu_prior, sd_prior = sd_prior))
+  if (isTRUE(p == 0)) return(estep_liability_binary(y = 0L, mu_prior = mu_prior, sd_prior = sd_prior))
+  r1 <- estep_liability_binary(y = 1L, mu_prior = mu_prior, sd_prior = sd_prior)
+  r0 <- estep_liability_binary(y = 0L, mu_prior = mu_prior, sd_prior = sd_prior)
+  m <- p * r1$mean + (1 - p) * r0$mean
+  v <- p * r1$var + (1 - p) * r0$var + p * (r1$mean - m)^2 + (1 - p) * (r0$mean - m)^2
+  list(mean = m, var = max(v, 0))
+}
+
 # Plug-in E-step approximation for categorical liabilities.
 # Observed-class liability gets +1 SD above the others, then project to
 # sum-zero (CLR-consistent). Exact Gibbs version lives in Phase 6 EM.
