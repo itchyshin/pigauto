@@ -257,7 +257,7 @@ test_that("build_liability_matrix fills observed categorical cells via K-dim E-s
   df$z[c(3, 7, 11)] <- NA
   pd <- preprocess_traits(df, tree)
 
-  out <- build_liability_matrix(pd, splits = NULL)
+  out <- build_liability_matrix(pd, splits = NULL, include_categorical = TRUE)
 
   # Expected: 1 continuous col + K=3 categorical cols = 4 total
   expect_equal(ncol(out$X_liab), 4)
@@ -297,7 +297,8 @@ test_that("build_liability_matrix joint_K encodes categorical as K-dim sum-zero"
   df$z[c(3, 7, 11)] <- NA
   pd <- preprocess_traits(df, tree)
 
-  out <- build_liability_matrix(pd, splits = NULL, cat_encoding = "joint_K")
+  out <- build_liability_matrix(pd, splits = NULL, cat_encoding = "joint_K",
+                                 include_categorical = TRUE)
 
   expect_equal(ncol(out$X_liab), 4)
   expect_equal(out$liab_types, c("continuous", "categorical", "categorical", "categorical"))
@@ -326,7 +327,8 @@ test_that("build_liability_matrix OVR encodes each K col as independent binary",
   df$z[c(2, 6, 10)] <- NA
   pd <- preprocess_traits(df, tree)
 
-  out <- build_liability_matrix(pd, splits = NULL, cat_encoding = "ovr")
+  out <- build_liability_matrix(pd, splits = NULL, cat_encoding = "ovr",
+                                 include_categorical = TRUE)
 
   expect_equal(ncol(out$X_liab), 4)
   expect_equal(out$liab_types, c("continuous", "categorical", "categorical", "categorical"))
@@ -354,8 +356,12 @@ test_that("build_liability_matrix default cat_encoding works without arg", {
     row.names = tree$tip.label
   )
   pd <- preprocess_traits(df, tree)
+  # Default (include_categorical = FALSE): categorical skipped
   out <- build_liability_matrix(pd, splits = NULL)
-  expect_equal(ncol(out$X_liab), 4)
+  expect_equal(ncol(out$X_liab), 1)  # only continuous
+  # With include_categorical = TRUE: categorical included
+  out2 <- build_liability_matrix(pd, splits = NULL, include_categorical = TRUE)
+  expect_equal(ncol(out2$X_liab), 4)
 })
 
 test_that("fit_joint_threshold_baseline accepts cat_encoding param and forwards it", {
@@ -370,9 +376,11 @@ test_that("fit_joint_threshold_baseline accepts cat_encoding param and forwards 
   pd <- preprocess_traits(df, tree)
 
   res_joint <- fit_joint_threshold_baseline(pd, tree, splits = NULL,
-                                             cat_encoding = "joint_K")
+                                             cat_encoding = "joint_K",
+                                             include_categorical = TRUE)
   res_ovr   <- fit_joint_threshold_baseline(pd, tree, splits = NULL,
-                                             cat_encoding = "ovr")
+                                             cat_encoding = "ovr",
+                                             include_categorical = TRUE)
 
   expect_equal(dim(res_joint$mu_liab), c(30, 4))
   expect_equal(dim(res_ovr$mu_liab),   c(30, 4))

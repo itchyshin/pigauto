@@ -31,9 +31,17 @@
 #' @keywords internal
 #' @noRd
 build_liability_matrix <- function(data, splits = NULL,
-                                    cat_encoding = c("joint_K", "ovr")) {
+                                    cat_encoding = c("joint_K", "ovr"),
+                                    include_categorical = FALSE) {
   stopifnot(!isTRUE(data$multi_obs))
   cat_encoding <- match.arg(cat_encoding)
+  # Rphylopars is numerically unstable on liability matrices that include
+  # categorical K-col groups (rank-(K-1) drop + multi-trait cross-correlation
+  # regularly triggers "Not compatible with requested type" errors in its
+  # EM iterations). Default: exclude categorical; it falls back to LP via
+  # the dispatcher. Set TRUE for explicit tests of the categorical
+  # machinery. Phase 6 EM will replace the phylopars call with a stable
+  # custom solver and flip this default.
   trait_map <- data$trait_map
   X         <- data$X_scaled
   n         <- nrow(X)
@@ -56,10 +64,10 @@ build_liability_matrix <- function(data, splits = NULL,
       liab_cols  <- c(liab_cols, tm$latent_cols)
       liab_types <- c(liab_types, "binary")
       liab_tms   <- c(liab_tms, list(tm))
-    } else if (tm$type == "categorical") {
+    } else if (tm$type == "categorical" && include_categorical) {
       # K latent cols per categorical trait; ALL K cols join the joint
-      # liability. Use the same `tm` entry for every one so downstream
-      # decoding knows which cols group together.
+      # liability. Guarded by include_categorical flag (default FALSE)
+      # because Rphylopars is numerically unstable on this path.
       K <- tm$n_latent
       for (kk in seq_len(K)) {
         liab_cols  <- c(liab_cols, tm$latent_cols[kk])
@@ -141,11 +149,14 @@ build_liability_matrix <- function(data, splits = NULL,
 #' @keywords internal
 #' @noRd
 fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
-                                          cat_encoding = c("joint_K", "ovr")) {
+                                          cat_encoding = c("joint_K", "ovr"),
+                                          include_categorical = FALSE) {
   stopifnot(joint_mvn_available())
   cat_encoding <- match.arg(cat_encoding)
 
-  built <- build_liability_matrix(data, splits = splits, cat_encoding = cat_encoding)
+  built <- build_liability_matrix(data, splits = splits,
+                                   cat_encoding = cat_encoding,
+                                   include_categorical = include_categorical)
   X_liab     <- built$X_liab
   liab_cols  <- built$liab_cols
   liab_types <- built$liab_types
