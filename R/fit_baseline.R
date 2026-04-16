@@ -131,16 +131,23 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     }
   }
 
-  # ---- Level-C Phase 2, 3 & 4: joint baseline dispatch -------------------
-  binary_cols <- integer(0)
-  cat_cols    <- integer(0)
+  # ---- Level-C Phase 2, 3, 4 & 5: joint baseline dispatch -------------------
+  # Binary and ZI-count gate cols both take the threshold-joint path (both
+  # are binary-like observations with a truncated-Gaussian E-step).
+  binary_cols  <- integer(0)
+  zi_gate_cols <- integer(0)
+  cat_cols     <- integer(0)
   for (tm in trait_map) {
     if (tm$type == "binary") {
       binary_cols <- c(binary_cols, tm$latent_cols)
+    } else if (tm$type == "zi_count") {
+      zi_gate_cols <- c(zi_gate_cols, tm$latent_cols[1])
     } else if (tm$type == "categorical") {
       cat_cols <- c(cat_cols, tm$latent_cols)
     }
   }
+  # ZI gates join binary for dispatch purposes.
+  binary_cols <- c(binary_cols, zi_gate_cols)
 
   # Phase 4 scope: threshold-joint fires when (binary) + BM are present.
   # Categorical-only (no binary) datasets fall back to Phase 2 MVN + LP:
@@ -354,6 +361,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   for (tm in trait_map) {
     if (tm$type != "zi_count") next
     lc_gate <- tm$latent_cols[1]
+    # Phase 5: if threshold-joint handled this gate, skip LP
+    if (!(lc_gate %in% binary_cols)) next
 
     # Get species-level gate values (0 = zero, 1 = non-zero)
     if (multi_obs) {

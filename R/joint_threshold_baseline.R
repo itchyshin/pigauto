@@ -64,6 +64,12 @@ build_liability_matrix <- function(data, splits = NULL,
       liab_cols  <- c(liab_cols, tm$latent_cols)
       liab_types <- c(liab_types, "binary")
       liab_tms   <- c(liab_tms, list(tm))
+    } else if (tm$type == "zi_count") {
+      # Phase 5: ZI gate col joins the joint as a binary-like liability.
+      # The magnitude col (col 2) is already in bm_cols at the caller side.
+      liab_cols  <- c(liab_cols, tm$latent_cols[1])
+      liab_types <- c(liab_types, "binary")         # treat as binary for E-step
+      liab_tms   <- c(liab_tms, list(list(type = "binary")))
     } else if (tm$type == "categorical" && include_categorical) {
       # K latent cols per categorical trait; ALL K cols join the joint
       # liability. Guarded by include_categorical flag (default FALSE)
@@ -75,7 +81,8 @@ build_liability_matrix <- function(data, splits = NULL,
         liab_tms   <- c(liab_tms, list(tm))
       }
     }
-    # multi_proportion / zi_count: skipped in Phase 4
+    # multi_proportion: skipped in Phase 5 (same phylopars numerical issue
+    # as categorical K-col groups; Phase 6 EM will handle).
   }
 
   X_liab <- matrix(NA_real_, nrow = n, ncol = length(liab_cols))

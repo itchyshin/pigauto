@@ -99,6 +99,29 @@ What's deferred to Phase 6:
 BACE's AVONET OVR benchmark (Trophic.Level 72% vs pigauto 65.6%) is
 the target lift for Phase 6.
 
+### Level C Phase 5 — ZI gate joins the threshold-joint path
+
+- Zero-inflated count traits have two latent cols: a binary gate
+  (observed-is-zero vs observed-is-nonzero) and a continuous magnitude
+  (log1p-z). The magnitude col already rode Phase 2's joint MVN
+  baseline (as a BM-eligible continuous). Phase 5 routes the gate col
+  through the Phase 3 threshold-joint path alongside binary traits,
+  so ZI gates now benefit from cross-trait correlation with other
+  continuous/binary traits just like regular binaries.
+- `build_liability_matrix()` now includes the ZI gate col as a
+  binary-like liability (treated identically to binary by the
+  truncated-Gaussian E-step).
+- `fit_baseline()` dispatcher collects gate cols into `binary_cols`
+  for threshold-joint dispatch; the ZI gate LP loop skips cols
+  already handled.
+- Count, proportion, ordinal already ride Phase 2's joint MVN via
+  the `bm_cols` set — no Phase 5 changes needed for them. They were
+  already cross-trait correlation-aware.
+
+**Deferred to Phase 6**: multi_proportion (K CLR cols hit the same
+phylopars rank-deficiency instability as categorical K-col groups).
+multi_proportion continues to run per-column BM via its existing path.
+
 # pigauto 0.7.0
 
 ## New trait type: multi_proportion (compositional data)
