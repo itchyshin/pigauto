@@ -253,12 +253,39 @@ GNN contributes nothing, guaranteeing the network never degrades accuracy.
 
 ## Benchmarks
 
-Full simulation results (14 scenarios, continuous through zi_count,
-missingness mechanisms, covariate effectiveness, tree uncertainty, and
-scaling to 10,000 species) are at the
+### Headline results (v0.9.0)
+
+On the bundled **AVONET 300** dataset (300 species, 7 mixed-type traits),
+pigauto 0.9.0's joint multivariate baseline + OVR categorical path
+achieves:
+
+| Trait | Metric | pigauto 0.9.0 | BACE (OVR) |
+|---|---|---|---|
+| Trophic.Level | accuracy | **77.0%** | 72.0% |
+| Primary.Lifestyle | accuracy | **84.3%** | 72.0% |
+| Mass, Wing, Beak, Tarsus | Pearson r | 0.89–0.98 | 0.89–0.97 |
+
+On a controlled **mixed-type multi-observation** simulation (150 species,
+2 continuous + 1 binary + 1 K=4 categorical, Poisson-5 obs per species),
+the Level-C baseline paths (joint MVN + threshold-joint + OVR) beat a
+legacy label-propagation baseline by:
+
+| Trait type | High phylo | Moderate phylo | Low phylo |
+|---|---|---|---|
+| Binary accuracy | +7.5 pp | +5.6 pp | +5.3 pp |
+| K=4 categorical accuracy | +18.8 pp | +28.4 pp | +12.7 pp |
+
+On a **low-phylogenetic-signal + strong-environment** simulation
+(`bench_covariate_sim`), pigauto 0.9.0 reduces RMSE by **10.6%** vs
+pre-0.9.0 — exactly the regime where cross-trait + covariate
+information complements weak phylogenetic signal.
+
+Full simulation results (14+ scenarios) are at the
 [validation suite](https://itchyshin.github.io/pigauto/dev/).
 
-Key finding: the gate closes completely for high-signal discrete traits
+### The gate protects against regression
+
+For high-signal discrete traits the calibrated gate closes completely
 (correct behaviour — phylogenetic label propagation is already optimal).
 The GNN contributes meaningfully for OU-misspecified continuous traits,
 zero-inflated counts at high zero-fraction, and low-signal traits when
