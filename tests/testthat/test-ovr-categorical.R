@@ -63,3 +63,33 @@ test_that("decode_ovr_categorical normalises K probs to valid log-prob distribut
   expect_true(all(is.finite(lp2)))
   expect_true(all(abs(rowSums(exp(lp2)) - 1) < 1e-6))
 })
+
+test_that("fit_pigauto end-to-end works with OVR categorical baseline", {
+  skip_if_not_installed("Rphylopars")
+  skip_if_not_installed("torch")
+  if (!torch::torch_is_installed()) skip("torch backend not installed")
+
+  set.seed(300)
+  tree <- ape::rtree(40)
+  df <- data.frame(
+    x = rnorm(40),
+    y = factor(sample(c("A","B"), 40, TRUE), levels = c("A","B")),
+    z = factor(sample(c("P","Q","R"), 40, TRUE), levels = c("P","Q","R")),
+    row.names = tree$tip.label
+  )
+  df$z[c(5, 15)] <- NA
+  pd <- preprocess_traits(df, tree)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.2,
+                                 seed = 300, trait_map = pd$trait_map)
+
+  fit <- fit_pigauto(pd, tree, splits = splits,
+                     epochs = 20L, eval_every = 5L, patience = 5L,
+                     verbose = FALSE, seed = 300)
+  pred <- predict(fit, return_se = FALSE)
+
+  cat_col_names <- grep("^z=", colnames(pd$X_scaled), value = TRUE)
+  # Latent output exists and categorical rows sum to ~1 after softmax
+  expect_true(!is.null(pred$imputed_latent))
+  probs_sums <- rowSums(exp(pred$imputed_latent[, cat_col_names]))
+  expect_true(all(abs(probs_sums - 1) < 0.05))
+})
