@@ -36,64 +36,103 @@
 
 ResidualPhyloDAE <- torch::nn_module(
   "ResidualPhyloDAE",
-  initialize = function(input_dim, hidden_dim, coord_dim, cov_dim,
+  initialize = function(input_dim = NULL, hidden_dim = NULL, coord_dim = NULL,
+                        cov_dim,
                         per_column_rs = TRUE, n_gnn_layers = 2L,
                         gate_cap = 0.8, use_attention = FALSE,
-                        n_user_cov = 0L) {
+                        n_user_cov = 0L, dropout = 0.10,
+                        # New Phase-9 aliases and parameters
+                        p_latent = NULL,   # alias for input_dim
+                        hidden   = NULL,   # alias for hidden_dim
+                        k_eigen  = NULL,   # alias for coord_dim
+                        use_transformer_blocks = TRUE,
+                        n_heads  = 4L,
+                        ffn_mult = 4L) {
+    # Resolve aliases: new names take precedence over legacy names
+    if (!is.null(p_latent)) input_dim  <- p_latent
+    if (!is.null(hidden))   hidden_dim <- hidden
+    if (!is.null(k_eigen))  coord_dim  <- k_eigen
+    stopifnot(!is.null(input_dim), !is.null(hidden_dim), !is.null(coord_dim))
+
     total_input <- input_dim + coord_dim + cov_dim
     self$n_user_cov <- as.integer(n_user_cov)
+
+    # Store Phase-9 hyperparameters as fields (for model_config and tests)
+    self$use_transformer_blocks <- isTRUE(use_transformer_blocks)
+    self$n_heads  <- as.integer(n_heads)
+    self$ffn_mult <- as.integer(ffn_mult)
 
     self$enc1 <- torch::nn_linear(total_input, hidden_dim)
     self$enc2 <- torch::nn_linear(hidden_dim,  hidden_dim)
 
-    # Multi-layer graph message passing: each layer has its own
-    # linear transform, layer norm, and learnable alpha gate.
+    # Multi-layer graph message passing
     self$n_gnn_layers <- as.integer(n_gnn_layers)
-    self$msg_layers  <- torch::nn_module_list(lapply(
-      seq_len(n_gnn_layers), function(i) torch::nn_linear(hidden_dim, hidden_dim)
-    ))
-    self$layer_norms <- torch::nn_module_list(lapply(
-      seq_len(n_gnn_layers), function(i) torch::nn_layer_norm(hidden_dim)
-    ))
-    # Per-layer learnable alpha gates (init 0.05)
-    self$alphas <- torch::nn_module_list(lapply(
-      seq_len(n_gnn_layers), function(i) {
-        m <- torch::nn_module("AlphaHolder",
-          initialize = function() {
-            self$val <- torch::nn_parameter(torch::torch_tensor(0.05))
-          }
-        )
-        m()
-      }
-    ))
 
-    # Attention-based message passing (optional) --------------------------------
-    self$use_attention <- use_attention
-    if (use_attention) {
-      attn_dim <- as.integer(max(hidden_dim %/% 4L, 16L))
-      self$attn_dim <- attn_dim
-      self$query_layers <- torch::nn_module_list(lapply(
-        seq_len(n_gnn_layers), function(i) torch::nn_linear(hidden_dim, attn_dim)
+    if (self$use_transformer_blocks) {
+      # ---- Phase-9 path: GraphTransformerBlock stack -------------------------
+      # n_gnn_layers instances of multi-head attention + FFN + pre-norm.
+      # The log-adj bias preserves the phylogenetic prior; near-zero FFN init
+      # keeps the stack close to identity at init (gate-closed safety).
+      self$transformer_blocks <- torch::nn_module_list(lapply(
+        seq_len(n_gnn_layers), function(i) {
+          GraphTransformerBlock(
+            hidden_dim = as.integer(hidden_dim),
+            n_heads    = as.integer(n_heads),
+            ffn_mult   = as.integer(ffn_mult),
+            dropout    = dropout
+          )
+        }
       ))
-      self$key_layers <- torch::nn_module_list(lapply(
-        seq_len(n_gnn_layers), function(i) torch::nn_linear(hidden_dim, attn_dim)
-      ))
-      self$value_layers <- torch::nn_module_list(lapply(
+    } else {
+      # ---- Legacy path: single-head attention or simple adjacency -------------
+      # Each layer has its own linear transform, layer norm, and learnable
+      # alpha gate (ResNet-style skip: h_next = norm(h + alpha * msg)).
+      self$msg_layers  <- torch::nn_module_list(lapply(
         seq_len(n_gnn_layers), function(i) torch::nn_linear(hidden_dim, hidden_dim)
       ))
-      # Learnable scale for adjacency bias (initialised to 1.0)
-      self$attn_bias_scale <- torch::nn_module_list(lapply(
+      self$layer_norms <- torch::nn_module_list(lapply(
+        seq_len(n_gnn_layers), function(i) torch::nn_layer_norm(hidden_dim)
+      ))
+      # Per-layer learnable alpha gates (init 0.05)
+      self$alphas <- torch::nn_module_list(lapply(
         seq_len(n_gnn_layers), function(i) {
-          m <- torch::nn_module("BiasScale",
+          m <- torch::nn_module("AlphaHolder",
             initialize = function() {
-              self$val <- torch::nn_parameter(torch::torch_tensor(1.0))
+              self$val <- torch::nn_parameter(torch::torch_tensor(0.05))
             }
           )
           m()
         }
       ))
-      self$attn_drop <- torch::nn_dropout(0.10)
-    }
+
+      # Attention-based message passing (optional within legacy path) -----------
+      self$use_attention <- use_attention
+      if (use_attention) {
+        attn_dim <- as.integer(max(hidden_dim %/% 4L, 16L))
+        self$attn_dim <- attn_dim
+        self$query_layers <- torch::nn_module_list(lapply(
+          seq_len(n_gnn_layers), function(i) torch::nn_linear(hidden_dim, attn_dim)
+        ))
+        self$key_layers <- torch::nn_module_list(lapply(
+          seq_len(n_gnn_layers), function(i) torch::nn_linear(hidden_dim, attn_dim)
+        ))
+        self$value_layers <- torch::nn_module_list(lapply(
+          seq_len(n_gnn_layers), function(i) torch::nn_linear(hidden_dim, hidden_dim)
+        ))
+        # Learnable scale for adjacency bias (initialised to 1.0)
+        self$attn_bias_scale <- torch::nn_module_list(lapply(
+          seq_len(n_gnn_layers), function(i) {
+            m <- torch::nn_module("BiasScale",
+              initialize = function() {
+                self$val <- torch::nn_parameter(torch::torch_tensor(1.0))
+              }
+            )
+            m()
+          }
+        ))
+        self$attn_drop <- torch::nn_dropout(dropout)
+      }
+    } # end legacy path
 
     # Observation-level refinement MLP (multi-obs + user covariates only).
     # After species-level GNN message passing, observations are broadcast
@@ -128,19 +167,23 @@ ResidualPhyloDAE <- torch::nn_module(
     }
 
     self$act  <- torch::nn_relu()
-    self$drop <- torch::nn_dropout(0.10)
+    self$drop <- torch::nn_dropout(dropout)
 
     # Learned mask token replaces corrupted trait values in the input
     self$mask_token <- torch::nn_parameter(torch::torch_zeros(c(1L, input_dim)))
   },
 
-  forward = function(x, coords, covs, adj, obs_to_species = NULL) {
+  forward = function(x, coords, covs, adj, obs_to_species = NULL,
+                     baseline_mu = NULL) {
     # x:     (n_obs x p)      -- input traits (possibly with mask tokens)
     # coords: (n_species x k) -- spectral coordinates (species-level)
     # covs:  (n_obs x cov_dim) -- covariates (baseline + mask indicator)
     # adj:   (n_species x n_species) -- phylogenetic adjacency
     # obs_to_species: long tensor (n_obs,) -- maps obs to species index.
     #   NULL when single-obs (n_obs = n_species).
+    # baseline_mu: (n_obs x p) optional. When provided, returns the blended
+    #   prediction (1-rs)*baseline_mu + rs*delta directly (a single tensor).
+    #   When NULL (legacy API), returns list(delta = ..., rs = ...).
 
     multi_obs <- !is.null(obs_to_species)
 
@@ -163,41 +206,52 @@ ResidualPhyloDAE <- torch::nn_module(
     if (multi_obs) {
       # Aggregate observations to species: scatter_mean
       n_species <- as.integer(adj$size(1))
-      hidden    <- as.integer(h$size(2))
       h_species <- scatter_mean(h, obs_to_species, n_species)
     } else {
       h_species <- h
     }
 
-    # Precompute log-adjacency for attention bias (only when using attention)
-    if (self$use_attention) {
-      log_adj <- torch::torch_log(adj$clamp(min = 1e-8))
-    }
-
-    for (l in seq_len(self$n_gnn_layers)) {
-      if (self$use_attention) {
-        # Attention-based message passing with phylogenetic prior
-        Q <- self$query_layers[[l]](h_species)
-        K <- self$key_layers[[l]](h_species)
-        V <- self$value_layers[[l]](h_species)
-
-        # Scaled dot-product attention + adjacency bias
-        attn_scores <- torch::torch_matmul(Q, K$t()) / sqrt(self$attn_dim)
-        attn_scores <- attn_scores + self$attn_bias_scale[[l]]$val * log_adj
-
-        attn_weights <- torch::nnf_softmax(attn_scores, dim = 2L)
-        attn_weights <- self$attn_drop(attn_weights)
-
-        m <- torch::torch_matmul(attn_weights, V)
-      } else {
-        m <- torch::torch_matmul(adj, h_species)
-        m <- self$msg_layers[[l]](m)
+    if (self$use_transformer_blocks) {
+      # ---- Phase-9 path: iterate through GraphTransformerBlock stack ---------
+      # Each block takes (h_species, adj) and returns updated h_species.
+      # The blocks handle multi-head attention + FFN + pre-norm + residual
+      # internally. The log-adj bias in each block preserves the phylo prior.
+      for (l in seq_len(self$n_gnn_layers)) {
+        h_species <- self$transformer_blocks[[l]](h_species, adj)
       }
-      m <- self$layer_norms[[l]](m)
-      m <- self$act(m)
-      m <- self$drop(m)
-      h_species <- h_species + self$alphas[[l]]$val * m
-    }
+    } else {
+      # ---- Legacy path: single-head attention or simple adjacency ------------
+
+      # Precompute log-adjacency for attention bias (only when using attention)
+      if (self$use_attention) {
+        log_adj <- torch::torch_log(adj$clamp(min = 1e-8))
+      }
+
+      for (l in seq_len(self$n_gnn_layers)) {
+        if (self$use_attention) {
+          # Attention-based message passing with phylogenetic prior
+          Q <- self$query_layers[[l]](h_species)
+          K <- self$key_layers[[l]](h_species)
+          V <- self$value_layers[[l]](h_species)
+
+          # Scaled dot-product attention + adjacency bias
+          attn_scores <- torch::torch_matmul(Q, K$t()) / sqrt(self$attn_dim)
+          attn_scores <- attn_scores + self$attn_bias_scale[[l]]$val * log_adj
+
+          attn_weights <- torch::nnf_softmax(attn_scores, dim = 2L)
+          attn_weights <- self$attn_drop(attn_weights)
+
+          m <- torch::torch_matmul(attn_weights, V)
+        } else {
+          m <- torch::torch_matmul(adj, h_species)
+          m <- self$msg_layers[[l]](m)
+        }
+        m <- self$layer_norms[[l]](m)
+        m <- self$act(m)
+        m <- self$drop(m)
+        h_species <- h_species + self$alphas[[l]]$val * m
+      }
+    } # end message-passing dispatch
 
     if (multi_obs) {
       # Expand back from species to observation level
@@ -229,7 +283,12 @@ ResidualPhyloDAE <- torch::nn_module(
       rs <- torch::torch_sigmoid(self$res_raw) * self$gate_cap
     }
 
-    list(delta = delta, rs = rs)
+    # Return: blended prediction when baseline_mu provided; otherwise legacy list
+    if (!is.null(baseline_mu)) {
+      (1 - rs) * baseline_mu + rs * delta
+    } else {
+      list(delta = delta, rs = rs)
+    }
   }
 )
 
