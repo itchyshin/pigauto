@@ -58,6 +58,47 @@
   Ordinal still rides in the Phase-2 MVN via its z-scored integer
   encoding.
 
+### Level C Phase 4 — CATEGORICAL machinery (partial; gated behind include_categorical)
+
+Categorical joint-baseline infrastructure landed but is **not yet on
+the default dispatch path**. The reason is a numerical limitation of
+`Rphylopars::phylopars()`: the rank-(K-1) drop required to fit
+categorical liabilities combined with multi-categorical cross-
+correlation routinely triggers "Not compatible with requested type"
+errors in its EM iterations, even at modest `n = 100` and rho = 0.4.
+Confirmed on real AVONET data and on synthetic correlated BM
+simulations.
+
+What landed:
+
+- `build_liability_matrix()` supports categorical traits in two
+  encodings (both gated behind `include_categorical = TRUE`):
+  - `cat_encoding = "joint_K"`: K sum-zero liabilities via
+    `estep_liability_categorical` (Phase 1 plug-in E-step).
+  - `cat_encoding = "ovr"`: K independent binary thresholds via
+    `estep_liability_binary` on each one-hot column.
+- `fit_joint_threshold_baseline()` handles the rank-(K-1) drop:
+  for `joint_K` it reconstructs the dropped column algebraically
+  as `-(sum of fitted K-1 cols)`; for `ovr` the decoder handles
+  the NA column via residual probability.
+- `decode_categorical_liability()` converts K-dim liability posterior
+  to log-probabilities via softmax (joint_K) or normalised probit
+  (ovr), matching the LP baseline's output convention.
+- Head-to-head A/B benchmark in `script/bench_categorical_joint.R`
+  compares joint_K vs OVR vs LP on correlated simulations.
+
+What's deferred to Phase 6:
+
+- **Safe joint-fit for categorical.** Phase 6's custom EM solver will
+  replace `Rphylopars::phylopars()` for categorical-containing
+  liability matrices, working around phylopars' numerical fragility.
+- **Default dispatch flip.** Once Phase 6 lands, `include_categorical`
+  will default to `TRUE` and categorical traits will get the cross-
+  trait correlation benefit automatically.
+
+BACE's AVONET OVR benchmark (Trophic.Level 72% vs pigauto 65.6%) is
+the target lift for Phase 6.
+
 # pigauto 0.7.0
 
 ## New trait type: multi_proportion (compositional data)
