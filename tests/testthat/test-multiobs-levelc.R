@@ -134,6 +134,35 @@ test_that("aggregate_to_species with soft_aggregate preserves proportions", {
   expect_false(agg_hard$is_proportion_col[y_col])
 })
 
+test_that("build_liability_matrix with soft_aggregate uses soft E-step on proportions", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(11)
+  tree <- ape::rtree(8)
+  df <- data.frame(
+    species = rep(tree$tip.label, each = 4),
+    x = rnorm(32),
+    y = factor(c("A","A","B","B",   # sp1: p=0.5 (max ambiguity)
+                 "B","B","B","B",   # sp2: p=1.0 (pure)
+                 sample(c("A","B"), 24, replace = TRUE)),
+               levels = c("A","B"))
+  )
+  pd <- preprocess_traits(df, tree, species_col = "species")
+
+  out_hard <- build_liability_matrix(pd, splits = NULL, soft_aggregate = FALSE)
+  out_soft <- build_liability_matrix(pd, splits = NULL, soft_aggregate = TRUE)
+
+  y_col <- which(colnames(out_soft$X_liab) == "y")
+  # sp1: p=0.5 with N(0,1) prior => soft posterior mean near 0
+  expect_lt(abs(out_soft$X_liab[1, y_col]), 1e-6)
+  # sp2: p=1.0 => same as hard (boundary case)
+  hard_val <- estep_liability_binary(y = 1L, mu_prior = 0, sd_prior = 1)$mean
+  expect_equal(out_soft$X_liab[2, y_col], hard_val, tolerance = 1e-6)
+  # Hard mode: sp1 gets thresholded to 1, so estep_liability_binary(1)
+  expect_equal(out_hard$X_liab[1, y_col], hard_val, tolerance = 1e-6)
+  # Hard and soft differ on sp1
+  expect_gt(abs(out_hard$X_liab[1, y_col] - out_soft$X_liab[1, y_col]), 0.5)
+})
+
 test_that("fit_baseline uses Level-C paths on multi-obs data", {
   skip_if_not_installed("Rphylopars")
   set.seed(5)

@@ -159,15 +159,23 @@ aggregate_to_species <- function(data, splits = NULL, soft_aggregate = FALSE) {
 #'   liab_cols.
 #' @keywords internal
 #' @noRd
-build_liability_matrix <- function(data, splits = NULL) {
+build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE) {
   trait_map <- data$trait_map
   # Collapse multi-obs to species level (no-op for single-obs). Splits are
   # masked internally in obs space before aggregation, so no separate
   # masking step is needed below.
-  agg    <- aggregate_to_species(data, splits = splits)
+  agg    <- aggregate_to_species(data, splits = splits, soft_aggregate = soft_aggregate)
   X      <- agg$X_species
   splits <- agg$splits_species
   n      <- nrow(X)
+
+  # is_proportion_col: TRUE for cols where the aggregated value is a proportion
+  # (soft binary or soft categorical), not a hard 0/1 or one-hot.
+  is_prop <- agg$is_proportion_col
+  # Overlay explicit proportion_cols if present on data (used by OVR path)
+  if (!is.null(data$proportion_cols)) {
+    is_prop[data$proportion_cols] <- TRUE
+  }
 
   liab_cols  <- integer(0)
   liab_types <- character(0)
@@ -206,13 +214,19 @@ build_liability_matrix <- function(data, splits = NULL) {
     src_col <- X[, col_idx]
 
     if (tp == "binary") {
-      # Observed 0/1 -> truncated-Gaussian posterior mean with N(0,1) prior.
-      # Route through the estep_liability() dispatcher so the contract stays
-      # consistent across trait types (CLAUDE.md mandates dispatcher use).
+      # Observed value is either hard 0/1 (hard aggregation or single-obs) or
+      # a species-level proportion in [0,1] (soft aggregation for multi-obs).
+      # Dispatch to soft E-step when is_prop indicates a proportion value.
       for (i in seq_len(n)) {
         v <- src_col[i]
         if (is.na(v)) next
-        post <- estep_liability(tm_j, observed = v, mu_prior = 0, sd_prior = 1)
+        if (is_prop[col_idx]) {
+          post <- estep_liability_binary_soft(p = as.numeric(v),
+                                               mu_prior = 0, sd_prior = 1)
+        } else {
+          post <- estep_liability(tm_j, observed = v,
+                                   mu_prior = 0, sd_prior = 1)
+        }
         X_liab[i, j] <- post$mean
       }
 
