@@ -79,3 +79,20 @@ test_that("fit_ovr_categorical_fits runs on multi-obs data", {
   finite_vals <- probs[!is.na(probs) & is.finite(probs)]
   expect_true(all(finite_vals >= 0 & finite_vals <= 1))
 })
+
+test_that("fit_joint_mvn_baseline runs on multi-obs data", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(4)
+  tree <- ape::rtree(20)
+  df <- data.frame(
+    species = rep(tree$tip.label, each = 3),
+    x1 = rnorm(60),
+    x2 = rnorm(60)
+  )
+  pd <- preprocess_traits(df, tree, species_col = "species")
+  res <- fit_joint_mvn_baseline(pd, tree, splits = NULL)
+  expect_equal(nrow(res$mu), 20L)
+  expect_equal(ncol(res$mu), 2L)
+  expect_true(all(is.finite(res$mu)))
+  expect_true(all(res$se >= 0))
+})
