@@ -1,0 +1,34 @@
+[   0.0s] === high_phylo_correlated (lambda=1, rho=0.7) rep 1 (seed=1021) ===
+[   0.1s]   n_obs = 739, n_species = 150
+[   0.1s]   [1/3] species_mean done in 0s
+[  55.3s]   [2/3] pigauto_levelC done in 55.2s
+[  93.7s]   [3/3] pigauto_LP done in 38.4s
+[  93.7s] === high_phylo_correlated (lambda=1, rho=0.7) rep 2 (seed=2021) ===
+[  93.7s]   n_obs = 742, n_species = 150
+[  93.7s]   [1/3] species_mean done in 0s
+[ 138.1s]   [2/3] pigauto_levelC done in 44.4s
+[ 175.2s]   [3/3] pigauto_LP done in 37.1s
+[ 175.2s] === mod_phylo_correlated (lambda=0.5, rho=0.6) rep 1 (seed=1020) ===
+[ 175.2s]   n_obs = 772, n_species = 150
+[ 175.2s]   [1/3] species_mean done in 0s
+[ 215.3s]   [2/3] pigauto_levelC done in 40.1s
+[ 249.9s]   [3/3] pigauto_LP done in 34.6s
+[ 249.9s] === mod_phylo_correlated (lambda=0.5, rho=0.6) rep 2 (seed=2020) ===
+[ 249.9s]   n_obs = 739, n_species = 150
+[ 250.0s]   [1/3] species_mean done in 0s
+[ 288.0s]   [2/3] pigauto_levelC done in 38s
+[ 322.5s]   [3/3] pigauto_LP done in 34.5s
+[ 322.5s] === low_phylo_correlated (lambda=0.2, rho=0.6) rep 1 (seed=1020) ===
+[ 322.5s]   n_obs = 772, n_species = 150
+[ 322.5s]   [1/3] species_mean done in 0s
+[ 358.9s]   [2/3] pigauto_levelC done in 36.3s
+[ 394.9s]   [3/3] pigauto_LP done in 36.1s
+[ 394.9s] === low_phylo_correlated (lambda=0.2, rho=0.6) rep 2 (seed=2020) ===
+[ 394.9s]   n_obs = 739, n_species = 150
+[ 394.9s]   [1/3] species_mean done in 0s
+[ 431.0s]   [2/3] pigauto_levelC done in 36.1s
+[ 464.8s]   [3/3] pigauto_LP done in 33.8s
+[ 464.8s] Total wall: 7.7 min
+[ 464.8s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/bench-multi-obs-mixed/script/bench_multi_obs_mixed.rds
+[ 464.8s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/bench-multi-obs-mixed/script/bench_multi_obs_mixed.md
+[ 464.8s] done
