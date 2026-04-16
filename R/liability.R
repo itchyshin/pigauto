@@ -133,6 +133,30 @@ estep_liability_categorical <- function(k, mu_prior, sd_prior) {
   list(mean = m, var = sd_prior^2)  # prior-scale variance; refined in Phase 6
 }
 
+# Soft E-step for K-class categorical liability given proportion vector.
+# Convex combination of K hard estep_liability_categorical outputs.
+# Preserves sum-zero. At one-hot: reduces to hard. At uniform: zero mean.
+#
+# @param p_vec numeric length K, sums to 1.
+# @param mu_prior numeric length K.
+# @param sd_prior numeric length K.
+# @return list(mean, var) each length K.
+# @keywords internal
+# @noRd
+estep_liability_categorical_soft <- function(p_vec, mu_prior, sd_prior) {
+  K <- length(p_vec)
+  stopifnot(K == length(mu_prior), K == length(sd_prior), all(sd_prior > 0))
+  if (abs(sum(p_vec) - 1) > 1e-6) stop("p_vec must sum to 1 (got ", sum(p_vec), ")", call. = FALSE)
+  mean_out <- rep(0, K)
+  for (k in seq_len(K)) {
+    if (p_vec[k] == 0) next
+    r_k <- estep_liability_categorical(k = k, mu_prior = mu_prior, sd_prior = sd_prior)
+    mean_out <- mean_out + p_vec[k] * r_k$mean
+  }
+  mean_out <- mean_out - mean(mean_out)
+  list(mean = mean_out, var = sd_prior^2)
+}
+
 # Dispatcher: given a trait_map entry, the observed value (in the latent
 # representation produced by preprocess_traits), and the current prior on
 # this trait's liability, return the E-step posterior mean and variance.
