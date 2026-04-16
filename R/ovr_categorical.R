@@ -19,13 +19,15 @@
 #' @keywords internal
 #' @noRd
 fit_ovr_categorical_fits <- function(data, tree, trait_name,
-                                      splits = NULL, graph = NULL) {
+                                      splits = NULL, graph = NULL,
+                                      soft_aggregate = FALSE) {
   stopifnot(joint_mvn_available())
 
   # If multi-obs: aggregate X to species level + build a single-obs pigauto_data
   # shell. The K-loop's reduced pd_k objects are then naturally single-obs.
   if (isTRUE(data$multi_obs)) {
-    agg <- aggregate_to_species(data, splits = splits)
+    agg <- aggregate_to_species(data, splits = splits,
+                                soft_aggregate = soft_aggregate)
     data_single <- data
     data_single$X_scaled       <- agg$X_species
     data_single$multi_obs      <- FALSE
@@ -60,7 +62,7 @@ fit_ovr_categorical_fits <- function(data, tree, trait_name,
                    dimnames = list(spp, colnames(data$X_scaled)[k_cols]))
 
   for (k in seq_len(K)) {
-    pd_k <- build_ovr_pd(data, tm_cat, k)
+    pd_k <- build_ovr_pd(data, tm_cat, k, soft_proportion = soft_aggregate)
 
     # Reindex splits for the reduced X_scaled
     splits_k <- if (is.null(splits)) NULL else reindex_splits(
@@ -71,7 +73,8 @@ fit_ovr_categorical_fits <- function(data, tree, trait_name,
 
     jt <- tryCatch(
       fit_joint_threshold_baseline(pd_k, tree, splits = splits_k,
-                                    graph = graph),
+                                    graph = graph,
+                                    soft_aggregate = soft_aggregate),
       error = function(e) NULL
     )
     if (is.null(jt)) next
@@ -93,7 +96,7 @@ fit_ovr_categorical_fits <- function(data, tree, trait_name,
 # Helper: construct a modified pigauto_data for class k's OVR fit
 # @keywords internal
 # @noRd
-build_ovr_pd <- function(data, tm_cat, k) {
+build_ovr_pd <- function(data, tm_cat, k, soft_proportion = FALSE) {
   K      <- tm_cat$n_latent
   k_cols <- tm_cat$latent_cols
   drop_cols <- setdiff(k_cols, k_cols[k])
@@ -128,7 +131,11 @@ build_ovr_pd <- function(data, tm_cat, k) {
   pd_k$trait_map <- new_tm
 
   attr(pd_k, "kept_cols") <- kept_cols
-  attr(pd_k, "synthetic_bin_col") <- unname(col_map[as.character(k_cols[k])])
+  synth_col <- unname(col_map[as.character(k_cols[k])])
+  attr(pd_k, "synthetic_bin_col") <- synth_col
+  if (soft_proportion) {
+    pd_k$proportion_cols <- synth_col
+  }
   pd_k
 }
 

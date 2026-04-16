@@ -26,11 +26,13 @@ joint_mvn_available <- function() {
 #' @return list(mu, se), each `n_species x p_latent`.
 #' @keywords internal
 #' @noRd
-fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL) {
+fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL,
+                                   soft_aggregate = FALSE) {
   stopifnot(joint_mvn_available())
 
   if (isTRUE(data$multi_obs)) {
-    agg <- aggregate_to_species(data, splits = splits)
+    agg <- aggregate_to_species(data, splits = splits,
+                                soft_aggregate = soft_aggregate)
     data_single <- data
     data_single$X_scaled       <- agg$X_species
     data_single$multi_obs      <- FALSE

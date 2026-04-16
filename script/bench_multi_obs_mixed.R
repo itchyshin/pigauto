@@ -2,7 +2,7 @@
 #
 # script/bench_multi_obs_mixed.R
 #
-# Multi-observation + mixed-type benchmark to validate Phase 10 lift.
+# Multi-observation + mixed-type benchmark: Phase 10 + B1 soft E-step.
 #
 # Why this exists
 #   Phase 10 removed the !multi_obs guards in fit_baseline() so the joint
@@ -14,11 +14,12 @@
 #   multiple obs per species, forcing the Level-C paths to activate.
 #
 # Comparison
-#   Three methods per (scenario, rep):
+#   Four methods per (scenario, rep):
 #     - species_mean:    observed-species mean propagated (reference)
-#     - pigauto_levelC:  Phase 10 Level-C paths active (default)
+#     - pigauto_hard:    Phase 10 default (threshold-at-0.5 / argmax)
+#     - pigauto_soft:    B1 soft E-step (Rao-Blackwell convex combination)
 #     - pigauto_LP:      same call with joint_mvn_available forced FALSE
-#   The levelC vs LP delta measures Phase 10's actual lift on multi-obs.
+#   The hard vs LP delta measures Phase 10's lift; soft vs hard measures B1.
 #
 # Run with
 #   cd pigauto && Rscript script/bench_multi_obs_mixed.R
@@ -28,12 +29,12 @@ options(warn = 1, stringsAsFactors = FALSE)
 suppressPackageStartupMessages({
   library(ape)
   devtools::load_all(
-    "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/bench-multi-obs-mixed",
+    "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/b1-soft-liability",
     quiet = TRUE
   )
 })
 
-here    <- "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/bench-multi-obs-mixed"
+here    <- "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/b1-soft-liability"
 out_rds <- file.path(here, "script", "bench_multi_obs_mixed.rds")
 out_md  <- file.path(here, "script", "bench_multi_obs_mixed.md")
 
@@ -278,21 +279,35 @@ run_one <- function(sc_name, sc, rep_id) {
   df_sm <- species_mean_impute(df_masked)
   wall_sm <- proc.time()[["elapsed"]] - t0
   metrics_sm <- eval_obs_level(df_truth, df_masked, df_sm, NULL)
-  log_line("  [1/3] species_mean done in ", round(wall_sm, 1), "s")
+  log_line("  [1/4] species_mean done in ", round(wall_sm, 1), "s")
 
-  # ----- Method 2: pigauto_levelC -----
+  # ----- Method 2: pigauto hard (Phase 10 default) -----
   t0 <- proc.time()[["elapsed"]]
-  res_lc <- tryCatch(
+  res_hard <- tryCatch(
     impute(df_masked, tree, species_col = "species",
-           epochs = as.integer(epochs), verbose = FALSE, seed = seed),
-    error = function(e) { log_line("  levelC FAILED: ", conditionMessage(e)); NULL }
+           epochs = as.integer(epochs), verbose = FALSE, seed = seed,
+           multi_obs_aggregation = "hard"),
+    error = function(e) { log_line("  hard FAILED: ", conditionMessage(e)); NULL }
   )
-  wall_lc <- proc.time()[["elapsed"]] - t0
-  metrics_lc <- if (is.null(res_lc)) list() else
-    eval_obs_level(df_truth, df_masked, res_lc$completed, res_lc$imputed_mask)
-  log_line("  [2/3] pigauto_levelC done in ", round(wall_lc, 1), "s")
+  wall_hard <- proc.time()[["elapsed"]] - t0
+  metrics_hard <- if (is.null(res_hard)) list() else
+    eval_obs_level(df_truth, df_masked, res_hard$completed, res_hard$imputed_mask)
+  log_line("  [2/4] pigauto_hard done in ", round(wall_hard, 1), "s")
 
-  # ----- Method 3: pigauto_LP -----
+  # ----- Method 3: pigauto soft (B1) -----
+  t0 <- proc.time()[["elapsed"]]
+  res_soft <- tryCatch(
+    impute(df_masked, tree, species_col = "species",
+           epochs = as.integer(epochs), verbose = FALSE, seed = seed,
+           multi_obs_aggregation = "soft"),
+    error = function(e) { log_line("  soft FAILED: ", conditionMessage(e)); NULL }
+  )
+  wall_soft <- proc.time()[["elapsed"]] - t0
+  metrics_soft <- if (is.null(res_soft)) list() else
+    eval_obs_level(df_truth, df_masked, res_soft$completed, res_soft$imputed_mask)
+  log_line("  [3/4] pigauto_soft done in ", round(wall_soft, 1), "s")
+
+  # ----- Method 4: pigauto_LP -----
   t0 <- proc.time()[["elapsed"]]
   res_lp <- tryCatch(
     with_lp_forced(function()
@@ -303,7 +318,7 @@ run_one <- function(sc_name, sc, rep_id) {
   wall_lp <- proc.time()[["elapsed"]] - t0
   metrics_lp <- if (is.null(res_lp)) list() else
     eval_obs_level(df_truth, df_masked, res_lp$completed, res_lp$imputed_mask)
-  log_line("  [3/3] pigauto_LP done in ", round(wall_lp, 1), "s")
+  log_line("  [4/4] pigauto_LP done in ", round(wall_lp, 1), "s")
 
   # Pack results
   pack <- function(method, metrics, wall) {
@@ -322,9 +337,10 @@ run_one <- function(sc_name, sc, rep_id) {
   }
 
   rbind(
-    pack("species_mean",    metrics_sm, wall_sm),
-    pack("pigauto_levelC",  metrics_lc, wall_lc),
-    pack("pigauto_LP",      metrics_lp, wall_lp)
+    pack("species_mean",   metrics_sm,   wall_sm),
+    pack("pigauto_hard",   metrics_hard, wall_hard),
+    pack("pigauto_soft",   metrics_soft, wall_soft),
+    pack("pigauto_LP",     metrics_lp,   wall_lp)
   )
 }
 
@@ -357,14 +373,19 @@ for (sc in unique(agg$scenario)) {
     if (nrow(sub) == 0L) next
     row <- list(scenario = sc, trait = tr,
                 metric = sub$metric[1])
-    for (m in c("species_mean", "pigauto_levelC", "pigauto_LP")) {
+    for (m in c("species_mean", "pigauto_hard", "pigauto_soft", "pigauto_LP")) {
       v <- sub$value[sub$method == m]
       row[[m]] <- if (length(v) == 0L) NA_real_ else v
     }
-    row$lift_vs_LP <- if (row$metric == "RMSE") {
-      row$pigauto_LP - row$pigauto_levelC   # lower = better
+    row$hard_vs_LP <- if (row$metric == "RMSE") {
+      row$pigauto_LP - row$pigauto_hard   # lower = better
     } else {
-      row$pigauto_levelC - row$pigauto_LP   # higher = better
+      row$pigauto_hard - row$pigauto_LP   # higher = better
+    }
+    row$soft_vs_hard <- if (row$metric == "RMSE") {
+      row$pigauto_hard - row$pigauto_soft   # lower = better
+    } else {
+      row$pigauto_soft - row$pigauto_hard   # higher = better
     }
     wide_rows[[length(wide_rows) + 1L]] <- as.data.frame(row,
                                                           stringsAsFactors = FALSE)
@@ -394,33 +415,44 @@ saveRDS(list(
 # -------------------------------------------------------------------------
 
 md <- c(
-  "# Multi-obs + mixed-type benchmark (Phase 10 validation)",
+  "# Multi-obs + mixed-type benchmark (Phase 10 + B1 soft E-step)",
   "",
   sprintf("Run on: %s", format(Sys.time())),
   sprintf("Species per scenario: %d, reps: %d, epochs: %d",
           n_species, reps, epochs),
   sprintf("Total wall time: %.1f min", total_wall / 60),
   "",
-  "Three methods, obs-level metrics on held-out cells:",
+  "Four methods, obs-level metrics on held-out cells:",
   "- **species_mean**: observed-species mean (continuous) or mode (discrete); reference.",
-  "- **pigauto_levelC**: `impute()` with Phase 10 Level-C default (joint MVN / threshold-joint / OVR via species-level aggregation).",
+  "- **pigauto_hard**: `impute(..., multi_obs_aggregation = 'hard')` — Phase 10 default (threshold-at-0.5 / argmax).",
+  "- **pigauto_soft**: `impute(..., multi_obs_aggregation = 'soft')` — B1 Rao-Blackwell soft E-step.",
   "- **pigauto_LP**: same call with `joint_mvn_available()` forced FALSE (legacy LP path).",
   "",
-  "Lift column: `pigauto_LP - pigauto_levelC` for RMSE (positive = Level-C better); `pigauto_levelC - pigauto_LP` for accuracy (positive = Level-C better).",
+  "hard_vs_LP: `pigauto_LP - pigauto_hard` for RMSE, `pigauto_hard - pigauto_LP` for accuracy (positive = hard better).",
+  "soft_vs_hard: `pigauto_hard - pigauto_soft` for RMSE, `pigauto_soft - pigauto_hard` for accuracy (positive = soft better).",
   "",
   "```",
   capture.output(print(wide, row.names = FALSE, digits = 4)),
   "```",
   "",
-  sprintf("Exit criterion (>=2pp lift on >=1 trait in >=2 scenarios): **%s**",
+  sprintf("Phase 10 exit criterion (>=2pp lift on >=1 trait in >=2 scenarios): **%s**",
           {
             lift_thresh <- 0.02
             n_qualifying_scenarios <- length(unique(
-              wide$scenario[abs(wide$lift_vs_LP) >= lift_thresh &
-                            !is.na(wide$lift_vs_LP) &
-                            sign(wide$lift_vs_LP) == 1]
+              wide$scenario[!is.na(wide$hard_vs_LP) &
+                            abs(wide$hard_vs_LP) >= lift_thresh &
+                            sign(wide$hard_vs_LP) == 1]
             ))
             if (n_qualifying_scenarios >= 2L) "MET" else "NOT MET"
+          }),
+  "",
+  sprintf("B1 exit criterion (soft >= hard on >=1 trait in >=2 scenarios): **%s**",
+          {
+            n_soft_better <- length(unique(
+              wide$scenario[!is.na(wide$soft_vs_hard) &
+                            wide$soft_vs_hard > 0]
+            ))
+            if (n_soft_better >= 2L) "MET" else "NOT MET"
           })
 )
 writeLines(md, out_md)

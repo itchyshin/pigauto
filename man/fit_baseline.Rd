@@ -4,7 +4,14 @@
 \alias{fit_baseline}
 \title{Fit a phylogenetic BM baseline}
 \usage{
-fit_baseline(data, tree, splits = NULL, model = "BM", graph = NULL)
+fit_baseline(
+  data,
+  tree,
+  splits = NULL,
+  model = "BM",
+  graph = NULL,
+  multi_obs_aggregation = c("hard", "soft")
+)
 }
 \arguments{
 \item{data}{object of class \code{"pigauto_data"}.}
@@ -23,6 +30,16 @@ label propagation and \code{graph$R_phy} (phylogenetic correlation
 matrix) is reused for BM imputation, avoiding duplicate \eqn{O(n^2)}
 allocations. When \code{NULL} (default), both matrices are computed
 here.}
+
+\item{multi_obs_aggregation}{character. How to aggregate multiple
+observations per species before the Level-C (Rphylopars) baseline:
+\code{"hard"} (default) thresholds binary proportions at 0.5 and uses
+argmax for categorical, matching Phase 10 behaviour.  \code{"soft"}
+preserves species-level proportions and dispatches the truncated-Gaussian
+soft E-step (\code{estep_liability_binary_soft}) so that intermediate
+class frequencies contribute fractional liability evidence.  Only
+relevant for multi-obs data with binary or categorical traits when the
+Level-C joint baseline is active.}
 }
 \value{
 A list with:

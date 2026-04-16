@@ -17,6 +17,7 @@ impute(
   epochs = 2000L,
   verbose = TRUE,
   seed = 1L,
+  multi_obs_aggregation = c("hard", "soft"),
   ...
 )
 }
@@ -72,6 +73,14 @@ Same number of rows as \code{traits}. Default \code{NULL} (no covariates).}
 \item{verbose}{logical. Print progress (default \code{TRUE}).}
 
 \item{seed}{integer. Random seed (default \code{1}).}
+
+\item{multi_obs_aggregation}{character. How to aggregate multiple
+observations per species before the Level-C baseline.  \code{"hard"}
+(default) thresholds binary proportions at 0.5 and uses argmax for
+categorical.  \code{"soft"} preserves species-level proportions and
+dispatches a soft E-step so that intermediate class frequencies
+contribute fractional liability evidence.  Passed to
+\code{\link{fit_baseline}}.}
 
 \item{...}{additional arguments passed to \code{\link{fit_pigauto}}.}
 }

@@ -162,6 +162,61 @@ test_that("whole trait_map can be processed via estep_liability", {
 })
 
 
+test_that("estep_liability_binary_soft reduces to hard E-step at boundary proportions", {
+  res_soft_1 <- estep_liability_binary_soft(p = 1, mu_prior = 0, sd_prior = 1)
+  res_hard_1 <- estep_liability_binary(y = 1L, mu_prior = 0, sd_prior = 1)
+  expect_equal(res_soft_1$mean, res_hard_1$mean, tolerance = 1e-9)
+  expect_equal(res_soft_1$var,  res_hard_1$var,  tolerance = 1e-9)
+
+  res_soft_0 <- estep_liability_binary_soft(p = 0, mu_prior = 0, sd_prior = 1)
+  res_hard_0 <- estep_liability_binary(y = 0L, mu_prior = 0, sd_prior = 1)
+  expect_equal(res_soft_0$mean, res_hard_0$mean, tolerance = 1e-9)
+  expect_equal(res_soft_0$var,  res_hard_0$var,  tolerance = 1e-9)
+})
+
+test_that("estep_liability_binary_soft returns prior mean at p = 0.5", {
+  res <- estep_liability_binary_soft(p = 0.5, mu_prior = 0, sd_prior = 1)
+  expect_equal(res$mean, 0, tolerance = 1e-9)
+  expect_gt(res$var, 0)
+  expect_lte(res$var, 1 + 1e-9)
+})
+
+test_that("estep_liability_binary_soft interpolates monotonically in p", {
+  ps <- c(0.1, 0.3, 0.5, 0.7, 0.9)
+  means <- vapply(ps, function(p) {
+    estep_liability_binary_soft(p = p, mu_prior = 0, sd_prior = 1)$mean
+  }, numeric(1))
+  expect_true(all(diff(means) > 0))
+  expect_equal(means[1], -means[5], tolerance = 1e-9)
+  expect_equal(means[2], -means[4], tolerance = 1e-9)
+})
+
+test_that("estep_liability_categorical_soft reduces to hard at one-hot", {
+  K <- 4L
+  mu_prior <- rep(0, K); sd_prior <- rep(1, K)
+  p_vec <- c(0, 1, 0, 0)
+  res_soft <- estep_liability_categorical_soft(p_vec, mu_prior, sd_prior)
+  res_hard <- estep_liability_categorical(k = 2L, mu_prior, sd_prior)
+  expect_equal(res_soft$mean, res_hard$mean, tolerance = 1e-9)
+})
+
+test_that("estep_liability_categorical_soft preserves sum-zero", {
+  p_vec <- c(0.5, 0.3, 0.2)
+  res <- estep_liability_categorical_soft(p_vec, rep(0, 3), rep(1, 3))
+  expect_equal(sum(res$mean), 0, tolerance = 1e-9)
+})
+
+test_that("estep_liability_categorical_soft returns zero mean at uniform", {
+  K <- 4L
+  res <- estep_liability_categorical_soft(rep(1/K, K), rep(0, K), rep(1, K))
+  expect_true(all(abs(res$mean) < 1e-9))
+})
+
+test_that("estep_liability_categorical_soft validates p_vec sums to 1", {
+  expect_error(estep_liability_categorical_soft(c(0.2, 0.2, 0.2), rep(0, 3), rep(1, 3)),
+               "must sum to 1")
+})
+
 test_that("estep_liability recovers ordinal class through z-score roundtrip", {
   # Regression test for a bug in the dispatcher's ordinal branch: when
   # `observed` is a z-scored value from X_scaled, as.integer() drops the

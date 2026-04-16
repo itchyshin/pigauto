@@ -13,7 +13,7 @@
 #' @return list(X_species, splits_species, species_names).
 #' @keywords internal
 #' @noRd
-aggregate_to_species <- function(data, splits = NULL) {
+aggregate_to_species <- function(data, splits = NULL, soft_aggregate = FALSE) {
   if (!isTRUE(data$multi_obs)) {
     # Single-obs: still need to apply split masking to match prior behaviour
     # of build_liability_matrix(), which masked val/test cells up front.
@@ -22,9 +22,10 @@ aggregate_to_species <- function(data, splits = NULL) {
       X_single[splits$val_idx]  <- NA
       X_single[splits$test_idx] <- NA
     }
-    return(list(X_species      = X_single,
-                splits_species = splits,
-                species_names  = data$species_names %||% rownames(data$X_scaled)))
+    return(list(X_species        = X_single,
+                splits_species   = splits,
+                species_names    = data$species_names %||% rownames(data$X_scaled),
+                is_proportion_col = rep(FALSE, ncol(X_single))))
   }
 
   trait_map <- data$trait_map
@@ -55,6 +56,8 @@ aggregate_to_species <- function(data, splits = NULL) {
   X_species <- matrix(NA_real_, nrow = n_species, ncol = ncol(X),
                       dimnames = list(spp, colnames(X)))
 
+  is_proportion_col <- rep(FALSE, ncol(X))
+
   for (j in seq_len(ncol(X))) {
     tp <- type_by_col[j]
     sp_vals <- tapply(X[, j], obs_to_sp, function(v) {
@@ -64,17 +67,26 @@ aggregate_to_species <- function(data, splits = NULL) {
     # Reorder to spp order via integer index
     sp_vals <- sp_vals[as.character(seq_len(n_species))]
     if (tp == "binary") {
-      X_species[, j] <- ifelse(is.na(sp_vals), NA_real_,
-                                as.numeric(sp_vals >= 0.5))
+      if (soft_aggregate) {
+        X_species[, j] <- unname(sp_vals)  # keep proportion
+        is_proportion_col[j] <- TRUE
+      } else {
+        X_species[, j] <- ifelse(is.na(sp_vals), NA_real_,
+                                  as.numeric(sp_vals >= 0.5))
+      }
     } else {
       X_species[, j] <- unname(sp_vals)
     }
   }
 
-  # Re-enforce one-hot for categorical via argmax
+  # Re-enforce one-hot for categorical via argmax (or preserve proportions in soft mode)
   for (tm in trait_map) {
     if (tm$type != "categorical") next
     k_cols <- tm$latent_cols
+    if (soft_aggregate) {
+      for (kc in k_cols) is_proportion_col[kc] <- TRUE
+      next  # preserve proportions
+    }
     for (s in seq_len(n_species)) {
       props <- X_species[s, k_cols]
       if (all(is.na(props))) next
@@ -110,9 +122,10 @@ aggregate_to_species <- function(data, splits = NULL) {
                            mask     = mask_species)
   }
 
-  list(X_species      = X_species,
-       splits_species = splits_species,
-       species_names  = spp)
+  list(X_species        = X_species,
+       splits_species   = splits_species,
+       species_names    = spp,
+       is_proportion_col = is_proportion_col)
 }
 
 #' Assemble liability-scale input matrix for the threshold-model joint baseline
@@ -146,15 +159,23 @@ aggregate_to_species <- function(data, splits = NULL) {
 #'   liab_cols.
 #' @keywords internal
 #' @noRd
-build_liability_matrix <- function(data, splits = NULL) {
+build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE) {
   trait_map <- data$trait_map
   # Collapse multi-obs to species level (no-op for single-obs). Splits are
   # masked internally in obs space before aggregation, so no separate
   # masking step is needed below.
-  agg    <- aggregate_to_species(data, splits = splits)
+  agg    <- aggregate_to_species(data, splits = splits, soft_aggregate = soft_aggregate)
   X      <- agg$X_species
   splits <- agg$splits_species
   n      <- nrow(X)
+
+  # is_proportion_col: TRUE for cols where the aggregated value is a proportion
+  # (soft binary or soft categorical), not a hard 0/1 or one-hot.
+  is_prop <- agg$is_proportion_col
+  # Overlay explicit proportion_cols if present on data (used by OVR path)
+  if (!is.null(data$proportion_cols)) {
+    is_prop[data$proportion_cols] <- TRUE
+  }
 
   liab_cols  <- integer(0)
   liab_types <- character(0)
@@ -193,13 +214,19 @@ build_liability_matrix <- function(data, splits = NULL) {
     src_col <- X[, col_idx]
 
     if (tp == "binary") {
-      # Observed 0/1 -> truncated-Gaussian posterior mean with N(0,1) prior.
-      # Route through the estep_liability() dispatcher so the contract stays
-      # consistent across trait types (CLAUDE.md mandates dispatcher use).
+      # Observed value is either hard 0/1 (hard aggregation or single-obs) or
+      # a species-level proportion in [0,1] (soft aggregation for multi-obs).
+      # Dispatch to soft E-step when is_prop indicates a proportion value.
       for (i in seq_len(n)) {
         v <- src_col[i]
         if (is.na(v)) next
-        post <- estep_liability(tm_j, observed = v, mu_prior = 0, sd_prior = 1)
+        if (is_prop[col_idx]) {
+          post <- estep_liability_binary_soft(p = as.numeric(v),
+                                               mu_prior = 0, sd_prior = 1)
+        } else {
+          post <- estep_liability(tm_j, observed = v,
+                                   mu_prior = 0, sd_prior = 1)
+        }
         X_liab[i, j] <- post$mean
       }
 
@@ -222,10 +249,12 @@ build_liability_matrix <- function(data, splits = NULL) {
 #' @return list(mu_liab, se_liab, liab_cols, liab_types).
 #' @keywords internal
 #' @noRd
-fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL) {
+fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
+                                        soft_aggregate = FALSE) {
   stopifnot(joint_mvn_available())
 
-  built <- build_liability_matrix(data, splits = splits)
+  built <- build_liability_matrix(data, splits = splits,
+                                  soft_aggregate = soft_aggregate)
   X_liab     <- built$X_liab
   liab_cols  <- built$liab_cols
   liab_types <- built$liab_types
