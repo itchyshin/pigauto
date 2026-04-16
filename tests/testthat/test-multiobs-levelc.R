@@ -243,3 +243,20 @@ test_that("fit_baseline respects multi_obs_aggregation = 'soft'", {
   expect_true(all(is.finite(bl_hard$mu[, y_col])))
   expect_true(all(is.finite(bl_soft$mu[, y_col])))
 })
+
+test_that("multi_obs_aggregation default 'hard' is identical to explicit 'hard'", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(23)
+  tree <- ape::rtree(20)
+  df <- data.frame(
+    species = rep(tree$tip.label, each = 3),
+    x = rnorm(60),
+    y = factor(sample(c("A","B"), 60, TRUE), levels = c("A","B")),
+    z = factor(sample(c("P","Q","R","S"), 60, TRUE), levels = c("P","Q","R","S"))
+  )
+  pd <- preprocess_traits(df, tree, species_col = "species")
+  bl_default <- fit_baseline(pd, tree, splits = NULL)
+  bl_hard    <- fit_baseline(pd, tree, splits = NULL, multi_obs_aggregation = "hard")
+  expect_equal(bl_default$mu, bl_hard$mu, tolerance = 1e-12)
+  expect_equal(bl_default$se, bl_hard$se, tolerance = 1e-12)
+})
