@@ -177,3 +177,50 @@ test_that("legacy architecture (use_transformer_blocks = FALSE) still trains", {
   expect_true(inherits(fit, "pigauto_fit"))
   expect_false(fit$model_config$use_transformer_blocks %||% FALSE)
 })
+
+test_that("fit_pigauto end-to-end converges with transformer blocks on small data", {
+  skip_if_not_installed("torch")
+  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_not_installed("Rphylopars")
+
+  set.seed(500)
+  data(avonet300, tree300, package = "pigauto")
+  traits <- avonet300
+  rownames(traits) <- traits$Species_Key
+  traits$Species_Key <- NULL
+
+  pd <- preprocess_traits(traits, tree300)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.25,
+                                seed = 500, trait_map = pd$trait_map)
+  graph <- build_phylo_graph(tree300, k_eigen = "auto")
+  baseline <- fit_baseline(pd, tree300, splits = splits, graph = graph)
+
+  # Transformer variant (default); eval_every = 5 ensures evaluations fire
+  # within the 30-epoch budget (default eval_every = 100 would not).
+  fit_t <- fit_pigauto(
+    data = pd, tree = tree300, splits = splits, graph = graph,
+    baseline = baseline,
+    epochs = 30L, eval_every = 5L, verbose = FALSE, seed = 500L
+  )
+  expect_s3_class(fit_t, "pigauto_fit")
+  # history$loss_rec is the per-epoch training reconstruction loss
+  expect_true(nrow(fit_t$history) > 0L)
+  expect_true(is.finite(tail(fit_t$history$loss_rec, 1)))
+  # val_rmse is the best validation loss recorded during training
+  expect_true(is.finite(fit_t$val_rmse))
+  # Predictions work and are all finite
+  pred_t <- predict(fit_t, return_se = FALSE)
+  expect_false(is.null(pred_t$imputed_latent))
+  expect_true(all(is.finite(as.matrix(pred_t$imputed_latent))))
+
+  # Legacy variant: should also converge cleanly
+  fit_l <- fit_pigauto(
+    data = pd, tree = tree300, splits = splits, graph = graph,
+    baseline = baseline,
+    use_transformer_blocks = FALSE,
+    epochs = 30L, eval_every = 5L, verbose = FALSE, seed = 500L
+  )
+  expect_s3_class(fit_l, "pigauto_fit")
+  expect_true(nrow(fit_l$history) > 0L)
+  expect_true(is.finite(tail(fit_l$history$loss_rec, 1)))
+})
