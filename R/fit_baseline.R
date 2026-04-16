@@ -48,13 +48,11 @@
 #' @importFrom stats complete.cases rnorm rbinom
 #' @export
 fit_baseline <- function(data, tree, splits = NULL, model = "BM",
-                         graph = NULL,
-                         cat_encoding = c("joint_K", "ovr")) {
+                         graph = NULL) {
   if (!inherits(data, "pigauto_data")) {
     stop("'data' must be a pigauto_data object (output of preprocess_traits).")
   }
   if (!inherits(tree, "phylo")) stop("'tree' must be a phylo object.")
-  cat_encoding <- match.arg(cat_encoding)
 
   X   <- data$X_scaled
   p   <- ncol(X)
@@ -166,8 +164,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
 
   if (use_threshold_joint) {
     jt <- fit_joint_threshold_baseline(data, tree, splits = splits,
-                                        graph = graph,
-                                        cat_encoding = cat_encoding)
+                                        graph = graph)
 
     populated_cols <- integer(0)
 
@@ -194,35 +191,44 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       populated_cols <- c(populated_cols, col)
     }
 
-    # Categorical -> K log-probs (both encodings, per trait)
-    for (tm in trait_map) {
-      if (tm$type != "categorical") next
-      k_cols    <- tm$latent_cols
-      local_idx <- match(k_cols, jt$liab_cols)
-      if (any(is.na(local_idx))) next
-      # If ALL K cols are all-NA, trait was filtered -> fall through to LP
-      if (all(apply(jt$mu_liab[, local_idx, drop = FALSE], 2,
-                    function(col) all(is.na(col))))) next
-      for (i in seq_len(nrow(jt$mu_liab))) {
-        mu_K <- jt$mu_liab[i, local_idx]
-        se_K <- jt$se_liab[i, local_idx]
-        dec  <- decode_categorical_liability(mu_K = mu_K, se_K = se_K,
-                                              cat_encoding = cat_encoding)
-        mu[i, k_cols] <- dec$log_probs
-      }
-      se[, k_cols]   <- 0
-      populated_cols <- c(populated_cols, k_cols)
-    }
-
     bm_cols     <- setdiff(bm_cols,     populated_cols)
     binary_cols <- setdiff(binary_cols, populated_cols)
-    cat_cols    <- setdiff(cat_cols,    populated_cols)
 
   } else if (use_continuous_joint) {
     joint <- fit_joint_mvn_baseline(data, tree, splits = splits, graph = graph)
     mu[, bm_cols] <- joint$mu[, bm_cols]
     se[, bm_cols] <- joint$se[, bm_cols]
     bm_cols <- integer(0)
+  }
+
+  # ---- Categorical -> K independent OVR fits (Phase 6) -------------------
+  # Each categorical trait gets K separate threshold-joint fits, one per
+  # class. This sidesteps the rank-(K-1) phylopars instability of the
+  # single-fit approach and fires regardless of whether the threshold-joint
+  # / continuous-joint dispatchers above ran. If phylopars is unavailable
+  # OR a fit fails for any reason, the per-trait result falls through to LP
+  # below.
+  if (length(cat_cols) > 0L && !multi_obs && joint_mvn_available()) {
+    for (tm in trait_map) {
+      if (tm$type != "categorical") next
+      k_cols <- tm$latent_cols
+      if (!all(k_cols %in% cat_cols)) next  # already handled
+      # Extract the trait name from the "<name>=<level>" column names
+      col_name_1 <- colnames(data$X_scaled)[k_cols[1]]
+      trait_name <- sub("=.*$", "", col_name_1)
+      probs <- tryCatch(
+        fit_ovr_categorical_fits(data, tree, trait_name = trait_name,
+                                  splits = splits, graph = graph),
+        error = function(e) NULL
+      )
+      if (is.null(probs)) next
+      # If OVR came back all-NA (every class's fit failed), leave for LP.
+      if (all(is.na(probs))) next
+      log_probs <- decode_ovr_categorical(probs)
+      mu[, k_cols] <- log_probs
+      se[, k_cols] <- 0
+      cat_cols <- setdiff(cat_cols, k_cols)
+    }
   }
 
   # ---- Internal BM imputation on BM-eligible columns -----------------------

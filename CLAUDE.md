@@ -185,6 +185,42 @@ The plug-in prior `N(0, 1)` is a standard first-iteration choice for
 threshold models; Phase 6 EM will replace this with an iterated,
 Σ-aware prior.
 
+### Categorical via OVR K-fits (Phase 6 of Level C — unreleased / v0.8.0-alpha)
+
+`R/ovr_categorical.R` is the stable categorical path. For each K-class
+categorical trait, pigauto runs K independent `fit_joint_threshold_baseline()`
+calls, each on a synthetic "is_class_k vs rest" binary column (the other
+K-1 categorical cols are dropped from that fit's data). This is BACE's
+OVR (one-vs-rest) strategy, which lifted their AVONET Trophic.Level
+accuracy from ~42% to 72%.
+
+Why not the single-fit path: putting all K one-hot categorical columns
+into one Rphylopars call is rank-(K-1) (the columns sum to 1 or sum-zero
+post E-step). Even with column drops, phylopars' EM iterations routinely
+hit singular-matrix errors on realistic data. Each OVR fit has only 1
+categorical-related column, so phylopars stays well-conditioned.
+
+Pipeline (all in `fit_baseline()`):
+
+1. The continuous/binary/zi_gate joint threshold baseline runs first
+   (Phase 2/3/5 path, unchanged).
+2. For each categorical trait, `fit_ovr_categorical_fits()` builds K
+   reduced pigauto_data objects and calls `fit_joint_threshold_baseline()`
+   K times. Returns an `n x K` probability matrix.
+3. `decode_ovr_categorical()` normalises the K independent probabilities
+   into a row-stochastic distribution (clamp at 0.01, renormalise, return
+   log-probs). Output matches the LP baseline's log-probability convention,
+   so downstream BCE / cross-entropy and gate math is transparent.
+4. If a single class-k fit fails (phylopars error), that column is left
+   NA and `decode_ovr_categorical()` redistributes its share. If ALL K
+   fits fail, the trait falls through to LP via the per-trait guard.
+
+Cost: K phylopars calls per categorical trait. For n <= 1000 and K <= 10
+this is still fast relative to GNN training. For larger K consider LP.
+
+The `include_categorical` / `cat_encoding` arguments from Phase 4 are
+retired — OVR K-fits is the one path and there is no knob.
+
 ### Post-training (`fit_pigauto.R`)
 
 After the training loop:

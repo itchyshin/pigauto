@@ -58,46 +58,24 @@
   Ordinal still rides in the Phase-2 MVN via its z-scored integer
   encoding.
 
-### Level C Phase 4 — CATEGORICAL machinery (partial; gated behind include_categorical)
+### Level C Phase 6 — CATEGORICAL via OVR K-fits (stable, default)
 
-Categorical joint-baseline infrastructure landed but is **not yet on
-the default dispatch path**. The reason is a numerical limitation of
-`Rphylopars::phylopars()`: the rank-(K-1) drop required to fit
-categorical liabilities combined with multi-categorical cross-
-correlation routinely triggers "Not compatible with requested type"
-errors in its EM iterations, even at modest `n = 100` and rho = 0.4.
-Confirmed on real AVONET data and on synthetic correlated BM
-simulations.
-
-What landed:
-
-- `build_liability_matrix()` supports categorical traits in two
-  encodings (both gated behind `include_categorical = TRUE`):
-  - `cat_encoding = "joint_K"`: K sum-zero liabilities via
-    `estep_liability_categorical` (Phase 1 plug-in E-step).
-  - `cat_encoding = "ovr"`: K independent binary thresholds via
-    `estep_liability_binary` on each one-hot column.
-- `fit_joint_threshold_baseline()` handles the rank-(K-1) drop:
-  for `joint_K` it reconstructs the dropped column algebraically
-  as `-(sum of fitted K-1 cols)`; for `ovr` the decoder handles
-  the NA column via residual probability.
-- `decode_categorical_liability()` converts K-dim liability posterior
-  to log-probabilities via softmax (joint_K) or normalised probit
-  (ovr), matching the LP baseline's output convention.
-- Head-to-head A/B benchmark in `script/bench_categorical_joint.R`
-  compares joint_K vs OVR vs LP on correlated simulations.
-
-What's deferred to Phase 6:
-
-- **Safe joint-fit for categorical.** Phase 6's custom EM solver will
-  replace `Rphylopars::phylopars()` for categorical-containing
-  liability matrices, working around phylopars' numerical fragility.
-- **Default dispatch flip.** Once Phase 6 lands, `include_categorical`
-  will default to `TRUE` and categorical traits will get the cross-
-  trait correlation benefit automatically.
-
-BACE's AVONET OVR benchmark (Trophic.Level 72% vs pigauto 65.6%) is
-the target lift for Phase 6.
+- `fit_baseline()` now dispatches categorical traits through K independent
+  `fit_joint_threshold_baseline` calls — one per class, treating each as
+  a "is_class_k vs rest" binary threshold problem. This is the same OVR
+  strategy BACE uses, which lifted their AVONET categorical accuracy
+  from ~42% to 72%.
+- Each individual fit has only 1 categorical-related col, so Rphylopars
+  stays well-conditioned — avoiding the rank-(K-1) numerical instability
+  that blocked the single-fit approach in Phase 4.
+- New file: `R/ovr_categorical.R` (`fit_ovr_categorical_fits()` and
+  `decode_ovr_categorical()`).
+- `include_categorical` and `cat_encoding` arguments removed (the
+  single-fit joint_K / OVR-in-one-matrix paths are retired — the
+  K-independent-fits path is strictly better and stable).
+- Cost: K times the phylopars cost per categorical trait. For n <= 1000
+  species and K <= 10, this is still fast relative to GNN training.
+- Benchmark: OVR K-fits beats LP on correlated simulated data.
 
 ### Level C Phase 5 — ZI gate joins the threshold-joint path
 
