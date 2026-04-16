@@ -223,3 +223,23 @@ test_that("fit_ovr_categorical_fits propagates soft_aggregate", {
   diff <- max(abs(probs_hard - probs_soft), na.rm = TRUE)
   expect_gt(diff, 1e-4)
 })
+
+test_that("fit_baseline respects multi_obs_aggregation = 'soft'", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(22)
+  tree <- ape::rtree(25)
+  df <- data.frame(
+    species = rep(tree$tip.label, each = 3),
+    x = rnorm(75),
+    y = factor(sample(c("A","B"), 75, TRUE), levels = c("A","B"))
+  )
+  pd <- preprocess_traits(df, tree, species_col = "species")
+  bl_hard <- fit_baseline(pd, tree, splits = NULL, multi_obs_aggregation = "hard")
+  bl_soft <- fit_baseline(pd, tree, splits = NULL, multi_obs_aggregation = "soft")
+  expect_equal(dim(bl_hard$mu), dim(bl_soft$mu))
+  y_col <- which(colnames(pd$X_scaled) == "y")
+  diff <- max(abs(bl_hard$mu[, y_col] - bl_soft$mu[, y_col]))
+  expect_gt(diff, 1e-4)
+  expect_true(all(is.finite(bl_hard$mu[, y_col])))
+  expect_true(all(is.finite(bl_soft$mu[, y_col])))
+})

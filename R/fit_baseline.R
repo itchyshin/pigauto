@@ -30,6 +30,15 @@
 #'   matrix) is reused for BM imputation, avoiding duplicate \eqn{O(n^2)}
 #'   allocations. When \code{NULL} (default), both matrices are computed
 #'   here.
+#' @param multi_obs_aggregation character. How to aggregate multiple
+#'   observations per species before the Level-C (Rphylopars) baseline:
+#'   \code{"hard"} (default) thresholds binary proportions at 0.5 and uses
+#'   argmax for categorical, matching Phase 10 behaviour.  \code{"soft"}
+#'   preserves species-level proportions and dispatches the truncated-Gaussian
+#'   soft E-step (\code{estep_liability_binary_soft}) so that intermediate
+#'   class frequencies contribute fractional liability evidence.  Only
+#'   relevant for multi-obs data with binary or categorical traits when the
+#'   Level-C joint baseline is active.
 #' @return A list with:
 #'   \describe{
 #'     \item{mu}{Numeric matrix (n_species x p_latent), baseline means in
@@ -48,7 +57,10 @@
 #' @importFrom stats complete.cases rnorm rbinom
 #' @export
 fit_baseline <- function(data, tree, splits = NULL, model = "BM",
-                         graph = NULL) {
+                         graph = NULL,
+                         multi_obs_aggregation = c("hard", "soft")) {
+  multi_obs_aggregation <- match.arg(multi_obs_aggregation)
+  soft_aggregate <- identical(multi_obs_aggregation, "soft")
   if (!inherits(data, "pigauto_data")) {
     stop("'data' must be a pigauto_data object (output of preprocess_traits).")
   }
@@ -164,7 +176,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
 
   if (use_threshold_joint) {
     jt <- fit_joint_threshold_baseline(data, tree, splits = splits,
-                                        graph = graph)
+                                        graph = graph,
+                                        soft_aggregate = soft_aggregate)
 
     populated_cols <- integer(0)
 
@@ -195,7 +208,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     binary_cols <- setdiff(binary_cols, populated_cols)
 
   } else if (use_continuous_joint) {
-    joint <- fit_joint_mvn_baseline(data, tree, splits = splits, graph = graph)
+    joint <- fit_joint_mvn_baseline(data, tree, splits = splits, graph = graph,
+                                     soft_aggregate = soft_aggregate)
     mu[, bm_cols] <- joint$mu[, bm_cols]
     se[, bm_cols] <- joint$se[, bm_cols]
     bm_cols <- integer(0)
@@ -218,7 +232,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       trait_name <- sub("=.*$", "", col_name_1)
       probs <- tryCatch(
         fit_ovr_categorical_fits(data, tree, trait_name = trait_name,
-                                  splits = splits, graph = graph),
+                                  splits = splits, graph = graph,
+                                  soft_aggregate = soft_aggregate),
         error = function(e) NULL
       )
       if (is.null(probs)) next

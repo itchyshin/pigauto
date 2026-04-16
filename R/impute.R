@@ -45,6 +45,13 @@
 #' @param epochs integer. Maximum GNN training epochs (default \code{2000}).
 #' @param verbose logical. Print progress (default \code{TRUE}).
 #' @param seed integer. Random seed (default \code{1}).
+#' @param multi_obs_aggregation character. How to aggregate multiple
+#'   observations per species before the Level-C baseline.  \code{"hard"}
+#'   (default) thresholds binary proportions at 0.5 and uses argmax for
+#'   categorical.  \code{"soft"} preserves species-level proportions and
+#'   dispatches a soft E-step so that intermediate class frequencies
+#'   contribute fractional liability evidence.  Passed to
+#'   \code{\link{fit_baseline}}.
 #' @param ... additional arguments passed to \code{\link{fit_pigauto}}.
 #' @return An object of class \code{"pigauto_result"} with components:
 #'   \describe{
@@ -137,7 +144,10 @@ impute <- function(traits, tree, species_col = NULL,
                    log_transform = TRUE,
                    missing_frac = 0.25, n_imputations = 1L,
                    covariates = NULL,
-                   epochs = 2000L, verbose = TRUE, seed = 1L, ...) {
+                   epochs = 2000L, verbose = TRUE, seed = 1L,
+                   multi_obs_aggregation = c("hard", "soft"),
+                   ...) {
+  multi_obs_aggregation <- match.arg(multi_obs_aggregation)
 
   # 1. Preprocess
   pd <- preprocess_traits(traits, tree, species_col = species_col,
@@ -165,7 +175,8 @@ impute <- function(traits, tree, species_col = NULL,
   graph <- build_phylo_graph(tree, k_eigen = "auto")
 
   # 4. Fit phylogenetic baseline (reuses graph$D for label propagation)
-  baseline <- fit_baseline(pd, tree, splits = splits, graph = graph)
+  baseline <- fit_baseline(pd, tree, splits = splits, graph = graph,
+                           multi_obs_aggregation = multi_obs_aggregation)
 
   # Free the cached cophenetic distance matrix: fit_pigauto() only
   # needs graph$adj and graph$coords, and at n = 10,000 the ~800 MB
