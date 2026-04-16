@@ -139,3 +139,34 @@ reindex_splits <- function(splits, n_rows, p_old, kept_cols) {
   }
   sp_k
 }
+
+#' Normalise K independent OVR probabilities into log-probabilities
+#'
+#' @param probs numeric matrix (n x K), unnormalised P(class_k).
+#' @return numeric matrix (n x K), log-probabilities summing to 1 per row.
+#' @keywords internal
+#' @noRd
+decode_ovr_categorical <- function(probs) {
+  K <- ncol(probs)
+  out <- probs
+  for (i in seq_len(nrow(probs))) {
+    row <- probs[i, ]
+    na_mask <- is.na(row)
+    if (any(!na_mask)) row[!na_mask] <- pmax(row[!na_mask], 0.01)
+    if (all(na_mask)) {
+      # All NA: uniform
+      row <- rep(1/K, K)
+    } else if (any(na_mask)) {
+      s <- sum(row[!na_mask])
+      cap <- 1 - 0.01 * sum(na_mask)
+      if (s > cap) row[!na_mask] <- row[!na_mask] * cap / s
+      row[na_mask] <- (1 - sum(row[!na_mask])) / sum(na_mask)
+    } else {
+      row <- row / sum(row)
+    }
+    row <- pmax(row, 0.01)
+    row <- row / sum(row)
+    out[i, ] <- log(row)
+  }
+  out
+}
