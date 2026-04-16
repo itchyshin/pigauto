@@ -208,7 +208,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   # / continuous-joint dispatchers above ran. If phylopars is unavailable
   # OR a fit fails for any reason, the per-trait result falls through to LP
   # below.
-  if (length(cat_cols) > 0L && !multi_obs && joint_mvn_available()) {
+  if (length(cat_cols) > 0L && joint_mvn_available()) {
     for (tm in trait_map) {
       if (tm$type != "categorical") next
       k_cols <- tm$latent_cols
