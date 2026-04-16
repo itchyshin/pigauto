@@ -154,12 +154,12 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   # Phase 6 EM will refine this once Sigma is estimated stably.
   use_threshold_joint <- length(binary_cols) >= 1L &&
     length(bm_cols) >= 1L &&
-    !has_multi_proportion && !multi_obs &&
+    !has_multi_proportion &&
     joint_mvn_available()
 
   use_continuous_joint <- !use_threshold_joint &&
     length(bm_cols) >= 2L &&
-    !has_multi_proportion && !multi_obs &&
+    !has_multi_proportion &&
     joint_mvn_available()
 
   if (use_threshold_joint) {

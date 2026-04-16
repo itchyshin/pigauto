@@ -96,3 +96,27 @@ test_that("fit_joint_mvn_baseline runs on multi-obs data", {
   expect_true(all(is.finite(res$mu)))
   expect_true(all(res$se >= 0))
 })
+
+test_that("fit_baseline uses Level-C paths on multi-obs data", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(5)
+  tree <- ape::rtree(30)
+  df <- data.frame(
+    species = rep(tree$tip.label, each = 3),
+    x = rnorm(90),
+    y = factor(sample(c("A", "B"), 90, TRUE), levels = c("A", "B")),
+    z = factor(sample(c("P", "Q", "R", "S"), 90, TRUE),
+               levels = c("P", "Q", "R", "S"))
+  )
+  pd <- preprocess_traits(df, tree, species_col = "species")
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.2,
+                                 seed = 5, trait_map = pd$trait_map)
+  bl <- fit_baseline(pd, tree, splits = splits)
+  expect_equal(nrow(bl$mu), 30L)
+  expect_true(all(is.finite(bl$mu[, "x"])))
+  expect_true(all(bl$mu[, "y"] >= qlogis(0.01) - 1e-6))
+  expect_true(all(bl$mu[, "y"] <= qlogis(0.99) + 1e-6))
+  cat_cols <- grep("^z=", colnames(pd$X_scaled), value = TRUE)
+  row_sums <- rowSums(exp(bl$mu[, cat_cols]))
+  expect_true(all(abs(row_sums - 1) < 1e-6))
+})
