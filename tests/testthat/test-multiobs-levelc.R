@@ -186,3 +186,40 @@ test_that("fit_baseline uses Level-C paths on multi-obs data", {
   row_sums <- rowSums(exp(bl$mu[, cat_cols]))
   expect_true(all(abs(row_sums - 1) < 1e-6))
 })
+
+test_that("fit_joint_threshold_baseline propagates soft_aggregate", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(20)
+  tree <- ape::rtree(20)
+  df <- data.frame(
+    species = rep(tree$tip.label, each = 3),
+    x = rnorm(60),
+    y = factor(sample(c("A","B"), 60, TRUE), levels = c("A","B"))
+  )
+  pd <- preprocess_traits(df, tree, species_col = "species")
+  res_hard <- fit_joint_threshold_baseline(pd, tree, splits = NULL, soft_aggregate = FALSE)
+  res_soft <- fit_joint_threshold_baseline(pd, tree, splits = NULL, soft_aggregate = TRUE)
+  expect_equal(dim(res_hard$mu_liab), dim(res_soft$mu_liab))
+  y_col <- which(colnames(res_hard$mu_liab) == "y")
+  diff <- max(abs(res_hard$mu_liab[, y_col] - res_soft$mu_liab[, y_col]))
+  expect_gt(diff, 1e-4)
+})
+
+test_that("fit_ovr_categorical_fits propagates soft_aggregate", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(21)
+  tree <- ape::rtree(20)
+  df <- data.frame(
+    species = rep(tree$tip.label, each = 3),
+    x = rnorm(60),
+    z = factor(sample(c("P","Q","R"), 60, TRUE), levels = c("P","Q","R"))
+  )
+  pd <- preprocess_traits(df, tree, species_col = "species")
+  probs_hard <- fit_ovr_categorical_fits(pd, tree, trait_name = "z",
+                                           splits = NULL, soft_aggregate = FALSE)
+  probs_soft <- fit_ovr_categorical_fits(pd, tree, trait_name = "z",
+                                           splits = NULL, soft_aggregate = TRUE)
+  expect_equal(dim(probs_hard), dim(probs_soft))
+  diff <- max(abs(probs_hard - probs_soft), na.rm = TRUE)
+  expect_gt(diff, 1e-4)
+})

@@ -249,10 +249,12 @@ build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE) 
 #' @return list(mu_liab, se_liab, liab_cols, liab_types).
 #' @keywords internal
 #' @noRd
-fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL) {
+fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
+                                        soft_aggregate = FALSE) {
   stopifnot(joint_mvn_available())
 
-  built <- build_liability_matrix(data, splits = splits)
+  built <- build_liability_matrix(data, splits = splits,
+                                  soft_aggregate = soft_aggregate)
   X_liab     <- built$X_liab
   liab_cols  <- built$liab_cols
   liab_types <- built$liab_types
