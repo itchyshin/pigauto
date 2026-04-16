@@ -1,292 +1,480 @@
 [   0.0s] === high_phylo_no_env, frac=0.20, rep=1 ===
 [   0.1s]   Missing: 180 / 900 (20.0%)
 [   0.1s]   pigauto (no covariates)...
-[  86.4s]     Done in 86.3s
-[  86.4s]   pigauto (with covariates)...
-[ 162.2s]     Done in 75.8s
-[ 162.2s]   Cell done.
 
-[ 162.2s] === high_phylo_no_env, frac=0.20, rep=2 ===
-[ 162.2s]   Missing: 180 / 900 (20.0%)
-[ 162.2s]   pigauto (no covariates)...
-[ 240.0s]     Done in 77.8s
-[ 240.0s]   pigauto (with covariates)...
-[ 315.6s]     Done in 75.6s
-[ 315.6s]   Cell done.
+warning: solve(): system is singular (rcond: 6.50772e-28); attempting approx solution
+[  99.7s]     Done in 99.6s
+[  99.7s]   pigauto (with covariates)...
 
-[ 315.6s] === high_phylo_no_env, frac=0.20, rep=3 ===
-[ 315.6s]   Missing: 180 / 900 (20.0%)
-[ 315.6s]   pigauto (no covariates)...
-[ 392.4s]     Done in 76.8s
-[ 392.4s]   pigauto (with covariates)...
-[ 466.2s]     Done in 73.8s
-[ 466.2s]   Cell done.
+warning: solve(): system is singular (rcond: 6.50772e-28); attempting approx solution
+[ 193.7s]     Done in 94.1s
+[ 193.8s]   Cell done.
 
-[ 466.2s] === high_phylo_no_env, frac=0.40, rep=1 ===
-[ 466.2s]   Missing: 360 / 900 (40.0%)
-[ 466.2s]   pigauto (no covariates)...
-[ 539.7s]     Done in 73.5s
-[ 539.7s]   pigauto (with covariates)...
-[ 612.7s]     Done in 73.0s
-[ 612.7s]   Cell done.
+[ 193.8s] === high_phylo_no_env, frac=0.20, rep=2 ===
+[ 193.8s]   Missing: 180 / 900 (20.0%)
+[ 193.8s]   pigauto (no covariates)...
 
-[ 612.7s] === high_phylo_no_env, frac=0.40, rep=2 ===
-[ 612.7s]   Missing: 360 / 900 (40.0%)
-[ 612.7s]   pigauto (no covariates)...
-[ 684.9s]     Done in 72.2s
-[ 684.9s]   pigauto (with covariates)...
-[ 758.3s]     Done in 73.4s
-[ 758.3s]   Cell done.
+warning: solve(): system is singular (rcond: 1.00179e-32); attempting approx solution
+[ 293.0s]     Done in 99.2s
+[ 293.0s]   pigauto (with covariates)...
 
-[ 758.3s] === high_phylo_no_env, frac=0.40, rep=3 ===
-[ 758.3s]   Missing: 360 / 900 (40.0%)
-[ 758.3s]   pigauto (no covariates)...
-[ 831.5s]     Done in 73.2s
-[ 831.5s]   pigauto (with covariates)...
-[ 905.3s]     Done in 73.8s
-[ 905.3s]   Cell done.
+warning: solve(): system is singular (rcond: 1.00179e-32); attempting approx solution
+[ 389.1s]     Done in 96.1s
+[ 389.1s]   Cell done.
 
-[ 905.3s] === high_phylo_no_env, frac=0.60, rep=1 ===
-[ 905.3s]   Missing: 540 / 900 (60.0%)
-[ 905.3s]   pigauto (no covariates)...
-[ 978.1s]     Done in 72.8s
-[ 978.1s]   pigauto (with covariates)...
-[1052.1s]     Done in 74.0s
-[1052.1s]   Cell done.
+[ 389.1s] === high_phylo_no_env, frac=0.20, rep=3 ===
+[ 389.1s]   Missing: 180 / 900 (20.0%)
+[ 389.1s]   pigauto (no covariates)...
+[ 483.1s]     Done in 94.0s
+[ 483.1s]   pigauto (with covariates)...
+[ 581.1s]     Done in 98.1s
+[ 581.1s]   Cell done.
 
-[1052.1s] === high_phylo_no_env, frac=0.60, rep=2 ===
-[1052.1s]   Missing: 540 / 900 (60.0%)
-[1052.1s]   pigauto (no covariates)...
-[1123.4s]     Done in 71.3s
-[1123.4s]   pigauto (with covariates)...
-[1199.0s]     Done in 75.6s
-[1199.0s]   Cell done.
+[ 581.1s] === high_phylo_no_env, frac=0.40, rep=1 ===
+[ 581.1s]   Missing: 360 / 900 (40.0%)
+[ 581.1s]   pigauto (no covariates)...
 
-[1199.0s] === high_phylo_no_env, frac=0.60, rep=3 ===
-[1199.0s]   Missing: 540 / 900 (60.0%)
-[1199.0s]   pigauto (no covariates)...
-[1268.9s]     Done in 69.9s
-[1268.9s]   pigauto (with covariates)...
-[1340.9s]     Done in 72.1s
-[1340.9s]   Cell done.
+warning: solve(): system is singular (rcond: 3.33674e-50); attempting approx solution
 
-[1340.9s] === high_phylo_mod_env, frac=0.20, rep=1 ===
-[1340.9s]   Missing: 180 / 900 (20.0%)
-[1340.9s]   pigauto (no covariates)...
-[1416.8s]     Done in 75.9s
-[1416.8s]   pigauto (with covariates)...
-[1498.8s]     Done in 82.0s
-[1498.8s]   Cell done.
+warning: solve(): system is singular (rcond: 4.63602e-64); attempting approx solution
 
-[1498.8s] === high_phylo_mod_env, frac=0.20, rep=2 ===
-[1498.8s]   Missing: 180 / 900 (20.0%)
-[1498.8s]   pigauto (no covariates)...
-[1579.0s]     Done in 80.2s
-[1579.0s]   pigauto (with covariates)...
-[1651.6s]     Done in 72.6s
-[1651.6s]   Cell done.
+warning: solve(): system is singular (rcond: 2.0997e-82); attempting approx solution
 
-[1651.6s] === high_phylo_mod_env, frac=0.20, rep=3 ===
-[1651.6s]   Missing: 180 / 900 (20.0%)
-[1651.6s]   pigauto (no covariates)...
-[1721.5s]     Done in 69.9s
-[1721.5s]   pigauto (with covariates)...
-[1787.3s]     Done in 65.7s
-[1787.3s]   Cell done.
+warning: solve(): system is singular (rcond: 3.88215e-18); attempting approx solution
+[ 674.7s]     Done in 93.6s
+[ 674.7s]   pigauto (with covariates)...
 
-[1787.3s] === high_phylo_mod_env, frac=0.40, rep=1 ===
-[1787.3s]   Missing: 360 / 900 (40.0%)
-[1787.3s]   pigauto (no covariates)...
-[1852.3s]     Done in 65.0s
-[1852.3s]   pigauto (with covariates)...
-[1919.9s]     Done in 67.6s
-[1919.9s]   Cell done.
+warning: solve(): system is singular (rcond: 3.33674e-50); attempting approx solution
 
-[1919.9s] === high_phylo_mod_env, frac=0.40, rep=2 ===
-[1919.9s]   Missing: 360 / 900 (40.0%)
-[1919.9s]   pigauto (no covariates)...
-[1986.1s]     Done in 66.1s
-[1986.1s]   pigauto (with covariates)...
-[2065.8s]     Done in 79.7s
-[2065.8s]   Cell done.
+warning: solve(): system is singular (rcond: 4.63602e-64); attempting approx solution
 
-[2065.8s] === high_phylo_mod_env, frac=0.40, rep=3 ===
-[2065.8s]   Missing: 360 / 900 (40.0%)
-[2065.8s]   pigauto (no covariates)...
-[2147.5s]     Done in 81.7s
-[2147.5s]   pigauto (with covariates)...
-[2232.4s]     Done in 84.9s
-[2232.4s]   Cell done.
+warning: solve(): system is singular (rcond: 2.0997e-82); attempting approx solution
 
-[2232.4s] === high_phylo_mod_env, frac=0.60, rep=1 ===
-[2232.4s]   Missing: 540 / 900 (60.0%)
-[2232.4s]   pigauto (no covariates)...
-[2315.5s]     Done in 83.1s
-[2315.5s]   pigauto (with covariates)...
-[2389.7s]     Done in 74.2s
-[2389.7s]   Cell done.
+warning: solve(): system is singular (rcond: 3.88215e-18); attempting approx solution
+[ 768.5s]     Done in 93.8s
+[ 768.5s]   Cell done.
 
-[2389.7s] === high_phylo_mod_env, frac=0.60, rep=2 ===
-[2389.7s]   Missing: 540 / 900 (60.0%)
-[2389.7s]   pigauto (no covariates)...
-[2460.1s]     Done in 70.4s
-[2460.1s]   pigauto (with covariates)...
-[2528.2s]     Done in 68.2s
-[2528.2s]   Cell done.
+[ 768.5s] === high_phylo_no_env, frac=0.40, rep=2 ===
+[ 768.5s]   Missing: 360 / 900 (40.0%)
+[ 768.5s]   pigauto (no covariates)...
 
-[2528.2s] === high_phylo_mod_env, frac=0.60, rep=3 ===
-[2528.2s]   Missing: 540 / 900 (60.0%)
-[2528.2s]   pigauto (no covariates)...
-[2597.9s]     Done in 69.6s
-[2597.9s]   pigauto (with covariates)...
-[2664.9s]     Done in 67.0s
-[2664.9s]   Cell done.
+warning: solve(): system is singular (rcond: 1.58804e-53); attempting approx solution
 
-[2664.9s] === mod_phylo_strong_env, frac=0.20, rep=1 ===
-[2664.9s]   Missing: 180 / 900 (20.0%)
-[2664.9s]   pigauto (no covariates)...
-[2729.4s]     Done in 64.5s
-[2729.4s]   pigauto (with covariates)...
-[2794.0s]     Done in 64.6s
-[2794.0s]   Cell done.
+warning: solve(): system is singular (rcond: 5.46627e-17); attempting approx solution
+[ 865.2s]     Done in 96.7s
+[ 865.2s]   pigauto (with covariates)...
 
-[2794.0s] === mod_phylo_strong_env, frac=0.20, rep=2 ===
-[2794.0s]   Missing: 180 / 900 (20.0%)
-[2794.0s]   pigauto (no covariates)...
-[2858.6s]     Done in 64.6s
-[2858.6s]   pigauto (with covariates)...
-[2923.2s]     Done in 64.6s
-[2923.2s]   Cell done.
+warning: solve(): system is singular (rcond: 1.58804e-53); attempting approx solution
 
-[2923.2s] === mod_phylo_strong_env, frac=0.20, rep=3 ===
-[2923.2s]   Missing: 180 / 900 (20.0%)
-[2923.2s]   pigauto (no covariates)...
-[2994.0s]     Done in 70.7s
-[2994.0s]   pigauto (with covariates)...
-[3065.0s]     Done in 71.1s
-[3065.0s]   Cell done.
+warning: solve(): system is singular (rcond: 5.46627e-17); attempting approx solution
+[ 962.0s]     Done in 96.7s
+[ 962.0s]   Cell done.
 
-[3065.0s] === mod_phylo_strong_env, frac=0.40, rep=1 ===
-[3065.0s]   Missing: 360 / 900 (40.0%)
-[3065.0s]   pigauto (no covariates)...
-[3142.3s]     Done in 77.3s
-[3142.3s]   pigauto (with covariates)...
-[3215.1s]     Done in 72.7s
-[3215.1s]   Cell done.
+[ 962.0s] === high_phylo_no_env, frac=0.40, rep=3 ===
+[ 962.0s]   Missing: 360 / 900 (40.0%)
+[ 962.0s]   pigauto (no covariates)...
 
-[3215.1s] === mod_phylo_strong_env, frac=0.40, rep=2 ===
-[3215.1s]   Missing: 360 / 900 (40.0%)
-[3215.1s]   pigauto (no covariates)...
-[3288.7s]     Done in 73.7s
-[3288.7s]   pigauto (with covariates)...
-[3366.3s]     Done in 77.5s
-[3366.3s]   Cell done.
+warning: solve(): system is singular (rcond: 1.50276e-17); attempting approx solution
 
-[3366.3s] === mod_phylo_strong_env, frac=0.40, rep=3 ===
-[3366.3s]   Missing: 360 / 900 (40.0%)
-[3366.3s]   pigauto (no covariates)...
-[3434.0s]     Done in 67.7s
-[3434.0s]   pigauto (with covariates)...
-[3499.8s]     Done in 65.8s
-[3499.8s]   Cell done.
+warning: solve(): system is singular (rcond: 9.21687e-18); attempting approx solution
+[1058.9s]     Done in 96.9s
+[1058.9s]   pigauto (with covariates)...
 
-[3499.8s] === mod_phylo_strong_env, frac=0.60, rep=1 ===
-[3499.8s]   Missing: 540 / 900 (60.0%)
-[3499.8s]   pigauto (no covariates)...
-[3565.7s]     Done in 65.9s
-[3565.7s]   pigauto (with covariates)...
-[3632.0s]     Done in 66.3s
-[3632.0s]   Cell done.
+warning: solve(): system is singular (rcond: 1.50276e-17); attempting approx solution
 
-[3632.0s] === mod_phylo_strong_env, frac=0.60, rep=2 ===
-[3632.0s]   Missing: 540 / 900 (60.0%)
-[3632.0s]   pigauto (no covariates)...
-[3699.2s]     Done in 67.2s
-[3699.2s]   pigauto (with covariates)...
-[3774.8s]     Done in 75.6s
-[3774.8s]   Cell done.
+warning: solve(): system is singular (rcond: 9.21687e-18); attempting approx solution
+[1156.6s]     Done in 97.7s
+[1156.6s]   Cell done.
 
-[3774.8s] === mod_phylo_strong_env, frac=0.60, rep=3 ===
-[3774.8s]   Missing: 540 / 900 (60.0%)
-[3774.8s]   pigauto (no covariates)...
-[3841.6s]     Done in 66.8s
-[3841.6s]   pigauto (with covariates)...
-[3908.3s]     Done in 66.6s
-[3908.3s]   Cell done.
+[1156.6s] === high_phylo_no_env, frac=0.60, rep=1 ===
+[1156.6s]   Missing: 540 / 900 (60.0%)
+[1156.6s]   pigauto (no covariates)...
 
-[3908.3s] === low_phylo_strong_env, frac=0.20, rep=1 ===
-[3908.3s]   Missing: 180 / 900 (20.0%)
-[3908.3s]   pigauto (no covariates)...
-[3983.3s]     Done in 75.0s
-[3983.3s]   pigauto (with covariates)...
-[4063.3s]     Done in 80.0s
-[4063.3s]   Cell done.
+warning: solve(): system is singular (rcond: 6.05089e-22); attempting approx solution
 
-[4063.3s] === low_phylo_strong_env, frac=0.20, rep=2 ===
-[4063.4s]   Missing: 180 / 900 (20.0%)
-[4063.4s]   pigauto (no covariates)...
-[4137.1s]     Done in 73.7s
-[4137.1s]   pigauto (with covariates)...
-[4211.3s]     Done in 74.2s
-[4211.3s]   Cell done.
+warning: solve(): system is singular (rcond: 6.05089e-22); attempting approx solution
+[1250.7s]     Done in 94.1s
+[1250.7s]   pigauto (with covariates)...
 
-[4211.3s] === low_phylo_strong_env, frac=0.20, rep=3 ===
-[4211.3s]   Missing: 180 / 900 (20.0%)
-[4211.3s]   pigauto (no covariates)...
-[4289.4s]     Done in 78.1s
-[4289.4s]   pigauto (with covariates)...
-[4366.6s]     Done in 77.2s
-[4366.6s]   Cell done.
+warning: solve(): system is singular (rcond: 6.05089e-22); attempting approx solution
 
-[4366.6s] === low_phylo_strong_env, frac=0.40, rep=1 ===
-[4366.6s]   Missing: 360 / 900 (40.0%)
-[4366.6s]   pigauto (no covariates)...
-[4439.3s]     Done in 72.7s
-[4439.3s]   pigauto (with covariates)...
-[4508.0s]     Done in 68.7s
-[4508.0s]   Cell done.
+warning: solve(): system is singular (rcond: 6.05089e-22); attempting approx solution
+[1343.7s]     Done in 93.0s
+[1343.7s]   Cell done.
 
-[4508.0s] === low_phylo_strong_env, frac=0.40, rep=2 ===
-[4508.0s]   Missing: 360 / 900 (40.0%)
-[4508.0s]   pigauto (no covariates)...
-[4574.3s]     Done in 66.3s
-[4574.3s]   pigauto (with covariates)...
-[4642.1s]     Done in 67.8s
-[4642.1s]   Cell done.
+[1343.7s] === high_phylo_no_env, frac=0.60, rep=2 ===
+[1343.7s]   Missing: 540 / 900 (60.0%)
+[1343.7s]   pigauto (no covariates)...
 
-[4642.1s] === low_phylo_strong_env, frac=0.40, rep=3 ===
-[4642.1s]   Missing: 360 / 900 (40.0%)
-[4642.1s]   pigauto (no covariates)...
-[4709.2s]     Done in 67.1s
-[4709.2s]   pigauto (with covariates)...
-[4782.0s]     Done in 72.8s
-[4782.0s]   Cell done.
+warning: solve(): system is singular (rcond: 1.36908e-41); attempting approx solution
 
-[4782.0s] === low_phylo_strong_env, frac=0.60, rep=1 ===
-[4782.0s]   Missing: 540 / 900 (60.0%)
-[4782.0s]   pigauto (no covariates)...
-[4854.2s]     Done in 72.1s
-[4854.2s]   pigauto (with covariates)...
-[4925.6s]     Done in 71.4s
-[4925.6s]   Cell done.
+warning: solve(): system is singular (rcond: 2.14041e-33); attempting approx solution
 
-[4925.6s] === low_phylo_strong_env, frac=0.60, rep=2 ===
-[4925.6s]   Missing: 540 / 900 (60.0%)
-[4925.6s]   pigauto (no covariates)...
-[4993.8s]     Done in 68.2s
-[4993.8s]   pigauto (with covariates)...
-[5062.0s]     Done in 68.2s
-[5062.0s]   Cell done.
+warning: solve(): system is singular (rcond: 8.27779e-20); attempting approx solution
 
-[5062.0s] === low_phylo_strong_env, frac=0.60, rep=3 ===
-[5062.0s]   Missing: 540 / 900 (60.0%)
-[5062.0s]   pigauto (no covariates)...
-[5130.0s]     Done in 68.0s
-[5130.0s]   pigauto (with covariates)...
-[5205.1s]     Done in 75.0s
-[5205.1s]   Cell done.
+warning: solve(): system is singular (rcond: 8.2778e-20); attempting approx solution
+[1439.5s]     Done in 95.8s
+[1439.5s]   pigauto (with covariates)...
 
-[5205.1s] Total rows: 216
-[5205.1s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_covariate_sim.rds
-[5205.1s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_covariate_sim.md
-[5205.1s] done
+warning: solve(): system is singular (rcond: 1.36908e-41); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.14041e-33); attempting approx solution
+
+warning: solve(): system is singular (rcond: 8.27779e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 8.2778e-20); attempting approx solution
+[1534.2s]     Done in 94.7s
+[1534.2s]   Cell done.
+
+[1534.2s] === high_phylo_no_env, frac=0.60, rep=3 ===
+[1534.2s]   Missing: 540 / 900 (60.0%)
+[1534.2s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 3.29079e-17); attempting approx solution
+[1625.2s]     Done in 91.0s
+[1625.2s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 3.29079e-17); attempting approx solution
+[1725.4s]     Done in 100.2s
+[1725.4s]   Cell done.
+
+[1725.4s] === high_phylo_mod_env, frac=0.20, rep=1 ===
+[1725.4s]   Missing: 180 / 900 (20.0%)
+[1725.4s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 2.23538e-19); attempting approx solution
+[1822.2s]     Done in 96.8s
+[1822.2s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 2.23538e-19); attempting approx solution
+[1915.0s]     Done in 92.8s
+[1915.0s]   Cell done.
+
+[1915.0s] === high_phylo_mod_env, frac=0.20, rep=2 ===
+[1915.0s]   Missing: 180 / 900 (20.0%)
+[1915.0s]   pigauto (no covariates)...
+[2010.7s]     Done in 95.7s
+[2010.7s]   pigauto (with covariates)...
+[2105.7s]     Done in 95.0s
+[2105.7s]   Cell done.
+
+[2105.7s] === high_phylo_mod_env, frac=0.20, rep=3 ===
+[2105.7s]   Missing: 180 / 900 (20.0%)
+[2105.7s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 9.78371e-19); attempting approx solution
+[2196.5s]     Done in 90.8s
+[2196.5s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 9.78371e-19); attempting approx solution
+[2293.7s]     Done in 97.2s
+[2293.7s]   Cell done.
+
+[2293.7s] === high_phylo_mod_env, frac=0.40, rep=1 ===
+[2293.7s]   Missing: 360 / 900 (40.0%)
+[2293.7s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 1.35458e-37); attempting approx solution
+[2391.1s]     Done in 97.4s
+[2391.1s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 1.35458e-37); attempting approx solution
+[2487.1s]     Done in 96.1s
+[2487.1s]   Cell done.
+
+[2487.2s] === high_phylo_mod_env, frac=0.40, rep=2 ===
+[2487.2s]   Missing: 360 / 900 (40.0%)
+[2487.2s]   pigauto (no covariates)...
+[2581.3s]     Done in 94.2s
+[2581.3s]   pigauto (with covariates)...
+[2681.2s]     Done in 99.8s
+[2681.2s]   Cell done.
+
+[2681.2s] === high_phylo_mod_env, frac=0.40, rep=3 ===
+[2681.2s]   Missing: 360 / 900 (40.0%)
+[2681.2s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 8.46076e-43); attempting approx solution
+[2775.8s]     Done in 94.6s
+[2775.8s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 8.46076e-43); attempting approx solution
+[2870.5s]     Done in 94.8s
+[2870.5s]   Cell done.
+
+[2870.5s] === high_phylo_mod_env, frac=0.60, rep=1 ===
+[2870.5s]   Missing: 540 / 900 (60.0%)
+[2870.5s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 4.64308e-77); attempting approx solution
+
+warning: solve(): system is singular (rcond: 9.96443e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 9.96443e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.9496e-22); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.9496e-22); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.85124e-17); attempting approx solution
+[2966.9s]     Done in 96.4s
+[2966.9s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 4.64308e-77); attempting approx solution
+
+warning: solve(): system is singular (rcond: 9.96443e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 9.96443e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.9496e-22); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.9496e-22); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.85124e-17); attempting approx solution
+[3059.2s]     Done in 92.2s
+[3059.2s]   Cell done.
+
+[3059.2s] === high_phylo_mod_env, frac=0.60, rep=2 ===
+[3059.2s]   Missing: 540 / 900 (60.0%)
+[3059.2s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 4.13194e-53); attempting approx solution
+
+warning: solve(): system is singular (rcond: 8.96188e-65); attempting approx solution
+[3157.2s]     Done in 98.0s
+[3157.2s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 4.13194e-53); attempting approx solution
+
+warning: solve(): system is singular (rcond: 8.96188e-65); attempting approx solution
+[3251.4s]     Done in 94.2s
+[3251.4s]   Cell done.
+
+[3251.4s] === high_phylo_mod_env, frac=0.60, rep=3 ===
+[3251.4s]   Missing: 540 / 900 (60.0%)
+[3251.4s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 1.67264e-52); attempting approx solution
+[3346.0s]     Done in 94.6s
+[3346.0s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 1.67264e-52); attempting approx solution
+[3439.6s]     Done in 93.6s
+[3439.6s]   Cell done.
+
+[3439.6s] === mod_phylo_strong_env, frac=0.20, rep=1 ===
+[3439.6s]   Missing: 180 / 900 (20.0%)
+[3439.6s]   pigauto (no covariates)...
+[3532.0s]     Done in 92.3s
+[3532.0s]   pigauto (with covariates)...
+[3629.5s]     Done in 97.5s
+[3629.5s]   Cell done.
+
+[3629.5s] === mod_phylo_strong_env, frac=0.20, rep=2 ===
+[3629.5s]   Missing: 180 / 900 (20.0%)
+[3629.5s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 2.6396e-19); attempting approx solution
+[3727.7s]     Done in 98.2s
+[3727.7s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 2.6396e-19); attempting approx solution
+[3823.4s]     Done in 95.6s
+[3823.4s]   Cell done.
+
+[3823.4s] === mod_phylo_strong_env, frac=0.20, rep=3 ===
+[3823.4s]   Missing: 180 / 900 (20.0%)
+[3823.4s]   pigauto (no covariates)...
+[3913.3s]     Done in 89.9s
+[3913.3s]   pigauto (with covariates)...
+[4007.0s]     Done in 93.7s
+[4007.0s]   Cell done.
+
+[4007.0s] === mod_phylo_strong_env, frac=0.40, rep=1 ===
+[4007.0s]   Missing: 360 / 900 (40.0%)
+[4007.0s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 5.93814e-27); attempting approx solution
+[4100.1s]     Done in 93.1s
+[4100.1s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 5.93814e-27); attempting approx solution
+[4189.2s]     Done in 89.1s
+[4189.2s]   Cell done.
+
+[4189.2s] === mod_phylo_strong_env, frac=0.40, rep=2 ===
+[4189.2s]   Missing: 360 / 900 (40.0%)
+[4189.2s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 1.31891e-32); attempting approx solution
+[4282.4s]     Done in 93.2s
+[4282.4s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 1.31891e-32); attempting approx solution
+[4375.6s]     Done in 93.2s
+[4375.6s]   Cell done.
+
+[4375.6s] === mod_phylo_strong_env, frac=0.40, rep=3 ===
+[4375.6s]   Missing: 360 / 900 (40.0%)
+[4375.6s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 2.60975e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.84924e-26); attempting approx solution
+[4467.5s]     Done in 92.0s
+[4467.5s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 2.60975e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.84924e-26); attempting approx solution
+[4558.5s]     Done in 90.9s
+[4558.5s]   Cell done.
+
+[4558.5s] === mod_phylo_strong_env, frac=0.60, rep=1 ===
+[4558.5s]   Missing: 540 / 900 (60.0%)
+[4558.5s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 1.18228e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.79424e-50); attempting approx solution
+[4649.1s]     Done in 90.6s
+[4649.1s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 1.18228e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.79424e-50); attempting approx solution
+[4737.8s]     Done in 88.7s
+[4737.8s]   Cell done.
+
+[4737.8s] === mod_phylo_strong_env, frac=0.60, rep=2 ===
+[4737.8s]   Missing: 540 / 900 (60.0%)
+[4737.8s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 2.6111e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.68105e-40); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.67097e-40); attempting approx solution
+[4827.6s]     Done in 89.8s
+[4827.6s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 2.6111e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.68105e-40); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.67097e-40); attempting approx solution
+[4916.4s]     Done in 88.7s
+[4916.4s]   Cell done.
+
+[4916.4s] === mod_phylo_strong_env, frac=0.60, rep=3 ===
+[4916.4s]   Missing: 540 / 900 (60.0%)
+[4916.4s]   pigauto (no covariates)...
+[5001.8s]     Done in 85.5s
+[5001.8s]   pigauto (with covariates)...
+[5094.6s]     Done in 92.8s
+[5094.6s]   Cell done.
+
+[5094.6s] === low_phylo_strong_env, frac=0.20, rep=1 ===
+[5094.6s]   Missing: 180 / 900 (20.0%)
+[5094.6s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 2.86409e-35); attempting approx solution
+[5188.6s]     Done in 94.0s
+[5188.6s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 2.86409e-35); attempting approx solution
+[5278.1s]     Done in 89.6s
+[5278.1s]   Cell done.
+
+[5278.1s] === low_phylo_strong_env, frac=0.20, rep=2 ===
+[5278.2s]   Missing: 180 / 900 (20.0%)
+[5278.2s]   pigauto (no covariates)...
+[5372.9s]     Done in 94.8s
+[5372.9s]   pigauto (with covariates)...
+[5466.1s]     Done in 93.2s
+[5466.1s]   Cell done.
+
+[5466.1s] === low_phylo_strong_env, frac=0.20, rep=3 ===
+[5466.1s]   Missing: 180 / 900 (20.0%)
+[5466.1s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 2.14318e-25); attempting approx solution
+[5557.3s]     Done in 91.2s
+[5557.3s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 2.14318e-25); attempting approx solution
+[5651.3s]     Done in 94.0s
+[5651.3s]   Cell done.
+
+[5651.3s] === low_phylo_strong_env, frac=0.40, rep=1 ===
+[5651.4s]   Missing: 360 / 900 (40.0%)
+[5651.4s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 3.82373e-28); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.12041e-21); attempting approx solution
+[5743.7s]     Done in 92.3s
+[5743.7s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 3.82373e-28); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.12041e-21); attempting approx solution
+[5829.9s]     Done in 86.2s
+[5829.9s]   Cell done.
+
+[5829.9s] === low_phylo_strong_env, frac=0.40, rep=2 ===
+[5829.9s]   Missing: 360 / 900 (40.0%)
+[5829.9s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 7.27646e-36); attempting approx solution
+[5915.0s]     Done in 85.1s
+[5915.0s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 7.27646e-36); attempting approx solution
+[5998.7s]     Done in 83.6s
+[5998.7s]   Cell done.
+
+[5998.7s] === low_phylo_strong_env, frac=0.40, rep=3 ===
+[5998.7s]   Missing: 360 / 900 (40.0%)
+[5998.7s]   pigauto (no covariates)...
+[6080.1s]     Done in 81.4s
+[6080.1s]   pigauto (with covariates)...
+[6164.9s]     Done in 84.8s
+[6164.9s]   Cell done.
+
+[6164.9s] === low_phylo_strong_env, frac=0.60, rep=1 ===
+[6164.9s]   Missing: 540 / 900 (60.0%)
+[6164.9s]   pigauto (no covariates)...
+
+warning: solve(): system is singular (rcond: 6.16607e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.64886e-20); attempting approx solution
+[6251.5s]     Done in 86.6s
+[6251.5s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 6.16607e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.64886e-20); attempting approx solution
+[6336.7s]     Done in 85.2s
+[6336.7s]   Cell done.
+
+[6336.7s] === low_phylo_strong_env, frac=0.60, rep=2 ===
+[6336.7s]   Missing: 540 / 900 (60.0%)
+[6336.7s]   pigauto (no covariates)...
+[6423.8s]     Done in 87.1s
+[6423.8s]   pigauto (with covariates)...
+[6501.1s]     Done in 77.3s
+[6501.1s]   Cell done.
+
+[6501.1s] === low_phylo_strong_env, frac=0.60, rep=3 ===
+[6501.1s]   Missing: 540 / 900 (60.0%)
+[6501.1s]   pigauto (no covariates)...
+[6574.2s]     Done in 73.0s
+[6574.2s]   pigauto (with covariates)...
+[6647.9s]     Done in 73.7s
+[6647.9s]   Cell done.
+
+[6647.9s] Total rows: 216
+[6647.9s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_covariate_sim.rds
+[6647.9s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_covariate_sim.md
+[6647.9s] done
