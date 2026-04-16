@@ -29,6 +29,18 @@ joint_mvn_available <- function() {
 fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL) {
   stopifnot(joint_mvn_available())
 
+  if (isTRUE(data$multi_obs)) {
+    agg <- aggregate_to_species(data, splits = splits)
+    data_single <- data
+    data_single$X_scaled       <- agg$X_species
+    data_single$multi_obs      <- FALSE
+    data_single$n_obs          <- data$n_species
+    data_single$obs_to_species <- NULL
+    data_single$obs_species    <- NULL
+    data   <- data_single
+    splits <- agg$splits_species
+  }
+
   trait_map <- data$trait_map
   X         <- data$X_scaled
   n         <- nrow(X)
