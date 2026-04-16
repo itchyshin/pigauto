@@ -97,6 +97,43 @@ test_that("fit_joint_mvn_baseline runs on multi-obs data", {
   expect_true(all(res$se >= 0))
 })
 
+test_that("aggregate_to_species with soft_aggregate preserves proportions", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(10)
+  tree <- ape::rtree(6)
+  df <- data.frame(
+    species = rep(tree$tip.label, each = 4),
+    y = factor(c(rep("B", 3), "A",    # sp1: 3/4 = 0.75 class-B
+                 rep("A", 4),           # sp2: 0/4 = 0.0 class-B
+                 rep("B", 4),           # sp3: 4/4 = 1.0 class-B
+                 "A","A","B","B",       # sp4: 2/4 = 0.5 class-B
+                 rep("A", 4),           # sp5: 0/4
+                 rep("B", 4)),          # sp6: 4/4
+               levels = c("A","B"))
+  )
+  pd <- preprocess_traits(df, tree, species_col = "species")
+
+  agg_hard <- aggregate_to_species(pd)
+  agg_soft <- aggregate_to_species(pd, soft_aggregate = TRUE)
+
+  y_col <- which(colnames(pd$X_scaled) == "y")
+
+  # Hard: sp1 (0.75) -> 1, sp4 (0.5) -> 1 (>= threshold)
+  expect_equal(agg_hard$X_species[1, y_col], 1, tolerance = 1e-9)
+  expect_equal(agg_hard$X_species[4, y_col], 1, tolerance = 1e-9)
+
+  # Soft: sp1 -> 0.75, sp4 -> 0.5 (proportions preserved)
+  expect_equal(agg_soft$X_species[1, y_col], 0.75, tolerance = 1e-9)
+  expect_equal(agg_soft$X_species[4, y_col], 0.5, tolerance = 1e-9)
+  # Pure cases: same in both modes
+  expect_equal(agg_soft$X_species[2, y_col], 0, tolerance = 1e-9)
+  expect_equal(agg_soft$X_species[3, y_col], 1, tolerance = 1e-9)
+
+  # is_proportion_col flag
+  expect_true(agg_soft$is_proportion_col[y_col])
+  expect_false(agg_hard$is_proportion_col[y_col])
+})
+
 test_that("fit_baseline uses Level-C paths on multi-obs data", {
   skip_if_not_installed("Rphylopars")
   set.seed(5)
