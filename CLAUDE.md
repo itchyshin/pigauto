@@ -221,6 +221,37 @@ this is still fast relative to GNN training. For larger K consider LP.
 The `include_categorical` / `cat_encoding` arguments from Phase 4 are
 retired — OVR K-fits is the one path and there is no knob.
 
+### Multi-obs support in Level-C baselines (Phase 10 — unreleased / v0.9.0-alpha)
+
+As of Phase 10, the joint MVN (Phase 2), threshold-joint (Phase 3),
+and OVR categorical (Phase 6) paths all accept multi-obs input via
+a private `aggregate_to_species()` helper in
+`R/joint_threshold_baseline.R`. The helper collapses obs-level
+`X_scaled` to species-level with per-type semantics:
+
+- continuous / count / ordinal / proportion / zi_magnitude: species
+  mean of non-NA observations
+- binary / zi_gate: species mean, threshold at 0.5 (modal class)
+- categorical: argmax of species-mean K-one-hot, written as one-hot
+- multi_proportion: falls through to per-column path (unchanged)
+
+Splits are masked in obs space BEFORE aggregation so leakage is
+impossible; species-level splits are re-derived from the NA pattern
+post-aggregation vs the originally-observed mask. Single-obs data
+passes through unchanged, with obs-level masking preserved.
+
+The four `!multi_obs` guards that previously blocked these paths
+(two in the dispatch conditions, one in the OVR loop, one in
+`build_liability_matrix`'s `stopifnot`) are removed in Phase 10.
+`fit_baseline()` still returns species-level `mu`/`se` and the
+downstream `fit_pigauto()` expansion via `obs_to_species` is
+unchanged.
+
+Because aggregation is lossy for discrete types (a 6/10 class-1
+species becomes a single class-1 observation), users with strong
+within-species discrete-trait variability should prefer single-obs
+mode with a user-computed species summary.
+
 ### Graph Transformer backbone (Phase 9 — unreleased / v0.9.0-alpha)
 
 `R/graph_transformer_block.R` defines `GraphTransformerBlock`, a

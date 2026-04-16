@@ -1,4 +1,31 @@
-# pigauto unreleased (v0.9.0-alpha — Graph Transformer GNN)
+# pigauto unreleased (v0.9.0-alpha — Graph Transformer GNN + multi-obs Level-C)
+
+## Phase 10: Level-C baselines activate for multi-observation datasets
+
+- `fit_baseline()` no longer gates out multi-obs data from the joint MVN
+  (Phase 2), threshold-joint (Phase 3), and OVR categorical (Phase 6)
+  paths. Multi-obs input is aggregated to species level inside each
+  Level-C helper (mean for continuous-family, threshold-at-0.5 for
+  binary/ZI-gate, argmax-one-hot for categorical) and then processed
+  identically to single-obs data.
+- New internal helper: `aggregate_to_species()` in
+  `R/joint_threshold_baseline.R`. Mask-then-aggregate ordering prevents
+  val/test leakage; single-obs data passes through unchanged with
+  masking preserved for back-compat.
+- All three Level-C entry points (`fit_joint_mvn_baseline`,
+  `fit_joint_threshold_baseline`, `fit_ovr_categorical_fits`) accept
+  multi-obs via aggregation at their top. `build_liability_matrix`
+  likewise.
+- Four `!multi_obs` guards removed from `fit_baseline()` dispatch
+  (threshold-joint condition, continuous-joint condition, OVR loop,
+  and the associated `stopifnot` in `build_liability_matrix`).
+- Aggregation caveat: binary/categorical aggregation is lossy. A
+  species with mixed observations (6/10 class-1) becomes a single
+  class-1 observation at species level. For datasets with strong
+  within-species variability in discrete traits, prefer single-obs
+  mode with a user-computed species-level summary.
+
+---
 
 ## Phase 9: Graph Transformer backbone for the GNN
 
