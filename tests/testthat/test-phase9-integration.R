@@ -107,3 +107,73 @@ test_that("model_config captures transformer hyperparameters", {
   expect_equal(model$n_heads, 4L)
   expect_equal(model$ffn_mult, 4L)
 })
+
+test_that("fit_pigauto end-to-end with transformer blocks on synthetic data", {
+  skip_if_not_installed("torch")
+  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_not_installed("Rphylopars")
+
+  set.seed(400)
+  tree <- ape::rtree(40)
+  # Mixed types: continuous + binary + categorical
+  df <- data.frame(
+    x = rnorm(40),
+    y = factor(sample(c("A", "B"), 40, TRUE), levels = c("A", "B")),
+    z = factor(sample(c("P", "Q", "R"), 40, TRUE), levels = c("P", "Q", "R")),
+    row.names = tree$tip.label
+  )
+  df$y[c(3, 15)] <- NA
+  df$z[c(7, 20)] <- NA
+
+  pd     <- preprocess_traits(df, tree)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.2,
+                                seed = 400, trait_map = pd$trait_map)
+
+  # Fit with transformer blocks (default) and short training
+  fit <- fit_pigauto(pd, tree, splits = splits,
+                     epochs = 30L, eval_every = 10L, patience = 5L,
+                     use_transformer_blocks = TRUE,
+                     n_gnn_layers = 4L, n_heads = 4L,
+                     verbose = FALSE, seed = 400)
+
+  # Smoke checks
+  expect_true(inherits(fit, "pigauto_fit"))
+  expect_false(is.null(fit$model_state))
+  expect_true(fit$model_config$use_transformer_blocks)
+
+  pred <- predict(fit, return_se = TRUE)
+  expect_false(is.null(pred$imputed))
+  expect_true(all(is.finite(as.numeric(as.matrix(pred$imputed_latent)))))
+
+  # Categorical outputs: probabilities matrix should exist and rows sum to ~1
+  expect_false(is.null(pred$probabilities$z))
+  row_sums <- rowSums(pred$probabilities$z)
+  expect_true(all(abs(row_sums - 1) < 1e-4))
+})
+
+test_that("legacy architecture (use_transformer_blocks = FALSE) still trains", {
+  skip_if_not_installed("torch")
+  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_not_installed("Rphylopars")
+
+  set.seed(401)
+  tree <- ape::rtree(30)
+  df <- data.frame(
+    x = rnorm(30),
+    y = factor(sample(c("A", "B"), 30, TRUE), levels = c("A", "B")),
+    row.names = tree$tip.label
+  )
+  df$y[c(5, 10)] <- NA
+  pd     <- preprocess_traits(df, tree)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.2,
+                                seed = 401, trait_map = pd$trait_map)
+
+  fit <- fit_pigauto(pd, tree, splits = splits,
+                     epochs = 20L, eval_every = 10L, patience = 5L,
+                     use_transformer_blocks = FALSE,
+                     n_gnn_layers = 2L,
+                     verbose = FALSE, seed = 401)
+
+  expect_true(inherits(fit, "pigauto_fit"))
+  expect_false(fit$model_config$use_transformer_blocks %||% FALSE)
+})
