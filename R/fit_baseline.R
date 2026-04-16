@@ -48,11 +48,13 @@
 #' @importFrom stats complete.cases rnorm rbinom
 #' @export
 fit_baseline <- function(data, tree, splits = NULL, model = "BM",
-                         graph = NULL) {
+                         graph = NULL,
+                         cat_encoding = c("joint_K", "ovr")) {
   if (!inherits(data, "pigauto_data")) {
     stop("'data' must be a pigauto_data object (output of preprocess_traits).")
   }
   if (!inherits(tree, "phylo")) stop("'tree' must be a phylo object.")
+  cat_encoding <- match.arg(cat_encoding)
 
   X   <- data$X_scaled
   p   <- ncol(X)
@@ -129,21 +131,29 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     }
   }
 
-  # ---- Level-C Phase 2 & 3: joint baseline dispatch ----------------------
-  # Phase 3 (threshold joint): when binary cols are present alongside
-  #   >=1 continuous-family col and Rphylopars is available, take the
-  #   threshold-joint path (covers both continuous and binary in one fit).
-  # Phase 2 (continuous joint): when >=2 continuous-family cols are
-  #   present without any binary, take the pure-MVN path.
-  # Single-trait continuous case keeps the existing per-column path
-  # (covered by Phase 2.3 back-compat test).
-  # multi_proportion and multi-obs are out of scope for joint dispatch;
-  # they fall through to the per-column loop below.
-  binary_cols <- integer(0)
+  # ---- Level-C Phase 2, 3, 4 & 5: joint baseline dispatch -------------------
+  # Binary and ZI-count gate cols both take the threshold-joint path (both
+  # are binary-like observations with a truncated-Gaussian E-step).
+  binary_cols  <- integer(0)
+  zi_gate_cols <- integer(0)
+  cat_cols     <- integer(0)
   for (tm in trait_map) {
-    if (tm$type == "binary") binary_cols <- c(binary_cols, tm$latent_cols)
+    if (tm$type == "binary") {
+      binary_cols <- c(binary_cols, tm$latent_cols)
+    } else if (tm$type == "zi_count") {
+      zi_gate_cols <- c(zi_gate_cols, tm$latent_cols[1])
+    } else if (tm$type == "categorical") {
+      cat_cols <- c(cat_cols, tm$latent_cols)
+    }
   }
+  # ZI gates join binary for dispatch purposes.
+  binary_cols <- c(binary_cols, zi_gate_cols)
 
+  # Phase 4 scope: threshold-joint fires when (binary) + BM are present.
+  # Categorical-only (no binary) datasets fall back to Phase 2 MVN + LP:
+  # Rphylopars has numerical instability with multi-categorical liability
+  # matrices (the rank-(K-1) drop + multiple cat groups combine badly).
+  # Phase 6 EM will refine this once Sigma is estimated stably.
   use_threshold_joint <- length(binary_cols) >= 1L &&
     length(bm_cols) >= 1L &&
     !has_multi_proportion && !multi_obs &&
@@ -156,47 +166,62 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
 
   if (use_threshold_joint) {
     jt <- fit_joint_threshold_baseline(data, tree, splits = splits,
-                                       graph = graph)
+                                        graph = graph,
+                                        cat_encoding = cat_encoding)
 
     populated_cols <- integer(0)
 
-    # Continuous cols: mu_liab is already on the z-scored latent scale
-    cont_cols_in_jt <- which(jt$liab_types != "binary")
-    for (idx in cont_cols_in_jt) {
+    # Continuous-family (mu_liab on z-score scale)
+    cont_idx <- which(jt$liab_types != "binary" & jt$liab_types != "categorical")
+    for (idx in cont_idx) {
       col <- jt$liab_cols[idx]
-      # Only copy if phylopars actually fit this column (non-NA posterior)
       if (any(!is.na(jt$mu_liab[, idx]))) {
         mu[, col] <- jt$mu_liab[, idx]
         se[, col] <- jt$se_liab[, idx]
         populated_cols <- c(populated_cols, col)
       }
     }
-    # Binary cols: decode liability -> logit(P(y=1))
-    bin_cols_in_jt <- which(jt$liab_types == "binary")
-    for (idx in bin_cols_in_jt) {
+
+    # Binary -> logit(P)
+    bin_idx <- which(jt$liab_types == "binary")
+    for (idx in bin_idx) {
       col <- jt$liab_cols[idx]
-      # Skip unfit columns (all-NA posterior from <2-obs filter)
       if (all(is.na(jt$mu_liab[, idx]))) next
       dec <- decode_binary_liability(mu_liab = jt$mu_liab[, idx],
-                                     se_liab = jt$se_liab[, idx])
+                                      se_liab = jt$se_liab[, idx])
       mu[, col] <- dec$mu_logit
-      se[, col] <- 0   # LP path also sets se=0 for binary; match convention
+      se[, col] <- 0
       populated_cols <- c(populated_cols, col)
     }
 
-    # Remove populated cols from bm_cols / binary_cols so the downstream
-    # per-column loops skip them. Any unpopulated cols (e.g. <2 observations,
-    # filtered out inside fit_joint_threshold_baseline) stay in bm_cols /
-    # binary_cols and fall through to the per-column BM / LP paths for
-    # graceful fallback.
-    bm_cols     <- setdiff(bm_cols, populated_cols)
+    # Categorical -> K log-probs (both encodings, per trait)
+    for (tm in trait_map) {
+      if (tm$type != "categorical") next
+      k_cols    <- tm$latent_cols
+      local_idx <- match(k_cols, jt$liab_cols)
+      if (any(is.na(local_idx))) next
+      # If ALL K cols are all-NA, trait was filtered -> fall through to LP
+      if (all(apply(jt$mu_liab[, local_idx, drop = FALSE], 2,
+                    function(col) all(is.na(col))))) next
+      for (i in seq_len(nrow(jt$mu_liab))) {
+        mu_K <- jt$mu_liab[i, local_idx]
+        se_K <- jt$se_liab[i, local_idx]
+        dec  <- decode_categorical_liability(mu_K = mu_K, se_K = se_K,
+                                              cat_encoding = cat_encoding)
+        mu[i, k_cols] <- dec$log_probs
+      }
+      se[, k_cols]   <- 0
+      populated_cols <- c(populated_cols, k_cols)
+    }
+
+    bm_cols     <- setdiff(bm_cols,     populated_cols)
     binary_cols <- setdiff(binary_cols, populated_cols)
+    cat_cols    <- setdiff(cat_cols,    populated_cols)
 
   } else if (use_continuous_joint) {
     joint <- fit_joint_mvn_baseline(data, tree, splits = splits, graph = graph)
     mu[, bm_cols] <- joint$mu[, bm_cols]
     se[, bm_cols] <- joint$se[, bm_cols]
-    # Skip the per-column loop by clearing bm_cols
     bm_cols <- integer(0)
   }
 
@@ -286,6 +311,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     if (tm$type != "categorical") next
     K    <- tm$n_latent
     lc   <- tm$latent_cols
+    if (!all(lc %in% cat_cols)) next  # handled by threshold-joint path
     oh   <- X[, lc, drop = FALSE]  # n_obs x K one-hot (with NAs)
 
     # Get species-level one-hot observations
@@ -335,6 +361,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   for (tm in trait_map) {
     if (tm$type != "zi_count") next
     lc_gate <- tm$latent_cols[1]
+    # Phase 5: if threshold-joint handled this gate, skip LP
+    if (!(lc_gate %in% binary_cols)) next
 
     # Get species-level gate values (0 = zero, 1 = non-zero)
     if (multi_obs) {

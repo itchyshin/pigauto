@@ -58,6 +58,70 @@
   Ordinal still rides in the Phase-2 MVN via its z-scored integer
   encoding.
 
+### Level C Phase 4 — CATEGORICAL machinery (partial; gated behind include_categorical)
+
+Categorical joint-baseline infrastructure landed but is **not yet on
+the default dispatch path**. The reason is a numerical limitation of
+`Rphylopars::phylopars()`: the rank-(K-1) drop required to fit
+categorical liabilities combined with multi-categorical cross-
+correlation routinely triggers "Not compatible with requested type"
+errors in its EM iterations, even at modest `n = 100` and rho = 0.4.
+Confirmed on real AVONET data and on synthetic correlated BM
+simulations.
+
+What landed:
+
+- `build_liability_matrix()` supports categorical traits in two
+  encodings (both gated behind `include_categorical = TRUE`):
+  - `cat_encoding = "joint_K"`: K sum-zero liabilities via
+    `estep_liability_categorical` (Phase 1 plug-in E-step).
+  - `cat_encoding = "ovr"`: K independent binary thresholds via
+    `estep_liability_binary` on each one-hot column.
+- `fit_joint_threshold_baseline()` handles the rank-(K-1) drop:
+  for `joint_K` it reconstructs the dropped column algebraically
+  as `-(sum of fitted K-1 cols)`; for `ovr` the decoder handles
+  the NA column via residual probability.
+- `decode_categorical_liability()` converts K-dim liability posterior
+  to log-probabilities via softmax (joint_K) or normalised probit
+  (ovr), matching the LP baseline's output convention.
+- Head-to-head A/B benchmark in `script/bench_categorical_joint.R`
+  compares joint_K vs OVR vs LP on correlated simulations.
+
+What's deferred to Phase 6:
+
+- **Safe joint-fit for categorical.** Phase 6's custom EM solver will
+  replace `Rphylopars::phylopars()` for categorical-containing
+  liability matrices, working around phylopars' numerical fragility.
+- **Default dispatch flip.** Once Phase 6 lands, `include_categorical`
+  will default to `TRUE` and categorical traits will get the cross-
+  trait correlation benefit automatically.
+
+BACE's AVONET OVR benchmark (Trophic.Level 72% vs pigauto 65.6%) is
+the target lift for Phase 6.
+
+### Level C Phase 5 — ZI gate joins the threshold-joint path
+
+- Zero-inflated count traits have two latent cols: a binary gate
+  (observed-is-zero vs observed-is-nonzero) and a continuous magnitude
+  (log1p-z). The magnitude col already rode Phase 2's joint MVN
+  baseline (as a BM-eligible continuous). Phase 5 routes the gate col
+  through the Phase 3 threshold-joint path alongside binary traits,
+  so ZI gates now benefit from cross-trait correlation with other
+  continuous/binary traits just like regular binaries.
+- `build_liability_matrix()` now includes the ZI gate col as a
+  binary-like liability (treated identically to binary by the
+  truncated-Gaussian E-step).
+- `fit_baseline()` dispatcher collects gate cols into `binary_cols`
+  for threshold-joint dispatch; the ZI gate LP loop skips cols
+  already handled.
+- Count, proportion, ordinal already ride Phase 2's joint MVN via
+  the `bm_cols` set — no Phase 5 changes needed for them. They were
+  already cross-trait correlation-aware.
+
+**Deferred to Phase 6**: multi_proportion (K CLR cols hit the same
+phylopars rank-deficiency instability as categorical K-col groups).
+multi_proportion continues to run per-column BM via its existing path.
+
 # pigauto 0.7.0
 
 ## New trait type: multi_proportion (compositional data)
