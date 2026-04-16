@@ -110,6 +110,9 @@ fit_pigauto <- function(
     n_gnn_layers      = 2L,
     gate_cap          = 0.8,
     use_attention     = TRUE,
+    use_transformer_blocks = TRUE,
+    n_heads           = 4L,
+    ffn_mult          = 4L,
     dropout           = 0.10,
     lr                = 0.003,
     weight_decay      = 1e-4,
@@ -286,15 +289,19 @@ fit_pigauto <- function(
   # different observations of the same species get distinct predictions.
   n_user_cov <- if (multi_obs) n_cov_cols else 0L
   model <- ResidualPhyloDAE(
-    input_dim      = p,
-    hidden_dim     = as.integer(hidden_dim),
-    coord_dim      = as.integer(k_eigen),
-    cov_dim        = as.integer(cov_dim),
-    per_column_rs  = TRUE,
-    n_gnn_layers   = as.integer(n_gnn_layers),
-    gate_cap       = gate_cap,
-    use_attention  = use_attention,
-    n_user_cov     = as.integer(n_user_cov)
+    input_dim              = p,
+    hidden_dim             = as.integer(hidden_dim),
+    coord_dim              = as.integer(k_eigen),
+    cov_dim                = as.integer(cov_dim),
+    per_column_rs          = TRUE,
+    n_gnn_layers           = as.integer(n_gnn_layers),
+    gate_cap               = gate_cap,
+    use_attention          = use_attention,
+    n_user_cov             = as.integer(n_user_cov),
+    dropout                = dropout,
+    use_transformer_blocks = use_transformer_blocks,
+    n_heads                = as.integer(n_heads),
+    ffn_mult               = as.integer(ffn_mult)
   )
 
   # Type-aware gate init: set res_raw so effective gate starts at a
@@ -603,17 +610,20 @@ fit_pigauto <- function(
 
   # ---- Build result object ---------------------------------------------------
   model_config <- list(
-    hidden_dim      = hidden_dim,
-    k_eigen         = k_eigen,
-    n_gnn_layers    = n_gnn_layers,
-    gate_cap        = gate_cap,
-    use_attention   = use_attention,
-    dropout         = dropout,
-    refine_steps    = refine_steps,
-    cov_dim         = cov_dim,
-    input_dim       = p,
-    per_column_rs   = TRUE,
-    n_user_cov      = n_user_cov
+    hidden_dim             = hidden_dim,
+    k_eigen                = k_eigen,
+    n_gnn_layers           = n_gnn_layers,
+    gate_cap               = gate_cap,
+    use_attention          = use_attention,
+    use_transformer_blocks = use_transformer_blocks,
+    n_heads                = as.integer(n_heads),
+    ffn_mult               = as.integer(ffn_mult),
+    dropout                = dropout,
+    refine_steps           = refine_steps,
+    cov_dim                = cov_dim,
+    input_dim              = p,
+    per_column_rs          = TRUE,
+    n_user_cov             = n_user_cov
   )
 
   # Backward-compat: store val_rmse and test_rmse names

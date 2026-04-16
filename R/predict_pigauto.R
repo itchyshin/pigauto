@@ -87,21 +87,29 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   has_trait_map <- !is.null(trait_map)
 
   # Reconstruct model (backward compat with old saves that lack new params)
-  per_col      <- isTRUE(cfg$per_column_rs)
-  n_gnn_layers <- cfg$n_gnn_layers %||% 1L
-  gate_cap     <- cfg$gate_cap %||% 0.5
-  use_attention <- cfg$use_attention %||% FALSE
-  n_user_cov   <- cfg$n_user_cov %||% 0L
+  per_col                <- isTRUE(cfg$per_column_rs)
+  n_gnn_layers           <- cfg$n_gnn_layers %||% 1L
+  gate_cap               <- cfg$gate_cap %||% 0.5
+  use_attention          <- cfg$use_attention %||% FALSE
+  n_user_cov             <- cfg$n_user_cov %||% 0L
+  use_transformer_blocks <- cfg$use_transformer_blocks %||% FALSE  # old saves: legacy
+  n_heads                <- cfg$n_heads %||% 4L
+  ffn_mult               <- cfg$ffn_mult %||% 4L
+  dropout_cfg            <- cfg$dropout %||% 0.10
   model <- ResidualPhyloDAE(
-    input_dim     = as.integer(cfg$input_dim),
-    hidden_dim    = as.integer(cfg$hidden_dim),
-    coord_dim     = as.integer(cfg$k_eigen),
-    cov_dim       = as.integer(cfg$cov_dim),
-    per_column_rs = per_col,
-    n_gnn_layers  = as.integer(n_gnn_layers),
-    gate_cap      = gate_cap,
-    use_attention = use_attention,
-    n_user_cov    = as.integer(n_user_cov)
+    input_dim              = as.integer(cfg$input_dim),
+    hidden_dim             = as.integer(cfg$hidden_dim),
+    coord_dim              = as.integer(cfg$k_eigen),
+    cov_dim                = as.integer(cfg$cov_dim),
+    per_column_rs          = per_col,
+    n_gnn_layers           = as.integer(n_gnn_layers),
+    gate_cap               = gate_cap,
+    use_attention          = use_attention,
+    n_user_cov             = as.integer(n_user_cov),
+    dropout                = dropout_cfg,
+    use_transformer_blocks = use_transformer_blocks,
+    n_heads                = as.integer(n_heads),
+    ffn_mult               = as.integer(ffn_mult)
   )
   model$to(device = device)
   model$load_state_dict(object$model_state)
