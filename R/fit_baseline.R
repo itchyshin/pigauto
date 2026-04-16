@@ -142,7 +142,12 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     }
   }
 
-  use_threshold_joint <- (length(binary_cols) + length(cat_cols)) >= 1L &&
+  # Phase 4 scope: threshold-joint fires when (binary) + BM are present.
+  # Categorical-only (no binary) datasets fall back to Phase 2 MVN + LP:
+  # Rphylopars has numerical instability with multi-categorical liability
+  # matrices (the rank-(K-1) drop + multiple cat groups combine badly).
+  # Phase 6 EM will refine this once Sigma is estimated stably.
+  use_threshold_joint <- length(binary_cols) >= 1L &&
     length(bm_cols) >= 1L &&
     !has_multi_proportion && !multi_obs &&
     joint_mvn_available()
