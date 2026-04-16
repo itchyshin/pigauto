@@ -19,6 +19,30 @@ test_that("fit_ovr_categorical_fits returns K probability vectors per tip", {
   expect_true(all(finite_vals >= 0 & finite_vals <= 1))
 })
 
+test_that("fit_baseline routes categorical through OVR K-fits when Rphylopars available", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(200)
+  tree <- ape::rtree(40)
+  df <- data.frame(
+    x = rnorm(40),
+    y = factor(sample(c("A","B"), 40, TRUE), levels = c("A","B")),
+    z = factor(sample(c("P","Q","R","S"), 40, TRUE),
+               levels = c("P","Q","R","S")),
+    row.names = tree$tip.label
+  )
+  df$z[c(5, 15, 25)] <- NA
+  pd <- preprocess_traits(df, tree)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.2,
+                                 seed = 200, trait_map = pd$trait_map)
+  bl <- fit_baseline(pd, tree, splits = splits)
+
+  cat_col_names <- grep("^z=", colnames(pd$X_scaled), value = TRUE)
+  expect_length(cat_col_names, 4L)
+  row_probs_sums <- rowSums(exp(bl$mu[, cat_col_names]))
+  expect_true(all(abs(row_probs_sums - 1) < 1e-6))
+  expect_true(all(is.finite(bl$mu[, cat_col_names])))
+})
+
 test_that("decode_ovr_categorical normalises K probs to valid log-prob distribution", {
   probs <- matrix(c(0.8, 0.3, 0.1,
                      0.2, 0.9, 0.4,
