@@ -3,7 +3,7 @@ test_that("build_phylo_graph returns list with adj and coords", {
   tree <- ape::rtree(20)
   g <- build_phylo_graph(tree, k_eigen = 4L)
   expect_type(g, "list")
-  expect_named(g, c("adj", "coords", "n", "sigma", "D", "R_phy"))
+  expect_named(g, c("adj", "coords", "n", "sigma", "D", "D_sq", "R_phy"))
 })
 
 test_that("build_phylo_graph adj is square and n matches ntips", {

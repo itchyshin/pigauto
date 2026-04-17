@@ -157,6 +157,10 @@ adj_symnorm_from_D <- function(D, sigma_mult) {
 #'       between tips, row/column-ordered by \code{tree$tip.label}.
 #'       Returned so downstream functions can reuse it instead of calling
 #'       \code{ape::cophenetic.phylo()} again.}
+#'     \item{D_sq}{Numeric matrix (n x n). Element-wise squared cophenetic
+#'       distances (\code{D * D}).  Used by \code{GraphTransformerBlock} for
+#'       the learnable per-head Gaussian bandwidth (B2 rate-aware attention).
+#'       Not freed during \code{impute()} training — only \code{D} is freed.}
 #'     \item{R_phy}{Numeric matrix (n x n). Phylogenetic correlation matrix
 #'       \code{cov2cor(ape::vcv(tree))} (diagonal = 1). Used by
 #'       \code{\link{fit_baseline}} for BM conditional imputation.}
@@ -200,6 +204,9 @@ build_phylo_graph <- function(tree, k_eigen = "auto", sigma_mult = 0.5,
       if (is.null(cache$D)) {
         cache$D <- ape::cophenetic.phylo(tree)
       }
+      if (is.null(cache$D_sq)) {
+        cache$D_sq <- cache$D * cache$D
+      }
       if (is.null(cache$R_phy)) {
         cache$R_phy <- phylo_cor_matrix(tree)
       }
@@ -225,8 +232,14 @@ build_phylo_graph <- function(tree, k_eigen = "auto", sigma_mult = 0.5,
   coords <- spectral_features_from_D(D, k_eigen, sigma_mult)
   sigma  <- stats::median(D) * sigma_mult
 
+  # Squared cophenetic distances: used by GraphTransformerBlock for the
+  # learnable per-head Gaussian bandwidth (B2 rate-aware attention).
+  # D_sq is NOT freed in impute.R's cleanup block because the transformer
+  # needs it during training.  Only D (and R_phy) are freed there.
+  D_sq <- D * D
+
   result <- list(adj = adj, coords = coords, n = n, sigma = sigma,
-                 D = D, R_phy = R_phy)
+                 D = D, D_sq = D_sq, R_phy = R_phy)
 
   if (!is.null(cache_path)) {
     saveRDS(result, cache_path)

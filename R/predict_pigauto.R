@@ -124,6 +124,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     MU_species <- object$baseline$mu    # n_species x p
     coords     <- object$graph$coords   # n_species x k
     adj        <- object$graph$adj      # n_species x n_species
+    D_sq       <- object$graph$D_sq     # n_species x n_species, or NULL for old saves
     obs_to_sp  <- object$obs_to_species # NULL or integer vector
   } else {
     stop("newdata support not yet implemented.")
@@ -154,6 +155,13 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
                                   device = device)
   t_adj    <- torch::torch_tensor(adj,    dtype = torch::torch_float(),
                                   device = device)
+  # Squared cophenetic distances for B2 rate-aware attention.
+  # NULL for old pigauto_fit objects saved before B2.1 — backward compat.
+  t_D_sq <- if (!is.null(D_sq)) {
+    torch::torch_tensor(D_sq, dtype = torch::torch_float(), device = device)
+  } else {
+    NULL
+  }
 
   # Observation-to-species mapping tensor
   if (multi_obs) {
@@ -224,7 +232,8 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
         cov_parts0 <- list(t_MU, mask_ind0)
         if (has_covariates) cov_parts0[[length(cov_parts0) + 1L]] <- t_covariates
         covs0 <- torch::torch_cat(cov_parts0, dim = 2L)
-        out   <- model(X_iter, t_coords, covs0, t_adj, t_obs_to_sp)
+        out   <- model(X_iter, t_coords, covs0, t_adj, t_obs_to_sp,
+                       D_sq = t_D_sq)
         # Use t_BM_draw (the BM posterior sample) in the baseline term so that
         # between-imputation variance is non-zero even when the gate is 0.
         if (use_calibrated) {

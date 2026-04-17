@@ -68,9 +68,17 @@ test_that("GraphTransformerBlock gradients flow through", {
   loss$backward()
 
   expect_false(is.null(h$grad))
-  # At least some parameters should have non-zero gradients
+  # At least some parameters should have non-zero gradients.
+  # Guard against both R-NULL and torch-undefined (None) grads — the
+  # latter arises for parameters not used in this forward path (e.g.
+  # log_bandwidth when D_sq is NULL).
   param_grads <- lapply(block$parameters, function(p) {
-    if (is.null(p$grad)) 0 else as.numeric(torch::torch_sum(torch::torch_abs(p$grad)))
+    g <- p$grad
+    if (is.null(g)) return(0)
+    tryCatch(
+      as.numeric(torch::torch_sum(torch::torch_abs(g))),
+      error = function(e) 0
+    )
   })
   expect_gt(sum(unlist(param_grads)), 0)
 })
@@ -103,4 +111,41 @@ test_that("GraphTransformerBlock preserves log-adjacency-bias prior on attention
   # The two outputs should differ — proves the block respects adj
   diff <- as.numeric(torch::torch_norm(out_peaked - out_uniform))
   expect_gt(diff, 0.01)
+})
+
+test_that("GraphTransformerBlock uses D_sq for learnable Gaussian when provided", {
+  skip_if_not_installed("torch")
+  if (!torch::torch_is_installed()) skip("torch backend not installed")
+
+  hidden_dim <- 16L; n_species <- 10L
+  torch::torch_manual_seed(5L)
+  block <- GraphTransformerBlock(hidden_dim = hidden_dim, n_heads = 2L,
+                                   ffn_mult = 4L, dropout = 0.0)
+  h    <- torch::torch_randn(n_species, hidden_dim)
+  adj  <- torch::torch_rand(n_species, n_species)
+  D_sq <- torch::torch_rand(n_species, n_species) * 10
+
+  out_dsq <- block(h, adj, D_sq = D_sq)
+  out_adj <- block(h, adj, D_sq = NULL)
+  diff <- as.numeric(torch::torch_norm(out_dsq - out_adj))
+  expect_gt(diff, 0.01)
+  expect_true(all(is.finite(as.numeric(out_dsq))))
+  expect_true(all(is.finite(as.numeric(out_adj))))
+})
+
+test_that("GraphTransformerBlock backward compat: D_sq = NULL uses old path", {
+  skip_if_not_installed("torch")
+  if (!torch::torch_is_installed()) skip("torch backend not installed")
+
+  hidden_dim <- 16L; n_species <- 10L
+  torch::torch_manual_seed(6L)
+  block <- GraphTransformerBlock(hidden_dim = hidden_dim, n_heads = 2L,
+                                   ffn_mult = 4L, dropout = 0.0)
+  h   <- torch::torch_randn(n_species, hidden_dim)
+  adj <- torch::torch_rand(n_species, n_species)
+
+  out1 <- block(h, adj, D_sq = NULL)
+  out2 <- block(h, adj)
+  diff <- as.numeric(torch::torch_norm(out1 - out2))
+  expect_lt(diff, 1e-6)
 })

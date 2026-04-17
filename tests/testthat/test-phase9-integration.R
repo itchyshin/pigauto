@@ -224,3 +224,28 @@ test_that("fit_pigauto end-to-end converges with transformer blocks on small dat
   expect_true(nrow(fit_l$history) > 0L)
   expect_true(is.finite(tail(fit_l$history$loss_rec, 1)))
 })
+
+test_that("ResidualPhyloDAE accepts D_sq in forward (transformer path)", {
+  skip_if_not_installed("torch")
+  if (!torch::torch_is_installed()) skip("torch backend not installed")
+
+  torch::torch_manual_seed(10L)
+  model <- ResidualPhyloDAE(
+    p_latent = 3L, k_eigen = 4L, cov_dim = 1L, hidden = 16L,
+    n_gnn_layers = 2L,
+    use_transformer_blocks = TRUE, n_heads = 2L
+  )
+  x      <- torch::torch_randn(10L, 3L)
+  coords <- torch::torch_randn(10L, 4L)
+  covs   <- torch::torch_randn(10L, 1L)
+  adj    <- torch::torch_rand(10L, 10L)
+  D_sq   <- torch::torch_rand(10L, 10L) * 10
+  baseline <- torch::torch_randn(10L, 3L)
+  obs_to_sp <- torch::torch_tensor(seq_len(10L), dtype = torch::torch_long())
+
+  out <- model(x = x, coords = coords, covs = covs, adj = adj,
+               baseline_mu = baseline, obs_to_species = obs_to_sp,
+               D_sq = D_sq)
+  expect_equal(dim(out), c(10L, 3L))
+  expect_true(all(is.finite(as.numeric(out))))
+})
