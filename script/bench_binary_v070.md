@@ -1,9 +1,9 @@
 # Binary-trait benchmark
 
-Run on: 2026-04-17 07:14:08
+Run on: 2026-04-13 13:05:03
 Machine: Darwin 25.4.0 (arm64), R 4.5.2
 Species: 300, traits: 4, reps: 5, missing_frac: 0.25
-Total wall: 30.1 min
+Total wall: 48.4 min
 
 ## Methods
 
@@ -58,7 +58,7 @@ Total wall: 30.1 min
   pigauto  bin1 0.6521893 0.2279319
      mode  bin2 0.4850633 0.2896968
  baseline  bin2 0.6068895 0.2345977
-  pigauto  bin2 0.6132343 0.2307684
+  pigauto  bin2 0.6068895 0.2345977
      mode  bin3 0.5075091 0.2836308
  baseline  bin3 0.6973778 0.2155216
   pigauto  bin3 0.6973778 0.2155216
@@ -82,7 +82,7 @@ Total wall: 30.1 min
   pigauto  bin3 0.6322208 0.2278702
      mode  bin4 0.4780418 0.2814069
  baseline  bin4 0.6913322 0.2212722
-  pigauto  bin4 0.7007072 0.2208609
+  pigauto  bin4 0.6913322 0.2212722
 ```
 
 ### signal_1.0
@@ -91,10 +91,10 @@ Total wall: 30.1 min
    method trait  accuracy     brier
      mode  bin1 0.4899804 0.2932487
  baseline  bin1 0.6775067 0.2073715
-  pigauto  bin1 0.6775067 0.2121193
+  pigauto  bin1 0.6775067 0.2073715
      mode  bin2 0.4597599 0.3164407
  baseline  bin2 0.7201143 0.2109569
-  pigauto  bin2 0.7286249 0.2024490
+  pigauto  bin2 0.7201143 0.2109569
      mode  bin3 0.5246706 0.2759206
  baseline  bin3 0.7245681 0.2025963
   pigauto  bin3 0.7245681 0.2025963
@@ -111,16 +111,16 @@ Total wall: 30.1 min
    method trait  accuracy     brier
      mode  bin1 0.5357446 0.2633183
  baseline  bin1 0.6586796 0.2255664
-  pigauto  bin1 0.6771981 0.2233414
+  pigauto  bin1 0.6586796 0.2248289
      mode  bin2 0.4892567 0.2880275
  baseline  bin2 0.5763727 0.2337068
-  pigauto  bin2 0.5763727 0.2337068
+  pigauto  bin2 0.5800090 0.2335587
      mode  bin3 0.4580955 0.3120753
  baseline  bin3 0.6649303 0.2194681
   pigauto  bin3 0.6649303 0.2194681
      mode  bin4 0.5351997 0.2883621
  baseline  bin4 0.6938771 0.2159868
-  pigauto  bin4 0.6853664 0.2158198
+  pigauto  bin4 0.6938771 0.2159868
 ```
 
 ### imbalance_0.7
@@ -129,13 +129,13 @@ Total wall: 30.1 min
    method trait  accuracy     brier
      mode  bin1 0.3172401 0.2500000
  baseline  bin1 0.6863963 0.1925513
-  pigauto  bin1 0.6863963 0.1925513
+  pigauto  bin1 0.6863963 0.1958033
      mode  bin2 0.2526189 0.2500000
  baseline  bin2 0.7624755 0.1738400
   pigauto  bin2 0.7624755 0.1738400
      mode  bin3 0.2598246 0.2500000
  baseline  bin3 0.7613300 0.1699391
-  pigauto  bin3 0.7613300 0.1712925
+  pigauto  bin3 0.7613300 0.1699391
      mode  bin4 0.2777733 0.2500000
  baseline  bin4 0.7601802 0.1650778
   pigauto  bin4 0.7601802 0.1650778

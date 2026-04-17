@@ -1,8 +1,0 @@
-[   0.0s] Running 40 cells across 2 cores (PSOCK cluster)
-[   0.0s] Starting PSOCK cluster...
-[   3.9s] Cluster ready. Dispatching cells...
-[2931.1s] Cluster stopped.
-[2931.2s] Completed: 40 good, 0 errors
-[2931.2s] Total wall: 2931.2s (48.9 min)
-[2931.7s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_proportion.md
-[2931.7s] done

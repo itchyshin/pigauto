@@ -1,9 +1,9 @@
 # Continuous-trait benchmark
 
-Run on: 2026-04-13 13:15:25
+Run on: 2026-04-17 06:43:58
 Machine: Darwin 25.4.0 (arm64), R 4.5.2
 Species: 300, traits: 4, reps: 5
-Total wall: 58.8 min
+Total wall: 40.4 min
 
 ## Methods
 
@@ -17,56 +17,56 @@ Total wall: 58.8 min
 
 ```
   method  trait      rmse pearson_r
-      BM trait1 0.4967363 0.8663988
- pigauto trait1 0.4967363 0.8663988
-      BM trait2 0.4544072 0.8864250
- pigauto trait2 0.4536278 0.8865820
-      BM trait3 0.4495054 0.8731011
- pigauto trait3 0.4495054 0.8731011
-      BM trait4 0.4754557 0.8779050
- pigauto trait4 0.4754557 0.8779050
+      BM trait1 0.4886809 0.8705976
+ pigauto trait1 0.4949629 0.8700480
+      BM trait2 0.4558267 0.8862792
+ pigauto trait2 0.4534462 0.8866550
+      BM trait3 0.4533913 0.8701876
+ pigauto trait3 0.4533913 0.8701876
+      BM trait4 0.4745146 0.8783615
+ pigauto trait4 0.4763183 0.8784153
 ```
 
 ### OU
 
 ```
   method  trait     rmse  pearson_r
-      BM trait1 1.119439 0.14857626
- pigauto trait1 1.087567 0.14485961
-      BM trait2 1.065164 0.27734385
- pigauto trait2 1.047763 0.27981444
-      BM trait3 1.167358 0.06945645
- pigauto trait3 1.122307 0.07190917
-      BM trait4 1.142055 0.13698177
- pigauto trait4 1.106968 0.13824618
+      BM trait1 1.134902 0.13963660
+ pigauto trait1 1.116960 0.13025472
+      BM trait2 1.111751 0.23476098
+ pigauto trait2 1.103693 0.23879219
+      BM trait3 1.185897 0.05873885
+ pigauto trait3 1.147709 0.06064279
+      BM trait4 1.159863 0.12775233
+ pigauto trait4 1.120844 0.13638028
 ```
 
 ### regime_shift
 
 ```
   method  trait      rmse pearson_r
-      BM trait1 0.3850487 0.9142773
- pigauto trait1 0.3850487 0.9142773
-      BM trait2 0.4171097 0.9097522
- pigauto trait2 0.4173008 0.9103828
-      BM trait3 0.3314232 0.9284165
- pigauto trait3 0.3314232 0.9284165
-      BM trait4 0.3033656 0.9507367
- pigauto trait4 0.3033656 0.9507367
+      BM trait1 0.3842905 0.9152567
+ pigauto trait1 0.3842905 0.9152567
+      BM trait2 0.4204941 0.9082347
+ pigauto trait2 0.4197538 0.9086790
+      BM trait3 0.3414650 0.9255868
+ pigauto trait3 0.3414650 0.9255868
+      BM trait4 0.3066973 0.9492055
+ pigauto trait4 0.3236757 0.9487930
 ```
 
 ### nonlinear
 
 ```
   method  trait      rmse pearson_r
-      BM trait1 0.7147945 0.7189273
- pigauto trait1 0.7157085 0.7235380
-      BM trait2 0.5717182 0.8187038
- pigauto trait2 0.5628034 0.8206180
-      BM trait3 0.6967794 0.7731351
- pigauto trait3 0.6994407 0.7771120
-      BM trait4 0.4488400 0.8748362
- pigauto trait4 0.4450811 0.8752356
+      BM trait1 0.7208384 0.7191276
+ pigauto trait1 0.7208384 0.7191276
+      BM trait2 0.5528077 0.8333589
+ pigauto trait2 0.5457424 0.8342428
+      BM trait3 0.6565790 0.7959599
+ pigauto trait3 0.6474180 0.8009217
+      BM trait4 0.4504407 0.8735342
+ pigauto trait4 0.4468838 0.8725947
 ```
 
 ## Secondary sweep (BM + OU, varying missingness)
@@ -75,83 +75,83 @@ Total wall: 58.8 min
 
 ```
   method  trait      rmse pearson_r
-      BM trait1 0.4419746 0.8919239
- pigauto trait1 0.4558371 0.8904821
-      BM trait2 0.4592459 0.8989809
- pigauto trait2 0.4592459 0.8989809
-      BM trait3 0.4315676 0.8861479
- pigauto trait3 0.4408927 0.8837973
-      BM trait4 0.4541139 0.9021030
- pigauto trait4 0.4816927 0.8985276
+      BM trait1 0.4439541 0.8908556
+ pigauto trait1 0.4588447 0.8907375
+      BM trait2 0.4558421 0.8991569
+ pigauto trait2 0.4558421 0.8991569
+      BM trait3 0.4318808 0.8854750
+ pigauto trait3 0.4318808 0.8854750
+      BM trait4 0.4478773 0.9047288
+ pigauto trait4 0.4627135 0.9036003
 ```
 
 ### BM, missing_frac = 0.30
 
 ```
   method  trait      rmse pearson_r
-      BM trait1 0.4904403 0.8652277
- pigauto trait1 0.4980983 0.8643317
-      BM trait2 0.4787526 0.8727168
- pigauto trait2 0.4787526 0.8727168
-      BM trait3 0.4707709 0.8702795
- pigauto trait3 0.4707709 0.8702795
-      BM trait4 0.4836186 0.8766321
- pigauto trait4 0.4836186 0.8766321
+      BM trait1 0.4877209 0.8669367
+ pigauto trait1 0.4877209 0.8669367
+      BM trait2 0.4864311 0.8683894
+ pigauto trait2 0.4864311 0.8683894
+      BM trait3 0.4754692 0.8672855
+ pigauto trait3 0.4754692 0.8672855
+      BM trait4 0.4821998 0.8782160
+ pigauto trait4 0.4964750 0.8781354
 ```
 
 ### BM, missing_frac = 0.50
 
 ```
   method  trait      rmse pearson_r
-      BM trait1 0.5412067 0.8427619
- pigauto trait1 0.5412067 0.8427619
-      BM trait2 0.5056230 0.8462154
- pigauto trait2 0.5056230 0.8462154
-      BM trait3 0.5232074 0.8428584
- pigauto trait3 0.5232074 0.8428584
-      BM trait4 0.5168270 0.8454739
- pigauto trait4 0.5168270 0.8454739
+      BM trait1 0.5461826 0.8388566
+ pigauto trait1 0.5461826 0.8388566
+      BM trait2 0.5051078 0.8476373
+ pigauto trait2 0.5040534 0.8479441
+      BM trait3 0.5265010 0.8414441
+ pigauto trait3 0.5265010 0.8414441
+      BM trait4 0.5207890 0.8435174
+ pigauto trait4 0.5207890 0.8435174
 ```
 
 ### OU, missing_frac = 0.15
 
 ```
-  method  trait      rmse  pearson_r
-      BM trait1 1.0636690 0.25983298
- pigauto trait1 1.0309551 0.26062807
-      BM trait2 1.0068474 0.32252923
- pigauto trait2 0.9879805 0.32762094
-      BM trait3 1.2029089 0.07861814
- pigauto trait3 1.1467637 0.07936132
-      BM trait4 1.1336748 0.10173831
- pigauto trait4 1.1103333 0.09856296
+  method  trait     rmse  pearson_r
+      BM trait1 1.068858 0.25996846
+ pigauto trait1 1.037773 0.25215555
+      BM trait2 1.033483 0.29242276
+ pigauto trait2 1.021008 0.29800038
+      BM trait3 1.204560 0.07539891
+ pigauto trait3 1.164650 0.07898685
+      BM trait4 1.147486 0.09273750
+ pigauto trait4 1.124111 0.09277594
 ```
 
 ### OU, missing_frac = 0.30
 
 ```
   method  trait     rmse  pearson_r
-      BM trait1 1.074144 0.15950978
- pigauto trait1 1.039044 0.15606319
-      BM trait2 1.119834 0.17898792
- pigauto trait2 1.102825 0.18073749
-      BM trait3 1.156460 0.09500669
- pigauto trait3 1.132107 0.09762647
-      BM trait4 1.157110 0.09640980
- pigauto trait4 1.108821 0.09413957
+      BM trait1 1.107821 0.12963658
+ pigauto trait1 1.091716 0.12375281
+      BM trait2 1.155393 0.15163548
+ pigauto trait2 1.133356 0.15191263
+      BM trait3 1.169799 0.08961219
+ pigauto trait3 1.147481 0.08541191
+      BM trait4 1.156355 0.10404563
+ pigauto trait4 1.139342 0.10394357
 ```
 
 ### OU, missing_frac = 0.50
 
 ```
   method  trait     rmse  pearson_r
-      BM trait1 1.123196 0.12727929
- pigauto trait1 1.101016 0.12348904
-      BM trait2 1.112662 0.15549385
- pigauto trait2 1.091417 0.15564637
-      BM trait3 1.145531 0.04548523
- pigauto trait3 1.122582 0.04909450
-      BM trait4 1.151708 0.08848987
- pigauto trait4 1.114978 0.08888818
+      BM trait1 1.138535 0.14125489
+ pigauto trait1 1.119471 0.14324702
+      BM trait2 1.164806 0.11984514
+ pigauto trait2 1.149506 0.11947169
+      BM trait3 1.164028 0.03768911
+ pigauto trait3 1.149039 0.04156518
+      BM trait4 1.178730 0.08583503
+ pigauto trait4 1.154306 0.08034537
 ```
 

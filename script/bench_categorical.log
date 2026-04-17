@@ -1,8 +1,7 @@
-[   0.0s] Running 35 cells across 2 cores (PSOCK cluster)
+[   0.0s] Running 35 cells across 4 cores (PSOCK cluster)
 [   0.0s] Starting PSOCK cluster...
-[   4.0s] Cluster ready. Dispatching cells...
-[2636.1s] Cluster stopped.
-[2636.1s] Completed: 35 good, 0 errors
-[2636.1s] Total wall: 2636.1s (43.9 min)
-[2636.2s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_categorical.md
-[2636.2s] done
+[   3.5s] Cluster ready. Dispatching cells...
+/AppleInternal/Library/BuildRoots/4~CJ7zugCWBHgyY5jF33Pox4qXqx4MT4guvYcGoM4/Library/Caches/com.apple.xbs/TemporaryDirectory.oY3GWR/Sources/MetalPerformanceShaders/MPSCore/Utility/MPSKernelDAG.mm:610: failed assertion `Failed to stich function with error: Error Domain=MTLLibraryErrorDomain Code=3 "Unable to reach MTLCompilerService. The process is unavailable because the compiler is no longer active. Latest invalidation reason: Connection init failed at lookup with error 124 - Domain is tearing down" UserInfo={NSLocalizedDescription=Unable to reach MTLCompilerService. The process is unavailable because the compiler is no longer active. Latest invalidation reason: Connection init failed at lookup with error 124 - Domain is tearing down}'
+Error in unserialize(node$con) : error reading from connection
+Calls: <Anonymous> ... FUN -> recvData -> recvData.SOCKnode -> unserialize
+Execution halted
