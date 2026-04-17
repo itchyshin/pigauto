@@ -147,6 +147,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   binary_cols  <- integer(0)
   zi_gate_cols <- integer(0)
   cat_cols     <- integer(0)
+  ordinal_cols <- integer(0)
   for (tm in trait_map) {
     if (tm$type == "binary") {
       binary_cols <- c(binary_cols, tm$latent_cols)
@@ -154,6 +155,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       zi_gate_cols <- c(zi_gate_cols, tm$latent_cols[1])
     } else if (tm$type == "categorical") {
       cat_cols <- c(cat_cols, tm$latent_cols)
+    } else if (tm$type == "ordinal") {
+      ordinal_cols <- c(ordinal_cols, tm$latent_cols)
     }
   }
   # ZI gates join binary for dispatch purposes.
@@ -164,7 +167,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   # Rphylopars has numerical instability with multi-categorical liability
   # matrices (the rank-(K-1) drop + multiple cat groups combine badly).
   # Phase 6 EM will refine this once Sigma is estimated stably.
-  use_threshold_joint <- length(binary_cols) >= 1L &&
+  use_threshold_joint <- (length(binary_cols) + length(ordinal_cols)) >= 1L &&
     length(bm_cols) >= 1L &&
     !has_multi_proportion &&
     joint_mvn_available()
@@ -181,8 +184,9 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
 
     populated_cols <- integer(0)
 
-    # Continuous-family (mu_liab on z-score scale)
-    cont_idx <- which(jt$liab_types != "binary" & jt$liab_types != "categorical")
+    # Continuous-family passthrough (mu_liab on z-score scale).
+    # Excludes binary (needs logit decode) and ordinal (needs threshold decode).
+    cont_idx <- which(!(jt$liab_types %in% c("binary", "categorical", "ordinal")))
     for (idx in cont_idx) {
       col <- jt$liab_cols[idx]
       if (any(!is.na(jt$mu_liab[, idx]))) {
@@ -204,8 +208,30 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       populated_cols <- c(populated_cols, col)
     }
 
-    bm_cols     <- setdiff(bm_cols,     populated_cols)
-    binary_cols <- setdiff(binary_cols, populated_cols)
+    # Ordinal -> z-scored integer class via threshold decode
+    ord_idx <- which(jt$liab_types == "ordinal")
+    for (idx in ord_idx) {
+      col <- jt$liab_cols[idx]
+      if (all(is.na(jt$mu_liab[, idx]))) next
+      # Find the trait_map entry for this ordinal col
+      tm_ord <- NULL
+      for (tm in trait_map) {
+        if (tm$type == "ordinal" && col %in% tm$latent_cols) {
+          tm_ord <- tm; break
+        }
+      }
+      if (is.null(tm_ord)) next
+      dec <- decode_ordinal_liability(mu_liab = jt$mu_liab[, idx],
+                                        se_liab = jt$se_liab[, idx],
+                                        tm = tm_ord)
+      mu[, col] <- dec$mu_z
+      se[, col] <- 0
+      populated_cols <- c(populated_cols, col)
+    }
+
+    bm_cols      <- setdiff(bm_cols,      populated_cols)
+    binary_cols  <- setdiff(binary_cols,  populated_cols)
+    ordinal_cols <- setdiff(ordinal_cols, populated_cols)
 
   } else if (use_continuous_joint) {
     joint <- fit_joint_mvn_baseline(data, tree, splits = splits, graph = graph,

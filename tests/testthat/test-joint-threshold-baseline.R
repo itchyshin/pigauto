@@ -261,3 +261,120 @@ test_that("build_liability_matrix excludes categorical cols from joint liability
   expect_equal(ncol(out$X_liab), 1L)
   expect_equal(out$liab_types, "continuous")
 })
+
+# ---- B3: ordinal threshold baseline tests ----
+
+test_that("build_liability_matrix applies ordinal E-step (not passthrough)", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(99)
+  tree <- ape::rtree(15)
+  df <- data.frame(
+    x = rnorm(15),
+    o = ordered(sample(c("low", "med", "high"), 15, TRUE),
+                levels = c("low", "med", "high")),
+    row.names = tree$tip.label
+  )
+  df$o[c(3, 7)] <- NA
+  pd <- preprocess_traits(df, tree)
+  out <- build_liability_matrix(pd, splits = NULL)
+
+  # Should have 2 cols (x continuous + o ordinal)
+  expect_equal(ncol(out$X_liab), 2)
+  expect_true("ordinal" %in% out$liab_types)
+  # Ordinal col: non-NA observed cells should differ from the z-scored
+  # integer passthrough (the E-step produces different values)
+  o_col <- which(out$liab_types == "ordinal")
+  obs_rows <- which(!is.na(df$o))
+  # The E-step posterior should be finite and in a reasonable range
+  expect_true(all(is.finite(out$X_liab[obs_rows, o_col])))
+  # Values should NOT exactly equal the z-scored integers from X_scaled
+  o_latent_col <- pd$trait_map[[2]]$latent_cols
+  z_passthrough <- pd$X_scaled[obs_rows, o_latent_col]
+  expect_false(all(abs(out$X_liab[obs_rows, o_col] - z_passthrough) < 1e-10))
+  # Missing cells should be NA
+  expect_true(all(is.na(out$X_liab[c(3, 7), o_col])))
+})
+
+test_that("fit_baseline uses threshold-joint for ordinal + continuous", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(100)
+  tree <- ape::rtree(30)
+  df <- data.frame(
+    x = rnorm(30),
+    o = ordered(sample(c("low", "med", "high"), 30, TRUE),
+                levels = c("low", "med", "high")),
+    row.names = tree$tip.label
+  )
+  df$o[c(5, 15, 25)] <- NA
+  pd <- preprocess_traits(df, tree)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.2,
+                                 seed = 100, trait_map = pd$trait_map)
+  bl <- fit_baseline(pd, tree, splits = splits)
+
+  # Output should be finite for all species
+  o_col <- pd$trait_map[[2]]$latent_cols
+  expect_true(all(is.finite(bl$mu[, o_col])))
+  # Ordinal mu should be within plausible z-scored integer range
+  expect_true(all(abs(bl$mu[, o_col]) < 5))
+  # Continuous col should also be finite
+  expect_true(all(is.finite(bl$mu[, "x"])))
+})
+
+test_that("decode_ordinal_liability returns z-scored integer class", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(101)
+  tree <- ape::rtree(10)
+  df <- data.frame(
+    x = rnorm(10),
+    o = ordered(rep(c("A", "B", "C", "D", "E"), 2),
+                levels = c("A", "B", "C", "D", "E")),
+    row.names = tree$tip.label
+  )
+  pd <- preprocess_traits(df, tree)
+  tm_o <- NULL
+  for (tm in pd$trait_map) if (tm$type == "ordinal") { tm_o <- tm; break }
+
+  # liability_info for K=5: thresholds = 0.5, 1.5, 2.5, 3.5
+  # Liability value 2.0 falls in interval [1.5, 2.5] = class 3 (0-indexed = 2)
+  dec <- decode_ordinal_liability(mu_liab = 2.0, se_liab = 0.1, tm = tm_o)
+  expected_z <- (2 - tm_o$mean) / tm_o$sd
+  expect_equal(dec$mu_z, expected_z, tolerance = 1e-6)
+  expect_equal(dec$se_z, 0)
+
+  # Extreme high liability -> highest class (K=5, 0-indexed = 4)
+  dec_high <- decode_ordinal_liability(mu_liab = 100, se_liab = 0, tm = tm_o)
+  expected_high <- (4 - tm_o$mean) / tm_o$sd
+  expect_equal(dec_high$mu_z, expected_high, tolerance = 1e-6)
+
+  # Extreme low liability -> lowest class (0-indexed = 0)
+  dec_low <- decode_ordinal_liability(mu_liab = -100, se_liab = 0, tm = tm_o)
+  expected_low <- (0 - tm_o$mean) / tm_o$sd
+  expect_equal(dec_low$mu_z, expected_low, tolerance = 1e-6)
+})
+
+test_that("ordinal falls back to per-column BM when Rphylopars unavailable", {
+  skip_if_not(joint_mvn_available(),
+              "This test checks the fallback path")
+  set.seed(102)
+  tree <- ape::rtree(20)
+  df <- data.frame(
+    x = rnorm(20),
+    o = ordered(sample(c("A", "B", "C"), 20, TRUE),
+                levels = c("A", "B", "C")),
+    row.names = tree$tip.label
+  )
+  df$o[c(3, 10)] <- NA
+  pd <- preprocess_traits(df, tree)
+
+  # Stub joint_mvn_available to FALSE
+  orig <- pigauto:::joint_mvn_available
+  assignInNamespace("joint_mvn_available", function() FALSE, ns = "pigauto")
+  on.exit(assignInNamespace("joint_mvn_available", orig, ns = "pigauto"))
+
+  bl <- fit_baseline(pd, tree, splits = NULL)
+
+  # Should still produce finite output (per-column BM fallback)
+  o_col <- pd$trait_map[[2]]$latent_cols
+  expect_true(all(is.finite(bl$mu[, o_col])))
+  expect_true(all(is.finite(bl$mu[, "x"])))
+})

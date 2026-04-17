@@ -230,8 +230,19 @@ build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE) 
         X_liab[i, j] <- post$mean
       }
 
+    } else if (tp == "ordinal") {
+      # Ordinal: interval-truncated Gaussian E-step via the dispatcher.
+      # estep_liability() handles z-score roundtrip internally.
+      for (i in seq_len(n)) {
+        v <- src_col[i]
+        if (is.na(v)) next
+        post <- estep_liability(tm_j, observed = v,
+                                  mu_prior = 0, sd_prior = 1)
+        X_liab[i, j] <- post$mean
+      }
+
     } else {
-      # Continuous-family: pass through
+      # Continuous-family (continuous/count/proportion): pass through
       X_liab[, j] <- src_col
     }
   }
@@ -337,5 +348,30 @@ decode_binary_liability <- function(mu_liab, se_liab) {
   p <- stats::pnorm(mu_liab / sigma_marg)
   p <- pmin(pmax(p, 0.01), 0.99)
   list(p = p, mu_logit = stats::qlogis(p))
+}
+
+#' Decode ordinal liability posterior to z-scored integer class
+#'
+#' Given liability posterior N(mu_liab, se_liab^2) and ordinal thresholds,
+#' find the most likely class and return its z-scored integer representation.
+#' Matches the existing z-scored integer convention in X_scaled so the GNN's
+#' MSE loss target is preserved.
+#'
+#' @param mu_liab numeric vector, posterior mean on liability scale.
+#' @param se_liab numeric vector (same length), posterior SD.
+#' @param tm trait_map entry for this ordinal trait.
+#' @return list(mu_z, se_z) z-scored integer values.
+#' @keywords internal
+#' @noRd
+decode_ordinal_liability <- function(mu_liab, se_liab, tm) {
+  info <- liability_info(tm)
+  thresholds <- info$thresholds
+  K <- length(thresholds) + 1L
+  # Most likely class: which interval does the posterior mean fall in?
+  class_idx <- findInterval(mu_liab, thresholds) + 1L
+  class_idx <- pmax(1L, pmin(K, class_idx))
+  # Convert to z-scored integer: (class_0indexed - mean) / sd
+  mu_z <- (class_idx - 1 - tm$mean) / tm$sd
+  list(mu_z = mu_z, se_z = rep(0, length(mu_liab)))
 }
 
