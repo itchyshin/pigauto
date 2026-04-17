@@ -1,5 +1,21 @@
 # pigauto 0.9.0.9000 (dev)
 
+## Full threshold-model ordinal baseline (B3)
+
+- Ordinal traits now use proper interval-truncated Gaussian E-step
+  in the Level-C baseline instead of z-scored integer passthrough.
+  Observing "class 3 out of 5" constrains the liability to the
+  interval [threshold_2, threshold_3] rather than treating it as a
+  point value. The liability joins the joint Rphylopars fit alongside
+  continuous + binary traits.
+- New internal decoder: `decode_ordinal_liability()` converts the
+  Rphylopars liability posterior back to z-scored integer class for
+  downstream GNN compatibility.
+- `fit_baseline()` threshold-joint dispatch now fires when ordinal
+  cols are present (in addition to binary / categorical). Ordinal
+  cols that can't be populated (e.g., <2 observations) fall back to
+  per-column BM unchanged.
+
 ## Soft-liability E-step for multi-obs aggregation (B1)
 
 - New argument `multi_obs_aggregation = c("hard", "soft")` on `impute()`

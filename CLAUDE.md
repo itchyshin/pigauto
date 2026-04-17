@@ -175,8 +175,10 @@ cols coexist with >=1 continuous col and Rphylopars is available;
 otherwise the Phase-2 continuous-only joint or the original per-column
 paths fire. Unpopulated cols (filtered by the <2-obs guard) fall
 through to the per-column BM / LP paths via `setdiff`, giving per-column
-graceful fallback. Ordinal stays on the Phase-2 path (z-scored integer
-as a continuous stand-in) — full threshold ordinal lands in Phase 6 EM.
+graceful fallback. B3 adds ordinal to the threshold-joint path via `estep_liability_ordinal`
+(interval-truncated Gaussian). Ordinal liability is decoded back to
+z-scored integer class via `decode_ordinal_liability()` for GNN
+compatibility.
 
 Nothing in `fit_pigauto()` / GNN changed: the baseline's `mu` for
 binary cols is still logit-scale, so BCE and gate math are transparent.
