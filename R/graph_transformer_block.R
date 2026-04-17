@@ -58,14 +58,29 @@ GraphTransformerBlock <- torch::nn_module(
 
     # Log-adjacency bias scaling: learnable per-head scalar so each head
     # can modulate how strongly it respects the phylo prior.
+    # Used as the fallback when D_sq is not supplied (backward compat).
     self$adj_bias_scale <- torch::nn_parameter(
       torch::torch_ones(self$n_heads)
     )
+
+    # Learnable per-head Gaussian bandwidth for rate-aware attention (B2).
+    # softplus(0.5413) ≈ 1.0 — moderate initial bandwidth.
+    # When D_sq is supplied in forward(), each head computes:
+    #   bias_h = -D_sq / (2 * softplus(log_bw_h)^2)
+    # so it learns its own phylogenetic scale (tight = close relatives;
+    # broad = distant relatives).  When D_sq = NULL, the legacy
+    # log(adj)-bias path fires unchanged.
+    self$log_bandwidth <- torch::nn_parameter(
+      torch::torch_full(list(self$n_heads), 0.5413)
+    )
   },
 
-  forward = function(h, adj) {
-    # h:   (n_species, hidden_dim)
-    # adj: (n_species, n_species), non-negative kernel weights
+  forward = function(h, adj, D_sq = NULL) {
+    # h:    (n_species, hidden_dim)
+    # adj:  (n_species, n_species), non-negative kernel weights
+    # D_sq: (n_species, n_species) or NULL.  When provided, use the
+    #       learnable per-head Gaussian bandwidth (B2) instead of the
+    #       log(adj) fallback.
     n  <- h$size(1)
     H  <- self$n_heads
     D  <- self$head_dim
@@ -82,11 +97,18 @@ GraphTransformerBlock <- torch::nn_module(
     scale  <- 1 / sqrt(D)
     scores <- torch::torch_matmul(q, k$transpose(2, 3)) * scale
 
-    # Add log-adjacency bias (phylo prior). adj: (n,n) -> log(adj + eps)
-    log_adj <- torch::torch_log(adj + 1e-6)
-    # Broadcast to (H, n, n) with per-head scale
-    bias <- self$adj_bias_scale$view(c(H, 1L, 1L)) *
-            log_adj$unsqueeze(1)
+    # Per-head Gaussian on cophenetic distances (B2) or log(adj) fallback
+    if (!is.null(D_sq)) {
+      # B2 path: bias_h = -D_sq / (2 * softplus(log_bw_h)^2)
+      bw    <- torch::nnf_softplus(self$log_bandwidth)       # (H,)
+      bw_sq <- (bw * bw)$view(c(H, 1L, 1L))                 # (H, 1, 1)
+      bias  <- -D_sq$unsqueeze(1) / (2 * bw_sq + 1e-8)      # (H, n, n)
+    } else {
+      # Legacy fallback: adj_bias_scale * log(adj + eps)
+      log_adj <- torch::torch_log(adj + 1e-6)
+      bias <- self$adj_bias_scale$view(c(H, 1L, 1L)) *
+              log_adj$unsqueeze(1)
+    }
     scores <- scores + bias
 
     # Softmax over keys
