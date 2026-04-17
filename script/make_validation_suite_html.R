@@ -2,8 +2,8 @@
 #
 # script/make_validation_suite_html.R
 #
-# Generate pkgdown/assets/validation_suite.html — an index of all 14
-# benchmark results for pigauto v0.6.0.
+# Generate pkgdown/assets/validation_suite.html — an index of all 15
+# benchmark results for pigauto v0.9.0.
 #
 # Run with:
 #   Rscript script/make_validation_suite_html.R
@@ -122,11 +122,12 @@ cat("Loading benchmark results...\n")
 b_binary      <- extract_pertype("binary",   "baseline", "accuracy", TRUE,  0.25)
 b_categorical <- extract_pertype("categorical", "baseline", "accuracy", TRUE, 0.25)
 b_continuous  <- extract_pertype("continuous", "BM", "rmse", FALSE, 0.25)
-b_count       <- extract_pertype("count",    "BM",       "rmse",     FALSE, 0.25)
-b_ordinal     <- extract_pertype("ordinal",  "BM",       "rmse",     FALSE, 0.25)
-b_proportion  <- extract_pertype("proportion", "BM",     "rmse",     FALSE, 0.25)
-b_zi_count    <- extract_pertype("zi_count", "BM",       "rmse",     FALSE, 0.25)
-b_mechanism   <- extract_pertype("missingness_mechanism", "BM", "rmse", FALSE, 0.25)
+b_count       <- extract_pertype("count",    "baseline", "rmse",     FALSE, 0.25)
+b_ordinal     <- extract_pertype("ordinal",  "baseline", "rmse",     FALSE, 0.25)
+b_proportion  <- extract_pertype("proportion", "baseline","rmse",    FALSE, 0.25)
+b_zi_count    <- extract_pertype("zi_count", "baseline", "rmse",     FALSE, 0.25)
+b_mechanism         <- extract_pertype("missingness_mechanism", "baseline", "rmse", FALSE, 0.25)
+b_multi_proportion  <- extract_pertype("multi_proportion", "baseline", "aitchison", FALSE, 0.25)
 
 # Covariate simulation: pigauto_covs vs pigauto at strong_env scenario
 b_covsim <- local({
@@ -208,7 +209,7 @@ b_avonet <- local({
 
 # Scaling: max N with status "ok" across all stages
 b_scaling <- local({
-  r <- load_rds("bench_scaling_v031")
+  r <- load_rds("bench_scaling_v090")
   if (is.null(r)) return(NULL)
   df <- if (is.data.frame(r)) r else r$results
   if (is.null(df)) return(NULL)
@@ -269,7 +270,7 @@ h('<!doctype html>')
 h('<html lang="en">')
 h('<head>')
 h('<meta charset="utf-8">')
-h('<title>pigauto v0.6.0 &mdash; Validation Suite</title>')
+h('<title>pigauto v0.9.0 &mdash; Validation Suite</title>')
 h('<style>')
 h('  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;')
 h('         max-width: 1040px; margin: 2em auto; padding: 0 1.5em; color: #111827;')
@@ -295,11 +296,11 @@ h('</style>')
 h('</head>')
 h('<body>')
 h()
-h('<h1>pigauto <span class="badge">v0.6.0</span> &mdash; Validation Suite</h1>')
+h('<h1>pigauto <span class="badge">v0.9.0</span> &mdash; Validation Suite</h1>')
 h('<p class="meta">Generated ', timestamp, ' &middot; Commit ', commit_short, '</p>')
 h()
 h('<p>')
-h('This page summarises 14 benchmark experiments validating pigauto v0.6.0 across all')
+h('This page summarises 15 benchmark experiments validating pigauto v0.9.0 across all')
 h('supported trait types, multiple real datasets, and a range of missingness scenarios.')
 h('Each row links to a full benchmark report with per-scenario tables, bar charts, and')
 h('methodology notes. Benchmarks were run with <code>devtools::load_all()</code> against')
@@ -370,6 +371,17 @@ if (!is.null(b_proportion)) {
            "RMSE (test, logit-z)", "dev/bench_proportion.html")
 } else {
   make_row("Proportion traits", "proportion", "Simulated", "", NA, NA, NA, "RMSE", "dev/bench_proportion.html", "pending")
+}
+
+# Multi-proportion
+if (!is.null(b_multi_proportion)) {
+  make_row("Multi-proportion traits", "multi_proportion", "Simulated (n=300)",
+           "BM baseline (CLR)", b_multi_proportion$baseline, b_multi_proportion$pigauto,
+           b_multi_proportion$improvement,
+           "Aitchison distance (test)", "dev/bench_multi_proportion.html")
+} else {
+  make_row("Multi-proportion traits", "multi_proportion", "Simulated", "", NA, NA, NA,
+           "Aitchison distance", "dev/bench_multi_proportion.html", "pending")
 }
 
 # ZI count
@@ -460,7 +472,7 @@ if (!is.null(b_tree_unc)) {
 if (!is.null(b_scaling)) {
   max_n_str <- if (!is.na(b_scaling$max_n)) format(b_scaling$max_n, big.mark=",") else "&ndash;"
   h('<tr>',
-    '<td><a href="dev/scaling.html">Scaling (v0.3.1 fix)</a></td>',
+    '<td><a href="dev/bench_scaling_v090.html">Scaling (v0.9.0)</a></td>',
     '<td><em>mixed</em></td>',
     '<td>Simulated (up to ', max_n_str, ' species)</td>',
     '<td>wall time per N</td>',
@@ -469,7 +481,7 @@ if (!is.null(b_scaling)) {
     '<td>Wall time (s)</td>',
     '</tr>')
 } else {
-  make_row("Scaling (v0.3.1 fix)", "mixed", "Simulated (up to 10k sp)", "", NA, NA, NA, "Wall time", "dev/scaling.html", "pending")
+  make_row("Scaling (v0.9.0)", "mixed", "Simulated (up to 10k sp)", "", NA, NA, NA, "Wall time", "dev/bench_scaling_v090.html", "pending")
 }
 
 h('</tbody></table>')
@@ -487,7 +499,7 @@ h('</div>')
 h()
 h('<h2>Reproducibility</h2>')
 h('<ul>')
-h('<li>Package version: <code>pigauto 0.6.0</code></li>')
+h('<li>Package version: <code>pigauto 0.9.0</code></li>')
 h('<li>Commit: <code>', commit_short, '</code></li>')
 h('<li>Run on: ', timestamp, '</li>')
 h('<li>All scripts in <code>script/bench_*.R</code>; generators in <code>script/make_bench_*_html.R</code></li>')

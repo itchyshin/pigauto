@@ -1,0 +1,85 @@
+[   0.0s] bench_scaling_v090 starting at 2026-04-17 13:20:07
+[   0.0s] RSpectra available: TRUE
+[   0.0s] n_grid = 100, 300, 1000, 3000, 5000
+[   0.0s] ===== n = 100 =====
+[   0.4s] [n=  100] preprocess ok      wall=    0.0s  maxR=    51 MB
+[   0.6s] [n=  100] graph      ok      wall=    0.0s  maxR=    54 MB
+[   0.9s] [n=  100] splits     ok      wall=    0.0s  maxR=    52 MB
+[   3.2s] [n=  100] baseline   ok      wall=    1.9s  maxR=    84 MB
+[   3.3s]   epochs for this n: 300
+[ 114.0s] [n=  100] train      ok      wall=  110.3s  maxR=    67 MB
+[ 114.7s] [n=  100] predict    ok      wall=    0.2s  maxR=    61 MB
+[ 115.0s] ===== n = 300 =====
+[ 115.5s] [n=  300] preprocess ok      wall=    0.1s  maxR=    65 MB
+[ 116.0s] [n=  300] graph      ok      wall=    0.0s  maxR=    82 MB
+[ 116.3s] [n=  300] splits     ok      wall=    0.0s  maxR=    65 MB
+[ 120.0s] [n=  300] baseline   ok      wall=    3.3s  maxR=    94 MB
+[ 120.2s]   epochs for this n: 300
+[ 237.9s] [n=  300] train      ok      wall=  117.3s  maxR=    70 MB
+[ 238.5s] [n=  300] predict    ok      wall=    0.2s  maxR=    66 MB
+[ 238.8s] ===== n = 1000 =====
+[ 239.2s] [n= 1000] preprocess ok      wall=    0.0s  maxR=    60 MB
+[ 240.1s] [n= 1000] graph      ok      wall=    0.5s  maxR=   137 MB
+[ 240.5s] [n= 1000] splits     ok      wall=    0.0s  maxR=    93 MB
+
+warning: solve(): system is singular (rcond: 1.59459e-18); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.32967e-19); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.25053e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.25118e-18); attempting approx solution
+
+warning: solve(): system is singular (rcond: 7.20819e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.04493e-18); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.65361e-22); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.50871e-47); attempting approx solution
+[ 252.9s] [n= 1000] baseline   ok      wall=   12.1s  maxR=   156 MB
+[ 253.0s]   epochs for this n: 200
+[ 343.2s] [n= 1000] train      ok      wall=   89.7s  maxR=    93 MB
+[ 343.9s] [n= 1000] predict    ok      wall=    0.3s  maxR=    86 MB
+[ 344.2s] ===== n = 3000 =====
+[ 344.7s] [n= 3000] preprocess ok      wall=    0.0s  maxR=    62 MB
+[ 351.5s] [n= 3000] graph      ok      wall=    6.4s  maxR=   749 MB
+[ 351.9s] [n= 3000] splits     ok      wall=    0.0s  maxR=   356 MB
+
+warning: solve(): system is singular (rcond: 1.17175e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 4.80295e-23); attempting approx solution
+[ 390.4s] [n= 3000] baseline   ok      wall=   38.1s  maxR=   774 MB
+[ 390.6s]   epochs for this n: 200
+[ 518.5s] [n= 3000] train      ok      wall=  127.5s  maxR=   283 MB
+[ 519.9s] [n= 3000] predict    ok      wall=    0.9s  maxR=   273 MB
+[ 520.2s] ===== n = 5000 =====
+[ 521.1s] [n= 5000] preprocess ok      wall=    0.0s  maxR=    63 MB
+[ 551.1s] [n= 5000] graph      ok      wall=   29.6s  maxR=  1971 MB
+[ 551.5s] [n= 5000] splits     ok      wall=    0.0s  maxR=   878 MB
+
+warning: solve(): system is singular (rcond: 1.31274e-16); attempting approx solution
+
+warning: solve(): system is singular (rcond: 8.79605e-19); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.39792e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.53083e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 9.76987e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.10986e-23); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.46286e-29); attempting approx solution
+[ 627.6s] [n= 5000] baseline   ok      wall=   75.7s  maxR=  2019 MB
+[ 627.8s]   epochs for this n: 100
+[1347.9s] [n= 5000] train      ok      wall=  719.5s  maxR=   656 MB
+[1382.8s] [n= 5000] predict    ok      wall=   34.3s  maxR=   643 MB
+[1383.2s] loop finished at 2026-04-17 13:43:10 (total 1383s)
+Warning in ggplot2::scale_y_log10() :
+  log-10 transformation introduced infinite values.
+Warning in ggplot2::scale_y_log10() :
+  log-10 transformation introduced infinite values.
+[1383.8s] plot written to /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_scaling_v090.png
+[1383.9s] summary written to /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_scaling_v090.md
+[1383.9s] done

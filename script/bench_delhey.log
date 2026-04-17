@@ -1,7 +1,7 @@
 [   0.0s] Data: 5809 species, 2 traits, 6 covariates
 [   0.1s] === frac=0.20, rep=1 (seed=1020) ===
 [   0.1s]   Missing cells: 2324 / 11618 (20.0%)
-[  63.4s]   mean...
+[  59.1s]   mean...
 Warning in stats::cor(t_j[ok], p_j[ok]) :
   the standard deviation is zero
 Warning in stats::cor(t_j[ok], p_j[ok]) :
@@ -10,88 +10,24 @@ Warning in stats::cor(t_j[ok], p_j[ok]) :
   the standard deviation is zero
 Warning in stats::cor(t_j[ok], p_j[ok]) :
   the standard deviation is zero
-[  63.4s]   BM baseline...
-[  65.4s]   pigauto (no covariates)...
-[ 445.8s]     Done in 380.5s
-[ 445.8s]   pigauto (with covariates)...
-[ 841.0s]     Done in 395.2s
-[ 841.0s]   Cell done.
+[  59.1s]   BM baseline...
 
-[ 841.0s] === frac=0.20, rep=2 (seed=2020) ===
-[ 841.0s]   Missing cells: 2324 / 11618 (20.0%)
-[ 901.8s]   mean...
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-[ 901.8s]   BM baseline...
-[ 904.3s]   pigauto (no covariates)...
-[1336.9s]     Done in 432.6s
-[1336.9s]   pigauto (with covariates)...
-[1742.6s]     Done in 405.7s
-[1742.6s]   Cell done.
+warning: solve(): system is singular (rcond: 3.36857e-54); attempting approx solution
 
-[1742.6s] === frac=0.20, rep=3 (seed=3020) ===
-[1742.6s]   Missing cells: 2324 / 11618 (20.0%)
-[1804.3s]   mean...
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-[1804.3s]   BM baseline...
-[1806.8s]   pigauto (no covariates)...
-[2166.6s]     Done in 359.8s
-[2166.6s]   pigauto (with covariates)...
-[2555.4s]     Done in 388.8s
-[2555.4s]   Cell done.
+warning: solve(): system is singular (rcond: 3.44006e-18); attempting approx solution
+[  62.5s]   pigauto (no covariates)...
+[1083.4s]     Done in 1020.9s
+[1083.4s]   pigauto (with covariates)...
 
-[2555.4s] === frac=0.40, rep=1 (seed=1040) ===
-[2555.4s]   Missing cells: 4648 / 11618 (40.0%)
-[2617.7s]   mean...
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-[2617.8s]   BM baseline...
-[2619.9s]   pigauto (no covariates)...
-[3005.1s]     Done in 385.1s
-[3005.1s]   pigauto (with covariates)...
-[3384.7s]     Done in 379.6s
-[3384.7s]   Cell done.
+warning: solve(): system is singular (rcond: 3.36857e-54); attempting approx solution
 
-[3384.7s] === frac=0.40, rep=2 (seed=2040) ===
-[3384.7s]   Missing cells: 4648 / 11618 (40.0%)
-[3448.5s]   mean...
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-[3448.5s]   BM baseline...
-[3450.3s]   pigauto (no covariates)...
-[3835.6s]     Done in 385.2s
-[3835.6s]   pigauto (with covariates)...
-[4241.5s]     Done in 405.9s
-[4241.5s]   Cell done.
+warning: solve(): system is singular (rcond: 3.44006e-18); attempting approx solution
+[1899.6s]     Done in 816.2s
+[1899.6s]   Cell done.
 
-[4241.5s] === frac=0.40, rep=3 (seed=3040) ===
-[4241.5s]   Missing cells: 4648 / 11618 (40.0%)
-[4306.5s]   mean...
+[1899.6s] === frac=0.20, rep=2 (seed=2020) ===
+[1899.6s]   Missing cells: 2324 / 11618 (20.0%)
+[1957.9s]   mean...
 Warning in stats::cor(t_j[ok], p_j[ok]) :
   the standard deviation is zero
 Warning in stats::cor(t_j[ok], p_j[ok]) :
@@ -100,16 +36,16 @@ Warning in stats::cor(t_j[ok], p_j[ok]) :
   the standard deviation is zero
 Warning in stats::cor(t_j[ok], p_j[ok]) :
   the standard deviation is zero
-[4306.5s]   BM baseline...
-[4308.7s]   pigauto (no covariates)...
-[4717.4s]     Done in 408.7s
-[4717.4s]   pigauto (with covariates)...
-[5185.4s]     Done in 467.9s
-[5185.4s]   Cell done.
+[1957.9s]   BM baseline...
+[1960.7s]   pigauto (no covariates)...
+[2525.2s]     Done in 564.5s
+[2525.2s]   pigauto (with covariates)...
+[3218.6s]     Done in 693.4s
+[3218.6s]   Cell done.
 
-[5185.4s] === frac=0.60, rep=1 (seed=1060) ===
-[5185.4s]   Missing cells: 6970 / 11618 (60.0%)
-[5250.7s]   mean...
+[3218.6s] === frac=0.20, rep=3 (seed=3020) ===
+[3218.6s]   Missing cells: 2324 / 11618 (20.0%)
+[3279.6s]   mean...
 Warning in stats::cor(t_j[ok], p_j[ok]) :
   the standard deviation is zero
 Warning in stats::cor(t_j[ok], p_j[ok]) :
@@ -118,16 +54,16 @@ Warning in stats::cor(t_j[ok], p_j[ok]) :
   the standard deviation is zero
 Warning in stats::cor(t_j[ok], p_j[ok]) :
   the standard deviation is zero
-[5250.7s]   BM baseline...
-[5252.4s]   pigauto (no covariates)...
-[5698.4s]     Done in 445.9s
-[5698.4s]   pigauto (with covariates)...
-[6161.0s]     Done in 462.6s
-[6161.0s]   Cell done.
+[3279.6s]   BM baseline...
+[3282.5s]   pigauto (no covariates)...
+[3931.7s]     Done in 649.2s
+[3931.7s]   pigauto (with covariates)...
+[4607.3s]     Done in 675.7s
+[4607.3s]   Cell done.
 
-[6161.0s] === frac=0.60, rep=2 (seed=2060) ===
-[6161.0s]   Missing cells: 6970 / 11618 (60.0%)
-[6225.8s]   mean...
+[4607.3s] === frac=0.40, rep=1 (seed=1040) ===
+[4607.3s]   Missing cells: 4648 / 11618 (40.0%)
+[4664.8s]   mean...
 Warning in stats::cor(t_j[ok], p_j[ok]) :
   the standard deviation is zero
 Warning in stats::cor(t_j[ok], p_j[ok]) :
@@ -136,32 +72,172 @@ Warning in stats::cor(t_j[ok], p_j[ok]) :
   the standard deviation is zero
 Warning in stats::cor(t_j[ok], p_j[ok]) :
   the standard deviation is zero
-[6225.8s]   BM baseline...
-[6227.6s]   pigauto (no covariates)...
-[6652.9s]     Done in 425.4s
-[6652.9s]   pigauto (with covariates)...
-[7089.1s]     Done in 436.1s
-[7089.1s]   Cell done.
+[4664.8s]   BM baseline...
 
-[7089.1s] === frac=0.60, rep=3 (seed=3060) ===
-[7089.1s]   Missing cells: 6970 / 11618 (60.0%)
-[7155.7s]   mean...
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-Warning in stats::cor(t_j[ok], p_j[ok]) :
-  the standard deviation is zero
-[7155.7s]   BM baseline...
-[7157.4s]   pigauto (no covariates)...
-[7575.0s]     Done in 417.6s
-[7575.0s]   pigauto (with covariates)...
-[7883.6s]     Done in 308.6s
-[7883.6s]   Cell done.
+warning: solve(): system is singular (rcond: 1.2287e-194); attempting approx solution
 
-[7883.7s] Total rows: 144
-[7883.7s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_delhey.rds
-[7883.7s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_delhey.md
-[7883.7s] done
+warning: solve(): system is singular (rcond: 1.92982e-28); attempting approx solution
+
+warning: solve(): system is singular (rcond: 6.73701e-128); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.05857e-25); attempting approx solution
+[4667.5s]   pigauto (no covariates)...
+[5401.1s]     Done in 733.6s
+[5401.1s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 1.2287e-194); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.92982e-28); attempting approx solution
+
+warning: solve(): system is singular (rcond: 6.73701e-128); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.05857e-25); attempting approx solution
+[6125.6s]     Done in 724.5s
+[6125.6s]   Cell done.
+
+[6125.6s] === frac=0.40, rep=2 (seed=2040) ===
+[6125.6s]   Missing cells: 4648 / 11618 (40.0%)
+[6184.8s]   mean...
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+[6184.8s]   BM baseline...
+
+warning: solve(): system is singular (rcond: 5.36132e-137); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.66845e-27); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.15026e-97); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.13131e-19); attempting approx solution
+[6187.8s]   pigauto (no covariates)...
+[6962.4s]     Done in 774.7s
+[6962.4s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 5.36132e-137); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.66845e-27); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.15026e-97); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.13131e-19); attempting approx solution
+[7751.9s]     Done in 789.4s
+[7751.9s]   Cell done.
+
+[7751.9s] === frac=0.40, rep=3 (seed=3040) ===
+[7751.9s]   Missing cells: 4648 / 11618 (40.0%)
+[7809.6s]   mean...
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+[7809.6s]   BM baseline...
+
+warning: solve(): system is singular (rcond: 1.17247e-29); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.43861e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.64618e-74); attempting approx solution
+[7812.6s]   pigauto (no covariates)...
+[8570.7s]     Done in 758.1s
+[8570.7s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 1.17247e-29); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.43861e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.64618e-74); attempting approx solution
+[9343.9s]     Done in 773.3s
+[9343.9s]   Cell done.
+
+[9343.9s] === frac=0.60, rep=1 (seed=1060) ===
+[9343.9s]   Missing cells: 6970 / 11618 (60.0%)
+[9403.1s]   mean...
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+[9403.2s]   BM baseline...
+[9406.6s]   pigauto (no covariates)...
+[10165.9s]     Done in 759.4s
+[10165.9s]   pigauto (with covariates)...
+[10906.4s]     Done in 740.5s
+[10906.4s]   Cell done.
+
+[10906.4s] === frac=0.60, rep=2 (seed=2060) ===
+[10906.4s]   Missing cells: 6970 / 11618 (60.0%)
+[10962.5s]   mean...
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+[10962.5s]   BM baseline...
+
+warning: solve(): system is singular (rcond: 4.14637e-31); attempting approx solution
+
+warning: solve(): system is singular (rcond: 4.29636e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.34671e-28); attempting approx solution
+[10965.6s]   pigauto (no covariates)...
+[11646.0s]     Done in 680.4s
+[11646.0s]   pigauto (with covariates)...
+
+warning: solve(): system is singular (rcond: 4.14637e-31); attempting approx solution
+
+warning: solve(): system is singular (rcond: 4.29636e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.34671e-28); attempting approx solution
+[12340.0s]     Done in 694.0s
+[12340.0s]   Cell done.
+
+[12340.0s] === frac=0.60, rep=3 (seed=3060) ===
+[12340.0s]   Missing cells: 6970 / 11618 (60.0%)
+[12396.8s]   mean...
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+Warning in stats::cor(t_j[ok], p_j[ok]) :
+  the standard deviation is zero
+[12396.8s]   BM baseline...
+
+warning: solve(): system is singular; attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.30568e-29); attempting approx solution
+
+warning: solve(): system is singular (rcond: 9.25246e-20); attempting approx solution
+[12399.9s]   pigauto (no covariates)...
+[13049.4s]     Done in 649.5s
+[13049.4s]   pigauto (with covariates)...
+
+warning: solve(): system is singular; attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.30568e-29); attempting approx solution
+
+warning: solve(): system is singular (rcond: 9.25246e-20); attempting approx solution
+[13752.1s]     Done in 702.7s
+[13752.1s]   Cell done.
+
+[13752.1s] Total rows: 144
+[13752.1s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_delhey.rds
+[13752.2s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_delhey.md
+[13752.2s] done

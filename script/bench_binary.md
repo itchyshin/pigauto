@@ -1,9 +1,9 @@
 # Binary-trait benchmark
 
-Run on: 2026-04-17 07:14:08
+Run on: 2026-04-17 08:46:52
 Machine: Darwin 25.4.0 (arm64), R 4.5.2
 Species: 300, traits: 4, reps: 5, missing_frac: 0.25
-Total wall: 30.1 min
+Total wall: 0.0 min
 
 ## Methods
 

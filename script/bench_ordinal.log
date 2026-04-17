@@ -1,8 +1,6 @@
-[   0.0s] Running 35 cells across 4 cores (PSOCK cluster)
-[   0.0s] Starting PSOCK cluster...
-[   3.6s] Cluster ready. Dispatching cells...
-[1448.2s] Cluster stopped.
-[1448.2s] Completed: 35 good, 0 errors
-[1448.2s] Total wall: 1448.2s (24.1 min)
-[1448.3s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_ordinal.md
-[1448.3s] done
+[   0.0s] Resuming: 35 / 35 cells already done, 0 remaining
+[   0.0s] Running 0 cells across 4 cores (PSOCK cluster)
+[   0.0s] All cells already done. Skipping to summary.
+[   0.1s] Total wall: 0.0s (0.0 min)
+[   0.1s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_ordinal.md
+[   0.1s] done

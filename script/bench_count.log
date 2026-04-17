@@ -1,8 +1,6 @@
-[   0.0s] Running 30 cells across 4 cores (PSOCK cluster)
-[   0.0s] Starting PSOCK cluster...
-[   3.5s] Cluster ready. Dispatching cells...
-[1285.9s] Cluster stopped.
-[1285.9s] Completed: 30 good, 0 errors
-[1286.0s] Total wall: 1285.9s (21.4 min)
-[1286.0s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_count.md
-[1286.0s] done
+[   0.0s] Resuming: 30 / 30 cells already done, 0 remaining
+[   0.0s] Running 0 cells across 4 cores (PSOCK cluster)
+[   0.0s] All cells already done. Skipping to summary.
+[   0.1s] Total wall: 0.0s (0.0 min)
+[   0.1s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_count.md
+[   0.1s] done

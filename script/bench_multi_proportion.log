@@ -1,0 +1,54 @@
+[   0.0s] Running 24 cells across 4 cores (PSOCK cluster)
+[   0.0s] Running 24 cells sequentially
+[   0.0s]   [1/24] signal_0.2 (rep 1)
+[  96.8s]     done in 96.8s
+[  96.8s]   [2/24] signal_0.4 (rep 1)
+[ 178.5s]     done in 81.8s
+[ 178.5s]   [3/24] signal_0.6 (rep 1)
+[ 259.7s]     done in 81.2s
+[ 259.7s]   [4/24] signal_0.8 (rep 1)
+[ 338.6s]     done in 78.9s
+[ 338.6s]   [5/24] signal_1.0 (rep 1)
+[ 417.1s]     done in 78.5s
+[ 417.1s]   [6/24] signal_0.2 (rep 2)
+[ 495.4s]     done in 78.3s
+[ 495.4s]   [7/24] signal_0.4 (rep 2)
+[ 573.3s]     done in 77.9s
+[ 573.3s]   [8/24] signal_0.6 (rep 2)
+[ 666.2s]     done in 92.9s
+[ 666.2s]   [9/24] signal_0.8 (rep 2)
+[ 760.4s]     done in 94.2s
+[ 760.4s]   [10/24] signal_1.0 (rep 2)
+[ 856.3s]     done in 95.9s
+[ 856.3s]   [11/24] signal_0.2 (rep 3)
+[ 948.4s]     done in 92.0s
+[ 948.4s]   [12/24] signal_0.4 (rep 3)
+[1040.8s]     done in 92.4s
+[1040.8s]   [13/24] signal_0.6 (rep 3)
+[1131.8s]     done in 91.0s
+[1131.8s]   [14/24] signal_0.8 (rep 3)
+[1219.1s]     done in 87.3s
+[1219.1s]   [15/24] signal_1.0 (rep 3)
+[1307.9s]     done in 88.7s
+[1307.9s]   [16/24] K_3 (rep 1)
+[1401.3s]     done in 93.4s
+[1401.3s]   [17/24] K_8 (rep 1)
+[1496.4s]     done in 95.1s
+[1496.4s]   [18/24] K_12 (rep 1)
+[1590.9s]     done in 94.5s
+[1590.9s]   [19/24] K_3 (rep 2)
+[1680.3s]     done in 89.4s
+[1680.3s]   [20/24] K_8 (rep 2)
+[1768.1s]     done in 87.8s
+[1768.1s]   [21/24] K_12 (rep 2)
+[1851.2s]     done in 83.0s
+[1851.2s]   [22/24] K_3 (rep 3)
+[1931.2s]     done in 80.0s
+[1931.2s]   [23/24] K_8 (rep 3)
+[2011.6s]     done in 80.4s
+[2011.6s]   [24/24] K_12 (rep 3)
+[2086.0s]     done in 74.4s
+[2086.0s] Completed: 24 good, 0 errors
+[2086.2s] Total wall: 2086.0s (34.8 min)
+[2086.2s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_multi_proportion.md
+[2086.2s] done

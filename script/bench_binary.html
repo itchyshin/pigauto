@@ -34,13 +34,13 @@ Signal: 0.2 &ndash; 1.0 &middot;
 Methods: mode &middot; phylo label propagation &middot; pigauto &middot;
 Replicates: 5 &middot;
 Missingness: 25% MCAR &middot;
-Commit 00afa8384a &middot;
-Run on 2026-04-14 10:50 &middot;
-Total wall: 48.4 min
+Commit 888d02052f &middot;
+Run on 2026-04-17 10:47 &middot;
+Total wall: 0.0 min
 </p>
 
 <div class="verdict">
-<p><b>Bottom line.</b> At high phylogenetic signal (1.0), phylo label propagation achieves 69.6% accuracy and pigauto matches at 69.6%. The calibrated gate correctly closes when the baseline is already strong.</p>
+<p><b>Bottom line.</b> At high phylogenetic signal (1.0), phylo label propagation achieves 69.6% accuracy and pigauto matches at 69.8%. The calibrated gate correctly closes when the baseline is already strong.</p>
 <p>At low signal (0.2), all methods struggle: baseline 58.0%, pigauto 58.0%. With weak phylogenetic structure there is limited information for any method to exploit.</p>
 </div>
 
@@ -55,9 +55,9 @@ Total wall: 48.4 min
 <tbody>
 <tr><td><b>Signal = 0.2</b></td><td style="text-align:right">0.498</td><td style="text-align:right">0.580 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.580</td><td style="text-align:right">0.290</td><td style="text-align:right">0.243 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.243</td></tr>
 <tr><td><b>Signal = 0.4</b></td><td style="text-align:right">0.500</td><td style="text-align:right">0.637 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.637</td><td style="text-align:right">0.285</td><td style="text-align:right">0.233 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.233</td></tr>
-<tr><td><b>Signal = 0.6</b></td><td style="text-align:right">0.506</td><td style="text-align:right">0.651 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.651</td><td style="text-align:right">0.282</td><td style="text-align:right">0.227</td><td style="text-align:right">0.227 <span style="color:#059669">&#9733;</span></td></tr>
-<tr><td><b>Signal = 0.8</b></td><td style="text-align:right">0.511</td><td style="text-align:right">0.675 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.675</td><td style="text-align:right">0.281</td><td style="text-align:right">0.220</td><td style="text-align:right">0.220 <span style="color:#059669">&#9733;</span></td></tr>
-<tr><td><b>Signal = 1.0</b></td><td style="text-align:right">0.503</td><td style="text-align:right">0.696 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.696</td><td style="text-align:right">0.289</td><td style="text-align:right">0.210</td><td style="text-align:right">0.210 <span style="color:#059669">&#9733;</span></td></tr>
+<tr><td><b>Signal = 0.6</b></td><td style="text-align:right">0.506</td><td style="text-align:right">0.651</td><td style="text-align:right">0.653 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.282</td><td style="text-align:right">0.227</td><td style="text-align:right">0.226 <span style="color:#059669">&#9733;</span></td></tr>
+<tr><td><b>Signal = 0.8</b></td><td style="text-align:right">0.511</td><td style="text-align:right">0.675</td><td style="text-align:right">0.677 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.281</td><td style="text-align:right">0.220</td><td style="text-align:right">0.220 <span style="color:#059669">&#9733;</span></td></tr>
+<tr><td><b>Signal = 1.0</b></td><td style="text-align:right">0.503</td><td style="text-align:right">0.696</td><td style="text-align:right">0.698 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.289</td><td style="text-align:right">0.210</td><td style="text-align:right">0.209 <span style="color:#059669">&#9733;</span></td></tr>
 </tbody>
 </table>
 
@@ -67,7 +67,7 @@ Total wall: 48.4 min
 <line x1="60" y1="258.0" x2="500" y2="258.0" stroke="#e5e7eb" stroke-width="1"/>
 <text x="54" y="261.0" text-anchor="end" font-size="10" fill="#6b7280">0.40</text>
 <line x1="60" y1="202.5" x2="500" y2="202.5" stroke="#e5e7eb" stroke-width="1"/>
-<text x="54" y="205.5" text-anchor="end" font-size="10" fill="#6b7280">0.48</text>
+<text x="54" y="205.5" text-anchor="end" font-size="10" fill="#6b7280">0.49</text>
 <line x1="60" y1="147.0" x2="500" y2="147.0" stroke="#e5e7eb" stroke-width="1"/>
 <text x="54" y="150.0" text-anchor="end" font-size="10" fill="#6b7280">0.57</text>
 <line x1="60" y1="91.5" x2="500" y2="91.5" stroke="#e5e7eb" stroke-width="1"/>
@@ -75,40 +75,40 @@ Total wall: 48.4 min
 <line x1="60" y1="36.0" x2="500" y2="36.0" stroke="#e5e7eb" stroke-width="1"/>
 <text x="54" y="39.0" text-anchor="end" font-size="10" fill="#6b7280">0.75</text>
 <text x="12" y="147" font-size="10" fill="#6b7280" transform="rotate(-90 12 147)">Accuracy</text>
-<rect x="65.5" y="194.3" width="22.0" height="63.7" fill="#9ca3af" rx="2"/>
-<text x="76.5" y="190.3" text-anchor="middle" font-size="9" fill="#374151">0.498</text>
-<rect x="93.0" y="141.6" width="22.0" height="116.4" fill="#2563eb" rx="2"/>
-<text x="104.0" y="137.6" text-anchor="middle" font-size="9" fill="#374151">0.580</text>
-<rect x="120.5" y="141.6" width="22.0" height="116.4" fill="#059669" rx="2"/>
-<text x="131.5" y="137.6" text-anchor="middle" font-size="9" fill="#374151">0.580</text>
+<rect x="65.5" y="194.7" width="22.0" height="63.3" fill="#9ca3af" rx="2"/>
+<text x="76.5" y="190.7" text-anchor="middle" font-size="9" fill="#374151">0.498</text>
+<rect x="93.0" y="142.3" width="22.0" height="115.7" fill="#2563eb" rx="2"/>
+<text x="104.0" y="138.3" text-anchor="middle" font-size="9" fill="#374151">0.580</text>
+<rect x="120.5" y="142.3" width="22.0" height="115.7" fill="#059669" rx="2"/>
+<text x="131.5" y="138.3" text-anchor="middle" font-size="9" fill="#374151">0.580</text>
 <text x="104.0" y="274" text-anchor="middle" font-size="11" fill="#374151">Signal = 0.2</text>
-<rect x="153.5" y="192.6" width="22.0" height="65.4" fill="#9ca3af" rx="2"/>
-<text x="164.5" y="188.6" text-anchor="middle" font-size="9" fill="#374151">0.500</text>
-<rect x="181.0" y="105.2" width="22.0" height="152.8" fill="#2563eb" rx="2"/>
-<text x="192.0" y="101.2" text-anchor="middle" font-size="9" fill="#374151">0.637</text>
-<rect x="208.5" y="105.2" width="22.0" height="152.8" fill="#059669" rx="2"/>
-<text x="219.5" y="101.2" text-anchor="middle" font-size="9" fill="#374151">0.637</text>
+<rect x="153.5" y="193.0" width="22.0" height="65.0" fill="#9ca3af" rx="2"/>
+<text x="164.5" y="189.0" text-anchor="middle" font-size="9" fill="#374151">0.500</text>
+<rect x="181.0" y="106.1" width="22.0" height="151.9" fill="#2563eb" rx="2"/>
+<text x="192.0" y="102.1" text-anchor="middle" font-size="9" fill="#374151">0.637</text>
+<rect x="208.5" y="106.1" width="22.0" height="151.9" fill="#059669" rx="2"/>
+<text x="219.5" y="102.1" text-anchor="middle" font-size="9" fill="#374151">0.637</text>
 <text x="192.0" y="274" text-anchor="middle" font-size="11" fill="#374151">Signal = 0.4</text>
-<rect x="241.5" y="188.6" width="22.0" height="69.4" fill="#9ca3af" rx="2"/>
-<text x="252.5" y="184.6" text-anchor="middle" font-size="9" fill="#374151">0.506</text>
-<rect x="269.0" y="96.2" width="22.0" height="161.8" fill="#2563eb" rx="2"/>
-<text x="280.0" y="92.2" text-anchor="middle" font-size="9" fill="#374151">0.651</text>
+<rect x="241.5" y="189.1" width="22.0" height="68.9" fill="#9ca3af" rx="2"/>
+<text x="252.5" y="185.1" text-anchor="middle" font-size="9" fill="#374151">0.506</text>
+<rect x="269.0" y="97.2" width="22.0" height="160.8" fill="#2563eb" rx="2"/>
+<text x="280.0" y="93.2" text-anchor="middle" font-size="9" fill="#374151">0.651</text>
 <rect x="296.5" y="96.2" width="22.0" height="161.8" fill="#059669" rx="2"/>
-<text x="307.5" y="92.2" text-anchor="middle" font-size="9" fill="#374151">0.651</text>
+<text x="307.5" y="92.2" text-anchor="middle" font-size="9" fill="#374151">0.653</text>
 <text x="280.0" y="274" text-anchor="middle" font-size="11" fill="#374151">Signal = 0.6</text>
-<rect x="329.5" y="185.9" width="22.0" height="72.1" fill="#9ca3af" rx="2"/>
-<text x="340.5" y="181.9" text-anchor="middle" font-size="9" fill="#374151">0.511</text>
-<rect x="357.0" y="81.2" width="22.0" height="176.8" fill="#2563eb" rx="2"/>
-<text x="368.0" y="77.2" text-anchor="middle" font-size="9" fill="#374151">0.675</text>
-<rect x="384.5" y="81.2" width="22.0" height="176.8" fill="#059669" rx="2"/>
-<text x="395.5" y="77.2" text-anchor="middle" font-size="9" fill="#374151">0.675</text>
+<rect x="329.5" y="186.4" width="22.0" height="71.6" fill="#9ca3af" rx="2"/>
+<text x="340.5" y="182.4" text-anchor="middle" font-size="9" fill="#374151">0.511</text>
+<rect x="357.0" y="82.2" width="22.0" height="175.8" fill="#2563eb" rx="2"/>
+<text x="368.0" y="78.2" text-anchor="middle" font-size="9" fill="#374151">0.675</text>
+<rect x="384.5" y="80.7" width="22.0" height="177.3" fill="#059669" rx="2"/>
+<text x="395.5" y="76.7" text-anchor="middle" font-size="9" fill="#374151">0.677</text>
 <text x="368.0" y="274" text-anchor="middle" font-size="11" fill="#374151">Signal = 0.8</text>
-<rect x="417.5" y="191.1" width="22.0" height="66.9" fill="#9ca3af" rx="2"/>
-<text x="428.5" y="187.1" text-anchor="middle" font-size="9" fill="#374151">0.503</text>
-<rect x="445.0" y="67.9" width="22.0" height="190.1" fill="#2563eb" rx="2"/>
-<text x="456.0" y="63.9" text-anchor="middle" font-size="9" fill="#374151">0.696</text>
-<rect x="472.5" y="67.9" width="22.0" height="190.1" fill="#059669" rx="2"/>
-<text x="483.5" y="63.9" text-anchor="middle" font-size="9" fill="#374151">0.696</text>
+<rect x="417.5" y="191.5" width="22.0" height="66.5" fill="#9ca3af" rx="2"/>
+<text x="428.5" y="187.5" text-anchor="middle" font-size="9" fill="#374151">0.503</text>
+<rect x="445.0" y="69.0" width="22.0" height="189.0" fill="#2563eb" rx="2"/>
+<text x="456.0" y="65.0" text-anchor="middle" font-size="9" fill="#374151">0.696</text>
+<rect x="472.5" y="67.7" width="22.0" height="190.3" fill="#059669" rx="2"/>
+<text x="483.5" y="63.7" text-anchor="middle" font-size="9" fill="#374151">0.698</text>
 <text x="456.0" y="274" text-anchor="middle" font-size="11" fill="#374151">Signal = 1.0</text>
 <text x="280.0" y="296" text-anchor="middle" font-size="10" fill="#6b7280">Phylogenetic signal</text>
 <rect x="514" y="36" width="12" height="12" fill="#9ca3af" rx="2"/>
@@ -152,8 +152,8 @@ Total wall: 48.4 min
 <text x="252.5" y="66.4" text-anchor="middle" font-size="9" fill="#374151">0.282</text>
 <rect x="269.0" y="106.9" width="22.0" height="151.1" fill="#2563eb" rx="2"/>
 <text x="280.0" y="102.9" text-anchor="middle" font-size="9" fill="#374151">0.227</text>
-<rect x="296.5" y="106.9" width="22.0" height="151.1" fill="#059669" rx="2"/>
-<text x="307.5" y="102.9" text-anchor="middle" font-size="9" fill="#374151">0.227</text>
+<rect x="296.5" y="107.5" width="22.0" height="150.5" fill="#059669" rx="2"/>
+<text x="307.5" y="103.5" text-anchor="middle" font-size="9" fill="#374151">0.226</text>
 <text x="280.0" y="274" text-anchor="middle" font-size="11" fill="#374151">Signal = 0.6</text>
 <rect x="329.5" y="70.7" width="22.0" height="187.3" fill="#9ca3af" rx="2"/>
 <text x="340.5" y="66.7" text-anchor="middle" font-size="9" fill="#374151">0.281</text>
@@ -166,8 +166,8 @@ Total wall: 48.4 min
 <text x="428.5" y="61.5" text-anchor="middle" font-size="9" fill="#374151">0.289</text>
 <rect x="445.0" y="118.3" width="22.0" height="139.7" fill="#2563eb" rx="2"/>
 <text x="456.0" y="114.3" text-anchor="middle" font-size="9" fill="#374151">0.210</text>
-<rect x="472.5" y="118.3" width="22.0" height="139.7" fill="#059669" rx="2"/>
-<text x="483.5" y="114.3" text-anchor="middle" font-size="9" fill="#374151">0.210</text>
+<rect x="472.5" y="118.9" width="22.0" height="139.1" fill="#059669" rx="2"/>
+<text x="483.5" y="114.9" text-anchor="middle" font-size="9" fill="#374151">0.209</text>
 <text x="456.0" y="274" text-anchor="middle" font-size="11" fill="#374151">Signal = 1.0</text>
 <text x="280.0" y="296" text-anchor="middle" font-size="10" fill="#6b7280">Phylogenetic signal</text>
 <rect x="514" y="36" width="12" height="12" fill="#9ca3af" rx="2"/>
@@ -200,8 +200,8 @@ Total wall: 48.4 min
 <text x="87.5" y="136.1" text-anchor="middle" font-size="9" fill="#374151">0.505</text>
 <rect x="115.0" y="106.5" width="36.7" height="151.5" fill="#2563eb" rx="2"/>
 <text x="133.3" y="102.5" text-anchor="middle" font-size="9" fill="#374151">0.648</text>
-<rect x="160.8" y="106.2" width="36.7" height="151.8" fill="#059669" rx="2"/>
-<text x="179.2" y="102.2" text-anchor="middle" font-size="9" fill="#374151">0.649</text>
+<rect x="160.8" y="105.9" width="36.7" height="152.1" fill="#059669" rx="2"/>
+<text x="179.2" y="101.9" text-anchor="middle" font-size="9" fill="#374151">0.651</text>
 <text x="133.3" y="274" text-anchor="middle" font-size="11" fill="#374151">Imbalance q = 0.5</text>
 <rect x="215.8" y="193.3" width="36.7" height="64.7" fill="#9ca3af" rx="2"/>
 <text x="234.2" y="189.3" text-anchor="middle" font-size="9" fill="#374151">0.277</text>
