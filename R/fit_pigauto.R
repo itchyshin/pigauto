@@ -235,6 +235,17 @@ fit_pigauto <- function(
   t_coords <- torch::torch_tensor(graph$coords, dtype = torch::torch_float(),
                                   device = device)
 
+  # Squared cophenetic distances for B2 rate-aware attention.
+  # graph$D_sq is set by build_phylo_graph() and is NOT freed in impute.R's
+  # cleanup block (only D and R_phy are freed there), so it is available here.
+  # Falls back to NULL if the graph was built before B2.1 (old cache).
+  t_D_sq <- if (!is.null(graph$D_sq)) {
+    torch::torch_tensor(graph$D_sq, dtype = torch::torch_float(),
+                        device = device)
+  } else {
+    NULL
+  }
+
   # Drop the cophenetic distance matrix from fit_pigauto's local view of
   # the graph now that we have the torch tensors we need. This keeps the
   # fit object slim on disk (predict() only reads $adj and $coords), but
@@ -418,7 +429,8 @@ fit_pigauto <- function(
     tok   <- model$mask_token$expand(c(n, p))
     X_in  <- torch::torch_where(masked_bool, tok, t_X)
 
-    out   <- model(X_in, t_coords, covs_t, t_adj_train, t_obs_to_sp)
+    out   <- model(X_in, t_coords, covs_t, t_adj_train, t_obs_to_sp,
+                   D_sq = t_D_sq)
     delta <- out$delta
     rs    <- out$rs
 
@@ -480,7 +492,8 @@ fit_pigauto <- function(
           covs0     <- make_covs_tensor(t_MU, mask_ind0, t_covariates)
           # Use t_X_eval (val/test cells replaced with baseline) so
           # that held-out truth does not leak into the model input.
-          out0      <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp)
+          out0      <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp,
+                             D_sq = t_D_sq)
           pred0     <- (1 - out0$rs) * t_MU + out0$rs * out0$delta
         })
         if (has_trait_map) {
@@ -545,7 +558,8 @@ fit_pigauto <- function(
     torch::with_no_grad({
       mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
       covs0     <- make_covs_tensor(t_MU, mask_ind0, t_covariates)
-      out_cal   <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp)
+      out_cal   <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp,
+                         D_sq = t_D_sq)
       delta_cal <- as.matrix(out_cal$delta$cpu())
       mu_cal    <- as.matrix(t_MU$cpu())
     })
@@ -593,7 +607,8 @@ fit_pigauto <- function(
       mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
       covs0     <- make_covs_tensor(t_MU, mask_ind0, t_covariates)
       # Use t_X_eval so held-out test cells are not leaked to the model.
-      out0      <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp)
+      out0      <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp,
+                         D_sq = t_D_sq)
       pred0     <- (1 - out0$rs) * t_MU + out0$rs * out0$delta
       t_truth_f <- torch::torch_tensor(X_truth, dtype = torch::torch_float(),
                                        device = device)

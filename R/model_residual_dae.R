@@ -174,7 +174,7 @@ ResidualPhyloDAE <- torch::nn_module(
   },
 
   forward = function(x, coords, covs, adj, obs_to_species = NULL,
-                     baseline_mu = NULL) {
+                     baseline_mu = NULL, D_sq = NULL) {
     # x:     (n_obs x p)      -- input traits (possibly with mask tokens)
     # coords: (n_species x k) -- spectral coordinates (species-level)
     # covs:  (n_obs x cov_dim) -- covariates (baseline + mask indicator)
@@ -184,6 +184,9 @@ ResidualPhyloDAE <- torch::nn_module(
     # baseline_mu: (n_obs x p) optional. When provided, returns the blended
     #   prediction (1-rs)*baseline_mu + rs*delta directly (a single tensor).
     #   When NULL (legacy API), returns list(delta = ..., rs = ...).
+    # D_sq: (n_species x n_species) or NULL. Squared cophenetic distances for
+    #   the per-head Gaussian bandwidth in GraphTransformerBlock (B2). When
+    #   NULL, each block falls back to the log(adj) prior path.
 
     multi_obs <- !is.null(obs_to_species)
 
@@ -213,11 +216,12 @@ ResidualPhyloDAE <- torch::nn_module(
 
     if (self$use_transformer_blocks) {
       # ---- Phase-9 path: iterate through GraphTransformerBlock stack ---------
-      # Each block takes (h_species, adj) and returns updated h_species.
+      # Each block takes (h_species, adj, D_sq) and returns updated h_species.
       # The blocks handle multi-head attention + FFN + pre-norm + residual
-      # internally. The log-adj bias in each block preserves the phylo prior.
+      # internally. When D_sq is provided (B2), each block uses the learnable
+      # per-head Gaussian bandwidth; otherwise the log-adj prior path fires.
       for (l in seq_len(self$n_gnn_layers)) {
-        h_species <- self$transformer_blocks[[l]](h_species, adj)
+        h_species <- self$transformer_blocks[[l]](h_species, adj, D_sq = D_sq)
       }
     } else {
       # ---- Legacy path: single-head attention or simple adjacency ------------
