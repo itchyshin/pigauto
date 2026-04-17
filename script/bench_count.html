@@ -34,14 +34,14 @@ Mean counts: 5 &ndash; 500 &middot;
 Methods: mean &middot; BM baseline (Rphylopars) &middot; pigauto &middot;
 Replicates: 5 &middot;
 Missingness: 25% MCAR &middot;
-Commit 00afa8384a &middot;
-Run on 2026-04-14 10:50 &middot;
-Total wall: 34.5 min
+Commit 888d02052f &middot;
+Run on 2026-04-17 10:47 &middot;
+Total wall: 0.0 min
 </p>
 
 <div class="verdict">
-<p><b>Bottom line.</b> For sparse counts (mean = 5) the BM baseline achieves RMSE 0.697 and pigauto achieves 0.693 on the log1p-z scale. Low counts are inherently noisy, limiting all methods.</p>
-<p>For dense counts (mean = 500), pigauto moves RMSE from 0.485 to 0.489 (-0.8%). The log1p transform compresses the scale, so the GNN has smoother gradients to learn from.</p>
+<p><b>Bottom line.</b> For sparse counts (mean = 5) the BM baseline achieves RMSE 0.699 and pigauto achieves 0.695 on the log1p-z scale. Low counts are inherently noisy, limiting all methods.</p>
+<p>For dense counts (mean = 500), pigauto moves RMSE from 0.484 to 0.492 (-1.8%). The log1p transform compresses the scale, so the GNN has smoother gradients to learn from.</p>
 </div>
 
 <h2>Primary sweep: performance by mean count (25% missingness)</h2>
@@ -53,10 +53,10 @@ Total wall: 34.5 min
 <tr><th style="text-align:right">Mean</th><th style="text-align:right">BM</th><th style="text-align:right">pigauto</th><th style="text-align:right">Mean</th><th style="text-align:right">BM</th><th style="text-align:right">pigauto</th><th style="text-align:right">Mean</th><th style="text-align:right">BM</th><th style="text-align:right">pigauto</th></tr>
 </thead>
 <tbody>
-<tr><td><b>μ = 5</b></td><td style="text-align:right">1.029</td><td style="text-align:right">0.697</td><td style="text-align:right">0.693 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.830</td><td style="text-align:right">0.558</td><td style="text-align:right">0.555 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">&ndash;</td><td style="text-align:right">0.724</td><td style="text-align:right">0.725 <span style="color:#059669">&#9733;</span></td></tr>
-<tr><td><b>μ = 20</b></td><td style="text-align:right">0.978</td><td style="text-align:right">0.558</td><td style="text-align:right">0.557 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.771</td><td style="text-align:right">0.447</td><td style="text-align:right">0.447 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">&ndash;</td><td style="text-align:right">0.819 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.818</td></tr>
-<tr><td><b>μ = 100</b></td><td style="text-align:right">1.045</td><td style="text-align:right">0.530 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.532</td><td style="text-align:right">0.844</td><td style="text-align:right">0.414 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.416</td><td style="text-align:right">&ndash;</td><td style="text-align:right">0.860 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.859</td></tr>
-<tr><td><b>μ = 500</b></td><td style="text-align:right">1.032</td><td style="text-align:right">0.485 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.489</td><td style="text-align:right">0.825</td><td style="text-align:right">0.382 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.384</td><td style="text-align:right">&ndash;</td><td style="text-align:right">0.884</td><td style="text-align:right">0.885 <span style="color:#059669">&#9733;</span></td></tr>
+<tr><td><b>μ = 5</b></td><td style="text-align:right">1.029</td><td style="text-align:right">0.699</td><td style="text-align:right">0.695 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.830</td><td style="text-align:right">0.558</td><td style="text-align:right">0.556 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">&ndash;</td><td style="text-align:right">0.723</td><td style="text-align:right">0.723 <span style="color:#059669">&#9733;</span></td></tr>
+<tr><td><b>μ = 20</b></td><td style="text-align:right">0.978</td><td style="text-align:right">0.559</td><td style="text-align:right">0.557 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.771</td><td style="text-align:right">0.447</td><td style="text-align:right">0.446 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">&ndash;</td><td style="text-align:right">0.818</td><td style="text-align:right">0.818 <span style="color:#059669">&#9733;</span></td></tr>
+<tr><td><b>μ = 100</b></td><td style="text-align:right">1.045</td><td style="text-align:right">0.528 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.530</td><td style="text-align:right">0.844</td><td style="text-align:right">0.413 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.416</td><td style="text-align:right">&ndash;</td><td style="text-align:right">0.860 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.859</td></tr>
+<tr><td><b>μ = 500</b></td><td style="text-align:right">1.032</td><td style="text-align:right">0.484 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.492</td><td style="text-align:right">0.825</td><td style="text-align:right">0.380 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.388</td><td style="text-align:right">&ndash;</td><td style="text-align:right">0.886 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.884</td></tr>
 </tbody>
 </table>
 
@@ -76,31 +76,31 @@ Total wall: 34.5 min
 <text x="12" y="147" font-size="10" fill="#6b7280" transform="rotate(-90 12 147)">RMSE</text>
 <rect x="66.9" y="68.1" width="27.5" height="189.9" fill="#9ca3af" rx="2"/>
 <text x="80.6" y="64.1" text-anchor="middle" font-size="9" fill="#374151">1.029</text>
-<rect x="101.2" y="129.3" width="27.5" height="128.7" fill="#2563eb" rx="2"/>
-<text x="115.0" y="125.3" text-anchor="middle" font-size="9" fill="#374151">0.697</text>
-<rect x="135.6" y="130.0" width="27.5" height="128.0" fill="#059669" rx="2"/>
-<text x="149.4" y="126.0" text-anchor="middle" font-size="9" fill="#374151">0.693</text>
+<rect x="101.2" y="128.9" width="27.5" height="129.1" fill="#2563eb" rx="2"/>
+<text x="115.0" y="124.9" text-anchor="middle" font-size="9" fill="#374151">0.699</text>
+<rect x="135.6" y="129.6" width="27.5" height="128.4" fill="#059669" rx="2"/>
+<text x="149.4" y="125.6" text-anchor="middle" font-size="9" fill="#374151">0.695</text>
 <text x="115.0" y="274" text-anchor="middle" font-size="11" fill="#374151">μ = 5</text>
 <rect x="176.9" y="77.4" width="27.5" height="180.6" fill="#9ca3af" rx="2"/>
 <text x="190.6" y="73.4" text-anchor="middle" font-size="9" fill="#374151">0.978</text>
-<rect x="211.2" y="155.0" width="27.5" height="103.0" fill="#2563eb" rx="2"/>
-<text x="225.0" y="151.0" text-anchor="middle" font-size="9" fill="#374151">0.558</text>
+<rect x="211.2" y="154.8" width="27.5" height="103.2" fill="#2563eb" rx="2"/>
+<text x="225.0" y="150.8" text-anchor="middle" font-size="9" fill="#374151">0.559</text>
 <rect x="245.6" y="155.2" width="27.5" height="102.8" fill="#059669" rx="2"/>
 <text x="259.4" y="151.2" text-anchor="middle" font-size="9" fill="#374151">0.557</text>
 <text x="225.0" y="274" text-anchor="middle" font-size="11" fill="#374151">μ = 20</text>
 <rect x="286.9" y="65.0" width="27.5" height="193.0" fill="#9ca3af" rx="2"/>
 <text x="300.6" y="61.0" text-anchor="middle" font-size="9" fill="#374151">1.045</text>
-<rect x="321.2" y="160.2" width="27.5" height="97.8" fill="#2563eb" rx="2"/>
-<text x="335.0" y="156.2" text-anchor="middle" font-size="9" fill="#374151">0.530</text>
-<rect x="355.6" y="159.8" width="27.5" height="98.2" fill="#059669" rx="2"/>
-<text x="369.4" y="155.8" text-anchor="middle" font-size="9" fill="#374151">0.532</text>
+<rect x="321.2" y="160.5" width="27.5" height="97.5" fill="#2563eb" rx="2"/>
+<text x="335.0" y="156.5" text-anchor="middle" font-size="9" fill="#374151">0.528</text>
+<rect x="355.6" y="160.2" width="27.5" height="97.8" fill="#059669" rx="2"/>
+<text x="369.4" y="156.2" text-anchor="middle" font-size="9" fill="#374151">0.530</text>
 <text x="335.0" y="274" text-anchor="middle" font-size="11" fill="#374151">μ = 100</text>
 <rect x="396.9" y="67.5" width="27.5" height="190.5" fill="#9ca3af" rx="2"/>
 <text x="410.6" y="63.5" text-anchor="middle" font-size="9" fill="#374151">1.032</text>
-<rect x="431.2" y="168.4" width="27.5" height="89.6" fill="#2563eb" rx="2"/>
-<text x="445.0" y="164.4" text-anchor="middle" font-size="9" fill="#374151">0.485</text>
-<rect x="465.6" y="167.6" width="27.5" height="90.4" fill="#059669" rx="2"/>
-<text x="479.4" y="163.6" text-anchor="middle" font-size="9" fill="#374151">0.489</text>
+<rect x="431.2" y="168.7" width="27.5" height="89.3" fill="#2563eb" rx="2"/>
+<text x="445.0" y="164.7" text-anchor="middle" font-size="9" fill="#374151">0.484</text>
+<rect x="465.6" y="167.1" width="27.5" height="90.9" fill="#059669" rx="2"/>
+<text x="479.4" y="163.1" text-anchor="middle" font-size="9" fill="#374151">0.492</text>
 <text x="445.0" y="274" text-anchor="middle" font-size="11" fill="#374151">μ = 500</text>
 <text x="280.0" y="296" text-anchor="middle" font-size="10" fill="#6b7280">Mean count</text>
 <rect x="514" y="36" width="12" height="12" fill="#9ca3af" rx="2"/>
@@ -128,31 +128,31 @@ Total wall: 34.5 min
 <text x="12" y="147" font-size="10" fill="#6b7280" transform="rotate(-90 12 147)">MAE</text>
 <rect x="66.9" y="68.1" width="27.5" height="189.9" fill="#9ca3af" rx="2"/>
 <text x="80.6" y="64.1" text-anchor="middle" font-size="9" fill="#374151">0.830</text>
-<rect x="101.2" y="130.5" width="27.5" height="127.5" fill="#2563eb" rx="2"/>
-<text x="115.0" y="126.5" text-anchor="middle" font-size="9" fill="#374151">0.558</text>
-<rect x="135.6" y="131.2" width="27.5" height="126.8" fill="#059669" rx="2"/>
-<text x="149.4" y="127.2" text-anchor="middle" font-size="9" fill="#374151">0.555</text>
+<rect x="101.2" y="130.4" width="27.5" height="127.6" fill="#2563eb" rx="2"/>
+<text x="115.0" y="126.4" text-anchor="middle" font-size="9" fill="#374151">0.558</text>
+<rect x="135.6" y="130.9" width="27.5" height="127.1" fill="#059669" rx="2"/>
+<text x="149.4" y="126.9" text-anchor="middle" font-size="9" fill="#374151">0.556</text>
 <text x="115.0" y="274" text-anchor="middle" font-size="11" fill="#374151">μ = 5</text>
 <rect x="176.9" y="81.7" width="27.5" height="176.3" fill="#9ca3af" rx="2"/>
 <text x="190.6" y="77.7" text-anchor="middle" font-size="9" fill="#374151">0.771</text>
 <rect x="211.2" y="155.7" width="27.5" height="102.3" fill="#2563eb" rx="2"/>
 <text x="225.0" y="151.7" text-anchor="middle" font-size="9" fill="#374151">0.447</text>
-<rect x="245.6" y="155.9" width="27.5" height="102.1" fill="#059669" rx="2"/>
-<text x="259.4" y="151.9" text-anchor="middle" font-size="9" fill="#374151">0.447</text>
+<rect x="245.6" y="156.0" width="27.5" height="102.0" fill="#059669" rx="2"/>
+<text x="259.4" y="152.0" text-anchor="middle" font-size="9" fill="#374151">0.446</text>
 <text x="225.0" y="274" text-anchor="middle" font-size="11" fill="#374151">μ = 20</text>
 <rect x="286.9" y="65.0" width="27.5" height="193.0" fill="#9ca3af" rx="2"/>
 <text x="300.6" y="61.0" text-anchor="middle" font-size="9" fill="#374151">0.844</text>
-<rect x="321.2" y="163.4" width="27.5" height="94.6" fill="#2563eb" rx="2"/>
-<text x="335.0" y="159.4" text-anchor="middle" font-size="9" fill="#374151">0.414</text>
+<rect x="321.2" y="163.5" width="27.5" height="94.5" fill="#2563eb" rx="2"/>
+<text x="335.0" y="159.5" text-anchor="middle" font-size="9" fill="#374151">0.413</text>
 <rect x="355.6" y="162.9" width="27.5" height="95.1" fill="#059669" rx="2"/>
 <text x="369.4" y="158.9" text-anchor="middle" font-size="9" fill="#374151">0.416</text>
 <text x="335.0" y="274" text-anchor="middle" font-size="11" fill="#374151">μ = 100</text>
 <rect x="396.9" y="69.3" width="27.5" height="188.7" fill="#9ca3af" rx="2"/>
 <text x="410.6" y="65.3" text-anchor="middle" font-size="9" fill="#374151">0.825</text>
-<rect x="431.2" y="170.7" width="27.5" height="87.3" fill="#2563eb" rx="2"/>
-<text x="445.0" y="166.7" text-anchor="middle" font-size="9" fill="#374151">0.382</text>
-<rect x="465.6" y="170.2" width="27.5" height="87.8" fill="#059669" rx="2"/>
-<text x="479.4" y="166.2" text-anchor="middle" font-size="9" fill="#374151">0.384</text>
+<rect x="431.2" y="171.0" width="27.5" height="87.0" fill="#2563eb" rx="2"/>
+<text x="445.0" y="167.0" text-anchor="middle" font-size="9" fill="#374151">0.380</text>
+<rect x="465.6" y="169.2" width="27.5" height="88.8" fill="#059669" rx="2"/>
+<text x="479.4" y="165.2" text-anchor="middle" font-size="9" fill="#374151">0.388</text>
 <text x="445.0" y="274" text-anchor="middle" font-size="11" fill="#374151">μ = 500</text>
 <text x="280.0" y="296" text-anchor="middle" font-size="10" fill="#6b7280">Mean count</text>
 <rect x="514" y="36" width="12" height="12" fill="#9ca3af" rx="2"/>
@@ -176,27 +176,27 @@ Total wall: 34.5 min
 <line x1="60" y1="91.5" x2="500" y2="91.5" stroke="#e5e7eb" stroke-width="1"/>
 <text x="54" y="94.5" text-anchor="end" font-size="10" fill="#6b7280">0.86</text>
 <line x1="60" y1="36.0" x2="500" y2="36.0" stroke="#e5e7eb" stroke-width="1"/>
-<text x="54" y="39.0" text-anchor="end" font-size="10" fill="#6b7280">0.93</text>
+<text x="54" y="39.0" text-anchor="end" font-size="10" fill="#6b7280">0.94</text>
 <text x="12" y="147" font-size="10" fill="#6b7280" transform="rotate(-90 12 147)">Pearson r</text>
-<rect x="101.2" y="186.6" width="27.5" height="71.4" fill="#2563eb" rx="2"/>
-<text x="115.0" y="182.6" text-anchor="middle" font-size="9" fill="#374151">0.724</text>
-<rect x="135.6" y="185.9" width="27.5" height="72.1" fill="#059669" rx="2"/>
-<text x="149.4" y="181.9" text-anchor="middle" font-size="9" fill="#374151">0.725</text>
+<rect x="101.2" y="187.1" width="27.5" height="70.9" fill="#2563eb" rx="2"/>
+<text x="115.0" y="183.1" text-anchor="middle" font-size="9" fill="#374151">0.723</text>
+<rect x="135.6" y="186.8" width="27.5" height="71.2" fill="#059669" rx="2"/>
+<text x="149.4" y="182.8" text-anchor="middle" font-size="9" fill="#374151">0.723</text>
 <text x="115.0" y="274" text-anchor="middle" font-size="11" fill="#374151">μ = 5</text>
-<rect x="211.2" y="118.8" width="27.5" height="139.2" fill="#2563eb" rx="2"/>
-<text x="225.0" y="114.8" text-anchor="middle" font-size="9" fill="#374151">0.819</text>
-<rect x="245.6" y="119.0" width="27.5" height="139.0" fill="#059669" rx="2"/>
-<text x="259.4" y="115.0" text-anchor="middle" font-size="9" fill="#374151">0.818</text>
+<rect x="211.2" y="119.6" width="27.5" height="138.4" fill="#2563eb" rx="2"/>
+<text x="225.0" y="115.6" text-anchor="middle" font-size="9" fill="#374151">0.818</text>
+<rect x="245.6" y="119.4" width="27.5" height="138.6" fill="#059669" rx="2"/>
+<text x="259.4" y="115.4" text-anchor="middle" font-size="9" fill="#374151">0.818</text>
 <text x="225.0" y="274" text-anchor="middle" font-size="11" fill="#374151">μ = 20</text>
-<rect x="321.2" y="89.6" width="27.5" height="168.4" fill="#2563eb" rx="2"/>
-<text x="335.0" y="85.6" text-anchor="middle" font-size="9" fill="#374151">0.860</text>
-<rect x="355.6" y="89.7" width="27.5" height="168.3" fill="#059669" rx="2"/>
-<text x="369.4" y="85.7" text-anchor="middle" font-size="9" fill="#374151">0.859</text>
+<rect x="321.2" y="89.9" width="27.5" height="168.1" fill="#2563eb" rx="2"/>
+<text x="335.0" y="85.9" text-anchor="middle" font-size="9" fill="#374151">0.860</text>
+<rect x="355.6" y="90.5" width="27.5" height="167.5" fill="#059669" rx="2"/>
+<text x="369.4" y="86.5" text-anchor="middle" font-size="9" fill="#374151">0.859</text>
 <text x="335.0" y="274" text-anchor="middle" font-size="11" fill="#374151">μ = 100</text>
-<rect x="431.2" y="71.8" width="27.5" height="186.2" fill="#2563eb" rx="2"/>
-<text x="445.0" y="67.8" text-anchor="middle" font-size="9" fill="#374151">0.884</text>
-<rect x="465.6" y="71.7" width="27.5" height="186.3" fill="#059669" rx="2"/>
-<text x="479.4" y="67.7" text-anchor="middle" font-size="9" fill="#374151">0.885</text>
+<rect x="431.2" y="71.5" width="27.5" height="186.5" fill="#2563eb" rx="2"/>
+<text x="445.0" y="67.5" text-anchor="middle" font-size="9" fill="#374151">0.886</text>
+<rect x="465.6" y="72.6" width="27.5" height="185.4" fill="#059669" rx="2"/>
+<text x="479.4" y="68.6" text-anchor="middle" font-size="9" fill="#374151">0.884</text>
 <text x="445.0" y="274" text-anchor="middle" font-size="11" fill="#374151">μ = 500</text>
 <text x="280.0" y="296" text-anchor="middle" font-size="10" fill="#6b7280">Mean count</text>
 <rect x="514" y="36" width="12" height="12" fill="#9ca3af" rx="2"/>
@@ -229,15 +229,15 @@ Total wall: 34.5 min
 <text x="101.2" y="61.0" text-anchor="middle" font-size="9" fill="#374151">1.007</text>
 <rect x="142.5" y="145.7" width="55.0" height="112.3" fill="#2563eb" rx="2"/>
 <text x="170.0" y="141.7" text-anchor="middle" font-size="9" fill="#374151">0.585</text>
-<rect x="211.2" y="146.0" width="55.0" height="112.0" fill="#059669" rx="2"/>
-<text x="238.8" y="142.0" text-anchor="middle" font-size="9" fill="#374151">0.584</text>
+<rect x="211.2" y="145.8" width="55.0" height="112.2" fill="#059669" rx="2"/>
+<text x="238.8" y="141.8" text-anchor="middle" font-size="9" fill="#374151">0.585</text>
 <text x="170.0" y="274" text-anchor="middle" font-size="11" fill="#374151">Poisson</text>
 <rect x="293.8" y="65.8" width="55.0" height="192.2" fill="#9ca3af" rx="2"/>
 <text x="321.2" y="61.8" text-anchor="middle" font-size="9" fill="#374151">1.002</text>
-<rect x="362.5" y="109.9" width="55.0" height="148.1" fill="#2563eb" rx="2"/>
-<text x="390.0" y="105.9" text-anchor="middle" font-size="9" fill="#374151">0.772</text>
-<rect x="431.2" y="111.7" width="55.0" height="146.3" fill="#059669" rx="2"/>
-<text x="458.8" y="107.7" text-anchor="middle" font-size="9" fill="#374151">0.763</text>
+<rect x="362.5" y="109.0" width="55.0" height="149.0" fill="#2563eb" rx="2"/>
+<text x="390.0" y="105.0" text-anchor="middle" font-size="9" fill="#374151">0.777</text>
+<rect x="431.2" y="110.5" width="55.0" height="147.5" fill="#059669" rx="2"/>
+<text x="458.8" y="106.5" text-anchor="middle" font-size="9" fill="#374151">0.769</text>
 <text x="390.0" y="274" text-anchor="middle" font-size="11" fill="#374151">NegBin</text>
 <text x="280.0" y="296" text-anchor="middle" font-size="10" fill="#6b7280">Distribution</text>
 <rect x="514" y="36" width="12" height="12" fill="#9ca3af" rx="2"/>

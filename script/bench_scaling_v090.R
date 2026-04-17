@@ -49,9 +49,10 @@ out_rds <- file.path(here, "script", "bench_scaling_v090.rds")
 out_png <- file.path(here, "script", "bench_scaling_v090.png")
 out_md  <- file.path(here, "script", "bench_scaling_v090.md")
 
-n_grid             <- c(100L, 300L, 1000L, 3000L, 5000L, 7500L, 10000L)
+# Phase E partial-local: capped at n=5000 (7500 and 10000 deferred to cloud).
+n_grid             <- c(100L, 300L, 1000L, 3000L, 5000L)
 stage_budget_sec   <- 45 * 60
-overall_budget_sec <- 6 * 3600
+overall_budget_sec <- 5 * 3600
 
 epochs_for <- function(n) {
   if (n <= 300L) return(300L)
