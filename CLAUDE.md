@@ -273,15 +273,24 @@ Bench: binary accuracy consistently +1.4–2.4pp across all signal
 regimes when using soft aggregation. Categorical mixed (helps high
 signal, neutral/slight hurt at moderate).
 
-### Graph Transformer backbone (Phase 9 — unreleased / v0.9.0-alpha)
+### Graph Transformer backbone (Phase 9 + B2 — v0.9.0)
 
 `R/graph_transformer_block.R` defines `GraphTransformerBlock`, a
 standard transformer-encoder block adapted for graph inputs:
-multi-head attention with learnable per-head `log(adj + eps)` bias
-(so the phylo prior is respected by each head independently), FFN,
+multi-head attention with learnable per-head phylogenetic bias, FFN,
 pre-norm, two residual skips. FFN output projection initialises to
 zero so each block starts near-identity — preserves the gate-closed-
 at-init safety when blocks are stacked.
+
+**B2 rate-aware attention**: the attention bias is a per-head Gaussian
+computed from raw squared cophenetic distances (`D_sq`):
+`bias_h = -D_sq / (2 * softplus(log_bw_h)^2)`. Each head learns its
+own bandwidth — one head can attend tightly (fast-evolving traits)
+while another attends broadly (conserved traits). This is the
+multi-scale attention pattern from Graphormer (Ying et al. 2021).
+`build_phylo_graph()` returns `D_sq` alongside `adj`; `D_sq` persists
+through training (not freed like `D`). Pre-B2 saved fits have
+`D_sq = NULL` and fall back to the old `log(adj)` path.
 
 `ResidualPhyloDAE` accepts three new hyperparams (defaults in parens):
 - `use_transformer_blocks = TRUE` (new default)

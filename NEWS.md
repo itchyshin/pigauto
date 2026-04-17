@@ -1,5 +1,6 @@
 # pigauto 0.9.0.9000 (dev)
 
+
 ## Full threshold-model ordinal baseline (B3)
 
 - Ordinal traits now use proper interval-truncated Gaussian E-step
@@ -15,6 +16,19 @@
   cols are present (in addition to binary / categorical). Ordinal
   cols that can't be populated (e.g., <2 observations) fall back to
   per-column BM unchanged.
+
+## Rate-aware message passing via learnable per-head Gaussian bandwidth (B2)
+
+- `GraphTransformerBlock` attention bias now uses learnable per-head
+  Gaussian bandwidth computed from raw squared cophenetic distances:
+  `bias_h = -D_sq / (2 * softplus(log_bw_h)^2)`. Each head can learn
+  its own phylogenetic scale — tight for fast-evolving traits, broad
+  for conserved traits. Replaces the fixed `adj_bias_scale * log(adj)`
+  formulation.
+- `build_phylo_graph()` returns `D_sq` (squared cophenetic distances)
+  alongside `adj`. Persists through training (not freed like `D`).
+- Backward compat: when `D_sq = NULL` (pre-B2 saved fits), the old
+  `log(adj)` path fires unchanged. Legacy attention path (`use_transformer_blocks = FALSE`) is completely unaffected.
 
 ## Soft-liability E-step for multi-obs aggregation (B1)
 
