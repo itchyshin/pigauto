@@ -41,6 +41,11 @@
 #'   BM posterior samples plus GNN dropout — (default \code{1L}).  Set to
 #'   e.g. 10 or 20 for proper multiple imputation with between-imputation
 #'   variance.
+#' @param baseline_override optional `list(mu, se)` with the same shape as
+#'   `object$baseline`. When supplied, predictions use this baseline instead
+#'   of the one saved in the fit. Used internally by [multi_impute_trees()]
+#'   to reuse a trained GNN across posterior trees. Most users can ignore
+#'   this. Default `NULL` (use the fit's own baseline).
 #' @param ... ignored.
 #' @return A list of class \code{"pigauto_pred"} with:
 #'   \describe{
@@ -80,7 +85,8 @@
 #' @importFrom torch torch_cat
 #' @export
 predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
-                                n_imputations = 1L, ...) {
+                                n_imputations = 1L, baseline_override = NULL,
+                                ...) {
   cfg       <- object$model_config
   device    <- get_device()
   trait_map <- object$trait_map
@@ -118,10 +124,16 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   calibrated_gates <- object$calibrated_gates  # NULL if not available
   use_calibrated   <- !is.null(calibrated_gates)
 
+  # Optional baseline override — used by multi_impute_trees(share_gnn = TRUE)
+  # to reuse a trained GNN across posterior trees, with only the BM baseline
+  # recomputed per tree.
+  effective_baseline <- if (!is.null(baseline_override)) baseline_override
+                        else object$baseline
+
   # Prepare data
   multi_obs <- isTRUE(object$multi_obs)
   if (is.null(newdata)) {
-    MU_species <- object$baseline$mu    # n_species x p
+    MU_species <- effective_baseline$mu    # n_species x p
     coords     <- object$graph$coords   # n_species x k
     adj        <- object$graph$adj      # n_species x n_species
     D_sq       <- object$graph$D_sq     # n_species x n_species, or NULL for old saves
@@ -201,7 +213,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   # → when gate=0: pred = t_BM_draw  ← proper BM posterior draw, non-zero variance
   # → when gate>0: both BM draws and GNN dropout contribute variance
   if (n_imp > 1L) {
-    bse_mat <- object$baseline$se            # n_species x p_latent
+    bse_mat <- effective_baseline$se            # n_species x p_latent
     if (multi_obs) bse_mat <- bse_mat[obs_to_sp, , drop = FALSE]
     t_BM_SE <- torch::torch_tensor(
       bse_mat, dtype = torch::torch_float(), device = device
@@ -284,7 +296,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   se_latent_mat <- NULL
   if (return_se) {
     # Expand species-level baseline SE to obs level if multi_obs
-    bse <- object$baseline$se
+    bse <- effective_baseline$se
     if (multi_obs) {
       bse <- bse[obs_to_sp, , drop = FALSE]
       rownames(bse) <- NULL
@@ -427,7 +439,7 @@ decode_continuous_legacy <- function(latent_runs, object, rs_val,
         se_mc[, j] <- apply(vals, 1, stats::sd)
       }
       # Add baseline SE in quadrature
-      bm_se <- object$baseline$se
+      bm_se <- effective_baseline$se
       se_bm_orig <- sweep(bm_se, 2, sds, "*")
       if (is_log) {
         pred_log <- sweep(pred_scaled, 2, sds, "*")
@@ -436,7 +448,7 @@ decode_continuous_legacy <- function(latent_runs, object, rs_val,
       }
       se_out <- sqrt(se_bm_orig^2 + se_mc^2)
     } else {
-      bm_se   <- object$baseline$se
+      bm_se   <- effective_baseline$se
       se_orig <- sweep(bm_se, 2, sds, "*")
       if (is_log) {
         pred_log <- sweep(pred_scaled, 2, sds, "*")

@@ -43,7 +43,8 @@ Suggests:
     Rphylopars,
     BACE,
     MCMCglmm,
-    glmmTMB
+    glmmTMB,
+    phangorn
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

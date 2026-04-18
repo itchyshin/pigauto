@@ -388,7 +388,10 @@ test_that("multi_impute_trees returns pigauto_mi_trees with T*m datasets", {
   m[idx] <- NA
   df <- as.data.frame(m); rownames(df) <- sp
 
-  mi_t <- multi_impute_trees(
+  # share_gnn = FALSE exercises the legacy per-tree-fit path, which this
+  # test asserts on via $fits. suppressWarnings() silences the expected
+  # low-M runtime warning triggered by the tiny T*m used for test speed.
+  mi_t <- suppressWarnings(multi_impute_trees(
     traits       = df,
     trees        = trees,
     m_per_tree   = 2L,
@@ -396,9 +399,10 @@ test_that("multi_impute_trees returns pigauto_mi_trees with T*m datasets", {
     missing_frac = 0.25,
     verbose      = FALSE,
     seed         = 200L,
+    share_gnn    = FALSE,
     eval_every   = 10L,
     patience     = 5L
-  )
+  ))
 
   # Class hierarchy
 
@@ -421,7 +425,7 @@ test_that("multi_impute_trees returns pigauto_mi_trees with T*m datasets", {
     expect_equal(names(d), c("tr1", "tr2", "tr3"))
   }
 
-  # Fits list has one per tree
+  # Fits list has one per tree (legacy behaviour, share_gnn = FALSE)
   expect_equal(length(mi_t$fits), 3L)
   for (f in mi_t$fits) {
     expect_s3_class(f, "pigauto_fit")
@@ -447,11 +451,15 @@ test_that("multi_impute_trees result works with with_imputations() and pool_mi()
   m <- as.matrix(df); idx <- sample.int(n * 2, 10); m[idx] <- NA
   df <- as.data.frame(m); rownames(df) <- sp
 
-  mi_t <- multi_impute_trees(
+  # suppressWarnings() silences the expected low-M warning (T*m = 4 < 10
+  # in this speed-tuned test). Default share_gnn = TRUE is fine here
+  # because this test only exercises the downstream with_imputations() +
+  # pool_mi() compatibility, not the $fits / $fit distinction.
+  mi_t <- suppressWarnings(multi_impute_trees(
     traits = df, trees = trees, m_per_tree = 2L,
     epochs = 20L, missing_frac = 0.25, verbose = FALSE,
     seed = 210L, eval_every = 10L, patience = 5L
-  )
+  ))
 
   # with_imputations should accept it via pigauto_mi inheritance
   fits <- with_imputations(mi_t, function(d) {
