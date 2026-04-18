@@ -157,7 +157,7 @@ auto-log-transformed.
 \code{categorical} — both are valid depending on the question.
 \item Parasite load (\code{integer} with many zeros) → needs
 \code{trait_types = c(Parasites = "zi_count")}.
-\item Survival rate (\code{numeric}, values in \link{0, 1}) → needs
+\item Survival rate (\code{numeric}, values in 0 to 1) → needs
 \code{trait_types = c(Survival = "proportion")}.
 }
 

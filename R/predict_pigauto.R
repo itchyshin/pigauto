@@ -265,7 +265,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   # ---- Legacy path: no trait_map (old pigauto_fit objects) -----------------
   if (!has_trait_map) {
     return(decode_continuous_legacy(latent_runs, object, rs_val,
-                                   return_se, n_imp))
+                                   return_se, n_imp, effective_baseline))
   }
 
   # ---- Mixed-type decoding -------------------------------------------------
@@ -404,7 +404,8 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
 # ---- Internal: legacy all-continuous decoding ---------------------------------
 
 decode_continuous_legacy <- function(latent_runs, object, rs_val,
-                                    return_se, n_imp) {
+                                    return_se, n_imp,
+                                    effective_baseline = object$baseline) {
   if (n_imp == 1L) {
     pred_scaled <- latent_runs[[1]]
   } else {

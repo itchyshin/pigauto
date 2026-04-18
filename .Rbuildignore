@@ -21,3 +21,8 @@
 ^\.github$
 ^DOCS\.md$
 ^CLAUDE\.md$
+^plans$
+^specs$
+^submit_v090_cloud$
+^\.worktrees$
+^\.devcontainer$
