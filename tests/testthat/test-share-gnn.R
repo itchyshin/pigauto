@@ -85,11 +85,13 @@ test_that("multi_impute_trees(share_gnn=TRUE) returns a single shared fit", {
   df$trait1[c(1, 5, 9)] <- NA
   df$trait2[c(2, 6, 10)] <- NA
 
-  mi_shared <- pigauto::multi_impute_trees(
+  # T*m = 3 triggers the low-M warning by design; silence here -- this
+  # test checks the result structure, not the warning.
+  mi_shared <- suppressWarnings(pigauto::multi_impute_trees(
     df, trees, m_per_tree = 1L,
     share_gnn = TRUE, reference_tree = trees[[1]],
     epochs = 30L, verbose = FALSE, seed = 1L
-  )
+  ))
 
   expect_s3_class(mi_shared, "pigauto_mi_trees")
   expect_equal(mi_shared$m, 3L)                       # T * m_per_tree
@@ -111,11 +113,12 @@ test_that("multi_impute_trees(share_gnn=FALSE) keeps per-tree behaviour", {
   df <- pigauto:::simulate_bm_traits(trees[[1]], n_traits = 2L, seed = 1L)
   df$trait1[c(1, 5)] <- NA
 
-  mi_legacy <- pigauto::multi_impute_trees(
+  # T*m = 2 triggers the low-M warning by design; silence here.
+  mi_legacy <- suppressWarnings(pigauto::multi_impute_trees(
     df, trees, m_per_tree = 1L,
     share_gnn = FALSE,
     epochs = 30L, verbose = FALSE, seed = 1L
-  )
+  ))
 
   expect_s3_class(mi_legacy, "pigauto_mi_trees")
   expect_false(mi_legacy$share_gnn)
