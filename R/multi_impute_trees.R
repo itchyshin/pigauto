@@ -185,7 +185,7 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 }
 
 #' @export
-multi_impute_trees <- function(traits, trees, m_per_tree = 5L,
+multi_impute_trees <- function(traits, trees, m_per_tree = 1L,
                                species_col = NULL,
                                trait_types = NULL,
                                multi_proportion_groups = NULL,
@@ -193,7 +193,10 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 5L,
                                missing_frac = 0.25,
                                covariates = NULL,
                                epochs = 2000L, verbose = TRUE,
-                               seed = 1L, ...) {
+                               seed = 1L,
+                               share_gnn = TRUE,
+                               reference_tree = NULL,
+                               ...) {
 
   # ---- Validate inputs -------------------------------------------------------
   m_per_tree <- as.integer(m_per_tree)
@@ -222,6 +225,14 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 5L,
          if (length(bad) > 5) ", ...", call. = FALSE)
   }
 
+  # Warn if total datasets M = T * m_per_tree is small (Rubin's rules wobble)
+  if (T_trees * m_per_tree < 10L) {
+    warning("Low total imputations (T * m_per_tree = ",
+            T_trees * m_per_tree,
+            "). Consider m_per_tree = 5L for stable Rubin's rules pooling ",
+            "when T < 20.", call. = FALSE)
+  }
+
   M_total <- T_trees * m_per_tree
 
   if (verbose) {
@@ -229,13 +240,50 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 5L,
                 T_trees, m_per_tree, M_total))
   }
 
-  # ---- Run impute() on each tree ---------------------------------------------
-  all_datasets  <- vector("list", M_total)
-  tree_index    <- integer(M_total)
-  all_fits      <- vector("list", T_trees)
-  imputed_mask  <- NULL
-  se_sum        <- NULL
-  pooled_sum    <- NULL
+  # ---- Dispatch on share_gnn ------------------------------------------------
+  if (isTRUE(share_gnn)) {
+    out <- run_shared_gnn(
+      traits = traits, trees = trees, m_per_tree = m_per_tree,
+      species_col = species_col, trait_types = trait_types,
+      multi_proportion_groups = multi_proportion_groups,
+      log_transform = log_transform, missing_frac = missing_frac,
+      covariates = covariates, epochs = as.integer(epochs),
+      verbose = verbose, seed = seed,
+      reference_tree = resolve_reference_tree(trees, reference_tree),
+      ...
+    )
+  } else {
+    out <- run_per_tree(
+      traits = traits, trees = trees, m_per_tree = m_per_tree,
+      species_col = species_col, trait_types = trait_types,
+      multi_proportion_groups = multi_proportion_groups,
+      log_transform = log_transform, missing_frac = missing_frac,
+      covariates = covariates, epochs = as.integer(epochs),
+      verbose = verbose, seed = seed, ...
+    )
+  }
+
+  out$share_gnn      <- isTRUE(share_gnn)
+  out$reference_tree <- if (isTRUE(share_gnn)) resolve_reference_tree(trees, reference_tree) else NULL
+  out$trees          <- trees
+  out$species_col    <- species_col
+  class(out) <- c("pigauto_mi_trees", "pigauto_mi")
+  out
+}
+
+# Internal: per-tree loop (pre-v0.9.1 behaviour, opt-in via share_gnn=FALSE)
+run_per_tree <- function(traits, trees, m_per_tree,
+                         species_col, trait_types, multi_proportion_groups,
+                         log_transform, missing_frac, covariates,
+                         epochs, verbose, seed, ...) {
+  T_trees      <- length(trees)
+  M_total      <- T_trees * m_per_tree
+  all_datasets <- vector("list", M_total)
+  tree_index   <- integer(M_total)
+  all_fits     <- vector("list", T_trees)
+  imputed_mask <- NULL
+  pooled_sum   <- NULL
+  trait_cols   <- setdiff(names(traits), species_col)
 
   for (t in seq_len(T_trees)) {
     t_seed <- as.integer(seed + t - 1L)
@@ -264,17 +312,22 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 5L,
 
     pred <- res$prediction
 
-    # Verify we got the right number of imputation datasets
-    if (is.null(pred$imputed_datasets) || length(pred$imputed_datasets) != m_per_tree) {
+    # Build completed data.frames.
+    # When n_imputations=1 predict() returns pred$imputed directly (not a list).
+    # When n_imputations>1 it returns pred$imputed_datasets (a list of m).
+    imp_list <- if (!is.null(pred$imputed_datasets)) {
+      pred$imputed_datasets
+    } else {
+      list(pred$imputed)
+    }
+    if (length(imp_list) != m_per_tree) {
       stop("Tree ", t, ": predict() did not return ", m_per_tree,
            " imputed datasets. This is an internal error.", call. = FALSE)
     }
 
-    # Build completed data.frames
     for (k in seq_len(m_per_tree)) {
       idx <- (t - 1L) * m_per_tree + k
-      completed_info <- build_completed(traits, pred$imputed_datasets[[k]],
-                                        species_col)
+      completed_info <- build_completed(traits, imp_list[[k]], species_col)
       all_datasets[[idx]] <- completed_info$completed
       tree_index[idx]     <- t
     }
@@ -288,10 +341,8 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 5L,
     }
 
     # Accumulate for pooled point estimate and SE
-    trait_cols <- setdiff(names(traits), species_col)
     if (is.null(pooled_sum)) {
       pooled_sum <- res$completed
-      # Initialise numeric columns to 0 for summing
       for (nm in trait_cols) {
         if (is.numeric(pooled_sum[[nm]])) {
           pooled_sum[[nm]] <- res$completed[[nm]]
@@ -311,32 +362,114 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 5L,
     }
   }
 
-  # ---- Pooled point estimate (average across trees) --------------------------
+  # Pooled point estimate (average across trees)
   pooled_point <- pooled_sum
   for (nm in trait_cols) {
     if (is.numeric(pooled_point[[nm]])) {
       pooled_point[[nm]] <- pooled_point[[nm]] / T_trees
     }
   }
-  # For non-numeric columns, use the result from the first tree (majority vote
-  # would be more principled, but for the point estimate this is secondary)
 
-  # ---- Assemble output -------------------------------------------------------
-  structure(
-    list(
-      datasets     = all_datasets,
-      m            = M_total,
-      n_trees      = T_trees,
-      m_per_tree   = m_per_tree,
-      tree_index   = tree_index,
-      pooled_point = pooled_point,
-      se           = NULL,   # per-cell SE not meaningful across trees
-      imputed_mask = imputed_mask,
-      fits         = all_fits,
-      trees        = trees,
-      species_col  = species_col
-    ),
-    class = c("pigauto_mi_trees", "pigauto_mi", "list")
+  list(
+    datasets     = all_datasets,
+    m            = M_total,
+    n_trees      = T_trees,
+    m_per_tree   = m_per_tree,
+    tree_index   = tree_index,
+    pooled_point = pooled_point,
+    se           = NULL,
+    imputed_mask = imputed_mask,
+    fits         = all_fits,
+    fit          = NULL
+  )
+}
+
+# Internal: shared-GNN path — fit once on reference_tree, recompute only
+# the BM baseline per posterior tree, reuse the trained GNN.
+run_shared_gnn <- function(traits, trees, m_per_tree,
+                           species_col, trait_types, multi_proportion_groups,
+                           log_transform, missing_frac, covariates,
+                           epochs, verbose, seed, reference_tree, ...) {
+  T_trees <- length(trees)
+  M_total <- T_trees * m_per_tree
+  if (verbose) {
+    cat(sprintf("multi_impute_trees (share_gnn=TRUE): %d trees x %d imputations = %d datasets\n",
+                T_trees, m_per_tree, M_total))
+    cat("  Training GNN once on reference tree...\n")
+  }
+
+  # Fit on the reference tree — this is the expensive step, done ONCE.
+  res_ref <- impute(
+    traits = traits, tree = reference_tree,
+    species_col = species_col, trait_types = trait_types,
+    multi_proportion_groups = multi_proportion_groups,
+    log_transform = log_transform, missing_frac = missing_frac,
+    n_imputations = m_per_tree, covariates = covariates,
+    epochs = as.integer(epochs), verbose = FALSE, seed = as.integer(seed), ...
+  )
+  fit_ref    <- res_ref$fit
+  data_ref   <- res_ref$data
+  splits_ref <- res_ref$splits
+  graph_ref  <- fit_ref$graph   # graph is stored on the fit, not on pigauto_result
+
+  all_datasets <- vector("list", M_total)
+  tree_index   <- integer(M_total)
+  imputed_mask <- NULL
+  se_sum       <- NULL
+  pooled_sum   <- NULL
+  idx <- 0L
+
+  for (t in seq_len(T_trees)) {
+    if (verbose) cat(sprintf("  Tree %d/%d: baseline only...", t, T_trees))
+    t0 <- proc.time()
+
+    baseline_t <- fit_baseline(data_ref, trees[[t]], splits = splits_ref,
+                               graph = graph_ref)
+    pred_t <- stats::predict(fit_ref, return_se = TRUE,
+                              n_imputations = m_per_tree,
+                              baseline_override = baseline_t)
+
+    # Build completed data.frames (reuse build_completed)
+    for (k in seq_len(m_per_tree)) {
+      idx <- idx + 1L
+      one <- if (!is.null(pred_t$imputed_datasets)) pred_t$imputed_datasets[[k]]
+             else pred_t$imputed
+      info <- build_completed(traits, one, species_col)
+      all_datasets[[idx]] <- info$completed
+      tree_index[idx]     <- t
+      if (is.null(imputed_mask)) imputed_mask <- info$imputed_mask
+    }
+
+    # Running sums for pooled point / se
+    if (!is.null(pred_t$imputed)) {
+      m_imp <- as.matrix(pred_t$imputed[, vapply(pred_t$imputed, is.numeric, logical(1)), drop = FALSE])
+      pooled_sum <- if (is.null(pooled_sum)) m_imp else pooled_sum + m_imp
+    }
+    if (!is.null(pred_t$se)) {
+      m_se <- as.matrix(pred_t$se)
+      se_sum <- if (is.null(se_sum)) m_se else se_sum + m_se
+    }
+
+    if (verbose) {
+      elapsed <- (proc.time() - t0)[["elapsed"]]
+      cat(sprintf(" done (%.1fs)\n", elapsed))
+    }
+  }
+
+  pooled_point <- if (!is.null(pooled_sum)) as.data.frame(pooled_sum / T_trees) else NULL
+  pooled_se    <- if (!is.null(se_sum))    se_sum / T_trees                   else NULL
+
+  list(
+    datasets     = all_datasets,
+    m            = M_total,
+    n_trees      = T_trees,
+    m_per_tree   = m_per_tree,
+    tree_index   = tree_index,
+    pooled_point = pooled_point,
+    se           = pooled_se,
+    imputed_mask = imputed_mask,
+    fit          = fit_ref,
+    fits         = NULL
   )
 }
 

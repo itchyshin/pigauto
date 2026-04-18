@@ -72,3 +72,53 @@ test_that("resolve_reference_tree warns and falls back when phangorn missing", {
   )
   expect_identical(out, trees[[1]])
 })
+
+test_that("multi_impute_trees(share_gnn=TRUE) returns a single shared fit", {
+  skip_if_not_installed("torch")
+  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+
+  set.seed(7L)
+  n <- 20L
+  trees <- lapply(1:3, function(i) ape::rcoal(n, tip.label = paste0("sp", 1:n)))
+  df <- pigauto:::simulate_bm_traits(trees[[1]], n_traits = 2L, seed = 1L)
+  # artificial missingness
+  df$trait1[c(1, 5, 9)] <- NA
+  df$trait2[c(2, 6, 10)] <- NA
+
+  mi_shared <- pigauto::multi_impute_trees(
+    df, trees, m_per_tree = 1L,
+    share_gnn = TRUE, reference_tree = trees[[1]],
+    epochs = 30L, verbose = FALSE, seed = 1L
+  )
+
+  expect_s3_class(mi_shared, "pigauto_mi_trees")
+  expect_equal(mi_shared$m, 3L)                       # T * m_per_tree
+  expect_equal(length(mi_shared$datasets), 3L)
+  expect_equal(mi_shared$tree_index, 1:3)
+  expect_true(mi_shared$share_gnn)
+  expect_false(is.null(mi_shared$fit))                # single shared fit
+  expect_null(mi_shared$fits)                         # old list absent under share
+  expect_identical(mi_shared$reference_tree, trees[[1]])
+})
+
+test_that("multi_impute_trees(share_gnn=FALSE) keeps per-tree behaviour", {
+  skip_if_not_installed("torch")
+  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+
+  set.seed(7L)
+  n <- 20L
+  trees <- lapply(1:2, function(i) ape::rcoal(n, tip.label = paste0("sp", 1:n)))
+  df <- pigauto:::simulate_bm_traits(trees[[1]], n_traits = 2L, seed = 1L)
+  df$trait1[c(1, 5)] <- NA
+
+  mi_legacy <- pigauto::multi_impute_trees(
+    df, trees, m_per_tree = 1L,
+    share_gnn = FALSE,
+    epochs = 30L, verbose = FALSE, seed = 1L
+  )
+
+  expect_s3_class(mi_legacy, "pigauto_mi_trees")
+  expect_false(mi_legacy$share_gnn)
+  expect_equal(length(mi_legacy$fits), 2L)            # per-tree list present
+  expect_null(mi_legacy$fit)                          # single fit absent
+})
