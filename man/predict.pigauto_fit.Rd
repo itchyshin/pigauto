@@ -4,7 +4,14 @@
 \alias{predict.pigauto_fit}
 \title{Impute missing traits using a fitted pigauto model}
 \usage{
-\method{predict}{pigauto_fit}(object, newdata = NULL, return_se = TRUE, n_imputations = 1L, ...)
+\method{predict}{pigauto_fit}(
+  object,
+  newdata = NULL,
+  return_se = TRUE,
+  n_imputations = 1L,
+  baseline_override = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{object of class \code{"pigauto_fit"}.}
@@ -18,6 +25,12 @@
 BM posterior samples plus GNN dropout — (default \code{1L}).  Set to
 e.g. 10 or 20 for proper multiple imputation with between-imputation
 variance.}
+
+\item{baseline_override}{optional \code{list(mu, se)} with the same shape as
+\code{object$baseline}. When supplied, predictions use this baseline instead
+of the one saved in the fit. Used internally by \code{\link[=multi_impute_trees]{multi_impute_trees()}}
+to reuse a trained GNN across posterior trees. Most users can ignore
+this. Default \code{NULL} (use the fit's own baseline).}
 
 \item{...}{ignored.}
 }
