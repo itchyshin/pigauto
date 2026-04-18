@@ -159,6 +159,24 @@ Nakagawa & Freckleton (2008, 2011) review the consequences of
 ignoring missing data in ecological and comparative analyses and
 argue for multiple imputation as the default.
 }
+\section{When to use this}{
+
+
+pigauto provides two multiple-imputation functions. Pick based on how
+many trees you have:
+\itemize{
+\item \strong{One tree} (single published phylogeny, single time-calibrated tree):
+use \code{\link[=multi_impute]{multi_impute()}}. The \code{m} MC-dropout imputations capture model
+uncertainty.
+\item \strong{Multiple posterior trees} (BirdTree samples, BEAST posterior, etc.):
+use \code{\link[=multi_impute_trees]{multi_impute_trees()}}. Between-tree variation is added to the
+pooled SEs via Rubin's rules (Nakagawa & de Villemereuil 2019).
+}
+
+The two functions share the same downstream API — both return objects
+compatible with \code{\link[=with_imputations]{with_imputations()}} and \code{\link[=pool_mi]{pool_mi()}}.
+}
+
 \examples{
 \dontrun{
 library(pigauto)

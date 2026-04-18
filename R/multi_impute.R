@@ -9,6 +9,21 @@
 #' comparative analyses (PGLS, PGLMM, etc.) rather than treating
 #' imputed cells as if they were observed.
 #'
+#' @section When to use this:
+#'
+#' pigauto provides two multiple-imputation functions. Pick based on how
+#' many trees you have:
+#'
+#' * **One tree** (single published phylogeny, single time-calibrated tree):
+#'   use [multi_impute()]. The `m` MC-dropout imputations capture model
+#'   uncertainty.
+#' * **Multiple posterior trees** (BirdTree samples, BEAST posterior, etc.):
+#'   use [multi_impute_trees()]. Between-tree variation is added to the
+#'   pooled SEs via Rubin's rules (Nakagawa & de Villemereuil 2019).
+#'
+#' The two functions share the same downstream API — both return objects
+#' compatible with [with_imputations()] and [pool_mi()].
+#'
 #' @param traits data.frame with species as rownames and trait columns.
 #'   Same input format as [impute()]. Supported column types are
 #'   numeric, integer, factor, ordered factor, and logical.
