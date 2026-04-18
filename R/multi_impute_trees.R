@@ -159,6 +159,31 @@
 #' pool_mi(fits)
 #' }
 #'
+# Pick the reference tree used to train the GNN when `share_gnn = TRUE`.
+#
+# - `reference_tree` non-NULL: return it unchanged.
+# - `reference_tree` NULL + phangorn installed: compute MCC via
+#   `phangorn::maxCladeCred(trees)`.
+# - phangorn missing: warn and fall back to `trees[[1]]`.
+resolve_reference_tree <- function(trees, reference_tree = NULL) {
+  if (!is.null(reference_tree)) {
+    if (!inherits(reference_tree, "phylo")) {
+      stop("`reference_tree` must be a 'phylo' object. Got ",
+           class(reference_tree)[1], ".", call. = FALSE)
+    }
+    return(reference_tree)
+  }
+  if (requireNamespace("phangorn", quietly = TRUE)) {
+    tr_multi <- trees
+    if (!inherits(tr_multi, "multiPhylo")) class(tr_multi) <- "multiPhylo"
+    return(phangorn::maxCladeCred(tr_multi))
+  }
+  warning("phangorn required for MCC tree selection; falling back to ",
+          "trees[[1]]. Install with install.packages('phangorn') for ",
+          "MCC-based selection.", call. = FALSE)
+  trees[[1]]
+}
+
 #' @export
 multi_impute_trees <- function(traits, trees, m_per_tree = 5L,
                                species_col = NULL,

@@ -31,3 +31,44 @@ test_that("predict.pigauto_fit accepts baseline_override and uses it in place of
     info = "baseline_override should change predictions when gate is not fully closed"
   )
 })
+
+test_that("resolve_reference_tree returns user-supplied tree when given", {
+  trees <- list(ape::rcoal(20L, tip.label = paste0("t", 1:20)),
+                ape::rcoal(20L, tip.label = paste0("t", 1:20)),
+                ape::rcoal(20L, tip.label = paste0("t", 1:20)))
+  user_tree <- ape::rcoal(20L, tip.label = paste0("t", 1:20))
+
+  out <- pigauto:::resolve_reference_tree(trees, reference_tree = user_tree)
+  expect_identical(out, user_tree)
+})
+
+test_that("resolve_reference_tree uses phangorn MCC when phangorn available", {
+  skip_if_not_installed("phangorn")
+
+  set.seed(1L)
+  trees <- lapply(1:5, function(i) ape::rcoal(20L, tip.label = paste0("t", 1:20)))
+  class(trees) <- "multiPhylo"
+
+  out <- pigauto:::resolve_reference_tree(trees, reference_tree = NULL)
+  expect_s3_class(out, "phylo")
+  # MCC must be identical (in structure) to one of the input trees
+  any_match <- any(vapply(trees, function(tr) {
+    isTRUE(all.equal(tr$edge, out$edge)) &&
+    isTRUE(all.equal(tr$tip.label, out$tip.label))
+  }, logical(1)))
+  expect_true(any_match, info = "MCC tree must be one of the input trees")
+})
+
+test_that("resolve_reference_tree warns and falls back when phangorn missing", {
+  trees <- list(ape::rcoal(15L), ape::rcoal(15L))
+  local_mocked_bindings(
+    requireNamespace = function(pkg, ...) !(identical(pkg, "phangorn")),
+    .package = "base"
+  )
+
+  expect_warning(
+    out <- pigauto:::resolve_reference_tree(trees, reference_tree = NULL),
+    "phangorn"
+  )
+  expect_identical(out, trees[[1]])
+})
