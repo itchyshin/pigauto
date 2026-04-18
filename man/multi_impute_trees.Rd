@@ -7,7 +7,7 @@
 multi_impute_trees(
   traits,
   trees,
-  m_per_tree = 5L,
+  m_per_tree = 1L,
   species_col = NULL,
   trait_types = NULL,
   multi_proportion_groups = NULL,
@@ -17,6 +17,8 @@ multi_impute_trees(
   epochs = 2000L,
   verbose = TRUE,
   seed = 1L,
+  share_gnn = TRUE,
+  reference_tree = NULL,
   ...
 )
 }
@@ -29,7 +31,9 @@ samples from BirdTree.org (Jetz et al. 2012) are ideal; the bundled
 \link{trees300} dataset provides 50 posterior trees for \link{avonet300}.}
 
 \item{m_per_tree}{integer. Number of MC-dropout imputations per tree
-(default \code{5}). Total datasets = \code{length(trees) * m_per_tree}.}
+(default \code{1}). Total datasets = \code{length(trees) * m_per_tree}. The
+canonical Nakagawa & de Villemereuil (2019) workflow uses T = 50
+posterior trees × m_per_tree = 1 = M = 50 total datasets.}
 
 \item{species_col}{character or \code{NULL}. See \code{\link[=impute]{impute()}}.}
 
@@ -59,6 +63,18 @@ Default \code{NULL} (no covariates).}
 \item{seed}{integer. Base random seed; each tree uses \code{seed + t - 1}
 so results are reproducible (default \code{1}).}
 
+\item{share_gnn}{logical. If \code{TRUE} (default), fit the GNN once on a
+reference tree and reuse it across all posterior trees, recomputing
+only the BM baseline per tree. Gives a ~10-15x speedup at n=10k.
+See the "Share-GNN" section below for tree-uncertainty propagation
+details. Set \code{FALSE} to fit from scratch on every tree (the pre-v0.9.1
+behaviour) when you need exact tree-by-tree model independence.}
+
+\item{reference_tree}{optional \code{phylo} used as the training tree when
+\code{share_gnn = TRUE}. Default \code{NULL} selects the maximum-clade-credibility
+tree via \code{phangorn::maxCladeCred(trees)}. If \code{phangorn} is not
+installed, falls back to \code{trees[[1]]} with a warning.}
+
 \item{...}{additional arguments forwarded to \code{\link[=fit_pigauto]{fit_pigauto()}} via
 \code{\link[=impute]{impute()}}.}
 }
@@ -79,8 +95,13 @@ the tree index (1..T) for dataset \code{i}.}
 \item{\code{se}}{Matrix of per-cell pooled SEs (NA if not available).}
 \item{\code{imputed_mask}}{Logical matrix; \code{TRUE} where a cell was
 originally missing.}
-\item{\code{fits}}{List of \code{T} \code{pigauto_fit} objects (one per tree),
-for diagnostics.}
+\item{\code{share_gnn}}{Logical; \code{TRUE} if the shared-GNN path was used.}
+\item{\code{fit}}{Single \code{pigauto_fit} trained on the reference
+tree when \code{share_gnn = TRUE}; \code{NULL} otherwise.}
+\item{\code{fits}}{List of \code{T} \code{pigauto_fit} objects (one per tree)
+when \code{share_gnn = FALSE}; \code{NULL} when \code{share_gnn = TRUE}.}
+\item{\code{reference_tree}}{The reference \code{phylo} used for GNN training
+when \code{share_gnn = TRUE}; \code{NULL} otherwise.}
 \item{\code{trees}}{The input posterior trees.}
 \item{\code{species_col}}{Passed-through species column name.}
 }
@@ -97,7 +118,7 @@ dataset is conditional on a specific posterior tree
 uncertainty.} Step 2 — varying the \emph{downstream analysis tree} in
 lockstep with the imputation tree — is the user's responsibility
 and is described in the Examples section and in
-\code{vignette("getting-started")}.
+\code{vignette("tree-uncertainty")}.
 
 \code{multi_impute_trees()} handles the imputation half (step 1) cleanly:
 every completed dataset carries a different tree's signal so that
@@ -108,10 +129,11 @@ a \code{corBrownian} on \code{trees[[ mi$tree_index[i] ]]}), then pool the
 T × M fits with \code{\link[=pool_mi]{pool_mi()}}.
 
 For each tree the function runs the full pigauto pipeline
-(preprocess -> baseline -> GNN -> predict). Topologies and branch
-lengths vary across trees, so the phylogenetic graph, baseline
-covariance, and GNN weights differ for each tree. Each tree produces
-\code{m_per_tree} stochastic completions via MC dropout.
+(preprocess -> baseline -> GNN -> predict) when \code{share_gnn = FALSE}.
+With the default \code{share_gnn = TRUE}, the GNN is trained once and only
+the baseline is recomputed per tree. Topologies and branch lengths vary
+across trees, so the phylogenetic baseline covariance differs for each
+tree.
 
 Downstream usage is identical to \code{\link[=multi_impute]{multi_impute()}}: pass the result
 to \code{\link[=with_imputations]{with_imputations()}} to fit a model on each dataset, then to
@@ -127,33 +149,69 @@ information (FMI) reported by \code{\link[=pool_mi]{pool_mi()}} reflects both. T
 them, compare FMI from \code{\link[=multi_impute]{multi_impute()}} (single tree) with FMI from
 \code{multi_impute_trees()}.
 
-\strong{Computation time — linear in T.} Each tree requires a fresh
-pigauto fit; there is no caching across trees because the tree \emph{is}
-the model. Rough budget on a modern CPU laptop:
+\strong{Computation time.} With \code{share_gnn = TRUE} (default): one GNN fit
+\itemize{
+\item T cheap baseline passes. Rough budget on a modern CPU laptop:
+}
 
 \tabular{rrrr}{
-Species n \tab 1 fit \tab T = 50 \tab T = 10 \cr
-300 \tab ~30-60 s \tab 25-50 min \tab 5-10 min \cr
-5,000 \tab ~5-10 min \tab 4-8 hr \tab ~1 hr \cr
-10,000 \tab ~20-40 min \tab 17-33 hr \tab 3-7 hr
+Species n \tab 1 fit \tab T = 50 share_gnn=TRUE \tab T = 50 share_gnn=FALSE \cr
+300 \tab ~30-60 s \tab ~3-5 min \tab 25-50 min \cr
+5,000 \tab ~5-10 min \tab ~10-20 min \tab 4-8 hr \cr
+10,000 \tab ~20-40 min \tab ~30-60 min \tab 17-33 hr
+}
+}
+\section{When to use this}{
+
+
+pigauto provides two multiple-imputation functions. Pick based on how
+many trees you have:
+\itemize{
+\item \strong{One tree} (single published phylogeny, single time-calibrated tree):
+use \code{\link[=multi_impute]{multi_impute()}}. The \code{m} MC-dropout imputations capture model
+uncertainty.
+\item \strong{Multiple posterior trees} (BirdTree samples, BEAST posterior, etc.):
+use \code{\link[=multi_impute_trees]{multi_impute_trees()}}. Between-tree variation is added to the
+pooled SEs via Rubin's rules (Nakagawa & de Villemereuil 2019).
 }
 
-For large trees (n >= 5,000) we recommend reducing \code{T} to 10-20
-posterior trees. The 2019 paper's "relative efficiency" index
-(visible as \code{fmi} in the pooled output of \code{\link[=pool_mi]{pool_mi()}}) typically
-shows convergence well before T = 50. Alternatively, parallelise
-the T fits across machines — each tree fit is independent and well
-suited to HPC / cloud workflows.
+The two functions share the same downstream API — both return objects
+compatible with \code{\link[=with_imputations]{with_imputations()}} and \code{\link[=pool_mi]{pool_mi()}}.
 }
+
+\section{Share-GNN (tree-sharing) mode}{
+
+
+Under \code{share_gnn = TRUE} the GNN weights and spectral features are
+trained once on the reference tree (MCC by default). For each
+posterior tree the BM / joint-MVN baseline is recomputed, and the
+prediction is the blend \code{(1 - r_cal) * baseline_t + r_cal * gnn_shared}.
+Because \code{r_cal} is calibrated once on held-out data at the reference
+tree and applied uniformly, the tree-uncertainty contribution is:
+\itemize{
+\item Fully preserved when the gate is closed (r_cal near 0): the GNN
+contributes nothing, and the baseline varies per tree.
+\item Partially preserved when the gate is open: the baseline portion
+still varies, but the GNN portion is a tree-invariant constant —
+this slightly under-estimates tree variance in the GNN channel.
+\item Lost in the GNN channel when the gate is fully open (rare on real
+data; the baseline channel still carries tree variation).
+}
+
+On every real dataset benchmarked in the v0.9.0 campaign the gate
+closed partially or fully, so \code{share_gnn = TRUE} is cheap AND honest.
+Set \code{share_gnn = FALSE} if you need exact per-tree model independence.
+}
+
 \examples{
 \dontrun{
 library(pigauto)
 data(avonet300, trees300)
 df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
 
-# ---- Step 1: tree-aware imputation --------------------------------
-# 50 trees x 5 imputations = 250 completed datasets
-mi <- multi_impute_trees(df, trees300, m_per_tree = 5L)
+# ---- Step 1: tree-aware imputation (canonical N&dV 2019 workflow) --
+# 50 trees x 1 imputation = 50 completed datasets (fast with share_gnn=TRUE)
+mi <- multi_impute_trees(df, trees300, m_per_tree = 1L)
 print(mi)
 
 # ---- Step 2: tree-aware analysis (Nakagawa & de Villemereuil 2019)

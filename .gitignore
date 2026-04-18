@@ -59,6 +59,3 @@ BACE/
 # Stray plot output
 Rplots.pdf
 inst/doc/
-
-# Superpowers design specs (not pkgdown output)
-!docs/superpowers/

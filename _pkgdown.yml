@@ -51,6 +51,8 @@ navbar:
           href: articles/getting-started.html
         - text: "Mixed-type traits"
           href: articles/mixed-types.html
+        - text: "Propagating tree uncertainty"
+          href: articles/tree-uncertainty.html
         - text: "-------"
         - text: "Walk-throughs"
         - text: "Intro (architecture overview)"
