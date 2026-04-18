@@ -1,0 +1,131 @@
+---
+title: "Propagating Tree Uncertainty"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Propagating Tree Uncertainty}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = requireNamespace("torch", quietly = TRUE) &&
+         isTRUE(try(torch::torch_is_installed(), silent = TRUE))
+)
+```
+
+## Do I need this article?
+
+**Short answer:** only if you have a **posterior sample of trees** (from BEAST, MrBayes, BirdTree.org, etc.) and you want the tree-topology uncertainty to show up in your pooled standard errors and p-values.
+
+| Situation | Use this article? |
+|---|---|
+| One tree (published phylogeny, time-calibrated tree) | No — use `multi_impute()` and the [mixed-types vignette](mixed-types.html). |
+| Posterior sample (2 or more trees) | Yes. |
+
+## The two-step workflow
+
+Tree uncertainty enters the analysis in two places. pigauto handles
+step 1. Step 2 is your responsibility because the downstream model is
+your choice.
+
+```
++--------------------------------------+
+| Step 1 -- imputation                 |
+|                                      |
+| multi_impute_trees(traits, trees)    |
+|   -> T x m_per_tree completed        |
+|      data.frames, each tagged with   |
+|      the tree that produced it       |
++------------------+-------------------+
+                   |
+                   v
++--------------------------------------+
+| Step 2 -- analysis + pool            |
+|                                      |
+| for dataset i:                       |
+|   fit model with trees[[t_i]]        |
+| pool_mi(fits)                        |
+|                                      |
+| The SAME tree that produced          |
+| dataset i is used to fit model i.    |
++--------------------------------------+
+```
+
+## The canonical workflow (Nakagawa & de Villemereuil 2019)
+
+With `share_gnn = TRUE` (the default), T = 50 posterior trees is cheap.
+Use one imputation per tree (M = 50 total), fit the downstream model 50
+times (each with the matching tree), and pool with Rubin's rules.
+
+```{r canonical, eval = FALSE}
+library(pigauto)
+data(avonet300, trees300)
+df <- avonet300
+rownames(df) <- df$Species_Key
+df$Species_Key <- NULL
+
+mi <- multi_impute_trees(df, trees = trees300, m_per_tree = 1L)
+# share_gnn = TRUE, reference_tree = MCC via phangorn -- all default
+
+fits <- Map(
+  function(dat, t_idx) {
+    dat$species <- rownames(dat)
+    nlme::gls(
+      log(Mass) ~ log(Wing.Length),
+      correlation = ape::corBrownian(phy = trees300[[t_idx]], form = ~species),
+      data = dat, method = "ML"
+    )
+  },
+  mi$datasets,
+  mi$tree_index
+)
+pool_mi(fits)   # pooled SEs include both imputation and tree uncertainty
+```
+
+The code above is illustrative — full execution takes ~25 min because
+it fits pigauto on the MCC reference tree, then runs a GLS model for
+each of the 50 posterior trees. Running the chunk is left to the reader.
+
+## Why `share_gnn = TRUE` is safe
+
+The calibrated gate `r_cal` controls how much of each prediction comes
+from the baseline vs the GNN. On every real dataset benchmarked in the
+v0.9.0 validation suite (Delhey 5,809; AVONET 300; mixed-type
+simulations), the gate closes or nearly closes under strong
+phylogenetic signal. When the gate is closed, `pred = baseline(tree_t)`
+— the GNN contributes nothing, and the per-tree baseline carries the
+full tree-uncertainty signal. See `?multi_impute_trees` under
+"Share-GNN (tree-sharing) mode" for the partially-open and fully-open
+cases.
+
+If you need exact per-tree model independence (e.g. for methodological
+comparison), set `share_gnn = FALSE`:
+
+```{r opt_out, eval = FALSE}
+mi_slow <- multi_impute_trees(df, trees300, m_per_tree = 1L,
+                               share_gnn = FALSE)
+# fits T = length(trees300) full pigauto models -- ~10-15x slower.
+```
+
+## Scale choices
+
+| T | m_per_tree | M | When |
+|---|---|---|---|
+| 50 | 1 | 50 | Default. Canonical N&dV 2019. |
+| 20 | 2 | 40 | Smaller posterior, still stable. |
+| 10 | 5 | 50 | Very small posterior; per-tree variance helps. |
+| <10 | bump m_per_tree | >=25 | Runtime warning fires; Rubin's rules unstable below M=25. |
+
+## References
+
+- Nakagawa S, de Villemereuil P (2019). A general method for
+  simultaneously accounting for phylogenetic and species sampling
+  uncertainty via Rubin's rules in comparative analysis.
+  *Systematic Biology* 68(4): 632-641.
+- Rubin DB (1987). *Multiple Imputation for Nonresponse in Surveys*.
+  Wiley.
+- Jetz W et al. (2012). The global diversity of birds in space and
+  time. *Nature* 491: 444-448.
