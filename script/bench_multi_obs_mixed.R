@@ -26,15 +26,20 @@
 
 options(warn = 1, stringsAsFactors = FALSE)
 
+here <- Sys.getenv("PIGAUTO_ROOT", unset = NA_character_)
+if (is.na(here) || !dir.exists(here)) {
+  cands <- c("/Users/z3437171/Dropbox/Github Local/pigauto",
+             "/workspaces/pigauto",
+             ".")
+  here <- Find(function(p) file.exists(file.path(p, "DESCRIPTION")), cands)
+  if (is.null(here)) stop("Cannot find pigauto project root")
+}
+
 suppressPackageStartupMessages({
   library(ape)
-  devtools::load_all(
-    "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/b1-soft-liability",
-    quiet = TRUE
-  )
+  devtools::load_all(here, quiet = TRUE)
 })
 
-here    <- "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/b1-soft-liability"
 out_rds <- file.path(here, "script", "bench_multi_obs_mixed.rds")
 out_md  <- file.path(here, "script", "bench_multi_obs_mixed.md")
 
