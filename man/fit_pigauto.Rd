@@ -65,6 +65,21 @@ layer normalisation, and ResNet-style skip connection.}
 \item{use_attention}{logical. Use attention in the GNN layers (default
 \code{TRUE}).}
 
+\item{use_transformer_blocks}{logical. Replace the legacy attention
+stack with pre-norm transformer-encoder blocks (multi-head attention
+\itemize{
+\item FFN + two residual skips). Default \code{TRUE}. Set \code{FALSE}
+to reconstruct pre-v0.9.0 fits (single-head attention with a
+learnable alpha gate per layer).
+}}
+
+\item{n_heads}{integer. Number of attention heads when
+\code{use_transformer_blocks = TRUE} (default \code{4}). Each head
+learns its own phylogenetic bandwidth (B2 rate-aware attention).}
+
+\item{ffn_mult}{integer. Feed-forward width multiplier inside each
+transformer block (default \code{4}, giving \code{hidden_dim * 4}).}
+
 \item{dropout}{numeric. Dropout rate (default \code{0.10}).}
 
 \item{lr}{numeric. AdamW learning rate (default \code{0.003}).}

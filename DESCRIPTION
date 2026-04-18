@@ -24,6 +24,7 @@ URL: https://itchyshin.github.io/pigauto, https://github.com/itchyshin/pigauto
 BugReports: https://github.com/itchyshin/pigauto/issues
 Encoding: UTF-8
 LazyData: true
+LazyDataCompression: xz
 Depends: R (>= 4.1)
 Imports:
     torch,
