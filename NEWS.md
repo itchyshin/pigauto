@@ -1,5 +1,27 @@
 # pigauto 0.9.0.9000 (dev)
 
+## Tree-sharing GNN is now the default in `multi_impute_trees()`
+
+- New default `share_gnn = TRUE` in `multi_impute_trees()`. The GNN is
+  trained once on a reference tree (MCC via `phangorn::maxCladeCred`,
+  fallback `trees[[1]]`) and reused across posterior trees, with only
+  the BM baseline recomputed per tree. ~10-15x speedup at n=10k x T=50
+  makes the Nakagawa & de Villemereuil (2019) canonical workflow
+  (T=50, m_per_tree=1, M=50 pooled via Rubin's rules) the default path.
+- Default `m_per_tree` flipped from `5L` to `1L` to align with the N&dV
+  2019 canonical workflow. Users with `T < 20` get a runtime warning
+  suggesting they bump `m_per_tree` to keep Rubin's rules stable.
+- Opt-out: `share_gnn = FALSE` restores the pre-v0.9.1 per-tree fit
+  path for users who need exact per-tree model independence.
+- New optional arg `reference_tree` lets users override the MCC choice.
+- `predict.pigauto_fit()` gains a `baseline_override` argument (mostly
+  internal — used by the shared-GNN path).
+- New Suggests: `phangorn` (for `maxCladeCred()`).
+- Tree-uncertainty propagation analysis: when the calibrated gate
+  closes (the common case on real data — see the v0.9.0 validation
+  suite), the shared-GNN approximation is lossless. When the gate is
+  open, tree variance is slightly under-estimated in the GNN channel
+  only — the baseline channel still carries it.
 
 ## Full threshold-model ordinal baseline (B3)
 
