@@ -432,11 +432,17 @@ pd     <- preprocess_traits(traits, tree)
 # ...proceed as above
 ```
 
-Trait columns can be any of the five auto-detected types — `numeric`
-(continuous), `integer` (count), `factor` (binary / categorical), and
-`ordered` (ordinal) — or `numeric` with a `trait_types = "proportion"`
-override for proportions bounded in (0, 1). pigauto reads column classes
-to decide how each trait is encoded and imputed. The
+Trait columns can be any of eight supported types. Five are
+auto-detected from R column class: `numeric` (continuous), `integer`
+(count), `factor` with 2 levels (binary), `factor` with >2 levels
+(categorical), and `ordered` (ordinal). Three require an explicit
+declaration because they cannot be inferred from class alone:
+`numeric` (0–1) with `trait_types = "proportion"` for bounded
+proportions; `integer` with `trait_types = "zi_count"` for
+zero-inflated counts; and K `numeric` columns declared via the
+`multi_proportion_groups` argument for compositional (simplex) data
+whose rows sum to 1. pigauto reads column classes to decide how each
+trait is encoded and imputed. The
 species names in `traits` must overlap with tip labels in `tree` (partial
 overlap is allowed; unmatched species are dropped with a warning).
 
