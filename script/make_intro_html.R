@@ -70,8 +70,10 @@ correlations among the traits themselves, which let observed traits
 inform predictions of missing ones, and <b>(3)</b> optional
 environmental covariates (climate, habitat, geography), which capture
 trait variation that phylogeny alone cannot explain. The package
-handles continuous measurements, counts, binary variables, ordered
-categories, and unordered categories &mdash; all in a single call.
+handles eight trait types in a single call: continuous measurements,
+counts, binary variables, unordered categories, ordered categories,
+bounded proportions, zero-inflated counts, and compositional
+(multi-proportion) data whose components sum to one.
 </p>
 <h3>How it works</h3>
 <p>
@@ -93,7 +95,7 @@ statistical residual. The GNN&rsquo;s output is a full prediction
 trained end-to-end, not <code>y &minus; baseline</code>.
 </div>
 <ul>
-<li><b>Multiple trait types</b> &mdash; continuous, binary, categorical, ordinal, count, and proportion in one model.</li>
+<li><b>Multiple trait types</b> &mdash; continuous, binary, categorical, ordinal, count, proportion, zero-inflated count, and multi-proportion (compositional) in one model.</li>
 <li><b>Uses the phylogeny</b> &mdash; closely related species inform predictions, as you would expect from a comparative method.</li>
 <li><b>Cross-trait patterns</b> &mdash; if body mass predicts beak length, observed masses help impute missing beak lengths.</li>
 <li><b>Safe by default</b> &mdash; the per-trait gate prevents the neural network from degrading traits the baseline already handles well.</li>
@@ -133,7 +135,7 @@ result$prediction$probabilities$Trophic.Level  # categorical probabilities
 pigauto_report(result)</code></pre>
 
 <h2>Trait types supported</h2>
-<p>All five types coexist in one model. pigauto auto-detects from the R column class; you can override with <code>trait_types</code>.</p>
+<p>All eight types coexist in one model. The first five are auto-detected from the R column class; the last three require an explicit declaration (<code>trait_types</code> for proportion / zi_count, or <code>multi_proportion_groups</code> for compositional data).</p>
 <table>
 <thead><tr>
 <th>R class</th>
@@ -148,6 +150,9 @@ pigauto_report(result)</code></pre>
 <tr><td><code>factor(2)</code></td> <td>binary</td>    <td>0/1</td>              <td>BCE</td>          <td>Phylo label propagation</td></tr>
 <tr><td><code>factor(&gt;2)</code></td><td>categorical</td><td>one-hot (K cols)</td><td>cross-entropy</td><td>Phylo label propagation</td></tr>
 <tr><td><code>ordered</code></td>   <td>ordinal</td>   <td>integer + z-score</td><td>MSE</td>          <td>Phylogenetic BM</td></tr>
+<tr><td><code>numeric</code> (0&ndash;1)</td> <td>proportion</td> <td>logit + z-score</td> <td>MSE</td> <td>Phylogenetic BM</td></tr>
+<tr><td><code>integer</code> (zero-inflated)</td> <td>zi_count</td> <td>gate (0/1) + <code>log1p</code>-z of non-zeros (2 latent cols)</td> <td>BCE (gate) + MSE (magnitude)</td> <td>LP (gate) + BM (magnitude)</td></tr>
+<tr><td>K <code>numeric</code> cols summing to 1</td> <td>multi_proportion</td> <td>centred log-ratio (CLR) + per-component z-score (K latent cols)</td> <td>MSE on CLR</td> <td>Per-component BM</td></tr>
 </tbody>
 </table>
 

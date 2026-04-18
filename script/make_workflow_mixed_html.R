@@ -109,10 +109,13 @@ for the full multiple-imputation workflow.</p>
 <ol>
 <li><b>Mixed-type imputation.</b> Most real phylogenetic datasets mix
 continuous morphometrics with categorical ecology (trophic level, habitat,
-migration strategy). pigauto is designed to handle all five trait types
-&mdash; continuous, count, ordinal, binary, categorical &mdash; in one
-model. Here every trait type is actually imputed and actually used
-in the downstream regression.</li>
+migration strategy). pigauto is designed to handle all eight trait types
+&mdash; continuous, count, ordinal, binary, categorical, proportion,
+zero-inflated count, and multi-proportion (compositional) &mdash; in a
+single model. This tutorial exercises five of them (continuous, count,
+ordinal, binary, categorical); see the separate benchmarks for
+proportion, zi_count, and multi_proportion. Every trait type used here
+is actually imputed and actually used in the downstream regression.</li>
 <li><b>Three analysis paths, not two.</b> Multiple imputation is a way
 to propagate uncertainty into whatever downstream model you prefer. The
 classical split is frequentist (Rubin&rsquo;s rules) vs Bayesian
