@@ -6,7 +6,7 @@
 #   bash rsync_results_back.sh <CC_LOGIN>
 #
 # Example:
-#   bash rsync_results_back.sh snakagawa@cedar.alliancecan.ca
+#   bash rsync_results_back.sh snakagawa@fir.alliancecan.ca
 #
 # The archives land in submit_v090_cloud/returned/ (created if absent).
 # Unpack them there:
@@ -16,7 +16,7 @@ set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
   echo "Usage: $0 <CC_LOGIN>"
-  echo "  e.g.: $0 snakagawa@cedar.alliancecan.ca"
+  echo "  e.g.: $0 snakagawa@fir.alliancecan.ca"
   exit 1
 fi
 

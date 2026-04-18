@@ -1,7 +1,14 @@
 # pigauto v0.9.0 — Compute Canada submission bundle
 
 This directory contains everything needed to run two heavy benchmarks on an
-Alliance Canada (Compute Canada) cluster: Cedar, Beluga, Graham, or Narval.
+Alliance Canada (Compute Canada) cluster. As of the 2025-2026 infrastructure
+renewal the general-purpose clusters are **Fir** (replaces Cedar), **Nibi**
+(replaces Graham), **Rorqual** (replaces Béluga), **Trillium** (replaces
+Niagara), and **Narval** (unchanged). Cedar / Graham / Béluga hostnames no
+longer resolve — use the new names below.
+
+The scripts and instructions in this directory use `fir.alliancecan.ca` as
+the default; substitute any other active cluster the same way.
 
 ## Benchmarks
 
@@ -31,16 +38,16 @@ working directory, then the SLURM wrapper archives them into
 ```bash
 # From your local machine, inside the pigauto repo:
 rsync -avz submit_v090_cloud/ \
-  <CC_USERNAME>@cedar.alliancecan.ca:~/pigauto_cloud/
+  <CC_USERNAME>@fir.alliancecan.ca:~/pigauto_cloud/
 ```
 
-Replace `<CC_USERNAME>` with your CC username and `cedar` with your preferred
-cluster (beluga / graham / narval).
+Replace `<CC_USERNAME>` with your CC username and `fir` with your preferred
+cluster (`nibi` / `rorqual` / `narval` / `trillium`).
 
 ### 2. SSH in and install pigauto
 
 ```bash
-ssh <CC_USERNAME>@cedar.alliancecan.ca
+ssh <CC_USERNAME>@fir.alliancecan.ca
 cd ~/pigauto_cloud
 ```
 
@@ -117,7 +124,7 @@ On your **local** machine:
 ```bash
 cd /path/to/pigauto  # repo root
 bash submit_v090_cloud/rsync_results_back.sh \
-  <CC_USERNAME>@cedar.alliancecan.ca
+  <CC_USERNAME>@fir.alliancecan.ca
 ```
 
 Archives land in `submit_v090_cloud/returned/`. Unpack:
