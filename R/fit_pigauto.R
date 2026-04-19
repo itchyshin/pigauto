@@ -142,6 +142,7 @@ fit_pigauto <- function(
     conformal_bootstrap_B = 500L,
     gate_method       = c("single_split", "median_splits"),
     gate_splits_B     = 31L,
+    min_val_cells     = 20L,
     verbose           = TRUE,
     seed              = 1L
 ) {
@@ -594,6 +595,7 @@ fit_pigauto <- function(
       gate_cap        = gate_cap,
       gate_method     = gate_method,
       gate_splits_B   = gate_splits_B,
+      min_val_cells   = min_val_cells,
       seed            = seed,
       latent_names    = data$latent_names,
       verbose         = verbose

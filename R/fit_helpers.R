@@ -62,12 +62,14 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
                             cal_min_rel_gain = 0.02,
                             gate_method = c("single_split", "median_splits"),
                             gate_splits_B = 31L,
+                            min_val_cells = 10L,
                             seed = 1L,
                             latent_names = NULL,
                             verbose = FALSE) {
   gate_method <- match.arg(gate_method)
   p                <- ncol(mu_cal)
   calibrated_gates <- numeric(p)
+  low_val_traits   <- character(0)
 
   for (tm in trait_map) {
     lc <- tm$latent_cols
@@ -86,6 +88,11 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
     if (n_val == 0) {
       calibrated_gates[lc] <- 0
       next
+    }
+
+    if (n_val < min_val_cells) {
+      low_val_traits <- c(low_val_traits,
+                          sprintf("%s (n=%d)", tm$name, n_val))
     }
 
     # ------------------------------------------------------------------
@@ -240,6 +247,23 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
                              paste0("col", seq_len(p))
     message("Calibrated gates: ",
             paste(names(gate_summary), gate_summary, sep = "=", collapse = ", "))
+  }
+
+  # Small-val warning: if any trait had fewer than `min_val_cells`
+  # validation cells, the gate calibration AND the conformal score will
+  # be noisy for that trait. Users see under-/over-coverage in that
+  # regime; surface this up-front so they know to (a) increase the
+  # fraction of held-out data, (b) use gate_method = "median_splits" +
+  # conformal_method = "bootstrap" to smooth the per-split variance,
+  # or (c) accept that intervals are approximate.
+  if (length(low_val_traits) > 0L) {
+    warning("Small validation set for ", length(low_val_traits),
+            " trait(s): ", paste(low_val_traits, collapse = ", "),
+            ". Calibrated gate and conformal scores will be noisy; ",
+            "coverage may deviate from the 95%% target. See ",
+            "`?fit_pigauto` under 'Calibration at small n' for ",
+            "smoothing options.",
+            call. = FALSE)
   }
 
   calibrated_gates
