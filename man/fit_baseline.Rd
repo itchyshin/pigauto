@@ -10,7 +10,9 @@ fit_baseline(
   splits = NULL,
   model = "BM",
   graph = NULL,
-  multi_obs_aggregation = c("hard", "soft")
+  multi_obs_aggregation = c("hard", "soft"),
+  em_iterations = 0L,
+  em_tol = 0.001
 )
 }
 \arguments{
@@ -40,6 +42,23 @@ soft E-step (\code{estep_liability_binary_soft}) so that intermediate
 class frequencies contribute fractional liability evidence.  Only
 relevant for multi-obs data with binary or categorical traits when the
 Level-C joint baseline is active.}
+
+\item{em_iterations}{integer. Number of Phase 6 EM iterations for the
+threshold-joint baseline (binary + ordinal + OVR categorical). Default
+\code{0L} disables the EM loop and preserves v0.9.1 output byte-for-byte.
+When \code{>= 1}, the BM rate \eqn{\Sigma} learned by
+\code{Rphylopars::phylopars()} at iteration \eqn{k} is fed back as the
+per-trait prior SD at iteration \eqn{k+1}, up to \code{em_iterations}
+times or until \code{em_tol} convergence.  \code{em_iterations = 1L} is
+a degenerate single-pass run and produces the same baseline output as
+\code{0L}; \code{>= 2L} is needed for actual iteration. Only affects
+the threshold-joint path (continuous-only traits pass through the
+existing joint MVN path unchanged).}
+
+\item{em_tol}{numeric. Relative-Frobenius convergence tolerance for the
+Phase 6 EM loop. Early-stops when
+\eqn{||\Sigma_k - \Sigma_{k-1}||_F / ||\Sigma_{k-1}||_F < }
+\code{em_tol}.  Default \code{1e-3}.}
 }
 \value{
 A list with:

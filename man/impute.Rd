@@ -18,6 +18,8 @@ impute(
   verbose = TRUE,
   seed = 1L,
   multi_obs_aggregation = c("hard", "soft"),
+  em_iterations = 0L,
+  em_tol = 0.001,
   ...
 )
 }
@@ -81,6 +83,18 @@ categorical.  \code{"soft"} preserves species-level proportions and
 dispatches a soft E-step so that intermediate class frequencies
 contribute fractional liability evidence.  Passed to
 \code{\link{fit_baseline}}.}
+
+\item{em_iterations}{integer. Phase 6 EM iterations for the
+threshold-joint baseline (binary + ordinal + OVR categorical).
+Default \code{0L} preserves v0.9.1 behaviour byte-for-byte. When
+\code{>= 2L}, the BM rate \eqn{\Sigma} learned by
+\code{Rphylopars::phylopars()} at iteration \eqn{k} is fed back as
+the per-trait prior SD at iteration \eqn{k+1}, up to
+\code{em_iterations} times or until \code{em_tol} convergence.
+Passed to \code{\link{fit_baseline}}.}
+
+\item{em_tol}{numeric. Relative-Frobenius convergence tolerance for
+the Phase 6 EM loop. Default \code{1e-3}.}
 
 \item{...}{additional arguments passed to \code{\link{fit_pigauto}}.}
 }
