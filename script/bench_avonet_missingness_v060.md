@@ -1,9 +1,9 @@
 # AVONET full-scale missingness sweep
 
-Run on: 2026-04-18 15:41:35
-Machine: Linux 5.14.0-611.42.1.el9_7.x86_64 (x86_64), R 4.4.0
+Run on: 2026-04-14 07:59:37
+Machine: Darwin 25.4.0 (arm64), R 4.5.2
 Species: 9993, traits: 7
-Total wall: 273.9 min
+Total wall: 125.8 min
 
 ## Methods
 
@@ -23,7 +23,7 @@ Total wall: 273.9 min
  pigauto Beak.Length_Culmen  continuous 1041 0.2963931 0.9565484           NA
       BM               Mass  continuous  999 0.2677125 0.9636107           NA
     mean               Mass  continuous  999 1.0009498        NA           NA
- pigauto               Mass  continuous  999 0.4056547 0.9646187           NA
+ pigauto               Mass  continuous  999 0.2891376 0.9655696           NA
       BM          Migration     ordinal  918 0.7747608        NA    0.5639290
     mean          Migration     ordinal  918 0.9974487        NA           NA
  pigauto          Migration     ordinal  918 0.7747608        NA    0.5639291
@@ -38,7 +38,7 @@ Total wall: 273.9 min
  pigauto      Trophic.Level categorical 1038        NA        NA           NA
       BM        Wing.Length  continuous 1009 0.2724725 0.9698869           NA
     mean        Wing.Length  continuous 1009 1.1017743        NA           NA
- pigauto        Wing.Length  continuous 1009 0.3051831 0.9720296           NA
+ pigauto        Wing.Length  continuous 1009 0.2724725 0.9698869           NA
   accuracy
         NA
         NA
@@ -51,13 +51,13 @@ Total wall: 273.9 min
         NA
  0.5957011
  0.5762538
- 0.6120778
+ 0.5250768
         NA
         NA
         NA
  0.5722543
  0.5558767
- 0.5173410
+ 0.5558767
         NA
         NA
         NA
@@ -98,15 +98,15 @@ Total wall: 273.9 min
         NA
         NA
         NA
- 0.6217975
+ 0.6059374
  0.5884506
- 0.5811305
+ 0.7222448
         NA
         NA
         NA
- 0.5927835
+ 0.5800952
  0.5626487
- 0.6046788
+ 0.6934972
         NA
         NA
         NA
@@ -122,7 +122,7 @@ Total wall: 273.9 min
       BM               Mass  continuous 3980 0.3231053 0.9479004           NA
     mean               Mass  continuous 3980 1.0127319        NA           NA
  pigauto               Mass  continuous 3980 0.3231053 0.9479004           NA
-      BM          Migration     ordinal 4041 0.8505674        NA    0.4960723
+      BM          Migration     ordinal 4041 0.8505674        NA    0.4960698
     mean          Migration     ordinal 4041 1.0168020        NA           NA
  pigauto          Migration     ordinal 4041 0.8505674        NA    0.4960762
       BM  Primary.Lifestyle categorical 3986        NA        NA           NA
@@ -147,15 +147,15 @@ Total wall: 273.9 min
         NA
         NA
         NA
- 0.6194180
+ 0.6043653
  0.5893126
- 0.6204215
+ 0.6562970
         NA
         NA
         NA
- 0.5910567
+ 0.5720709
  0.5548339
- 0.5910567
+ 0.5720709
         NA
         NA
         NA
