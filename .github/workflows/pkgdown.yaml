@@ -24,9 +24,14 @@ on:
       - 'pkgdown/**'
       - '.github/workflows/pkgdown.yaml'
   pull_request:
-  release:
-    types: [published]
   workflow_dispatch:
+
+# Note: no `release:` trigger.
+# Our release flow always bumps DESCRIPTION + NEWS.md via a PR merge to
+# main BEFORE the tag is pushed, and that main-push rebuilds the site.
+# Adding `release:` on top reliably fails at the github-pages environment
+# gate (tags aren't in the allowed-refs list), producing spurious red
+# checks on every release. See PR #XX / issue discussion.
 
 name: pkgdown.yaml
 
