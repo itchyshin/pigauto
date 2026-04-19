@@ -1,0 +1,164 @@
+During startup - Warning messages:
+1: Setting LC_CTYPE failed, using "C" 
+2: Setting LC_COLLATE failed, using "C" 
+3: Setting LC_TIME failed, using "C" 
+4: Setting LC_MESSAGES failed, using "C" 
+5: Setting LC_MONETARY failed, using "C" 
+6: Setting LC_PAPER failed, using "C" 
+7: Setting LC_MEASUREMENT failed, using "C" 
+[   0.0s] bench_scaling_v090_extended starting at 2026-04-18 11:20:37
+[   0.0s] RSpectra available: FALSE
+[   0.0s] n_grid = 5000, 7500, 10000
+[   0.0s] stage budget = 3600s, overall budget = 43200s
+[   0.1s] ===== n = 5000 =====
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[   0.7s] [n= 5000] preprocess ok      wall=    0.0s  maxR=    NA MB
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[  46.1s] [n= 5000] graph      ok      wall=   45.2s  maxR=    NA MB
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[  46.3s] [n= 5000] splits     ok      wall=    0.0s  maxR=    NA MB
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[  49.1s] [n= 5000] baseline   ok      wall=    2.5s  maxR=    NA MB
+[  49.1s]   epochs for this n: 100
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[ 442.4s] [n= 5000] train      ok      wall=  393.1s  maxR=    NA MB
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[ 447.8s] [n= 5000] predict    ok      wall=    5.1s  maxR=    NA MB
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[ 448.0s] ===== n = 7500 =====
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[ 448.8s] [n= 7500] preprocess ok      wall=    0.0s  maxR=    NA MB
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[ 590.1s] [n= 7500] graph      ok      wall=  141.1s  maxR=    NA MB
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[ 590.3s] [n= 7500] splits     ok      wall=    0.1s  maxR=    NA MB
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[ 597.4s] [n= 7500] baseline   ok      wall=    6.8s  maxR=    NA MB
+[ 597.5s]   epochs for this n: 100
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[1432.9s] [n= 7500] train      ok      wall=  835.1s  maxR=    NA MB
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[1443.9s] [n= 7500] predict    ok      wall=   10.7s  maxR=    NA MB
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[1444.0s] ===== n = 10000 =====
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[1445.4s] [n=10000] preprocess ok      wall=    0.0s  maxR=    NA MB
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[1760.0s] [n=10000] graph      ok      wall=  314.4s  maxR=    NA MB
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[1760.3s] [n=10000] splits     ok      wall=    0.1s  maxR=    NA MB
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[1774.9s] [n=10000] baseline   ok      wall=   14.3s  maxR=    NA MB
+[1775.0s]   epochs for this n: 100
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[3170.2s] [n=10000] train      ok      wall= 1394.9s  maxR=    NA MB
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[3186.3s] [n=10000] predict    ok      wall=   15.8s  maxR=    NA MB
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[3186.5s] loop finished at 2026-04-18 12:13:44 (total 3187s)
+[3187.2s] plot written to bench_scaling_v090_extended.png
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Warning in system("git rev-parse HEAD", intern = TRUE) :
+  running command 'git rev-parse HEAD' had status 128
+[3187.2s] summary written to bench_scaling_v090_extended.md
+[3187.2s] done
