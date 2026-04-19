@@ -12,7 +12,8 @@ fit_baseline(
   graph = NULL,
   multi_obs_aggregation = c("hard", "soft"),
   em_iterations = 0L,
-  em_tol = 0.001
+  em_tol = 0.001,
+  em_offdiag = FALSE
 )
 }
 \arguments{
@@ -56,9 +57,17 @@ the threshold-joint path (continuous-only traits pass through the
 existing joint MVN path unchanged).}
 
 \item{em_tol}{numeric. Relative-Frobenius convergence tolerance for the
-Phase 6 EM loop. Early-stops when
+Phase 6 / 7 EM loop. Early-stops when
 \eqn{||\Sigma_k - \Sigma_{k-1}||_F / ||\Sigma_{k-1}||_F < }
 \code{em_tol}.  Default \code{1e-3}.}
+
+\item{em_offdiag}{logical. Phase 7 opt-in: when \code{TRUE} AND
+\code{em_iterations >= 2L}, each liability cell's prior at iteration
+\eqn{k+1} is the conditional-MVN \eqn{(\mu, sd)} given the posterior
+liability of other traits at iteration \eqn{k}, using the full off-
+diagonal entries of \eqn{\Sigma}. Binary + ordinal only (OVR categorical
+stays on Phase 6 diagonal). Default \code{FALSE} preserves Phase 6
+behaviour.}
 }
 \value{
 A list with:
