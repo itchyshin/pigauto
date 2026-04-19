@@ -1,3 +1,25 @@
+# pigauto 0.9.1.9000 (dev)
+
+## Phase 6 EM for threshold-joint baseline (opt-in)
+
+- New argument `em_iterations = 0L` on `impute()` and `fit_baseline()`.
+  When `>= 1`, the threshold-joint path (binary + ordinal + OVR
+  categorical) iterates: the BM rate `Σ` learned by
+  `Rphylopars::phylopars()` at iteration `k` is fed back as the
+  per-trait prior SD at iteration `k + 1`, up to `em_iterations` times
+  (default 5 when enabled) or until
+  `||Σ_k - Σ_{k-1}||_F / ||Σ_{k-1}||_F < em_tol` (default 1e-3). Closes
+  the final open item from the v0.9.0 "Deferred to future releases" list.
+- Default `em_iterations = 0L` preserves v0.9.1 output byte-for-byte.
+- Under independent-discrete data the EM path converges in 1-2 iters
+  at the plug-in answer (no free lunch, no harm). Under
+  correlated-discrete data (ρ >= 0.5), the prior tightens and
+  discrete-trait accuracy typically gains a few pp.
+- Full off-diagonal conditioning on `Σ` is deferred to a future Phase 7.
+  Phase 6 uses `sqrt(diag(Σ))` only.
+
+---
+
 # pigauto 0.9.1 (2026-04-19)
 
 pigauto 0.9.1 is a consolidation release on top of 0.9.0. Two headline
