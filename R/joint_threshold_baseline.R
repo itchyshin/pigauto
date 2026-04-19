@@ -159,8 +159,16 @@ aggregate_to_species <- function(data, splits = NULL, soft_aggregate = FALSE) {
 #'   liab_cols.
 #' @keywords internal
 #' @noRd
-build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE) {
+build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE,
+                                   sd_prior_vec = NULL) {
   trait_map <- data$trait_map
+  # sd_j_lookup returns the per-column prior SD. NULL default preserves the
+  # v0.9.1 plug-in N(0, 1) behaviour byte-for-byte. Phase 6 EM passes
+  # sqrt(diag(Σ)) from the previous phylopars fit here.
+  sd_j_lookup <- function(j) {
+    if (is.null(sd_prior_vec)) return(1)
+    sd_prior_vec[j]
+  }
   # Collapse multi-obs to species level (no-op for single-obs). Splits are
   # masked internally in obs space before aggregation, so no separate
   # masking step is needed below.
@@ -217,15 +225,16 @@ build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE) 
       # Observed value is either hard 0/1 (hard aggregation or single-obs) or
       # a species-level proportion in [0,1] (soft aggregation for multi-obs).
       # Dispatch to soft E-step when is_prop indicates a proportion value.
+      sd_j <- sd_j_lookup(j)
       for (i in seq_len(n)) {
         v <- src_col[i]
         if (is.na(v)) next
         if (is_prop[col_idx]) {
           post <- estep_liability_binary_soft(p = as.numeric(v),
-                                               mu_prior = 0, sd_prior = 1)
+                                               mu_prior = 0, sd_prior = sd_j)
         } else {
           post <- estep_liability(tm_j, observed = v,
-                                   mu_prior = 0, sd_prior = 1)
+                                   mu_prior = 0, sd_prior = sd_j)
         }
         X_liab[i, j] <- post$mean
       }
@@ -233,11 +242,12 @@ build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE) 
     } else if (tp == "ordinal") {
       # Ordinal: interval-truncated Gaussian E-step via the dispatcher.
       # estep_liability() handles z-score roundtrip internally.
+      sd_j <- sd_j_lookup(j)
       for (i in seq_len(n)) {
         v <- src_col[i]
         if (is.na(v)) next
         post <- estep_liability(tm_j, observed = v,
-                                  mu_prior = 0, sd_prior = 1)
+                                  mu_prior = 0, sd_prior = sd_j)
         X_liab[i, j] <- post$mean
       }
 
