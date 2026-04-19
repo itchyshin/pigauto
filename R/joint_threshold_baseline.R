@@ -280,12 +280,16 @@ build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE,
 #' @noRd
 fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
                                         soft_aggregate = FALSE,
-                                        sd_prior_vec = NULL) {
+                                        sd_prior_vec = NULL,
+                                        mu_prior_mat = NULL,
+                                        sd_prior_mat = NULL) {
   stopifnot(joint_mvn_available())
 
   built <- build_liability_matrix(data, splits = splits,
                                   soft_aggregate = soft_aggregate,
-                                  sd_prior_vec = sd_prior_vec)
+                                  sd_prior_vec = sd_prior_vec,
+                                  mu_prior_mat = mu_prior_mat,
+                                  sd_prior_mat = sd_prior_mat)
   X_liab     <- built$X_liab
   liab_cols  <- built$liab_cols
   liab_types <- built$liab_types
@@ -525,21 +529,31 @@ fit_joint_threshold_baseline_em <- function(data, tree, splits,
                                              graph = NULL,
                                              soft_aggregate = FALSE,
                                              em_iterations = 5L,
-                                             em_tol = 1e-3) {
+                                             em_tol = 1e-3,
+                                             em_offdiag = FALSE) {
   stopifnot(joint_mvn_available(), em_iterations >= 1L)
 
-  sd_prior_vec <- NULL  # iter 1 = plug-in N(0, 1)
-  prev_vars    <- NULL
+  # Phase 6 state (diagonal):
+  sd_prior_vec <- NULL   # iter 1 = plug-in N(0, 1)
+  # Phase 7 state (off-diagonal):
+  #   Sigma_prev:   K x K BM rate matrix from previous phylopars fit
+  #   L_hat_prev:   n x K liability posterior means (mu_liab) from previous fit
+  mu_prior_mat <- NULL
+  sd_prior_mat <- NULL
+  Sigma_prev   <- NULL
+  prev_conv    <- NULL   # convergence quantity for early-stop
   delta        <- Inf
   base         <- NULL
   iter_run     <- 0L
-  n_liab_cols  <- NULL   # set on iter 1 after first build
+  n_liab_cols  <- NULL
 
   for (iter in seq_len(em_iterations)) {
     new_base <- tryCatch(
       fit_joint_threshold_baseline(data, tree, splits = splits, graph = graph,
                                     soft_aggregate = soft_aggregate,
-                                    sd_prior_vec = sd_prior_vec),
+                                    sd_prior_vec = sd_prior_vec,
+                                    mu_prior_mat = mu_prior_mat,
+                                    sd_prior_mat = sd_prior_mat),
       error = function(e) NULL
     )
 
@@ -562,24 +576,56 @@ fit_joint_threshold_baseline_em <- function(data, tree, splits,
       # All cols < 2 obs; no fit possible. Degenerate case — bail.
       break
     }
-    new_vars <- extract_liability_variances(new_base$phylopars_fit)
 
-    if (!is.null(prev_vars)) {
-      delta <- rel_frobenius(new_vars, prev_vars)
-      if (delta < em_tol) break
+    # Pull Σ and convergence quantity per em_offdiag branch.
+    Sigma_new <- new_base$phylopars_fit$pars$phylocov
+    if (is.null(Sigma_new)) Sigma_new <- new_base$phylopars_fit$pars$sigma2
+    if (!is.matrix(Sigma_new)) Sigma_new <- as.matrix(Sigma_new)
+    new_vars <- as.numeric(diag(Sigma_new))
+
+    if (em_offdiag) {
+      conv_now <- as.numeric(Sigma_new)  # full flattened Σ
+    } else {
+      conv_now <- new_vars               # Phase 6: diagonal only
     }
 
-    prev_vars    <- new_vars
-    # Align sd_prior_vec to the FULL liab_cols. Unfitted cols stay at 1
-    # (plug-in fallback).
-    sd_prior_vec <- rep(1, n_liab_cols)
-    sd_prior_vec[new_base$fit_cols_idx] <- sqrt(pmax(new_vars, 1e-8))
+    if (!is.null(prev_conv)) {
+      delta <- rel_frobenius(conv_now, prev_conv)
+      if (delta < em_tol) break
+    }
+    prev_conv  <- conv_now
+    Sigma_prev <- Sigma_new
+
+    # Prepare priors for the NEXT iteration.
+    if (em_offdiag) {
+      # Phase 7: per-cell conditional-MVN prior. Need the previous iter's
+      # posterior liability means, aligned to the same K columns as Σ.
+      # new_base$mu_liab is n x n_liab_cols; Σ is K x K where K = length(fit_cols_idx).
+      L_hat_k <- new_base$mu_liab[, new_base$fit_cols_idx, drop = FALSE]
+      cp <- build_conditional_prior(Sigma_new, L_hat_k)
+      # Broadcast cp (n x K_fit) to the full liab_cols width; unfitted cols
+      # stay at plug-in (mu = 0, sd = 1).
+      mu_full <- matrix(0, nrow = nrow(new_base$mu_liab), ncol = n_liab_cols)
+      sd_full <- matrix(1, nrow = nrow(new_base$mu_liab), ncol = n_liab_cols)
+      mu_full[, new_base$fit_cols_idx] <- cp$mu_prior
+      sd_full[, new_base$fit_cols_idx] <- cp$sd_prior
+      mu_prior_mat <- mu_full
+      sd_prior_mat <- sd_full
+      sd_prior_vec <- NULL
+    } else {
+      # Phase 6: diagonal-only sd_prior_vec; clear Phase 7 matrices.
+      sd_prior_vec <- rep(1, n_liab_cols)
+      sd_prior_vec[new_base$fit_cols_idx] <- sqrt(pmax(new_vars, 1e-8))
+      mu_prior_mat <- NULL
+      sd_prior_mat <- NULL
+    }
   }
 
   base$em_state <- list(
     iterations_run = iter_run,
     converged      = is.finite(delta) && delta < em_tol,
-    final_delta    = delta
+    final_delta    = delta,
+    em_offdiag     = isTRUE(em_offdiag)
   )
   base
 }
