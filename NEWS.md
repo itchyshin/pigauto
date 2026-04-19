@@ -1,5 +1,28 @@
 # pigauto 0.9.0.9000 (dev)
 
+## Calibration diagnostics and opt-in smoothing for small-n regimes
+
+- New `fit_pigauto()` argument `min_val_cells = 10L`. Warns at fit time
+  if any trait had fewer than this many validation cells available for
+  gate calibration and conformal-score estimation. Default of 10 is the
+  floor of pathological territory (operational target is 20-30).
+- New optional `gate_method = "median_splits"` runs the half-A / half-B
+  grid search on `gate_splits_B = 31L` random splits and takes the
+  median best-gate. Small empirical benefit at small `n_val` (gate SD
+  0.406 → 0.360 across 10 seeds on the calibration sim). Default stays
+  `"single_split"` for backward compat.
+- New optional `conformal_method = "bootstrap"` averages the conformal
+  quantile across `conformal_bootstrap_B = 500L` bootstrap resamples of
+  the val residuals. Empirically reduces conformal-score variance ~30%
+  but **does not** reliably improve 95%-interval coverage stability on
+  the evaluation sim. Shipped as experimental; default stays
+  `"split"`.
+- Roxygen for `fit_pigauto()` gains a `@section Calibration at small n:`
+  explaining when the 95% intervals should be treated as approximate.
+  Short version: at n_val < 20 the split-conformal guarantee degrades;
+  increase `missing_frac` or collect more species rather than relying
+  on estimator smoothing.
+
 ## Tree-sharing GNN is now the default in `multi_impute_trees()`
 
 - New default `share_gnn = TRUE` in `multi_impute_trees()`. The GNN is

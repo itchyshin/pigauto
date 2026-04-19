@@ -102,8 +102,81 @@
 #' @param patience integer. Early-stopping patience in eval cycles (default
 #'   \code{10}).
 #' @param clip_norm numeric. Gradient clip norm (default \code{1.0}).
+#' @param conformal_method character. How the conformal prediction score
+#'   is estimated from validation residuals.  \code{"split"} (default,
+#'   backward-compatible) takes a single sample quantile; \code{"bootstrap"}
+#'   takes \code{conformal_bootstrap_B} bootstrap resamples of the val
+#'   residuals and averages the per-resample quantiles.  Empirically the
+#'   bootstrap variant reduces the conformal-score variance across seeds
+#'   by ~30% at small \code{n_val}, but on the simulation design used to
+#'   evaluate it (n=150 species, 35\% trait_MAR) it did not translate
+#'   into better 95\% coverage stability (coverage SD 0.094 vs 0.102
+#'   across 10 seeds).  Ship as an opt-in experimental knob; defaults to
+#'   \code{"split"}.
+#' @param conformal_bootstrap_B integer. Bootstrap resamples used when
+#'   \code{conformal_method = "bootstrap"}; default \code{500}.  Ignored
+#'   otherwise.
+#' @param gate_method character. How the per-trait calibrated gate is
+#'   chosen.  \code{"single_split"} (default, backward-compatible) runs
+#'   the grid search on a single random half-A / half-B split of the val
+#'   rows; \code{"median_splits"} repeats the whole procedure for
+#'   \code{gate_splits_B} random splits and takes the median
+#'   \code{best_g}.  \code{"median_splits"} slightly reduces gate
+#'   bimodality at small \code{n_val} (SD 0.406 → 0.360 across 10 seeds
+#'   on the evaluation sim) with a small coverage-SD improvement
+#'   (0.094 → 0.086).  Negligible runtime cost (B × cheap grid searches).
+#' @param gate_splits_B integer. Random splits used when
+#'   \code{gate_method = "median_splits"}; default \code{31} (odd so the
+#'   median is well-defined).
+#' @param min_val_cells integer. Warn at fit time if any trait has fewer
+#'   than \code{min_val_cells} validation cells available for gate
+#'   calibration and conformal-score estimation.  Default \code{10}: the
+#'   floor of pathological territory, where the conformal quantile
+#'   collapses to \code{max(val_residuals)} and gate calibration becomes
+#'   essentially a coin flip between \code{0} and \code{gate_cap}.
+#'   Recommended operational target is \code{n_val >= 20-30} per trait;
+#'   achieve this by increasing \code{missing_frac} or collecting more
+#'   species.  See \strong{Calibration at small n} below.
 #' @param verbose logical. Print training progress (default \code{TRUE}).
 #' @param seed integer. Random seed (default \code{1}).
+#' @section Calibration at small n:
+#'
+#' pigauto's 95\% intervals are \emph{conformal}, not parametric: the
+#' interval half-width for each trait is the empirical \code{(1 - alpha)}
+#' quantile of \eqn{|y - \hat y|} on held-out validation cells.  When the
+#' number of validation cells per trait (\code{n_val}) is large
+#' (\eqn{\gtrsim 30}), split-conformal gives near-exact marginal coverage
+#' under mild exchangeability assumptions.
+#'
+#' At small \code{n_val} (\eqn{<} 20, and especially \eqn{<} 10) two
+#' things degrade at once:
+#'
+#' \itemize{
+#'   \item The conformal quantile clamps to \code{max(residuals)} because
+#'     the required quantile level exceeds 1.  The score is the single
+#'     largest val residual and has substantial sampling variance across
+#'     fits.
+#'   \item The gate calibration's half-A / half-B split ends up with only
+#'     a few cells per half, so the grid-search winner is essentially
+#'     random between \code{0} and \code{gate_cap}.
+#' }
+#'
+#' Empirically (pigauto simulation harness, n=150 species, 35\%
+#' trait_MAR, 10 random seeds), default behaviour produces 92\% mean
+#' coverage with per-fit coverage ranging \code{[0.73, 1.00]}.  The mean
+#' is close to the 95\% target; the per-fit variance is the issue.
+#' \code{gate_method = "median_splits"} and \code{conformal_method =
+#' "bootstrap"} reduce their respective estimator variances but
+#' empirically do not meaningfully narrow the coverage distribution.
+#' \strong{Treat the 95\% intervals as approximate in the small-\code{n}
+#' regime}; increase \code{missing_frac} (more held-out data for
+#' calibration) or collect more species if tight per-fit coverage is
+#' required.
+#'
+#' The \code{min_val_cells} warning fires at fit time whenever any trait
+#' falls below this threshold, so you know when to interpret the
+#' intervals cautiously.
+#'
 #' @return An object of class \code{"pigauto_fit"}.
 #' @importFrom torch torch_tensor torch_float torch_bool torch_long
 #' @importFrom torch optim_adam with_no_grad nn_utils_clip_grad_norm_
@@ -138,9 +211,16 @@ fit_pigauto <- function(
     eval_every        = 100L,
     patience          = 10L,
     clip_norm         = 1.0,
+    conformal_method  = c("split", "bootstrap"),
+    conformal_bootstrap_B = 500L,
+    gate_method       = c("single_split", "median_splits"),
+    gate_splits_B     = 31L,
+    min_val_cells     = 20L,
     verbose           = TRUE,
     seed              = 1L
 ) {
+  conformal_method <- match.arg(conformal_method)
+  gate_method      <- match.arg(gate_method)
   if (!inherits(data, "pigauto_data")) {
     stop("'data' must be a pigauto_data object.")
   }
@@ -586,6 +666,9 @@ fit_pigauto <- function(
       val_mask_mat    = val_mask_mat,
       gate_grid       = seq(0, gate_cap, length.out = 9L),
       gate_cap        = gate_cap,
+      gate_method     = gate_method,
+      gate_splits_B   = gate_splits_B,
+      min_val_cells   = min_val_cells,
       seed            = seed,
       latent_names    = data$latent_names,
       verbose         = verbose
@@ -602,6 +685,8 @@ fit_pigauto <- function(
       delta_cal        = delta_cal,
       X_truth_r        = X_truth_r,
       val_mask_mat     = val_mask_mat,
+      method           = conformal_method,
+      bootstrap_B      = conformal_bootstrap_B,
       verbose          = verbose
     )
   }
