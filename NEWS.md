@@ -1,4 +1,17 @@
-# pigauto 0.9.0.9000 (dev)
+# pigauto 0.9.1 (2026-04-19)
+
+pigauto 0.9.1 is a consolidation release on top of 0.9.0. Two headline
+improvements: (a) **tree-sharing GNN is now the default** in
+`multi_impute_trees()`, which makes posterior-tree multiple imputation
+cheap enough that the Nakagawa & de Villemereuil (2019) canonical
+workflow (T = 50 posterior trees × m_per_tree = 1 = M = 50 pooled
+datasets) is the default path at n = 10,000 species; (b) **opt-in
+calibration smoothers** (bootstrap conformal, median-over-splits gate,
+low-val-cells warning) for small-n regimes. This release also ships the
+three post-0.9.0 feature branches (B1 soft-liability, B2 rate-aware
+attention, B3 full-threshold ordinal baseline), scaling validation up
+to 10,000 species, and a clean `R CMD check` (0 errors / 0 warnings /
+1 note, down from 1 / 4 / 3 on v0.9.0).
 
 ## Calibration diagnostics and opt-in smoothing for small-n regimes
 
@@ -94,6 +107,64 @@
   all 3 phylogenetic-signal regimes. Categorical shows +2.0pp at high
   signal but mixed results at moderate/low signal (hard threshold
   sometimes snaps to the correct majority class by luck).
+
+## Scaling validation (up to 10,000 species)
+
+- **AVONET 9,993 + BirdTree missingness sweep** (`script/bench_avonet_missingness.R`).
+  Mean / mode vs BM baseline vs pigauto at 20% / 50% / 80% missing, run
+  from Compute Canada (Narval). pigauto beats the BM baseline on every
+  continuous trait at 80% missing; discrete accuracy stays within ≈1pp
+  of BM across the sweep. Output: `bench_avonet_missingness.rds` +
+  `bench_avonet_missingness.md`, rendered into the pkgdown validation
+  suite.
+- **Scaling curve to n = 10,000** (`script/bench_scaling_v090_extended.R`).
+  Per-stage wall-clock + peak memory at
+  n ∈ {100, 300, 1000, 3000, 5000, 7500, 10000}. Confirms sub-quadratic
+  growth for the baseline and the expected O(n²) scaling of the GNN
+  attention. At n = 10,000 the full pipeline completes in ~30–60 min on
+  a single CPU node. Output: scaling table + curve PNG in the pkgdown
+  validation suite.
+
+## Benchmarks
+
+- `bench_covariate_sim.R` rerun on v0.9.0 (previously pinned to v0.6.0).
+  Now the reference entry for the environmental-covariates path in the
+  validation suite.
+- `bench_multi_obs_mixed.R` output regenerated with the B1 soft E-step
+  path enabled; captures the +12–28pp categorical lift under soft
+  aggregation vs hard.
+
+## Documentation
+
+- New pkgdown article **"Propagating Tree Uncertainty"**
+  (`vignettes/tree-uncertainty.Rmd`). Decision guide for single-tree vs
+  multi-tree MI, canonical N&dV 2019 workflow under the new
+  `share_gnn = TRUE` default, worked example over posterior trees with
+  `Map()`-based downstream-model refitting, and a timing table.
+- pkgdown trait-type consistency pass: `zi_count` and `multi_proportion`
+  are now listed everywhere alongside the other six trait types
+  (Getting Started, Mixed Types, the validation suite, and the README).
+
+## Internal
+
+- **`R CMD check` clean**: 0 errors / 0 warnings / 1 note, down from
+  1 / 4 / 3 on v0.9.0. The remaining note is the `BACE` in-tree
+  "Package sources not in a standard location" flag, which is a
+  deliberate `.Rbuildignore` choice so BACE ships as a comparison
+  reference without being part of the installed pigauto package.
+- **Compute Canada SLURM bundles**. `submit_v090_cloud/` (Narval;
+  renamed clusters after the 2026 Alliance Canada infrastructure
+  renewal — Cedar → Fir etc.) ships one-shot scripts for the AVONET
+  missingness sweep and the scaling curve. `submit_v090_vulcan/` (PAICE
+  account `aip-snakagaw`) ships a SLURM array driver for the 60-cell
+  calibration-coverage grid.
+- **pkgdown CI path filter**: the pkgdown workflow now only rebuilds on
+  changes to user-facing files (`R/`, `vignettes/`, `pkgdown/`,
+  `README.md`, `NEWS.md`, `DESCRIPTION`). Saves ~50% of the
+  GitHub Actions minutes previously consumed by pigauto PR checks.
+- **Gap fixes**: replaced a hardcoded worktree path in
+  `bench_multi_obs_mixed.R` with a portable relative path; refreshed
+  the bench_multi_obs_mixed `.rds`.
 
 ---
 
