@@ -253,35 +253,15 @@ GNN contributes nothing, guaranteeing the network never degrades accuracy.
 
 ## Benchmarks
 
-### Headline results (v0.9.0)
-
-On the bundled **AVONET 300** dataset (300 species, 7 mixed-type traits),
-pigauto 0.9.0's joint multivariate baseline + OVR categorical path
-achieves:
-
-| Trait | Metric | pigauto 0.9.0 | BACE (OVR) |
-|---|---|---|---|
-| Trophic.Level | accuracy | **77.0%** | 72.0% |
-| Primary.Lifestyle | accuracy | **84.3%** | 72.0% |
-| Mass, Wing, Beak, Tarsus | Pearson r | 0.89–0.98 | 0.89–0.97 |
-
-On a controlled **mixed-type multi-observation** simulation (150 species,
-2 continuous + 1 binary + 1 K=4 categorical, Poisson-5 obs per species),
-the Level-C baseline paths (joint MVN + threshold-joint + OVR) beat a
-legacy label-propagation baseline by:
-
-| Trait type | High phylo | Moderate phylo | Low phylo |
-|---|---|---|---|
-| Binary accuracy | +7.5 pp | +5.6 pp | +5.3 pp |
-| K=4 categorical accuracy | +18.8 pp | +28.4 pp | +12.7 pp |
-
-On a **low-phylogenetic-signal + strong-environment** simulation
-(`bench_covariate_sim`), pigauto 0.9.0 reduces RMSE by **10.6%** vs
-pre-0.9.0 — exactly the regime where cross-trait + covariate
-information complements weak phylogenetic signal.
-
-Full simulation results (14+ scenarios) are at the
-[validation suite](https://itchyshin.github.io/pigauto/dev/).
+Current per-trait-type numbers, scaling curves, AVONET 9,993 results,
+tree-uncertainty comparisons, and the covariate-simulation sweep all live
+in the
+[validation suite](https://itchyshin.github.io/pigauto/dev/validation_suite.html).
+We keep the headline numbers out of this README because both pigauto and
+the reference implementations (including BACE) are still under active
+development, and the numbers move with each release. The validation
+suite is regenerated from the actual benchmark scripts every release, so
+it is the single source of truth.
 
 ### The gate protects against regression
 
