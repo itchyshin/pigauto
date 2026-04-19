@@ -385,20 +385,23 @@ decode_ordinal_liability <- function(mu_liab, se_liab, tm) {
   list(mu_z = mu_z, se_z = rep(0, length(mu_liab)))
 }
 
-# Extract per-column BM rate variance from an Rphylopars fit's `$pars$sigma2`.
-# For a 1-col fit this returns a length-1 vector; for a K-col joint fit it
-# returns the K diagonal elements (off-diagonals are the phylogenetic
-# covariances, which Phase 6 does NOT use).
+# Extract per-column BM rate variance from an Rphylopars fit.
+# Rphylopars stores the BM rate matrix in `$pars$phylocov`; some older
+# builds used `$pars$sigma2`. Both are K x K matrices (or 1x1 for a single
+# column). For a K-col joint fit we return the K diagonal elements
+# (off-diagonals are the phylogenetic covariances, which Phase 6 does NOT
+# use). For scalar sigma2 back-compat, handle that too.
 # Phase 6 EM uses this to build the next iteration's sd_prior_vec via
 # `sqrt(pmax(extract_liability_variances(...), tiny))`.
 #' @keywords internal
 #' @noRd
 extract_liability_variances <- function(phylopars_fit) {
-  sig2 <- phylopars_fit$pars$sigma2
-  if (is.matrix(sig2)) {
-    as.numeric(diag(sig2))
+  Sigma <- phylopars_fit$pars$phylocov
+  if (is.null(Sigma)) Sigma <- phylopars_fit$pars$sigma2  # older Rphylopars
+  if (is.matrix(Sigma)) {
+    as.numeric(diag(Sigma))
   } else {
-    as.numeric(sig2)
+    as.numeric(Sigma)
   }
 }
 
@@ -413,5 +416,138 @@ rel_frobenius <- function(v_new, v_old) {
   if (!is.finite(den) || den == 0) return(Inf)
   num <- sqrt(sum((v_new - v_old)^2))
   num / den
+}
+
+# Internal: run phylopars on an already-built liability matrix. Returns a
+# list shaped like fit_joint_threshold_baseline's output, plus $phylopars_fit
+# and $fit_cols_idx for Phase 6 EM. NULL on phylopars failure (caller falls
+# back to previous iter).
+#' @keywords internal
+#' @noRd
+.phylopars_on_built <- function(built, data, tree) {
+  X_liab     <- built$X_liab
+  liab_cols  <- built$liab_cols
+  liab_types <- built$liab_types
+  spp <- if (!is.null(data$species_names)) data$species_names else rownames(data$X_scaled)
+
+  has_obs  <- apply(X_liab, 2, function(col) sum(!is.na(col)) >= 2L)
+  fit_cols <- which(has_obs)
+  n_species  <- nrow(X_liab)
+  n_all_cols <- ncol(X_liab)
+  mu_liab    <- matrix(NA_real_, nrow = n_species, ncol = n_all_cols,
+                        dimnames = list(spp, colnames(X_liab)))
+  se_liab    <- matrix(NA_real_, nrow = n_species, ncol = n_all_cols,
+                        dimnames = list(spp, colnames(X_liab)))
+
+  if (length(fit_cols) < 1L) {
+    return(list(mu_liab = mu_liab, se_liab = se_liab,
+                liab_cols = liab_cols, liab_types = liab_types,
+                phylopars_fit = NULL, fit_cols_idx = integer(0)))
+  }
+
+  X_fit <- X_liab[, fit_cols, drop = FALSE]
+  orig_colnames   <- colnames(X_fit)
+  safe_colnames   <- make.names(orig_colnames, unique = TRUE)
+  colnames(X_fit) <- safe_colnames
+  df_in          <- as.data.frame(X_fit)
+  df_in$species  <- spp
+  df_in          <- df_in[, c("species", safe_colnames), drop = FALSE]
+
+  fit <- tryCatch(
+    Rphylopars::phylopars(trait_data = df_in, tree = tree, model = "BM"),
+    error = function(e) NULL
+  )
+  if (is.null(fit)) return(NULL)
+
+  tip_rows <- match(spp, rownames(fit$anc_recon))
+  mu_fit   <- fit$anc_recon[tip_rows, , drop = FALSE]
+  se_fit   <- sqrt(fit$anc_var[tip_rows, , drop = FALSE])
+  colnames(mu_fit) <- orig_colnames
+  colnames(se_fit) <- orig_colnames
+  mu_liab[, fit_cols] <- mu_fit
+  se_liab[, fit_cols] <- se_fit
+
+  list(mu_liab    = mu_liab,
+       se_liab    = se_liab,
+       liab_cols  = liab_cols,
+       liab_types = liab_types,
+       phylopars_fit = fit,
+       fit_cols_idx  = fit_cols)
+}
+
+# Phase 6 EM wrapper around fit_joint_threshold_baseline().
+# Iterates:
+#   1. Build liability matrix with sd_prior_vec = sqrt(diag(Sigma_prev)).
+#   2. Run phylopars to get new Sigma.
+#   3. Check relative Frobenius convergence.
+# Returns the final baseline piece (shape-identical to the single-pass
+# fit_joint_threshold_baseline() return) augmented with $em_state.
+# $phylopars_fit and $fit_cols_idx are dropped before return to keep the
+# downstream shape identical.
+#' @keywords internal
+#' @noRd
+fit_joint_threshold_baseline_em <- function(data, tree, splits,
+                                             graph = NULL,
+                                             soft_aggregate = FALSE,
+                                             em_iterations = 5L,
+                                             em_tol = 1e-3) {
+  stopifnot(joint_mvn_available(), em_iterations >= 1L)
+
+  sd_prior_vec <- NULL  # iter 1 = plug-in N(0, 1)
+  prev_vars    <- NULL
+  delta        <- Inf
+  base         <- NULL
+  iter_run     <- 0L
+
+  for (iter in seq_len(em_iterations)) {
+    built <- build_liability_matrix(data, splits = splits,
+                                     soft_aggregate = soft_aggregate,
+                                     sd_prior_vec = sd_prior_vec)
+
+    new_base <- .phylopars_on_built(built, data, tree)
+
+    if (is.null(new_base)) {
+      if (is.null(base)) {
+        stop("fit_joint_threshold_baseline_em: phylopars failed on iter 1; ",
+             "no fallback available. Try em_iterations = 0L.", call. = FALSE)
+      }
+      warning("fit_joint_threshold_baseline_em: phylopars failed at iter ",
+              iter, ". Returning previous iteration's baseline.",
+              call. = FALSE)
+      break
+    }
+
+    iter_run <- iter
+    base     <- new_base
+
+    if (is.null(new_base$phylopars_fit)) {
+      # All cols < 2 obs; no fit possible. Degenerate case — bail.
+      break
+    }
+    new_vars <- extract_liability_variances(new_base$phylopars_fit)
+
+    if (!is.null(prev_vars)) {
+      delta <- rel_frobenius(new_vars, prev_vars)
+      if (delta < em_tol) break
+    }
+
+    prev_vars    <- new_vars
+    # Align sd_prior_vec to the FULL liab_cols. Unfitted cols stay at 1
+    # (plug-in fallback).
+    sd_prior_vec <- rep(1, length(built$liab_cols))
+    sd_prior_vec[new_base$fit_cols_idx] <- sqrt(pmax(new_vars, 1e-8))
+  }
+
+  # Attach em_state and drop the phylopars-specific bits so caller shape
+  # matches the single-pass path.
+  out <- base
+  out$em_state <- list(
+    iterations_run = iter_run,
+    converged      = is.finite(delta) && delta < em_tol,
+    final_delta    = delta
+  )
+  out$phylopars_fit <- NULL
+  out$fit_cols_idx  <- NULL
+  out
 }
 
