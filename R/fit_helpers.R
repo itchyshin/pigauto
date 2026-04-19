@@ -212,20 +212,41 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
 # Used at prediction time to construct marginal conformal intervals with
 # guaranteed (1 - alpha) coverage.
 #
-# @param trait_map        list of trait descriptors
-# @param calibrated_gates named numeric vector (length p)
-# @param mu_cal           numeric matrix (n × p) — baseline predictions
-# @param delta_cal        numeric matrix (n × p) — GNN predictions
-# @param X_truth_r        numeric matrix (n × p) — truth with NAs
-# @param val_mask_mat     logical matrix (n × p) — TRUE = validation cell
-# @param alpha            numeric — miscoverage level; default 0.05 (→ 95%)
-# @param verbose          logical
+# Two estimators are supported:
+#
+# - `"split"` (default, backward compat): the classical Vovk conformal
+#   quantile at level `ceil((1 - alpha)(n + 1))/n` on the val residuals.
+#   Fast, exact finite-sample coverage guarantee under exchangeability,
+#   but extremely noisy when `n_val` is small (~10 cells): at `n_val = 7`
+#   the estimator is essentially `max(residuals)`, and a single seed
+#   reshuffle can move it by an order of magnitude.
+#
+# - `"bootstrap"` (new): compute `B` bootstrap resamples of the val
+#   residuals, take the split-conformal quantile on each resample, then
+#   average (mean). This reduces the score's Monte-Carlo variance ~√B×
+#   at the cost of a single `B`-sample loop per trait.  It loses the
+#   exact exchangeability guarantee from split conformal but stays in the
+#   same asymptotic regime.  Recommended when `n_val` per trait is < 30.
+#
+# @param trait_map         list of trait descriptors
+# @param calibrated_gates  named numeric vector (length p)
+# @param mu_cal            numeric matrix (n × p) — baseline predictions
+# @param delta_cal         numeric matrix (n × p) — GNN predictions
+# @param X_truth_r         numeric matrix (n × p) — truth with NAs
+# @param val_mask_mat      logical matrix (n × p) — TRUE = validation cell
+# @param alpha             numeric — miscoverage level; default 0.05 (→ 95%)
+# @param method            `"split"` or `"bootstrap"`
+# @param bootstrap_B       integer — bootstrap resamples when `method = "bootstrap"`
+# @param verbose           logical
 # @return named numeric vector; NA for discrete traits or empty val sets
 compute_conformal_scores <- function(trait_map, calibrated_gates,
                                      mu_cal, delta_cal,
                                      X_truth_r, val_mask_mat,
                                      alpha = 0.05,
+                                     method = c("split", "bootstrap"),
+                                     bootstrap_B = 500L,
                                      verbose = FALSE) {
+  method <- match.arg(method)
   p <- ncol(mu_cal)
   n <- nrow(mu_cal)
 
@@ -250,17 +271,28 @@ compute_conformal_scores <- function(trait_map, calibrated_gates,
     n_val     <- length(residuals)
     if (n_val == 0L) next
 
-    # Conformal quantile at level ceil((1-alpha)(1+1/n_val)) / n_val
     q_level <- min(ceiling((1 - alpha) * (n_val + 1)) / n_val, 1)
-    conformal_scores[tm$name] <- as.numeric(
-      stats::quantile(residuals, q_level, na.rm = TRUE)
-    )
+
+    if (method == "split") {
+      conformal_scores[tm$name] <- as.numeric(
+        stats::quantile(residuals, q_level, na.rm = TRUE)
+      )
+    } else {
+      # bootstrap: average the split quantile over B resamples
+      B <- as.integer(bootstrap_B)
+      qs <- vapply(seq_len(B), function(b) {
+        idx <- sample.int(n_val, n_val, replace = TRUE)
+        as.numeric(stats::quantile(residuals[idx], q_level, na.rm = TRUE))
+      }, numeric(1))
+      conformal_scores[tm$name] <- mean(qs, na.rm = TRUE)
+    }
   }
 
   if (verbose) {
     cs_print <- round(conformal_scores[!is.na(conformal_scores)], 4)
-    message("Conformal scores (latent scale): ",
-            paste(names(cs_print), cs_print, sep = "=", collapse = ", "))
+    message(sprintf("Conformal scores (latent scale, method=%s): %s",
+                    method,
+                    paste(names(cs_print), cs_print, sep = "=", collapse = ", ")))
   }
 
   conformal_scores

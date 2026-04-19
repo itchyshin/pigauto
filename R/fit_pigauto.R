@@ -138,9 +138,12 @@ fit_pigauto <- function(
     eval_every        = 100L,
     patience          = 10L,
     clip_norm         = 1.0,
+    conformal_method  = c("split", "bootstrap"),
+    conformal_bootstrap_B = 500L,
     verbose           = TRUE,
     seed              = 1L
 ) {
+  conformal_method <- match.arg(conformal_method)
   if (!inherits(data, "pigauto_data")) {
     stop("'data' must be a pigauto_data object.")
   }
@@ -602,6 +605,8 @@ fit_pigauto <- function(
       delta_cal        = delta_cal,
       X_truth_r        = X_truth_r,
       val_mask_mat     = val_mask_mat,
+      method           = conformal_method,
+      bootstrap_B      = conformal_bootstrap_B,
       verbose          = verbose
     )
   }
