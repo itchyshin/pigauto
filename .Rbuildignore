@@ -24,5 +24,6 @@
 ^plans$
 ^specs$
 ^submit_v090_cloud$
+^submit_v090_vulcan$
 ^\.worktrees$
 ^\.devcontainer$
