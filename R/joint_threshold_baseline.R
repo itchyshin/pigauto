@@ -422,6 +422,82 @@ extract_liability_variances <- function(phylopars_fit) {
   }
 }
 
+# Build per-cell conditional-MVN prior for Phase 7 EM.
+#
+# Given K x K Σ and n x K posterior-mean liability matrix L_hat from the
+# previous iteration, return (n x K) matrices mu_prior and sd_prior where
+# for each cell (i, j):
+#   mu[i, j] = Σ[j, -j] %*% solve(Σ[-j, -j]) %*% L_hat[i, -j observed]
+#   sd[i, j] = sqrt(Σ[j, j] - Σ[j, -j] %*% solve(Σ[-j, -j]) %*% Σ[-j, j])
+# Missing-pattern handling: if L_hat[i, -j] has NAs, restrict the condition
+# to the observed subset with a smaller solve(); if ALL are NA, fall back
+# to the unconditional prior (mu = 0, sd = sqrt(Σ[j, j])) for that cell.
+#
+# K is typically small (2–10) so per-cell matrix inversion with restricted
+# subsets is cheap relative to the phylopars fit that produced Σ.
+#' @keywords internal
+#' @noRd
+build_conditional_prior <- function(Sigma, L_hat, eps = 1e-8) {
+  if (!is.matrix(Sigma) || nrow(Sigma) != ncol(Sigma)) {
+    stop("build_conditional_prior: Sigma must be a square matrix.",
+         call. = FALSE)
+  }
+  K <- ncol(Sigma)
+  if (K != ncol(L_hat)) {
+    stop("build_conditional_prior: ncol(L_hat) = ", ncol(L_hat),
+         " != ncol(Sigma) = ", K, ".", call. = FALSE)
+  }
+  n <- nrow(L_hat)
+
+  mu_mat <- matrix(0,  nrow = n, ncol = K)
+  sd_mat <- matrix(1,  nrow = n, ncol = K)
+
+  sd_plain <- sqrt(pmax(diag(Sigma), eps))  # fallback prior when all-NA
+
+  for (j in seq_len(K)) {
+    sigma_jj  <- Sigma[j, j]
+    sigma_jnj <- Sigma[j, -j, drop = FALSE]         # 1 x (K-1)
+    sigma_njn <- Sigma[-j, -j, drop = FALSE]        # (K-1) x (K-1)
+
+    # All-observed cells share one precomputed inverse. Cells with NAs use
+    # a per-cell inverse on the observed subset.
+    inv_full  <- NULL
+
+    for (i in seq_len(n)) {
+      li <- L_hat[i, -j, drop = TRUE]
+      na <- is.na(li)
+
+      if (all(na)) {
+        # No conditioning info — fall back to unconditional prior.
+        mu_mat[i, j] <- 0
+        sd_mat[i, j] <- sd_plain[j]
+        next
+      }
+
+      if (!any(na)) {
+        if (is.null(inv_full)) {
+          inv_full <- solve(sigma_njn + diag(eps, K - 1))
+        }
+        mu_mat[i, j] <- as.numeric(sigma_jnj %*% inv_full %*% li)
+        var_ij <- sigma_jj - as.numeric(sigma_jnj %*% inv_full %*% t(sigma_jnj))
+        sd_mat[i, j] <- sqrt(max(var_ij, eps))
+      } else {
+        # Restricted conditional on observed subset of -j
+        obs <- which(!na)
+        s_jnj_obs <- sigma_jnj[, obs, drop = FALSE]
+        s_njn_obs <- sigma_njn[obs, obs, drop = FALSE]
+        inv_obs <- solve(s_njn_obs + diag(eps, length(obs)))
+        mu_mat[i, j] <- as.numeric(s_jnj_obs %*% inv_obs %*% li[obs])
+        var_ij <- sigma_jj -
+          as.numeric(s_jnj_obs %*% inv_obs %*% t(s_jnj_obs))
+        sd_mat[i, j] <- sqrt(max(var_ij, eps))
+      }
+    }
+  }
+
+  list(mu_prior = mu_mat, sd_prior = sd_mat)
+}
+
 # Relative Frobenius distance between two variance vectors (or matrices).
 # Used as the Phase 6 EM early-stop criterion:
 #   delta = ||v_new - v_old||_F / ||v_old||_F
