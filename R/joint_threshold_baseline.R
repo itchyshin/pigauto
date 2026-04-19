@@ -160,14 +160,22 @@ aggregate_to_species <- function(data, splits = NULL, soft_aggregate = FALSE) {
 #' @keywords internal
 #' @noRd
 build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE,
-                                   sd_prior_vec = NULL) {
+                                   sd_prior_vec = NULL,
+                                   mu_prior_mat = NULL,
+                                   sd_prior_mat = NULL) {
   trait_map <- data$trait_map
-  # sd_j_lookup returns the per-column prior SD. NULL default preserves the
-  # v0.9.1 plug-in N(0, 1) behaviour byte-for-byte. Phase 6 EM passes
-  # sqrt(diag(Σ)) from the previous phylopars fit here.
-  sd_j_lookup <- function(j) {
-    if (is.null(sd_prior_vec)) return(1)
-    sd_prior_vec[j]
+  # Prior lookup precedence (highest first):
+  #   1. mu_prior_mat / sd_prior_mat (Phase 7, per-cell, n x K_liab)
+  #   2. sd_prior_vec (Phase 6, per-column, length K_liab)
+  #   3. NULL default — plug-in N(0, 1) byte-identical to v0.9.1.
+  use_mat <- !is.null(mu_prior_mat) || !is.null(sd_prior_mat)
+  mu_i_j_lookup <- function(i, j) {
+    if (!is.null(mu_prior_mat)) mu_prior_mat[i, j] else 0
+  }
+  sd_i_j_lookup <- function(i, j) {
+    if (!is.null(sd_prior_mat)) return(sd_prior_mat[i, j])
+    if (!is.null(sd_prior_vec)) return(sd_prior_vec[j])
+    1
   }
   # Collapse multi-obs to species level (no-op for single-obs). Splits are
   # masked internally in obs space before aggregation, so no separate
@@ -225,16 +233,16 @@ build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE,
       # Observed value is either hard 0/1 (hard aggregation or single-obs) or
       # a species-level proportion in [0,1] (soft aggregation for multi-obs).
       # Dispatch to soft E-step when is_prop indicates a proportion value.
-      sd_j <- sd_j_lookup(j)
       for (i in seq_len(n)) {
         v <- src_col[i]
         if (is.na(v)) next
+        mu_i <- mu_i_j_lookup(i, j); sd_i <- sd_i_j_lookup(i, j)
         if (is_prop[col_idx]) {
           post <- estep_liability_binary_soft(p = as.numeric(v),
-                                               mu_prior = 0, sd_prior = sd_j)
+                                               mu_prior = mu_i, sd_prior = sd_i)
         } else {
           post <- estep_liability(tm_j, observed = v,
-                                   mu_prior = 0, sd_prior = sd_j)
+                                   mu_prior = mu_i, sd_prior = sd_i)
         }
         X_liab[i, j] <- post$mean
       }
@@ -242,12 +250,12 @@ build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE,
     } else if (tp == "ordinal") {
       # Ordinal: interval-truncated Gaussian E-step via the dispatcher.
       # estep_liability() handles z-score roundtrip internally.
-      sd_j <- sd_j_lookup(j)
       for (i in seq_len(n)) {
         v <- src_col[i]
         if (is.na(v)) next
+        mu_i <- mu_i_j_lookup(i, j); sd_i <- sd_i_j_lookup(i, j)
         post <- estep_liability(tm_j, observed = v,
-                                  mu_prior = 0, sd_prior = sd_j)
+                                  mu_prior = mu_i, sd_prior = sd_i)
         X_liab[i, j] <- post$mean
       }
 
