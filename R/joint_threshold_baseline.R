@@ -385,3 +385,33 @@ decode_ordinal_liability <- function(mu_liab, se_liab, tm) {
   list(mu_z = mu_z, se_z = rep(0, length(mu_liab)))
 }
 
+# Extract per-column BM rate variance from an Rphylopars fit's `$pars$sigma2`.
+# For a 1-col fit this returns a length-1 vector; for a K-col joint fit it
+# returns the K diagonal elements (off-diagonals are the phylogenetic
+# covariances, which Phase 6 does NOT use).
+# Phase 6 EM uses this to build the next iteration's sd_prior_vec via
+# `sqrt(pmax(extract_liability_variances(...), tiny))`.
+#' @keywords internal
+#' @noRd
+extract_liability_variances <- function(phylopars_fit) {
+  sig2 <- phylopars_fit$pars$sigma2
+  if (is.matrix(sig2)) {
+    as.numeric(diag(sig2))
+  } else {
+    as.numeric(sig2)
+  }
+}
+
+# Relative Frobenius distance between two variance vectors (or matrices).
+# Used as the Phase 6 EM early-stop criterion:
+#   delta = ||v_new - v_old||_F / ||v_old||_F
+# Returns +Inf if `v_old` has zero norm (first real iter).
+#' @keywords internal
+#' @noRd
+rel_frobenius <- function(v_new, v_old) {
+  den <- sqrt(sum(v_old^2))
+  if (!is.finite(den) || den == 0) return(Inf)
+  num <- sqrt(sum((v_new - v_old)^2))
+  num / den
+}
+
