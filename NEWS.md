@@ -1,5 +1,28 @@
 # pigauto 0.9.1.9000 (dev)
 
+## Phase 7 EM: off-diagonal conditioning (opt-in, on top of Phase 6)
+
+- New argument `em_offdiag = FALSE` on `impute()` and `fit_baseline()`.
+  When `TRUE` AND `em_iterations >= 2L`, each binary/ordinal liability
+  cell's prior at iteration `k + 1` is the full conditional-MVN
+  `(mu, sd)` given the posterior liability of other traits at iteration
+  `k`. This means observing one discrete trait shifts (not just
+  tightens) the prior on correlated other traits — the off-diagonal
+  entries of `Σ` now enter the E-step, instead of being ignored as in
+  Phase 6.
+- `em_offdiag = FALSE` default preserves Phase 6 behaviour byte-for-byte.
+- `em_offdiag = TRUE` with `em_iterations < 2L` is silently clamped
+  (iter 0 has no EM; iter 1 is plug-in with no previous Σ to condition
+  on).
+- **Scope**: binary + ordinal only. OVR categorical stays on Phase 6
+  diagonal — going off-diagonal on OVR would re-couple the K classes
+  and reintroduce the rank-(K − 1) singular-matrix instability that OVR
+  was built to dodge.
+- Missing-pattern handling: cells with all-NA other-trait posteriors
+  fall back to the unconditional Phase 6 prior; cells with partial-NA
+  use a restricted conditional on the observed subset.
+- `em_state` gains `em_offdiag` field.
+
 ## Phase 6 EM for threshold-joint baseline (opt-in)
 
 - New argument `em_iterations = 0L` on `impute()` and `fit_baseline()`.
