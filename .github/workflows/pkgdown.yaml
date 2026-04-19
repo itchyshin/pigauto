@@ -7,6 +7,22 @@
 on:
   push:
     branches: [main, master]
+    # Only rebuild the pkgdown site when files that actually affect the
+    # site change. Commits that only touch script/ (benchmarks), dev/
+    # (experiments), plans/, specs/, submit_v090_cloud/, tests/, or
+    # data-raw/ don't rebuild, saving GitHub Actions minutes. Use
+    # workflow_dispatch to force a rebuild manually.
+    paths:
+      - 'R/**'
+      - 'vignettes/**'
+      - 'man/**'
+      - 'README.md'
+      - 'NEWS.md'
+      - 'DESCRIPTION'
+      - 'NAMESPACE'
+      - '_pkgdown.yml'
+      - 'pkgdown/**'
+      - '.github/workflows/pkgdown.yaml'
   pull_request:
   release:
     types: [published]
