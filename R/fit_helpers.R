@@ -60,9 +60,12 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
                             X_truth_r, val_mask_mat,
                             gate_grid, gate_cap,
                             cal_min_rel_gain = 0.02,
+                            gate_method = c("single_split", "median_splits"),
+                            gate_splits_B = 31L,
                             seed = 1L,
                             latent_names = NULL,
                             verbose = FALSE) {
+  gate_method <- match.arg(gate_method)
   p                <- ncol(mu_cal)
   calibrated_gates <- numeric(p)
 
@@ -85,15 +88,43 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
       next
     }
 
-    # Split val rows into two halves (deterministic given seed)
-    set.seed(seed + 17L)
-    perm   <- sample(n_val)
-    half_a <- val_row_idx[perm[seq_len(floor(n_val / 2))]]
-    half_b <- val_row_idx[perm[(floor(n_val / 2) + 1L):n_val]]
-    if (length(half_a) == 0L || length(half_b) == 0L) {
-      half_a <- val_row_idx
-      half_b <- val_row_idx
+    # ------------------------------------------------------------------
+    # Select the half-A / half-B split(s) used for grid search.
+    #
+    # "single_split" (default, backward-compat): one deterministic split
+    # keyed off `seed + 17L`. Fast; unstable when n_val is small (e.g.
+    # 7 val cells -> 3-4 in half_a -> gate picks are essentially random
+    # between 0 and the max grid value).
+    #
+    # "median_splits": repeat the whole grid + half-B-verify procedure
+    # for each of `gate_splits_B` random splits, take the MEDIAN gate
+    # across the B runs. Shrinks the bimodal-gate flip-flop observed at
+    # small n_val without any retraining. Default B = 31 gives a cheap
+    # variance reduction and is odd so the median is well-defined.
+    # ------------------------------------------------------------------
+    split_seeds <- if (gate_method == "single_split") {
+      (seed + 17L)
+    } else {
+      as.integer(seed + 17L + seq_len(gate_splits_B) - 1L)
     }
+
+    resolve_best_g_one_split <- function(ss) {
+      set.seed(ss)
+      perm_i <- sample(n_val)
+      half_a_i <- val_row_idx[perm_i[seq_len(floor(n_val / 2))]]
+      half_b_i <- val_row_idx[perm_i[(floor(n_val / 2) + 1L):n_val]]
+      if (length(half_a_i) == 0L || length(half_b_i) == 0L) {
+        half_a_i <- val_row_idx
+        half_b_i <- val_row_idx
+      }
+      list(half_a = half_a_i, half_b = half_b_i)
+    }
+
+    split_pairs <- lapply(split_seeds, resolve_best_g_one_split)
+    # For the single-split path we keep half_a / half_b as before; for
+    # the median-splits path we rebuild them inside the loop below.
+    half_a <- split_pairs[[1]]$half_a
+    half_b <- split_pairs[[1]]$half_b
 
     # Helper: mean loss for gate g on a set of row indices.
     # Uses 0-1 loss for binary/categorical so that the val signal matches
@@ -152,37 +183,50 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
     # (relative gains on 0-1 loss are small: a 2% relative gain over 0.35
     # baseline is only ~0.007, easily noise on small val sets).
     is_discrete <- tm$type %in% c("binary", "categorical")
-    min_abs_a   <- if (is_discrete) 2 / max(length(half_a), 1L) else 0
-    min_abs_b   <- if (is_discrete) 1 / max(length(half_b), 1L) else 0
 
-    # Step 1: argmin val loss on half A subject to floors
-    loss_a_0 <- cal_mean_loss(0, half_a)
-    best_g   <- 0
-    best_la  <- loss_a_0
-    for (g in gate_grid) {
-      if (g == 0) next
-      loss_a_g <- cal_mean_loss(g, half_a)
-      if (!is.finite(loss_a_g)) next
-      rel      <- (loss_a_0 - loss_a_g) / max(loss_a_0, 1e-12)
-      abs_gain <- loss_a_0 - loss_a_g
-      if (rel >= cal_min_rel_gain && abs_gain >= min_abs_a &&
-          loss_a_g < best_la) {
-        best_g  <- g
-        best_la <- loss_a_g
+    # Inner: grid search on half_a + half_b verification, returns best_g.
+    resolve_one_split <- function(ha, hb) {
+      min_abs_a <- if (is_discrete) 2 / max(length(ha), 1L) else 0
+      min_abs_b <- if (is_discrete) 1 / max(length(hb), 1L) else 0
+
+      loss_a_0 <- cal_mean_loss(0, ha)
+      best_g   <- 0
+      best_la  <- loss_a_0
+      for (g in gate_grid) {
+        if (g == 0) next
+        loss_a_g <- cal_mean_loss(g, ha)
+        if (!is.finite(loss_a_g)) next
+        rel      <- (loss_a_0 - loss_a_g) / max(loss_a_0, 1e-12)
+        abs_gain <- loss_a_0 - loss_a_g
+        if (rel >= cal_min_rel_gain && abs_gain >= min_abs_a &&
+            loss_a_g < best_la) {
+          best_g  <- g
+          best_la <- loss_a_g
+        }
       }
+
+      if (best_g > 0) {
+        loss_b_0 <- cal_mean_loss(0,      hb)
+        loss_b_g <- cal_mean_loss(best_g, hb)
+        rel_b    <- (loss_b_0 - loss_b_g) / max(loss_b_0, 1e-12)
+        abs_b    <- loss_b_0 - loss_b_g
+        if (!is.finite(rel_b) ||
+            rel_b < (cal_min_rel_gain / 2) ||
+            abs_b < min_abs_b) {
+          best_g <- 0
+        }
+      }
+      best_g
     }
 
-    # Step 2: verify on half B; revert to 0 if improvement does not persist
-    if (best_g > 0) {
-      loss_b_0 <- cal_mean_loss(0,      half_b)
-      loss_b_g <- cal_mean_loss(best_g, half_b)
-      rel_b    <- (loss_b_0 - loss_b_g) / max(loss_b_0, 1e-12)
-      abs_b    <- loss_b_0 - loss_b_g
-      if (!is.finite(rel_b) ||
-          rel_b < (cal_min_rel_gain / 2) ||
-          abs_b < min_abs_b) {
-        best_g <- 0
-      }
+    if (gate_method == "single_split") {
+      best_g <- resolve_one_split(half_a, half_b)
+    } else {
+      # median_splits: run grid + verify for each of B splits, take median
+      best_g_vec <- vapply(split_pairs,
+                           function(sp) resolve_one_split(sp$half_a, sp$half_b),
+                           numeric(1))
+      best_g <- as.numeric(stats::median(best_g_vec))
     }
 
     calibrated_gates[lc] <- best_g

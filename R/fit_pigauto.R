@@ -140,10 +140,13 @@ fit_pigauto <- function(
     clip_norm         = 1.0,
     conformal_method  = c("split", "bootstrap"),
     conformal_bootstrap_B = 500L,
+    gate_method       = c("single_split", "median_splits"),
+    gate_splits_B     = 31L,
     verbose           = TRUE,
     seed              = 1L
 ) {
   conformal_method <- match.arg(conformal_method)
+  gate_method      <- match.arg(gate_method)
   if (!inherits(data, "pigauto_data")) {
     stop("'data' must be a pigauto_data object.")
   }
@@ -589,6 +592,8 @@ fit_pigauto <- function(
       val_mask_mat    = val_mask_mat,
       gate_grid       = seq(0, gate_cap, length.out = 9L),
       gate_cap        = gate_cap,
+      gate_method     = gate_method,
+      gate_splits_B   = gate_splits_B,
       seed            = seed,
       latent_names    = data$latent_names,
       verbose         = verbose
