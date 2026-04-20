@@ -518,6 +518,57 @@ if (!is.null(b_bace_head)) {
   make_row("BACE head-to-head (Phase 8)", "mixed", "AVONET 300", "", NA, NA, NA, "accuracy / RMSE / r", "dev/bench_bace_avonet_head_to_head.html", "pending")
 }
 
+# Phase 8.1 — cross-trait-correlation sweep
+b_corr_sweep <- load_rds("bench_correlation_sweep")
+if (!is.null(b_corr_sweep)) {
+  cfg <- b_corr_sweep$config
+  h('<tr>',
+    '<td><a href="dev/bench_correlation_sweep.html">ρ sweep (Phase 8.1)</a></td>',
+    '<td><em>continuous</em></td>',
+    '<td>Simulated (n = ', cfg$n_species, ', K = ', cfg$n_traits, ')</td>',
+    '<td>cross-trait ρ &isin; {', paste(cfg$rhos, collapse = ", "), '}</td>',
+    '<td colspan="2">', length(cfg$methods), ' methods &times; ', cfg$n_reps, ' reps</td>',
+    '<td>&mdash;</td>',
+    '<td>RMSE / Pearson r</td>',
+    '</tr>')
+} else {
+  make_row("\u03c1 sweep (Phase 8.1)", "continuous", "Simulated", "", NA, NA, NA, "RMSE / r", "dev/bench_correlation_sweep.html", "pending")
+}
+
+# Phase 8.2 — evolutionary-model sweep
+b_evo_sweep <- load_rds("bench_evo_model_sweep")
+if (!is.null(b_evo_sweep)) {
+  cfg <- b_evo_sweep$config
+  h('<tr>',
+    '<td><a href="dev/bench_evo_model_sweep.html">Evo-model sweep (Phase 8.2)</a></td>',
+    '<td><em>continuous</em></td>',
+    '<td>Simulated (n = ', cfg$n_species, ', K = ', cfg$n_traits, ')</td>',
+    '<td>', paste(cfg$models, collapse = " / "), '</td>',
+    '<td colspan="2">', length(cfg$methods), ' methods &times; ', cfg$n_reps, ' reps</td>',
+    '<td>&mdash;</td>',
+    '<td>RMSE / Pearson r</td>',
+    '</tr>')
+} else {
+  make_row("Evo-model sweep (Phase 8.2)", "continuous", "Simulated", "", NA, NA, NA, "RMSE / r", "dev/bench_evo_model_sweep.html", "pending")
+}
+
+# Phase 8.3 — clade-correlated missingness
+b_clade_miss <- load_rds("bench_clade_missingness")
+if (!is.null(b_clade_miss)) {
+  cfg <- b_clade_miss$config
+  h('<tr>',
+    '<td><a href="dev/bench_clade_missingness.html">Clade-MAR (Phase 8.3)</a></td>',
+    '<td><em>mixed</em></td>',
+    '<td>Simulated (n = ', cfg$n_species, ')</td>',
+    '<td>target_frac &isin; {', paste(cfg$target_fracs, collapse = ", "), '}, focal = ', cfg$focal_trait, '</td>',
+    '<td colspan="2">', length(cfg$methods), ' methods &times; ', cfg$n_reps, ' reps</td>',
+    '<td>&mdash;</td>',
+    '<td>RMSE on focal trait</td>',
+    '</tr>')
+} else {
+  make_row("Clade-MAR (Phase 8.3)", "mixed", "Simulated", "", NA, NA, NA, "RMSE / accuracy", "dev/bench_clade_missingness.html", "pending")
+}
+
 h('</tbody></table>')
 
 # ---------------------------------------------------------------------------
