@@ -1,5 +1,29 @@
 # pigauto 0.9.1.9000 (dev)
 
+## Phase 8 (MVP): discriminative benchmark suite
+
+- **New `script/bench_signal_sweep.R`**: Pagel's λ ∈ {0.1, 0.3, 0.5,
+  0.7, 0.9, 1.0} × mixed-type traits (2 continuous + 1 binary + 1
+  categorical K=3) × 4 methods × 3 reps. Documents how each method
+  discriminates as phylogenetic signal varies. Headline: at λ = 1.0
+  pigauto reaches 94.4% binary accuracy vs `mean_baseline` 76.3%; at
+  λ = 0.1 all methods collapse near chance (expected — no signal to
+  exploit).
+- **New `script/bench_bace_avonet_head_to_head.R`**: pigauto default
+  vs pigauto with `em_iterations = 5L` vs optional `BACE::bace()` on
+  the bundled `avonet300`/`tree300` with identical splits. Graceful
+  fallback when BACE is not installed. Documents an **honest** finding
+  that Phase 6 EM does NOT universally beat the plug-in at n = 300
+  (default 80.5% vs EM 65.9% on Trophic.Level), consistent with the
+  "Calibration at small n" caveat from v0.9.1 — EM is opt-in for a
+  reason.
+- **Aggregate report** `phase8_summary.html` linked from the pkgdown
+  validation suite, with TL;DR metric table + sub-report links +
+  reproducibility block (package versions, `sessionInfo()`).
+- Deferred to follow-up PRs: Phase 8.1 cross-trait-correlation sweep,
+  Phase 8.2 evolutionary-model sweep, Phase 8.3 clade-correlated
+  missingness.
+
 ## Phase 7 EM: off-diagonal conditioning (opt-in, on top of Phase 6)
 
 - New argument `em_offdiag = FALSE` on `impute()` and `fit_baseline()`.

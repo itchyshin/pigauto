@@ -1,0 +1,12 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><title>Phase 8: AVONET head-to-head</title><style>body{font-family:system-ui,sans-serif;max-width:1100px;margin:2em auto;padding:0 1em;color:#222}h1{border-bottom:2px solid #ccc}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:4px 8px}</style></head><body><h1>Phase 8 MVP: AVONET 300 — pigauto vs BACE</h1><p>Single-seed comparison on avonet300/tree300 (n = 300). Seed = 2026, miss_frac = 0.30.</p><p><strong>BACE did not run</strong> (not installed, or output shape unrecognised). Comparison below is pigauto paths only.</p><h2>Per-trait metrics (winner highlighted)</h2><table><tr><th>trait</th><th>metric</th><th>pigauto_default</th><th>pigauto_em5</th></tr><tr><td>Mass</td><td>rmse</td><td style='background:#def6d0;font-weight:bold'>297.261</td><td>311.583</td></tr>
+<tr><td>Mass</td><td>pearson_r</td><td style='background:#def6d0;font-weight:bold'>0.937</td><td>0.935</td></tr>
+<tr><td>Beak.Length_Culmen</td><td>rmse</td><td style='background:#def6d0;font-weight:bold'>14.077</td><td>14.374</td></tr>
+<tr><td>Beak.Length_Culmen</td><td>pearson_r</td><td style='background:#def6d0;font-weight:bold'>0.932</td><td>0.928</td></tr>
+<tr><td>Tarsus.Length</td><td>rmse</td><td>20.086</td><td style='background:#def6d0;font-weight:bold'>16.976</td></tr>
+<tr><td>Tarsus.Length</td><td>pearson_r</td><td>0.984</td><td style='background:#def6d0;font-weight:bold'>0.986</td></tr>
+<tr><td>Wing.Length</td><td>rmse</td><td>23.771</td><td style='background:#def6d0;font-weight:bold'>23.646</td></tr>
+<tr><td>Wing.Length</td><td>pearson_r</td><td>0.968</td><td style='background:#def6d0;font-weight:bold'>0.968</td></tr>
+<tr><td>Trophic.Level</td><td>accuracy</td><td style='background:#def6d0;font-weight:bold'>0.805</td><td>0.659</td></tr>
+<tr><td>Primary.Lifestyle</td><td>accuracy</td><td style='background:#def6d0;font-weight:bold'>0.732</td><td>0.659</td></tr>
+<tr><td>Migration</td><td>accuracy</td><td style='background:#def6d0;font-weight:bold'>0.778</td><td style='background:#def6d0;font-weight:bold'>0.778</td></tr></table><h2>Wall time per method</h2><table><tr><th>method</th><th>wall (s)</th></tr><tr><td>pigauto_default</td><td>236.8</td></tr>
+<tr><td>pigauto_em5</td><td>440.5</td></tr></table></body></html>
