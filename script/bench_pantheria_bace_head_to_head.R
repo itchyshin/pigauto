@@ -143,9 +143,11 @@ safe_cor <- function(x, y) {
 }
 
 run_pigauto <- function(em_iter) {
+  # n_imputations = 20 gives MC-dropout draws for the second coverage type
   pigauto::impute(df_miss, tree_sub, log_transform = FALSE,
                     missing_frac = 0.20, verbose = FALSE, seed = SEED,
-                    epochs = 300L, em_iterations = em_iter)$completed
+                    epochs = 300L, em_iterations = em_iter,
+                    n_imputations = 20L)
 }
 
 run_bace <- function() {
@@ -162,9 +164,14 @@ run_bace <- function() {
   }, error = function(e) { message("BACE run failed: ", conditionMessage(e)); NULL })
 }
 
-eval_completed <- function(completed, truth, mask, method_name, wall_s) {
+eval_completed <- function(completed, truth, mask, method_name, wall_s,
+                            res_obj = NULL) {
   if (is.null(completed)) return(NULL)
   rows <- list()
+  lo <- if (!is.null(res_obj)) res_obj$prediction$conformal_lower else NULL
+  hi <- if (!is.null(res_obj)) res_obj$prediction$conformal_upper else NULL
+  mi_list <- if (!is.null(res_obj)) res_obj$prediction$imputed_datasets else NULL
+
   for (v in names(truth)) {
     idx <- which(mask[, v])
     if (!length(idx)) next
@@ -186,6 +193,41 @@ eval_completed <- function(completed, truth, mask, method_name, wall_s) {
         method = method_name, trait = v, metric = "pearson_r",
         value = pear, n_cells = length(idx), wall_s = wall_s
       )
+      t_num <- as.numeric(t_v)
+      # Conformal coverage
+      if (!is.null(lo) && !is.null(hi) && v %in% colnames(lo)) {
+        lo_v <- lo[idx, v]; hi_v <- hi[idx, v]
+        valid <- is.finite(lo_v) & is.finite(hi_v) & is.finite(t_num)
+        if (any(valid)) {
+          hits <- t_num[valid] >= lo_v[valid] & t_num[valid] <= hi_v[valid]
+          rows[[length(rows) + 1L]] <- data.frame(
+            method = method_name, trait = v, metric = "coverage95_conformal",
+            value = mean(hits), n_cells = sum(valid), wall_s = wall_s
+          )
+        }
+      }
+      # MC-dropout coverage
+      if (!is.null(mi_list) && length(mi_list) > 1L && v %in% names(mi_list[[1]])) {
+        draws_mat <- vapply(mi_list, function(d) as.numeric(d[idx, v]),
+                             numeric(length(idx)))
+        if (!is.matrix(draws_mat)) {
+          draws_mat <- matrix(draws_mat, ncol = length(mi_list))
+        }
+        if (nrow(draws_mat) == length(idx) && ncol(draws_mat) > 1L) {
+          q_lo <- apply(draws_mat, 1L, stats::quantile, probs = 0.025,
+                         na.rm = TRUE)
+          q_hi <- apply(draws_mat, 1L, stats::quantile, probs = 0.975,
+                         na.rm = TRUE)
+          valid <- is.finite(q_lo) & is.finite(q_hi) & is.finite(t_num)
+          if (any(valid)) {
+            hits <- t_num[valid] >= q_lo[valid] & t_num[valid] <= q_hi[valid]
+            rows[[length(rows) + 1L]] <- data.frame(
+              method = method_name, trait = v, metric = "coverage95_mcdropout",
+              value = mean(hits), n_cells = sum(valid), wall_s = wall_s
+            )
+          }
+        }
+      }
     }
   }
   if (!length(rows)) NULL else do.call(rbind, rows)
@@ -193,15 +235,21 @@ eval_completed <- function(completed, truth, mask, method_name, wall_s) {
 
 cat("\n=== pigauto_default ===\n")
 r_def <- timed(run_pigauto(0L))
-ev_def <- eval_completed(r_def$val, df_sub, mask_test, "pigauto_default", r_def$wall)
+ev_def <- eval_completed(r_def$val$completed, df_sub, mask_test,
+                           "pigauto_default", r_def$wall,
+                           res_obj = r_def$val)
 
 cat("=== pigauto_em5 ===\n")
 r_em5 <- timed(run_pigauto(5L))
-ev_em5 <- eval_completed(r_em5$val, df_sub, mask_test, "pigauto_em5", r_em5$wall)
+ev_em5 <- eval_completed(r_em5$val$completed, df_sub, mask_test,
+                           "pigauto_em5", r_em5$wall,
+                           res_obj = r_em5$val)
 
 cat("=== BACE (may skip) ===\n")
 r_bace <- timed(run_bace())
-ev_bace <- eval_completed(r_bace$val, df_sub, mask_test, "bace_default", r_bace$wall)
+# BACE doesn't expose conformal intervals; pass NULL for res_obj
+ev_bace <- eval_completed(r_bace$val, df_sub, mask_test,
+                            "bace_default", r_bace$wall, res_obj = NULL)
 
 all_rows <- do.call(rbind, Filter(Negate(is.null), list(ev_def, ev_em5, ev_bace)))
 

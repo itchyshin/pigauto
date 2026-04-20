@@ -1,0 +1,25 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><title>PanTHERIA full-scale bench</title><style>body{font-family:system-ui,sans-serif;max-width:1100px;margin:2em auto;padding:0 1em;color:#222}h1{border-bottom:2px solid #ccc}table{border-collapse:collapse;margin:1em 0}td,th{border:1px solid #ccc;padding:4px 8px}</style></head><body><h1>PanTHERIA mammal benchmark (full scale)</h1><p>n = 4027 mammals (PanTHERIA ∩ taxonomy tree), 8 traits, seed = 2026, miss_frac = 0.30.</p><p><em>Tree: taxonomy-derived cladogram (Order/Family/Genus/Species via <code>ape::as.phylo.formula()</code>) with Grafen branch lengths — not a time-calibrated phylogeny. Adequate for testing pigauto's hierarchical phylo prior.</em></p><h2>Per-trait metrics (winner highlighted)</h2><table><tr><th>trait</th><th>metric</th><th>mean_baseline</th><th>pigauto_default</th><th>pigauto_em5</th></tr><tr><td>body_mass_g</td><td>rmse</td><td>3.077</td><td>0.725</td><td style='background:#def6d0;font-weight:bold'>0.692</td></tr>
+<tr><td>body_mass_g</td><td>pearson_r</td><td>-</td><td>0.972</td><td style='background:#def6d0;font-weight:bold'>0.975</td></tr>
+<tr><td>head_body_length_mm</td><td>rmse</td><td>1.021</td><td>0.249</td><td style='background:#def6d0;font-weight:bold'>0.239</td></tr>
+<tr><td>head_body_length_mm</td><td>pearson_r</td><td>-</td><td>0.970</td><td style='background:#def6d0;font-weight:bold'>0.973</td></tr>
+<tr><td>gestation_d</td><td>rmse</td><td>0.961</td><td>0.387</td><td style='background:#def6d0;font-weight:bold'>0.360</td></tr>
+<tr><td>gestation_d</td><td>pearson_r</td><td>-</td><td>0.916</td><td style='background:#def6d0;font-weight:bold'>0.928</td></tr>
+<tr><td>litter_size</td><td>rmse</td><td style='background:#def6d0;font-weight:bold'>1.766</td><td>7.741</td><td>59.973</td></tr>
+<tr><td>litter_size</td><td>pearson_r</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.291</td><td>0.030</td></tr>
+<tr><td>max_longevity_m</td><td>rmse</td><td>0.914</td><td>0.642</td><td style='background:#def6d0;font-weight:bold'>0.582</td></tr>
+<tr><td>max_longevity_m</td><td>pearson_r</td><td>-</td><td>0.747</td><td style='background:#def6d0;font-weight:bold'>0.796</td></tr>
+<tr><td>diet_breadth</td><td>accuracy</td><td>0.385</td><td style='background:#def6d0;font-weight:bold'>0.481</td><td>0.276</td></tr>
+<tr><td>habitat_breadth</td><td>accuracy</td><td>0.742</td><td style='background:#def6d0;font-weight:bold'>0.844</td><td>0.739</td></tr>
+<tr><td>terrestriality</td><td>accuracy</td><td>0.551</td><td style='background:#def6d0;font-weight:bold'>0.946</td><td>0.943</td></tr>
+<tr><td>body_mass_g</td><td>coverage95_conformal</td><td>-</td><td>0.937</td><td style='background:#def6d0;font-weight:bold'>0.943</td></tr>
+<tr><td>body_mass_g</td><td>coverage95_mcdropout</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.868</td><td>0.865</td></tr>
+<tr><td>head_body_length_mm</td><td>coverage95_conformal</td><td>-</td><td>0.944</td><td style='background:#def6d0;font-weight:bold'>0.955</td></tr>
+<tr><td>head_body_length_mm</td><td>coverage95_mcdropout</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.848</td><td>0.838</td></tr>
+<tr><td>gestation_d</td><td>coverage95_conformal</td><td>-</td><td>0.929</td><td style='background:#def6d0;font-weight:bold'>0.953</td></tr>
+<tr><td>gestation_d</td><td>coverage95_mcdropout</td><td>-</td><td>0.830</td><td style='background:#def6d0;font-weight:bold'>0.921</td></tr>
+<tr><td>litter_size</td><td>coverage95_conformal</td><td>-</td><td>0.950</td><td style='background:#def6d0;font-weight:bold'>0.960</td></tr>
+<tr><td>litter_size</td><td>coverage95_mcdropout</td><td>-</td><td>0.919</td><td style='background:#def6d0;font-weight:bold'>0.939</td></tr>
+<tr><td>max_longevity_m</td><td>coverage95_conformal</td><td>-</td><td>0.868</td><td style='background:#def6d0;font-weight:bold'>0.931</td></tr>
+<tr><td>max_longevity_m</td><td>coverage95_mcdropout</td><td>-</td><td>0.828</td><td style='background:#def6d0;font-weight:bold'>0.858</td></tr></table><h2>Wall time per method</h2><table><tr><th>method</th><th>wall (s)</th></tr><tr><td>mean_baseline</td><td>0.0</td></tr>
+<tr><td>pigauto_default</td><td>1396.3</td></tr>
+<tr><td>pigauto_em5</td><td>2402.6</td></tr></table></body></html>
