@@ -159,8 +159,16 @@ aggregate_to_species <- function(data, splits = NULL, soft_aggregate = FALSE) {
 #'   liab_cols.
 #' @keywords internal
 #' @noRd
-build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE) {
+build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE,
+                                   sd_prior_vec = NULL) {
   trait_map <- data$trait_map
+  # sd_j_lookup returns the per-column prior SD. NULL default preserves the
+  # v0.9.1 plug-in N(0, 1) behaviour byte-for-byte. Phase 6 EM passes
+  # sqrt(diag(Σ)) from the previous phylopars fit here.
+  sd_j_lookup <- function(j) {
+    if (is.null(sd_prior_vec)) return(1)
+    sd_prior_vec[j]
+  }
   # Collapse multi-obs to species level (no-op for single-obs). Splits are
   # masked internally in obs space before aggregation, so no separate
   # masking step is needed below.
@@ -217,15 +225,16 @@ build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE) 
       # Observed value is either hard 0/1 (hard aggregation or single-obs) or
       # a species-level proportion in [0,1] (soft aggregation for multi-obs).
       # Dispatch to soft E-step when is_prop indicates a proportion value.
+      sd_j <- sd_j_lookup(j)
       for (i in seq_len(n)) {
         v <- src_col[i]
         if (is.na(v)) next
         if (is_prop[col_idx]) {
           post <- estep_liability_binary_soft(p = as.numeric(v),
-                                               mu_prior = 0, sd_prior = 1)
+                                               mu_prior = 0, sd_prior = sd_j)
         } else {
           post <- estep_liability(tm_j, observed = v,
-                                   mu_prior = 0, sd_prior = 1)
+                                   mu_prior = 0, sd_prior = sd_j)
         }
         X_liab[i, j] <- post$mean
       }
@@ -233,11 +242,12 @@ build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE) 
     } else if (tp == "ordinal") {
       # Ordinal: interval-truncated Gaussian E-step via the dispatcher.
       # estep_liability() handles z-score roundtrip internally.
+      sd_j <- sd_j_lookup(j)
       for (i in seq_len(n)) {
         v <- src_col[i]
         if (is.na(v)) next
         post <- estep_liability(tm_j, observed = v,
-                                  mu_prior = 0, sd_prior = 1)
+                                  mu_prior = 0, sd_prior = sd_j)
         X_liab[i, j] <- post$mean
       }
 
@@ -261,11 +271,13 @@ build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE) 
 #' @keywords internal
 #' @noRd
 fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
-                                        soft_aggregate = FALSE) {
+                                        soft_aggregate = FALSE,
+                                        sd_prior_vec = NULL) {
   stopifnot(joint_mvn_available())
 
   built <- build_liability_matrix(data, splits = splits,
-                                  soft_aggregate = soft_aggregate)
+                                  soft_aggregate = soft_aggregate,
+                                  sd_prior_vec = sd_prior_vec)
   X_liab     <- built$X_liab
   liab_cols  <- built$liab_cols
   liab_types <- built$liab_types
@@ -284,6 +296,7 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
   se_liab    <- matrix(NA_real_, nrow = n_species, ncol = n_all_cols,
                         dimnames = list(spp, colnames(X_liab)))
 
+  phylopars_fit <- NULL
   if (length(fit_cols) >= 1L) {
     X_fit <- X_liab[, fit_cols, drop = FALSE]
 
@@ -321,12 +334,18 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
 
     mu_liab[, fit_cols] <- mu_fit
     se_liab[, fit_cols] <- se_fit
+    phylopars_fit <- fit
   }
 
-  list(mu_liab    = mu_liab,
-       se_liab    = se_liab,
-       liab_cols  = liab_cols,
-       liab_types = liab_types)
+  # phylopars_fit and fit_cols_idx are additive fields used by Phase 6 EM to
+  # extract the per-column BM rate for the next iteration's prior. Existing
+  # callers that don't look for them are unaffected.
+  list(mu_liab      = mu_liab,
+       se_liab      = se_liab,
+       liab_cols    = liab_cols,
+       liab_types   = liab_types,
+       phylopars_fit = phylopars_fit,
+       fit_cols_idx = fit_cols)
 }
 
 #' Decode liability-scale posterior to logit(P(y=1)) for binary traits
@@ -373,5 +392,111 @@ decode_ordinal_liability <- function(mu_liab, se_liab, tm) {
   # Convert to z-scored integer: (class_0indexed - mean) / sd
   mu_z <- (class_idx - 1 - tm$mean) / tm$sd
   list(mu_z = mu_z, se_z = rep(0, length(mu_liab)))
+}
+
+# Extract per-column BM rate variance from an Rphylopars fit.
+# Rphylopars stores the BM rate matrix in `$pars$phylocov`; some older
+# builds used `$pars$sigma2`. Both are K x K matrices (or 1x1 for a single
+# column). For a K-col joint fit we return the K diagonal elements
+# (off-diagonals are the phylogenetic covariances, which Phase 6 does NOT
+# use). For scalar sigma2 back-compat, handle that too.
+# Phase 6 EM uses this to build the next iteration's sd_prior_vec via
+# `sqrt(pmax(extract_liability_variances(...), tiny))`.
+#' @keywords internal
+#' @noRd
+extract_liability_variances <- function(phylopars_fit) {
+  Sigma <- phylopars_fit$pars$phylocov
+  if (is.null(Sigma)) Sigma <- phylopars_fit$pars$sigma2  # older Rphylopars
+  if (is.matrix(Sigma)) {
+    as.numeric(diag(Sigma))
+  } else {
+    as.numeric(Sigma)
+  }
+}
+
+# Relative Frobenius distance between two variance vectors (or matrices).
+# Used as the Phase 6 EM early-stop criterion:
+#   delta = ||v_new - v_old||_F / ||v_old||_F
+# Returns +Inf if `v_old` has zero norm (first real iter).
+#' @keywords internal
+#' @noRd
+rel_frobenius <- function(v_new, v_old) {
+  den <- sqrt(sum(v_old^2))
+  if (!is.finite(den) || den == 0) return(Inf)
+  num <- sqrt(sum((v_new - v_old)^2))
+  num / den
+}
+
+# Phase 6 EM wrapper around fit_joint_threshold_baseline().
+# Iterates:
+#   1. Run fit_joint_threshold_baseline() with sd_prior_vec = sqrt(diag(Sigma_prev)).
+#   2. Extract new Sigma from the fit's phylopars_fit slot.
+#   3. Check relative Frobenius convergence; break if delta < em_tol.
+# Returns the final fit (shape identical to fit_joint_threshold_baseline's
+# return) augmented with $em_state. $phylopars_fit and $fit_cols_idx are
+# returned unchanged — Phase 6 doesn't hide them.
+#' @keywords internal
+#' @noRd
+fit_joint_threshold_baseline_em <- function(data, tree, splits,
+                                             graph = NULL,
+                                             soft_aggregate = FALSE,
+                                             em_iterations = 5L,
+                                             em_tol = 1e-3) {
+  stopifnot(joint_mvn_available(), em_iterations >= 1L)
+
+  sd_prior_vec <- NULL  # iter 1 = plug-in N(0, 1)
+  prev_vars    <- NULL
+  delta        <- Inf
+  base         <- NULL
+  iter_run     <- 0L
+  n_liab_cols  <- NULL   # set on iter 1 after first build
+
+  for (iter in seq_len(em_iterations)) {
+    new_base <- tryCatch(
+      fit_joint_threshold_baseline(data, tree, splits = splits, graph = graph,
+                                    soft_aggregate = soft_aggregate,
+                                    sd_prior_vec = sd_prior_vec),
+      error = function(e) NULL
+    )
+
+    if (is.null(new_base)) {
+      if (is.null(base)) {
+        stop("fit_joint_threshold_baseline_em: phylopars failed on iter 1; ",
+             "no fallback available. Try em_iterations = 0L.", call. = FALSE)
+      }
+      warning("fit_joint_threshold_baseline_em: phylopars failed at iter ",
+              iter, ". Returning previous iteration's baseline.",
+              call. = FALSE)
+      break
+    }
+
+    iter_run <- iter
+    base     <- new_base
+    if (is.null(n_liab_cols)) n_liab_cols <- length(new_base$liab_cols)
+
+    if (is.null(new_base$phylopars_fit)) {
+      # All cols < 2 obs; no fit possible. Degenerate case — bail.
+      break
+    }
+    new_vars <- extract_liability_variances(new_base$phylopars_fit)
+
+    if (!is.null(prev_vars)) {
+      delta <- rel_frobenius(new_vars, prev_vars)
+      if (delta < em_tol) break
+    }
+
+    prev_vars    <- new_vars
+    # Align sd_prior_vec to the FULL liab_cols. Unfitted cols stay at 1
+    # (plug-in fallback).
+    sd_prior_vec <- rep(1, n_liab_cols)
+    sd_prior_vec[new_base$fit_cols_idx] <- sqrt(pmax(new_vars, 1e-8))
+  }
+
+  base$em_state <- list(
+    iterations_run = iter_run,
+    converged      = is.finite(delta) && delta < em_tol,
+    final_delta    = delta
+  )
+  base
 }
 

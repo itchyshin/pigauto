@@ -52,6 +52,16 @@
 #'   dispatches a soft E-step so that intermediate class frequencies
 #'   contribute fractional liability evidence.  Passed to
 #'   \code{\link{fit_baseline}}.
+#' @param em_iterations integer. Phase 6 EM iterations for the
+#'   threshold-joint baseline (binary + ordinal + OVR categorical).
+#'   Default \code{0L} preserves v0.9.1 behaviour byte-for-byte. When
+#'   \code{>= 2L}, the BM rate \eqn{\Sigma} learned by
+#'   \code{Rphylopars::phylopars()} at iteration \eqn{k} is fed back as
+#'   the per-trait prior SD at iteration \eqn{k+1}, up to
+#'   \code{em_iterations} times or until \code{em_tol} convergence.
+#'   Passed to \code{\link{fit_baseline}}.
+#' @param em_tol numeric. Relative-Frobenius convergence tolerance for
+#'   the Phase 6 EM loop. Default \code{1e-3}.
 #' @param ... additional arguments passed to \code{\link{fit_pigauto}}.
 #' @return An object of class \code{"pigauto_result"} with components:
 #'   \describe{
@@ -146,6 +156,8 @@ impute <- function(traits, tree, species_col = NULL,
                    covariates = NULL,
                    epochs = 2000L, verbose = TRUE, seed = 1L,
                    multi_obs_aggregation = c("hard", "soft"),
+                   em_iterations = 0L,
+                   em_tol = 1e-3,
                    ...) {
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
 
@@ -176,7 +188,9 @@ impute <- function(traits, tree, species_col = NULL,
 
   # 4. Fit phylogenetic baseline (reuses graph$D for label propagation)
   baseline <- fit_baseline(pd, tree, splits = splits, graph = graph,
-                           multi_obs_aggregation = multi_obs_aggregation)
+                           multi_obs_aggregation = multi_obs_aggregation,
+                           em_iterations = em_iterations,
+                           em_tol = em_tol)
 
   # Free the cached cophenetic distance matrix: fit_pigauto() only
   # needs graph$adj and graph$coords, and at n = 10,000 the ~800 MB

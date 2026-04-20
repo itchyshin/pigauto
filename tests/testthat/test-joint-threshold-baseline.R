@@ -50,8 +50,11 @@ test_that("fit_joint_threshold_baseline returns liability-scale posterior for ev
 
   res <- fit_joint_threshold_baseline(pd, tree, splits = NULL)
 
-  # Expected shape: list(mu_liab, se_liab) each n_species x n_liab_cols
-  expect_named(res, c("mu_liab", "se_liab", "liab_cols", "liab_types"))
+  # Expected shape: list with at least (mu_liab, se_liab, liab_cols,
+  # liab_types); Phase 6 additively attaches phylopars_fit + fit_cols_idx so
+  # downstream EM code can extract Σ without re-running phylopars.
+  expect_true(all(c("mu_liab", "se_liab", "liab_cols", "liab_types")
+                   %in% names(res)))
   expect_equal(dim(res$mu_liab), c(30, 2))
   expect_equal(dim(res$se_liab), c(30, 2))
   expect_true(all(is.finite(res$mu_liab)))
