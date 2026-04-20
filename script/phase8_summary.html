@@ -1,38 +1,38 @@
 <!DOCTYPE html><html><head><meta charset='utf-8'><title>Phase 8 benchmark summary</title><style>body{font-family:system-ui,sans-serif;max-width:1100px;margin:2em auto;padding:0 1em;color:#222} h1{border-bottom:2px solid #ccc}table{border-collapse:collapse;margin:1em 0}td,th{border:1px solid #ccc;padding:4px 8px} pre{background:#f6f6f6;padding:1em;overflow:auto}</style></head><body><h1>Phase 8: discriminative benchmark suite</h1><p>pigauto v? · BACE not installed · torch 0.17.0</p><h2>TL;DR — mean metric per method across all benches</h2><table><tr><th>source</th><th>method</th><th>metric</th><th>mean value</th></tr><tr><td>signal_sweep</td><td>mean_baseline</td><td>accuracy</td><td>0.607</td></tr>
-<tr><td>signal_sweep</td><td>pigauto_default</td><td>accuracy</td><td>0.662</td></tr>
-<tr><td>signal_sweep</td><td>pigauto_em5</td><td>accuracy</td><td>0.663</td></tr>
+<tr><td>signal_sweep</td><td>pigauto_default</td><td>accuracy</td><td>0.660</td></tr>
+<tr><td>signal_sweep</td><td>pigauto_em5</td><td>accuracy</td><td>0.662</td></tr>
 <tr><td>signal_sweep</td><td>pigauto_LP</td><td>accuracy</td><td>0.607</td></tr>
-<tr><td>signal_sweep</td><td>pigauto_default</td><td>pearson_r</td><td>0.459</td></tr>
-<tr><td>signal_sweep</td><td>pigauto_em5</td><td>pearson_r</td><td>0.451</td></tr>
+<tr><td>signal_sweep</td><td>pigauto_default</td><td>pearson_r</td><td>0.454</td></tr>
+<tr><td>signal_sweep</td><td>pigauto_em5</td><td>pearson_r</td><td>0.449</td></tr>
 <tr><td>signal_sweep</td><td>pigauto_LP</td><td>pearson_r</td><td>0.524</td></tr>
 <tr><td>signal_sweep</td><td>mean_baseline</td><td>rmse</td><td>0.995</td></tr>
-<tr><td>signal_sweep</td><td>pigauto_default</td><td>rmse</td><td>0.890</td></tr>
-<tr><td>signal_sweep</td><td>pigauto_em5</td><td>rmse</td><td>0.898</td></tr>
+<tr><td>signal_sweep</td><td>pigauto_default</td><td>rmse</td><td>0.907</td></tr>
+<tr><td>signal_sweep</td><td>pigauto_em5</td><td>rmse</td><td>0.903</td></tr>
 <tr><td>signal_sweep</td><td>pigauto_LP</td><td>rmse</td><td>0.810</td></tr>
 <tr><td>bace_head_to_head</td><td>pigauto_default</td><td>accuracy</td><td>0.771</td></tr>
-<tr><td>bace_head_to_head</td><td>pigauto_em5</td><td>accuracy</td><td>0.698</td></tr>
-<tr><td>bace_head_to_head</td><td>pigauto_default</td><td>pearson_r</td><td>0.955</td></tr>
-<tr><td>bace_head_to_head</td><td>pigauto_em5</td><td>pearson_r</td><td>0.954</td></tr>
-<tr><td>bace_head_to_head</td><td>pigauto_default</td><td>rmse</td><td>88.799</td></tr>
-<tr><td>bace_head_to_head</td><td>pigauto_em5</td><td>rmse</td><td>91.645</td></tr>
+<tr><td>bace_head_to_head</td><td>pigauto_em5</td><td>accuracy</td><td>0.723</td></tr>
+<tr><td>bace_head_to_head</td><td>pigauto_default</td><td>pearson_r</td><td>0.950</td></tr>
+<tr><td>bace_head_to_head</td><td>pigauto_em5</td><td>pearson_r</td><td>0.956</td></tr>
+<tr><td>bace_head_to_head</td><td>pigauto_default</td><td>rmse</td><td>100.920</td></tr>
+<tr><td>bace_head_to_head</td><td>pigauto_em5</td><td>rmse</td><td>87.763</td></tr>
 <tr><td>correlation_sweep</td><td>pigauto_default</td><td>pearson_r</td><td>0.981</td></tr>
 <tr><td>correlation_sweep</td><td>pigauto_em5</td><td>pearson_r</td><td>0.981</td></tr>
 <tr><td>correlation_sweep</td><td>mean_baseline</td><td>rmse</td><td>0.731</td></tr>
-<tr><td>correlation_sweep</td><td>pigauto_default</td><td>rmse</td><td>0.113</td></tr>
-<tr><td>correlation_sweep</td><td>pigauto_em5</td><td>rmse</td><td>0.113</td></tr>
-<tr><td>evo_model_sweep</td><td>pigauto_default</td><td>pearson_r</td><td>0.902</td></tr>
-<tr><td>evo_model_sweep</td><td>pigauto_em5</td><td>pearson_r</td><td>0.902</td></tr>
+<tr><td>correlation_sweep</td><td>pigauto_default</td><td>rmse</td><td>0.116</td></tr>
+<tr><td>correlation_sweep</td><td>pigauto_em5</td><td>rmse</td><td>0.116</td></tr>
+<tr><td>evo_model_sweep</td><td>pigauto_default</td><td>pearson_r</td><td>0.900</td></tr>
+<tr><td>evo_model_sweep</td><td>pigauto_em5</td><td>pearson_r</td><td>0.896</td></tr>
 <tr><td>evo_model_sweep</td><td>mean_baseline</td><td>rmse</td><td>0.940</td></tr>
-<tr><td>evo_model_sweep</td><td>pigauto_default</td><td>rmse</td><td>0.285</td></tr>
-<tr><td>evo_model_sweep</td><td>pigauto_em5</td><td>rmse</td><td>0.285</td></tr>
+<tr><td>evo_model_sweep</td><td>pigauto_default</td><td>rmse</td><td>0.286</td></tr>
+<tr><td>evo_model_sweep</td><td>pigauto_em5</td><td>rmse</td><td>0.297</td></tr>
 <tr><td>clade_missingness</td><td>mean_baseline</td><td>accuracy</td><td>0.678</td></tr>
 <tr><td>clade_missingness</td><td>pigauto_default</td><td>accuracy</td><td>0.942</td></tr>
 <tr><td>clade_missingness</td><td>pigauto_em5</td><td>accuracy</td><td>0.942</td></tr>
-<tr><td>clade_missingness</td><td>pigauto_default</td><td>pearson_r</td><td>0.960</td></tr>
-<tr><td>clade_missingness</td><td>pigauto_em5</td><td>pearson_r</td><td>0.960</td></tr>
+<tr><td>clade_missingness</td><td>pigauto_default</td><td>pearson_r</td><td>0.957</td></tr>
+<tr><td>clade_missingness</td><td>pigauto_em5</td><td>pearson_r</td><td>0.958</td></tr>
 <tr><td>clade_missingness</td><td>mean_baseline</td><td>rmse</td><td>0.745</td></tr>
-<tr><td>clade_missingness</td><td>pigauto_default</td><td>rmse</td><td>0.148</td></tr>
-<tr><td>clade_missingness</td><td>pigauto_em5</td><td>rmse</td><td>0.146</td></tr></table><p><em>Lower is better for RMSE; higher is better for accuracy and Pearson r.</em></p><h2>Sub-reports</h2><ul><li><a href='bench_signal_sweep.html'>Pagel's λ signal-strength sweep (MVP)</a></li><li><a href='bench_bace_avonet_head_to_head.html'>AVONET 300 head-to-head vs BACE (MVP)</a></li><li><a href='bench_correlation_sweep.html'>Cross-trait-correlation (ρ) sweep (Phase 8.1)</a></li><li><a href='bench_evo_model_sweep.html'>Evolutionary-model sweep — BM / OU / regime_shift / nonlinear (Phase 8.2)</a></li><li><a href='bench_clade_missingness.html'>Clade-correlated missingness (realistic MAR) (Phase 8.3)</a></li></ul><h2>Reproducibility</h2><pre>R version 4.5.2 (2025-10-31)
+<tr><td>clade_missingness</td><td>pigauto_default</td><td>rmse</td><td>0.150</td></tr>
+<tr><td>clade_missingness</td><td>pigauto_em5</td><td>rmse</td><td>0.148</td></tr></table><p><em>Lower is better for RMSE; higher is better for accuracy and Pearson r.</em></p><h2>Sub-reports</h2><ul><li><a href='bench_signal_sweep.html'>Pagel's λ signal-strength sweep (MVP)</a></li><li><a href='bench_bace_avonet_head_to_head.html'>AVONET 300 head-to-head vs BACE (MVP)</a></li><li><a href='bench_correlation_sweep.html'>Cross-trait-correlation (ρ) sweep (Phase 8.1)</a></li><li><a href='bench_evo_model_sweep.html'>Evolutionary-model sweep — BM / OU / regime_shift / nonlinear (Phase 8.2)</a></li><li><a href='bench_clade_missingness.html'>Clade-correlated missingness (realistic MAR) (Phase 8.3)</a></li></ul><h2>Reproducibility</h2><pre>R version 4.5.2 (2025-10-31)
 Platform: aarch64-apple-darwin20
 Running under: macOS Tahoe 26.4.1
 
