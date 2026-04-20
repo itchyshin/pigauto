@@ -1,28 +1,45 @@
 # pigauto 0.9.1.9000 (dev)
 
-## Phase 8 (MVP): discriminative benchmark suite
+## Phase 8: discriminative benchmark suite (complete)
 
-- **New `script/bench_signal_sweep.R`**: Pagel's λ ∈ {0.1, 0.3, 0.5,
-  0.7, 0.9, 1.0} × mixed-type traits (2 continuous + 1 binary + 1
-  categorical K=3) × 4 methods × 3 reps. Documents how each method
-  discriminates as phylogenetic signal varies. Headline: at λ = 1.0
-  pigauto reaches 94.4% binary accuracy vs `mean_baseline` 76.3%; at
-  λ = 0.1 all methods collapse near chance (expected — no signal to
-  exploit).
-- **New `script/bench_bace_avonet_head_to_head.R`**: pigauto default
-  vs pigauto with `em_iterations = 5L` vs optional `BACE::bace()` on
-  the bundled `avonet300`/`tree300` with identical splits. Graceful
-  fallback when BACE is not installed. Documents an **honest** finding
-  that Phase 6 EM does NOT universally beat the plug-in at n = 300
-  (default 80.5% vs EM 65.9% on Trophic.Level), consistent with the
-  "Calibration at small n" caveat from v0.9.1 — EM is opt-in for a
-  reason.
-- **Aggregate report** `phase8_summary.html` linked from the pkgdown
-  validation suite, with TL;DR metric table + sub-report links +
-  reproducibility block (package versions, `sessionInfo()`).
-- Deferred to follow-up PRs: Phase 8.1 cross-trait-correlation sweep,
-  Phase 8.2 evolutionary-model sweep, Phase 8.3 clade-correlated
-  missingness.
+Five reproducible bench scripts + one aggregate report, all linked from
+the pkgdown validation suite. No `R/` code changes; bench infrastructure
+only.
+
+- **`script/bench_signal_sweep.R`** — Pagel's λ ∈ {0.1, 0.3, 0.5, 0.7,
+  0.9, 1.0} × mixed-type traits (2 cont + 1 bin + 1 cat K=3) × 4 methods
+  × 3 reps. Headline: at λ = 1.0 pigauto reaches **94.4% binary accuracy
+  vs `mean_baseline` 76.3%**; at λ = 0.1 all methods collapse near chance
+  (expected — no signal).
+- **`script/bench_bace_avonet_head_to_head.R`** — `pigauto_default` vs
+  `pigauto_em5` vs optional `BACE::bace()` on `avonet300`/`tree300` with
+  identical splits. Graceful `requireNamespace` guard when BACE is
+  unavailable. Honest finding: Phase 6 EM does NOT universally beat the
+  plug-in at n = 300 (default **80.5% vs em5 65.9%** on Trophic.Level),
+  consistent with the "Calibration at small n" caveat from v0.9.1 — EM
+  is opt-in for a reason.
+- **`script/bench_correlation_sweep.R`** (Phase 8.1) — cross-trait
+  correlation ρ ∈ {0, 0.2, 0.4, 0.6, 0.8} × 4 continuous traits × 3 reps.
+  pigauto delivers consistent **6–10× RMSE reduction** over `mean_baseline`
+  across all ρ (0.07–0.14 vs 0.64–0.80). Pearson r averages 0.97 at all ρ.
+- **`script/bench_evo_model_sweep.R`** (Phase 8.2) — 4 evolutionary
+  models × 3 reps. BM RMSE 0.13 (6× lift over mean); OU 0.32 (3×);
+  **regime_shift 0.07 (14×)**; nonlinear 0.63 (1.6× — pigauto struggles
+  on genuinely non-BM correlations, Pearson r drops to 0.69). Honest
+  graceful-degradation story.
+- **`script/bench_clade_missingness.R`** (Phase 8.3) — realistic MAR
+  pattern via random-clade masking on focal trait. At every target_frac
+  tested pigauto maintains **Pearson r ≥ 0.96** and RMSE **5–8× lower**
+  than `mean_baseline`: 0.10→0.18 vs 0.99 (r 0.97); 0.25→0.14 vs 1.11
+  (r 0.97); 0.40→0.16 vs 1.16 (r 0.96). Strong validation of pigauto's
+  phylo prior in the realistic missingness regime (real databases
+  undersample clades, not random species). Clade-picker caps at
+  `target_frac` to avoid degenerate 100%-masked runs.
+- **`script/phase8_summary.html`** — aggregate TL;DR + sub-report links
+  + reproducibility block (package versions, `sessionInfo()`).
+- Validation suite (`pkgdown/assets/validation_suite.html`) gains five
+  new rows, one per bench, with graceful `pending` fallback on missing
+  RDS files.
 
 ## Phase 7 EM: off-diagonal conditioning (opt-in, on top of Phase 6)
 

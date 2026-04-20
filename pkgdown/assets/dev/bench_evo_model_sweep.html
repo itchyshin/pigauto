@@ -1,0 +1,23 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><title>Phase 8.2: evo-model sweep</title><style>body{font-family:system-ui,sans-serif;max-width:1100px;margin:2em auto;padding:0 1em;color:#222}h1{border-bottom:2px solid #ccc}img{max-width:100%}</style></head><body><h1>Phase 8.2: evolutionary-model sweep</h1><p>Models: BM, OU, regime_shift, nonlinear. n=300, K=4, miss_frac=0.30, 3 reps.</p><p>Total wall: 23.7 min.</p><img src='bench_evo_model_sweep.png' alt='evo-model bars'/><h2>Summary table</h2><table border='1' cellpadding='4' style='border-collapse:collapse'>
+<tr><th>method</th><th>model</th><th>metric</th><th>mean value</th></tr>
+<tr><td>pigauto_default</td><td>BM</td><td>pearson_r</td><td>0.974</td></tr>
+<tr><td>pigauto_em5</td><td>BM</td><td>pearson_r</td><td>0.975</td></tr>
+<tr><td>pigauto_default</td><td>nonlinear</td><td>pearson_r</td><td>0.694</td></tr>
+<tr><td>pigauto_em5</td><td>nonlinear</td><td>pearson_r</td><td>0.693</td></tr>
+<tr><td>pigauto_default</td><td>OU</td><td>pearson_r</td><td>0.944</td></tr>
+<tr><td>pigauto_em5</td><td>OU</td><td>pearson_r</td><td>0.944</td></tr>
+<tr><td>pigauto_default</td><td>regime_shift</td><td>pearson_r</td><td>0.997</td></tr>
+<tr><td>pigauto_em5</td><td>regime_shift</td><td>pearson_r</td><td>0.997</td></tr>
+<tr><td>mean_baseline</td><td>BM</td><td>rmse</td><td>0.764</td></tr>
+<tr><td>pigauto_default</td><td>BM</td><td>rmse</td><td>0.127</td></tr>
+<tr><td>pigauto_em5</td><td>BM</td><td>rmse</td><td>0.126</td></tr>
+<tr><td>mean_baseline</td><td>nonlinear</td><td>rmse</td><td>0.997</td></tr>
+<tr><td>pigauto_default</td><td>nonlinear</td><td>rmse</td><td>0.626</td></tr>
+<tr><td>pigauto_em5</td><td>nonlinear</td><td>rmse</td><td>0.627</td></tr>
+<tr><td>mean_baseline</td><td>OU</td><td>rmse</td><td>0.986</td></tr>
+<tr><td>pigauto_default</td><td>OU</td><td>rmse</td><td>0.318</td></tr>
+<tr><td>pigauto_em5</td><td>OU</td><td>rmse</td><td>0.318</td></tr>
+<tr><td>mean_baseline</td><td>regime_shift</td><td>rmse</td><td>1.014</td></tr>
+<tr><td>pigauto_default</td><td>regime_shift</td><td>rmse</td><td>0.070</td></tr>
+<tr><td>pigauto_em5</td><td>regime_shift</td><td>rmse</td><td>0.069</td></tr>
+</table></body></html>

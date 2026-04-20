@@ -1,0 +1,28 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><title>Phase 8.1: ρ sweep</title><style>body{font-family:system-ui,sans-serif;max-width:1100px;margin:2em auto;padding:0 1em;color:#222}h1{border-bottom:2px solid #ccc}img{max-width:100%}</style></head><body><h1>Phase 8.1: cross-trait-correlation (ρ) sweep</h1><p>Config: n = 300, K = 4 continuous traits, 3 reps × 5 ρ levels × 3 methods.</p><p>Total wall: 28.9 min.</p><img src='bench_correlation_sweep.png' alt='ρ curves'/><h2>Summary table</h2><table border='1' cellpadding='4' style='border-collapse:collapse'>
+<tr><th>method</th><th>ρ</th><th>metric</th><th>mean value</th></tr>
+<tr><td>pigauto_default</td><td>0.0</td><td>pearson_r</td><td>0.974</td></tr>
+<tr><td>pigauto_em5</td><td>0.0</td><td>pearson_r</td><td>0.974</td></tr>
+<tr><td>pigauto_default</td><td>0.2</td><td>pearson_r</td><td>0.979</td></tr>
+<tr><td>pigauto_em5</td><td>0.2</td><td>pearson_r</td><td>0.978</td></tr>
+<tr><td>pigauto_default</td><td>0.4</td><td>pearson_r</td><td>0.979</td></tr>
+<tr><td>pigauto_em5</td><td>0.4</td><td>pearson_r</td><td>0.979</td></tr>
+<tr><td>pigauto_default</td><td>0.6</td><td>pearson_r</td><td>0.983</td></tr>
+<tr><td>pigauto_em5</td><td>0.6</td><td>pearson_r</td><td>0.983</td></tr>
+<tr><td>pigauto_default</td><td>0.8</td><td>pearson_r</td><td>0.993</td></tr>
+<tr><td>pigauto_em5</td><td>0.8</td><td>pearson_r</td><td>0.993</td></tr>
+<tr><td>mean_baseline</td><td>0.0</td><td>rmse</td><td>0.686</td></tr>
+<tr><td>pigauto_default</td><td>0.0</td><td>rmse</td><td>0.136</td></tr>
+<tr><td>pigauto_em5</td><td>0.0</td><td>rmse</td><td>0.135</td></tr>
+<tr><td>mean_baseline</td><td>0.2</td><td>rmse</td><td>0.798</td></tr>
+<tr><td>pigauto_default</td><td>0.2</td><td>rmse</td><td>0.126</td></tr>
+<tr><td>pigauto_em5</td><td>0.2</td><td>rmse</td><td>0.126</td></tr>
+<tr><td>mean_baseline</td><td>0.4</td><td>rmse</td><td>0.767</td></tr>
+<tr><td>pigauto_default</td><td>0.4</td><td>rmse</td><td>0.127</td></tr>
+<tr><td>pigauto_em5</td><td>0.4</td><td>rmse</td><td>0.128</td></tr>
+<tr><td>mean_baseline</td><td>0.6</td><td>rmse</td><td>0.765</td></tr>
+<tr><td>pigauto_default</td><td>0.6</td><td>rmse</td><td>0.103</td></tr>
+<tr><td>pigauto_em5</td><td>0.6</td><td>rmse</td><td>0.103</td></tr>
+<tr><td>mean_baseline</td><td>0.8</td><td>rmse</td><td>0.637</td></tr>
+<tr><td>pigauto_default</td><td>0.8</td><td>rmse</td><td>0.075</td></tr>
+<tr><td>pigauto_em5</td><td>0.8</td><td>rmse</td><td>0.075</td></tr>
+</table></body></html>

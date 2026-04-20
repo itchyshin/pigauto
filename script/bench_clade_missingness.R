@@ -80,14 +80,23 @@ pick_clade_tips <- function(tree, target_frac, seed) {
   n <- length(tree$tip.label)
   n_int <- tree$Nnode
   internal <- seq(n + 1, n + n_int)
-  # Prefer deeper (smaller) clades — shuffle then pick in order.
+  target_n <- max(1L, min(n - 2L, ceiling(n * target_frac)))
+  # Prefer smaller clades — shuffle internal nodes and order by descendant
+  # count (ascending) to add small clades first and avoid overshooting the
+  # target by a huge margin.
   order_random <- sample(internal)
+  sizes <- vapply(order_random, function(nd) {
+    length(phangorn::Descendants(tree, nd, type = "tips")[[1]])
+  }, integer(1))
+  order_random <- order_random[order(sizes)]
   covered <- integer(0)
   for (nd in order_random) {
     desc <- phangorn::Descendants(tree, nd, type = "tips")[[1]]
     covered <- union(covered, desc)
-    if (length(covered) >= ceiling(n * target_frac)) break
+    if (length(covered) >= target_n) break
   }
+  # Cap at target_n so we never mask 100% of the tree
+  if (length(covered) > target_n) covered <- covered[seq_len(target_n)]
   covered
 }
 
@@ -95,17 +104,19 @@ pick_clade_tips <- function(tree, target_frac, seed) {
 pick_clade_tips_fallback <- function(tree, target_frac, seed) {
   set.seed(seed)
   n <- length(tree$tip.label)
-  # Use ape::node.depth + descendants: pick random tips and add their 2nd-
-  # cousin neighbourhood via cophenetic distance.
+  target_n <- max(1L, min(n - 2L, ceiling(n * target_frac)))
+  # Use ape::node.depth + descendants: pick random tips and add their
+  # nearest-10% neighbourhood via cophenetic distance.
   D <- ape::cophenetic.phylo(tree)
   covered <- integer(0)
   order_random <- sample(seq_len(n))
-  thresh <- stats::quantile(D[lower.tri(D)], 0.10)  # nearest 10%
+  thresh <- stats::quantile(D[lower.tri(D)], 0.10)
   for (root_tip in order_random) {
     neighbours <- which(D[root_tip, ] <= thresh)
     covered <- union(covered, neighbours)
-    if (length(covered) >= ceiling(n * target_frac)) break
+    if (length(covered) >= target_n) break
   }
+  if (length(covered) > target_n) covered <- covered[seq_len(target_n)]
   covered
 }
 
@@ -156,6 +167,14 @@ method_pigauto <- function(df_miss, tree, em_iter, seed) {
   res$completed
 }
 
+safe_cor <- function(x, y) {
+  # Returns NA_real_ if either vector is constant or has < 2 complete pairs.
+  idx <- which(is.finite(x) & is.finite(y))
+  if (length(idx) < 2L) return(NA_real_)
+  if (stats::sd(x[idx]) == 0 || stats::sd(y[idx]) == 0) return(NA_real_)
+  suppressWarnings(stats::cor(x[idx], y[idx]))
+}
+
 eval_cell <- function(truth, completed, mask) {
   rows <- list()
   for (v in names(truth)) {
@@ -168,7 +187,7 @@ eval_cell <- function(truth, completed, mask) {
                                                 value = acc)
     } else {
       rmse <- sqrt(mean((t_v - c_v)^2, na.rm = TRUE))
-      pear <- suppressWarnings(stats::cor(t_v, c_v, use = "complete.obs"))
+      pear <- safe_cor(as.numeric(t_v), as.numeric(c_v))
       rows[[length(rows) + 1L]] <- data.frame(trait = v,
         metric = c("rmse", "pearson_r"), value = c(rmse, pear))
     }
