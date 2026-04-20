@@ -484,6 +484,39 @@ if (!is.null(b_scaling)) {
   make_row("Scaling (v0.9.0)", "mixed", "Simulated (up to 10k sp)", "", NA, NA, NA, "Wall time", "dev/bench_scaling_v090.html", "pending")
 }
 
+# PanTHERIA full-scale bench (mammals)
+b_pantheria_full <- load_rds("bench_pantheria_full")
+if (!is.null(b_pantheria_full)) {
+  h('<tr>',
+    '<td><a href="dev/bench_pantheria_full.html">PanTHERIA full (mammals)</a></td>',
+    '<td><em>mixed</em></td>',
+    '<td>PanTHERIA 2009 ∩ taxonomy tree (n = ', b_pantheria_full$n_species, ')</td>',
+    '<td>pigauto_default / pigauto_em5 / mean</td>',
+    '<td colspan="2">', b_pantheria_full$n_traits, ' traits, seed = ', b_pantheria_full$seed, '</td>',
+    '<td>&mdash;</td>',
+    '<td>per-trait RMSE / r / accuracy</td>',
+    '</tr>')
+} else {
+  make_row("PanTHERIA full (mammals)", "mixed", "PanTHERIA ∩ mammal tree", "", NA, NA, NA, "RMSE / r / acc", "dev/bench_pantheria_full.html", "pending")
+}
+
+# PanTHERIA vs BACE head-to-head
+b_pantheria_bace <- load_rds("bench_pantheria_bace_head_to_head")
+if (!is.null(b_pantheria_bace)) {
+  bace_tag <- if (isTRUE(b_pantheria_bace$bace_ran)) "pigauto vs BACE" else "pigauto only (BACE skipped)"
+  h('<tr>',
+    '<td><a href="dev/bench_pantheria_bace_head_to_head.html">PanTHERIA vs BACE</a></td>',
+    '<td><em>mixed</em></td>',
+    '<td>PanTHERIA subset (n = ', b_pantheria_bace$n_subset, ')</td>',
+    '<td>', bace_tag, '</td>',
+    '<td colspan="2">Seed = ', b_pantheria_bace$seed, ', miss_frac = ', b_pantheria_bace$miss_frac, '</td>',
+    '<td>&mdash;</td>',
+    '<td>per-trait metrics</td>',
+    '</tr>')
+} else {
+  make_row("PanTHERIA vs BACE", "mixed", "PanTHERIA subset", "", NA, NA, NA, "acc / RMSE / r", "dev/bench_pantheria_bace_head_to_head.html", "pending")
+}
+
 h('</tbody></table>')
 
 # ---------------------------------------------------------------------------
