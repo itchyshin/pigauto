@@ -90,14 +90,16 @@ timed <- function(expr) {
 run_pigauto_default <- function() {
   pigauto::impute(df_miss, tree, log_transform = TRUE,
                     missing_frac = 0, verbose = FALSE, seed = SEED,
-                    epochs = 500L, em_iterations = 0L)
+                    epochs = 500L, em_iterations = 0L,
+                    n_imputations = 20L)
 }
 
 # pigauto_em5 (Phase 6 EM, diagonal)
 run_pigauto_em5 <- function() {
   pigauto::impute(df_miss, tree, log_transform = TRUE,
                     missing_frac = 0, verbose = FALSE, seed = SEED,
-                    epochs = 500L, em_iterations = 5L)
+                    epochs = 500L, em_iterations = 5L,
+                    n_imputations = 20L)
 }
 
 # BACE (optional — skipped if BACE is not installed)
@@ -129,7 +131,12 @@ run_bace <- function() {
 # Evaluation
 # -------------------------------------------------------------------------
 
-eval_completed <- function(completed_df, truth_df, mask, method) {
+eval_completed <- function(completed_df, truth_df, mask, method,
+                            res_obj = NULL) {
+  lo      <- if (!is.null(res_obj)) res_obj$prediction$conformal_lower else NULL
+  hi      <- if (!is.null(res_obj)) res_obj$prediction$conformal_upper else NULL
+  mi_list <- if (!is.null(res_obj)) res_obj$prediction$imputed_datasets else NULL
+
   rows <- list()
   for (v in colnames(mask)) {
     idx <- which(mask[, v])
@@ -154,6 +161,34 @@ eval_completed <- function(completed_df, truth_df, mask, method) {
         method = method, trait = v, metric = "pearson_r", value = pear,
         n_cells = length(idx)
       )
+      t_num <- as.numeric(t_v)
+      if (!is.null(lo) && !is.null(hi) && v %in% colnames(lo)) {
+        lo_v <- lo[idx, v]; hi_v <- hi[idx, v]
+        valid <- is.finite(lo_v) & is.finite(hi_v) & is.finite(t_num)
+        if (any(valid)) {
+          hits <- t_num[valid] >= lo_v[valid] & t_num[valid] <= hi_v[valid]
+          rows[[length(rows) + 1L]] <- data.frame(
+            method = method, trait = v, metric = "coverage95_conformal",
+            value = mean(hits), n_cells = sum(valid))
+        }
+      }
+      if (!is.null(mi_list) && length(mi_list) > 1L && v %in% names(mi_list[[1]])) {
+        draws_mat <- vapply(mi_list, function(d) as.numeric(d[idx, v]),
+                             numeric(length(idx)))
+        if (!is.matrix(draws_mat))
+          draws_mat <- matrix(draws_mat, ncol = length(mi_list))
+        if (nrow(draws_mat) == length(idx) && ncol(draws_mat) > 1L) {
+          q_lo <- apply(draws_mat, 1L, stats::quantile, probs = 0.025, na.rm = TRUE)
+          q_hi <- apply(draws_mat, 1L, stats::quantile, probs = 0.975, na.rm = TRUE)
+          valid <- is.finite(q_lo) & is.finite(q_hi) & is.finite(t_num)
+          if (any(valid)) {
+            hits <- t_num[valid] >= q_lo[valid] & t_num[valid] <= q_hi[valid]
+            rows[[length(rows) + 1L]] <- data.frame(
+              method = method, trait = v, metric = "coverage95_mcdropout",
+              value = mean(hits), n_cells = sum(valid))
+          }
+        }
+      }
     }
   }
   do.call(rbind, rows)
@@ -166,13 +201,15 @@ eval_completed <- function(completed_df, truth_df, mask, method) {
 cat("\n=== pigauto_default ===\n")
 r_def <- timed(run_pigauto_default())
 ev_def <- eval_completed(r_def$val$completed, df, user_mask_test,
-                           method = "pigauto_default")
+                           method = "pigauto_default",
+                           res_obj = r_def$val)
 ev_def$wall_s <- r_def$wall
 
 cat("\n=== pigauto_em5 ===\n")
 r_em5 <- timed(run_pigauto_em5())
 ev_em5 <- eval_completed(r_em5$val$completed, df, user_mask_test,
-                           method = "pigauto_em5")
+                           method = "pigauto_em5",
+                           res_obj = r_em5$val)
 ev_em5$wall_s <- r_em5$wall
 
 cat("\n=== BACE (may skip) ===\n")

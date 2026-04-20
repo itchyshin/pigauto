@@ -170,26 +170,38 @@ method_pigauto_lp_approx <- function(df_miss, tree, truth, mask) {
 }
 
 # pigauto_default: em_iterations = 0L.
+# n_imputations=20 gives MC-dropout draws for coverage computation; the
+# fitted res is attached as an attribute so eval_cell can read conformal
+# intervals + imputed_datasets.
 method_pigauto_default <- function(df_miss, tree, truth, mask, seed) {
   res <- pigauto::impute(df_miss, tree, epochs = 300L, verbose = FALSE,
-                           n_imputations = 1L, seed = seed,
+                           n_imputations = 20L, seed = seed,
                            missing_frac = 0.25, em_iterations = 0L)
-  res$completed
+  out <- res$completed
+  attr(out, "res_obj") <- res
+  out
 }
 
 # pigauto_em5: em_iterations = 5L (Phase 6 diagonal).
 method_pigauto_em5 <- function(df_miss, tree, truth, mask, seed) {
   res <- pigauto::impute(df_miss, tree, epochs = 300L, verbose = FALSE,
-                           n_imputations = 1L, seed = seed,
+                           n_imputations = 20L, seed = seed,
                            missing_frac = 0.25, em_iterations = 5L)
-  res$completed
+  out <- res$completed
+  attr(out, "res_obj") <- res
+  out
 }
 
 # -------------------------------------------------------------------------
-# Evaluation
+# Evaluation — RMSE / Pearson r / accuracy + both coverage types
 # -------------------------------------------------------------------------
 
 eval_cell <- function(truth, completed, mask) {
+  res_obj <- attr(completed, "res_obj")
+  lo      <- if (!is.null(res_obj)) res_obj$prediction$conformal_lower else NULL
+  hi      <- if (!is.null(res_obj)) res_obj$prediction$conformal_upper else NULL
+  mi_list <- if (!is.null(res_obj)) res_obj$prediction$imputed_datasets else NULL
+
   rows <- list()
   for (v in names(truth)) {
     idx <- mask[[v]]
@@ -213,6 +225,34 @@ eval_cell <- function(truth, completed, mask) {
         trait = v, type = "continuous",
         metric = "pearson_r", value = pear
       )
+      t_num <- as.numeric(t_v)
+      if (!is.null(lo) && !is.null(hi) && v %in% colnames(lo)) {
+        lo_v <- lo[idx, v]; hi_v <- hi[idx, v]
+        valid <- is.finite(lo_v) & is.finite(hi_v) & is.finite(t_num)
+        if (any(valid)) {
+          hits <- t_num[valid] >= lo_v[valid] & t_num[valid] <= hi_v[valid]
+          rows[[length(rows) + 1L]] <- data.frame(
+            trait = v, type = "continuous",
+            metric = "coverage95_conformal", value = mean(hits))
+        }
+      }
+      if (!is.null(mi_list) && length(mi_list) > 1L && v %in% names(mi_list[[1]])) {
+        draws_mat <- vapply(mi_list, function(d) as.numeric(d[idx, v]),
+                             numeric(length(idx)))
+        if (!is.matrix(draws_mat))
+          draws_mat <- matrix(draws_mat, ncol = length(mi_list))
+        if (nrow(draws_mat) == length(idx) && ncol(draws_mat) > 1L) {
+          q_lo <- apply(draws_mat, 1L, stats::quantile, probs = 0.025, na.rm = TRUE)
+          q_hi <- apply(draws_mat, 1L, stats::quantile, probs = 0.975, na.rm = TRUE)
+          valid <- is.finite(q_lo) & is.finite(q_hi) & is.finite(t_num)
+          if (any(valid)) {
+            hits <- t_num[valid] >= q_lo[valid] & t_num[valid] <= q_hi[valid]
+            rows[[length(rows) + 1L]] <- data.frame(
+              trait = v, type = "continuous",
+              metric = "coverage95_mcdropout", value = mean(hits))
+          }
+        }
+      }
     }
   }
   do.call(rbind, rows)
