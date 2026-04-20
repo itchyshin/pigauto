@@ -20,6 +20,7 @@ impute(
   multi_obs_aggregation = c("hard", "soft"),
   em_iterations = 0L,
   em_tol = 0.001,
+  em_offdiag = FALSE,
   ...
 )
 }
@@ -94,7 +95,15 @@ the per-trait prior SD at iteration \eqn{k+1}, up to
 Passed to \code{\link{fit_baseline}}.}
 
 \item{em_tol}{numeric. Relative-Frobenius convergence tolerance for
-the Phase 6 EM loop. Default \code{1e-3}.}
+the Phase 6 / 7 EM loop. Default \code{1e-3}.}
+
+\item{em_offdiag}{logical. Phase 7 opt-in: when \code{TRUE} AND
+\code{em_iterations >= 2L}, each liability cell's prior uses the
+full conditional-MVN from Σ's off-diagonal entries, so that
+observing one discrete trait shifts (not just tightens) the prior
+on correlated other traits.  Binary + ordinal only; OVR categorical
+stays on Phase 6 diagonal.  Default \code{FALSE}.  Passed to
+\code{\link{fit_baseline}}.}
 
 \item{...}{additional arguments passed to \code{\link{fit_pigauto}}.}
 }

@@ -61,7 +61,14 @@
 #'   \code{em_iterations} times or until \code{em_tol} convergence.
 #'   Passed to \code{\link{fit_baseline}}.
 #' @param em_tol numeric. Relative-Frobenius convergence tolerance for
-#'   the Phase 6 EM loop. Default \code{1e-3}.
+#'   the Phase 6 / 7 EM loop. Default \code{1e-3}.
+#' @param em_offdiag logical. Phase 7 opt-in: when \code{TRUE} AND
+#'   \code{em_iterations >= 2L}, each liability cell's prior uses the
+#'   full conditional-MVN from Σ's off-diagonal entries, so that
+#'   observing one discrete trait shifts (not just tightens) the prior
+#'   on correlated other traits.  Binary + ordinal only; OVR categorical
+#'   stays on Phase 6 diagonal.  Default \code{FALSE}.  Passed to
+#'   \code{\link{fit_baseline}}.
 #' @param ... additional arguments passed to \code{\link{fit_pigauto}}.
 #' @return An object of class \code{"pigauto_result"} with components:
 #'   \describe{
@@ -158,6 +165,7 @@ impute <- function(traits, tree, species_col = NULL,
                    multi_obs_aggregation = c("hard", "soft"),
                    em_iterations = 0L,
                    em_tol = 1e-3,
+                   em_offdiag = FALSE,
                    ...) {
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
 
@@ -190,7 +198,8 @@ impute <- function(traits, tree, species_col = NULL,
   baseline <- fit_baseline(pd, tree, splits = splits, graph = graph,
                            multi_obs_aggregation = multi_obs_aggregation,
                            em_iterations = em_iterations,
-                           em_tol = em_tol)
+                           em_tol = em_tol,
+                           em_offdiag = em_offdiag)
 
   # Free the cached cophenetic distance matrix: fit_pigauto() only
   # needs graph$adj and graph$coords, and at n = 10,000 the ~800 MB

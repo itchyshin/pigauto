@@ -51,9 +51,16 @@
 #'   the threshold-joint path (continuous-only traits pass through the
 #'   existing joint MVN path unchanged).
 #' @param em_tol numeric. Relative-Frobenius convergence tolerance for the
-#'   Phase 6 EM loop. Early-stops when
+#'   Phase 6 / 7 EM loop. Early-stops when
 #'   \eqn{||\Sigma_k - \Sigma_{k-1}||_F / ||\Sigma_{k-1}||_F < }
 #'   \code{em_tol}.  Default \code{1e-3}.
+#' @param em_offdiag logical. Phase 7 opt-in: when \code{TRUE} AND
+#'   \code{em_iterations >= 2L}, each liability cell's prior at iteration
+#'   \eqn{k+1} is the conditional-MVN \eqn{(\mu, sd)} given the posterior
+#'   liability of other traits at iteration \eqn{k}, using the full off-
+#'   diagonal entries of \eqn{\Sigma}. Binary + ordinal only (OVR categorical
+#'   stays on Phase 6 diagonal). Default \code{FALSE} preserves Phase 6
+#'   behaviour.
 #' @return A list with:
 #'   \describe{
 #'     \item{mu}{Numeric matrix (n_species x p_latent), baseline means in
@@ -75,12 +82,19 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                          graph = NULL,
                          multi_obs_aggregation = c("hard", "soft"),
                          em_iterations = 0L,
-                         em_tol = 1e-3) {
+                         em_tol = 1e-3,
+                         em_offdiag = FALSE) {
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
   soft_aggregate <- identical(multi_obs_aggregation, "soft")
   em_iterations <- as.integer(em_iterations)
+  em_offdiag    <- isTRUE(em_offdiag)
   if (!is.finite(em_iterations) || em_iterations < 0L) {
     stop("'em_iterations' must be a non-negative integer.", call. = FALSE)
+  }
+  if (em_offdiag && em_iterations < 2L) {
+    # Silent: em_offdiag has no effect at em=0 (no EM at all) or em=1
+    # (plug-in path; no previous Σ to condition on).
+    em_offdiag <- FALSE
   }
   if (!inherits(data, "pigauto_data")) {
     stop("'data' must be a pigauto_data object (output of preprocess_traits).")
@@ -205,7 +219,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                                        graph = graph,
                                        soft_aggregate = soft_aggregate,
                                        em_iterations = em_iterations,
-                                       em_tol = em_tol)
+                                       em_tol = em_tol,
+                                       em_offdiag = em_offdiag)
     } else {
       fit_joint_threshold_baseline(data, tree, splits = splits,
                                     graph = graph,
