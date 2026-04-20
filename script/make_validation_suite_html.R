@@ -484,6 +484,40 @@ if (!is.null(b_scaling)) {
   make_row("Scaling (v0.9.0)", "mixed", "Simulated (up to 10k sp)", "", NA, NA, NA, "Wall time", "dev/bench_scaling_v090.html", "pending")
 }
 
+# Phase 8 MVP — signal-strength sweep
+b_signal_sweep <- load_rds("bench_signal_sweep")
+if (!is.null(b_signal_sweep)) {
+  cfg <- b_signal_sweep$config
+  h('<tr>',
+    '<td><a href="dev/bench_signal_sweep.html">Signal sweep (Phase 8)</a></td>',
+    '<td><em>mixed</em></td>',
+    '<td>Simulated (n = ', cfg$n_species, ', ', length(cfg$lambdas), ' &lambda; levels)</td>',
+    '<td>Pagel &lambda; &isin; {', paste(cfg$lambdas, collapse = ", "), '}</td>',
+    '<td colspan="2">', length(cfg$methods), ' methods &times; ', cfg$n_reps, ' reps</td>',
+    '<td>&mdash;</td>',
+    '<td>per-trait metric curves</td>',
+    '</tr>')
+} else {
+  make_row("Signal sweep (Phase 8)", "mixed", "Simulated (Pagel \u03bb sweep)", "", NA, NA, NA, "accuracy / RMSE", "dev/bench_signal_sweep.html", "pending")
+}
+
+# Phase 8 MVP — AVONET head-to-head vs BACE
+b_bace_head <- load_rds("bench_bace_avonet_head_to_head")
+if (!is.null(b_bace_head)) {
+  bace_tag <- if (isTRUE(b_bace_head$bace_ran)) "pigauto vs BACE" else "pigauto only (BACE skipped)"
+  h('<tr>',
+    '<td><a href="dev/bench_bace_avonet_head_to_head.html">BACE head-to-head (Phase 8)</a></td>',
+    '<td><em>mixed</em></td>',
+    '<td>AVONET 300 + tree300</td>',
+    '<td>', bace_tag, '</td>',
+    '<td colspan="2">Seed = ', b_bace_head$seed, ', miss_frac = ', b_bace_head$miss_frac, '</td>',
+    '<td>&mdash;</td>',
+    '<td>per-trait metrics</td>',
+    '</tr>')
+} else {
+  make_row("BACE head-to-head (Phase 8)", "mixed", "AVONET 300", "", NA, NA, NA, "accuracy / RMSE / r", "dev/bench_bace_avonet_head_to_head.html", "pending")
+}
+
 h('</tbody></table>')
 
 # ---------------------------------------------------------------------------
