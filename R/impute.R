@@ -223,6 +223,17 @@ impute <- function(traits, tree, species_col = NULL,
     ...
   )
 
+  # Belt-and-braces GPU memory reclaim before predict().  fit_pigauto()
+  # already moves its state_dict to CPU and calls cuda_empty_cache()
+  # internally, but doing it again here handles any R-level references
+  # to graph/baseline tensors that may linger between calls.  Essential
+  # at n >= 5000 on cards with <= 46 GB to avoid OOM on the first
+  # predict-stage allocation.
+  invisible(gc(full = TRUE, verbose = FALSE))
+  if (torch::cuda_is_available()) {
+    try(torch::cuda_empty_cache(), silent = TRUE)
+  }
+
   # 6. Predict
   pred <- predict(fit, return_se = TRUE,
                   n_imputations = as.integer(n_imputations))

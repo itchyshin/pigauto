@@ -736,13 +736,35 @@ fit_pigauto <- function(
     n_user_cov             = n_user_cov
   )
 
+  # Move model state to CPU before returning. Otherwise the returned
+  # fit object holds GPU tensor references and the training-time
+  # activations / optimizer state cannot be released by torch's CUDA
+  # caching allocator. At n >= 5000 this keeps ~40 GB live on GPU, and
+  # the downstream predict() path then OOMs on any card < 80 GB. See
+  # GPU bundle jobs 4741993/4741994/4742888/4742889 on 2026-04-21 for
+  # the Vulcan L40S reproducer.
+  model_state_cpu <- lapply(model$state_dict(),
+                             function(t) t$detach()$cpu())
+
+  # Drop all local GPU tensor refs, then force torch's caching
+  # allocator to reclaim by calling cuda_empty_cache().  R's `rm`
+  # removes the bindings; the underlying tensors become unreachable
+  # and torch can release them at the next empty_cache() call.
+  local_gpu_tensors <- grep("^t_", ls(), value = TRUE)
+  if (length(local_gpu_tensors)) rm(list = local_gpu_tensors)
+  rm(model)
+  invisible(gc(full = TRUE, verbose = FALSE))
+  if (torch::cuda_is_available()) {
+    try(torch::cuda_empty_cache(), silent = TRUE)
+  }
+
   # Backward-compat: store val_rmse and test_rmse names
   # (graph$D was stripped earlier, right after tensor creation, so the
   # graph stored here is already the slim version without the cophenetic
   # distance matrix.)
   structure(
     list(
-      model_state    = model$state_dict(),
+      model_state    = model_state_cpu,
       model_config   = model_config,
       graph          = graph,
       baseline       = baseline,

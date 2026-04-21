@@ -1,5 +1,23 @@
 # pigauto 0.9.1.9000 (dev)
 
+## GPU memory fix at predict stage (large n)
+
+- `fit_pigauto()` now moves its returned `model_state` to CPU and
+  calls `torch::cuda_empty_cache()` before returning, so the training
+  run's activations, optimizer state, and per-epoch intermediate
+  tensors can be reclaimed by torch's CUDA caching allocator. Prior
+  to this fix, the fit object held GPU tensor refs that kept
+  ~40 GB of training-time memory resident, and the downstream
+  `predict()` path OOM'd on any card with <= 80 GB at n >= 5000.
+- `impute()` now calls `gc()` + `torch::cuda_empty_cache()` between
+  `fit_pigauto()` and `predict()` as belt-and-braces.
+- Reproducer: Vulcan L40S (46 GB) at n=5000 or n=9993, default or
+  compact config; predicted in 382 MB / 192 MB / 762 MB allocations
+  on a 43 GB-already-used GPU. All four configurations on 2026-04-21
+  died at the same step with the same root cause.
+- No behavioural change for users: same `pigauto_fit` shape,
+  `predict()` output identical; just no longer OOM at scale.
+
 ## Phase 7 EM: off-diagonal conditioning (opt-in, on top of Phase 6)
 
 - New argument `em_offdiag = FALSE` on `impute()` and `fit_baseline()`.
