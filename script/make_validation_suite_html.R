@@ -539,15 +539,28 @@ if (!is.null(b_pantheria)) {
 b_fish <- load_rds("bench_fishbase")
 if (!is.null(b_fish) && !is.null(b_fish$results)) {
   r <- b_fish$results
-  # Headline: Length RMSE (mean vs pigauto)
-  m <- r[r$trait == "Length" & r$metric == "rmse", ]
+  # Headline: BodyShapeI accuracy (categorical trait, not affected by
+  # the log-transform MI-pooling issue that amplifies outliers on
+  # Length / Weight at n>=5000 -- tracked as followup of Issue #40).
+  m <- r[r$trait == "BodyShapeI" & r$metric == "accuracy", ]
   if (nrow(m) >= 2) {
     mean_v <- m$value[m$method == "mean_baseline"]
     pig_v  <- m$value[m$method == "pigauto_default"]
-    headline <- sprintf("Length RMSE %.1f &rarr; <b>%.1f</b> (&minus;%.0f%%)",
-                         mean_v, pig_v,
-                         100 * (mean_v - pig_v) / mean_v)
-  } else headline <- "(see report)"
+    pp <- 100 * (pig_v - mean_v)
+    headline <- sprintf("BodyShapeI accuracy %.2f &rarr; <b>%.2f</b> (+%.0f pp)",
+                         mean_v, pig_v, pp)
+  } else {
+    # Fallback to Troph RMSE (log-transformed but low dynamic range,
+    # so MI-pooling outliers don't dominate).
+    m <- r[r$trait == "Troph" & r$metric == "rmse", ]
+    if (nrow(m) >= 2) {
+      mean_v <- m$value[m$method == "mean_baseline"]
+      pig_v  <- m$value[m$method == "pigauto_default"]
+      headline <- sprintf("Troph RMSE %.2f &rarr; <b>%.2f</b> (&minus;%.0f%%)",
+                           mean_v, pig_v,
+                           100 * (mean_v - pig_v) / mean_v)
+    } else headline <- "(see report)"
+  }
   h('<tr>')
   h('<td><a href="dev/bench_fishbase.html">FishBase + fishtree</a></td>')
   h('<td><em>5 continuous + 1 categorical</em></td>')
