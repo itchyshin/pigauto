@@ -256,9 +256,25 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
         } else {
           pred <- (1 - out$rs) * t_BM_draw + out$rs * out$delta
         }
+        # Drop the previous X_iter before binding the new one so that the
+        # old forward-pass intermediates (attention matrices, FFN outputs,
+        # and all their stored views) become unreachable and available for
+        # the caching allocator to reclaim on cuda_empty_cache().  At
+        # n=5000 with refine_steps=8 and n_imputations=5, skipping this
+        # step causes ~22 GB of attention-per-step to pile up across
+        # refinements -- see job 4745401 (n=5000, DEBUG_GPU_MEM=1) for
+        # the reproducer.
         X_iter <- pred
+        rm(covs0, out, pred)
       }
+      rm(mask_ind0)
     })
+    # Release the accumulated intra-draw intermediates before the next
+    # MI draw starts. cuda_empty_cache() actually reclaims the allocator
+    # blocks -- without it, torch holds the 22 GB chunk forever.
+    if (torch::cuda_is_available()) {
+      try(torch::cuda_empty_cache(), silent = TRUE)
+    }
     latent_runs[[m]] <- as.matrix(X_iter$cpu())
     gpu_mem_checkpoint(sprintf("predict: after MI draw %d / %d", m, n_imp))
   }
