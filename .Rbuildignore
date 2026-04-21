@@ -25,5 +25,6 @@
 ^specs$
 ^submit_v090_cloud$
 ^submit_v090_vulcan$
+^submit_v090_vulcan_gpu$
 ^\.worktrees$
 ^\.devcontainer$
