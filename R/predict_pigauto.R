@@ -119,6 +119,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   )
   model$to(device = device)
   model$load_state_dict(object$model_state)
+  gpu_mem_checkpoint("predict: after model rebuild + load_state_dict")
 
   # Calibrated gates override learned gates
   calibrated_gates <- object$calibrated_gates  # NULL if not available
@@ -193,6 +194,8 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     )
   }
 
+  gpu_mem_checkpoint("predict: after input tensor creation (adj, D_sq, coords, MU)")
+
   # ---- Inference (single or MC dropout) ------------------------------------
   latent_runs <- vector("list", n_imp)
 
@@ -257,6 +260,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
       }
     })
     latent_runs[[m]] <- as.matrix(X_iter$cpu())
+    gpu_mem_checkpoint(sprintf("predict: after MI draw %d / %d", m, n_imp))
   }
 
   # Residual scale (per-column vector or legacy scalar)
