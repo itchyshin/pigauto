@@ -11,6 +11,33 @@ get_device <- function() {
   }
 }
 
+# GPU memory snapshot helper for debugging large-n OOM. Returns a
+# one-line summary like "23.4/42.9 GiB (alloc/reserved)" on CUDA,
+# or the empty string otherwise (so it's safe to always call).
+# Set PIGAUTO_DEBUG_GPU_MEM=1 to enable printing in fit_pigauto.
+gpu_mem_str <- function() {
+  if (!torch::cuda_is_available()) return("")
+  stats <- tryCatch(torch::cuda_memory_stats(), error = function(e) NULL)
+  if (is.null(stats)) return("")
+  alloc    <- stats[["allocated_bytes.all.current"]]
+  reserved <- stats[["reserved_bytes.all.current"]]
+  if (is.null(alloc) || is.null(reserved)) return("")
+  sprintf("%.2f/%.2f GiB (alloc/reserved)",
+           alloc / 1024^3, reserved / 1024^3)
+}
+
+# Convenience logger: prints `[GPU @ tag] <mem>` when
+# PIGAUTO_DEBUG_GPU_MEM=1 is set and CUDA is available. No-op
+# otherwise.  Used by fit_pigauto() at phase transitions to
+# localise where the ~40 GB predict-stage OOM originates.
+gpu_mem_checkpoint <- function(tag) {
+  if (!identical(Sys.getenv("PIGAUTO_DEBUG_GPU_MEM"), "1")) return(invisible())
+  m <- gpu_mem_str()
+  if (!nchar(m)) return(invisible())
+  message(sprintf("[GPU @ %s] %s", tag, m))
+  invisible()
+}
+
 # RMSE computed entirely in torch (avoids per-epoch CPU copy)
 rmse_torch <- function(pred, truth, mask_bool) {
   d <- pred - truth

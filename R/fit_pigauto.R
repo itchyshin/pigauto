@@ -442,6 +442,8 @@ fit_pigauto <- function(
   opt <- torch::optim_adamw(model$parameters, lr = lr,
                              weight_decay = weight_decay)
 
+  gpu_mem_checkpoint("after model$to(device) + optimizer")
+
   # ---- Training loop --------------------------------------------------------
   best_val      <- Inf
   best_state    <- NULL
@@ -636,12 +638,15 @@ fit_pigauto <- function(
     }
   }
 
+  gpu_mem_checkpoint("end of training loop (before restoring best state)")
   if (!is.null(best_state)) model$load_state_dict(best_state)
+  gpu_mem_checkpoint("after model$load_state_dict(best_state)")
 
   # ---- Post-training gate calibration (validation set) --------------------
   calibrated_gates <- NULL
   if (has_val && has_trait_map) {
     if (verbose) message("Calibrating gates on validation set...")
+    gpu_mem_checkpoint("entering gate calibration")
     model$eval()
 
     # Forward pass on val set (use t_X_eval so held-out truths do not leak).
@@ -678,6 +683,7 @@ fit_pigauto <- function(
   # ---- Conformal prediction scores (validation set) -----------------------
   conformal_scores <- NULL
   if (has_val && has_trait_map && !is.null(calibrated_gates)) {
+    gpu_mem_checkpoint("entering compute_conformal_scores")
     conformal_scores <- compute_conformal_scores(
       trait_map        = trait_map,
       calibrated_gates = calibrated_gates,
@@ -743,8 +749,10 @@ fit_pigauto <- function(
   # the downstream predict() path then OOMs on any card < 80 GB. See
   # GPU bundle jobs 4741993/4741994/4742888/4742889 on 2026-04-21 for
   # the Vulcan L40S reproducer.
+  gpu_mem_checkpoint("before state_dict CPU move")
   model_state_cpu <- lapply(model$state_dict(),
                              function(t) t$detach()$cpu())
+  gpu_mem_checkpoint("after state_dict CPU move (before rm + empty_cache)")
 
   # Drop all local GPU tensor refs, then force torch's caching
   # allocator to reclaim by calling cuda_empty_cache().  R's `rm`
@@ -757,6 +765,7 @@ fit_pigauto <- function(
   if (torch::cuda_is_available()) {
     try(torch::cuda_empty_cache(), silent = TRUE)
   }
+  gpu_mem_checkpoint("end of fit_pigauto (after rm + gc + empty_cache)")
 
   # Backward-compat: store val_rmse and test_rmse names
   # (graph$D was stripped earlier, right after tensor creation, so the
