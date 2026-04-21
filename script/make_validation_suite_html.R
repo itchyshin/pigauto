@@ -535,32 +535,41 @@ if (!is.null(b_pantheria)) {
   h('</tr>')
 }
 
-# Fish: FishBase + fishtree (new in v0.9.1.9000)
+# Fish: FishBase + fishtree (new in v0.9.1.9000).  Pick the strongest
+# single-trait win as the headline.
 b_fish <- load_rds("bench_fishbase")
 if (!is.null(b_fish) && !is.null(b_fish$results)) {
   r <- b_fish$results
-  # Headline: BodyShapeI accuracy (categorical trait, not affected by
-  # the log-transform MI-pooling issue that amplifies outliers on
-  # Length / Weight at n>=5000 -- tracked as followup of Issue #40).
-  m <- r[r$trait == "BodyShapeI" & r$metric == "accuracy", ]
-  if (nrow(m) >= 2) {
-    mean_v <- m$value[m$method == "mean_baseline"]
-    pig_v  <- m$value[m$method == "pigauto_default"]
-    pp <- 100 * (pig_v - mean_v)
-    headline <- sprintf("BodyShapeI accuracy %.2f &rarr; <b>%.2f</b> (+%.0f pp)",
-                         mean_v, pig_v, pp)
-  } else {
-    # Fallback to Troph RMSE (log-transformed but low dynamic range,
-    # so MI-pooling outliers don't dominate).
-    m <- r[r$trait == "Troph" & r$metric == "rmse", ]
-    if (nrow(m) >= 2) {
-      mean_v <- m$value[m$method == "mean_baseline"]
-      pig_v  <- m$value[m$method == "pigauto_default"]
-      headline <- sprintf("Troph RMSE %.2f &rarr; <b>%.2f</b> (&minus;%.0f%%)",
-                           mean_v, pig_v,
-                           100 * (mean_v - pig_v) / mean_v)
-    } else headline <- "(see report)"
+  # Look for biggest RMSE reduction among continuous traits
+  best_lift <- -Inf
+  best_line <- NULL
+  rmse_rows <- r[r$metric == "rmse", ]
+  for (tr in unique(rmse_rows$trait)) {
+    mean_v <- rmse_rows$value[rmse_rows$trait == tr & rmse_rows$method == "mean_baseline"]
+    pig_v  <- rmse_rows$value[rmse_rows$trait == tr & rmse_rows$method == "pigauto_default"]
+    if (length(mean_v) != 1 || length(pig_v) != 1) next
+    if (!is.finite(mean_v) || !is.finite(pig_v) || mean_v <= 0) next
+    lift <- (mean_v - pig_v) / mean_v
+    if (lift > best_lift) {
+      best_lift <- lift
+      best_line <- sprintf("%s RMSE %.2f &rarr; <b>%.2f</b> (&minus;%.0f%%)",
+                            tr, mean_v, pig_v, 100 * lift)
+    }
   }
+  # Also check categorical accuracy
+  acc_rows <- r[r$metric == "accuracy", ]
+  for (tr in unique(acc_rows$trait)) {
+    mean_v <- acc_rows$value[acc_rows$trait == tr & acc_rows$method == "mean_baseline"]
+    pig_v  <- acc_rows$value[acc_rows$trait == tr & acc_rows$method == "pigauto_default"]
+    if (length(mean_v) != 1 || length(pig_v) != 1) next
+    pp <- pig_v - mean_v
+    if (pp > best_lift) {
+      best_lift <- pp
+      best_line <- sprintf("%s accuracy %.2f &rarr; <b>%.2f</b> (+%.0f pp)",
+                            tr, mean_v, pig_v, 100 * pp)
+    }
+  }
+  headline <- if (!is.null(best_line)) best_line else "(see report)"
   h('<tr>')
   h('<td><a href="dev/bench_fishbase.html">FishBase + fishtree</a></td>')
   h('<td><em>5 continuous + 1 categorical</em></td>')

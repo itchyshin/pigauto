@@ -8,9 +8,12 @@
   with 6 mixed-type traits (Length, Weight, BodyShapeI, DepthRangeDeep,
   Vulnerability, Troph). Completes the vertebrate breadth triad:
   birds (AVONET), mammals (PanTHERIA), fish (FishBase + fishtree).
-- Full-scope result on Apple Silicon MPS (2.5 hr wall):
-  BodyShapeI accuracy 0.46 → 0.78 (+31 pp); Troph RMSE -24%;
-  Vulnerability RMSE -16%; DepthRangeDeep RMSE -12%.
+- Full-scope result on Apple Silicon MPS (2.5 hr wall, post median-
+  pool fix dc8cffa):
+  Vulnerability RMSE 17.9 → 9.9 (-45%); Length RMSE 41.2 → 25.5
+  (-38%, r=0.81); BodyShapeI accuracy 0.46 → 0.78 (+31 pp);
+  Troph RMSE -23%; DepthRangeDeep RMSE -10%; Weight RMSE -3%
+  (r=0.42 vs 0.04 under mean pool).
 - HTML generator: `script/make_bench_fishbase_html.R` + pkgdown
   mirror at `pkgdown/assets/dev/bench_fishbase.html`.
 
