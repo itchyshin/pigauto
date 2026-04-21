@@ -60,6 +60,30 @@ banner <- if (!is.null(b$n_subset) && !is.na(b$n_subset)) {
 } else ""
 banner_bace <- if (!bace_ran) "<p><em>BACE skipped</em> (not installed or PIGAUTO_RUN_BACE != 1).</p>" else ""
 
+# Known-issue caveat for the log-transform + MI-pooling + expm1 decode
+# amplification that blows up Length / Weight RMSE at n >= 5000.
+# Applies only when n_species is large enough for the outlier
+# pattern to dominate (empirically > ~3000).
+caveat <- if (!is.null(b$n_species) && b$n_species >= 5000L) {
+  paste0(
+    "<div style='background:#fef3c7;border-left:4px solid #d97706;",
+    "padding:1em 1.2em;border-radius:4px;margin:1em 0'>",
+    "<b>Known issue:</b> pigauto's Length / Weight RMSE are inflated on ",
+    "this run by an MI-pooling + expm1 decode bug. With ",
+    "n_imputations &gt; 1 and log-transformed continuous traits, ",
+    "a few dropout-noisy draws with high latent values decode to absurd ",
+    "magnitudes, and the mean pool across M imputations is dominated by ",
+    "those outliers. Pattern mirrors Issue #40 (fixed for count / ",
+    "proportion via PR #41 median pooling) but has not yet been ",
+    "extended to log-transformed continuous traits. Calibrated gate ",
+    "on Length was 0 on this run &mdash; pigauto falls back to the ",
+    "baseline mean anyway, so the decoded Length RMSE here is NOT a ",
+    "signal about pigauto&apos;s modelling quality, just about the ",
+    "MI-pooling decode path. The BodyShapeI / Troph / Vulnerability / ",
+    "DepthRangeDeep lifts are unaffected and show pigauto&apos;s real ",
+    "performance at this scale.</div>")
+} else ""
+
 html <- paste0(
   "<!DOCTYPE html><html><head><meta charset='utf-8'>",
   "<title>FishBase + fishtree - pigauto + BACE</title>",
@@ -72,7 +96,7 @@ html <- paste0(
           b$n_species, b$seed, b$miss_frac),
   "benchmark completing the vertebrate breadth triad ",
   "(birds via AVONET, mammals via PanTHERIA, fish via FishBase + fishtree).</p>",
-  banner, banner_bace,
+  banner, banner_bace, caveat,
   "<h2>Per-trait metrics (winner highlighted)</h2>",
   "<table><tr><th>trait</th><th>metric</th>",
   paste0("<th>", method_cols, "</th>", collapse = ""), "</tr>",

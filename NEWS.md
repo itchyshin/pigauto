@@ -1,5 +1,39 @@
 # pigauto 0.9.1.9000 (dev)
 
+## FishBase + fishtree benchmark (vertebrate breadth triad complete)
+
+- New `script/bench_fishbase.R` benchmarks pigauto on the intersection
+  of `fishtree::fishtree_phylogeny()` (Rabosky et al. 2018) and
+  rfishbase's `load_taxa() + species() + ecology()` -- 10,654 species
+  with 6 mixed-type traits (Length, Weight, BodyShapeI, DepthRangeDeep,
+  Vulnerability, Troph). Completes the vertebrate breadth triad:
+  birds (AVONET), mammals (PanTHERIA), fish (FishBase + fishtree).
+- Full-scope result on Apple Silicon MPS (2.5 hr wall):
+  BodyShapeI accuracy 0.46 → 0.78 (+31 pp); Troph RMSE -24%;
+  Vulnerability RMSE -16%; DepthRangeDeep RMSE -12%.
+- HTML generator: `script/make_bench_fishbase_html.R` + pkgdown
+  mirror at `pkgdown/assets/dev/bench_fishbase.html`.
+
+## Known issue: log-transform MI-pooling decode amplification at n >= 5000
+
+- When `n_imputations > 1` and a continuous trait is auto-log-transformed
+  (default for all-positive numeric columns), `pool_imputations()` pools
+  via `rowMeans()` of the decoded values. Because `mean(exp(x)) !=
+  exp(mean(x))` (Jensen inequality), a few dropout-noisy draws with high
+  latent values decode to absurd magnitudes and dominate the mean pool.
+  Empirically kicks in around n >= 5000 where the probability of any
+  draw being in the tail becomes non-trivial.
+- Concrete example: on the n=10,654 FishBase bench, pigauto's Length
+  RMSE is 3,718 vs the mean-baseline's 41 -- a decode artefact, NOT a
+  real modelling failure (the calibrated gate on Length was 0, so
+  pigauto falls back to the baseline mean anyway).
+- Issue #40 addressed this pattern for count / proportion traits via PR
+  #41's median-pool-after-decode. The fix has not been extended to
+  log-transformed continuous traits. Safe workarounds today: pass
+  `log_transform = FALSE` for traits where you expect large dynamic
+  range, or set `n_imputations = 1`.
+- Tracked as Issue #40-followup for v0.9.2.
+
 ## GPU memory fix at predict stage (large n)
 
 - `fit_pigauto()` now moves its returned `model_state` to CPU and
