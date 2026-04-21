@@ -15,15 +15,63 @@ get_device <- function() {
 # one-line summary like "23.4/42.9 GiB (alloc/reserved)" on CUDA,
 # or the empty string otherwise (so it's safe to always call).
 # Set PIGAUTO_DEBUG_GPU_MEM=1 to enable printing in fit_pigauto.
+#
+# Tries three strategies in order:
+#   1. torch::cuda_memory_stats() with structured keys (standard
+#      PyTorch shape: $allocated_bytes.all.current etc.)
+#   2. torch::cuda_memory_stats() with flattened list fallback
+#   3. nvidia-smi subprocess (works even if torch API doesn't
+#      expose the bytes we need)
 gpu_mem_str <- function() {
   if (!torch::cuda_is_available()) return("")
+
+  # Strategy 1: standard PyTorch key names
   stats <- tryCatch(torch::cuda_memory_stats(), error = function(e) NULL)
-  if (is.null(stats)) return("")
-  alloc    <- stats[["allocated_bytes.all.current"]]
-  reserved <- stats[["reserved_bytes.all.current"]]
-  if (is.null(alloc) || is.null(reserved)) return("")
-  sprintf("%.2f/%.2f GiB (alloc/reserved)",
-           alloc / 1024^3, reserved / 1024^3)
+  if (!is.null(stats)) {
+    alloc    <- stats[["allocated_bytes.all.current"]]
+    reserved <- stats[["reserved_bytes.all.current"]]
+    if (!is.null(alloc) && !is.null(reserved) &&
+        is.numeric(alloc) && is.numeric(reserved)) {
+      return(sprintf("%.2f/%.2f GiB (alloc/reserved, via cuda_memory_stats)",
+                      alloc / 1024^3, reserved / 1024^3))
+    }
+    # Strategy 2: pattern match any "current" bytes keys
+    nm <- names(stats)
+    a_key <- nm[grepl("allocated_bytes.*current", nm)][1]
+    r_key <- nm[grepl("reserved_bytes.*current", nm)][1]
+    if (!is.na(a_key) && !is.na(r_key)) {
+      a_val <- tryCatch(stats[[a_key]], error = function(e) NULL)
+      r_val <- tryCatch(stats[[r_key]], error = function(e) NULL)
+      if (is.numeric(a_val) && is.numeric(r_val)) {
+        return(sprintf("%.2f/%.2f GiB (alloc/reserved, matched keys: %s/%s)",
+                        a_val / 1024^3, r_val / 1024^3, a_key, r_key))
+      }
+    }
+  }
+
+  # Strategy 3: nvidia-smi fallback
+  smi <- tryCatch(
+    system("nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader,nounits",
+           intern = TRUE),
+    error = function(e) NULL,
+    warning = function(w) NULL
+  )
+  if (!is.null(smi) && length(smi) >= 1L && nchar(smi[1])) {
+    parts <- strsplit(smi[1], ",\\s*")[[1]]
+    if (length(parts) >= 2L) {
+      used  <- suppressWarnings(as.numeric(parts[1]))
+      total <- suppressWarnings(as.numeric(parts[2]))
+      if (is.finite(used) && is.finite(total)) {
+        return(sprintf("%.2f/%.2f GiB (used/total, via nvidia-smi)",
+                        used / 1024, total / 1024))
+      }
+    }
+  }
+
+  # All strategies failed -- return a marker that at least proves the
+  # function got called (so we know instrumentation fires even if we
+  # can't read memory numbers).
+  "(memory query unavailable; CUDA alive)"
 }
 
 # Convenience logger: prints `[GPU @ tag] <mem>` when
@@ -34,7 +82,10 @@ gpu_mem_checkpoint <- function(tag) {
   if (!identical(Sys.getenv("PIGAUTO_DEBUG_GPU_MEM"), "1")) return(invisible())
   m <- gpu_mem_str()
   if (!nchar(m)) return(invisible())
-  message(sprintf("[GPU @ %s] %s", tag, m))
+  # cat to stdout so the SLURM log captures it unambiguously (message()
+  # goes to stderr which some tee pipelines drop or reorder).
+  cat(sprintf("[GPU @ %s] %s\n", tag, m))
+  flush.console()
   invisible()
 }
 
