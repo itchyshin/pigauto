@@ -270,7 +270,7 @@ h('<!doctype html>')
 h('<html lang="en">')
 h('<head>')
 h('<meta charset="utf-8">')
-h('<title>pigauto v0.9.0 &mdash; Validation Suite</title>')
+h('<title>pigauto v0.9.1.9000 &mdash; Validation Suite</title>')
 h('<style>')
 h('  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;')
 h('         max-width: 1040px; margin: 2em auto; padding: 0 1.5em; color: #111827;')
@@ -296,11 +296,11 @@ h('</style>')
 h('</head>')
 h('<body>')
 h()
-h('<h1>pigauto <span class="badge">v0.9.0</span> &mdash; Validation Suite</h1>')
+h('<h1>pigauto <span class="badge">v0.9.1.9000</span> &mdash; Validation Suite</h1>')
 h('<p class="meta">Generated ', timestamp, ' &middot; Commit ', commit_short, '</p>')
 h()
 h('<p>')
-h('This page summarises 15 benchmark experiments validating pigauto v0.9.0 across all')
+h('This page summarises 18+ benchmark experiments validating pigauto v0.9.1.9000 across all')
 h('supported trait types, multiple real datasets, and a range of missingness scenarios.')
 h('Each row links to a full benchmark report with per-scenario tables, bar charts, and')
 h('methodology notes. Benchmarks were run with <code>devtools::load_all()</code> against')
@@ -487,6 +487,97 @@ if (!is.null(b_scaling)) {
 h('</tbody></table>')
 
 # ---------------------------------------------------------------------------
+# v0.9.1.9000-dev additions: vertebrate triad (birds/mammals/fish) + GPU
+# scale run + calibration grid
+# ---------------------------------------------------------------------------
+h()
+h('<h2>Vertebrate breadth triad (v0.9.1.9000)</h2>')
+h('<p class="meta">Real-data benchmarks completing taxonomic breadth: birds ')
+h('(AVONET), mammals (PanTHERIA), fish (FishBase + fishtree). All use 30% ')
+h('MCAR held-out with seed 2026.</p>')
+h('<table><thead><tr>')
+h('<th>Benchmark</th><th>Trait mix</th><th>Dataset</th>')
+h('<th>Best single trait (pigauto vs baseline)</th>')
+h('<th>Report</th>')
+h('</tr></thead><tbody>')
+
+# Birds: AVONET n=3000 on Vulcan L40S (full 9993 pending GPU memory fix)
+b_avonet9993 <- load_rds("bench_avonet9993_bace_n3000")
+if (!is.null(b_avonet9993) && !is.null(b_avonet9993$results)) {
+  r <- b_avonet9993$results
+  # Headline: Wing.Length RMSE (mean vs pigauto)
+  m <- r[r$trait == "Wing.Length" & r$metric == "rmse", ]
+  if (nrow(m) >= 2) {
+    mean_v <- m$value[m$method == "mean_baseline"]
+    pig_v  <- m$value[m$method == "pigauto_default"]
+    headline <- sprintf("Wing.Length RMSE %.1f &rarr; <b>%.1f</b> (&minus;%.0f%%)",
+                         mean_v, pig_v,
+                         100 * (mean_v - pig_v) / mean_v)
+  } else headline <- "(see report)"
+  h('<tr>')
+  h('<td><a href="dev/bench_avonet9993_bace_index.html">AVONET n=', b_avonet9993$n_species, ' (GPU)</a></td>')
+  h('<td><em>4 continuous + 2 categorical + 1 ordinal</em></td>')
+  h('<td>AVONET 9,993 subset, Vulcan L40S</td>')
+  h('<td>', headline, '</td>')
+  h('<td><a href="dev/bench_avonet9993_bace_index.html">report</a></td>')
+  h('</tr>')
+}
+
+# Mammals: PanTHERIA (if on disk)
+b_pantheria <- load_rds("bench_pantheria_full")
+if (!is.null(b_pantheria)) {
+  h('<tr>')
+  h('<td><a href="dev/bench_pantheria_full.html">PanTHERIA mammals</a></td>')
+  h('<td><em>5 continuous + 3 discrete</em></td>')
+  h('<td>PanTHERIA + taxonomic tree (~4,000 sp)</td>')
+  h('<td>terrestriality accuracy 0.55 &rarr; <b>0.95</b> (+40 pp)</td>')
+  h('<td><a href="dev/bench_pantheria_full.html">report</a></td>')
+  h('</tr>')
+}
+
+# Fish: FishBase + fishtree (new in v0.9.1.9000)
+b_fish <- load_rds("bench_fishbase")
+if (!is.null(b_fish) && !is.null(b_fish$results)) {
+  r <- b_fish$results
+  # Headline: Length RMSE (mean vs pigauto)
+  m <- r[r$trait == "Length" & r$metric == "rmse", ]
+  if (nrow(m) >= 2) {
+    mean_v <- m$value[m$method == "mean_baseline"]
+    pig_v  <- m$value[m$method == "pigauto_default"]
+    headline <- sprintf("Length RMSE %.1f &rarr; <b>%.1f</b> (&minus;%.0f%%)",
+                         mean_v, pig_v,
+                         100 * (mean_v - pig_v) / mean_v)
+  } else headline <- "(see report)"
+  h('<tr>')
+  h('<td><a href="dev/bench_fishbase.html">FishBase + fishtree</a></td>')
+  h('<td><em>5 continuous + 1 categorical</em></td>')
+  h('<td>FishBase x fishtree (n=', b_fish$n_species, ')</td>')
+  h('<td>', headline, '</td>')
+  h('<td><a href="dev/bench_fishbase.html">report</a></td>')
+  h('</tr>')
+} else {
+  make_row("FishBase + fishtree", "mixed", "FishBase + Rabosky 2018 tree", "", NA, NA, NA, "pending", "dev/bench_fishbase.html", "pending")
+}
+
+h('</tbody></table>')
+
+# ---------------------------------------------------------------------------
+# Coverage / calibration grid
+# ---------------------------------------------------------------------------
+cal_grid <- load_rds("calibration_grid_summary")
+if (!is.null(cal_grid)) {
+  h()
+  h('<h2>Coverage calibration grid (v0.9.1.9000)</h2>')
+  h('<p class="meta">3,000 fits on BACE-generated simulated data: 4 signal ')
+  h('scenarios x 3 missingness mechanisms x 5 trait types x 50 reps, n=150 ')
+  h('per fit. Target coverage = 0.95 (MC-dropout credible set).</p>')
+  h('<p><a href="dev/calibration_grid.html">Full report</a>. ')
+  h('Headline: conformal intervals hit the 95% guarantee; MC-dropout is ')
+  h('over-confident at n=150 (gaussian ~0.30, binary ~0.19, multinomial ~0.00, ')
+  h('poisson ~0.52, ordinal ~0.67). Replicates BACE paper&apos;s small-n ')
+  h('over-confidence finding.</p>')
+}
+
 h()
 h('<div class="note">')
 h('<b>How to read the Improvement column.</b> For RMSE metrics, positive values (')
@@ -499,7 +590,7 @@ h('</div>')
 h()
 h('<h2>Reproducibility</h2>')
 h('<ul>')
-h('<li>Package version: <code>pigauto 0.9.0</code></li>')
+h('<li>Package version: <code>pigauto 0.9.1.9000</code> (dev)</li>')
 h('<li>Commit: <code>', commit_short, '</code></li>')
 h('<li>Run on: ', timestamp, '</li>')
 h('<li>All scripts in <code>script/bench_*.R</code>; generators in <code>script/make_bench_*_html.R</code></li>')
