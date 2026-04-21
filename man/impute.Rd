@@ -21,6 +21,7 @@ impute(
   em_iterations = 0L,
   em_tol = 0.001,
   em_offdiag = FALSE,
+  pool_method = c("median", "mean"),
   ...
 )
 }
@@ -104,6 +105,16 @@ observing one discrete trait shifts (not just tightens) the prior
 on correlated other traits.  Binary + ordinal only; OVR categorical
 stays on Phase 6 diagonal.  Default \code{FALSE}.  Passed to
 \code{\link{fit_baseline}}.}
+
+\item{pool_method}{character. How to pool multiple imputation draws
+(\code{n_imputations > 1}) for count, proportion, and zi_count
+magnitude traits: \code{"median"} (default) takes the per-cell
+median of the \code{M} decoded draws — robust to dropout-noisy
+latents amplified by \code{expm1()} / \code{plogis()} decoders.
+\code{"mean"} restores the pre-v0.9.2 arithmetic-mean pooling.
+Continuous / ordinal / binary / categorical traits always pool by
+mean (or probability average); unaffected by this argument.  See
+\href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.}
 
 \item{...}{additional arguments passed to \code{\link{fit_pigauto}}.}
 }

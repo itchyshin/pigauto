@@ -1,5 +1,27 @@
 # pigauto 0.9.1.9000 (dev)
 
+## Median pooling for MI on count / proportion / zi_count traits (fixes #40)
+
+- New argument `pool_method = c("median", "mean")` on `impute()` and
+  `predict.pigauto_fit()`.  Default `"median"` takes the per-cell
+  median of the M decoded draws when `n_imputations > 1` for **count**,
+  **proportion**, and **zi_count** magnitude traits — robust to
+  dropout-noisy latents that get amplified by `expm1()` / `plogis()`
+  decoders.  `"mean"` restores pre-v0.9.2 arithmetic-mean pooling.
+- **Why this matters**: the PanTHERIA full-scale bench at n = 4,027
+  flagged a pathological RMSE blow-up on `litter_size` at
+  `n_imputations = 20` (default **RMSE 7.7, em5 RMSE 60.0**) — a single
+  dropout-noisy latent draw at ~+5 SD decoded to thousands and
+  contaminated the mean.  With median pooling the RMSE returns to
+  `n_imputations = 1` scale.  Coverage was unaffected (conformal ≥ 0.95,
+  MC-dropout ≥ 0.92); this is purely a point-estimate fix.
+- **Continuous / ordinal / binary / categorical** traits are
+  unaffected — linear or probability-averaged decoders don't amplify
+  latent outliers the same way.  `pool_method` has no effect on them.
+- New test file `tests/testthat/test-count-mi-pooling.R` guards the
+  robustness: 5-draw synthetic with one injected outlier of 1000 on a
+  count trait returns median = 2 (expected) but mean ≈ 202 (bug).
+
 ## Phase 7 EM: off-diagonal conditioning (opt-in, on top of Phase 6)
 
 - New argument `em_offdiag = FALSE` on `impute()` and `fit_baseline()`.
