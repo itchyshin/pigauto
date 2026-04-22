@@ -191,6 +191,17 @@ run_bace <- function() {
     log_line("BACE not installed -- skipping")
     return(list(completed = NULL))
   }
+  # BACE (via MCMCglmm) refuses phylogenies with zero-length edges.
+  # Replace zero edges with a tiny positive value so MCMCglmm accepts
+  # the tree. 1e-8 is below the resolution of any real evolutionary
+  # distance so this is a no-op for the model.
+  tree_b <- tree
+  if (any(tree_b$edge.length == 0, na.rm = TRUE)) {
+    n_zero <- sum(tree_b$edge.length == 0, na.rm = TRUE)
+    log_line(sprintf("Tree has %d zero-length edges -- patching to 1e-8 for BACE", n_zero))
+    tree_b$edge.length[tree_b$edge.length == 0] <- 1e-8
+  }
+
   # Build BACE-shaped data frame with Species column matching phylo tips.
   df_b <- df_miss
   df_b$Species <- rownames(df_miss)
@@ -208,7 +219,7 @@ run_bace <- function() {
     BACE::bace(
       fixformula    = fixformula,
       ran_phylo_form = "~ 1 |Species",
-      phylo         = tree,
+      phylo         = tree_b,
       data          = df_b,
       nitt          = 2000L,
       burnin        = 500L,
