@@ -265,7 +265,11 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
         # refinements -- see job 4745401 (n=5000, DEBUG_GPU_MEM=1) for
         # the reproducer.
         X_iter <- pred
-        rm(covs0, out, pred)
+        # Preserve `out` for the last-iteration reference at line ~283
+        # (rs_val <- out$rs$cpu()$squeeze()).  Drop covs0 and pred
+        # which are safe to release -- X_iter holds the latest pred's
+        # value and the next iteration rebinds both.
+        rm(covs0, pred)
       }
       rm(mask_ind0)
     })
