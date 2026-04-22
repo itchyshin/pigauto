@@ -1,5 +1,48 @@
 # pigauto 0.9.1.9000 (dev)
 
+## Taxonomic-breadth benchmarks: 4 vertebrate classes + kingdom jump to plants
+
+Real-data benches now cover four vertebrate classes plus a pending
+plants run. All use 30% MCAR held-out, seed 2026, and report both
+conformal and MC-dropout 95% coverage alongside RMSE / accuracy.
+
+- **Birds** (`script/bench_avonet9993_bace_n3000.rds`, Vulcan L40S):
+  AVONET n=3,000 subset x 7 traits. Mass RMSE -45%, Beak -55%,
+  Tarsus -46%, Wing -57%; Trophic.Level accuracy +16 pp;
+  Primary.Lifestyle +13 pp. Conformal 0.94-0.96.
+  New driver `script/bench_avonet_full_local.R` runs the full
+  n=9,993 locally on Mac MPS (Vulcan hit a predict-stage OOM at
+  this scale); overnight job, HTML generator
+  `script/make_bench_avonet_full_local_html.R` ready.
+- **Mammals** (from `feature/bench-pantheria`): PanTHERIA n=4,027 x
+  8 traits. **terrestriality accuracy 0.55 -> 0.95 (+40 pp)**;
+  body_mass_g RMSE -27%, head_body_length -75%; diet/habitat
+  breadth +10 pp each. Conformal 0.93-0.96.
+- **Fish** (`script/bench_fishbase.rds`, Mac MPS):
+  FishBase x fishtree n=10,654 x 6 traits.
+  **Vulnerability RMSE -45%**, Length -38% (r=0.81), BodyShapeI
+  accuracy +31 pp; Troph -23%, Depth -10%; Weight improved from
+  r=0.04 (noise) to r=0.42 under the new median-pool MI fix.
+- **Amphibians** (`script/bench_amphibio.rds`, Mac MPS): AmphiBIO
+  n=5,237 x 2 continuous traits. **Body_size_mm RMSE 89 -> 44
+  (-51%)**, Body_mass_g -27% (r=0.98). Continuous-only v1 --
+  AmphiBIO binary / categorical columns hit a character/double
+  type mismatch in the threshold-joint baseline, parked for
+  v0.9.2. Calibrated gates = 0 on both traits: pigauto's GNN
+  correctly recognises that the Level-C joint MVN baseline is
+  already optimal, and still beats the mean baseline by 27-51%
+  because the BM baseline captures cross-trait correlation +
+  phylogenetic signal.
+- **Plants** (`script/bench_bien.R`, pending overnight): BIEN x
+  V.PhyloMaker2. Data pull works (5 traits x ~50k-93k obs each);
+  first tree build matched 19,109 seed plants. Overnight run
+  subsetted to `PIGAUTO_BIEN_N_SPECIES=5000` to fit on Mac MPS.
+  HTML generator `script/make_bench_bien_html.R` ready.
+
+Validation suite (`pkgdown/assets/validation_suite.html`) and the
+paper-draft summary (`useful/results_summary.md`) collect all
+numbers in one place.
+
 ## FishBase + fishtree benchmark (vertebrate breadth triad complete)
 
 - New `script/bench_fishbase.R` benchmarks pigauto on the intersection
