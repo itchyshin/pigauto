@@ -28,7 +28,7 @@
 </head>
 <body>
 <h1>pigauto <span class="badge">v0.9.1.9000</span> &mdash; Validation Suite</h1>
-<p class="meta">Generated 2026-04-21 16:03 &middot; Commit dc8cffa7d2</p>
+<p class="meta">Generated 2026-04-22 16:49 &middot; Commit cddd5d3985</p>
 <p>
 This page summarises 18+ benchmark experiments validating pigauto v0.9.1.9000 across all
 supported trait types, multiple real datasets, and a range of missingness scenarios.
@@ -71,10 +71,9 @@ Positive values (green) indicate pigauto reduces error.</p>
 <tr><td><a href="dev/bench_tree_uncertainty.html">Tree uncertainty</a></td><td><em>continuous</em></td><td>AVONET300 + BirdTree (50 trees)</td><td>single-tree vs multi-tree MI</td><td colspan="2">Mean FMI = 0.305</td><td>&mdash;</td><td>FMI (pooled coefs)</td></tr>
 <tr><td><a href="dev/bench_scaling_v090.html">Scaling (v0.9.0)</a></td><td><em>mixed</em></td><td>Simulated (up to 10,000 species)</td><td>wall time per N</td><td colspan="2">Max N = 10,000 (42/42 stages ok)</td><td>&mdash;</td><td>Wall time (s)</td></tr>
 </tbody></table>
-<h2>Vertebrate breadth triad (v0.9.1.9000)</h2>
-<p class="meta">Real-data benchmarks completing taxonomic breadth: birds 
-(AVONET), mammals (PanTHERIA), fish (FishBase + fishtree). All use 30% 
-MCAR held-out with seed 2026.</p>
+<h2>Real-data taxonomic breadth (v0.9.1.9000)</h2>
+<p class="meta">pigauto across four vertebrate classes + a kingdom jump to plants. 
+All use 30% MCAR held-out with seed 2026.</p>
 <table><thead><tr>
 <th>Benchmark</th><th>Trait mix</th><th>Dataset</th>
 <th>Best single trait (pigauto vs baseline)</th>
@@ -84,7 +83,7 @@ MCAR held-out with seed 2026.</p>
 <td><a href="dev/bench_avonet9993_bace_index.html">AVONET n=3000 (GPU)</a></td>
 <td><em>4 continuous + 2 categorical + 1 ordinal</em></td>
 <td>AVONET 9,993 subset, Vulcan L40S</td>
-<td>Wing.Length RMSE 102.6 &rarr; <b>44.2</b> (&minus;57%)</td>
+<td>Wing.Length RMSE 102.62 &rarr; <b>44.18</b> (&minus;57%) &nbsp;<em style="color:#9ca3af">(full n=9,993 pending overnight run)</em></td>
 <td><a href="dev/bench_avonet9993_bace_index.html">report</a></td>
 </tr>
 <tr>
@@ -100,6 +99,19 @@ MCAR held-out with seed 2026.</p>
 <td>FishBase x fishtree (n=10654)</td>
 <td>Vulnerability RMSE 17.87 &rarr; <b>9.89</b> (&minus;45%)</td>
 <td><a href="dev/bench_fishbase.html">report</a></td>
+</tr>
+<tr>
+<td><a href="dev/bench_amphibio.html">AmphiBIO amphibians</a></td>
+<td><em>2 continuous</em></td>
+<td>AmphiBIO + taxonomic tree (n=5237)</td>
+<td>Body_size_mm RMSE 89.08 &rarr; <b>43.57</b> (&minus;51%)</td>
+<td><a href="dev/bench_amphibio.html">report</a></td>
+</tr>
+<tr>
+<td>BIEN + V.PhyloMaker2 plants</td>
+<td><em>5 continuous</em></td>
+<td>BIEN + V.PhyloMaker2 (kingdom jump)</td>
+<td colspan="2" style="color:#9ca3af;font-style:italic">pending overnight run -- script/bench_bien.R ready</td>
 </tr>
 </tbody></table>
 <h2>Coverage calibration grid (v0.9.1.9000)</h2>
@@ -121,8 +133,8 @@ closes to zero &mdash; in that case pigauto falls back to the baseline by design
 <h2>Reproducibility</h2>
 <ul>
 <li>Package version: <code>pigauto 0.9.1.9000</code> (dev)</li>
-<li>Commit: <code>dc8cffa7d2</code></li>
-<li>Run on: 2026-04-21 16:03</li>
+<li>Commit: <code>cddd5d3985</code></li>
+<li>Run on: 2026-04-22 16:49</li>
 <li>All scripts in <code>script/bench_*.R</code>; generators in <code>script/make_bench_*_html.R</code></li>
 <li>All .rds result files checked into <code>script/</code></li>
 </ul>

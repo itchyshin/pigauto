@@ -491,34 +491,68 @@ h('</tbody></table>')
 # scale run + calibration grid
 # ---------------------------------------------------------------------------
 h()
-h('<h2>Vertebrate breadth triad (v0.9.1.9000)</h2>')
-h('<p class="meta">Real-data benchmarks completing taxonomic breadth: birds ')
-h('(AVONET), mammals (PanTHERIA), fish (FishBase + fishtree). All use 30% ')
-h('MCAR held-out with seed 2026.</p>')
+h('<h2>Real-data taxonomic breadth (v0.9.1.9000)</h2>')
+h('<p class="meta">pigauto across four vertebrate classes + a kingdom jump to plants. ')
+h('All use 30% MCAR held-out with seed 2026.</p>')
 h('<table><thead><tr>')
 h('<th>Benchmark</th><th>Trait mix</th><th>Dataset</th>')
 h('<th>Best single trait (pigauto vs baseline)</th>')
 h('<th>Report</th>')
 h('</tr></thead><tbody>')
 
-# Birds: AVONET n=3000 on Vulcan L40S (full 9993 pending GPU memory fix)
-b_avonet9993 <- load_rds("bench_avonet9993_bace_n3000")
-if (!is.null(b_avonet9993) && !is.null(b_avonet9993$results)) {
-  r <- b_avonet9993$results
-  # Headline: Wing.Length RMSE (mean vs pigauto)
-  m <- r[r$trait == "Wing.Length" & r$metric == "rmse", ]
-  if (nrow(m) >= 2) {
-    mean_v <- m$value[m$method == "mean_baseline"]
-    pig_v  <- m$value[m$method == "pigauto_default"]
-    headline <- sprintf("Wing.Length RMSE %.1f &rarr; <b>%.1f</b> (&minus;%.0f%%)",
-                         mean_v, pig_v,
-                         100 * (mean_v - pig_v) / mean_v)
-  } else headline <- "(see report)"
+# Helper: extract best single-trait headline from a results df
+pick_best_headline <- function(results) {
+  if (is.null(results) || !nrow(results)) return("(no results)")
+  best_lift <- -Inf
+  best_line <- NULL
+  rmse_rows <- results[results$metric == "rmse", ]
+  for (tr in unique(rmse_rows$trait)) {
+    mean_v <- rmse_rows$value[rmse_rows$trait == tr & rmse_rows$method == "mean_baseline"]
+    pig_v  <- rmse_rows$value[rmse_rows$trait == tr & rmse_rows$method == "pigauto_default"]
+    if (length(mean_v) != 1 || length(pig_v) != 1) next
+    if (!is.finite(mean_v) || !is.finite(pig_v) || mean_v <= 0) next
+    lift <- (mean_v - pig_v) / mean_v
+    if (lift > best_lift) {
+      best_lift <- lift
+      best_line <- sprintf("%s RMSE %.2f &rarr; <b>%.2f</b> (&minus;%.0f%%)",
+                            tr, mean_v, pig_v, 100 * lift)
+    }
+  }
+  acc_rows <- results[results$metric == "accuracy", ]
+  for (tr in unique(acc_rows$trait)) {
+    mean_v <- acc_rows$value[acc_rows$trait == tr & acc_rows$method == "mean_baseline"]
+    pig_v  <- acc_rows$value[acc_rows$trait == tr & acc_rows$method == "pigauto_default"]
+    if (length(mean_v) != 1 || length(pig_v) != 1) next
+    pp <- pig_v - mean_v
+    if (pp > best_lift) {
+      best_lift <- pp
+      best_line <- sprintf("%s accuracy %.2f &rarr; <b>%.2f</b> (+%.0f pp)",
+                            tr, mean_v, pig_v, 100 * pp)
+    }
+  }
+  if (!is.null(best_line)) best_line else "(see report)"
+}
+
+# Birds: prefer full n=9,993 if the local overnight run has landed,
+# else fall back to the n=3,000 Vulcan subset.
+b_avonet_full <- load_rds("bench_avonet_full_local")
+b_avonet9993  <- load_rds("bench_avonet9993_bace_n3000")
+if (!is.null(b_avonet_full) && !is.null(b_avonet_full$results)) {
+  headline <- pick_best_headline(b_avonet_full$results)
+  h('<tr>')
+  h('<td><a href="dev/bench_avonet_full_local.html">AVONET full n=', b_avonet_full$n_species, '</a></td>')
+  h('<td><em>4 continuous + 2 categorical + 1 ordinal</em></td>')
+  h('<td>AVONET + BirdTree full, Mac MPS overnight</td>')
+  h('<td>', headline, '</td>')
+  h('<td><a href="dev/bench_avonet_full_local.html">report</a></td>')
+  h('</tr>')
+} else if (!is.null(b_avonet9993) && !is.null(b_avonet9993$results)) {
+  headline <- pick_best_headline(b_avonet9993$results)
   h('<tr>')
   h('<td><a href="dev/bench_avonet9993_bace_index.html">AVONET n=', b_avonet9993$n_species, ' (GPU)</a></td>')
   h('<td><em>4 continuous + 2 categorical + 1 ordinal</em></td>')
   h('<td>AVONET 9,993 subset, Vulcan L40S</td>')
-  h('<td>', headline, '</td>')
+  h('<td>', headline, ' &nbsp;<em style="color:#9ca3af">(full n=9,993 pending overnight run)</em></td>')
   h('<td><a href="dev/bench_avonet9993_bace_index.html">report</a></td>')
   h('</tr>')
 }
@@ -579,6 +613,42 @@ if (!is.null(b_fish) && !is.null(b_fish$results)) {
   h('</tr>')
 } else {
   make_row("FishBase + fishtree", "mixed", "FishBase + Rabosky 2018 tree", "", NA, NA, NA, "pending", "dev/bench_fishbase.html", "pending")
+}
+
+# Amphibians: AmphiBIO + taxonomic tree (continuous-only v1)
+b_amphi <- load_rds("bench_amphibio")
+if (!is.null(b_amphi) && !is.null(b_amphi$results)) {
+  headline <- pick_best_headline(b_amphi$results)
+  h('<tr>')
+  n_amphi_traits <- length(unique(b_amphi$results$trait))
+  h('<td><a href="dev/bench_amphibio.html">AmphiBIO amphibians</a></td>')
+  h('<td><em>', n_amphi_traits, ' continuous</em></td>')
+  h('<td>AmphiBIO + taxonomic tree (n=', b_amphi$n_species, ')</td>')
+  h('<td>', headline, '</td>')
+  h('<td><a href="dev/bench_amphibio.html">report</a></td>')
+  h('</tr>')
+} else {
+  make_row("AmphiBIO amphibians", "continuous", "AmphiBIO + taxonomic tree", "", NA, NA, NA, "pending", "dev/bench_amphibio.html", "pending")
+}
+
+# Plants: BIEN + V.PhyloMaker2 (kingdom jump)
+b_bien <- load_rds("bench_bien")
+if (!is.null(b_bien) && !is.null(b_bien$results)) {
+  headline <- pick_best_headline(b_bien$results)
+  h('<tr>')
+  h('<td><a href="dev/bench_bien.html">BIEN + V.PhyloMaker2 plants</a></td>')
+  h('<td><em>5 continuous</em></td>')
+  h('<td>BIEN + V.PhyloMaker2 (n=', b_bien$n_species, ')</td>')
+  h('<td>', headline, '</td>')
+  h('<td><a href="dev/bench_bien.html">report</a></td>')
+  h('</tr>')
+} else {
+  h('<tr>')
+  h('<td>BIEN + V.PhyloMaker2 plants</td>')
+  h('<td><em>5 continuous</em></td>')
+  h('<td>BIEN + V.PhyloMaker2 (kingdom jump)</td>')
+  h('<td colspan="2" style="color:#9ca3af;font-style:italic">pending overnight run -- script/bench_bien.R ready</td>')
+  h('</tr>')
 }
 
 h('</tbody></table>')
