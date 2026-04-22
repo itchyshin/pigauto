@@ -273,8 +273,12 @@ safe_cor <- function(x, y) {
   suppressWarnings(stats::cor(x[idx], y[idx]))
 }
 
-eval_completed <- function(completed, truth, mask, method, wall_s) {
+eval_completed <- function(completed, truth, mask, method, wall_s,
+                            res_obj = NULL) {
   if (is.null(completed)) return(NULL)
+  lo      <- if (!is.null(res_obj)) res_obj$prediction$conformal_lower else NULL
+  hi      <- if (!is.null(res_obj)) res_obj$prediction$conformal_upper else NULL
+  mi_list <- if (!is.null(res_obj)) res_obj$prediction$imputed_datasets else NULL
   rows <- list()
   for (v in colnames(mask)) {
     idx <- which(mask[, v])
@@ -295,6 +299,40 @@ eval_completed <- function(completed, truth, mask, method, wall_s) {
       rows[[length(rows) + 1L]] <- data.frame(
         method = method, trait = v, metric = "pearson_r",
         value = pear, n_cells = length(idx), wall_s = wall_s)
+      t_num <- as.numeric(t_v)
+      # Conformal coverage (from pigauto's $conformal_lower / upper,
+      # present on all pigauto fits regardless of n_imputations).
+      if (!is.null(lo) && !is.null(hi) && v %in% colnames(lo)) {
+        lo_v <- lo[idx, v]; hi_v <- hi[idx, v]
+        valid <- is.finite(lo_v) & is.finite(hi_v) & is.finite(t_num)
+        if (any(valid)) {
+          hits <- t_num[valid] >= lo_v[valid] & t_num[valid] <= hi_v[valid]
+          rows[[length(rows) + 1L]] <- data.frame(
+            method = method, trait = v, metric = "coverage95_conformal",
+            value = mean(hits), n_cells = sum(valid), wall_s = wall_s)
+        }
+      }
+      # MC-dropout coverage (needs n_imputations > 1)
+      if (!is.null(mi_list) && length(mi_list) > 1L &&
+          v %in% names(mi_list[[1]])) {
+        draws_mat <- vapply(mi_list, function(d) as.numeric(d[idx, v]),
+                             numeric(length(idx)))
+        if (!is.matrix(draws_mat))
+          draws_mat <- matrix(draws_mat, ncol = length(mi_list))
+        if (nrow(draws_mat) == length(idx) && ncol(draws_mat) > 1L) {
+          q_lo <- apply(draws_mat, 1L, stats::quantile, probs = 0.025,
+                         na.rm = TRUE)
+          q_hi <- apply(draws_mat, 1L, stats::quantile, probs = 0.975,
+                         na.rm = TRUE)
+          valid <- is.finite(q_lo) & is.finite(q_hi) & is.finite(t_num)
+          if (any(valid)) {
+            hits <- t_num[valid] >= q_lo[valid] & t_num[valid] <= q_hi[valid]
+            rows[[length(rows) + 1L]] <- data.frame(
+              method = method, trait = v, metric = "coverage95_mcdropout",
+              value = mean(hits), n_cells = sum(valid), wall_s = wall_s)
+          }
+        }
+      }
     }
   }
   if (!length(rows)) NULL else do.call(rbind, rows)
@@ -327,7 +365,7 @@ run_pigauto <- function() {
                            epochs        = 500L,
                            verbose       = TRUE,
                            seed          = SEED)
-  list(completed = res$completed)
+  list(completed = res$completed, res = res)
 }
 
 # -------------------------------------------------------------------------
@@ -347,9 +385,9 @@ r_mean <- timed("mean_baseline",   run_mean)
 r_pig  <- timed("pigauto_default", run_pigauto)
 
 ev_mean <- eval_completed(r_mean$val$completed, df_truth, mask_test,
-                            "mean_baseline",   r_mean$wall)
+                            "mean_baseline",   r_mean$wall, NULL)
 ev_pig  <- eval_completed(r_pig$val$completed,  df_truth, mask_test,
-                            "pigauto_default", r_pig$wall)
+                            "pigauto_default", r_pig$wall, r_pig$val$res)
 
 all_rows <- do.call(rbind, Filter(Negate(is.null),
                                      list(ev_mean, ev_pig)))
