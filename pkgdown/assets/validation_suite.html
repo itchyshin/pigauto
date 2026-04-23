@@ -28,7 +28,7 @@
 </head>
 <body>
 <h1>pigauto <span class="badge">v0.9.1.9000</span> &mdash; Validation Suite</h1>
-<p class="meta">Generated 2026-04-22 16:49 &middot; Commit cddd5d3985</p>
+<p class="meta">Generated 2026-04-23 05:38 &middot; Commit 595201fa30</p>
 <p>
 This page summarises 18+ benchmark experiments validating pigauto v0.9.1.9000 across all
 supported trait types, multiple real datasets, and a range of missingness scenarios.
@@ -80,11 +80,11 @@ All use 30% MCAR held-out with seed 2026.</p>
 <th>Report</th>
 </tr></thead><tbody>
 <tr>
-<td><a href="dev/bench_avonet9993_bace_index.html">AVONET n=3000 (GPU)</a></td>
+<td><a href="dev/bench_avonet_full_local.html">AVONET full n=9993</a></td>
 <td><em>4 continuous + 2 categorical + 1 ordinal</em></td>
-<td>AVONET 9,993 subset, Vulcan L40S</td>
-<td>Wing.Length RMSE 102.62 &rarr; <b>44.18</b> (&minus;57%) &nbsp;<em style="color:#9ca3af">(full n=9,993 pending overnight run)</em></td>
-<td><a href="dev/bench_avonet9993_bace_index.html">report</a></td>
+<td>AVONET + BirdTree full, Mac MPS overnight</td>
+<td>Wing.Length RMSE 95.84 &rarr; <b>21.55</b> (&minus;78%)</td>
+<td><a href="dev/bench_avonet_full_local.html">report</a></td>
 </tr>
 <tr>
 <td><a href="dev/bench_pantheria_full.html">PanTHERIA mammals</a></td>
@@ -133,8 +133,8 @@ closes to zero &mdash; in that case pigauto falls back to the baseline by design
 <h2>Reproducibility</h2>
 <ul>
 <li>Package version: <code>pigauto 0.9.1.9000</code> (dev)</li>
-<li>Commit: <code>cddd5d3985</code></li>
-<li>Run on: 2026-04-22 16:49</li>
+<li>Commit: <code>595201fa30</code></li>
+<li>Run on: 2026-04-23 05:38</li>
 <li>All scripts in <code>script/bench_*.R</code>; generators in <code>script/make_bench_*_html.R</code></li>
 <li>All .rds result files checked into <code>script/</code></li>
 </ul>

@@ -318,3 +318,14 @@ warning: solve(): system is singular (rcond: 4.63e-24); attempting approx soluti
 warning: solve(): system is singular (rcond: 7.09753e-30); attempting approx solution
 Using device: mps
 epoch  100 | rec 0.1467 | shrink 0.9693 | gate 0.0121 | lr 1.5e-03 | val 0.3659 | best Inf | pat 10
+epoch  200 | rec 0.0455 | shrink 0.9253 | gate 0.0147 | lr 3.0e-03 | val 0.3583 | best 0.3659 | pat 10
+epoch  300 | rec 0.0343 | shrink 0.8712 | gate 0.0210 | lr 2.3e-03 | val 0.3530 | best 0.3583 | pat 10
+epoch  400 | rec 0.0312 | shrink 0.8905 | gate 0.0259 | lr 7.6e-04 | val 0.3499 | best 0.3530 | pat 10
+epoch  500 | rec 0.0316 | shrink 0.8786 | gate 0.0268 | lr 1.0e-05 | val 0.3491 | best 0.3499 | pat 10
+Calibrating gates on validation set...
+Calibrated gates: Mass=0, Beak.Length_Culmen=0, Tarsus.Length=0, Wing.Length=0, Trophic.Level=Carnivore=0, Trophic.Level=Herbivore=0, Trophic.Level=Omnivore=0, Trophic.Level=Scavenger=0, Primary.Lifestyle=Aerial=0, Primary.Lifestyle=Aquatic=0, Primary.Lifestyle=Generalist=0, Primary.Lifestyle=Insessorial=0, Primary.Lifestyle=Terrestrial=0, Migration=0.6
+Conformal scores (latent scale, method=split): Mass=0.3166, Beak.Length_Culmen=0.4808, Tarsus.Length=0.4337, Wing.Length=0.3114, Migration=2.0245
+[9416.2s] [STAGE] pigauto_default done in 9416.1 s
+[9417.2s] === DONE ===
+[9417.2s]   rds: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_avonet_full_local.rds
+[9417.2s]   md : /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_avonet_full_local.md
