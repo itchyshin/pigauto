@@ -1,0 +1,52 @@
+[   0.0s] Loading cached BIEN trait means from /Users/z3437171/Dropbox/Github Local/pigauto/script/data-cache/bien_trait_means.rds
+[   0.0s] Union of all trait species: 20135
+[   0.0s] After filtering (>=1 trait): 20135 species
+[   0.0s] PIGAUTO_BIEN_N_SPECIES = 5000: random subset
+[   0.0s] Loading cached V.PhyloMaker2 tree ...
+[   0.1s] Tree: 19109 tips after V.PhyloMaker2
+[   0.1s] Matched: 4745 species x 5 traits
+[   0.1s] Held-out test cells per trait:
+    height_m    leaf_area          sla    seed_mass wood_density 
+         218          297          386          743          560 
+[   0.1s] [STAGE] mean_baseline starting
+[   0.1s] [STAGE] mean_baseline done in 0 s
+[   0.1s] [STAGE] pigauto_default starting
+
+warning: solve(): system is singular; attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.0869e-73); attempting approx solution
+
+warning: solve(): system is singular (rcond: 4.76288e-117); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.88236e-25); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.05137e-53); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.96968e-19); attempting approx solution
+
+warning: solve(): system is singular (rcond: 6.22914e-31); attempting approx solution
+
+warning: solve(): system is singular (rcond: 7.49489e-255); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.05639e-66); attempting approx solution
+
+warning: solve(): system is singular (rcond: 7.45873e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.16528e-55); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.02488e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.32414e-17); attempting approx solution
+Using device: mps
+epoch  100 | rec 0.0471 | shrink 0.0397 | gate 0.0173 | lr 1.5e-03 | val 0.6274 | best Inf | pat 10
+epoch  200 | rec 0.0307 | shrink 0.0334 | gate 0.0158 | lr 3.0e-03 | val 0.6324 | best 0.6274 | pat 10
+epoch  300 | rec 0.0136 | shrink 0.0145 | gate 0.0141 | lr 2.3e-03 | val 0.6319 | best 0.6274 | pat 9
+epoch  400 | rec 0.0098 | shrink 0.0093 | gate 0.0133 | lr 7.6e-04 | val 0.6325 | best 0.6274 | pat 8
+epoch  500 | rec 0.0114 | shrink 0.0115 | gate 0.0131 | lr 1.0e-05 | val 0.6324 | best 0.6274 | pat 7
+Calibrating gates on validation set...
+Calibrated gates: height_m=0.8, leaf_area=0, sla=0.8, seed_mass=0, wood_density=0.8
+Conformal scores (latent scale, method=split): height_m=1.509, leaf_area=2.518, sla=2.3023, seed_mass=0.4195, wood_density=2.0431
+[ 491.1s] [STAGE] pigauto_default done in 491 s
+[ 491.3s] === DONE ===
+[ 491.3s]   rds: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_bien.rds
+[ 491.3s]   md : /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_bien.md

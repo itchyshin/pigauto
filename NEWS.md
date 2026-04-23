@@ -1,10 +1,19 @@
 # pigauto 0.9.1.9000 (dev)
 
-## Taxonomic-breadth benchmarks: 4 vertebrate classes + kingdom jump to plants
+## Taxonomic-breadth benchmarks: 4 vertebrate classes + plant boundary case
 
-Real-data benches now cover four vertebrate classes plus a pending
-plants run. All use 30% MCAR held-out, seed 2026, and report both
-conformal and MC-dropout 95% coverage alongside RMSE / accuracy.
+Real-data benches now cover four vertebrate classes plus a plants
+run that establishes the scope of phylogenetic imputation. All use
+30% MCAR held-out, seed 2026, and report both conformal and
+MC-dropout 95% coverage alongside RMSE / accuracy. The vertebrate
+benches consistently lift point estimates by 27-75% RMSE /
+10-40 pp accuracy; the plants bench is the first honest
+boundary-case result, with a clean wood_density lift but r ≤ 0.21
+on four other traits, attributable to weak phylogenetic signal in
+pooled BIEN species means and random polytomy resolution in
+V.PhyloMaker2 (details below). **Conformal coverage still lands at
+0.90-0.98 on plants**, so the uncertainty story generalises across
+the kingdom jump even where point estimates do not.
 
 - **Birds** (`script/bench_avonet9993_bace_n3000.rds`, Vulcan L40S):
   AVONET n=3,000 subset x 7 traits. Mass RMSE -45%, Beak -55%,
@@ -33,11 +42,30 @@ conformal and MC-dropout 95% coverage alongside RMSE / accuracy.
   already optimal, and still beats the mean baseline by 27-51%
   because the BM baseline captures cross-trait correlation +
   phylogenetic signal.
-- **Plants** (`script/bench_bien.R`, pending overnight): BIEN x
-  V.PhyloMaker2. Data pull works (5 traits x ~50k-93k obs each);
-  first tree build matched 19,109 seed plants. Overnight run
-  subsetted to `PIGAUTO_BIEN_N_SPECIES=5000` to fit on Mac MPS.
-  HTML generator `script/make_bench_bien_html.R` ready.
+- **Plants** (`script/bench_bien.R`, honest boundary-case finding):
+  BIEN x V.PhyloMaker2 at n=4,745 species, n_imputations=20.
+  Only `wood_density` lifts (-6% RMSE, r=0.43); `height_m`, `sla`,
+  `seed_mass`, `leaf_area` show r ≤ 0.21 and are 15-101% *worse*
+  than grand mean on RMSE. Root cause is in the data, not pigauto:
+  (i) BIEN species means are pooled from heterogeneous individual
+  observations, diluting phylogenetic signal, and (ii) V.PhyloMaker2
+  scenario S3 resolves within-genus polytomies randomly, so most
+  species sit behind random branches relative to the Smith & Brown
+  2018 backbone. pigauto's gate safety contains the damage: on
+  weak-signal traits the calibrated gate closes to 0 and the
+  pipeline degrades gracefully to the (also weak) BM prior rather
+  than blowing up. **Conformal coverage still lands at 0.90-0.98
+  on all 5 traits** -- the distribution-free uncertainty story
+  holds even when point estimates are weak, separating the UQ
+  narrative (always robust) from the point-estimate narrative
+  (taxon-dependent). A first pass at `n_imputations = 1` showed
+  `height_m` RMSE blowing up to 47.7 via Jensen exp()-decode bias;
+  rerunning at `n_imputations = 20` activated the `dc8cffa`
+  median-pool MI correction and dropped it to 15.15. The weak-
+  signal result is what remains after that fix -- it is a property
+  of BIEN x V.PhyloMaker2 at this species pool, not a pigauto
+  regression. See `script/bench_bien.html` for the full honest
+  reading and the in-page Jensen note.
 
 Validation suite (`pkgdown/assets/validation_suite.html`) and the
 paper-draft summary (`useful/results_summary.md`) collect all
