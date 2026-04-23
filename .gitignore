@@ -36,6 +36,7 @@ checkpoints_bin/
 # Cached graph files
 *.rds
 !data/*.rda
+!inst/extdata/*.rds
 
 # pkgdown / rsconnect
 docs/
