@@ -37,6 +37,7 @@ checkpoints_bin/
 *.rds
 !data/*.rda
 !inst/extdata/*.rds
+!tests/testthat/fixtures/*.rds
 
 # pkgdown / rsconnect
 docs/

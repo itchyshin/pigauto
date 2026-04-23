@@ -33,17 +33,25 @@
                  centroid_lon = NA_real_,
                  n_occurrences = 0L))
   }
+  # hasGeospatialIssues may be absent from the GBIF response (column NULL) —
+  # the v3 API does not always return this field.  Treat absent as FALSE
+  # (pass through; we already filter on coord range and hasCoordinate=TRUE).
+  # For a present column, treat NA as TRUE (conservative).
+  has_issue <- records$hasGeospatialIssues
+  if (is.null(has_issue)) {
+    has_issue <- rep(FALSE, nrow(records))
+  } else {
+    has_issue[is.na(has_issue)] <- TRUE
+  }
+  # basisOfRecord may also be absent; treat absent as not-excluded.
+  bor <- records$basisOfRecord
+  if (is.null(bor)) bor <- rep("UNKNOWN", nrow(records))
   ok <- !is.na(records$decimalLatitude) &
          !is.na(records$decimalLongitude) &
          records$decimalLatitude  >= -90  & records$decimalLatitude  <= 90 &
          records$decimalLongitude >= -180 & records$decimalLongitude <= 180 &
-         !isTRUE(records$hasGeospatialIssues) &
-         !(records$basisOfRecord %in% c("FOSSIL_SPECIMEN",
-                                           "LIVING_SPECIMEN"))
-  # hasGeospatialIssues may be a logical vector of NA's; treat NA as TRUE (conservative)
-  has_issue <- records$hasGeospatialIssues
-  has_issue[is.na(has_issue)] <- TRUE
-  ok <- ok & !has_issue
+         !has_issue &
+         !(bor %in% c("FOSSIL_SPECIMEN", "LIVING_SPECIMEN"))
   kept <- records[ok, , drop = FALSE]
   if (nrow(kept) == 0L) {
     return(list(centroid_lat = NA_real_,
