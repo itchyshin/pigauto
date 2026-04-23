@@ -95,3 +95,23 @@ test_that("fit_pigauto gates weak-signal traits to (0, 0, 1) exactly", {
   expect_equal(as.numeric(fit$r_cal_gnn["noise"]),  0, tolerance = 1e-10)
   expect_equal(as.numeric(fit$r_cal_mean["noise"]), 1, tolerance = 1e-10)
 })
+
+test_that("impute(phylo_signal_gate = TRUE) is the default and threads to fit", {
+  skip_if_not_installed("phytools")
+  data("avonet300", package = "pigauto")
+  data("tree300",   package = "pigauto")
+  df <- avonet300
+  if ("Species_Key" %in% colnames(df)) {
+    rownames(df) <- df$Species_Key; df$Species_Key <- NULL
+  }
+  set.seed(2026L)
+  df$Mass[sample(300, 30)] <- NA_real_
+  r1 <- pigauto::impute(df, tree300, epochs = 30L, n_imputations = 1L,
+                          verbose = FALSE, seed = 2026L)
+  expect_equal(r1$fit$phylo_signal_method, "lambda")
+  r2 <- pigauto::impute(df, tree300, phylo_signal_gate = FALSE,
+                          epochs = 30L, n_imputations = 1L,
+                          verbose = FALSE, seed = 2026L)
+  expect_true(all(is.na(r2$fit$phylo_signal_per_trait)))
+  expect_false(any(r2$fit$phylo_gate_triggered, na.rm = TRUE))
+})
