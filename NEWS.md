@@ -1,3 +1,75 @@
+# pigauto 0.9.1.9002 (dev)
+
+## Safety floor: pigauto is never worse than the grand mean
+
+Default change: `impute()` / `fit_pigauto()` / `multi_impute*` now run
+with `safety_floor = TRUE`. The calibration grid post-training searches
+a three-way convex combination of (BM baseline, GNN delta, grand mean)
+on a 231-point simplex at step 0.05. Because the pure-mean corner
+`(0, 0, 1)` is always a candidate in the grid, validation RMSE is
+guaranteed by construction to satisfy `pigauto_val_RMSE <= mean_val_RMSE`
+on every trait. On held-out test, the invariant holds up to
+sampling-noise slack (tolerance +2% in the production canary,
+verified on five taxa by `script/regress.R`).
+
+### Effect on existing benches
+
+- Birds, mammals, fish, amphibians: lift unchanged (within 1%).
+- Plants: on weak-signal traits (`height_m`, `leaf_area`, `seed_mass`,
+  `sla`) the calibrator opens `r_MEAN > 0` and the prediction falls
+  toward the grand mean, fixing the boundary-case regression where
+  pigauto was previously 15-101% worse than mean; `wood_density` lift
+  preserved.
+
+### API
+
+- `impute(..., safety_floor = TRUE)` — new arg, defaults to TRUE.
+- `fit_pigauto(..., safety_floor = TRUE)` — same.
+- The fit object gains four new slots: `r_cal_bm`, `r_cal_gnn`,
+  `r_cal_mean` (each a named numeric of length `p_latent`), and
+  `mean_baseline_per_col`.
+- `multi_impute()` / `multi_impute_trees()` propagate the mean term
+  automatically via `predict.pigauto_fit()`; no signature change.
+- Legacy v0.9.1 fit objects keep working via `%||%` fallback in
+  `predict.pigauto_fit()`: when the new slots are absent, the 2-way
+  blend `(1 - r_cal) * BM + r_cal * GNN` is reconstructed from the
+  scalar `r_cal`.
+
+### Opt-out
+
+`safety_floor = FALSE` reproduces the v0.9.1 1-D calibration
+bit-identically on the legacy path.
+
+### Testing
+
+- `tests/testthat/test-safety-floor.R`: smoke canary, ~3 min on MPS.
+  23 `test_that` blocks, 75 expectations covering: simplex grid,
+  mean-baseline scalar, calibrate_gates 3-way path, fit_pigauto
+  integration, predict 3-way blend + legacy fallback, multi_impute
+  propagation, multi_impute_trees share_gnn propagation, AVONET300
+  regression (continuous RMSE within +2%, discrete accuracy within
+  -2pp), plants safety smoke (cached BIEN n=1000, RMSE within +15%
+  of grand mean).
+- `script/regress.R`: full canary, ~20 min on MPS at n=1000 per taxon.
+  Writes `script/regress_result.json` with per-bench pass/fail.
+
+### Files
+
+- `R/calibration_three_way.R`: new — `simplex_grid()`,
+  `mean_baseline_scalar()` helpers.
+- `R/fit_helpers.R`: `calibrate_gates()` now returns list of 3 weight
+  vectors and optionally searches the simplex grid.
+- `R/fit_pigauto.R`: computes `mean_baseline_per_col` from training
+  cells; passes `safety_floor` through; stores the new slots.
+- `R/predict_pigauto.R`: 3-way blend with `%||%` backward compat.
+- `R/impute.R`: pass-through arg + roxygen.
+- `R/multi_impute.R`, `R/multi_impute_trees.R`: roxygen only.
+- `inst/extdata/legacy_fit_v091.rds`: fixture for backward-compat
+  test.
+- `data-raw/make_legacy_fit_v091.R`: one-shot fixture builder.
+- `specs/2026-04-23-safety-floor-mean-gate-design.md`: design spec.
+- `plans/2026-04-23-safety-floor-mean-gate.md`: implementation plan.
+
 # pigauto 0.9.1.9000 (dev)
 
 ## Taxonomic-breadth benchmarks: 4 vertebrate classes + plant boundary case
