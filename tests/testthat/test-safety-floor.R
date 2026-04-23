@@ -119,3 +119,63 @@ test_that("calibrate_gates() returns list with r_cal_bm/r_cal_gnn/r_cal_mean", {
   # (1 - r) BM + r GNN, so r_cal_bm = 1 - r_cal_gnn).
   expect_equal(as.numeric(res$r_cal_bm + res$r_cal_gnn), 1)
 })
+
+# ---- Task 4: simplex search when safety_floor = TRUE ----
+
+test_that("calibrate_gates(safety_floor = TRUE) finds w_mean > 0 when mean dominates", {
+  # Construct a column where the grand mean BEATS both bm and gnn.
+  # truth = rep(0, 30); bm = rnorm(30, 0, 2); gnn = rnorm(30, 0, 2); mean = 0.
+  # The grid should pick a weight triple with r_mean > 0.
+  set.seed(42L)
+  n <- 30L
+  tm <- list(list(name = "x1", type = "continuous",
+                   latent_cols = 1L, mean = 0, sd = 1))
+  mu    <- matrix(rnorm(n, 0, 2), nrow = n)
+  delta <- matrix(rnorm(n, 0, 2), nrow = n)
+  truth <- matrix(rep(0, n), nrow = n)   # degenerate: mean IS truth
+  val   <- matrix(rep(TRUE, n), nrow = n)
+  res <- pigauto:::calibrate_gates(
+    trait_map = tm, mu_cal = mu, delta_cal = delta,
+    X_truth_r = truth, val_mask_mat = val,
+    gate_grid = seq(0, 1, 0.1), gate_cap = 1,
+    safety_floor = TRUE,
+    mean_baseline_per_col = c(x1 = 0),
+    simplex_step = 0.05,
+    latent_names = "x1", verbose = FALSE, seed = 2026L)
+  expect_gt(as.numeric(res$r_cal_mean), 0)
+  # Simplex: three weights sum to exactly 1 (or within renorm tolerance).
+  expect_equal(as.numeric(res$r_cal_bm + res$r_cal_gnn + res$r_cal_mean),
+               1, tolerance = 1e-10)
+})
+
+test_that("calibrate_gates(safety_floor = TRUE) invariant: loss <= mean_loss on val", {
+  # Two columns: one where BM is good, one where mean is best.
+  set.seed(2026L)
+  n <- 50L
+  tm <- list(
+    list(name = "phy",   type = "continuous", latent_cols = 1L,
+          mean = 0, sd = 1),
+    list(name = "noise", type = "continuous", latent_cols = 2L,
+          mean = 0, sd = 1))
+  truth <- cbind(rnorm(n), rnorm(n, 0, 0.5))   # col 2 clusters near 0
+  mu    <- cbind(truth[, 1] + rnorm(n, 0, 0.3),   # good BM on col 1
+                 rnorm(n, 0, 2))                  # bad BM on col 2
+  delta <- cbind(rnorm(n, 0, 2),                  # bad GNN on col 1
+                 rnorm(n, 0, 2))                  # bad GNN on col 2
+  val   <- matrix(TRUE, nrow = n, ncol = 2L)
+  res <- pigauto:::calibrate_gates(
+    trait_map = tm, mu_cal = mu, delta_cal = delta,
+    X_truth_r = truth, val_mask_mat = val,
+    gate_grid = seq(0, 1, 0.1), gate_cap = 1,
+    safety_floor = TRUE,
+    mean_baseline_per_col = c(phy = 0, noise = 0),
+    simplex_step = 0.05,
+    latent_names = c("phy", "noise"), verbose = FALSE, seed = 2026L)
+  for (j in 1:2) {
+    w <- c(res$r_cal_bm[j], res$r_cal_gnn[j], res$r_cal_mean[j])
+    blended <- w[1] * mu[, j] + w[2] * delta[, j] + w[3] * 0
+    mean_only <- rep(0, n)
+    expect_lte(mean((blended - truth[, j])^2),
+               mean((mean_only - truth[, j])^2) + 1e-10)
+  }
+})

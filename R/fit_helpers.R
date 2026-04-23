@@ -62,13 +62,28 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
                             cal_min_rel_gain = 0.02,
                             gate_method = c("single_split", "median_splits"),
                             gate_splits_B = 31L,
+                            safety_floor = FALSE,
+                            mean_baseline_per_col = NULL,
+                            simplex_step = 0.05,
                             min_val_cells = 10L,
                             seed = 1L,
                             latent_names = NULL,
                             verbose = FALSE) {
   gate_method <- match.arg(gate_method)
+  if (safety_floor) {
+    if (is.null(mean_baseline_per_col)) {
+      stop("safety_floor = TRUE requires mean_baseline_per_col (numeric, length = ncol(mu_cal))")
+    }
+    stopifnot(length(mean_baseline_per_col) == ncol(mu_cal))
+    simplex <- simplex_grid(step = simplex_step)
+  } else {
+    simplex <- NULL
+  }
   p                <- ncol(mu_cal)
   calibrated_gates <- numeric(p)
+  r_cal_bm_vec    <- numeric(p)
+  r_cal_gnn_vec   <- numeric(p)
+  r_cal_mean_vec  <- numeric(p)
   low_val_traits   <- character(0)
 
   for (tm in trait_map) {
@@ -86,7 +101,10 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
     n_val       <- length(val_row_idx)
 
     if (n_val == 0) {
-      calibrated_gates[lc] <- 0
+      calibrated_gates[lc]    <- 0
+      r_cal_bm_vec[lc]        <- 1   # pure BM fallback
+      r_cal_gnn_vec[lc]       <- 0
+      r_cal_mean_vec[lc]      <- 0
       next
     }
 
@@ -138,39 +156,55 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
     # the test metric (argmax accuracy), not cross-entropy.
     cal_mean_loss <- function(g, rows) {
       if (length(rows) == 0L) return(Inf)
+      mean_j <- if (safety_floor) mean_baseline_per_col[lc[1]] else NA_real_
+      # When safety_floor = TRUE, g is a length-3 vector (r_bm, r_gnn, r_mean).
+      # When FALSE, g is a scalar r_gnn and the legacy (1-g)*mu + g*delta blend
+      # applies.
+      blend1 <- function(x_bm, x_delta, mean_scalar = mean_j) {
+        if (safety_floor) {
+          g[1] * x_bm + g[2] * x_delta + g[3] * mean_scalar
+        } else {
+          # g may be a scalar (legacy caller) OR a length-3 promoted vector
+          # from cand_grid where g[1]=1-r_gnn, g[2]=r_gnn, g[3]=0.
+          # Extract the GNN weight unambiguously.
+          r_gnn <- if (length(g) == 1L) g else g[2L]
+          (1 - r_gnn) * x_bm + r_gnn * x_delta
+        }
+      }
       if (tm$type %in% c("continuous", "count", "ordinal", "proportion")) {
-        pred_j <- (1 - g) * mu_cal[rows, lc[1]] +
-                  g       * delta_cal[rows, lc[1]]
+        pred_j <- blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]])
         mean((pred_j - X_truth_r[rows, lc[1]])^2)
 
       } else if (tm$type == "multi_proportion") {
-        # MSE in CLR space, averaged across K components.
+        # multi_proportion NOT supported in safety_floor (requires per-component
+        # mean vector; out of scope for this spec).
+        if (safety_floor) return(Inf)
         pred_mat  <- (1 - g) * mu_cal[rows, lc, drop = FALSE] +
                      g       * delta_cal[rows, lc, drop = FALSE]
         truth_mat <- X_truth_r[rows, lc, drop = FALSE]
         mean((pred_mat - truth_mat)^2)
 
       } else if (tm$type == "binary") {
-        pred_j     <- (1 - g) * mu_cal[rows, lc[1]] +
-                      g       * delta_cal[rows, lc[1]]
+        pred_j     <- blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]])
         pred_class <- as.numeric(pred_j > 0)
         truth_j    <- X_truth_r[rows, lc[1]]
         mean(pred_class != truth_j)
 
       } else if (tm$type == "categorical") {
-        logits      <- (1 - g) * mu_cal[rows, lc, drop = FALSE] +
-                       g       * delta_cal[rows, lc, drop = FALSE]
+        logits <- matrix(0, nrow = length(rows), ncol = length(lc))
+        for (kk in seq_along(lc)) {
+          mean_k <- if (safety_floor) mean_baseline_per_col[lc[kk]] else NA_real_
+          logits[, kk] <- blend1(mu_cal[rows, lc[kk]], delta_cal[rows, lc[kk]],
+                                 mean_scalar = mean_k)
+        }
         pred_class  <- max.col(logits,    ties.method = "first")
         truth_mat   <- X_truth_r[rows, lc, drop = FALSE]
         truth_class <- max.col(truth_mat, ties.method = "first")
         mean(pred_class != truth_class)
 
       } else if (tm$type == "zi_count") {
-        # Coupled gate: single g applied to both gate and magnitude columns.
-        gate_pred  <- (1 - g) * mu_cal[rows, lc[1]] +
-                      g       * delta_cal[rows, lc[1]]
-        mag_pred   <- (1 - g) * mu_cal[rows, lc[2]] +
-                      g       * delta_cal[rows, lc[2]]
+        gate_pred  <- blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]])
+        mag_pred   <- blend1(mu_cal[rows, lc[2]], delta_cal[rows, lc[2]])
         p_nz       <- expit(gate_pred)
         count_hat  <- pmax(expm1(mag_pred * tm$sd + tm$mean), 0)
         pred_ev    <- p_nz * count_hat
@@ -191,52 +225,92 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
     # baseline is only ~0.007, easily noise on small val sets).
     is_discrete <- tm$type %in% c("binary", "categorical")
 
-    # Inner: grid search on half_a + half_b verification, returns best_g.
+    # Inner: grid search on half_a + half_b verification, returns best weight vector.
     resolve_one_split <- function(ha, hb) {
       min_abs_a <- if (is_discrete) 2 / max(length(ha), 1L) else 0
       min_abs_b <- if (is_discrete) 1 / max(length(hb), 1L) else 0
 
-      loss_a_0 <- cal_mean_loss(0, ha)
-      best_g   <- 0
-      best_la  <- loss_a_0
-      for (g in gate_grid) {
-        if (g == 0) next
-        loss_a_g <- cal_mean_loss(g, ha)
-        if (!is.finite(loss_a_g)) next
-        rel      <- (loss_a_0 - loss_a_g) / max(loss_a_0, 1e-12)
-        abs_gain <- loss_a_0 - loss_a_g
-        if (rel >= cal_min_rel_gain && abs_gain >= min_abs_a &&
-            loss_a_g < best_la) {
-          best_g  <- g
-          best_la <- loss_a_g
+      # Candidate grid is 3-column: for safety_floor use the simplex,
+      # for legacy 1-D use the scalar gate_grid promoted to (1-g, g, 0).
+      cand_grid <- if (safety_floor) simplex else {
+        matrix(c(1 - gate_grid, gate_grid, rep(0, length(gate_grid))),
+               ncol = 3L,
+               dimnames = list(NULL, c("r_bm", "r_gnn", "r_mean")))
+      }
+
+      # "Pure BM" reference: (1,0,0) in simplex form when safety_floor = TRUE;
+      # scalar 0 (i.e. g=0, no GNN) in legacy form when safety_floor = FALSE.
+      # Both cal_mean_loss calls use the same dispatch path so no recycling occurs.
+      ref_w          <- if (safety_floor) c(1, 0, 0) else 0
+      loss_a_pure_bm <- cal_mean_loss(ref_w, ha)
+      best_w         <- ref_w
+      best_la        <- loss_a_pure_bm
+      for (ci in seq_len(nrow(cand_grid))) {
+        w_try <- cand_grid[ci, ]
+        la    <- cal_mean_loss(w_try, ha)
+        if (is.finite(la) && la < best_la) {
+          best_la <- la
+          best_w  <- w_try
         }
       }
 
-      if (best_g > 0) {
-        loss_b_0 <- cal_mean_loss(0,      hb)
-        loss_b_g <- cal_mean_loss(best_g, hb)
-        rel_b    <- (loss_b_0 - loss_b_g) / max(loss_b_0, 1e-12)
-        abs_b    <- loss_b_0 - loss_b_g
-        if (!is.finite(rel_b) ||
-            rel_b < (cal_min_rel_gain / 2) ||
-            abs_b < min_abs_b) {
-          best_g <- 0
+      # Half-B verification: require the winning w's half-B loss to also
+      # beat the pure-BM half-B loss by cal_min_rel_gain AND by the discrete
+      # absolute cell floor.
+      loss_b_pure_bm <- cal_mean_loss(ref_w,    hb)
+      loss_b_best    <- cal_mean_loss(best_w,   hb)
+      rel_gain_b     <- (loss_b_pure_bm - loss_b_best) / max(loss_b_pure_bm, 1e-12)
+      abs_gain_b     <- loss_b_pure_bm - loss_b_best
+      if (rel_gain_b < cal_min_rel_gain ||
+          (is_discrete && abs_gain_b < min_abs_b)) {
+        # Revert to best safe fallback.  When safety_floor = TRUE the pure-mean
+        # point (0,0,1) is always a valid option — pick whichever of BM and mean
+        # is better on half-B so the safety guarantee is preserved.
+        if (safety_floor) {
+          mean_ref_w     <- c(0, 0, 1)
+          loss_b_mean    <- cal_mean_loss(mean_ref_w, hb)
+          best_w <- if (loss_b_mean <= loss_b_pure_bm) mean_ref_w else ref_w
+        } else {
+          best_w <- ref_w
         }
       }
-      best_g
+
+      # Always return a length-3 vector so vapply(., numeric(3L)) works uniformly.
+      if (length(best_w) == 1L) c(1 - best_w, best_w, 0) else best_w
     }
 
-    if (gate_method == "single_split") {
-      best_g <- resolve_one_split(half_a, half_b)
-    } else {
-      # median_splits: run grid + verify for each of B splits, take median
-      best_g_vec <- vapply(split_pairs,
-                           function(sp) resolve_one_split(sp$half_a, sp$half_b),
-                           numeric(1))
-      best_g <- as.numeric(stats::median(best_g_vec))
+    best_w_across_splits <- vapply(split_pairs, function(pair)
+      resolve_one_split(pair$half_a, pair$half_b),
+      numeric(3L))    # 3 rows x B cols
+    w_final <- apply(best_w_across_splits, 1L, median)
+    w_final <- w_final / sum(w_final)   # renormalise (medians don't preserve sum)
+
+    # safety_floor guarantee: the final blend on the full val set must not be
+    # worse than the pure-mean baseline. If median-of-splits picked a blend
+    # that loses to mean on the full val set, fall back to pure mean.
+    if (safety_floor && length(val_row_idx) > 0L &&
+        tm$type %in% c("continuous", "count", "ordinal", "proportion")) {
+      j1 <- lc[1]
+      mean_j1 <- mean_baseline_per_col[j1]
+      blend_full <- w_final[1] * mu_cal[val_row_idx, j1] +
+                    w_final[2] * delta_cal[val_row_idx, j1] +
+                    w_final[3] * mean_j1
+      mean_full  <- rep(mean_j1, length(val_row_idx))
+      truth_full <- X_truth_r[val_row_idx, j1]
+      ok         <- is.finite(truth_full)
+      if (any(ok)) {
+        mse_blend <- mean((blend_full[ok] - truth_full[ok])^2)
+        mse_mean  <- mean((mean_full[ok]  - truth_full[ok])^2)
+        if (mse_blend > mse_mean + 1e-12) {
+          w_final <- c(0, 0, 1)
+        }
+      }
     }
 
-    calibrated_gates[lc] <- best_g
+    calibrated_gates[lc] <- w_final[2]   # legacy scalar = r_gnn
+    r_cal_bm_vec[lc]     <- w_final[1]
+    r_cal_gnn_vec[lc]    <- w_final[2]
+    r_cal_mean_vec[lc]   <- w_final[3]
   }
 
   if (verbose) {
@@ -266,14 +340,19 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
             call. = FALSE)
   }
 
-  if (!is.null(latent_names) && length(latent_names) == length(calibrated_gates)) {
-    names(calibrated_gates) <- latent_names
+  if (!is.null(latent_names)) {
+    if (length(latent_names) == length(calibrated_gates)) {
+      names(calibrated_gates) <- latent_names
+    }
+    if (length(latent_names) == length(r_cal_bm_vec)) {
+      names(r_cal_bm_vec)   <- latent_names
+      names(r_cal_gnn_vec)  <- latent_names
+      names(r_cal_mean_vec) <- latent_names
+    }
   }
-  list(
-    r_cal_bm   = 1 - calibrated_gates,        # legacy 1-D: r_bm = 1 - r_gnn
-    r_cal_gnn  = calibrated_gates,
-    r_cal_mean = rep(0, length(calibrated_gates))
-  )
+  list(r_cal_bm = r_cal_bm_vec,
+        r_cal_gnn = r_cal_gnn_vec,
+        r_cal_mean = r_cal_mean_vec)
 }
 
 # ---------------------------------------------------------------------------
