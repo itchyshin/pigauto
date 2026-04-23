@@ -266,7 +266,14 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
             call. = FALSE)
   }
 
-  calibrated_gates
+  if (!is.null(latent_names) && length(latent_names) == length(calibrated_gates)) {
+    names(calibrated_gates) <- latent_names
+  }
+  list(
+    r_cal_bm   = 1 - calibrated_gates,        # legacy 1-D: r_bm = 1 - r_gnn
+    r_cal_gnn  = calibrated_gates,
+    r_cal_mean = rep(0, length(calibrated_gates))
+  )
 }
 
 # ---------------------------------------------------------------------------

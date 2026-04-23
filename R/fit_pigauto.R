@@ -644,6 +644,7 @@ fit_pigauto <- function(
 
   # ---- Post-training gate calibration (validation set) --------------------
   calibrated_gates <- NULL
+  calibrated_gates_list <- NULL
   if (has_val && has_trait_map) {
     if (verbose) message("Calibrating gates on validation set...")
     gpu_mem_checkpoint("entering gate calibration")
@@ -663,7 +664,7 @@ fit_pigauto <- function(
     val_mask_mat <- matrix(FALSE, n, p)
     val_mask_mat[splits$val_idx] <- TRUE
 
-    calibrated_gates <- calibrate_gates(
+    calibrated_gates_list <- calibrate_gates(
       trait_map       = trait_map,
       mu_cal          = mu_cal,
       delta_cal       = delta_cal,
@@ -678,6 +679,7 @@ fit_pigauto <- function(
       latent_names    = data$latent_names,
       verbose         = verbose
     )
+    calibrated_gates <- calibrated_gates_list$r_cal_gnn   # legacy scalar slot
   }
 
   # ---- Conformal prediction scores (validation set) -----------------------
@@ -796,6 +798,14 @@ fit_pigauto <- function(
       val_rmse         = best_val,
       test_rmse        = test_loss,
       calibrated_gates = calibrated_gates,
+      r_cal      = if (!is.null(calibrated_gates_list))
+                     calibrated_gates_list$r_cal_gnn else NULL,
+      r_cal_bm   = if (!is.null(calibrated_gates_list))
+                     calibrated_gates_list$r_cal_bm  else NULL,
+      r_cal_gnn  = if (!is.null(calibrated_gates_list))
+                     calibrated_gates_list$r_cal_gnn else NULL,
+      r_cal_mean = if (!is.null(calibrated_gates_list))
+                     calibrated_gates_list$r_cal_mean else NULL,
       conformal_scores = conformal_scores,
       covariates       = data$covariates,
       cov_means        = data$cov_means,

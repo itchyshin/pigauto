@@ -89,3 +89,33 @@ test_that("mean_baseline_scalar excludes NA and non-training rows", {
                                           trait_type = "binary")
   expect_equal(got, expected, tolerance = 1e-12)
 })
+
+# ---- Task 3: calibrate_gates return shape change ----
+
+test_that("calibrate_gates() returns list with r_cal_bm/r_cal_gnn/r_cal_mean", {
+  set.seed(2026)
+  n <- 30L
+  tm <- list(list(name = "x1", type = "continuous",
+                   latent_cols = 1L, mean = 0, sd = 1))
+  mu    <- matrix(rnorm(n), nrow = n, ncol = 1L)
+  delta <- matrix(rnorm(n), nrow = n, ncol = 1L)
+  truth <- matrix(rnorm(n), nrow = n, ncol = 1L)
+  val   <- matrix(c(rep(TRUE, 10), rep(FALSE, 20)), nrow = n, ncol = 1L)
+  res <- pigauto:::calibrate_gates(
+    trait_map = tm, mu_cal = mu, delta_cal = delta,
+    X_truth_r = truth, val_mask_mat = val,
+    gate_grid = c(0, 0.25, 0.5, 0.75, 1), gate_cap = 1,
+    latent_names = "x1", verbose = FALSE, seed = 2026L)
+  expect_type(res, "list")
+  expect_named(res, c("r_cal_bm", "r_cal_gnn", "r_cal_mean"),
+               ignore.order = TRUE)
+  expect_equal(length(res$r_cal_bm), 1L)
+  expect_equal(length(res$r_cal_gnn), 1L)
+  expect_equal(length(res$r_cal_mean), 1L)
+  # 1-D path: r_mean must be 0 (safety_floor not yet on; this is behaviour
+  # preservation).
+  expect_equal(as.numeric(res$r_cal_mean), 0)
+  # r_cal_bm + r_cal_gnn must be 1 (the 1-D path splits the blend into
+  # (1 - r) BM + r GNN, so r_cal_bm = 1 - r_cal_gnn).
+  expect_equal(as.numeric(res$r_cal_bm + res$r_cal_gnn), 1)
+})
