@@ -75,6 +75,15 @@
 #' @param epochs integer. Maximum GNN training epochs (default `2000`).
 #' @param verbose logical. Print progress (default `TRUE`).
 #' @param seed integer. Random seed (default `1`).
+#' @param safety_floor logical. Passed through via `...` to
+#'   [fit_pigauto()]. When `TRUE` (default since v0.9.1.9002),
+#'   calibration searches the full 3-way simplex
+#'   \eqn{(r_{BM},\, r_{GNN},\, r_{MEAN})} and the prediction blend
+#'   becomes \eqn{r_{BM} \cdot BM + r_{GNN} \cdot GNN + r_{MEAN} \cdot MEAN}.
+#'   The mean term is a column-level grand mean over the training-observed
+#'   cells and acts as an additional safety floor: even when BM and GNN
+#'   are both poor, the calibrated blend can fall back to the training
+#'   mean.
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
 #'   [impute()].
 #'
@@ -148,6 +157,19 @@
 #' Nakagawa S, Freckleton RP (2011). "Model averaging, missing data and
 #' multiple imputation: a case study for behavioural ecology."
 #' *Behavioral Ecology and Sociobiology* 65(1): 103-116.
+#'
+#' @section Safety floor (v0.9.1.9002+):
+#'   When \code{fit_pigauto()} was called with \code{safety_floor = TRUE}
+#'   (the default since v0.9.1.9002), the 3-way blend
+#'   \code{r_BM * BM + r_GNN * GNN + r_MEAN * MEAN} propagates through
+#'   every imputation draw automatically via the updated
+#'   \code{predict.pigauto_fit()}.  For \code{draws_method = "mc_dropout"}
+#'   the mean term contributes no between-draw variance (it is a
+#'   deterministic scalar per column), so Rubin-pooled SE stays correctly
+#'   calibrated: variance comes from the BM-draw and GNN-dropout terms
+#'   only.  For \code{draws_method = "conformal"} the blend centre is the
+#'   3-way prediction and conformal scores remain calibrated on the
+#'   blended residuals.
 #'
 #' @seealso [impute()] for single-point imputation, [with_imputations()]
 #'   for applying a model-fitting function across the `M` datasets,

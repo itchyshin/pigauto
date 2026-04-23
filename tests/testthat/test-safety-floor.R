@@ -359,7 +359,12 @@ test_that("legacy v0.9.1 fit fixture loads and predicts via %||% fallback", {
   # Predict via %||% fallback — must succeed and return finite imputed values
   pred <- predict(fit, n_imputations = 1L)
   expect_true(!is.null(pred$imputed))
-  expect_true(all(is.finite(as.matrix(pred$imputed)[!is.na(as.matrix(pred$imputed))])))
+  # Check only numeric columns (factor/ordered columns decode to levels, not doubles)
+  num_cols <- vapply(pred$imputed, is.numeric, logical(1L))
+  if (any(num_cols)) {
+    num_mat <- as.matrix(pred$imputed[, num_cols, drop = FALSE])
+    expect_true(all(is.finite(num_mat[!is.na(num_mat)])))
+  }
 })
 
 test_that("multi_impute(safety_floor = TRUE) pooled point + SE are finite", {
@@ -373,10 +378,13 @@ test_that("multi_impute(safety_floor = TRUE) pooled point + SE are finite", {
   df$Beak.Length_Culmen[sample(300, 30)] <- NA_real_
   mi <- pigauto::multi_impute(df, tree300, m = 5L, safety_floor = TRUE,
                                 epochs = 50L, verbose = FALSE, seed = 2026L)
-  # Pooled point must be finite for every imputed cell.
-  expect_true(all(is.finite(mi$pooled_point[!is.na(mi$pooled_point)])))
-  # Pooled SE on imputed cells (non-zero mask).
-  se_vec <- mi$se[mi$imputed_mask]
+  # Pooled point: restrict to numeric columns only (mixed df includes factors).
+  num_cols <- vapply(mi$pooled_point, is.numeric, logical(1))
+  pp_num <- as.matrix(mi$pooled_point[, num_cols, drop = FALSE])
+  expect_true(all(is.finite(pp_num[!is.na(pp_num)])))
+  # Pooled SE on imputed numeric cells.
+  se_mat <- mi$se[, num_cols, drop = FALSE]
+  se_vec <- se_mat[mi$imputed_mask[, num_cols, drop = FALSE]]
   expect_true(all(is.finite(se_vec)))
   # Completed datasets: all finite on the imputed Mass column.
   for (k in seq_along(mi$datasets)) {
