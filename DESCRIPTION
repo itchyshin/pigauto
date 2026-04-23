@@ -45,7 +45,8 @@ Suggests:
     BACE,
     MCMCglmm,
     glmmTMB,
-    phangorn
+    phangorn,
+    rgbif
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
