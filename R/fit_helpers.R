@@ -146,10 +146,6 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
     }
 
     split_pairs <- lapply(split_seeds, resolve_best_g_one_split)
-    # For the single-split path we keep half_a / half_b as before; for
-    # the median-splits path we rebuild them inside the loop below.
-    half_a <- split_pairs[[1]]$half_a
-    half_b <- split_pairs[[1]]$half_b
 
     # Helper: mean loss for gate g on a set of row indices.
     # Uses 0-1 loss for binary/categorical so that the val signal matches
@@ -179,8 +175,11 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
         # multi_proportion NOT supported in safety_floor (requires per-component
         # mean vector; out of scope for this spec).
         if (safety_floor) return(Inf)
-        pred_mat  <- (1 - g) * mu_cal[rows, lc, drop = FALSE] +
-                     g       * delta_cal[rows, lc, drop = FALSE]
+        # Legacy path: g may be scalar OR length-3 (c(1-r, r, 0)) from cand_grid.
+        # Extract r_gnn unambiguously to avoid broadcasting mismatch against n×K mat.
+        r_gnn     <- if (length(g) == 1L) g else g[2L]
+        pred_mat  <- (1 - r_gnn) * mu_cal[rows, lc, drop = FALSE] +
+                     r_gnn       * delta_cal[rows, lc, drop = FALSE]
         truth_mat <- X_truth_r[rows, lc, drop = FALSE]
         mean((pred_mat - truth_mat)^2)
 
@@ -248,20 +247,31 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
       for (ci in seq_len(nrow(cand_grid))) {
         w_try <- cand_grid[ci, ]
         la    <- cal_mean_loss(w_try, ha)
-        if (is.finite(la) && la < best_la) {
+        if (!is.finite(la)) next
+        if (!safety_floor) {
+          # Legacy half-A filter (bit-identical to Task 3): skip candidates
+          # that do not beat pure-BM by cal_min_rel_gain AND min_abs_a.
+          r_gnn_try <- w_try[2L]
+          if (r_gnn_try == 0) next
+          rel      <- (loss_a_pure_bm - la) / max(loss_a_pure_bm, 1e-12)
+          abs_gain <- loss_a_pure_bm - la
+          if (rel < cal_min_rel_gain || abs_gain < min_abs_a) next
+        }
+        if (la < best_la) {
           best_la <- la
           best_w  <- w_try
         }
       }
 
       # Half-B verification: require the winning w's half-B loss to also
-      # beat the pure-BM half-B loss by cal_min_rel_gain AND by the discrete
-      # absolute cell floor.
-      loss_b_pure_bm <- cal_mean_loss(ref_w,    hb)
-      loss_b_best    <- cal_mean_loss(best_w,   hb)
-      rel_gain_b     <- (loss_b_pure_bm - loss_b_best) / max(loss_b_pure_bm, 1e-12)
-      abs_gain_b     <- loss_b_pure_bm - loss_b_best
-      if (rel_gain_b < cal_min_rel_gain ||
+      # beat the pure-BM half-B loss by cal_min_rel_gain (legacy: /2) AND
+      # by the discrete absolute cell floor.
+      loss_b_pure_bm      <- cal_mean_loss(ref_w,    hb)
+      loss_b_best         <- cal_mean_loss(best_w,   hb)
+      rel_gain_b          <- (loss_b_pure_bm - loss_b_best) / max(loss_b_pure_bm, 1e-12)
+      abs_gain_b          <- loss_b_pure_bm - loss_b_best
+      rel_gain_threshold  <- if (safety_floor) cal_min_rel_gain else cal_min_rel_gain / 2
+      if (rel_gain_b < rel_gain_threshold ||
           (is_discrete && abs_gain_b < min_abs_b)) {
         # Revert to best safe fallback.  When safety_floor = TRUE the pure-mean
         # point (0,0,1) is always a valid option — pick whichever of BM and mean
