@@ -37,6 +37,7 @@ fit_pigauto(
   conformal_bootstrap_B = 500L,
   gate_method = c("single_split", "median_splits"),
   gate_splits_B = 31L,
+  safety_floor = TRUE,
   min_val_cells = 20L,
   verbose = TRUE,
   seed = 1L
@@ -161,6 +162,13 @@ on the evaluation sim) with a small coverage-SD improvement
 \item{gate_splits_B}{integer. Random splits used when
 \code{gate_method = "median_splits"}; default \code{31} (odd so the
 median is well-defined).}
+
+\item{safety_floor}{logical. When \code{TRUE} (default), post-training
+calibration searches a 3-way simplex \code{r_BM * BM + r_GNN * GNN
+  + r_MEAN * MEAN} so the grand mean is always in the candidate set,
+guaranteeing \code{pigauto_val_RMSE <= mean_val_RMSE} by
+construction. When \code{FALSE}, the v0.9.1 1-D calibration is used
+exactly (\code{r_MEAN = 0}).}
 
 \item{min_val_cells}{integer. Warn at fit time if any trait has fewer
 than \code{min_val_cells} validation cells available for gate

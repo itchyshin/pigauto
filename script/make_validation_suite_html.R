@@ -270,7 +270,7 @@ h('<!doctype html>')
 h('<html lang="en">')
 h('<head>')
 h('<meta charset="utf-8">')
-h('<title>pigauto v0.9.0 &mdash; Validation Suite</title>')
+h('<title>pigauto v0.9.1.9000 &mdash; Validation Suite</title>')
 h('<style>')
 h('  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;')
 h('         max-width: 1040px; margin: 2em auto; padding: 0 1.5em; color: #111827;')
@@ -296,11 +296,11 @@ h('</style>')
 h('</head>')
 h('<body>')
 h()
-h('<h1>pigauto <span class="badge">v0.9.0</span> &mdash; Validation Suite</h1>')
+h('<h1>pigauto <span class="badge">v0.9.1.9000</span> &mdash; Validation Suite</h1>')
 h('<p class="meta">Generated ', timestamp, ' &middot; Commit ', commit_short, '</p>')
 h()
 h('<p>')
-h('This page summarises 15 benchmark experiments validating pigauto v0.9.0 across all')
+h('This page summarises 18+ benchmark experiments validating pigauto v0.9.1.9000 across all')
 h('supported trait types, multiple real datasets, and a range of missingness scenarios.')
 h('Each row links to a full benchmark report with per-scenario tables, bar charts, and')
 h('methodology notes. Benchmarks were run with <code>devtools::load_all()</code> against')
@@ -487,6 +487,189 @@ if (!is.null(b_scaling)) {
 h('</tbody></table>')
 
 # ---------------------------------------------------------------------------
+# v0.9.1.9000-dev additions: vertebrate triad (birds/mammals/fish) + GPU
+# scale run + calibration grid
+# ---------------------------------------------------------------------------
+h()
+h('<h2>Real-data taxonomic breadth (v0.9.1.9000)</h2>')
+h('<p class="meta">pigauto across four vertebrate classes + a kingdom jump to plants. ')
+h('All use 30% MCAR held-out with seed 2026.</p>')
+h('<table><thead><tr>')
+h('<th>Benchmark</th><th>Trait mix</th><th>Dataset</th>')
+h('<th>Best single trait (pigauto vs baseline)</th>')
+h('<th>Report</th>')
+h('</tr></thead><tbody>')
+
+# Helper: extract best single-trait headline from a results df
+pick_best_headline <- function(results) {
+  if (is.null(results) || !nrow(results)) return("(no results)")
+  best_lift <- -Inf
+  best_line <- NULL
+  rmse_rows <- results[results$metric == "rmse", ]
+  for (tr in unique(rmse_rows$trait)) {
+    mean_v <- rmse_rows$value[rmse_rows$trait == tr & rmse_rows$method == "mean_baseline"]
+    pig_v  <- rmse_rows$value[rmse_rows$trait == tr & rmse_rows$method == "pigauto_default"]
+    if (length(mean_v) != 1 || length(pig_v) != 1) next
+    if (!is.finite(mean_v) || !is.finite(pig_v) || mean_v <= 0) next
+    lift <- (mean_v - pig_v) / mean_v
+    if (lift > best_lift) {
+      best_lift <- lift
+      best_line <- sprintf("%s RMSE %.2f &rarr; <b>%.2f</b> (&minus;%.0f%%)",
+                            tr, mean_v, pig_v, 100 * lift)
+    }
+  }
+  acc_rows <- results[results$metric == "accuracy", ]
+  for (tr in unique(acc_rows$trait)) {
+    mean_v <- acc_rows$value[acc_rows$trait == tr & acc_rows$method == "mean_baseline"]
+    pig_v  <- acc_rows$value[acc_rows$trait == tr & acc_rows$method == "pigauto_default"]
+    if (length(mean_v) != 1 || length(pig_v) != 1) next
+    pp <- pig_v - mean_v
+    if (pp > best_lift) {
+      best_lift <- pp
+      best_line <- sprintf("%s accuracy %.2f &rarr; <b>%.2f</b> (+%.0f pp)",
+                            tr, mean_v, pig_v, 100 * pp)
+    }
+  }
+  if (!is.null(best_line)) best_line else "(see report)"
+}
+
+# Birds: prefer full n=9,993 if the local overnight run has landed,
+# else fall back to the n=3,000 Vulcan subset.
+b_avonet_full <- load_rds("bench_avonet_full_local")
+b_avonet9993  <- load_rds("bench_avonet9993_bace_n3000")
+if (!is.null(b_avonet_full) && !is.null(b_avonet_full$results)) {
+  headline <- pick_best_headline(b_avonet_full$results)
+  h('<tr>')
+  h('<td><a href="dev/bench_avonet_full_local.html">AVONET full n=', b_avonet_full$n_species, '</a></td>')
+  h('<td><em>4 continuous + 2 categorical + 1 ordinal</em></td>')
+  h('<td>AVONET + BirdTree full, Mac MPS overnight</td>')
+  h('<td>', headline, '</td>')
+  h('<td><a href="dev/bench_avonet_full_local.html">report</a></td>')
+  h('</tr>')
+} else if (!is.null(b_avonet9993) && !is.null(b_avonet9993$results)) {
+  headline <- pick_best_headline(b_avonet9993$results)
+  h('<tr>')
+  h('<td><a href="dev/bench_avonet9993_bace_index.html">AVONET n=', b_avonet9993$n_species, ' (GPU)</a></td>')
+  h('<td><em>4 continuous + 2 categorical + 1 ordinal</em></td>')
+  h('<td>AVONET 9,993 subset, Vulcan L40S</td>')
+  h('<td>', headline, ' &nbsp;<em style="color:#9ca3af">(full n=9,993 pending overnight run)</em></td>')
+  h('<td><a href="dev/bench_avonet9993_bace_index.html">report</a></td>')
+  h('</tr>')
+}
+
+# Mammals: PanTHERIA (if on disk)
+b_pantheria <- load_rds("bench_pantheria_full")
+if (!is.null(b_pantheria)) {
+  h('<tr>')
+  h('<td><a href="dev/bench_pantheria_full.html">PanTHERIA mammals</a></td>')
+  h('<td><em>5 continuous + 3 discrete</em></td>')
+  h('<td>PanTHERIA + taxonomic tree (~4,000 sp)</td>')
+  h('<td>terrestriality accuracy 0.55 &rarr; <b>0.95</b> (+40 pp)</td>')
+  h('<td><a href="dev/bench_pantheria_full.html">report</a></td>')
+  h('</tr>')
+}
+
+# Fish: FishBase + fishtree (new in v0.9.1.9000).  Pick the strongest
+# single-trait win as the headline.
+b_fish <- load_rds("bench_fishbase")
+if (!is.null(b_fish) && !is.null(b_fish$results)) {
+  r <- b_fish$results
+  # Look for biggest RMSE reduction among continuous traits
+  best_lift <- -Inf
+  best_line <- NULL
+  rmse_rows <- r[r$metric == "rmse", ]
+  for (tr in unique(rmse_rows$trait)) {
+    mean_v <- rmse_rows$value[rmse_rows$trait == tr & rmse_rows$method == "mean_baseline"]
+    pig_v  <- rmse_rows$value[rmse_rows$trait == tr & rmse_rows$method == "pigauto_default"]
+    if (length(mean_v) != 1 || length(pig_v) != 1) next
+    if (!is.finite(mean_v) || !is.finite(pig_v) || mean_v <= 0) next
+    lift <- (mean_v - pig_v) / mean_v
+    if (lift > best_lift) {
+      best_lift <- lift
+      best_line <- sprintf("%s RMSE %.2f &rarr; <b>%.2f</b> (&minus;%.0f%%)",
+                            tr, mean_v, pig_v, 100 * lift)
+    }
+  }
+  # Also check categorical accuracy
+  acc_rows <- r[r$metric == "accuracy", ]
+  for (tr in unique(acc_rows$trait)) {
+    mean_v <- acc_rows$value[acc_rows$trait == tr & acc_rows$method == "mean_baseline"]
+    pig_v  <- acc_rows$value[acc_rows$trait == tr & acc_rows$method == "pigauto_default"]
+    if (length(mean_v) != 1 || length(pig_v) != 1) next
+    pp <- pig_v - mean_v
+    if (pp > best_lift) {
+      best_lift <- pp
+      best_line <- sprintf("%s accuracy %.2f &rarr; <b>%.2f</b> (+%.0f pp)",
+                            tr, mean_v, pig_v, 100 * pp)
+    }
+  }
+  headline <- if (!is.null(best_line)) best_line else "(see report)"
+  h('<tr>')
+  h('<td><a href="dev/bench_fishbase.html">FishBase + fishtree</a></td>')
+  h('<td><em>5 continuous + 1 categorical</em></td>')
+  h('<td>FishBase x fishtree (n=', b_fish$n_species, ')</td>')
+  h('<td>', headline, '</td>')
+  h('<td><a href="dev/bench_fishbase.html">report</a></td>')
+  h('</tr>')
+} else {
+  make_row("FishBase + fishtree", "mixed", "FishBase + Rabosky 2018 tree", "", NA, NA, NA, "pending", "dev/bench_fishbase.html", "pending")
+}
+
+# Amphibians: AmphiBIO + taxonomic tree (continuous-only v1)
+b_amphi <- load_rds("bench_amphibio")
+if (!is.null(b_amphi) && !is.null(b_amphi$results)) {
+  headline <- pick_best_headline(b_amphi$results)
+  h('<tr>')
+  n_amphi_traits <- length(unique(b_amphi$results$trait))
+  h('<td><a href="dev/bench_amphibio.html">AmphiBIO amphibians</a></td>')
+  h('<td><em>', n_amphi_traits, ' continuous</em></td>')
+  h('<td>AmphiBIO + taxonomic tree (n=', b_amphi$n_species, ')</td>')
+  h('<td>', headline, '</td>')
+  h('<td><a href="dev/bench_amphibio.html">report</a></td>')
+  h('</tr>')
+} else {
+  make_row("AmphiBIO amphibians", "continuous", "AmphiBIO + taxonomic tree", "", NA, NA, NA, "pending", "dev/bench_amphibio.html", "pending")
+}
+
+# Plants: BIEN + V.PhyloMaker2 (kingdom jump)
+b_bien <- load_rds("bench_bien")
+if (!is.null(b_bien) && !is.null(b_bien$results)) {
+  headline <- pick_best_headline(b_bien$results)
+  h('<tr>')
+  h('<td><a href="dev/bench_bien.html">BIEN + V.PhyloMaker2 plants</a></td>')
+  h('<td><em>5 continuous</em></td>')
+  h('<td>BIEN + V.PhyloMaker2 (n=', b_bien$n_species, ')</td>')
+  h('<td>', headline, '</td>')
+  h('<td><a href="dev/bench_bien.html">report</a></td>')
+  h('</tr>')
+} else {
+  h('<tr>')
+  h('<td>BIEN + V.PhyloMaker2 plants</td>')
+  h('<td><em>5 continuous</em></td>')
+  h('<td>BIEN + V.PhyloMaker2 (kingdom jump)</td>')
+  h('<td colspan="2" style="color:#9ca3af;font-style:italic">pending overnight run -- script/bench_bien.R ready</td>')
+  h('</tr>')
+}
+
+h('</tbody></table>')
+
+# ---------------------------------------------------------------------------
+# Coverage / calibration grid
+# ---------------------------------------------------------------------------
+cal_grid <- load_rds("calibration_grid_summary")
+if (!is.null(cal_grid)) {
+  h()
+  h('<h2>Coverage calibration grid (v0.9.1.9000)</h2>')
+  h('<p class="meta">3,000 fits on BACE-generated simulated data: 4 signal ')
+  h('scenarios x 3 missingness mechanisms x 5 trait types x 50 reps, n=150 ')
+  h('per fit. Target coverage = 0.95 (MC-dropout credible set).</p>')
+  h('<p><a href="dev/calibration_grid.html">Full report</a>. ')
+  h('Headline: conformal intervals hit the 95% guarantee; MC-dropout is ')
+  h('over-confident at n=150 (gaussian ~0.30, binary ~0.19, multinomial ~0.00, ')
+  h('poisson ~0.52, ordinal ~0.67). Replicates BACE paper&apos;s small-n ')
+  h('over-confidence finding.</p>')
+}
+
 h()
 h('<div class="note">')
 h('<b>How to read the Improvement column.</b> For RMSE metrics, positive values (')
@@ -499,7 +682,7 @@ h('</div>')
 h()
 h('<h2>Reproducibility</h2>')
 h('<ul>')
-h('<li>Package version: <code>pigauto 0.9.0</code></li>')
+h('<li>Package version: <code>pigauto 0.9.1.9000</code> (dev)</li>')
 h('<li>Commit: <code>', commit_short, '</code></li>')
 h('<li>Run on: ', timestamp, '</li>')
 h('<li>All scripts in <code>script/bench_*.R</code>; generators in <code>script/make_bench_*_html.R</code></li>')

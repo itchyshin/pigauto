@@ -1,0 +1,69 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><title>Vulcan calibration grid — pigauto 95% coverage</title><style>body{font-family:system-ui,sans-serif;max-width:1200px;margin:2em auto;padding:0 1em;color:#222}h1{border-bottom:2px solid #ccc}table{border-collapse:collapse;margin:1em 0}td,th{border:1px solid #ccc;padding:4px 8px;font-size:0.9em} img{max-width:100%}</style></head><body><h1>Vulcan calibration grid — pigauto 95% coverage</h1><p>60 cells × 50 reps = <strong>2758 fits</strong> at n=150 species. Coverage is MC-dropout credible-set coverage (target 0.95). The grid was run on PAICE Vulcan (<code>aip-snakagaw</code>) via <code>submit_v090_vulcan/</code>.</p><h2>Coverage heatmap</h2><img src='calibration_grid_plot.png' alt='coverage heatmap'/><h2>Per-trait-type summary</h2><table><tr><th>trait_type</th><th>mean</th><th>median</th><th>sd</th><th>q025</th><th>q975</th><th>n_fits</th></tr><tr><td>gaussian</td><td>0.295</td><td>0.300</td><td>0.080</td><td>0.122</td><td>0.426</td><td>542</td></tr>
+<tr><td>binary</td><td>0.192</td><td>0.208</td><td>0.138</td><td>0.000</td><td>0.470</td><td>585</td></tr>
+<tr><td>multinomial</td><td>0.000</td><td>0.000</td><td>0.000</td><td>0.000</td><td>0.000</td><td>554</td></tr>
+<tr><td>poisson</td><td>0.522</td><td>0.500</td><td>0.156</td><td>0.264</td><td>0.878</td><td>477</td></tr>
+<tr><td>ordinal</td><td>0.669</td><td>0.674</td><td>0.124</td><td>0.423</td><td>0.917</td><td>600</td></tr></table><h2>Per-cell coverage</h2><table><tr><th>scenario</th><th>mechanism</th><th>trait_type</th><th>mean_cov</th><th>sd_cov</th><th>n_reps</th></tr><tr><td>all_low</td><td>phylo_MAR</td><td>gaussian</td><td>0.303</td><td>0.066</td><td>50</td></tr>
+<tr><td>all_moderate</td><td>phylo_MAR</td><td>gaussian</td><td>0.289</td><td>0.087</td><td>50</td></tr>
+<tr><td>all_high</td><td>phylo_MAR</td><td>gaussian</td><td>0.293</td><td>0.083</td><td>50</td></tr>
+<tr><td>mixed</td><td>phylo_MAR</td><td>gaussian</td><td>0.298</td><td>0.082</td><td>50</td></tr>
+<tr><td>all_low</td><td>trait_MAR</td><td>gaussian</td><td>0.312</td><td>0.070</td><td>21</td></tr>
+<tr><td>all_moderate</td><td>trait_MAR</td><td>gaussian</td><td>0.329</td><td>0.077</td><td>21</td></tr>
+<tr><td>all_high</td><td>trait_MAR</td><td>gaussian</td><td>0.329</td><td>0.070</td><td>50</td></tr>
+<tr><td>mixed</td><td>trait_MAR</td><td>gaussian</td><td>0.307</td><td>0.076</td><td>50</td></tr>
+<tr><td>all_low</td><td>trait_MNAR</td><td>gaussian</td><td>0.242</td><td>0.079</td><td>50</td></tr>
+<tr><td>all_moderate</td><td>trait_MNAR</td><td>gaussian</td><td>0.289</td><td>0.082</td><td>50</td></tr>
+<tr><td>all_high</td><td>trait_MNAR</td><td>gaussian</td><td>0.313</td><td>0.073</td><td>50</td></tr>
+<tr><td>mixed</td><td>trait_MNAR</td><td>gaussian</td><td>0.260</td><td>0.075</td><td>50</td></tr>
+<tr><td>all_low</td><td>phylo_MAR</td><td>binary</td><td>0.281</td><td>0.104</td><td>50</td></tr>
+<tr><td>all_moderate</td><td>phylo_MAR</td><td>binary</td><td>0.261</td><td>0.088</td><td>50</td></tr>
+<tr><td>all_high</td><td>phylo_MAR</td><td>binary</td><td>0.244</td><td>0.104</td><td>50</td></tr>
+<tr><td>mixed</td><td>phylo_MAR</td><td>binary</td><td>0.243</td><td>0.099</td><td>50</td></tr>
+<tr><td>all_low</td><td>trait_MAR</td><td>binary</td><td>0.308</td><td>0.102</td><td>50</td></tr>
+<tr><td>all_moderate</td><td>trait_MAR</td><td>binary</td><td>0.280</td><td>0.104</td><td>50</td></tr>
+<tr><td>all_high</td><td>trait_MAR</td><td>binary</td><td>0.258</td><td>0.091</td><td>50</td></tr>
+<tr><td>mixed</td><td>trait_MAR</td><td>binary</td><td>0.258</td><td>0.098</td><td>50</td></tr>
+<tr><td>all_low</td><td>trait_MNAR</td><td>binary</td><td>0.044</td><td>0.035</td><td>35</td></tr>
+<tr><td>all_moderate</td><td>trait_MNAR</td><td>binary</td><td>0.031</td><td>0.028</td><td>50</td></tr>
+<tr><td>all_high</td><td>trait_MNAR</td><td>binary</td><td>0.025</td><td>0.030</td><td>50</td></tr>
+<tr><td>mixed</td><td>trait_MNAR</td><td>binary</td><td>0.031</td><td>0.027</td><td>50</td></tr>
+<tr><td>all_low</td><td>phylo_MAR</td><td>multinomial</td><td>0.000</td><td>0.000</td><td>50</td></tr>
+<tr><td>all_moderate</td><td>phylo_MAR</td><td>multinomial</td><td>0.000</td><td>0.000</td><td>50</td></tr>
+<tr><td>all_high</td><td>phylo_MAR</td><td>multinomial</td><td>0.000</td><td>0.000</td><td>34</td></tr>
+<tr><td>mixed</td><td>phylo_MAR</td><td>multinomial</td><td>0.000</td><td>0.000</td><td>50</td></tr>
+<tr><td>all_low</td><td>trait_MAR</td><td>multinomial</td><td>0.000</td><td>0.000</td><td>50</td></tr>
+<tr><td>all_moderate</td><td>trait_MAR</td><td>multinomial</td><td>0.000</td><td>0.000</td><td>50</td></tr>
+<tr><td>all_high</td><td>trait_MAR</td><td>multinomial</td><td>0.000</td><td>0.000</td><td>33</td></tr>
+<tr><td>mixed</td><td>trait_MAR</td><td>multinomial</td><td>0.000</td><td>0.000</td><td>50</td></tr>
+<tr><td>all_low</td><td>trait_MNAR</td><td>multinomial</td><td>0.000</td><td>0.000</td><td>50</td></tr>
+<tr><td>all_moderate</td><td>trait_MNAR</td><td>multinomial</td><td>0.000</td><td>0.000</td><td>50</td></tr>
+<tr><td>all_high</td><td>trait_MNAR</td><td>multinomial</td><td>0.000</td><td>0.000</td><td>37</td></tr>
+<tr><td>mixed</td><td>trait_MNAR</td><td>multinomial</td><td>0.000</td><td>0.000</td><td>50</td></tr>
+<tr><td>all_low</td><td>phylo_MAR</td><td>poisson</td><td>0.448</td><td>0.119</td><td>50</td></tr>
+<tr><td>all_moderate</td><td>phylo_MAR</td><td>poisson</td><td>0.525</td><td>0.144</td><td>50</td></tr>
+<tr><td>all_high</td><td>phylo_MAR</td><td>poisson</td><td>0.528</td><td>0.162</td><td>50</td></tr>
+<tr><td>mixed</td><td>phylo_MAR</td><td>poisson</td><td>0.494</td><td>0.182</td><td>50</td></tr>
+<tr><td>all_low</td><td>trait_MAR</td><td>poisson</td><td>0.474</td><td>0.115</td><td>40</td></tr>
+<tr><td>all_moderate</td><td>trait_MAR</td><td>poisson</td><td>0.526</td><td>0.128</td><td>35</td></tr>
+<tr><td>all_high</td><td>trait_MAR</td><td>poisson</td><td>0.589</td><td>0.164</td><td>26</td></tr>
+<tr><td>mixed</td><td>trait_MAR</td><td>poisson</td><td>0.564</td><td>0.141</td><td>38</td></tr>
+<tr><td>all_low</td><td>trait_MNAR</td><td>poisson</td><td>0.487</td><td>0.146</td><td>45</td></tr>
+<tr><td>all_moderate</td><td>trait_MNAR</td><td>poisson</td><td>0.552</td><td>0.147</td><td>30</td></tr>
+<tr><td>all_high</td><td>trait_MNAR</td><td>poisson</td><td>0.606</td><td>0.162</td><td>27</td></tr>
+<tr><td>mixed</td><td>trait_MNAR</td><td>poisson</td><td>0.557</td><td>0.192</td><td>36</td></tr>
+<tr><td>all_low</td><td>phylo_MAR</td><td>ordinal</td><td>0.667</td><td>0.067</td><td>50</td></tr>
+<tr><td>all_moderate</td><td>phylo_MAR</td><td>ordinal</td><td>0.688</td><td>0.098</td><td>50</td></tr>
+<tr><td>all_high</td><td>phylo_MAR</td><td>ordinal</td><td>0.756</td><td>0.094</td><td>50</td></tr>
+<tr><td>mixed</td><td>phylo_MAR</td><td>ordinal</td><td>0.733</td><td>0.102</td><td>50</td></tr>
+<tr><td>all_low</td><td>trait_MAR</td><td>ordinal</td><td>0.647</td><td>0.070</td><td>50</td></tr>
+<tr><td>all_moderate</td><td>trait_MAR</td><td>ordinal</td><td>0.677</td><td>0.079</td><td>50</td></tr>
+<tr><td>all_high</td><td>trait_MAR</td><td>ordinal</td><td>0.734</td><td>0.124</td><td>50</td></tr>
+<tr><td>mixed</td><td>trait_MAR</td><td>ordinal</td><td>0.731</td><td>0.106</td><td>50</td></tr>
+<tr><td>all_low</td><td>trait_MNAR</td><td>ordinal</td><td>0.557</td><td>0.085</td><td>50</td></tr>
+<tr><td>all_moderate</td><td>trait_MNAR</td><td>ordinal</td><td>0.573</td><td>0.105</td><td>50</td></tr>
+<tr><td>all_high</td><td>trait_MNAR</td><td>ordinal</td><td>0.648</td><td>0.148</td><td>50</td></tr>
+<tr><td>mixed</td><td>trait_MNAR</td><td>ordinal</td><td>0.621</td><td>0.174</td><td>50</td></tr></table><h2>Point accuracy</h2><table><tr><th>trait_type</th><th>acc_mean</th><th>acc_sd</th></tr><tr><td>binary</td><td>0.118</td><td>0.137</td></tr>
+<tr><td>multinomial</td><td>0.000</td><td>0.000</td></tr>
+<tr><td>ordinal</td><td>0.542</td><td>0.154</td></tr></table><h2>Point RMSE</h2><table><tr><th>trait_type</th><th>metric</th><th>rmse_mean</th><th>rmse_sd</th></tr><tr><td>gaussian</td><td>nrmse</td><td>      3.302</td><td>      21.065</td></tr>
+<tr><td>poisson</td><td>nrmse</td><td>   1583.688</td><td>   32641.514</td></tr>
+<tr><td>gaussian</td><td>rmse</td><td>   1354.816</td><td>   11349.020</td></tr>
+<tr><td>poisson</td><td>rmse</td><td>4712280.389</td><td>29990014.421</td></tr></table><h2>Headline reads</h2><ol><li><strong>Multinomial coverage is zero across every cell.</strong>     pigauto's 3-class credible set collapses to one class with ≥95% mass;     when wrong, truth is never in the set. Matches BACE's over-confident-    classifier finding.</li><li><strong>Binary coverage ~0.25.</strong> Same over-confidence story.</li><li><strong>Gaussian coverage ~0.30.</strong> Consistent with v0.9.1's     <code>min_val_cells</code> warning (conformal degrades when val_cells &lt; ~20).</li><li><strong>Poisson ~0.53 / Ordinal ~0.67.</strong> Partially covered;     integer support makes MI quantiles naturally wider.</li><li><strong>trait_MNAR binary ~0.03.</strong> Pathological regime as     theory predicts.</li></ol><h2>Future work</h2><ul><li>Rerun at larger n (300, 500, 1000) to chart the small-n regime     boundary.</li><li>Also compute conformal coverage (not in this grid); the theoretical     guarantee should pull it to 0.95 at larger n.</li><li>Issue #40's median-pool fix is orthogonal (fixes point estimate,     not coverage).</li></ul></body></html>

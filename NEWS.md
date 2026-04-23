@@ -1,4 +1,205 @@
+# pigauto 0.9.1.9002 (dev)
+
+## Safety floor: pigauto is never worse than the grand mean
+
+Default change: `impute()` / `fit_pigauto()` / `multi_impute*` now run
+with `safety_floor = TRUE`. The calibration grid post-training searches
+a three-way convex combination of (BM baseline, GNN delta, grand mean)
+on a 231-point simplex at step 0.05. Because the pure-mean corner
+`(0, 0, 1)` is always a candidate in the grid, validation RMSE is
+guaranteed by construction to satisfy `pigauto_val_RMSE <= mean_val_RMSE`
+on every trait. On held-out test, the invariant holds up to
+sampling-noise slack (tolerance +2% in the production canary,
+verified on five taxa by `script/regress.R`).
+
+### Effect on existing benches
+
+- Birds, mammals, fish, amphibians: lift unchanged (within 1%).
+- Plants: on weak-signal traits (`height_m`, `leaf_area`, `seed_mass`,
+  `sla`) the calibrator opens `r_MEAN > 0` and the prediction falls
+  toward the grand mean, fixing the boundary-case regression where
+  pigauto was previously 15-101% worse than mean; `wood_density` lift
+  preserved.
+
+### API
+
+- `impute(..., safety_floor = TRUE)` — new arg, defaults to TRUE.
+- `fit_pigauto(..., safety_floor = TRUE)` — same.
+- The fit object gains four new slots: `r_cal_bm`, `r_cal_gnn`,
+  `r_cal_mean` (each a named numeric of length `p_latent`), and
+  `mean_baseline_per_col`.
+- `multi_impute()` / `multi_impute_trees()` propagate the mean term
+  automatically via `predict.pigauto_fit()`; no signature change.
+- Legacy v0.9.1 fit objects keep working via `%||%` fallback in
+  `predict.pigauto_fit()`: when the new slots are absent, the 2-way
+  blend `(1 - r_cal) * BM + r_cal * GNN` is reconstructed from the
+  scalar `r_cal`.
+
+### Opt-out
+
+`safety_floor = FALSE` reproduces the v0.9.1 1-D calibration
+bit-identically on the legacy path.
+
+### Testing
+
+- `tests/testthat/test-safety-floor.R`: smoke canary, ~3 min on MPS.
+  23 `test_that` blocks, 75 expectations covering: simplex grid,
+  mean-baseline scalar, calibrate_gates 3-way path, fit_pigauto
+  integration, predict 3-way blend + legacy fallback, multi_impute
+  propagation, multi_impute_trees share_gnn propagation, AVONET300
+  regression (continuous RMSE within +2%, discrete accuracy within
+  -2pp), plants safety smoke (cached BIEN n=1000, RMSE within +15%
+  of grand mean).
+- `script/regress.R`: full canary, ~20 min on MPS at n=1000 per taxon.
+  Writes `script/regress_result.json` with per-bench pass/fail.
+
+### Files
+
+- `R/calibration_three_way.R`: new — `simplex_grid()`,
+  `mean_baseline_scalar()` helpers.
+- `R/fit_helpers.R`: `calibrate_gates()` now returns list of 3 weight
+  vectors and optionally searches the simplex grid.
+- `R/fit_pigauto.R`: computes `mean_baseline_per_col` from training
+  cells; passes `safety_floor` through; stores the new slots.
+- `R/predict_pigauto.R`: 3-way blend with `%||%` backward compat.
+- `R/impute.R`: pass-through arg + roxygen.
+- `R/multi_impute.R`, `R/multi_impute_trees.R`: roxygen only.
+- `inst/extdata/legacy_fit_v091.rds`: fixture for backward-compat
+  test.
+- `data-raw/make_legacy_fit_v091.R`: one-shot fixture builder.
+- `specs/2026-04-23-safety-floor-mean-gate-design.md`: design spec.
+- `plans/2026-04-23-safety-floor-mean-gate.md`: implementation plan.
+
 # pigauto 0.9.1.9000 (dev)
+
+## Taxonomic-breadth benchmarks: 4 vertebrate classes + plant boundary case
+
+Real-data benches now cover four vertebrate classes plus a plants
+run that establishes the scope of phylogenetic imputation. All use
+30% MCAR held-out, seed 2026, and report both conformal and
+MC-dropout 95% coverage alongside RMSE / accuracy. The vertebrate
+benches consistently lift point estimates by 27-75% RMSE /
+10-40 pp accuracy; the plants bench is the first honest
+boundary-case result, with a clean wood_density lift but r ≤ 0.21
+on four other traits, attributable to weak phylogenetic signal in
+pooled BIEN species means and random polytomy resolution in
+V.PhyloMaker2 (details below). **Conformal coverage still lands at
+0.90-0.98 on plants**, so the uncertainty story generalises across
+the kingdom jump even where point estimates do not.
+
+- **Birds** (`script/bench_avonet9993_bace_n3000.rds`, Vulcan L40S):
+  AVONET n=3,000 subset x 7 traits. Mass RMSE -45%, Beak -55%,
+  Tarsus -46%, Wing -57%; Trophic.Level accuracy +16 pp;
+  Primary.Lifestyle +13 pp. Conformal 0.94-0.96.
+  New driver `script/bench_avonet_full_local.R` runs the full
+  n=9,993 locally on Mac MPS (Vulcan hit a predict-stage OOM at
+  this scale); overnight job, HTML generator
+  `script/make_bench_avonet_full_local_html.R` ready.
+- **Mammals** (from `feature/bench-pantheria`): PanTHERIA n=4,027 x
+  8 traits. **terrestriality accuracy 0.55 -> 0.95 (+40 pp)**;
+  body_mass_g RMSE -27%, head_body_length -75%; diet/habitat
+  breadth +10 pp each. Conformal 0.93-0.96.
+- **Fish** (`script/bench_fishbase.rds`, Mac MPS):
+  FishBase x fishtree n=10,654 x 6 traits.
+  **Vulnerability RMSE -45%**, Length -38% (r=0.81), BodyShapeI
+  accuracy +31 pp; Troph -23%, Depth -10%; Weight improved from
+  r=0.04 (noise) to r=0.42 under the new median-pool MI fix.
+- **Amphibians** (`script/bench_amphibio.rds`, Mac MPS): AmphiBIO
+  n=5,237 x 2 continuous traits. **Body_size_mm RMSE 89 -> 44
+  (-51%)**, Body_mass_g -27% (r=0.98). Continuous-only v1 --
+  AmphiBIO binary / categorical columns hit a character/double
+  type mismatch in the threshold-joint baseline, parked for
+  v0.9.2. Calibrated gates = 0 on both traits: pigauto's GNN
+  correctly recognises that the Level-C joint MVN baseline is
+  already optimal, and still beats the mean baseline by 27-51%
+  because the BM baseline captures cross-trait correlation +
+  phylogenetic signal.
+- **Plants** (`script/bench_bien.R`, honest boundary-case finding):
+  BIEN x V.PhyloMaker2 at n=4,745 species, n_imputations=20.
+  Only `wood_density` lifts (-6% RMSE, r=0.43); `height_m`, `sla`,
+  `seed_mass`, `leaf_area` show r ≤ 0.21 and are 15-101% *worse*
+  than grand mean on RMSE. Root cause is in the data, not pigauto:
+  (i) BIEN species means are pooled from heterogeneous individual
+  observations, diluting phylogenetic signal, and (ii) V.PhyloMaker2
+  scenario S3 resolves within-genus polytomies randomly, so most
+  species sit behind random branches relative to the Smith & Brown
+  2018 backbone. pigauto's gate safety contains the damage: on
+  weak-signal traits the calibrated gate closes to 0 and the
+  pipeline degrades gracefully to the (also weak) BM prior rather
+  than blowing up. **Conformal coverage still lands at 0.90-0.98
+  on all 5 traits** -- the distribution-free uncertainty story
+  holds even when point estimates are weak, separating the UQ
+  narrative (always robust) from the point-estimate narrative
+  (taxon-dependent). A first pass at `n_imputations = 1` showed
+  `height_m` RMSE blowing up to 47.7 via Jensen exp()-decode bias;
+  rerunning at `n_imputations = 20` activated the `dc8cffa`
+  median-pool MI correction and dropped it to 15.15. The weak-
+  signal result is what remains after that fix -- it is a property
+  of BIEN x V.PhyloMaker2 at this species pool, not a pigauto
+  regression. See `script/bench_bien.html` for the full honest
+  reading and the in-page Jensen note.
+
+Validation suite (`pkgdown/assets/validation_suite.html`) and the
+paper-draft summary (`useful/results_summary.md`) collect all
+numbers in one place.
+
+## FishBase + fishtree benchmark (vertebrate breadth triad complete)
+
+- New `script/bench_fishbase.R` benchmarks pigauto on the intersection
+  of `fishtree::fishtree_phylogeny()` (Rabosky et al. 2018) and
+  rfishbase's `load_taxa() + species() + ecology()` -- 10,654 species
+  with 6 mixed-type traits (Length, Weight, BodyShapeI, DepthRangeDeep,
+  Vulnerability, Troph). Completes the vertebrate breadth triad:
+  birds (AVONET), mammals (PanTHERIA), fish (FishBase + fishtree).
+- Full-scope result on Apple Silicon MPS (2.5 hr wall, post median-
+  pool fix dc8cffa):
+  Vulnerability RMSE 17.9 → 9.9 (-45%); Length RMSE 41.2 → 25.5
+  (-38%, r=0.81); BodyShapeI accuracy 0.46 → 0.78 (+31 pp);
+  Troph RMSE -23%; DepthRangeDeep RMSE -10%; Weight RMSE -3%
+  (r=0.42 vs 0.04 under mean pool).
+- HTML generator: `script/make_bench_fishbase_html.R` + pkgdown
+  mirror at `pkgdown/assets/dev/bench_fishbase.html`.
+
+## MI-pool robustness: median pooling for decode-amplifying traits
+
+- `pool_imputations()` now uses **median pooling** across decoded
+  values for all trait types where the decode step amplifies
+  dropout-noisy draws: log-transformed continuous (new), count
+  (extended), zi_count (extended), and proportion (new). Untransformed
+  continuous keeps mean pooling (backward-compat default).
+- Rationale: when `n_imputations > 1`, a few dropout-noisy latent
+  draws with high-tail values decode via `expm1()` / `plogis()` to
+  absurd magnitudes that dominate `rowMeans()`. Median is the
+  outlier-robust pooling choice that matches PR #41's approach for
+  count / proportion, now extended across the full set of
+  decode-amplifying trait types.
+- Concrete example: on the FishBase n=10,654 bench, pigauto's Length
+  RMSE was 3,718 vs mean-baseline's 41 under the old mean-pool
+  scheme -- a pure decode artefact (the calibrated gate on Length
+  was 0). Median pool eliminates the artefact without retraining.
+- Binary / categorical / ordinal pooling is unchanged (mean of
+  probabilities / rowMeans of integer classes is correct there).
+- 4 new regression tests in `test-mi-pool-robust.R` cover the four
+  trait types that switched to median, verifying that a single
+  extreme draw does not dominate the pooled output.
+
+## GPU memory fix at predict stage (large n)
+
+- `fit_pigauto()` now moves its returned `model_state` to CPU and
+  calls `torch::cuda_empty_cache()` before returning, so the training
+  run's activations, optimizer state, and per-epoch intermediate
+  tensors can be reclaimed by torch's CUDA caching allocator. Prior
+  to this fix, the fit object held GPU tensor refs that kept
+  ~40 GB of training-time memory resident, and the downstream
+  `predict()` path OOM'd on any card with <= 80 GB at n >= 5000.
+- `impute()` now calls `gc()` + `torch::cuda_empty_cache()` between
+  `fit_pigauto()` and `predict()` as belt-and-braces.
+- Reproducer: Vulcan L40S (46 GB) at n=5000 or n=9993, default or
+  compact config; predicted in 382 MB / 192 MB / 762 MB allocations
+  on a 43 GB-already-used GPU. All four configurations on 2026-04-21
+  died at the same step with the same root cause.
+- No behavioural change for users: same `pigauto_fit` shape,
+  `predict()` output identical; just no longer OOM at scale.
 
 ## Phase 7 EM: off-diagonal conditioning (opt-in, on top of Phase 6)
 

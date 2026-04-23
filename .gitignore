@@ -36,6 +36,7 @@ checkpoints_bin/
 # Cached graph files
 *.rds
 !data/*.rda
+!inst/extdata/*.rds
 
 # pkgdown / rsconnect
 docs/
@@ -59,3 +60,11 @@ BACE/
 # Stray plot output
 Rplots.pdf
 inst/doc/
+
+# Local data caches for bench scripts (downloadable, not portable)
+script/data-cache/
+
+# Vulcan bundles and their rsync'd artifacts live on dedicated branches;
+# don't let working-dir leftovers pollute feature branches
+submit_v090_vulcan_gpu/
+submit_v090_vulcan/
