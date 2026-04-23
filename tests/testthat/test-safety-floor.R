@@ -27,3 +27,65 @@ test_that("simplex_grid always contains the three corners", {
                                corners[k,1], corners[k,2], corners[k,3]))
   }
 })
+
+# ---- Task 1 follow-up: cover the non-divisor error path ----
+
+test_that("simplex_grid errors when step does not evenly divide 1", {
+  expect_error(pigauto:::simplex_grid(step = 0.3), "evenly divide")
+})
+
+# ---- Task 2: mean_baseline_scalar() ----
+
+test_that("mean_baseline_scalar continuous = training grand mean on latent scale", {
+  # Simulate: column is z-scored, training-observed mask drops some rows
+  set.seed(1L)
+  X <- matrix(rnorm(100), nrow = 100, ncol = 1L)
+  train_mask <- rep(TRUE, 100); train_mask[11:20] <- FALSE
+  # Latent scale mean of training-observed rows:
+  expected <- mean(X[train_mask, 1L])
+  got <- pigauto:::mean_baseline_scalar(X[, 1L], train_mask,
+                                          trait_type = "continuous")
+  expect_equal(got, expected, tolerance = 1e-12)
+})
+
+test_that("mean_baseline_scalar binary = qlogis(clip(freq, 0.01, 0.99))", {
+  X <- c(rep(1, 30), rep(0, 70))   # freq = 0.30
+  expected <- qlogis(0.30)
+  got <- pigauto:::mean_baseline_scalar(X, rep(TRUE, 100),
+                                          trait_type = "binary")
+  expect_equal(got, expected, tolerance = 1e-12)
+})
+
+test_that("mean_baseline_scalar binary clips degenerate all-0 to qlogis(0.01)", {
+  X <- rep(0, 100)
+  expected <- qlogis(0.01)
+  got <- pigauto:::mean_baseline_scalar(X, rep(TRUE, 100),
+                                          trait_type = "binary")
+  expect_equal(got, expected, tolerance = 1e-12)
+})
+
+test_that("mean_baseline_scalar binary clips degenerate all-1 to qlogis(0.99)", {
+  X <- rep(1, 100)
+  expected <- qlogis(0.99)
+  got <- pigauto:::mean_baseline_scalar(X, rep(TRUE, 100),
+                                          trait_type = "binary")
+  expect_equal(got, expected, tolerance = 1e-12)
+})
+
+test_that("mean_baseline_scalar categorical column = qlogis(clip(mean(Y_k), 0.01, 0.99))", {
+  Y_k <- c(rep(1, 20), rep(0, 80))
+  expected <- qlogis(0.20)
+  got <- pigauto:::mean_baseline_scalar(Y_k, rep(TRUE, 100),
+                                          trait_type = "categorical")
+  expect_equal(got, expected, tolerance = 1e-12)
+})
+
+test_that("mean_baseline_scalar excludes NA and non-training rows", {
+  X <- c(NA_real_, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+  train_mask <- c(TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE)
+  # train_mask AND !is.na(X) -> rows 2..6: 3/5 = 0.6
+  expected <- qlogis(0.6)
+  got <- pigauto:::mean_baseline_scalar(X, train_mask,
+                                          trait_type = "binary")
+  expect_equal(got, expected, tolerance = 1e-12)
+})

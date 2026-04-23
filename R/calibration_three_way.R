@@ -34,3 +34,42 @@ simplex_grid <- function(step = 0.05) {
   colnames(out) <- c("r_bm", "r_gnn", "r_mean")
   out
 }
+
+# Compute the safety-floor mean-baseline scalar for one latent column.
+#
+# Returns a single numeric on the same latent scale as the column's
+# bm_val / gnn_val (z-score for continuous/count/ordinal/proportion,
+# logit for binary/categorical, z-score of magnitude for zi_count).
+#
+# For continuous-family columns: plain training grand mean on the
+# already-z-scored `x_col`. This is approximately 0 (not exactly 0
+# because z-scoring uses ALL preprocessed observations including ones
+# that later become held-out test / val).
+#
+# For binary / categorical sub-columns: class-1 frequency clipped to
+# [0.01, 0.99], then `qlogis()` to move to logit scale.
+#
+# @param x_col       numeric, one latent column, length n_obs
+# @param train_mask  logical, TRUE for training-observed rows
+# @param trait_type  character, one of "continuous", "count", "ordinal",
+#                    "proportion", "zi_mag", "binary", "categorical"
+# @return scalar numeric
+#
+# @noRd
+mean_baseline_scalar <- function(x_col, train_mask, trait_type) {
+  stopifnot(length(x_col) == length(train_mask),
+            is.logical(train_mask),
+            length(trait_type) == 1L)
+  keep <- train_mask & !is.na(x_col)
+  if (sum(keep) == 0L) return(0)
+  if (trait_type %in% c("continuous", "count", "ordinal",
+                          "proportion", "zi_mag")) {
+    mean(x_col[keep])
+  } else if (trait_type %in% c("binary", "categorical")) {
+    p <- mean(x_col[keep])
+    p <- pmin(pmax(p, 0.01), 0.99)
+    qlogis(p)
+  } else {
+    stop("mean_baseline_scalar: unsupported trait_type = ", trait_type)
+  }
+}
