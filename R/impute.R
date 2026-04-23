@@ -69,6 +69,10 @@
 #'   on correlated other traits.  Binary + ordinal only; OVR categorical
 #'   stays on Phase 6 diagonal.  Default \code{FALSE}.  Passed to
 #'   \code{\link{fit_baseline}}.
+#' @param safety_floor logical. Pass-through to \code{fit_pigauto()}.
+#'   When \code{TRUE} (default), ensures pigauto's validation RMSE is
+#'   never worse than the grand-mean baseline. See \code{fit_pigauto()}
+#'   for details.
 #' @param ... additional arguments passed to \code{\link{fit_pigauto}}.
 #' @return An object of class \code{"pigauto_result"} with components:
 #'   \describe{
@@ -166,6 +170,7 @@ impute <- function(traits, tree, species_col = NULL,
                    em_iterations = 0L,
                    em_tol = 1e-3,
                    em_offdiag = FALSE,
+                   safety_floor = TRUE,
                    ...) {
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
 
@@ -212,14 +217,15 @@ impute <- function(traits, tree, species_col = NULL,
 
   # 5. Train GNN
   fit <- fit_pigauto(
-    data     = pd,
-    tree     = tree,
-    splits   = splits,
-    graph    = graph,
-    baseline = baseline,
-    epochs   = as.integer(epochs),
-    verbose  = verbose,
-    seed     = as.integer(seed),
+    data         = pd,
+    tree         = tree,
+    splits       = splits,
+    graph        = graph,
+    baseline     = baseline,
+    epochs       = as.integer(epochs),
+    verbose      = verbose,
+    seed         = as.integer(seed),
+    safety_floor = safety_floor,
     ...
   )
 

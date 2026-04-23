@@ -179,3 +179,48 @@ test_that("calibrate_gates(safety_floor = TRUE) invariant: loss <= mean_loss on 
                mean((mean_only - truth[, j])^2) + 1e-10)
   }
 })
+
+# ---- Task 5: fit_pigauto() safety_floor integration ----
+
+test_that("fit_pigauto(safety_floor = TRUE) stores mean_baseline_per_col + simplex weights on fit", {
+  skip_if_not_installed("torch")
+  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  data(avonet300, tree300, package = "pigauto")
+  set.seed(2026L)
+  df <- avonet300
+  rownames(df) <- df$Species_Key
+  df$Species_Key <- NULL
+  df$Mass[sample(300, 30)]               <- NA_real_
+  df$Beak.Length_Culmen[sample(300, 30)] <- NA_real_
+  res <- pigauto::impute(df, tree300, safety_floor = TRUE,
+                           epochs = 50L, n_imputations = 1L,
+                           verbose = FALSE, seed = 2026L)
+  fit <- res$fit
+  expect_true(!is.null(fit$mean_baseline_per_col))
+  expect_type(fit$mean_baseline_per_col, "double")
+  expect_true(!is.null(fit$r_cal_bm))
+  expect_true(!is.null(fit$r_cal_gnn))
+  expect_true(!is.null(fit$r_cal_mean))
+  expect_equal(length(fit$r_cal_bm), length(fit$mean_baseline_per_col))
+  sums <- fit$r_cal_bm + fit$r_cal_gnn + fit$r_cal_mean
+  expect_equal(as.numeric(sums), rep(1, length(sums)), tolerance = 1e-8)
+  expect_true(isTRUE(fit$safety_floor))
+})
+
+test_that("fit_pigauto(safety_floor = FALSE) reproduces v0.9.1 behaviour (r_mean = 0, mean_baseline_per_col NULL or 0)", {
+  skip_if_not_installed("torch")
+  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  data(avonet300, tree300, package = "pigauto")
+  set.seed(2026L)
+  df <- avonet300
+  rownames(df) <- df$Species_Key
+  df$Species_Key <- NULL
+  df$Mass[sample(300, 30)] <- NA_real_
+  res <- pigauto::impute(df, tree300, safety_floor = FALSE,
+                           epochs = 50L, n_imputations = 1L,
+                           verbose = FALSE, seed = 2026L)
+  fit <- res$fit
+  expect_false(isTRUE(fit$safety_floor))
+  # Legacy path: r_cal_mean must be exactly 0 on every column.
+  expect_equal(as.numeric(fit$r_cal_mean), rep(0, length(fit$r_cal_mean)))
+})
