@@ -203,6 +203,20 @@ closed partially or fully, so \code{share_gnn = TRUE} is cheap AND honest.
 Set \code{share_gnn = FALSE} if you need exact per-tree model independence.
 }
 
+\section{Safety floor + share_gnn (v0.9.1.9002+)}{
+
+When \code{share_gnn = TRUE} with \code{safety_floor = TRUE}, the
+grand-mean baseline \code{mean_baseline_per_col} and the three
+calibrated weights (\code{r_cal_bm}, \code{r_cal_gnn},
+\code{r_cal_mean}) are computed ONCE on the reference tree and
+reused across all posterior trees.  They are properties of the
+observed training traits, not of the tree topology.  Each posterior
+tree only recomputes the BM baseline; the GNN delta and the three
+weights stay fixed.  This preserves the Nakagawa & de Villemereuil
+(2019) tree-uncertainty integration story without re-calibrating
+the safety floor per tree, and keeps the shared-GNN speedup intact.
+}
+
 \examples{
 \dontrun{
 library(pigauto)

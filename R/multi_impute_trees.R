@@ -193,6 +193,18 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #' global diversity of birds in space and time." \emph{Nature}
 #' 491(7424): 444-448.
 #'
+#' @section Safety floor + share_gnn (v0.9.1.9002+):
+#'   When \code{share_gnn = TRUE} with \code{safety_floor = TRUE}, the
+#'   grand-mean baseline \code{mean_baseline_per_col} and the three
+#'   calibrated weights (\code{r_cal_bm}, \code{r_cal_gnn},
+#'   \code{r_cal_mean}) are computed ONCE on the reference tree and
+#'   reused across all posterior trees.  They are properties of the
+#'   observed training traits, not of the tree topology.  Each posterior
+#'   tree only recomputes the BM baseline; the GNN delta and the three
+#'   weights stay fixed.  This preserves the Nakagawa & de Villemereuil
+#'   (2019) tree-uncertainty integration story without re-calibrating
+#'   the safety floor per tree, and keeps the shared-GNN speedup intact.
+#'
 #' @seealso [multi_impute()] for single-tree MI, [with_imputations()],
 #'   [pool_mi()], [trees300]
 #'

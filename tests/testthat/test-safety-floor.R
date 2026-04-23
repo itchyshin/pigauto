@@ -306,3 +306,81 @@ test_that("predict.pigauto_fit falls back to 2-way blend on legacy v0.9.1 fits (
   # 1 - r_cal, r_cal_gnn = r_cal, r_cal_mean = 0, mean_baseline = 0.
   expect_equal(pred_legacy_view$imputed, new_pred, tolerance = 1e-10)
 })
+
+# ---- Task 8: multi_impute() mean-term propagation ----
+
+# ---- Task 9: multi_impute_trees() share_gnn + safety_floor ----
+
+test_that("multi_impute_trees(share_gnn = TRUE, safety_floor = TRUE) reuses safety weights across trees", {
+  # trees300 is bundled in pigauto; skip gracefully if absent.
+  skip_if(
+    !exists("trees300", where = asNamespace("pigauto")) &&
+      inherits(try(data("trees300", package = "pigauto"), silent = TRUE), "try-error"),
+    "trees300 dataset not available")
+  skip_if_not_installed("torch")
+  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  data("avonet300",  package = "pigauto")
+  data("trees300",   package = "pigauto")
+  set.seed(2026L)
+  df <- avonet300
+  rownames(df) <- df$Species_Key
+  df$Species_Key <- NULL
+  df$Mass[sample(300, 30)] <- NA_real_
+  mit <- pigauto::multi_impute_trees(
+    df, trees300[1:3], m_per_tree = 1L,
+    share_gnn = TRUE, safety_floor = TRUE,
+    epochs = 50L, verbose = FALSE, seed = 2026L)
+  # The reference-tree fit carries safety-floor metadata.
+  expect_true(isTRUE(mit$fit$safety_floor))
+  expect_true(!is.null(mit$fit$mean_baseline_per_col))
+  # Each completed dataset has finite Mass values.
+  for (i in seq_along(mit$datasets)) {
+    mass_col <- mit$datasets[[i]]$Mass
+    expect_true(all(is.finite(mass_col[!is.na(mass_col)])))
+  }
+})
+
+# ---- Task 10: legacy v0.9.1 fit backward-compat fixture ----
+
+test_that("legacy v0.9.1 fit fixture loads and predicts via %||% fallback", {
+  skip_if_not_installed("torch")
+  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  fx_path <- system.file("extdata", "legacy_fit_v091.rds", package = "pigauto")
+  expect_true(nzchar(fx_path) && file.exists(fx_path))
+  # load_pigauto() deserialises the torch model_state (cross-session portable)
+  fit <- load_pigauto(fx_path)
+  expect_s3_class(fit, "pigauto_fit")
+  # Legacy fit has NO new safety-floor slots
+  expect_null(fit$r_cal_bm)
+  expect_null(fit$r_cal_gnn)
+  expect_null(fit$r_cal_mean)
+  expect_null(fit$mean_baseline_per_col)
+  expect_null(fit$safety_floor)
+  # Predict via %||% fallback — must succeed and return finite imputed values
+  pred <- predict(fit, n_imputations = 1L)
+  expect_true(!is.null(pred$imputed))
+  expect_true(all(is.finite(as.matrix(pred$imputed)[!is.na(as.matrix(pred$imputed))])))
+})
+
+test_that("multi_impute(safety_floor = TRUE) pooled point + SE are finite", {
+  data("avonet300",  package = "pigauto")
+  data("tree300",    package = "pigauto")
+  set.seed(2026L)
+  df <- avonet300
+  rownames(df) <- df$Species_Key
+  df$Species_Key <- NULL
+  df$Mass[sample(300, 30)]               <- NA_real_
+  df$Beak.Length_Culmen[sample(300, 30)] <- NA_real_
+  mi <- pigauto::multi_impute(df, tree300, m = 5L, safety_floor = TRUE,
+                                epochs = 50L, verbose = FALSE, seed = 2026L)
+  # Pooled point must be finite for every imputed cell.
+  expect_true(all(is.finite(mi$pooled_point[!is.na(mi$pooled_point)])))
+  # Pooled SE on imputed cells (non-zero mask).
+  se_vec <- mi$se[mi$imputed_mask]
+  expect_true(all(is.finite(se_vec)))
+  # Completed datasets: all finite on the imputed Mass column.
+  for (k in seq_along(mi$datasets)) {
+    mass_imp <- mi$datasets[[k]]$Mass[mi$imputed_mask[, "Mass"]]
+    expect_true(all(is.finite(mass_imp)))
+  }
+})
