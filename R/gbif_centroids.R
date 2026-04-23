@@ -155,6 +155,95 @@
   NULL
 }
 
+#' Fetch species range-centroid covariates from GBIF
+#'
+#' Pulls occurrence records from the Global Biodiversity Information
+#' Facility (GBIF) for each species in \code{species}, aggregates them
+#' to a median lat / lon centroid, and returns a data.frame ready to
+#' be passed to \code{\link{impute}} via its \code{covariates} argument.
+#'
+#' Caching is strongly recommended — GBIF rate-limits anonymous calls
+#' and the per-species fetch is expensive. With \code{cache_dir} set,
+#' each species gets one RDS file; subsequent calls skip the API.
+#'
+#' For each species: resolve taxon via
+#' \code{\link[rgbif]{name_backbone}}, fetch up to
+#' \code{occurrence_limit} records via \code{\link[rgbif]{occ_search}}
+#' (paginated at 300 per GBIF call), filter out records with
+#' \code{hasGeospatialIssues = TRUE} and \code{basisOfRecord} in
+#' \code{c("FOSSIL_SPECIMEN", "LIVING_SPECIMEN")}, drop
+#' out-of-range coordinates, then take the median latitude and
+#' longitude as the species centroid.
+#'
+#' Species with zero post-filter records receive \code{NA} centroids;
+#' their rows are still included in the returned data.frame so it
+#' aligns with the input species list.
+#'
+#' @param species           character vector of species names.
+#' @param cache_dir         directory to cache per-species RDS files.
+#'   \code{NULL} (default) disables caching — not recommended for
+#'   production use.
+#' @param occurrence_limit  integer, maximum number of occurrences to
+#'   fetch per species (default 500; paginated if > 300).
+#' @param sleep_ms          integer, polite delay between API calls in
+#'   milliseconds (default 100).
+#' @param verbose           logical, print progress every 50 species.
+#' @param refresh_cache     logical, force re-fetch even when cache
+#'   exists.
+#'
+#' @return A data.frame with columns \code{species}, \code{centroid_lat},
+#'   \code{centroid_lon}, \code{n_occurrences}. Rownames are set to
+#'   \code{species}. NA centroids are returned for species with no
+#'   GBIF hits; the caller should decide how to handle them (typical:
+#'   drop or impute).
+#'
+#' @seealso \code{\link{impute}} (pass the return value as
+#'   \code{covariates}).
+#'
+#' @examples
+#' \dontrun{
+#' # Plants ecology example: pull centroids for a species list.
+#' sp <- c("Quercus alba", "Pinus taeda", "Acer saccharum")
+#' cov <- pull_gbif_centroids(sp, cache_dir = "script/data-cache/gbif")
+#' # Use as covariates (drop the bookkeeping cols)
+#' cov_num <- cov[, c("centroid_lat", "centroid_lon"), drop = FALSE]
+#' # Then: impute(traits, tree, covariates = cov_num)
+#' }
+#'
+#' @export
+pull_gbif_centroids <- function(species, cache_dir = NULL,
+                                 occurrence_limit = 500L,
+                                 sleep_ms = 100L,
+                                 verbose = TRUE,
+                                 refresh_cache = FALSE) {
+  stopifnot(is.character(species), length(species) >= 1L)
+  n_sp <- length(species)
+  rows <- vector("list", n_sp)
+  n_success <- 0L
+  for (i in seq_along(species)) {
+    sp <- species[[i]]
+    row <- .gbif_fetch_one(sp,
+                             cache_dir = cache_dir,
+                             occurrence_limit = occurrence_limit,
+                             sleep_ms = sleep_ms,
+                             refresh_cache = refresh_cache)
+    rows[[i]] <- row
+    if (is.finite(row$centroid_lat)) n_success <- n_success + 1L
+    if (verbose && (i %% 50L == 0L || i == n_sp)) {
+      cat(sprintf("[gbif] %d/%d species fetched, %d with valid centroids\n",
+                   i, n_sp, n_success))
+    }
+  }
+  out <- data.frame(
+    species       = vapply(rows, function(r) r$species, character(1L)),
+    centroid_lat  = vapply(rows, function(r) r$centroid_lat, numeric(1L)),
+    centroid_lon  = vapply(rows, function(r) r$centroid_lon, numeric(1L)),
+    n_occurrences = vapply(rows, function(r) r$n_occurrences, integer(1L)),
+    stringsAsFactors = FALSE,
+    row.names = species)
+  out
+}
+
 # In-file %||% shim (pigauto defines one elsewhere, but making this file
 # self-contained helps testthat mock_bindings for rgbif).
 `%||%` <- function(a, b) if (is.null(a)) b else a

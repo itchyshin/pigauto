@@ -101,3 +101,41 @@ test_that(".gbif_fetch_one reports helpful error when rgbif missing", {
                                 refresh_cache = FALSE),
     "rgbif")
 })
+
+test_that("pull_gbif_centroids returns data.frame with expected columns from cache", {
+  tmp <- tempfile("gbif_cache_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  sp_list <- c("Quercus alba", "Pinus taeda", "Acer saccharum")
+  for (sp in sp_list) {
+    key <- pigauto:::.gbif_cache_key(sp)
+    saveRDS(list(species = sp, centroid_lat = runif(1, 30, 50),
+                  centroid_lon = runif(1, -100, -70),
+                  n_occurrences = sample(100:500, 1)),
+             file.path(tmp, paste0(key, ".rds")))
+  }
+  out <- pigauto::pull_gbif_centroids(sp_list,
+                                        cache_dir = tmp,
+                                        verbose = FALSE)
+  expect_s3_class(out, "data.frame")
+  expect_equal(nrow(out), 3L)
+  expect_named(out,
+               c("species", "centroid_lat", "centroid_lon", "n_occurrences"))
+  expect_equal(rownames(out), sp_list)
+  expect_true(all(is.finite(out$centroid_lat)))
+  expect_true(all(out$n_occurrences > 0))
+})
+
+test_that("pull_gbif_centroids handles species with no GBIF hits gracefully", {
+  tmp <- tempfile("gbif_cache_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  sp <- "Nonexistent species"
+  key <- pigauto:::.gbif_cache_key(sp)
+  saveRDS(list(species = sp, centroid_lat = NA_real_,
+                centroid_lon = NA_real_, n_occurrences = 0L),
+           file.path(tmp, paste0(key, ".rds")))
+  out <- pigauto::pull_gbif_centroids(c(sp), cache_dir = tmp, verbose = FALSE)
+  expect_equal(nrow(out), 1L)
+  expect_true(is.na(out$centroid_lat[1]))
+  expect_true(is.na(out$centroid_lon[1]))
+  expect_equal(out$n_occurrences[1], 0L)
+})
