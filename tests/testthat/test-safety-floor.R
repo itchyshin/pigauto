@@ -224,3 +224,32 @@ test_that("fit_pigauto(safety_floor = FALSE) reproduces v0.9.1 behaviour (r_mean
   # Legacy path: r_cal_mean must be exactly 0 on every column.
   expect_equal(as.numeric(fit$r_cal_mean), rep(0, length(fit$r_cal_mean)))
 })
+
+# ---- Task 4 follow-up: guard against zero-sum median weight vector ----
+
+test_that("calibrate_gates(safety_floor = TRUE, median_splits) produces finite weights", {
+  # median_splits with small n_val + simplex can produce adversarial splits
+  # whose per-axis median is c(0, 0, 0). The guard falls back to c(0, 0, 1).
+  set.seed(2026L)
+  n <- 15L   # small val set
+  tm <- list(list(name = "x1", type = "continuous",
+                   latent_cols = 1L, mean = 0, sd = 1))
+  mu    <- matrix(rnorm(n, 0, 3), nrow = n)
+  delta <- matrix(rnorm(n, 0, 3), nrow = n)
+  truth <- matrix(rnorm(n), nrow = n)
+  val   <- matrix(rep(TRUE, n), nrow = n)
+  res <- pigauto:::calibrate_gates(
+    trait_map = tm, mu_cal = mu, delta_cal = delta,
+    X_truth_r = truth, val_mask_mat = val,
+    gate_grid = seq(0, 1, 0.1), gate_cap = 1,
+    safety_floor = TRUE,
+    mean_baseline_per_col = c(x1 = 0),
+    simplex_step = 0.05,
+    gate_method = "median_splits",
+    gate_splits_B = 31L,
+    latent_names = "x1", verbose = FALSE, seed = 7L)
+  # Must be finite on every slot, must sum to 1.
+  expect_true(all(is.finite(c(res$r_cal_bm, res$r_cal_gnn, res$r_cal_mean))))
+  expect_equal(as.numeric(res$r_cal_bm + res$r_cal_gnn + res$r_cal_mean),
+               1, tolerance = 1e-8)
+})

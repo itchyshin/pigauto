@@ -293,7 +293,15 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
       resolve_one_split(pair$half_a, pair$half_b),
       numeric(3L))    # 3 rows x B cols
     w_final <- apply(best_w_across_splits, 1L, median)
-    w_final <- w_final / sum(w_final)   # renormalise (medians don't preserve sum)
+    # Guard against degenerate median = c(0, 0, 0), which can occur when
+    # adversarial splits alternate between corners (e.g. >50% of splits pick
+    # (1,0,0), >50% pick (0,0,1), and each coordinate's median is 0). Pure-mean
+    # (0,0,1) is the safe fallback matching the invariant guarantee.
+    if (!is.finite(sum(w_final)) || sum(w_final) < 1e-10) {
+      w_final <- if (safety_floor) c(0, 0, 1) else c(1, 0, 0)
+    } else {
+      w_final <- w_final / sum(w_final)   # renormalise (medians don't preserve sum)
+    }
 
     # safety_floor guarantee: the final blend on the full val set must not be
     # worse than the pure-mean baseline. If median-of-splits picked a blend
