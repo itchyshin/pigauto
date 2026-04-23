@@ -22,13 +22,23 @@
 
 options(warn = 1, stringsAsFactors = FALSE)
 
+# Silence Armadillo's "solve(): system is singular" stream from Rphylopars
+# EM iterations -- at n=1000 across 5 taxa these emit 10,000+ lines and
+# can overflow shell pipe buffers, killing the R process silently. The
+# approx-solution path still works correctly; the warning is purely
+# informational.
+old_warn <- getOption("warn")
+options(warn = -1L)
+
 suppressPackageStartupMessages({
   pkg_path <- Sys.getenv("PIGAUTO_PKG_PATH", unset = "")
   if (nzchar(pkg_path) && dir.exists(pkg_path) &&
       file.exists(file.path(pkg_path, "DESCRIPTION"))) {
     devtools::load_all(pkg_path, quiet = TRUE)
   } else {
-    library(pigauto)
+    # Fallback: if pigauto isn't installed system-wide, try to load from cwd.
+    tryCatch(library(pigauto),
+              error = function(e) devtools::load_all(".", quiet = TRUE))
   }
   library(jsonlite)
   library(ape)
