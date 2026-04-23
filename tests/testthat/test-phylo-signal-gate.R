@@ -46,3 +46,52 @@ test_that("compute_phylo_signal_per_trait returns NA below min_tips", {
     data = data_obj, tree = tree, method = "lambda", min_tips = 20L)
   expect_true(is.na(as.numeric(lambdas["x"])))
 })
+
+test_that("fit_pigauto(phylo_signal_gate = TRUE) stores phylo_signal slots", {
+  skip_if_not_installed("phytools")
+  data("avonet300", package = "pigauto")
+  data("tree300",   package = "pigauto")
+  df <- avonet300
+  if ("Species_Key" %in% colnames(df)) {
+    rownames(df) <- df$Species_Key; df$Species_Key <- NULL
+  }
+  set.seed(2026L)
+  df$Mass[sample(300, 30)] <- NA_real_
+  res <- pigauto::impute(df, tree300,
+                           phylo_signal_gate = TRUE,
+                           phylo_signal_threshold = 0.2,
+                           safety_floor = TRUE,
+                           epochs = 50L, n_imputations = 1L,
+                           verbose = FALSE, seed = 2026L)
+  fit <- res$fit
+  expect_true(!is.null(fit$phylo_signal_per_trait))
+  expect_true(!is.null(fit$phylo_gate_triggered))
+  expect_equal(fit$phylo_signal_method, "lambda")
+  expect_equal(fit$phylo_signal_threshold, 0.2)
+  # AVONET traits all have strong phylogenetic signal; none should be gated
+  expect_false(any(fit$phylo_gate_triggered, na.rm = TRUE))
+})
+
+test_that("fit_pigauto gates weak-signal traits to (0, 0, 1) exactly", {
+  skip_if_not_installed("phytools")
+  set.seed(2026L)
+  n <- 200L
+  tree <- ape::rcoal(n)
+  # White-noise trait — lambda ~ 0
+  traits <- data.frame(noise = stats::rnorm(n),
+                        row.names = tree$tip.label)
+  # Mask some cells
+  traits$noise[sample(n, 30)] <- NA_real_
+  res <- pigauto::impute(traits, tree,
+                           phylo_signal_gate = TRUE,
+                           phylo_signal_threshold = 0.2,
+                           safety_floor = TRUE,
+                           epochs = 30L, n_imputations = 1L,
+                           verbose = FALSE, seed = 2026L)
+  fit <- res$fit
+  expect_true(isTRUE(as.logical(fit$phylo_gate_triggered["noise"])))
+  # r_cal_bm = 0, r_cal_gnn = 0, r_cal_mean = 1 on the noise latent col
+  expect_equal(as.numeric(fit$r_cal_bm["noise"]),   0, tolerance = 1e-10)
+  expect_equal(as.numeric(fit$r_cal_gnn["noise"]),  0, tolerance = 1e-10)
+  expect_equal(as.numeric(fit$r_cal_mean["noise"]), 1, tolerance = 1e-10)
+})
