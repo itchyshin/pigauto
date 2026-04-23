@@ -75,17 +75,10 @@
 #' @param epochs integer. Maximum GNN training epochs (default `2000`).
 #' @param verbose logical. Print progress (default `TRUE`).
 #' @param seed integer. Random seed (default `1`).
-#' @param safety_floor logical. Passed through via `...` to
-#'   [fit_pigauto()]. When `TRUE` (default since v0.9.1.9002),
-#'   calibration searches the full 3-way simplex
-#'   \eqn{(r_{BM},\, r_{GNN},\, r_{MEAN})} and the prediction blend
-#'   becomes \eqn{r_{BM} \cdot BM + r_{GNN} \cdot GNN + r_{MEAN} \cdot MEAN}.
-#'   The mean term is a column-level grand mean over the training-observed
-#'   cells and acts as an additional safety floor: even when BM and GNN
-#'   are both poor, the calibrated blend can fall back to the training
-#'   mean.
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
-#'   [impute()].
+#'   [impute()]. See [fit_pigauto()] for the full list; the "Safety
+#'   floor" section below describes the relevant new v0.9.1.9002
+#'   argument.
 #'
 #' @return An object of class `"pigauto_mi"` with components:
 #'   \describe{

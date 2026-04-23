@@ -87,17 +87,9 @@ Default \code{NULL} (no covariates).}
 \item{seed}{integer. Random seed (default \code{1}).}
 
 \item{...}{additional arguments forwarded to \code{\link[=fit_pigauto]{fit_pigauto()}} via
-\code{\link[=impute]{impute()}}.}
-
-\item{safety_floor}{logical. Passed through via \code{...} to
-\code{\link[=fit_pigauto]{fit_pigauto()}}. When \code{TRUE} (default since v0.9.1.9002),
-calibration searches the full 3-way simplex
-\eqn{(r_{BM},\, r_{GNN},\, r_{MEAN})} and the prediction blend
-becomes \eqn{r_{BM} \cdot BM + r_{GNN} \cdot GNN + r_{MEAN} \cdot MEAN}.
-The mean term is a column-level grand mean over the training-observed
-cells and acts as an additional safety floor: even when BM and GNN
-are both poor, the calibrated blend can fall back to the training
-mean.}
+\code{\link[=impute]{impute()}}. See \code{\link[=fit_pigauto]{fit_pigauto()}} for the full list; the "Safety
+floor" section below describes the relevant new v0.9.1.9002
+argument.}
 }
 \value{
 An object of class \code{"pigauto_mi"} with components:
