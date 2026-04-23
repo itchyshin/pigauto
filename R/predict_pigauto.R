@@ -199,11 +199,31 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   # ---- Inference (single or MC dropout) ------------------------------------
   latent_runs <- vector("list", n_imp)
 
-  # Pre-create calibrated gates tensor (once, outside the loop)
+  # Pre-create calibrated gates tensors (once, outside the loop).
+  # Three-way blend: pred = r_bm * BM_draw + r_gnn * GNN_delta + r_mean * MEAN
+  # Backward-compat fallback: legacy v0.9.1 fits only have calibrated_gates /
+  # r_cal (scalar per col). When r_cal_bm / r_cal_mean are missing, reconstruct
+  # the 2-way blend as r_bm = 1 - r_cal, r_gnn = r_cal, r_mean = 0, mean = 0.
   if (use_calibrated) {
-    t_cal_gates <- torch::torch_tensor(
-      calibrated_gates, dtype = torch::torch_float(), device = device
-    )$unsqueeze(1L)
+    r_bm_vec   <- object$r_cal_bm             %||% (1 - calibrated_gates)
+    r_gnn_vec  <- object$r_cal_gnn            %||% calibrated_gates
+    r_mean_vec <- object$r_cal_mean           %||% rep(0, length(calibrated_gates))
+    mean_vec   <- object$mean_baseline_per_col %||% rep(0, length(calibrated_gates))
+    # Defensive coercion: NULL replacements above can leak non-numeric types.
+    r_bm_vec   <- as.numeric(r_bm_vec)
+    r_gnn_vec  <- as.numeric(r_gnn_vec)
+    r_mean_vec <- as.numeric(r_mean_vec)
+    mean_vec   <- as.numeric(mean_vec)
+    t_w_bm          <- torch::torch_tensor(r_bm_vec,   dtype = torch::torch_float(),
+                                           device = device)$unsqueeze(1L)
+    t_w_gnn         <- torch::torch_tensor(r_gnn_vec,  dtype = torch::torch_float(),
+                                           device = device)$unsqueeze(1L)
+    t_w_mean        <- torch::torch_tensor(r_mean_vec, dtype = torch::torch_float(),
+                                           device = device)$unsqueeze(1L)
+    t_mean_baseline <- torch::torch_tensor(mean_vec,   dtype = torch::torch_float(),
+                                           device = device)$unsqueeze(1L)
+    t_cal_gates     <- t_w_gnn  # legacy alias: downstream code that references
+                                 # t_cal_gates directly still gets the GNN gate
   }
 
   # BM SE tensor for MC dropout BM-draw injection (latent / z-score scale).
@@ -252,7 +272,8 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
         # Use t_BM_draw (the BM posterior sample) in the baseline term so that
         # between-imputation variance is non-zero even when the gate is 0.
         if (use_calibrated) {
-          pred <- (1 - t_cal_gates) * t_BM_draw + t_cal_gates * out$delta
+          pred <- t_w_bm * t_BM_draw + t_w_gnn * out$delta +
+                  t_w_mean * t_mean_baseline
         } else {
           pred <- (1 - out$rs) * t_BM_draw + out$rs * out$delta
         }

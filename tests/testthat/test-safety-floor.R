@@ -253,3 +253,56 @@ test_that("calibrate_gates(safety_floor = TRUE, median_splits) produces finite w
   expect_equal(as.numeric(res$r_cal_bm + res$r_cal_gnn + res$r_cal_mean),
                1, tolerance = 1e-8)
 })
+
+# ---- Task 6: predict 3-way blend + backward compat ----
+
+test_that("predict.pigauto_fit uses 3-way blend when r_cal_mean > 0", {
+  # Construct a synthetic case where safety_floor should pull the gate
+  # toward the mean: plants-like pattern with weak BM baseline.
+  data("avonet300", package = "pigauto")
+  data("tree300",   package = "pigauto")
+  set.seed(2026L)
+  df <- avonet300
+  rownames(df) <- df$Species_Key
+  df$Species_Key <- NULL
+  df$Mass[sample(300, 30)] <- NA_real_
+  res <- pigauto::impute(df, tree300, safety_floor = TRUE,
+                           epochs = 50L, n_imputations = 1L,
+                           verbose = FALSE, seed = 2026L)
+  fit <- res$fit
+  # All stored per-column weights sum to 1.
+  expect_equal(as.numeric(fit$r_cal_bm + fit$r_cal_gnn + fit$r_cal_mean),
+               rep(1, length(fit$r_cal_bm)), tolerance = 1e-8)
+  # Predictions must be finite on every imputed cell.
+  imputed_vals <- res$completed$Mass[res$imputed_mask[, "Mass"]]
+  expect_true(all(is.finite(imputed_vals)))
+})
+
+test_that("predict.pigauto_fit falls back to 2-way blend on legacy v0.9.1 fits (null r_cal_mean)", {
+  # Fit with safety_floor = FALSE first; compare against the same fit
+  # with r_cal_bm / r_cal_gnn / r_cal_mean / mean_baseline_per_col all
+  # set to NULL to simulate a pre-Task-3 v0.9.1 fit. %||% fallback must
+  # reproduce identical predictions.
+  data("avonet300", package = "pigauto")
+  data("tree300",   package = "pigauto")
+  set.seed(2026L)
+  df <- avonet300
+  rownames(df) <- df$Species_Key
+  df$Species_Key <- NULL
+  df$Mass[sample(300, 30)] <- NA_real_
+  res <- pigauto::impute(df, tree300, safety_floor = FALSE,
+                           epochs = 50L, n_imputations = 1L,
+                           verbose = FALSE, seed = 2026L)
+  new_pred   <- res$prediction$imputed
+  # Simulate legacy fit: remove new slots, keep only r_cal + calibrated_gates.
+  fit_legacy <- res$fit
+  fit_legacy$r_cal_bm             <- NULL
+  fit_legacy$r_cal_gnn            <- NULL
+  fit_legacy$r_cal_mean           <- NULL
+  fit_legacy$mean_baseline_per_col <- NULL
+  fit_legacy$safety_floor         <- NULL
+  pred_legacy_view <- predict(fit_legacy, n_imputations = 1L)
+  # Should be bit-identical: the %||% fallback reconstructs r_cal_bm =
+  # 1 - r_cal, r_cal_gnn = r_cal, r_cal_mean = 0, mean_baseline = 0.
+  expect_equal(pred_legacy_view$imputed, new_pred, tolerance = 1e-10)
+})
