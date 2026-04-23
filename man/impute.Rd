@@ -22,6 +22,9 @@ impute(
   em_tol = 0.001,
   em_offdiag = FALSE,
   safety_floor = TRUE,
+  phylo_signal_gate = TRUE,
+  phylo_signal_threshold = 0.2,
+  phylo_signal_method = "lambda",
   ...
 )
 }
@@ -113,6 +116,8 @@ always in the candidate set and the calibrated prediction is
 guaranteed never to be worse than the grand-mean baseline on
 validation.  When \code{FALSE}, the v0.9.1 1-D calibration is used
 exactly.  See the Safety floor section below.}
+
+\item{phylo_signal_gate, phylo_signal_threshold, phylo_signal_method}{Pass-through to \code{\link[=fit_pigauto]{fit_pigauto()}}. See that help page for details.}
 
 \item{...}{additional arguments passed to \code{\link{fit_pigauto}}.}
 }
