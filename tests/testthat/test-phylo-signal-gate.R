@@ -134,3 +134,60 @@ test_that("print.pigauto_fit shows phylogenetic-signal section when gate trigger
   expect_true(any(grepl("noise", out)))
   expect_true(any(grepl("gated", out, ignore.case = TRUE)))
 })
+
+test_that("plants smoke: BIEN plant traits with weak phylo signal are gated", {
+  skip_if_not_installed("phytools")
+  cache_trait <- "script/data-cache/bien_trait_means.rds"
+  cache_tree  <- "script/data-cache/bien_tree.rds"
+  if (!file.exists(cache_trait)) {
+    cache_trait <- file.path("/Users/z3437171/Dropbox/Github Local/pigauto",
+                              "script/data-cache", "bien_trait_means.rds")
+    cache_tree  <- file.path("/Users/z3437171/Dropbox/Github Local/pigauto",
+                              "script/data-cache", "bien_tree.rds")
+  }
+  skip_if_not(file.exists(cache_trait) && file.exists(cache_tree),
+              "BIEN cache not found")
+  trait_means <- readRDS(cache_trait)
+  tree_raw    <- readRDS(cache_tree)
+  tree_all <- if (is.list(tree_raw) && !inherits(tree_raw, "phylo")) {
+    t <- tree_raw$scenario.3
+    t$tip.label <- gsub("_", " ", t$tip.label)
+    t
+  } else {
+    tree_raw
+  }
+  all_species <- Reduce(union, lapply(trait_means,
+    function(d) if (!is.null(d)) d$species else character(0)))
+  wide <- data.frame(species = all_species, stringsAsFactors = FALSE)
+  for (nm in names(trait_means)) {
+    d <- trait_means[[nm]]
+    if (is.null(d)) { wide[[nm]] <- NA_real_; next }
+    val_col <- intersect(c("mean_value", "trait_value", "value"), names(d))[1]
+    if (is.na(val_col)) { wide[[nm]] <- NA_real_; next }
+    m <- match(wide$species, d$species)
+    wide[[nm]] <- suppressWarnings(as.numeric(d[[val_col]][m]))
+  }
+  matched <- intersect(wide$species, tree_all$tip.label)
+  skip_if_not(length(matched) >= 500L,
+              "insufficient matched species")
+  set.seed(100L)
+  sp <- sample(matched, 500L)
+  df <- wide[wide$species %in% sp, , drop = FALSE]
+  rownames(df) <- df$species; df$species <- NULL
+  tr <- ape::keep.tip(tree_all, sp)
+  res <- pigauto::impute(df, tr,
+                           phylo_signal_gate = TRUE,
+                           phylo_signal_threshold = 0.2,
+                           safety_floor = TRUE,
+                           epochs = 40L, n_imputations = 5L,
+                           verbose = FALSE, seed = 100L)
+  fit <- res$fit
+  gated <- fit$phylo_gate_triggered
+  n_gated <- sum(gated, na.rm = TRUE)
+  expect_gte(n_gated, 2L)
+  gated_names <- names(gated)[gated & !is.na(gated)]
+  gated_in_r_mean <- intersect(gated_names, names(fit$r_cal_mean))
+  if (length(gated_in_r_mean) > 0L) {
+    expect_true(all(fit$r_cal_mean[gated_in_r_mean] == 1))
+  }
+})
