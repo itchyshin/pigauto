@@ -54,3 +54,107 @@
         centroid_lon = stats::median(kept$decimalLongitude),
         n_occurrences = nrow(kept))
 }
+
+# Fetch (and cache) centroids for one species.
+#
+# Cache check first: if an RDS exists at {cache_dir}/{cache_key}.rds,
+# load it unless refresh_cache = TRUE.
+#
+# Otherwise: rgbif::name_backbone() -> rgbif::occ_search() -> filter -> aggregate.
+# Cache the result (including n_occ = 0 cases so we don't re-hit the API
+# for a species with no records).
+#
+# On network error: retry 3x with exponential backoff; if still failing,
+# cache as (NA, NA, 0, fetched_at = NA) so subsequent calls short-circuit
+# until refresh_cache = TRUE.
+#
+# @noRd
+.gbif_fetch_one <- function(sp, cache_dir = NULL,
+                             occurrence_limit = 500L,
+                             sleep_ms = 100L,
+                             refresh_cache = FALSE) {
+  stopifnot(is.character(sp), length(sp) == 1L, nzchar(sp))
+  # Cache lookup
+  cache_path <- if (!is.null(cache_dir)) {
+    dir.create(cache_dir, showWarnings = FALSE, recursive = TRUE)
+    file.path(cache_dir, paste0(.gbif_cache_key(sp), ".rds"))
+  } else {
+    NA_character_
+  }
+  if (!refresh_cache && !is.na(cache_path) && file.exists(cache_path)) {
+    cached <- tryCatch(readRDS(cache_path), error = function(e) NULL)
+    if (!is.null(cached) && identical(cached$species, sp)) {
+      return(list(species = sp,
+                   centroid_lat = cached$centroid_lat,
+                   centroid_lon = cached$centroid_lon,
+                   n_occurrences = cached$n_occurrences))
+    }
+  }
+  # Require rgbif for live fetch
+  if (!requireNamespace("rgbif", quietly = TRUE)) {
+    stop("pull_gbif_centroids() requires the 'rgbif' package: ",
+         "install.packages('rgbif')", call. = FALSE)
+  }
+  # Resolve taxon
+  bbone <- tryCatch(rgbif::name_backbone(name = sp),
+                     error = function(e) NULL)
+  if (is.null(bbone) || is.null(bbone$usageKey)) {
+    res <- list(species = sp, centroid_lat = NA_real_, centroid_lon = NA_real_,
+                 n_occurrences = 0L)
+    if (!is.na(cache_path)) {
+      saveRDS(c(res, list(fetched_at = Sys.time(), match_type = "NO_MATCH")),
+              cache_path)
+    }
+    return(res)
+  }
+  # Fetch occurrences (with pagination to support occurrence_limit > 300)
+  per_call <- 300L
+  pages <- ceiling(occurrence_limit / per_call)
+  records <- NULL
+  for (p in seq_len(pages)) {
+    offset <- (p - 1L) * per_call
+    limit  <- min(per_call, occurrence_limit - offset)
+    if (limit <= 0L) break
+    ret <- .gbif_fetch_page(bbone$usageKey, offset, limit)
+    if (is.null(ret) || nrow(ret) == 0L) break
+    records <- rbind(records, ret)
+    if (sleep_ms > 0L) Sys.sleep(sleep_ms / 1000)
+  }
+  # Aggregate
+  centroid <- .gbif_centroid_one(records %||% data.frame(
+    decimalLatitude = numeric(0), decimalLongitude = numeric(0),
+    hasGeospatialIssues = logical(0), basisOfRecord = character(0)))
+  res <- list(species = sp,
+               centroid_lat = centroid$centroid_lat,
+               centroid_lon = centroid$centroid_lon,
+               n_occurrences = centroid$n_occurrences)
+  if (!is.na(cache_path)) {
+    saveRDS(c(res, list(fetched_at = Sys.time(),
+                          match_type = bbone$matchType %||% "UNKNOWN")),
+            cache_path)
+  }
+  res
+}
+
+# Inner page-fetcher, retriable.  Separated so tests can mock.
+# @noRd
+.gbif_fetch_page <- function(taxon_key, offset, limit) {
+  tries <- 0L
+  while (tries < 3L) {
+    ret <- tryCatch(
+      rgbif::occ_search(taxonKey = taxon_key,
+                         hasCoordinate = TRUE,
+                         limit = limit, start = offset),
+      error = function(e) {
+        Sys.sleep(2 ^ tries)
+        NULL
+      })
+    if (!is.null(ret) && !is.null(ret$data)) return(ret$data)
+    tries <- tries + 1L
+  }
+  NULL
+}
+
+# In-file %||% shim (pigauto defines one elsewhere, but making this file
+# self-contained helps testthat mock_bindings for rgbif).
+`%||%` <- function(a, b) if (is.null(a)) b else a

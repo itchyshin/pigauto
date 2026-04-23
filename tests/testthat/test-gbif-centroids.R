@@ -68,3 +68,36 @@ test_that(".gbif_centroid_one rejects coords out of range", {
   expect_equal(out$centroid_lat, 10)
   expect_equal(out$centroid_lon, -80)
 })
+
+test_that(".gbif_fetch_one uses cache when present", {
+  tmp <- tempfile("gbif_cache_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  key <- pigauto:::.gbif_cache_key("Quercus alba")
+  saveRDS(list(species = "Quercus alba",
+                centroid_lat = 41.5, centroid_lon = -80.0,
+                n_occurrences = 120L,
+                fetched_at = as.POSIXct("2026-01-01 00:00:00", tz = "UTC")),
+           file.path(tmp, paste0(key, ".rds")))
+  out <- pigauto:::.gbif_fetch_one("Quercus alba",
+                                      cache_dir = tmp,
+                                      occurrence_limit = 500L,
+                                      sleep_ms = 0L,
+                                      refresh_cache = FALSE)
+  expect_equal(out$centroid_lat, 41.5)
+  expect_equal(out$centroid_lon, -80.0)
+  expect_equal(out$n_occurrences, 120L)
+})
+
+test_that(".gbif_fetch_one reports helpful error when rgbif missing", {
+  testthat::skip_if(requireNamespace("rgbif", quietly = TRUE),
+                     "rgbif IS installed; cannot test missing-rgbif branch")
+  tmp <- tempfile("gbif_cache_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  expect_error(
+    pigauto:::.gbif_fetch_one("Quercus alba",
+                                cache_dir = tmp,
+                                occurrence_limit = 500L,
+                                sleep_ms = 0L,
+                                refresh_cache = FALSE),
+    "rgbif")
+})
