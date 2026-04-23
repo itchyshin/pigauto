@@ -115,3 +115,22 @@ test_that("impute(phylo_signal_gate = TRUE) is the default and threads to fit", 
   expect_true(all(is.na(r2$fit$phylo_signal_per_trait)))
   expect_false(any(r2$fit$phylo_gate_triggered, na.rm = TRUE))
 })
+
+test_that("print.pigauto_fit shows phylogenetic-signal section when gate triggered", {
+  skip_if_not_installed("phytools")
+  set.seed(2026L)
+  n <- 200L
+  tree <- ape::rcoal(n)
+  traits <- data.frame(noise = stats::rnorm(n),
+                        row.names = tree$tip.label)
+  traits$noise[sample(n, 30)] <- NA_real_
+  res <- pigauto::impute(traits, tree,
+                           phylo_signal_gate = TRUE,
+                           phylo_signal_threshold = 0.2,
+                           epochs = 30L, n_imputations = 1L,
+                           verbose = FALSE, seed = 2026L)
+  out <- utils::capture.output(print(res$fit))
+  expect_true(any(grepl("Phylogenetic signal", out)))
+  expect_true(any(grepl("noise", out)))
+  expect_true(any(grepl("gated", out, ignore.case = TRUE)))
+})

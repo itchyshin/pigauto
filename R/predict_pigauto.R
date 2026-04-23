@@ -947,6 +947,26 @@ print.pigauto_fit <- function(x, ...) {
     cs <- x$conformal_scores[!is.na(x$conformal_scores)]
     cat("  Conformal scores:", length(cs), "traits\n")
   }
+  if (!is.null(x$phylo_gate_triggered) &&
+      any(!is.na(x$phylo_signal_per_trait))) {
+    `%||%` <- function(a, b) if (is.null(a)) b else a
+    thr <- x$phylo_signal_threshold %||% 0.2
+    method <- x$phylo_signal_method %||% "lambda"
+    sig <- x$phylo_signal_per_trait
+    gated <- x$phylo_gate_triggered
+    cat(sprintf("\nPhylogenetic signal (%s, threshold %.2f):\n", method, thr))
+    if (any(gated, na.rm = TRUE)) {
+      gated_names <- names(gated)[gated & !is.na(gated)]
+      greek <- if (method == "lambda") "lambda" else "K"
+      cat("  gated (BM skipped, using grand mean):",
+           paste(sprintf("%s (%s=%.2f)", gated_names, greek, sig[gated_names]),
+                 collapse = ", "), "\n")
+    } else {
+      greek <- if (method == "lambda") "lambda" else "K"
+      cat(sprintf("  all %d traits have %s >= %.2f; safety floor is the fallback.\n",
+                   sum(!is.na(sig)), greek, thr))
+    }
+  }
   invisible(x)
 }
 
