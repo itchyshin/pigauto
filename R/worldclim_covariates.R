@@ -50,3 +50,55 @@
   names(iqr) <- col_names
   list(bio_median = med, bio_iqr = iqr, n_extracted = nrow(kept))
 }
+
+# Ensure WorldClim rasters are present in cache_dir/wc2.1_<resolution>/.
+# If a sentinel file .wc_complete exists and all 19 GeoTIFFs are
+# present, no-op.  Otherwise download the zip stack from
+# worldclim.org via the supplied `.download_fn` (for testability)
+# and unzip to the target directory.
+#
+# @param cache_dir   character scalar, root cache path
+# @param resolution  one of "10m", "5m", "2.5m"
+# @param verbose     logical
+# @param .download_fn internal hook (defaults to utils::download.file)
+# @return path to the resolved raster directory
+# @noRd
+.wc_download_rasters <- function(cache_dir, resolution = "10m",
+                                   verbose = TRUE,
+                                   .download_fn = NULL) {
+  res_ok <- c("10m", "5m", "2.5m")
+  if (!identical(length(resolution), 1L) || !(resolution %in% res_ok)) {
+    stop(".wc_download_rasters: resolution must be one of ",
+         paste(res_ok, collapse = ", "))
+  }
+  wc_dir <- file.path(cache_dir, paste0("wc2.1_", resolution))
+  sentinel <- file.path(wc_dir, ".wc_complete")
+  expected <- file.path(wc_dir, sprintf("wc2.1_%s_bio_%d.tif",
+                                           resolution, 1:19))
+  if (file.exists(sentinel) && all(file.exists(expected))) {
+    if (verbose) message("[worldclim] rasters present at ", wc_dir)
+    return(wc_dir)
+  }
+  # Need to download.
+  dir.create(wc_dir, showWarnings = FALSE, recursive = TRUE)
+  zip_url <- sprintf(
+    "https://biogeo.ucdavis.edu/data/worldclim/v2.1/base/wc2.1_%s_bio.zip",
+    resolution)
+  zip_path <- file.path(wc_dir, sprintf("wc2.1_%s_bio.zip", resolution))
+  if (verbose) {
+    message("[worldclim] downloading ", zip_url,
+            " (~130 MB compressed, ~500 MB unzipped) ...")
+  }
+  dl_fn <- .download_fn %||% function(url, destfile, mode) {
+    utils::download.file(url, destfile, mode = mode, quiet = !verbose)
+  }
+  dl_fn(zip_url, zip_path, "wb")
+  utils::unzip(zip_path, exdir = wc_dir)
+  file.create(sentinel)
+  if (verbose) message("[worldclim] ready at ", wc_dir)
+  wc_dir
+}
+
+# Local fallback for %||% in case the file is used in isolation.
+# pigauto defines %||% elsewhere too; this shim is harmless.
+`%||%` <- function(a, b) if (is.null(a)) b else a

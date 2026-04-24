@@ -50,3 +50,40 @@ test_that(".wc_aggregate_one handles single-point species (IQR = 0)", {
   expect_equal(out$bio_median[["bio1"]], 15)
   expect_equal(out$bio_iqr[["bio1"]], 0)   # IQR of a singleton is 0
 })
+
+test_that(".wc_download_rasters is a no-op when sentinel + rasters present", {
+  tmp <- tempfile("wc_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  wc_dir <- file.path(tmp, "wc2.1_10m")
+  dir.create(wc_dir)
+  # Create fake rasters (empty files, only presence is checked)
+  for (i in 1:19) {
+    file.create(file.path(wc_dir, sprintf("wc2.1_10m_bio_%d.tif", i)))
+  }
+  file.create(file.path(wc_dir, ".wc_complete"))
+  # Should return wc_dir without attempting download
+  out <- pigauto:::.wc_download_rasters(tmp, resolution = "10m",
+                                          verbose = FALSE)
+  expect_equal(normalizePath(out), normalizePath(wc_dir))
+})
+
+test_that(".wc_download_rasters detects missing sentinel and would re-download", {
+  tmp <- tempfile("wc_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  # Sentinel absent -> would download; we only test the intent, not
+  # the actual HTTP call.
+  expect_error(
+    pigauto:::.wc_download_rasters(tmp, resolution = "10m",
+                                      verbose = FALSE,
+                                      .download_fn = function(...)
+                                        stop("MOCK: would download")),
+    "MOCK: would download")
+})
+
+test_that(".wc_download_rasters errors cleanly for unsupported resolution", {
+  tmp <- tempfile("wc_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  expect_error(
+    pigauto:::.wc_download_rasters(tmp, resolution = "99m", verbose = FALSE),
+    "resolution must be one of")
+})
