@@ -178,8 +178,7 @@
          "cannot extract bioclim for species: ", sp, call. = FALSE)
   }
   vals_mat <- terra::extract(rast_stack,
-                               as.matrix(points[, c("lon", "lat")]),
-                               ID = FALSE, method = "simple")
+                               as.matrix(points[, c("lon", "lat")]))
   # terra returns a data.frame with raster layer names
   vals_df <- as.data.frame(vals_mat)
   # Rename to bio1 .. bio19 in case terra prefixes with wc2.1_10m_bio_N
