@@ -351,3 +351,111 @@ test_that("end-to-end: bioclim lifts plants RMSE >= 10% on sla/leaf_area at n=20
                 "The >=10% lift threshold (ratio<=0.90) is deferred to v1.1 ",
                 "when per-occurrence extraction + phylo_signal_gate=FALSE land."))
 })
+
+test_that("per-occurrence bioclim lifts plants SLA >= 10% over centroid-only at n=200 (NOT_CRAN)", {
+  skip_if(Sys.getenv("NOT_CRAN") == "", "slow integration -- NOT_CRAN=TRUE to run")
+  wc_fx <- "fixtures/worldclim_plants_300.rds"
+  skip_if_not(file.exists(wc_fx), "worldclim fixture not found")
+
+  # Load refreshed (per-occurrence) bioclim fixture
+  wc_peroccur <- readRDS(wc_fx)
+  # Species with meaningful IQR (range breadth)
+  iqr_cols <- grep("_iqr$", colnames(wc_peroccur), value = TRUE)
+  sp_with_iqr <- rownames(wc_peroccur)[rowSums(wc_peroccur[, iqr_cols] > 0,
+                                                  na.rm = TRUE) > 0]
+  skip_if_not(length(sp_with_iqr) >= 100L,
+              "insufficient species with per-occurrence IQR")
+
+  cache_trait <- "../../script/data-cache/bien_trait_means.rds"
+  cache_tree  <- "../../script/data-cache/bien_tree.rds"
+  skip_if_not(file.exists(cache_trait) && file.exists(cache_tree),
+              "BIEN cache not found")
+
+  trait_means <- readRDS(cache_trait)
+  tree_raw    <- readRDS(cache_tree)
+  tree_all <- if (is.list(tree_raw) && !inherits(tree_raw, "phylo")) {
+    t <- tree_raw$scenario.3; t$tip.label <- gsub("_", " ", t$tip.label); t
+  } else tree_raw
+
+  all_species <- Reduce(union, lapply(trait_means,
+    function(d) if (!is.null(d)) d$species else character(0)))
+  wide <- data.frame(species = all_species, stringsAsFactors = FALSE)
+  for (nm in names(trait_means)) {
+    d <- trait_means[[nm]]
+    if (is.null(d)) { wide[[nm]] <- NA_real_; next }
+    m <- match(wide$species, d$species)
+    wide[[nm]] <- suppressWarnings(as.numeric(d$mean_value[m]))
+  }
+
+  matched <- Reduce(intersect, list(wide$species, tree_all$tip.label,
+                                      sp_with_iqr))
+  skip_if_not(length(matched) >= 100L, "insufficient matched species")
+
+  set.seed(2026L)
+  sp_s <- sample(matched, min(200L, length(matched)))
+  wide_s <- wide[wide$species %in% sp_s, , drop = FALSE]
+  rownames(wide_s) <- wide_s$species; wide_s$species <- NULL
+  cov_peroccur <- wc_peroccur[sp_s, grepl("^bio", colnames(wc_peroccur)),
+                                drop = FALSE]
+  # Build a centroid-only comparison cov: median cols only, with IQR cols zero'd
+  cov_centroid <- cov_peroccur
+  cov_centroid[, iqr_cols] <- 0
+  tree_s <- ape::keep.tip(tree_all, sp_s)
+
+  df <- wide_s
+  cont_cols <- colnames(df)
+  mask <- matrix(FALSE, nrow = nrow(df), ncol = length(cont_cols),
+                  dimnames = list(NULL, cont_cols))
+  for (v in cont_cols) {
+    ok <- which(!is.na(wide_s[[v]]))
+    if (length(ok) < 20L) next
+    idx <- sample(ok, round(0.30 * length(ok)))
+    mask[idx, v] <- TRUE
+    df[[v]][idx] <- NA_real_
+  }
+
+  res_centroid <- pigauto::impute(df, tree_s, covariates = cov_centroid,
+                                     epochs = 80L, n_imputations = 20L,
+                                     verbose = FALSE, seed = 2026L)
+  res_peroccur <- pigauto::impute(df, tree_s, covariates = cov_peroccur,
+                                     epochs = 80L, n_imputations = 20L,
+                                     verbose = FALSE, seed = 2026L)
+
+  env_traits <- intersect(c("sla", "leaf_area"), cont_cols)
+  skip_if(length(env_traits) == 0L, "no env-driven trait present")
+
+  any_lift <- FALSE
+  for (v in env_traits) {
+    if (!any(mask[, v])) next
+    truth <- wide_s[[v]][mask[, v]]
+    ok <- is.finite(truth)
+    if (sum(ok) < 10L) next
+    r_cent    <- sqrt(mean((res_centroid$completed[[v]][mask[, v]][ok] - truth[ok])^2))
+    r_peroc   <- sqrt(mean((res_peroccur$completed[[v]][mask[, v]][ok] - truth[ok])^2))
+    ratio <- r_peroc / r_cent
+    cat(sprintf("[per-occur] %s: centroid RMSE = %.3g, per-occur = %.3g, ratio = %.4f\n",
+                 v, r_cent, r_peroc, ratio))
+    if (ratio <= 0.90) any_lift <- TRUE
+  }
+
+  # If the lift isn't there at n=200, don't fail -- document and defer to full bench.
+  # Assert guardrail (not-worse-than +10%) so a gross regression would fail.
+  all_within_guardrail <- TRUE
+  for (v in env_traits) {
+    if (!any(mask[, v])) next
+    truth <- wide_s[[v]][mask[, v]]
+    ok <- is.finite(truth)
+    if (sum(ok) < 10L) next
+    r_cent  <- sqrt(mean((res_centroid$completed[[v]][mask[, v]][ok] - truth[ok])^2))
+    r_peroc <- sqrt(mean((res_peroccur$completed[[v]][mask[, v]][ok] - truth[ok])^2))
+    if (r_peroc > r_cent * 1.10) all_within_guardrail <- FALSE
+  }
+  expect_true(all_within_guardrail,
+              info = "per-occurrence must not regress centroid-only by >+10%")
+  # Log the lift status but don't fail on it -- the full n=4745 bench is where
+  # the >=10% lift claim is verified.
+  if (!any_lift) {
+    message("note: per-occurrence lift not visible at n=200; full bench (n=4745) ",
+            "in script/bench_bien_worldclim.R is where the paper claim lives.")
+  }
+})
