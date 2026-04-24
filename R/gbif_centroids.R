@@ -80,7 +80,8 @@
 .gbif_fetch_one <- function(sp, cache_dir = NULL,
                              occurrence_limit = 500L,
                              sleep_ms = 100L,
-                             refresh_cache = FALSE) {
+                             refresh_cache = FALSE,
+                             store_points = FALSE) {
   stopifnot(is.character(sp), length(sp) == 1L, nzchar(sp))
   # Cache lookup
   cache_path <- if (!is.null(cache_dir)) {
@@ -136,10 +137,32 @@
                centroid_lat = centroid$centroid_lat,
                centroid_lon = centroid$centroid_lon,
                n_occurrences = centroid$n_occurrences)
+  # Collect raw valid points if store_points = TRUE
+  points_df <- NULL
+  if (isTRUE(store_points) && !is.null(records) && nrow(records) > 0L) {
+    # Apply the SAME filters as .gbif_centroid_one for consistency
+    ok <- !is.na(records$decimalLatitude) &
+           !is.na(records$decimalLongitude) &
+           records$decimalLatitude  >= -90  & records$decimalLatitude  <= 90 &
+           records$decimalLongitude >= -180 & records$decimalLongitude <= 180
+    has_issue <- records$hasGeospatialIssues
+    if (is.null(has_issue)) has_issue <- rep(FALSE, nrow(records))
+    has_issue[is.na(has_issue)] <- TRUE
+    ok <- ok & !has_issue &
+           !(records$basisOfRecord %in% c("FOSSIL_SPECIMEN", "LIVING_SPECIMEN"))
+    kept <- records[ok, , drop = FALSE]
+    if (nrow(kept) > 0L) {
+      points_df <- data.frame(
+        lat = kept$decimalLatitude,
+        lon = kept$decimalLongitude,
+        stringsAsFactors = FALSE)
+    }
+  }
   if (!is.na(cache_path)) {
-    saveRDS(c(res, list(fetched_at = Sys.time(),
-                          match_type = bbone$matchType %||% "UNKNOWN")),
-            cache_path)
+    cache_obj <- c(res, list(fetched_at = Sys.time(),
+                              match_type = bbone$matchType %||% "UNKNOWN"))
+    if (!is.null(points_df)) cache_obj$points <- points_df
+    saveRDS(cache_obj, cache_path)
   }
   res
 }
@@ -198,6 +221,12 @@
 #' @param verbose           logical, print progress every 50 species.
 #' @param refresh_cache     logical, force re-fetch even when cache
 #'   exists.
+#' @param store_points logical. When \code{TRUE}, persists the raw
+#'   filtered lat/lon occurrence points in each species' cache RDS
+#'   under the \code{points} field.  Used by
+#'   \code{\link{pull_worldclim_per_species}} for per-occurrence
+#'   bioclim extraction.  Default \code{FALSE} preserves the
+#'   pre-v0.9.1.9006 cache format.
 #'
 #' @return A data.frame with columns \code{species}, \code{centroid_lat},
 #'   \code{centroid_lon}, \code{n_occurrences}. Rownames are set to
@@ -223,7 +252,8 @@ pull_gbif_centroids <- function(species, cache_dir = NULL,
                                  occurrence_limit = 500L,
                                  sleep_ms = 100L,
                                  verbose = TRUE,
-                                 refresh_cache = FALSE) {
+                                 refresh_cache = FALSE,
+                                 store_points = FALSE) {
   stopifnot(is.character(species), length(species) >= 1L)
   n_sp <- length(species)
   rows <- vector("list", n_sp)
@@ -234,7 +264,8 @@ pull_gbif_centroids <- function(species, cache_dir = NULL,
                              cache_dir = cache_dir,
                              occurrence_limit = occurrence_limit,
                              sleep_ms = sleep_ms,
-                             refresh_cache = refresh_cache)
+                             refresh_cache = refresh_cache,
+                             store_points = store_points)
     rows[[i]] <- row
     if (is.finite(row$centroid_lat)) n_success <- n_success + 1L
     if (verbose && (i %% 50L == 0L || i == n_sp)) {

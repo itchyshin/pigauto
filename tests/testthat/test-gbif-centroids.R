@@ -140,6 +140,86 @@ test_that("pull_gbif_centroids handles species with no GBIF hits gracefully", {
   expect_equal(out$n_occurrences[1], 0L)
 })
 
+# ---- Task 1 (v1.1): store_points arg ----
+
+test_that("pull_gbif_centroids(store_points = TRUE) writes points field", {
+  tmp <- tempfile("gbif_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  # Mock rgbif: pretend 5 occurrences for one species
+  fake_records <- data.frame(
+    decimalLatitude  = c(40, 41, 39, 40.5, 41.5),
+    decimalLongitude = c(-82, -81, -83, -82.5, -81.5),
+    hasGeospatialIssues = rep(FALSE, 5),
+    basisOfRecord = rep("PRESERVED_SPECIMEN", 5),
+    stringsAsFactors = FALSE)
+  testthat::local_mocked_bindings(
+    name_backbone = function(name, ...)
+      list(usageKey = 1L, matchType = "EXACT"),
+    occ_search = function(...) list(data = fake_records),
+    .package = "rgbif")
+  out <- pigauto::pull_gbif_centroids(
+    species = "TestSpecies one",
+    cache_dir = tmp,
+    sleep_ms = 0L,
+    verbose = FALSE,
+    occurrence_limit = 5L,
+    store_points = TRUE)
+  expect_equal(nrow(out), 1L)
+  expect_equal(out$n_occurrences, 5L)
+  # Confirm the cache RDS has the points field
+  key <- pigauto:::.gbif_cache_key("TestSpecies one")
+  cached <- readRDS(file.path(tmp, paste0(key, ".rds")))
+  expect_true(!is.null(cached$points))
+  expect_s3_class(cached$points, "data.frame")
+  expect_equal(nrow(cached$points), 5L)
+  expect_named(cached$points, c("lat", "lon"), ignore.order = TRUE)
+  expect_true(all(cached$points$lat %in% fake_records$decimalLatitude))
+})
+
+test_that("pull_gbif_centroids(store_points = FALSE) omits points (default)", {
+  tmp <- tempfile("gbif_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  fake_records <- data.frame(
+    decimalLatitude  = c(40, 41, 39),
+    decimalLongitude = c(-82, -81, -83),
+    hasGeospatialIssues = rep(FALSE, 3),
+    basisOfRecord = rep("PRESERVED_SPECIMEN", 3),
+    stringsAsFactors = FALSE)
+  testthat::local_mocked_bindings(
+    name_backbone = function(name, ...)
+      list(usageKey = 1L, matchType = "EXACT"),
+    occ_search = function(...) list(data = fake_records),
+    .package = "rgbif")
+  out <- pigauto::pull_gbif_centroids(
+    species = "TestSpecies two",
+    cache_dir = tmp,
+    sleep_ms = 0L,
+    verbose = FALSE)   # store_points defaults to FALSE
+  key <- pigauto:::.gbif_cache_key("TestSpecies two")
+  cached <- readRDS(file.path(tmp, paste0(key, ".rds")))
+  expect_true(is.null(cached$points))
+})
+
+test_that("legacy GBIF cache (no points field) still reads cleanly", {
+  tmp <- tempfile("gbif_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  # Hand-write legacy cache (pre-v1.1 shape — no points field)
+  key <- pigauto:::.gbif_cache_key("Legacy species")
+  saveRDS(list(species = "Legacy species",
+                centroid_lat = 40.0, centroid_lon = -82.0,
+                n_occurrences = 25L,
+                fetched_at = Sys.time(),
+                match_type = "EXACT"),
+           file.path(tmp, paste0(key, ".rds")))
+  out <- pigauto::pull_gbif_centroids(
+    species = "Legacy species",
+    cache_dir = tmp,
+    verbose = FALSE)
+  expect_equal(out$centroid_lat, 40.0)
+  expect_equal(out$centroid_lon, -82.0)
+  expect_equal(out$n_occurrences, 25L)
+})
+
 test_that("end-to-end: GBIF centroids don't regress plants RMSE (>=1.10x guardrail on env traits)", {
   skip_if(Sys.getenv("NOT_CRAN") == "", "slow integration - set NOT_CRAN=TRUE to run")
   fx_path <- file.path(testthat::test_path("fixtures"), "gbif_plants_300.rds")
