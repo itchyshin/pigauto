@@ -1,3 +1,71 @@
+# pigauto 0.9.1.9004 (dev)
+
+## GBIF range-centroid covariates
+
+New exported helper `pull_gbif_centroids(species, cache_dir, ...)`
+fetches species occurrence records from the Global Biodiversity
+Information Facility (GBIF) and returns a data.frame of per-species
+median lat/lon centroids ready for `impute(..., covariates = ...)`.
+
+### What it does
+
+For each species, pull_gbif_centroids():
+
+1. Resolves the taxon via rgbif::name_backbone() (handles synonyms).
+2. Fetches up to occurrence_limit records via rgbif::occ_search(
+   hasCoordinate = TRUE), paginated at 300/call.
+3. Drops records with hasGeospatialIssues = TRUE,
+   basisOfRecord in c("FOSSIL_SPECIMEN", "LIVING_SPECIMEN"),
+   or out-of-range coordinates.
+4. Computes median lat / lon per species (centroids more robust than
+   means to outliers).
+5. Caches one RDS per species at cache_dir (strongly recommended to
+   avoid GBIF rate-limit issues).
+
+### Why it matters
+
+Plant traits like SLA and leaf area are environment-driven. Even the
+simplest geographic covariate -- a species range centroid from GBIF --
+carries biogeographic signal that phylogeny alone doesn't. This is the
+B.1 proof-of-pipe for the pigauto covariate path; the full B.2 spec
+(WorldClim bioclim + SoilGrids raster extraction) follows.
+
+### End-to-end smoke (BIEN 200-subset)
+
+Adding GBIF centroids as covariates keeps SLA and leaf_area RMSE
+within +10% of the no-cov baseline (ratios ~1.09 and ~1.01 at n=200).
+At this sample size the val-to-test sampling noise dominates any
+covariate lift signal; production-grade positive lift reserved for
+the B.2 bioclim run at larger n.
+
+### API
+
+- pull_gbif_centroids(species, cache_dir = NULL,
+                        occurrence_limit = 500L, sleep_ms = 100L,
+                        verbose = TRUE, refresh_cache = FALSE)
+- Returns data.frame with species / centroid_lat / centroid_lon /
+  n_occurrences, rownames = species.
+
+### Dependency
+
+rgbif added to Suggests (not Imports). pull_gbif_centroids() fails
+with a helpful install hint when rgbif is absent.
+
+### Testing
+
+- tests/testthat/test-gbif-centroids.R: 32 offline expectations (cache
+  key, aggregation, filtering, cache hit/miss, public function
+  integration via mocks).
+- End-to-end fixture at tests/testthat/fixtures/gbif_plants_300.rds
+  (259/300 species with valid centroids) + live smoke test gated by
+  NOT_CRAN=TRUE environment variable.
+
+### Follow-up (separate spec)
+
+B.2: full WorldClim bioclim + SoilGrids extraction at each GBIF
+occurrence, aggregated per species. Expected to lift plants RMSE
+significantly more than centroids alone.
+
 # pigauto 0.9.1.9002 (dev)
 
 ## Safety floor: pigauto is never worse than the grand mean
