@@ -15,7 +15,8 @@ suppressPackageStartupMessages({
 })
 options(warn = -1L)
 
-SEED <- 2026L; MISS_FRAC <- 0.30; N_IMP <- 20L; EPOCHS <- 300L
+SEED <- 2026L; MISS_FRAC <- 0.30; N_IMP <- 20L
+EPOCHS <- as.integer(Sys.getenv("PIGAUTO_BENCH_EPOCHS", "300"))
 
 cache_trait <- "script/data-cache/bien_trait_means.rds"
 cache_tree  <- "script/data-cache/bien_tree.rds"
@@ -97,22 +98,61 @@ for (v in cont_cols) {
 }
 
 cat("[bench] fit without covariates ...\n")
-res_none <- pigauto::impute(df, tr, phylo_signal_gate = FALSE,
+# Note: phylo_signal_gate arg only exists on feature/phylo-signal-gate (PR #45),
+# not this branch. Safety-floor gate (PR #43) is active by default.
+res_none <- pigauto::impute(df, tr,
                                epochs = EPOCHS, n_imputations = N_IMP,
-                               verbose = FALSE, seed = SEED)
+                               verbose = FALSE, seed = SEED,
+                               safety_floor = TRUE)
 cat("[bench] fit with bioclim ...\n")
 res_bio  <- pigauto::impute(df, tr, covariates = cov_bio,
-                               phylo_signal_gate = FALSE,
                                epochs = EPOCHS, n_imputations = N_IMP,
-                               verbose = FALSE, seed = SEED)
+                               verbose = FALSE, seed = SEED,
+                               safety_floor = TRUE)
 
+# Also a safety-floor-OFF comparison -- the gate blocked lift at n=271
+# on the same fixture. At n~500 the calibrator should have enough val
+# cells to open on its own, but let's measure both.
+cat("[bench] fit with bioclim + safety_floor=FALSE (gate forced open) ...\n")
+res_bio_off <- pigauto::impute(df, tr, covariates = cov_bio,
+                                 epochs = EPOCHS, n_imputations = N_IMP,
+                                 verbose = FALSE, seed = SEED,
+                                 safety_floor = FALSE)
+
+rows <- list()
 for (v in cont_cols) {
   if (!any(mask[, v])) next
   truth <- wide_s[[v]][mask[, v]]
   ok <- is.finite(truth)
-  r_none <- sqrt(mean((res_none$completed[[v]][mask[, v]][ok] - truth[ok])^2))
-  r_bio  <- sqrt(mean((res_bio$completed[[v]][mask[, v]][ok]  - truth[ok])^2))
-  corr_bio <- stats::cor(res_bio$completed[[v]][mask[, v]][ok], truth[ok])
-  cat(sprintf("  %-15s: no-cov RMSE = %.3g, with-bio = %.3g (r = %.3f, ratio = %.3f)\n",
-               v, r_none, r_bio, corr_bio, r_bio / r_none))
+  if (sum(ok) < 5L) next
+  mean_pred <- mean(df[[v]], na.rm = TRUE)
+  rmse_mean <- sqrt(mean((mean_pred - truth[ok])^2))
+  rmse_none <- sqrt(mean((res_none$completed[[v]][mask[, v]][ok] - truth[ok])^2))
+  rmse_bio  <- sqrt(mean((res_bio$completed[[v]][mask[, v]][ok]  - truth[ok])^2))
+  rmse_off  <- sqrt(mean((res_bio_off$completed[[v]][mask[, v]][ok] - truth[ok])^2))
+  r_bio <- tryCatch({
+    p <- res_bio$completed[[v]][mask[, v]][ok]
+    if (!is.finite(sd(p, na.rm = TRUE)) || sd(p, na.rm = TRUE) < 1e-10) NA_real_
+    else suppressWarnings(stats::cor(p, truth[ok], use = "complete.obs"))
+  }, error = function(e) NA_real_)
+  r_off <- tryCatch({
+    p <- res_bio_off$completed[[v]][mask[, v]][ok]
+    if (!is.finite(sd(p, na.rm = TRUE)) || sd(p, na.rm = TRUE) < 1e-10) NA_real_
+    else suppressWarnings(stats::cor(p, truth[ok], use = "complete.obs"))
+  }, error = function(e) NA_real_)
+  cat(sprintf("  %-15s n=%3d  mean=%.3g  none=%.3g  bio_sf_on=%.3g (r=%+0.3f)  bio_sf_off=%.3g (r=%+0.3f)  ratio_on=%.3f  ratio_off=%.3f\n",
+               v, sum(ok), rmse_mean, rmse_none, rmse_bio, r_bio, rmse_off, r_off,
+               rmse_bio / rmse_none, rmse_off / rmse_none))
+  rows[[length(rows) + 1L]] <- data.frame(
+    trait = v, n = sum(ok),
+    mean_RMSE = rmse_mean, none_RMSE = rmse_none,
+    bio_sf_on_RMSE = rmse_bio, bio_sf_off_RMSE = rmse_off,
+    bio_on_r = r_bio, bio_off_r = r_off,
+    ratio_on = rmse_bio / rmse_none, ratio_off = rmse_off / rmse_none)
 }
+all_res <- do.call(rbind, rows)
+saveRDS(list(results = all_res, n = nrow(df),
+              config = list(seed = SEED, miss_frac = MISS_FRAC,
+                             epochs = EPOCHS, n_imp = N_IMP)),
+         "script/bench_bien_worldclim.rds", compress = "xz")
+cat("[bench] wrote script/bench_bien_worldclim.rds\n")
