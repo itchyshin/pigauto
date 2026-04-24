@@ -139,3 +139,93 @@ test_that("pull_gbif_centroids handles species with no GBIF hits gracefully", {
   expect_true(is.na(out$centroid_lon[1]))
   expect_equal(out$n_occurrences[1], 0L)
 })
+
+test_that("end-to-end: GBIF centroids don't regress plants RMSE (>=1.10x guardrail on env traits)", {
+  skip_if(Sys.getenv("NOT_CRAN") == "", "slow integration - set NOT_CRAN=TRUE to run")
+  fx_path <- file.path(testthat::test_path("fixtures"), "gbif_plants_300.rds")
+  if (!file.exists(fx_path))
+    fx_path <- "tests/testthat/fixtures/gbif_plants_300.rds"
+  skip_if_not(file.exists(fx_path), "GBIF fixture not found")
+
+  cache_trait <- "script/data-cache/bien_trait_means.rds"
+  cache_tree  <- "script/data-cache/bien_tree.rds"
+  if (!file.exists(cache_trait)) {
+    cache_trait <- file.path("/Users/z3437171/Dropbox/Github Local/pigauto",
+                              "script/data-cache", "bien_trait_means.rds")
+    cache_tree  <- file.path("/Users/z3437171/Dropbox/Github Local/pigauto",
+                              "script/data-cache", "bien_tree.rds")
+  }
+  skip_if_not(file.exists(cache_trait) && file.exists(cache_tree),
+              "BIEN cache not found")
+
+  cov_all <- readRDS(fx_path)
+  trait_means <- readRDS(cache_trait)
+  tree_raw    <- readRDS(cache_tree)
+  tree_all <- if (is.list(tree_raw) && !inherits(tree_raw, "phylo")) {
+    t <- tree_raw$scenario.3; t$tip.label <- gsub("_", " ", t$tip.label); t
+  } else tree_raw
+
+  all_species <- Reduce(union, lapply(trait_means,
+    function(d) if (!is.null(d)) d$species else character(0)))
+  wide <- data.frame(species = all_species, stringsAsFactors = FALSE)
+  for (nm in names(trait_means)) {
+    d <- trait_means[[nm]]
+    if (is.null(d)) { wide[[nm]] <- NA_real_; next }
+    m <- match(wide$species, d$species)
+    wide[[nm]] <- suppressWarnings(as.numeric(d$mean_value[m]))
+  }
+
+  # Intersect: has cov + has tree tip + has >= 1 trait
+  has_cov_sp <- rownames(cov_all)[!is.na(cov_all$centroid_lat)]
+  matched <- Reduce(intersect,
+                     list(wide$species, tree_all$tip.label, has_cov_sp))
+  skip_if_not(length(matched) >= 100L, "insufficient matched species")
+
+  set.seed(2026L)
+  sp_s <- sample(matched, min(200L, length(matched)))
+  wide_s <- wide[wide$species %in% sp_s, , drop = FALSE]
+  rownames(wide_s) <- wide_s$species; wide_s$species <- NULL
+  cov_s <- cov_all[sp_s, c("centroid_lat", "centroid_lon"), drop = FALSE]
+  tree_s <- ape::keep.tip(tree_all, sp_s)
+
+  df <- wide_s
+  cont_cols <- colnames(df)
+  mask <- matrix(FALSE, nrow = nrow(df), ncol = length(cont_cols),
+                  dimnames = list(NULL, cont_cols))
+  for (v in cont_cols) {
+    ok <- which(!is.na(wide_s[[v]]))
+    if (length(ok) < 20L) next
+    idx <- sample(ok, round(0.30 * length(ok)))
+    mask[idx, v] <- TRUE
+    df[[v]][idx] <- NA_real_
+  }
+
+  # Fit without cov
+  res_nocov <- pigauto::impute(df, tree_s,
+                                  epochs = 80L, n_imputations = 20L,
+                                  verbose = FALSE, seed = 2026L)
+  # Fit with GBIF centroids as cov
+  res_withcov <- pigauto::impute(df, tree_s, covariates = cov_s,
+                                    epochs = 80L, n_imputations = 20L,
+                                    verbose = FALSE, seed = 2026L)
+
+  env_traits <- intersect(c("sla", "leaf_area"), cont_cols)
+  skip_if(length(env_traits) == 0L, "no environment-driven trait present")
+
+  any_within_guardrail <- FALSE
+  for (v in env_traits) {
+    if (!any(mask[, v])) next
+    truth <- wide_s[[v]][mask[, v]]
+    ok <- is.finite(truth)
+    if (sum(ok) < 5L) next
+    r_nocov   <- sqrt(mean((res_nocov$completed[[v]][mask[, v]][ok] - truth[ok])^2))
+    r_withcov <- sqrt(mean((res_withcov$completed[[v]][mask[, v]][ok] - truth[ok])^2))
+    ratio <- r_withcov / r_nocov
+    cat(sprintf("[end-to-end] %s: no-cov RMSE = %.3g, with-cov = %.3g, ratio = %.4f\n",
+                 v, r_nocov, r_withcov, ratio))
+    if (ratio <= 1.10) any_within_guardrail <- TRUE
+  }
+
+  expect_true(any_within_guardrail,
+              info = "at least one of sla/leaf_area should be within 10% of no-cov RMSE (centroids not catastrophically hurting)")
+})
