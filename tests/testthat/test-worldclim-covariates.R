@@ -181,6 +181,82 @@ test_that("pull_worldclim_per_species stops with clear error when terra absent",
     "terra")
 })
 
+# ---- Task 2 (v1.1): per-occurrence extraction ----
+
+test_that(".wc_extract_one uses points when available (per-occurrence)", {
+  tmp <- tempfile("wc_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  gbif_dir <- file.path(tmp, "gbif"); dir.create(gbif_dir)
+  extracts_dir <- file.path(tmp, "extracts"); dir.create(extracts_dir)
+  # Write a GBIF cache with 10 occurrence points
+  sp <- "Per occurrence"
+  gbif_key <- gsub("[^A-Za-z0-9._-]", "_", sp)
+  points_df <- data.frame(
+    lat = c(40, 41, 39, 40.5, 41.5, 38, 42, 40, 41, 39),
+    lon = c(-82, -81, -83, -82.5, -81.5, -84, -80, -82, -81, -83))
+  saveRDS(list(species = sp,
+                centroid_lat = 40.0, centroid_lon = -82.0,
+                n_occurrences = 10L,
+                points = points_df,
+                fetched_at = Sys.time()),
+           file.path(gbif_dir, paste0(gbif_key, ".rds")))
+  # Mock terra::extract to return a plausible 10x19 matrix
+  fake_extract <- matrix(seq_len(190), nrow = 10, ncol = 19)
+  colnames(fake_extract) <- paste0("wc2.1_10m_bio_", 1:19)
+  testthat::local_mocked_bindings(
+    extract = function(x, y, ...) as.data.frame(fake_extract),
+    .package = "terra")
+  # Need a fake rast_stack object -- any non-NULL placeholder works
+  # because mocked extract ignores it.
+  out <- pigauto:::.wc_extract_one(
+    sp = sp,
+    gbif_cache_dir = gbif_dir,
+    wc_extracts_dir = extracts_dir,
+    rast_stack = structure(list(), class = "FakeSpatRaster"),
+    refresh_cache = FALSE)
+  expect_equal(out$n_extracted, 10L)
+  # Median of 1:10 = 5.5 (bio1 column), median of 11:20 = 15.5 (bio2), etc.
+  expect_equal(as.numeric(out$bio_median["bio1"]), 5.5)
+  expect_equal(as.numeric(out$bio_median["bio2"]), 15.5)
+  # IQR of 1:10 = 5.0 (q75 - q25 = 7.75 - 3.25 = 4.5, not 5.0) -- use IQR()
+  expect_equal(as.numeric(out$bio_iqr["bio1"]), stats::IQR(1:10))
+})
+
+test_that(".wc_extract_one falls back to centroid when points field absent", {
+  tmp <- tempfile("wc_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  gbif_dir <- file.path(tmp, "gbif"); dir.create(gbif_dir)
+  extracts_dir <- file.path(tmp, "extracts"); dir.create(extracts_dir)
+  # Write a LEGACY-style cache (no points field)
+  sp <- "Legacy species"
+  gbif_key <- gsub("[^A-Za-z0-9._-]", "_", sp)
+  saveRDS(list(species = sp,
+                centroid_lat = 40.0, centroid_lon = -82.0,
+                n_occurrences = 50L,
+                fetched_at = Sys.time()),
+           file.path(gbif_dir, paste0(gbif_key, ".rds")))
+  # Mock terra::extract to return a 1x19 matrix (centroid = 1 point)
+  fake_extract <- matrix(seq(100, 1800, length.out = 19), nrow = 1, ncol = 19)
+  colnames(fake_extract) <- paste0("wc2.1_10m_bio_", 1:19)
+  testthat::local_mocked_bindings(
+    extract = function(x, y, ...) as.data.frame(fake_extract),
+    .package = "terra")
+  out <- pigauto:::.wc_extract_one(
+    sp = sp,
+    gbif_cache_dir = gbif_dir,
+    wc_extracts_dir = extracts_dir,
+    rast_stack = structure(list(), class = "FakeSpatRaster"),
+    refresh_cache = FALSE)
+  expect_equal(out$n_extracted, 1L)
+  # IQR of a singleton is 0 (legacy centroid-only behaviour)
+  expect_equal(as.numeric(out$bio_iqr["bio1"]), 0)
+  # Reason should note the legacy path
+  cached <- readRDS(file.path(extracts_dir,
+                                 paste0(pigauto:::.wc_cache_key(sp), ".rds")))
+  expect_true(!is.null(cached$reason))
+  expect_true(grepl("centroid_only_legacy", cached$reason))
+})
+
 test_that("end-to-end: bioclim lifts plants RMSE >= 10% on sla/leaf_area at n=200 (NOT_CRAN)", {
   skip_if(Sys.getenv("NOT_CRAN") == "", "slow integration -- NOT_CRAN=TRUE to run")
   # testthat sets cwd to tests/testthat/ during test runs;
