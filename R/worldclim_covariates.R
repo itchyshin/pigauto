@@ -195,6 +195,137 @@
   out
 }
 
+#' Fetch per-species bioclim covariates from WorldClim v2.1
+#'
+#' @description
+#' Extends \code{\link{pull_gbif_centroids}} by extracting 19 WorldClim
+#' v2.1 bioclim variables at each species' GBIF occurrence points,
+#' aggregating per species (median + IQR), and returning a data.frame
+#' ready for \code{\link{impute}} via its \code{covariates} argument.
+#'
+#' On first call, downloads the WorldClim 10-arc-minute raster stack
+#' (~130 MB compressed, ~500 MB unzipped) to \code{worldclim_cache_dir}.
+#' A sentinel file makes subsequent calls fully offline.
+#'
+#' Per-species extracts are also cached (one RDS per species in
+#' \code{worldclim_cache_dir/extracts/}), so repeated calls for the
+#' same species list are instantaneous.
+#'
+#' NOTE: this v1 uses each species' GBIF CENTROID (from
+#' \code{pull_gbif_centroids}) as the single extraction point.
+#' True per-occurrence extraction requires the GBIF cache to store
+#' the raw point list, which is a planned v1.1 extension.
+#' For the B.2 proof-of-pipe, centroid-only is sufficient.
+#'
+#' @param species character vector of species binomials.
+#' @param gbif_cache_dir character path, GBIF per-species cache
+#'   directory (as written by \code{\link{pull_gbif_centroids}}).
+#' @param worldclim_cache_dir character path, directory for WorldClim
+#'   rasters + per-species extract cache.  Created if absent.
+#' @param resolution one of \code{"10m"} (default), \code{"5m"},
+#'   \code{"2.5m"}.
+#' @param verbose logical.  Print progress every 50 species.
+#' @param refresh_cache logical.  Force re-extract even when per-species
+#'   cache exists.
+#'
+#' @return A data.frame with \code{length(species)} rows and columns:
+#'   \itemize{
+#'     \item \code{species}
+#'     \item \code{bio1_median}, \code{bio1_iqr}, ...,
+#'           \code{bio19_median}, \code{bio19_iqr}
+#'     \item \code{n_extracted} (integer, number of valid occurrence
+#'           points that contributed)
+#'   }
+#'   Rownames are set to \code{species}.  Species with no GBIF hits
+#'   get all-NA bio values and \code{n_extracted = 0}.
+#'
+#' @seealso \code{\link{pull_gbif_centroids}} (B.1, required input),
+#'   \code{\link{impute}} (consume as \code{covariates}).
+#'
+#' @references Fick SE, Hijmans RJ (2017). WorldClim 2: new 1-km
+#'   spatial resolution climate surfaces for global land areas.
+#'   International Journal of Climatology 37, 4302--4315.
+#'
+#' @examples
+#' \dontrun{
+#' sp <- c("Quercus alba", "Pinus taeda", "Acer saccharum")
+#' gbif_df <- pull_gbif_centroids(sp,
+#'   cache_dir = "script/data-cache/gbif")
+#' wc_df   <- pull_worldclim_per_species(
+#'   species             = sp,
+#'   gbif_cache_dir      = "script/data-cache/gbif",
+#'   worldclim_cache_dir = "script/data-cache/worldclim")
+#' # Combine for impute()
+#' cov <- cbind(gbif_df[, c("centroid_lat", "centroid_lon")],
+#'              wc_df[, grep("^bio", colnames(wc_df))])
+#' # res <- impute(traits, tree, covariates = cov,
+#' #               phylo_signal_gate = FALSE)  # <-- needed; see NEWS
+#' }
+#'
+#' @export
+pull_worldclim_per_species <- function(species,
+                                         gbif_cache_dir,
+                                         worldclim_cache_dir,
+                                         resolution = "10m",
+                                         verbose = TRUE,
+                                         refresh_cache = FALSE) {
+  stopifnot(is.character(species), length(species) >= 1L,
+            is.character(gbif_cache_dir), length(gbif_cache_dir) == 1L,
+            is.character(worldclim_cache_dir),
+            length(worldclim_cache_dir) == 1L)
+  if (!requireNamespace("terra", quietly = TRUE)) {
+    stop("pull_worldclim_per_species() requires the 'terra' package: ",
+         "install.packages('terra')", call. = FALSE)
+  }
+  dir.create(worldclim_cache_dir, showWarnings = FALSE, recursive = TRUE)
+  rast_dir <- .wc_download_rasters(worldclim_cache_dir,
+                                      resolution = resolution,
+                                      verbose = verbose)
+  extracts_dir <- file.path(worldclim_cache_dir, "extracts")
+  dir.create(extracts_dir, showWarnings = FALSE, recursive = TRUE)
+  rast_paths <- file.path(rast_dir,
+                            sprintf("wc2.1_%s_bio_%d.tif", resolution, 1:19))
+  # Load once (rasters are small when accessed via terra; it mmaps the file)
+  rast_stack <- tryCatch(terra::rast(rast_paths),
+                           error = function(e) {
+                             warning("terra::rast failed; falling back to cache-only mode. ",
+                                     "Error: ", conditionMessage(e))
+                             NULL
+                           })
+  n_sp <- length(species)
+  rows <- vector("list", n_sp)
+  for (i in seq_along(species)) {
+    sp <- species[[i]]
+    rows[[i]] <- .wc_extract_one(sp,
+                                   gbif_cache_dir = gbif_cache_dir,
+                                   wc_extracts_dir = extracts_dir,
+                                   rast_stack = rast_stack,
+                                   refresh_cache = refresh_cache)
+    if (verbose && (i %% 50L == 0L || i == n_sp)) {
+      n_done <- sum(vapply(rows[seq_len(i)],
+                            function(r) r$n_extracted > 0L,
+                            logical(1L)))
+      message(sprintf("[worldclim] %d/%d extracted, %d with valid bioclim",
+                       i, n_sp, n_done))
+    }
+  }
+  # Assemble wide data.frame
+  med_mat <- do.call(rbind, lapply(rows, function(r) r$bio_median))
+  iqr_mat <- do.call(rbind, lapply(rows, function(r) r$bio_iqr))
+  bio_names <- paste0("bio", 1:19)
+  colnames(med_mat) <- paste0(bio_names, "_median")
+  colnames(iqr_mat) <- paste0(bio_names, "_iqr")
+  out <- data.frame(
+    species       = vapply(rows, function(r) r$species, character(1L)),
+    med_mat,
+    iqr_mat,
+    n_extracted   = vapply(rows, function(r) r$n_extracted, integer(1L)),
+    stringsAsFactors = FALSE,
+    row.names = species,
+    check.names = FALSE)
+  out
+}
+
 # Local fallback for %||% in case the file is used in isolation.
 # pigauto defines %||% elsewhere too; this shim is harmless.
 `%||%` <- function(a, b) if (is.null(a)) b else a

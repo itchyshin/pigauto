@@ -125,3 +125,58 @@ test_that(".wc_extract_one returns NA row when species has no GBIF cache", {
   expect_equal(out$n_extracted, 0L)
   expect_true(all(is.na(out$bio_median)))
 })
+
+test_that("pull_worldclim_per_species returns data.frame with 38 bio cols + n_extracted", {
+  tmp <- tempfile("wc_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  gbif_dir <- file.path(tmp, "gbif"); dir.create(gbif_dir)
+  wc_dir   <- file.path(tmp, "wc");   dir.create(wc_dir)
+  extracts_dir <- file.path(wc_dir, "extracts"); dir.create(extracts_dir)
+  # Hand-write per-species extract caches for 3 species (skip GBIF + raster)
+  sp_list <- c("Quercus alba", "Pinus taeda", "Acer saccharum")
+  for (sp in sp_list) {
+    key <- pigauto:::.wc_cache_key(sp)
+    med <- setNames(runif(19, 0, 20), paste0("bio", 1:19))
+    iqr <- setNames(runif(19, 0, 5),  paste0("bio", 1:19))
+    saveRDS(list(species = sp, bio_median = med, bio_iqr = iqr,
+                  n_extracted = 42L,
+                  extracted_at = Sys.time()),
+             file.path(extracts_dir, paste0(key, ".rds")))
+  }
+  # Pre-populate the sentinel so .wc_download_rasters short-circuits
+  wc_res_dir <- file.path(wc_dir, "wc2.1_10m")
+  dir.create(wc_res_dir)
+  for (i in 1:19) {
+    file.create(file.path(wc_res_dir, sprintf("wc2.1_10m_bio_%d.tif", i)))
+  }
+  file.create(file.path(wc_res_dir, ".wc_complete"))
+  # Mock terra::rast to a placeholder value -- we won't hit it on cache hit.
+  testthat::local_mocked_bindings(
+    rast = function(paths) structure(list(paths = paths), class = "FakeSpatRaster"),
+    .package = "terra")
+  out <- pigauto::pull_worldclim_per_species(
+    species = sp_list,
+    gbif_cache_dir = gbif_dir,
+    worldclim_cache_dir = wc_dir,
+    verbose = FALSE)
+  expect_s3_class(out, "data.frame")
+  expect_equal(nrow(out), 3L)
+  # 19 median + 19 iqr + n_extracted = 39 cols, plus species column
+  expect_true("bio1_median" %in% colnames(out))
+  expect_true("bio19_iqr"   %in% colnames(out))
+  expect_true("n_extracted" %in% colnames(out))
+  expect_equal(rownames(out), sp_list)
+  expect_true(all(out$n_extracted == 42L))
+})
+
+test_that("pull_worldclim_per_species stops with clear error when terra absent", {
+  testthat::skip_if(requireNamespace("terra", quietly = TRUE),
+                     "terra IS installed; cannot test missing-terra branch")
+  expect_error(
+    pigauto::pull_worldclim_per_species(
+      species = "x",
+      gbif_cache_dir = tempdir(),
+      worldclim_cache_dir = tempdir(),
+      verbose = FALSE),
+    "terra")
+})
