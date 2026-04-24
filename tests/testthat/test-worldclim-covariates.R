@@ -87,3 +87,41 @@ test_that(".wc_download_rasters errors cleanly for unsupported resolution", {
     pigauto:::.wc_download_rasters(tmp, resolution = "99m", verbose = FALSE),
     "resolution must be one of")
 })
+
+test_that(".wc_extract_one reads from cache when present", {
+  tmp <- tempfile("wc_cache_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  extracts_dir <- file.path(tmp, "extracts")
+  dir.create(extracts_dir)
+  key <- pigauto:::.wc_cache_key("Quercus alba")
+  med <- setNames(runif(19, 0, 20), paste0("bio", 1:19))
+  iqr <- setNames(runif(19, 0, 5),  paste0("bio", 1:19))
+  saveRDS(list(species = "Quercus alba",
+                bio_median = med, bio_iqr = iqr, n_extracted = 42L,
+                extracted_at = Sys.time()),
+           file.path(extracts_dir, paste0(key, ".rds")))
+  out <- pigauto:::.wc_extract_one(
+    sp = "Quercus alba",
+    gbif_cache_dir = tempdir(),  # won't be read on cache hit
+    wc_extracts_dir = extracts_dir,
+    rast_stack = NULL,
+    refresh_cache = FALSE)
+  expect_equal(out$n_extracted, 42L)
+  expect_equal(out$bio_median, med)
+})
+
+test_that(".wc_extract_one returns NA row when species has no GBIF cache", {
+  tmp <- tempfile("wc_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  gbif_dir <- file.path(tmp, "gbif"); dir.create(gbif_dir)
+  extracts_dir <- file.path(tmp, "extracts"); dir.create(extracts_dir)
+  # No GBIF cache for "Ghost species"
+  out <- pigauto:::.wc_extract_one(
+    sp = "Ghost species",
+    gbif_cache_dir = gbif_dir,
+    wc_extracts_dir = extracts_dir,
+    rast_stack = NULL,
+    refresh_cache = FALSE)
+  expect_equal(out$n_extracted, 0L)
+  expect_true(all(is.na(out$bio_median)))
+})

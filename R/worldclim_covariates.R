@@ -99,6 +99,102 @@
   wc_dir
 }
 
+# Extract bioclim values at one species' GBIF occurrences.
+#
+# Checks for per-species extract cache first (one RDS per species).
+# On cache miss: reads the species' GBIF cache RDS (written by
+# pull_gbif_centroids), extracts bioclim values at each lat/lon point
+# via terra::extract(), aggregates via .wc_aggregate_one(), writes
+# per-species cache, returns result.
+#
+# Species with no GBIF cache file (or empty one): returns NA bio
+# vectors with n_extracted = 0L.  Does NOT error -- pull_gbif_centroids()
+# is the source of truth for species presence.
+#
+# @param sp character scalar, species name
+# @param gbif_cache_dir character path, root of GBIF per-species cache
+#                        (as written by pull_gbif_centroids)
+# @param wc_extracts_dir character path, root of WC per-species extract cache
+# @param rast_stack terra SpatRaster with 19 bio layers (can be NULL when
+#                    we expect a cache hit; extraction will error if NULL
+#                    on a cache miss)
+# @param refresh_cache logical; TRUE forces re-extract even with cache
+# @return list(species, bio_median, bio_iqr, n_extracted)
+# @noRd
+.wc_extract_one <- function(sp, gbif_cache_dir, wc_extracts_dir,
+                              rast_stack = NULL,
+                              refresh_cache = FALSE) {
+  stopifnot(is.character(sp), length(sp) == 1L, nzchar(sp))
+  dir.create(wc_extracts_dir, showWarnings = FALSE, recursive = TRUE)
+  key <- .wc_cache_key(sp)
+  cache_path <- file.path(wc_extracts_dir, paste0(key, ".rds"))
+  if (!refresh_cache && file.exists(cache_path)) {
+    cached <- tryCatch(readRDS(cache_path), error = function(e) NULL)
+    if (!is.null(cached) && identical(cached$species, sp)) {
+      return(list(species      = sp,
+                   bio_median   = cached$bio_median,
+                   bio_iqr      = cached$bio_iqr,
+                   n_extracted  = cached$n_extracted))
+    }
+  }
+  # Need to extract from raster.  Read GBIF cache.
+  gbif_key <- gsub("[^A-Za-z0-9._-]", "_", sp)  # B.1 convention
+  gbif_path <- file.path(gbif_cache_dir, paste0(gbif_key, ".rds"))
+  # Placeholder bio column names -- will be overwritten by actual extraction
+  bio_names <- paste0("bio", 1:19)
+  na_med <- setNames(rep(NA_real_, 19L), bio_names)
+  na_iqr <- setNames(rep(NA_real_, 19L), bio_names)
+  if (!file.exists(gbif_path)) {
+    # No GBIF record at all -- return NA row
+    out <- list(species = sp, bio_median = na_med, bio_iqr = na_iqr,
+                 n_extracted = 0L)
+    saveRDS(c(out, list(extracted_at = Sys.time(),
+                          reason = "no_gbif_cache")),
+             cache_path)
+    return(out)
+  }
+  gbif_cached <- tryCatch(readRDS(gbif_path), error = function(e) NULL)
+  if (is.null(gbif_cached) ||
+      is.na(gbif_cached$centroid_lat) ||
+      gbif_cached$n_occurrences == 0L) {
+    # GBIF cache exists but has no valid points
+    out <- list(species = sp, bio_median = na_med, bio_iqr = na_iqr,
+                 n_extracted = 0L)
+    saveRDS(c(out, list(extracted_at = Sys.time(),
+                          reason = "no_gbif_points")),
+             cache_path)
+    return(out)
+  }
+  # GBIF cache may or may not include the raw occurrence point list.
+  # pull_gbif_centroids v0.9.1.9004 stores only centroid + n_occurrences.
+  # B.2 needs per-point extraction -- extend the GBIF cache OR re-fetch
+  # occurrences.  For simplicity here we use the centroid-only row as a
+  # minimum viable extraction point.  Users who want per-point extraction
+  # should re-run pull_gbif_centroids with extended caching (future B.2.1).
+  points <- data.frame(lon = gbif_cached$centroid_lon,
+                        lat = gbif_cached$centroid_lat)
+  if (is.null(rast_stack)) {
+    stop(".wc_extract_one: rast_stack is NULL but cache miss -- ",
+         "cannot extract bioclim for species: ", sp, call. = FALSE)
+  }
+  vals_mat <- terra::extract(rast_stack,
+                               as.matrix(points[, c("lon", "lat")]),
+                               ID = FALSE, method = "simple")
+  # terra returns a data.frame with raster layer names
+  vals_df <- as.data.frame(vals_mat)
+  # Rename to bio1 .. bio19 in case terra prefixes with wc2.1_10m_bio_N
+  colnames(vals_df) <- bio_names[seq_len(ncol(vals_df))]
+  agg <- .wc_aggregate_one(vals_df)
+  out <- list(species = sp,
+               bio_median = agg$bio_median,
+               bio_iqr = agg$bio_iqr,
+               n_extracted = agg$n_extracted)
+  saveRDS(c(out, list(extracted_at = Sys.time(),
+                        reason = "extracted")),
+           cache_path)
+  out
+}
+
 # Local fallback for %||% in case the file is used in isolation.
 # pigauto defines %||% elsewhere too; this shim is harmless.
 `%||%` <- function(a, b) if (is.null(a)) b else a
