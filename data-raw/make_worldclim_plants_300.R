@@ -21,7 +21,8 @@ wc_df <- pull_worldclim_per_species(
   gbif_cache_dir      = gbif_cache_dir,
   worldclim_cache_dir = wc_cache_dir,
   resolution          = "10m",
-  verbose             = TRUE)
+  verbose             = TRUE,
+  refresh_cache       = TRUE)   # one-time refresh to use per-occurrence points from v1.1 GBIF cache
 
 out_path <- "tests/testthat/fixtures/worldclim_plants_300.rds"
 dir.create(dirname(out_path), showWarnings = FALSE, recursive = TRUE)

@@ -22,7 +22,9 @@ cov <- pull_gbif_centroids(sp300,
                             cache_dir = cache_dir,
                             occurrence_limit = 300L,
                             sleep_ms = 100L,
-                            verbose = TRUE)
+                            verbose = TRUE,
+                            store_points = TRUE,        # NEW (v1.1)
+                            refresh_cache = TRUE)       # one-time refetch to add points to existing cache
 
 out_path <- "tests/testthat/fixtures/gbif_plants_300.rds"
 dir.create(dirname(out_path), showWarnings = FALSE, recursive = TRUE)
