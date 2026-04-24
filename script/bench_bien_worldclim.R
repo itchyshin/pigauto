@@ -41,18 +41,48 @@ for (nm in names(trait_means)) {
 }
 matched <- intersect(wide$species, tree_all$tip.label)
 set.seed(SEED)
-sp <- sample(matched, min(4745L, length(matched)))
+# Parameterised by PIGAUTO_BENCH_N env var (default 4745)
+N_TARGET <- as.integer(Sys.getenv("PIGAUTO_BENCH_N", "4745"))
+sp <- sample(matched, min(N_TARGET, length(matched)))
 wide_s <- wide[wide$species %in% sp, , drop = FALSE]
 rownames(wide_s) <- wide_s$species; wide_s$species <- NULL
 tr <- ape::keep.tip(tree_all, sp)
 
+# Pre-fetch GBIF occurrences (with points) for any species not yet cached
+# so that pull_worldclim_per_species() can do per-occurrence extraction.
+# Cached species are instant; un-cached ones hit the API.
+cat("[bench] pre-fetching GBIF occurrences for", length(sp), "species ...\n")
+cat("[bench] (cached species instant; ~2-4 sec/species for uncached)\n")
+t_gbif <- proc.time()[["elapsed"]]
+gbif_df <- pull_gbif_centroids(sp,
+                                 cache_dir = gbif_dir,
+                                 occurrence_limit = 300L,
+                                 sleep_ms = 50L,
+                                 verbose = TRUE,
+                                 store_points = TRUE,
+                                 refresh_cache = FALSE)
+cat(sprintf("[bench] GBIF pre-fetch done in %.0fs (%d species with valid centroids)\n",
+             proc.time()[["elapsed"]] - t_gbif,
+             sum(!is.na(gbif_df$centroid_lat))))
+
 # Fetch bioclim for these species
-cat("[bench] fetching bioclim for", length(sp), "species ...\n")
+cat("[bench] extracting bioclim for", length(sp), "species ...\n")
 wc_df <- pull_worldclim_per_species(sp,
                                       gbif_cache_dir = gbif_dir,
                                       worldclim_cache_dir = wc_dir,
                                       verbose = TRUE)
 cov_bio <- wc_df[sp, grepl("^bio", colnames(wc_df)), drop = FALSE]
+# Drop species with all-NA bioclim (no GBIF hit) so pigauto sees clean covariates
+na_rows <- rowSums(is.na(cov_bio)) == ncol(cov_bio)
+if (any(na_rows)) {
+  cat(sprintf("[bench] dropping %d species without any bioclim coverage\n", sum(na_rows)))
+  keep <- !na_rows
+  cov_bio <- cov_bio[keep, , drop = FALSE]
+  wide_s  <- wide_s[keep, , drop = FALSE]
+  sp      <- sp[keep]
+  tr      <- ape::keep.tip(tr, sp)
+}
+cat("[bench] final n =", length(sp), "species after covariate filter\n")
 
 # 30% MCAR mask
 df <- wide_s
