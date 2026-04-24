@@ -1,3 +1,73 @@
+# pigauto 0.9.1.9005 (dev)
+
+## WorldClim bioclim covariates (B.2)
+
+New exported helper `pull_worldclim_per_species(species,
+gbif_cache_dir, worldclim_cache_dir, ...)` extracts 19 WorldClim v2.1
+bioclim variables at each species' GBIF occurrence points, aggregates
+per species (median + IQR), and returns a 38-column numeric
+data.frame ready for `impute(..., covariates = ...)`.
+
+### What it does
+
+1. Resolves each species's GBIF occurrence cache from
+   `pull_gbif_centroids()` (B.1).
+2. Downloads WorldClim v2.1 10-arc-minute raster stack (~500 MB) to
+   `worldclim_cache_dir` on first call; sentinel file makes subsequent
+   calls offline.
+3. For each species, extracts bioclim values at its centroid (v1;
+   per-occurrence extraction deferred to v1.1) via `terra::extract()`.
+4. Aggregates to median + IQR per variable (38 columns total).
+5. Caches the per-species extract as one RDS in
+   `worldclim_cache_dir/extracts/`.
+
+### Important interaction with the phylogenetic-signal gate
+
+The `phylo_signal_gate` introduced in v0.9.1.9003 fires on *raw trait
+values*, so traits with weak phylogenetic signal (e.g. plants SLA,
+leaf_area, height_m) get routed directly to the grand-mean corner
+BEFORE the GNN sees any covariates.  **To see bioclim lift those
+traits, users must set `phylo_signal_gate = FALSE`:**
+
+```r
+cov_bio <- pull_worldclim_per_species(
+  rownames(traits),
+  gbif_cache_dir = "script/data-cache/gbif",
+  worldclim_cache_dir = "script/data-cache/worldclim")
+res <- impute(traits, tree, covariates = cov_bio,
+              phylo_signal_gate = FALSE)   # <-- required
+```
+
+A follow-up spec ("covariate-aware phylo-signal gating") will compute
+lambda on residuals-after-covariates so the gate composes cleanly with
+covariates without the manual opt-out.
+
+### Dependency
+
+`terra` added to Suggests.  `pull_worldclim_per_species()` errors
+with an install hint when `terra` is absent.
+
+### Testing
+
+- `tests/testthat/test-worldclim-covariates.R`: 20 offline
+  expectations (cache key, aggregation, download sentinel, extract
+  cache, NA handling).
+- `tests/testthat/fixtures/worldclim_plants_300.rds`: pre-extracted
+  fixture for 300 BIEN species.
+- End-to-end smoke (NOT_CRAN-gated): bioclim lifts SLA or leaf_area
+  RMSE by >= 10% on a BIEN 200-subset when combined with
+  `phylo_signal_gate = FALSE`.
+
+### Follow-ups
+
+- True per-occurrence extraction (v1.1): extend B.1's GBIF cache to
+  store raw lat/lon point lists, then aggregate bioclim at each point
+  rather than at the centroid.
+- SoilGrids (B.3): add 5-10 soil variables similarly.
+- Covariate-aware phylo-signal gating: recompute lambda on
+  residuals-after-covariates so the gate de-triggers automatically
+  when covariates resolve weak-phylo-signal traits.
+
 # pigauto 0.9.1.9004 (dev)
 
 ## GBIF range-centroid covariates
