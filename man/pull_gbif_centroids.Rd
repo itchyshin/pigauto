@@ -10,7 +10,8 @@ pull_gbif_centroids(
   occurrence_limit = 500L,
   sleep_ms = 100L,
   verbose = TRUE,
-  refresh_cache = FALSE
+  refresh_cache = FALSE,
+  store_points = FALSE
 )
 }
 \arguments{
@@ -30,6 +31,13 @@ milliseconds (default 100).}
 
 \item{refresh_cache}{logical, force re-fetch even when cache
 exists.}
+
+\item{store_points}{logical. When \code{TRUE}, persists the raw
+filtered lat/lon occurrence points in each species' cache RDS
+under the \code{points} field.  Used by
+\code{\link{pull_worldclim_per_species}} for per-occurrence
+bioclim extraction.  Default \code{FALSE} preserves the
+pre-v0.9.1.9006 cache format.}
 }
 \value{
 A data.frame with columns \code{species}, \code{centroid_lat},
