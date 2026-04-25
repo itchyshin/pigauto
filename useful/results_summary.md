@@ -8,6 +8,8 @@ All benches use: 30% MCAR held-out, seed = 2026, Rphylopars Level-C joint MVN ba
 
 ## TL;DR — covariates DO lift on real data (2026-04-24, 5 am check-in)
 
+**See `useful/covariate_lift_figure.png` for the one-glance picture.**
+
 Four real species-level datasets, four positive lift results:
 
 | dataset | n | tree | baseline r | best-trait lift | r before → after |
