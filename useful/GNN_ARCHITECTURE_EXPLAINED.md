@@ -234,29 +234,56 @@ concat-and-project. Each layer attends to (h_species, covariates)
 jointly. This lets the GNN propagate covariate-aware signals through
 the phylogenetic graph.
 
-## Recommendation
+## Recommendation (executed 2026-04-25)
 
-I recommend trying **Fix G first** because it directly addresses the
-root cause: `pigauto`'s baseline is pure-phylo, while `phylolm-lambda`'s
-baseline is linear-cov + phylo. By upgrading the baseline to include
-covariates linearly, the GNN's job becomes learning *only* the
-nonlinear / interactive corrections — exactly the regime where it
-should win.
+Fix G was implemented inside pigauto's own BM machinery (no external
+dependency on phylolm). `bm_impute_col_with_cov()` does the GLS
+regression + BLUP analytically, matching `phylolm::phylolm(model="BM")`
+to 1e-7 in unit tests, and the LRT gate auto-decides when covs are
+useful. Single-trait + cov-aware baseline brought linear-effect RMSE
+from 1.85× phylolm-lambda → 1.22× (22% gap, down from 85%). On nonlinear
+and interactive cells, ratios closed similarly.
 
-Concretely Fix G means: replace `fit_baseline_continuous` with a call
-to `phylolm::phylolm(y ~ ., data = X_with_covs, phy = tree,
-model = "lambda")` and use BLUP for prediction. Then the GNN delta is
-honestly a residual model — and the lambda_shrink penalty toward
-baseline becomes a DESIRABLE inductive bias rather than a handicap.
+Fix H was then added on top: per-layer cov injection in the
+GraphTransformerBlock. Goal is to give the GNN's `delta` access to
+covariate features at every layer, not just the input encoder, so it
+can learn nonlinear cov-conditional phylogenetic corrections. Effect
+on top of Fix G is being measured by v2 FIXED tree300 (running
+2026-04-25 PM).
 
-## Status of fixes
+The architectural decomposition is now:
+
+```
+pred = X · β̂                  (Fix G: linear cov fixed effects)
+     + V_lambda BLUP(y - X·β̂)  (Fix G: BM phylo residual)
+     + r · GNN_delta            (the GNN: nonlinear cov + cross-trait
+                                  + non-BM phylo refinements; Fix H
+                                  gives it cov-aware message passing)
+```
+
+Each layer of the architecture has a clear job. The GNN no longer
+has to re-derive linear cov effects from scratch -- those are baked
+into the baseline. The GNN focuses on what only it can do.
+
+## Status of fixes (post-2026-04-25 GNN intervention round)
 
 - ✅ Fix A: `n_user_cov = n_cov_cols` always (single-obs + multi-obs both create obs_refine)
 - ✅ Fix B: dedicated cov_encoder MLP for richer cov capacity
 - ✅ Fix C: cov_linear direct linear cov head added to delta
 - ✅ Fix D: cov_linear contribution moved OUTSIDE the (1−r)/r blend gate
-- 🔜 Fix E (proposed): adaptive lambda_shrink/lambda_gate when covs present
-- 🔜 Fix F (proposed): auxiliary regression loss on cov_linear
-- 🔜 Fix G (proposed, recommended next): use `phylolm-lambda` as baseline
-  when covs supplied — pigauto's GNN becomes pure nonlinear residual
-- 🔜 Fix H (proposed): cov-aware GNN layers via cross-attention
+- ❌ Fix E (TESTED, ruled out): lowering lambda_shrink/lambda_gate barely
+  moved RMSE; regularisations were NOT the bottleneck.
+- ⏸️ Fix F (deferred): auxiliary regression loss on cov_linear — not needed
+  given Fix G subsumes the linear path into the baseline.
+- ✅ **Fix G (root-cause fix): `bm_impute_col_with_cov()` adds GLS regression
+  with covariate fixed effects to the BM baseline. Plus an LRT gate that
+  falls back to no-cov baseline when covariates do not actually reduce
+  residual variance.** Brought linear-effect gap from 85% to 22% of
+  phylolm-lambda BLUP. Unit-tested vs phylolm to 1e-7.
+- ✅ **Fix H: per-layer covariate injection in the GNN. Each
+  GraphTransformerBlock now optionally takes a cov_h tensor and adds it
+  via residual connection. cov_h is computed once from the cov_encoder
+  and passed to every block, so phylogenetic message passing has access
+  to covariate features at every depth.** Initialised to zero so block
+  ≈ identity at training step 0. Backward-compatible: when n_user_cov=0,
+  no extra params and forward() doesn't compute cov_h.
