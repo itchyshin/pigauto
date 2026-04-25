@@ -134,12 +134,19 @@ ResidualPhyloDAE <- torch::nn_module(
       }
     } # end legacy path
 
-    # Observation-level refinement MLP (multi-obs + user covariates only).
-    # After species-level GNN message passing, observations are broadcast
-    # back to obs-level but lose within-species covariate variation.  This
-    # small MLP re-injects user covariates via a residual connection so
-    # that different observations of the same species (e.g. CTmax at
-    # different acclimation temperatures) can receive different predictions.
+    # Covariate refinement MLP (fires whenever n_user_cov > 0, single-obs
+    # OR multi-obs).
+    # After species-level GNN message passing, the hidden state has been
+    # propagated through phylogenetic graph layers that did NOT see the
+    # user covariates.  This MLP re-injects the raw covariates via a
+    # residual connection so the GNN's delta is conditioned on
+    # nonlinear / interactive covariate structure that a single linear
+    # encoder projection cannot capture.
+    #
+    # In multi-obs mode it also restores within-species covariate
+    # variation lost during species-level pooling (e.g. CTmax at
+    # different acclimation temperatures).
+    #
     # When n_user_cov = 0, this module is not created and forward() skips it.
     if (n_user_cov > 0L) {
       self$obs_refine <- torch::nn_sequential(
@@ -260,20 +267,25 @@ ResidualPhyloDAE <- torch::nn_module(
     if (multi_obs) {
       # Expand back from species to observation level
       h <- h_species$index_select(1L, obs_to_species)
-
-      # Observation-level refinement: re-inject user covariates so that
-      # different observations of the same species get distinct predictions.
-      # The residual connection preserves the phylogenetic signal from
-      # message passing while allowing covariate-conditional adjustment.
-      if (self$n_user_cov > 0L && !is.null(self$obs_refine)) {
-        # User covariates occupy the last n_user_cov columns of covs
-        total_cov <- as.integer(covs$size(2))
-        user_covs <- covs$narrow(2L, total_cov - self$n_user_cov + 1L,
-                                 self$n_user_cov)
-        h <- h + self$obs_refine(torch::torch_cat(list(h, user_covs), dim = 2L))
-      }
     } else {
       h <- h_species
+    }
+
+    # Covariate refinement: re-inject user covariates via residual
+    # connection so the GNN's delta is conditioned on nonlinear /
+    # interactive covariate structure.  Fires in BOTH single-obs and
+    # multi-obs modes whenever n_user_cov > 0.  In multi-obs mode this
+    # also restores within-species covariate variation lost during
+    # species-level pooling.
+    #
+    # The residual connection preserves the phylogenetic signal from
+    # message passing while allowing covariate-conditional adjustment.
+    if (self$n_user_cov > 0L && !is.null(self$obs_refine)) {
+      # User covariates occupy the last n_user_cov columns of covs
+      total_cov <- as.integer(covs$size(2))
+      user_covs <- covs$narrow(2L, total_cov - self$n_user_cov + 1L,
+                               self$n_user_cov)
+      h <- h + self$obs_refine(torch::torch_cat(list(h, user_covs), dim = 2L))
     }
 
     h     <- self$dec1(h)

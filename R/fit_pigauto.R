@@ -390,12 +390,22 @@ fit_pigauto <- function(
 
   # ---- Model ----------------------------------------------------------------
   cov_dim <- p + 1L + n_cov_cols
-  # n_user_cov tells the model how many observation-level user covariates
-  # exist (the last n_cov_cols columns of the covs tensor).  When multi_obs
-  # is TRUE and n_user_cov > 0, the model's obs_refine MLP re-injects
-  # these covariates after species-level GNN message passing so that
-  # different observations of the same species get distinct predictions.
-  n_user_cov <- if (multi_obs) n_cov_cols else 0L
+  # n_user_cov tells the model how many user covariates exist (the last
+  # n_cov_cols columns of the covs tensor). The model's obs_refine MLP
+  # re-injects these covariates after species-level GNN message passing
+  # via a residual connection so the GNN's delta is conditioned on the
+  # raw covariates rather than only on the species-level hidden state
+  # (which has been propagated through phylogeny-only graph layers).
+  #
+  # Historical note (pre-2026-04-25): n_user_cov was forced to 0 in
+  # single-obs mode, which meant user covariates entered the model only
+  # via the input encoder and were diluted through the GNN layers. The
+  # GNN had no path to extract nonlinear covariate-effect signal beyond
+  # what a single linear projection could carry. Fixed by feeding the
+  # raw user covariates back into the obs_refine MLP in single-obs mode
+  # too, so single-obs imputation can finally exploit nonlinear
+  # covariate structure.
+  n_user_cov <- n_cov_cols
   model <- ResidualPhyloDAE(
     input_dim              = p,
     hidden_dim             = as.integer(hidden_dim),
