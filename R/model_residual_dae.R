@@ -73,13 +73,21 @@ ResidualPhyloDAE <- torch::nn_module(
       # n_gnn_layers instances of multi-head attention + FFN + pre-norm.
       # The log-adj bias preserves the phylogenetic prior; near-zero FFN init
       # keeps the stack close to identity at init (gate-closed safety).
+      #
+      # Fix H (2026-04-25): when user covariates are present (n_user_cov > 0),
+      # each transformer block also gets a per-layer cov-injection MLP.
+      # forward() then passes the cov_encoder output to every block, so the
+      # phylogenetic message passing has covariate-derived features
+      # available at every layer rather than only at the input encoder.
+      cov_inject_blocks <- (n_user_cov > 0L)
       self$transformer_blocks <- torch::nn_module_list(lapply(
         seq_len(n_gnn_layers), function(i) {
           GraphTransformerBlock(
             hidden_dim = as.integer(hidden_dim),
             n_heads    = as.integer(n_heads),
             ffn_mult   = as.integer(ffn_mult),
-            dropout    = dropout
+            dropout    = dropout,
+            cov_inject = cov_inject_blocks
           )
         }
       ))
@@ -253,14 +261,34 @@ ResidualPhyloDAE <- torch::nn_module(
       h_species <- h
     }
 
+    # Fix H prep: compute species-level cov_h ONCE per forward, pass to
+    # each transformer block.  Only when transformer_blocks were
+    # constructed with cov_inject=TRUE (i.e. n_user_cov > 0 at init).
+    cov_h_sp <- NULL
+    if (self$n_user_cov > 0L && !is.null(self$cov_encoder)) {
+      total_cov <- as.integer(covs$size(2))
+      user_covs <- covs$narrow(2L, total_cov - self$n_user_cov + 1L,
+                               self$n_user_cov)
+      cov_h <- self$cov_encoder(user_covs)
+      cov_h_sp <- if (multi_obs) {
+        scatter_mean(cov_h, obs_to_species, as.integer(adj$size(1)))
+      } else {
+        cov_h
+      }
+    }
+
     if (self$use_transformer_blocks) {
       # ---- Phase-9 path: iterate through GraphTransformerBlock stack ---------
-      # Each block takes (h_species, adj, D_sq) and returns updated h_species.
-      # The blocks handle multi-head attention + FFN + pre-norm + residual
-      # internally. When D_sq is provided (B2), each block uses the learnable
-      # per-head Gaussian bandwidth; otherwise the log-adj prior path fires.
+      # Each block takes (h_species, adj, D_sq, cov_h) and returns updated
+      # h_species.  The blocks handle multi-head attention + FFN + pre-norm
+      # + residual internally.  When D_sq is provided (B2), per-head
+      # Gaussian bandwidth fires.  When cov_h_sp is provided AND the block
+      # was built with cov_inject=TRUE (Fix H), the block also adds a
+      # learned cov-projection at this layer.
       for (l in seq_len(self$n_gnn_layers)) {
-        h_species <- self$transformer_blocks[[l]](h_species, adj, D_sq = D_sq)
+        h_species <- self$transformer_blocks[[l]](h_species, adj,
+                                                  D_sq = D_sq,
+                                                  cov_h = cov_h_sp)
       }
     } else {
       # ---- Legacy path: single-head attention or simple adjacency ------------
@@ -311,11 +339,10 @@ ResidualPhyloDAE <- torch::nn_module(
     # In multi-obs mode this also restores within-species covariate
     # variation lost during species-level pooling.
     if (self$n_user_cov > 0L && !is.null(self$obs_refine)) {
-      # User covariates occupy the last n_user_cov columns of covs
-      total_cov <- as.integer(covs$size(2))
-      user_covs <- covs$narrow(2L, total_cov - self$n_user_cov + 1L,
-                               self$n_user_cov)
-      cov_h <- self$cov_encoder(user_covs)                          # (n_obs, hidden_dim)
+      # cov_h is the obs-level cov-encoder output (computed earlier and
+      # also passed into the GNN blocks via cov_h_sp).  We reuse it here
+      # to avoid running cov_encoder twice per forward pass.  cov_h
+      # exists since n_user_cov > 0 implies cov_encoder was created.
       h <- h + self$obs_refine(torch::torch_cat(list(h, cov_h), dim = 2L))
     }
 
