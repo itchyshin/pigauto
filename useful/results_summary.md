@@ -497,6 +497,18 @@ the honest headline — but readers should know the phylogeny used
 here is taxonomic, not molecular, and the comparison vs pigauto-
 baseline overstates what the covariates add.
 
+**Seed-2027 confirmation.**  At seed 2027 the same data + tree
+gives BM-baseline RMSE 0.33 (vs 1.10 at seed 2026) — pigauto
+baseline does NOT fail on this sample.  Covariate-aided RMSE is
+0.33 either way, identical to the seed-2027 baseline.  Across both
+seeds, the cov-aided model sits at RMSE 0.32-0.33 (very stable),
+column-mean at 0.42-0.47, and pigauto-none varies wildly between
+0.33 and 1.10.  The "lift" interpretation depends on which baseline
+you compare against, but the empirical fact is: **the covariate-
+aided model is the most stable of the three**, beating column-mean
+by 24-30 % whatever the BM-baseline does.  This is itself a useful
+robustness property of pigauto-with-covariates.
+
 ### 8.5 Multi-obs sim on the REAL bird phylogeny — confirmation
 
 `script/bench_multi_obs_real_tree.R`.  Same DGP as `bench_multi_obs.R`
