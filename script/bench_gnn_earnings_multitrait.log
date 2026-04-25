@@ -1,0 +1,251 @@
+[11:06:03] multitrait sim: tree=multitrait_FIXED_tree300, n=300, K=4 traits, couples=0,0.5,1, reps=5
+[11:06:03] === couple=0.0 rep=1 (seed=3026) ===
+
+warning: solve(): system is singular (rcond: 1.0003e-44); attempting approx solution
+[11:06:04]   rphylopars_blup 1.5s
+
+warning: solve(): system is singular (rcond: 1.18328e-25); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.37594e-41); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.06221e-88); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.22701e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 4.38136e-134); attempting approx solution
+
+warning: solve(): system is singular (rcond: 8.13074e-37); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.03718e-42); attempting approx solution
+
+warning: solve(): system is singular (rcond: 6.01828e-38); attempting approx solution
+[11:11:20]   pigauto_multitrait 315.6s
+[11:11:20] === couple=0.0 rep=2 (seed=4026) ===
+
+warning: solve(): system is singular (rcond: 7.2861e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.64203e-24); attempting approx solution
+[11:11:21]   rphylopars_blup 1.7s
+
+warning: solve(): system is singular (rcond: 1.22773e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.98935e-35); attempting approx solution
+
+warning: solve(): system is singular; attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.11798e-25); attempting approx solution
+[11:13:17]   pigauto_multitrait 115.5s
+[11:13:17] === couple=0.0 rep=3 (seed=5026) ===
+
+warning: solve(): system is singular (rcond: 6.88639e-19); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.78006e-59); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.35025e-87); attempting approx solution
+
+warning: solve(): system is singular (rcond: 4.81793e-25); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.32723e-41); attempting approx solution
+[11:13:18]   rphylopars_blup 0.7s
+
+warning: solve(): system is singular (rcond: 7.69792e-25); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.66346e-42); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.90169e-68); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.89875e-19); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.41572e-89); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.93728e-33); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.34675e-32); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.30508e-24); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.13075e-134); attempting approx solution
+
+warning: solve(): system is singular (rcond: 6.56435e-30); attempting approx solution
+[11:14:22]   pigauto_multitrait 64.4s
+[11:14:22] === couple=0.0 rep=4 (seed=6026) ===
+[11:14:23]   rphylopars_blup 0.7s
+
+warning: solve(): system is singular (rcond: 8.24545e-19); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.85057e-30); attempting approx solution
+
+warning: solve(): system is singular (rcond: 9.05266e-41); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.23251e-39); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.5415e-105); attempting approx solution
+
+warning: solve(): system is singular (rcond: 4.84931e-22); attempting approx solution
+[11:15:25]   pigauto_multitrait 62.5s
+[11:15:25] === couple=0.0 rep=5 (seed=7026) ===
+
+warning: solve(): system is singular (rcond: 3.94632e-18); attempting approx solution
+[11:15:26]   rphylopars_blup 0.6s
+
+warning: solve(): system is singular (rcond: 3.56467e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 4.43017e-38); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.63522e-86); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.37948e-18); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.71858e-36); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.03465e-25); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.82289e-19); attempting approx solution
+[11:16:25]   pigauto_multitrait 59.3s
+[11:16:25] === couple=0.5 rep=1 (seed=3076) ===
+[11:16:26]   rphylopars_blup 0.7s
+
+warning: solve(): system is singular (rcond: 1.55821e-18); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.46162e-62); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.8204e-46); attempting approx solution
+[11:17:22]   pigauto_multitrait 56.2s
+[11:17:22] === couple=0.5 rep=2 (seed=4076) ===
+
+warning: solve(): system is singular (rcond: 3.16899e-22); attempting approx solution
+[11:17:23]   rphylopars_blup 0.7s
+
+warning: solve(): system is singular (rcond: 5.92169e-18); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.33566e-25); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.54645e-50); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.96834e-22); attempting approx solution
+
+warning: solve(): system is singular (rcond: 6.89445e-43); attempting approx solution
+
+warning: solve(): system is singular (rcond: 7.97505e-23); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.41546e-36); attempting approx solution
+[11:18:19]   pigauto_multitrait 55.8s
+[11:18:19] === couple=0.5 rep=3 (seed=5076) ===
+
+warning: solve(): system is singular (rcond: 1.13875e-17); attempting approx solution
+[11:18:19]   rphylopars_blup 0.7s
+[11:19:16]   pigauto_multitrait 56.3s
+[11:19:16] === couple=0.5 rep=4 (seed=6076) ===
+
+warning: solve(): system is singular (rcond: 7.14602e-17); attempting approx solution
+[11:19:16]   rphylopars_blup 0.7s
+
+warning: solve(): system is singular (rcond: 4.72816e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.74138e-32); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.33169e-105); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.33649e-24); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.18374e-43); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.02226e-19); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.67701e-42); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.1925e-17); attempting approx solution
+[11:20:21]   pigauto_multitrait 64.4s
+[11:20:21] === couple=0.5 rep=5 (seed=7076) ===
+
+warning: solve(): system is singular (rcond: 2.09433e-29); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.23298e-73); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.47899e-18); attempting approx solution
+[11:20:21]   rphylopars_blup 0.7s
+
+warning: solve(): system is singular (rcond: 1.66996e-25); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.06627e-50); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.44459e-98); attempting approx solution
+
+warning: solve(): system is singular (rcond: 4.70447e-24); attempting approx solution
+
+warning: solve(): system is singular (rcond: 9.2508e-96); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.49901e-23); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.21205e-73); attempting approx solution
+[11:21:17]   pigauto_multitrait 55.4s
+[11:21:17] === couple=1.0 rep=1 (seed=3126) ===
+[11:21:18]   rphylopars_blup 0.8s
+
+warning: solve(): system is singular (rcond: 5.69244e-34); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.61103e-95); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.03271e-19); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.78958e-68); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.25852e-27); attempting approx solution
+[11:22:12]   pigauto_multitrait 54.8s
+[11:22:12] === couple=1.0 rep=2 (seed=4126) ===
+[11:22:13]   rphylopars_blup 0.7s
+
+warning: solve(): system is singular (rcond: 4.86581e-34); attempting approx solution
+
+warning: solve(): system is singular; attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.11967e-29); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.9478e-42); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.24251e-38); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.89623e-17); attempting approx solution
+[11:23:12]   pigauto_multitrait 59.0s
+[11:23:12] === couple=1.0 rep=3 (seed=5126) ===
+[11:23:13]   rphylopars_blup 0.8s
+
+warning: solve(): system is singular (rcond: 1.63412e-16); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.63625e-47); attempting approx solution
+
+warning: solve(): system is singular (rcond: 7.00044e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 4.02735e-44); attempting approx solution
+[11:24:08]   pigauto_multitrait 54.6s
+[11:24:08] === couple=1.0 rep=4 (seed=6126) ===
+[11:24:08]   rphylopars_blup 0.7s
+
+warning: solve(): system is singular (rcond: 7.01723e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.09028e-35); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.58034e-47); attempting approx solution
+
+warning: solve(): system is singular (rcond: 6.53088e-36); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.9867e-25); attempting approx solution
+[11:25:02]   pigauto_multitrait 53.9s
+[11:25:02] === couple=1.0 rep=5 (seed=7126) ===
+
+warning: solve(): system is singular (rcond: 8.92089e-76); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.54263e-16); attempting approx solution
+[11:25:03]   rphylopars_blup 0.7s
+
+warning: solve(): system is singular (rcond: 1.30381e-41); attempting approx solution
+
+warning: solve(): system is singular; attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.1383e-30); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.445e-29); attempting approx solution
+[11:26:00]   pigauto_multitrait 57.2s
+[11:26:00] === DONE ===
+[11:26:00]   rds: script/bench_gnn_earnings_multitrait_FIXED_tree300.rds
+[11:26:00]   md : script/bench_gnn_earnings_multitrait_FIXED_tree300.md
