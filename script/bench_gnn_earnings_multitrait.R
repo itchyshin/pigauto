@@ -68,8 +68,11 @@ cat_line <- function(...) cat(format(Sys.time(), "[%H:%M:%S] "), ..., "\n", sep 
 # Load tree (default tree300)
 tree_rda <- Sys.getenv("PIGAUTO_TREE_RDA", "")
 tree_obj <- Sys.getenv("PIGAUTO_TREE_OBJ", "tree300")
-if (nzchar(tree_rda)) { load(tree_rda); tree <- get(tree_obj) }
-else { data(list = tree_obj); tree <- get(tree_obj) }
+if (nzchar(tree_rda)) {
+  load(tree_rda); tree <- get(tree_obj)
+} else {
+  data(list = tree_obj); tree <- get(tree_obj)
+}
 set.seed(SEED)
 if (!ape::is.binary(tree)) tree <- ape::multi2di(tree, random = TRUE)
 if (is.null(tree$edge.length))
