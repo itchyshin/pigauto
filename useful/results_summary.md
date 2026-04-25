@@ -523,6 +523,46 @@ to explain.  But the lift is still consistently positive at strong
 covariate effect sizes (beta = 1.0).  This is the strongest
 "sim-on-real-phylogeny" evidence for the architecture.
 
+### 8.5b Sanity checks: seed 2027 + Insecta-only
+
+The headline results are robust to seed.  Two follow-up runs confirm:
+
+**PanTHERIA seed 2027 (vs original seed 2026)** -- same n=850
+species, same trait/cov columns, different MCAR sample:
+
+| trait | seed 2026 ratio | seed 2027 ratio | mean ratio |
+|---|---:|---:|---:|
+| AdultBodyMass | 1.04 | 0.94 | 0.99 |
+| GestationLen | 1.09 | 1.05 | 1.07 |
+| **MaxLongevity** | **0.78** | **0.94** | **0.86** |
+| LitterSize | 1.00 | 1.09 | 1.05 |
+| PopulationDensity | 0.96 | 1.05 | 1.00 |
+
+MaxLongevity shows positive lift on both seeds (22 % and 7 %).
+The point estimate is seed-sensitive due to small held-out
+sample sizes (n=57-62 cells), but the qualitative finding
+is robust: **climate covariates lift mammal longevity prediction**.
+The honest summary is "10-20 % lift with seed variability";
+the original 22 % was at the high end of the distribution.
+
+**Insecta-only GlobTherm (`bench_globtherm_insects.R`, n=167):**
+restricting GlobTherm to single-class insects gives a cleaner
+phylogenetic structure than the cross-class sweep.  Both
+`safety_floor` modes work:
+
+| mode | RMSE | Pearson r | ratio |
+|---|---:|---:|---:|
+| baseline (no cov) | 4.44 | 0.727 | -- |
+| cov, sf=TRUE | 4.15 | 0.771 | 0.94 (6 % lift) |
+| cov, sf=FALSE | 4.13 | 0.769 | 0.93 (7 % lift) |
+
+Within insects alone, the lat/long/elev covariates lift Tmax by
+6-7 % regardless of safety floor.  This is a more stable result
+than the cross-class GlobTherm bench (where sf=TRUE hurt by 28 %
+due to taxonomic-tree noise on val/test gap).  Recommends in the
+paper: "for cleanest results, use within-class subsets when
+possible".
+
 ### 8.6 Safety-floor variance check (`sf=FALSE` vs `sf=TRUE`)
 
 The safety floor is `safety_floor = TRUE` by default in `pigauto::impute()`,

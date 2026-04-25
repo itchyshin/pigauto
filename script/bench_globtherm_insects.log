@@ -1,0 +1,22 @@
+[18:56:06] loading globTherm ...
+[18:56:06] Insecta subset: 172 species
+[18:56:06] with covariates: 167 species
+[18:56:06] tree: 167 tips
+[18:56:06] after tree alignment: n = 167 species
+[18:56:06] Tmax: 50 held-out cells
+[18:56:06] =============== fit baseline (no covariates) ===============
+[18:56:48] done in 42s
+[18:56:48] =============== fit cov + safety_floor=TRUE ===============
+[18:57:28] done in 40s
+[18:57:28] =============== fit cov + safety_floor=FALSE ===============
+[18:58:06] done in 38s
+
+
+============ RESULTS (Insecta-only, n = 167 ) ============
+
+trait            Tmax n_held 50
+  mean   baseline  RMSE =    6.464
+  pigauto no-cov   RMSE =    4.440, r = +0.727
+  pigauto cov sf=T RMSE =    4.149, r = +0.771, ratio = 0.935
+  pigauto cov sf=F RMSE =    4.131, r = +0.769, ratio = 0.930
+[18:58:06] wrote script/bench_globtherm_insects.rds
