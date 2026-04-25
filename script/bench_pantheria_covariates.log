@@ -1,0 +1,44 @@
+[18:02:46] loading PanTHERIA + mammal tree ...
+[18:02:46] PanTHERIA: 4629 rows x 55 cols
+[18:02:46] mammal tree: 4629 tips, binary=FALSE
+[18:02:46] mammal tree resolved: 4629 tips, binary=TRUE
+[18:02:46] PanTHERIA x tree intersect: 4629 species
+[18:02:46] subsample: n = 1000 species
+[18:02:46] traits in: X5.1_AdultBodyMass_g, X9.1_GestationLen_d, X17.1_MaxLongevity_m, X15.1_LitterSize, X21.1_PopulationDensity_n.km2
+[18:02:46] covs   in: X28.1_Precip_Mean_mm, X28.2_Temp_Mean_01degC, X26.2_GR_MaxLat_dd, X26.3_GR_MinLat_dd, X30.2_PET_Mean_mm
+[18:02:46] species with all 5 covariates non-NA: 850 / 1000
+[18:02:46] final n = 850 species, 5 traits, 5 covariates
+[18:02:46]   X5.1_AdultBodyMass_g          : 200 held-out cells
+[18:02:46]   X9.1_GestationLen_d           : 80 held-out cells
+[18:02:46]   X17.1_MaxLongevity_m          : 62 held-out cells
+[18:02:46]   X15.1_LitterSize              : 142 held-out cells
+[18:02:46]   X21.1_PopulationDensity_n.km2 : 50 held-out cells
+[18:02:46] =============== fit baseline (no covariates) ===============
+
+warning: solve(): system is singular (rcond: 6.9633e-54); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.68782e-25); attempting approx solution
+[18:04:02] baseline done in 76s
+[18:04:02] =============== fit cov + safety_floor=TRUE ===============
+
+warning: solve(): system is singular (rcond: 6.9633e-54); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.68782e-25); attempting approx solution
+[18:05:11] cov sf=TRUE done in 68s
+[18:05:11] =============== fit cov + safety_floor=FALSE ===============
+
+warning: solve(): system is singular (rcond: 6.9633e-54); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.68782e-25); attempting approx solution
+[18:06:22] cov sf=FALSE done in 72s
+
+
+============ RESULTS (n = 850 ) ============
+
+trait                                n       mean       none     cov_on    cov_off   none_r     on_r    off_r   rat_on  rat_off
+X5.1_AdultBodyMass_g               200       3.01       1.36       1.42       2.02   +0.894   +0.884   +0.787    1.042    1.484
+X9.1_GestationLen_d                 80       0.87      0.398      0.434      0.373   +0.891   +0.872   +0.904    1.091    0.937
+X17.1_MaxLongevity_m                62      0.981      0.838      0.652      0.614   +0.802   +0.772   +0.785    0.778    0.733
+X15.1_LitterSize                   142       1.85       1.87       1.87       1.12       NA       NA   +0.799    1.000    0.599
+X21.1_PopulationDensity_n.km2       50       3.38       2.23       2.15       2.37   +0.768   +0.785   +0.755    0.962    1.064
+[18:06:22] wrote script/bench_pantheria_covariates.rds
