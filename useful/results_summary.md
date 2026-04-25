@@ -12,10 +12,10 @@ Four real species-level datasets, four positive lift results:
 
 | dataset | n | tree | baseline r | best-trait lift | r before → after |
 |---|---:|---|---:|---|---|
-| **PanTHERIA mammals** (precip+temp+lat) | 850 | molecular (Bininda-Emonds 2007) | 0.80 | MaxLongevity_m **22 % RMSE lift** | 0.80 → 0.77 |
-| **GlobTherm ectotherms** (lat+long+elev) | 809 | cross-class taxonomic | 0.67 | Tmax **8 % RMSE lift** (sf=off) | 0.67 → 0.73 |
-| **AmphiBIO amphibians** (climate-zone occupancy) | 1,000 | taxonomic (Order/Family/Genus) | 0.62 | Body_size_mm **17 % RMSE lift** | 0.62 → 0.70 |
-| **LepTraits butterflies** (Jan–Dec phenology) | 1,500 | taxonomic (Family/Genus) | 0.29 | WS_L wingspan **71 % RMSE lift** | 0.29 → 0.73 |
+| **PanTHERIA mammals** (precip+temp+lat) | 850 | molecular (Bininda-Emonds 2007) | 0.80 | MaxLongevity_m **22 % RMSE lift over pigauto-none** | 0.80 → 0.77 |
+| **GlobTherm ectotherms** (lat+long+elev) | 809 | cross-class taxonomic | 0.67 | Tmax **8 % RMSE lift over pigauto-none** (sf=off) | 0.67 → 0.73 |
+| **AmphiBIO amphibians** (climate-zone occupancy) | 1,000 | taxonomic (Order/Family/Genus) | 0.62 | Body_size_mm **17 % RMSE lift over pigauto-none** | 0.62 → 0.70 |
+| **LepTraits butterflies** (Jan–Dec phenology) | 1,500 | taxonomic (Family/Genus) | 0.29 | WS_L wingspan **24 % RMSE lift over column-mean** (pigauto-none degenerate) | 0.29 → 0.73 |
 
 Plus the multi-obs simulation lift survives on the **real AVONET 300 bird phylogeny** (`bench_multi_obs_real_tree.R`, in progress).
 
@@ -467,22 +467,25 @@ hurt — the safety floor caps the damage at 8 % on Litter_size_min_n.
 indicators (Jan–Dec, binary 0/1 per species per month).
 Family/Genus taxonomic tree with Grafen branch lengths.
 
-| trait | n_held | none RMSE | cov_on RMSE | r none → on | ratio_on |
-|---|---:|---:|---:|---:|---:|
-| **WS_L (wingspan)** | **169** | **1.10** | **0.32** | **0.29 → 0.73** | **0.29** |
-| FW_L (forewing) | 19 | 0.22 | 0.23 | 0.80 → 0.78 | 1.03 |
-| FlightDuration | 450 | 4.14 | 4.09 | 0.13 → 0.08 | 0.99 |
-| NumberOfHostplantFamilies | 287 | 0.46 | 0.47 | 0.22 → 0.15 | 1.02 |
+| trait | n_held | mean RMSE | none RMSE | cov_on RMSE | r none → on | ratio vs none | ratio vs mean |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **WS_L (wingspan)** | **169** | **0.42** | **1.10** | **0.32** | **0.29 → 0.73** | **0.29** | **0.75** |
+| FW_L (forewing) | 19 | 0.36 | 0.22 | 0.23 | 0.80 → 0.78 | 1.03 | 0.63 |
+| FlightDuration | 450 | 3.67 | 4.14 | 4.09 | 0.13 → 0.08 | 0.99 | 1.11 |
+| NumberOfHostplantFamilies | 287 | 0.46 | 0.46 | 0.47 | 0.22 → 0.15 | 1.02 | 1.02 |
 
-**Wingspan lift is dramatic (71 % RMSE drop, r 0.29 → 0.73)** but
-deserves a caveat: the LepTraits taxonomic tree (Family/Genus only)
-gives a weak phylogenetic baseline (r=0.29, worse than column-mean
-imputation at RMSE 0.42).  In other words, this is the
-"covariates rescue a weak baseline" mode, not the
+**Wingspan: pigauto + covariates beats column-mean by 24 %** (RMSE
+0.32 vs 0.42) and reaches r=0.73.  The "ratio_vs_none = 0.29"
+(71 % drop vs pigauto baseline) is misleading because the LepTraits
+Family/Genus taxonomic tree gives an *unusually weak* phylogenetic
+baseline for wingspan (RMSE 1.10 > column-mean 0.42).  This is the
+"covariates rescue a degenerate baseline" mode, not the
 "covariates beat a strong phylogeny" mode.  The biological
-interpretation is still meaningful — flight phenology IS climate-
-coupled and IS predictive of size — but readers should know the
-phylogeny used here is taxonomic, not molecular.
+interpretation is still real (flight phenology IS climate-coupled
+and IS predictive of size), and the 24 % lift over column-mean is
+the honest headline — but readers should know the phylogeny used
+here is taxonomic, not molecular, and the comparison vs pigauto-
+baseline overstates what the covariates add.
 
 ### 8.5 Multi-obs sim on the REAL bird phylogeny
 
@@ -524,7 +527,7 @@ both regenerated from the bench RDS files via
 | PanTHERIA mammals (climate cov) | 850 | **MaxLongevity_m: 22 % (sf=on)** | 0.80 → 0.77 |
 | GlobTherm ectotherms (lat+long+elev) | 809 | **Tmax: 8 % (sf=off)** | 0.67 → 0.73 |
 | AmphiBIO amphibians (climate-zone cov) | 1,000 | **Body_size_mm: 17 % (sf=on)** | 0.62 → 0.70 |
-| LepTraits butterflies (Jan–Dec phenology) | 1,500 | **WS_L: 71 % (sf=on, weak baseline)** | 0.29 → 0.73 |
+| LepTraits butterflies (Jan–Dec phenology) | 1,500 | **WS_L: 24 % vs column-mean** (sf=on, taxonomic tree) | 0.29 → 0.73 |
 | Multi-obs sim (Yule tree, beta>0) | sim | **CTmax: ~15 % median** | n/a |
 | Multi-obs sim (REAL tree300) | sim | **(in progress)** | n/a |
 | Delhey birds (climate cov) | 5,809 | none (≤1 % lift on 2/2 traits) | redundant |
