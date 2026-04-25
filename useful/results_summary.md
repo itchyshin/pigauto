@@ -23,7 +23,7 @@ Plus the multi-obs simulation lift **confirmed on the real AVONET 300 bird phylo
 
 Two real datasets remain phylo-redundant null: **BIEN plants** (n=3,450, WorldClim covariates) and **Delhey birds** (n=5,809, climate covariates).  In both cases the safety floor closes the gate and users pay no accuracy penalty for passing redundant covariates.  This is the safety property in action.
 
-**Reading guidance.** The lift magnitude tracks inversely with baseline strength: when the phylogeny is informative (PanTHERIA molecular tree, baseline r=0.80), covariates add a tighter ~22 % beyond what BM can already do.  When the tree is taxonomic and the baseline weak (LepTraits Family/Genus, baseline r=0.29), covariates can essentially rescue the prediction (71 % drop in RMSE).  Both are real-data lifts; the molecular-tree case is the harder, fairer benchmark for the paper claim.
+**Reading guidance.** The lift magnitude tracks inversely with baseline strength: when the phylogeny is informative (PanTHERIA molecular tree, baseline r=0.80), covariates add a tighter ~22 % beyond what BM can already do.  When the tree is taxonomic and the baseline weak (LepTraits Family/Genus, baseline r=0.29), covariates can essentially rescue the prediction (24 % lift over column-mean, r climbs from 0.29 to 0.73).  Both are real-data lifts; the molecular-tree case (PanTHERIA, AmphiBIO via taxonomy) is the harder, fairer benchmark for the paper claim.
 
 The full per-trait detail and the consolidated covariate-lift table are in **`useful/covariate_lift_table.md`** and **`useful/covariate_lift_summary.md`** (re-run `script/make_covariate_lift_table.R` to regenerate).
 
