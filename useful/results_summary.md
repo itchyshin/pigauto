@@ -14,8 +14,8 @@ Four real species-level datasets, four positive lift results:
 
 | dataset | n | tree | baseline r | best-trait lift | r before → after |
 |---|---:|---|---:|---|---|
-| **PanTHERIA mammals** (precip+temp+lat) | 850 | molecular (Bininda-Emonds 2007) | 0.80 | MaxLongevity_m **22 % RMSE lift over pigauto-none** | 0.80 → 0.77 |
-| **GlobTherm ectotherms** (lat+long+elev) | 809 | cross-class taxonomic | 0.67 | Tmax **8 % RMSE lift over pigauto-none** (sf=off) | 0.67 → 0.73 |
+| **PanTHERIA mammals** (precip+temp+lat) | 850 | molecular (Bininda-Emonds 2007) | 0.80 | MaxLongevity_m **22 % lift over pigauto-none** (seed 2026; 7 % at seed 2027 — small held-out n) | 0.80 → 0.77 |
+| **GlobTherm ectotherms** (lat+long+elev) | 809 | cross-class taxonomic | 0.67 | Tmax **8 % lift over pigauto-none** (sf=off; insects-only n=167 gives 7 % at sf=on) | 0.67 → 0.73 |
 | **AmphiBIO amphibians** (climate-zone occupancy) | 1,000 | taxonomic (Order/Family/Genus) | 0.62 | Body_size_mm **17 % RMSE lift over pigauto-none** | 0.62 → 0.70 |
 | **LepTraits butterflies** (Jan–Dec phenology) | 1,500 | taxonomic (Family/Genus) | 0.29 | WS_L wingspan **24 % RMSE lift over column-mean** (pigauto-none degenerate) | 0.29 → 0.73 |
 
