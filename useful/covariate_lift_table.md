@@ -1,6 +1,6 @@
 # Covariate-lift results: per-trait detail
 
-Last regenerated: 2026-04-24 18:22:41
+Last regenerated: 2026-04-24 18:48:00
 
 Each row = one (dataset, trait) pair.  RMSE columns are the absolute RMSE on held-out cells.
 

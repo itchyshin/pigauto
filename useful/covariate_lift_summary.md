@@ -1,6 +1,6 @@
 # Covariate-lift summary across datasets
 
-Last regenerated: 2026-04-24 18:22:41
+Last regenerated: 2026-04-24 18:48:00
 
 One row per dataset.  `median_ratio_on` is the median across traits of
 `cov_on_RMSE / none_RMSE`.  Values < 1.00 mean covariates lift accuracy.
@@ -17,6 +17,7 @@ One row per dataset.  `median_ratio_on` is the median across traits of
   BIEN plants (WorldClim bioclim, cached species)      3450        5
  LepTraits butterflies (Jan-Dec flight phenology)      1500        4
           Multi-obs sim (Yule tree + acclim_temp)        NA       16
+       Multi-obs sim (REAL tree300 + acclim_temp)       300       16
  median_ratio_on median_ratio_off n_traits_with_lift_on n_traits_with_lift_off
        1.0000000        0.9371046                     1                      3
        1.1341536        0.9583471                     0                      1
@@ -25,14 +26,16 @@ One row per dataset.  `median_ratio_on` is the median across traits of
        1.0138293        1.0525132                     0                      0
        1.0061317        1.0446413                     1                      2
        0.8533183               NA                    16                     NA
-     kind
-     real
-     real
-     real
-     real
-     real
-     real
- sim_yule
+       0.9544597               NA                     8                     NA
+           kind
+           real
+           real
+           real
+           real
+           real
+           real
+       sim_yule
+ sim_real_phylo
 ```
 
 ## Reading guide

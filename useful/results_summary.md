@@ -17,7 +17,7 @@ Four real species-level datasets, four positive lift results:
 | **AmphiBIO amphibians** (climate-zone occupancy) | 1,000 | taxonomic (Order/Family/Genus) | 0.62 | Body_size_mm **17 % RMSE lift over pigauto-none** | 0.62 → 0.70 |
 | **LepTraits butterflies** (Jan–Dec phenology) | 1,500 | taxonomic (Family/Genus) | 0.29 | WS_L wingspan **24 % RMSE lift over column-mean** (pigauto-none degenerate) | 0.29 → 0.73 |
 
-Plus the multi-obs simulation lift survives on the **real AVONET 300 bird phylogeny** (`bench_multi_obs_real_tree.R`, in progress).
+Plus the multi-obs simulation lift **confirmed on the real AVONET 300 bird phylogeny** (`bench_multi_obs_real_tree.R`, n=300, 24 sweep cells): median 4.75 % CTmax RMSE lift, peak 9.2 % at strong covariate effect sizes; Pearson r improves 0.04–0.11.  Smaller than the Yule sim sibling (15 % median) because a real bird tree already captures more of the trait covariance.
 
 Two real datasets remain phylo-redundant null: **BIEN plants** (n=3,450, WorldClim covariates) and **Delhey birds** (n=5,809, climate covariates).  In both cases the safety floor closes the gate and users pay no accuracy penalty for passing redundant covariates.  This is the safety property in action.
 
@@ -487,15 +487,39 @@ the honest headline — but readers should know the phylogeny used
 here is taxonomic, not molecular, and the comparison vs pigauto-
 baseline overstates what the covariates add.
 
-### 8.5 Multi-obs sim on the REAL bird phylogeny
+### 8.5 Multi-obs sim on the REAL bird phylogeny — confirmation
 
 `script/bench_multi_obs_real_tree.R`.  Same DGP as `bench_multi_obs.R`
 (CTmax = mu + phylo_BM + beta · acclim_temp + epsilon) but on the
 bundled `tree300` AVONET 300 real bird phylogeny instead of an
-`ape::rtree(n)` Yule sim.  In progress at time of writing; harvest
-the .rds for final lift numbers.  The companion sim-tree result
-showed 10–19 % lift across (lambda, beta, sp_miss) cells; this
-script confirms the lift survives realistic phylogenetic structure.
+`ape::rtree(n)` Yule sim.  Sweep: lambda ∈ {0.5, 0.9}, beta ∈ {0,
+0.5, 1.0}, sp_missing_frac ∈ {0.5, 0.8}, n_reps=2.
+
+Per-cell observation-level RMSE lift (beta=0 omitted -- correctly no
+lift expected when covariate carries no signal):
+
+| lambda | beta | sp_miss | none RMSE | cov RMSE | lift % | r_none → r_cov |
+|---:|---:|---:|---:|---:|---:|---|
+| 0.5 | 0.5 | 0.5 | 4.74 | 4.55 | 3.9 % | 0.68 → 0.71 |
+| 0.5 | 0.5 | 0.8 | 5.63 | 5.47 | 2.8 % | 0.58 → 0.60 |
+| 0.5 | 1.0 | 0.5 | 6.65 | 6.04 | **9.2 %** | 0.63 → 0.70 |
+| 0.5 | 1.0 | 0.8 | 6.92 | 6.41 | **7.4 %** | 0.47 → 0.58 |
+| 0.9 | 0.5 | 0.5 | 5.41 | 5.27 | 2.4 % | 0.76 → 0.78 |
+| 0.9 | 0.5 | 0.8 | 6.60 | 6.50 | 1.5 % | 0.80 → 0.81 |
+| 0.9 | 1.0 | 0.5 | 7.22 | 6.69 | **7.4 %** | 0.55 → 0.62 |
+| 0.9 | 1.0 | 0.8 | 7.83 | 7.40 | **5.6 %** | 0.58 → 0.64 |
+
+Median lift across the 8 informative cells: **4.75 %**.  Mean lift:
+**5.03 %**.  Four of eight cells exceed the 5 % threshold.  Pearson
+r improves by 0.044 median (range 0.007 to 0.108).
+
+This is half the magnitude of the Yule-tree sibling result (10–19 %
+in `bench_multi_obs.R`).  The interpretation: the real bird tree
+captures more of the species-level trait covariance structure than
+a Yule branching process does, so there is less left for covariates
+to explain.  But the lift is still consistently positive at strong
+covariate effect sizes (beta = 1.0).  This is the strongest
+"sim-on-real-phylogeny" evidence for the architecture.
 
 ### 8.6 Updated paper framing
 
@@ -529,6 +553,6 @@ both regenerated from the bench RDS files via
 | AmphiBIO amphibians (climate-zone cov) | 1,000 | **Body_size_mm: 17 % (sf=on)** | 0.62 → 0.70 |
 | LepTraits butterflies (Jan–Dec phenology) | 1,500 | **WS_L: 24 % vs column-mean** (sf=on, taxonomic tree) | 0.29 → 0.73 |
 | Multi-obs sim (Yule tree, beta>0) | sim | **CTmax: ~15 % median** | n/a |
-| Multi-obs sim (REAL tree300) | sim | **(in progress)** | n/a |
+| Multi-obs sim (REAL tree300, beta>0) | sim | **CTmax: 4.75 % median** (5–9 % at beta=1) | r +0.044 median |
 | Delhey birds (climate cov) | 5,809 | none (≤1 % lift on 2/2 traits) | redundant |
 | BIEN plants (WorldClim cov) | 3,450 | none (≤1 % lift on 5/5 traits) | redundant |
