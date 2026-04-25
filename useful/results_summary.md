@@ -10,6 +10,14 @@ All benches use: 30% MCAR held-out, seed = 2026, Rphylopars Level-C joint MVN ba
 
 **See `useful/covariate_lift_figure.png` for the one-glance picture.**
 
+**Where to look:**
+1. This TL;DR (read top to bottom)
+2. **`useful/covariate_lift_figure.png`** -- headline bar chart
+3. **Section 8 below** -- per-dataset detail (8.1-8.4 = positive lifts; 8.5 = multi-obs sim; 8.5b = sanity checks; 8.6 = sf=TRUE/FALSE trade-off; 8.7 = updated paper framing; 8.8 = at-a-glance)
+4. `useful/covariate_lift_table.md` -- per-trait raw numbers
+5. `useful/covariate_lift_summary.md` -- per-dataset median ratios
+6. `script/bench_*_covariates.R` -- reproducible bench scripts (PIGAUTO_PKG_PATH=$(pwd) Rscript ...)
+
 Four real species-level datasets, four positive lift results:
 
 | dataset | n | tree | baseline r | best-trait lift | r before → after |
