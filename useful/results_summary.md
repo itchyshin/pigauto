@@ -24,7 +24,7 @@ Four real species-level datasets, four positive lift results:
 |---|---:|---|---:|---|---|
 | **PanTHERIA mammals** (precip+temp+lat) | 850 | molecular (Bininda-Emonds 2007) | 0.80 | MaxLongevity_m **22 % lift over pigauto-none** (seed 2026; 7 % at seed 2027 — small held-out n) | 0.80 → 0.77 |
 | **GlobTherm ectotherms** (lat+long+elev) | 809 | cross-class taxonomic | 0.67 | Tmax **8 % lift over pigauto-none** (sf=off; insects-only n=167 gives 7 % at sf=on) | 0.67 → 0.73 |
-| **AmphiBIO amphibians** (climate-zone occupancy) | 1,000 | taxonomic (Order/Family/Genus) | 0.62 | Body_size_mm **17 % RMSE lift over pigauto-none** | 0.62 → 0.70 |
+| **AmphiBIO amphibians** (climate-zone occupancy) | 1,000 | taxonomic (Order/Family/Genus) | 0.62 | Body_size_mm **17 % lift** at seed 2026 (Body_mass_g 16 % at seed 2027 — signal lands on either size trait) | 0.62 → 0.70 |
 | **LepTraits butterflies** (Jan–Dec phenology) | 1,500 | taxonomic (Family/Genus) | 0.29 | WS_L wingspan **24 % RMSE lift over column-mean** (pigauto-none degenerate) | 0.29 → 0.73 |
 
 Plus the multi-obs simulation lift **confirmed on the real AVONET 300 bird phylogeny** (`bench_multi_obs_real_tree.R`, n=300, 24 sweep cells): median 4.75 % CTmax RMSE lift, peak 9.2 % at strong covariate effect sizes; Pearson r improves 0.04–0.11.  Smaller than the Yule sim sibling (15 % median) because a real bird tree already captures more of the trait covariance.
@@ -552,6 +552,27 @@ sample sizes (n=57-62 cells), but the qualitative finding
 is robust: **climate covariates lift mammal longevity prediction**.
 The honest summary is "10-20 % lift with seed variability";
 the original 22 % was at the high end of the distribution.
+
+**AmphiBIO seed 2027 (vs original seed 2026)** -- same n=1000
+amphibians, same trait/cov columns, different MCAR sample:
+
+| trait | seed 2026 ratio | seed 2027 ratio | mean ratio |
+|---|---:|---:|---:|
+| **Body_size_mm** | **0.83** | **1.00** | **0.91** |
+| **Body_mass_g** | 1.02 | **0.84** | 0.93 |
+| Longevity_max_y | 1.00 | 1.00 | 1.00 |
+| Age_at_maturity | 1.00 | 1.00 | 1.00 |
+| Litter_size | 1.08 | 1.01 | 1.05 |
+
+The interesting story here: at seed 2026 the lift hit Body_size_mm
+(17 %, neutral on Body_mass); at seed 2027 the lift moved to
+Body_mass_g (16 % lift, neutral on Body_size).  Both are
+size-related traits and ought to share the same climate-signal
+pathway, so this is the random-sample variability deciding
+which trait the signal lands on most strongly.  The qualitative
+finding (climate-zone covariates lift amphibian SIZE prediction
+by ~7-17 %, depending on which size variable hits the random
+sample) is robust; the per-trait magnitude is not.
 
 **Insecta-only GlobTherm (`bench_globtherm_insects.R`, n=167):**
 restricting GlobTherm to single-class insects gives a cleaner

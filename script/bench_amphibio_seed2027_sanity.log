@@ -1,0 +1,36 @@
+[19:04:31] AmphiBIO seed-2027 sanity check, n=1000
+[19:04:31] baseline ...
+
+warning: solve(): system is singular (rcond: 5.50116e-69); attempting approx solution
+
+warning: solve(): system is singular (rcond: 7.39842e-93); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.97888e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.97888e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.32229e-22); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.63502e-16); attempting approx solution
+[19:05:38] cov sf=TRUE ...
+
+warning: solve(): system is singular (rcond: 5.50116e-69); attempting approx solution
+
+warning: solve(): system is singular (rcond: 7.39842e-93); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.97888e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 3.97888e-21); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.32229e-22); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.63502e-16); attempting approx solution
+
+
+============ AmphiBIO seed 2027 ============
+trait                              n       none     cov_on   none_r     on_r   rat_on
+Body_size_mm                     297      0.399      0.399   +0.780   +0.778    1.000
+Body_mass_g                       68       1.63       1.37       NA   +0.553    0.839
+Longevity_max_y                   36       1.02       1.02       NA       NA    1.000
+Age_at_maturity_min_y             34      0.656      0.656       NA       NA    1.000
+Litter_size_min_n                172       1.68        1.7   +0.563   +0.552    1.012
