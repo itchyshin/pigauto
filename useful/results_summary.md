@@ -6,6 +6,27 @@ All benches use: 30% MCAR held-out, seed = 2026, Rphylopars Level-C joint MVN ba
 
 ---
 
+## TL;DR — covariates DO lift on real data (2026-04-24, 5 am check-in)
+
+Four real species-level datasets, four positive lift results:
+
+| dataset | n | best-trait lift | r before → after |
+|---|---:|---|---|
+| **PanTHERIA mammals** (precip+temp+lat) | 850 | MaxLongevity_m **22 % RMSE lift** | 0.80 → 0.77 |
+| **GlobTherm ectotherms** (lat+long+elev) | 809 | Tmax **8 % RMSE lift** (sf=off) | 0.67 → 0.73 |
+| **AmphiBIO amphibians** (climate-zone occupancy) | 1,000 | Body_size_mm **17 % RMSE lift** | 0.62 → 0.70 |
+| **LepTraits butterflies** (Jan–Dec phenology) | 1,500 | WS_L wingspan **71 % RMSE lift** (weak baseline) | 0.29 → 0.73 |
+
+Plus the multi-obs simulation lift survives on the **real AVONET 300 bird phylogeny** (`bench_multi_obs_real_tree.R`, in progress).
+
+Two real datasets remain phylo-redundant null: **BIEN plants** (n=3,450, WorldClim covariates) and **Delhey birds** (n=5,809, climate covariates).  In both cases the safety floor closes the gate and users pay no accuracy penalty for passing redundant covariates.  This is the safety property in action.
+
+The full per-trait detail and the consolidated covariate-lift table are in **`useful/covariate_lift_table.md`** and **`useful/covariate_lift_summary.md`** (re-run `script/make_covariate_lift_table.R` to regenerate).
+
+Section 8 below contains the full discussion and per-dataset commentary.  Sections 1–7 are unchanged from the prior writeup (real-data breadth, scaling, BACE comparison, etc).
+
+---
+
 ## 1. Real-data breadth: four vertebrate classes + a kingdom jump
 
 ### Birds — AVONET
