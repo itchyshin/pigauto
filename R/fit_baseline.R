@@ -356,9 +356,45 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       X_sp <- X[, bm_cols, drop = FALSE]
     }
 
-    # Impute each BM-eligible column independently
+    # ---- Covariate-aware design matrix (Fix G, 2026-04-25) ------------------
+    # When `data$covariates` is non-NULL, the BM baseline becomes a GLS
+    # regression on covariates: y = X*beta + u, u ~ MVN(0, sigma^2 * R).
+    # This puts linear covariate effects into the BASELINE so the GNN's
+    # delta only has to learn the nonlinear / interactive residuals.
+    #
+    # Without this, the GNN had to re-derive linear cov effects from
+    # scratch through several non-linear layers + a regularised gate.
+    # Empirically that converged to a much worse solution than direct
+    # GLS regression (see useful/GNN_ARCHITECTURE_EXPLAINED.md).
+    cov_design <- NULL
+    if (!is.null(data$covariates)) {
+      cov_mat <- as.matrix(data$covariates)
+      if (multi_obs) {
+        # Aggregate covariates to species level (mean across obs per species)
+        cov_sp <- matrix(NA_real_, n_species, ncol(cov_mat))
+        colnames(cov_sp) <- colnames(cov_mat)
+        for (j in seq_len(ncol(cov_mat))) {
+          sp_means <- tapply(cov_mat[, j], obs_spp, mean, na.rm = TRUE)
+          cov_sp[match(names(sp_means), spp), j] <- as.numeric(sp_means)
+        }
+        cov_design <- cbind(intercept = 1, cov_sp)
+      } else {
+        cov_design <- cbind(intercept = 1, cov_mat)
+      }
+      # Replace any residual NAs (defensive): mean impute by column
+      for (j in seq_len(ncol(cov_design))) {
+        bad <- !is.finite(cov_design[, j])
+        if (any(bad)) cov_design[bad, j] <- mean(cov_design[!bad, j])
+      }
+    }
+
+    # Impute each BM-eligible column (covariate-aware when cov_design supplied)
     for (j in seq_along(bm_cols)) {
-      res_j <- bm_impute_col(X_sp[, j], R_phy)
+      if (is.null(cov_design)) {
+        res_j <- bm_impute_col(X_sp[, j], R_phy)
+      } else {
+        res_j <- bm_impute_col_with_cov(X_sp[, j], cov_design, R_phy)
+      }
       mu[, bm_cols[j]] <- res_j$mu
       se[, bm_cols[j]] <- res_j$se
     }
