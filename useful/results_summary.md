@@ -10,16 +10,18 @@ All benches use: 30% MCAR held-out, seed = 2026, Rphylopars Level-C joint MVN ba
 
 Four real species-level datasets, four positive lift results:
 
-| dataset | n | best-trait lift | r before → after |
-|---|---:|---|---|
-| **PanTHERIA mammals** (precip+temp+lat) | 850 | MaxLongevity_m **22 % RMSE lift** | 0.80 → 0.77 |
-| **GlobTherm ectotherms** (lat+long+elev) | 809 | Tmax **8 % RMSE lift** (sf=off) | 0.67 → 0.73 |
-| **AmphiBIO amphibians** (climate-zone occupancy) | 1,000 | Body_size_mm **17 % RMSE lift** | 0.62 → 0.70 |
-| **LepTraits butterflies** (Jan–Dec phenology) | 1,500 | WS_L wingspan **71 % RMSE lift** (weak baseline) | 0.29 → 0.73 |
+| dataset | n | tree | baseline r | best-trait lift | r before → after |
+|---|---:|---|---:|---|---|
+| **PanTHERIA mammals** (precip+temp+lat) | 850 | molecular (Bininda-Emonds 2007) | 0.80 | MaxLongevity_m **22 % RMSE lift** | 0.80 → 0.77 |
+| **GlobTherm ectotherms** (lat+long+elev) | 809 | cross-class taxonomic | 0.67 | Tmax **8 % RMSE lift** (sf=off) | 0.67 → 0.73 |
+| **AmphiBIO amphibians** (climate-zone occupancy) | 1,000 | taxonomic (Order/Family/Genus) | 0.62 | Body_size_mm **17 % RMSE lift** | 0.62 → 0.70 |
+| **LepTraits butterflies** (Jan–Dec phenology) | 1,500 | taxonomic (Family/Genus) | 0.29 | WS_L wingspan **71 % RMSE lift** | 0.29 → 0.73 |
 
 Plus the multi-obs simulation lift survives on the **real AVONET 300 bird phylogeny** (`bench_multi_obs_real_tree.R`, in progress).
 
 Two real datasets remain phylo-redundant null: **BIEN plants** (n=3,450, WorldClim covariates) and **Delhey birds** (n=5,809, climate covariates).  In both cases the safety floor closes the gate and users pay no accuracy penalty for passing redundant covariates.  This is the safety property in action.
+
+**Reading guidance.** The lift magnitude tracks inversely with baseline strength: when the phylogeny is informative (PanTHERIA molecular tree, baseline r=0.80), covariates add a tighter ~22 % beyond what BM can already do.  When the tree is taxonomic and the baseline weak (LepTraits Family/Genus, baseline r=0.29), covariates can essentially rescue the prediction (71 % drop in RMSE).  Both are real-data lifts; the molecular-tree case is the harder, fairer benchmark for the paper claim.
 
 The full per-trait detail and the consolidated covariate-lift table are in **`useful/covariate_lift_table.md`** and **`useful/covariate_lift_summary.md`** (re-run `script/make_covariate_lift_table.R` to regenerate).
 
