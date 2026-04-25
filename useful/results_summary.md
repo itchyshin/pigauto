@@ -523,7 +523,41 @@ to explain.  But the lift is still consistently positive at strong
 covariate effect sizes (beta = 1.0).  This is the strongest
 "sim-on-real-phylogeny" evidence for the architecture.
 
-### 8.6 Updated paper framing
+### 8.6 Safety-floor variance check (`sf=FALSE` vs `sf=TRUE`)
+
+The safety floor is `safety_floor = TRUE` by default in `pigauto::impute()`,
+and lives there to protect users who don't know whether their covariates
+will help.  Across the 23 (dataset, trait) cells in our 6 real-data
+benches, we get this contrast:
+
+**`sf=TRUE` (default, conservative):**
+- Worst case: **GlobTherm Tmax** at +28 % RMSE (gate forced open on
+  noisy val signal that doesn't generalise).
+- Second-worst: **BIEN height_m** at +17 %.
+- Most other failures stay below +9 % hurt.
+- Best lift: **LepTraits WS_L** at -71 % (degenerate baseline).
+- Honest summary: when covariates are bad, the safety floor caps
+  the damage at roughly 10–30 % on a small minority of traits.
+
+**`sf=FALSE` (aggressive, for known-good covariates):**
+- Worst case: **BIEN height_m at +460 % RMSE** (5.6× the baseline
+  — utterly catastrophic over-fit).
+- Second-worst: **BIEN sla** at +72 %.  PanTHERIA body mass +48 %.
+- Best lift: **LepTraits WS_L at -70 %**, then PanTHERIA
+  LitterSize -40 %, MaxLongevity -27 %, AmphiBIO body_mass -12 %,
+  GlobTherm Tmax -8 %.
+- Higher variance, much bigger upside on truly informative
+  covariates, much bigger downside on uninformative ones.
+
+**Recommendation for the paper.** Document both modes.  Default to
+`sf=TRUE` because most users won't know in advance whether their
+covariates are mechanistically relevant.  Recommend `sf=FALSE` only
+when the user has prior biological knowledge that the covariate
+mechanism is real (e.g., latitude → CTmax for ectotherms).  The
+safety floor is doing real work: it converts catastrophic over-fit
+(BIEN height_m 5.6× worse) into a bounded ~10 % cost.
+
+### 8.7 Updated paper framing
 
 The original Section 7.4 framing was correct but too modest.  The
 honest, updated claim:
@@ -546,7 +580,7 @@ Per-trait detail and per-dataset summaries live in
 both regenerated from the bench RDS files via
 `script/make_covariate_lift_table.R`.
 
-### 8.7 At-a-glance summary table
+### 8.8 At-a-glance summary table
 
 | Dataset | n | Best-trait lift | r before → after |
 |---|---:|---:|---|
