@@ -1,33 +1,27 @@
 #!/usr/bin/env Rscript
-# script/bench_globtherm_covariates.R
+# script/bench_leptraits_covariates.R
 #
-# Covariate-lift test on the GlobTherm thermal-tolerance database
-# (Bennett et al. 2018, Sci. Data 5: 180022).
+# Covariate-lift test on LepTraits 1.0 (Shirey et al. 2022, Sci.
+# Data 9: 382), the global butterfly trait dataset.
 #
-# Why this dataset is the strongest candidate yet:
-#   - Tmax (CTmax) and tmin (CTmin) have a textbook latitudinal
-#     gradient.  Tropical species tolerate hotter, polar species
-#     tolerate colder.  ~0.5 deg C per degree latitude.
-#   - Sister species often live at different latitudes (range
-#     shifts during diversification), so latitude can carry
-#     information that phylogeny alone does not encode.
-#   - This is the dataset where species-level climate covariates
-#     have the best chance of breaking the phylo-redundancy that
-#     killed lift on BIEN (n=3,450) and Delhey (n=5,809).
+# Targets (continuous):
+#   - WS_L  (wingspan lower bound, mm)
+#   - FW_L  (forewing length lower bound, mm)
+#   - FlightDuration (number of flight months per year)
+#   - NumberOfHostplantFamilies (count, log-transformed)
 #
-# Subset: ectotherms (Lepidosauria + Insecta + Amphibia + Actinopteri)
-#   ~793 species with Tmax + lat_max non-NA.  Ectotherms are where
-#   thermal tolerance is most directly tied to ambient conditions.
-#
-# Phylogeny: cross-class taxonomic tree from Class/Order/Family/
-#   Genus/Species via ape::as.phylo.formula() + Grafen brlen.
-#   This mirrors the AmphiBIO + LepTraits patterns since a
-#   comprehensive cross-phylum molecular tree is not available.
+# Covariates: 12 monthly flight indicators (Jan, Feb, ..., Dec),
+#   each binary 0/1 ("does this species fly in this month?").
+#   Treats per-month phenology as a 12-D climate-correlated
+#   feature -- tropical species fly year-round, temperate species
+#   seasonally, polar species briefly in summer.  Sister species
+#   often diverge in flight phenology, so this carries information
+#   beyond phylogeny.
 #
 # Three fits: baseline / cov + sf=TRUE / cov + sf=FALSE.
 #
 # Invocation:
-#   PIGAUTO_PKG_PATH="$(pwd)" Rscript script/bench_globtherm_covariates.R
+#   PIGAUTO_PKG_PATH="$(pwd)" Rscript script/bench_leptraits_covariates.R
 
 suppressPackageStartupMessages({
   pkg_path <- Sys.getenv("PIGAUTO_PKG_PATH", unset = "")
@@ -41,78 +35,74 @@ SEED      <- 2026L
 MISS_FRAC <- 0.30
 N_IMP     <- 20L
 EPOCHS    <- as.integer(Sys.getenv("PIGAUTO_BENCH_EPOCHS", "150"))
+N_TARGET  <- as.integer(Sys.getenv("PIGAUTO_BENCH_N", "1500"))
 
 cat_line <- function(...) cat(format(Sys.time(), "[%H:%M:%S] "),
                                 ..., "\n", sep = "")
 
-here <- "/Users/z3437171/Dropbox/Github Local/pigauto"
-gt_path <- file.path(here, "script", "data-cache", "external", "globTherm.rda")
-stopifnot(file.exists(gt_path))
+here     <- "/Users/z3437171/Dropbox/Github Local/pigauto"
+csv_path <- file.path(here, "script", "data-cache", "external", "LepTraits",
+                      "consensus", "consensus.csv")
+stopifnot(file.exists(csv_path))
 
-cat_line("loading globTherm ...")
-load(gt_path)
-# globTherm ships as a tibble; convert to data.frame so rownames stick
-globTherm <- as.data.frame(globTherm, stringsAsFactors = FALSE)
-cat_line(sprintf("globTherm: %d rows x %d cols", nrow(globTherm),
-                  ncol(globTherm)))
+cat_line("loading LepTraits consensus ...")
+lt <- utils::read.csv(csv_path, stringsAsFactors = FALSE)
+cat_line(sprintf("LepTraits: %d rows x %d cols", nrow(lt), ncol(lt)))
 
-# Subset: ectotherms with Tmax + lat
-ECTO_CLASSES <- c("Lepidosauria", "Insecta", "Amphibia", "Actinopteri",
-                   "Arachnida", "Malacostraca", "Bivalvia", "Gastropoda")
-gt <- globTherm
-gt <- gt[gt$Class %in% ECTO_CLASSES, , drop = FALSE]
-gt <- gt[!is.na(gt$Tmax) & !is.na(gt$lat_max), , drop = FALSE]
-cat_line(sprintf("ectotherm subset (Tmax + lat_max known): %d rows",
-                  nrow(gt)))
+# Targets + covariates
+trait_cols <- c("WS_L", "FW_L", "FlightDuration", "NumberOfHostplantFamilies")
+cov_cols   <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+trait_cols <- intersect(trait_cols, colnames(lt))
+cov_cols   <- intersect(cov_cols,   colnames(lt))
+stopifnot(length(trait_cols) >= 2L, length(cov_cols) == 12L)
 
-# Drop rows missing taxonomy
-ok_tax <- !is.na(gt$Class) & !is.na(gt$Order) & !is.na(gt$Family) &
-           nzchar(gt$Class) & nzchar(gt$Order) & nzchar(gt$Family) &
-           !is.na(gt$Genus) & nzchar(gt$Genus) &
-           !is.na(gt$scientificNameStd) & nzchar(gt$scientificNameStd)
-gt <- gt[ok_tax, , drop = FALSE]
-cat_line(sprintf("after taxonomy filter: %d rows", nrow(gt)))
+for (v in trait_cols) lt[[v]] <- suppressWarnings(as.numeric(lt[[v]]))
+for (v in cov_cols)   lt[[v]] <- suppressWarnings(as.numeric(lt[[v]]))
 
-# Build species names (use scientificNameStd)
-gt$Species_Key <- gsub(" ", "_", gt$scientificNameStd)
-gt <- gt[!duplicated(gt$Species_Key), , drop = FALSE]
-cat_line(sprintf("after dedup: %d species", nrow(gt)))
+# Log-transform skewed counts/sizes
+for (v in c("WS_L", "FW_L", "NumberOfHostplantFamilies")) {
+  if (v %in% trait_cols) {
+    ok <- !is.na(lt[[v]]) & lt[[v]] > 0
+    lt[[v]] <- ifelse(ok, log(lt[[v]]), NA_real_)
+  }
+}
 
-# Targets
-trait_cols <- c("Tmax", "tmin")
-# Use both since some species have only one
-trait_cols <- intersect(trait_cols, colnames(gt))
-df_traits  <- gt[, trait_cols, drop = FALSE]
-for (v in trait_cols) df_traits[[v]] <- suppressWarnings(as.numeric(df_traits[[v]]))
+# Drop species with all-NA covariates (those have no recorded flight months)
+cov_complete <- stats::complete.cases(lt[, cov_cols, drop = FALSE])
+cat_line(sprintf("species with all 12 monthly indicators non-NA: %d / %d",
+                  sum(cov_complete), nrow(lt)))
 
-# Covariates: latitude, longitude, elevation, |lat| (abs lat = thermal niche),
-# and lat-difference between max and min collection (ecological breadth)
-gt$abs_lat_max <- abs(gt$lat_max)
-gt$lat_diff    <- gt$lat_max - gt$lat_min  # NA-safe; both used at the same site
-cov_cols <- c("lat_max", "long_max", "elevation_max", "abs_lat_max")
-cov_cols <- intersect(cov_cols, colnames(gt))
-cov_df   <- gt[, cov_cols, drop = FALSE]
-for (v in cov_cols) cov_df[[v]] <- suppressWarnings(as.numeric(cov_df[[v]]))
+# Also require at least 1 month active (zero across all 12 means no info)
+has_any_month <- rowSums(lt[, cov_cols, drop = FALSE] > 0, na.rm = TRUE) >= 1L
+keep <- cov_complete & has_any_month
+cat_line(sprintf("species with cov + >= 1 active month: %d / %d",
+                  sum(keep), nrow(lt)))
+lt <- lt[keep, , drop = FALSE]
 
-# Drop species missing any covariate
-ok_cov <- stats::complete.cases(cov_df)
-cat_line(sprintf("species with all covariates non-NA: %d / %d",
-                  sum(ok_cov), nrow(cov_df)))
-df_traits <- df_traits[ok_cov, , drop = FALSE]
-cov_df    <- cov_df[ok_cov, , drop = FALSE]
-gt        <- gt[ok_cov, , drop = FALSE]
-rownames(df_traits) <- gt$Species_Key
-rownames(cov_df)    <- gt$Species_Key
-cat_line(sprintf("final n = %d species, %d traits, %d covariates",
-                  nrow(df_traits), ncol(df_traits), ncol(cov_df)))
+# Drop species with incomplete tax
+tax_ok <- !is.na(lt$Family) & !is.na(lt$Genus) & !is.na(lt$Species) &
+           nzchar(lt$Family) & nzchar(lt$Genus) & nzchar(lt$Species)
+lt <- lt[tax_ok, , drop = FALSE]
+cat_line(sprintf("after tax filter: %d species", nrow(lt)))
 
-# Build taxonomic tree
-cat_line("building cross-class taxonomic tree (Class/Order/Family/Genus/Species) ...")
-tax_df <- gt[, c("Class", "Order", "Family", "Genus", "Species_Key"),
-              drop = FALSE]
+# Build species key + dedup
+lt$Species_Key <- gsub(" ", "_", trimws(lt$Species))
+lt <- lt[!duplicated(lt$Species_Key), , drop = FALSE]
+cat_line(sprintf("after dedup: %d species", nrow(lt)))
+
+# Subsample
+set.seed(SEED)
+if (nrow(lt) > N_TARGET) {
+  lt <- lt[sample.int(nrow(lt), N_TARGET), , drop = FALSE]
+  cat_line(sprintf("sub-sampled to %d species", nrow(lt)))
+}
+
+# Build taxonomic tree (Family / Genus / Species)
+cat_line("building taxonomic tree ...")
+tax_df <- lt[, c("Family", "Genus", "Species_Key"), drop = FALSE]
 tax_df[] <- lapply(tax_df, factor)
-tree <- as.phylo(~Class/Order/Family/Genus/Species_Key,
-                  data = tax_df, collapse = FALSE)
+tree <- as.phylo(~Family/Genus/Species_Key, data = tax_df, collapse = FALSE)
 set.seed(SEED)
 tree <- ape::collapse.singles(tree)
 if (!ape::is.rooted(tree))
@@ -124,12 +114,24 @@ cat_line(sprintf("tree: %d tips, binary=%s, rooted=%s",
                   length(tree$tip.label), ape::is.binary(tree),
                   ape::is.rooted(tree)))
 
-# Align: keep only species present in tree
-matched <- intersect(rownames(df_traits), tree$tip.label)
-df_traits <- df_traits[matched, , drop = FALSE]
-cov_df    <- cov_df[matched, , drop = FALSE]
-tree      <- ape::keep.tip(tree, matched)
+# Convert lt to data.frame (drop tibble class if present) so rownames stick
+lt <- as.data.frame(lt, stringsAsFactors = FALSE)
+rownames(lt) <- lt$Species_Key
+
+matched <- intersect(rownames(lt), tree$tip.label)
+lt   <- lt[matched, , drop = FALSE]
+tree <- ape::keep.tip(tree, matched)
 cat_line(sprintf("after tree alignment: n = %d species", length(matched)))
+
+df_traits <- lt[, trait_cols, drop = FALSE]
+cov_df    <- lt[, cov_cols,   drop = FALSE]
+
+# Drop traits with too few observations
+keep_trait <- vapply(df_traits, function(x) sum(!is.na(x)) >= 50L, logical(1))
+trait_cols <- trait_cols[keep_trait]
+df_traits  <- df_traits[, trait_cols, drop = FALSE]
+cat_line(sprintf("kept traits with >= 50 non-NA: %d (%s)",
+                  length(trait_cols), paste(trait_cols, collapse = ", ")))
 
 # 30% MCAR mask
 mask <- matrix(FALSE, nrow = nrow(df_traits), ncol = length(trait_cols),
@@ -144,7 +146,7 @@ for (v in trait_cols) {
   df_obs[[v]][idx] <- NA_real_
 }
 for (v in trait_cols) {
-  cat_line(sprintf("  %-15s: %d held-out cells", v, sum(mask[, v])))
+  cat_line(sprintf("  %-30s: %d held-out cells", v, sum(mask[, v])))
 }
 
 # Three fits
@@ -183,7 +185,7 @@ cat_line(sprintf("cov sf=FALSE done in %.0fs", w_off))
 
 # Report
 cat("\n\n============ RESULTS (n =", nrow(df_traits), ") ============\n\n")
-cat(sprintf("%-15s %5s %10s %10s %10s %10s %8s %8s %8s %8s %8s\n",
+cat(sprintf("%-32s %5s %10s %10s %10s %10s %8s %8s %8s %8s %8s\n",
              "trait", "n", "mean", "none", "cov_on", "cov_off",
              "none_r", "on_r", "off_r", "rat_on", "rat_off"))
 
@@ -215,7 +217,7 @@ for (v in trait_cols) {
   r_none <- safe_cor(safe_get(res_none, v, which(mask[, v]))[ok], truth[ok])
   r_bio  <- safe_cor(safe_get(res_bio,  v, which(mask[, v]))[ok], truth[ok])
   r_off  <- safe_cor(safe_get(res_off,  v, which(mask[, v]))[ok], truth[ok])
-  cat(sprintf("%-15s %5d %10.3g %10.3g %10.3g %10.3g %+8.3f %+8.3f %+8.3f %8.3f %8.3f\n",
+  cat(sprintf("%-32s %5d %10.3g %10.3g %10.3g %10.3g %+8.3f %+8.3f %+8.3f %8.3f %8.3f\n",
                v, sum(ok), rmse_mean, rmse_none, rmse_bio, rmse_off,
                ifelse(is.na(r_none), NA, r_none),
                ifelse(is.na(r_bio),  NA, r_bio),
@@ -234,6 +236,6 @@ all_res <- do.call(rbind, rows)
 saveRDS(list(results = all_res, n = nrow(df_traits),
               config = list(seed = SEED, miss_frac = MISS_FRAC,
                               epochs = EPOCHS, n_imp = N_IMP,
-                              ecto_classes = ECTO_CLASSES)),
-         "script/bench_globtherm_covariates.rds", compress = "xz")
-cat_line("wrote script/bench_globtherm_covariates.rds")
+                              n_target = N_TARGET)),
+         "script/bench_leptraits_covariates.rds", compress = "xz")
+cat_line("wrote script/bench_leptraits_covariates.rds")

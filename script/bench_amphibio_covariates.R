@@ -62,7 +62,13 @@ cov_cols   <- intersect(cov_cols,   colnames(amphi))
 stopifnot(length(trait_cols) >= 3L, length(cov_cols) >= 2L)
 
 for (v in trait_cols) amphi[[v]] <- suppressWarnings(as.numeric(amphi[[v]]))
-for (v in cov_cols)   amphi[[v]] <- suppressWarnings(as.numeric(amphi[[v]]))
+# Climate zone columns: AmphiBIO codes 1 = species occurs in zone, NA =
+# not observed.  Treat NA as 0 (not in zone) per the original data dictionary.
+for (v in cov_cols) {
+  raw <- suppressWarnings(as.numeric(amphi[[v]]))
+  raw[is.na(raw)] <- 0
+  amphi[[v]] <- raw
+}
 
 # Log-transform skewed traits
 for (v in c("Body_size_mm", "Body_mass_g", "Longevity_max_y",
@@ -73,12 +79,13 @@ for (v in c("Body_size_mm", "Body_mass_g", "Longevity_max_y",
   }
 }
 
-# Drop species with all-NA covariates (a row of all zeros is OK -- means
-# species occurs in none of the four zones, which is unusual but possible)
-cov_complete <- stats::complete.cases(amphi[, cov_cols, drop = FALSE])
-cat_line(sprintf("species with all 4 climate zones non-NA: %d / %d",
-                  sum(cov_complete), nrow(amphi)))
-amphi <- amphi[cov_complete, , drop = FALSE]
+# Filter to species with at least one zone occupied (zone_sum >= 1).
+# Species with zone_sum = 0 have no climate data, and using them as
+# "0 in all zones" is data invention.
+zone_sum <- rowSums(amphi[, cov_cols, drop = FALSE])
+cat_line(sprintf("species with >= 1 zone occupied: %d / %d",
+                  sum(zone_sum >= 1L), nrow(amphi)))
+amphi <- amphi[zone_sum >= 1L, , drop = FALSE]
 
 # Subsample
 set.seed(SEED)
