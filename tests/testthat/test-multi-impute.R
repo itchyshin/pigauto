@@ -503,3 +503,59 @@ test_that("draws_method='conformal' stores method and produces non-zero between-
     expect_identical(obs_vals[[i]], obs_vals[[1]],
                      info = paste("dataset", i, "should not alter observed cells"))
 })
+
+test_that("multi_impute() multi-obs aligns datasets when input is shuffled", {
+  # Regression test for the multi_impute path of the row-alignment bug
+  # found 2026-04-26 (commit a3e6d39).  preprocess_traits() reorders rows
+  # internally to tree-tip order, and build_completed() needs the inverse
+  # mapping to write predictions back to the user's input row order.  This
+  # test exercises both draws_method paths (default conformal + mc_dropout)
+  # to make sure both code paths in multi_impute.R were patched.
+  set.seed(20260426)
+  tree <- ape::rtree(15)
+  # Two obs per species, species column SHUFFLED.
+  sp_shuffled <- sample(rep(tree$tip.label, each = 2L))
+  sp_truth <- setNames(rnorm(15, mean = 5, sd = 3), tree$tip.label)
+  trait_full <- sp_truth[sp_shuffled] + rnorm(length(sp_shuffled), sd = 0.05)
+  df <- data.frame(species = sp_shuffled, trait = trait_full,
+                    stringsAsFactors = FALSE)
+
+  # Mask one of each species's two observations.
+  mask_idx <- vapply(unique(df$species),
+                      function(sp) sample(which(df$species == sp), 1L),
+                      integer(1))
+  df_obs <- df
+  df_obs$trait[mask_idx] <- NA
+
+  for (method in c("conformal", "mc_dropout")) {
+    mi <- multi_impute(
+      traits        = df_obs,
+      tree          = tree,
+      species_col   = "species",
+      m             = 2L,
+      draws_method  = method,
+      epochs        = 30L,
+      missing_frac  = 0.0,
+      verbose       = FALSE,
+      seed          = 1L
+    )
+
+    for (k in seq_along(mi$datasets)) {
+      d <- mi$datasets[[k]]
+      observed_idx <- setdiff(seq_len(nrow(df)), mask_idx)
+      # Observed rows preserved exactly (sanity check).
+      expect_equal(d$trait[observed_idx], df$trait[observed_idx],
+                    tolerance = 1e-8,
+                    label = sprintf("draws_method=%s, dataset %d, observed", method, k))
+
+      # Imputed rows must align with their own species.  We allow
+      # generous tolerance because mc_dropout adds Gaussian noise.
+      imp_pred <- d$trait[mask_idx]
+      imp_truth <- sp_truth[as.character(df$species[mask_idx])]
+      r <- cor(imp_pred, imp_truth)
+      expect_gt(r, 0.85,
+                 label = sprintf("cor(pred, truth) for draws_method=%s dataset %d (got %.3f)",
+                                  method, k, r))
+    }
+  }
+})
