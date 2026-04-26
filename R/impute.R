@@ -271,7 +271,13 @@ impute <- function(traits, tree, species_col = NULL,
   # 7. Build the completed data.frame: observed values preserved,
   #    missing cells filled with model predictions.  This is the primary
   #    user-facing output.
-  completed_info <- build_completed(traits, pred$imputed, species_col)
+  #
+  # `pd$input_row_order[k]` tells us the original-input row index for
+  # internal position k.  build_completed needs this whenever
+  # preprocess_traits reordered rows (multi-obs always; single-obs when
+  # input row order didn't already match tree-tip order).
+  completed_info <- build_completed(traits, pred$imputed, species_col,
+                                     input_row_order = pd$input_row_order)
   completed      <- completed_info$completed
   imputed_mask   <- completed_info$imputed_mask
 
@@ -303,7 +309,14 @@ impute <- function(traits, tree, species_col = NULL,
 # ---- Internal: merge observed values with model predictions ---------------
 # Returns the original traits data.frame with NAs replaced by imputed
 # values, plus a boolean mask of which cells were filled.
-build_completed <- function(original, imputed, species_col = NULL) {
+#
+# `input_row_order` (from `pd$input_row_order`) maps internal positions back
+# to original input rows: imputed[k, ] corresponds to original[input_row_order[k], ].
+# When supplied (post 2026-04-26 row-alignment fix) it is used to recover the
+# user's row order; passing NULL falls back to the legacy match-by-rowname /
+# 1-to-1 alignment behaviour for backward compat.
+build_completed <- function(original, imputed, species_col = NULL,
+                             input_row_order = NULL) {
   # Align row order: imputed has rownames = species / obs ids used by the fit
   # Original may have row names OR a species column. We match on the
   # column types.
@@ -317,14 +330,32 @@ build_completed <- function(original, imputed, species_col = NULL) {
   imputed_mask <- matrix(FALSE, nrow = n_row, ncol = length(trait_cols),
                          dimnames = list(rownames(original), trait_cols))
 
-  # 2. Row alignment: impute() preserves input order when no species_col
-  #    is supplied (row names align). With species_col, multiple rows
-  #    per species may exist; imputed has one row per observation.
-  if (is.null(species_col)) {
-    # Match by rowname
+  # 2. Row alignment.
+  #
+  # Pre-2026-04-26: multi-obs assumed `imputed` rows aligned 1:1 with input
+  # rows ("Multi-obs: imputed rows align 1:1 with original rows in input
+  # order"), but `preprocess_traits()` reorders rows internally to tree-tip
+  # order, breaking that assumption when the input data.frame's species
+  # column isn't already tree-tip-sorted.  Result: predictions for masked
+  # cells were assigned to the wrong rows in `completed`, producing
+  # near-zero correlation with truth on shuffled-input data.
+  #
+  # Fix: when `input_row_order` is supplied, use it to invert the reorder.
+  # input_row_order[k] gives the original input-row index for internal
+  # position k; we want the inverse: for each original row i, find the
+  # internal position k such that input_row_order[k] == i.  That is
+  # `match(seq_len(n_row), input_row_order)`, which is robust to the
+  # synthetic NA rows that `preprocess_traits` appends for tree tips that
+  # have no input data (those have input_row_order == NA and are simply
+  # not matched).
+  if (!is.null(input_row_order)) {
+    imp_row <- match(seq_len(n_row), input_row_order)
+  } else if (is.null(species_col)) {
+    # Legacy path: match by rowname (single-obs without input_row_order)
     imp_row <- match(rownames(original), rownames(imputed))
   } else {
-    # Multi-obs: imputed rows align 1:1 with original rows in input order
+    # Legacy path: assume 1:1 (kept for backward compat with any external
+    # callers of build_completed; not used by impute() itself anymore).
     imp_row <- seq_len(n_row)
   }
 

@@ -252,6 +252,12 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
     obs_species_raw <- obs_species_raw[row_order]
     rownames(traits) <- NULL
 
+    # `input_row_order[k]` = original input-row index that was placed at
+    # internal position k.  Used by `build_completed()` (and any downstream
+    # caller that needs to re-align internal-order results back to the
+    # user's input row order).
+    input_row_order <- as.integer(row_order)
+
     # Add all-NA rows for tree tips missing from data
     missing_tips <- tree$tip.label[!in_data]
     if (length(missing_tips) > 0) {
@@ -259,6 +265,10 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
       rownames(na_rows) <- NULL
       traits <- rbind(traits, na_rows)
       obs_species_raw <- c(obs_species_raw, missing_tips)
+      # Pad input_row_order with NAs for these synthetic rows (no original
+      # input row corresponds to them).
+      input_row_order <- c(input_row_order,
+                            rep(NA_integer_, length(missing_tips)))
     }
 
     # Build species-level outputs
@@ -271,6 +281,11 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
   } else {
     # Single-obs path: reorder rows to match tree$tip.label exactly
     idx <- match(tree$tip.label, rownames(traits))
+    # `input_row_order[k]` = original input-row index that was placed at
+    # internal position k.  `idx[k]` is the row of `traits` (= input row
+    # index, since rownames are preserved at this point) that maps to
+    # tree$tip.label[k].  When a tip has no input row, idx[k] = NA.
+    input_row_order <- as.integer(idx)
     traits <- traits[idx, , drop = FALSE]
     rownames(traits) <- tree$tip.label
 
@@ -452,6 +467,7 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
       species_names  = species_names,
       obs_species    = obs_species,
       obs_to_species = obs_to_species,
+      input_row_order = input_row_order,
       n_species      = n_species,
       n_obs          = n_obs,
       multi_obs      = multi_obs,

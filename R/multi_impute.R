@@ -235,8 +235,12 @@ multi_impute <- function(traits, tree, m = 100L,
            " imputed datasets. This is an internal error -- please report.",
            call. = FALSE)
     }
+    # Pass `input_row_order` so build_completed re-aligns predictions back
+    # to the user's input row order (multi-obs reordering fix, 2026-04-26).
+    input_row_order <- res$data$input_row_order
     datasets <- lapply(pred$imputed_datasets, function(imp_df) {
-      build_completed(traits, imp_df, species_col)$completed
+      build_completed(traits, imp_df, species_col,
+                       input_row_order = input_row_order)$completed
     })
 
   } else {
@@ -262,10 +266,12 @@ multi_impute <- function(traits, tree, m = 100L,
     trait_map <- res$fit$trait_map
     imask     <- res$imputed_mask
 
+    input_row_order <- res$data$input_row_order
     datasets <- lapply(seq_len(m), function(i) {
       imp_df <- .sample_conformal_draw(pred, imask, trait_map,
                                        seed_i = as.integer(seed) + i)
-      build_completed(traits, imp_df, species_col)$completed
+      build_completed(traits, imp_df, species_col,
+                       input_row_order = input_row_order)$completed
     })
   }
 

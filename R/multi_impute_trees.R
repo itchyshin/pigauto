@@ -383,9 +383,15 @@ run_per_tree <- function(traits, trees, m_per_tree,
            " imputed datasets. This is an internal error.", call. = FALSE)
     }
 
+    # `res$data$input_row_order` re-aligns internal-order imputations back
+    # to the user's input row order (multi-obs reordering fix, 2026-04-26).
+    # Each tree gets its own pigauto_data object, so we read this fresh
+    # per tree.
+    input_row_order <- res$data$input_row_order
     for (k in seq_len(m_per_tree)) {
       idx <- (t - 1L) * m_per_tree + k
-      completed_info <- build_completed(traits, imp_list[[k]], species_col)
+      completed_info <- build_completed(traits, imp_list[[k]], species_col,
+                                          input_row_order = input_row_order)
       all_datasets[[idx]] <- completed_info$completed
       tree_index[idx]     <- t
     }
@@ -487,12 +493,18 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
                               n_imputations = m_per_tree,
                               baseline_override = baseline_t)
 
-    # Build completed data.frames (reuse build_completed)
+    # Build completed data.frames (reuse build_completed).  In the share-GNN
+    # path, data_ref / fit_ref are tied to the FIRST tree's preprocess pass;
+    # since input row order is independent of the tree (it depends only on
+    # the input data.frame's species column), we can reuse data_ref's
+    # input_row_order across all trees.  (Multi-obs reordering fix, 2026-04-26.)
+    input_row_order <- data_ref$input_row_order
     for (k in seq_len(m_per_tree)) {
       idx <- idx + 1L
       one <- if (!is.null(pred_t$imputed_datasets)) pred_t$imputed_datasets[[k]]
              else pred_t$imputed
-      info <- build_completed(traits, one, species_col)
+      info <- build_completed(traits, one, species_col,
+                                input_row_order = input_row_order)
       all_datasets[[idx]] <- info$completed
       tree_index[idx]     <- t
       if (is.null(imputed_mask)) imputed_mask <- info$imputed_mask

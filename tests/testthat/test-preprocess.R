@@ -137,6 +137,33 @@ test_that("preprocess_traits backward compatible (no species_col, no multi_obs)"
   expect_equal(pd$n_species, 8L)
 })
 
+test_that("preprocess_traits exposes input-to-internal row mapping (multi-obs)", {
+  # When input rows are not in tree-tip order, preprocess_traits reorders them
+  # internally for the GNN.  Downstream code (build_completed, evaluate, MI)
+  # needs an inverse mapping to align internal predictions back to input rows.
+  set.seed(20260426)
+  tree <- ape::rtree(6)
+  # Shuffle species column so input is NOT tree-tip-ordered
+  sp_shuffled <- sample(rep(tree$tip.label, each = 2L))
+  df <- data.frame(species = sp_shuffled,
+                    trait   = rnorm(length(sp_shuffled)),
+                    stringsAsFactors = FALSE)
+
+  pd <- preprocess_traits(df, tree, species_col = "species")
+
+  # Field `input_row_order`: integer vector of length n_obs.  pd$X_scaled[i, ]
+  # corresponds to df[input_row_order[i], ].  Equivalently, predictions in
+  # internal order can be re-ordered to input order via order(input_row_order).
+  expect_true("input_row_order" %in% names(pd))
+  expect_equal(length(pd$input_row_order), nrow(df))
+  expect_equal(sort(pd$input_row_order), seq_len(nrow(df)))
+
+  # Sanity: applying the mapping recovers the original species labels in
+  # internal order.
+  expect_equal(pd$obs_species,
+               df$species[pd$input_row_order])
+})
+
 
 # ---- avonet300 categorical variables ----------------------------------------
 
