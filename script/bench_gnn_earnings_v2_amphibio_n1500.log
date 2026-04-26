@@ -1,0 +1,119 @@
+[06:43:13] v2: tree=v2_amphibio_n1500, n=1500, alphas=0.1,0.4,0.7, betas=0,0.2,0.4, f=linear,nonlinear,interactive, cov=iid,phylo_structured, reps=5
+[06:43:13] Total cells: 240 (skipping invalid alpha+beta>0.9)
+[06:43:13] === 1/240: a=0.1 b=0.0 f=linear cov=iid rep=1 (seed=3037) ===
+[06:44:06]   pigauto_no_cov 52.3s
+[06:44:56]   pigauto_cov_sfT 50.5s
+[06:45:45]   pigauto_cov_sfF 48.9s
+[06:45:45] === 2/240: a=0.1 b=0.0 f=linear cov=iid rep=2 (seed=4037) ===
+[06:46:38]   pigauto_no_cov 52.3s
+[06:47:27]   pigauto_cov_sfT 49.7s
+[06:48:16]   pigauto_cov_sfF 48.4s
+[06:48:16] === 3/240: a=0.1 b=0.0 f=linear cov=iid rep=3 (seed=5037) ===
+[06:49:00]   pigauto_no_cov 43.9s
+[06:49:45]   pigauto_cov_sfT 45.3s
+[06:50:33]   pigauto_cov_sfF 47.6s
+[06:50:33] === 4/240: a=0.1 b=0.0 f=linear cov=iid rep=4 (seed=6037) ===
+[06:51:15]   pigauto_no_cov 42.3s
+[06:51:58]   pigauto_cov_sfT 42.8s
+[06:52:42]   pigauto_cov_sfF 44.2s
+[06:52:42] === 5/240: a=0.1 b=0.0 f=linear cov=iid rep=5 (seed=7037) ===
+[06:53:24]   pigauto_no_cov 41.7s
+[06:54:06]   pigauto_cov_sfT 42.6s
+[06:54:49]   pigauto_cov_sfF 42.2s
+[06:54:49] === 6/240: a=0.1 b=0.0 f=linear cov=phylo_structured rep=1 (seed=3137) ===
+[06:55:30]   pigauto_no_cov 41.7s
+[06:56:12]   pigauto_cov_sfT 41.5s
+[06:56:57]   pigauto_cov_sfF 44.8s
+[06:56:57] === 7/240: a=0.1 b=0.0 f=linear cov=phylo_structured rep=2 (seed=4137) ===
+[06:57:44]   pigauto_no_cov 46.8s
+[06:58:30]   pigauto_cov_sfT 46.4s
+[06:59:17]   pigauto_cov_sfF 46.7s
+[06:59:17] === 8/240: a=0.1 b=0.0 f=linear cov=phylo_structured rep=3 (seed=5137) ===
+[07:00:05]   pigauto_no_cov 47.9s
+[07:00:52]   pigauto_cov_sfT 47.4s
+[07:01:42]   pigauto_cov_sfF 49.7s
+[07:01:42] === 9/240: a=0.1 b=0.0 f=linear cov=phylo_structured rep=4 (seed=6137) ===
+[07:02:30]   pigauto_no_cov 48.3s
+[07:03:13]   pigauto_cov_sfT 42.8s
+[07:03:57]   pigauto_cov_sfF 44.5s
+[07:03:57] === 10/240: a=0.1 b=0.0 f=linear cov=phylo_structured rep=5 (seed=7137) ===
+[07:04:41]   pigauto_no_cov 43.5s
+[07:05:22]   pigauto_cov_sfT 41.4s
+[07:06:05]   pigauto_cov_sfF 42.6s
+[07:06:05] === 11/240: a=0.1 b=0.0 f=nonlinear cov=iid rep=1 (seed=3038) ===
+[07:06:49]   pigauto_no_cov 43.8s
+[07:07:32]   pigauto_cov_sfT 43.4s
+[07:08:17]   pigauto_cov_sfF 44.7s
+[07:08:17] === 12/240: a=0.1 b=0.0 f=nonlinear cov=iid rep=2 (seed=4038) ===
+[07:09:02]   pigauto_no_cov 45.4s
+[07:09:49]   pigauto_cov_sfT 46.0s
+[07:10:32]   pigauto_cov_sfF 43.7s
+[07:10:32] === 13/240: a=0.1 b=0.0 f=nonlinear cov=iid rep=3 (seed=5038) ===
+[07:11:16]   pigauto_no_cov 43.9s
+[07:12:01]   pigauto_cov_sfT 44.5s
+[07:12:45]   pigauto_cov_sfF 43.8s
+[07:12:45] === 14/240: a=0.1 b=0.0 f=nonlinear cov=iid rep=4 (seed=6038) ===
+[07:13:32]   pigauto_no_cov 46.9s
+[07:14:15]   pigauto_cov_sfT 43.8s
+[07:15:02]   pigauto_cov_sfF 46.5s
+[07:15:02] === 15/240: a=0.1 b=0.0 f=nonlinear cov=iid rep=5 (seed=7038) ===
+[07:15:46]   pigauto_no_cov 43.6s
+[07:16:33]   pigauto_cov_sfT 47.3s
+[07:17:19]   pigauto_cov_sfF 45.7s
+[07:17:19] === 16/240: a=0.1 b=0.0 f=nonlinear cov=phylo_structured rep=1 (seed=3138) ===
+[07:18:06]   pigauto_no_cov 47.2s
+[07:18:54]   pigauto_cov_sfT 47.8s
+[07:19:41]   pigauto_cov_sfF 47.7s
+[07:19:41] === 17/240: a=0.1 b=0.0 f=nonlinear cov=phylo_structured rep=2 (seed=4138) ===
+[07:20:28]   pigauto_no_cov 46.0s
+[07:21:08]   pigauto_cov_sfT 40.8s
+[07:21:49]   pigauto_cov_sfF 40.7s
+[07:21:49] === 18/240: a=0.1 b=0.0 f=nonlinear cov=phylo_structured rep=3 (seed=5138) ===
+[07:22:29]   pigauto_no_cov 40.4s
+[07:23:13]   pigauto_cov_sfT 43.9s
+[07:24:02]   pigauto_cov_sfF 48.2s
+[07:24:02] === 19/240: a=0.1 b=0.0 f=nonlinear cov=phylo_structured rep=4 (seed=6138) ===
+[07:24:51]   pigauto_no_cov 49.1s
+[07:25:38]   pigauto_cov_sfT 47.6s
+[07:26:24]   pigauto_cov_sfF 45.8s
+[07:26:24] === 20/240: a=0.1 b=0.0 f=nonlinear cov=phylo_structured rep=5 (seed=7138) ===
+[07:27:13]   pigauto_no_cov 48.5s
+[07:27:59]   pigauto_cov_sfT 46.6s
+[07:28:45]   pigauto_cov_sfF 45.6s
+[07:28:45] === 21/240: a=0.1 b=0.0 f=interactive cov=iid rep=1 (seed=3039) ===
+[07:29:31]   pigauto_no_cov 45.6s
+[07:30:18]   pigauto_cov_sfT 47.3s
+[07:31:04]   pigauto_cov_sfF 45.7s
+[07:31:04] === 22/240: a=0.1 b=0.0 f=interactive cov=iid rep=2 (seed=4039) ===
+[07:31:49]   pigauto_no_cov 45.6s
+[07:32:39]   pigauto_cov_sfT 49.7s
+[07:33:26]   pigauto_cov_sfF 46.8s
+[07:33:26] === 23/240: a=0.1 b=0.0 f=interactive cov=iid rep=3 (seed=5039) ===
+[07:34:13]   pigauto_no_cov 46.9s
+[07:35:03]   pigauto_cov_sfT 49.5s
+[07:35:52]   pigauto_cov_sfF 49.3s
+[07:35:52] === 24/240: a=0.1 b=0.0 f=interactive cov=iid rep=4 (seed=6039) ===
+[07:36:40]   pigauto_no_cov 48.0s
+[07:37:29]   pigauto_cov_sfT 49.6s
+[07:38:18]   pigauto_cov_sfF 48.7s
+[07:38:18] === 25/240: a=0.1 b=0.0 f=interactive cov=iid rep=5 (seed=7039) ===
+[07:39:04]   pigauto_no_cov 45.3s
+[07:39:53]   pigauto_cov_sfT 49.5s
+[07:40:43]   pigauto_cov_sfF 49.7s
+[07:40:43] === 26/240: a=0.1 b=0.0 f=interactive cov=phylo_structured rep=1 (seed=3139) ===
+[07:41:29]   pigauto_no_cov 45.9s
+[07:42:17]   pigauto_cov_sfT 48.6s
+[07:43:07]   pigauto_cov_sfF 49.6s
+[07:43:07] === 27/240: a=0.1 b=0.0 f=interactive cov=phylo_structured rep=2 (seed=4139) ===
+[07:43:56]   pigauto_no_cov 48.4s
+[07:44:43]   pigauto_cov_sfT 47.1s
+[07:45:31]   pigauto_cov_sfF 48.3s
+[07:45:31] === 28/240: a=0.1 b=0.0 f=interactive cov=phylo_structured rep=3 (seed=5139) ===
+[07:46:17]   pigauto_no_cov 46.1s
+[07:47:04]   pigauto_cov_sfT 47.2s
+[07:47:51]   pigauto_cov_sfF 46.6s
+[07:47:51] === 29/240: a=0.1 b=0.0 f=interactive cov=phylo_structured rep=4 (seed=6139) ===
+[07:48:38]   pigauto_no_cov 47.1s
+[07:49:27]   pigauto_cov_sfT 48.6s
+[07:50:15]   pigauto_cov_sfF 47.7s
+[07:50:15] === 30/240: a=0.1 b=0.0 f=interactive cov=phylo_structured rep=5 (seed=7139) ===
