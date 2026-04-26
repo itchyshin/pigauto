@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>pigauto — mathematical and algorithmic description</title>
+<script>
+MathJax = {
+  tex: {inlineMath: [['$','$'], ['\\(','\\)']]},
+  svg: {fontCache: 'global'}
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+:root {
+  --fg: #1a1a1a;
+  --muted: #6a6a6a;
+  --accent: #2c5aa0;
+  --bg: #fdfdfd;
+  --code-bg: #f6f6f6;
+  --rule: #e0e0e0;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+               Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.55;
+  font-size: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2.5em 2em 6em;
+}
+h1, h2, h3, h4 {
+  font-weight: 600;
+  line-height: 1.25;
+  margin-top: 1.6em;
+  margin-bottom: 0.5em;
+}
+h1 { font-size: 2.0em; border-bottom: 2px solid var(--rule); padding-bottom: 0.3em; }
+h2 { font-size: 1.4em; color: var(--accent); margin-top: 2.4em; }
+h3 { font-size: 1.15em; }
+h4 { font-size: 1.0em; color: var(--muted); }
+p { margin: 0.7em 0; }
+code {
+  background: var(--code-bg);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.92em;
+}
+pre {
+  background: var(--code-bg);
+  padding: 1em 1.2em;
+  border-radius: 5px;
+  overflow-x: auto;
+  font-size: 0.88em;
+  line-height: 1.4;
+  border-left: 3px solid var(--accent);
+}
+pre code { background: none; padding: 0; }
+blockquote {
+  margin: 1em 0;
+  padding: 0.5em 1.2em;
+  border-left: 3px solid var(--accent);
+  background: #f4f7fb;
+  color: #333;
+}
+table {
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-size: 0.95em;
+  width: 100%;
+}
+th, td {
+  border: 1px solid var(--rule);
+  padding: 0.4em 0.7em;
+  text-align: left;
+  vertical-align: top;
+}
+th { background: var(--code-bg); font-weight: 600; }
+.note { font-size: 0.9em; color: var(--muted); }
+.toc { background: #fafafa; padding: 1em 1.5em; border: 1px solid var(--rule); border-radius: 5px; margin: 1.5em 0; }
+.toc ol { margin: 0.4em 0 0 1em; padding: 0; }
+.toc li { margin: 0.2em 0; }
+.eq { display: block; text-align: center; margin: 1em 0; }
+hr { border: none; border-top: 1px solid var(--rule); margin: 2.5em 0; }
+.ascii {
+  background: var(--code-bg);
+  padding: 1em 1.2em;
+  border-radius: 5px;
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.82em;
+  line-height: 1.35;
+  white-space: pre;
+  overflow-x: auto;
+  border-left: 3px solid var(--accent);
+}
+</style>
+</head>
+<body>
+
+<h1>pigauto — mathematical and algorithmic description</h1>
+<p class="note">v0.9.1.9000 / experiment/gnn-earnings-sim branch (post Fix A-H).
+Generated 2026-04-26.</p>
+
+<div class="toc">
+<strong>Contents</strong>
+<ol>
+  <li><a href="#overview">Overview &amp; design principles</a></li>
+  <li><a href="#notation">Notation</a></li>
+  <li><a href="#preprocess">Trait preprocessing — the latent encoding</a></li>
+  <li><a href="#graph">Phylogenetic graph construction</a></li>
+  <li><a href="#bm-baseline">BM baseline — conditional multivariate normal</a></li>
+  <li><a href="#fix-g">Covariate-aware baseline (Fix G) — GLS regression</a></li>
+  <li><a href="#gnn">The GNN — graph transformer architecture</a></li>
+  <li><a href="#blend">The blended prediction</a></li>
+  <li><a href="#loss">Loss function and training</a></li>
+  <li><a href="#calibration">Calibration and safety floor</a></li>
+  <li><a href="#mi-uq">Multiple imputation and uncertainty</a></li>
+  <li><a href="#mixed-types">Mixed-type handling</a></li>
+  <li><a href="#multi-obs">Multi-observation mode</a></li>
+  <li><a href="#algorithm">End-to-end algorithm pseudocode</a></li>
+</ol>
+</div>
+
+<hr>
+
+<h2 id="overview">1. Overview &amp; design principles</h2>
+
+<p>pigauto fits a per-trait blend of two predictors:</p>
+
+<p class="eq">$$\widehat{y}_{ij} \;=\; \underbrace{(1 - r_j) \cdot \mu_{ij}^{\text{baseline}}}_{\text{phylogenetic prior}} \;+\; \underbrace{r_j \cdot \delta_{ij}^{\text{GNN}}}_{\text{neural correction}} \;+\; \underbrace{\mathrm{X}_i \widehat\beta_j^{\text{(linear)}}}_{\text{Fix C/D residual stream}}$$</p>
+
+<p>where</p>
+<ul>
+<li>$i$ indexes <em>observations</em> (= species in single-obs mode; = trait measurements in multi-obs mode);</li>
+<li>$j$ indexes <em>latent trait columns</em> (continuous traits use one latent column; categorical with $K$ classes uses $K$);</li>
+<li>$\mu^{\text{baseline}}$ is computed analytically (no training) — see §5–§6;</li>
+<li>$\delta^{\text{GNN}}$ is the output of a graph transformer trained by stochastic gradient descent;</li>
+<li>$r_j \in (0, r_{\max})$ is a per-latent-column gate calibrated on a held-out validation split;</li>
+<li>$\widehat\beta_j$ is a small linear-on-covariates path that contributes outside the gate.</li>
+</ul>
+
+<p>Three properties are designed in:</p>
+<ol>
+<li><strong>Safety floor.</strong> $r_j = 0$ is always a valid fallback. When the calibrated gate closes, the model collapses to the analytical baseline. Users passing covariates that are uninformative beyond phylogeny pay no accuracy penalty.</li>
+<li><strong>Mixed types from a single API.</strong> Continuous, count, ordinal, binary, categorical, proportion, zero-inflated count, and multi-proportion (compositional) traits coexist in a single latent matrix; the loss switches between MSE / BCE / cross-entropy per trait type.</li>
+<li><strong>Uncertainty quantification.</strong> Conformal prediction intervals (distribution-free, calibrated on a held-out split) and multiple imputation (MC-dropout or conformal-score sampling) are integrated.</li>
+</ol>
+
+<hr>
+
+<h2 id="notation">2. Notation</h2>
+
+<table>
+<tr><th>Symbol</th><th>Meaning</th></tr>
+<tr><td>$T$</td><td>phylogenetic tree, rooted, binary, with positive branch lengths</td></tr>
+<tr><td>$n_s$</td><td>number of species (tree tips)</td></tr>
+<tr><td>$n$</td><td>number of observations: $n = n_s$ in single-obs mode; $n &gt; n_s$ in multi-obs mode</td></tr>
+<tr><td>$p$</td><td>number of input traits</td></tr>
+<tr><td>$p_\ell$</td><td>number of latent columns (categorical with $K$ classes contributes $K$)</td></tr>
+<tr><td>$\mathbf{X} \in \mathbb{R}^{n \times p_\ell}$</td><td>z-scored (or log-transformed) trait matrix; held-out cells are NA</td></tr>
+<tr><td>$\mathbf{Z} \in \mathbb{R}^{n \times d_z}$</td><td>user covariate matrix (z-scored)</td></tr>
+<tr><td>$R = \mathrm{cov2cor}(\mathrm{vcv}(T))$</td><td>phylogenetic correlation matrix, $n_s \times n_s$</td></tr>
+<tr><td>$\mathbf{A} \in \mathbb{R}^{n_s \times n_s}$</td><td>Gaussian-kernel adjacency on cophenetic distance</td></tr>
+<tr><td>$\mathbf{C} \in \mathbb{R}^{n_s \times k}$</td><td>spectral coordinates (Laplacian eigenvectors of $\mathbf{A}$)</td></tr>
+<tr><td>$\mathbf{D}^2$</td><td>squared cophenetic distance matrix (used for rate-aware attention)</td></tr>
+<tr><td>$h$</td><td>hidden dimension of the GNN (default 32–64)</td></tr>
+<tr><td>$\mathcal{O}, \mathcal{H}$</td><td>index sets: observed cells, held-out cells</td></tr>
+</table>
+
+<hr>
+
+<h2 id="preprocess">3. Trait preprocessing — the latent encoding</h2>
+
+<p>Each input trait is mapped to one or more latent columns by <code>preprocess_traits()</code>:</p>
+
+<table>
+<tr><th>R class</th><th>type</th><th>latent</th><th>encoding</th><th>loss</th><th>baseline</th></tr>
+<tr><td><code>numeric</code></td><td>continuous</td><td>1</td><td>(optional log) + z-score</td><td>MSE</td><td>BM</td></tr>
+<tr><td><code>integer</code></td><td>count</td><td>1</td><td>$\log(1+x)$ + z-score</td><td>MSE</td><td>BM</td></tr>
+<tr><td><code>ordered</code></td><td>ordinal</td><td>1</td><td>integer + z-score</td><td>MSE</td><td>BM</td></tr>
+<tr><td><code>factor(2)</code></td><td>binary</td><td>1</td><td>$\{0,1\}$</td><td>BCE</td><td>label propagation</td></tr>
+<tr><td><code>factor(K)</code></td><td>categorical</td><td>$K$</td><td>one-hot</td><td>cross-entropy</td><td>label propagation</td></tr>
+<tr><td><code>numeric(0,1)</code></td><td>proportion</td><td>1</td><td>$\mathrm{logit}(x) + \epsilon$ + z-score</td><td>MSE</td><td>BM</td></tr>
+<tr><td><code>integer (ZI)</code></td><td>zero-inflated count</td><td>2</td><td>gate $\{0,1\}$ + log1p-z magnitude</td><td>BCE + MSE</td><td>LP + BM</td></tr>
+<tr><td>K cols summing to 1</td><td>multi-proportion</td><td>$K$</td><td>per-row CLR + per-column z</td><td>MSE</td><td>per-component BM</td></tr>
+</table>
+
+<p>The output is a single $n \times p_\ell$ matrix $\mathbf{X}$ together with a <em>trait_map</em> that records the inverse transform for decoding predictions back to user scale.</p>
+
+<hr>
+
+<h2 id="graph">4. Phylogenetic graph construction</h2>
+
+<p>From the tree $T$, <code>build_phylo_graph()</code> produces three pieces:</p>
+
+<p class="eq">$$\mathbf{D}_{kl} = \mathrm{cophenetic}(T)_{kl}, \quad \mathbf{A}_{kl} = \exp\!\left(-\frac{\mathbf{D}_{kl}^2}{2\sigma^2}\right)$$</p>
+
+<p>$\sigma$ is set adaptively from the median pairwise distance. The Laplacian $\mathbf{L} = \mathbf{D}_{\text{deg}} - \mathbf{A}$ is eigendecomposed and the top $k$ eigenvectors form $\mathbf{C}$:</p>
+
+<p class="eq">$$\mathbf{L} \mathbf{C} = \mathbf{C} \boldsymbol\Lambda, \quad \mathbf{C} \in \mathbb{R}^{n_s \times k}$$</p>
+
+<p>$k$ scales adaptively with $n_s$ (default: $k = 4$ at $n_s = 30$, $k = 32$ at $n_s = 640$+). The squared distance matrix $\mathbf{D}^2$ is also passed downstream for rate-aware attention bandwidth (see §7).</p>
+
+<hr>
+
+<h2 id="bm-baseline">5. BM baseline — conditional multivariate normal</h2>
+
+<p>For each continuous (BM-eligible) latent column $j$, observed cells $\mathcal{O}_j$ and missing cells $\mathcal{H}_j$. Under the standard Brownian-motion model with phylogenetic correlation $R$:</p>
+
+<p class="eq">$$\mathbf{X}_{:,j} \;\sim\; \mathcal{N}(\mu_j \mathbf{1}, \;\sigma_j^2 \cdot R)$$</p>
+
+<p>The conditional mean and variance for missing cells follow the standard kriging formulas. Let $R_{oo} = R[\mathcal{O}_j, \mathcal{O}_j]$ and $R_{ho} = R[\mathcal{H}_j, \mathcal{O}_j]$. With Cholesky $R_{oo} = L L^\top$:</p>
+
+<p class="eq">$$\widehat\mu_j = \frac{\mathbf{1}^\top R_{oo}^{-1} \mathbf{X}_{\mathcal{O}_j, j}}{\mathbf{1}^\top R_{oo}^{-1} \mathbf{1}}, \quad \widehat\sigma_j^2 = \frac{(\mathbf{X}_{\mathcal{O}_j,j} - \widehat\mu_j)^\top R_{oo}^{-1} (\mathbf{X}_{\mathcal{O}_j,j} - \widehat\mu_j)}{n_o - 1}$$</p>
+
+<p class="eq">$$\boxed{\;\mu^{\text{BM}}_{\mathcal{H}_j, j} = \widehat\mu_j + R_{ho} R_{oo}^{-1} (\mathbf{X}_{\mathcal{O}_j, j} - \widehat\mu_j)\;}$$</p>
+
+<p class="eq">$$\sigma^{\text{BM}}_{\mathcal{H}_j, j} = \widehat\sigma_j \sqrt{1 - \mathrm{diag}(R_{ho} R_{oo}^{-1} R_{ho}^\top)}$$</p>
+
+<p>This is computed analytically once before training; it does not depend on the GNN. Implementation in <code>R/bm_internal.R::bm_impute_col()</code>. Numerical stability uses a backed-off Cholesky nugget on $R_{oo}$.</p>
+
+<p>For binary and categorical traits, a phylogenetic <em>label propagation</em> baseline replaces the conditional MVN: the per-species probability is the kernel-weighted mean of observed labels using $\mathbf{A}$ as similarity. (Categorical with $K$ classes uses one-vs-rest threshold-joint baselines via Rphylopars; see <code>R/ovr_categorical.R</code>.)</p>
+
+<hr>
+
+<h2 id="fix-g">6. Covariate-aware baseline (Fix G) — GLS regression</h2>
+
+<p>When the user passes covariates $\mathbf{Z}$ (an $n_s \times d_z$ matrix), the BM baseline is upgraded to a phylogenetic GLS regression with covariate fixed effects. Let $\mathbf{X}_{\text{des}} = [\mathbf{1}, \mathbf{Z}]$ be the design matrix.</p>
+
+<p class="eq">$$\mathbf{y}_{:,j} \;=\; \mathbf{X}_{\text{des}} \boldsymbol\beta_j + \mathbf{u}_j, \quad \mathbf{u}_j \sim \mathcal{N}(\mathbf{0}, \sigma_j^2 R)$$</p>
+
+<p>The GLS estimate is</p>
+
+<p class="eq">$$\widehat{\boldsymbol\beta}_j = \left( \mathbf{X}_{\text{des},o}^\top R_{oo}^{-1} \mathbf{X}_{\text{des},o} + \lambda_{\text{ridge}} \mathbf{I}_{\text{non-int}} \right)^{-1} \mathbf{X}_{\text{des},o}^\top R_{oo}^{-1} \mathbf{X}_{\mathcal{O}_j, j}$$</p>
+
+<p>(default $\lambda_{\text{ridge}} = 0$; $\mathbf{I}_{\text{non-int}}$ has 0 on the intercept diagonal). The BLUP for held-out cells combines the fixed-effects fit with the BM-correlated residual:</p>
+
+<p class="eq">$$\boxed{\;\mu^{\text{cov}}_{\mathcal{H}_j, j} = \mathbf{X}_{\text{des},h} \widehat{\boldsymbol\beta}_j \;+\; R_{ho} R_{oo}^{-1} \big( \mathbf{X}_{\mathcal{O}_j,j} - \mathbf{X}_{\text{des},o} \widehat{\boldsymbol\beta}_j \big)\;}$$</p>
+
+<p>This is mathematically identical to <code>phylolm(model="BM")</code>'s prediction (unit-tested to $10^{-7}$).</p>
+
+<h3>The likelihood-ratio gate</h3>
+
+<p>To guard against fitting noise on phylo-redundant covariates, a one-line check decides whether to use the cov-aware fit or fall back to the cov-blind BM baseline:</p>
+
+<p class="eq">$$\text{relative reduction} = \frac{\widehat\sigma^2_{\text{intercept-only}} - \widehat\sigma^2_{\text{cov-aware}}}{\widehat\sigma^2_{\text{intercept-only}}}$$</p>
+
+<p>If the relative reduction does not exceed <code>lrt_threshold</code> (default $0.02$), <code>used_cov</code> is set FALSE and the intercept-only GLS solution is used. This was decisive on Delhey n=5,809 where climate is genuinely phylo-redundant: the LRT correctly detects no signal and falls back, preventing the GNN from being pulled toward a noisy "all-zero coefficients" baseline.</p>
+
+<hr>
+
+<h2 id="gnn">7. The GNN — graph transformer architecture</h2>
+
+<p>The neural correction $\delta$ is computed by a graph transformer (<code>R/model_residual_dae.R::ResidualPhyloDAE</code>) with the following data flow:</p>
+
+<div class="ascii">INPUT
+  x      (n × p_ℓ)        corrupted trait input  (NA cells → learned mask token)
+  C_obs  (n × k)          spectral phylo features  (broadcast obs ← species in multi-obs)
+  covs   (n × d_cov)      cov_dim = p_ℓ + 1 + d_z
+                          [baseline_mu | NA-mask indicator | user covariates]
+
+ENCODER  (2-layer MLP)
+  combined  = concat(x, C_obs, covs)
+  h         = enc1(combined) → ReLU → dropout → enc2 → ReLU      ∈ ℝ^(n × h)
+
+POOL TO SPECIES  (multi-obs only)
+  h_species = scatter_mean(h, obs_to_species)                    ∈ ℝ^(n_s × h)
+
+GNN STACK  (n_gnn_layers Graph Transformer Blocks)
+  if n_user_cov > 0:
+      cov_h     = cov_encoder(user_covs)                          (Fix B)
+      cov_h_sp  = scatter_mean(cov_h, obs_to_species)  if multi_obs else cov_h
+  for ℓ in 1..n_gnn_layers:
+      h_species = TransformerBlock_ℓ(h_species, A, D², cov_h_sp)  (Fix H)
+                  -- multi-head self-attn with phylo-Gaussian bias
+                  -- pre-norm, FFN, residual
+                  -- Fix H: residual injection of cov_h_sp at each layer
+
+BROADCAST BACK  (multi-obs only)
+  h = h_species[obs_to_species]                                   ∈ ℝ^(n × h)
+
+COVARIATE REFINEMENT  (Fix B — fires when n_user_cov > 0)
+  cov_h      = cov_encoder(user_covs)        # (n × h)
+  h          = h + obs_refine(concat(h, cov_h))                   # residual
+
+DECODER  (2-layer MLP)
+  h     = dec1(h) → ReLU
+  δ     = dec2(h)                                                 ∈ ℝ^(n × p_ℓ)
+
+LINEAR COV HEAD  (Fix C/D — fires when n_user_cov > 0)
+  fixed_effects = cov_linear(user_covs)                           ∈ ℝ^(n × p_ℓ)
+                  # initialised to small weights × 0.01 for safety
+</div>
+
+<h3>The Graph Transformer Block</h3>
+
+<p>Each transformer block (<code>R/graph_transformer_block.R</code>) computes:</p>
+
+<p class="eq">$$\mathrm{attn\_scores}_{h,kl} = \frac{(W_Q^h h_k)^\top (W_K^h h_l)}{\sqrt{d_{\text{head}}}} + b_{h,kl}^{\text{phylo}}$$</p>
+
+<p>The phylogenetic prior bias has two modes. The <strong>rate-aware</strong> mode (B2) uses per-head learned Gaussian bandwidth $\beta_h$ on squared cophenetic distance:</p>
+
+<p class="eq">$$b_{h,kl}^{\text{phylo}} \;=\; -\frac{\mathbf{D}^2_{kl}}{2 \cdot \mathrm{softplus}(\beta_h)^2}$$</p>
+
+<p>so each head learns its own phylogenetic scale (some heads tight = close relatives, others broad = distant relatives). The <strong>legacy</strong> mode uses a learned scaling on $\log \mathbf{A}$. Output is the standard transformer block:</p>
+
+<p class="eq">$$h^{\text{(out)}} = h + W_O \cdot \mathrm{softmax}(\mathrm{attn\_scores}) V + \mathrm{FFN}(\mathrm{LN}(h^{\text{post-attn}})) + \mathrm{cov\_inject}(\mathrm{cov\_h})$$</p>
+
+<p>where the FFN output projection and (Fix H) <code>cov_inject</code> linear weights are both initialised to zero so each block $\approx$ identity at training step 0. This preserves the gate-closed-at-init safety property: an untrained pigauto = the analytical baseline.</p>
+
+<hr>
+
+<h2 id="blend">8. The blended prediction</h2>
+
+<p>Putting it together, the per-cell prediction is</p>
+
+<p class="eq">$$\boxed{\;\widehat{y}_{ij} \;=\; (1 - r_j) \cdot \mu^{\text{baseline}}_{ij} \;+\; r_j \cdot \delta^{\text{GNN}}_{ij} \;+\; (\mathbf{Z}_i \widehat\beta_j^{\text{(linear)}})\;}$$</p>
+
+<p>where the gate is</p>
+
+<p class="eq">$$r_j \;=\; \sigma(\rho_j) \cdot r_{\max}, \qquad \rho_j \in \mathbb{R}, \quad r_{\max} \in (0, 1]$$</p>
+
+<p>$r_{\max}$ (default 0.8) caps the gate so the baseline always gets at least 20% weight even if the GNN tries to dominate. The per-latent-column vector $\boldsymbol\rho$ initialises at $\rho_j = -1$ for continuous types ($r_j \approx 0.135 \cdot r_{\max}$) and near 0 for binary/categorical (gate near $r_{\max}/2$).</p>
+
+<hr>
+
+<h2 id="loss">9. Loss function and training</h2>
+
+<p>The model is trained as a denoising autoencoder. At each epoch, a random subset of observed cells is corrupted (replaced with the learned <em>mask token</em>) at corruption rate $\tau$ that ramps from $\tau_0 = 0.20$ to $\tau_1 = 0.55$ over <code>corruption_ramp</code> epochs.</p>
+
+<p>The loss is a weighted sum of three terms:</p>
+
+<p class="eq">$$\mathcal{L} \;=\; \mathcal{L}_{\text{main}} \;+\; \lambda_{\text{shrink}} \cdot \mathrm{MSE}(\delta - \mu^{\text{baseline}}) \;+\; \lambda_{\text{gate}} \cdot \mathrm{MSE}(r)$$</p>
+
+<p>Each term:</p>
+
+<table>
+<tr><th>Term</th><th>Formula</th><th>Default weight</th><th>Purpose</th></tr>
+<tr><td>$\mathcal{L}_{\text{main}}$</td><td>type-appropriate (MSE / BCE / CE per trait)</td><td>1</td><td>match the blended prediction to the truth</td></tr>
+<tr><td>shrinkage</td><td>$\frac{1}{n p_\ell} \sum_{ij} (\delta_{ij} - \mu^{\text{baseline}}_{ij})^2$</td><td>0.03</td><td>prefer $\delta \approx$ baseline when no signal supports a deviation</td></tr>
+<tr><td>gate</td><td>$\frac{1}{p_\ell} \sum_j r_j^2$</td><td>0.01</td><td>prefer closed gate when no signal supports opening</td></tr>
+</table>
+
+<p>Optimiser is AdamW with linear-decay learning rate (default base 0.005, warmup 200 epochs). Default total epochs is 3,000 with patience-based early stopping at 100 epochs of no validation improvement.</p>
+
+<hr>
+
+<h2 id="calibration">10. Calibration and safety floor</h2>
+
+<p>After training, the gate $r_j$ is <em>recalibrated</em> per latent column on a held-out validation split. Let $\mathcal{V}_j$ be the validation cells for trait $j$. The calibrated gate is</p>
+
+<p class="eq">$$r_j^{\text{cal}} = \arg\min_{r \in [0, r_{\max}]} \; \frac{1}{|\mathcal{V}_j|} \sum_{i \in \mathcal{V}_j} \ell\big( (1-r) \mu_{ij}^{\text{baseline}} + r \delta_{ij}^{\text{GNN}}, \; y_{ij} \big)$$</p>
+
+<p>where $\ell$ is the type-appropriate per-cell loss (squared error for continuous, 0–1 loss for discrete with a cell-count floor). The grid is fine: 41 candidate values uniformly between 0 and $r_{\max}$.</p>
+
+<h3>The safety floor</h3>
+
+<p>When <code>safety_floor = TRUE</code> (default), $r_j^{\text{cal}}$ is constrained so that the calibrated blend's val RMSE is no worse than the column-mean prediction's val RMSE:</p>
+
+<p class="eq">$$r_j^{\text{cal}} \;=\; \arg\min_r \; \mathrm{val\_RMSE}(r) \quad \text{s.t.} \quad \mathrm{val\_RMSE}(r) \le \mathrm{val\_RMSE}_{\text{column-mean}}$$</p>
+
+<p>If no $r$ satisfies the constraint (rare; happens when the GNN is degraded), the gate is forced to $r=0$ (pure baseline). This gives <strong>the user a guarantee that pigauto's predictions are no worse than column-mean, by construction.</strong></p>
+
+<hr>
+
+<h2 id="mi-uq">11. Multiple imputation and uncertainty</h2>
+
+<p>pigauto produces three distinct uncertainty quantifications. Each has different validity and downstream uses:</p>
+
+<h3>11.1 Baseline SE (analytic)</h3>
+
+<p>From the conditional MVN math: $\sigma^{\text{BM}}_{ij} = \widehat\sigma_j \sqrt{1 - h_{ij}}$ where $h_{ij}$ is the leverage of cell $ij$. Exact under BM; model-dependent.</p>
+
+<h3>11.2 Conformal prediction intervals (distribution-free)</h3>
+
+<p>After training, on the held-out validation set, compute conformal scores</p>
+
+<p class="eq">$$s_j = \mathrm{quantile}\big( \big| \mathbf{y}_{\mathcal{V}_j} - \widehat{\mathbf{y}}_{\mathcal{V}_j} \big|, \; \lceil (1-\alpha)(1+1/|\mathcal{V}_j|) \rceil / |\mathcal{V}_j| \big)$$</p>
+
+<p>The 95 % prediction interval for held-out cell $i,j$ is $\widehat y_{ij} \pm s_j$. By the split-conformal theorem this has marginal coverage exactly $\ge 1 - \alpha$, regardless of the model's correctness.</p>
+
+<h3>11.3 Multiple imputation draws</h3>
+
+<p>Two methods selectable via <code>draws_method</code>:</p>
+
+<ul>
+<li><strong>conformal</strong> (default): single forward pass; held-out cells sampled from $\mathcal{N}(\widehat y_{ij}, s_j / 1.96)$ on the latent scale (or Bernoulli/categorical from the probability vector for discrete types).</li>
+<li><strong>MC dropout</strong>: $M$ forward passes with dropout active. Each imputation $m$ first draws a baseline noise instance $t^{\text{BM}} \sim \mathcal{N}(\mu^{\text{BM}}, (\sigma^{\text{BM}})^2)$ on the latent scale, then blends with the dropout GNN output.</li>
+</ul>
+
+<p>For Rubin's-rules pooling of downstream models, the conformal method is preferred because conformal scores are calibrated against actual held-out residuals regardless of gate value.</p>
+
+<hr>
+
+<h2 id="mixed-types">12. Mixed-type handling</h2>
+
+<p>All trait types live in a single latent matrix $\mathbf{X}$. The GNN delta $\delta$ has the same dimensionality. The differences are at decoding and loss:</p>
+
+<table>
+<tr><th>Type</th><th>Decoding</th><th>Loss</th></tr>
+<tr><td>continuous</td><td>inverse z + (inverse log if applied)</td><td>$\mathrm{MSE}$</td></tr>
+<tr><td>binary</td><td>$\sigma(\widehat y_{ij})$ → class probability</td><td>$\mathrm{BCE}(\sigma(\widehat y), \, y)$</td></tr>
+<tr><td>categorical ($K$)</td><td>$\mathrm{softmax}$ over the $K$ latent columns</td><td>$\mathrm{CE}(\mathrm{softmax}, \, y)$</td></tr>
+<tr><td>ordinal</td><td>round $z^{-1}(\widehat y)$ to nearest class</td><td>$\mathrm{MSE}$ (z-scored class index)</td></tr>
+<tr><td>multi-proportion ($K$ cols summing to 1)</td><td>per-row $\mathrm{softmax}$ on CLR</td><td>$\mathrm{MSE}$ on CLR latent</td></tr>
+</table>
+
+<p>The dispatcher in <code>compute_mixed_loss()</code> applies each loss to its trait's latent columns and sums them with equal weight. Per-trait reweighting is possible via the <code>trait_loss_weights</code> argument.</p>
+
+<hr>
+
+<h2 id="multi-obs">13. Multi-observation mode</h2>
+
+<p>When multiple trait measurements per species are available (e.g. CTmax measured at several acclimation temperatures), pigauto operates in <em>multi-obs</em> mode. Set via <code>preprocess_traits(traits, tree, species_col = "species")</code>.</p>
+
+<p>The matrix $\mathbf{X}$ has $n &gt; n_s$ rows, and an <code>obs_to_species</code> long tensor maps each observation to its species index. The GNN forward is</p>
+
+<ol>
+<li><strong>Encode</strong> at observation level: $h = \mathrm{enc}(\mathbf{X}, \mathbf{C}_{\text{obs}}, \mathbf{Z})$.</li>
+<li><strong>Aggregate</strong> to species: $h_{\text{sp}} = \mathrm{scatter\_mean}(h, \mathrm{obs\_to\_species})$.</li>
+<li><strong>Message-pass</strong> at species level on $\mathbf{A}$.</li>
+<li><strong>Broadcast</strong> back: $h \leftarrow h_{\text{sp}}[\mathrm{obs\_to\_species}]$.</li>
+<li><strong>Refine</strong>: $h \leftarrow h + \mathrm{obs\_refine}(\mathrm{concat}(h, \mathrm{cov\_h}))$ — restores within-species covariate variation lost during pooling.</li>
+<li><strong>Decode</strong> to per-observation $\delta$.</li>
+</ol>
+
+<p>The baseline $\mu^{\text{baseline}}$ is computed at species level (using species-mean of observations as the "observation" for the conditional MVN), then expanded to obs level via <code>obs_to_species</code>.</p>
+
+<hr>
+
+<h2 id="algorithm">14. End-to-end algorithm pseudocode</h2>
+
+<pre><code>function impute(traits, tree, covariates = NULL):
+    # Step 1: preprocess
+    pd  &lt;- preprocess_traits(traits, tree, covariates)
+    spl &lt;- make_missing_splits(pd, val_frac = 0.5, miss_frac = 0.20)
+
+    # Step 2: phylogenetic graph
+    g &lt;- build_phylo_graph(tree, k_eigen = "auto")
+
+    # Step 3: analytical baseline
+    bl &lt;- fit_baseline(pd, tree, splits = spl, graph = g)
+        # for each trait j:
+        #   if type = continuous AND covariates supplied:
+        #       (μ_j, σ_j) ← bm_impute_col_with_cov(X[,j], [1, Z], R)
+        #                    [GLS regression + LRT gate]
+        #   elif type = continuous:
+        #       (μ_j, σ_j) ← bm_impute_col(X[,j], R)
+        #   elif type = binary or categorical:
+        #       (μ_j, σ_j) ← phylogenetic label propagation
+        #   etc.
+
+    # Step 4: train the GNN
+    fit &lt;- fit_pigauto(pd, tree, splits = spl, graph = g, baseline = bl,
+                       covariates = pd$covariates,
+                       epochs = 3000, optimiser = AdamW)
+
+        for epoch in 1..epochs:
+            # 4a. corrupt observed cells (denoising autoencoder objective)
+            X_corrupted &lt;- mask random τ-fraction of observed cells with mask_token
+
+            # 4b. forward pass
+            δ, r &lt;- model(X_corrupted, C, covs, A, D², obs_to_species)
+            ŷ    &lt;- (1 - r) * μ_baseline + r * δ + cov_linear(Z)
+
+            # 4c. mixed-type loss + regularizers
+            L_main   &lt;- compute_mixed_loss(ŷ, y_truth, trait_map)
+            L_shrink &lt;- mean((δ - μ_baseline)^2)
+            L_gate   &lt;- mean(r^2)
+            L &lt;- L_main + λ_shrink * L_shrink + λ_gate * L_gate
+
+            # 4d. backward + step
+            L.backward(); optimiser.step()
+
+            # 4e. early stopping check on val cells
+            if patience exceeded: break
+
+    # Step 5: per-trait gate calibration on val
+    for j in 1..p_ℓ:
+        r_cal[j] &lt;- argmin_{r in [0, r_max]} val_RMSE_j(r)
+        if safety_floor: enforce val_RMSE_j(r_cal[j]) ≤ val_RMSE_column_mean_j
+
+    # Step 6: conformal scores
+    s_j &lt;- quantile(|y_val - ŷ_val|, 1-α)  per trait j
+
+    # Step 7: predict held-out cells
+    δ_pred, _ &lt;- model.eval(X_full, ...)   # eval mode, no dropout
+    ŷ_pred   &lt;- (1 - r_cal) * μ_baseline + r_cal * δ_pred + cov_linear(Z)
+
+    # Step 8: multiple imputation
+    if n_imputations &gt; 1:
+        for m in 1..n_imputations:
+            sample y_im[m] from N(ŷ_pred, s/1.96)   [conformal method]
+              -- or MC dropout draws of δ + BM-noise draws of μ_baseline
+
+    # Step 9: decode latent → user trait scale
+    completed &lt;- decode(ŷ_pred, trait_map)
+
+    return list(completed = completed, prediction = list(
+        imputed = ŷ_pred, conformal_lower = ŷ_pred - 1.96*s,
+        conformal_upper = ŷ_pred + 1.96*s, imputed_datasets = y_im),
+        fit = fit, baseline = bl, splits = spl)
+</code></pre>
+
+<hr>
+
+<h2>References to source</h2>
+
+<table>
+<tr><th>Step / object</th><th>R file</th></tr>
+<tr><td>Trait preprocessing</td><td><code>R/preprocess_traits.R</code></td></tr>
+<tr><td>Phylogenetic graph</td><td><code>R/build_phylo_graph.R</code></td></tr>
+<tr><td>BM baseline</td><td><code>R/bm_internal.R</code>, <code>R/fit_baseline.R</code></td></tr>
+<tr><td>Cov-aware baseline (Fix G)</td><td><code>R/bm_internal.R::bm_impute_col_with_cov</code></td></tr>
+<tr><td>Joint MVN baseline (mixed types)</td><td><code>R/joint_mvn_baseline.R</code>, <code>R/joint_threshold_baseline.R</code>, <code>R/ovr_categorical.R</code></td></tr>
+<tr><td>GNN model</td><td><code>R/model_residual_dae.R</code></td></tr>
+<tr><td>Graph Transformer Block</td><td><code>R/graph_transformer_block.R</code></td></tr>
+<tr><td>Training</td><td><code>R/fit_pigauto.R</code></td></tr>
+<tr><td>Mixed loss</td><td><code>R/compute_mixed_loss.R</code></td></tr>
+<tr><td>Calibration + safety floor</td><td><code>R/fit_pigauto.R</code> (post-training section)</td></tr>
+<tr><td>Conformal + MI</td><td><code>R/fit_helpers.R</code>, <code>R/predict_pigauto.R</code></td></tr>
+<tr><td>User-facing wrapper</td><td><code>R/impute.R</code></td></tr>
+</table>
+
+</body>
+</html>
