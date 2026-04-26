@@ -1,0 +1,43 @@
+[     0s] =========================================================
+[     0s] Tier: SMOKE
+[     0s] Sweep: n_species=100 | multi_obs=1,4 | phylo_signal=0.2,0.6 | beta=0,0.5 | response=gaussian | n_pred=3 | reps=2
+[     0s] Output: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_sim_bace_pigauto_smoke.rds
+[     0s] Total cells: 16
+[     0s] Cell 1/16: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.0, rep=1 (seed=1017)
+Generated default beta_matrix with pre-set sparsity
+[    56s] Cell 2/16: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.0, rep=2 (seed=1034)
+Generated default beta_matrix with pre-set sparsity
+[   107s] Cell 3/16: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.5, rep=1 (seed=1051)
+Generated default beta_matrix with pre-set sparsity
+[   158s] Cell 4/16: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.5, rep=2 (seed=1068)
+Generated default beta_matrix with pre-set sparsity
+[   209s]   [checkpoint] saved 16 rows
+[   209s] Cell 5/16: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.0, rep=1 (seed=1085)
+Generated default beta_matrix with pre-set sparsity
+[   269s] Cell 6/16: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.0, rep=2 (seed=1102)
+Generated default beta_matrix with pre-set sparsity
+[   312s] Cell 7/16: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.5, rep=1 (seed=1119)
+Generated default beta_matrix with pre-set sparsity
+[   357s] Cell 8/16: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.5, rep=2 (seed=1136)
+Generated default beta_matrix with pre-set sparsity
+[   398s]   [checkpoint] saved 32 rows
+[   398s] Cell 9/16: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.0, rep=1 (seed=1153)
+Generated default beta_matrix with pre-set sparsity
+[   447s] Cell 10/16: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.0, rep=2 (seed=1170)
+Generated default beta_matrix with pre-set sparsity
+[   496s] Cell 11/16: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.5, rep=1 (seed=1187)
+Generated default beta_matrix with pre-set sparsity
+[   543s] Cell 12/16: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.5, rep=2 (seed=1204)
+Generated default beta_matrix with pre-set sparsity
+[   589s]   [checkpoint] saved 48 rows
+[   589s] Cell 13/16: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.0, rep=1 (seed=1221)
+Generated default beta_matrix with pre-set sparsity
+[   635s] Cell 14/16: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.0, rep=2 (seed=1238)
+Generated default beta_matrix with pre-set sparsity
+[   683s] Cell 15/16: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.5, rep=1 (seed=1255)
+Generated default beta_matrix with pre-set sparsity
+[   730s] Cell 16/16: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.5, rep=2 (seed=1272)
+Generated default beta_matrix with pre-set sparsity
+[   778s]   [checkpoint] saved 64 rows
+[   778s] === DONE: 16 cells, 64 rows ===
+[   778s]   rds: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_sim_bace_pigauto_smoke.rds
