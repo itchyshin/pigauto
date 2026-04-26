@@ -163,7 +163,11 @@ method_phylolm_blup <- function(d) {
   if (is.null(fit)) return(rep(NA_real_, nrow(ddf)))
 
   beta_hat <- coef(fit)
-  Xmat <- model.matrix(fmla, sp_df)
+  # Build the prediction design matrix using a NO-LHS formula so model.matrix
+  # doesn't drop rows where y is NA (it would otherwise leave `fixed` with the
+  # wrong length and the subsequent miss_idx indexing returns NAs).
+  fmla_rhs <- stats::as.formula(paste("~", paste(pred_n, collapse = " + ")))
+  Xmat <- model.matrix(fmla_rhs, sp_df)
   fixed <- as.numeric(Xmat %*% beta_hat)
 
   R <- ape::vcv(d$tree); R <- stats::cov2cor(R); R <- R[sp_df$species, sp_df$species]
