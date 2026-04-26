@@ -5,6 +5,15 @@
 > simulation study (see `useful/paper_section_draft.md`,
 > `useful/fix_G_real_data_verdict.md`) but worth picking up after.
 
+> **Update 2026-04-26 PM:** items below are reordered after the
+> `multi_obs_row_alignment_diagnosis.md` (commit a3e6d39) was found and
+> shipped. The smoke-tier "pigauto loses 6/8 cells" verdict was caused
+> by that bug, not by the architectural concerns originally listed
+> here. Re-running smoke tier in progress; medium tier queued for
+> overnight. New top item: pigauto's own multi-obs simulator. The
+> transformer-vs-GNN ablation and Pagel's λ items still stand on their
+> own merits but are no longer "needed to explain results".
+
 ## 1. Transformer vs GNN architecture comparison
 
 **User raised 2026-04-26 (during sim study running):** "once we do this
@@ -79,6 +88,70 @@ transformer-flavoured. The question is more nuanced:
 
 **Priority:** start with option 1 (1-line ablation). It will
 disambiguate "graph-aware-attention helps vs neutral" cleanly.
+
+---
+
+## 1b. pigauto's own multi-obs simulator (`sim_pigauto_multi_obs()`)
+
+**Approved 2026-04-26 by user.** Spec lives in
+`useful/multi_obs_simulator_spec.md`. Build Phase 1 (continuous
+response, single predictor, four-share variance decomposition) as a
+deliberate package feature, exported with full roxygen + tests.
+
+### Why now
+
+- Independence: pigauto should not rely on `BACE::sim_bace` for its own
+  sim studies (BACE is `Suggests:`-only).
+- Transparency: the four-share decomposition (`phylo_signal`,
+  `species_re_share`, `within_species_share`, residual) is an
+  immediately-readable knob for ecologists.
+- Coverage: BACE's DGP produces predictors with species + phylo + obs
+  noise. There's no easy way to make a `bench_multi_obs.R`-style pure
+  within-obs predictor (acclim_temp-like) inside BACE. Our simulator
+  should make both regimes one-line each.
+- The row-alignment bug confirmed the value of an in-package simulator
+  that we can audit end-to-end, instead of having BACE be a black-box
+  source of truth.
+
+### Effort
+
+Phase 1: ~half a day (continuous response only, single predictor,
+fixed obs/species, gaussian only).
+Phase 2-5: ~3 more days (multi-predictor, mixed types, interactions,
+vignette).
+
+---
+
+## 1c. Pagel's λ in BM baseline (DEFERRED — wrong original motivation)
+
+**Investigated 2026-04-26 as a potential fix for the multi-obs
+"pigauto worse than column-mean on BACE-sim" symptom.** Turned out to
+be a spurious motivation: a monkey-patched λ=0 (R = identity) gave
+identical RMSE to λ=1 (R = full BM) on the failing cell. The actual
+bug was row-alignment, not phylo shrinkage.
+
+### Status
+
+Building λ-aware `bm_impute_col` is still defensible work, just not
+urgent. After post-fix smoke tier finishes, we'll know whether
+pigauto's BM baseline still has any visible deficit. If yes, this is
+back on the table.
+
+### Concrete plan if revived
+
+- Add `lambda ∈ [0, 1]` to `bm_impute_col` and `bm_impute_col_with_cov`,
+  with `R_λ = λ R + (1-λ) I`. Default `lambda = 1` for backward compat.
+- Add internal `estimate_pagel_lambda(y, R)` — REML profile over a
+  grid `c(0, 0.1, 0.3, 0.5, 0.7, 0.9, 1)`, optionally refined via
+  `optimize()`.
+- Wire into `fit_baseline.R`: estimate λ per BM column when ≥ 10
+  observed species.
+- Tests: at λ=0 baseline reduces to global mean; at λ=1 matches
+  current behaviour byte-for-byte.
+
+### Effort
+
+~half a day TDD if needed.
 
 ---
 
