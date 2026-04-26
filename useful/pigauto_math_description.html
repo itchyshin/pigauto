@@ -116,7 +116,19 @@ Generated 2026-04-26.</p>
   <li><a href="#graph">Phylogenetic graph construction</a></li>
   <li><a href="#bm-baseline">BM baseline — conditional multivariate normal</a></li>
   <li><a href="#fix-g">Covariate-aware baseline (Fix G) — GLS regression</a></li>
-  <li><a href="#gnn">The GNN — graph transformer architecture</a></li>
+  <li><a href="#gnn">The GNN — graph transformer architecture</a>
+    <ol style="list-style-type: lower-alpha;">
+      <li><a href="#gnn-overview">Pipeline overview</a></li>
+      <li><a href="#gnn-mlp">Encoder and decoder MLPs</a></li>
+      <li><a href="#gnn-attention">Self-attention from scratch</a></li>
+      <li><a href="#gnn-phylo-bias">The phylogenetic bias on attention</a></li>
+      <li><a href="#gnn-ffn">The feed-forward network</a></li>
+      <li><a href="#gnn-block">Block structure — pre-norm and residuals</a></li>
+      <li><a href="#gnn-multiobs">Multi-observation handling</a></li>
+      <li><a href="#gnn-variants">Architectural variants — what the ablation toggles</a></li>
+      <li><a href="#gnn-block-pseudocode">Block pseudocode</a></li>
+    </ol>
+  </li>
   <li><a href="#blend">The blended prediction</a></li>
   <li><a href="#loss">Loss function and training</a></li>
   <li><a href="#calibration">Calibration and safety floor</a></li>
@@ -257,7 +269,11 @@ Generated 2026-04-26.</p>
 
 <h2 id="gnn">7. The GNN — graph transformer architecture</h2>
 
-<p>The neural correction $\delta$ is computed by a graph transformer (<code>R/model_residual_dae.R::ResidualPhyloDAE</code>) with the following data flow:</p>
+<p>The neural correction $\delta$ is computed by a <em>graph transformer</em>: a stack of standard Transformer-encoder blocks (Vaswani et al. 2017) with one specialisation — the attention mechanism is biased by the phylogenetic distance between species. This section builds the model from primitives. Source: <code>R/model_residual_dae.R::ResidualPhyloDAE</code> (the assembly) and <code>R/graph_transformer_block.R</code> (the block itself).</p>
+
+<h3 id="gnn-overview">7.1 Pipeline overview</h3>
+
+<p>The full data flow:</p>
 
 <div class="ascii">INPUT
   x      (n × p_ℓ)        corrupted trait input  (NA cells → learned mask token)
@@ -265,54 +281,195 @@ Generated 2026-04-26.</p>
   covs   (n × d_cov)      cov_dim = p_ℓ + 1 + d_z
                           [baseline_mu | NA-mask indicator | user covariates]
 
-ENCODER  (2-layer MLP)
+ENCODER  (2-layer MLP — §7.2)
   combined  = concat(x, C_obs, covs)
   h         = enc1(combined) → ReLU → dropout → enc2 → ReLU      ∈ ℝ^(n × h)
 
-POOL TO SPECIES  (multi-obs only)
+POOL TO SPECIES  (multi-obs only — §7.7)
   h_species = scatter_mean(h, obs_to_species)                    ∈ ℝ^(n_s × h)
 
-GNN STACK  (n_gnn_layers Graph Transformer Blocks)
+GRAPH-TRANSFORMER STACK  (n_gnn_layers blocks — §7.3 to §7.6)
   if n_user_cov > 0:
       cov_h     = cov_encoder(user_covs)                          (Fix B)
       cov_h_sp  = scatter_mean(cov_h, obs_to_species)  if multi_obs else cov_h
   for ℓ in 1..n_gnn_layers:
-      h_species = TransformerBlock_ℓ(h_species, A, D², cov_h_sp)  (Fix H)
-                  -- multi-head self-attn with phylo-Gaussian bias
-                  -- pre-norm, FFN, residual
-                  -- Fix H: residual injection of cov_h_sp at each layer
+      h_species ← GraphTransformerBlock_ℓ(h_species, D², cov_h_sp)
+                  -- pre-norm  →  multi-head self-attn (phylo-Gaussian bias)
+                                →  residual
+                                →  pre-norm  →  FFN  →  residual
+                                →  optional  +cov_inject(cov_h_sp)        (Fix H)
 
 BROADCAST BACK  (multi-obs only)
   h = h_species[obs_to_species]                                   ∈ ℝ^(n × h)
 
-COVARIATE REFINEMENT  (Fix B — fires when n_user_cov > 0)
+COVARIATE REFINEMENT  (Fix B — n_user_cov > 0)
   cov_h      = cov_encoder(user_covs)        # (n × h)
   h          = h + obs_refine(concat(h, cov_h))                   # residual
 
-DECODER  (2-layer MLP)
+DECODER  (2-layer MLP — §7.2)
   h     = dec1(h) → ReLU
   δ     = dec2(h)                                                 ∈ ℝ^(n × p_ℓ)
 
-LINEAR COV HEAD  (Fix C/D — fires when n_user_cov > 0)
+LINEAR COV HEAD  (Fix C/D — n_user_cov > 0)
   fixed_effects = cov_linear(user_covs)                           ∈ ℝ^(n × p_ℓ)
-                  # initialised to small weights × 0.01 for safety
+                  # initialised at 0.01 × small weights for safety
 </div>
 
-<h3>The Graph Transformer Block</h3>
+<p>The encoder lifts the raw input (trait values, phylo coordinates, covariates) into a hidden representation. The transformer stack does the heavy lifting: each block performs phylogenetic message passing via attention, then per-species feature transformation via the FFN. The decoder projects back to per-cell predictions. Below we build each piece.</p>
 
-<p>Each transformer block (<code>R/graph_transformer_block.R</code>) computes:</p>
+<h3 id="gnn-mlp">7.2 Encoder and decoder MLPs</h3>
 
-<p class="eq">$$\mathrm{attn\_scores}_{h,kl} = \frac{(W_Q^h h_k)^\top (W_K^h h_l)}{\sqrt{d_{\text{head}}}} + b_{h,kl}^{\text{phylo}}$$</p>
+<p>The encoder is a two-layer feed-forward network with ReLU activations and dropout in between, applied independently to each row (each observation):</p>
 
-<p>The phylogenetic prior bias has two modes. The <strong>rate-aware</strong> mode (B2) uses per-head learned Gaussian bandwidth $\beta_h$ on squared cophenetic distance:</p>
+<p class="eq">$$h^{(0)}_i \;=\; \mathrm{ReLU}\Big( W_2^{\text{enc}} \cdot \mathrm{Dropout}\big( \mathrm{ReLU}( W_1^{\text{enc}} [\,x_i \,;\, C_i \,;\, \mathrm{covs}_i\,] + b_1 ) \big) + b_2 \Big), \quad h^{(0)}_i \in \mathbb{R}^h$$</p>
 
-<p class="eq">$$b_{h,kl}^{\text{phylo}} \;=\; -\frac{\mathbf{D}^2_{kl}}{2 \cdot \mathrm{softplus}(\beta_h)^2}$$</p>
+<p>Here $[x_i ; C_i ; \mathrm{covs}_i]$ is the concatenation of the trait input, spectral phylogenetic features, and the structured covariate block (which always contains the BM baseline mean and the NA-mask indicator, plus user covariates if supplied). The hidden width $h$ defaults to 32 for $n_s &lt; 200$ and scales to 64 for larger trees.</p>
 
-<p>so each head learns its own phylogenetic scale (some heads tight = close relatives, others broad = distant relatives). The <strong>legacy</strong> mode uses a learned scaling on $\log \mathbf{A}$. Output is the standard transformer block:</p>
+<p>The decoder mirrors this:</p>
 
-<p class="eq">$$h^{\text{(out)}} = h + W_O \cdot \mathrm{softmax}(\mathrm{attn\_scores}) V + \mathrm{FFN}(\mathrm{LN}(h^{\text{post-attn}})) + \mathrm{cov\_inject}(\mathrm{cov\_h})$$</p>
+<p class="eq">$$\delta_i \;=\; W_2^{\text{dec}} \, \mathrm{ReLU}( W_1^{\text{dec}} h^{(\text{out})}_i + b_1' ) + b_2' , \quad \delta_i \in \mathbb{R}^{p_\ell}$$</p>
 
-<p>where the FFN output projection and (Fix H) <code>cov_inject</code> linear weights are both initialised to zero so each block $\approx$ identity at training step 0. This preserves the gate-closed-at-init safety property: an untrained pigauto = the analytical baseline.</p>
+<p>Both are pure feed-forward MLPs — they do not look across rows. All cross-row interaction happens inside the transformer stack via attention.</p>
+
+<h3 id="gnn-attention">7.3 Self-attention from scratch</h3>
+
+<p>Self-attention is the operation by which every species $k$ updates its hidden state by computing a weighted average of every other species' state. The weights are learned per-pair from the data, with a phylogenetic prior nudging closer relatives toward higher weight.</p>
+
+<h4>Single-head attention (scaled dot-product)</h4>
+
+<p>Given hidden states $h \in \mathbb{R}^{n_s \times h}$ for the $n_s$ species, a single attention head computes three linear projections — <em>queries</em>, <em>keys</em>, and <em>values</em> — using learnable weight matrices $W_Q, W_K, W_V \in \mathbb{R}^{h \times d_{\text{head}}}$:</p>
+
+<p class="eq">$$Q = h W_Q, \qquad K = h W_K, \qquad V = h W_V \quad \in \mathbb{R}^{n_s \times d_{\text{head}}}$$</p>
+
+<p>The attention score for species pair $(k, l)$ is the dot product of their query and key vectors, scaled to keep gradients well-conditioned, plus the phylogenetic prior bias $b_{kl}^{\text{phylo}}$ defined below:</p>
+
+<p class="eq">$$\mathrm{scores}_{kl} \;=\; \frac{Q_k \cdot K_l^\top}{\sqrt{d_{\text{head}}}} \;+\; b_{kl}^{\text{phylo}}$$</p>
+
+<p>The scores are softmaxed across the second index $l$ to produce attention weights that sum to 1 over neighbours:</p>
+
+<p class="eq">$$\alpha_{kl} \;=\; \frac{\exp(\mathrm{scores}_{kl})}{\sum_{l'} \exp(\mathrm{scores}_{kl'})}, \qquad \sum_l \alpha_{kl} = 1$$</p>
+
+<p>The new hidden state for species $k$ is the weighted average of all species' value vectors:</p>
+
+<p class="eq">$$\mathrm{Attn}(h)_k \;=\; \sum_{l=1}^{n_s} \alpha_{kl} \, V_l$$</p>
+
+<p><em>Intuition.</em> $Q_k$ summarises "what does species $k$ want to know about?", $K_l$ summarises "what is species $l$ offering?", and the dot product measures their compatibility. $V_l$ is the actual content species $l$ offers. The softmax converts compatibilities to weights; the weighted sum is the response.</p>
+
+<h4>Multi-head attention</h4>
+
+<p>A single head can only learn one notion of "compatibility". Multi-head attention runs $H$ independent attention operations in parallel, each with its own $W_Q^{(h)}, W_K^{(h)}, W_V^{(h)}$, then concatenates and projects:</p>
+
+<p class="eq">$$\mathrm{MHA}(h)_k \;=\; W_O \, \big[ \mathrm{Attn}^{(1)}(h)_k \,;\, \mathrm{Attn}^{(2)}(h)_k \,;\, \dots \,;\, \mathrm{Attn}^{(H)}(h)_k \big]$$</p>
+
+<p>where $W_O \in \mathbb{R}^{(H \cdot d_{\text{head}}) \times h}$ is a learned output projection and $d_{\text{head}} = h / H$ to keep total compute fixed. pigauto defaults to $H = 4$ heads. Different heads can specialise: one head might learn to attend to close relatives only, another to one specific clade, another broadly. This multi-resolution capacity is critical for phylogenies where evolutionary signal lives at multiple scales.</p>
+
+<h3 id="gnn-phylo-bias">7.4 The phylogenetic bias on attention</h3>
+
+<p>The crucial domain-specific feature in pigauto's transformer is the additive phylo bias on the attention score. Two modes are implemented in <code>R/graph_transformer_block.R</code>; the rate-aware variant is the default since v0.9.0.</p>
+
+<h4>Rate-aware Gaussian bandwidth (B2 default)</h4>
+
+<p>Let $\mathbf{D}^2 \in \mathbb{R}^{n_s \times n_s}$ be the squared cophenetic distance matrix from the tree. Each head $h$ learns a single scalar $\beta_h$, and the bias for that head is</p>
+
+<p class="eq">$$b_{kl}^{\text{phylo}, (h)} \;=\; -\frac{\mathbf{D}^2_{kl}}{2 \cdot \mathrm{softplus}(\beta_h)^2}$$</p>
+
+<p>which is the log of an unnormalised Gaussian with bandwidth $\sigma_h = \mathrm{softplus}(\beta_h)$. Because the bias is negative and grows quadratically with phylogenetic distance, it pushes attention weight toward close relatives and away from distant ones. The <em>per-head</em> bandwidth is the key design choice: with $H = 4$ heads, the model can simultaneously attend at four phylogenetic scales (e.g., $\sigma \in \{0.1, 0.5, 2, 10\}$ if the data supports it). This is the Graphormer multi-scale pattern (Ying et al. 2021) specialised to phylogenies.</p>
+
+<p>At training step 0, all $\beta_h$ initialise so that the bias is moderate (default $\sigma \approx 1$), and gradient descent then differentiates them. Empirically the heads diverge over training.</p>
+
+<h4>Legacy log-adjacency bias</h4>
+
+<p>The pre-B2 path sets $b_{kl}^{\text{phylo}} = c \cdot \log \mathbf{A}_{kl}$ with a single learned scalar $c$ shared across heads. This collapses the 4-head capacity to a single scale and, in our internal benchmarking, costs ~3–7 % RMSE on nonlinear DGPs at $n &gt; 300$ relative to the rate-aware variant.</p>
+
+<h3 id="gnn-ffn">7.5 The feed-forward network (FFN)</h3>
+
+<p>After attention has performed cross-species mixing, the FFN performs <em>per-species</em> nonlinear transformation. Each species $k$ is processed independently:</p>
+
+<p class="eq">$$\mathrm{FFN}(h_k) \;=\; W_4 \cdot \mathrm{ReLU}( W_3 h_k + b_3) + b_4$$</p>
+
+<p>with $W_3 \in \mathbb{R}^{h \times (m \cdot h)}$ and $W_4 \in \mathbb{R}^{(m \cdot h) \times h}$. The width multiplier $m$ defaults to 4 (so the FFN expands and then contracts the representation, like the standard Transformer). $W_4$ is initialised to zero so the FFN starts at identity (i.e. its output is 0 + residual = unchanged input) — see §7.6 for why this matters.</p>
+
+<p><em>Intuition.</em> Attention can compute weighted averages of inputs, which are linear combinations and so cannot represent functions like $\sin(2x_1) \exp(0.3 x_2)$. The ReLU in the FFN unlocks per-feature nonlinearity. The FFN is what lets the transformer learn nonlinear functions of phylogenetic context — exactly what we want for capturing nonlinear DGPs that the BM baseline misses.</p>
+
+<h3 id="gnn-block">7.6 Putting the block together — pre-norm and residuals</h3>
+
+<p>One Graph Transformer Block in pigauto takes input $h \in \mathbb{R}^{n_s \times h}$ and produces output $h^{(\text{out})}$ via two sub-layers, each with a pre-norm + residual structure (Xiong et al. 2020). Step by step:</p>
+
+<p class="eq">$$\begin{aligned}
+h' &amp;\;=\; h \;+\; \mathrm{MHA}\big(\, \mathrm{LN}_1(h) \,\big) \\
+h^{(\text{out})} &amp;\;=\; h' \;+\; \mathrm{FFN}\big(\, \mathrm{LN}_2(h') \,\big) \;+\; \underbrace{\;\mathrm{cov\_inject}( \mathrm{cov\_h}_{\text{sp}}) }_{\text{Fix H, optional}}
+\end{aligned}$$</p>
+
+<p>where $\mathrm{LN}$ is LayerNorm. Each sub-layer is wrapped in:</p>
+<ul>
+<li>a <strong>pre-norm</strong>: normalise input first, then apply the sub-layer, then add to the unnormalised input. Pre-norm is more stable to train than the original post-norm formulation.</li>
+<li>a <strong>residual skip</strong>: the output is sub-layer($\cdot$) <em>plus</em> the input. The sub-layer learns a correction on top of identity rather than a full new representation. This is what lets transformers be very deep without vanishing gradients.</li>
+</ul>
+
+<p>The Fix H term <code>cov_inject</code> is a per-block linear projection of the per-species covariate embedding $\mathrm{cov\_h}_{\text{sp}}$, added directly into the residual stream. It allows covariate signal to enter every block, not just at the encoder. <code>cov_inject</code>'s output projection is initialised to zero, so at step 0 it contributes nothing. With $W_4$ in the FFN also at zero, the entire block is identity at initialisation:</p>
+
+<p class="eq">$$h^{(\text{out})}_{\text{step 0}} \;=\; h \;+\; \mathrm{MHA}(\mathrm{LN}_1(h)) \;+\; 0 \;+\; 0$$</p>
+
+<p>and the gate $r_j$ also initialises near 0 — so the very first prediction (before any gradient step) is essentially the analytical baseline. This is the gate-closed-at-init safety property that lets pigauto fall back gracefully if the GNN fails to find signal.</p>
+
+<p>The block is repeated $n_{\text{layers}}$ times (default 2) with independent weights at each layer.</p>
+
+<h3 id="gnn-multiobs">7.7 Multi-observation handling inside the stack</h3>
+
+<p>When multiple observations share a species (e.g., several CTmax measurements per species), the encoder produces a per-observation hidden state of shape $n \times h$. The transformer stack operates at the species level, so we aggregate then broadcast:</p>
+
+<p class="eq">$$h_{\text{sp}, s} \;=\; \frac{1}{|\{i : \mathrm{obs\_to\_species}(i) = s\}|} \sum_{i: \mathrm{obs\_to\_species}(i) = s} h_i$$</p>
+
+<p>This is the <code>scatter_mean</code> step. The transformer stack runs on $h_{\text{sp}}$ (size $n_s \times h$). After the stack, we broadcast back via</p>
+
+<p class="eq">$$h_i \;\leftarrow\; h_{\text{sp}, \mathrm{obs\_to\_species}(i)}$$</p>
+
+<p>so each observation inherits its species' updated representation. To recover within-species variation that the pooling lost, an <code>obs_refine</code> MLP applies a residual transformation using the per-observation covariates:</p>
+
+<p class="eq">$$h_i \;\leftarrow\; h_i + W_5 \cdot \mathrm{ReLU}\big( W_6 \big[\, h_i \,;\, \mathrm{cov\_h}_i \,\big] + b_5 \big) + b_6$$</p>
+
+<p>This step is what allows different observations of the same species to receive different predictions when they have different covariate values (e.g., CTmax at 20 °C vs 30 °C acclimation). $W_5$'s output is also small at init.</p>
+
+<h3 id="gnn-variants">7.8 Architectural variants — what the ablation toggles</h3>
+
+<p>Two boolean flags in <code>pigauto::impute()</code> select which variant of the GNN runs. The transformer (§7.2–7.7 above) is the default since v0.9.0.</p>
+
+<table>
+<tr><th>Flag combination</th><th>Architecture</th><th>What it does</th></tr>
+<tr><td><code>use_transformer_blocks=TRUE</code> (default), <code>use_attention=TRUE</code></td><td>Graph Transformer (§7.2–7.7)</td><td>Multi-head attention + FFN + 2 LayerNorms + 2 residuals + per-head Gaussian phylo bias. The full block, repeated $n_{\text{layers}}$ times.</td></tr>
+<tr><td><code>use_transformer_blocks=FALSE</code>, <code>use_attention=TRUE</code></td><td>Legacy attention-GNN (GAT-style)</td><td>2 fixed layers of <em>single-head</em> scaled dot-product attention with a learnable scalar bias on $\log \mathbf{A}$. <em>No FFN. No multi-head. Single LayerNorm.</em> Closer to GAT (Veličković et al. 2018) than to a Transformer.</td></tr>
+<tr><td><code>use_transformer_blocks=FALSE</code>, <code>use_attention=FALSE</code></td><td>Plain message-passing GCN</td><td>$h \leftarrow \mathrm{ReLU}(\mathbf{A}_{\text{norm}} h W)$. Fixed phylogenetic adjacency, no learned weights on neighbours, no attention. Closest to a vanilla GCN (Kipf &amp; Welling 2016).</td></tr>
+</table>
+
+<p>This is what <code>script/bench_transformer_ablation.R</code> probes. The hypothesis is that the FFN (which gives transformers nonlinear-function approximation capacity) plus the multi-head structure (which gives multi-scale attention) together justify the ~25–30 % per-fit slowdown over the GAT-style legacy path. The plain GCN serves as a "no learned attention" floor.</p>
+
+<h3 id="gnn-block-pseudocode">7.9 Block pseudocode (compact reference)</h3>
+
+<pre><code>function GraphTransformerBlock(h, D2, cov_h):
+    # h ∈ R^(n_s × h), D2 ∈ R^(n_s × n_s), cov_h ∈ R^(n_s × h) or NULL
+    # MHA sub-layer
+    h_norm = LayerNorm_1(h)
+    Q, K, V = h_norm @ W_Q, h_norm @ W_K, h_norm @ W_V  # each: (n_s × H × d_head)
+    for h in 1..H:
+        scores[h] = Q[:,h,:] @ K[:,h,:].T / sqrt(d_head)
+        bias[h]   = -D2 / (2 * softplus(beta[h])^2)        # rate-aware Gaussian
+        attn[h]   = softmax(scores[h] + bias[h], axis=-1) @ V[:,h,:]
+    h_attn = concat_heads(attn) @ W_O
+    h_post_attn = h + h_attn                                # residual
+
+    # FFN sub-layer
+    h_norm2 = LayerNorm_2(h_post_attn)
+    h_ffn   = ReLU(h_norm2 @ W_3 + b_3) @ W_4 + b_4
+    h_out   = h_post_attn + h_ffn                           # residual
+
+    # Fix H: covariate injection
+    if cov_h is not None:
+        h_out = h_out + cov_inject(cov_h)
+
+    return h_out
+</code></pre>
+
+<p>where W_4 and cov_inject's output projection are initialised to zero so the block starts as identity, preserving gate-closed safety at init.</p>
 
 <hr>
 
