@@ -49,10 +49,9 @@ options(warn = 1, stringsAsFactors = FALSE)
 
 suppressPackageStartupMessages({
   library(ape)
-  devtools::load_all(
-    "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/phase-10-multiobs",
-    quiet = TRUE
-  )
+  pkg_path <- Sys.getenv("PIGAUTO_PKG_PATH",
+                          "/Users/z3437171/Dropbox/Github Local/pigauto")
+  devtools::load_all(pkg_path, quiet = TRUE)
 })
 
 # -------------------------------------------------------------------------
