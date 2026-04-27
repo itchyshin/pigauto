@@ -247,11 +247,79 @@ what survives. **Do NOT pursue D unless A reveals widespread breakage.**
    I'd say yes — but the package's API stability is a concern. Most
    are internal so removal is safe; calibrated gate is user-facing.
 
-## What's still running (will land before user returns)
+## Update 2026-04-27 ~11:50 — ALL SIMS DONE
 
-- `bench_missingness_mechanism` (~20 min)
-- `bench_transformer_ablation_nosf smoke` (EPOCHS=200) (~3 hr)
-- `bench_ou_regime smoke` (EPOCHS=200) (~1.5–2 hr)
+All overnight phases finished by 11:34. Final verdict on each:
 
-Combined: ~5 hr from 09:41 → ~14:30. Slight overrun on 13:00. Will
-land partial results by 13:00.
+### Phase 3: ou_regime (DONE 11:34)
+
+| scenario | β | column_mean | phylolm-λ | pigauto_sfT | pigauto_sfF | sfT/phy |
+|---|---|---|---|---|---|---|
+| OU | 0.0 | 0.466 | 0.481 | 0.481 | 0.481 | **1.000 (tied)** |
+| OU | 0.5 | 0.692 | 0.501 | 0.501 | 0.503 | **0.998 (tied)** |
+| OU | 1.0 | 1.084 | 0.542 | 0.542 | 0.541 | **1.000 (tied)** |
+| regime_shift | 0.0 | 2.943 | 1.310 | 1.307 | 1.310 | **0.998 (tied)** |
+| regime_shift | 0.5 | 3.214 | 1.106 | 1.109 | 1.110 | **1.003 (tied)** |
+| regime_shift | 1.0 | 3.120 | 1.069 | 1.074 | 1.072 | **1.004 (tied)** |
+
+**Pigauto exactly ties phylolm-λ on OU and regime_shift.** Every cell
+within 0.4 %. Median ratio: 1.000. The hypothesis "phylolm-λ assumes
+BM so must lose on non-BM DGPs" was wrong — phylolm-λ's *lambda*
+parameter adapts the BM correction strength enough to match OU /
+regime-shift adequately.
+
+This re-interprets the earlier "bench_continuous OU win". That bench
+compared pigauto against **plain BM** (Rphylopars `phylopars()`), not
+against phylolm-λ. Plain BM cannot adapt to OU; the BM RMSE was 1.13.
+Pigauto with its calibrated gate matched what phylolm-λ would have
+done (1.07), giving the appearance of "pigauto beats BM by 6%". It's
+not a GNN win; it's pigauto's BM baseline being augmented enough by
+the gate to act like phylolm-λ.
+
+### Final state: where does pigauto add value vs phylolm-λ?
+
+- ✅ **Multi-obs nonlinear with i.i.d. covariates** (designed-to-win):
+  pigauto wins 14/18, +6–10 % on β=1.0 cells. **Real**.
+- ✅ **vs plain BM on non-BM DGPs**: pigauto wins 6–14 % (because
+  pigauto's pipeline acts like phylolm-λ).
+- 🟰 **vs phylolm-λ on linear**: tied (within 3 % usually).
+- 🟰 **vs phylolm-λ on OU/regime_shift**: tied (within 0.4 %).
+- 🟰 **vs label-prop / OVR baselines on discrete** (single-obs):
+  tied or slight regression.
+- ❌ **Architecture (transformer vs GAT vs GCN)**: indistinguishable
+  (≤ 1.21 % spread, with or without safety floor).
+- ❌ **Discrete trait types post-fix vs Apr 17**: regressed 5–15 pp on
+  some scenarios; multi_proportion completely broken.
+
+### Single-line conclusion
+
+**Pigauto's pipeline is a fancy reimplementation of phylolm-λ + a
+mixed-type API + UQ + a multi-obs aggregation that earns ~10 % over
+phylolm-λ in one specific regime (low phylo + i.i.d. covariates +
+multi-obs + nonlinear).** The transformer architecture is
+incidental; the safety-gated multi-obs aggregation is the actual
+contribution.
+
+### What this means for the planning conversation
+
+1. **The paper is much narrower than we thought.** The "transformer
+   beats GNN" angle is dead. The "wins on non-BM DGPs" angle is
+   illusory (pigauto matches phylolm-λ; doesn't beat it). The win is
+   in **multi-obs aggregation** of i.i.d. covariates.
+
+2. **The safety floor is the actual product.** It's what prevents
+   pigauto from losing 8–26 % on single-obs cells when the GNN
+   wanders. Without it, pigauto would be a regression on most
+   benches.
+
+3. **The architecture choice is irrelevant.** Switch back to the
+   simpler legacy attention-GNN as default; ditch the transformer
+   block. ~25–30 % faster fits, no measurable accuracy cost.
+
+4. **The discrete regression must be fixed before any release.**
+   `bench_multi_proportion` complete failure + `bench_binary` -7pp
+   loss is unshippable.
+
+5. **Recommended order remains: B (bisect discrete regression) → A
+   (ablation campaign on multi-obs nonlinear) → C (conservative
+   paper around multi-obs aggregation + UQ).**
