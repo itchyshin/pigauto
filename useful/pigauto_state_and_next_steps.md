@@ -43,15 +43,28 @@ decide what to keep.**
 | bench_transformer_ablation_nosf | queued | tbd |
 | bench_ou_regime | queued | tbd |
 
-## Update 2026-04-27 ~10:35 — ablation_nosf partial results
+## Update 2026-04-27 ~11:10 — ablation_nosf FULL results (24 cells done)
 
-The architecture ablation with **safety_floor = FALSE** (12 of 24 cells
-done at this writing, but the pattern is unambiguous):
+The architecture ablation with **safety_floor = FALSE**, 24 cells, 120
+rows. Per-cell spread between {transformer, legacy_attn, no_attn}:
 
-| Comparison | Range | Conclusion |
-|---|---|---|
-| transformer / legacy_attn | 0.987–1.007 | within 1.3 % across ALL cells |
-| legacy_attn / no_attn | 0.988–1.014 | within 1.4 % across ALL cells |
+| f_type | multi | beta | architecture spread |
+|---|---|---|---|
+| interactive | 1 | 0.5 | 0.85 % |
+| interactive | 4 | 0.5 | 0.22 % |
+| linear | 1 | 0.5 | 1.19 % |
+| linear | 4 | 0.5 | 0.22 % |
+| nonlinear | 1 | 0.5 | 1.21 % |
+| nonlinear | 4 | 0.5 | 0.40 % |
+| interactive | 1 | 1.0 | 0.57 % |
+| interactive | 4 | 1.0 | 0.34 % |
+| linear | 1 | 1.0 | 1.02 % |
+| linear | 4 | 1.0 | 0.45 % |
+| nonlinear | 1 | 1.0 | 0.62 % |
+| nonlinear | 4 | 1.0 | 0.48 % |
+
+**Maximum spread: 1.21 %.** Average: 0.63 %. The three architectures
+are functionally identical regardless of f_type, multi_obs, or β.
 
 **Architectural choice is irrelevant on these DGPs.** Transformer's
 multi-head + FFN does not outperform single-head attention or even the
