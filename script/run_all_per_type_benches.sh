@@ -18,6 +18,11 @@ cd "/Users/z3437171/Dropbox/Github Local/pigauto"
 LOG_DIR="script"
 RSCRIPT=/usr/local/bin/Rscript
 
+# Throttle PSOCK parallelism: 16 workers swamped this 18-core machine
+# (each ~1.2 GB resident -> ~19 GB total -> swapped).  8 workers at
+# ~10 GB total leaves headroom for OS and the parent R process.
+export MC_CORES=8
+
 # bench_continuous already started by hand; if it's still running we
 # wait for it. Otherwise start it.
 benches=(
