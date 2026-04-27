@@ -43,6 +43,54 @@ decide what to keep.**
 | bench_transformer_ablation_nosf | queued | tbd |
 | bench_ou_regime | queued | tbd |
 
+## Update 2026-04-27 ~10:35 — ablation_nosf partial results
+
+The architecture ablation with **safety_floor = FALSE** (12 of 24 cells
+done at this writing, but the pattern is unambiguous):
+
+| Comparison | Range | Conclusion |
+|---|---|---|
+| transformer / legacy_attn | 0.987–1.007 | within 1.3 % across ALL cells |
+| legacy_attn / no_attn | 0.988–1.014 | within 1.4 % across ALL cells |
+
+**Architectural choice is irrelevant on these DGPs.** Transformer's
+multi-head + FFN does not outperform single-head attention or even the
+plain message-passing GCN. The "transformer beats GNN" story is
+**dead** on this evidence.
+
+But this same ablation revealed something more interesting: **the
+safety floor is doing real work specifically on single-obs cells**:
+
+| Cell type | sf=FALSE pigauto / phylolm-λ |
+|---|---|
+| single-obs linear β=1.0 | 1.256 (pigauto LOSES 25.6 %) |
+| single-obs nonlinear β=1.0 | 1.139 (pigauto LOSES 13.9 %) |
+| single-obs interactive β=1.0 | 1.083 (pigauto LOSES 8.3 %) |
+| multi-obs nonlinear β=1.0 | 0.987 (pigauto WINS 1.3 %) |
+| multi-obs linear β=1.0 | 1.016 (tied) |
+
+**Without the safety floor, pigauto's GNN overfits or wanders on
+single-obs cells**, costing 8–26 %. With the safety floor on (= the
+default in the per-type benches), the calibrated gate clamps the delta
+to ~0 and pigauto matches phylolm-λ. This explains why every per-type
+bench showed `pigauto ≈ baseline` — the GNN delta was being silently
+zeroed.
+
+**Net story:** pigauto's GNN adds value ONLY on multi-obs cells. On
+single-obs, the GNN actively hurts and the safety floor saves it. The
+"safety floor" is therefore the actual product, not the GNN.
+
+This reframes the paper:
+- **NOT**: "pigauto's transformer beats GNN beats baselines"
+- **YES**: "pigauto's safety-gated multi-obs imputation pipeline matches
+  the linear-smart baseline on single-obs DGPs and beats it on
+  multi-obs nonlinear DGPs, with built-in calibrated UQ"
+
+The transformer architecture is incidental; the real machinery is the
+calibrated gate + safety floor + multi-obs aggregation.
+
+---
+
 ## Three findings that matter
 
 ### 1. The discrete-type regression is real
