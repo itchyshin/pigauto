@@ -41,6 +41,31 @@ benches after multi_proportion confirms.
 
 **Time spent on Path B so far: ~30 minutes** (bisect + diagnose + patch + commit + unit tests).
 
+### Update 2026-04-28 ~08:15 — 3-bench re-run with NA-fix: PARTIAL improvement
+
+| Bench | NA-fix impact |
+|---|---|
+| multi_proportion | ✅ fully fixed (crash → 24/24 success) |
+| bench_binary | 🟡 partial — signal_0.6 recovered +2.5pp (still -4.9pp short of pre-fix); signal_0.4 +1pp; others unchanged or slightly worse |
+| bench_categorical | 🟠 mostly unchanged — K_3 still -8.4pp, signal_0.6/1.0 still -3 to -4pp |
+| bench_zi_count | 🟡 partial — zf_0.2 RMSE -4.4%; mean_nz_100 fully recovered; others unchanged |
+
+**The NA-handling bug was ONE cause of multiple regressions.** It fully
+explains the multi_proportion crash and partly explains the others, but
+the binary / categorical / zi_count performance regressions have
+**additional root causes still in the Apr 17 → Apr 27 window**.
+
+To fully resolve, would need to bisect each remaining regression
+separately:
+- bench_binary on signal_0.6 (a performance bisect, not a crash bisect — slower)
+- bench_categorical on K_3
+- bench_zi_count on zf_0.2
+
+Each would take ~1-2 hours. For paper purposes the multi_proportion
+crash fix is the critical one (an unshippable failure → working
+again). The remaining performance regressions are tolerable for the
+paper but should be investigated before a release.
+
 ---
 
 
