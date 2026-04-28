@@ -29,7 +29,9 @@ reference, preserving the safety guarantee.
 - Bisect reproducer (script/bisect_test_multi_proportion.R) PASSES (~14 s)
 - `test-safety-floor.R`: 75/75 PASS, 0 FAIL
 - `test-multi-proportion.R`: 14/14 PASS, 0 FAIL, 1 skip-on-CRAN
-- Full `bench_multi_proportion` re-running now (~30 min)
+- **Full `bench_multi_proportion` confirmed: 24 good / 0 errors** (35 min wall).
+  Pigauto = baseline (gate closed by safety floor — same behaviour as
+  pre-fix; the crash was the only regression on multi_proportion).
 
 **Open question**: do the binary / categorical / zi_count performance
 regressions (-5pp to -15%) share the same root cause? They aren't
