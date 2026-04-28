@@ -6,6 +6,42 @@
 > Source verdicts (commit hashes): 189586a, 8c20932, 5fd9497, 6281bb0,
 > 2566b18, 9afc747, 778e534, a7008c2, 573decd.
 
+## Update 2026-04-28 ~09:20 — Architecture ablation on WINNING DGP: VERDICT
+
+Re-ran transformer / legacy_attn (GAT) / no_attn (plain GCN) on the
+cells where pigauto wins decisively (λ ∈ {0.2, 0.3, 0.5}, n=500,
+ncov=10, β=1.0, both f_types, 3 reps).
+
+| | median ratio | range |
+|---|---|---|
+| transformer / no_attn | **0.993** | [0.989, 0.994] |
+| transformer / legacy_attn | **0.992** | [0.990, 0.995] |
+
+Max spread across any cell: **1.15 %**.
+
+**Transformer wins 6/6 cells consistently — but by 0.5–1.1 % only.**
+
+This lands solidly in the registered "[0.98, 1.02] = architectures
+equivalent" bracket from the decision rule. Conclusion:
+
+- **Default: keep `use_transformer_blocks = TRUE`** (consistent slight
+  edge across all cells; forward-compatible with foundation-model
+  pretraining)
+- **Drop the "transformer beats GNN" claim from the paper.** Earlier
+  ablations were uninformative; this one tested on cells where
+  pigauto-as-a-whole wins, and even there the architecture spread is
+  only 1.15 %. The architecture is incidental.
+
+The paper's headline claim is the **safety-gated multi-obs
+phylogenetic autoencoder pipeline**: BM/GLS baseline + obs-level
+multi-obs aggregation + safety gate + GNN correction + calibrated UQ.
+The transformer's specific block design is a sensible default but not
+a differentiator.
+
+Verdict file: `useful/phase1_arch_winning_dgp_verdict.md`.
+
+---
+
 ## Update 2026-04-28 ~07:00 — Path B BISECT FOUND THE BUG, FIXED IT
 
 After you approved Path B (bisect the discrete regression), `git bisect`
