@@ -271,15 +271,29 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
       rel_gain_b          <- (loss_b_pure_bm - loss_b_best) / max(loss_b_pure_bm, 1e-12)
       abs_gain_b          <- loss_b_pure_bm - loss_b_best
       rel_gain_threshold  <- if (safety_floor) cal_min_rel_gain else cal_min_rel_gain / 2
-      if (rel_gain_b < rel_gain_threshold ||
-          (is_discrete && abs_gain_b < min_abs_b)) {
+      # Defensive: if either half-B loss is NA (e.g. a multi_proportion CLR
+      # column with too few cells in half-B for some component), the gain
+      # cannot be evaluated.  Treat as "verification failed" -> fall back
+      # to the safe reference, preserving the safety guarantee.
+      verification_failed <-
+        !is.finite(rel_gain_b) ||
+        rel_gain_b < rel_gain_threshold ||
+        (is_discrete && (!is.finite(abs_gain_b) || abs_gain_b < min_abs_b))
+      if (verification_failed) {
         # Revert to best safe fallback.  When safety_floor = TRUE the pure-mean
         # point (0,0,1) is always a valid option — pick whichever of BM and mean
         # is better on half-B so the safety guarantee is preserved.
         if (safety_floor) {
           mean_ref_w     <- c(0, 0, 1)
           loss_b_mean    <- cal_mean_loss(mean_ref_w, hb)
-          best_w <- if (loss_b_mean <= loss_b_pure_bm) mean_ref_w else ref_w
+          # If either loss is NA, prefer the BM ref (safer than mean
+          # for continuous-like latents); otherwise pick whichever is
+          # smaller on half-B.
+          best_w <- if (is.finite(loss_b_mean) && is.finite(loss_b_pure_bm)) {
+            if (loss_b_mean <= loss_b_pure_bm) mean_ref_w else ref_w
+          } else {
+            ref_w
+          }
         } else {
           best_w <- ref_w
         }
