@@ -1,8 +1,46 @@
 # pigauto — comprehensive synthesis for the 5 AM planning conversation
 
 > Written 2026-04-27 ~22:30 after a focused overnight Phase 1 campaign.
+> Updated 2026-04-28 ~07:00 with Path B bisect finding + fix.
 > This is the single document to read when you return.
-> Source verdicts (commit hashes): 189586a, 8c20932, 5fd9497, 6281bb0, 2566b18.
+> Source verdicts (commit hashes): 189586a, 8c20932, 5fd9497, 6281bb0,
+> 2566b18, 9afc747, 778e534, a7008c2, 573decd.
+
+## Update 2026-04-28 ~07:00 — Path B BISECT FOUND THE BUG, FIXED IT
+
+After you approved Path B (bisect the discrete regression), `git bisect`
+found the offending commit in **90 seconds**:
+
+**Commit `faf29e51` (Apr 23) — "safety-floor: fit_pigauto() computes
+mean_baseline_per_col + passes safety_floor"** is the first bad commit
+that breaks `bench_multi_proportion`.
+
+**Root cause**: in `R/fit_helpers.R::resolve_one_split()`, the half-B
+verification step does `if (rel_gain_b < threshold)`. For
+multi_proportion CLR latents the half-B subset can have too few cells
+to evaluate the per-column loss, making `rel_gain_b = NA`, and
+`if (NA < ...)` errors with "missing value where TRUE/FALSE needed".
+
+**Fix committed in `573decd`**: NA-safe verification — treat any
+non-finite gain as "verification failed" and fall back to the safe
+reference, preserving the safety guarantee.
+
+**Verification:**
+- Bisect reproducer (script/bisect_test_multi_proportion.R) PASSES (~14 s)
+- `test-safety-floor.R`: 75/75 PASS, 0 FAIL
+- `test-multi-proportion.R`: 14/14 PASS, 0 FAIL, 1 skip-on-CRAN
+- Full `bench_multi_proportion` re-running now (~30 min)
+
+**Open question**: do the binary / categorical / zi_count performance
+regressions (-5pp to -15%) share the same root cause? They aren't
+crashes, just performance losses — but the same NA-handling path could
+be silently routing them to suboptimal fallbacks. Will re-run those 3
+benches after multi_proportion confirms.
+
+**Time spent on Path B so far: ~30 minutes** (bisect + diagnose + patch + commit + unit tests).
+
+---
+
 
 ## TL;DR
 
