@@ -2,6 +2,33 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## How to be useful here (added 2026-04-29)
+
+Before recommending changes or framing findings, hold yourself to these standards:
+
+1. **Distinguish what was measured from what was claimed.** When citing a result, state the regime: which DGP, which n, which λ, which trait types, single-obs vs multi-obs, how many reps. Do not generalise from a 27-cell single-obs continuous-only smoke to a recommendation about "the baseline" globally. If a finding holds only in a narrow regime, label it as such.
+
+2. **Pigauto's actual architectural advantages.** The package's unique selling points, in order:
+   (a) unified mixed-type imputation in one model (continuous, binary, categorical, ordinal, count, proportion, zi_count, multi_proportion);
+   (b) calibrated conformal prediction intervals tied to validation residuals;
+   (c) multi-tree posterior workflow with Rubin pooling (Nakagawa & de Villemereuil 2019);
+   (d) multi-obs covariate refinement via the obs_refine MLP.
+   Recommendations that compromise any of these need an explicit case for why the trade-off is worth it. Suggesting "replace pigauto's BM baseline with phylolm" is wrong on its face because phylolm is monotype continuous and would dismantle (a). Suggesting "use Rphylopars" is similarly wrong unless you can show the proposal preserves all four.
+
+3. **BM baseline is a kernel, not a method.** `R/bm_internal.R::bm_impute_col` plugs into Phase 2 joint MVN, Phase 3 threshold-joint (binary/ordinal), Phase 6 OVR categorical, the liability E-step, and the GNN's gated residual baseline. Modifications to this kernel touch all of the above. Estimate effort accordingly — and when in doubt, scope the change as "add a parameter, default off" rather than "replace."
+
+4. **Avoid superlatives without evidence.** "Highest leverage", "best of best", "definitive", "the next strategic move" — do not use these unless you've compared against alternatives. If the user has used the phrase first, do not echo it back as if it were ground truth.
+
+5. **When proposing a change, scope it precisely.** Name the file paths, what's in scope, what's out of scope, what tests change, what benches need re-running, expected wall-time. "1-2 days" without a file-level breakdown is a guess, not an estimate.
+
+6. **Pre-existing limitations vs new bugs.** Distinguish "this code path was always like this" from "this code path regressed recently." The strict val-floor type-restriction (April 2026 bug) was a new bug. The BM-fixed-at-λ=1 baseline (since v0.5) is a pre-existing design choice. Both might be worth changing, but the framing differs.
+
+7. **Compare against pigauto's existing benches before claiming novelty.** Before claiming "pigauto loses to X", check whether pigauto already has a bench against X and what it shows. Do not run a new comparison and report it as the headline finding without first reading what is already known.
+
+8. **Honest scope when the user asks "what could we do more?"** Answer with two or three defensible items, not ten plausible-sounding ones. Each item should have a measurement that motivates it, not a hunch.
+
+When in doubt, prefer the smallest defensible claim and ask before extrapolating.
+
 ## Project
 
 `pigauto` is an R package (version 0.9.1) for phylogenetic trait imputation. It fits a gated ensemble of a phylogenetic baseline and an attention-based graph neural network correction. For continuous/count/ordinal traits the baseline is Brownian motion (via an internal conditional-MVN implementation using the phylogenetic correlation matrix `R = cov2cor(vcv(tree))`; see `R/bm_internal.R`); for binary/categorical traits it is phylogenetic label propagation. Optional environmental covariates are threaded through the GNN with gated safety. Prediction is the per-trait blend `(1 - r_cal) * baseline + r_cal * delta_GNN`, with `r_cal` calibrated on a held-out validation split. See `README.md` for the user-facing API; this file documents the internals.
