@@ -5,12 +5,12 @@ options(warn = 1, stringsAsFactors = FALSE)
 suppressPackageStartupMessages({
   library(ape)
   devtools::load_all(
-    "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/level-c-phase-6",
+    "/Users/z3437171/Dropbox/Github Local/pigauto",
     quiet = TRUE
   )
 })
 
-here   <- "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/level-c-phase-6"
+here   <- "/Users/z3437171/Dropbox/Github Local/pigauto"
 out_md <- file.path(here, "script", "bench_avonet_phase6.md")
 
 # Load AVONET 300 (bundled)
