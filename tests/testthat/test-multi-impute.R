@@ -559,3 +559,53 @@ test_that("multi_impute() multi-obs aligns datasets when input is shuffled", {
     }
   }
 })
+
+test_that("multi_impute(draws_method='conformal') produces non-zero between-draw variance on shuffled input", {
+  # Regression test for the row-alignment bug in .sample_conformal_draw
+  # found by adversarial review (commit fixing it: pending).
+  # The bug: imputed_mask is in user-input row order, but pred$imputed is
+  # in internal (tree-tip) order.  .sample_conformal_draw was indexing
+  # imp[[nm]][rows] with rows from imputed_mask, so on shuffled-input
+  # data it perturbed the WRONG cells, and build_completed re-aligned
+  # the unperturbed (deterministic) values back into the user's missing
+  # cells — producing identical datasets across all M draws (zero
+  # between-imputation variance).
+  set.seed(20260428)
+  tree <- ape::rtree(15)
+  # Single-obs but ROWNAMES are SHUFFLED relative to tree$tip.label so
+  # preprocess_traits has to reorder.
+  shuffled_sp <- sample(tree$tip.label)
+  df <- data.frame(
+    row.names = shuffled_sp,
+    tr = abs(rnorm(15)) + 0.5
+  )
+  # Mask 5 of 15 cells.
+  miss_idx <- sample(15, 5)
+  df_obs <- df
+  df_obs$tr[miss_idx] <- NA
+
+  mi <- multi_impute(
+    traits        = df_obs,
+    tree          = tree,
+    m             = 5L,
+    draws_method  = "conformal",
+    epochs        = 30L,
+    missing_frac  = 0.0,
+    verbose       = FALSE,
+    seed          = 1L
+  )
+
+  # Pull values at the originally-missing cells from each of the 5 datasets.
+  draws_at_miss <- sapply(mi$datasets, function(d) d$tr[miss_idx])
+  # Compute SD across the 5 draws at each masked cell.
+  per_cell_sd <- apply(draws_at_miss, 1L, stats::sd)
+
+  # Pre-fix bug behaviour: per_cell_sd ≡ 0 for all cells (zero variance
+  # because the wrong cells were perturbed).  Post-fix: the SD should be
+  # strictly positive at every masked cell because conformal-width
+  # Gaussian sampling was correctly applied.
+  expect_true(all(per_cell_sd > 1e-8),
+              info = sprintf(
+                "All 5 masked cells should have non-zero SD across draws. Got: %s",
+                paste(round(per_cell_sd, 6), collapse = ", ")))
+})

@@ -35,6 +35,7 @@ fit_pigauto(
   clip_norm = 1,
   conformal_method = c("split", "bootstrap"),
   conformal_bootstrap_B = 500L,
+  conformal_split_val = FALSE,
   gate_method = c("single_split", "median_splits"),
   gate_splits_B = 31L,
   safety_floor = TRUE,
@@ -148,6 +149,23 @@ across 10 seeds).  Ship as an opt-in experimental knob; defaults to
 \item{conformal_bootstrap_B}{integer. Bootstrap resamples used when
 \code{conformal_method = "bootstrap"}; default \code{500}.  Ignored
 otherwise.}
+
+\item{conformal_split_val}{logical. Default \code{FALSE} (pre-2026-04-28
+single-set behaviour, retained because forcing the split regresses
+the AVONET300 / OVR-categorical / BIEN safety-floor smoke benches by
+2-26\%). When \code{TRUE}, the validation set is split per latent
+column into a calibration half (used to pick the calibrated blend
+gate) and a conformal half (used to compute the conformal residual
+quantile). This restores split-conformal exchangeability — without
+the split, the gate is selected to minimise residual MSE on the very
+cells whose residuals drive the conformal quantile, producing
+systematic undercoverage (most visible at small \code{n_val}; see
+the \code{coverage_investigation} memo). Use this when accurate 95\%
+coverage matters more than the bench-grade RMSE; the split only
+activates per-column when that column has at least
+\code{2 * min_val_cells} val cells (smaller columns silently fall
+back to the single-set path to keep \code{calibrate_gates()}'s
+half-A / half-B cross-check stable).}
 
 \item{gate_method}{character. How the per-trait calibrated gate is
 chosen.  \code{"single_split"} (default, backward-compatible) runs

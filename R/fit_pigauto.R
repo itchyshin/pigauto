@@ -116,6 +116,22 @@
 #' @param conformal_bootstrap_B integer. Bootstrap resamples used when
 #'   \code{conformal_method = "bootstrap"}; default \code{500}.  Ignored
 #'   otherwise.
+#' @param conformal_split_val logical. Default \code{FALSE} (pre-2026-04-28
+#'   single-set behaviour, retained because forcing the split regresses
+#'   the AVONET300 / OVR-categorical / BIEN safety-floor smoke benches by
+#'   2-26%). When \code{TRUE}, the validation set is split per latent
+#'   column into a calibration half (used to pick the calibrated blend
+#'   gate) and a conformal half (used to compute the conformal residual
+#'   quantile). This restores split-conformal exchangeability — without
+#'   the split, the gate is selected to minimise residual MSE on the very
+#'   cells whose residuals drive the conformal quantile, producing
+#'   systematic undercoverage (most visible at small \code{n_val}; see
+#'   the \code{coverage_investigation} memo). Use this when accurate 95%
+#'   coverage matters more than the bench-grade RMSE; the split only
+#'   activates per-column when that column has at least
+#'   \code{2 * min_val_cells} val cells (smaller columns silently fall
+#'   back to the single-set path to keep \code{calibrate_gates()}'s
+#'   half-A / half-B cross-check stable).
 #' @param gate_method character. How the per-trait calibrated gate is
 #'   chosen.  \code{"single_split"} (default, backward-compatible) runs
 #'   the grid search on a single random half-A / half-B split of the val
@@ -219,6 +235,7 @@ fit_pigauto <- function(
     clip_norm         = 1.0,
     conformal_method  = c("split", "bootstrap"),
     conformal_bootstrap_B = 500L,
+    conformal_split_val = FALSE,
     gate_method       = c("single_split", "median_splits"),
     gate_splits_B     = 31L,
     safety_floor      = TRUE,
@@ -682,6 +699,55 @@ fit_pigauto <- function(
     val_mask_mat <- matrix(FALSE, n, p)
     val_mask_mat[splits$val_idx] <- TRUE
 
+    # Fix C.3 (Opus 2026-04-28): split val into a CALIBRATION half (used by
+    # `calibrate_gates()` to pick per-trait blend weights) and a CONFORMAL
+    # half (used by `compute_conformal_scores()` to estimate residual
+    # quantiles). Reusing the same val cells for both breaks split-conformal
+    # exchangeability — the gate is selected to minimise val residual MSE,
+    # which post-selects the very residuals that drive the conformal
+    # quantile, producing systematic undercoverage. The split is per
+    # latent column to avoid wasting cells on traits with already-tiny
+    # val sets.
+    #
+    # Min-val safeguard: only split a column when its val set has at
+    # least `2 * min_val_cells` cells.  Below that threshold the half-A /
+    # half-B cross-check inside `calibrate_gates()` (which itself halves
+    # the input) becomes too noisy and the calibrated gate degrades in
+    # ways that show up as a +2-25% RMSE regression on benches like the
+    # AVONET300 safety-floor smoke test.  Columns under the threshold
+    # silently fall back to the legacy single-set behaviour for that
+    # column (calibration uses the full val cells; conformal also uses
+    # them but accepts the modest undercoverage risk).  Set
+    # `conformal_split_val = FALSE` to disable splitting everywhere.
+    split_threshold <- 2L * as.integer(min_val_cells)
+    if (isTRUE(conformal_split_val)) {
+      set.seed(seed + 23L)
+      val_mask_cal  <- matrix(FALSE, n, p)
+      val_mask_conf <- matrix(FALSE, n, p)
+      for (jcol in seq_len(p)) {
+        idx_j <- which(val_mask_mat[, jcol])
+        n_j   <- length(idx_j)
+        if (n_j == 0L) next
+        if (n_j < split_threshold) {
+          # Below threshold: do not split — both halves get the full val
+          # cells.  Documented downside: conformal scores for this column
+          # are post-selected on the gate calibration cells, undercovering
+          # by an amount bounded by the size of the gate-grid search
+          # (small in practice).
+          val_mask_cal[idx_j, jcol]  <- TRUE
+          val_mask_conf[idx_j, jcol] <- TRUE
+          next
+        }
+        cal_n   <- ceiling(n_j / 2)
+        cal_idx <- sample(idx_j, cal_n)
+        val_mask_cal[cal_idx, jcol]                        <- TRUE
+        val_mask_conf[setdiff(idx_j, cal_idx), jcol]       <- TRUE
+      }
+    } else {
+      val_mask_cal  <- val_mask_mat
+      val_mask_conf <- val_mask_mat
+    }
+
     # Safety-floor: compute per-latent-column grand mean on training-observed
     # cells only. Excludes val + test hold-out to prevent leakage. Works in
     # both single-obs and multi-obs mode (X_scaled is obs-level either way).
@@ -735,7 +801,7 @@ fit_pigauto <- function(
       mu_cal                = mu_cal,
       delta_cal             = delta_cal,
       X_truth_r             = X_truth_r,
-      val_mask_mat          = val_mask_mat,
+      val_mask_mat          = val_mask_cal,
       gate_grid             = seq(0, gate_cap, length.out = 9L),
       gate_cap              = gate_cap,
       gate_method           = gate_method,
@@ -761,7 +827,7 @@ fit_pigauto <- function(
       mu_cal           = mu_cal,
       delta_cal        = delta_cal,
       X_truth_r        = X_truth_r,
-      val_mask_mat     = val_mask_mat,
+      val_mask_mat     = val_mask_conf,
       method           = conformal_method,
       bootstrap_B      = conformal_bootstrap_B,
       verbose          = verbose

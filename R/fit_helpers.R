@@ -243,7 +243,14 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
       ref_w          <- if (safety_floor) c(1, 0, 0) else 0
       loss_a_pure_bm <- cal_mean_loss(ref_w, ha)
       best_w         <- ref_w
-      best_la        <- loss_a_pure_bm
+      # Defensive: if loss_a_pure_bm is non-finite (e.g. multi_proportion
+      # CLR latents with too few half-A cells for some component), seed
+      # best_la with Inf so any finite candidate la beats it.  Same NA-
+      # safety pattern as the half-B fix in commit 573decd.  Without
+      # this, `la < best_la` errors with "missing value where TRUE/FALSE
+      # needed" when best_la is NA.
+      best_la        <- if (is.finite(loss_a_pure_bm)) loss_a_pure_bm else Inf
+      pure_bm_is_finite <- is.finite(loss_a_pure_bm)
       for (ci in seq_len(nrow(cand_grid))) {
         w_try <- cand_grid[ci, ]
         la    <- cal_mean_loss(w_try, ha)
@@ -253,9 +260,14 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
           # that do not beat pure-BM by cal_min_rel_gain AND min_abs_a.
           r_gnn_try <- w_try[2L]
           if (r_gnn_try == 0) next
-          rel      <- (loss_a_pure_bm - la) / max(loss_a_pure_bm, 1e-12)
-          abs_gain <- loss_a_pure_bm - la
-          if (rel < cal_min_rel_gain || abs_gain < min_abs_a) next
+          # If pure-BM loss is non-finite, the legacy filter cannot
+          # evaluate; admit the candidate (the half-B verification step
+          # is the safety net).
+          if (pure_bm_is_finite) {
+            rel      <- (loss_a_pure_bm - la) / max(loss_a_pure_bm, 1e-12)
+            abs_gain <- loss_a_pure_bm - la
+            if (rel < cal_min_rel_gain || abs_gain < min_abs_a) next
+          }
         }
         if (la < best_la) {
           best_la <- la

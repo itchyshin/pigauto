@@ -268,8 +268,18 @@ multi_impute <- function(traits, tree, m = 100L,
 
     input_row_order <- res$data$input_row_order
     datasets <- lapply(seq_len(m), function(i) {
+      # `imask` is in user-input row order (built by build_completed from
+      # the original traits data.frame).  But pred$imputed / pred$se /
+      # pred$probabilities are in INTERNAL (tree-tip) order from the
+      # model.  .sample_conformal_draw must therefore map input-order
+      # mask indices to internal-order before perturbing imp; otherwise
+      # it perturbs the wrong cells and build_completed re-aligns the
+      # unperturbed (internal) values back into the user's missing cells,
+      # producing zero between-imputation variance.  See
+      # adversarial_review_opus.md (HIGH severity finding C.1).
       imp_df <- .sample_conformal_draw(pred, imask, trait_map,
-                                       seed_i = as.integer(seed) + i)
+                                       seed_i = as.integer(seed) + i,
+                                       input_row_order = input_row_order)
       build_completed(traits, imp_df, species_col,
                        input_row_order = input_row_order)$completed
     })
@@ -299,17 +309,36 @@ multi_impute <- function(traits, tree, m = 100L,
 # types (on the appropriate transformed scale), and from Bernoulli /
 # Categorical for discrete types. Falls back to BM SE when conformal score
 # is not available for a trait.
-.sample_conformal_draw <- function(pred, imputed_mask, trait_map, seed_i) {
+.sample_conformal_draw <- function(pred, imputed_mask, trait_map, seed_i,
+                                    input_row_order = NULL) {
   set.seed(seed_i)
   imp    <- pred$imputed
   probs  <- pred$probabilities
   cscores <- pred$conformal_scores  # named vector, NA for discrete traits
 
+  # Build input-row -> internal-row index map.  `imputed_mask` rows are in
+  # user-input order; `pred$imputed` / `pred$se` / `pred$probabilities` are
+  # in internal (tree-tip) order.  `input_row_order[k] = i` means internal
+  # row k holds original input row i, so the inverse map is
+  # `match(seq_along(input_row_order), input_row_order)`.  When NULL or
+  # identity, internal order == input order and the conversion is a no-op.
+  input_to_internal <- if (!is.null(input_row_order)) {
+    match(seq_along(input_row_order), input_row_order)
+  } else NULL
+
+  to_internal <- function(rows_input) {
+    if (is.null(input_to_internal)) return(rows_input)
+    out <- input_to_internal[rows_input]
+    out[!is.na(out)]    # drop input rows with no internal counterpart
+  }
+
   for (tm in trait_map) {
     nm   <- tm$name
     if (!(nm %in% names(imp))) next
     if (!(nm %in% colnames(imputed_mask))) next
-    rows <- which(imputed_mask[, nm])
+    # Map input-order mask indices to internal-order indices for indexing
+    # into pred$imputed / pred$se / pred$probabilities.
+    rows <- to_internal(which(imputed_mask[, nm]))
     if (length(rows) == 0L) next
     N    <- length(rows)
 

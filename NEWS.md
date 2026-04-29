@@ -1,3 +1,67 @@
+# pigauto 0.9.1.9007 (dev)
+
+## Adversarial-review fixes (Opus 2026-04-28)
+
+Four correctness fixes surfaced by the Opus adversarial pass on
+top of PR #49 (the safety-floor / mean-gate work). All four are
+silent-failure modes that produced plausible-looking but invalid
+output; none of them threw a useful error before this release.
+
+- **HIGH — `multi_impute(draws_method = "conformal")` no longer
+  collapses to zero between-draw variance on shuffled input.**
+  `R/multi_impute.R::.sample_conformal_draw` now threads
+  `input_row_order` so it correctly maps user-input mask indices
+  to internal (tree-tip) row indices when perturbing
+  `pred$imputed`. Previously, on any data frame whose rows are
+  not already in tree-tip order, the sampler perturbed the
+  wrong cells and `build_completed` re-aligned the unperturbed
+  values back into the user's missing cells, producing M
+  identical datasets and `var = 0` after pooling. Any prior
+  Rubin's-rules pooling on shuffled-input multi-imputation was
+  unreliable. Caught by a new shuffled-input variance regression
+  test; pre-fix `per_cell_sd ≡ 0`, post-fix `> 1e-8` at every
+  masked cell.
+
+- **MEDIUM (opt-in) — `conformal_split_val` argument on
+  `fit_pigauto()` lets users avoid the validation-set
+  double-dipping that breaks split-conformal exchangeability.**
+  When `TRUE`, the validation cells are split per-column into a
+  calibration half (used by `calibrate_gates()` to pick the
+  blend weights) and a conformal half (used to estimate the
+  residual quantile). Reusing the same val cells for both
+  selects the gate to minimise residual MSE on the very cells
+  whose residuals drive the conformal quantile, producing
+  systematic undercoverage that's most visible at small `n_val`
+  (matches the `coverage_investigation` memo).
+  Default is `FALSE` (pre-fix single-set behaviour) because
+  forcing the split regresses the AVONET300 / OVR-categorical /
+  BIEN safety-floor smoke benches by 2-26% on small-val
+  datasets. Use `conformal_split_val = TRUE` when accurate 95%
+  coverage matters more than bench-grade RMSE.
+
+- **MEDIUM — `calibrate_gates` half-A loop is now NA-safe.**
+  Mirrors the half-B fix from commit 573decd: when
+  `loss_a_pure_bm` is non-finite (e.g. multi_proportion CLR
+  latents whose half-A subset is too small for some component),
+  `best_la` is now seeded with `Inf` and the legacy
+  pure-BM-relative-gain filter is skipped rather than throwing
+  `missing value where TRUE/FALSE needed`.
+
+- **LOW — `predict.pigauto_fit` no longer produces a cryptic
+  torch shape error when calibrated_gates is overridden with a
+  vector of the wrong length.** Length 0 is now treated as "no
+  calibration" (degrades gracefully to the learned-gate path);
+  any other non-matching length errors with an explicit
+  `"calibrated_gates has length k but the model has p latent
+  column(s)"` message. Unblocks the AE-attribution ablation
+  workflow used by `script/phase1_gnn_ablation.R`.
+
+Each fix has a dedicated regression test:
+`tests/testthat/test-multi-impute.R::"multi_impute(draws_method=\"conformal\") produces non-zero between-draw variance on shuffled input"`,
+`tests/testthat/test-fit-predict.R::"conformal_split_val toggle changes conformal scores (no double-dipping)"`,
+and
+`tests/testthat/test-fit-predict.R::"predict.pigauto_fit catches wrong-length calibrated_gates override"`.
+
 # pigauto 0.9.1.9006 (dev)
 
 ## Per-occurrence WorldClim covariates (v1.1 follow-up to B.2)
