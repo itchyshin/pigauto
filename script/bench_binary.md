@@ -1,9 +1,9 @@
 # Binary-trait benchmark
 
-Run on: 2026-04-29 06:57:51
+Run on: 2026-04-29 16:57:46
 Machine: Darwin 25.4.0 (arm64), R 4.5.2
 Species: 300, traits: 4, reps: 5, missing_frac: 0.25
-Total wall: 15.4 min
+Total wall: 15.2 min
 
 ## Methods
 
@@ -22,13 +22,13 @@ Total wall: 15.4 min
   pigauto  bin1 0.5746902 0.2424626
      mode  bin2 0.4892830 0.2933657
  baseline  bin2 0.5801194 0.2425266
-  pigauto  bin2 0.5801194 0.2425266
+  pigauto  bin2 0.5767861 0.2411430
      mode  bin3 0.5155702 0.2763520
  baseline  bin3 0.6122610 0.2403516
-  pigauto  bin3 0.6061071 0.2472631
+  pigauto  bin3 0.6122610 0.2403516
      mode  bin4 0.4746424 0.2959516
  baseline  bin4 0.5537311 0.2456909
-  pigauto  bin4 0.5238951 0.2474146
+  pigauto  bin4 0.5534032 0.2465800
 ```
 
 ### signal_0.4
@@ -40,13 +40,13 @@ Total wall: 15.4 min
   pigauto  bin1 0.5697604 0.2409198
      mode  bin2 0.4943013 0.2962158
  baseline  bin2 0.6138919 0.2332056
-  pigauto  bin2 0.5885398 0.2387196
+  pigauto  bin2 0.5941736 0.2402909
      mode  bin3 0.5226393 0.2805976
  baseline  bin3 0.6080198 0.2371133
-  pigauto  bin3 0.6080198 0.2371133
+  pigauto  bin3 0.5946864 0.2403278
      mode  bin4 0.5078400 0.2589661
  baseline  bin4 0.6973949 0.2315774
-  pigauto  bin4 0.6936911 0.2311374
+  pigauto  bin4 0.6973949 0.2315774
 ```
 
 ### signal_0.6
@@ -55,13 +55,13 @@ Total wall: 15.4 min
    method trait  accuracy     brier
      mode  bin1 0.5282502 0.2656543
  baseline  bin1 0.6521893 0.2279319
-  pigauto  bin1 0.6306508 0.2316825
+  pigauto  bin1 0.6306508 0.2317244
      mode  bin2 0.4850633 0.2896968
  baseline  bin2 0.6068895 0.2345977
   pigauto  bin2 0.6068895 0.2345977
      mode  bin3 0.5075091 0.2836308
  baseline  bin3 0.6973778 0.2155216
-  pigauto  bin3 0.6840200 0.2211595
+  pigauto  bin3 0.6777700 0.2188167
      mode  bin4 0.5048352 0.2872203
  baseline  bin4 0.6492156 0.2292792
   pigauto  bin4 0.6492156 0.2292792
@@ -73,16 +73,16 @@ Total wall: 15.4 min
    method trait  accuracy     brier
      mode  bin1 0.4869412 0.2988403
  baseline  bin1 0.6629786 0.2241337
-  pigauto  bin1 0.6475940 0.2260030
+  pigauto  bin1 0.6475940 0.2254090
      mode  bin2 0.5664590 0.2655111
  baseline  bin2 0.7139051 0.2075373
-  pigauto  bin2 0.7178267 0.2103166
+  pigauto  bin2 0.6914650 0.2049402
      mode  bin3 0.5111140 0.2784045
  baseline  bin3 0.6322208 0.2278702
-  pigauto  bin3 0.6355541 0.2299619
+  pigauto  bin3 0.6255541 0.2304090
      mode  bin4 0.4780418 0.2814069
  baseline  bin4 0.6913322 0.2212722
-  pigauto  bin4 0.6946656 0.2228528
+  pigauto  bin4 0.7038322 0.2206187
 ```
 
 ### signal_1.0
@@ -91,16 +91,16 @@ Total wall: 15.4 min
    method trait  accuracy     brier
      mode  bin1 0.4899804 0.2932487
  baseline  bin1 0.6775067 0.2073715
-  pigauto  bin1 0.6960252 0.2014071
+  pigauto  bin1 0.6812104 0.2096108
      mode  bin2 0.4597599 0.3164407
  baseline  bin2 0.7201143 0.2109569
-  pigauto  bin2 0.7158590 0.2128116
+  pigauto  bin2 0.6945824 0.2162580
      mode  bin3 0.5246706 0.2759206
  baseline  bin3 0.7245681 0.2025963
-  pigauto  bin3 0.6775093 0.2123745
+  pigauto  bin3 0.6775093 0.2121488
      mode  bin4 0.5358681 0.2701922
  baseline  bin4 0.6616975 0.2177338
-  pigauto  bin4 0.6034033 0.2292296
+  pigauto  bin4 0.6190963 0.2268418
 ```
 
 ## Secondary sweep (class imbalance, signal = 0.6)
@@ -120,7 +120,7 @@ Total wall: 15.4 min
   pigauto  bin3 0.5628984 0.2331786
      mode  bin4 0.5351997 0.2883621
  baseline  bin4 0.6938771 0.2159868
-  pigauto  bin4 0.6795914 0.2180913
+  pigauto  bin4 0.6938771 0.2159868
 ```
 
 ### imbalance_0.7
@@ -129,13 +129,13 @@ Total wall: 15.4 min
    method trait  accuracy     brier
      mode  bin1 0.3172401 0.2500000
  baseline  bin1 0.6863963 0.1925513
-  pigauto  bin1 0.6863963 0.2147920
+  pigauto  bin1 0.6863963 0.2183323
      mode  bin2 0.2526189 0.2500000
  baseline  bin2 0.7624755 0.1738400
   pigauto  bin2 0.7624755 0.1809652
      mode  bin3 0.2598246 0.2500000
  baseline  bin3 0.7613300 0.1699391
-  pigauto  bin3 0.7436237 0.1945977
+  pigauto  bin3 0.7545327 0.1908834
      mode  bin4 0.2777733 0.2500000
  baseline  bin4 0.7601802 0.1650778
   pigauto  bin4 0.7601802 0.1730639
