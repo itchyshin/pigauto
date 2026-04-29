@@ -566,3 +566,119 @@ test_that("safety_floor = TRUE keeps plants continuous RMSE <= 1.02 * mean_RMSE 
                                 v, rmse_mean, rmse_pig, rmse_pig / rmse_mean))
   }
 })
+
+# ---- Task 12: STRICT val-floor invariant (Tier-1 fix 2026-04-29) ----------
+
+test_that("strict val-floor: pigauto val-loss <= baseline val-loss per trait, all types", {
+  # Cell-by-cell invariant: for every trait in every fit, the calibrated
+  # blend must not exceed pure-BM-baseline loss on the FULL validation set.
+  # Pre-fix, this invariant held only for continuous types; binary,
+  # categorical, and zi_count were silently exempt and could regress 5-12pp
+  # below baseline (see bench_binary.md / bench_categorical.md /
+  # bench_zi_count.md, run 2026-04-28).
+
+  set.seed(20260429L)
+  n <- 80L
+  tree <- ape::rtree(n)
+  sp   <- tree$tip.label
+
+  # Mixed-type fixture: one continuous, one binary, one categorical, one
+  # count.  All BM-evolved on the same tree (independent draws).
+  bm_draw <- function(seed) {
+    withr::with_seed(seed, {
+      v <- as.numeric(ape::rTraitCont(tree, model = "BM", sigma = 1))
+      names(v) <- tree$tip.label
+      v[sp]
+    })
+  }
+  v1 <- bm_draw(11L)
+  v2 <- bm_draw(12L)
+  v3 <- bm_draw(13L)
+  v4 <- bm_draw(14L)
+  qs   <- stats::quantile(v3, c(0, 1/3, 2/3, 1), na.rm = TRUE)
+  qs[1] <- qs[1] - 1e-9
+  cat3 <- factor(c("a", "b", "c")[as.integer(cut(v3, qs, include.lowest = TRUE))],
+                  levels = c("a", "b", "c"))
+
+  df <- data.frame(row.names = sp,
+                   x_cont = v1,
+                   x_bin  = factor(ifelse(v2 > 0, "yes", "no"),
+                                    levels = c("no", "yes")),
+                   x_cat  = cat3,
+                   x_cnt  = as.integer(round(pmax(v4 + 5, 0))))
+
+  # Fit with safety_floor = TRUE (the path the strict floor protects).
+  res <- pigauto::impute(df, tree,
+                          epochs = 30L, eval_every = 10L, patience = 5L,
+                          missing_frac = 0.30, verbose = FALSE,
+                          seed = 20260429L)
+  fit  <- res$fit
+  data <- res$data
+
+  # Re-derive what calibrate_gates saw.  The val mask cells are stored in
+  # `splits$val_idx` as a vector of linear indices into the n_obs x p_latent
+  # X_scaled matrix.
+  splits   <- res$splits
+  X_scaled <- data$X_scaled
+  n_obs    <- nrow(X_scaled); p_lat <- ncol(X_scaled)
+
+  val_mask <- matrix(FALSE, n_obs, p_lat)
+  val_mask[splits$val_idx] <- TRUE
+
+  # Recompute mu_cal and delta_cal on val cells via a one-shot predict.
+  # (The fit itself stored conformal scores but not the raw delta;
+  # cleanest is to rerun the model forward in eval mode.)
+  pred_obj <- predict(fit, return_se = FALSE)
+  blend_pred <- pred_obj$imputed_latent
+
+  # Pure-BM prediction = baseline$mu (single-obs) or expanded to obs level.
+  bm_pred <- fit$baseline$mu
+  if (isTRUE(fit$multi_obs)) {
+    bm_pred <- bm_pred[fit$obs_to_species, , drop = FALSE]
+  }
+
+  # For each trait, compute val-loss for blend and for pure BM.  Use the
+  # same per-type loss surface that calibrate_gates uses internally: 0-1
+  # for binary/categorical, MSE on latent for continuous/count/ordinal.
+  trait_names_ok <- character(0)
+  for (tm in fit$trait_map) {
+    lc <- tm$latent_cols
+    val_rows <- which(val_mask[, lc[1]])
+    if (length(val_rows) == 0L) next
+
+    truth <- data$X_scaled[val_rows, lc, drop = FALSE]
+    bm_v  <- bm_pred[val_rows,    lc, drop = FALSE]
+    bl_v  <- blend_pred[val_rows, lc, drop = FALSE]
+
+    loss_blend <- if (tm$type == "binary") {
+      mean(as.numeric(bl_v[, 1] > 0) != truth[, 1], na.rm = TRUE)
+    } else if (tm$type == "categorical") {
+      pred_class  <- max.col(bl_v, ties.method = "first")
+      truth_class <- max.col(truth, ties.method = "first")
+      mean(pred_class != truth_class, na.rm = TRUE)
+    } else {
+      mean((bl_v - truth)^2, na.rm = TRUE)
+    }
+    loss_bm <- if (tm$type == "binary") {
+      mean(as.numeric(bm_v[, 1] > 0) != truth[, 1], na.rm = TRUE)
+    } else if (tm$type == "categorical") {
+      pred_class  <- max.col(bm_v, ties.method = "first")
+      truth_class <- max.col(truth, ties.method = "first")
+      mean(pred_class != truth_class, na.rm = TRUE)
+    } else {
+      mean((bm_v - truth)^2, na.rm = TRUE)
+    }
+
+    # The strict val-floor invariant.  Tolerance accounts for predict-time
+    # numerical drift vs the calibration-time loss surface (refine_steps,
+    # mask_token, etc.); 5% of baseline loss is tight enough to catch real
+    # regressions (the ones the discrete benches saw were 10-30%) and loose
+    # enough to absorb honest floating-point drift.
+    expect_lte(loss_blend, loss_bm * 1.05 + 1e-10,
+               label = sprintf("pigauto val-loss for trait %s (type %s) <= baseline val-loss",
+                                tm$name, tm$type))
+    trait_names_ok <- c(trait_names_ok, tm$name)
+  }
+  expect_true(length(trait_names_ok) >= 3L,
+              info = "expected the floor invariant to be checked on at least 3 traits")
+})

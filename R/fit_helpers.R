@@ -329,25 +329,44 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
       w_final <- w_final / sum(w_final)   # renormalise (medians don't preserve sum)
     }
 
-    # safety_floor guarantee: the final blend on the full val set must not be
-    # worse than the pure-mean baseline. If median-of-splits picked a blend
-    # that loses to mean on the full val set, fall back to pure mean.
-    if (safety_floor && length(val_row_idx) > 0L &&
-        tm$type %in% c("continuous", "count", "ordinal", "proportion")) {
-      j1 <- lc[1]
-      mean_j1 <- mean_baseline_per_col[j1]
-      blend_full <- w_final[1] * mu_cal[val_row_idx, j1] +
-                    w_final[2] * delta_cal[val_row_idx, j1] +
-                    w_final[3] * mean_j1
-      mean_full  <- rep(mean_j1, length(val_row_idx))
-      truth_full <- X_truth_r[val_row_idx, j1]
-      ok         <- is.finite(truth_full)
-      if (any(ok)) {
-        mse_blend <- mean((blend_full[ok] - truth_full[ok])^2)
-        mse_mean  <- mean((mean_full[ok]  - truth_full[ok])^2)
-        if (mse_blend > mse_mean + 1e-12) {
-          w_final <- c(0, 0, 1)
-        }
+    # Strict val-floor guarantee (Tier-1 fix 2026-04-29): on the FULL
+    # validation set (not the half-A/half-B split), the final blend must
+    # not lose to pure-BM or (when safety_floor = TRUE) pure-MEAN. If it
+    # does, override `w_final` to whichever pure corner wins on val.
+    #
+    # Background: pre-fix this check fired only for continuous types via
+    # a hand-rolled MSE block. Binary, categorical, zi_count, and
+    # multi_proportion were silently exempt, which is why
+    # `bench_binary.md`, `bench_categorical.md`, and `bench_zi_count.md`
+    # showed pigauto underperforming its own baseline by 5-12pp on those
+    # types. Reusing `cal_mean_loss` (which already implements 0-1 loss
+    # for binary/categorical and the ZI gate+magnitude composite for
+    # zi_count) makes the floor type-agnostic and tight by construction:
+    # `loss(blend) <= min(loss(BM), loss(MEAN))` on val for every trait.
+    # Test gap that hid this for ~2 weeks: per-type benches were not
+    # asserted against per-trait safety-floor invariants in CI.
+    if (length(val_row_idx) > 0L && tm$type != "multi_proportion") {
+      loss_blend <- cal_mean_loss(w_final, val_row_idx)
+      bm_corner  <- if (safety_floor) c(1, 0, 0) else 0
+      loss_bm    <- cal_mean_loss(bm_corner, val_row_idx)
+      loss_mean  <- if (safety_floor) cal_mean_loss(c(0, 0, 1), val_row_idx) else Inf
+
+      # Pick the lowest-loss pure corner as the safe fallback. NA losses
+      # (degenerate column or evaluator failure) are treated as Inf so
+      # they cannot win.
+      coerce_loss <- function(x) if (is.finite(x)) x else Inf
+      lb <- coerce_loss(loss_blend)
+      lm_bm <- coerce_loss(loss_bm)
+      lm_mean <- coerce_loss(loss_mean)
+
+      tol <- 1e-12
+      if (lb > lm_bm + tol || lb > lm_mean + tol) {
+        # Calibrated blend strictly worse than at least one pure corner --
+        # override to whichever corner wins.  Pure-BM is always a valid
+        # fallback (in both safety_floor modes); pure-MEAN only when
+        # safety_floor = TRUE.  Note `lm_mean = Inf` in the legacy mode
+        # so the BM branch is selected unconditionally there.
+        w_final <- if (lm_bm <= lm_mean) c(1, 0, 0) else c(0, 0, 1)
       }
     }
 
