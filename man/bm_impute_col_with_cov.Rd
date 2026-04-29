@@ -29,7 +29,7 @@ diagonal of the non-intercept coefficients.  Shrinks unsupported
 covariate coefficients toward zero (e.g. on interactive DGPs where
 the linear projection is genuinely 0).  Default \code{0.05} -- gentle.}
 
-\item{lrt_threshold}{numeric scalar in \link{0, 1}. Likelihood-ratio gate:
+\item{lrt_threshold}{numeric scalar in \eqn{[0, 1]}. Likelihood-ratio gate:
 if the cov-aware fit's residual variance is not at least
 \code{1 - lrt_threshold} fraction of the no-cov fit's residual
 variance, fall back to the no-cov baseline.  This avoids fitting

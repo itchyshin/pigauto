@@ -163,7 +163,7 @@ bm_impute_col <- function(y, R, nugget = 1e-6) {
 #'   diagonal of the non-intercept coefficients.  Shrinks unsupported
 #'   covariate coefficients toward zero (e.g. on interactive DGPs where
 #'   the linear projection is genuinely 0).  Default \code{0.05} -- gentle.
-#' @param lrt_threshold numeric scalar in [0, 1]. Likelihood-ratio gate:
+#' @param lrt_threshold numeric scalar in \eqn{[0, 1]}. Likelihood-ratio gate:
 #'   if the cov-aware fit's residual variance is not at least
 #'   \code{1 - lrt_threshold} fraction of the no-cov fit's residual
 #'   variance, fall back to the no-cov baseline.  This avoids fitting

@@ -106,8 +106,8 @@ adj_symnorm_from_D <- function(D, sigma_mult) {
 #' @details
 #' The graph is built in three steps: (1) cophenetic distances between all
 #' pairs of tips; (2) Gaussian kernel \eqn{A_{ij} = \exp(-d_{ij}^2 /
-#' (2\sigma^2))} with \eqn{\sigma = \text{median}(D) \times
-#' \code{sigma_mult}}; (3) symmetric normalisation
+#' (2\sigma^2))} with \eqn{\sigma = \mathrm{median}(D) \times s} (where
+#' \eqn{s} is the user-supplied \code{sigma_mult}); (3) symmetric normalisation
 #' \eqn{\tilde{A} = D^{-1/2} A D^{-1/2}} with self-loops added before
 #' normalisation.
 #'
@@ -141,9 +141,8 @@ adj_symnorm_from_D <- function(D, sigma_mult) {
 #'   to use as node features.  When \code{"auto"} (default), scales with tree
 #'   size: \code{min(max(ceiling(n/20), 4), 32)}, giving 4 for very small
 #'   trees, 8 for 100-160 tips, 15 for 300 tips, and 32 for 640+ tips.
-#' @param sigma_mult numeric. Bandwidth multiplier:
-#'   \eqn{\sigma = \mathrm{median}(D) \times \code{sigma_mult}}
-#'   (default \code{0.5}).
+#' @param sigma_mult numeric. Bandwidth multiplier (call it \eqn{s}):
+#'   \eqn{\sigma = \mathrm{median}(D) \times s} (default \code{0.5}).
 #' @param cache_path character or \code{NULL}. Path to an \code{.rds} cache
 #'   file. If the file exists and dimensions match, it is loaded instead of
 #'   recomputing. \code{NULL} disables caching (default).
