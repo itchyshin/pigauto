@@ -318,7 +318,7 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
     best_w_across_splits <- vapply(split_pairs, function(pair)
       resolve_one_split(pair$half_a, pair$half_b),
       numeric(3L))    # 3 rows x B cols
-    w_final <- apply(best_w_across_splits, 1L, median)
+    w_final <- apply(best_w_across_splits, 1L, stats::median)
     # Guard against degenerate median = c(0, 0, 0), which can occur when
     # adversarial splits alternate between corners (e.g. >50% of splits pick
     # (1,0,0), >50% pick (0,0,1), and each coordinate's median is 0). Pure-mean

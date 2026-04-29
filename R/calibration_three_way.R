@@ -68,7 +68,7 @@ mean_baseline_scalar <- function(x_col, train_mask, trait_type) {
   } else if (trait_type %in% c("binary", "categorical")) {
     p <- mean(x_col[keep])
     p <- pmin(pmax(p, 0.01), 0.99)
-    qlogis(p)
+    stats::qlogis(p)
   } else {
     stop("mean_baseline_scalar: unsupported trait_type = ", trait_type)
   }

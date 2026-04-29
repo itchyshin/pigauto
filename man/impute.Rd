@@ -100,7 +100,7 @@ the Phase 6 / 7 EM loop. Default \code{1e-3}.}
 
 \item{em_offdiag}{logical. Phase 7 opt-in: when \code{TRUE} AND
 \code{em_iterations >= 2L}, each liability cell's prior uses the
-full conditional-MVN from Σ's off-diagonal entries, so that
+full conditional-MVN from \eqn{\Sigma}'s off-diagonal entries, so that
 observing one discrete trait shifts (not just tightens) the prior
 on correlated other traits.  Binary + ordinal only; OVR categorical
 stays on Phase 6 diagonal.  Default \code{FALSE}.  Passed to
