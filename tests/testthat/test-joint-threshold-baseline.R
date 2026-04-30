@@ -469,3 +469,71 @@ test_that("fit_baseline ordinal selection picks BM when threshold-joint loses on
                label = "threshold-joint kept => its val MSE <= BM val MSE")
   }
 })
+
+# ---- C1: AVONET-300 Migration K=3 regression bottled as fixture ----------
+# This test locks in the Phase F win against future refactors.  Pre-Phase-F
+# (commit a541dbd .. f43edb6^), AVONET-300 Migration's threshold-joint
+# baseline regressed RMSE from 0.879 to 0.975 vs the LP-equivalent path
+# (see useful/MEMO_2026-04-29_phase6_migration_bisect.md).  Phase F's
+# per-trait selection now picks the BM-via-MVN path on Migration whenever
+# threshold-joint loses on val.
+#
+# This test asserts the SELECTION OUTCOME on AVONET-300, not the absolute
+# accuracy.  If a future refactor reintroduces the regression silently
+# (e.g. by changing the val-MSE comparison logic, or swapping the BM path
+# implementation), this test will fail at the AVONET regression bench
+# script's expense before the user-facing benchmark drift surfaces.
+
+test_that("[C1] AVONET-300 Migration ordinal: BM-via-MVN beats threshold-joint on val (Phase F regression bottle)", {
+  skip_if_not_installed("Rphylopars")
+  data("avonet300", package = "pigauto")
+  data("tree300",   package = "pigauto")
+  set.seed(42)
+  traits <- avonet300
+  rownames(traits) <- traits$Species_Key
+  traits$Species_Key <- NULL
+
+  pd     <- preprocess_traits(traits, tree300)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.25, seed = 42,
+                                 trait_map = pd$trait_map)
+  bl <- fit_baseline(pd, tree300, splits = splits)
+
+  # Locate the Migration latent column (it's an ordered factor)
+  mig_col <- NULL
+  for (tm in pd$trait_map) {
+    if (identical(tm$name, "Migration") && tm$type == "ordinal") {
+      mig_col <- tm$latent_cols
+      break
+    }
+  }
+  expect_false(is.null(mig_col),
+               info = "AVONET-300 must have a Migration ordinal trait")
+
+  expect_true("ordinal_path_chosen" %in% names(bl),
+              info = "fit_baseline must expose $ordinal_path_chosen on AVONET-300 (single-obs)")
+  chosen <- bl$ordinal_path_chosen[[as.character(mig_col)]]
+  expect_identical(chosen, "bm_mvn",
+                   info = paste0(
+                     "[C1] On AVONET-300 K=3 Migration ordinal, the per-trait ",
+                     "selection MUST pick BM-via-MVN over threshold-joint. ",
+                     "If this fails, Phase F has regressed -- check ",
+                     "useful/MEMO_2026-04-29_phase6_migration_bisect.md and ",
+                     "useful/MEMO_2026-04-30_ordinal_path_selection.md."))
+
+  # Sanity: the absolute lift on Migration RMSE vs LP-only should be
+  # near-zero (Phase F restores parity with the LP path), not the
+  # pre-Phase-F regression of -0.085.  Check on test-set RMSE so this
+  # asserts the user-facing outcome.
+  n   <- nrow(pd$X_scaled)
+  ri  <- ((splits$test_idx - 1L) %% n) + 1L
+  cj  <- ((splits$test_idx - 1L) %/% n) + 1L
+  test_mig_rows <- ri[cj == mig_col]
+  truth <- pd$X_scaled[test_mig_rows, mig_col]
+  pred  <- bl$mu[test_mig_rows, mig_col]
+  rmse_phaseF <- sqrt(mean((truth - pred)^2))
+  # Pre-Phase-F regression value was 0.975; Phase F restores 0.890 (and
+  # the LP path gives 0.890 too).  Assert RMSE is comfortably below the
+  # regression threshold of 0.93 (halfway between 0.890 and 0.975).
+  expect_lt(rmse_phaseF, 0.93,
+            label = sprintf("[C1] Migration test RMSE = %.3f", rmse_phaseF))
+})

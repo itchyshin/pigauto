@@ -346,3 +346,131 @@ test_that("compute_corner_loss zi_count: pure-BM corner = current zi_count loss 
   # Pure-BM corner (g[3] = 0) ignores the mean values entirely.
   expect_equal(out_a, out_b, tolerance = 1e-12)
 })
+
+# ---- A1: Continuous-family clones (count, ordinal, proportion) -----------
+# These four types share the continuous branch in compute_corner_loss().
+# Each should produce identical numbers given identical numeric inputs;
+# the only difference is the trait_map's `type` field.  Test that the
+# branch dispatch is bit-equivalent across the four types.
+
+test_that("compute_corner_loss continuous-family clones agree (count/ordinal/proportion)", {
+  set.seed(101)
+  n <- 30L
+  mu_cal    <- matrix(rnorm(n), n, 1, dimnames = list(NULL, "v"))
+  delta_cal <- matrix(rnorm(n), n, 1, dimnames = list(NULL, "v"))
+  X_truth_r <- matrix(rnorm(n), n, 1, dimnames = list(NULL, "v"))
+  rows <- seq_len(n)
+  mb   <- c(v = 0.7)
+
+  ref <- pigauto:::compute_corner_loss(
+    g = c(0.4, 0.3, 0.3), rows = rows, tm = make_tm("v", "continuous", 1L),
+    mu_cal = mu_cal, delta_cal = delta_cal, X_truth_r = X_truth_r,
+    safety_floor = TRUE, mean_baseline_per_col = mb)
+
+  for (type in c("count", "ordinal", "proportion")) {
+    other <- pigauto:::compute_corner_loss(
+      g = c(0.4, 0.3, 0.3), rows = rows, tm = make_tm("v", type, 1L),
+      mu_cal = mu_cal, delta_cal = delta_cal, X_truth_r = X_truth_r,
+      safety_floor = TRUE, mean_baseline_per_col = mb)
+    expect_equal(other, ref, tolerance = 1e-12,
+                 info = sprintf("%s should match continuous on identical inputs", type))
+  }
+})
+
+# ---- A1: Convexity for continuous-family branches -------------------------
+# Continuous-family loss is L(g) = mean( (sum_k g_k * f_k - truth)^2 )
+# with predictions linear in g.  L is therefore convex in g, so for any
+# two simplex weight vectors g_a, g_b and lambda in [0, 1]:
+#     L(lambda * g_a + (1 - lambda) * g_b) <= lambda * L(g_a) + (1 - lambda) * L(g_b)
+# This is the strongest invariant the corner-loss formula could violate.
+
+test_that("compute_corner_loss continuous: convex in g (corners + midpoints)", {
+  set.seed(102)
+  n <- 50L
+  mu_cal    <- matrix(rnorm(n), n, 1, dimnames = list(NULL, "v"))
+  delta_cal <- matrix(rnorm(n), n, 1, dimnames = list(NULL, "v"))
+  X_truth_r <- matrix(rnorm(n), n, 1, dimnames = list(NULL, "v"))
+  tm <- make_tm("v", "continuous", 1L)
+  rows <- seq_len(n)
+  mb   <- c(v = -0.3)
+
+  call <- function(g) pigauto:::compute_corner_loss(
+    g = g, rows = rows, tm = tm,
+    mu_cal = mu_cal, delta_cal = delta_cal, X_truth_r = X_truth_r,
+    safety_floor = TRUE, mean_baseline_per_col = mb)
+
+  # Three corners
+  L_BM   <- call(c(1, 0, 0))
+  L_GNN  <- call(c(0, 1, 0))
+  L_MEAN <- call(c(0, 0, 1))
+
+  # Six edge midpoints
+  L_mid_BM_GNN  <- call(c(0.5, 0.5, 0))
+  L_mid_BM_MEAN <- call(c(0.5, 0, 0.5))
+  L_mid_GNN_MEAN <- call(c(0, 0.5, 0.5))
+
+  # Convexity along each edge
+  expect_lte(L_mid_BM_GNN,  0.5 * L_BM  + 0.5 * L_GNN  + 1e-9)
+  expect_lte(L_mid_BM_MEAN, 0.5 * L_BM  + 0.5 * L_MEAN + 1e-9)
+  expect_lte(L_mid_GNN_MEAN, 0.5 * L_GNN + 0.5 * L_MEAN + 1e-9)
+
+  # Center of simplex
+  L_center <- call(c(1/3, 1/3, 1/3))
+  expect_lte(L_center, (L_BM + L_GNN + L_MEAN) / 3 + 1e-9)
+})
+
+# ---- A1: Pure-MEAN corner (continuous) is independent of mu_cal/delta_cal -
+# When g = c(0, 0, 1), the prediction is `mean_baseline_per_col[lc[1]]` for
+# every row, regardless of `mu_cal` and `delta_cal`.  Catches a regression
+# where the formula leaks `mu_cal` or `delta_cal` through, which would
+# break the safety-floor's pure-MEAN reference.
+
+test_that("compute_corner_loss continuous: c(0,0,1) ignores mu_cal and delta_cal", {
+  set.seed(103)
+  n <- 20L
+  mu_a    <- matrix(rnorm(n), n, 1, dimnames = list(NULL, "v"))
+  mu_b    <- matrix(rnorm(n), n, 1, dimnames = list(NULL, "v"))   # different
+  delta_a <- matrix(rnorm(n), n, 1, dimnames = list(NULL, "v"))
+  delta_b <- matrix(rnorm(n), n, 1, dimnames = list(NULL, "v"))   # different
+  X_truth_r <- matrix(rnorm(n), n, 1, dimnames = list(NULL, "v"))
+  tm <- make_tm("v", "continuous", 1L)
+  rows <- seq_len(n)
+  mb <- c(v = 0.42)
+
+  L_a <- pigauto:::compute_corner_loss(
+    g = c(0, 0, 1), rows = rows, tm = tm,
+    mu_cal = mu_a, delta_cal = delta_a, X_truth_r = X_truth_r,
+    safety_floor = TRUE, mean_baseline_per_col = mb)
+  L_b <- pigauto:::compute_corner_loss(
+    g = c(0, 0, 1), rows = rows, tm = tm,
+    mu_cal = mu_b, delta_cal = delta_b, X_truth_r = X_truth_r,
+    safety_floor = TRUE, mean_baseline_per_col = mb)
+  expect_equal(L_a, L_b, tolerance = 1e-12,
+               info = "c(0,0,1) corner must depend ONLY on the per-column mean")
+  expected <- mean((mb["v"] - X_truth_r[rows, 1])^2)
+  expect_equal(L_a, unname(expected), tolerance = 1e-12)
+})
+
+# ---- A1: All-zero `g` is harmless under continuous family ---------------
+# Defensive test: although `c(0,0,0)` is outside the simplex, the
+# safety-floor degenerate guard renormalises medians.  Ensure
+# compute_corner_loss does not crash on degenerate input -- it should
+# evaluate to MSE on the zero-prediction (i.e. (truth - 0)^2).
+
+test_that("compute_corner_loss continuous: all-zero g is finite (defensive)", {
+  set.seed(104)
+  n <- 10L
+  mu_cal    <- matrix(rnorm(n), n, 1, dimnames = list(NULL, "v"))
+  delta_cal <- matrix(rnorm(n), n, 1, dimnames = list(NULL, "v"))
+  X_truth_r <- matrix(rnorm(n), n, 1, dimnames = list(NULL, "v"))
+  tm   <- make_tm("v", "continuous", 1L)
+  rows <- seq_len(n)
+  mb   <- c(v = 0.5)
+
+  L0 <- pigauto:::compute_corner_loss(
+    g = c(0, 0, 0), rows = rows, tm = tm,
+    mu_cal = mu_cal, delta_cal = delta_cal, X_truth_r = X_truth_r,
+    safety_floor = TRUE, mean_baseline_per_col = mb)
+  expect_true(is.finite(L0))
+  expect_equal(L0, mean(X_truth_r[rows, 1]^2), tolerance = 1e-12)
+})
