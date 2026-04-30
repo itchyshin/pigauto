@@ -30,6 +30,120 @@ make_covs_tensor <- function(t_MU, mask_ind, t_covariates) {
 }
 
 # ---------------------------------------------------------------------------
+# compute_corner_loss()
+# ---------------------------------------------------------------------------
+#
+# Per-trait calibration-time loss of a candidate weight vector `g` on a
+# set of validation rows.  Used by `calibrate_gates()` for both the
+# half-A grid search and the post-calibration full-val invariant check.
+#
+# Extracted from a closure inside `calibrate_gates()` (2026-04-30) to
+# (a) make the formula testable per trait type, and (b) eliminate the
+# closure-capture footgun that previously hid a zi_count `mean_j`
+# contamination bug across the gate and magnitude latent columns
+# (Opus adversarial review, 2026-04-30).
+#
+# @param g                     numeric, length-1 (legacy) or length-3 (simplex
+#                              `(r_BM, r_GNN, r_MEAN)`).
+# @param rows                  integer, row indices into the val set.
+# @param tm                    trait_map entry for this trait.
+# @param mu_cal                numeric (n_obs x p_latent), baseline preds.
+# @param delta_cal             numeric (n_obs x p_latent), GNN preds.
+# @param X_truth_r             numeric (n_obs x p_latent), ground truth (NA
+#                              outside masked cells; finite at val rows).
+# @param safety_floor          logical; when TRUE g is the simplex weight,
+#                              when FALSE g is a scalar GNN weight.
+# @param mean_baseline_per_col numeric (length p_latent) per-column grand
+#                              mean on the latent scale; required when
+#                              safety_floor = TRUE.  Each latent column
+#                              has its OWN mean (gate logit and magnitude
+#                              z-score for zi_count, K log-probs for
+#                              categorical, etc.) -- callers must NOT
+#                              substitute one column's mean for another.
+# @return numeric scalar (Inf for zero-row, multi_proportion under
+#         safety_floor, or unsupported types).
+compute_corner_loss <- function(g, rows, tm,
+                                mu_cal, delta_cal, X_truth_r,
+                                safety_floor,
+                                mean_baseline_per_col = NULL) {
+  if (length(rows) == 0L) return(Inf)
+  lc <- tm$latent_cols
+
+  # Per-column latent blend.  When safety_floor = TRUE the caller passes
+  # the column-specific mean explicitly via `mean_scalar`; the default
+  # NA_real_ exists only for the safety_floor = FALSE branch where the
+  # mean term is unused.
+  blend1 <- function(x_bm, x_delta, mean_scalar = NA_real_) {
+    if (safety_floor) {
+      g[1] * x_bm + g[2] * x_delta + g[3] * mean_scalar
+    } else {
+      r_gnn <- if (length(g) == 1L) g else g[2L]
+      (1 - r_gnn) * x_bm + r_gnn * x_delta
+    }
+  }
+
+  if (tm$type %in% c("continuous", "count", "ordinal", "proportion")) {
+    mean_j <- if (safety_floor) mean_baseline_per_col[lc[1]] else NA_real_
+    pred_j <- blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]], mean_j)
+    mean((pred_j - X_truth_r[rows, lc[1]])^2)
+
+  } else if (tm$type == "multi_proportion") {
+    # multi_proportion NOT supported in safety_floor (requires per-component
+    # mean vector; out of scope for this spec).
+    if (safety_floor) return(Inf)
+    r_gnn     <- if (length(g) == 1L) g else g[2L]
+    pred_mat  <- (1 - r_gnn) * mu_cal[rows, lc, drop = FALSE] +
+                 r_gnn       * delta_cal[rows, lc, drop = FALSE]
+    truth_mat <- X_truth_r[rows, lc, drop = FALSE]
+    mean((pred_mat - truth_mat)^2)
+
+  } else if (tm$type == "binary") {
+    mean_j <- if (safety_floor) mean_baseline_per_col[lc[1]] else NA_real_
+    pred_j     <- blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]], mean_j)
+    pred_class <- as.numeric(pred_j > 0)
+    truth_j    <- X_truth_r[rows, lc[1]]
+    mean(pred_class != truth_j)
+
+  } else if (tm$type == "categorical") {
+    logits <- matrix(0, nrow = length(rows), ncol = length(lc))
+    for (kk in seq_along(lc)) {
+      mean_k <- if (safety_floor) mean_baseline_per_col[lc[kk]] else NA_real_
+      logits[, kk] <- blend1(mu_cal[rows, lc[kk]], delta_cal[rows, lc[kk]],
+                             mean_scalar = mean_k)
+    }
+    pred_class  <- max.col(logits,    ties.method = "first")
+    truth_mat   <- X_truth_r[rows, lc, drop = FALSE]
+    truth_class <- max.col(truth_mat, ties.method = "first")
+    mean(pred_class != truth_class)
+
+  } else if (tm$type == "zi_count") {
+    # Gate column (lc[1], logit-scale) and magnitude column (lc[2],
+    # z-scored log1p) have DIFFERENT mean baselines.  The pre-2026-04-30
+    # closure version of this branch used a single
+    # `mean_j = mean_baseline_per_col[lc[1]]` for both blend calls, which
+    # contaminated the magnitude formula's pure-MEAN corner with the
+    # gate's logit value.  Fixed here per the Opus adversarial review of
+    # 2026-04-30.  Each column now uses its own column mean.
+    mean_gate <- if (safety_floor) mean_baseline_per_col[lc[1]] else NA_real_
+    mean_mag  <- if (safety_floor) mean_baseline_per_col[lc[2]] else NA_real_
+    gate_pred  <- blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]], mean_gate)
+    mag_pred   <- blend1(mu_cal[rows, lc[2]], delta_cal[rows, lc[2]], mean_mag)
+    p_nz       <- expit(gate_pred)
+    count_hat  <- pmax(expm1(mag_pred * tm$sd + tm$mean), 0)
+    pred_ev    <- p_nz * count_hat
+    truth_gate <- X_truth_r[rows, lc[1]]
+    truth_mag  <- X_truth_r[rows, lc[2]]
+    truth_ev   <- rep(0, length(rows))
+    nz         <- which(truth_gate > 0.5 & is.finite(truth_mag))
+    truth_ev[nz] <- expm1(truth_mag[nz] * tm$sd + tm$mean)
+    mean((pred_ev - truth_ev)^2)
+
+  } else {
+    Inf
+  }
+}
+
+# ---------------------------------------------------------------------------
 # calibrate_gates()
 # ---------------------------------------------------------------------------
 #
@@ -147,76 +261,17 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
 
     split_pairs <- lapply(split_seeds, resolve_best_g_one_split)
 
-    # Helper: mean loss for gate g on a set of row indices.
-    # Uses 0-1 loss for binary/categorical so that the val signal matches
-    # the test metric (argmax accuracy), not cross-entropy.
+    # Helper: mean loss for gate g on a set of row indices, closing over
+    # the trait-loop variables (lc, tm, mu_cal, delta_cal, X_truth_r,
+    # safety_floor, mean_baseline_per_col) and forwarding to the
+    # standalone `compute_corner_loss()` function below.  The closure
+    # exists to preserve the original two-arg call signature in the
+    # half-A/half-B grid search and post-calibration check.
     cal_mean_loss <- function(g, rows) {
-      if (length(rows) == 0L) return(Inf)
-      mean_j <- if (safety_floor) mean_baseline_per_col[lc[1]] else NA_real_
-      # When safety_floor = TRUE, g is a length-3 vector (r_bm, r_gnn, r_mean).
-      # When FALSE, g is a scalar r_gnn and the legacy (1-g)*mu + g*delta blend
-      # applies.
-      blend1 <- function(x_bm, x_delta, mean_scalar = mean_j) {
-        if (safety_floor) {
-          g[1] * x_bm + g[2] * x_delta + g[3] * mean_scalar
-        } else {
-          # g may be a scalar (legacy caller) OR a length-3 promoted vector
-          # from cand_grid where g[1]=1-r_gnn, g[2]=r_gnn, g[3]=0.
-          # Extract the GNN weight unambiguously.
-          r_gnn <- if (length(g) == 1L) g else g[2L]
-          (1 - r_gnn) * x_bm + r_gnn * x_delta
-        }
-      }
-      if (tm$type %in% c("continuous", "count", "ordinal", "proportion")) {
-        pred_j <- blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]])
-        mean((pred_j - X_truth_r[rows, lc[1]])^2)
-
-      } else if (tm$type == "multi_proportion") {
-        # multi_proportion NOT supported in safety_floor (requires per-component
-        # mean vector; out of scope for this spec).
-        if (safety_floor) return(Inf)
-        # Legacy path: g may be scalar OR length-3 (c(1-r, r, 0)) from cand_grid.
-        # Extract r_gnn unambiguously to avoid broadcasting mismatch against n×K mat.
-        r_gnn     <- if (length(g) == 1L) g else g[2L]
-        pred_mat  <- (1 - r_gnn) * mu_cal[rows, lc, drop = FALSE] +
-                     r_gnn       * delta_cal[rows, lc, drop = FALSE]
-        truth_mat <- X_truth_r[rows, lc, drop = FALSE]
-        mean((pred_mat - truth_mat)^2)
-
-      } else if (tm$type == "binary") {
-        pred_j     <- blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]])
-        pred_class <- as.numeric(pred_j > 0)
-        truth_j    <- X_truth_r[rows, lc[1]]
-        mean(pred_class != truth_j)
-
-      } else if (tm$type == "categorical") {
-        logits <- matrix(0, nrow = length(rows), ncol = length(lc))
-        for (kk in seq_along(lc)) {
-          mean_k <- if (safety_floor) mean_baseline_per_col[lc[kk]] else NA_real_
-          logits[, kk] <- blend1(mu_cal[rows, lc[kk]], delta_cal[rows, lc[kk]],
-                                 mean_scalar = mean_k)
-        }
-        pred_class  <- max.col(logits,    ties.method = "first")
-        truth_mat   <- X_truth_r[rows, lc, drop = FALSE]
-        truth_class <- max.col(truth_mat, ties.method = "first")
-        mean(pred_class != truth_class)
-
-      } else if (tm$type == "zi_count") {
-        gate_pred  <- blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]])
-        mag_pred   <- blend1(mu_cal[rows, lc[2]], delta_cal[rows, lc[2]])
-        p_nz       <- expit(gate_pred)
-        count_hat  <- pmax(expm1(mag_pred * tm$sd + tm$mean), 0)
-        pred_ev    <- p_nz * count_hat
-        truth_gate <- X_truth_r[rows, lc[1]]
-        truth_mag  <- X_truth_r[rows, lc[2]]
-        truth_ev   <- rep(0, length(rows))
-        nz         <- which(truth_gate > 0.5 & is.finite(truth_mag))
-        truth_ev[nz] <- expm1(truth_mag[nz] * tm$sd + tm$mean)
-        mean((pred_ev - truth_ev)^2)
-
-      } else {
-        Inf
-      }
+      compute_corner_loss(g, rows, tm,
+                          mu_cal, delta_cal, X_truth_r,
+                          safety_floor = safety_floor,
+                          mean_baseline_per_col = mean_baseline_per_col)
     }
 
     # Absolute minimum cell-level improvement floor for discrete traits
@@ -329,60 +384,83 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
       w_final <- w_final / sum(w_final)   # renormalise (medians don't preserve sum)
     }
 
-    # safety_floor guarantee (continuous family, byte-for-byte
-    # equivalent to the pre-2026-04-29 implementation): the final blend
-    # on the full val set must not be worse than the pure-mean baseline.
-    # If median-of-splits picked a blend that loses to mean on the full
-    # val set, fall back to pure mean. Pure-BM is trusted via the
-    # half-A/half-B + median cross-check above; checking blend vs
-    # pure-BM on the full val set would be too noisy at typical val
-    # sizes (~5 % sampling SD on 30 %-MAR / n=1500) and spuriously
-    # overrides the blend on high-phylo-signal continuous traits.
-    if (safety_floor && length(val_row_idx) > 0L &&
-        tm$type %in% c("continuous", "count", "ordinal", "proportion")) {
-      j1 <- lc[1]
-      mean_j1 <- mean_baseline_per_col[j1]
-      blend_full <- w_final[1] * mu_cal[val_row_idx, j1] +
-                    w_final[2] * delta_cal[val_row_idx, j1] +
-                    w_final[3] * mean_j1
-      mean_full  <- rep(mean_j1, length(val_row_idx))
-      truth_full <- X_truth_r[val_row_idx, j1]
-      ok         <- is.finite(truth_full)
-      if (any(ok)) {
-        mse_blend <- mean((blend_full[ok] - truth_full[ok])^2)
-        mse_mean  <- mean((mean_full[ok]  - truth_full[ok])^2)
-        if (mse_blend > mse_mean + 1e-12) {
+    # ---- Post-calibration full-val invariant check ------------------
+    # Single dispatcher (refactored 2026-04-30 per Opus adversarial
+    # review #5).  Both blocks now route through the shared
+    # `compute_corner_loss()` helper via the `cal_mean_loss` closure.
+    # The asymmetry between trait families is captured in a per-family
+    # POLICY:
+    #
+    #   continuous family (continuous / count / ordinal / proportion):
+    #     override ONLY if blend loses to pure-MEAN on the full val
+    #     set.  Pure-BM is trusted via the half-A/half-B + median
+    #     cross-check above (which compared blend to pure-BM by half-set
+    #     gain).  A strict pure-BM check on the full val set is too
+    #     sensitive to sampling noise at typical val sizes — see the
+    #     2026-04-29 AVONET Mass over-correction (commit 1ac34b1) where
+    #     blend's val MSE was numerically equal to pure-BM's val MSE on
+    #     a 450-cell val set yet blend was meaningfully better on test.
+    #
+    #   discrete family (binary / categorical / zi_count):
+    #     override if blend loses to EITHER pure-BM or pure-MEAN on the
+    #     full val set; pick whichever pure corner has lower val loss.
+    #     Discrete 0-1 / argmax losses are step functions on a small
+    #     set, so the strict-tie comparison is well-conditioned even
+    #     at typical val sizes (val→test extrapolation noise survives,
+    #     but is at most a few cell-flips per trait).
+    #
+    #   multi_proportion: skipped entirely.  cal_mean_loss returns Inf
+    #     under safety_floor = TRUE for this type by design (no
+    #     per-component mean vector); the legacy gate-naturally-closes
+    #     path produces pigauto = baseline at every signal level.
+    #
+    # Tie semantics (lb ≤ corner + 1e-12): blend wins ties.  For
+    # continuous-family near-ties this prevents the v1 over-correction
+    # mechanism.  For discrete this preserves a non-zero GNN delta if
+    # it is not strictly worse than the corner.  In the discrete fork's
+    # corner-selection, BM wins ties over MEAN (`lm_bm <= lm_mean`).
+    #
+    # The `1e-12` is a numerical floor against floating-point drift,
+    # not a meaningful tolerance — typical loss scales (0.07 for 0-1
+    # discrete, 0.3 for z-scored MSE, ~1000 for zi_count count^2 MSE)
+    # are all >> 1e-12.  At calibration time this enforces
+    #   loss(blend) ≤ loss(pure_corner)  modulo float noise.
+    # It does NOT guarantee the same invariant at predict time —
+    # `predict.pigauto_fit` runs additional refine_steps and
+    # mask_token substitution that introduce a small (~5 %) drift; see
+    # the Task 12 invariant test's `* 1.05` slack.
+    is_continuous_family <-
+      tm$type %in% c("continuous", "count", "ordinal", "proportion")
+    is_discrete_family <-
+      tm$type %in% c("binary", "categorical", "zi_count")
+    if (length(val_row_idx) > 0L &&
+        (is_continuous_family || is_discrete_family) &&
+        # multi_proportion has tm$type "multi_proportion" and falls
+        # outside both family flags, so it is skipped.
+        TRUE) {
+      coerce_loss <- function(x) if (is.finite(x)) x else Inf
+      lb     <- coerce_loss(cal_mean_loss(w_final, val_row_idx))
+      lm_mean <- if (safety_floor)
+        coerce_loss(cal_mean_loss(c(0, 0, 1), val_row_idx))
+      else
+        Inf
+      tol <- 1e-12
+
+      if (is_continuous_family && safety_floor) {
+        # Mean-only check: override only if blend strictly worse than MEAN.
+        if (lb > lm_mean + tol) {
           w_final <- c(0, 0, 1)
         }
-      }
-    }
-
-    # Strict val-floor (DISCRETE only — Tier-1 fix 2026-04-29):
-    # binary, categorical, zi_count types previously bypassed any final
-    # invariant check, which let through non-corner blends that lost to
-    # pure-BM at the cell level (binary -5..-9 pp, categorical -5..-12 pp,
-    # zi_count +5..+23 % RMSE in the 2026-04-28 benches). For these
-    # types we apply a strict full-val check using `cal_mean_loss`
-    # (0-1 loss for binary/categorical, gate+magnitude composite for
-    # zi_count): if the blend's val-loss exceeds either pure-BM or
-    # pure-MEAN by 1e-12, override to whichever pure corner is better.
-    # Discrete losses are step functions over a small set of integers,
-    # so the strict check is well-conditioned and the val→test
-    # extrapolation noise that hurts the same check on continuous
-    # types (see e.g. AVONET Mass) is much smaller here.
-    if (length(val_row_idx) > 0L &&
-        tm$type %in% c("binary", "categorical", "zi_count")) {
-      lb <- cal_mean_loss(w_final, val_row_idx)
-      bm_corner <- if (safety_floor) c(1, 0, 0) else 0
-      lm_bm     <- cal_mean_loss(bm_corner, val_row_idx)
-      lm_mean   <- if (safety_floor) cal_mean_loss(c(0, 0, 1), val_row_idx) else Inf
-      coerce_loss <- function(x) if (is.finite(x)) x else Inf
-      lb     <- coerce_loss(lb)
-      lm_bm  <- coerce_loss(lm_bm)
-      lm_mean <- coerce_loss(lm_mean)
-      tol <- 1e-12
-      if (lb > lm_bm + tol || lb > lm_mean + tol) {
-        w_final <- if (lm_bm <= lm_mean) c(1, 0, 0) else c(0, 0, 1)
+      } else if (is_discrete_family) {
+        # Strict both-corners check: BM is always a valid corner; MEAN
+        # only when safety_floor = TRUE (legacy path's `cal_mean_loss`
+        # is undefined for the (0,0,1) gate).
+        bm_corner <- if (safety_floor) c(1, 0, 0) else 0
+        lm_bm <- coerce_loss(cal_mean_loss(bm_corner, val_row_idx))
+        if (lb > lm_bm + tol || lb > lm_mean + tol) {
+          # On ties, BM wins via `<=`.
+          w_final <- if (lm_bm <= lm_mean) c(1, 0, 0) else c(0, 0, 1)
+        }
       }
     }
 
