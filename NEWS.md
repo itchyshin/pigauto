@@ -1,5 +1,82 @@
 # pigauto 0.9.1.9007 (dev)
 
+## Strict val-floor v3 — type-conditional safety floor (2026-04-29)
+
+A type-restriction bug in `R/fit_helpers.R::calibrate_gates` was
+silently exempting binary, categorical, and zi_count traits from the
+post-calibration "strict val-floor" invariant.  The buggy behaviour
+let pigauto underperform its own baseline on the package's own
+simulator benches (`bench_binary.md`, `bench_categorical.md`,
+`bench_zi_count.md`):
+
+* binary `signal_0.6` mean accuracy: −4.8 pp below baseline
+* categorical `K_3` cat2: −12 pp below baseline
+* zi_count `zf_0.2` zi1: +23 % RMSE above baseline
+
+These violate the safety-floor's "pigauto cannot underperform its
+own baseline" promise.  The bug was introduced 2026-04-23 with the
+initial safety-floor commit (`28d8e45`); the type filter mirrored an
+earlier continuous-only MSE evaluator and was not extended when the
+simplex grid landed.
+
+The fix splits the post-calibration invariant into two
+type-specific blocks:
+
+* **Discrete family** (binary, categorical, zi_count) gets a strict
+  full-val-set check against both pure-BM and pure-MEAN corners; if
+  the calibrated blend's val-loss exceeds either corner by 1e-12,
+  the gate is overridden to whichever pure corner is better.
+  Discrete losses are 0-1 / argmax step functions, so this strict
+  check is well-conditioned at typical val sizes.
+* **Continuous family** (continuous, count, ordinal, proportion)
+  keeps the pre-2026-04-29 mean-only check verbatim (override only
+  if the blend loses to pure-MEAN, never to pure-BM).  An
+  intermediate fix that also added a strict pure-BM check for
+  continuous types over-corrected on high-phylo-signal traits where
+  the blend's val MSE is numerically equal to pure-BM's val MSE
+  within sampling noise (AVONET Mass test RMSE went 386 → 659 in
+  the over-strict variant); v3 reverts continuous to the original
+  conservative check.
+* **multi_proportion** is skipped (gate naturally closes via the
+  legacy path; bench shows pigauto = baseline at every signal
+  level).
+
+Empirical evidence (mean acc gap pigauto − baseline; lower-magnitude
+= closer to baseline-parity floor):
+
+| bench | Apr 17 (pre-bug) | Apr 28 (buggy) | Apr 29 (post-fix v3) |
+|---|---|---|---|
+| binary | −0.019 | −0.016 | **−0.005** |
+| categorical | −0.017 | −0.014 | **−0.004** |
+| zi_count (RMSE ratio) | 1.010 | 1.007 | **0.986** |
+
+Continuous benchmarks (AVONET n=1500 same-seed): v3 within
+MC-dropout noise of pre-fix on every cell (mean ΔRMSE = −2.75
+across four continuous traits, max |Δ| = 8.4 RMSE on Mass which
+moved closer to pre-fix not further away).
+
+Per-cell variance survives in 4 of 32 binary cells (val→test
+sampling drift).  The strict val-floor only guarantees
+`pigauto_val ≤ baseline_val`; it does not guarantee
+`pigauto_test ≤ baseline_test`.  A future improvement (cross-
+validated gate selection or epsilon-margin tightening) could close
+this further; not in scope for this release.
+
+R CMD check after the fix: 0 errors / 0 warnings / 0 notes.
+Full `devtools::test()`: FAIL 0 / SKIP 2 / PASS 1081.
+
+New regression test in `tests/testthat/test-safety-floor.R`:
+`"strict val-floor: pigauto val-loss <= baseline val-loss per
+trait, all types"` — fits on a mixed continuous + binary +
+categorical + count fixture, recomputes val-loss for the
+calibrated blend and the pure baseline, asserts blend ≤ baseline ×
+1.05 for every trait.
+
+Calibration evidence preserved at
+`script/_strict_floor_v3_calibration/` (4-way comparison: pre-fix /
+v1 over-strict / v2 intermediate / v3 current).  Memos:
+`useful/MEMO_2026-04-29_*.md`.
+
 ## Adversarial-review fixes (Opus 2026-04-28)
 
 Four correctness fixes surfaced by the Opus adversarial pass on
