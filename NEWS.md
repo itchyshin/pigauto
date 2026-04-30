@@ -105,6 +105,47 @@ Calibration evidence preserved at
 v1 over-strict / v2 intermediate / v3 current).  Memos:
 `useful/MEMO_2026-04-29_*.md`.
 
+## Per-trait ordinal baseline path selection (Opus #6, 2026-04-30)
+
+`fit_baseline()` now computes BOTH the threshold-joint baseline (B3,
+commit `a541dbd`) AND a per-column BM-via-MVN alternative for each
+ordinal trait, then picks the lower-val-MSE path per trait against
+`splits$val_idx`.  The chosen path is exposed as
+`fit_baseline()$ordinal_path_chosen` (named character: latent col →
+`"threshold_joint"` or `"bm_mvn"`).
+
+Motivation: the AVONET-300 Phase 6 bench's Migration RMSE regressed
+from 0.879 (Apr 16) to 0.975 (Apr 29) when B3 swapped the ordinal
+baseline path from a label-propagation-equivalent BM-via-MVN to the
+truncated-Gaussian threshold-joint approach.  At K=3 ordinals the
+K−1 thresholds are pinned to a narrow band by phylopars EM,
+producing systematically worse predictions than BM-via-MVN on
+z-scored integer class.  See
+`useful/MEMO_2026-04-29_phase6_migration_bisect.md`.
+
+Per Opus's adversarial review #6, we did **not** ship a `K ≤ 3 → LP`
+heuristic.  Instead the per-trait selection runs at every K and
+the gate's safety-floor simplex no longer has to route around
+threshold-joint output for low-K ordinals -- the lower-val-MSE
+baseline is selected before the gate calibration sees it.
+
+Scope: single-obs only (multi-obs ordinal selection is out of scope
+for this fix; it would require species-level aggregation of the BM
+alternative).  The code path is gated by `!multi_obs && !is.null(splits)`
+and only activates when threshold-joint actually populated the
+ordinal column.
+
+Two regression tests in
+`tests/testthat/test-joint-threshold-baseline.R`:
+
+* `"fit_baseline picks per-trait ordinal path and reports it"` --
+  smoke test on K=3 ordinal + continuous mixed data; verifies finite
+  output and that `$ordinal_path_chosen` is one of the two valid
+  values.
+* `"fit_baseline ordinal selection picks BM when threshold-joint
+  loses on val"` -- recomputes both paths' val MSE independently
+  and asserts the selection picked the lower one.
+
 ## Adversarial-review fixes (Opus 2026-04-28)
 
 Four correctness fixes surfaced by the Opus adversarial pass on

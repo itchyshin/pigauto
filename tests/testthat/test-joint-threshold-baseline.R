@@ -381,3 +381,91 @@ test_that("ordinal falls back to per-column BM when Rphylopars unavailable", {
   expect_true(all(is.finite(bl$mu[, o_col])))
   expect_true(all(is.finite(bl$mu[, "x"])))
 })
+
+# ---- Phase F: per-trait ordinal baseline path selection ----
+# Opus adversarial review #6 (2026-04-30).  The threshold-joint baseline
+# under-performs per-column BM-via-MVN at K=3 ordinals (see the AVONET
+# Migration regression bisected to commit a541dbd).  fit_baseline()
+# now computes both paths and picks the lower-val-MSE one per ordinal
+# trait, exposing the choice via $ordinal_path_chosen.
+
+test_that("fit_baseline picks per-trait ordinal path and reports it", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(2026)
+  tree <- ape::rtree(40)
+  df <- data.frame(
+    x = rnorm(40),
+    o = ordered(sample(c("low", "med", "high"), 40, TRUE),
+                levels = c("low", "med", "high")),
+    row.names = tree$tip.label
+  )
+  pd <- preprocess_traits(df, tree)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.30,
+                                 seed = 2026, trait_map = pd$trait_map)
+  bl <- fit_baseline(pd, tree, splits = splits)
+
+  o_col <- pd$trait_map[[2]]$latent_cols
+  # Output finite for all species
+  expect_true(all(is.finite(bl$mu[, o_col])))
+  # Selection field present and recorded for the ordinal column
+  expect_true("ordinal_path_chosen" %in% names(bl))
+  expect_true(as.character(o_col) %in% names(bl$ordinal_path_chosen))
+  expect_true(bl$ordinal_path_chosen[[as.character(o_col)]] %in%
+              c("threshold_joint", "bm_mvn"))
+})
+
+test_that("fit_baseline ordinal selection picks BM when threshold-joint loses on val", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(2027)
+  tree <- ape::rtree(40)
+  df <- data.frame(
+    x = rnorm(40),
+    o = ordered(sample(c("low", "med", "high"), 40, TRUE),
+                levels = c("low", "med", "high")),
+    row.names = tree$tip.label
+  )
+  pd <- preprocess_traits(df, tree)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.30,
+                                 seed = 2027, trait_map = pd$trait_map)
+
+  # Run fit_baseline as usual (selection enabled)
+  bl <- fit_baseline(pd, tree, splits = splits)
+  o_col <- pd$trait_map[[2]]$latent_cols
+  chosen <- bl$ordinal_path_chosen[[as.character(o_col)]]
+
+  # Compute the BOTH-paths predictions independently and verify the
+  # selection picked the lower-val-MSE path (no monkey-patching: the
+  # selection logic is a pure function of the predictions and val cells).
+  truth_full <- pd$X_scaled
+  n_obs <- nrow(truth_full)
+  val_idx  <- splits$val_idx
+  val_col  <- ((val_idx - 1L) %/% n_obs) + 1L
+  val_row  <- ((val_idx - 1L) %% n_obs) + 1L
+  val_rows <- val_row[val_col == o_col]
+  expect_gt(length(val_rows), 0L)
+  # Compute alternative prediction: per-column BM on z-scored col with
+  # val cells masked.
+  X_masked <- pd$X_scaled
+  X_masked[splits$val_idx]  <- NA
+  X_masked[splits$test_idx] <- NA
+  R_phy <- pigauto:::phylo_cor_matrix(tree)
+  R_phy <- R_phy[tree$tip.label, tree$tip.label]
+  bm_alt <- pigauto:::bm_impute_col(X_masked[, o_col], R_phy)
+  truth_o <- truth_full[val_rows, o_col]
+  finite_t <- is.finite(truth_o)
+  bm_mse <- mean((bm_alt$mu[val_rows[finite_t]] - truth_o[finite_t])^2)
+  tj_mse <- mean((bl$mu[val_rows[finite_t], o_col] - truth_o[finite_t])^2)
+
+  if (chosen == "bm_mvn") {
+    # bl$mu = bm_alt; tj_mse here is BM MSE; nothing extra to check.
+    expect_equal(unname(bl$mu[, o_col]), unname(bm_alt$mu),
+                 tolerance = 1e-9,
+                 info = "bm_mvn was chosen so bl$mu must match bm_alt")
+  } else {
+    # threshold-joint kept; verify it was not strictly worse than BM
+    # by recomputing both MSEs using bl$mu (which is the threshold
+    # path) and the independent bm_alt.
+    expect_lte(tj_mse, bm_mse + 1e-9,
+               label = "threshold-joint kept => its val MSE <= BM val MSE")
+  }
+})

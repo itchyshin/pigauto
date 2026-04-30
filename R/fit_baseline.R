@@ -255,6 +255,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
 
     # Ordinal -> z-scored integer class via threshold decode
     ord_idx <- which(jt$liab_types == "ordinal")
+    ordinal_threshold_populated <- integer(0)   # subset for path-selection below
     for (idx in ord_idx) {
       col <- jt$liab_cols[idx]
       if (all(is.na(jt$mu_liab[, idx]))) next
@@ -272,11 +273,79 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       mu[, col] <- dec$mu_z
       se[, col] <- 0
       populated_cols <- c(populated_cols, col)
+      ordinal_threshold_populated <- c(ordinal_threshold_populated, col)
     }
 
     bm_cols      <- setdiff(bm_cols,      populated_cols)
     binary_cols  <- setdiff(binary_cols,  populated_cols)
     ordinal_cols <- setdiff(ordinal_cols, populated_cols)
+
+    # ---- Per-trait ordinal path selection (Opus #6, 2026-04-30) -----------
+    # The threshold-joint path is theoretically more flexible than per-
+    # column BM-via-MVN on z-scored integer class for ordinal traits, but
+    # at small K (especially K=3, e.g. AVONET Migration) the K-1 thresholds
+    # are pinned to a narrow band by phylopars EM and produce systematically
+    # worse predictions than a Gaussian conditional MVN on z-scored
+    # integers.  See `useful/MEMO_2026-04-29_phase6_migration_bisect.md`
+    # for the bisect localising the regression to commit a541dbd.
+    #
+    # Rather than ship a `K <= 3 -> LP` heuristic, we compute BOTH paths
+    # for each populated ordinal trait and pick the lower-val-MSE one
+    # against the held-out val cells in `data$X_scaled`.  Single-obs only
+    # for now (multi-obs would require species aggregation of the
+    # alternative path; out of scope for this fix).
+    ordinal_path_chosen <- character(0)
+    if (length(ordinal_threshold_populated) > 0L &&
+        !is.null(splits) && !multi_obs) {
+      R_phy_local <- if (!is.null(graph) && !is.null(graph$R_phy)) {
+        graph$R_phy[spp, spp]
+      } else {
+        phylo_cor_matrix(tree)[spp, spp]
+      }
+      # Linear-index decode helpers for splits$val_idx (integer indices
+      # into the original n_obs x p_latent matrix).
+      n_rows_sp <- nrow(data$X_scaled)
+      val_idx   <- splits$val_idx
+      val_col   <- ((val_idx - 1L) %/% n_rows_sp) + 1L
+      val_row   <- ((val_idx - 1L) %% n_rows_sp) + 1L
+      truth_full <- data$X_scaled
+
+      for (col in ordinal_threshold_populated) {
+        val_rows_j <- val_row[val_col == col]
+        if (length(val_rows_j) == 0L) {
+          ordinal_path_chosen[as.character(col)] <- "threshold_joint"
+          next
+        }
+        # Threshold-joint prediction (currently in mu, possibly
+        # species-level; for single-obs n_species == n_obs).
+        tj_pred <- mu[, col]
+        # BM-via-MVN alternative on the masked z-scored ordinal column.
+        bm_res <- bm_impute_col(X[, col], R_phy_local)
+        # Val MSE for both paths.
+        truth_j  <- truth_full[val_rows_j, col]
+        finite_t <- is.finite(truth_j)
+        if (!any(finite_t)) {
+          ordinal_path_chosen[as.character(col)] <- "threshold_joint"
+          next
+        }
+        tj_diff  <- tj_pred[val_rows_j[finite_t]] - truth_j[finite_t]
+        bm_diff  <- bm_res$mu[val_rows_j[finite_t]] - truth_j[finite_t]
+        tj_mse   <- if (any(is.finite(tj_diff))) {
+                      mean(tj_diff[is.finite(tj_diff)]^2)
+                    } else NA_real_
+        bm_mse   <- if (any(is.finite(bm_diff))) {
+                      mean(bm_diff[is.finite(bm_diff)]^2)
+                    } else NA_real_
+
+        if (is.finite(bm_mse) && is.finite(tj_mse) && bm_mse < tj_mse) {
+          mu[, col] <- bm_res$mu
+          se[, col] <- bm_res$se
+          ordinal_path_chosen[as.character(col)] <- "bm_mvn"
+        } else {
+          ordinal_path_chosen[as.character(col)] <- "threshold_joint"
+        }
+      }
+    }
 
   } else if (use_continuous_joint) {
     joint <- fit_joint_mvn_baseline(data, tree, splits = splits, graph = graph,
@@ -532,5 +601,10 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     se[, lc_gate] <- 0
   }
 
-  list(mu = mu, se = se)
+  out <- list(mu = mu, se = se)
+  if (exists("ordinal_path_chosen", inherits = FALSE) &&
+      length(ordinal_path_chosen) > 0L) {
+    out$ordinal_path_chosen <- ordinal_path_chosen
+  }
+  out
 }
