@@ -12,19 +12,49 @@ pre-fix runs.  Three snapshots are now available:
   of "pigauto's discrete behaviour with the buggy safety_floor."
 * current `bench_*.{md,rds}` — 2026-04-29, post-fix.
 
-## Aggregate results
+## Aggregate results (CORRECTED 2026-04-30 per Opus E1)
 
-| bench | metric | Apr 17 (pre-bug) | Apr 28 (buggy) | Apr 29 (post-fix) |
-|---|---|---|---|---|
-| `bench_binary` | mean acc gap (pigauto − baseline) | −0.019 | −0.016 | **−0.003** |
-| `bench_categorical` | mean acc gap | −0.017 | −0.014 | **−0.003** |
-| `bench_zi_count` | mean RMSE ratio (pigauto / baseline) | 1.010 | 1.007 | **0.990** |
+The original version of this section quoted aggregates that averaged
+over BOTH the val and test splits in the bench RDS files.  This
+overstated the closure: pigauto's val performance is bounded by the
+strict val-floor by construction (post-fix), but the test set drifts
+~1.4 pp below val due to val→test sampling noise.  The honest
+numbers users care about are TEST-ONLY.
+
+**Test-only mean acc gap (pigauto − baseline):**
+
+| bench | metric | Apr 17 (pre-bug) | Apr 28 (buggy) | Apr 29 v1 strict | Apr 29 v3 type-cond |
+|---|---|---|---|---|---|
+| `bench_binary` | mean acc gap | −0.0292 | −0.0268 | −0.0138 | **−0.0138** |
+| `bench_categorical` | mean acc gap | −0.0311 | −0.0263 | −0.0127 | **−0.0160** |
+| `bench_zi_count` | mean RMSE ratio | 1.0585 | 1.0426 | 1.0120 | **1.0123** |
 
 ratio < 1.0 = pigauto better; > 1.0 = pigauto worse.
 
-The fix flips zi_count from "pigauto worse than baseline by 1 %" to
-"pigauto better than baseline by 1 %" on average, and closes the
-binary / categorical −1.6 to −1.4 pp gaps to within 0.3 pp.
+**Closure interpretation (test-only):**
+
+- binary: pre-fix gap −2.9 pp → post-fix −1.4 pp.  Closes ~50 % of
+  the test-side regression; the remaining 1.4 pp is val→test drift
+  that no val-only check can prevent.
+- categorical: −3.1 pp → −1.6 pp (v3) / −1.3 pp (v1).  Closes ~half
+  on test; v1 and v3 differ by 0.3 pp which is sampling noise
+  (the discrete-strict check is bit-identical between v1 and v3).
+- zi_count: ratio 1.06 → 1.012 (v3).  Closes most of the regression.
+  Still 1 % above baseline on test mean.
+
+**For comparison (val-only, computed for diagnostic purposes only):**
+
+| bench | metric | Apr 29 v3 val gap |
+|---|---|---|
+| `bench_binary` | mean acc gap | +0.0040 |
+| `bench_categorical` | mean acc gap | +0.0074 |
+| `bench_zi_count` | mean RMSE ratio | 0.9725 |
+
+On val, pigauto BEATS baseline by construction (the strict val-floor
+forces pigauto val-loss ≤ baseline val-loss + 1e-12 calibration-time
+floor).  This is the invariant the fix enforces.  The val→test gap
+is the gap between this calibration-time guarantee and the user-facing
+test performance.
 
 ## Worst-cell recoveries
 

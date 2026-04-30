@@ -59,10 +59,31 @@ Verification (apples-to-apples, AVONET n=1500 seed=2026):
 | Wing | RMSE | 37.09 | 35.11 | 34.12 | -2.97 |
 | categorical traits | acc | unchanged in all versions |
 
-Continuous mean change v3 vs pre = -2.75 RMSE units (slight
-improvement, within MC-dropout noise).  Discrete benches under v3
-preserve the closures from commit 720fab0 (mean acc gap binary
--0.005, categorical -0.004; zi_count RMSE ratio 0.986).
+Continuous mean change v3 vs pre = -2.75 RMSE units on a single
+seed × N_IMP=5 run.  Subsequent re-runs at the same seed produced
+Mass = 377 / 430 / 504 -- so the apparent "improvement" is within
+the MC-dropout pooling-order noise envelope and should NOT be read
+as evidence of a real continuous lift (Opus E2 confirmed
+empirically 2026-04-30).  See Phase E follow-up for multi-seed
+N_IMP=20 evidence.
+
+Discrete benches under v3 preserve the closures from commit 720fab0.
+Test-only aggregates (CORRECTED 2026-04-30 per Opus E1 -- the
+original numbers in this memo and in commit 720fab0's commit
+message averaged val + test, overstating the closure):
+
+  | bench       | pre-bug | buggy   | v1     | v3 (current) |
+  |-------------|---------|---------|--------|--------------|
+  | binary acc  | -0.0292 | -0.0268 | -0.014 | -0.0138      |
+  | categorical | -0.0311 | -0.0263 | -0.013 | -0.0160      |
+  | zi_count    |  1.0585 |  1.0426 |  1.012 |  1.0123      |
+
+Closes ~50 % of the test-side regression on binary / categorical;
+remaining ~1.4 pp test gap is val→test drift that no val-only
+floor can catch.  zi_count test ratio drops from 1.06 to 1.01 --
+most of the regression closes; pigauto is still 1 % above baseline
+on test mean.  v1 and v3 are bit-identical on the discrete strict
+check, so the ~0.3 pp v1↔v3 difference is sampling noise.
 
 Calibration evidence preserved at
 `script/_strict_floor_v3_calibration/`.  Memos at

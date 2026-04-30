@@ -41,26 +41,54 @@ type-specific blocks:
   legacy path; bench shows pigauto = baseline at every signal
   level).
 
-Empirical evidence (mean acc gap pigauto − baseline; lower-magnitude
+Empirical evidence (CORRECTED 2026-04-30 per the Opus adversarial
+review; the original tabulation here mistakenly averaged val + test
+splits in the bench RDS, overstating the closure).  The user-facing
+held-out **test-set** mean acc gap pigauto − baseline (lower-magnitude
 = closer to baseline-parity floor):
 
 | bench | Apr 17 (pre-bug) | Apr 28 (buggy) | Apr 29 (post-fix v3) |
 |---|---|---|---|
-| binary | −0.019 | −0.016 | **−0.005** |
-| categorical | −0.017 | −0.014 | **−0.004** |
-| zi_count (RMSE ratio) | 1.010 | 1.007 | **0.986** |
+| binary | −0.029 | −0.027 | **−0.014** |
+| categorical | −0.031 | −0.026 | **−0.016** |
+| zi_count (RMSE ratio) | 1.058 | 1.043 | **1.012** |
 
-Continuous benchmarks (AVONET n=1500 same-seed): v3 within
-MC-dropout noise of pre-fix on every cell (mean ΔRMSE = −2.75
-across four continuous traits, max |Δ| = 8.4 RMSE on Mass which
-moved closer to pre-fix not further away).
+The strict val-floor closes ~50 % of the test-side regression on
+binary and categorical (from −2.7 / −2.6 pp to −1.4 / −1.6 pp); the
+remaining ~1.4 pp is val→test sampling drift.  zi_count test ratio
+drops from 1.06 to 1.01 -- most of the regression closes, with a
+small residual.  3 of 32 binary cells still drift ≥ 5 pp on test
+(val→test extrapolation that no val-only floor can prevent).
 
-Per-cell variance survives in 4 of 32 binary cells (val→test
+The strict val-floor's invariant is enforced at **calibration time**
+on the calibration-time loss surface
+(`compute_corner_loss(g, val_row_idx, ...)`).  At predict time the
+model runs additional refine_steps and mask_token substitution that
+introduce a small (~5 %) drift; the
+`tests/testthat/test-safety-floor.R` strict-floor invariant test
+documents this with a `* 1.05` slack.  So the user-facing guarantee
+is "pigauto val-loss ≤ baseline val-loss + 1e-12 at calibration time,
+modulo ~5 % refine_step drift at predict time" -- not the bit-exact
+"≤ 1e-12 everywhere" reading.
+
+Continuous benchmarks (AVONET n=1500 single seed × N_IMP=5):
+the originally-reported "v3 within MC-dropout noise of pre-fix"
+landed on a particularly close pair of draws.  Re-running the same
+seed × n × N_IMP three times produced Mass test RMSE = 377, 430, 504
+-- the comparison is non-deterministic at this evidence level
+(pooling order over the 5 MC dropout draws varies between R sessions).
+A multi-seed × N_IMP=20 verification is queued; the single-seed
+single-run evidence does NOT support strong claims about whether
+v3 changed continuous performance, only that the change (if any)
+is within run-to-run pooling noise on this dataset.
+
+Per-cell variance survives in multiple binary cells (val→test
 sampling drift).  The strict val-floor only guarantees
-`pigauto_val ≤ baseline_val`; it does not guarantee
-`pigauto_test ≤ baseline_test`.  A future improvement (cross-
-validated gate selection or epsilon-margin tightening) could close
-this further; not in scope for this release.
+`pigauto_val_loss ≤ baseline_val_loss + 1e-12` (calibration time);
+it does not guarantee `pigauto_test_loss ≤ baseline_test_loss`.  A
+future improvement (cross-validated gate selection, epsilon-margin
+tightening, or LP added as a corner option for ordinal) could
+close this further; not in scope for this release.
 
 R CMD check after the fix: 0 errors / 0 warnings / 0 notes.
 Full `devtools::test()`: FAIL 0 / SKIP 2 / PASS 1081.

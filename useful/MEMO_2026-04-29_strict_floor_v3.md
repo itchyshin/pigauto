@@ -67,14 +67,32 @@ calibration block:
 | Trophic.Level | acc | 0.829 | 0.829 | 0.829 | 0 |
 | Wing.Length | RMSE | 37.09 | 35.11 | 34.12 | −2.97 |
 
-* Continuous mean change v3 − pre: **−2.75 RMSE** (slight improvement on average)
-* Continuous max abs change: 8.4 (Mass moved −2.2 %; the rest under 1 %)
-* Discrete: identical (categorical / accuracy traits are at corner gates
-  in this dataset, so the strict check is a no-op for them)
+* Continuous mean change v3 − pre: **−2.75 RMSE** on this single
+  seed × N_IMP=5 run.  **Caveat (added 2026-04-30 per Opus E2):**
+  re-running the same seed × n × N_IMP three times produced Mass
+  test RMSE = 377 / 430 / 504 — i.e., the apparent "improvement"
+  is well within run-to-run MC-dropout pooling-order noise.  The
+  comparison should NOT be read as evidence that v3 changes
+  continuous performance, only that any change is within
+  pooling-noise envelope at this evidence level.
+* Continuous max abs change: 8.4 RMSE on Mass — same caveat as
+  above; this is within pooling noise.
+* Discrete: identical (categorical / accuracy traits are at corner
+  gates in this dataset, so the strict check is a no-op for them.
+  Per Opus E3, this AVONET discrete consistency is NOT positive
+  evidence that the strict-discrete check works on real data —
+  the check fires identically across all four versions because the
+  gate is already pinned at a corner regardless.  The strict-
+  discrete check's evidence comes exclusively from the simulator
+  benches.)
 
 For comparison, v1 had continuous mean change of **+67.9 RMSE**
 (driven by Mass +273) — that was the over-correction this memo
-documents and v3 removes.
+documents and v3 removes.  At the time the v1→v3 contrast was
+within pooling noise too, but the magnitude (+67.9 RMSE) is
+~10× the noise envelope so the v1 over-correction was a real
+effect, not pooling artefact.  Multi-seed × N_IMP=20 verification
+queued (Phase E) for sharper estimates.
 
 ## What v3 doesn't change vs the 2026-04-29-am state
 
