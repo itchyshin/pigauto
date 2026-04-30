@@ -36,7 +36,10 @@ here    <- "/Users/z3437171/Dropbox/Github Local/pigauto"
 out_rds <- file.path(here, "script", "bench_avonet_full_local.rds")
 out_md  <- file.path(here, "script", "bench_avonet_full_local.md")
 
-SEED      <- 2026L
+SEED      <- {
+  v <- Sys.getenv("PIGAUTO_SEED", unset = "")
+  if (nzchar(v)) as.integer(v) else 2026L
+}
 MISS_FRAC <- 0.30
 N_SUB <- {
   v <- Sys.getenv("PIGAUTO_N_SUBSET", unset = "")
