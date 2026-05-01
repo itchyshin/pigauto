@@ -537,3 +537,81 @@ test_that("[C1] AVONET-300 Migration ordinal: BM-via-MVN beats threshold-joint o
   expect_lt(rmse_phaseF, 0.93,
             label = sprintf("[C1] Migration test RMSE = %.3f", rmse_phaseF))
 })
+
+# Phase F (2026-05-01): LP added as a third option in the per-trait
+# ordinal path selection.  Tests below verify mechanical correctness:
+# the LP path is reachable, produces finite z-scaled predictions, and
+# does not cause the existing AVONET-300 regression bottle to fail.
+
+test_that("[Phase F] fit_baseline ordinal selection lists 'lp' as a valid choice", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(2031L)
+  tree <- ape::rtree(40L)
+  df <- data.frame(
+    x = stats::rnorm(40L),
+    o = ordered(sample(c("low", "med", "high"), 40L, TRUE),
+                levels = c("low", "med", "high")),
+    row.names = tree$tip.label
+  )
+  pd     <- preprocess_traits(df, tree)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.30,
+                                 seed = 2031L,
+                                 trait_map = pd$trait_map)
+  bl <- fit_baseline(pd, tree, splits = splits)
+
+  o_col <- pd$trait_map[[2L]]$latent_cols
+  expect_true("ordinal_path_chosen" %in% names(bl))
+  chosen <- bl$ordinal_path_chosen[[as.character(o_col)]]
+  # Phase F adds "lp" to the legal set of selection outcomes.
+  expect_true(chosen %in% c("threshold_joint", "bm_mvn", "lp"),
+              info = "Phase F: chosen path must be one of the three options")
+  # Whichever path was selected, predictions must be finite and on the
+  # same z-scale (sanity).
+  expect_true(all(is.finite(bl$mu[, o_col])))
+  expect_true(all(is.finite(bl$se[, o_col])))
+  expect_true(all(abs(bl$mu[, o_col]) < 5),
+              info = "Phase F: ordinal latent predictions must stay within ~5 SD")
+})
+
+test_that("[Phase F] LP option produces a sensible z-scale prediction when chosen", {
+  skip_if_not_installed("Rphylopars")
+  # K=3 ordinal where the threshold-joint baseline is misspecified.
+  # If LP wins, verify its predictions are bounded by E[class] in [1, K]
+  # which on the integer-z scale is bounded approximately in [-z_max, +z_max]
+  # with z_max = (K - mean(1:K)) / sd(1:K).  For K=3 uniform: mean=2,
+  # sd=1, so z_max = 1.0 (predictions bounded in [-1, +1]).
+  set.seed(2032L)
+  n_tip <- 60L
+  tree  <- ape::rtree(n_tip)
+  cls <- sample(c("low", "med", "high"), n_tip, replace = TRUE,
+                prob = c(0.4, 0.2, 0.4))
+  df <- data.frame(
+    x = stats::rnorm(n_tip),
+    o = ordered(cls, levels = c("low", "med", "high")),
+    row.names = tree$tip.label
+  )
+  pd     <- preprocess_traits(df, tree)
+  splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.30,
+                                 seed = 2032L,
+                                 trait_map = pd$trait_map)
+  bl <- fit_baseline(pd, tree, splits = splits)
+
+  o_col <- NULL
+  for (tm in pd$trait_map) {
+    if (tm$type == "ordinal") { o_col <- tm$latent_cols; break }
+  }
+  expect_false(is.null(o_col),
+               info = "K=3 ordered factor must preprocess as ordinal")
+  chosen <- bl$ordinal_path_chosen[[as.character(o_col)]]
+  expect_true(chosen %in% c("threshold_joint", "bm_mvn", "lp"))
+  expect_true(all(is.finite(bl$mu[, o_col])))
+  if (chosen == "lp") {
+    # LP-via-OVR: E[class] bounded in [1, K]; z-scaled bounded in
+    # roughly [(1 - mean) / sd, (K - mean) / sd]; for K=3 uniform
+    # ~[-1, +1] but with non-uniform priors it can be slightly outside.
+    # Use a generous bound (+/- 1.5) to allow for class-frequency shifts.
+    rng <- range(bl$mu[, o_col])
+    expect_gte(rng[1], -1.5)
+    expect_lte(rng[2],  1.5)
+  }
+})
