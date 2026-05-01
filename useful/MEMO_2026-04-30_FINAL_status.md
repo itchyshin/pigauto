@@ -141,12 +141,42 @@ Per the original triage, these were tempting but out of scope:
 * **λ-as-corner in safety_floor simplex** — middle-tier
   architectural improvement; would have been a stretch goal but
   preferred to ship cv_folds + active imputation cleanly.
-* **CRAN-readiness `R CMD check --as-cran`** — running at the
-  end of session; result will be in `/tmp/rcheck.log`.  No
-  expected blockers but could surface NOTEs.
 * **Self-supervised pretraining on tree corpus** — CLAUDE.md
   Phase 9 future work; 30+ hours.
 * **CUDA backend / mini-batched GNN** — architecture rewrite.
+
+## R CMD check --as-cran (commit 340cc5c + 516b126)
+
+Ran end-to-end (`devtools::check(args = "--no-tests --no-manual")`,
+3m17s wall, full vignette rebuild including knit of all 3
+vignettes).  First pass surfaced:
+
+  * 1 WARNING: `'::' or ':::' imports not declared from: 'phylolm' 'withr'`
+  * 2 NOTEs:
+    - `unable to verify current time` (NTP / system clock)
+    - `Non-standard file/directory found at top level: 'submit_v090_vulcan_gpu'`
+
+Both code-related items fixed:
+
+  * commit `340cc5c` — adds `phylolm` + `withr` to Suggests in
+    DESCRIPTION (both used in tests under skip_if_not_installed).
+  * commit `516b126` — adds `submit_v090_vulcan_gpu` to
+    `.Rbuildignore` (companion submit_v090_cloud and
+    submit_v090_vulcan were already excluded; this was an oversight).
+
+Second R CMD check pass (partial, killed at "checking tests" stage
+which was unintentionally running the full test suite due to a
+devtools::check args parsing quirk) confirmed both fixes took effect:
+  * `checking for unstated dependencies in 'tests' ... OK` (was
+    WARNING)
+  * `checking top-level files ... OK` (was NOTE)
+
+Expected final tally: **0 errors / 0 warnings / 1 note** where the
+remaining note ("unable to verify current time") is purely an NTP /
+system clock issue, not a code issue.  Verifiable by re-running
+`devtools::check()` with `args = c("--no-tests", "--no-manual")`
+(args as character vector, not single space-separated string) when
+network NTP is reachable.
 
 ## Suggested next-session items
 
