@@ -1,0 +1,34 @@
+[     0s] =========================================================
+[     0s] Tier: SMOKE   (OU + REGIME-SHIFT DGP)
+[     0s] Sweep: n=300 | scenarios=OU,regime_shift | beta=0,0.5,1 | reps=3 | epochs=200
+[     0s] Output: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_ou_regime_smoke.rds
+[     0s] Total cells: 18
+[     0s] Cell 1/18: scenario=OU, n=300, beta=0.0, rep=1 (seed=13001)
+[   130s] Cell 2/18: scenario=regime_shift, n=300, beta=0.0, rep=1 (seed=13002)
+[   252s]   [checkpoint] saved 10 rows
+[   252s] Cell 3/18: scenario=OU, n=300, beta=0.5, rep=1 (seed=13003)
+[   374s] Cell 4/18: scenario=regime_shift, n=300, beta=0.5, rep=1 (seed=13004)
+[   490s]   [checkpoint] saved 20 rows
+[   490s] Cell 5/18: scenario=OU, n=300, beta=1.0, rep=1 (seed=13005)
+[   611s] Cell 6/18: scenario=regime_shift, n=300, beta=1.0, rep=1 (seed=13006)
+[   733s]   [checkpoint] saved 30 rows
+[   733s] Cell 7/18: scenario=OU, n=300, beta=0.0, rep=2 (seed=13007)
+[   855s] Cell 8/18: scenario=regime_shift, n=300, beta=0.0, rep=2 (seed=13008)
+[   976s]   [checkpoint] saved 40 rows
+[   976s] Cell 9/18: scenario=OU, n=300, beta=0.5, rep=2 (seed=13009)
+[  1095s] Cell 10/18: scenario=regime_shift, n=300, beta=0.5, rep=2 (seed=13010)
+[  1220s]   [checkpoint] saved 50 rows
+[  1220s] Cell 11/18: scenario=OU, n=300, beta=1.0, rep=2 (seed=13011)
+[  1341s] Cell 12/18: scenario=regime_shift, n=300, beta=1.0, rep=2 (seed=13012)
+[  1461s]   [checkpoint] saved 60 rows
+[  1461s] Cell 13/18: scenario=OU, n=300, beta=0.0, rep=3 (seed=13013)
+[  1575s] Cell 14/18: scenario=regime_shift, n=300, beta=0.0, rep=3 (seed=13014)
+[  1687s]   [checkpoint] saved 70 rows
+[  1687s] Cell 15/18: scenario=OU, n=300, beta=0.5, rep=3 (seed=13015)
+[  1805s] Cell 16/18: scenario=regime_shift, n=300, beta=0.5, rep=3 (seed=13016)
+[  1922s]   [checkpoint] saved 80 rows
+[  1922s] Cell 17/18: scenario=OU, n=300, beta=1.0, rep=3 (seed=13017)
+[  2037s] Cell 18/18: scenario=regime_shift, n=300, beta=1.0, rep=3 (seed=13018)
+[  2157s]   [checkpoint] saved 90 rows
+[  2157s] === DONE: 18 cells, 90 rows ===
+[  2157s]   rds: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_ou_regime_smoke.rds

@@ -1,0 +1,31 @@
+[     0s] ARCHITECTURE ABLATION ON WINNING DGP
+[     0s] Sweep: n=500 ncov=10 lambda=0.2,0.3,0.5 f=nonlinear,interactive beta=1 reps=3 epochs=250
+[     0s] Total cells: 18 x 3 archs = 54 fits
+[     0s] Cell 1/18: f=nonlinear, lam=0.2, rep=1 (seed=31001)
+[   240s] Cell 2/18: f=nonlinear, lam=0.3, rep=1 (seed=31002)
+[   462s]   [checkpoint] 6 rows
+[   462s] Cell 3/18: f=nonlinear, lam=0.5, rep=1 (seed=31003)
+[   666s] Cell 4/18: f=interactive, lam=0.2, rep=1 (seed=31004)
+[   874s]   [checkpoint] 12 rows
+[   874s] Cell 5/18: f=interactive, lam=0.3, rep=1 (seed=31005)
+[  1087s] Cell 6/18: f=interactive, lam=0.5, rep=1 (seed=31006)
+[  1289s]   [checkpoint] 18 rows
+[  1289s] Cell 7/18: f=nonlinear, lam=0.2, rep=2 (seed=31007)
+[  1496s] Cell 8/18: f=nonlinear, lam=0.3, rep=2 (seed=31008)
+[  1701s]   [checkpoint] 24 rows
+[  1701s] Cell 9/18: f=nonlinear, lam=0.5, rep=2 (seed=31009)
+[  1915s] Cell 10/18: f=interactive, lam=0.2, rep=2 (seed=31010)
+[  2129s]   [checkpoint] 30 rows
+[  2129s] Cell 11/18: f=interactive, lam=0.3, rep=2 (seed=31011)
+[  2334s] Cell 12/18: f=interactive, lam=0.5, rep=2 (seed=31012)
+[  2539s]   [checkpoint] 36 rows
+[  2539s] Cell 13/18: f=nonlinear, lam=0.2, rep=3 (seed=31013)
+[  2758s] Cell 14/18: f=nonlinear, lam=0.3, rep=3 (seed=31014)
+[  2964s]   [checkpoint] 42 rows
+[  2964s] Cell 15/18: f=nonlinear, lam=0.5, rep=3 (seed=31015)
+[  3171s] Cell 16/18: f=interactive, lam=0.2, rep=3 (seed=31016)
+[  3367s]   [checkpoint] 48 rows
+[  3367s] Cell 17/18: f=interactive, lam=0.3, rep=3 (seed=31017)
+[  3557s] Cell 18/18: f=interactive, lam=0.5, rep=3 (seed=31018)
+[  3758s]   [checkpoint] 54 rows
+[  3758s] === DONE: 18 cells, 54 rows ===

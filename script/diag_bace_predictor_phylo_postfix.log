@@ -1,0 +1,28 @@
+[   0.0s] Total cells: 12
+[   0.0s] Cell 1/12: pred_phylo=0.0, beta=0.0, rep=1 (seed=7001)
+[   0.1s]   n_cases = 400, mask = 120
+[ 126.7s] Cell 2/12: pred_phylo=0.3, beta=0.0, rep=1 (seed=7301)
+[ 126.7s]   n_cases = 400, mask = 120
+[ 245.2s] Cell 3/12: pred_phylo=0.6, beta=0.0, rep=1 (seed=7601)
+[ 245.2s]   n_cases = 400, mask = 120
+[ 364.8s] Cell 4/12: pred_phylo=0.0, beta=0.5, rep=1 (seed=7051)
+[ 364.8s]   n_cases = 400, mask = 120
+[ 469.4s] Cell 5/12: pred_phylo=0.3, beta=0.5, rep=1 (seed=7351)
+[ 469.4s]   n_cases = 400, mask = 120
+[ 568.9s] Cell 6/12: pred_phylo=0.6, beta=0.5, rep=1 (seed=7651)
+[ 568.9s]   n_cases = 400, mask = 120
+[ 676.2s] Cell 7/12: pred_phylo=0.0, beta=0.0, rep=2 (seed=7002)
+[ 676.2s]   n_cases = 400, mask = 120
+[ 776.0s] Cell 8/12: pred_phylo=0.3, beta=0.0, rep=2 (seed=7302)
+[ 776.0s]   n_cases = 400, mask = 120
+[ 874.0s] Cell 9/12: pred_phylo=0.6, beta=0.0, rep=2 (seed=7602)
+[ 874.0s]   n_cases = 400, mask = 120
+[ 976.8s] Cell 10/12: pred_phylo=0.0, beta=0.5, rep=2 (seed=7052)
+[ 976.8s]   n_cases = 400, mask = 120
+[1089.4s] Cell 11/12: pred_phylo=0.3, beta=0.5, rep=2 (seed=7352)
+[1089.4s]   n_cases = 400, mask = 120
+[1199.3s] Cell 12/12: pred_phylo=0.6, beta=0.5, rep=2 (seed=7652)
+[1199.3s]   n_cases = 400, mask = 120
+[1308.9s] Done. Total wall: 1308.9s
+[1308.9s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/useful/diag_bace_predictor_phylo.md
+[1308.9s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/diag_bace_predictor_phylo.rds

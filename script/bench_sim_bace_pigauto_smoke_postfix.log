@@ -1,0 +1,27 @@
+[     0s] =========================================================
+[     0s] Tier: SMOKE
+[     0s] Sweep: n_species=100 | multi_obs=1,4 | phylo_signal=0.2,0.6 | beta=0,0.5 | response=gaussian | n_pred=3 | reps=2
+[     0s] Output: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_sim_bace_pigauto_smoke.rds
+[     0s] Total cells: 16
+[     0s] Cell 1/16: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.0, rep=1 (seed=1017)
+[    59s] Cell 2/16: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.0, rep=2 (seed=1034)
+[   111s] Cell 3/16: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.5, rep=1 (seed=1051)
+[   165s] Cell 4/16: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.5, rep=2 (seed=1068)
+[   219s]   [checkpoint] saved 16 rows
+[   219s] Cell 5/16: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.0, rep=1 (seed=1085)
+[   276s] Cell 6/16: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.0, rep=2 (seed=1102)
+[   327s] Cell 7/16: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.5, rep=1 (seed=1119)
+[   378s] Cell 8/16: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.5, rep=2 (seed=1136)
+[   424s]   [checkpoint] saved 32 rows
+[   424s] Cell 9/16: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.0, rep=1 (seed=1153)
+[   472s] Cell 10/16: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.0, rep=2 (seed=1170)
+[   518s] Cell 11/16: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.5, rep=1 (seed=1187)
+[   565s] Cell 12/16: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.5, rep=2 (seed=1204)
+[   610s]   [checkpoint] saved 48 rows
+[   610s] Cell 13/16: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.0, rep=1 (seed=1221)
+[   656s] Cell 14/16: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.0, rep=2 (seed=1238)
+[   701s] Cell 15/16: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.5, rep=1 (seed=1255)
+[   748s] Cell 16/16: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.5, rep=2 (seed=1272)
+[   792s]   [checkpoint] saved 64 rows
+[   792s] === DONE: 16 cells, 64 rows ===
+[   792s]   rds: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_sim_bace_pigauto_smoke.rds

@@ -1,0 +1,8 @@
+[   0.0s] Running 35 cells across 8 cores (PSOCK cluster)
+[   0.0s] Starting PSOCK cluster...
+[   4.1s] Cluster ready. Dispatching cells...
+[1049.9s] Cluster stopped.
+[1050.0s] Completed: 35 good, 0 errors
+[1050.0s] Total wall: 1050.0s (17.5 min)
+[1050.1s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_categorical.md
+[1050.1s] done

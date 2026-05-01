@@ -1,0 +1,43 @@
+[     0s] =========================================================
+[     0s] Tier: SMOKE   (GNN CAPACITY)
+[     0s] Sweep: n=500 | multi=1,4 | ps=0.4 | beta=0.5,1 | f_types=linear,nonlinear,interactive | reps=2 | epochs=300
+[     0s] Output: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_gnn_capacity_smoke.rds
+[     0s] Total cells: 24
+[     0s] Cell 1/24: f=linear, n=500, multi=1, ps=0.4, beta=0.5, rep=1 (seed=9001)
+[   207s] Cell 2/24: f=linear, n=500, multi=4, ps=0.4, beta=0.5, rep=1 (seed=9002)
+[   395s]   [checkpoint] saved 12 rows
+[   395s] Cell 3/24: f=linear, n=500, multi=1, ps=0.4, beta=1.0, rep=1 (seed=9003)
+[   570s] Cell 4/24: f=linear, n=500, multi=4, ps=0.4, beta=1.0, rep=1 (seed=9004)
+[   757s]   [checkpoint] saved 24 rows
+[   757s] Cell 5/24: f=nonlinear, n=500, multi=1, ps=0.4, beta=0.5, rep=1 (seed=9005)
+[   929s] Cell 6/24: f=nonlinear, n=500, multi=4, ps=0.4, beta=0.5, rep=1 (seed=9006)
+[  1107s]   [checkpoint] saved 36 rows
+[  1107s] Cell 7/24: f=nonlinear, n=500, multi=1, ps=0.4, beta=1.0, rep=1 (seed=9007)
+[  1263s] Cell 8/24: f=nonlinear, n=500, multi=4, ps=0.4, beta=1.0, rep=1 (seed=9008)
+[  1425s]   [checkpoint] saved 48 rows
+[  1425s] Cell 9/24: f=interactive, n=500, multi=1, ps=0.4, beta=0.5, rep=1 (seed=9009)
+[  1581s] Cell 10/24: f=interactive, n=500, multi=4, ps=0.4, beta=0.5, rep=1 (seed=9010)
+[  1743s]   [checkpoint] saved 60 rows
+[  1743s] Cell 11/24: f=interactive, n=500, multi=1, ps=0.4, beta=1.0, rep=1 (seed=9011)
+[  1900s] Cell 12/24: f=interactive, n=500, multi=4, ps=0.4, beta=1.0, rep=1 (seed=9012)
+[  2062s]   [checkpoint] saved 72 rows
+[  2062s] Cell 13/24: f=linear, n=500, multi=1, ps=0.4, beta=0.5, rep=2 (seed=9013)
+[  2219s] Cell 14/24: f=linear, n=500, multi=4, ps=0.4, beta=0.5, rep=2 (seed=9014)
+[  2385s]   [checkpoint] saved 84 rows
+[  2385s] Cell 15/24: f=linear, n=500, multi=1, ps=0.4, beta=1.0, rep=2 (seed=9015)
+[  2545s] Cell 16/24: f=linear, n=500, multi=4, ps=0.4, beta=1.0, rep=2 (seed=9016)
+[  2706s]   [checkpoint] saved 96 rows
+[  2706s] Cell 17/24: f=nonlinear, n=500, multi=1, ps=0.4, beta=0.5, rep=2 (seed=9017)
+[  2862s] Cell 18/24: f=nonlinear, n=500, multi=4, ps=0.4, beta=0.5, rep=2 (seed=9018)
+[  3023s]   [checkpoint] saved 108 rows
+[  3023s] Cell 19/24: f=nonlinear, n=500, multi=1, ps=0.4, beta=1.0, rep=2 (seed=9019)
+[  3180s] Cell 20/24: f=nonlinear, n=500, multi=4, ps=0.4, beta=1.0, rep=2 (seed=9020)
+[  3341s]   [checkpoint] saved 120 rows
+[  3341s] Cell 21/24: f=interactive, n=500, multi=1, ps=0.4, beta=0.5, rep=2 (seed=9021)
+[  3498s] Cell 22/24: f=interactive, n=500, multi=4, ps=0.4, beta=0.5, rep=2 (seed=9022)
+[  3661s]   [checkpoint] saved 132 rows
+[  3661s] Cell 23/24: f=interactive, n=500, multi=1, ps=0.4, beta=1.0, rep=2 (seed=9023)
+[  3818s] Cell 24/24: f=interactive, n=500, multi=4, ps=0.4, beta=1.0, rep=2 (seed=9024)
+[  3979s]   [checkpoint] saved 144 rows
+[  3979s] === DONE: 24 cells, 144 rows ===
+[  3979s]   rds: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_gnn_capacity_smoke.rds

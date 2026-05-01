@@ -1,0 +1,78 @@
+[   0.0s] Running 24 cells across 8 cores (PSOCK cluster)
+[   0.0s] Running 24 cells sequentially
+[   0.0s]   [1/24] signal_0.2 (rep 1)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[  95.4s]     done in 95.4s
+[  95.4s]   [2/24] signal_0.4 (rep 1)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[ 185.3s]     done in 89.9s
+[ 185.3s]   [3/24] signal_0.6 (rep 1)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[ 273.3s]     done in 88.0s
+[ 273.3s]   [4/24] signal_0.8 (rep 1)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[ 358.6s]     done in 85.3s
+[ 358.6s]   [5/24] signal_1.0 (rep 1)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[ 445.4s]     done in 86.8s
+[ 445.4s]   [6/24] signal_0.2 (rep 2)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[ 532.8s]     done in 87.4s
+[ 532.8s]   [7/24] signal_0.4 (rep 2)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[ 615.8s]     done in 83.0s
+[ 615.8s]   [8/24] signal_0.6 (rep 2)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[ 700.3s]     done in 84.5s
+[ 700.3s]   [9/24] signal_0.8 (rep 2)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[ 790.0s]     done in 89.7s
+[ 790.0s]   [10/24] signal_1.0 (rep 2)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[ 878.4s]     done in 88.4s
+[ 878.4s]   [11/24] signal_0.2 (rep 3)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[ 964.8s]     done in 86.4s
+[ 964.8s]   [12/24] signal_0.4 (rep 3)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[1049.3s]     done in 84.5s
+[1049.3s]   [13/24] signal_0.6 (rep 3)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[1128.5s]     done in 79.2s
+[1128.5s]   [14/24] signal_0.8 (rep 3)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[1211.9s]     done in 83.4s
+[1211.9s]   [15/24] signal_1.0 (rep 3)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[1303.9s]     done in 92.0s
+[1303.9s]   [16/24] K_3 (rep 1)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[1402.4s]     done in 98.5s
+[1402.4s]   [17/24] K_8 (rep 1)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[1499.9s]     done in 97.4s
+[1499.9s]   [18/24] K_12 (rep 1)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[1596.0s]     done in 96.2s
+[1596.0s]   [19/24] K_3 (rep 2)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[1684.8s]     done in 88.8s
+[1684.8s]   [20/24] K_8 (rep 2)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[1765.3s]     done in 80.4s
+[1765.3s]   [21/24] K_12 (rep 2)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[1849.8s]     done in 84.5s
+[1849.8s]   [22/24] K_3 (rep 3)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[1935.9s]     done in 86.1s
+[1935.9s]   [23/24] K_8 (rep 3)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[2024.5s]     done in 88.6s
+[2024.5s]   [24/24] K_12 (rep 3)
+Warning: Small validation set for 1 trait(s): comp (n=18). Calibrated gate and conformal scores will be noisy; coverage may deviate from the 95%% target. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+[2113.8s]     done in 89.4s
+[2113.8s] Completed: 24 good, 0 errors
+[2113.9s] Total wall: 2113.8s (35.2 min)
+[2113.9s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_multi_proportion.md
+[2113.9s] done

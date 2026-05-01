@@ -1,0 +1,78 @@
+[   0.0s] Running 24 cells across 8 cores (PSOCK cluster)
+[   0.0s] Running 24 cells sequentially
+[   0.0s]   [1/24] signal_0.2 (rep 1)
+[  83.5s]     done in 83.4s
+[  83.5s]   [2/24] signal_0.4 (rep 1)
+[ 162.4s]     done in 79.0s
+[ 162.4s]   [3/24] signal_0.6 (rep 1)
+[ 240.9s]     done in 78.5s
+[ 240.9s]   [4/24] signal_0.8 (rep 1)
+[ 315.1s]     done in 74.1s
+[ 315.1s]   [5/24] signal_1.0 (rep 1)
+[ 390.6s]     done in 75.6s
+[ 390.7s]   [6/24] signal_0.2 (rep 2)
+[ 465.1s]     done in 74.4s
+[ 465.1s]   [7/24] signal_0.4 (rep 2)
+[ 539.4s]     done in 74.3s
+[ 539.4s]   [8/24] signal_0.6 (rep 2)
+[ 613.4s]     done in 74.1s
+[ 613.4s]   [9/24] signal_0.8 (rep 2)
+[ 690.7s]     done in 77.3s
+[ 690.7s]   [10/24] signal_1.0 (rep 2)
+[ 764.8s]     done in 74.0s
+[ 764.8s]   [11/24] signal_0.2 (rep 3)
+[ 835.9s]     done in 71.1s
+[ 835.9s]   [12/24] signal_0.4 (rep 3)
+[ 904.8s]     done in 69.0s
+[ 904.8s]   [13/24] signal_0.6 (rep 3)
+[ 977.9s]     done in 73.0s
+[ 977.9s]   [14/24] signal_0.8 (rep 3)
+[1051.5s]     done in 73.6s
+[1051.5s]   [15/24] signal_1.0 (rep 3)
+[1125.1s]     done in 73.6s
+[1125.1s]   [16/24] K_3 (rep 1)
+[1204.8s]     done in 79.7s
+[1204.8s]   [17/24] K_8 (rep 1)
+[1282.4s]     done in 77.6s
+[1282.4s]   [18/24] K_12 (rep 1)
+[1356.7s]     done in 74.3s
+[1356.7s]   [19/24] K_3 (rep 2)
+[1430.0s]     done in 73.4s
+[1430.0s]   [20/24] K_8 (rep 2)
+[1505.4s]     done in 75.4s
+[1505.4s]   [21/24] K_12 (rep 2)
+[1579.4s]     done in 73.9s
+[1579.4s]   [22/24] K_3 (rep 3)
+[1654.0s]     done in 74.6s
+[1654.0s]   [23/24] K_8 (rep 3)
+[1725.1s]     done in 71.2s
+[1725.1s]   [24/24] K_12 (rep 3)
+[1793.6s]     done in 68.5s
+[1793.6s]   ERROR [signal_0.2/0.25/1]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [signal_0.4/0.25/1]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [signal_0.6/0.25/1]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [signal_0.8/0.25/1]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [signal_1.0/0.25/1]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [signal_0.2/0.25/2]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [signal_0.4/0.25/2]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [signal_0.6/0.25/2]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [signal_0.8/0.25/2]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [signal_1.0/0.25/2]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [signal_0.2/0.25/3]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [signal_0.4/0.25/3]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [signal_0.6/0.25/3]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [signal_0.8/0.25/3]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [signal_1.0/0.25/3]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [K_3/0.25/1]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [K_8/0.25/1]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [K_12/0.25/1]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [K_3/0.25/2]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [K_8/0.25/2]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [K_12/0.25/2]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [K_3/0.25/3]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [K_8/0.25/3]: missing value where TRUE/FALSE needed
+[1793.6s]   ERROR [K_12/0.25/3]: missing value where TRUE/FALSE needed
+[1793.6s] Completed: 0 good, 24 errors
+[1793.7s] Total wall: 1793.6s (29.9 min)
+Error in if (nrow(sub) == 0L) { : argument is of length zero
+Execution halted

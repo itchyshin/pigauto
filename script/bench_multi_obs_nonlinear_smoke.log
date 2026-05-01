@@ -1,0 +1,34 @@
+[     0s] =========================================================
+[     0s] Tier: SMOKE   (MULTI-OBS NONLINEAR -- low phylo, many covs, i.i.d.)
+[     0s] Sweep: n=300 obs/sp=5 | n_covs=5 | lambda=0.1,0.3 | f=linear,nonlinear,interactive | beta=0,0.5,1 | reps=1 | epochs=200
+[     0s] Output: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_multi_obs_nonlinear_smoke.rds
+[     0s] Total cells: 18
+[     0s] Cell 1/18: f=linear, lam=0.1, beta=0.0, n_covs=5, rep=1 (seed=17001)
+[   143s] Cell 2/18: f=linear, lam=0.3, beta=0.0, n_covs=5, rep=1 (seed=17002)
+[   269s]   [checkpoint] saved 14 rows
+[   269s] Cell 3/18: f=nonlinear, lam=0.1, beta=0.0, n_covs=5, rep=1 (seed=17003)
+[   388s] Cell 4/18: f=nonlinear, lam=0.3, beta=0.0, n_covs=5, rep=1 (seed=17004)
+[   505s]   [checkpoint] saved 28 rows
+[   505s] Cell 5/18: f=interactive, lam=0.1, beta=0.0, n_covs=5, rep=1 (seed=17005)
+[   636s] Cell 6/18: f=interactive, lam=0.3, beta=0.0, n_covs=5, rep=1 (seed=17006)
+[   769s]   [checkpoint] saved 42 rows
+[   769s] Cell 7/18: f=linear, lam=0.1, beta=0.5, n_covs=5, rep=1 (seed=17007)
+[   911s] Cell 8/18: f=linear, lam=0.3, beta=0.5, n_covs=5, rep=1 (seed=17008)
+[  1045s]   [checkpoint] saved 56 rows
+[  1045s] Cell 9/18: f=nonlinear, lam=0.1, beta=0.5, n_covs=5, rep=1 (seed=17009)
+[  1187s] Cell 10/18: f=nonlinear, lam=0.3, beta=0.5, n_covs=5, rep=1 (seed=17010)
+[  1336s]   [checkpoint] saved 70 rows
+[  1336s] Cell 11/18: f=interactive, lam=0.1, beta=0.5, n_covs=5, rep=1 (seed=17011)
+[  1473s] Cell 12/18: f=interactive, lam=0.3, beta=0.5, n_covs=5, rep=1 (seed=17012)
+[  1603s]   [checkpoint] saved 84 rows
+[  1603s] Cell 13/18: f=linear, lam=0.1, beta=1.0, n_covs=5, rep=1 (seed=17013)
+[  1749s] Cell 14/18: f=linear, lam=0.3, beta=1.0, n_covs=5, rep=1 (seed=17014)
+[  1883s]   [checkpoint] saved 98 rows
+[  1883s] Cell 15/18: f=nonlinear, lam=0.1, beta=1.0, n_covs=5, rep=1 (seed=17015)
+[  2011s] Cell 16/18: f=nonlinear, lam=0.3, beta=1.0, n_covs=5, rep=1 (seed=17016)
+[  2160s]   [checkpoint] saved 112 rows
+[  2160s] Cell 17/18: f=interactive, lam=0.1, beta=1.0, n_covs=5, rep=1 (seed=17017)
+[  2321s] Cell 18/18: f=interactive, lam=0.3, beta=1.0, n_covs=5, rep=1 (seed=17018)
+[  2463s]   [checkpoint] saved 126 rows
+[  2464s] === DONE: 18 cells, 126 rows ===
+[  2464s]   rds: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_multi_obs_nonlinear_smoke.rds

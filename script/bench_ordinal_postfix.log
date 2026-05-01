@@ -1,0 +1,13 @@
+[   0.0s] Running 35 cells across 8 cores (PSOCK cluster)
+[   0.0s] Starting PSOCK cluster...
+[   3.9s] Cluster ready. Dispatching cells...
+[ 926.7s] Cluster stopped.
+[ 926.7s]   ERROR [levels_10/0.25/1]: Not compatible with requested type: [type=character; target=double].
+[ 926.7s]   ERROR [levels_10/0.25/2]: Not compatible with requested type: [type=character; target=double].
+[ 926.7s]   ERROR [levels_10/0.25/3]: Not compatible with requested type: [type=character; target=double].
+[ 926.7s]   ERROR [levels_10/0.25/4]: Not compatible with requested type: [type=character; target=double].
+[ 926.7s]   ERROR [levels_10/0.25/5]: Not compatible with requested type: [type=character; target=double].
+[ 926.7s] Completed: 30 good, 5 errors
+[ 926.8s] Total wall: 926.7s (15.4 min)
+[ 926.8s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_ordinal.md
+[ 926.8s] done

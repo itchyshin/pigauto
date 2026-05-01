@@ -1,0 +1,37 @@
+[     0s] =========================================================
+[     0s] Tier: SMOKE   (NONLINEAR DGP)
+[     0s] Sweep: n_species=100 | multi_obs=1,4 | phylo_signal=0.4 | beta=0,0.5 | f_types=linear,nonlinear,interactive | reps=2
+[     0s] Output: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_sim_bace_nonlinear_smoke.rds
+[     0s] Total cells: 24
+[     0s] Cell 1/24: f=linear, n=100, multi=1, ps=0.4, beta=0.0, rep=1 (seed=7001)
+[    53s] Cell 2/24: f=linear, n=100, multi=4, ps=0.4, beta=0.0, rep=1 (seed=7002)
+[   107s] Cell 3/24: f=linear, n=100, multi=1, ps=0.4, beta=0.5, rep=1 (seed=7003)
+[   156s] Cell 4/24: f=linear, n=100, multi=4, ps=0.4, beta=0.5, rep=1 (seed=7004)
+[   207s]   [checkpoint] saved 20 rows
+[   207s] Cell 5/24: f=nonlinear, n=100, multi=1, ps=0.4, beta=0.0, rep=1 (seed=7005)
+[   251s] Cell 6/24: f=nonlinear, n=100, multi=4, ps=0.4, beta=0.0, rep=1 (seed=7006)
+[   296s] Cell 7/24: f=nonlinear, n=100, multi=1, ps=0.4, beta=0.5, rep=1 (seed=7007)
+[   339s] Cell 8/24: f=nonlinear, n=100, multi=4, ps=0.4, beta=0.5, rep=1 (seed=7008)
+[   383s]   [checkpoint] saved 40 rows
+[   383s] Cell 9/24: f=interactive, n=100, multi=1, ps=0.4, beta=0.0, rep=1 (seed=7009)
+[   427s] Cell 10/24: f=interactive, n=100, multi=4, ps=0.4, beta=0.0, rep=1 (seed=7010)
+[   472s] Cell 11/24: f=interactive, n=100, multi=1, ps=0.4, beta=0.5, rep=1 (seed=7011)
+[   515s] Cell 12/24: f=interactive, n=100, multi=4, ps=0.4, beta=0.5, rep=1 (seed=7012)
+[   559s]   [checkpoint] saved 60 rows
+[   559s] Cell 13/24: f=linear, n=100, multi=1, ps=0.4, beta=0.0, rep=2 (seed=7013)
+[   602s] Cell 14/24: f=linear, n=100, multi=4, ps=0.4, beta=0.0, rep=2 (seed=7014)
+[   648s] Cell 15/24: f=linear, n=100, multi=1, ps=0.4, beta=0.5, rep=2 (seed=7015)
+[   693s] Cell 16/24: f=linear, n=100, multi=4, ps=0.4, beta=0.5, rep=2 (seed=7016)
+[   739s]   [checkpoint] saved 80 rows
+[   739s] Cell 17/24: f=nonlinear, n=100, multi=1, ps=0.4, beta=0.0, rep=2 (seed=7017)
+[   782s] Cell 18/24: f=nonlinear, n=100, multi=4, ps=0.4, beta=0.0, rep=2 (seed=7018)
+[   827s] Cell 19/24: f=nonlinear, n=100, multi=1, ps=0.4, beta=0.5, rep=2 (seed=7019)
+[   870s] Cell 20/24: f=nonlinear, n=100, multi=4, ps=0.4, beta=0.5, rep=2 (seed=7020)
+[   914s]   [checkpoint] saved 100 rows
+[   914s] Cell 21/24: f=interactive, n=100, multi=1, ps=0.4, beta=0.0, rep=2 (seed=7021)
+[   956s] Cell 22/24: f=interactive, n=100, multi=4, ps=0.4, beta=0.0, rep=2 (seed=7022)
+[  1000s] Cell 23/24: f=interactive, n=100, multi=1, ps=0.4, beta=0.5, rep=2 (seed=7023)
+[  1044s] Cell 24/24: f=interactive, n=100, multi=4, ps=0.4, beta=0.5, rep=2 (seed=7024)
+[  1088s]   [checkpoint] saved 120 rows
+[  1088s] === DONE: 24 cells, 120 rows ===
+[  1088s]   rds: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_sim_bace_nonlinear_smoke.rds

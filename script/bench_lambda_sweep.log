@@ -1,0 +1,66 @@
+[     0s] =========================================================
+[     0s] LAMBDA SWEEP -- find pigauto's win/loss threshold
+[     0s] Sweep: n=500 | ncov=10 | lambda=0,0.025,0.05,0.1,0.15,0.2,0.3,0.5 | f=nonlinear,interactive | beta=1 | reps=3 | epochs=250
+[     0s] Output: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_lambda_sweep.rds
+[     0s] Total cells: 48
+[     0s] Cell 1/48: f=nonlinear, lam=0.000, beta=1.0, rep=1 (seed=23001)
+[    92s] Cell 2/48: f=nonlinear, lam=0.025, beta=1.0, rep=1 (seed=23002)
+[   179s] Cell 3/48: f=nonlinear, lam=0.050, beta=1.0, rep=1 (seed=23003)
+[   261s] Cell 4/48: f=nonlinear, lam=0.100, beta=1.0, rep=1 (seed=23004)
+[   344s]   [checkpoint] 24 rows
+[   344s] Cell 5/48: f=nonlinear, lam=0.150, beta=1.0, rep=1 (seed=23005)
+[   427s] Cell 6/48: f=nonlinear, lam=0.200, beta=1.0, rep=1 (seed=23006)
+[   511s] Cell 7/48: f=nonlinear, lam=0.300, beta=1.0, rep=1 (seed=23007)
+[   594s] Cell 8/48: f=nonlinear, lam=0.500, beta=1.0, rep=1 (seed=23008)
+[   673s]   [checkpoint] 48 rows
+[   673s] Cell 9/48: f=interactive, lam=0.000, beta=1.0, rep=1 (seed=23009)
+[   762s] Cell 10/48: f=interactive, lam=0.025, beta=1.0, rep=1 (seed=23010)
+[   853s] Cell 11/48: f=interactive, lam=0.050, beta=1.0, rep=1 (seed=23011)
+[   946s] Cell 12/48: f=interactive, lam=0.100, beta=1.0, rep=1 (seed=23012)
+[  1040s]   [checkpoint] 72 rows
+[  1040s] Cell 13/48: f=interactive, lam=0.150, beta=1.0, rep=1 (seed=23013)
+[  1125s] Cell 14/48: f=interactive, lam=0.200, beta=1.0, rep=1 (seed=23014)
+[  1206s] Cell 15/48: f=interactive, lam=0.300, beta=1.0, rep=1 (seed=23015)
+[  1286s] Cell 16/48: f=interactive, lam=0.500, beta=1.0, rep=1 (seed=23016)
+[  1367s]   [checkpoint] 96 rows
+[  1367s] Cell 17/48: f=nonlinear, lam=0.000, beta=1.0, rep=2 (seed=23017)
+[  1450s] Cell 18/48: f=nonlinear, lam=0.025, beta=1.0, rep=2 (seed=23018)
+[  1530s] Cell 19/48: f=nonlinear, lam=0.050, beta=1.0, rep=2 (seed=23019)
+[  1611s] Cell 20/48: f=nonlinear, lam=0.100, beta=1.0, rep=2 (seed=23020)
+[  1692s]   [checkpoint] 120 rows
+[  1692s] Cell 21/48: f=nonlinear, lam=0.150, beta=1.0, rep=2 (seed=23021)
+[  1775s] Cell 22/48: f=nonlinear, lam=0.200, beta=1.0, rep=2 (seed=23022)
+[  1856s] Cell 23/48: f=nonlinear, lam=0.300, beta=1.0, rep=2 (seed=23023)
+[  1940s] Cell 24/48: f=nonlinear, lam=0.500, beta=1.0, rep=2 (seed=23024)
+[  2025s]   [checkpoint] 144 rows
+[  2025s] Cell 25/48: f=interactive, lam=0.000, beta=1.0, rep=2 (seed=23025)
+[  2105s] Cell 26/48: f=interactive, lam=0.025, beta=1.0, rep=2 (seed=23026)
+[  2185s] Cell 27/48: f=interactive, lam=0.050, beta=1.0, rep=2 (seed=23027)
+[  2265s] Cell 28/48: f=interactive, lam=0.100, beta=1.0, rep=2 (seed=23028)
+[  2339s]   [checkpoint] 168 rows
+[  2339s] Cell 29/48: f=interactive, lam=0.150, beta=1.0, rep=2 (seed=23029)
+[  2411s] Cell 30/48: f=interactive, lam=0.200, beta=1.0, rep=2 (seed=23030)
+[  2481s] Cell 31/48: f=interactive, lam=0.300, beta=1.0, rep=2 (seed=23031)
+[  2552s] Cell 32/48: f=interactive, lam=0.500, beta=1.0, rep=2 (seed=23032)
+[  2624s]   [checkpoint] 192 rows
+[  2624s] Cell 33/48: f=nonlinear, lam=0.000, beta=1.0, rep=3 (seed=23033)
+[  2695s] Cell 34/48: f=nonlinear, lam=0.025, beta=1.0, rep=3 (seed=23034)
+[  2765s] Cell 35/48: f=nonlinear, lam=0.050, beta=1.0, rep=3 (seed=23035)
+[  2837s] Cell 36/48: f=nonlinear, lam=0.100, beta=1.0, rep=3 (seed=23036)
+[  2908s]   [checkpoint] 216 rows
+[  2908s] Cell 37/48: f=nonlinear, lam=0.150, beta=1.0, rep=3 (seed=23037)
+[  2979s] Cell 38/48: f=nonlinear, lam=0.200, beta=1.0, rep=3 (seed=23038)
+[  3050s] Cell 39/48: f=nonlinear, lam=0.300, beta=1.0, rep=3 (seed=23039)
+[  3122s] Cell 40/48: f=nonlinear, lam=0.500, beta=1.0, rep=3 (seed=23040)
+[  3194s]   [checkpoint] 240 rows
+[  3194s] Cell 41/48: f=interactive, lam=0.000, beta=1.0, rep=3 (seed=23041)
+[  3265s] Cell 42/48: f=interactive, lam=0.025, beta=1.0, rep=3 (seed=23042)
+[  3336s] Cell 43/48: f=interactive, lam=0.050, beta=1.0, rep=3 (seed=23043)
+[  3407s] Cell 44/48: f=interactive, lam=0.100, beta=1.0, rep=3 (seed=23044)
+[  3479s]   [checkpoint] 264 rows
+[  3479s] Cell 45/48: f=interactive, lam=0.150, beta=1.0, rep=3 (seed=23045)
+[  3550s] Cell 46/48: f=interactive, lam=0.200, beta=1.0, rep=3 (seed=23046)
+[  3622s] Cell 47/48: f=interactive, lam=0.300, beta=1.0, rep=3 (seed=23047)
+[  3697s] Cell 48/48: f=interactive, lam=0.500, beta=1.0, rep=3 (seed=23048)
+[  3770s]   [checkpoint] 288 rows
+[  3770s] === DONE: 48 cells, 288 rows ===

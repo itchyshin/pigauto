@@ -1,0 +1,187 @@
+[     0s] =========================================================
+[     0s] Tier: MEDIUM
+[     0s] Sweep: n_species=100,500 | multi_obs=1,4 | phylo_signal=0.2,0.6 | beta=0,0.3,0.6 | response=gaussian,binary | n_pred=3 | reps=3
+[     0s] Output: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_sim_bace_pigauto_medium.rds
+[     0s] Total cells: 144
+[     0s] Cell 1/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.0, rep=1 (seed=1017)
+[    56s] Cell 2/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.0, rep=2 (seed=1034)
+[   108s] Cell 3/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.0, rep=3 (seed=1051)
+[   159s] Cell 4/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.3, rep=1 (seed=1068)
+[   202s]   [checkpoint] saved 16 rows
+[   202s] Cell 5/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.3, rep=2 (seed=1085)
+[   250s] Cell 6/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.3, rep=3 (seed=1102)
+[   299s] Cell 7/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.6, rep=1 (seed=1119)
+[   351s] Cell 8/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.6, rep=2 (seed=1136)
+[   404s]   [checkpoint] saved 32 rows
+[   404s] Cell 9/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.2, beta=0.6, rep=3 (seed=1153)
+[   459s] Cell 10/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.0, rep=1 (seed=1170)
+[   514s] Cell 11/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.0, rep=2 (seed=1187)
+[   570s] Cell 12/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.0, rep=3 (seed=1204)
+[   624s]   [checkpoint] saved 48 rows
+[   624s] Cell 13/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.3, rep=1 (seed=1221)
+[   680s] Cell 14/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.3, rep=2 (seed=1238)
+[   734s] Cell 15/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.3, rep=3 (seed=1255)
+[   790s] Cell 16/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.6, rep=1 (seed=1272)
+[   842s]   [checkpoint] saved 64 rows
+[   842s] Cell 17/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.6, rep=2 (seed=1289)
+[   894s] Cell 18/144: response=gaussian, n_pred=3, n=100, multi=1, ps=0.6, beta=0.6, rep=3 (seed=1306)
+[   944s] Cell 19/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.0, rep=1 (seed=1323)
+[   997s] Cell 20/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.0, rep=2 (seed=1340)
+[  1051s]   [checkpoint] saved 80 rows
+[  1051s] Cell 21/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.0, rep=3 (seed=1357)
+[  1104s] Cell 22/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.3, rep=1 (seed=1374)
+[  1159s] Cell 23/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.3, rep=2 (seed=1391)
+[  1215s] Cell 24/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.3, rep=3 (seed=1408)
+[  1269s]   [checkpoint] saved 96 rows
+[  1269s] Cell 25/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.6, rep=1 (seed=1425)
+[  1323s] Cell 26/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.6, rep=2 (seed=1442)
+[  1377s] Cell 27/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.2, beta=0.6, rep=3 (seed=1459)
+[  1429s] Cell 28/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.0, rep=1 (seed=1476)
+[  1484s]   [checkpoint] saved 112 rows
+[  1484s] Cell 29/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.0, rep=2 (seed=1493)
+[  1547s] Cell 30/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.0, rep=3 (seed=1510)
+[  1605s] Cell 31/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.3, rep=1 (seed=1527)
+[  1663s] Cell 32/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.3, rep=2 (seed=1544)
+[  1720s]   [checkpoint] saved 128 rows
+[  1720s] Cell 33/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.3, rep=3 (seed=1561)
+[  1778s] Cell 34/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.6, rep=1 (seed=1578)
+[  1839s] Cell 35/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.6, rep=2 (seed=1595)
+[  1903s] Cell 36/144: response=gaussian, n_pred=3, n=100, multi=4, ps=0.6, beta=0.6, rep=3 (seed=1612)
+[  1964s]   [checkpoint] saved 144 rows
+[  1964s] Cell 37/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.2, beta=0.0, rep=1 (seed=1629)
+[  2024s] Cell 38/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.2, beta=0.0, rep=2 (seed=1646)
+[  2079s] Cell 39/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.2, beta=0.0, rep=3 (seed=1663)
+[  2133s] Cell 40/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.2, beta=0.3, rep=1 (seed=1680)
+[  2189s]   [checkpoint] saved 160 rows
+[  2189s] Cell 41/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.2, beta=0.3, rep=2 (seed=1697)
+[  2245s] Cell 42/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.2, beta=0.3, rep=3 (seed=1714)
+[  2306s] Cell 43/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.2, beta=0.6, rep=1 (seed=1731)
+[  2362s] Cell 44/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.2, beta=0.6, rep=2 (seed=1748)
+[  2416s]   [checkpoint] saved 176 rows
+[  2416s] Cell 45/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.2, beta=0.6, rep=3 (seed=1765)
+[  2472s] Cell 46/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.6, beta=0.0, rep=1 (seed=1782)
+[  2526s] Cell 47/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.6, beta=0.0, rep=2 (seed=1799)
+[  2578s] Cell 48/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.6, beta=0.0, rep=3 (seed=1816)
+[  2629s]   [checkpoint] saved 192 rows
+[  2629s] Cell 49/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.6, beta=0.3, rep=1 (seed=1833)
+[  2681s] Cell 50/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.6, beta=0.3, rep=2 (seed=1850)
+[  2732s] Cell 51/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.6, beta=0.3, rep=3 (seed=1867)
+[  2786s] Cell 52/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.6, beta=0.6, rep=1 (seed=1884)
+[  2841s]   [checkpoint] saved 208 rows
+[  2841s] Cell 53/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.6, beta=0.6, rep=2 (seed=1901)
+[  2894s] Cell 54/144: response=gaussian, n_pred=3, n=500, multi=1, ps=0.6, beta=0.6, rep=3 (seed=1918)
+[  2944s] Cell 55/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.2, beta=0.0, rep=1 (seed=1935)
+[  2998s] Cell 56/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.2, beta=0.0, rep=2 (seed=1952)
+[  3050s]   [checkpoint] saved 224 rows
+[  3050s] Cell 57/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.2, beta=0.0, rep=3 (seed=1969)
+[  3102s] Cell 58/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.2, beta=0.3, rep=1 (seed=1986)
+[  3155s] Cell 59/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.2, beta=0.3, rep=2 (seed=2003)
+[  3209s] Cell 60/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.2, beta=0.3, rep=3 (seed=2020)
+[  3263s]   [checkpoint] saved 240 rows
+[  3263s] Cell 61/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.2, beta=0.6, rep=1 (seed=2037)
+[  3313s] Cell 62/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.2, beta=0.6, rep=2 (seed=2054)
+[  3364s] Cell 63/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.2, beta=0.6, rep=3 (seed=2071)
+[  3418s] Cell 64/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.6, beta=0.0, rep=1 (seed=2088)
+[  3471s]   [checkpoint] saved 256 rows
+[  3471s] Cell 65/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.6, beta=0.0, rep=2 (seed=2105)
+[  3523s] Cell 66/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.6, beta=0.0, rep=3 (seed=2122)
+[  3575s] Cell 67/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.6, beta=0.3, rep=1 (seed=2139)
+[  3629s] Cell 68/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.6, beta=0.3, rep=2 (seed=2156)
+[  3677s]   [checkpoint] saved 272 rows
+[  3677s] Cell 69/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.6, beta=0.3, rep=3 (seed=2173)
+[  3726s] Cell 70/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.6, beta=0.6, rep=1 (seed=2190)
+[  3782s] Cell 71/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.6, beta=0.6, rep=2 (seed=2207)
+[  3837s] Cell 72/144: response=gaussian, n_pred=3, n=500, multi=4, ps=0.6, beta=0.6, rep=3 (seed=2224)
+[  3892s]   [checkpoint] saved 288 rows
+[  3892s] Cell 73/144: response=binary, n_pred=3, n=100, multi=1, ps=0.2, beta=0.0, rep=1 (seed=2241)
+[  3944s] Cell 74/144: response=binary, n_pred=3, n=100, multi=1, ps=0.2, beta=0.0, rep=2 (seed=2258)
+[  3987s] Cell 75/144: response=binary, n_pred=3, n=100, multi=1, ps=0.2, beta=0.0, rep=3 (seed=2275)
+[  4031s] Cell 76/144: response=binary, n_pred=3, n=100, multi=1, ps=0.2, beta=0.3, rep=1 (seed=2292)
+[  4071s]   [checkpoint] saved 300 rows
+[  4071s] Cell 77/144: response=binary, n_pred=3, n=100, multi=1, ps=0.2, beta=0.3, rep=2 (seed=2309)
+[  4111s] Cell 78/144: response=binary, n_pred=3, n=100, multi=1, ps=0.2, beta=0.3, rep=3 (seed=2326)
+[  4151s] Cell 79/144: response=binary, n_pred=3, n=100, multi=1, ps=0.2, beta=0.6, rep=1 (seed=2343)
+[  4194s] Cell 80/144: response=binary, n_pred=3, n=100, multi=1, ps=0.2, beta=0.6, rep=2 (seed=2360)
+[  4238s]   [checkpoint] saved 312 rows
+[  4238s] Cell 81/144: response=binary, n_pred=3, n=100, multi=1, ps=0.2, beta=0.6, rep=3 (seed=2377)
+[  4283s] Cell 82/144: response=binary, n_pred=3, n=100, multi=1, ps=0.6, beta=0.0, rep=1 (seed=2394)
+[  4324s] Cell 83/144: response=binary, n_pred=3, n=100, multi=1, ps=0.6, beta=0.0, rep=2 (seed=2411)
+[  4370s] Cell 84/144: response=binary, n_pred=3, n=100, multi=1, ps=0.6, beta=0.0, rep=3 (seed=2428)
+[  4413s]   [checkpoint] saved 324 rows
+[  4413s] Cell 85/144: response=binary, n_pred=3, n=100, multi=1, ps=0.6, beta=0.3, rep=1 (seed=2445)
+[  4454s] Cell 86/144: response=binary, n_pred=3, n=100, multi=1, ps=0.6, beta=0.3, rep=2 (seed=2462)
+[  4496s] Cell 87/144: response=binary, n_pred=3, n=100, multi=1, ps=0.6, beta=0.3, rep=3 (seed=2479)
+[  4538s] Cell 88/144: response=binary, n_pred=3, n=100, multi=1, ps=0.6, beta=0.6, rep=1 (seed=2496)
+[  4584s]   [checkpoint] saved 336 rows
+[  4584s] Cell 89/144: response=binary, n_pred=3, n=100, multi=1, ps=0.6, beta=0.6, rep=2 (seed=2513)
+[  4631s] Cell 90/144: response=binary, n_pred=3, n=100, multi=1, ps=0.6, beta=0.6, rep=3 (seed=2530)
+[  4671s] Cell 91/144: response=binary, n_pred=3, n=100, multi=4, ps=0.2, beta=0.0, rep=1 (seed=2547)
+[  4717s] Cell 92/144: response=binary, n_pred=3, n=100, multi=4, ps=0.2, beta=0.0, rep=2 (seed=2564)
+[  4763s]   [checkpoint] saved 348 rows
+[  4763s] Cell 93/144: response=binary, n_pred=3, n=100, multi=4, ps=0.2, beta=0.0, rep=3 (seed=2581)
+[  4805s] Cell 94/144: response=binary, n_pred=3, n=100, multi=4, ps=0.2, beta=0.3, rep=1 (seed=2598)
+[  4848s] Cell 95/144: response=binary, n_pred=3, n=100, multi=4, ps=0.2, beta=0.3, rep=2 (seed=2615)
+[  4892s] Cell 96/144: response=binary, n_pred=3, n=100, multi=4, ps=0.2, beta=0.3, rep=3 (seed=2632)
+[  4939s]   [checkpoint] saved 360 rows
+[  4939s] Cell 97/144: response=binary, n_pred=3, n=100, multi=4, ps=0.2, beta=0.6, rep=1 (seed=2649)
+[  4984s] Cell 98/144: response=binary, n_pred=3, n=100, multi=4, ps=0.2, beta=0.6, rep=2 (seed=2666)
+[  5030s] Cell 99/144: response=binary, n_pred=3, n=100, multi=4, ps=0.2, beta=0.6, rep=3 (seed=2683)
+[  5074s] Cell 100/144: response=binary, n_pred=3, n=100, multi=4, ps=0.6, beta=0.0, rep=1 (seed=2700)
+[  5122s]   [checkpoint] saved 372 rows
+[  5122s] Cell 101/144: response=binary, n_pred=3, n=100, multi=4, ps=0.6, beta=0.0, rep=2 (seed=2717)
+[  5168s] Cell 102/144: response=binary, n_pred=3, n=100, multi=4, ps=0.6, beta=0.0, rep=3 (seed=2734)
+[  5212s] Cell 103/144: response=binary, n_pred=3, n=100, multi=4, ps=0.6, beta=0.3, rep=1 (seed=2751)
+[  5258s] Cell 104/144: response=binary, n_pred=3, n=100, multi=4, ps=0.6, beta=0.3, rep=2 (seed=2768)
+[  5300s]   [checkpoint] saved 384 rows
+[  5300s] Cell 105/144: response=binary, n_pred=3, n=100, multi=4, ps=0.6, beta=0.3, rep=3 (seed=2785)
+[  5344s] Cell 106/144: response=binary, n_pred=3, n=100, multi=4, ps=0.6, beta=0.6, rep=1 (seed=2802)
+[  5389s] Cell 107/144: response=binary, n_pred=3, n=100, multi=4, ps=0.6, beta=0.6, rep=2 (seed=2819)
+[  5439s] Cell 108/144: response=binary, n_pred=3, n=100, multi=4, ps=0.6, beta=0.6, rep=3 (seed=2836)
+[  5488s]   [checkpoint] saved 396 rows
+[  5488s] Cell 109/144: response=binary, n_pred=3, n=500, multi=1, ps=0.2, beta=0.0, rep=1 (seed=2853)
+[  5536s] Cell 110/144: response=binary, n_pred=3, n=500, multi=1, ps=0.2, beta=0.0, rep=2 (seed=2870)
+[  5584s] Cell 111/144: response=binary, n_pred=3, n=500, multi=1, ps=0.2, beta=0.0, rep=3 (seed=2887)
+[  5632s] Cell 112/144: response=binary, n_pred=3, n=500, multi=1, ps=0.2, beta=0.3, rep=1 (seed=2904)
+[  5680s]   [checkpoint] saved 408 rows
+[  5680s] Cell 113/144: response=binary, n_pred=3, n=500, multi=1, ps=0.2, beta=0.3, rep=2 (seed=2921)
+[  5727s] Cell 114/144: response=binary, n_pred=3, n=500, multi=1, ps=0.2, beta=0.3, rep=3 (seed=2938)
+[  5773s] Cell 115/144: response=binary, n_pred=3, n=500, multi=1, ps=0.2, beta=0.6, rep=1 (seed=2955)
+[  5817s] Cell 116/144: response=binary, n_pred=3, n=500, multi=1, ps=0.2, beta=0.6, rep=2 (seed=2972)
+[  5862s]   [checkpoint] saved 420 rows
+[  5862s] Cell 117/144: response=binary, n_pred=3, n=500, multi=1, ps=0.2, beta=0.6, rep=3 (seed=2989)
+[  5905s] Cell 118/144: response=binary, n_pred=3, n=500, multi=1, ps=0.6, beta=0.0, rep=1 (seed=3006)
+[  5948s] Cell 119/144: response=binary, n_pred=3, n=500, multi=1, ps=0.6, beta=0.0, rep=2 (seed=3023)
+[  5990s] Cell 120/144: response=binary, n_pred=3, n=500, multi=1, ps=0.6, beta=0.0, rep=3 (seed=3040)
+[  6037s]   [checkpoint] saved 432 rows
+[  6037s] Cell 121/144: response=binary, n_pred=3, n=500, multi=1, ps=0.6, beta=0.3, rep=1 (seed=3057)
+[  6083s] Cell 122/144: response=binary, n_pred=3, n=500, multi=1, ps=0.6, beta=0.3, rep=2 (seed=3074)
+[  6127s] Cell 123/144: response=binary, n_pred=3, n=500, multi=1, ps=0.6, beta=0.3, rep=3 (seed=3091)
+[  6172s] Cell 124/144: response=binary, n_pred=3, n=500, multi=1, ps=0.6, beta=0.6, rep=1 (seed=3108)
+[  6219s]   [checkpoint] saved 444 rows
+[  6219s] Cell 125/144: response=binary, n_pred=3, n=500, multi=1, ps=0.6, beta=0.6, rep=2 (seed=3125)
+[  6267s] Cell 126/144: response=binary, n_pred=3, n=500, multi=1, ps=0.6, beta=0.6, rep=3 (seed=3142)
+[  6312s] Cell 127/144: response=binary, n_pred=3, n=500, multi=4, ps=0.2, beta=0.0, rep=1 (seed=3159)
+[  6368s] Cell 128/144: response=binary, n_pred=3, n=500, multi=4, ps=0.2, beta=0.0, rep=2 (seed=3176)
+[  6421s]   [checkpoint] saved 456 rows
+[  6421s] Cell 129/144: response=binary, n_pred=3, n=500, multi=4, ps=0.2, beta=0.0, rep=3 (seed=3193)
+[  6472s] Cell 130/144: response=binary, n_pred=3, n=500, multi=4, ps=0.2, beta=0.3, rep=1 (seed=3210)
+[  6520s] Cell 131/144: response=binary, n_pred=3, n=500, multi=4, ps=0.2, beta=0.3, rep=2 (seed=3227)
+[  6564s] Cell 132/144: response=binary, n_pred=3, n=500, multi=4, ps=0.2, beta=0.3, rep=3 (seed=3244)
+[  6609s]   [checkpoint] saved 468 rows
+[  6609s] Cell 133/144: response=binary, n_pred=3, n=500, multi=4, ps=0.2, beta=0.6, rep=1 (seed=3261)
+[  6656s] Cell 134/144: response=binary, n_pred=3, n=500, multi=4, ps=0.2, beta=0.6, rep=2 (seed=3278)
+[  6706s] Cell 135/144: response=binary, n_pred=3, n=500, multi=4, ps=0.2, beta=0.6, rep=3 (seed=3295)
+[  6758s] Cell 136/144: response=binary, n_pred=3, n=500, multi=4, ps=0.6, beta=0.0, rep=1 (seed=3312)
+[  6809s]   [checkpoint] saved 480 rows
+[  6809s] Cell 137/144: response=binary, n_pred=3, n=500, multi=4, ps=0.6, beta=0.0, rep=2 (seed=3329)
+[  6862s] Cell 138/144: response=binary, n_pred=3, n=500, multi=4, ps=0.6, beta=0.0, rep=3 (seed=3346)
+[  6907s] Cell 139/144: response=binary, n_pred=3, n=500, multi=4, ps=0.6, beta=0.3, rep=1 (seed=3363)
+[  6949s] Cell 140/144: response=binary, n_pred=3, n=500, multi=4, ps=0.6, beta=0.3, rep=2 (seed=3380)
+[  6994s]   [checkpoint] saved 492 rows
+[  6994s] Cell 141/144: response=binary, n_pred=3, n=500, multi=4, ps=0.6, beta=0.3, rep=3 (seed=3397)
+[  7039s] Cell 142/144: response=binary, n_pred=3, n=500, multi=4, ps=0.6, beta=0.6, rep=1 (seed=3414)
+[  7082s] Cell 143/144: response=binary, n_pred=3, n=500, multi=4, ps=0.6, beta=0.6, rep=2 (seed=3431)
+[  7126s] Cell 144/144: response=binary, n_pred=3, n=500, multi=4, ps=0.6, beta=0.6, rep=3 (seed=3448)
+[  7173s]   [checkpoint] saved 504 rows
+[  7173s] === DONE: 144 cells, 504 rows ===
+[  7173s]   rds: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_sim_bace_pigauto_medium.rds

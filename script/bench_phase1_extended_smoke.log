@@ -1,0 +1,37 @@
+[     0s] =========================================================
+[     0s] PHASE 1 EXTENDED  (Option 1: confirm if pigauto beats lm_nonlinear)
+[     0s] Tier: SMOKE
+[     0s] Sweep: n=300 | n_covs=5 | lambda=0.1,0.3 | f=nonlinear,interactive | beta=0.5,1 | reps=3 | epochs=200
+[     0s] Output: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_phase1_extended_smoke.rds
+[     0s] Total cells: 24
+[     0s] Cell 1/24: f=nonlinear, lam=0.10, beta=0.5, n=300, ncov=5, rep=1 (seed=21001)
+[    86s] Cell 2/24: f=nonlinear, lam=0.30, beta=0.5, n=300, ncov=5, rep=1 (seed=21002)
+[   169s] Cell 3/24: f=interactive, lam=0.10, beta=0.5, n=300, ncov=5, rep=1 (seed=21003)
+[   250s] Cell 4/24: f=interactive, lam=0.30, beta=0.5, n=300, ncov=5, rep=1 (seed=21004)
+[   334s]   [checkpoint] 24 rows
+[   334s] Cell 5/24: f=nonlinear, lam=0.10, beta=1.0, n=300, ncov=5, rep=1 (seed=21005)
+[   413s] Cell 6/24: f=nonlinear, lam=0.30, beta=1.0, n=300, ncov=5, rep=1 (seed=21006)
+[   490s] Cell 7/24: f=interactive, lam=0.10, beta=1.0, n=300, ncov=5, rep=1 (seed=21007)
+[   567s] Cell 8/24: f=interactive, lam=0.30, beta=1.0, n=300, ncov=5, rep=1 (seed=21008)
+[   644s]   [checkpoint] 48 rows
+[   644s] Cell 9/24: f=nonlinear, lam=0.10, beta=0.5, n=300, ncov=5, rep=2 (seed=21009)
+[   719s] Cell 10/24: f=nonlinear, lam=0.30, beta=0.5, n=300, ncov=5, rep=2 (seed=21010)
+[   795s] Cell 11/24: f=interactive, lam=0.10, beta=0.5, n=300, ncov=5, rep=2 (seed=21011)
+[   870s] Cell 12/24: f=interactive, lam=0.30, beta=0.5, n=300, ncov=5, rep=2 (seed=21012)
+[   943s]   [checkpoint] 72 rows
+[   943s] Cell 13/24: f=nonlinear, lam=0.10, beta=1.0, n=300, ncov=5, rep=2 (seed=21013)
+[  1017s] Cell 14/24: f=nonlinear, lam=0.30, beta=1.0, n=300, ncov=5, rep=2 (seed=21014)
+[  1093s] Cell 15/24: f=interactive, lam=0.10, beta=1.0, n=300, ncov=5, rep=2 (seed=21015)
+[  1168s] Cell 16/24: f=interactive, lam=0.30, beta=1.0, n=300, ncov=5, rep=2 (seed=21016)
+[  1240s]   [checkpoint] 96 rows
+[  1240s] Cell 17/24: f=nonlinear, lam=0.10, beta=0.5, n=300, ncov=5, rep=3 (seed=21017)
+[  1320s] Cell 18/24: f=nonlinear, lam=0.30, beta=0.5, n=300, ncov=5, rep=3 (seed=21018)
+[  1403s] Cell 19/24: f=interactive, lam=0.10, beta=0.5, n=300, ncov=5, rep=3 (seed=21019)
+[  1487s] Cell 20/24: f=interactive, lam=0.30, beta=0.5, n=300, ncov=5, rep=3 (seed=21020)
+[  1570s]   [checkpoint] 120 rows
+[  1570s] Cell 21/24: f=nonlinear, lam=0.10, beta=1.0, n=300, ncov=5, rep=3 (seed=21021)
+[  1644s] Cell 22/24: f=nonlinear, lam=0.30, beta=1.0, n=300, ncov=5, rep=3 (seed=21022)
+[  1728s] Cell 23/24: f=interactive, lam=0.10, beta=1.0, n=300, ncov=5, rep=3 (seed=21023)
+[  1811s] Cell 24/24: f=interactive, lam=0.30, beta=1.0, n=300, ncov=5, rep=3 (seed=21024)
+[  1884s]   [checkpoint] 144 rows
+[  1884s] === DONE: 24 cells, 144 rows ===

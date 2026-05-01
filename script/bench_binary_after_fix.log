@@ -1,0 +1,8 @@
+[   0.0s] Running 40 cells across 8 cores (PSOCK cluster)
+[   0.0s] Starting PSOCK cluster...
+[   3.4s] Cluster ready. Dispatching cells...
+[1026.3s] Cluster stopped.
+[1026.3s] Completed: 40 good, 0 errors
+[1026.4s] Total wall: 1026.3s (17.1 min)
+[1026.4s] Wrote /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_binary.md
+[1026.4s] done

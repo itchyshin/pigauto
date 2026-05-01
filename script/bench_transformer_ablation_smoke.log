@@ -1,0 +1,37 @@
+[     0s] =========================================================
+[     0s] Tier: SMOKE   (TRANSFORMER ABLATION)
+[     0s] Sweep: n_species=200 | multi_obs=1,4 | phylo_sig=0.4 | beta=0.3,0.6 | f_types=linear,nonlinear,interactive | reps=2
+[     0s] Output: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_transformer_ablation_smoke.rds
+[     0s] Total cells: 24
+[     0s] Cell 1/24: f=linear, n=200, multi=1, beta=0.3, rep=1 (seed=8001)
+[   122s] Cell 2/24: f=linear, n=200, multi=4, beta=0.3, rep=1 (seed=8002)
+[   244s] Cell 3/24: f=linear, n=200, multi=1, beta=0.6, rep=1 (seed=8003)
+[   362s] Cell 4/24: f=linear, n=200, multi=4, beta=0.6, rep=1 (seed=8004)
+[   483s]   [checkpoint] saved 20 rows
+[   483s] Cell 5/24: f=nonlinear, n=200, multi=1, beta=0.3, rep=1 (seed=8005)
+[   596s] Cell 6/24: f=nonlinear, n=200, multi=4, beta=0.3, rep=1 (seed=8006)
+[   729s] Cell 7/24: f=nonlinear, n=200, multi=1, beta=0.6, rep=1 (seed=8007)
+[   851s] Cell 8/24: f=nonlinear, n=200, multi=4, beta=0.6, rep=1 (seed=8008)
+[   982s]   [checkpoint] saved 40 rows
+[   983s] Cell 9/24: f=interactive, n=200, multi=1, beta=0.3, rep=1 (seed=8009)
+[  1115s] Cell 10/24: f=interactive, n=200, multi=4, beta=0.3, rep=1 (seed=8010)
+[  1247s] Cell 11/24: f=interactive, n=200, multi=1, beta=0.6, rep=1 (seed=8011)
+[  1368s] Cell 12/24: f=interactive, n=200, multi=4, beta=0.6, rep=1 (seed=8012)
+[  1503s]   [checkpoint] saved 60 rows
+[  1503s] Cell 13/24: f=linear, n=200, multi=1, beta=0.3, rep=2 (seed=8013)
+[  1624s] Cell 14/24: f=linear, n=200, multi=4, beta=0.3, rep=2 (seed=8014)
+[  1745s] Cell 15/24: f=linear, n=200, multi=1, beta=0.6, rep=2 (seed=8015)
+[  1860s] Cell 16/24: f=linear, n=200, multi=4, beta=0.6, rep=2 (seed=8016)
+[  1982s]   [checkpoint] saved 80 rows
+[  1982s] Cell 17/24: f=nonlinear, n=200, multi=1, beta=0.3, rep=2 (seed=8017)
+[  2098s] Cell 18/24: f=nonlinear, n=200, multi=4, beta=0.3, rep=2 (seed=8018)
+[  2210s] Cell 19/24: f=nonlinear, n=200, multi=1, beta=0.6, rep=2 (seed=8019)
+[  2317s] Cell 20/24: f=nonlinear, n=200, multi=4, beta=0.6, rep=2 (seed=8020)
+[  2434s]   [checkpoint] saved 100 rows
+[  2435s] Cell 21/24: f=interactive, n=200, multi=1, beta=0.3, rep=2 (seed=8021)
+[  2543s] Cell 22/24: f=interactive, n=200, multi=4, beta=0.3, rep=2 (seed=8022)
+[  2660s] Cell 23/24: f=interactive, n=200, multi=1, beta=0.6, rep=2 (seed=8023)
+[  2773s] Cell 24/24: f=interactive, n=200, multi=4, beta=0.6, rep=2 (seed=8024)
+[  2881s]   [checkpoint] saved 120 rows
+[  2881s] === DONE: 24 cells, 120 rows ===
+[  2881s]   rds: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_transformer_ablation_smoke.rds

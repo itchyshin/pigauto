@@ -1,0 +1,67 @@
+[     0s] =========================================================
+[     0s] Tier: SMOKE   (TRANSFORMER ABLATION, NO SAFETY FLOOR)
+[     0s] Sweep: n=500 | multi=1,4 | beta=0.5,1 | f_types=linear,nonlinear,interactive | reps=2 | epochs=200 | safety_floor=FALSE
+[     0s] Output: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_transformer_ablation_nosf_smoke.rds
+[     0s] Total cells: 24
+[     0s] Cell 1/24: f=linear, n=500, multi=1, beta=0.5, rep=1 (seed=11001)
+Generated default beta_matrix with pre-set sparsity
+[   145s] Cell 2/24: f=linear, n=500, multi=4, beta=0.5, rep=1 (seed=11002)
+Generated default beta_matrix with pre-set sparsity
+[   291s]   [checkpoint] saved 10 rows
+[   291s] Cell 3/24: f=linear, n=500, multi=1, beta=1.0, rep=1 (seed=11003)
+Generated default beta_matrix with pre-set sparsity
+[   427s] Cell 4/24: f=linear, n=500, multi=4, beta=1.0, rep=1 (seed=11004)
+Generated default beta_matrix with pre-set sparsity
+[   571s]   [checkpoint] saved 20 rows
+[   571s] Cell 5/24: f=nonlinear, n=500, multi=1, beta=0.5, rep=1 (seed=11005)
+Generated default beta_matrix with pre-set sparsity
+[   714s] Cell 6/24: f=nonlinear, n=500, multi=4, beta=0.5, rep=1 (seed=11006)
+Generated default beta_matrix with pre-set sparsity
+[   858s]   [checkpoint] saved 30 rows
+[   859s] Cell 7/24: f=nonlinear, n=500, multi=1, beta=1.0, rep=1 (seed=11007)
+Generated default beta_matrix with pre-set sparsity
+[   993s] Cell 8/24: f=nonlinear, n=500, multi=4, beta=1.0, rep=1 (seed=11008)
+Generated default beta_matrix with pre-set sparsity
+[  1129s]   [checkpoint] saved 40 rows
+[  1129s] Cell 9/24: f=interactive, n=500, multi=1, beta=0.5, rep=1 (seed=11009)
+Generated default beta_matrix with pre-set sparsity
+[  1269s] Cell 10/24: f=interactive, n=500, multi=4, beta=0.5, rep=1 (seed=11010)
+Generated default beta_matrix with pre-set sparsity
+[  1411s]   [checkpoint] saved 50 rows
+[  1412s] Cell 11/24: f=interactive, n=500, multi=1, beta=1.0, rep=1 (seed=11011)
+Generated default beta_matrix with pre-set sparsity
+[  1545s] Cell 12/24: f=interactive, n=500, multi=4, beta=1.0, rep=1 (seed=11012)
+Generated default beta_matrix with pre-set sparsity
+[  1696s]   [checkpoint] saved 60 rows
+[  1696s] Cell 13/24: f=linear, n=500, multi=1, beta=0.5, rep=2 (seed=11013)
+Generated default beta_matrix with pre-set sparsity
+[  1831s] Cell 14/24: f=linear, n=500, multi=4, beta=0.5, rep=2 (seed=11014)
+Generated default beta_matrix with pre-set sparsity
+[  1972s]   [checkpoint] saved 70 rows
+[  1972s] Cell 15/24: f=linear, n=500, multi=1, beta=1.0, rep=2 (seed=11015)
+Generated default beta_matrix with pre-set sparsity
+[  2111s] Cell 16/24: f=linear, n=500, multi=4, beta=1.0, rep=2 (seed=11016)
+Generated default beta_matrix with pre-set sparsity
+[  2252s]   [checkpoint] saved 80 rows
+[  2252s] Cell 17/24: f=nonlinear, n=500, multi=1, beta=0.5, rep=2 (seed=11017)
+Generated default beta_matrix with pre-set sparsity
+[  2382s] Cell 18/24: f=nonlinear, n=500, multi=4, beta=0.5, rep=2 (seed=11018)
+Generated default beta_matrix with pre-set sparsity
+[  2526s]   [checkpoint] saved 90 rows
+[  2526s] Cell 19/24: f=nonlinear, n=500, multi=1, beta=1.0, rep=2 (seed=11019)
+Generated default beta_matrix with pre-set sparsity
+[  2664s] Cell 20/24: f=nonlinear, n=500, multi=4, beta=1.0, rep=2 (seed=11020)
+Generated default beta_matrix with pre-set sparsity
+[  2804s]   [checkpoint] saved 100 rows
+[  2804s] Cell 21/24: f=interactive, n=500, multi=1, beta=0.5, rep=2 (seed=11021)
+Generated default beta_matrix with pre-set sparsity
+[  2935s] Cell 22/24: f=interactive, n=500, multi=4, beta=0.5, rep=2 (seed=11022)
+Generated default beta_matrix with pre-set sparsity
+[  3081s]   [checkpoint] saved 110 rows
+[  3081s] Cell 23/24: f=interactive, n=500, multi=1, beta=1.0, rep=2 (seed=11023)
+Generated default beta_matrix with pre-set sparsity
+[  3220s] Cell 24/24: f=interactive, n=500, multi=4, beta=1.0, rep=2 (seed=11024)
+Generated default beta_matrix with pre-set sparsity
+[  3355s]   [checkpoint] saved 120 rows
+[  3355s] === DONE: 24 cells, 120 rows ===
+[  3355s]   rds: /Users/z3437171/Dropbox/Github Local/pigauto/script/bench_transformer_ablation_nosf_smoke.rds
