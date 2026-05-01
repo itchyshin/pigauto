@@ -1,4 +1,169 @@
-# pigauto 0.9.1.9007 (dev)
+# pigauto 0.9.1.9008 (dev)
+
+## NEW: `suggest_next_observation()` -- active-imputation guidance (2026-04-30)
+
+For a fitted `pigauto_result` (from `impute()`), compute the
+closed-form expected reduction in TOTAL predictive variance across
+all currently-missing cells if each candidate cell were observed
+next.  Useful for sampling-design guidance when measurement budget
+is limited: which species, if observed next, would most reduce
+imputation uncertainty across the rest of your tree?
+
+### API
+
+```r
+suggest_next_observation(result, top_n = 10L,
+                          by = c("cell", "species"))
+```
+
+Returns a `pigauto_active` data.frame (descending by
+`delta_var_total`).  Columns:
+
+* `by = "cell"`: `species`, `trait`, `type`, `delta_var_total`.
+* `by = "species"`: `species`, `delta_var_total`,
+  `n_traits_missing`.
+
+### Math
+
+Built on a Sherman-Morrison rank-1 inverse update of the BM
+conditional MVN: adding species `s_new` to the observed set updates
+`R_oo^{-1}` by a known closed form, and the variance reduction at
+every other missing cell is a single scalar per candidate.
+
+Closed form per candidate cell:
+
+```
+delta_V_total(s_new) = sigma2 * sum_{i in miss} D[i, k]^2 / alpha_k
+```
+
+where `D = R_mm - R_mo R_oo^{-1} R_om` is the residual matrix and
+`alpha_k = D[k, k]` is the current relative leverage of cell `k`.
+
+The formula assumes `sigma2` (REML variance) is held fixed -- the
+standard active-learning convention.  Variance reduction depends
+only on the geometry of which cells are observed, not on the
+unknown value at `s_new`.
+
+### Scope (v1)
+
+* Continuous-family traits only (`continuous`, `count`, `ordinal`,
+  `proportion`).  Discrete traits are silently skipped.
+* Single-obs only.  Multi-obs deferred to v2.
+
+### Why this is novel
+
+To my knowledge, no other phylogenetic-imputation package (Rphylopars,
+BACE, phylolm, mice with phylogenetic correlation) exposes a
+sampling-design helper.  pigauto is uniquely positioned because its
+BM conditional MVN already computes per-cell predictive variance --
+this function just exposes the closed-form variance-reduction
+formula derived from rank-1 update.  The methods are 30 years old
+in optimal-design literature (Cohn et al. 1996, JAIR 4:129–145);
+applying them to phylogenetic trait imputation appears to be new.
+
+### Files
+
+* `R/active_impute.R` (new) -- 304 LOC, hosts
+  `bm_variance_reduction()` (internal) and
+  `suggest_next_observation()` (exported), plus
+  `print.pigauto_active` S3 method.
+* `R/impute.R` -- adds `tree` to the `pigauto_result` so
+  `suggest_next_observation()` can recompute `R_phy` if it was
+  freed in the post-fit cleanup block.
+* `tests/testthat/test-active-impute.R` (new) -- 10 tests, 29
+  expects.  Verifies closed-form against an independent fixed-
+  sigma2 brute-force refit on a 20-tip fixture; descending order;
+  by-species aggregation; multi-obs error path; discrete-skip.
+
+### Smoke
+
+On AVONET 300 with 90 cells masked across 4 continuous traits:
+top-1 cell is `Chloephaga_rubidiceps Beak.Length_Culmen`,
+delta_var_total = 2.99; top-1 species is `Chloephaga_rubidiceps`
+with 2 currently-missing traits combining to delta = 3.23.
+
+## NEW: `gate_method = "cv_folds"` -- cross-validated gate calibration (2026-04-30)
+
+Closes the longest-standing open NEWS item: *"A future improvement
+(cross-validated gate selection, ...) could close this further; not
+in scope for this release."*
+
+### What changed
+
+`calibrate_gates()` and `fit_pigauto()` gain `gate_method =
+"cv_folds"` (opt-in alongside the existing `"single_split"` default
+and `"median_splits"` option).  When selected, val cells are
+partitioned into `gate_cv_folds = 5L` (default) deterministic
+non-overlapping folds; the existing grid + half-B-verify procedure
+runs once per fold (`half_a` = K-1 training folds, `half_b` =
+held-out fold), and the componentwise median of K winning weight
+vectors becomes `w_final`.  Post-cal full-val invariant fires
+unchanged.
+
+### Compared to `"median_splits"`
+
+| Property | median_splits | cv_folds |
+|---|---|---|
+| half_a per split | 1/2 of n_val | (K-1)/K of n_val |
+| Number of splits | B=31 random | K=5 deterministic |
+| Overlap | Random (each cell in many splits) | None |
+| Statistical interpretation | Median of B noisy gate selections | Standard k-fold CV |
+
+Larger training sets per split → less noisy w_k.  Standard CV gives
+a cleaner story for users and reviewers.
+
+### Motivation
+
+The strict val-floor enforces `pigauto_val <= baseline_val`, but
+val→test drift survives in 4/32 binary cells (per
+`useful/MEMO_2026-04-29_discrete_bench_reruns.md`).  Per-trait gate
+calibration overfits to the specific val cells because the same
+cells score every candidate weight.  Larger training sets per
+split reduce overfitting; non-overlapping folds give a true held-
+out evaluation.
+
+### Edge cases
+
+* `gate_cv_folds < 2` errors with a clear message.
+* `n_val < gate_cv_folds` caps `K_eff = n_val` so each fold has at
+  least 1 cell.
+* `n_val < 2` (CV ill-defined) falls back to a single split.
+* Existing back-compat preserved: default `gate_method =
+  "single_split"`, and the `"median_splits"` path is bit-identical
+  to pre-fix.
+
+### Tests
+
+5 new tests in `tests/testthat/test-safety-floor.R` (under
+"# CV-fold gate calibration"):
+
+* Valid simplex output
+* Deterministic for fixed seed
+* Pure-MEAN snap when MEAN dominates (post-cal invariant fires)
+* `n_val < K` graceful fallback
+* `gate_cv_folds < 2` error
+
+All pass.  Existing 24 safety-floor tests + B4 edge cases unchanged.
+
+### Smoke (AVONET 300, 60 epochs, 1 imputation, 60 Mass + 60 Migration cells masked)
+
+| gate_method | wall (s) | r_cal_gnn[col_3] |
+|---|---|---|
+| single_split | 82.6 | 0.000 |
+| median_splits | 77.2 | 0.050 |
+| cv_folds | 75.9 | 0.150 |
+
+`cv_folds` is slightly faster (smaller per-split work) and selects
+a non-zero GNN gate on the col where the others snap to BM.
+
+### Bench rerun (queued)
+
+Comparing val→test drift on `bench_binary.R`,
+`bench_categorical.R`, `bench_zi_count.R` across the three gate
+methods is queued; the empirical question is whether the larger
+training sets in cv_folds close more of the val→test drift than
+median_splits did.  Will be reported in a follow-up commit if
+results are conclusive.
 
 ## Strict val-floor v3 — type-conditional safety floor (2026-04-29)
 
