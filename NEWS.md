@@ -1,3 +1,56 @@
+# pigauto 0.9.1.9009 (dev)
+
+## `suggest_next_observation()` v2: zi_count + multi_proportion (2026-05-01)
+
+Closes the v1.5 scope gap: `suggest_next_observation()` now supports
+all 8 pigauto trait types.
+
+### zi_count
+
+Hybrid metric: observing a missing zi_count cell reveals the gate
+value (entropy reduction at the gate column, computed via the LP
+binary formula) AND, with probability \eqn{p_{\mathrm{gate}}}
+(current LP estimate at \eqn{s_{\mathrm{new}}}), reveals a
+magnitude (variance reduction at the magnitude column, computed
+via the BM Sherman-Morrison formula on the gate=1 subset).  Output
+rows for zi_count populate BOTH `delta_var_total` (= probability-
+weighted magnitude variance reduction) AND `delta_entropy_total`
+(= gate entropy reduction).  `metric` is set to `"variance"` so
+the row sorts on the magnitude scale; `delta_entropy_total` is
+available for users who care about gate-uncertainty separately.
+
+### multi_proportion
+
+Per-component variance reduction summed across K CLR-z-scored
+latent columns.  Per CLAUDE.md, multi_proportion rows are
+fully observed OR fully missing (no partial K-component
+observations), so `delta_var_total` is the K-component sum at each
+fully-missing row.
+
+### Implementation
+
+`R/active_impute.R`:
+- New dispatch branches for `zi_count` and `multi_proportion`
+  in `suggest_next_observation()`.
+- Reuses existing `bm_variance_reduction()` and
+  `lp_entropy_reduction_binary()` helpers.
+- New `needs_R_phy` / `needs_sim_phylo` derived flags clarify
+  which kernels each trait type needs (zi_count needs both;
+  multi_proportion needs R_phy only).
+
+### Tests
+
+4 new test_that blocks (`tests/testthat/test-active-impute.R`):
+
+* `[active v2] zi_count: hybrid variance + entropy populated`
+* `[active v2] zi_count: types argument can exclude zi_count`
+* `[active v2] multi_proportion: per-component BM variance summed`
+* `[active v2] multi_proportion: delta equals K-component sum`
+  (verifies via independent recomputation against
+  `bm_variance_reduction()` per component)
+
+Total active-impute tests: 17 / 60 expects, all pass.
+
 # pigauto 0.9.1.9008 (dev)
 
 ## NEW: `suggest_next_observation()` -- active-imputation guidance (2026-04-30)

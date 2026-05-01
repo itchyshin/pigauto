@@ -1,6 +1,6 @@
 Package: pigauto
 Title: Fill in Missing Species Traits Using a Phylogenetic Tree
-Version: 0.9.1.9008
+Version: 0.9.1.9009
 Authors@R:
     person("Shinichi", "Nakagawa", role = c("aut", "cre"), email = "itchyshin@gmail.com")
 Description: Imputes missing species trait data for comparative analyses

@@ -385,3 +385,150 @@ test_that("[active] suggest_next_observation returns 'pigauto_active' class", {
   expect_s3_class(sug, "pigauto_active")
   expect_s3_class(sug, "data.frame")
 })
+
+# ===========================================================================
+# v2 (2026-05-01): zi_count + multi_proportion support
+# ===========================================================================
+
+test_that("[active v2] zi_count: hybrid variance + entropy populated", {
+  skip_if_not_installed("torch")
+  set.seed(2200L)
+  n <- 30L
+  tree <- ape::rtree(n)
+  counts <- stats::rpois(n, lambda = 5)
+  counts[sample.int(n, round(n * 0.3))] <- 0L
+  df <- data.frame(parasites = as.integer(counts),
+                    row.names = tree$tip.label)
+  df$parasites[c(3L, 7L, 11L, 17L)] <- NA
+
+  result <- pigauto::impute(df, tree,
+                              trait_types = c(parasites = "zi_count"),
+                              epochs = 15L, n_imputations = 1L,
+                              verbose = FALSE, seed = 2200L)
+  sug <- pigauto::suggest_next_observation(result, top_n = 10)
+  expect_gte(nrow(sug), 1L)
+  expect_true(all(sug$type == "zi_count"))
+  expect_true(all(sug$metric == "variance"))
+  # BOTH variance AND entropy populated for zi_count rows
+  expect_true(all(!is.na(sug$delta_var_total)))
+  expect_true(all(!is.na(sug$delta_entropy_total)))
+  # Variance reduction is probability-weighted -> non-negative,
+  # entropy reduction is non-negative
+  expect_true(all(sug$delta_var_total >= 0))
+  expect_true(all(sug$delta_entropy_total >= 0))
+  # Sorted by delta (= delta_var_total for zi_count) descending
+  expect_true(all(diff(sug$delta) <= 0))
+})
+
+test_that("[active v2] zi_count: types argument can exclude zi_count", {
+  skip_if_not_installed("torch")
+  set.seed(2201L)
+  n <- 30L
+  tree <- ape::rtree(n)
+  counts <- stats::rpois(n, lambda = 5)
+  counts[sample.int(n, round(n * 0.3))] <- 0L
+  df <- data.frame(parasites = as.integer(counts),
+                    cont      = stats::rnorm(n),
+                    row.names = tree$tip.label)
+  df$parasites[c(3L, 7L, 11L)] <- NA
+  df$cont[c(5L, 9L)] <- NA
+
+  result <- pigauto::impute(df, tree,
+                              trait_types = c(parasites = "zi_count"),
+                              epochs = 15L, n_imputations = 1L,
+                              verbose = FALSE, seed = 2201L)
+  sug <- pigauto::suggest_next_observation(result, top_n = 100,
+                                             types = c("continuous", "count",
+                                                       "ordinal", "proportion"))
+  expect_true(all(sug$type == "continuous"))
+})
+
+test_that("[active v2] multi_proportion: per-component BM variance summed", {
+  skip_if_not_installed("torch")
+  set.seed(2202L)
+  n <- 25L
+  tree <- ape::rtree(n)
+  raw <- matrix(stats::rgamma(n * 3L, shape = 2), n, 3L)
+  props <- raw / rowSums(raw)
+  df <- data.frame(red   = props[, 1L],
+                    green = props[, 2L],
+                    blue  = props[, 3L],
+                    row.names = tree$tip.label)
+  miss_rows <- c(3L, 7L, 11L, 17L)
+  df$red[miss_rows]   <- NA_real_
+  df$green[miss_rows] <- NA_real_
+  df$blue[miss_rows]  <- NA_real_
+
+  result <- pigauto::impute(df, tree,
+                              multi_proportion_groups = list(
+                                colour = c("red", "green", "blue")),
+                              epochs = 15L, n_imputations = 1L,
+                              verbose = FALSE, seed = 2202L)
+  sug <- pigauto::suggest_next_observation(result, top_n = 10)
+  expect_gte(nrow(sug), 1L)
+  expect_true(all(sug$type == "multi_proportion"))
+  expect_true(all(sug$metric == "variance"))
+  expect_true(all(!is.na(sug$delta_var_total)))
+  expect_true(all(is.na(sug$delta_entropy_total)))
+  expect_true(all(sug$delta_var_total >= 0))
+  # Sorted descending
+  expect_true(all(diff(sug$delta) <= 0))
+})
+
+test_that("[active v2] multi_proportion: delta equals K-component sum", {
+  # Verify the multi_proportion delta_var_total is exactly the sum of
+  # per-component BM variance reductions (not double counted, no scale
+  # bug).
+  skip_if_not_installed("torch")
+  set.seed(2203L)
+  n <- 20L
+  tree <- ape::rtree(n)
+  raw <- matrix(stats::rgamma(n * 3L, shape = 2), n, 3L)
+  props <- raw / rowSums(raw)
+  df <- data.frame(red   = props[, 1L],
+                    green = props[, 2L],
+                    blue  = props[, 3L],
+                    row.names = tree$tip.label)
+  miss_rows <- c(3L, 7L, 11L)
+  df$red[miss_rows]   <- NA_real_
+  df$green[miss_rows] <- NA_real_
+  df$blue[miss_rows]  <- NA_real_
+
+  result <- pigauto::impute(df, tree,
+                              multi_proportion_groups = list(
+                                colour = c("red", "green", "blue")),
+                              epochs = 10L, n_imputations = 1L,
+                              verbose = FALSE, seed = 2203L)
+  sug <- pigauto::suggest_next_observation(result, top_n = 10)
+
+  # Recompute the per-component variance reduction independently from
+  # X_scaled and check the sum matches.
+  R_phy <- pigauto:::phylo_cor_matrix(tree)[tree$tip.label, tree$tip.label]
+  X <- result$data$X_scaled
+  tm_mp <- NULL
+  for (tm in result$data$trait_map) {
+    if (identical(tm$type, "multi_proportion")) { tm_mp <- tm; break }
+  }
+  expect_false(is.null(tm_mp))
+
+  delta_sum <- numeric(0)
+  for (k in seq_along(tm_mp$latent_cols)) {
+    y_k <- X[, tm_mp$latent_cols[k]]
+    delta_k <- pigauto:::bm_variance_reduction(y_k, R_phy)
+    if (length(delta_sum) == 0L) delta_sum <- delta_k else
+      delta_sum <- delta_sum + delta_k
+  }
+  expect_length(delta_sum, length(miss_rows))
+
+  # sug rows are sorted descending by delta, but the underlying
+  # delta_sum is in miss_idx order.  Match by species name.
+  miss_species <- tree$tip.label[miss_rows]
+  for (sp in miss_species) {
+    sug_val <- sug$delta_var_total[sug$species == sp]
+    if (length(sug_val) == 0L) next
+    ind_in_miss <- match(sp, names(delta_sum))
+    if (is.na(ind_in_miss)) next
+    expect_equal(sug_val, delta_sum[[ind_in_miss]], tolerance = 1e-9,
+                 info = sprintf("[active v2] multi_proportion sum check for %s", sp))
+  }
+})

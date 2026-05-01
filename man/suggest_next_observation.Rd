@@ -8,7 +8,8 @@ suggest_next_observation(
   result,
   top_n = 10L,
   by = c("cell", "species"),
-  types = c("continuous", "count", "ordinal", "proportion", "binary", "categorical")
+  types = c("continuous", "count", "ordinal", "proportion", "binary", "categorical",
+    "zi_count", "multi_proportion")
 )
 }
 \arguments{
@@ -26,9 +27,10 @@ species (summing reductions across the species' currently-missing
 traits).}
 
 \item{types}{character vector of pigauto trait types to include.
-Default includes the six supported types: \code{continuous},
+Default includes all eight supported types: \code{continuous},
 \code{count}, \code{ordinal}, \code{proportion}, \code{binary},
-\code{categorical}.}
+\code{categorical}, \code{zi_count} (added v2, 2026-05-01),
+\code{multi_proportion} (added v2).}
 }
 \value{
 A data.frame of class \code{"pigauto_active"}.  Columns
@@ -95,8 +97,24 @@ entropy reductions are summed separately into
 species-level ranking is approximate -- see the variance-vs-
 entropy caveat above.
 
-\code{zi_count} and \code{multi_proportion} are not yet supported
-and are silently skipped.
+\code{zi_count} (v2): observing a missing zi_count cell reveals
+the gate value (entropy reduction at the gate column, computed via
+the LP binary formula) AND, with probability \eqn{p_{\mathrm{gate}}}
+(current LP estimate at \eqn{s_{\mathrm{new}}}), reveals a
+magnitude (variance reduction at the magnitude column, computed
+via the BM Sherman-Morrison formula on the gate=1 subset).  Output
+rows for zi_count populate BOTH \code{delta_var_total} (= expected
+magnitude variance reduction = \eqn{p_{\mathrm{gate}} \times \Delta
+V_{\mathrm{mag}}}) AND \code{delta_entropy_total} (= gate entropy
+reduction).  \code{metric} is set to \code{"variance"} so the row
+sorts on the magnitude scale; \code{delta_entropy_total} is
+available for users who care about gate-uncertainty separately.
+
+\code{multi_proportion} (v2): observing a row reveals all K
+simplex components simultaneously.  Per-component variance
+reductions are computed via BM Sherman-Morrison on each CLR-z
+latent column, summed across components.  \code{metric} is
+\code{"variance"}; \code{delta_var_total} is the K-component sum.
 }
 \examples{
 \dontrun{

@@ -354,8 +354,24 @@ lp_entropy_reduction_categorical <- function(oh, sim) {
 #' species-level ranking is approximate -- see the variance-vs-
 #' entropy caveat above.
 #'
-#' \code{zi_count} and \code{multi_proportion} are not yet supported
-#' and are silently skipped.
+#' \code{zi_count} (v2): observing a missing zi_count cell reveals
+#' the gate value (entropy reduction at the gate column, computed via
+#' the LP binary formula) AND, with probability \eqn{p_{\mathrm{gate}}}
+#' (current LP estimate at \eqn{s_{\mathrm{new}}}), reveals a
+#' magnitude (variance reduction at the magnitude column, computed
+#' via the BM Sherman-Morrison formula on the gate=1 subset).  Output
+#' rows for zi_count populate BOTH \code{delta_var_total} (= expected
+#' magnitude variance reduction = \eqn{p_{\mathrm{gate}} \times \Delta
+#' V_{\mathrm{mag}}}) AND \code{delta_entropy_total} (= gate entropy
+#' reduction).  \code{metric} is set to \code{"variance"} so the row
+#' sorts on the magnitude scale; \code{delta_entropy_total} is
+#' available for users who care about gate-uncertainty separately.
+#'
+#' \code{multi_proportion} (v2): observing a row reveals all K
+#' simplex components simultaneously.  Per-component variance
+#' reductions are computed via BM Sherman-Morrison on each CLR-z
+#' latent column, summed across components.  \code{metric} is
+#' \code{"variance"}; \code{delta_var_total} is the K-component sum.
 #'
 #' @param result A \code{pigauto_result} object returned by
 #'   \code{\link{impute}}.  Must have been produced from single-obs
@@ -368,9 +384,10 @@ lp_entropy_reduction_categorical <- function(oh, sim) {
 #'   species (summing reductions across the species' currently-missing
 #'   traits).
 #' @param types character vector of pigauto trait types to include.
-#'   Default includes the six supported types: \code{continuous},
+#'   Default includes all eight supported types: \code{continuous},
 #'   \code{count}, \code{ordinal}, \code{proportion}, \code{binary},
-#'   \code{categorical}.
+#'   \code{categorical}, \code{zi_count} (added v2, 2026-05-01),
+#'   \code{multi_proportion} (added v2).
 #' @return A data.frame of class \code{"pigauto_active"}.  Columns
 #'   when \code{by = "cell"}: \code{species}, \code{trait},
 #'   \code{type}, \code{metric} (\code{"variance"} or \code{"entropy"}),
@@ -396,7 +413,9 @@ suggest_next_observation <- function(result, top_n = 10L,
                                        by = c("cell", "species"),
                                        types = c("continuous", "count",
                                                  "ordinal", "proportion",
-                                                 "binary", "categorical")) {
+                                                 "binary", "categorical",
+                                                 "zi_count",
+                                                 "multi_proportion")) {
   by <- match.arg(by)
   if (!inherits(result, "pigauto_result")) {
     stop("'result' must be a pigauto_result object (from impute()).",
@@ -422,16 +441,30 @@ suggest_next_observation <- function(result, top_n = 10L,
 
   cont_types <- c("continuous", "count", "ordinal", "proportion")
   disc_types <- c("binary", "categorical")
+  # v2 (2026-05-01): zi_count needs BOTH R_phy (magnitude) and sim_phylo
+  # (gate); multi_proportion needs R_phy only (per-component BM).
   has_cont <- any(types %in% cont_types) &&
-              any(vapply(trait_map, function(tm) tm$type %in% types, logical(1)) &
-                  vapply(trait_map, function(tm) tm$type %in% cont_types, logical(1)))
+              any(vapply(trait_map,
+                          function(tm) tm$type %in% intersect(types, cont_types),
+                          logical(1)))
   has_disc <- any(types %in% disc_types) &&
-              any(vapply(trait_map, function(tm) tm$type %in% types, logical(1)) &
-                  vapply(trait_map, function(tm) tm$type %in% disc_types, logical(1)))
+              any(vapply(trait_map,
+                          function(tm) tm$type %in% intersect(types, disc_types),
+                          logical(1)))
+  has_zi   <- "zi_count" %in% types &&
+              any(vapply(trait_map, function(tm) identical(tm$type, "zi_count"),
+                          logical(1)))
+  has_mp   <- "multi_proportion" %in% types &&
+              any(vapply(trait_map,
+                          function(tm) identical(tm$type, "multi_proportion"),
+                          logical(1)))
+  needs_R_phy    <- has_cont || has_zi || has_mp
+  needs_sim_phylo <- has_disc || has_zi
 
-  # Recover R_phy: needed for continuous variance reduction.
+  # Recover R_phy: needed for continuous variance reduction (continuous
+  # family + zi_count magnitude + multi_proportion per-component).
   R_phy <- NULL
-  if (has_cont) {
+  if (needs_R_phy) {
     R_phy <- fit$graph$R_phy
     if (is.null(R_phy) && !is.null(result$tree)) {
       R_phy <- phylo_cor_matrix(result$tree)
@@ -445,11 +478,11 @@ suggest_next_observation <- function(result, top_n = 10L,
   }
 
   # Recover sim_phylo (Gaussian kernel on cophenetic distances): needed
-  # for discrete entropy reduction.  Reconstruct from result$tree (the
-  # similarity matrix is not cached in fit$graph after impute()'s
-  # cleanup block).
+  # for discrete entropy reduction (binary + categorical + zi_count gate).
+  # Reconstruct from result$tree (the similarity matrix is not cached
+  # in fit$graph after impute()'s cleanup block).
   sim_phylo <- NULL
-  if (has_disc) {
+  if (needs_sim_phylo) {
     if (is.null(result$tree)) {
       stop("suggest_next_observation: result$tree is missing; cannot ",
            "reconstruct similarity matrix for discrete traits. Refit ",
@@ -529,8 +562,107 @@ suggest_next_observation <- function(result, top_n = 10L,
         delta_var_total      = NA_real_,
         delta_entropy_total  = as.numeric(delta_e),
         stringsAsFactors = FALSE)
+
+    } else if (identical(tm$type, "zi_count")) {
+      # v2 (2026-05-01): hybrid variance + entropy.
+      # Layout: lc[1] = gate (0/1, NA at user-missing), lc[2] = magnitude
+      # (z-scored log1p, NA when gate=0 OR user-missing).
+      lc_gate <- tm$latent_cols[1L]
+      lc_mag  <- tm$latent_cols[2L]
+      y_gate  <- X[, lc_gate]
+      y_mag   <- X[, lc_mag]
+      names(y_gate) <- spp
+      names(y_mag)  <- spp
+
+      miss_gate <- which(is.na(y_gate))    # user-missing cells
+      if (length(miss_gate) == 0L)        next
+      if (sum(!is.na(y_gate)) < 1L)       next
+
+      # Gate entropy reduction (binary LP)
+      delta_e <- lp_entropy_reduction_binary(y_gate, sim_phylo)
+      if (length(delta_e) != length(miss_gate)) next  # defensive
+
+      # Probability gate is 1 at user-missing cells (current LP estimate)
+      obs_gate_idx <- which(!is.na(y_gate))
+      sim_obs_g    <- sim_phylo[, obs_gate_idx, drop = FALSE]
+      row_w_g      <- rowSums(sim_obs_g)
+      row_w_g_safe <- pmax(row_w_g, 1e-12)
+      p_gate_all   <- as.numeric(sim_obs_g %*% y_gate[obs_gate_idx]) / row_w_g_safe
+      p_gate_all   <- pmin(pmax(p_gate_all, 0.01), 0.99)
+      p_gate_user  <- p_gate_all[miss_gate]
+
+      # Magnitude variance reduction (BM Sherman-Morrison) on the gate=1
+      # subset.  bm_variance_reduction returns one value per
+      # magnitude-missing cell; we pick the values for user-missing cells
+      # (subset of magnitude-missing).
+      delta_v_full <- bm_variance_reduction(y_mag, R_phy)
+      miss_mag <- which(is.na(y_mag))
+      if (length(delta_v_full) != length(miss_mag)) {
+        # bm_variance_reduction returned empty (e.g. n_obs < 5); skip
+        # variance contribution but still report entropy
+        var_red_user <- rep(0, length(miss_gate))
+      } else {
+        var_red_user <- delta_v_full[match(miss_gate, miss_mag)]
+        var_red_user[is.na(var_red_user)] <- 0   # not in mag-miss (impossible)
+      }
+      delta_v_expected <- p_gate_user * var_red_user
+
+      cell_dfs[[length(cell_dfs) + 1L]] <- data.frame(
+        species              = spp[miss_gate],
+        trait                = tm$name,
+        type                 = tm$type,
+        metric               = "variance",
+        delta                = as.numeric(delta_v_expected),
+        delta_var_total      = as.numeric(delta_v_expected),
+        delta_entropy_total  = as.numeric(delta_e),
+        stringsAsFactors = FALSE)
+
+    } else if (identical(tm$type, "multi_proportion")) {
+      # v2 (2026-05-01): per-component BM variance reduction summed
+      # across K components.  Per CLAUDE.md, multi_proportion has K
+      # latent CLR-z-scored cols and rows are EITHER fully observed OR
+      # fully missing (no partial observations of K-component
+      # composition).  So miss_idx is well-defined as rows with any
+      # latent col missing (= all latent cols missing).
+      lc <- tm$latent_cols
+      n_components <- length(lc)
+      X_mp <- X[, lc, drop = FALSE]
+      rownames(X_mp) <- spp
+      row_obs <- stats::complete.cases(X_mp)
+      if (sum(row_obs) < 5L || sum(!row_obs) == 0L) next
+
+      delta_v_per_component <- numeric(0)
+      for (k in seq_along(lc)) {
+        y_k <- X_mp[, k]
+        names(y_k) <- spp
+        delta_k <- bm_variance_reduction(y_k, R_phy)
+        if (length(delta_k) == 0L) {
+          delta_v_per_component <- numeric(0); break
+        }
+        if (length(delta_v_per_component) == 0L) {
+          delta_v_per_component <- delta_k
+        } else {
+          # Component-wise sum (each component has the same miss_idx by
+          # the row-level masking convention)
+          if (length(delta_k) != length(delta_v_per_component)) {
+            delta_v_per_component <- numeric(0); break
+          }
+          delta_v_per_component <- delta_v_per_component + delta_k
+        }
+      }
+      if (length(delta_v_per_component) == 0L) next
+
+      miss_idx <- which(!row_obs)
+      cell_dfs[[length(cell_dfs) + 1L]] <- data.frame(
+        species              = spp[miss_idx],
+        trait                = tm$name,
+        type                 = tm$type,
+        metric               = "variance",
+        delta                = as.numeric(delta_v_per_component),
+        delta_var_total      = as.numeric(delta_v_per_component),
+        delta_entropy_total  = NA_real_,
+        stringsAsFactors = FALSE)
     }
-    # zi_count, multi_proportion: not supported in v1.5; silently skip.
   }
 
   if (length(cell_dfs) == 0L) {
