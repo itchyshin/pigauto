@@ -1,3 +1,60 @@
+# pigauto 0.9.1.9006 (dev)
+
+## Per-occurrence WorldClim covariates (v1.1 follow-up to B.2)
+
+Fixes the core limitation of PR #47 (centroid-only bioclim extraction):
+bioclim is now extracted at every GBIF occurrence point per species
+(not just the centroid), so the IQR columns carry real range-breadth
+signal instead of being constant zero. This is what actually lets the
+safety-floor calibrator see a meaningful covariate input and open the
+GNN gate on plants.
+
+Validated by the honest-sim diagnostic
+(`experiment/covariate-honest-sim`) which showed pigauto's architecture
+can produce 32 % RMSE lift on strong-environment traits when
+covariates carry real signal — something centroid-only bioclim
+failed to deliver on plants.
+
+### API
+
+- `pull_gbif_centroids(..., store_points = FALSE)` — new arg,
+  default `FALSE` preserves pre-v0.9.1.9006 cache format. When
+  `TRUE`, persists the raw filtered lat/lon points in each species'
+  cache RDS, enabling per-occurrence bioclim extraction.
+- `pull_worldclim_per_species()` — no signature change.  Internally,
+  `.wc_extract_one()` now prefers cached per-occurrence points,
+  falling back to centroid only when `points` field is absent
+  (legacy caches).
+
+### Back-compat
+
+Pre-v1.1 cache RDS files remain fully readable. Users who want
+per-occurrence extraction upgrade their cache with one call:
+
+```r
+pull_gbif_centroids(sp_list,
+  cache_dir = "script/data-cache/gbif",
+  store_points = TRUE,
+  refresh_cache = TRUE)   # one-time refresh
+```
+
+After that, subsequent calls are instantaneous (cache hit).
+
+### Fixture regeneration
+
+`tests/testthat/fixtures/worldclim_plants_300.rds` re-generated with
+per-occurrence aggregation. IQR columns are now informative.
+
+### Follow-ups
+
+- Covariate-aware phylo-signal gate — nice-to-have for
+  interpretability (gate de-triggers when covariates resolve weak-
+  phylo-signal traits). NOT a blocker given the safety-floor
+  calibrator opens the gate on its own.
+- Full-scale plants bench (n=4,745) — operator-run via
+  `script/bench_bien_worldclim.R`. Expected: SLA r >= 0.35,
+  leaf_area r >= 0.30.
+
 # pigauto 0.9.1.9005 (dev)
 
 ## WorldClim bioclim covariates (B.2)

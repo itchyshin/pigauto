@@ -165,14 +165,17 @@
              cache_path)
     return(out)
   }
-  # GBIF cache may or may not include the raw occurrence point list.
-  # pull_gbif_centroids v0.9.1.9004 stores only centroid + n_occurrences.
-  # B.2 needs per-point extraction -- extend the GBIF cache OR re-fetch
-  # occurrences.  For simplicity here we use the centroid-only row as a
-  # minimum viable extraction point.  Users who want per-point extraction
-  # should re-run pull_gbif_centroids with extended caching (future B.2.1).
-  points <- data.frame(lon = gbif_cached$centroid_lon,
-                        lat = gbif_cached$centroid_lat)
+  # v1.1: prefer cached raw occurrence points over centroid
+  points_df <- gbif_cached$points
+  if (!is.null(points_df) && nrow(points_df) > 0L) {
+    points <- data.frame(lon = points_df$lon, lat = points_df$lat)
+    extract_reason <- "per_occurrence"
+  } else {
+    # Legacy cache fallback (v0.9.1.9005 centroid-only)
+    points <- data.frame(lon = gbif_cached$centroid_lon,
+                          lat = gbif_cached$centroid_lat)
+    extract_reason <- "centroid_only_legacy"
+  }
   if (is.null(rast_stack)) {
     stop(".wc_extract_one: rast_stack is NULL but cache miss -- ",
          "cannot extract bioclim for species: ", sp, call. = FALSE)
@@ -189,7 +192,7 @@
                bio_iqr = agg$bio_iqr,
                n_extracted = agg$n_extracted)
   saveRDS(c(out, list(extracted_at = Sys.time(),
-                        reason = "extracted")),
+                        reason = extract_reason)),
            cache_path)
   out
 }
