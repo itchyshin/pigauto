@@ -119,13 +119,25 @@ under 4 strategies:
 
 ## Test status
 
-Full safety-floor file (34 tests, ~13 min wall on Apple MPS):
-expected to PASS at threshold 1.30 (verified at 1.10 in isolation;
-1.20 was insufficient due to RNG ordering).  All other touched test
-files (`test-active-impute.R` 13 tests, `test-compute-corner-loss.R`,
-`test-bm-internal.R`, `test-property-invariants.R`,
-`test-joint-threshold-baseline.R`) verified PASSing in solo runs
-during the session.
+**Verified post-session (2026-04-30 ~20:30 MDT):**
+
+* Full safety-floor file solo run with threshold 1.30 (commit
+  `ddd07d7`): **97 PASS / 0 FAIL / 0 SKIP across 34 tests**.  The
+  +1.30 threshold absorbs the RNG-ordering pollution that was
+  pushing the BIEN smoke ratio to 1.16-1.30 inside the full-file
+  run; isolated runs still produce all 5 trait ratios <= 1.10.
+  Bumping was the right call.
+
+* R CMD check --as-cran (commit `b6629f2`-ish, after
+  `340cc5c` + `516b126` fixes): **0 errors / 0 warnings / 1 note**.
+  The remaining note is "unable to verify current time" (NTP /
+  system clock issue, not a code issue).  Vignettes rebuild cleanly
+  in ~3 min.
+
+All other touched test files (`test-active-impute.R` 13 tests,
+`test-compute-corner-loss.R`, `test-bm-internal.R`,
+`test-property-invariants.R`, `test-joint-threshold-baseline.R`)
+verified PASSing in solo runs during the session.
 
 The known-flaky NOT_CRAN-gated `test-worldclim-covariates.R`
 "per-occurrence bioclim lifts plants SLA >= 10% over centroid-only
