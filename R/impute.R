@@ -91,6 +91,22 @@
 #'   exactly.  See the Safety floor section below.
 #' @param phylo_signal_gate,phylo_signal_threshold,phylo_signal_method
 #'   Pass-through to [fit_pigauto()]. See that help page for details.
+#' @param clamp_outliers logical.  Phase G (v0.9.1.9011+).  When
+#'   \code{TRUE}, post-back-transform predictions for log-transformed
+#'   continuous, count, and zi_count magnitude traits are capped at
+#'   \code{tm$obs_max * clamp_factor} (and \code{tm$obs_max} is the
+#'   observed maximum on the original scale, recorded at preprocess
+#'   time).  Targets the AVONET Mass tail-extrapolation mode
+#'   documented in
+#'   \code{useful/MEMO_2026-05-01_avonet_mass_diag.md} where a
+#'   \eqn{+3}-\eqn{4 \sigma} latent overshoot becomes a 50x-100x
+#'   value error after \code{expm1()}.  Default \code{FALSE}
+#'   preserves v0.9.1 behaviour exactly.
+#' @param clamp_factor numeric scalar (>= 1).  Multiplicative factor
+#'   on the observed maximum used by \code{clamp_outliers}.  Default
+#'   \code{5} (Tukey-style outlier definition: anything >= 5x the
+#'   observed max is implausible).  Ignored when
+#'   \code{clamp_outliers = FALSE}.
 #' @param ... additional arguments passed to \code{\link{fit_pigauto}}.
 #' @return An object of class \code{"pigauto_result"} with components:
 #'   \describe{
@@ -210,6 +226,8 @@ impute <- function(traits, tree, species_col = NULL,
                    em_tol = 1e-3,
                    em_offdiag = FALSE,
                    pool_method = c("median", "mean", "mode"),
+                   clamp_outliers = FALSE,
+                   clamp_factor = 5,
                    safety_floor = TRUE,
                    phylo_signal_gate = TRUE,
                    phylo_signal_threshold = 0.2,
@@ -290,7 +308,9 @@ impute <- function(traits, tree, species_col = NULL,
   # 6. Predict
   pred <- predict(fit, return_se = TRUE,
                   n_imputations = as.integer(n_imputations),
-                  pool_method = pool_method)
+                  pool_method = pool_method,
+                  clamp_outliers = clamp_outliers,
+                  clamp_factor   = clamp_factor)
 
   # 7. Build the completed data.frame: observed values preserved,
   #    missing cells filled with model predictions.  This is the primary

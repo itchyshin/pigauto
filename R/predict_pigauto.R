@@ -55,6 +55,17 @@
 #'   categorical pooling is unchanged (linear / probability-averaged).
 #'   See
 #'   \href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.
+#' @param clamp_outliers logical.  Phase G (v0.9.1.9011+).  When
+#'   \code{TRUE}, post-back-transform predictions for log-transformed
+#'   continuous, count, and zi_count magnitude traits are capped at
+#'   \code{tm$obs_max * clamp_factor} (\code{tm$obs_max} is the
+#'   observed maximum on the original scale, set at preprocess time).
+#'   Targets tail-extrapolation modes amplified by \code{exp()} /
+#'   \code{expm1()} back-transforms.  Default \code{FALSE} preserves
+#'   v0.9.1 behaviour exactly.
+#' @param clamp_factor numeric scalar (>= 1).  Multiplicative factor
+#'   on the observed maximum used by \code{clamp_outliers}.  Default
+#'   \code{5}.  Ignored when \code{clamp_outliers = FALSE}.
 #' @param ... ignored.
 #' @return A list of class \code{"pigauto_pred"} with:
 #'   \describe{
@@ -96,8 +107,16 @@
 predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
                                 n_imputations = 1L, baseline_override = NULL,
                                 pool_method = c("median", "mean", "mode"),
+                                clamp_outliers = FALSE,
+                                clamp_factor = 5,
                                 ...) {
   pool_method <- match.arg(pool_method)
+  clamp_outliers <- isTRUE(clamp_outliers)
+  if (!is.numeric(clamp_factor) || length(clamp_factor) != 1L ||
+      !is.finite(clamp_factor) || clamp_factor < 1) {
+    stop("'clamp_factor' must be a single finite numeric >= 1.",
+         call. = FALSE)
+  }
   cfg       <- object$model_config
   device    <- get_device()
   trait_map <- object$trait_map
@@ -355,7 +374,9 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   # ---- Mixed-type decoding -------------------------------------------------
   row_labels <- if (multi_obs) object$obs_species else object$species_names
   decode_results <- lapply(latent_runs, function(lat) {
-    decode_from_latent(lat, trait_map, row_labels)
+    decode_from_latent(lat, trait_map, row_labels,
+                        clamp_outliers = clamp_outliers,
+                        clamp_factor   = clamp_factor)
   })
 
   if (n_imp == 1L) {
@@ -553,7 +574,22 @@ decode_continuous_legacy <- function(latent_runs, object, rs_val,
 
 # ---- Internal: decode latent matrix to original-scale data.frame ---------------
 
-decode_from_latent <- function(latent_mat, trait_map, species_names) {
+decode_from_latent <- function(latent_mat, trait_map, species_names,
+                                clamp_outliers = FALSE, clamp_factor = 5) {
+  # Phase G (2026-05-01): optional value clamp on log-transformed
+  # continuous, count, and zi_count magnitude after the expm1 / exp
+  # back-transform.  When clamp_outliers = TRUE and tm$obs_max is
+  # available (set at preprocess time), predictions are capped at
+  # obs_max * clamp_factor.  Helps with the AVONET Mass tail-extrapolation
+  # mode (see useful/MEMO_2026-05-01_avonet_mass_diag.md): a +3-4 SD
+  # latent overshoot becomes a 50x-100x value error after expm1.  Default
+  # FALSE preserves v0.9.1 behaviour exactly.
+  .clamp_high <- function(vals, tm) {
+    if (!clamp_outliers) return(vals)
+    if (is.null(tm$obs_max) || !is.finite(tm$obs_max)) return(vals)
+    upper <- as.numeric(tm$obs_max) * clamp_factor
+    pmin(vals, upper)
+  }
   n <- nrow(latent_mat)
   # Use make.unique for multi-obs (species_names may have duplicates)
   imputed <- data.frame(row.names = make.unique(species_names, sep = "."))
@@ -565,13 +601,17 @@ decode_from_latent <- function(latent_mat, trait_map, species_names) {
 
     if (tm$type == "continuous") {
       vals <- latent_mat[, lc] * tm$sd + tm$mean
-      if (tm$log_transform) vals <- exp(vals)
+      if (tm$log_transform) {
+        vals <- exp(vals)
+        vals <- .clamp_high(vals, tm)
+      }
       imputed[[nm]] <- vals
 
     } else if (tm$type == "count") {
       vals <- latent_mat[, lc] * tm$sd + tm$mean
       vals <- expm1(vals)
       vals <- pmax(round(vals), 0)
+      vals <- .clamp_high(vals, tm)
       imputed[[nm]] <- as.integer(vals)
 
     } else if (tm$type == "ordinal") {
@@ -608,6 +648,7 @@ decode_from_latent <- function(latent_mat, trait_map, species_names) {
       count_logscale <- latent_mat[, lc[2]] * tm$sd + tm$mean
       count_hat <- expm1(count_logscale)
       count_hat <- pmax(count_hat, 0)
+      count_hat <- .clamp_high(count_hat, tm)
       ev <- p_nz * count_hat
       imputed[[nm]] <- as.integer(pmax(round(ev), 0L))
       probs[[nm]] <- p_nz  # probability of non-zero

@@ -22,6 +22,8 @@ impute(
   em_tol = 0.001,
   em_offdiag = FALSE,
   pool_method = c("median", "mean", "mode"),
+  clamp_outliers = FALSE,
+  clamp_factor = 5,
   safety_floor = TRUE,
   phylo_signal_gate = TRUE,
   phylo_signal_threshold = 0.2,
@@ -123,6 +125,24 @@ continuous-family traits, \code{"mode"} falls back to
 \code{"median"}.  Binary / categorical / multi_proportion traits
 always pool by probability average; unaffected by this argument.  See
 \href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.}
+
+\item{clamp_outliers}{logical.  Phase G (v0.9.1.9011+).  When
+\code{TRUE}, post-back-transform predictions for log-transformed
+continuous, count, and zi_count magnitude traits are capped at
+\code{tm$obs_max * clamp_factor} (and \code{tm$obs_max} is the
+observed maximum on the original scale, recorded at preprocess
+time).  Targets the AVONET Mass tail-extrapolation mode
+documented in
+\code{useful/MEMO_2026-05-01_avonet_mass_diag.md} where a
+\eqn{+3}-\eqn{4 \sigma} latent overshoot becomes a 50x-100x
+value error after \code{expm1()}.  Default \code{FALSE}
+preserves v0.9.1 behaviour exactly.}
+
+\item{clamp_factor}{numeric scalar (>= 1).  Multiplicative factor
+on the observed maximum used by \code{clamp_outliers}.  Default
+\code{5} (Tukey-style outlier definition: anything >= 5x the
+observed max is implausible).  Ignored when
+\code{clamp_outliers = FALSE}.}
 
 \item{safety_floor}{logical. When \code{TRUE} (default since
 v0.9.1.9002), calibration searches the 3-way simplex

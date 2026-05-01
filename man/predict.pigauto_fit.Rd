@@ -11,6 +11,8 @@
   n_imputations = 1L,
   baseline_override = NULL,
   pool_method = c("median", "mean", "mode"),
+  clamp_outliers = FALSE,
+  clamp_factor = 5,
   ...
 )
 }
@@ -42,6 +44,19 @@ pre-v0.9.2 arithmetic-mean pooling.  Continuous / ordinal / binary /
 categorical pooling is unchanged (linear / probability-averaged).
 See
 \href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.}
+
+\item{clamp_outliers}{logical.  Phase G (v0.9.1.9011+).  When
+\code{TRUE}, post-back-transform predictions for log-transformed
+continuous, count, and zi_count magnitude traits are capped at
+\code{tm$obs_max * clamp_factor} (\code{tm$obs_max} is the
+observed maximum on the original scale, set at preprocess time).
+Targets tail-extrapolation modes amplified by \code{exp()} /
+\code{expm1()} back-transforms.  Default \code{FALSE} preserves
+v0.9.1 behaviour exactly.}
+
+\item{clamp_factor}{numeric scalar (>= 1).  Multiplicative factor
+on the observed maximum used by \code{clamp_outliers}.  Default
+\code{5}.  Ignored when \code{clamp_outliers = FALSE}.}
 
 \item{...}{ignored.}
 }
