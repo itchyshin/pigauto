@@ -432,19 +432,33 @@ the REML BM variance. The formula is the standard active-learning
 variance-reduction bound (Cohn et al. 1996); applying it to
 phylogenetic trait imputation appears to be new.
 
-**Scope.** `suggest_next_observation()` v1.5 (2026-04-30) supports
-two metrics: variance reduction for continuous-family traits
-(`continuous`, `count`, `ordinal`, `proportion`) and entropy
-reduction for binary and categorical traits.  The output's
-`metric` column distinguishes them.
+**Scope.** `suggest_next_observation()` v2 (2026-05-01) supports
+all eight pigauto trait types:
+
+* **Variance reduction** for continuous-family traits (`continuous`,
+  `count`, `ordinal`, `proportion`) and the magnitude column of
+  `zi_count`, computed by closed-form Sherman-Morrison rank-1
+  update on the BM phylogenetic-correlation matrix.
+* **Entropy reduction** for `binary`, `categorical`, and the gate
+  column of `zi_count`, computed by closed-form label-propagation
+  posteriors.
+* **Multi-component variance reduction** (per-component BM,
+  summed across the K CLR-z latent columns) for `multi_proportion`.
+
+For `zi_count` rows the output populates BOTH `delta_var_total`
+(probability-weighted magnitude variance reduction) AND
+`delta_entropy_total` (gate entropy reduction); the `metric`
+column is set to `"variance"` so rows sort on the magnitude scale.
+See `?suggest_next_observation` for full details.
 
 **Variance vs entropy are not directly comparable** — the cross-
-metric ordering by `delta` is approximate.  When you want a strict
-ranking on a single metric, filter by `metric` first or restrict
-`types` to continuous-only or discrete-only.
+metric ordering by `delta_var_total` is approximate.  When you
+want a strict ranking on a single metric, filter by `metric`
+first or restrict `types` to continuous-family-only or
+discrete-only.
 
-`zi_count` and `multi_proportion` are not yet supported. Multi-obs
-inputs error with a clear message; both deferred to v2.
+Multi-obs (multiple observations per species) inputs are not
+supported and error with a clear message.
 
 ## Tips and next steps
 
