@@ -56,11 +56,15 @@ Per-species extracts are also cached (one RDS per species in
 \code{worldclim_cache_dir/extracts/}), so repeated calls for the
 same species list are instantaneous.
 
-NOTE: this v1 uses each species' GBIF CENTROID (from
-\code{pull_gbif_centroids}) as the single extraction point.
-True per-occurrence extraction requires the GBIF cache to store
-the raw point list, which is a planned v1.1 extension.
-For the B.2 proof-of-pipe, centroid-only is sufficient.
+Since v0.9.1.9006 (2026-04-30) extraction operates on the raw
+per-occurrence point list when \code{\link{pull_gbif_centroids}}
+was called with \code{store_points = TRUE}.  For legacy caches
+written by older \code{pull_gbif_centroids} (centroid-only) calls,
+extraction silently falls back to the species centroid.
+
+Requires the optional \code{terra} package (in DESCRIPTION
+\code{Suggests}).  If \code{terra} is not installed the function
+errors with an installation message.
 }
 \examples{
 \dontrun{
