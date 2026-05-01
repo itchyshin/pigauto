@@ -1,6 +1,6 @@
 Package: pigauto
 Title: Fill in Missing Species Traits Using a Phylogenetic Tree
-Version: 0.9.1.9003
+Version: 0.9.1.9004
 Authors@R:
     person("Shinichi", "Nakagawa", role = c("aut", "cre"), email = "itchyshin@gmail.com")
 Description: Imputes missing species trait data for comparative analyses
@@ -46,6 +46,7 @@ Suggests:
     MCMCglmm,
     glmmTMB,
     phangorn,
+    rgbif
     phytools
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
