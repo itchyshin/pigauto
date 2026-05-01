@@ -10,7 +10,7 @@
   return_se = TRUE,
   n_imputations = 1L,
   baseline_override = NULL,
-  pool_method = c("median", "mean"),
+  pool_method = c("median", "mean", "mode"),
   ...
 )
 }
