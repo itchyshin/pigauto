@@ -263,6 +263,37 @@ development, and the numbers move with each release. The validation
 suite is regenerated from the actual benchmark scripts every release, so
 it is the single source of truth.
 
+### Caveats from multi-seed evidence
+
+Three findings worth knowing before running pigauto on AVONET-scale
+data:
+
+1. **Continuous-trait results have non-trivial cross-seed
+   variance** — multi-seed evidence on AVONET n=1500 (3 seeds at
+   N_IMP=20, see `useful/MEMO_2026-05-01_multiseed_n20_and_default_flip.md`)
+   shows lift bands of ±10 % to ±20 % around the mean for traits
+   like Tarsus.Length and Beak.Length_Culmen. We recommend
+   `multi_impute(m = 20, ...)` and reporting mean ± SD across
+   ≥ 3 seeds for any quantitative claim. Single-seed RMSE numbers
+   should not be interpreted as point estimates of expected
+   performance.
+
+2. **Mass on AVONET is currently unstable.** At N_IMP=20 the BM
+   joint baseline emits singular-Σ warnings on Mass, and one of
+   three seeds produces a tail outlier with RMSE ≈ 11× the
+   column-mean baseline (others beat it). Cause is under
+   investigation; expected to be a back-transform tail issue. If
+   you are imputing Mass, run multiple seeds and inspect the
+   distribution of imputed values for outliers.
+
+3. **Migration (3-level ordinal) regresses by ≈ 11 pp** vs the
+   per-class-mode baseline on AVONET, consistent across all
+   tested seeds. The ordinal threshold-joint baseline (Phase B3)
+   is under-determined for K=3 and the calibrated gate cannot
+   route around it because LP is not yet a corner in the
+   safety-floor simplex grid. Phase F (LP corner for ordinal)
+   addresses this and is queued for v0.9.2.
+
 ### The gate protects against regression
 
 For high-signal discrete traits the calibrated gate closes completely
@@ -299,4 +330,4 @@ a species differ by covariate context.
 ## Citation
 
 Nakagawa S (2026). *pigauto: Phylogenetic Imputation via Graph
-Autoencoder*. R package version 0.6.1.
+Autoencoder*. R package version 0.9.1.9009.
