@@ -21,7 +21,11 @@ impute(
   em_iterations = 0L,
   em_tol = 0.001,
   em_offdiag = FALSE,
+  pool_method = c("median", "mean"),
   safety_floor = TRUE,
+  phylo_signal_gate = TRUE,
+  phylo_signal_threshold = 0.2,
+  phylo_signal_method = "lambda",
   ...
 )
 }
@@ -106,6 +110,15 @@ on correlated other traits.  Binary + ordinal only; OVR categorical
 stays on Phase 6 diagonal.  Default \code{FALSE}.  Passed to
 \code{\link{fit_baseline}}.}
 
+\item{pool_method}{character. How to pool multiple imputation draws
+(\code{n_imputations > 1}) for count, proportion, and zi_count
+magnitude traits: \code{"median"} (default) takes the per-cell
+median of the \code{M} decoded draws — robust to dropout-noisy
+latents amplified by \code{expm1()} / \code{plogis()} decoders.
+\code{"mean"} restores the pre-v0.9.2 arithmetic-mean pooling.
+Continuous / ordinal / binary / categorical traits always pool by
+mean (or probability average); unaffected by this argument.  See
+\href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.}
 \item{safety_floor}{logical. When \code{TRUE} (default since
 v0.9.1.9002), calibration searches the 3-way simplex
 \code{r_BM * BM + r_GNN * GNN + r_MEAN * MEAN} so the grand mean is
@@ -113,6 +126,8 @@ always in the candidate set and the calibrated prediction is
 guaranteed never to be worse than the grand-mean baseline on
 validation.  When \code{FALSE}, the v0.9.1 1-D calibration is used
 exactly.  See the Safety floor section below.}
+
+\item{phylo_signal_gate, phylo_signal_threshold, phylo_signal_method}{Pass-through to \code{\link[=fit_pigauto]{fit_pigauto()}}. See that help page for details.}
 
 \item{...}{additional arguments passed to \code{\link{fit_pigauto}}.}
 }

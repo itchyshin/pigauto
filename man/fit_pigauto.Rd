@@ -40,6 +40,9 @@ fit_pigauto(
   gate_splits_B = 31L,
   gate_cv_folds = 5L,
   safety_floor = TRUE,
+  phylo_signal_gate = TRUE,
+  phylo_signal_threshold = 0.2,
+  phylo_signal_method = c("lambda", "blomberg_k"),
   min_val_cells = 20L,
   verbose = TRUE,
   seed = 1L
@@ -203,6 +206,26 @@ calibration searches a 3-way simplex \code{r_BM * BM + r_GNN * GNN
 guaranteeing \code{pigauto_val_RMSE <= mean_val_RMSE} by
 construction. When \code{FALSE}, the v0.9.1 1-D calibration is used
 exactly (\code{r_MEAN = 0}).}
+
+\item{phylo_signal_gate}{logical. When \code{TRUE} (default since
+v0.9.1.9003), compute per-trait Pagel's \eqn{\lambda} on
+training-observed cells before fitting; for traits with
+\code{lambda < phylo_signal_threshold}, force
+\code{(r_cal_bm = 0, r_cal_gnn = 0, r_cal_mean = 1)} directly
+and skip BM + GNN training on those traits.  Requires the
+\code{phytools} package.  Falls back to safety-floor-only
+behaviour (\code{phylo_signal_gate = FALSE} effective) when
+\code{phytools} is absent.}
+
+\item{phylo_signal_threshold}{numeric, default \code{0.2}.  Traits
+with Pagel's \eqn{\lambda} below this value are routed to the
+grand-mean corner of the safety-floor simplex.}
+
+\item{phylo_signal_method}{character, currently only \code{"lambda"}
+is fully implemented.  Reserved \code{"blomberg_k"} path returns
+Blomberg's K via \code{phytools::phylosig()} but uses the same
+threshold --- which is NOT dimensionally comparable; users
+selecting K must supply a K-appropriate threshold.}
 
 \item{min_val_cells}{integer. Warn at fit time if any trait has fewer
 than \code{min_val_cells} validation cells available for gate

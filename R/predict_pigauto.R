@@ -46,6 +46,15 @@
 #'   of the one saved in the fit. Used internally by [multi_impute_trees()]
 #'   to reuse a trained GNN across posterior trees. Most users can ignore
 #'   this. Default `NULL` (use the fit's own baseline).
+#' @param pool_method character.  How to pool the M decoded draws when
+#'   \code{n_imputations > 1}: \code{"median"} (default) takes the per-cell
+#'   median for count / proportion / zi_count magnitude traits — robust to
+#'   single dropout-noisy draws amplified by non-linear decoders
+#'   (\code{expm1} / \code{plogis}).  \code{"mean"} restores the
+#'   pre-v0.9.2 arithmetic-mean pooling.  Continuous / ordinal / binary /
+#'   categorical pooling is unchanged (linear / probability-averaged).
+#'   See
+#'   \href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.
 #' @param ... ignored.
 #' @return A list of class \code{"pigauto_pred"} with:
 #'   \describe{
@@ -86,7 +95,9 @@
 #' @export
 predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
                                 n_imputations = 1L, baseline_override = NULL,
+                                pool_method = c("median", "mean"),
                                 ...) {
+  pool_method <- match.arg(pool_method)
   cfg       <- object$model_config
   device    <- get_device()
   trait_map <- object$trait_map
@@ -352,7 +363,8 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     probs       <- decode_results[[1]]$probabilities
     latent_pred <- latent_runs[[1]]
   } else {
-    pool <- pool_imputations(decode_results, latent_runs, trait_map)
+    pool <- pool_imputations(decode_results, latent_runs, trait_map,
+                              pool_method = pool_method)
     imputed     <- pool$imputed
     probs       <- pool$probabilities
     latent_pred <- pool$latent_mean
@@ -626,13 +638,24 @@ decode_from_latent <- function(latent_mat, trait_map, species_names) {
 
 # ---- Internal: pool multiple imputations ----------------------------------------
 
-pool_imputations <- function(decode_results, latent_runs, trait_map) {
+pool_imputations <- function(decode_results, latent_runs, trait_map,
+                              pool_method = c("median", "mean")) {
+  # `pool_method`:
+  #   "median" — per-cell median across M decoded draws for count /
+  #     proportion / zi_count magnitude.  Robust to dropout-noisy draws
+  #     amplified by non-linear decoders (expm1 / plogis).
+  #   "mean"   — per-cell arithmetic mean (pre-v0.9.2 behaviour).  Kept
+  #     as opt-in for strict backward compat.
+  # Continuous / ordinal / binary / categorical are UNAFFECTED — their
+  # decoders are linear or probability-averaged, so mean pooling is fine.
+  pool_method <- match.arg(pool_method)
   M <- length(decode_results)
   latent_mean <- Reduce("+", latent_runs) / M
   sp_names <- rownames(decode_results[[1]]$imputed)
   imputed <- data.frame(row.names = sp_names)
   probs <- list()
 
+  # Helper: per-cell median of a trait's decoded values across M draws.
   # Median pooling across decoded values. Robust to dropout-noisy draws
   # whose decode path (expm1, plogis) amplifies high-tail values --
   # critical for log-transformed continuous, count, zi_count, and
@@ -660,6 +683,13 @@ pool_imputations <- function(decode_results, latent_runs, trait_map) {
       }
 
     } else if (tm$type == "count") {
+      # Count traits are decoded via expm1() on the log1p+z latent.  A
+      # single dropout-noisy large draw can produce a latent ~ +5 SD,
+      # which expm1 turns into thousands — mean-pooling with M=20
+      # contaminates the whole cell.  Median-pool to stay robust
+      # (Issue #40).
+      vals <- if (pool_method == "median") row_median_decoded(nm) else
+        rowMeans(sapply(decode_results, function(dr) as.numeric(dr$imputed[[nm]])))
       # Median pool on decoded counts -- expm1 on log1p-noisy latents
       # amplifies outliers (Issue #40 fix).
       vals <- row_median_decoded(nm)
@@ -691,6 +721,20 @@ pool_imputations <- function(decode_results, latent_runs, trait_map) {
       imputed[[nm]] <- factor(tm$levels[pred_idx], levels = tm$levels)
 
     } else if (tm$type == "proportion") {
+      # Proportion traits are decoded via plogis() on the logit+z latent.
+      # Extreme dropout draws push decoded values toward 0 or 1; mean
+      # pooling contaminates the cell.  Median-pool for robustness
+      # (Issue #40).
+      vals <- if (pool_method == "median") row_median_decoded(nm) else
+        rowMeans(sapply(decode_results, function(dr) dr$imputed[[nm]]))
+      imputed[[nm]] <- vals
+
+    } else if (tm$type == "zi_count") {
+      # Magnitude col is expm1-decoded — same hazard as "count".
+      vals <- if (pool_method == "median") row_median_decoded(nm) else
+        rowMeans(sapply(decode_results, function(dr) as.numeric(dr$imputed[[nm]])))
+      imputed[[nm]] <- as.integer(pmax(round(vals), 0L))
+      # Gate col stays on the mean of P(non-zero) — linear.
       # Median pool -- plogis decode can amplify near-extreme latents.
       imputed[[nm]] <- row_median_decoded(nm)
 
@@ -974,6 +1018,26 @@ print.pigauto_fit <- function(x, ...) {
   if (!is.null(x$conformal_scores)) {
     cs <- x$conformal_scores[!is.na(x$conformal_scores)]
     cat("  Conformal scores:", length(cs), "traits\n")
+  }
+  if (!is.null(x$phylo_gate_triggered) &&
+      any(!is.na(x$phylo_signal_per_trait))) {
+    `%||%` <- function(a, b) if (is.null(a)) b else a
+    thr <- x$phylo_signal_threshold %||% 0.2
+    method <- x$phylo_signal_method %||% "lambda"
+    sig <- x$phylo_signal_per_trait
+    gated <- x$phylo_gate_triggered
+    cat(sprintf("\nPhylogenetic signal (%s, threshold %.2f):\n", method, thr))
+    if (any(gated, na.rm = TRUE)) {
+      gated_names <- names(gated)[gated & !is.na(gated)]
+      greek <- if (method == "lambda") "lambda" else "K"
+      cat("  gated (BM skipped, using grand mean):",
+           paste(sprintf("%s (%s=%.2f)", gated_names, greek, sig[gated_names]),
+                 collapse = ", "), "\n")
+    } else {
+      greek <- if (method == "lambda") "lambda" else "K"
+      cat(sprintf("  all %d traits have %s >= %.2f; safety floor is the fallback.\n",
+                   sum(!is.na(sig)), greek, thr))
+    }
   }
   invisible(x)
 }

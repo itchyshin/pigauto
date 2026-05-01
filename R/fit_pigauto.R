@@ -164,6 +164,23 @@
 #'   guaranteeing \code{pigauto_val_RMSE <= mean_val_RMSE} by
 #'   construction. When \code{FALSE}, the v0.9.1 1-D calibration is used
 #'   exactly (\code{r_MEAN = 0}).
+#' @param phylo_signal_gate logical. When \code{TRUE} (default since
+#'   v0.9.1.9003), compute per-trait Pagel's \eqn{\lambda} on
+#'   training-observed cells before fitting; for traits with
+#'   \code{lambda < phylo_signal_threshold}, force
+#'   \code{(r_cal_bm = 0, r_cal_gnn = 0, r_cal_mean = 1)} directly
+#'   and skip BM + GNN training on those traits.  Requires the
+#'   \code{phytools} package.  Falls back to safety-floor-only
+#'   behaviour (\code{phylo_signal_gate = FALSE} effective) when
+#'   \code{phytools} is absent.
+#' @param phylo_signal_threshold numeric, default \code{0.2}.  Traits
+#'   with Pagel's \eqn{\lambda} below this value are routed to the
+#'   grand-mean corner of the safety-floor simplex.
+#' @param phylo_signal_method character, currently only \code{"lambda"}
+#'   is fully implemented.  Reserved \code{"blomberg_k"} path returns
+#'   Blomberg's K via \code{phytools::phylosig()} but uses the same
+#'   threshold --- which is NOT dimensionally comparable; users
+#'   selecting K must supply a K-appropriate threshold.
 #' @param min_val_cells integer. Warn at fit time if any trait has fewer
 #'   than \code{min_val_cells} validation cells available for gate
 #'   calibration and conformal-score estimation.  Default \code{10}: the
@@ -254,12 +271,16 @@ fit_pigauto <- function(
     gate_splits_B     = 31L,
     gate_cv_folds     = 5L,
     safety_floor      = TRUE,
+    phylo_signal_gate = TRUE,
+    phylo_signal_threshold = 0.2,
+    phylo_signal_method = c("lambda", "blomberg_k"),
     min_val_cells     = 20L,
     verbose           = TRUE,
     seed              = 1L
 ) {
-  conformal_method <- match.arg(conformal_method)
-  gate_method      <- match.arg(gate_method)
+  conformal_method    <- match.arg(conformal_method)
+  gate_method         <- match.arg(gate_method)
+  phylo_signal_method <- match.arg(phylo_signal_method)
   if (!inherits(data, "pigauto_data")) {
     stop("'data' must be a pigauto_data object.")
   }
@@ -269,6 +290,35 @@ fit_pigauto <- function(
 
   device <- get_device()
   if (verbose) message("Using device: ", as.character(device))
+
+  # ---- Phylogenetic-signal gate -----------------------------------------------
+  # Compute per-trait Pagel's lambda on training-observed cells. Traits with
+  # lambda < phylo_signal_threshold are routed to the grand-mean corner (0,0,1)
+  # of the safety-floor simplex after calibration.
+  if (phylo_signal_gate) {
+    phylo_signal_per_trait <- compute_phylo_signal_per_trait(
+      data = data, tree = tree,
+      method = phylo_signal_method, min_tips = 20L)
+  } else {
+    phylo_signal_per_trait <- rep(NA_real_, length(data$trait_map))
+    names(phylo_signal_per_trait) <- vapply(data$trait_map,
+                                              function(tm) tm$name,
+                                              character(1L))
+  }
+  phylo_gate_triggered <- phylo_signal_gate &
+    !is.na(phylo_signal_per_trait) &
+    (phylo_signal_per_trait < phylo_signal_threshold)
+  names(phylo_gate_triggered) <- names(phylo_signal_per_trait)
+  # Build a latent-column-level index vector for downstream overrides.
+  gated_latent_cols <- integer(0L)
+  if (any(phylo_gate_triggered)) {
+    gated_trait_names <- names(phylo_gate_triggered)[phylo_gate_triggered]
+    for (tm in data$trait_map) {
+      if (tm$name %in% gated_trait_names) {
+        gated_latent_cols <- c(gated_latent_cols, tm$latent_cols)
+      }
+    }
+  }
 
   # ---- Graph ----------------------------------------------------------------
   if (is.null(graph)) {
@@ -831,6 +881,15 @@ fit_pigauto <- function(
       verbose               = verbose
     )
     calibrated_gates <- calibrated_gates_list$r_cal_gnn   # legacy scalar slot
+
+    # Apply phylo-signal gate override: gated latent columns get (0, 0, 1)
+    # regardless of what the 3-way simplex calibrator picked.
+    if (length(gated_latent_cols) > 0L && !is.null(calibrated_gates_list)) {
+      calibrated_gates_list$r_cal_bm[gated_latent_cols]   <- 0
+      calibrated_gates_list$r_cal_gnn[gated_latent_cols]  <- 0
+      calibrated_gates_list$r_cal_mean[gated_latent_cols] <- 1
+      calibrated_gates <- calibrated_gates_list$r_cal_gnn
+    }
   }
 
   # ---- Conformal prediction scores (validation set) -----------------------
@@ -957,8 +1016,12 @@ fit_pigauto <- function(
                      calibrated_gates_list$r_cal_gnn else NULL,
       r_cal_mean = if (!is.null(calibrated_gates_list))
                      calibrated_gates_list$r_cal_mean else NULL,
-      mean_baseline_per_col = mean_baseline_per_col,
-      safety_floor          = safety_floor,
+      mean_baseline_per_col  = mean_baseline_per_col,
+      safety_floor           = safety_floor,
+      phylo_signal_per_trait = phylo_signal_per_trait,
+      phylo_gate_triggered   = phylo_gate_triggered,
+      phylo_signal_method    = phylo_signal_method,
+      phylo_signal_threshold = phylo_signal_threshold,
       conformal_scores = conformal_scores,
       covariates       = data$covariates,
       cov_means        = data$cov_means,
