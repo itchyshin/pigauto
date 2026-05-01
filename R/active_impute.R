@@ -127,6 +127,175 @@ bm_variance_reduction <- function(y, R, nugget = 1e-6) {
   total_reduction
 }
 
+# ---- lp_entropy_reduction_binary --------------------------------------------
+#
+# Closed-form expected entropy reduction (single-obs binary trait, LP).
+#
+# Given y in {0, 1, NA} and sim (n x n similarity matrix, diag = 0 by
+# convention -- self-exclusion for label propagation), for each
+# currently-missing cell s_new in miss_idx, return the expected total
+# entropy reduction across all currently-missing cells if s_new were
+# observed next.
+#
+# The current LP probability at species i is:
+#     p_i = (sim[i, obs] %*% y_obs) / sum(sim[i, obs])
+# Entropy at i is H(p_i) = -p log p - (1 - p) log(1 - p) (binary).
+#
+# If we imagine observing s_new with unknown value y_new, the new LP
+# probability is:
+#     p_i_new = (sim[i, obs] %*% y_obs + sim[i, s_new] * y_new) /
+#                (row_w[i] + sim[i, s_new])
+# We don't know y_new ahead of time, so we use the current LP estimate
+# at s_new (call it q = p_s_new) as P(y_new = 1).  The expected new
+# entropy at i is:
+#     E[H_i | obs s_new] = (1 - q) * H(p_i_y0) + q * H(p_i_y1)
+# where p_i_y0, p_i_y1 are the LP updates with y_new = 0, 1 respectively.
+#
+# Total expected entropy reduction = current_total_H - expected_new_total_H,
+# accounting for the fact that observing s_new drops its own entropy to 0.
+#
+# Cost: O(n) per candidate, O(n * n_m) total.
+#
+# @param y    numeric vector (length n).  NA = missing; non-NA values must
+#             be 0 or 1.
+# @param sim  n x n similarity matrix.  diag = 0 by LP convention.
+# @return Named numeric vector of length(miss_idx) with total entropy
+#   reduction at each candidate cell.  Empty if no observed or no
+#   missing.  Non-negative (numerical floor at 0).
+# @keywords internal
+lp_entropy_reduction_binary <- function(y, sim) {
+  obs_idx  <- which(!is.na(y))
+  miss_idx <- which(is.na(y))
+  n_o <- length(obs_idx); n_m <- length(miss_idx)
+  if (n_o == 0L || n_m == 0L) return(numeric(0L))
+
+  H <- function(p) {
+    # Vectorised binary entropy with H(0) = H(1) = 0
+    out <- rep(0, length(p))
+    keep <- p > 0 & p < 1
+    out[keep] <- -p[keep] * log(p[keep]) - (1 - p[keep]) * log(1 - p[keep])
+    out
+  }
+
+  # Current LP probabilities at every species
+  sim_obs <- sim[, obs_idx, drop = FALSE]                    # n x n_o
+  numerator <- as.numeric(sim_obs %*% y[obs_idx])           # length n
+  row_w   <- rowSums(sim_obs)                                # length n
+  row_w_safe <- pmax(row_w, 1e-12)
+  p_all <- numerator / row_w_safe
+  p_all <- pmin(pmax(p_all, 0.01), 0.99)   # match LP path's clamp
+  H_cur <- H(p_all[miss_idx])
+
+  total_H_cur <- sum(H_cur)
+
+  out <- numeric(n_m)
+  for (k in seq_len(n_m)) {
+    s_new <- miss_idx[k]
+    q <- p_all[s_new]                          # current LP estimate
+    sim_to_s_new <- sim[, s_new]               # length n
+    denom_new <- row_w + sim_to_s_new
+    denom_new <- pmax(denom_new, 1e-12)
+    # LP after observing s_new with y_new = 0 / 1
+    p_y0 <- numerator / denom_new
+    p_y1 <- (numerator + sim_to_s_new) / denom_new
+    p_y0 <- pmin(pmax(p_y0, 0.01), 0.99)
+    p_y1 <- pmin(pmax(p_y1, 0.01), 0.99)
+    # Expected entropy at miss cells (other than s_new -- s_new drops to 0)
+    miss_other <- miss_idx[miss_idx != s_new]
+    if (length(miss_other) == 0L) {
+      sum_E <- 0
+    } else {
+      E_H <- (1 - q) * H(p_y0[miss_other]) + q * H(p_y1[miss_other])
+      sum_E <- sum(E_H)
+    }
+    out[k] <- total_H_cur - sum_E
+  }
+  out <- pmax(out, 0)   # numerical floor
+  if (!is.null(names(y))) names(out) <- names(y)[miss_idx]
+  out
+}
+
+# ---- lp_entropy_reduction_categorical ---------------------------------------
+#
+# K-ary version of the binary entropy-reduction formula.  Given a
+# K-class one-hot matrix `oh` (n x K, NA in entire row = missing) and
+# similarity matrix `sim`, return expected total entropy reduction
+# across all currently-missing rows for each candidate.
+#
+# Current K-class LP at species i:
+#     p_i_k = (sim[i, obs] %*% oh_obs[, k]) / row_w[i]
+#     where oh_obs is the one-hot matrix at observed rows.
+# Entropy: H(p_i) = -sum_k p_i_k log p_i_k (with floors).
+#
+# After observing s_new with class k_new:
+#     p_i_k_new = (numerator[i, k] + (k == k_new) * sim[i, s_new]) /
+#                  (row_w[i] + sim[i, s_new])
+# Expected entropy: sum_k_new q_k_new * H(p_i | y_new = k_new), where
+# q_k_new = current LP estimate at s_new.
+#
+# Cost: O(n * K) per candidate, O(n * n_m * K) total.
+#
+# @param oh   n x K one-hot matrix (numeric 0/1, NA in entire row = missing)
+# @param sim  n x n similarity matrix
+# @return Named numeric vector of length(miss_rows) with total entropy
+#   reduction.
+# @keywords internal
+lp_entropy_reduction_categorical <- function(oh, sim) {
+  K <- ncol(oh)
+  n <- nrow(oh)
+  obs_idx  <- which(stats::complete.cases(oh))
+  miss_idx <- setdiff(seq_len(n), obs_idx)
+  n_o <- length(obs_idx); n_m <- length(miss_idx)
+  if (n_o == 0L || n_m == 0L) return(numeric(0L))
+
+  H_cat <- function(P) {
+    # Row-wise K-ary entropy: P is m x K with rows summing to 1
+    P <- pmax(P, 1e-12)
+    P <- P / rowSums(P)
+    -rowSums(P * log(P))
+  }
+
+  sim_obs <- sim[, obs_idx, drop = FALSE]            # n x n_o
+  numerator <- sim_obs %*% oh[obs_idx, , drop = FALSE]  # n x K
+  row_w <- rowSums(sim_obs)                          # length n
+  row_w_safe <- pmax(row_w, 1e-12)
+  p_all <- numerator / row_w_safe
+  p_all <- pmax(p_all, 1e-12)
+  p_all <- p_all / rowSums(p_all)                    # row-stochastic
+
+  H_cur <- H_cat(p_all[miss_idx, , drop = FALSE])
+  total_H_cur <- sum(H_cur)
+
+  out <- numeric(n_m)
+  for (k in seq_len(n_m)) {
+    s_new <- miss_idx[k]
+    q <- p_all[s_new, ]                              # K-vector
+    sim_to_s_new <- sim[, s_new]                     # length n
+    denom_new <- row_w + sim_to_s_new
+    denom_new <- pmax(denom_new, 1e-12)
+    miss_other <- miss_idx[miss_idx != s_new]
+    if (length(miss_other) == 0L) {
+      out[k] <- total_H_cur
+      next
+    }
+    sum_E <- 0
+    for (kc in seq_len(K)) {
+      # Observing s_new in class kc
+      num_kc <- numerator
+      num_kc[, kc] <- num_kc[, kc] + sim_to_s_new
+      P_kc <- num_kc / denom_new
+      P_kc <- pmax(P_kc, 1e-12)
+      P_kc <- P_kc / rowSums(P_kc)
+      H_kc <- H_cat(P_kc[miss_other, , drop = FALSE])
+      sum_E <- sum_E + q[kc] * sum(H_kc)
+    }
+    out[k] <- total_H_cur - sum_E
+  }
+  out <- pmax(out, 0)
+  if (!is.null(rownames(oh))) names(out) <- rownames(oh)[miss_idx]
+  out
+}
+
 # ---- suggest_next_observation -----------------------------------------------
 
 #' Suggest which cell to observe next to maximise imputation precision
@@ -139,10 +308,14 @@ bm_variance_reduction <- function(y, R, nugget = 1e-6) {
 #' tells you which ones contribute most to imputation precision.
 #'
 #' @details
-#' The variance-reduction formula is derived from a Sherman-Morrison
-#' rank-1 inverse update on the BM conditional MVN: adding species
-#' \eqn{s} to the observed set updates the inverse correlation matrix
-#' by a known closed form.  For each candidate cell \eqn{(s, t)},
+#' Two metrics are supported, dispatched by trait type:
+#'
+#' \strong{Continuous-family traits} (continuous, count, ordinal,
+#' proportion) use the BM variance-reduction formula.  The variance-
+#' reduction formula is derived from a Sherman-Morrison rank-1 inverse
+#' update on the BM conditional MVN: adding species \eqn{s} to the
+#' observed set updates the inverse correlation matrix by a known
+#' closed form.  For each candidate cell \eqn{(s, t)},
 #' \deqn{
 #'   \Delta V(s, t) = \sigma_t^2
 #'     \sum_{i \in \mathrm{miss}_t} \frac{D_{ik}^2}{\alpha_k}
@@ -150,50 +323,80 @@ bm_variance_reduction <- function(y, R, nugget = 1e-6) {
 #' where \eqn{D = R_{mm} - R_{mo} R_{oo}^{-1} R_{om}} is the residual
 #' matrix at currently-missing cells, \eqn{\alpha_k = D_{kk}} is the
 #' current relative leverage of cell \eqn{k}, and \eqn{\sigma_t^2} is
-#' the REML BM variance for trait \eqn{t}.  See \code{R/active_impute.R}
-#' source for the full derivation.
+#' the REML BM variance for trait \eqn{t}.
 #'
-#' Reductions are summed across the BM-eligible traits for each species
+#' \strong{Discrete traits} (binary, categorical) use a label-
+#' propagation expected-entropy-reduction formula.  The current LP
+#' probability at species \eqn{i} is
+#' \eqn{p_i = \mathrm{sim}[i, \mathrm{obs}] y_{\mathrm{obs}} /
+#' \sum \mathrm{sim}[i, \mathrm{obs}]}, with entropy
+#' \eqn{H(p_i) = -\sum_k p_{i,k} \log p_{i,k}}.  After observing
+#' \eqn{s_{\mathrm{new}}} with unknown class \eqn{y_{\mathrm{new}}},
+#' the new LP probability has a closed form, and the expected entropy
+#' is averaged over \eqn{P(y_{\mathrm{new}})} = current LP estimate at
+#' \eqn{s_{\mathrm{new}}}.  Total expected entropy reduction sums
+#' across all currently-missing cells (the entropy at
+#' \eqn{s_{\mathrm{new}}} itself drops to 0).
+#'
+#' \strong{Variance and entropy are NOT directly comparable.}  The
+#' output sorts within each metric and the cross-metric ordering by
+#' \code{delta} is approximate.  When you want a strict ranking,
+#' filter by \code{metric} first.
+#'
+#' Reductions are summed across the included traits for each species
 #' when \code{by = "species"}, supporting the typical use case where
-#' measuring a species observes all of its currently-missing
-#' continuous-family traits at once.
+#' measuring a species observes all of its currently-missing traits
+#' at once.  At \code{by = "species"}, the per-trait variance and
+#' entropy reductions are summed separately into
+#' \code{delta_var_total} and \code{delta_entropy_total} columns; the
+#' \code{delta} column is whichever is non-NA (or
+#' \code{delta_var_total} when both are populated).  Cross-type
+#' species-level ranking is approximate -- see the variance-vs-
+#' entropy caveat above.
 #'
-#' Discrete traits (binary, categorical, zi_count) are silently
-#' skipped: their uncertainty is captured by class-probability entropy,
-#' not by the BM variance, and the variance-reduction formula above
-#' does not apply.  An expected-entropy-reduction extension is queued
-#' for v2.
+#' \code{zi_count} and \code{multi_proportion} are not yet supported
+#' and are silently skipped.
 #'
 #' @param result A \code{pigauto_result} object returned by
 #'   \code{\link{impute}}.  Must have been produced from single-obs
 #'   data; multi-obs inputs error with a clear message.
 #' @param top_n integer, default \code{10L}.  Number of suggestions to
-#'   return (descending by \code{delta_var_total}).
+#'   return (descending by \code{delta}).
 #' @param by character, one of \code{"cell"} (default) or
 #'   \code{"species"}.  \code{"cell"} returns individual
 #'   \code{(species, trait)} pairs.  \code{"species"} aggregates by
-#'   species (summing variance reductions across the species'
-#'   currently-missing continuous-family traits).
+#'   species (summing reductions across the species' currently-missing
+#'   traits).
 #' @param types character vector of pigauto trait types to include.
-#'   Default includes all continuous-family types
-#'   (\code{continuous}, \code{count}, \code{ordinal}, \code{proportion}).
+#'   Default includes the six supported types: \code{continuous},
+#'   \code{count}, \code{ordinal}, \code{proportion}, \code{binary},
+#'   \code{categorical}.
 #' @return A data.frame of class \code{"pigauto_active"}.  Columns
-#'   when \code{by = "cell"}: \code{species}, \code{trait}, \code{type},
-#'   \code{delta_var_total} (descending).  When \code{by = "species"}:
-#'   \code{species}, \code{delta_var_total}, \code{n_traits_missing}.
+#'   when \code{by = "cell"}: \code{species}, \code{trait},
+#'   \code{type}, \code{metric} (\code{"variance"} or \code{"entropy"}),
+#'   \code{delta}, \code{delta_var_total} (NA for discrete rows), and
+#'   \code{delta_entropy_total} (NA for continuous rows), sorted by
+#'   \code{delta} descending.  When \code{by = "species"}:
+#'   \code{species}, \code{delta_var_total}, \code{delta_entropy_total},
+#'   \code{n_traits_missing}, sorted by the SUM of available metrics.
 #' @examples
 #' \dontrun{
 #' data(avonet300, tree300, package = "pigauto")
 #' res <- impute(avonet300, tree300)
 #' suggest_next_observation(res, top_n = 5)              # top-5 cells
 #' suggest_next_observation(res, top_n = 10, by = "species")  # top-10 species
+#'
+#' # Continuous only:
+#' suggest_next_observation(res, top_n = 10,
+#'   types = c("continuous", "count", "ordinal", "proportion"))
 #' }
 #' @seealso \code{\link{impute}}
 #' @export
 suggest_next_observation <- function(result, top_n = 10L,
                                        by = c("cell", "species"),
                                        types = c("continuous", "count",
-                                                 "ordinal", "proportion")) {
+                                                 "ordinal", "proportion",
+                                                 "binary", "categorical")) {
   by <- match.arg(by)
   if (!inherits(result, "pigauto_result")) {
     stop("'result' must be a pigauto_result object (from impute()).",
@@ -217,46 +420,127 @@ suggest_next_observation <- function(result, top_n = 10L,
   trait_map <- data$trait_map
   spp <- data$species_names
 
-  # Recover R_phy: prefer fit$graph$R_phy (cached), fall back to
-  # phylo_cor_matrix(tree) if absent (older fits, defensive)
-  R_phy <- fit$graph$R_phy
-  if (is.null(R_phy) && !is.null(result$tree)) {
-    R_phy <- phylo_cor_matrix(result$tree)
-  }
-  if (is.null(R_phy)) {
-    stop("suggest_next_observation: phylogenetic correlation matrix not ",
-         "available in fit$graph$R_phy. Refit with build_phylo_graph() ",
-         "to populate it.", call. = FALSE)
-  }
-  R_phy <- R_phy[spp, spp, drop = FALSE]
+  cont_types <- c("continuous", "count", "ordinal", "proportion")
+  disc_types <- c("binary", "categorical")
+  has_cont <- any(types %in% cont_types) &&
+              any(vapply(trait_map, function(tm) tm$type %in% types, logical(1)) &
+                  vapply(trait_map, function(tm) tm$type %in% cont_types, logical(1)))
+  has_disc <- any(types %in% disc_types) &&
+              any(vapply(trait_map, function(tm) tm$type %in% types, logical(1)) &
+                  vapply(trait_map, function(tm) tm$type %in% disc_types, logical(1)))
 
-  # Per-trait loop: variance reduction on continuous-family columns
+  # Recover R_phy: needed for continuous variance reduction.
+  R_phy <- NULL
+  if (has_cont) {
+    R_phy <- fit$graph$R_phy
+    if (is.null(R_phy) && !is.null(result$tree)) {
+      R_phy <- phylo_cor_matrix(result$tree)
+    }
+    if (is.null(R_phy)) {
+      stop("suggest_next_observation: phylogenetic correlation matrix not ",
+           "available in fit$graph$R_phy and tree not in result. Refit via ",
+           "impute() to populate.", call. = FALSE)
+    }
+    R_phy <- R_phy[spp, spp, drop = FALSE]
+  }
+
+  # Recover sim_phylo (Gaussian kernel on cophenetic distances): needed
+  # for discrete entropy reduction.  Reconstruct from result$tree (the
+  # similarity matrix is not cached in fit$graph after impute()'s
+  # cleanup block).
+  sim_phylo <- NULL
+  if (has_disc) {
+    if (is.null(result$tree)) {
+      stop("suggest_next_observation: result$tree is missing; cannot ",
+           "reconstruct similarity matrix for discrete traits. Refit ",
+           "via impute() (>=v0.9.1.9008 stores tree in result).",
+           call. = FALSE)
+    }
+    D_phylo <- ape::cophenetic.phylo(result$tree)
+    D_phylo <- D_phylo[spp, spp]
+    sigma_lp <- stats::median(D_phylo) * 0.5
+    sim_phylo <- exp(-(D_phylo^2) / (2 * sigma_lp^2))
+    diag(sim_phylo) <- 0   # LP convention: exclude self
+  }
+
+  # Per-trait loop: dispatch by type
   cell_dfs <- list()
   for (tm in trait_map) {
     if (!(tm$type %in% types)) next
-    j <- tm$latent_cols[1L]
-    y <- X[, j]
-    names(y) <- spp
-    if (sum(!is.na(y)) < 5L || sum(is.na(y)) == 0L) next
 
-    delta_v <- bm_variance_reduction(y, R_phy)
-    if (length(delta_v) == 0L) next
+    if (tm$type %in% cont_types) {
+      j <- tm$latent_cols[1L]
+      y <- X[, j]
+      names(y) <- spp
+      if (sum(!is.na(y)) < 5L || sum(is.na(y)) == 0L) next
 
-    miss_idx <- which(is.na(y))
-    cell_dfs[[length(cell_dfs) + 1L]] <- data.frame(
-      species         = spp[miss_idx],
-      trait           = tm$name,
-      type            = tm$type,
-      delta_var_total = as.numeric(delta_v),
-      stringsAsFactors = FALSE
-    )
+      delta_v <- bm_variance_reduction(y, R_phy)
+      if (length(delta_v) == 0L) next
+
+      miss_idx <- which(is.na(y))
+      cell_dfs[[length(cell_dfs) + 1L]] <- data.frame(
+        species              = spp[miss_idx],
+        trait                = tm$name,
+        type                 = tm$type,
+        metric               = "variance",
+        delta                = as.numeric(delta_v),
+        delta_var_total      = as.numeric(delta_v),
+        delta_entropy_total  = NA_real_,
+        stringsAsFactors = FALSE)
+
+    } else if (identical(tm$type, "binary")) {
+      j <- tm$latent_cols[1L]
+      y <- X[, j]
+      names(y) <- spp
+      if (sum(!is.na(y)) < 1L || sum(is.na(y)) == 0L) next
+
+      delta_e <- lp_entropy_reduction_binary(y, sim_phylo)
+      if (length(delta_e) == 0L) next
+
+      miss_idx <- which(is.na(y))
+      cell_dfs[[length(cell_dfs) + 1L]] <- data.frame(
+        species              = spp[miss_idx],
+        trait                = tm$name,
+        type                 = tm$type,
+        metric               = "entropy",
+        delta                = as.numeric(delta_e),
+        delta_var_total      = NA_real_,
+        delta_entropy_total  = as.numeric(delta_e),
+        stringsAsFactors = FALSE)
+
+    } else if (identical(tm$type, "categorical")) {
+      lc <- tm$latent_cols
+      oh <- X[, lc, drop = FALSE]
+      rownames(oh) <- spp
+      # rows where any latent col is NA -> entire row missing
+      row_obs <- stats::complete.cases(oh)
+      if (sum(row_obs) < 1L || sum(!row_obs) == 0L) next
+
+      delta_e <- lp_entropy_reduction_categorical(oh, sim_phylo)
+      if (length(delta_e) == 0L) next
+
+      miss_idx <- which(!row_obs)
+      cell_dfs[[length(cell_dfs) + 1L]] <- data.frame(
+        species              = spp[miss_idx],
+        trait                = tm$name,
+        type                 = tm$type,
+        metric               = "entropy",
+        delta                = as.numeric(delta_e),
+        delta_var_total      = NA_real_,
+        delta_entropy_total  = as.numeric(delta_e),
+        stringsAsFactors = FALSE)
+    }
+    # zi_count, multi_proportion: not supported in v1.5; silently skip.
   }
 
   if (length(cell_dfs) == 0L) {
     out <- data.frame(species = character(0L),
                       trait = character(0L),
                       type = character(0L),
+                      metric = character(0L),
+                      delta = numeric(0L),
                       delta_var_total = numeric(0L),
+                      delta_entropy_total = numeric(0L),
                       stringsAsFactors = FALSE)
     return(structure(out, class = c("pigauto_active", "data.frame"),
                      by = by))
@@ -265,17 +549,32 @@ suggest_next_observation <- function(result, top_n = 10L,
   all_cells <- do.call(rbind, cell_dfs)
 
   out <- if (identical(by, "cell")) {
-    all_cells <- all_cells[order(-all_cells$delta_var_total), , drop = FALSE]
+    all_cells <- all_cells[order(-all_cells$delta), , drop = FALSE]
     rownames(all_cells) <- NULL
     utils::head(all_cells, top_n)
   } else {
-    agg_total <- stats::aggregate(delta_var_total ~ species,
-                                    data = all_cells, FUN = sum)
-    agg_n     <- stats::aggregate(trait ~ species,
-                                    data = all_cells, FUN = length)
-    agg <- merge(agg_total, agg_n, by = "species")
+    # Aggregate to species: sum of variance + entropy per species
+    agg_var <- stats::aggregate(delta_var_total ~ species,
+                                  data = all_cells,
+                                  FUN = function(x) sum(x, na.rm = TRUE))
+    agg_ent <- stats::aggregate(delta_entropy_total ~ species,
+                                  data = all_cells,
+                                  FUN = function(x) sum(x, na.rm = TRUE))
+    agg_n   <- stats::aggregate(trait ~ species,
+                                  data = all_cells, FUN = length)
+    agg <- merge(merge(agg_var, agg_ent, by = "species", all = TRUE),
+                  agg_n, by = "species", all = TRUE)
     names(agg)[names(agg) == "trait"] <- "n_traits_missing"
-    agg <- agg[order(-agg$delta_var_total), , drop = FALSE]
+    # Convert NaN/NA to 0 for sums
+    agg$delta_var_total[is.na(agg$delta_var_total) |
+                        is.nan(agg$delta_var_total)]     <- 0
+    agg$delta_entropy_total[is.na(agg$delta_entropy_total) |
+                            is.nan(agg$delta_entropy_total)] <- 0
+    # For ranking: use delta_var_total when present, else delta_entropy_total
+    rank_score <- ifelse(agg$delta_var_total > 0,
+                         agg$delta_var_total,
+                         agg$delta_entropy_total)
+    agg <- agg[order(-rank_score), , drop = FALSE]
     rownames(agg) <- NULL
     utils::head(agg, top_n)
   }

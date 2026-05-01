@@ -8,7 +8,7 @@ suggest_next_observation(
   result,
   top_n = 10L,
   by = c("cell", "species"),
-  types = c("continuous", "count", "ordinal", "proportion")
+  types = c("continuous", "count", "ordinal", "proportion", "binary", "categorical")
 )
 }
 \arguments{
@@ -17,23 +17,28 @@ suggest_next_observation(
 data; multi-obs inputs error with a clear message.}
 
 \item{top_n}{integer, default \code{10L}.  Number of suggestions to
-return (descending by \code{delta_var_total}).}
+return (descending by \code{delta}).}
 
 \item{by}{character, one of \code{"cell"} (default) or
 \code{"species"}.  \code{"cell"} returns individual
 \code{(species, trait)} pairs.  \code{"species"} aggregates by
-species (summing variance reductions across the species'
-currently-missing continuous-family traits).}
+species (summing reductions across the species' currently-missing
+traits).}
 
 \item{types}{character vector of pigauto trait types to include.
-Default includes all continuous-family types
-(\code{continuous}, \code{count}, \code{ordinal}, \code{proportion}).}
+Default includes the six supported types: \code{continuous},
+\code{count}, \code{ordinal}, \code{proportion}, \code{binary},
+\code{categorical}.}
 }
 \value{
 A data.frame of class \code{"pigauto_active"}.  Columns
-when \code{by = "cell"}: \code{species}, \code{trait}, \code{type},
-\code{delta_var_total} (descending).  When \code{by = "species"}:
-\code{species}, \code{delta_var_total}, \code{n_traits_missing}.
+when \code{by = "cell"}: \code{species}, \code{trait},
+\code{type}, \code{metric} (\code{"variance"} or \code{"entropy"}),
+\code{delta}, \code{delta_var_total} (NA for discrete rows), and
+\code{delta_entropy_total} (NA for continuous rows), sorted by
+\code{delta} descending.  When \code{by = "species"}:
+\code{species}, \code{delta_var_total}, \code{delta_entropy_total},
+\code{n_traits_missing}, sorted by the SUM of available metrics.
 }
 \description{
 For a fitted \code{pigauto_result} (returned by \code{\link{impute}}),
@@ -44,10 +49,14 @@ have time/budget to measure \emph{k} more species, this function
 tells you which ones contribute most to imputation precision.
 }
 \details{
-The variance-reduction formula is derived from a Sherman-Morrison
-rank-1 inverse update on the BM conditional MVN: adding species
-\eqn{s} to the observed set updates the inverse correlation matrix
-by a known closed form.  For each candidate cell \eqn{(s, t)},
+Two metrics are supported, dispatched by trait type:
+
+\strong{Continuous-family traits} (continuous, count, ordinal,
+proportion) use the BM variance-reduction formula.  The variance-
+reduction formula is derived from a Sherman-Morrison rank-1 inverse
+update on the BM conditional MVN: adding species \eqn{s} to the
+observed set updates the inverse correlation matrix by a known
+closed form.  For each candidate cell \eqn{(s, t)},
 \deqn{
   \Delta V(s, t) = \sigma_t^2
     \sum_{i \in \mathrm{miss}_t} \frac{D_{ik}^2}{\alpha_k}
@@ -55,19 +64,39 @@ by a known closed form.  For each candidate cell \eqn{(s, t)},
 where \eqn{D = R_{mm} - R_{mo} R_{oo}^{-1} R_{om}} is the residual
 matrix at currently-missing cells, \eqn{\alpha_k = D_{kk}} is the
 current relative leverage of cell \eqn{k}, and \eqn{\sigma_t^2} is
-the REML BM variance for trait \eqn{t}.  See \code{R/active_impute.R}
-source for the full derivation.
+the REML BM variance for trait \eqn{t}.
 
-Reductions are summed across the BM-eligible traits for each species
+\strong{Discrete traits} (binary, categorical) use a label-
+propagation expected-entropy-reduction formula.  The current LP
+probability at species \eqn{i} is
+\eqn{p_i = \mathrm{sim}[i, \mathrm{obs}] y_{\mathrm{obs}} /
+\sum \mathrm{sim}[i, \mathrm{obs}]}, with entropy
+\eqn{H(p_i) = -\sum_k p_{i,k} \log p_{i,k}}.  After observing
+\eqn{s_{\mathrm{new}}} with unknown class \eqn{y_{\mathrm{new}}},
+the new LP probability has a closed form, and the expected entropy
+is averaged over \eqn{P(y_{\mathrm{new}})} = current LP estimate at
+\eqn{s_{\mathrm{new}}}.  Total expected entropy reduction sums
+across all currently-missing cells (the entropy at
+\eqn{s_{\mathrm{new}}} itself drops to 0).
+
+\strong{Variance and entropy are NOT directly comparable.}  The
+output sorts within each metric and the cross-metric ordering by
+\code{delta} is approximate.  When you want a strict ranking,
+filter by \code{metric} first.
+
+Reductions are summed across the included traits for each species
 when \code{by = "species"}, supporting the typical use case where
-measuring a species observes all of its currently-missing
-continuous-family traits at once.
+measuring a species observes all of its currently-missing traits
+at once.  At \code{by = "species"}, the per-trait variance and
+entropy reductions are summed separately into
+\code{delta_var_total} and \code{delta_entropy_total} columns; the
+\code{delta} column is whichever is non-NA (or
+\code{delta_var_total} when both are populated).  Cross-type
+species-level ranking is approximate -- see the variance-vs-
+entropy caveat above.
 
-Discrete traits (binary, categorical, zi_count) are silently
-skipped: their uncertainty is captured by class-probability entropy,
-not by the BM variance, and the variance-reduction formula above
-does not apply.  An expected-entropy-reduction extension is queued
-for v2.
+\code{zi_count} and \code{multi_proportion} are not yet supported
+and are silently skipped.
 }
 \examples{
 \dontrun{
@@ -75,6 +104,10 @@ data(avonet300, tree300, package = "pigauto")
 res <- impute(avonet300, tree300)
 suggest_next_observation(res, top_n = 5)              # top-5 cells
 suggest_next_observation(res, top_n = 10, by = "species")  # top-10 species
+
+# Continuous only:
+suggest_next_observation(res, top_n = 10,
+  types = c("continuous", "count", "ordinal", "proportion"))
 }
 }
 \seealso{

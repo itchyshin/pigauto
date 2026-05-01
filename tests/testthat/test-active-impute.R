@@ -246,7 +246,7 @@ test_that("[active] suggest_next_observation rejects multi-obs input with clear 
   )
 })
 
-test_that("[active] suggest_next_observation skips discrete traits silently", {
+test_that("[active] suggest_next_observation handles binary trait via entropy reduction", {
   skip_if_not_installed("torch")
   set.seed(2114L)
   n <- 30L
@@ -262,9 +262,114 @@ test_that("[active] suggest_next_observation skips discrete traits silently", {
   result <- pigauto::impute(df, tree, epochs = 15L, n_imputations = 1L,
                               verbose = FALSE, seed = 2114L)
   sug <- pigauto::suggest_next_observation(result, top_n = 100)
-  # Only continuous trait suggestions
+  # Mixed-type input: should have BOTH continuous (variance) and binary
+  # (entropy) suggestions in the output
+  expect_true(any(sug$type == "continuous"))
+  expect_true(any(sug$type == "binary"))
+  expect_true("metric" %in% names(sug))
+  expect_true(all(sug$metric[sug$type == "continuous"] == "variance"))
+  expect_true(all(sug$metric[sug$type == "binary"]     == "entropy"))
+  expect_true(all(sug$delta >= 0))
+})
+
+test_that("[active] suggest_next_observation skips discrete when types excludes them", {
+  skip_if_not_installed("torch")
+  set.seed(2116L)
+  n <- 30L
+  tree <- ape::rtree(n)
+  df <- data.frame(
+    cont = stats::rnorm(n),
+    bin  = factor(sample(c("A", "B"), n, replace = TRUE), levels = c("A", "B")),
+    row.names = tree$tip.label
+  )
+  df$cont[c(3L, 7L, 11L)] <- NA
+  df$bin[c(5L, 9L, 13L)] <- NA
+  result <- pigauto::impute(df, tree, epochs = 15L, n_imputations = 1L,
+                              verbose = FALSE, seed = 2116L)
+  sug <- pigauto::suggest_next_observation(result, top_n = 100,
+                                             types = c("continuous", "count",
+                                                       "ordinal", "proportion"))
   expect_true(all(sug$type == "continuous"))
-  expect_true(all(sug$trait == "cont"))
+})
+
+test_that("[active] suggest_next_observation handles K=3 categorical via entropy reduction", {
+  skip_if_not_installed("torch")
+  set.seed(2117L)
+  n <- 30L
+  tree <- ape::rtree(n)
+  df <- data.frame(
+    cat3 = factor(sample(c("A", "B", "C"), n, replace = TRUE),
+                  levels = c("A", "B", "C")),
+    row.names = tree$tip.label
+  )
+  df$cat3[c(3L, 7L, 11L, 17L)] <- NA
+  result <- pigauto::impute(df, tree, epochs = 15L, n_imputations = 1L,
+                              verbose = FALSE, seed = 2117L)
+  sug <- pigauto::suggest_next_observation(result, top_n = 5)
+  expect_gte(nrow(sug), 1L)
+  expect_true(all(sug$type == "categorical"))
+  expect_true(all(sug$metric == "entropy"))
+  expect_true(all(sug$delta >= 0))
+  # Descending
+  expect_true(all(diff(sug$delta) <= 0))
+})
+
+test_that("[active] lp_entropy_reduction_binary matches brute-force on small fixture", {
+  set.seed(2118L)
+  n <- 15L
+  tree <- ape::rtree(n)
+  D <- ape::cophenetic.phylo(tree)
+  sigma_lp <- stats::median(D) * 0.5
+  sim <- exp(-(D^2) / (2 * sigma_lp^2))
+  diag(sim) <- 0
+  y <- as.numeric(stats::rbinom(n, 1, 0.5))
+  names(y) <- tree$tip.label
+  miss_idx <- c(2L, 5L, 9L, 13L)
+  y[miss_idx] <- NA
+
+  closed <- pigauto:::lp_entropy_reduction_binary(y, sim)
+  expect_length(closed, length(miss_idx))
+  expect_true(all(closed >= 0))
+  expect_true(all(is.finite(closed)))
+
+  # Brute-force: for each candidate s_new, compute current LP entropy at miss
+  # cells, then for y_new in {0, 1} compute new LP entropy, take expectation
+  # weighted by current p_s_new.  This directly mirrors the closed-form
+  # formula -- but written from scratch as a check.
+  H_bin <- function(p) {
+    p <- pmin(pmax(p, 0.01), 0.99)
+    -p * log(p) - (1 - p) * log(1 - p)
+  }
+  obs_idx <- which(!is.na(y))
+  current_p <- function(y_full, sim_mat) {
+    obs <- which(!is.na(y_full))
+    sim_o <- sim_mat[, obs, drop = FALSE]
+    rw <- rowSums(sim_o)
+    rw[rw < 1e-10] <- 1e-10
+    p <- as.numeric(sim_o %*% y_full[obs]) / rw
+    pmin(pmax(p, 0.01), 0.99)
+  }
+  p_cur <- current_p(y, sim)
+  H_cur <- H_bin(p_cur)
+  total_H_cur <- sum(H_cur[miss_idx])
+
+  for (k in seq_along(miss_idx)) {
+    s_new <- miss_idx[k]
+    q <- p_cur[s_new]
+    # y_new = 0
+    y_y0 <- y; y_y0[s_new] <- 0
+    p_y0 <- current_p(y_y0, sim)
+    miss_other <- miss_idx[miss_idx != s_new]
+    sum_E_y0 <- sum(H_bin(p_y0[miss_other]))
+    # y_new = 1
+    y_y1 <- y; y_y1[s_new] <- 1
+    p_y1 <- current_p(y_y1, sim)
+    sum_E_y1 <- sum(H_bin(p_y1[miss_other]))
+    expected_total_after <- (1 - q) * sum_E_y0 + q * sum_E_y1
+    bf <- total_H_cur - expected_total_after
+    expect_equal(closed[k], bf, tolerance = 1e-6,
+                 info = sprintf("[active] entropy reduction k=%d brute-force mismatch", k))
+  }
 })
 
 test_that("[active] suggest_next_observation returns 'pigauto_active' class", {

@@ -44,11 +44,26 @@ standard active-learning convention.  Variance reduction depends
 only on the geometry of which cells are observed, not on the
 unknown value at `s_new`.
 
-### Scope (v1)
+### Scope (v1.5, 2026-04-30 evening)
 
-* Continuous-family traits only (`continuous`, `count`, `ordinal`,
-  `proportion`).  Discrete traits are silently skipped.
+* Continuous-family traits (`continuous`, `count`, `ordinal`,
+  `proportion`) -- variance reduction via the BM Sherman-Morrison
+  closed form above.
+* Binary + categorical traits (added 2026-04-30 evening) --
+  expected entropy reduction via the label-propagation closed form:
+  current LP probability \eqn{p_i} has entropy \eqn{H(p_i)};
+  observing \eqn{s_{\mathrm{new}}} updates LP linearly via the
+  similarity kernel; expected entropy after observation is averaged
+  over \eqn{P(y_{\mathrm{new}})} = current LP estimate at
+  \eqn{s_{\mathrm{new}}}.
+* `zi_count` and `multi_proportion` not yet supported (silently
+  skipped).
 * Single-obs only.  Multi-obs deferred to v2.
+
+**Variance and entropy are not directly comparable.**  The
+default output mixes them by `delta` value, which is approximate
+across metrics.  When precise ranking matters, filter by
+`metric` ("variance" or "entropy") first.
 
 ### Why this is novel
 
