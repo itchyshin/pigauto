@@ -24,6 +24,8 @@ impute(
   pool_method = c("median", "mean", "mode"),
   clamp_outliers = FALSE,
   clamp_factor = 5,
+  match_observed = c("none", "pmm"),
+  pmm_K = 5L,
   safety_floor = TRUE,
   phylo_signal_gate = TRUE,
   phylo_signal_threshold = 0.2,
@@ -143,6 +145,20 @@ on the observed maximum used by \code{clamp_outliers}.  Default
 \code{5} (Tukey-style outlier definition: anything >= 5x the
 observed max is implausible).  Ignored when
 \code{clamp_outliers = FALSE}.}
+
+\item{match_observed}{character, one of \code{c("none", "pmm")}.
+Phase G' (v0.9.1.9012+).  Pass-through to
+\code{\link{predict.pigauto_fit}}.  When \code{"pmm"}, uses
+Predictive Mean Matching for log-transformed continuous, count,
+zi_count magnitude, and proportion traits: imputed values are
+drawn from the observed value pool, never extrapolated.  This
+is the \pkg{mice}-style imputation; recommended for use with
+\code{n_imputations > 1}.  Default \code{"none"} preserves
+pre-G' behaviour.}
+
+\item{pmm_K}{integer (>= 1).  Donor pool size for PMM.  Default
+\code{5L} (mice convention).  Ignored when
+\code{match_observed = "none"}.}
 
 \item{safety_floor}{logical. When \code{TRUE} (default since
 v0.9.1.9002), calibration searches the 3-way simplex

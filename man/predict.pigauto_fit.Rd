@@ -13,6 +13,8 @@
   pool_method = c("median", "mean", "mode"),
   clamp_outliers = FALSE,
   clamp_factor = 5,
+  match_observed = c("none", "pmm"),
+  pmm_K = 5L,
   ...
 )
 }
@@ -57,6 +59,25 @@ v0.9.1 behaviour exactly.}
 \item{clamp_factor}{numeric scalar (>= 1).  Multiplicative factor
 on the observed maximum used by \code{clamp_outliers}.  Default
 \code{5}.  Ignored when \code{clamp_outliers = FALSE}.}
+
+\item{match_observed}{character, one of \code{c("none", "pmm")}.
+Phase G' (v0.9.1.9012+).  When \code{"pmm"}, uses Predictive
+Mean Matching (Little 1988; Buuren mice) on the at-risk types
+(log-transformed continuous, count, zi_count magnitude,
+proportion).  For each missing cell, finds the \code{pmm_K}
+observed cells whose own predictions are closest to the missing
+cell's prediction, samples one, and returns its observed
+value.  Imputed values are guaranteed to lie in the observed
+data range -- no extrapolation is possible by construction.
+Recommended for log-transformed continuous traits with
+\code{n_imputations > 1} (e.g. AVONET Mass).  Discrete-class
+types (binary / categorical / ordinal / multi_proportion) and
+un-log continuous: no-op.  Default \code{"none"} preserves
+v0.9.1.9011 behaviour exactly.}
+
+\item{pmm_K}{integer scalar (>= 1).  Donor pool size for PMM.
+Default \code{5L} (mice convention).  Ignored when
+\code{match_observed = "none"}.}
 
 \item{...}{ignored.}
 }

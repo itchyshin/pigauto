@@ -107,6 +107,18 @@
 #'   \code{5} (Tukey-style outlier definition: anything >= 5x the
 #'   observed max is implausible).  Ignored when
 #'   \code{clamp_outliers = FALSE}.
+#' @param match_observed character, one of \code{c("none", "pmm")}.
+#'   Phase G' (v0.9.1.9012+).  Pass-through to
+#'   \code{\link{predict.pigauto_fit}}.  When \code{"pmm"}, uses
+#'   Predictive Mean Matching for log-transformed continuous, count,
+#'   zi_count magnitude, and proportion traits: imputed values are
+#'   drawn from the observed value pool, never extrapolated.  This
+#'   is the \pkg{mice}-style imputation; recommended for use with
+#'   \code{n_imputations > 1}.  Default \code{"none"} preserves
+#'   pre-G' behaviour.
+#' @param pmm_K integer (>= 1).  Donor pool size for PMM.  Default
+#'   \code{5L} (mice convention).  Ignored when
+#'   \code{match_observed = "none"}.
 #' @param ... additional arguments passed to \code{\link{fit_pigauto}}.
 #' @return An object of class \code{"pigauto_result"} with components:
 #'   \describe{
@@ -228,6 +240,8 @@ impute <- function(traits, tree, species_col = NULL,
                    pool_method = c("median", "mean", "mode"),
                    clamp_outliers = FALSE,
                    clamp_factor = 5,
+                   match_observed = c("none", "pmm"),
+                   pmm_K = 5L,
                    safety_floor = TRUE,
                    phylo_signal_gate = TRUE,
                    phylo_signal_threshold = 0.2,
@@ -305,12 +319,15 @@ impute <- function(traits, tree, species_col = NULL,
     try(torch::cuda_empty_cache(), silent = TRUE)
   }
 
+  match_observed <- match.arg(match_observed)
   # 6. Predict
   pred <- predict(fit, return_se = TRUE,
                   n_imputations = as.integer(n_imputations),
                   pool_method = pool_method,
                   clamp_outliers = clamp_outliers,
-                  clamp_factor   = clamp_factor)
+                  clamp_factor   = clamp_factor,
+                  match_observed = match_observed,
+                  pmm_K          = pmm_K)
 
   # 7. Build the completed data.frame: observed values preserved,
   #    missing cells filled with model predictions.  This is the primary
