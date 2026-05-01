@@ -10,6 +10,7 @@
   return_se = TRUE,
   n_imputations = 1L,
   baseline_override = NULL,
+  pool_method = c("median", "mean"),
   ...
 )
 }
@@ -31,6 +32,16 @@ variance.}
 of the one saved in the fit. Used internally by \code{\link[=multi_impute_trees]{multi_impute_trees()}}
 to reuse a trained GNN across posterior trees. Most users can ignore
 this. Default \code{NULL} (use the fit's own baseline).}
+
+\item{pool_method}{character.  How to pool the M decoded draws when
+\code{n_imputations > 1}: \code{"median"} (default) takes the per-cell
+median for count / proportion / zi_count magnitude traits — robust to
+single dropout-noisy draws amplified by non-linear decoders
+(\code{expm1} / \code{plogis}).  \code{"mean"} restores the
+pre-v0.9.2 arithmetic-mean pooling.  Continuous / ordinal / binary /
+categorical pooling is unchanged (linear / probability-averaged).
+See
+\href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.}
 
 \item{...}{ignored.}
 }

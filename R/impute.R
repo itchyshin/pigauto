@@ -69,6 +69,15 @@
 #'   on correlated other traits.  Binary + ordinal only; OVR categorical
 #'   stays on Phase 6 diagonal.  Default \code{FALSE}.  Passed to
 #'   \code{\link{fit_baseline}}.
+#' @param pool_method character. How to pool multiple imputation draws
+#'   (\code{n_imputations > 1}) for count, proportion, and zi_count
+#'   magnitude traits: \code{"median"} (default) takes the per-cell
+#'   median of the \code{M} decoded draws — robust to dropout-noisy
+#'   latents amplified by \code{expm1()} / \code{plogis()} decoders.
+#'   \code{"mean"} restores the pre-v0.9.2 arithmetic-mean pooling.
+#'   Continuous / ordinal / binary / categorical traits always pool by
+#'   mean (or probability average); unaffected by this argument.  See
+#'   \href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.
 #' @param safety_floor logical. When \code{TRUE} (default since
 #'   v0.9.1.9002), calibration searches the 3-way simplex
 #'   \code{r_BM * BM + r_GNN * GNN + r_MEAN * MEAN} so the grand mean is
@@ -194,9 +203,11 @@ impute <- function(traits, tree, species_col = NULL,
                    em_iterations = 0L,
                    em_tol = 1e-3,
                    em_offdiag = FALSE,
+                   pool_method = c("median", "mean"),
                    safety_floor = TRUE,
                    ...) {
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
+  pool_method <- match.arg(pool_method)
 
   # 1. Preprocess
   pd <- preprocess_traits(traits, tree, species_col = species_col,
@@ -266,7 +277,8 @@ impute <- function(traits, tree, species_col = NULL,
 
   # 6. Predict
   pred <- predict(fit, return_se = TRUE,
-                  n_imputations = as.integer(n_imputations))
+                  n_imputations = as.integer(n_imputations),
+                  pool_method = pool_method)
 
   # 7. Build the completed data.frame: observed values preserved,
   #    missing cells filled with model predictions.  This is the primary
