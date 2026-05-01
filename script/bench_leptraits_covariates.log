@@ -1,0 +1,61 @@
+[18:15:19] loading LepTraits consensus ...
+[18:15:19] LepTraits: 12448 rows x 43 cols
+[18:15:19] species with all 12 monthly indicators non-NA: 6516 / 12448
+[18:15:19] species with cov + >= 1 active month: 6516 / 12448
+[18:15:19] after tax filter: 6516 species
+[18:15:19] after dedup: 6339 species
+[18:15:19] sub-sampled to 1500 species
+[18:15:19] building taxonomic tree ...
+[18:15:19] tree: 1500 tips, binary=TRUE, rooted=TRUE
+[18:15:19] after tree alignment: n = 1500 species
+[18:15:19] kept traits with >= 50 non-NA: 4 (WS_L, FW_L, FlightDuration, NumberOfHostplantFamilies)
+[18:15:19]   WS_L                          : 169 held-out cells
+[18:15:19]   FW_L                          : 19 held-out cells
+[18:15:19]   FlightDuration                : 450 held-out cells
+[18:15:19]   NumberOfHostplantFamilies     : 287 held-out cells
+[18:15:19] =============== fit baseline (no covariates) ===============
+
+warning: solve(): system is singular; attempting approx solution
+
+warning: solve(): system is singular (rcond: 8.95809e-76); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.48124e-27); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.89934e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.73721e-23); attempting approx solution
+[18:16:33] baseline done in 73s
+[18:16:33] =============== fit cov + safety_floor=TRUE ===============
+
+warning: solve(): system is singular; attempting approx solution
+
+warning: solve(): system is singular (rcond: 8.95809e-76); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.48124e-27); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.89934e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.73721e-23); attempting approx solution
+[18:17:40] cov sf=TRUE done in 67s
+[18:17:40] =============== fit cov + safety_floor=FALSE ===============
+
+warning: solve(): system is singular; attempting approx solution
+
+warning: solve(): system is singular (rcond: 8.95809e-76); attempting approx solution
+
+warning: solve(): system is singular (rcond: 1.48124e-27); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.89934e-20); attempting approx solution
+
+warning: solve(): system is singular (rcond: 5.73721e-23); attempting approx solution
+[18:18:47] cov sf=FALSE done in 67s
+
+
+============ RESULTS (n = 1500 ) ============
+
+trait                                n       mean       none     cov_on    cov_off   none_r     on_r    off_r   rat_on  rat_off
+WS_L                               169       0.42        1.1      0.315      0.329   +0.293   +0.727   +0.713    0.287    0.300
+FW_L                                19      0.364      0.222      0.228      0.257   +0.802   +0.783   +0.827    1.027    1.161
+FlightDuration                     450       3.67       4.14       4.09       3.84   +0.133   +0.082   +0.260    0.989    0.928
+NumberOfHostplantFamilies          287      0.463      0.461      0.471      0.603   +0.221   +0.149   +0.162    1.023    1.308
+[18:18:47] wrote script/bench_leptraits_covariates.rds

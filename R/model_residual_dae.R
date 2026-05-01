@@ -73,13 +73,21 @@ ResidualPhyloDAE <- torch::nn_module(
       # n_gnn_layers instances of multi-head attention + FFN + pre-norm.
       # The log-adj bias preserves the phylogenetic prior; near-zero FFN init
       # keeps the stack close to identity at init (gate-closed safety).
+      #
+      # Fix H (2026-04-25): when user covariates are present (n_user_cov > 0),
+      # each transformer block also gets a per-layer cov-injection MLP.
+      # forward() then passes the cov_encoder output to every block, so the
+      # phylogenetic message passing has covariate-derived features
+      # available at every layer rather than only at the input encoder.
+      cov_inject_blocks <- (n_user_cov > 0L)
       self$transformer_blocks <- torch::nn_module_list(lapply(
         seq_len(n_gnn_layers), function(i) {
           GraphTransformerBlock(
             hidden_dim = as.integer(hidden_dim),
             n_heads    = as.integer(n_heads),
             ffn_mult   = as.integer(ffn_mult),
-            dropout    = dropout
+            dropout    = dropout,
+            cov_inject = cov_inject_blocks
           )
         }
       ))
@@ -134,19 +142,58 @@ ResidualPhyloDAE <- torch::nn_module(
       }
     } # end legacy path
 
-    # Observation-level refinement MLP (multi-obs + user covariates only).
-    # After species-level GNN message passing, observations are broadcast
-    # back to obs-level but lose within-species covariate variation.  This
-    # small MLP re-injects user covariates via a residual connection so
-    # that different observations of the same species (e.g. CTmax at
-    # different acclimation temperatures) can receive different predictions.
-    # When n_user_cov = 0, this module is not created and forward() skips it.
+    # Covariate sub-network (Fix B, 2026-04-25).  Two-stage architecture:
+    #   1. cov_encoder: dedicated MLP that maps raw covariates to a
+    #      hidden_dim-sized latent representation.  Gives the covariates
+    #      their own nonlinear capacity, independent of the phylogenetic
+    #      graph layers.
+    #   2. obs_refine: takes (h_after_GNN, cov_h) and produces a
+    #      hidden_dim-sized refinement that is added back into h via a
+    #      residual connection.
+    #
+    # Why two stages: the previous design fed raw covariates (5 dims, say)
+    # concatenated to h (hidden_dim, e.g. 32) into the obs_refine MLP.
+    # The first linear layer compressed (hidden_dim + n_user_cov) -> hidden_dim,
+    # which drowned the 5 covariate dimensions in the projection of the
+    # 32-dim phylogenetic hidden state.  cov_encoder ensures the covariates
+    # get their own hidden_dim of capacity before being mixed in.
+    #
+    # Fires whenever n_user_cov > 0 (single-obs and multi-obs both).  In
+    # multi-obs mode this also restores within-species covariate variation
+    # lost during species-level pooling (e.g. CTmax at different
+    # acclimation temperatures).
     if (n_user_cov > 0L) {
+      # Nonlinear cov path: dedicated MLP encoder + obs_refine residual.
+      self$cov_encoder <- torch::nn_sequential(
+        torch::nn_linear(as.integer(n_user_cov), hidden_dim),
+        torch::nn_relu(),
+        torch::nn_dropout(dropout),
+        torch::nn_linear(hidden_dim, hidden_dim),
+        torch::nn_relu()
+      )
       self$obs_refine <- torch::nn_sequential(
-        torch::nn_linear(hidden_dim + as.integer(n_user_cov), hidden_dim),
+        torch::nn_linear(hidden_dim + hidden_dim, hidden_dim),
         torch::nn_relu(),
         torch::nn_linear(hidden_dim, hidden_dim)
       )
+
+      # Linear cov path (Fix C, 2026-04-25): a direct linear projection
+      # from raw covariates to the input_dim output space, added to delta.
+      # This gives the model an unobstructed linear-regression path on
+      # covariates, equivalent to the fixed-effect part of phylolm.
+      # Without it, the GNN's blended-MSE training had to learn linear
+      # cov effects via gradient descent through several layers of
+      # nonlinearity, which empirically converges to a much worse
+      # solution than direct regression (smoke tests showed pigauto
+      # 1.85x RMSE vs phylolm-lambda BLUP on linear-effect cells).
+      self$cov_linear <- torch::nn_linear(as.integer(n_user_cov), input_dim,
+                                            bias = TRUE)
+      # Initialise close to zero so the linear path doesn't dominate at
+      # start.  Training will pull it to fitted regression coefficients.
+      torch::with_no_grad({
+        self$cov_linear$weight$mul_(0.01)
+        self$cov_linear$bias$zero_()
+      })
     }
 
     self$dec1 <- torch::nn_linear(hidden_dim,  hidden_dim)
@@ -214,14 +261,34 @@ ResidualPhyloDAE <- torch::nn_module(
       h_species <- h
     }
 
+    # Fix H prep: compute species-level cov_h ONCE per forward, pass to
+    # each transformer block.  Only when transformer_blocks were
+    # constructed with cov_inject=TRUE (i.e. n_user_cov > 0 at init).
+    cov_h_sp <- NULL
+    if (self$n_user_cov > 0L && !is.null(self$cov_encoder)) {
+      total_cov <- as.integer(covs$size(2))
+      user_covs <- covs$narrow(2L, total_cov - self$n_user_cov + 1L,
+                               self$n_user_cov)
+      cov_h <- self$cov_encoder(user_covs)
+      cov_h_sp <- if (multi_obs) {
+        scatter_mean(cov_h, obs_to_species, as.integer(adj$size(1)))
+      } else {
+        cov_h
+      }
+    }
+
     if (self$use_transformer_blocks) {
       # ---- Phase-9 path: iterate through GraphTransformerBlock stack ---------
-      # Each block takes (h_species, adj, D_sq) and returns updated h_species.
-      # The blocks handle multi-head attention + FFN + pre-norm + residual
-      # internally. When D_sq is provided (B2), each block uses the learnable
-      # per-head Gaussian bandwidth; otherwise the log-adj prior path fires.
+      # Each block takes (h_species, adj, D_sq, cov_h) and returns updated
+      # h_species.  The blocks handle multi-head attention + FFN + pre-norm
+      # + residual internally.  When D_sq is provided (B2), per-head
+      # Gaussian bandwidth fires.  When cov_h_sp is provided AND the block
+      # was built with cov_inject=TRUE (Fix H), the block also adds a
+      # learned cov-projection at this layer.
       for (l in seq_len(self$n_gnn_layers)) {
-        h_species <- self$transformer_blocks[[l]](h_species, adj, D_sq = D_sq)
+        h_species <- self$transformer_blocks[[l]](h_species, adj,
+                                                  D_sq = D_sq,
+                                                  cov_h = cov_h_sp)
       }
     } else {
       # ---- Legacy path: single-head attention or simple adjacency ------------
@@ -260,25 +327,43 @@ ResidualPhyloDAE <- torch::nn_module(
     if (multi_obs) {
       # Expand back from species to observation level
       h <- h_species$index_select(1L, obs_to_species)
-
-      # Observation-level refinement: re-inject user covariates so that
-      # different observations of the same species get distinct predictions.
-      # The residual connection preserves the phylogenetic signal from
-      # message passing while allowing covariate-conditional adjustment.
-      if (self$n_user_cov > 0L && !is.null(self$obs_refine)) {
-        # User covariates occupy the last n_user_cov columns of covs
-        total_cov <- as.integer(covs$size(2))
-        user_covs <- covs$narrow(2L, total_cov - self$n_user_cov + 1L,
-                                 self$n_user_cov)
-        h <- h + self$obs_refine(torch::torch_cat(list(h, user_covs), dim = 2L))
-      }
     } else {
       h <- h_species
+    }
+
+    # Covariate refinement (Fix B): two-stage covariate sub-network.
+    # cov_encoder gives raw covs their own hidden_dim of nonlinear capacity;
+    # obs_refine then mixes that with the GNN-output h via residual.
+    #
+    # Fires in BOTH single-obs and multi-obs modes whenever n_user_cov > 0.
+    # In multi-obs mode this also restores within-species covariate
+    # variation lost during species-level pooling.
+    if (self$n_user_cov > 0L && !is.null(self$obs_refine)) {
+      # cov_h is the obs-level cov-encoder output (computed earlier and
+      # also passed into the GNN blocks via cov_h_sp).  We reuse it here
+      # to avoid running cov_encoder twice per forward pass.  cov_h
+      # exists since n_user_cov > 0 implies cov_encoder was created.
+      h <- h + self$obs_refine(torch::torch_cat(list(h, cov_h), dim = 2L))
     }
 
     h     <- self$dec1(h)
     h     <- self$act(h)
     delta <- self$dec2(h)
+
+    # Linear cov path (Fix D, 2026-04-25): the direct linear projection
+    # is added to BOTH the baseline and the delta path, so it contributes
+    # to pred regardless of the blend gate r.  This mirrors phylolm's
+    # fixed-effects decomposition: pred = X*beta + (BM or GNN nonlinear
+    # corrections).  Without this, the linear cov contribution was
+    # multiplied by r in the blend, vanishing whenever the gate stayed
+    # closed.
+    fixed_effects <- NULL
+    if (self$n_user_cov > 0L && !is.null(self$cov_linear)) {
+      total_cov <- as.integer(covs$size(2))
+      user_covs <- covs$narrow(2L, total_cov - self$n_user_cov + 1L,
+                               self$n_user_cov)
+      fixed_effects <- self$cov_linear(user_covs)
+    }
 
     # Bounded blend gate in (0, gate_cap)
     if (self$per_column_rs) {
@@ -289,9 +374,12 @@ ResidualPhyloDAE <- torch::nn_module(
 
     # Return: blended prediction when baseline_mu provided; otherwise legacy list
     if (!is.null(baseline_mu)) {
-      (1 - rs) * baseline_mu + rs * delta
+      blended <- (1 - rs) * baseline_mu + rs * delta
+      if (!is.null(fixed_effects)) blended <- blended + fixed_effects
+      blended
     } else {
-      list(delta = delta, rs = rs)
+      list(delta = delta, rs = rs,
+            fixed_effects = if (!is.null(fixed_effects)) fixed_effects else NULL)
     }
   }
 )

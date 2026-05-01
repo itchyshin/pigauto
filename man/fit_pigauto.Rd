@@ -35,8 +35,10 @@ fit_pigauto(
   clip_norm = 1,
   conformal_method = c("split", "bootstrap"),
   conformal_bootstrap_B = 500L,
-  gate_method = c("single_split", "median_splits"),
+  conformal_split_val = FALSE,
+  gate_method = c("single_split", "median_splits", "cv_folds"),
   gate_splits_B = 31L,
+  gate_cv_folds = 5L,
   safety_floor = TRUE,
   phylo_signal_gate = TRUE,
   phylo_signal_threshold = 0.2,
@@ -152,12 +154,38 @@ across 10 seeds).  Ship as an opt-in experimental knob; defaults to
 \code{conformal_method = "bootstrap"}; default \code{500}.  Ignored
 otherwise.}
 
+\item{conformal_split_val}{logical. Default \code{FALSE} (pre-2026-04-28
+single-set behaviour, retained because forcing the split regresses
+the AVONET300 / OVR-categorical / BIEN safety-floor smoke benches by
+2-26\%). When \code{TRUE}, the validation set is split per latent
+column into a calibration half (used to pick the calibrated blend
+gate) and a conformal half (used to compute the conformal residual
+quantile). This restores split-conformal exchangeability — without
+the split, the gate is selected to minimise residual MSE on the very
+cells whose residuals drive the conformal quantile, producing
+systematic undercoverage (most visible at small \code{n_val}; see
+the \code{coverage_investigation} memo). Use this when accurate 95\%
+coverage matters more than the bench-grade RMSE; the split only
+activates per-column when that column has at least
+\code{2 * min_val_cells} val cells (smaller columns silently fall
+back to the single-set path to keep \code{calibrate_gates()}'s
+half-A / half-B cross-check stable).}
+
 \item{gate_method}{character. How the per-trait calibrated gate is
 chosen.  \code{"single_split"} (default, backward-compatible) runs
 the grid search on a single random half-A / half-B split of the val
 rows; \code{"median_splits"} repeats the whole procedure for
 \code{gate_splits_B} random splits and takes the median
-\code{best_g}.  \code{"median_splits"} slightly reduces gate
+\code{best_g}.  \code{"cv_folds"} (2026-04-30) partitions val cells
+into \code{gate_cv_folds} (default 5) deterministic non-overlapping
+folds and runs the grid + half-B-verify procedure once per fold
+(training set = K-1 folds, held-out = remaining fold), taking the
+componentwise median of K winning weight vectors.  \code{"cv_folds"}
+uses larger training sets per split (K-1/K vs 1/2 in
+\code{median_splits}) and has a standard cross-validation
+interpretation, motivated by the open val→test drift observed on
+4/32 binary cells in the discrete-bench memo.
+\code{"median_splits"} slightly reduces gate
 bimodality at small \code{n_val} (SD 0.406 → 0.360 across 10 seeds
 on the evaluation sim) with a small coverage-SD improvement
 (0.094 → 0.086).  Negligible runtime cost (B × cheap grid searches).}
@@ -165,6 +193,12 @@ on the evaluation sim) with a small coverage-SD improvement
 \item{gate_splits_B}{integer. Random splits used when
 \code{gate_method = "median_splits"}; default \code{31} (odd so the
 median is well-defined).}
+
+\item{gate_cv_folds}{integer. Number of CV folds when
+\code{gate_method = "cv_folds"}; default \code{5}, must be
+\code{>= 2}.  Capped at \code{n_val} per trait so each fold has at
+least 1 cell.  When effective K \code{< 2} (e.g. \code{n_val = 1}),
+the code falls back to a single split.}
 
 \item{safety_floor}{logical. When \code{TRUE} (default), post-training
 calibration searches a 3-way simplex \code{r_BM * BM + r_GNN * GNN

@@ -116,18 +116,48 @@
 #' @param conformal_bootstrap_B integer. Bootstrap resamples used when
 #'   \code{conformal_method = "bootstrap"}; default \code{500}.  Ignored
 #'   otherwise.
+#' @param conformal_split_val logical. Default \code{FALSE} (pre-2026-04-28
+#'   single-set behaviour, retained because forcing the split regresses
+#'   the AVONET300 / OVR-categorical / BIEN safety-floor smoke benches by
+#'   2-26%). When \code{TRUE}, the validation set is split per latent
+#'   column into a calibration half (used to pick the calibrated blend
+#'   gate) and a conformal half (used to compute the conformal residual
+#'   quantile). This restores split-conformal exchangeability — without
+#'   the split, the gate is selected to minimise residual MSE on the very
+#'   cells whose residuals drive the conformal quantile, producing
+#'   systematic undercoverage (most visible at small \code{n_val}; see
+#'   the \code{coverage_investigation} memo). Use this when accurate 95%
+#'   coverage matters more than the bench-grade RMSE; the split only
+#'   activates per-column when that column has at least
+#'   \code{2 * min_val_cells} val cells (smaller columns silently fall
+#'   back to the single-set path to keep \code{calibrate_gates()}'s
+#'   half-A / half-B cross-check stable).
 #' @param gate_method character. How the per-trait calibrated gate is
 #'   chosen.  \code{"single_split"} (default, backward-compatible) runs
 #'   the grid search on a single random half-A / half-B split of the val
 #'   rows; \code{"median_splits"} repeats the whole procedure for
 #'   \code{gate_splits_B} random splits and takes the median
-#'   \code{best_g}.  \code{"median_splits"} slightly reduces gate
+#'   \code{best_g}.  \code{"cv_folds"} (2026-04-30) partitions val cells
+#'   into \code{gate_cv_folds} (default 5) deterministic non-overlapping
+#'   folds and runs the grid + half-B-verify procedure once per fold
+#'   (training set = K-1 folds, held-out = remaining fold), taking the
+#'   componentwise median of K winning weight vectors.  \code{"cv_folds"}
+#'   uses larger training sets per split (K-1/K vs 1/2 in
+#'   \code{median_splits}) and has a standard cross-validation
+#'   interpretation, motivated by the open val→test drift observed on
+#'   4/32 binary cells in the discrete-bench memo.
+#'   \code{"median_splits"} slightly reduces gate
 #'   bimodality at small \code{n_val} (SD 0.406 → 0.360 across 10 seeds
 #'   on the evaluation sim) with a small coverage-SD improvement
 #'   (0.094 → 0.086).  Negligible runtime cost (B × cheap grid searches).
 #' @param gate_splits_B integer. Random splits used when
 #'   \code{gate_method = "median_splits"}; default \code{31} (odd so the
 #'   median is well-defined).
+#' @param gate_cv_folds integer. Number of CV folds when
+#'   \code{gate_method = "cv_folds"}; default \code{5}, must be
+#'   \code{>= 2}.  Capped at \code{n_val} per trait so each fold has at
+#'   least 1 cell.  When effective K \code{< 2} (e.g. \code{n_val = 1}),
+#'   the code falls back to a single split.
 #' @param safety_floor logical. When \code{TRUE} (default), post-training
 #'   calibration searches a 3-way simplex \code{r_BM * BM + r_GNN * GNN
 #'   + r_MEAN * MEAN} so the grand mean is always in the candidate set,
@@ -236,8 +266,10 @@ fit_pigauto <- function(
     clip_norm         = 1.0,
     conformal_method  = c("split", "bootstrap"),
     conformal_bootstrap_B = 500L,
-    gate_method       = c("single_split", "median_splits"),
+    conformal_split_val = FALSE,
+    gate_method       = c("single_split", "median_splits", "cv_folds"),
     gate_splits_B     = 31L,
+    gate_cv_folds     = 5L,
     safety_floor      = TRUE,
     phylo_signal_gate = TRUE,
     phylo_signal_threshold = 0.2,
@@ -440,12 +472,22 @@ fit_pigauto <- function(
 
   # ---- Model ----------------------------------------------------------------
   cov_dim <- p + 1L + n_cov_cols
-  # n_user_cov tells the model how many observation-level user covariates
-  # exist (the last n_cov_cols columns of the covs tensor).  When multi_obs
-  # is TRUE and n_user_cov > 0, the model's obs_refine MLP re-injects
-  # these covariates after species-level GNN message passing so that
-  # different observations of the same species get distinct predictions.
-  n_user_cov <- if (multi_obs) n_cov_cols else 0L
+  # n_user_cov tells the model how many user covariates exist (the last
+  # n_cov_cols columns of the covs tensor). The model's obs_refine MLP
+  # re-injects these covariates after species-level GNN message passing
+  # via a residual connection so the GNN's delta is conditioned on the
+  # raw covariates rather than only on the species-level hidden state
+  # (which has been propagated through phylogeny-only graph layers).
+  #
+  # Historical note (pre-2026-04-25): n_user_cov was forced to 0 in
+  # single-obs mode, which meant user covariates entered the model only
+  # via the input encoder and were diluted through the GNN layers. The
+  # GNN had no path to extract nonlinear covariate-effect signal beyond
+  # what a single linear projection could carry. Fixed by feeding the
+  # raw user covariates back into the obs_refine MLP in single-obs mode
+  # too, so single-obs imputation can finally exploit nonlinear
+  # covariate structure.
+  n_user_cov <- n_cov_cols
   model <- ResidualPhyloDAE(
     input_dim              = p,
     hidden_dim             = as.integer(hidden_dim),
@@ -722,6 +764,55 @@ fit_pigauto <- function(
     val_mask_mat <- matrix(FALSE, n, p)
     val_mask_mat[splits$val_idx] <- TRUE
 
+    # Fix C.3 (Opus 2026-04-28): split val into a CALIBRATION half (used by
+    # `calibrate_gates()` to pick per-trait blend weights) and a CONFORMAL
+    # half (used by `compute_conformal_scores()` to estimate residual
+    # quantiles). Reusing the same val cells for both breaks split-conformal
+    # exchangeability — the gate is selected to minimise val residual MSE,
+    # which post-selects the very residuals that drive the conformal
+    # quantile, producing systematic undercoverage. The split is per
+    # latent column to avoid wasting cells on traits with already-tiny
+    # val sets.
+    #
+    # Min-val safeguard: only split a column when its val set has at
+    # least `2 * min_val_cells` cells.  Below that threshold the half-A /
+    # half-B cross-check inside `calibrate_gates()` (which itself halves
+    # the input) becomes too noisy and the calibrated gate degrades in
+    # ways that show up as a +2-25% RMSE regression on benches like the
+    # AVONET300 safety-floor smoke test.  Columns under the threshold
+    # silently fall back to the legacy single-set behaviour for that
+    # column (calibration uses the full val cells; conformal also uses
+    # them but accepts the modest undercoverage risk).  Set
+    # `conformal_split_val = FALSE` to disable splitting everywhere.
+    split_threshold <- 2L * as.integer(min_val_cells)
+    if (isTRUE(conformal_split_val)) {
+      set.seed(seed + 23L)
+      val_mask_cal  <- matrix(FALSE, n, p)
+      val_mask_conf <- matrix(FALSE, n, p)
+      for (jcol in seq_len(p)) {
+        idx_j <- which(val_mask_mat[, jcol])
+        n_j   <- length(idx_j)
+        if (n_j == 0L) next
+        if (n_j < split_threshold) {
+          # Below threshold: do not split — both halves get the full val
+          # cells.  Documented downside: conformal scores for this column
+          # are post-selected on the gate calibration cells, undercovering
+          # by an amount bounded by the size of the gate-grid search
+          # (small in practice).
+          val_mask_cal[idx_j, jcol]  <- TRUE
+          val_mask_conf[idx_j, jcol] <- TRUE
+          next
+        }
+        cal_n   <- ceiling(n_j / 2)
+        cal_idx <- sample(idx_j, cal_n)
+        val_mask_cal[cal_idx, jcol]                        <- TRUE
+        val_mask_conf[setdiff(idx_j, cal_idx), jcol]       <- TRUE
+      }
+    } else {
+      val_mask_cal  <- val_mask_mat
+      val_mask_conf <- val_mask_mat
+    }
+
     # Safety-floor: compute per-latent-column grand mean on training-observed
     # cells only. Excludes val + test hold-out to prevent leakage. Works in
     # both single-obs and multi-obs mode (X_scaled is obs-level either way).
@@ -775,11 +866,12 @@ fit_pigauto <- function(
       mu_cal                = mu_cal,
       delta_cal             = delta_cal,
       X_truth_r             = X_truth_r,
-      val_mask_mat          = val_mask_mat,
+      val_mask_mat          = val_mask_cal,
       gate_grid             = seq(0, gate_cap, length.out = 9L),
       gate_cap              = gate_cap,
       gate_method           = gate_method,
       gate_splits_B         = gate_splits_B,
+      gate_cv_folds         = gate_cv_folds,
       safety_floor          = safety_floor,
       mean_baseline_per_col = mean_baseline_per_col,
       simplex_step          = 0.05,
@@ -810,7 +902,7 @@ fit_pigauto <- function(
       mu_cal           = mu_cal,
       delta_cal        = delta_cal,
       X_truth_r        = X_truth_r,
-      val_mask_mat     = val_mask_mat,
+      val_mask_mat     = val_mask_conf,
       method           = conformal_method,
       bootstrap_B      = conformal_bootstrap_B,
       verbose          = verbose

@@ -1,0 +1,24 @@
+[10:46:36] v2: tree=v2_FIXED_tree300, n=300, alphas=0.1,0.4,0.7, betas=0,0.2,0.4, f=linear,nonlinear,interactive, cov=iid,phylo_structured, reps=5
+[10:46:37] Total cells: 240 (skipping invalid alpha+beta>0.9)
+[10:46:37] === 1/240: a=0.1 b=0.0 f=linear cov=iid rep=1 (seed=3037) ===
+[10:47:15]   pigauto_no_cov 38.7s
+[10:48:02]   pigauto_cov_sfT 46.6s
+[10:48:45]   pigauto_cov_sfF 43.5s
+[10:48:45] === 2/240: a=0.1 b=0.0 f=linear cov=iid rep=2 (seed=4037) ===
+[10:49:52]   pigauto_no_cov 66.7s
+[10:52:26]   pigauto_cov_sfT 153.6s
+[10:54:59]   pigauto_cov_sfF 153.4s
+[10:54:59] === 3/240: a=0.1 b=0.0 f=linear cov=iid rep=3 (seed=5037) ===
+[10:57:02]   pigauto_no_cov 122.9s
+[10:59:09]   pigauto_cov_sfT 127.2s
+[11:01:40]   pigauto_cov_sfF 151.1s
+[11:01:40] === 4/240: a=0.1 b=0.0 f=linear cov=iid rep=4 (seed=6037) ===
+[11:03:51]   pigauto_no_cov 130.5s
+[11:07:33]   pigauto_cov_sfT 222.0s
+[11:11:32]   pigauto_cov_sfF 239.3s
+[11:11:32] === 5/240: a=0.1 b=0.0 f=linear cov=iid rep=5 (seed=7037) ===
+[11:12:57]   pigauto_no_cov 84.6s
+[11:13:47]   pigauto_cov_sfT 49.9s
+[11:14:39]   pigauto_cov_sfF 52.6s
+[11:14:39] === 6/240: a=0.1 b=0.0 f=linear cov=phylo_structured rep=1 (seed=3137) ===
+[11:15:21]   pigauto_no_cov 41.1s

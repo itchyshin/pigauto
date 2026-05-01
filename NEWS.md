@@ -1,3 +1,470 @@
+# pigauto 0.9.1.9009 (dev)
+
+## `suggest_next_observation()` v2: zi_count + multi_proportion (2026-05-01)
+
+Closes the v1.5 scope gap: `suggest_next_observation()` now supports
+all 8 pigauto trait types.
+
+### zi_count
+
+Hybrid metric: observing a missing zi_count cell reveals the gate
+value (entropy reduction at the gate column, computed via the LP
+binary formula) AND, with probability \eqn{p_{\mathrm{gate}}}
+(current LP estimate at \eqn{s_{\mathrm{new}}}), reveals a
+magnitude (variance reduction at the magnitude column, computed
+via the BM Sherman-Morrison formula on the gate=1 subset).  Output
+rows for zi_count populate BOTH `delta_var_total` (= probability-
+weighted magnitude variance reduction) AND `delta_entropy_total`
+(= gate entropy reduction).  `metric` is set to `"variance"` so
+the row sorts on the magnitude scale; `delta_entropy_total` is
+available for users who care about gate-uncertainty separately.
+
+### multi_proportion
+
+Per-component variance reduction summed across K CLR-z-scored
+latent columns.  Per CLAUDE.md, multi_proportion rows are
+fully observed OR fully missing (no partial K-component
+observations), so `delta_var_total` is the K-component sum at each
+fully-missing row.
+
+### Implementation
+
+`R/active_impute.R`:
+- New dispatch branches for `zi_count` and `multi_proportion`
+  in `suggest_next_observation()`.
+- Reuses existing `bm_variance_reduction()` and
+  `lp_entropy_reduction_binary()` helpers.
+- New `needs_R_phy` / `needs_sim_phylo` derived flags clarify
+  which kernels each trait type needs (zi_count needs both;
+  multi_proportion needs R_phy only).
+
+### Tests
+
+4 new test_that blocks (`tests/testthat/test-active-impute.R`):
+
+* `[active v2] zi_count: hybrid variance + entropy populated`
+* `[active v2] zi_count: types argument can exclude zi_count`
+* `[active v2] multi_proportion: per-component BM variance summed`
+* `[active v2] multi_proportion: delta equals K-component sum`
+  (verifies via independent recomputation against
+  `bm_variance_reduction()` per component)
+
+Total active-impute tests: 17 / 60 expects, all pass.
+
+# pigauto 0.9.1.9008 (dev)
+
+## NEW: `suggest_next_observation()` -- active-imputation guidance (2026-04-30)
+
+For a fitted `pigauto_result` (from `impute()`), compute the
+closed-form expected reduction in TOTAL predictive variance across
+all currently-missing cells if each candidate cell were observed
+next.  Useful for sampling-design guidance when measurement budget
+is limited: which species, if observed next, would most reduce
+imputation uncertainty across the rest of your tree?
+
+### API
+
+```r
+suggest_next_observation(result, top_n = 10L,
+                          by = c("cell", "species"))
+```
+
+Returns a `pigauto_active` data.frame (descending by
+`delta_var_total`).  Columns:
+
+* `by = "cell"`: `species`, `trait`, `type`, `delta_var_total`.
+* `by = "species"`: `species`, `delta_var_total`,
+  `n_traits_missing`.
+
+### Math
+
+Built on a Sherman-Morrison rank-1 inverse update of the BM
+conditional MVN: adding species `s_new` to the observed set updates
+`R_oo^{-1}` by a known closed form, and the variance reduction at
+every other missing cell is a single scalar per candidate.
+
+Closed form per candidate cell:
+
+```
+delta_V_total(s_new) = sigma2 * sum_{i in miss} D[i, k]^2 / alpha_k
+```
+
+where `D = R_mm - R_mo R_oo^{-1} R_om` is the residual matrix and
+`alpha_k = D[k, k]` is the current relative leverage of cell `k`.
+
+The formula assumes `sigma2` (REML variance) is held fixed -- the
+standard active-learning convention.  Variance reduction depends
+only on the geometry of which cells are observed, not on the
+unknown value at `s_new`.
+
+### Scope (v1.5, 2026-04-30 evening)
+
+* Continuous-family traits (`continuous`, `count`, `ordinal`,
+  `proportion`) -- variance reduction via the BM Sherman-Morrison
+  closed form above.
+* Binary + categorical traits (added 2026-04-30 evening) --
+  expected entropy reduction via the label-propagation closed form:
+  current LP probability \eqn{p_i} has entropy \eqn{H(p_i)};
+  observing \eqn{s_{\mathrm{new}}} updates LP linearly via the
+  similarity kernel; expected entropy after observation is averaged
+  over \eqn{P(y_{\mathrm{new}})} = current LP estimate at
+  \eqn{s_{\mathrm{new}}}.
+* `zi_count` and `multi_proportion` not yet supported (silently
+  skipped).
+* Single-obs only.  Multi-obs deferred to v2.
+
+**Variance and entropy are not directly comparable.**  The
+default output mixes them by `delta` value, which is approximate
+across metrics.  When precise ranking matters, filter by
+`metric` ("variance" or "entropy") first.
+
+### Why this is novel
+
+To my knowledge, no other phylogenetic-imputation package (Rphylopars,
+BACE, phylolm, mice with phylogenetic correlation) exposes a
+sampling-design helper.  pigauto is uniquely positioned because its
+BM conditional MVN already computes per-cell predictive variance --
+this function just exposes the closed-form variance-reduction
+formula derived from rank-1 update.  The methods are 30 years old
+in optimal-design literature (Cohn et al. 1996, JAIR 4:129–145);
+applying them to phylogenetic trait imputation appears to be new.
+
+### Files
+
+* `R/active_impute.R` (new) -- 304 LOC, hosts
+  `bm_variance_reduction()` (internal) and
+  `suggest_next_observation()` (exported), plus
+  `print.pigauto_active` S3 method.
+* `R/impute.R` -- adds `tree` to the `pigauto_result` so
+  `suggest_next_observation()` can recompute `R_phy` if it was
+  freed in the post-fit cleanup block.
+* `tests/testthat/test-active-impute.R` (new) -- 10 tests, 29
+  expects.  Verifies closed-form against an independent fixed-
+  sigma2 brute-force refit on a 20-tip fixture; descending order;
+  by-species aggregation; multi-obs error path; discrete-skip.
+
+### Smoke
+
+On AVONET 300 with 90 cells masked across 4 continuous traits:
+top-1 cell is `Chloephaga_rubidiceps Beak.Length_Culmen`,
+delta_var_total = 2.99; top-1 species is `Chloephaga_rubidiceps`
+with 2 currently-missing traits combining to delta = 3.23.
+
+## NEW: `gate_method = "cv_folds"` -- cross-validated gate calibration (2026-04-30)
+
+Closes the longest-standing open NEWS item: *"A future improvement
+(cross-validated gate selection, ...) could close this further; not
+in scope for this release."*
+
+### What changed
+
+`calibrate_gates()` and `fit_pigauto()` gain `gate_method =
+"cv_folds"` (opt-in alongside the existing `"single_split"` default
+and `"median_splits"` option).  When selected, val cells are
+partitioned into `gate_cv_folds = 5L` (default) deterministic
+non-overlapping folds; the existing grid + half-B-verify procedure
+runs once per fold (`half_a` = K-1 training folds, `half_b` =
+held-out fold), and the componentwise median of K winning weight
+vectors becomes `w_final`.  Post-cal full-val invariant fires
+unchanged.
+
+### Compared to `"median_splits"`
+
+| Property | median_splits | cv_folds |
+|---|---|---|
+| half_a per split | 1/2 of n_val | (K-1)/K of n_val |
+| Number of splits | B=31 random | K=5 deterministic |
+| Overlap | Random (each cell in many splits) | None |
+| Statistical interpretation | Median of B noisy gate selections | Standard k-fold CV |
+
+Larger training sets per split → less noisy w_k.  Standard CV gives
+a cleaner story for users and reviewers.
+
+### Motivation
+
+The strict val-floor enforces `pigauto_val <= baseline_val`, but
+val→test drift survives in 4/32 binary cells (per
+`useful/MEMO_2026-04-29_discrete_bench_reruns.md`).  Per-trait gate
+calibration overfits to the specific val cells because the same
+cells score every candidate weight.  Larger training sets per
+split reduce overfitting; non-overlapping folds give a true held-
+out evaluation.
+
+### Edge cases
+
+* `gate_cv_folds < 2` errors with a clear message.
+* `n_val < gate_cv_folds` caps `K_eff = n_val` so each fold has at
+  least 1 cell.
+* `n_val < 2` (CV ill-defined) falls back to a single split.
+* Existing back-compat preserved: default `gate_method =
+  "single_split"`, and the `"median_splits"` path is bit-identical
+  to pre-fix.
+
+### Tests
+
+5 new tests in `tests/testthat/test-safety-floor.R` (under
+"# CV-fold gate calibration"):
+
+* Valid simplex output
+* Deterministic for fixed seed
+* Pure-MEAN snap when MEAN dominates (post-cal invariant fires)
+* `n_val < K` graceful fallback
+* `gate_cv_folds < 2` error
+
+All pass.  Existing 24 safety-floor tests + B4 edge cases unchanged.
+
+### Smoke (AVONET 300, 60 epochs, 1 imputation, 60 Mass + 60 Migration cells masked)
+
+| gate_method | wall (s) | r_cal_gnn[col_3] |
+|---|---|---|
+| single_split | 82.6 | 0.000 |
+| median_splits | 77.2 | 0.050 |
+| cv_folds | 75.9 | 0.150 |
+
+`cv_folds` is slightly faster (smaller per-split work) and selects
+a non-zero GNN gate on the col where the others snap to BM.
+
+### Bench (focused 3-way comparison on synthetic mixed-type)
+
+`script/bench_cv_vs_median.R` runs a focused 3-way comparison on
+a synthetic continuous + binary + categorical fixture (BM, lambda=1,
+n=300, 30 % mask, 5 reps).  Test-set means across reps:
+
+| Method | bin (acc) | cat3 (acc) | cont (RMSE) |
+|---|---|---|---|
+| single_split  | 0.8222 | 0.7356 | 1.0778 |
+| median_splits | 0.8222 | 0.7356 | 1.0720 |
+| **cv_folds**  | 0.8222 | 0.7356 | **1.0611** |
+
+* **Continuous**: cv_folds reduces RMSE by 1.6 % vs single_split
+  and by 1.0 % vs median_splits.  Modest but consistent across
+  the 5 reps (per-rep cv_folds < median_splits in 4/5 reps).
+* **Discrete**: identical across all three methods on this
+  fixture.  At lambda=1 the strict val-floor snaps the gate to
+  the pure-BM corner regardless of how the gate was selected,
+  so the three methods produce identical class assignments.
+  This is consistent with what the discrete-bench memo
+  (`useful/MEMO_2026-04-29_discrete_bench_reruns.md`) showed:
+  the val→test drift on 4/32 binary cells is val→test
+  extrapolation noise, not gate-selection noise; cv_folds does
+  not close it on this regime.  The hypothesis that larger
+  training sets per split would close MORE of the val→test
+  drift than median_splits is **not supported** by this
+  fixture.  cv_folds is preferable for continuous traits but
+  not transformative for discrete.
+
+Full per-type bench reruns (`bench_binary.R`, `bench_categorical.R`,
+`bench_zi_count.R` at multiple signal levels) deferred to a
+later session.
+
+## Strict val-floor v3 — type-conditional safety floor (2026-04-29)
+
+A type-restriction bug in `R/fit_helpers.R::calibrate_gates` was
+silently exempting binary, categorical, and zi_count traits from the
+post-calibration "strict val-floor" invariant.  The buggy behaviour
+let pigauto underperform its own baseline on the package's own
+simulator benches (`bench_binary.md`, `bench_categorical.md`,
+`bench_zi_count.md`):
+
+* binary `signal_0.6` mean accuracy: −4.8 pp below baseline
+* categorical `K_3` cat2: −12 pp below baseline
+* zi_count `zf_0.2` zi1: +23 % RMSE above baseline
+
+These violate the safety-floor's "pigauto cannot underperform its
+own baseline" promise.  The bug was introduced 2026-04-23 with the
+initial safety-floor commit (`28d8e45`); the type filter mirrored an
+earlier continuous-only MSE evaluator and was not extended when the
+simplex grid landed.
+
+The fix splits the post-calibration invariant into two
+type-specific blocks:
+
+* **Discrete family** (binary, categorical, zi_count) gets a strict
+  full-val-set check against both pure-BM and pure-MEAN corners; if
+  the calibrated blend's val-loss exceeds either corner by 1e-12,
+  the gate is overridden to whichever pure corner is better.
+  Discrete losses are 0-1 / argmax step functions, so this strict
+  check is well-conditioned at typical val sizes.
+* **Continuous family** (continuous, count, ordinal, proportion)
+  keeps the pre-2026-04-29 mean-only check verbatim (override only
+  if the blend loses to pure-MEAN, never to pure-BM).  An
+  intermediate fix that also added a strict pure-BM check for
+  continuous types over-corrected on high-phylo-signal traits where
+  the blend's val MSE is numerically equal to pure-BM's val MSE
+  within sampling noise (AVONET Mass test RMSE went 386 → 659 in
+  the over-strict variant); v3 reverts continuous to the original
+  conservative check.
+* **multi_proportion** is skipped (gate naturally closes via the
+  legacy path; bench shows pigauto = baseline at every signal
+  level).
+
+Empirical evidence (CORRECTED 2026-04-30 per the Opus adversarial
+review; the original tabulation here mistakenly averaged val + test
+splits in the bench RDS, overstating the closure).  The user-facing
+held-out **test-set** mean acc gap pigauto − baseline (lower-magnitude
+= closer to baseline-parity floor):
+
+| bench | Apr 17 (pre-bug) | Apr 28 (buggy) | Apr 29 (post-fix v3) |
+|---|---|---|---|
+| binary | −0.029 | −0.027 | **−0.014** |
+| categorical | −0.031 | −0.026 | **−0.016** |
+| zi_count (RMSE ratio) | 1.058 | 1.043 | **1.012** |
+
+The strict val-floor closes ~50 % of the test-side regression on
+binary and categorical (from −2.7 / −2.6 pp to −1.4 / −1.6 pp); the
+remaining ~1.4 pp is val→test sampling drift.  zi_count test ratio
+drops from 1.06 to 1.01 -- most of the regression closes, with a
+small residual.  3 of 32 binary cells still drift ≥ 5 pp on test
+(val→test extrapolation that no val-only floor can prevent).
+
+The strict val-floor's invariant is enforced at **calibration time**
+on the calibration-time loss surface
+(`compute_corner_loss(g, val_row_idx, ...)`).  At predict time the
+model runs additional refine_steps and mask_token substitution that
+introduce a small (~5 %) drift; the
+`tests/testthat/test-safety-floor.R` strict-floor invariant test
+documents this with a `* 1.05` slack.  So the user-facing guarantee
+is "pigauto val-loss ≤ baseline val-loss + 1e-12 at calibration time,
+modulo ~5 % refine_step drift at predict time" -- not the bit-exact
+"≤ 1e-12 everywhere" reading.
+
+Continuous benchmarks (AVONET n=1500 single seed × N_IMP=5):
+the originally-reported "v3 within MC-dropout noise of pre-fix"
+landed on a particularly close pair of draws.  Re-running the same
+seed × n × N_IMP three times produced Mass test RMSE = 377, 430, 504
+-- the comparison is non-deterministic at this evidence level
+(pooling order over the 5 MC dropout draws varies between R sessions).
+A multi-seed × N_IMP=20 verification is queued; the single-seed
+single-run evidence does NOT support strong claims about whether
+v3 changed continuous performance, only that the change (if any)
+is within run-to-run pooling noise on this dataset.
+
+Per-cell variance survives in multiple binary cells (val→test
+sampling drift).  The strict val-floor only guarantees
+`pigauto_val_loss ≤ baseline_val_loss + 1e-12` (calibration time);
+it does not guarantee `pigauto_test_loss ≤ baseline_test_loss`.  A
+future improvement (cross-validated gate selection, epsilon-margin
+tightening, or LP added as a corner option for ordinal) could
+close this further; not in scope for this release.
+
+R CMD check after the fix: 0 errors / 0 warnings / 0 notes.
+Full `devtools::test()`: FAIL 0 / SKIP 2 / PASS 1081.
+
+New regression test in `tests/testthat/test-safety-floor.R`:
+`"strict val-floor: pigauto val-loss <= baseline val-loss per
+trait, all types"` — fits on a mixed continuous + binary +
+categorical + count fixture, recomputes val-loss for the
+calibrated blend and the pure baseline, asserts blend ≤ baseline ×
+1.05 for every trait.
+
+Calibration evidence preserved at
+`script/_strict_floor_v3_calibration/` (4-way comparison: pre-fix /
+v1 over-strict / v2 intermediate / v3 current).  Memos:
+`useful/MEMO_2026-04-29_*.md`.
+
+## Per-trait ordinal baseline path selection (Opus #6, 2026-04-30)
+
+`fit_baseline()` now computes BOTH the threshold-joint baseline (B3,
+commit `a541dbd`) AND a per-column BM-via-MVN alternative for each
+ordinal trait, then picks the lower-val-MSE path per trait against
+`splits$val_idx`.  The chosen path is exposed as
+`fit_baseline()$ordinal_path_chosen` (named character: latent col →
+`"threshold_joint"` or `"bm_mvn"`).
+
+Motivation: the AVONET-300 Phase 6 bench's Migration RMSE regressed
+from 0.879 (Apr 16) to 0.975 (Apr 29) when B3 swapped the ordinal
+baseline path from a label-propagation-equivalent BM-via-MVN to the
+truncated-Gaussian threshold-joint approach.  At K=3 ordinals the
+K−1 thresholds are pinned to a narrow band by phylopars EM,
+producing systematically worse predictions than BM-via-MVN on
+z-scored integer class.  See
+`useful/MEMO_2026-04-29_phase6_migration_bisect.md`.
+
+Per Opus's adversarial review #6, we did **not** ship a `K ≤ 3 → LP`
+heuristic.  Instead the per-trait selection runs at every K and
+the gate's safety-floor simplex no longer has to route around
+threshold-joint output for low-K ordinals -- the lower-val-MSE
+baseline is selected before the gate calibration sees it.
+
+Scope: single-obs only (multi-obs ordinal selection is out of scope
+for this fix; it would require species-level aggregation of the BM
+alternative).  The code path is gated by `!multi_obs && !is.null(splits)`
+and only activates when threshold-joint actually populated the
+ordinal column.
+
+Two regression tests in
+`tests/testthat/test-joint-threshold-baseline.R`:
+
+* `"fit_baseline picks per-trait ordinal path and reports it"` --
+  smoke test on K=3 ordinal + continuous mixed data; verifies finite
+  output and that `$ordinal_path_chosen` is one of the two valid
+  values.
+* `"fit_baseline ordinal selection picks BM when threshold-joint
+  loses on val"` -- recomputes both paths' val MSE independently
+  and asserts the selection picked the lower one.
+
+## Adversarial-review fixes (Opus 2026-04-28)
+
+Four correctness fixes surfaced by the Opus adversarial pass on
+top of PR #49 (the safety-floor / mean-gate work). All four are
+silent-failure modes that produced plausible-looking but invalid
+output; none of them threw a useful error before this release.
+
+- **HIGH — `multi_impute(draws_method = "conformal")` no longer
+  collapses to zero between-draw variance on shuffled input.**
+  `R/multi_impute.R::.sample_conformal_draw` now threads
+  `input_row_order` so it correctly maps user-input mask indices
+  to internal (tree-tip) row indices when perturbing
+  `pred$imputed`. Previously, on any data frame whose rows are
+  not already in tree-tip order, the sampler perturbed the
+  wrong cells and `build_completed` re-aligned the unperturbed
+  values back into the user's missing cells, producing M
+  identical datasets and `var = 0` after pooling. Any prior
+  Rubin's-rules pooling on shuffled-input multi-imputation was
+  unreliable. Caught by a new shuffled-input variance regression
+  test; pre-fix `per_cell_sd ≡ 0`, post-fix `> 1e-8` at every
+  masked cell.
+
+- **MEDIUM (opt-in) — `conformal_split_val` argument on
+  `fit_pigauto()` lets users avoid the validation-set
+  double-dipping that breaks split-conformal exchangeability.**
+  When `TRUE`, the validation cells are split per-column into a
+  calibration half (used by `calibrate_gates()` to pick the
+  blend weights) and a conformal half (used to estimate the
+  residual quantile). Reusing the same val cells for both
+  selects the gate to minimise residual MSE on the very cells
+  whose residuals drive the conformal quantile, producing
+  systematic undercoverage that's most visible at small `n_val`
+  (matches the `coverage_investigation` memo).
+  Default is `FALSE` (pre-fix single-set behaviour) because
+  forcing the split regresses the AVONET300 / OVR-categorical /
+  BIEN safety-floor smoke benches by 2-26% on small-val
+  datasets. Use `conformal_split_val = TRUE` when accurate 95%
+  coverage matters more than bench-grade RMSE.
+
+- **MEDIUM — `calibrate_gates` half-A loop is now NA-safe.**
+  Mirrors the half-B fix from commit 573decd: when
+  `loss_a_pure_bm` is non-finite (e.g. multi_proportion CLR
+  latents whose half-A subset is too small for some component),
+  `best_la` is now seeded with `Inf` and the legacy
+  pure-BM-relative-gain filter is skipped rather than throwing
+  `missing value where TRUE/FALSE needed`.
+
+- **LOW — `predict.pigauto_fit` no longer produces a cryptic
+  torch shape error when calibrated_gates is overridden with a
+  vector of the wrong length.** Length 0 is now treated as "no
+  calibration" (degrades gracefully to the learned-gate path);
+  any other non-matching length errors with an explicit
+  `"calibrated_gates has length k but the model has p latent
+  column(s)"` message. Unblocks the AE-attribution ablation
+  workflow used by `script/phase1_gnn_ablation.R`.
+
+Each fix has a dedicated regression test:
+`tests/testthat/test-multi-impute.R::"multi_impute(draws_method=\"conformal\") produces non-zero between-draw variance on shuffled input"`,
+`tests/testthat/test-fit-predict.R::"conformal_split_val toggle changes conformal scores (no double-dipping)"`,
+and
+`tests/testthat/test-fit-predict.R::"predict.pigauto_fit catches wrong-length calibrated_gates override"`.
+
 # pigauto 0.9.1.9006 (dev)
 
 ## Per-occurrence WorldClim covariates (v1.1 follow-up to B.2)

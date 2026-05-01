@@ -1,0 +1,49 @@
+[18:11:01] loading AmphiBIO ...
+[18:11:01] AmphiBIO: 6776 rows x 38 cols
+[18:11:01] after dedup + tax filter: 6776 species
+[18:11:01] species with >= 1 zone occupied: 1003 / 6776
+[18:11:01] sub-sampled to 1000 species
+[18:11:01] building taxonomic tree ...
+[18:11:01] tree: 1000 tips, binary=TRUE, rooted=TRUE
+[18:11:01] matched: n = 1000 species
+[18:11:01] kept traits with >= 50 non-NA: 5 (Body_size_mm, Body_mass_g, Longevity_max_y, Age_at_maturity_min_y, Litter_size_min_n)
+[18:11:01]   Body_size_mm                  : 297 held-out cells
+[18:11:01]   Body_mass_g                   : 68 held-out cells
+[18:11:01]   Longevity_max_y               : 36 held-out cells
+[18:11:01]   Age_at_maturity_min_y         : 34 held-out cells
+[18:11:01]   Litter_size_min_n             : 172 held-out cells
+[18:11:01] =============== fit baseline (no covariates) ===============
+
+warning: solve(): system is singular (rcond: 1.79367e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.62632e-27); attempting approx solution
+
+warning: solve(): system is singular (rcond: 7.39571e-19); attempting approx solution
+[18:12:20] baseline done in 79s
+[18:12:20] =============== fit cov + safety_floor=TRUE ===============
+
+warning: solve(): system is singular (rcond: 1.79367e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.62632e-27); attempting approx solution
+
+warning: solve(): system is singular (rcond: 7.39571e-19); attempting approx solution
+[18:13:31] cov sf=TRUE done in 72s
+[18:13:31] =============== fit cov + safety_floor=FALSE ===============
+
+warning: solve(): system is singular (rcond: 1.79367e-17); attempting approx solution
+
+warning: solve(): system is singular (rcond: 2.62632e-27); attempting approx solution
+
+warning: solve(): system is singular (rcond: 7.39571e-19); attempting approx solution
+[18:14:38] cov sf=FALSE done in 67s
+
+
+============ RESULTS (n = 1000 ) ============
+
+trait                              n       mean       none     cov_on    cov_off   none_r     on_r    off_r   rat_on  rat_off
+Body_size_mm                     297      0.534      0.488      0.404      0.547   +0.624   +0.701   +0.571    0.828    1.122
+Body_mass_g                       68       1.58       1.41       1.44       1.25   +0.588   +0.589   +0.668    1.019    0.883
+Longevity_max_y                   36      0.809      0.806      0.806      0.848       NA       NA   +0.409    1.000    1.052
+Age_at_maturity_min_y             34      0.636      0.644      0.644      0.752       NA       NA   -0.125    1.000    1.169
+Litter_size_min_n                172       2.02       1.51       1.63       1.69   +0.667   +0.592   +0.622    1.079    1.115
+[18:14:38] wrote script/bench_amphibio_covariates.rds

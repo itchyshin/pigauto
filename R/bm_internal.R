@@ -136,3 +136,160 @@ bm_impute_col <- function(y, R, nugget = 1e-6) {
 
   list(mu = mu_out, se = se_out)
 }
+
+# ---- bm_impute_col_with_cov -------------------------------------------------
+
+#' Univariate BM conditional imputation with covariates as fixed effects.
+#'
+#' Extends \code{\link{bm_impute_col}} to a GLS regression model
+#'   \eqn{y = X \beta + u,\quad u \sim \mathrm{MVN}(0, \sigma^2 R)},
+#' where \eqn{X} is a (\code{n_species x p_x}) design matrix of
+#' covariates (with intercept as the first column).  Returns the
+#' phylogenetic-BLUP prediction
+#'   \eqn{\hat{y}_m = X_m \hat{\beta} + R_{mo} R_{oo}^{-1} (y_o - X_o \hat{\beta})}.
+#'
+#' This is the same math \code{phylolm::phylolm(y ~ X, model="BM")}
+#' uses internally for prediction.  Implemented here so pigauto's own
+#' BM machinery handles covariate fixed effects without an external
+#' dependency.
+#'
+#' @param y numeric vector (length \code{n_species}). \code{NA} = missing.
+#' @param X numeric matrix (\code{n_species x p_x}). Design matrix with
+#'   the intercept column included.  All rows must be present and
+#'   finite (covariates should already be imputed before this call).
+#' @param R phylogenetic correlation matrix (\code{n_species x n_species}).
+#' @param nugget numeric scalar (default \code{1e-6}).
+#' @param ridge numeric scalar. Ridge regulariser added to (X' R^-1 X)
+#'   diagonal of the non-intercept coefficients.  Shrinks unsupported
+#'   covariate coefficients toward zero (e.g. on interactive DGPs where
+#'   the linear projection is genuinely 0).  Default \code{0.05} -- gentle.
+#' @param lrt_threshold numeric scalar in \eqn{[0, 1]}. Likelihood-ratio gate:
+#'   if the cov-aware fit's residual variance is not at least
+#'   \code{1 - lrt_threshold} fraction of the no-cov fit's residual
+#'   variance, fall back to the no-cov baseline.  This avoids fitting
+#'   noise on data where covariates do not actually help.  Default
+#'   \code{0.02} (covariates must reduce residual variance by >= 2%).
+#'   Set to \code{0} to disable the gate entirely.
+#' @return A list with \code{mu}, \code{se}, \code{beta_hat}
+#'   (the fitted GLS coefficients, length \code{p_x}), and
+#'   \code{used_cov} (logical -- TRUE if the cov-aware fit was used,
+#'   FALSE if the LRT gate fell back to no-cov).
+#' @keywords internal
+bm_impute_col_with_cov <- function(y, X, R, nugget = 1e-6,
+                                    ridge = 0.0,
+                                    lrt_threshold = 0.02) {
+  n <- length(y)
+  stopifnot(is.matrix(X), nrow(X) == n)
+  p_x <- ncol(X)
+  mu_out <- numeric(n)
+  se_out <- numeric(n)
+
+  obs_idx  <- which(!is.na(y))
+  miss_idx <- which(is.na(y))
+  n_o <- length(obs_idx)
+  n_m <- length(miss_idx)
+
+  if (n_m == 0L) {
+    return(list(mu = y, se = se_out, beta_hat = rep(NA_real_, p_x)))
+  }
+
+  # Too few observations for GLS regression: fall back to global mean
+  if (n_o < max(p_x + 5L, 10L)) {
+    y_obs <- y[obs_idx]
+    global_mu <- if (n_o > 0L) mean(y_obs) else 0
+    global_sd <- if (n_o > 1L) stats::sd(y_obs) else 1
+    mu_out[obs_idx]  <- y_obs
+    mu_out[miss_idx] <- global_mu
+    se_out[miss_idx] <- global_sd
+    return(list(mu = mu_out, se = se_out, beta_hat = rep(NA_real_, p_x)))
+  }
+
+  y_o  <- y[obs_idx]
+  X_o  <- X[obs_idx, , drop = FALSE]
+  X_m  <- X[miss_idx, , drop = FALSE]
+  R_oo <- R[obs_idx, obs_idx, drop = FALSE]
+  R_mo <- R[miss_idx, obs_idx, drop = FALSE]
+
+  # Cholesky with nugget back-off
+  L <- NULL
+  nug <- nugget
+  for (attempt in seq_len(6L)) {
+    R_oo_reg <- R_oo + diag(nug, n_o)
+    L <- tryCatch(chol(R_oo_reg), error = function(e) NULL)
+    if (!is.null(L)) break
+    nug <- nug * 2
+  }
+  if (is.null(L)) {
+    warning("BM cov baseline: Cholesky failed; falling back to global mean.",
+            call. = FALSE)
+    mu_out[obs_idx]  <- y_o
+    mu_out[miss_idx] <- mean(y_o)
+    se_out[miss_idx] <- stats::sd(y_o)
+    return(list(mu = mu_out, se = se_out, beta_hat = rep(NA_real_, p_x)))
+  }
+  chol_solve <- function(b) backsolve(L, forwardsolve(t(L), b))
+
+  # GLS regression with ridge on non-intercept coefficients:
+  #   beta_hat = (X' R_oo^{-1} X + lambda*P)^{-1} X' R_oo^{-1} y_o
+  # P is the identity matrix with the intercept (col 1) zeroed out, so
+  # only the covariate coefs are shrunk.
+  Rinv_X <- chol_solve(X_o)
+  Rinv_y <- chol_solve(y_o)
+  XtRinvX <- crossprod(X_o, Rinv_X)
+  XtRinvy <- crossprod(X_o, Rinv_y)
+  ridge_diag <- rep(ridge, p_x)
+  ridge_diag[1] <- 0           # don't penalise the intercept
+  beta_hat <- tryCatch(
+    solve(XtRinvX + diag(ridge_diag + 1e-8, p_x), XtRinvy),
+    error = function(e) {
+      warning("GLS solve failed; falling back to OLS.", call. = FALSE)
+      solve(crossprod(X_o) + diag(ridge_diag + 1e-8, p_x), crossprod(X_o, y_o))
+    })
+  beta_hat <- as.numeric(beta_hat)
+
+  # REML residual variance with cov fit
+  e_cov       <- y_o - as.numeric(X_o %*% beta_hat)
+  e_cov_solve <- chol_solve(e_cov)
+  sigma2_cov  <- as.numeric(crossprod(e_cov, e_cov_solve)) /
+                  max(n_o - p_x, 1L)
+
+  # Likelihood-ratio gate: compare cov fit to intercept-only fit.
+  # If covariates barely reduce residual variance, fall back to no-cov
+  # so we don't drag the GNN toward a noisy "all-zero coefs" baseline.
+  used_cov <- TRUE
+  if (lrt_threshold > 0) {
+    # Intercept-only GLS: same as bm_impute_col() math
+    ones <- rep(1, n_o)
+    a <- chol_solve(ones)
+    b <- chol_solve(y_o)
+    mu_int <- sum(b) / sum(a)
+    e_int  <- y_o - mu_int
+    e_int_solve <- chol_solve(e_int)
+    sigma2_int  <- as.numeric(crossprod(e_int, e_int_solve)) /
+                    max(n_o - 1L, 1L)
+    # Relative reduction in residual variance from adding covariates
+    rel_red <- (sigma2_int - sigma2_cov) / max(sigma2_int, 1e-12)
+    if (!is.finite(rel_red) || rel_red < lrt_threshold) {
+      used_cov <- FALSE
+      # Use intercept-only solution
+      beta_hat <- c(mu_int, rep(0, p_x - 1L))
+      e_cov_solve <- e_int_solve
+      sigma2_cov  <- sigma2_int
+    }
+  }
+
+  # Conditional mean for missing species: fixed-effects + residual BLUP
+  fixed_m <- as.numeric(X_m %*% beta_hat)
+  mu_m    <- fixed_m + as.numeric(R_mo %*% e_cov_solve)
+
+  # Conditional variance (residual phylo only; ignores fixed-effects uncertainty)
+  W <- forwardsolve(t(L), t(R_mo))
+  h <- colSums(W^2)
+  cond_var <- sigma2_cov * pmax(1 - h, 0)
+
+  mu_out[obs_idx]  <- y_o
+  mu_out[miss_idx] <- mu_m
+  se_out[miss_idx] <- sqrt(cond_var)
+
+  list(mu = mu_out, se = se_out, beta_hat = beta_hat, used_cov = used_cov)
+}

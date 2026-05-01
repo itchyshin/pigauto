@@ -396,6 +396,56 @@ recommend reducing T to 10–20 (the `fmi` column in `pool_mi()` output
 typically indicates convergence well before T = 50), or parallelising
 tree fits across machines.
 
+## Active imputation: where to measure next
+
+When you can measure k more species but not all of them, which ones
+should you prioritise to maximally reduce imputation uncertainty
+across the rest of your tree? `suggest_next_observation()` answers
+this with a closed-form variance-reduction calculation built on the
+BM conditional MVN.
+
+```{r active-impute, eval=FALSE}
+res <- impute(traits, tree)
+
+# Top-10 individual (species, trait) cells, ordered by expected
+# total variance reduction:
+suggest_next_observation(res, top_n = 10, by = "cell")
+
+# Or aggregated by species (sum of variance reductions across the
+# species' currently-missing continuous-family traits):
+suggest_next_observation(res, top_n = 10, by = "species")
+```
+
+The `delta_var_total` column is the closed-form expected reduction
+in total predictive variance across all currently-missing cells if
+you observed that candidate next:
+
+\[
+\Delta V(s_{\text{new}}) = \sigma_t^2 \sum_{i \in \mathrm{miss}_t}
+\frac{D_{ik}^2}{\alpha_k}
+\]
+
+where \(D = R_{mm} - R_{mo} R_{oo}^{-1} R_{om}\) is the residual
+matrix at currently-missing cells, \(\alpha_k = D_{kk}\) is the
+current relative leverage of cell \(k\), and \(\sigma_t^2\) is
+the REML BM variance. The formula is the standard active-learning
+variance-reduction bound (Cohn et al. 1996); applying it to
+phylogenetic trait imputation appears to be new.
+
+**Scope.** `suggest_next_observation()` v1.5 (2026-04-30) supports
+two metrics: variance reduction for continuous-family traits
+(`continuous`, `count`, `ordinal`, `proportion`) and entropy
+reduction for binary and categorical traits.  The output's
+`metric` column distinguishes them.
+
+**Variance vs entropy are not directly comparable** — the cross-
+metric ordering by `delta` is approximate.  When you want a strict
+ranking on a single metric, filter by `metric` first or restrict
+`types` to continuous-only or discrete-only.
+
+`zi_count` and `multi_proportion` are not yet supported. Multi-obs
+inputs error with a clear message; both deferred to v2.
+
 ## Tips and next steps
 
 **Use GPU if available.** pigauto automatically selects CUDA > MPS > CPU. Check
@@ -457,3 +507,7 @@ overlap is allowed; unmatched species are dropped with a warning).
   within-species variation. *Methods in Ecology and Evolution*, 8, 22–27.
   (pigauto's internal BM baseline implements the same conditional-MVN
   approach.)
+- Cohn, D.A., Ghahramani, Z. & Jordan, M.I. (1996). Active learning
+  with statistical models. *Journal of Artificial Intelligence Research*,
+  4, 129–145. (Variance-reduction framework that
+  `suggest_next_observation()` adapts to the phylogenetic setting.)

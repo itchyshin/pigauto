@@ -132,8 +132,36 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   model$load_state_dict(object$model_state)
   gpu_mem_checkpoint("predict: after model rebuild + load_state_dict")
 
-  # Calibrated gates override learned gates
+  # Calibrated gates override learned gates.
+  # Defensive length check (Fix C.4 / Opus 2026-04-28): when a downstream
+  # caller manually overrides `object$calibrated_gates` (and the matching
+  # r_cal_bm / r_cal_gnn / r_cal_mean) with a vector whose length does not
+  # match the model's latent dim, the (1, k) override tensors broadcast
+  # against the (n, p_latent) baseline to a degenerate shape and the
+  # propagated `pred` becomes (n, 0) on the next refine step, which then
+  # corrupts enc1's input width. Fail loudly with a useful message instead.
+  expected_p <- as.integer(cfg$input_dim)
   calibrated_gates <- object$calibrated_gates  # NULL if not available
+  if (!is.null(calibrated_gates) && length(calibrated_gates) == 0L) {
+    # Treat 0-length override (e.g. rep(0, length(NULL))) as "no calibration".
+    calibrated_gates <- NULL
+  }
+  if (!is.null(calibrated_gates) && length(calibrated_gates) != expected_p) {
+    stop("calibrated_gates has length ", length(calibrated_gates),
+         " but the model has ", expected_p, " latent column(s). ",
+         "Pass a length-", expected_p,
+         " numeric vector (one gate per latent column) to override.",
+         call. = FALSE)
+  }
+  for (slot in c("r_cal_bm", "r_cal_gnn", "r_cal_mean", "mean_baseline_per_col")) {
+    val <- object[[slot]]
+    if (!is.null(val) && length(val) != 0L && length(val) != expected_p) {
+      stop("`", slot, "` has length ", length(val),
+           " but the model has ", expected_p, " latent column(s). ",
+           "All per-column gate / mean overrides must be length ", expected_p, ".",
+           call. = FALSE)
+    }
+  }
   use_calibrated   <- !is.null(calibrated_gates)
 
   # Optional baseline override — used by multi_impute_trees(share_gnn = TRUE)

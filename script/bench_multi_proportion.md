@@ -1,8 +1,8 @@
 # Multi-proportion trait benchmark (compositional data)
 
-Run on: 2026-04-17 10:46:12
+Run on: 2026-04-28 07:20:44
 Species: 300, reps: 3
-Total wall: 34.8 min
+Total wall: 35.2 min
 
 ## Methods
 
@@ -58,7 +58,7 @@ Metrics:
    method trait aitchison  rmse_clr simplex_mae  accuracy
      mean  comp  3.856234 1.0036552  0.19460312 0.3216374
  baseline  comp  1.858306 0.5122988  0.08997025 0.7076023
-  pigauto  comp  1.862612 0.5115521  0.08940068 0.7192982
+  pigauto  comp  1.858306 0.5122988  0.08997025 0.7076023
 ```
 
 ### K_3

@@ -22,12 +22,13 @@ GraphTransformerBlock <- torch::nn_module(
   "GraphTransformerBlock",
 
   initialize = function(hidden_dim, n_heads = 4L, ffn_mult = 4L,
-                         dropout = 0.1) {
+                         dropout = 0.1, cov_inject = FALSE) {
     stopifnot(hidden_dim %% n_heads == 0L)
     self$hidden_dim <- as.integer(hidden_dim)
     self$n_heads    <- as.integer(n_heads)
     self$head_dim   <- self$hidden_dim %/% self$n_heads
     self$dropout_p  <- dropout
+    self$cov_inject_enabled <- isTRUE(cov_inject)
 
     # Attention projections: Q, K, V, output
     self$q_proj   <- torch::nn_linear(hidden_dim, hidden_dim)
@@ -73,14 +74,29 @@ GraphTransformerBlock <- torch::nn_module(
     self$log_bandwidth <- torch::nn_parameter(
       torch::torch_full(list(self$n_heads), 0.5413)
     )
+
+    # Fix H (2026-04-25): per-block covariate injection.  When enabled,
+    # forward() accepts a hidden_dim-sized cov_h vector that is added
+    # into h via residual connection AT THIS LAYER.  This gives every
+    # GNN layer access to covariate-derived features rather than only
+    # the input encoder.  Initialised to zero so the block is identity
+    # at training step 0 and the gate-closed-at-init safety holds.
+    if (self$cov_inject_enabled) {
+      self$cov_inject <- torch::nn_linear(hidden_dim, hidden_dim)
+      torch::nn_init_zeros_(self$cov_inject$weight)
+      torch::nn_init_zeros_(self$cov_inject$bias)
+    }
   },
 
-  forward = function(h, adj, D_sq = NULL) {
+  forward = function(h, adj, D_sq = NULL, cov_h = NULL) {
     # h:    (n_species, hidden_dim)
     # adj:  (n_species, n_species), non-negative kernel weights
     # D_sq: (n_species, n_species) or NULL.  When provided, use the
     #       learnable per-head Gaussian bandwidth (B2) instead of the
     #       log(adj) fallback.
+    # cov_h: (n_species, hidden_dim) or NULL.  Fix H: per-layer
+    #       covariate injection.  When provided AND cov_inject_enabled,
+    #       cov_h is added to the post-FFN output via residual.
     n  <- h$size(1)
     H  <- self$n_heads
     D  <- self$head_dim
@@ -132,6 +148,12 @@ GraphTransformerBlock <- torch::nn_module(
 
     # Residual 2: FFN output + attention output
     h3 <- h2 + ffn_out
+
+    # Fix H: per-layer covariate injection (skip if disabled or cov_h NULL)
+    if (self$cov_inject_enabled && !is.null(cov_h) &&
+         !is.null(self$cov_inject)) {
+      h3 <- h3 + self$cov_inject(cov_h)
+    }
 
     h3
   }

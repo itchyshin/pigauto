@@ -85,7 +85,7 @@ gpu_mem_checkpoint <- function(tag) {
   # cat to stdout so the SLURM log captures it unambiguously (message()
   # goes to stderr which some tee pipelines drop or reorder).
   cat(sprintf("[GPU @ %s] %s\n", tag, m))
-  flush.console()
+  utils::flush.console()
   invisible()
 }
 

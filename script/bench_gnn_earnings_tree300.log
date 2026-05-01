@@ -1,0 +1,148 @@
+[05:28:33] Loaded tree: tag=tree300, n=300 tips, binary=TRUE, rooted=TRUE
+[05:28:33] === cell 1/36: beta=0.0 f=linear rep=1 (seed=3027) ===
+[05:29:16]   pigauto_no_cov done in 43.1s
+[05:30:03]   pigauto_cov_sfT done in 47.3s
+[05:30:47]   pigauto_cov_sfF done in 43.5s
+[05:30:47] === cell 2/36: beta=0.0 f=linear rep=2 (seed=4027) ===
+[05:31:29]   pigauto_no_cov done in 41.5s
+[05:32:10]   pigauto_cov_sfT done in 41.1s
+[05:32:48]   pigauto_cov_sfF done in 38.6s
+[05:32:48] === cell 3/36: beta=0.0 f=linear rep=3 (seed=5027) ===
+[05:33:26]   pigauto_no_cov done in 38.0s
+[05:34:07]   pigauto_cov_sfT done in 40.3s
+[05:34:45]   pigauto_cov_sfF done in 38.8s
+[05:34:45] === cell 4/36: beta=0.0 f=nonlinear rep=1 (seed=3028) ===
+[05:35:25]   pigauto_no_cov done in 39.7s
+[05:36:06]   pigauto_cov_sfT done in 40.8s
+[05:36:50]   pigauto_cov_sfF done in 44.6s
+[05:36:50] === cell 5/36: beta=0.0 f=nonlinear rep=2 (seed=4028) ===
+[05:37:35]   pigauto_no_cov done in 44.0s
+[05:38:17]   pigauto_cov_sfT done in 42.5s
+[05:38:57]   pigauto_cov_sfF done in 39.8s
+[05:38:57] === cell 6/36: beta=0.0 f=nonlinear rep=3 (seed=5028) ===
+[05:39:40]   pigauto_no_cov done in 42.7s
+[05:40:22]   pigauto_cov_sfT done in 42.6s
+[05:41:03]   pigauto_cov_sfF done in 40.9s
+[05:41:03] === cell 7/36: beta=0.0 f=interactive rep=1 (seed=3029) ===
+[05:41:45]   pigauto_no_cov done in 42.1s
+[05:42:27]   pigauto_cov_sfT done in 41.8s
+[05:43:08]   pigauto_cov_sfF done in 41.1s
+[05:43:08] === cell 8/36: beta=0.0 f=interactive rep=2 (seed=4029) ===
+[05:43:52]   pigauto_no_cov done in 44.2s
+[05:44:36]   pigauto_cov_sfT done in 43.3s
+[05:45:18]   pigauto_cov_sfF done in 42.0s
+[05:45:18] === cell 9/36: beta=0.0 f=interactive rep=3 (seed=5029) ===
+[05:46:05]   pigauto_no_cov done in 46.9s
+[05:46:50]   pigauto_cov_sfT done in 45.8s
+[05:47:34]   pigauto_cov_sfF done in 44.0s
+[05:47:34] === cell 10/36: beta=0.2 f=linear rep=1 (seed=3047) ===
+[05:48:19]   pigauto_no_cov done in 44.3s
+[05:49:02]   pigauto_cov_sfT done in 43.7s
+[05:49:46]   pigauto_cov_sfF done in 43.2s
+[05:49:46] === cell 11/36: beta=0.2 f=linear rep=2 (seed=4047) ===
+[05:50:26]   pigauto_no_cov done in 40.2s
+[05:51:04]   pigauto_cov_sfT done in 37.9s
+[05:51:42]   pigauto_cov_sfF done in 38.3s
+[05:51:42] === cell 12/36: beta=0.2 f=linear rep=3 (seed=5047) ===
+[05:52:23]   pigauto_no_cov done in 41.5s
+[05:53:03]   pigauto_cov_sfT done in 39.5s
+[05:53:42]   pigauto_cov_sfF done in 39.4s
+[05:53:42] === cell 13/36: beta=0.2 f=nonlinear rep=1 (seed=3048) ===
+[05:54:22]   pigauto_no_cov done in 39.3s
+[05:54:59]   pigauto_cov_sfT done in 37.7s
+[05:55:40]   pigauto_cov_sfF done in 41.1s
+[05:55:40] === cell 14/36: beta=0.2 f=nonlinear rep=2 (seed=4048) ===
+[05:56:22]   pigauto_no_cov done in 41.9s
+[05:57:02]   pigauto_cov_sfT done in 39.5s
+[05:57:43]   pigauto_cov_sfF done in 40.9s
+[05:57:43] === cell 15/36: beta=0.2 f=nonlinear rep=3 (seed=5048) ===
+[05:58:22]   pigauto_no_cov done in 39.3s
+[05:59:02]   pigauto_cov_sfT done in 40.1s
+[05:59:39]   pigauto_cov_sfF done in 37.1s
+[05:59:39] === cell 16/36: beta=0.2 f=interactive rep=1 (seed=3049) ===
+[06:00:17]   pigauto_no_cov done in 37.4s
+[06:00:56]   pigauto_cov_sfT done in 39.2s
+[06:01:36]   pigauto_cov_sfF done in 40.3s
+[06:01:36] === cell 17/36: beta=0.2 f=interactive rep=2 (seed=4049) ===
+[06:02:15]   pigauto_no_cov done in 38.8s
+[06:02:55]   pigauto_cov_sfT done in 40.1s
+[06:03:37]   pigauto_cov_sfF done in 41.6s
+[06:03:37] === cell 18/36: beta=0.2 f=interactive rep=3 (seed=5049) ===
+[06:04:16]   pigauto_no_cov done in 39.1s
+[06:04:52]   pigauto_cov_sfT done in 36.2s
+[06:05:30]   pigauto_cov_sfF done in 37.4s
+[06:05:30] === cell 19/36: beta=0.4 f=linear rep=1 (seed=3067) ===
+[06:06:07]   pigauto_no_cov done in 37.4s
+[06:06:44]   pigauto_cov_sfT done in 37.5s
+[06:07:22]   pigauto_cov_sfF done in 37.4s
+[06:07:22] === cell 20/36: beta=0.4 f=linear rep=2 (seed=4067) ===
+[06:07:59]   pigauto_no_cov done in 37.0s
+[06:08:37]   pigauto_cov_sfT done in 38.1s
+[06:09:14]   pigauto_cov_sfF done in 37.4s
+[06:09:14] === cell 21/36: beta=0.4 f=linear rep=3 (seed=5067) ===
+[06:09:52]   pigauto_no_cov done in 38.1s
+[06:10:33]   pigauto_cov_sfT done in 40.8s
+[06:11:10]   pigauto_cov_sfF done in 37.1s
+[06:11:10] === cell 22/36: beta=0.4 f=nonlinear rep=1 (seed=3068) ===
+[06:11:48]   pigauto_no_cov done in 37.9s
+[06:12:29]   pigauto_cov_sfT done in 41.0s
+[06:13:10]   pigauto_cov_sfF done in 40.8s
+[06:13:10] === cell 23/36: beta=0.4 f=nonlinear rep=2 (seed=4068) ===
+[06:13:52]   pigauto_no_cov done in 41.6s
+[06:14:32]   pigauto_cov_sfT done in 40.4s
+[06:15:11]   pigauto_cov_sfF done in 39.0s
+[06:15:11] === cell 24/36: beta=0.4 f=nonlinear rep=3 (seed=5068) ===
+[06:15:52]   pigauto_no_cov done in 40.5s
+[06:16:30]   pigauto_cov_sfT done in 38.2s
+[06:17:07]   pigauto_cov_sfF done in 37.1s
+[06:17:07] === cell 25/36: beta=0.4 f=interactive rep=1 (seed=3069) ===
+[06:17:44]   pigauto_no_cov done in 37.1s
+[06:18:22]   pigauto_cov_sfT done in 38.4s
+[06:19:01]   pigauto_cov_sfF done in 38.6s
+[06:19:01] === cell 26/36: beta=0.4 f=interactive rep=2 (seed=4069) ===
+[06:19:42]   pigauto_no_cov done in 40.6s
+[06:20:21]   pigauto_cov_sfT done in 39.0s
+[06:21:03]   pigauto_cov_sfF done in 42.7s
+[06:21:03] === cell 27/36: beta=0.4 f=interactive rep=3 (seed=5069) ===
+[06:21:43]   pigauto_no_cov done in 39.6s
+[06:22:22]   pigauto_cov_sfT done in 39.3s
+[06:23:02]   pigauto_cov_sfF done in 39.7s
+[06:23:02] === cell 28/36: beta=0.6 f=linear rep=1 (seed=3087) ===
+[06:23:42]   pigauto_no_cov done in 39.8s
+[06:24:21]   pigauto_cov_sfT done in 39.7s
+[06:25:02]   pigauto_cov_sfF done in 40.7s
+[06:25:02] === cell 29/36: beta=0.6 f=linear rep=2 (seed=4087) ===
+[06:25:40]   pigauto_no_cov done in 37.8s
+[06:26:20]   pigauto_cov_sfT done in 40.3s
+[06:26:59]   pigauto_cov_sfF done in 38.5s
+[06:26:59] === cell 30/36: beta=0.6 f=linear rep=3 (seed=5087) ===
+[06:27:40]   pigauto_no_cov done in 41.6s
+[06:28:20]   pigauto_cov_sfT done in 39.6s
+[06:29:00]   pigauto_cov_sfF done in 40.2s
+[06:29:00] === cell 31/36: beta=0.6 f=nonlinear rep=1 (seed=3088) ===
+[06:29:38]   pigauto_no_cov done in 38.0s
+[06:30:17]   pigauto_cov_sfT done in 38.5s
+[06:30:57]   pigauto_cov_sfF done in 40.2s
+[06:30:57] === cell 32/36: beta=0.6 f=nonlinear rep=2 (seed=4088) ===
+[06:31:38]   pigauto_no_cov done in 40.9s
+[06:32:17]   pigauto_cov_sfT done in 39.5s
+[06:32:58]   pigauto_cov_sfF done in 40.8s
+[06:32:58] === cell 33/36: beta=0.6 f=nonlinear rep=3 (seed=5088) ===
+[06:33:40]   pigauto_no_cov done in 41.5s
+[06:34:21]   pigauto_cov_sfT done in 41.3s
+[06:35:02]   pigauto_cov_sfF done in 40.9s
+[06:35:02] === cell 34/36: beta=0.6 f=interactive rep=1 (seed=3089) ===
+[06:35:44]   pigauto_no_cov done in 41.9s
+[06:36:26]   pigauto_cov_sfT done in 42.3s
+[06:37:08]   pigauto_cov_sfF done in 42.4s
+[06:37:08] === cell 35/36: beta=0.6 f=interactive rep=2 (seed=4089) ===
+[06:37:50]   pigauto_no_cov done in 41.7s
+[06:38:31]   pigauto_cov_sfT done in 41.5s
+[06:39:12]   pigauto_cov_sfF done in 41.0s
+[06:39:12] === cell 36/36: beta=0.6 f=interactive rep=3 (seed=5089) ===
+[06:39:52]   pigauto_no_cov done in 39.5s
+[06:40:29]   pigauto_cov_sfT done in 36.8s
+[06:41:07]   pigauto_cov_sfF done in 37.9s
+[06:41:07] === DONE ===
+[06:41:07]   rds: script/bench_gnn_earnings_tree300.rds
+[06:41:07]   md : script/bench_gnn_earnings_tree300.md

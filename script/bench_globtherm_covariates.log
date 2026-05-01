@@ -1,0 +1,26 @@
+[18:10:53] loading globTherm ...
+[18:10:53] globTherm: 2164 rows x 47 cols
+[18:10:53] ectotherm subset (Tmax + lat_max known): 912 rows
+[18:10:53] after taxonomy filter: 833 rows
+[18:10:53] after dedup: 829 species
+[18:10:53] species with all covariates non-NA: 809 / 829
+[18:10:53] final n = 809 species, 2 traits, 4 covariates
+[18:10:53] building cross-class taxonomic tree (Class/Order/Family/Genus/Species) ...
+[18:10:53] tree: 809 tips, binary=TRUE, rooted=TRUE
+[18:10:53] after tree alignment: n = 809 species
+[18:10:53]   Tmax           : 243 held-out cells
+[18:10:53]   tmin           : 109 held-out cells
+[18:10:53] =============== fit baseline (no covariates) ===============
+[18:11:48] baseline done in 55s
+[18:11:48] =============== fit cov + safety_floor=TRUE ===============
+[18:12:36] cov sf=TRUE done in 49s
+[18:12:36] =============== fit cov + safety_floor=FALSE ===============
+[18:13:23] cov sf=FALSE done in 46s
+
+
+============ RESULTS (n = 809 ) ============
+
+trait               n       mean       none     cov_on    cov_off   none_r     on_r    off_r   rat_on  rat_off
+Tmax              243       6.63        5.3       6.81       4.89   +0.670       NA   +0.725    1.284    0.922
+tmin              109       7.79       4.74       4.67       4.71   +0.801   +0.808   +0.800    0.985    0.995
+[18:13:23] wrote script/bench_globtherm_covariates.rds

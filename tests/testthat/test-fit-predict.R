@@ -154,6 +154,56 @@ test_that("impute() works with species_col (multi-obs)", {
   expect_true(result$prediction$multi_obs)
 })
 
+test_that("impute() multi-obs aligns completed rows when input is shuffled", {
+  # Regression test for the row-alignment bug found 2026-04-26.
+  # When the input data.frame's species column is NOT in tree-tip order,
+  # preprocess_traits internally reorders rows to tree-tip order, but the
+  # returned `result$completed` must still align with the user's input
+  # row order.  Specifically: each non-NA row must keep its original value,
+  # and each NA row's imputed value must be consistent with the species
+  # of THAT original row (not some other row).
+  set.seed(20260426)
+  tree <- ape::rtree(20)
+  # Two obs per species, species column SHUFFLED (not tree-tip sorted).
+  sp_shuffled <- sample(rep(tree$tip.label, each = 2L))
+  # Strong species effect: each species has its own true mean.
+  sp_truth <- setNames(rnorm(20, mean = 10, sd = 5), tree$tip.label)
+  trait_full <- sp_truth[sp_shuffled] + rnorm(length(sp_shuffled), sd = 0.05)
+  df <- data.frame(species = sp_shuffled, trait = trait_full,
+                    stringsAsFactors = FALSE)
+
+  # Mask exactly one of each species's two observations (cell-level MCAR).
+  mask_idx <- vapply(unique(df$species),
+                      function(sp) sample(which(df$species == sp), 1L),
+                      integer(1))
+  df_obs <- df
+  df_obs$trait[mask_idx] <- NA
+
+  result <- impute(df_obs, tree, species_col = "species",
+                    epochs = 60L, verbose = FALSE, seed = 1L,
+                    missing_frac = 0.0)
+
+  # 1. Observed rows must retain their original values exactly.
+  observed_idx <- setdiff(seq_len(nrow(df)), mask_idx)
+  expect_equal(result$completed$trait[observed_idx],
+               df$trait[observed_idx],
+               tolerance = 1e-8)
+
+  # 2. Imputed rows must be close to the OTHER observed obs of the same
+  #    species (within ~0.5 of the true species mean).  This is the bug:
+  #    if predictions are mis-aligned, masked rows get predictions from a
+  #    different species and miss by 5-15 units instead of <1.
+  imp_pred <- result$completed$trait[mask_idx]
+  imp_truth <- sp_truth[as.character(df$species[mask_idx])]
+  expect_true(all(abs(imp_pred - imp_truth) < 1.0),
+              info = sprintf(
+                "Imputed values must be near species truth. Worst diff: %.3f",
+                max(abs(imp_pred - imp_truth))))
+
+  # 3. Pearson correlation between predicted and species-truth must be high.
+  expect_gt(cor(imp_pred, imp_truth), 0.95)
+})
+
 
 # ---- Tests for new features: attention, calibration, conformal ---------------
 
@@ -245,4 +295,100 @@ test_that("attention + calibration + conformal work with mixed types", {
   expect_s3_class(pred, "pigauto_pred")
   expect_true(!is.null(pred$conformal_lower))
   expect_true(!is.null(pred$conformal_upper))
+})
+
+test_that("predict.pigauto_fit catches wrong-length calibrated_gates override", {
+  # Regression test for Opus C.4 (2026-04-28).
+  # Previously: setting calibrated_gates to a vector of the wrong length
+  # produced a cryptic torch shape error inside the encoder linear layer
+  # ("input and weight.T shapes cannot be multiplied (n x p-1 and p x h)")
+  # because (1, 0)-shaped weights broadcast with (n, p) baselines to (n, 0)
+  # and corrupted the next refine step's enc1 input width.
+  data(avonet300, tree300, package = "pigauto")
+  traits <- avonet300[1:40, c("Species_Key", "Mass")]
+  rownames(traits) <- traits$Species_Key
+  traits$Species_Key <- NULL
+  subtree <- ape::keep.tip(tree300, rownames(traits))
+
+  res <- pigauto::impute(traits, subtree, epochs = 20L, verbose = FALSE,
+                         seed = 1L, missing_frac = 0.0)
+  fit <- res$fit
+  p   <- as.integer(fit$model_config$input_dim)
+
+  # 1. Wrong-length numeric override should error with a clear message.
+  fit_bad <- fit
+  fit_bad$calibrated_gates <- rep(0, p + 1L)
+  fit_bad$r_cal_gnn        <- rep(0, p + 1L)
+  fit_bad$r_cal_bm         <- rep(1, p + 1L)
+  fit_bad$r_cal_mean       <- rep(0, p + 1L)
+  expect_error(predict(fit_bad, return_se = FALSE),
+               "calibrated_gates has length")
+
+  # 2. Zero-length override (e.g. rep(0, length(NULL))) is treated as "no
+  #    calibration" and predict falls through to the learned-gate path.
+  fit_empty <- fit
+  fit_empty$calibrated_gates <- numeric(0)
+  fit_empty$r_cal_gnn        <- numeric(0)
+  fit_empty$r_cal_bm         <- numeric(0)
+  fit_empty$r_cal_mean       <- numeric(0)
+  pred_empty <- predict(fit_empty, return_se = FALSE)
+  expect_s3_class(pred_empty, "pigauto_pred")
+
+  # 3. Correct-length zero gate (full BM, no GNN) succeeds.
+  fit_zero <- fit
+  fit_zero$calibrated_gates <- rep(0, p)
+  fit_zero$r_cal_gnn        <- rep(0, p)
+  fit_zero$r_cal_bm         <- rep(1, p)
+  fit_zero$r_cal_mean       <- rep(0, p)
+  pred_zero <- predict(fit_zero, return_se = FALSE)
+  expect_s3_class(pred_zero, "pigauto_pred")
+})
+
+test_that("conformal_split_val=TRUE changes conformal scores (no double-dipping)", {
+  # Regression test for Opus C.3 (2026-04-28).
+  # When `conformal_split_val = TRUE`, the calibration half and the
+  # conformal half must not share cells — otherwise post-selection
+  # bias makes the conformal quantile a biased estimator of the true
+  # residual quantile.  Default is FALSE (legacy single-set path) to
+  # preserve bench-grade RMSE on small-val datasets; this test exercises
+  # the opt-in path and verifies that toggling the flag produces a
+  # different conformal-score vector (the split path uses different
+  # cells and therefore a different empirical quantile).  Use a dataset
+  # large enough that each trait has at least
+  # `2 * min_val_cells = 40` cells so the per-column split actually
+  # fires (smaller traits silently fall back to the single-set path).
+  # n=200 + 50% missing + 40% val per masked-trait gives ~40 val cells
+  # per column, just above the default `2 * min_val_cells = 40` split
+  # threshold so the per-column split actually fires here.
+  set.seed(90)
+  tree <- ape::rtree(200)
+  df   <- data.frame(
+    row.names = tree$tip.label,
+    tr1 = abs(stats::rnorm(200)) + 0.5,
+    tr2 = abs(stats::rnorm(200)) + 0.5
+  )
+  pd  <- preprocess_traits(df, tree)
+  spl <- make_missing_splits(pd$X_scaled, seed = 90, trait_map = pd$trait_map,
+                              missing_frac = 0.50, val_frac = 0.40)
+
+  fit_split <- fit_pigauto(pd, tree, splits = spl,
+                            epochs = 30L, eval_every = 10L, patience = 5L,
+                            verbose = FALSE, seed = 90,
+                            conformal_split_val = TRUE)
+  fit_full  <- fit_pigauto(pd, tree, splits = spl,
+                            epochs = 30L, eval_every = 10L, patience = 5L,
+                            verbose = FALSE, seed = 90,
+                            conformal_split_val = FALSE)
+
+  expect_true(!is.null(fit_split$conformal_scores))
+  expect_true(!is.null(fit_full$conformal_scores))
+  # When val is generous enough, both should be finite and the split
+  # version should differ from the post-selected estimate (proof that
+  # the toggle actually changes the conformal-score computation).
+  ok <- is.finite(fit_split$conformal_scores) &
+        is.finite(fit_full$conformal_scores)
+  if (any(ok)) {
+    expect_false(isTRUE(all.equal(fit_split$conformal_scores[ok],
+                                    fit_full$conformal_scores[ok])))
+  }
 })
