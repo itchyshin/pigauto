@@ -76,7 +76,9 @@
 #' @param verbose logical. Print progress (default `TRUE`).
 #' @param seed integer. Random seed (default `1`).
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
-#'   [impute()].
+#'   [impute()]. See [fit_pigauto()] for the full list; the "Safety
+#'   floor" section below describes the relevant new v0.9.1.9002
+#'   argument.
 #'
 #' @return An object of class `"pigauto_mi"` with components:
 #'   \describe{
@@ -148,6 +150,19 @@
 #' Nakagawa S, Freckleton RP (2011). "Model averaging, missing data and
 #' multiple imputation: a case study for behavioural ecology."
 #' *Behavioral Ecology and Sociobiology* 65(1): 103-116.
+#'
+#' @section Safety floor (v0.9.1.9002+):
+#'   When \code{fit_pigauto()} was called with \code{safety_floor = TRUE}
+#'   (the default since v0.9.1.9002), the 3-way blend
+#'   \code{r_BM * BM + r_GNN * GNN + r_MEAN * MEAN} propagates through
+#'   every imputation draw automatically via the updated
+#'   \code{predict.pigauto_fit()}.  For \code{draws_method = "mc_dropout"}
+#'   the mean term contributes no between-draw variance (it is a
+#'   deterministic scalar per column), so Rubin-pooled SE stays correctly
+#'   calibrated: variance comes from the BM-draw and GNN-dropout terms
+#'   only.  For \code{draws_method = "conformal"} the blend centre is the
+#'   3-way prediction and conformal scores remain calibrated on the
+#'   blended residuals.
 #'
 #' @seealso [impute()] for single-point imputation, [with_imputations()]
 #'   for applying a model-fitting function across the `M` datasets,

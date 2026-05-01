@@ -1,0 +1,22 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><title>FishBase + fishtree - pigauto + BACE</title><style>body{font-family:system-ui,sans-serif;max-width:1200px;margin:2em auto;padding:0 1em;color:#222}h1{border-bottom:2px solid #ccc}table{border-collapse:collapse;margin:1em 0}td,th{border:1px solid #ccc;padding:4px 8px}</style></head><body><h1>FishBase + fishtree - pigauto vs BACE</h1><p>n = 10654 species, seed = 2026, miss_frac = 0.30. Third real-data benchmark completing the vertebrate breadth triad (birds via AVONET, mammals via PanTHERIA, fish via FishBase + fishtree).</p><p><em>BACE skipped</em> (not installed or PIGAUTO_RUN_BACE != 1).</p><h2>Per-trait metrics (winner highlighted)</h2><table><tr><th>trait</th><th>metric</th><th>mean_baseline</th><th>pigauto_default</th></tr><tr><td>Length</td><td>rmse</td><td>41.199</td><td style='background:#def6d0;font-weight:bold'>25.470</td></tr>
+<tr><td>Length</td><td>pearson_r</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.809</td></tr>
+<tr><td>Weight</td><td>rmse</td><td>87111.140</td><td style='background:#def6d0;font-weight:bold'>84804.500</td></tr>
+<tr><td>Weight</td><td>pearson_r</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.418</td></tr>
+<tr><td>BodyShapeI</td><td>accuracy</td><td>0.464</td><td style='background:#def6d0;font-weight:bold'>0.775</td></tr>
+<tr><td>DepthRangeDeep</td><td>rmse</td><td>883.959</td><td style='background:#def6d0;font-weight:bold'>791.977</td></tr>
+<tr><td>DepthRangeDeep</td><td>pearson_r</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.584</td></tr>
+<tr><td>Vulnerability</td><td>rmse</td><td>17.867</td><td style='background:#def6d0;font-weight:bold'>9.892</td></tr>
+<tr><td>Vulnerability</td><td>pearson_r</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.833</td></tr>
+<tr><td>Troph</td><td>rmse</td><td>0.645</td><td style='background:#def6d0;font-weight:bold'>0.496</td></tr>
+<tr><td>Troph</td><td>pearson_r</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.648</td></tr>
+<tr><td>Length</td><td>coverage95_conformal</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.906</td></tr>
+<tr><td>Length</td><td>coverage95_mcdropout</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.946</td></tr>
+<tr><td>Weight</td><td>coverage95_conformal</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.908</td></tr>
+<tr><td>Weight</td><td>coverage95_mcdropout</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.736</td></tr>
+<tr><td>DepthRangeDeep</td><td>coverage95_conformal</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.893</td></tr>
+<tr><td>DepthRangeDeep</td><td>coverage95_mcdropout</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.933</td></tr>
+<tr><td>Vulnerability</td><td>coverage95_conformal</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.949</td></tr>
+<tr><td>Vulnerability</td><td>coverage95_mcdropout</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.806</td></tr>
+<tr><td>Troph</td><td>coverage95_conformal</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.955</td></tr>
+<tr><td>Troph</td><td>coverage95_mcdropout</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.719</td></tr></table><h2>Wall time per method</h2><table><tr><th>method</th><th>wall (s)</th><th>wall (min)</th></tr><tr><td>mean_baseline</td><td>0.0</td><td>0.0</td></tr>
+<tr><td>pigauto_default</td><td>8760.6</td><td>146.0</td></tr></table></body></html>

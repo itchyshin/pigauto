@@ -128,6 +128,12 @@
 #' @param gate_splits_B integer. Random splits used when
 #'   \code{gate_method = "median_splits"}; default \code{31} (odd so the
 #'   median is well-defined).
+#' @param safety_floor logical. When \code{TRUE} (default), post-training
+#'   calibration searches a 3-way simplex \code{r_BM * BM + r_GNN * GNN
+#'   + r_MEAN * MEAN} so the grand mean is always in the candidate set,
+#'   guaranteeing \code{pigauto_val_RMSE <= mean_val_RMSE} by
+#'   construction. When \code{FALSE}, the v0.9.1 1-D calibration is used
+#'   exactly (\code{r_MEAN = 0}).
 #' @param min_val_cells integer. Warn at fit time if any trait has fewer
 #'   than \code{min_val_cells} validation cells available for gate
 #'   calibration and conformal-score estimation.  Default \code{10}: the
@@ -215,6 +221,7 @@ fit_pigauto <- function(
     conformal_bootstrap_B = 500L,
     gate_method       = c("single_split", "median_splits"),
     gate_splits_B     = 31L,
+    safety_floor      = TRUE,
     min_val_cells     = 20L,
     verbose           = TRUE,
     seed              = 1L
@@ -442,6 +449,8 @@ fit_pigauto <- function(
   opt <- torch::optim_adamw(model$parameters, lr = lr,
                              weight_decay = weight_decay)
 
+  gpu_mem_checkpoint("after model$to(device) + optimizer")
+
   # ---- Training loop --------------------------------------------------------
   best_val      <- Inf
   best_state    <- NULL
@@ -636,12 +645,17 @@ fit_pigauto <- function(
     }
   }
 
+  gpu_mem_checkpoint("end of training loop (before restoring best state)")
   if (!is.null(best_state)) model$load_state_dict(best_state)
+  gpu_mem_checkpoint("after model$load_state_dict(best_state)")
 
   # ---- Post-training gate calibration (validation set) --------------------
   calibrated_gates <- NULL
+  calibrated_gates_list <- NULL
+  mean_baseline_per_col <- NULL
   if (has_val && has_trait_map) {
     if (verbose) message("Calibrating gates on validation set...")
+    gpu_mem_checkpoint("entering gate calibration")
     model$eval()
 
     # Forward pass on val set (use t_X_eval so held-out truths do not leak).
@@ -658,26 +672,79 @@ fit_pigauto <- function(
     val_mask_mat <- matrix(FALSE, n, p)
     val_mask_mat[splits$val_idx] <- TRUE
 
-    calibrated_gates <- calibrate_gates(
-      trait_map       = trait_map,
-      mu_cal          = mu_cal,
-      delta_cal       = delta_cal,
-      X_truth_r       = X_truth_r,
-      val_mask_mat    = val_mask_mat,
-      gate_grid       = seq(0, gate_cap, length.out = 9L),
-      gate_cap        = gate_cap,
-      gate_method     = gate_method,
-      gate_splits_B   = gate_splits_B,
-      min_val_cells   = min_val_cells,
-      seed            = seed,
-      latent_names    = data$latent_names,
-      verbose         = verbose
+    # Safety-floor: compute per-latent-column grand mean on training-observed
+    # cells only. Excludes val + test hold-out to prevent leakage. Works in
+    # both single-obs and multi-obs mode (X_scaled is obs-level either way).
+    mean_baseline_per_col <- if (safety_floor) {
+      mb        <- numeric(p)
+      latent_nm <- colnames(data$X_scaled)
+      if (!is.null(latent_nm)) names(mb) <- latent_nm
+
+      # Build per-column trait-type lookup by walking trait_map.
+      # multi_proportion CLR columns are treated as "continuous" on the latent
+      # scale (each component is a z-scored CLR value).
+      col_type <- character(p)
+      for (tm_entry in data$trait_map) {
+        for (idx in seq_along(tm_entry$latent_cols)) {
+          lc <- tm_entry$latent_cols[idx]
+          col_type[lc] <- if (tm_entry$type == "zi_count") {
+            if (idx == 1L) "binary" else "zi_mag"
+          } else if (tm_entry$type == "multi_proportion") {
+            "continuous"
+          } else {
+            tm_entry$type
+          }
+        }
+      }
+
+      # Build test mask to exclude test cells (val already in val_mask_mat).
+      test_mask_mat_sf <- matrix(FALSE, n, p)
+      if (!is.null(splits) && length(splits$test_idx) > 0L) {
+        test_mask_mat_sf[splits$test_idx] <- TRUE
+      }
+      # Training-observed = not val, not test, not NA.
+      train_mask_mat <- !val_mask_mat & !test_mask_mat_sf & !is.na(data$X_scaled)
+
+      for (j in seq_len(p)) {
+        mb[j] <- mean_baseline_scalar(
+          x_col      = data$X_scaled[, j],
+          train_mask = train_mask_mat[, j],
+          trait_type = col_type[j]
+        )
+      }
+      # Guard: replace any NA that slipped through with 0 (e.g. columns with
+      # no training observations at all — degenerate but possible).
+      mb[is.na(mb)] <- 0
+      mb
+    } else {
+      NULL
+    }
+
+    calibrated_gates_list <- calibrate_gates(
+      trait_map             = trait_map,
+      mu_cal                = mu_cal,
+      delta_cal             = delta_cal,
+      X_truth_r             = X_truth_r,
+      val_mask_mat          = val_mask_mat,
+      gate_grid             = seq(0, gate_cap, length.out = 9L),
+      gate_cap              = gate_cap,
+      gate_method           = gate_method,
+      gate_splits_B         = gate_splits_B,
+      safety_floor          = safety_floor,
+      mean_baseline_per_col = mean_baseline_per_col,
+      simplex_step          = 0.05,
+      min_val_cells         = min_val_cells,
+      seed                  = seed,
+      latent_names          = data$latent_names,
+      verbose               = verbose
     )
+    calibrated_gates <- calibrated_gates_list$r_cal_gnn   # legacy scalar slot
   }
 
   # ---- Conformal prediction scores (validation set) -----------------------
   conformal_scores <- NULL
   if (has_val && has_trait_map && !is.null(calibrated_gates)) {
+    gpu_mem_checkpoint("entering compute_conformal_scores")
     conformal_scores <- compute_conformal_scores(
       trait_map        = trait_map,
       calibrated_gates = calibrated_gates,
@@ -736,13 +803,38 @@ fit_pigauto <- function(
     n_user_cov             = n_user_cov
   )
 
+  # Move model state to CPU before returning. Otherwise the returned
+  # fit object holds GPU tensor references and the training-time
+  # activations / optimizer state cannot be released by torch's CUDA
+  # caching allocator. At n >= 5000 this keeps ~40 GB live on GPU, and
+  # the downstream predict() path then OOMs on any card < 80 GB. See
+  # GPU bundle jobs 4741993/4741994/4742888/4742889 on 2026-04-21 for
+  # the Vulcan L40S reproducer.
+  gpu_mem_checkpoint("before state_dict CPU move")
+  model_state_cpu <- lapply(model$state_dict(),
+                             function(t) t$detach()$cpu())
+  gpu_mem_checkpoint("after state_dict CPU move (before rm + empty_cache)")
+
+  # Drop all local GPU tensor refs, then force torch's caching
+  # allocator to reclaim by calling cuda_empty_cache().  R's `rm`
+  # removes the bindings; the underlying tensors become unreachable
+  # and torch can release them at the next empty_cache() call.
+  local_gpu_tensors <- grep("^t_", ls(), value = TRUE)
+  if (length(local_gpu_tensors)) rm(list = local_gpu_tensors)
+  rm(model)
+  invisible(gc(full = TRUE, verbose = FALSE))
+  if (torch::cuda_is_available()) {
+    try(torch::cuda_empty_cache(), silent = TRUE)
+  }
+  gpu_mem_checkpoint("end of fit_pigauto (after rm + gc + empty_cache)")
+
   # Backward-compat: store val_rmse and test_rmse names
   # (graph$D was stripped earlier, right after tensor creation, so the
   # graph stored here is already the slim version without the cophenetic
   # distance matrix.)
   structure(
     list(
-      model_state    = model$state_dict(),
+      model_state    = model_state_cpu,
       model_config   = model_config,
       graph          = graph,
       baseline       = baseline,
@@ -765,6 +857,16 @@ fit_pigauto <- function(
       val_rmse         = best_val,
       test_rmse        = test_loss,
       calibrated_gates = calibrated_gates,
+      r_cal      = if (!is.null(calibrated_gates_list))
+                     calibrated_gates_list$r_cal_gnn else NULL,
+      r_cal_bm   = if (!is.null(calibrated_gates_list))
+                     calibrated_gates_list$r_cal_bm  else NULL,
+      r_cal_gnn  = if (!is.null(calibrated_gates_list))
+                     calibrated_gates_list$r_cal_gnn else NULL,
+      r_cal_mean = if (!is.null(calibrated_gates_list))
+                     calibrated_gates_list$r_cal_mean else NULL,
+      mean_baseline_per_col = mean_baseline_per_col,
+      safety_floor          = safety_floor,
       conformal_scores = conformal_scores,
       covariates       = data$covariates,
       cov_means        = data$cov_means,

@@ -1,0 +1,20 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><title>AVONET full n=9,993 &mdash; pigauto (Mac MPS)</title><style>body{font-family:system-ui,sans-serif;max-width:1200px;margin:2em auto;padding:0 1em;color:#222}h1{border-bottom:2px solid #ccc}table{border-collapse:collapse;margin:1em 0}td,th{border:1px solid #ccc;padding:4px 8px}</style></head><body><h1>AVONET full n=9,993 &mdash; pigauto on local Mac MPS</h1><p>n = 9993 species x 7-trait AVONET. Seed = 2026, miss_frac = 0.30, n_imputations = 20.</p><p>Apple Silicon MPS run -- Vulcan L40S OOM'd at predict stage on the equivalent config (the refine_steps forward-pass accumulation leak, partly addressed in commit <code>dc8cffa</code> and tracked for v0.9.2).  Mac MPS unified memory absorbs the attention at n=10k.</p><h2>Per-trait metrics (winner highlighted)</h2><table><tr><th>trait</th><th>metric</th><th>mean_baseline</th><th>pigauto_default</th></tr><tr><td>Mass</td><td>rmse</td><td>1222.961</td><td style='background:#def6d0;font-weight:bold'>678.993</td></tr>
+<tr><td>Mass</td><td>pearson_r</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.855</td></tr>
+<tr><td>Beak.Length_Culmen</td><td>rmse</td><td>24.357</td><td style='background:#def6d0;font-weight:bold'>7.171</td></tr>
+<tr><td>Beak.Length_Culmen</td><td>pearson_r</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.956</td></tr>
+<tr><td>Tarsus.Length</td><td>rmse</td><td>22.194</td><td style='background:#def6d0;font-weight:bold'>5.857</td></tr>
+<tr><td>Tarsus.Length</td><td>pearson_r</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.965</td></tr>
+<tr><td>Wing.Length</td><td>rmse</td><td>95.844</td><td style='background:#def6d0;font-weight:bold'>21.548</td></tr>
+<tr><td>Wing.Length</td><td>pearson_r</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.975</td></tr>
+<tr><td>Trophic.Level</td><td>accuracy</td><td>0.545</td><td style='background:#def6d0;font-weight:bold'>0.850</td></tr>
+<tr><td>Primary.Lifestyle</td><td>accuracy</td><td>0.583</td><td style='background:#def6d0;font-weight:bold'>0.869</td></tr>
+<tr><td>Migration</td><td>accuracy</td><td>0.807</td><td style='background:#def6d0;font-weight:bold'>0.837</td></tr>
+<tr><td>Mass</td><td>coverage95_conformal</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.922</td></tr>
+<tr><td>Mass</td><td>coverage95_mcdropout</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.866</td></tr>
+<tr><td>Beak.Length_Culmen</td><td>coverage95_conformal</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.940</td></tr>
+<tr><td>Beak.Length_Culmen</td><td>coverage95_mcdropout</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.874</td></tr>
+<tr><td>Tarsus.Length</td><td>coverage95_conformal</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.959</td></tr>
+<tr><td>Tarsus.Length</td><td>coverage95_mcdropout</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.894</td></tr>
+<tr><td>Wing.Length</td><td>coverage95_conformal</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.926</td></tr>
+<tr><td>Wing.Length</td><td>coverage95_mcdropout</td><td>-</td><td style='background:#def6d0;font-weight:bold'>0.895</td></tr></table><h2>Wall time per method</h2><table><tr><th>method</th><th>wall (s)</th><th>wall (min)</th></tr><tr><td>mean_baseline</td><td>0.0</td><td>0.0</td></tr>
+<tr><td>pigauto_default</td><td>9416.1</td><td>156.9</td></tr></table></body></html>
