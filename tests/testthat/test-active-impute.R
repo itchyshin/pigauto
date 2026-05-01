@@ -532,3 +532,101 @@ test_that("[active v2] multi_proportion: delta equals K-component sum", {
                  info = sprintf("[active v2] multi_proportion sum check for %s", sp))
   }
 })
+
+# ===========================================================================
+# T1 (2026-05-01): count + ordinal + proportion explicit coverage
+#
+# These three types use the same continuous-family BM variance-reduction
+# closed form as `continuous`.  They were validated indirectly via the
+# `continuous` test, but a dedicated mixed fixture pins down the
+# trait_map encoding (log1p for count, integer-z for ordinal,
+# logit-z for proportion) and confirms each type appears in the
+# output and sorts correctly.
+# ===========================================================================
+
+test_that("[active T1] suggest_next_observation handles count + ordinal + proportion in one mixed fixture", {
+  skip_if_not_installed("torch")
+  set.seed(2300L)
+  n <- 30L
+  tree <- ape::rtree(n)
+
+  # Three traits, all continuous-family but with different encodings:
+  #   count:      integer + log1p + z-score (auto-detected)
+  #   ordinal:    ordered factor + integer-z latent (explicit override)
+  #   proportion: numeric in (0,1) + logit + z-score (explicit override
+  #               -- not auto-detected per CLAUDE.md)
+  cnt   <- as.integer(stats::rpois(n, lambda = 4))
+  ord   <- ordered(sample(letters[1:4], n, replace = TRUE),
+                   levels = letters[1:4])
+  prop  <- stats::plogis(stats::rnorm(n))
+
+  df <- data.frame(parasites = cnt,
+                   stage     = ord,
+                   p         = prop,
+                   row.names = tree$tip.label)
+  miss_rows <- c(2L, 5L, 9L, 13L, 17L, 21L, 25L)
+  df$parasites[miss_rows[1:3]] <- NA_integer_
+  df$stage[miss_rows[3:5]] <- NA
+  df$p[miss_rows[5:7]] <- NA_real_
+
+  result <- pigauto::impute(df, tree,
+                              trait_types = c(p = "proportion"),
+                              epochs = 15L, n_imputations = 1L,
+                              verbose = FALSE, seed = 2300L)
+  sug <- pigauto::suggest_next_observation(result, top_n = 30L)
+
+  expect_s3_class(sug, "pigauto_active")
+  expect_gt(nrow(sug), 0L)
+
+  # All three trait types must appear in the output
+  types_seen <- unique(sug$type)
+  expect_true("count"      %in% types_seen,
+              info = "T1: count missing-cell rows must appear in output")
+  expect_true("ordinal"    %in% types_seen,
+              info = "T1: ordinal missing-cell rows must appear in output")
+  expect_true("proportion" %in% types_seen,
+              info = "T1: proportion missing-cell rows must appear in output")
+
+  # All three are continuous-family -> metric == "variance"
+  expect_true(all(sug$metric == "variance"))
+  # All deltas non-negative and finite
+  expect_true(all(is.finite(sug$delta_var_total)))
+  expect_true(all(sug$delta_var_total >= 0))
+  # Sorted descending on the unified delta column
+  expect_true(all(diff(sug$delta) <= 0),
+              info = "T1: rows must be sorted by descending delta")
+})
+
+test_that("[active T1] suggest_next_observation respects types argument for count/ordinal/proportion", {
+  skip_if_not_installed("torch")
+  set.seed(2301L)
+  n <- 25L
+  tree <- ape::rtree(n)
+  cnt  <- as.integer(stats::rpois(n, lambda = 4))
+  ord  <- ordered(sample(letters[1:3], n, replace = TRUE),
+                  levels = letters[1:3])
+  prop <- stats::plogis(stats::rnorm(n))
+  df <- data.frame(parasites = cnt,
+                   stage     = ord,
+                   p         = prop,
+                   row.names = tree$tip.label)
+  df$parasites[c(2L, 5L)] <- NA_integer_
+  df$stage[c(3L, 7L)] <- NA
+  df$p[c(4L, 9L)] <- NA_real_
+  result <- pigauto::impute(df, tree,
+                              trait_types = c(p = "proportion"),
+                              epochs = 15L, n_imputations = 1L,
+                              verbose = FALSE, seed = 2301L)
+
+  # Restrict to count only
+  sug_count <- pigauto::suggest_next_observation(result, types = "count")
+  expect_true(all(sug_count$type == "count"))
+
+  # Restrict to ordinal + proportion
+  sug_ord_prop <- pigauto::suggest_next_observation(result,
+                                                       types = c("ordinal",
+                                                                 "proportion"))
+  expect_true(all(sug_ord_prop$type %in% c("ordinal", "proportion")))
+  expect_true(any(sug_ord_prop$type == "ordinal"))
+  expect_true(any(sug_ord_prop$type == "proportion"))
+})
