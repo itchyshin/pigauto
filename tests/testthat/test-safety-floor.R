@@ -743,7 +743,7 @@ test_that("[B4] blend wins ties against pure-BM corner (continuous family)", {
   gnn_w <- as.numeric(res$r_cal_gnn)
   mean_w <- as.numeric(res$r_cal_mean)
   expect_lt(mean_w, 1.0 - 1e-9,
-            info = "[B4] blend tied with BM => should NOT snap to pure-MEAN corner")
+            label = "[B4] blend tied with BM => should NOT snap to pure-MEAN corner")
 })
 
 test_that("[B4] discrete strict floor: BM wins ties over MEAN in corner selection", {
@@ -888,7 +888,7 @@ test_that("[B4] forced blend-loses-to-corner triggers strict floor (continuous)"
   # Override should pin to pure-MEAN since MEAN is much better than BM
   # / GNN here.
   expect_gt(as.numeric(res$r_cal_mean), 0.5,
-            info = "[B4] blend loses to MEAN => post-cal block should snap toward MEAN corner")
+            label = "[B4] blend loses to MEAN => post-cal block should snap toward MEAN corner")
 })
 
 # ===========================================================================
@@ -989,7 +989,7 @@ test_that("[CV] cv_folds picks pure-MEAN when MEAN dominates (post-cal invariant
     gate_cv_folds = 5L,
     latent_names = "x1", verbose = FALSE, seed = 2026L)
   expect_gt(as.numeric(res$r_cal_mean), 0.5,
-            info = "[CV] cv_folds + post-cal invariant should snap to MEAN when MEAN dominates")
+            label = "[CV] cv_folds + post-cal invariant should snap to MEAN when MEAN dominates")
 })
 
 test_that("[CV] cv_folds with n_val < K folds back to single_split-like behaviour", {
