@@ -881,3 +881,157 @@ test_that("[B4] forced blend-loses-to-corner triggers strict floor (continuous)"
   expect_gt(as.numeric(res$r_cal_mean), 0.5,
             info = "[B4] blend loses to MEAN => post-cal block should snap toward MEAN corner")
 })
+
+# ===========================================================================
+# CV-fold gate calibration (2026-04-30 evening sprint)
+# ===========================================================================
+#
+# `gate_method = "cv_folds"` partitions val cells into K deterministic
+# non-overlapping folds, runs the half-A/half-B grid search per fold
+# (half_a = K-1 training folds, half_b = held-out fold), then takes the
+# componentwise median of K winning weight vectors as w_final.
+#
+# Compared to "median_splits" (B random half-A/half-B splits with
+# overlap), CV-folds:
+#   * uses larger training sets per fold (K-1/K vs 1/2)
+#   * runs strictly fewer gate-search iterations (K=5 vs B=31)
+#   * has a standard cross-validation interpretation
+#
+# Motivated by the open val→test drift on 4/32 binary cells noted in
+# useful/MEMO_2026-04-29_discrete_bench_reruns.md.
+
+test_that("[CV] gate_method = 'cv_folds' produces valid simplex weights", {
+  set.seed(2050L)
+  n <- 30L
+  tm <- list(list(name = "x", type = "continuous", latent_cols = 1L,
+                   mean = 0, sd = 1))
+  mu    <- matrix(rnorm(n), n, 1L, dimnames = list(NULL, "x"))
+  delta <- matrix(rnorm(n), n, 1L, dimnames = list(NULL, "x"))
+  truth <- matrix(rnorm(n), n, 1L, dimnames = list(NULL, "x"))
+  val   <- matrix(TRUE,   n, 1L)
+  res <- pigauto:::calibrate_gates(
+    trait_map = tm, mu_cal = mu, delta_cal = delta,
+    X_truth_r = truth, val_mask_mat = val,
+    gate_grid = seq(0, 1, 0.1), gate_cap = 1,
+    safety_floor = TRUE,
+    mean_baseline_per_col = c(x = 0),
+    simplex_step = 0.1,
+    gate_method = "cv_folds",
+    gate_cv_folds = 5L,
+    latent_names = "x", verbose = FALSE, seed = 2050L)
+  # All weights finite, sum to 1
+  s <- as.numeric(res$r_cal_bm + res$r_cal_gnn + res$r_cal_mean)
+  expect_equal(s, 1, tolerance = 1e-8)
+  expect_true(all(c(res$r_cal_bm, res$r_cal_gnn, res$r_cal_mean) >= 0))
+  expect_true(all(is.finite(c(res$r_cal_bm, res$r_cal_gnn, res$r_cal_mean))))
+})
+
+test_that("[CV] gate_method = 'cv_folds' is deterministic for fixed seed", {
+  set.seed(2051L)
+  n <- 40L
+  tm <- list(list(name = "x", type = "continuous", latent_cols = 1L,
+                   mean = 0, sd = 1))
+  mu    <- matrix(rnorm(n), n, 1L, dimnames = list(NULL, "x"))
+  delta <- matrix(rnorm(n), n, 1L, dimnames = list(NULL, "x"))
+  truth <- matrix(rnorm(n), n, 1L, dimnames = list(NULL, "x"))
+  val   <- matrix(TRUE,   n, 1L)
+  args <- list(
+    trait_map = tm, mu_cal = mu, delta_cal = delta,
+    X_truth_r = truth, val_mask_mat = val,
+    gate_grid = seq(0, 1, 0.1), gate_cap = 1,
+    safety_floor = TRUE,
+    mean_baseline_per_col = c(x = 0),
+    simplex_step = 0.1,
+    gate_method = "cv_folds",
+    gate_cv_folds = 5L,
+    latent_names = "x", verbose = FALSE, seed = 2051L
+  )
+  res_a <- do.call(pigauto:::calibrate_gates, args)
+  res_b <- do.call(pigauto:::calibrate_gates, args)
+  expect_equal(as.numeric(res_a$r_cal_bm),  as.numeric(res_b$r_cal_bm),
+               tolerance = 1e-12)
+  expect_equal(as.numeric(res_a$r_cal_gnn), as.numeric(res_b$r_cal_gnn),
+               tolerance = 1e-12)
+  expect_equal(as.numeric(res_a$r_cal_mean), as.numeric(res_b$r_cal_mean),
+               tolerance = 1e-12)
+})
+
+test_that("[CV] cv_folds picks pure-MEAN when MEAN dominates (post-cal invariant)", {
+  # Same fixture as the median_splits "mean dominates" test: truth = 0,
+  # mu/delta both noisy, MEAN of 0 is exactly correct.  Both gate_methods
+  # should converge on r_cal_mean > 0.5 because the post-cal full-val
+  # invariant fires.
+  set.seed(42L)
+  n <- 30L
+  tm <- list(list(name = "x1", type = "continuous", latent_cols = 1L,
+                   mean = 0, sd = 1))
+  mu    <- matrix(rnorm(n, 0, 2), nrow = n)
+  delta <- matrix(rnorm(n, 0, 2), nrow = n)
+  truth <- matrix(rep(0, n), nrow = n)
+  val   <- matrix(rep(TRUE, n), nrow = n)
+  res <- pigauto:::calibrate_gates(
+    trait_map = tm, mu_cal = mu, delta_cal = delta,
+    X_truth_r = truth, val_mask_mat = val,
+    gate_grid = seq(0, 1, 0.1), gate_cap = 1,
+    safety_floor = TRUE,
+    mean_baseline_per_col = c(x1 = 0),
+    simplex_step = 0.05,
+    gate_method = "cv_folds",
+    gate_cv_folds = 5L,
+    latent_names = "x1", verbose = FALSE, seed = 2026L)
+  expect_gt(as.numeric(res$r_cal_mean), 0.5,
+            info = "[CV] cv_folds + post-cal invariant should snap to MEAN when MEAN dominates")
+})
+
+test_that("[CV] cv_folds with n_val < K folds back to single_split-like behaviour", {
+  # When n_val (5) < K (10), CV cannot run -- the code should fall back
+  # gracefully (e.g. to median_splits or single_split) rather than crash.
+  set.seed(2052L)
+  n <- 8L
+  tm <- list(list(name = "x", type = "continuous", latent_cols = 1L,
+                   mean = 0, sd = 1))
+  mu    <- matrix(rnorm(n), n, 1L, dimnames = list(NULL, "x"))
+  delta <- matrix(rnorm(n), n, 1L, dimnames = list(NULL, "x"))
+  truth <- matrix(rnorm(n), n, 1L, dimnames = list(NULL, "x"))
+  val   <- matrix(c(rep(TRUE, 5L), rep(FALSE, n - 5L)), nrow = n)
+
+  # Should NOT crash even though n_val (5) < K (10)
+  expect_no_error(
+    res <- pigauto:::calibrate_gates(
+      trait_map = tm, mu_cal = mu, delta_cal = delta,
+      X_truth_r = truth, val_mask_mat = val,
+      gate_grid = seq(0, 1, 0.1), gate_cap = 1,
+      safety_floor = TRUE,
+      mean_baseline_per_col = c(x = 0),
+      simplex_step = 0.1,
+      gate_method = "cv_folds",
+      gate_cv_folds = 10L,
+      latent_names = "x", verbose = FALSE, seed = 2052L)
+  )
+  s <- as.numeric(res$r_cal_bm + res$r_cal_gnn + res$r_cal_mean)
+  expect_equal(s, 1, tolerance = 1e-8)
+})
+
+test_that("[CV] cv_folds requires gate_cv_folds >= 2", {
+  set.seed(2053L)
+  n <- 20L
+  tm <- list(list(name = "x", type = "continuous", latent_cols = 1L,
+                   mean = 0, sd = 1))
+  mu    <- matrix(rnorm(n), n, 1L, dimnames = list(NULL, "x"))
+  delta <- matrix(rnorm(n), n, 1L, dimnames = list(NULL, "x"))
+  truth <- matrix(rnorm(n), n, 1L, dimnames = list(NULL, "x"))
+  val   <- matrix(TRUE, n, 1L)
+  expect_error(
+    pigauto:::calibrate_gates(
+      trait_map = tm, mu_cal = mu, delta_cal = delta,
+      X_truth_r = truth, val_mask_mat = val,
+      gate_grid = seq(0, 1, 0.1), gate_cap = 1,
+      safety_floor = TRUE,
+      mean_baseline_per_col = c(x = 0),
+      simplex_step = 0.1,
+      gate_method = "cv_folds",
+      gate_cv_folds = 1L,
+      latent_names = "x", verbose = FALSE, seed = 2053L),
+    regexp = "gate_cv_folds"
+  )
+})

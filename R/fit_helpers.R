@@ -174,8 +174,10 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
                             X_truth_r, val_mask_mat,
                             gate_grid, gate_cap,
                             cal_min_rel_gain = 0.02,
-                            gate_method = c("single_split", "median_splits"),
+                            gate_method = c("single_split", "median_splits",
+                                             "cv_folds"),
                             gate_splits_B = 31L,
+                            gate_cv_folds = 5L,
                             safety_floor = FALSE,
                             mean_baseline_per_col = NULL,
                             simplex_step = 0.05,
@@ -184,6 +186,17 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
                             latent_names = NULL,
                             verbose = FALSE) {
   gate_method <- match.arg(gate_method)
+  if (gate_method == "cv_folds") {
+    if (!is.numeric(gate_cv_folds) ||
+        length(gate_cv_folds) != 1L ||
+        !is.finite(gate_cv_folds) ||
+        gate_cv_folds < 2L ||
+        gate_cv_folds != as.integer(gate_cv_folds)) {
+      stop("'gate_cv_folds' must be a single integer >= 2 when ",
+           "gate_method = 'cv_folds'", call. = FALSE)
+    }
+    gate_cv_folds <- as.integer(gate_cv_folds)
+  }
   if (safety_floor) {
     if (is.null(mean_baseline_per_col)) {
       stop("safety_floor = TRUE requires mean_baseline_per_col (numeric, length = ncol(mu_cal))")
@@ -240,6 +253,17 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
     # across the B runs. Shrinks the bimodal-gate flip-flop observed at
     # small n_val without any retraining. Default B = 31 gives a cheap
     # variance reduction and is odd so the median is well-defined.
+    #
+    # "cv_folds" (2026-04-30, NEW): partition val cells into K=`gate_cv_folds`
+    # deterministic non-overlapping folds; each fold becomes the "held-out"
+    # set (half_b) while the union of the other K-1 folds is the "training"
+    # set (half_a).  Run the grid + half-B-verify procedure K times, take
+    # the componentwise MEDIAN of K winning weight vectors as w_final.
+    # Compared to median_splits: uses larger half_a per split (4/5 vs 1/2),
+    # has non-overlapping splits, and has a standard cross-validation
+    # interpretation.  Falls back to single_split when n_val < 2 (CV ill-
+    # defined).  Edge: when n_val < gate_cv_folds we cap K_eff = n_val
+    # so each fold has at least 1 cell.
     # ------------------------------------------------------------------
     split_seeds <- if (gate_method == "single_split") {
       (seed + 17L)
@@ -259,7 +283,28 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
       list(half_a = half_a_i, half_b = half_b_i)
     }
 
-    split_pairs <- lapply(split_seeds, resolve_best_g_one_split)
+    split_pairs <- if (gate_method != "cv_folds") {
+      lapply(split_seeds, resolve_best_g_one_split)
+    } else {
+      K_eff <- min(gate_cv_folds, n_val)
+      if (K_eff < 2L) {
+        # CV ill-defined at n_val < 2; fall back to a single split.
+        list(resolve_best_g_one_split(seed + 17L))
+      } else {
+        set.seed(seed + 17L)
+        # rep(seq_len(K_eff), length.out = n_val) gives a balanced fold
+        # assignment (within +/- 1 cell across folds); sample() randomises
+        # which val_row gets which fold id, fixed by the seed above.
+        fold_id <- sample(rep(seq_len(K_eff), length.out = n_val))
+        lapply(seq_len(K_eff), function(k) {
+          train_local <- val_row_idx[fold_id != k]
+          held_out    <- val_row_idx[fold_id == k]
+          if (length(train_local) == 0L) train_local <- val_row_idx
+          if (length(held_out) == 0L)    held_out    <- val_row_idx
+          list(half_a = train_local, half_b = held_out)
+        })
+      }
+    }
 
     # Helper: mean loss for gate g on a set of row indices, closing over
     # the trait-loop variables (lc, tm, mu_cal, delta_cal, X_truth_r,

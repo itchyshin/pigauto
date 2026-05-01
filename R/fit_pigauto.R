@@ -137,13 +137,27 @@
 #'   the grid search on a single random half-A / half-B split of the val
 #'   rows; \code{"median_splits"} repeats the whole procedure for
 #'   \code{gate_splits_B} random splits and takes the median
-#'   \code{best_g}.  \code{"median_splits"} slightly reduces gate
+#'   \code{best_g}.  \code{"cv_folds"} (2026-04-30) partitions val cells
+#'   into \code{gate_cv_folds} (default 5) deterministic non-overlapping
+#'   folds and runs the grid + half-B-verify procedure once per fold
+#'   (training set = K-1 folds, held-out = remaining fold), taking the
+#'   componentwise median of K winning weight vectors.  \code{"cv_folds"}
+#'   uses larger training sets per split (K-1/K vs 1/2 in
+#'   \code{median_splits}) and has a standard cross-validation
+#'   interpretation, motivated by the open val→test drift observed on
+#'   4/32 binary cells in the discrete-bench memo.
+#'   \code{"median_splits"} slightly reduces gate
 #'   bimodality at small \code{n_val} (SD 0.406 → 0.360 across 10 seeds
 #'   on the evaluation sim) with a small coverage-SD improvement
 #'   (0.094 → 0.086).  Negligible runtime cost (B × cheap grid searches).
 #' @param gate_splits_B integer. Random splits used when
 #'   \code{gate_method = "median_splits"}; default \code{31} (odd so the
 #'   median is well-defined).
+#' @param gate_cv_folds integer. Number of CV folds when
+#'   \code{gate_method = "cv_folds"}; default \code{5}, must be
+#'   \code{>= 2}.  Capped at \code{n_val} per trait so each fold has at
+#'   least 1 cell.  When effective K \code{< 2} (e.g. \code{n_val = 1}),
+#'   the code falls back to a single split.
 #' @param safety_floor logical. When \code{TRUE} (default), post-training
 #'   calibration searches a 3-way simplex \code{r_BM * BM + r_GNN * GNN
 #'   + r_MEAN * MEAN} so the grand mean is always in the candidate set,
@@ -236,8 +250,9 @@ fit_pigauto <- function(
     conformal_method  = c("split", "bootstrap"),
     conformal_bootstrap_B = 500L,
     conformal_split_val = FALSE,
-    gate_method       = c("single_split", "median_splits"),
+    gate_method       = c("single_split", "median_splits", "cv_folds"),
     gate_splits_B     = 31L,
+    gate_cv_folds     = 5L,
     safety_floor      = TRUE,
     min_val_cells     = 20L,
     verbose           = TRUE,
@@ -806,6 +821,7 @@ fit_pigauto <- function(
       gate_cap              = gate_cap,
       gate_method           = gate_method,
       gate_splits_B         = gate_splits_B,
+      gate_cv_folds         = gate_cv_folds,
       safety_floor          = safety_floor,
       mean_baseline_per_col = mean_baseline_per_col,
       simplex_step          = 0.05,
