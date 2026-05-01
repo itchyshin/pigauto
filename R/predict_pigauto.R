@@ -119,6 +119,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   )
   model$to(device = device)
   model$load_state_dict(object$model_state)
+  gpu_mem_checkpoint("predict: after model rebuild + load_state_dict")
 
   # Calibrated gates override learned gates
   calibrated_gates <- object$calibrated_gates  # NULL if not available
@@ -193,14 +194,36 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     )
   }
 
+  gpu_mem_checkpoint("predict: after input tensor creation (adj, D_sq, coords, MU)")
+
   # ---- Inference (single or MC dropout) ------------------------------------
   latent_runs <- vector("list", n_imp)
 
-  # Pre-create calibrated gates tensor (once, outside the loop)
+  # Pre-create calibrated gates tensors (once, outside the loop).
+  # Three-way blend: pred = r_bm * BM_draw + r_gnn * GNN_delta + r_mean * MEAN
+  # Backward-compat fallback: legacy v0.9.1 fits only have calibrated_gates /
+  # r_cal (scalar per col). When r_cal_bm / r_cal_mean are missing, reconstruct
+  # the 2-way blend as r_bm = 1 - r_cal, r_gnn = r_cal, r_mean = 0, mean = 0.
   if (use_calibrated) {
-    t_cal_gates <- torch::torch_tensor(
-      calibrated_gates, dtype = torch::torch_float(), device = device
-    )$unsqueeze(1L)
+    r_bm_vec   <- object$r_cal_bm             %||% (1 - calibrated_gates)
+    r_gnn_vec  <- object$r_cal_gnn            %||% calibrated_gates
+    r_mean_vec <- object$r_cal_mean           %||% rep(0, length(calibrated_gates))
+    mean_vec   <- object$mean_baseline_per_col %||% rep(0, length(calibrated_gates))
+    # Defensive coercion: NULL replacements above can leak non-numeric types.
+    r_bm_vec   <- as.numeric(r_bm_vec)
+    r_gnn_vec  <- as.numeric(r_gnn_vec)
+    r_mean_vec <- as.numeric(r_mean_vec)
+    mean_vec   <- as.numeric(mean_vec)
+    t_w_bm          <- torch::torch_tensor(r_bm_vec,   dtype = torch::torch_float(),
+                                           device = device)$unsqueeze(1L)
+    t_w_gnn         <- torch::torch_tensor(r_gnn_vec,  dtype = torch::torch_float(),
+                                           device = device)$unsqueeze(1L)
+    t_w_mean        <- torch::torch_tensor(r_mean_vec, dtype = torch::torch_float(),
+                                           device = device)$unsqueeze(1L)
+    t_mean_baseline <- torch::torch_tensor(mean_vec,   dtype = torch::torch_float(),
+                                           device = device)$unsqueeze(1L)
+    t_cal_gates     <- t_w_gnn  # legacy alias: downstream code that references
+                                 # t_cal_gates directly still gets the GNN gate
   }
 
   # BM SE tensor for MC dropout BM-draw injection (latent / z-score scale).
@@ -249,14 +272,36 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
         # Use t_BM_draw (the BM posterior sample) in the baseline term so that
         # between-imputation variance is non-zero even when the gate is 0.
         if (use_calibrated) {
-          pred <- (1 - t_cal_gates) * t_BM_draw + t_cal_gates * out$delta
+          pred <- t_w_bm * t_BM_draw + t_w_gnn * out$delta +
+                  t_w_mean * t_mean_baseline
         } else {
           pred <- (1 - out$rs) * t_BM_draw + out$rs * out$delta
         }
+        # Drop the previous X_iter before binding the new one so that the
+        # old forward-pass intermediates (attention matrices, FFN outputs,
+        # and all their stored views) become unreachable and available for
+        # the caching allocator to reclaim on cuda_empty_cache().  At
+        # n=5000 with refine_steps=8 and n_imputations=5, skipping this
+        # step causes ~22 GB of attention-per-step to pile up across
+        # refinements -- see job 4745401 (n=5000, DEBUG_GPU_MEM=1) for
+        # the reproducer.
         X_iter <- pred
+        # Preserve `out` for the last-iteration reference at line ~283
+        # (rs_val <- out$rs$cpu()$squeeze()).  Drop covs0 and pred
+        # which are safe to release -- X_iter holds the latest pred's
+        # value and the next iteration rebinds both.
+        rm(covs0, pred)
       }
+      rm(mask_ind0)
     })
+    # Release the accumulated intra-draw intermediates before the next
+    # MI draw starts. cuda_empty_cache() actually reclaims the allocator
+    # blocks -- without it, torch holds the 22 GB chunk forever.
+    if (torch::cuda_is_available()) {
+      try(torch::cuda_empty_cache(), silent = TRUE)
+    }
     latent_runs[[m]] <- as.matrix(X_iter$cpu())
+    gpu_mem_checkpoint(sprintf("predict: after MI draw %d / %d", m, n_imp))
   }
 
   # Residual scale (per-column vector or legacy scalar)
@@ -560,17 +605,36 @@ pool_imputations <- function(decode_results, latent_runs, trait_map) {
   imputed <- data.frame(row.names = sp_names)
   probs <- list()
 
+  # Median pooling across decoded values. Robust to dropout-noisy draws
+  # whose decode path (expm1, plogis) amplifies high-tail values --
+  # critical for log-transformed continuous, count, zi_count, and
+  # proportion traits at large n where a few outlier draws dominate the
+  # mean pool. See the FishBase n=10,654 bench for the reproducer.
+  row_median_decoded <- function(nm) {
+    mat <- sapply(decode_results, function(dr) as.numeric(dr$imputed[[nm]]))
+    if (!is.matrix(mat)) mat <- matrix(mat, ncol = M)
+    apply(mat, 1L, stats::median, na.rm = TRUE)
+  }
+
   for (tm in trait_map) {
     nm <- tm$name
 
     if (tm$type == "continuous") {
-      vals <- rowMeans(sapply(decode_results, function(dr) dr$imputed[[nm]]))
-      imputed[[nm]] <- vals
+      if (isTRUE(tm$log_transform)) {
+        # Log-transformed continuous: median pool to avoid expm1
+        # amplification of dropout-noisy draws.
+        imputed[[nm]] <- row_median_decoded(nm)
+      } else {
+        # Untransformed continuous: mean pool (backward-compat default).
+        vals <- rowMeans(sapply(decode_results,
+                                 function(dr) dr$imputed[[nm]]))
+        imputed[[nm]] <- vals
+      }
 
     } else if (tm$type == "count") {
-      vals <- rowMeans(sapply(decode_results, function(dr) {
-        as.numeric(dr$imputed[[nm]])
-      }))
+      # Median pool on decoded counts -- expm1 on log1p-noisy latents
+      # amplifies outliers (Issue #40 fix).
+      vals <- row_median_decoded(nm)
       imputed[[nm]] <- as.integer(pmax(round(vals), 0L))
 
     } else if (tm$type == "ordinal") {
@@ -599,16 +663,14 @@ pool_imputations <- function(decode_results, latent_runs, trait_map) {
       imputed[[nm]] <- factor(tm$levels[pred_idx], levels = tm$levels)
 
     } else if (tm$type == "proportion") {
-      vals <- rowMeans(sapply(decode_results, function(dr) dr$imputed[[nm]]))
-      imputed[[nm]] <- vals
+      # Median pool -- plogis decode can amplify near-extreme latents.
+      imputed[[nm]] <- row_median_decoded(nm)
 
     } else if (tm$type == "zi_count") {
-      # Average the expected values across imputations
-      vals <- rowMeans(sapply(decode_results, function(dr) {
-        as.numeric(dr$imputed[[nm]])
-      }))
+      # Median pool on decoded expected values (same expm1 issue).
+      vals <- row_median_decoded(nm)
       imputed[[nm]] <- as.integer(pmax(round(vals), 0L))
-      # Average the P(non-zero) probabilities
+      # P(non-zero): mean of probabilities is correct (probability pooling).
       avg_pnz <- rowMeans(sapply(decode_results, function(dr) {
         dr$probabilities[[nm]]
       }))

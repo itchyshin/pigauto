@@ -1,0 +1,111 @@
+# Phase 8 MVP: signal-strength sweep (Pagel's λ)
+
+n_species = 300, miss_frac = 0.30, n_reps = 3
+Total wall: 62.3 min
+
+## Per-trait, per-λ means (averaged over reps)
+
+```
+          method lambda trait               metric       value
+   mean_baseline    0.1    b1             accuracy 0.562962963
+ pigauto_default    0.1    b1             accuracy 0.500000000
+     pigauto_em5    0.1    b1             accuracy 0.500000000
+      pigauto_LP    0.1    b1             accuracy 0.562962963
+   mean_baseline    0.3    b1             accuracy 0.714814815
+ pigauto_default    0.3    b1             accuracy 0.696296296
+     pigauto_em5    0.3    b1             accuracy 0.677777778
+      pigauto_LP    0.3    b1             accuracy 0.714814815
+   mean_baseline    0.5    b1             accuracy 0.596296296
+ pigauto_default    0.5    b1             accuracy 0.611111111
+     pigauto_em5    0.5    b1             accuracy 0.611111111
+      pigauto_LP    0.5    b1             accuracy 0.596296296
+   mean_baseline    0.7    b1             accuracy 0.829629630
+ pigauto_default    0.7    b1             accuracy 0.822222222
+     pigauto_em5    0.7    b1             accuracy 0.822222222
+      pigauto_LP    0.7    b1             accuracy 0.829629630
+   mean_baseline    0.9    b1             accuracy 0.629629630
+ pigauto_default    0.9    b1             accuracy 0.837037037
+     pigauto_em5    0.9    b1             accuracy 0.837037037
+      pigauto_LP    0.9    b1             accuracy 0.629629630
+   mean_baseline    1.0    b1             accuracy 0.762962963
+ pigauto_default    1.0    b1             accuracy 0.944444444
+     pigauto_em5    1.0    b1             accuracy 0.944444444
+      pigauto_LP    1.0    b1             accuracy 0.762962963
+   mean_baseline    0.1  cat1             accuracy 0.503703704
+ pigauto_default    0.1  cat1             accuracy 0.337037037
+     pigauto_em5    0.1  cat1             accuracy 0.370370370
+      pigauto_LP    0.1  cat1             accuracy 0.503703704
+   mean_baseline    0.3  cat1             accuracy 0.407407407
+ pigauto_default    0.3  cat1             accuracy 0.385185185
+     pigauto_em5    0.3  cat1             accuracy 0.385185185
+      pigauto_LP    0.3  cat1             accuracy 0.407407407
+   mean_baseline    0.5  cat1             accuracy 0.448148148
+ pigauto_default    0.5  cat1             accuracy 0.455555556
+     pigauto_em5    0.5  cat1             accuracy 0.470370370
+      pigauto_LP    0.5  cat1             accuracy 0.448148148
+   mean_baseline    0.7  cat1             accuracy 0.603703704
+ pigauto_default    0.7  cat1             accuracy 0.648148148
+     pigauto_em5    0.7  cat1             accuracy 0.637037037
+      pigauto_LP    0.7  cat1             accuracy 0.603703704
+   mean_baseline    0.9  cat1             accuracy 0.592592593
+ pigauto_default    0.9  cat1             accuracy 0.737037037
+     pigauto_em5    0.9  cat1             accuracy 0.733333333
+      pigauto_LP    0.9  cat1             accuracy 0.592592593
+   mean_baseline    1.0  cat1             accuracy 0.633333333
+ pigauto_default    1.0  cat1             accuracy 0.951851852
+     pigauto_em5    1.0  cat1             accuracy 0.951851852
+      pigauto_LP    1.0  cat1             accuracy 0.633333333
+ pigauto_default    0.1    c1 coverage95_conformal 0.933333333
+     pigauto_em5    0.1    c1 coverage95_conformal 0.951851852
+ pigauto_default    0.3    c1 coverage95_conformal 0.944444444
+     pigauto_em5    0.3    c1 coverage95_conformal 0.951851852
+ pigauto_default    0.5    c1 coverage95_conformal 0.985185185
+     pigauto_em5    0.5    c1 coverage95_conformal 0.977777778
+ pigauto_default    0.7    c1 coverage95_conformal 0.974074074
+     pigauto_em5    0.7    c1 coverage95_conformal 0.981481481
+ pigauto_default    0.9    c1 coverage95_conformal 0.944444444
+     pigauto_em5    0.9    c1 coverage95_conformal 0.955555556
+ pigauto_default    1.0    c1 coverage95_conformal 0.974074074
+     pigauto_em5    1.0    c1 coverage95_conformal 0.970370370
+ pigauto_default    0.1    c2 coverage95_conformal 0.955555556
+     pigauto_em5    0.1    c2 coverage95_conformal 0.951851852
+ pigauto_default    0.3    c2 coverage95_conformal 0.977777778
+     pigauto_em5    0.3    c2 coverage95_conformal 0.977777778
+ pigauto_default    0.5    c2 coverage95_conformal 0.903703704
+     pigauto_em5    0.5    c2 coverage95_conformal 0.892592593
+ pigauto_default    0.7    c2 coverage95_conformal 0.974074074
+     pigauto_em5    0.7    c2 coverage95_conformal 0.970370370
+ pigauto_default    0.9    c2 coverage95_conformal 0.944444444
+     pigauto_em5    0.9    c2 coverage95_conformal 0.951851852
+ pigauto_default    1.0    c2 coverage95_conformal 0.959259259
+     pigauto_em5    1.0    c2 coverage95_conformal 0.955555556
+ pigauto_default    0.1    c1 coverage95_mcdropout 0.340740741
+     pigauto_em5    0.1    c1 coverage95_mcdropout 0.351851852
+ pigauto_default    0.3    c1 coverage95_mcdropout 0.525925926
+     pigauto_em5    0.3    c1 coverage95_mcdropout 0.329629630
+ pigauto_default    0.5    c1 coverage95_mcdropout 0.285185185
+     pigauto_em5    0.5    c1 coverage95_mcdropout 0.400000000
+ pigauto_default    0.7    c1 coverage95_mcdropout 0.377777778
+     pigauto_em5    0.7    c1 coverage95_mcdropout 0.425925926
+ pigauto_default    0.9    c1 coverage95_mcdropout 0.600000000
+     pigauto_em5    0.9    c1 coverage95_mcdropout 0.414814815
+ pigauto_default    1.0    c1 coverage95_mcdropout 0.885185185
+     pigauto_em5    1.0    c1 coverage95_mcdropout 0.885185185
+ pigauto_default    0.1    c2 coverage95_mcdropout 0.303703704
+     pigauto_em5    0.1    c2 coverage95_mcdropout 0.311111111
+ pigauto_default    0.3    c2 coverage95_mcdropout 0.414814815
+     pigauto_em5    0.3    c2 coverage95_mcdropout 0.433333333
+ pigauto_default    0.5    c2 coverage95_mcdropout 0.455555556
+     pigauto_em5    0.5    c2 coverage95_mcdropout 0.544444444
+ pigauto_default    0.7    c2 coverage95_mcdropout 0.455555556
+     pigauto_em5    0.7    c2 coverage95_mcdropout 0.496296296
+ pigauto_default    0.9    c2 coverage95_mcdropout 0.751851852
+     pigauto_em5    0.9    c2 coverage95_mcdropout 0.644444444
+ pigauto_default    1.0    c2 coverage95_mcdropout 0.814814815
+     pigauto_em5    1.0    c2 coverage95_mcdropout 0.833333333
+ pigauto_default    0.1    c1            pearson_r 0.010798158
+     pigauto_em5    0.1    c1            pearson_r 0.006048102
+      pigauto_LP    0.1    c1            pearson_r 0.003981373
+ pigauto_default    0.3    c1            pearson_r 0.110260381
+ [ reached 'max' / getOption("max.print") -- omitted 80 rows ]
+```

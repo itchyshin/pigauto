@@ -87,7 +87,9 @@ Default \code{NULL} (no covariates).}
 \item{seed}{integer. Random seed (default \code{1}).}
 
 \item{...}{additional arguments forwarded to \code{\link[=fit_pigauto]{fit_pigauto()}} via
-\code{\link[=impute]{impute()}}.}
+\code{\link[=impute]{impute()}}. See \code{\link[=fit_pigauto]{fit_pigauto()}} for the full list; the "Safety
+floor" section below describes the relevant new v0.9.1.9002
+argument.}
 }
 \value{
 An object of class \code{"pigauto_mi"} with components:
@@ -175,6 +177,21 @@ pooled SEs via Rubin's rules (Nakagawa & de Villemereuil 2019).
 
 The two functions share the same downstream API — both return objects
 compatible with \code{\link[=with_imputations]{with_imputations()}} and \code{\link[=pool_mi]{pool_mi()}}.
+}
+
+\section{Safety floor (v0.9.1.9002+)}{
+
+When \code{fit_pigauto()} was called with \code{safety_floor = TRUE}
+(the default since v0.9.1.9002), the 3-way blend
+\code{r_BM * BM + r_GNN * GNN + r_MEAN * MEAN} propagates through
+every imputation draw automatically via the updated
+\code{predict.pigauto_fit()}.  For \code{draws_method = "mc_dropout"}
+the mean term contributes no between-draw variance (it is a
+deterministic scalar per column), so Rubin-pooled SE stays correctly
+calibrated: variance comes from the BM-draw and GNN-dropout terms
+only.  For \code{draws_method = "conformal"} the blend centre is the
+3-way prediction and conformal scores remain calibrated on the
+blended residuals.
 }
 
 \examples{
