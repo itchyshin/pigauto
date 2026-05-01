@@ -151,10 +151,23 @@ Phase G' (v0.9.1.9012+).  Pass-through to
 \code{\link{predict.pigauto_fit}}.  When \code{"pmm"}, uses
 Predictive Mean Matching for log-transformed continuous, count,
 zi_count magnitude, and proportion traits: imputed values are
-drawn from the observed value pool, never extrapolated.  This
-is the \pkg{mice}-style imputation; recommended for use with
-\code{n_imputations > 1}.  Default \code{"none"} preserves
-pre-G' behaviour.}
+drawn from the observed value pool, never extrapolated.
+
+\strong{When to use:} PMM is intended for
+\strong{multiple-imputation workflows} where the M imputed
+datasets feed into \code{\link{pool_mi}} via Rubin's rules.
+The donor-based between-imputation variance is well-calibrated
+to the trait's marginal distribution, giving honest standard
+errors on downstream regression coefficients even when the
+GNN's MC-dropout noise alone would underestimate uncertainty.
+PMM \strong{is not} a tail-safety tool for single-imputation
+point estimates -- the Phase G' bench
+(\code{useful/MEMO_2026-05-01_phase_g_prime_results.md}) showed
+PMM can hurt point-estimate RMSE on cells where predictions
+are accurate.  For tail safety, prefer \code{clamp_outliers =
+  TRUE}.
+
+Default \code{"none"} preserves pre-G' behaviour.}
 
 \item{pmm_K}{integer (>= 1).  Donor pool size for PMM.  Default
 \code{5L} (mice convention).  Ignored when

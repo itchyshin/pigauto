@@ -75,11 +75,25 @@
 #'   cell's prediction, samples one, and returns its observed
 #'   value.  Imputed values are guaranteed to lie in the observed
 #'   data range -- no extrapolation is possible by construction.
-#'   Recommended for log-transformed continuous traits with
-#'   \code{n_imputations > 1} (e.g. AVONET Mass).  Discrete-class
-#'   types (binary / categorical / ordinal / multi_proportion) and
-#'   un-log continuous: no-op.  Default \code{"none"} preserves
-#'   v0.9.1.9011 behaviour exactly.
+#'
+#'   \strong{When to use:} PMM is intended for
+#'   \strong{multiple-imputation workflows} (\code{n_imputations >
+#'   1} feeding into \code{\link{pool_mi}} via
+#'   \code{\link{multi_impute}} / \code{\link{with_imputations}}).
+#'   The donor-based variance across the M draws is well-calibrated
+#'   to the trait's marginal distribution, giving Rubin's rules
+#'   honest standard errors even when the GNN's MC-dropout noise is
+#'   too narrow.  PMM \strong{is not} intended for tail-safety on
+#'   single-imputation point estimates -- the Phase G'
+#'   acceptance bench (\code{useful/MEMO_2026-05-01_phase_g_prime_results.md})
+#'   showed PMM can hurt RMSE on cells where the GNN's prediction is
+#'   already accurate (donor-mismatch noise injected on top of an
+#'   on-target prediction).  For tail safety on single imputations,
+#'   prefer \code{clamp_outliers = TRUE}.
+#'
+#'   Discrete-class types (binary / categorical / ordinal /
+#'   multi_proportion) and un-log continuous: no-op.  Default
+#'   \code{"none"} preserves v0.9.1.9011 behaviour exactly.
 #' @param pmm_K integer scalar (>= 1).  Donor pool size for PMM.
 #'   Default \code{5L} (mice convention).  Ignored when
 #'   \code{match_observed = "none"}.
