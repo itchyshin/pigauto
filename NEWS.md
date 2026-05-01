@@ -1,3 +1,74 @@
+# pigauto 0.9.1.9011 (dev)
+
+## Phase G: opt-in `clamp_outliers` for back-transform tail extrapolation (2026-05-01)
+
+Closes the AVONET Mass tail-extrapolation mode documented in
+`useful/MEMO_2026-05-01_avonet_mass_diag.md`: at N_IMP=20 on seed
+2030, Casuarius bennetti was predicted at 538 kg vs truth 35 kg
+because all 20 MC-dropout draws produced a +3-4 SD latent overshoot
+that `expm1()` amplified to 250-1700 kg.
+
+### What changed
+
+Two new arguments on `impute()` and `predict.pigauto_fit()`:
+
+* **`clamp_outliers`** (logical, default `FALSE`).  When `TRUE`,
+  post-back-transform predictions for log-transformed continuous,
+  count, and zi_count magnitude traits are capped at
+  `tm$obs_max * clamp_factor` (where `tm$obs_max` is the observed
+  maximum on the original scale, recorded at preprocess time).
+* **`clamp_factor`** (numeric, default `5`).  Multiplicative factor
+  on the observed maximum.  Anything > `obs_max * clamp_factor` is
+  considered implausible and capped.
+
+For non-at-risk types (untransformed continuous, ordinal, binary,
+categorical, proportion, multi_proportion) the clamp is a no-op.
+
+### Default policy
+
+**`clamp_outliers = FALSE`** remains the default for backward
+compatibility.  Users imputing log-transformed traits with
+`n_imputations > 1` and concerned about tail blow-ups should pass
+`clamp_outliers = TRUE` explicitly.  See
+`useful/MEMO_2026-05-01_phase_g_results.md` for the AVONET
+acceptance bench:
+
+| seed | clamp OFF | clamp ON | reduction |
+|------|-----------|----------|-----------|
+| 2030 | 24,330 | 6,273  | -74 % |
+| 2031 |    312 |   318  | +1.7 % (MC noise) |
+| 2032 |    591 |   433  | -27 % |
+
+Seed-2030 Casuarius prediction: 551,050 g (OFF) -> 167,847 g (ON,
+capped at 35,000 * 5 = 175,000).
+
+### Implementation
+
+* `R/preprocess_traits.R`: records `entry$obs_max` and
+  `entry$obs_min` (original-scale) for log-transformed continuous,
+  count, and zi_count types.  Untransformed continuous: NA (not at
+  risk of expm1 amplification).
+* `R/predict_pigauto.R`: extends `predict.pigauto_fit()` and
+  `decode_from_latent()` with `clamp_outliers` / `clamp_factor`
+  arguments.  New `.clamp_high()` helper applies the cap at the
+  three back-transform sites (continuous-log, count, zi_count
+  magnitude).
+* `R/impute.R`: extends the user-facing wrapper with the same
+  arguments + roxygen.
+
+### Tests
+
+`tests/testthat/test-clamp-outliers.R`: 5 test_that blocks
+(24 assertions), all pass.  Covers obs_max / obs_min recording,
+default-OFF no-op, ON behaviour on synthetic tail, clamp_factor
+scaling, and input validation.
+
+### Bench
+
+`script/bench_phase_g_clamp.R` runs the AVONET seed-2030/2031/2032
+N_IMP=20 sweep with clamp ON and OFF.  Output:
+`script/bench_phase_g_clamp.{rds,md}`.
+
 # pigauto 0.9.1.9010 (dev)
 
 ## Phase H: `pool_method = "mode"` for ordinal traits (2026-05-01)

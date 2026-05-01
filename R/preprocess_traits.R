@@ -551,6 +551,19 @@ build_trait_map <- function(traits, types, log_set, center, scale,
       entry$log_transform <- do_log
       entry$mean          <- m
       entry$sd            <- s
+      # Phase G (2026-05-01): observed range in original units, used by
+      # the optional `clamp_outliers` argument to predict.pigauto_fit() to
+      # cap tail-extrapolation amplified by the back-transform.  Only
+      # populated for log-transformed traits where expm1/exp() can blow up
+      # latent overshoots; left NA for untransformed continuous (which
+      # decode linearly and don't need clamping).
+      if (do_log && length(stats::na.omit(as.numeric(x))) > 0L) {
+        entry$obs_max <- max(as.numeric(x), na.rm = TRUE)
+        entry$obs_min <- min(as.numeric(x), na.rm = TRUE)
+      } else {
+        entry$obs_max <- NA_real_
+        entry$obs_min <- NA_real_
+      }
 
     } else if (tp == "count") {
       vals <- log1p(as.numeric(x))
@@ -563,6 +576,16 @@ build_trait_map <- function(traits, types, log_set, center, scale,
       entry$log_transform <- FALSE
       entry$mean          <- m
       entry$sd            <- s
+      # Phase G: count is always log1p-z; expm1 back-transform amplifies
+      # tail overshoots.  Clamp at obs_max * clamp_factor when the user
+      # opts in via predict(clamp_outliers = TRUE).
+      if (length(stats::na.omit(as.numeric(x))) > 0L) {
+        entry$obs_max <- max(as.numeric(x), na.rm = TRUE)
+        entry$obs_min <- min(as.numeric(x), na.rm = TRUE)
+      } else {
+        entry$obs_max <- NA_real_
+        entry$obs_min <- NA_real_
+      }
 
     } else if (tp == "ordinal") {
       int_vals <- as.integer(x) - 1L  # 0-based
@@ -625,6 +648,16 @@ build_trait_map <- function(traits, types, log_set, center, scale,
       entry$mean          <- m_nz      # for magnitude column z-scoring
       entry$sd            <- s_nz
       entry$zero_frac     <- sum(x == 0) / length(x)
+      # Phase G: same expm1 amplification hazard as count.  Use the
+      # non-zero observations to derive the clamp range (zero values
+      # would push obs_min to 0 and make the lower clamp meaningless).
+      if (length(nz) > 0L) {
+        entry$obs_max <- max(as.numeric(nz), na.rm = TRUE)
+        entry$obs_min <- min(as.numeric(nz), na.rm = TRUE)
+      } else {
+        entry$obs_max <- NA_real_
+        entry$obs_min <- NA_real_
+      }
     }
 
     col_offset <- col_offset + entry$n_latent
