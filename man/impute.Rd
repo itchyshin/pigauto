@@ -26,6 +26,7 @@ impute(
   clamp_factor = 5,
   match_observed = c("none", "pmm"),
   pmm_K = 5L,
+  pmm_when = c("outside_observed", "always"),
   safety_floor = TRUE,
   phylo_signal_gate = TRUE,
   phylo_signal_threshold = 0.2,
@@ -159,6 +160,13 @@ pre-G' behaviour.}
 \item{pmm_K}{integer (>= 1).  Donor pool size for PMM.  Default
 \code{5L} (mice convention).  Ignored when
 \code{match_observed = "none"}.}
+
+\item{pmm_when}{character, one of \code{c("outside_observed",
+  "always")}.  Phase G'' (v0.9.1.9013+) -- pass-through to
+\code{\link{predict.pigauto_fit}}.  When
+\code{"outside_observed"} (default), PMM only triggers on cells
+whose prediction is outside the observed range.  In-range
+predictions are trusted as-is.  See that function's help.}
 
 \item{safety_floor}{logical. When \code{TRUE} (default since
 v0.9.1.9002), calibration searches the 3-way simplex

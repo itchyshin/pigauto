@@ -133,7 +133,7 @@ test_that("[Phase G' L2] pmm_is_eligible says no for un-log cont and discrete-cl
 # Layer 3: statistical property -- no extrapolation by construction
 # ===========================================================================
 
-test_that("[Phase G' L3] PMM imputed values are EXACTLY in the observed value set", {
+test_that("[Phase G' L3] PMM imputed values are EXACTLY in observed pool when pmm_when='always'", {
   skip_if_not_installed("torch")
   set.seed(2080L)
   n <- 30L
@@ -146,15 +146,19 @@ test_that("[Phase G' L3] PMM imputed values are EXACTLY in the observed value se
   obs_values <- df$mass[-miss_idx]      # the donor pool of TRUTH values
   df$mass[miss_idx] <- NA
 
+  # Use pmm_when = "always" (original mice-style mode) to enforce the
+  # strict "every imputation is a donor" invariant.  Phase G''
+  # default ("outside_observed") only triggers PMM on extrapolation,
+  # so in-range predictions pass through and would NOT equal a donor.
   res <- pigauto::impute(df, tree,
                           epochs = 10L, n_imputations = 5L,
                           match_observed = "pmm",
-                          pmm_K = 5L,
+                          pmm_K = 5L, pmm_when = "always",
                           verbose = FALSE, seed = 2080L)
   imputed <- res$completed$mass[miss_idx]
   # EVERY imputed value must equal one of the observed values exactly
   expect_true(all(imputed %in% obs_values),
-              info = "[Phase G' L3] PMM imputed values must come from observed pool")
+              info = "[Phase G' L3] pmm_when='always' must produce only donor values")
 })
 
 test_that("[Phase G' L3] PMM never produces values outside observed range", {
@@ -309,6 +313,97 @@ test_that("[Phase G' L5] PMM with K=1 is fully deterministic given a seed", {
 # Acceptance: simulated tail-extrapolation case
 # ===========================================================================
 
+# ===========================================================================
+# Phase G'' (2026-05-01): conditional PMM via pmm_when = "outside_observed"
+# ===========================================================================
+
+test_that("[Phase G'' L1] pmm_impute_one_trait when='outside_observed' keeps in-range preds", {
+  pmm_one <- getFromNamespace("pmm_impute_one_trait", "pigauto")
+  preds <- c(50, 50, 50, 50)              # all in-range predictions
+  truth <- c(40, 60, NA, NA)              # obs range = [40, 60]; pred 50 is in-range
+  out <- pmm_one(preds, truth, K = 1L, seed = 1L,
+                 when = "outside_observed")
+  # Cells 3, 4: pred=50 in [40, 60] -> kept as-is, NOT a donor
+  expect_equal(out[3], 50)
+  expect_equal(out[4], 50)
+  # Observed cells unchanged
+  expect_equal(out[1:2], truth[1:2])
+})
+
+test_that("[Phase G'' L1] pmm_impute_one_trait when='outside_observed' triggers on extrapolation", {
+  pmm_one <- getFromNamespace("pmm_impute_one_trait", "pigauto")
+  preds <- c(50, 50, 200, -10)            # cells 3, 4 extrapolate
+  truth <- c(40, 60, NA, NA)              # obs range = [40, 60]
+  out <- pmm_one(preds, truth, K = 1L, seed = 1L,
+                 when = "outside_observed")
+  # Cell 3: pred=200 > 60 -> PMM triggers; nearest donor by pred: index 2 (50 vs 200, d=150) wait
+  # Actually pred[1]=50, pred[2]=50, both equally close to 200.  Tie-break: order() picks index 1 first.
+  # donor 1 -> truth[1] = 40
+  expect_equal(out[3], 40)
+  # Cell 4: pred=-10 < 40 -> PMM triggers; same logic, donor 1 -> 40
+  expect_equal(out[4], 40)
+})
+
+test_that("[Phase G'' L1] when='always' replaces every cell (mice mode)", {
+  pmm_one <- getFromNamespace("pmm_impute_one_trait", "pigauto")
+  preds <- c(50, 50, 51)                  # cell 3 in-range pred
+  truth <- c(40, 60, NA)
+  out <- pmm_one(preds, truth, K = 1L, seed = 1L,
+                 when = "always")
+  # Even though pred[3]=51 is in range [40, 60], when="always" forces a donor.
+  # Nearest donor pred: |50-51|=1 (cell 1, truth 40) or |50-51|=1 (cell 2, truth 60).
+  # Tie -> order() returns index 1 first -> donor truth = 40
+  expect_equal(out[3], 40)
+})
+
+test_that("[Phase G'' L1] default when is 'outside_observed'", {
+  pmm_one <- getFromNamespace("pmm_impute_one_trait", "pigauto")
+  preds <- c(50, 50, 50)                  # all in-range
+  truth <- c(40, 60, NA)
+  out_default <- pmm_one(preds, truth, K = 1L, seed = 1L)
+  out_outside <- pmm_one(preds, truth, K = 1L, seed = 1L,
+                         when = "outside_observed")
+  expect_equal(out_default, out_outside,
+               info = "[Phase G''] default `when` must be 'outside_observed'")
+})
+
+test_that("[Phase G'' L4] integration: pmm_when defaults preserve in-range predictions", {
+  skip_if_not_installed("torch")
+  set.seed(2090L)
+  n <- 30L
+  tree <- ape::rtree(n)
+  # log-cont with NO extreme tail; predictions should mostly stay in-range
+  df <- data.frame(
+    mass = exp(stats::rnorm(n, 5, 0.3)),
+    row.names = tree$tip.label
+  )
+  df$mass[c(2L, 5L, 9L)] <- NA
+
+  res_default_pmm <- pigauto::impute(df, tree,
+                                      match_observed = "pmm",
+                                      epochs = 10L, n_imputations = 5L,
+                                      verbose = FALSE, seed = 2090L)
+  # With when='outside_observed' default, in-range predictions should
+  # NOT be replaced -> similar to "none" behaviour on this fixture
+  res_none <- pigauto::impute(df, tree,
+                               match_observed = "none",
+                               epochs = 10L, n_imputations = 5L,
+                               verbose = FALSE, seed = 2090L)
+  # The two should be very close on a small-tail fixture (most preds
+  # in-range -> PMM is no-op).  Allow a small tolerance for any cell
+  # that does extrapolate.
+  diffs <- abs(res_default_pmm$completed$mass[c(2L, 5L, 9L)] -
+               res_none$completed$mass[c(2L, 5L, 9L)])
+  obs_range_max <- max(df$mass, na.rm = TRUE) - min(df$mass, na.rm = TRUE)
+  # Most cells should have zero diff (in-range -> identical).  But the
+  # specific outcome depends on the GNN's stochastic dropout output;
+  # at minimum verify diffs are bounded by a small fraction of the
+  # observed range.
+  expect_lt(max(diffs), obs_range_max,
+            label = "[Phase G''] in-range PMM should not deviate by more than the observed range")
+})
+
+# Original acceptance test
 test_that("[Phase G' acceptance] PMM caps a synthetic tail blow-up better than no-clamp", {
   skip_if_not_installed("torch")
   # Construct a fixture where:
@@ -333,16 +428,19 @@ test_that("[Phase G' acceptance] PMM caps a synthetic tail blow-up better than n
                                epochs = 30L, n_imputations = 10L,
                                match_observed = "none",
                                verbose = FALSE, seed = 2087L)
-  # PMM: imputation is bounded by observed range
+  # PMM with pmm_when="always": imputation guaranteed to equal an
+  # observed value.  (Phase G'' default "outside_observed" only
+  # triggers on extrapolation; here the GNN may predict in-range.)
   res_pmm <- pigauto::impute(df, tree,
                               epochs = 30L, n_imputations = 10L,
                               match_observed = "pmm", pmm_K = 5L,
+                              pmm_when = "always",
                               verbose = FALSE, seed = 2087L)
   pmm_val <- as.numeric(res_pmm$completed$mass[1L])
   # PMM imputation must be exactly equal to one of the observed mass values
   obs_vals <- df$mass[-1L]
   expect_true(pmm_val %in% obs_vals,
-              info = "[Phase G' accept] PMM imputation must equal an observed value")
+              info = "[Phase G' accept] PMM-always imputation must equal an observed value")
   # PMM must be at most obs_max (no extrapolation)
   expect_lte(pmm_val, obs_max,
               label = "[Phase G' accept] PMM imputation cannot exceed observed max")

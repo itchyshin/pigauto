@@ -20,6 +20,16 @@
 # cell's predicted value, sample one, and return that donor's observed
 # truth value.  Observed cells are passed through unchanged.
 #
+# Phase G'' (2026-05-01): added `when` argument to scope PMM to
+# extrapolating predictions only.  When predictions are within
+# [obs_min, obs_max], retaining the prediction is more accurate than
+# snapping to a donor (the AVONET seed-2032 Mass regression of +805 %
+# in PR #61 documents this).  Default `when = "outside_observed"`
+# applies PMM only as a safety net for extrapolation; opt in to
+# `when = "always"` for the mice-style "PMM for all imputations"
+# behaviour (used in MI workflows where between-draw donor variance
+# matters).
+#
 # @param predictions numeric vector length n.  Per-cell predictions
 #   (post-back-transform, original units).
 # @param truth numeric vector length n.  Original-units observed values
@@ -29,11 +39,20 @@
 # @param seed integer.  Per-call random seed for the within-K donor
 #   choice.  Use distinct seeds across multi-imputation draws to get
 #   different donors (preserving between-draw variance).
-# @return numeric vector length n with NA cells filled by donor values.
-#   The donor is always an observed value from `truth`.
+# @param when character.  When to apply PMM.  \code{"outside_observed"}
+#   (default) only swaps cells whose prediction is < min(observed)
+#   or > max(observed); cells whose prediction is in-range pass through
+#   unchanged.  \code{"always"} swaps every missing cell (the original
+#   mice convention).
+# @return numeric vector length n with NA cells filled by donor values
+#   (or by passthrough predictions when \code{when = "outside_observed"}
+#   and the prediction is in-range).  Whenever PMM triggers, the donor
+#   is an observed value from \code{truth}.
 # @keywords internal
-pmm_impute_one_trait <- function(predictions, truth, K = 5L, seed = 1L) {
+pmm_impute_one_trait <- function(predictions, truth, K = 5L, seed = 1L,
+                                  when = c("outside_observed", "always")) {
   stopifnot(length(predictions) == length(truth))
+  when <- match.arg(when)
   K <- as.integer(K)
   if (K < 1L) stop("'K' must be >= 1.", call. = FALSE)
 
@@ -49,6 +68,12 @@ pmm_impute_one_trait <- function(predictions, truth, K = 5L, seed = 1L) {
   obs_pred  <- predictions[obs_idx]
   obs_truth <- truth[obs_idx]
 
+  # Phase G'' triggers PMM only when prediction is outside the
+  # OBSERVED range.  obs_truth is the ground-truth donor pool;
+  # obs_min / obs_max define the in-range window.
+  obs_min <- min(obs_truth, na.rm = TRUE)
+  obs_max <- max(obs_truth, na.rm = TRUE)
+
   result <- truth
   rng_state <- .Random.seed_or_null()
   on.exit(restore_rng_state(rng_state), add = TRUE)
@@ -59,6 +84,12 @@ pmm_impute_one_trait <- function(predictions, truth, K = 5L, seed = 1L) {
     if (!is.finite(pred_i)) {
       # Pred is NA/NaN/Inf: PMM cannot match.  Leave as NA -- caller can
       # decide whether to fall back.
+      next
+    }
+    if (identical(when, "outside_observed") &&
+        pred_i >= obs_min && pred_i <= obs_max) {
+      # Phase G'': prediction is in observed range; trust it.
+      result[i] <- pred_i
       next
     }
     # K-nearest by predicted-value distance.  order() gives stable
@@ -140,7 +171,9 @@ restore_rng_state <- function(state) {
 # @return list of M decoded results, with PMM applied.
 # @keywords internal
 apply_pmm_to_decoded <- function(decode_results, trait_map, X_orig,
-                                  K = 5L, base_seed = 1L) {
+                                  K = 5L, base_seed = 1L,
+                                  when = c("outside_observed", "always")) {
+  when <- match.arg(when)
   K <- as.integer(K)
   M <- length(decode_results)
   for (m in seq_len(M)) {
@@ -153,7 +186,8 @@ apply_pmm_to_decoded <- function(decode_results, trait_map, X_orig,
         next  # shape mismatch -- skip rather than error (multi-obs edge)
       }
       decode_results[[m]]$imputed[[nm]] <-
-        pmm_impute_one_trait(preds, truth, K = K, seed = base_seed + m)
+        pmm_impute_one_trait(preds, truth,
+                              K = K, seed = base_seed + m, when = when)
       # Coerce back to integer for count and zi_count
       if (tm$type == "count") {
         decode_results[[m]]$imputed[[nm]] <-

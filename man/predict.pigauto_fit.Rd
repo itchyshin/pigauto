@@ -15,6 +15,7 @@
   clamp_factor = 5,
   match_observed = c("none", "pmm"),
   pmm_K = 5L,
+  pmm_when = c("outside_observed", "always"),
   ...
 )
 }
@@ -78,6 +79,17 @@ v0.9.1.9011 behaviour exactly.}
 \item{pmm_K}{integer scalar (>= 1).  Donor pool size for PMM.
 Default \code{5L} (mice convention).  Ignored when
 \code{match_observed = "none"}.}
+
+\item{pmm_when}{character, one of \code{c("outside_observed",
+  "always")}.  Phase G'' (v0.9.1.9013+) -- when to apply PMM.
+Default \code{"outside_observed"} only swaps cells whose
+prediction is outside \code{[obs_min, obs_max]} (i.e. only
+genuine extrapolation triggers PMM).  In-range predictions are
+trusted as-is.  This is the conservative safety-net mode.
+\code{"always"} restores the mice convention of replacing every
+imputation with a donor; useful for multi-imputation workflows
+where between-draw donor variance matters for Rubin's rules.
+Ignored when \code{match_observed = "none"}.}
 
 \item{...}{ignored.}
 }

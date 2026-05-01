@@ -83,6 +83,16 @@
 #' @param pmm_K integer scalar (>= 1).  Donor pool size for PMM.
 #'   Default \code{5L} (mice convention).  Ignored when
 #'   \code{match_observed = "none"}.
+#' @param pmm_when character, one of \code{c("outside_observed",
+#'   "always")}.  Phase G'' (v0.9.1.9013+) -- when to apply PMM.
+#'   Default \code{"outside_observed"} only swaps cells whose
+#'   prediction is outside \code{[obs_min, obs_max]} (i.e. only
+#'   genuine extrapolation triggers PMM).  In-range predictions are
+#'   trusted as-is.  This is the conservative safety-net mode.
+#'   \code{"always"} restores the mice convention of replacing every
+#'   imputation with a donor; useful for multi-imputation workflows
+#'   where between-draw donor variance matters for Rubin's rules.
+#'   Ignored when \code{match_observed = "none"}.
 #' @param ... ignored.
 #' @return A list of class \code{"pigauto_pred"} with:
 #'   \describe{
@@ -128,9 +138,11 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
                                 clamp_factor = 5,
                                 match_observed = c("none", "pmm"),
                                 pmm_K = 5L,
+                                pmm_when = c("outside_observed", "always"),
                                 ...) {
   pool_method <- match.arg(pool_method)
   match_observed <- match.arg(match_observed)
+  pmm_when <- match.arg(pmm_when)
   clamp_outliers <- isTRUE(clamp_outliers)
   if (!is.numeric(clamp_factor) || length(clamp_factor) != 1L ||
       !is.finite(clamp_factor) || clamp_factor < 1) {
@@ -420,7 +432,8 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     decode_results <- apply_pmm_to_decoded(
       decode_results, trait_map, X_orig,
       K = pmm_K,
-      base_seed = as.integer(object$model_config$seed %||% 1L)
+      base_seed = as.integer(object$model_config$seed %||% 1L),
+      when = pmm_when
     )
   }
 

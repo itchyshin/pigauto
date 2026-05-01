@@ -119,6 +119,12 @@
 #' @param pmm_K integer (>= 1).  Donor pool size for PMM.  Default
 #'   \code{5L} (mice convention).  Ignored when
 #'   \code{match_observed = "none"}.
+#' @param pmm_when character, one of \code{c("outside_observed",
+#'   "always")}.  Phase G'' (v0.9.1.9013+) -- pass-through to
+#'   \code{\link{predict.pigauto_fit}}.  When
+#'   \code{"outside_observed"} (default), PMM only triggers on cells
+#'   whose prediction is outside the observed range.  In-range
+#'   predictions are trusted as-is.  See that function's help.
 #' @param ... additional arguments passed to \code{\link{fit_pigauto}}.
 #' @return An object of class \code{"pigauto_result"} with components:
 #'   \describe{
@@ -242,6 +248,7 @@ impute <- function(traits, tree, species_col = NULL,
                    clamp_factor = 5,
                    match_observed = c("none", "pmm"),
                    pmm_K = 5L,
+                   pmm_when = c("outside_observed", "always"),
                    safety_floor = TRUE,
                    phylo_signal_gate = TRUE,
                    phylo_signal_threshold = 0.2,
@@ -320,6 +327,7 @@ impute <- function(traits, tree, species_col = NULL,
   }
 
   match_observed <- match.arg(match_observed)
+  pmm_when <- match.arg(pmm_when)
   # 6. Predict
   pred <- predict(fit, return_se = TRUE,
                   n_imputations = as.integer(n_imputations),
@@ -327,7 +335,8 @@ impute <- function(traits, tree, species_col = NULL,
                   clamp_outliers = clamp_outliers,
                   clamp_factor   = clamp_factor,
                   match_observed = match_observed,
-                  pmm_K          = pmm_K)
+                  pmm_K          = pmm_K,
+                  pmm_when       = pmm_when)
 
   # 7. Build the completed data.frame: observed values preserved,
   #    missing cells filled with model predictions.  This is the primary
