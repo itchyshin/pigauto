@@ -460,6 +460,73 @@ discrete-only.
 Multi-obs (multiple observations per species) inputs are not
 supported and error with a clear message.
 
+## Optional advanced features
+
+### Phylogenetic-signal gating
+
+`impute()` runs a per-trait Pagel's-λ check before training and
+routes traits with very weak phylogenetic signal to the
+**grand-mean corner** of the safety-floor simplex (i.e., it
+predicts the column mean for those traits).  This protects against
+over-fitting noise on traits where the phylogeny carries little
+information.
+
+It is on by default since v0.9.1.9003.  The two arguments you can
+tune:
+
+```{r phylo-signal-gate, eval=FALSE}
+result <- impute(traits, tree,
+                 phylo_signal_gate     = TRUE,   # default
+                 phylo_signal_threshold = 0.2,   # default; min lambda to keep BM/GNN
+                 phylo_signal_method   = "lambda")
+```
+
+If a trait's λ falls below `phylo_signal_threshold`, the calibrated
+gate routes it to the grand-mean corner.  `print(fit)` reports
+which traits triggered the gate and their λ values.
+
+To disable (e.g., when comparing against an older snapshot or for
+benchmarking purposes):
+
+```{r phylo-signal-gate-off, eval=FALSE}
+result <- impute(traits, tree, phylo_signal_gate = FALSE)
+```
+
+### Assembling covariates from public data
+
+Two helpers are bundled for the common case of building a
+covariate matrix from species-level environmental data:
+
+```{r covariate-helpers, eval=FALSE}
+# Step 1: GBIF occurrence centroids (median lat/lon across cleaned points)
+gbif <- pull_gbif_centroids(species          = rownames(my_traits),
+                            cache_dir        = "cache/gbif",
+                            occurrence_limit = 500L)
+#> data.frame with columns species, centroid_lat, centroid_lon, n_occurrences
+
+# Step 2: WorldClim bioclim summaries (median + IQR of all 19 bio variables
+# across each species' GBIF occurrences)
+clim <- pull_worldclim_per_species(species             = rownames(my_traits),
+                                    gbif_cache_dir      = "cache/gbif",
+                                    worldclim_cache_dir = "cache/worldclim",
+                                    resolution          = "10m")
+#> data.frame with bio1..bio19 medians + IQRs + n_extracted per species
+
+# Step 3: hand the whole climate frame to impute() as covariates
+result <- impute(my_traits, my_tree, covariates = clim)
+```
+
+Caching is on by default — both helpers write to the
+`cache_dir` you supply and re-use existing extracts on subsequent
+runs.  GBIF requires no API key.  WorldClim raster downloads are
+~50–500 MB depending on resolution and are cached in
+`worldclim_cache_dir`.  Both functions error with a clear message
+if the optional dependencies (`rgbif`, `terra`) are not installed.
+
+For a worked end-to-end example with covariates see the
+[Comparative study with covariates](pigauto_walkthrough_covariates.html)
+walk-through.
+
 ## Tips and next steps
 
 **Use GPU if available.** pigauto automatically selects CUDA > MPS > CPU. Check
