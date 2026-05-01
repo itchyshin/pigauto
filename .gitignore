@@ -61,6 +61,8 @@ BACE/
 Rplots.pdf
 inst/doc/
 
+# Local data cache for PanTHERIA + mammal tree
+script/data-cache/
 # Local data caches for bench scripts (downloadable, not portable)
 script/data-cache/
 

@@ -28,6 +28,7 @@
 </head>
 <body>
 <h1>pigauto <span class="badge">v0.9.0</span> &mdash; Validation Suite</h1>
+<p class="meta">Generated 2026-04-20 12:18 &middot; Commit c3bd756a2e</p>
 <p class="meta">Generated 2026-04-20 13:56 &middot; Commit f2bdbc7f7d</p>
 <h1>pigauto <span class="badge">v0.9.1.9000</span> &mdash; Validation Suite</h1>
 <p class="meta">Generated 2026-04-23 06:14 &middot; Commit a200462e81</p>
@@ -72,6 +73,8 @@ Positive values (green) indicate pigauto reduces error.</p>
 <tr><td><a href="dev/bench_multi_obs.html">Multi-obs + covariates</a></td><td><em>continuous</em></td><td>Simulated CTmax (multi-obs)</td><td>no-cov vs cov</td><td>3.252</td><td>2.825</td><td><span style="color:#059669">&#9650; 13.1%</span></td><td>Obs-level RMSE (mean)</td></tr>
 <tr><td><a href="dev/bench_tree_uncertainty.html">Tree uncertainty</a></td><td><em>continuous</em></td><td>AVONET300 + BirdTree (50 trees)</td><td>single-tree vs multi-tree MI</td><td colspan="2">Mean FMI = 0.305</td><td>&mdash;</td><td>FMI (pooled coefs)</td></tr>
 <tr><td><a href="dev/bench_scaling_v090.html">Scaling (v0.9.0)</a></td><td><em>mixed</em></td><td>Simulated (up to 10,000 species)</td><td>wall time per N</td><td colspan="2">Max N = 10,000 (42/42 stages ok)</td><td>&mdash;</td><td>Wall time (s)</td></tr>
+<tr><td><a href="dev/bench_pantheria_full.html">PanTHERIA full (mammals)</a></td><td><em>mixed</em></td><td>PanTHERIA 2009 ∩ taxonomy tree (n = 4027)</td><td>pigauto_default / pigauto_em5 / mean</td><td colspan="2">8 traits, seed = 2026</td><td>&mdash;</td><td>per-trait RMSE / r / accuracy</td></tr>
+<tr><td><a href="dev/bench_pantheria_bace_head_to_head.html">PanTHERIA vs BACE</a></td><td><em>mixed</em></td><td>PanTHERIA subset (n = 500)</td><td>pigauto only (BACE skipped)</td><td colspan="2">Seed = 2026, miss_frac = 0.3</td><td>&mdash;</td><td>per-trait metrics</td></tr>
 <tr><td><a href="dev/bench_signal_sweep.html">Signal sweep (Phase 8)</a></td><td><em>mixed</em></td><td>Simulated (n = 300, 6 &lambda; levels)</td><td>Pagel &lambda; &isin; {0.1, 0.3, 0.5, 0.7, 0.9, 1}</td><td colspan="2">4 methods &times; 3 reps</td><td>&mdash;</td><td>per-trait metric curves</td></tr>
 <tr><td><a href="dev/bench_bace_avonet_head_to_head.html">BACE head-to-head (Phase 8)</a></td><td><em>mixed</em></td><td>AVONET 300 + tree300</td><td>pigauto only (BACE skipped)</td><td colspan="2">Seed = 2026, miss_frac = 0.3</td><td>&mdash;</td><td>per-trait metrics</td></tr>
 <tr><td><a href="dev/bench_correlation_sweep.html">ρ sweep (Phase 8.1)</a></td><td><em>continuous</em></td><td>Simulated (n = 300, K = 4)</td><td>cross-trait ρ &isin; {0, 0.2, 0.4, 0.6, 0.8}</td><td colspan="2">3 methods &times; 3 reps</td><td>&mdash;</td><td>RMSE / Pearson r</td></tr>
@@ -141,6 +144,8 @@ closes to zero &mdash; in that case pigauto falls back to the baseline by design
 <h2>Reproducibility</h2>
 <ul>
 <li>Package version: <code>pigauto 0.9.0</code></li>
+<li>Commit: <code>c3bd756a2e</code></li>
+<li>Run on: 2026-04-20 12:18</li>
 <li>Commit: <code>f2bdbc7f7d</code></li>
 <li>Run on: 2026-04-20 13:56</li>
 <li>Package version: <code>pigauto 0.9.1.9000</code> (dev)</li>

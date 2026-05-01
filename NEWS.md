@@ -72,6 +72,31 @@ bit-identically on the legacy path.
 
 # pigauto 0.9.1.9000 (dev)
 
+## PanTHERIA mammal benchmark (second real-data validation)
+
+Second real-data benchmark for pigauto after AVONET (birds). Tests the
+"general-purpose phylogenetic trait imputation" claim on a different
+taxon with a different trait mix.
+
+- **`script/fetch_pantheria_and_tree.R`** — one-shot downloader. Fetches
+  PanTHERIA (Jones et al. 2009, *Ecology*) from the ESA archive and
+  builds a **taxonomy-derived cladogram** from the Order/Family/Genus/
+  Species columns via `ape::as.phylo.formula()` + Grafen branch lengths.
+  Not a time-calibrated phylogeny, but encodes the hierarchical
+  taxonomic structure pigauto's phylo prior uses. Self-contained; no
+  external tree-database dependency.
+- **`script/bench_pantheria_full.R`** — full-scale bench on ~4,629 mammals
+  × 8 canonical traits (body mass, head-body length, gestation length,
+  litter size, max longevity, diet breadth, habitat breadth,
+  terrestriality), MCAR 30% per trait. `pigauto_default` +
+  `pigauto_em5` vs `mean_baseline`.
+- **`script/bench_pantheria_bace_head_to_head.R`** — stratified 500-
+  species subset with optional `BACE::bace()` for cross-package parity
+  (graceful `requireNamespace` skip when BACE isn't available).
+- **`script/make_pantheria_summary_html.R`** — aggregate landing page
+  linked from the validation suite alongside the Phase 8 summary.
+- Two new rows in the pkgdown validation suite table for the full
+  bench + BACE head-to-head.
 ## Phase 8: discriminative benchmark suite (complete)
 
 Five reproducible bench scripts + one aggregate report, all linked from

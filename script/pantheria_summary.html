@@ -1,0 +1,32 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><title>PanTHERIA benchmark summary</title><style>body{font-family:system-ui,sans-serif;max-width:1100px;margin:2em auto;padding:0 1em;color:#222}h1{border-bottom:2px solid #ccc}table{border-collapse:collapse;margin:1em 0}td,th{border:1px solid #ccc;padding:4px 8px}pre{background:#f6f6f6;padding:1em;overflow:auto}</style></head><body><h1>PanTHERIA mammal benchmark — summary</h1><p>pigauto v? · BACE not installed · torch 0.17.0</p><p><em>Second real-data benchmark for pigauto after AVONET (birds). PanTHERIA (Jones et al. 2009, <em>Ecology</em>) provides 4,629 mammals × ~55 traits; this bench uses 8 canonical traits matched against a taxonomy-derived cladogram.</em></p><h2>TL;DR — mean metric per method across both benches</h2><table><tr><th>source</th><th>method</th><th>metric</th><th>mean value</th></tr><tr><td>full_scale</td><td>mean_baseline</td><td>accuracy</td><td>0.559</td></tr>
+<tr><td>full_scale</td><td>pigauto_default</td><td>accuracy</td><td>0.757</td></tr>
+<tr><td>full_scale</td><td>pigauto_em5</td><td>accuracy</td><td>0.652</td></tr>
+<tr><td>full_scale</td><td>pigauto_default</td><td>pearson_r</td><td>0.779</td></tr>
+<tr><td>full_scale</td><td>pigauto_em5</td><td>pearson_r</td><td>0.740</td></tr>
+<tr><td>full_scale</td><td>mean_baseline</td><td>rmse</td><td>1.548</td></tr>
+<tr><td>full_scale</td><td>pigauto_default</td><td>rmse</td><td>1.949</td></tr>
+<tr><td>full_scale</td><td>pigauto_em5</td><td>rmse</td><td>12.369</td></tr>
+<tr><td>bace_head_to_head</td><td>pigauto_default</td><td>accuracy</td><td>0.653</td></tr>
+<tr><td>bace_head_to_head</td><td>pigauto_em5</td><td>accuracy</td><td>0.606</td></tr>
+<tr><td>bace_head_to_head</td><td>pigauto_default</td><td>pearson_r</td><td>0.773</td></tr>
+<tr><td>bace_head_to_head</td><td>pigauto_em5</td><td>pearson_r</td><td>0.759</td></tr>
+<tr><td>bace_head_to_head</td><td>pigauto_default</td><td>rmse</td><td>0.902</td></tr>
+<tr><td>bace_head_to_head</td><td>pigauto_em5</td><td>rmse</td><td>0.933</td></tr></table><p><em>Lower is better for RMSE; higher is better for accuracy and Pearson r.</em></p><h2>Sub-reports</h2><ul><li><a href='bench_pantheria_full.html'>Full-scale PanTHERIA (pigauto paths)</a></li><li><a href='bench_pantheria_bace_head_to_head.html'>PanTHERIA vs BACE head-to-head (n=500 subset)</a></li></ul><h2>Reproducibility</h2><pre>R version 4.5.2 (2025-10-31)
+Platform: aarch64-apple-darwin20
+Running under: macOS Tahoe 26.4.1
+
+Matrix products: default
+BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+
+locale:
+[1] en_AU/en_AU/en_AU/C/en_AU/en_AU
+
+time zone: America/Edmonton
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+[1] compiler_4.5.2</pre></body></html>
