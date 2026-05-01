@@ -112,10 +112,21 @@
 #'   \code{\link{predict.pigauto_fit}}.  When \code{"pmm"}, uses
 #'   Predictive Mean Matching for log-transformed continuous, count,
 #'   zi_count magnitude, and proportion traits: imputed values are
-#'   drawn from the observed value pool, never extrapolated.  This
-#'   is the \pkg{mice}-style imputation; recommended for use with
-#'   \code{n_imputations > 1}.  Default \code{"none"} preserves
-#'   pre-G' behaviour.
+#'   drawn from the observed value pool, never extrapolated.
+#'
+#'   \strong{When to use:} PMM is a niche feature.  pigauto already
+#'   provides conformal prediction intervals (calibrated against
+#'   held-out residuals) and \code{multi_impute(draws_method =
+#'   "conformal")} for multi-imputation workflows; those are the
+#'   recommended paths for honest standard errors on downstream
+#'   regression.  PMM is only worth enabling for: (a) methodological
+#'   comparison against mice, or (b) workflows that specifically
+#'   require imputed values to come from the observed data pool.
+#'   For tail safety, prefer \code{clamp_outliers = TRUE}.  For
+#'   honest MI inference, prefer \code{multi_impute(draws_method
+#'   = "conformal")}.
+#'
+#'   Default \code{"none"} preserves pre-G' behaviour.
 #' @param pmm_K integer (>= 1).  Donor pool size for PMM.  Default
 #'   \code{5L} (mice convention).  Ignored when
 #'   \code{match_observed = "none"}.

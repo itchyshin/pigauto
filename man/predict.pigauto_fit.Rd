@@ -69,11 +69,30 @@ observed cells whose own predictions are closest to the missing
 cell's prediction, samples one, and returns its observed
 value.  Imputed values are guaranteed to lie in the observed
 data range -- no extrapolation is possible by construction.
-Recommended for log-transformed continuous traits with
-\code{n_imputations > 1} (e.g. AVONET Mass).  Discrete-class
-types (binary / categorical / ordinal / multi_proportion) and
-un-log continuous: no-op.  Default \code{"none"} preserves
-v0.9.1.9011 behaviour exactly.}
+
+\strong{When to use:} PMM is a niche feature in pigauto.  The
+package already provides conformal prediction intervals
+(calibrated against held-out residuals) and
+\code{multi_impute(draws_method = "conformal")} for
+multi-imputation workflows -- those give Rubin's-rules
+honest standard errors without donor-mismatch noise.  PMM is
+only worth enabling for: (a) methodological comparison against
+mice / equivalent packages, or (b) workflows that specifically
+require imputed values to come from the observed data pool.
+For tail safety on single-imputation point estimates, prefer
+\code{clamp_outliers = TRUE}.  For honest MI standard errors,
+prefer \code{multi_impute(draws_method = "conformal")}.
+
+The Phase G' acceptance bench
+(\code{useful/MEMO_2026-05-01_phase_g_prime_results.md})
+confirmed PMM does not strictly improve point-estimate RMSE
+over the no-PMM default: it wins on extrapolating cells (e.g.
+AVONET Casuarius) but loses on cells where the GNN's prediction
+is already accurate (donor-mismatch noise).
+
+Discrete-class types (binary / categorical / ordinal /
+multi_proportion) and un-log continuous: no-op.  Default
+\code{"none"} preserves v0.9.1.9011 behaviour exactly.}
 
 \item{pmm_K}{integer scalar (>= 1).  Donor pool size for PMM.
 Default \code{5L} (mice convention).  Ignored when

@@ -1,12 +1,44 @@
+# pigauto 0.9.1.9013 (dev)
+
+## Documentation: clarify PMM is for multi-imputation, NOT tail safety (2026-05-01)
+
+The bench evidence collected after PR #61 (Phase G' PMM) and the
+unsuccessful Phase G'' attempts (per-draw and post-pool conditional
+PMM) showed that **PMM is not a tail-safety tool for pigauto**.
+PMM in mice works because linear-regression predictions are unbiased
+estimators of truth across the prediction range.  pigauto's GNN can
+be systematically biased on rare-clade species (the AVONET
+Casuarius case) AND simultaneously accurate on legitimate-but-out-
+of-observed-range species (the AVONET seed-2032 case).  PMM cannot
+distinguish these two cases by donor-distance alone, so it can hurt
+RMSE just as easily as it can help.
+
+**Where PMM genuinely helps**: in multi-imputation workflows
+(`n_imputations > 1` + `pool_mi()`), the donor-based between-
+imputation variance is well-calibrated to the trait's marginal
+distribution, giving Rubin's rules honest standard errors even
+when the GNN's MC-dropout noise alone underestimates uncertainty.
+
+This release updates the `?impute` and `?predict.pigauto_fit`
+documentation + this NEWS entry to reflect the corrected framing.
+**No code changes**.
+
+For tail safety on single-imputation point estimates, the
+recommended tool remains `clamp_outliers = TRUE` (Phase G PR #60).
+
 # pigauto 0.9.1.9012 (dev)
 
-## Phase G': `match_observed = "pmm"` -- Predictive Mean Matching for tail safety (2026-05-01)
+## Phase G': `match_observed = "pmm"` -- Predictive Mean Matching (2026-05-01)
 
-Adds the standard imputation-literature solution to back-transform
-tail extrapolation: **Predictive Mean Matching** (PMM; Little 1988;
-Buuren & Groothuis-Oudshoorn 2011 mice).  Phase G's `clamp_outliers`
-ships as a Tukey-style heuristic; PMM is the principled alternative
-that completes the toolkit.
+Adds Predictive Mean Matching (PMM; Little 1988; Buuren &
+Groothuis-Oudshoorn 2011 mice) as an opt-in mechanism for
+multiple-imputation workflows.  PMM replaces each missing cell's
+back-transformed prediction with an actual observed value drawn
+from a donor pool ranked by predicted-value proximity.
+
+\strong{Originally framed as "tail safety", but the bench result
+showed PMM is actually for MI workflows.}  See the v0.9.1.9013
+NEWS section above for the corrected framing.
 
 ### What changed
 
