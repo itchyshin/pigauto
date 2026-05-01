@@ -1,3 +1,98 @@
+# pigauto 0.9.1.9012 (dev)
+
+## Phase G': `match_observed = "pmm"` -- Predictive Mean Matching for tail safety (2026-05-01)
+
+Adds the standard imputation-literature solution to back-transform
+tail extrapolation: **Predictive Mean Matching** (PMM; Little 1988;
+Buuren & Groothuis-Oudshoorn 2011 mice).  Phase G's `clamp_outliers`
+ships as a Tukey-style heuristic; PMM is the principled alternative
+that completes the toolkit.
+
+### What changed
+
+Two new arguments on `impute()` and `predict.pigauto_fit()`:
+
+* **`match_observed`** (character, default `"none"`).  Set to
+  `"pmm"` to enable PMM.
+* **`pmm_K`** (integer, default `5L` -- mice convention).  Donor
+  pool size.
+
+When `match_observed = "pmm"`, for each missing cell of an at-risk
+trait type the function:
+
+1. Computes the predicted value via the existing BM + GNN +
+   blend pipeline (with optional MC dropout).
+2. Finds the `pmm_K` observed cells whose own predictions are
+   closest to the missing cell's prediction (the "donor pool").
+3. Samples one donor uniformly at random.
+4. Returns that donor's actual observed value as the imputation.
+
+By construction, **PMM-imputed values are always in the observed
+data range**.  No extrapolation is possible.
+
+### When PMM applies
+
+PMM is type-restricted to **at-risk** trait types where the
+back-transform amplifies tail overshoots:
+
+* log-transformed continuous (e.g. body mass)
+* count (`expm1` decode)
+* zi_count magnitude column (same)
+* proportion (mild benefit)
+
+Discrete-class types (binary / categorical / ordinal /
+multi_proportion) are no-op: their decoders already return values
+from the observed level set by construction.  Untransformed
+continuous: no-op (no expm1 risk).
+
+### Default policy
+
+**`match_observed = "none"` remains the default** for backward
+compatibility (PR #60 added `clamp_outliers` opt-in; this PR adds
+PMM opt-in alongside it).  Cross-dataset evidence in v0.9.2 may
+justify flipping the default to `"pmm"` for at-risk types.
+
+Recommended use:
+  * `match_observed = "pmm"` for log-transformed continuous traits
+    with `n_imputations > 1` (multi-imputation context, where
+    each draw picks a different donor and Rubin's rules give
+    properly calibrated SEs).
+  * `clamp_outliers = TRUE, clamp_factor = 5` for users who want
+    a deterministic point estimate without PMM stochasticity.
+
+### Implementation
+
+* `R/pmm.R` (NEW) -- `pmm_impute_one_trait()`, `apply_pmm_to_decoded()`,
+  `recover_X_orig()`, `pmm_is_eligible()`.  RNG state is saved and
+  restored around per-call `set.seed()` so PMM does not leak the
+  user's RNG state.
+* `R/predict_pigauto.R` -- `predict.pigauto_fit()` and
+  `decode_from_latent()` extended with `match_observed` and `pmm_K`
+  arguments.  PMM is applied between decode and pool, per draw.
+* `R/impute.R` -- user-facing wrapper extended with same args + roxygen.
+* `R/fit_pigauto.R` -- the fit object now retains `X_scaled` so
+  `predict()` can recover original-units observed values for the
+  donor pool.  Adds ~8 * n_obs * p_latent bytes (~600 KB at AVONET
+  full).
+* `tests/testthat/test-pmm.R` -- 5 layers of tests, **65
+  assertions**, all pass:
+    - L1: helper unit tests (K=1, K=5, empty cases, ties, NA preds, RNG hygiene)
+    - L2: type-dispatch (eligible types yes; discrete + un-log no)
+    - L3: statistical properties (no extrapolation, observed
+      cells unchanged, donor membership)
+    - L4: integration (default = none, PMM + clamp coexist,
+      non-eligible no-op)
+    - L5: edge cases (invalid K, deterministic K=1)
+* `script/bench_phase_g_prime_pmm.R` -- AVONET 4 log-cont traits +
+  synthetic heavy-tail bench across 3 configs (none / clamp / pmm).
+
+### Bench
+
+`script/bench_phase_g_prime_pmm.R` reports RMSE, max prediction, and
+the fraction of imputations falling in the observed range, for
+each (dataset, seed, trait, config) cell.  See
+`useful/MEMO_2026-05-01_phase_g_prime_results.md` for the verdict.
+
 # pigauto 0.9.1.9011 (dev)
 
 ## Phase G: opt-in `clamp_outliers` for back-transform tail extrapolation (2026-05-01)

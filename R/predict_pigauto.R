@@ -66,6 +66,23 @@
 #' @param clamp_factor numeric scalar (>= 1).  Multiplicative factor
 #'   on the observed maximum used by \code{clamp_outliers}.  Default
 #'   \code{5}.  Ignored when \code{clamp_outliers = FALSE}.
+#' @param match_observed character, one of \code{c("none", "pmm")}.
+#'   Phase G' (v0.9.1.9012+).  When \code{"pmm"}, uses Predictive
+#'   Mean Matching (Little 1988; Buuren mice) on the at-risk types
+#'   (log-transformed continuous, count, zi_count magnitude,
+#'   proportion).  For each missing cell, finds the \code{pmm_K}
+#'   observed cells whose own predictions are closest to the missing
+#'   cell's prediction, samples one, and returns its observed
+#'   value.  Imputed values are guaranteed to lie in the observed
+#'   data range -- no extrapolation is possible by construction.
+#'   Recommended for log-transformed continuous traits with
+#'   \code{n_imputations > 1} (e.g. AVONET Mass).  Discrete-class
+#'   types (binary / categorical / ordinal / multi_proportion) and
+#'   un-log continuous: no-op.  Default \code{"none"} preserves
+#'   v0.9.1.9011 behaviour exactly.
+#' @param pmm_K integer scalar (>= 1).  Donor pool size for PMM.
+#'   Default \code{5L} (mice convention).  Ignored when
+#'   \code{match_observed = "none"}.
 #' @param ... ignored.
 #' @return A list of class \code{"pigauto_pred"} with:
 #'   \describe{
@@ -109,13 +126,20 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
                                 pool_method = c("median", "mean", "mode"),
                                 clamp_outliers = FALSE,
                                 clamp_factor = 5,
+                                match_observed = c("none", "pmm"),
+                                pmm_K = 5L,
                                 ...) {
   pool_method <- match.arg(pool_method)
+  match_observed <- match.arg(match_observed)
   clamp_outliers <- isTRUE(clamp_outliers)
   if (!is.numeric(clamp_factor) || length(clamp_factor) != 1L ||
       !is.finite(clamp_factor) || clamp_factor < 1) {
     stop("'clamp_factor' must be a single finite numeric >= 1.",
          call. = FALSE)
+  }
+  pmm_K <- as.integer(pmm_K)
+  if (length(pmm_K) != 1L || is.na(pmm_K) || pmm_K < 1L) {
+    stop("'pmm_K' must be a single positive integer.", call. = FALSE)
   }
   cfg       <- object$model_config
   device    <- get_device()
@@ -378,6 +402,27 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
                         clamp_outliers = clamp_outliers,
                         clamp_factor   = clamp_factor)
   })
+
+  # ---- Phase G' (2026-05-01): Predictive Mean Matching --------------------
+  # When match_observed = "pmm", replace the back-transformed prediction at
+  # each missing cell with an observed value from the K nearest donors.
+  # Imputed values are guaranteed to lie in the observed-data range; no
+  # extrapolation is possible (Little 1988; Buuren mice).  Discrete-class
+  # types (binary / categorical / ordinal / multi_proportion) are no-op.
+  # Untransformed continuous: no-op (no expm1 tail risk).
+  if (identical(match_observed, "pmm")) {
+    if (is.null(object$X_scaled)) {
+      stop("match_observed = 'pmm' requires a fit object with X_scaled. ",
+           "This fit was produced by an older pigauto version; refit with ",
+           "v0.9.1.9012+ to enable PMM.", call. = FALSE)
+    }
+    X_orig <- recover_X_orig(object$X_scaled, trait_map)
+    decode_results <- apply_pmm_to_decoded(
+      decode_results, trait_map, X_orig,
+      K = pmm_K,
+      base_seed = as.integer(object$model_config$seed %||% 1L)
+    )
+  }
 
   if (n_imp == 1L) {
     imputed     <- decode_results[[1]]$imputed

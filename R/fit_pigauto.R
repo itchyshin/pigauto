@@ -951,7 +951,8 @@ fit_pigauto <- function(
     cov_dim                = cov_dim,
     input_dim              = p,
     per_column_rs          = TRUE,
-    n_user_cov             = n_user_cov
+    n_user_cov             = n_user_cov,
+    seed                   = as.integer(seed)
   )
 
   # Move model state to CPU before returning. Otherwise the returned
@@ -997,6 +998,13 @@ fit_pigauto <- function(
       species_names  = data$species_names,
       obs_species    = data$obs_species,
       obs_to_species = data$obs_to_species,
+      # Phase G' (2026-05-01): retain X_scaled so predict.pigauto_fit
+      # can recover original-units observed values for PMM
+      # (match_observed = "pmm").  The matrix is n_obs x p_latent with
+      # NA at originally-missing cells; PMM uses non-NA cells as the
+      # donor pool.  Adds ~8 * n_obs * p_latent bytes to the fit object;
+      # at AVONET full (n=10k, p~7) that's ~600 KB -- negligible.
+      X_scaled       = data$X_scaled,
       n_species      = n_species,
       n_obs          = n_obs,
       multi_obs      = multi_obs,
