@@ -156,14 +156,38 @@ All pass.  Existing 24 safety-floor tests + B4 edge cases unchanged.
 `cv_folds` is slightly faster (smaller per-split work) and selects
 a non-zero GNN gate on the col where the others snap to BM.
 
-### Bench rerun (queued)
+### Bench (focused 3-way comparison on synthetic mixed-type)
 
-Comparing val→test drift on `bench_binary.R`,
-`bench_categorical.R`, `bench_zi_count.R` across the three gate
-methods is queued; the empirical question is whether the larger
-training sets in cv_folds close more of the val→test drift than
-median_splits did.  Will be reported in a follow-up commit if
-results are conclusive.
+`script/bench_cv_vs_median.R` runs a focused 3-way comparison on
+a synthetic continuous + binary + categorical fixture (BM, lambda=1,
+n=300, 30 % mask, 5 reps).  Test-set means across reps:
+
+| Method | bin (acc) | cat3 (acc) | cont (RMSE) |
+|---|---|---|---|
+| single_split  | 0.8222 | 0.7356 | 1.0778 |
+| median_splits | 0.8222 | 0.7356 | 1.0720 |
+| **cv_folds**  | 0.8222 | 0.7356 | **1.0611** |
+
+* **Continuous**: cv_folds reduces RMSE by 1.6 % vs single_split
+  and by 1.0 % vs median_splits.  Modest but consistent across
+  the 5 reps (per-rep cv_folds < median_splits in 4/5 reps).
+* **Discrete**: identical across all three methods on this
+  fixture.  At lambda=1 the strict val-floor snaps the gate to
+  the pure-BM corner regardless of how the gate was selected,
+  so the three methods produce identical class assignments.
+  This is consistent with what the discrete-bench memo
+  (`useful/MEMO_2026-04-29_discrete_bench_reruns.md`) showed:
+  the val→test drift on 4/32 binary cells is val→test
+  extrapolation noise, not gate-selection noise; cv_folds does
+  not close it on this regime.  The hypothesis that larger
+  training sets per split would close MORE of the val→test
+  drift than median_splits is **not supported** by this
+  fixture.  cv_folds is preferable for continuous traits but
+  not transformative for discrete.
+
+Full per-type bench reruns (`bench_binary.R`, `bench_categorical.R`,
+`bench_zi_count.R` at multiple signal levels) deferred to a
+later session.
 
 ## Strict val-floor v3 — type-conditional safety floor (2026-04-29)
 
