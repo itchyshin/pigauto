@@ -65,6 +65,48 @@ with a helpful install hint when rgbif is absent.
 B.2: full WorldClim bioclim + SoilGrids extraction at each GBIF
 occurrence, aggregated per species. Expected to lift plants RMSE
 significantly more than centroids alone.
+# pigauto 0.9.1.9003 (dev)
+
+## Phylogenetic-signal gate
+
+Default change since v0.9.1.9003: `impute()` / `fit_pigauto()` now
+compute per-trait Pagel's lambda on training-observed cells and route
+traits with `lambda < 0.2` to the grand-mean corner `(0, 0, 1)` of the
+safety-floor simplex, skipping BM fitting and GNN training effort on
+those traits. Complements the v0.9.1.9002 safety floor with an
+explicit per-trait decision: "pigauto knows when phylogeny helps".
+
+### Effect on existing benches
+
+- Birds / mammals / fish / amphibians: zero traits gated (all lambda >= 0.2).
+  Results bit-identical to v0.9.1.9002.
+- Plants (BIEN x V.PhyloMaker2 n=500 smoke): 3 of 5 traits flagged as
+  weak-signal (leaf_area, sla, height_m) and gated to grand mean.
+  fit$phylo_gate_triggered reports which.
+
+### API
+
+- impute(..., phylo_signal_gate = TRUE, phylo_signal_threshold = 0.2,
+   phylo_signal_method = "lambda") - new args.
+- fit_pigauto() same pass-through.
+- Fit object gains four new slots: phylo_signal_per_trait (named
+  numeric lambda values), phylo_gate_triggered (named logical),
+  phylo_signal_method, phylo_signal_threshold.
+
+### Opt-out
+
+phylo_signal_gate = FALSE reproduces v0.9.1.9002 safety-floor-only
+behaviour bit-identically.
+
+### Reporting
+
+print.pigauto_fit() now surfaces a "Phylogenetic signal" section
+listing gated vs passed traits when any trait was gated.
+
+### Dependencies
+
+phytools added to Suggests. When absent, phylo_signal_gate degrades
+gracefully to FALSE (safety-floor-only) with a one-time warning.
 
 # pigauto 0.9.1.9002 (dev)
 
@@ -140,6 +182,92 @@ bit-identically on the legacy path.
 
 # pigauto 0.9.1.9000 (dev)
 
+## Median pooling for MI on count / proportion / zi_count traits (fixes #40)
+
+- New argument `pool_method = c("median", "mean")` on `impute()` and
+  `predict.pigauto_fit()`.  Default `"median"` takes the per-cell
+  median of the M decoded draws when `n_imputations > 1` for **count**,
+  **proportion**, and **zi_count** magnitude traits — robust to
+  dropout-noisy latents that get amplified by `expm1()` / `plogis()`
+  decoders.  `"mean"` restores pre-v0.9.2 arithmetic-mean pooling.
+- **Why this matters**: the PanTHERIA full-scale bench at n = 4,027
+  flagged a pathological RMSE blow-up on `litter_size` at
+  `n_imputations = 20` (default **RMSE 7.7, em5 RMSE 60.0**) — a single
+  dropout-noisy latent draw at ~+5 SD decoded to thousands and
+  contaminated the mean.  With median pooling the RMSE returns to
+  `n_imputations = 1` scale.  Coverage was unaffected (conformal ≥ 0.95,
+  MC-dropout ≥ 0.92); this is purely a point-estimate fix.
+- **Continuous / ordinal / binary / categorical** traits are
+  unaffected — linear or probability-averaged decoders don't amplify
+  latent outliers the same way.  `pool_method` has no effect on them.
+- New test file `tests/testthat/test-count-mi-pooling.R` guards the
+  robustness: 5-draw synthetic with one injected outlier of 1000 on a
+  count trait returns median = 2 (expected) but mean ≈ 202 (bug).
+## PanTHERIA mammal benchmark (second real-data validation)
+
+Second real-data benchmark for pigauto after AVONET (birds). Tests the
+"general-purpose phylogenetic trait imputation" claim on a different
+taxon with a different trait mix.
+
+- **`script/fetch_pantheria_and_tree.R`** — one-shot downloader. Fetches
+  PanTHERIA (Jones et al. 2009, *Ecology*) from the ESA archive and
+  builds a **taxonomy-derived cladogram** from the Order/Family/Genus/
+  Species columns via `ape::as.phylo.formula()` + Grafen branch lengths.
+  Not a time-calibrated phylogeny, but encodes the hierarchical
+  taxonomic structure pigauto's phylo prior uses. Self-contained; no
+  external tree-database dependency.
+- **`script/bench_pantheria_full.R`** — full-scale bench on ~4,629 mammals
+  × 8 canonical traits (body mass, head-body length, gestation length,
+  litter size, max longevity, diet breadth, habitat breadth,
+  terrestriality), MCAR 30% per trait. `pigauto_default` +
+  `pigauto_em5` vs `mean_baseline`.
+- **`script/bench_pantheria_bace_head_to_head.R`** — stratified 500-
+  species subset with optional `BACE::bace()` for cross-package parity
+  (graceful `requireNamespace` skip when BACE isn't available).
+- **`script/make_pantheria_summary_html.R`** — aggregate landing page
+  linked from the validation suite alongside the Phase 8 summary.
+- Two new rows in the pkgdown validation suite table for the full
+  bench + BACE head-to-head.
+## Phase 8: discriminative benchmark suite (complete)
+
+Five reproducible bench scripts + one aggregate report, all linked from
+the pkgdown validation suite. No `R/` code changes; bench infrastructure
+only.
+
+- **`script/bench_signal_sweep.R`** — Pagel's λ ∈ {0.1, 0.3, 0.5, 0.7,
+  0.9, 1.0} × mixed-type traits (2 cont + 1 bin + 1 cat K=3) × 4 methods
+  × 3 reps. Headline: at λ = 1.0 pigauto reaches **94.4% binary accuracy
+  vs `mean_baseline` 76.3%**; at λ = 0.1 all methods collapse near chance
+  (expected — no signal).
+- **`script/bench_bace_avonet_head_to_head.R`** — `pigauto_default` vs
+  `pigauto_em5` vs optional `BACE::bace()` on `avonet300`/`tree300` with
+  identical splits. Graceful `requireNamespace` guard when BACE is
+  unavailable. Honest finding: Phase 6 EM does NOT universally beat the
+  plug-in at n = 300 (default **80.5% vs em5 65.9%** on Trophic.Level),
+  consistent with the "Calibration at small n" caveat from v0.9.1 — EM
+  is opt-in for a reason.
+- **`script/bench_correlation_sweep.R`** (Phase 8.1) — cross-trait
+  correlation ρ ∈ {0, 0.2, 0.4, 0.6, 0.8} × 4 continuous traits × 3 reps.
+  pigauto delivers consistent **6–10× RMSE reduction** over `mean_baseline`
+  across all ρ (0.07–0.14 vs 0.64–0.80). Pearson r averages 0.97 at all ρ.
+- **`script/bench_evo_model_sweep.R`** (Phase 8.2) — 4 evolutionary
+  models × 3 reps. BM RMSE 0.13 (6× lift over mean); OU 0.32 (3×);
+  **regime_shift 0.07 (14×)**; nonlinear 0.63 (1.6× — pigauto struggles
+  on genuinely non-BM correlations, Pearson r drops to 0.69). Honest
+  graceful-degradation story.
+- **`script/bench_clade_missingness.R`** (Phase 8.3) — realistic MAR
+  pattern via random-clade masking on focal trait. At every target_frac
+  tested pigauto maintains **Pearson r ≥ 0.96** and RMSE **5–8× lower**
+  than `mean_baseline`: 0.10→0.18 vs 0.99 (r 0.97); 0.25→0.14 vs 1.11
+  (r 0.97); 0.40→0.16 vs 1.16 (r 0.96). Strong validation of pigauto's
+  phylo prior in the realistic missingness regime (real databases
+  undersample clades, not random species). Clade-picker caps at
+  `target_frac` to avoid degenerate 100%-masked runs.
+- **`script/phase8_summary.html`** — aggregate TL;DR + sub-report links
+  + reproducibility block (package versions, `sessionInfo()`).
+- Validation suite (`pkgdown/assets/validation_suite.html`) gains five
+  new rows, one per bench, with graceful `pending` fallback on missing
+  RDS files.
 ## Taxonomic-breadth benchmarks: 4 vertebrate classes + plant boundary case
 
 Real-data benches now cover four vertebrate classes plus a plants
