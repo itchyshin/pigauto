@@ -298,6 +298,7 @@ impute <- function(traits, tree, species_col = NULL,
       fit          = fit,
       baseline     = baseline,
       data         = pd,
+      tree         = tree,
       splits       = splits,
       evaluation   = evaluation
     ),
