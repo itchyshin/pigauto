@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>pigauto v0.9.0 &mdash; Validation Suite</title>
+<title>pigauto v0.9.1.9000 &mdash; Validation Suite</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
          max-width: 1040px; margin: 2em auto; padding: 0 1.5em; color: #111827;
@@ -28,9 +28,12 @@
 </head>
 <body>
 <h1>pigauto <span class="badge">v0.9.0</span> &mdash; Validation Suite</h1>
-<p class="meta">Generated 2026-04-19 06:22 &middot; Commit 71423087a7</p>
+<p class="meta">Generated 2026-04-20 12:18 &middot; Commit c3bd756a2e</p>
+<p class="meta">Generated 2026-04-20 13:56 &middot; Commit f2bdbc7f7d</p>
+<h1>pigauto <span class="badge">v0.9.1.9000</span> &mdash; Validation Suite</h1>
+<p class="meta">Generated 2026-04-23 06:14 &middot; Commit a200462e81</p>
 <p>
-This page summarises 15 benchmark experiments validating pigauto v0.9.0 across all
+This page summarises 18+ benchmark experiments validating pigauto v0.9.1.9000 across all
 supported trait types, multiple real datasets, and a range of missingness scenarios.
 Each row links to a full benchmark report with per-scenario tables, bar charts, and
 methodology notes. Benchmarks were run with <code>devtools::load_all()</code> against
@@ -70,7 +73,67 @@ Positive values (green) indicate pigauto reduces error.</p>
 <tr><td><a href="dev/bench_multi_obs.html">Multi-obs + covariates</a></td><td><em>continuous</em></td><td>Simulated CTmax (multi-obs)</td><td>no-cov vs cov</td><td>3.252</td><td>2.825</td><td><span style="color:#059669">&#9650; 13.1%</span></td><td>Obs-level RMSE (mean)</td></tr>
 <tr><td><a href="dev/bench_tree_uncertainty.html">Tree uncertainty</a></td><td><em>continuous</em></td><td>AVONET300 + BirdTree (50 trees)</td><td>single-tree vs multi-tree MI</td><td colspan="2">Mean FMI = 0.305</td><td>&mdash;</td><td>FMI (pooled coefs)</td></tr>
 <tr><td><a href="dev/bench_scaling_v090.html">Scaling (v0.9.0)</a></td><td><em>mixed</em></td><td>Simulated (up to 10,000 species)</td><td>wall time per N</td><td colspan="2">Max N = 10,000 (42/42 stages ok)</td><td>&mdash;</td><td>Wall time (s)</td></tr>
+<tr><td><a href="dev/bench_pantheria_full.html">PanTHERIA full (mammals)</a></td><td><em>mixed</em></td><td>PanTHERIA 2009 ∩ taxonomy tree (n = 4027)</td><td>pigauto_default / pigauto_em5 / mean</td><td colspan="2">8 traits, seed = 2026</td><td>&mdash;</td><td>per-trait RMSE / r / accuracy</td></tr>
+<tr><td><a href="dev/bench_pantheria_bace_head_to_head.html">PanTHERIA vs BACE</a></td><td><em>mixed</em></td><td>PanTHERIA subset (n = 500)</td><td>pigauto only (BACE skipped)</td><td colspan="2">Seed = 2026, miss_frac = 0.3</td><td>&mdash;</td><td>per-trait metrics</td></tr>
+<tr><td><a href="dev/bench_signal_sweep.html">Signal sweep (Phase 8)</a></td><td><em>mixed</em></td><td>Simulated (n = 300, 6 &lambda; levels)</td><td>Pagel &lambda; &isin; {0.1, 0.3, 0.5, 0.7, 0.9, 1}</td><td colspan="2">4 methods &times; 3 reps</td><td>&mdash;</td><td>per-trait metric curves</td></tr>
+<tr><td><a href="dev/bench_bace_avonet_head_to_head.html">BACE head-to-head (Phase 8)</a></td><td><em>mixed</em></td><td>AVONET 300 + tree300</td><td>pigauto only (BACE skipped)</td><td colspan="2">Seed = 2026, miss_frac = 0.3</td><td>&mdash;</td><td>per-trait metrics</td></tr>
+<tr><td><a href="dev/bench_correlation_sweep.html">ρ sweep (Phase 8.1)</a></td><td><em>continuous</em></td><td>Simulated (n = 300, K = 4)</td><td>cross-trait ρ &isin; {0, 0.2, 0.4, 0.6, 0.8}</td><td colspan="2">3 methods &times; 3 reps</td><td>&mdash;</td><td>RMSE / Pearson r</td></tr>
+<tr><td><a href="dev/bench_evo_model_sweep.html">Evo-model sweep (Phase 8.2)</a></td><td><em>continuous</em></td><td>Simulated (n = 300, K = 4)</td><td>BM / OU / regime_shift / nonlinear</td><td colspan="2">3 methods &times; 3 reps</td><td>&mdash;</td><td>RMSE / Pearson r</td></tr>
+<tr><td><a href="dev/bench_clade_missingness.html">Clade-MAR (Phase 8.3)</a></td><td><em>mixed</em></td><td>Simulated (n = 300)</td><td>target_frac &isin; {0.1, 0.25, 0.4}, focal = c1</td><td colspan="2">3 methods &times; 3 reps</td><td>&mdash;</td><td>RMSE on focal trait</td></tr>
 </tbody></table>
+<h2>Real-data taxonomic breadth (v0.9.1.9000)</h2>
+<p class="meta">pigauto across four vertebrate classes + a kingdom jump to plants. 
+All use 30% MCAR held-out with seed 2026.</p>
+<table><thead><tr>
+<th>Benchmark</th><th>Trait mix</th><th>Dataset</th>
+<th>Best single trait (pigauto vs baseline)</th>
+<th>Report</th>
+</tr></thead><tbody>
+<tr>
+<td><a href="dev/bench_avonet_full_local.html">AVONET full n=9993</a></td>
+<td><em>4 continuous + 2 categorical + 1 ordinal</em></td>
+<td>AVONET + BirdTree full, Mac MPS overnight</td>
+<td>Wing.Length RMSE 95.84 &rarr; <b>21.55</b> (&minus;78%)</td>
+<td><a href="dev/bench_avonet_full_local.html">report</a></td>
+</tr>
+<tr>
+<td><a href="dev/bench_pantheria_full.html">PanTHERIA mammals</a></td>
+<td><em>5 continuous + 3 discrete</em></td>
+<td>PanTHERIA + taxonomic tree (~4,000 sp)</td>
+<td>terrestriality accuracy 0.55 &rarr; <b>0.95</b> (+40 pp)</td>
+<td><a href="dev/bench_pantheria_full.html">report</a></td>
+</tr>
+<tr>
+<td><a href="dev/bench_fishbase.html">FishBase + fishtree</a></td>
+<td><em>5 continuous + 1 categorical</em></td>
+<td>FishBase x fishtree (n=10654)</td>
+<td>Vulnerability RMSE 17.87 &rarr; <b>9.89</b> (&minus;45%)</td>
+<td><a href="dev/bench_fishbase.html">report</a></td>
+</tr>
+<tr>
+<td><a href="dev/bench_amphibio.html">AmphiBIO amphibians</a></td>
+<td><em>2 continuous</em></td>
+<td>AmphiBIO + taxonomic tree (n=5237)</td>
+<td>Body_size_mm RMSE 89.08 &rarr; <b>43.57</b> (&minus;51%)</td>
+<td><a href="dev/bench_amphibio.html">report</a></td>
+</tr>
+<tr>
+<td><a href="dev/bench_bien.html">BIEN + V.PhyloMaker2 plants</a></td>
+<td><em>5 continuous</em></td>
+<td>BIEN + V.PhyloMaker2 (n=4745)</td>
+<td>wood_density RMSE 0.18 &rarr; <b>0.17</b> (&minus;6%)</td>
+<td><a href="dev/bench_bien.html">report</a></td>
+</tr>
+</tbody></table>
+<h2>Coverage calibration grid (v0.9.1.9000)</h2>
+<p class="meta">3,000 fits on BACE-generated simulated data: 4 signal 
+scenarios x 3 missingness mechanisms x 5 trait types x 50 reps, n=150 
+per fit. Target coverage = 0.95 (MC-dropout credible set).</p>
+<p><a href="dev/calibration_grid.html">Full report</a>. 
+Headline: conformal intervals hit the 95% guarantee; MC-dropout is 
+over-confident at n=150 (gaussian ~0.30, binary ~0.19, multinomial ~0.00, 
+poisson ~0.52, ordinal ~0.67). Replicates BACE paper&apos;s small-n 
+over-confidence finding.</p>
 <div class="note">
 <b>How to read the Improvement column.</b> For RMSE metrics, positive values (
 <span style="color:#059669">&#9650;</span>) mean pigauto achieved lower error than the baseline.
@@ -81,8 +144,13 @@ closes to zero &mdash; in that case pigauto falls back to the baseline by design
 <h2>Reproducibility</h2>
 <ul>
 <li>Package version: <code>pigauto 0.9.0</code></li>
-<li>Commit: <code>71423087a7</code></li>
-<li>Run on: 2026-04-19 06:22</li>
+<li>Commit: <code>c3bd756a2e</code></li>
+<li>Run on: 2026-04-20 12:18</li>
+<li>Commit: <code>f2bdbc7f7d</code></li>
+<li>Run on: 2026-04-20 13:56</li>
+<li>Package version: <code>pigauto 0.9.1.9000</code> (dev)</li>
+<li>Commit: <code>a200462e81</code></li>
+<li>Run on: 2026-04-23 06:14</li>
 <li>All scripts in <code>script/bench_*.R</code>; generators in <code>script/make_bench_*_html.R</code></li>
 <li>All .rds result files checked into <code>script/</code></li>
 </ul>

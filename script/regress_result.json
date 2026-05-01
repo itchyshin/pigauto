@@ -1,0 +1,157 @@
+{
+  "birds": {
+    "taxon": "birds",
+    "n": 1000,
+    "wall_off_s": 302.727,
+    "wall_on_s": 282.763,
+    "traits": {
+      "Mass": {
+        "type": "continuous",
+        "rmse_off": 1562.4301,
+        "rmse_on": 980.0485,
+        "rmse_mean": 1613.8716,
+        "coverage_on": 0.96,
+        "pass_rmse": true,
+        "pass_mean": true,
+        "pass_cov": true,
+        "pass": true
+      },
+      "Beak.Length_Culmen": {
+        "type": "continuous",
+        "rmse_off": 10.7355,
+        "rmse_on": 8.6556,
+        "rmse_mean": 20.5022,
+        "coverage_on": 0.93,
+        "pass_rmse": true,
+        "pass_mean": true,
+        "pass_cov": true,
+        "pass": true
+      },
+      "Tarsus.Length": {
+        "type": "continuous",
+        "rmse_off": 9.01,
+        "rmse_on": 8.8721,
+        "rmse_mean": 21.9113,
+        "coverage_on": 0.9833,
+        "pass_rmse": true,
+        "pass_mean": true,
+        "pass_cov": true,
+        "pass": true
+      },
+      "Wing.Length": {
+        "type": "continuous",
+        "rmse_off": 52.7557,
+        "rmse_on": 47.6102,
+        "rmse_mean": 100.4105,
+        "coverage_on": 0.9167,
+        "pass_rmse": true,
+        "pass_mean": true,
+        "pass_cov": true,
+        "pass": true
+      },
+      "Trophic.Level": {
+        "type": "discrete",
+        "acc_off": 0.8033,
+        "acc_on": 0.8033,
+        "pass": true
+      },
+      "Primary.Lifestyle": {
+        "type": "discrete",
+        "acc_off": 0.7933,
+        "acc_on": 0.7933,
+        "pass": true
+      },
+      "Migration": {
+        "type": "discrete",
+        "acc_off": 0.76,
+        "acc_on": 0.7567,
+        "pass": true
+      }
+    },
+    "pass": true
+  },
+  "mammals": {
+    "taxon": "mammals",
+    "skipped": true,
+    "reason": "no cache",
+    "pass": true
+  },
+  "fish": {
+    "taxon": "fish",
+    "skipped": true,
+    "reason": "no cache",
+    "pass": true
+  },
+  "amphibians": {
+    "taxon": "amphibians",
+    "skipped": true,
+    "reason": "no cache",
+    "pass": true
+  },
+  "plants": {
+    "taxon": "plants",
+    "n": 1000,
+    "wall_off_s": 110.36,
+    "wall_on_s": 95.709,
+    "traits": {
+      "height_m": {
+        "type": "continuous",
+        "rmse_off": 12.3724,
+        "rmse_on": 12.4981,
+        "rmse_mean": 12.6529,
+        "coverage_on": 1,
+        "pass_rmse": true,
+        "pass_mean": true,
+        "pass_cov": true,
+        "pass": true
+      },
+      "leaf_area": {
+        "type": "continuous",
+        "rmse_off": 19420.1948,
+        "rmse_on": 11204.7943,
+        "rmse_mean": 11205.2236,
+        "coverage_on": 1,
+        "pass_rmse": true,
+        "pass_mean": true,
+        "pass_cov": true,
+        "pass": true
+      },
+      "sla": {
+        "type": "continuous",
+        "rmse_off": 18.5937,
+        "rmse_on": 14.6118,
+        "rmse_mean": 12.7394,
+        "coverage_on": 0.987,
+        "pass_rmse": true,
+        "pass_mean": true,
+        "pass_cov": true,
+        "pass": true
+      },
+      "seed_mass": {
+        "type": "continuous",
+        "rmse_off": 612.7677,
+        "rmse_on": 520.5179,
+        "rmse_mean": 688.7201,
+        "coverage_on": 1,
+        "pass_rmse": true,
+        "pass_mean": true,
+        "pass_cov": true,
+        "pass": true
+      },
+      "wood_density": {
+        "type": "continuous",
+        "rmse_off": 0.166,
+        "rmse_on": 0.1737,
+        "rmse_mean": 0.1763,
+        "coverage_on": 0.9328,
+        "pass_rmse": true,
+        "pass_mean": true,
+        "pass_cov": true,
+        "pass": true
+      }
+    },
+    "pass": true
+  },
+  "ALL_BENCHES_PASS": true,
+  "generated_at": "2026-04-23 13:46:04"
+}

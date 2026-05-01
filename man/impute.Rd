@@ -22,6 +22,7 @@ impute(
   em_tol = 0.001,
   em_offdiag = FALSE,
   pool_method = c("median", "mean"),
+  safety_floor = TRUE,
   ...
 )
 }
@@ -115,6 +116,13 @@ latents amplified by \code{expm1()} / \code{plogis()} decoders.
 Continuous / ordinal / binary / categorical traits always pool by
 mean (or probability average); unaffected by this argument.  See
 \href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.}
+\item{safety_floor}{logical. When \code{TRUE} (default since
+v0.9.1.9002), calibration searches the 3-way simplex
+\code{r_BM * BM + r_GNN * GNN + r_MEAN * MEAN} so the grand mean is
+always in the candidate set and the calibrated prediction is
+guaranteed never to be worse than the grand-mean baseline on
+validation.  When \code{FALSE}, the v0.9.1 1-D calibration is used
+exactly.  See the Safety floor section below.}
 
 \item{...}{additional arguments passed to \code{\link{fit_pigauto}}.}
 }
@@ -195,6 +203,29 @@ Variables that belong in \code{traits}: anything with missing values you
 care about predicting.  Variables that belong in \code{covariates}: fully
 observed, exogenous to the trait space (geography, climate, habitat,
 experimental treatment).
+}
+
+\section{Safety floor (v0.9.1.9002+)}{
+
+With \code{safety_floor = TRUE} (the new default), the post-training
+calibration grid searches a 3-way convex combination of the
+Brownian-motion baseline, the GNN delta, and the per-trait grand
+mean.  The simplex is sampled at step 0.05 (231 candidates per latent
+column).  Because the corner \code{(0, 0, 1)} — pure grand mean —
+is always in the grid, the calibrated validation RMSE is guaranteed
+by construction to satisfy \code{calibrated_val_RMSE <=
+  mean_val_RMSE} on every trait.  The fit object gains four new slots:
+\code{r_cal_bm}, \code{r_cal_gnn}, \code{r_cal_mean} (each a named
+numeric of length \code{p_latent}), and
+\code{mean_baseline_per_col}.
+
+Set \code{safety_floor = FALSE} to reproduce the pre-v0.9.1.9002
+1-D calibration bit-identically (no mean term; \code{r_cal_mean = 0};
+\code{r_cal_bm = 1 - r_cal_gnn}).  See
+\code{specs/2026-04-23-safety-floor-mean-gate-design.md} for the
+design rationale and
+\code{plans/2026-04-23-safety-floor-mean-gate.md} for the
+implementation plan.
 }
 
 \examples{

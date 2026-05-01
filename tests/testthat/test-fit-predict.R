@@ -25,6 +25,16 @@ test_that("fit_pigauto returns a pigauto_fit object", {
   expect_true("latent_names" %in% names(fit))
   expect_true("val_rmse" %in% names(fit))
   expect_true("test_rmse" %in% names(fit))
+
+  # GPU memory fix (2026-04-21): model_state must be on CPU so the
+  # returned fit object doesn't hold GPU tensor refs that pin ~40 GB
+  # of training-time activations and break predict() at large n.
+  state_devices <- vapply(fit$model_state,
+                           function(t) as.character(t$device$type),
+                           character(1))
+  expect_true(all(state_devices == "cpu"),
+              info = paste("model_state tensors must be on CPU; got:",
+                            paste(unique(state_devices), collapse = ", ")))
 })
 
 test_that("predict.pigauto_fit returns pigauto_pred with correct dimensions", {
