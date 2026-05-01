@@ -1,3 +1,46 @@
+# pigauto 0.9.1.9003 (dev)
+
+## Phylogenetic-signal gate
+
+Default change since v0.9.1.9003: `impute()` / `fit_pigauto()` now
+compute per-trait Pagel's lambda on training-observed cells and route
+traits with `lambda < 0.2` to the grand-mean corner `(0, 0, 1)` of the
+safety-floor simplex, skipping BM fitting and GNN training effort on
+those traits. Complements the v0.9.1.9002 safety floor with an
+explicit per-trait decision: "pigauto knows when phylogeny helps".
+
+### Effect on existing benches
+
+- Birds / mammals / fish / amphibians: zero traits gated (all lambda >= 0.2).
+  Results bit-identical to v0.9.1.9002.
+- Plants (BIEN x V.PhyloMaker2 n=500 smoke): 3 of 5 traits flagged as
+  weak-signal (leaf_area, sla, height_m) and gated to grand mean.
+  fit$phylo_gate_triggered reports which.
+
+### API
+
+- impute(..., phylo_signal_gate = TRUE, phylo_signal_threshold = 0.2,
+   phylo_signal_method = "lambda") - new args.
+- fit_pigauto() same pass-through.
+- Fit object gains four new slots: phylo_signal_per_trait (named
+  numeric lambda values), phylo_gate_triggered (named logical),
+  phylo_signal_method, phylo_signal_threshold.
+
+### Opt-out
+
+phylo_signal_gate = FALSE reproduces v0.9.1.9002 safety-floor-only
+behaviour bit-identically.
+
+### Reporting
+
+print.pigauto_fit() now surfaces a "Phylogenetic signal" section
+listing gated vs passed traits when any trait was gated.
+
+### Dependencies
+
+phytools added to Suggests. When absent, phylo_signal_gate degrades
+gracefully to FALSE (safety-floor-only) with a one-time warning.
+
 # pigauto 0.9.1.9002 (dev)
 
 ## Safety floor: pigauto is never worse than the grand mean

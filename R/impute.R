@@ -85,6 +85,8 @@
 #'   guaranteed never to be worse than the grand-mean baseline on
 #'   validation.  When \code{FALSE}, the v0.9.1 1-D calibration is used
 #'   exactly.  See the Safety floor section below.
+#' @param phylo_signal_gate,phylo_signal_threshold,phylo_signal_method
+#'   Pass-through to [fit_pigauto()]. See that help page for details.
 #' @param ... additional arguments passed to \code{\link{fit_pigauto}}.
 #' @return An object of class \code{"pigauto_result"} with components:
 #'   \describe{
@@ -205,6 +207,9 @@ impute <- function(traits, tree, species_col = NULL,
                    em_offdiag = FALSE,
                    pool_method = c("median", "mean"),
                    safety_floor = TRUE,
+                   phylo_signal_gate = TRUE,
+                   phylo_signal_threshold = 0.2,
+                   phylo_signal_method = "lambda",
                    ...) {
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
   pool_method <- match.arg(pool_method)
@@ -252,15 +257,18 @@ impute <- function(traits, tree, species_col = NULL,
 
   # 5. Train GNN
   fit <- fit_pigauto(
-    data         = pd,
-    tree         = tree,
-    splits       = splits,
-    graph        = graph,
-    baseline     = baseline,
-    epochs       = as.integer(epochs),
-    verbose      = verbose,
-    seed         = as.integer(seed),
-    safety_floor = safety_floor,
+    data                   = pd,
+    tree                   = tree,
+    splits                 = splits,
+    graph                  = graph,
+    baseline               = baseline,
+    epochs                 = as.integer(epochs),
+    verbose                = verbose,
+    seed                   = as.integer(seed),
+    safety_floor           = safety_floor,
+    phylo_signal_gate      = phylo_signal_gate,
+    phylo_signal_threshold = phylo_signal_threshold,
+    phylo_signal_method    = phylo_signal_method,
     ...
   )
 
