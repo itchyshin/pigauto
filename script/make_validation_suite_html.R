@@ -484,6 +484,118 @@ if (!is.null(b_scaling)) {
   make_row("Scaling (v0.9.0)", "mixed", "Simulated (up to 10k sp)", "", NA, NA, NA, "Wall time", "dev/bench_scaling_v090.html", "pending")
 }
 
+# PanTHERIA full-scale bench (mammals)
+b_pantheria_full <- load_rds("bench_pantheria_full")
+if (!is.null(b_pantheria_full)) {
+  h('<tr>',
+    '<td><a href="dev/bench_pantheria_full.html">PanTHERIA full (mammals)</a></td>',
+    '<td><em>mixed</em></td>',
+    '<td>PanTHERIA 2009 ∩ taxonomy tree (n = ', b_pantheria_full$n_species, ')</td>',
+    '<td>pigauto_default / pigauto_em5 / mean</td>',
+    '<td colspan="2">', b_pantheria_full$n_traits, ' traits, seed = ', b_pantheria_full$seed, '</td>',
+    '<td>&mdash;</td>',
+    '<td>per-trait RMSE / r / accuracy</td>',
+    '</tr>')
+} else {
+  make_row("PanTHERIA full (mammals)", "mixed", "PanTHERIA ∩ mammal tree", "", NA, NA, NA, "RMSE / r / acc", "dev/bench_pantheria_full.html", "pending")
+}
+
+# PanTHERIA vs BACE head-to-head
+b_pantheria_bace <- load_rds("bench_pantheria_bace_head_to_head")
+if (!is.null(b_pantheria_bace)) {
+  bace_tag <- if (isTRUE(b_pantheria_bace$bace_ran)) "pigauto vs BACE" else "pigauto only (BACE skipped)"
+  h('<tr>',
+    '<td><a href="dev/bench_pantheria_bace_head_to_head.html">PanTHERIA vs BACE</a></td>',
+    '<td><em>mixed</em></td>',
+    '<td>PanTHERIA subset (n = ', b_pantheria_bace$n_subset, ')</td>',
+    '<td>', bace_tag, '</td>',
+    '<td colspan="2">Seed = ', b_pantheria_bace$seed, ', miss_frac = ', b_pantheria_bace$miss_frac, '</td>',
+# Phase 8 MVP — signal-strength sweep
+b_signal_sweep <- load_rds("bench_signal_sweep")
+if (!is.null(b_signal_sweep)) {
+  cfg <- b_signal_sweep$config
+  h('<tr>',
+    '<td><a href="dev/bench_signal_sweep.html">Signal sweep (Phase 8)</a></td>',
+    '<td><em>mixed</em></td>',
+    '<td>Simulated (n = ', cfg$n_species, ', ', length(cfg$lambdas), ' &lambda; levels)</td>',
+    '<td>Pagel &lambda; &isin; {', paste(cfg$lambdas, collapse = ", "), '}</td>',
+    '<td colspan="2">', length(cfg$methods), ' methods &times; ', cfg$n_reps, ' reps</td>',
+    '<td>&mdash;</td>',
+    '<td>per-trait metric curves</td>',
+    '</tr>')
+} else {
+  make_row("Signal sweep (Phase 8)", "mixed", "Simulated (Pagel \u03bb sweep)", "", NA, NA, NA, "accuracy / RMSE", "dev/bench_signal_sweep.html", "pending")
+}
+
+# Phase 8 MVP — AVONET head-to-head vs BACE
+b_bace_head <- load_rds("bench_bace_avonet_head_to_head")
+if (!is.null(b_bace_head)) {
+  bace_tag <- if (isTRUE(b_bace_head$bace_ran)) "pigauto vs BACE" else "pigauto only (BACE skipped)"
+  h('<tr>',
+    '<td><a href="dev/bench_bace_avonet_head_to_head.html">BACE head-to-head (Phase 8)</a></td>',
+    '<td><em>mixed</em></td>',
+    '<td>AVONET 300 + tree300</td>',
+    '<td>', bace_tag, '</td>',
+    '<td colspan="2">Seed = ', b_bace_head$seed, ', miss_frac = ', b_bace_head$miss_frac, '</td>',
+    '<td>&mdash;</td>',
+    '<td>per-trait metrics</td>',
+    '</tr>')
+} else {
+  make_row("PanTHERIA vs BACE", "mixed", "PanTHERIA subset", "", NA, NA, NA, "acc / RMSE / r", "dev/bench_pantheria_bace_head_to_head.html", "pending")
+  make_row("BACE head-to-head (Phase 8)", "mixed", "AVONET 300", "", NA, NA, NA, "accuracy / RMSE / r", "dev/bench_bace_avonet_head_to_head.html", "pending")
+}
+
+# Phase 8.1 — cross-trait-correlation sweep
+b_corr_sweep <- load_rds("bench_correlation_sweep")
+if (!is.null(b_corr_sweep)) {
+  cfg <- b_corr_sweep$config
+  h('<tr>',
+    '<td><a href="dev/bench_correlation_sweep.html">ρ sweep (Phase 8.1)</a></td>',
+    '<td><em>continuous</em></td>',
+    '<td>Simulated (n = ', cfg$n_species, ', K = ', cfg$n_traits, ')</td>',
+    '<td>cross-trait ρ &isin; {', paste(cfg$rhos, collapse = ", "), '}</td>',
+    '<td colspan="2">', length(cfg$methods), ' methods &times; ', cfg$n_reps, ' reps</td>',
+    '<td>&mdash;</td>',
+    '<td>RMSE / Pearson r</td>',
+    '</tr>')
+} else {
+  make_row("\u03c1 sweep (Phase 8.1)", "continuous", "Simulated", "", NA, NA, NA, "RMSE / r", "dev/bench_correlation_sweep.html", "pending")
+}
+
+# Phase 8.2 — evolutionary-model sweep
+b_evo_sweep <- load_rds("bench_evo_model_sweep")
+if (!is.null(b_evo_sweep)) {
+  cfg <- b_evo_sweep$config
+  h('<tr>',
+    '<td><a href="dev/bench_evo_model_sweep.html">Evo-model sweep (Phase 8.2)</a></td>',
+    '<td><em>continuous</em></td>',
+    '<td>Simulated (n = ', cfg$n_species, ', K = ', cfg$n_traits, ')</td>',
+    '<td>', paste(cfg$models, collapse = " / "), '</td>',
+    '<td colspan="2">', length(cfg$methods), ' methods &times; ', cfg$n_reps, ' reps</td>',
+    '<td>&mdash;</td>',
+    '<td>RMSE / Pearson r</td>',
+    '</tr>')
+} else {
+  make_row("Evo-model sweep (Phase 8.2)", "continuous", "Simulated", "", NA, NA, NA, "RMSE / r", "dev/bench_evo_model_sweep.html", "pending")
+}
+
+# Phase 8.3 — clade-correlated missingness
+b_clade_miss <- load_rds("bench_clade_missingness")
+if (!is.null(b_clade_miss)) {
+  cfg <- b_clade_miss$config
+  h('<tr>',
+    '<td><a href="dev/bench_clade_missingness.html">Clade-MAR (Phase 8.3)</a></td>',
+    '<td><em>mixed</em></td>',
+    '<td>Simulated (n = ', cfg$n_species, ')</td>',
+    '<td>target_frac &isin; {', paste(cfg$target_fracs, collapse = ", "), '}, focal = ', cfg$focal_trait, '</td>',
+    '<td colspan="2">', length(cfg$methods), ' methods &times; ', cfg$n_reps, ' reps</td>',
+    '<td>&mdash;</td>',
+    '<td>RMSE on focal trait</td>',
+    '</tr>')
+} else {
+  make_row("Clade-MAR (Phase 8.3)", "mixed", "Simulated", "", NA, NA, NA, "RMSE / accuracy", "dev/bench_clade_missingness.html", "pending")
+}
+
 h('</tbody></table>')
 
 # ---------------------------------------------------------------------------

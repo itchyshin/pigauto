@@ -47,7 +47,8 @@ Suggests:
     glmmTMB,
     phangorn,
     rgbif,
-    terra
+    terra,
+    phytools
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
