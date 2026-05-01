@@ -75,8 +75,12 @@
 #'   median of the \code{M} decoded draws — robust to dropout-noisy
 #'   latents amplified by \code{expm1()} / \code{plogis()} decoders.
 #'   \code{"mean"} restores the pre-v0.9.2 arithmetic-mean pooling.
-#'   Continuous / ordinal / binary / categorical traits always pool by
-#'   mean (or probability average); unaffected by this argument.  See
+#'   \code{"mode"} (Phase H, v0.9.1.9010+) is intended for ordinal
+#'   traits: per-cell majority vote across the \code{M} draws,
+#'   avoiding the integer-mean-round bias toward middle classes.  For
+#'   continuous-family traits, \code{"mode"} falls back to
+#'   \code{"median"}.  Binary / categorical / multi_proportion traits
+#'   always pool by probability average; unaffected by this argument.  See
 #'   \href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.
 #' @param safety_floor logical. When \code{TRUE} (default since
 #'   v0.9.1.9002), calibration searches the 3-way simplex
@@ -205,7 +209,7 @@ impute <- function(traits, tree, species_col = NULL,
                    em_iterations = 0L,
                    em_tol = 1e-3,
                    em_offdiag = FALSE,
-                   pool_method = c("median", "mean"),
+                   pool_method = c("median", "mean", "mode"),
                    safety_floor = TRUE,
                    phylo_signal_gate = TRUE,
                    phylo_signal_threshold = 0.2,

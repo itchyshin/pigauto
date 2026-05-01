@@ -95,7 +95,7 @@
 #' @export
 predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
                                 n_imputations = 1L, baseline_override = NULL,
-                                pool_method = c("median", "mean"),
+                                pool_method = c("median", "mean", "mode"),
                                 ...) {
   pool_method <- match.arg(pool_method)
   cfg       <- object$model_config
@@ -639,15 +639,23 @@ decode_from_latent <- function(latent_mat, trait_map, species_names) {
 # ---- Internal: pool multiple imputations ----------------------------------------
 
 pool_imputations <- function(decode_results, latent_runs, trait_map,
-                              pool_method = c("median", "mean")) {
+                              pool_method = c("median", "mean", "mode")) {
   # `pool_method`:
   #   "median" — per-cell median across M decoded draws for count /
   #     proportion / zi_count magnitude.  Robust to dropout-noisy draws
   #     amplified by non-linear decoders (expm1 / plogis).
   #   "mean"   — per-cell arithmetic mean (pre-v0.9.2 behaviour).  Kept
   #     as opt-in for strict backward compat.
-  # Continuous / ordinal / binary / categorical are UNAFFECTED — their
-  # decoders are linear or probability-averaged, so mean pooling is fine.
+  #   "mode"   — Phase H (2026-05-01): per-cell mode (majority vote)
+  #     for ordinal traits.  Closes the AVONET Migration N_IMP=20
+  #     regression (-10.9 pp) by avoiding integer-mean-round bias
+  #     toward middle classes.  For continuous-family types ("mode"
+  #     falls back to "median" since mode does not apply to continuous
+  #     decoders).  Binary / categorical / multi_proportion are
+  #     unchanged (already probability-averaged + argmax).
+  # Continuous / binary / categorical are UNAFFECTED by "median" vs
+  # "mean" -- their decoders are linear or probability-averaged, so
+  # mean pooling is fine.
   pool_method <- match.arg(pool_method)
   M <- length(decode_results)
   latent_mean <- Reduce("+", latent_runs) / M
@@ -688,7 +696,7 @@ pool_imputations <- function(decode_results, latent_runs, trait_map,
       # which expm1 turns into thousands — mean-pooling with M=20
       # contaminates the whole cell.  Median-pool to stay robust
       # (Issue #40).
-      vals <- if (pool_method == "median") row_median_decoded(nm) else
+      vals <- if (pool_method %in% c("median", "mode")) row_median_decoded(nm) else
         rowMeans(sapply(decode_results, function(dr) as.numeric(dr$imputed[[nm]])))
       # Median pool on decoded counts -- expm1 on log1p-noisy latents
       # amplifies outliers (Issue #40 fix).
@@ -697,10 +705,30 @@ pool_imputations <- function(decode_results, latent_runs, trait_map,
 
     } else if (tm$type == "ordinal") {
       K <- length(tm$levels)
-      int_vals <- rowMeans(sapply(decode_results, function(dr) {
-        as.integer(dr$imputed[[nm]]) - 1L
-      }))
-      int_vals <- as.integer(pmin(pmax(round(int_vals), 0), K - 1L))
+      if (identical(pool_method, "mode")) {
+        # Phase H: per-cell mode (majority vote) across M draws.
+        # Preserves the K-class discrete structure better than
+        # integer-mean+round when dropout spreads predictions across
+        # adjacent classes.  See useful/MEMO_2026-05-01_phase_f_smoke_results.md
+        # for the diagnostic that motivated this path.
+        int_mat <- sapply(decode_results, function(dr) {
+          as.integer(dr$imputed[[nm]]) - 1L
+        })
+        if (!is.matrix(int_mat)) int_mat <- matrix(int_mat, ncol = M)
+        int_vals <- apply(int_mat, 1L, function(row) {
+          row <- row[!is.na(row)]
+          if (length(row) == 0L) return(NA_integer_)
+          tab <- tabulate(row + 1L, nbins = K)
+          which.max(tab) - 1L
+        })
+      } else {
+        # Default: per-cell mean of integer class indices, rounded.
+        # Backward-compatible with v0.9.1 behaviour.
+        int_vals <- rowMeans(sapply(decode_results, function(dr) {
+          as.integer(dr$imputed[[nm]]) - 1L
+        }))
+        int_vals <- as.integer(pmin(pmax(round(int_vals), 0), K - 1L))
+      }
       imputed[[nm]] <- factor(tm$levels[int_vals + 1L],
                               levels = tm$levels, ordered = TRUE)
 
@@ -725,13 +753,13 @@ pool_imputations <- function(decode_results, latent_runs, trait_map,
       # Extreme dropout draws push decoded values toward 0 or 1; mean
       # pooling contaminates the cell.  Median-pool for robustness
       # (Issue #40).
-      vals <- if (pool_method == "median") row_median_decoded(nm) else
+      vals <- if (pool_method %in% c("median", "mode")) row_median_decoded(nm) else
         rowMeans(sapply(decode_results, function(dr) dr$imputed[[nm]]))
       imputed[[nm]] <- vals
 
     } else if (tm$type == "zi_count") {
       # Magnitude col is expm1-decoded — same hazard as "count".
-      vals <- if (pool_method == "median") row_median_decoded(nm) else
+      vals <- if (pool_method %in% c("median", "mode")) row_median_decoded(nm) else
         rowMeans(sapply(decode_results, function(dr) as.numeric(dr$imputed[[nm]])))
       imputed[[nm]] <- as.integer(pmax(round(vals), 0L))
       # Gate col stays on the mean of P(non-zero) — linear.

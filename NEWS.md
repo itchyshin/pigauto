@@ -1,3 +1,74 @@
+# pigauto 0.9.1.9010 (dev)
+
+## Phase H: `pool_method = "mode"` for ordinal traits (2026-05-01)
+
+Closes the AVONET Migration N_IMP-dependent regression flagged in
+`useful/MEMO_2026-05-01_phase_f_smoke_results.md`.
+
+### What changed
+
+`predict.pigauto_fit()` and `impute()` now accept a third value for
+`pool_method`:
+
+* `"median"` (default, unchanged) — per-cell median for count /
+  proportion / zi_count magnitude; per-cell `mean(integer-class) ->
+  round` for ordinal.
+* `"mean"` (unchanged) — pre-v0.9.2 arithmetic-mean pooling.
+* **`"mode"` (new)** — per-cell **majority vote** across the M
+  draws for ordinal traits.  For continuous-family traits ("mode"
+  falls back to "median" since mode does not apply to continuous
+  decoders).  Binary, categorical, and multi_proportion are
+  unaffected (already probability-averaged + argmax).
+
+### Why this matters
+
+The previous ordinal pooling (`mean of integer class indices, then
+round`) biases predictions toward middle classes when MC-dropout
+spreads the M draws across adjacent classes.  Concrete K=3 failure:
+
+  True class 1 (sedentary), 5 dropout draws produce {1,1,1,2,3}.
+    Mean = 1.6, round = 2 -> "partial migrant" (wrong).
+    Mode = 1 -> "sedentary" (correct).
+
+Empirical impact on AVONET Migration (3 seeds, n=1500, miss=0.30):
+
+| pool_method | N_IMP=1     | N_IMP=20    |
+|-------------|-------------|-------------|
+| median (default) | 0.767 +/- 0.011 | **0.713 +/- 0.032** |
+| **mode (new)**   | 0.767 +/- 0.011 | **0.779 +/- 0.011** |
+
+Mean baseline (per-class mode): 0.800 +/- 0.013.
+
+Switching to `"mode"` improves Migration accuracy at N_IMP=20 by
+**+6.6 pp** and reduces the regression vs baseline from -10.9 pp
+to -2.1 pp.  Pre-registered acceptance criterion (Migration acc at
+N_IMP=20 >= N_IMP=1) passes 3 / 3 seeds.
+
+### Default policy
+
+**`"median"` remains the default** for backward compatibility.
+Users running ordinal traits with `n_imputations > 1` should pass
+`pool_method = "mode"` explicitly until cross-dataset evidence
+justifies a default flip.  See
+`useful/MEMO_2026-05-01_phase_h_results.md`.
+
+### Implementation
+
+* `R/predict_pigauto.R`: extended pool_method enum; new ordinal
+  branch using `tabulate(class_indices, nbins = K) -> which.max()`.
+  Existing median-vs-mean guards on count / proportion / zi_count
+  branches extended to treat "mode" as "median" (fall back).
+* `R/impute.R`: extended user-facing `pool_method` enum + roxygen.
+* `tests/testthat/test-mi-pool-robust.R`: 5 new assertions covering
+  the mode-pool ordinal path and the median-fallback for continuous.
+
+### Bench
+
+`script/bench_phase_h_pool.R` runs the 3-seed AVONET-1500 Migration
+sweep at `N_IMP in {1, 20}` with `pool_method = "mode"`. Output:
+`script/bench_phase_h_pool.{rds,md}` and the verdict memo at
+`useful/MEMO_2026-05-01_phase_h_results.md`.
+
 # pigauto 0.9.1.9009 (dev)
 
 ## `suggest_next_observation()` v2: zi_count + multi_proportion (2026-05-01)
