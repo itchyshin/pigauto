@@ -69,6 +69,10 @@ longitude as the species centroid.
 Species with zero post-filter records receive \code{NA} centroids;
 their rows are still included in the returned data.frame so it
 aligns with the input species list.
+
+Requires the optional \code{rgbif} package (in DESCRIPTION
+\code{Suggests}).  If \code{rgbif} is not installed the function
+errors with an installation message.
 }
 \examples{
 \dontrun{

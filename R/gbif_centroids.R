@@ -210,6 +210,10 @@
 #' their rows are still included in the returned data.frame so it
 #' aligns with the input species list.
 #'
+#' Requires the optional \code{rgbif} package (in DESCRIPTION
+#' \code{Suggests}).  If \code{rgbif} is not installed the function
+#' errors with an installation message.
+#'
 #' @param species           character vector of species names.
 #' @param cache_dir         directory to cache per-species RDS files.
 #'   \code{NULL} (default) disables caching — not recommended for
