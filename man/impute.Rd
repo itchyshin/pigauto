@@ -119,6 +119,7 @@ latents amplified by \code{expm1()} / \code{plogis()} decoders.
 Continuous / ordinal / binary / categorical traits always pool by
 mean (or probability average); unaffected by this argument.  See
 \href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.}
+
 \item{safety_floor}{logical. When \code{TRUE} (default since
 v0.9.1.9002), calibration searches the 3-way simplex
 \code{r_BM * BM + r_GNN * GNN + r_MEAN * MEAN} so the grand mean is

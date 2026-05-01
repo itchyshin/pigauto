@@ -141,6 +141,25 @@ reference:
       - evaluate
       - evaluate_imputation
 
+  - title: "Active imputation (sampling-design guidance)"
+    desc: >
+      Per-candidate-observation expected uncertainty reduction across
+      every currently-missing cell, using closed-form BM
+      (Sherman-Morrison) variance reduction for continuous / count /
+      ordinal / proportion / zi_count magnitude and label-propagation
+      entropy reduction for binary / categorical / zi_count gate.
+    contents:
+      - suggest_next_observation
+
+  - title: "Covariate data helpers"
+    desc: >
+      Optional helpers for assembling environmental covariate matrices
+      from public data sources. Both are designed to plug into
+      `impute(..., covariates = X)`.
+    contents:
+      - pull_gbif_centroids
+      - pull_worldclim_per_species
+
   - title: "Benchmarks and cross-validation"
     contents:
       - simulate_benchmark
