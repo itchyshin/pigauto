@@ -12,8 +12,9 @@ Before recommending changes or framing findings, hold yourself to these standard
    (a) unified mixed-type imputation in one model (continuous, binary, categorical, ordinal, count, proportion, zi_count, multi_proportion);
    (b) calibrated conformal prediction intervals tied to validation residuals;
    (c) multi-tree posterior workflow with Rubin pooling (Nakagawa & de Villemereuil 2019);
-   (d) multi-obs covariate refinement via the obs_refine MLP.
-   Recommendations that compromise any of these need an explicit case for why the trade-off is worth it. Suggesting "replace pigauto's BM baseline with phylolm" is wrong on its face because phylolm is monotype continuous and would dismantle (a). Suggesting "use Rphylopars" is similarly wrong unless you can show the proposal preserves all four.
+   (d) multi-obs covariate refinement via the obs_refine MLP;
+   (e) active-imputation guidance via `suggest_next_observation()` (added 2026-04-30 evening): closed-form expected variance reduction (continuous BM via Sherman-Morrison) and entropy reduction (binary/categorical via LP) over all currently-missing cells per candidate observation. To my knowledge no other phylogenetic-imputation package exposes a sampling-design helper.
+   Recommendations that compromise any of these need an explicit case for why the trade-off is worth it. Suggesting "replace pigauto's BM baseline with phylolm" is wrong on its face because phylolm is monotype continuous and would dismantle (a). Suggesting "use Rphylopars" is similarly wrong unless you can show the proposal preserves all five.
 
 3. **BM baseline is a kernel, not a method.** `R/bm_internal.R::bm_impute_col` plugs into Phase 2 joint MVN, Phase 3 threshold-joint (binary/ordinal), Phase 6 OVR categorical, the liability E-step, and the GNN's gated residual baseline. Modifications to this kernel touch all of the above. Estimate effort accordingly — and when in doubt, scope the change as "add a parameter, default off" rather than "replace."
 
