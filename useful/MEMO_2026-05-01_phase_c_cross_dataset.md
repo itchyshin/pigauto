@@ -1,167 +1,106 @@
-# Phase C — cross-dataset bench: do AVONET findings generalise?
+# Phase C — cross-dataset bench (multi-seed v2): single-seed v1 was misleading
 
 Date: 2026-05-01.
-Bench: `script/bench_phase_c_cross_dataset.R` on PanTHERIA mammals
-(n=1500 random subset of 4,629) + AmphiBIO amphibians (n=1500
-random subset of 6,776).  4 configs per dataset
-({default, clamp_outliers, pool_method=mode, both}) × 2 datasets =
-8 cells, single seed = 2026, N_IMP = 20.  ~30 min wall.
+Bench: `script/bench_phase_c_cross_dataset.R` v2.  3 seeds (2026 / 2027
+/ 2028) × 4 configs × 2 datasets = 24 cells.  Wall: 51 min.
 
-## TL;DR
+**Updates the v1 single-seed memo** which had this same path -- v1
+results were dominated by GNN-training MC noise; multi-seed reveals
+the actual effect sizes (mostly small) and **reverses one of v1's
+headline findings**.
 
-**Two findings hold up across taxa:**
+## TL;DR — what holds and what doesn't
 
-1. **Phase H mode pooling helps real ordinal traits at BOTH K=3 AND K=5.**
-   PanTHERIA habitat_breadth K=3: mode +7.3 pp over default (consistent
-   with AVONET Migration K=3 +6.6 pp from PR #59).  PanTHERIA
-   diet_breadth K=5: mode +4.2 pp.  This **contradicts the Phase H+
-   simulated K=5 finding** (PR #62) that mode loses at K=5.  Real-data
-   evidence > simulation for K=5.
+✓ **Phase H mode pooling helps K=3 ordinal across taxa, smaller than v1
+   suggested**: PanTHERIA habitat_breadth +1.5 ± 1.5 pp; AVONET
+   Migration +6.6 pp (PR #59).  Real but modest at K=3.
 
-2. **Phase G clamp_outliers helps log-cont mass on a different taxon.**
-   AmphiBIO body_mass: clamp +13.7 % RMSE reduction over default.
-   PanTHERIA body_mass: clamp +4.2 %.  PanTHERIA max_longevity: clamp
-   +24.5 % (rescues a default-mode regression where pigauto was worse
-   than mean baseline).  AVONET Mass seed-2030 evidence (-74 %)
-   generalises to mammals + amphibians.
+✗ **Phase H mode pooling HURTS K=5 ordinal on real data**: PanTHERIA
+   diet_breadth −2.1 ± noise pp.  v1 said +4.2 pp (single-seed
+   artefact).  **Multi-seed agrees with the Phase H+ simulation**
+   (PR #62: −6.7 pp on simulated K=5).  My v1 PR #64 framing
+   "real-data K=5 contradicts simulation" was wrong.
 
-**One genuine caveat:**
+✗ **Phase G clamp_outliers effect on log-cont mass is small and
+   dataset-dependent**, not the broad win v1 implied.  PanTHERIA
+   body_mass +7.3 % (helps); AmphiBIO body_mass −5.3 % (hurts);
+   AVONET Casuarius case −74 % (huge help, but extreme outlier).
+   The Casuarius case generalises only to OTHER extreme-outlier
+   cases, not to routine log-cont imputation.
 
-3. **`pool_method = "mode"` should NOT affect continuous predictions,**
-   but the bench shows continuous-trait RMSE differences across configs
-   (e.g. PanTHERIA body_mass: -20.2 % under mode, +4.2 % under clamp).
-   These deltas are **MC-dropout noise** from re-training the GNN per
-   config — each `impute()` call re-fits with a fresh stochastic
-   trajectory, so single-seed comparisons cannot isolate config
-   effects on continuous traits.  Multi-seed would resolve this; out
-   of scope for this bench.
+## Multi-seed result (mean ± SD across 3 seeds)
 
-## Pre-registered questions + answers
+PanTHERIA mammals:
 
-### Q1. Does clamp_outliers help log-cont mass on a different taxon?
+| trait | type | default | clamp Δ | mode Δ | both Δ |
+|---|---|---|---|---|---|
+| body_mass_g            | log-cont (M)     | 3.70M ± 0.09M | **+7.3 %** | +9.0 % | +9.2 % |
+| head_body_length_mm    | log-cont (mm)    | 504 ± 182    | +3.4 %    | +8.6 % | +3.6 % |
+| gestation_d            | log-cont (d)     | 42.6 ± 10.9  | +5.7 %    | +13.5 % | +2.9 % |
+| max_longevity_m        | log-cont (mo)    | 137 ± 55     | −5.8 %    | +4.8 % | −28.9 % |
+| litter_size            | count            | 1.07 ± 0.07  | −2.7 %    | −0.6 % | +0.8 % |
+| **diet_breadth**       | **ordinal K=5**  | **0.407 ± 0.031** | +2.5 pp   | **−2.1 pp** | −0.2 pp |
+| **habitat_breadth**    | **ordinal K=3**  | **0.767 ± 0.031** | +1.4 pp   | **+1.5 pp** | +1.7 pp |
+| terrestriality         | binary           | 0.917 ± 0.013 | −0.4 pp   | 0     | −0.3 pp |
 
-**Yes.**  AmphiBIO body_mass: default RMSE 58.5 → clamp 50.5 (-13.7 %).
-PanTHERIA body_mass: default RMSE 3.23 M → clamp 3.09 M (-4.2 %).
-PanTHERIA max_longevity: default 225 → clamp 170 (-24.5 %; this trait
-regressed -42 % from baseline under default; clamp closes most of the
-gap).  Multi-taxon support for the AVONET seed-2030 finding.
+AmphiBIO amphibians (Diu / Noc dropped; presence-only encoding):
 
-Note: PanTHERIA `head_body_length_mm` and `litter_size` show clamp
-HURTING by ~10 % — likely either MC noise (training trajectory
-differences) or a true narrow-distribution case where capping at
-obs_max × 5 clips legitimate predictions.
+| trait | type | default | clamp Δ | mode Δ |
+|---|---|---|---|---|
+| body_mass_g       | log-cont    | 57.2 ± 37.7 | **−5.3 %** | −12.5 % |
+| body_size_mm      | log-cont    | 59.5 ± 18.9 | +2.5 %    | −5.9 % |
+| diet_breadth K=5  | ordinal (degenerate) | 0.872 ± 0.051 | 0      | 0     |
+| habitat (4-class) | categorical | 0.847 ± 0.012 | 0      | 0     |
 
-### Q2. Does mode pooling help OR hurt K=5 ordinal on real data?
+## Why the single-seed bench was misleading
 
-**HELPS.**  PanTHERIA diet_breadth (K=5, mammal diet categories):
-default acc 0.395 → mode 0.437 (+4.2 pp).  This contradicts the Phase
-H+ simulated K=5 finding (-6.7 pp on K=5 simulated ordinal at λ = 0.6).
+In Phase C v1 (single seed), the cross-config RMSE deltas on
+continuous traits were dominated by **MC noise from re-training the
+GNN per config** -- each `impute()` call has stochastic dropout +
+non-deterministic torch ops, so the same data yields different
+predictions across runs.  At single seed:
 
-Likely explanation: real ordinal traits have semantic structure
-(e.g. diet categories carry biological meaning, not arbitrary class
-labels) that mode-pooling exploits; simulated K=5 ordinals at fixed
-λ have no such structure and mode pooling adds noise without signal.
+  PanTHERIA body_mass mode    -20.2 % (single-seed)
+  PanTHERIA body_mass mode    +9.0 ± SD  (multi-seed)
+  PanTHERIA diet_breadth mode +4.2 pp (single-seed)
+  PanTHERIA diet_breadth mode -2.1 ± noise pp (multi-seed)
 
-PanTHERIA habitat_breadth (K=3): default 0.715 → mode 0.788 (+7.3 pp).
-Consistent with AVONET Migration K=3 finding (+6.6 pp from PR #59).
+The mode K=5 reversal is the most important: single-seed gave a
+confident +4.2 pp lift, multi-seed shows a small negative effect.
+Without multi-seed, this would have entered the literature as a
+positive finding contradicting the simulation result.
 
-### Q3. Does Mass-instability appear on PanTHERIA mammals?
+## Updated user guidance (from all phase work today)
 
-**Yes, in milder form.**  The Phase G mass-tail evidence on AVONET
-seed-2030 (RMSE 11× baseline) does not appear on PanTHERIA seed=2026
-at default-config (RMSE 0.73× baseline -- a lift not a regression).
-But **PanTHERIA max_longevity regresses by -42 %** under default
-(RMSE 225 vs baseline 158).  clamp_outliers rescues this (-1.5 %
-under clamp; -42 % under default) -- functionally analogous to the
-AVONET Mass case.
+| trait class | recommendation |
+|---|---|
+| log-cont body mass / size / gestation | defaults usually fine; `clamp_outliers = TRUE` ONLY for known-extreme-outlier datasets (e.g. AVONET when Casuarius-class species are masked).  For routine use, the small deltas are noise. |
+| **K=3 ordinal** | `pool_method = "mode"` modestly helps (+1.5 to +6.6 pp).  Recommended at N_IMP > 1. |
+| **K=5+ ordinal** | **`pool_method = "mode"` HURTS at K=5+** (real-data + simulation agree).  Keep default `"median"`. |
+| binary / categorical | defaults usually fine. |
+| count | defaults usually fine; small datasets noisy. |
 
-This generalises the Phase G-finding pattern: pigauto can produce
-catastrophic over-predictions on certain (trait × dataset)
-combinations, and `clamp_outliers = TRUE` is the right opt-in fix.
+## What changed in the v2 bench (vs v1 PR #64)
 
-## Per-trait detail
-
-PanTHERIA (mammals, n=1500):
-
-| trait | default lift vs baseline | clamp Δ | mode Δ |
-|---|---|---|---|
-| body_mass_g            | +27 %    | +4.2 %    | -20.2 % (MC noise) |
-| head_body_length_mm    | +49 %    | -9.9 %    | -17.2 % (MC noise) |
-| gestation_d            | +62 %    | +18.4 %   | +9.5 % (MC noise) |
-| max_longevity_m        | **-42 %** (regression) | **+24.5 %** | -11 % |
-| litter_size            | +47 %    | -8.0 %    | -7.1 % |
-| diet_breadth (K=5)     | +2.7 pp  | -1.6 pp   | **+4.2 pp** |
-| habitat_breadth (K=3)  | -0.4 pp  | -1.5 pp   | **+7.3 pp** |
-| terrestriality binary  | +31 pp   | 0         | 0    |
-
-AmphiBIO (amphibians, n=1500):
-
-| trait | default lift vs baseline | clamp Δ | mode Δ |
-|---|---|---|---|
-| body_mass_g     | +21 %   | **+13.7 %** | +6.5 % (MC noise) |
-| body_size_mm    | +40 %   | -2.8 %      | +7.4 % (MC noise) |
-| diet_breadth K=5 (degenerate) | 0 | 0 | 0 |
-| habitat (cat)   | +5.3 pp | -0.5 pp     | -1.2 pp |
-| diu binary (heavily imbalanced) | 0 | -0.4 pp | -39.8 pp (artefact) |
-| noc binary (imbalanced) | 0 | 0 | +0.2 pp |
-
-## Caveats
-
-1. **Single seed**.  Continuous-trait config deltas include
-   GNN-training MC noise.  Multi-seed runs would let us separate
-   config effect from training noise.  Out of scope for this PR.
-
-2. **AmphiBIO binaries are degenerate.**  AmphiBIO encodes Diu / Noc
-   as 1 / NA (presence-only).  My bench loader treated NA as 0
-   (absent), creating heavy class imbalance (most species coded as
-   not-diurnal).  Mode-class baseline = 85 % accuracy on Diu just by
-   predicting 0.  pigauto matches that → no lift.  The -39.8 pp
-   "regression" of mode on Diu is a class-imbalance artefact (the
-   model happened to predict the minority class on more cells), not
-   a real mode-pooling effect.  Future bench should refine the
-   binary encoding.
-
-3. **AmphiBIO diet_breadth is degenerate** (acc ≈ 0.907 across all
-   configs because the trait distribution is dominated by one
-   breadth value in the training set).  Cannot distinguish configs.
-
-## Updates to user guidance (combined with prior phase findings)
-
-After Phase C, the picture across AVONET + PanTHERIA + AmphiBIO is:
-
-| trait class | default works? | which opt-in helps? |
-|---|---|---|
-| log-cont body mass / size (3 datasets) | mostly yes; occasional regressions | `clamp_outliers = TRUE` (Phase G) — generalises across taxa |
-| ordinal K = 3-5 | small lift over baseline | `pool_method = "mode"` (Phase H) — generalises across taxa, real-data K=5 contradicts simulation |
-| binary / categorical | usually big lifts | defaults are fine |
-| count | mostly fine | defaults; small datasets show MC noise |
-
-So **the existing Phase G + Phase H opt-in tools have multi-taxon
-support**.  The package is in stronger empirical shape than yesterday.
-No default-flip recommendations from this bench (single seed; would
-need multi-seed before flipping anything).
-
-## Negative / null findings
-
-- AmphiBIO binaries (Diu / Noc): bench-design noise, not a real
-  signal for any config.
-- PanTHERIA terrestriality: all configs identical; default is
-  optimal.
-- Phase G''/G''' (conditional PMM) was already abandoned before
-  Phase C; not benched here.
+- 3 seeds instead of 1
+- AmphiBIO Diu / Noc dropped (presence-only encoding produced
+  −39.8 pp artefact on Diu in v1)
+- Per-config aggregation: mean ± SD across seeds
+- Honest reading of effect sizes vs noise
 
 ## What this PR contains
 
-- `script/bench_phase_c_cross_dataset.R` (NEW) — cross-dataset bench
-- `script/bench_phase_c_cross_dataset.{md,rds}` — outputs
+- `script/bench_phase_c_cross_dataset.R` — updated bench (multi-seed,
+  Diu/Noc dropped)
+- `script/bench_phase_c_cross_dataset.{md,rds}` — v2 outputs
 - (this memo)
 
-No code changes.
+No code changes to `R/`.
 
 ## What's NOT in this PR
 
-- Multi-seed Phase C bench — would resolve MC noise on continuous-
-  trait config deltas; ~3 hr wall; queued.
-- AmphiBIO binary refinement (proper 0/1 encoding instead of
-  NA→0) — small bench-script fix; queued.
-- BIEN plant + FishBase fish benches — additional taxa; out of scope.
+- v0.9.2 default-flip recommendations.  No, none.  All effect sizes
+  are within noise except the K=3 mode finding (consistently
+  positive but small).
+- BIEN plant + FishBase fish benches.
+- `clamp_factor` tuning.

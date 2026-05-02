@@ -60,7 +60,15 @@ out_rds <- file.path(here, "script", "bench_phase_c_cross_dataset.rds")
 out_md  <- file.path(here, "script", "bench_phase_c_cross_dataset.md")
 cache_dir <- file.path(here, "script", "data-cache")
 
-SEED      <- 2026L
+# Phase C v2 (2026-05-01): multi-seed + AmphiBIO loader fix
+#   * 3 seeds (2026 / 2027 / 2028) to separate config effects from
+#     GNN-training MC noise on continuous traits.
+#   * AmphiBIO loader drops Diu/Noc (presence-only encoding => degenerate
+#     binary; the v1 bench saw a -39.8 pp artefact on Diu under
+#     pool_method = "mode" caused by class-imbalance after the NA -> 0
+#     hack).  Keeps body_mass / body_size (continuous), diet_breadth
+#     (ordinal K=5), habitat (categorical K=4).
+SEEDS     <- c(2026L, 2027L, 2028L)
 MISS_FRAC <- 0.30
 N_IMP     <- 20L
 # Subset to match AVONET-bench scale.  PanTHERIA full (n~4600) and
@@ -148,13 +156,12 @@ load_amphibio <- function() {
     x[x <= 0 | !is.finite(x)] <- NA
     x
   }
-  # AmphiBIO encodes binaries as int 1 / NA (presence-only).  Treat NA as
-  # 0 (absent) so we get a real binary -- only valid for fields that
-  # AmphiBIO genuinely curates (Diu / Noc are well-curated).
-  df$diu  <- factor(ifelse(is.na(amph$Diu), 0L, amph$Diu),
-                    levels = c("0", "1"))
-  df$noc  <- factor(ifelse(is.na(amph$Noc), 0L, amph$Noc),
-                    levels = c("0", "1"))
+  # AmphiBIO Diu / Noc are presence-only (only 1 and NA values; no
+  # explicit 0 = "not diurnal").  Phase C v1 saw a -39.8 pp artefact
+  # on Diu under mode pooling that was actually class-imbalance noise
+  # (NA -> 0 created a 13 % vs 87 % imbalance with mode-class accuracy
+  # = 0.85 by default, easy to flip).  Phase C v2 drops Diu / Noc from
+  # the AmphiBIO bench entirely: not a real binary signal.
   # Diet breadth: count of 1's across the 6 diet indicator columns
   # (Leaves, Flowers, Seeds, Fruits, Arthro, Vert).  Range 0-6; clip to
   # 1-5 for ordinal encoding.  Species with all-NA diet -> NA breadth.
@@ -181,11 +188,11 @@ load_amphibio <- function() {
 
 # ---- Per-cell run ----------------------------------------------------------
 
-run_one_cell <- function(dataset_name, df, tree, config) {
-  log_line(sprintf("Cell %s + %s ...", dataset_name, config))
+run_one_cell <- function(dataset_name, df, tree, config, seed) {
+  log_line(sprintf("Cell %s + %s seed=%d ...", dataset_name, config, seed))
 
   # Apply mask
-  set.seed(SEED)
+  set.seed(seed)
   mask_test <- matrix(FALSE, nrow = nrow(df), ncol = ncol(df),
                       dimnames = list(rownames(df), names(df)))
   for (v in names(df)) {
@@ -203,7 +210,7 @@ run_one_cell <- function(dataset_name, df, tree, config) {
                epochs = 200L,
                n_imputations = N_IMP,
                verbose = FALSE,
-               seed = SEED)
+               seed = seed)
   if (config == "default") {
     # nothing extra
   } else if (config == "clamp") {
@@ -237,7 +244,7 @@ run_one_cell <- function(dataset_name, df, tree, config) {
       mode_class <- names(sort(table(df_miss[[tr]]), decreasing = TRUE))[1]
       base_acc <- mean(as.character(truth) == mode_class, na.rm = TRUE)
       out[[tr]] <- data.frame(
-        dataset = dataset_name, config = config, trait = tr,
+        dataset = dataset_name, seed = seed, config = config, trait = tr,
         type = if (is.ordered(truth)) "ordinal"
                else if (nlevels(as.factor(truth)) == 2L) "binary"
                else "categorical",
@@ -252,7 +259,7 @@ run_one_cell <- function(dataset_name, df, tree, config) {
       base_rmse <- sqrt(mean(
         (truth_n - mean(df_miss[[tr]], na.rm = TRUE))^2, na.rm = TRUE))
       out[[tr]] <- data.frame(
-        dataset = dataset_name, config = config, trait = tr,
+        dataset = dataset_name, seed = seed, config = config, trait = tr,
         type = "continuous_or_count",
         metric = "rmse",
         value  = rmse, baseline = base_rmse, n = length(idx),
@@ -271,9 +278,12 @@ log_line("Loading PanTHERIA ...")
 pan <- load_pantheria()
 log_line(sprintf("  PanTHERIA full: %d species, %d traits",
                  nrow(pan$df), ncol(pan$df)))
-# Subset to N_SUB random species
+# Subset to N_SUB random species (use first SEED for the subset draw
+# so the species set is fixed across config x seed cells; only the
+# masking + GNN training varies across seeds, isolating the noise we
+# want to measure).
 if (nrow(pan$df) > N_SUB) {
-  set.seed(SEED)
+  set.seed(SEEDS[1])
   keep <- sample(rownames(pan$df), N_SUB)
   pan$tree <- ape::drop.tip(pan$tree, setdiff(pan$tree$tip.label, keep))
   pan$df   <- pan$df[pan$tree$tip.label, , drop = FALSE]
@@ -286,7 +296,7 @@ amph <- load_amphibio()
 log_line(sprintf("  AmphiBIO full: %d species, %d traits",
                  nrow(amph$df), ncol(amph$df)))
 if (nrow(amph$df) > N_SUB) {
-  set.seed(SEED + 1L)
+  set.seed(SEEDS[1] + 1L)
   keep <- sample(rownames(amph$df), N_SUB)
   amph$tree <- ape::drop.tip(amph$tree, setdiff(amph$tree$tip.label, keep))
   amph$df   <- amph$df[amph$tree$tip.label, , drop = FALSE]
@@ -295,48 +305,81 @@ if (nrow(amph$df) > N_SUB) {
 }
 
 results <- list()
-for (cfg in CONFIGS) {
-  results[[length(results) + 1L]] <- run_one_cell("pantheria",
-                                                   pan$df, pan$tree, cfg)
-}
-for (cfg in CONFIGS) {
-  results[[length(results) + 1L]] <- run_one_cell("amphibio",
-                                                   amph$df, amph$tree, cfg)
+total_cells <- length(SEEDS) * length(CONFIGS) * 2L
+i <- 0L
+for (s in SEEDS) {
+  for (cfg in CONFIGS) {
+    i <- i + 1L
+    log_line(sprintf("==== cell %d/%d ====", i, total_cells))
+    results[[length(results) + 1L]] <- run_one_cell("pantheria",
+                                                     pan$df, pan$tree, cfg, s)
+  }
+  for (cfg in CONFIGS) {
+    i <- i + 1L
+    log_line(sprintf("==== cell %d/%d ====", i, total_cells))
+    results[[length(results) + 1L]] <- run_one_cell("amphibio",
+                                                     amph$df, amph$tree, cfg, s)
+  }
 }
 all_rows <- do.call(rbind, results)
 saveRDS(all_rows, out_rds)
 
-# ---- Summary ---------------------------------------------------------------
+# ---- Summary: per-config mean +/- SD across seeds --------------------------
 
-# Compute lift over default per (dataset, trait)
-default_rows <- subset(all_rows, config == "default")
-all_rows$lift_pct <- NA_real_
-for (i in seq_len(nrow(all_rows))) {
-  d <- subset(default_rows,
-              dataset == all_rows$dataset[i] & trait == all_rows$trait[i])
-  if (nrow(d) == 1L && d$value != 0) {
-    if (all_rows$metric[i] == "rmse") {
-      all_rows$lift_pct[i] <- 100 * (d$value - all_rows$value[i]) / d$value
+# Per (dataset, trait, config), aggregate mean +/- SD across seeds, then
+# compute lift_pct vs default-config mean.
+agg <- stats::aggregate(value ~ dataset + trait + type + config + metric,
+                        data = all_rows,
+                        FUN = function(x) {
+                          c(mean = mean(x, na.rm = TRUE),
+                            sd   = stats::sd(x, na.rm = TRUE),
+                            n    = sum(!is.na(x)))
+                        })
+agg <- data.frame(
+  dataset = agg$dataset, trait = agg$trait, type = agg$type,
+  config  = agg$config, metric = agg$metric,
+  mean    = as.numeric(agg$value[, "mean"]),
+  sd      = as.numeric(agg$value[, "sd"]),
+  n_seeds = as.numeric(agg$value[, "n"]),
+  stringsAsFactors = FALSE
+)
+default_agg <- subset(agg, config == "default")
+agg$lift_pct_mean <- NA_real_
+for (i in seq_len(nrow(agg))) {
+  d <- subset(default_agg,
+              dataset == agg$dataset[i] & trait == agg$trait[i])
+  if (nrow(d) == 1L && d$mean != 0) {
+    agg$lift_pct_mean[i] <- if (agg$metric[i] == "rmse") {
+      100 * (d$mean - agg$mean[i]) / d$mean
     } else {
-      all_rows$lift_pct[i] <- 100 * (all_rows$value[i] - d$value)
+      100 * (agg$mean[i] - d$mean)
     }
   }
 }
+agg <- agg[order(agg$dataset, agg$trait, agg$config), ]
 
 md <- c(
-  "# Phase C cross-dataset bench: PanTHERIA + AmphiBIO",
+  "# Phase C v2 cross-dataset bench: PanTHERIA + AmphiBIO (multi-seed)",
   "",
   sprintf("Run: %s", format(Sys.time())),
-  sprintf("Seed = %d, miss_frac = %.2f, N_IMP = %d", SEED, MISS_FRAC, N_IMP),
+  sprintf("Seeds: %s.  miss_frac = %.2f, N_IMP = %d.  AmphiBIO Diu / Noc dropped (presence-only encoding).",
+          paste(SEEDS, collapse = ", "), MISS_FRAC, N_IMP),
   "",
-  "## Per-cell results",
+  "## Aggregated results (mean +/- SD across seeds)",
+  "",
+  "```",
+  capture.output(print(agg[, c("dataset", "trait", "type", "config",
+                                 "metric", "mean", "sd", "lift_pct_mean")],
+                        row.names = FALSE)),
+  "```",
+  "",
+  "## Raw per-seed results",
   "",
   "```",
   capture.output(print(all_rows[order(all_rows$dataset, all_rows$trait,
-                                        all_rows$config),
-                                  c("dataset", "trait", "type", "config",
-                                    "metric", "value", "baseline",
-                                    "lift_pct")],
+                                        all_rows$config, all_rows$seed),
+                                  c("dataset", "seed", "trait", "config",
+                                    "metric", "value", "baseline")],
                         row.names = FALSE)),
   "```",
   ""
