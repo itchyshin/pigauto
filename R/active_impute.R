@@ -685,15 +685,23 @@ suggest_next_observation <- function(result, top_n = 10L,
     rownames(all_cells) <- NULL
     utils::head(all_cells, top_n)
   } else {
-    # Aggregate to species: sum of variance + entropy per species
-    agg_var <- stats::aggregate(delta_var_total ~ species,
-                                  data = all_cells,
-                                  FUN = function(x) sum(x, na.rm = TRUE))
-    agg_ent <- stats::aggregate(delta_entropy_total ~ species,
-                                  data = all_cells,
-                                  FUN = function(x) sum(x, na.rm = TRUE))
-    agg_n   <- stats::aggregate(trait ~ species,
-                                  data = all_cells, FUN = length)
+    # Aggregate to species: sum of variance + entropy per species.
+    # Use the data.frame interface (not the formula interface) so all-NA
+    # columns -- e.g. delta_entropy_total when only continuous traits are
+    # present, or delta_var_total when only binary/categorical traits are
+    # present -- do NOT trigger "no rows to aggregate".  The formula
+    # interface routes through model.frame() which na.omit's rows, leaving
+    # zero rows when every value is NA.
+    sum_skipna <- function(x) sum(x, na.rm = TRUE)
+    agg_var <- stats::aggregate(all_cells["delta_var_total"],
+                                  by = list(species = all_cells$species),
+                                  FUN = sum_skipna)
+    agg_ent <- stats::aggregate(all_cells["delta_entropy_total"],
+                                  by = list(species = all_cells$species),
+                                  FUN = sum_skipna)
+    agg_n   <- stats::aggregate(all_cells["trait"],
+                                  by = list(species = all_cells$species),
+                                  FUN = length)
     agg <- merge(merge(agg_var, agg_ent, by = "species", all = TRUE),
                   agg_n, by = "species", all = TRUE)
     names(agg)[names(agg) == "trait"] <- "n_traits_missing"
