@@ -174,25 +174,21 @@ test_that("[T2B] fit_pigauto(conformal_method = 'bootstrap') stores conformal sc
 # T3   Edge cases
 # ---------------------------------------------------------------------------
 
-test_that("[T3] preprocess_traits warns when no rownames overlap with tree tips", {
-  # Documents the CURRENT contract: when traits and tree have zero
-  # overlap, preprocess emits a "tree tips have no trait data" warning
-  # and returns a pigauto_data with all-NA X_scaled.  TODO (future
-  # hardening): consider erroring rather than silently producing an
-  # all-NA matrix that downstream fit_pigauto will fail on.
+test_that("[T3] preprocess_traits errors when no rownames overlap with tree tips", {
+  # Hardened in v0.9.1.9014: zero overlap was previously a silent warn
+  # + all-NA X_scaled that downstream fit_pigauto would only fail on
+  # much later.  Now errors at preprocess time with a clear message.
   set.seed(8L)
   tree <- ape::rcoal(10L)
   df <- data.frame(
     row.names = paste0("not_a_tip_", seq_len(10L)),
     cont = stats::rnorm(10L)
   )
-  expect_message(
-    pd <- preprocess_traits(df, tree),
-    regexp = "(no trait data|all-NA|tip)",
+  expect_error(
+    suppressWarnings(preprocess_traits(df, tree)),
+    regexp = "no overlap",
     ignore.case = TRUE
   )
-  expect_s3_class(pd, "pigauto_data")
-  expect_true(all(is.na(pd$X_scaled)))
 })
 
 test_that("[T3] impute errors gracefully on a tree without branch lengths", {
@@ -221,19 +217,20 @@ test_that("[T3] impute errors gracefully on a tree without branch lengths", {
   }
 })
 
-test_that("[T3] preprocess_traits accepts a single-species tree (current contract)", {
-  # Documents the CURRENT contract: preprocess does not error for
-  # n_species = 1; it returns a 1-row pigauto_data.  Downstream
-  # fit_pigauto / fit_baseline will then fail because phylogenetic
-  # signal is undefined for n = 1.  TODO (future hardening): error in
-  # preprocess_traits when n_species < 2.
+test_that("[T3] preprocess_traits errors on a single-species tree", {
+  # Hardened in v0.9.1.9014: a 1-tip tree was previously accepted and
+  # produced a 1-row pigauto_data with no phylogenetic signal that
+  # downstream fit_pigauto / fit_baseline could not use.  Now errors
+  # at preprocess time.
   set.seed(10L)
   tree <- ape::rcoal(2L)
   tree <- ape::drop.tip(tree, tree$tip.label[2])
   df <- data.frame(row.names = tree$tip.label, cont = 1.0)
-  pd <- suppressWarnings(preprocess_traits(df, tree))
-  expect_s3_class(pd, "pigauto_data")
-  expect_equal(nrow(pd$X_scaled), 1L)
+  expect_error(
+    preprocess_traits(df, tree),
+    regexp = "fewer than 2 tips|at least 2 species",
+    ignore.case = TRUE
+  )
 })
 
 test_that("[T3] all-observed continuous trait round-trips through impute() as identity", {

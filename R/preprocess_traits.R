@@ -169,6 +169,15 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
   if (!is.data.frame(traits)) stop("'traits' must be a data.frame.")
   if (!inherits(tree, "phylo")) stop("'tree' must be a phylo object.")
 
+  # Phylogenetic imputation needs >= 2 tips to define any signal.  A
+  # 1-tip tree silently produces a 1-row pigauto_data that downstream
+  # fit_baseline / fit_pigauto cannot use; better to fail loudly here.
+  if (length(tree$tip.label) < 2L) {
+    stop("`tree` has fewer than 2 tips (", length(tree$tip.label),
+         "). Phylogenetic imputation requires at least 2 species.",
+         call. = FALSE)
+  }
+
   # ---- Validate multi_proportion_groups -------------------------------------
   if (!is.null(multi_proportion_groups)) {
     if (!is.list(multi_proportion_groups) ||
@@ -236,6 +245,15 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
     traits <- traits[keep_rows, , drop = FALSE]
     obs_species_raw <- obs_species_raw[keep_rows]
     unique_species <- unique(obs_species_raw)
+  }
+  # If alignment leaves zero species in common, phylogenetic imputation
+  # cannot proceed.  Fail loudly here rather than producing an all-NA
+  # X_scaled that downstream fit_pigauto would only fail on much later.
+  if (length(unique_species) == 0L) {
+    stop("No overlap between trait row names and tree tip labels: ",
+         "0 species in common. Check that rownames(traits) match ",
+         "tree$tip.label (or pass `species_col` if rows are not species).",
+         call. = FALSE)
   }
   n_missing_from_data <- sum(!in_data)
   if (n_missing_from_data > 0) {
