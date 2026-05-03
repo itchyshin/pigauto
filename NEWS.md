@@ -1,4 +1,61 @@
+# pigauto 0.9.1.9014 (dev)
+
+## Hardening: `preprocess_traits()` errors on edge-case inputs (2026-05-03)
+
+Two silent-degradation paths surfaced by the pre-shipping coverage
+audit are now loud errors instead of "warn + degraded result":
+
+- **Zero overlap** between `rownames(traits)` and `tree$tip.label`
+  used to drop every trait row, emit a "tree tips have no trait
+  data" message, and return a `pigauto_data` with all-NA `X_scaled`.
+  Downstream `fit_pigauto()` would then fail in a less-obvious place.
+  Now `preprocess_traits()` errors immediately with `"No overlap
+  between trait row names and tree tip labels: 0 species in
+  common."`.
+- **Single-tip tree** used to be accepted and produce a 1-row
+  `pigauto_data` with no phylogenetic signal.  Now errors with
+  `"`tree` has fewer than 2 tips. Phylogenetic imputation requires
+  at least 2 species."`.
+
+No effect on any non-pathological input.
+
 # pigauto 0.9.1.9013 (dev)
+
+## Bug fixes (pre-shipping coverage audit, 2026-05-03)
+
+Two production bugs surfaced by the pre-shipping coverage audit and
+fixed in PR #65:
+
+- `suggest_next_observation(by = "species")` no longer dies with
+  `"no rows to aggregate"` on continuous-only traits.  The species
+  aggregator now uses `stats::aggregate()`'s data.frame interface
+  (which tolerates all-NA columns) instead of the formula interface
+  (which routes through `model.frame()` and `na.omit`s every row
+  when the lhs is all NA).  See `R/active_impute.R::692`.
+- `pool_imputations()` for `count` and `zi_count` traits now
+  honours `pool_method = "mean"` instead of silently falling back
+  to median.  A leftover-from-refactor `vals <- row_median_decoded(nm)`
+  line had been overriding the pool_method-aware assignment.  The
+  `zi_count` branch additionally had a duplicate (and therefore
+  unreachable) `else if (tm$type == "zi_count")` that has now been
+  collapsed into a single branch which (a) honours pool_method on
+  the magnitude column and (b) always probability-pools the gate
+  column for `P(non-zero)`.  See `R/predict_pigauto.R::809+865`.
+
+## Pre-shipping coverage tests (2026-05-03)
+
+`tests/testthat/test-shipping-coverage.R` (+17 test_that blocks,
++68 expectations) covers:
+
+- 9 exported functions that previously had zero direct test usage:
+  `confusion_matrix`, `calibration_df`, `simulate_non_bm`,
+  `read_tree`, `plot_history_gg`, `plot_uncertainty`.
+- 3 non-default option paths previously untested:
+  `multi_impute(draws_method = "mc_dropout")`,
+  `fit_pigauto(use_attention = FALSE)`,
+  `fit_pigauto(conformal_method = "bootstrap")`.
+- 5 edge cases: zero-overlap, no branch lengths, single-species
+  tree, all-observed identity round-trip, all-NA column.
 
 ## Documentation: clarify PMM is for multi-imputation, NOT tail safety (2026-05-01)
 
