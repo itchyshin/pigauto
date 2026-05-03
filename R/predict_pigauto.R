@@ -803,9 +803,6 @@ pool_imputations <- function(decode_results, latent_runs, trait_map,
       # (Issue #40).
       vals <- if (pool_method %in% c("median", "mode")) row_median_decoded(nm) else
         rowMeans(sapply(decode_results, function(dr) as.numeric(dr$imputed[[nm]])))
-      # Median pool on decoded counts -- expm1 on log1p-noisy latents
-      # amplifies outliers (Issue #40 fix).
-      vals <- row_median_decoded(nm)
       imputed[[nm]] <- as.integer(pmax(round(vals), 0L))
 
     } else if (tm$type == "ordinal") {
@@ -863,19 +860,14 @@ pool_imputations <- function(decode_results, latent_runs, trait_map,
       imputed[[nm]] <- vals
 
     } else if (tm$type == "zi_count") {
-      # Magnitude col is expm1-decoded — same hazard as "count".
+      # Magnitude col is expm1-decoded -- same hazard as "count".  Default
+      # to median-pool; honour pool_method = "mean" when explicitly opted
+      # in (pre-v0.9.2 byte-compat).  P(non-zero) is the mean of per-draw
+      # decoder probabilities (always probability-pool, independent of
+      # pool_method).
       vals <- if (pool_method %in% c("median", "mode")) row_median_decoded(nm) else
         rowMeans(sapply(decode_results, function(dr) as.numeric(dr$imputed[[nm]])))
       imputed[[nm]] <- as.integer(pmax(round(vals), 0L))
-      # Gate col stays on the mean of P(non-zero) — linear.
-      # Median pool -- plogis decode can amplify near-extreme latents.
-      imputed[[nm]] <- row_median_decoded(nm)
-
-    } else if (tm$type == "zi_count") {
-      # Median pool on decoded expected values (same expm1 issue).
-      vals <- row_median_decoded(nm)
-      imputed[[nm]] <- as.integer(pmax(round(vals), 0L))
-      # P(non-zero): mean of probabilities is correct (probability pooling).
       avg_pnz <- rowMeans(sapply(decode_results, function(dr) {
         dr$probabilities[[nm]]
       }))
