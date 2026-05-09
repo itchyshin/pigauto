@@ -219,22 +219,79 @@
 #'   \code{plans/2026-04-23-safety-floor-mean-gate.md} for the
 #'   implementation plan.
 #'
+#' @section What gets imputed (read this first):
+#'   pigauto only \emph{imputes} cells that are \code{NA} in the input.
+#'   Observed cells are preserved as-is in \code{result$completed}.  The
+#'   slot \code{result$prediction$imputed} contains the model's
+#'   prediction for \strong{every} cell -- observed and missing alike --
+#'   and is intended for diagnostics (e.g. checking calibration on
+#'   training cells), \emph{not} as the imputed-values output.  The
+#'   imputed values themselves are \code{result$completed[result$imputed_mask]}.
+#'
+#'   \strong{Common pitfall.}  If you call \code{impute()} on a fully
+#'   observed trait matrix (no \code{NA}s anywhere), there is nothing
+#'   to impute.  \code{result$completed} is identical to the input,
+#'   \code{sum(result$imputed_mask)} is \code{0}, and
+#'   \code{result$prediction$imputed} is just model predictions for
+#'   already-known values.  This is the right behaviour, but it can
+#'   look surprising: e.g. on \code{avonet300} (fully observed), the
+#'   "imputed" Mass values you see are simply the observed body
+#'   masses passed through (some bird species are 24 kg).  To exercise
+#'   the imputation path on a complete dataset, mask some cells first
+#'   (see Examples).
+#'
+#'   \strong{Imbalanced K-class traits.}  At default settings
+#'   (\code{n_imputations = 1L}, \code{pool_method = "median"}), a
+#'   small ordinal / categorical trait whose marginal distribution is
+#'   heavily skewed (e.g. AVONET \code{Migration} is ~78\% Resident /
+#'   ~14\% Partial / ~8\% Full at n=300) can have its calibrated gate
+#'   collapse onto a corner that predicts the majority class
+#'   everywhere.  When this matters, increase \code{n_imputations}
+#'   (>= 20 in our K=3 ordinal benches) and set
+#'   \code{pool_method = "mode"} (Phase H, +6.6 pp on AVONET
+#'   Migration K=3 vs the default median pool).  See
+#'   \code{useful/MEMO_2026-05-01_phase_h_results.md}.
+#'
 #' @examples
 #' \dontrun{
-#' # Simple case: fill in missing values — type detection is automatic
-#' result <- impute(my_traits, my_tree)
-#' result$completed              # observed preserved, NAs filled
-#' result$imputed_mask           # which cells were imputed
+#' # Typical use: your data already has NAs you want filled
+#' result <- impute(my_traits_with_NAs, my_tree)
+#' result$completed                  # observed preserved, NAs filled
+#' result$imputed_mask               # which cells were imputed
+#' sum(result$imputed_mask)          # how many cells were imputed
 #'
 #' # Proportion and zi_count must be declared explicitly
 #' result <- impute(my_traits, my_tree,
 #'                  trait_types = c(Survival  = "proportion",
 #'                                  Parasites = "zi_count"))
 #'
-#' # Diagnostic: raw predictions for every cell
-#' result$prediction$imputed     # model's prediction everywhere
-#' result$prediction$se          # per-cell uncertainty
+#' # Diagnostic: raw predictions for every cell (NOT the imputed values).
+#' # `imputed` here means "model output", not "filled gap".
+#' result$prediction$imputed         # model prediction at every cell
+#' result$prediction$se              # per-cell uncertainty
 #' result$prediction$probabilities$diet  # class probabilities
+#'
+#' # Demonstration / sanity-check on a fully observed dataset:
+#' # mask some cells, impute, compare predictions to truth.
+#' data(avonet300, tree300)
+#' df <- avonet300
+#' rownames(df) <- df$Species_Key; df$Species_Key <- NULL
+#' set.seed(1L)
+#' truth <- df$Mass
+#' df_obs <- df
+#' hide  <- sample(which(!is.na(df$Mass)), 30L)
+#' df_obs$Mass[hide] <- NA
+#'
+#' result <- impute(df_obs, tree300)
+#' truth[hide]                         # held-out truth
+#' result$completed$Mass[hide]         # pigauto's imputations for those cells
+#' plot(truth[hide], result$completed$Mass[hide],
+#'      log = "xy", xlab = "truth", ylab = "imputed")
+#' abline(0, 1, col = "red")
+#'
+#' # For imbalanced K=3 ordinal traits (e.g. Migration), prefer:
+#' result <- impute(df_obs, tree300, n_imputations = 20L,
+#'                  pool_method = "mode")
 #' }
 #' @export
 impute <- function(traits, tree, species_col = NULL,

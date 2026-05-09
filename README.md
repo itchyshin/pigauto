@@ -43,11 +43,31 @@ rownames(df) <- df$Species_Key
 df$Species_Key <- NULL
 
 # ── Step 1: point imputation ──────────────────────────────────────────────
-result <- impute(df, tree300)
+# avonet300 is fully observed, so there is nothing to impute as-is.
+# Demonstrate the workflow by hiding 30 Mass values:
+set.seed(1L)
+hide <- sample(which(!is.na(df$Mass)), 30L)
+df_obs <- df
+df_obs$Mass[hide] <- NA
 
-result$prediction$imputed$Mass               # imputed values
-result$prediction$conformal_lower[, "Mass"]  # 95% CI lower
-result$prediction$conformal_upper[, "Mass"]  # 95% CI upper
+result <- impute(df_obs, tree300)
+
+# `completed` keeps observed values and fills the NAs:
+result$completed$Mass[hide]                          # pigauto's imputations
+df$Mass[hide]                                        # held-out truth, for comparison
+
+# `imputed_mask` flags which cells were filled:
+sum(result$imputed_mask[, "Mass"])                   # 30
+
+# Conformal 95% intervals are stored on the prediction object:
+result$prediction$conformal_lower[hide, "Mass"]
+result$prediction$conformal_upper[hide, "Mass"]
+
+# `result$prediction$imputed$Mass` contains predictions for ALL species
+# (observed + missing) -- intended for diagnostics, not as the imputed
+# output.  See `?impute` ("What gets imputed (read this first)") for the
+# distinction, and for the `n_imputations = 20, pool_method = "mode"`
+# recommendation on imbalanced ordinal traits like Migration.
 
 # ── Step 2: generate 50 complete datasets ────────────────────────────────
 mi <- multi_impute(df, tree300, m = 50L)
