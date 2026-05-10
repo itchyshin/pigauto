@@ -1,5 +1,32 @@
 # pigauto 0.9.1.9014 (dev)
 
+## Documentation: pkgdown reorganisation Phase 1 (2026-05-09)
+
+User-facing docs reorganisation following the issues by @b1805 (#67, #68)
+that surfaced confusion the README and `?impute` should have prevented.
+PR #69 fixed the function-level docstring; this release reorganises the
+pkgdown site itself:
+
+- The Articles dropdown is slimmed from 39 entries to 8 first-class items
+  (4 vignettes + 4 walk-throughs).
+- A new top-level Methodology dropdown owns benchmark HTMLs in two
+  sub-sections: per-trait benches (7 working items) and cross-dataset
+  benches + simulations (6 working items).  Ten older bench HTMLs that
+  are not present in `docs/dev/` on the current build are documented as
+  pending regeneration in the YAML and will re-enter the navbar once
+  their `script/make_*_html.R` driver has been re-run; the Phase-2
+  math vignette will land in a separate PR alongside this list refresh.
+- New `vignettes/common-pitfalls.Rmd`: five sections covering
+  `prediction$imputed` semantics, K=3 ordinal majority-class collapse,
+  the safety-floor closed-gate behaviour, phylogenetic signal diagnosis,
+  and `clamp_outliers` tail safety.  Each follows a fixed
+  Symptom / Why / Diagnose / Fix / See-also template.
+- `DOCS.md` retired; README + live pkgdown site are the single source of
+  truth for documentation navigation.  README gains a one-line
+  "Live documentation" link near the top.
+
+No code changes, no DESCRIPTION bump, no test changes.
+
 ## Hardening: `preprocess_traits()` errors on edge-case inputs (2026-05-03)
 
 Two silent-degradation paths surfaced by the pre-shipping coverage

@@ -2,6 +2,8 @@
 
 **Missing trait data should not stop a comparative analysis.**
 
+> Live documentation: <https://itchyshin.github.io/pigauto>
+
 pigauto fills gaps in species trait matrices by combining the phylogenetic
 tree, cross-trait correlations, and optional environmental covariates — then
 propagates imputation uncertainty through to your downstream model via

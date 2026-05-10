@@ -28,8 +28,6 @@ home:
     propagation via posterior tree samples. Tested up to 10,000
     species on a laptop.
   links:
-    - text: Documentation index (DOCS.md)
-      href: https://github.com/itchyshin/pigauto/blob/main/DOCS.md
     - text: Source code
       href: https://github.com/itchyshin/pigauto
     - text: Report a bug
@@ -37,7 +35,7 @@ home:
 
 navbar:
   structure:
-    left:  [intro, articles, reference, news]
+    left:  [intro, articles, methodology, reference, news]
     right: [search, github]
   components:
     intro:
@@ -47,15 +45,17 @@ navbar:
       text: Articles
       menu:
         - text: "Knitted vignettes"
-        - text: "Getting started"
+        - text: "Get started"
           href: articles/getting-started.html
+        - text: "Common pitfalls / FAQ"
+          href: articles/common-pitfalls.html
         - text: "Mixed-type traits"
           href: articles/mixed-types.html
         - text: "Propagating tree uncertainty"
           href: articles/tree-uncertainty.html
         - text: "-------"
         - text: "Walk-throughs"
-        - text: "Intro (architecture overview)"
+        - text: "Architecture overview"
           href: pigauto_intro.html
         - text: "Mixed-type workflow (Paths A / B / C)"
           href: pigauto_workflow_mixed.html
@@ -63,62 +63,51 @@ navbar:
           href: pigauto_walkthrough_covariates.html
         - text: "Multi-observation per species"
           href: pigauto_walkthrough_multi_obs.html
-        - text: "-------"
-        - text: "Benchmarks"
-        - text: "Scaling up to 5,000 tips"
-          href: dev/bench_scaling_v090.html
-        - text: "AVONET missingness sweep (20/50/80%)"
-          href: dev/bench_avonet_missingness.html
-        - text: "Continuous traits (BM / OU / regime / nonlinear)"
+    methodology:
+      text: Methodology
+      menu:
+        - text: "Per-trait benches"
+        - text: "Continuous (BM / OU / regime / nonlinear)"
           href: dev/bench_continuous.html
-        - text: "Binary traits (signal strength sweep)"
+        - text: "Binary (signal strength sweep)"
           href: dev/bench_binary.html
-        - text: "Ordinal traits (level count sweep)"
+        - text: "Ordinal (level count sweep)"
           href: dev/bench_ordinal.html
-        - text: "Count traits (Poisson / NegBin)"
+        - text: "Count (Poisson / NegBin)"
           href: dev/bench_count.html
-        - text: "Categorical traits (K-level sweep)"
+        - text: "Categorical (K-level sweep)"
           href: dev/bench_categorical.html
-        - text: "Proportion traits (signal sweep)"
+        - text: "Proportion (signal sweep)"
           href: dev/bench_proportion.html
         - text: "Zero-inflated counts (zero fraction sweep)"
           href: dev/bench_zi_count.html
-        - text: "Multi-proportion / compositional (simplex data)"
-          href: dev/bench_multi_proportion.html
+        - text: "-------"
+        - text: "Cross-dataset benches and simulations"
+        - text: "AVONET missingness sweep (20 / 50 / 80 %)"
+          href: dev/bench_avonet_missingness.html
         - text: "Missingness mechanisms (MCAR / MAR / MNAR)"
           href: dev/bench_missingness_mechanism.html
         - text: "Tree uncertainty (Rubin's rules, 10 posterior trees)"
           href: dev/bench_tree_uncertainty.html
-        - text: "Environmental covariates (Delhey 5,809 spp)"
+        - text: "Delhey 5,809-species birds"
           href: dev/bench_delhey.html
-        - text: "Covariate effectiveness (simulation sweep)"
-          href: dev/bench_covariate_sim.html
         - text: "Multi-observation imputation (CTmax-like)"
           href: dev/bench_multi_obs.html
-        - text: "-------"
-        - text: "Phase 8 sweeps and head-to-heads"
-        - text: "Phase 8 summary"
-          href: dev/phase8_summary.html
-        - text: "Phylogenetic signal sweep (Pagel's λ)"
-          href: dev/bench_signal_sweep.html
-        - text: "Cross-trait correlation sweep"
-          href: dev/bench_correlation_sweep.html
-        - text: "Evolutionary-model sweep (BM / OU / regime)"
-          href: dev/bench_evo_model_sweep.html
-        - text: "Clade-correlated missingness (realistic MAR)"
-          href: dev/bench_clade_missingness.html
-        - text: "AVONET 300 head-to-head (pigauto vs BACE)"
-          href: dev/bench_bace_avonet_head_to_head.html
-        - text: "PanTHERIA head-to-head (pigauto vs BACE)"
-          href: dev/bench_pantheria_bace_head_to_head.html
-        - text: "PanTHERIA n=500 summary"
-          href: dev/pantheria_summary.html
-        - text: "-------"
-        - text: "Developer reports"
-        - text: "Test catalogue"
-          href: dev/tests_overview.html
-        - text: "Logo gallery"
-          href: logo_gallery.html
+        - text: "Covariate effectiveness (simulation sweep)"
+          href: dev/bench_covariate_sim.html
+        # -------- Phase 2 placeholder --------
+        # When Phase 2 ships, add an entry here for the math vignette:
+        #   - text: "Mathematical & algorithmic description"
+        #     href: articles/methodology.html
+        #
+        # -------- Pending regeneration --------
+        # The following bench HTMLs were dropped from this navbar in Phase 1
+        # because they are not present in docs/dev/ on the current build.
+        # Re-add them once their script/make_*_html.R driver has been re-run:
+        #   bench_multi_proportion, bench_scaling_v090, pantheria_summary,
+        #   phase8_summary, bench_signal_sweep, bench_correlation_sweep,
+        #   bench_evo_model_sweep, bench_clade_missingness,
+        #   bench_bace_avonet_head_to_head, bench_pantheria_bace_head_to_head.
 
 reference:
   - title: "One-call entry point"
