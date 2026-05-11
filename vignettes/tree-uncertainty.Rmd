@@ -70,18 +70,14 @@ df$Species_Key <- NULL
 mi <- multi_impute_trees(df, trees = trees300, m_per_tree = 1L)
 # share_gnn = TRUE, reference_tree = MCC via phangorn -- all default
 
-fits <- Map(
-  function(dat, t_idx) {
-    dat$species <- rownames(dat)
-    nlme::gls(
-      log(Mass) ~ log(Wing.Length),
-      correlation = ape::corBrownian(phy = trees300[[t_idx]], form = ~species),
-      data = dat, method = "ML"
-    )
-  },
-  mi$datasets,
-  mi$tree_index
-)
+fits <- with_imputations(mi, function(dat, tree) {
+  dat$species <- rownames(dat)
+  nlme::gls(
+    log(Mass) ~ log(Wing.Length),
+    correlation = ape::corBrownian(phy = tree, form = ~species),
+    data = dat, method = "ML"
+  )
+})
 pool_mi(fits)   # pooled SEs include both imputation and tree uncertainty
 ```
 

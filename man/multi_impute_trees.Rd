@@ -232,19 +232,15 @@ print(mi)
 # For each completed dataset, fit the downstream model using the SAME
 # tree that produced that dataset. `mi$tree_index[i]` gives the tree
 # index (1..T) for dataset `i`.
-fits <- Map(
-  function(dat, t_idx) {
+fits <- with_imputations(mi, function(dat, tree) {
     dat$species <- rownames(dat)
     nlme::gls(
       log(Mass) ~ log(Wing.Length),
       correlation = ape::corBrownian(
-        phy = trees300[[t_idx]], form = ~species),
+        phy = tree, form = ~species),
       data = dat, method = "ML"
     )
-  },
-  mi$datasets,
-  mi$tree_index
-)
+})
 
 # Rubin's rules: pooled SEs include both trait-imputation and
 # phylogenetic-tree uncertainty.

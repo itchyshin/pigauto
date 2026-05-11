@@ -20,7 +20,12 @@ slot directly.}
 \item{.f}{A function of the form \verb{function(dataset, ...)} that fits
 a model to one complete data.frame and returns a model object.
 \code{coef()} and \code{vcov()} should work on the return value (required by
-\code{\link[=pool_mi]{pool_mi()}}). Any model class with those two generics is supported.}
+\code{\link[=pool_mi]{pool_mi()}}). Any model class with those two generics is supported.
+When \code{mi} comes from \code{\link[=multi_impute_trees]{multi_impute_trees()}}, \code{.f} may also declare
+explicit \code{tree}, \code{tree_index}, or \code{imputation} arguments; these are
+filled with the posterior tree object, its index in \code{mi$trees}, and
+the imputation-dataset index. The dataset also carries matching
+\code{tree}, \code{tree_index}, and \code{imputation} attributes.}
 
 \item{...}{Additional arguments passed to \code{.f} for every imputation.}
 
@@ -60,6 +65,19 @@ fits <- with_imputations(mi, function(d) {
 })
 
 pool_mi(fits)
+
+# Tree-aware MI: with_imputations() passes the matching posterior tree
+# when the callback declares a `tree` argument.
+mi_t <- multi_impute_trees(df, trees, m_per_tree = 1L)
+fits_t <- with_imputations(mi_t, function(d, tree) {
+  d$species <- rownames(d)
+  nlme::gls(
+    y ~ x,
+    correlation = ape::corBrownian(phy = tree, form = ~species),
+    data = d, method = "ML"
+  )
+})
+pool_mi(fits_t)
 }
 
 }
