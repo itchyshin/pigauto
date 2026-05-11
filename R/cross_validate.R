@@ -294,7 +294,7 @@ compute_conformal_coverage_fold <- function(pred, X_scaled, test_idx,
     nm <- tm$name
     lc <- tm$latent_cols
 
-    if (!(tm$type %in% c("continuous", "count", "ordinal"))) next
+    if (!(tm$type %in% c("continuous", "count", "ordinal", "proportion"))) next
 
     # Find test rows for this trait's first latent column
     row_i <- ((test_idx - 1L) %% n) + 1L
@@ -314,6 +314,8 @@ compute_conformal_coverage_fold <- function(pred, X_scaled, test_idx,
       if (isTRUE(tm$log_transform)) truth_orig <- exp(truth_orig)
     } else if (tm$type == "count") {
       truth_orig <- expm1(truth_latent[ok] * tm$sd + tm$mean)
+    } else if (tm$type == "proportion") {
+      truth_orig <- stats::plogis(truth_latent[ok] * tm$sd + tm$mean)
     } else {
       truth_orig <- truth_latent[ok] * tm$sd + tm$mean
     }

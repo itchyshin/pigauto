@@ -235,7 +235,7 @@ plot.pigauto_fit <- function(x, type = "history", ...) {
 #'   Used to identify which cells were held out for evaluation.
 #' @param type Character.
 #'   \code{"scatter"} (default): grid of observed-vs-predicted scatter
-#'     plots for continuous and count traits, with 1:1 line and
+#'     plots for continuous, count, and proportion traits, with 1:1 line and
 #'     conformal interval bands where available.
 #'   \code{"intervals"}: for each trait, species sorted by predicted
 #'     value with conformal-interval ribbon; observed values shown in
@@ -280,15 +280,16 @@ plot.pigauto_pred <- function(x, data = NULL, splits = NULL,
 .plot_scatter <- function(x, data = NULL, splits = NULL, traits = NULL, ...) {
   trait_map <- x$trait_map
 
-  # Identify plottable traits (continuous and count)
+  # Identify plottable traits (continuous, count, and proportion)
   if (!is.null(trait_map)) {
-    plot_traits <- Filter(function(tm) tm$type %in% c("continuous", "count"),
-                          trait_map)
+    plot_traits <- Filter(function(tm) {
+      tm$type %in% c("continuous", "count", "proportion")
+    }, trait_map)
     if (!is.null(traits)) {
       plot_traits <- Filter(function(tm) tm$name %in% traits, plot_traits)
     }
     if (length(plot_traits) == 0L) {
-      stop("No continuous or count traits available for scatter plots.")
+      stop("No continuous, count, or proportion traits available for scatter plots.")
     }
     trait_names <- vapply(plot_traits, "[[", character(1), "name")
   } else {
@@ -389,7 +390,7 @@ plot.pigauto_pred <- function(x, data = NULL, splits = NULL,
   # Select traits with numeric predictions
   if (!is.null(trait_map)) {
     avail <- Filter(function(tm) {
-      tm$type %in% c("continuous", "count", "ordinal")
+      tm$type %in% c("continuous", "count", "ordinal", "proportion")
     }, trait_map)
     avail_names <- vapply(avail, "[[", character(1), "name")
   } else {

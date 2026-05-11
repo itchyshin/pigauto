@@ -2,7 +2,8 @@
 #'
 #' Runs a single forward pass through the fitted model and returns imputed
 #' trait values back-transformed to the original scale.  Supports all
-#' trait types (continuous, binary, categorical, ordinal, count, proportion)
+#' trait types (continuous, binary, categorical, ordinal, count, proportion,
+#' zero-inflated count, multi-proportion)
 #' and MC dropout for multiple imputation (when \code{n_imputations > 1}). The fitted model is a gated ensemble
 #' of a phylogenetic baseline and a graph neural network correction;
 #' prediction is the per-trait blend
@@ -110,8 +111,8 @@
 #'     \item{imputed_latent}{Numeric matrix (n x p_latent) of predictions in
 #'       latent scale.}
 #'     \item{se}{Numeric matrix (n x n_original_traits) of per-cell
-#'       uncertainty.  Continuous/count/ordinal: SE in original scale (BM
-#'       conditional SD, delta-method back-transformed).
+#'       uncertainty.  Continuous/count/ordinal/proportion: SE in original
+#'       scale (BM conditional SD, delta-method back-transformed).
 #'       Binary: \code{min(p, 1-p)} — probability of being wrong (0 = certain,
 #'       0.5 = maximally uncertain); \strong{not} a Gaussian SE.
 #'       Categorical: \code{1 - max(p_k)} — margin from certainty; \strong{not}
@@ -546,7 +547,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
       nm <- tm$name
       lc <- tm$latent_cols
 
-      if (!(tm$type %in% c("continuous", "count", "ordinal"))) next
+      if (!(tm$type %in% c("continuous", "count", "ordinal", "proportion"))) next
       if (is.na(conformal_scores_out[nm])) next
 
       q <- conformal_scores_out[nm]
@@ -578,6 +579,13 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
         K <- length(tm$levels)
         conformal_lower[, nm] <- pmax(round(pred_low), 0)
         conformal_upper[, nm] <- pmin(round(pred_high), K - 1L)
+
+      } else if (tm$type == "proportion") {
+        pred_latent <- latent_pred[, lc[1]]
+        pred_low  <- (pred_latent - q) * tm$sd + tm$mean
+        pred_high <- (pred_latent + q) * tm$sd + tm$mean
+        conformal_lower[, nm] <- stats::plogis(pred_low)
+        conformal_upper[, nm] <- stats::plogis(pred_high)
       }
     }
   }

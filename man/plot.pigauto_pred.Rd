@@ -18,7 +18,7 @@ Used to identify which cells were held out for evaluation.}
 
 \item{type}{Character.
 \code{"scatter"} (default): grid of observed-vs-predicted scatter
-plots for continuous and count traits, with 1:1 line and
+plots for continuous, count, and proportion traits, with 1:1 line and
 conformal interval bands where available.
 \code{"intervals"}: for each trait, species sorted by predicted
 value with conformal-interval ribbon; observed values shown in
