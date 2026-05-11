@@ -474,7 +474,6 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
   fit_ref    <- res_ref$fit
   data_ref   <- res_ref$data
   splits_ref <- res_ref$splits
-  graph_ref  <- fit_ref$graph   # graph is stored on the fit, not on pigauto_result
 
   all_datasets <- vector("list", M_total)
   tree_index   <- integer(M_total)
@@ -487,8 +486,11 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
     if (verbose) cat(sprintf("  Tree %d/%d: baseline only...", t, T_trees))
     t0 <- proc.time()
 
+    # Do not pass graph_ref here. The shared GNN keeps the reference-tree
+    # graph inside fit_ref for prediction, but each tree-specific baseline
+    # must recompute its own cophenetic distances and phylogenetic covariance.
     baseline_t <- fit_baseline(data_ref, trees[[t]], splits = splits_ref,
-                               graph = graph_ref)
+                               graph = NULL)
     pred_t <- stats::predict(fit_ref, return_se = TRUE,
                               n_imputations = m_per_tree,
                               baseline_override = baseline_t)

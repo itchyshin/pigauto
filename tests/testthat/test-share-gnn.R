@@ -113,6 +113,27 @@ test_that("multi_impute_trees(share_gnn=TRUE) returns a single shared fit", {
   expect_identical(mi_shared$reference_tree, trees[[1]])
 })
 
+test_that("shared-GNN tree baselines recompute tree-specific graphs", {
+  set.seed(20260511)
+  tips <- paste0("sp", 1:8)
+  tree_ref <- ape::rcoal(8L, tip.label = tips)
+  tree_alt <- ape::rcoal(8L, tip.label = tips)
+  df <- data.frame(trait = c(NA_real_, 2, -1, 0.5, NA_real_, 1, -0.5, 1.5),
+                   row.names = tips)
+
+  pd <- pigauto::preprocess_traits(df, tree_ref, log_transform = FALSE)
+  graph_ref <- pigauto::build_phylo_graph(tree_ref, k_eigen = 4L)
+  bl_reused_graph <- pigauto::fit_baseline(pd, tree_alt, graph = graph_ref)
+  bl_tree_specific <- pigauto::fit_baseline(pd, tree_alt, graph = NULL)
+
+  expect_false(isTRUE(all.equal(bl_reused_graph$mu, bl_tree_specific$mu)))
+  expect_false(isTRUE(all.equal(bl_reused_graph$se, bl_tree_specific$se)))
+
+  body_txt <- paste(deparse(body(pigauto:::run_shared_gnn)), collapse = "\n")
+  expect_false(grepl("graph_ref", body_txt, fixed = TRUE))
+  expect_true(grepl("graph = NULL", body_txt, fixed = TRUE))
+})
+
 test_that("multi_impute_trees(share_gnn=FALSE) keeps per-tree behaviour", {
   skip_if_not_installed("torch")
   skip_if_not(torch::torch_is_installed(), "libtorch not installed")
