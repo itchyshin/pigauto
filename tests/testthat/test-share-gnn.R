@@ -172,6 +172,52 @@ test_that("shared-GNN pooled_point stays in completed-data order", {
   expect_equal(mi$pooled_point$trait, draw_mean, tolerance = 1e-8)
 })
 
+test_that("per-tree pooled_point averages all completed draws", {
+  traits <- data.frame(
+    species = c("sp1", "sp2"),
+    trait = c(NA_real_, 10),
+    stringsAsFactors = FALSE
+  )
+  trees <- list(ape::rtree(2L, tip.label = traits$species),
+                ape::rtree(2L, tip.label = traits$species))
+  calls <- 0L
+
+  local_mocked_bindings(
+    impute = function(traits, tree, ...) {
+      calls <<- calls + 1L
+      draws <- if (calls == 1L) c(1, 3) else c(5, 7)
+      imputed_datasets <- lapply(draws, function(value) {
+        data.frame(trait = c(value, -999))
+      })
+      list(
+        prediction = list(imputed_datasets = imputed_datasets),
+        completed = data.frame(species = traits$species,
+                               trait = c(calls * 100, 10)),
+        imputed_mask = matrix(c(TRUE, FALSE), ncol = 1L,
+                              dimnames = list(NULL, "trait")),
+        data = list(input_row_order = seq_len(nrow(traits))),
+        fit = structure(list(call = calls), class = "pigauto_fit")
+      )
+    },
+    .package = "pigauto"
+  )
+
+  mi <- pigauto:::run_per_tree(
+    traits = traits, trees = trees, m_per_tree = 2L,
+    species_col = "species", trait_types = NULL,
+    multi_proportion_groups = NULL, log_transform = FALSE,
+    missing_frac = 0, covariates = NULL, epochs = 1L,
+    verbose = FALSE, seed = 1L
+  )
+
+  expect_equal(mi$tree_index, c(1L, 1L, 2L, 2L))
+  expect_equal(mi$pooled_point$species, traits$species)
+  draw_mean <- rowMeans(vapply(mi$datasets, function(d) d$trait,
+                               numeric(nrow(traits))))
+  expect_equal(mi$pooled_point$trait, draw_mean)
+  expect_equal(mi$pooled_point$trait, c(4, 10))
+})
+
 test_that("multi_impute_trees(share_gnn=FALSE) keeps per-tree behaviour", {
   skip_if_not_installed("torch")
   skip_if_not(torch::torch_is_installed(), "libtorch not installed")

@@ -341,6 +341,7 @@ run_per_tree <- function(traits, trees, m_per_tree,
   all_fits     <- vector("list", T_trees)
   imputed_mask <- NULL
   pooled_sum   <- NULL
+  pooled_n     <- 0L
   trait_cols   <- setdiff(names(traits), species_col)
 
   for (t in seq_len(T_trees)) {
@@ -392,33 +393,33 @@ run_per_tree <- function(traits, trees, m_per_tree,
       idx <- (t - 1L) * m_per_tree + k
       completed_info <- build_completed(traits, imp_list[[k]], species_col,
                                           input_row_order = input_row_order)
-      all_datasets[[idx]] <- completed_info$completed
+      completed_i <- completed_info$completed
+      all_datasets[[idx]] <- completed_i
       tree_index[idx]     <- t
+
+      if (is.null(imputed_mask)) {
+        imputed_mask <- completed_info$imputed_mask
+      }
+
+      if (is.null(pooled_sum)) {
+        pooled_sum <- completed_i
+        for (nm in trait_cols) {
+          if (is.numeric(completed_i[[nm]])) {
+            pooled_sum[[nm]] <- as.numeric(completed_i[[nm]])
+          }
+        }
+      } else {
+        for (nm in trait_cols) {
+          if (is.numeric(completed_i[[nm]])) {
+            pooled_sum[[nm]] <- pooled_sum[[nm]] + as.numeric(completed_i[[nm]])
+          }
+        }
+      }
+      pooled_n <- pooled_n + 1L
     }
 
     # Store the fit for diagnostics
     all_fits[[t]] <- res$fit
-
-    # Accumulate imputed_mask (should be same across all trees)
-    if (is.null(imputed_mask)) {
-      imputed_mask <- res$imputed_mask
-    }
-
-    # Accumulate for pooled point estimate and SE
-    if (is.null(pooled_sum)) {
-      pooled_sum <- res$completed
-      for (nm in trait_cols) {
-        if (is.numeric(pooled_sum[[nm]])) {
-          pooled_sum[[nm]] <- res$completed[[nm]]
-        }
-      }
-    } else {
-      for (nm in trait_cols) {
-        if (is.numeric(res$completed[[nm]])) {
-          pooled_sum[[nm]] <- pooled_sum[[nm]] + res$completed[[nm]]
-        }
-      }
-    }
 
     if (verbose) {
       elapsed <- (proc.time() - t_start)[3]
@@ -426,11 +427,12 @@ run_per_tree <- function(traits, trees, m_per_tree,
     }
   }
 
-  # Pooled point estimate (average across trees)
   pooled_point <- pooled_sum
-  for (nm in trait_cols) {
-    if (is.numeric(pooled_point[[nm]])) {
-      pooled_point[[nm]] <- pooled_point[[nm]] / T_trees
+  if (!is.null(pooled_point) && pooled_n > 0L) {
+    for (nm in trait_cols) {
+      if (is.numeric(pooled_point[[nm]])) {
+        pooled_point[[nm]] <- pooled_point[[nm]] / pooled_n
+      }
     }
   }
 
