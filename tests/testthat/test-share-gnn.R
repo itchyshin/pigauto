@@ -30,6 +30,16 @@ test_that("predict.pigauto_fit accepts baseline_override and uses it in place of
     identical(pred_default$imputed_latent, pred_shifted$imputed_latent),
     info = "baseline_override should change predictions when gate is not fully closed"
   )
+
+  # Wrong-shaped per-tree baselines should fail before torch sees the tensor.
+  bl_bad <- bl
+  bl_bad$mu <- bl_bad$mu[, 1, drop = FALSE]
+  bl_bad$se <- bl_bad$se[, 1, drop = FALSE]
+  expect_error(
+    stats::predict(fit, return_se = FALSE, n_imputations = 1L,
+                   baseline_override = bl_bad),
+    regexp = "baseline_override\\$mu"
+  )
 })
 
 test_that("resolve_reference_tree returns user-supplied tree when given", {

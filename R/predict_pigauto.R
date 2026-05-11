@@ -225,12 +225,29 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     }
   }
   use_calibrated   <- !is.null(calibrated_gates)
+  calibration_slot <- function(slot, default) {
+    val <- object[[slot]]
+    if (is.null(val) || length(val) == 0L) default else val
+  }
+  numeric_calibration_slot <- function(x, slot) {
+    out <- suppressWarnings(as.numeric(x))
+    if (length(out) != expected_p || any(!is.finite(out))) {
+      stop("`", slot, "` must be a finite numeric vector of length ",
+           expected_p, ".", call. = FALSE)
+    }
+    out
+  }
 
   # Optional baseline override — used by multi_impute_trees(share_gnn = TRUE)
   # to reuse a trained GNN across posterior trees, with only the BM baseline
   # recomputed per tree.
   effective_baseline <- if (!is.null(baseline_override)) baseline_override
                         else object$baseline
+  baseline_label <- if (!is.null(baseline_override)) "baseline_override" else "object$baseline"
+  if (!is.matrix(effective_baseline$mu) || !is.matrix(effective_baseline$se)) {
+    stop("`", baseline_label, "` must contain `mu` and `se` matrices.",
+         call. = FALSE)
+  }
 
   # Prepare data
   multi_obs <- isTRUE(object$multi_obs)
@@ -260,6 +277,15 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   n <- n_obs   # rows in output
   p <- ncol(MU)
   n_imp <- as.integer(n_imputations)
+  if (is.null(p) || is.na(p) || p != expected_p) {
+    stop("`", baseline_label, "$mu` has ", p,
+         " latent column(s), but the model expects ", expected_p, ".",
+         call. = FALSE)
+  }
+  if (!identical(dim(effective_baseline$se), dim(MU_species))) {
+    stop("`", baseline_label, "$se` must be a matrix with the same dimensions as `",
+         baseline_label, "$mu`.", call. = FALSE)
+  }
 
   t_X_fill <- torch::torch_tensor(MU, dtype = torch::torch_float(),
                                   device = device)
@@ -289,10 +315,27 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   # ---- Covariates (environmental conditioners) ------------------------------
   has_covariates <- !is.null(object$covariates)
   t_covariates   <- NULL
+  n_cov_cols      <- 0L
   if (has_covariates) {
+    covariates <- as.matrix(object$covariates)
+    if (nrow(covariates) != n) {
+      stop("Stored covariates have ", nrow(covariates),
+           " row(s), but prediction needs ", n, " row(s).",
+           call. = FALSE)
+    }
+    n_cov_cols <- ncol(covariates)
     t_covariates <- torch::torch_tensor(
-      object$covariates, dtype = torch::torch_float(), device = device
+      covariates, dtype = torch::torch_float(), device = device
     )
+  }
+  actual_cov_dim <- p + 1L + n_cov_cols
+  expected_cov_dim <- as.integer(cfg$cov_dim)
+  if (length(expected_cov_dim) == 1L && !is.na(expected_cov_dim) &&
+      actual_cov_dim != expected_cov_dim) {
+    stop("Prediction covariate tensor would have ", actual_cov_dim,
+         " column(s), but the model was fitted with cov_dim = ",
+         expected_cov_dim, ". Check the fit object's stored covariates.",
+         call. = FALSE)
   }
 
   gpu_mem_checkpoint("predict: after input tensor creation (adj, D_sq, coords, MU)")
@@ -306,15 +349,15 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   # r_cal (scalar per col). When r_cal_bm / r_cal_mean are missing, reconstruct
   # the 2-way blend as r_bm = 1 - r_cal, r_gnn = r_cal, r_mean = 0, mean = 0.
   if (use_calibrated) {
-    r_bm_vec   <- object$r_cal_bm             %||% (1 - calibrated_gates)
-    r_gnn_vec  <- object$r_cal_gnn            %||% calibrated_gates
-    r_mean_vec <- object$r_cal_mean           %||% rep(0, length(calibrated_gates))
-    mean_vec   <- object$mean_baseline_per_col %||% rep(0, length(calibrated_gates))
-    # Defensive coercion: NULL replacements above can leak non-numeric types.
-    r_bm_vec   <- as.numeric(r_bm_vec)
-    r_gnn_vec  <- as.numeric(r_gnn_vec)
-    r_mean_vec <- as.numeric(r_mean_vec)
-    mean_vec   <- as.numeric(mean_vec)
+    r_bm_vec   <- calibration_slot("r_cal_bm", 1 - calibrated_gates)
+    r_gnn_vec  <- calibration_slot("r_cal_gnn", calibrated_gates)
+    r_mean_vec <- calibration_slot("r_cal_mean", rep(0, length(calibrated_gates)))
+    mean_vec   <- calibration_slot("mean_baseline_per_col",
+                                   rep(0, length(calibrated_gates)))
+    r_bm_vec   <- numeric_calibration_slot(r_bm_vec, "r_cal_bm")
+    r_gnn_vec  <- numeric_calibration_slot(r_gnn_vec, "r_cal_gnn")
+    r_mean_vec <- numeric_calibration_slot(r_mean_vec, "r_cal_mean")
+    mean_vec   <- numeric_calibration_slot(mean_vec, "mean_baseline_per_col")
     t_w_bm          <- torch::torch_tensor(r_bm_vec,   dtype = torch::torch_float(),
                                            device = device)$unsqueeze(1L)
     t_w_gnn         <- torch::torch_tensor(r_gnn_vec,  dtype = torch::torch_float(),
@@ -365,9 +408,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     torch::with_no_grad({
       mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
       for (step in seq_len(cfg$refine_steps)) {
-        cov_parts0 <- list(t_MU, mask_ind0)
-        if (has_covariates) cov_parts0[[length(cov_parts0) + 1L]] <- t_covariates
-        covs0 <- torch::torch_cat(cov_parts0, dim = 2L)
+        covs0 <- make_covs_tensor(t_MU, mask_ind0, t_covariates)
         out   <- model(X_iter, t_coords, covs0, t_adj, t_obs_to_sp,
                        D_sq = t_D_sq)
         # Use t_BM_draw (the BM posterior sample) in the baseline term so that

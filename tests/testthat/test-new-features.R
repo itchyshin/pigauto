@@ -370,6 +370,15 @@ test_that("impute() accepts covariates and threads them through the pipeline", {
   # Model config has larger cov_dim
   base_cov_dim <- res$data$p_latent + 1L  # baseline + mask_ind
   expect_equal(res$fit$model_config$cov_dim, base_cov_dim + 2L)
+
+  # Prediction should fail early if a saved/manually-edited fit loses the
+  # covariate matrix that its encoder width was trained to expect.
+  fit_bad <- res$fit
+  fit_bad$covariates <- NULL
+  expect_error(
+    predict(fit_bad, return_se = FALSE),
+    regexp = "Prediction covariate tensor would have"
+  )
 })
 
 test_that("covariates with NAs are rejected", {

@@ -334,7 +334,18 @@ test_that("predict.pigauto_fit catches wrong-length calibrated_gates override", 
   pred_empty <- predict(fit_empty, return_se = FALSE)
   expect_s3_class(pred_empty, "pigauto_pred")
 
-  # 3. Correct-length zero gate (full BM, no GNN) succeeds.
+  # 3. Legacy/scrubbed sub-slots that are zero-length should fall back to
+  #    the valid calibrated_gates vector, not create zero-width torch tensors.
+  fit_partial_empty <- fit
+  fit_partial_empty$calibrated_gates      <- rep(0, p)
+  fit_partial_empty$r_cal_gnn             <- numeric(0)
+  fit_partial_empty$r_cal_bm              <- numeric(0)
+  fit_partial_empty$r_cal_mean            <- numeric(0)
+  fit_partial_empty$mean_baseline_per_col <- numeric(0)
+  pred_partial_empty <- predict(fit_partial_empty, return_se = FALSE)
+  expect_s3_class(pred_partial_empty, "pigauto_pred")
+
+  # 4. Correct-length zero gate (full BM, no GNN) succeeds.
   fit_zero <- fit
   fit_zero$calibrated_gates <- rep(0, p)
   fit_zero$r_cal_gnn        <- rep(0, p)
