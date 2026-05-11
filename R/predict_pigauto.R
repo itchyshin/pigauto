@@ -1114,7 +1114,8 @@ compute_latent_se <- function(latent_runs, trait_map, baseline_se,
   for (tm in trait_map) {
     lc <- tm$latent_cols
 
-    if (tm$type %in% c("continuous", "count", "ordinal", "proportion")) {
+    if (tm$type %in% c("continuous", "count", "ordinal", "proportion",
+                       "multi_proportion")) {
       for (j in lc) {
         se_bm <- baseline_se[, j]
 

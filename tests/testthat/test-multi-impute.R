@@ -609,3 +609,47 @@ test_that("multi_impute(draws_method='conformal') produces non-zero between-draw
                 "All 5 masked cells should have non-zero SD across draws. Got: %s",
                 paste(round(per_cell_sd, 6), collapse = ", ")))
 })
+
+test_that("conformal draws perturb multi_proportion groups on the simplex", {
+  comp_cols <- c("a", "b", "c")
+  tm <- list(
+    name = "comp", type = "multi_proportion", latent_cols = 1:3,
+    levels = comp_cols, input_cols = comp_cols, n_latent = 3L,
+    mean = c(0, 0, 0), sd = c(1, 1, 1)
+  )
+  pred <- list(
+    imputed = data.frame(
+      a = c(1 / 3, 0.2), b = c(1 / 3, 0.3), c = c(1 / 3, 0.5)
+    ),
+    imputed_latent = matrix(c(0, 0, 0, -0.2, 0, 0.2),
+                            nrow = 2, byrow = TRUE),
+    se_latent = matrix(c(0.3, 0.3, 0.3, 0.3, 0.3, 0.3),
+                       nrow = 2, byrow = TRUE),
+    probabilities = list(),
+    conformal_scores = c(comp = NA_real_)
+  )
+  imputed_mask <- matrix(
+    c(TRUE, TRUE, TRUE, FALSE, FALSE, FALSE),
+    nrow = 2, byrow = TRUE,
+    dimnames = list(NULL, comp_cols)
+  )
+
+  se_lat <- compute_latent_se(list(pred$imputed_latent), list(tm),
+                              pred$se_latent, c("s1", "s2"))
+  expect_equal(unname(se_lat[, tm$latent_cols]), unname(pred$se_latent),
+               tolerance = 0)
+
+  draw1 <- .sample_conformal_draw(pred, imputed_mask, list(tm), seed_i = 1L)
+  draw2 <- .sample_conformal_draw(pred, imputed_mask, list(tm), seed_i = 2L)
+
+  first1 <- unlist(draw1[1, comp_cols], use.names = FALSE)
+  first2 <- unlist(draw2[1, comp_cols], use.names = FALSE)
+  second <- unlist(draw1[2, comp_cols], use.names = FALSE)
+
+  expect_gt(max(abs(first1 - first2)), 1e-10)
+  expect_equal(sum(first1), 1, tolerance = 1e-12)
+  expect_equal(sum(first2), 1, tolerance = 1e-12)
+  expect_equal(second,
+               unlist(pred$imputed[2, comp_cols], use.names = FALSE),
+               tolerance = 0)
+})

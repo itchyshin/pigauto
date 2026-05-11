@@ -124,7 +124,10 @@
 #' therefore calibrated against actual prediction error regardless of
 #' whether the BM or GNN term dominates. For discrete traits (binary,
 #' categorical) it uses Bernoulli / categorical draws from the estimated
-#' probability vector. This is the preferred default for pigauto.
+#' probability vector. For \code{multi_proportion} groups it draws the
+#' K CLR latent columns with their BM latent SEs, projects back to
+#' sum-zero CLR space, and decodes to the simplex. This is the preferred
+#' default for pigauto.
 #'
 #' **`draws_method = "mc_dropout"`**: Run `M` GNN forward passes in
 #' training mode (dropout active). **Caution**: when the per-trait
@@ -334,6 +337,37 @@ multi_impute <- function(traits, tree, m = 100L,
 
   for (tm in trait_map) {
     nm   <- tm$name
+    if (tm$type == "multi_proportion") {
+      comp_cols <- if (!is.null(tm$input_cols)) tm$input_cols else tm$levels
+      if (!all(comp_cols %in% names(imp))) next
+      if (!all(comp_cols %in% colnames(imputed_mask))) next
+
+      missing_rows <- rowSums(imputed_mask[, comp_cols, drop = FALSE]) > 0
+      rows <- to_internal(which(missing_rows))
+      if (length(rows) == 0L) next
+
+      lc <- tm$latent_cols
+      latent_mu <- pred$imputed_latent[rows, lc, drop = FALSE]
+      s_latent <- pred$se_latent[rows, lc, drop = FALSE]
+      s_latent[!is.finite(s_latent)] <- 0
+
+      latent_draw <- latent_mu +
+        matrix(stats::rnorm(length(rows) * length(lc)), nrow = length(rows)) *
+          s_latent
+
+      clr_mat <- latent_draw
+      for (k in seq_along(lc)) {
+        clr_mat[, k] <- clr_mat[, k] * tm$sd[k] + tm$mean[k]
+      }
+      clr_mat <- clr_mat - rowMeans(clr_mat)
+      prop_mat <- softmax_rows(clr_mat)
+
+      for (k in seq_along(comp_cols)) {
+        imp[[comp_cols[k]]][rows] <- prop_mat[, k]
+      }
+      next
+    }
+
     if (!(nm %in% names(imp))) next
     if (!(nm %in% colnames(imputed_mask))) next
     # Map input-order mask indices to internal-order indices for indexing

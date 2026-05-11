@@ -8,6 +8,14 @@
   now treat proportions as numeric back-transformable traits on the original
   0-1 scale.
 
+## Bug fixes: multi-proportion conformal MI (2026-05-11)
+
+- `multi_impute(draws_method = "conformal")` now generates stochastic
+  draws for `multi_proportion` groups by sampling their CLR latent columns
+  with BM latent uncertainty and decoding back to the simplex. Previously
+  the default conformal MI path skipped these groups because their decoded
+  output columns are the component names rather than the group name.
+
 ## Documentation: pkgdown reorganisation Phase 1 (2026-05-09)
 
 User-facing docs reorganisation following the issues by @b1805 (#67, #68)
