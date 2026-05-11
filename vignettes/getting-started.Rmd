@@ -370,19 +370,15 @@ comparative model using the *same* tree that produced that dataset, then
 pool all T × M fits with Rubin's rules:
 
 ```{r tree-uncertainty-step2, eval=FALSE}
-fits <- Map(
-  function(dat, t_idx) {
-    dat$species <- rownames(dat)
-    nlme::gls(
-      log(Mass) ~ log(Wing.Length),
-      correlation = ape::corBrownian(
-        phy = trees300[[t_idx]], form = ~species),
-      data = dat, method = "ML"
-    )
-  },
-  mi$datasets,
-  mi$tree_index
-)
+fits <- with_imputations(mi, function(dat, tree) {
+  dat$species <- rownames(dat)
+  nlme::gls(
+    log(Mass) ~ log(Wing.Length),
+    correlation = ape::corBrownian(
+      phy = tree, form = ~species),
+    data = dat, method = "ML"
+  )
+})
 pool_mi(fits)
 ```
 

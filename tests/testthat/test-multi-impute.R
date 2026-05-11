@@ -477,6 +477,49 @@ test_that("multi_impute_trees result works with with_imputations() and pool_mi()
   expect_equal(attr(pooled, "m"), 4L)
 })
 
+test_that("with_imputations() passes tree metadata for tree-aware MI", {
+  sp <- paste0("sp", 1:4)
+  trees <- list(ape::rtree(4L, tip.label = sp),
+                ape::rtree(4L, tip.label = sp))
+  datasets <- lapply(seq_len(4L), function(i) {
+    data.frame(y = c(1, 2, 3, 4) + i / 10,
+               x = c(0, 1, 0, 1),
+               row.names = sp)
+  })
+  mi <- structure(
+    list(
+      datasets = datasets,
+      m = 4L,
+      n_trees = 2L,
+      m_per_tree = 2L,
+      tree_index = c(1L, 1L, 2L, 2L),
+      trees = trees,
+      species_col = NULL
+    ),
+    class = c("pigauto_mi_trees", "pigauto_mi")
+  )
+
+  seen_tree_index <- integer(4L)
+  fits <- with_imputations(mi, function(d, tree, tree_index, imputation) {
+    expect_equal(attr(d, "tree_index"), tree_index)
+    expect_equal(attr(d, "imputation"), imputation)
+    expect_identical(attr(d, "tree"), tree)
+    expect_identical(tree, trees[[tree_index]])
+    seen_tree_index[[imputation]] <<- tree_index
+    stats::lm(y ~ x, data = d)
+  }, .progress = FALSE)
+
+  expect_equal(seen_tree_index, mi$tree_index)
+  expect_equal(attr(fits, "tree_index"), mi$tree_index)
+  expect_equal(attr(fits, "n_trees"), 2L)
+  expect_equal(attr(fits, "m_per_tree"), 2L)
+
+  pooled <- pool_mi(fits)
+  expect_equal(attr(pooled, "tree_index"), mi$tree_index)
+  expect_equal(attr(pooled, "n_trees"), 2L)
+  expect_equal(attr(pooled, "m_per_tree"), 2L)
+})
+
 
 # ---- 14. draws_method = "conformal" explicitly ----------------------------
 

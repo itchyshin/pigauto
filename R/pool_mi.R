@@ -117,6 +117,10 @@ pool_mi <- function(fits,
     stop("`fits` must be a list of model fits.", call. = FALSE)
   }
 
+  tree_index <- attr(fits, "tree_index")
+  n_trees <- attr(fits, "n_trees")
+  m_per_tree <- attr(fits, "m_per_tree")
+
   # Drop and warn about captured errors (from with_imputations() with
   # error handling on). These are stored as try-error objects.
   is_err <- vapply(fits, function(x) inherits(x, "try-error") ||
@@ -127,6 +131,7 @@ pool_mi <- function(fits,
                     sum(is_err), if (sum(is_err) == 1L) "" else "s"),
             call. = FALSE)
     fits <- fits[!is_err]
+    if (!is.null(tree_index)) tree_index <- tree_index[!is_err]
   }
 
   M <- length(fits)
@@ -285,6 +290,11 @@ pool_mi <- function(fits,
   )
   attr(out, "m") <- M
   attr(out, "conf.level") <- conf.level
+  if (!is.null(tree_index)) {
+    attr(out, "tree_index") <- tree_index
+    attr(out, "n_trees") <- n_trees
+    attr(out, "m_per_tree") <- m_per_tree
+  }
   class(out) <- c("pigauto_pooled", "data.frame")
   out
 }

@@ -12,6 +12,11 @@
 #'   a model to one complete data.frame and returns a model object.
 #'   `coef()` and `vcov()` should work on the return value (required by
 #'   [pool_mi()]). Any model class with those two generics is supported.
+#'   When `mi` comes from [multi_impute_trees()], `.f` may also declare
+#'   explicit `tree`, `tree_index`, or `imputation` arguments; these are
+#'   filled with the posterior tree object, its index in `mi$trees`, and
+#'   the imputation-dataset index. The dataset also carries matching
+#'   `tree`, `tree_index`, and `imputation` attributes.
 #' @param ... Additional arguments passed to `.f` for every imputation.
 #' @param .progress Logical. Show a text progress indicator (default
 #'   `TRUE` in interactive sessions).
@@ -43,6 +48,19 @@
 #' })
 #'
 #' pool_mi(fits)
+#'
+#' # Tree-aware MI: with_imputations() passes the matching posterior tree
+#' # when the callback declares a `tree` argument.
+#' mi_t <- multi_impute_trees(df, trees, m_per_tree = 1L)
+#' fits_t <- with_imputations(mi_t, function(d, tree) {
+#'   d$species <- rownames(d)
+#'   nlme::gls(
+#'     y ~ x,
+#'     correlation = ape::corBrownian(phy = tree, form = ~species),
+#'     data = d, method = "ML"
+#'   )
+#' })
+#' pool_mi(fits_t)
 #' }
 #'
 #' @export
@@ -73,6 +91,36 @@ with_imputations <- function(mi, .f, ...,
          call. = FALSE)
   }
 
+  tree_index <- NULL
+  trees <- NULL
+  n_trees <- NULL
+  m_per_tree <- NULL
+  if (inherits(mi, "pigauto_mi_trees")) {
+    tree_index <- mi$tree_index
+    trees <- mi$trees
+    n_trees <- mi$n_trees
+    m_per_tree <- mi$m_per_tree
+    if (is.null(tree_index) || length(tree_index) != M) {
+      stop("`mi$tree_index` must have one entry per imputed dataset.",
+           call. = FALSE)
+    }
+    if (anyNA(tree_index) || any(tree_index < 1L)) {
+      stop("`mi$tree_index` must contain positive tree indices.",
+           call. = FALSE)
+    }
+    if (!is.null(trees) && any(tree_index > length(trees))) {
+      stop("`mi$trees` does not contain every tree referenced by `mi$tree_index`.",
+           call. = FALSE)
+    }
+  }
+
+  dots <- list(...)
+  f_formals <- names(formals(.f))
+  add_if_declared <- function(args, nm, value) {
+    if (nm %in% f_formals && !(nm %in% names(args))) args[[nm]] <- value
+    args
+  }
+
   fits <- vector("list", M)
   failures <- integer(0)
 
@@ -82,8 +130,22 @@ with_imputations <- function(mi, .f, ...,
       message(msg, appendLF = FALSE)
     }
 
+    dataset_i <- datasets[[i]]
+    call_args <- c(list(dataset_i), dots)
+    if (!is.null(tree_index)) {
+      t_idx <- tree_index[[i]]
+      tree_i <- if (!is.null(trees)) trees[[t_idx]] else NULL
+      attr(dataset_i, "tree_index") <- t_idx
+      attr(dataset_i, "imputation") <- i
+      if (!is.null(tree_i)) attr(dataset_i, "tree") <- tree_i
+      call_args[[1L]] <- dataset_i
+      call_args <- add_if_declared(call_args, "tree", tree_i)
+      call_args <- add_if_declared(call_args, "tree_index", t_idx)
+      call_args <- add_if_declared(call_args, "imputation", i)
+    }
+
     result <- tryCatch(
-      .f(datasets[[i]], ...),
+      do.call(.f, call_args),
       error = function(e) {
         structure(
           list(index = i, message = conditionMessage(e), call = conditionCall(e)),
@@ -117,6 +179,11 @@ with_imputations <- function(mi, .f, ...,
   attr(fits, "n_fits")   <- M
   attr(fits, "n_failed") <- length(failures)
   attr(fits, "failed")   <- failures
+  if (!is.null(tree_index)) {
+    attr(fits, "tree_index") <- tree_index
+    attr(fits, "n_trees") <- n_trees
+    attr(fits, "m_per_tree") <- m_per_tree
+  }
   class(fits) <- c("pigauto_mi_fits", "list")
   fits
 }

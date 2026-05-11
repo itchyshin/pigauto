@@ -1,5 +1,9 @@
 # pigauto 0.9.1.9014 (dev)
 
+## Improvements: tree-aware downstream fitting (2026-05-11)
+
+- `with_imputations()` now carries tree metadata for `multi_impute_trees()` results. If the fitting callback declares `tree`, `tree_index`, or `imputation` arguments, they are filled with the matching posterior tree, its index, and the imputation number; the returned fits and `pool_mi()` output also retain the successful `tree_index` vector as metadata.
+
 ## Bug fixes: per-tree tree MI pooling (2026-05-11)
 
 - `multi_impute_trees(share_gnn = FALSE)` now computes `pooled_point` by averaging all completed `T * m_per_tree` datasets, matching the documented return contract. Previously this path averaged one per-tree pooled result, which could ignore within-tree draw-level variation when `m_per_tree > 1`.
