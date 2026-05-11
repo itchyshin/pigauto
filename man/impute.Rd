@@ -174,10 +174,12 @@ Default \code{"none"} preserves pre-G' behaviour.}
 \item{safety_floor}{logical. When \code{TRUE} (default since
 v0.9.1.9002), calibration searches the 3-way simplex
 \code{r_BM * BM + r_GNN * GNN + r_MEAN * MEAN} so the grand mean is
-always in the candidate set and the calibrated prediction is
-guaranteed never to be worse than the grand-mean baseline on
-validation.  When \code{FALSE}, the v0.9.1 1-D calibration is used
-exactly.  See the Safety floor section below.}
+always in the candidate set. Under the validation metric used for
+calibration, the selected candidate cannot be worse than that
+grand-mean corner on the validation cells. This is a validation
+safeguard, not a guarantee about future held-out data. When
+\code{FALSE}, the v0.9.1 1-D calibration is used exactly. See the
+Safety floor section below.}
 
 \item{phylo_signal_gate, phylo_signal_threshold, phylo_signal_method}{Pass-through to \code{\link[=fit_pigauto]{fit_pigauto()}}. See that help page for details.}
 
@@ -269,9 +271,9 @@ calibration grid searches a 3-way convex combination of the
 Brownian-motion baseline, the GNN delta, and the per-trait grand
 mean.  The simplex is sampled at step 0.05 (231 candidates per latent
 column).  Because the corner \code{(0, 0, 1)} — pure grand mean —
-is always in the grid, the calibrated validation RMSE is guaranteed
-by construction to satisfy \code{calibrated_val_RMSE <=
-  mean_val_RMSE} on every trait.  The fit object gains four new slots:
+is always in the grid, the selected candidate cannot be worse than
+the grand-mean corner on the validation cells under the calibration
+metric.  The fit object gains four new slots:
 \code{r_cal_bm}, \code{r_cal_gnn}, \code{r_cal_mean} (each a named
 numeric of length \code{p_latent}), and
 \code{mean_baseline_per_col}.

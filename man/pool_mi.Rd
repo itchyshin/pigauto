@@ -85,8 +85,8 @@ cleanly to posterior distributions. For a Bayesian pigauto workflow
 (pigauto as imputer, MCMCglmm as inference engine), concatenate the
 posterior samples across imputations manually -- stack \code{fit$Sol} and
 \code{fit$VCV} row-wise with \code{do.call(rbind, ...)} and wrap the result in
-\code{coda::as.mcmc()}. See section 7 of the \code{pigauto_workflow_mixed}
-tutorial (\code{system.file("doc", "pigauto_workflow_mixed.html", package = "pigauto")}) for a worked example. For an integrated
+\code{coda::as.mcmc()}. For the frequentist Rubin's-rules path, see
+\code{vignette("mixed-types", package = "pigauto")}. For an integrated
 chained-equation MCMC workflow where imputation and inference happen
 in a single engine, use the companion BACE package end-to-end
 (\code{BACE::bace()} + \code{BACE::pool_posteriors()}).

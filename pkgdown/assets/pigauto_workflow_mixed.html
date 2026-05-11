@@ -56,6 +56,10 @@
 </head>
 <body>
 
+<div style="background:#fff7ed;border-left:4px solid #ea580c;padding:1em 1.2em;margin:0 0 1.5em 0;border-radius:4px">
+<b>Archived static page.</b> This page is kept for historical context while it is rethought. Current public guidance lives in the source-backed vignettes under Articles. Do not treat this page as the current source of truth for version scope, uncertainty wording, or benchmark claims.
+</div>
+
 <h1>pigauto: mixed-type PCM workflow <span class="badge">v0.9.0.9000</span></h1>
 <p class="tagline">Multiple imputation of continuous, categorical, and ordinal traits &mdash; three downstream paths.</p>
 <p class="meta">Generated 2026-04-18 &middot; scripts/<code>make_workflow_mixed_html.R</code></p>
@@ -288,8 +292,9 @@ The function chains preprocessing, the Brownian-motion baseline
 (binary/categorical), GNN training, and per-trait gate calibration into
 one call, then generates M stochastic completions by sampling each
 originally-missing cell from its posterior predictive distribution using
-the calibrated SE (Normal draws for continuous / count / ordinal /
-proportion; Bernoulli for binary; Categorical for multi-level factors).</p>
+the configured uncertainty mechanism (conformal by default, or MC dropout when
+requested) for continuous / count / ordinal / proportion traits, and Bernoulli
+or categorical sampling for discrete traits.</p>
 
 <pre><code>mi &lt;- multi_impute(
   traits        = dat,
@@ -301,7 +306,7 @@ proportion; Bernoulli for binary; Categorical for multi-level factors).</p>
 )
 mi
 #&gt; pigauto multiple imputation
-#&gt;   M        : 20 imputations (SE-based draws)
+#&gt;   M        : 20 imputations (conformal draws)
 #&gt;   Species  : 300
 #&gt;   Traits   : 7 -- Mass, Beak.Length_Culmen, Tarsus.Length, Wing.Length,
 #&gt;                  Trophic.Level, Primary.Lifestyle, Migration
@@ -341,8 +346,8 @@ single fit. Nothing silently turns into an integer code.</p>
 <h3>Verification 2 &mdash; Continuous draws vary across imputations</h3>
 
 <p>Multiple imputation is pointless if the M draws are identical. For a
-continuous trait like <code>Mass</code>, SE-based sampling produces real
-variation across draws at originally-missing cells &mdash; this is the
+continuous trait like <code>Mass</code>, stochastic imputation draws produce
+variation across originally-missing cells &mdash; this is the
 between-imputation variance <code>B</code> that Rubin&rsquo;s rules use
 to inflate standard errors.</p>
 
@@ -579,7 +584,7 @@ coda::HPDinterval(sol_pooled)
 
 <div class="bayesbox">
 <b>What does concatenation actually do?</b> Stacking the M posterior
-matrices treats pigauto&rsquo;s SE-based imputation draws as approximate
+matrices treats pigauto&rsquo;s imputation draws as approximate
 posterior predictive samples for the missing cells. This is the same
 approximation Nakagawa&nbsp;&amp;&nbsp;Freckleton&nbsp;(2011) make when
 they use mice-style multiple imputation with <code>MCMCglmm</code>
@@ -780,7 +785,7 @@ familiar), but you do not want to wait 6 hours for BACE&rsquo;s
 chained-equation imputer. Path&nbsp;B gets you a Bayesian posterior on
 the downstream parameters in 1&ndash;4 hours with pigauto doing the
 imputation work. The trade-off is the approximation highlighted in the
-callout in section&nbsp;6: the SE-based imputation draws are treated as
+callout in section&nbsp;6: the imputation draws are treated as
 approximate posterior predictive samples, not as a literal joint
 Bayesian posterior over parameters and missing cells. For
 Nakagawa&nbsp;&amp;&nbsp;Freckleton-style applied comparative analyses,
@@ -835,4 +840,3 @@ Installed path: <code>system.file("doc", "pigauto_workflow_mixed.html", package 
 
 </body>
 </html>
-

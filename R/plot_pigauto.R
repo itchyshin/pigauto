@@ -36,10 +36,11 @@ plot_history_gg <- function(x, ...) {
 #' Plot uncertainty ribbons for imputed trait values
 #'
 #' @description
-#' Plots 95\% credible intervals around imputed values, sorted by predicted
+#' Plots conformal prediction intervals when present, otherwise an
+#' approximate \code{prediction +/- 1.96 * SE} ribbon, sorted by predicted
 #' value.  If \code{truth} is supplied, observed values are overlaid as
 #' points.  Works for continuous, count, and ordinal traits.  For binary
-#' traits, plots predicted probabilities with CI ribbon.
+#' traits, plots predicted probabilities with an uncertainty ribbon.
 #'
 #' @param pred_result list with \code{imputed} and \code{se} components
 #'   (output of \code{predict.pigauto_fit}).
@@ -80,17 +81,27 @@ plot_uncertainty <- function(pred_result, truth = NULL, trait_name) {
     pred_j <- pred_result$imputed[, trait_name]
   }
 
-  # SE
-  se_j <- pred_result$se[, trait_name]
-  if (is.null(se_j)) stop("No SE available for trait '", trait_name, "'.")
+  has_conformal <- !is.null(pred_result$conformal_lower) &&
+    !is.null(pred_result$conformal_upper) &&
+    trait_name %in% colnames(pred_result$conformal_lower)
+
+  if (has_conformal) {
+    lower_j <- pred_result$conformal_lower[, trait_name]
+    upper_j <- pred_result$conformal_upper[, trait_name]
+  } else {
+    se_j <- pred_result$se[, trait_name]
+    if (is.null(se_j)) stop("No SE available for trait '", trait_name, "'.")
+    lower_j <- pred_j - 1.96 * se_j
+    upper_j <- pred_j + 1.96 * se_j
+  }
 
   idx <- order(pred_j)
 
   df <- data.frame(
     i     = seq_along(pred_j)[idx],
     pred  = pred_j[idx],
-    lower = (pred_j - 1.96 * se_j)[idx],
-    upper = (pred_j + 1.96 * se_j)[idx]
+    lower = lower_j[idx],
+    upper = upper_j[idx]
   )
 
   # Determine y-axis label

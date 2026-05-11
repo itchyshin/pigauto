@@ -379,9 +379,10 @@ h('simulation), pigauto can produce different imputed values for ')
 h('different observations of the same species, matching the true ')
 h('data-generating process.</li>')
 h('<li><b>Safety when covariates are uninformative.</b> The gated ')
-h('architecture ensures that when the covariate has no predictive ')
-h('value (beta = 0), the model falls back to the phylogenetic baseline ')
-h('without penalty. You can always supply covariates.</li>')
+h('architecture can fall back to the phylogenetic baseline when the ')
+h('covariate has no predictive value in this simulation (beta = 0). ')
+h('Treat covariates as a validation-checked addition, not an automatic ')
+h('improvement.</li>')
 h('</ul>')
 
 # =========================================================================

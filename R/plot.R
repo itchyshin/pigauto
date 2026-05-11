@@ -50,8 +50,9 @@
 #' plot(fit, type = "gates")
 #' plot(fit, type = "conformal")
 #' }
-#' @importFrom graphics par plot plot.new points lines abline barplot axis text
-#'   legend mtext segments arrows rect polygon boxplot hist
+#' @importFrom graphics par plot plot.new points lines abline
+#' @importFrom graphics barplot axis text legend mtext segments arrows rect
+#' @importFrom graphics polygon boxplot hist
 #' @importFrom grDevices adjustcolor
 #' @importFrom stats predict setNames
 #' @export
@@ -257,7 +258,7 @@ plot.pigauto_fit <- function(x, type = "history", ...) {
 #' plot(pred, type = "probabilities", data = observed_df)
 #' }
 #' @importFrom graphics par plot points lines abline barplot axis text
-#'   legend mtext segments arrows rect polygon boxplot hist
+#' @importFrom graphics legend mtext segments arrows rect polygon boxplot hist
 #' @importFrom grDevices adjustcolor
 #' @export
 plot.pigauto_pred <- function(x, data = NULL, splits = NULL,
@@ -668,7 +669,7 @@ plot.pigauto_pred <- function(x, data = NULL, splits = NULL,
 #' plot_comparison(results, metric = "rmse")
 #' }
 #' @importFrom graphics par plot points lines abline barplot axis text
-#'   legend mtext segments arrows rect
+#' @importFrom graphics legend mtext segments arrows rect
 #' @importFrom grDevices adjustcolor
 #' @export
 plot_comparison <- function(results, metric = NULL,

@@ -366,9 +366,10 @@ simulation), pigauto can produce different imputed values for
 different observations of the same species, matching the true 
 data-generating process.</li>
 <li><b>Safety when covariates are uninformative.</b> The gated 
-architecture ensures that when the covariate has no predictive 
-value (beta = 0), the model falls back to the phylogenetic baseline 
-without penalty. You can always supply covariates.</li>
+architecture can fall back to the phylogenetic baseline when the
+covariate has no predictive value in this simulation (beta = 0).
+Treat covariates as a validation-checked addition, not an automatic
+improvement.</li>
 </ul>
 <h2>5. Architecture: observation-level refinement</h2>
 <p>

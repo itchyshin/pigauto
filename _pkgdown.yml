@@ -53,16 +53,13 @@ navbar:
           href: articles/mixed-types.html
         - text: "Propagating tree uncertainty"
           href: articles/tree-uncertainty.html
-        - text: "-------"
-        - text: "Walk-throughs"
-        - text: "Architecture overview"
-          href: pigauto_intro.html
-        - text: "Mixed-type workflow (Paths A / B / C)"
-          href: pigauto_workflow_mixed.html
-        - text: "Comparative study with covariates"
-          href: pigauto_walkthrough_covariates.html
-        - text: "Multi-observation per species"
-          href: pigauto_walkthrough_multi_obs.html
+        # Static walk-through HTML pages are intentionally hidden and marked
+        # archived until they are refreshed against the current README,
+        # vignettes, and benchmark evidence. Do not re-add pigauto_intro.html,
+        # pigauto_workflow_mixed.html, pigauto_walkthrough_covariates.html, or
+        # pigauto_walkthrough_multi_obs.html without checking
+        # useful/pkgdown_page_rethink.md and replacing stale version badges,
+        # trait-type scope, uncertainty wording, and benchmark claims.
     methodology:
       text: Methodology
       menu:
@@ -124,7 +121,7 @@ reference:
       Three functions that compose into the canonical
       multiple-imputation → regression → Rubin's-rules workflow
       (Rubin 1987; Nakagawa & Freckleton 2008, 2011). See
-      `vignette("mixed-types")` and the static HTML walk-throughs for
+      `vignette("mixed-types")` and `vignette("tree-uncertainty")` for
       end-to-end examples.
     contents:
       - multi_impute

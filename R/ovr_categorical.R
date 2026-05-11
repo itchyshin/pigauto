@@ -202,7 +202,8 @@ reindex_splits <- function(splits, n_rows, p_old, kept_cols) {
 #'
 #' Returns the same shape as fit_ovr_categorical_fits() (n x K probs matrix)
 #' with `em_state` attached as an attribute. Phase 6 diagonal-only: the
-#' off-diagonal Σ_cat[j, k] is not used, consistent with the design spec.
+#' off-diagonal entries of `Sigma_cat` are not used, consistent with the
+#' design spec.
 #'
 #' @inheritParams fit_ovr_categorical_fits
 #' @param em_iterations integer, max number of EM iters (>= 1).

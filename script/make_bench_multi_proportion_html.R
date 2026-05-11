@@ -280,10 +280,11 @@ compositional data is either complete for a row or missing &mdash; you cannot ob
 <h2>Commentary</h2>
 <p>', v_hi, '</p>
 <p>', v_lo, '</p>
-<p>The gated safety in pigauto ensures that when the BM-on-CLR baseline is already optimal
-(high phylogenetic signal), the calibrated gate closes and pigauto returns the baseline
-&mdash; so it never degrades accuracy. When signal is low, the GNN can learn cross-component
-correlations that the independent-per-component BM misses.</p>
+<p>In high-phylogenetic-signal regimes, the calibrated gate can close onto the
+BM-on-CLR baseline when the validation cells do not support a GNN contribution.
+When signal is low, the GNN can learn cross-component correlations that the
+independent-per-component BM misses, but the benchmark table should be read
+scenario by scenario.</p>
 
 <h2>How to reproduce</h2>
 <pre><code>cd pigauto &amp;&amp; Rscript script/bench_multi_proportion.R

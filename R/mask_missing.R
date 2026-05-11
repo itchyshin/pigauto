@@ -194,6 +194,7 @@ make_missing_splits <- function(X, missing_frac = 0.25, val_frac = 0.25,
 #' @param trait_map list of trait descriptors.
 #' @return integer vector of linear indices in (n x p_latent) space.
 #' @keywords internal
+#' @noRd
 expand_trait_idx_to_latent <- function(idx, n, trait_map) {
   # Convert linear index to (row, trait_number)
   row_i   <- ((idx - 1L) %% n) + 1L

@@ -365,7 +365,7 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
 #' Given posterior N(mu_liab, se_liab^2) for a latent liability L and the
 #' threshold model y = 1 iff L > 0, the marginal probability is
 #'   P(y=1) = pnorm(mu_liab / sqrt(1 + se_liab^2)).
-#' We return the logit of this clipped to [0.01, 0.99] so downstream code
+#' We return the logit of this clipped between 0.01 and 0.99 so downstream code
 #' (GNN blending, BCE loss) stays numerically stable. Matches the clip used
 #' by the label-propagation path in `fit_baseline()`.
 #'
@@ -629,4 +629,3 @@ fit_joint_threshold_baseline_em <- function(data, tree, splits,
   )
   base
 }
-

@@ -20,7 +20,7 @@ multi_impute(m=50)   # 50 stochastic complete datasets
        ↓
 with_imputations()   # fit your model on each dataset
        ↓
-   pool_mi()         # pool with Rubin's rules → correct SEs
+   pool_mi()         # pool with Rubin's rules → MI-aware SEs
 ```
 
 ## Installation
@@ -106,7 +106,7 @@ is sufficient.
 ## Using environmental covariates
 
 When trait variation has a strong environmental component, supplying
-covariates improves imputation. The same covariates typically serve as
+covariates can improve imputation. The same covariates may also serve as
 predictors in the downstream model:
 
 ```r
@@ -122,12 +122,10 @@ result <- impute(traits, tree_delhey, covariates = covs)
 ```
 
 Covariates must be fully observed. Numeric columns are z-scored;
-factor/ordered columns are one-hot encoded automatically (v0.6.1+).
-A per-trait gated safety prevents covariates from degrading imputation:
-when phylogenetic signal explains the data well, the covariate pathway
-closes automatically. See the
-[covariate walkthrough](https://itchyshin.github.io/pigauto/pigauto_walkthrough_covariates.html)
-for a complete example.
+factor/ordered columns are one-hot encoded automatically. The calibrated gate
+can close when the phylogenetic baseline already explains the validation cells,
+so covariates should be treated as an evidence-backed addition rather than an
+automatic improvement.
 
 ## Phylogenetic tree uncertainty
 
@@ -175,16 +173,18 @@ Rubin's-rules step. Reference: Nakagawa S, de Villemereuil P (2019).
 *Systematic Biology* 68(4):632–641. doi:
 [10.1093/sysbio/syy089](https://doi.org/10.1093/sysbio/syy089).
 
-### Compute cost scales linearly with T
+### Compute cost depends on whether the GNN is shared
 
-Each posterior tree requires a fresh pigauto fit (no caching possible —
-the tree *is* the model). Rough budget on a modern CPU laptop:
+By default, `multi_impute_trees()` uses `share_gnn = TRUE`: it trains the GNN
+once on a reference tree, then recomputes the cheaper phylogenetic baseline for
+each posterior tree. Set `share_gnn = FALSE` only when you need exact per-tree
+model independence. Rough budget on a modern CPU laptop:
 
-| Species n | 1 fit | T = 50 | T = 10 |
+| Species n | 1 fit | T = 50, `share_gnn = TRUE` | T = 50, `share_gnn = FALSE` |
 |---:|---:|---:|---:|
-| 300 | ~30–60 s | 25–50 min | 5–10 min |
-| 5,000 | ~5–10 min | 4–8 hr | ~1 hr |
-| 10,000 | ~20–40 min | 17–33 hr | 3–7 hr |
+| 300 | ~30–60 s | ~3–5 min | 25–50 min |
+| 5,000 | ~5–10 min | ~10–20 min | 4–8 hr |
+| 10,000 | ~20–40 min | ~30–60 min | 17–33 hr |
 
 **Guidance for large trees.** The 2019 paper notes that 10–20 posterior
 trees are usually enough (use the "relative efficiency" index in
@@ -270,20 +270,17 @@ propagation for binary/categorical traits. The **GNN** is an
 attention-based graph neural network trained on the phylogenetic
 topology, cross-trait correlations, and any user covariates.
 `r_cal` is a per-trait gate calibrated on a held-out validation split:
-when the baseline is already optimal the gate closes to zero and the
-GNN contributes nothing, guaranteeing the network never degrades accuracy.
+when the baseline is already optimal on the validation cells, the gate can
+close to zero so the GNN contributes nothing. This is a validation-calibrated
+safety mechanism, not a universal performance guarantee.
 
 ## Benchmarks
 
-Current per-trait-type numbers, scaling curves, AVONET 9,993 results,
-tree-uncertainty comparisons, and the covariate-simulation sweep all live
-in the
-[validation suite](https://itchyshin.github.io/pigauto/dev/validation_suite.html).
-We keep the headline numbers out of this README because both pigauto and
-the reference implementations (including BACE) are still under active
-development, and the numbers move with each release. The validation
-suite is regenerated from the actual benchmark scripts every release, so
-it is the single source of truth.
+Current benchmark pages live under the pkgdown Methodology menu and should be
+read as versioned evidence: each page states its data-generating regime, sample
+size, missingness, seed, and comparison set. We keep headline numbers out of
+this README because both pigauto and the reference implementations are still
+under active development, and the numbers move with each release.
 
 ### Caveats from multi-seed evidence
 
@@ -308,13 +305,11 @@ data:
    you are imputing Mass, run multiple seeds and inspect the
    distribution of imputed values for outliers.
 
-3. **Migration (3-level ordinal) regresses by ≈ 11 pp** vs the
-   per-class-mode baseline on AVONET, consistent across all
-   tested seeds. The ordinal threshold-joint baseline (Phase B3)
-   is under-determined for K=3 and the calibrated gate cannot
-   route around it because LP is not yet a corner in the
-   safety-floor simplex grid. Phase F (LP corner for ordinal)
-   addresses this and is queued for v0.9.2.
+3. **Migration (3-level ordinal) has needed special care** in the
+   AVONET multi-seed checks. The current baseline includes
+   per-trait ordinal path selection with an LP-via-OVR candidate for
+   low-K ordinal traits, but re-run the multi-seed evidence before
+   treating this regime as resolved for a quantitative claim.
 
 ### The gate protects against regression
 
@@ -345,11 +340,14 @@ a species differ by covariate context.
 - **Live site**: <https://itchyshin.github.io/pigauto>
 - **Getting started**: `vignettes/getting-started.Rmd`
   ([rendered](https://itchyshin.github.io/pigauto/articles/getting-started.html))
-- **Full PCM workflow** (mixed types + downstream inference):
-  [pigauto_workflow_mixed.html](https://itchyshin.github.io/pigauto/pigauto_workflow_mixed.html)
-- **Architecture notes**: [`CLAUDE.md`](CLAUDE.md)
+- **Mixed types**:
+  [mixed-types.html](https://itchyshin.github.io/pigauto/articles/mixed-types.html)
+- **Tree uncertainty**:
+  [tree-uncertainty.html](https://itchyshin.github.io/pigauto/articles/tree-uncertainty.html)
+- **Common pitfalls**:
+  [common-pitfalls.html](https://itchyshin.github.io/pigauto/articles/common-pitfalls.html)
 
 ## Citation
 
 Nakagawa S (2026). *pigauto: Phylogenetic Imputation via Graph
-Autoencoder*. R package version 0.9.1.9009.
+Autoencoder*. R package version 0.9.1.9014.

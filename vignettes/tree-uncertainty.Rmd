@@ -89,16 +89,15 @@ The code above is illustrative — full execution takes ~25 min because
 it fits pigauto on the MCC reference tree, then runs a GLS model for
 each of the 50 posterior trees. Running the chunk is left to the reader.
 
-## Why `share_gnn = TRUE` is safe
+## Why `share_gnn = TRUE` preserves tree signal
 
 The calibrated gate `r_cal` controls how much of each prediction comes
-from the baseline vs the GNN. On every real dataset benchmarked in the
-v0.9.0 validation suite (Delhey 5,809; AVONET 300; mixed-type
-simulations), the gate closes or nearly closes under strong
-phylogenetic signal. When the gate is closed, `pred = baseline(tree_t)`
-— the GNN contributes nothing, and the per-tree baseline carries the
-full tree-uncertainty signal. See `?multi_impute_trees` under
-"Share-GNN (tree-sharing) mode" for the partially-open and fully-open
+from the baseline vs the GNN. In high-phylogenetic-signal regimes the
+gate often closes or nearly closes, so `pred = baseline(tree_t)` and the
+per-tree baseline carries the tree-uncertainty signal. When the gate is
+partly open, the GNN component is shared across trees and the per-tree
+baseline still varies with `tree_t`. See `?multi_impute_trees` under
+"Share-GNN (tree-sharing) mode" for the fully-open and partially-open
 cases.
 
 If you need exact per-tree model independence (e.g. for methodological

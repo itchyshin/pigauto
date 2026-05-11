@@ -26,6 +26,7 @@
 #' @return Symmetric positive-definite matrix (\eqn{n \times n}), with
 #'   diagonal = 1 and dimnames from \code{tree$tip.label}.
 #' @keywords internal
+#' @noRd
 phylo_cor_matrix <- function(tree) {
   C <- ape::vcv(tree)
   stats::cov2cor(C)
@@ -53,6 +54,7 @@ phylo_cor_matrix <- function(tree) {
 #'       \eqn{\sqrt{\sigma^2 (1 - h_i)}}.}
 #'   }
 #' @keywords internal
+#' @noRd
 bm_impute_col <- function(y, R, nugget = 1e-6) {
   n <- length(y)
   mu_out <- numeric(n)
@@ -175,6 +177,7 @@ bm_impute_col <- function(y, R, nugget = 1e-6) {
 #'   \code{used_cov} (logical -- TRUE if the cov-aware fit was used,
 #'   FALSE if the LRT gate fell back to no-cov).
 #' @keywords internal
+#' @noRd
 bm_impute_col_with_cov <- function(y, X, R, nugget = 1e-6,
                                     ridge = 0.0,
                                     lrt_threshold = 0.02) {

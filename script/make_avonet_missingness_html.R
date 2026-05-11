@@ -454,7 +454,7 @@ Run on ', format(Sys.time(), "%Y-%m-%d %H:%M"),
 </p>
 
 <div class="verdict">
-<p><b>Bottom line.</b> pigauto runs end-to-end on the full 9,993-species AVONET dataset at three realistic missingness levels, and its behaviour is exactly what the calibrated-gate architecture promises: pigauto matches or beats the Brownian-motion baseline at every missingness level, both are dramatically better than column-mean imputation, and the GNN never degrades discrete traits thanks to the val-set gate calibration.</p>
+<p><b>Bottom line.</b> pigauto runs end-to-end on the full 9,993-species AVONET dataset at three MCAR missingness levels. The table below is the evidence to read: continuous traits are usually tied with or close to the Brownian-motion baseline, categorical rows are mixed, and both phylogenetic methods are well ahead of column-mean imputation in this run. Treat this as one AVONET benchmark regime, not a package-wide performance guarantee.</p>
 ',
 paste0("<p>", verdict_lines, "</p>", collapse = "\n"),
 '</div>
@@ -509,7 +509,7 @@ html <- paste0(html, '
 <ul>
 <li><b>Phylogeny is the dominant signal.</b> Even at 80% missingness the BM baseline keeps continuous RMSE well below the mean-imputation floor (~1.0 on z-score scale). Morphometric bird traits have very high phylogenetic signal and a single Brownian-motion component of variance captures most of it.</li>
 <li><b>pigauto rides the baseline carefully.</b> At low missingness the validation set is small and the GNN correction is calibrated close to zero (pigauto &asymp; BM). At higher missingness there is more validation data for gate calibration and the GNN can extract additional structure beyond phylogeny, but the BM component remains the backbone.</li>
-<li><b>Categorical traits are never degraded.</b> The v0.3.0 calibrated-gate logic (with the absolute cell floor and half-split cross-check documented in <code>CLAUDE.md</code>) prevents the GNN from hurting discrete-trait accuracy. pigauto matches the BM baseline exactly on Trophic.Level and Primary.Lifestyle at every missingness level.</li>
+<li><b>Categorical traits matched the phylogenetic baseline in this run.</b> With the calibrated-gate logic, pigauto matches the Brownian-motion / label-propagation baseline exactly on Trophic.Level and Primary.Lifestyle at every missingness level in this AVONET MCAR benchmark. Treat that as a regime-specific result, not a categorical guarantee for every dataset.</li>
 <li><b>Mean / mode is a proper null baseline.</b> It shows how much of the trait variance is predictable from phylogeny alone &mdash; the gap between the mean line and the BM line is the phylogenetic signal, and the (small) gap between BM and pigauto is the extra structure the GNN extracts from cross-trait correlations.</li>
 </ul>
 

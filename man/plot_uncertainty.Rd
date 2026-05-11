@@ -19,8 +19,9 @@ plot_uncertainty(pred_result, truth = NULL, trait_name)
 A \code{ggplot} object.
 }
 \description{
-Plots 95\\% credible intervals around imputed values, sorted by predicted
+Plots conformal prediction intervals when present, otherwise an
+approximate \code{prediction +/- 1.96 * SE} ribbon, sorted by predicted
 value.  If \code{truth} is supplied, observed values are overlaid as
 points.  Works for continuous, count, and ordinal traits.  For binary
-traits, plots predicted probabilities with CI ribbon.
+traits, plots predicted probabilities with an uncertainty ribbon.
 }

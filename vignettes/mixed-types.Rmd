@@ -34,8 +34,9 @@ imputation runs for different column types.
 | ZI count | `integer` (zero-inflated) | Parasite load, rare behaviour | Requires `trait_types = "zi_count"` override; experimental — accuracy more variable than other types |
 | Multi-proportion | K `numeric` columns summing to 1 | Diet composition, plumage-colour fractions, microbiome relative abundances | Requires `multi_proportion_groups = list(<name> = c("col1", ..., "colK"))`; encoded via centred log-ratio (CLR) + per-component z-score |
 
-The first five types are auto-detected from R column class; the last
-three must be declared explicitly (`trait_types` or
+The first five rows in this table are auto-detected from R column class;
+`proportion`, `zi_count`, and `multi_proportion` must be declared explicitly
+(`trait_types` or
 `multi_proportion_groups`). All eight share the same latent space — the
 phylogenetic baseline and GNN correction both operate in this space,
 and type-specific logic appears only at encoding, loss computation,
@@ -94,9 +95,9 @@ cat("Test cells (latent):", length(spl$test_idx), "\n")
 
 ## Baseline fitting
 
-The BM baseline uses phylogenetic conditional MVN for continuous, count,
-and ordinal traits.  Binary traits receive the logit of the observed proportion;
-categorical traits receive log marginal frequencies:
+The baseline uses phylogenetic conditional MVN for continuous-family latent
+columns, and label-propagation or threshold/liability candidates for
+discrete-family columns:
 
 ```{r baseline}
 bl <- fit_baseline(pd, tree, splits = spl)
@@ -161,12 +162,11 @@ The recommended workflow uses `multi_impute()` to generate M complete datasets
 from the model's calibrated uncertainty distribution, then pools downstream
 coefficients with Rubin's rules via `with_imputations()` and `pool_mi()`.
 
-In **v0.6.1**, `draws_method = "conformal"` is the default: missing cells are
-drawn from Normal distributions centred on the point estimate with width set by
-the split-conformal calibration score — properly calibrated against held-out
-residuals. The alternative `draws_method = "mc_dropout"` runs M stochastic
-GNN forward passes with dropout active and BM posterior draws as the blend
-baseline; it is available for comparison.
+`draws_method = "conformal"` is the default: missing cells are drawn from
+Normal distributions centred on the point estimate with width set by the
+split-conformal calibration score. The alternative `draws_method = "mc_dropout"`
+runs M stochastic GNN forward passes with dropout active and BM posterior draws
+as the blend baseline; it is available for comparison.
 
 ```{r mi_workflow, eval=FALSE}
 # Generate M = 20 stochastic complete datasets

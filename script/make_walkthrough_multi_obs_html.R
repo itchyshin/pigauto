@@ -2,6 +2,10 @@
 #
 # script/make_walkthrough_multi_obs_html.R
 #
+# Archived static page generator. Do not re-add this output to public pkgdown
+# navigation until it is rewritten as a source-backed vignette or refreshed
+# against the current README, vignettes, and benchmark evidence.
+#
 # Build a self-contained HTML walkthrough:
 #   "Multi-observation per species with observation-level covariates"
 #
@@ -352,7 +356,7 @@ h('<tr><td>Paradigm</td><td>Frequentist (GNN + Rubin\'s rules)</td>')
 h('    <td>Bayesian (MCMCglmm)</td></tr>')
 h('<tr><td>Speed (1,000 species)</td><td>Minutes</td><td>Hours</td></tr>')
 h('<tr><td>Speed (5,000+ species)</td><td>5&ndash;15 min</td><td>Days</td></tr>')
-h('<tr><td>Trait types</td><td>All 7 types in one call</td>')
+h('<tr><td>Trait types</td><td>Mixed trait types in one call</td>')
 h('    <td>Continuous + binary (Gaussian/ordinal family)</td></tr>')
 h('<tr><td>Obs-level covariates</td><td>Yes (v0.6.0+, refinement MLP)</td>')
 h('    <td>Yes (MCMCglmm fixed effects)</td></tr>')

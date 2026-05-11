@@ -124,7 +124,7 @@ cat("Kernel bandwidth sigma:", round(graph$sigma, 3), "\n")
 
 
 ## ----plot-uncertainty, eval=FALSE---------------------------------------------
-# plot_uncertainty(pred, trait_name = "Mass")
+# plot(pred, type = "intervals", trait = "Mass")
 
 
 ## ----gpu, eval=FALSE----------------------------------------------------------
@@ -141,4 +141,3 @@ cat("Kernel bandwidth sigma:", round(graph$sigma, 3), "\n")
 # traits <- read_traits("my_traits.csv", species_col = "species")
 # pd     <- preprocess_traits(traits, tree)
 # # ...proceed as above
-

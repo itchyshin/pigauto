@@ -38,6 +38,10 @@
 </head>
 <body>
 
+<div style="background:#fff7ed;border-left:4px solid #ea580c;padding:1em 1.2em;margin:0 0 1.5em 0;border-radius:4px">
+<b>Archived static page.</b> This page is kept for historical context while it is rethought. Current public guidance lives in the source-backed vignettes under Articles. Do not treat this page as the current source of truth for version scope, uncertainty wording, or benchmark claims.
+</div>
+
 <h1>pigauto <span class="badge">v0.9.0.9000</span></h1>
 <p class="tagline">Fill in missing species traits using a phylogenetic tree.</p>
 <p class="meta">Generated 2026-04-18 from <code>README.md</code> and <code>CLAUDE.md</code>.</p>
@@ -146,9 +150,9 @@ Every prediction is
 <p>
 where <code>r_cal</code> is a per-trait gate learned during training and
 <b>re-calibrated on the validation set</b> afterward. When the Brownian-motion
-baseline is already optimal, the calibrated gate closes to zero and the GNN
-becomes a no-op &mdash; so pigauto is guaranteed never to underperform the
-baseline on held-out data. The GNN uses two message-passing layers with
+baseline is already optimal on the validation cells, the calibrated gate can
+close to zero and the GNN becomes a no-op. This is a validation safeguard, not
+a universal performance guarantee. The GNN uses two message-passing layers with
 scaled dot-product attention and a learnable log-adjacency bias, so the
 model starts close to the phylogenetic prior and learns deviations only
 where the data supports them.
@@ -297,4 +301,3 @@ Installed path: <code>system.file("doc", "pigauto_intro.html", package = "pigaut
 
 </body>
 </html>
-
