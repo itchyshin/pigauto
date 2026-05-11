@@ -1,5 +1,9 @@
 # pigauto 0.9.1.9014 (dev)
 
+## Bug fixes: per-tree tree MI pooling (2026-05-11)
+
+- `multi_impute_trees(share_gnn = FALSE)` now computes `pooled_point` by averaging all completed `T * m_per_tree` datasets, matching the documented return contract. Previously this path averaged one per-tree pooled result, which could ignore within-tree draw-level variation when `m_per_tree > 1`.
+
 ## Bug fixes: shared-GNN tree MI pooling (2026-05-11)
 
 - `multi_impute_trees(share_gnn = TRUE)` now computes `pooled_point` from the completed imputation datasets, preserving `species_col`, user input row order, observed cells, and all `m_per_tree` draws. Previously this path pooled directly from raw prediction output, which could drop non-trait columns and return the point estimate in internal prediction order.
