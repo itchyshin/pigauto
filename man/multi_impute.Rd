@@ -146,7 +146,10 @@ units back-transformed to the original scale). The draw width is
 therefore calibrated against actual prediction error regardless of
 whether the BM or GNN term dominates. For discrete traits (binary,
 categorical) it uses Bernoulli / categorical draws from the estimated
-probability vector. This is the preferred default for pigauto.
+probability vector. For \code{multi_proportion} groups it draws the
+K CLR latent columns with their BM latent SEs, projects back to
+sum-zero CLR space, and decodes to the simplex. This is the preferred
+default for pigauto.
 
 \strong{\code{draws_method = "mc_dropout"}}: Run \code{M} GNN forward passes in
 training mode (dropout active). \strong{Caution}: when the per-trait
