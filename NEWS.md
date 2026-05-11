@@ -1,5 +1,9 @@
 # pigauto 0.9.1.9014 (dev)
 
+## Bug fixes: shared-GNN tree MI pooling (2026-05-11)
+
+- `multi_impute_trees(share_gnn = TRUE)` now computes `pooled_point` from the completed imputation datasets, preserving `species_col`, user input row order, observed cells, and all `m_per_tree` draws. Previously this path pooled directly from raw prediction output, which could drop non-trait columns and return the point estimate in internal prediction order.
+
 ## Bug fixes: shared-GNN tree baselines (2026-05-11)
 
 - `multi_impute_trees(share_gnn = TRUE)` now recomputes each posterior

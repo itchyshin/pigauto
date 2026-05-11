@@ -134,6 +134,44 @@ test_that("shared-GNN tree baselines recompute tree-specific graphs", {
   expect_true(grepl("graph = NULL", body_txt, fixed = TRUE))
 })
 
+test_that("shared-GNN pooled_point stays in completed-data order", {
+  skip_if_not_installed("torch")
+  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+
+  set.seed(20260512)
+  tips <- paste0("sp", 1:12)
+  trees <- lapply(1:2, function(i) ape::rcoal(12L, tip.label = tips))
+  sp_shuffled <- sample(rep(tips, each = 2L))
+  sp_mean <- setNames(seq_along(tips), tips)
+  trait <- sp_mean[sp_shuffled] + stats::rnorm(length(sp_shuffled), sd = 0.01)
+  df <- data.frame(species = sp_shuffled, trait = as.numeric(trait),
+                   stringsAsFactors = FALSE)
+  mask_idx <- vapply(unique(df$species),
+                     function(sp) sample(which(df$species == sp), 1L),
+                     integer(1))
+  df_obs <- df
+  df_obs$trait[mask_idx] <- NA_real_
+
+  mi <- suppressWarnings(pigauto::multi_impute_trees(
+    df_obs, trees, species_col = "species", m_per_tree = 2L,
+    share_gnn = TRUE, reference_tree = trees[[1]],
+    missing_frac = 0, epochs = 30L, verbose = FALSE, seed = 1L
+  ))
+
+  expect_named(mi$pooled_point, names(df_obs))
+  expect_equal(rownames(mi$pooled_point), rownames(df_obs))
+  expect_equal(mi$pooled_point$species, df_obs$species)
+  expect_equal(mi$tree_index, c(1L, 1L, 2L, 2L))
+
+  observed_idx <- which(!is.na(df_obs$trait))
+  expect_equal(mi$pooled_point$trait[observed_idx], df_obs$trait[observed_idx],
+               tolerance = 1e-8)
+
+  draw_mean <- rowMeans(vapply(mi$datasets, function(d) d$trait,
+                               numeric(nrow(df_obs))))
+  expect_equal(mi$pooled_point$trait, draw_mean, tolerance = 1e-8)
+})
+
 test_that("multi_impute_trees(share_gnn=FALSE) keeps per-tree behaviour", {
   skip_if_not_installed("torch")
   skip_if_not(torch::torch_is_installed(), "libtorch not installed")
