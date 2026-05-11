@@ -28,32 +28,32 @@ a{color:#059669}
  &middot; 200 species
  &middot; 5 obs/species
  &middot; 2 replicates
- &middot; 54.0 min compute
- &middot; Generated 2026-04-17 10:49
+ &middot; 44.0 min compute
+ &middot; Generated 2026-05-11 10:58
 </p>
 <h2>1. The problem</h2>
 <p>
-Comparative datasets increasingly contain multiple data points per 
-species measured under different experimental or environmental 
-conditions: critical thermal maximum (CT<sub>max</sub>) at different 
-acclimation temperatures, metabolic rate at different body 
-temperatures, performance at different substrate concentrations. 
-Missing data is ubiquitous in these datasets, and different species 
+Comparative datasets increasingly contain multiple data points per
+species measured under different experimental or environmental
+conditions: critical thermal maximum (CT<sub>max</sub>) at different
+acclimation temperatures, metabolic rate at different body
+temperatures, performance at different substrate concentrations.
+Missing data is ubiquitous in these datasets, and different species
 may be missing measurements at different condition levels.
 </p>
 <p>
-The challenge: can imputation methods use <b>observation-level 
-covariates</b> (the experimental condition under which each 
-measurement was taken) to produce <b>covariate-conditional 
-predictions</b>? A species measured at 20&deg;C acclimation should 
-receive a different CT<sub>max</sub> imputation than the same 
-species measured at 30&deg;C. Standard phylogenetic imputation 
-methods that operate at the species level cannot make this 
+The challenge: can imputation methods use <b>observation-level
+covariates</b> (the experimental condition under which each
+measurement was taken) to produce <b>covariate-conditional
+predictions</b>? A species measured at 20&deg;C acclimation should
+receive a different CT<sub>max</sub> imputation than the same
+species measured at 30&deg;C. Standard phylogenetic imputation
+methods that operate at the species level cannot make this
 distinction.
 </p>
 <div class="key-point">
-<b>Key question:</b> Does supplying observation-level covariates to 
-pigauto improve imputation accuracy when within-species variation 
+<b>Key question:</b> Does supplying observation-level covariates to
+pigauto improve imputation accuracy when within-species variation
 is driven by a measurable condition variable?
 </div>
 <h2>2. Simulation design</h2>
@@ -68,11 +68,11 @@ where:
   epsilon_ij  ~ N(0, sigma^2) residual noise
 </code></pre>
 <p>
-Each species has multiple observations at different acclimation 
-temperatures. The parameter <code>beta</code> controls the strength 
-of the within-species covariate effect. When <code>beta = 0</code>, 
-there is no within-species variation driven by the covariate; when 
-<code>beta &gt; 0</code>, the covariate contains information that 
+Each species has multiple observations at different acclimation
+temperatures. The parameter <code>beta</code> controls the strength
+of the within-species covariate effect. When <code>beta = 0</code>,
+there is no within-species variation driven by the covariate; when
+<code>beta &gt; 0</code>, the covariate contains information that
 should improve imputation.
 </p>
 <h3>Methods compared</h3>
@@ -81,15 +81,15 @@ should improve imputation.
 <tr><td><span style="color:#9ca3af"><b>Mean imputation</b></span></td>
 <td style="text-align:left">Column mean of observed values. Ignores phylogeny and covariates.</td></tr>
 <tr><td><span style="color:#7c3aed"><b>pigauto (no covariates)</b></span></td>
-<td style="text-align:left">Phylogenetic BM baseline + GNN correction. Uses the tree and cross-trait 
+<td style="text-align:left">Phylogenetic BM baseline + GNN correction. Uses the tree and cross-trait
 correlations but no observation-level covariates.</td></tr>
 <tr><td><span style="color:#059669"><b>pigauto + obs-level covariates</b></span></td>
-<td style="text-align:left">Same architecture, but the acclimation temperature is supplied as an 
+<td style="text-align:left">Same architecture, but the acclimation temperature is supplied as an
 observation-level covariate. The refinement MLP can learn within-species adjustments.</td></tr>
 </table>
 <h2>3. Results</h2>
 <h3>Observation-level RMSE</h3>
-<p class="meta">Average RMSE on held-out cells across replicates. 
+<p class="meta">Average RMSE on held-out cells across replicates.
 <span class="best">Bold green</span> marks the best method per scenario.</p>
 <table>
 <tr><th>Scenario</th>
@@ -100,78 +100,78 @@ observation-level covariate. The refinement MLP can learn within-species adjustm
 <tr>
 <td><b>lambda=0.5 beta=0.0 miss=50%</b></td>
 <td>1.123</td>
-<td>0.894</td>
-<td class="best">0.888</td>
+<td>0.891</td>
+<td class="best">0.890</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=0.0 miss=50%</b></td>
 <td>1.382</td>
-<td>1.091</td>
-<td class="best">1.089</td>
+<td class="best">1.090</td>
+<td>1.101</td>
 </tr>
 <tr>
 <td><b>lambda=0.5 beta=0.5 miss=50%</b></td>
 <td>2.927</td>
-<td>2.922</td>
-<td class="best">2.483</td>
+<td>2.967</td>
+<td class="best">2.226</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=0.5 miss=50%</b></td>
 <td>3.060</td>
-<td>3.014</td>
-<td class="best">2.621</td>
+<td>3.006</td>
+<td class="best">2.320</td>
 </tr>
 <tr>
 <td><b>lambda=0.5 beta=1.0 miss=50%</b></td>
 <td>5.107</td>
-<td>5.487</td>
-<td class="best">4.680</td>
+<td>6.214</td>
+<td class="best">4.003</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=1.0 miss=50%</b></td>
 <td>5.537</td>
-<td>6.019</td>
-<td class="best">4.895</td>
+<td>6.164</td>
+<td class="best">4.220</td>
 </tr>
 <tr>
 <td><b>lambda=0.5 beta=0.0 miss=80%</b></td>
 <td>1.413</td>
-<td>1.068</td>
-<td class="best">1.066</td>
+<td>1.081</td>
+<td class="best">1.072</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=0.0 miss=80%</b></td>
 <td>1.975</td>
-<td>1.551</td>
-<td class="best">1.551</td>
+<td class="best">1.552</td>
+<td>1.557</td>
 </tr>
 <tr>
 <td><b>lambda=0.5 beta=0.5 miss=80%</b></td>
 <td>2.925</td>
-<td>2.939</td>
-<td class="best">2.587</td>
+<td>3.044</td>
+<td class="best">2.292</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=0.5 miss=80%</b></td>
 <td>3.063</td>
-<td>3.189</td>
-<td class="best">2.874</td>
+<td>3.223</td>
+<td class="best">2.495</td>
 </tr>
 <tr>
 <td><b>lambda=0.5 beta=1.0 miss=80%</b></td>
 <td>5.228</td>
-<td>5.311</td>
-<td class="best">4.485</td>
+<td>5.524</td>
+<td class="best">3.984</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=1.0 miss=80%</b></td>
 <td>5.452</td>
-<td>5.535</td>
-<td class="best">4.689</td>
+<td>5.666</td>
+<td class="best">4.111</td>
 </tr>
 </table>
 <h3>Pearson r (observed vs predicted)</h3>
-<p class="meta">Higher is better. 
+<p class="meta">Higher is better.
 <span class="best">Bold green</span> marks the best method per scenario.</p>
 <table>
 <tr><th>Scenario</th>
@@ -182,74 +182,74 @@ observation-level covariate. The refinement MLP can learn within-species adjustm
 <tr>
 <td><b>lambda=0.5 beta=0.0 miss=50%</b></td>
 <td>0.3781</td>
-<td>0.6758</td>
-<td class="best">0.6761</td>
+<td class="best">0.6754</td>
+<td>0.6744</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=0.0 miss=50%</b></td>
 <td>0.3523</td>
-<td>0.6839</td>
-<td class="best">0.6854</td>
+<td class="best">0.6846</td>
+<td>0.6775</td>
 </tr>
 <tr>
 <td><b>lambda=0.5 beta=0.5 miss=50%</b></td>
 <td>0.1267</td>
-<td>0.2319</td>
-<td class="best">0.5377</td>
+<td>0.2903</td>
+<td class="best">0.6553</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=0.5 miss=50%</b></td>
 <td>0.1570</td>
-<td>0.3184</td>
-<td class="best">0.5338</td>
+<td>0.3471</td>
+<td class="best">0.6508</td>
 </tr>
 <tr>
 <td><b>lambda=0.5 beta=1.0 miss=50%</b></td>
 <td>0.0729</td>
-<td>0.0476</td>
-<td class="best">0.3913</td>
+<td>0.0247</td>
+<td class="best">0.6414</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=1.0 miss=50%</b></td>
 <td>0.0644</td>
-<td>0.0710</td>
-<td class="best">0.4441</td>
+<td>0.0814</td>
+<td class="best">0.6547</td>
 </tr>
 <tr>
 <td><b>lambda=0.5 beta=0.0 miss=80%</b></td>
 <td>0.2043</td>
-<td>0.7050</td>
-<td class="best">0.7062</td>
+<td>0.7041</td>
+<td class="best">0.7057</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=0.0 miss=80%</b></td>
 <td>0.2048</td>
-<td class="best">0.6501</td>
-<td>0.6500</td>
+<td class="best">0.6496</td>
+<td>0.6480</td>
 </tr>
 <tr>
 <td><b>lambda=0.5 beta=0.5 miss=80%</b></td>
 <td>0.0599</td>
-<td>0.2118</td>
-<td class="best">0.4599</td>
+<td>0.1836</td>
+<td class="best">0.6308</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=0.5 miss=80%</b></td>
 <td>0.0676</td>
-<td>0.2216</td>
-<td class="best">0.3997</td>
+<td>0.2254</td>
+<td class="best">0.5747</td>
 </tr>
 <tr>
 <td><b>lambda=0.5 beta=1.0 miss=80%</b></td>
 <td>-0.0051</td>
-<td>0.1115</td>
-<td class="best">0.5514</td>
+<td>0.1100</td>
+<td class="best">0.6522</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=1.0 miss=80%</b></td>
 <td>0.0448</td>
-<td>0.1556</td>
-<td class="best">0.5605</td>
+<td>0.1397</td>
+<td class="best">0.6808</td>
 </tr>
 </table>
 <h3>Covariate lift</h3>
@@ -258,114 +258,114 @@ observation-level covariate. The refinement MLP can learn within-species adjustm
 <tr><th>Scenario</th><th>RMSE (no cov)</th><th>RMSE (+ cov)</th><th>Ratio</th><th>Lift</th></tr>
 <tr>
 <td><b>lambda=0.5 beta=0.0 miss=50%</b></td>
-<td>0.894</td>
-<td>0.888</td>
-<td>0.993</td>
-<td>+0.7%</td>
+<td>0.891</td>
+<td>0.890</td>
+<td>0.999</td>
+<td>+0.1%</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=0.0 miss=50%</b></td>
-<td>1.091</td>
-<td>1.089</td>
-<td>0.997</td>
-<td>+0.3%</td>
+<td>1.090</td>
+<td>1.101</td>
+<td>1.010</td>
+<td>-1.0%</td>
 </tr>
 <tr>
 <td><b>lambda=0.5 beta=0.5 miss=50%</b></td>
-<td>2.922</td>
-<td>2.483</td>
-<td class="best">0.850</td>
-<td class="best">+15.0%</td>
+<td>2.967</td>
+<td>2.226</td>
+<td class="best">0.750</td>
+<td class="best">+25.0%</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=0.5 miss=50%</b></td>
-<td>3.014</td>
-<td>2.621</td>
-<td class="best">0.870</td>
-<td class="best">+13.0%</td>
+<td>3.006</td>
+<td>2.320</td>
+<td class="best">0.772</td>
+<td class="best">+22.8%</td>
 </tr>
 <tr>
 <td><b>lambda=0.5 beta=1.0 miss=50%</b></td>
-<td>5.487</td>
-<td>4.680</td>
-<td class="best">0.853</td>
-<td class="best">+14.7%</td>
+<td>6.214</td>
+<td>4.003</td>
+<td class="best">0.644</td>
+<td class="best">+35.6%</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=1.0 miss=50%</b></td>
-<td>6.019</td>
-<td>4.895</td>
-<td class="best">0.813</td>
-<td class="best">+18.7%</td>
+<td>6.164</td>
+<td>4.220</td>
+<td class="best">0.685</td>
+<td class="best">+31.5%</td>
 </tr>
 <tr>
 <td><b>lambda=0.5 beta=0.0 miss=80%</b></td>
-<td>1.068</td>
-<td>1.066</td>
-<td>0.998</td>
-<td>+0.2%</td>
+<td>1.081</td>
+<td>1.072</td>
+<td>0.992</td>
+<td>+0.8%</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=0.0 miss=80%</b></td>
-<td>1.551</td>
-<td>1.551</td>
-<td>1.000</td>
-<td>+0.0%</td>
+<td>1.552</td>
+<td>1.557</td>
+<td>1.003</td>
+<td>-0.3%</td>
 </tr>
 <tr>
 <td><b>lambda=0.5 beta=0.5 miss=80%</b></td>
-<td>2.939</td>
-<td>2.587</td>
-<td class="best">0.880</td>
-<td class="best">+12.0%</td>
+<td>3.044</td>
+<td>2.292</td>
+<td class="best">0.753</td>
+<td class="best">+24.7%</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=0.5 miss=80%</b></td>
-<td>3.189</td>
-<td>2.874</td>
-<td class="best">0.901</td>
-<td class="best">+9.9%</td>
+<td>3.223</td>
+<td>2.495</td>
+<td class="best">0.774</td>
+<td class="best">+22.6%</td>
 </tr>
 <tr>
 <td><b>lambda=0.5 beta=1.0 miss=80%</b></td>
-<td>5.311</td>
-<td>4.485</td>
-<td class="best">0.844</td>
-<td class="best">+15.6%</td>
+<td>5.524</td>
+<td>3.984</td>
+<td class="best">0.721</td>
+<td class="best">+27.9%</td>
 </tr>
 <tr>
 <td><b>lambda=0.9 beta=1.0 miss=80%</b></td>
-<td>5.535</td>
-<td>4.689</td>
-<td class="best">0.847</td>
-<td class="best">+15.3%</td>
+<td>5.666</td>
+<td>4.111</td>
+<td class="best">0.726</td>
+<td class="best">+27.4%</td>
 </tr>
 </table>
 <h2>4. Key findings</h2>
 <div class="note">
-<b>When beta &gt; 0</b> (within-species covariate effect exists), 
-pigauto with observation-level covariates outperforms pigauto without 
-covariates. The improvement grows with beta: stronger covariate 
-effects provide more information for the model to exploit.
+<b>When beta &gt; 0</b> (within-species covariate effect exists),
+pigauto with observation-level covariates usually improves over pigauto
+without covariates in this simulation. The lift grows with beta because
+stronger covariate effects provide more information for the model to exploit.
 </div>
 <div class="key-point">
-<b>When beta = 0</b> (no within-species covariate effect), the two 
-pigauto variants produce similar RMSE. The gated architecture 
-correctly avoids using uninformative covariates, so supplying them 
-does not degrade accuracy.
+<b>When beta = 0</b> (no within-species covariate effect), the two
+pigauto variants produce similar RMSE. The gated architecture
+can fall back when covariates are uninformative; treat the beta = 0
+rows as the evidence for whether they changed accuracy in this run.
 </div>
 <ul>
-<li><b>Species-level phylogenetic imputation is necessary but not 
-sufficient.</b> The BM baseline captures inter-species variation 
-driven by shared evolutionary history. But when within-species 
-variation is structured by an experimental condition, species-level 
+<li><b>Species-level phylogenetic imputation is necessary but not
+sufficient.</b> The BM baseline captures inter-species variation
+driven by shared evolutionary history. But when within-species
+variation is structured by an experimental condition, species-level
 imputation leaves that structure unexploited.</li>
-<li><b>Observation-level covariates fill the gap.</b> By conditioning 
-on the experimental condition (acclimation temperature in this 
-simulation), pigauto can produce different imputed values for 
-different observations of the same species, matching the true 
+<li><b>Observation-level covariates fill the gap.</b> By conditioning
+on the experimental condition (acclimation temperature in this
+simulation), pigauto can produce different imputed values for
+different observations of the same species, matching the true
 data-generating process.</li>
-<li><b>Safety when covariates are uninformative.</b> The gated 
+<li><b>Safety when covariates are uninformative.</b> The gated
 architecture can fall back to the phylogenetic baseline when the
 covariate has no predictive value in this simulation (beta = 0).
 Treat covariates as a validation-checked addition, not an automatic
@@ -373,21 +373,21 @@ improvement.</li>
 </ul>
 <h2>5. Architecture: observation-level refinement</h2>
 <p>
-Standard phylogenetic imputation operates at the species level: 
-one prediction per species per trait. To handle multiple observations 
+Standard phylogenetic imputation operates at the species level:
+one prediction per species per trait. To handle multiple observations
 per species, pigauto uses a two-stage architecture:
 </p>
 <ol>
-<li><b>Species-level message passing.</b> The GNN aggregates 
-observations within each species (<code>scatter_mean</code>), 
-performs phylogenetic message passing on the species graph, then 
-broadcasts the species-level representation back to observations 
-(<code>index_select</code>). This captures inter-species structure 
+<li><b>Species-level message passing.</b> The GNN aggregates
+observations within each species (<code>scatter_mean</code>),
+performs phylogenetic message passing on the species graph, then
+broadcasts the species-level representation back to observations
+(<code>index_select</code>). This captures inter-species structure
 from the phylogenetic tree.</li>
-<li><b>Observation-level refinement MLP.</b> A small feedforward 
-network takes the species-level representation and concatenates it 
-with the observation-level covariates. This allows the model to 
-learn within-species adjustments: the same species gets different 
+<li><b>Observation-level refinement MLP.</b> A small feedforward
+network takes the species-level representation and concatenates it
+with the observation-level covariates. This allows the model to
+learn within-species adjustments: the same species gets different
 predictions at different covariate values.</li>
 </ol>
 <pre><code>
@@ -411,9 +411,9 @@ The final prediction is still the gated blend:
 pred = (1 - r_cal) * baseline + r_cal * delta_obs
 </code></pre>
 <p>
-where <code>baseline</code> is the phylogenetic BM prediction 
-(species-level, broadcast to observations) and 
-<code>delta_obs</code> is the observation-level GNN output that 
+where <code>baseline</code> is the phylogenetic BM prediction
+(species-level, broadcast to observations) and
+<code>delta_obs</code> is the observation-level GNN output that
 incorporates both phylogenetic structure and covariate information.
 </p>
 <h2>6. Reproducibility</h2>
@@ -430,19 +430,19 @@ Rscript script/make_bench_multi_obs_html.R
 </code></pre>
 <h2>References</h2>
 <ul>
-<li>Goolsby, E.W., Bruggeman, J. &amp; An&eacute;, C. (2017). 
-Rphylopars: fast multivariate phylogenetic comparative methods 
-for missing data and within-species variation. 
+<li>Goolsby, E.W., Bruggeman, J. &amp; An&eacute;, C. (2017).
+Rphylopars: fast multivariate phylogenetic comparative methods
+for missing data and within-species variation.
 <i>Methods in Ecology and Evolution</i>, 8, 22&ndash;27.</li>
-<li>Rubin, D.B. (1987). <i>Multiple Imputation for Nonresponse 
+<li>Rubin, D.B. (1987). <i>Multiple Imputation for Nonresponse
 in Surveys</i>. Wiley.</li>
-<li>Nakagawa, S. &amp; Freckleton, R.P. (2008). Missing inaction: 
-the dangers of ignoring missing data. 
+<li>Nakagawa, S. &amp; Freckleton, R.P. (2008). Missing inaction:
+the dangers of ignoring missing data.
 <i>Trends in Ecology &amp; Evolution</i>, 23, 592&ndash;596.</li>
 </ul>
 <hr>
-<p class="meta">Generated 2026-04-17 10:49 by 
-<code>script/make_bench_multi_obs_html.R</code> from 
+<p class="meta">Generated 2026-05-11 10:58 by
+<code>script/make_bench_multi_obs_html.R</code> from
 pre-computed results in <code>script/bench_multi_obs.rds</code>.
 </p>
 </body></html>

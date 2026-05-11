@@ -251,9 +251,9 @@ verdict1 <- if (is.finite(rmse_bl_5) && is.finite(rmse_pg_5)) {
 
 verdict2 <- if (is.finite(rmse_bl_500) && is.finite(rmse_pg_500)) {
   pct <- 100 * (rmse_bl_500 - rmse_pg_500) / rmse_bl_500
-  sprintf('For dense counts (mean = 500), pigauto moves RMSE from %.3f to %.3f (%+.1f%%). The log1p transform compresses the scale, so the GNN has smoother gradients to learn from.',
+  sprintf('For dense counts (mean = 500), pigauto moves RMSE from %.3f to %.3f (%+.1f%%). The log1p transform compresses the scale, but the observed GNN lift is scenario-dependent.',
           rmse_bl_500, rmse_pg_500, pct)
-} else 'For dense counts the log1p transform smooths the scale and the GNN can contribute more.'
+} else 'For dense counts the log1p transform smooths the scale; compare pigauto against BM scenario by scenario.'
 
 # ---------------------------------------------------------------------------
 # HTML
@@ -347,8 +347,8 @@ Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 <ul>
 <li><b>The log1p-z pipeline handles count data well.</b> Counts are transformed via log1p then z-scored before entering the latent matrix. This brings sparse and dense counts onto a common scale where BM can operate.</li>
 <li><b>Sparse counts (mean = 5) are inherently noisy.</b> All methods struggle because the signal-to-noise ratio is low in log-space for small integers. The GNN cannot extract structure that is not there.</li>
-<li><b>Dense counts (mean = 100+) give the GNN room to improve.</b> With more information per cell, the GNN can learn cross-trait correlations and non-linear patterns that BM misses.</li>
-<li><b>Negative-binomial overdispersion increases error for all methods</b> but does not change the ordering. The extra variance makes all predictions less precise, but the phylogenetic information remains exploitable.</li>
+<li><b>Dense counts (mean = 100+) are not automatically easier for the GNN.</b> The log1p transform gives a smoother latent scale, but the table shows modest and mixed deltas against BM.</li>
+<li><b>Negative-binomial overdispersion increases error for all methods.</b> The extra variance makes all predictions less precise, and the method ordering should be read from the table rather than assumed.</li>
 </ul>
 
 <h2>Reproducibility</h2>

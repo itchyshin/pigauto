@@ -328,7 +328,7 @@ Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 <li><b>Proportions are treated as continuous traits in latent space.</b> The pipeline z-scores proportions directly. The [0,1] boundary is respected at prediction time via clamping after back-transformation.</li>
 <li><b>Signal strength dominates performance.</b> At high phylogenetic signal the BM baseline captures most of the variation because closely related species have similar proportions. The GNN gate stays near zero.</li>
 <li><b>Boundary density affects difficulty.</b> When many values cluster near 0 or 1, the distribution is skewed and BM (which assumes Gaussian residuals) can struggle. The GNN can learn the non-linear boundary effects.</li>
-<li><b>pigauto matches or improves on the baseline</b> across all signal levels. The calibrated gate ensures no degradation when the baseline is already strong.</li>
+<li><b>pigauto is usually close to the baseline and sometimes improves it.</b> Average RMSE gains are modest in this run, and individual traits can tie or slightly trail the BM baseline.</li>
 </ul>
 
 <h2>Reproducibility</h2>

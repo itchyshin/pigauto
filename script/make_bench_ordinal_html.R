@@ -204,11 +204,11 @@ for (scen in scenarios_primary) {
     vapply(method_order, function(m) avg_metric(test_df, m, scen, missing_frac, "spearman_rho"), numeric(1)),
     method_order)
 
-  best_rmse <- names(which.min(rmse_vals))
-  best_rho  <- names(which.max(rho_vals))
+  best_rmse <- if (any(is.finite(rmse_vals))) names(which.min(rmse_vals)) else NA_character_
+  best_rho  <- if (any(is.finite(rho_vals))) names(which.max(rho_vals)) else NA_character_
 
   star <- function(method, best) {
-    if (method == best) ' <span style="color:#059669">&#9733;</span>' else ""
+    if (!is.na(best) && method == best) ' <span style="color:#059669">&#9733;</span>' else ""
   }
 
   primary_table_rows <- c(primary_table_rows, sprintf(
@@ -239,9 +239,9 @@ verdict1 <- if (is.finite(rmse_bl_3) && is.finite(rmse_pg_3)) {
 
 verdict2 <- if (is.finite(rmse_bl_10) && is.finite(rmse_pg_10)) {
   pct <- 100 * (rmse_bl_10 - rmse_pg_10) / rmse_bl_10
-  sprintf('With 10 ordinal levels, pigauto reduces RMSE from %.3f to %.3f (%+.1f%%). More levels mean finer-grained variation that the GNN can exploit.',
+  sprintf('With 10 ordinal levels, pigauto moves RMSE from %.3f to %.3f (%+.1f%%). More levels expose finer-grained variation, but the observed GNN lift remains scenario-specific.',
           rmse_bl_10, rmse_pg_10, pct)
-} else 'With more ordinal levels there is more room for the GNN to add value.'
+} else 'With more ordinal levels there is finer-grained variation; compare pigauto against BM scenario by scenario.'
 
 # ---------------------------------------------------------------------------
 # HTML
@@ -330,7 +330,7 @@ Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 <h2>What the benchmark shows</h2>
 <ul>
 <li><b>BM on the integer-z scale is a strong baseline for ordinal traits.</b> Rphylopars treats the z-scored integer codes as continuous, which works well when phylogenetic signal is moderate to high.</li>
-<li><b>More ordinal levels give the GNN more room to improve.</b> With only 3 levels the discretisation is coarse and the baseline captures most of the structure. With 10 levels the finer gradation exposes patterns that the GNN can exploit via cross-trait correlations.</li>
+<li><b>More ordinal levels expose finer-grained variation.</b> With only 3 levels the discretisation is coarse and the baseline captures most of the structure. With 10 levels there is more information, but this run does not justify a general improvement claim.</li>
 <li><b>Spearman rank correlation tracks RMSE improvements.</b> Because ordinal imputation cares about rank preservation, Spearman &rho; is the more interpretable metric for downstream use.</li>
 </ul>
 
