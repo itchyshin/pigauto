@@ -480,6 +480,8 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
   imputed_mask <- NULL
   se_sum       <- NULL
   pooled_sum   <- NULL
+  pooled_n     <- 0L
+  trait_cols   <- setdiff(names(traits), species_col)
   idx <- 0L
 
   for (t in seq_len(T_trees)) {
@@ -507,18 +509,40 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
              else pred_t$imputed
       info <- build_completed(traits, one, species_col,
                                 input_row_order = input_row_order)
-      all_datasets[[idx]] <- info$completed
+      completed_i <- info$completed
+      all_datasets[[idx]] <- completed_i
       tree_index[idx]     <- t
       if (is.null(imputed_mask)) imputed_mask <- info$imputed_mask
+
+      # Pool from the user-facing completed datasets, not raw pred_t$imputed:
+      # completed_i is already in input row order, preserves species_col and
+      # observed cells, and represents each of the m_per_tree draws.
+      if (is.null(pooled_sum)) {
+        pooled_sum <- completed_i
+        for (nm in trait_cols) {
+          if (is.numeric(completed_i[[nm]])) {
+            pooled_sum[[nm]] <- as.numeric(completed_i[[nm]])
+          }
+        }
+      } else {
+        for (nm in trait_cols) {
+          if (is.numeric(completed_i[[nm]])) {
+            pooled_sum[[nm]] <- pooled_sum[[nm]] + as.numeric(completed_i[[nm]])
+          }
+        }
+      }
+      pooled_n <- pooled_n + 1L
     }
 
-    # Running sums for pooled point / se
-    if (!is.null(pred_t$imputed)) {
-      m_imp <- as.matrix(pred_t$imputed[, vapply(pred_t$imputed, is.numeric, logical(1)), drop = FALSE])
-      pooled_sum <- if (is.null(pooled_sum)) m_imp else pooled_sum + m_imp
-    }
+    # Running sum for SE. pred_t$se is in prediction/internal row order, so
+    # align it to the user's input rows before returning it beside pooled_point.
     if (!is.null(pred_t$se)) {
       m_se <- as.matrix(pred_t$se)
+      if (!is.null(input_row_order)) {
+        row_idx <- match(seq_len(nrow(traits)), input_row_order)
+        m_se <- m_se[row_idx, , drop = FALSE]
+        rownames(m_se) <- rownames(traits)
+      }
       se_sum <- if (is.null(se_sum)) m_se else se_sum + m_se
     }
 
@@ -528,7 +552,14 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
     }
   }
 
-  pooled_point <- if (!is.null(pooled_sum)) as.data.frame(pooled_sum / T_trees) else NULL
+  pooled_point <- pooled_sum
+  if (!is.null(pooled_point) && pooled_n > 0L) {
+    for (nm in trait_cols) {
+      if (is.numeric(pooled_point[[nm]])) {
+        pooled_point[[nm]] <- pooled_point[[nm]] / pooled_n
+      }
+    }
+  }
   pooled_se    <- if (!is.null(se_sum))    se_sum / T_trees                   else NULL
 
   list(
