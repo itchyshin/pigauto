@@ -1,5 +1,13 @@
 # pigauto 0.9.1.9014 (dev)
 
+## Bug fixes: shared-GNN tree baselines (2026-05-11)
+
+- `multi_impute_trees(share_gnn = TRUE)` now recomputes each posterior
+  tree's baseline from that tree's own cophenetic distances and
+  phylogenetic covariance. Previously the shared-GNN path accidentally
+  reused the reference tree's cached graph when fitting per-tree baselines,
+  which could collapse the intended tree-uncertainty signal.
+
 ## Bug fixes: proportion conformal intervals (2026-05-11)
 
 - `predict.pigauto_fit()` now returns `conformal_lower` and `conformal_upper`
