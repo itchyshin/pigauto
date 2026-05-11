@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 # HTML generator for the AVONET 9,993 × BACE head-to-head GPU bench.
-# Reads script/bench_avonet9993_bace.rds (copied home by the
-# submit_v090_vulcan_gpu/rsync_results_back.sh helper) and writes a
-# winner-highlighted pivot table + wall-time block.
+# Reads script/bench_avonet9993_bace.rds copied home from the dedicated Vulcan
+# GPU submission bundle, then writes a winner-highlighted pivot table +
+# wall-time block.
 
 options(stringsAsFactors = FALSE)
 
@@ -14,7 +14,7 @@ out_p  <- file.path(here, "pkgdown", "assets", "dev",
 dir.create(dirname(out_p), showWarnings = FALSE, recursive = TRUE)
 if (!file.exists(in_rds))
   stop("No RDS at ", in_rds,
-       ". Run submit_v090_vulcan_gpu/rsync_results_back.sh first.")
+       ". Copy the Vulcan GPU result RDS into script/ first.")
 
 b   <- readRDS(in_rds)
 res <- b$results
