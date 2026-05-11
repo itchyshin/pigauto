@@ -94,7 +94,7 @@ collect_report_metrics <- function(fit_obj, pred, data, splits) {
       if (length(test_rows) > 0) {
         entry$n_test <- length(test_rows)
 
-        if (tp %in% c("continuous", "count", "ordinal")) {
+        if (tp %in% c("continuous", "count", "ordinal", "proportion")) {
           truth_latent <- X_truth[test_rows, lc[1]]
           pred_latent  <- pred$imputed_latent[test_rows, lc[1]]
 
@@ -122,6 +122,10 @@ collect_report_metrics <- function(fit_obj, pred, data, splits) {
             if (tp == "continuous") {
               truth_orig <- truth_latent * tm$sd + tm$mean
               if (isTRUE(tm$log_transform)) truth_orig <- exp(truth_orig)
+            } else if (tp == "count") {
+              truth_orig <- expm1(truth_latent * tm$sd + tm$mean)
+            } else if (tp == "proportion") {
+              truth_orig <- stats::plogis(truth_latent * tm$sd + tm$mean)
             } else {
               truth_orig <- truth_latent * tm$sd + tm$mean
             }

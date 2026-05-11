@@ -251,6 +251,57 @@ test_that("predict with conformal scores returns intervals", {
   expect_true(all(pred$conformal_lower[valid] <= pred$conformal_upper[valid]))
 })
 
+test_that("predict returns conformal intervals for proportion traits", {
+  set.seed(112)
+  n <- 50L
+  tree <- ape::rtree(n)
+  df <- data.frame(
+    prop = stats::runif(n, min = 0.05, max = 0.95),
+    row.names = tree$tip.label
+  )
+  df$prop[sample.int(n, 10L)] <- NA_real_
+
+  res <- impute(df, tree,
+                trait_types = c(prop = "proportion"),
+                epochs = 20L, eval_every = 10L, patience = 5L,
+                verbose = FALSE, seed = 112L, missing_frac = 0.30)
+  pred <- predict(res$fit, return_se = TRUE)
+
+  expect_true("prop" %in% names(res$fit$conformal_scores))
+  expect_true(is.finite(res$fit$conformal_scores["prop"]))
+  expect_true("prop" %in% colnames(pred$conformal_lower))
+  expect_true("prop" %in% colnames(pred$conformal_upper))
+
+  lo <- pred$conformal_lower[, "prop"]
+  hi <- pred$conformal_upper[, "prop"]
+  ok <- is.finite(lo) & is.finite(hi)
+  expect_true(any(ok))
+  expect_true(all(lo[ok] >= 0 & lo[ok] <= 1))
+  expect_true(all(hi[ok] >= 0 & hi[ok] <= 1))
+  expect_true(all(lo[ok] <= hi[ok]))
+})
+
+test_that("cross-validation conformal coverage handles proportion intervals", {
+  trait_map <- list(list(
+    name = "prop", type = "proportion", latent_cols = 1L,
+    mean = 0, sd = 1
+  ))
+  pred <- list(
+    conformal_lower = matrix(c(0.2, 0.2), ncol = 1,
+                             dimnames = list(NULL, "prop")),
+    conformal_upper = matrix(c(0.8, 0.8), ncol = 1,
+                             dimnames = list(NULL, "prop"))
+  )
+  X_scaled <- matrix(stats::qlogis(c(0.5, 0.9)), ncol = 1)
+
+  cov <- pigauto:::compute_conformal_coverage_fold(
+    pred, X_scaled, test_idx = c(1L, 2L), trait_map, fold = 1L, rep = 1L
+  )
+
+  expect_equal(cov$type, "proportion")
+  expect_equal(cov$coverage, 0.5)
+})
+
 test_that("phylo label propagation gives species-specific discrete baselines", {
   # Create mixed-type data
   data(avonet300, tree300, package = "pigauto")

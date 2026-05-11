@@ -1,5 +1,13 @@
 # pigauto 0.9.1.9014 (dev)
 
+## Bug fixes: proportion conformal intervals (2026-05-11)
+
+- `predict.pigauto_fit()` now returns `conformal_lower` and `conformal_upper`
+  columns for explicit `proportion` traits when conformal scores are
+  available.  Cross-validation/report coverage and prediction interval plots
+  now treat proportions as numeric back-transformable traits on the original
+  0-1 scale.
+
 ## Documentation: pkgdown reorganisation Phase 1 (2026-05-09)
 
 User-facing docs reorganisation following the issues by @b1805 (#67, #68)
