@@ -1,5 +1,9 @@
 # pigauto 0.9.1.9014 (dev)
 
+## Bug fixes: prediction-time observed-cell context (2026-05-11)
+
+- `predict.pigauto_fit()` now seeds DAE refinement with stored observed latent cells and uses the phylogenetic baseline only for originally missing cells. Previously prediction initialized every cell from the baseline, so the GNN did not receive the observed trait context it was trained to use. Evaluation, cross-validation, and report metrics explicitly mask validation/test cells from that context so held-out scores remain leakage-free.
+
 ## Improvements: tree-aware downstream fitting (2026-05-11)
 
 - `with_imputations()` now carries tree metadata for `multi_impute_trees()` results. If the fitting callback declares `tree`, `tree_index`, or `imputation` arguments, they are filled with the matching posterior tree, its index, and the imputation number; the returned fits and `pool_mi()` output also retain the successful `tree_index` vector as metadata.

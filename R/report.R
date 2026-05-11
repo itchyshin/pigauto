@@ -40,7 +40,17 @@ pigauto_report <- function(fit, data = NULL, splits = NULL,
   if (is.null(trait_map)) stop("Report requires a trait_map (mixed-type fit).")
 
   # ---- Collect metrics -------------------------------------------------------
-  metrics <- collect_report_metrics(fit_obj, pred, data, splits)
+  # Metrics must score held-out cells without feeding their truth back into
+  # the DAE context. Keep `pred` unchanged for the report's user-facing
+  # prediction payload, but use a masked prediction for split metrics.
+  metric_pred <- pred
+  if (!is.null(data) && !is.null(splits) && length(splits$test_idx) > 0L) {
+    metric_pred <- predict(
+      fit_obj, return_se = TRUE,
+      .mask_observed_idx = c(splits$val_idx, splits$test_idx)
+    )
+  }
+  metrics <- collect_report_metrics(fit_obj, metric_pred, data, splits)
 
   # ---- Build HTML ------------------------------------------------------------
   html <- build_report_html(

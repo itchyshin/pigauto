@@ -91,6 +91,83 @@ test_that("predict with n_imputations > 1 returns multiple datasets", {
   expect_true(is.matrix(pred$se))
 })
 
+test_that("predict.pigauto_fit uses observed latent cells as DAE context", {
+  td  <- make_test_data(n = 16, p = 1, seed = 20260511)
+  td$df$tr1[c(3, 9, 12)] <- NA_real_
+  pd  <- preprocess_traits(td$df, td$tree)
+  spl <- make_missing_splits(pd$X_scaled, missing_frac = 0.1,
+                             seed = 20260511, trait_map = pd$trait_map)
+  fit <- fit_pigauto(pd, td$tree, splits = spl,
+                     epochs = 2L, eval_every = 1L, patience = 2L,
+                     refine_steps = 1L, dropout = 0,
+                     use_transformer_blocks = FALSE,
+                     verbose = FALSE, seed = 20260511)
+
+  p <- as.integer(fit$model_config$input_dim)
+  fit$calibrated_gates <- rep(1, p)
+  fit$r_cal_bm         <- rep(0, p)
+  fit$r_cal_gnn        <- rep(1, p)
+  fit$r_cal_mean       <- rep(0, p)
+  fit$mean_baseline_per_col <- rep(0, p)
+
+  pred_ref <- predict(fit, return_se = FALSE)$imputed_latent
+
+  fit_shifted <- fit
+  observed <- !is.na(fit_shifted$X_scaled)
+  fit_shifted$X_scaled[observed] <- fit_shifted$X_scaled[observed] + 25
+  pred_shifted <- predict(fit_shifted, return_se = FALSE)$imputed_latent
+
+  expect_false(isTRUE(all.equal(pred_ref, pred_shifted, tolerance = 1e-8)),
+               info = "prediction should depend on stored observed cells, not only the baseline")
+})
+
+test_that("predict.pigauto_fit rejects stale X_scaled dimensions", {
+  td  <- make_test_data(n = 12, p = 1, seed = 20260512)
+  pd  <- preprocess_traits(td$df, td$tree)
+  spl <- make_missing_splits(pd$X_scaled, missing_frac = 0.1,
+                             seed = 20260512, trait_map = pd$trait_map)
+  fit <- fit_pigauto(pd, td$tree, splits = spl,
+                     epochs = 1L, eval_every = 1L, patience = 1L,
+                     refine_steps = 1L, use_transformer_blocks = FALSE,
+                     verbose = FALSE, seed = 20260512)
+
+  fit$X_scaled <- fit$X_scaled[-1, , drop = FALSE]
+  expect_error(
+    predict(fit, return_se = FALSE),
+    regexp = "Stored `X_scaled`"
+  )
+})
+
+test_that("predict.pigauto_fit can mask held-out cells from DAE context", {
+  td  <- make_test_data(n = 16, p = 1, seed = 20260513)
+  pd  <- preprocess_traits(td$df, td$tree)
+  spl <- make_missing_splits(pd$X_scaled, missing_frac = 0.1,
+                             seed = 20260513, trait_map = pd$trait_map)
+  fit <- fit_pigauto(pd, td$tree, splits = spl,
+                     epochs = 2L, eval_every = 1L, patience = 2L,
+                     refine_steps = 1L, dropout = 0,
+                     use_transformer_blocks = FALSE,
+                     verbose = FALSE, seed = 20260513)
+
+  p <- as.integer(fit$model_config$input_dim)
+  fit$calibrated_gates <- rep(1, p)
+  fit$r_cal_bm         <- rep(0, p)
+  fit$r_cal_gnn        <- rep(1, p)
+  fit$r_cal_mean       <- rep(0, p)
+  fit$mean_baseline_per_col <- rep(0, p)
+
+  hold_idx <- c(spl$val_idx, spl$test_idx)
+  pred_ref <- predict(fit, return_se = FALSE,
+                      .mask_observed_idx = hold_idx)$imputed_latent
+
+  fit_shifted <- fit
+  fit_shifted$X_scaled[hold_idx] <- fit_shifted$X_scaled[hold_idx] + 25
+  pred_shifted <- predict(fit_shifted, return_se = FALSE,
+                          .mask_observed_idx = hold_idx)$imputed_latent
+
+  expect_equal(pred_shifted, pred_ref, tolerance = 1e-6)
+})
+
 
 # ---- Multi-observation per species tests ------------------------------------
 
