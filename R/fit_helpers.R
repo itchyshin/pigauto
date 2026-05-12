@@ -49,6 +49,9 @@ make_covs_tensor <- function(t_MU, mask_ind, t_covariates) {
 # @param tm                    trait_map entry for this trait.
 # @param mu_cal                numeric (n_obs x p_latent), baseline preds.
 # @param delta_cal             numeric (n_obs x p_latent), GNN preds.
+# @param fixed_cal             optional numeric (n_obs x p_latent), direct
+#                              fixed-effect predictions to add outside the
+#                              BM/GNN/MEAN blend.
 # @param X_truth_r             numeric (n_obs x p_latent), ground truth (NA
 #                              outside masked cells; finite at val rows).
 # @param safety_floor          logical; when TRUE g is the simplex weight,
@@ -65,9 +68,19 @@ make_covs_tensor <- function(t_MU, mask_ind, t_covariates) {
 compute_corner_loss <- function(g, rows, tm,
                                 mu_cal, delta_cal, X_truth_r,
                                 safety_floor,
-                                mean_baseline_per_col = NULL) {
+                                mean_baseline_per_col = NULL,
+                                fixed_cal = NULL) {
   if (length(rows) == 0L) return(Inf)
   lc <- tm$latent_cols
+  fixed_mat <- if (is.null(fixed_cal)) {
+    matrix(0, nrow = nrow(mu_cal), ncol = ncol(mu_cal))
+  } else {
+    if (!identical(dim(fixed_cal), dim(mu_cal))) {
+      stop("`fixed_cal` must have the same dimensions as `mu_cal`.",
+           call. = FALSE)
+    }
+    fixed_cal
+  }
 
   # Per-column latent blend.  When safety_floor = TRUE the caller passes
   # the column-specific mean explicitly via `mean_scalar`; the default
@@ -84,7 +97,8 @@ compute_corner_loss <- function(g, rows, tm,
 
   if (tm$type %in% c("continuous", "count", "ordinal", "proportion")) {
     mean_j <- if (safety_floor) mean_baseline_per_col[lc[1]] else NA_real_
-    pred_j <- blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]], mean_j)
+    pred_j <- fixed_mat[rows, lc[1]] +
+              blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]], mean_j)
     mean((pred_j - X_truth_r[rows, lc[1]])^2)
 
   } else if (tm$type == "multi_proportion") {
@@ -92,14 +106,16 @@ compute_corner_loss <- function(g, rows, tm,
     # mean vector; out of scope for this spec).
     if (safety_floor) return(Inf)
     r_gnn     <- if (length(g) == 1L) g else g[2L]
-    pred_mat  <- (1 - r_gnn) * mu_cal[rows, lc, drop = FALSE] +
+    pred_mat  <- fixed_mat[rows, lc, drop = FALSE] +
+                 (1 - r_gnn) * mu_cal[rows, lc, drop = FALSE] +
                  r_gnn       * delta_cal[rows, lc, drop = FALSE]
     truth_mat <- X_truth_r[rows, lc, drop = FALSE]
     mean((pred_mat - truth_mat)^2)
 
   } else if (tm$type == "binary") {
     mean_j <- if (safety_floor) mean_baseline_per_col[lc[1]] else NA_real_
-    pred_j     <- blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]], mean_j)
+    pred_j     <- fixed_mat[rows, lc[1]] +
+                  blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]], mean_j)
     pred_class <- as.numeric(pred_j > 0)
     truth_j    <- X_truth_r[rows, lc[1]]
     mean(pred_class != truth_j)
@@ -108,7 +124,8 @@ compute_corner_loss <- function(g, rows, tm,
     logits <- matrix(0, nrow = length(rows), ncol = length(lc))
     for (kk in seq_along(lc)) {
       mean_k <- if (safety_floor) mean_baseline_per_col[lc[kk]] else NA_real_
-      logits[, kk] <- blend1(mu_cal[rows, lc[kk]], delta_cal[rows, lc[kk]],
+      logits[, kk] <- fixed_mat[rows, lc[kk]] +
+                      blend1(mu_cal[rows, lc[kk]], delta_cal[rows, lc[kk]],
                              mean_scalar = mean_k)
     }
     pred_class  <- max.col(logits,    ties.method = "first")
@@ -126,8 +143,10 @@ compute_corner_loss <- function(g, rows, tm,
     # 2026-04-30.  Each column now uses its own column mean.
     mean_gate <- if (safety_floor) mean_baseline_per_col[lc[1]] else NA_real_
     mean_mag  <- if (safety_floor) mean_baseline_per_col[lc[2]] else NA_real_
-    gate_pred  <- blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]], mean_gate)
-    mag_pred   <- blend1(mu_cal[rows, lc[2]], delta_cal[rows, lc[2]], mean_mag)
+    gate_pred  <- fixed_mat[rows, lc[1]] +
+                  blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]], mean_gate)
+    mag_pred   <- fixed_mat[rows, lc[2]] +
+                  blend1(mu_cal[rows, lc[2]], delta_cal[rows, lc[2]], mean_mag)
     p_nz       <- expit(gate_pred)
     count_hat  <- pmax(expm1(mag_pred * tm$sd + tm$mean), 0)
     pred_ev    <- p_nz * count_hat
@@ -161,6 +180,8 @@ compute_corner_loss <- function(g, rows, tm,
 # @param trait_map        list of trait descriptors from preprocess_traits()
 # @param mu_cal           numeric matrix (n_obs × p) — baseline predictions
 # @param delta_cal        numeric matrix (n_obs × p) — GNN predictions
+# @param fixed_cal        optional numeric matrix (n_obs × p) — fixed-effect
+#                         predictions added outside the blend.
 # @param X_truth_r        numeric matrix (n_obs × p) — original data with NAs
 # @param val_mask_mat     logical matrix (n_obs × p) — TRUE = validation cell
 # @param gate_grid        numeric vector — candidate gate values (9-pt grid)
@@ -184,7 +205,8 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
                             min_val_cells = 10L,
                             seed = 1L,
                             latent_names = NULL,
-                            verbose = FALSE) {
+                            verbose = FALSE,
+                            fixed_cal = NULL) {
   gate_method <- match.arg(gate_method)
   if (gate_method == "cv_folds") {
     if (!is.numeric(gate_cv_folds) ||
@@ -316,7 +338,8 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
       compute_corner_loss(g, rows, tm,
                           mu_cal, delta_cal, X_truth_r,
                           safety_floor = safety_floor,
-                          mean_baseline_per_col = mean_baseline_per_col)
+                          mean_baseline_per_col = mean_baseline_per_col,
+                          fixed_cal = fixed_cal)
     }
 
     # Absolute minimum cell-level improvement floor for discrete traits
@@ -585,9 +608,16 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
 #   same asymptotic regime.  Recommended when `n_val` per trait is < 30.
 #
 # @param trait_map         list of trait descriptors
-# @param calibrated_gates  named numeric vector (length p)
+# @param calibrated_gates  named numeric vector (length p), legacy GNN gate
+#                           used when three-way calibration weights are NULL.
 # @param mu_cal            numeric matrix (n × p) — baseline predictions
 # @param delta_cal         numeric matrix (n × p) — GNN predictions
+# @param r_cal_bm          optional numeric vector (length p), BM weights.
+# @param r_cal_gnn         optional numeric vector (length p), GNN weights.
+# @param r_cal_mean        optional numeric vector (length p), MEAN weights.
+# @param mean_baseline_per_col optional numeric vector (length p), MEAN corner.
+# @param fixed_cal         optional numeric matrix (n × p), direct
+#                          fixed-effect predictions added outside the blend.
 # @param X_truth_r         numeric matrix (n × p) — truth with NAs
 # @param val_mask_mat      logical matrix (n × p) — TRUE = validation cell
 # @param alpha             numeric — miscoverage level; default 0.05 (→ 95%)
@@ -601,16 +631,66 @@ compute_conformal_scores <- function(trait_map, calibrated_gates,
                                      alpha = 0.05,
                                      method = c("split", "bootstrap"),
                                      bootstrap_B = 500L,
-                                     verbose = FALSE) {
+                                     verbose = FALSE,
+                                     r_cal_bm = NULL,
+                                     r_cal_gnn = NULL,
+                                     r_cal_mean = NULL,
+                                     mean_baseline_per_col = NULL,
+                                     fixed_cal = NULL) {
   method <- match.arg(method)
   p <- ncol(mu_cal)
   n <- nrow(mu_cal)
 
-  # Blended predictions using calibrated gates
+  if (!identical(dim(delta_cal), dim(mu_cal))) {
+    stop("`delta_cal` must have the same dimensions as `mu_cal`.",
+         call. = FALSE)
+  }
+  if (!identical(dim(X_truth_r), dim(mu_cal))) {
+    stop("`X_truth_r` must have the same dimensions as `mu_cal`.",
+         call. = FALSE)
+  }
+  if (!identical(dim(val_mask_mat), dim(mu_cal))) {
+    stop("`val_mask_mat` must have the same dimensions as `mu_cal`.",
+         call. = FALSE)
+  }
+
+  fixed_mat <- if (is.null(fixed_cal)) {
+    matrix(0, nrow = n, ncol = p)
+  } else {
+    if (!identical(dim(fixed_cal), dim(mu_cal))) {
+      stop("`fixed_cal` must have the same dimensions as `mu_cal`.",
+           call. = FALSE)
+    }
+    fixed_cal
+  }
+
+  if (!is.null(r_cal_bm) && !is.null(r_cal_gnn) && !is.null(r_cal_mean)) {
+    w_bm <- as.numeric(r_cal_bm)
+    w_gnn <- as.numeric(r_cal_gnn)
+    w_mean <- as.numeric(r_cal_mean)
+  } else {
+    w_gnn <- as.numeric(calibrated_gates)
+    w_bm <- 1 - w_gnn
+    w_mean <- rep(0, p)
+  }
+  mean_vec <- if (is.null(mean_baseline_per_col)) {
+    rep(0, p)
+  } else {
+    as.numeric(mean_baseline_per_col)
+  }
+  if (length(w_bm) != p || length(w_gnn) != p || length(w_mean) != p ||
+      length(mean_vec) != p) {
+    stop("Calibration weights and means must have length ncol(`mu_cal`).",
+         call. = FALSE)
+  }
+
+  # Blended predictions using the same calibrated weights used by predict().
   pred_cal <- matrix(0, n, p)
   for (j in seq_len(p)) {
-    pred_cal[, j] <- (1 - calibrated_gates[j]) * mu_cal[, j] +
-                      calibrated_gates[j]       * delta_cal[, j]
+    pred_cal[, j] <- fixed_mat[, j] +
+                      w_bm[j]   * mu_cal[, j] +
+                      w_gnn[j]  * delta_cal[, j] +
+                      w_mean[j] * mean_vec[j]
   }
 
   conformal_scores <- rep(NA_real_, length(trait_map))

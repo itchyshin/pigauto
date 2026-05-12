@@ -464,6 +464,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
         } else {
           pred <- (1 - out$rs) * t_BM_draw + out$rs * out$delta
         }
+        if (!is.null(out$fixed_effects)) pred <- pred + out$fixed_effects
         last_pred <- pred
         # Drop the previous X_iter before binding the new one so that the
         # old forward-pass intermediates (attention matrices, FFN outputs,

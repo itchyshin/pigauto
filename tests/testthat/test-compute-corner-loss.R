@@ -88,6 +88,24 @@ test_that("compute_corner_loss continuous: pure-GNN corner = MSE on delta_cal", 
   expect_equal(observed, expected, tolerance = 1e-12)
 })
 
+test_that("compute_corner_loss continuous: fixed_cal is outside the blend", {
+  n <- 6L
+  mu_cal    <- matrix(10, n, 1, dimnames = list(NULL, "x"))
+  delta_cal <- matrix(-10, n, 1, dimnames = list(NULL, "x"))
+  fixed_cal <- matrix(seq_len(n), n, 1, dimnames = list(NULL, "x"))
+  X_truth_r <- fixed_cal + mu_cal
+  tm <- make_tm("x", "continuous", 1L)
+
+  observed <- pigauto:::compute_corner_loss(
+    g = c(1, 0, 0), rows = seq_len(n), tm = tm,
+    mu_cal = mu_cal, delta_cal = delta_cal, X_truth_r = X_truth_r,
+    safety_floor = TRUE, mean_baseline_per_col = c(x = 0),
+    fixed_cal = fixed_cal
+  )
+
+  expect_equal(observed, 0, tolerance = 1e-12)
+})
+
 test_that("compute_corner_loss legacy (safety_floor=FALSE): scalar g works", {
   set.seed(4)
   n <- 20L
@@ -473,4 +491,32 @@ test_that("compute_corner_loss continuous: all-zero g is finite (defensive)", {
     safety_floor = TRUE, mean_baseline_per_col = mb)
   expect_true(is.finite(L0))
   expect_equal(L0, mean(X_truth_r[rows, 1]^2), tolerance = 1e-12)
+})
+
+# ---- Conformal scoring -----------------------------------------------------
+
+test_that("compute_conformal_scores uses fixed_cal and three-way weights", {
+  n <- 8L
+  trait_map <- list(make_tm("x", "continuous", 1L))
+  mu_cal    <- matrix(100, n, 1, dimnames = list(NULL, "x"))
+  delta_cal <- matrix(200, n, 1, dimnames = list(NULL, "x"))
+  fixed_cal <- matrix(2, n, 1, dimnames = list(NULL, "x"))
+  X_truth_r <- matrix(5, n, 1, dimnames = list(NULL, "x"))
+  val_mask  <- matrix(TRUE, n, 1, dimnames = list(NULL, "x"))
+
+  scores <- pigauto:::compute_conformal_scores(
+    trait_map = trait_map,
+    calibrated_gates = c(x = 1),
+    mu_cal = mu_cal,
+    delta_cal = delta_cal,
+    X_truth_r = X_truth_r,
+    val_mask_mat = val_mask,
+    r_cal_bm = c(x = 0),
+    r_cal_gnn = c(x = 0),
+    r_cal_mean = c(x = 1),
+    mean_baseline_per_col = c(x = 3),
+    fixed_cal = fixed_cal
+  )
+
+  expect_equal(unname(scores["x"]), 0, tolerance = 1e-12)
 })
