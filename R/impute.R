@@ -413,8 +413,16 @@ impute <- function(traits, tree, species_col = NULL,
   # 8. Evaluate on test set (if splits exist)
   evaluation <- NULL
   if (!is.null(splits) && length(splits$test_idx) > 0) {
+    eval_pred <- predict(fit, return_se = TRUE,
+                         n_imputations = as.integer(n_imputations),
+                         pool_method = pool_method,
+                         clamp_outliers = clamp_outliers,
+                         clamp_factor   = clamp_factor,
+                         match_observed = match_observed,
+                         pmm_K          = pmm_K,
+                         .mask_observed_idx = c(splits$val_idx, splits$test_idx))
     evaluation <- tryCatch(
-      evaluate_imputation(pred, pd$X_scaled, splits),
+      evaluate_imputation(eval_pred, pd$X_scaled, splits),
       error = function(e) NULL
     )
   }

@@ -161,6 +161,8 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   if (length(pmm_K) != 1L || is.na(pmm_K) || pmm_K < 1L) {
     stop("'pmm_K' must be a single positive integer.", call. = FALSE)
   }
+  dots <- list(...)
+  mask_observed_idx <- dots[[".mask_observed_idx"]]
   cfg       <- object$model_config
   device    <- get_device()
   trait_map <- object$trait_map
@@ -288,7 +290,35 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
          baseline_label, "$mu`.", call. = FALSE)
   }
 
-  t_X_fill <- torch::torch_tensor(MU, dtype = torch::torch_float(),
+  # Prediction-time input mirrors fit-time assembly: observed latent cells
+  # remain available as DAE context, while originally-missing cells start at
+  # the phylogenetic baseline. Older fit objects did not store X_scaled, so
+  # they fall back to the baseline-only seed for backward compatibility.
+  X_seed <- MU
+  observed_mask <- NULL
+  observed_values <- NULL
+  if (!is.null(object$X_scaled)) {
+    if (!is.matrix(object$X_scaled) ||
+        !identical(dim(object$X_scaled), dim(MU))) {
+      stop("Stored `X_scaled` must be a matrix with the same dimensions as `",
+           baseline_label, "$mu` after any multi-observation expansion.",
+           call. = FALSE)
+    }
+    observed_values <- object$X_scaled
+    observed_mask <- !is.na(observed_values)
+    if (!is.null(mask_observed_idx)) {
+      mask_observed_idx <- as.integer(mask_observed_idx)
+      if (anyNA(mask_observed_idx) ||
+          any(mask_observed_idx < 1L | mask_observed_idx > length(X_seed))) {
+        stop("`.mask_observed_idx` must contain valid linear indices into the ",
+             "prediction latent matrix.", call. = FALSE)
+      }
+      observed_mask[unique(mask_observed_idx)] <- FALSE
+    }
+    X_seed[observed_mask] <- observed_values[observed_mask]
+  }
+
+  t_X_fill <- torch::torch_tensor(X_seed, dtype = torch::torch_float(),
                                   device = device)
   t_MU     <- torch::torch_tensor(MU, dtype = torch::torch_float(),
                                   device = device)
@@ -311,6 +341,16 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     )
   } else {
     t_obs_to_sp <- NULL
+  }
+  t_observed_mask <- NULL
+  t_observed_values <- NULL
+  if (!is.null(observed_mask)) {
+    t_observed_mask <- torch::torch_tensor(observed_mask,
+                                           dtype = torch::torch_bool(),
+                                           device = device)
+    t_observed_values <- torch::torch_tensor(observed_values,
+                                             dtype = torch::torch_float(),
+                                             device = device)
   }
 
   # ---- Covariates (environmental conditioners) ------------------------------
@@ -393,6 +433,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   t_BM_draw <- t_MU
 
   for (m in seq_len(n_imp)) {
+    last_pred <- NULL
     if (n_imp == 1L) {
       model$eval()
       X_iter <- t_X_fill$clone()
@@ -405,6 +446,9 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
                                      device = device)
       t_BM_draw <- t_MU + noise * t_BM_SE   # fixed BM draw for this m
       X_iter    <- t_BM_draw$clone()          # GNN input starts from BM draw
+      if (!is.null(t_observed_mask)) {
+        X_iter <- torch::torch_where(t_observed_mask, t_observed_values, X_iter)
+      }
     }
     torch::with_no_grad({
       mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
@@ -420,6 +464,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
         } else {
           pred <- (1 - out$rs) * t_BM_draw + out$rs * out$delta
         }
+        last_pred <- pred
         # Drop the previous X_iter before binding the new one so that the
         # old forward-pass intermediates (attention matrices, FFN outputs,
         # and all their stored views) become unreachable and available for
@@ -428,7 +473,11 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
         # step causes ~22 GB of attention-per-step to pile up across
         # refinements -- see job 4745401 (n=5000, DEBUG_GPU_MEM=1) for
         # the reproducer.
-        X_iter <- pred
+        X_iter <- if (!is.null(t_observed_mask)) {
+          torch::torch_where(t_observed_mask, t_observed_values, pred)
+        } else {
+          pred
+        }
         # Preserve `out` for the last-iteration reference at line ~283
         # (rs_val <- out$rs$cpu()$squeeze()).  Drop covs0 and pred
         # which are safe to release -- X_iter holds the latest pred's
@@ -443,7 +492,8 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     if (torch::cuda_is_available()) {
       try(torch::cuda_empty_cache(), silent = TRUE)
     }
-    latent_runs[[m]] <- as.matrix(X_iter$cpu())
+    if (is.null(last_pred)) last_pred <- X_iter
+    latent_runs[[m]] <- as.matrix(last_pred$cpu())
     gpu_mem_checkpoint(sprintf("predict: after MI draw %d / %d", m, n_imp))
   }
 
@@ -478,6 +528,16 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
            "v0.9.1.9012+ to enable PMM.", call. = FALSE)
     }
     X_orig <- recover_X_orig(object$X_scaled, trait_map)
+    if (!is.null(mask_observed_idx)) {
+      row_i <- ((mask_observed_idx - 1L) %% n) + 1L
+      col_j <- ceiling(mask_observed_idx / n)
+      for (tm in trait_map) {
+        trait_rows <- row_i[col_j %in% tm$latent_cols]
+        if (length(trait_rows) > 0L && tm$name %in% names(X_orig)) {
+          X_orig[unique(trait_rows), tm$name] <- NA
+        }
+      }
+    }
     decode_results <- apply_pmm_to_decoded(
       decode_results, trait_map, X_orig,
       K = pmm_K,

@@ -94,8 +94,10 @@ cross_validate <- function(data, tree, k = 5L, seeds = 1:3,
         ...
       )
 
-      # Predict on test fold
-      pred <- predict(fit, return_se = TRUE)
+      # Predict on test fold with validation/test cells hidden from DAE
+      # context, matching the held-out input used during fit/calibration.
+      pred <- predict(fit, return_se = TRUE,
+                      .mask_observed_idx = c(splits$val_idx, splits$test_idx))
 
       # Evaluate using evaluate_imputation (test split)
       eval_df <- evaluate_imputation(

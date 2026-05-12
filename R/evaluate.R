@@ -45,8 +45,10 @@ evaluate <- function(fit, data = NULL, splits = NULL) {
     stop("No test split available. Supply 'splits' or refit with splits.")
   }
 
-  # Get predictions
-  pred <- predict(fit, return_se = TRUE)
+  # Get predictions, masking validation/test cells from DAE context so
+  # held-out truth is not fed back into the prediction being scored.
+  pred <- predict(fit, return_se = TRUE,
+                  .mask_observed_idx = c(splits$val_idx, splits$test_idx))
 
   # Get truth in latent scale
   trait_map <- fit$trait_map
