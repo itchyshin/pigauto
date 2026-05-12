@@ -21,6 +21,8 @@
 ^\.github$
 ^DOCS\.md$
 ^CLAUDE\.md$
+^AGENTS\.md$
+^goodagents\.md$
 ^plans$
 ^specs$
 ^submit_v090_cloud$

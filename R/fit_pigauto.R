@@ -159,11 +159,11 @@
 #'   least 1 cell.  When effective K \code{< 2} (e.g. \code{n_val = 1}),
 #'   the code falls back to a single split.
 #' @param safety_floor logical. When \code{TRUE} (default), post-training
-#'   calibration searches a 3-way simplex \code{r_BM * BM + r_GNN * GNN
-#'   + r_MEAN * MEAN} so the grand mean is always in the candidate set,
-#'   guaranteeing \code{pigauto_val_RMSE <= mean_val_RMSE} by
-#'   construction. When \code{FALSE}, the v0.9.1 1-D calibration is used
-#'   exactly (\code{r_MEAN = 0}).
+#'   calibration searches a 3-way simplex of BM, GNN, and grand-mean
+#'   candidates. Because the grand-mean corner is always in the grid, the
+#'   selected candidate cannot be worse than that corner on the validation
+#'   cells under the calibration metric. When \code{FALSE}, the v0.9.1
+#'   1-D calibration is used exactly (\code{r_MEAN = 0}).
 #' @param phylo_signal_gate logical. When \code{TRUE} (default since
 #'   v0.9.1.9003), compute per-trait Pagel's \eqn{\lambda} on
 #'   training-observed cells before fitting; for traits with

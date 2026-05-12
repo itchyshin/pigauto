@@ -47,8 +47,11 @@ that surfaced confusion the README and `?impute` should have prevented.
 PR #69 fixed the function-level docstring; this release reorganises the
 pkgdown site itself:
 
-- The Articles dropdown is slimmed from 39 entries to 8 first-class items
-  (4 vignettes + 4 walk-throughs).
+- The Articles dropdown is slimmed from 39 entries to 4 source-backed
+  vignettes. Older static walk-through HTML pages are hidden and marked
+  archived until they are refreshed against the current README, vignettes,
+  and benchmark evidence; the page-by-page disposition is recorded in
+  `useful/pkgdown_page_rethink.md`.
 - A new top-level Methodology dropdown owns benchmark HTMLs in two
   sub-sections: per-trait benches (7 working items) and cross-dataset
   benches + simulations (6 working items).  Ten older bench HTMLs that
@@ -65,7 +68,7 @@ pkgdown site itself:
   truth for documentation navigation.  README gains a one-line
   "Live documentation" link near the top.
 
-No code changes, no DESCRIPTION bump, no test changes.
+No benchmark reruns or test changes.
 
 ## Hardening: `preprocess_traits()` errors on edge-case inputs (2026-05-03)
 

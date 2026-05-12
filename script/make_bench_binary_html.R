@@ -226,9 +226,9 @@ lo_acc_bl <- avg_metric(test_df, "baseline", "signal_0.2", primary_frac, "accura
 lo_acc_pg <- avg_metric(test_df, "pigauto",  "signal_0.2", primary_frac, "accuracy")
 
 verdict1 <- if (is.finite(hi_acc_bl) && is.finite(hi_acc_pg)) {
-  sprintf('At high phylogenetic signal (1.0), phylo label propagation achieves %.1f%% accuracy and pigauto matches at %.1f%%. The calibrated gate correctly closes when the baseline is already strong.',
+  sprintf('At high phylogenetic signal (1.0), phylo label propagation achieves %.1f%% accuracy and pigauto achieves %.1f%%. The calibrated gate often keeps pigauto close to the baseline when the baseline is already strong.',
           100 * hi_acc_bl, 100 * hi_acc_pg)
-} else 'At high signal the baseline is already strong and pigauto matches it.'
+} else 'At high signal the baseline is already strong; compare pigauto against it scenario by scenario.'
 
 verdict2 <- if (is.finite(lo_acc_bl) && is.finite(lo_acc_pg)) {
   sprintf('At low signal (0.2), all methods struggle: baseline %.1f%%, pigauto %.1f%%. With weak phylogenetic structure there is limited information for any method to exploit.',
@@ -323,7 +323,7 @@ Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 <ul>
 <li><b>Phylogenetic label propagation is a strong baseline for binary traits.</b> At high signal, the similarity-weighted average of neighbours is near-optimal. The GNN must earn its gate to add value.</li>
 <li><b>Signal matters more than method.</b> At low signal (0.2) the phylogenetic structure is too weak for any method. At high signal (1.0) even mode imputation does reasonably because the majority class is phylogenetically clustered.</li>
-<li><b>pigauto matches or slightly improves on the baseline</b> across signal levels, with the largest relative gains at intermediate signal where there is enough structure for the GNN to learn from cross-trait correlations but the baseline is imperfect.</li>
+<li><b>pigauto stays close to label propagation but can trail it.</b> The table should be read by signal level and imbalance setting; the GNN contribution is not uniformly positive in this run.</li>
 </ul>
 
 <h2>Reproducibility</h2>

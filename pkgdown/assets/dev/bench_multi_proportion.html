@@ -236,10 +236,11 @@ compositional data is either complete for a row or missing &mdash; you cannot ob
 <h2>Commentary</h2>
 <p>At high signal (1.0), baseline Aitchison = 1.858 and pigauto = 1.863 (gate closes when baseline is near-optimal).</p>
 <p>At low signal (0.2), baseline Aitchison = 9.299 and pigauto = 9.299.</p>
-<p>The gated safety in pigauto ensures that when the BM-on-CLR baseline is already optimal
-(high phylogenetic signal), the calibrated gate closes and pigauto returns the baseline
-&mdash; so it never degrades accuracy. When signal is low, the GNN can learn cross-component
-correlations that the independent-per-component BM misses.</p>
+<p>In high-phylogenetic-signal regimes, the calibrated gate can close onto the
+BM-on-CLR baseline when the validation cells do not support a GNN contribution.
+When signal is low, the GNN can learn cross-component correlations that the
+independent-per-component BM misses, but the benchmark table should be read
+scenario by scenario.</p>
 
 <h2>How to reproduce</h2>
 <pre><code>cd pigauto &amp;&amp; Rscript script/bench_multi_proportion.R
@@ -248,4 +249,3 @@ Rscript script/make_bench_multi_proportion_html.R</code></pre>
 <p><small>Generated from <code>script/bench_multi_proportion.rds</code> on 2026-04-17 10:48:02. Git commit: <code>888d020</code>.</small></p>
 
 </body></html>
-

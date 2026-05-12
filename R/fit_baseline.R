@@ -1,22 +1,19 @@
-#' Fit a phylogenetic BM baseline
+#' Fit the phylogenetic baseline
 #'
-#' Fits an internal univariate Brownian Motion baseline using the
-#' phylogenetic correlation matrix \eqn{R = \mathrm{cov2cor}(\mathrm{vcv}(\mathrm{tree}))}
-#' and returns imputed means and standard errors for every species.
+#' Dispatches to pigauto's phylogenetic baseline machinery and returns imputed
+#' latent-scale means and standard errors for every species.
 #'
 #' @details
 #' When \code{splits} is supplied the val and test cells are masked to
 #' \code{NA} before fitting, so the baseline is evaluated under the same
 #' conditions as \code{\link{fit_pigauto}}.
 #'
-#' For continuous, count, ordinal, and proportion traits (which are
-#' continuous in latent space), each column is imputed independently
-#' via conditional multivariate normal on the phylogenetic correlation
-#' matrix: GLS phylogenetic mean, REML variance, and conditional
-#' \eqn{E[y_m | y_o]}.  Binary and categorical traits use phylogenetic
-#' label propagation: each species receives a personalised baseline
-#' computed as the phylo-similarity-weighted average of observed values,
-#' using a Gaussian kernel on cophenetic distances.
+#' Continuous-family columns use Brownian-motion conditional MVN baselines on
+#' the phylogenetic correlation matrix, either independently or through the
+#' joint MVN path when the data and optional dependencies support it. Binary,
+#' ordinal, categorical, and zero-inflated gate columns use the appropriate
+#' label-propagation or threshold/liability baseline candidates, with
+#' per-column fallbacks when a joint path is not available.
 #'
 #' @param data object of class \code{"pigauto_data"}.
 #' @param tree object of class \code{"phylo"}.

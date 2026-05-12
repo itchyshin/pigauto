@@ -147,10 +147,10 @@ bug. After training, pigauto picks the per-latent-column gate that
 minimises validation loss across the simplex
 $r_\text{BM} \cdot \text{BM} + r_\text{GNN} \cdot \text{GNN} + r_\text{MEAN} \cdot \text{MEAN}$.
 When the GNN cannot beat BM on the held-out validation set, the
-optimum is `r_cal_gnn = 0` — so the calibrated prediction is
-guaranteed never to be worse than BM (or grand mean, whichever is
-better).  This is what the package was designed to do on
-high-phylogenetic-signal traits where BM is already optimal.
+optimum can be `r_cal_gnn = 0`. In that case the calibrated prediction
+stays on the validation-supported baseline or mean corner instead of
+forcing a GNN contribution. This is what the package was designed to do
+on high-phylogenetic-signal traits where BM is already hard to beat.
 
 **Diagnose.**
 
@@ -181,7 +181,7 @@ has known cross-trait structure) but the gate is closed:
 - For ordinal / categorical traits, see Pitfall 2 — the gate may be
   closing onto a majority-class corner that mode pooling resolves.
 
-**See also.** `?fit_pigauto` ("Safety floor"), `?phylo_signal`,
+**See also.** `?fit_pigauto` (`phylo_signal_gate`, "Safety floor"),
 [design spec](https://github.com/itchyshin/pigauto/blob/main/specs/2026-04-23-safety-floor-mean-gate-design.md).
 
 ## 4. "How do I know if my dataset has enough phylogenetic signal?"
@@ -198,20 +198,21 @@ materially outperforms the mean.  The Phase 8 signal-strength sweep
 dropdown surfaces it once the bench HTML is regenerated) shows the
 crossover empirically.
 
-**Diagnose.** Estimate λ on the observed cells of each trait before
-imputing:
+**Diagnose.** The fitted object stores the per-trait λ values used by
+`phylo_signal_gate`:
 
 ```{r section4-diag, eval = FALSE}
 library(pigauto)
 data(avonet300, tree300)
 df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
 
-# Per-trait Pagel's lambda on observed values
-phylo_signal(df, tree300)
+fit <- impute(df, tree300)$fit
+fit$phylo_signal_per_trait
 ```
 
-The output reports lambda per continuous trait. Discrete traits use
-the binary / categorical analogue.
+The output reports λ on the observed cells where it can be estimated. Discrete
+traits use the package's internal continuous proxy on the latent/liability
+scale.
 
 **Fix.** Use the lambda estimate to set expectations:
 
@@ -223,7 +224,7 @@ the binary / categorical analogue.
   phylogenetic imputation method is the right tool at all. A simple
   mean impute or a covariate-only regression may do as well.
 
-**See also.** `?phylo_signal`,
+**See also.** `?fit_pigauto` (`phylo_signal_gate`),
 [Phase 8 signal sweep memo](https://github.com/itchyshin/pigauto/blob/main/script/bench_signal_sweep.md).
 
 ## 5. "Predictions are way bigger than anything I observed"

@@ -227,9 +227,9 @@ verdict1 <- if (is.finite(acc_bl_3) && is.finite(acc_pg_3)) {
 
 verdict2 <- if (is.finite(acc_bl_12) && is.finite(acc_pg_12)) {
   diff_pp <- 100 * (acc_pg_12 - acc_bl_12)
-  sprintf('With K = 12 categories, baseline accuracy drops to %.1f%% while pigauto achieves %.1f%% (%+.1f pp). More categories make the classification task harder, and the GNN can exploit cross-trait correlations to improve on pure label propagation.',
+  sprintf('With K = 12 categories, baseline accuracy drops to %.1f%% while pigauto achieves %.1f%% (%+.1f pp). More categories make the classification task harder; in this run pigauto should be read against label propagation scenario by scenario.',
           100 * acc_bl_12, 100 * acc_pg_12, diff_pp)
-} else 'With many categories the task is harder and the GNN has more scope to contribute.'
+} else 'With many categories the task is harder; compare pigauto against label propagation scenario by scenario.'
 
 # ---------------------------------------------------------------------------
 # HTML
@@ -314,7 +314,7 @@ Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 <ul>
 <li><b>Phylogenetic label propagation is a strong baseline for categorical traits.</b> It uses phylogenetic distance to weight neighbours and predict the most likely category. With strong phylogenetic signal this is near-optimal.</li>
 <li><b>More categories make the task harder for all methods.</b> As K increases, the chance level drops (1/K) and each category has fewer training examples. The accuracy gap between methods widens.</li>
-<li><b>pigauto matches or improves on label propagation</b> by learning cross-trait correlations through the GNN. The calibrated gate ensures that when LP is already optimal, the GNN does not degrade accuracy.</li>
+<li><b>pigauto often matches label propagation but can trail it.</b> The calibrated gate limits unsupported GNN contribution, but this run still has scenarios where pure label propagation is better.</li>
 <li><b>Signal strength remains the dominant factor.</b> Even with K = 12 categories, high phylogenetic signal yields good accuracy. Low signal makes the task difficult regardless of method.</li>
 </ul>
 

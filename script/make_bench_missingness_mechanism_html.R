@@ -291,10 +291,10 @@ verdict1 <- if (is.finite(mcar_rmse_bl) && is.finite(mnar_rmse_bl)) {
 
 verdict2 <- if (is.finite(mcar_acc_bl) && is.finite(mcar_acc_pg) &&
                 is.finite(mnar_acc_bl) && is.finite(mnar_acc_pg)) {
-  sprintf('Discrete accuracy under MCAR: baseline %.1f%%, pigauto %.1f%%. Under MNAR: baseline %.1f%%, pigauto %.1f%%. The GNN maintains its relative advantage across mechanisms.',
+  sprintf('Discrete accuracy under MCAR: baseline %.1f%%, pigauto %.1f%%. Under MNAR: baseline %.1f%%, pigauto %.1f%%. In this run the discrete rows mostly show pigauto matching the phylogenetic baseline rather than adding a separate advantage.',
           100 * mcar_acc_bl, 100 * mcar_acc_pg,
           100 * mnar_acc_bl, 100 * mnar_acc_pg)
-} else 'Discrete trait accuracy degrades under non-random missingness but the relative method ranking is preserved.'
+} else 'Discrete trait accuracy under non-random missingness should be read trait by trait.'
 
 # ---------------------------------------------------------------------------
 # HTML
@@ -381,11 +381,11 @@ Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 
 <h2>What the benchmark shows</h2>
 <ul>
-<li><b>MCAR is the easiest setting.</b> When missingness is completely at random, phylogenetic imputation assumptions are satisfied and all methods perform at their best.</li>
+<li><b>MCAR is the reference setting.</b> When missingness is completely at random, the missingness mechanism itself does not add value-dependent bias; use this row as the comparator for the MAR and MNAR scenarios.</li>
 <li><b>MAR (trait-driven) introduces moderate difficulty.</b> Missingness depends on an observed trait, creating non-random gaps. The phylogenetic baseline handles this well because the phylogenetic signal provides information orthogonal to the trait-driven missingness pattern.</li>
-<li><b>MAR (phylo-clade) clusters gaps in the tree.</b> When entire clades are missing, the phylogenetic baseline loses its closest informants. The GNN can partially compensate via cross-trait patterns, but accuracy drops for all methods.</li>
-<li><b>MNAR is the hardest setting.</b> When missingness depends on the unobserved value itself, all imputation methods are biased in principle. Phylogenetic structure still helps by providing independent information, but performance degrades relative to MCAR.</li>
-<li><b>pigauto maintains its relative advantage across mechanisms.</b> The calibrated gate adapts to the difficulty of each scenario, closing when the baseline is already near-optimal and opening when the GNN can add value.</li>
+<li><b>MAR (phylo-clade) clusters gaps in the tree.</b> When entire clades are missing, the phylogenetic baseline loses its closest informants. The resulting deltas are mixed by trait and metric in this run.</li>
+<li><b>MNAR is statistically harder in principle.</b> When missingness depends on the unobserved value itself, all imputation methods can be biased. The table shows how that principle played out in this particular simulation rather than a universal ranking.</li>
+<li><b>pigauto mostly tracks the phylogenetic baseline across mechanisms.</b> The calibrated gate often closes when the baseline is already strong; any GNN contribution should be read from the trait-level rows rather than assumed.</li>
 </ul>
 
 <h2>Reproducibility</h2>

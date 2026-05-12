@@ -66,7 +66,7 @@ lift$pct_improvement <- (1 - lift$ratio) * 100
 # ---------------------------------------------------------------------------
 
 html <- character()
-h <- function(...) html <<- c(html, paste0(...))
+h <- function(...) html <<- c(html, sub("[[:space:]]+$", "", paste0(...)))
 
 h('<!DOCTYPE html>')
 h('<html lang="en"><head>')
@@ -134,7 +134,7 @@ for (i in seq_len(nrow(agg_ordered))) {
   row <- agg_ordered[i, ]
   label <- scenario_label[row$scenario]
   is_cov <- row$method == "pigauto_covs"
-  td_class <- if (is_cov) ' class="best"' else ''
+  td_class <- ""
   h(sprintf('<tr><td>%s</td><td>%.1f</td><td>%.1f</td><td>%.0f%%</td>',
             label, row$lambda, row$beta, row$missing_frac * 100))
   h(sprintf('<td%s>%s</td><td>%s</td><td>%s</td></tr>',
@@ -178,8 +178,9 @@ h('<li><strong>Low phylogenetic signal + strong environmental effects</strong> '
   'that phylogeny alone cannot explain.</li>')
 h('<li><strong>High phylogenetic signal, no environmental effects</strong> ',
   '(&lambda;=0.9, &beta;=0): Covariates provide ~zero improvement. ',
-  'The gated safety correctly keeps the covariate pathway closed, ',
-  'preventing noise injection. This matches the Delhey 2019 real-data result.</li>')
+  'In this simulation the gated fit does not gain meaningful accuracy from ',
+  'uninformative covariates; compare the exact RMSE ratio in the table. ',
+  'This is consistent with the Delhey 2019 real-data result.</li>')
 h('<li><strong>Crossover</strong>: The benefit appears when the environmental ',
   'component is strong relative to phylogenetic signal. Moderate phylo + ',
   'strong env (&lambda;=0.3, &beta;=1.0) already shows clear improvement.</li>')

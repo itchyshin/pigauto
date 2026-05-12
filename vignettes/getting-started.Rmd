@@ -33,16 +33,17 @@ in those gaps using three sources of information:
    has a strong environmental component beyond phylogenetic signal.
 
 The package handles continuous measurements, counts, binary variables,
-ordered categories, and unordered categories — all in a single call to
-`impute()`.
+ordered categories, unordered categories, bounded proportions,
+zero-inflated counts, and compositional multi-proportion data — all in a
+single call to `impute()`.
 
 ### How it works (briefly)
 
 pigauto combines a phylogenetic baseline with a graph neural network
-(GNN) correction. The baseline is Brownian-motion imputation (using
-the phylogenetic correlation matrix) for continuous / count / ordinal
-traits and phylogenetic label propagation for binary / categorical
-traits. The GNN learns
+(GNN) correction. The baseline uses Brownian-motion conditional
+imputation for continuous-family latent columns and phylogenetic
+label-propagation or threshold/liability candidates for discrete-family
+columns. The GNN learns
 additional patterns from tree topology and cross-trait structure. A
 per-trait gate controls how much the GNN contributes: when the baseline
 is already good enough, the gate closes and the GNN stays out of the
@@ -294,9 +295,9 @@ data.frame(
 4        Wing.Length   0.884    0.841
 ```
 
-The GNN consistently reduces test RMSE relative to the BM baseline. How large
-the improvement is depends on how strongly trait evolution departs from BM in
-your particular clade.
+In this example output, the GNN reduces test RMSE relative to the BM baseline.
+How large the improvement is depends on the trait, clade, missingness pattern,
+and validation split.
 
 ## Step 8: Visualise
 
@@ -312,12 +313,12 @@ triggered.
 ### Uncertainty ribbons
 
 ```{r plot-uncertainty, eval=FALSE}
-plot_uncertainty(pred, trait_name = "Mass")
+plot(pred, type = "intervals", trait = "Mass")
 ```
 
-Species are sorted by predicted mass. The blue ribbon shows the 95% credible
-interval (prediction ± 1.96 × SE). Grey points (if `truth` is supplied) show
-known values — a useful visual check of calibration.
+Species are sorted by predicted mass. The blue ribbon shows the conformal
+prediction interval when conformal scores are available. Grey points (if
+`truth` is supplied) show known values — a useful visual check of calibration.
 
 ## Multiple imputation for downstream inference
 
@@ -328,7 +329,7 @@ uncertainty distribution, then pool coefficients with Rubin's rules.
 
 ```{r mi-workflow, eval=FALSE}
 # Step 1: generate M = 50 complete datasets
-# draws_method = "conformal" (default in v0.6.1) draws from conformal-calibrated
+# draws_method = "conformal" draws from conformal-calibrated
 # uncertainty — properly calibrated against held-out residuals.
 mi <- multi_impute(traits, tree, m = 50L)
 
@@ -519,9 +520,10 @@ runs.  GBIF requires no API key.  WorldClim raster downloads are
 `worldclim_cache_dir`.  Both functions error with a clear message
 if the optional dependencies (`rgbif`, `terra`) are not installed.
 
-For a worked end-to-end example with covariates see the
-[Comparative study with covariates](pigauto_walkthrough_covariates.html)
-walk-through.
+For a worked end-to-end example with covariates, use this section alongside
+`?impute`, `?pull_gbif_centroids`, and `?pull_worldclim_per_species`. The old
+static covariate walk-through is being refreshed and is not the current source
+of truth.
 
 ## Tips and next steps
 

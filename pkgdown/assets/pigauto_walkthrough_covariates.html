@@ -24,6 +24,9 @@ td:first-child,th:first-child{text-align:left}
 a{color:#059669}
 </style>
 </head><body>
+<div style="background:#fff7ed;border-left:4px solid #ea580c;padding:1em 1.2em;margin:0 0 1.5em 0;border-radius:4px">
+<b>Archived static page.</b> This page is kept for historical context while it is rethought. Current public guidance lives in the source-backed vignettes under Articles. Do not treat this page as the current source of truth for version scope, uncertainty wording, or benchmark claims.
+</div>
 <h1>Comparative study with environmental covariates</h1>
 <p class="meta">Generated 2026-04-11 12:25 &middot; pigauto v0.6.0 &middot; 5809 species &middot; 7 min compute</p>
 <h2>1. The question</h2>
@@ -134,8 +137,8 @@ When phylogenetic signal is low and environmental effects are strong.
 The <a href="dev/bench_covariate_sim.html">covariate effectiveness 
 benchmark</a> shows 8&ndash;15% RMSE reduction in simulated scenarios 
 with &lambda;=0.1 and &beta;=1.5. The safety here is crucial: 
-covariates never <i>hurt</i> imputation, even when they are 
-uninformative. You can always supply them.
+the calibrated gate can close when covariates are uninformative,
+but each dataset should still be checked on validation cells.
 </div>
 <p>
 Even though covariates do not improve <i>imputation</i> here, 
@@ -285,8 +288,8 @@ treat species as independent data points.</li>
 </ol>
 <div class="key-point">
 <b>When to supply covariates:</b> 
-always, if you have them. They never hurt (the gate closes when 
-they are uninformative) and they can substantially improve 
+when they are fully observed and scientifically defensible predictors.
+The gate can close when they are uninformative, and covariates can improve
 imputation when trait variation has a strong environmental 
 component. See the 
 <a href="dev/bench_covariate_sim.html">simulation benchmark</a> 

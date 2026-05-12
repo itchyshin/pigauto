@@ -112,7 +112,7 @@ beta_from_scenario <- function(scen) {
 # ---------------------------------------------------------------------------
 
 html <- character()
-h <- function(...) html <<- c(html, paste0(...))
+h <- function(...) html <<- c(html, sub("[[:space:]]+$", "", paste0(...)))
 
 h('<!DOCTYPE html>')
 h('<html lang="en"><head>')
@@ -355,16 +355,16 @@ h('<h2>4. Key findings</h2>')
 
 h('<div class="note">')
 h('<b>When beta &gt; 0</b> (within-species covariate effect exists), ')
-h('pigauto with observation-level covariates outperforms pigauto without ')
-h('covariates. The improvement grows with beta: stronger covariate ')
-h('effects provide more information for the model to exploit.')
+h('pigauto with observation-level covariates usually improves over pigauto ')
+h('without covariates in this simulation. The lift grows with beta because ')
+h('stronger covariate effects provide more information for the model to exploit.')
 h('</div>')
 
 h('<div class="key-point">')
 h('<b>When beta = 0</b> (no within-species covariate effect), the two ')
 h('pigauto variants produce similar RMSE. The gated architecture ')
-h('correctly avoids using uninformative covariates, so supplying them ')
-h('does not degrade accuracy.')
+h('can fall back when covariates are uninformative; treat the beta = 0 ')
+h('rows as the evidence for whether they changed accuracy in this run.')
 h('</div>')
 
 h('<ul>')
@@ -379,9 +379,10 @@ h('simulation), pigauto can produce different imputed values for ')
 h('different observations of the same species, matching the true ')
 h('data-generating process.</li>')
 h('<li><b>Safety when covariates are uninformative.</b> The gated ')
-h('architecture ensures that when the covariate has no predictive ')
-h('value (beta = 0), the model falls back to the phylogenetic baseline ')
-h('without penalty. You can always supply covariates.</li>')
+h('architecture can fall back to the phylogenetic baseline when the ')
+h('covariate has no predictive value in this simulation (beta = 0). ')
+h('Treat covariates as a validation-checked addition, not an automatic ')
+h('improvement.</li>')
 h('</ul>')
 
 # =========================================================================

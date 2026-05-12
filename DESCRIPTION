@@ -9,7 +9,8 @@ Description: Imputes missing species trait data for comparative analyses
     correlations (observed traits inform missing ones), and optional
     environmental covariates (climate, habitat, geography). Handles
     continuous measurements, counts, binary variables, ordered categories,
-    and unordered categories in a single call. The method blends a
+    unordered categories, bounded proportions, zero-inflated counts, and
+    compositional multi-proportion data in a single call. The method blends a
     phylogenetic baseline with a graph neural network correction; a
     per-trait gate calibrated on held-out data ensures the network only
     contributes when it improves on the baseline. Provides conformal
@@ -53,5 +54,5 @@ Suggests:
     phytools
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0

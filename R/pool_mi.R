@@ -66,9 +66,8 @@
 #' (pigauto as imputer, MCMCglmm as inference engine), concatenate the
 #' posterior samples across imputations manually -- stack `fit$Sol` and
 #' `fit$VCV` row-wise with `do.call(rbind, ...)` and wrap the result in
-#' `coda::as.mcmc()`. See section 7 of the `pigauto_workflow_mixed`
-#' tutorial (`system.file("doc", "pigauto_workflow_mixed.html",
-#' package = "pigauto")`) for a worked example. For an integrated
+#' `coda::as.mcmc()`. For the frequentist Rubin's-rules path, see
+#' `vignette("mixed-types", package = "pigauto")`. For an integrated
 #' chained-equation MCMC workflow where imputation and inference happen
 #' in a single engine, use the companion BACE package end-to-end
 #' (`BACE::bace()` + `BACE::pool_posteriors()`).
@@ -146,8 +145,9 @@ pool_mi <- function(fits,
       "MCMCglmm fits. For a Bayesian pigauto workflow, concatenate ",
       "posterior samples across imputations directly: ",
       "`coda::as.mcmc(do.call(rbind, lapply(fits, function(f) f$Sol)))`. ",
-      "See the 'pigauto_workflow_mixed' tutorial section 7 for a worked ",
-      "example. For an integrated chained-equation MCMC workflow, use ",
+      "For the frequentist Rubin's-rules path, see ",
+      "`vignette('mixed-types', package = 'pigauto')`. For an integrated ",
+      "chained-equation MCMC workflow, use ",
       "BACE::bace() + BACE::pool_posteriors() end-to-end.",
       call. = FALSE
     )

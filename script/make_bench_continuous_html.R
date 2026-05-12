@@ -483,15 +483,15 @@ Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 <div class="verdict">
 <p><b>Bottom line.</b> ',
 if (is.finite(bm_rmse) && is.finite(bm_rmse_pg)) {
-  sprintf('Under pure Brownian motion the BM baseline is near-optimal (RMSE %.3f) and pigauto matches it (%.3f) &mdash; the calibrated gate correctly stays near zero when the baseline is already the true model.',
+  sprintf('Under pure Brownian motion the BM baseline is near-optimal (RMSE %.3f) and pigauto stays close to it (%.3f) &mdash; the calibrated gate is expected to stay near zero when the baseline is already the true model.',
           bm_rmse, bm_rmse_pg)
-} else 'Under pure BM the baseline is optimal and pigauto matches it via the calibrated gate.',
+} else 'Under pure BM the baseline is expected to be optimal; compare pigauto against it scenario by scenario.',
 '</p>
 <p>',
 if (is.finite(ou_pct) && is.finite(rs_pct) && is.finite(nl_pct)) {
-  sprintf('Under OU, regime shift, and nonlinear models the GNN correction adds value: RMSE improves by %+.1f%%, %+.1f%%, and %+.1f%% respectively over the BM baseline. The strongest gains come where BM&rsquo;s assumptions are most violated.',
+  sprintf('Across OU, regime shift, and nonlinear models, pigauto stays close to the BM baseline with RMSE deltas of %+.1f%%, %+.1f%%, and %+.1f%% respectively. Read these as scenario-specific deltas, not a general dominance claim.',
           ou_pct, rs_pct, nl_pct)
-} else 'Under non-BM models the GNN correction adds value where BM assumptions are violated.',
+} else 'Under non-BM models, compare pigauto and BM scenario by scenario.',
 '</p>
 </div>
 
@@ -525,10 +525,10 @@ if (is.finite(ou_pct) && is.finite(rs_pct) && is.finite(nl_pct)) {
 
 <h2>What the benchmark shows</h2>
 <ul>
-<li><b>BM is hard to beat when BM is the truth.</b> Under pure Brownian motion the Rphylopars baseline is the maximum-likelihood estimator. The calibrated gate correctly closes to near zero, and pigauto matches the baseline. This is the designed behaviour.</li>
-<li><b>The GNN earns its contribution under model misspecification.</b> OU (stabilising selection), regime shifts (clade-specific optima), and nonlinear inter-trait relationships all violate BM&rsquo;s assumptions. The GNN can capture these deviations &mdash; quadratic and interaction effects, bimodal structure, and constrained variance &mdash; that BM&rsquo;s linear covariance misses.</li>
-<li><b>Mean imputation is a proper null.</b> The gap between mean imputation and the BM baseline quantifies the phylogenetic signal in the data. The gap between BM and pigauto quantifies the extra non-BM structure the GNN extracts.</li>
-<li><b>Higher missingness degrades all methods.</b> But the ordering is preserved: pigauto &ge; BM &gt; mean. With more data held out, calibration has more validation data and the GNN can sometimes provide a larger correction.</li>
+<li><b>BM is hard to beat when BM is the truth.</b> Under pure Brownian motion the Rphylopars baseline is the maximum-likelihood estimator. pigauto should be judged against that baseline, not against mean imputation alone.</li>
+<li><b>Non-BM scenarios are mixed.</b> OU (stabilising selection), regime shifts (clade-specific optima), and nonlinear inter-trait relationships all violate BM&rsquo;s assumptions, but the observed GNN contribution differs by scenario and trait.</li>
+<li><b>Mean imputation is a proper null.</b> The gap between mean imputation and the BM baseline quantifies the phylogenetic signal in the data. The gap between BM and pigauto is the incremental model contribution and can be positive, zero, or negative.</li>
+<li><b>Higher missingness degrades all methods.</b> BM and pigauto remain well ahead of mean imputation in these sweeps, while their ordering is scenario- and trait-dependent. With more data held out, calibration has more validation data and the GNN can sometimes provide a larger correction.</li>
 </ul>
 
 <h2>Reproducibility</h2>

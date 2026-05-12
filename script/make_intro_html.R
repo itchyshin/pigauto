@@ -1,4 +1,8 @@
 #!/usr/bin/env Rscript
+# Archived static page generator. Do not re-add this output to public pkgdown
+# navigation until it is rewritten as a source-backed vignette or refreshed
+# against the current README, vignettes, and benchmark evidence.
+#
 # Build a self-contained HTML introduction to pigauto, drawn from README.md
 # and the architecture summary in CLAUDE.md. Writes to inst/doc/ so it ships
 # with the installed package and can be found via:
@@ -164,9 +168,10 @@ Every prediction is
 <p>
 where <code>r_cal</code> is a per-trait gate learned during training and
 <b>re-calibrated on the validation set</b> afterward. When the Brownian-motion
-baseline is already optimal, the calibrated gate closes to zero and the GNN
-becomes a no-op &mdash; so pigauto is guaranteed never to underperform the
-baseline on held-out data. The GNN uses two message-passing layers with
+baseline is already optimal on the validation cells, the calibrated gate
+can close to zero and the GNN becomes a no-op. This is a validation
+safeguard, not a universal performance guarantee. The GNN uses two
+message-passing layers with
 scaled dot-product attention and a learnable log-adjacency bias, so the
 model starts close to the phylogenetic prior and learns deviations only
 where the data supports them.

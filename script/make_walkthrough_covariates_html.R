@@ -2,6 +2,10 @@
 #
 # script/make_walkthrough_covariates_html.R
 #
+# Archived static page generator. Do not re-add this output to public pkgdown
+# navigation until it is rewritten as a source-backed vignette or refreshed
+# against the current README, vignettes, and benchmark evidence.
+#
 # Build a self-contained HTML walkthrough:
 #   "Comparative study with environmental covariates"
 #
@@ -247,8 +251,8 @@ h('When phylogenetic signal is low and environmental effects are strong. ')
 h('The <a href="dev/bench_covariate_sim.html">covariate effectiveness ')
 h('benchmark</a> shows 8&ndash;15% RMSE reduction in simulated scenarios ')
 h('with &lambda;=0.1 and &beta;=1.5. The safety here is crucial: ')
-h('covariates never <i>hurt</i> imputation, even when they are ')
-h('uninformative. You can always supply them.')
+h('the calibrated gate can close when covariates are uninformative, ')
+h('but each dataset should still be checked on validation cells.')
 h('</div>')
 
 h('<p>')
@@ -431,8 +435,8 @@ h('</ol>')
 
 h('<div class="key-point">')
 h('<b>When to supply covariates:</b> ')
-h('always, if you have them. They never hurt (the gate closes when ')
-h('they are uninformative) and they can substantially improve ')
+h('when they are fully observed and scientifically defensible predictors. ')
+h('The gate can close when they are uninformative, and covariates can improve ')
 h('imputation when trait variation has a strong environmental ')
 h('component. See the ')
 h('<a href="dev/bench_covariate_sim.html">simulation benchmark</a> ')
