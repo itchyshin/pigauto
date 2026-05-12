@@ -168,6 +168,77 @@ test_that("predict.pigauto_fit can mask held-out cells from DAE context", {
   expect_equal(pred_shifted, pred_ref, tolerance = 1e-6)
 })
 
+test_that("predict.pigauto_fit adds cov_linear fixed effects outside the blend", {
+  skip_if_not_installed("torch")
+
+  n <- 4L
+  sp <- paste0("sp", seq_len(n))
+  covariates <- matrix(seq_len(n) - 1, ncol = 1,
+                       dimnames = list(sp, "temp"))
+
+  model <- ResidualPhyloDAE(
+    input_dim = 1L, hidden_dim = 4L, coord_dim = 1L, cov_dim = 3L,
+    per_column_rs = TRUE, n_gnn_layers = 1L, gate_cap = 0.8,
+    use_attention = FALSE, n_user_cov = 1L, dropout = 0,
+    use_transformer_blocks = FALSE, n_heads = 1L, ffn_mult = 1L
+  )
+  torch::with_no_grad({
+    model$cov_linear$weight$copy_(
+      torch::torch_tensor(matrix(2, nrow = 1L, ncol = 1L))
+    )
+    model$cov_linear$bias$copy_(torch::torch_tensor(1))
+  })
+
+  fit <- structure(
+    list(
+      model_state = lapply(model$state_dict(), function(t) t$detach()$cpu()),
+      model_config = list(
+        input_dim = 1L, hidden_dim = 4L, k_eigen = 1L, cov_dim = 3L,
+        per_column_rs = TRUE, n_gnn_layers = 1L, gate_cap = 0.8,
+        use_attention = FALSE, n_user_cov = 1L, dropout = 0,
+        refine_steps = 1L, use_transformer_blocks = FALSE,
+        n_heads = 1L, ffn_mult = 1L
+      ),
+      graph = list(coords = matrix(0, n, 1), adj = diag(n), D_sq = NULL),
+      baseline = list(
+        mu = matrix(0, n, 1, dimnames = list(sp, "y")),
+        se = matrix(0, n, 1, dimnames = list(sp, "y"))
+      ),
+      species_names = sp,
+      obs_species = sp,
+      obs_to_species = NULL,
+      X_scaled = matrix(NA_real_, n, 1, dimnames = list(sp, "y")),
+      n_species = n,
+      n_obs = n,
+      multi_obs = FALSE,
+      trait_names = "y",
+      latent_names = "y",
+      trait_map = list(list(
+        name = "y", type = "continuous", latent_cols = 1L,
+        mean = 0, sd = 1, log_transform = FALSE
+      )),
+      calibrated_gates = c(y = 0),
+      r_cal_bm = c(y = 0),
+      r_cal_gnn = c(y = 0),
+      r_cal_mean = c(y = 0),
+      mean_baseline_per_col = c(y = 0),
+      conformal_scores = NULL,
+      covariates = covariates,
+      cov_means = 0,
+      cov_sds = 1,
+      cov_names = "temp"
+    ),
+    class = "pigauto_fit"
+  )
+
+  pred <- predict(fit, return_se = FALSE)
+  expected <- as.numeric(1 + 2 * covariates[, 1])
+
+  expect_equal(as.numeric(pred$imputed_latent[, "y"]), expected,
+               tolerance = 1e-6)
+  expect_equal(pred$imputed$y, expected, tolerance = 1e-6)
+})
+
 
 # ---- Multi-observation per species tests ------------------------------------
 

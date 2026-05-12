@@ -3,6 +3,8 @@
 ## Bug fixes: prediction-time observed-cell context (2026-05-11)
 
 - `predict.pigauto_fit()` now seeds DAE refinement with stored observed latent cells and uses the phylogenetic baseline only for originally missing cells. Previously prediction initialized every cell from the baseline, so the GNN did not receive the observed trait context it was trained to use. Evaluation, cross-validation, and report metrics explicitly mask validation/test cells from that context so held-out scores remain leakage-free.
+- The direct `cov_linear` fixed-effect path is now included in training, validation, gate calibration, conformal scoring, and prediction whenever user covariates are present. Previously that path was constructed and returned by the model, but production callers ignored it unless using the optional low-level `baseline_mu` forward path.
+- Conformal residuals are now computed from the same calibrated three-way safety-floor blend used at prediction time, rather than reconstructing a legacy two-way BM/GNN blend from `r_cal_gnn` alone.
 
 ## Improvements: tree-aware downstream fitting (2026-05-11)
 

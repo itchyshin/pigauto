@@ -624,6 +624,8 @@ fit_pigauto <- function(
                    D_sq = t_D_sq)
     delta <- out$delta
     rs    <- out$rs
+    fixed <- out$fixed_effects
+    delta_pred <- if (!is.null(fixed)) delta + fixed else delta
 
     # Direct prediction loss: train delta to predict the truth directly.
     # This gives delta a full-strength gradient signal on every corrupted
@@ -632,10 +634,10 @@ fit_pigauto <- function(
     # delta to stay close to the baseline and calibration to fall back
     # to gate = 0.
     if (has_trait_map) {
-      loss_rec <- compute_mixed_loss(delta, t_X, masked_bool, trait_map)
+      loss_rec <- compute_mixed_loss(delta_pred, t_X, masked_bool, trait_map)
     } else {
       loss_rec <- torch::nnf_mse_loss(
-        delta[masked_bool], t_X[masked_bool]
+        delta_pred[masked_bool], t_X[masked_bool]
       )
     }
 
@@ -645,6 +647,7 @@ fit_pigauto <- function(
     # dominate the direct supervision on delta.  Post-hoc calibration on
     # the validation set still has the final say over the gate.
     pred_blend <- (1 - rs) * t_MU + rs * delta
+    if (!is.null(fixed)) pred_blend <- pred_blend + fixed
     if (has_trait_map) {
       loss_blend <- compute_mixed_loss(pred_blend, t_X, masked_bool, trait_map)
     } else {
@@ -686,6 +689,9 @@ fit_pigauto <- function(
           out0      <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp,
                              D_sq = t_D_sq)
           pred0     <- (1 - out0$rs) * t_MU + out0$rs * out0$delta
+          if (!is.null(out0$fixed_effects)) {
+            pred0 <- pred0 + out0$fixed_effects
+          }
         })
         if (has_trait_map) {
           val_loss_val <- composite_val_loss(pred0, t_truth_safe, t_val,
@@ -757,6 +763,11 @@ fit_pigauto <- function(
       out_cal   <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp,
                          D_sq = t_D_sq)
       delta_cal <- as.matrix(out_cal$delta$cpu())
+      fixed_cal <- if (!is.null(out_cal$fixed_effects)) {
+        as.matrix(out_cal$fixed_effects$cpu())
+      } else {
+        NULL
+      }
       mu_cal    <- as.matrix(t_MU$cpu())
     })
 
@@ -876,6 +887,7 @@ fit_pigauto <- function(
       mean_baseline_per_col = mean_baseline_per_col,
       simplex_step          = 0.05,
       min_val_cells         = min_val_cells,
+      fixed_cal             = fixed_cal,
       seed                  = seed,
       latent_names          = data$latent_names,
       verbose               = verbose
@@ -901,6 +913,11 @@ fit_pigauto <- function(
       calibrated_gates = calibrated_gates,
       mu_cal           = mu_cal,
       delta_cal        = delta_cal,
+      r_cal_bm         = calibrated_gates_list$r_cal_bm,
+      r_cal_gnn        = calibrated_gates_list$r_cal_gnn,
+      r_cal_mean       = calibrated_gates_list$r_cal_mean,
+      mean_baseline_per_col = mean_baseline_per_col,
+      fixed_cal        = fixed_cal,
       X_truth_r        = X_truth_r,
       val_mask_mat     = val_mask_conf,
       method           = conformal_method,
@@ -923,6 +940,9 @@ fit_pigauto <- function(
       out0      <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp,
                          D_sq = t_D_sq)
       pred0     <- (1 - out0$rs) * t_MU + out0$rs * out0$delta
+      if (!is.null(out0$fixed_effects)) {
+        pred0 <- pred0 + out0$fixed_effects
+      }
       t_truth_f <- torch::torch_tensor(X_truth, dtype = torch::torch_float(),
                                        device = device)
       t_truth_f[t_truth_f$isnan()] <- 0
