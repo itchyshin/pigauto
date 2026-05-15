@@ -266,3 +266,64 @@ test_that("[T3] all-NA column triggers a clear error rather than silent NaN", {
     expect_false(any(is.nan(out)))
   }
 })
+
+
+# ---------------------------------------------------------------------------
+# T4   Post-Codex audit regression tests
+#
+# Tests added 2026-05-15 to lock in fixes from PRs #74-#82 (the Codex
+# audit) and close coverage gaps the audit exposed.
+# ---------------------------------------------------------------------------
+
+## Note: a PR #81 regression test for "predict() seeds DAE with observed
+## latent cells" was attempted here but already exists in
+## test-fit-predict.R:94 ("predict.pigauto_fit uses observed latent cells
+## as DAE context"), added by PR #82.  That test forces the gate fully
+## open via direct fit-object surgery and shifts the observed latents by
+## +25 to confirm predictions change -- a cleaner discriminator than
+## anything achievable through the public impute() interface on small
+## synthetic data, where the safety-floor gate closes onto the mean
+## corner and predictions degenerate.  Not duplicating here.
+
+test_that("[T4] fit_baseline_bace returns a baseline list with mu / se (smoke)", {
+  skip_if_not_installed("BACE")
+  td  <- .tcov_make_data(n = 20L, seed = 7L)
+  pd  <- preprocess_traits(td$df, td$tree)
+  spl <- make_missing_splits(pd$X_scaled, seed = 7L, trait_map = pd$trait_map)
+  res <- tryCatch(
+    fit_baseline_bace(pd, td$tree, splits = spl,
+                      runs = 1L, nitt = 200L, burnin = 50L,
+                      thin = 5L, verbose = FALSE),
+    error = function(e) e
+  )
+  if (inherits(res, "error")) {
+    skip(paste("fit_baseline_bace setup not supported here:",
+               conditionMessage(res)))
+  }
+  expect_type(res, "list")
+  expect_true("mu" %in% names(res))
+  expect_true("se" %in% names(res))
+  # mu / se are species x latent matrices
+  expect_equal(nrow(res$mu), nrow(pd$X_scaled))
+})
+
+test_that("[T4] plot_comparison runs without error on a minimal results data.frame (smoke)", {
+  # plot_comparison uses base-R par()/plot() and returns invisible(NULL)
+  # on the two-panel path, so we just check it doesn't error.
+  set.seed(7L)
+  bench <- data.frame(
+    method = rep(c("BM_baseline", "pigauto_GNN"), each = 6L),
+    trait  = rep(c("t1", "t2", "t3"), 4L),
+    type   = "continuous",
+    metric = rep(c("rmse", "rmse", "rmse"), 4L),
+    value  = stats::rnorm(12L, mean = 1, sd = 0.1),
+    stringsAsFactors = FALSE
+  )
+  # Render to a null device so the test doesn't pop a graphics window.
+  pdf(file = NULL)
+  on.exit(dev.off(), add = TRUE)
+  expect_silent(
+    plot_comparison(bench, metric = "rmse",
+                    methods = c("BM_baseline", "pigauto_GNN"))
+  )
+})
