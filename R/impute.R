@@ -320,6 +320,54 @@ impute <- function(traits, tree, species_col = NULL,
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
   pool_method <- match.arg(pool_method)
 
+  # Phase B3 Safety Check
+  if (n_imputations == 1L && pool_method == "median") {
+    for (trait_name in names(traits)) {
+      col <- traits[[trait_name]]
+      
+      # Is it an Ordinal factor with K >= 3?
+      is_ordinal_k3 <- is.factor(col) && is.ordered(col) && length(levels(col)) >= 3
+      
+      if (is_ordinal_k3) {
+        # Is it highly imbalanced? (Majority class > 70%)
+        class_freqs <- table(col) / sum(table(col), na.rm = TRUE)
+        is_imbalanced <- max(class_freqs) > 0.7
+        
+        # Is the validation set small? (e.g., fewer than 500 valid observations)
+        val_n <- sum(!is.na(col))
+        is_small_val <- val_n < 500 
+        
+        # If ALL conditions are met, throw a formal CRAN-safe warning
+        if (is_imbalanced && is_small_val) {
+          warning(
+            sprintf(
+              "Imbalanced K>=3 ordinal trait '%s' with a small validation set may collapse to the majority class.\nConsider setting: n_imputations = 20L, pool_method = 'mode'.\nSee ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').",
+              trait_name
+            ),
+            call. = FALSE
+          )
+        }
+      }
+    }
+  }
+
+  # Compute Scale Estimator (Added to prevent silent compute traps)
+  if (nrow(traits) >= 5000 && n_imputations >= 10) {
+    # as.numeric prevents integer overflow on massive datasets
+    total_updates <- as.numeric(nrow(traits)) * as.numeric(epochs) * as.numeric(n_imputations)
+    message(
+      sprintf(
+        "Note: You requested %d imputations on %d species. ",
+        n_imputations, nrow(traits)
+      ),
+      sprintf(
+        "This will take ~%dx longer than a default run (approx. %s total updates). ",
+        n_imputations, format(total_updates, scientific = FALSE, big.mark = ",")
+      ),
+      "Consider setting `verbose = TRUE` to track progress."
+    )
+  }
+
   # 1. Preprocess
   pd <- preprocess_traits(traits, tree, species_col = species_col,
                           trait_types = trait_types,
