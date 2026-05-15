@@ -53,13 +53,15 @@ navbar:
           href: articles/mixed-types.html
         - text: "Propagating tree uncertainty"
           href: articles/tree-uncertainty.html
-        # Static walk-through HTML pages are intentionally hidden and marked
-        # archived until they are refreshed against the current README,
-        # vignettes, and benchmark evidence. Do not re-add pigauto_intro.html,
-        # pigauto_workflow_mixed.html, pigauto_walkthrough_covariates.html, or
-        # pigauto_walkthrough_multi_obs.html without checking
-        # useful/pkgdown_page_rethink.md and replacing stale version badges,
-        # trait-type scope, uncertainty wording, and benchmark claims.
+        # Four static walk-through HTML pages (pigauto_intro,
+        # pigauto_workflow_mixed, pigauto_walkthrough_covariates,
+        # pigauto_walkthrough_multi_obs) were retired in 2026-05 to
+        # dev/archive/ because their version badges, trait-type scope,
+        # and BACE-comparison wording had gone stale.  Do not restore
+        # them as live navbar entries.  If a fresh walk-through is
+        # needed, write a new source-backed vignette under vignettes/
+        # rather than reanimating the archived HTML.  Audit detail:
+        # useful/pkgdown_page_rethink.md.
     methodology:
       text: Methodology
       menu:
