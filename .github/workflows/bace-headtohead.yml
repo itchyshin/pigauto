@@ -28,6 +28,9 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
+      # pigauto's GNN needs torch's libtorch (~1.5 GB Lantern backend).
+      # Setting TORCH_INSTALL=1 makes torch auto-download it on first load.
+      TORCH_INSTALL: 1
 
     steps:
       - uses: actions/checkout@v4
@@ -44,6 +47,20 @@ jobs:
           dependencies: '"hard"'
           extra-packages: any::devtools, any::jsonlite, any::knitr, any::ape, any::rmarkdown
           needs: ''
+
+      - name: Cache libtorch backend
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/torch
+            /opt/R/4.6.0/lib/R/site-library/torch/deps
+          key: libtorch-${{ runner.os }}-v1
+          restore-keys: |
+            libtorch-${{ runner.os }}-
+
+      - name: Pre-install libtorch (Lantern backend)
+        run: |
+          Rscript -e 'torch::install_torch(); cat("libtorch installed at", torch:::lantern_install_path(), "\n")'
 
       - name: Run ${{ matrix.dataset }} benchmark
         run: |
@@ -118,7 +135,14 @@ jobs:
         run: Rscript script/gha/stage_ci_run.R "${{ github.run_id }}"
 
       - name: Open draft PR with per-run summary
+        # Soft-fails when the repo hasn't enabled
+        # "Allow GitHub Actions to create and approve pull requests"
+        # under Settings → Actions → General → Workflow permissions.
+        # The artifact + workflow-summary inline view already carry the
+        # head-to-head report, so missing the auto-PR doesn't lose
+        # information.
         if: always()
+        continue-on-error: true
         uses: peter-evans/create-pull-request@v6
         with:
           branch: ci-run/${{ github.run_id }}
