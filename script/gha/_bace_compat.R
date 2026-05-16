@@ -264,17 +264,37 @@ BACE_DATASET_CONFIG <- list(
   )
   t_fit <- as.numeric(difftime(Sys.time(), t0_fit, units = "secs"))
 
-  # 6) Back-transform log preds to raw scale and evaluate
+  # 6) Evaluate on the FIT SCALE (= log-scale for log_traits, raw
+  # otherwise). BACE's snapshot stores RMSE on the same fit scale,
+  # so this is the apples-to-apples comparison. Previous version
+  # back-transformed predictions to raw scale via .bace_unlog_pred(),
+  # which inflated pigauto RMSE by factors of 10^2-10^8 vs BACE's
+  # log-scale numbers on log_traits.
   t0_eval <- Sys.time()
-  completed_raw <- lapply(mi$datasets, function(d) {
-    .bace_unlog_pred(d, log_traits = ds_cfg$log_traits)
-  })
+  completed_fit <- mi$datasets   # already on fit scale by construction
 
-  # Trait-type lookup from the original (pre-log) traits_df
+  # Log-transform truth values for log_traits so truth and prediction
+  # share the same scale. Non-log traits keep raw truth (BACE's
+  # behaviour for those is identical, so no change needed).
+  truth_long_fit <- truth_long
+  if (length(ds_cfg$log_traits) > 0L) {
+    for (lt in ds_cfg$log_traits) {
+      idx <- which(truth_long_fit$trait == lt)
+      if (!length(idx)) next
+      v <- suppressWarnings(as.numeric(as.character(truth_long_fit$true_value[idx])))
+      v[!is.finite(v) | v <= 0] <- NA_real_
+      truth_long_fit$true_value[idx] <- log(v)
+    }
+  }
+
+  # Trait-type lookup from the original (pre-log) traits_df. factor
+  # with exactly 2 levels is BINARY in pigauto's type contract (and in
+  # BACE's snapshot). Anything wider is categorical.
   trait_types_lookup <- setNames(
     vapply(trait_cols, function(v) {
       x <- traits_df[[v]]
       if (is.ordered(x))       "ordinal"
+      else if (is.factor(x) && nlevels(x) == 2L) "binary"
       else if (is.factor(x))   "categorical"
       else if (is.character(x)) "categorical"
       else if (is.integer(x) && all(x[!is.na(x)] >= 0)) "count"
@@ -283,7 +303,7 @@ BACE_DATASET_CONFIG <- list(
     trait_cols
   )
 
-  ev <- .bace_eval_per_imputation(completed_raw, truth_long,
+  ev <- .bace_eval_per_imputation(completed_fit, truth_long_fit,
                                    trait_types_lookup, t_fit)
   t_eval <- as.numeric(difftime(Sys.time(), t0_eval, units = "secs"))
 
@@ -318,7 +338,7 @@ BACE_DATASET_CONFIG <- list(
     agg <- stats::aggregate(rmse ~ trait + type,
                              data = out_tbl[!is.na(out_tbl$rmse), ],
                              FUN = function(x) stats::median(x, na.rm = TRUE))
-    md <- c(md, "## Continuous-family (RMSE, raw scale)", "",
+    md <- c(md, "## Continuous-family (RMSE, fit scale; log for log_traits)", "",
             knitr::kable(agg, format = "markdown", digits = 4), "")
   }
   if (any(!is.na(out_tbl$accuracy))) {
