@@ -45,13 +45,14 @@ jobs:
           # Hard deps only — Suggests includes BACE (lives in this repo's
           # BACE/ subdir, not on CRAN) which pak can't resolve.
           dependencies: '"hard"'
-          # Rphylopars + phytools are pigauto Suggests that unlock the
-          # joint multivariate-BM baseline (cross-trait correlation) and
-          # the phylo-signal mean-floor. Without them pigauto falls back
-          # to per-column BM with no cross-trait info — that's the
-          # likely reason BACE's MCMCglmm beat pigauto on continuous
-          # traits in run 25969352294.
-          extra-packages: any::devtools, any::jsonlite, any::knitr, any::ape, any::rmarkdown, any::Rphylopars, any::phytools
+          # phytools enables pigauto's phylo_signal_gate (safety-floor
+          # mean-gate). Rphylopars is no longer required as of the
+          # in-house Sigma solver (R/joint_mvn_solver.R) which replaces
+          # the phylopars-backed joint MVN fit with a homegrown
+          # matrix-normal ML estimator. pigauto's non-Gaussian latent
+          # imputation (R/liability.R + R/joint_threshold_baseline.R +
+          # R/ovr_categorical.R) is now fully in-house.
+          extra-packages: any::devtools, any::jsonlite, any::knitr, any::ape, any::rmarkdown, any::phytools
           needs: ''
 
       - name: Cache libtorch backend

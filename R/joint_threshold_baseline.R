@@ -270,7 +270,8 @@ build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE,
 
 #' Fit a joint MVN BM on liability-scale columns (Phase 3)
 #'
-#' Runs `build_liability_matrix()` then delegates to `Rphylopars::phylopars()`.
+#' Runs `build_liability_matrix()` then fits the joint Sigma via the
+#' in-house [fit_mvn_bm_inhouse()] solver (R/joint_mvn_solver.R).
 #' Returns raw liability-scale posterior. Decoding to per-type output scale
 #' happens upstream in the caller / in `fit_baseline()` glue.
 #'
@@ -311,22 +312,13 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
   phylopars_fit <- NULL
   if (length(fit_cols) >= 1L) {
     X_fit <- X_liab[, fit_cols, drop = FALSE]
+    rownames(X_fit) <- spp
 
-    # Rphylopars rejects column names with '=' (e.g. "z=A"). Sanitise to
-    # safe names for the Rphylopars call and restore originals afterwards.
-    orig_colnames   <- colnames(X_fit)
-    safe_colnames   <- make.names(orig_colnames, unique = TRUE)
-    colnames(X_fit) <- safe_colnames
-
-    df_in          <- as.data.frame(X_fit)
-    df_in$species  <- spp
-    df_in          <- df_in[, c("species", safe_colnames), drop = FALSE]
-
-    fit <- Rphylopars::phylopars(
-      trait_data = df_in,
-      tree       = tree,
-      model      = "BM"
-    )
+    # In-house solver: matrix-normal BM ML estimate on the liability
+    # matrix. No external dependency (no Rphylopars). Output contract
+    # matches phylopars' $anc_recon / $anc_var / $pars$phylocov on the
+    # fields pigauto consumes.
+    fit <- fit_mvn_bm_inhouse(L = X_fit, tree = tree)
 
     tip_rows <- match(spp, rownames(fit$anc_recon))
     mu_fit   <- fit$anc_recon[tip_rows, , drop = FALSE]
@@ -334,15 +326,11 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
 
     # Validate shape
     if (ncol(mu_fit) != length(fit_cols)) {
-      stop("fit_joint_threshold_baseline: Rphylopars returned ",
+      stop("fit_joint_threshold_baseline: in-house solver returned ",
            ncol(mu_fit), " columns but ", length(fit_cols),
            " were passed. Column alignment would be ambiguous.",
            call. = FALSE)
     }
-
-    # Restore original column names before writing back to output matrices
-    colnames(mu_fit) <- orig_colnames
-    colnames(se_fit) <- orig_colnames
 
     mu_liab[, fit_cols] <- mu_fit
     se_liab[, fit_cols] <- se_fit

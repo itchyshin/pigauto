@@ -1,21 +1,25 @@
-#' Is the Rphylopars delegate available?
+#' Is the joint MVN baseline available?
 #'
-#' Used by `fit_baseline()` to decide whether to dispatch to the
-#' joint multivariate-BM baseline (Level C Phase 2). When FALSE,
-#' `fit_baseline()` falls back to the per-column BM path.
+#' Historically gated on `requireNamespace("Rphylopars")`. As of the
+#' in-house Sigma solver (R/joint_mvn_solver.R) the joint MVN baseline
+#' has no external dependency and is always available. Kept as a
+#' function (rather than a constant) so call sites in `fit_baseline()`
+#' don't need to change.
 #'
 #' @keywords internal
 #' @noRd
 joint_mvn_available <- function() {
-  requireNamespace("Rphylopars", quietly = TRUE)
+  TRUE
 }
 
 #' Joint multivariate BM baseline for continuous-family latent columns
 #'
-#' Delegates to `Rphylopars::phylopars()`. Returns per-cell posterior mean
-#' and SE in the same shape as the per-column path in [fit_baseline()].
-#' Non-BM columns (binary, categorical) are untouched; they stay at zero
-#' in the returned matrices (caller handles them separately).
+#' Fits a matrix-normal BM model jointly across BM-eligible latent
+#' columns via [fit_mvn_bm_inhouse()] (R/joint_mvn_solver.R). Returns
+#' per-cell posterior mean and SE in the same shape as the per-column
+#' path in [fit_baseline()]. Non-BM columns (binary, categorical) are
+#' untouched; they stay at zero in the returned matrices (caller
+#' handles them separately).
 #'
 #' @param data pigauto_data (from `preprocess_traits`).
 #' @param tree phylo.
@@ -84,21 +88,14 @@ fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL,
     }
   }
 
-  # Build trait_data for Rphylopars: species column first, then trait columns
-  df_in          <- as.data.frame(X_bm)
-  df_in$species  <- spp
-  # Rphylopars requires species as first column
-  df_in          <- df_in[, c("species", colnames(X_bm)), drop = FALSE]
+  # In-house ML solver: matrix-normal BM via per-column init + EM
+  # refinement using cross-trait Sigma off-diagonals. Returns a list
+  # with $anc_recon and $anc_var on n_tips x q (no internal nodes).
+  L_in <- X_bm
+  rownames(L_in) <- spp
 
-  fit <- Rphylopars::phylopars(
-    trait_data = df_in,
-    tree       = tree,
-    model      = "BM"
-  )
+  fit <- fit_mvn_bm_inhouse(L = L_in, tree = tree)
 
-  # anc_recon and anc_var are (n_tips + n_internal) x q matrices.
-  # Tip rows come first and their rownames match tip labels.
-  # We extract the tip block by matching species names.
   tip_rows <- match(spp, rownames(fit$anc_recon))
   mu_bm    <- fit$anc_recon[tip_rows, , drop = FALSE]
   se_bm    <- sqrt(fit$anc_var[tip_rows, , drop = FALSE])
