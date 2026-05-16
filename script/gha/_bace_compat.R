@@ -156,9 +156,12 @@ BACE_DATASET_CONFIG <- list(
       p_v <- pred_df[[trait_name]][match(sp_keep, rownames(pred_df))]
       type_t <- trait_types_lookup[[trait_name]]
       if (is.null(type_t)) type_t <- NA_character_
-      if (type_t %in% c("categorical", "binary") ||
-          is.factor(p_v) || is.character(p_v) ||
-          is.factor(t_v) || is.character(t_v)) {
+      # Branch on declared trait type (not on observed value class). When
+      # .bace_apply_mask rbinds truth rows across mixed-type traits, the
+      # true_value column gets coerced to character for ALL rows — so the
+      # storage class of t_v / p_v can't be trusted; trust type_t.
+      is_discrete <- isTRUE(type_t %in% c("categorical", "binary", "ordinal"))
+      if (is_discrete) {
         ok <- !is.na(p_v) & !is.na(t_v)
         acc <- if (any(ok)) mean(as.character(p_v[ok]) ==
                                   as.character(t_v[ok])) else NA_real_
@@ -169,7 +172,9 @@ BACE_DATASET_CONFIG <- list(
           stringsAsFactors = FALSE
         )
       } else {
-        t_num <- suppressWarnings(as.numeric(t_v))
+        # Continuous / count / proportion / zi_count: coerce truth to
+        # numeric even if storage is character (after rbind coercion).
+        t_num <- suppressWarnings(as.numeric(as.character(t_v)))
         p_num <- suppressWarnings(as.numeric(as.character(p_v)))
         ok <- is.finite(t_num) & is.finite(p_num)
         rmse <- if (any(ok)) sqrt(mean((t_num[ok] - p_num[ok])^2)) else NA_real_
