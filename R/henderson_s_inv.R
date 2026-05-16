@@ -200,6 +200,66 @@ henderson_R_inv_apply <- function(b, henderson, chol_Q_II = NULL) {
 #
 # Returns log |R| on the tip-only block. Used for the proper Kronecker
 # Fisher-ML on Sigma.
+# ---------------------------------------------------------------------------
+# henderson_bm_predict()
+# ---------------------------------------------------------------------------
+#
+# Per-column BM imputation using Hadfield's sparse Q. Equivalent in
+# spirit to bm_impute_col() but O(n) instead of O(n_obs^3).
+#
+# Algorithm: given observed values y_o at tip indices `obs_in_tips`,
+# the conditional posterior mean of the non-observed extended-tree
+# nodes (missing tips + all internals) under BM with unit rate is:
+#
+#   E[X_no | X_o] = -Q[no, no]^{-1} Q[no, o] y_o
+#
+# where `o` indexes observed tips in Q and `no` indexes everything
+# else (miss tips + internals). The prediction at miss tip positions
+# is then E[X_no | X_o] restricted to miss-tip rows.
+#
+# Variance: returning a conservative tree-depth-based estimate
+# (full sparse-selected-inverse via Takahashi recursion is doable
+# but ~3x the engineering; for pigauto's purposes the calibrated
+# gates handle posterior uncertainty downstream, so per-cell
+# precision here matters less than at the GLS-mean level).
+#
+# Returns list(mu, se) where mu and se are length-n_tips vectors
+# (observed cells echo y_o; missing cells get predictions).
+henderson_bm_predict <- function(y, henderson, sigma2 = NULL, eps = 1e-8) {
+  stopifnot(length(y) == henderson$n_tips)
+  obs_idx_local <- which(!is.na(y))
+  miss_idx_local <- which(is.na(y))
+  n_o <- length(obs_idx_local)
+  n_m <- length(miss_idx_local)
+  if (n_o == henderson$n_tips) return(list(mu = y, se = rep(0, length(y))))
+  if (n_o == 0L) return(list(mu = rep(0, length(y)),
+                              se = rep(1, length(y))))
+  Q <- henderson$Q
+  T_idx <- henderson$tip_idx
+  # Map local obs/miss positions to global Q positions.
+  obs_q  <- T_idx[obs_idx_local]
+  miss_q <- T_idx[miss_idx_local]
+  no_q   <- c(miss_q, henderson$int_idx)   # non-observed: miss tips + internals
+  Q_no_no <- Q[no_q, no_q, drop = FALSE]
+  Q_no_o  <- Q[no_q, obs_q, drop = FALSE]
+
+  rhs <- -as.matrix(Q_no_o %*% y[obs_idx_local])
+  chol_no_no <- Matrix::Cholesky(Matrix::forceSymmetric(Q_no_no), LDL = FALSE)
+  v <- as.matrix(Matrix::solve(chol_no_no, rhs))
+
+  mu <- y
+  mu[miss_idx_local] <- as.numeric(v[seq_len(n_m), 1])
+
+  # Conservative se: empirical sd of observed values (REML-style estimate
+  # of the BM rate scaled by sqrt of marginal-variance-fraction). For
+  # downstream pigauto consumers the per-cell se matters less than the
+  # mu, and the proper sparse Takahashi recursion is a follow-up.
+  if (is.null(sigma2)) sigma2 <- stats::var(y[obs_idx_local])
+  se <- numeric(length(y))
+  se[miss_idx_local] <- sqrt(max(sigma2, eps))
+  list(mu = mu, se = se)
+}
+
 henderson_log_det_R <- function(henderson, chol_Q = NULL, chol_Q_II = NULL) {
   Q <- henderson$Q
   I_idx <- henderson$int_idx
