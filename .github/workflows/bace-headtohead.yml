@@ -59,8 +59,7 @@ jobs:
             libtorch-${{ runner.os }}-
 
       - name: Pre-install libtorch (Lantern backend)
-        run: |
-          Rscript -e 'torch::install_torch(); cat("libtorch installed at", torch:::lantern_install_path(), "\n")'
+        run: Rscript -e 'torch::install_torch(); message("libtorch ready: ", torch::torch_is_installed())'
 
       - name: Run ${{ matrix.dataset }} benchmark
         run: |
