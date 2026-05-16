@@ -88,6 +88,49 @@ test_that("[gha-mask] latent-cell -> user-col mask projection is correct", {
   expect_true(sum(user_mask) > 0L)
 })
 
+test_that("[gha-snapshot] snapshot_bace_one() projects BACE summary to canonical schema", {
+  e <- new.env()
+  source(.gha_path("_ci_config.R"), local = e)
+  source(.gha_path("snapshot_bace.R"), local = e)
+  fn <- e$snapshot_bace_one
+
+  # BACE summary_metrics.csv wide-format mimic
+  bace_native <- data.frame(
+    dataset = c("avonet","avonet","avonet"),
+    method  = c("bace", "bace", "mean_baseline"),
+    trait   = c("mass", "wing", "mass"),
+    type    = c("continuous","continuous","continuous"),
+    scale   = c("log","log","log"),
+    n_hidden = c(600, 600, 600),
+    rmse    = c(2.73, 2.99, 2.44),
+    nrmse   = c(1.76, 5.13, NA),
+    mae_fit = c(2.44, 2.95, 2.10),
+    mae_raw = c(NA, NA, NA),
+    correlation = c(0.96, 0.69, 0.50),
+    coverage95  = c(0.001, 0, 0),
+    accuracy    = c(NA, NA, NA),
+    balanced_accuracy = c(NA, NA, NA),
+    brier   = c(NA, NA, NA),
+    mae_level = c(NA, NA, NA),
+    stringsAsFactors = FALSE
+  )
+  # Stub run_info with runtime_min
+  run_info <- data.frame(runtime_min = 100.6, n_species = 300L,
+                          stringsAsFactors = FALSE)
+
+  out <- fn(bace_native, run_info = run_info, dataset = "avonet")
+  expect_true(all(out$dataset == "avonet"))
+  expect_true(all(out$method == "BACE_snapshot"))
+  # Only 'bace' rows survive (mean_baseline dropped)
+  expect_equal(nrow(out), 2L)
+  expect_setequal(out$trait, c("mass", "wing"))
+  expect_equal(out$rmse[out$trait == "mass"], 2.73)
+  # pearson_r mapped from BACE's correlation
+  expect_equal(out$pearson_r[out$trait == "mass"], 0.96)
+  # time_sec from runtime_min * 60
+  expect_equal(out$time_sec[1], 100.6 * 60)
+})
+
 test_that("[gha-h2h] build_h2h_report produces report.md + summary tbl", {
   e <- new.env()
   source(.gha_path("_ci_config.R"), local = e)
