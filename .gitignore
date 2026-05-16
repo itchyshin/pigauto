@@ -38,6 +38,7 @@ checkpoints_bin/
 !data/*.rda
 !inst/extdata/*.rds
 !tests/testthat/fixtures/*.rds
+!useful/bace_results_snapshot/*.rds
 
 # pkgdown / rsconnect
 docs/
@@ -69,3 +70,7 @@ script/data-cache/
 # don't let working-dir leftovers pollute feature branches
 submit_v090_vulcan_gpu/
 submit_v090_vulcan/
+
+# pigauto CI bench results — committed only via per-run summary PR
+script/gha/results/*
+!script/gha/results/.gitkeep
