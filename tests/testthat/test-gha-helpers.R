@@ -88,6 +88,44 @@ test_that("[gha-mask] latent-cell -> user-col mask projection is correct", {
   expect_true(sum(user_mask) > 0L)
 })
 
+test_that("[gha-h2h] build_h2h_report produces report.md + summary tbl", {
+  e <- new.env()
+  source(.gha_path("_ci_config.R"), local = e)
+  source(.gha_path("make_headtohead_report.R"), local = e)
+  build <- e$build_h2h_report
+
+  pigauto_tbl <- e$.normalize_eval(data.frame(
+    trait = c("mass", "diet"),
+    type  = c("continuous", "categorical"),
+    imputation_idx = c(1L, 1L),
+    rmse = c(0.41, NA_real_),
+    accuracy = c(NA_real_, 0.72),
+    time_sec = c(120, 120),
+    stringsAsFactors = FALSE
+  ), dataset = "avonet", method = "pigauto_ci")
+
+  bace_tbl <- e$.normalize_eval(data.frame(
+    trait = c("mass", "diet"),
+    type  = c("continuous", "categorical"),
+    imputation_idx = c(1L, 1L),
+    rmse = c(0.55, NA_real_),
+    accuracy = c(NA_real_, 0.65),
+    time_sec = c(3600, 3600),
+    stringsAsFactors = FALSE
+  ), dataset = "avonet", method = "BACE_snapshot")
+
+  tmp <- withr::local_tempdir()
+  rep <- build(combined = rbind(pigauto_tbl, bace_tbl), out_dir = tmp)
+  expect_true(file.exists(file.path(tmp, "report.md")))
+  expect_s3_class(rep$summary, "data.frame")
+  expect_true(all(c("dataset","trait","type","pigauto","bace","winner")
+                  %in% colnames(rep$summary)))
+  expect_equal(rep$summary$winner[rep$summary$trait == "mass"],
+               "pigauto")     # 0.41 RMSE < 0.55 RMSE
+  expect_equal(rep$summary$winner[rep$summary$trait == "diet"],
+               "pigauto")     # 0.72 acc > 0.65 acc
+})
+
 test_that("[gha-eval] .eval_per_imputation() emits canonical long-format rows", {
   e <- new.env()
   source(.gha_path("_ci_config.R"), local = e)
