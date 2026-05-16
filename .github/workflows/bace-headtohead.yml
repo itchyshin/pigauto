@@ -1,0 +1,129 @@
+name: pigauto vs BACE cross-dataset benchmark
+
+on:
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    name: ${{ matrix.dataset }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dataset: avonet
+            script: script/gha/run_bench_avonet.R
+          - dataset: pantheria
+            script: script/gha/run_bench_pantheria.R
+          - dataset: amphibio
+            script: script/gha/run_bench_amphibio.R
+          - dataset: bien
+            script: script/gha/run_bench_bien.R
+          - dataset: globtherm
+            script: script/gha/run_bench_globtherm.R
+          - dataset: leptraits
+            script: script/gha/run_bench_leptraits.R
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::devtools, any::jsonlite, any::knitr, any::ape
+          needs: ''
+
+      - name: Run ${{ matrix.dataset }} benchmark
+        run: |
+          (while sleep 60; do echo "[heartbeat $(date -u +%H:%M:%S)] still running ${{ matrix.dataset }}"; done) &
+          HEARTBEAT_PID=$!
+          trap 'kill $HEARTBEAT_PID 2>/dev/null || true' EXIT
+          Rscript ${{ matrix.script }}
+
+      - name: Upload per-dataset artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-${{ matrix.dataset }}
+          path: script/gha/results/${{ matrix.dataset }}/
+          if-no-files-found: warn
+
+  aggregate:
+    name: Aggregate + head-to-head report
+    needs: benchmark
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::knitr, any::rmarkdown, any::jsonlite
+          needs: ''
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Download all per-dataset artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: script/gha/results/_artifacts
+          pattern: bench-*
+
+      - name: Generate cross-dataset head-to-head report
+        run: Rscript script/gha/make_headtohead_report.R
+
+      - name: Publish report inline to workflow summary
+        run: |
+          REPORT=$(find script/gha/results/cross_dataset \
+                        -name "report.md" -type f | sort -r | head -1)
+          if [ -n "$REPORT" ] && [ -f "$REPORT" ]; then
+            cat "$REPORT" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## Report not generated" >> "$GITHUB_STEP_SUMMARY"
+            echo "Check the matrix job logs for failures." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload cross-dataset summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cross-dataset-summary
+          path: script/gha/results/cross_dataset/
+          if-no-files-found: warn
+
+      - name: Stage per-run summary into useful/ci_runs/
+        if: always()
+        run: Rscript script/gha/stage_ci_run.R "${{ github.run_id }}"
+
+      - name: Open draft PR with per-run summary
+        if: always()
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: ci-run/${{ github.run_id }}
+          commit-message: "ci: archive CI run ${{ github.run_id }}"
+          title: "CI run ${{ github.run_id }} — pigauto vs BACE"
+          body: |
+            Auto-staged per-run summary from pigauto-vs-BACE head-to-head CI.
+            See `useful/ci_runs/` for the new directory.
+            Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          draft: true
+          add-paths: |
+            useful/ci_runs/**
