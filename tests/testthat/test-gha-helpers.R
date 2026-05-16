@@ -131,6 +131,35 @@ test_that("[gha-snapshot] snapshot_bace_one() projects BACE summary to canonical
   expect_equal(out$time_sec[1], 100.6 * 60)
 })
 
+test_that("[gha-stage] stage_ci_run() copies the right files into useful/ci_runs/", {
+  e <- new.env()
+  source(.gha_path("stage_ci_run.R"), local = e)
+  stage <- e$stage_ci_run
+
+  tmp <- withr::local_tempdir()
+  for (d in c("avonet","globtherm")) {
+    sub <- file.path(tmp, "_artifacts", paste0("bench-", d))
+    dir.create(sub, recursive = TRUE)
+    writeLines(sprintf("# %s", d), file.path(sub, "results.md"))
+    jsonlite::write_json(list(fit_sec = 60),
+                          file.path(sub, "timings.json"),
+                          auto_unbox = TRUE)
+  }
+  cd <- file.path(tmp, "cross_dataset")
+  dir.create(cd, recursive = TRUE)
+  writeLines("# h2h", file.path(cd, "report.md"))
+
+  out_root <- withr::local_tempdir()
+  staged <- stage(results_root = tmp, ci_runs_root = out_root,
+                   run_id = "99999", date_str = "2026-05-16")
+
+  expect_true(dir.exists(staged))
+  expect_true(file.exists(file.path(staged, "report.md")))
+  expect_true(file.exists(file.path(staged, "pigauto_per_dataset", "avonet.md")))
+  expect_true(file.exists(file.path(staged, "pigauto_per_dataset", "globtherm.md")))
+  expect_true(file.exists(file.path(staged, "timings.json")))
+})
+
 test_that("[gha-h2h] build_h2h_report produces report.md + summary tbl", {
   e <- new.env()
   source(.gha_path("_ci_config.R"), local = e)
