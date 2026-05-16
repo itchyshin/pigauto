@@ -54,6 +54,174 @@ PIGAUTO_CI_CONFIG <- list(
   NA_character_
 }
 
+# Build a taxonomic phylo from columns like Order / Family / Genus / Species.
+# Mirrors the pattern used in script/bench_amphibio.R and
+# script/bench_globtherm_covariates.R (no molecular tree dependency).
+.build_tax_tree <- function(tax_df, seed) {
+  stopifnot(is.data.frame(tax_df),
+            all(c("Order", "Family", "Genus", "Species") %in% colnames(tax_df)))
+  tax_df[] <- lapply(tax_df, factor)
+  tree <- ape::as.phylo(~Order/Family/Genus/Species, data = tax_df,
+                         collapse = FALSE)
+  set.seed(seed)
+  tree <- ape::collapse.singles(tree)
+  if (!ape::is.rooted(tree)) {
+    tree <- ape::root.phylo(tree, outgroup = 1L, resolve.root = TRUE)
+  }
+  tree <- ape::multi2di(tree, random = TRUE)
+  tree <- ape::compute.brlen(tree, method = "Grafen")
+  tree$edge.length[tree$edge.length <= 0] <- 1e-8
+  tree
+}
+
+# Read a file from a URL into a local cache; return the cached path.
+# CI uses /tmp; local dev uses script/data-cache/.
+.cache_path <- function(name) {
+  root <- Sys.getenv("PIGAUTO_CI_CACHE", unset = file.path("script", "data-cache"))
+  dir.create(root, recursive = TRUE, showWarnings = FALSE)
+  file.path(root, name)
+}
+
+.download_to_cache <- function(url, name, mode = "wb") {
+  dst <- .cache_path(name)
+  if (!file.exists(dst)) {
+    utils::download.file(url, dst, mode = mode, quiet = TRUE)
+  }
+  dst
+}
+
+# End-to-end CI bench loop. Called by each script/gha/run_bench_<dataset>.R
+# after that wrapper has populated (df, tree). Writes results.{rds,md} +
+# timings.json under script/gha/results/<dataset>/.
+.run_bench <- function(df, tree, dataset, out_dir, cfg,
+                       trait_types = NULL,
+                       multi_proportion_groups = NULL,
+                       log_transform = TRUE) {
+  stopifnot(is.data.frame(df), inherits(tree, "phylo"),
+            is.character(dataset), is.list(cfg))
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+  # Subset to cap
+  n_target <- min(cfg$subset_n, nrow(df))
+  if (n_target < nrow(df)) {
+    set.seed(cfg$seed)
+    keep <- sort(sample.int(nrow(df), n_target))
+    df   <- df[keep, , drop = FALSE]
+    tree <- ape::keep.tip(tree, rownames(df))
+  }
+  cat(sprintf("[%s] n=%d species x %d traits\n",
+              dataset, nrow(df), ncol(df)))
+
+  # Preprocess + split
+  t0_split <- Sys.time()
+  pd0 <- preprocess_traits(df, tree, trait_types = trait_types,
+                            multi_proportion_groups = multi_proportion_groups,
+                            log_transform = log_transform)
+  splits <- make_missing_splits(pd0$X_scaled,
+                                 missing_frac = cfg$missing_frac,
+                                 val_frac     = 0.5,
+                                 seed         = cfg$seed,
+                                 trait_map    = pd0$trait_map)
+  mask_latent <- matrix(FALSE, nrow = nrow(pd0$X_scaled),
+                         ncol = ncol(pd0$X_scaled))
+  mask_latent[splits$test_idx] <- TRUE
+  user_mask_test <- matrix(FALSE, nrow = nrow(df), ncol = ncol(df),
+                            dimnames = list(rownames(df), colnames(df)))
+  for (k in seq_along(pd0$trait_map)) {
+    tm <- pd0$trait_map[[k]]
+    user_cols   <- if (!is.null(tm$input_cols)) tm$input_cols else tm$name
+    latent_cols <- tm$latent_cols
+    hit_rows <- apply(mask_latent[, latent_cols, drop = FALSE], 1L, any)
+    for (uc in user_cols) {
+      user_mask_test[, uc] <- user_mask_test[, uc] | hit_rows
+    }
+  }
+  df_masked <- df
+  df_masked[user_mask_test] <- NA
+  t_split <- as.numeric(difftime(Sys.time(), t0_split, units = "secs"))
+
+  # Multi-impute
+  t0_fit <- Sys.time()
+  mi <- multi_impute(
+    df_masked, tree,
+    m              = cfg$n_imputations,
+    pool_method    = cfg$pool_method,
+    clamp_outliers = cfg$clamp_outliers,
+    trait_types    = trait_types,
+    multi_proportion_groups = multi_proportion_groups,
+    log_transform  = log_transform,
+    seed           = cfg$seed
+  )
+  t_fit <- as.numeric(difftime(Sys.time(), t0_fit, units = "secs"))
+
+  # Evaluate
+  t0_eval <- Sys.time()
+  ev <- .eval_per_imputation(mi$datasets, df, user_mask_test, pd0$trait_map,
+                              t_fit)
+  t_eval <- as.numeric(difftime(Sys.time(), t0_eval, units = "secs"))
+
+  # Persist
+  out_tbl <- .normalize_eval(ev, dataset = dataset, method = "pigauto_ci")
+  saveRDS(out_tbl, file.path(out_dir, "results.rds"))
+  jsonlite::write_json(
+    list(split_sec = t_split, fit_sec = t_fit, eval_sec = t_eval,
+         total_sec = t_split + t_fit + t_eval,
+         n_species = nrow(df), n_imputations = cfg$n_imputations),
+    file.path(out_dir, "timings.json"),
+    auto_unbox = TRUE, pretty = TRUE)
+
+  md_lines <- c(
+    sprintf("# %s — pigauto CI bench", dataset),
+    sprintf("Run config: seed=%d, missing_frac=%.2f, n_imputations=%d",
+            cfg$seed, cfg$missing_frac, cfg$n_imputations),
+    sprintf("N species used: %d", nrow(df)),
+    sprintf("Wall time: %.1f s (fit) + %.1f s (eval)", t_fit, t_eval),
+    "",
+    "## Per-trait medians across imputations",
+    ""
+  )
+  if (any(!is.na(out_tbl$rmse))) {
+    agg_cont <- stats::aggregate(rmse ~ trait + type,
+                                  data = out_tbl[!is.na(out_tbl$rmse), ],
+                                  FUN = function(x) stats::median(x, na.rm = TRUE))
+    md_lines <- c(md_lines, "### Continuous-family (RMSE)", "",
+                  knitr::kable(agg_cont, format = "markdown", digits = 4), "")
+  }
+  if (any(!is.na(out_tbl$accuracy))) {
+    agg_disc <- stats::aggregate(accuracy ~ trait + type,
+                                  data = out_tbl[!is.na(out_tbl$accuracy), ],
+                                  FUN = function(x) stats::median(x, na.rm = TRUE))
+    md_lines <- c(md_lines, "### Discrete-family (accuracy)", "",
+                  knitr::kable(agg_disc, format = "markdown", digits = 4), "")
+  }
+  writeLines(md_lines, file.path(out_dir, "results.md"))
+
+  cat(sprintf("[%s] done in %.1f s total\n",
+              dataset, t_split + t_fit + t_eval))
+  invisible(out_tbl)
+}
+
+# Graceful failure marker: write a results.md/results.rds saying the
+# dataset couldn't be loaded, so the aggregator job doesn't fall over.
+.write_skip_marker <- function(dataset, out_dir, reason) {
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+  saveRDS(.normalize_eval(
+    data.frame(trait = character(0), type = character(0),
+               imputation_idx = integer(0), rmse = numeric(0),
+               mae = numeric(0), pearson_r = numeric(0),
+               accuracy = numeric(0), brier = numeric(0),
+               time_sec = numeric(0)),
+    dataset = dataset, method = "pigauto_ci"
+  ), file.path(out_dir, "results.rds"))
+  writeLines(c(sprintf("# %s — SKIPPED", dataset), "",
+               sprintf("Data load failed: %s", reason)),
+             file.path(out_dir, "results.md"))
+  jsonlite::write_json(list(error = reason),
+                       file.path(out_dir, "timings.json"),
+                       auto_unbox = TRUE, pretty = TRUE)
+  cat(sprintf("[%s] SKIPPED: %s\n", dataset, reason))
+}
+
 .eval_per_imputation <- function(completed_list, truth_df, mask, trait_map,
                                   t_fit_sec) {
   stopifnot(is.list(completed_list), is.data.frame(truth_df), is.matrix(mask))
