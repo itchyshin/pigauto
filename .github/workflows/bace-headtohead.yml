@@ -45,7 +45,13 @@ jobs:
           # Hard deps only — Suggests includes BACE (lives in this repo's
           # BACE/ subdir, not on CRAN) which pak can't resolve.
           dependencies: '"hard"'
-          extra-packages: any::devtools, any::jsonlite, any::knitr, any::ape, any::rmarkdown
+          # Rphylopars + phytools are pigauto Suggests that unlock the
+          # joint multivariate-BM baseline (cross-trait correlation) and
+          # the phylo-signal mean-floor. Without them pigauto falls back
+          # to per-column BM with no cross-trait info — that's the
+          # likely reason BACE's MCMCglmm beat pigauto on continuous
+          # traits in run 25969352294.
+          extra-packages: any::devtools, any::jsonlite, any::knitr, any::ape, any::rmarkdown, any::Rphylopars, any::phytools
           needs: ''
 
       - name: Cache libtorch backend
