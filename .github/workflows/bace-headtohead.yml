@@ -39,7 +39,10 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::devtools, any::jsonlite, any::knitr, any::ape
+          # Hard deps only — Suggests includes BACE (lives in this repo's
+          # BACE/ subdir, not on CRAN) which pak can't resolve.
+          dependencies: '"hard"'
+          extra-packages: any::devtools, any::jsonlite, any::knitr, any::ape, any::rmarkdown
           needs: ''
 
       - name: Run ${{ matrix.dataset }} benchmark
@@ -76,6 +79,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          dependencies: '"hard"'
           extra-packages: any::knitr, any::rmarkdown, any::jsonlite
           needs: ''
 
