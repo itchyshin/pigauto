@@ -267,7 +267,7 @@ fit_pigauto <- function(
     conformal_method  = c("split", "bootstrap"),
     conformal_bootstrap_B = 500L,
     conformal_split_val = FALSE,
-    gate_method       = c("single_split", "median_splits", "cv_folds"),
+    gate_method       = c("cv_folds", "median_splits", "single_split"),
     gate_splits_B     = 31L,
     gate_cv_folds     = 5L,
     safety_floor      = TRUE,
