@@ -878,7 +878,7 @@ fit_pigauto <- function(
       delta_cal             = delta_cal,
       X_truth_r             = X_truth_r,
       val_mask_mat          = val_mask_cal,
-      gate_grid             = seq(0, gate_cap, length.out = 9L),
+      gate_grid             = seq(0, gate_cap, length.out = 21L),
       gate_cap              = gate_cap,
       gate_method           = gate_method,
       gate_splits_B         = gate_splits_B,
