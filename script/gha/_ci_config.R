@@ -7,7 +7,7 @@
 
 PIGAUTO_CI_CONFIG <- list(
   subset_n          = 2000L,     # cap; smaller datasets use all available species
-  n_imputations     = 10L,
+  n_imputations     = 20L,
   missing_frac      = 0.30,
   seed              = 2026L,
   pool_method       = "median",
