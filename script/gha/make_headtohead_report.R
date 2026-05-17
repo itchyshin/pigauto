@@ -24,7 +24,14 @@ load_pigauto_results <- function() {
       message(sprintf("[h2h] missing pigauto results for %s; skipping", d))
       return(NULL)
     }
-    readRDS(f)
+    # Re-normalize via .normalize_eval so every per-dataset frame has
+    # the current canonical schema. Without this, an older rds saved
+    # before the schema gained coverage_95 / interval_width / brier
+    # would have fewer columns and the rbind below would fail with
+    # "numbers of columns of arguments do not match". .normalize_eval
+    # pads missing columns with NA on the fly. Sourced inside the
+    # `sys.nframe() == 0L` block below so it's available here too.
+    .normalize_eval(readRDS(f), dataset = d, method = "pigauto_ci")
   })
   parts <- Filter(function(x) !is.null(x) && nrow(x) > 0L, parts)
   if (length(parts) == 0L) return(NULL)
@@ -39,7 +46,16 @@ load_bace_snapshot <- function() {
       message(sprintf("[h2h] missing BACE snapshot for %s; skipping", d))
       return(NULL)
     }
-    readRDS(f)
+    # Same schema-normalization as load_pigauto_results above. BACE
+    # snapshot rds files are pinned (per useful/bace_results_snapshot/
+    # README.md) so they evolve independently of pigauto's CI eval
+    # schema; the BACE snapshot used here was created pre-2026-05-17
+    # before coverage_95 / interval_width were added, so it has 11
+    # columns vs pigauto's 13. .normalize_eval pads to the 13-column
+    # canonical schema with NA in the missing columns. This is
+    # exactly the behaviour the h2h report wants: BACE has no
+    # conformal coverage / interval-width data to report.
+    .normalize_eval(readRDS(f), dataset = d, method = "BACE_snapshot")
   })
   parts <- Filter(function(x) !is.null(x) && nrow(x) > 0L, parts)
   if (length(parts) == 0L) return(NULL)
