@@ -520,8 +520,9 @@ BACE_DATASET_CONFIG <- list(
     m              = cfg$n_imputations,
     pool_method    = cfg$pool_method,
     clamp_outliers = cfg$clamp_outliers,
-    log_transform  = FALSE,   # we already log-transformed selected cols
-    covariates     = cov_df,  # NULL when ds_cfg$covariate_cols is empty
+    log_transform  = FALSE,
+    covariates     = cov_df,
+    n_heads        = 8L,    # T1: more attention heads
     seed           = cfg$seed
   )
   t_fit <- as.numeric(difftime(Sys.time(), t0_fit, units = "secs"))
