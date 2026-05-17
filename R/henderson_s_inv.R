@@ -55,6 +55,17 @@ build_henderson_S_inv <- function(tree, eps = 1e-12) {
          call. = FALSE)
   }
 
+  # Hadfield-Nakagawa Q is the precision of the raw cophenetic VCV
+  # A = vcv(tree). pigauto's joint MVN solver works on the correlation
+  # scale R = cov2cor(A) for numerical stability. Store the tip-depth
+  # vector d = sqrt(diag(A)) so callers can request R^{-1} b instead of
+  # A^{-1} b via henderson_R_inv_apply(..., cor_scale = TRUE). For
+  # ultrametric trees diag(A) is constant and the two scales coincide
+  # up to a global factor, but for coalescent / variable-depth trees
+  # the difference is substantial.
+  tip_depths <- diag(ape::vcv(tree))[tree$tip.label]
+  tip_sqrt_d <- sqrt(pmax(tip_depths, eps))
+
   n_tips <- length(tree$tip.label)
   # ape stores internal node count in tree$Nnode (this INCLUDES the root)
   n_internal_total <- as.integer(tree$Nnode)
@@ -137,7 +148,8 @@ build_henderson_S_inv <- function(tree, eps = 1e-12) {
     root_node = root_node,
     n_tips = n_tips,
     n_internal_nonroot = length(all_internals_nonroot),
-    N = N
+    N = N,
+    tip_sqrt_d = tip_sqrt_d
   )
 }
 
@@ -162,7 +174,8 @@ build_henderson_S_inv <- function(tree, eps = 1e-12) {
 # `henderson` is the list returned by `build_henderson_S_inv`. `b` is
 # either a numeric vector (n_tips) or a matrix (n_tips x K). Returns the
 # same shape.
-henderson_R_inv_apply <- function(b, henderson, chol_Q_II = NULL) {
+henderson_R_inv_apply <- function(b, henderson, chol_Q_II = NULL,
+                                    cor_scale = FALSE) {
   stopifnot(is.list(henderson),
             !is.null(henderson$Q),
             !is.null(henderson$tip_idx),
@@ -171,21 +184,40 @@ henderson_R_inv_apply <- function(b, henderson, chol_Q_II = NULL) {
   T_idx <- henderson$tip_idx
   I_idx <- henderson$int_idx
 
+  # Convert b from R-scale to A-scale if requested: R^{-1} = D^{1/2} A^{-1}
+  # D^{1/2} where D = diag(diag(A)). For ultrametric trees, D is a scalar
+  # and the rescale is a no-op factor.
+  if (isTRUE(cor_scale)) {
+    if (is.null(henderson$tip_sqrt_d)) {
+      stop("henderson_R_inv_apply(cor_scale = TRUE) requires tip_sqrt_d ",
+           "stored in `henderson`; rebuild via build_henderson_S_inv().",
+           call. = FALSE)
+    }
+    b <- if (is.matrix(b)) henderson$tip_sqrt_d * b
+         else              henderson$tip_sqrt_d * b
+  }
+
   Q_TT <- Q[T_idx, T_idx, drop = FALSE]
   if (length(I_idx) == 0L) {
-    # Tree is just tips (degenerate). R^{-1} = Q_TT.
-    return(as.matrix(Q_TT %*% b))
-  }
-  Q_TI <- Q[T_idx, I_idx, drop = FALSE]
-  Q_IT <- Q[I_idx, T_idx, drop = FALSE]
-  Q_II <- Q[I_idx, I_idx, drop = FALSE]
+    # Tree is just tips (degenerate). A^{-1} = Q_TT.
+    out <- as.matrix(Q_TT %*% b)
+  } else {
+    Q_TI <- Q[T_idx, I_idx, drop = FALSE]
+    Q_IT <- Q[I_idx, T_idx, drop = FALSE]
+    Q_II <- Q[I_idx, I_idx, drop = FALSE]
 
-  if (is.null(chol_Q_II)) {
-    chol_Q_II <- Matrix::Cholesky(Matrix::forceSymmetric(Q_II), LDL = FALSE)
+    if (is.null(chol_Q_II)) {
+      chol_Q_II <- Matrix::Cholesky(Matrix::forceSymmetric(Q_II), LDL = FALSE)
+    }
+    rhs_v <- as.matrix(Q_IT %*% b)
+    v     <- as.matrix(Matrix::solve(chol_Q_II, rhs_v))
+    out   <- as.matrix(Q_TT %*% b - Q_TI %*% v)
   }
-  rhs_v <- as.matrix(Q_IT %*% b)
-  v     <- as.matrix(Matrix::solve(chol_Q_II, rhs_v))
-  out   <- as.matrix(Q_TT %*% b - Q_TI %*% v)
+
+  if (isTRUE(cor_scale)) {
+    out <- if (is.matrix(out)) henderson$tip_sqrt_d * out
+           else                henderson$tip_sqrt_d * out
+  }
   out
 }
 
@@ -225,7 +257,8 @@ henderson_R_inv_apply <- function(b, henderson, chol_Q_II = NULL) {
 #
 # Returns list(mu, se) where mu and se are length-n_tips vectors
 # (observed cells echo y_o; missing cells get predictions).
-henderson_bm_predict <- function(y, henderson, sigma2 = NULL, eps = 1e-8) {
+henderson_bm_predict <- function(y, henderson, sigma2 = NULL, eps = 1e-8,
+                                   cor_scale = FALSE) {
   stopifnot(length(y) == henderson$n_tips)
   obs_idx_local <- which(!is.na(y))
   miss_idx_local <- which(is.na(y))
@@ -243,12 +276,32 @@ henderson_bm_predict <- function(y, henderson, sigma2 = NULL, eps = 1e-8) {
   Q_no_no <- Q[no_q, no_q, drop = FALSE]
   Q_no_o  <- Q[no_q, obs_q, drop = FALSE]
 
-  rhs <- -as.matrix(Q_no_o %*% y[obs_idx_local])
+  # R^{-1} = D^{1/2} A^{-1} D^{1/2}; equivalently, working through the
+  # conditional MVN for missing tips given observed tips on R-scale uses
+  # the same Q with the observed values pre-scaled by sqrt(d_o) and the
+  # predicted means post-divided by sqrt(d_m). See build_henderson_S_inv
+  # for the tip_sqrt_d stored alongside Q.
+  if (isTRUE(cor_scale)) {
+    if (is.null(henderson$tip_sqrt_d)) {
+      stop("henderson_bm_predict(cor_scale = TRUE) requires tip_sqrt_d ",
+           "stored in `henderson`; rebuild via build_henderson_S_inv().",
+           call. = FALSE)
+    }
+    y_in <- y[obs_idx_local] * henderson$tip_sqrt_d[obs_idx_local]
+  } else {
+    y_in <- y[obs_idx_local]
+  }
+
+  rhs <- -as.matrix(Q_no_o %*% y_in)
   chol_no_no <- Matrix::Cholesky(Matrix::forceSymmetric(Q_no_no), LDL = FALSE)
   v <- as.matrix(Matrix::solve(chol_no_no, rhs))
 
   mu <- y
-  mu[miss_idx_local] <- as.numeric(v[seq_len(n_m), 1])
+  mu_miss <- as.numeric(v[seq_len(n_m), 1])
+  if (isTRUE(cor_scale)) {
+    mu_miss <- mu_miss / henderson$tip_sqrt_d[miss_idx_local]
+  }
+  mu[miss_idx_local] <- mu_miss
 
   # Conservative se: empirical sd of observed values (REML-style estimate
   # of the BM rate scaled by sqrt of marginal-variance-fraction). For

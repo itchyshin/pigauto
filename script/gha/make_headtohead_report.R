@@ -8,7 +8,13 @@
 # Spec: specs/2026-05-16-bace-headtohead-ci-design.md.
 
 DATASETS <- c("avonet", "pantheria", "amphibio", "bien", "globtherm", "leptraits")
-CONTINUOUS_TYPES <- c("continuous", "count", "ordinal", "proportion", "zi_count")
+# Types whose primary metric is RMSE (lower is better). Ordinal is excluded
+# because pigauto's CI evaluator treats ordered-factor truth values as
+# factors and records accuracy (not RMSE), to match BACE's snapshot which
+# also records accuracy for ordinal. Including ordinal here previously
+# caused the h2h merge to read NA RMSE from both sides and produce NA
+# winners for every ordinal trait in the report.
+CONTINUOUS_TYPES <- c("continuous", "count", "proportion", "zi_count")
 
 load_pigauto_results <- function() {
   base <- file.path("script", "gha", "results", "_artifacts")

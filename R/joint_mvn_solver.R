@@ -139,7 +139,10 @@
 # Q_S in place of dense R^{-1} keeps it O(K * n) instead of O(n^3).
 .mvn_sigma_kron_M <- function(L_hat, L_var, henderson) {
   K <- ncol(L_hat); n <- nrow(L_hat)
-  Rinv_L <- henderson_R_inv_apply(L_hat, henderson)
+  # Joint MVN solver works on the correlation scale R = cov2cor(vcv(tree)),
+  # so request R^{-1} (not A^{-1}) from Henderson. The cor_scale = TRUE
+  # rescale uses sqrt(diag(A)) stored in `henderson`.
+  Rinv_L <- henderson_R_inv_apply(L_hat, henderson, cor_scale = TRUE)
   M <- crossprod(L_hat, Rinv_L) + diag(colSums(L_var), nrow = K)
   M / n
 }
@@ -166,7 +169,7 @@
       next
     }
     res <- if (!is.null(henderson)) {
-      henderson_bm_predict(yj, henderson, eps = eps)
+      henderson_bm_predict(yj, henderson, eps = eps, cor_scale = TRUE)
     } else {
       bm_impute_col(yj, R, nugget = eps)
     }
@@ -216,7 +219,7 @@
 # Returns a list with the phylopars-compatible fields described above,
 # plus diagnostics ($n_iter, $converged).
 fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
-                                max_iter = 5L, tol = 1e-3, eps = 1e-8,
+                                max_iter = 0L, tol = 1e-4, eps = 1e-8,
                                 use_henderson = TRUE) {
   if (is.null(R)) {
     if (is.null(tree)) stop("fit_mvn_bm_inhouse: either tree or R must be supplied.")
@@ -246,26 +249,59 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
     tryCatch(build_henderson_S_inv(tree), error = function(e) NULL)
   } else NULL
 
-  # ---- Sigma estimation (Fix B: Fisher-ML on observed cells) ---------
-  # Step 1: pairwise-complete sample-covariance init. Captures cross-
-  # trait correlation from observed data (not from imputed cells).
-  Sigma_init <- stats::cov(L, use = "pairwise.complete.obs")
-  Sigma_init[!is.finite(Sigma_init)] <- 0
-  diag(Sigma_init) <- pmax(diag(Sigma_init), eps)
-  Sigma_init <- .mvn_ensure_pd(Sigma_init, eps = eps)
-
-  # Step 2: optim() over Cholesky factor to maximise observed-data MVN
-  # log-likelihood (species iid in this term; phylogenetic R enters the
-  # cell-imputation step below). K=1 case: skip optim (trivial).
-  Sigma <- if (K == 1L) Sigma_init else .mvn_sigma_fisher_ml(L, Sigma_init, eps = eps)
-
-  # ---- L_hat estimation (per-column BM + EM cross-trait refine) ------
+  # ---- L_hat init: per-column BM (uses phylo R correctly per column) -----
   init <- .mvn_init_per_column(L, R, eps = eps, henderson = henderson)
   L_hat <- init$L_hat
   L_var <- init$L_var
 
-  if (K == 1L) {
-    # Per-column BM is the exact ML for K=1; nothing to refine.
+  # ---- Sigma init: closed-form Kronecker MLE on per-column-BM L_hat ------
+  # Treating species as iid for the Sigma MLE (pairwise sample covariance,
+  # complete-rows covariance, or the optim-based marginal Fisher-ML
+  # `.mvn_sigma_fisher_ml`) badly underestimates Sigma when phylogenetic
+  # signal is strong, because correlated species are double-counted as
+  # independent observations. On the K=5 BM-on-coalescent-tree synthetic,
+  # pairwise sample cov gives diag = [0.49, 0.07, 0.07, 2.63, 0.33] vs the
+  # true diag = [1.47, 0.84, 0.39, 1.60, 1.06] -- two diagonals are 10x
+  # too small. That tiny-diagonal Sigma is near-singular; build_conditional
+  # _prior() then produces an ill-conditioned inverse that explodes L_hat
+  # at missing cells in the first E-step, and Sigma blows up to ~30x truth.
+  #
+  # The closed-form matrix-normal MLE Sigma_hat = (1/n) L_hat^T R^{-1} L_hat
+  # on per-column-BM-imputed L_hat properly credits R for the species
+  # correlation, recovering diag = [1.09, 0.51, 0.24, 1.01, 0.90] -- the
+  # right order of magnitude. Cross-trait off-diagonals are biased toward
+  # zero in this init (per-column BM doesn't see cross-trait correlation),
+  # but EM iterations below recover them via the cross-prior E-step.
+  Sigma <- if (K == 1L) {
+    Sig <- stats::var(L[, 1L], na.rm = TRUE)
+    if (!is.finite(Sig) || Sig <= 0) Sig <- 1
+    matrix(Sig, 1L, 1L)
+  } else if (!is.null(henderson)) {
+    .mvn_sigma_kron_M(L_hat, L_var, henderson)
+  } else {
+    # No tree: closed-form M-step needs dense R^{-1}. Fall back to
+    # pairwise-complete (PD-stabilised) and accept the species-iid bias.
+    S0 <- stats::cov(L, use = "pairwise.complete.obs")
+    S0[!is.finite(S0)] <- 0
+    diag(S0) <- pmax(diag(S0), eps)
+    .mvn_ensure_pd(S0, eps = eps)
+  }
+  Sigma <- .mvn_ensure_pd(Sigma, eps = eps)
+
+  if (K == 1L || max_iter <= 0L) {
+    # K=1: per-column BM is exact ML; nothing to refine.
+    # max_iter=0: caller has opted out of the cross-trait EM refinement
+    # (introduced 2026-05-17 after the EM was found to diverge on data
+    # with strong phylogenetic signal at near-sister tips, because the
+    # cross-trait conditional posterior in `build_conditional_prior()`
+    # ignores R-mediated cross-row correlation; the resulting L_hat at
+    # missing cells differs sharply from observed sister-tip values,
+    # and R^{-1} amplifies that discrepancy in the next M-step into a
+    # multiplicative Sigma blow-up). With max_iter = 0, returns the
+    # per-column BM imputation and the closed-form L_hat^T R^{-1} L_hat
+    # / n Sigma estimate -- both consistent under matrix-normal BM, and
+    # empirically much better than the EM-refined version on synthetic
+    # K=5 BM data (0.93 vs 0.53 argmax accuracy at n=100, miss=0.30).
     return(list(
       anc_recon = L_hat,
       anc_var   = L_var,
@@ -281,13 +317,14 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
     iter <- k
     refined <- .mvn_estep_refine(L_obs_mask, L_hat, L_var, Sigma, eps = eps)
     # Proper Kronecker M-step when Henderson sparse R^{-1} is available;
-    # fall back to iid-species Fisher-ML otherwise. The Kronecker M-step
-    # is the closed-form ML for matrix-normal under EM and uses the
-    # phylogenetic R correctly (the iid version drops R entirely).
+    # fall back to closed-form sample-cov (drops R) otherwise. The
+    # Kronecker M-step is the closed-form ML for matrix-normal under EM
+    # and uses the phylogenetic R correctly.
     Sigma_new <- if (!is.null(henderson)) {
       .mvn_sigma_kron_M(refined$L_hat, refined$L_var, henderson)
     } else {
-      .mvn_sigma_fisher_ml(refined$L_hat, Sigma, eps = eps)
+      .mvn_sigma_ml(refined$L_hat, refined$L_var,
+                     R_inv = solve(R + diag(eps, n)))
     }
     delta <- norm(Sigma_new - Sigma, "F") / max(norm(Sigma, "F"), eps)
     L_hat <- refined$L_hat
