@@ -290,17 +290,29 @@ multi_impute <- function(traits, tree, m = 100L,
 
   structure(
     list(
-      datasets     = datasets,
-      m            = m,
-      draws_method = draws_method,
-      pooled_point = res$completed,
-      se           = pred$se,
-      imputed_mask = res$imputed_mask,
-      fit          = res$fit,
-      data         = res$data,
-      tree         = tree,
-      species_col  = species_col,
-      evaluation   = res$evaluation
+      datasets        = datasets,
+      m               = m,
+      draws_method    = draws_method,
+      pooled_point    = res$completed,
+      se              = pred$se,
+      # Exposed for downstream coverage / interval-width / Brier analyses
+      # without having to round-trip through `mi$fit` + a fresh predict().
+      # `conformal_lower` / `conformal_upper` are the trait-level 95%
+      # prediction intervals (back-transformed to user scale when the
+      # trait was log-transformed); `probabilities` is the per-discrete-
+      # trait probability list (binary: numeric vector, categorical: K-
+      # column matrix). See predict.pigauto_fit() for shape and scale
+      # conventions. Either may be NULL when the underlying conformal
+      # scores were unavailable (e.g. zero validation cells for a trait).
+      conformal_lower = pred$conformal_lower,
+      conformal_upper = pred$conformal_upper,
+      probabilities   = pred$probabilities,
+      imputed_mask    = res$imputed_mask,
+      fit             = res$fit,
+      data            = res$data,
+      tree            = tree,
+      species_col     = species_col,
+      evaluation      = res$evaluation
     ),
     class = c("pigauto_mi", "list")
   )

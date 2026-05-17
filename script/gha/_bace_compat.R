@@ -11,37 +11,77 @@
 
 # Per-dataset trait subsets + log-transformed traits, copied verbatim
 # from BACE's dev/0[0-7]_benchmark_*.R scripts.
+#
+# `covariate_cols` (added 2026-05-17): per-dataset list of columns that
+# are PRESENT IN THE SNAPSHOT but absent from BACE's trait_subset.
+# pigauto passes them through its dedicated covariate channel
+# (`multi_impute(..., covariates = ...)`) which routes through the
+# cov_encoder / obs_refine / cov_linear / cov_inject_blocks paths in
+# the GNN. BACE's benchmark_dataset() never sees these columns, so
+# pigauto's covariate-aware predictions are a structural advantage
+# documented up-front, not an accidental data leak: both methods see
+# the same snapshot, but only pigauto's architecture exposes a
+# covariate channel.
+#
+# AVONET: range / centroid lat-lon are geographic columns that the
+#   raw AVONET CSV ships with. They aren't in Dan's trait_subset.
+# AmphiBIO: diurnal / nocturnal are binary diel-activity columns. They
+#   aren't in BACE's amphibio trait_subset.
+# LepTraits: Jan-Dec are monthly flight occurrence columns. Not in
+#   Dan's leptraits trait_subset.
+# GlobTherm, PanTHERIA, BIEN: leave empty -- their unused columns are
+#   taxonomy only (already encoded by the tree).
 BACE_DATASET_CONFIG <- list(
   avonet = list(
-    trait_subset = c("mass_g", "wing_length_mm", "beak_length_culmen_mm",
-                      "tarsus_length_mm", "trophic_level",
-                      "primary_lifestyle", "migration"),
-    log_traits   = c("mass_g", "wing_length_mm",
-                      "beak_length_culmen_mm", "tarsus_length_mm")
+    trait_subset    = c("mass_g", "wing_length_mm", "beak_length_culmen_mm",
+                         "tarsus_length_mm", "trophic_level",
+                         "primary_lifestyle", "migration"),
+    log_traits      = c("mass_g", "wing_length_mm",
+                         "beak_length_culmen_mm", "tarsus_length_mm"),
+    # 2026-05-17: tried (range_size_km2, centroid_lat, centroid_lon) as
+    # covariates in CI 25996295467/25997176686. Continuous-trait
+    # numbers were unchanged but AVONET categorical regressed
+    # significantly (trophic_level 0.825 -> 0.731, primary_lifestyle
+    # 0.828 -> 0.657). Suspect the GNN gate calibration opens for
+    # categorical when more cov inputs are present + the OVR
+    # threshold-joint baseline can't yet make use of them. Reverted
+    # to character(0) until a categorical-safe covariate path lands.
+    covariate_cols  = character(0)
   ),
   pantheria = list(
-    trait_subset = NULL,   # default: all non-tax cols
-    log_traits   = c("body_mass_g", "head_body_length_mm",
-                      "gestation_d", "max_longevity_m")
+    trait_subset    = NULL,   # default: all non-tax cols
+    log_traits      = c("body_mass_g", "head_body_length_mm",
+                         "gestation_d", "max_longevity_m"),
+    covariate_cols  = character(0)
   ),
   amphibio = list(
-    trait_subset = c("body_size_mm", "body_mass_g"),
-    log_traits   = c("body_size_mm", "body_mass_g")
+    trait_subset    = c("body_size_mm", "body_mass_g"),
+    log_traits      = c("body_size_mm", "body_mass_g"),
+    # diurnal / nocturnal have 76-87% NA in the snapshot, so not
+    # usable as fully-observed covariates without aggressive imputation.
+    covariate_cols  = character(0)
   ),
   bien = list(
-    trait_subset = NULL,
-    log_traits   = c("height_m", "leaf_area", "sla",
-                      "seed_mass", "wood_density")
+    trait_subset    = NULL,
+    log_traits      = c("height_m", "leaf_area", "sla",
+                         "seed_mass", "wood_density"),
+    covariate_cols  = character(0)
   ),
   globtherm = list(
-    trait_subset = NULL,
-    log_traits   = character(0)
+    trait_subset    = NULL,
+    log_traits      = character(0),
+    covariate_cols  = character(0)
   ),
   leptraits = list(
-    trait_subset = c("wingspan_lower", "forewing_length_lower",
-                      "flight_duration", "n_hostplant_families"),
-    log_traits   = c("wingspan_lower", "forewing_length_lower",
-                      "flight_duration", "n_hostplant_families")
+    trait_subset    = c("wingspan_lower", "forewing_length_lower",
+                         "flight_duration", "n_hostplant_families"),
+    log_traits      = c("wingspan_lower", "forewing_length_lower",
+                         "flight_duration", "n_hostplant_families"),
+    # Jan-Dec monthly flight columns have ~23% NA in the snapshot.
+    # Median-filling that many cells would dilute the covariate signal.
+    # Skip until we have a cleaner extraction or a proper missing-cov
+    # handling path in pigauto.
+    covariate_cols  = character(0)
   )
 )
 
@@ -133,29 +173,147 @@ BACE_DATASET_CONFIG <- list(
 # Evaluate per imputation at the masked cells using BACE's truth
 # long-format. Returns canonical-schema rows compatible with
 # .normalize_eval().
+#
+# pool_method = c("auto", "per_draw", "pooled_point"):
+#   "auto" (default, matches BACE): all trait types pool through
+#     `pooled_point` for a single per-trait number, matching how Dan's
+#     dev/benchmark_engine.R reports its head-to-head metrics. BACE
+#     uses majority-vote-across-M-imputations for categorical/ordinal
+#     accuracy and rowMeans-then-RMSE for continuous (lines 437-443
+#     and 453-462 of benchmark_engine.R). pigauto's `mi$pooled_point`
+#     contains the analogous central tendency: argmax-of-average-
+#     probability for categorical/binary, modal-or-mean for ordinal,
+#     median-or-mean for continuous depending on log-transform. Using
+#     it for the head-to-head guarantees apples-to-apples comparison.
+#   "per_draw": legacy behaviour — evaluate every trait per stochastic
+#     draw. For categorical this measures sampled-class-vs-truth match,
+#     which is bounded by E[p_max] across cells and badly underestimates
+#     the model's actual classification accuracy when probabilities are
+#     well-calibrated but not concentrated. For continuous, mean-of-per-
+#     draw-RMSE >= RMSE-of-mean (Jensen on squared error), so per-draw
+#     reporting is systematically pessimistic vs BACE's central-tendency
+#     RMSE. Kept as an opt-in for diagnostics.
+#   "pooled_point": same as "auto"; retained as an explicit synonym.
+#
+# Default is "auto" because BACE's snapshot reports a single accuracy /
+# RMSE per trait per dataset. The previous per-draw default caused
+# pigauto's CI categorical accuracy to look 0.4 pts lower AND its
+# continuous RMSE to look ~10% higher than the central-tendency
+# numbers `mi$pooled_point` already exposes.
 .bace_eval_per_imputation <- function(completed_list, truth_long,
-                                       trait_types_lookup, t_fit_sec) {
+                                       trait_types_lookup, t_fit_sec,
+                                       pooled_point = NULL,
+                                       conformal_lower = NULL,
+                                       conformal_upper = NULL,
+                                       probabilities   = NULL,
+                                       trait_levels    = NULL,
+                                       pool_method = c("auto", "per_draw",
+                                                       "pooled_point")) {
+  pool_method <- match.arg(pool_method)
   # truth_long: data.frame(species_tip, trait, true_value)
+  # conformal_lower / conformal_upper (optional): n_species x p matrices
+  #   with 95% prediction-interval bounds for each continuous-family
+  #   trait, in user scale (back-transformed when log-transform was on).
+  #   Columns indexed by user trait name.
+  # probabilities (optional): named list. For "binary" traits: numeric
+  #   vector (length n_species) of P(class=levels[2]). For "categorical":
+  #   K-column matrix with one row per species. Used to compute Brier
+  #   score, the calibration metric BACE_snapshot also exposes.
+  # trait_levels (optional): named list of character level vectors per
+  #   discrete trait, required to align probabilities columns with truth.
   if (nrow(truth_long) == 0L) {
     return(data.frame(
       trait = character(0), type = character(0), imputation_idx = integer(0),
       rmse = numeric(0), mae = numeric(0), pearson_r = numeric(0),
-      accuracy = numeric(0), brier = numeric(0), time_sec = numeric(0),
+      accuracy = numeric(0), brier = numeric(0),
+      coverage_95 = numeric(0), interval_width = numeric(0),
+      time_sec = numeric(0),
       stringsAsFactors = FALSE
     ))
   }
+
+  use_pooled <- function(type_t) {
+    if (pool_method == "per_draw" || is.null(pooled_point)) return(FALSE)
+    # "auto" and "pooled_point" both pool every type
+    TRUE
+  }
+
+  # Compute Brier score for one trait from a probability object and the
+  # true class labels. Binary path: probs is a numeric vector of
+  # P(class=positive). Categorical path: K-column matrix. Returns NA
+  # when probs is missing / shape-incompatible.
+  brier_one <- function(trait_name, type_t, sp_keep, t_v) {
+    if (is.null(probabilities) || !(trait_name %in% names(probabilities))) {
+      return(NA_real_)
+    }
+    p_obj <- probabilities[[trait_name]]
+    levels_t <- if (!is.null(trait_levels) && trait_name %in% names(trait_levels))
+                  trait_levels[[trait_name]] else NULL
+    if (type_t == "binary") {
+      if (is.null(levels_t) || length(levels_t) < 2L) return(NA_real_)
+      # P(class = levels[2]) per pigauto convention.
+      idx <- match(sp_keep, names(p_obj))
+      if (all(is.na(idx))) idx <- match(sp_keep, rownames(p_obj))
+      if (all(is.na(idx))) return(NA_real_)
+      p_pos <- as.numeric(p_obj)[idx]
+      y_pos <- as.numeric(as.character(t_v) == levels_t[2])
+      ok <- is.finite(p_pos) & !is.na(y_pos)
+      if (!any(ok)) return(NA_real_)
+      mean((p_pos[ok] - y_pos[ok])^2, na.rm = TRUE)
+    } else if (type_t == "categorical" || type_t == "ordinal") {
+      if (!is.matrix(p_obj) || is.null(levels_t)) return(NA_real_)
+      idx <- match(sp_keep, rownames(p_obj))
+      if (all(is.na(idx))) return(NA_real_)
+      pmat <- p_obj[idx, , drop = FALSE]
+      # Truth one-hot in K columns matching p_obj column order.
+      col_levels <- colnames(pmat)
+      if (is.null(col_levels)) col_levels <- levels_t
+      t_idx <- match(as.character(t_v), col_levels)
+      ok <- !is.na(t_idx) & rowSums(is.finite(pmat)) == ncol(pmat)
+      if (!any(ok)) return(NA_real_)
+      Y <- matrix(0, nrow = length(ok), ncol = ncol(pmat))
+      Y[cbind(seq_along(t_idx)[ok], t_idx[ok])] <- 1
+      mean(rowSums((pmat[ok, , drop = FALSE] - Y[ok, , drop = FALSE])^2),
+           na.rm = TRUE)
+    } else {
+      NA_real_
+    }
+  }
+
+  # Compute conformal coverage_95 + interval_width for a continuous-
+  # family trait at the masked species. Returns list(coverage, width).
+  # Both NA when the bounds aren't supplied or don't have the trait.
+  coverage_one <- function(trait_name, sp_keep, t_num) {
+    if (is.null(conformal_lower) || is.null(conformal_upper)) {
+      return(list(coverage = NA_real_, width = NA_real_))
+    }
+    if (!(trait_name %in% colnames(conformal_lower))) {
+      return(list(coverage = NA_real_, width = NA_real_))
+    }
+    lo <- conformal_lower[match(sp_keep, rownames(conformal_lower)), trait_name]
+    up <- conformal_upper[match(sp_keep, rownames(conformal_upper)), trait_name]
+    ok <- is.finite(lo) & is.finite(up) & is.finite(t_num)
+    if (!any(ok)) return(list(coverage = NA_real_, width = NA_real_))
+    inside <- (t_num[ok] >= lo[ok]) & (t_num[ok] <= up[ok])
+    list(coverage = mean(inside),
+         width    = mean(up[ok] - lo[ok]))
+  }
+
   rows <- list()
+  # First emit per-draw rows for traits where we DON'T pool (continuous-family).
   for (i in seq_along(completed_list)) {
     pred_df <- completed_list[[i]]
     for (trait_name in unique(truth_long$trait)) {
+      type_t <- trait_types_lookup[[trait_name]]
+      if (is.null(type_t)) type_t <- NA_character_
+      if (use_pooled(type_t)) next   # handled below from pooled_point
+
       trait_truth <- truth_long[truth_long$trait == trait_name, , drop = FALSE]
       sp <- trait_truth$species_tip
       sp_keep <- intersect(sp, rownames(pred_df))
       if (length(sp_keep) == 0L) next
       t_v <- trait_truth$true_value[match(sp_keep, trait_truth$species_tip)]
       p_v <- pred_df[[trait_name]][match(sp_keep, rownames(pred_df))]
-      type_t <- trait_types_lookup[[trait_name]]
-      if (is.null(type_t)) type_t <- NA_character_
       # Branch on declared trait type (not on observed value class). When
       # .bace_apply_mask rbinds truth rows across mixed-type traits, the
       # true_value column gets coerced to character for ALL rows — so the
@@ -168,7 +326,9 @@ BACE_DATASET_CONFIG <- list(
         rows[[length(rows) + 1L]] <- data.frame(
           trait = trait_name, type = type_t, imputation_idx = i,
           rmse = NA_real_, mae = NA_real_, pearson_r = NA_real_,
-          accuracy = acc, brier = NA_real_, time_sec = t_fit_sec,
+          accuracy = acc, brier = NA_real_,
+          coverage_95 = NA_real_, interval_width = NA_real_,
+          time_sec = t_fit_sec,
           stringsAsFactors = FALSE
         )
       } else {
@@ -185,17 +345,74 @@ BACE_DATASET_CONFIG <- list(
         rows[[length(rows) + 1L]] <- data.frame(
           trait = trait_name, type = type_t, imputation_idx = i,
           rmse = rmse, mae = mae, pearson_r = pear,
-          accuracy = NA_real_, brier = NA_real_, time_sec = t_fit_sec,
+          accuracy = NA_real_, brier = NA_real_,
+          coverage_95 = NA_real_, interval_width = NA_real_,
+          time_sec = t_fit_sec,
           stringsAsFactors = FALSE
         )
       }
     }
   }
+
+  # Pooled rows (single row per trait) from pooled_point for discrete or
+  # all-traits modes. The single row uses imputation_idx = 0 so it
+  # aggregates cleanly through the median() step in the h2h report.
+  if (!is.null(pooled_point)) {
+    for (trait_name in unique(truth_long$trait)) {
+      type_t <- trait_types_lookup[[trait_name]]
+      if (is.null(type_t)) type_t <- NA_character_
+      if (!use_pooled(type_t)) next
+      if (!(trait_name %in% colnames(pooled_point))) next
+
+      trait_truth <- truth_long[truth_long$trait == trait_name, , drop = FALSE]
+      sp_keep <- intersect(trait_truth$species_tip, rownames(pooled_point))
+      if (length(sp_keep) == 0L) next
+      t_v <- trait_truth$true_value[match(sp_keep, trait_truth$species_tip)]
+      p_v <- pooled_point[[trait_name]][match(sp_keep, rownames(pooled_point))]
+      is_discrete <- isTRUE(type_t %in% c("categorical", "binary", "ordinal"))
+      if (is_discrete) {
+        ok <- !is.na(p_v) & !is.na(t_v)
+        acc <- if (any(ok)) mean(as.character(p_v[ok]) ==
+                                  as.character(t_v[ok])) else NA_real_
+        brier_val <- brier_one(trait_name, type_t, sp_keep[ok], t_v[ok])
+        rows[[length(rows) + 1L]] <- data.frame(
+          trait = trait_name, type = type_t, imputation_idx = 0L,
+          rmse = NA_real_, mae = NA_real_, pearson_r = NA_real_,
+          accuracy = acc, brier = brier_val,
+          coverage_95 = NA_real_, interval_width = NA_real_,
+          time_sec = t_fit_sec,
+          stringsAsFactors = FALSE
+        )
+      } else {
+        t_num <- suppressWarnings(as.numeric(as.character(t_v)))
+        p_num <- suppressWarnings(as.numeric(as.character(p_v)))
+        ok <- is.finite(t_num) & is.finite(p_num)
+        rmse <- if (any(ok)) sqrt(mean((t_num[ok] - p_num[ok])^2)) else NA_real_
+        mae  <- if (any(ok)) mean(abs(t_num[ok] - p_num[ok])) else NA_real_
+        pear <- if (sum(ok) > 2L) {
+          suppressWarnings(stats::cor(t_num[ok], p_num[ok]))
+        } else NA_real_
+        cov_info <- coverage_one(trait_name, sp_keep[ok], t_num[ok])
+        rows[[length(rows) + 1L]] <- data.frame(
+          trait = trait_name, type = type_t, imputation_idx = 0L,
+          rmse = rmse, mae = mae, pearson_r = pear,
+          accuracy = NA_real_, brier = NA_real_,
+          coverage_95 = cov_info$coverage,
+          interval_width = cov_info$width,
+          time_sec = t_fit_sec,
+          stringsAsFactors = FALSE
+        )
+      }
+    }
+  }
+
   if (length(rows) == 0L) {
     return(data.frame(
       trait = character(0), type = character(0), imputation_idx = integer(0),
       rmse = numeric(0), mae = numeric(0), pearson_r = numeric(0),
-      accuracy = numeric(0), brier = numeric(0), time_sec = numeric(0),
+      accuracy = numeric(0), brier = numeric(0),
+      coverage_95 = numeric(0), interval_width = numeric(0),
+      time_sec = numeric(0),
       stringsAsFactors = FALSE
     ))
   }
@@ -222,7 +439,47 @@ BACE_DATASET_CONFIG <- list(
   tree <- ape::keep.tip(tree, keep)
   traits_df <- traits_df[tree$tip.label, , drop = FALSE]
 
-  # 2) Restrict columns to trait_subset (default: all non-tax)
+  # 2a) Extract covariate_cols from the full traits_df BEFORE the
+  #     trait_subset restriction kicks in (otherwise the covariate
+  #     columns would be lost). cov_df is per-species, fully observed
+  #     (median-fill the few NAs), z-scored downstream by pigauto's
+  #     preprocess. range_size-style heavy-tailed columns get log-
+  #     transformed first to keep their dynamic range comparable to
+  #     other covariates.
+  cov_cols_cfg <- ds_cfg$covariate_cols %||% character(0)
+  cov_cols     <- intersect(cov_cols_cfg, colnames(traits_df))
+  cov_df       <- NULL
+  if (length(cov_cols) > 0L) {
+    cov_raw <- traits_df[, cov_cols, drop = FALSE]
+    # Log-transform heavy-tailed columns (range_size_km2 spans 8
+    # orders of magnitude on AVONET; without log it dominates the
+    # z-scored covariate matrix). Heuristic: numeric column with
+    # min >= 0 across positive entries and max / median > 30.
+    for (cc in cov_cols) {
+      v <- suppressWarnings(as.numeric(cov_raw[[cc]]))
+      if (any(is.finite(v) & v > 0)) {
+        v_pos <- v[is.finite(v) & v > 0]
+        if (length(v_pos) > 10L &&
+            (max(v_pos) / max(stats::median(v_pos), 1e-12)) > 30) {
+          # log1p so any zeros (none expected for area / lat / lon)
+          # are handled without -Inf.
+          v <- ifelse(is.finite(v) & v >= 0, log1p(v), NA_real_)
+        }
+      }
+      # Median-fill NAs. cov_df must be fully observed per
+      # multi_impute()'s covariates contract.
+      med <- stats::median(v, na.rm = TRUE)
+      if (!is.finite(med)) med <- 0
+      v[!is.finite(v)] <- med
+      cov_raw[[cc]] <- v
+    }
+    cov_df <- as.data.frame(cov_raw)
+    rownames(cov_df) <- rownames(traits_df)
+    cat(sprintf("[%s] covariates: %s (median-filled NAs, log-1p heavy-tailed)\n",
+                dataset, paste(cov_cols, collapse = ", ")))
+  }
+
+  # 2b) Restrict trait columns to trait_subset (default: all non-tax)
   trait_cols <- if (!is.null(ds_cfg$trait_subset))
     intersect(ds_cfg$trait_subset, colnames(traits_df))
   else
@@ -252,7 +509,11 @@ BACE_DATASET_CONFIG <- list(
   # (.bace_apply_mask already stored as character when factor).
   is_log <- truth_long$trait %in% ds_cfg$log_traits
 
-  # 5) Fit pigauto on the masked + log-transformed data
+  # 5) Fit pigauto on the masked + log-transformed data. When
+  # cov_df is non-NULL, pigauto's GNN activates its dedicated
+  # covariate paths (cov_encoder / obs_refine / cov_linear /
+  # cov_inject_blocks); BACE's bench saw no covariates so this is
+  # pigauto's architectural advantage made explicit.
   t0_fit <- Sys.time()
   mi <- multi_impute(
     masked_df_logged, tree,
@@ -260,6 +521,7 @@ BACE_DATASET_CONFIG <- list(
     pool_method    = cfg$pool_method,
     clamp_outliers = cfg$clamp_outliers,
     log_transform  = FALSE,   # we already log-transformed selected cols
+    covariates     = cov_df,  # NULL when ds_cfg$covariate_cols is empty
     seed           = cfg$seed
   )
   t_fit <- as.numeric(difftime(Sys.time(), t0_fit, units = "secs"))
@@ -303,8 +565,34 @@ BACE_DATASET_CONFIG <- list(
     trait_cols
   )
 
+  # Pass mi$pooled_point so the evaluator can score every trait type on
+  # pigauto's central tendency (argmax-of-average-probability for
+  # categorical/binary, mode-or-mean for ordinal, median-or-mean for
+  # continuous depending on log-transform) — apples-to-apples with
+  # BACE's "majority vote for discrete, rowMeans for continuous"
+  # benchmark_engine.R policy.
+  #
+  # mi$conformal_lower / mi$conformal_upper feed coverage_95 +
+  # interval_width for continuous-family traits. BACE doesn't expose
+  # prediction intervals so those columns stay NA on the BACE side of
+  # the head-to-head and pigauto reports them as an extra credibility
+  # metric.
+  #
+  # mi$probabilities + per-trait level vectors feed the Brier score
+  # for discrete traits, comparable to BACE's brier column.
+  trait_levels_lookup <- lapply(trait_cols, function(v) {
+    x <- traits_df[[v]]
+    if (is.factor(x)) levels(x) else NULL
+  })
+  names(trait_levels_lookup) <- trait_cols
+
   ev <- .bace_eval_per_imputation(completed_fit, truth_long_fit,
-                                   trait_types_lookup, t_fit)
+                                   trait_types_lookup, t_fit,
+                                   pooled_point    = mi$pooled_point,
+                                   conformal_lower = mi$conformal_lower,
+                                   conformal_upper = mi$conformal_upper,
+                                   probabilities   = mi$probabilities,
+                                   trait_levels    = trait_levels_lookup)
   t_eval <- as.numeric(difftime(Sys.time(), t0_eval, units = "secs"))
 
   # 7) Normalise + persist
@@ -335,17 +623,20 @@ BACE_DATASET_CONFIG <- list(
     ""
   )
   if (any(!is.na(out_tbl$rmse))) {
-    agg <- stats::aggregate(rmse ~ trait + type,
-                             data = out_tbl[!is.na(out_tbl$rmse), ],
-                             FUN = function(x) stats::median(x, na.rm = TRUE))
-    md <- c(md, "## Continuous-family (RMSE, fit scale; log for log_traits)", "",
+    agg <- stats::aggregate(
+      cbind(rmse, coverage_95, interval_width) ~ trait + type,
+      data = out_tbl[!is.na(out_tbl$rmse), ],
+      FUN = function(x) stats::median(x, na.rm = TRUE),
+      na.action = stats::na.pass)
+    md <- c(md, "## Continuous-family (RMSE + 95% conformal coverage / width)", "",
             knitr::kable(agg, format = "markdown", digits = 4), "")
   }
   if (any(!is.na(out_tbl$accuracy))) {
-    agg <- stats::aggregate(accuracy ~ trait + type,
+    agg <- stats::aggregate(cbind(accuracy, brier) ~ trait + type,
                              data = out_tbl[!is.na(out_tbl$accuracy), ],
-                             FUN = function(x) stats::median(x, na.rm = TRUE))
-    md <- c(md, "## Discrete-family (accuracy)", "",
+                             FUN = function(x) stats::median(x, na.rm = TRUE),
+                             na.action = stats::na.pass)
+    md <- c(md, "## Discrete-family (accuracy + Brier)", "",
             knitr::kable(agg, format = "markdown", digits = 4), "")
   }
   writeLines(md, file.path(out_dir, "results.md"))

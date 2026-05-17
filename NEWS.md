@@ -1,3 +1,128 @@
+# pigauto 0.9.2 (2026-05-17)
+
+First release after the v0.9.1.9000 dev cycle. Headline outcome:
+on the BACE-compatible cross-dataset head-to-head bench (six
+phylogenetic-trait datasets, n=2000 per dataset, 30% MCAR,
+matched against `daniel1noble/BACE`'s snapshot results),
+pigauto's net win-loss vs BACE went from 14–14 (commit 9d4782e,
+PR #102) to **roughly 24–7** in this release. The change is
+driven by three bug fixes in the in-house Σ solver plus a CI
+evaluator alignment with BACE's reporting policy; the underlying
+imputation algorithm is unchanged from v0.9.1.
+
+## Bug fixes: in-house Σ solver
+
+`fit_mvn_bm_inhouse()` had three independent bugs that surfaced
+together on real phylogenetic data:
+
+1. **Henderson R⁻¹ scale mismatch.** `henderson_R_inv_apply()` was
+   documented to return R⁻¹b but actually returned A⁻¹b (where
+   A = `vcv(tree)`, R = `cov2cor(vcv(tree))`). For variable-depth
+   trees the mismatch is a per-tip rescale; for ultrametric trees
+   it is a global scalar. Fixed by adding `cor_scale = TRUE`
+   option that pre-/post-multiplies by `sqrt(diag(A))`.
+   `henderson_R_inv_apply(..., cor_scale = TRUE)` now matches
+   dense `solve(R)` to ~1e-6 relative on non-ultrametric trees;
+   the existing `cor_scale = FALSE` (A-scale) tests continue to
+   pass unchanged.
+
+2. **Σ init via species-iid sample covariance.** The previous init
+   used `cov(L, use = "pairwise.complete.obs")` which treats
+   species as iid and double-counts sister tips as independent
+   observations. On strongly-phylo-conserved liability matrices
+   this produced near-singular Σ̂ initialisations whose off-diagonals
+   were biased toward zero. Replaced with the closed-form
+   matrix-normal MLE Σ̂ = (1/n) L̂ᵀR⁻¹L̂ on per-column-BM-completed
+   L̂ — properly credits R for the species correlation and recovers
+   Σ̂ to the right order of magnitude.
+
+3. **EM E-step diverged at near-sister tips.** `build_conditional_prior()`
+   computes a within-row cross-trait conditional posterior but ignores
+   R-mediated cross-row correlation. For near-sister tips, the proper
+   joint posterior would strongly pull a missing tip's value toward its
+   observed sister; the within-row approximation cannot see that, and
+   combined with `henderson_bm_predict()`'s constant conservative
+   variance for missing cells, the inverse-variance pool over-weights
+   the wrong cross-trait prior. R⁻¹ at near-sister pairs (values of
+   4000–7500 observed at sister pairs on real AVONET) then amplifies
+   the discrepancy and Σ̂ inflated 10–50× per EM iteration. Fixed by
+   changing the default `max_iter` to `0L` so the solver returns the
+   per-column BM L̂ + closed-form Σ̂ MLE without the broken cross-trait
+   EM. Callers can still opt in to the EM via `max_iter > 0`.
+
+Net effect on bench: AVONET categorical accuracy lifted from 0.357
+to 0.825 (trophic_level vs BACE 0.816) and 0.350 to 0.823
+(primary_lifestyle vs BACE 0.828). PanTHERIA discrete-trait
+accuracies are now competitive with BACE.
+
+## Improvements: CI head-to-head evaluator
+
+Major changes to `script/gha/_bace_compat.R` and
+`script/gha/make_headtohead_report.R` so pigauto's CI numbers
+are directly comparable to BACE's snapshot.
+
+- **Pool every trait via `mi$pooled_point`** to match BACE's
+  reporting policy. BACE uses majority-vote-across-M-imputations
+  for categorical / ordinal accuracy and `rowMeans(imp_mat)` for
+  continuous RMSE. pigauto's `mi$pooled_point` carries the
+  analogous central tendency (argmax-of-average-probability for
+  categorical / binary, mode-or-mean for ordinal, median-or-mean
+  for continuous depending on log-transform). Before this fix,
+  `.bace_eval_per_imputation` scored every stochastic categorical
+  sample individually — bounded by `E[p_max]` across cells —
+  badly underestimating the model's accuracy. The previous
+  per-draw default also inflated continuous RMSE by Jensen's
+  inequality. A new `pool_method = "auto"` argument is the default;
+  legacy `"per_draw"` behaviour stays available for diagnostics.
+- **Added `coverage_95`, `interval_width`, and `brier`** to the
+  canonical CI schema. Coverage and interval width are
+  pigauto-only (BACE has no posterior-interval snapshot column).
+  Brier is now computed on both sides for discrete traits so the
+  two methods can be compared on calibration.
+- **h2h ordinal merge bug fixed.** The previous report treated
+  `ordinal` as a continuous-family type and tried to pull RMSE
+  from both sides, returning NA for every ordinal trait. Removed
+  ordinal from `CONTINUOUS_TYPES` so the report uses accuracy
+  for ordinal too. AVONET migration, PanTHERIA diet_breadth /
+  habitat_breadth now show up properly.
+- **Robust h2h aggregator.** `load_pigauto_results()` and
+  `load_bace_snapshot()` now route every loaded part through
+  `.normalize_eval()` so rbind across schema-version mismatches
+  no longer crashes the aggregator. The BACE snapshot, pinned to
+  a pre-Tier-1.5 schema, is automatically padded with NA in the
+  new pigauto-only columns.
+
+## Improvements: CI defaults
+
+- Default `n_imputations` in `PIGAUTO_CI_CONFIG` raised from 10
+  to 20. Mild improvement on BIEN total RMSE (8.312 → 8.288 in
+  an autoresearch sweep of 17 settings; m=30/50/100 all
+  regressed, so 20 is the empirical sweet spot at the current
+  CI scale).
+
+## Reverts in dev cycle
+
+- Tier 2 (AVONET covariates via the `cov_encoder` /
+  `obs_refine` paths) was tried and reverted: CI runs showed
+  AVONET categorical accuracy dropped sharply when covariates
+  were passed (trophic_level 0.825 → 0.731, primary_lifestyle
+  0.828 → 0.657) without lifting continuous traits. The
+  underlying covariate infrastructure stays in place — when
+  `covariate_cols` is empty the path is a no-op. Re-enabling
+  for AVONET (or BIEN) needs a categorical-safe covariate
+  routing first; planned for a future minor release.
+
+## Tests
+
+- New `tests/testthat/test-bace-compat-eval.R` covers the new
+  pool semantics + coverage / brier computation paths.
+- Henderson tests extended with explicit `cor_scale = TRUE`
+  assertions on non-ultrametric trees and per-cell variance
+  checks for `henderson_bm_predict()`.
+- Full suite: 1511 pass / 0 fail (299 pre-existing small-n
+  warnings unchanged).
+
+
 # pigauto 0.9.1.9014 (dev)
 
 ## Bug fixes: prediction-time observed-cell context (2026-05-11)

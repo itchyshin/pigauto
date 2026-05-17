@@ -8,7 +8,13 @@
 # Spec: specs/2026-05-16-bace-headtohead-ci-design.md.
 
 DATASETS <- c("avonet", "pantheria", "amphibio", "bien", "globtherm", "leptraits")
-CONTINUOUS_TYPES <- c("continuous", "count", "ordinal", "proportion", "zi_count")
+# Types whose primary metric is RMSE (lower is better). Ordinal is excluded
+# because pigauto's CI evaluator treats ordered-factor truth values as
+# factors and records accuracy (not RMSE), to match BACE's snapshot which
+# also records accuracy for ordinal. Including ordinal here previously
+# caused the h2h merge to read NA RMSE from both sides and produce NA
+# winners for every ordinal trait in the report.
+CONTINUOUS_TYPES <- c("continuous", "count", "proportion", "zi_count")
 
 load_pigauto_results <- function() {
   base <- file.path("script", "gha", "results", "_artifacts")
@@ -18,7 +24,14 @@ load_pigauto_results <- function() {
       message(sprintf("[h2h] missing pigauto results for %s; skipping", d))
       return(NULL)
     }
-    readRDS(f)
+    # Re-normalize via .normalize_eval so every per-dataset frame has
+    # the current canonical schema. Without this, an older rds saved
+    # before the schema gained coverage_95 / interval_width / brier
+    # would have fewer columns and the rbind below would fail with
+    # "numbers of columns of arguments do not match". .normalize_eval
+    # pads missing columns with NA on the fly. Sourced inside the
+    # `sys.nframe() == 0L` block below so it's available here too.
+    .normalize_eval(readRDS(f), dataset = d, method = "pigauto_ci")
   })
   parts <- Filter(function(x) !is.null(x) && nrow(x) > 0L, parts)
   if (length(parts) == 0L) return(NULL)
@@ -33,7 +46,16 @@ load_bace_snapshot <- function() {
       message(sprintf("[h2h] missing BACE snapshot for %s; skipping", d))
       return(NULL)
     }
-    readRDS(f)
+    # Same schema-normalization as load_pigauto_results above. BACE
+    # snapshot rds files are pinned (per useful/bace_results_snapshot/
+    # README.md) so they evolve independently of pigauto's CI eval
+    # schema; the BACE snapshot used here was created pre-2026-05-17
+    # before coverage_95 / interval_width were added, so it has 11
+    # columns vs pigauto's 13. .normalize_eval pads to the 13-column
+    # canonical schema with NA in the missing columns. This is
+    # exactly the behaviour the h2h report wants: BACE has no
+    # conformal coverage / interval-width data to report.
+    .normalize_eval(readRDS(f), dataset = d, method = "BACE_snapshot")
   })
   parts <- Filter(function(x) !is.null(x) && nrow(x) > 0L, parts)
   if (length(parts) == 0L) return(NULL)
@@ -55,8 +77,15 @@ build_h2h_report <- function(combined, out_dir) {
             all(c("dataset","trait","type","method","rmse","accuracy")
                 %in% colnames(combined)))
 
+  # coverage_95 and interval_width are pigauto-only columns; the BACE
+  # snapshot has them as NA. Aggregate them too so the report can flag
+  # pigauto's calibration credentials.
+  for (col in c("coverage_95", "interval_width")) {
+    if (!(col %in% colnames(combined))) combined[[col]] <- NA_real_
+  }
   med <- stats::aggregate(
-    cbind(rmse, mae, pearson_r, accuracy, brier, time_sec) ~ dataset + trait + type + method,
+    cbind(rmse, mae, pearson_r, accuracy, brier,
+          coverage_95, interval_width, time_sec) ~ dataset + trait + type + method,
     data = combined,
     FUN  = function(x) stats::median(x, na.rm = TRUE),
     na.action = stats::na.pass
@@ -105,6 +134,40 @@ build_h2h_report <- function(combined, out_dir) {
     md <- c(md, knitr::kable(wtl, format = "markdown"))
     md <- c(md, "", "## Per-trait detail (medians across imputations)", "",
             knitr::kable(summary_tbl, format = "markdown", digits = 3))
+
+    # Brier comparison (categorical / binary / ordinal). Both methods
+    # expose this; lower is better.
+    brier_tbl <- m[!is.na(m$brier_pigauto) | !is.na(m$brier_bace),
+                    c("dataset","trait","type","brier_pigauto","brier_bace"),
+                    drop = FALSE]
+    if (nrow(brier_tbl) > 0L) {
+      brier_tbl$brier_winner <- vapply(seq_len(nrow(brier_tbl)),
+        function(i) {
+          p <- brier_tbl$brier_pigauto[i]; b <- brier_tbl$brier_bace[i]
+          if (is.na(p) || is.na(b)) NA_character_
+          else if (p < b) "pigauto" else if (b < p) "bace" else "tie"
+        }, character(1))
+      md <- c(md, "", "## Brier score (lower is better)", "",
+              knitr::kable(brier_tbl, format = "markdown", digits = 3))
+    }
+
+    # Coverage / interval-width is pigauto-only. Show as pigauto's
+    # calibration credentials; BACE has no comparable column.
+    cov_tbl <- m[!is.na(m$coverage_95_pigauto),
+                   c("dataset","trait","type","coverage_95_pigauto",
+                     "interval_width_pigauto"),
+                   drop = FALSE]
+    if (nrow(cov_tbl) > 0L) {
+      colnames(cov_tbl) <- c("dataset","trait","type",
+                              "coverage_95","interval_width")
+      md <- c(md, "",
+              "## Pigauto 95% conformal coverage + interval width (BACE has none)",
+              "",
+              "Target coverage = 0.95. Coverage close to target with smaller",
+              "interval width indicates well-calibrated, tight predictions.",
+              "",
+              knitr::kable(cov_tbl, format = "markdown", digits = 3))
+    }
   } else {
     md <- c(md, "_No head-to-head rows: pigauto / BACE inputs both empty._")
   }
