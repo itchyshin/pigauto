@@ -1,0 +1,56 @@
+{
+  "avonet": {
+    "fit_sec": 1465.7631,
+    "eval_sec": 0.117,
+    "total_sec": 1465.8802,
+    "n_species": 2000,
+    "n_traits": 7,
+    "n_masked_cells": 4197,
+    "n_imputations": 10
+  },
+  "pantheria": {
+    "fit_sec": 1427.0202,
+    "eval_sec": 0.3156,
+    "total_sec": 1427.3359,
+    "n_species": 2000,
+    "n_traits": 8,
+    "n_masked_cells": 2258,
+    "n_imputations": 10
+  },
+  "amphibio": {
+    "fit_sec": 792.2088,
+    "eval_sec": 0.1121,
+    "total_sec": 792.3209,
+    "n_species": 2000,
+    "n_traits": 2,
+    "n_masked_cells": 518,
+    "n_imputations": 10
+  },
+  "bien": {
+    "fit_sec": 1205.1363,
+    "eval_sec": 0.1088,
+    "total_sec": 1205.2451,
+    "n_species": 2000,
+    "n_traits": 5,
+    "n_masked_cells": 913,
+    "n_imputations": 10
+  },
+  "globtherm": {
+    "fit_sec": 845.8559,
+    "eval_sec": 0.1156,
+    "total_sec": 845.9715,
+    "n_species": 1969,
+    "n_traits": 5,
+    "n_masked_cells": 2074,
+    "n_imputations": 10
+  },
+  "leptraits": {
+    "fit_sec": 784.2067,
+    "eval_sec": 0.1051,
+    "total_sec": 784.3117,
+    "n_species": 2000,
+    "n_traits": 4,
+    "n_masked_cells": 1080,
+    "n_imputations": 10
+  }
+}
