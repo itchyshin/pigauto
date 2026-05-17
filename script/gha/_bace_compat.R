@@ -11,37 +11,69 @@
 
 # Per-dataset trait subsets + log-transformed traits, copied verbatim
 # from BACE's dev/0[0-7]_benchmark_*.R scripts.
+#
+# `covariate_cols` (added 2026-05-17): per-dataset list of columns that
+# are PRESENT IN THE SNAPSHOT but absent from BACE's trait_subset.
+# pigauto passes them through its dedicated covariate channel
+# (`multi_impute(..., covariates = ...)`) which routes through the
+# cov_encoder / obs_refine / cov_linear / cov_inject_blocks paths in
+# the GNN. BACE's benchmark_dataset() never sees these columns, so
+# pigauto's covariate-aware predictions are a structural advantage
+# documented up-front, not an accidental data leak: both methods see
+# the same snapshot, but only pigauto's architecture exposes a
+# covariate channel.
+#
+# AVONET: range / centroid lat-lon are geographic columns that the
+#   raw AVONET CSV ships with. They aren't in Dan's trait_subset.
+# AmphiBIO: diurnal / nocturnal are binary diel-activity columns. They
+#   aren't in BACE's amphibio trait_subset.
+# LepTraits: Jan-Dec are monthly flight occurrence columns. Not in
+#   Dan's leptraits trait_subset.
+# GlobTherm, PanTHERIA, BIEN: leave empty -- their unused columns are
+#   taxonomy only (already encoded by the tree).
 BACE_DATASET_CONFIG <- list(
   avonet = list(
-    trait_subset = c("mass_g", "wing_length_mm", "beak_length_culmen_mm",
-                      "tarsus_length_mm", "trophic_level",
-                      "primary_lifestyle", "migration"),
-    log_traits   = c("mass_g", "wing_length_mm",
-                      "beak_length_culmen_mm", "tarsus_length_mm")
+    trait_subset    = c("mass_g", "wing_length_mm", "beak_length_culmen_mm",
+                         "tarsus_length_mm", "trophic_level",
+                         "primary_lifestyle", "migration"),
+    log_traits      = c("mass_g", "wing_length_mm",
+                         "beak_length_culmen_mm", "tarsus_length_mm"),
+    covariate_cols  = c("range_size_km2", "centroid_lat", "centroid_lon")
   ),
   pantheria = list(
-    trait_subset = NULL,   # default: all non-tax cols
-    log_traits   = c("body_mass_g", "head_body_length_mm",
-                      "gestation_d", "max_longevity_m")
+    trait_subset    = NULL,   # default: all non-tax cols
+    log_traits      = c("body_mass_g", "head_body_length_mm",
+                         "gestation_d", "max_longevity_m"),
+    covariate_cols  = character(0)
   ),
   amphibio = list(
-    trait_subset = c("body_size_mm", "body_mass_g"),
-    log_traits   = c("body_size_mm", "body_mass_g")
+    trait_subset    = c("body_size_mm", "body_mass_g"),
+    log_traits      = c("body_size_mm", "body_mass_g"),
+    # diurnal / nocturnal have 76-87% NA in the snapshot, so not
+    # usable as fully-observed covariates without aggressive imputation.
+    covariate_cols  = character(0)
   ),
   bien = list(
-    trait_subset = NULL,
-    log_traits   = c("height_m", "leaf_area", "sla",
-                      "seed_mass", "wood_density")
+    trait_subset    = NULL,
+    log_traits      = c("height_m", "leaf_area", "sla",
+                         "seed_mass", "wood_density"),
+    covariate_cols  = character(0)
   ),
   globtherm = list(
-    trait_subset = NULL,
-    log_traits   = character(0)
+    trait_subset    = NULL,
+    log_traits      = character(0),
+    covariate_cols  = character(0)
   ),
   leptraits = list(
-    trait_subset = c("wingspan_lower", "forewing_length_lower",
-                      "flight_duration", "n_hostplant_families"),
-    log_traits   = c("wingspan_lower", "forewing_length_lower",
-                      "flight_duration", "n_hostplant_families")
+    trait_subset    = c("wingspan_lower", "forewing_length_lower",
+                         "flight_duration", "n_hostplant_families"),
+    log_traits      = c("wingspan_lower", "forewing_length_lower",
+                         "flight_duration", "n_hostplant_families"),
+    # Jan-Dec monthly flight columns have ~23% NA in the snapshot.
+    # Median-filling that many cells would dilute the covariate signal.
+    # Skip until we have a cleaner extraction or a proper missing-cov
+    # handling path in pigauto.
+    covariate_cols  = character(0)
   )
 )
 
@@ -399,7 +431,47 @@ BACE_DATASET_CONFIG <- list(
   tree <- ape::keep.tip(tree, keep)
   traits_df <- traits_df[tree$tip.label, , drop = FALSE]
 
-  # 2) Restrict columns to trait_subset (default: all non-tax)
+  # 2a) Extract covariate_cols from the full traits_df BEFORE the
+  #     trait_subset restriction kicks in (otherwise the covariate
+  #     columns would be lost). cov_df is per-species, fully observed
+  #     (median-fill the few NAs), z-scored downstream by pigauto's
+  #     preprocess. range_size-style heavy-tailed columns get log-
+  #     transformed first to keep their dynamic range comparable to
+  #     other covariates.
+  cov_cols_cfg <- ds_cfg$covariate_cols %||% character(0)
+  cov_cols     <- intersect(cov_cols_cfg, colnames(traits_df))
+  cov_df       <- NULL
+  if (length(cov_cols) > 0L) {
+    cov_raw <- traits_df[, cov_cols, drop = FALSE]
+    # Log-transform heavy-tailed columns (range_size_km2 spans 8
+    # orders of magnitude on AVONET; without log it dominates the
+    # z-scored covariate matrix). Heuristic: numeric column with
+    # min >= 0 across positive entries and max / median > 30.
+    for (cc in cov_cols) {
+      v <- suppressWarnings(as.numeric(cov_raw[[cc]]))
+      if (any(is.finite(v) & v > 0)) {
+        v_pos <- v[is.finite(v) & v > 0]
+        if (length(v_pos) > 10L &&
+            (max(v_pos) / max(stats::median(v_pos), 1e-12)) > 30) {
+          # log1p so any zeros (none expected for area / lat / lon)
+          # are handled without -Inf.
+          v <- ifelse(is.finite(v) & v >= 0, log1p(v), NA_real_)
+        }
+      }
+      # Median-fill NAs. cov_df must be fully observed per
+      # multi_impute()'s covariates contract.
+      med <- stats::median(v, na.rm = TRUE)
+      if (!is.finite(med)) med <- 0
+      v[!is.finite(v)] <- med
+      cov_raw[[cc]] <- v
+    }
+    cov_df <- as.data.frame(cov_raw)
+    rownames(cov_df) <- rownames(traits_df)
+    cat(sprintf("[%s] covariates: %s (median-filled NAs, log-1p heavy-tailed)\n",
+                dataset, paste(cov_cols, collapse = ", ")))
+  }
+
+  # 2b) Restrict trait columns to trait_subset (default: all non-tax)
   trait_cols <- if (!is.null(ds_cfg$trait_subset))
     intersect(ds_cfg$trait_subset, colnames(traits_df))
   else
@@ -429,7 +501,11 @@ BACE_DATASET_CONFIG <- list(
   # (.bace_apply_mask already stored as character when factor).
   is_log <- truth_long$trait %in% ds_cfg$log_traits
 
-  # 5) Fit pigauto on the masked + log-transformed data
+  # 5) Fit pigauto on the masked + log-transformed data. When
+  # cov_df is non-NULL, pigauto's GNN activates its dedicated
+  # covariate paths (cov_encoder / obs_refine / cov_linear /
+  # cov_inject_blocks); BACE's bench saw no covariates so this is
+  # pigauto's architectural advantage made explicit.
   t0_fit <- Sys.time()
   mi <- multi_impute(
     masked_df_logged, tree,
@@ -437,6 +513,7 @@ BACE_DATASET_CONFIG <- list(
     pool_method    = cfg$pool_method,
     clamp_outliers = cfg$clamp_outliers,
     log_transform  = FALSE,   # we already log-transformed selected cols
+    covariates     = cov_df,  # NULL when ds_cfg$covariate_cols is empty
     seed           = cfg$seed
   )
   t_fit <- as.numeric(difftime(Sys.time(), t0_fit, units = "secs"))
