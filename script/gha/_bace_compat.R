@@ -38,7 +38,15 @@ BACE_DATASET_CONFIG <- list(
                          "primary_lifestyle", "migration"),
     log_traits      = c("mass_g", "wing_length_mm",
                          "beak_length_culmen_mm", "tarsus_length_mm"),
-    covariate_cols  = c("range_size_km2", "centroid_lat", "centroid_lon")
+    # 2026-05-17: tried (range_size_km2, centroid_lat, centroid_lon) as
+    # covariates in CI 25996295467/25997176686. Continuous-trait
+    # numbers were unchanged but AVONET categorical regressed
+    # significantly (trophic_level 0.825 -> 0.731, primary_lifestyle
+    # 0.828 -> 0.657). Suspect the GNN gate calibration opens for
+    # categorical when more cov inputs are present + the OVR
+    # threshold-joint baseline can't yet make use of them. Reverted
+    # to character(0) until a categorical-safe covariate path lands.
+    covariate_cols  = character(0)
   ),
   pantheria = list(
     trait_subset    = NULL,   # default: all non-tax cols
