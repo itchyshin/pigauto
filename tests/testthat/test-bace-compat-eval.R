@@ -78,6 +78,98 @@ test_that("BACE-compat eval pools discrete-type accuracy via pooled_point", {
   expect_equal(nrow(per_draw_rows), 0L)
 })
 
+test_that("BACE-compat eval computes coverage_95 + interval_width from conformal bounds", {
+  skip_if_not_installed("ape")
+  bace_compat_path <- file.path("..", "..", "script", "gha", "_bace_compat.R")
+  if (!file.exists(bace_compat_path)) {
+    skip(sprintf("script/gha/_bace_compat.R not found at %s", bace_compat_path))
+  }
+  source(bace_compat_path, local = TRUE)
+
+  truth_long <- data.frame(
+    species_tip = paste0("sp", 1:10),
+    trait       = "cont1",
+    true_value  = as.character(seq_len(10L)),
+    stringsAsFactors = FALSE
+  )
+  trait_types_lookup <- c(cont1 = "continuous")
+
+  set.seed(2026L)
+  draws <- list(data.frame(cont1 = (1:10) + rnorm(10L, 0, 0.1),
+                            row.names = paste0("sp", 1:10)))
+  pooled <- data.frame(cont1 = (1:10) + rnorm(10L, 0, 0.1),
+                         row.names = paste0("sp", 1:10))
+
+  # Conformal bounds: tight intervals covering 9 of 10 truth values
+  truth_vals <- 1:10
+  pred_vals <- pooled$cont1
+  half_width <- abs(pred_vals - truth_vals) + c(rep(0.1, 9), -0.5)   # last cell uncovered
+  conformal_lower <- matrix(pred_vals - half_width, ncol = 1L,
+                              dimnames = list(paste0("sp", 1:10), "cont1"))
+  conformal_upper <- matrix(pred_vals + half_width, ncol = 1L,
+                              dimnames = list(paste0("sp", 1:10), "cont1"))
+
+  ev <- .bace_eval_per_imputation(draws, truth_long, trait_types_lookup,
+                                    t_fit_sec = 0,
+                                    pooled_point    = pooled,
+                                    conformal_lower = conformal_lower,
+                                    conformal_upper = conformal_upper)
+  cont_row <- ev[ev$type == "continuous", , drop = FALSE]
+  expect_equal(nrow(cont_row), 1L)
+  # 9 of 10 truths inside their conformal interval
+  expect_equal(cont_row$coverage_95, 0.9)
+  expect_true(is.finite(cont_row$interval_width))
+  expect_true(cont_row$interval_width > 0)
+})
+
+test_that("BACE-compat eval computes Brier score from per-class probabilities", {
+  skip_if_not_installed("ape")
+  bace_compat_path <- file.path("..", "..", "script", "gha", "_bace_compat.R")
+  if (!file.exists(bace_compat_path)) {
+    skip(sprintf("script/gha/_bace_compat.R not found at %s", bace_compat_path))
+  }
+  source(bace_compat_path, local = TRUE)
+
+  truth_long <- data.frame(
+    species_tip = paste0("sp", 1:6),
+    trait       = "cat1",
+    true_value  = c("A","A","A","B","B","C"),
+    stringsAsFactors = FALSE
+  )
+  trait_types_lookup <- c(cat1 = "categorical")
+
+  # Perfect probabilities: 1.0 on the true class, 0 elsewhere → Brier = 0
+  probs_perfect <- matrix(0, nrow = 6L, ncol = 3L,
+                            dimnames = list(paste0("sp", 1:6),
+                                            c("A","B","C")))
+  for (i in seq_along(truth_long$true_value)) {
+    probs_perfect[i, truth_long$true_value[i]] <- 1
+  }
+  pooled <- data.frame(cat1 = factor(truth_long$true_value,
+                                       levels = c("A","B","C")),
+                         row.names = paste0("sp", 1:6))
+
+  ev <- .bace_eval_per_imputation(list(pooled), truth_long, trait_types_lookup,
+                                    t_fit_sec = 0,
+                                    pooled_point  = pooled,
+                                    probabilities = list(cat1 = probs_perfect),
+                                    trait_levels  = list(cat1 = c("A","B","C")))
+  cat_row <- ev[ev$type == "categorical", , drop = FALSE]
+  expect_equal(cat_row$accuracy, 1.0)
+  expect_equal(cat_row$brier, 0.0, tolerance = 1e-10)
+
+  # Uniform probabilities (all 1/3): Brier should be > 0.
+  probs_uniform <- matrix(1/3, nrow = 6L, ncol = 3L,
+                            dimnames = dimnames(probs_perfect))
+  ev2 <- .bace_eval_per_imputation(list(pooled), truth_long, trait_types_lookup,
+                                     t_fit_sec = 0,
+                                     pooled_point  = pooled,
+                                     probabilities = list(cat1 = probs_uniform),
+                                     trait_levels  = list(cat1 = c("A","B","C")))
+  cat_row2 <- ev2[ev2$type == "categorical", , drop = FALSE]
+  expect_gt(cat_row2$brier, 0.3)
+})
+
 test_that("BACE-compat eval pools continuous RMSE via pooled_point under auto mode", {
   skip_if_not_installed("ape")
   bace_compat_path <- file.path("..", "..", "script", "gha", "_bace_compat.R")

@@ -163,15 +163,31 @@ BACE_DATASET_CONFIG <- list(
 .bace_eval_per_imputation <- function(completed_list, truth_long,
                                        trait_types_lookup, t_fit_sec,
                                        pooled_point = NULL,
+                                       conformal_lower = NULL,
+                                       conformal_upper = NULL,
+                                       probabilities   = NULL,
+                                       trait_levels    = NULL,
                                        pool_method = c("auto", "per_draw",
                                                        "pooled_point")) {
   pool_method <- match.arg(pool_method)
   # truth_long: data.frame(species_tip, trait, true_value)
+  # conformal_lower / conformal_upper (optional): n_species x p matrices
+  #   with 95% prediction-interval bounds for each continuous-family
+  #   trait, in user scale (back-transformed when log-transform was on).
+  #   Columns indexed by user trait name.
+  # probabilities (optional): named list. For "binary" traits: numeric
+  #   vector (length n_species) of P(class=levels[2]). For "categorical":
+  #   K-column matrix with one row per species. Used to compute Brier
+  #   score, the calibration metric BACE_snapshot also exposes.
+  # trait_levels (optional): named list of character level vectors per
+  #   discrete trait, required to align probabilities columns with truth.
   if (nrow(truth_long) == 0L) {
     return(data.frame(
       trait = character(0), type = character(0), imputation_idx = integer(0),
       rmse = numeric(0), mae = numeric(0), pearson_r = numeric(0),
-      accuracy = numeric(0), brier = numeric(0), time_sec = numeric(0),
+      accuracy = numeric(0), brier = numeric(0),
+      coverage_95 = numeric(0), interval_width = numeric(0),
+      time_sec = numeric(0),
       stringsAsFactors = FALSE
     ))
   }
@@ -180,6 +196,67 @@ BACE_DATASET_CONFIG <- list(
     if (pool_method == "per_draw" || is.null(pooled_point)) return(FALSE)
     # "auto" and "pooled_point" both pool every type
     TRUE
+  }
+
+  # Compute Brier score for one trait from a probability object and the
+  # true class labels. Binary path: probs is a numeric vector of
+  # P(class=positive). Categorical path: K-column matrix. Returns NA
+  # when probs is missing / shape-incompatible.
+  brier_one <- function(trait_name, type_t, sp_keep, t_v) {
+    if (is.null(probabilities) || !(trait_name %in% names(probabilities))) {
+      return(NA_real_)
+    }
+    p_obj <- probabilities[[trait_name]]
+    levels_t <- if (!is.null(trait_levels) && trait_name %in% names(trait_levels))
+                  trait_levels[[trait_name]] else NULL
+    if (type_t == "binary") {
+      if (is.null(levels_t) || length(levels_t) < 2L) return(NA_real_)
+      # P(class = levels[2]) per pigauto convention.
+      idx <- match(sp_keep, names(p_obj))
+      if (all(is.na(idx))) idx <- match(sp_keep, rownames(p_obj))
+      if (all(is.na(idx))) return(NA_real_)
+      p_pos <- as.numeric(p_obj)[idx]
+      y_pos <- as.numeric(as.character(t_v) == levels_t[2])
+      ok <- is.finite(p_pos) & !is.na(y_pos)
+      if (!any(ok)) return(NA_real_)
+      mean((p_pos[ok] - y_pos[ok])^2, na.rm = TRUE)
+    } else if (type_t == "categorical" || type_t == "ordinal") {
+      if (!is.matrix(p_obj) || is.null(levels_t)) return(NA_real_)
+      idx <- match(sp_keep, rownames(p_obj))
+      if (all(is.na(idx))) return(NA_real_)
+      pmat <- p_obj[idx, , drop = FALSE]
+      # Truth one-hot in K columns matching p_obj column order.
+      col_levels <- colnames(pmat)
+      if (is.null(col_levels)) col_levels <- levels_t
+      t_idx <- match(as.character(t_v), col_levels)
+      ok <- !is.na(t_idx) & rowSums(is.finite(pmat)) == ncol(pmat)
+      if (!any(ok)) return(NA_real_)
+      Y <- matrix(0, nrow = length(ok), ncol = ncol(pmat))
+      Y[cbind(seq_along(t_idx)[ok], t_idx[ok])] <- 1
+      mean(rowSums((pmat[ok, , drop = FALSE] - Y[ok, , drop = FALSE])^2),
+           na.rm = TRUE)
+    } else {
+      NA_real_
+    }
+  }
+
+  # Compute conformal coverage_95 + interval_width for a continuous-
+  # family trait at the masked species. Returns list(coverage, width).
+  # Both NA when the bounds aren't supplied or don't have the trait.
+  coverage_one <- function(trait_name, sp_keep, t_num) {
+    if (is.null(conformal_lower) || is.null(conformal_upper)) {
+      return(list(coverage = NA_real_, width = NA_real_))
+    }
+    if (!(trait_name %in% colnames(conformal_lower))) {
+      return(list(coverage = NA_real_, width = NA_real_))
+    }
+    lo <- conformal_lower[match(sp_keep, rownames(conformal_lower)), trait_name]
+    up <- conformal_upper[match(sp_keep, rownames(conformal_upper)), trait_name]
+    ok <- is.finite(lo) & is.finite(up) & is.finite(t_num)
+    if (!any(ok)) return(list(coverage = NA_real_, width = NA_real_))
+    inside <- (t_num[ok] >= lo[ok]) & (t_num[ok] <= up[ok])
+    list(coverage = mean(inside),
+         width    = mean(up[ok] - lo[ok]))
   }
 
   rows <- list()
@@ -209,7 +286,9 @@ BACE_DATASET_CONFIG <- list(
         rows[[length(rows) + 1L]] <- data.frame(
           trait = trait_name, type = type_t, imputation_idx = i,
           rmse = NA_real_, mae = NA_real_, pearson_r = NA_real_,
-          accuracy = acc, brier = NA_real_, time_sec = t_fit_sec,
+          accuracy = acc, brier = NA_real_,
+          coverage_95 = NA_real_, interval_width = NA_real_,
+          time_sec = t_fit_sec,
           stringsAsFactors = FALSE
         )
       } else {
@@ -226,7 +305,9 @@ BACE_DATASET_CONFIG <- list(
         rows[[length(rows) + 1L]] <- data.frame(
           trait = trait_name, type = type_t, imputation_idx = i,
           rmse = rmse, mae = mae, pearson_r = pear,
-          accuracy = NA_real_, brier = NA_real_, time_sec = t_fit_sec,
+          accuracy = NA_real_, brier = NA_real_,
+          coverage_95 = NA_real_, interval_width = NA_real_,
+          time_sec = t_fit_sec,
           stringsAsFactors = FALSE
         )
       }
@@ -253,10 +334,13 @@ BACE_DATASET_CONFIG <- list(
         ok <- !is.na(p_v) & !is.na(t_v)
         acc <- if (any(ok)) mean(as.character(p_v[ok]) ==
                                   as.character(t_v[ok])) else NA_real_
+        brier_val <- brier_one(trait_name, type_t, sp_keep[ok], t_v[ok])
         rows[[length(rows) + 1L]] <- data.frame(
           trait = trait_name, type = type_t, imputation_idx = 0L,
           rmse = NA_real_, mae = NA_real_, pearson_r = NA_real_,
-          accuracy = acc, brier = NA_real_, time_sec = t_fit_sec,
+          accuracy = acc, brier = brier_val,
+          coverage_95 = NA_real_, interval_width = NA_real_,
+          time_sec = t_fit_sec,
           stringsAsFactors = FALSE
         )
       } else {
@@ -268,10 +352,14 @@ BACE_DATASET_CONFIG <- list(
         pear <- if (sum(ok) > 2L) {
           suppressWarnings(stats::cor(t_num[ok], p_num[ok]))
         } else NA_real_
+        cov_info <- coverage_one(trait_name, sp_keep[ok], t_num[ok])
         rows[[length(rows) + 1L]] <- data.frame(
           trait = trait_name, type = type_t, imputation_idx = 0L,
           rmse = rmse, mae = mae, pearson_r = pear,
-          accuracy = NA_real_, brier = NA_real_, time_sec = t_fit_sec,
+          accuracy = NA_real_, brier = NA_real_,
+          coverage_95 = cov_info$coverage,
+          interval_width = cov_info$width,
+          time_sec = t_fit_sec,
           stringsAsFactors = FALSE
         )
       }
@@ -282,7 +370,9 @@ BACE_DATASET_CONFIG <- list(
     return(data.frame(
       trait = character(0), type = character(0), imputation_idx = integer(0),
       rmse = numeric(0), mae = numeric(0), pearson_r = numeric(0),
-      accuracy = numeric(0), brier = numeric(0), time_sec = numeric(0),
+      accuracy = numeric(0), brier = numeric(0),
+      coverage_95 = numeric(0), interval_width = numeric(0),
+      time_sec = numeric(0),
       stringsAsFactors = FALSE
     ))
   }
@@ -390,15 +480,34 @@ BACE_DATASET_CONFIG <- list(
     trait_cols
   )
 
-  # Pass mi$pooled_point so the evaluator can score discrete-type
-  # accuracy on the argmax-of-average-probability prediction (BACE-style
-  # reporting) instead of on each of the m stochastic categorical draws
-  # produced by .sample_conformal_draw(). Continuous-family traits still
-  # get per-stochastic-draw RMSE, so Rubin-style noise propagation
-  # remains visible there. See the 2026-05-17 commit message.
+  # Pass mi$pooled_point so the evaluator can score every trait type on
+  # pigauto's central tendency (argmax-of-average-probability for
+  # categorical/binary, mode-or-mean for ordinal, median-or-mean for
+  # continuous depending on log-transform) — apples-to-apples with
+  # BACE's "majority vote for discrete, rowMeans for continuous"
+  # benchmark_engine.R policy.
+  #
+  # mi$conformal_lower / mi$conformal_upper feed coverage_95 +
+  # interval_width for continuous-family traits. BACE doesn't expose
+  # prediction intervals so those columns stay NA on the BACE side of
+  # the head-to-head and pigauto reports them as an extra credibility
+  # metric.
+  #
+  # mi$probabilities + per-trait level vectors feed the Brier score
+  # for discrete traits, comparable to BACE's brier column.
+  trait_levels_lookup <- lapply(trait_cols, function(v) {
+    x <- traits_df[[v]]
+    if (is.factor(x)) levels(x) else NULL
+  })
+  names(trait_levels_lookup) <- trait_cols
+
   ev <- .bace_eval_per_imputation(completed_fit, truth_long_fit,
                                    trait_types_lookup, t_fit,
-                                   pooled_point = mi$pooled_point)
+                                   pooled_point    = mi$pooled_point,
+                                   conformal_lower = mi$conformal_lower,
+                                   conformal_upper = mi$conformal_upper,
+                                   probabilities   = mi$probabilities,
+                                   trait_levels    = trait_levels_lookup)
   t_eval <- as.numeric(difftime(Sys.time(), t0_eval, units = "secs"))
 
   # 7) Normalise + persist
@@ -429,17 +538,20 @@ BACE_DATASET_CONFIG <- list(
     ""
   )
   if (any(!is.na(out_tbl$rmse))) {
-    agg <- stats::aggregate(rmse ~ trait + type,
-                             data = out_tbl[!is.na(out_tbl$rmse), ],
-                             FUN = function(x) stats::median(x, na.rm = TRUE))
-    md <- c(md, "## Continuous-family (RMSE, fit scale; log for log_traits)", "",
+    agg <- stats::aggregate(
+      cbind(rmse, coverage_95, interval_width) ~ trait + type,
+      data = out_tbl[!is.na(out_tbl$rmse), ],
+      FUN = function(x) stats::median(x, na.rm = TRUE),
+      na.action = stats::na.pass)
+    md <- c(md, "## Continuous-family (RMSE + 95% conformal coverage / width)", "",
             knitr::kable(agg, format = "markdown", digits = 4), "")
   }
   if (any(!is.na(out_tbl$accuracy))) {
-    agg <- stats::aggregate(accuracy ~ trait + type,
+    agg <- stats::aggregate(cbind(accuracy, brier) ~ trait + type,
                              data = out_tbl[!is.na(out_tbl$accuracy), ],
-                             FUN = function(x) stats::median(x, na.rm = TRUE))
-    md <- c(md, "## Discrete-family (accuracy)", "",
+                             FUN = function(x) stats::median(x, na.rm = TRUE),
+                             na.action = stats::na.pass)
+    md <- c(md, "## Discrete-family (accuracy + Brier)", "",
             knitr::kable(agg, format = "markdown", digits = 4), "")
   }
   writeLines(md, file.path(out_dir, "results.md"))

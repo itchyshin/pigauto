@@ -61,8 +61,15 @@ build_h2h_report <- function(combined, out_dir) {
             all(c("dataset","trait","type","method","rmse","accuracy")
                 %in% colnames(combined)))
 
+  # coverage_95 and interval_width are pigauto-only columns; the BACE
+  # snapshot has them as NA. Aggregate them too so the report can flag
+  # pigauto's calibration credentials.
+  for (col in c("coverage_95", "interval_width")) {
+    if (!(col %in% colnames(combined))) combined[[col]] <- NA_real_
+  }
   med <- stats::aggregate(
-    cbind(rmse, mae, pearson_r, accuracy, brier, time_sec) ~ dataset + trait + type + method,
+    cbind(rmse, mae, pearson_r, accuracy, brier,
+          coverage_95, interval_width, time_sec) ~ dataset + trait + type + method,
     data = combined,
     FUN  = function(x) stats::median(x, na.rm = TRUE),
     na.action = stats::na.pass
@@ -111,6 +118,40 @@ build_h2h_report <- function(combined, out_dir) {
     md <- c(md, knitr::kable(wtl, format = "markdown"))
     md <- c(md, "", "## Per-trait detail (medians across imputations)", "",
             knitr::kable(summary_tbl, format = "markdown", digits = 3))
+
+    # Brier comparison (categorical / binary / ordinal). Both methods
+    # expose this; lower is better.
+    brier_tbl <- m[!is.na(m$brier_pigauto) | !is.na(m$brier_bace),
+                    c("dataset","trait","type","brier_pigauto","brier_bace"),
+                    drop = FALSE]
+    if (nrow(brier_tbl) > 0L) {
+      brier_tbl$brier_winner <- vapply(seq_len(nrow(brier_tbl)),
+        function(i) {
+          p <- brier_tbl$brier_pigauto[i]; b <- brier_tbl$brier_bace[i]
+          if (is.na(p) || is.na(b)) NA_character_
+          else if (p < b) "pigauto" else if (b < p) "bace" else "tie"
+        }, character(1))
+      md <- c(md, "", "## Brier score (lower is better)", "",
+              knitr::kable(brier_tbl, format = "markdown", digits = 3))
+    }
+
+    # Coverage / interval-width is pigauto-only. Show as pigauto's
+    # calibration credentials; BACE has no comparable column.
+    cov_tbl <- m[!is.na(m$coverage_95_pigauto),
+                   c("dataset","trait","type","coverage_95_pigauto",
+                     "interval_width_pigauto"),
+                   drop = FALSE]
+    if (nrow(cov_tbl) > 0L) {
+      colnames(cov_tbl) <- c("dataset","trait","type",
+                              "coverage_95","interval_width")
+      md <- c(md, "",
+              "## Pigauto 95% conformal coverage + interval width (BACE has none)",
+              "",
+              "Target coverage = 0.95. Coverage close to target with smaller",
+              "interval width indicates well-calibrated, tight predictions.",
+              "",
+              knitr::kable(cov_tbl, format = "markdown", digits = 3))
+    }
   } else {
     md <- c(md, "_No head-to-head rows: pigauto / BACE inputs both empty._")
   }

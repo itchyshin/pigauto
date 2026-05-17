@@ -19,10 +19,18 @@ PIGAUTO_CI_CONFIG <- list(
 # Canonical schema for cross-method comparison.
 # Pigauto's evaluate_imputation() output gets passed through here.
 # BACE snapshots also conform to this schema (see script/gha/snapshot_bace.R).
+#
+# Coverage / interval-width / Brier columns (added 2026-05-17) are
+# pigauto's calibrated-CI features. BACE doesn't expose conformal /
+# posterior interval data in its snapshot so its rows leave
+# coverage_95 / interval_width as NA. Brier IS in BACE's snapshot for
+# discrete traits and we compute it here for pigauto from the per-cell
+# probability vectors so the two sides can be compared apples-to-apples.
 .normalize_eval <- function(df, dataset, method) {
   stopifnot(is.data.frame(df), is.character(dataset), is.character(method))
   expected_cols <- c("trait", "type", "imputation_idx", "rmse", "mae",
-                     "pearson_r", "accuracy", "brier", "time_sec")
+                     "pearson_r", "accuracy", "brier", "coverage_95",
+                     "interval_width", "time_sec")
   for (col in expected_cols) {
     if (!col %in% colnames(df)) df[[col]] <- NA
   }
@@ -37,6 +45,8 @@ PIGAUTO_CI_CONFIG <- list(
     pearson_r      = as.numeric(df$pearson_r),
     accuracy       = as.numeric(df$accuracy),
     brier          = as.numeric(df$brier),
+    coverage_95    = as.numeric(df$coverage_95),
+    interval_width = as.numeric(df$interval_width),
     time_sec       = as.numeric(df$time_sec),
     stringsAsFactors = FALSE
   )
