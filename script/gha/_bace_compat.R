@@ -133,8 +133,39 @@ BACE_DATASET_CONFIG <- list(
 # Evaluate per imputation at the masked cells using BACE's truth
 # long-format. Returns canonical-schema rows compatible with
 # .normalize_eval().
+#
+# pool_method = c("auto", "per_draw", "pooled_point"):
+#   "auto" (default, matches BACE): all trait types pool through
+#     `pooled_point` for a single per-trait number, matching how Dan's
+#     dev/benchmark_engine.R reports its head-to-head metrics. BACE
+#     uses majority-vote-across-M-imputations for categorical/ordinal
+#     accuracy and rowMeans-then-RMSE for continuous (lines 437-443
+#     and 453-462 of benchmark_engine.R). pigauto's `mi$pooled_point`
+#     contains the analogous central tendency: argmax-of-average-
+#     probability for categorical/binary, modal-or-mean for ordinal,
+#     median-or-mean for continuous depending on log-transform. Using
+#     it for the head-to-head guarantees apples-to-apples comparison.
+#   "per_draw": legacy behaviour — evaluate every trait per stochastic
+#     draw. For categorical this measures sampled-class-vs-truth match,
+#     which is bounded by E[p_max] across cells and badly underestimates
+#     the model's actual classification accuracy when probabilities are
+#     well-calibrated but not concentrated. For continuous, mean-of-per-
+#     draw-RMSE >= RMSE-of-mean (Jensen on squared error), so per-draw
+#     reporting is systematically pessimistic vs BACE's central-tendency
+#     RMSE. Kept as an opt-in for diagnostics.
+#   "pooled_point": same as "auto"; retained as an explicit synonym.
+#
+# Default is "auto" because BACE's snapshot reports a single accuracy /
+# RMSE per trait per dataset. The previous per-draw default caused
+# pigauto's CI categorical accuracy to look 0.4 pts lower AND its
+# continuous RMSE to look ~10% higher than the central-tendency
+# numbers `mi$pooled_point` already exposes.
 .bace_eval_per_imputation <- function(completed_list, truth_long,
-                                       trait_types_lookup, t_fit_sec) {
+                                       trait_types_lookup, t_fit_sec,
+                                       pooled_point = NULL,
+                                       pool_method = c("auto", "per_draw",
+                                                       "pooled_point")) {
+  pool_method <- match.arg(pool_method)
   # truth_long: data.frame(species_tip, trait, true_value)
   if (nrow(truth_long) == 0L) {
     return(data.frame(
@@ -144,18 +175,28 @@ BACE_DATASET_CONFIG <- list(
       stringsAsFactors = FALSE
     ))
   }
+
+  use_pooled <- function(type_t) {
+    if (pool_method == "per_draw" || is.null(pooled_point)) return(FALSE)
+    # "auto" and "pooled_point" both pool every type
+    TRUE
+  }
+
   rows <- list()
+  # First emit per-draw rows for traits where we DON'T pool (continuous-family).
   for (i in seq_along(completed_list)) {
     pred_df <- completed_list[[i]]
     for (trait_name in unique(truth_long$trait)) {
+      type_t <- trait_types_lookup[[trait_name]]
+      if (is.null(type_t)) type_t <- NA_character_
+      if (use_pooled(type_t)) next   # handled below from pooled_point
+
       trait_truth <- truth_long[truth_long$trait == trait_name, , drop = FALSE]
       sp <- trait_truth$species_tip
       sp_keep <- intersect(sp, rownames(pred_df))
       if (length(sp_keep) == 0L) next
       t_v <- trait_truth$true_value[match(sp_keep, trait_truth$species_tip)]
       p_v <- pred_df[[trait_name]][match(sp_keep, rownames(pred_df))]
-      type_t <- trait_types_lookup[[trait_name]]
-      if (is.null(type_t)) type_t <- NA_character_
       # Branch on declared trait type (not on observed value class). When
       # .bace_apply_mask rbinds truth rows across mixed-type traits, the
       # true_value column gets coerced to character for ALL rows — so the
@@ -191,6 +232,52 @@ BACE_DATASET_CONFIG <- list(
       }
     }
   }
+
+  # Pooled rows (single row per trait) from pooled_point for discrete or
+  # all-traits modes. The single row uses imputation_idx = 0 so it
+  # aggregates cleanly through the median() step in the h2h report.
+  if (!is.null(pooled_point)) {
+    for (trait_name in unique(truth_long$trait)) {
+      type_t <- trait_types_lookup[[trait_name]]
+      if (is.null(type_t)) type_t <- NA_character_
+      if (!use_pooled(type_t)) next
+      if (!(trait_name %in% colnames(pooled_point))) next
+
+      trait_truth <- truth_long[truth_long$trait == trait_name, , drop = FALSE]
+      sp_keep <- intersect(trait_truth$species_tip, rownames(pooled_point))
+      if (length(sp_keep) == 0L) next
+      t_v <- trait_truth$true_value[match(sp_keep, trait_truth$species_tip)]
+      p_v <- pooled_point[[trait_name]][match(sp_keep, rownames(pooled_point))]
+      is_discrete <- isTRUE(type_t %in% c("categorical", "binary", "ordinal"))
+      if (is_discrete) {
+        ok <- !is.na(p_v) & !is.na(t_v)
+        acc <- if (any(ok)) mean(as.character(p_v[ok]) ==
+                                  as.character(t_v[ok])) else NA_real_
+        rows[[length(rows) + 1L]] <- data.frame(
+          trait = trait_name, type = type_t, imputation_idx = 0L,
+          rmse = NA_real_, mae = NA_real_, pearson_r = NA_real_,
+          accuracy = acc, brier = NA_real_, time_sec = t_fit_sec,
+          stringsAsFactors = FALSE
+        )
+      } else {
+        t_num <- suppressWarnings(as.numeric(as.character(t_v)))
+        p_num <- suppressWarnings(as.numeric(as.character(p_v)))
+        ok <- is.finite(t_num) & is.finite(p_num)
+        rmse <- if (any(ok)) sqrt(mean((t_num[ok] - p_num[ok])^2)) else NA_real_
+        mae  <- if (any(ok)) mean(abs(t_num[ok] - p_num[ok])) else NA_real_
+        pear <- if (sum(ok) > 2L) {
+          suppressWarnings(stats::cor(t_num[ok], p_num[ok]))
+        } else NA_real_
+        rows[[length(rows) + 1L]] <- data.frame(
+          trait = trait_name, type = type_t, imputation_idx = 0L,
+          rmse = rmse, mae = mae, pearson_r = pear,
+          accuracy = NA_real_, brier = NA_real_, time_sec = t_fit_sec,
+          stringsAsFactors = FALSE
+        )
+      }
+    }
+  }
+
   if (length(rows) == 0L) {
     return(data.frame(
       trait = character(0), type = character(0), imputation_idx = integer(0),
@@ -303,8 +390,15 @@ BACE_DATASET_CONFIG <- list(
     trait_cols
   )
 
+  # Pass mi$pooled_point so the evaluator can score discrete-type
+  # accuracy on the argmax-of-average-probability prediction (BACE-style
+  # reporting) instead of on each of the m stochastic categorical draws
+  # produced by .sample_conformal_draw(). Continuous-family traits still
+  # get per-stochastic-draw RMSE, so Rubin-style noise propagation
+  # remains visible there. See the 2026-05-17 commit message.
   ev <- .bace_eval_per_imputation(completed_fit, truth_long_fit,
-                                   trait_types_lookup, t_fit)
+                                   trait_types_lookup, t_fit,
+                                   pooled_point = mi$pooled_point)
   t_eval <- as.numeric(difftime(Sys.time(), t0_eval, units = "secs"))
 
   # 7) Normalise + persist
