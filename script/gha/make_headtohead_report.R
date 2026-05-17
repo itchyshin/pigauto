@@ -71,11 +71,18 @@ build_h2h_report <- function(combined, out_dir) {
                       m$rmse_pigauto, m$accuracy_pigauto)
   m$bace    <- ifelse(m$type %in% CONTINUOUS_TYPES,
                       m$rmse_bace, m$accuracy_bace)
-  m$winner  <- vapply(seq_len(nrow(m)),
+  # Label the metric and its preferred direction so the reader can
+  # interpret the pigauto / bace columns at a glance. Continuous-family
+  # types report RMSE (lower is better); discrete types report
+  # accuracy (higher is better).
+  m$metric <- ifelse(m$type %in% CONTINUOUS_TYPES, "rmse", "acc")
+  m$better <- ifelse(m$type %in% CONTINUOUS_TYPES, "lower", "higher")
+  m$winner <- vapply(seq_len(nrow(m)),
                       function(i) .h2h_winner(m$pigauto[i], m$bace[i], m$type[i]),
                       character(1))
 
-  summary_tbl <- m[, c("dataset","trait","type","pigauto","bace","winner")]
+  summary_tbl <- m[, c("dataset","trait","type","metric","better",
+                       "pigauto","bace","winner")]
 
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
   saveRDS(summary_tbl, file.path(out_dir, "summary.rds"))
