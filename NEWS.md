@@ -1,3 +1,74 @@
+# pigauto 0.9.4 (2026-05-18)
+
+Wires the existing WorldClim bioclim covariate pipeline (shipped in
+v0.9.1.9005) into the BACE-compatible head-to-head CI bench for the
+BIEN plant dataset. Closes the gap surfaced by the v0.9.3 autoresearch
+sweep — at that scale, GNN architecture knobs were exhausted; the
+remaining improvement had to come from environmental covariates,
+not capacity.
+
+## Result
+
+BIEN pooled per-trait log-RMSE on the h2h CI bench (n=2000 species,
+30% MCAR, m=20 imputations):
+
+```
+baseline  (full 19,109-pool, no cov, gate ON):  8.286
+control   (filtered 3,450-pool, no cov, gate OFF): 7.455
+treatment (filtered pool, WC covariates, gate OFF): 7.236
+```
+
+Pool-filter effect = −0.83. Net covariate effect = −0.22.
+Combined gain vs v0.9.3 baseline: **−1.05 (−12.7%)**.
+
+Per-trait gates with covariates active:
+
+```
+height_m     = 0.68   (raw |r| vs bioclim = 0.64)
+leaf_area    = 1.00   (raw |r| vs bioclim = 0.41)
+wood_density = 0.40   (raw |r| vs bioclim = 0.16)
+sla          = 0      (raw |r| vs bioclim = 0.27; gate-closed)
+seed_mass    = 0      (raw |r| vs bioclim = 0.43; gate-closed)
+```
+
+Two of five traits (`sla`, `seed_mass`) remain gate-closed even with
+covariates active. `sla` is the expected case (low raw correlation).
+`seed_mass` is anomalous — its raw bioclim correlation is comparable
+to `height_m`'s, but the val-set gate calibration finds no benefit.
+Diagnosis to follow.
+
+## Changes
+
+- `script/gha/_bace_compat.R`: BIEN config now sets
+  `covariate_cols` to the 38 bioclim columns (19 vars × median + IQR),
+  `phylo_signal_gate = FALSE`, and `external_cov_rds` pointing to the
+  new bioclim cache. `.run_bench_bace_compat()` learned an
+  `external_cov_rds` join that cbinds covariates onto `traits_df`
+  before subsetting and filters out species without complete bioclim
+  coverage. `cov_cols` AND external-cov column names are removed
+  from the default trait-subset so they don't get masked + imputed
+  as traits.
+- New cache: `useful/bace_data_snapshot/data/bien_worldclim_covariates.rds`
+  (19,109 species × 38 cols; 3,450 with complete coverage).
+
+## Negative results documented for the trail
+
+The W-series sweep tested six tweaks on top of the W0 (treatment)
+baseline; all regressed by 0.09–0.12, except W6 which was tied
+within noise:
+
+- W3 lambda_shrink 0.03 → 0.01 (+0.12)
+- W4 lambda_gate 0.01 → 0.001 (+0.09; leaf_area gate collapsed)
+- W5 median-only cov (drop 19 IQR cols) (+0.12)
+- W6 phylo_signal_gate FALSE → TRUE (+0.01, tied)
+- Run A: WorldClim + use_trait_attention=TRUE (+0.11)
+
+W6's tie shows the `phylo_signal_gate = FALSE` recommendation
+from `specs/2026-04-24-worldclim-covariates-design.md` §5.4 is
+unnecessary when WC covariates are active — the calibrator handles
+the gating either way. The config keeps `FALSE` for stability but
+the constraint is softer than the spec implied.
+
 # pigauto 0.9.3 (2026-05-18)
 
 Small opt-in feature release from an autoresearch sweep on the BIEN

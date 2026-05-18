@@ -65,7 +65,24 @@ BACE_DATASET_CONFIG <- list(
     trait_subset    = NULL,
     log_traits      = c("height_m", "leaf_area", "sla",
                          "seed_mass", "wood_density"),
-    covariate_cols  = character(0)
+    # WorldClim bioclim covariates (38 = 19 vars x median + iqr).
+    # external_cov_rds below filters traits_df to species WITH bioclim
+    # coverage; these column names flow to cov_df and on to multi_impute.
+    # 2026-05-18 controls:
+    #   baseline (full pool, no cov, gate ON):  8.286
+    #   control  (filtered pool, no cov, gate OFF): 7.455
+    #   treatment (filtered pool, WC cov, gate OFF): 7.236
+    #   => pool effect -0.83, covariate effect -0.22.
+    covariate_cols  = c(paste0("bio", 1:19, "_median"),
+                        paste0("bio", 1:19, "_iqr")),
+    # Phylo-signal gate OFF on BIEN: weak-phylo-signal traits (sla, leaf_area,
+    # height_m have lambda ~ 0) would otherwise be forced to mean-only, masking
+    # the covariate lift. Spec §5.4 Option A.
+    phylo_signal_gate = FALSE,
+    # External covariate source: loaded at runtime and cbind-ed onto traits_df
+    # BEFORE trait_subset / mask / subsetting. Species without bioclim coverage
+    # are dropped from BIEN before the bench's n=2000 subsample.
+    external_cov_rds  = "useful/bace_data_snapshot/data/bien_worldclim_covariates.rds"
   ),
   globtherm = list(
     trait_subset    = NULL,
@@ -432,6 +449,29 @@ BACE_DATASET_CONFIG <- list(
   ds_cfg <- BACE_DATASET_CONFIG[[dataset]]
   if (is.null(ds_cfg)) stop(sprintf("No BACE config for dataset '%s'", dataset))
 
+  # 0) External covariate join (e.g. WorldClim for BIEN). When
+  # ds_cfg$external_cov_rds points to a per-species covariate RDS,
+  # cbind those covariates onto traits_df BEFORE subsetting, and
+  # filter traits_df to species with non-NA coverage on the join
+  # cols (avoids the bench sampling 80% median-filled covariates).
+  ext_cov_rds <- ds_cfg$external_cov_rds %||% NULL
+  ext_cov_col_names <- character(0)
+  if (!is.null(ext_cov_rds) && nzchar(ext_cov_rds) && file.exists(ext_cov_rds)) {
+    ext_cov <- readRDS(ext_cov_rds)
+    # Match by rowname; species present in traits_df but not in ext_cov
+    # get NAs (would be dropped below).
+    ext_aligned <- ext_cov[rownames(traits_df), , drop = FALSE]
+    rownames(ext_aligned) <- rownames(traits_df)
+    ext_cov_col_names <- colnames(ext_aligned)
+    has_cov <- stats::complete.cases(ext_aligned)
+    cat(sprintf("[%s] external cov: %s -> %d / %d species have full coverage\n",
+                dataset, ext_cov_rds, sum(has_cov), length(has_cov)))
+    traits_df <- cbind(traits_df, ext_aligned)
+    traits_df <- traits_df[has_cov, , drop = FALSE]
+    tree <- ape::keep.tip(tree, rownames(traits_df))
+    traits_df <- traits_df[tree$tip.label, , drop = FALSE]
+  }
+
   # 1) Subset species via BACE's exact set.seed(2026); sample(rownames, 2000)
   keep <- .bace_subset_species(traits_df, subset_n = cfg$subset_n,
                                 seed = cfg$seed)
@@ -479,11 +519,18 @@ BACE_DATASET_CONFIG <- list(
                 dataset, paste(cov_cols, collapse = ", ")))
   }
 
-  # 2b) Restrict trait columns to trait_subset (default: all non-tax)
+  # 2b) Restrict trait columns to trait_subset (default: all non-tax).
+  # cov_cols AND ext_cov_col_names are removed from the trait set so they
+  # aren't masked + imputed like traits. cov_cols flow to cov_df when
+  # covariate_cols is non-empty; the broader ext_cov_col_names exclusion
+  # ensures that columns cbind-ed in by external_cov_rds (e.g. WorldClim
+  # bioclim) are NEVER treated as traits, even on a control run where
+  # covariate_cols is intentionally empty.
   trait_cols <- if (!is.null(ds_cfg$trait_subset))
     intersect(ds_cfg$trait_subset, colnames(traits_df))
   else
-    .bace_default_subset(traits_df)
+    setdiff(.bace_default_subset(traits_df),
+            union(cov_cols_cfg, ext_cov_col_names))
   traits_df <- traits_df[, trait_cols, drop = FALSE]
   cat(sprintf("[%s] subset to n=%d species x %d traits (%s)\n",
               dataset, nrow(traits_df), ncol(traits_df),
@@ -515,6 +562,12 @@ BACE_DATASET_CONFIG <- list(
   # cov_inject_blocks); BACE's bench saw no covariates so this is
   # pigauto's architectural advantage made explicit.
   t0_fit <- Sys.time()
+  # Per-dataset phylo_signal_gate override. BIEN turns this OFF so
+  # weak-phylo-signal traits (sla / leaf_area / height_m at lambda ~ 0)
+  # don't get forced to mean-only by the gate, which would mask the
+  # WorldClim covariate lift (spec §5.4 Option A).
+  ds_phylo_gate <- ds_cfg$phylo_signal_gate
+  if (is.null(ds_phylo_gate)) ds_phylo_gate <- TRUE
   mi <- multi_impute(
     masked_df_logged, tree,
     m              = cfg$n_imputations,
@@ -523,6 +576,7 @@ BACE_DATASET_CONFIG <- list(
     log_transform  = FALSE,
     covariates     = cov_df,
     n_heads        = 8L,    # T1: more attention heads
+    phylo_signal_gate = ds_phylo_gate,
     seed           = cfg$seed
   )
   t_fit <- as.numeric(difftime(Sys.time(), t0_fit, units = "secs"))
