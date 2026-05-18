@@ -47,20 +47,53 @@ ResidualPhyloDAE <- torch::nn_module(
                         k_eigen  = NULL,   # alias for coord_dim
                         use_transformer_blocks = TRUE,
                         n_heads  = 4L,
-                        ffn_mult = 4L) {
+                        ffn_mult = 4L,
+                        # Within-row cross-trait attention (B3, 2026-05-18)
+                        use_trait_attention = FALSE,
+                        n_trait_heads       = 2L,
+                        trait_embed_dim     = 32L) {
     # Resolve aliases: new names take precedence over legacy names
     if (!is.null(p_latent)) input_dim  <- p_latent
     if (!is.null(hidden))   hidden_dim <- hidden
     if (!is.null(k_eigen))  coord_dim  <- k_eigen
     stopifnot(!is.null(input_dim), !is.null(hidden_dim), !is.null(coord_dim))
 
+    # Within-row cross-trait attention adds a pooled trait-embedding to the
+    # encoder input. Each trait value gets a learnable positional embedding,
+    # self-attention mixes them across the row, mean-pool produces a
+    # trait_embed_dim feature that is concat'd alongside (x, coords, covs).
+    self$use_trait_attention <- isTRUE(use_trait_attention)
+    self$n_trait_heads       <- as.integer(n_trait_heads)
+    self$trait_embed_dim     <- as.integer(trait_embed_dim)
+
     total_input <- input_dim + coord_dim + cov_dim
+    if (self$use_trait_attention) {
+      total_input <- total_input + self$trait_embed_dim
+    }
     self$n_user_cov <- as.integer(n_user_cov)
 
     # Store Phase-9 hyperparameters as fields (for model_config and tests)
     self$use_transformer_blocks <- isTRUE(use_transformer_blocks)
     self$n_heads  <- as.integer(n_heads)
     self$ffn_mult <- as.integer(ffn_mult)
+
+    # ---- Trait-attention sub-module (B3) ------------------------------------
+    # value_proj:    scalar trait value -> trait_embed_dim
+    # trait_pos:    learnable positional embedding per trait column
+    # trait_attn:    one multihead attention block over the trait sequence
+    if (self$use_trait_attention) {
+      self$trait_value_proj <- torch::nn_linear(1L, self$trait_embed_dim)
+      self$trait_pos_embed  <- torch::nn_parameter(
+        torch::torch_randn(c(1L, input_dim, self$trait_embed_dim)) * 0.02
+      )
+      self$trait_attn <- torch::nn_multihead_attention(
+        embed_dim   = self$trait_embed_dim,
+        num_heads   = self$n_trait_heads,
+        dropout     = dropout,
+        batch_first = TRUE
+      )
+      self$trait_attn_norm <- torch::nn_layer_norm(self$trait_embed_dim)
+    }
 
     self$enc1 <- torch::nn_linear(total_input, hidden_dim)
     self$enc2 <- torch::nn_linear(hidden_dim,  hidden_dim)
@@ -244,7 +277,22 @@ ResidualPhyloDAE <- torch::nn_module(
       coords_obs <- coords
     }
 
-    combined <- torch::torch_cat(list(x, coords_obs, covs), dim = 2L)
+    # ---- B3: within-row cross-trait attention -------------------------------
+    # Build per-trait tokens from x, self-attend within each row, mean-pool to
+    # a single trait_embed_dim feature that the encoder sees alongside x.
+    if (isTRUE(self$use_trait_attention)) {
+      # x: (n_obs, p_latent) -> (n_obs, p_latent, 1) -> (n_obs, p_latent, E)
+      tokens <- self$trait_value_proj(x$unsqueeze(-1L))
+      tokens <- tokens + self$trait_pos_embed
+      attn_out <- self$trait_attn(tokens, tokens, tokens)[[1]]
+      attn_out <- self$trait_attn_norm(tokens + attn_out)  # pre-norm-style residual
+      trait_pooled <- attn_out$mean(dim = 2L)              # (n_obs, E)
+      combined <- torch::torch_cat(
+        list(x, coords_obs, covs, trait_pooled), dim = 2L
+      )
+    } else {
+      combined <- torch::torch_cat(list(x, coords_obs, covs), dim = 2L)
+    }
 
     h <- self$enc1(combined)
     h <- self$act(h)

@@ -249,6 +249,9 @@ fit_pigauto <- function(
     use_transformer_blocks = TRUE,
     n_heads           = 4L,
     ffn_mult          = 4L,
+    use_trait_attention = FALSE,
+    n_trait_heads     = 2L,
+    trait_embed_dim   = 32L,
     dropout           = 0.10,
     lr                = 0.003,
     weight_decay      = 1e-4,
@@ -501,7 +504,10 @@ fit_pigauto <- function(
     dropout                = dropout,
     use_transformer_blocks = use_transformer_blocks,
     n_heads                = as.integer(n_heads),
-    ffn_mult               = as.integer(ffn_mult)
+    ffn_mult               = as.integer(ffn_mult),
+    use_trait_attention    = use_trait_attention,
+    n_trait_heads          = as.integer(n_trait_heads),
+    trait_embed_dim        = as.integer(trait_embed_dim)
   )
 
   # Type-aware gate init: set res_raw so effective gate starts at a
@@ -966,6 +972,9 @@ fit_pigauto <- function(
     use_transformer_blocks = use_transformer_blocks,
     n_heads                = as.integer(n_heads),
     ffn_mult               = as.integer(ffn_mult),
+    use_trait_attention    = isTRUE(use_trait_attention),
+    n_trait_heads          = as.integer(n_trait_heads),
+    trait_embed_dim        = as.integer(trait_embed_dim),
     dropout                = dropout,
     refine_steps           = refine_steps,
     cov_dim                = cov_dim,
