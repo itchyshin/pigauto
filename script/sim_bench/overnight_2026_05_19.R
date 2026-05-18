@@ -54,7 +54,11 @@ suppressPackageStartupMessages({
 N_SIMS       <- 10L
 N_SPECIES    <- c(200L, 500L)
 SCENARIOS    <- c("bm_strong", "ou_strong", "nonlinear_cov", "weak_signal")
-N_CORES      <- min(4L, parallel::detectCores() - 1L)
+# Serial only -- torch + MPS does not fork-safe; mclapply with mc.cores > 1
+# segfaults on macOS when multiple workers try to share the MPS device.
+# Serial MPS is faster than parallel CPU at this n, so the right tradeoff
+# is to keep MPS and run one rep at a time.
+N_CORES      <- 1L
 MISS_RATE    <- 0.30
 SEED_BASE    <- 20260519L
 
@@ -188,17 +192,25 @@ cat("Started at:", format(Sys.time()), "\n\n")
 # Each fork uses the already-loaded pigauto. Peak RAM is roughly
 # N_CORES * (1.5 GB per pigauto fit at n=500) = 6 GB; well within
 # laptop budget.
-results_list <- parallel::mclapply(seq_len(nrow(design)), function(i) {
+CHECKPOINT_PATH <- file.path(OUT_DIR, "results_partial.rds")
+results_list <- vector("list", nrow(design))
+for (i in seq_len(nrow(design))) {
   row <- design[i, ]
   cat(sprintf("[%s] rep %d/%d: %s n=%d sim=%d\n",
               format(Sys.time(), "%H:%M:%S"),
               i, nrow(design), row$scenario, row$n, row$sim_id))
-  tryCatch(run_one_rep(row$scenario, row$n, row$sim_id),
-           error = function(e) {
-             cat(sprintf("  REP FAILED: %s\n", e$message))
-             NULL
-           })
-}, mc.cores = N_CORES)
+  results_list[[i]] <- tryCatch(
+    run_one_rep(row$scenario, row$n, row$sim_id),
+    error = function(e) {
+      cat(sprintf("  REP FAILED: %s\n", e$message))
+      NULL
+    })
+  # Checkpoint after each rep so an overnight crash doesn't lose work.
+  partial <- do.call(rbind, results_list[!sapply(results_list, is.null)])
+  if (!is.null(partial) && nrow(partial) > 0L) {
+    saveRDS(partial, CHECKPOINT_PATH)
+  }
+}
 
 results <- do.call(rbind, results_list[!sapply(results_list, is.null)])
 cat("\nFinished at:", format(Sys.time()), "\n")
