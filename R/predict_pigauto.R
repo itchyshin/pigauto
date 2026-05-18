@@ -177,6 +177,9 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   use_transformer_blocks <- cfg$use_transformer_blocks %||% FALSE  # old saves: legacy
   n_heads                <- cfg$n_heads %||% 4L
   ffn_mult               <- cfg$ffn_mult %||% 4L
+  use_trait_attention    <- isTRUE(cfg$use_trait_attention)        # old saves: FALSE
+  n_trait_heads          <- cfg$n_trait_heads   %||% 2L
+  trait_embed_dim        <- cfg$trait_embed_dim %||% 32L
   dropout_cfg            <- cfg$dropout %||% 0.10
   model <- ResidualPhyloDAE(
     input_dim              = as.integer(cfg$input_dim),
@@ -191,7 +194,10 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     dropout                = dropout_cfg,
     use_transformer_blocks = use_transformer_blocks,
     n_heads                = as.integer(n_heads),
-    ffn_mult               = as.integer(ffn_mult)
+    ffn_mult               = as.integer(ffn_mult),
+    use_trait_attention    = use_trait_attention,
+    n_trait_heads          = as.integer(n_trait_heads),
+    trait_embed_dim        = as.integer(trait_embed_dim)
   )
   model$to(device = device)
   model$load_state_dict(object$model_state)

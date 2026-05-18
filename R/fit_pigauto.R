@@ -74,6 +74,25 @@
 #'   learns its own phylogenetic bandwidth (B2 rate-aware attention).
 #' @param ffn_mult integer. Feed-forward width multiplier inside each
 #'   transformer block (default \code{4}, giving \code{hidden_dim * 4}).
+#' @param use_trait_attention logical. Opt-in within-row cross-trait
+#'   self-attention (B3, v0.9.3). When \code{TRUE} (default \code{FALSE}),
+#'   the model builds per-trait tokens from each row's latent values
+#'   (linear projection + learnable positional embedding), applies one
+#'   multi-head self-attention block over the trait sequence, mean-pools
+#'   to a \code{trait_embed_dim} feature, and concatenates it alongside
+#'   \code{(x, coords, covs)} at the encoder input. Intended for trait
+#'   sets with strong within-row functional coupling that the joint MVN /
+#'   threshold-joint baseline cannot capture (e.g. nonlinear cross-trait
+#'   structure). On the BIEN n=2000 plant bench it did \strong{not} improve
+#'   pooled RMSE (Σ is already captured by the joint baseline); kept as
+#'   an opt-in for datasets where it may help. Default \code{FALSE}
+#'   preserves v0.9.2 behaviour exactly.
+#' @param n_trait_heads integer. Number of attention heads in the within-row
+#'   self-attention block when \code{use_trait_attention = TRUE}. Default
+#'   \code{2}. Ignored when \code{use_trait_attention = FALSE}.
+#' @param trait_embed_dim integer. Embedding dim per trait token in the
+#'   within-row self-attention block. Default \code{32}. Ignored when
+#'   \code{use_trait_attention = FALSE}.
 #' @param corruption_rate numeric. Final corruption fraction if
 #'   \code{corruption_ramp > 0}; otherwise the fixed corruption rate per
 #'   epoch (default \code{0.55}).
@@ -249,6 +268,9 @@ fit_pigauto <- function(
     use_transformer_blocks = TRUE,
     n_heads           = 4L,
     ffn_mult          = 4L,
+    use_trait_attention = FALSE,
+    n_trait_heads     = 2L,
+    trait_embed_dim   = 32L,
     dropout           = 0.10,
     lr                = 0.003,
     weight_decay      = 1e-4,
@@ -501,7 +523,10 @@ fit_pigauto <- function(
     dropout                = dropout,
     use_transformer_blocks = use_transformer_blocks,
     n_heads                = as.integer(n_heads),
-    ffn_mult               = as.integer(ffn_mult)
+    ffn_mult               = as.integer(ffn_mult),
+    use_trait_attention    = use_trait_attention,
+    n_trait_heads          = as.integer(n_trait_heads),
+    trait_embed_dim        = as.integer(trait_embed_dim)
   )
 
   # Type-aware gate init: set res_raw so effective gate starts at a
@@ -966,6 +991,9 @@ fit_pigauto <- function(
     use_transformer_blocks = use_transformer_blocks,
     n_heads                = as.integer(n_heads),
     ffn_mult               = as.integer(ffn_mult),
+    use_trait_attention    = isTRUE(use_trait_attention),
+    n_trait_heads          = as.integer(n_trait_heads),
+    trait_embed_dim        = as.integer(trait_embed_dim),
     dropout                = dropout,
     refine_steps           = refine_steps,
     cov_dim                = cov_dim,

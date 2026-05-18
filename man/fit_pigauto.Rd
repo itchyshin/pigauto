@@ -18,6 +18,9 @@ fit_pigauto(
   use_transformer_blocks = TRUE,
   n_heads = 4L,
   ffn_mult = 4L,
+  use_trait_attention = FALSE,
+  n_trait_heads = 2L,
+  trait_embed_dim = 32L,
   dropout = 0.1,
   lr = 0.003,
   weight_decay = 1e-04,
@@ -36,7 +39,7 @@ fit_pigauto(
   conformal_method = c("split", "bootstrap"),
   conformal_bootstrap_B = 500L,
   conformal_split_val = FALSE,
-  gate_method = c("single_split", "median_splits", "cv_folds"),
+  gate_method = c("cv_folds", "median_splits", "single_split"),
   gate_splits_B = 31L,
   gate_cv_folds = 5L,
   safety_floor = TRUE,
@@ -90,6 +93,28 @@ learns its own phylogenetic bandwidth (B2 rate-aware attention).}
 
 \item{ffn_mult}{integer. Feed-forward width multiplier inside each
 transformer block (default \code{4}, giving \code{hidden_dim * 4}).}
+
+\item{use_trait_attention}{logical. Opt-in within-row cross-trait
+self-attention (B3, v0.9.3). When \code{TRUE} (default \code{FALSE}),
+the model builds per-trait tokens from each row's latent values
+(linear projection + learnable positional embedding), applies one
+multi-head self-attention block over the trait sequence, mean-pools
+to a \code{trait_embed_dim} feature, and concatenates it alongside
+\code{(x, coords, covs)} at the encoder input. Intended for trait
+sets with strong within-row functional coupling that the joint MVN /
+threshold-joint baseline cannot capture (e.g. nonlinear cross-trait
+structure). On the BIEN n=2000 plant bench it did \strong{not} improve
+pooled RMSE (Σ is already captured by the joint baseline); kept as
+an opt-in for datasets where it may help. Default \code{FALSE}
+preserves v0.9.2 behaviour exactly.}
+
+\item{n_trait_heads}{integer. Number of attention heads in the within-row
+self-attention block when \code{use_trait_attention = TRUE}. Default
+\code{2}. Ignored when \code{use_trait_attention = FALSE}.}
+
+\item{trait_embed_dim}{integer. Embedding dim per trait token in the
+within-row self-attention block. Default \code{32}. Ignored when
+\code{use_trait_attention = FALSE}.}
 
 \item{dropout}{numeric. Dropout rate (default \code{0.10}).}
 

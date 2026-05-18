@@ -14,7 +14,7 @@ test_that("[gha-config] PIGAUTO_CI_CONFIG loads with documented defaults", {
   cfg <- e$PIGAUTO_CI_CONFIG
   expect_type(cfg, "list")
   expect_equal(cfg$subset_n,          2000L)
-  expect_equal(cfg$n_imputations,     10L)
+  expect_equal(cfg$n_imputations,     20L)  # bumped 10 -> 20 in v0.9.2
   expect_equal(cfg$missing_frac,      0.30)
   expect_equal(cfg$seed,              2026L)
   expect_equal(cfg$pool_method,       "median")
@@ -42,9 +42,14 @@ test_that("[gha-config] .normalize_eval() projects to the canonical schema", {
   )
 
   out <- norm(raw, dataset = "avonet", method = "pigauto_ci")
+  # v0.9.2+ schema: coverage_95 + interval_width inserted between brier
+  # and time_sec so per-dataset h2h coverage tables render alongside
+  # the brier table. Older snapshots without those cols are NA-filled
+  # by .normalize_eval().
   expected_cols <- c("dataset", "trait", "type", "method",
                      "imputation_idx", "rmse", "mae", "pearson_r",
-                     "accuracy", "brier", "time_sec")
+                     "accuracy", "brier", "coverage_95",
+                     "interval_width", "time_sec")
   expect_equal(colnames(out), expected_cols)
   expect_equal(out$dataset, c("avonet", "avonet"))
   expect_equal(out$method,  c("pigauto_ci", "pigauto_ci"))
