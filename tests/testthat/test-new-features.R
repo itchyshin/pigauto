@@ -589,3 +589,43 @@ test_that("multi-obs + covariates: fit stores multi_obs flag and obs metadata", 
   expect_equal(nrow(pred2$se), n_obs)
   expect_true(pred2$multi_obs)
 })
+
+# ---- B3: within-row cross-trait attention (v0.9.3) ------------------------
+
+test_that("use_trait_attention=TRUE builds, trains, and predicts (smoke)", {
+  skip_on_cran()
+  skip_if_not_installed("torch")
+  skip_if_not(torch::torch_is_installed())
+
+  td  <- make_test_data_new(n = 30L, seed = 730L)
+  result <- impute(td$df, td$tree,
+                   use_trait_attention = TRUE,
+                   n_trait_heads       = 2L,
+                   trait_embed_dim     = 16L,
+                   epochs              = 20L,
+                   eval_every          = 10L,
+                   patience            = 5L,
+                   verbose             = FALSE,
+                   seed                = 730L)
+
+  expect_s3_class(result, "pigauto_result")
+  expect_true(all(is.finite(as.matrix(result$completed))))
+  expect_true(isTRUE(result$fit$model_config$use_trait_attention))
+  expect_equal(result$fit$model_config$n_trait_heads, 2L)
+  expect_equal(result$fit$model_config$trait_embed_dim, 16L)
+})
+
+test_that("use_trait_attention default FALSE is backward compatible", {
+  skip_on_cran()
+  skip_if_not_installed("torch")
+  skip_if_not(torch::torch_is_installed())
+
+  td <- make_test_data_new(n = 30L, seed = 731L)
+  result <- impute(td$df, td$tree,
+                   epochs     = 20L,
+                   eval_every = 10L,
+                   patience   = 5L,
+                   verbose    = FALSE,
+                   seed       = 731L)
+  expect_false(isTRUE(result$fit$model_config$use_trait_attention))
+})

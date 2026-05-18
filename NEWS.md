@@ -1,3 +1,61 @@
+# pigauto 0.9.3 (2026-05-18)
+
+Small opt-in feature release from an autoresearch sweep on the BIEN
+plant bench. New: within-row cross-trait self-attention in the GNN
+(`use_trait_attention`, default `FALSE`). Eighteen knob-tweak
+experiments + three structural variants on BIEN n=2000 were run
+between v0.9.2 and v0.9.3; none improved BIEN pooled RMSE
+meaningfully over the default architecture. The cross-trait attention
+path is shipped as opt-in because it is structurally distinct and may
+help on datasets with strong within-row functional coupling that the
+joint MVN / threshold-joint baseline cannot capture; it did NOT help
+on BIEN (the baseline already encodes Σ for the dominant trait types).
+
+## New (opt-in)
+
+- `fit_pigauto()` and `multi_impute()` accept `use_trait_attention =
+  FALSE` (default), `n_trait_heads = 2L`, `trait_embed_dim = 32L`.
+  When `TRUE`, the GNN's encoder receives an additional pooled
+  trait-context feature built by per-trait token embedding +
+  one multi-head self-attention block over the trait sequence.
+  Backward-compatible: saved fits without the field default to
+  `FALSE` and reconstruct identically.
+
+## Documentation
+
+- New article on the pkgdown site: **"GNN architecture and the math
+  behind pigauto"** (`vignettes/gnn-architecture.Rmd`). Documents the
+  end-to-end data flow, the baseline dispatcher (BM / LP / joint MVN /
+  threshold-joint / OVR), the transformer-block GNN with B2 rate-aware
+  attention and the new B3 within-row cross-trait attention, the gate-
+  and-calibrate safety mechanism, conformal prediction intervals, the
+  three uncertainty quantification mechanisms, and the two-step
+  Nakagawa & de Villemereuil (2019) tree-uncertainty workflow.
+
+## Autoresearch findings (BIEN n=2000)
+
+Negative results, documented for the trail:
+
+- More capacity hurts: `n_gnn_layers` 2→4, `hidden_dim` 64→128,
+  `ffn_mult` 4→8, `n_heads` 4→16, and all combos regress (+0.02 to
+  +0.05 on pooled RMSE).
+- Less capacity hurts equally: `n_heads` 4→2, `hidden_dim` 64→32,
+  legacy attention path also regress.
+- Regularization tweaks regress: `dropout` 0.10→0.20,
+  `lambda_gate` 0.01→0.001, `gate_cap` 0.8→1.0.
+- Refinement / corruption tweaks regress: `refine_steps` 8→16,
+  `corruption_rate` 0.55→0.30.
+- Within-row cross-trait attention (this release's new feature)
+  also regresses on BIEN at 32/64 embed and 2/4 heads — the joint
+  MVN baseline already captures Σ for continuous traits.
+
+Marginal positive: `n_heads` 4→8 in the CI bench config (-0.002,
+at-noise; bench-only).
+
+Strategic implication: at BIEN's scale and signal regime, further
+RMSE lift needs environmental covariates (WorldClim) or larger
+posterior tree ensembles, not GNN-architecture changes.
+
 # pigauto 0.9.2 (2026-05-17)
 
 First release after the v0.9.1.9000 dev cycle. Headline outcome:

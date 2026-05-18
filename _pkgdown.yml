@@ -53,6 +53,8 @@ navbar:
           href: articles/mixed-types.html
         - text: "Propagating tree uncertainty"
           href: articles/tree-uncertainty.html
+        - text: "GNN architecture and the math behind pigauto"
+          href: articles/gnn-architecture.html
         # Four static walk-through HTML pages (pigauto_intro,
         # pigauto_workflow_mixed, pigauto_walkthrough_covariates,
         # pigauto_walkthrough_multi_obs) were retired in 2026-05 to
