@@ -175,3 +175,60 @@ test_that('[pagel] bm_impute_col(lambda = "estimate") recovers low lambda on iid
   out <- pigauto:::bm_impute_col(y, R, lambda = "estimate")
   expect_lt(out$lambda_hat, 0.3)
 })
+
+# ---- fit_baseline + dispatcher threading ----------------------------------
+
+test_that("[pagel] fit_baseline(lambda_mode='fixed_1') is back-compatible (no behaviour change)", {
+  set.seed(30L)
+  tree <- ape::rcoal(30L)
+  df <- data.frame(
+    x1 = stats::rnorm(30L),
+    x2 = stats::rnorm(30L),
+    row.names = tree$tip.label
+  )
+  df$x1[c(2L, 5L, 17L)] <- NA
+  df$x2[c(3L, 11L)] <- NA
+  pd <- preprocess_traits(df, tree)
+  bl_default <- fit_baseline(pd, tree)
+  bl_fixed   <- fit_baseline(pd, tree, lambda_mode = "fixed_1")
+  expect_equal(bl_fixed$mu, bl_default$mu, tolerance = 1e-12)
+  expect_equal(bl_fixed$se, bl_default$se, tolerance = 1e-12)
+})
+
+test_that("[pagel] fit_baseline(lambda_mode='estimate') runs end-to-end + produces finite predictions", {
+  set.seed(31L)
+  tree <- ape::rcoal(40L)
+  df <- data.frame(
+    x1 = stats::rnorm(40L),    # iid: should pull lambda toward 0
+    x2 = stats::rnorm(40L),
+    row.names = tree$tip.label
+  )
+  df$x1[c(2L, 5L, 17L, 28L)] <- NA
+  df$x2[c(3L, 11L, 35L)] <- NA
+  pd <- preprocess_traits(df, tree)
+  bl_est <- fit_baseline(pd, tree, lambda_mode = "estimate")
+  expect_true(all(is.finite(bl_est$mu)))
+  expect_true(all(is.finite(bl_est$se)))
+  expect_true(all(bl_est$se >= 0))
+})
+
+test_that("[pagel] fit_baseline lambda_mode='estimate' produces different predictions vs 'fixed_1' on iid data", {
+  set.seed(32L)
+  tree <- ape::rcoal(50L)
+  df <- data.frame(
+    x1 = stats::rnorm(50L),       # iid (no phylo signal)
+    row.names = tree$tip.label
+  )
+  miss <- c(2L, 7L, 22L, 41L)
+  df$x1[miss] <- NA
+  pd <- preprocess_traits(df, tree)
+  bl_fixed <- fit_baseline(pd, tree, lambda_mode = "fixed_1")
+  bl_est   <- fit_baseline(pd, tree, lambda_mode = "estimate")
+  # For iid data, the lambda-estimate path should shrink toward grand mean
+  # (different from lambda=1 BM kriging predictions). Predictions on missing
+  # cells should differ between modes.
+  diff <- bl_fixed$mu[miss, 1L] - bl_est$mu[miss, 1L]
+  expect_true(max(abs(diff)) > 1e-4,
+              info = sprintf("max abs diff = %.6f (should be > 1e-4)",
+                              max(abs(diff))))
+})

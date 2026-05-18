@@ -297,10 +297,12 @@ fit_pigauto <- function(
     phylo_signal_threshold = 0.2,
     phylo_signal_method = c("lambda", "blomberg_k"),
     min_val_cells     = 20L,
+    lambda_mode       = c("fixed_1", "estimate"),
     verbose           = TRUE,
     seed              = 1L
 ) {
   conformal_method    <- match.arg(conformal_method)
+  lambda_mode         <- match.arg(lambda_mode)
   gate_method         <- match.arg(gate_method)
   phylo_signal_method <- match.arg(phylo_signal_method)
   if (!inherits(data, "pigauto_data")) {
@@ -355,7 +357,8 @@ fit_pigauto <- function(
     if (verbose) message("Fitting baseline...")
     # Pass graph through so fit_baseline can reuse graph$D instead of
     # calling ape::cophenetic.phylo() a second time on the same tree.
-    baseline <- fit_baseline(data, tree, splits = splits, graph = graph)
+    baseline <- fit_baseline(data, tree, splits = splits, graph = graph,
+                              lambda_mode = lambda_mode)
   }
 
   # ---- Trait map ------------------------------------------------------------
@@ -994,6 +997,7 @@ fit_pigauto <- function(
     use_trait_attention    = isTRUE(use_trait_attention),
     n_trait_heads          = as.integer(n_trait_heads),
     trait_embed_dim        = as.integer(trait_embed_dim),
+    lambda_mode            = lambda_mode,
     dropout                = dropout,
     refine_steps           = refine_steps,
     cov_dim                = cov_dim,

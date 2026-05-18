@@ -210,14 +210,33 @@ ml_lambda_for_col <- function(y, R, nugget = 1e-6,
     0.5 * ((n_o - 1L) * log(sigma2) + log_det)
   }
 
+  # Robustness: stats::optimise (golden-section) can get stuck near a
+  # boundary when the NLL has plateau regions or weak curvature. We do a
+  # coarse 11-point grid scan first, then refine via optimise() in a
+  # narrowed bracket around the best grid point. Cost: 11 extra Cholesky
+  # solves per trait, ~10ms at n=500. Buys substantial stability.
+  grid <- seq(lambda_grid[1L], lambda_grid[2L], length.out = 11L)
+  grid_nll <- vapply(grid, nll, numeric(1L))
+  if (!any(is.finite(grid_nll))) return(1.0)
+  best_idx <- which.min(grid_nll)
+  # Narrow bracket around the best grid point (use neighbours).
+  lo <- grid[max(1L, best_idx - 1L)]
+  hi <- grid[min(length(grid), best_idx + 1L)]
+  if (lo == hi) {
+    # Single grid point is best (boundary case); return it.
+    return(grid[best_idx])
+  }
   opt <- tryCatch(
-    stats::optimise(nll, interval = lambda_grid, tol = 1e-4),
+    stats::optimise(nll, interval = c(lo, hi), tol = 1e-4),
     error = function(e) NULL
   )
-  if (is.null(opt) || !is.finite(opt$minimum)) return(1.0)
-  # Clamp the result back into [0, 1] (it's bounded by the interval but
-  # snap exactly when near the grid endpoints).
-  lambda_hat <- max(0, min(1, opt$minimum))
+  if (is.null(opt) || !is.finite(opt$minimum)) return(grid[best_idx])
+  # Compare optimise result against grid best; keep whichever is lower.
+  if (opt$objective <= grid_nll[best_idx] + 1e-8) {
+    lambda_hat <- max(0, min(1, opt$minimum))
+  } else {
+    lambda_hat <- grid[best_idx]
+  }
   lambda_hat
 }
 
