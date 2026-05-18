@@ -78,11 +78,17 @@
 fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                          graph = NULL,
                          multi_obs_aggregation = c("hard", "soft"),
+                         lambda_mode = c("fixed_1", "estimate"),
                          em_iterations = 0L,
                          em_tol = 1e-3,
                          em_offdiag = FALSE) {
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
   soft_aggregate <- identical(multi_obs_aggregation, "soft")
+  lambda_mode <- match.arg(lambda_mode)
+  # Translate dispatcher mode to the kernel-layer lambda argument.
+  # "fixed_1"  -> lambda = 1.0   (back-compat; bit-identical to v0.9.x)
+  # "estimate" -> lambda = "estimate" (per-column ML)
+  bm_lambda <- if (identical(lambda_mode, "estimate")) "estimate" else 1.0
   em_iterations <- as.integer(em_iterations)
   em_offdiag    <- isTRUE(em_offdiag)
   if (!is.finite(em_iterations) || em_iterations < 0L) {
@@ -199,14 +205,21 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   # Rphylopars has numerical instability with multi-categorical liability
   # matrices (the rank-(K-1) drop + multiple cat groups combine badly).
   # Phase 6 EM will refine this once Sigma is estimated stably.
+  # lambda_mode = "estimate" forces the per-column ML BM path:
+  # joint MVN / threshold-joint use phylopars(model="BM") which is
+  # lambda=1 silently; per-column ML supports lambda estimation natively.
+  # See spec §8 decision 3 (in-house, no phylopars on the lambda path).
+  force_per_column <- identical(lambda_mode, "estimate")
   use_threshold_joint <- (length(binary_cols) + length(ordinal_cols)) >= 1L &&
     length(bm_cols) >= 1L &&
     !has_multi_proportion &&
+    !force_per_column &&
     joint_mvn_available()
 
   use_continuous_joint <- !use_threshold_joint &&
     length(bm_cols) >= 2L &&
     !has_multi_proportion &&
+    !force_per_column &&
     joint_mvn_available()
 
 
@@ -317,7 +330,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
         # species-level; for single-obs n_species == n_obs).
         tj_pred <- mu[, col]
         # BM-via-MVN alternative on the masked z-scored ordinal column.
-        bm_res <- bm_impute_col(X[, col], R_phy_local)
+        bm_res <- bm_impute_col(X[, col], R_phy_local, lambda = bm_lambda)
         # Val MSE for both paths.
         truth_j  <- truth_full[val_rows_j, col]
         finite_t <- is.finite(truth_j)
@@ -420,7 +433,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   # / continuous-joint dispatchers above ran. If phylopars is unavailable
   # OR a fit fails for any reason, the per-trait result falls through to LP
   # below.
-  if (length(cat_cols) > 0L && joint_mvn_available()) {
+  if (length(cat_cols) > 0L && joint_mvn_available() && !force_per_column) {
     for (tm in trait_map) {
       if (tm$type != "categorical") next
       k_cols <- tm$latent_cols
@@ -518,7 +531,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     # Impute each BM-eligible column (covariate-aware when cov_design supplied)
     for (j in seq_along(bm_cols)) {
       if (is.null(cov_design)) {
-        res_j <- bm_impute_col(X_sp[, j], R_phy)
+        res_j <- bm_impute_col(X_sp[, j], R_phy, lambda = bm_lambda)
       } else {
         res_j <- bm_impute_col_with_cov(X_sp[, j], cov_design, R_phy)
       }

@@ -55,7 +55,32 @@ phylo_cor_matrix <- function(tree) {
 #'   }
 #' @keywords internal
 #' @noRd
-bm_impute_col <- function(y, R, nugget = 1e-6) {
+bm_impute_col <- function(y, R, nugget = 1e-6, lambda = 1.0) {
+  # Pagel's lambda regularises the off-diagonal of R toward zero
+  #   R(lambda) = lambda * R + (1 - lambda) * I,    lambda in [0, 1]
+  # At lambda = 1 the call is bit-identical to v0.9.x (back-compat).
+  # At lambda = 0, R(lambda) = I -- GLS mean reduces to the arithmetic
+  # mean of observed cells; conditional posterior is the grand mean
+  # with no phylogenetic structure.
+  # lambda = "estimate" triggers ML estimation: returns a list with an
+  # additional $lambda_hat field reporting the optimal lambda.
+  # Spec: specs/2026-05-18-pagel-lambda-baseline-design.md.
+  lambda_hat <- NULL
+  if (identical(lambda, "estimate")) {
+    lambda_hat <- ml_lambda_for_col(y, R, nugget = nugget)
+    lambda <- lambda_hat
+  }
+  if (!is.numeric(lambda) || length(lambda) != 1L || !is.finite(lambda) ||
+      lambda < 0 || lambda > 1) {
+    stop("'lambda' must be a numeric scalar in [0, 1] or \"estimate\"; got: ",
+         paste(lambda, collapse = ", "), call. = FALSE)
+  }
+  if (lambda < 1) {
+    diag_R <- diag(R)
+    R <- lambda * R
+    diag(R) <- lambda * diag_R + (1 - lambda)
+  }
+
   n <- length(y)
   mu_out <- numeric(n)
   se_out <- numeric(n)
@@ -136,7 +161,83 @@ bm_impute_col <- function(y, R, nugget = 1e-6) {
   mu_out[miss_idx] <- mu_m
   se_out[miss_idx] <- sqrt(cond_var)
 
-  list(mu = mu_out, se = se_out)
+  out <- list(mu = mu_out, se = se_out)
+  if (!is.null(lambda_hat)) out$lambda_hat <- lambda_hat
+  out
+}
+
+# ---- ml_lambda_for_col -----------------------------------------------------
+#
+# Per-column ML estimation of Pagel's lambda for the BM baseline.
+#
+# Profile-likelihood: at fixed lambda the GLS phylogenetic mean
+# mu_hat(lambda) and REML variance sigma2_hat(lambda) are closed-form,
+# so the profile (REML) negative log-likelihood is
+#
+#   nll(lambda) = 0.5 * ( (n_o - 1) * log(sigma2_hat(lambda))
+#                       + log|R_oo(lambda)| )
+#
+# (constants dropped). We 1D-optimise over lambda in (eps, 1-eps) using
+# stats::optimise to avoid the singular endpoints.
+#
+# Returns: scalar lambda_hat in [eps, 1-eps]. Falls back to 1 if there
+# are too few observed cells (n_o < 10) to do useful inference, or if
+# any of the Cholesky factorisations fail.
+# @noRd
+ml_lambda_for_col <- function(y, R, nugget = 1e-6,
+                                lambda_grid = c(0.005, 0.995)) {
+  obs <- which(!is.na(y))
+  n_o <- length(obs)
+  if (n_o < 10L) return(1.0)
+  R_oo <- R[obs, obs, drop = FALSE]
+  y_o  <- y[obs]
+  ones <- rep(1, n_o)
+
+  nll <- function(lambda) {
+    R_l <- lambda * R_oo
+    diag(R_l) <- lambda * diag(R_oo) + (1 - lambda) + nugget
+    L <- tryCatch(chol(R_l), error = function(e) NULL)
+    if (is.null(L)) return(.Machine$double.xmax)
+    chol_solve <- function(b) backsolve(L, forwardsolve(t(L), b))
+    a <- chol_solve(ones)
+    b <- chol_solve(y_o)
+    mu_hat <- sum(b) / sum(a)
+    e <- y_o - mu_hat
+    e_solve <- chol_solve(e)
+    sigma2 <- as.numeric(crossprod(e, e_solve)) / max(n_o - 1L, 1L)
+    if (!is.finite(sigma2) || sigma2 <= 0) return(.Machine$double.xmax)
+    log_det <- 2 * sum(log(diag(L)))
+    0.5 * ((n_o - 1L) * log(sigma2) + log_det)
+  }
+
+  # Robustness: stats::optimise (golden-section) can get stuck near a
+  # boundary when the NLL has plateau regions or weak curvature. We do a
+  # coarse 11-point grid scan first, then refine via optimise() in a
+  # narrowed bracket around the best grid point. Cost: 11 extra Cholesky
+  # solves per trait, ~10ms at n=500. Buys substantial stability.
+  grid <- seq(lambda_grid[1L], lambda_grid[2L], length.out = 11L)
+  grid_nll <- vapply(grid, nll, numeric(1L))
+  if (!any(is.finite(grid_nll))) return(1.0)
+  best_idx <- which.min(grid_nll)
+  # Narrow bracket around the best grid point (use neighbours).
+  lo <- grid[max(1L, best_idx - 1L)]
+  hi <- grid[min(length(grid), best_idx + 1L)]
+  if (lo == hi) {
+    # Single grid point is best (boundary case); return it.
+    return(grid[best_idx])
+  }
+  opt <- tryCatch(
+    stats::optimise(nll, interval = c(lo, hi), tol = 1e-4),
+    error = function(e) NULL
+  )
+  if (is.null(opt) || !is.finite(opt$minimum)) return(grid[best_idx])
+  # Compare optimise result against grid best; keep whichever is lower.
+  if (opt$objective <= grid_nll[best_idx] + 1e-8) {
+    lambda_hat <- max(0, min(1, opt$minimum))
+  } else {
+    lambda_hat <- grid[best_idx]
+  }
+  lambda_hat
 }
 
 # ---- bm_impute_col_with_cov -------------------------------------------------

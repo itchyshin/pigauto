@@ -1,3 +1,70 @@
+# pigauto 0.10.0.9000 (development)
+
+## New (opt-in): Pagel's lambda Brownian-motion baseline
+
+Adds first-pass support for Pagel's lambda < 1 in the BM baseline.
+Spec: `specs/2026-05-18-pagel-lambda-baseline-design.md` (APPROVED).
+
+New parameters:
+
+- `fit_pigauto(..., lambda_mode = c("fixed_1", "estimate"))`
+- `fit_baseline(..., lambda_mode = c("fixed_1", "estimate"))`
+- kernel-layer `bm_impute_col(..., lambda)` accepts numeric in `[0, 1]`
+  OR the string `"estimate"` (in-house ML via REML profile + 11-point
+  grid scan + local optim)
+
+Default `lambda_mode = "fixed_1"` is **bit-identical to v0.9.x** — no
+silent behaviour change for existing callers.
+
+What lambda < 1 does mathematically:
+
+```
+R(lambda) = lambda * R + (1 - lambda) * I
+```
+
+shrinks the off-diagonal of the phylogenetic correlation matrix
+toward zero. lambda = 1 is full BM kriging; lambda = 0 reduces the
+GLS predictor to the grand mean. Intermediate lambda allows partial
+phylogenetic shrinkage for traits with weak phylo signal.
+
+**No phylopars dependency on the lambda path.** Both `transform_tree_pagel`
+(internal scaler with Pagel terminal-edge compensation) and
+`ml_lambda_for_col` (per-column ML) are in-house. When
+`lambda_mode = "estimate"`, the dispatcher forces per-column BM
+(joint MVN / threshold-joint / OVR are gated off because phylopars
+`model = "BM"` is silently lambda = 1).
+
+## Known limitation (honest framing)
+
+On the v0.9.4 BIEN h2h CI bench (n=2000, 30% MCAR, m=20):
+
+- height_m: ML lambda_hat ≈ 0.95, z-RMSE 0.73 (close to RMSE-optimal)
+- leaf_area: ML lambda_hat ≈ 0.83, z-RMSE 0.92 (slight regression vs lambda=1's 0.89)
+- seed_mass: ML lambda_hat ≈ 0.99, z-RMSE 0.60 (essentially unchanged)
+- wood_density: ML lambda_hat ≈ 0.79, z-RMSE 0.79 (slight regression vs lambda=1's 0.77)
+- **sla**: ML lambda_hat ≈ 0.005 (boundary!), z-RMSE 0.98 (regresses from lambda=1's 0.91)
+
+The sla case is the well-known **weak-phylo-signal pathology** of ML
+for Pagel's lambda: the profile likelihood becomes flat for small
+lambda when phylogenetic signal is weak, finite-sample noise
+dominates, and the point estimator can collapse to the boundary. The
+math is correct; the predictor is just suboptimal.
+
+BACE's MCMCglmm achieves z-RMSE ≈ 0.69 on sla because Bayesian model
+averaging integrates over the variance-component posterior rather
+than relying on a point ML estimate.
+
+**Practical guidance:** keep `lambda_mode = "fixed_1"` (the default)
+unless you've verified on your data that ML lambda doesn't pick
+degenerate boundary values. The spec's hard target ("sla z-RMSE
+≤ 0.75") is **not achieved by this release**; it's a v0.11 target
+via cross-validation lambda selection (spec to follow).
+
+## Tests
+
+- 16 new tests in `tests/testthat/test-pagel-lambda.R` (31 expectations)
+- All 54 existing `bm-internal` tests pass — back-compat verified
+
 # pigauto 0.9.4 (2026-05-18)
 
 Wires the existing WorldClim bioclim covariate pipeline (shipped in
