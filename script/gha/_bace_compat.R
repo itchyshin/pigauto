@@ -73,8 +73,8 @@ BACE_DATASET_CONFIG <- list(
     #   control  (filtered pool, no cov, gate OFF): 7.455
     #   treatment (filtered pool, WC cov, gate OFF): 7.236
     #   => pool effect -0.83, covariate effect -0.22.
-    covariate_cols  = paste0("bio", 1:19, "_median"),  # W5: median-only
-
+    covariate_cols  = c(paste0("bio", 1:19, "_median"),
+                        paste0("bio", 1:19, "_iqr")),
     # Phylo-signal gate OFF on BIEN: weak-phylo-signal traits (sla, leaf_area,
     # height_m have lambda ~ 0) would otherwise be forced to mean-only, masking
     # the covariate lift. Spec §5.4 Option A.
