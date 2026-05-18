@@ -72,10 +72,36 @@ bm_impute_col <- function(y, R, nugget = 1e-6, lambda = 1.0) {
   } else if (identical(lambda, "cv")) {
     lambda_hat <- cv_lambda_for_col(y, R, nugget = nugget)
     lambda <- lambda_hat
+  } else if (identical(lambda, "bayes")) {
+    # Bayesian model-averaged prediction: predict at each grid lambda,
+    # then average with the posterior weights. Returns mu averaged, se
+    # combining within-lambda and between-lambda variance, and
+    # lambda_hat = posterior mean (a diagnostic, not used in the blend).
+    post <- bayes_lambda_for_col(y, R, nugget = nugget)
+    mu_avg <- numeric(length(y))
+    var_within <- numeric(length(y))   # E_lambda[Var_BM(lambda)]
+    mu_each <- vector("list", length(post$lambda_grid))
+    for (i in seq_along(post$lambda_grid)) {
+      r_i <- bm_impute_col(y, R, nugget = nugget, lambda = post$lambda_grid[i])
+      mu_each[[i]] <- r_i$mu
+      mu_avg <- mu_avg + post$weights[i] * r_i$mu
+      var_within <- var_within + post$weights[i] * r_i$se^2
+    }
+    # Var_lambda[E_BM(lambda)]: between-lambda spread in posterior mean.
+    var_between <- numeric(length(y))
+    for (i in seq_along(post$lambda_grid)) {
+      var_between <- var_between + post$weights[i] * (mu_each[[i]] - mu_avg)^2
+    }
+    var_total <- var_within + var_between
+    out <- list(mu = mu_avg,
+                se = sqrt(pmax(var_total, 0)),
+                lambda_hat = post$lambda_post_mean,
+                lambda_post_entropy = post$lambda_post_entropy)
+    return(out)
   }
   if (!is.numeric(lambda) || length(lambda) != 1L || !is.finite(lambda) ||
       lambda < 0 || lambda > 1) {
-    stop("'lambda' must be a numeric scalar in [0, 1], \"estimate\", or \"cv\"; got: ",
+    stop("'lambda' must be a numeric scalar in [0, 1], \"estimate\", \"cv\", or \"bayes\"; got: ",
          paste(lambda, collapse = ", "), call. = FALSE)
   }
   if (lambda < 1) {

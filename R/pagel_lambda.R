@@ -18,6 +18,83 @@
 #
 # Reference: Pagel (1999) Nature 401: 877-884.
 
+# ---- bayes_lambda_for_col -------------------------------------------------
+#
+# Bayesian model-averaged Pagel's lambda (v0.11). Returns the posterior
+# distribution over lambda under a flat prior, computed deterministically
+# from the profile log-likelihood evaluated on a fine grid.
+#
+# Why: ML (`ml_lambda_for_col`) and k-fold CV (`cv_lambda_for_col`) both
+# collapse to a single point lambda_hat. On traits with weak phylogenetic
+# signal, the profile likelihood is flat across a wide interior region
+# and a single point estimate is mask-sensitive — different masks give
+# wildly different lambda_hat values. Bayesian model averaging integrates
+# over the whole likelihood-weighted lambda distribution, so the
+# downstream prediction is stable.
+#
+# Mathematically: w_i propto exp(-nll(lambda_i)), normalised. Under a
+# flat prior over [0, 1] this is exactly the marginal posterior on a
+# coarse grid; the eigendecomp cache makes evaluation cheap enough that
+# a 41-point grid is essentially free.
+#
+# This is the deterministic analogue of what BACE's MCMCglmm does via
+# Markov-chain samples from the phylo / residual variance-component
+# posterior. The integration is identical; the sampling is just a fast
+# numerical Riemann sum rather than a chain.
+#
+# Spec: specs/2026-05-18-pagel-lambda-baseline-design.md (v0.11 update).
+#
+# Returns a list with:
+#   $lambda_grid          numeric vector of grid points
+#   $weights              numeric vector of posterior weights (sums to 1)
+#   $lambda_post_mean     scalar -- posterior mean of lambda
+#   $lambda_post_entropy  scalar -- Shannon entropy of the posterior
+#                         (in nats; high entropy = wide posterior, low =
+#                         concentrated)
+#
+# Degenerate cases (n_obs < 10 or all-NLL non-finite) return a point
+# mass at lambda = 1 with entropy 0, matching the ml_lambda fallback.
+# @noRd
+bayes_lambda_for_col <- function(y, R, nugget = 1e-6,
+                                   lambda_grid = seq(0.005, 0.995,
+                                                       length.out = 41L)) {
+  obs <- which(!is.na(y))
+  n_o <- length(obs)
+  point_mass_1 <- function() {
+    list(lambda_grid = 1.0,
+         weights = 1.0,
+         lambda_post_mean = 1.0,
+         lambda_post_entropy = 0.0)
+  }
+  if (n_o < 10L) return(point_mass_1())
+
+  cache <- build_pagel_nll_cache(y, R, nugget = nugget)
+  nll_vals <- vapply(lambda_grid, cache$nll, numeric(1L))
+  ok <- is.finite(nll_vals)
+  if (!any(ok)) return(point_mass_1())
+
+  # Softmax with max-subtract for numerical stability. Non-finite NLLs
+  # (Cholesky failures at extreme lambdas) get zero weight.
+  log_w <- -nll_vals
+  log_w[!ok] <- -Inf
+  log_w <- log_w - max(log_w[ok])
+  w <- exp(log_w)
+  w_sum <- sum(w)
+  if (!is.finite(w_sum) || w_sum <= 0) return(point_mass_1())
+  w <- w / w_sum
+
+  # Posterior summaries.
+  post_mean <- sum(w * lambda_grid)
+  # Shannon entropy in nats; mask near-zero weights to avoid 0*log(0).
+  w_safe <- w[w > 1e-12]
+  post_entropy <- -sum(w_safe * log(w_safe))
+
+  list(lambda_grid = lambda_grid,
+       weights = w,
+       lambda_post_mean = post_mean,
+       lambda_post_entropy = post_entropy)
+}
+
 # ---- cv_lambda_for_col ----------------------------------------------------
 #
 # Cross-validated Pagel's lambda selection (v0.11). Direct fix for the

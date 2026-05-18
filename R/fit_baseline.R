@@ -78,7 +78,7 @@
 fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                          graph = NULL,
                          multi_obs_aggregation = c("hard", "soft"),
-                         lambda_mode = c("fixed_1", "estimate", "cv"),
+                         lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
                          em_iterations = 0L,
                          em_tol = 1e-3,
                          em_offdiag = FALSE) {
@@ -93,6 +93,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     "fixed_1"  = 1.0,
     "estimate" = "estimate",
     "cv"       = "cv",
+    "bayes"    = "bayes",
     1.0
   )
   em_iterations <- as.integer(em_iterations)
@@ -216,7 +217,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   # lambda=1 silently; per-column ML / CV supports lambda estimation
   # natively. See spec §8 decision 3 (in-house, no phylopars on the
   # lambda path).
-  force_per_column <- lambda_mode %in% c("estimate", "cv")
+  force_per_column <- lambda_mode %in% c("estimate", "cv", "bayes")
   use_threshold_joint <- (length(binary_cols) + length(ordinal_cols)) >= 1L &&
     length(bm_cols) >= 1L &&
     !has_multi_proportion &&
