@@ -577,7 +577,6 @@ BACE_DATASET_CONFIG <- list(
     covariates     = cov_df,
     n_heads        = 8L,    # T1: more attention heads
     phylo_signal_gate = ds_phylo_gate,
-    lambda_gate    = 0.001, # W4: weaker gate-shrinkage penalty
     seed           = cfg$seed
   )
   t_fit <- as.numeric(difftime(Sys.time(), t0_fit, units = "secs"))
