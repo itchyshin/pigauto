@@ -201,7 +201,7 @@ Estimate: half-day to full-day of focused work, dominated by audit + testing of 
 2. **API name:** Two-tier naming:
    - Kernel layer (`bm_impute_col`, `fit_joint_mvn_baseline`): `lambda` — takes numeric `[0, 1]` OR `"estimate"`.
    - Dispatcher / user-facing layer (`fit_baseline`, `fit_pigauto`, `multi_impute`, `impute`): `lambda_mode` — enum `c("fixed_1", "estimate")`.
-3. **Joint MVN λ-mode:** Trust phylopars's `model = "lambda"` (one joint fit returns per-trait λ̂_t along with Σ̂). Per-column ML λ is the fallback on phylopars convergence failure. Timing instrumented so we know when phylopars is slow.
+3. **Joint MVN λ-mode (REVISED 2026-05-18):** In-house implementation, **no phylopars dependency on the λ path.** Per-trait λ via ML over a tree-transform: `R(λ) = λR + (1-λ)I` ≡ scaling all internal branch lengths by λ. Each ML eval reuses the existing in-house Hadfield-Nakagawa sparse precision solver (`R/joint_mvn_solver.R`, `R/henderson_s_inv.R`) which is O(n). C++/Rcpp not needed at h2h-CI scale (n=2000); kept in reserve for future scaling work. Phylopars stays in Suggests as comparator only, never as a runtime dependency for λ.
 4. **Threshold-joint and OVR paths:** `lambda_mode` flows all the way through. Discrete traits (binary / categorical / ordinal liability) inherit λ-estimate automatically as a free upgrade — these paths are deterministic delegates of the joint MVN.
 
 ## 9. Success criteria summary
