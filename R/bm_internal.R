@@ -69,10 +69,13 @@ bm_impute_col <- function(y, R, nugget = 1e-6, lambda = 1.0) {
   if (identical(lambda, "estimate")) {
     lambda_hat <- ml_lambda_for_col(y, R, nugget = nugget)
     lambda <- lambda_hat
+  } else if (identical(lambda, "cv")) {
+    lambda_hat <- cv_lambda_for_col(y, R, nugget = nugget)
+    lambda <- lambda_hat
   }
   if (!is.numeric(lambda) || length(lambda) != 1L || !is.finite(lambda) ||
       lambda < 0 || lambda > 1) {
-    stop("'lambda' must be a numeric scalar in [0, 1] or \"estimate\"; got: ",
+    stop("'lambda' must be a numeric scalar in [0, 1], \"estimate\", or \"cv\"; got: ",
          paste(lambda, collapse = ", "), call. = FALSE)
   }
   if (lambda < 1) {

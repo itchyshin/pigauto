@@ -297,7 +297,7 @@ fit_pigauto <- function(
     phylo_signal_threshold = 0.2,
     phylo_signal_method = c("lambda", "blomberg_k"),
     min_val_cells     = 20L,
-    lambda_mode       = c("fixed_1", "estimate"),
+    lambda_mode       = c("fixed_1", "estimate", "cv"),
     verbose           = TRUE,
     seed              = 1L
 ) {

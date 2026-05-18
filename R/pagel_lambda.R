@@ -18,6 +18,50 @@
 #
 # Reference: Pagel (1999) Nature 401: 877-884.
 
+# ---- cv_lambda_for_col ----------------------------------------------------
+#
+# Cross-validated Pagel's lambda selection (v0.11). Direct fix for the
+# weak-signal ML pathology: ML picks lambda near 0 when the profile
+# likelihood is flat there, even when the RMSE-optimal interior lambda
+# would generalise better. CV optimises out-of-fold prediction error
+# directly, so it recovers the right interior lambda.
+#
+# Spec: specs/2026-05-18-cv-lambda-selection-design.md.
+#
+# Falls back to lambda = 1 (matches ml_lambda_for_col convention) when
+# n_obs < 50 (folds become too small to be useful).
+#
+# Returns a scalar lambda_hat in [0, 1].
+# @noRd
+cv_lambda_for_col <- function(y, R, nugget = 1e-6,
+                                lambda_grid = seq(0.01, 0.99, by = 0.05),
+                                k = 5L, seed = 1L) {
+  obs <- which(!is.na(y))
+  n_o <- length(obs)
+  if (n_o < 50L) return(1.0)
+
+  # Seeded fold assignment over observed cells.
+  set.seed(seed)
+  fold_id <- sample(rep(seq_len(k), length.out = n_o))
+
+  # Per-lambda cumulative squared error across folds.
+  cv_sse <- numeric(length(lambda_grid))
+  for (f in seq_len(k)) {
+    held <- obs[fold_id == f]
+    if (length(held) == 0L) next
+    y_train <- y
+    y_train[held] <- NA
+    truth <- y[held]
+    for (i in seq_along(lambda_grid)) {
+      pred <- bm_impute_col(y_train, R, nugget = nugget,
+                              lambda = lambda_grid[i])
+      cv_sse[i] <- cv_sse[i] + sum((pred$mu[held] - truth)^2)
+    }
+  }
+  if (!any(is.finite(cv_sse))) return(1.0)
+  lambda_grid[which.min(cv_sse)]
+}
+
 # ---- build_pagel_nll_cache --------------------------------------------------
 #
 # One-time eigendecomposition cache for the Pagel's lambda profile NLL.
