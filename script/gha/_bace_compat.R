@@ -78,7 +78,7 @@ BACE_DATASET_CONFIG <- list(
     # Phylo-signal gate OFF on BIEN: weak-phylo-signal traits (sla, leaf_area,
     # height_m have lambda ~ 0) would otherwise be forced to mean-only, masking
     # the covariate lift. Spec §5.4 Option A.
-    phylo_signal_gate = TRUE,  # W6: gate ON to test if OFF was needed
+    phylo_signal_gate = FALSE,
     # External covariate source: loaded at runtime and cbind-ed onto traits_df
     # BEFORE trait_subset / mask / subsetting. Species without bioclim coverage
     # are dropped from BIEN before the bench's n=2000 subsample.
