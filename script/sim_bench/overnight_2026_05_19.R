@@ -51,7 +51,13 @@ suppressPackageStartupMessages({
 })
 
 # ---- Config ---------------------------------------------------------------
+# SIM_ID_START lets the cascade launcher run "more sims" by shifting the
+# seed range: stage 1 uses sim_id 1..10, stage 2 uses 11..20, stage 3
+# uses 21..30. Each stage writes to a separate RDS so partial results
+# from any stage are never overwritten.
 N_SIMS       <- 10L
+SIM_ID_START <- as.integer(Sys.getenv("PIGAUTO_SIM_ID_START", unset = "1"))
+SIM_ID_TAG   <- Sys.getenv("PIGAUTO_SIM_TAG", unset = "stage1")
 N_SPECIES    <- c(200L, 500L)
 SCENARIOS    <- c("bm_strong", "ou_strong", "nonlinear_cov", "weak_signal")
 # Serial only -- torch + MPS does not fork-safe; mclapply with mc.cores > 1
@@ -182,9 +188,12 @@ run_one_rep <- function(scenario, n, sim_id) {
 }
 
 # ---- Design + execution --------------------------------------------------
+sim_id_seq <- SIM_ID_START + seq_len(N_SIMS) - 1L
 design <- expand.grid(scenario = SCENARIOS, n = N_SPECIES,
-                      sim_id = seq_len(N_SIMS),
+                      sim_id = sim_id_seq,
                       stringsAsFactors = FALSE)
+cat("  sim_id range  :", min(sim_id_seq), "..", max(sim_id_seq), "\n")
+cat("  tag           :", SIM_ID_TAG, "\n")
 cat("Total replicates:", nrow(design), "\n")
 cat("Started at:", format(Sys.time()), "\n\n")
 
@@ -192,7 +201,7 @@ cat("Started at:", format(Sys.time()), "\n\n")
 # Each fork uses the already-loaded pigauto. Peak RAM is roughly
 # N_CORES * (1.5 GB per pigauto fit at n=500) = 6 GB; well within
 # laptop budget.
-CHECKPOINT_PATH <- file.path(OUT_DIR, "results_partial.rds")
+CHECKPOINT_PATH <- file.path(OUT_DIR, paste0("results_partial_", SIM_ID_TAG, ".rds"))
 results_list <- vector("list", nrow(design))
 for (i in seq_len(nrow(design))) {
   row <- design[i, ]
@@ -216,8 +225,9 @@ results <- do.call(rbind, results_list[!sapply(results_list, is.null)])
 cat("\nFinished at:", format(Sys.time()), "\n")
 cat("Saved", nrow(results), "rows of", nrow(design) * 4L, "expected.\n")
 
-saveRDS(results, file.path(OUT_DIR, "results.rds"))
-cat("Output written to:", file.path(OUT_DIR, "results.rds"), "\n\n")
+final_path <- file.path(OUT_DIR, paste0("results_", SIM_ID_TAG, ".rds"))
+saveRDS(results, final_path)
+cat("Output written to:", final_path, "\n\n")
 
 # ---- Summary table for quick eyeballing ---------------------------------
 agg <- aggregate(z_rmse ~ scenario + n + method, data = results,
