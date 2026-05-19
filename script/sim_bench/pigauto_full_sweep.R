@@ -60,12 +60,15 @@ set.seed(2026L)
 # Mirror Dan's signal + mechanism axes, add three pigauto-only sweep axes.
 SCENARIOS    <- c("all_high", "all_moderate", "all_low", "mixed")
 MECHANISMS   <- c("phylo_MAR", "trait_MAR", "trait_MNAR")
-N_SPECIES_GRID <- c(100L, 500L, 2000L)
-MISS_RATE_GRID <- c(0.15, 0.35, 0.55)
-BETA_GRID    <- c(0.1, 0.3, 0.6)
-DGP_GRID     <- c("BM", "OU", "EB")
-N_SIMS       <- 20L            # per cell of the full crossed design
-N_CORES      <- 4L
+# 2026-05-19: configured for Dan-comparable slice — N=500, miss=0.35,
+# beta=0.3, BM only, 50 sims per cell -> 12 cells x 50 = 600 reps.
+# pigauto-side companion to Dan's full BACE simulation.
+N_SPECIES_GRID <- c(500L)
+MISS_RATE_GRID <- c(0.35)
+BETA_GRID    <- c(0.3)
+DGP_GRID     <- c("BM")
+N_SIMS       <- 50L
+N_CORES      <- 1L              # serial -- torch+MPS not fork-safe
 
 SIGNAL <- list(high = 0.90, moderate = 0.60, low = 0.20)
 DEP_STRENGTH <- 1.5            # same as Dan's (matches Penone 2014 ICCs)
@@ -432,7 +435,9 @@ for (cell_i in seq_len(nrow(design))) {
   cell_id <- paste(cell, collapse = "|")
   cat(sprintf("--- cell %d / %d: %s ---\n", cell_i, nrow(design), cell_id))
   t0 <- Sys.time()
-  reps <- parallel::mclapply(seq_len(N_SIMS), function(i) {
+  # Serial -- torch + MPS not fork-safe (mclapply with mc.cores > 1
+  # segfaults when multiple workers share the MPS device).
+  reps <- lapply(seq_len(N_SIMS), function(i) {
     run_one_sim(sim_id        = i,
                  scenario      = cell$scenario,
                  mechanism     = cell$mechanism,
@@ -440,7 +445,7 @@ for (cell_i in seq_len(nrow(design))) {
                  miss_rate     = cell$miss_rate,
                  beta_sparsity = cell$beta_sparsity,
                  dgp           = cell$dgp)
-  }, mc.cores = N_CORES)
+  })
   ok <- !vapply(reps, is.null, logical(1))
   cat(sprintf("  done %d/%d in %.1f min\n",
               sum(ok), N_SIMS,
