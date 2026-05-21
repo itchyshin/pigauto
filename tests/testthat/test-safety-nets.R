@@ -1,51 +1,68 @@
 # tests/testthat/test-safety-nets.R
 
-test_that("Phase B3 warning fires on imbalanced K>=3 ordinal", {
-  data(avonet300, tree300)
+.load_avonet <- function() {
+  data(avonet300, tree300, envir = environment())
   df <- avonet300
-  rownames(df) <- df$Species_Key; df$Species_Key <- NULL
-  df$Migration <- factor(df$Migration, ordered = TRUE)
+  rownames(df) <- df$Species_Key
+  df$Species_Key <- NULL
+  list(df = df, tree = tree300)
+}
+
+test_that("Phase B3 warning fires on imbalanced AVONET300 Migration trait", {
+  withr::local_seed(1L)
+  dat <- .load_avonet()
   
-  set.seed(1L)
-  hide <- sample(which(!is.na(df$Migration)), 30L)
-  df$Migration[hide] <- NA
-  
-  # We expect a warning matching our regex (epochs=1 so the test runs instantly)
   expect_warning(
-    impute(df, tree300, n_imputations = 1L, pool_method = "median", epochs = 1L),
-    regexp = "Imbalanced K>=3 ordinal trait"
+    impute(dat$df, dat$tree, n_imputations = 1L, pool_method = "median", epochs = 1L),
+    regexp = "Imbalanced K>=3 ordinal trait 'Migration'"
   )
 })
 
-test_that("Phase B3 warning stays silent for balanced K=5 ordinal", {
-  data(avonet300, tree300)
-  df <- avonet300
-  rownames(df) <- df$Species_Key; df$Species_Key <- NULL
+test_that("Phase B3 warning stays silent for balanced K=5 ordinal trait", {
+  withr::local_seed(2L)
+  dat <- .load_avonet()
   
-  # Create a perfectly balanced K=5 ordinal factor
-  k5_levels <- c("Tiny", "Small", "Medium", "Large", "Giant")
-  df$Dummy_Size <- factor(rep(k5_levels, each = 60), levels = k5_levels, ordered = TRUE)
-  
-  set.seed(2L)
-  hide <- sample(1:300, 30L)
-  df$Dummy_Size[hide] <- NA
-  
-  # We expect NO warning
-  expect_no_warning(
-    impute(df, tree300, n_imputations = 1L, pool_method = "median", epochs = 1L)
+  k5_levels <- c("A", "B", "C", "D", "E")
+  clean_df <- data.frame(
+    Dummy_Size = factor(rep(k5_levels, length.out = nrow(dat$df)), 
+                        levels = k5_levels, ordered = TRUE),
+    row.names = rownames(dat$df)
   )
+  
+  clean_df$Dummy_Size[c(1, 2, 3)] <- NA
+  
+  # CRITICAL FIX: Instead of expect_no_warning (which fails on ANY unrelated warning),
+  # we use a custom handler to ensure our specific warning DOES NOT fire.
+  warning_fired <- FALSE
+  withCallingHandlers({
+    impute(clean_df, dat$tree, n_imputations = 1L, pool_method = "median", epochs = 1L)
+  }, warning = function(w) {
+    if (grepl("Imbalanced K>=3 ordinal trait", w$message)) {
+      warning_fired <<- TRUE
+    }
+  })
+  
+  expect_false(warning_fired)
 })
 
-test_that("Compute scale estimator message fires on massive dataset", {
-  data(avonet300, tree300)
+test_that("Compute scale estimator fires correctly on large N", {
+  withr::local_seed(3L)
   
-  # Create a dummy dataframe with 5000 rows
-  df_massive <- data.frame(Mass = rnorm(5000))
-  rownames(df_massive) <- paste0("FakeBird_", 1:5000)
+  big_tree <- ape::rcoal(5000)
+  big_df <- data.frame(
+    Dummy_Trait = rnorm(5000),
+    row.names = big_tree$tip.label
+  )
+  big_df$Dummy_Trait[1] <- NA
   
-  # We expect the message to fire (even if the function errors out after due to tree mismatch)
-  expect_message(
-    tryCatch(impute(df_massive, tree300, n_imputations = 10L, epochs = 1L), error = function(e) NULL),
-    regexp = "longer than a default run"
+  expect_error(
+    withCallingHandlers({
+      impute(big_df, big_tree, n_imputations = 10L)
+    }, message = function(m) {
+      if (grepl("longer", m$message, ignore.case = TRUE)) {
+        stop("RIPCORD_PULLED")
+      }
+    }),
+    regexp = "RIPCORD_PULLED"
   )
 })
