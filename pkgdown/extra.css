@@ -1,0 +1,14 @@
+/* pigauto custom pkgdown styles */
+
+/* Make the home-page logo larger (default is page-header img natural size) */
+.page-header .logo {
+  max-width: 260px;
+  width: 260px;
+  height: auto;
+}
+@media (max-width: 768px) {
+  .page-header .logo {
+    max-width: 160px;
+    width: 160px;
+  }
+}
