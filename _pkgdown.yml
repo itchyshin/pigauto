@@ -4,8 +4,9 @@ destination: docs
 
 template:
   bootstrap: 5
+  bootswatch: flatly    # gives a coloured (bg-primary) navbar, matching drmTMB/symbolizer
   bslib:
-    primary: "#059669"
+    primary: "#2c5e4f"   # brand green; matches prepR4pcm/_pkgdown.yml
     base_font: {google: "Inter"}
     heading_font: {google: "Inter"}
     code_font: {google: "JetBrains Mono"}
