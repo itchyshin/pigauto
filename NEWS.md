@@ -65,6 +65,46 @@ via cross-validation lambda selection (spec to follow).
 - 16 new tests in `tests/testthat/test-pagel-lambda.R` (31 expectations)
 - All 54 existing `bm-internal` tests pass — back-compat verified
 
+## Simulation evidence: mechanism-axis robustness sweep
+
+A two-part Monte Carlo study (no code change) testing whether pigauto's
+gated GNN holds up against the plain BM-kriging baseline under realistic
+non-random missingness. Drivers:
+`script/sim_bench/overnight_2026_05_19_mechanisms.R` (240 reps) and
+`script/sim_bench/pigauto_full_sweep.R` (600 reps, Dan-comparable n=500,
+50 sims/cell). Methodology writeup:
+`script/sim_bench/mechanism_sweep_methodology.md`.
+
+Design: 4 process scenarios (`bm_strong`, `ou_strong`, `nonlinear_cov`,
+`weak_signal`) × 3 missingness conditions (`phylo_MAR`, `trait_MAR`,
+`trait_MNAR`, DEP_STRENGTH = 1.5 per Penone et al. 2014) × 30% missing.
+Caveat: in this single-trait DGP, `trait_MAR` depends on the `env`
+covariate, which exists only for `nonlinear_cov`; for the other three
+scenarios `trait_MAR` has no variable to depend on and degenerates to
+MCAR. The conditions genuinely exercised are therefore phylo-MAR, MCAR,
+and value-dependent MNAR for all four scenarios, plus a genuine
+covariate-MAR for `nonlinear_cov` only.
+
+Result on the 600-rep n=500 sweep — across all 12 cells: **6 material
+wins for pigauto, 6 ties, 0 material losses** vs BM kriging (z-RMSE,
+material = |Δ| > 0.05). The win mechanism is scenario-specific and only
+partly attributable to the GNN:
+
+- `weak_signal`: the calibrated gate closes to ≈0; pigauto falls back to
+  column-mean while BM kriging mis-extrapolates 90%-noise as phylo signal
+  (Δ up to −0.22). This is the safety floor, not GNN learning.
+- `ou_strong`: gate stays low (≈0.07–0.09) but pigauto beats both
+  baselines by avoiding BM's process-misspecification (Δ ≈ −0.13).
+- `nonlinear_cov`: gate most open (≈0.18–0.25); the GNN + environmental
+  covariate genuinely beat column-mean *and* BM (Δ ≈ −0.09).
+- `bm_strong`: gate harmless; pigauto ties BM (the correct answer).
+
+The missingness condition scales difficulty (`trait_MNAR` is uniformly
+hardest) but never flips a verdict: pigauto's per-scenario standing
+relative to BM kriging is stable across phylo-MAR, MCAR, and MNAR. The
+2 apparent losses seen in the smaller 10-sim pilot were both
+n=200/`trait_MNAR` and did not replicate at n=500.
+
 # pigauto 0.9.4 (2026-05-18)
 
 Wires the existing WorldClim bioclim covariate pipeline (shipped in

@@ -1,33 +1,26 @@
 #!/usr/bin/env Rscript
 # =============================================================================
-# script/sim_bench/pigauto_full_sweep.R
+# script/sim_bench/overnight_2026_05_19_mechanisms.R
 # =============================================================================
 #
-# Dan-comparable single-trait pigauto sweep (2026-05-19 rewrite).
+# Sibling of overnight_2026_05_19.R, adding the MISSINGNESS-MECHANISM axis.
+# Designed to merge cleanly with Dan's BACE simulation results when they
+# arrive: same 3 mechanism names (phylo_MAR, trait_MAR, trait_MNAR),
+# same parameter (DEP_STRENGTH = 1.5), single-trait adaptation of Dan's
+# multi-trait injector.
 #
-# **What this is.** The high-rep version of overnight_2026_05_19_mechanisms.R.
-# Same single-trait DGP (`.sim_complete()`), same mechanism injector
-# (`.inject_missingness_single()`), same four scenarios, same three
-# mechanisms, same evaluator schema (rmse / z_rmse / wall_sec / gate_mean).
-# Only the design knobs change:
+# Design:
+#   4 scenarios (bm_strong, ou_strong, nonlinear_cov, weak_signal)
+#   x 2 N (200, 500)
+#   x 3 mechanisms (phylo_MAR, trait_MAR, trait_MNAR)
+#   x 10 sims
+#   = 240 replicates
 #
-#   mech sim      : 4 scen x 3 mech x {200,500} x 10 sims =  240 reps, 4 methods
-#   full sweep    : 4 scen x 3 mech x {500}     x 50 sims =  600 reps, 3 methods
+# Compared to overnight_2026_05_19.R (which used MCAR), this sim
+# probes whether pigauto's results survive realistic non-random
+# missingness patterns.
 #
-# Dropping pigauto_bayes (mech sim showed bayes ~= default within 1 MC SE on
-# every cell) halves pigauto wall and brings total wall to ~12h. Keeping n=500
-# only matches Dan's BACE sim (BACE/dev/02_benchmark_simulated_full.R), so the
-# two RDSs can be merged for the paper figure.
-#
-# **What this is NOT.** This is not a replication of Dan's multi-trait
-# sim_bace() DGP. The earlier attempt at that (the BACE-side companion) tripped
-# on multi_impute's handling of sim_bace's species-column layout and produced
-# zero successful reps. Single-trait gives a cleaner contrast and is directly
-# comparable to the mech sim, so cross-N + cross-mechanism + cross-mode
-# conclusions all land in one schema.
-#
-# Output: dev/simulation_results_pigauto/results.rds (long format, same
-# columns as the mech sim) + a per-rep results_partial.rds checkpoint.
+# Compute budget: ~10 hours wall on this laptop (serial, MPS).
 
 suppressPackageStartupMessages({
   devtools::load_all(".", quiet = TRUE)
@@ -35,18 +28,18 @@ suppressPackageStartupMessages({
 })
 
 # ---- Config ---------------------------------------------------------------
-N_SIMS       <- 50L
-N_SPECIES    <- c(500L)
+N_SIMS       <- 10L
+N_SPECIES    <- c(200L, 500L)
 SCENARIOS    <- c("bm_strong", "ou_strong", "nonlinear_cov", "weak_signal")
 MECHANISMS   <- c("phylo_MAR", "trait_MAR", "trait_MNAR")
 MISS_RATE    <- 0.30
-DEP_STRENGTH <- 1.5
+DEP_STRENGTH <- 1.5  # matches Dan's design (Penone 2014 ICCs)
 SEED_BASE    <- 20260519L
 
-OUT_DIR <- file.path("dev", "simulation_results_pigauto")
+OUT_DIR <- file.path("dev", "simulation_results_overnight_2026_05_19_mechanisms")
 dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
 
-cat("=== pigauto_full_sweep (Dan-comparable single-trait) ===\n")
+cat("=== Overnight sim 2026-05-19 (mechanism axis) ===\n")
 cat("scenarios     :", paste(SCENARIOS, collapse = ", "), "\n")
 cat("mechanisms    :", paste(MECHANISMS, collapse = ", "), "\n")
 cat("n_species     :", paste(N_SPECIES, collapse = ", "), "\n")
@@ -55,7 +48,7 @@ cat("total reps    :", length(SCENARIOS) * length(N_SPECIES) *
                         length(MECHANISMS) * N_SIMS, "\n")
 cat("output        :", OUT_DIR, "\n\n")
 
-# ---- DGP helpers (identical to overnight_2026_05_19_mechanisms.R) ---------
+# ---- DGP helpers (same as overnight_2026_05_19.R) -------------------------
 .sim_complete <- function(scenario, n, seed) {
   set.seed(seed)
   tree <- rcoal(n)
@@ -85,6 +78,14 @@ cat("output        :", OUT_DIR, "\n\n")
   list(y_true = y, tree = tree, R = R, cov_df = cov_df)
 }
 
+# ---- Mechanism injector (single-trait adaptation of Dan's) ----------------
+# For a single trait y on n tips, generate a missingness mask of expected
+# rate `miss_rate` whose probability follows the chosen mechanism:
+#   phylo_MAR  : P(miss) depends on a phylo-correlated latent z(tree)
+#   trait_MAR  : P(miss) depends on the covariate (only available for
+#                nonlinear_cov scenario; for others, falls back to MCAR
+#                because there's no covariate to depend on)
+#   trait_MNAR : P(miss) depends on y itself (the value being measured)
 .inject_missingness_single <- function(y, tree, R, cov_df, mechanism,
                                          miss_rate, seed) {
   set.seed(seed)
@@ -96,11 +97,13 @@ cat("output        :", OUT_DIR, "\n\n")
     if (!is.null(cov_df) && "env" %in% colnames(cov_df)) {
       linpred <- -DEP_STRENGTH * as.numeric(scale(cov_df$env))
     } else {
+      # No covariate available -> MCAR fallback
       linpred <- rep(0, n)
     }
-  } else {
+  } else {  # trait_MNAR
     linpred <- -DEP_STRENGTH * as.numeric(scale(y))
   }
+  # Calibrate intercept so expected miss rate matches target
   obj <- function(c) (mean(plogis(c + linpred)) - miss_rate)^2
   c_hat <- stats::optimize(obj, interval = c(-10, 10))$minimum
   p <- plogis(c_hat + linpred)
@@ -111,7 +114,7 @@ cat("output        :", OUT_DIR, "\n\n")
        truth = y[miss_idx])
 }
 
-# ---- Method runners -------------------------------------------------------
+# ---- Method runners (same as overnight_2026_05_19.R) ----------------------
 .run_column_mean <- function(y_obs, miss_idx, tree, R, cov_df) {
   t0 <- Sys.time()
   pred <- rep(mean(y_obs, na.rm = TRUE), length(miss_idx))
@@ -126,11 +129,11 @@ cat("output        :", OUT_DIR, "\n\n")
        wall = as.numeric(difftime(Sys.time(), t0, units = "secs")),
        gate = NA_real_)
 }
-.run_pigauto <- function(y_obs, miss_idx, tree, R, cov_df) {
+.run_pigauto <- function(y_obs, miss_idx, tree, R, cov_df, lambda_mode) {
   df <- data.frame(y = y_obs, row.names = tree$tip.label)
   t0 <- Sys.time()
   args <- list(df, tree, epochs = 300L, eval_every = 50L, patience = 5L,
-               verbose = FALSE, seed = 1L, lambda_mode = "fixed_1")
+               verbose = FALSE, seed = 1L, lambda_mode = lambda_mode)
   if (!is.null(cov_df)) args$covariates <- cov_df
   res <- tryCatch(do.call(impute, args), error = function(e) NULL)
   wall <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
@@ -141,15 +144,12 @@ cat("output        :", OUT_DIR, "\n\n")
   list(pred = pred, wall = wall, gate = gate)
 }
 
-# ---- One replicate runs all 3 methods --------------------------------------
+# ---- One replicate runs all 4 methods --------------------------------------
 run_one_rep <- function(scenario, n, mechanism, sim_id) {
   sci <- as.integer(which(SCENARIOS == scenario))
   ni  <- as.integer(which(N_SPECIES == n))
   mi  <- as.integer(which(MECHANISMS == mechanism))
-  # NOTE: shift seed offset away from the mech sim's seed space (10000*sci +
-  # 1000*ni + 100*mi + sim_id, sim_id <= 10). full_sweep uses sim_id 1..50, so
-  # adding +200000 makes the rep seeds disjoint from any mech sim cell.
-  seed <- as.integer(SEED_BASE + 200000L + 10000L * sci + 1000L * ni +
+  seed <- as.integer(SEED_BASE + 10000L * sci + 1000L * ni +
                        100L * mi + sim_id)
   sim <- .sim_complete(scenario, n, seed = seed)
   m   <- .inject_missingness_single(sim$y_true, sim$tree, sim$R, sim$cov_df,
@@ -159,7 +159,8 @@ run_one_rep <- function(scenario, n, mechanism, sim_id) {
   methods <- list(
     column_mean     = .run_column_mean(m$y_obs, m$miss_idx, sim$tree, sim$R, sim$cov_df),
     bm_kriging      = .run_bm_kriging(m$y_obs, m$miss_idx, sim$tree, sim$R, sim$cov_df),
-    pigauto_default = .run_pigauto(m$y_obs, m$miss_idx, sim$tree, sim$R, sim$cov_df)
+    pigauto_default = .run_pigauto(m$y_obs, m$miss_idx, sim$tree, sim$R, sim$cov_df, "fixed_1"),
+    pigauto_bayes   = .run_pigauto(m$y_obs, m$miss_idx, sim$tree, sim$R, sim$cov_df, "bayes")
   )
   rmse <- function(p, t) sqrt(mean((p - t)^2, na.rm = TRUE))
   z_sd <- stats::sd(m$y_obs, na.rm = TRUE)
@@ -207,12 +208,12 @@ for (i in seq_len(nrow(design))) {
 
 results <- do.call(rbind, results_list[!sapply(results_list, is.null)])
 cat("\nFinished at:", format(Sys.time()), "\n")
-cat("Saved", nrow(results), "rows of", nrow(design) * 3L, "expected.\n")
+cat("Saved", nrow(results), "rows of", nrow(design) * 4L, "expected.\n")
 
 saveRDS(results, file.path(OUT_DIR, "results.rds"))
 cat("Output written to:", file.path(OUT_DIR, "results.rds"), "\n\n")
 
+# Per-(scenario, n, mechanism, method) summary for quick eyeballing
 agg <- aggregate(z_rmse ~ scenario + n + mechanism + method, data = results,
-                  FUN = function(x) c(mean = mean(x), sd = stats::sd(x),
-                                       n = length(x)))
+                  FUN = function(x) c(mean = mean(x), sd = stats::sd(x), n = length(x)))
 print(agg)
