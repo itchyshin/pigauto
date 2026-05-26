@@ -298,9 +298,23 @@ functional coupling that the joint MVN baseline cannot already capture
 **On the BIEN plant bench it did not improve pooled RMSE** — the joint
 MVN/threshold-joint path already encodes $\mathbf{\Sigma}$ for the
 dominant trait types, so the second cross-trait mechanism is redundant.
+
+**Independent verification ([#106](https://github.com/itchyshin/pigauto/issues/106),
+code in [#116](https://github.com/itchyshin/pigauto/pull/116)):** a
+60-replicate ablation at N=2000 (5 seeds per cell, multi-trait DGP that
+fires the joint MVN baseline) confirmed `pigauto_OFF` beats both
+`pigauto_ON` and `pigauto_ON_L0` (the "lazy-optimiser disarmed" arm
+with `baseline_mu` masked and `lambda_shrink = 0`) — z-RMSE 1.038 vs
+1.056 vs 1.057; conformal coverage stable at 0.884–0.887. Even with
+the lazy-optimiser trap disarmed, the network regresses against the
+baseline rather than finding new structure. See the NEWS entry for the
+full table.
+
 The flag ships as opt-in because it may help on datasets where the
 linear $\mathbf{\Sigma}$ assumption is too weak (e.g. functional traits
-with phase-transition or interaction structure).
+with phase-transition or interaction structure), or in small-N regimes
+where the joint MVN baseline hasn't yet converged on the cross-trait
+covariance.
 
 Backward-compatible: saved fits without the field default to
 `use_trait_attention = FALSE` and reconstruct identically.

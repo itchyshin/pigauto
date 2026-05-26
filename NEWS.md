@@ -105,6 +105,34 @@ relative to BM kriging is stable across phylo-MAR, MCAR, and MNAR. The
 2 apparent losses seen in the smaller 10-sim pilot were both
 n=200/`trait_MNAR` and did not replicate at n=500.
 
+## Independent verification: `use_trait_attention` redundant at scale
+
+External 60-replicate ablation (b1805, [#106](https://github.com/itchyshin/pigauto/issues/106), code in [#116](https://github.com/itchyshin/pigauto/pull/116))
+using a corrected multi-trait DGP that fires the joint-MVN baseline.
+N=2000, 5 seeds per cell, three arms — including the "lazy-optimiser
+disarmed" `pigauto_ON_L0` configuration (`baseline_mu` masked, `lambda_shrink = 0`).
+
+Result (z-RMSE, averaged across all scenarios):
+
+| arm             | z_rmse | coverage | width |
+|-----------------|--------|----------|-------|
+| `column_mean`   | 1.291  | —        | —     |
+| `bm_kriging`    | 1.163  | —        | —     |
+| `pigauto_OFF`   | 1.038  | 0.887    | 2.65  |
+| `pigauto_ON`    | 1.056  | 0.884    | 2.67  |
+| `pigauto_ON_L0` | 1.057  | 0.887    | 2.68  |
+
+At BIEN scale (N=2000) the joint-MVN baseline already encodes the
+cross-trait Σ structure; the within-row attention mechanism injects
+noise and slightly widens conformal intervals. Even with the lazy-
+optimiser trap disarmed (`pigauto_ON_L0`), the network regresses
+against the baseline rather than finding new structure.
+
+`use_trait_attention` stays default-`FALSE`. Kept as opt-in for
+small-N regimes where the baseline hasn't converged (b1805's local
+smoke test at N=300 showed it dropping validation loss before the
+joint-MVN catches up at larger N).
+
 # pigauto 0.9.4 (2026-05-18)
 
 Wires the existing WorldClim bioclim covariate pipeline (shipped in
