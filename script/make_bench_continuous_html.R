@@ -476,7 +476,7 @@ Methods: mean &middot; BM baseline &middot; pigauto &middot;
 Replicates: ', r$n_reps, ' &middot;
 Missingness: ', as.integer(100 * primary_frac), '% MCAR (primary) &middot;
 Commit ', commit_str, ' &middot;
-Run on ', format(Sys.time(), "%Y-%m-%d %H:%M"), ' &middot;
+Report generated ', format(Sys.time(), "%Y-%m-%d %H:%M"), ' &middot;
 Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 </p>
 
@@ -528,7 +528,7 @@ if (is.finite(ou_pct) && is.finite(rs_pct) && is.finite(nl_pct)) {
 <li><b>BM is hard to beat when BM is the truth.</b> Under pure Brownian motion the Rphylopars baseline is the maximum-likelihood estimator. pigauto should be judged against that baseline, not against mean imputation alone.</li>
 <li><b>Non-BM scenarios are mixed.</b> OU (stabilising selection), regime shifts (clade-specific optima), and nonlinear inter-trait relationships all violate BM&rsquo;s assumptions, but the observed GNN contribution differs by scenario and trait.</li>
 <li><b>Mean imputation is a proper null.</b> The gap between mean imputation and the BM baseline quantifies the phylogenetic signal in the data. The gap between BM and pigauto is the incremental model contribution and can be positive, zero, or negative.</li>
-<li><b>Higher missingness degrades all methods.</b> BM and pigauto remain well ahead of mean imputation in these sweeps, while their ordering is scenario- and trait-dependent. With more data held out, calibration has more validation data and the GNN can sometimes provide a larger correction.</li>
+<li><b>Higher missingness degrades all methods.</b> BM and pigauto remain well ahead of mean imputation in these sweeps, while their ordering is scenario- and trait-dependent. With more data held out, calibration has more validation data, but the GNN correction still needs to be read from the measured cells rather than assumed.</li>
 </ul>
 
 <h2>Reproducibility</h2>

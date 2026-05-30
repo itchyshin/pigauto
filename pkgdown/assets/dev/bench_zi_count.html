@@ -34,14 +34,14 @@ Zero fraction: 0.2 &ndash; 0.8 &middot;
 Methods: mean &middot; LP + BM baseline &middot; pigauto &middot;
 Replicates: 5 &middot;
 Missingness: 25% MCAR &middot;
-Commit 888d02052f &middot;
-Run on 2026-04-17 10:47 &middot;
-Total wall: 28.5 min
+Commit 794537121b &middot;
+Report generated 2026-05-30 12:04 &middot;
+Total wall: 93.8 min
 </p>
 
 <div class="verdict">
-<p><b>Bottom line.</b> At 20% zero inflation, the baseline achieves RMSE 37.518 and pigauto achieves 38.849. With few structural zeros the count component dominates and BM on the log1p-z scale performs well.</p>
-<p>At 80% zero inflation, RMSE rises to 36.149 (baseline) vs 36.206 (pigauto), and zero-class accuracy is 55.9% vs 55.9%. Heavy zero inflation creates a two-component mixture that challenges all methods, but the GNN can learn the zero/non-zero boundary from cross-trait patterns.</p>
+<p><b>Bottom line.</b> At 20% zero inflation, the baseline achieves RMSE 38.167 and pigauto achieves 39.402. With few structural zeros the count component dominates and BM on the log1p-z scale performs well.</p>
+<p>At 80% zero inflation, RMSE rises to 35.991 (baseline) vs 36.040 (pigauto), and zero-class accuracy is 56.4% vs 52.4%. Heavy zero inflation creates a two-component mixture that challenges all methods; read the GNN contribution from the RMSE and zero-accuracy columns together.</p>
 </div>
 
 <h2>Primary sweep: performance by zero fraction (25% missingness)</h2>
@@ -53,10 +53,10 @@ Total wall: 28.5 min
 <tr><th style="text-align:right">Mean</th><th style="text-align:right">Baseline</th><th style="text-align:right">pigauto</th><th style="text-align:right">Mean</th><th style="text-align:right">Baseline</th><th style="text-align:right">pigauto</th></tr>
 </thead>
 <tbody>
-<tr><td><b>20% zeros</b></td><td style="text-align:right">58.059</td><td style="text-align:right">37.518 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">38.849</td><td style="text-align:right">1.000 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.935</td><td style="text-align:right">0.938</td></tr>
-<tr><td><b>40% zeros</b></td><td style="text-align:right">34.494</td><td style="text-align:right">25.635</td><td style="text-align:right">25.245 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">1.000 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.831</td><td style="text-align:right">0.831</td></tr>
-<tr><td><b>60% zeros</b></td><td style="text-align:right">57.595</td><td style="text-align:right">44.103 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">44.337</td><td style="text-align:right">1.000 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.808</td><td style="text-align:right">0.805</td></tr>
-<tr><td><b>80% zeros</b></td><td style="text-align:right">41.886</td><td style="text-align:right">36.149 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">36.206</td><td style="text-align:right">1.000 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.559</td><td style="text-align:right">0.559</td></tr>
+<tr><td><b>20% zeros</b></td><td style="text-align:right">58.059</td><td style="text-align:right">38.167 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">39.402</td><td style="text-align:right">1.000 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.937</td><td style="text-align:right">0.936</td></tr>
+<tr><td><b>40% zeros</b></td><td style="text-align:right">34.494</td><td style="text-align:right">25.787 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">26.301</td><td style="text-align:right">1.000 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.829</td><td style="text-align:right">0.828</td></tr>
+<tr><td><b>60% zeros</b></td><td style="text-align:right">57.595</td><td style="text-align:right">44.472 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">45.200</td><td style="text-align:right">1.000 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.812</td><td style="text-align:right">0.803</td></tr>
+<tr><td><b>80% zeros</b></td><td style="text-align:right">41.886</td><td style="text-align:right">35.991 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">36.040</td><td style="text-align:right">1.000 <span style="color:#059669">&#9733;</span></td><td style="text-align:right">0.564</td><td style="text-align:right">0.524</td></tr>
 </tbody>
 </table>
 
@@ -76,31 +76,31 @@ Total wall: 28.5 min
 <text x="12" y="147" font-size="10" fill="#6b7280" transform="rotate(-90 12 147)">RMSE</text>
 <rect x="66.6" y="65.0" width="26.2" height="193.0" fill="#9ca3af" rx="2"/>
 <text x="79.7" y="61.0" text-anchor="middle" font-size="9" fill="#374151">58.059</text>
-<rect x="99.4" y="133.3" width="26.2" height="124.7" fill="#2563eb" rx="2"/>
-<text x="112.5" y="129.3" text-anchor="middle" font-size="9" fill="#374151">37.518</text>
-<rect x="132.2" y="128.8" width="26.2" height="129.2" fill="#059669" rx="2"/>
-<text x="145.3" y="124.8" text-anchor="middle" font-size="9" fill="#374151">38.849</text>
+<rect x="99.4" y="131.1" width="26.2" height="126.9" fill="#2563eb" rx="2"/>
+<text x="112.5" y="127.1" text-anchor="middle" font-size="9" fill="#374151">38.167</text>
+<rect x="132.2" y="127.0" width="26.2" height="131.0" fill="#059669" rx="2"/>
+<text x="145.3" y="123.0" text-anchor="middle" font-size="9" fill="#374151">39.402</text>
 <text x="112.5" y="274" text-anchor="middle" font-size="11" fill="#374151">20% zeros</text>
 <rect x="171.6" y="143.3" width="26.2" height="114.7" fill="#9ca3af" rx="2"/>
 <text x="184.7" y="139.3" text-anchor="middle" font-size="9" fill="#374151">34.494</text>
-<rect x="204.4" y="172.8" width="26.2" height="85.2" fill="#2563eb" rx="2"/>
-<text x="217.5" y="168.8" text-anchor="middle" font-size="9" fill="#374151">25.635</text>
-<rect x="237.2" y="174.1" width="26.2" height="83.9" fill="#059669" rx="2"/>
-<text x="250.3" y="170.1" text-anchor="middle" font-size="9" fill="#374151">25.245</text>
+<rect x="204.4" y="172.3" width="26.2" height="85.7" fill="#2563eb" rx="2"/>
+<text x="217.5" y="168.3" text-anchor="middle" font-size="9" fill="#374151">25.787</text>
+<rect x="237.2" y="170.6" width="26.2" height="87.4" fill="#059669" rx="2"/>
+<text x="250.3" y="166.6" text-anchor="middle" font-size="9" fill="#374151">26.301</text>
 <text x="217.5" y="274" text-anchor="middle" font-size="11" fill="#374151">40% zeros</text>
 <rect x="276.6" y="66.5" width="26.2" height="191.5" fill="#9ca3af" rx="2"/>
 <text x="289.7" y="62.5" text-anchor="middle" font-size="9" fill="#374151">57.595</text>
-<rect x="309.4" y="111.4" width="26.2" height="146.6" fill="#2563eb" rx="2"/>
-<text x="322.5" y="107.4" text-anchor="middle" font-size="9" fill="#374151">44.103</text>
-<rect x="342.2" y="110.6" width="26.2" height="147.4" fill="#059669" rx="2"/>
-<text x="355.3" y="106.6" text-anchor="middle" font-size="9" fill="#374151">44.337</text>
+<rect x="309.4" y="110.1" width="26.2" height="147.9" fill="#2563eb" rx="2"/>
+<text x="322.5" y="106.1" text-anchor="middle" font-size="9" fill="#374151">44.472</text>
+<rect x="342.2" y="107.7" width="26.2" height="150.3" fill="#059669" rx="2"/>
+<text x="355.3" y="103.7" text-anchor="middle" font-size="9" fill="#374151">45.200</text>
 <text x="322.5" y="274" text-anchor="middle" font-size="11" fill="#374151">60% zeros</text>
 <rect x="381.6" y="118.7" width="26.2" height="139.3" fill="#9ca3af" rx="2"/>
 <text x="394.7" y="114.7" text-anchor="middle" font-size="9" fill="#374151">41.886</text>
-<rect x="414.4" y="137.8" width="26.2" height="120.2" fill="#2563eb" rx="2"/>
-<text x="427.5" y="133.8" text-anchor="middle" font-size="9" fill="#374151">36.149</text>
-<rect x="447.2" y="137.6" width="26.2" height="120.4" fill="#059669" rx="2"/>
-<text x="460.3" y="133.6" text-anchor="middle" font-size="9" fill="#374151">36.206</text>
+<rect x="414.4" y="138.3" width="26.2" height="119.7" fill="#2563eb" rx="2"/>
+<text x="427.5" y="134.3" text-anchor="middle" font-size="9" fill="#374151">35.991</text>
+<rect x="447.2" y="138.2" width="26.2" height="119.8" fill="#059669" rx="2"/>
+<text x="460.3" y="134.2" text-anchor="middle" font-size="9" fill="#374151">36.040</text>
 <text x="427.5" y="274" text-anchor="middle" font-size="11" fill="#374151">80% zeros</text>
 <text x="270.0" y="296" text-anchor="middle" font-size="10" fill="#6b7280">Zero fraction</text>
 <rect x="494" y="36" width="12" height="12" fill="#9ca3af" rx="2"/>
@@ -116,11 +116,11 @@ Total wall: 28.5 min
 <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px;height:auto;font-family:system-ui,-apple-system,sans-serif">
 <text x="60" y="22" font-size="14" font-weight="600" fill="#111827">Zero-class accuracy by zero fraction</text>
 <line x1="60" y1="258.0" x2="480" y2="258.0" stroke="#e5e7eb" stroke-width="1"/>
-<text x="54" y="261.0" text-anchor="end" font-size="10" fill="#6b7280">0.46</text>
+<text x="54" y="261.0" text-anchor="end" font-size="10" fill="#6b7280">0.42</text>
 <line x1="60" y1="202.5" x2="480" y2="202.5" stroke="#e5e7eb" stroke-width="1"/>
-<text x="54" y="205.5" text-anchor="end" font-size="10" fill="#6b7280">0.59</text>
+<text x="54" y="205.5" text-anchor="end" font-size="10" fill="#6b7280">0.57</text>
 <line x1="60" y1="147.0" x2="480" y2="147.0" stroke="#e5e7eb" stroke-width="1"/>
-<text x="54" y="150.0" text-anchor="end" font-size="10" fill="#6b7280">0.73</text>
+<text x="54" y="150.0" text-anchor="end" font-size="10" fill="#6b7280">0.71</text>
 <line x1="60" y1="91.5" x2="480" y2="91.5" stroke="#e5e7eb" stroke-width="1"/>
 <text x="54" y="94.5" text-anchor="end" font-size="10" fill="#6b7280">0.86</text>
 <line x1="60" y1="36.0" x2="480" y2="36.0" stroke="#e5e7eb" stroke-width="1"/>
@@ -128,31 +128,31 @@ Total wall: 28.5 min
 <text x="12" y="147" font-size="10" fill="#6b7280" transform="rotate(-90 12 147)">Zero accuracy</text>
 <rect x="66.6" y="36.0" width="26.2" height="222.0" fill="#9ca3af" rx="2"/>
 <text x="79.7" y="32.0" text-anchor="middle" font-size="9" fill="#374151">1.000</text>
-<rect x="99.4" y="62.5" width="26.2" height="195.5" fill="#2563eb" rx="2"/>
-<text x="112.5" y="58.5" text-anchor="middle" font-size="9" fill="#374151">0.935</text>
-<rect x="132.2" y="61.5" width="26.2" height="196.5" fill="#059669" rx="2"/>
-<text x="145.3" y="57.5" text-anchor="middle" font-size="9" fill="#374151">0.938</text>
+<rect x="99.4" y="60.2" width="26.2" height="197.8" fill="#2563eb" rx="2"/>
+<text x="112.5" y="56.2" text-anchor="middle" font-size="9" fill="#374151">0.937</text>
+<rect x="132.2" y="60.7" width="26.2" height="197.3" fill="#059669" rx="2"/>
+<text x="145.3" y="56.7" text-anchor="middle" font-size="9" fill="#374151">0.936</text>
 <text x="112.5" y="274" text-anchor="middle" font-size="11" fill="#374151">20% zeros</text>
 <rect x="171.6" y="36.0" width="26.2" height="222.0" fill="#9ca3af" rx="2"/>
 <text x="184.7" y="32.0" text-anchor="middle" font-size="9" fill="#374151">1.000</text>
-<rect x="204.4" y="105.6" width="26.2" height="152.4" fill="#2563eb" rx="2"/>
-<text x="217.5" y="101.6" text-anchor="middle" font-size="9" fill="#374151">0.831</text>
-<rect x="237.2" y="105.6" width="26.2" height="152.4" fill="#059669" rx="2"/>
-<text x="250.3" y="101.6" text-anchor="middle" font-size="9" fill="#374151">0.831</text>
+<rect x="204.4" y="101.9" width="26.2" height="156.1" fill="#2563eb" rx="2"/>
+<text x="217.5" y="97.9" text-anchor="middle" font-size="9" fill="#374151">0.829</text>
+<rect x="237.2" y="102.4" width="26.2" height="155.6" fill="#059669" rx="2"/>
+<text x="250.3" y="98.4" text-anchor="middle" font-size="9" fill="#374151">0.828</text>
 <text x="217.5" y="274" text-anchor="middle" font-size="11" fill="#374151">40% zeros</text>
 <rect x="276.6" y="36.0" width="26.2" height="222.0" fill="#9ca3af" rx="2"/>
 <text x="289.7" y="32.0" text-anchor="middle" font-size="9" fill="#374151">1.000</text>
-<rect x="309.4" y="114.7" width="26.2" height="143.3" fill="#2563eb" rx="2"/>
-<text x="322.5" y="110.7" text-anchor="middle" font-size="9" fill="#374151">0.808</text>
-<rect x="342.2" y="116.0" width="26.2" height="142.0" fill="#059669" rx="2"/>
-<text x="355.3" y="112.0" text-anchor="middle" font-size="9" fill="#374151">0.805</text>
+<rect x="309.4" y="108.6" width="26.2" height="149.4" fill="#2563eb" rx="2"/>
+<text x="322.5" y="104.6" text-anchor="middle" font-size="9" fill="#374151">0.812</text>
+<rect x="342.2" y="112.1" width="26.2" height="145.9" fill="#059669" rx="2"/>
+<text x="355.3" y="108.1" text-anchor="middle" font-size="9" fill="#374151">0.803</text>
 <text x="322.5" y="274" text-anchor="middle" font-size="11" fill="#374151">60% zeros</text>
 <rect x="381.6" y="36.0" width="26.2" height="222.0" fill="#9ca3af" rx="2"/>
 <text x="394.7" y="32.0" text-anchor="middle" font-size="9" fill="#374151">1.000</text>
-<rect x="414.4" y="216.9" width="26.2" height="41.1" fill="#2563eb" rx="2"/>
-<text x="427.5" y="212.9" text-anchor="middle" font-size="9" fill="#374151">0.559</text>
-<rect x="447.2" y="216.9" width="26.2" height="41.1" fill="#059669" rx="2"/>
-<text x="460.3" y="212.9" text-anchor="middle" font-size="9" fill="#374151">0.559</text>
+<rect x="414.4" y="204.1" width="26.2" height="53.9" fill="#2563eb" rx="2"/>
+<text x="427.5" y="200.1" text-anchor="middle" font-size="9" fill="#374151">0.564</text>
+<rect x="447.2" y="219.5" width="26.2" height="38.5" fill="#059669" rx="2"/>
+<text x="460.3" y="215.5" text-anchor="middle" font-size="9" fill="#374151">0.524</text>
 <text x="427.5" y="274" text-anchor="middle" font-size="11" fill="#374151">80% zeros</text>
 <text x="270.0" y="296" text-anchor="middle" font-size="10" fill="#6b7280">Zero fraction</text>
 <rect x="494" y="36" width="12" height="12" fill="#9ca3af" rx="2"/>
@@ -183,24 +183,24 @@ Total wall: 28.5 min
 <text x="12" y="147" font-size="10" fill="#6b7280" transform="rotate(-90 12 147)">RMSE</text>
 <rect x="68.8" y="251.0" width="35.0" height="7.0" fill="#9ca3af" rx="2"/>
 <text x="86.2" y="247.0" text-anchor="middle" font-size="9" fill="#374151">17.347</text>
-<rect x="112.5" y="253.8" width="35.0" height="4.2" fill="#2563eb" rx="2"/>
-<text x="130.0" y="249.8" text-anchor="middle" font-size="9" fill="#374151">10.383</text>
-<rect x="156.2" y="254.0" width="35.0" height="4.0" fill="#059669" rx="2"/>
-<text x="173.8" y="250.0" text-anchor="middle" font-size="9" fill="#374151">9.966</text>
+<rect x="112.5" y="253.7" width="35.0" height="4.3" fill="#2563eb" rx="2"/>
+<text x="130.0" y="249.7" text-anchor="middle" font-size="9" fill="#374151">10.571</text>
+<rect x="156.2" y="253.6" width="35.0" height="4.4" fill="#059669" rx="2"/>
+<text x="173.8" y="249.6" text-anchor="middle" font-size="9" fill="#374151">11.012</text>
 <text x="130.0" y="274" text-anchor="middle" font-size="11" fill="#374151">μ(nz) = 5</text>
 <rect x="208.8" y="244.9" width="35.0" height="13.1" fill="#9ca3af" rx="2"/>
 <text x="226.2" y="240.9" text-anchor="middle" font-size="9" fill="#374151">32.567</text>
-<rect x="252.5" y="248.5" width="35.0" height="9.5" fill="#2563eb" rx="2"/>
-<text x="270.0" y="244.5" text-anchor="middle" font-size="9" fill="#374151">23.536</text>
-<rect x="296.2" y="248.6" width="35.0" height="9.4" fill="#059669" rx="2"/>
-<text x="313.8" y="244.6" text-anchor="middle" font-size="9" fill="#374151">23.315</text>
+<rect x="252.5" y="248.4" width="35.0" height="9.6" fill="#2563eb" rx="2"/>
+<text x="270.0" y="244.4" text-anchor="middle" font-size="9" fill="#374151">23.784</text>
+<rect x="296.2" y="248.5" width="35.0" height="9.5" fill="#059669" rx="2"/>
+<text x="313.8" y="244.5" text-anchor="middle" font-size="9" fill="#374151">23.546</text>
 <text x="270.0" y="274" text-anchor="middle" font-size="11" fill="#374151">μ(nz) = 20</text>
 <rect x="348.8" y="65.0" width="35.0" height="193.0" fill="#9ca3af" rx="2"/>
 <text x="366.2" y="61.0" text-anchor="middle" font-size="9" fill="#374151">478.719</text>
-<rect x="392.5" y="155.1" width="35.0" height="102.9" fill="#2563eb" rx="2"/>
-<text x="410.0" y="151.1" text-anchor="middle" font-size="9" fill="#374151">255.224</text>
-<rect x="436.2" y="157.6" width="35.0" height="100.4" fill="#059669" rx="2"/>
-<text x="453.8" y="153.6" text-anchor="middle" font-size="9" fill="#374151">249.077</text>
+<rect x="392.5" y="153.4" width="35.0" height="104.6" fill="#2563eb" rx="2"/>
+<text x="410.0" y="149.4" text-anchor="middle" font-size="9" fill="#374151">259.481</text>
+<rect x="436.2" y="154.1" width="35.0" height="103.9" fill="#059669" rx="2"/>
+<text x="453.8" y="150.1" text-anchor="middle" font-size="9" fill="#374151">257.740</text>
 <text x="410.0" y="274" text-anchor="middle" font-size="11" fill="#374151">μ(nz) = 100</text>
 <text x="270.0" y="296" text-anchor="middle" font-size="10" fill="#6b7280">Mean of non-zero counts</text>
 <rect x="494" y="36" width="12" height="12" fill="#9ca3af" rx="2"/>
@@ -217,7 +217,7 @@ Total wall: 28.5 min
 <ul>
 <li><b>Zero-inflated counts are a two-component mixture.</b> The data has structural zeros (drawn from a zero-generating process) and positive counts (drawn from a count process). Imputation must handle both components.</li>
 <li><b>Low zero inflation behaves like regular counts.</b> At 20% zeros the count component dominates, and the log1p-z BM baseline captures most of the variation. The GNN gate stays near zero.</li>
-<li><b>High zero inflation is challenging for all methods.</b> At 80% zeros, distinguishing structural zeros from missing data becomes difficult. The GNN can learn the zero/non-zero boundary from cross-trait correlations, but the fundamental identifiability challenge remains.</li>
+<li><b>High zero inflation is challenging for all methods.</b> At 80% zeros, distinguishing structural zeros from missing data becomes difficult. In this run, RMSE and zero-class accuracy do not move in lockstep, so both columns are needed to interpret the result.</li>
 <li><b>Zero-class accuracy is a key secondary metric.</b> Overall RMSE may be misleading when most true values are zero. Tracking whether each cell correctly identifies as zero or non-zero gives a clearer picture of structural accuracy.</li>
 </ul>
 

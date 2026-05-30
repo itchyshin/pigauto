@@ -277,7 +277,7 @@ Methods: mode &middot; phylo label propagation &middot; pigauto &middot;
 Replicates: ', r$n_reps, ' &middot;
 Missingness: ', as.integer(100 * missing_frac), '% MCAR &middot;
 Commit ', commit_str, ' &middot;
-Run on ', format(Sys.time(), "%Y-%m-%d %H:%M"), ' &middot;
+Report generated ', format(Sys.time(), "%Y-%m-%d %H:%M"), ' &middot;
 Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 </p>
 
@@ -312,8 +312,8 @@ Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 
 <h2>What the benchmark shows</h2>
 <ul>
-<li><b>Phylogenetic label propagation is a strong baseline for categorical traits.</b> It uses phylogenetic distance to weight neighbours and predict the most likely category. With strong phylogenetic signal this is near-optimal.</li>
-<li><b>More categories make the task harder for all methods.</b> As K increases, the chance level drops (1/K) and each category has fewer training examples. The accuracy gap between methods widens.</li>
+<li><b>Phylogenetic label propagation is a strong baseline for categorical traits.</b> It uses phylogenetic distance to weight neighbours and predict the most likely category. With strong phylogenetic signal in this simulator, it can be difficult for the GNN to improve on.</li>
+<li><b>More categories make the task harder for all methods.</b> As K increases, the chance level drops (1/K) and each category has fewer training examples. The method gap should be read from the table because pigauto sometimes ties, trails, or slightly improves on label propagation.</li>
 <li><b>pigauto often matches label propagation but can trail it.</b> The calibrated gate limits unsupported GNN contribution, but this run still has scenarios where pure label propagation is better.</li>
 <li><b>Signal strength remains the dominant factor.</b> Even with K = 12 categories, high phylogenetic signal yields good accuracy. Low signal makes the task difficult regardless of method.</li>
 </ul>
