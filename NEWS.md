@@ -105,6 +105,18 @@ relative to BM kriging is stable across phylo-MAR, MCAR, and MNAR. The
 2 apparent losses seen in the smaller 10-sim pilot were both
 n=200/`trait_MNAR` and did not replicate at n=500.
 
+Follow-up coverage remeasurement (120 reps, n=500, 30% missing; source:
+`useful/MEMO_2026-05-21_coverage_remeasurement.md`) separated pigauto's
+actual split-conformal interval from the older 2.5/97.5% band of 20 MI
+draws used in the mixed-type sweep. Under MCAR / exchangeable missingness
+the actual conformal interval is near nominal: `bm_strong` 0.937 +/- 0.015
+and `weak_signal` 0.966 +/- 0.007. The old draw-band metric was lower
+because it was measuring the finite-draw band, not conformal coverage
+(`bm_strong` MCAR 0.872; `weak_signal` MCAR 0.898). Under value-dependent
+MNAR, undercoverage is real rather than a measurement artifact
+(`bm_strong` 0.878 +/- 0.022; `weak_signal` 0.815 +/- 0.020), as expected
+when calibration cells and target missing cells are not exchangeable.
+
 ## Independent verification: `use_trait_attention` redundant at scale
 
 External 60-replicate ablation (b1805, [#106](https://github.com/itchyshin/pigauto/issues/106), code in [#116](https://github.com/itchyshin/pigauto/pull/116))

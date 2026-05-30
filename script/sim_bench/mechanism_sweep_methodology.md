@@ -6,6 +6,7 @@
 **Data:** `dev/simulation_results_overnight_2026_05_19_mechanisms/results.rds`
 (240 reps), `dev/simulation_results_pigauto/results.rds` (600 reps)
 **Auto-generated companion:** `useful/MEMO_2026-05-20_mechanism_sweep.md`
+**Coverage addendum:** `useful/MEMO_2026-05-21_coverage_remeasurement.md`
 
 ---
 
@@ -124,6 +125,44 @@ scenarios with different signal variance, and pins the column-mean
 baseline near 1.0 by construction (it is exactly 1.0 in expectation
 under MCAR). A method beats column-mean iff `z_rmse < 1`. Per-cell
 means are reported with Monte Carlo SE = `sd / sqrt(n_sims)`.
+
+## Addendum: conformal-coverage remeasurement
+
+The original mechanism sweep was an RMSE study. A follow-up coverage
+remeasurement (`useful/MEMO_2026-05-21_coverage_remeasurement.md`) used
+the same mechanism families at n = 500, 30% missing, 120 replicates, and
+measured three different quantities:
+
+- `cov_conformal`: pigauto's actual split-conformal interval coverage
+  from `pred$conformal_lower` / `pred$conformal_upper`.
+- `cov_drawband`: the older mixed-type sweep's 2.5/97.5% band of 20
+  imputation draws.
+- `cov_bm`: BM-kriging's analytic Gaussian interval, as a reference.
+
+The distinction matters. `cov_drawband` is not pigauto's conformal
+interval; it is a finite-draw MI band and systematically understates
+coverage relative to the actual split-conformal interval.
+
+| scenario | condition | cov_conformal | cov_drawband | cov_bm |
+|---|---|---|---|---|
+| bm_strong | MCAR | 0.937 +/- 0.015 | 0.872 +/- 0.020 | 0.931 +/- 0.007 |
+| bm_strong | phylo_MAR | 0.952 +/- 0.010 | 0.890 +/- 0.010 | 0.949 +/- 0.005 |
+| bm_strong | trait_MAR | 0.934 +/- 0.018 | 0.853 +/- 0.024 | 0.924 +/- 0.008 |
+| bm_strong | trait_MNAR | 0.878 +/- 0.022 | 0.799 +/- 0.021 | 0.928 +/- 0.008 |
+| weak_signal | MCAR | 0.966 +/- 0.007 | 0.898 +/- 0.014 | 0.918 +/- 0.010 |
+| weak_signal | phylo_MAR | 0.948 +/- 0.012 | 0.876 +/- 0.017 | 0.954 +/- 0.009 |
+| weak_signal | trait_MAR | 0.951 +/- 0.008 | 0.893 +/- 0.013 | 0.933 +/- 0.010 |
+| weak_signal | trait_MNAR | 0.815 +/- 0.020 | 0.690 +/- 0.022 | 0.890 +/- 0.014 |
+
+Reading:
+
+- Under MCAR, where split-conformal exchangeability is the intended
+  reference regime, `cov_conformal` sits near the nominal 0.95 target.
+- Under phylo-MAR and the degenerate-MCAR `trait_MAR` cells, coverage is
+  also near nominal in this design.
+- Under value-dependent MNAR, undercoverage is real rather than a
+  measurement artifact: the observed calibration residuals no longer
+  represent the missing target cells.
 
 ## 7. Results — 600-rep sweep (n = 500, 50 sims/cell)
 
