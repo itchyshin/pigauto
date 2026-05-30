@@ -89,9 +89,14 @@ adj_symnorm_from_D <- function(D, sigma_mult) {
   A     <- exp(-(D^2) / (2 * sigma^2))
   diag(A) <- 1  # self-loops for stability
 
-  rs        <- rowSums(A) + 1e-8
-  Dinv_sqrt <- diag(1 / sqrt(rs))
-  Dinv_sqrt %*% A %*% Dinv_sqrt
+  # Symmetric normalisation D^{-1/2} A D^{-1/2}. The previous implementation
+  # built `diag(1/sqrt(rs))` as a dense n x n matrix and did two BLAS
+  # matmuls, which is O(n^3) (~19 min at n = 9,993 on a single core).
+  # Since the left/right factors are diagonal, the same product is just
+  # the outer scaling A_ij * v_i * v_j, which is O(n^2) (< 1 s at the same
+  # n). The result is identical to machine precision.
+  v <- 1 / sqrt(rowSums(A) + 1e-8)
+  outer(v, v) * A
 }
 
 
