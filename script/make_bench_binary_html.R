@@ -281,7 +281,7 @@ Methods: mode &middot; phylo label propagation &middot; pigauto &middot;
 Replicates: ', r$n_reps, ' &middot;
 Missingness: ', as.integer(100 * primary_frac), '% MCAR &middot;
 Commit ', commit_str, ' &middot;
-Run on ', format(Sys.time(), "%Y-%m-%d %H:%M"), ' &middot;
+Report generated ', format(Sys.time(), "%Y-%m-%d %H:%M"), ' &middot;
 Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 </p>
 
@@ -321,8 +321,8 @@ Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 
 <h2>What the benchmark shows</h2>
 <ul>
-<li><b>Phylogenetic label propagation is a strong baseline for binary traits.</b> At high signal, the similarity-weighted average of neighbours is near-optimal. The GNN must earn its gate to add value.</li>
-<li><b>Signal matters more than method.</b> At low signal (0.2) the phylogenetic structure is too weak for any method. At high signal (1.0) even mode imputation does reasonably because the majority class is phylogenetically clustered.</li>
+<li><b>Phylogenetic label propagation is a strong baseline for binary traits.</b> At high signal in this sweep, the similarity-weighted average of neighbours is difficult to improve on. The GNN must earn its gate to add value.</li>
+<li><b>Signal matters strongly in this simulation.</b> At low signal (0.2) the phylogenetic structure is weak, limiting all phylogeny-based methods. At high signal (1.0), the neighbour baseline and pigauto both improve, but their ordering still varies by cell.</li>
 <li><b>pigauto stays close to label propagation but can trail it.</b> The table should be read by signal level and imbalance setting; the GNN contribution is not uniformly positive in this run.</li>
 </ul>
 

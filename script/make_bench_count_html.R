@@ -251,7 +251,7 @@ verdict1 <- if (is.finite(rmse_bl_5) && is.finite(rmse_pg_5)) {
 
 verdict2 <- if (is.finite(rmse_bl_500) && is.finite(rmse_pg_500)) {
   pct <- 100 * (rmse_bl_500 - rmse_pg_500) / rmse_bl_500
-  sprintf('For dense counts (mean = 500), pigauto moves RMSE from %.3f to %.3f (%+.1f%%). The log1p transform compresses the scale, but the observed GNN lift is scenario-dependent.',
+  sprintf('For dense counts (mean = 500), pigauto moves RMSE from %.3f to %.3f (%+.1f%%). The log1p transform compresses the scale, but the observed GNN delta is scenario-dependent.',
           rmse_bl_500, rmse_pg_500, pct)
 } else 'For dense counts the log1p transform smooths the scale; compare pigauto against BM scenario by scenario.'
 
@@ -301,7 +301,7 @@ Methods: mean &middot; BM baseline (Rphylopars) &middot; pigauto &middot;
 Replicates: ', r$n_reps, ' &middot;
 Missingness: ', as.integer(100 * missing_frac), '% MCAR &middot;
 Commit ', commit_str, ' &middot;
-Run on ', format(Sys.time(), "%Y-%m-%d %H:%M"), ' &middot;
+Report generated ', format(Sys.time(), "%Y-%m-%d %H:%M"), ' &middot;
 Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 </p>
 

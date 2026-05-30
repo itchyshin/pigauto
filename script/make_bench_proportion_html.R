@@ -285,7 +285,7 @@ Methods: mean &middot; BM baseline (Rphylopars) &middot; pigauto &middot;
 Replicates: ', r$n_reps, ' &middot;
 Missingness: ', as.integer(100 * primary_frac), '% MCAR &middot;
 Commit ', commit_str, ' &middot;
-Run on ', format(Sys.time(), "%Y-%m-%d %H:%M"), ' &middot;
+Report generated ', format(Sys.time(), "%Y-%m-%d %H:%M"), ' &middot;
 Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 </p>
 
@@ -325,10 +325,10 @@ Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 
 <h2>What the benchmark shows</h2>
 <ul>
-<li><b>Proportions are treated as continuous traits in latent space.</b> The pipeline z-scores proportions directly. The [0,1] boundary is respected at prediction time via clamping after back-transformation.</li>
-<li><b>Signal strength dominates performance.</b> At high phylogenetic signal the BM baseline captures most of the variation because closely related species have similar proportions. The GNN gate stays near zero.</li>
-<li><b>Boundary density affects difficulty.</b> When many values cluster near 0 or 1, the distribution is skewed and BM (which assumes Gaussian residuals) can struggle. The GNN can learn the non-linear boundary effects.</li>
-<li><b>pigauto is usually close to the baseline and sometimes improves it.</b> Average RMSE gains are modest in this run, and individual traits can tie or slightly trail the BM baseline.</li>
+<li><b>Proportions are modelled on a transformed latent scale.</b> The pipeline logit-transforms bounded values and z-scores that latent column before applying the BM baseline and GNN correction; decoding returns predictions to the [0,1] scale.</li>
+<li><b>Signal strength dominates performance.</b> At high phylogenetic signal the BM baseline captures much of the variation because closely related species have similar proportions.</li>
+<li><b>Boundary density affects difficulty.</b> When many values cluster near 0 or 1, the distribution is skewed and the transformed latent scale can still be challenging. The table should be used to judge whether the GNN correction helps in each cell.</li>
+<li><b>The v0.10 rerun is cautious evidence for proportions.</b> In the primary signal sweep shown here, pigauto stays in the neighbourhood of the BM baseline but trails it on average. Treat this page as a measured benchmark, not an improvement claim.</li>
 </ul>
 
 <h2>Reproducibility</h2>

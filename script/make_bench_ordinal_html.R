@@ -289,7 +289,7 @@ Methods: median &middot; BM baseline (Rphylopars) &middot; pigauto &middot;
 Replicates: ', r$n_reps, ' &middot;
 Missingness: ', as.integer(100 * missing_frac), '% MCAR &middot;
 Commit ', commit_str, ' &middot;
-Run on ', format(Sys.time(), "%Y-%m-%d %H:%M"), ' &middot;
+Report generated ', format(Sys.time(), "%Y-%m-%d %H:%M"), ' &middot;
 Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 </p>
 
@@ -329,7 +329,7 @@ Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 
 <h2>What the benchmark shows</h2>
 <ul>
-<li><b>BM on the integer-z scale is a strong baseline for ordinal traits.</b> Rphylopars treats the z-scored integer codes as continuous, which works well when phylogenetic signal is moderate to high.</li>
+<li><b>BM on the integer-z scale is a strong baseline for ordinal traits in this setup.</b> Rphylopars treats the z-scored integer codes as continuous, which works well in these simulated cells.</li>
 <li><b>More ordinal levels expose finer-grained variation.</b> With only 3 levels the discretisation is coarse and the baseline captures most of the structure. With 10 levels there is more information, but this run does not justify a general improvement claim.</li>
 <li><b>Spearman rank correlation tracks RMSE improvements.</b> Because ordinal imputation cares about rank preservation, Spearman &rho; is the more interpretable metric for downstream use.</li>
 </ul>

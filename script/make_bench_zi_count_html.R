@@ -245,7 +245,7 @@ verdict1 <- if (is.finite(rmse_bl_20) && is.finite(rmse_pg_20)) {
 
 verdict2 <- if (is.finite(rmse_bl_80) && is.finite(rmse_pg_80) &&
                 is.finite(zacc_bl_80) && is.finite(zacc_pg_80)) {
-  sprintf('At 80%% zero inflation, RMSE rises to %.3f (baseline) vs %.3f (pigauto), and zero-class accuracy is %.1f%% vs %.1f%%. Heavy zero inflation creates a two-component mixture that challenges all methods, but the GNN can learn the zero/non-zero boundary from cross-trait patterns.',
+  sprintf('At 80%% zero inflation, RMSE rises to %.3f (baseline) vs %.3f (pigauto), and zero-class accuracy is %.1f%% vs %.1f%%. Heavy zero inflation creates a two-component mixture that challenges all methods; read the GNN contribution from the RMSE and zero-accuracy columns together.',
           rmse_bl_80, rmse_pg_80, 100 * zacc_bl_80, 100 * zacc_pg_80)
 } else 'At high zero inflation the two-component mixture challenges all methods.'
 
@@ -295,7 +295,7 @@ Methods: mean &middot; LP + BM baseline &middot; pigauto &middot;
 Replicates: ', r$n_reps, ' &middot;
 Missingness: ', as.integer(100 * primary_frac), '% MCAR &middot;
 Commit ', commit_str, ' &middot;
-Run on ', format(Sys.time(), "%Y-%m-%d %H:%M"), ' &middot;
+Report generated ', format(Sys.time(), "%Y-%m-%d %H:%M"), ' &middot;
 Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 </p>
 
@@ -337,7 +337,7 @@ Total wall: ', sprintf("%.1f", r$total_wall / 60), ' min
 <ul>
 <li><b>Zero-inflated counts are a two-component mixture.</b> The data has structural zeros (drawn from a zero-generating process) and positive counts (drawn from a count process). Imputation must handle both components.</li>
 <li><b>Low zero inflation behaves like regular counts.</b> At 20% zeros the count component dominates, and the log1p-z BM baseline captures most of the variation. The GNN gate stays near zero.</li>
-<li><b>High zero inflation is challenging for all methods.</b> At 80% zeros, distinguishing structural zeros from missing data becomes difficult. The GNN can learn the zero/non-zero boundary from cross-trait correlations, but the fundamental identifiability challenge remains.</li>
+<li><b>High zero inflation is challenging for all methods.</b> At 80% zeros, distinguishing structural zeros from missing data becomes difficult. In this run, RMSE and zero-class accuracy do not move in lockstep, so both columns are needed to interpret the result.</li>
 <li><b>Zero-class accuracy is a key secondary metric.</b> Overall RMSE may be misleading when most true values are zero. Tracking whether each cell correctly identifies as zero or non-zero gives a clearer picture of structural accuracy.</li>
 </ul>
 
