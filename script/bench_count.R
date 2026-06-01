@@ -39,10 +39,7 @@ options(warn = 1, stringsAsFactors = FALSE)
 suppressPackageStartupMessages({
   library(ape)
   library(parallel)
-  devtools::load_all(
-    "/Users/z3437171/Dropbox/Github Local/pigauto",
-    quiet = TRUE
-  )
+  devtools::load_all(".")
 })
 
 # -------------------------------------------------------------------------
