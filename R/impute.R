@@ -319,6 +319,7 @@ impute <- function(traits, tree, species_col = NULL,
                    ...) {
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
   pool_method <- match.arg(pool_method)
+  lambda_mode <- match.arg(lambda_mode)
 
   # Phase B3 Safety Check
   if (n_imputations == 1L && pool_method == "median") {
@@ -398,7 +399,8 @@ impute <- function(traits, tree, species_col = NULL,
                            multi_obs_aggregation = multi_obs_aggregation,
                            em_iterations = em_iterations,
                            em_tol = em_tol,
-                           em_offdiag = em_offdiag)
+                           em_offdiag = em_offdiag,
+                           lambda_mode = lambda_mode)
 
   # Free the cached cophenetic distance matrix: fit_pigauto() only
   # needs graph$adj and graph$coords, and at n = 10,000 the ~800 MB
