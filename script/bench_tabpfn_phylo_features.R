@@ -234,16 +234,20 @@ run_tabpfn_predict <- function(train_x, train_y, pred_x, seed) {
   utils::write.csv(train_frame, train_path, row.names = FALSE, na = "")
   utils::write.csv(pred_frame, pred_path, row.names = FALSE, na = "")
 
+  cmd_args <- c(
+    shQuote(runner_py),
+    "--train", shQuote(train_path),
+    "--predict", shQuote(pred_path),
+    "--target", ".target",
+    "--out", shQuote(out_path),
+    "--metadata", shQuote(meta_path),
+    "--device", device,
+    "--seed", as.character(seed)
+  )
+
   cmd_out <- system2(
     python,
-    c(runner_py,
-      "--train", train_path,
-      "--predict", pred_path,
-      "--target", ".target",
-      "--out", out_path,
-      "--metadata", meta_path,
-      "--device", device,
-      "--seed", as.character(seed)),
+    cmd_args,
     stdout = TRUE,
     stderr = TRUE
   )
@@ -297,24 +301,36 @@ tabpfn_one_target <- function(pd, graph, splits, target, variant, seed,
   if (dry_run) return(base_row)
 
   t0 <- proc.time()[["elapsed"]]
-  pred_rows <- c(val_rows, test_rows)
-  pred_all <- run_tabpfn_predict(x[train_rows, , drop = FALSE],
-                                 y[train_rows],
-                                 x[pred_rows, , drop = FALSE],
-                                 seed)
-  val_pred <- pred_all[seq_along(val_rows)]
-  test_pred <- pred_all[length(val_rows) + seq_along(test_rows)]
-  qhat <- conformal_q(abs(y[val_rows] - val_pred), alpha = 0.05)
-  base_row$rmse <- rmse_vec(y[test_rows], test_pred)
-  base_row$pearson_r <- cor_vec(y[test_rows], test_pred)
+  fit_result <- tryCatch({
+    pred_rows <- c(val_rows, test_rows)
+    pred_all <- run_tabpfn_predict(x[train_rows, , drop = FALSE],
+                                   y[train_rows],
+                                   x[pred_rows, , drop = FALSE],
+                                   seed)
+    val_pred <- pred_all[seq_along(val_rows)]
+    test_pred <- pred_all[length(val_rows) + seq_along(test_rows)]
+    qhat <- conformal_q(abs(y[val_rows] - val_pred), alpha = 0.05)
+    list(ok = TRUE, val_pred = val_pred, test_pred = test_pred, qhat = qhat)
+  }, error = function(e) {
+    list(ok = FALSE, message = conditionMessage(e))
+  })
+
+  base_row$wall_sec <- proc.time()[["elapsed"]] - t0
+  if (!isTRUE(fit_result$ok)) {
+    base_row$status <- paste0("error: ", fit_result$message)
+    return(base_row)
+  }
+
+  qhat <- fit_result$qhat
+  base_row$rmse <- rmse_vec(y[test_rows], fit_result$test_pred)
+  base_row$pearson_r <- cor_vec(y[test_rows], fit_result$test_pred)
   base_row$qhat <- qhat
   base_row$coverage_95 <- if (is.finite(qhat)) {
-    mean(abs(y[test_rows] - test_pred) <= qhat)
+    mean(abs(y[test_rows] - fit_result$test_pred) <= qhat)
   } else {
     NA_real_
   }
   base_row$width_95 <- 2 * qhat
-  base_row$wall_sec <- proc.time()[["elapsed"]] - t0
   base_row$status <- "ok"
   base_row
 }
@@ -425,7 +441,11 @@ write_summary <- function(results, metadata, path) {
   } else {
     writeLines("## Test Summary", con)
     writeLines("", con)
-    writeLines("No scored rows yet. This is expected for `PIGAUTO_TABPFN_DRY_RUN=true`.", con)
+    if (isTRUE(metadata$dry_run)) {
+      writeLines("No scored rows yet. This is expected for `PIGAUTO_TABPFN_DRY_RUN=true`.", con)
+    } else {
+      writeLines("No scored rows were produced. Inspect `Status Counts` above for the failing method status.", con)
+    }
   }
 }
 
