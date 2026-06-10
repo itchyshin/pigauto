@@ -65,7 +65,33 @@ Honest current wording:
 > This does not yet cover pigauto's mixed-type, uncertainty, multiple
 > imputation, multi-tree, or active-sampling workflows.
 
-## Next check
+## Larger check
 
-Run one larger continuous-trait check at `n = 2000`, `rep = 1`, using only
-the stronger/diagnostic variants: `plain`, `lappe`, and `lappe_nfa`.
+Completed one larger continuous-trait check at `n = 2000`, `rep = 1`, using
+`plain`, `lappe`, and `lappe_nfa`.
+
+Command shape:
+
+```sh
+PIGAUTO_TABPFN_OUT_STEM=bench_tabpfn_phylo_features_n2000 \
+PIGAUTO_TABPFN_SCALES=2000 \
+PIGAUTO_TABPFN_REPS=1 \
+PIGAUTO_TABPFN_VARIANTS=plain,lappe,lappe_nfa \
+PIGAUTO_TABPFN_RUN_PIGAUTO=true \
+Rscript script/bench_tabpfn_phylo_features.R
+```
+
+All 20 result rows completed with `status == "ok"`. Best TabPFN variant beat
+pigauto on RMSE in all four continuous-trait comparisons. The mean
+best-TabPFN / pigauto RMSE ratio was 0.803; the median ratio was 0.791.
+
+| n | trait | best TabPFN | TabPFN RMSE | pigauto RMSE | RMSE ratio | coverage |
+|---:|---|---|---:|---:|---:|---:|
+| 2000 | Beak.Length_Culmen | tabpfn_lappe | 0.2844 | 0.4048 | 0.703 | 0.950 |
+| 2000 | Mass | tabpfn_lappe | 0.2289 | 0.3428 | 0.668 | 0.957 |
+| 2000 | Tarsus.Length | tabpfn_lappe_nfa | 0.2872 | 0.3267 | 0.879 | 0.959 |
+| 2000 | Wing.Length | tabpfn_lappe_nfa | 0.8417 | 0.8750 | 0.962 | 0.938 |
+
+This supports continuing the benchmark lane. The claim is still limited:
+continuous AVONET traits, MCAR holdout, single `n = 2000` replicate, and no
+mixed-type/discrete/multi-tree/downstream-inference workflows.
