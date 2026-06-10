@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Small TabPFN regression runner for pigauto benchmark scripts.
+"""Small TabPFN runner for pigauto benchmark scripts.
 
 This intentionally lives in script/ rather than the package API. TabPFN is an
 optional external benchmark dependency, not a pigauto runtime dependency.
@@ -39,11 +39,33 @@ def _make_regressor(device: str, seed: int):
     return TabPFNRegressor(**kwargs)
 
 
+def _make_classifier(device: str, seed: int):
+    try:
+        from tabpfn import TabPFNClassifier
+    except Exception as exc:  # pragma: no cover - exercised on user machines
+        raise RuntimeError(
+            "Could not import TabPFNClassifier. Install a TabPFN version that "
+            "provides classification support in the Python environment used by "
+            "PIGAUTO_TABPFN_PYTHON."
+        ) from exc
+
+    params = inspect.signature(TabPFNClassifier).parameters
+    kwargs = {}
+    if "device" in params:
+        kwargs["device"] = device
+    if "random_state" in params:
+        kwargs["random_state"] = seed
+    if "ignore_pretraining_limits" in params:
+        kwargs["ignore_pretraining_limits"] = True
+
+    return TabPFNClassifier(**kwargs)
+
+
 def _read_train(path: str, target: str):
     frame = pd.read_csv(path)
     if target not in frame.columns:
         raise ValueError(f"Target column {target!r} is missing from {path}")
-    y = frame.pop(target).to_numpy(dtype=np.float32)
+    y = frame.pop(target).to_numpy()
     x = frame.to_numpy(dtype=np.float32)
     return x, y, list(frame.columns)
 
@@ -62,6 +84,8 @@ def main() -> int:
     parser.add_argument("--metadata", default=None)
     parser.add_argument("--device", default="auto")
     parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument("--task", choices=["regression", "classification"],
+                        default="regression")
     args = parser.parse_args()
 
     t0 = time.perf_counter()
@@ -70,9 +94,14 @@ def main() -> int:
     if train_cols != pred_cols:
         raise ValueError("Training and prediction feature columns differ.")
 
-    model = _make_regressor(args.device, args.seed)
-    model.fit(x_train, y_train)
-    pred = np.asarray(model.predict(x_pred), dtype=np.float32).reshape(-1)
+    if args.task == "classification":
+        model = _make_classifier(args.device, args.seed)
+        y_fit = y_train.astype(np.int64)
+    else:
+        model = _make_regressor(args.device, args.seed)
+        y_fit = y_train.astype(np.float32)
+    model.fit(x_train, y_fit)
+    pred = np.asarray(model.predict(x_pred)).reshape(-1)
 
     pd.DataFrame({"prediction": pred}).to_csv(args.out, index=False)
 
