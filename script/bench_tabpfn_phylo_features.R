@@ -30,6 +30,10 @@
 #     PIGAUTO_TABPFN_RUN_PIGAUTO=true \
 #     PIGAUTO_TABPFN_PYTHON=/path/to/python \
 #     Rscript script/bench_tabpfn_phylo_features.R
+#
+# To keep multiple result files side-by-side:
+#   PIGAUTO_TABPFN_OUT_STEM=bench_tabpfn_phylo_features_n2000 \
+#     Rscript script/bench_tabpfn_phylo_features.R
 
 options(warn = 1, stringsAsFactors = FALSE)
 
@@ -70,8 +74,13 @@ env_vec <- function(name, default) {
 }
 
 repo_root <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
-out_rds <- file.path(repo_root, "script", "bench_tabpfn_phylo_features.rds")
-out_md <- file.path(repo_root, "script", "bench_tabpfn_phylo_features.md")
+out_stem <- env_chr("PIGAUTO_TABPFN_OUT_STEM",
+                    "bench_tabpfn_phylo_features")
+if (!grepl("^[A-Za-z0-9_.-]+$", out_stem)) {
+  stop("PIGAUTO_TABPFN_OUT_STEM must be a simple file stem, not a path.")
+}
+out_rds <- file.path(repo_root, "script", paste0(out_stem, ".rds"))
+out_md <- file.path(repo_root, "script", paste0(out_stem, ".md"))
 runner_py <- file.path(repo_root, "script", "run_tabpfn_phylo.py")
 
 scales <- as.integer(env_vec("PIGAUTO_TABPFN_SCALES", c("50", "75", "300")))
@@ -108,6 +117,7 @@ metadata <- list(
   run_pigauto = run_pigauto,
   python = python,
   device = device,
+  out_stem = out_stem,
   commit = tryCatch(system("git rev-parse HEAD", intern = TRUE),
                     error = function(e) "unknown")
 )
