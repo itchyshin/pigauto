@@ -431,11 +431,22 @@ write_summary <- function(results, metadata, path) {
   if (nrow(scored)) {
     writeLines("## Test Summary", con)
     writeLines("", con)
-    agg <- stats::aggregate(
-      cbind(rmse, pearson_r, coverage_95) ~ method + scale_n + trait,
-      data = scored,
-      FUN = function(x) mean(x, na.rm = TRUE)
-    )
+    groups <- split(scored, interaction(scored$method, scored$scale_n,
+                                        scored$trait, drop = TRUE))
+    mean_or_na <- function(x) {
+      if (all(is.na(x))) NA_real_ else mean(x, na.rm = TRUE)
+    }
+    agg <- do.call(rbind, lapply(groups, function(x) {
+      data.frame(
+        method = x$method[1L],
+        scale_n = x$scale_n[1L],
+        trait = x$trait[1L],
+        rmse = mean_or_na(x$rmse),
+        pearson_r = mean_or_na(x$pearson_r),
+        coverage_95 = mean_or_na(x$coverage_95),
+        stringsAsFactors = FALSE
+      )
+    }))
     agg <- agg[order(agg$scale_n, agg$trait, agg$method), , drop = FALSE]
     writeLines(capture.output(print(agg, row.names = FALSE, digits = 4)), con)
   } else {
