@@ -65,6 +65,7 @@ inst/doc/
 
 # Local data caches for bench scripts (downloadable, not portable)
 script/data-cache/
+script/bench_tabpfn_phylo_features.md
 
 # Vulcan bundles and their rsync'd artifacts live on dedicated branches;
 # don't let working-dir leftovers pollute feature branches
