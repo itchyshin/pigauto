@@ -93,10 +93,17 @@
   if (!refresh_cache && !is.na(cache_path) && file.exists(cache_path)) {
     cached <- tryCatch(readRDS(cache_path), error = function(e) NULL)
     if (!is.null(cached) && identical(cached$species, sp)) {
-      return(list(species = sp,
-                   centroid_lat = cached$centroid_lat,
-                   centroid_lon = cached$centroid_lon,
-                   n_occurrences = cached$n_occurrences))
+      # Check if per-occurrence points are required but missing
+      if (store_points && is.null(cached$points)) {
+        message(sprintf("Updating cache for %s: per-occurrence points requested but not found.", sp))
+        # Skips the return, forcing it to fall through to the live fetch below
+      } else {
+        return(list(species = sp,
+                    centroid_lat = cached$centroid_lat,
+                    centroid_lon = cached$centroid_lon,
+                    n_occurrences = cached$n_occurrences,
+                    points = cached$points))
+      }
     }
   }
   # Require rgbif for live fetch

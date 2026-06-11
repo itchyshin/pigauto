@@ -138,7 +138,7 @@
     }
   }
   # Need to extract from raster.  Read GBIF cache.
-  gbif_key <- gsub("[^A-Za-z0-9._-]", "_", sp)  # B.1 convention
+  gbif_key <- .gbif_cache_key(sp)
   gbif_path <- file.path(gbif_cache_dir, paste0(gbif_key, ".rds"))
   # Placeholder bio column names -- will be overwritten by actual extraction
   bio_names <- paste0("bio", 1:19)
