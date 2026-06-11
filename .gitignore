@@ -73,6 +73,7 @@ script/bench_tabpfn_discrete_smoke.md
 script/bench_tabpfn_sim_types*.md
 script/bench_tabpfn_complex_types*.md
 script/bench_tabpfn_reconciliation*.md
+script/bench_pigauto_cross_trait*.md
 
 # Vulcan bundles and their rsync'd artifacts live on dedicated branches;
 # don't let working-dir leftovers pollute feature branches

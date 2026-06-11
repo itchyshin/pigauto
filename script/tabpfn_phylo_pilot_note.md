@@ -458,10 +458,88 @@ Interpretation:
 > strongly as same-row TabPFN in these continuous AVONET cells, while preserving
 > pigauto's mixed-type semantics and uncertainty workflow.
 
+## Pigauto Cross-Trait Diagnostic
+
+Completed a focused pigauto-side diagnostic on 2026-06-11, using
+`script/bench_pigauto_cross_trait.R`.
+
+Command shape for the expensive pigauto configs:
+
+```sh
+PIGAUTO_XTRAIT_OUT_STEM=bench_pigauto_cross_trait_n300 \
+PIGAUTO_XTRAIT_SCALES=300 \
+PIGAUTO_XTRAIT_REPS=3 \
+PIGAUTO_XTRAIT_CONFIGS=default,trait_attention,relaxed_gate \
+PIGAUTO_XTRAIT_EPOCHS=500 \
+Rscript script/bench_pigauto_cross_trait.R
+```
+
+A cheap ridge-only rerun used the same seeds with
+`PIGAUTO_XTRAIT_RUN_PIGAUTO=false`. The ridge comparator drops near-zero
+training-variance features (`PIGAUTO_XTRAIT_RIDGE_MIN_SD=1e-6`) because some
+LapPE columns can be effectively zero in the training rows but non-zero in the
+held-out rows.
+
+Scope:
+
+- Data: bundled AVONET continuous traits at `n = 300`.
+- Replicates: 3.
+- Missingness: pigauto `make_missing_splits()` MCAR holdout.
+- Pigauto configs: current default, trait attention, and a relaxed-gate
+  diagnostic (`gate_cap = 1`, `lambda_gate = 0`, `phylo_signal_gate = FALSE`).
+- Simple comparators: ridge same-row traits, and ridge same-row traits plus
+  LapPE.
+
+All 72 combined rows completed with `status == "ok"`.
+
+Mean RMSE at `n = 300`:
+
+| method | mean RMSE | mean Pearson r |
+|---|---:|---:|
+| pigauto_relaxed_gate | 0.4682 | 0.8914 |
+| pigauto_trait_attention | 0.4932 | 0.8765 |
+| pigauto_default | 0.5023 | 0.8774 |
+| ridge_same_row | 0.5052 | 0.8651 |
+| ridge_same_row_lappe | 0.5378 | 0.8508 |
+| baseline | 0.5452 | 0.8581 |
+| tabpfn_same_row_lappe | 0.3345 | -- |
+| tabpfn_same_row | 0.3611 | -- |
+
+The TabPFN rows are copied from the reconciliation check above for the same
+`n = 300` scale, so they are not new rows from this pigauto diagnostic.
+
+Mean pigauto RMSE by trait:
+
+| trait | default | trait attention | relaxed gate | TabPFN same-row + LapPE |
+|---|---:|---:|---:|---:|
+| Beak.Length_Culmen | 0.6689 | 0.6949 | 0.6629 | 0.4772 |
+| Mass | 0.3201 | 0.3365 | 0.3226 | 0.2203 |
+| Tarsus.Length | 0.5065 | 0.5117 | 0.4982 | 0.3424 |
+| Wing.Length | 0.5138 | 0.4296 | 0.3893 | 0.2980 |
+
+Gate audit:
+
+| trait | relaxed-gate RMSE | mean BM gate | mean GNN gate | mean mean-gate |
+|---|---:|---:|---:|---:|
+| Beak.Length_Culmen | 0.6629 | 0.6667 | 0.3333 | 0.0000 |
+| Mass | 0.3226 | 0.4833 | 0.5167 | 0.0167 |
+| Tarsus.Length | 0.4982 | 0.8500 | 0.1500 | 0.0000 |
+| Wing.Length | 0.3893 | 0.1000 | 0.8649 | 0.0351 |
+
+Interpretation:
+
+> More local testing supports the same direction as the reconciliation check.
+> The relaxed-gate diagnostic improves pigauto at `n = 300`, especially for
+> `Wing.Length`, but it does not close the gap to same-row TabPFN. Trait
+> attention by itself is not enough in this AVONET continuous setup. A simple
+> ridge same-row model is close to current pigauto but far behind TabPFN,
+> suggesting TabPFN is exploiting more than a plain linear allometry signal.
+
 Actionable next step:
 
-> Add a focused pigauto-side cross-trait diagnostic: compare current pigauto
-> against a stronger cross-trait baseline or feature path on these same held-out
-> continuous AVONET cells, especially `Mass` and `Wing.Length`, and inspect
-> whether the calibrated gate is closing too conservatively for traits where
-> same-row TabPFN is strongest.
+> Keep TabPFN as an experimental benchmark/integration lane, and open a
+> separate pigauto-side development issue for cross-trait learning/gate
+> calibration. The issue should start from this bounded claim: in AVONET
+> continuous MCAR cells, same-row TabPFN still outperforms default pigauto and
+> the relaxed-gate diagnostic, while the current mixed-type and uncertainty
+> workflows remain pigauto advantages that this test does not replace.
