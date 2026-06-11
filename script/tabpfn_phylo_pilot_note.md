@@ -543,3 +543,111 @@ Actionable next step:
 > continuous MCAR cells, same-row TabPFN still outperforms default pigauto and
 > the relaxed-gate diagnostic, while the current mixed-type and uncertainty
 > workflows remain pigauto advantages that this test does not replace.
+
+## Targeted Follow-Up Tests
+
+Completed two targeted follow-up runs on 2026-06-11, using the updated
+`script/bench_tabpfn_reconciliation.R`.
+
+### Row-Block Mechanism Check
+
+Command shape:
+
+```sh
+PIGAUTO_TABPFN_OUT_STEM=bench_tabpfn_reconciliation_rowblock_n300 \
+PIGAUTO_TABPFN_SPLIT_MODE=row_block_all \
+PIGAUTO_TABPFN_SCALES=300 \
+PIGAUTO_TABPFN_REPS=3 \
+PIGAUTO_TABPFN_REGIMES=same_row,same_row_lappe,phylo_only \
+PIGAUTO_TABPFN_PIGAUTO_CONFIGS=default,relaxed_gate \
+PIGAUTO_TABPFN_RUN_PIGAUTO=true \
+PIGAUTO_TABPFN_EPOCHS=500 \
+Rscript script/bench_tabpfn_reconciliation.R
+```
+
+Scope:
+
+- Data: bundled AVONET continuous targets at `n = 300`.
+- Replicates: 3.
+- Split mode: `row_block_all`, which masks every latent column for held-out
+  validation/test species rows.
+- Aim: test whether TabPFN still wins when same-row features are unavailable at
+  prediction time.
+
+All 72 rows completed with `status == "ok"`.
+
+Mean RMSE:
+
+| method | mean RMSE | mean Pearson r | mean coverage |
+|---|---:|---:|---:|
+| baseline | 0.6633 | 0.8307 | -- |
+| pigauto | 0.6991 | 0.7956 | 0.9627 |
+| pigauto_relaxed_gate | 0.7090 | 0.7833 | 0.9627 |
+| tabpfn_phylo_only | 0.8656 | 0.6716 | 0.9605 |
+| tabpfn_same_row_lappe | 1.1453 | 0.5270 | 0.9671 |
+| tabpfn_same_row | 1.1634 | -- | 0.9825 |
+
+Interpretation:
+
+> The row-block check strongly supports the mechanism diagnosis. When held-out
+> species rows have no observed same-row features, the same-row TabPFN advantage
+> disappears and reverses. TabPFN `same_row` becomes effectively constant in
+> this setting, and `same_row_lappe` is still worse than pigauto and the
+> phylogenetic baseline. The original TabPFN win is therefore not a general
+> phylogenetic imputation win; it depends on available aligned same-row trait
+> information.
+
+### Cell-MCAR Robustness Check
+
+Command shape:
+
+```sh
+PIGAUTO_TABPFN_OUT_STEM=bench_tabpfn_reconciliation_robust_n300 \
+PIGAUTO_TABPFN_SPLIT_MODE=cell \
+PIGAUTO_TABPFN_SCALES=300 \
+PIGAUTO_TABPFN_REPS=5 \
+PIGAUTO_TABPFN_REGIMES=same_row,same_row_lappe \
+PIGAUTO_TABPFN_PIGAUTO_CONFIGS=default,relaxed_gate \
+PIGAUTO_TABPFN_RUN_PIGAUTO=true \
+PIGAUTO_TABPFN_EPOCHS=500 \
+Rscript script/bench_tabpfn_reconciliation.R
+```
+
+Scope:
+
+- Data: bundled AVONET continuous targets at `n = 300`.
+- Replicates: 5.
+- Split mode: `cell`, pigauto's usual MCAR cell holdout.
+- Aim: check that the same-row TabPFN win persists when same-row traits are
+  available, and compare default pigauto against the relaxed-gate diagnostic on
+  the same splits.
+
+All 100 rows completed with `status == "ok"`.
+
+Mean RMSE:
+
+| method | mean RMSE | mean Pearson r | mean coverage |
+|---|---:|---:|---:|
+| tabpfn_same_row_lappe | 0.3428 | 0.9361 | 0.9604 |
+| tabpfn_same_row | 0.3658 | 0.9254 | 0.9702 |
+| pigauto_relaxed_gate | 0.5126 | 0.8573 | 0.9900 |
+| pigauto | 0.5139 | 0.8573 | 0.9900 |
+| baseline | 0.5664 | 0.8303 | -- |
+
+Mean RMSE by trait:
+
+| trait | TabPFN same-row + LapPE | TabPFN same-row | pigauto relaxed gate | pigauto |
+|---|---:|---:|---:|---:|
+| Beak.Length_Culmen | 0.4692 | 0.5364 | 0.6709 | 0.6780 |
+| Mass | 0.2242 | 0.2247 | 0.3183 | 0.3205 |
+| Tarsus.Length | 0.3920 | 0.4166 | 0.5543 | 0.5571 |
+| Wing.Length | 0.2859 | 0.2853 | 0.5069 | 0.5001 |
+
+Interpretation:
+
+> Under the ordinary cell-MCAR regime, the same-row TabPFN gap is robust across
+> five `n = 300` replicates. Relaxed gating gives only a tiny average lift over
+> default pigauto in this run and does not close the gap. Together with the
+> row-block check, this says the useful next issue is not "replace pigauto with
+> TabPFN"; it is "add or improve a same-row cross-trait learner while preserving
+> pigauto's mixed-type and uncertainty contracts."

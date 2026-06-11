@@ -19,6 +19,14 @@
 #   PIGAUTO_TABPFN_REGIMES=same_row,phylo_only,shuffled_same_row_lappe \
 #   PIGAUTO_TABPFN_RUN_PIGAUTO=false \
 #     Rscript script/bench_tabpfn_reconciliation.R
+#
+# Row-block mechanism check:
+#   PIGAUTO_TABPFN_OUT_STEM=bench_tabpfn_reconciliation_rowblock_n300 \
+#   PIGAUTO_TABPFN_SPLIT_MODE=row_block_all \
+#   PIGAUTO_TABPFN_SCALES=300 PIGAUTO_TABPFN_REPS=3 \
+#   PIGAUTO_TABPFN_REGIMES=same_row,same_row_lappe,phylo_only \
+#   PIGAUTO_TABPFN_PIGAUTO_CONFIGS=default,relaxed_gate \
+#     Rscript script/bench_tabpfn_reconciliation.R
 
 options(warn = 1, stringsAsFactors = FALSE)
 
@@ -86,10 +94,12 @@ n_reps <- env_int("PIGAUTO_TABPFN_REPS", 1L)
 seed0 <- env_int("PIGAUTO_TABPFN_SEED", 20260611L)
 missing_frac <- env_num("PIGAUTO_TABPFN_MISSING_FRAC", 0.25)
 val_frac <- env_num("PIGAUTO_TABPFN_VAL_FRAC", 0.5)
+split_mode <- env_chr("PIGAUTO_TABPFN_SPLIT_MODE", "cell")
 epochs <- env_int("PIGAUTO_TABPFN_EPOCHS", 500L)
 nfa_k <- env_int("PIGAUTO_TABPFN_NFA_K", 15L)
 dry_run <- env_lgl("PIGAUTO_TABPFN_DRY_RUN", FALSE)
 run_pigauto <- env_lgl("PIGAUTO_TABPFN_RUN_PIGAUTO", !dry_run)
+pigauto_configs <- env_vec("PIGAUTO_TABPFN_PIGAUTO_CONFIGS", "default")
 python <- env_chr("PIGAUTO_TABPFN_PYTHON", "python3")
 device <- env_chr("PIGAUTO_TABPFN_DEVICE", "auto")
 target_env <- env_vec("PIGAUTO_TABPFN_TARGETS", character())
@@ -108,6 +118,24 @@ if (!all(regimes %in% valid_regimes)) {
   )
 }
 
+valid_split_modes <- c("cell", "row_block_all", "row_block_continuous")
+if (!split_mode %in% valid_split_modes) {
+  stop(
+    "Unknown split mode: ",
+    split_mode,
+    ". Valid modes: ",
+    paste(valid_split_modes, collapse = ", ")
+  )
+}
+
+valid_pigauto_configs <- c("default", "relaxed_gate")
+if (!all(pigauto_configs %in% valid_pigauto_configs)) {
+  stop(
+    "Unknown pigauto configs: ",
+    paste(setdiff(pigauto_configs, valid_pigauto_configs), collapse = ", ")
+  )
+}
+
 metadata <- list(
   benchmark = "tabpfn_reconciliation",
   scales = scales,
@@ -116,10 +144,12 @@ metadata <- list(
   seed0 = seed0,
   missing_frac = missing_frac,
   val_frac = val_frac,
+  split_mode = split_mode,
   epochs = epochs,
   nfa_k = nfa_k,
   dry_run = dry_run,
   run_pigauto = run_pigauto,
+  pigauto_configs = pigauto_configs,
   python = python,
   device = device,
   out_stem = out_stem,
@@ -197,6 +227,134 @@ target_rows_from_split <- function(splits, target_col, n) {
   list(
     val = split_to_rows(splits$val_idx),
     test = split_to_rows(splits$test_idx)
+  )
+}
+
+expand_rows_cols <- function(rows, cols, n) {
+  if (!length(rows) || !length(cols)) {
+    return(integer(0))
+  }
+  as.integer(c(outer(rows, (cols - 1L) * n, `+`)))
+}
+
+trait_ids_for_cols <- function(trait_map, cols) {
+  ids <- vapply(
+    trait_map,
+    function(tm) any(tm$latent_cols %in% cols),
+    logical(1L)
+  )
+  which(ids)
+}
+
+observed_trait_indices <- function(X, rows, trait_ids, trait_map) {
+  n <- nrow(X)
+  out <- integer(0)
+  for (trait_id in trait_ids) {
+    latent_cols <- trait_map[[trait_id]]$latent_cols
+    ok <- rows[
+      rowSums(is.finite(X[rows, latent_cols, drop = FALSE])) ==
+        length(latent_cols)
+    ]
+    if (length(ok)) {
+      out <- c(out, ok + (trait_id - 1L) * n)
+    }
+  }
+  out
+}
+
+make_row_block_splits <- function(
+  X,
+  trait_map,
+  target_cols,
+  missing_frac,
+  val_frac,
+  seed,
+  mode
+) {
+  n <- nrow(X)
+  p <- ncol(X)
+  if (identical(mode, "row_block_all")) {
+    block_cols <- seq_len(p)
+  } else if (identical(mode, "row_block_continuous")) {
+    block_cols <- target_cols
+  } else {
+    stop("Unsupported row-block mode: ", mode)
+  }
+
+  eligible_rows <- which(
+    rowSums(is.finite(X[, target_cols, drop = FALSE])) == length(target_cols)
+  )
+  if (!length(eligible_rows)) {
+    stop("No complete target rows are available for row-block splitting.")
+  }
+  if (length(eligible_rows) < 2L) {
+    stop(
+      "At least two complete target rows are needed for row-block splitting."
+    )
+  }
+
+  set.seed(seed)
+  n_hold <- max(2L, floor(missing_frac * length(eligible_rows)))
+  n_hold <- min(n_hold, length(eligible_rows))
+  held_rows <- sample(eligible_rows, n_hold)
+  n_val <- max(1L, floor(val_frac * length(held_rows)))
+  n_val <- min(n_val, length(held_rows) - 1L)
+  val_rows <- held_rows[seq_len(n_val)]
+  test_rows <- held_rows[-seq_len(n_val)]
+
+  val_idx <- expand_rows_cols(val_rows, block_cols, n)
+  test_idx <- expand_rows_cols(test_rows, block_cols, n)
+  val_idx <- val_idx[is.finite(X[val_idx])]
+  test_idx <- test_idx[is.finite(X[test_idx])]
+
+  block_trait_ids <- trait_ids_for_cols(trait_map, block_cols)
+  val_trait <- observed_trait_indices(X, val_rows, block_trait_ids, trait_map)
+  test_trait <- observed_trait_indices(X, test_rows, block_trait_ids, trait_map)
+
+  mask <- !is.na(X)
+  mask[c(val_idx, test_idx)] <- FALSE
+
+  list(
+    val_idx = val_idx,
+    test_idx = test_idx,
+    val_idx_trait = val_trait,
+    test_idx_trait = test_trait,
+    n = n,
+    p = p,
+    n_traits = length(trait_map),
+    mask = mask,
+    mechanism = mode,
+    val_rows = val_rows,
+    test_rows = test_rows,
+    block_cols = block_cols
+  )
+}
+
+make_benchmark_splits <- function(
+  pd,
+  target_cols,
+  missing_frac,
+  val_frac,
+  seed
+) {
+  if (identical(split_mode, "cell")) {
+    return(make_missing_splits(
+      pd$X_scaled,
+      missing_frac = missing_frac,
+      val_frac = val_frac,
+      seed = seed,
+      trait_map = pd$trait_map
+    ))
+  }
+
+  make_row_block_splits(
+    pd$X_scaled,
+    pd$trait_map,
+    target_cols,
+    missing_frac,
+    val_frac,
+    seed,
+    split_mode
   )
 }
 
@@ -523,6 +681,27 @@ standardize_eval <- function(
   )
 }
 
+fit_config_args <- function(config) {
+  switch(
+    config,
+    default = list(),
+    relaxed_gate = list(
+      gate_cap = 1.0,
+      lambda_gate = 0,
+      phylo_signal_gate = FALSE
+    ),
+    stop("Unknown pigauto config: ", config)
+  )
+}
+
+pigauto_method_name <- function(config) {
+  if (identical(config, "default")) {
+    "pigauto"
+  } else {
+    paste0("pigauto_", config)
+  }
+}
+
 pigauto_methods <- function(
   pd,
   tree,
@@ -551,42 +730,76 @@ pigauto_methods <- function(
   graph_fit$D <- NULL
   invisible(gc(full = TRUE, verbose = FALSE))
 
-  t1 <- proc.time()[["elapsed"]]
-  fit <- fit_pigauto(
-    pd,
-    tree,
-    splits = splits,
-    baseline = baseline,
-    graph = graph_fit,
-    epochs = epochs,
-    verbose = FALSE,
-    seed = seed
-  )
-  pred <- stats::predict(fit, return_se = TRUE, n_imputations = 1L)
-  ev_pg <- evaluate_imputation(pred, pd$X_scaled, splits)
-  pigauto_wall <- proc.time()[["elapsed"]] - t1
+  rows <- list(standardize_eval(
+    ev_bl,
+    "baseline",
+    scale_n,
+    rep_id,
+    targets,
+    baseline_wall
+  ))
 
-  rbind(
-    standardize_eval(
-      ev_bl,
-      "baseline",
-      scale_n,
-      rep_id,
-      targets,
-      baseline_wall
-    ),
-    standardize_eval(
-      ev_pg,
-      "pigauto",
+  for (config in pigauto_configs) {
+    method <- pigauto_method_name(config)
+    t1 <- proc.time()[["elapsed"]]
+    fit_result <- tryCatch(
+      {
+        args <- c(
+          list(
+            data = pd,
+            tree = tree,
+            splits = splits,
+            baseline = baseline,
+            graph = graph_fit,
+            epochs = epochs,
+            verbose = FALSE,
+            seed = seed
+          ),
+          fit_config_args(config)
+        )
+        fit <- do.call(fit_pigauto, args)
+        pred <- stats::predict(fit, return_se = TRUE, n_imputations = 1L)
+        ev <- evaluate_imputation(pred, pd$X_scaled, splits)
+        list(ok = TRUE, fit = fit, ev = ev)
+      },
+      error = function(e) {
+        list(ok = FALSE, message = conditionMessage(e))
+      }
+    )
+    pigauto_wall <- proc.time()[["elapsed"]] - t1
+
+    if (!isTRUE(fit_result$ok)) {
+      rows[[length(rows) + 1L]] <- do.call(
+        rbind,
+        lapply(targets, function(target) {
+          row <- empty_row(
+            method,
+            scale_n,
+            rep_id,
+            target,
+            paste0("error: ", fit_result$message)
+          )
+          row$wall_sec <- pigauto_wall
+          row
+        })
+      )
+      next
+    }
+
+    rows[[length(rows) + 1L]] <- standardize_eval(
+      fit_result$ev,
+      method,
       scale_n,
       rep_id,
       targets,
       pigauto_wall,
-      gate_bm = gate_map(fit, pd, targets, "r_cal_bm"),
-      gate_gnn = gate_map(fit, pd, targets, "r_cal_gnn"),
-      gate_mean = gate_map(fit, pd, targets, "r_cal_mean")
+      gate_bm = gate_map(fit_result$fit, pd, targets, "r_cal_bm"),
+      gate_gnn = gate_map(fit_result$fit, pd, targets, "r_cal_gnn"),
+      gate_mean = gate_map(fit_result$fit, pd, targets, "r_cal_mean")
     )
-  )
+  }
+
+  do.call(rbind, rows)
 }
 
 mean_or_na <- function(x) {
@@ -612,20 +825,41 @@ write_summary <- function(results, metadata, path) {
     con
   )
   writeLines(sprintf("- Replicates: `%d`", metadata$n_reps), con)
+  writeLines(sprintf("- Split mode: `%s`", metadata$split_mode), con)
   writeLines(sprintf("- Dry run: `%s`", metadata$dry_run), con)
+  writeLines(
+    sprintf(
+      "- Pigauto configs: `%s`",
+      paste(metadata$pigauto_configs, collapse = ", ")
+    ),
+    con
+  )
   writeLines("", con)
 
   writeLines("## Aim", con)
   writeLines("", con)
-  writeLines(
-    paste(
-      "This benchmark tests whether Russell-style TabPFN gains are mostly",
-      "explained by same-row cross-trait features, phylogenetic features,",
-      "or their combination. The shuffled regime keeps the same feature",
-      "distribution but breaks row-level cross-trait alignment."
-    ),
-    con
-  )
+  if (identical(metadata$split_mode, "cell")) {
+    writeLines(
+      paste(
+        "This benchmark tests whether Russell-style TabPFN gains are mostly",
+        "explained by same-row cross-trait features, phylogenetic features,",
+        "or their combination. The shuffled regime keeps the same feature",
+        "distribution but breaks row-level cross-trait alignment."
+      ),
+      con
+    )
+  } else {
+    writeLines(
+      paste(
+        "This benchmark uses row-block holdouts so validation/test species",
+        "rows have their selected trait cells hidden together. In",
+        "`row_block_all`, every latent column for held-out rows is masked,",
+        "so same-row TabPFN features cannot borrow observed cells from the",
+        "same species at prediction time."
+      ),
+      con
+    )
+  }
   writeLines("", con)
 
   writeLines("## Status Counts", con)
@@ -702,18 +936,24 @@ write_summary <- function(results, metadata, path) {
   )
   writeLines("", con)
 
-  gate_rows <- scored[scored$method == "pigauto", , drop = FALSE]
+  gate_rows <- scored[startsWith(scored$method, "pigauto"), , drop = FALSE]
   if (nrow(gate_rows)) {
     writeLines("## Pigauto Gate Audit", con)
     writeLines("", con)
     gate_groups <- split(
       gate_rows,
-      interaction(gate_rows$scale_n, gate_rows$trait, drop = TRUE)
+      interaction(
+        gate_rows$method,
+        gate_rows$scale_n,
+        gate_rows$trait,
+        drop = TRUE
+      )
     )
     gate_agg <- do.call(
       rbind,
       lapply(gate_groups, function(x) {
         data.frame(
+          method = x$method[1L],
           scale_n = x$scale_n[1L],
           trait = x$trait[1L],
           rmse = mean_or_na(x$rmse),
@@ -725,7 +965,7 @@ write_summary <- function(results, metadata, path) {
       })
     )
     gate_agg <- gate_agg[
-      order(gate_agg$scale_n, gate_agg$trait),
+      order(gate_agg$scale_n, gate_agg$trait, gate_agg$method),
       ,
       drop = FALSE
     ]
@@ -746,13 +986,6 @@ for (scale_n in scales) {
     dat <- load_avonet_subset(scale_n, seed)
     pd <- preprocess_traits(dat$df, dat$tree, log_transform = TRUE)
     graph <- build_phylo_graph(dat$tree, k_eigen = "auto")
-    splits <- make_missing_splits(
-      pd$X_scaled,
-      missing_frac = missing_frac,
-      val_frac = val_frac,
-      seed = seed,
-      trait_map = pd$trait_map
-    )
 
     continuous_targets <- names(Filter(
       function(tm) {
@@ -768,6 +1001,18 @@ for (scale_n in scales) {
     }
 
     log_line("Targets: ", paste(continuous_targets, collapse = ", "))
+    target_cols <- vapply(
+      continuous_targets,
+      function(target) pd$trait_map[[target]]$latent_cols[1L],
+      integer(1L)
+    )
+    splits <- make_benchmark_splits(
+      pd,
+      target_cols,
+      missing_frac = missing_frac,
+      val_frac = val_frac,
+      seed = seed
+    )
 
     all_results[[length(all_results) + 1L]] <- pigauto_methods(
       pd,
