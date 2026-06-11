@@ -95,3 +95,70 @@ best-TabPFN / pigauto RMSE ratio was 0.803; the median ratio was 0.791.
 This supports continuing the benchmark lane. The claim is still limited:
 continuous AVONET traits, MCAR holdout, single `n = 2000` replicate, and no
 mixed-type/discrete/multi-tree/downstream-inference workflows.
+
+## Discrete AVONET check
+
+Completed a local categorical/ordinal AVONET check on 2026-06-10, using
+`script/bench_tabpfn_discrete_avonet.R`.
+
+Command shape:
+
+```sh
+PIGAUTO_TABPFN_OUT_STEM=bench_tabpfn_discrete_avonet_local \
+PIGAUTO_TABPFN_SCALES=50,75,300 \
+PIGAUTO_TABPFN_REPS=3 \
+PIGAUTO_TABPFN_VARIANTS=plain,lappe,lappe_nfa,knn \
+PIGAUTO_TABPFN_RUN_PIGAUTO=true \
+Rscript script/bench_tabpfn_discrete_avonet.R
+```
+
+Scope:
+
+- Data: bundled AVONET discrete traits (`Trophic.Level`,
+  `Primary.Lifestyle`, `Migration`).
+- Scales: `n = 50, 75, 300`.
+- Replicates: 3 per scale.
+- Missingness: pigauto `make_missing_splits()` MCAR holdout.
+- Methods: majority baseline, pigauto's phylogenetic baseline, pigauto,
+  `tabpfn_plain`, `tabpfn_lappe`, `tabpfn_lappe_nfa`, `tabpfn_knn`.
+- Comparison target: test-set accuracy and balanced accuracy only. This check
+  does not implement classification prediction sets.
+
+All 189 result rows completed with `status == "ok"`.
+
+This did not reproduce the continuous-trait TabPFN win. Using the most
+favorable TabPFN reading, where the best TabPFN variant is selected separately
+for each scale, replicate, and trait, best TabPFN beat pigauto on balanced
+accuracy in 9/27 comparisons and beat the phylogenetic baseline in 5/27
+comparisons. It tied pigauto in 6/27 comparisons and tied the baseline in 7/27
+comparisons. Mean balanced accuracy across all scale-trait-replicate cells was:
+
+| method | mean balanced accuracy | mean accuracy |
+|---|---:|---:|
+| baseline | 0.5916 | 0.7382 |
+| pigauto | 0.5272 | 0.6926 |
+| best TabPFN variant | 0.5216 | 0.7180 |
+| majority | 0.3944 | 0.6176 |
+
+Scale-by-trait balanced accuracy means:
+
+| n | trait | baseline | pigauto | best TabPFN | majority |
+|---:|---|---:|---:|---:|---:|
+| 50 | Migration | 0.7381 | 0.7381 | 0.8333 | 0.8333 |
+| 50 | Primary.Lifestyle | 0.5417 | 0.5417 | 0.4861 | 0.3889 |
+| 50 | Trophic.Level | 0.5926 | 0.4630 | 0.5648 | 0.3889 |
+| 75 | Migration | 0.6111 | 0.4444 | 0.4583 | 0.4444 |
+| 75 | Primary.Lifestyle | 0.5833 | 0.3750 | 0.4167 | 0.2500 |
+| 75 | Trophic.Level | 0.5602 | 0.4861 | 0.5671 | 0.3889 |
+| 300 | Migration | 0.4764 | 0.4764 | 0.3510 | 0.3333 |
+| 300 | Primary.Lifestyle | 0.5530 | 0.5526 | 0.5108 | 0.2167 |
+| 300 | Trophic.Level | 0.6677 | 0.6677 | 0.5061 | 0.3056 |
+
+Honest current wording:
+
+> TabPFN with cross-trait and phylogenetic features looks promising for
+> continuous AVONET imputation, including a single `n = 2000` check, but the
+> local categorical/ordinal AVONET check is mixed and generally favors
+> pigauto's phylogenetic baseline on balanced accuracy. This branch should be
+> treated as a benchmark lane, not as evidence for a broad replacement of
+> pigauto's mixed-type model.
