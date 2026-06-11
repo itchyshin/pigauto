@@ -10,7 +10,7 @@
 #   pkgdown/assets/dev/bench_continuous.html   (shipped with site)
 #
 # Run with
-#   /usr/local/bin/Rscript script/make_bench_continuous_html.R
+#   Rscript script/make_bench_continuous_html.R
 
 suppressPackageStartupMessages({ })
 

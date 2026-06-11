@@ -480,14 +480,14 @@ test_that("safety_floor = TRUE keeps plants continuous RMSE <= 1.02 * mean_RMSE 
                             "bien_trait_means.rds")
   cache_tree  <- file.path(proj_root, "script", "data-cache",
                             "bien_tree.rds")
-  # Fallback: try the hard-coded development path.
+  # Fallback: try an explicit or current repo root when tests run via load_all().
   if (!file.exists(cache_trait)) {
-    cache_trait <- file.path(
-      "/Users/z3437171/Dropbox/Github Local/pigauto",
-      "script", "data-cache", "bien_trait_means.rds")
-    cache_tree  <- file.path(
-      "/Users/z3437171/Dropbox/Github Local/pigauto",
-      "script", "data-cache", "bien_tree.rds")
+    repo_root <- Sys.getenv("PIGAUTO_REPO_ROOT",
+                            unset = Sys.getenv("PIGAUTO_ROOT", unset = getwd()))
+    cache_trait <- file.path(repo_root, "script", "data-cache",
+                             "bien_trait_means.rds")
+    cache_tree  <- file.path(repo_root, "script", "data-cache",
+                             "bien_tree.rds")
   }
   skip_if_not(file.exists(cache_trait) && file.exists(cache_tree),
               "BIEN cache not found -- run script/bench_bien.R once to build")

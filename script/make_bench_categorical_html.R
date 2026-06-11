@@ -5,7 +5,7 @@
 # Build a self-contained HTML report from bench_categorical.rds.
 #
 # Run with
-#   /usr/local/bin/Rscript script/make_bench_categorical_html.R
+#   Rscript script/make_bench_categorical_html.R
 
 suppressPackageStartupMessages({ })
 

@@ -14,20 +14,20 @@
 
 options(warn = 1, stringsAsFactors = FALSE)
 
+here <- Sys.getenv("PIGAUTO_REPO_ROOT",
+                   unset = Sys.getenv("PIGAUTO_ROOT", unset = "."))
+here <- normalizePath(here, winslash = "/", mustWork = TRUE)
+
 suppressPackageStartupMessages({
   library(ape)
   library(parallel)
-  devtools::load_all(
-    "/Users/z3437171/Dropbox/Github Local/pigauto",
-    quiet = TRUE
-  )
+  devtools::load_all(here, quiet = TRUE)
 })
 
 # -------------------------------------------------------------------------
 # Paths
 # -------------------------------------------------------------------------
 
-here    <- "/Users/z3437171/Dropbox/Github Local/pigauto"
 out_rds <- file.path(here, "script", "bench_multi_proportion.rds")
 out_md  <- file.path(here, "script", "bench_multi_proportion.md")
 MC_CORES <- as.integer(Sys.getenv("MC_CORES", unset = "4"))

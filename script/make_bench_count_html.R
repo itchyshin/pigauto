@@ -5,7 +5,7 @@
 # Build a self-contained HTML report from bench_count.rds.
 #
 # Run with
-#   /usr/local/bin/Rscript script/make_bench_count_html.R
+#   Rscript script/make_bench_count_html.R
 
 suppressPackageStartupMessages({ })
 

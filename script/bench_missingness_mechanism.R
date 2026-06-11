@@ -6,24 +6,24 @@
 # Tests how pigauto performs under realistic missingness patterns.
 #
 # Run with
-#   cd pigauto && /usr/local/bin/Rscript script/bench_missingness_mechanism.R
+#   cd pigauto && Rscript script/bench_missingness_mechanism.R
 
 options(warn = 1, stringsAsFactors = FALSE)
+
+here <- Sys.getenv("PIGAUTO_REPO_ROOT",
+                   unset = Sys.getenv("PIGAUTO_ROOT", unset = "."))
+here <- normalizePath(here, winslash = "/", mustWork = TRUE)
 
 suppressPackageStartupMessages({
   library(ape)
   library(parallel)
-  devtools::load_all(
-    "/Users/z3437171/Dropbox/Github Local/pigauto",
-    quiet = TRUE
-  )
+  devtools::load_all(here, quiet = TRUE)
 })
 
 # -------------------------------------------------------------------------
 # Paths
 # -------------------------------------------------------------------------
 
-here    <- "/Users/z3437171/Dropbox/Github Local/pigauto"
 out_rds <- file.path(here, "script", "bench_missingness_mechanism.rds")
 out_md  <- file.path(here, "script", "bench_missingness_mechanism.md")
 MC_CORES <- as.integer(Sys.getenv("MC_CORES", unset = "16"))
@@ -213,7 +213,7 @@ if (n_remaining > 0L) {
   log_line("Starting PSOCK cluster...")
   cl <- parallel::makeCluster(min(MC_CORES, n_remaining))
 
-  parallel::clusterExport(cl, c("run_one_cell", "mean_mode_impute", "tag_rows",
+  parallel::clusterExport(cl, c("here", "run_one_cell", "mean_mode_impute", "tag_rows",
                                  "n_species", "n_reps", "epochs",
                                  "scenario_index"),
                           envir = environment())
@@ -221,10 +221,7 @@ if (n_remaining > 0L) {
   parallel::clusterEvalQ(cl, {
     suppressPackageStartupMessages({
       library(ape)
-      devtools::load_all(
-        "/Users/z3437171/Dropbox/Github Local/pigauto",
-        quiet = TRUE
-      )
+      devtools::load_all(here, quiet = TRUE)
     })
   })
   log_line("Cluster ready. Dispatching cells...")
