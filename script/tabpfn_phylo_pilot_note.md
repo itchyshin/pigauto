@@ -358,3 +358,110 @@ Honest current wording:
 > experimental benchmark lane unless a future integration preserves pigauto's
 > grouped mixed-type semantics, conformal uncertainty, multi-tree pooling,
 > multi-observation refinement, and active-imputation guidance.
+
+## Russell-Style Reconciliation Check
+
+Completed a local reconciliation ablation on 2026-06-10 / 2026-06-11, using
+`script/bench_tabpfn_reconciliation.R`.
+
+Command shape:
+
+```sh
+PIGAUTO_TABPFN_OUT_STEM=bench_tabpfn_reconciliation_local \
+PIGAUTO_TABPFN_SCALES=50,75,300 \
+PIGAUTO_TABPFN_REPS=3 \
+PIGAUTO_TABPFN_REGIMES=same_row,phylo_only,same_row_lappe,shuffled_same_row_lappe,same_row_lappe_nfa \
+PIGAUTO_TABPFN_RUN_PIGAUTO=true \
+PIGAUTO_TABPFN_EPOCHS=500 \
+Rscript script/bench_tabpfn_reconciliation.R
+```
+
+Scope:
+
+- Data: bundled AVONET continuous traits (`Mass`,
+  `Beak.Length_Culmen`, `Tarsus.Length`, `Wing.Length`).
+- Scales: `n = 50, 75, 300`.
+- Replicates: 3 per scale.
+- Missingness: pigauto `make_missing_splits()` MCAR holdout.
+- Methods: pigauto's phylogenetic baseline, pigauto, and five TabPFN feature
+  regimes.
+- Aim: determine whether Russell-style TabPFN gains are driven by same-row
+  cross-trait information, phylogenetic features, or their combination.
+
+Feature regimes:
+
+| regime | features |
+|---|---|
+| `same_row` | other observed same-row traits only |
+| `phylo_only` | Laplacian phylogenetic eigenvectors only |
+| `same_row_lappe` | same-row traits plus Laplacian eigenvectors |
+| `shuffled_same_row_lappe` | same features as `same_row_lappe`, but other-trait rows shuffled across species |
+| `same_row_lappe_nfa` | same-row traits, Laplacian eigenvectors, and nearest-training-target aggregates |
+
+All 252 result rows completed with `status == "ok"`.
+
+Mean RMSE across all scales, replicates, and continuous traits:
+
+| method | mean RMSE |
+|---|---:|
+| tabpfn_same_row_lappe | 0.3871 |
+| tabpfn_same_row | 0.4006 |
+| tabpfn_same_row_lappe_nfa | 0.4714 |
+| pigauto | 0.5299 |
+| baseline | 0.6532 |
+| tabpfn_phylo_only | 0.8493 |
+| tabpfn_shuffled_same_row_lappe | 0.8737 |
+
+Mean RMSE by scale:
+
+| n | pigauto | same-row | same-row + LapPE | phylo-only | shuffled same-row + LapPE |
+|---:|---:|---:|---:|---:|---:|
+| 50 | 0.5364 | 0.4007 | 0.3920 | 0.7275 | 0.7653 |
+| 75 | 0.5274 | 0.4401 | 0.4347 | 1.0122 | 1.0507 |
+| 300 | 0.4713 | 0.3611 | 0.3345 | 0.8082 | 0.8052 |
+
+Mean RMSE by trait:
+
+| trait | pigauto | same-row | same-row + LapPE | phylo-only | shuffled same-row + LapPE |
+|---|---:|---:|---:|---:|---:|
+| Beak.Length_Culmen | 0.6843 | 0.5874 | 0.5566 | 0.9811 | 0.9972 |
+| Mass | 0.3982 | 0.2678 | 0.2627 | 0.8670 | 0.8659 |
+| Tarsus.Length | 0.5572 | 0.4303 | 0.4204 | 0.7642 | 0.7865 |
+| Wing.Length | 0.4798 | 0.3170 | 0.3087 | 0.7849 | 0.8454 |
+
+Pigauto gate audit:
+
+| n | trait | pigauto RMSE | r_cal_bm | r_cal_gnn | r_cal_mean |
+|---:|---|---:|---:|---:|---:|
+| 50 | Beak.Length_Culmen | 0.7305 | 0.5833 | 0.2103 | 0.2063 |
+| 50 | Mass | 0.4949 | 0.4500 | 0.5500 | 0.0000 |
+| 50 | Tarsus.Length | 0.6083 | 0.4833 | 0.5167 | 0.0000 |
+| 50 | Wing.Length | 0.3118 | 0.2833 | 0.7167 | 0.0000 |
+| 75 | Beak.Length_Culmen | 0.6642 | 0.3500 | 0.5759 | 0.0741 |
+| 75 | Mass | 0.3950 | 0.0000 | 0.9833 | 0.0167 |
+| 75 | Tarsus.Length | 0.5734 | 0.4670 | 0.5330 | 0.0000 |
+| 75 | Wing.Length | 0.6951 | 0.3833 | 0.2833 | 0.3333 |
+| 300 | Beak.Length_Culmen | 0.6583 | 0.7500 | 0.2500 | 0.0000 |
+| 300 | Mass | 0.3046 | 0.4000 | 0.6000 | 0.0000 |
+| 300 | Tarsus.Length | 0.4899 | 0.8140 | 0.1860 | 0.0000 |
+| 300 | Wing.Length | 0.4324 | 0.2500 | 0.6807 | 0.0693 |
+
+Interpretation:
+
+> Russell's stronger TabPFN result is compatible with these local results.
+> The large continuous-trait gain is real in this AVONET setup, but the
+> reconciliation ablation says it is driven mostly by aligned same-row
+> cross-trait information. When same-row trait rows are shuffled, TabPFN
+> collapses to the phylogeny-only regime. Therefore the next useful pigauto
+> development direction is not "replace the GNN with TabPFN"; it is to examine
+> why pigauto's current gated model does not exploit cross-trait information as
+> strongly as same-row TabPFN in these continuous AVONET cells, while preserving
+> pigauto's mixed-type semantics and uncertainty workflow.
+
+Actionable next step:
+
+> Add a focused pigauto-side cross-trait diagnostic: compare current pigauto
+> against a stronger cross-trait baseline or feature path on these same held-out
+> continuous AVONET cells, especially `Mass` and `Wing.Length`, and inspect
+> whether the calibrated gate is closing too conservatively for traits where
+> same-row TabPFN is strongest.
