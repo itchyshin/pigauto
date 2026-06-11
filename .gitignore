@@ -70,6 +70,7 @@ script/bench_tabpfn_phylo_features_*.md
 script/bench_tabpfn_discrete_avonet.md
 script/bench_tabpfn_discrete_avonet_*.md
 script/bench_tabpfn_discrete_smoke.md
+script/bench_tabpfn_sim_types*.md
 
 # Vulcan bundles and their rsync'd artifacts live on dedicated branches;
 # don't let working-dir leftovers pollute feature branches
