@@ -679,9 +679,9 @@ write_summary <- function(results, metadata, path) {
     "Each cell simulates one mixed scalar dataset with two continuous traits",
     "and one trait each for count, proportion, binary, ordinal, and",
     "categorical data. Missing cells are held out with pigauto's",
-    "`make_missing_splits()`. TabPFN uses regression for continuous/count/",
-    "proportion latent targets and classification for binary/ordinal/",
-    "categorical targets. This branch-local check does not cover `zi_count`,",
+    "`make_missing_splits()`. TabPFN uses regression for continuous, count,",
+    "and proportion latent targets and classification for binary, ordinal,",
+    "and categorical targets. This branch-local check does not cover `zi_count`,",
     "`multi_proportion`, classification prediction sets, multi-tree Rubin",
     "pooling, multi-observation covariates, or active-imputation guidance."
   ), con)

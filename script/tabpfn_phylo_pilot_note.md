@@ -162,3 +162,75 @@ Honest current wording:
 > pigauto's phylogenetic baseline on balanced accuracy. This branch should be
 > treated as a benchmark lane, not as evidence for a broad replacement of
 > pigauto's mixed-type model.
+
+## Simulated Mixed Scalar-Type Check
+
+Completed a local mixed scalar-type simulation check on 2026-06-10, using
+`script/bench_tabpfn_sim_types.R`.
+
+Command shape:
+
+```sh
+PIGAUTO_TABPFN_OUT_STEM=bench_tabpfn_sim_types_local \
+PIGAUTO_TABPFN_SCALES=75,150 \
+PIGAUTO_TABPFN_REPS=2 \
+PIGAUTO_TABPFN_SCENARIOS=mixed_moderate,mixed_high_phylo,mixed_sparse_imbalanced \
+PIGAUTO_TABPFN_VARIANTS=plain,lappe,lappe_nfa \
+PIGAUTO_TABPFN_RUN_PIGAUTO=true \
+PIGAUTO_TABPFN_EPOCHS=200 \
+Rscript script/bench_tabpfn_sim_types.R
+```
+
+Scope:
+
+- Data: simulated mixed scalar datasets with two continuous traits and one
+  trait each for count, proportion, binary, ordinal, and categorical data.
+- Scales: `n = 75, 150`.
+- Scenarios: `mixed_moderate`, `mixed_high_phylo`,
+  `mixed_sparse_imbalanced`.
+- Replicates: 2 per scale-scenario cell.
+- Missingness: pigauto `make_missing_splits()` MCAR holdout.
+- Methods: mean/mode baseline, pigauto's phylogenetic baseline, pigauto,
+  `tabpfn_plain`, `tabpfn_lappe`, `tabpfn_lappe_nfa`.
+- Comparison targets: latent-scale RMSE for continuous/count/proportion, and
+  balanced accuracy for binary/ordinal/categorical.
+
+The run produced 504 result rows. All baseline, mean/mode, and pigauto rows
+completed with `status == "ok"`. TabPFN completed 249/252 rows; all three
+skips were the same `n = 75`, `mixed_high_phylo`, `rep = 2`, `binary_1`
+target where too few held-out cells were available.
+
+Using an optimistic "best TabPFN variant per scale-scenario-replicate-trait"
+reading, best TabPFN beat pigauto in 34/83 comparable target-cells and beat
+the phylogenetic baseline in 32/83 comparable target-cells. This is the
+favorable reading for TabPFN because it selects the best feature variant
+separately for each target.
+
+Overall means by type:
+
+| type | metric | baseline | pigauto | best TabPFN | mean/mode |
+|---|---|---:|---:|---:|---:|
+| continuous | RMSE | 0.5521 | 0.5798 | 0.6852 | 1.0369 |
+| count | RMSE | 0.7528 | 0.7910 | 0.7912 | 1.0164 |
+| proportion | RMSE | 0.8010 | 0.7841 | 0.7543 | 0.9772 |
+| binary | balanced accuracy | 0.7359 | 0.7099 | 0.6832 | 0.5417 |
+| categorical | balanced accuracy | 0.6147 | 0.6008 | 0.6345 | 0.4167 |
+| ordinal | balanced accuracy | 0.3758 | 0.3364 | 0.4283 | 0.1500 |
+
+Best TabPFN beat pigauto most often for proportion (8/12), categorical
+(6/12), and ordinal (8/12), but not for continuous (5/24), count (4/12), or
+binary (3/11 comparable cells). In the `n = 150`, `mixed_high_phylo` scenario,
+the phylogenetic baseline/pigauto were stronger than best TabPFN across
+continuous, count, proportion, binary, and categorical targets.
+
+Honest current wording:
+
+> The simulated mixed scalar-type check supports keeping TabPFN as an
+> experimental benchmark lane and suggests possible promise for proportion,
+> categorical, and ordinal targets. It does not support promoting TabPFN as
+> pigauto's replacement GNN/ML model. Pigauto's phylogenetic baseline remains
+> stronger for continuous, count, and binary targets in this local grid, and
+> the high-phylogenetic-signal regime favors the existing baseline/pigauto
+> path. `zi_count`, `multi_proportion`, classification prediction sets,
+> multi-tree pooling, multi-observation covariates, and active-imputation
+> guidance remain untested by this branch.
