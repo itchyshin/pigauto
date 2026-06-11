@@ -94,6 +94,7 @@ def main() -> int:
     if train_cols != pred_cols:
         raise ValueError("Training and prediction feature columns differ.")
 
+    prob_frame = None
     if args.task == "classification":
         model = _make_classifier(args.device, args.seed)
         y_fit = y_train.astype(np.int64)
@@ -102,8 +103,17 @@ def main() -> int:
         y_fit = y_train.astype(np.float32)
     model.fit(x_train, y_fit)
     pred = np.asarray(model.predict(x_pred)).reshape(-1)
+    if args.task == "classification" and hasattr(model, "predict_proba"):
+        prob = np.asarray(model.predict_proba(x_pred))
+        prob_frame = pd.DataFrame(
+            prob,
+            columns=[f"prob_class_{int(cls)}" for cls in model.classes_],
+        )
 
-    pd.DataFrame({"prediction": pred}).to_csv(args.out, index=False)
+    out_frame = pd.DataFrame({"prediction": pred})
+    if prob_frame is not None:
+        out_frame = pd.concat([out_frame, prob_frame], axis=1)
+    out_frame.to_csv(args.out, index=False)
 
     if args.metadata:
         with open(args.metadata, "w", encoding="utf-8") as handle:
@@ -114,6 +124,12 @@ def main() -> int:
                     "n_features": int(x_train.shape[1]),
                     "device": args.device,
                     "seed": int(args.seed),
+                    "classes": (
+                        [int(cls) for cls in model.classes_]
+                        if args.task == "classification"
+                        and hasattr(model, "classes_")
+                        else None
+                    ),
                     "wall_sec": time.perf_counter() - t0,
                 },
                 handle,

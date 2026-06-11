@@ -231,9 +231,9 @@ Honest current wording:
 > pigauto's replacement GNN/ML model. Pigauto's phylogenetic baseline remains
 > stronger for continuous, count, and binary targets in this local grid, and
 > the high-phylogenetic-signal regime favors the existing baseline/pigauto
-> path. `zi_count`, `multi_proportion`, classification prediction sets,
-> multi-tree pooling, multi-observation covariates, and active-imputation
-> guidance remain untested by this branch.
+> path. Classification prediction sets, multi-tree pooling,
+> multi-observation covariates, and active-imputation guidance remain untested
+> by this branch.
 
 ### Larger Simulated Scalar Check
 
@@ -269,3 +269,92 @@ target-cells and beat the phylogenetic baseline in 4/21 target-cells.
 This larger check strengthens the conclusion above: in this local simulation,
 TabPFN is most interesting for ordinal classification, but it is not ready to
 be promoted as pigauto's replacement ML/GNN model.
+
+## Complex-Type Check
+
+Completed a local `zi_count` and `multi_proportion` check on 2026-06-10, using
+`script/bench_tabpfn_complex_types.R`.
+
+Command shape:
+
+```sh
+PIGAUTO_TABPFN_OUT_STEM=bench_tabpfn_complex_types_local \
+PIGAUTO_TABPFN_SCALES=150,300 \
+PIGAUTO_TABPFN_REPS=1 \
+PIGAUTO_TABPFN_SCENARIOS=zi_moderate,zi_sparse,zi_many_zeros,multi_moderate,multi_high_phylo,multi_K8 \
+PIGAUTO_TABPFN_VARIANTS=lappe,lappe_nfa \
+PIGAUTO_TABPFN_RUN_PIGAUTO=true \
+PIGAUTO_TABPFN_EPOCHS=200 \
+Rscript script/bench_tabpfn_complex_types.R
+```
+
+Scope:
+
+- Data: simulated `zi_count` datasets with two zero-inflated count traits, and
+  simulated `multi_proportion` datasets with one grouped compositional trait.
+- Scales: `n = 150, 300`.
+- Scenarios: `zi_moderate`, `zi_sparse`, `zi_many_zeros`,
+  `multi_moderate`, `multi_high_phylo`, `multi_K8`.
+- Replicates: 1 per scale-scenario cell.
+- Methods: mean/mode baseline, pigauto's phylogenetic baseline, pigauto,
+  `tabpfn_lappe`, and `tabpfn_lappe_nfa`.
+- TabPFN wrapper: `zi_count` uses one TabPFN classifier for the non-zero gate
+  and one TabPFN regressor for the conditional non-zero magnitude;
+  `multi_proportion` uses independent TabPFN regressions on the z-scored CLR
+  latent columns.
+- Comparison targets: expected-count RMSE, zero accuracy, and Brier score for
+  `zi_count`; Aitchison distance, CLR RMSE, simplex MAE, and
+  dominant-component accuracy for `multi_proportion`.
+
+All 90 result rows completed with `status == "ok"`.
+
+`zi_count` means across both scales and all three ZI scenarios:
+
+| method | RMSE | zero accuracy | Brier |
+|---|---:|---:|---:|
+| baseline | 13.6395 | 0.7281 | 0.1921 |
+| mean/mode | 14.2382 | 1.0000 | 0.1765 |
+| pigauto | 14.7313 | 0.6998 | 0.2187 |
+| tabpfn_lappe | 14.0938 | 0.5628 | 0.3006 |
+| tabpfn_lappe_nfa | 17.2431 | 0.4867 | 0.4396 |
+
+Metric-specific optimistic TabPFN wins, selecting the better of `lappe` and
+`lappe_nfa` separately for each scale-scenario-replicate-trait row:
+
+| metric | wins vs pigauto | wins vs baseline |
+|---|---:|---:|
+| expected-count RMSE | 6/12 | 3/12 |
+| Brier score | 2/12 | 1/12 |
+| zero accuracy | 2/12 | 2/12 |
+
+`multi_proportion` means across both scales and all three composition
+scenarios:
+
+| method | Aitchison | CLR RMSE | simplex MAE | accuracy |
+|---|---:|---:|---:|---:|
+| baseline | 4.4104 | 0.8087 | 0.1353 | 0.5395 |
+| mean/mode | 5.3588 | 1.0128 | 0.1794 | 0.3377 |
+| pigauto | 4.4104 | 0.8087 | 0.1353 | 0.5395 |
+| tabpfn_lappe | 4.4932 | 0.8443 | 0.1508 | 0.4649 |
+| tabpfn_lappe_nfa | 5.6242 | 1.0546 | 0.1826 | 0.3728 |
+
+Metric-specific optimistic TabPFN wins:
+
+| metric | wins vs pigauto | wins vs baseline |
+|---|---:|---:|
+| Aitchison distance | 3/6 | 3/6 |
+| CLR RMSE | 3/6 | 3/6 |
+| simplex MAE | 1/6 | 1/6 |
+| dominant-component accuracy | 3/6 | 3/6 |
+
+Honest current wording:
+
+> The complex-type check does not support promoting TabPFN as pigauto's
+> replacement ML/GNN model. The ZI wrapper has occasional expected-count RMSE
+> wins, but its non-zero gate calibration is worse on average by Brier score
+> and zero accuracy. The multi-proportion wrapper is close in some cells but is
+> worse than pigauto/baseline on the averaged Aitchison, CLR RMSE, simplex MAE,
+> and dominant-component accuracy metrics. TabPFN should remain an
+> experimental benchmark lane unless a future integration preserves pigauto's
+> grouped mixed-type semantics, conformal uncertainty, multi-tree pooling,
+> multi-observation refinement, and active-imputation guidance.
