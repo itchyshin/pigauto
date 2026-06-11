@@ -454,6 +454,7 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
                            epochs, verbose, seed, reference_tree, ...) {
   T_trees <- length(trees)
   M_total <- T_trees * m_per_tree
+  dots <- list(...)
   if (verbose) {
     cat(sprintf("multi_impute_trees (share_gnn=TRUE): %d trees x %d imputations = %d datasets\n",
                 T_trees, m_per_tree, M_total))
@@ -488,6 +489,11 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
 
     # Capture the resolved baseline config from the reference fit
     config <- res_ref$fit$model_config
+    baseline_arg <- function(name, default) {
+      val <- dots[[name]]
+      if (is.null(val) || length(val) == 0L) val <- config[[name]]
+      if (is.null(val) || length(val) == 0L) default else val
+    }
 
     # Do not pass graph_ref here. The shared GNN keeps the reference-tree
     # graph inside fit_ref for prediction, but each tree-specific baseline
@@ -498,11 +504,11 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
       splits = splits_ref,
       graph = NULL,
       # Replay all the config options:
-      lambda_mode = config$lambda_mode,
-      multi_obs_aggregation = config$multi_obs_aggregation,
-      em_iterations = config$em_iterations,
-      em_tol = config$em_tol,
-      em_offdiag = config$em_offdiag
+      lambda_mode = baseline_arg("lambda_mode", "fixed_1"),
+      multi_obs_aggregation = baseline_arg("multi_obs_aggregation", "hard"),
+      em_iterations = baseline_arg("em_iterations", 0L),
+      em_tol = baseline_arg("em_tol", 1e-3),
+      em_offdiag = baseline_arg("em_offdiag", FALSE)
     )
     pred_t <- stats::predict(fit_ref, return_se = TRUE,
                               n_imputations = m_per_tree,
