@@ -234,3 +234,38 @@ Honest current wording:
 > path. `zi_count`, `multi_proportion`, classification prediction sets,
 > multi-tree pooling, multi-observation covariates, and active-imputation
 > guidance remain untested by this branch.
+
+### Larger Simulated Scalar Check
+
+Completed one additional local `n = 300` mixed scalar check on 2026-06-10:
+
+```sh
+PIGAUTO_TABPFN_OUT_STEM=bench_tabpfn_sim_types_n300 \
+PIGAUTO_TABPFN_SCALES=300 \
+PIGAUTO_TABPFN_REPS=1 \
+PIGAUTO_TABPFN_SCENARIOS=mixed_moderate,mixed_high_phylo,mixed_sparse_imbalanced \
+PIGAUTO_TABPFN_VARIANTS=plain,lappe,lappe_nfa \
+PIGAUTO_TABPFN_RUN_PIGAUTO=true \
+PIGAUTO_TABPFN_EPOCHS=200 \
+Rscript script/bench_tabpfn_sim_types.R
+```
+
+All 126 result rows completed with `status == "ok"`.
+
+Using the same favorable best-TabPFN reading, best TabPFN beat pigauto in 6/21
+target-cells and beat the phylogenetic baseline in 4/21 target-cells.
+
+`n = 300` means by type:
+
+| type | metric | baseline | pigauto | best TabPFN | mean/mode |
+|---|---|---:|---:|---:|---:|
+| continuous | RMSE | 0.5144 | 0.5144 | 0.6818 | 0.9385 |
+| count | RMSE | 0.6733 | 0.6892 | 0.7790 | 0.9941 |
+| proportion | RMSE | 0.7446 | 0.7502 | 0.7850 | 1.0377 |
+| binary | balanced accuracy | 0.6680 | 0.6680 | 0.6577 | 0.5000 |
+| categorical | balanced accuracy | 0.6459 | 0.5683 | 0.5830 | 0.3333 |
+| ordinal | balanced accuracy | 0.3279 | 0.3279 | 0.4331 | 0.2000 |
+
+This larger check strengthens the conclusion above: in this local simulation,
+TabPFN is most interesting for ordinal classification, but it is not ready to
+be promoted as pigauto's replacement ML/GNN model.
