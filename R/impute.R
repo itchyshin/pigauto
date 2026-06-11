@@ -52,6 +52,11 @@
 #'   dispatches a soft E-step so that intermediate class frequencies
 #'   contribute fractional liability evidence.  Passed to
 #'   \code{\link{fit_baseline}}.
+#' @param lambda_mode character. Pagel-lambda mode for the BM baseline.
+#'   \code{"fixed_1"} preserves the default Brownian correlation matrix;
+#'   \code{"estimate"}, \code{"cv"}, and \code{"bayes"} delegate lambda
+#'   handling to the per-column BM path.  Passed to
+#'   \code{\link{fit_baseline}} and stored in the fitted model config.
 #' @param em_iterations integer. Phase 6 EM iterations for the
 #'   threshold-joint baseline (binary + ordinal + OVR categorical).
 #'   Default \code{0L} preserves v0.9.1 behaviour byte-for-byte. When
@@ -304,6 +309,7 @@ impute <- function(traits, tree, species_col = NULL,
                    covariates = NULL,
                    epochs = 2000L, verbose = TRUE, seed = 1L,
                    multi_obs_aggregation = c("hard", "soft"),
+                   lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
                    em_iterations = 0L,
                    em_tol = 1e-3,
                    em_offdiag = FALSE,
@@ -319,6 +325,7 @@ impute <- function(traits, tree, species_col = NULL,
                    ...) {
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
   pool_method <- match.arg(pool_method)
+  lambda_mode <- match.arg(lambda_mode)
 
   # Phase B3 Safety Check
   if (n_imputations == 1L && pool_method == "median") {
@@ -398,7 +405,8 @@ impute <- function(traits, tree, species_col = NULL,
                            multi_obs_aggregation = multi_obs_aggregation,
                            em_iterations = em_iterations,
                            em_tol = em_tol,
-                           em_offdiag = em_offdiag)
+                           em_offdiag = em_offdiag,
+                           lambda_mode = lambda_mode)
 
   # Free the cached cophenetic distance matrix: fit_pigauto() only
   # needs graph$adj and graph$coords, and at n = 10,000 the ~800 MB
@@ -423,6 +431,7 @@ impute <- function(traits, tree, species_col = NULL,
     phylo_signal_gate      = phylo_signal_gate,
     phylo_signal_threshold = phylo_signal_threshold,
     phylo_signal_method    = phylo_signal_method,
+    lambda_mode            = lambda_mode,
     ...
   )
 

@@ -18,6 +18,7 @@ impute(
   verbose = TRUE,
   seed = 1L,
   multi_obs_aggregation = c("hard", "soft"),
+  lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
   em_iterations = 0L,
   em_tol = 0.001,
   em_offdiag = FALSE,
@@ -93,6 +94,12 @@ categorical.  \code{"soft"} preserves species-level proportions and
 dispatches a soft E-step so that intermediate class frequencies
 contribute fractional liability evidence.  Passed to
 \code{\link{fit_baseline}}.}
+
+\item{lambda_mode}{character. Pagel-lambda mode for the BM baseline.
+\code{"fixed_1"} preserves the default Brownian correlation matrix;
+\code{"estimate"}, \code{"cv"}, and \code{"bayes"} delegate lambda
+handling to the per-column BM path.  Passed to
+\code{\link{fit_baseline}} and stored in the fitted model config.}
 
 \item{em_iterations}{integer. Phase 6 EM iterations for the
 threshold-joint baseline (binary + ordinal + OVR categorical).

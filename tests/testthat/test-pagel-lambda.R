@@ -232,3 +232,25 @@ test_that("[pagel] fit_baseline lambda_mode='estimate' produces different predic
               info = sprintf("max abs diff = %.6f (should be > 1e-4)",
                               max(abs(diff))))
 })
+
+test_that("[pagel] impute(lambda_mode=...) threads to baseline and model config", {
+  set.seed(33L)
+  tree <- ape::rcoal(24L)
+  df <- data.frame(
+    x = stats::rnorm(24L),
+    row.names = tree$tip.label
+  )
+  df$x[c(3L, 9L, 17L)] <- NA
+
+  res <- suppressWarnings(impute(
+    df, tree,
+    lambda_mode = "estimate",
+    epochs = 1L,
+    missing_frac = 0.2,
+    verbose = FALSE,
+    seed = 33L
+  ))
+
+  expect_equal(res$fit$model_config$lambda_mode, "estimate")
+  expect_true(all(is.finite(unlist(res$prediction$imputed, use.names = FALSE))))
+})
