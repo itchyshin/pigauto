@@ -5,7 +5,7 @@
 # Build a self-contained HTML report from bench_missingness_mechanism.rds.
 #
 # Run with
-#   /usr/local/bin/Rscript script/make_bench_missingness_mechanism_html.R
+#   Rscript script/make_bench_missingness_mechanism_html.R
 
 suppressPackageStartupMessages({ })
 `%||%` <- function(a, b) if (is.null(a)) b else a

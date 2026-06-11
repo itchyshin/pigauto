@@ -13,10 +13,14 @@
 #   bash script/run_all_per_type_benches.sh
 
 set -e
-cd "/Users/z3437171/Dropbox/Github Local/pigauto"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="${PIGAUTO_REPO_ROOT:-${PIGAUTO_ROOT:-$(cd "${SCRIPT_DIR}/.." && pwd)}}"
+cd "${REPO_ROOT}"
+export PIGAUTO_REPO_ROOT="${REPO_ROOT}"
 
 LOG_DIR="script"
-RSCRIPT=/usr/local/bin/Rscript
+RSCRIPT="${RSCRIPT:-Rscript}"
 
 # Throttle PSOCK parallelism: 16 workers swamped this 18-core machine
 # (each ~1.2 GB resident -> ~19 GB total -> swapped).  8 workers at

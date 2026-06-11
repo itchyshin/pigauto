@@ -140,10 +140,11 @@ test_that("plants smoke: BIEN plant traits with weak phylo signal are gated", {
   cache_trait <- "script/data-cache/bien_trait_means.rds"
   cache_tree  <- "script/data-cache/bien_tree.rds"
   if (!file.exists(cache_trait)) {
-    cache_trait <- file.path("/Users/z3437171/Dropbox/Github Local/pigauto",
-                              "script/data-cache", "bien_trait_means.rds")
-    cache_tree  <- file.path("/Users/z3437171/Dropbox/Github Local/pigauto",
-                              "script/data-cache", "bien_tree.rds")
+    repo_root <- Sys.getenv("PIGAUTO_REPO_ROOT",
+                            unset = Sys.getenv("PIGAUTO_ROOT", unset = getwd()))
+    cache_trait <- file.path(repo_root, "script/data-cache",
+                             "bien_trait_means.rds")
+    cache_tree  <- file.path(repo_root, "script/data-cache", "bien_tree.rds")
   }
   skip_if_not(file.exists(cache_trait) && file.exists(cache_tree),
               "BIEN cache not found")

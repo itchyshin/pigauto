@@ -13,8 +13,13 @@
 # don't oversubscribe the machine.
 
 set -e
-cd "/Users/z3437171/Dropbox/Github Local/pigauto"
-RSCRIPT=/usr/local/bin/Rscript
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="${PIGAUTO_REPO_ROOT:-${PIGAUTO_ROOT:-$(cd "${SCRIPT_DIR}/.." && pwd)}}"
+cd "${REPO_ROOT}"
+export PIGAUTO_REPO_ROOT="${REPO_ROOT}"
+
+RSCRIPT="${RSCRIPT:-Rscript}"
 LOG_DIR="script"
 
 # -----------------------------------------------------------------------
