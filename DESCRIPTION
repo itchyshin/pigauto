@@ -31,6 +31,7 @@ Imports:
     torch,
     ape,
     ggplot2,
+    Matrix,
     rlang,
     stats,
     utils,

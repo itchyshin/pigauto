@@ -209,6 +209,11 @@
 #'   Recommended operational target is \code{n_val >= 20-30} per trait;
 #'   achieve this by increasing \code{missing_frac} or collecting more
 #'   species.  See \strong{Calibration at small n} below.
+#' @param lambda_mode character. Pagel-lambda mode for the BM baseline.
+#'   \code{"fixed_1"} preserves the default Brownian correlation matrix;
+#'   \code{"estimate"}, \code{"cv"}, and \code{"bayes"} delegate lambda
+#'   handling to the per-column BM path. Passed to
+#'   \code{\link{fit_baseline}} and stored in the fitted model config.
 #' @param verbose logical. Print training progress (default \code{TRUE}).
 #' @param seed integer. Random seed (default \code{1}).
 #' @section Calibration at small n:

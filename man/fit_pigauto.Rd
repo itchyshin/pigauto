@@ -47,6 +47,7 @@ fit_pigauto(
   phylo_signal_threshold = 0.2,
   phylo_signal_method = c("lambda", "blomberg_k"),
   min_val_cells = 20L,
+  lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
   verbose = TRUE,
   seed = 1L
 )
@@ -261,6 +262,12 @@ essentially a coin flip between \code{0} and \code{gate_cap}.
 Recommended operational target is \code{n_val >= 20-30} per trait;
 achieve this by increasing \code{missing_frac} or collecting more
 species.  See \strong{Calibration at small n} below.}
+
+\item{lambda_mode}{character. Pagel-lambda mode for the BM baseline.
+\code{"fixed_1"} preserves the default Brownian correlation matrix;
+\code{"estimate"}, \code{"cv"}, and \code{"bayes"} delegate lambda
+handling to the per-column BM path. Passed to
+\code{\link{fit_baseline}} and stored in the fitted model config.}
 
 \item{verbose}{logical. Print training progress (default \code{TRUE}).}
 

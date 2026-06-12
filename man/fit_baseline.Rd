@@ -11,6 +11,7 @@ fit_baseline(
   model = "BM",
   graph = NULL,
   multi_obs_aggregation = c("hard", "soft"),
+  lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
   em_iterations = 0L,
   em_tol = 0.001,
   em_offdiag = FALSE
@@ -43,6 +44,11 @@ soft E-step (\code{estep_liability_binary_soft}) so that intermediate
 class frequencies contribute fractional liability evidence.  Only
 relevant for multi-obs data with binary or categorical traits when the
 Level-C joint baseline is active.}
+
+\item{lambda_mode}{character. Pagel-lambda mode for the BM baseline.
+\code{"fixed_1"} preserves the default Brownian correlation matrix;
+\code{"estimate"}, \code{"cv"}, and \code{"bayes"} delegate lambda
+handling to the per-column BM path.}
 
 \item{em_iterations}{integer. Number of Phase 6 EM iterations for the
 threshold-joint baseline (binary + ordinal + OVR categorical). Default

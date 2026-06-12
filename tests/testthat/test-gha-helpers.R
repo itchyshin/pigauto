@@ -4,8 +4,14 @@
 
 .gha_path <- function(...) {
   # tests/testthat run from tests/testthat/; the helpers are at
-  # ../../script/gha/<name>.R relative to the test file.
-  file.path("..", "..", "script", "gha", ...)
+  # ../../script/gha/<name>.R relative to the test file. The script/
+  # directory is intentionally excluded from R CMD build, so these tests
+  # are source-tree checks only.
+  path <- file.path("..", "..", "script", "gha", ...)
+  if (!file.exists(path)) {
+    testthat::skip("script/gha helpers are not shipped in the built package")
+  }
+  path
 }
 
 test_that("[gha-config] PIGAUTO_CI_CONFIG loads with documented defaults", {
