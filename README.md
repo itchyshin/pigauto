@@ -1,5 +1,12 @@
 # pigauto: Phylogenetic Imputation via Graph AUTO-encoders <img src="man/figures/logo.png" align="right" height="139" alt="pigauto logo"/>
 
+<!-- badges: start -->
+
+[![pkgdown](https://github.com/itchyshin/pigauto/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/itchyshin/pigauto/actions/workflows/pkgdown.yaml)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+<!-- badges: end -->
+
 **Missing trait data should not stop a comparative analysis.**
 
 > Live documentation: <https://itchyshin.github.io/pigauto>
