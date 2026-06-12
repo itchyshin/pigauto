@@ -1,0 +1,66 @@
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'R/**'
+      - 'tests/**'
+      - 'vignettes/**'
+      - 'man/**'
+      - 'README.md'
+      - 'NEWS.md'
+      - 'DESCRIPTION'
+      - 'NAMESPACE'
+      - '.github/workflows/R-CMD-check.yaml'
+  pull_request:
+  workflow_dispatch:
+
+name: R-CMD-check
+
+permissions:
+  contents: read
+
+concurrency:
+  group: R-CMD-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  R-CMD-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    name: ubuntu-latest (release)
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      _R_CHECK_FORCE_SUGGESTS_: false
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y ghostscript libglpk40 libglpk-dev qpdf
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          extra-packages: |
+            any::rcmdcheck
+            any::testthat
+            any::knitr
+            any::rmarkdown
+            any::rgbif
+            any::terra
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          build_args: 'c("--no-manual", "--compact-vignettes=gs+qpdf")'
+          args: 'c("--no-manual")'

@@ -36,6 +36,10 @@
 #'   class frequencies contribute fractional liability evidence.  Only
 #'   relevant for multi-obs data with binary or categorical traits when the
 #'   Level-C joint baseline is active.
+#' @param lambda_mode character. Pagel-lambda mode for the BM baseline.
+#'   \code{"fixed_1"} preserves the default Brownian correlation matrix;
+#'   \code{"estimate"}, \code{"cv"}, and \code{"bayes"} delegate lambda
+#'   handling to the per-column BM path.
 #' @param em_iterations integer. Number of Phase 6 EM iterations for the
 #'   threshold-joint baseline (binary + ordinal + OVR categorical). Default
 #'   \code{0L} disables the EM loop and preserves v0.9.1 output byte-for-byte.
