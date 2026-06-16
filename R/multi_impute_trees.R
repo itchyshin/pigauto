@@ -486,11 +486,24 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
     if (verbose) cat(sprintf("  Tree %d/%d: baseline only...", t, T_trees))
     t0 <- proc.time()
 
+    # Capture the resolved baseline config from the reference fit
+    config <- res_ref$fit$model_config
+
     # Do not pass graph_ref here. The shared GNN keeps the reference-tree
     # graph inside fit_ref for prediction, but each tree-specific baseline
     # must recompute its own cophenetic distances and phylogenetic covariance.
-    baseline_t <- fit_baseline(data_ref, trees[[t]], splits = splits_ref,
-                               graph = NULL)
+    baseline_t <- fit_baseline(
+      data_ref, 
+      trees[[t]], 
+      splits = splits_ref,
+      graph = NULL,
+      # Replay all the config options:
+      lambda_mode = config$lambda_mode,
+      multi_obs_aggregation = config$multi_obs_aggregation,
+      em_iterations = config$em_iterations,
+      em_tol = config$em_tol,
+      em_offdiag = config$em_offdiag
+    )
     pred_t <- stats::predict(fit_ref, return_se = TRUE,
                               n_imputations = m_per_tree,
                               baseline_override = baseline_t)
