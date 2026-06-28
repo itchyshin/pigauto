@@ -86,7 +86,11 @@
 #'   structure). On the BIEN n=2000 plant bench it did \strong{not} improve
 #'   pooled RMSE (Σ is already captured by the joint baseline); kept as
 #'   an opt-in for datasets where it may help. Default \code{FALSE}
-#'   preserves v0.9.2 behaviour exactly.
+#'   preserves v0.9.2 behaviour exactly. Note: Ablation testing 
+#'   demonstrates that this within-row attention recovers only a small, 
+#'   sub-material gain, and only when cross-trait structure is explicitly 
+#'   non-linear and the joint-MVN baseline is present; it cannot model 
+#'   non-linear coupling on its own.
 #' @param n_trait_heads integer. Number of attention heads in the within-row
 #'   self-attention block when \code{use_trait_attention = TRUE}. Default
 #'   \code{2}. Ignored when \code{use_trait_attention = FALSE}.
