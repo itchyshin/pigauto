@@ -34,6 +34,9 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
       _R_CHECK_FORCE_SUGGESTS_: false
+      # Auto-install the libtorch backend non-interactively when torch is
+      # first loaded (fallback if the explicit install step below is skipped).
+      TORCH_INSTALL: 1
 
     steps:
       - uses: actions/checkout@v6
@@ -58,6 +61,13 @@ jobs:
             any::rmarkdown
             any::rgbif
             any::terra
+
+      # torch is a hard dependency, but the R package alone is not enough:
+      # the libtorch/lantern C++ backend must be downloaded, or every test
+      # that touches a tensor errors instead of running. Install it explicitly
+      # so torch::torch_is_installed() is TRUE for the check's test processes.
+      - name: Install libtorch backend
+        run: Rscript -e 'torch::install_torch()'
 
       - uses: r-lib/actions/check-r-package@v2
         with:
