@@ -1,9 +1,8 @@
-test_that("joint_mvn_available() detects Rphylopars correctly", {
-  # We expect TRUE in dev environments where Rphylopars is installed
+test_that("joint_mvn_available() reflects the in-house solver", {
   res <- joint_mvn_available()
   expect_type(res, "logical")
   expect_length(res, 1L)
-  expect_equal(res, requireNamespace("Rphylopars", quietly = TRUE))
+  expect_identical(res, TRUE)
 })
 
 test_that("fit_joint_mvn_baseline recovers cross-trait structure on correlated BM", {
