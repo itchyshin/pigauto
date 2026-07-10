@@ -169,7 +169,7 @@ test_that("predict.pigauto_fit can mask held-out cells from DAE context", {
 })
 
 test_that("predict.pigauto_fit adds cov_linear fixed effects outside the blend", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
 
   n <- 4L
   sp <- paste0("sp", seq_len(n))

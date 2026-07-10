@@ -134,7 +134,7 @@ test_that("[Phase G' L2] pmm_is_eligible says no for un-log cont and discrete-cl
 # ===========================================================================
 
 test_that("[Phase G' L3] PMM imputed values are EXACTLY in the observed value set", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2080L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -158,7 +158,7 @@ test_that("[Phase G' L3] PMM imputed values are EXACTLY in the observed value se
 })
 
 test_that("[Phase G' L3] PMM never produces values outside observed range", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2081L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -179,7 +179,7 @@ test_that("[Phase G' L3] PMM never produces values outside observed range", {
 })
 
 test_that("[Phase G' L3] PMM does NOT modify observed values", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2082L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -203,7 +203,7 @@ test_that("[Phase G' L3] PMM does NOT modify observed values", {
 # ===========================================================================
 
 test_that("[Phase G' L4] match_observed = 'none' default preserves backward compat", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2083L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -227,7 +227,7 @@ test_that("[Phase G' L4] match_observed = 'none' default preserves backward comp
 })
 
 test_that("[Phase G' L4] match_observed = 'pmm' and clamp_outliers = TRUE coexist", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2084L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -246,7 +246,7 @@ test_that("[Phase G' L4] match_observed = 'pmm' and clamp_outliers = TRUE coexis
 })
 
 test_that("[Phase G' L4] non-eligible trait types pass through PMM unchanged", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2085L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -270,7 +270,7 @@ test_that("[Phase G' L4] non-eligible trait types pass through PMM unchanged", {
 # ===========================================================================
 
 test_that("[Phase G' L5] pmm_K invalid value errors", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   n <- 20L
   tree <- ape::rtree(n)
   df <- data.frame(mass = exp(stats::rnorm(n)),
@@ -285,7 +285,7 @@ test_that("[Phase G' L5] pmm_K invalid value errors", {
 })
 
 test_that("[Phase G' L5] PMM with K=1 is fully deterministic given a seed", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2086L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -310,7 +310,7 @@ test_that("[Phase G' L5] PMM with K=1 is fully deterministic given a seed", {
 # ===========================================================================
 
 test_that("[Phase G' acceptance] PMM caps a synthetic tail blow-up better than no-clamp", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   # Construct a fixture where:
   # - log-cont mass with one phylogenetically isolated tip (analogue of
   #   the AVONET Casuarius case)
