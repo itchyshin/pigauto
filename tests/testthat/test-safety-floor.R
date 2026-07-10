@@ -183,8 +183,7 @@ test_that("calibrate_gates(safety_floor = TRUE) invariant: loss <= mean_loss on 
 # ---- Task 5: fit_pigauto() safety_floor integration ----
 
 test_that("fit_pigauto(safety_floor = TRUE) stores mean_baseline_per_col + simplex weights on fit", {
-  skip_if_not_installed("torch")
-  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  skip_if_no_libtorch()
   data(avonet300, tree300, package = "pigauto")
   set.seed(2026L)
   df <- avonet300
@@ -208,8 +207,7 @@ test_that("fit_pigauto(safety_floor = TRUE) stores mean_baseline_per_col + simpl
 })
 
 test_that("fit_pigauto(safety_floor = FALSE) reproduces v0.9.1 behaviour (r_mean = 0, mean_baseline_per_col NULL or 0)", {
-  skip_if_not_installed("torch")
-  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  skip_if_no_libtorch()
   data(avonet300, tree300, package = "pigauto")
   set.seed(2026L)
   df <- avonet300
@@ -317,8 +315,7 @@ test_that("multi_impute_trees(share_gnn = TRUE, safety_floor = TRUE) reuses safe
     !exists("trees300", where = asNamespace("pigauto")) &&
       inherits(try(data("trees300", package = "pigauto"), silent = TRUE), "try-error"),
     "trees300 dataset not available")
-  skip_if_not_installed("torch")
-  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  skip_if_no_libtorch()
   data("avonet300",  package = "pigauto")
   data("trees300",   package = "pigauto")
   set.seed(2026L)
@@ -343,8 +340,7 @@ test_that("multi_impute_trees(share_gnn = TRUE, safety_floor = TRUE) reuses safe
 # ---- Task 10: legacy v0.9.1 fit backward-compat fixture ----
 
 test_that("legacy v0.9.1 fit fixture loads and predicts via %||% fallback", {
-  skip_if_not_installed("torch")
-  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  skip_if_no_libtorch()
   fx_path <- system.file("extdata", "legacy_fit_v091.rds", package = "pigauto")
   expect_true(nzchar(fx_path) && file.exists(fx_path))
   # load_pigauto() deserialises the torch model_state (cross-session portable)
