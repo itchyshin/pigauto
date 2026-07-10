@@ -390,6 +390,18 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   # ---- Inference (single or MC dropout) ------------------------------------
   latent_runs <- vector("list", n_imp)
 
+  # Re-seed the torch generator for stochastic prediction. fit_pigauto()
+  # seeds training, but prediction rebuilds the module and then consumes
+  # dropout and Normal draws from the process-global torch generator. Without
+  # an explicit prediction seed, two otherwise identical impute(..., seed = s)
+  # calls can differ according to unrelated torch work performed in between.
+  # The stored fit seed makes the public seed contract reproducible while
+  # different user seeds still generate different imputations.
+  if (n_imp > 1L) {
+    prediction_seed <- as.integer(cfg$seed %||% 1L) + 100000L
+    torch::torch_manual_seed(prediction_seed)
+  }
+
   # Pre-create calibrated gates tensors (once, outside the loop).
   # Three-way blend: pred = r_bm * BM_draw + r_gnn * GNN_delta + r_mean * MEAN
   # Backward-compat fallback: legacy v0.9.1 fits only have calibrated_gates /
