@@ -439,3 +439,5 @@ Several spots switch behaviour on `multi_obs`: baseline expansion (`MU <- MU_spe
 ## Host-specific notes (optional)
 
 On the primary author's machine, two persistent memory notes live under `~/.Codex/projects/-Users-z3437171-Dropbox-Github-Local-pigauto/memory/`: `user_profile.md` (author priorities) and `project_bace.md` (BACE internals). They are **not** portable — ignore this section if the path does not exist on the current host.
+<!-- shinichi-hub -->
+> Read \`~/shinichi-brain/AGENTS.md\` first; this repository's rules override the personal hub where they differ.
