@@ -1,3 +1,5 @@
+skip_if_no_libtorch()
+
 # Small synthetic dataset helpers
 make_test_data <- function(n = 40, p = 2, seed = 42) {
   set.seed(seed)

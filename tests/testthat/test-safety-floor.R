@@ -1047,3 +1047,4 @@ test_that("[CV] cv_folds requires gate_cv_folds >= 2", {
     regexp = "gate_cv_folds"
   )
 })
+skip_if_no_libtorch()

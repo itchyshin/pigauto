@@ -192,3 +192,4 @@ test_that("plants smoke: BIEN plant traits with weak phylo signal are gated", {
     expect_true(all(fit$r_cal_mean[gated_in_r_mean] == 1))
   }
 })
+skip_if_no_libtorch()

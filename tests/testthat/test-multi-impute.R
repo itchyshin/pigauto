@@ -1,3 +1,5 @@
+skip_if_no_libtorch()
+
 # Tests for multi_impute(), with_imputations(), and pool_mi().
 # Uses tiny synthetic data (small tree, short training) to keep runtime low.
 
