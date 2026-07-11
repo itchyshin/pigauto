@@ -49,6 +49,7 @@ test_that("compute_phylo_signal_per_trait returns NA below min_tips", {
 
 test_that("fit_pigauto(phylo_signal_gate = TRUE) stores phylo_signal slots", {
   skip_if_not_installed("phytools")
+  skip_if_no_libtorch()
   data("avonet300", package = "pigauto")
   data("tree300",   package = "pigauto")
   df <- avonet300
@@ -74,6 +75,7 @@ test_that("fit_pigauto(phylo_signal_gate = TRUE) stores phylo_signal slots", {
 
 test_that("fit_pigauto gates weak-signal traits to (0, 0, 1) exactly", {
   skip_if_not_installed("phytools")
+  skip_if_no_libtorch()
   set.seed(2026L)
   n <- 200L
   tree <- ape::rcoal(n)
@@ -98,6 +100,7 @@ test_that("fit_pigauto gates weak-signal traits to (0, 0, 1) exactly", {
 
 test_that("impute(phylo_signal_gate = TRUE) is the default and threads to fit", {
   skip_if_not_installed("phytools")
+  skip_if_no_libtorch()
   data("avonet300", package = "pigauto")
   data("tree300",   package = "pigauto")
   df <- avonet300
@@ -118,6 +121,7 @@ test_that("impute(phylo_signal_gate = TRUE) is the default and threads to fit", 
 
 test_that("print.pigauto_fit shows phylogenetic-signal section when gate triggered", {
   skip_if_not_installed("phytools")
+  skip_if_no_libtorch()
   set.seed(2026L)
   n <- 200L
   tree <- ape::rcoal(n)

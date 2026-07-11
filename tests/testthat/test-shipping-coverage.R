@@ -100,6 +100,7 @@ test_that("[T2A] read_tree errors clearly on a missing file", {
 })
 
 test_that("[T2A] plot_history_gg returns a ggplot for a fit with $history", {
+  skip_if_no_libtorch()
   skip_if_not_installed("ggplot2")
   td <- .tcov_make_data(n = 20L, seed = 2L)
   pd <- preprocess_traits(td$df, td$tree)
@@ -112,6 +113,7 @@ test_that("[T2A] plot_history_gg returns a ggplot for a fit with $history", {
 })
 
 test_that("[T2A] plot_uncertainty returns a ggplot for a continuous trait", {
+  skip_if_no_libtorch()
   skip_if_not_installed("ggplot2")
   td  <- .tcov_make_data(n = 20L, seed = 3L)
   td$df$cont[1:5] <- NA
@@ -128,6 +130,7 @@ test_that("[T2A] plot_uncertainty returns a ggplot for a continuous trait", {
 # ---------------------------------------------------------------------------
 
 test_that("[T2B] multi_impute(draws_method = 'mc_dropout') returns m completed datasets", {
+  skip_if_no_libtorch()
   td  <- .tcov_make_data(n = 25L, seed = 4L)
   td$df$cont[1:6] <- NA
   mi <- multi_impute(td$df, td$tree, m = 3L,
@@ -142,6 +145,7 @@ test_that("[T2B] multi_impute(draws_method = 'mc_dropout') returns m completed d
 })
 
 test_that("[T2B] fit_pigauto(use_attention = FALSE) runs end-to-end and predicts", {
+  skip_if_no_libtorch()
   td  <- .tcov_make_data(n = 25L, seed = 5L)
   pd  <- preprocess_traits(td$df, td$tree)
   spl <- make_missing_splits(pd$X_scaled, seed = 5, trait_map = pd$trait_map)
@@ -157,6 +161,7 @@ test_that("[T2B] fit_pigauto(use_attention = FALSE) runs end-to-end and predicts
 })
 
 test_that("[T2B] fit_pigauto(conformal_method = 'bootstrap') stores conformal scores", {
+  skip_if_no_libtorch()
   td  <- .tcov_make_data(n = 30L, seed = 6L)
   pd  <- preprocess_traits(td$df, td$tree)
   spl <- make_missing_splits(pd$X_scaled, seed = 6, trait_map = pd$trait_map)
@@ -234,6 +239,7 @@ test_that("[T3] preprocess_traits errors on a single-species tree", {
 })
 
 test_that("[T3] all-observed continuous trait round-trips through impute() as identity", {
+  skip_if_no_libtorch()
   set.seed(11L)
   td <- .tcov_make_data(n = 20L, seed = 11L)
   res <- impute(td$df, td$tree, epochs = 10L, n_imputations = 1L,
