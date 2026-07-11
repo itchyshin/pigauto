@@ -80,7 +80,7 @@ result$prediction$conformal_upper[hide, "Mass"]
 # recommendation on imbalanced ordinal traits like Migration.
 
 # ── Step 2: generate 50 complete datasets ────────────────────────────────
-mi <- multi_impute(df, tree300, m = 50L)
+mi <- multi_impute(df_obs, tree300, m = 50L)
 
 # ── Step 3: fit downstream model on each ────────────────────────────────
 Vphy <- cov2cor(ape::vcv(tree300))
@@ -95,11 +95,7 @@ fits <- with_imputations(mi, function(d) {
 })
 
 # ── Step 4: pool with Rubin's rules ──────────────────────────────────────
-pool_mi(
-  fits,
-  coef_fun = function(f) fixef(f)$cond,
-  vcov_fun = function(f) vcov(f)$cond
-)
+pool_mi(fits)  # glmmTMB conditional fixed effects are selected automatically
 #>               term  estimate std.error    df  fmi
 #>        (Intercept)     ...
 #>   log(Wing.Length)     ...
@@ -110,6 +106,12 @@ The pooled table reports `fmi` (fraction of missing information) per
 coefficient. When `fmi > 0.1` on any term, increase `m` until the
 standard errors stop changing. For most comparative datasets `m = 50`
 is sufficient.
+
+`pool_mi()` supports fixed-effect coefficients only. In v0.10.0 it does
+not pool random-effect variances or correlations, BLUPs/conditional modes,
+latent loadings, or other structured parameters. Those quantities require
+parameter-specific transformations and validation beyond ordinary Rubin
+pooling.
 
 ## Using environmental covariates
 

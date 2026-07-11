@@ -264,6 +264,171 @@ test_that("pool_mi() matches a hand-computed Rubin's rules reference (M=3, p=2)"
 })
 
 
+test_that("pool_mi() handles Rubin variance boundaries exactly", {
+  make_fake <- function(beta, V) list(beta = beta, V = V)
+  coef_fun <- function(f) f$beta
+  vcov_fun <- function(f) f$V
+  named_vcov <- function(x) {
+    V <- diag(x)
+    dimnames(V) <- list(c("a", "b"), c("a", "b"))
+    V
+  }
+
+  same <- replicate(
+    3L,
+    make_fake(c(a = 1, b = 2), named_vcov(c(0.25, 0.5))),
+    simplify = FALSE
+  )
+  classical <- pool_mi(same, coef_fun = coef_fun, vcov_fun = vcov_fun)
+  expect_equal(classical$riv, c(0, 0))
+  expect_equal(classical$fmi, c(0, 0))
+  expect_true(all(is.infinite(classical$df)))
+
+  adjusted <- pool_mi(
+    same,
+    coef_fun = coef_fun,
+    vcov_fun = vcov_fun,
+    df_fun = function(f) 10
+  )
+  expected_df <- 10 * 11 / 13
+  expect_equal(adjusted$df, rep(expected_df, 2), tolerance = 1e-12)
+  expect_equal(adjusted$fmi, rep(2 / (expected_df + 3), 2),
+               tolerance = 1e-12)
+  expect_true(all(adjusted$fmi > 0))
+
+  deterministic <- replicate(
+    3L,
+    make_fake(c(a = 1, b = 2), named_vcov(c(0, 0))),
+    simplify = FALSE
+  )
+  zero <- pool_mi(
+    deterministic,
+    coef_fun = coef_fun,
+    vcov_fun = vcov_fun,
+    df_fun = function(f) 10
+  )
+  expect_equal(zero$std.error, c(0, 0))
+  expect_equal(zero$riv, c(0, 0))
+  expect_equal(zero$fmi, c(0, 0))
+  expect_true(all(is.infinite(zero$df)))
+  expect_equal(zero$conf.low, zero$estimate)
+  expect_equal(zero$conf.high, zero$estimate)
+  expect_true(all(is.na(zero$statistic)))
+  expect_true(all(is.na(zero$p.value)))
+
+  between_only <- list(
+    make_fake(c(a = 0), matrix(0, 1, 1, dimnames = list("a", "a"))),
+    make_fake(c(a = 1), matrix(0, 1, 1, dimnames = list("a", "a"))),
+    make_fake(c(a = 2), matrix(0, 1, 1, dimnames = list("a", "a")))
+  )
+  pure_between <- pool_mi(
+    between_only,
+    coef_fun = coef_fun,
+    vcov_fun = vcov_fun,
+    df_fun = function(f) 10
+  )
+  expect_true(is.infinite(pure_between$riv))
+  expect_equal(pure_between$fmi, 1)
+  expect_equal(pure_between$df, 2)
+})
+
+
+test_that("pool_mi() accepts Matrix covariance objects and validates them", {
+  make_fake <- function(V) list(beta = c(a = 1, b = 2), V = V)
+  V <- matrix(c(0.2, 0.03, 0.03, 0.4), 2, 2,
+              dimnames = list(c("a", "b"), c("a", "b")))
+  base <- pool_mi(
+    list(make_fake(V), make_fake(V)),
+    coef_fun = function(f) f$beta,
+    vcov_fun = function(f) f$V
+  )
+  sparse_V <- Matrix::Matrix(V, sparse = TRUE)
+  sparse <- pool_mi(
+    list(make_fake(sparse_V), make_fake(sparse_V)),
+    coef_fun = function(f) f$beta,
+    vcov_fun = function(f) f$V
+  )
+  expect_equal(sparse, base)
+
+  expect_error(
+    pool_mi(
+      list(make_fake(matrix(1, 2, 3)), make_fake(V)),
+      coef_fun = function(f) f$beta, vcov_fun = function(f) f$V
+    ),
+    "square"
+  )
+  V_na <- V
+  V_na[1, 1] <- NA_real_
+  expect_error(
+    pool_mi(
+      list(make_fake(V_na), make_fake(V_na)),
+      coef_fun = function(f) f$beta, vcov_fun = function(f) f$V
+    ),
+    "non-finite"
+  )
+  V_negative <- V
+  V_negative[1, 1] <- -0.1
+  expect_error(
+    pool_mi(
+      list(make_fake(V_negative), make_fake(V_negative)),
+      coef_fun = function(f) f$beta, vcov_fun = function(f) f$V
+    ),
+    "negative"
+  )
+  V_asymmetric <- V
+  V_asymmetric[1, 2] <- 0.2
+  expect_error(
+    pool_mi(
+      list(make_fake(V_asymmetric), make_fake(V_asymmetric)),
+      coef_fun = function(f) f$beta, vcov_fun = function(f) f$V
+    ),
+    "symmetric"
+  )
+  V_names <- V
+  dimnames(V_names) <- list(c("a", "c"), c("a", "c"))
+  expect_error(
+    pool_mi(
+      list(make_fake(V_names), make_fake(V_names)),
+      coef_fun = function(f) f$beta, vcov_fun = function(f) f$V
+    ),
+    "align"
+  )
+})
+
+
+test_that("pool_mi() supports a strict tidy extractor contract", {
+  fits <- list(list(i = 1), list(i = 2))
+  tidy_fun <- function(f) {
+    data.frame(
+      term = c("a", "b"),
+      estimate = c(f$i, 2 * f$i),
+      std.error = c(0.2, 0.4)
+    )
+  }
+  pooled <- pool_mi(fits, tidy_fun = tidy_fun)
+  expect_equal(pooled$term, c("a", "b"))
+  expect_equal(pooled$estimate, c(1.5, 3))
+
+  expect_error(
+    pool_mi(fits, tidy_fun = tidy_fun, coef_fun = function(f) f$i),
+    "cannot be combined"
+  )
+  expect_error(
+    pool_mi(fits, tidy_fun = function(f) {
+      data.frame(term = c("a", "a"), estimate = c(1, 2),
+                 std.error = c(0.1, 0.1))
+    }),
+    "duplicate"
+  )
+  expect_error(
+    pool_mi(fits, tidy_fun = function(f) {
+      data.frame(term = "a", estimate = 1, std.error = -0.1)
+    }),
+    "non-negative"
+  )
+})
+
+
 # ---- 9. End-to-end with glmmTMB + propto() ----------------------------------
 
 test_that("pool_mi() works end-to-end with glmmTMB + propto()", {
@@ -313,16 +478,158 @@ test_that("pool_mi() works end-to-end with glmmTMB + propto()", {
   skip_if(sum(ok) < 2L,
           "Fewer than 2 glmmTMB fits succeeded on synthetic test data")
 
-  pooled <- suppressWarnings(pool_mi(
-    fits[ok],
-    coef_fun = function(f) fixef(f)$cond,
-    vcov_fun = function(f) stats::vcov(f)$cond
-  ))
+  pooled <- suppressWarnings(pool_mi(fits[ok]))
 
   expect_s3_class(pooled, "pigauto_pooled")
   expect_true(nrow(pooled) >= 2L)
   expect_true(all(is.finite(pooled$estimate)))
   expect_true(all(pooled$std.error >= 0))
+})
+
+
+test_that("automatic fixed-effect adapters cover lm and glm", {
+  set.seed(1901)
+  dat <- data.frame(
+    y = rnorm(60),
+    x = rnorm(60),
+    z = rnorm(60),
+    g = factor(rep(seq_len(12), each = 5))
+  )
+  dat$binary <- stats::rbinom(60, 1, stats::plogis(0.2 + 0.5 * dat$x))
+
+  lm_fit <- stats::lm(y ~ x + z, data = dat)
+  glm_fit <- stats::glm(binary ~ x + z, data = dat,
+                        family = stats::binomial())
+  expect_equal(pool_mi(list(lm_fit, lm_fit))$term,
+               names(stats::coef(lm_fit)))
+  expect_equal(pool_mi(list(glm_fit, glm_fit))$term,
+               names(stats::coef(glm_fit)))
+})
+
+
+test_that("glmmTMB adapter selects conditional fixed effects only", {
+  skip_if_not_installed("glmmTMB")
+  set.seed(1904)
+  n <- 240L
+  dat <- data.frame(x = rnorm(n), z = rnorm(n))
+  mu <- exp(0.2 + 0.4 * dat$x)
+  dat$y <- stats::rnbinom(n, mu = mu, size = exp(0.3 - 0.2 * dat$x))
+  dat$y[stats::rbinom(n, 1, stats::plogis(-1 + 0.5 * dat$z)) == 1L] <- 0L
+
+  fit <- suppressWarnings(glmmTMB::glmmTMB(
+    y ~ x,
+    ziformula = ~ z,
+    dispformula = ~ x,
+    family = glmmTMB::nbinom2,
+    data = dat
+  ))
+  fixed <- glmmTMB::fixef(fit)
+  expect_gt(length(fixed$zi), 0L)
+  expect_gt(length(fixed$disp), 0L)
+
+  pooled <- pool_mi(list(fit, fit))
+  expect_equal(pooled$term, names(fixed$cond))
+  expect_equal(pooled$estimate, unname(fixed$cond))
+  expect_equal(nrow(pooled), length(fixed$cond))
+  expect_lt(nrow(pooled), sum(lengths(fixed)))
+})
+
+
+test_that("automatic fixed-effect adapters cover nlme gls and lme", {
+  skip_if_not_installed("nlme")
+  set.seed(1901)
+  dat <- data.frame(
+    y = rnorm(60), x = rnorm(60), z = rnorm(60),
+    g = factor(rep(seq_len(12), each = 5))
+  )
+  gls_fit <- nlme::gls(y ~ x + z, data = dat)
+  lme_fit <- nlme::lme(y ~ x + z, random = ~1 | g, data = dat)
+  expect_equal(pool_mi(list(gls_fit, gls_fit))$term,
+               names(stats::coef(gls_fit)))
+  expect_equal(pool_mi(list(lme_fit, lme_fit))$term,
+               names(nlme::fixef(lme_fit)))
+})
+
+
+test_that("automatic fixed-effect adapter covers lme4 Matrix covariance", {
+  skip_if_not_installed("lme4")
+  set.seed(1901)
+  dat <- data.frame(
+    y = rnorm(60), x = rnorm(60), z = rnorm(60),
+    g = factor(rep(seq_len(12), each = 5))
+  )
+  mer_fit <- suppressMessages(lme4::lmer(y ~ x + z + (1 | g), data = dat))
+  mer_pooled <- pool_mi(list(mer_fit, mer_fit))
+  expect_equal(mer_pooled$term, names(lme4::fixef(mer_fit)))
+  expect_true(all(is.finite(mer_pooled$std.error)))
+
+  custom_coef <- pool_mi(
+    list(mer_fit, mer_fit),
+    coef_fun = function(f) lme4::fixef(f)
+  )
+  custom_vcov <- pool_mi(
+    list(mer_fit, mer_fit),
+    vcov_fun = function(f) stats::vcov(f)
+  )
+  expect_equal(custom_coef, mer_pooled)
+  expect_equal(custom_vcov, mer_pooled)
+})
+
+
+test_that("automatic drmTMB adapter pools all distributional fixed effects", {
+  skip_if_not_installed("drmTMB")
+  drm_fit <- getExportedValue("drmTMB", "drmTMB")
+  bf <- getExportedValue("drmTMB", "bf")
+  set.seed(1902)
+  dat <- data.frame(x = seq(-1, 1, length.out = 40))
+  dat$y <- 0.3 + 0.7 * dat$x + rnorm(40, sd = exp(-0.2 + 0.1 * dat$x))
+  fit1 <- drm_fit(bf(y ~ x, sigma ~ x), data = dat)
+  dat$y <- dat$y + rnorm(40, sd = 0.01)
+  fit2 <- drm_fit(bf(y ~ x, sigma ~ x), data = dat)
+
+  pooled <- pool_mi(list(fit1, fit2))
+  expect_equal(
+    pooled$term,
+    c("mu:(Intercept)", "mu:x", "sigma:(Intercept)", "sigma:x")
+  )
+  expect_true(all(is.finite(pooled$estimate)))
+  expect_true(all(is.finite(pooled$std.error)))
+})
+
+
+test_that("automatic gllvmTMB adapter uses fixed-effect tidy rows only", {
+  skip_if_not_installed("gllvmTMB")
+  simulate_site_trait <- getExportedValue("gllvmTMB", "simulate_site_trait")
+  gllvm_fit <- getExportedValue("gllvmTMB", "gllvmTMB")
+  set.seed(1903)
+  sim <- simulate_site_trait(
+    n_sites = 30, n_species = 8, n_traits = 2,
+    mean_species_per_site = 5,
+    Lambda_B = matrix(c(0.5, -0.2), nrow = 2),
+    psi_B = c(0.2, 0.2), sigma2_eps = 0.1, seed = 1903
+  )
+  fit <- suppressMessages(suppressWarnings(gllvm_fit(
+    value ~ 0 + trait + latent(0 + trait | site, d = 1),
+    data = sim$data, silent = TRUE
+  )))
+
+  tidy_method <- utils::getS3method(
+    "tidy", "gllvmTMB_multi", envir = asNamespace("gllvmTMB")
+  )
+  fixed <- tidy_method(fit, effects = "fixed")
+
+  # Saved fits must remain poolable in a fresh session where gllvmTMB has not
+  # already been attached or loaded. The adapter is responsible for loading
+  # the namespace that owns the class-specific tidy method.
+  unloadNamespace("gllvmTMB")
+  on.exit(loadNamespace("gllvmTMB"), add = TRUE)
+  expect_false("gllvmTMB" %in% loadedNamespaces())
+  pooled <- pool_mi(list(fit, fit))
+  expect_true("gllvmTMB" %in% loadedNamespaces())
+  expect_equal(pooled$term, fixed$term)
+  expect_equal(pooled$estimate, fixed$estimate)
+  expect_equal(pooled$std.error, fixed$std.error)
+  expect_false(any(grepl("^sd_|loglambda|cutpoint", pooled$term)))
 })
 
 

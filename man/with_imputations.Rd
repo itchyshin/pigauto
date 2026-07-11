@@ -19,8 +19,10 @@ slot directly.}
 
 \item{.f}{A function of the form \verb{function(dataset, ...)} that fits
 a model to one complete data.frame and returns a model object.
-\code{coef()} and \code{vcov()} should work on the return value (required by
-\code{\link[=pool_mi]{pool_mi()}}). Any model class with those two generics is supported.
+\code{\link[=pool_mi]{pool_mi()}} supplies automatic fixed-effect adapters for its documented
+model classes. Other classes require \code{coef()} and \code{vcov()} methods that
+return compatible fixed-effect quantities, or explicit extractor
+functions supplied to \code{pool_mi()}.
 When \code{mi} comes from \code{\link[=multi_impute_trees]{multi_impute_trees()}}, \code{.f} may also declare
 explicit \code{tree}, \code{tree_index}, or \code{imputation} arguments; these are
 filled with the posterior tree object, its index in \code{mi$trees}, and

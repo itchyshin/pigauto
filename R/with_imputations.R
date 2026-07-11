@@ -10,8 +10,10 @@
 #'   slot directly.
 #' @param .f A function of the form `function(dataset, ...)` that fits
 #'   a model to one complete data.frame and returns a model object.
-#'   `coef()` and `vcov()` should work on the return value (required by
-#'   [pool_mi()]). Any model class with those two generics is supported.
+#'   [pool_mi()] supplies automatic fixed-effect adapters for its documented
+#'   model classes. Other classes require `coef()` and `vcov()` methods that
+#'   return compatible fixed-effect quantities, or explicit extractor
+#'   functions supplied to `pool_mi()`.
 #'   When `mi` comes from [multi_impute_trees()], `.f` may also declare
 #'   explicit `tree`, `tree_index`, or `imputation` arguments; these are
 #'   filled with the posterior tree object, its index in `mi$trees`, and

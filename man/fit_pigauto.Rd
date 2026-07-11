@@ -359,4 +359,3 @@ The \code{min_val_cells} warning fires at fit time whenever any trait
 falls below this threshold, so you know when to interpret the
 intervals cautiously.
 }
-
