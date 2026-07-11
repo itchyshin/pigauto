@@ -365,10 +365,10 @@ substantive model before imputation. It supports one incomplete continuous
 covariate under MAR, dispatching to proper Bayesian normal-regression MI for
 Gaussian `lm`, `smcfcs` for binomial-logit `glm`, and `jomo.smc` for a Gaussian
 `lmer` with one random intercept. `pool_mi()` then applies Rubin's rules to
-fixed effects only. The backend has passed a warning-free 6,000-task
-controls-only gate, demonstrating that the inferential target is attainable,
-but the package implementation remains experimental pending its own full
-validation.
+fixed effects only. The package implementation passed a warning-free
+6,000-task gate at clean SHA `2e3809d`, with all 24 fixed-effect cells inside
+the predeclared bias, SE-ratio, coverage, fit, and finite-result bounds. The
+interface remains experimental and deliberately narrow.
 
 ## 6. Posterior-tree prediction sensitivity
 

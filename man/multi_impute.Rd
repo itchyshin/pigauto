@@ -117,8 +117,8 @@ The conformal-width and Brownian/MC-dropout draws returned here are
 experimental prediction-diagnostic draws. A 3,000-fit known-DGP campaign
 found that neither method passed any of the 12 downstream fixed-effect
 gate cells. Do not use these datasets for downstream inference or Rubin
-pooling. A separate analysis-aware backend, \code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, is
-under package-level validation for a narrow set of supported analyses.
+pooling. A separate analysis-aware backend, \code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, has
+passed its package-level fixed-effect gate for a narrow set of analyses.
 }
 \details{
 These draws do not condition on a declared substantive analysis model.

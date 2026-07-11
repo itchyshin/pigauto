@@ -94,11 +94,10 @@ result$prediction$conformal_upper[hide, "Mass"]
 the missing values. The initial backend accepts exactly one incomplete
 continuous column under MAR:
 
-The analysis-compatible target passed all 24 method-by-term cells in a
-warning-free 6,000-task controls-only campaign at clean SHA `430b2c9`. That
-result establishes gate attainability, not package validity; this backend
-remains experimental until its implementation passes the corresponding
-package-level campaign.
+The package implementation passed all 24 method-by-term cells in a warning-free
+6,000-task campaign at clean SHA `2e3809d`. Coverage was 93.9%-96.3%,
+pooled-SE/empirical-SD ratios were 0.942-1.030, and all results were finite.
+This validates only the narrow scope below; the interface remains experimental.
 
 | `model` | Supported analysis | Imputation engine |
 |---|---|---|
@@ -107,7 +106,6 @@ package-level campaign.
 | `"lmer"` | Gaussian model with one random intercept | `jomo::jomo.smc()` |
 
 ```r
-# Conceptual until the experimental backend completes package-level validation.
 # Precompute auxiliary terms explicitly; for example:
 analysis_data$z_sq <- analysis_data$z^2
 

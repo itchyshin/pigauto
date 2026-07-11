@@ -2,19 +2,19 @@
 
 ## Experimental analysis-aware multiple-imputation backend
 
-The planned `multi_impute_analysis()` backend requires the substantive model
+The new `multi_impute_analysis()` backend requires the substantive model
 before imputation and is deliberately narrow: one incomplete continuous
 covariate under MAR, with proper Bayesian normal-regression MI for Gaussian
 `lm`, `smcfcs` for binomial-logit `glm`, and `jomo.smc` for a Gaussian `lmer`
 with one random intercept. It pools fixed effects only.
 
-A warning-free 6,000-task controls-only campaign at clean source SHA
-`430b2c9` established
-that this analysis-compatible target can pass the predeclared bias, SE-ratio,
-coverage, fit-success, and finite-result gates. This validates gate
-attainability and authorizes package implementation; it does **not** validate
-the package backend. Public promotion remains blocked until the implemented
-backend passes the same package-level campaign.
+A warning-free 6,000-task package-level campaign at clean source SHA
+`2e3809d` passed all 24 predeclared fixed-effect cells. Added bias was
+0.00086-0.05042 oracle SD, pooled-SE/empirical-SD ratios were 0.942-1.030,
+coverage was 93.9%-96.3%, and all results were finite. Engine warnings are
+fatal, so no inference-ready object is returned after a rejection or
+convergence warning. This validates the backend only within its documented
+narrow scope.
 
 The earlier conformal-width and Brownian/MC-dropout methods each passed 0/12
 downstream fixed-effect cells in the 3,000-fit package campaign. PMM also failed

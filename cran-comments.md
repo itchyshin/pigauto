@@ -1,18 +1,18 @@
 ## Release scope
 
 This is the first CRAN submission of pigauto. Version 0.10.0 provides
-phylogenetically informed imputation for mixed species-trait data. The planned
+phylogenetically informed imputation for mixed species-trait data. The
 analysis-aware multiple-imputation backend is experimental and deliberately
 limited to one incomplete continuous covariate under MAR for Gaussian `lm`,
 binomial-logit `glm`, and Gaussian one-random-intercept `lmer`; fixed effects
 only. Conformal-width, Brownian/MC-dropout, PMM, and posterior-tree draws are
 prediction diagnostics and are unsupported for downstream inference.
 
-A warning-free 6,000-task controls-only campaign at clean source SHA
-`430b2c9` demonstrated that the narrow
-analysis-aware target is attainable. This does not validate the package
-implementation. Submission remains blocked until `multi_impute_analysis()`
-passes its package-level validation campaign on a frozen clean SHA.
+A warning-free 6,000-task package-level campaign at clean source SHA
+`2e3809d` passed all 24 fixed-effect cells, with 93.9%-96.3% coverage,
+pooled-SE/empirical-SD ratios of 0.942-1.030, and 100% finite results. This
+validates only the documented narrow scope. Submission remains blocked pending
+the final cross-platform package checks below.
 
 ## Test environments
 

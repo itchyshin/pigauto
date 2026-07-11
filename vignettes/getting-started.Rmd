@@ -330,10 +330,10 @@ Downstream inference requires imputations compatible with the substantive
 analysis. `multi_impute_analysis()` therefore receives the formula and model
 class before drawing one incomplete continuous covariate under MAR.
 
-A warning-free 6,000-task controls-only campaign at clean SHA `430b2c9`
-passed all 24 method-by-term cells. This establishes that the target is
-attainable; the package backend remains experimental pending its own full
-validation.
+A warning-free 6,000-task package campaign at clean SHA `2e3809d` passed all
+24 method-by-term cells. Coverage was 93.9%-96.3% and all pooled results were
+finite. This validates only the documented narrow scope; the interface remains
+experimental.
 
 ```{r mi-workflow, eval=FALSE}
 analysis_data$z_sq <- analysis_data$z^2

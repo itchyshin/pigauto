@@ -130,7 +130,8 @@ reference:
       The analysis model is declared before imputations are drawn. Initial
       support is one incomplete continuous covariate under MAR with lm,
       binomial-logit glm, or one-random-intercept lmer. Fixed effects only;
-      the backend remains experimental pending package-level validation.
+      the backend passed its package-level fixed-effect gate and remains an
+      experimental, deliberately narrow interface.
     contents:
       - multi_impute_analysis
       - with_imputations

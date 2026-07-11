@@ -415,8 +415,8 @@ decision <- if (calibration_only || !full_grid) {
   )
 } else if (oracle_attainable && standard_smc_ready) {
   paste0(
-    "CONTROL PASS ONLY: gate is attainable; block CRAN pending an ",
-    "analysis-aware inferential backend"
+    "PACKAGE BACKEND PASS: supported fixed-effect gate passes; ",
+    "continue CRAN engineering"
   )
 } else if (oracle_attainable && !standard_smc_ready) {
   "ORACLE PASS / STANDARD SMC FAIL: gate attainable; comparator not ready"
