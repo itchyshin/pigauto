@@ -204,26 +204,19 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   # which drops fixed-effect intercepts from prediction.
   model$load_state_dict(object$model_state)
   model$to(device = device)
-  # ARM/MPS libtorch can silently zero a length-one bias during state loading,
-  # and copy_() to that parameter can silently no-op as well.  Detect any lost
-  # direct-covariate bias and retain the difference as an external prediction
-  # offset.  This avoids mutating the affected MPS parameter while preserving
-  # the authoritative value from the saved state.
-  t_cov_bias_offset <- NULL
+  # Some ARM/MPS libtorch builds expose the correct length-one bias after state
+  # loading but omit it from nn_linear()'s forward result.  Preserve the saved
+  # direct-covariate parameters so prediction can reconstruct this small fixed-
+  # effect term on CPU and bypass the affected MPS kernel entirely.
+  mps_cov_linear <- NULL
+  cov_weight <- object$model_state[["cov_linear.weight"]]
   cov_bias <- object$model_state[["cov_linear.bias"]]
-  if (identical(device$type, "mps") && !is.null(cov_bias) &&
-      !is.null(model$cov_linear)) {
-    saved_bias <- as.numeric(as.array(cov_bias$detach()$cpu()))
-    loaded_bias <- as.numeric(as.array(
-      model$cov_linear$bias$detach()$cpu()
-    ))
-    bias_offset <- saved_bias - loaded_bias
-    if (any(abs(bias_offset) > sqrt(.Machine$double.eps))) {
-      t_cov_bias_offset <- torch::torch_tensor(
-        matrix(bias_offset, nrow = 1L),
-        dtype = torch::torch_float(), device = device
-      )
-    }
+  if (identical(device$type, "mps") && !is.null(cov_weight) &&
+      !is.null(cov_bias) && !is.null(model$cov_linear)) {
+    mps_cov_linear <- list(
+      weight = as.matrix(as.array(cov_weight$detach()$cpu())),
+      bias = as.numeric(as.array(cov_bias$detach()$cpu()))
+    )
   }
   gpu_mem_checkpoint("predict: after model rebuild + load_state_dict")
 
@@ -399,6 +392,16 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
       covariates, dtype = torch::torch_float(), device = device
     )
   }
+  t_mps_cov_fixed_effects <- NULL
+  if (!is.null(mps_cov_linear)) {
+    mps_fixed_effects <- covariates %*% t(mps_cov_linear$weight)
+    mps_fixed_effects <- sweep(
+      mps_fixed_effects, 2L, mps_cov_linear$bias, FUN = "+"
+    )
+    t_mps_cov_fixed_effects <- torch::torch_tensor(
+      mps_fixed_effects, dtype = torch::torch_float(), device = device
+    )
+  }
   actual_cov_dim <- p + 1L + n_cov_cols
   expected_cov_dim <- as.integer(cfg$cov_dim)
   if (length(expected_cov_dim) == 1L && !is.na(expected_cov_dim) &&
@@ -506,8 +509,11 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
         } else {
           pred <- (1 - out$rs) * t_BM_draw + out$rs * out$delta
         }
-        if (!is.null(out$fixed_effects)) pred <- pred + out$fixed_effects
-        if (!is.null(t_cov_bias_offset)) pred <- pred + t_cov_bias_offset
+        if (!is.null(t_mps_cov_fixed_effects)) {
+          pred <- pred + t_mps_cov_fixed_effects
+        } else if (!is.null(out$fixed_effects)) {
+          pred <- pred + out$fixed_effects
+        }
         last_pred <- pred
         # Drop the previous X_iter before binding the new one so that the
         # old forward-pass intermediates (attention matrices, FFN outputs,
