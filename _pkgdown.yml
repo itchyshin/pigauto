@@ -24,11 +24,12 @@ home:
     counts, binary variables, unordered categories, ordered categories,
     bounded proportions, zero-inflated counts, and compositional
     (multi-proportion) data that sums to one across components.
-    Uncertainty is described with conformal prediction intervals and an
-    experimental Rubin's-rules multiple-imputation workflow for pooling
-    fixed effects, with tree-uncertainty propagation via posterior tree
-    samples. Variance components, random-effect predictions, and BLUPs are
-    not pooled in version 0.10.0. Tested up to 10,000 species on a laptop.
+    Prediction uncertainty is described with conformal intervals. A separate
+    experimental analysis-aware backend supports one incomplete continuous
+    covariate under MAR for narrow lm, logit-glm, and random-intercept-lmer
+    analyses. Conformal-width, Brownian/MC-dropout, PMM, and posterior-tree
+    draws are prediction diagnostics and are unsupported for downstream
+    inference. Tested up to 10,000 species on a laptop.
   links:
     - text: Source code
       href: https://github.com/itchyshin/pigauto
@@ -53,7 +54,7 @@ navbar:
           href: articles/common-pitfalls.html
         - text: "Mixed-type traits"
           href: articles/mixed-types.html
-        - text: "Propagating tree uncertainty"
+        - text: "Tree sensitivity (not inferentially validated)"
           href: articles/tree-uncertainty.html
         - text: "GNN architecture and the math behind pigauto"
           href: articles/gnn-architecture.html
@@ -90,7 +91,7 @@ navbar:
           href: dev/bench_avonet_missingness.html
         - text: "Missingness mechanisms (MCAR / MAR / MNAR)"
           href: dev/bench_missingness_mechanism.html
-        - text: "Tree uncertainty (Rubin's rules, 10 posterior trees)"
+        - text: "Historical tree-sensitivity benchmark"
           href: dev/bench_tree_uncertainty.html
         - text: "Delhey 5,809-species birds"
           href: dev/bench_delhey.html
@@ -124,20 +125,25 @@ reference:
     contents:
       - impute
 
-  - title: "Experimental multiple imputation for fixed effects"
+  - title: "Experimental analysis-aware MI for fixed effects"
     desc: >
-      Three functions that compose into the documented
-      experimental multiple-imputation → regression → Rubin's-rules workflow
-      (Rubin 1987; Nakagawa & Freckleton 2008, 2011). See
-      `vignette("mixed-types")` and `vignette("tree-uncertainty")` for
-      end-to-end examples. Version 0.10.0 pools fixed effects only; variance
-      components, random-effect predictions, correlations, and BLUPs are not
-      supported pooling targets.
+      The analysis model is declared before imputations are drawn. Initial
+      support is one incomplete continuous covariate under MAR with lm,
+      binomial-logit glm, or one-random-intercept lmer. Fixed effects only;
+      the backend remains experimental pending package-level validation.
+    contents:
+      - multi_impute_analysis
+      - with_imputations
+      - pool_mi
+
+  - title: "Stochastic prediction diagnostics"
+    desc: >
+      Conformal-width, Brownian/MC-dropout, PMM, and posterior-tree draws.
+      These paths failed or were outside the downstream inferential gate and
+      must not be used as analysis-aware multiple imputations.
     contents:
       - multi_impute
       - multi_impute_trees
-      - with_imputations
-      - pool_mi
 
   - title: "Pipeline — fine-grained control"
     desc: >

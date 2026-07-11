@@ -1,34 +1,27 @@
-#' Generate M complete datasets for multiple imputation
+#' Generate experimental stochastic completion datasets
 #'
 #' Run pigauto's full imputation pipeline and return `M` stochastic
 #' completions of the trait matrix instead of a single point estimate.
-#' The `M` datasets are the input needed for the classical multiple
-#' imputation workflow: fit a downstream model on each dataset, then
-#' pool fixed-effect coefficients with Rubin's rules via [pool_mi()].
-#' In version 0.10.0 this downstream-inference workflow is experimental;
-#' variance components, correlations, random-effect predictions, BLUPs,
-#' and other structured parameters are not supported pooling targets.
+#' The conformal-width and Brownian/MC-dropout draws returned here are
+#' experimental prediction-diagnostic draws. A 3,000-fit known-DGP campaign
+#' found that neither method passed any of the 12 downstream fixed-effect
+#' gate cells. Do not use these datasets for downstream inference or Rubin
+#' pooling. A separate analysis-aware backend, [multi_impute_analysis()], is
+#' under package-level validation for a narrow set of supported analyses.
 #'
 #' @section When to use this:
 #'
-#' pigauto provides two multiple-imputation functions. Pick based on how
-#' many trees you have:
+#' This function is useful for comparing stochastic prediction behavior from
+#' one tree. It is not the analysis-aware inferential backend.
 #'
-#' * **One tree** (single published phylogeny, single time-calibrated tree):
-#'   use [multi_impute()]. Choose conformal-width or MC-dropout/BM draws
-#'   with `draws_method`.
-#' * **Multiple posterior trees** (BirdTree samples, BEAST posterior, etc.):
-#'   use [multi_impute_trees()]. Between-tree variation is added to the
-#'   pooled SEs via Rubin's rules (Nakagawa & de Villemereuil 2019).
-#'
-#' The two functions share the same downstream API — both return objects
-#' compatible with [with_imputations()] and [pool_mi()].
+#' [multi_impute_trees()] provides an experimental posterior-tree sensitivity
+#' path, but tree uncertainty is not supported by [multi_impute_analysis()].
 #'
 #' @param traits data.frame with species as rownames and trait columns.
 #'   Same input format as [impute()]. Supported column types are
 #'   numeric, integer, factor, ordered factor, and logical.
 #' @param tree object of class `phylo` aligned with `traits`.
-#' @param m integer. Number of imputation datasets to generate
+#' @param m integer. Number of stochastic completion datasets to generate
 #'   (default `100`). Observed cells are identical across all `M`
 #'   datasets; only originally-missing cells vary.
 #' @param draws_method character. How stochastic draws are generated for
@@ -44,7 +37,7 @@
 #'       draws for discrete traits.}
 #'     \item{`"mc_dropout"`}{Run `M` stochastic GNN forward passes in training
 #'       mode (dropout active) on top of stochastic Brownian-motion baseline
-#'       draws. Brownian draws still contribute between-imputation variation
+#'       draws. Brownian draws still contribute between-draw variation
 #'       when a calibrated GNN gate is zero.}
 #'   }
 #' @param species_col character or `NULL`. If set, marks the column
@@ -79,15 +72,14 @@
 #'     \item{`datasets`}{A list of length `m`. Each element is a
 #'       data.frame with the same shape and column types as the input
 #'       `traits`; observed cells are preserved and missing cells are
-#'       filled with the corresponding imputation draw. Pass this list
-#'       to [with_imputations()] to fit downstream models.}
-#'     \item{`m`}{Number of imputations.}
+#'       filled with the corresponding stochastic draw. These datasets are
+#'       for prediction diagnostics, not downstream inference.}
+#'     \item{`m`}{Number of stochastic completion datasets.}
 #'     \item{`pooled_point`}{A single data.frame whose missing cells
 #'       are replaced by the MC-averaged point estimate. Convenient for
-#'       reporting but does *not* propagate imputation uncertainty --
-#'       use `datasets` + [pool_mi()] for inference.}
-#'     \item{`se`}{Matrix of per-cell standard errors combining the
-#'       baseline SE and the between-imputation standard deviation.}
+#'       reporting but does *not* provide a valid downstream MI analysis.}
+#'     \item{`se`}{Matrix of per-cell uncertainty summaries combining the
+#'       baseline SE and the between-draw standard deviation.}
 #'     \item{`imputed_mask`}{Logical matrix; `TRUE` where a cell was
 #'       originally missing.}
 #'     \item{`fit`}{The underlying [`pigauto_fit`][fit_pigauto()]
@@ -100,14 +92,11 @@
 #'   }
 #'
 #' @details
-#' Multiple imputation is a method for doing *downstream analysis*
-#' under missing data, not an end in itself. Plugging a single
-#' point-estimate imputation into a regression underestimates standard
-#' errors because it treats imputed cells as if they were observed.
-#' The standard remedy, due to Rubin (1987), is to generate `M`
-#' stochastic completions, fit the downstream model on each, and pool
-#' the results. `multi_impute()` + [with_imputations()] + [pool_mi()]
-#' implement an experimental fixed-effect version of this workflow end to end.
+#' These draws do not condition on a declared substantive analysis model.
+#' Consequently, stochastic variation alone does not make them proper or
+#' congenial multiple imputations. The analysis-aware backend requires the
+#' analysis model before generating draws and dispatches only across its
+#' documented supported model classes.
 #'
 #' **`draws_method = "conformal"` (default)**: Run the model once; missing
 #' cells are sampled from
@@ -123,7 +112,7 @@
 #' **`draws_method = "mc_dropout"`**: Run `M` GNN forward passes in
 #' training mode (dropout active) on top of stochastic BM baseline draws.
 #' When `r_cal = 0`, the GNN-dropout term disappears but the BM draw still
-#' contributes between-imputation variance.
+#' contributes between-draw variance.
 #'
 #' Nakagawa & Freckleton (2008, 2011) review the consequences of
 #' ignoring missing data in ecological and comparative analyses and
@@ -154,9 +143,8 @@
 #'   3-way prediction and conformal scores remain calibrated on the
 #'   blended residuals.
 #'
-#' @seealso [impute()] for single-point imputation, [with_imputations()]
-#'   for applying a model-fitting function across the `M` datasets,
-#'   [pool_mi()] for Rubin's rules pooling of the resulting fits.
+#' @seealso [impute()] for point imputation and [multi_impute_analysis()]
+#'   for the narrow analysis-aware inferential backend.
 #'
 #' @examples
 #' \dontrun{
@@ -168,16 +156,8 @@
 #' mi <- multi_impute(df, tree300, m = 100)
 #' print(mi)
 #'
-#' # Experimental fixed-effect analysis: phylogenetic GLS + Rubin pooling
-#' fits <- with_imputations(mi, function(d) {
-#'   d$species <- rownames(d)
-#'   nlme::gls(
-#'     log(Mass) ~ log(Wing.Length),
-#'     correlation = ape::corBrownian(phy = tree300, form = ~species),
-#'     data = d, method = "ML"
-#'   )
-#' })
-#' pool_mi(fits)
+#' # Inspect stochastic prediction sensitivity only.
+#' lapply(mi$datasets, head)
 #' }
 #'
 #' @export
@@ -194,7 +174,7 @@ multi_impute <- function(traits, tree, m = 100L,
   draws_method <- match.arg(draws_method)
   m <- as.integer(m)
   if (!is.finite(m) || m < 2L) {
-    stop("`m` must be an integer >= 2 (multiple imputation needs at least ",
+    stop("`m` must be an integer >= 2 (stochastic diagnostics need at least ",
          "two draws). Got m = ", m, ".", call. = FALSE)
   }
 
@@ -463,21 +443,21 @@ print.pigauto_mi <- function(x, ...) {
   n_imp_cells <- sum(x$imputed_mask)
   pct <- if (total_cells > 0) 100 * n_imp_cells / total_cells else 0
 
-  cat("pigauto multiple imputation\n")
+  cat("pigauto experimental stochastic completion diagnostics\n")
   method_label <- switch(x$draws_method %||% "mc_dropout",
     mc_dropout = "MC dropout",
     conformal  = "conformal-width sampling",
     x$draws_method
   )
-  cat(sprintf("  M        : %d imputations (%s)\n", x$m, method_label))
+  cat(sprintf("  M        : %d completion draws (%s)\n", x$m, method_label))
   cat(sprintf("  Species  : %d\n", n_sp))
   cat(sprintf("  Traits   : %d -- %s\n", p,
               paste(traits, collapse = ", ")))
   cat(sprintf("  Cells    : %d imputed / %d total (%.1f%%)\n",
               n_imp_cells, total_cells, pct))
 
-  cat("\n  Access imputation draws:  mi$datasets[[i]]\n")
-  cat("  Fit downstream models:    with_imputations(mi, fit_fun)\n")
-  cat("  Pool with Rubin's rules:  pool_mi(fits)\n")
+  cat("\n  Access diagnostic draws:  mi$datasets[[i]]\n")
+  cat("  Downstream inference:     unsupported for these draws\n")
+  cat("  Analysis-aware MI:        multi_impute_analysis(...)\n")
   invisible(x)
 }

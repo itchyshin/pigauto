@@ -33,8 +33,8 @@ familiarity with the package's internals.
 observations (= species in single-obs mode, > species when each species
 has multiple measurements), $p$ for the *latent* trait dimension (which
 expands categorical traits to $K$ one-hot columns), $k$ for spectral
-Laplacian features, $c$ for covariate dimensions, and $T$ for the
-posterior tree count in tree-uncertainty pooling.
+Laplacian features, $c$ for covariate dimensions, and $T$ for a posterior-tree
+prediction-sensitivity sample.
 
 ```
 INPUT:
@@ -348,48 +348,34 @@ different questions and must not be conflated.
 |-----------|--------|----------|
 | `pred$se` (cont./count/ordinal/prop.) | Conditional-MVN SD from the BM baseline, delta-method back-transformed. | Exact under BM, model-dependent. |
 | `pred$se` (binary/categorical) | $\min(p, 1{-}p)$ / $1 - \max_k p_k$ — uncertainty score, **not** a Gaussian SE. | Use for ranking/reporting; do **not** plug into Rubin's rules. |
-| `pred$conformal_lower`, `pred$conformal_upper` | Split conformal residual quantile on the val set: $s = q_{(1-\alpha)}( | y - \hat{y} |_{\text{val}} )$. | Distribution-free 95% marginal coverage regardless of model assumptions. |
+| `pred$conformal_lower`, `pred$conformal_upper` | Split conformal residual quantile on the val set: $s = q_{(1-\alpha)}( | y - \hat{y} |_{\text{val}} )$. | Marginal prediction coverage under the split-conformal exchangeability and fixed calibration-procedure assumptions; not an MI draw distribution. |
 
-For multiple-imputation workflows, `multi_impute()` exposes two draw
+For prediction diagnostics, `multi_impute()` exposes two stochastic draw
 methods. `"conformal"` (default) uses the heuristic
 $\mathcal{N}(\mu, s/1.96)$ on the transformed scale, where $s$ is the
 conformal residual quantile. A conformal prediction interval does not by
 itself establish that these Normal draws are proper multiple imputations.
 `"mc_dropout"` runs $M$ stochastic GNN passes in training mode (dropout
-active) on top of BM-draw inputs and is available as a comparison path.
+active) on top of BM-draw inputs. A 3,000-fit campaign found that neither
+legacy draw method passed any of the 12 downstream fixed-effect cells; PMM
+also failed its redesign pilot. These paths are unsupported for inference.
 
-Version 0.10.0 therefore labels downstream multiple imputation as
-**experimental** while known-DGP coverage validation is completed.
-`pool_mi()` applies Rubin's (1987) rules to fixed-effect coefficients from
-$M$ downstream fits and returns `estimate`, `std.error`, `df`, `fmi`, and
-`riv` per term. It does not pool variance components, correlations,
-random-effect predictions, BLUPs/conditional modes, latent loadings, or
-other structured parameters.
+The separate experimental `multi_impute_analysis()` backend declares the
+substantive model before imputation. It supports one incomplete continuous
+covariate under MAR, dispatching to proper Bayesian normal-regression MI for
+Gaussian `lm`, `smcfcs` for binomial-logit `glm`, and `jomo.smc` for a Gaussian
+`lmer` with one random intercept. `pool_mi()` then applies Rubin's rules to
+fixed effects only. The backend has passed a warning-free 6,000-task
+controls-only gate, demonstrating that the inferential target is attainable,
+but the package implementation remains experimental pending its own full
+validation.
 
-## 6. Tree uncertainty: a two-step workflow
+## 6. Posterior-tree prediction sensitivity
 
-When the species tree itself is uncertain, the Nakagawa & de Villemereuil
-(2019, *Syst. Biol.*) algorithm pools across $T$ posterior trees.
-`multi_impute_trees(traits, trees, m_per_tree = 5L)` performs **step 1**
-— a full pigauto fit per tree, producing $T \times M$ completed
-datasets, each tagged with the tree index that produced it. **Step 2**
-is the user's responsibility: refit the downstream comparative model
-using the **same tree** that produced each dataset, then pool all
-$T \times M$ fits via `pool_mi()`:
-
-```r
-fits <- Map(function(dat, t_idx) {
-  dat$species <- rownames(dat)
-  nlme::gls(y ~ x,
-            correlation = ape::corBrownian(phy = trees[[t_idx]],
-                                            form = ~species),
-            data = dat, method = "ML")
-}, mi$datasets, mi$tree_index)
-pool_mi(fits)
-```
-
-Compute is linear in $T$. The 2019 paper's relative-efficiency index
-typically converges before $T = 50$.
+`multi_impute_trees()` can compare point predictions across a posterior tree
+sample. Tree uncertainty was outside the analysis-aware validation campaign,
+so its stochastic datasets are unsupported for downstream inference and cannot
+currently be combined with `multi_impute_analysis()`.
 
 ## 7. Putting it together: a worked predictive equation
 
@@ -427,8 +413,9 @@ giving $\ge 95\%$ marginal coverage on the original scale.
 | ResidualPhyloDAE + B3 trait attention | `R/model_residual_dae.R` |
 | Training loop, gate calibration | `R/fit_pigauto.R`, `R/fit_helpers.R` |
 | Prediction, conformal intervals | `R/predict_pigauto.R` |
-| Multi-imputation pooling | `R/multi_impute.R`, `R/pool_mi.R` |
-| Tree uncertainty workflow | `R/multi_impute_trees.R` |
+| Analysis-aware MI and fixed-effect pooling | `R/multi_impute_analysis.R`, `R/pool_mi.R` |
+| Prediction-diagnostic draws | `R/multi_impute.R`, `R/predict_pigauto.R` |
+| Experimental tree-sensitivity workflow | `R/multi_impute_trees.R` |
 
 ## References
 

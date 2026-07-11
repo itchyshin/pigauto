@@ -324,88 +324,49 @@ Species are sorted by predicted mass. The blue ribbon shows the conformal
 prediction interval when conformal scores are available. Grey points (if
 `truth` is supplied) show known values — a useful visual check of calibration.
 
-## Experimental multiple imputation for fixed effects
+## Experimental analysis-aware multiple imputation
 
-The single completed dataset from `impute()` does not propagate imputation
-uncertainty into downstream standard errors. `multi_impute()` generates M
-stochastic complete datasets and `pool_mi()` pools fixed-effect coefficients
-with Rubin's rules. In version 0.10.0 this workflow is experimental: the
-conformal-to-Normal draw construction is not yet inferentially validated for
-every downstream model family.
+Downstream inference requires imputations compatible with the substantive
+analysis. `multi_impute_analysis()` therefore receives the formula and model
+class before drawing one incomplete continuous covariate under MAR.
+
+A warning-free 6,000-task controls-only campaign at clean SHA `430b2c9`
+passed all 24 method-by-term cells. This establishes that the target is
+attainable; the package backend remains experimental pending its own full
+validation.
 
 ```{r mi-workflow, eval=FALSE}
-# Step 1: generate M = 50 complete datasets
-# draws_method = "conformal" draws from conformal-calibrated
-# uncertainty using a conformal-score-derived Normal scale.
-mi <- multi_impute(traits, tree, m = 50L)
+analysis_data$z_sq <- analysis_data$z^2
 
-# Step 2: fit your downstream model to each imputed dataset
-fits <- with_imputations(mi, function(d) {
-  lm(log(Wing.Length) ~ log(Mass) + Trophic.Level, data = d)
-})
+mi <- multi_impute_analysis(
+  data = analysis_data,
+  formula = y ~ x + z,
+  missing = "x",
+  model = "lm",
+  m = 50L,
+  auxiliary = "z_sq",
+  seed = 1L
+)
 
-# Step 3: pool with Rubin's rules
+fits <- with_imputations(mi, function(d) lm(y ~ x + z, data = d))
 pool_mi(fits)
-# Returns a tidy data.frame with estimate, std.error, statistic, p.value,
-# df (classical Rubin degrees of freedom unless df_fun is supplied),
-# fmi (fraction of missing information),
-# and riv (relative increase in variance) per coefficient.
 ```
 
-Use M = 50 as a starting point, then increase M and check whether pooled
-estimates and standard errors are numerically stable for the analysis at hand.
-The `fmi` column describes the fraction of missing information under the
-pooling calculation; it does not by itself validate interval coverage.
+The initial dispatch is deliberately narrow: proper Bayesian normal-regression
+MI for Gaussian `lm`, `smcfcs` for binomial-logit `glm`, and `jomo.smc` for a
+Gaussian `lmer` with one random intercept. Users must precompute auxiliary
+terms such as `z_sq`. Fixed effects are the only supported pooling targets.
 
-Only fixed-effect coefficients and their covariance matrices are supported
-pooling targets in version 0.10.0. Do not use `pool_mi()` for variance
-components, correlation parameters, random-effect predictions, BLUPs,
-conditional modes, or latent-variable loadings.
+Conformal-width, Brownian/MC-dropout, and PMM draws remain experimental
+prediction diagnostics. They failed the downstream fixed-effect gate and must
+not be passed to `with_imputations()`/`pool_mi()` for inference.
 
 ## Phylogenetic tree uncertainty
 
-A single fixed tree ignores phylogenetic uncertainty. pigauto splits this
-into **two** steps, matching Nakagawa & de Villemereuil (2019, *Syst.
-Biol.* 68:632–641):
-
-**Step 1 — imputation.**  `multi_impute_trees()` fits pigauto on each of
-the T posterior trees and returns T × M completed datasets. Every dataset
-is conditional on a specific tree, recorded in `mi$tree_index`:
-
-```{r tree-uncertainty-step1, eval=FALSE}
-data(trees300, package = "pigauto")   # 50 posterior trees
-
-mi <- multi_impute_trees(traits, trees = trees300, m_per_tree = 5L)
-# 50 trees × 5 imputations = 250 completed datasets
-```
-
-**Step 2 — analysis.**  For each completed dataset, fit the downstream
-comparative model using the *same* tree that produced that dataset, then
-pool all T × M fits with Rubin's rules:
-
-```{r tree-uncertainty-step2, eval=FALSE}
-fits <- with_imputations(mi, function(dat, tree) {
-  dat$species <- rownames(dat)
-  nlme::gls(
-    log(Mass) ~ log(Wing.Length),
-    correlation = ape::corBrownian(
-      phy = tree, form = ~species),
-    data = dat, method = "ML"
-  )
-})
-pool_mi(fits)
-```
-
-Subject to the experimental MI assumptions above, the pooled fixed-effect
-standard errors reflect trait-imputation uncertainty, phylogenetic tree
-uncertainty, and their interaction in one step.
-
-**Compute cost scales linearly with T** (each tree requires a fresh
-pigauto fit). At `n = 300` species this is ~30 minutes for T = 50 trees;
-at `n = 10,000` species it can be 17+ hours. For large trees we
-recommend reducing T to 10–20 (the `fmi` column in `pool_mi()` output
-typically indicates convergence well before T = 50), or parallelising
-tree fits across machines.
+Tree uncertainty was outside the analysis-aware validation campaign.
+`multi_impute_trees()` may be used descriptively to examine point-prediction
+sensitivity, but its stochastic datasets are unsupported for downstream
+inference and cannot currently be combined with `multi_impute_analysis()`.
 
 ## Active imputation: where to measure next
 

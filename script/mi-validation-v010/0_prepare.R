@@ -102,7 +102,7 @@ mi_validation_config <- function(args = commandArgs(trailingOnly = TRUE)) {
       "smcfcs_numit", 1L
     ),
     smcfcs_rjlimit = .as_int(
-      get_setting("smcfcs-rjlimit", "PIGAUTO_MI_SMCFCS_RJLIMIT", 10000L),
+      get_setting("smcfcs-rjlimit", "PIGAUTO_MI_SMCFCS_RJLIMIT", 100000L),
       "smcfcs_rjlimit", 1L
     ),
     jomo_nburn = .as_int(

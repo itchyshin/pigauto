@@ -11,7 +11,7 @@ default_config <- mi_validation_config("--profile=smoke")
 manifest <- make_manifest(config)
 stopifnot(
   default_config$jomo_nbetween == 100L,
-  default_config$smcfcs_rjlimit == 10000L,
+  default_config$smcfcs_rjlimit == 100000L,
   all(manifest$smcfcs_numit == 33L),
   all(manifest$smcfcs_rjlimit == 22222L),
   all(manifest$jomo_nburn == 444L),

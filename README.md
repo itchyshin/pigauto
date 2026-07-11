@@ -13,24 +13,27 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 > Live documentation: <https://itchyshin.github.io/pigauto/>
 
 pigauto fills gaps in species trait matrices by combining the phylogenetic
-tree, cross-trait correlations, and optional environmental covariates — then
-can propagate imputation uncertainty into fixed-effect estimates from a
-downstream model via an experimental multiple-imputation workflow and
-Rubin's rules.
+tree, cross-trait correlations, and optional environmental covariates. A
+separate experimental `multi_impute_analysis()` backend provides narrow,
+analysis-aware multiple imputation for one incomplete continuous covariate
+under missing at random (MAR); it is not a general extension of pigauto's
+conformal or MC-dropout prediction draws.
 
 ## The workflow
 
 ```
-Raw data (with NAs)
-       ↓
-   impute()          # point estimates + conformal uncertainty intervals
-       ↓
-multi_impute(m=50)   # 50 stochastic complete datasets
-       ↓
-with_imputations()   # fit your model on each dataset
-       ↓
-   pool_mi()         # experimental fixed-effect Rubin pooling
+Phylogenetic trait prediction       Analysis-aware fixed-effect inference
+Raw traits + tree                   Analysis data + declared formula/model
+       ↓                                          ↓
+   impute()                         multi_impute_analysis()
+       ↓                                          ↓
+completed traits + intervals        with_imputations() → pool_mi()
 ```
+
+The inference branch is experimental and deliberately narrow. Conformal-width,
+Brownian/MC-dropout, and PMM draws remain useful for prediction diagnostics,
+but they failed the downstream fixed-effect gate and are unsupported for
+inference.
 
 ## Installation
 
@@ -49,7 +52,6 @@ torch::install_torch()
 
 ```r
 library(pigauto)
-library(glmmTMB)
 library(ape)
 
 data(avonet300, tree300)
@@ -84,39 +86,51 @@ result$prediction$conformal_upper[hide, "Mass"]
 # distinction, and for the `n_imputations = 20, pool_method = "mode"`
 # recommendation on imbalanced ordinal traits like Migration.
 
-# ── Step 2: generate 50 complete datasets ────────────────────────────────
-mi <- multi_impute(df_obs, tree300, m = 50L)
-
-# ── Step 3: fit downstream model on each ────────────────────────────────
-Vphy <- cov2cor(ape::vcv(tree300))
-fits <- with_imputations(mi, function(d) {
-  d$species <- factor(rownames(d), levels = rownames(Vphy))
-  d$dummy   <- factor(1)
-  glmmTMB(
-    log(Mass) ~ log(Wing.Length) + Trophic.Level +
-      propto(0 + species | dummy, Vphy),
-    data = d
-  )
-})
-
-# ── Step 4: pool with Rubin's rules ──────────────────────────────────────
-pool_mi(fits)  # glmmTMB conditional fixed effects are selected automatically
-#>               term  estimate std.error    df  fmi
-#>        (Intercept)     ...
-#>   log(Wing.Length)     ...
-#>     Trophic.LevelC     ...
 ```
 
-The pooled table reports `fmi` (fraction of missing information) per
-coefficient. Increase `m` and check that the pooled estimates and standard
-errors are numerically stable for the analysis at hand; `m = 50` is a useful
-starting point, not an inferential guarantee.
+## Experimental analysis-aware multiple imputation
 
-`pool_mi()` supports fixed-effect coefficients only. In v0.10.0 it does
-not pool random-effect variances or correlations, BLUPs/conditional modes,
-latent loadings, or other structured parameters. Those quantities require
-parameter-specific transformations and validation beyond ordinary Rubin
-pooling.
+`multi_impute_analysis()` requires the substantive analysis before it draws
+the missing values. The initial backend accepts exactly one incomplete
+continuous column under MAR:
+
+The analysis-compatible target passed all 24 method-by-term cells in a
+warning-free 6,000-task controls-only campaign at clean SHA `430b2c9`. That
+result establishes gate attainability, not package validity; this backend
+remains experimental until its implementation passes the corresponding
+package-level campaign.
+
+| `model` | Supported analysis | Imputation engine |
+|---|---|---|
+| `"lm"` | Gaussian linear main-effects model | Proper Bayesian normal-regression MI |
+| `"glm"` | Binomial logit main-effects model | `smcfcs` substantive-model-compatible MI |
+| `"lmer"` | Gaussian model with one random intercept | `jomo::jomo.smc()` |
+
+```r
+# Conceptual until the experimental backend completes package-level validation.
+# Precompute auxiliary terms explicitly; for example:
+analysis_data$z_sq <- analysis_data$z^2
+
+mi <- multi_impute_analysis(
+  data = analysis_data,
+  formula = y ~ x + z,
+  missing = "x",
+  model = "lm",
+  m = 50L,
+  auxiliary = "z_sq",
+  seed = 1L
+)
+
+fits <- with_imputations(mi, function(d) lm(y ~ x + z, data = d))
+pool_mi(fits)
+```
+
+The backend pools fixed effects only. It does not support more than one
+incomplete column, missing discrete covariates, MNAR, nonlinear or interaction
+terms involving the incomplete covariate, random slopes, variance components,
+correlations, BLUPs/conditional modes, latent loadings, or arbitrary downstream
+models. Correct Rubin arithmetic from `pool_mi()` does not make an incompatible
+imputation model valid.
 
 ## Using environmental covariates
 
@@ -141,73 +155,10 @@ automatic improvement.
 
 ## Phylogenetic tree uncertainty
 
-If you have a posterior sample of trees (for example, from a Bayesian
-phylogenetic analysis),
-tree uncertainty enters the analysis at **two** places — and pigauto
-handles them separately because they are conceptually distinct.
-
-**Step 1 — imputation** (pigauto's job).
-`multi_impute_trees()` runs a full pigauto fit on each posterior tree,
-so each completed dataset is conditional on a *different* tree:
-
-```r
-data(avonet300, trees300)   # trees300 = 50 posterior trees
-df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
-
-mi <- multi_impute_trees(df, trees = trees300, m_per_tree = 5L)
-#> 50 trees × 5 imputations = 250 completed datasets
-#> mi$tree_index[i]  →  which posterior tree produced dataset i
-```
-
-**Step 2 — analysis** (Nakagawa & de Villemereuil 2019).
-For each completed dataset, fit the downstream comparative model
-using the *same* tree that produced that dataset, then pool the
-T × M fits with Rubin's rules:
-
-```r
-fits <- Map(
-  function(dat, t_idx) {
-    dat$species <- rownames(dat)
-    nlme::gls(
-      log(Mass) ~ log(Wing.Length),
-      correlation = ape::corBrownian(phy = trees300[[t_idx]], form = ~species),
-      data = dat, method = "ML"
-    )
-  },
-  mi$datasets,
-  mi$tree_index
-)
-pool_mi(fits)
-```
-
-For supported fixed effects, the experimental pooled standard errors combine
-imputation uncertainty and phylogenetic tree uncertainty in one Rubin's-rules
-step. Variance components, correlations, random-effect predictions, BLUPs,
-and latent loadings are not pooled in version 0.10.0. Reference: Nakagawa S,
-de Villemereuil P (2019).
-*Systematic Biology* 68(4):632–641. `doi:10.1093/sysbio/syy089`.
-
-### Compute cost depends on whether the GNN is shared
-
-By default, `multi_impute_trees()` uses `share_gnn = TRUE`: it trains the GNN
-once on a reference tree, then recomputes the cheaper phylogenetic baseline for
-each posterior tree. Set `share_gnn = FALSE` only when you need exact per-tree
-model independence. Rough budget on a modern CPU laptop:
-
-| Species n | 1 fit | T = 50, `share_gnn = TRUE` | T = 50, `share_gnn = FALSE` |
-|---:|---:|---:|---:|
-| 300 | ~30–60 s | ~3–5 min | 25–50 min |
-| 5,000 | ~5–10 min | ~10–20 min | 4–8 hr |
-| 10,000 | ~20–40 min | ~30–60 min | 17–33 hr |
-
-**Guidance for large trees.** The 2019 paper notes that 10–20 posterior
-trees are usually enough (use the "relative efficiency" index in
-`pool_mi()$fmi` to check convergence). For 10,000-species datasets we
-recommend T = 10–20, or parallelising the T fits across machines
-(each fit is independent — good HPC / cloud use case).
-If you have no posterior tree sample, use a single MCC tree via
-`impute()` or `multi_impute()` and note the tree-uncertainty caveat in
-your paper.
+`multi_impute_trees()` remains an experimental prediction-sensitivity tool.
+Tree uncertainty was outside the analysis-aware validation campaign and is not
+supported by `multi_impute_analysis()`. Its stochastic completions must not be
+combined with `pool_mi()` for downstream inference.
 
 ## Trait types
 
@@ -356,7 +307,7 @@ a species differ by covariate context.
   ([rendered](https://itchyshin.github.io/pigauto/articles/getting-started.html))
 - **Mixed types**:
   [mixed-types.html](https://itchyshin.github.io/pigauto/articles/mixed-types.html)
-- **Tree uncertainty**:
+- **Posterior-tree prediction sensitivity**:
   [tree-uncertainty.html](https://itchyshin.github.io/pigauto/articles/tree-uncertainty.html)
 - **Common pitfalls**:
   [common-pitfalls.html](https://itchyshin.github.io/pigauto/articles/common-pitfalls.html)

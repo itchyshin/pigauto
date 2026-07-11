@@ -2,7 +2,7 @@
 % Please edit documentation in R/multi_impute.R
 \name{multi_impute}
 \alias{multi_impute}
-\title{Generate M complete datasets for multiple imputation}
+\title{Generate experimental stochastic completion datasets}
 \usage{
 multi_impute(
   traits,
@@ -28,7 +28,7 @@ numeric, integer, factor, ordered factor, and logical.}
 
 \item{tree}{object of class \code{phylo} aligned with \code{traits}.}
 
-\item{m}{integer. Number of imputation datasets to generate
+\item{m}{integer. Number of stochastic completion datasets to generate
 (default \code{100}). Observed cells are identical across all \code{M}
 datasets; only originally-missing cells vary.}
 
@@ -45,7 +45,7 @@ when conformal scores are unavailable, and to Bernoulli / Categorical
 draws for discrete traits.}
 \item{\code{"mc_dropout"}}{Run \code{M} stochastic GNN forward passes in training
 mode (dropout active) on top of stochastic Brownian-motion baseline
-draws. Brownian draws still contribute between-imputation variation
+draws. Brownian draws still contribute between-draw variation
 when a calibrated GNN gate is zero.}
 }}
 
@@ -91,15 +91,14 @@ An object of class \code{"pigauto_mi"} with components:
 \item{\code{datasets}}{A list of length \code{m}. Each element is a
 data.frame with the same shape and column types as the input
 \code{traits}; observed cells are preserved and missing cells are
-filled with the corresponding imputation draw. Pass this list
-to \code{\link[=with_imputations]{with_imputations()}} to fit downstream models.}
-\item{\code{m}}{Number of imputations.}
+filled with the corresponding stochastic draw. These datasets are
+for prediction diagnostics, not downstream inference.}
+\item{\code{m}}{Number of stochastic completion datasets.}
 \item{\code{pooled_point}}{A single data.frame whose missing cells
 are replaced by the MC-averaged point estimate. Convenient for
-reporting but does \emph{not} propagate imputation uncertainty --
-use \code{datasets} + \code{\link[=pool_mi]{pool_mi()}} for inference.}
-\item{\code{se}}{Matrix of per-cell standard errors combining the
-baseline SE and the between-imputation standard deviation.}
+reporting but does \emph{not} provide a valid downstream MI analysis.}
+\item{\code{se}}{Matrix of per-cell uncertainty summaries combining the
+baseline SE and the between-draw standard deviation.}
 \item{\code{imputed_mask}}{Logical matrix; \code{TRUE} where a cell was
 originally missing.}
 \item{\code{fit}}{The underlying \code{\link[=fit_pigauto]{pigauto_fit}}
@@ -114,22 +113,19 @@ on new data.}
 \description{
 Run pigauto's full imputation pipeline and return \code{M} stochastic
 completions of the trait matrix instead of a single point estimate.
-The \code{M} datasets are the input needed for the classical multiple
-imputation workflow: fit a downstream model on each dataset, then
-pool fixed-effect coefficients with Rubin's rules via \code{\link[=pool_mi]{pool_mi()}}.
-In version 0.10.0 this downstream-inference workflow is experimental;
-variance components, correlations, random-effect predictions, BLUPs,
-and other structured parameters are not supported pooling targets.
+The conformal-width and Brownian/MC-dropout draws returned here are
+experimental prediction-diagnostic draws. A 3,000-fit known-DGP campaign
+found that neither method passed any of the 12 downstream fixed-effect
+gate cells. Do not use these datasets for downstream inference or Rubin
+pooling. A separate analysis-aware backend, \code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, is
+under package-level validation for a narrow set of supported analyses.
 }
 \details{
-Multiple imputation is a method for doing \emph{downstream analysis}
-under missing data, not an end in itself. Plugging a single
-point-estimate imputation into a regression underestimates standard
-errors because it treats imputed cells as if they were observed.
-The standard remedy, due to Rubin (1987), is to generate \code{M}
-stochastic completions, fit the downstream model on each, and pool
-the results. \code{multi_impute()} + \code{\link[=with_imputations]{with_imputations()}} + \code{\link[=pool_mi]{pool_mi()}}
-implement an experimental fixed-effect version of this workflow end to end.
+These draws do not condition on a declared substantive analysis model.
+Consequently, stochastic variation alone does not make them proper or
+congenial multiple imputations. The analysis-aware backend requires the
+analysis model before generating draws and dispatches only across its
+documented supported model classes.
 
 \strong{\code{draws_method = "conformal"} (default)}: Run the model once; missing
 cells are sampled from
@@ -145,7 +141,7 @@ sum-zero CLR space, and decodes to the simplex.
 \strong{\code{draws_method = "mc_dropout"}}: Run \code{M} GNN forward passes in
 training mode (dropout active) on top of stochastic BM baseline draws.
 When \code{r_cal = 0}, the GNN-dropout term disappears but the BM draw still
-contributes between-imputation variance.
+contributes between-draw variance.
 
 Nakagawa & Freckleton (2008, 2011) review the consequences of
 ignoring missing data in ecological and comparative analyses and
@@ -154,19 +150,11 @@ argue for multiple imputation as the default.
 \section{When to use this}{
 
 
-pigauto provides two multiple-imputation functions. Pick based on how
-many trees you have:
-\itemize{
-\item \strong{One tree} (single published phylogeny, single time-calibrated tree):
-use \code{\link[=multi_impute]{multi_impute()}}. Choose conformal-width or MC-dropout/BM draws
-with \code{draws_method}.
-\item \strong{Multiple posterior trees} (BirdTree samples, BEAST posterior, etc.):
-use \code{\link[=multi_impute_trees]{multi_impute_trees()}}. Between-tree variation is added to the
-pooled SEs via Rubin's rules (Nakagawa & de Villemereuil 2019).
-}
+This function is useful for comparing stochastic prediction behavior from
+one tree. It is not the analysis-aware inferential backend.
 
-The two functions share the same downstream API — both return objects
-compatible with \code{\link[=with_imputations]{with_imputations()}} and \code{\link[=pool_mi]{pool_mi()}}.
+\code{\link[=multi_impute_trees]{multi_impute_trees()}} provides an experimental posterior-tree sensitivity
+path, but tree uncertainty is not supported by \code{\link[=multi_impute_analysis]{multi_impute_analysis()}}.
 }
 
 \section{Safety floor (v0.9.1.9002+)}{
@@ -194,16 +182,8 @@ df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
 mi <- multi_impute(df, tree300, m = 100)
 print(mi)
 
-# Experimental fixed-effect analysis: phylogenetic GLS + Rubin pooling
-fits <- with_imputations(mi, function(d) {
-  d$species <- rownames(d)
-  nlme::gls(
-    log(Mass) ~ log(Wing.Length),
-    correlation = ape::corBrownian(phy = tree300, form = ~species),
-    data = d, method = "ML"
-  )
-})
-pool_mi(fits)
+# Inspect stochastic prediction sensitivity only.
+lapply(mi$datasets, head)
 }
 
 }
@@ -220,7 +200,6 @@ multiple imputation: a case study for behavioural ecology."
 \emph{Behavioral Ecology and Sociobiology} 65(1): 103-116.
 }
 \seealso{
-\code{\link[=impute]{impute()}} for single-point imputation, \code{\link[=with_imputations]{with_imputations()}}
-for applying a model-fitting function across the \code{M} datasets,
-\code{\link[=pool_mi]{pool_mi()}} for Rubin's rules pooling of the resulting fits.
+\code{\link[=impute]{impute()}} for point imputation and \code{\link[=multi_impute_analysis]{multi_impute_analysis()}}
+for the narrow analysis-aware inferential backend.
 }

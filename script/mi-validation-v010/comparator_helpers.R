@@ -260,19 +260,51 @@
 }
 
 .draw_standard_smc_imputations <- function(dgp, m, seed,
-                                           smcfcs_numit = 20L,
-                                           smcfcs_rjlimit = 10000L,
-                                           jomo_nburn = 1000L,
-                                           jomo_nbetween = 100L) {
-  if (dgp$dgp == "lmer") {
-    .draw_jomo_lmer_imputations(
-      dgp, m, seed, nburn = jomo_nburn, nbetween = jomo_nbetween
-    )
-  } else if (dgp$dgp == "glm") {
-    .draw_smcfcs_imputations(
-      dgp, m, seed, numit = smcfcs_numit, rjlimit = smcfcs_rjlimit
-    )
-  } else {
-    .draw_bayes_norm_lm_imputations(dgp, m, seed)
+                                             smcfcs_numit = 20L,
+                                             smcfcs_rjlimit = 10000L,
+                                             jomo_nburn = 1000L,
+                                             jomo_nbetween = 100L) {
+  if (!exists("multi_impute_analysis", mode = "function", inherits = TRUE)) {
+    stop("Load the current pigauto source before running package controls.",
+         call. = FALSE)
   }
+  data <- dgp$observed
+  data$z_sq <- data$z^2
+  formula <- switch(
+    dgp$dgp,
+    lm = y ~ x + z,
+    glm = y ~ x + z,
+    lmer = y ~ x + z + (1 | species)
+  )
+  control <- switch(
+    dgp$dgp,
+    lm = list(),
+    glm = list(numit = as.integer(smcfcs_numit),
+               rjlimit = as.integer(smcfcs_rjlimit)),
+    lmer = list(nburn = as.integer(jomo_nburn),
+                nbetween = as.integer(jomo_nbetween))
+  )
+  elapsed <- system.time({
+    mi <- multi_impute_analysis(
+      data = data, formula = formula, missing = "x", model = dgp$dgp,
+      m = as.integer(m), auxiliary = "z_sq", seed = as.integer(seed),
+      control = control
+    )
+  })[["elapsed"]]
+  datasets <- lapply(mi$datasets, function(completed) {
+    completed$z_sq <- NULL
+    completed
+  })
+  .validate_completed_datasets(datasets, dgp, m, mi$engine)
+  list(
+    datasets = datasets,
+    diagnostics = c(
+      list(
+        engine = mi$engine,
+        warnings = mi$diagnostics$warnings,
+        elapsed_seconds = unname(elapsed)
+      ),
+      control
+    )
+  )
 }

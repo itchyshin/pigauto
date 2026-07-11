@@ -3,8 +3,10 @@
 #' Combine regression coefficients from `M` model fits -- one per imputed
 #' dataset -- into a single pooled table using Rubin's rules. The pooled
 #' standard errors combine within-imputation sampling variance and
-#' between-imputation variance. In version 0.10.0 this workflow is
-#' experimental and supports fixed-effect coefficients only. Variance
+#' between-imputation variance. Correct Rubin arithmetic does not make an
+#' incompatible imputation model inferentially valid. For pigauto inference,
+#' fits should come from the documented [multi_impute_analysis()] workflow.
+#' The backend is experimental and supports fixed-effect coefficients only. Variance
 #' components, correlations, random-effect predictions, BLUPs/conditional
 #' modes, latent loadings, and other structured parameters are unsupported.
 #'
@@ -87,12 +89,8 @@
 #'
 #' **MCMCglmm fits** are rejected because Rubin's rules are not the right
 #' tool for posterior samples: variance decomposition does not generalise
-#' cleanly to posterior distributions. For a Bayesian pigauto workflow
-#' (pigauto as imputer, MCMCglmm as inference engine), concatenate the
-#' posterior samples across imputations manually -- stack `fit$Sol` and
-#' `fit$VCV` row-wise with `do.call(rbind, ...)` and wrap the result in
-#' `coda::as.mcmc()`. For the frequentist Rubin's-rules path, see
-#' `vignette("mixed-types", package = "pigauto")`.
+#' cleanly to posterior distributions. No MCMCglmm downstream workflow is
+#' supported by the initial analysis-aware backend.
 #'
 #' @references
 #' Rubin DB (1987). *Multiple Imputation for Nonresponse in Surveys.*
@@ -109,19 +107,20 @@
 #' multiple imputation: a case study for behavioural ecology."
 #' *Behavioral Ecology and Sociobiology* 65(1): 103-116.
 #'
-#' @seealso [multi_impute()], [with_imputations()]
+#' @seealso [multi_impute_analysis()], [with_imputations()]
 #'
 #' @examples
 #' \dontrun{
-#' # Typical workflow
-#' mi   <- multi_impute(traits, tree, m = 100)
-#' fits <- with_imputations(mi, function(d) lm(y ~ x1 + x2, data = d))
+#' # Analysis-aware workflow (one incomplete continuous covariate)
+#' mi <- multi_impute_analysis(
+#'   data = analysis_data, formula = y ~ x + z, missing = "x",
+#'   model = "lm", m = 50L
+#' )
+#' fits <- with_imputations(mi, function(d) lm(y ~ x + z, data = d))
 #' pool_mi(fits)
 #'
-#' # Supported mixed-model classes use fixed effects automatically
-#' pool_mi(fits)
-#'
-#' # Custom extractors remain available for other model classes
+#' # Custom extractors alter extraction only; they do not expand the
+#' # validated imputation-model scope.
 #' pool_mi(fits, coef_fun = my_fixef, vcov_fun = my_fixed_vcov)
 #' }
 #'

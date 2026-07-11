@@ -33,7 +33,8 @@ then supplies both paired draw sets:
 - `oracle_conditional` (positive control): draws from the known DGP-specific
   conditional distribution of missing `x`, including the true random intercept
   in the mixed DGP.
-- `standard_smc` (historical result identifier; positive control): proper
+- `standard_smc` (historical result identifier; positive control): the public
+  experimental `multi_impute_analysis()` implementation, dispatching to proper
   Bayesian normal-regression MI for Gaussian `lm`, `smcfcs` for logit `glm`,
   and `jomo::jomo.smc(model = "lmer")` for the Gaussian mixed model. The fully
   observed `z^2` term is included in each imputation model. The Gaussian branch
@@ -98,7 +99,7 @@ The CLI options have matching environment variables:
 | `--m=` | `PIGAUTO_MI_M` | 2 / 50 / 50 |
 | `--epochs=` | `PIGAUTO_MI_EPOCHS` | 2 / 500 / 500 |
 | `--smcfcs-numit=` | `PIGAUTO_MI_SMCFCS_NUMIT` | 20 |
-| `--smcfcs-rjlimit=` | `PIGAUTO_MI_SMCFCS_RJLIMIT` | 10,000 |
+| `--smcfcs-rjlimit=` | `PIGAUTO_MI_SMCFCS_RJLIMIT` | 100,000 |
 | `--jomo-nburn=` | `PIGAUTO_MI_JOMO_NBURN` | 1,000 |
 | `--jomo-nbetween=` | `PIGAUTO_MI_JOMO_NBETWEEN` | 100 |
 | `--task=` | `PIGAUTO_MI_TASK_ID` | no implicit task |

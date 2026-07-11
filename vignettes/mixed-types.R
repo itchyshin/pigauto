@@ -83,12 +83,17 @@ print(ev)
 
 
 ## ----mi_workflow, eval=FALSE--------------------------------------------------
-# # Generate M = 20 stochastic complete datasets
-# mi <- multi_impute(fit$data$X_original, tree, m = 20L)
+# # Precompute nonlinear auxiliaries explicitly when required.
+# analysis_data$z_sq <- analysis_data$z^2
+# mi <- multi_impute_analysis(
+#   data = analysis_data, formula = y ~ x + z,
+#   missing = "x", model = "glm", m = 50L,
+#   auxiliary = "z_sq", seed = 1L
+# )
 #
 # # Fit a downstream model to each
 # fits <- with_imputations(mi, function(d) {
-#   glm(Migratory ~ log(Mass) + Diet, data = d, family = binomial)
+#   glm(y ~ x + z, data = d, family = binomial)
 # })
 #
 # # Pool with Rubin's rules

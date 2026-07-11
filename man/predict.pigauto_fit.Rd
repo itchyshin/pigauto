@@ -28,8 +28,8 @@
 
 \item{n_imputations}{integer. Number of stochastic imputation draws —
 BM posterior samples plus GNN dropout — (default \code{1L}).  Set to
-e.g. 10 or 20 to return stochastic datasets with between-imputation
-variation for the experimental downstream workflow.}
+e.g. 10 or 20 to inspect stochastic prediction variation. These are not
+validated analysis-aware multiple imputations.}
 
 \item{baseline_override}{optional \code{list(mu, se)} with the same shape as
 \code{object$baseline}. When supplied, predictions use this baseline instead
@@ -73,14 +73,13 @@ data range -- no extrapolation is possible by construction.
 \strong{When to use:} PMM is a niche feature in pigauto.  The
 package already provides conformal prediction intervals
 (calibrated against held-out residuals) and
-\code{multi_impute(draws_method = "conformal")} for
-experimental fixed-effect multiple-imputation workflows. PMM is
+stochastic conformal-width and Brownian/MC-dropout prediction draws. PMM is
 only worth enabling for: (a) methodological comparison against
 mice / equivalent packages, or (b) workflows that specifically
 require imputed values to come from the observed data pool.
 For tail safety on single-imputation point estimates, prefer
-\code{clamp_outliers = TRUE}. For downstream MI, see
-\code{multi_impute()} and its documented draw assumptions.
+\code{clamp_outliers = TRUE}. PMM failed the downstream fixed-effect
+redesign pilot and is unsupported for inference.
 
 The Phase G' acceptance bench
 (\code{useful/MEMO_2026-05-01_phase_g_prime_results.md})
@@ -116,8 +115,9 @@ a Gaussian SE.  \code{NULL} if \code{return_se = FALSE}.}
 \item{probabilities}{Named list.  Binary traits: numeric probability
 vector.  Categorical traits: n x K probability matrix.  Other
 types: not present.}
-\item{imputed_datasets}{List of M data.frames when
-\code{n_imputations > 1}; \code{NULL} otherwise.}
+\item{imputed_datasets}{List of M stochastic prediction data.frames when
+\code{n_imputations > 1}; \code{NULL} otherwise. Not supported for
+downstream inference.}
 \item{trait_map}{Trait map from the fitted model.}
 \item{species_names}{Character vector.}
 \item{trait_names}{Character vector.}
@@ -129,7 +129,8 @@ Runs a single forward pass through the fitted model and returns imputed
 trait values back-transformed to the original scale.  Supports all
 trait types (continuous, binary, categorical, ordinal, count, proportion,
 zero-inflated count, multi-proportion)
-and MC dropout for multiple imputation (when \code{n_imputations > 1}). The fitted model is a gated ensemble
+and MC dropout for stochastic prediction diagnostics (when
+\code{n_imputations > 1}). The fitted model is a gated ensemble
 of a phylogenetic baseline and a graph neural network correction;
 prediction is the per-trait blend
 \code{(1 - r_cal) * baseline + r_cal * delta_GNN}.
@@ -145,10 +146,10 @@ calibrated gate is zero the imputation is a pure BM posterior draw; when
 \code{r_cal > 0} both BM draws and GNN dropout contribute variance.  Point
 estimates are the mean (continuous, count) or mode (binary, categorical,
 ordinal) across passes.  The M complete datasets are returned in
-\code{imputed_datasets} for the experimental fixed-effect Rubin workflow.
-For the user-facing multiple-imputation workflow, use \code{multi_impute()},
-which offers \code{draws_method = "conformal"} (conformal-width heuristic) or
-\code{"mc_dropout"} (BM posterior draws + GNN dropout, wider).
+\code{imputed_datasets} for prediction diagnostics. These datasets are not
+supported for downstream inference. Use \code{multi_impute_analysis()} for
+the narrow analysis-aware backend after consulting its supported-model and
+lifecycle documentation.
 
 \strong{Decoding per type:}
 \describe{
@@ -166,7 +167,7 @@ pred$imputed        # data.frame, original scale
 pred$se             # matrix, uncertainty
 pred$probabilities  # list of prob vectors/matrices
 
-# Multiple imputation (BM posterior draws + GNN dropout)
+# Stochastic prediction diagnostics (BM draws + GNN dropout)
 pred10 <- predict(fit, n_imputations = 10)
 pred10$imputed_datasets  # 10 complete data.frames
 }
