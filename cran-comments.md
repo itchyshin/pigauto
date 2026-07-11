@@ -39,7 +39,7 @@ Audit inventory at the release-candidate documentation freeze:
 
 - 30 namespace exports; every export has an Rd alias, value section, and
   executable or appropriately guarded example;
-- 43 Rd topics total, including eight bundled-data topics;
+- 41 Rd topics total, including six bundled-data topics;
 - five authored vignettes: getting started, common pitfalls, mixed types,
   tree uncertainty, and GNN architecture;
 - no hand-maintained files under `inst/doc/`; vignette artifacts are generated
