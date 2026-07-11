@@ -136,6 +136,20 @@ retain `smCoefIter` for convergence inspection. Returned datasets are rejected
 unless they preserve row/species order and observed values and contain exactly
 `M` finite completed `x` vectors.
 
+Disjoint restricted runs from the same clean SHA and setting tuple can be
+assembled without recomputation once they cover the complete 3 x 2 product:
+
+```sh
+Rscript script/mi-validation-v010/3_consolidate.R \
+  --inputs=<lm-dir>,<glm-phylo-dir>,<glm-aux-dir>,<lmer-dir> \
+  --output=<full-grid-dir>
+```
+
+The consolidator rejects duplicate or missing cells, incomplete task sets,
+mixed settings, dirty or mixed SHAs, and mixed package versions. It remaps task
+IDs atomically and writes a provenance receipt; `2_summarise.R` then applies the
+ordinary full-grid release gate.
+
 The SMC iteration settings are stored in every manifest row and therefore in
 every task's provenance. The default preserves the frozen campaign settings.
 Stronger spacing such as `--jomo-nbetween=1000` must be an explicit calibration
