@@ -205,16 +205,25 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   model$load_state_dict(object$model_state)
   model$to(device = device)
   # ARM/MPS libtorch can silently zero a length-one bias during state loading,
-  # even when the saved tensor has the correct float dtype and shape.  Restore
-  # the direct covariate-path bias explicitly after the module is on MPS.  This
-  # parameter contributes outside the BM/GNN blend, so losing it changes every
-  # prediction whenever a fitted covariate intercept is non-zero.
+  # and copy_() to that parameter can silently no-op as well.  Detect any lost
+  # direct-covariate bias and retain the difference as an external prediction
+  # offset.  This avoids mutating the affected MPS parameter while preserving
+  # the authoritative value from the saved state.
+  t_cov_bias_offset <- NULL
   cov_bias <- object$model_state[["cov_linear.bias"]]
   if (identical(device$type, "mps") && !is.null(cov_bias) &&
       !is.null(model$cov_linear)) {
-    torch::with_no_grad({
-      model$cov_linear$bias$copy_(cov_bias$to(device = device))
-    })
+    saved_bias <- as.numeric(as.array(cov_bias$detach()$cpu()))
+    loaded_bias <- as.numeric(as.array(
+      model$cov_linear$bias$detach()$cpu()
+    ))
+    bias_offset <- saved_bias - loaded_bias
+    if (any(abs(bias_offset) > sqrt(.Machine$double.eps))) {
+      t_cov_bias_offset <- torch::torch_tensor(
+        matrix(bias_offset, nrow = 1L),
+        dtype = torch::torch_float(), device = device
+      )
+    }
   }
   gpu_mem_checkpoint("predict: after model rebuild + load_state_dict")
 
@@ -498,6 +507,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
           pred <- (1 - out$rs) * t_BM_draw + out$rs * out$delta
         }
         if (!is.null(out$fixed_effects)) pred <- pred + out$fixed_effects
+        if (!is.null(t_cov_bias_offset)) pred <- pred + t_cov_bias_offset
         last_pred <- pred
         # Drop the previous X_iter before binding the new one so that the
         # old forward-pass intermediates (attention matrices, FFN outputs,
