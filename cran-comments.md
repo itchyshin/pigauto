@@ -77,7 +77,8 @@ Audit inventory at the release-candidate documentation freeze:
 
 The exact release tarball is 4,853,809 bytes with SHA-256
 `96e3f98c130251006026220a5476e8c5eca34b3a57e06a3e6db94becc572cb5f`.
-The CRAN upload timestamp will be added after submission.
+The exact tarball was submitted to CRAN on 2026-07-11 at 16:00:16 UTC;
+CRAN confirmation is pending by email.
 
 ## Bundled-data licensing gate
 
