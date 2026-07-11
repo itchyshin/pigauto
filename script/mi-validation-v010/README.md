@@ -27,10 +27,13 @@ then supplies both paired draw sets:
   passes;
 - `conformal`: conformal-width Normal draws regenerated from the same fit,
   calibrated gates, mask, and point prediction.
+- `pmm` (redesign candidate): stochastic Brownian/MC-dropout predictions
+  followed by predictive mean matching to one of the five nearest observed
+  donors. This is evaluated in the harness before any public API promotion.
 
-This pairing isolates the draw rule from model-training variability and halves
-training cost. Complete-data oracle and complete-case analyses are retained as
-comparators. For the mixed DGP, variance-component estimates and
+This pairing isolates the draw rule from model-training variability and avoids
+retraining for each candidate. Complete-data oracle and complete-case analyses
+are retained as comparators. For the mixed DGP, variance-component estimates and
 singularity/boundary rates are diagnostics only; they are never Rubin-pooled.
 
 ## Commands
