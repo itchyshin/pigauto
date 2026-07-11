@@ -393,7 +393,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     )
   }
   t_mps_cov_fixed_effects <- NULL
-  if (!is.null(mps_cov_linear)) {
+  if (!is.null(mps_cov_linear) && has_covariates) {
     mps_fixed_effects <- covariates %*% t(mps_cov_linear$weight)
     mps_fixed_effects <- sweep(
       mps_fixed_effects, 2L, mps_cov_linear$bias, FUN = "+"

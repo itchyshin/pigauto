@@ -96,7 +96,7 @@ jobs:
       # canary that previously failed only on GitHub's macOS runner.
       - name: Run focused MPS prediction tests
         if: runner.os == 'macOS'
-        run: Rscript -e 'testthat::test_local(filter = "fit-predict")'
+        run: Rscript -e 'testthat::test_local(filter = "fit-predict|new-features")'
 
       - uses: r-lib/actions/check-r-package@v2
         with:
