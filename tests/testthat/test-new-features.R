@@ -1,3 +1,5 @@
+skip_if_no_libtorch()
+
 # Tests for evaluate(), summary.pigauto_fit, plot.pigauto_fit,
 # pigauto_report(), build_phylo_graph auto k_eigen, and cross_validate()
 

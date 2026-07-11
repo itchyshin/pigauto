@@ -305,3 +305,4 @@ test_that("[T4] plot_comparison runs without error on a minimal results data.fra
                     methods = c("BM_baseline", "pigauto_GNN"))
   )
 })
+skip_if_no_libtorch()

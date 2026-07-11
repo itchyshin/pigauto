@@ -254,3 +254,4 @@ test_that("[pagel] impute(lambda_mode=...) threads to baseline and model config"
   expect_equal(res$fit$model_config$lambda_mode, "estimate")
   expect_true(all(is.finite(unlist(res$prediction$imputed, use.names = FALSE))))
 })
+skip_if_no_libtorch()

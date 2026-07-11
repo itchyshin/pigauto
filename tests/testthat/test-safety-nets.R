@@ -66,3 +66,4 @@ test_that("Compute scale estimator fires correctly on large N", {
     regexp = "RIPCORD_PULLED"
   )
 })
+skip_if_no_libtorch()

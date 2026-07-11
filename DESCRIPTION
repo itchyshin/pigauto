@@ -21,8 +21,8 @@ Description: Imputes missing species trait data for comparative analyses
     Stochastic graph-network and posterior-tree completions are prediction
     diagnostics rather than validated inferential imputations. Tested up to
     10,000 species.
-    Bundled datasets include 300-species and 9,993-species AVONET bird-trait
-    subsets with matching example phylogenies.
+    Bundled datasets include 300-species and 9,993-species bird-trait subsets
+    with matching example phylogenetic trees.
 License: MIT + file LICENSE
 URL: https://itchyshin.github.io/pigauto/, https://github.com/itchyshin/pigauto
 BugReports: https://github.com/itchyshin/pigauto/issues
