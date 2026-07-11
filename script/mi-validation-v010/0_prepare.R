@@ -160,12 +160,17 @@ write_manifest <- function(config, overwrite = FALSE) {
 
 .simulate_x <- function(phylo_value, z, regime, noise_sd = 0.25) {
   if (regime == "phylogeny") {
-    raw <- 1.50 * phylo_value + 0.20 * z + stats::rnorm(length(z), sd = noise_sd)
+    conditional_mean <- 1.50 * phylo_value + 0.20 * z
   } else {
-    raw <- 0.25 * phylo_value + 1.00 * (z^2 - 1) +
-      stats::rnorm(length(z), sd = noise_sd)
+    conditional_mean <- 0.25 * phylo_value + 1.00 * (z^2 - 1)
   }
-  .zscore(raw)
+  raw <- conditional_mean + stats::rnorm(length(z), sd = noise_sd)
+  scaled <- .zscore(raw)
+  list(
+    value = scaled,
+    prior_mean = (conditional_mean - mean(raw)) / stats::sd(raw),
+    prior_sd = noise_sd / stats::sd(raw)
+  )
 }
 
 .mask_mar_x <- function(data, y_numeric, fraction, seed) {
@@ -198,7 +203,8 @@ simulate_validation_dgp <- function(dgp, regime, seed,
     phylo_named <- ape::rTraitCont(tree, model = "BM")
     phylo_value <- .zscore(phylo_named[species])
     z <- stats::rnorm(n)
-    x <- .simulate_x(phylo_value, z, regime)
+    x_dgp <- .simulate_x(phylo_value, z, regime)
+    x <- x_dgp$value
 
     if (dgp == "lm") {
       y <- 1 + 0.60 * x - 0.40 * z + stats::rnorm(n, sd = 1)
@@ -228,8 +234,10 @@ simulate_validation_dgp <- function(dgp, regime, seed,
     phylo_species <- .zscore(phylo_named[species_names])
     species <- rep(species_names, each = n_per_species)
     z <- stats::rnorm(length(species))
-    x <- .simulate_x(rep(phylo_species, each = n_per_species), z, regime,
-                     noise_sd = 0.30)
+    x_dgp <- .simulate_x(
+      rep(phylo_species, each = n_per_species), z, regime, noise_sd = 0.30
+    )
+    x <- x_dgp$value
     random_intercept <- stats::rnorm(n_species, sd = 0.80)
     names(random_intercept) <- species_names
     y <- 1 + 0.60 * x - 0.40 * z + random_intercept[species] +
@@ -257,7 +265,10 @@ simulate_validation_dgp <- function(dgp, regime, seed,
     species_col = species_col,
     missing_rows = masked$rows,
     truth = truth,
-    truth_vc = truth_vc
+    truth_vc = truth_vc,
+    x_prior_mean = x_dgp$prior_mean,
+    x_prior_sd = x_dgp$prior_sd,
+    random_intercept = if (dgp == "lmer") random_intercept else NULL
   )
 }
 
