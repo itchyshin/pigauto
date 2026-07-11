@@ -5,6 +5,50 @@
   as.numeric(y)
 }
 
+.capture_warnings <- function(expr) {
+  warnings <- character(0)
+  value <- withCallingHandlers(
+    expr,
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  list(value = value, warnings = unique(warnings))
+}
+
+.validate_completed_datasets <- function(datasets, dgp, m, engine) {
+  if (!is.list(datasets) || length(datasets) != as.integer(m)) {
+    stop(engine, " returned ", length(datasets), " datasets; expected ", m,
+         ".", call. = FALSE)
+  }
+  missing <- !is.finite(dgp$observed$x)
+  observed <- !missing
+  for (i in seq_along(datasets)) {
+    data <- datasets[[i]]
+    if (!is.data.frame(data) || nrow(data) != nrow(dgp$observed)) {
+      stop(engine, " dataset ", i, " does not preserve row count.",
+           call. = FALSE)
+    }
+    if (!("x" %in% names(data)) || any(!is.finite(data$x))) {
+      stop(engine, " dataset ", i, " has missing or non-finite x.",
+           call. = FALSE)
+    }
+    if (!isTRUE(all.equal(data$x[observed], dgp$observed$x[observed],
+                          tolerance = 0))) {
+      stop(engine, " dataset ", i, " changed observed x values.",
+           call. = FALSE)
+    }
+    if (dgp$dgp == "lmer" &&
+        !identical(as.character(data$species),
+                   as.character(dgp$observed$species))) {
+      stop(engine, " dataset ", i, " changed species row order.",
+           call. = FALSE)
+    }
+  }
+  invisible(datasets)
+}
+
 .draw_oracle_conditional_imputations <- function(dgp, m, seed) {
   m <- as.integer(m)
   if (length(m) != 1L || is.na(m) || m < 2L) {
@@ -74,22 +118,34 @@
   predictor_matrix["x", c("z", "z_sq")] <- 1
 
   set.seed(as.integer(seed))
-  fit <- smcfcs::smcfcs(
-    originaldata = data,
-    smtype = if (dgp$dgp == "glm") "logistic" else "lm",
-    smformula = "y ~ x + z",
-    method = method,
-    predictorMatrix = predictor_matrix,
-    m = as.integer(m),
-    numit = as.integer(numit),
-    rjlimit = 10000L,
-    noisy = FALSE
-  )
-  lapply(fit$impDatasets, function(completed) {
+  elapsed <- system.time({
+    captured <- .capture_warnings(smcfcs::smcfcs(
+      originaldata = data,
+      smtype = if (dgp$dgp == "glm") "logistic" else "lm",
+      smformula = "y ~ x + z",
+      method = method,
+      predictorMatrix = predictor_matrix,
+      m = as.integer(m),
+      numit = as.integer(numit),
+      rjlimit = 10000L,
+      noisy = FALSE
+    ))
+  })[["elapsed"]]
+  fit <- captured$value
+  datasets <- lapply(fit$impDatasets, function(completed) {
     completed$z_sq <- NULL
     completed$y <- dgp$observed$y
     completed
   })
+  .validate_completed_datasets(datasets, dgp, m, "smcfcs")
+  list(
+    datasets = datasets,
+    diagnostics = list(
+      engine = "smcfcs", warnings = captured$warnings,
+      elapsed_seconds = unname(elapsed), numit = as.integer(numit),
+      sm_coef_iter = fit$smCoefIter
+    )
+  )
 }
 
 .draw_jomo_lmer_imputations <- function(dgp, m, seed, nburn = 1000L,
@@ -104,17 +160,20 @@
   level <- rep(1L, ncol(data))
 
   set.seed(as.integer(seed))
-  long <- jomo::jomo.smc(
-    formula = y ~ x + z + (1 | species),
-    data = data,
-    level = level,
-    nburn = as.integer(nburn),
-    nbetween = as.integer(nbetween),
-    nimp = as.integer(m),
-    output = 0,
-    model = "lmer"
-  )
-  lapply(seq_len(m), function(i) {
+  elapsed <- system.time({
+    captured <- .capture_warnings(jomo::jomo.smc(
+      formula = y ~ x + z + (1 | species),
+      data = data,
+      level = level,
+      nburn = as.integer(nburn),
+      nbetween = as.integer(nbetween),
+      nimp = as.integer(m),
+      output = 0,
+      model = "lmer"
+    ))
+  })[["elapsed"]]
+  long <- captured$value
+  datasets <- lapply(seq_len(m), function(i) {
     completed <- long[long$Imputation == i, , drop = FALSE]
     completed <- completed[order(completed$id), c("y", "x", "z", "z_sq"),
                            drop = FALSE]
@@ -123,12 +182,26 @@
     rownames(completed) <- NULL
     completed
   })
+  .validate_completed_datasets(datasets, dgp, m, "jomo.smc")
+  list(
+    datasets = datasets,
+    diagnostics = list(
+      engine = "jomo", warnings = captured$warnings,
+      elapsed_seconds = unname(elapsed), nburn = as.integer(nburn),
+      nbetween = as.integer(nbetween)
+    )
+  )
 }
 
-.draw_standard_smc_imputations <- function(dgp, m, seed) {
+.draw_standard_smc_imputations <- function(dgp, m, seed,
+                                           smcfcs_numit = 20L,
+                                           jomo_nburn = 1000L,
+                                           jomo_nbetween = 100L) {
   if (dgp$dgp == "lmer") {
-    .draw_jomo_lmer_imputations(dgp, m, seed)
+    .draw_jomo_lmer_imputations(
+      dgp, m, seed, nburn = jomo_nburn, nbetween = jomo_nbetween
+    )
   } else {
-    .draw_smcfcs_imputations(dgp, m, seed)
+    .draw_smcfcs_imputations(dgp, m, seed, numit = smcfcs_numit)
   }
 }

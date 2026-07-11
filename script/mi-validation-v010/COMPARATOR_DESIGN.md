@@ -59,8 +59,9 @@ the paired mean imputation-minus-complete-data-oracle difference divided by the
 oracle empirical SD. Absolute truth-based bias remains reported, but cannot be
 the imputation gate because the frozen 500-replicate complete-data logit oracle
 itself has finite-sample standardized bias above 0.10 in one cell. Coverage and
-SE calibration remain truth-based. The pilot cannot satisfy the 500-replicate
-evidence or coverage-MCSE requirements, so it cannot authorize release.
+SE calibration remain truth-based. The frozen campaign cannot satisfy the
+prospectively amended 1,000-replicate design requirement, so it cannot authorize
+release.
 
 ## Symbolic alignment table
 
@@ -89,3 +90,32 @@ evidence or coverage-MCSE requirements, so it cannot authorize release.
 | 9. Applied example | Out of scope for this diagnostic |
 | 10. Reporting | One row per DGP x regime x method x term |
 | 11. MC uncertainty | 50-rep pilot is directional; 500 reps required for release |
+
+## Focused calibration amendment after the frozen control campaign
+
+The frozen 500-replicate campaign at `3c0e413` used `smcfcs_numit = 20`,
+`jomo_nburn = 1000`, and `jomo_nbetween = 100`. It left three standard-SMC
+coverage misses while all added-bias and SE-ratio cells passed. Before changing
+the public package, run paired, controls-only calibration on exactly the affected
+DGP/regime cells:
+
+1. binomial phylogeny: compare SMCFCS 20 versus 100 iterations;
+2. mixed phylogeny and mixed auxiliary: compare jomo burn/spacing
+   `(1000, 100)`, `(1000, 1000)`, and `(5000, 1000)`;
+3. use 200 paired replicates per cell for setting selection, then 1,000 new,
+   independent replicates per cell for the selected setting;
+4. retain `M = 50`, the same DGP seeds, downstream models, and all bias/SE/
+   coverage criteria;
+5. select a stronger setting only when it does not worsen added bias or SE
+   calibration and moves coverage toward 0.95 consistently across the two mixed
+   regimes. Do not select on a single term crossing 0.925 by chance.
+
+This amendment is prospective relative to the stronger-setting runs. It does
+not reclassify the frozen campaign or authorize a release.
+
+The final gate uses the unchanged 92.5--97.5% performance band and replaces
+observed-MCSE filtering with the planned worst-band precision requirement
+`sqrt(0.925 * 0.075 / n_planned) <= 0.01`. Thus final decisions require 1,000
+replicates per cell. Observed MCSE and exact binomial confidence intervals remain
+diagnostics. At `n = 500`, the former observed-MCSE rule implicitly required
+coverage of about 94.7% or higher and contradicted the declared band.

@@ -272,7 +272,8 @@ manifest <- write_manifest(config)
   )
 }
 
-.run_task <- function(task, dry_run = FALSE, controls_only = FALSE) {
+.run_task <- function(task, dry_run = FALSE, controls_only = FALSE,
+                      standard_smc_only = FALSE) {
   started <- Sys.time()
   dgp <- simulate_validation_dgp(
     task$dgp, task$regime, task$seed,
@@ -302,6 +303,7 @@ manifest <- write_manifest(config)
       reached_epoch_cap = NA, recent_relative_improvement = NA_real_,
       suggests_more_epochs = NA
     ),
+    comparator_diagnostics = list(),
     downstream_failures = list(),
     missing_rows = dgp$missing_rows,
     started_at = started,
@@ -311,47 +313,63 @@ manifest <- write_manifest(config)
   if (dry_run) return(result)
 
   .load_package()
-  oracle_conditional_datasets <- .draw_oracle_conditional_imputations(
-    dgp, m = task$m, seed = task$seed + 80000L
-  )
-  standard_smc_datasets <- .draw_standard_smc_imputations(
-    dgp, m = task$m, seed = task$seed + 90000L
-  )
-  oracle_conditional_analysis <- .analyse_method(
-    oracle_conditional_datasets, task$dgp, "oracle_conditional",
-    dgp$truth, dgp$truth_vc
+  standard_smc <- .draw_standard_smc_imputations(
+    dgp, m = task$m, seed = task$seed + 90000L,
+    smcfcs_numit = task$smcfcs_numit,
+    jomo_nburn = task$jomo_nburn,
+    jomo_nbetween = task$jomo_nbetween
   )
   standard_smc_analysis <- .analyse_method(
-    standard_smc_datasets, task$dgp, "standard_smc",
+    standard_smc$datasets, task$dgp, "standard_smc",
     dgp$truth, dgp$truth_vc
   )
+  oracle_conditional_analysis <- NULL
+  if (!standard_smc_only) {
+    oracle_conditional_datasets <- .draw_oracle_conditional_imputations(
+      dgp, m = task$m, seed = task$seed + 80000L
+    )
+    oracle_conditional_analysis <- .analyse_method(
+      oracle_conditional_datasets, task$dgp, "oracle_conditional",
+      dgp$truth, dgp$truth_vc
+    )
+  }
   result$fixed_effects <- rbind(
     result$fixed_effects,
-    oracle_conditional_analysis$fixed_effects,
+    if (is.null(oracle_conditional_analysis)) NULL else
+      oracle_conditional_analysis$fixed_effects,
     standard_smc_analysis$fixed_effects
   )
   if (task$dgp == "lmer") {
     result$variance_components <- rbind(
       result$variance_components,
-      oracle_conditional_analysis$variance_components,
+      if (is.null(oracle_conditional_analysis)) NULL else
+        oracle_conditional_analysis$variance_components,
       standard_smc_analysis$variance_components
     )
   }
+  result$comparator_diagnostics <- standard_smc$diagnostics
   result$downstream_failures <- list(
-    oracle_conditional = list(
-      fit_errors = oracle_conditional_analysis$fit_errors,
-      pool_error = oracle_conditional_analysis$pool_error
-    ),
     standard_smc = list(
       fit_errors = standard_smc_analysis$fit_errors,
       pool_error = standard_smc_analysis$pool_error
     )
   )
+  if (!is.null(oracle_conditional_analysis)) {
+    result$downstream_failures$oracle_conditional <- list(
+      fit_errors = oracle_conditional_analysis$fit_errors,
+      pool_error = oracle_conditional_analysis$pool_error
+    )
+  }
   controls_ok <- c(
-    oracle_conditional = nrow(oracle_conditional_analysis$fixed_effects) ==
-      length(dgp$truth),
     standard_smc = nrow(standard_smc_analysis$fixed_effects) == length(dgp$truth)
   )
+  if (!is.null(oracle_conditional_analysis)) {
+    controls_ok <- c(
+      controls_ok,
+      oracle_conditional = nrow(oracle_conditional_analysis$fixed_effects) ==
+        length(dgp$truth)
+    )
+  }
   if (controls_only) {
     result$status <- if (all(controls_ok)) "success" else if (any(controls_ok)) {
       "partial"
@@ -471,6 +489,10 @@ force <- .has_flag("force")
 controls_only <- .has_flag("controls-only") ||
   tolower(.env_value("PIGAUTO_MI_CONTROLS_ONLY", "false")) %in%
     c("true", "1", "yes")
+standard_smc_only <- .has_flag("standard-smc-only") ||
+  tolower(.env_value("PIGAUTO_MI_STANDARD_SMC_ONLY", "false")) %in%
+    c("true", "1", "yes")
+if (standard_smc_only) controls_only <- TRUE
 
 for (id in selected) {
   path <- file.path(config$output_dir, sprintf("task-%06d.rds", id))
@@ -483,7 +505,10 @@ for (id in selected) {
               task$regime, task$replicate,
               if (dry_run) " [dry-run]" else ""))
   result <- tryCatch(
-    .run_task(task, dry_run = dry_run, controls_only = controls_only),
+    .run_task(
+      task, dry_run = dry_run, controls_only = controls_only,
+      standard_smc_only = standard_smc_only
+    ),
     error = function(e) {
       list(
         meta = as.list(task), status = "error",
@@ -491,6 +516,7 @@ for (id in selected) {
         error = conditionMessage(e), fixed_effects = data.frame(),
         variance_components = data.frame(), gate = data.frame(),
         training = data.frame(),
+        comparator_diagnostics = list(),
         downstream_failures = list(), missing_rows = integer(0),
         started_at = Sys.time(), completed_at = Sys.time(),
         elapsed_seconds = NA_real_

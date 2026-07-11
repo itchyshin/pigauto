@@ -14,6 +14,9 @@ mi_methods <- c(
 )
 release_methods <- c("conformal", "mc_dropout", "pmm")
 control_methods <- c("oracle_conditional", "standard_smc")
+calibration_only <- "--calibration-only" %in% args ||
+  tolower(.env_value("PIGAUTO_MI_CALIBRATION_ONLY", "false")) %in%
+    c("true", "1", "yes")
 
 config <- mi_validation_config(args)
 manifest_path <- file.path(config$output_dir, "manifest.rds")
@@ -63,6 +66,23 @@ processed <- data.frame(
   stringsAsFactors = FALSE
 )
 
+comparator_diagnostics <- do.call(rbind, lapply(results, function(result) {
+  value <- result$comparator_diagnostics
+  if (is.null(value) || length(value) == 0L) return(NULL)
+  data.frame(
+    task_id = as.integer(.meta_value(result, "task_id")),
+    dgp = as.character(.meta_value(result, "dgp")),
+    regime = as.character(.meta_value(result, "regime")),
+    replicate = as.integer(.meta_value(result, "replicate")),
+    engine = value$engine %||% NA_character_,
+    elapsed_seconds = value$elapsed_seconds %||% NA_real_,
+    warning_count = length(value$warnings %||% character(0)),
+    warnings = paste(value$warnings %||% character(0), collapse = " | "),
+    stringsAsFactors = FALSE
+  )
+}))
+if (is.null(comparator_diagnostics)) comparator_diagnostics <- data.frame()
+
 if (nrow(fixed) > 0L) {
   oracle_reference <- fixed[
     fixed$method == "oracle",
@@ -108,9 +128,12 @@ if (nrow(fixed) > 0L) {
   } else {
     rep(TRUE, nrow(qualified))
   }
-  coverage <- if (nrow(qualified) > 0L) {
-    mean(qualified$conf.low <= truth & qualified$conf.high >= truth,
-         na.rm = TRUE)
+  valid_interval <- is.finite(qualified$conf.low) &
+    is.finite(qualified$conf.high)
+  coverage_denominator <- sum(valid_interval)
+  coverage <- if (coverage_denominator > 0L) {
+    mean(qualified$conf.low[valid_interval] <= truth &
+           qualified$conf.high[valid_interval] >= truth)
   } else NA_real_
   n_success <- nrow(qualified)
   success_rate <- n_success / counts[["n_processed"]]
@@ -128,11 +151,21 @@ if (nrow(fixed) > 0L) {
     mean(qualified$std.error, na.rm = TRUE)
   } else NA_real_
   se_ratio <- mean_se / empirical_sd
-  coverage_mcse <- if (n_success > 0L && is.finite(coverage)) {
-    sqrt(coverage * (1 - coverage) / n_success)
+  coverage_mcse <- if (coverage_denominator > 0L && is.finite(coverage)) {
+    sqrt(coverage * (1 - coverage) / coverage_denominator)
   } else NA_real_
+  planned_coverage_mcse <- if (counts[["n_planned"]] > 0L) {
+    sqrt(0.925 * 0.075 / counts[["n_planned"]])
+  } else NA_real_
+  coverage_successes <- if (coverage_denominator > 0L) {
+    sum(qualified$conf.low[valid_interval] <= truth &
+          qualified$conf.high[valid_interval] >= truth)
+  } else 0L
+  coverage_ci <- if (coverage_denominator > 0L) {
+    stats::binom.test(coverage_successes, coverage_denominator)$conf.int
+  } else c(NA_real_, NA_real_)
   finite_rate <- if (n_success > 0L) mean(finite & rubin_valid) else 0
-  evidence_complete <- counts[["n_processed"]] >= 500L &&
+  evidence_complete <- counts[["n_processed"]] >= 1000L &&
     counts[["n_processed"]] == counts[["n_planned"]]
 
   data.frame(
@@ -150,6 +183,9 @@ if (nrow(fixed) > 0L) {
     standardized_added_bias = standardized_added_bias,
     mean_se = mean_se, se_ratio = se_ratio,
     coverage = coverage, coverage_mcse = coverage_mcse,
+    coverage_denominator = coverage_denominator,
+    planned_coverage_mcse = planned_coverage_mcse,
+    coverage_ci_low = coverage_ci[[1]], coverage_ci_high = coverage_ci[[2]],
     finite_valid_rate = finite_rate,
     evidence_complete = evidence_complete,
     pilot_criteria_pass = success_rate >= 0.95 &&
@@ -161,7 +197,7 @@ if (nrow(fixed) > 0L) {
       is.finite(bias_gate_value) && bias_gate_value <= 0.10 &&
       is.finite(se_ratio) && se_ratio >= 0.90 && se_ratio <= 1.10 &&
       is.finite(coverage) && coverage >= 0.925 && coverage <= 0.975 &&
-      is.finite(coverage_mcse) && coverage_mcse <= 0.01 &&
+      is.finite(planned_coverage_mcse) && planned_coverage_mcse <= 0.01 &&
       is.finite(finite_rate) && finite_rate >= 0.99,
     stringsAsFactors = FALSE
   )
@@ -173,6 +209,60 @@ if (nrow(fixed) > 0L) {
                                      fixed$term, drop = TRUE))
   fixed_summary <- do.call(rbind, lapply(groups, .summarise_fixed_group))
   rownames(fixed_summary) <- NULL
+}
+
+.paired_coverage_group <- function(data) {
+  oracle <- data[data$method == "oracle_conditional",
+                 c("replicate", "conf.low", "conf.high", "truth"),
+                 drop = FALSE]
+  standard <- data[data$method == "standard_smc",
+                   c("replicate", "conf.low", "conf.high", "truth"),
+                   drop = FALSE]
+  names(oracle)[2:4] <- c("oracle_low", "oracle_high", "oracle_truth")
+  names(standard)[2:4] <- c("standard_low", "standard_high", "standard_truth")
+  paired <- merge(oracle, standard, by = "replicate", sort = FALSE)
+  if (nrow(paired) == 0L) return(NULL)
+  oracle_cover <- paired$oracle_low <= paired$oracle_truth &
+    paired$oracle_high >= paired$oracle_truth
+  standard_cover <- paired$standard_low <= paired$standard_truth &
+    paired$standard_high >= paired$standard_truth
+  oracle_only <- sum(oracle_cover & !standard_cover)
+  standard_only <- sum(!oracle_cover & standard_cover)
+  discordant <- oracle_only + standard_only
+  data.frame(
+    dgp = data$dgp[[1]], regime = data$regime[[1]], term = data$term[[1]],
+    n_paired = nrow(paired),
+    oracle_coverage = mean(oracle_cover),
+    standard_coverage = mean(standard_cover),
+    paired_difference = mean(standard_cover - oracle_cover),
+    both_cover = sum(oracle_cover & standard_cover),
+    oracle_only = oracle_only, standard_only = standard_only,
+    neither_cover = sum(!oracle_cover & !standard_cover),
+    mcnemar_exact_p = if (discordant > 0L) {
+      stats::binom.test(standard_only, discordant, p = 0.5)$p.value
+    } else 1,
+    stringsAsFactors = FALSE
+  )
+}
+
+paired_coverage <- data.frame()
+if (nrow(fixed) > 0L) {
+  paired_rows <- fixed[fixed$method %in% control_methods &
+                         fixed$term %in% c("x", "z"), , drop = FALSE]
+  if (nrow(paired_rows) > 0L) {
+    paired_groups <- split(
+      paired_rows,
+      interaction(paired_rows$dgp, paired_rows$regime, paired_rows$term,
+                  drop = TRUE)
+    )
+    paired_coverage_result <- do.call(
+      rbind, lapply(paired_groups, .paired_coverage_group)
+    )
+    if (!is.null(paired_coverage_result)) {
+      paired_coverage <- paired_coverage_result
+      rownames(paired_coverage) <- NULL
+    }
+  }
 }
 
 .summarise_variance_group <- function(data) {
@@ -242,7 +332,7 @@ if (nrow(training) > 0L) {
       n_models = nrow(usable),
       median_epochs_run = stats::median(usable$epochs_run),
       median_elapsed_seconds = median_elapsed,
-      projected_full_hours_96 = median_elapsed * 3000 * 1.20 / 96 / 3600,
+      projected_full_hours_96 = median_elapsed * 6000 * 1.20 / 96 / 3600,
       proportion_reaching_cap = mean(usable$reached_epoch_cap),
       proportion_suggesting_more = mean(usable$suggests_more_epochs),
       escalate_above_500 = mean(usable$suggests_more_epochs) > 0.05,
@@ -268,12 +358,43 @@ git_dirty <- vapply(results, function(x) {
 }, logical(1))
 sha_consistent <- !anyNA(git_shas) && length(unique(git_shas)) == 1L &&
   !anyNA(git_dirty) && !any(git_dirty)
+setting_names <- c("smcfcs_numit", "jomo_nburn", "jomo_nbetween")
+if (all(setting_names %in% names(manifest))) {
+  settings <- unique(manifest[, setting_names, drop = FALSE])
+  settings_consistent <- nrow(settings) == 1L
+} else {
+  settings <- data.frame(
+    smcfcs_numit = NA_integer_, jomo_nburn = NA_integer_,
+    jomo_nbetween = NA_integer_
+  )
+  settings_consistent <- FALSE
+}
+dependency_version <- function(package) {
+  vapply(results, function(x) {
+    versions <- x$provenance$dependency_versions %||% character(0)
+    unname(versions[[package]] %||% NA_character_)
+  }, character(1))
+}
+comparator_versions <- list(
+  smcfcs = unique(dependency_version("smcfcs")),
+  jomo = unique(dependency_version("jomo"))
+)
+versions_consistent <- all(vapply(comparator_versions, function(x) {
+  length(x) == 1L && !is.na(x)
+}, logical(1)))
 cell_sizes <- table(manifest$dgp, manifest$regime)
+full_grid <- setequal(unique(manifest$dgp), c("lm", "glm", "lmer")) &&
+  setequal(unique(manifest$regime), c("phylogeny", "auxiliary"))
 campaign_complete <- nrow(processed) == nrow(manifest) &&
   length(unique(processed$task_id)) == nrow(manifest) &&
-  all(cell_sizes >= 500L) && sha_consistent
+  all(cell_sizes >= 1000L) && sha_consistent && settings_consistent &&
+  versions_consistent && full_grid
 
-decision <- if (!campaign_complete) {
+oracle_attainable <- isTRUE(method_pass[["oracle_conditional"]])
+standard_smc_ready <- isTRUE(method_pass[["standard_smc"]])
+decision <- if (calibration_only || !full_grid) {
+  "CALIBRATION ONLY: restricted evidence cannot support a release decision"
+} else if (!campaign_complete) {
   "INCOMPLETE: pilot/dry-run evidence cannot support a release decision"
 } else if (any(method_pass[release_methods])) {
   paste0(
@@ -281,23 +402,34 @@ decision <- if (!campaign_complete) {
                     collapse = ", "),
     " ONLY: unsupported draw methods remain experimental"
   )
-} else if (all(method_pass[control_methods])) {
+} else if (oracle_attainable && standard_smc_ready) {
   paste0(
     "CONTROL PASS ONLY: gate is attainable; block CRAN pending an ",
     "analysis-aware inferential backend"
   )
+} else if (oracle_attainable && !standard_smc_ready) {
+  "ORACLE PASS / STANDARD SMC FAIL: gate attainable; comparator not ready"
+} else if (!oracle_attainable && standard_smc_ready) {
+  "STANDARD SMC PASS / ORACLE FAIL: audit the oracle and harness"
 } else {
-  "FAIL: positive controls do not establish an attainable MI gate"
+  "FAIL: neither positive control passes the MI gate"
 }
 
 summary_object <- list(
   generated_at = Sys.time(), config = config, manifest = manifest,
   processed = processed, fixed_effects = fixed_summary,
+  paired_coverage = paired_coverage,
+  comparator_diagnostics = comparator_diagnostics,
   variance_components = variance_summary, gate_weights = gate_summary,
   training = training_summary,
   git_shas = unique(git_shas), git_dirty = unique(git_dirty),
-  sha_consistent = sha_consistent,
+  sha_consistent = sha_consistent, comparator_settings = settings,
+  settings_consistent = settings_consistent,
+  comparator_versions = comparator_versions,
+  versions_consistent = versions_consistent,
   method_pass = method_pass, campaign_complete = campaign_complete,
+  oracle_attainable = oracle_attainable,
+  standard_smc_ready = standard_smc_ready,
   decision = decision
 )
 atomic_save_rds(summary_object, file.path(config$output_dir, "summary.rds"))
@@ -316,9 +448,24 @@ if (nrow(core) > 0L) {
   print(core[, c("dgp", "regime", "method", "term", "n_processed",
                  "success_rate", "standardized_bias",
                  "standardized_added_bias", "se_ratio", "coverage",
-                 "coverage_mcse", "finite_valid_rate", "pilot_criteria_pass",
+                 "coverage_mcse", "planned_coverage_mcse",
+                 "coverage_denominator", "coverage_ci_low", "coverage_ci_high",
+                 "finite_valid_rate",
+                 "pilot_criteria_pass",
                  "pass")],
         row.names = FALSE)
+}
+if (nrow(paired_coverage) > 0L) {
+  cat("\nPaired standard-SMC minus oracle-conditional coverage:\n")
+  print(paired_coverage, row.names = FALSE)
+}
+if (nrow(comparator_diagnostics) > 0L) {
+  cat("\nComparator diagnostics:\n")
+  cat("Warnings:", sum(comparator_diagnostics$warning_count), "across",
+      nrow(comparator_diagnostics), "tasks\n")
+  cat("Median engine seconds:",
+      stats::median(comparator_diagnostics$elapsed_seconds, na.rm = TRUE),
+      "\n")
 }
 if (nrow(variance_summary) > 0L && any(variance_summary$diagnostic_flag)) {
   cat("\nVariance-component diagnostic flags (descriptive; not Rubin-pooled):\n")

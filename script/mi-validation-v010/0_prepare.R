@@ -46,7 +46,7 @@ mi_validation_config <- function(args = commandArgs(trailingOnly = TRUE)) {
     profile,
     smoke = list(reps = 1L, m = 2L, epochs = 2L),
     pilot = list(reps = 10L, m = 50L, epochs = 500L),
-    full  = list(reps = 500L, m = 50L, epochs = 500L)
+    full  = list(reps = 1000L, m = 50L, epochs = 500L)
   )
   root <- normalizePath(getwd(), mustWork = TRUE)
   default_output <- file.path(root, "script", "mi-validation-v010", "results",
@@ -64,6 +64,10 @@ mi_validation_config <- function(args = commandArgs(trailingOnly = TRUE)) {
     ),
     reps = .as_int(
       get_setting("reps", "PIGAUTO_MI_REPS", defaults$reps), "reps", 1L
+    ),
+    replicate_start = .as_int(
+      get_setting("replicate-start", "PIGAUTO_MI_REPLICATE_START", 1L),
+      "replicate_start", 1L
     ),
     m = .as_int(
       get_setting("m", "PIGAUTO_MI_M", defaults$m), "m", 2L
@@ -92,6 +96,18 @@ mi_validation_config <- function(args = commandArgs(trailingOnly = TRUE)) {
     patience = .as_int(
       get_setting("patience", "PIGAUTO_MI_PATIENCE", 50L),
       "patience", 1L
+    ),
+    smcfcs_numit = .as_int(
+      get_setting("smcfcs-numit", "PIGAUTO_MI_SMCFCS_NUMIT", 20L),
+      "smcfcs_numit", 1L
+    ),
+    jomo_nburn = .as_int(
+      get_setting("jomo-nburn", "PIGAUTO_MI_JOMO_NBURN", 1000L),
+      "jomo_nburn", 1L
+    ),
+    jomo_nbetween = .as_int(
+      get_setting("jomo-nbetween", "PIGAUTO_MI_JOMO_NBETWEEN", 100L),
+      "jomo_nbetween", 1L
     )
   )
 }
@@ -108,10 +124,11 @@ atomic_save_rds <- function(object, path) {
 }
 
 make_manifest <- function(config) {
+  replicates <- seq.int(config$replicate_start, length.out = config$reps)
   grid <- expand.grid(
     dgp = config$dgps,
     regime = config$regimes,
-    replicate = seq_len(config$reps),
+    replicate = replicates,
     stringsAsFactors = FALSE
   )
   grid <- grid[order(match(grid$dgp, config$dgps),
@@ -131,9 +148,13 @@ make_manifest <- function(config) {
   grid$missing_fraction <- config$missing_fraction
   grid$m <- config$m
   grid$epochs <- config$epochs
+  grid$smcfcs_numit <- config$smcfcs_numit
+  grid$jomo_nburn <- config$jomo_nburn
+  grid$jomo_nbetween <- config$jomo_nbetween
   grid$profile <- config$profile
   grid[, c("task_id", "dgp", "regime", "replicate", "seed", "n_species",
-           "n_observations", "missing_fraction", "m", "epochs", "profile")]
+           "n_observations", "missing_fraction", "m", "epochs",
+           "smcfcs_numit", "jomo_nburn", "jomo_nbetween", "profile")]
 }
 
 write_manifest <- function(config, overwrite = FALSE) {
