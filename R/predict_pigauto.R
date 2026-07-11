@@ -198,12 +198,17 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     n_trait_heads          = as.integer(n_trait_heads),
     trait_embed_dim        = as.integer(trait_embed_dim)
   )
-  # Restore the CPU state before moving the rebuilt module to an accelerator.
-  # Loading CPU tensors directly into an MPS module can silently miss scalar
-  # bias values on some libtorch/macOS combinations (the weight still loads),
-  # which drops fixed-effect intercepts from prediction.
+  # Restore on CPU first so load_state_dict() validates the complete state.
   model$load_state_dict(object$model_state)
   model$to(device = device)
+  # Some libtorch/MPS combinations can lose scalar bias values while moving a
+  # populated module from CPU to MPS (matrix weights survive).  Reloading an
+  # explicitly device-local state after the move preserves those biases.  Do
+  # this only on MPS: CPU needs no second copy, and CUDA has not shown the bug.
+  if (identical(device$type, "mps")) {
+    mps_state <- lapply(object$model_state, function(t) t$to(device = device))
+    model$load_state_dict(mps_state)
+  }
   gpu_mem_checkpoint("predict: after model rebuild + load_state_dict")
 
   # Calibrated gates override learned gates.
