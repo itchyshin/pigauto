@@ -46,7 +46,8 @@ Audit inventory at the release-candidate documentation freeze:
   from the five source files during the package build;
 - all five vignette destinations are indexed in the pkgdown navigation, and
   every namespace export is assigned to a pkgdown reference section;
-- a clean pkgdown build produced 93 HTML files; a local href/src inventory
+- a clean pkgdown build produced 91 public HTML files after removing three
+  internal agent-coordination pages; a local href/src inventory
   found no missing internal targets;
 - current user-facing pages contain no live BACE integration or TabPFN support
   claim. Historical NEWS entries remain as an accurate release record, and the
