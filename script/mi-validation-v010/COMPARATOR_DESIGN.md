@@ -53,9 +53,13 @@ does implementation proceed to an analysis-aware package backend.
 
 ## P — Performance measures
 
-The frozen metrics remain bias, empirical SD, mean pooled SE, SE/empirical-SD
-ratio, 95% coverage, finite-valid Rubin rate, and downstream fit rate. The pilot
-uses the same numerical thresholds but cannot satisfy the predeclared 500-rep
+The metrics remain bias, empirical SD, mean pooled SE, SE/empirical-SD ratio,
+95% coverage, finite-valid Rubin rate, and downstream fit rate. The bias gate is
+the paired mean imputation-minus-complete-data-oracle difference divided by the
+oracle empirical SD. Absolute truth-based bias remains reported, but cannot be
+the imputation gate because the frozen 500-replicate complete-data logit oracle
+itself has finite-sample standardized bias above 0.10 in one cell. Coverage and
+SE calibration remain truth-based. The pilot cannot satisfy the 500-replicate
 evidence or coverage-MCSE requirements, so it cannot authorize release.
 
 ## Symbolic alignment table

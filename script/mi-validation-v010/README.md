@@ -125,11 +125,18 @@ Every `x` and `z` cell for every DGP, regime, and method must have:
 
 - at least 500 processed replicates and at least 95% successful pooled analyses;
 - at least 95% successful downstream fits within every counted pooled analysis;
-- absolute bias no larger than 0.10 empirical standard deviations;
+- imputation-added bias relative to the paired complete-data oracle no larger
+  than 0.10 oracle empirical standard deviations;
 - mean pooled SE / empirical SD between 0.90 and 1.10;
 - 95% interval coverage between 92.5% and 97.5%;
 - coverage Monte Carlo SE no larger than one percentage point;
 - at least 99% finite estimates, SEs, intervals, and valid Rubin df/FMI/RIV.
+
+Absolute truth-based bias is still reported. It is not the imputation gate
+because the complete-data logistic estimator has finite-sample bias even when
+no values are missing; penalising an imputer for that downstream-estimator bias
+would make the gate unattainable. Truth-based interval coverage and SE
+calibration remain unchanged.
 
 The summariser refuses to issue a release pass from smoke or pilot evidence. It
 reports `pilot_criteria_pass` without the 500-replicate completeness and 0.01

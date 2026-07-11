@@ -63,6 +63,21 @@ processed <- data.frame(
   stringsAsFactors = FALSE
 )
 
+if (nrow(fixed) > 0L) {
+  oracle_reference <- fixed[
+    fixed$method == "oracle",
+    c("task_id", "dgp", "regime", "replicate", "term", "estimate"),
+    drop = FALSE
+  ]
+  names(oracle_reference)[names(oracle_reference) == "estimate"] <-
+    "oracle_estimate"
+  fixed <- merge(
+    fixed, oracle_reference,
+    by = c("task_id", "dgp", "regime", "replicate", "term"),
+    all.x = TRUE, sort = FALSE
+  )
+}
+
 .cell_counts <- function(dgp, regime) {
   n_planned <- sum(manifest$dgp == dgp & manifest$regime == regime)
   cell <- processed$dgp == dgp & processed$regime == regime
@@ -101,6 +116,14 @@ processed <- data.frame(
   success_rate <- n_success / counts[["n_processed"]]
   bias <- if (n_success > 0L) mean(estimates, na.rm = TRUE) - truth else NA_real_
   standardized_bias <- abs(bias) / empirical_sd
+  oracle_empirical_sd <- if (nrow(qualified) > 1L) {
+    stats::sd(qualified$oracle_estimate, na.rm = TRUE)
+  } else NA_real_
+  added_bias <- if (n_success > 0L) {
+    mean(qualified$estimate - qualified$oracle_estimate, na.rm = TRUE)
+  } else NA_real_
+  standardized_added_bias <- abs(added_bias) / oracle_empirical_sd
+  bias_gate_value <- if (mi_method) standardized_added_bias else standardized_bias
   mean_se <- if (n_success > 0L) {
     mean(qualified$std.error, na.rm = TRUE)
   } else NA_real_
@@ -122,17 +145,20 @@ processed <- data.frame(
     bias = bias,
     empirical_sd = empirical_sd,
     standardized_bias = standardized_bias,
+    added_bias = added_bias,
+    oracle_empirical_sd = oracle_empirical_sd,
+    standardized_added_bias = standardized_added_bias,
     mean_se = mean_se, se_ratio = se_ratio,
     coverage = coverage, coverage_mcse = coverage_mcse,
     finite_valid_rate = finite_rate,
     evidence_complete = evidence_complete,
     pilot_criteria_pass = success_rate >= 0.95 &&
-      is.finite(standardized_bias) && standardized_bias <= 0.10 &&
+      is.finite(bias_gate_value) && bias_gate_value <= 0.10 &&
       is.finite(se_ratio) && se_ratio >= 0.90 && se_ratio <= 1.10 &&
       is.finite(coverage) && coverage >= 0.925 && coverage <= 0.975 &&
       is.finite(finite_rate) && finite_rate >= 0.99,
     pass = evidence_complete && success_rate >= 0.95 &&
-      is.finite(standardized_bias) && standardized_bias <= 0.10 &&
+      is.finite(bias_gate_value) && bias_gate_value <= 0.10 &&
       is.finite(se_ratio) && se_ratio >= 0.90 && se_ratio <= 1.10 &&
       is.finite(coverage) && coverage >= 0.925 && coverage <= 0.975 &&
       is.finite(coverage_mcse) && coverage_mcse <= 0.01 &&
@@ -288,7 +314,8 @@ if (nrow(training_summary) > 0L) {
 }
 if (nrow(core) > 0L) {
   print(core[, c("dgp", "regime", "method", "term", "n_processed",
-                 "success_rate", "standardized_bias", "se_ratio", "coverage",
+                 "success_rate", "standardized_bias",
+                 "standardized_added_bias", "se_ratio", "coverage",
                  "coverage_mcse", "finite_valid_rate", "pilot_criteria_pass",
                  "pass")],
         row.names = FALSE)
