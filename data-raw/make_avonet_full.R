@@ -3,7 +3,7 @@
 ## Run from the package root: Rscript data-raw/make_avonet_full.R
 ##
 ## This is the full-scale counterpart to avonet300 / tree300: all 9,993 bird
-## species for which AVONET3 and the BirdTree Stage2 Hackett MCC phylogeny
+## species for which AVONET3 and the example tree from megatrees
 ## agree. The schema is identical to avonet300 (same trait columns, same
 ## Species_Key column, same factor encodings) so any code that runs on
 ## avonet300 runs on avonet_full with no modification.
@@ -13,15 +13,16 @@
 
 library(ape)
 library(here)
+library(megatrees)
 
 # ---- Load raw data -----------------------------------------------------------
-tree_path <- here("avonet", "Stage2_Hackett_MCC_no_neg.tre")
 csv_path  <- here("avonet", "AVONET3_BirdTree.csv")
 
-if (!file.exists(tree_path)) stop("Tree file not found: ", tree_path)
 if (!file.exists(csv_path))  stop("CSV file not found: ", csv_path)
 
-tree   <- ape::read.tree(tree_path)
+# The upstream megatrees package and release assets are MIT-licensed. Record
+# the asset digest in inst/NOTICE and retain the Jetz et al. (2012) citation.
+tree   <- megatrees::get_tree_bird_n100()[[1L]]
 avonet <- read.csv(csv_path, stringsAsFactors = FALSE)
 avonet$Species_Key <- gsub(" ", "_", avonet$Species3)
 

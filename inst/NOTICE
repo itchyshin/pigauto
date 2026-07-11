@@ -22,16 +22,16 @@ doi:10.1111/ele.13898
 
 Data archive: https://figshare.com/s/b990722d72a26b5bfead
 
-BirdTree phylogenies
---------------------
+Example bird phylogenies
+------------------------
 
-Bundled objects: tree300, trees300, tree_full, and tree_delhey.
+Bundled objects: tree300, trees300, and tree_full.
 
-These objects are pruned or sampled derivatives of the BirdTree Hackett
-backbone and posterior trees. BirdTree requests citation of the source study,
-but no explicit redistribution licence for these tree files has been located
-in the package source or on the cited BirdTree material. A citation request is
-not, by itself, permission to redistribute.
+These objects are pruned derivatives of tree_bird_n100, distributed by the
+megatrees 1.0.0 R package under the MIT licence. The exact upstream release
+asset has SHA-256 digest
+71f6f712bf4c57c14570644f447c1e2eb0d76436a88075560afd4e85be1fcb78.
+The underlying posterior tree sample is from the BirdTree Hackett backbone.
 
 Source and citation:
 
@@ -39,30 +39,8 @@ Jetz W, Thomas GH, Joy JB, Hartmann K, Mooers AO (2012). The global diversity
 of birds in space and time. Nature 491:444-448.
 doi:10.1038/nature11631
 
-Website: https://birdtree.org/
-
-Release status: redistribution permission for the BirdTree-derived objects
-must be documented before CRAN submission. If defensible permission cannot be
-obtained, these objects must be removed from the release tarball or replaced
-with clearly licensed synthetic/example phylogenies.
-
-Delhey plumage and environmental data
--------------------------------------
-
-Bundled object: delhey5809.
-
-This object was derived from the data used by Delhey et al. (2019). The local
-provenance record identifies the article and source CSV, but no explicit data
-redistribution licence has been located. Accordingly, this notice does not
-assert a licence for redistribution; permission or an explicit licence must be
-verified before CRAN submission, or the object must be removed from the
-release tarball.
-
-Source and citation:
-
-Delhey K, Dale J, Valcu M, Kempenaers B (2019). Reconciling ecogeographical
-rules: rainfall and temperature predict global colour variation in the
-largest bird radiation. Ecology Letters 22:726-736.
-doi:10.1111/ele.13233
+Upstream package: https://github.com/daijiang/megatrees
+Release asset: https://github.com/daijiang/megatrees/releases/tag/large_multiPhylo
+BirdTree citation: https://birdtree.org/
 
 No additional rights are granted by this notice.

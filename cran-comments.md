@@ -66,10 +66,11 @@ frozen release-candidate evidence.
 
 `inst/NOTICE` separates the package's MIT-licensed code from bundled
 third-party data. AVONET is attributed under its Creative Commons Attribution
-licence. Explicit redistribution licences have not yet been verified for the
-BirdTree-derived phylogenies or the Delhey-derived data object. CRAN submission
-is blocked until permission is documented or those objects are removed or
-replaced with clearly licensed examples.
+licence. The bundled example phylogenies are pruned derivatives of the
+MIT-licensed `megatrees` 1.0.0 release asset; its exact SHA-256 digest and the
+underlying Jetz et al. (2012) citation are recorded in the notice. The
+previously bundled Delhey-derived object was removed because an explicit data
+redistribution licence could not be verified.
 
 ## Downstream dependencies
 

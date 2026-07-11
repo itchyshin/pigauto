@@ -2,9 +2,9 @@
 ## Creates trees300 (multiPhylo): 50 posterior trees for the avonet300 species.
 ## Run from the package root: Rscript data-raw/make_trees300.R
 ##
-## Requires: megatrees (>= 0.1.4), ape, pigauto (for tree300 tip names).
-## Source: megatrees::tree_bird_n100 — 100 randomly selected posterior trees
-## from the BirdTree Hackett backbone (Jetz et al. 2012).
+## Requires: megatrees (>= 1.0.0), ape, pigauto (for tree300 tip names).
+## Source: megatrees::get_tree_bird_n100() -- an MIT-licensed distribution of
+## 100 posterior trees from the BirdTree Hackett backbone (Jetz et al. 2012).
 
 library(ape)
 library(megatrees)
@@ -16,6 +16,7 @@ our_spp <- tree300$tip.label
 stopifnot(length(our_spp) == 300L)
 
 # ---- Verify all 300 species exist in the megatree ----------------------------
+tree_bird_n100 <- megatrees::get_tree_bird_n100()
 mega_tips <- tree_bird_n100[[1]]$tip.label
 n_match   <- sum(our_spp %in% mega_tips)
 cat("Species matching megatree:", n_match, "/ 300\n")

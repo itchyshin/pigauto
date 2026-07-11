@@ -125,15 +125,12 @@ covariates can improve imputation. The same covariates may also serve as
 predictors in the downstream model:
 
 ```r
-data(delhey5809, tree_delhey)
-df <- delhey5809
-rownames(df) <- df$Species_Key
+data(ctmax_sim, tree300)
+traits <- ctmax_sim[, c("species", "CTmax")]
+covs   <- ctmax_sim["acclim_temp"]
 
-traits <- df[, c("lightness_male", "lightness_female")]
-covs   <- df[, c("annual_mean_temperature", "annual_precipitation",
-                 "percent_tree_cover", "midLatitude")]
-
-result <- impute(traits, tree_delhey, covariates = covs)
+result <- impute(traits, tree300, species_col = "species",
+                 covariates = covs)
 ```
 
 Covariates must be fully observed. Numeric columns are z-scored;
@@ -144,7 +141,8 @@ automatic improvement.
 
 ## Phylogenetic tree uncertainty
 
-If you have a posterior sample of trees (e.g. 50 trees from BirdTree),
+If you have a posterior sample of trees (for example, from a Bayesian
+phylogenetic analysis),
 tree uncertainty enters the analysis at **two** places — and pigauto
 handles them separately because they are conceptually distinct.
 
