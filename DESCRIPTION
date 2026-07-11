@@ -47,6 +47,8 @@ Suggests:
     BACE,
     MCMCglmm,
     glmmTMB,
+    lme4,
+    nlme,
     phangorn,
     phylolm,
     rgbif,
