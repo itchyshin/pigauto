@@ -18,7 +18,8 @@ area_map <- list(
   "test-masking.R"       = "Missing-data splits and observed-cell masks",
   "test-fit-predict.R"   = "Training, prediction, attention, conformal, impute()",
   "test-mixed-types.R"   = "5-type detection, encode/decode round-trip",
-  "test-multi-impute.R"  = "multi_impute(), with_imputations(), pool_mi() (Rubin's rules)",
+  "test-multi-impute.R"  = "Legacy stochastic prediction-draw diagnostics",
+  "test-multi-impute-analysis.R" = "Analysis-aware MI and fixed-effect Rubin pooling",
   "test-new-features.R"  = "evaluate, summary, plot, report, CV, benchmark, save/load"
 )
 

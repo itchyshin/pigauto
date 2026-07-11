@@ -156,28 +156,25 @@ ev <- evaluate_imputation(pred, pd$X_scaled, spl)
 print(ev)
 ```
 
-## Experimental multiple imputation for fixed effects
+## Experimental analysis-aware multiple imputation
 
-The downstream workflow uses `multi_impute()` to generate M complete datasets,
-then pools fixed-effect coefficients with Rubin's rules via
-`with_imputations()` and `pool_mi()`. Version 0.10.0 labels this workflow
-experimental pending known-DGP inferential coverage validation.
-
-`draws_method = "conformal"` is the default: missing cells are drawn from
-Normal distributions centred on the point estimate with width heuristically
-derived from the split-conformal calibration score. This construction is not
-implied by the split-conformal coverage guarantee. The alternative
-`draws_method = "mc_dropout"`
-runs M stochastic GNN forward passes with dropout active and BM posterior draws
-as the blend baseline; it is available for comparison.
+`multi_impute_analysis()` requires the downstream formula before imputation.
+The initial backend supports exactly one incomplete continuous covariate under
+MAR. It does not yet impute the mixed discrete and compositional outcomes shown
+earlier in this vignette for downstream inference.
 
 ```{r mi_workflow, eval=FALSE}
-# Generate M = 20 stochastic complete datasets
-mi <- multi_impute(fit$data$X_original, tree, m = 20L)
+# Precompute nonlinear auxiliaries explicitly when required.
+analysis_data$z_sq <- analysis_data$z^2
+mi <- multi_impute_analysis(
+  data = analysis_data, formula = y ~ x + z,
+  missing = "x", model = "glm", m = 50L,
+  auxiliary = "z_sq", seed = 1L
+)
 
 # Fit a downstream model to each
 fits <- with_imputations(mi, function(d) {
-  glm(Migratory ~ log(Mass) + Diet, data = d, family = binomial)
+  glm(y ~ x + z, data = d, family = binomial)
 })
 
 # Pool with Rubin's rules
@@ -189,9 +186,13 @@ pool_mi(fits)
 `df_fun` supplies complete-data residual degrees of freedom), `fmi` (fraction of missing information),
 and `riv` (relative increase in variance) per coefficient.
 
-Version 0.10.0 supports fixed effects only. Variance components, correlations,
-random-effect predictions, BLUPs/conditional modes, latent loadings, and other
-structured quantities are not supported pooling targets.
+The `"lm"` branch uses proper Bayesian normal-regression MI, `"glm"` uses
+`smcfcs` for a binomial-logit model, and `"lmer"` uses `jomo.smc` for one
+Gaussian random intercept. Fixed effects only: multiple incomplete columns,
+missing discrete covariates, MNAR, interactions/nonlinear terms involving the
+incomplete covariate, random slopes, variance components, correlations,
+BLUPs/conditional modes, and latent loadings are unsupported.
 
-For reference, the lower-level `predict(fit, n_imputations = 5L)` interface
-returns M complete datasets directly (without downstream pooling):
+For prediction diagnostics, the lower-level
+`predict(fit, n_imputations = 5L)` interface returns stochastic datasets.
+These are not supported for downstream inference.

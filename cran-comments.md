@@ -2,10 +2,17 @@
 
 This is the first CRAN submission of pigauto. Version 0.10.0 provides
 phylogenetically informed imputation for mixed species-trait data. The
-multiple-imputation workflow is documented as experimental and supports
-Rubin pooling of fixed effects only. Variance components, correlations,
-random-effect predictions, BLUPs or conditional modes, latent loadings, and
-other structured parameters are outside the version 0.10.0 pooling scope.
+analysis-aware multiple-imputation backend is experimental and deliberately
+limited to one incomplete continuous covariate under MAR for Gaussian `lm`,
+binomial-logit `glm`, and Gaussian one-random-intercept `lmer`; fixed effects
+only. Conformal-width, Brownian/MC-dropout, PMM, and posterior-tree draws are
+prediction diagnostics and are unsupported for downstream inference.
+
+A warning-free 6,000-task package-level campaign at clean source SHA
+`2e3809d` passed all 24 fixed-effect cells, with 93.9%-96.3% coverage,
+pooled-SE/empirical-SD ratios of 0.942-1.030, and 100% finite results. This
+validates only the documented narrow scope. Submission remains blocked pending
+the final cross-platform package checks below.
 
 ## Test environments
 
@@ -37,9 +44,8 @@ The release audit covers the authored source and rendered output for:
 
 Audit inventory at the release-candidate documentation freeze:
 
-- 30 namespace exports; every export has an Rd alias, value section, and
-  executable or appropriately guarded example;
-- 41 Rd topics total, including six bundled-data topics;
+- namespace-export and Rd-topic counts will be refreshed after the
+  `multi_impute_analysis()` implementation and generated documentation land;
 - five authored vignettes: getting started, common pitfalls, mixed types,
   tree uncertainty, and GNN architecture;
 - no hand-maintained files under `inst/doc/`; vignette artifacts are generated

@@ -137,41 +137,19 @@ cat("Kernel bandwidth sigma:", round(graph$sigma, 3), "\n")
 
 
 ## ----mi-workflow, eval=FALSE--------------------------------------------------
-# # Step 1: generate M = 50 complete datasets
-# # draws_method = "conformal" draws from conformal-calibrated
-# # uncertainty using a conformal-score-derived Normal scale.
-# mi <- multi_impute(traits, tree, m = 50L)
+# analysis_data$z_sq <- analysis_data$z^2
 #
-# # Step 2: fit your downstream model to each imputed dataset
-# fits <- with_imputations(mi, function(d) {
-#   lm(log(Wing.Length) ~ log(Mass) + Trophic.Level, data = d)
-# })
+# mi <- multi_impute_analysis(
+#   data = analysis_data,
+#   formula = y ~ x + z,
+#   missing = "x",
+#   model = "lm",
+#   m = 50L,
+#   auxiliary = "z_sq",
+#   seed = 1L
+# )
 #
-# # Step 3: pool with Rubin's rules
-# pool_mi(fits)
-# # Returns a tidy data.frame with estimate, std.error, statistic, p.value,
-# # df (classical Rubin degrees of freedom unless df_fun is supplied),
-# # fmi (fraction of missing information),
-# # and riv (relative increase in variance) per coefficient.
-
-
-## ----tree-uncertainty-step1, eval=FALSE---------------------------------------
-# data(trees300, package = "pigauto")   # 50 posterior trees
-#
-# mi <- multi_impute_trees(traits, trees = trees300, m_per_tree = 5L)
-# # 50 trees × 5 imputations = 250 completed datasets
-
-
-## ----tree-uncertainty-step2, eval=FALSE---------------------------------------
-# fits <- with_imputations(mi, function(dat, tree) {
-#   dat$species <- rownames(dat)
-#   nlme::gls(
-#     log(Mass) ~ log(Wing.Length),
-#     correlation = ape::corBrownian(
-#       phy = tree, form = ~species),
-#     data = dat, method = "ML"
-#   )
-# })
+# fits <- with_imputations(mi, function(d) lm(y ~ x + z, data = d))
 # pool_mi(fits)
 
 

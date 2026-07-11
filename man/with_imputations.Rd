@@ -13,7 +13,7 @@ with_imputations(
 )
 }
 \arguments{
-\item{mi}{A \code{pigauto_mi} object returned by \code{\link[=multi_impute]{multi_impute()}}. Plain
+\item{mi}{A \code{pigauto_mi} object returned by \code{\link[=multi_impute_analysis]{multi_impute_analysis()}}. Plain
 lists of data.frames are also accepted and treated as the \code{datasets}
 slot directly.}
 
@@ -22,12 +22,14 @@ a model to one complete data.frame and returns a model object.
 \code{\link[=pool_mi]{pool_mi()}} supplies automatic fixed-effect adapters for its documented
 model classes. Other classes require \code{coef()} and \code{vcov()} methods that
 return compatible fixed-effect quantities, or explicit extractor
-functions supplied to \code{pool_mi()}.
+functions supplied to \code{pool_mi()}; extractability does not imply that an
+unlisted analysis model has passed the analysis-aware validation gate.
 When \code{mi} comes from \code{\link[=multi_impute_trees]{multi_impute_trees()}}, \code{.f} may also declare
 explicit \code{tree}, \code{tree_index}, or \code{imputation} arguments; these are
 filled with the posterior tree object, its index in \code{mi$trees}, and
-the imputation-dataset index. The dataset also carries matching
-\code{tree}, \code{tree_index}, and \code{imputation} attributes.}
+the stochastic-completion index. The dataset also carries matching
+attributes. This metadata support is for prediction-sensitivity
+diagnostics only; tree-aware downstream inference is unsupported.}
 
 \item{...}{Additional arguments passed to \code{.f} for every imputation.}
 
@@ -49,42 +51,26 @@ filters error elements automatically.
 \description{
 Apply a user-supplied model-fitting function \code{.f} to each of the \code{M}
 complete datasets stored in a \code{pigauto_mi} object and return the list
-of fits. This is the middle step of the documented multiple-imputation
-workflow \code{multi_impute()} -> \code{with_imputations()} -> \code{\link[=pool_mi]{pool_mi()}}. In
-version 0.10.0 the downstream pooling workflow is experimental and is
+of fits. For inference, use an object returned by
+\code{\link[=multi_impute_analysis]{multi_impute_analysis()}}; conformal-width, Brownian/MC-dropout, and PMM
+prediction-diagnostic draws are unsupported. The analysis-aware workflow is
+experimental and is
 limited to fixed-effect coefficients and their covariance matrices.
 }
 \examples{
 \dontrun{
-mi <- multi_impute(df, tree, m = 50)
+mi <- multi_impute_analysis(
+  data = df, formula = y ~ x + z, missing = "x",
+  model = "lm", m = 50L
+)
 
-# nlme::gls example -- zero new dependencies
-fits <- with_imputations(mi, function(d) {
-  d$species <- rownames(d)
-  nlme::gls(
-    log(Mass) ~ log(Wing.Length),
-    correlation = ape::corBrownian(phy = mi$tree, form = ~species),
-    data = d, method = "ML"
-  )
-})
+fits <- with_imputations(mi, function(d) stats::lm(y ~ x + z, data = d))
 
 pool_mi(fits)
 
-# Tree-aware MI: with_imputations() passes the matching posterior tree
-# when the callback declares a `tree` argument.
-mi_t <- multi_impute_trees(df, trees, m_per_tree = 1L)
-fits_t <- with_imputations(mi_t, function(d, tree) {
-  d$species <- rownames(d)
-  nlme::gls(
-    y ~ x,
-    correlation = ape::corBrownian(phy = tree, form = ~species),
-    data = d, method = "ML"
-  )
-})
-pool_mi(fits_t)
 }
 
 }
 \seealso{
-\code{\link[=multi_impute]{multi_impute()}}, \code{\link[=pool_mi]{pool_mi()}}
+\code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, \code{\link[=pool_mi]{pool_mi()}}
 }

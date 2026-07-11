@@ -1,5 +1,8 @@
 # MI positive-control validation result
 
+This is a frozen historical report. Its `lm` engine was later superseded after
+rejection-limit warnings were detected; see `SETTING_SELECTION_2026-07-11.md`.
+
 ## Decision
 
 **NEAR-PASS, NOT A RELEASE PASS — the gate is broadly attainable, but the

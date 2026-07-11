@@ -161,16 +161,14 @@ zi_count magnitude, and proportion traits: imputed values are
 drawn from the observed value pool, never extrapolated.
 
 \strong{When to use:} PMM is a niche feature.  pigauto already
-provides conformal prediction intervals (calibrated against
-held-out residuals) and \code{multi_impute(draws_method =
-  "conformal")} for multi-imputation workflows; those are the
-experimental multiple-imputation path for downstream fixed-effect
-regression. PMM is only worth enabling for: (a) methodological
+provides conformal prediction intervals calibrated against held-out
+residuals and stochastic prediction draws for diagnostics. PMM is only
+worth enabling for: (a) methodological
 comparison against mice, or (b) workflows that specifically
 require imputed values to come from the observed data pool.
-For tail safety, prefer \code{clamp_outliers = TRUE}.  For
-experimental fixed-effect MI, see \code{multi_impute()} and its
-documented draw assumptions.
+For tail safety, prefer \code{clamp_outliers = TRUE}. PMM failed the
+downstream fixed-effect redesign pilot and is unsupported for inference;
+see \code{multi_impute_analysis()} for the analysis-aware backend.
 
 Default \code{"none"} preserves pre-G' behaviour.}
 
