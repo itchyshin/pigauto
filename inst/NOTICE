@@ -32,6 +32,11 @@ megatrees 1.0.0 R package under the MIT licence. The exact upstream release
 asset has SHA-256 digest
 71f6f712bf4c57c14570644f447c1e2eb0d76436a88075560afd4e85be1fcb78.
 The underlying posterior tree sample is from the BirdTree Hackett backbone.
+tree300 and tree_full use posterior member 69. It is tied for the smallest
+Robinson-Foulds distance to the former example topology and reproducibly
+retains the pre-existing AVONET safety-floor smoke criterion on the CPU path.
+trees300 records its own deterministic 50-member sample in
+data-raw/make_trees300.R.
 
 Source and citation:
 

@@ -286,6 +286,12 @@ test_that("[Phase G' L5] pmm_K invalid value errors", {
 
 test_that("[Phase G' L5] PMM with K=1 is fully deterministic given a seed", {
   skip_if_no_libtorch()
+  # The public seed contract is tested on the deterministic CPU backend;
+  # MPS training kernels are not bitwise reproducible across repeated fits.
+  testthat::local_mocked_bindings(
+    get_device = function() torch::torch_device("cpu"),
+    .package = "pigauto"
+  )
   set.seed(2086L)
   n <- 30L
   tree <- ape::rtree(n)

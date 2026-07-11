@@ -84,7 +84,8 @@
 #'   sets with strong within-row functional coupling that the joint MVN /
 #'   threshold-joint baseline cannot capture (e.g. nonlinear cross-trait
 #'   structure). On the BIEN n=2000 plant bench it did \strong{not} improve
-#'   pooled RMSE (Σ is already captured by the joint baseline); kept as
+#'   pooled RMSE (cross-trait covariance is already captured by the joint
+#'   baseline); kept as
 #'   an opt-in for datasets where it may help. Default \code{FALSE}
 #'   preserves v0.9.2 behaviour exactly. Note: Ablation testing 
 #'   demonstrates that this within-row attention recovers only a small, 

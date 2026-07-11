@@ -392,6 +392,13 @@ test_that("multi_impute(safety_floor = TRUE) pooled point + SE are finite", {
 # ---- Task 11: AVONET300 vertebrate regression ----
 
 test_that("safety_floor = TRUE preserves vertebrate lift on AVONET300 (within +2% RMSE / -1pp acc)", {
+  # This is a numerical regression canary, so keep it on the deterministic CPU
+  # path. MPS kernels can vary enough across preceding tests to move a single
+  # masked cell across the deliberately tight smoke threshold.
+  testthat::local_mocked_bindings(
+    get_device = function() torch::torch_device("cpu"),
+    .package = "pigauto"
+  )
   data("avonet300", package = "pigauto")
   data("tree300",   package = "pigauto")
   set.seed(2026L)
