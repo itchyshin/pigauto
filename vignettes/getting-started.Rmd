@@ -1,5 +1,5 @@
 ---
-title: "Getting started with pigauto: Phylogenetic Imputation via Graph AUTO-encoders"
+title: "Getting started with pigauto"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Getting started with pigauto}
@@ -63,6 +63,10 @@ The phylogenetic structure is encoded as:
 ## Installation
 
 ```{r install, eval=FALSE}
+# CRAN release
+install.packages("pigauto")
+
+# Development version
 pak::pak("itchyshin/pigauto")
 
 # torch backend (required; ~1 GB first-time download)
@@ -320,17 +324,19 @@ Species are sorted by predicted mass. The blue ribbon shows the conformal
 prediction interval when conformal scores are available. Grey points (if
 `truth` is supplied) show known values — a useful visual check of calibration.
 
-## Multiple imputation for downstream inference
+## Experimental multiple imputation for fixed effects
 
-The single completed dataset from `impute()` ignores imputation uncertainty —
-downstream standard errors will be too small. Use `multi_impute()` to generate
-M stochastic complete datasets, each a draw from the model's calibrated
-uncertainty distribution, then pool coefficients with Rubin's rules.
+The single completed dataset from `impute()` does not propagate imputation
+uncertainty into downstream standard errors. `multi_impute()` generates M
+stochastic complete datasets and `pool_mi()` pools fixed-effect coefficients
+with Rubin's rules. In version 0.10.0 this workflow is experimental: the
+conformal-to-Normal draw construction is not yet inferentially validated for
+every downstream model family.
 
 ```{r mi-workflow, eval=FALSE}
 # Step 1: generate M = 50 complete datasets
 # draws_method = "conformal" draws from conformal-calibrated
-# uncertainty — properly calibrated against held-out residuals.
+# uncertainty using a conformal-score-derived Normal scale.
 mi <- multi_impute(traits, tree, m = 50L)
 
 # Step 2: fit your downstream model to each imputed dataset
@@ -341,13 +347,20 @@ fits <- with_imputations(mi, function(d) {
 # Step 3: pool with Rubin's rules
 pool_mi(fits)
 # Returns a tidy data.frame with estimate, std.error, statistic, p.value,
-# df (Barnard-Rubin degrees of freedom), fmi (fraction of missing information),
+# df (classical Rubin degrees of freedom unless df_fun is supplied),
+# fmi (fraction of missing information),
 # and riv (relative increase in variance) per coefficient.
 ```
 
-Choose M ≥ 50 for stable pooled SEs; M ≥ 100 × max(fmi) for reliable p-values.
-The `fmi` column directly tells you how much each coefficient is affected by
-missing data — if `fmi < 0.05`, imputation uncertainty is negligible for that term.
+Use M = 50 as a starting point, then increase M and check whether pooled
+estimates and standard errors are numerically stable for the analysis at hand.
+The `fmi` column describes the fraction of missing information under the
+pooling calculation; it does not by itself validate interval coverage.
+
+Only fixed-effect coefficients and their covariance matrices are supported
+pooling targets in version 0.10.0. Do not use `pool_mi()` for variance
+components, correlation parameters, random-effect predictions, BLUPs,
+conditional modes, or latent-variable loadings.
 
 ## Phylogenetic tree uncertainty
 
@@ -383,8 +396,9 @@ fits <- with_imputations(mi, function(dat, tree) {
 pool_mi(fits)
 ```
 
-The pooled standard errors reflect trait-imputation uncertainty,
-phylogenetic tree uncertainty, and their interaction in one step.
+Subject to the experimental MI assumptions above, the pooled fixed-effect
+standard errors reflect trait-imputation uncertainty, phylogenetic tree
+uncertainty, and their interaction in one step.
 
 **Compute cost scales linearly with T** (each tree requires a fresh
 pigauto fit). At `n = 300` species this is ~30 minutes for T = 50 trees;

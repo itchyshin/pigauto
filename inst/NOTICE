@@ -1,0 +1,68 @@
+pigauto third-party data notice
+================================
+
+The MIT licence in DESCRIPTION and LICENSE applies to pigauto's original
+software code and documentation. It does not relicense third-party datasets
+or phylogenies bundled in data/.
+
+AVONET trait data
+-----------------
+
+Bundled objects: avonet300 and avonet_full.
+
+These objects contain subsets and transformations of AVONET. The AVONET
+article and data are released under a Creative Commons Attribution (CC BY)
+licence. Users must retain attribution to the original authors.
+
+Source and citation:
+
+Tobias JA et al. (2022). AVONET: morphological, ecological and geographical
+data for all birds. Ecology Letters 25:581-597.
+doi:10.1111/ele.13898
+
+Data archive: https://figshare.com/s/b990722d72a26b5bfead
+
+BirdTree phylogenies
+--------------------
+
+Bundled objects: tree300, trees300, tree_full, and tree_delhey.
+
+These objects are pruned or sampled derivatives of the BirdTree Hackett
+backbone and posterior trees. BirdTree requests citation of the source study,
+but no explicit redistribution licence for these tree files has been located
+in the package source or on the cited BirdTree material. A citation request is
+not, by itself, permission to redistribute.
+
+Source and citation:
+
+Jetz W, Thomas GH, Joy JB, Hartmann K, Mooers AO (2012). The global diversity
+of birds in space and time. Nature 491:444-448.
+doi:10.1038/nature11631
+
+Website: https://birdtree.org/
+
+Release status: redistribution permission for the BirdTree-derived objects
+must be documented before CRAN submission. If defensible permission cannot be
+obtained, these objects must be removed from the release tarball or replaced
+with clearly licensed synthetic/example phylogenies.
+
+Delhey plumage and environmental data
+-------------------------------------
+
+Bundled object: delhey5809.
+
+This object was derived from the data used by Delhey et al. (2019). The local
+provenance record identifies the article and source CSV, but no explicit data
+redistribution licence has been located. Accordingly, this notice does not
+assert a licence for redistribution; permission or an explicit licence must be
+verified before CRAN submission, or the object must be removed from the
+release tarball.
+
+Source and citation:
+
+Delhey K, Dale J, Valcu M, Kempenaers B (2019). Reconciling ecogeographical
+rules: rainfall and temperature predict global colour variation in the
+largest bird radiation. Ecology Letters 22:726-736.
+doi:10.1111/ele.13233
+
+No additional rights are granted by this notice.

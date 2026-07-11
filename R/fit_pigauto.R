@@ -262,6 +262,18 @@
 #' @importFrom torch torch_tensor torch_float torch_bool torch_long
 #' @importFrom torch optim_adam with_no_grad nn_utils_clip_grad_norm_
 #' @importFrom torch nnf_mse_loss torch_rand_like torch_where torch_zeros_like
+#' @examples
+#' \dontrun{
+#' data(avonet300, tree300)
+#' traits <- avonet300
+#' rownames(traits) <- traits$Species_Key
+#' traits$Species_Key <- NULL
+#' data <- preprocess_traits(traits, tree300)
+#' splits <- make_missing_splits(data$X_scaled, trait_map = data$trait_map,
+#'                               seed = 1)
+#' fit <- fit_pigauto(data, tree300, splits = splits, epochs = 100,
+#'                    verbose = FALSE, seed = 1)
+#' }
 #' @export
 fit_pigauto <- function(
     data,

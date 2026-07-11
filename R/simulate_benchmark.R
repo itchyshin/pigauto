@@ -238,6 +238,13 @@ summary.pigauto_benchmark <- function(object, ...) {
 #' @return Invisible \code{NULL}.
 #' @importFrom graphics par barplot axis text legend mtext
 #' @importFrom grDevices adjustcolor
+#' @examples
+#' benchmark <- structure(list(summary = data.frame(
+#'   scenario = rep("BM", 2), trait = rep("trait1", 2),
+#'   method = c("baseline", "pigauto"), metric = rep("rmse", 2),
+#'   mean = c(1, 0.8)
+#' )), class = "pigauto_benchmark")
+#' plot(benchmark)
 #' @export
 plot.pigauto_benchmark <- function(x, metric = "rmse", ...) {
   metric <- match.arg(metric, c("rmse", "pearson_r", "mae", "accuracy",

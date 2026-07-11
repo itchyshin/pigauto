@@ -18,7 +18,13 @@ knitr::opts_chunk$set(
 
 ## Do I need this article?
 
-**Short answer:** only if you have a **posterior sample of trees** (from BEAST, MrBayes, BirdTree.org, etc.) and you want the tree-topology uncertainty to show up in your pooled standard errors and p-values.
+**Short answer:** only if you have a **posterior sample of trees** (from BEAST,
+MrBayes, BirdTree.org, etc.) and you want tree-topology uncertainty represented
+in experimental Rubin-pooled fixed-effect standard errors and p-values.
+
+Version 0.10.0 does not pool variance components, correlations, random-effect
+predictions, BLUPs/conditional modes, or latent loadings. The MI workflow is
+experimental pending known-DGP inferential coverage validation.
 
 | Situation | Use this article? |
 |---|---|
@@ -56,9 +62,10 @@ your choice.
 
 ## The canonical workflow (Nakagawa & de Villemereuil 2019)
 
-With `share_gnn = TRUE` (the default), T = 50 posterior trees is cheap.
-Use one imputation per tree (M = 50 total), fit the downstream model 50
-times (each with the matching tree), and pool with Rubin's rules.
+With `share_gnn = TRUE` (the default), T = 50 posterior trees avoids fitting
+50 separate GNNs. The literature workflow uses one imputation per tree
+(M = 50 total), fits the downstream model 50 times (each with the matching
+tree), and pools supported fixed effects with Rubin's rules.
 
 ```{r canonical, eval = FALSE}
 library(pigauto)
@@ -78,7 +85,7 @@ fits <- with_imputations(mi, function(dat, tree) {
     data = dat, method = "ML"
   )
 })
-pool_mi(fits)   # pooled SEs include both imputation and tree uncertainty
+pool_mi(fits)   # experimental fixed-effect pooling across both uncertainties
 ```
 
 The code above is illustrative — full execution takes ~25 min because
@@ -109,8 +116,8 @@ mi_slow <- multi_impute_trees(df, trees300, m_per_tree = 1L,
 
 | T | m_per_tree | M | When |
 |---|---|---|---|
-| 50 | 1 | 50 | Default. Canonical N&dV 2019. |
-| 20 | 2 | 40 | Smaller posterior, still stable. |
+| 50 | 1 | 50 | Literature example following N&dV 2019. |
+| 20 | 2 | 40 | Smaller posterior; more than one draw per tree. |
 | 10 | 5 | 50 | Very small posterior; per-tree variance helps. |
 | <10 | bump m_per_tree | >=25 | Runtime warning fires; Rubin's rules unstable below M=25. |
 

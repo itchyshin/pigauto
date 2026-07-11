@@ -4,10 +4,10 @@
 #' completions of the trait matrix instead of a single point estimate.
 #' The `M` datasets are the input needed for the classical multiple
 #' imputation workflow: fit a downstream model on each dataset, then
-#' pool the results with Rubin's rules via [pool_mi()]. This is the
-#' standard way to propagate imputation uncertainty into phylogenetic
-#' comparative analyses (PGLS, PGLMM, etc.) rather than treating
-#' imputed cells as if they were observed.
+#' pool fixed-effect coefficients with Rubin's rules via [pool_mi()].
+#' In version 0.10.0 this downstream-inference workflow is experimental;
+#' variance components, correlations, random-effect predictions, BLUPs,
+#' and other structured parameters are not supported pooling targets.
 #'
 #' @section When to use this:
 #'
@@ -15,8 +15,8 @@
 #' many trees you have:
 #'
 #' * **One tree** (single published phylogeny, single time-calibrated tree):
-#'   use [multi_impute()]. The `m` MC-dropout imputations capture model
-#'   uncertainty.
+#'   use [multi_impute()]. Choose conformal-width or MC-dropout/BM draws
+#'   with `draws_method`.
 #' * **Multiple posterior trees** (BirdTree samples, BEAST posterior, etc.):
 #'   use [multi_impute_trees()]. Between-tree variation is added to the
 #'   pooled SEs via Rubin's rules (Nakagawa & de Villemereuil 2019).
@@ -36,22 +36,16 @@
 #'   \describe{
 #'     \item{`"conformal"`}{(default) Run the model once, then sample each
 #'       originally-missing cell from a Normal distribution centred on the
-#'       point estimate with SD = conformal_score / 1.96. The conformal score
-#'       is the empirical 97.5th percentile of held-out absolute residuals,
-#'       so the draw width is calibrated against actual prediction error —
-#'       not a model assumption. Falls back to BM-SE-based Normal sampling
+#'       point estimate with SD = conformal_score / 1.96. Converting a
+#'       split-conformal residual quantile to a Normal scale is a heuristic;
+#'       the conformal coverage guarantee does not establish that these draws
+#'       are proper multiple imputations. Falls back to BM-SE-based Normal sampling
 #'       when conformal scores are unavailable, and to Bernoulli / Categorical
-#'       draws for discrete traits. **Preferred default for pigauto** because
-#'       MC dropout gives zero variance whenever the calibrated gate is zero
-#'       (i.e. whenever the BM baseline already fits well), which is common
-#'       for continuous traits with strong phylogenetic signal.}
+#'       draws for discrete traits.}
 #'     \item{`"mc_dropout"`}{Run `M` stochastic GNN forward passes in training
-#'       mode (dropout active). Useful when the calibrated gate is open
-#'       (r_cal > 0, i.e. GNN meaningfully corrects the BM baseline). When
-#'       all gates are zero — as is typical for continuous traits on datasets
-#'       with strong phylogenetic signal — MC dropout is deterministic and
-#'       falls back silently to the BM-only point estimate for every draw.
-#'       Check `mi$fit$calibrated_gates` before using this method.}
+#'       mode (dropout active) on top of stochastic Brownian-motion baseline
+#'       draws. Brownian draws still contribute between-imputation variation
+#'       when a calibrated GNN gate is zero.}
 #'   }
 #' @param species_col character or `NULL`. If set, marks the column
 #'   in `traits` containing species identifiers and enables multiple
@@ -113,30 +107,23 @@
 #' The standard remedy, due to Rubin (1987), is to generate `M`
 #' stochastic completions, fit the downstream model on each, and pool
 #' the results. `multi_impute()` + [with_imputations()] + [pool_mi()]
-#' implement this workflow end to end.
+#' implement an experimental fixed-effect version of this workflow end to end.
 #'
 #' **`draws_method = "conformal"` (default)**: Run the model once; missing
 #' cells are sampled from
 #' \eqn{x_{ij}^{(k)} \sim \mathrm{N}(\hat\mu_{ij},\; q_{j}/1.96)}
-#' where \eqn{q_j} is the trait-level conformal score (the empirical
-#' 97.5th percentile of held-out absolute residuals, in latent z-score
-#' units back-transformed to the original scale). The draw width is
-#' therefore calibrated against actual prediction error regardless of
-#' whether the BM or GNN term dominates. For discrete traits (binary,
+#' where \eqn{q_j} is the trait-level split-conformal residual quantile.
+#' Dividing this quantile by 1.96 is a pragmatic Normal-scale construction,
+#' not a consequence of the conformal coverage guarantee. For discrete traits (binary,
 #' categorical) it uses Bernoulli / categorical draws from the estimated
 #' probability vector. For \code{multi_proportion} groups it draws the
 #' K CLR latent columns with their BM latent SEs, projects back to
-#' sum-zero CLR space, and decodes to the simplex. This is the preferred
-#' default for pigauto.
+#' sum-zero CLR space, and decodes to the simplex.
 #'
 #' **`draws_method = "mc_dropout"`**: Run `M` GNN forward passes in
-#' training mode (dropout active). **Caution**: when the per-trait
-#' calibrated gate `r_cal = 0` (which happens whenever the BM baseline
-#' already fits well, typically for continuous traits with strong
-#' phylogenetic signal), every MC pass is identical to the BM point
-#' estimate and draws have zero between-imputation variance. Check
-#' `mi$fit$calibrated_gates` after fitting — if all gates for the traits
-#' of interest are zero, use `draws_method = "conformal"` instead.
+#' training mode (dropout active) on top of stochastic BM baseline draws.
+#' When `r_cal = 0`, the GNN-dropout term disappears but the BM draw still
+#' contributes between-imputation variance.
 #'
 #' Nakagawa & Freckleton (2008, 2011) review the consequences of
 #' ignoring missing data in ecological and comparative analyses and
@@ -161,8 +148,8 @@
 #'   every imputation draw automatically via the updated
 #'   \code{predict.pigauto_fit()}.  For \code{draws_method = "mc_dropout"}
 #'   the mean term contributes no between-draw variance (it is a
-#'   deterministic scalar per column), so Rubin-pooled SE stays correctly
-#'   calibrated: variance comes from the BM-draw and GNN-dropout terms
+#'   deterministic scalar per column); between-draw variance comes from the
+#'   BM-draw and GNN-dropout terms
 #'   only.  For \code{draws_method = "conformal"} the blend centre is the
 #'   3-way prediction and conformal scores remain calibrated on the
 #'   blended residuals.
@@ -181,7 +168,7 @@
 #' mi <- multi_impute(df, tree300, m = 100)
 #' print(mi)
 #'
-#' # Downstream analysis: phylogenetic GLS via nlme, pooled with Rubin's rules
+#' # Experimental fixed-effect analysis: phylogenetic GLS + Rubin pooling
 #' fits <- with_imputations(mi, function(d) {
 #'   d$species <- rownames(d)
 #'   nlme::gls(

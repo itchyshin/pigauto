@@ -65,9 +65,11 @@ supplied, else classical Rubin).}
 \description{
 Combine regression coefficients from \code{M} model fits -- one per imputed
 dataset -- into a single pooled table using Rubin's rules. The pooled
-standard errors properly account for \emph{both} within-imputation sampling
-variance and between-imputation variance, so downstream inference
-propagates the uncertainty introduced by imputation.
+standard errors combine within-imputation sampling variance and
+between-imputation variance. In version 0.10.0 this workflow is
+experimental and supports fixed-effect coefficients only. Variance
+components, correlations, random-effect predictions, BLUPs/conditional
+modes, latent loadings, and other structured parameters are unsupported.
 }
 \details{
 Let \eqn{\hat\theta_i} be the coefficient vector from fit \emph{i} and
@@ -111,10 +113,7 @@ cleanly to posterior distributions. For a Bayesian pigauto workflow
 posterior samples across imputations manually -- stack \code{fit$Sol} and
 \code{fit$VCV} row-wise with \code{do.call(rbind, ...)} and wrap the result in
 \code{coda::as.mcmc()}. For the frequentist Rubin's-rules path, see
-\code{vignette("mixed-types", package = "pigauto")}. For an integrated
-chained-equation MCMC workflow where imputation and inference happen
-in a single engine, use the companion BACE package end-to-end
-(\code{BACE::bace()} + \code{BACE::pool_posteriors()}).
+\code{vignette("mixed-types", package = "pigauto")}.
 }
 \examples{
 \dontrun{

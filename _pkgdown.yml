@@ -24,10 +24,11 @@ home:
     counts, binary variables, unordered categories, ordered categories,
     bounded proportions, zero-inflated counts, and compositional
     (multi-proportion) data that sums to one across components.
-    Uncertainty is quantified via conformal prediction intervals and
-    Rubin's-rules multiple imputation, with tree-uncertainty
-    propagation via posterior tree samples. Tested up to 10,000
-    species on a laptop.
+    Uncertainty is described with conformal prediction intervals and an
+    experimental Rubin's-rules multiple-imputation workflow for pooling
+    fixed effects, with tree-uncertainty propagation via posterior tree
+    samples. Variance components, random-effect predictions, and BLUPs are
+    not pooled in version 0.10.0. Tested up to 10,000 species on a laptop.
   links:
     - text: Source code
       href: https://github.com/itchyshin/pigauto
@@ -102,10 +103,12 @@ navbar:
         #   - text: "Mathematical & algorithmic description"
         #     href: articles/methodology.html
         #
-        # -------- Pending regeneration --------
-        # The following bench HTMLs were dropped from this navbar in Phase 1
-        # because they are not present in docs/dev/ on the current build.
-        # Re-add them once their script/make_*_html.R driver has been re-run:
+        # -------- Historical benchmark evidence --------
+        # The following pre-v0.10 snapshot pages remain under docs/dev/ as
+        # historical benchmark evidence, but are intentionally absent from
+        # the release navbar. Re-add them only after their script/make_*_html.R
+        # driver has been rerun against the release code and the claims have
+        # been reviewed:
         #   bench_multi_proportion, bench_scaling_v090, pantheria_summary,
         #   phase8_summary, bench_signal_sweep, bench_correlation_sweep,
         #   bench_evo_model_sweep, bench_clade_missingness,
@@ -121,13 +124,15 @@ reference:
     contents:
       - impute
 
-  - title: "Multiple imputation for downstream inference"
+  - title: "Experimental multiple imputation for fixed effects"
     desc: >
-      Three functions that compose into the canonical
-      multiple-imputation → regression → Rubin's-rules workflow
+      Three functions that compose into the documented
+      experimental multiple-imputation → regression → Rubin's-rules workflow
       (Rubin 1987; Nakagawa & Freckleton 2008, 2011). See
       `vignette("mixed-types")` and `vignette("tree-uncertainty")` for
-      end-to-end examples.
+      end-to-end examples. Version 0.10.0 pools fixed effects only; variance
+      components, random-effect predictions, correlations, and BLUPs are not
+      supported pooling targets.
     contents:
       - multi_impute
       - multi_impute_trees
@@ -144,7 +149,6 @@ reference:
       - make_missing_splits
       - mask_missing
       - fit_baseline
-      - fit_baseline_bace
       - fit_pigauto
       - predict.pigauto_fit
       - evaluate

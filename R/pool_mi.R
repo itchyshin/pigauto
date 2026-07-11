@@ -2,9 +2,11 @@
 #'
 #' Combine regression coefficients from `M` model fits -- one per imputed
 #' dataset -- into a single pooled table using Rubin's rules. The pooled
-#' standard errors properly account for *both* within-imputation sampling
-#' variance and between-imputation variance, so downstream inference
-#' propagates the uncertainty introduced by imputation.
+#' standard errors combine within-imputation sampling variance and
+#' between-imputation variance. In version 0.10.0 this workflow is
+#' experimental and supports fixed-effect coefficients only. Variance
+#' components, correlations, random-effect predictions, BLUPs/conditional
+#' modes, latent loadings, and other structured parameters are unsupported.
 #'
 #' @param fits A list of model fits of length `M >= 2`. Automatic fixed-effect
 #'   adapters are provided for [`stats::lm`], [`stats::glm`], `nlme::gls`,
@@ -90,10 +92,7 @@
 #' posterior samples across imputations manually -- stack `fit$Sol` and
 #' `fit$VCV` row-wise with `do.call(rbind, ...)` and wrap the result in
 #' `coda::as.mcmc()`. For the frequentist Rubin's-rules path, see
-#' `vignette("mixed-types", package = "pigauto")`. For an integrated
-#' chained-equation MCMC workflow where imputation and inference happen
-#' in a single engine, use the companion BACE package end-to-end
-#' (`BACE::bace()` + `BACE::pool_posteriors()`).
+#' `vignette("mixed-types", package = "pigauto")`.
 #'
 #' @references
 #' Rubin DB (1987). *Multiple Imputation for Nonresponse in Surveys.*
@@ -169,9 +168,7 @@ pool_mi <- function(fits,
       "posterior samples across imputations directly: ",
       "`coda::as.mcmc(do.call(rbind, lapply(fits, function(f) f$Sol)))`. ",
       "For the frequentist Rubin's-rules path, see ",
-      "`vignette('mixed-types', package = 'pigauto')`. For an integrated ",
-      "chained-equation MCMC workflow, use ",
-      "BACE::bace() + BACE::pool_posteriors() end-to-end.",
+      "`vignette('mixed-types', package = 'pigauto')`.",
       call. = FALSE
     )
   }

@@ -285,28 +285,6 @@ test_that("[T3] all-NA column triggers a clear error rather than silent NaN", {
 ## synthetic data, where the safety-floor gate closes onto the mean
 ## corner and predictions degenerate.  Not duplicating here.
 
-test_that("[T4] fit_baseline_bace returns a baseline list with mu / se (smoke)", {
-  skip_if_not_installed("BACE")
-  td  <- .tcov_make_data(n = 20L, seed = 7L)
-  pd  <- preprocess_traits(td$df, td$tree)
-  spl <- make_missing_splits(pd$X_scaled, seed = 7L, trait_map = pd$trait_map)
-  res <- tryCatch(
-    fit_baseline_bace(pd, td$tree, splits = spl,
-                      runs = 1L, nitt = 200L, burnin = 50L,
-                      thin = 5L, verbose = FALSE),
-    error = function(e) e
-  )
-  if (inherits(res, "error")) {
-    skip(paste("fit_baseline_bace setup not supported here:",
-               conditionMessage(res)))
-  }
-  expect_type(res, "list")
-  expect_true("mu" %in% names(res))
-  expect_true("se" %in% names(res))
-  # mu / se are species x latent matrices
-  expect_equal(nrow(res$mu), nrow(pd$X_scaled))
-})
-
 test_that("[T4] plot_comparison runs without error on a minimal results data.frame (smoke)", {
   # plot_comparison uses base-R par()/plot() and returns invisible(NULL)
   # on the two-panel path, so we just check it doesn't error.

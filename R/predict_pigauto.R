@@ -20,9 +20,9 @@
 #' \code{r_cal > 0} both BM draws and GNN dropout contribute variance.  Point
 #' estimates are the mean (continuous, count) or mode (binary, categorical,
 #' ordinal) across passes.  The M complete datasets are returned in
-#' \code{imputed_datasets} for Rubin's-rules pooling.  For the user-facing
-#' multiple-imputation workflow, prefer \code{multi_impute()} which offers
-#' \code{draws_method = "conformal"} (calibrated, narrower) or
+#' \code{imputed_datasets} for the experimental fixed-effect Rubin workflow.
+#' For the user-facing multiple-imputation workflow, use \code{multi_impute()},
+#' which offers \code{draws_method = "conformal"} (conformal-width heuristic) or
 #' \code{"mc_dropout"} (BM posterior draws + GNN dropout, wider).
 #'
 #' **Decoding per type:**
@@ -40,8 +40,8 @@
 #' @param return_se logical. Compute standard errors? (default \code{TRUE}).
 #' @param n_imputations integer. Number of stochastic imputation draws —
 #'   BM posterior samples plus GNN dropout — (default \code{1L}).  Set to
-#'   e.g. 10 or 20 for proper multiple imputation with between-imputation
-#'   variance.
+#'   e.g. 10 or 20 to return stochastic datasets with between-imputation
+#'   variation for the experimental downstream workflow.
 #' @param baseline_override optional `list(mu, se)` with the same shape as
 #'   `object$baseline`. When supplied, predictions use this baseline instead
 #'   of the one saved in the fit. Used internally by [multi_impute_trees()]
@@ -81,14 +81,13 @@
 #'   package already provides conformal prediction intervals
 #'   (calibrated against held-out residuals) and
 #'   \code{multi_impute(draws_method = "conformal")} for
-#'   multi-imputation workflows -- those give Rubin's-rules
-#'   honest standard errors without donor-mismatch noise.  PMM is
+#'   experimental fixed-effect multiple-imputation workflows. PMM is
 #'   only worth enabling for: (a) methodological comparison against
 #'   mice / equivalent packages, or (b) workflows that specifically
 #'   require imputed values to come from the observed data pool.
 #'   For tail safety on single-imputation point estimates, prefer
-#'   \code{clamp_outliers = TRUE}.  For honest MI standard errors,
-#'   prefer \code{multi_impute(draws_method = "conformal")}.
+#'   \code{clamp_outliers = TRUE}. For downstream MI, see
+#'   \code{multi_impute()} and its documented draw assumptions.
 #'
 #'   The Phase G' acceptance bench
 #'   (\code{useful/MEMO_2026-05-01_phase_g_prime_results.md})

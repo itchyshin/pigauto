@@ -142,7 +142,7 @@ The single-fit approach to categorical liability (K columns into one
 phylopars call) is rank-deficient and unstable. pigauto instead runs $K$
 independent threshold-joint fits — class $k$ vs the rest — and
 renormalises the resulting $K$ probabilities into a row-stochastic
-distribution. This is BACE's strategy and lifts AVONET Trophic.Level
+distribution. This one-vs-rest strategy lifts AVONET Trophic.Level
 accuracy from ~42% to ~72%.
 
 ### 2.6 Multi-obs aggregation (Phase 10 + B1 soft)
@@ -351,16 +351,20 @@ different questions and must not be conflated.
 | `pred$conformal_lower`, `pred$conformal_upper` | Split conformal residual quantile on the val set: $s = q_{(1-\alpha)}( | y - \hat{y} |_{\text{val}} )$. | Distribution-free 95% marginal coverage regardless of model assumptions. |
 
 For multiple-imputation workflows, `multi_impute()` exposes two draw
-methods. `"conformal"` (default) samples missing cells from
-$\mathcal{N}(\mu, s/1.96)$ on the transformed scale — calibrated against
-actual residuals. `"mc_dropout"` runs $M$ stochastic GNN passes in
-training mode (dropout active) on top of BM-draw inputs, which is wider
-than conformal but reflects model uncertainty when the gate is fully
-open.
+methods. `"conformal"` (default) uses the heuristic
+$\mathcal{N}(\mu, s/1.96)$ on the transformed scale, where $s$ is the
+conformal residual quantile. A conformal prediction interval does not by
+itself establish that these Normal draws are proper multiple imputations.
+`"mc_dropout"` runs $M$ stochastic GNN passes in training mode (dropout
+active) on top of BM-draw inputs and is available as a comparison path.
 
-For pooled inference, `pool_mi()` applies Rubin's (1987) rules to
-$M$ downstream fits and returns a tidy data.frame with
-`estimate`, `std.error`, `df`, `fmi`, `riv` per term.
+Version 0.10.0 therefore labels downstream multiple imputation as
+**experimental** while known-DGP coverage validation is completed.
+`pool_mi()` applies Rubin's (1987) rules to fixed-effect coefficients from
+$M$ downstream fits and returns `estimate`, `std.error`, `df`, `fmi`, and
+`riv` per term. It does not pool variance components, correlations,
+random-effect predictions, BLUPs/conditional modes, latent loadings, or
+other structured parameters.
 
 ## 6. Tree uncertainty: a two-step workflow
 
