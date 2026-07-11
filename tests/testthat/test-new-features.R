@@ -594,8 +594,7 @@ test_that("multi-obs + covariates: fit stores multi_obs flag and obs metadata", 
 
 test_that("use_trait_attention=TRUE builds, trains, and predicts (smoke)", {
   skip_on_cran()
-  skip_if_not_installed("torch")
-  skip_if_not(torch::torch_is_installed())
+  skip_if_no_libtorch()
 
   td  <- make_test_data_new(n = 30L, seed = 730L)
   result <- impute(td$df, td$tree,
@@ -617,8 +616,7 @@ test_that("use_trait_attention=TRUE builds, trains, and predicts (smoke)", {
 
 test_that("use_trait_attention default FALSE is backward compatible", {
   skip_on_cran()
-  skip_if_not_installed("torch")
-  skip_if_not(torch::torch_is_installed())
+  skip_if_no_libtorch()
 
   td <- make_test_data_new(n = 30L, seed = 731L)
   result <- impute(td$df, td$tree,

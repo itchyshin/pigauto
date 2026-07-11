@@ -1,6 +1,5 @@
 test_that("GraphTransformerBlock forward pass produces correct shape", {
-  skip_if_not_installed("torch")
-  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_no_libtorch()
 
   hidden_dim <- 32L
   n_heads    <- 4L
@@ -23,8 +22,7 @@ test_that("GraphTransformerBlock forward pass produces correct shape", {
 })
 
 test_that("GraphTransformerBlock is near-identity at init (FFN output near zero)", {
-  skip_if_not_installed("torch")
-  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_no_libtorch()
 
   hidden_dim <- 32L
   n_species  <- 20L
@@ -49,8 +47,7 @@ test_that("GraphTransformerBlock is near-identity at init (FFN output near zero)
 })
 
 test_that("GraphTransformerBlock gradients flow through", {
-  skip_if_not_installed("torch")
-  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_no_libtorch()
 
   hidden_dim <- 16L
   n_species  <- 10L
@@ -84,8 +81,7 @@ test_that("GraphTransformerBlock gradients flow through", {
 })
 
 test_that("GraphTransformerBlock preserves log-adjacency-bias prior on attention", {
-  skip_if_not_installed("torch")
-  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_no_libtorch()
 
   # When adj is strongly peaked (near-identity), attention should mostly attend
   # to self; when adj is uniform, attention should be roughly uniform.
@@ -114,8 +110,7 @@ test_that("GraphTransformerBlock preserves log-adjacency-bias prior on attention
 })
 
 test_that("GraphTransformerBlock uses D_sq for learnable Gaussian when provided", {
-  skip_if_not_installed("torch")
-  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_no_libtorch()
 
   hidden_dim <- 16L; n_species <- 10L
   torch::torch_manual_seed(5L)
@@ -134,8 +129,7 @@ test_that("GraphTransformerBlock uses D_sq for learnable Gaussian when provided"
 })
 
 test_that("GraphTransformerBlock backward compat: D_sq = NULL uses old path", {
-  skip_if_not_installed("torch")
-  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_no_libtorch()
 
   hidden_dim <- 16L; n_species <- 10L
   torch::torch_manual_seed(6L)

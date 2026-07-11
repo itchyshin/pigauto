@@ -58,7 +58,7 @@ test_that("[Phase G] preprocess_traits records obs_max / obs_min for log-cont, c
 })
 
 test_that("[Phase G] clamp_outliers = FALSE is the default and is a no-op", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2051L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -84,7 +84,7 @@ test_that("[Phase G] clamp_outliers = FALSE is the default and is a no-op", {
 })
 
 test_that("[Phase G] clamp_outliers = TRUE caps a synthetic tail outlier", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   # Reach into the decoder directly with a contrived latent vector that
   # back-transforms to a 50x-the-max blow-up.  Verifies the clamp catches
   # it when ON, and lets it through when OFF.
@@ -127,7 +127,7 @@ test_that("[Phase G] clamp_outliers = TRUE caps a synthetic tail outlier", {
 })
 
 test_that("[Phase G] clamp_factor controls the cap multiplier", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2053L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -155,7 +155,7 @@ test_that("[Phase G] clamp_factor controls the cap multiplier", {
 })
 
 test_that("[Phase G] clamp_factor < 1 errors", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2054L)
   n <- 20L
   tree <- ape::rtree(n)

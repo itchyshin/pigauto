@@ -66,8 +66,7 @@ test_that("decode_ovr_categorical normalises K probs to valid log-prob distribut
 
 test_that("fit_pigauto end-to-end works with OVR categorical baseline", {
   skip_if_not_installed("Rphylopars")
-  skip_if_not_installed("torch")
-  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_no_libtorch()
 
   set.seed(300)
   tree <- ape::rtree(40)

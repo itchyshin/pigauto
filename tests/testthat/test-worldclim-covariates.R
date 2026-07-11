@@ -127,6 +127,8 @@ test_that(".wc_extract_one returns NA row when species has no GBIF cache", {
 })
 
 test_that("pull_worldclim_per_species returns data.frame with 38 bio cols + n_extracted", {
+  skip_if_not_installed("terra")
+
   tmp <- tempfile("wc_"); dir.create(tmp)
   on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
   gbif_dir <- file.path(tmp, "gbif"); dir.create(gbif_dir)
@@ -184,6 +186,8 @@ test_that("pull_worldclim_per_species stops with clear error when terra absent",
 # ---- Task 2 (v1.1): per-occurrence extraction ----
 
 test_that(".wc_extract_one uses points when available (per-occurrence)", {
+  skip_if_not_installed("terra")
+
   tmp <- tempfile("wc_"); dir.create(tmp)
   on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
   gbif_dir <- file.path(tmp, "gbif"); dir.create(gbif_dir)
@@ -223,6 +227,8 @@ test_that(".wc_extract_one uses points when available (per-occurrence)", {
 })
 
 test_that(".wc_extract_one falls back to centroid when points field absent", {
+  skip_if_not_installed("terra")
+
   tmp <- tempfile("wc_"); dir.create(tmp)
   on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
   gbif_dir <- file.path(tmp, "gbif"); dir.create(gbif_dir)

@@ -126,8 +126,7 @@ test_that("bm_impute_col handles zero observations", {
 })
 
 test_that("fit_baseline with internal BM produces finite mu and se", {
-  skip_if_not_installed("torch")
-  skip_if(!torch::torch_is_installed(), "torch backend not installed")
+  skip_if_no_libtorch()
 
   set.seed(8)
   tree <- ape::rtree(30)
@@ -152,8 +151,7 @@ test_that("fit_baseline with internal BM produces finite mu and se", {
 })
 
 test_that("fit_baseline with internal BM and splits produces finite results", {
-  skip_if_not_installed("torch")
-  skip_if(!torch::torch_is_installed(), "torch backend not installed")
+  skip_if_no_libtorch()
 
   set.seed(9)
   tree <- ape::rtree(30)

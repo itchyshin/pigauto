@@ -143,7 +143,7 @@ test_that("[active] bm_variance_reduction is non-negative under tip permutation"
 # ---- suggest_next_observation: public API -----------------------------------
 
 test_that("[active] suggest_next_observation returns top-N by descending delta_var_total", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2110L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -169,7 +169,7 @@ test_that("[active] suggest_next_observation returns top-N by descending delta_v
 })
 
 test_that("[active] suggest_next_observation by = 'species' aggregates across traits", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2111L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -208,7 +208,7 @@ test_that("[active] suggest_next_observation by = 'species' aggregates across tr
 })
 
 test_that("[active] suggest_next_observation returns empty when no missing cells", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2112L)
   n <- 20L
   tree <- ape::rtree(n)
@@ -225,7 +225,7 @@ test_that("[active] suggest_next_observation returns empty when no missing cells
 })
 
 test_that("[active] suggest_next_observation rejects multi-obs input with clear error", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2113L)
   n <- 10L
   tree <- ape::rtree(n)
@@ -247,7 +247,7 @@ test_that("[active] suggest_next_observation rejects multi-obs input with clear 
 })
 
 test_that("[active] suggest_next_observation handles binary trait via entropy reduction", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2114L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -273,7 +273,7 @@ test_that("[active] suggest_next_observation handles binary trait via entropy re
 })
 
 test_that("[active] suggest_next_observation skips discrete when types excludes them", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2116L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -293,7 +293,7 @@ test_that("[active] suggest_next_observation skips discrete when types excludes 
 })
 
 test_that("[active] suggest_next_observation handles K=3 categorical via entropy reduction", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2117L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -373,7 +373,7 @@ test_that("[active] lp_entropy_reduction_binary matches brute-force on small fix
 })
 
 test_that("[active] suggest_next_observation returns 'pigauto_active' class", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2115L)
   n <- 15L
   tree <- ape::rtree(n)
@@ -391,7 +391,7 @@ test_that("[active] suggest_next_observation returns 'pigauto_active' class", {
 # ===========================================================================
 
 test_that("[active v2] zi_count: hybrid variance + entropy populated", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2200L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -421,7 +421,7 @@ test_that("[active v2] zi_count: hybrid variance + entropy populated", {
 })
 
 test_that("[active v2] zi_count: types argument can exclude zi_count", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2201L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -444,7 +444,7 @@ test_that("[active v2] zi_count: types argument can exclude zi_count", {
 })
 
 test_that("[active v2] multi_proportion: per-component BM variance summed", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2202L)
   n <- 25L
   tree <- ape::rtree(n)
@@ -479,7 +479,7 @@ test_that("[active v2] multi_proportion: delta equals K-component sum", {
   # Verify the multi_proportion delta_var_total is exactly the sum of
   # per-component BM variance reductions (not double counted, no scale
   # bug).
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2203L)
   n <- 20L
   tree <- ape::rtree(n)
@@ -545,7 +545,7 @@ test_that("[active v2] multi_proportion: delta equals K-component sum", {
 # ===========================================================================
 
 test_that("[active T1] suggest_next_observation handles count + ordinal + proportion in one mixed fixture", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2300L)
   n <- 30L
   tree <- ape::rtree(n)
@@ -598,7 +598,7 @@ test_that("[active T1] suggest_next_observation handles count + ordinal + propor
 })
 
 test_that("[active T1] suggest_next_observation respects types argument for count/ordinal/proportion", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2301L)
   n <- 25L
   tree <- ape::rtree(n)
