@@ -91,6 +91,13 @@ jobs:
       - name: Install libtorch backend
         run: Rscript -e 'torch::install_torch()'
 
+      # Catch ARM/MPS state-restoration regressions before the much longer
+      # full package check.  This file contains the direct covariate-bias
+      # canary that previously failed only on GitHub's macOS runner.
+      - name: Run focused MPS prediction tests
+        if: runner.os == 'macOS'
+        run: Rscript -e 'testthat::test_local(filter = "fit-predict")'
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true

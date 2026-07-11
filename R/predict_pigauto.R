@@ -204,6 +204,18 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   # which drops fixed-effect intercepts from prediction.
   model$load_state_dict(object$model_state)
   model$to(device = device)
+  # ARM/MPS libtorch can silently zero a length-one bias during state loading,
+  # even when the saved tensor has the correct float dtype and shape.  Restore
+  # the direct covariate-path bias explicitly after the module is on MPS.  This
+  # parameter contributes outside the BM/GNN blend, so losing it changes every
+  # prediction whenever a fitted covariate intercept is non-zero.
+  cov_bias <- object$model_state[["cov_linear.bias"]]
+  if (identical(device$type, "mps") && !is.null(cov_bias) &&
+      !is.null(model$cov_linear)) {
+    torch::with_no_grad({
+      model$cov_linear$bias$copy_(cov_bias$to(device = device))
+    })
+  }
   gpu_mem_checkpoint("predict: after model rebuild + load_state_dict")
 
   # Calibrated gates override learned gates.
