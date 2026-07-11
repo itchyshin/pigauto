@@ -11,22 +11,29 @@ prediction diagnostics and are unsupported for downstream inference.
 A warning-free 6,000-task package-level campaign at clean source SHA
 `2e3809d` passed all 24 fixed-effect cells, with 93.9%-96.3% coverage,
 pooled-SE/empirical-SD ratios of 0.942-1.030, and 100% finite results. This
-validates only the documented narrow scope. Submission remains blocked pending
-the final cross-platform package checks below.
+validates only the documented narrow scope. The final cross-platform checks are
+recorded below; the Windows rerun is the last outstanding release gate.
 
 ## Test environments
 
-Final results are pending the release-candidate checks:
+Release-candidate checks completed so far:
 
-- local macOS, R release: pending
-- GitHub Actions, Ubuntu, R release: pending
-- GitHub Actions, macOS, R release: pending
-- win-builder, R-devel: pending
+- local macOS, R release: 0 errors under `_R_CHECK_FORCE_SUGGESTS_=false`; the
+  only note is the normal `New submission` note and unavailable-Suggests info;
+- GitHub Actions, Ubuntu, R release: 0 errors, 0 warnings, 0 notes;
+- GitHub Actions, Ubuntu, R-devel: 0 errors, 0 warnings, 0 notes;
+- GitHub Actions, macOS, R-release: 0 errors, 0 warnings, 0 notes;
+- win-builder, R-devel: rerun submitted from merged main `899d733`; result
+  pending.
 
 ## R CMD check results
 
-Pending. Release requires 0 errors, 0 warnings, and 0 notes on R release and
-R-devel before this section is finalized.
+The exact 4.85 MB tarball was checked locally and completed with no errors. The
+authoritative GitHub R-CMD-check matrix is green on Ubuntu release, Ubuntu
+R-devel, and macOS R-release. The local check used
+`_R_CHECK_FORCE_SUGGESTS_=false` because several optional packages are not
+installed on this machine; unavailable-Suggests messages are recorded as
+information, not package errors.
 
 ## Documentation and website audit
 
@@ -44,8 +51,8 @@ The release audit covers the authored source and rendered output for:
 
 Audit inventory at the release-candidate documentation freeze:
 
-- namespace-export and Rd-topic counts will be refreshed after the
-  `multi_impute_analysis()` implementation and generated documentation land;
+- the public namespace and generated Rd topics were refreshed after the
+  `multi_impute_analysis()` implementation landed;
 - five authored vignettes: getting started, common pitfalls, mixed types,
   tree uncertainty, and GNN architecture;
 - no hand-maintained files under `inst/doc/`; vignette artifacts are generated
@@ -66,8 +73,8 @@ Audit inventory at the release-candidate documentation freeze:
 - `urlchecker::url_check()` examined 19 package URLs with no errors or
   redirections after canonicalizing the pkgdown URL.
 
-The final submission will replace all pending check entries above with the
-frozen release-candidate evidence.
+The final submission will add the win-builder result and the exact CRAN
+submission timestamp to this record.
 
 ## Bundled-data licensing gate
 
