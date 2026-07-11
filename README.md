@@ -1,4 +1,4 @@
-# pigauto: Phylogenetic Imputation via Graph AUTO-encoders <img src="man/figures/logo.png" align="right" height="139" alt="pigauto logo"/>
+# pigauto: Phylogenetic Imputation via Graph AUTO-encoders <img src="https://raw.githubusercontent.com/itchyshin/pigauto/main/man/figures/logo.png" align="right" height="139" alt="pigauto logo"/>
 
 <!-- badges: start -->
 
@@ -10,12 +10,13 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 
 **Missing trait data should not stop a comparative analysis.**
 
-> Live documentation: <https://itchyshin.github.io/pigauto>
+> Live documentation: <https://itchyshin.github.io/pigauto/>
 
 pigauto fills gaps in species trait matrices by combining the phylogenetic
 tree, cross-trait correlations, and optional environmental covariates — then
-propagates imputation uncertainty through to your downstream model via
-multiple imputation and Rubin's rules.
+can propagate imputation uncertainty into fixed-effect estimates from a
+downstream model via an experimental multiple-imputation workflow and
+Rubin's rules.
 
 ## The workflow
 
@@ -28,12 +29,16 @@ multi_impute(m=50)   # 50 stochastic complete datasets
        ↓
 with_imputations()   # fit your model on each dataset
        ↓
-   pool_mi()         # pool with Rubin's rules → MI-aware SEs
+   pool_mi()         # experimental fixed-effect Rubin pooling
 ```
 
 ## Installation
 
 ```r
+# CRAN release
+install.packages("pigauto")
+
+# Development version
 pak::pak("itchyshin/pigauto")
 
 # First-time torch setup (required once)
@@ -103,9 +108,9 @@ pool_mi(fits)  # glmmTMB conditional fixed effects are selected automatically
 ```
 
 The pooled table reports `fmi` (fraction of missing information) per
-coefficient. When `fmi > 0.1` on any term, increase `m` until the
-standard errors stop changing. For most comparative datasets `m = 50`
-is sufficient.
+coefficient. Increase `m` and check that the pooled estimates and standard
+errors are numerically stable for the analysis at hand; `m = 50` is a useful
+starting point, not an inferential guarantee.
 
 `pool_mi()` supports fixed-effect coefficients only. In v0.10.0 it does
 not pool random-effect variances or correlations, BLUPs/conditional modes,
@@ -120,15 +125,12 @@ covariates can improve imputation. The same covariates may also serve as
 predictors in the downstream model:
 
 ```r
-data(delhey5809, tree_delhey)
-df <- delhey5809
-rownames(df) <- df$Species_Key
+data(ctmax_sim, tree300)
+traits <- ctmax_sim[, c("species", "CTmax")]
+covs   <- ctmax_sim["acclim_temp"]
 
-traits <- df[, c("lightness_male", "lightness_female")]
-covs   <- df[, c("annual_mean_temperature", "annual_precipitation",
-                 "percent_tree_cover", "midLatitude")]
-
-result <- impute(traits, tree_delhey, covariates = covs)
+result <- impute(traits, tree300, species_col = "species",
+                 covariates = covs)
 ```
 
 Covariates must be fully observed. Numeric columns are z-scored;
@@ -139,7 +141,8 @@ automatic improvement.
 
 ## Phylogenetic tree uncertainty
 
-If you have a posterior sample of trees (e.g. 50 trees from BirdTree),
+If you have a posterior sample of trees (for example, from a Bayesian
+phylogenetic analysis),
 tree uncertainty enters the analysis at **two** places — and pigauto
 handles them separately because they are conceptually distinct.
 
@@ -177,11 +180,12 @@ fits <- Map(
 pool_mi(fits)
 ```
 
-The pooled standard errors now reflect imputation uncertainty,
-phylogenetic tree uncertainty, and their interaction — all in one
-Rubin's-rules step. Reference: Nakagawa S, de Villemereuil P (2019).
-*Systematic Biology* 68(4):632–641. doi:
-[10.1093/sysbio/syy089](https://doi.org/10.1093/sysbio/syy089).
+For supported fixed effects, the experimental pooled standard errors combine
+imputation uncertainty and phylogenetic tree uncertainty in one Rubin's-rules
+step. Variance components, correlations, random-effect predictions, BLUPs,
+and latent loadings are not pooled in version 0.10.0. Reference: Nakagawa S,
+de Villemereuil P (2019).
+*Systematic Biology* 68(4):632–641. `doi:10.1093/sysbio/syy089`.
 
 ### Compute cost depends on whether the GNN is shared
 
@@ -347,7 +351,7 @@ a species differ by covariate context.
 
 ## Documentation
 
-- **Live site**: <https://itchyshin.github.io/pigauto>
+- **Live site**: <https://itchyshin.github.io/pigauto/>
 - **Getting started**: `vignettes/getting-started.Rmd`
   ([rendered](https://itchyshin.github.io/pigauto/articles/getting-started.html))
 - **Mixed types**:
@@ -357,7 +361,16 @@ a species differ by covariate context.
 - **Common pitfalls**:
   [common-pitfalls.html](https://itchyshin.github.io/pigauto/articles/common-pitfalls.html)
 
+## Acknowledgements
+
+Russell Dinnage ([@rdinnager](https://github.com/rdinnager)) contributed to
+graph-scaling work and foundation-model/TabPFN exploration. Bhavya Jain
+([@b1805](https://github.com/b1805)) contributed correctness fixes,
+safeguards and tests, and a large attention ablation. They are acknowledged
+as package contributors; Shinichi Nakagawa is the package author and
+maintainer for this release.
+
 ## Citation
 
 Nakagawa S (2026). *pigauto: Phylogenetic Imputation via Graph
-Autoencoder*. R package version 0.9.1.9014.
+Autoencoder*. R package version 0.10.0.

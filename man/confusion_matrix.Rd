@@ -25,3 +25,9 @@ A list with:
 \description{
 Compute a confusion matrix for categorical or binary predictions
 }
+\examples{
+confusion_matrix(
+  truth = c("a", "a", "b", "b"),
+  predicted = c("a", "b", "b", "b")
+)
+}

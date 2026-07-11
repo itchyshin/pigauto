@@ -125,13 +125,13 @@
 #'   provides conformal prediction intervals (calibrated against
 #'   held-out residuals) and \code{multi_impute(draws_method =
 #'   "conformal")} for multi-imputation workflows; those are the
-#'   recommended paths for honest standard errors on downstream
-#'   regression.  PMM is only worth enabling for: (a) methodological
+#'   experimental multiple-imputation path for downstream fixed-effect
+#'   regression. PMM is only worth enabling for: (a) methodological
 #'   comparison against mice, or (b) workflows that specifically
 #'   require imputed values to come from the observed data pool.
 #'   For tail safety, prefer \code{clamp_outliers = TRUE}.  For
-#'   honest MI inference, prefer \code{multi_impute(draws_method
-#'   = "conformal")}.
+#'   experimental fixed-effect MI, see \code{multi_impute()} and its
+#'   documented draw assumptions.
 #'
 #'   Default \code{"none"} preserves pre-G' behaviour.
 #' @param pmm_K integer (>= 1).  Donor pool size for PMM.  Default

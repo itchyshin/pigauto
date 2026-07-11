@@ -49,8 +49,10 @@ filters error elements automatically.
 \description{
 Apply a user-supplied model-fitting function \code{.f} to each of the \code{M}
 complete datasets stored in a \code{pigauto_mi} object and return the list
-of fits. This is the middle step of the canonical multiple-imputation
-workflow \code{multi_impute()} -> \code{with_imputations()} -> \code{\link[=pool_mi]{pool_mi()}}.
+of fits. This is the middle step of the documented multiple-imputation
+workflow \code{multi_impute()} -> \code{with_imputations()} -> \code{\link[=pool_mi]{pool_mi()}}. In
+version 0.10.0 the downstream pooling workflow is experimental and is
+limited to fixed-effect coefficients and their covariance matrices.
 }
 \examples{
 \dontrun{

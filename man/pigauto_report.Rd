@@ -39,3 +39,11 @@ Produces a self-contained HTML file with interactive charts comparing the
 GNN against the phylogenetic baseline.  The report includes per-trait
 metrics, gate values, conformal coverage, and training history.
 }
+\examples{
+\dontrun{
+data(avonet300, tree300)
+result <- impute(avonet300, tree300, species_col = "Species_Key")
+pigauto_report(result, output_path = tempfile(fileext = ".html"),
+               open = FALSE)
+}
+}

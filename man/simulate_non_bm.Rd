@@ -42,3 +42,8 @@ Generates species trait data under models that deviate from Brownian Motion.
 Supports OU (stabilising selection), regime shifts (clade-specific optima),
 and non-linear inter-trait correlations.
 }
+\examples{
+tree <- ape::rtree(12)
+traits <- simulate_non_bm(tree, n_traits = 2, scenario = "OU", seed = 1)
+head(traits)
+}

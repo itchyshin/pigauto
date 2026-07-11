@@ -271,7 +271,7 @@ build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE,
 #' Fit a joint MVN BM on liability-scale columns (Phase 3)
 #'
 #' Runs `build_liability_matrix()` then fits the joint Sigma via the
-#' in-house [fit_mvn_bm_inhouse()] solver (R/joint_mvn_solver.R).
+#' in-house `fit_mvn_bm_inhouse()` solver (R/joint_mvn_solver.R).
 #' Returns raw liability-scale posterior. Decoding to per-type output scale
 #' happens upstream in the caller / in `fit_baseline()` glue.
 #'

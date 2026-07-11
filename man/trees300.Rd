@@ -9,8 +9,9 @@ An object of class \code{multiPhylo} containing 50 \code{phylo}
 objects, each with 300 tips.
 }
 \source{
-BirdTree.org posterior (Jetz et al. 2012, Hackett et al. backbone),
-pruned from \code{megatrees::tree_bird_n100}.
+Li (2026), \pkg{megatrees} 1.0.0, MIT licence; trees pruned from
+\code{megatrees::get_tree_bird_n100()}. Underlying posterior from Jetz
+et al. (2012), Hackett et al. backbone.
 }
 \usage{
 trees300

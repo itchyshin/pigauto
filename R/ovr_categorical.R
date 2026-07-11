@@ -5,7 +5,7 @@
 #' modified pigauto_data where the categorical is replaced by this
 #' synthetic binary. Returns the K per-species P(class_k) probabilities.
 #'
-#' This is the OVR (one-vs-rest) strategy BACE uses. Each individual fit
+#' This is a one-vs-rest (OVR) strategy. Each individual fit
 #' has only 1 categorical-related column so Rphylopars stays
 #' well-conditioned.
 #'

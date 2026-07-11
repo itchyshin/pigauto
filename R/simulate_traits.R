@@ -24,6 +24,10 @@
 #' @param seed Integer seed or \code{NULL}.
 #' @return A data.frame with species as rownames.
 #' @importFrom ape rtree rTraitCont
+#' @examples
+#' tree <- ape::rtree(12)
+#' traits <- simulate_non_bm(tree, n_traits = 2, scenario = "OU", seed = 1)
+#' head(traits)
 #' @export
 simulate_non_bm <- function(tree, n_traits = 4,
                             scenario = c("OU", "regime_shift", "nonlinear"),

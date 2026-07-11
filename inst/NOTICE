@@ -1,0 +1,51 @@
+pigauto third-party data notice
+================================
+
+The MIT licence in DESCRIPTION and LICENSE applies to pigauto's original
+software code and documentation. It does not relicense third-party datasets
+or phylogenies bundled in data/.
+
+AVONET trait data
+-----------------
+
+Bundled objects: avonet300 and avonet_full.
+
+These objects contain subsets and transformations of AVONET. The AVONET
+article and data are released under a Creative Commons Attribution (CC BY)
+licence. Users must retain attribution to the original authors.
+
+Source and citation:
+
+Tobias JA et al. (2022). AVONET: morphological, ecological and geographical
+data for all birds. Ecology Letters 25:581-597.
+doi:10.1111/ele.13898
+
+Data archive: https://figshare.com/s/b990722d72a26b5bfead
+
+Example bird phylogenies
+------------------------
+
+Bundled objects: tree300, trees300, and tree_full.
+
+These objects are pruned derivatives of tree_bird_n100, distributed by the
+megatrees 1.0.0 R package under the MIT licence. The exact upstream release
+asset has SHA-256 digest
+71f6f712bf4c57c14570644f447c1e2eb0d76436a88075560afd4e85be1fcb78.
+The underlying posterior tree sample is from the BirdTree Hackett backbone.
+tree300 and tree_full use posterior member 69. It is tied for the smallest
+Robinson-Foulds distance to the former example topology and reproducibly
+retains the pre-existing AVONET safety-floor smoke criterion on the CPU path.
+trees300 records its own deterministic 50-member sample in
+data-raw/make_trees300.R.
+
+Source and citation:
+
+Jetz W, Thomas GH, Joy JB, Hartmann K, Mooers AO (2012). The global diversity
+of birds in space and time. Nature 491:444-448.
+doi:10.1038/nature11631
+
+Upstream package: https://github.com/daijiang/megatrees
+Release asset: https://github.com/daijiang/megatrees/releases/tag/large_multiPhylo
+BirdTree citation: https://birdtree.org/
+
+No additional rights are granted by this notice.

@@ -2,8 +2,10 @@
 #'
 #' Apply a user-supplied model-fitting function `.f` to each of the `M`
 #' complete datasets stored in a `pigauto_mi` object and return the list
-#' of fits. This is the middle step of the canonical multiple-imputation
-#' workflow `multi_impute()` -> `with_imputations()` -> [pool_mi()].
+#' of fits. This is the middle step of the documented multiple-imputation
+#' workflow `multi_impute()` -> `with_imputations()` -> [pool_mi()]. In
+#' version 0.10.0 the downstream pooling workflow is experimental and is
+#' limited to fixed-effect coefficients and their covariance matrices.
 #'
 #' @param mi A `pigauto_mi` object returned by [multi_impute()]. Plain
 #'   lists of data.frames are also accepted and treated as the `datasets`

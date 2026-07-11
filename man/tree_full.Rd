@@ -3,21 +3,22 @@
 \docType{data}
 \name{tree_full}
 \alias{tree_full}
-\title{Pruned BirdTree phylogeny for the 9,993 species in \code{avonet_full}}
+\title{Example bird phylogeny for the species in \code{avonet_full}}
 \format{
 An object of class \code{phylo} with 9,993 tips.
 }
 \source{
-BirdTree.org (Jetz et al. 2012, Hackett et al. backbone).
+Li (2026), \pkg{megatrees} 1.0.0, MIT licence; underlying tree
+sample from Jetz et al. (2012), Hackett et al. backbone.
 }
 \usage{
 tree_full
 }
 \description{
 An object of class \code{'phylo'} from the \pkg{ape} package. The tree is
-the same Stage2_Hackett_MCC Maximum Clade Credibility tree used for
-\code{\link{tree300}}, but pruned to the 9,993 species present in
-\code{\link{avonet_full}} rather than a 300-species random subset.
+the same posterior Hackett-backbone sample used for \code{\link{tree300}},
+but pruned to the species present in \code{\link{avonet_full}} rather than
+a 300-species random subset.
 }
 \details{
 Row order in \code{avonet_full} matches tip order in \code{tree_full}:

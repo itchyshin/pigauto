@@ -82,8 +82,14 @@ ev <- evaluate_imputation(pred, pd$X_scaled, spl)
 print(ev)
 
 
-## ----mc_dropout---------------------------------------------------------------
-pred_mc <- predict(fit, n_imputations = 5L)
-cat("Imputed datasets:", length(pred_mc$imputed_datasets), "\n")
-head(pred_mc$se)  # between-imputation SD
-
+## ----mi_workflow, eval=FALSE--------------------------------------------------
+# # Generate M = 20 stochastic complete datasets
+# mi <- multi_impute(fit$data$X_original, tree, m = 20L)
+#
+# # Fit a downstream model to each
+# fits <- with_imputations(mi, function(d) {
+#   glm(Migratory ~ log(Mass) + Diet, data = d, family = binomial)
+# })
+#
+# # Pool with Rubin's rules
+# pool_mi(fits)

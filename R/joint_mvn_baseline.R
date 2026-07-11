@@ -15,7 +15,8 @@ joint_mvn_available <- function() {
 #' Joint multivariate BM baseline for continuous-family latent columns
 #'
 #' Fits a matrix-normal BM model jointly across BM-eligible latent
-#' columns via [fit_mvn_bm_inhouse()] (R/joint_mvn_solver.R). Returns
+#' columns via the internal `fit_mvn_bm_inhouse()` solver
+#' (R/joint_mvn_solver.R). Returns
 #' per-cell posterior mean and SE in the same shape as the per-column
 #' path in [fit_baseline()]. Non-BM columns (binary, categorical) are
 #' untouched; they stay at zero in the returned matrices (caller

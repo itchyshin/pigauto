@@ -20,3 +20,11 @@ Invisible \code{NULL}.
 Creates a multi-panel comparison plot showing BM baseline vs pigauto
 performance across all simulation scenarios.
 }
+\examples{
+benchmark <- structure(list(summary = data.frame(
+  scenario = rep("BM", 2), trait = rep("trait1", 2),
+  method = c("baseline", "pigauto"), metric = rep("rmse", 2),
+  mean = c(1, 0.8)
+)), class = "pigauto_benchmark")
+plot(benchmark)
+}

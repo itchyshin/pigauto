@@ -186,8 +186,13 @@ test_that("predict.pigauto_fit adds cov_linear fixed effects outside the blend",
     model$cov_linear$weight$copy_(
       torch::torch_tensor(matrix(2, nrow = 1L, ncol = 1L))
     )
-    model$cov_linear$bias$copy_(torch::torch_tensor(1))
+    # fill_() preserves the parameter's float dtype and 1D shape.  Copying a
+    # scalar integer tensor into this bias silently no-ops with some ARM/MPS
+    # libtorch builds, making the fixture test a zero intercept by accident.
+    model$cov_linear$bias$fill_(1)
   })
+
+  expect_equal(as.numeric(as.array(model$cov_linear$bias)), 1)
 
   fit <- structure(
     list(

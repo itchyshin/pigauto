@@ -7,15 +7,16 @@
 
 library(ape)
 library(here)
+library(megatrees)
 
 # ---- Load raw data -----------------------------------------------------------
-tree_path <- here("avonet", "Stage2_Hackett_MCC_no_neg.tre")
 csv_path  <- here("avonet", "AVONET3_BirdTree.csv")
 
-if (!file.exists(tree_path)) stop("Tree file not found: ", tree_path)
 if (!file.exists(csv_path))  stop("CSV file not found: ", csv_path)
 
-tree   <- ape::read.tree(tree_path)
+# The upstream megatrees package and release assets are MIT-licensed. Record
+# the asset digest in inst/NOTICE and retain the Jetz et al. (2012) citation.
+tree   <- megatrees::get_tree_bird_n100()[[69L]]
 avonet <- read.csv(csv_path, stringsAsFactors = FALSE)
 avonet$Species_Key <- gsub(" ", "_", avonet$Species3)
 

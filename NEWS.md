@@ -1,4 +1,4 @@
-# pigauto 0.10.0.9000 (development)
+# pigauto 0.10.0
 
 ## New (opt-in): Pagel's lambda Brownian-motion baseline
 

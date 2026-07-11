@@ -39,7 +39,7 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'
 #' `multi_impute_trees()` handles the imputation half (step 1) cleanly:
 #' every completed dataset carries a different tree's signal so that
-#' between-tree variation propagates into the pooled standard errors.
+#' between-tree variation enters experimental fixed-effect pooling.
 #' Step 2 is where Nakagawa & de Villemereuil (2019) enters: for each
 #' completed dataset, fit the downstream model (e.g. `nlme::gls()` with
 #' a `corBrownian` on `trees[[ mi$tree_index[i] ]]`), then pool the
@@ -51,11 +51,10 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #' many trees you have:
 #'
 #' * **One tree** (single published phylogeny, single time-calibrated tree):
-#'   use [multi_impute()]. The `m` MC-dropout imputations capture model
-#'   uncertainty.
+#'   use [multi_impute()] and select a draw method explicitly when needed.
 #' * **Multiple posterior trees** (BirdTree samples, BEAST posterior, etc.):
-#'   use [multi_impute_trees()]. Between-tree variation is added to the
-#'   pooled SEs via Rubin's rules (Nakagawa & de Villemereuil 2019).
+#'   use [multi_impute_trees()]. Between-tree variation enters the
+#'   experimental fixed-effect Rubin pooling (Nakagawa & de Villemereuil 2019).
 #'
 #' The two functions share the same downstream API — both return objects
 #' compatible with [with_imputations()] and [pool_mi()].
@@ -69,7 +68,7 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'   [trees300] dataset provides 50 posterior trees for [avonet300].
 #' @param m_per_tree integer. Number of MC-dropout imputations per tree
 #'   (default `1`). Total datasets = `length(trees) * m_per_tree`. The
-#'   canonical Nakagawa & de Villemereuil (2019) workflow uses T = 50
+#'   common Nakagawa & de Villemereuil (2019) workflow uses T = 50
 #'   posterior trees × m_per_tree = 1 = M = 50 total datasets.
 #' @param species_col character or `NULL`. See [impute()].
 #' @param trait_types named character vector overriding auto-detected
@@ -148,7 +147,8 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'   data; the baseline channel still carries tree variation).
 #'
 #' On every real dataset benchmarked in the v0.9.0 campaign the gate
-#' closed partially or fully, so `share_gnn = TRUE` is cheap AND honest.
+#' closed partially or fully. This evidence is specific to those benchmark
+#' regimes and does not guarantee tree-variance calibration elsewhere.
 #' Set `share_gnn = FALSE` if you need exact per-tree model independence.
 #'
 #' @details
@@ -161,11 +161,11 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'
 #' Downstream usage is identical to [multi_impute()]: pass the result
 #' to [with_imputations()] to fit a model on each dataset, then to
-#' [pool_mi()] for Rubin's-rules pooling. The pooled standard errors
+#' [pool_mi()] for experimental fixed-effect Rubin pooling. The pooled standard errors
 #' will be wider than those from a single tree because they incorporate
 #' the extra between-tree variance.
 #'
-#' **Variance decomposition.** The between-imputation variance from
+#' **Variance decomposition.** For supported fixed effects, the between-imputation variance from
 #' Rubin's rules has two sources: (1) within-tree sampling variance
 #' (MC-dropout noise), and (2) between-tree variance (phylogenetic
 #' uncertainty at the imputation step). The fraction of missing
@@ -214,7 +214,7 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #' data(avonet300, trees300)
 #' df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
 #'
-#' # ---- Step 1: tree-aware imputation (canonical N&dV 2019 workflow) --
+#' # ---- Step 1: tree-aware imputation (N&dV 2019 workflow) --
 #' # 50 trees x 1 imputation = 50 completed datasets (fast with share_gnn=TRUE)
 #' mi <- multi_impute_trees(df, trees300, m_per_tree = 1L)
 #' print(mi)
@@ -233,8 +233,7 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'     )
 #' })
 #'
-#' # Rubin's rules: pooled SEs include both trait-imputation and
-#' # phylogenetic-tree uncertainty.
+#' # Experimental Rubin pooling combines both sources for fixed effects.
 #' pool_mi(fits)
 #' }
 #'

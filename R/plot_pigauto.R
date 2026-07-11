@@ -12,6 +12,12 @@
 #' @importFrom ggplot2 ggplot aes geom_point geom_abline facet_wrap
 #' @importFrom ggplot2 theme_minimal labs geom_line geom_ribbon
 #' @importFrom rlang .data
+#' @examples
+#' fit <- structure(
+#'   list(history = data.frame(epoch = 1:3, val_loss = c(1, 0.7, 0.5))),
+#'   class = "pigauto_fit"
+#' )
+#' plot_history_gg(fit)
 #' @export
 plot_history_gg <- function(x, ...) {
   if (!inherits(x, "pigauto_fit")) {
@@ -51,6 +57,13 @@ plot_history_gg <- function(x, ...) {
 #' @importFrom ggplot2 ggplot aes geom_ribbon geom_line geom_point
 #' @importFrom ggplot2 theme_minimal labs geom_hline
 #' @importFrom rlang .data
+#' @examples
+#' pred <- list(
+#'   imputed = data.frame(mass = c(10, 12, 15)),
+#'   se = matrix(c(1, 1.5, 2), ncol = 1,
+#'               dimnames = list(NULL, "mass"))
+#' )
+#' plot_uncertainty(pred, trait_name = "mass")
 #' @export
 plot_uncertainty <- function(pred_result, truth = NULL, trait_name) {
   # Determine trait type from trait_map if available

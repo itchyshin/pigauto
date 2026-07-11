@@ -12,7 +12,6 @@
 ^data-raw$
 ^doc$
 ^Meta$
-^NEWS\.md$
 ^BACE$
 ^Rplots\.pdf$
 ^_pkgdown\.yml$
@@ -30,3 +29,6 @@
 ^submit_v090_vulcan_gpu$
 ^\.worktrees$
 ^\.devcontainer$
+^\.git$
+^VALIDATION_LEDGER\.md$
+^cran-comments\.md$

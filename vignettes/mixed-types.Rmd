@@ -156,15 +156,18 @@ ev <- evaluate_imputation(pred, pd$X_scaled, spl)
 print(ev)
 ```
 
-## Multiple imputation for downstream inference
+## Experimental multiple imputation for fixed effects
 
-The recommended workflow uses `multi_impute()` to generate M complete datasets
-from the model's calibrated uncertainty distribution, then pools downstream
-coefficients with Rubin's rules via `with_imputations()` and `pool_mi()`.
+The downstream workflow uses `multi_impute()` to generate M complete datasets,
+then pools fixed-effect coefficients with Rubin's rules via
+`with_imputations()` and `pool_mi()`. Version 0.10.0 labels this workflow
+experimental pending known-DGP inferential coverage validation.
 
 `draws_method = "conformal"` is the default: missing cells are drawn from
-Normal distributions centred on the point estimate with width set by the
-split-conformal calibration score. The alternative `draws_method = "mc_dropout"`
+Normal distributions centred on the point estimate with width heuristically
+derived from the split-conformal calibration score. This construction is not
+implied by the split-conformal coverage guarantee. The alternative
+`draws_method = "mc_dropout"`
 runs M stochastic GNN forward passes with dropout active and BM posterior draws
 as the blend baseline; it is available for comparison.
 
@@ -182,8 +185,13 @@ pool_mi(fits)
 ```
 
 `pool_mi()` returns a tidy data.frame with `estimate`, `std.error`, `p.value`,
-`df` (Barnard-Rubin degrees of freedom), `fmi` (fraction of missing information),
+`df` (classical Rubin degrees of freedom by default, or Barnard-Rubin when
+`df_fun` supplies complete-data residual degrees of freedom), `fmi` (fraction of missing information),
 and `riv` (relative increase in variance) per coefficient.
+
+Version 0.10.0 supports fixed effects only. Variance components, correlations,
+random-effect predictions, BLUPs/conditional modes, latent loadings, and other
+structured quantities are not supported pooling targets.
 
 For reference, the lower-level `predict(fit, n_imputations = 5L)` interface
 returns M complete datasets directly (without downstream pooling):

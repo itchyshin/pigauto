@@ -25,3 +25,11 @@ value.  If \code{truth} is supplied, observed values are overlaid as
 points.  Works for continuous, count, and ordinal traits.  For binary
 traits, plots predicted probabilities with an uncertainty ribbon.
 }
+\examples{
+pred <- list(
+  imputed = data.frame(mass = c(10, 12, 15)),
+  se = matrix(c(1, 1.5, 2), ncol = 1,
+              dimnames = list(NULL, "mass"))
+)
+plot_uncertainty(pred, trait_name = "mass")
+}

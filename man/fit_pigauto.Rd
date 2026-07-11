@@ -105,9 +105,14 @@ to a \code{trait_embed_dim} feature, and concatenates it alongside
 sets with strong within-row functional coupling that the joint MVN /
 threshold-joint baseline cannot capture (e.g. nonlinear cross-trait
 structure). On the BIEN n=2000 plant bench it did \strong{not} improve
-pooled RMSE (Σ is already captured by the joint baseline); kept as
+pooled RMSE (cross-trait covariance is already captured by the joint
+baseline); kept as
 an opt-in for datasets where it may help. Default \code{FALSE}
-preserves v0.9.2 behaviour exactly.}
+preserves v0.9.2 behaviour exactly. Note: Ablation testing
+demonstrates that this within-row attention recovers only a small,
+sub-material gain, and only when cross-trait structure is explicitly
+non-linear and the joint-MVN baseline is present; it cannot model
+non-linear coupling on its own.}
 
 \item{n_trait_heads}{integer. Number of attention heads in the within-row
 self-attention block when \code{use_trait_attention = TRUE}. Default
@@ -358,4 +363,18 @@ required.
 The \code{min_val_cells} warning fires at fit time whenever any trait
 falls below this threshold, so you know when to interpret the
 intervals cautiously.
+}
+
+\examples{
+\dontrun{
+data(avonet300, tree300)
+traits <- avonet300
+rownames(traits) <- traits$Species_Key
+traits$Species_Key <- NULL
+data <- preprocess_traits(traits, tree300)
+splits <- make_missing_splits(data$X_scaled, trait_map = data$trait_map,
+                              seed = 1)
+fit <- fit_pigauto(data, tree300, splits = splits, epochs = 100,
+                   verbose = FALSE, seed = 1)
+}
 }

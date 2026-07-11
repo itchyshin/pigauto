@@ -23,26 +23,28 @@
 #' }
 #' @source Tobias et al. (2022) AVONET: morphological, ecological and
 #'   geographical data for all birds. \emph{Ecology Letters}, 25, 581-597.
-#'   BirdTree backbone: Hackett et al. MCC tree via BirdTree.org.
+#'   Species labels are aligned to the bundled example phylogenies.
 "avonet300"
 
 
-#' Pruned BirdTree phylogeny for the 300 species in \code{avonet300}
+#' Example bird phylogeny for the 300 species in \code{avonet300}
 #'
 #' An object of class \code{'phylo'} from the \pkg{ape} package. The tree is a
-#' Maximum Clade Credibility (MCC) tree from the Hackett et al. backbone
-#' (Stage2_Hackett_MCC_no_neg.tre), pruned to the 300 species present in
-#' \code{\link{avonet300}}.
+#' posterior Hackett-backbone sample distributed by the MIT-licensed
+#' \pkg{megatrees} package, pruned to the 300 species present in
+#' \code{\link{avonet300}}. It is intended for examples, not as a consensus
+#' or recommended tree for substantive analysis.
 #'
 #' @format An object of class \code{phylo} with 300 tips.
-#' @source BirdTree.org (Jetz et al. 2012, Hackett et al. backbone).
+#' @source Li (2026), \pkg{megatrees} 1.0.0, MIT licence; underlying tree
+#'   sample from Jetz et al. (2012), Hackett et al. backbone.
 "tree300"
 
 
 #' Full AVONET morphological and ecological trait data for 9,993 bird species
 #'
 #' The full-scale counterpart to \code{\link{avonet300}}: every bird species
-#' for which AVONET3 and the BirdTree Stage2 Hackett MCC phylogeny agree on
+#' for which AVONET3 and the bundled example phylogeny agree on
 #' both a species label and a complete set of continuous morphometric
 #' measurements. The schema is identical to \code{avonet300} (same trait
 #' columns, same factor encodings, same \code{Species_Key} column) so any
@@ -67,24 +69,25 @@
 #'   \code{Trophic.Level}, \code{Primary.Lifestyle}, \code{Migration}.
 #' @source Tobias et al. (2022) AVONET: morphological, ecological and
 #'   geographical data for all birds. \emph{Ecology Letters}, 25, 581-597.
-#'   BirdTree backbone: Hackett et al. MCC tree via BirdTree.org.
+#'   Species labels are aligned to the bundled example phylogeny.
 #' @seealso \code{\link{avonet300}}, \code{\link{tree_full}}
 "avonet_full"
 
 
-#' Pruned BirdTree phylogeny for the 9,993 species in \code{avonet_full}
+#' Example bird phylogeny for the species in \code{avonet_full}
 #'
 #' An object of class \code{'phylo'} from the \pkg{ape} package. The tree is
-#' the same Stage2_Hackett_MCC Maximum Clade Credibility tree used for
-#' \code{\link{tree300}}, but pruned to the 9,993 species present in
-#' \code{\link{avonet_full}} rather than a 300-species random subset.
+#' the same posterior Hackett-backbone sample used for \code{\link{tree300}},
+#' but pruned to the species present in \code{\link{avonet_full}} rather than
+#' a 300-species random subset.
 #'
 #' Row order in \code{avonet_full} matches tip order in \code{tree_full}:
 #' \code{all(avonet_full$Species_Key == tree_full$tip.label)} returns
 #' \code{TRUE}.
 #'
 #' @format An object of class \code{phylo} with 9,993 tips.
-#' @source BirdTree.org (Jetz et al. 2012, Hackett et al. backbone).
+#' @source Li (2026), \pkg{megatrees} 1.0.0, MIT licence; underlying tree
+#'   sample from Jetz et al. (2012), Hackett et al. backbone.
 #' @seealso \code{\link{tree300}}, \code{\link{avonet_full}}
 "tree_full"
 
@@ -107,54 +110,12 @@
 #'
 #' @format An object of class \code{multiPhylo} containing 50 \code{phylo}
 #'   objects, each with 300 tips.
-#' @source BirdTree.org posterior (Jetz et al. 2012, Hackett et al. backbone),
-#'   pruned from \code{megatrees::tree_bird_n100}.
+#' @source Li (2026), \pkg{megatrees} 1.0.0, MIT licence; trees pruned from
+#'   \code{megatrees::get_tree_bird_n100()}. Underlying posterior from Jetz
+#'   et al. (2012), Hackett et al. backbone.
 #' @seealso \code{\link{tree300}}, \code{\link{avonet300}},
 #'   \code{\link{multi_impute_trees}}
 "trees300"
-
-
-#' Delhey et al. (2019) plumage lightness data for 5,809 passerine species
-#'
-#' Plumage lightness measurements and environmental covariates for 5,809
-#' passerine bird species. This dataset demonstrates environmental-covariate
-#' support in pigauto: climate variables are fully observed conditioners that
-#' improve imputation of lightness traits.
-#'
-#' @format A data frame with 5,809 rows and 10 variables:
-#' \describe{
-#'   \item{Species_Key}{Character. Species name in BirdTree format.}
-#'   \item{family}{Character. Taxonomic family.}
-#'   \item{annual_mean_temperature}{Numeric. Annual mean temperature
-#'     (BIO1, degrees C x 10).}
-#'   \item{annual_precipitation}{Numeric. Annual precipitation (mm).}
-#'   \item{percent_tree_cover}{Numeric. Percent tree cover.}
-#'   \item{mean_temperature_of_warmest_quarter}{Numeric. Mean temperature
-#'     of warmest quarter (BIO10, degrees C x 10).}
-#'   \item{precipitation_of_warmest_quarter}{Numeric. Precipitation of
-#'     warmest quarter (mm).}
-#'   \item{midLatitude}{Numeric. Mid-latitude of species range.}
-#'   \item{lightness_male}{Numeric. Average plumage lightness for males.}
-#'   \item{lightness_female}{Numeric. Average plumage lightness for females.}
-#' }
-#' @source Delhey K, Dale J, Valcu M, Kempenaers B (2019). "Reconciling
-#'   ecogeographical rules: rainfall and temperature predict global colour
-#'   variation in the largest bird radiation." \emph{Ecology Letters},
-#'   22(5): 726-736.
-#' @seealso \code{\link{tree_delhey}}
-"delhey5809"
-
-
-#' Pruned BirdTree phylogeny for the 5,809 species in \code{delhey5809}
-#'
-#' An object of class \code{'phylo'} from the \pkg{ape} package. The tree is
-#' the Stage2_Hackett_MCC Maximum Clade Credibility tree, pruned to the 5,809
-#' passerine species in \code{\link{delhey5809}}.
-#'
-#' @format An object of class \code{phylo} with 5,809 tips.
-#' @source BirdTree.org (Jetz et al. 2012, Hackett et al. backbone).
-#' @seealso \code{\link{delhey5809}}
-"tree_delhey"
 
 
 #' Simulated multi-observation-per-species CTmax data
@@ -163,10 +124,10 @@
 #' has multiple measurements of critical thermal maximum (CTmax) taken at
 #' different acclimation temperatures.  The data-generating process is
 #'
-#' \deqn{CTmax_{ij} = 38 + phylo_i + 0.10 \times acclim\_temp_{ij} + \epsilon_{ij}}
+#' \deqn{CTmax_{ij} = 38 + phylo_i + 0.50 \times acclim\_temp_{ij} + \epsilon_{ij}}
 #'
 #' where \eqn{phylo_i} follows Brownian motion on \code{\link{tree300}},
-#' the within-species acclimation response ratio is 0.10, and
+#' the within-species acclimation response ratio is 0.50, and
 #' \eqn{\epsilon_{ij} \sim N(0, 1.5)}.  Thirty percent of species are entirely
 #' unobserved (all CTmax values are NA), and an additional 15\% of remaining
 #' observations are missing at random.

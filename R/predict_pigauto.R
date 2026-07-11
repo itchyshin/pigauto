@@ -20,9 +20,9 @@
 #' \code{r_cal > 0} both BM draws and GNN dropout contribute variance.  Point
 #' estimates are the mean (continuous, count) or mode (binary, categorical,
 #' ordinal) across passes.  The M complete datasets are returned in
-#' \code{imputed_datasets} for Rubin's-rules pooling.  For the user-facing
-#' multiple-imputation workflow, prefer \code{multi_impute()} which offers
-#' \code{draws_method = "conformal"} (calibrated, narrower) or
+#' \code{imputed_datasets} for the experimental fixed-effect Rubin workflow.
+#' For the user-facing multiple-imputation workflow, use \code{multi_impute()},
+#' which offers \code{draws_method = "conformal"} (conformal-width heuristic) or
 #' \code{"mc_dropout"} (BM posterior draws + GNN dropout, wider).
 #'
 #' **Decoding per type:**
@@ -40,8 +40,8 @@
 #' @param return_se logical. Compute standard errors? (default \code{TRUE}).
 #' @param n_imputations integer. Number of stochastic imputation draws —
 #'   BM posterior samples plus GNN dropout — (default \code{1L}).  Set to
-#'   e.g. 10 or 20 for proper multiple imputation with between-imputation
-#'   variance.
+#'   e.g. 10 or 20 to return stochastic datasets with between-imputation
+#'   variation for the experimental downstream workflow.
 #' @param baseline_override optional `list(mu, se)` with the same shape as
 #'   `object$baseline`. When supplied, predictions use this baseline instead
 #'   of the one saved in the fit. Used internally by [multi_impute_trees()]
@@ -81,14 +81,13 @@
 #'   package already provides conformal prediction intervals
 #'   (calibrated against held-out residuals) and
 #'   \code{multi_impute(draws_method = "conformal")} for
-#'   multi-imputation workflows -- those give Rubin's-rules
-#'   honest standard errors without donor-mismatch noise.  PMM is
+#'   experimental fixed-effect multiple-imputation workflows. PMM is
 #'   only worth enabling for: (a) methodological comparison against
 #'   mice / equivalent packages, or (b) workflows that specifically
 #'   require imputed values to come from the observed data pool.
 #'   For tail safety on single-imputation point estimates, prefer
-#'   \code{clamp_outliers = TRUE}.  For honest MI standard errors,
-#'   prefer \code{multi_impute(draws_method = "conformal")}.
+#'   \code{clamp_outliers = TRUE}. For downstream MI, see
+#'   \code{multi_impute()} and its documented draw assumptions.
 #'
 #'   The Phase G' acceptance bench
 #'   (\code{useful/MEMO_2026-05-01_phase_g_prime_results.md})
@@ -199,8 +198,26 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     n_trait_heads          = as.integer(n_trait_heads),
     trait_embed_dim        = as.integer(trait_embed_dim)
   )
-  model$to(device = device)
+  # Restore the CPU state before moving the rebuilt module to an accelerator.
+  # Loading CPU tensors directly into an MPS module can silently miss scalar
+  # bias values on some libtorch/macOS combinations (the weight still loads),
+  # which drops fixed-effect intercepts from prediction.
   model$load_state_dict(object$model_state)
+  model$to(device = device)
+  # Some ARM/MPS libtorch builds expose the correct length-one bias after state
+  # loading but omit it from nn_linear()'s forward result.  Preserve the saved
+  # direct-covariate parameters so prediction can reconstruct this small fixed-
+  # effect term on CPU and bypass the affected MPS kernel entirely.
+  mps_cov_linear <- NULL
+  cov_weight <- object$model_state[["cov_linear.weight"]]
+  cov_bias <- object$model_state[["cov_linear.bias"]]
+  if (identical(device$type, "mps") && !is.null(cov_weight) &&
+      !is.null(cov_bias) && !is.null(model$cov_linear)) {
+    mps_cov_linear <- list(
+      weight = as.matrix(as.array(cov_weight$detach()$cpu())),
+      bias = as.numeric(as.array(cov_bias$detach()$cpu()))
+    )
+  }
   gpu_mem_checkpoint("predict: after model rebuild + load_state_dict")
 
   # Calibrated gates override learned gates.
@@ -375,6 +392,16 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
       covariates, dtype = torch::torch_float(), device = device
     )
   }
+  t_mps_cov_fixed_effects <- NULL
+  if (!is.null(mps_cov_linear) && has_covariates) {
+    mps_fixed_effects <- covariates %*% t(mps_cov_linear$weight)
+    mps_fixed_effects <- sweep(
+      mps_fixed_effects, 2L, mps_cov_linear$bias, FUN = "+"
+    )
+    t_mps_cov_fixed_effects <- torch::torch_tensor(
+      mps_fixed_effects, dtype = torch::torch_float(), device = device
+    )
+  }
   actual_cov_dim <- p + 1L + n_cov_cols
   expected_cov_dim <- as.integer(cfg$cov_dim)
   if (length(expected_cov_dim) == 1L && !is.na(expected_cov_dim) &&
@@ -482,7 +509,11 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
         } else {
           pred <- (1 - out$rs) * t_BM_draw + out$rs * out$delta
         }
-        if (!is.null(out$fixed_effects)) pred <- pred + out$fixed_effects
+        if (!is.null(t_mps_cov_fixed_effects)) {
+          pred <- pred + t_mps_cov_fixed_effects
+        } else if (!is.null(out$fixed_effects)) {
+          pred <- pred + out$fixed_effects
+        }
         last_pred <- pred
         # Drop the previous X_iter before binding the new one so that the
         # old forward-pass intermediates (attention matrices, FFN outputs,
