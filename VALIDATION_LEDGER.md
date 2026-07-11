@@ -7,12 +7,13 @@ parameterization.
 
 | Claim | Evidence | Tier | Date |
 |---|---|---|---|
-| Rubin pooling for downstream `lm`/`glm` fixed effects has calibrated bias, SE, and 95% coverage after pigauto MI | `script/mi-validation-v010/`; full 500-replicate campaign pending | experimental | 2026-07-10 |
-| Rubin pooling for downstream random-intercept `lmer` fixed effects has calibrated bias, SE, and 95% coverage after pigauto MI | `script/mi-validation-v010/`; full 500-replicate campaign pending | experimental | 2026-07-10 |
-| Conformal-width Normal draws form an inferentially valid imputation distribution | Paired conformal versus Brownian/MC-dropout campaign specified but not yet run | experimental | 2026-07-10 |
-| Brownian-posterior/MC-dropout draws form an inferentially valid imputation distribution | Paired conformal versus Brownian/MC-dropout campaign specified but not yet run | experimental | 2026-07-10 |
+| Rubin pooling for downstream `lm`/`glm` fixed effects has calibrated bias, SE, and 95% coverage after pigauto MI | Full 500-replicate-per-cell campaign at `800e0cb` failed every conformal and MC-dropout core cell; see `script/mi-validation-v010/FULL_RESULTS_2026-07-11.md` | experimental | 2026-07-11 |
+| Rubin pooling for downstream random-intercept `lmer` fixed effects has calibrated bias, SE, and 95% coverage after pigauto MI | Full 500-replicate-per-cell campaign at `800e0cb` failed the joint fixed-effect gate; variance components were diagnostic only and showed no boundary/singularity flags | experimental | 2026-07-11 |
+| Conformal-width Normal draws form an inferentially valid imputation distribution | Full paired campaign: 0/12 core cells passed; coverage 35.4% to 93.6% | experimental | 2026-07-11 |
+| Brownian-posterior/MC-dropout draws form an inferentially valid imputation distribution | Full paired campaign: 0/12 core cells passed; coverage 52.2% to 93.6% | experimental | 2026-07-11 |
+| Stochastic predictive mean matching repairs the failed downstream fixed-effect behavior | Exploratory 60-task paired pilot on `568e0e2`: all six `x` cells retained standardized bias above 0.10; not promoted to the public API | experimental | 2026-07-11 |
 | Random-effect variances, correlations, and BLUPs can be pooled by `pool_mi()` | Explicitly outside v0.10.0 scope; variance components are diagnostic only | experimental | 2026-07-10 |
 
-No inferential claim above should be promoted to `validated` until the frozen
-package SHA passes every pre-specified core cell and the evidence artifact records
-that SHA, platform, package versions, manifest, failures, and summary.
+The v0.10.0 CRAN gate is blocked. No inferential claim above should be promoted
+to `validated`, and no CRAN submission should be made, until a redesigned method
+passes every pre-specified core cell on a new frozen package SHA.

@@ -65,7 +65,7 @@ processed <- data.frame(
 
 .summarise_fixed_group <- function(data) {
   counts <- .cell_counts(data$dgp[[1]], data$regime[[1]])
-  mi_method <- data$method[[1]] %in% c("conformal", "mc_dropout")
+  mi_method <- data$method[[1]] %in% c("conformal", "mc_dropout", "pmm")
   downstream_ok <- if (mi_method) {
     data$n_fits >= ceiling(0.95 * data$m_requested)
   } else {
@@ -172,7 +172,7 @@ if (nrow(variance) > 0L) {
   variance_summary$boundary_rate_increase <-
     variance_summary$boundary_rate - variance_summary$oracle_boundary_rate
   variance_summary$diagnostic_flag <-
-    variance_summary$method %in% c("conformal", "mc_dropout") &
+    variance_summary$method %in% c("conformal", "mc_dropout", "pmm") &
     (variance_summary$added_abs_relative_bias > 0.20 |
        variance_summary$boundary_rate_increase > 0.05)
 }
@@ -215,11 +215,12 @@ if (nrow(training) > 0L) {
 }
 
 core <- fixed_summary[
-  fixed_summary$method %in% c("conformal", "mc_dropout") &
+  fixed_summary$method %in% c("conformal", "mc_dropout", "pmm") &
     fixed_summary$term %in% c("x", "z"), , drop = FALSE
 ]
 expected_cells <- length(unique(manifest$dgp)) * length(unique(manifest$regime)) * 2L
-method_pass <- vapply(c("conformal", "mc_dropout"), function(method) {
+mi_methods <- c("conformal", "mc_dropout", "pmm")
+method_pass <- vapply(mi_methods, function(method) {
   cells <- core[core$method == method, , drop = FALSE]
   nrow(cells) == expected_cells && all(cells$pass)
 }, logical(1))
@@ -239,11 +240,10 @@ campaign_complete <- nrow(processed) == nrow(manifest) &&
 decision <- if (!campaign_complete) {
   "INCOMPLETE: pilot/dry-run evidence cannot support a release decision"
 } else if (all(method_pass)) {
-  "PASS: both draw methods pass; retain conformal only if it has no undercoverage cell"
-} else if (method_pass[["mc_dropout"]]) {
-  "PASS MC-DROPOUT ONLY: make MC-dropout the inferential default; conformal remains experimental"
-} else if (method_pass[["conformal"]]) {
-  "PASS CONFORMAL ONLY: retain conformal; MC-dropout remains experimental"
+  "PASS: all candidate draw methods pass"
+} else if (any(method_pass)) {
+  paste0("PASS ", paste(names(method_pass)[method_pass], collapse = ", "),
+         " ONLY: unsupported draw methods remain experimental")
 } else {
   "FAIL: block CRAN and redesign the MI draw distribution"
 }

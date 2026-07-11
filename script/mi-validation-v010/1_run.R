@@ -192,6 +192,41 @@ manifest <- write_manifest(config)
   })
 }
 
+.pmm_datasets_from_fit <- function(mi, original_traits, species_col,
+                                    m, seed, k = 5L) {
+  pred <- stats::predict(
+    mi$fit, return_se = FALSE, n_imputations = m,
+    match_observed = "none"
+  )
+  if (is.null(pred$imputed_datasets) ||
+      length(pred$imputed_datasets) != m) {
+    stop("PMM validation did not receive ", m, " stochastic predictions.",
+         call. = FALSE)
+  }
+
+  input_row_order <- mi$data$input_row_order
+  truth_input <- as.numeric(original_traits$x)
+  truth_internal <- if (!is.null(input_row_order)) {
+    truth_input[input_row_order]
+  } else {
+    truth_input
+  }
+  pmm_one <- getFromNamespace("pmm_impute_one_trait", "pigauto")
+  build_completed <- getFromNamespace("build_completed", "pigauto")
+
+  lapply(seq_len(m), function(i) {
+    imputed <- pred$imputed_datasets[[i]]
+    imputed$x <- pmm_one(
+      predictions = as.numeric(imputed$x), truth = truth_internal,
+      K = k, seed = as.integer(seed + 70000L + i)
+    )
+    build_completed(
+      original_traits, imputed, species_col,
+      input_row_order = input_row_order
+    )$completed
+  })
+}
+
 .x_gate <- function(fit) {
   tm_index <- which(vapply(fit$trait_map, function(x) identical(x$name, "x"),
                            logical(1)))
@@ -305,6 +340,11 @@ manifest <- write_manifest(config)
   )
   conformal_datasets <- lapply(conformal_datasets, complete_imputed_dataset,
                                dgp_object = dgp)
+  pmm_datasets <- .pmm_datasets_from_fit(
+    mi_mc, dgp$traits, dgp$species_col, task$m, task$seed
+  )
+  pmm_datasets <- lapply(pmm_datasets, complete_imputed_dataset,
+                         dgp_object = dgp)
 
   conformal_analysis <- .analyse_method(
     conformal_datasets, task$dgp, "conformal", dgp$truth, dgp$truth_vc
@@ -312,22 +352,28 @@ manifest <- write_manifest(config)
   mc_analysis <- .analyse_method(
     mc_datasets, task$dgp, "mc_dropout", dgp$truth, dgp$truth_vc
   )
+  pmm_analysis <- .analyse_method(
+    pmm_datasets, task$dgp, "pmm", dgp$truth, dgp$truth_vc
+  )
   fixed <- rbind(
     fixed,
     conformal_analysis$fixed_effects,
-    mc_analysis$fixed_effects
+    mc_analysis$fixed_effects,
+    pmm_analysis$fixed_effects
   )
   if (task$dgp == "lmer") {
     variance <- rbind(
       variance,
       conformal_analysis$variance_components,
-      mc_analysis$variance_components
+      mc_analysis$variance_components,
+      pmm_analysis$variance_components
     )
   }
 
   method_ok <- c(
     conformal = nrow(conformal_analysis$fixed_effects) == length(dgp$truth),
-    mc_dropout = nrow(mc_analysis$fixed_effects) == length(dgp$truth)
+    mc_dropout = nrow(mc_analysis$fixed_effects) == length(dgp$truth),
+    pmm = nrow(pmm_analysis$fixed_effects) == length(dgp$truth)
   )
   result$status <- if (all(method_ok)) "success" else if (any(method_ok)) {
     "partial"
@@ -342,7 +388,9 @@ manifest <- write_manifest(config)
     conformal = list(fit_errors = conformal_analysis$fit_errors,
                      pool_error = conformal_analysis$pool_error),
     mc_dropout = list(fit_errors = mc_analysis$fit_errors,
-                      pool_error = mc_analysis$pool_error)
+                      pool_error = mc_analysis$pool_error),
+    pmm = list(fit_errors = pmm_analysis$fit_errors,
+               pool_error = pmm_analysis$pool_error)
   )
   result$completed_at <- Sys.time()
   result$elapsed_seconds <- as.numeric(difftime(result$completed_at, started,
