@@ -24,7 +24,7 @@ Generalist, Insessorial, or Terrestrial.}
 \source{
 Tobias et al. (2022) AVONET: morphological, ecological and
 geographical data for all birds. \emph{Ecology Letters}, 25, 581-597.
-BirdTree backbone: Hackett et al. MCC tree via BirdTree.org.
+Species labels are aligned to the bundled example phylogenies.
 }
 \usage{
 avonet300

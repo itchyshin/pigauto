@@ -13,14 +13,14 @@ A data frame with 9,993 rows and 8 variables. Columns match
 \source{
 Tobias et al. (2022) AVONET: morphological, ecological and
 geographical data for all birds. \emph{Ecology Letters}, 25, 581-597.
-BirdTree backbone: Hackett et al. MCC tree via BirdTree.org.
+Species labels are aligned to the bundled example phylogeny.
 }
 \usage{
 avonet_full
 }
 \description{
 The full-scale counterpart to \code{\link{avonet300}}: every bird species
-for which AVONET3 and the BirdTree Stage2 Hackett MCC phylogeny agree on
+for which AVONET3 and the bundled example phylogeny agree on
 both a species label and a complete set of continuous morphometric
 measurements. The schema is identical to \code{avonet300} (same trait
 columns, same factor encodings, same \code{Species_Key} column) so any

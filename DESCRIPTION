@@ -18,9 +18,8 @@ Description: Imputes missing species trait data for comparative analyses
     experimental Rubin's-rules multiple-imputation workflow for pooling
     fixed effects in downstream models, including tree-uncertainty
     propagation via posterior tree samples. Tested up to 10,000 species.
-    Bundled datasets include a
-    300-species and a 9,993-species AVONET bird trait + BirdTree phylogeny
-    subset.
+    Bundled datasets include 300-species and 9,993-species AVONET bird-trait
+    subsets with matching example phylogenies.
 License: MIT + file LICENSE
 URL: https://itchyshin.github.io/pigauto/, https://github.com/itchyshin/pigauto
 BugReports: https://github.com/itchyshin/pigauto/issues
