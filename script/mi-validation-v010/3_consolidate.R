@@ -71,7 +71,7 @@ setting_names <- c("m", "smcfcs_numit", "smcfcs_rjlimit", "jomo_nburn",
                    "jomo_nbetween")
 if (!all(setting_names %in% names(manifest)) ||
     length(unique(manifest$m)) != 1L ||
-    nrow(unique(manifest[manifest$dgp != "lmer",
+    nrow(unique(manifest[manifest$dgp == "glm",
                          c("smcfcs_numit", "smcfcs_rjlimit"),
                          drop = FALSE])) != 1L ||
     nrow(unique(manifest[manifest$dgp == "lmer",

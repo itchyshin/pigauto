@@ -32,10 +32,21 @@ For the logit DGP it samples from the Normal prior and accepts with the exact
 Bernoulli likelihood. The mixed-DGP oracle conditions on the simulated random
 intercept; this is intentionally a positive control, not a deployable method.
 
-The standard comparator uses `smcfcs` for `lm` and logit `glm`, and
-`jomo::jomo.smc(model = "lmer")` for the Gaussian random-intercept model.
-Both see `z^2` as a fully observed auxiliary. `jomo` is not used for the logit
-comparator because its documented binomial substantive model uses a probit link.
+The standard analysis-compatible comparator dispatches by frozen analysis:
+
+- Gaussian `lm`: proper Bayesian normal-regression MI from
+  `x ~ y + z + I(z^2)`, using the Jeffreys posterior
+  `sigma^2 = RSS / chi-square(n_obs - p)`,
+  `beta | sigma^2 ~ Normal(beta_hat, sigma^2 (X'X)^-1)`, followed by an
+  independent residual draw for every missing cell;
+- logit `glm`: `smcfcs` with the substantive model `y ~ x + z`;
+- Gaussian random-intercept `lmer`: `jomo::jomo.smc(model = "lmer")`.
+
+The Gaussian branch is deliberately narrow: it supports this complete-rank
+Gaussian main-effects validation cell and is not a general SMC implementation.
+All branches see `z^2` as a fully observed auxiliary. `jomo` is not used for
+the logit comparator because its documented binomial substantive model uses a
+probit link.
 
 ## E — Estimands
 
@@ -82,7 +93,7 @@ release.
 | 1. Aims | Gate-attainability question stated above |
 | 2. DGP | Frozen DGP and MAR selection retained |
 | 3. Estimands | `beta_x`, `beta_z`; variance components diagnostic only |
-| 4. Methods | Exact oracle, SMCFCS, and jomo SMC specified |
+| 4. Methods | Exact oracle, Bayesian normal-regression MI, SMCFCS, and jomo |
 | 5. Performance | Frozen bias, SE, coverage, validity thresholds |
 | 6. Environment | Git SHA and dependency versions stored per task |
 | 7. Code | Three-stage harness in this repository |

@@ -363,7 +363,7 @@ setting_names <- c(
 )
 if (all(setting_names %in% names(manifest))) {
   settings <- list(
-    smcfcs = unique(manifest[manifest$dgp != "lmer",
+    smcfcs = unique(manifest[manifest$dgp == "glm",
                              c("smcfcs_numit", "smcfcs_rjlimit"), drop = FALSE]),
     jomo = unique(manifest[manifest$dgp == "lmer",
                            c("jomo_nburn", "jomo_nbetween"), drop = FALSE])

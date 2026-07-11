@@ -71,3 +71,13 @@ replicate 793) before rerunning the single-level grid. A larger limit is accepte
 only if both tasks are warning-free and preserve finite imputations, observed
 values, and row order. This amendment changes a numerical rejection-sampling
 safeguard, not the imputation model or performance thresholds.
+
+## Superseding Gaussian-engine decision
+
+The rejection-limit experiment did not repair the Gaussian `lm` branch:
+`rjlimit = 100000` reduced but did not remove warnings on the two worst seeds,
+and `rjlimit = 1000000` was not economically viable. The next prospective
+confirmation therefore replaces SMCFCS only for the frozen Gaussian `lm` cell
+with proper Bayesian normal-regression MI using `x ~ y + z + I(z^2)`. SMCFCS
+remains the logit `glm` engine and jomo remains the `lmer` engine. Historical
+results above retain their original engine labels.

@@ -33,9 +33,12 @@ then supplies both paired draw sets:
 - `oracle_conditional` (positive control): draws from the known DGP-specific
   conditional distribution of missing `x`, including the true random intercept
   in the mixed DGP.
-- `standard_smc` (positive control): `smcfcs` for `lm` and logit `glm`, and
-  `jomo::jomo.smc(model = "lmer")` for the Gaussian mixed model. The fully
-  observed `z^2` term is included as an auxiliary variable.
+- `standard_smc` (historical result identifier; positive control): proper
+  Bayesian normal-regression MI for Gaussian `lm`, `smcfcs` for logit `glm`,
+  and `jomo::jomo.smc(model = "lmer")` for the Gaussian mixed model. The fully
+  observed `z^2` term is included in each imputation model. The Gaussian branch
+  draws the residual variance, coefficients, and missing-cell residuals from
+  `x ~ y + z + I(z^2)`; it is not a general SMC implementation.
 
 This pairing isolates the draw rule from model-training variability and avoids
 retraining for each candidate. Complete-data oracle and complete-case analyses
@@ -102,7 +105,7 @@ The CLI options have matching environment variables:
 | `--output=` | `PIGAUTO_MI_OUTPUT` | profile-specific results directory |
 
 `--controls-only` (or `PIGAUTO_MI_CONTROLS_ONLY=true`) runs only the oracle and
-standard substantive-compatible controls. It deliberately skips torch and
+standard analysis-compatible controls. It deliberately skips torch and
 pigauto training, making the gate-attainability check much cheaper than another
 candidate campaign. It requires the optional harness dependencies `smcfcs` and
 `jomo`; neither is added to the package DESCRIPTION.
@@ -203,8 +206,9 @@ calibration remain unchanged.
 
 The summariser refuses to issue a release pass from smoke or pilot evidence. It
 reports `pilot_criteria_pass` without the 1,000-replicate completeness
-requirement. The oracle and standard SMC controls must first pass the directional
-screen across all cells. Only then is a public analysis-aware backend worth
+requirement. The oracle and standard analysis-compatible controls must first
+pass the directional screen across all cells. Only then is a public
+analysis-aware backend worth
 implementing and validating at 1,000 replicates per cell. Current conformal,
 MC-dropout, and PMM methods remain experimental unless they independently pass
 the full gate.

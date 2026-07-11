@@ -51,4 +51,31 @@ for (dgp_name in c("lm", "glm", "lmer")) {
   )
 }
 
+lm_dgp <- simulate_validation_dgp("lm", "auxiliary", seed = 20260711L)
+lm_a <- .draw_bayes_norm_lm_imputations(lm_dgp, m = 50L, seed = 42L)
+lm_b <- .draw_bayes_norm_lm_imputations(lm_dgp, m = 50L, seed = 42L)
+lm_c <- .draw_bayes_norm_lm_imputations(lm_dgp, m = 50L, seed = 43L)
+lm_missing <- !is.finite(lm_dgp$observed$x)
+lm_observed <- !lm_missing
+stopifnot(
+  identical(lm_a$datasets, lm_b$datasets),
+  !identical(lm_a$datasets, lm_c$datasets),
+  identical(lm_a$diagnostics$engine, "bayes_norm_lm"),
+  identical(lm_a$diagnostics$imputation_formula, "x ~ y + z + I(z^2)"),
+  length(lm_a$diagnostics$warnings) == 0L,
+  all(vapply(lm_a$datasets, function(x) all(is.finite(x$x)), logical(1))),
+  all(vapply(lm_a$datasets, function(x) {
+    identical(x$x[lm_observed], lm_dgp$observed$x[lm_observed])
+  }, logical(1))),
+  stats::sd(vapply(lm_a$datasets, function(x) {
+    x$x[which(lm_missing)[1]]
+  }, numeric(1))) > 0
+)
+
+wrong_dispatch <- tryCatch(
+  .draw_smcfcs_imputations(lm_dgp, m = 2L, seed = 42L),
+  error = conditionMessage
+)
+stopifnot(grepl("only for the logit glm", wrong_dispatch, fixed = TRUE))
+
 cat("comparator helper tests: PASS\n")

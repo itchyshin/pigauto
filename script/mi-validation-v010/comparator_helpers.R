@@ -102,15 +102,79 @@
   lapply(seq_len(m), draw_one)
 }
 
+.draw_bayes_norm_lm_imputations <- function(dgp, m, seed) {
+  if (dgp$dgp != "lm") {
+    stop("The analytic normal-regression imputer is only defined for lm.",
+         call. = FALSE)
+  }
+  m <- as.integer(m)
+  if (length(m) != 1L || is.na(m) || m < 2L) {
+    stop("m must be an integer >= 2.", call. = FALSE)
+  }
+  data <- dgp$observed
+  observed <- is.finite(data$x)
+  missing <- !observed
+  design <- stats::model.matrix(~ y + z + I(z^2), data = data)
+  q_observed <- design[observed, , drop = FALSE]
+  q_missing <- design[missing, , drop = FALSE]
+  x_observed <- data$x[observed]
+  qr_fit <- qr(q_observed)
+  if (qr_fit$rank != ncol(q_observed)) {
+    stop("The analytic lm imputation design is rank deficient.", call. = FALSE)
+  }
+  beta_hat <- as.numeric(qr.coef(qr_fit, x_observed))
+  residual <- x_observed - as.numeric(q_observed %*% beta_hat)
+  residual_df <- nrow(q_observed) - ncol(q_observed)
+  if (residual_df <= 0L) {
+    stop("The analytic lm imputer has no residual degrees of freedom.",
+         call. = FALSE)
+  }
+  rss <- sum(residual^2)
+  if (!is.finite(rss) || rss <= 0) {
+    stop("The analytic lm imputer requires positive finite residual variance.",
+         call. = FALSE)
+  }
+  # The QR fit supplies rank detection and stable coefficients; Cholesky gives
+  # the covariance in the original (unpivoted) coefficient order.
+  xtx_inverse <- chol2inv(chol(crossprod(q_observed)))
+
+  elapsed <- system.time({
+    datasets <- lapply(seq_len(m), function(i) {
+      set.seed(as.integer(seed + i))
+      sigma2 <- rss / stats::rchisq(1L, df = residual_df)
+      beta <- beta_hat + as.numeric(
+        t(chol(sigma2 * xtx_inverse)) %*% stats::rnorm(length(beta_hat))
+      )
+      completed <- data
+      completed$x[missing] <- as.numeric(q_missing %*% beta) +
+        stats::rnorm(sum(missing), sd = sqrt(sigma2))
+      completed
+    })
+  })[["elapsed"]]
+  .validate_completed_datasets(datasets, dgp, m, "bayes_norm_lm")
+  list(
+    datasets = datasets,
+    diagnostics = list(
+      engine = "bayes_norm_lm", warnings = character(0),
+      elapsed_seconds = unname(elapsed), residual_df = residual_df,
+      imputation_formula = "x ~ y + z + I(z^2)"
+    )
+  )
+}
+
 .draw_smcfcs_imputations <- function(dgp, m, seed, numit = 20L,
                                      rjlimit = 10000L) {
+  if (dgp$dgp != "glm") {
+    stop("SMCFCS is used only for the logit glm validation cell.",
+         call. = FALSE)
+  }
   if (!requireNamespace("smcfcs", quietly = TRUE)) {
     stop("The standard single-level comparator requires package 'smcfcs'.",
          call. = FALSE)
   }
   data <- dgp$observed[, c("x", "y", "z"), drop = FALSE]
   data$z_sq <- data$z^2
-  if (dgp$dgp == "glm") data$y <- .numeric_outcome(data$y)
+  data$y <- .numeric_outcome(data$y)
   method <- c(x = "norm", y = "", z = "", z_sq = "")
   predictor_matrix <- matrix(
     0, nrow = ncol(data), ncol = ncol(data),
@@ -122,7 +186,7 @@
   elapsed <- system.time({
     captured <- .capture_warnings(smcfcs::smcfcs(
       originaldata = data,
-      smtype = if (dgp$dgp == "glm") "logistic" else "lm",
+      smtype = "logistic",
       smformula = "y ~ x + z",
       method = method,
       predictorMatrix = predictor_matrix,
@@ -204,9 +268,11 @@
     .draw_jomo_lmer_imputations(
       dgp, m, seed, nburn = jomo_nburn, nbetween = jomo_nbetween
     )
-  } else {
+  } else if (dgp$dgp == "glm") {
     .draw_smcfcs_imputations(
       dgp, m, seed, numit = smcfcs_numit, rjlimit = smcfcs_rjlimit
     )
+  } else {
+    .draw_bayes_norm_lm_imputations(dgp, m, seed)
   }
 }
