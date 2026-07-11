@@ -68,9 +68,19 @@ jobs:
 
       # igraph is pulled in transitively and needs libglpk at load time;
       # without libglpk40 on the runner pkgdown fails with
-      # "libglpk.so.40: cannot open shared object file".
+      # "libglpk.so.40: cannot open shared object file". pkgdown may also
+      # load optional terra metadata while building NEWS/reference links;
+      # install its geospatial runtime libraries even though Suggests are
+      # otherwise excluded from the website dependency plan.
       - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y libglpk40 libglpk-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgdal-dev \
+            libgeos-dev \
+            libglpk40 \
+            libglpk-dev \
+            libproj-dev
 
       - uses: r-lib/actions/setup-pandoc@v2
 

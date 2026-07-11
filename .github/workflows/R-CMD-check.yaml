@@ -42,7 +42,16 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y ghostscript libglpk40 libglpk-dev qpdf
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ghostscript \
+            libgdal-dev \
+            libgeos-dev \
+            libglpk40 \
+            libglpk-dev \
+            libproj-dev \
+            qpdf
 
       - uses: r-lib/actions/setup-pandoc@v2
 
