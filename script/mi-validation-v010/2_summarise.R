@@ -9,6 +9,12 @@ script_path <- if (length(script_arg)) sub("^--file=", "", script_arg[[1]]) else
 script_dir <- if (nzchar(script_path)) dirname(normalizePath(script_path)) else getwd()
 source(file.path(script_dir, "0_prepare.R"))
 
+mi_methods <- c(
+  "conformal", "mc_dropout", "pmm", "oracle_conditional", "standard_smc"
+)
+release_methods <- c("conformal", "mc_dropout", "pmm")
+control_methods <- c("oracle_conditional", "standard_smc")
+
 config <- mi_validation_config(args)
 manifest_path <- file.path(config$output_dir, "manifest.rds")
 if (!file.exists(manifest_path)) {
@@ -65,7 +71,7 @@ processed <- data.frame(
 
 .summarise_fixed_group <- function(data) {
   counts <- .cell_counts(data$dgp[[1]], data$regime[[1]])
-  mi_method <- data$method[[1]] %in% c("conformal", "mc_dropout", "pmm")
+  mi_method <- data$method[[1]] %in% mi_methods
   downstream_ok <- if (mi_method) {
     data$n_fits >= ceiling(0.95 * data$m_requested)
   } else {
@@ -120,6 +126,11 @@ processed <- data.frame(
     coverage = coverage, coverage_mcse = coverage_mcse,
     finite_valid_rate = finite_rate,
     evidence_complete = evidence_complete,
+    pilot_criteria_pass = success_rate >= 0.95 &&
+      is.finite(standardized_bias) && standardized_bias <= 0.10 &&
+      is.finite(se_ratio) && se_ratio >= 0.90 && se_ratio <= 1.10 &&
+      is.finite(coverage) && coverage >= 0.925 && coverage <= 0.975 &&
+      is.finite(finite_rate) && finite_rate >= 0.99,
     pass = evidence_complete && success_rate >= 0.95 &&
       is.finite(standardized_bias) && standardized_bias <= 0.10 &&
       is.finite(se_ratio) && se_ratio >= 0.90 && se_ratio <= 1.10 &&
@@ -172,7 +183,7 @@ if (nrow(variance) > 0L) {
   variance_summary$boundary_rate_increase <-
     variance_summary$boundary_rate - variance_summary$oracle_boundary_rate
   variance_summary$diagnostic_flag <-
-    variance_summary$method %in% c("conformal", "mc_dropout", "pmm") &
+    variance_summary$method %in% mi_methods &
     (variance_summary$added_abs_relative_bias > 0.20 |
        variance_summary$boundary_rate_increase > 0.05)
 }
@@ -215,11 +226,10 @@ if (nrow(training) > 0L) {
 }
 
 core <- fixed_summary[
-  fixed_summary$method %in% c("conformal", "mc_dropout", "pmm") &
+  fixed_summary$method %in% mi_methods &
     fixed_summary$term %in% c("x", "z"), , drop = FALSE
 ]
 expected_cells <- length(unique(manifest$dgp)) * length(unique(manifest$regime)) * 2L
-mi_methods <- c("conformal", "mc_dropout", "pmm")
 method_pass <- vapply(mi_methods, function(method) {
   cells <- core[core$method == method, , drop = FALSE]
   nrow(cells) == expected_cells && all(cells$pass)
@@ -239,13 +249,19 @@ campaign_complete <- nrow(processed) == nrow(manifest) &&
 
 decision <- if (!campaign_complete) {
   "INCOMPLETE: pilot/dry-run evidence cannot support a release decision"
-} else if (all(method_pass)) {
-  "PASS: all candidate draw methods pass"
-} else if (any(method_pass)) {
-  paste0("PASS ", paste(names(method_pass)[method_pass], collapse = ", "),
-         " ONLY: unsupported draw methods remain experimental")
+} else if (any(method_pass[release_methods])) {
+  paste0(
+    "PASS ", paste(release_methods[method_pass[release_methods]],
+                    collapse = ", "),
+    " ONLY: unsupported draw methods remain experimental"
+  )
+} else if (all(method_pass[control_methods])) {
+  paste0(
+    "CONTROL PASS ONLY: gate is attainable; block CRAN pending an ",
+    "analysis-aware inferential backend"
+  )
 } else {
-  "FAIL: block CRAN and redesign the MI draw distribution"
+  "FAIL: positive controls do not establish an attainable MI gate"
 }
 
 summary_object <- list(
@@ -273,7 +289,8 @@ if (nrow(training_summary) > 0L) {
 if (nrow(core) > 0L) {
   print(core[, c("dgp", "regime", "method", "term", "n_processed",
                  "success_rate", "standardized_bias", "se_ratio", "coverage",
-                 "coverage_mcse", "finite_valid_rate", "pass")],
+                 "coverage_mcse", "finite_valid_rate", "pilot_criteria_pass",
+                 "pass")],
         row.names = FALSE)
 }
 if (nrow(variance_summary) > 0L && any(variance_summary$diagnostic_flag)) {

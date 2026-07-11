@@ -30,6 +30,12 @@ then supplies both paired draw sets:
 - `pmm` (redesign candidate): stochastic Brownian/MC-dropout predictions
   followed by predictive mean matching to one of the five nearest observed
   donors. This is evaluated in the harness before any public API promotion.
+- `oracle_conditional` (positive control): draws from the known DGP-specific
+  conditional distribution of missing `x`, including the true random intercept
+  in the mixed DGP.
+- `standard_smc` (positive control): `smcfcs` for `lm` and logit `glm`, and
+  `jomo::jomo.smc(model = "lmer")` for the Gaussian mixed model. The fully
+  observed `z^2` term is included as an auxiliary variable.
 
 This pairing isolates the draw rule from model-training variability and avoids
 retraining for each candidate. Complete-data oracle and complete-case analyses
@@ -51,13 +57,23 @@ Rscript script/mi-validation-v010/2_summarise.R --profile=smoke
 # One real, two-draw/two-epoch smoke when libtorch is available.
 Rscript script/mi-validation-v010/1_run.R --profile=smoke --task=1 --force
 
+# Economical positive-control gate: 50 replicates per cell, no pigauto training.
+Rscript script/mi-validation-v010/0_prepare.R --profile=pilot --reps=50 \
+  --output=script/mi-validation-v010/results/controls-pilot
+seq 1 300 | OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 xargs -P 96 -I{} \
+  Rscript script/mi-validation-v010/1_run.R --profile=pilot --reps=50 \
+    --output=script/mi-validation-v010/results/controls-pilot \
+    --controls-only --task={}
+Rscript script/mi-validation-v010/2_summarise.R --profile=pilot --reps=50 \
+  --output=script/mi-validation-v010/results/controls-pilot
+
 # Ten-replicate pilot: 60 tasks, M=50, 500 epochs.
 Rscript script/mi-validation-v010/0_prepare.R --profile=pilot
 seq 1 60 | OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 xargs -P 24 -I{} \
   Rscript script/mi-validation-v010/1_run.R --profile=pilot --task={}
 Rscript script/mi-validation-v010/2_summarise.R --profile=pilot
 
-# Full campaign: 3,000 trained models, 500 epochs, and 6,000 paired results.
+# Full campaign: 3,000 trained models, 500 epochs, and paired method results.
 Rscript script/mi-validation-v010/0_prepare.R --profile=full
 seq 1 3000 | OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 xargs -P 96 -I{} \
   Rscript script/mi-validation-v010/1_run.R --profile=full --task={}
@@ -79,6 +95,12 @@ The CLI options have matching environment variables:
 | `--epochs=` | `PIGAUTO_MI_EPOCHS` | 2 / 500 / 500 |
 | `--task=` | `PIGAUTO_MI_TASK_ID` | no implicit task |
 | `--output=` | `PIGAUTO_MI_OUTPUT` | profile-specific results directory |
+
+`--controls-only` (or `PIGAUTO_MI_CONTROLS_ONLY=true`) runs only the oracle and
+standard substantive-compatible controls. It deliberately skips torch and
+pigauto training, making the gate-attainability check much cheaper than another
+candidate campaign. It requires the optional harness dependencies `smcfcs` and
+`jomo`; neither is added to the package DESCRIPTION.
 
 `--force` overwrites an existing task atomically. Otherwise completed task files
 are skipped, so interrupted campaigns are resumable. `--all-pending` is intended
@@ -109,11 +131,13 @@ Every `x` and `z` cell for every DGP, regime, and method must have:
 - coverage Monte Carlo SE no larger than one percentage point;
 - at least 99% finite estimates, SEs, intervals, and valid Rubin df/FMI/RIV.
 
-The summariser refuses to issue a release pass from smoke or pilot evidence. If
-both methods pass, conformal remains the default only if it has no undercoverage
-cell. If only one method passes, only that method is inferentially supported. If
-neither passes, the CRAN release is blocked pending redesign of the draw
-distribution.
+The summariser refuses to issue a release pass from smoke or pilot evidence. It
+reports `pilot_criteria_pass` without the 500-replicate completeness and 0.01
+coverage-MCSE requirements. The oracle and standard SMC controls must first pass
+that directional 50-replicate screen across all cells. Only then is a public
+analysis-aware backend worth implementing and validating at 500 replicates per
+cell. Current conformal, MC-dropout, and PMM methods remain experimental unless
+they independently pass the full gate.
 
 Variance-component behavior is reported descriptively. A method is flagged when
 it adds more than 0.20 absolute relative bias over the oracle or increases the

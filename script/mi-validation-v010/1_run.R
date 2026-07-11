@@ -9,6 +9,7 @@ script_arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
 script_path <- if (length(script_arg)) sub("^--file=", "", script_arg[[1]]) else ""
 script_dir <- if (nzchar(script_path)) dirname(normalizePath(script_path)) else getwd()
 source(file.path(script_dir, "0_prepare.R"))
+source(file.path(script_dir, "comparator_helpers.R"))
 
 config <- mi_validation_config(args)
 manifest <- write_manifest(config)
@@ -49,7 +50,7 @@ manifest <- write_manifest(config)
   )
   description <- read.dcf("DESCRIPTION", fields = "Version")
   package_version <- unname(description[1, "Version"])
-  dependencies <- c("ape", "lme4", "torch")
+  dependencies <- c("ape", "lme4", "torch", "smcfcs", "jomo")
   versions <- vapply(dependencies, function(package) {
     if (!requireNamespace(package, quietly = TRUE)) return(NA_character_)
     as.character(utils::packageVersion(package))
@@ -271,7 +272,7 @@ manifest <- write_manifest(config)
   )
 }
 
-.run_task <- function(task, dry_run = FALSE) {
+.run_task <- function(task, dry_run = FALSE, controls_only = FALSE) {
   started <- Sys.time()
   dgp <- simulate_validation_dgp(
     task$dgp, task$regime, task$seed,
@@ -310,6 +311,60 @@ manifest <- write_manifest(config)
   if (dry_run) return(result)
 
   .load_package()
+  oracle_conditional_datasets <- .draw_oracle_conditional_imputations(
+    dgp, m = task$m, seed = task$seed + 80000L
+  )
+  standard_smc_datasets <- .draw_standard_smc_imputations(
+    dgp, m = task$m, seed = task$seed + 90000L
+  )
+  oracle_conditional_analysis <- .analyse_method(
+    oracle_conditional_datasets, task$dgp, "oracle_conditional",
+    dgp$truth, dgp$truth_vc
+  )
+  standard_smc_analysis <- .analyse_method(
+    standard_smc_datasets, task$dgp, "standard_smc",
+    dgp$truth, dgp$truth_vc
+  )
+  result$fixed_effects <- rbind(
+    result$fixed_effects,
+    oracle_conditional_analysis$fixed_effects,
+    standard_smc_analysis$fixed_effects
+  )
+  if (task$dgp == "lmer") {
+    result$variance_components <- rbind(
+      result$variance_components,
+      oracle_conditional_analysis$variance_components,
+      standard_smc_analysis$variance_components
+    )
+  }
+  result$downstream_failures <- list(
+    oracle_conditional = list(
+      fit_errors = oracle_conditional_analysis$fit_errors,
+      pool_error = oracle_conditional_analysis$pool_error
+    ),
+    standard_smc = list(
+      fit_errors = standard_smc_analysis$fit_errors,
+      pool_error = standard_smc_analysis$pool_error
+    )
+  )
+  controls_ok <- c(
+    oracle_conditional = nrow(oracle_conditional_analysis$fixed_effects) ==
+      length(dgp$truth),
+    standard_smc = nrow(standard_smc_analysis$fixed_effects) == length(dgp$truth)
+  )
+  if (controls_only) {
+    result$status <- if (all(controls_ok)) "success" else if (any(controls_ok)) {
+      "partial"
+    } else {
+      "analysis_error"
+    }
+    result$completed_at <- Sys.time()
+    result$elapsed_seconds <- as.numeric(difftime(
+      result$completed_at, started, units = "secs"
+    ))
+    return(result)
+  }
+
   if (!requireNamespace("torch", quietly = TRUE) ||
       !isTRUE(torch::torch_is_installed())) {
     stop("A working torch R package and libtorch backend are required. ",
@@ -356,14 +411,14 @@ manifest <- write_manifest(config)
     pmm_datasets, task$dgp, "pmm", dgp$truth, dgp$truth_vc
   )
   fixed <- rbind(
-    fixed,
+    result$fixed_effects,
     conformal_analysis$fixed_effects,
     mc_analysis$fixed_effects,
     pmm_analysis$fixed_effects
   )
   if (task$dgp == "lmer") {
     variance <- rbind(
-      variance,
+      result$variance_components,
       conformal_analysis$variance_components,
       mc_analysis$variance_components,
       pmm_analysis$variance_components
@@ -373,7 +428,8 @@ manifest <- write_manifest(config)
   method_ok <- c(
     conformal = nrow(conformal_analysis$fixed_effects) == length(dgp$truth),
     mc_dropout = nrow(mc_analysis$fixed_effects) == length(dgp$truth),
-    pmm = nrow(pmm_analysis$fixed_effects) == length(dgp$truth)
+    pmm = nrow(pmm_analysis$fixed_effects) == length(dgp$truth),
+    controls_ok
   )
   result$status <- if (all(method_ok)) "success" else if (any(method_ok)) {
     "partial"
@@ -384,14 +440,14 @@ manifest <- write_manifest(config)
   result$variance_components <- variance
   result$gate <- .x_gate(mi_mc$fit)
   result$training <- .training_diagnostic(mi_mc$fit, task$epochs)
-  result$downstream_failures <- list(
+  result$downstream_failures <- c(result$downstream_failures, list(
     conformal = list(fit_errors = conformal_analysis$fit_errors,
                      pool_error = conformal_analysis$pool_error),
     mc_dropout = list(fit_errors = mc_analysis$fit_errors,
                       pool_error = mc_analysis$pool_error),
     pmm = list(fit_errors = pmm_analysis$fit_errors,
                pool_error = pmm_analysis$pool_error)
-  )
+  ))
   result$completed_at <- Sys.time()
   result$elapsed_seconds <- as.numeric(difftime(result$completed_at, started,
                                                 units = "secs"))
@@ -412,6 +468,9 @@ selected <- if (!is.null(task_id)) task_id else manifest$task_id
 dry_run <- .has_flag("dry-run") ||
   tolower(.env_value("PIGAUTO_MI_DRY_RUN", "false")) %in% c("true", "1", "yes")
 force <- .has_flag("force")
+controls_only <- .has_flag("controls-only") ||
+  tolower(.env_value("PIGAUTO_MI_CONTROLS_ONLY", "false")) %in%
+    c("true", "1", "yes")
 
 for (id in selected) {
   path <- file.path(config$output_dir, sprintf("task-%06d.rds", id))
@@ -424,7 +483,7 @@ for (id in selected) {
               task$regime, task$replicate,
               if (dry_run) " [dry-run]" else ""))
   result <- tryCatch(
-    .run_task(task, dry_run = dry_run),
+    .run_task(task, dry_run = dry_run, controls_only = controls_only),
     error = function(e) {
       list(
         meta = as.list(task), status = "error",
