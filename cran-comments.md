@@ -12,8 +12,8 @@ A warning-free 6,000-task package-level campaign at clean source SHA
 `2e3809d` passed all 24 fixed-effect cells, with 93.9%-96.3% coverage,
 pooled-SE/empirical-SD ratios of 0.942-1.030, and 100% finite results. This
 validates only the documented narrow scope. The final cross-platform checks are
-recorded below; the corrected Windows rerun is the last outstanding release
-gate.
+recorded below. The corrected Windows rerun completed cleanly; only the CRAN
+upload remains.
 
 ## Test environments
 
@@ -24,8 +24,9 @@ Release-candidate checks completed so far:
 - GitHub Actions, Ubuntu, R release: 0 errors, 0 warnings, 0 notes;
 - GitHub Actions, Ubuntu, R-devel: 0 errors, 0 warnings, 0 notes;
 - GitHub Actions, macOS, R-release: 0 errors, 0 warnings, 0 notes;
-- win-builder, R-devel: corrected rerun submitted from merged main `ddd16c5`;
-  result pending.
+- win-builder, R-devel: corrected rerun from merged main `ddd16c5` completed with
+  0 errors, 0 warnings, and the normal `New submission` NOTE
+  ([result](https://win-builder.r-project.org/bzZPuw74su97)).
 
 ## R CMD check results
 
@@ -74,8 +75,9 @@ Audit inventory at the release-candidate documentation freeze:
 - `urlchecker::url_check()` examined 19 package URLs with no errors or
   redirections after canonicalizing the pkgdown URL.
 
-The final submission will add the win-builder result and the exact CRAN
-submission timestamp to this record.
+The exact release tarball is 4,853,809 bytes with SHA-256
+`96e3f98c130251006026220a5476e8c5eca34b3a57e06a3e6db94becc572cb5f`.
+The CRAN upload timestamp will be added after submission.
 
 ## Bundled-data licensing gate
 
