@@ -67,10 +67,18 @@ rownames(manifest) <- NULL
 manifest$task_id <- seq_len(nrow(manifest))
 manifest_key <- key(manifest$dgp, manifest$regime, manifest$replicate)
 
-setting_names <- c("m", "smcfcs_numit", "jomo_nburn", "jomo_nbetween")
+setting_names <- c("m", "smcfcs_numit", "smcfcs_rjlimit", "jomo_nburn",
+                   "jomo_nbetween")
 if (!all(setting_names %in% names(manifest)) ||
-    nrow(unique(manifest[, setting_names, drop = FALSE])) != 1L) {
-  stop("Input manifests do not share one M/SMC setting tuple.", call. = FALSE)
+    length(unique(manifest$m)) != 1L ||
+    nrow(unique(manifest[manifest$dgp != "lmer",
+                         c("smcfcs_numit", "smcfcs_rjlimit"),
+                         drop = FALSE])) != 1L ||
+    nrow(unique(manifest[manifest$dgp == "lmer",
+                         c("jomo_nburn", "jomo_nbetween"),
+                         drop = FALSE])) != 1L) {
+  stop("Input manifests do not share one engine-specific setting tuple.",
+       call. = FALSE)
 }
 
 files <- unlist(lapply(inputs, function(input) {

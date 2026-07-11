@@ -358,14 +358,23 @@ git_dirty <- vapply(results, function(x) {
 }, logical(1))
 sha_consistent <- !anyNA(git_shas) && length(unique(git_shas)) == 1L &&
   !anyNA(git_dirty) && !any(git_dirty)
-setting_names <- c("smcfcs_numit", "jomo_nburn", "jomo_nbetween")
+setting_names <- c(
+  "smcfcs_numit", "smcfcs_rjlimit", "jomo_nburn", "jomo_nbetween"
+)
 if (all(setting_names %in% names(manifest))) {
-  settings <- unique(manifest[, setting_names, drop = FALSE])
-  settings_consistent <- nrow(settings) == 1L
+  settings <- list(
+    smcfcs = unique(manifest[manifest$dgp != "lmer",
+                             c("smcfcs_numit", "smcfcs_rjlimit"), drop = FALSE]),
+    jomo = unique(manifest[manifest$dgp == "lmer",
+                           c("jomo_nburn", "jomo_nbetween"), drop = FALSE])
+  )
+  settings_consistent <- nrow(settings$smcfcs) == 1L &&
+    nrow(settings$jomo) == 1L
 } else {
-  settings <- data.frame(
-    smcfcs_numit = NA_integer_, jomo_nburn = NA_integer_,
-    jomo_nbetween = NA_integer_
+  settings <- list(
+    smcfcs = data.frame(smcfcs_numit = NA_integer_,
+                        smcfcs_rjlimit = NA_integer_),
+    jomo = data.frame(jomo_nburn = NA_integer_, jomo_nbetween = NA_integer_)
   )
   settings_consistent <- FALSE
 }
@@ -382,13 +391,15 @@ comparator_versions <- list(
 versions_consistent <- all(vapply(comparator_versions, function(x) {
   length(x) == 1L && !is.na(x)
 }, logical(1)))
+warning_free <- nrow(comparator_diagnostics) == nrow(processed) &&
+  sum(comparator_diagnostics$warning_count) == 0L
 cell_sizes <- table(manifest$dgp, manifest$regime)
 full_grid <- setequal(unique(manifest$dgp), c("lm", "glm", "lmer")) &&
   setequal(unique(manifest$regime), c("phylogeny", "auxiliary"))
 campaign_complete <- nrow(processed) == nrow(manifest) &&
   length(unique(processed$task_id)) == nrow(manifest) &&
   all(cell_sizes >= 1000L) && sha_consistent && settings_consistent &&
-  versions_consistent && full_grid
+  versions_consistent && warning_free && full_grid
 
 oracle_attainable <- isTRUE(method_pass[["oracle_conditional"]])
 standard_smc_ready <- isTRUE(method_pass[["standard_smc"]])
@@ -427,6 +438,7 @@ summary_object <- list(
   settings_consistent = settings_consistent,
   comparator_versions = comparator_versions,
   versions_consistent = versions_consistent,
+  warning_free = warning_free,
   method_pass = method_pass, campaign_complete = campaign_complete,
   oracle_attainable = oracle_attainable,
   standard_smc_ready = standard_smc_ready,

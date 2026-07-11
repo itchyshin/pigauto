@@ -102,7 +102,8 @@
   lapply(seq_len(m), draw_one)
 }
 
-.draw_smcfcs_imputations <- function(dgp, m, seed, numit = 20L) {
+.draw_smcfcs_imputations <- function(dgp, m, seed, numit = 20L,
+                                     rjlimit = 10000L) {
   if (!requireNamespace("smcfcs", quietly = TRUE)) {
     stop("The standard single-level comparator requires package 'smcfcs'.",
          call. = FALSE)
@@ -127,7 +128,7 @@
       predictorMatrix = predictor_matrix,
       m = as.integer(m),
       numit = as.integer(numit),
-      rjlimit = 10000L,
+      rjlimit = as.integer(rjlimit),
       noisy = FALSE
     ))
   })[["elapsed"]]
@@ -143,6 +144,7 @@
     diagnostics = list(
       engine = "smcfcs", warnings = captured$warnings,
       elapsed_seconds = unname(elapsed), numit = as.integer(numit),
+      rjlimit = as.integer(rjlimit),
       sm_coef_iter = fit$smCoefIter
     )
   )
@@ -195,6 +197,7 @@
 
 .draw_standard_smc_imputations <- function(dgp, m, seed,
                                            smcfcs_numit = 20L,
+                                           smcfcs_rjlimit = 10000L,
                                            jomo_nburn = 1000L,
                                            jomo_nbetween = 100L) {
   if (dgp$dgp == "lmer") {
@@ -202,6 +205,8 @@
       dgp, m, seed, nburn = jomo_nburn, nbetween = jomo_nbetween
     )
   } else {
-    .draw_smcfcs_imputations(dgp, m, seed, numit = smcfcs_numit)
+    .draw_smcfcs_imputations(
+      dgp, m, seed, numit = smcfcs_numit, rjlimit = smcfcs_rjlimit
+    )
   }
 }

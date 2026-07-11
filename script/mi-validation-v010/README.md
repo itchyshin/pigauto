@@ -95,6 +95,7 @@ The CLI options have matching environment variables:
 | `--m=` | `PIGAUTO_MI_M` | 2 / 50 / 50 |
 | `--epochs=` | `PIGAUTO_MI_EPOCHS` | 2 / 500 / 500 |
 | `--smcfcs-numit=` | `PIGAUTO_MI_SMCFCS_NUMIT` | 20 |
+| `--smcfcs-rjlimit=` | `PIGAUTO_MI_SMCFCS_RJLIMIT` | 10,000 |
 | `--jomo-nburn=` | `PIGAUTO_MI_JOMO_NBURN` | 1,000 |
 | `--jomo-nbetween=` | `PIGAUTO_MI_JOMO_NBETWEEN` | 100 |
 | `--task=` | `PIGAUTO_MI_TASK_ID` | no implicit task |

@@ -316,6 +316,7 @@ manifest <- write_manifest(config)
   standard_smc <- .draw_standard_smc_imputations(
     dgp, m = task$m, seed = task$seed + 90000L,
     smcfcs_numit = task$smcfcs_numit,
+    smcfcs_rjlimit = task$smcfcs_rjlimit,
     jomo_nburn = task$jomo_nburn,
     jomo_nbetween = task$jomo_nbetween
   )

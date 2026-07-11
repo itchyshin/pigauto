@@ -5,13 +5,15 @@ source("script/mi-validation-v010/comparator_helpers.R")
 
 config <- mi_validation_config(c(
   "--profile=smoke", "--smcfcs-numit=33", "--jomo-nburn=444",
-  "--jomo-nbetween=555"
+  "--smcfcs-rjlimit=22222", "--jomo-nbetween=555"
 ))
 default_config <- mi_validation_config("--profile=smoke")
 manifest <- make_manifest(config)
 stopifnot(
   default_config$jomo_nbetween == 100L,
+  default_config$smcfcs_rjlimit == 10000L,
   all(manifest$smcfcs_numit == 33L),
+  all(manifest$smcfcs_rjlimit == 22222L),
   all(manifest$jomo_nburn == 444L),
   all(manifest$jomo_nbetween == 555L)
 )

@@ -101,6 +101,10 @@ mi_validation_config <- function(args = commandArgs(trailingOnly = TRUE)) {
       get_setting("smcfcs-numit", "PIGAUTO_MI_SMCFCS_NUMIT", 20L),
       "smcfcs_numit", 1L
     ),
+    smcfcs_rjlimit = .as_int(
+      get_setting("smcfcs-rjlimit", "PIGAUTO_MI_SMCFCS_RJLIMIT", 10000L),
+      "smcfcs_rjlimit", 1L
+    ),
     jomo_nburn = .as_int(
       get_setting("jomo-nburn", "PIGAUTO_MI_JOMO_NBURN", 1000L),
       "jomo_nburn", 1L
@@ -149,12 +153,14 @@ make_manifest <- function(config) {
   grid$m <- config$m
   grid$epochs <- config$epochs
   grid$smcfcs_numit <- config$smcfcs_numit
+  grid$smcfcs_rjlimit <- config$smcfcs_rjlimit
   grid$jomo_nburn <- config$jomo_nburn
   grid$jomo_nbetween <- config$jomo_nbetween
   grid$profile <- config$profile
   grid[, c("task_id", "dgp", "regime", "replicate", "seed", "n_species",
            "n_observations", "missing_fraction", "m", "epochs",
-           "smcfcs_numit", "jomo_nburn", "jomo_nbetween", "profile")]
+           "smcfcs_numit", "smcfcs_rjlimit", "jomo_nburn",
+           "jomo_nbetween", "profile")]
 }
 
 write_manifest <- function(config, overwrite = FALSE) {

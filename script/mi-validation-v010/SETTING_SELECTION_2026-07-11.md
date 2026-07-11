@@ -56,3 +56,18 @@ Run the selected defaults on independent replicate IDs 501--1500:
 The restricted confirmation is calibration-only and cannot issue a package
 release pass. It determines whether the three earlier coverage misses persist
 before any public analysis-aware backend is implemented.
+
+## Rejection-limit amendment after the full-grid confirmation
+
+The independent 1,000-replicate full grid passed every statistical control cell,
+but SMCFCS emitted rejection-limit warnings in 106/2,000 `lm` tasks at
+`rjlimit = 10000`. Some warnings reported hundreds of exhausted proposals.
+Warnings are now captured and a warning-free campaign is required; the
+statistical pass is not accepted while these remain.
+
+`smcfcs_rjlimit` is therefore added to the manifest and task provenance. Test
+larger limits on the two worst seeds (`lm` phylogeny replicate 539 and auxiliary
+replicate 793) before rerunning the single-level grid. A larger limit is accepted
+only if both tasks are warning-free and preserve finite imputations, observed
+values, and row order. This amendment changes a numerical rejection-sampling
+safeguard, not the imputation model or performance thresholds.
