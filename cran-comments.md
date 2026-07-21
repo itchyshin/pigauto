@@ -34,22 +34,26 @@ references already included in `DESCRIPTION`.
 
 ## Test environments
 
-Release-candidate checks completed so far:
+Release-candidate checks completed for this resubmission:
 
-- local macOS, R release: 0 errors under `_R_CHECK_FORCE_SUGGESTS_=false`; the
-  only note is the normal `New submission` note and unavailable-Suggests info;
+- local macOS, R release: `R CMD check --as-cran --run-donttest` reaches only
+  the expected unavailable-Suggests stop on this development machine. With
+  `_R_CHECK_FORCE_SUGGESTS_=false`, the candidate completes without package
+  errors; the remaining note is the normal `New submission` note;
 - GitHub Actions, Ubuntu, R release: 0 errors, 0 warnings, 0 notes;
 - GitHub Actions, Ubuntu, R-devel: 0 errors, 0 warnings, 0 notes;
-- GitHub Actions, macOS, R-release: 0 errors, 0 warnings, 0 notes;
 - win-builder, R-devel: corrected rerun from merged main `ddd16c5` completed with
   0 errors, 0 warnings, and the normal `New submission` NOTE
   ([result](https://win-builder.r-project.org/bzZPuw74su97)).
 
 ## R CMD check results
 
-The exact 4.85 MB tarball was checked locally and completed with no errors. The
-authoritative GitHub R-CMD-check matrix is green on Ubuntu release, Ubuntu
-R-devel, and macOS R-release. The local check used
+The exact 4.85 MB tarball submitted for this resubmission was built from source
+commit `e1b2a25202454ed182d6babf86205c8bbf66d3c6` with `R CMD build`.
+Its SHA-256 digest is
+`fd0e20dbe739f3deb2b7d60c120aeb63f480265db5821bca8fb8cd9285217a25`
+(4,853,666 bytes; 180 archive entries). GitHub Actions is green on Ubuntu
+release and Ubuntu R-devel for this source. The local check used
 `_R_CHECK_FORCE_SUGGESTS_=false` because several optional packages are not
 installed on this machine; unavailable-Suggests messages are recorded as
 information, not package errors.
@@ -93,8 +97,6 @@ Audit inventory at the release-candidate documentation freeze:
   redirections after canonicalizing the pkgdown URL.
 
 The previous candidate was submitted to CRAN on 2026-07-11 at 16:00:16 UTC.
-The exact resubmission tarball, hash, size, and check receipt are recorded only
-after the final candidate has been rebuilt from the merged resubmission commit.
 
 ## Bundled-data licensing gate
 
