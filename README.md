@@ -10,30 +10,20 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 
 **Missing trait data should not stop a comparative analysis.**
 
-> Live documentation: <https://itchyshin.github.io/pigauto/>
-
-pigauto fills gaps in species trait matrices by combining the phylogenetic
-tree, cross-trait correlations, and optional environmental covariates. A
-separate experimental `multi_impute_analysis()` backend provides narrow,
-analysis-aware multiple imputation for one incomplete continuous covariate
-under missing at random (MAR); it is not a general extension of pigauto's
-conformal or MC-dropout prediction draws.
+pigauto helps fill missing values in species trait data. Give it a trait table
+and a phylogenetic tree, and it uses related species, other traits, and optional
+environmental data to estimate the gaps. It works with common continuous and
+categorical trait types, and provides prediction intervals where available.
 
 ## The workflow
 
 ```
-Phylogenetic trait prediction       Analysis-aware fixed-effect inference
-Raw traits + tree                   Analysis data + declared formula/model
-       ↓                                          ↓
-   impute()                         multi_impute_analysis()
-       ↓                                          ↓
-completed traits + intervals        with_imputations() → pool_mi()
+Trait data + phylogenetic tree
+              ↓
+          impute()
+              ↓
+Completed trait data + prediction intervals
 ```
-
-The inference branch is experimental and deliberately narrow. Conformal-width,
-Brownian/MC-dropout, and PMM draws remain useful for prediction diagnostics,
-but they failed the downstream fixed-effect gate and are unsupported for
-inference.
 
 ## Installation
 
@@ -88,48 +78,6 @@ result$prediction$conformal_upper[hide, "Mass"]
 
 ```
 
-## Experimental analysis-aware multiple imputation
-
-`multi_impute_analysis()` requires the substantive analysis before it draws
-the missing values. The initial backend accepts exactly one incomplete
-continuous column under MAR:
-
-The package implementation passed all 24 method-by-term cells in a warning-free
-6,000-task campaign at clean SHA `2e3809d`. Coverage was 93.9%-96.3%,
-pooled-SE/empirical-SD ratios were 0.942-1.030, and all results were finite.
-This validates only the narrow scope below; the interface remains experimental.
-
-| `model` | Supported analysis | Imputation engine |
-|---|---|---|
-| `"lm"` | Gaussian linear main-effects model | Proper Bayesian normal-regression MI |
-| `"glm"` | Binomial logit main-effects model | `smcfcs` substantive-model-compatible MI |
-| `"lmer"` | Gaussian model with one random intercept | `jomo::jomo.smc()` |
-
-```r
-# Precompute auxiliary terms explicitly; for example:
-analysis_data$z_sq <- analysis_data$z^2
-
-mi <- multi_impute_analysis(
-  data = analysis_data,
-  formula = y ~ x + z,
-  missing = "x",
-  model = "lm",
-  m = 50L,
-  auxiliary = "z_sq",
-  seed = 1L
-)
-
-fits <- with_imputations(mi, function(d) lm(y ~ x + z, data = d))
-pool_mi(fits)
-```
-
-The backend pools fixed effects only. It does not support more than one
-incomplete column, missing discrete covariates, MNAR, nonlinear or interaction
-terms involving the incomplete covariate, random slopes, variance components,
-correlations, BLUPs/conditional modes, latent loadings, or arbitrary downstream
-models. Correct Rubin arithmetic from `pool_mi()` does not make an incompatible
-imputation model valid.
-
 ## Using environmental covariates
 
 When trait variation has a strong environmental component, supplying
@@ -154,9 +102,7 @@ automatic improvement.
 ## Phylogenetic tree uncertainty
 
 `multi_impute_trees()` remains an experimental prediction-sensitivity tool.
-Tree uncertainty was outside the analysis-aware validation campaign and is not
-supported by `multi_impute_analysis()`. Its stochastic completions must not be
-combined with `pool_mi()` for downstream inference.
+Its stochastic completions are not intended for downstream inference.
 
 ## Trait types
 
