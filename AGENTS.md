@@ -1,6 +1,7 @@
 # AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+Shared agent instructions for `pigauto`. Read by Codex natively and by
+Claude Code via the `@AGENTS.md` import in `CLAUDE.md`.
 
 ## How to be useful here (added 2026-04-29)
 
@@ -32,7 +33,13 @@ When in doubt, prefer the smallest defensible claim and ask before extrapolating
 
 ## Project
 
-`pigauto` is an R package (current dev version 0.9.1.9009, heading toward v0.9.2) for phylogenetic trait imputation. It fits a gated ensemble of a phylogenetic baseline and an attention-based graph neural network correction. For continuous/count/ordinal traits the baseline is Brownian motion (via an internal conditional-MVN implementation using the phylogenetic correlation matrix `R = cov2cor(vcv(tree))`; see `R/bm_internal.R`); for binary/categorical traits it is phylogenetic label propagation. Optional environmental covariates are threaded through the GNN with gated safety. Prediction is the per-trait blend `(1 - r_cal) * baseline + r_cal * delta_GNN`, with `r_cal` calibrated on a held-out validation split. See `README.md` for the user-facing API; this file documents the internals.
+`pigauto` is an R package for phylogenetic trait imputation. It fits a gated ensemble of a phylogenetic baseline and an attention-based graph neural network correction. For continuous/count/ordinal traits the baseline is Brownian motion (via an internal conditional-MVN implementation using the phylogenetic correlation matrix `R = cov2cor(vcv(tree))`; see `R/bm_internal.R`); for binary/categorical traits it is phylogenetic label propagation. Optional environmental covariates are threaded through the GNN with gated safety. Prediction is the per-trait blend `(1 - r_cal) * baseline + r_cal * delta_GNN`, with `r_cal` calibrated on a held-out validation split. See `README.md` for the user-facing API; this file documents the internals.
+
+<!-- This preamble intentionally states no current version number: this file is
+     re-read every session and cannot be kept current, so it must make no current-state
+     claims. `DESCRIPTION` (`Version:` field) and `NEWS.md` (topmost heading) are the
+     ground-truth version ledgers. Historical feature markers like "(v0.6.0+)" or
+     "v0.8.0-alpha" below describe when a feature appeared and remain valid. -->
 
 **A note on "residual"**: the internal torch class is named `ResidualPhyloDAE` because its GNN layers use ResNet-style residual skip connections. The GNN output `delta` is **not** a statistical residual `y - baseline` — it is a full per-cell prediction trained end-to-end via type-appropriate loss (MSE / BCE / cross-entropy) on the blend, not on `y - baseline`. Do not re-introduce user-facing prose that describes the GNN as "learning a residual from the baseline".
 
@@ -105,7 +112,7 @@ preprocess_traits()  →  build_phylo_graph()  →  fit_baseline()  →  fit_pig
 
 `evaluate_imputation()` returns a wide-format data.frame. Most types populate `rmse` / `pearson_r` / `mae` / `accuracy` / `brier` / `spearman_rho`. `multi_proportion` additionally populates three compositional-specific columns: `aitchison` (Euclidean distance in CLR space — the natural compositional metric), `rmse_clr` (RMSE on z-scored CLR latent, comparable to continuous RMSE), and `simplex_mae` (mean abs error on the decoded proportions). Other types carry `NA` in these columns.
 
-The pipeline functions are for fine-grained control and for writing benchmarks. For the multiple-imputation → downstream-inference workflow, see `R/multi_impute.R` → `R/with_imputations.R` → `R/pool_mi.R` (Rubin 1987; Barnard & Rubin 1999; Nakagawa & Freckleton 2008, 2011). User-facing tutorial: `inst/doc/pigauto_workflow_mixed.html` (source: `script/make_workflow_mixed_html.R`) is the self-contained walk-through on the bundled AVONET 300 mixed-type dataset, covering all three analysis paths (Path A = pigauto+glmmTMB+Rubin; Path B = pigauto+MCMCglmm+posterior concatenation; Path C = BACE integrated). There is no continuous-only sibling tutorial — it was removed in the v0.3.0 docs cleanup because the mixed-type walk-through strictly covers it.
+The pipeline functions are for fine-grained control and for writing benchmarks. For the multiple-imputation → downstream-inference workflow, see `R/multi_impute.R` → `R/with_imputations.R` → `R/pool_mi.R` (Rubin 1987; Barnard & Rubin 1999; Nakagawa & Freckleton 2008, 2011). User-facing tutorial: `vignettes/mixed-types.Rmd` (rendered as `articles/mixed-types.html` on the pkgdown site) is the recommended walk-through on the bundled AVONET 300 mixed-type dataset. An older static HTML walk-through covering Paths A/B/C explicitly lived at `pkgdown/assets/pigauto_workflow_mixed.html` but was retired in 2026-05 to `dev/archive/` because version badges and BACE-comparison wording had gone stale; see `useful/pkgdown_page_rethink.md`.
 
 ### Trait-type handling
 
@@ -435,7 +442,3 @@ Several spots switch behaviour on `multi_obs`: baseline expansion (`MU <- MU_spe
 ### pkgdown GitHub Actions on pull requests
 
 `.github/workflows/pkgdown.yaml` has a job-level `if: github.event_name != 'pull_request'` that skips the entire pkgdown job on PR events. This is deliberate. The job attaches to the `github-pages` environment at job level (for the deploy step), and that environment has a protection rule that only allows `main` to deploy. The environment check fires BEFORE any `step: if` filter, so PR runs would always fail at the env gate even though the Upload/Deploy steps were themselves already conditionally skipped on PRs. Skipping the whole job on PRs eliminates the spurious red X on PR checks. Do not remove the job-level `if` without splitting into a separate build-on-PR job that does not attach to the `github-pages` environment.
-
-## Host-specific notes (optional)
-
-On the primary author's machine, two persistent memory notes live under `~/.Codex/projects/-Users-z3437171-Dropbox-Github-Local-pigauto/memory/`: `user_profile.md` (author priorities) and `project_bace.md` (BACE internals). They are **not** portable — ignore this section if the path does not exist on the current host.
