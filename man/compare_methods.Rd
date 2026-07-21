@@ -52,8 +52,13 @@ For each seed the function:
 }
 \examples{
 \donttest{
-cmp <- compare_methods(pd, tree300, seeds = 1:3, epochs = 500)
-# Summarise across reps
+data(avonet300, tree300)
+traits <- avonet300
+rownames(traits) <- traits$Species_Key
+traits$Species_Key <- NULL
+pd <- preprocess_traits(traits, tree300)
+cmp <- compare_methods(pd, tree300, seeds = 1L, epochs = 20L,
+                       verbose = FALSE)
 aggregate(value ~ method + trait + metric, data = cmp, FUN = mean)
 }
 }
