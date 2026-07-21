@@ -58,7 +58,7 @@ experimental and is
 limited to fixed-effect coefficients and their covariance matrices.
 }
 \examples{
-\dontrun{
+\donttest{
 mi <- multi_impute_analysis(
   data = df, formula = y ~ x + z, missing = "x",
   model = "lm", m = 50L

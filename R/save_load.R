@@ -16,7 +16,7 @@
 #' @param compress logical.  Use gzip compression (default \code{TRUE}).
 #' @return Invisible \code{path}.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' save_pigauto(fit, "my_model.pigauto")
 #' fit2 <- load_pigauto("my_model.pigauto")
 #' }
@@ -54,7 +54,7 @@ save_pigauto <- function(fit, path, compress = TRUE) {
 #' @param path character.  File path to load from.
 #' @return An object of class \code{"pigauto_fit"}.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' fit <- load_pigauto("my_model.pigauto")
 #' pred <- predict(fit)
 #' }

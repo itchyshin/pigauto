@@ -17,7 +17,7 @@ Reads a \code{pigauto_fit} object previously saved with
 \code{\link{save_pigauto}}.
 }
 \examples{
-\dontrun{
+\donttest{
 fit <- load_pigauto("my_model.pigauto")
 pred <- predict(fit)
 }

@@ -110,7 +110,7 @@
 #' @seealso [multi_impute_analysis()], [with_imputations()]
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Analysis-aware workflow (one incomplete continuous covariate)
 #' mi <- multi_impute_analysis(
 #'   data = analysis_data, formula = y ~ x + z, missing = "x",

@@ -253,7 +253,7 @@
 #'   International Journal of Climatology 37, 4302--4315.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' sp <- c("Quercus alba", "Pinus taeda", "Acer saccharum")
 #' gbif_df <- pull_gbif_centroids(sp,
 #'   cache_dir = "script/data-cache/gbif")

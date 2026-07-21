@@ -83,6 +83,11 @@ test_that("[Phase G' L1] pmm_impute_one_trait deterministic with same seed", {
   expect_identical(out1, out2)
 })
 
+test_that("[Phase G' L1] pmm_impute_one_trait accepts an unseeded draw", {
+  pmm_one <- getFromNamespace("pmm_impute_one_trait", "pigauto")
+  expect_no_error(pmm_one(c(10, 20, 30), c(11, 21, NA), K = 2L, seed = NULL))
+})
+
 test_that("[Phase G' L1] pmm_impute_one_trait does not leak global RNG state", {
   pmm_one <- getFromNamespace("pmm_impute_one_trait", "pigauto")
   set.seed(123L)
@@ -352,4 +357,20 @@ test_that("[Phase G' acceptance] PMM caps a synthetic tail blow-up better than n
   # PMM must be at most obs_max (no extrapolation)
   expect_lte(pmm_val, obs_max,
               label = "[Phase G' accept] PMM imputation cannot exceed observed max")
+})
+
+test_that("[CRAN RNG] PMM seeding is reproducible and scoped", {
+  pmm_one <- getFromNamespace("pmm_impute_one_trait", "pigauto")
+  predictions <- c(0, 0.01, 0.005, 0.006)
+  truth <- c(10, 20, NA, NA)
+
+  one <- pmm_one(predictions, truth, K = 2L, seed = 31L)
+  two <- pmm_one(predictions, truth, K = 2L, seed = 31L)
+  expect_identical(one, two)
+
+  set.seed(404L)
+  rng_before <- .Random.seed
+  invisible(pmm_one(predictions, truth, K = 2L, seed = 31L))
+  expect_identical(.Random.seed, rng_before)
+  expect_no_error(pmm_one(predictions, truth, K = 2L, seed = NULL))
 })

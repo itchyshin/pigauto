@@ -42,7 +42,7 @@ When the fit includes a baseline, baseline metrics are appended with
 \code{method = "baseline"} for direct comparison.
 }
 \examples{
-\dontrun{
+\donttest{
 eval_df <- evaluate(fit)
 eval_df[eval_df$metric == "rmse", ]
 }

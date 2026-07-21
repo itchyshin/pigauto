@@ -29,6 +29,11 @@ test_that("make_missing_splits is deterministic given seed", {
   expect_equal(s1$test_idx, s2$test_idx)
 })
 
+test_that("make_missing_splits accepts an unseeded RNG stream", {
+  X <- matrix(rnorm(100), nrow = 10)
+  expect_no_error(make_missing_splits(X, seed = NULL))
+})
+
 test_that("make_missing_splits mask is TRUE for non-missing cells", {
   X      <- matrix(rnorm(100), nrow = 10)
   splits <- make_missing_splits(X, missing_frac = 0.20, seed = 3)

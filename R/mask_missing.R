@@ -30,7 +30,8 @@ mask_missing <- function(X) {
 #'   designate as missing (default \code{0.25}).
 #' @param val_frac numeric. Fraction of missing cells for validation
 #'   (default \code{0.25}); the rest become the test set.
-#' @param seed integer. Random seed for reproducibility (default \code{555}).
+#' @param seed optional integer. When supplied, makes split construction
+#'   reproducible; the default \code{NULL} uses the current RNG stream.
 #' @param trait_map list of trait descriptors (from \code{pigauto_data}).
 #'   If \code{NULL}, masking is applied per latent column (v0.1 behaviour).
 #' @param mechanism character. Missingness mechanism:
@@ -83,7 +84,7 @@ mask_missing <- function(X) {
 #'   mechanism_args = list(driver_col = 1, beta = 2))
 #' @export
 make_missing_splits <- function(X, missing_frac = 0.25, val_frac = 0.25,
-                                seed = 555, trait_map = NULL,
+                                seed = NULL, trait_map = NULL,
                                 mechanism = c("MCAR", "MAR_trait",
                                               "MAR_phylo", "MNAR"),
                                 mechanism_args = list(),
@@ -109,7 +110,7 @@ make_missing_splits <- function(X, missing_frac = 0.25, val_frac = 0.25,
     if (length(observed_idx) == 0L) {
       stop("No observed cells in X; cannot create splits.")
     }
-    set.seed(seed)
+    if (!is.null(seed)) set.seed(seed)
     n_miss <- floor(missing_frac * length(observed_idx))
 
     # Generate per-cell weights (uniform for MCAR, non-uniform for MAR/MNAR)
@@ -153,7 +154,7 @@ make_missing_splits <- function(X, missing_frac = 0.25, val_frac = 0.25,
     stop("No observed (species, trait) cells; cannot create splits.")
   }
 
-  set.seed(seed)
+  if (!is.null(seed)) set.seed(seed)
   n_miss <- floor(missing_frac * length(observed_trait_idx))
 
   # Generate per-cell weights in (n x n_traits) space

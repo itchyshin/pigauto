@@ -17,7 +17,7 @@ multi_impute(
   covariates = NULL,
   epochs = 2000L,
   verbose = TRUE,
-  seed = 1L,
+  seed = NULL,
   ...
 )
 }
@@ -78,7 +78,8 @@ Default \code{NULL} (no covariates).}
 
 \item{verbose}{logical. Print progress (default \code{TRUE}).}
 
-\item{seed}{integer. Random seed (default \code{1}).}
+\item{seed}{optional integer. When supplied, makes fitting and imputation
+draws reproducible; the default \code{NULL} uses the current RNG stream.}
 
 \item{...}{additional arguments forwarded to \code{\link[=fit_pigauto]{fit_pigauto()}} via
 \code{\link[=impute]{impute()}}. See \code{\link[=fit_pigauto]{fit_pigauto()}} for the full list; the "Safety
@@ -173,7 +174,7 @@ blended residuals.
 }
 
 \examples{
-\dontrun{
+\donttest{
 library(pigauto)
 data(avonet300, tree300)
 df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL

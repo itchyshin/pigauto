@@ -41,7 +41,7 @@
 #' @seealso [multi_impute_analysis()], [pool_mi()]
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' mi <- multi_impute_analysis(
 #'   data = df, formula = y ~ x + z, missing = "x",
 #'   model = "lm", m = 50L

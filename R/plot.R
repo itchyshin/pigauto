@@ -43,7 +43,7 @@
 #' @param ... Additional arguments passed to base plotting functions.
 #' @return Invisible \code{NULL}. Called for its side effect (plotting).
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' fit <- fit_pigauto(data, tree)
 #' plot(fit)
 #' plot(fit, type = "history")
@@ -250,7 +250,7 @@ plot.pigauto_fit <- function(x, type = "history", ...) {
 #' @param ... Additional arguments passed to base plotting functions.
 #' @return Invisible \code{NULL}. Called for its side effect (plotting).
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' pred <- predict(fit)
 #' plot(pred)
 #' plot(pred, type = "scatter", data = observed_df)
@@ -664,7 +664,7 @@ plot.pigauto_pred <- function(x, data = NULL, splits = NULL,
 #' @param ... Additional arguments passed to \code{plot()}.
 #' @return Invisible \code{NULL}. Called for its side effect (plotting).
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' results <- read.csv("benchmark_results.csv")
 #' plot_comparison(results)
 #' plot_comparison(results, metric = "rmse")

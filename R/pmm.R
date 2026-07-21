@@ -26,13 +26,13 @@
 #   with NA at cells to impute.
 # @param K integer >= 1.  Donor pool size.  Reduced to length(observed)
 #   when fewer than K observed cells exist.
-# @param seed integer.  Per-call random seed for the within-K donor
-#   choice.  Use distinct seeds across multi-imputation draws to get
-#   different donors (preserving between-draw variance).
+# @param seed optional integer. Per-call random seed for the within-K donor
+#   choice. Use distinct seeds across multi-imputation draws to get different
+#   donors (preserving between-draw variance); `NULL` uses the current stream.
 # @return numeric vector length n with NA cells filled by donor values.
 #   The donor is always an observed value from `truth`.
 # @keywords internal
-pmm_impute_one_trait <- function(predictions, truth, K = 5L, seed = 1L) {
+pmm_impute_one_trait <- function(predictions, truth, K = 5L, seed = NULL) {
   stopifnot(length(predictions) == length(truth))
   K <- as.integer(K)
   if (K < 1L) stop("'K' must be >= 1.", call. = FALSE)
@@ -49,31 +49,30 @@ pmm_impute_one_trait <- function(predictions, truth, K = 5L, seed = 1L) {
   obs_pred  <- predictions[obs_idx]
   obs_truth <- truth[obs_idx]
 
-  result <- truth
-  rng_state <- .Random.seed_or_null()
-  on.exit(restore_rng_state(rng_state), add = TRUE)
-  set.seed(seed)
-
-  for (i in miss_idx) {
-    pred_i <- predictions[i]
-    if (!is.finite(pred_i)) {
-      # Pred is NA/NaN/Inf: PMM cannot match.  Leave as NA -- caller can
-      # decide whether to fall back.
-      next
+  draw_donors <- function() {
+    result <- truth
+    for (i in miss_idx) {
+      pred_i <- predictions[i]
+      if (!is.finite(pred_i)) {
+        # Pred is NA/NaN/Inf: PMM cannot match.  Leave as NA -- caller can
+        # decide whether to fall back.
+        next
+      }
+      # K-nearest by predicted-value distance.  order() gives stable
+      # tie-breaking (first-occurrence index wins).
+      dists   <- abs(obs_pred - pred_i)
+      nearest <- order(dists)[seq_len(K_eff)]
+      # Pick one uniformly at random from the K nearest
+      if (K_eff == 1L) {
+        donor <- nearest
+      } else {
+        donor <- nearest[sample.int(K_eff, 1L)]
+      }
+      result[i] <- obs_truth[donor]
     }
-    # K-nearest by predicted-value distance.  order() gives stable
-    # tie-breaking (first-occurrence index wins).
-    dists   <- abs(obs_pred - pred_i)
-    nearest <- order(dists)[seq_len(K_eff)]
-    # Pick one uniformly at random from the K nearest
-    if (K_eff == 1L) {
-      donor <- nearest
-    } else {
-      donor <- nearest[sample.int(K_eff, 1L)]
-    }
-    result[i] <- obs_truth[donor]
+    result
   }
-  result
+  if (is.null(seed)) draw_donors() else withr::with_seed(seed, draw_donors())
 }
 
 # pmm_eligible_types
@@ -98,31 +97,6 @@ pmm_is_eligible <- function(tm) {
   tm$type %in% pmm_eligible_types()
 }
 
-# .Random.seed_or_null / restore_rng_state
-# ----------------------------------------
-# Save and restore the RNG state so PMM's seed-setting doesn't leak
-# upstream.  R's set.seed has global effect; saving + restoring around
-# our per-trait calls keeps the user's RNG state untouched.
-# @keywords internal
-.Random.seed_or_null <- function() {
-  if (exists(".Random.seed", envir = globalenv(), inherits = FALSE)) {
-    get(".Random.seed", envir = globalenv())
-  } else {
-    NULL
-  }
-}
-
-restore_rng_state <- function(state) {
-  if (is.null(state)) {
-    if (exists(".Random.seed", envir = globalenv(), inherits = FALSE)) {
-      rm(list = ".Random.seed", envir = globalenv())
-    }
-  } else {
-    assign(".Random.seed", state, envir = globalenv())
-  }
-  invisible(NULL)
-}
-
 # apply_pmm_to_decoded
 # --------------------
 # Apply PMM per-trait per-draw to a list of decoded predictions.
@@ -136,11 +110,12 @@ restore_rng_state <- function(state) {
 #   originally-missing cells (PMM imputes those; observed cells pass
 #   through).  This is recovered from object$X_scaled at the call site.
 # @param K integer donor pool size.
-# @param base_seed integer.  Per-draw seed = base_seed + draw_idx.
+# @param base_seed optional integer. When supplied, per-draw seed =
+#   base_seed + draw_idx; `NULL` uses the current stream.
 # @return list of M decoded results, with PMM applied.
 # @keywords internal
 apply_pmm_to_decoded <- function(decode_results, trait_map, X_orig,
-                                  K = 5L, base_seed = 1L) {
+                                  K = 5L, base_seed = NULL) {
   K <- as.integer(K)
   M <- length(decode_results)
   for (m in seq_len(M)) {
@@ -153,7 +128,8 @@ apply_pmm_to_decoded <- function(decode_results, trait_map, X_orig,
         next  # shape mismatch -- skip rather than error (multi-obs edge)
       }
       decode_results[[m]]$imputed[[nm]] <-
-        pmm_impute_one_trait(preds, truth, K = K, seed = base_seed + m)
+        pmm_impute_one_trait(preds, truth, K = K,
+                             seed = if (is.null(base_seed)) NULL else base_seed + m)
       # Coerce back to integer for count and zi_count
       if (tm$type == "count") {
         decode_results[[m]]$imputed[[nm]] <-

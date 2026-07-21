@@ -77,8 +77,9 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #' @param epochs integer. Maximum GNN training epochs per tree (default
 #'   `2000`).
 #' @param verbose logical. Print progress (default `TRUE`).
-#' @param seed integer. Base random seed; each tree uses `seed + t - 1`
-#'   so results are reproducible (default `1`).
+#' @param seed optional integer. Base random seed; when supplied, each tree
+#'   uses `seed + t - 1` for reproducible results. The default `NULL` uses
+#'   the current RNG stream.
 #' @param share_gnn logical. If `TRUE` (default), fit the GNN once on a
 #'   reference tree and reuse it across all posterior trees, recomputing
 #'   only the BM baseline per tree. Gives a ~10-15x speedup at n=10k.
@@ -189,7 +190,7 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'   [multi_impute_analysis()] for analysis-aware MI, and [trees300]
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' library(pigauto)
 #' data(avonet300, trees300)
 #' df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
@@ -212,7 +213,7 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 1L,
                                missing_frac = 0.25,
                                covariates = NULL,
                                epochs = 2000L, verbose = TRUE,
-                               seed = 1L,
+                               seed = NULL,
                                share_gnn = TRUE,
                                reference_tree = NULL,
                                ...) {
@@ -306,10 +307,11 @@ run_per_tree <- function(traits, trees, m_per_tree,
   trait_cols   <- setdiff(names(traits), species_col)
 
   for (t in seq_len(T_trees)) {
-    t_seed <- as.integer(seed + t - 1L)
+    t_seed <- if (is.null(seed)) NULL else as.integer(seed + t - 1L)
 
     if (verbose) {
-      cat(sprintf("  Tree %d/%d (seed=%d)...", t, T_trees, t_seed))
+      cat(sprintf("  Tree %d/%d%s...", t, T_trees,
+                  if (is.null(t_seed)) "" else paste0(" (seed=", t_seed, ")")))
       t_start <- proc.time()
     }
 
@@ -433,7 +435,8 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
     multi_proportion_groups = multi_proportion_groups,
     log_transform = log_transform, missing_frac = missing_frac,
     n_imputations = m_per_tree, covariates = covariates,
-    epochs = as.integer(epochs), verbose = FALSE, seed = as.integer(seed), ...
+    epochs = as.integer(epochs), verbose = FALSE,
+    seed = if (is.null(seed)) NULL else as.integer(seed), ...
   )
   fit_ref    <- res_ref$fit
   data_ref   <- res_ref$data

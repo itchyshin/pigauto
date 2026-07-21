@@ -49,7 +49,7 @@ fit_pigauto(
   min_val_cells = 20L,
   lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
   verbose = TRUE,
-  seed = 1L
+  seed = NULL
 )
 }
 \arguments{
@@ -276,7 +276,9 @@ handling to the per-column BM path. Passed to
 
 \item{verbose}{logical. Print training progress (default \code{TRUE}).}
 
-\item{seed}{integer. Random seed (default \code{1}).}
+\item{seed}{optional integer. When supplied, makes stochastic training and
+calibration reproducible; the default \code{NULL} uses the current RNG
+stream.}
 }
 \value{
 An object of class \code{"pigauto_fit"}.
@@ -366,7 +368,7 @@ intervals cautiously.
 }
 
 \examples{
-\dontrun{
+\donttest{
 data(avonet300, tree300)
 traits <- avonet300
 rownames(traits) <- traits$Species_Key

@@ -11,7 +11,7 @@ multi_impute_analysis(
   model = c("lm", "glm", "lmer"),
   m = 50L,
   auxiliary = character(),
-  seed = 1L,
+  seed = NULL,
   control = list()
 )
 }
@@ -36,7 +36,9 @@ only by the imputation model. They cannot duplicate formula variables.
 Derived terms must be created explicitly in \code{data} before calling this
 function.}
 
-\item{seed}{Integer random seed.}
+\item{seed}{Optional integer random seed. When supplied, makes the
+imputation draws reproducible; the default \code{NULL} uses the current
+RNG stream.}
 
 \item{control}{Named list of engine controls. The \code{"lm"} route accepts no
 controls. The \code{"glm"} route accepts \code{numit} (default 20) and \code{rjlimit}

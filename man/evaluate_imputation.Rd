@@ -54,7 +54,7 @@ For binary and categorical traits the function accepts either a
 raw matrices (latent scale).
 }
 \examples{
-\dontrun{
+\donttest{
 # From pigauto_pred object
 eval_df <- evaluate_imputation(pred_obj, pd$X_scaled, splits)
 

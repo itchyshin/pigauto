@@ -75,7 +75,7 @@ Requires the optional \code{rgbif} package (in DESCRIPTION
 errors with an installation message.
 }
 \examples{
-\dontrun{
+\donttest{
 # Plants ecology example: pull centroids for a species list.
 sp <- c("Quercus alba", "Pinus taeda", "Acer saccharum")
 cov <- pull_gbif_centroids(sp, cache_dir = "script/data-cache/gbif")

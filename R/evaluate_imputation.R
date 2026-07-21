@@ -39,7 +39,7 @@
 #' @return A \code{data.frame} with columns \code{split}, \code{trait},
 #'   \code{type}, \code{n}, and type-specific metric columns.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # From pigauto_pred object
 #' eval_df <- evaluate_imputation(pred_obj, pd$X_scaled, splits)
 #'

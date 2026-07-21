@@ -45,7 +45,7 @@ When both RMSE and accuracy metrics are present and \code{metric} is
 \code{NULL}, a two-panel figure is produced automatically.
 }
 \examples{
-\dontrun{
+\donttest{
 results <- read.csv("benchmark_results.csv")
 plot_comparison(results)
 plot_comparison(results, metric = "rmse")

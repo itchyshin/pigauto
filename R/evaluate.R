@@ -29,7 +29,7 @@
 #' @return A \code{data.frame} with columns: \code{method}, \code{trait},
 #'   \code{type}, \code{metric}, \code{value}, \code{n_test}.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' eval_df <- evaluate(fit)
 #' eval_df[eval_df$metric == "rmse", ]
 #' }
@@ -494,20 +494,21 @@ eval_test_cells_legacy <- function(pred_latent, truth_latent,
 #' @param tree phylo object.
 #' @param splits pre-computed splits (applied to all reps) or \code{NULL}
 #'   to create fresh splits per seed.
-#' @param seeds integer vector of random seeds for replication.
+#' @param seeds optional integer vector of random seeds for replication. The
+#'   default \code{NULL} performs one run using the current RNG stream.
 #' @param epochs number of training epochs.
 #' @param verbose logical.
 #' @param ... additional arguments passed to \code{\link{fit_pigauto}}.
 #' @return A \code{data.frame} with columns: \code{method}, \code{trait},
 #'   \code{type}, \code{metric}, \code{value}, \code{rep}.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' cmp <- compare_methods(pd, tree300, seeds = 1:3, epochs = 500)
 #' # Summarise across reps
 #' aggregate(value ~ method + trait + metric, data = cmp, FUN = mean)
 #' }
 #' @export
-compare_methods <- function(data, tree, splits = NULL, seeds = 1:3,
+compare_methods <- function(data, tree, splits = NULL, seeds = NULL,
                             epochs = 500L, verbose = TRUE, ...) {
   if (!inherits(data, "pigauto_data")) {
     stop("'data' must be a pigauto_data object.")
@@ -515,13 +516,22 @@ compare_methods <- function(data, tree, splits = NULL, seeds = 1:3,
   if (!inherits(tree, "phylo")) {
     stop("'tree' must be a phylo object.")
   }
+  if (is.null(seeds)) {
+    seeds <- list(NULL)
+  } else {
+    if (!is.numeric(seeds) || anyNA(seeds) || any(!is.finite(seeds))) {
+      stop("`seeds` must be NULL or a finite numeric vector.", call. = FALSE)
+    }
+    seeds <- as.list(as.integer(seeds))
+  }
 
   all_results <- vector("list", length(seeds))
 
   for (i in seq_along(seeds)) {
-    s <- seeds[i]
+    s <- seeds[[i]]
     if (verbose) message("=== Replicate ", i, "/", length(seeds),
-                         " (seed ", s, ") ===")
+                         if (is.null(s)) "" else paste0(" (seed ", s, ")"),
+                         " ===")
 
     # ---- Splits -----------------------------------------------------------
     if (is.null(splits)) {
@@ -579,7 +589,7 @@ compare_methods <- function(data, tree, splits = NULL, seeds = 1:3,
 #' @return Invisibly returns the evaluation data.frame (or \code{NULL} if
 #'   \code{data} is not supplied).
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' summary(fit, data = pd)
 #' }
 #' @export

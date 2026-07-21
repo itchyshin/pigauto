@@ -37,6 +37,8 @@
 #'   (default 3).
 #' @param epochs integer.  Maximum GNN training epochs (default 500).
 #' @param verbose logical.  Print progress (default \code{TRUE}).
+#' @param seed optional integer.  When supplied, makes the generated
+#'   benchmark replicates reproducible.
 #' @param ... additional arguments passed to \code{\link{fit_pigauto}}.
 #' @return An object of class \code{"pigauto_benchmark"} with:
 #'   \describe{
@@ -49,7 +51,7 @@
 #'     \item{n_species}{integer.}
 #'   }
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' bench <- simulate_benchmark(n_species = 50, epochs = 200, n_reps = 2)
 #' bench$summary
 #' plot(bench)
@@ -63,6 +65,7 @@ simulate_benchmark <- function(
     n_reps     = 3L,
     epochs     = 500L,
     verbose    = TRUE,
+    seed       = NULL,
     ...
 ) {
   all_scenarios <- c("BM", "OU", "regime_shift", "nonlinear", "mixed")
@@ -75,12 +78,13 @@ simulate_benchmark <- function(
     if (verbose) message("\n=== Scenario: ", scen, " ===")
 
     for (rep in seq_len(n_reps)) {
-      rep_seed <- rep * 100L + match(scen, all_scenarios)
+      rep_seed <- if (is.null(seed)) NULL else as.integer(seed) +
+        rep * 100L + match(scen, all_scenarios)
       if (verbose) message("  Rep ", rep, "/", n_reps,
-                           " (seed ", rep_seed, ")")
+                           if (is.null(rep_seed)) "" else paste0(" (seed ", rep_seed, ")"))
 
       # ---- Generate tree and traits ------------------------------------------
-      set.seed(rep_seed)
+      if (!is.null(rep_seed)) set.seed(rep_seed)
       tree <- ape::rtree(as.integer(n_species))
 
       if (scen == "mixed") {

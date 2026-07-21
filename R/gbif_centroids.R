@@ -249,7 +249,7 @@
 #'   \code{covariates}).
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Plants ecology example: pull centroids for a species list.
 #' sp <- c("Quercus alba", "Pinus taeda", "Acer saccharum")
 #' cov <- pull_gbif_centroids(sp, cache_dir = "script/data-cache/gbif")

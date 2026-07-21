@@ -18,7 +18,7 @@ Reads a Newick or NEXUS tree file using \pkg{ape}. Tries
 fails.
 }
 \examples{
-\dontrun{
+\donttest{
 tree <- read_tree("path/to/tree.tre")
 }
 }

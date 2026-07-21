@@ -117,7 +117,7 @@ latent column, summed across components.  \code{metric} is
 \code{"variance"}; \code{delta_var_total} is the K-component sum.
 }
 \examples{
-\dontrun{
+\donttest{
 data(avonet300, tree300, package = "pigauto")
 res <- impute(avonet300, tree300)
 suggest_next_observation(res, top_n = 5)              # top-5 cells

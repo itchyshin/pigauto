@@ -203,7 +203,7 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
                             mean_baseline_per_col = NULL,
                             simplex_step = 0.05,
                             min_val_cells = 10L,
-                            seed = 1L,
+                            seed = NULL,
                             latent_names = NULL,
                             verbose = FALSE,
                             fixed_cal = NULL) {
@@ -288,13 +288,14 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
     # so each fold has at least 1 cell.
     # ------------------------------------------------------------------
     split_seeds <- if (gate_method == "single_split") {
-      (seed + 17L)
+      if (is.null(seed)) list(NULL) else (seed + 17L)
     } else {
-      as.integer(seed + 17L + seq_len(gate_splits_B) - 1L)
+      if (is.null(seed)) rep(list(NULL), gate_splits_B) else
+        as.integer(seed + 17L + seq_len(gate_splits_B) - 1L)
     }
 
     resolve_best_g_one_split <- function(ss) {
-      set.seed(ss)
+      if (!is.null(ss)) set.seed(ss)
       perm_i <- sample(n_val)
       half_a_i <- val_row_idx[perm_i[seq_len(floor(n_val / 2))]]
       half_b_i <- val_row_idx[perm_i[(floor(n_val / 2) + 1L):n_val]]
@@ -311,9 +312,9 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
       K_eff <- min(gate_cv_folds, n_val)
       if (K_eff < 2L) {
         # CV ill-defined at n_val < 2; fall back to a single split.
-        list(resolve_best_g_one_split(seed + 17L))
+        list(resolve_best_g_one_split(if (is.null(seed)) NULL else seed + 17L))
       } else {
-        set.seed(seed + 17L)
+        if (!is.null(seed)) set.seed(seed + 17L)
         # rep(seq_len(K_eff), length.out = n_val) gives a balanced fold
         # assignment (within +/- 1 cell across folds); sample() randomises
         # which val_row gets which fold id, fixed by the seed above.

@@ -16,7 +16,7 @@ multi_impute_trees(
   covariates = NULL,
   epochs = 2000L,
   verbose = TRUE,
-  seed = 1L,
+  seed = NULL,
   share_gnn = TRUE,
   reference_tree = NULL,
   ...
@@ -58,8 +58,9 @@ Default \code{NULL} (no covariates).}
 
 \item{verbose}{logical. Print progress (default \code{TRUE}).}
 
-\item{seed}{integer. Base random seed; each tree uses \code{seed + t - 1}
-so results are reproducible (default \code{1}).}
+\item{seed}{optional integer. Base random seed; when supplied, each tree
+uses \code{seed + t - 1} for reproducible results. The default \code{NULL} uses
+the current RNG stream.}
 
 \item{share_gnn}{logical. If \code{TRUE} (default), fit the GNN once on a
 reference tree and reuse it across all posterior trees, recomputing
@@ -198,7 +199,7 @@ establish downstream inferential validity.
 }
 
 \examples{
-\dontrun{
+\donttest{
 library(pigauto)
 data(avonet300, trees300)
 df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL

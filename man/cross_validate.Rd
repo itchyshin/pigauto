@@ -8,7 +8,7 @@ cross_validate(
   data,
   tree,
   k = 5L,
-  seeds = 1:3,
+  seeds = NULL,
   epochs = 500L,
   verbose = TRUE,
   ...
@@ -21,7 +21,8 @@ cross_validate(
 
 \item{k}{integer.  Number of folds (default 5).}
 
-\item{seeds}{integer vector.  Seeds for replicate runs.}
+\item{seeds}{optional integer vector. Seeds for replicate runs. The default
+\code{NULL} performs one run using the current RNG stream.}
 
 \item{epochs}{integer.  Training epochs per fold (default 500).}
 
@@ -48,7 +49,7 @@ Performs stratified k-fold cross-validation by rotating which cells
 serve as the test set.  Returns per-fold and aggregated metrics.
 }
 \examples{
-\dontrun{
+\donttest{
 data(avonet300, tree300, package = "pigauto")
 traits <- avonet300; rownames(traits) <- traits$Species_Key
 traits$Species_Key <- NULL

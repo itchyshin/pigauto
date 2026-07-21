@@ -220,7 +220,9 @@
 #'   handling to the per-column BM path. Passed to
 #'   \code{\link{fit_baseline}} and stored in the fitted model config.
 #' @param verbose logical. Print training progress (default \code{TRUE}).
-#' @param seed integer. Random seed (default \code{1}).
+#' @param seed optional integer. When supplied, makes stochastic training and
+#'   calibration reproducible; the default \code{NULL} uses the current RNG
+#'   stream.
 #' @section Calibration at small n:
 #'
 #' pigauto's 95\% intervals are \emph{conformal}, not parametric: the
@@ -264,7 +266,7 @@
 #' @importFrom torch optim_adam with_no_grad nn_utils_clip_grad_norm_
 #' @importFrom torch nnf_mse_loss torch_rand_like torch_where torch_zeros_like
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(avonet300, tree300)
 #' traits <- avonet300
 #' rownames(traits) <- traits$Species_Key
@@ -321,7 +323,7 @@ fit_pigauto <- function(
     min_val_cells     = 20L,
     lambda_mode       = c("fixed_1", "estimate", "cv", "bayes"),
     verbose           = TRUE,
-    seed              = 1L
+    seed = NULL
 ) {
   conformal_method    <- match.arg(conformal_method)
   lambda_mode         <- match.arg(lambda_mode)
@@ -331,8 +333,10 @@ fit_pigauto <- function(
     stop("'data' must be a pigauto_data object.")
   }
 
-  set.seed(seed)
-  torch::torch_manual_seed(seed)
+  if (!is.null(seed)) {
+    set.seed(seed)
+    torch::torch_manual_seed(seed)
+  }
 
   device <- get_device()
   if (verbose) message("Using device: ", as.character(device))
@@ -847,7 +851,7 @@ fit_pigauto <- function(
     # `conformal_split_val = FALSE` to disable splitting everywhere.
     split_threshold <- 2L * as.integer(min_val_cells)
     if (isTRUE(conformal_split_val)) {
-      set.seed(seed + 23L)
+      if (!is.null(seed)) set.seed(seed + 23L)
       val_mask_cal  <- matrix(FALSE, n, p)
       val_mask_conf <- matrix(FALSE, n, p)
       for (jcol in seq_len(p)) {
@@ -1026,7 +1030,7 @@ fit_pigauto <- function(
     input_dim              = p,
     per_column_rs          = TRUE,
     n_user_cov             = n_user_cov,
-    seed                   = as.integer(seed)
+    seed                   = if (is.null(seed)) NULL else as.integer(seed)
   )
 
   # Move model state to CPU before returning. Otherwise the returned

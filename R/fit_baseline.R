@@ -69,7 +69,7 @@
 #'     \item{se}{Numeric matrix (n_species x p_latent), standard errors.}
 #'   }
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(avonet300, tree300, package = "pigauto")
 #' traits <- avonet300; rownames(traits) <- traits$Species_Key
 #' traits$Species_Key <- NULL

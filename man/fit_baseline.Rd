@@ -100,7 +100,7 @@ label-propagation or threshold/liability baseline candidates, with
 per-column fallbacks when a joint path is not available.
 }
 \examples{
-\dontrun{
+\donttest{
 data(avonet300, tree300, package = "pigauto")
 traits <- avonet300; rownames(traits) <- traits$Species_Key
 traits$Species_Key <- NULL

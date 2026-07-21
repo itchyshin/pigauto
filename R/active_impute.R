@@ -397,7 +397,7 @@ lp_entropy_reduction_categorical <- function(oh, sim) {
 #'   \code{species}, \code{delta_var_total}, \code{delta_entropy_total},
 #'   \code{n_traits_missing}, sorted by the SUM of available metrics.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(avonet300, tree300, package = "pigauto")
 #' res <- impute(avonet300, tree300)
 #' suggest_next_observation(res, top_n = 5)              # top-5 cells

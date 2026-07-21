@@ -114,7 +114,7 @@ cleanly to posterior distributions. No MCMCglmm downstream workflow is
 supported by the initial analysis-aware backend.
 }
 \examples{
-\dontrun{
+\donttest{
 # Analysis-aware workflow (one incomplete continuous covariate)
 mi <- multi_impute_analysis(
   data = analysis_data, formula = y ~ x + z, missing = "x",

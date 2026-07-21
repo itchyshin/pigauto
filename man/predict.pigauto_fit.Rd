@@ -161,7 +161,7 @@ lifecycle documentation.
 }
 }
 \examples{
-\dontrun{
+\donttest{
 pred <- predict(fit, return_se = TRUE)
 pred$imputed        # data.frame, original scale
 pred$se             # matrix, uncertainty

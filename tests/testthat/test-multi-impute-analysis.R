@@ -51,6 +51,14 @@ test_that("Bayesian Normal analysis-aware MI is seed reproducible", {
   expect_false(identical(a$datasets, c$datasets))
 })
 
+test_that("Bayesian Normal analysis-aware MI accepts the ambient RNG stream", {
+  data <- make_analysis_mi_data(seed = 1205L)
+  mi <- multi_impute_analysis(data, y ~ x + z, "x", model = "lm", m = 2L)
+
+  expect_null(mi$seed)
+  expect_length(mi$datasets, 2L)
+})
+
 test_that("analysis-aware MI composes with fit and Rubin pooling", {
   data <- make_analysis_mi_data(n = 400L, seed = 1203L)
   mi <- multi_impute_analysis(

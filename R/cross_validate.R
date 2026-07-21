@@ -6,7 +6,8 @@
 #' @param data pigauto_data object (output of \code{\link{preprocess_traits}}).
 #' @param tree phylo object.
 #' @param k integer.  Number of folds (default 5).
-#' @param seeds integer vector.  Seeds for replicate runs.
+#' @param seeds optional integer vector. Seeds for replicate runs. The default
+#'   \code{NULL} performs one run using the current RNG stream.
 #' @param epochs integer.  Training epochs per fold (default 500).
 #' @param verbose logical.  Print progress (default TRUE).
 #' @param ... Additional arguments passed to \code{\link{fit_pigauto}}
@@ -23,7 +24,7 @@
 #'     \item{n_reps}{Number of replicates.}
 #'   }
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(avonet300, tree300, package = "pigauto")
 #' traits <- avonet300; rownames(traits) <- traits$Species_Key
 #' traits$Species_Key <- NULL
@@ -33,7 +34,7 @@
 #' summary(cv)
 #' }
 #' @export
-cross_validate <- function(data, tree, k = 5L, seeds = 1:3,
+cross_validate <- function(data, tree, k = 5L, seeds = NULL,
                            epochs = 500L, verbose = TRUE, ...) {
   if (!inherits(data, "pigauto_data")) {
     stop("'data' must be a pigauto_data object (output of preprocess_traits).")
@@ -41,6 +42,14 @@ cross_validate <- function(data, tree, k = 5L, seeds = 1:3,
   if (!inherits(tree, "phylo")) stop("'tree' must be a phylo object.")
   k <- as.integer(k)
   if (k < 2L) stop("'k' must be >= 2.")
+  if (is.null(seeds)) {
+    seeds <- list(NULL)
+  } else {
+    if (!is.numeric(seeds) || anyNA(seeds) || any(!is.finite(seeds))) {
+      stop("`seeds` must be NULL or a finite numeric vector.", call. = FALSE)
+    }
+    seeds <- as.list(as.integer(seeds))
+  }
 
   X_scaled  <- data$X_scaled
   trait_map <- data$trait_map
@@ -59,15 +68,16 @@ cross_validate <- function(data, tree, k = 5L, seeds = 1:3,
   all_conformal <- list()
 
   for (rep_i in seq_along(seeds)) {
-    seed <- seeds[rep_i]
+    seed <- seeds[[rep_i]]
 
     # Create k non-overlapping folds from observed cells
     folds <- make_cv_folds(X_scaled, k, seed, trait_map)
 
     for (fold_i in seq_len(k)) {
       if (verbose) {
-        message(sprintf("Rep %d/%d, Fold %d/%d (seed=%d)...",
-                        rep_i, length(seeds), fold_i, k, seed))
+        message(sprintf("Rep %d/%d, Fold %d/%d%s...",
+                        rep_i, length(seeds), fold_i, k,
+                        if (is.null(seed)) "" else paste0(" (seed=", seed, ")")))
       }
 
       # Build splits: fold_i = test, fold_i+1 (mod k) = val, rest = train
@@ -170,7 +180,7 @@ cross_validate <- function(data, tree, k = 5L, seeds = 1:3,
 # the n x p matrix).
 
 make_cv_folds <- function(X_scaled, k, seed, trait_map = NULL) {
-  set.seed(seed)
+  if (!is.null(seed)) set.seed(seed)
   n <- nrow(X_scaled)
   p <- ncol(X_scaled)
 

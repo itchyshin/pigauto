@@ -30,7 +30,7 @@ graphics.  Three plot types are available: training history,
 calibrated gate values, and conformal prediction scores.
 }
 \examples{
-\dontrun{
+\donttest{
 fit <- fit_pigauto(data, tree)
 plot(fit)
 plot(fit, type = "history")

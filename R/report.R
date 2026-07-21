@@ -17,7 +17,7 @@
 #'   \code{TRUE}).
 #' @return The output path (invisibly).
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(avonet300, tree300)
 #' result <- impute(avonet300, tree300, species_col = "Species_Key")
 #' pigauto_report(result, output_path = tempfile(fileext = ".html"),

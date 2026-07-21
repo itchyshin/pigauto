@@ -61,7 +61,8 @@
 #'   Default `NULL` (no covariates).
 #' @param epochs integer. Maximum GNN training epochs (default `2000`).
 #' @param verbose logical. Print progress (default `TRUE`).
-#' @param seed integer. Random seed (default `1`).
+#' @param seed optional integer. When supplied, makes fitting and imputation
+#'   draws reproducible; the default `NULL` uses the current RNG stream.
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
 #'   [impute()]. See [fit_pigauto()] for the full list; the "Safety
 #'   floor" section below describes the relevant new v0.9.1.9002
@@ -147,7 +148,7 @@
 #'   for the narrow analysis-aware inferential backend.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' library(pigauto)
 #' data(avonet300, tree300)
 #' df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
@@ -169,7 +170,7 @@ multi_impute <- function(traits, tree, m = 100L,
                          log_transform = TRUE,
                          missing_frac = 0.25,
                          covariates = NULL,
-                         epochs = 2000L, verbose = TRUE, seed = 1L, ...) {
+                         epochs = 2000L, verbose = TRUE, seed = NULL, ...) {
 
   draws_method <- match.arg(draws_method)
   m <- as.integer(m)
@@ -195,7 +196,7 @@ multi_impute <- function(traits, tree, m = 100L,
       covariates    = covariates,
       epochs        = as.integer(epochs),
       verbose       = verbose,
-      seed          = as.integer(seed),
+      seed          = if (is.null(seed)) NULL else as.integer(seed),
       ...
     )
 
@@ -228,7 +229,7 @@ multi_impute <- function(traits, tree, m = 100L,
       covariates    = covariates,
       epochs        = as.integer(epochs),
       verbose       = verbose,
-      seed          = as.integer(seed),
+      seed          = if (is.null(seed)) NULL else as.integer(seed),
       ...
     )
 
@@ -248,7 +249,7 @@ multi_impute <- function(traits, tree, m = 100L,
       # producing zero between-imputation variance.  See
       # adversarial_review_opus.md (HIGH severity finding C.1).
       imp_df <- .sample_conformal_draw(pred, imask, trait_map,
-                                       seed_i = as.integer(seed) + i,
+                                       seed_i = if (is.null(seed)) NULL else as.integer(seed) + i,
                                        input_row_order = input_row_order)
       build_completed(traits, imp_df, species_col,
                        input_row_order = input_row_order)$completed
@@ -293,7 +294,7 @@ multi_impute <- function(traits, tree, m = 100L,
 # is not available for a trait.
 .sample_conformal_draw <- function(pred, imputed_mask, trait_map, seed_i,
                                     input_row_order = NULL) {
-  set.seed(seed_i)
+  if (!is.null(seed_i)) set.seed(seed_i)
   imp    <- pred$imputed
   probs  <- pred$probabilities
   cscores <- pred$conformal_scores  # named vector, NA for discrete traits

@@ -128,7 +128,7 @@
 #'     \item{n_imputations}{Integer, number of imputations performed.}
 #'   }
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' pred <- predict(fit, return_se = TRUE)
 #' pred$imputed        # data.frame, original scale
 #' pred$se             # matrix, uncertainty
@@ -426,8 +426,10 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   # The stored fit seed makes the public seed contract reproducible while
   # different user seeds still generate different imputations.
   if (n_imp > 1L) {
-    prediction_seed <- as.integer(cfg$seed %||% 1L) + 100000L
-    torch::torch_manual_seed(prediction_seed)
+    if (!is.null(cfg$seed)) {
+      prediction_seed <- as.integer(cfg$seed) + 100000L
+      torch::torch_manual_seed(prediction_seed)
+    }
   }
 
   # Pre-create calibrated gates tensors (once, outside the loop).
@@ -592,7 +594,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     decode_results <- apply_pmm_to_decoded(
       decode_results, trait_map, X_orig,
       K = pmm_K,
-      base_seed = as.integer(object$model_config$seed %||% 1L)
+      base_seed = object$model_config$seed
     )
   }
 

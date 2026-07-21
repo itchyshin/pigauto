@@ -29,7 +29,7 @@ This function converts the model state to a portable raw format
 before saving.
 }
 \examples{
-\dontrun{
+\donttest{
 save_pigauto(fit, "my_model.pigauto")
 fit2 <- load_pigauto("my_model.pigauto")
 }

@@ -67,7 +67,7 @@ Requires the optional \code{terra} package (in DESCRIPTION
 errors with an installation message.
 }
 \examples{
-\dontrun{
+\donttest{
 sp <- c("Quercus alba", "Pinus taeda", "Acer saccharum")
 gbif_df <- pull_gbif_centroids(sp,
   cache_dir = "script/data-cache/gbif")

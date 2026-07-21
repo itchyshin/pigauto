@@ -24,7 +24,7 @@ gate calibration, and conformal coverage.  Requires the original
 \code{pigauto_data} object to compute test-set performance.
 }
 \examples{
-\dontrun{
+\donttest{
 summary(fit, data = pd)
 }
 }

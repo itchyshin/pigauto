@@ -21,7 +21,9 @@
 #'   only by the imputation model. They cannot duplicate formula variables.
 #'   Derived terms must be created explicitly in `data` before calling this
 #'   function.
-#' @param seed Integer random seed.
+#' @param seed Optional integer random seed. When supplied, makes the
+#'   imputation draws reproducible; the default \code{NULL} uses the current
+#'   RNG stream.
 #' @param control Named list of engine controls. The `"lm"` route accepts no
 #'   controls. The `"glm"` route accepts `numit` (default 20) and `rjlimit`
 #'   (default 100000). The `"lmer"` route accepts `nburn` (default 1000) and
@@ -64,7 +66,7 @@
 multi_impute_analysis <- function(data, formula, missing,
                                   model = c("lm", "glm", "lmer"),
                                   m = 50L, auxiliary = character(),
-                                  seed = 1L, control = list()) {
+                                  seed = NULL, control = list()) {
   model <- match.arg(model)
   validated <- .analysis_mi_validate(
     data = data, formula = formula, missing = missing, model = model,
@@ -201,7 +203,9 @@ multi_impute_analysis <- function(data, formula, missing,
   }
 
   m <- .analysis_mi_integer(m, "m", lower = 2L)
-  seed <- .analysis_mi_integer(seed, "seed", lower = 0L)
+  if (!is.null(seed)) {
+    seed <- .analysis_mi_integer(seed, "seed", lower = 0L)
+  }
   control <- .analysis_mi_control(control, model)
 
   if (model == "lmer") {
@@ -394,7 +398,7 @@ multi_impute_analysis <- function(data, formula, missing,
   R <- chol(crossprod(X_observed))
   X_missing <- X[!observed, , drop = FALSE]
 
-  set.seed(seed)
+  if (!is.null(seed)) set.seed(seed)
   lapply(seq_len(m), function(i) {
     sigma2 <- sse / stats::rchisq(1L, df = df)
     beta <- fit$coefficients + sqrt(sigma2) *
@@ -423,7 +427,7 @@ multi_impute_analysis <- function(data, formula, missing,
   imputation_predictors <- unique(c(setdiff(predictors, missing), auxiliary))
   predictor_matrix[missing, imputation_predictors] <- 1
 
-  set.seed(seed)
+  if (!is.null(seed)) set.seed(seed)
   fit <- smcfcs::smcfcs(
     originaldata = engine_data,
     smtype = "logistic",
@@ -458,7 +462,7 @@ multi_impute_analysis <- function(data, formula, missing,
   engine_data[[group]] <- factor(engine_data[[group]])
   level <- rep(1L, ncol(engine_data))
 
-  set.seed(seed)
+  if (!is.null(seed)) set.seed(seed)
   long <- jomo::jomo.smc(
     formula = formula, data = engine_data, level = level,
     nburn = control$nburn, nbetween = control$nbetween, nimp = m,

@@ -43,7 +43,7 @@ vs predicted values, interval plots per species, and probability
 charts for discrete traits.
 }
 \examples{
-\dontrun{
+\donttest{
 pred <- predict(fit)
 plot(pred)
 plot(pred, type = "scatter", data = observed_df)
