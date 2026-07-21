@@ -53,12 +53,12 @@ For each seed the function:
 \examples{
 \donttest{
 data(avonet300, tree300)
-traits <- avonet300
-rownames(traits) <- traits$Species_Key
-traits$Species_Key <- NULL
-pd <- preprocess_traits(traits, tree300)
-cmp <- compare_methods(pd, tree300, seeds = 1L, epochs = 20L,
-                       verbose = FALSE)
+tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+                     c("Mass", "Wing.Length"), drop = FALSE]
+rownames(traits) <- tree$tip.label
+cmp <- compare_methods(preprocess_traits(traits, tree), tree, seeds = 1L,
+                       epochs = 5L, verbose = FALSE)
 aggregate(value ~ method + trait + metric, data = cmp, FUN = mean)
 }
 }

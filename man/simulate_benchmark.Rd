@@ -81,7 +81,9 @@ interaction effects that BM's linear covariance misses.}
 }
 \examples{
 \donttest{
-bench <- simulate_benchmark(n_species = 50, epochs = 200, n_reps = 2)
+bench <- simulate_benchmark(n_species = 20L, n_traits = 2L,
+                            scenarios = "BM", epochs = 5L, n_reps = 1L,
+                            verbose = FALSE)
 bench$summary
 plot(bench)
 }

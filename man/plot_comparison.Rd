@@ -46,7 +46,11 @@ When both RMSE and accuracy metrics are present and \code{metric} is
 }
 \examples{
 \donttest{
-results <- read.csv("benchmark_results.csv")
+results <- data.frame(
+  trait = rep("Mass", 2L), type = rep("continuous", 2L),
+  metric = rep("rmse", 2L), method = c("BM_baseline", "pigauto_GNN"),
+  value = c(1, 0.8)
+)
 plot_comparison(results)
 plot_comparison(results, metric = "rmse")
 }

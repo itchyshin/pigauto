@@ -191,17 +191,19 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'
 #' @examples
 #' \donttest{
-#' library(pigauto)
-#' data(avonet300, trees300)
-#' df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
-#'
-#' # Posterior-tree prediction sensitivity
-#' mi <- multi_impute_trees(df, trees300, m_per_tree = 1L)
+#' data(avonet300, tree300)
+#' tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+#' trees <- structure(list(tree, tree), class = "multiPhylo")
+#' df <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+#'                 c("Mass", "Wing.Length"), drop = FALSE]
+#' rownames(df) <- tree$tip.label
+#' df$Mass[seq_len(3L)] <- NA_real_
+#' mi <- multi_impute_trees(df, trees, m_per_tree = 1L, epochs = 5L,
+#'                          verbose = FALSE)
 #' print(mi)
-#'
 #' mass_by_tree <- vapply(mi$datasets, function(dat) dat$Mass,
 #'                        numeric(nrow(df)))
-#' apply(mass_by_tree, 1L, stats::sd) # descriptive, not an MI standard error
+#' apply(mass_by_tree, 1L, stats::sd)
 #' }
 #'
 #' @export

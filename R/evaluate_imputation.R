@@ -40,12 +40,9 @@
 #'   \code{type}, \code{n}, and type-specific metric columns.
 #' @examples
 #' \donttest{
-#' # From pigauto_pred object
-#' eval_df <- evaluate_imputation(pred_obj, pd$X_scaled, splits)
-#'
-#' # From raw latent matrix
-#' eval_df <- evaluate_imputation(bl$mu, pd$X_scaled, splits,
-#'                                 trait_map = pd$trait_map)
+#' truth <- matrix(c(1, 2, 3, 4), nrow = 2L)
+#' splits <- list(test_idx = 1L, val_idx = 2L, n = 2L, p = 2L)
+#' evaluate_imputation(truth, truth, splits)
 #' }
 #' @importFrom stats complete.cases
 #' @export

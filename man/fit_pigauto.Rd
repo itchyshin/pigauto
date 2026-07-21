@@ -370,13 +370,14 @@ intervals cautiously.
 \examples{
 \donttest{
 data(avonet300, tree300)
-traits <- avonet300
-rownames(traits) <- traits$Species_Key
-traits$Species_Key <- NULL
-data <- preprocess_traits(traits, tree300)
+tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+                     c("Mass", "Wing.Length"), drop = FALSE]
+rownames(traits) <- tree$tip.label
+data <- preprocess_traits(traits, tree)
 splits <- make_missing_splits(data$X_scaled, trait_map = data$trait_map,
                               seed = 1)
-fit <- fit_pigauto(data, tree300, splits = splits, epochs = 100,
+fit <- fit_pigauto(data, tree, splits = splits, epochs = 5L,
                    verbose = FALSE, seed = 1)
 }
 }

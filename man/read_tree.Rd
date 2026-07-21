@@ -19,6 +19,8 @@ fails.
 }
 \examples{
 \donttest{
-tree <- read_tree("path/to/tree.tre")
+path <- tempfile(fileext = ".tre")
+ape::write.tree(ape::rtree(10L), path)
+tree <- read_tree(path)
 }
 }

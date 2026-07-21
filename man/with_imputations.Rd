@@ -59,15 +59,15 @@ limited to fixed-effect coefficients and their covariance matrices.
 }
 \examples{
 \donttest{
+dat <- data.frame(y = stats::rnorm(30L), x = stats::rnorm(30L),
+                  z = stats::rnorm(30L))
+dat$x[seq(3L, 30L, by = 5L)] <- NA_real_
 mi <- multi_impute_analysis(
-  data = df, formula = y ~ x + z, missing = "x",
-  model = "lm", m = 50L
+  data = dat, formula = y ~ x + z, missing = "x",
+  model = "lm", m = 2L
 )
-
 fits <- with_imputations(mi, function(d) stats::lm(y ~ x + z, data = d))
-
 pool_mi(fits)
-
 }
 
 }

@@ -44,10 +44,15 @@ charts for discrete traits.
 }
 \examples{
 \donttest{
-pred <- predict(fit)
+data(avonet300, tree300)
+tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+                     c("Mass", "Wing.Length"), drop = FALSE]
+rownames(traits) <- tree$tip.label
+traits$Mass[seq_len(3L)] <- NA_real_
+pred <- impute(traits, tree, epochs = 5L, verbose = FALSE)$prediction
 plot(pred)
-plot(pred, type = "scatter", data = observed_df)
-plot(pred, type = "intervals", trait = "Beak.Length_Culmen")
-plot(pred, type = "probabilities", data = observed_df)
+plot(pred, type = "scatter", data = traits)
+plot(pred, type = "intervals", trait = "Mass")
 }
 }

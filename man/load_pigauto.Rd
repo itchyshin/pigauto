@@ -18,7 +18,15 @@ Reads a \code{pigauto_fit} object previously saved with
 }
 \examples{
 \donttest{
-fit <- load_pigauto("my_model.pigauto")
-pred <- predict(fit)
+data(avonet300, tree300)
+tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+                     c("Mass", "Wing.Length"), drop = FALSE]
+rownames(traits) <- tree$tip.label
+traits$Mass[seq_len(3L)] <- NA_real_
+fit <- impute(traits, tree, epochs = 5L, verbose = FALSE)$fit
+path <- tempfile(fileext = ".pigauto")
+save_pigauto(fit, path)
+pred <- predict(load_pigauto(path))
 }
 }

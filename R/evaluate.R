@@ -30,6 +30,15 @@
 #'   \code{type}, \code{metric}, \code{value}, \code{n_test}.
 #' @examples
 #' \donttest{
+#' data(avonet300, tree300)
+#' tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+#' traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+#'                      c("Mass", "Wing.Length"), drop = FALSE]
+#' rownames(traits) <- tree$tip.label
+#' pd <- preprocess_traits(traits, tree)
+#' splits <- make_missing_splits(pd$X_scaled, trait_map = pd$trait_map)
+#' fit <- fit_pigauto(pd, tree, splits = splits, epochs = 5L,
+#'                    verbose = FALSE)
 #' eval_df <- evaluate(fit)
 #' eval_df[eval_df$metric == "rmse", ]
 #' }
@@ -504,12 +513,12 @@ eval_test_cells_legacy <- function(pred_latent, truth_latent,
 #' @examples
 #' \donttest{
 #' data(avonet300, tree300)
-#' traits <- avonet300
-#' rownames(traits) <- traits$Species_Key
-#' traits$Species_Key <- NULL
-#' pd <- preprocess_traits(traits, tree300)
-#' cmp <- compare_methods(pd, tree300, seeds = 1L, epochs = 20L,
-#'                        verbose = FALSE)
+#' tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+#' traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+#'                      c("Mass", "Wing.Length"), drop = FALSE]
+#' rownames(traits) <- tree$tip.label
+#' cmp <- compare_methods(preprocess_traits(traits, tree), tree, seeds = 1L,
+#'                        epochs = 5L, verbose = FALSE)
 #' aggregate(value ~ method + trait + metric, data = cmp, FUN = mean)
 #' }
 #' @export
@@ -595,6 +604,15 @@ compare_methods <- function(data, tree, splits = NULL, seeds = NULL,
 #'   \code{data} is not supplied).
 #' @examples
 #' \donttest{
+#' data(avonet300, tree300)
+#' tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+#' traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+#'                      c("Mass", "Wing.Length"), drop = FALSE]
+#' rownames(traits) <- tree$tip.label
+#' pd <- preprocess_traits(traits, tree)
+#' splits <- make_missing_splits(pd$X_scaled, trait_map = pd$trait_map)
+#' fit <- fit_pigauto(pd, tree, splits = splits, epochs = 5L,
+#'                    verbose = FALSE)
 #' summary(fit, data = pd)
 #' }
 #' @export

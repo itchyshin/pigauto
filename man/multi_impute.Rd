@@ -177,13 +177,13 @@ blended residuals.
 \donttest{
 library(pigauto)
 data(avonet300, tree300)
-df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
-
-# Generate 100 complete datasets
-mi <- multi_impute(df, tree300, m = 100)
+tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+df <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+                c("Mass", "Wing.Length"), drop = FALSE]
+rownames(df) <- tree$tip.label
+df$Mass[seq_len(3L)] <- NA_real_
+mi <- multi_impute(df, tree, m = 2L, epochs = 5L, verbose = FALSE)
 print(mi)
-
-# Inspect stochastic prediction sensitivity only.
 lapply(mi$datasets, head)
 }
 

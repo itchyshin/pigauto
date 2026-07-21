@@ -31,7 +31,13 @@ calibrated gate values, and conformal prediction scores.
 }
 \examples{
 \donttest{
-fit <- fit_pigauto(data, tree)
+data(avonet300, tree300)
+tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+                     c("Mass", "Wing.Length"), drop = FALSE]
+rownames(traits) <- tree$tip.label
+traits$Mass[seq_len(3L)] <- NA_real_
+fit <- impute(traits, tree, epochs = 5L, verbose = FALSE)$fit
 plot(fit)
 plot(fit, type = "history")
 plot(fit, type = "gates")

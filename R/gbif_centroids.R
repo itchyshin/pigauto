@@ -248,15 +248,10 @@
 #' @seealso \code{\link{impute}} (pass the return value as
 #'   \code{covariates}).
 #'
-#' @examples
-#' \donttest{
-#' # Plants ecology example: pull centroids for a species list.
+#' @examplesIf interactive()
 #' sp <- c("Quercus alba", "Pinus taeda", "Acer saccharum")
 #' cov <- pull_gbif_centroids(sp, cache_dir = "script/data-cache/gbif")
-#' # Use as covariates (drop the bookkeeping cols)
 #' cov_num <- cov[, c("centroid_lat", "centroid_lon"), drop = FALSE]
-#' # Then: impute(traits, tree, covariates = cov_num)
-#' }
 #'
 #' @export
 pull_gbif_centroids <- function(species, cache_dir = NULL,

@@ -115,17 +115,15 @@ supported by the initial analysis-aware backend.
 }
 \examples{
 \donttest{
-# Analysis-aware workflow (one incomplete continuous covariate)
+dat <- data.frame(y = stats::rnorm(30L), x = stats::rnorm(30L),
+                  z = stats::rnorm(30L))
+dat$x[seq(3L, 30L, by = 5L)] <- NA_real_
 mi <- multi_impute_analysis(
-  data = analysis_data, formula = y ~ x + z, missing = "x",
-  model = "lm", m = 50L
+  data = dat, formula = y ~ x + z, missing = "x",
+  model = "lm", m = 2L
 )
 fits <- with_imputations(mi, function(d) lm(y ~ x + z, data = d))
 pool_mi(fits)
-
-# Custom extractors alter extraction only; they do not expand the
-# validated imputation-model scope.
-pool_mi(fits, coef_fun = my_fixef, vcov_fun = my_fixed_vcov)
 }
 
 }

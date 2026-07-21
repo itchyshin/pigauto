@@ -129,14 +129,21 @@
 #'   }
 #' @examples
 #' \donttest{
+#' data(avonet300, tree300)
+#' tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+#' traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+#'                      c("Mass", "Wing.Length"), drop = FALSE]
+#' rownames(traits) <- tree$tip.label
+#' data <- preprocess_traits(traits, tree)
+#' splits <- make_missing_splits(data$X_scaled, trait_map = data$trait_map)
+#' fit <- fit_pigauto(data, tree, splits = splits, epochs = 5L,
+#'                    verbose = FALSE)
 #' pred <- predict(fit, return_se = TRUE)
-#' pred$imputed        # data.frame, original scale
-#' pred$se             # matrix, uncertainty
-#' pred$probabilities  # list of prob vectors/matrices
-#'
-#' # Stochastic prediction diagnostics (BM draws + GNN dropout)
-#' pred10 <- predict(fit, n_imputations = 10)
-#' pred10$imputed_datasets  # 10 complete data.frames
+#' pred$imputed
+#' pred$se
+#' pred$probabilities
+#' pred2 <- predict(fit, n_imputations = 2L)
+#' pred2$imputed_datasets
 #' }
 #' @importFrom torch torch_tensor torch_float with_no_grad torch_zeros
 #' @importFrom torch torch_cat

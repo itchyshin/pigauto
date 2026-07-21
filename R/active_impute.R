@@ -399,13 +399,14 @@ lp_entropy_reduction_categorical <- function(oh, sim) {
 #' @examples
 #' \donttest{
 #' data(avonet300, tree300, package = "pigauto")
-#' res <- impute(avonet300, tree300)
-#' suggest_next_observation(res, top_n = 5)              # top-5 cells
-#' suggest_next_observation(res, top_n = 10, by = "species")  # top-10 species
-#'
-#' # Continuous only:
-#' suggest_next_observation(res, top_n = 10,
-#'   types = c("continuous", "count", "ordinal", "proportion"))
+#' tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+#' traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+#'                      c("Mass", "Wing.Length"), drop = FALSE]
+#' rownames(traits) <- tree$tip.label
+#' traits$Mass[seq_len(3L)] <- NA_real_
+#' res <- impute(traits, tree, epochs = 5L, verbose = FALSE)
+#' suggest_next_observation(res, top_n = 5L)
+#' suggest_next_observation(res, top_n = 5L, by = "species")
 #' }
 #' @seealso \code{\link{impute}}
 #' @export

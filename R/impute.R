@@ -262,11 +262,12 @@
 #' @examples
 #' \donttest{
 #' data(avonet300, tree300)
-#' df <- avonet300
-#' rownames(df) <- df$Species_Key
-#' df$Species_Key <- NULL
-#' df$Mass[seq_len(10L)] <- NA_real_
-#' result <- impute(df, tree300, epochs = 20L, verbose = FALSE)
+#' tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+#' df <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+#'                 c("Mass", "Wing.Length"), drop = FALSE]
+#' rownames(df) <- tree$tip.label
+#' df$Mass[seq_len(3L)] <- NA_real_
+#' result <- impute(df, tree, epochs = 5L, verbose = FALSE)
 #' head(result$completed)
 #' }
 #' @export

@@ -44,7 +44,13 @@
 #' @return Invisible \code{NULL}. Called for its side effect (plotting).
 #' @examples
 #' \donttest{
-#' fit <- fit_pigauto(data, tree)
+#' data(avonet300, tree300)
+#' tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+#' traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+#'                      c("Mass", "Wing.Length"), drop = FALSE]
+#' rownames(traits) <- tree$tip.label
+#' traits$Mass[seq_len(3L)] <- NA_real_
+#' fit <- impute(traits, tree, epochs = 5L, verbose = FALSE)$fit
 #' plot(fit)
 #' plot(fit, type = "history")
 #' plot(fit, type = "gates")
@@ -251,11 +257,16 @@ plot.pigauto_fit <- function(x, type = "history", ...) {
 #' @return Invisible \code{NULL}. Called for its side effect (plotting).
 #' @examples
 #' \donttest{
-#' pred <- predict(fit)
+#' data(avonet300, tree300)
+#' tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+#' traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+#'                      c("Mass", "Wing.Length"), drop = FALSE]
+#' rownames(traits) <- tree$tip.label
+#' traits$Mass[seq_len(3L)] <- NA_real_
+#' pred <- impute(traits, tree, epochs = 5L, verbose = FALSE)$prediction
 #' plot(pred)
-#' plot(pred, type = "scatter", data = observed_df)
-#' plot(pred, type = "intervals", trait = "Beak.Length_Culmen")
-#' plot(pred, type = "probabilities", data = observed_df)
+#' plot(pred, type = "scatter", data = traits)
+#' plot(pred, type = "intervals", trait = "Mass")
 #' }
 #' @importFrom graphics par plot points lines abline barplot axis text
 #' @importFrom graphics legend mtext segments arrows rect polygon boxplot hist
@@ -665,7 +676,11 @@ plot.pigauto_pred <- function(x, data = NULL, splits = NULL,
 #' @return Invisible \code{NULL}. Called for its side effect (plotting).
 #' @examples
 #' \donttest{
-#' results <- read.csv("benchmark_results.csv")
+#' results <- data.frame(
+#'   trait = rep("Mass", 2L), type = rep("continuous", 2L),
+#'   metric = rep("rmse", 2L), method = c("BM_baseline", "pigauto_GNN"),
+#'   value = c(1, 0.8)
+#' )
 #' plot_comparison(results)
 #' plot_comparison(results, metric = "rmse")
 #' }
