@@ -39,7 +39,7 @@
 #' splits <- make_missing_splits(pd$X_scaled, trait_map = pd$trait_map)
 #' fit <- fit_pigauto(pd, tree, splits = splits, epochs = 5L,
 #'                    verbose = FALSE)
-#' eval_df <- evaluate(fit)
+#' eval_df <- evaluate(fit, data = pd)
 #' eval_df[eval_df$metric == "rmse", ]
 #' }
 #' @export
