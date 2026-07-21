@@ -82,8 +82,19 @@ ev <- evaluate_imputation(pred, pd$X_scaled, spl)
 print(ev)
 
 
-## ----mc_dropout---------------------------------------------------------------
-pred_mc <- predict(fit, n_imputations = 5L)
-cat("Imputed datasets:", length(pred_mc$imputed_datasets), "\n")
-head(pred_mc$se)  # between-imputation SD
-
+## ----mi_workflow, eval=FALSE--------------------------------------------------
+# # Precompute nonlinear auxiliaries explicitly when required.
+# analysis_data$z_sq <- analysis_data$z^2
+# mi <- multi_impute_analysis(
+#   data = analysis_data, formula = y ~ x + z,
+#   missing = "x", model = "glm", m = 50L,
+#   auxiliary = "z_sq", seed = 1L
+# )
+#
+# # Fit a downstream model to each
+# fits <- with_imputations(mi, function(d) {
+#   glm(y ~ x + z, data = d, family = binomial)
+# })
+#
+# # Pool with Rubin's rules
+# pool_mi(fits)

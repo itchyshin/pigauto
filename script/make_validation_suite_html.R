@@ -459,10 +459,10 @@ if (!is.null(b_tree_unc)) {
     '<td><a href="dev/bench_tree_uncertainty.html">Tree uncertainty</a></td>',
     '<td><em>continuous</em></td>',
     '<td>AVONET300 + BirdTree (50 trees)</td>',
-    '<td>single-tree vs multi-tree MI</td>',
+    '<td>historical prediction-sensitivity comparison</td>',
     '<td colspan="2">Mean FMI = ', fmi_str, '</td>',
     '<td>&mdash;</td>',
-    '<td>FMI (pooled coefs)</td>',
+    '<td>historical FMI diagnostic; not validated inference</td>',
     '</tr>')
 } else {
   make_row("Tree uncertainty", "continuous", "AVONET300 + 50 trees", "", NA, NA, NA, "FMI", "dev/bench_tree_uncertainty.html", "pending")
@@ -510,6 +510,15 @@ if (!is.null(b_pantheria_bace)) {
     '<td>PanTHERIA subset (n = ', b_pantheria_bace$n_subset, ')</td>',
     '<td>', bace_tag, '</td>',
     '<td colspan="2">Seed = ', b_pantheria_bace$seed, ', miss_frac = ', b_pantheria_bace$miss_frac, '</td>',
+    '<td>&mdash;</td>',
+    '<td>per-trait metrics</td>',
+    '</tr>')
+} else {
+  make_row("PanTHERIA vs BACE", "mixed", "PanTHERIA subset", "", NA, NA,
+           NA, "per-trait metrics",
+           "dev/bench_pantheria_bace_head_to_head.html", "pending")
+}
+
 # Phase 8 MVP — signal-strength sweep
 b_signal_sweep <- load_rds("bench_signal_sweep")
 if (!is.null(b_signal_sweep)) {
@@ -774,9 +783,10 @@ if (!is.null(cal_grid)) {
   h('<h2>Coverage calibration grid (v0.9.1.9000)</h2>')
   h('<p class="meta">3,000 fits on BACE-generated simulated data: 4 signal ')
   h('scenarios x 3 missingness mechanisms x 5 trait types x 50 reps, n=150 ')
-  h('per fit. Target coverage = 0.95 (MC-dropout credible set).</p>')
+  h('per fit. Target coverage = 0.95 for historical interval diagnostics.</p>')
   h('<p><a href="dev/calibration_grid.html">Full report</a>. ')
-  h('Headline: conformal intervals hit the 95% guarantee; MC-dropout is ')
+  h('Headline: conformal intervals were near nominal in this prediction grid; ')
+  h('this does not validate conformal-width draws as multiple imputations. MC-dropout is ')
   h('over-confident at n=150 (gaussian ~0.30, binary ~0.19, multinomial ~0.00, ')
   h('poisson ~0.52, ordinal ~0.67). Replicates BACE paper&apos;s small-n ')
   h('over-confidence finding.</p>')

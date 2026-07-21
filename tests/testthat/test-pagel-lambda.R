@@ -234,6 +234,7 @@ test_that("[pagel] fit_baseline lambda_mode='estimate' produces different predic
 })
 
 test_that("[pagel] impute(lambda_mode=...) threads to baseline and model config", {
+  skip_if_no_libtorch()
   set.seed(33L)
   tree <- ape::rcoal(24L)
   df <- data.frame(

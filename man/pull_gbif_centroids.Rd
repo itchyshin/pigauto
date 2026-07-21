@@ -75,15 +75,11 @@ Requires the optional \code{rgbif} package (in DESCRIPTION
 errors with an installation message.
 }
 \examples{
-\dontrun{
-# Plants ecology example: pull centroids for a species list.
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 sp <- c("Quercus alba", "Pinus taeda", "Acer saccharum")
 cov <- pull_gbif_centroids(sp, cache_dir = "script/data-cache/gbif")
-# Use as covariates (drop the bookkeeping cols)
 cov_num <- cov[, c("centroid_lat", "centroid_lon"), drop = FALSE]
-# Then: impute(traits, tree, covariates = cov_num)
-}
-
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link{impute}} (pass the return value as

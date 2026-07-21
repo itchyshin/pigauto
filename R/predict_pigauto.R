@@ -4,7 +4,8 @@
 #' trait values back-transformed to the original scale.  Supports all
 #' trait types (continuous, binary, categorical, ordinal, count, proportion,
 #' zero-inflated count, multi-proportion)
-#' and MC dropout for multiple imputation (when \code{n_imputations > 1}). The fitted model is a gated ensemble
+#' and MC dropout for stochastic prediction diagnostics (when
+#' \code{n_imputations > 1}). The fitted model is a gated ensemble
 #' of a phylogenetic baseline and a graph neural network correction;
 #' prediction is the per-trait blend
 #' \code{(1 - r_cal) * baseline + r_cal * delta_GNN}.
@@ -20,10 +21,10 @@
 #' \code{r_cal > 0} both BM draws and GNN dropout contribute variance.  Point
 #' estimates are the mean (continuous, count) or mode (binary, categorical,
 #' ordinal) across passes.  The M complete datasets are returned in
-#' \code{imputed_datasets} for Rubin's-rules pooling.  For the user-facing
-#' multiple-imputation workflow, prefer \code{multi_impute()} which offers
-#' \code{draws_method = "conformal"} (calibrated, narrower) or
-#' \code{"mc_dropout"} (BM posterior draws + GNN dropout, wider).
+#' \code{imputed_datasets} for prediction diagnostics. These datasets are not
+#' supported for downstream inference. Use \code{multi_impute_analysis()} for
+#' the narrow analysis-aware backend after consulting its supported-model and
+#' lifecycle documentation.
 #'
 #' **Decoding per type:**
 #' \describe{
@@ -40,8 +41,8 @@
 #' @param return_se logical. Compute standard errors? (default \code{TRUE}).
 #' @param n_imputations integer. Number of stochastic imputation draws —
 #'   BM posterior samples plus GNN dropout — (default \code{1L}).  Set to
-#'   e.g. 10 or 20 for proper multiple imputation with between-imputation
-#'   variance.
+#'   e.g. 10 or 20 to inspect stochastic prediction variation. These are not
+#'   validated analysis-aware multiple imputations.
 #' @param baseline_override optional `list(mu, se)` with the same shape as
 #'   `object$baseline`. When supplied, predictions use this baseline instead
 #'   of the one saved in the fit. Used internally by [multi_impute_trees()]
@@ -80,15 +81,13 @@
 #'   \strong{When to use:} PMM is a niche feature in pigauto.  The
 #'   package already provides conformal prediction intervals
 #'   (calibrated against held-out residuals) and
-#'   \code{multi_impute(draws_method = "conformal")} for
-#'   multi-imputation workflows -- those give Rubin's-rules
-#'   honest standard errors without donor-mismatch noise.  PMM is
+#'   stochastic conformal-width and Brownian/MC-dropout prediction draws. PMM is
 #'   only worth enabling for: (a) methodological comparison against
 #'   mice / equivalent packages, or (b) workflows that specifically
 #'   require imputed values to come from the observed data pool.
 #'   For tail safety on single-imputation point estimates, prefer
-#'   \code{clamp_outliers = TRUE}.  For honest MI standard errors,
-#'   prefer \code{multi_impute(draws_method = "conformal")}.
+#'   \code{clamp_outliers = TRUE}. PMM failed the downstream fixed-effect
+#'   redesign pilot and is unsupported for inference.
 #'
 #'   The Phase G' acceptance bench
 #'   (\code{useful/MEMO_2026-05-01_phase_g_prime_results.md})
@@ -120,23 +119,31 @@
 #'     \item{probabilities}{Named list.  Binary traits: numeric probability
 #'       vector.  Categorical traits: n x K probability matrix.  Other
 #'       types: not present.}
-#'     \item{imputed_datasets}{List of M data.frames when
-#'       \code{n_imputations > 1}; \code{NULL} otherwise.}
+#'     \item{imputed_datasets}{List of M stochastic prediction data.frames when
+#'       \code{n_imputations > 1}; \code{NULL} otherwise. Not supported for
+#'       downstream inference.}
 #'     \item{trait_map}{Trait map from the fitted model.}
 #'     \item{species_names}{Character vector.}
 #'     \item{trait_names}{Character vector.}
 #'     \item{n_imputations}{Integer, number of imputations performed.}
 #'   }
 #' @examples
-#' \dontrun{
+#' \donttest{
+#' data(avonet300, tree300)
+#' tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+#' traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+#'                      c("Mass", "Wing.Length"), drop = FALSE]
+#' rownames(traits) <- tree$tip.label
+#' data <- preprocess_traits(traits, tree)
+#' splits <- make_missing_splits(data$X_scaled, trait_map = data$trait_map)
+#' fit <- fit_pigauto(data, tree, splits = splits, epochs = 5L,
+#'                    verbose = FALSE)
 #' pred <- predict(fit, return_se = TRUE)
-#' pred$imputed        # data.frame, original scale
-#' pred$se             # matrix, uncertainty
-#' pred$probabilities  # list of prob vectors/matrices
-#'
-#' # Multiple imputation (BM posterior draws + GNN dropout)
-#' pred10 <- predict(fit, n_imputations = 10)
-#' pred10$imputed_datasets  # 10 complete data.frames
+#' pred$imputed
+#' pred$se
+#' pred$probabilities
+#' pred2 <- predict(fit, n_imputations = 2L)
+#' pred2$imputed_datasets
 #' }
 #' @importFrom torch torch_tensor torch_float with_no_grad torch_zeros
 #' @importFrom torch torch_cat
@@ -199,8 +206,26 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     n_trait_heads          = as.integer(n_trait_heads),
     trait_embed_dim        = as.integer(trait_embed_dim)
   )
-  model$to(device = device)
+  # Restore the CPU state before moving the rebuilt module to an accelerator.
+  # Loading CPU tensors directly into an MPS module can silently miss scalar
+  # bias values on some libtorch/macOS combinations (the weight still loads),
+  # which drops fixed-effect intercepts from prediction.
   model$load_state_dict(object$model_state)
+  model$to(device = device)
+  # Some ARM/MPS libtorch builds expose the correct length-one bias after state
+  # loading but omit it from nn_linear()'s forward result.  Preserve the saved
+  # direct-covariate parameters so prediction can reconstruct this small fixed-
+  # effect term on CPU and bypass the affected MPS kernel entirely.
+  mps_cov_linear <- NULL
+  cov_weight <- object$model_state[["cov_linear.weight"]]
+  cov_bias <- object$model_state[["cov_linear.bias"]]
+  if (identical(device$type, "mps") && !is.null(cov_weight) &&
+      !is.null(cov_bias) && !is.null(model$cov_linear)) {
+    mps_cov_linear <- list(
+      weight = as.matrix(as.array(cov_weight$detach()$cpu())),
+      bias = as.numeric(as.array(cov_bias$detach()$cpu()))
+    )
+  }
   gpu_mem_checkpoint("predict: after model rebuild + load_state_dict")
 
   # Calibrated gates override learned gates.
@@ -375,6 +400,16 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
       covariates, dtype = torch::torch_float(), device = device
     )
   }
+  t_mps_cov_fixed_effects <- NULL
+  if (!is.null(mps_cov_linear) && has_covariates) {
+    mps_fixed_effects <- covariates %*% t(mps_cov_linear$weight)
+    mps_fixed_effects <- sweep(
+      mps_fixed_effects, 2L, mps_cov_linear$bias, FUN = "+"
+    )
+    t_mps_cov_fixed_effects <- torch::torch_tensor(
+      mps_fixed_effects, dtype = torch::torch_float(), device = device
+    )
+  }
   actual_cov_dim <- p + 1L + n_cov_cols
   expected_cov_dim <- as.integer(cfg$cov_dim)
   if (length(expected_cov_dim) == 1L && !is.na(expected_cov_dim) &&
@@ -389,6 +424,20 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
 
   # ---- Inference (single or MC dropout) ------------------------------------
   latent_runs <- vector("list", n_imp)
+
+  # Re-seed the torch generator for stochastic prediction. fit_pigauto()
+  # seeds training, but prediction rebuilds the module and then consumes
+  # dropout and Normal draws from the process-global torch generator. Without
+  # an explicit prediction seed, two otherwise identical impute(..., seed = s)
+  # calls can differ according to unrelated torch work performed in between.
+  # The stored fit seed makes the public seed contract reproducible while
+  # different user seeds still generate different imputations.
+  if (n_imp > 1L) {
+    if (!is.null(cfg$seed)) {
+      prediction_seed <- as.integer(cfg$seed) + 100000L
+      torch::torch_manual_seed(prediction_seed)
+    }
+  }
 
   # Pre-create calibrated gates tensors (once, outside the loop).
   # Three-way blend: pred = r_bm * BM_draw + r_gnn * GNN_delta + r_mean * MEAN
@@ -470,7 +519,11 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
         } else {
           pred <- (1 - out$rs) * t_BM_draw + out$rs * out$delta
         }
-        if (!is.null(out$fixed_effects)) pred <- pred + out$fixed_effects
+        if (!is.null(t_mps_cov_fixed_effects)) {
+          pred <- pred + t_mps_cov_fixed_effects
+        } else if (!is.null(out$fixed_effects)) {
+          pred <- pred + out$fixed_effects
+        }
         last_pred <- pred
         # Drop the previous X_iter before binding the new one so that the
         # old forward-pass intermediates (attention matrices, FFN outputs,
@@ -548,7 +601,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     decode_results <- apply_pmm_to_decoded(
       decode_results, trait_map, X_orig,
       K = pmm_K,
-      base_seed = as.integer(object$model_config$seed %||% 1L)
+      base_seed = object$model_config$seed
     )
   }
 
@@ -657,7 +710,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     }
   }
 
-  # ---- Imputed datasets for multiple imputation ----------------------------
+  # ---- Stochastic completed datasets for prediction diagnostics ------------
   imputed_datasets <- if (n_imp > 1L) {
     lapply(decode_results, "[[", "imputed")
   }
@@ -857,7 +910,7 @@ decode_from_latent <- function(latent_mat, trait_map, species_names,
 }
 
 
-# ---- Internal: pool multiple imputations ----------------------------------------
+# ---- Internal: aggregate stochastic prediction draws ----------------------------
 
 pool_imputations <- function(decode_results, latent_runs, trait_map,
                               pool_method = c("median", "mean", "mode")) {
@@ -1166,8 +1219,9 @@ compute_single_se <- function(latent_mat, probs, trait_map, baseline_se,
 # Returns an n x p_latent matrix of SE in latent (z-score) scale.
 # For continuous/count/ordinal: baseline SE from BM.
 # For binary/categorical: NA (coverage is not computed for discrete types).
-# When multiple imputations exist, combines baseline SE with between-imputation
-# SD in latent scale via quadrature.
+# When multiple stochastic draws exist, combines baseline SE with between-draw
+# SD in latent scale via quadrature. This is predictive uncertainty accounting,
+# not Rubin pooling.
 
 compute_latent_se <- function(latent_runs, trait_map, baseline_se,
                               species_names) {

@@ -18,7 +18,7 @@
 # ---- A2: observed-cell preservation ----------------------------------------
 
 test_that("impute() preserves observed (non-NA) cells exactly for every trait type", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
   set.seed(2026)
   tree <- ape::rtree(20)
   n <- length(tree$tip.label)

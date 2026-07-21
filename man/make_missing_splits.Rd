@@ -8,7 +8,7 @@ make_missing_splits(
   X,
   missing_frac = 0.25,
   val_frac = 0.25,
-  seed = 555,
+  seed = NULL,
   trait_map = NULL,
   mechanism = c("MCAR", "MAR_trait", "MAR_phylo", "MNAR"),
   mechanism_args = list(),
@@ -25,7 +25,8 @@ designate as missing (default \code{0.25}).}
 \item{val_frac}{numeric. Fraction of missing cells for validation
 (default \code{0.25}); the rest become the test set.}
 
-\item{seed}{integer. Random seed for reproducibility (default \code{555}).}
+\item{seed}{optional integer. When supplied, makes split construction
+reproducible; the default \code{NULL} uses the current RNG stream.}
 
 \item{trait_map}{list of trait descriptors (from \code{pigauto_data}).
 If \code{NULL}, masking is applied per latent column (v0.1 behaviour).}

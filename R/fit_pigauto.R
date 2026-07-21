@@ -84,7 +84,8 @@
 #'   sets with strong within-row functional coupling that the joint MVN /
 #'   threshold-joint baseline cannot capture (e.g. nonlinear cross-trait
 #'   structure). On the BIEN n=2000 plant bench it did \strong{not} improve
-#'   pooled RMSE (Σ is already captured by the joint baseline); kept as
+#'   pooled RMSE (cross-trait covariance is already captured by the joint
+#'   baseline); kept as
 #'   an opt-in for datasets where it may help. Default \code{FALSE}
 #'   preserves v0.9.2 behaviour exactly. Note: Ablation testing 
 #'   demonstrates that this within-row attention recovers only a small, 
@@ -219,7 +220,9 @@
 #'   handling to the per-column BM path. Passed to
 #'   \code{\link{fit_baseline}} and stored in the fitted model config.
 #' @param verbose logical. Print training progress (default \code{TRUE}).
-#' @param seed integer. Random seed (default \code{1}).
+#' @param seed optional integer. When supplied, makes stochastic training and
+#'   calibration reproducible; the default \code{NULL} uses the current RNG
+#'   stream.
 #' @section Calibration at small n:
 #'
 #' pigauto's 95\% intervals are \emph{conformal}, not parametric: the
@@ -262,6 +265,19 @@
 #' @importFrom torch torch_tensor torch_float torch_bool torch_long
 #' @importFrom torch optim_adam with_no_grad nn_utils_clip_grad_norm_
 #' @importFrom torch nnf_mse_loss torch_rand_like torch_where torch_zeros_like
+#' @examples
+#' \donttest{
+#' data(avonet300, tree300)
+#' tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+#' traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+#'                      c("Mass", "Wing.Length"), drop = FALSE]
+#' rownames(traits) <- tree$tip.label
+#' data <- preprocess_traits(traits, tree)
+#' splits <- make_missing_splits(data$X_scaled, trait_map = data$trait_map,
+#'                               seed = 1)
+#' fit <- fit_pigauto(data, tree, splits = splits, epochs = 5L,
+#'                    verbose = FALSE, seed = 1)
+#' }
 #' @export
 fit_pigauto <- function(
     data,
@@ -308,7 +324,7 @@ fit_pigauto <- function(
     min_val_cells     = 20L,
     lambda_mode       = c("fixed_1", "estimate", "cv", "bayes"),
     verbose           = TRUE,
-    seed              = 1L
+    seed = NULL
 ) {
   conformal_method    <- match.arg(conformal_method)
   lambda_mode         <- match.arg(lambda_mode)
@@ -318,8 +334,10 @@ fit_pigauto <- function(
     stop("'data' must be a pigauto_data object.")
   }
 
-  set.seed(seed)
-  torch::torch_manual_seed(seed)
+  if (!is.null(seed)) {
+    set.seed(seed)
+    torch::torch_manual_seed(seed)
+  }
 
   device <- get_device()
   if (verbose) message("Using device: ", as.character(device))
@@ -834,7 +852,7 @@ fit_pigauto <- function(
     # `conformal_split_val = FALSE` to disable splitting everywhere.
     split_threshold <- 2L * as.integer(min_val_cells)
     if (isTRUE(conformal_split_val)) {
-      set.seed(seed + 23L)
+      if (!is.null(seed)) set.seed(seed + 23L)
       val_mask_cal  <- matrix(FALSE, n, p)
       val_mask_conf <- matrix(FALSE, n, p)
       for (jcol in seq_len(p)) {
@@ -1013,7 +1031,7 @@ fit_pigauto <- function(
     input_dim              = p,
     per_column_rs          = TRUE,
     n_user_cov             = n_user_cov,
-    seed                   = as.integer(seed)
+    seed                   = if (is.null(seed)) NULL else as.integer(seed)
   )
 
   # Move model state to CPU before returning. Otherwise the returned

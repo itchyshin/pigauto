@@ -49,7 +49,7 @@ fit_pigauto(
   min_val_cells = 20L,
   lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
   verbose = TRUE,
-  seed = 1L
+  seed = NULL
 )
 }
 \arguments{
@@ -105,9 +105,14 @@ to a \code{trait_embed_dim} feature, and concatenates it alongside
 sets with strong within-row functional coupling that the joint MVN /
 threshold-joint baseline cannot capture (e.g. nonlinear cross-trait
 structure). On the BIEN n=2000 plant bench it did \strong{not} improve
-pooled RMSE (Σ is already captured by the joint baseline); kept as
+pooled RMSE (cross-trait covariance is already captured by the joint
+baseline); kept as
 an opt-in for datasets where it may help. Default \code{FALSE}
-preserves v0.9.2 behaviour exactly.}
+preserves v0.9.2 behaviour exactly. Note: Ablation testing
+demonstrates that this within-row attention recovers only a small,
+sub-material gain, and only when cross-trait structure is explicitly
+non-linear and the joint-MVN baseline is present; it cannot model
+non-linear coupling on its own.}
 
 \item{n_trait_heads}{integer. Number of attention heads in the within-row
 self-attention block when \code{use_trait_attention = TRUE}. Default
@@ -271,7 +276,9 @@ handling to the per-column BM path. Passed to
 
 \item{verbose}{logical. Print training progress (default \code{TRUE}).}
 
-\item{seed}{integer. Random seed (default \code{1}).}
+\item{seed}{optional integer. When supplied, makes stochastic training and
+calibration reproducible; the default \code{NULL} uses the current RNG
+stream.}
 }
 \value{
 An object of class \code{"pigauto_fit"}.
@@ -360,3 +367,17 @@ falls below this threshold, so you know when to interpret the
 intervals cautiously.
 }
 
+\examples{
+\donttest{
+data(avonet300, tree300)
+tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+                     c("Mass", "Wing.Length"), drop = FALSE]
+rownames(traits) <- tree$tip.label
+data <- preprocess_traits(traits, tree)
+splits <- make_missing_splits(data$X_scaled, trait_map = data$trait_map,
+                              seed = 1)
+fit <- fit_pigauto(data, tree, splits = splits, epochs = 5L,
+                   verbose = FALSE, seed = 1)
+}
+}

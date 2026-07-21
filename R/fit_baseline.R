@@ -69,13 +69,15 @@
 #'     \item{se}{Numeric matrix (n_species x p_latent), standard errors.}
 #'   }
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(avonet300, tree300, package = "pigauto")
-#' traits <- avonet300; rownames(traits) <- traits$Species_Key
-#' traits$Species_Key <- NULL
-#' pd     <- preprocess_traits(traits, tree300)
+#' tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+#' traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+#'                      c("Mass", "Wing.Length"), drop = FALSE]
+#' rownames(traits) <- tree$tip.label
+#' pd     <- preprocess_traits(traits, tree)
 #' splits <- make_missing_splits(pd$X_scaled, trait_map = pd$trait_map)
-#' bl     <- fit_baseline(pd, tree300, splits)
+#' bl     <- fit_baseline(pd, tree, splits)
 #' }
 #' @importFrom stats complete.cases rnorm rbinom
 #' @export

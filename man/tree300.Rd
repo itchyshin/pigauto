@@ -3,20 +3,22 @@
 \docType{data}
 \name{tree300}
 \alias{tree300}
-\title{Pruned BirdTree phylogeny for the 300 species in \code{avonet300}}
+\title{Example bird phylogeny for the 300 species in \code{avonet300}}
 \format{
 An object of class \code{phylo} with 300 tips.
 }
 \source{
-BirdTree.org (Jetz et al. 2012, Hackett et al. backbone).
+Li (2026), \pkg{megatrees} 1.0.0, MIT licence; underlying tree
+sample from Jetz et al. (2012), Hackett et al. backbone.
 }
 \usage{
 tree300
 }
 \description{
 An object of class \code{'phylo'} from the \pkg{ape} package. The tree is a
-Maximum Clade Credibility (MCC) tree from the Hackett et al. backbone
-(Stage2_Hackett_MCC_no_neg.tre), pruned to the 300 species present in
-\code{\link{avonet300}}.
+posterior Hackett-backbone sample distributed by the MIT-licensed
+\pkg{megatrees} package, pruned to the 300 species present in
+\code{\link{avonet300}}. It is intended for examples, not as a consensus
+or recommended tree for substantive analysis.
 }
 \keyword{datasets}

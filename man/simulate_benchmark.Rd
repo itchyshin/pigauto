@@ -12,6 +12,7 @@ simulate_benchmark(
   n_reps = 3L,
   epochs = 500L,
   verbose = TRUE,
+  seed = NULL,
   ...
 )
 }
@@ -36,6 +37,9 @@ Default runs all.}
 \item{epochs}{integer.  Maximum GNN training epochs (default 500).}
 
 \item{verbose}{logical.  Print progress (default \code{TRUE}).}
+
+\item{seed}{optional integer.  When supplied, makes the generated
+benchmark replicates reproducible.}
 
 \item{...}{additional arguments passed to \code{\link{fit_pigauto}}.}
 }
@@ -76,8 +80,10 @@ interaction effects that BM's linear covariance misses.}
 }
 }
 \examples{
-\dontrun{
-bench <- simulate_benchmark(n_species = 50, epochs = 200, n_reps = 2)
+\donttest{
+bench <- simulate_benchmark(n_species = 20L, n_traits = 2L,
+                            scenarios = "BM", epochs = 5L, n_reps = 1L,
+                            verbose = FALSE)
 bench$summary
 plot(bench)
 }

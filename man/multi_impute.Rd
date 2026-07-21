@@ -2,7 +2,7 @@
 % Please edit documentation in R/multi_impute.R
 \name{multi_impute}
 \alias{multi_impute}
-\title{Generate M complete datasets for multiple imputation}
+\title{Generate experimental stochastic completion datasets}
 \usage{
 multi_impute(
   traits,
@@ -17,7 +17,7 @@ multi_impute(
   covariates = NULL,
   epochs = 2000L,
   verbose = TRUE,
-  seed = 1L,
+  seed = NULL,
   ...
 )
 }
@@ -28,7 +28,7 @@ numeric, integer, factor, ordered factor, and logical.}
 
 \item{tree}{object of class \code{phylo} aligned with \code{traits}.}
 
-\item{m}{integer. Number of imputation datasets to generate
+\item{m}{integer. Number of stochastic completion datasets to generate
 (default \code{100}). Observed cells are identical across all \code{M}
 datasets; only originally-missing cells vary.}
 
@@ -37,22 +37,16 @@ missing cells. One of:
 \describe{
 \item{\code{"conformal"}}{(default) Run the model once, then sample each
 originally-missing cell from a Normal distribution centred on the
-point estimate with SD = conformal_score / 1.96. The conformal score
-is the empirical 97.5th percentile of held-out absolute residuals,
-so the draw width is calibrated against actual prediction error —
-not a model assumption. Falls back to BM-SE-based Normal sampling
+point estimate with SD = conformal_score / 1.96. Converting a
+split-conformal residual quantile to a Normal scale is a heuristic;
+the conformal coverage guarantee does not establish that these draws
+are proper multiple imputations. Falls back to BM-SE-based Normal sampling
 when conformal scores are unavailable, and to Bernoulli / Categorical
-draws for discrete traits. \strong{Preferred default for pigauto} because
-MC dropout gives zero variance whenever the calibrated gate is zero
-(i.e. whenever the BM baseline already fits well), which is common
-for continuous traits with strong phylogenetic signal.}
+draws for discrete traits.}
 \item{\code{"mc_dropout"}}{Run \code{M} stochastic GNN forward passes in training
-mode (dropout active). Useful when the calibrated gate is open
-(r_cal > 0, i.e. GNN meaningfully corrects the BM baseline). When
-all gates are zero — as is typical for continuous traits on datasets
-with strong phylogenetic signal — MC dropout is deterministic and
-falls back silently to the BM-only point estimate for every draw.
-Check \code{mi$fit$calibrated_gates} before using this method.}
+mode (dropout active) on top of stochastic Brownian-motion baseline
+draws. Brownian draws still contribute between-draw variation
+when a calibrated GNN gate is zero.}
 }}
 
 \item{species_col}{character or \code{NULL}. If set, marks the column
@@ -84,7 +78,8 @@ Default \code{NULL} (no covariates).}
 
 \item{verbose}{logical. Print progress (default \code{TRUE}).}
 
-\item{seed}{integer. Random seed (default \code{1}).}
+\item{seed}{optional integer. When supplied, makes fitting and imputation
+draws reproducible; the default \code{NULL} uses the current RNG stream.}
 
 \item{...}{additional arguments forwarded to \code{\link[=fit_pigauto]{fit_pigauto()}} via
 \code{\link[=impute]{impute()}}. See \code{\link[=fit_pigauto]{fit_pigauto()}} for the full list; the "Safety
@@ -97,15 +92,14 @@ An object of class \code{"pigauto_mi"} with components:
 \item{\code{datasets}}{A list of length \code{m}. Each element is a
 data.frame with the same shape and column types as the input
 \code{traits}; observed cells are preserved and missing cells are
-filled with the corresponding imputation draw. Pass this list
-to \code{\link[=with_imputations]{with_imputations()}} to fit downstream models.}
-\item{\code{m}}{Number of imputations.}
+filled with the corresponding stochastic draw. These datasets are
+for prediction diagnostics, not downstream inference.}
+\item{\code{m}}{Number of stochastic completion datasets.}
 \item{\code{pooled_point}}{A single data.frame whose missing cells
 are replaced by the MC-averaged point estimate. Convenient for
-reporting but does \emph{not} propagate imputation uncertainty --
-use \code{datasets} + \code{\link[=pool_mi]{pool_mi()}} for inference.}
-\item{\code{se}}{Matrix of per-cell standard errors combining the
-baseline SE and the between-imputation standard deviation.}
+reporting but does \emph{not} provide a valid downstream MI analysis.}
+\item{\code{se}}{Matrix of per-cell uncertainty summaries combining the
+baseline SE and the between-draw standard deviation.}
 \item{\code{imputed_mask}}{Logical matrix; \code{TRUE} where a cell was
 originally missing.}
 \item{\code{fit}}{The underlying \code{\link[=fit_pigauto]{pigauto_fit}}
@@ -120,45 +114,35 @@ on new data.}
 \description{
 Run pigauto's full imputation pipeline and return \code{M} stochastic
 completions of the trait matrix instead of a single point estimate.
-The \code{M} datasets are the input needed for the classical multiple
-imputation workflow: fit a downstream model on each dataset, then
-pool the results with Rubin's rules via \code{\link[=pool_mi]{pool_mi()}}. This is the
-standard way to propagate imputation uncertainty into phylogenetic
-comparative analyses (PGLS, PGLMM, etc.) rather than treating
-imputed cells as if they were observed.
+The conformal-width and Brownian/MC-dropout draws returned here are
+experimental prediction-diagnostic draws. A 3,000-fit known-DGP campaign
+found that neither method passed any of the 12 downstream fixed-effect
+gate cells. Do not use these datasets for downstream inference or Rubin
+pooling. A separate analysis-aware backend, \code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, has
+passed its package-level fixed-effect gate for a narrow set of analyses.
 }
 \details{
-Multiple imputation is a method for doing \emph{downstream analysis}
-under missing data, not an end in itself. Plugging a single
-point-estimate imputation into a regression underestimates standard
-errors because it treats imputed cells as if they were observed.
-The standard remedy, due to Rubin (1987), is to generate \code{M}
-stochastic completions, fit the downstream model on each, and pool
-the results. \code{multi_impute()} + \code{\link[=with_imputations]{with_imputations()}} + \code{\link[=pool_mi]{pool_mi()}}
-implement this workflow end to end.
+These draws do not condition on a declared substantive analysis model.
+Consequently, stochastic variation alone does not make them proper or
+congenial multiple imputations. The analysis-aware backend requires the
+analysis model before generating draws and dispatches only across its
+documented supported model classes.
 
 \strong{\code{draws_method = "conformal"} (default)}: Run the model once; missing
 cells are sampled from
 \eqn{x_{ij}^{(k)} \sim \mathrm{N}(\hat\mu_{ij},\; q_{j}/1.96)}
-where \eqn{q_j} is the trait-level conformal score (the empirical
-97.5th percentile of held-out absolute residuals, in latent z-score
-units back-transformed to the original scale). The draw width is
-therefore calibrated against actual prediction error regardless of
-whether the BM or GNN term dominates. For discrete traits (binary,
+where \eqn{q_j} is the trait-level split-conformal residual quantile.
+Dividing this quantile by 1.96 is a pragmatic Normal-scale construction,
+not a consequence of the conformal coverage guarantee. For discrete traits (binary,
 categorical) it uses Bernoulli / categorical draws from the estimated
 probability vector. For \code{multi_proportion} groups it draws the
 K CLR latent columns with their BM latent SEs, projects back to
-sum-zero CLR space, and decodes to the simplex. This is the preferred
-default for pigauto.
+sum-zero CLR space, and decodes to the simplex.
 
 \strong{\code{draws_method = "mc_dropout"}}: Run \code{M} GNN forward passes in
-training mode (dropout active). \strong{Caution}: when the per-trait
-calibrated gate \code{r_cal = 0} (which happens whenever the BM baseline
-already fits well, typically for continuous traits with strong
-phylogenetic signal), every MC pass is identical to the BM point
-estimate and draws have zero between-imputation variance. Check
-\code{mi$fit$calibrated_gates} after fitting — if all gates for the traits
-of interest are zero, use \code{draws_method = "conformal"} instead.
+training mode (dropout active) on top of stochastic BM baseline draws.
+When \code{r_cal = 0}, the GNN-dropout term disappears but the BM draw still
+contributes between-draw variance.
 
 Nakagawa & Freckleton (2008, 2011) review the consequences of
 ignoring missing data in ecological and comparative analyses and
@@ -167,19 +151,11 @@ argue for multiple imputation as the default.
 \section{When to use this}{
 
 
-pigauto provides two multiple-imputation functions. Pick based on how
-many trees you have:
-\itemize{
-\item \strong{One tree} (single published phylogeny, single time-calibrated tree):
-use \code{\link[=multi_impute]{multi_impute()}}. The \code{m} MC-dropout imputations capture model
-uncertainty.
-\item \strong{Multiple posterior trees} (BirdTree samples, BEAST posterior, etc.):
-use \code{\link[=multi_impute_trees]{multi_impute_trees()}}. Between-tree variation is added to the
-pooled SEs via Rubin's rules (Nakagawa & de Villemereuil 2019).
-}
+This function is useful for comparing stochastic prediction behavior from
+one tree. It is not the analysis-aware inferential backend.
 
-The two functions share the same downstream API — both return objects
-compatible with \code{\link[=with_imputations]{with_imputations()}} and \code{\link[=pool_mi]{pool_mi()}}.
+\code{\link[=multi_impute_trees]{multi_impute_trees()}} provides an experimental posterior-tree sensitivity
+path, but tree uncertainty is not supported by \code{\link[=multi_impute_analysis]{multi_impute_analysis()}}.
 }
 
 \section{Safety floor (v0.9.1.9002+)}{
@@ -190,33 +166,25 @@ When \code{fit_pigauto()} was called with \code{safety_floor = TRUE}
 every imputation draw automatically via the updated
 \code{predict.pigauto_fit()}.  For \code{draws_method = "mc_dropout"}
 the mean term contributes no between-draw variance (it is a
-deterministic scalar per column), so Rubin-pooled SE stays correctly
-calibrated: variance comes from the BM-draw and GNN-dropout terms
+deterministic scalar per column); between-draw variance comes from the
+BM-draw and GNN-dropout terms
 only.  For \code{draws_method = "conformal"} the blend centre is the
 3-way prediction and conformal scores remain calibrated on the
 blended residuals.
 }
 
 \examples{
-\dontrun{
+\donttest{
 library(pigauto)
 data(avonet300, tree300)
-df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
-
-# Generate 100 complete datasets
-mi <- multi_impute(df, tree300, m = 100)
+tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+df <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+                c("Mass", "Wing.Length"), drop = FALSE]
+rownames(df) <- tree$tip.label
+df$Mass[seq_len(3L)] <- NA_real_
+mi <- multi_impute(df, tree, m = 2L, epochs = 5L, verbose = FALSE)
 print(mi)
-
-# Downstream analysis: phylogenetic GLS via nlme, pooled with Rubin's rules
-fits <- with_imputations(mi, function(d) {
-  d$species <- rownames(d)
-  nlme::gls(
-    log(Mass) ~ log(Wing.Length),
-    correlation = ape::corBrownian(phy = tree300, form = ~species),
-    data = d, method = "ML"
-  )
-})
-pool_mi(fits)
+lapply(mi$datasets, head)
 }
 
 }
@@ -233,7 +201,6 @@ multiple imputation: a case study for behavioural ecology."
 \emph{Behavioral Ecology and Sociobiology} 65(1): 103-116.
 }
 \seealso{
-\code{\link[=impute]{impute()}} for single-point imputation, \code{\link[=with_imputations]{with_imputations()}}
-for applying a model-fitting function across the \code{M} datasets,
-\code{\link[=pool_mi]{pool_mi()}} for Rubin's rules pooling of the resulting fits.
+\code{\link[=impute]{impute()}} for point imputation and \code{\link[=multi_impute_analysis]{multi_impute_analysis()}}
+for the narrow analysis-aware inferential backend.
 }

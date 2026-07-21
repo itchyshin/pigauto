@@ -100,6 +100,7 @@ test_that("[T2A] read_tree errors clearly on a missing file", {
 })
 
 test_that("[T2A] plot_history_gg returns a ggplot for a fit with $history", {
+  skip_if_no_libtorch()
   skip_if_not_installed("ggplot2")
   td <- .tcov_make_data(n = 20L, seed = 2L)
   pd <- preprocess_traits(td$df, td$tree)
@@ -112,6 +113,7 @@ test_that("[T2A] plot_history_gg returns a ggplot for a fit with $history", {
 })
 
 test_that("[T2A] plot_uncertainty returns a ggplot for a continuous trait", {
+  skip_if_no_libtorch()
   skip_if_not_installed("ggplot2")
   td  <- .tcov_make_data(n = 20L, seed = 3L)
   td$df$cont[1:5] <- NA
@@ -128,6 +130,7 @@ test_that("[T2A] plot_uncertainty returns a ggplot for a continuous trait", {
 # ---------------------------------------------------------------------------
 
 test_that("[T2B] multi_impute(draws_method = 'mc_dropout') returns m completed datasets", {
+  skip_if_no_libtorch()
   td  <- .tcov_make_data(n = 25L, seed = 4L)
   td$df$cont[1:6] <- NA
   mi <- multi_impute(td$df, td$tree, m = 3L,
@@ -142,6 +145,7 @@ test_that("[T2B] multi_impute(draws_method = 'mc_dropout') returns m completed d
 })
 
 test_that("[T2B] fit_pigauto(use_attention = FALSE) runs end-to-end and predicts", {
+  skip_if_no_libtorch()
   td  <- .tcov_make_data(n = 25L, seed = 5L)
   pd  <- preprocess_traits(td$df, td$tree)
   spl <- make_missing_splits(pd$X_scaled, seed = 5, trait_map = pd$trait_map)
@@ -157,6 +161,7 @@ test_that("[T2B] fit_pigauto(use_attention = FALSE) runs end-to-end and predicts
 })
 
 test_that("[T2B] fit_pigauto(conformal_method = 'bootstrap') stores conformal scores", {
+  skip_if_no_libtorch()
   td  <- .tcov_make_data(n = 30L, seed = 6L)
   pd  <- preprocess_traits(td$df, td$tree)
   spl <- make_missing_splits(pd$X_scaled, seed = 6, trait_map = pd$trait_map)
@@ -234,6 +239,7 @@ test_that("[T3] preprocess_traits errors on a single-species tree", {
 })
 
 test_that("[T3] all-observed continuous trait round-trips through impute() as identity", {
+  skip_if_no_libtorch()
   set.seed(11L)
   td <- .tcov_make_data(n = 20L, seed = 11L)
   res <- impute(td$df, td$tree, epochs = 10L, n_imputations = 1L,
@@ -285,28 +291,6 @@ test_that("[T3] all-NA column triggers a clear error rather than silent NaN", {
 ## synthetic data, where the safety-floor gate closes onto the mean
 ## corner and predictions degenerate.  Not duplicating here.
 
-test_that("[T4] fit_baseline_bace returns a baseline list with mu / se (smoke)", {
-  skip_if_not_installed("BACE")
-  td  <- .tcov_make_data(n = 20L, seed = 7L)
-  pd  <- preprocess_traits(td$df, td$tree)
-  spl <- make_missing_splits(pd$X_scaled, seed = 7L, trait_map = pd$trait_map)
-  res <- tryCatch(
-    fit_baseline_bace(pd, td$tree, splits = spl,
-                      runs = 1L, nitt = 200L, burnin = 50L,
-                      thin = 5L, verbose = FALSE),
-    error = function(e) e
-  )
-  if (inherits(res, "error")) {
-    skip(paste("fit_baseline_bace setup not supported here:",
-               conditionMessage(res)))
-  }
-  expect_type(res, "list")
-  expect_true("mu" %in% names(res))
-  expect_true("se" %in% names(res))
-  # mu / se are species x latent matrices
-  expect_equal(nrow(res$mu), nrow(pd$X_scaled))
-})
-
 test_that("[T4] plot_comparison runs without error on a minimal results data.frame (smoke)", {
   # plot_comparison uses base-R par()/plot() and returns invisible(NULL)
   # on the two-panel path, so we just check it doesn't error.
@@ -327,3 +311,4 @@ test_that("[T4] plot_comparison runs without error on a minimal results data.fra
                     methods = c("BM_baseline", "pigauto_GNN"))
   )
 })
+skip_if_no_libtorch()

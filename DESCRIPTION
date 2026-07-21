@@ -1,8 +1,8 @@
 Package: pigauto
 Title: Fill in Missing Species Traits Using a Phylogenetic Tree
-Version: 0.10.0.9000
+Version: 0.10.0
 Authors@R:
-    person("Shinichi", "Nakagawa", role = c("aut", "cre"), email = "itchyshin@gmail.com")
+    person("Shinichi", "Nakagawa", role = c("aut", "cre", "cph"), email = "itchyshin@gmail.com")
 Description: Imputes missing species trait data for comparative analyses
     by combining three sources of information: phylogenetic similarity
     (closely related species share similar traits), cross-trait
@@ -14,14 +14,20 @@ Description: Imputes missing species trait data for comparative analyses
     phylogenetic baseline with a graph neural network correction; a
     per-trait gate calibrated on held-out data ensures the network only
     contributes when it improves on the baseline. Provides conformal
-    prediction intervals (95% coverage) for continuous, count, and ordinal
-    traits and supports Rubin's-rules multiple imputation for downstream
-    inference, including tree-uncertainty propagation via posterior tree
-    samples. Tested up to 10,000 species. Bundled datasets include a
-    300-species and a 9,993-species AVONET bird trait + BirdTree phylogeny
-    subset.
+    prediction intervals for continuous, count, and ordinal traits and an
+    experimental analysis-aware multiple-imputation workflow for one missing
+    continuous covariate in Gaussian linear, binomial-logit, and Gaussian
+    random-intercept models, with Rubin pooling limited to fixed effects.
+    Stochastic graph-network and posterior-tree completions are prediction
+    diagnostics rather than validated inferential imputations. Tested up to
+    10,000 species.
+    Bundled datasets include 300-species and 9,993-species bird-trait subsets
+    with matching example phylogenetic trees.
+    Rubin (1987, ISBN:978-0-471-08705-2); Vovk et al. (2005,
+    ISBN:978-0-387-25061-8); Nakagawa and de Villemereuil (2019)
+    <doi:10.1093/sysbio/syy089>.
 License: MIT + file LICENSE
-URL: https://itchyshin.github.io/pigauto, https://github.com/itchyshin/pigauto
+URL: https://itchyshin.github.io/pigauto/, https://github.com/itchyshin/pigauto
 BugReports: https://github.com/itchyshin/pigauto/issues
 Encoding: UTF-8
 LazyData: true
@@ -36,22 +42,26 @@ Imports:
     stats,
     utils,
     graphics,
-    grDevices
+    grDevices,
+    withr,
 Suggests:
     testthat,
+    jsonlite,
     knitr,
     rmarkdown,
     pkgdown,
     RSpectra,
     Rphylopars,
-    BACE,
+    jomo,
     MCMCglmm,
     glmmTMB,
+    lme4,
+    nlme,
     phangorn,
     phylolm,
     rgbif,
+    smcfcs,
     terra,
-    withr,
     phytools
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)

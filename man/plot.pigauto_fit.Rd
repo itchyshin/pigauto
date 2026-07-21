@@ -30,8 +30,16 @@ graphics.  Three plot types are available: training history,
 calibrated gate values, and conformal prediction scores.
 }
 \examples{
-\dontrun{
-fit <- fit_pigauto(data, tree)
+\donttest{
+data(avonet300, tree300)
+tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+                     c("Mass", "Wing.Length"), drop = FALSE]
+rownames(traits) <- tree$tip.label
+data <- preprocess_traits(traits, tree)
+splits <- make_missing_splits(data$X_scaled, trait_map = data$trait_map)
+fit <- fit_pigauto(data, tree, splits = splits, epochs = 5L,
+                   eval_every = 1L, verbose = FALSE)
 plot(fit)
 plot(fit, type = "history")
 plot(fit, type = "gates")

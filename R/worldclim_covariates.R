@@ -252,8 +252,7 @@
 #'   spatial resolution climate surfaces for global land areas.
 #'   International Journal of Climatology 37, 4302--4315.
 #'
-#' @examples
-#' \dontrun{
+#' @examplesIf interactive()
 #' sp <- c("Quercus alba", "Pinus taeda", "Acer saccharum")
 #' gbif_df <- pull_gbif_centroids(sp,
 #'   cache_dir = "script/data-cache/gbif")
@@ -264,9 +263,6 @@
 #' # Combine for impute()
 #' cov <- cbind(gbif_df[, c("centroid_lat", "centroid_lon")],
 #'              wc_df[, grep("^bio", colnames(wc_df))])
-#' # res <- impute(traits, tree, covariates = cov,
-#' #               phylo_signal_gate = FALSE)  # <-- needed; see NEWS
-#' }
 #'
 #' @export
 pull_worldclim_per_species <- function(species,

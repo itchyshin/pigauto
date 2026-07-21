@@ -183,8 +183,8 @@ test_that("calibrate_gates(safety_floor = TRUE) invariant: loss <= mean_loss on 
 # ---- Task 5: fit_pigauto() safety_floor integration ----
 
 test_that("fit_pigauto(safety_floor = TRUE) stores mean_baseline_per_col + simplex weights on fit", {
-  skip_if_not_installed("torch")
-  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  skip_if_no_libtorch()
+  skip_if_no_libtorch()
   data(avonet300, tree300, package = "pigauto")
   set.seed(2026L)
   df <- avonet300
@@ -208,8 +208,8 @@ test_that("fit_pigauto(safety_floor = TRUE) stores mean_baseline_per_col + simpl
 })
 
 test_that("fit_pigauto(safety_floor = FALSE) reproduces v0.9.1 behaviour (r_mean = 0, mean_baseline_per_col NULL or 0)", {
-  skip_if_not_installed("torch")
-  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  skip_if_no_libtorch()
+  skip_if_no_libtorch()
   data(avonet300, tree300, package = "pigauto")
   set.seed(2026L)
   df <- avonet300
@@ -257,6 +257,7 @@ test_that("calibrate_gates(safety_floor = TRUE, median_splits) produces finite w
 # ---- Task 6: predict 3-way blend + backward compat ----
 
 test_that("predict.pigauto_fit uses 3-way blend when r_cal_mean > 0", {
+  skip_if_no_libtorch()
   # Construct a synthetic case where safety_floor should pull the gate
   # toward the mean: plants-like pattern with weak BM baseline.
   data("avonet300", package = "pigauto")
@@ -279,6 +280,7 @@ test_that("predict.pigauto_fit uses 3-way blend when r_cal_mean > 0", {
 })
 
 test_that("predict.pigauto_fit falls back to 2-way blend on legacy v0.9.1 fits (null r_cal_mean)", {
+  skip_if_no_libtorch()
   # Fit with safety_floor = FALSE first; compare against the same fit
   # with r_cal_bm / r_cal_gnn / r_cal_mean / mean_baseline_per_col all
   # set to NULL to simulate a pre-Task-3 v0.9.1 fit. %||% fallback must
@@ -312,13 +314,13 @@ test_that("predict.pigauto_fit falls back to 2-way blend on legacy v0.9.1 fits (
 # ---- Task 9: multi_impute_trees() share_gnn + safety_floor ----
 
 test_that("multi_impute_trees(share_gnn = TRUE, safety_floor = TRUE) reuses safety weights across trees", {
+  skip_if_no_libtorch()
   # trees300 is bundled in pigauto; skip gracefully if absent.
   skip_if(
     !exists("trees300", where = asNamespace("pigauto")) &&
       inherits(try(data("trees300", package = "pigauto"), silent = TRUE), "try-error"),
     "trees300 dataset not available")
-  skip_if_not_installed("torch")
-  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  skip_if_no_libtorch()
   data("avonet300",  package = "pigauto")
   data("trees300",   package = "pigauto")
   set.seed(2026L)
@@ -343,8 +345,8 @@ test_that("multi_impute_trees(share_gnn = TRUE, safety_floor = TRUE) reuses safe
 # ---- Task 10: legacy v0.9.1 fit backward-compat fixture ----
 
 test_that("legacy v0.9.1 fit fixture loads and predicts via %||% fallback", {
-  skip_if_not_installed("torch")
-  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  skip_if_no_libtorch()
+  skip_if_no_libtorch()
   fx_path <- system.file("extdata", "legacy_fit_v091.rds", package = "pigauto")
   expect_true(nzchar(fx_path) && file.exists(fx_path))
   # load_pigauto() deserialises the torch model_state (cross-session portable)
@@ -368,6 +370,7 @@ test_that("legacy v0.9.1 fit fixture loads and predicts via %||% fallback", {
 })
 
 test_that("multi_impute(safety_floor = TRUE) pooled point + SE are finite", {
+  skip_if_no_libtorch()
   data("avonet300",  package = "pigauto")
   data("tree300",    package = "pigauto")
   set.seed(2026L)
@@ -396,6 +399,14 @@ test_that("multi_impute(safety_floor = TRUE) pooled point + SE are finite", {
 # ---- Task 11: AVONET300 vertebrate regression ----
 
 test_that("safety_floor = TRUE preserves vertebrate lift on AVONET300 (within +2% RMSE / -1pp acc)", {
+  skip_if_no_libtorch()
+  # This is a numerical regression canary, so keep it on the deterministic CPU
+  # path. MPS kernels can vary enough across preceding tests to move a single
+  # masked cell across the deliberately tight smoke threshold.
+  testthat::local_mocked_bindings(
+    get_device = function() torch::torch_device("cpu"),
+    .package = "pigauto"
+  )
   data("avonet300", package = "pigauto")
   data("tree300",   package = "pigauto")
   set.seed(2026L)
@@ -469,6 +480,7 @@ test_that("safety_floor = TRUE preserves vertebrate lift on AVONET300 (within +2
 # ---- Task 11: plants safety smoke (cached BIEN) ----
 
 test_that("safety_floor = TRUE keeps plants continuous RMSE <= 1.02 * mean_RMSE on cached BIEN subset", {
+  skip_if_no_libtorch()
   # The cache stores a named list of per-trait data frames
   # (species, mean_value). Pivot to wide here.
   pkg_dir <- system.file(package = "pigauto")
@@ -587,6 +599,7 @@ test_that("safety_floor = TRUE keeps plants continuous RMSE <= 1.02 * mean_RMSE 
 # ---- Task 12: STRICT val-floor invariant (Tier-1 fix 2026-04-29) ----------
 
 test_that("strict val-floor: pigauto val-loss <= baseline val-loss per trait, all types", {
+  skip_if_no_libtorch()
   # Cell-by-cell invariant: for every trait in every fit, the calibrated
   # blend must not exceed pure-BM-baseline loss on the FULL validation set.
   # Pre-fix, this invariant held only for continuous types; binary,
@@ -1044,3 +1057,4 @@ test_that("[CV] cv_folds requires gate_cv_folds >= 2", {
     regexp = "gate_cv_folds"
   )
 })
+skip_if_no_libtorch()

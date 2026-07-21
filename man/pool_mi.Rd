@@ -7,35 +7,44 @@
 pool_mi(
   fits,
   conf.level = 0.95,
-  coef_fun = stats::coef,
-  vcov_fun = stats::vcov,
-  df_fun = NULL
+  coef_fun = NULL,
+  vcov_fun = NULL,
+  df_fun = NULL,
+  tidy_fun = NULL
 )
 }
 \arguments{
-\item{fits}{A list of model fits of length \code{M >= 2}. Any model class
-implementing \code{coef()} and \code{vcov()} works (e.g. \code{\link[stats:lm]{stats::lm}},
-\code{\link[nlme:gls]{nlme::gls}}, \code{\link[lme4:lmer]{lme4::lmer}}, \code{glmmTMB::glmmTMB}, \code{phylolm::phylolm},
-\code{phylolm::phyloglm}). The output of \code{\link[=with_imputations]{with_imputations()}} is accepted
-directly. \code{MCMCglmm} fits are rejected -- see Details.}
+\item{fits}{A list of model fits of length \code{M >= 2}. Automatic fixed-effect
+adapters are provided for \code{\link[stats:lm]{stats::lm}}, \code{\link[stats:glm]{stats::glm}}, \code{nlme::gls},
+\code{nlme::lme}, \code{lme4::merMod}, \code{glmmTMB::glmmTMB}, \code{drmTMB}, and
+\code{gllvmTMB_multi} fits. Other classes implementing \code{coef()} and \code{vcov()}
+also work. The output of \code{\link[=with_imputations]{with_imputations()}} is accepted directly.
+\code{MCMCglmm} fits are rejected -- see Details.}
 
 \item{conf.level}{Confidence level for the pooled interval (default
 \code{0.95}).}
 
-\item{coef_fun}{Function extracting a named numeric coefficient vector
-from one fit. Defaults to \code{\link[stats:coef]{stats::coef()}}. Supply a custom extractor
-for models where \code{coef()} returns a list (e.g. \code{glmmTMB} with multiple
-components) -- see Examples.}
+\item{coef_fun}{Optional function extracting a named numeric fixed-effect
+vector from one fit. \code{NULL} uses the automatic class adapter. Custom
+coefficient and covariance extractors can be supplied independently;
+callers must ensure custom extractors select fixed effects only.}
 
-\item{vcov_fun}{Function extracting the variance-covariance matrix of
-the fixed-effect coefficients. Defaults to \code{\link[stats:vcov]{stats::vcov()}}. Must
-return a square matrix whose row/column names match \code{coef_fun(fit)}.}
+\item{vcov_fun}{Optional function extracting the fixed-effect covariance
+matrix. \code{NULL} uses the automatic class adapter. Base matrices and
+\code{Matrix} objects are accepted; the selected covariance block must be
+square, finite, symmetric, and have non-negative diagonal entries.}
 
 \item{df_fun}{Optional function returning the complete-data residual
 degrees of freedom \code{nu_com} from one fit. When supplied, pooled
 degrees of freedom use the Barnard & Rubin (1999) small-sample
 correction, which is less biased for short series. When \code{NULL} (the
 default) the classical Rubin (1987) formula is used.}
+
+\item{tidy_fun}{Optional function returning a data.frame with unique
+\code{term}, numeric \code{estimate}, and non-negative finite \code{std.error} columns.
+This is an alternative to \code{coef_fun} and \code{vcov_fun}, not a supplement;
+combining them is an error. Callers must ensure it selects fixed effects
+only.}
 }
 \value{
 A data.frame with one row per coefficient and columns:
@@ -56,9 +65,13 @@ supplied, else classical Rubin).}
 \description{
 Combine regression coefficients from \code{M} model fits -- one per imputed
 dataset -- into a single pooled table using Rubin's rules. The pooled
-standard errors properly account for \emph{both} within-imputation sampling
-variance and between-imputation variance, so downstream inference
-propagates the uncertainty introduced by imputation.
+standard errors combine within-imputation sampling variance and
+between-imputation variance. Correct Rubin arithmetic does not make an
+incompatible imputation model inferentially valid. For pigauto inference,
+fits should come from the documented \code{\link[=multi_impute_analysis]{multi_impute_analysis()}} workflow.
+The backend is experimental and supports fixed-effect coefficients only. Variance
+components, correlations, random-effect predictions, BLUPs/conditional
+modes, latent loadings, and other structured parameters are unsupported.
 }
 \details{
 Let \eqn{\hat\theta_i} be the coefficient vector from fit \emph{i} and
@@ -78,32 +91,39 @@ Barnard-Rubin (1999) correction combines
 \eqn{\nu_{\text{obs}} = ((\nu_{\text{com}}+1)/(\nu_{\text{com}}+3))
 \nu_{\text{com}} (1 - \lambda)} with \code{nu_old} via
 \eqn{\nu_{\text{BR}} = 1/(1/\nu_{\text{old}} + 1/\nu_{\text{obs}})}.
+With no between-imputation variation (\code{B = 0}), the classical limit is
+\code{df = Inf}, \code{riv = 0}, and \code{fmi = 0}. If finite complete-data df are
+supplied, Barnard--Rubin instead retains finite observed-data df and its
+small-sample FMI adjustment. A completely deterministic quantity
+(\code{B = W = 0}) always has zero FMI and infinite df.
+
+Only fixed-effect coefficients are pooled in version 0.10.0. Random-effect
+variances and correlations, BLUPs/conditional modes, latent loadings, and
+other structured parameters require parameter-specific transformations and
+are not supported by the automatic \code{pool_mi()} adapters. Custom extractors
+are an expert escape hatch and cannot be inspected by pigauto; using them to
+select unsupported structured parameters is outside the documented scope.
+The \code{glmmTMB} adapter selects conditional fixed effects only. The \code{drmTMB}
+adapter includes named distributional fixed-effect blocks such as regression
+coefficients for \code{mu} and \code{sigma}; those are fixed coefficients, not
+random-effect variance components.
 
 \strong{MCMCglmm fits} are rejected because Rubin's rules are not the right
 tool for posterior samples: variance decomposition does not generalise
-cleanly to posterior distributions. For a Bayesian pigauto workflow
-(pigauto as imputer, MCMCglmm as inference engine), concatenate the
-posterior samples across imputations manually -- stack \code{fit$Sol} and
-\code{fit$VCV} row-wise with \code{do.call(rbind, ...)} and wrap the result in
-\code{coda::as.mcmc()}. For the frequentist Rubin's-rules path, see
-\code{vignette("mixed-types", package = "pigauto")}. For an integrated
-chained-equation MCMC workflow where imputation and inference happen
-in a single engine, use the companion BACE package end-to-end
-(\code{BACE::bace()} + \code{BACE::pool_posteriors()}).
+cleanly to posterior distributions. No MCMCglmm downstream workflow is
+supported by the initial analysis-aware backend.
 }
 \examples{
-\dontrun{
-# Typical workflow
-mi   <- multi_impute(traits, tree, m = 100)
-fits <- with_imputations(mi, function(d) lm(y ~ x1 + x2, data = d))
-pool_mi(fits)
-
-# glmmTMB with custom extractors (conditional component only)
-pool_mi(
-  fits,
-  coef_fun = function(f) glmmTMB::fixef(f)$cond,
-  vcov_fun = function(f) vcov(f)$cond
+\donttest{
+dat <- data.frame(y = stats::rnorm(30L), x = stats::rnorm(30L),
+                  z = stats::rnorm(30L))
+dat$x[seq(3L, 30L, by = 5L)] <- NA_real_
+mi <- multi_impute_analysis(
+  data = dat, formula = y ~ x + z, missing = "x",
+  model = "lm", m = 2L
 )
+fits <- with_imputations(mi, function(d) lm(y ~ x + z, data = d))
+pool_mi(fits)
 }
 
 }
@@ -123,5 +143,5 @@ multiple imputation: a case study for behavioural ecology."
 \emph{Behavioral Ecology and Sociobiology} 65(1): 103-116.
 }
 \seealso{
-\code{\link[=multi_impute]{multi_impute()}}, \code{\link[=with_imputations]{with_imputations()}}
+\code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, \code{\link[=with_imputations]{with_imputations()}}
 }

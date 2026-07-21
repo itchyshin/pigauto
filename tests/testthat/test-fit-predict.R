@@ -1,3 +1,5 @@
+skip_if_no_libtorch()
+
 # Small synthetic dataset helpers
 make_test_data <- function(n = 40, p = 2, seed = 42) {
   set.seed(seed)
@@ -169,7 +171,7 @@ test_that("predict.pigauto_fit can mask held-out cells from DAE context", {
 })
 
 test_that("predict.pigauto_fit adds cov_linear fixed effects outside the blend", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
 
   n <- 4L
   sp <- paste0("sp", seq_len(n))
@@ -186,8 +188,13 @@ test_that("predict.pigauto_fit adds cov_linear fixed effects outside the blend",
     model$cov_linear$weight$copy_(
       torch::torch_tensor(matrix(2, nrow = 1L, ncol = 1L))
     )
-    model$cov_linear$bias$copy_(torch::torch_tensor(1))
+    # fill_() preserves the parameter's float dtype and 1D shape.  Copying a
+    # scalar integer tensor into this bias silently no-ops with some ARM/MPS
+    # libtorch builds, making the fixture test a zero intercept by accident.
+    model$cov_linear$bias$fill_(1)
   })
+
+  expect_equal(as.numeric(as.array(model$cov_linear$bias)), 1)
 
   fit <- structure(
     list(

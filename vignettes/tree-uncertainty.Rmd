@@ -1,8 +1,8 @@
 ---
-title: "Propagating Tree Uncertainty"
+title: "Posterior-Tree Prediction Sensitivity"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Propagating Tree Uncertainty}
+  %\VignetteIndexEntry{Posterior-Tree Prediction Sensitivity}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -16,49 +16,23 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Do I need this article?
+## Scope
 
-**Short answer:** only if you have a **posterior sample of trees** (from BEAST, MrBayes, BirdTree.org, etc.) and you want the tree-topology uncertainty to show up in your pooled standard errors and p-values.
+This article is for **descriptive prediction sensitivity only**. Tree
+uncertainty was not part of the analysis-aware MI validation campaign.
+`multi_impute_trees()` does not produce datasets supported for downstream
+inference, and it cannot currently be combined with
+`multi_impute_analysis()`.
 
-| Situation | Use this article? |
-|---|---|
-| One tree (published phylogeny, time-calibrated tree) | No — use `multi_impute()` and the [mixed-types vignette](mixed-types.html). |
-| Posterior sample (2 or more trees) | Yes. |
+Use this article only when you have a posterior sample of trees (from BEAST,
+MrBayes, BirdTree.org, etc.) and want to see how point imputations change across
+that sample.
 
-## The two-step workflow
+## Prediction-sensitivity workflow
 
-Tree uncertainty enters the analysis in two places. pigauto handles
-step 1. Step 2 is your responsibility because the downstream model is
-your choice.
-
-```
-+--------------------------------------+
-| Step 1 -- imputation                 |
-|                                      |
-| multi_impute_trees(traits, trees)    |
-|   -> T x m_per_tree completed        |
-|      data.frames, each tagged with   |
-|      the tree that produced it       |
-+------------------+-------------------+
-                   |
-                   v
-+--------------------------------------+
-| Step 2 -- analysis + pool            |
-|                                      |
-| for dataset i:                       |
-|   fit model with trees[[t_i]]        |
-| pool_mi(fits)                        |
-|                                      |
-| The SAME tree that produced          |
-| dataset i is used to fit model i.    |
-+--------------------------------------+
-```
-
-## The canonical workflow (Nakagawa & de Villemereuil 2019)
-
-With `share_gnn = TRUE` (the default), T = 50 posterior trees is cheap.
-Use one imputation per tree (M = 50 total), fit the downstream model 50
-times (each with the matching tree), and pool with Rubin's rules.
+With `share_gnn = TRUE` (the default), the GNN is trained once on a reference
+tree and the baseline is recomputed for every posterior tree. The returned
+datasets can be compared descriptively; do not pass them to `pool_mi()`.
 
 ```{r canonical, eval = FALSE}
 library(pigauto)
@@ -70,20 +44,12 @@ df$Species_Key <- NULL
 mi <- multi_impute_trees(df, trees = trees300, m_per_tree = 1L)
 # share_gnn = TRUE, reference_tree = MCC via phangorn -- all default
 
-fits <- with_imputations(mi, function(dat, tree) {
-  dat$species <- rownames(dat)
-  nlme::gls(
-    log(Mass) ~ log(Wing.Length),
-    correlation = ape::corBrownian(phy = tree, form = ~species),
-    data = dat, method = "ML"
-  )
-})
-pool_mi(fits)   # pooled SEs include both imputation and tree uncertainty
+mass_by_tree <- vapply(mi$datasets, function(dat) dat$Mass, numeric(nrow(df)))
+apply(mass_by_tree, 1L, stats::sd)  # descriptive sensitivity, not an MI SE
 ```
 
-The code above is illustrative — full execution takes ~25 min because
-it fits pigauto on the MCC reference tree, then runs a GLS model for
-each of the 50 posterior trees. Running the chunk is left to the reader.
+The code above is illustrative and left unevaluated because the tree loop is
+computationally expensive.
 
 ## Why `share_gnn = TRUE` preserves tree signal
 
@@ -105,22 +71,15 @@ mi_slow <- multi_impute_trees(df, trees300, m_per_tree = 1L,
 # fits T = length(trees300) full pigauto models -- ~10-15x slower.
 ```
 
-## Scale choices
+## What this does not establish
 
-| T | m_per_tree | M | When |
-|---|---|---|---|
-| 50 | 1 | 50 | Default. Canonical N&dV 2019. |
-| 20 | 2 | 40 | Smaller posterior, still stable. |
-| 10 | 5 | 50 | Very small posterior; per-tree variance helps. |
-| <10 | bump m_per_tree | >=25 | Runtime warning fires; Rubin's rules unstable below M=25. |
+Variation across these datasets is not a calibrated standard error, confidence
+interval, or fraction of missing information. It does not validate Rubin
+pooling, variance components, correlations, BLUPs, conditional modes, or latent
+loadings. A future tree-aware analysis backend requires a separate known-DGP
+campaign.
 
 ## References
 
-- Nakagawa S, de Villemereuil P (2019). A general method for
-  simultaneously accounting for phylogenetic and species sampling
-  uncertainty via Rubin's rules in comparative analysis.
-  *Systematic Biology* 68(4): 632-641.
-- Rubin DB (1987). *Multiple Imputation for Nonresponse in Surveys*.
-  Wiley.
 - Jetz W et al. (2012). The global diversity of birds in space and
   time. *Nature* 491: 444-448.

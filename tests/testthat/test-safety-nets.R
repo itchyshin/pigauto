@@ -9,6 +9,7 @@
 }
 
 test_that("Phase B3 warning fires on imbalanced AVONET300 Migration trait", {
+  skip_if_no_libtorch()
   withr::local_seed(1L)
   dat <- .load_avonet()
   
@@ -19,6 +20,7 @@ test_that("Phase B3 warning fires on imbalanced AVONET300 Migration trait", {
 })
 
 test_that("Phase B3 warning stays silent for balanced K=5 ordinal trait", {
+  skip_if_no_libtorch()
   withr::local_seed(2L)
   dat <- .load_avonet()
   
@@ -46,6 +48,7 @@ test_that("Phase B3 warning stays silent for balanced K=5 ordinal trait", {
 })
 
 test_that("Compute scale estimator fires correctly on large N", {
+  skip_if_no_libtorch()
   withr::local_seed(3L)
   
   big_tree <- ape::rcoal(5000)
@@ -66,3 +69,4 @@ test_that("Compute scale estimator fires correctly on large N", {
     regexp = "RIPCORD_PULLED"
   )
 })
+skip_if_no_libtorch()

@@ -67,7 +67,7 @@ Requires the optional \code{terra} package (in DESCRIPTION
 errors with an installation message.
 }
 \examples{
-\dontrun{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
 sp <- c("Quercus alba", "Pinus taeda", "Acer saccharum")
 gbif_df <- pull_gbif_centroids(sp,
   cache_dir = "script/data-cache/gbif")
@@ -78,10 +78,7 @@ wc_df   <- pull_worldclim_per_species(
 # Combine for impute()
 cov <- cbind(gbif_df[, c("centroid_lat", "centroid_lon")],
              wc_df[, grep("^bio", colnames(wc_df))])
-# res <- impute(traits, tree, covariates = cov,
-#               phylo_signal_gate = FALSE)  # <-- needed; see NEWS
-}
-
+\dontshow{\}) # examplesIf}
 }
 \references{
 Fick SE, Hijmans RJ (2017). WorldClim 2: new 1-km

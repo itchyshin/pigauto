@@ -84,6 +84,11 @@ get_latent_cols_by_type <- function(trait_map, type) {
 #'     \item{accuracy}{Overall accuracy.}
 #'     \item{per_class}{Data.frame with per-class precision, recall, F1.}
 #'   }
+#' @examples
+#' confusion_matrix(
+#'   truth = c("a", "a", "b", "b"),
+#'   predicted = c("a", "b", "b", "b")
+#' )
 #' @export
 confusion_matrix <- function(truth, predicted, levels = NULL) {
   if (is.null(levels)) {
@@ -135,6 +140,12 @@ confusion_matrix <- function(truth, predicted, levels = NULL) {
 #' @param n_bins integer, number of bins (default 10).
 #' @return A data.frame with columns \code{bin_mid}, \code{obs_freq},
 #'   \code{mean_pred}, \code{n}.
+#' @examples
+#' calibration_df(
+#'   truth = c(0, 0, 1, 1),
+#'   prob = c(0.1, 0.3, 0.7, 0.9),
+#'   n_bins = 2
+#' )
 #' @export
 calibration_df <- function(truth, prob, n_bins = 10L) {
   ok <- !is.na(truth) & !is.na(prob)

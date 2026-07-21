@@ -1,6 +1,5 @@
 test_that("ResidualPhyloDAE with transformer blocks builds and forwards", {
-  skip_if_not_installed("torch")
-  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_no_libtorch()
 
   n_obs     <- 20L
   n_species <- 20L
@@ -37,8 +36,7 @@ test_that("ResidualPhyloDAE with transformer blocks builds and forwards", {
 })
 
 test_that("ResidualPhyloDAE with transformer blocks produces ~= baseline at init", {
-  skip_if_not_installed("torch")
-  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_no_libtorch()
 
   torch::torch_manual_seed(2L)
   model <- ResidualPhyloDAE(
@@ -66,8 +64,7 @@ test_that("ResidualPhyloDAE with transformer blocks produces ~= baseline at init
 })
 
 test_that("Legacy architecture still works (use_transformer_blocks = FALSE)", {
-  skip_if_not_installed("torch")
-  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_no_libtorch()
 
   torch::torch_manual_seed(3L)
   model <- ResidualPhyloDAE(
@@ -91,8 +88,7 @@ test_that("Legacy architecture still works (use_transformer_blocks = FALSE)", {
 })
 
 test_that("model_config captures transformer hyperparameters", {
-  skip_if_not_installed("torch")
-  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_no_libtorch()
 
   torch::torch_manual_seed(4L)
   model <- ResidualPhyloDAE(
@@ -109,8 +105,7 @@ test_that("model_config captures transformer hyperparameters", {
 })
 
 test_that("fit_pigauto end-to-end with transformer blocks on synthetic data", {
-  skip_if_not_installed("torch")
-  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_no_libtorch()
   skip_if_not_installed("Rphylopars")
 
   set.seed(400)
@@ -152,8 +147,7 @@ test_that("fit_pigauto end-to-end with transformer blocks on synthetic data", {
 })
 
 test_that("legacy architecture (use_transformer_blocks = FALSE) still trains", {
-  skip_if_not_installed("torch")
-  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_no_libtorch()
   skip_if_not_installed("Rphylopars")
 
   set.seed(401)
@@ -179,8 +173,7 @@ test_that("legacy architecture (use_transformer_blocks = FALSE) still trains", {
 })
 
 test_that("fit_pigauto end-to-end converges with transformer blocks on small data", {
-  skip_if_not_installed("torch")
-  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_no_libtorch()
   skip_if_not_installed("Rphylopars")
 
   set.seed(500)
@@ -226,8 +219,7 @@ test_that("fit_pigauto end-to-end converges with transformer blocks on small dat
 })
 
 test_that("ResidualPhyloDAE accepts D_sq in forward (transformer path)", {
-  skip_if_not_installed("torch")
-  if (!torch::torch_is_installed()) skip("torch backend not installed")
+  skip_if_no_libtorch()
 
   torch::torch_manual_seed(10L)
   model <- ResidualPhyloDAE(

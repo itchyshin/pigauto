@@ -16,7 +16,7 @@ impute(
   covariates = NULL,
   epochs = 2000L,
   verbose = TRUE,
-  seed = 1L,
+  seed = NULL,
   multi_obs_aggregation = c("hard", "soft"),
   lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
   em_iterations = 0L,
@@ -85,7 +85,9 @@ Same number of rows as \code{traits}. Default \code{NULL} (no covariates).}
 
 \item{verbose}{logical. Print progress (default \code{TRUE}).}
 
-\item{seed}{integer. Random seed (default \code{1}).}
+\item{seed}{optional integer. When supplied, makes the stochastic fitting
+and prediction steps reproducible; the default \code{NULL} uses the
+current RNG stream.}
 
 \item{multi_obs_aggregation}{character. How to aggregate multiple
 observations per species before the Level-C baseline.  \code{"hard"}
@@ -161,16 +163,14 @@ zi_count magnitude, and proportion traits: imputed values are
 drawn from the observed value pool, never extrapolated.
 
 \strong{When to use:} PMM is a niche feature.  pigauto already
-provides conformal prediction intervals (calibrated against
-held-out residuals) and \code{multi_impute(draws_method =
-  "conformal")} for multi-imputation workflows; those are the
-recommended paths for honest standard errors on downstream
-regression.  PMM is only worth enabling for: (a) methodological
+provides conformal prediction intervals calibrated against held-out
+residuals and stochastic prediction draws for diagnostics. PMM is only
+worth enabling for: (a) methodological
 comparison against mice, or (b) workflows that specifically
 require imputed values to come from the observed data pool.
-For tail safety, prefer \code{clamp_outliers = TRUE}.  For
-honest MI inference, prefer \code{multi_impute(draws_method
-  = "conformal")}.
+For tail safety, prefer \code{clamp_outliers = TRUE}. PMM failed the
+downstream fixed-effect redesign pilot and is unsupported for inference;
+see \code{multi_impute_analysis()} for the analysis-aware backend.
 
 Default \code{"none"} preserves pre-G' behaviour.}
 
@@ -330,44 +330,14 @@ Migration K=3 vs the default median pool).  See
 }
 
 \examples{
-\dontrun{
-# Typical use: your data already has NAs you want filled
-result <- impute(my_traits_with_NAs, my_tree)
-result$completed                  # observed preserved, NAs filled
-result$imputed_mask               # which cells were imputed
-sum(result$imputed_mask)          # how many cells were imputed
-
-# Proportion and zi_count must be declared explicitly
-result <- impute(my_traits, my_tree,
-                 trait_types = c(Survival  = "proportion",
-                                 Parasites = "zi_count"))
-
-# Diagnostic: raw predictions for every cell (NOT the imputed values).
-# `imputed` here means "model output", not "filled gap".
-result$prediction$imputed         # model prediction at every cell
-result$prediction$se              # per-cell uncertainty
-result$prediction$probabilities$diet  # class probabilities
-
-# Demonstration / sanity-check on a fully observed dataset:
-# mask some cells, impute, compare predictions to truth.
+\donttest{
 data(avonet300, tree300)
-df <- avonet300
-rownames(df) <- df$Species_Key; df$Species_Key <- NULL
-set.seed(1L)
-truth <- df$Mass
-df_obs <- df
-hide  <- sample(which(!is.na(df$Mass)), 30L)
-df_obs$Mass[hide] <- NA
-
-result <- impute(df_obs, tree300)
-truth[hide]                         # held-out truth
-result$completed$Mass[hide]         # pigauto's imputations for those cells
-plot(truth[hide], result$completed$Mass[hide],
-     log = "xy", xlab = "truth", ylab = "imputed")
-abline(0, 1, col = "red")
-
-# For imbalanced K=3 ordinal traits (e.g. Migration), prefer:
-result <- impute(df_obs, tree300, n_imputations = 20L,
-                 pool_method = "mode")
+tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+df <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+                c("Mass", "Wing.Length"), drop = FALSE]
+rownames(df) <- tree$tip.label
+df$Mass[seq_len(3L)] <- NA_real_
+result <- impute(df, tree, epochs = 5L, verbose = FALSE)
+head(result$completed)
 }
 }

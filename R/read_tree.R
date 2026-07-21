@@ -7,8 +7,10 @@
 #' @param path character. Path to the tree file.
 #' @return An object of class \code{"phylo"}.
 #' @examples
-#' \dontrun{
-#' tree <- read_tree("path/to/tree.tre")
+#' \donttest{
+#' path <- tempfile(fileext = ".tre")
+#' ape::write.tree(ape::rtree(10L), path)
+#' tree <- read_tree(path)
 #' }
 #' @importFrom ape read.tree read.nexus
 #' @export

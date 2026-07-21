@@ -112,13 +112,13 @@ bayes_lambda_for_col <- function(y, R, nugget = 1e-6,
 # @noRd
 cv_lambda_for_col <- function(y, R, nugget = 1e-6,
                                 lambda_grid = seq(0.01, 0.99, by = 0.05),
-                                k = 5L, seed = 1L) {
+                                k = 5L, seed = NULL) {
   obs <- which(!is.na(y))
   n_o <- length(obs)
   if (n_o < 50L) return(1.0)
 
   # Seeded fold assignment over observed cells.
-  set.seed(seed)
+  if (!is.null(seed)) set.seed(seed)
   fold_id <- sample(rep(seq_len(k), length.out = n_o))
 
   # Per-lambda cumulative squared error across folds.

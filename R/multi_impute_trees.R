@@ -23,7 +23,7 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
   trees[[1]]
 }
 
-#' Tree-aware multiple imputation (step 1 of 2)
+#' Posterior-tree prediction sensitivity
 #'
 #' Run pigauto's full imputation pipeline on each of `T` posterior
 #' phylogenies, generating `m_per_tree` stochastic completions per tree
@@ -31,34 +31,25 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #' dataset is conditional on a specific posterior tree
 #' (recorded in `mi$tree_index`).
 #'
-#' **This is step 1 of the two-step workflow for propagating tree
-#' uncertainty.** Step 2 — varying the *downstream analysis tree* in
-#' lockstep with the imputation tree — is the user's responsibility
-#' and is described in the Examples section and in
+#' **This is an experimental prediction-sensitivity workflow.** It compares
+#' stochastic completions across a posterior tree sample; it does not provide
+#' a validated downstream inferential workflow. See
 #' `vignette("tree-uncertainty")`.
 #'
-#' `multi_impute_trees()` handles the imputation half (step 1) cleanly:
-#' every completed dataset carries a different tree's signal so that
-#' between-tree variation propagates into the pooled standard errors.
-#' Step 2 is where Nakagawa & de Villemereuil (2019) enters: for each
-#' completed dataset, fit the downstream model (e.g. `nlme::gls()` with
-#' a `corBrownian` on `trees[[ mi$tree_index[i] ]]`), then pool the
-#' T × M fits with [pool_mi()].
+#' Every completed dataset carries a different tree's signal so that
+#' between-tree variation enters the returned stochastic completions. This
+#' path is not supported by [multi_impute_analysis()] and has not passed the
+#' analysis-aware inferential gate. Do not use it for downstream inference.
 #'
 #' @section When to use this:
 #'
-#' pigauto provides two multiple-imputation functions. Pick based on how
-#' many trees you have:
+#' Choose the prediction-diagnostic function based on how many trees you have:
 #'
 #' * **One tree** (single published phylogeny, single time-calibrated tree):
-#'   use [multi_impute()]. The `m` MC-dropout imputations capture model
-#'   uncertainty.
+#'   use [multi_impute()] and select a draw method explicitly when needed.
 #' * **Multiple posterior trees** (BirdTree samples, BEAST posterior, etc.):
-#'   use [multi_impute_trees()]. Between-tree variation is added to the
-#'   pooled SEs via Rubin's rules (Nakagawa & de Villemereuil 2019).
-#'
-#' The two functions share the same downstream API — both return objects
-#' compatible with [with_imputations()] and [pool_mi()].
+#'   use [multi_impute_trees()] only for prediction sensitivity. Tree
+#'   uncertainty is unsupported by the analysis-aware backend.
 #'
 #' @importFrom utils head
 #'
@@ -67,10 +58,8 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'   Each tree must contain the species in `traits` as tips. Posterior
 #'   samples from BirdTree.org (Jetz et al. 2012) are ideal; the bundled
 #'   [trees300] dataset provides 50 posterior trees for [avonet300].
-#' @param m_per_tree integer. Number of MC-dropout imputations per tree
-#'   (default `1`). Total datasets = `length(trees) * m_per_tree`. The
-#'   canonical Nakagawa & de Villemereuil (2019) workflow uses T = 50
-#'   posterior trees × m_per_tree = 1 = M = 50 total datasets.
+#' @param m_per_tree integer. Number of stochastic completion draws per tree
+#'   (default `1`). Total datasets = `length(trees) * m_per_tree`.
 #' @param species_col character or `NULL`. See [impute()].
 #' @param trait_types named character vector overriding auto-detected
 #'   trait types. Required for `"proportion"` and `"zi_count"`. See
@@ -88,8 +77,9 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #' @param epochs integer. Maximum GNN training epochs per tree (default
 #'   `2000`).
 #' @param verbose logical. Print progress (default `TRUE`).
-#' @param seed integer. Base random seed; each tree uses `seed + t - 1`
-#'   so results are reproducible (default `1`).
+#' @param seed optional integer. Base random seed; when supplied, each tree
+#'   uses `seed + t - 1` for reproducible results. The default `NULL` uses
+#'   the current RNG stream.
 #' @param share_gnn logical. If `TRUE` (default), fit the GNN once on a
 #'   reference tree and reuse it across all posterior trees, recomputing
 #'   only the BM baseline per tree. Gives a ~10-15x speedup at n=10k.
@@ -108,7 +98,7 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'   \describe{
 #'     \item{`datasets`}{List of `T * m_per_tree` completed data.frames.
 #'       Observed cells are preserved; missing cells are filled with
-#'       imputation draws. Compatible with [with_imputations()].}
+#'       stochastic draws for prediction-sensitivity diagnostics.}
 #'     \item{`m`}{Total number of datasets (`T * m_per_tree`).}
 #'     \item{`n_trees`}{Number of posterior trees used.}
 #'     \item{`m_per_tree`}{Imputations per tree.}
@@ -148,7 +138,8 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'   data; the baseline channel still carries tree variation).
 #'
 #' On every real dataset benchmarked in the v0.9.0 campaign the gate
-#' closed partially or fully, so `share_gnn = TRUE` is cheap AND honest.
+#' closed partially or fully. This evidence is specific to those benchmark
+#' regimes and does not guarantee tree-variance calibration elsewhere.
 #' Set `share_gnn = FALSE` if you need exact per-tree model independence.
 #'
 #' @details
@@ -159,19 +150,9 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #' across trees, so the phylogenetic baseline covariance differs for each
 #' tree.
 #'
-#' Downstream usage is identical to [multi_impute()]: pass the result
-#' to [with_imputations()] to fit a model on each dataset, then to
-#' [pool_mi()] for Rubin's-rules pooling. The pooled standard errors
-#' will be wider than those from a single tree because they incorporate
-#' the extra between-tree variance.
-#'
-#' **Variance decomposition.** The between-imputation variance from
-#' Rubin's rules has two sources: (1) within-tree sampling variance
-#' (MC-dropout noise), and (2) between-tree variance (phylogenetic
-#' uncertainty at the imputation step). The fraction of missing
-#' information (FMI) reported by [pool_mi()] reflects both. To decompose
-#' them, compare FMI from [multi_impute()] (single tree) with FMI from
-#' `multi_impute_trees()`.
+#' The returned datasets may be compared descriptively to assess sensitivity
+#' of point imputations to the tree sample. No calibrated downstream standard
+#' error or Rubin-pooling claim is made for this path.
 #'
 #' **Computation time.** With `share_gnn = TRUE` (default): one GNN fit
 #' + T cheap baseline passes. Rough budget on a modern CPU laptop:
@@ -201,41 +182,28 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'   reused across all posterior trees.  They are properties of the
 #'   observed training traits, not of the tree topology.  Each posterior
 #'   tree only recomputes the BM baseline; the GNN delta and the three
-#'   weights stay fixed.  This preserves the Nakagawa & de Villemereuil
-#'   (2019) tree-uncertainty integration story without re-calibrating
-#'   the safety floor per tree, and keeps the shared-GNN speedup intact.
+#'   weights stay fixed. This preserves prediction sensitivity to the
+#'   per-tree baseline without re-calibrating the safety floor; it does not
+#'   establish downstream inferential validity.
 #'
-#' @seealso [multi_impute()] for single-tree MI, [with_imputations()],
-#'   [pool_mi()], [trees300]
+#' @seealso [multi_impute()] for single-tree prediction diagnostics,
+#'   [multi_impute_analysis()] for analysis-aware MI, and [trees300]
 #'
 #' @examples
-#' \dontrun{
-#' library(pigauto)
-#' data(avonet300, trees300)
-#' df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
-#'
-#' # ---- Step 1: tree-aware imputation (canonical N&dV 2019 workflow) --
-#' # 50 trees x 1 imputation = 50 completed datasets (fast with share_gnn=TRUE)
-#' mi <- multi_impute_trees(df, trees300, m_per_tree = 1L)
+#' \donttest{
+#' data(avonet300, tree300)
+#' tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+#' trees <- structure(list(tree, tree), class = "multiPhylo")
+#' df <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+#'                 c("Mass", "Wing.Length"), drop = FALSE]
+#' rownames(df) <- tree$tip.label
+#' df$Mass[seq_len(3L)] <- NA_real_
+#' mi <- multi_impute_trees(df, trees, m_per_tree = 1L, epochs = 5L,
+#'                          verbose = FALSE)
 #' print(mi)
-#'
-#' # ---- Step 2: tree-aware analysis (Nakagawa & de Villemereuil 2019)
-#' # For each completed dataset, fit the downstream model using the SAME
-#' # tree that produced that dataset. `mi$tree_index[i]` gives the tree
-#' # index (1..T) for dataset `i`.
-#' fits <- with_imputations(mi, function(dat, tree) {
-#'     dat$species <- rownames(dat)
-#'     nlme::gls(
-#'       log(Mass) ~ log(Wing.Length),
-#'       correlation = ape::corBrownian(
-#'         phy = tree, form = ~species),
-#'       data = dat, method = "ML"
-#'     )
-#' })
-#'
-#' # Rubin's rules: pooled SEs include both trait-imputation and
-#' # phylogenetic-tree uncertainty.
-#' pool_mi(fits)
+#' mass_by_tree <- vapply(mi$datasets, function(dat) dat$Mass,
+#'                        numeric(nrow(df)))
+#' apply(mass_by_tree, 1L, stats::sd)
 #' }
 #'
 #' @export
@@ -247,7 +215,7 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 1L,
                                missing_frac = 0.25,
                                covariates = NULL,
                                epochs = 2000L, verbose = TRUE,
-                               seed = 1L,
+                               seed = NULL,
                                share_gnn = TRUE,
                                reference_tree = NULL,
                                ...) {
@@ -279,12 +247,12 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 1L,
          if (length(bad) > 5) ", ...", call. = FALSE)
   }
 
-  # Warn if total datasets M = T * m_per_tree is small (Rubin's rules wobble)
+  # Warn when a tree-sensitivity summary is based on very few draws.
   if (T_trees * m_per_tree < 10L) {
-    warning("Low total imputations (T * m_per_tree = ",
+    warning("Few tree-sensitivity draws (T * m_per_tree = ",
             T_trees * m_per_tree,
-            "). Consider m_per_tree = 5L for stable Rubin's rules pooling ",
-            "when T < 20.", call. = FALSE)
+            "). Descriptive sensitivity summaries may be unstable.",
+            call. = FALSE)
   }
 
   M_total <- T_trees * m_per_tree
@@ -341,10 +309,11 @@ run_per_tree <- function(traits, trees, m_per_tree,
   trait_cols   <- setdiff(names(traits), species_col)
 
   for (t in seq_len(T_trees)) {
-    t_seed <- as.integer(seed + t - 1L)
+    t_seed <- if (is.null(seed)) NULL else as.integer(seed + t - 1L)
 
     if (verbose) {
-      cat(sprintf("  Tree %d/%d (seed=%d)...", t, T_trees, t_seed))
+      cat(sprintf("  Tree %d/%d%s...", t, T_trees,
+                  if (is.null(t_seed)) "" else paste0(" (seed=", t_seed, ")")))
       t_start <- proc.time()
     }
 
@@ -468,7 +437,8 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
     multi_proportion_groups = multi_proportion_groups,
     log_transform = log_transform, missing_frac = missing_frac,
     n_imputations = m_per_tree, covariates = covariates,
-    epochs = as.integer(epochs), verbose = FALSE, seed = as.integer(seed), ...
+    epochs = as.integer(epochs), verbose = FALSE,
+    seed = if (is.null(seed)) NULL else as.integer(seed), ...
   )
   fit_ref    <- res_ref$fit
   data_ref   <- res_ref$data
@@ -609,9 +579,9 @@ print.pigauto_mi_trees <- function(x, ...) {
   n_imp_cells <- sum(x$imputed_mask)
   pct <- if (total_cells > 0) 100 * n_imp_cells / total_cells else 0
 
-  cat("pigauto multiple imputation with tree uncertainty\n")
+  cat("pigauto experimental posterior-tree prediction sensitivity\n")
   cat(sprintf("  Trees     : %d posterior phylogenies\n", T_trees))
-  cat(sprintf("  Per tree  : %d imputations (MC dropout)\n", m_per_tree))
+  cat(sprintf("  Per tree  : %d completion draws (MC dropout)\n", m_per_tree))
   cat(sprintf("  Total     : %d completed datasets\n", M_total))
   cat(sprintf("  Species   : %d\n", n_sp))
   cat(sprintf("  Traits    : %d -- %s\n", length(trait_cols),
@@ -619,9 +589,8 @@ print.pigauto_mi_trees <- function(x, ...) {
   cat(sprintf("  Cells     : %d imputed / %d total (%.1f%%)\n",
               n_imp_cells, total_cells, pct))
 
-  cat("\n  Access imputation draws:  mi$datasets[[i]]\n")
+  cat("\n  Access diagnostic draws:  mi$datasets[[i]]\n")
   cat("  Tree index for draw i:    mi$tree_index[i]\n")
-  cat("  Fit downstream models:    with_imputations(mi, fit_fun)\n")
-  cat("  Pool with Rubin's rules:  pool_mi(fits)\n")
+  cat("  Downstream inference:     unsupported for this path\n")
   invisible(x)
 }

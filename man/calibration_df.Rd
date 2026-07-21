@@ -21,3 +21,10 @@ A data.frame with columns \code{bin_mid}, \code{obs_freq},
 Bins predicted probabilities and computes observed frequencies within
 each bin.  Useful for calibration plots of binary classifiers.
 }
+\examples{
+calibration_df(
+  truth = c(0, 0, 1, 1),
+  prob = c(0.1, 0.3, 0.7, 0.9),
+  n_bins = 2
+)
+}

@@ -1,4 +1,26 @@
-# pigauto 0.10.0.9000 (development)
+# pigauto 0.10.0
+
+## Experimental analysis-aware multiple-imputation backend
+
+The new `multi_impute_analysis()` backend requires the substantive model
+before imputation and is deliberately narrow: one incomplete continuous
+covariate under MAR, with proper Bayesian normal-regression MI for Gaussian
+`lm`, `smcfcs` for binomial-logit `glm`, and `jomo.smc` for a Gaussian `lmer`
+with one random intercept. It pools fixed effects only.
+
+A warning-free 6,000-task package-level campaign at clean source SHA
+`2e3809d` passed all 24 predeclared fixed-effect cells. Added bias was
+0.00086-0.05042 oracle SD, pooled-SE/empirical-SD ratios were 0.942-1.030,
+coverage was 93.9%-96.3%, and all results were finite. Engine warnings are
+fatal, so no inference-ready object is returned after a rejection or
+convergence warning. This validates the backend only within its documented
+narrow scope.
+
+The earlier conformal-width and Brownian/MC-dropout methods each passed 0/12
+downstream fixed-effect cells in the 3,000-fit package campaign. PMM also failed
+its redesign pilot. Those methods remain experimental prediction diagnostics
+and are unsupported for downstream inference. Tree uncertainty was outside the
+analysis-aware campaign and remains unsupported by the new backend.
 
 ## New (opt-in): Pagel's lambda Brownian-motion baseline
 

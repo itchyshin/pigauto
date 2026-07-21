@@ -8,7 +8,7 @@ compare_methods(
   data,
   tree,
   splits = NULL,
-  seeds = 1:3,
+  seeds = NULL,
   epochs = 500L,
   verbose = TRUE,
   ...
@@ -22,7 +22,8 @@ compare_methods(
 \item{splits}{pre-computed splits (applied to all reps) or \code{NULL}
 to create fresh splits per seed.}
 
-\item{seeds}{integer vector of random seeds for replication.}
+\item{seeds}{optional integer vector of random seeds for replication. The
+default \code{NULL} performs one run using the current RNG stream.}
 
 \item{epochs}{number of training epochs.}
 
@@ -50,9 +51,14 @@ For each seed the function:
 }
 }
 \examples{
-\dontrun{
-cmp <- compare_methods(pd, tree300, seeds = 1:3, epochs = 500)
-# Summarise across reps
+\donttest{
+data(avonet300, tree300)
+tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+                     c("Mass", "Wing.Length"), drop = FALSE]
+rownames(traits) <- tree$tip.label
+cmp <- compare_methods(preprocess_traits(traits, tree), tree, seeds = 1L,
+                       epochs = 5L, verbose = FALSE)
 aggregate(value ~ method + trait + metric, data = cmp, FUN = mean)
 }
 }

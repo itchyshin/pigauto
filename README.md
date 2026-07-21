@@ -1,4 +1,4 @@
-# pigauto: Phylogenetic Imputation via Graph AUTO-encoders <img src="man/figures/logo.png" align="right" height="139" alt="pigauto logo"/>
+# pigauto: Phylogenetic Imputation via Graph AUTO-encoders <img src="https://raw.githubusercontent.com/itchyshin/pigauto/main/man/figures/logo.png" align="right" height="139" alt="pigauto logo"/>
 
 <!-- badges: start -->
 
@@ -10,30 +10,28 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 
 **Missing trait data should not stop a comparative analysis.**
 
-> Live documentation: <https://itchyshin.github.io/pigauto>
-
-pigauto fills gaps in species trait matrices by combining the phylogenetic
-tree, cross-trait correlations, and optional environmental covariates — then
-propagates imputation uncertainty through to your downstream model via
-multiple imputation and Rubin's rules.
+pigauto helps fill missing values in species trait data. Give it a trait table
+and a phylogenetic tree, and it uses related species, other traits, and optional
+environmental data to estimate the gaps. It works with common continuous and
+categorical trait types, and provides prediction intervals where available.
 
 ## The workflow
 
 ```
-Raw data (with NAs)
-       ↓
-   impute()          # point estimates + conformal uncertainty intervals
-       ↓
-multi_impute(m=50)   # 50 stochastic complete datasets
-       ↓
-with_imputations()   # fit your model on each dataset
-       ↓
-   pool_mi()         # pool with Rubin's rules → MI-aware SEs
+Trait data + phylogenetic tree
+              ↓
+          impute()
+              ↓
+Completed trait data + prediction intervals
 ```
 
 ## Installation
 
 ```r
+# CRAN release
+install.packages("pigauto")
+
+# Development version
 pak::pak("itchyshin/pigauto")
 
 # First-time torch setup (required once)
@@ -44,7 +42,6 @@ torch::install_torch()
 
 ```r
 library(pigauto)
-library(glmmTMB)
 library(ape)
 
 data(avonet300, tree300)
@@ -79,37 +76,7 @@ result$prediction$conformal_upper[hide, "Mass"]
 # distinction, and for the `n_imputations = 20, pool_method = "mode"`
 # recommendation on imbalanced ordinal traits like Migration.
 
-# ── Step 2: generate 50 complete datasets ────────────────────────────────
-mi <- multi_impute(df, tree300, m = 50L)
-
-# ── Step 3: fit downstream model on each ────────────────────────────────
-Vphy <- cov2cor(ape::vcv(tree300))
-fits <- with_imputations(mi, function(d) {
-  d$species <- factor(rownames(d), levels = rownames(Vphy))
-  d$dummy   <- factor(1)
-  glmmTMB(
-    log(Mass) ~ log(Wing.Length) + Trophic.Level +
-      propto(0 + species | dummy, Vphy),
-    data = d
-  )
-})
-
-# ── Step 4: pool with Rubin's rules ──────────────────────────────────────
-pool_mi(
-  fits,
-  coef_fun = function(f) fixef(f)$cond,
-  vcov_fun = function(f) vcov(f)$cond
-)
-#>               term  estimate std.error    df  fmi
-#>        (Intercept)     ...
-#>   log(Wing.Length)     ...
-#>     Trophic.LevelC     ...
 ```
-
-The pooled table reports `fmi` (fraction of missing information) per
-coefficient. When `fmi > 0.1` on any term, increase `m` until the
-standard errors stop changing. For most comparative datasets `m = 50`
-is sufficient.
 
 ## Using environmental covariates
 
@@ -118,15 +85,12 @@ covariates can improve imputation. The same covariates may also serve as
 predictors in the downstream model:
 
 ```r
-data(delhey5809, tree_delhey)
-df <- delhey5809
-rownames(df) <- df$Species_Key
+data(ctmax_sim, tree300)
+traits <- ctmax_sim[, c("species", "CTmax")]
+covs   <- ctmax_sim["acclim_temp"]
 
-traits <- df[, c("lightness_male", "lightness_female")]
-covs   <- df[, c("annual_mean_temperature", "annual_precipitation",
-                 "percent_tree_cover", "midLatitude")]
-
-result <- impute(traits, tree_delhey, covariates = covs)
+result <- impute(traits, tree300, species_col = "species",
+                 covariates = covs)
 ```
 
 Covariates must be fully observed. Numeric columns are z-scored;
@@ -137,71 +101,8 @@ automatic improvement.
 
 ## Phylogenetic tree uncertainty
 
-If you have a posterior sample of trees (e.g. 50 trees from BirdTree),
-tree uncertainty enters the analysis at **two** places — and pigauto
-handles them separately because they are conceptually distinct.
-
-**Step 1 — imputation** (pigauto's job).
-`multi_impute_trees()` runs a full pigauto fit on each posterior tree,
-so each completed dataset is conditional on a *different* tree:
-
-```r
-data(avonet300, trees300)   # trees300 = 50 posterior trees
-df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
-
-mi <- multi_impute_trees(df, trees = trees300, m_per_tree = 5L)
-#> 50 trees × 5 imputations = 250 completed datasets
-#> mi$tree_index[i]  →  which posterior tree produced dataset i
-```
-
-**Step 2 — analysis** (Nakagawa & de Villemereuil 2019).
-For each completed dataset, fit the downstream comparative model
-using the *same* tree that produced that dataset, then pool the
-T × M fits with Rubin's rules:
-
-```r
-fits <- Map(
-  function(dat, t_idx) {
-    dat$species <- rownames(dat)
-    nlme::gls(
-      log(Mass) ~ log(Wing.Length),
-      correlation = ape::corBrownian(phy = trees300[[t_idx]], form = ~species),
-      data = dat, method = "ML"
-    )
-  },
-  mi$datasets,
-  mi$tree_index
-)
-pool_mi(fits)
-```
-
-The pooled standard errors now reflect imputation uncertainty,
-phylogenetic tree uncertainty, and their interaction — all in one
-Rubin's-rules step. Reference: Nakagawa S, de Villemereuil P (2019).
-*Systematic Biology* 68(4):632–641. doi:
-[10.1093/sysbio/syy089](https://doi.org/10.1093/sysbio/syy089).
-
-### Compute cost depends on whether the GNN is shared
-
-By default, `multi_impute_trees()` uses `share_gnn = TRUE`: it trains the GNN
-once on a reference tree, then recomputes the cheaper phylogenetic baseline for
-each posterior tree. Set `share_gnn = FALSE` only when you need exact per-tree
-model independence. Rough budget on a modern CPU laptop:
-
-| Species n | 1 fit | T = 50, `share_gnn = TRUE` | T = 50, `share_gnn = FALSE` |
-|---:|---:|---:|---:|
-| 300 | ~30–60 s | ~3–5 min | 25–50 min |
-| 5,000 | ~5–10 min | ~10–20 min | 4–8 hr |
-| 10,000 | ~20–40 min | ~30–60 min | 17–33 hr |
-
-**Guidance for large trees.** The 2019 paper notes that 10–20 posterior
-trees are usually enough (use the "relative efficiency" index in
-`pool_mi()$fmi` to check convergence). For 10,000-species datasets we
-recommend T = 10–20, or parallelising the T fits across machines
-(each fit is independent — good HPC / cloud use case).
-If you have no posterior tree sample, use a single MCC tree via
-`impute()` or `multi_impute()` and note the tree-uncertainty caveat in
-your paper.
+`multi_impute_trees()` remains an experimental prediction-sensitivity tool.
+Its stochastic completions are not intended for downstream inference.
 
 ## Trait types
 
@@ -345,17 +246,26 @@ a species differ by covariate context.
 
 ## Documentation
 
-- **Live site**: <https://itchyshin.github.io/pigauto>
+- **Live site**: <https://itchyshin.github.io/pigauto/>
 - **Getting started**: `vignettes/getting-started.Rmd`
   ([rendered](https://itchyshin.github.io/pigauto/articles/getting-started.html))
 - **Mixed types**:
   [mixed-types.html](https://itchyshin.github.io/pigauto/articles/mixed-types.html)
-- **Tree uncertainty**:
+- **Posterior-tree prediction sensitivity**:
   [tree-uncertainty.html](https://itchyshin.github.io/pigauto/articles/tree-uncertainty.html)
 - **Common pitfalls**:
   [common-pitfalls.html](https://itchyshin.github.io/pigauto/articles/common-pitfalls.html)
 
+## Acknowledgements
+
+Russell Dinnage ([@rdinnager](https://github.com/rdinnager)) contributed to
+graph-scaling work and foundation-model/TabPFN exploration. Bhavya Jain
+([@b1805](https://github.com/b1805)) contributed correctness fixes,
+safeguards and tests, and a large attention ablation. They are acknowledged
+as package contributors; Shinichi Nakagawa is the package author and
+maintainer for this release.
+
 ## Citation
 
 Nakagawa S (2026). *pigauto: Phylogenetic Imputation via Graph
-Autoencoder*. R package version 0.9.1.9014.
+Autoencoder*. R package version 0.10.0.

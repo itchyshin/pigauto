@@ -1,6 +1,5 @@
 test_that("predict.pigauto_fit accepts baseline_override and uses it in place of object$baseline", {
-  skip_if_not_installed("torch")
-  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  skip_if_no_libtorch()
 
   set.seed(42L)
   tree <- ape::rcoal(30L)
@@ -84,8 +83,7 @@ test_that("resolve_reference_tree warns and falls back when phangorn missing", {
 })
 
 test_that("multi_impute_trees(share_gnn=TRUE) returns a single shared fit", {
-  skip_if_not_installed("torch")
-  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  skip_if_no_libtorch()
 
   set.seed(7L)
   n <- 20L
@@ -135,8 +133,7 @@ test_that("shared-GNN tree baselines recompute tree-specific graphs", {
 })
 
 test_that("shared-GNN pooled_point stays in completed-data order", {
-  skip_if_not_installed("torch")
-  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  skip_if_no_libtorch()
 
   set.seed(20260512)
   tips <- paste0("sp", 1:12)
@@ -219,8 +216,7 @@ test_that("per-tree pooled_point averages all completed draws", {
 })
 
 test_that("multi_impute_trees(share_gnn=FALSE) keeps per-tree behaviour", {
-  skip_if_not_installed("torch")
-  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  skip_if_no_libtorch()
 
   set.seed(7L)
   n <- 20L

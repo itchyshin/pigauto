@@ -8,8 +8,12 @@ knitr::opts_chunk$set(
 
 
 ## ----install, eval=FALSE------------------------------------------------------
+# # CRAN release
 # install.packages("pigauto")
-# 
+#
+# # Development version
+# pak::pak("itchyshin/pigauto")
+#
 # # torch backend (required; ~1 GB first-time download)
 # torch::install_torch()
 
@@ -21,7 +25,7 @@ library(ape)
 
 ## ----quickstart, eval=FALSE---------------------------------------------------
 # result <- impute(traits, tree)
-# 
+#
 # result$completed    # data.frame: observed values preserved, NAs filled
 # result$imputed_mask # logical matrix: TRUE where a cell was imputed
 # result$prediction$se # per-cell uncertainty (original units)
@@ -98,10 +102,15 @@ cat("Kernel bandwidth sigma:", round(graph$sigma, 3), "\n")
 
 ## ----predict, eval=FALSE------------------------------------------------------
 # pred <- predict(fit, return_se = TRUE)
-# 
+#
 # # pred$imputed: 300 x 4 matrix in original units
 # # pred$se:      300 x 4 uncertainty matrix (original units)
 # head(pred$imputed)
+#
+# # Conformal prediction intervals (95% marginal coverage guarantee)
+# pred$conformal_lower[["Mass"]]    # lower bound per species (original units)
+# pred$conformal_upper[["Mass"]]    # upper bound per species (original units)
+# pred$conformal_coverage           # empirical coverage on val set (target ≈ 0.95)
 
 
 ## ----evaluate, eval=FALSE-----------------------------------------------------
@@ -125,6 +134,65 @@ cat("Kernel bandwidth sigma:", round(graph$sigma, 3), "\n")
 
 ## ----plot-uncertainty, eval=FALSE---------------------------------------------
 # plot(pred, type = "intervals", trait = "Mass")
+
+
+## ----mi-workflow, eval=FALSE--------------------------------------------------
+# analysis_data$z_sq <- analysis_data$z^2
+#
+# mi <- multi_impute_analysis(
+#   data = analysis_data,
+#   formula = y ~ x + z,
+#   missing = "x",
+#   model = "lm",
+#   m = 50L,
+#   auxiliary = "z_sq",
+#   seed = 1L
+# )
+#
+# fits <- with_imputations(mi, function(d) lm(y ~ x + z, data = d))
+# pool_mi(fits)
+
+
+## ----active-impute, eval=FALSE------------------------------------------------
+# res <- impute(traits, tree)
+#
+# # Top-10 individual (species, trait) cells, ordered by expected
+# # total variance reduction:
+# suggest_next_observation(res, top_n = 10, by = "cell")
+#
+# # Or aggregated by species (sum of variance reductions across the
+# # species' currently-missing continuous-family traits):
+# suggest_next_observation(res, top_n = 10, by = "species")
+
+
+## ----phylo-signal-gate, eval=FALSE--------------------------------------------
+# result <- impute(traits, tree,
+#                  phylo_signal_gate     = TRUE,   # default
+#                  phylo_signal_threshold = 0.2,   # default; min lambda to keep BM/GNN
+#                  phylo_signal_method   = "lambda")
+
+
+## ----phylo-signal-gate-off, eval=FALSE----------------------------------------
+# result <- impute(traits, tree, phylo_signal_gate = FALSE)
+
+
+## ----covariate-helpers, eval=FALSE--------------------------------------------
+# # Step 1: GBIF occurrence centroids (median lat/lon across cleaned points)
+# gbif <- pull_gbif_centroids(species          = rownames(my_traits),
+#                             cache_dir        = "cache/gbif",
+#                             occurrence_limit = 500L)
+# #> data.frame with columns species, centroid_lat, centroid_lon, n_occurrences
+#
+# # Step 2: WorldClim bioclim summaries (median + IQR of all 19 bio variables
+# # across each species' GBIF occurrences)
+# clim <- pull_worldclim_per_species(species             = rownames(my_traits),
+#                                     gbif_cache_dir      = "cache/gbif",
+#                                     worldclim_cache_dir = "cache/worldclim",
+#                                     resolution          = "10m")
+# #> data.frame with bio1..bio19 medians + IQRs + n_extracted per species
+#
+# # Step 3: hand the whole climate frame to impute() as covariates
+# result <- impute(my_traits, my_tree, covariates = clim)
 
 
 ## ----gpu, eval=FALSE----------------------------------------------------------

@@ -42,8 +42,17 @@ When the fit includes a baseline, baseline metrics are appended with
 \code{method = "baseline"} for direct comparison.
 }
 \examples{
-\dontrun{
-eval_df <- evaluate(fit)
+\donttest{
+data(avonet300, tree300)
+tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+                     c("Mass", "Wing.Length"), drop = FALSE]
+rownames(traits) <- tree$tip.label
+pd <- preprocess_traits(traits, tree)
+splits <- make_missing_splits(pd$X_scaled, trait_map = pd$trait_map)
+fit <- fit_pigauto(pd, tree, splits = splits, epochs = 5L,
+                   verbose = FALSE)
+eval_df <- evaluate(fit, data = pd)
 eval_df[eval_df$metric == "rmse", ]
 }
 }

@@ -114,8 +114,7 @@ test_that("em_iterations = 5L works on K = 3 OVR categorical", {
 test_that("em_iterations = 0L via impute() matches default impute() baseline", {
   skip_if_not_installed("Rphylopars")
   skip_if_not(pigauto:::joint_mvn_available())
-  skip_if_not_installed("torch")
-  skip_if_not(torch::torch_is_installed(), "libtorch not installed")
+  skip_if_no_libtorch()
 
   set.seed(7L)
   tree <- ape::rcoal(50L)
