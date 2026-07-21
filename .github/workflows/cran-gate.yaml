@@ -1,7 +1,9 @@
 name: CRAN gate (temporary)
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - codex/cran-gate-0100
 
 permissions:
   contents: read
