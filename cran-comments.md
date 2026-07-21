@@ -1,6 +1,7 @@
-## Release scope
+## Resubmission scope
 
-This is the first CRAN submission of pigauto. Version 0.10.0 provides
+This is a resubmission of pigauto 0.10.0 after CRAN reviewer comments received
+on 2026-07-21. Version 0.10.0 provides
 phylogenetically informed imputation for mixed species-trait data. The
 analysis-aware multiple-imputation backend is experimental and deliberately
 limited to one incomplete continuous covariate under MAR for Gaussian `lm`,
@@ -12,8 +13,24 @@ A warning-free 6,000-task package-level campaign at clean source SHA
 `2e3809d` passed all 24 fixed-effect cells, with 93.9%-96.3% coverage,
 pooled-SE/empirical-SD ratios of 0.942-1.030, and 100% finite results. This
 validates only the documented narrow scope. The final cross-platform checks are
-recorded below. The corrected Windows rerun completed cleanly; only the CRAN
-upload remains.
+recorded below.
+
+## CRAN reviewer corrections
+
+This resubmission makes no methodological or inferential-scope change. It:
+
+- supplies valid author-year method references with ISBN/DOI identifiers in
+  `DESCRIPTION`;
+- replaces the `impute()` placeholder example with a self-contained bundled-data
+  example and removes commented-out executable code;
+- changes generated example blocks from `\\dontrun{}` to `\\donttest{}` where
+  they are lengthy but runnable;
+- removes production `.GlobalEnv` access; and
+- changes public random-seed defaults to `NULL`, retaining reproducibility only
+  when the user explicitly supplies a seed.
+
+There are no additional published papers to cite beyond the valid method
+references already included in `DESCRIPTION`.
 
 ## Test environments
 
@@ -75,10 +92,9 @@ Audit inventory at the release-candidate documentation freeze:
 - `urlchecker::url_check()` examined 19 package URLs with no errors or
   redirections after canonicalizing the pkgdown URL.
 
-The exact release tarball is 4,853,809 bytes with SHA-256
-`96e3f98c130251006026220a5476e8c5eca34b3a57e06a3e6db94becc572cb5f`.
-The exact tarball was submitted to CRAN on 2026-07-11 at 16:00:16 UTC;
-CRAN confirmation is pending by email.
+The previous candidate was submitted to CRAN on 2026-07-11 at 16:00:16 UTC.
+The exact resubmission tarball, hash, size, and check receipt are recorded only
+after the final candidate has been rebuilt from the merged resubmission commit.
 
 ## Bundled-data licensing gate
 
