@@ -52,7 +52,7 @@
 #' data <- preprocess_traits(traits, tree)
 #' splits <- make_missing_splits(data$X_scaled, trait_map = data$trait_map)
 #' fit <- fit_pigauto(data, tree, splits = splits, epochs = 5L,
-#'                    verbose = FALSE)
+#'                    eval_every = 1L, verbose = FALSE)
 #' plot(fit)
 #' plot(fit, type = "history")
 #' plot(fit, type = "gates")
