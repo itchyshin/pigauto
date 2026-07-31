@@ -8,6 +8,12 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
+> [!WARNING] **pigauto is experimental — use at your own risk.** It is not
+> complete, has not been fully human-verified, and needs extensive further
+> validation. CRAN availability is not a statement of scientific maturity.
+> Point estimates are the supported claim; no cell's interval coverage is
+> certified, and covariance routes have focused-test evidence only.
+
 **Missing trait data should not stop a comparative analysis.**
 
 pigauto helps fill missing values in species trait data. Give it a trait table

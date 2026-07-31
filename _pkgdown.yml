@@ -14,12 +14,26 @@ template:
 home:
   logo: man/figures/logo.png
   title: "pigauto: Phylogenetic Imputation via Graph AUTO-encoders"
+  sidebar:
+    structure: [status, links, license, citation, authors, dev]
+    components:
+      status:
+        title: Status
+        text: >
+          **Experimental — use at your own risk.** Not complete, not fully
+          human-verified, needs extensive further validation. CRAN
+          availability is not scientific maturity. Point estimates are the
+          supported claim; no cell's interval coverage is certified, and
+          covariance routes have focused-test evidence only.
   description: >
     Fill missing values in species trait data using a phylogenetic tree,
     information from other traits, and optional environmental data. Supports
     continuous, count, binary, categorical, ordinal, proportion,
-    zero-inflated count, and compositional traits in one workflow. Prediction
-    intervals describe uncertainty for continuous, count, and ordinal traits.
+    zero-inflated count, and compositional traits in one workflow.
+    Experimental: use at your own risk. CRAN availability is not scientific
+    maturity; point estimates are the supported claim. Prediction-interval
+    coverage is not certified, and covariance routes have focused-test
+    evidence only.
 
 navbar:
   structure:
