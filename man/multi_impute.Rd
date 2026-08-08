@@ -146,7 +146,11 @@ units back-transformed to the original scale). The draw width is
 therefore calibrated against actual prediction error regardless of
 whether the BM or GNN term dominates. For discrete traits (binary,
 categorical) it uses Bernoulli / categorical draws from the estimated
-probability vector. For \code{multi_proportion} groups it draws the
+probability vector. For \code{zi_count} the gate is Bernoulli from
+P(nonzero) and the conditional magnitude is drawn on the log1p-z
+latent using the conformal score (or the magnitude latent SE when
+scores are unavailable) — not the reported SE of expected count. For
+\code{multi_proportion} groups it draws the
 K CLR latent columns with their BM latent SEs, projects back to
 sum-zero CLR space, and decodes to the simplex. This is the preferred
 default for pigauto.

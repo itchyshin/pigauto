@@ -107,7 +107,8 @@
 #'   ramps from \code{corruption_start} to \code{corruption_rate}
 #'   (default \code{500}).  Set to \code{0} for fixed corruption.
 #' @param refine_steps integer. Iterative refinement steps at inference
-#'   (default \code{8}).
+#'   (default \code{8}). Gate calibration and conformal scoring use the
+#'   same number of steps so the calibrated surface matches predict.
 #' @param lambda_shrink numeric. Weight on the shrinkage penalty
 #'   \code{||delta - baseline||^2} that keeps the GNN correction close
 #'   to the phylogenetic baseline (default \code{0.03}).
@@ -410,16 +411,14 @@ fit_pigauto <- function(
   if (!is.null(splits)) M_obs_mat[c(splits$val_idx, splits$test_idx)] <- FALSE
 
   # Held-out-masked input: like X_fill but with val/test cells replaced
-  # with the baseline prediction.  This is what the model SHOULD see at
-  # val/test evaluation time and at gate calibration time, so that it
-  # does not have direct access to the held-out truth values.  Without
-  # this masking, val cells' true values leak into the model input and
-  # the calibration signal becomes meaningless.
-  X_fill_heldout <- X_fill
-  if (!is.null(splits)) {
-    hold_idx <- c(splits$val_idx, splits$test_idx)
-    X_fill_heldout[hold_idx] <- MU[hold_idx]
+  # with the baseline prediction.  Used for TRAINING, val eval, and gate
+  # calibration so held-out truth never appears as DAE context (B1).
+  hold_idx <- if (!is.null(splits)) {
+    c(splits$val_idx, splits$test_idx)
+  } else {
+    integer(0L)
   }
+  X_fill_heldout <- mask_heldout_with_baseline(X_fill, MU, hold_idx)
 
   # ---- Trait-level corruption mask expansion --------------------------------
   # For categorical traits: corrupt all K latent columns together
@@ -655,7 +654,10 @@ fit_pigauto <- function(
     covs_t <- make_covs_tensor(t_MU, mask_ind, t_covariates)
 
     tok   <- model$mask_token$expand(c(n, p))
-    X_in  <- torch::torch_where(masked_bool, tok, t_X)
+    # B1: visible context is t_X_eval (holdouts → BM), not t_X (holdout truth).
+    # Corruption still replaces train-observed cells with the mask token;
+    # loss targets remain t_X on those corrupted cells only.
+    X_in  <- torch::torch_where(masked_bool, tok, t_X_eval)
 
     out   <- model(X_in, t_coords, covs_t, t_adj_train, t_obs_to_sp,
                    D_sq = t_D_sq)
@@ -793,20 +795,28 @@ fit_pigauto <- function(
     gpu_mem_checkpoint("entering gate calibration")
     model$eval()
 
-    # Forward pass on val set (use t_X_eval so held-out truths do not leak).
-    torch::with_no_grad({
-      mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
-      covs0     <- make_covs_tensor(t_MU, mask_ind0, t_covariates)
-      out_cal   <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp,
-                         D_sq = t_D_sq)
-      delta_cal <- as.matrix(out_cal$delta$cpu())
-      fixed_cal <- if (!is.null(out_cal$fixed_effects)) {
-        as.matrix(out_cal$fixed_effects$cpu())
-      } else {
-        NULL
-      }
-      mu_cal    <- as.matrix(t_MU$cpu())
-    })
+    # B3: refine with the same refine_steps predict() will use. Pin
+    # training-observed cells; holdouts start at BM via t_X_eval.
+    # Blend uses learned rs here (gates not yet calibrated).
+    refined_cal <- pigauto_refine_forward(
+      model          = model,
+      X_init         = t_X_eval,
+      t_coords       = t_coords,
+      t_adj          = t_adj,
+      t_obs_to_sp    = t_obs_to_sp,
+      t_D_sq         = t_D_sq,
+      t_MU           = t_MU,
+      t_covariates   = t_covariates,
+      pin_mask       = t_M_obs,
+      refine_steps   = refine_steps,
+      device         = device,
+      blend          = "learned_rs"
+    )
+    delta_cal_gates <- refined_cal$delta_mat
+    fixed_cal_gates <- refined_cal$fixed_mat
+    mu_cal          <- as.matrix(t_MU$cpu())
+    delta_cal       <- delta_cal_gates
+    fixed_cal       <- fixed_cal_gates
 
     X_truth_r    <- X_truth
     val_mask_mat <- matrix(FALSE, n, p)
@@ -912,7 +922,7 @@ fit_pigauto <- function(
     calibrated_gates_list <- calibrate_gates(
       trait_map             = trait_map,
       mu_cal                = mu_cal,
-      delta_cal             = delta_cal,
+      delta_cal             = delta_cal_gates,
       X_truth_r             = X_truth_r,
       val_mask_mat          = val_mask_cal,
       gate_grid             = seq(0, gate_cap, length.out = 9L),
@@ -924,21 +934,79 @@ fit_pigauto <- function(
       mean_baseline_per_col = mean_baseline_per_col,
       simplex_step          = 0.05,
       min_val_cells         = min_val_cells,
-      fixed_cal             = fixed_cal,
+      fixed_cal             = fixed_cal_gates,
       seed                  = seed,
       latent_names          = data$latent_names,
       verbose               = verbose
     )
     calibrated_gates <- calibrated_gates_list$r_cal_gnn   # legacy scalar slot
 
-    # Apply phylo-signal gate override: gated latent columns get (0, 0, 1)
-    # regardless of what the 3-way simplex calibrator picked.
+    # B2: phylo-signal override. Mean corner (0,0,1) is only valid when
+    # safety_floor computed a real mean_baseline_per_col. Otherwise the
+    # predict fallback is latent 0 — force BM (1,0,0) instead.
     if (length(gated_latent_cols) > 0L && !is.null(calibrated_gates_list)) {
-      calibrated_gates_list$r_cal_bm[gated_latent_cols]   <- 0
-      calibrated_gates_list$r_cal_gnn[gated_latent_cols]  <- 0
-      calibrated_gates_list$r_cal_mean[gated_latent_cols] <- 1
+      if (isTRUE(safety_floor) && !is.null(mean_baseline_per_col)) {
+        calibrated_gates_list$r_cal_bm[gated_latent_cols]   <- 0
+        calibrated_gates_list$r_cal_gnn[gated_latent_cols]  <- 0
+        calibrated_gates_list$r_cal_mean[gated_latent_cols] <- 1
+      } else {
+        warning(
+          "phylo_signal_gate triggered for ",
+          length(gated_latent_cols),
+          " latent column(s) but safety_floor = FALSE (or mean baseline ",
+          "unavailable); falling back to BM (r_cal_bm = 1) instead of the ",
+          "mean corner, which would become latent 0 at predict time.",
+          call. = FALSE
+        )
+        calibrated_gates_list$r_cal_bm[gated_latent_cols]   <- 1
+        calibrated_gates_list$r_cal_gnn[gated_latent_cols]  <- 0
+        calibrated_gates_list$r_cal_mean[gated_latent_cols] <- 0
+      }
       calibrated_gates <- calibrated_gates_list$r_cal_gnn
     }
+
+    # B3 (conformal): re-refine with the calibrated blend so residual
+    # quantiles match the surface predict() delivers.
+    mean_vec_cal <- if (!is.null(mean_baseline_per_col)) {
+      as.numeric(mean_baseline_per_col)
+    } else {
+      rep(0, p)
+    }
+    t_w_bm_cal <- torch::torch_tensor(
+      as.numeric(calibrated_gates_list$r_cal_bm),
+      dtype = torch::torch_float(), device = device
+    )$unsqueeze(1L)
+    t_w_gnn_cal <- torch::torch_tensor(
+      as.numeric(calibrated_gates_list$r_cal_gnn),
+      dtype = torch::torch_float(), device = device
+    )$unsqueeze(1L)
+    t_w_mean_cal <- torch::torch_tensor(
+      as.numeric(calibrated_gates_list$r_cal_mean),
+      dtype = torch::torch_float(), device = device
+    )$unsqueeze(1L)
+    t_mean_cal <- torch::torch_tensor(
+      mean_vec_cal, dtype = torch::torch_float(), device = device
+    )$unsqueeze(1L)
+    refined_conf <- pigauto_refine_forward(
+      model            = model,
+      X_init           = t_X_eval,
+      t_coords         = t_coords,
+      t_adj            = t_adj,
+      t_obs_to_sp      = t_obs_to_sp,
+      t_D_sq           = t_D_sq,
+      t_MU             = t_MU,
+      t_covariates     = t_covariates,
+      pin_mask         = t_M_obs,
+      refine_steps     = refine_steps,
+      device           = device,
+      blend            = "calibrated",
+      t_w_bm           = t_w_bm_cal,
+      t_w_gnn          = t_w_gnn_cal,
+      t_w_mean         = t_w_mean_cal,
+      t_mean_baseline  = t_mean_cal
+    )
+    delta_cal <- refined_conf$delta_mat
+    fixed_cal <- refined_conf$fixed_mat
   }
 
   # ---- Conformal prediction scores (validation set) -----------------------
@@ -1009,6 +1077,8 @@ fit_pigauto <- function(
     lambda_mode            = lambda_mode,
     dropout                = dropout,
     refine_steps           = refine_steps,
+    cal_refine_steps       = as.integer(refine_steps),
+    train_mask_heldout     = TRUE,
     cov_dim                = cov_dim,
     input_dim              = p,
     per_column_rs          = TRUE,
