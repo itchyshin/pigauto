@@ -16,6 +16,36 @@
 #' \code{pigauto_data$X_scaled}), so they can be passed directly to
 #' \code{\link{fit_pigauto}} as the \code{baseline} argument.
 #'
+#' @section Which BACE datasets \code{mu} / \code{se} are built from:
+#' Two paths are available and they differ in what the returned
+#' \code{se} means.
+#'
+#' \describe{
+#'   \item{\code{final_imp = FALSE} (default)}{\code{mu} / \code{se} are
+#'     computed from the \code{runs} datasets of the \code{bace_imp()}
+#'     chain.  Those are successive sweeps of one chained-equations
+#'     chain, so they are autocorrelated by construction and still carry
+#'     convergence transient.  The resulting \code{se} is a cheap
+#'     dispersion summary, not a calibrated imputation standard error,
+#'     and it has no coverage guarantee.}
+#'   \item{\code{final_imp = TRUE}}{\code{BACE::bace_final_imp()} is run
+#'     on the fitted chain object and \code{mu} / \code{se} are computed
+#'     from its \code{n_final} final datasets.  Each of those runs starts
+#'     independently from the converged chain, so they are proper
+#'     multiple-imputation draws and \code{se} is a between-imputation SD
+#'     in the Rubin (1987) sense.  Expect this \code{se} to be
+#'     \emph{larger} than the default path's.  Cost is \code{n_final}
+#'     extra MCMC fits per trait on top of the chain.}
+#' }
+#'
+#' The default is \code{FALSE} so that existing calls are unchanged.
+#' Note that this is a choice about which BACE datasets pigauto
+#' summarises; it is not a correction to the default path's arithmetic.
+#'
+#' \code{BACE::bace_final_imp()} is only available in recent BACE
+#' versions.  If it is missing, \code{final_imp = TRUE} errors with an
+#' upgrade hint rather than silently falling back.
+#'
 #' @param data object of class \code{"pigauto_data"}.
 #' @param tree object of class \code{"phylo"}.
 #' @param splits list (output of \code{\link{make_missing_splits}}) or
@@ -25,6 +55,14 @@
 #' @param nitt integer. MCMC iterations per model (default \code{4000L}).
 #' @param burnin integer. Burn-in iterations (default \code{1000L}).
 #' @param thin integer. Thinning rate (default \code{10L}).
+#' @param final_imp logical. If \code{TRUE}, append
+#'   \code{BACE::bace_final_imp()} after the chain and build \code{mu} /
+#'   \code{se} from its final datasets instead of the chain datasets.
+#'   Default \code{FALSE} (unchanged behaviour).
+#' @param n_final integer. Number of final imputation draws when
+#'   \code{final_imp = TRUE} (default \code{15L}, matching the BACE
+#'   simulation study).  Ignored when \code{final_imp = FALSE}.  Small
+#'   values undercover; BACE's own default is 50.
 #' @param verbose logical.
 #' @return A list with:
 #'   \describe{
@@ -40,6 +78,7 @@
 fit_baseline_bace <- function(data, tree, splits = NULL,
                               runs = 5L, nitt = 4000L,
                               burnin = 1000L, thin = 10L,
+                              final_imp = FALSE, n_final = 15L,
                               verbose = TRUE) {
 
   if (!requireNamespace("BACE", quietly = TRUE)) {
@@ -48,6 +87,21 @@ fit_baseline_bace <- function(data, tree, splits = NULL,
   }
   if (!inherits(data, "pigauto_data")) {
     stop("'data' must be a pigauto_data object.")
+  }
+
+  if (!is.logical(final_imp) || length(final_imp) != 1L || is.na(final_imp)) {
+    stop("'final_imp' must be a single TRUE or FALSE.")
+  }
+  if (final_imp) {
+    n_final <- as.integer(n_final)
+    if (length(n_final) != 1L || is.na(n_final) || n_final < 2L) {
+      stop("'n_final' must be a single integer >= 2 when final_imp = TRUE.")
+    }
+    if (!"bace_final_imp" %in% getNamespaceExports("BACE")) {
+      stop("final_imp = TRUE requires a BACE version exporting ",
+           "bace_final_imp().\n",
+           "  Update BACE, or call with final_imp = FALSE.")
+    }
   }
 
   trait_map   <- data$trait_map
@@ -101,9 +155,29 @@ fit_baseline_bace <- function(data, tree, splits = NULL,
     verbose        = verbose
   )
 
-  # ---- Extract imputed datasets (skip Initial_Data) --------------------------
-  n_iter      <- length(fit$data) - 1L
-  imp_datasets <- fit$data[seq(2, n_iter + 1)]
+  # ---- Choose which imputed datasets mu / se summarise -----------------------
+  if (final_imp) {
+    # Proper-MI path: n_final independent draws from the converged chain.
+    final_fit <- BACE::bace_final_imp(
+      bace_object    = fit,
+      fixformula     = formula_str,
+      ran_phylo_form = "~ 1 | species",
+      phylo          = tree,
+      nitt           = as.integer(nitt),
+      burnin         = as.integer(burnin),
+      thin           = as.integer(thin),
+      n_final        = n_final,
+      verbose        = verbose
+    )
+    imp_datasets <- final_fit$all_datasets
+    if (!length(imp_datasets)) {
+      stop("BACE::bace_final_imp() returned no datasets.")
+    }
+  } else {
+    # Default path: chain datasets (skip Initial_Data).
+    n_iter      <- length(fit$data) - 1L
+    imp_datasets <- fit$data[seq(2, n_iter + 1)]
+  }
 
   # ---- Re-encode each imputed dataset to latent scale ------------------------
   latent_mats <- lapply(imp_datasets, function(imp_df) {

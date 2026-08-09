@@ -45,6 +45,52 @@ more honest about what the model sees at train and cal time.
   `refine_steps` refine loop that `predict()` uses
   (`pigauto_refine_forward()`; `model_config$cal_refine_steps`).
 
+## New (opt-in): proper-MI draws for the BACE baseline wrapper
+
+`fit_baseline_bace()` gains `final_imp = FALSE` (default) and
+`n_final = 15L`. With `final_imp = TRUE` the wrapper appends
+`BACE::bace_final_imp()` to the `BACE::bace_imp()` chain it already runs
+and builds `mu` / `se` from that function's `n_final` final datasets
+instead of the chain datasets.
+
+Why it is worth having: the chain datasets are successive sweeps of one
+chained-equations chain, so they are autocorrelated by construction and
+still carry convergence transient. The between-dataset SD pigauto
+reports as `se` on that path is therefore a dispersion summary with no
+coverage guarantee. `bace_final_imp()`'s runs each start independently
+from the converged chain, so they are proper multiple-imputation draws
+and the resulting `se` is a between-imputation SD in the Rubin (1987)
+sense. Expect it to be substantially larger.
+
+This is a choice about which BACE datasets pigauto summarises. It is
+**not** a correction to the default path's arithmetic, and in
+particular it is unrelated to the imputed-as-observed defect fixed
+upstream in BACE — that defect lived in `bace_final_imp()`, which
+pigauto has never called until now, so no pigauto output was ever
+affected by it.
+
+`final_imp = TRUE` costs `n_final` extra MCMC fits per trait on top of
+the chain. The default of 15 matches the BACE simulation study; BACE's
+own default is 50, and small values undercover. The default remains
+`FALSE`, and the default path is bit-identical to previous versions
+(verified against the pre-change function under a fixed seed). If the
+installed BACE is too old to export `bace_final_imp()`,
+`final_imp = TRUE` errors with an upgrade hint rather than silently
+falling back.
+
+No pigauto-versus-BACE performance claim is made here; the wrapper
+re-bench against a current BACE has not been run.
+
+## Documentation: pigauto's OVR categorical path vs BACE's default
+
+`fit_ovr_categorical_fits()` no longer describes its one-vs-rest
+decomposition as "the OVR strategy BACE uses". BACE's
+`ovr_categorical` default became `FALSE` (true multinomial) in
+2026-08. pigauto's OVR is a different estimator — K threshold-joint
+Rphylopars fits, used so that Rphylopars stays well-conditioned — and
+that motivation is unchanged. Comment/roxygen only; no estimator
+change.
+
 ## New (opt-in): Pagel's lambda Brownian-motion baseline
 
 Adds first-pass support for Pagel's lambda < 1 in the BM baseline.

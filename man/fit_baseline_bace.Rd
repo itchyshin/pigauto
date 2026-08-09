@@ -12,6 +12,8 @@ fit_baseline_bace(
   nitt = 4000L,
   burnin = 1000L,
   thin = 10L,
+  final_imp = FALSE,
+  n_final = 15L,
   verbose = TRUE
 )
 }
@@ -31,6 +33,16 @@ fit_baseline_bace(
 \item{burnin}{integer. Burn-in iterations (default \code{1000L}).}
 
 \item{thin}{integer. Thinning rate (default \code{10L}).}
+
+\item{final_imp}{logical. If \code{TRUE}, append
+\code{BACE::bace_final_imp()} after the chain and build \code{mu} /
+\code{se} from its final datasets instead of the chain datasets.
+Default \code{FALSE} (unchanged behaviour).}
+
+\item{n_final}{integer. Number of final imputation draws when
+\code{final_imp = TRUE} (default \code{15L}, matching the BACE
+simulation study).  Ignored when \code{final_imp = FALSE}.  Small
+values undercover; BACE's own default is 50.}
 
 \item{verbose}{logical.}
 }
@@ -58,6 +70,38 @@ uncertainty).  Both are in latent scale (same as
 \code{pigauto_data$X_scaled}), so they can be passed directly to
 \code{\link{fit_pigauto}} as the \code{baseline} argument.
 }
+\section{Which BACE datasets \code{mu} / \code{se} are built from}{
+
+Two paths are available and they differ in what the returned
+\code{se} means.
+
+\describe{
+\item{\code{final_imp = FALSE} (default)}{\code{mu} / \code{se} are
+computed from the \code{runs} datasets of the \code{bace_imp()}
+chain.  Those are successive sweeps of one chained-equations
+chain, so they are autocorrelated by construction and still carry
+convergence transient.  The resulting \code{se} is a cheap
+dispersion summary, not a calibrated imputation standard error,
+and it has no coverage guarantee.}
+\item{\code{final_imp = TRUE}}{\code{BACE::bace_final_imp()} is run
+on the fitted chain object and \code{mu} / \code{se} are computed
+from its \code{n_final} final datasets.  Each of those runs starts
+independently from the converged chain, so they are proper
+multiple-imputation draws and \code{se} is a between-imputation SD
+in the Rubin (1987) sense.  Expect this \code{se} to be
+\emph{larger} than the default path's.  Cost is \code{n_final}
+extra MCMC fits per trait on top of the chain.}
+}
+
+The default is \code{FALSE} so that existing calls are unchanged.
+Note that this is a choice about which BACE datasets pigauto
+summarises; it is not a correction to the default path's arithmetic.
+
+\code{BACE::bace_final_imp()} is only available in recent BACE
+versions.  If it is missing, \code{final_imp = TRUE} errors with an
+upgrade hint rather than silently falling back.
+}
+
 \examples{
 \dontrun{
 bl_bace <- fit_baseline_bace(pd, tree, splits = spl)

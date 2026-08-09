@@ -5,9 +5,18 @@
 #' modified pigauto_data where the categorical is replaced by this
 #' synthetic binary. Returns the K per-species P(class_k) probabilities.
 #'
-#' This is the OVR (one-vs-rest) strategy BACE uses. Each individual fit
-#' has only 1 categorical-related column so Rphylopars stays
-#' well-conditioned.
+#' This is a OVR (one-vs-rest) decomposition. Each individual fit has
+#' only 1 categorical-related column so Rphylopars stays
+#' well-conditioned, which is the reason pigauto uses it.
+#'
+#' Footnote on the sister package: BACE once defaulted to OVR too, but
+#' as of 2026-08 its `ovr_categorical` default is FALSE (true
+#' multinomial), because OVR binaries hit quasi-separation in its
+#' one-observation-per-species MCMCglmm regime. That is a different
+#' estimator from this one -- pigauto's OVR sits on Rphylopars
+#' threshold-joint fits and its motivation (rank/conditioning) is
+#' unchanged by BACE's default. Do not copy BACE's multinomial default
+#' here without a pigauto-side measurement.
 #'
 #' @param data pigauto_data from preprocess_traits.
 #' @param tree phylo.
