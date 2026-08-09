@@ -1,5 +1,5 @@
 test_that("build_liability_matrix fills observed binary cells via truncated-Gaussian E-step", {
-  skip_if_not_installed("Rphylopars")
+  skip_if_not(joint_mvn_available())
   set.seed(42)
   tree <- ape::rtree(10)
   df <- data.frame(
@@ -37,7 +37,7 @@ test_that("build_liability_matrix fills observed binary cells via truncated-Gaus
 })
 
 test_that("fit_joint_threshold_baseline returns liability-scale posterior for every tip", {
-  skip_if_not_installed("Rphylopars")
+  skip_if_not(joint_mvn_available())
   set.seed(7)
   tree <- ape::rtree(30)
   df <- data.frame(
@@ -67,7 +67,7 @@ test_that("fit_joint_threshold_baseline returns liability-scale posterior for ev
 })
 
 test_that("fit_joint_threshold_baseline handles mixed continuous + binary", {
-  skip_if_not_installed("Rphylopars")
+  skip_if_not(joint_mvn_available())
   set.seed(21)
   tree <- ape::rtree(40)
   df <- data.frame(
@@ -91,7 +91,7 @@ test_that("fit_joint_threshold_baseline handles mixed continuous + binary", {
 })
 
 test_that("fit_joint_threshold_baseline handles all-NA liability columns gracefully", {
-  skip_if_not_installed("Rphylopars")
+  skip_if_not(joint_mvn_available())
   set.seed(33)
   tree <- ape::rtree(15)
   df <- data.frame(
@@ -113,7 +113,7 @@ test_that("fit_joint_threshold_baseline handles all-NA liability columns gracefu
 })
 
 test_that("build_liability_matrix masks val/test split cells to NA", {
-  skip_if_not_installed("Rphylopars")
+  skip_if_not(joint_mvn_available())
   set.seed(11)
   tree <- ape::rtree(12)
   df <- data.frame(
@@ -142,7 +142,7 @@ test_that("build_liability_matrix masks val/test split cells to NA", {
 })
 
 test_that("fit_joint_threshold_baseline treats 1-non-NA columns as unfit", {
-  skip_if_not_installed("Rphylopars")
+  skip_if_not(joint_mvn_available())
   set.seed(44)
   tree <- ape::rtree(20)
   df <- data.frame(
@@ -194,8 +194,41 @@ test_that("decode_binary_liability returns logit(pnorm(mu/sqrt(1+se^2)))", {
   expect_length(res$p, 3)
 })
 
+# P0 B-Blk1: threshold-joint se_liab is per-tip; binary decode must see it.
+test_that("threshold-joint missing binary SE is per-tip and decode is not constant-se", {
+  skip_if_not_installed("Matrix")
+  tree <- ape::read.tree(text = paste0(
+    "(((close_obs:0.01,close_miss:0.01):0.04,(a:0.03,b:0.03):0.02):0.95,",
+    "((far_miss:0.90,c:0.05):0.05,(d:0.4,e:0.4):0.1):0.05);"
+  ))
+  tips <- tree$tip.label
+  # Strong phylo binary: close_obs and its near clade are class B; far clade mixed.
+  y <- factor(c(close_obs = "B", close_miss = "A", a = "B", b = "B",
+                far_miss = "A", c = "A", d = "A", e = "B")[tips],
+              levels = c("A", "B"))
+  df <- data.frame(
+    x = setNames(as.numeric(y == "B") + rnorm(length(tips), sd = 0.05), tips),
+    y = y,
+    row.names = tips
+  )
+  df[c("close_miss", "far_miss"), "y"] <- NA
+  pd <- preprocess_traits(df, tree)
+
+  res <- fit_joint_threshold_baseline(pd, tree, splits = NULL)
+  se_b <- res$se_liab[c("close_miss", "far_miss"), "y"]
+  mu_b <- res$mu_liab[c("close_miss", "far_miss"), "y"]
+  expect_true(all(is.finite(se_b)) && all(se_b > 0))
+  expect_lt(unname(se_b["close_miss"]), unname(se_b["far_miss"]))
+
+  p_actual <- decode_binary_liability(mu_b, se_b)$p
+  # Recycle one SE (the pre-fix empirical-SD contract) — decoded p must move.
+  p_const <- decode_binary_liability(mu_b, rep(mean(se_b), length(se_b)))$p
+  expect_false(isTRUE(all.equal(p_actual, p_const)))
+  expect_false(abs(diff(p_actual)) < 1e-12)
+})
+
 test_that("fit_baseline uses threshold-joint path for mixed continuous+binary", {
-  skip_if_not_installed("Rphylopars")
+  skip_if_not(joint_mvn_available())
   set.seed(1)
   tree <- ape::rtree(40)
   df <- data.frame(
@@ -248,7 +281,7 @@ test_that("fit_baseline falls back to LP when Rphylopars not installed", {
 })
 
 test_that("build_liability_matrix excludes categorical cols from joint liability", {
-  skip_if_not_installed("Rphylopars")
+  skip_if_not(joint_mvn_available())
   set.seed(50)
   tree <- ape::rtree(15)
   df <- data.frame(
@@ -268,7 +301,7 @@ test_that("build_liability_matrix excludes categorical cols from joint liability
 # ---- B3: ordinal threshold baseline tests ----
 
 test_that("build_liability_matrix applies ordinal E-step (not passthrough)", {
-  skip_if_not_installed("Rphylopars")
+  skip_if_not(joint_mvn_available())
   set.seed(99)
   tree <- ape::rtree(15)
   df <- data.frame(
@@ -299,7 +332,7 @@ test_that("build_liability_matrix applies ordinal E-step (not passthrough)", {
 })
 
 test_that("fit_baseline uses threshold-joint for ordinal + continuous", {
-  skip_if_not_installed("Rphylopars")
+  skip_if_not(joint_mvn_available())
   set.seed(100)
   tree <- ape::rtree(30)
   df <- data.frame(
@@ -324,7 +357,7 @@ test_that("fit_baseline uses threshold-joint for ordinal + continuous", {
 })
 
 test_that("decode_ordinal_liability returns z-scored integer class", {
-  skip_if_not_installed("Rphylopars")
+  skip_if_not(joint_mvn_available())
   set.seed(101)
   tree <- ape::rtree(10)
   df <- data.frame(
@@ -390,7 +423,7 @@ test_that("ordinal falls back to per-column BM when Rphylopars unavailable", {
 # trait, exposing the choice via $ordinal_path_chosen.
 
 test_that("fit_baseline picks per-trait ordinal path and reports it", {
-  skip_if_not_installed("Rphylopars")
+  skip_if_not(joint_mvn_available())
   set.seed(2026)
   tree <- ape::rtree(40)
   df <- data.frame(
@@ -415,7 +448,7 @@ test_that("fit_baseline picks per-trait ordinal path and reports it", {
 })
 
 test_that("fit_baseline ordinal selection picks BM when threshold-joint loses on val", {
-  skip_if_not_installed("Rphylopars")
+  skip_if_not(joint_mvn_available())
   set.seed(2027)
   tree <- ape::rtree(40)
   df <- data.frame(
@@ -485,7 +518,7 @@ test_that("fit_baseline ordinal selection picks BM when threshold-joint loses on
 # script's expense before the user-facing benchmark drift surfaces.
 
 test_that("[C1] AVONET-300 Migration ordinal: BM-via-MVN beats threshold-joint on val (Phase F regression bottle)", {
-  skip_if_not_installed("Rphylopars")
+  skip_if_not(joint_mvn_available())
   data("avonet300", package = "pigauto")
   data("tree300",   package = "pigauto")
   set.seed(42)
@@ -544,7 +577,7 @@ test_that("[C1] AVONET-300 Migration ordinal: BM-via-MVN beats threshold-joint o
 # does not cause the existing AVONET-300 regression bottle to fail.
 
 test_that("[Phase F] fit_baseline ordinal selection lists 'lp' as a valid choice", {
-  skip_if_not_installed("Rphylopars")
+  skip_if_not(joint_mvn_available())
   set.seed(2031L)
   tree <- ape::rtree(40L)
   df <- data.frame(
@@ -574,7 +607,7 @@ test_that("[Phase F] fit_baseline ordinal selection lists 'lp' as a valid choice
 })
 
 test_that("[Phase F] LP option produces a sensible z-scale prediction when chosen", {
-  skip_if_not_installed("Rphylopars")
+  skip_if_not(joint_mvn_available())
   # K=3 ordinal where the threshold-joint baseline is misspecified.
   # If LP wins, verify its predictions are bounded by E[class] in [1, K]
   # which on the integer-z scale is bounded approximately in [-z_max, +z_max]

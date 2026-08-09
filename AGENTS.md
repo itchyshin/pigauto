@@ -1,5 +1,13 @@
 # AGENTS.md
 
+## LOAD-FIRST manifest
+<!-- Brain dossier manifest (refresh: python3 ~/shinichi-brain/tools/route.py pigauto). Top = salience; drift-checked by route.py. -->
+- Compute is a default condition — for multi-seed imputation benchmarks ask *"Totoro or DRAC?"* (fast CPU ≤100 cores → Totoro; replicated / GPU → DRAC arrays); scale out, never laptop-scale. Playbook: `~/shinichi-brain/projects/COMPUTE-PLAYBOOK.md`.
+- Trust recovery-to-truth (recovery + prediction) over a single diagnostic; run data-size and seed ladders.
+- Diff main before building and keep prediction-path correctness as the first audit lane.
+- Load `r-package-engineer`, `validation-harness`, and the repo instructions below.
+- Preserve `r_cal = 0` as a valid fallback and keep uncertainty propagation first-class.
+
 This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
 ## How to be useful here (added 2026-04-29)
@@ -439,3 +447,5 @@ Several spots switch behaviour on `multi_obs`: baseline expansion (`MU <- MU_spe
 ## Host-specific notes (optional)
 
 On the primary author's machine, two persistent memory notes live under `~/.Codex/projects/-Users-z3437171-Dropbox-Github-Local-pigauto/memory/`: `user_profile.md` (author priorities) and `project_bace.md` (BACE internals). They are **not** portable — ignore this section if the path does not exist on the current host.
+<!-- shinichi-hub -->
+> Read \`~/shinichi-brain/AGENTS.md\` first; this repository's rules override the personal hub where they differ.

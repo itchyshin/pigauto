@@ -41,7 +41,11 @@
 #'   imputation but are not themselves imputed.  Numeric/integer columns are
 #'   z-scored; factor/ordered columns are one-hot encoded automatically.
 #'   If a variable has missing values, include it in \code{traits} instead.
-#'   Same number of rows as \code{traits}. Default \code{NULL} (no covariates).
+#'   Rows are aligned to the same species / observation order as
+#'   \code{traits} after tree matching (single-obs: rownames vs tip labels;
+#'   multi-obs: \code{species_col} if present, otherwise input-row order).
+#'   Matching \code{nrow} alone does not pair species to environment.
+#'   Default \code{NULL} (no covariates).
 #' @param epochs integer. Maximum GNN training epochs (default \code{2000}).
 #' @param verbose logical. Print progress (default \code{TRUE}).
 #' @param seed integer. Random seed (default \code{1}).

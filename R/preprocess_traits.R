@@ -105,8 +105,14 @@
 #' @param covariates data.frame or numeric matrix of environmental covariates.
 #'   Covariates are conditioners: they inform imputation but are not themselves
 #'   imputed, so they must be \strong{fully observed} (no NAs — if a variable
-#'   has missing values, put it in \code{traits} instead).  Must have the same
-#'   number of rows as \code{traits} after alignment to the tree.
+#'   has missing values, put it in \code{traits} instead).  Rows are aligned
+#'   to the same species / observation order as \code{X_scaled} after traits
+#'   are matched to the tree.  Single-obs: rownames should match
+#'   \code{tree$tip.label} (they are reordered to tip order).  Multi-obs:
+#'   include the same \code{species_col} to match observation rows by species
+#'   identity.  Unnamed covariates are assumed to share the input-row order of
+#'   \code{traits} and receive the same drop / reorder.  Matching
+#'   \code{nrow} alone is not enough — unmatched species names are an error.
 #'   \describe{
 #'     \item{Numeric / integer columns}{z-scored automatically.}
 #'     \item{Factor / ordered columns}{one-hot encoded (K binary columns per
@@ -407,6 +413,15 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
       covariates <- as.data.frame(covariates)
     }
 
+    covariates <- align_covariates_to_obs(
+      covariates       = covariates,
+      species_names    = species_names,
+      obs_species      = if (multi_obs) obs_species else species_names,
+      multi_obs        = multi_obs,
+      species_col      = species_col,
+      input_row_order  = input_row_order
+    )
+
     if (nrow(covariates) != n_obs) {
       stop("`covariates` has ", nrow(covariates), " rows but traits has ",
            n_obs, " rows after alignment. They must match.", call. = FALSE)
@@ -501,6 +516,76 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
     ),
     class = "pigauto_data"
   )
+}
+
+
+# ---- Internal: align covariates to X_scaled / obs order ---------------------
+# Named single-obs covariates → match species_names (tree tip order).
+# Multi-obs + species_col → match obs_species, consuming rows per species.
+# Unnamed → same input_row_order permutation as traits.
+align_covariates_to_obs <- function(covariates,
+                                    species_names,
+                                    obs_species,
+                                    multi_obs,
+                                    species_col,
+                                    input_row_order) {
+  target_sp <- if (is.null(obs_species)) species_names else obs_species
+  n_target  <- length(target_sp)
+  n_cov     <- nrow(covariates)
+  rn        <- rownames(covariates)
+  trivial_rn <- is.null(rn) || identical(rn, as.character(seq_len(n_cov)))
+
+  id_col <- NULL
+  if (!is.null(species_col) && species_col %in% names(covariates)) {
+    id_col <- species_col
+  }
+
+  drop_id_col <- function(x, col) {
+    if (is.null(col) || !col %in% names(x)) return(x)
+    x[, setdiff(names(x), col), drop = FALSE]
+  }
+
+  stop_unmatched <- function(missing, what) {
+    stop("Cannot match covariate rows to ", what, ". ",
+         "Unmatched species: ",
+         paste(utils::head(missing, 8L), collapse = ", "),
+         if (length(missing) > 8L) ", ..." else "",
+         ". Matching nrow alone is not enough; names must identify ",
+         "the same species as aligned traits.",
+         call. = FALSE)
+  }
+
+  if (!multi_obs && !trivial_rn) {
+    idx <- match(target_sp, rn)
+    if (anyNA(idx)) {
+      stop_unmatched(target_sp[is.na(idx)], "species")
+    }
+    return(drop_id_col(covariates[idx, , drop = FALSE], id_col))
+  }
+
+  if (!is.null(id_col)) {
+    cov_sp <- as.character(covariates[[id_col]])
+    cov_data <- drop_id_col(covariates, id_col)
+    used <- logical(n_cov)
+    idx  <- integer(n_target)
+    for (i in seq_len(n_target)) {
+      hit <- which(!used & cov_sp == target_sp[[i]])
+      if (!length(hit)) {
+        stop_unmatched(target_sp[[i]], "observations")
+      }
+      idx[[i]] <- hit[[1L]]
+      used[[idx[[i]]]] <- TRUE
+    }
+    return(cov_data[idx, , drop = FALSE])
+  }
+
+  if (anyNA(input_row_order) || n_cov < max(input_row_order, na.rm = TRUE)) {
+    stop("`covariates` has ", n_cov, " rows but traits has ",
+         n_target, " rows after alignment. They must match ",
+         "(unnamed covariates follow the input-row order of `traits`).",
+         call. = FALSE)
+  }
+  covariates[input_row_order, , drop = FALSE]
 }
 
 

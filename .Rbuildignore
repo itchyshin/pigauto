@@ -30,3 +30,4 @@
 ^submit_v090_vulcan_gpu$
 ^\.worktrees$
 ^\.devcontainer$
+^LOOP$

@@ -249,11 +249,11 @@ henderson_R_inv_apply <- function(b, henderson, chol_Q_II = NULL,
 # else (miss tips + internals). The prediction at miss tip positions
 # is then E[X_no | X_o] restricted to miss-tip rows.
 #
-# Variance: returning a conservative tree-depth-based estimate
-# (full sparse-selected-inverse via Takahashi recursion is doable
-# but ~3x the engineering; for pigauto's purposes the calibrated
-# gates handle posterior uncertainty downstream, so per-cell
-# precision here matters less than at the GLS-mean level).
+# Variance: unit-rate conditional variance at missing tips is the
+# corresponding diagonal of Q_no_no^{-1} (already factorised for the
+# mean). On the correlation scale that is divided by tip depth so the
+# SE matches BM-style σ√(1−h_i) up to the σ² estimator. Observed cells
+# stay at se = 0.
 #
 # Returns list(mu, se) where mu and se are length-n_tips vectors
 # (observed cells echo y_o; missing cells get predictions).
@@ -303,13 +303,22 @@ henderson_bm_predict <- function(y, henderson, sigma2 = NULL, eps = 1e-8,
   }
   mu[miss_idx_local] <- mu_miss
 
-  # Conservative se: empirical sd of observed values (REML-style estimate
-  # of the BM rate scaled by sqrt of marginal-variance-fraction). For
-  # downstream pigauto consumers the per-cell se matters less than the
-  # mu, and the proper sparse Takahashi recursion is a follow-up.
+  # Per-tip SE: σ √v_i with v_i = diag(Q_no_no^{-1}) at missing tips
+  # (A-scale), rescaled by tip depth when working on R = cov2cor(A).
+  # This is the sparse equivalent of bm_impute_col's σ√(1−h_i). Do not
+  # recycle a single empirical SD — binary threshold decode consumes se.
   if (is.null(sigma2)) sigma2 <- stats::var(y[obs_idx_local])
+  if (!is.finite(sigma2) || sigma2 < 0) sigma2 <- 1
+  n_no <- length(no_q)
+  rhs_var <- matrix(0, n_no, n_m)
+  rhs_var[cbind(seq_len(n_m), seq_len(n_m))] <- 1
+  V <- as.matrix(Matrix::solve(chol_no_no, rhs_var))
+  var_unit <- V[cbind(seq_len(n_m), seq_len(n_m))]
+  if (isTRUE(cor_scale)) {
+    var_unit <- var_unit / (henderson$tip_sqrt_d[miss_idx_local]^2)
+  }
   se <- numeric(length(y))
-  se[miss_idx_local] <- sqrt(max(sigma2, eps))
+  se[miss_idx_local] <- sqrt(pmax(sigma2 * pmax(var_unit, 0), 0))
   list(mu = mu, se = se)
 }
 

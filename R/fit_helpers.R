@@ -24,8 +24,9 @@
 # @return torch tensor (n_obs × (p + 1 + k))
 make_covs_tensor <- function(t_MU, mask_ind, t_covariates) {
   cov_parts <- list(t_MU, mask_ind)
-  if (!is.null(t_covariates))
+  if (!is.null(t_covariates)) {
     cov_parts[[length(cov_parts) + 1L]] <- t_covariates
+  }
   torch::torch_cat(cov_parts, dim = 2L)
 }
 
@@ -65,19 +66,29 @@ make_covs_tensor <- function(t_MU, mask_ind, t_covariates) {
 #                              substitute one column's mean for another.
 # @return numeric scalar (Inf for zero-row, multi_proportion under
 #         safety_floor, or unsupported types).
-compute_corner_loss <- function(g, rows, tm,
-                                mu_cal, delta_cal, X_truth_r,
-                                safety_floor,
-                                mean_baseline_per_col = NULL,
-                                fixed_cal = NULL) {
-  if (length(rows) == 0L) return(Inf)
+compute_corner_loss <- function(
+  g,
+  rows,
+  tm,
+  mu_cal,
+  delta_cal,
+  X_truth_r,
+  safety_floor,
+  mean_baseline_per_col = NULL,
+  fixed_cal = NULL
+) {
+  if (length(rows) == 0L) {
+    return(Inf)
+  }
   lc <- tm$latent_cols
   fixed_mat <- if (is.null(fixed_cal)) {
     matrix(0, nrow = nrow(mu_cal), ncol = ncol(mu_cal))
   } else {
     if (!identical(dim(fixed_cal), dim(mu_cal))) {
-      stop("`fixed_cal` must have the same dimensions as `mu_cal`.",
-           call. = FALSE)
+      stop(
+        "`fixed_cal` must have the same dimensions as `mu_cal`.",
+        call. = FALSE
+      )
     }
     fixed_cal
   }
@@ -98,41 +109,42 @@ compute_corner_loss <- function(g, rows, tm,
   if (tm$type %in% c("continuous", "count", "ordinal", "proportion")) {
     mean_j <- if (safety_floor) mean_baseline_per_col[lc[1]] else NA_real_
     pred_j <- fixed_mat[rows, lc[1]] +
-              blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]], mean_j)
+      blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]], mean_j)
     mean((pred_j - X_truth_r[rows, lc[1]])^2)
-
   } else if (tm$type == "multi_proportion") {
     # multi_proportion NOT supported in safety_floor (requires per-component
     # mean vector; out of scope for this spec).
-    if (safety_floor) return(Inf)
-    r_gnn     <- if (length(g) == 1L) g else g[2L]
-    pred_mat  <- fixed_mat[rows, lc, drop = FALSE] +
-                 (1 - r_gnn) * mu_cal[rows, lc, drop = FALSE] +
-                 r_gnn       * delta_cal[rows, lc, drop = FALSE]
+    if (safety_floor) {
+      return(Inf)
+    }
+    r_gnn <- if (length(g) == 1L) g else g[2L]
+    pred_mat <- fixed_mat[rows, lc, drop = FALSE] +
+      (1 - r_gnn) * mu_cal[rows, lc, drop = FALSE] +
+      r_gnn * delta_cal[rows, lc, drop = FALSE]
     truth_mat <- X_truth_r[rows, lc, drop = FALSE]
     mean((pred_mat - truth_mat)^2)
-
   } else if (tm$type == "binary") {
     mean_j <- if (safety_floor) mean_baseline_per_col[lc[1]] else NA_real_
-    pred_j     <- fixed_mat[rows, lc[1]] +
-                  blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]], mean_j)
+    pred_j <- fixed_mat[rows, lc[1]] +
+      blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]], mean_j)
     pred_class <- as.numeric(pred_j > 0)
-    truth_j    <- X_truth_r[rows, lc[1]]
+    truth_j <- X_truth_r[rows, lc[1]]
     mean(pred_class != truth_j)
-
   } else if (tm$type == "categorical") {
     logits <- matrix(0, nrow = length(rows), ncol = length(lc))
     for (kk in seq_along(lc)) {
       mean_k <- if (safety_floor) mean_baseline_per_col[lc[kk]] else NA_real_
       logits[, kk] <- fixed_mat[rows, lc[kk]] +
-                      blend1(mu_cal[rows, lc[kk]], delta_cal[rows, lc[kk]],
-                             mean_scalar = mean_k)
+        blend1(
+          mu_cal[rows, lc[kk]],
+          delta_cal[rows, lc[kk]],
+          mean_scalar = mean_k
+        )
     }
-    pred_class  <- max.col(logits,    ties.method = "first")
-    truth_mat   <- X_truth_r[rows, lc, drop = FALSE]
+    pred_class <- max.col(logits, ties.method = "first")
+    truth_mat <- X_truth_r[rows, lc, drop = FALSE]
     truth_class <- max.col(truth_mat, ties.method = "first")
     mean(pred_class != truth_class)
-
   } else if (tm$type == "zi_count") {
     # Gate column (lc[1], logit-scale) and magnitude column (lc[2],
     # z-scored log1p) have DIFFERENT mean baselines.  The pre-2026-04-30
@@ -142,21 +154,20 @@ compute_corner_loss <- function(g, rows, tm,
     # gate's logit value.  Fixed here per the Opus adversarial review of
     # 2026-04-30.  Each column now uses its own column mean.
     mean_gate <- if (safety_floor) mean_baseline_per_col[lc[1]] else NA_real_
-    mean_mag  <- if (safety_floor) mean_baseline_per_col[lc[2]] else NA_real_
-    gate_pred  <- fixed_mat[rows, lc[1]] +
-                  blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]], mean_gate)
-    mag_pred   <- fixed_mat[rows, lc[2]] +
-                  blend1(mu_cal[rows, lc[2]], delta_cal[rows, lc[2]], mean_mag)
-    p_nz       <- expit(gate_pred)
-    count_hat  <- pmax(expm1(mag_pred * tm$sd + tm$mean), 0)
-    pred_ev    <- p_nz * count_hat
+    mean_mag <- if (safety_floor) mean_baseline_per_col[lc[2]] else NA_real_
+    gate_pred <- fixed_mat[rows, lc[1]] +
+      blend1(mu_cal[rows, lc[1]], delta_cal[rows, lc[1]], mean_gate)
+    mag_pred <- fixed_mat[rows, lc[2]] +
+      blend1(mu_cal[rows, lc[2]], delta_cal[rows, lc[2]], mean_mag)
+    p_nz <- expit(gate_pred)
+    count_hat <- pmax(expm1(mag_pred * tm$sd + tm$mean), 0)
+    pred_ev <- p_nz * count_hat
     truth_gate <- X_truth_r[rows, lc[1]]
-    truth_mag  <- X_truth_r[rows, lc[2]]
-    truth_ev   <- rep(0, length(rows))
-    nz         <- which(truth_gate > 0.5 & is.finite(truth_mag))
+    truth_mag <- X_truth_r[rows, lc[2]]
+    truth_ev <- rep(0, length(rows))
+    nz <- which(truth_gate > 0.5 & is.finite(truth_mag))
     truth_ev[nz] <- expm1(truth_mag[nz] * tm$sd + tm$mean)
     mean((pred_ev - truth_ev)^2)
-
   } else {
     Inf
   }
@@ -191,49 +202,61 @@ compute_corner_loss <- function(g, rows, tm,
 # @param latent_names     character vector or NULL — for verbose output
 # @param verbose          logical
 # @return named numeric vector of length p; values in [0, gate_cap]
-calibrate_gates <- function(trait_map, mu_cal, delta_cal,
-                            X_truth_r, val_mask_mat,
-                            gate_grid, gate_cap,
-                            cal_min_rel_gain = 0.02,
-                            gate_method = c("single_split", "median_splits",
-                                             "cv_folds"),
-                            gate_splits_B = 31L,
-                            gate_cv_folds = 5L,
-                            safety_floor = FALSE,
-                            mean_baseline_per_col = NULL,
-                            simplex_step = 0.05,
-                            min_val_cells = 10L,
-                            seed = 1L,
-                            latent_names = NULL,
-                            verbose = FALSE,
-                            fixed_cal = NULL) {
+calibrate_gates <- function(
+  trait_map,
+  mu_cal,
+  delta_cal,
+  X_truth_r,
+  val_mask_mat,
+  gate_grid,
+  gate_cap,
+  cal_min_rel_gain = 0.02,
+  gate_method = c("single_split", "median_splits", "cv_folds"),
+  gate_splits_B = 31L,
+  gate_cv_folds = 5L,
+  safety_floor = FALSE,
+  mean_baseline_per_col = NULL,
+  simplex_step = 0.05,
+  min_val_cells = 10L,
+  seed = 1L,
+  latent_names = NULL,
+  verbose = FALSE,
+  fixed_cal = NULL
+) {
   gate_method <- match.arg(gate_method)
   if (gate_method == "cv_folds") {
-    if (!is.numeric(gate_cv_folds) ||
+    if (
+      !is.numeric(gate_cv_folds) ||
         length(gate_cv_folds) != 1L ||
         !is.finite(gate_cv_folds) ||
         gate_cv_folds < 2L ||
-        gate_cv_folds != as.integer(gate_cv_folds)) {
-      stop("'gate_cv_folds' must be a single integer >= 2 when ",
-           "gate_method = 'cv_folds'", call. = FALSE)
+        gate_cv_folds != as.integer(gate_cv_folds)
+    ) {
+      stop(
+        "'gate_cv_folds' must be a single integer >= 2 when ",
+        "gate_method = 'cv_folds'",
+        call. = FALSE
+      )
     }
     gate_cv_folds <- as.integer(gate_cv_folds)
   }
   if (safety_floor) {
     if (is.null(mean_baseline_per_col)) {
-      stop("safety_floor = TRUE requires mean_baseline_per_col (numeric, length = ncol(mu_cal))")
+      stop(
+        "safety_floor = TRUE requires mean_baseline_per_col (numeric, length = ncol(mu_cal))"
+      )
     }
     stopifnot(length(mean_baseline_per_col) == ncol(mu_cal))
     simplex <- simplex_grid(step = simplex_step)
   } else {
     simplex <- NULL
   }
-  p                <- ncol(mu_cal)
+  p <- ncol(mu_cal)
   calibrated_gates <- numeric(p)
-  r_cal_bm_vec    <- numeric(p)
-  r_cal_gnn_vec   <- numeric(p)
-  r_cal_mean_vec  <- numeric(p)
-  low_val_traits   <- character(0)
+  r_cal_bm_vec <- numeric(p)
+  r_cal_gnn_vec <- numeric(p)
+  r_cal_mean_vec <- numeric(p)
+  low_val_traits <- character(0)
 
   for (tm in trait_map) {
     lc <- tm$latent_cols
@@ -245,21 +268,20 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
     } else {
       truth_ok <- !is.na(X_truth_r[, lc[1]])
     }
-    val_cells   <- val_cells & truth_ok
+    val_cells <- val_cells & truth_ok
     val_row_idx <- which(val_cells)
-    n_val       <- length(val_row_idx)
+    n_val <- length(val_row_idx)
 
     if (n_val == 0) {
-      calibrated_gates[lc]    <- 0
-      r_cal_bm_vec[lc]        <- 1   # pure BM fallback
-      r_cal_gnn_vec[lc]       <- 0
-      r_cal_mean_vec[lc]      <- 0
+      calibrated_gates[lc] <- 0
+      r_cal_bm_vec[lc] <- 1 # pure BM fallback
+      r_cal_gnn_vec[lc] <- 0
+      r_cal_mean_vec[lc] <- 0
       next
     }
 
     if (n_val < min_val_cells) {
-      low_val_traits <- c(low_val_traits,
-                          sprintf("%s (n=%d)", tm$name, n_val))
+      low_val_traits <- c(low_val_traits, sprintf("%s (n=%d)", tm$name, n_val))
     }
 
     # ------------------------------------------------------------------
@@ -320,9 +342,13 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
         fold_id <- sample(rep(seq_len(K_eff), length.out = n_val))
         lapply(seq_len(K_eff), function(k) {
           train_local <- val_row_idx[fold_id != k]
-          held_out    <- val_row_idx[fold_id == k]
-          if (length(train_local) == 0L) train_local <- val_row_idx
-          if (length(held_out) == 0L)    held_out    <- val_row_idx
+          held_out <- val_row_idx[fold_id == k]
+          if (length(train_local) == 0L) {
+            train_local <- val_row_idx
+          }
+          if (length(held_out) == 0L) {
+            held_out <- val_row_idx
+          }
           list(half_a = train_local, half_b = held_out)
         })
       }
@@ -335,11 +361,17 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
     # exists to preserve the original two-arg call signature in the
     # half-A/half-B grid search and post-calibration check.
     cal_mean_loss <- function(g, rows) {
-      compute_corner_loss(g, rows, tm,
-                          mu_cal, delta_cal, X_truth_r,
-                          safety_floor = safety_floor,
-                          mean_baseline_per_col = mean_baseline_per_col,
-                          fixed_cal = fixed_cal)
+      compute_corner_loss(
+        g,
+        rows,
+        tm,
+        mu_cal,
+        delta_cal,
+        X_truth_r,
+        safety_floor = safety_floor,
+        mean_baseline_per_col = mean_baseline_per_col,
+        fixed_cal = fixed_cal
+      )
     }
 
     # Absolute minimum cell-level improvement floor for discrete traits
@@ -354,58 +386,70 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
 
       # Candidate grid is 3-column: for safety_floor use the simplex,
       # for legacy 1-D use the scalar gate_grid promoted to (1-g, g, 0).
-      cand_grid <- if (safety_floor) simplex else {
-        matrix(c(1 - gate_grid, gate_grid, rep(0, length(gate_grid))),
-               ncol = 3L,
-               dimnames = list(NULL, c("r_bm", "r_gnn", "r_mean")))
+      cand_grid <- if (safety_floor) {
+        simplex
+      } else {
+        matrix(
+          c(1 - gate_grid, gate_grid, rep(0, length(gate_grid))),
+          ncol = 3L,
+          dimnames = list(NULL, c("r_bm", "r_gnn", "r_mean"))
+        )
       }
 
       # "Pure BM" reference: (1,0,0) in simplex form when safety_floor = TRUE;
       # scalar 0 (i.e. g=0, no GNN) in legacy form when safety_floor = FALSE.
       # Both cal_mean_loss calls use the same dispatch path so no recycling occurs.
-      ref_w          <- if (safety_floor) c(1, 0, 0) else 0
+      ref_w <- if (safety_floor) c(1, 0, 0) else 0
       loss_a_pure_bm <- cal_mean_loss(ref_w, ha)
-      best_w         <- ref_w
+      best_w <- ref_w
       # Defensive: if loss_a_pure_bm is non-finite (e.g. multi_proportion
       # CLR latents with too few half-A cells for some component), seed
       # best_la with Inf so any finite candidate la beats it.  Same NA-
       # safety pattern as the half-B fix in commit 573decd.  Without
       # this, `la < best_la` errors with "missing value where TRUE/FALSE
       # needed" when best_la is NA.
-      best_la        <- if (is.finite(loss_a_pure_bm)) loss_a_pure_bm else Inf
+      best_la <- if (is.finite(loss_a_pure_bm)) loss_a_pure_bm else Inf
       pure_bm_is_finite <- is.finite(loss_a_pure_bm)
       for (ci in seq_len(nrow(cand_grid))) {
         w_try <- cand_grid[ci, ]
-        la    <- cal_mean_loss(w_try, ha)
-        if (!is.finite(la)) next
+        la <- cal_mean_loss(w_try, ha)
+        if (!is.finite(la)) {
+          next
+        }
         if (!safety_floor) {
           # Legacy half-A filter (bit-identical to Task 3): skip candidates
           # that do not beat pure-BM by cal_min_rel_gain AND min_abs_a.
           r_gnn_try <- w_try[2L]
-          if (r_gnn_try == 0) next
+          if (r_gnn_try == 0) {
+            next
+          }
           # If pure-BM loss is non-finite, the legacy filter cannot
           # evaluate; admit the candidate (the half-B verification step
           # is the safety net).
           if (pure_bm_is_finite) {
-            rel      <- (loss_a_pure_bm - la) / max(loss_a_pure_bm, 1e-12)
+            rel <- (loss_a_pure_bm - la) / max(loss_a_pure_bm, 1e-12)
             abs_gain <- loss_a_pure_bm - la
             if (rel < cal_min_rel_gain || abs_gain < min_abs_a) next
           }
         }
         if (la < best_la) {
           best_la <- la
-          best_w  <- w_try
+          best_w <- w_try
         }
       }
 
       # Half-B verification: require the winning w's half-B loss to also
       # beat the pure-BM half-B loss by cal_min_rel_gain (legacy: /2) AND
       # by the discrete absolute cell floor.
-      loss_b_pure_bm      <- cal_mean_loss(ref_w,    hb)
-      loss_b_best         <- cal_mean_loss(best_w,   hb)
-      rel_gain_b          <- (loss_b_pure_bm - loss_b_best) / max(loss_b_pure_bm, 1e-12)
-      abs_gain_b          <- loss_b_pure_bm - loss_b_best
-      rel_gain_threshold  <- if (safety_floor) cal_min_rel_gain else cal_min_rel_gain / 2
+      loss_b_pure_bm <- cal_mean_loss(ref_w, hb)
+      loss_b_best <- cal_mean_loss(best_w, hb)
+      rel_gain_b <- (loss_b_pure_bm - loss_b_best) / max(loss_b_pure_bm, 1e-12)
+      abs_gain_b <- loss_b_pure_bm - loss_b_best
+      rel_gain_threshold <- if (safety_floor) {
+        cal_min_rel_gain
+      } else {
+        cal_min_rel_gain / 2
+      }
       # Defensive: if either half-B loss is NA (e.g. a multi_proportion CLR
       # column with too few cells in half-B for some component), the gain
       # cannot be evaluated.  Treat as "verification failed" -> fall back
@@ -419,8 +463,8 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
         # point (0,0,1) is always a valid option — pick whichever of BM and mean
         # is better on half-B so the safety guarantee is preserved.
         if (safety_floor) {
-          mean_ref_w     <- c(0, 0, 1)
-          loss_b_mean    <- cal_mean_loss(mean_ref_w, hb)
+          mean_ref_w <- c(0, 0, 1)
+          loss_b_mean <- cal_mean_loss(mean_ref_w, hb)
           # If either loss is NA, prefer the BM ref (safer than mean
           # for continuous-like latents); otherwise pick whichever is
           # smaller on half-B.
@@ -438,9 +482,13 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
       if (length(best_w) == 1L) c(1 - best_w, best_w, 0) else best_w
     }
 
-    best_w_across_splits <- vapply(split_pairs, function(pair)
-      resolve_one_split(pair$half_a, pair$half_b),
-      numeric(3L))    # 3 rows x B cols
+    best_w_across_splits <- vapply(
+      split_pairs,
+      function(pair) {
+        resolve_one_split(pair$half_a, pair$half_b)
+      },
+      numeric(3L)
+    ) # 3 rows x B cols
     w_final <- apply(best_w_across_splits, 1L, stats::median)
     # Guard against degenerate median = c(0, 0, 0), which can occur when
     # adversarial splits alternate between corners (e.g. >50% of splits pick
@@ -449,7 +497,7 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
     if (!is.finite(sum(w_final)) || sum(w_final) < 1e-10) {
       w_final <- if (safety_floor) c(0, 0, 1) else c(1, 0, 0)
     } else {
-      w_final <- w_final / sum(w_final)   # renormalise (medians don't preserve sum)
+      w_final <- w_final / sum(w_final) # renormalise (medians don't preserve sum)
     }
 
     # ---- Post-calibration full-val invariant check ------------------
@@ -501,17 +549,20 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
       tm$type %in% c("continuous", "count", "ordinal", "proportion")
     is_discrete_family <-
       tm$type %in% c("binary", "categorical", "zi_count")
-    if (length(val_row_idx) > 0L &&
+    if (
+      length(val_row_idx) > 0L &&
         (is_continuous_family || is_discrete_family) &&
         # multi_proportion has tm$type "multi_proportion" and falls
         # outside both family flags, so it is skipped.
-        TRUE) {
+        TRUE
+    ) {
       coerce_loss <- function(x) if (is.finite(x)) x else Inf
-      lb     <- coerce_loss(cal_mean_loss(w_final, val_row_idx))
-      lm_mean <- if (safety_floor)
+      lb <- coerce_loss(cal_mean_loss(w_final, val_row_idx))
+      lm_mean <- if (safety_floor) {
         coerce_loss(cal_mean_loss(c(0, 0, 1), val_row_idx))
-      else
+      } else {
         Inf
+      }
       tol <- 1e-12
 
       if (is_continuous_family && safety_floor) {
@@ -532,20 +583,23 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
       }
     }
 
-    calibrated_gates[lc] <- w_final[2]   # legacy scalar = r_gnn
-    r_cal_bm_vec[lc]     <- w_final[1]
-    r_cal_gnn_vec[lc]    <- w_final[2]
-    r_cal_mean_vec[lc]   <- w_final[3]
+    calibrated_gates[lc] <- w_final[2] # legacy scalar = r_gnn
+    r_cal_bm_vec[lc] <- w_final[1]
+    r_cal_gnn_vec[lc] <- w_final[2]
+    r_cal_mean_vec[lc] <- w_final[3]
   }
 
   if (verbose) {
     gate_summary <- round(calibrated_gates, 3)
-    names(gate_summary) <- if (!is.null(latent_names))
-                             latent_names
-                           else
-                             paste0("col", seq_len(p))
-    message("Calibrated gates: ",
-            paste(names(gate_summary), gate_summary, sep = "=", collapse = ", "))
+    names(gate_summary) <- if (!is.null(latent_names)) {
+      latent_names
+    } else {
+      paste0("col", seq_len(p))
+    }
+    message(
+      "Calibrated gates: ",
+      paste(names(gate_summary), gate_summary, sep = "=", collapse = ", ")
+    )
   }
 
   # Small-val warning: if any trait had fewer than `min_val_cells`
@@ -556,13 +610,17 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
   # conformal_method = "bootstrap" to smooth the per-split variance,
   # or (c) accept that intervals are approximate.
   if (length(low_val_traits) > 0L) {
-    warning("Small validation set for ", length(low_val_traits),
-            " trait(s): ", paste(low_val_traits, collapse = ", "),
-            ". Calibrated gate and conformal scores will be noisy; ",
-            "coverage may deviate from the 95%% target. See ",
-            "`?fit_pigauto` under 'Calibration at small n' for ",
-            "smoothing options.",
-            call. = FALSE)
+    warning(
+      "Small validation set for ",
+      length(low_val_traits),
+      " trait(s): ",
+      paste(low_val_traits, collapse = ", "),
+      ". Calibrated gate and conformal scores will be noisy; ",
+      "coverage may deviate from the 95%% target. See ",
+      "`?fit_pigauto` under 'Calibration at small n' for ",
+      "smoothing options.",
+      call. = FALSE
+    )
   }
 
   if (!is.null(latent_names)) {
@@ -570,14 +628,16 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
       names(calibrated_gates) <- latent_names
     }
     if (length(latent_names) == length(r_cal_bm_vec)) {
-      names(r_cal_bm_vec)   <- latent_names
-      names(r_cal_gnn_vec)  <- latent_names
+      names(r_cal_bm_vec) <- latent_names
+      names(r_cal_gnn_vec) <- latent_names
       names(r_cal_mean_vec) <- latent_names
     }
   }
-  list(r_cal_bm = r_cal_bm_vec,
-        r_cal_gnn = r_cal_gnn_vec,
-        r_cal_mean = r_cal_mean_vec)
+  list(
+    r_cal_bm = r_cal_bm_vec,
+    r_cal_gnn = r_cal_gnn_vec,
+    r_cal_mean = r_cal_mean_vec
+  )
 }
 
 # ---------------------------------------------------------------------------
@@ -587,9 +647,9 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
 # Compute per-trait conformal prediction scores from validation residuals.
 #
 # Produces the (1 - alpha) conformal quantile of |truth - pred| on held-out
-# validation cells for continuous, count, ordinal, and proportion traits.
-# Used at prediction time to construct marginal conformal intervals with
-# guaranteed (1 - alpha) coverage.
+# validation cells for continuous, count, ordinal, proportion, and zi_count
+# (magnitude / log1p-z column only; the gate is discrete). Used at prediction
+# time to construct marginal conformal intervals and as the MI draw width.
 #
 # Two estimators are supported:
 #
@@ -624,42 +684,56 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
 # @param method            `"split"` or `"bootstrap"`
 # @param bootstrap_B       integer — bootstrap resamples when `method = "bootstrap"`
 # @param verbose           logical
-# @return named numeric vector; NA for discrete traits or empty val sets
-compute_conformal_scores <- function(trait_map, calibrated_gates,
-                                     mu_cal, delta_cal,
-                                     X_truth_r, val_mask_mat,
-                                     alpha = 0.05,
-                                     method = c("split", "bootstrap"),
-                                     bootstrap_B = 500L,
-                                     verbose = FALSE,
-                                     r_cal_bm = NULL,
-                                     r_cal_gnn = NULL,
-                                     r_cal_mean = NULL,
-                                     mean_baseline_per_col = NULL,
-                                     fixed_cal = NULL) {
+# @return named numeric vector; NA for binary/categorical or empty val sets.
+#   zi_count scores are on the magnitude (log1p-z) latent, not E[X].
+compute_conformal_scores <- function(
+  trait_map,
+  calibrated_gates,
+  mu_cal,
+  delta_cal,
+  X_truth_r,
+  val_mask_mat,
+  alpha = 0.05,
+  method = c("split", "bootstrap"),
+  bootstrap_B = 500L,
+  verbose = FALSE,
+  r_cal_bm = NULL,
+  r_cal_gnn = NULL,
+  r_cal_mean = NULL,
+  mean_baseline_per_col = NULL,
+  fixed_cal = NULL
+) {
   method <- match.arg(method)
   p <- ncol(mu_cal)
   n <- nrow(mu_cal)
 
   if (!identical(dim(delta_cal), dim(mu_cal))) {
-    stop("`delta_cal` must have the same dimensions as `mu_cal`.",
-         call. = FALSE)
+    stop(
+      "`delta_cal` must have the same dimensions as `mu_cal`.",
+      call. = FALSE
+    )
   }
   if (!identical(dim(X_truth_r), dim(mu_cal))) {
-    stop("`X_truth_r` must have the same dimensions as `mu_cal`.",
-         call. = FALSE)
+    stop(
+      "`X_truth_r` must have the same dimensions as `mu_cal`.",
+      call. = FALSE
+    )
   }
   if (!identical(dim(val_mask_mat), dim(mu_cal))) {
-    stop("`val_mask_mat` must have the same dimensions as `mu_cal`.",
-         call. = FALSE)
+    stop(
+      "`val_mask_mat` must have the same dimensions as `mu_cal`.",
+      call. = FALSE
+    )
   }
 
   fixed_mat <- if (is.null(fixed_cal)) {
     matrix(0, nrow = n, ncol = p)
   } else {
     if (!identical(dim(fixed_cal), dim(mu_cal))) {
-      stop("`fixed_cal` must have the same dimensions as `mu_cal`.",
-           call. = FALSE)
+      stop(
+        "`fixed_cal` must have the same dimensions as `mu_cal`.",
+        call. = FALSE
+      )
     }
     fixed_cal
   }
@@ -678,34 +752,55 @@ compute_conformal_scores <- function(trait_map, calibrated_gates,
   } else {
     as.numeric(mean_baseline_per_col)
   }
-  if (length(w_bm) != p || length(w_gnn) != p || length(w_mean) != p ||
-      length(mean_vec) != p) {
-    stop("Calibration weights and means must have length ncol(`mu_cal`).",
-         call. = FALSE)
+  if (
+    length(w_bm) != p ||
+      length(w_gnn) != p ||
+      length(w_mean) != p ||
+      length(mean_vec) != p
+  ) {
+    stop(
+      "Calibration weights and means must have length ncol(`mu_cal`).",
+      call. = FALSE
+    )
   }
 
   # Blended predictions using the same calibrated weights used by predict().
   pred_cal <- matrix(0, n, p)
   for (j in seq_len(p)) {
     pred_cal[, j] <- fixed_mat[, j] +
-                      w_bm[j]   * mu_cal[, j] +
-                      w_gnn[j]  * delta_cal[, j] +
-                      w_mean[j] * mean_vec[j]
+      w_bm[j] * mu_cal[, j] +
+      w_gnn[j] * delta_cal[, j] +
+      w_mean[j] * mean_vec[j]
   }
 
   conformal_scores <- rep(NA_real_, length(trait_map))
   names(conformal_scores) <- vapply(trait_map, "[[", character(1), "name")
 
   for (tm in trait_map) {
-    if (!(tm$type %in% c("continuous", "count", "ordinal", "proportion"))) next
-    lc        <- tm$latent_cols
-    val_cells <- val_mask_mat[, lc[1]]
-    if (sum(val_cells) == 0) next
+    if (
+      !(tm$type %in%
+        c("continuous", "count", "ordinal", "proportion", "zi_count"))
+    ) {
+      next
+    }
+    lc <- tm$latent_cols
+    # zi_count: score the magnitude (log1p-z) column, not the Bernoulli gate
+    # and not decoded E[X]. Zeros leave mag NA, so val cells are non-zeros.
+    score_col <- if (identical(tm$type, "zi_count")) lc[2L] else lc[1L]
+    val_cells <- val_mask_mat[, score_col]
+    if (sum(val_cells) == 0) {
+      next
+    }
 
-    residuals <- abs(X_truth_r[val_cells, lc[1]] - pred_cal[val_cells, lc[1]])
+    residuals <- abs(
+      X_truth_r[val_cells, score_col] -
+        pred_cal[val_cells, score_col]
+    )
     residuals <- residuals[is.finite(residuals)]
-    n_val     <- length(residuals)
-    if (n_val == 0L) next
+    n_val <- length(residuals)
+    if (n_val == 0L) {
+      next
+    }
 
     q_level <- min(ceiling((1 - alpha) * (n_val + 1)) / n_val, 1)
 
@@ -716,20 +811,192 @@ compute_conformal_scores <- function(trait_map, calibrated_gates,
     } else {
       # bootstrap: average the split quantile over B resamples
       B <- as.integer(bootstrap_B)
-      qs <- vapply(seq_len(B), function(b) {
-        idx <- sample.int(n_val, n_val, replace = TRUE)
-        as.numeric(stats::quantile(residuals[idx], q_level, na.rm = TRUE))
-      }, numeric(1))
+      qs <- vapply(
+        seq_len(B),
+        function(b) {
+          idx <- sample.int(n_val, n_val, replace = TRUE)
+          as.numeric(stats::quantile(residuals[idx], q_level, na.rm = TRUE))
+        },
+        numeric(1)
+      )
       conformal_scores[tm$name] <- mean(qs, na.rm = TRUE)
     }
   }
 
   if (verbose) {
     cs_print <- round(conformal_scores[!is.na(conformal_scores)], 4)
-    message(sprintf("Conformal scores (latent scale, method=%s): %s",
-                    method,
-                    paste(names(cs_print), cs_print, sep = "=", collapse = ", ")))
+    message(sprintf(
+      "Conformal scores (latent scale, method=%s): %s",
+      method,
+      paste(names(cs_print), cs_print, sep = "=", collapse = ", ")
+    ))
   }
 
   conformal_scores
+}
+
+# ---------------------------------------------------------------------------
+# mask_heldout_with_baseline() / pigauto_refine_forward()
+# ---------------------------------------------------------------------------
+#
+# Train/cal/predict symmetry helpers (B1 / B3, 2026-08-07).
+# Held-out val/test cells must not appear as truth in the DAE input during
+# training or calibration. Iterative refine at calibration must use the same
+# refine_steps count that predict() will use.
+
+#' Apply phylo-signal gate override to calibrated three-way weights (B2).
+#'
+#' Mean corner `(0,0,1)` requires a real `mean_baseline_per_col`. Without
+#' it, predict falls back to latent 0 — use BM `(1,0,0)` instead.
+#'
+#' @return list with updated `r_cal_bm`, `r_cal_gnn`, `r_cal_mean`, and
+#'   `used_mean_corner` (logical)
+#' @noRd
+apply_phylo_signal_gate_override <- function(
+  r_cal_bm,
+  r_cal_gnn,
+  r_cal_mean,
+  gated_latent_cols,
+  safety_floor,
+  mean_baseline_per_col,
+  warn = TRUE
+) {
+  if (length(gated_latent_cols) == 0L) {
+    return(list(
+      r_cal_bm = r_cal_bm,
+      r_cal_gnn = r_cal_gnn,
+      r_cal_mean = r_cal_mean,
+      used_mean_corner = FALSE
+    ))
+  }
+  use_mean <- isTRUE(safety_floor) && !is.null(mean_baseline_per_col)
+  if (use_mean) {
+    r_cal_bm[gated_latent_cols] <- 0
+    r_cal_gnn[gated_latent_cols] <- 0
+    r_cal_mean[gated_latent_cols] <- 1
+  } else {
+    if (isTRUE(warn)) {
+      warning(
+        "phylo_signal_gate triggered for ",
+        length(gated_latent_cols),
+        " latent column(s) but safety_floor = FALSE (or mean baseline ",
+        "unavailable); falling back to BM (r_cal_bm = 1) instead of the ",
+        "mean corner, which would become latent 0 at predict time.",
+        call. = FALSE
+      )
+    }
+    r_cal_bm[gated_latent_cols] <- 1
+    r_cal_gnn[gated_latent_cols] <- 0
+    r_cal_mean[gated_latent_cols] <- 0
+  }
+  list(
+    r_cal_bm = r_cal_bm,
+    r_cal_gnn = r_cal_gnn,
+    r_cal_mean = r_cal_mean,
+    used_mean_corner = use_mean
+  )
+}
+
+#' Replace held-out latent cells with the baseline prediction.
+#'
+#' @param X_fill numeric matrix (n × p), NA-filled with baseline already
+#' @param MU numeric matrix (n × p), baseline predictions
+#' @param hold_idx integer vector of linear (column-major) indices to mask,
+#'   typically `c(splits$val_idx, splits$test_idx)`. May be empty.
+#' @return numeric matrix same dim as `X_fill`
+#' @noRd
+mask_heldout_with_baseline <- function(X_fill, MU, hold_idx) {
+  out <- X_fill
+  if (length(hold_idx) > 0L) {
+    out[hold_idx] <- MU[hold_idx]
+  }
+  out
+}
+
+#' Iterative GNN forward with pinned observed cells.
+#'
+#' Used by gate calibration (and tests) so the delta surface matches the
+#' multi-step refine path in `predict.pigauto_fit()`.
+#'
+#' @param blend `"learned_rs"` uses the model's sigmoid gates; `"calibrated"`
+#'   uses the supplied `t_w_*` tensors (must all be non-NULL).
+#' @param pin_mask logical/bool torch tensor (n × p) or NULL. When set,
+#'   those cells are reset to `X_init` after every step.
+#' @return list with `out` (last model output), `pred` (last blend), `delta_mat`,
+#'   `fixed_mat` (matrix or NULL)
+#' @noRd
+pigauto_refine_forward <- function(
+  model,
+  X_init,
+  t_coords,
+  t_adj,
+  t_obs_to_sp,
+  t_D_sq,
+  t_MU,
+  t_covariates,
+  pin_mask,
+  refine_steps,
+  device,
+  blend = c("learned_rs", "calibrated"),
+  t_w_bm = NULL,
+  t_w_gnn = NULL,
+  t_w_mean = NULL,
+  t_mean_baseline = NULL
+) {
+  blend <- match.arg(blend)
+  refine_steps <- as.integer(refine_steps)
+  if (refine_steps < 1L) {
+    stop("refine_steps must be >= 1", call. = FALSE)
+  }
+  if (identical(blend, "calibrated")) {
+    if (
+      is.null(t_w_bm) ||
+        is.null(t_w_gnn) ||
+        is.null(t_w_mean) ||
+        is.null(t_mean_baseline)
+    ) {
+      stop(
+        "calibrated blend requires t_w_bm, t_w_gnn, t_w_mean, ",
+        "t_mean_baseline",
+        call. = FALSE
+      )
+    }
+  }
+
+  X_iter <- X_init$clone()
+  out <- NULL
+  pred <- NULL
+  n <- X_init$size(1)
+  torch::with_no_grad({
+    for (step in seq_len(refine_steps)) {
+      mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
+      covs0 <- make_covs_tensor(t_MU, mask_ind0, t_covariates)
+      out <- model(X_iter, t_coords, covs0, t_adj, t_obs_to_sp, D_sq = t_D_sq)
+      if (identical(blend, "learned_rs")) {
+        pred <- (1 - out$rs) * t_MU + out$rs * out$delta
+      } else {
+        pred <- t_w_bm * t_MU + t_w_gnn * out$delta + t_w_mean * t_mean_baseline
+      }
+      if (!is.null(out$fixed_effects)) {
+        pred <- pred + out$fixed_effects
+      }
+      if (!is.null(pin_mask)) {
+        X_iter <- torch::torch_where(pin_mask, X_init, pred)
+      } else {
+        X_iter <- pred
+      }
+    }
+  })
+
+  fixed_mat <- if (!is.null(out$fixed_effects)) {
+    as.matrix(out$fixed_effects$cpu())
+  } else {
+    NULL
+  }
+  list(
+    out = out,
+    pred = pred,
+    delta_mat = as.matrix(out$delta$cpu()),
+    fixed_mat = fixed_mat
+  )
 }

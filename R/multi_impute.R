@@ -124,7 +124,11 @@
 #' therefore calibrated against actual prediction error regardless of
 #' whether the BM or GNN term dominates. For discrete traits (binary,
 #' categorical) it uses Bernoulli / categorical draws from the estimated
-#' probability vector. For \code{multi_proportion} groups it draws the
+#' probability vector. For \code{zi_count} the gate is Bernoulli from
+#' P(nonzero) and the conditional magnitude is drawn on the log1p-z
+#' latent using the conformal score (or the magnitude latent SE when
+#' scores are unavailable) — not the reported SE of expected count. For
+#' \code{multi_proportion} groups it draws the
 #' K CLR latent columns with their BM latent SEs, projects back to
 #' sum-zero CLR space, and decodes to the simplex. This is the preferred
 #' default for pigauto.
@@ -322,14 +326,16 @@ multi_impute <- function(traits, tree, m = 100L,
 # ---- Internal: one conformal-width draw -------------------------------------
 # Samples missing cells from N(mu, conformal_score / 1.96) for continuous
 # types (on the appropriate transformed scale), and from Bernoulli /
-# Categorical for discrete types. Falls back to BM SE when conformal score
-# is not available for a trait.
+# Categorical for discrete types. zi_count: Bernoulli gate + Normal draw
+# on the magnitude log1p-z latent (conformal score or se_latent mag),
+# never pred$se of E[X]. Falls back to BM / latent SE when the conformal
+# score is not available for a trait.
 .sample_conformal_draw <- function(pred, imputed_mask, trait_map, seed_i,
                                     input_row_order = NULL) {
   set.seed(seed_i)
   imp    <- pred$imputed
   probs  <- pred$probabilities
-  cscores <- pred$conformal_scores  # named vector, NA for discrete traits
+  cscores <- pred$conformal_scores  # named; NA for binary/categorical
 
   # Build input-row -> internal-row index map.  `imputed_mask` rows are in
   # user-input order; `pred$imputed` / `pred$se` / `pred$probabilities` are
@@ -452,12 +458,24 @@ multi_impute <- function(traits, tree, m = 100L,
       imp[[nm]][rows] <- factor(tm$levels[idx], levels = tm$levels)
 
     } else if (tm$type == "zi_count") {
-      p_nz    <- pmin(pmax(probs[[nm]][rows], 0), 1)
-      gate    <- rbinom(N, 1L, p_nz)
-      mu      <- as.numeric(imp[[nm]][rows])
-      s       <- pred$se[rows, nm]
-      cond_mu <- ifelse(p_nz > 0.01, mu / p_nz, mu)
-      draw_c  <- as.integer(pmax(round(rnorm(N, cond_mu, s)), 0L))
+      # Gate: Bernoulli from P(nonzero). Magnitude: log1p-z latent draw
+      # using the conformal score (or se_latent of the mag column). Do
+      # not use pred$se — that slot is the delta-method SE of E[X].
+      p_nz <- pmin(pmax(probs[[nm]][rows], 0), 1)
+      gate <- stats::rbinom(N, 1L, p_nz)
+      lc   <- tm$latent_cols
+      z_mu <- as.numeric(pred$imputed_latent[rows, lc[2L]])
+      if (!is.null(cs)) {
+        s_latent <- cs
+      } else if (!is.null(pred$se_latent) &&
+                 ncol(pred$se_latent) >= lc[2L]) {
+        s_latent <- pred$se_latent[rows, lc[2L]]
+        s_latent[!is.finite(s_latent)] <- 0
+      } else {
+        s_latent <- 0
+      }
+      z_drw  <- stats::rnorm(N, z_mu, s_latent)
+      draw_c <- as.integer(pmax(round(expm1(z_drw * tm$sd + tm$mean)), 0L))
       draw_c[gate == 0L] <- 0L
       imp[[nm]][rows] <- draw_c
     }
