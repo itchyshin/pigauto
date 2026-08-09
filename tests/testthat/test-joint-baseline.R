@@ -1,10 +1,11 @@
-test_that("joint_mvn_available() is TRUE (in-house solver; no Rphylopars)", {
+test_that("joint_mvn_available() reflects the in-house solver (always TRUE; no Rphylopars)", {
   # Default joint MVN path is R/joint_mvn_solver.R — always available.
   # Do not gate this on requireNamespace("Rphylopars").
+  # 3c31f1d contract: identical TRUE (not requireNamespace("Rphylopars")).
   res <- joint_mvn_available()
   expect_type(res, "logical")
   expect_length(res, 1L)
-  expect_true(res)
+  expect_identical(res, TRUE)
 })
 
 test_that("fit_joint_mvn_baseline recovers cross-trait structure on correlated BM", {
