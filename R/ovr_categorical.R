@@ -9,6 +9,15 @@
 #' has only 1 categorical-related column so Rphylopars stays
 #' well-conditioned.
 #'
+#' Footnote on the sister package: BACE once defaulted to OVR too, but
+#' as of 2026-08 its `ovr_categorical` default is FALSE (true
+#' multinomial), because OVR binaries hit quasi-separation in its
+#' one-observation-per-species MCMCglmm regime. That is a different
+#' estimator from this one -- pigauto's OVR sits on Rphylopars
+#' threshold-joint fits and its motivation (rank/conditioning) is
+#' unchanged by BACE's default. Do not copy BACE's multinomial default
+#' here without a pigauto-side measurement.
+#'
 #' @param data pigauto_data from preprocess_traits.
 #' @param tree phylo.
 #' @param trait_name character, name of the categorical trait.

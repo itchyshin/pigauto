@@ -1,3 +1,60 @@
+# pigauto 0.10.0.9000 (development)
+
+GitHub-dev branch only. This is not the CRAN 0.10.0 tarball. Do not merge
+to `main` until BACE is on CRAN or the v0.10.0 CRAN cut has shipped.
+
+## New (opt-in): BACE baseline wrapper restored, with proper-MI draws
+
+Restores `fit_baseline_bace()` (removed from the v0.10.0 CRAN surface in
+`b615579` because BACE is not on CRAN) and adds `final_imp = FALSE`
+(default) plus `n_final = 15L`. With `final_imp = TRUE` the wrapper
+appends `BACE::bace_final_imp()` to the `BACE::bace_imp()` chain it
+already runs and builds `mu` / `se` from that function's `n_final` final
+datasets instead of the chain datasets. `BACE` is restored in Suggests
+on this branch; there is no Remotes field. Install BACE from the
+standalone tree at `@ce8bc87`.
+
+Why the opt-in path is worth having: the chain datasets are successive
+sweeps of one chained-equations chain, so they are autocorrelated by
+construction and still carry convergence transient. The between-dataset
+SD pigauto reports as `se` on that path is therefore a dispersion
+summary with no coverage guarantee. `bace_final_imp()`'s runs each start
+independently from the converged chain, so they are proper
+multiple-imputation draws and the resulting `se` is a between-imputation
+SD in the Rubin (1987) sense. Expect it to be substantially larger.
+
+This is a choice about which BACE datasets pigauto summarises. It is
+**not** a correction to the default path's arithmetic, and in particular
+it is unrelated to the imputed-as-observed defect fixed upstream in
+BACE — that defect lived in `bace_final_imp()`, which pigauto has never
+called until now, so no pigauto output was ever affected by it.
+
+`final_imp = TRUE` costs `n_final` extra MCMC fits per trait on top of
+the chain. The default of 15 matches the BACE simulation study; BACE's
+own default is 50, and small values undercover. The default remains
+`FALSE`. If the installed BACE is too old to export `bace_final_imp()`,
+`final_imp = TRUE` errors with an upgrade hint rather than silently
+falling back.
+
+The final phase is less robust than the chain phase — each draw refits
+MCMCglmm and can hit a singular mixed-model equation on data the chain
+handled fine. In that case `final_imp = TRUE` raises an error naming
+the failure and pointing back at `final_imp = FALSE`, rather than
+quietly returning chain averages to a caller who asked for proper MI
+draws.
+
+No pigauto-versus-BACE performance claim is made here.
+
+## Documentation: pigauto's OVR categorical path vs BACE's default
+
+`fit_ovr_categorical_fits()` no longer describes its one-vs-rest
+decomposition as "the OVR strategy BACE uses". BACE's
+`ovr_categorical` default became `FALSE` (true multinomial) in
+2026-08. pigauto's OVR is a different estimator — K threshold-joint
+Rphylopars fits, used so that Rphylopars stays well-conditioned — and
+that motivation is unchanged. Comment/roxygen only; no estimator
+change.
+
 # pigauto 0.10.0
 
 ## Experimental analysis-aware multiple-imputation backend
