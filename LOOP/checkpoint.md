@@ -1,6 +1,6 @@
 # Checkpoint — pigauto BACE wrap (Option B-minus)
 
-**Date:** 2026-08-09 · **Branch:** `handover/2026-08-09-cursor`
+**Date:** 2026-08-09 · **Branch:** `handover/2026-08-09-cursor` · **HEAD:** `b57da54` (+ uncommitted S3 follow-up)
 **Repo:** `/Users/z3437171/Dropbox/Github Local/pigauto`
 
 > Previous LOOP kit belonged to the **closed P0 lane** and is preserved verbatim at
@@ -8,70 +8,80 @@
 
 ## STATE
 
-Wrap implemented and verified locally. Default path proven **bit-identical**. Blocked at an
-OPEN GATE that predates this lane: `origin/main` no longer ships the file we just extended.
+Wrap implemented, measured, and verified. Default path proven **bit-identical** twice (before
+and after the robustness follow-up). S3 measurement done and it supports the G0 decision.
+One OPEN GATE that predates this lane blocks any landing conversation.
 
-## ARCS DONE (verified, evidence in-repo)
+## ARCS DONE (verified, evidence pasted below)
 
 - **S0** BACE installed from standalone `/Users/z3437171/Dropbox/Github Local/BACE`.
-  `git rev-parse HEAD` = `ce8bc87d5b1dd4059bacfba23ab42c3f4dfe6080`, tree clean, SHA gate
-  passed. In-tree `pigauto/BACE` untouched. `packageVersion("BACE")` 0.0.0.9000, built
-  2026-08-09 14:35:46 UTC.
-- **R1** `bace_imp()` returns class `"bace"` (`bace_imp.R:407`), so `bace_final_imp()`
-  consumes it directly. `all_datasets` = list of length `n_final`, each a full data.frame of
-  the same shape the wrapper already re-encodes — existing re-encode loop works unchanged.
-  Source comment confirms each final run starts independently from the converged chain
-  ("truly independent posterior draws suitable for Rubin's rules pooling").
-- **S1** `final_imp = FALSE` + `n_final = 15L` added; branch on dataset selection only;
-  validation errors for bad flags and for a BACE too old to export `bace_final_imp()`.
-- **S2** `R/ovr_categorical.R` footnote: pigauto's OVR is no longer described as "the OVR
-  strategy BACE uses"; records BACE's 2026-08 multinomial default and that pigauto's
-  rank/conditioning motivation is unchanged. Docs-only.
-- **M2** `tests/testthat/test-fit-baseline-bace-final-imp.R`:
-  `[ FAIL 0 | WARN 0 | SKIP 1 | PASS 18 ]` (the one skip is the inapplicable
-  "BACE lacks bace_final_imp" branch).
-- **N1** NEWS entry written. Explicitly states this is **not** an imputed-as-observed fix.
-- **M1 (partial)**
-  - Bit-identity vs `git show HEAD:R/fit_baseline_bace.R`, same seed:
-    `mu identical TRUE`, `se identical TRUE`, `max|dmu| = 0`, `max|dse| = 0`.
-  - `test-shipping-coverage.R`: `FAIL 0 | WARN 10 | SKIP 0 | PASS 54` — the T4
-    `fit_baseline_bace` smoke now **runs** instead of skipping (it skipped before S0).
-  - `test-bace-compat-eval.R`: `FAIL 0 | WARN 0 | SKIP 0 | PASS 20`.
-  - Paths-scoped drift diff run (no rebase) — surfaced the OPEN GATE below.
-  - `devtools::check()` still in flight.
+  SHA gate: `ce8bc87d5b1dd4059bacfba23ab42c3f4dfe6080`, tree clean. In-tree `pigauto/BACE`
+  untouched. Built 2026-08-09 14:35:46 UTC.
+- **R1** `bace_imp()` returns class `"bace"`; `bace_final_imp()` consumes it directly;
+  `all_datasets` matches the shape the wrapper already re-encodes. BACE source confirms each
+  final run starts independently from the converged chain.
+- **S1** `final_imp = FALSE` + `n_final = 15L`; dataset-selection branch only.
+- **S2** `R/ovr_categorical.R` footnote (docs-only).
+- **M2** `[ FAIL 0 | WARN 0 | SKIP 1 | PASS 18 ]`.
+- **N1** NEWS written; explicitly **not** an imputed-as-observed fix claim.
+- **S3** measured (see below).
+- **M1** drift + focused tests + bit-identity DONE; `devtools::check()` still in flight
+  (~40 min, buffered — no partial output available).
 
-## MEASUREMENT (toy regime — not a claim)
+## S3 RESULT — wrap default vs `final_imp` (the measurement that matters)
 
-n=20 species, 2 traits (1 continuous + 1 binary), `runs=3`, `nitt=300`, one seed:
-mean `se` default **0.0175** vs `final_imp=TRUE` (`n_final=5`) **0.2118** — about 12x larger.
-Direction matches the G0 argument that chain-sweep SD understates imputation uncertainty.
-**Single toy seed. Not a benchmark. Do not quote as a result.**
+Simulated BM, n=100 tips, 3 traits (2 correlated continuous + 1 binary), 5 seeds,
+`runs=5 nitt=2000 burnin=500 thin=10`, held-out val+test cells, latent scale.
+Harness: `docs/dev-log/2026-08-09-bace-wrap-s3-harness.R`.
 
-## ARC IN PROGRESS
+| path | RMSE | cover95 | mean se | secs | seeds ok |
+|---|---|---|---|---|---|
+| default (chain averages) | 0.2274 | **0.672** | 0.0646 | 2.0 | 5/5 |
+| `final_imp`, `n_final=15` | 0.2162 | **0.940** | 0.1766 | 7.9 | 4/5 |
 
-M1 `devtools::check()` (background). Then S3 re-bench.
+Nominal target 0.95. The default path undercovers by ~28 points; the proper-MI path lands
+essentially on nominal. RMSE also improves slightly (~5%). Cost ~3.9x runtime.
+
+**Caveat, and it is a real one:** 1 of 5 seeds failed inside `bace_final_imp()` with
+*"Mixed model equations singular: use a (stronger) prior"*. The chain path succeeded on all
+5. The final phase refits MCMCglmm per draw and is genuinely less robust.
+
+**Regime fence:** simulated BM only, one n, one trait mix, 5 seeds. Not AVONET, not
+PanTHERIA. This is wrap-config vs wrap-config — it is **not** a pigauto-vs-BACE comparison.
+
+## FOLLOW-UP APPLIED (uncommitted at time of writing)
+
+`bace_final_imp()` is now wrapped in `tryCatch` and re-thrown with context pointing at
+`final_imp = FALSE`, instead of surfacing a bare MCMCglmm message. Deliberately **not** a
+silent fallback: a caller who asked for proper MI must not receive chain averages unknowingly.
+Roxygen + NEWS document the failure mode. Bit-identity re-verified after this change
+(`identical()` TRUE, max diff 0).
 
 ## OPEN GATES
 
 1. **`origin/main` deleted `R/fit_baseline_bace.R`.** Commit `b615579 docs: prepare v0.10.0
    CRAN release surface` (Shinichi, 10 Jul 2026) removed the file plus its `NAMESPACE`
-   export, `man/fit_baseline_bace.Rd`, and its `_pkgdown.yml` entry. This branch is 43
-   behind main and still carries the pre-deletion file, so the wrap exists **only here**.
-   Neither handover mentioned this. Needs a Shinichi decision before any landing path.
-2. **S3 is an open gate for public claims.** Numbers may be produced; no pigauto-vs-BACE
-   capability sentence ships without Shinichi.
+   export, `man/` page, and `_pkgdown.yml` entry. This branch is 43 behind and still carries
+   the pre-deletion file, so the wrap exists **only here**. Neither handover mentioned it.
+   Needs Shinichi before any landing path is designed.
+2. **S3 gate for public claims.** Numbers above are internal wrap-config comparison only. No
+   pigauto-vs-BACE capability sentence ships without Shinichi.
+3. **Scope fence held:** the S3 harness lives in `docs/dev-log/` (gitignored). Promoting it
+   to `script/bench_bace_wrap_final_imp.R` so it is reproducible for others needs a one-line
+   scope OK, since the approved scope was `R/` + `man/` + `tests/` + `NEWS.md`.
 
 ## TRUTH
 
-Working tree scoped to: `R/fit_baseline_bace.R`, `R/ovr_categorical.R`,
-`man/fit_baseline_bace.Rd`, `NEWS.md`, `tests/testthat/test-fit-baseline-bace-final-imp.R`,
-`LOOP/*`. `man/fit_pigauto.Rd` regeneration drift belonged to the P0 lane and was reverted.
-uinit files and `gnn_attribution` artefacts remain unstaged. PR #155 untouched.
+Committed `b57da54` (9 files, explicit paths). Uncommitted: the robustness follow-up in
+`R/fit_baseline_bace.R` + `man/fit_baseline_bace.Rd` + `NEWS.md`, plus `LOOP/` updates and
+`docs/dev-log/coordination-board.md`. uinit files and `gnn_attribution` artefacts remain
+unstaged and untouched. PR #155 untouched. Neither BACE tree touched.
 
 ## RESUME
 
 ```
-Wrap lane: S0–S2, M2, N1 done; M1 partial (check in flight); S3, X1, X2 open.
-Default path proven bit-identical. OPEN GATE: main deleted R/fit_baseline_bace.R in b615579
-— ask Shinichi whether the wrap should exist at all before planning any landing.
+Wrap lane: S0-S3, M2, N1 done; M1 check in flight; X1/X2 open.
+Default path bit-identical. S3: coverage 0.672 -> 0.940 (nominal 0.95), 1/5 seeds fail in
+bace_final_imp. OPEN GATE: main deleted R/fit_baseline_bace.R in b615579 — ask Shinichi
+whether the wrap should exist before designing any landing.
 ```

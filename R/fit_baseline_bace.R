@@ -46,6 +46,15 @@
 #' versions.  If it is missing, \code{final_imp = TRUE} errors with an
 #' upgrade hint rather than silently falling back.
 #'
+#' The final phase is also less robust than the chain phase: each draw
+#' refits MCMCglmm from the converged data and can hit \dQuote{Mixed
+#' model equations singular} on data the chain handled without
+#' complaint.  When that happens \code{final_imp = TRUE} errors rather
+#' than quietly returning chain averages, because a caller who asked for
+#' proper MI draws should not silently receive improper ones.  Raising
+#' \code{nitt}, using fewer traits, or falling back to
+#' \code{final_imp = FALSE} are the available responses.
+#'
 #' @param data object of class \code{"pigauto_data"}.
 #' @param tree object of class \code{"phylo"}.
 #' @param splits list (output of \code{\link{make_missing_splits}}) or
@@ -158,16 +167,29 @@ fit_baseline_bace <- function(data, tree, splits = NULL,
   # ---- Choose which imputed datasets mu / se summarise -----------------------
   if (final_imp) {
     # Proper-MI path: n_final independent draws from the converged chain.
-    final_fit <- BACE::bace_final_imp(
-      bace_object    = fit,
-      fixformula     = formula_str,
-      ran_phylo_form = "~ 1 | species",
-      phylo          = tree,
-      nitt           = as.integer(nitt),
-      burnin         = as.integer(burnin),
-      thin           = as.integer(thin),
-      n_final        = n_final,
-      verbose        = verbose
+    # Each draw refits MCMCglmm from the converged data, so it can hit a
+    # singularity the chain phase never saw.  Fail loudly rather than
+    # falling back: a silent fallback would hand back chain averages
+    # while the caller believes they hold proper MI draws.
+    final_fit <- tryCatch(
+      BACE::bace_final_imp(
+        bace_object    = fit,
+        fixformula     = formula_str,
+        ran_phylo_form = "~ 1 | species",
+        phylo          = tree,
+        nitt           = as.integer(nitt),
+        burnin         = as.integer(burnin),
+        thin           = as.integer(thin),
+        n_final        = n_final,
+        verbose        = verbose
+      ),
+      error = function(e) {
+        stop("BACE::bace_final_imp() failed, so no proper-MI draws are ",
+             "available: ", conditionMessage(e), "\n",
+             "  The chain phase succeeded; re-run with final_imp = FALSE ",
+             "for the (improper) chain-average baseline, or raise nitt / ",
+             "reduce the number of traits.", call. = FALSE)
+      }
     )
     imp_datasets <- final_fit$all_datasets
     if (!length(imp_datasets)) {

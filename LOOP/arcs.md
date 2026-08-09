@@ -11,10 +11,11 @@ Branch `handover/2026-08-09-cursor`. Plan:
 | S1 | Implement `final_imp` + `n_final` in `fit_baseline_bace()` | Cursor Models | DONE |
 | S2 | OVR footnote (docs-only) | Other Models | DONE |
 | M2 | New focused test file | Cursor Models | DONE — 18 pass / 0 fail / 1 expected skip |
-| M1 | Mechanical verify: paths-scoped drift, focused tests, `devtools::check()`, bit-identity | hand off / local | **PARTIAL** — drift + tests + bit-identity DONE; `check()` in flight |
-| S3 | Re-bench wrap (both paths) vs BACE `@ce8bc87` | hand off / local | TODO — smoke-first |
-| N1 | NEWS entry | Other Models | DONE |
-| X1 | Melissa reconcile (plan vs git reality) | Other Models | TODO |
+| M1 | Mechanical verify: paths-scoped drift, focused tests, `devtools::check()`, bit-identity | hand off / local | **PARTIAL** — drift + tests + bit-identity DONE; `check()` in flight (~40 min) |
+| S3 | Re-bench wrap (both paths) vs BACE `@ce8bc87` | hand off / local | DONE — coverage 0.672 → 0.940 (nominal 0.95); 1/5 seeds fail in `bace_final_imp` |
+| S3b | Robustness follow-up: contextual error instead of bare MCMCglmm message | Cursor Models | DONE (uncommitted at checkpoint time) |
+| N1 | NEWS entry | Other Models | DONE (+ robustness caveat) |
+| X1 | Melissa reconcile (plan vs git reality) | Other Models | IN PROGRESS |
 | X2 | After-task report + brain-write **proposal** (not a write) | Other Models | TODO |
 
 ## Blocking discovery (raised during M1)

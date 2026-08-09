@@ -78,6 +78,13 @@ installed BACE is too old to export `bace_final_imp()`,
 `final_imp = TRUE` errors with an upgrade hint rather than silently
 falling back.
 
+The final phase is less robust than the chain phase — each draw refits
+MCMCglmm and can hit a singular mixed-model equation on data the chain
+handled fine. In that case `final_imp = TRUE` raises an error naming
+the failure and pointing back at `final_imp = FALSE`, rather than
+quietly returning chain averages to a caller who asked for proper MI
+draws.
+
 No pigauto-versus-BACE performance claim is made here; the wrapper
 re-bench against a current BACE has not been run.
 

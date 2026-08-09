@@ -100,6 +100,15 @@ summarises; it is not a correction to the default path's arithmetic.
 \code{BACE::bace_final_imp()} is only available in recent BACE
 versions.  If it is missing, \code{final_imp = TRUE} errors with an
 upgrade hint rather than silently falling back.
+
+The final phase is also less robust than the chain phase: each draw
+refits MCMCglmm from the converged data and can hit \dQuote{Mixed
+model equations singular} on data the chain handled without
+complaint.  When that happens \code{final_imp = TRUE} errors rather
+than quietly returning chain averages, because a caller who asked for
+proper MI draws should not silently receive improper ones.  Raising
+\code{nitt}, using fewer traits, or falling back to
+\code{final_imp = FALSE} are the available responses.
 }
 
 \examples{
