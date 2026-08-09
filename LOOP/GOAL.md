@@ -12,13 +12,13 @@ path by a single bit**.
 ## Invariants
 - Default path (`final_imp = FALSE`) must be byte-identical to pre-change. Verify against
   `git show HEAD:R/fit_baseline_bace.R`, same seed — not by inspection.
-- `n_final = 15L` is **Ada's default** (matches Dan's Study B). Shinichi did not choose 15
-  vs 50. Do **not** flip to 50 without a new ask.
+- `n_final = 15L` is Shinichi's explicit AskQuestion pick (the `/goal` paste also used 15).
+  Matches Dan's Study B. Do **not** flip to 50 without a new ask.
 - Scope: `R/fit_baseline_bace.R` + `man/` + `tests/` + `NEWS.md` + docs-only
   `R/ovr_categorical.R` footnote. Nothing else.
 - NEWS must **not** claim this fixes "imputed-as-observed". That defect lived in BACE's
   `bace_final_imp()`, which pigauto never called — no pigauto output was ever affected.
-- No Slack to Dan. G0 is sufficient.
+- Slack remains parked per Shinichi's `/goal` paste ("No Slack to Dan"). Do not draft or send.
 
 ## Forbidden
 Editing either BACE tree · vendor-sync `pigauto/BACE` · touching PR #155 /

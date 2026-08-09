@@ -11,21 +11,26 @@ Branch `handover/2026-08-09-cursor`. Plan:
 | S1 | Implement `final_imp` + `n_final` in `fit_baseline_bace()` | Cursor Models | DONE |
 | S2 | OVR footnote (docs-only) | Other Models | DONE |
 | M2 | New focused test file | Cursor Models | DONE — 18 pass / 0 fail / 1 expected skip |
-| M1 | Mechanical verify: paths-scoped drift, focused tests, `devtools::check()`, bit-identity | hand off / local | **PARTIAL** — drift + tests + bit-identity DONE; `check()` in flight (~40 min) |
+| M1 | Mechanical verify: paths-scoped drift, focused tests, `devtools::check()`, bit-identity | hand off / local | **PARTIAL** — wrap Rd `\usage` OK; focused tests 18/0/1; full check still 2 WARN / 3 NOTE (pre-existing). Log `/tmp/pigauto_m1c3/pigauto.Rcheck/00check.log` |
 | S3 | Re-bench wrap (both paths) vs BACE `@ce8bc87` | hand off / local | DONE — coverage 0.672 → 0.940 (nominal 0.95); 1/5 seeds fail in `bace_final_imp` |
-| S3b | Robustness follow-up: contextual error instead of bare MCMCglmm message | Cursor Models | DONE (uncommitted at checkpoint time) |
+| S3b | Robustness follow-up: contextual error instead of bare MCMCglmm message | Cursor Models | DONE (`3bfd740`) |
+| KEEP | Shinichi 2026-08-09: keep wrap; landing path TBD; no merge | this chat | **LOCKED** — landing executed on `feat/bace-wrap-restore`; still do not merge |
 | N1 | NEWS entry | Other Models | DONE (+ robustness caveat) |
 | X1 | Melissa reconcile (plan vs git reality) | Other Models | DONE — `docs/dev-log/plan-actual/2026-08-09-bace-wrap-reconcile.md` |
 | X2 | After-task report + brain-write **proposal** (not a write) | Other Models | DONE — `docs/dev-log/2026-08-09-bace-wrap-brain-write-proposal.md`; vault untouched |
+| RESTORE | New branch from `origin/main`: restore wrap + folded API; GitHub-dev only | this chat | DONE — `feat/bace-wrap-restore` @ `b180555` (do not merge) |
+| CLOSEOUT | After-task + Melissa LIGHT + draft DO-NOT-MERGE PR; stop until CRAN | this chat | **DONE** — PR [#156](https://github.com/itchyshin/pigauto/pull/156) draft; STOP until CRAN |
 
 ## Not green, stated plainly
 
-`devtools::check()` died at `checking Rd \usage sections`; the full testthat suite was still
-running at hand-off. Neither is claimed as passing. Both are Codex hand-off items.
+Wrap Rd `\usage` **OK**. Full `--as-cran` check is **not** 0/0/0: 2 WARNINGs + 3 NOTEs,
+all pre-existing (bench rds in `data/`, undeclared `jsonlite`, `.uinit`, `results.tsv`,
+BACE not on CRAN). Do not claim check-green. Full testthat suite still not claimed.
 
-## Blocking discovery (raised during M1)
+## KEEP wrap / landing (Shinichi 2026-08-09)
 
-`origin/main` **deleted** `R/fit_baseline_bace.R` in `b615579 docs: prepare v0.10.0 CRAN
-release surface` (Shinichi, 10 Jul 2026) — removed from `R/`, `NAMESPACE`, `man/`, and
-`_pkgdown.yml`. This branch is 43 behind and still carries the pre-deletion file. The wrap
-exists on this branch only. See the OPEN GATE in `LOOP/checkpoint.md`.
+Keep the wrap. Landing lives on `feat/bace-wrap-restore` @ `b180555` with draft
+DO-NOT-MERGE PR [#156](https://github.com/itchyshin/pigauto/pull/156). Do **not**
+merge to `main` until BACE is on CRAN / the v0.10.0 CRAN cut ships. Do not rebase
+the handover branch. Slack / public pigauto-vs-BACE / vendor-sync / EM remain
+parked. See `LOOP/checkpoint.md`.

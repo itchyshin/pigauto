@@ -5,13 +5,13 @@
 | Lane | Owner | Branch | Handover / truth | Status |
 |---|---|---|---|---|
 | **P0 review blockers + B1–B3** | prior Cursor `/goal` | `fix/p0-review-blockers` | `docs/dev-log/handover/2026-08-08-p0-rose.md` · PR [#155](https://github.com/itchyshin/pigauto/pull/155) → `fix/ci-install-libtorch` | **#155 MERGED** to parent `fix/ci-install-libtorch` (2026-08-09). Not to `main`. |
-| **BACE wrap / re-bench (pigauto remit)** | landing in progress | `feat/bace-wrap-restore` @ `b180555` (worktree `/tmp/pigauto-bace-wrap-restore`, from `origin/main`) · old wrap commits still on `handover/2026-08-09-cursor` @ `a5976b0` | `LOOP/checkpoint.md` · plan `docs/dev-log/handover/2026-08-09-bace-wrap-g0-ultra-plan.md` | Wrap **restored** on GitHub-dev branch. Pushed to origin. **Do not merge to `main`** until BACE is on CRAN / v0.10.0 ships. No PR this turn. Slack parked. Do not edit `BACE/` |
+| **BACE wrap / re-bench (pigauto remit)** | **STOP until CRAN** | `feat/bace-wrap-restore` @ `b180555` · draft PR [#156](https://github.com/itchyshin/pigauto/pull/156) → `main` (**DO NOT MERGE**) · LOOP/docs on `handover/2026-08-09-cursor` | `LOOP/checkpoint.md` · after-task `docs/dev-log/after-task/2026-08-09-bace-wrap-closeout.md` · reconcile `docs/dev-log/plan-actual/2026-08-09-bace-wrap-closeout-reconcile.md` | Closeout **DONE**. Focused tests 18 pass / 1 skip. **Wait for CRAN** (v0.10.0 cut ships or BACE on CRAN). Do not merge #156. Slack / public BACE claim / vendor-sync / EM parked. |
 
 Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orphan a sibling — there is no Live Phase Snapshot in AGENTS.md; **this table is the split**.
 
 ## Current Rule
 
-- Wrap restore lives on `feat/bace-wrap-restore` only. **Do not merge that branch to `main`** until BACE is on CRAN / the v0.10.0 CRAN cut has shipped.
+- Wrap restore lives on `feat/bace-wrap-restore` only. Draft PR [#156](https://github.com/itchyshin/pigauto/pull/156) is **DO NOT MERGE** until BACE is on CRAN / the v0.10.0 CRAN cut has shipped. Suggests BACE would block CRAN if merged now.
 - Do not rebase `handover/2026-08-09-cursor` onto main. Leave its dirty uinit / gnn tree unstaged.
 - Do not modify standalone BACE or in-tree `pigauto/BACE`.
 - No EM restore (`max_iter>0`) without a new G0.
@@ -44,3 +44,11 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
   `feat/bace-wrap-restore` @ `b180555` (from `origin/main` `bf46991`). Pushed
   `origin/feat/bace-wrap-restore`. Focused tests `[ FAIL 0 | WARN 0 | SKIP 1 | PASS 18 ]`.
   **No PR into `main`.** Handover checkout left dirty/untouched. Neither BACE tree touched.
+- 2026-08-09 (wrap closeout): Focused tests re-run on
+  `/tmp/pigauto-bace-wrap-restore` → `[ FAIL 0 | WARN 0 | SKIP 1 | PASS 18 ]`.
+  Draft DO-NOT-MERGE PR [#156](https://github.com/itchyshin/pigauto/pull/156)
+  (`feat/bace-wrap-restore` → `main`). After-task
+  `docs/dev-log/after-task/2026-08-09-bace-wrap-closeout.md`. Melissa LIGHT
+  `docs/dev-log/plan-actual/2026-08-09-bace-wrap-closeout-reconcile.md`.
+  **STOP until CRAN.** Do not merge. Do not start DRM.jl / DESCRIPTION
+  claim-gate / EM / Slack / vendor-sync / public pigauto-vs-BACE.
