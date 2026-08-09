@@ -1,6 +1,8 @@
 # Checkpoint — pigauto BACE wrap (Option B-minus)
 
-**Date:** 2026-08-09 · **Branch:** `handover/2026-08-09-cursor` · **HEAD:** `b57da54` (+ uncommitted S3 follow-up)
+**Date:** 2026-08-09 · **Landing branch:** `feat/bace-wrap-restore` @ `b180555`
+**Worktree:** `/tmp/pigauto-bace-wrap-restore` (from `origin/main` `bf46991`)
+**Handover checkout (untouched dirty tree):** `handover/2026-08-09-cursor` @ `a5976b0`
 **Repo:** `/Users/z3437171/Dropbox/Github Local/pigauto`
 
 > Previous LOOP kit belonged to the **closed P0 lane** and is preserved verbatim at
@@ -8,9 +10,21 @@
 
 ## STATE
 
-Wrap implemented, measured, and verified. Default path proven **bit-identical** twice (before
-and after the robustness follow-up). S3 measurement done and it supports the G0 decision.
-One OPEN GATE that predates this lane blocks any landing conversation.
+Shinichi 2026-08-09 chose **KEEP the wrap**. Landing timing: **A after #155**. #155 is now
+**MERGED** to parent `fix/ci-install-libtorch` (not to `main`). Wrap restore **executed** on
+isolated worktree `/tmp/pigauto-bace-wrap-restore`, branch `feat/bace-wrap-restore` @
+`b180555`, pushed to `origin/feat/bace-wrap-restore`. GitHub-dev-only: **do not merge to
+`main`** until BACE is on CRAN / v0.10.0 ships. No PR this turn. Handover checkout left
+dirty (uinit + gnn artefacts unstaged). PARKED stays parked.
+
+## KEEP-WRAP DECISION (Shinichi, 2026-08-09)
+
+- **Keep** `fit_baseline_bace()` + opt-in `final_imp` / `n_final = 15L`.
+- Design a landing path onto current `main` (`b615579` deleted the wrap for the v0.10.0 CRAN
+  surface). **Do not merge this turn.**
+- `n_final = 15L` is Shinichi's explicit AskQuestion pick (also in the `/goal` paste), not
+  merely Ada's IF-YOU-DO-NOT-MIND default.
+- Slack to Dan remains **parked** per the `/goal` paste ("No Slack to Dan").
 
 ## ARCS DONE (verified, evidence pasted below)
 
@@ -22,35 +36,54 @@ One OPEN GATE that predates this lane blocks any landing conversation.
   final run starts independently from the converged chain.
 - **S1** `final_imp = FALSE` + `n_final = 15L`; dataset-selection branch only.
 - **S2** `R/ovr_categorical.R` footnote (docs-only).
-- **M2** `[ FAIL 0 | WARN 0 | SKIP 1 | PASS 18 ]`.
+- **M2** `[ FAIL 0 | WARN 0 | SKIP 1 | PASS 18 ]` (re-verified 2026-08-09 this turn).
 - **N1** NEWS written; explicitly **not** an imputed-as-observed fix claim.
 - **S3** measured (see below).
-- **M1** drift + focused tests + bit-identity DONE. `devtools::check()` **NOT green**: the
-  driver died at `checking Rd \usage sections`. What it did complete is useful and is quoted
-  below; the run must be redone (Codex hand-off).
+- **M1** drift + focused tests + bit-identity DONE. M1c wrap Rd `\usage` **OK**;
+  full check still 2 WARN / 3 NOTE (pre-existing). Log
+  `/tmp/pigauto_m1c3/pigauto.Rcheck/00check.log`.
 - **X1** reconcile at `docs/dev-log/plan-actual/2026-08-09-bace-wrap-reconcile.md`.
 - **X2** brain-write **proposal** (not a write) at
   `docs/dev-log/2026-08-09-bace-wrap-brain-write-proposal.md`.
 
-## M1c — what the check DID reach before dying
+## M1c — wrap Rd green; full check still red (pre-existing)
+
+Wrap Rd is **not** what killed the earlier driver. `man/fit_baseline_bace.Rd` `\usage`
+matches formals exactly (`final_imp`, `n_final` included).
+`tools::checkRd("man/fit_baseline_bace.Rd")` is silent. No wrap-only Rd/test edit was needed.
+
+Finished check (existing tarball, `_R_CHECK_FORCE_SUGGESTS_=false`,
+`--as-cran --no-tests --no-vignettes --no-manual`), log
+`/tmp/pigauto_m1c3/pigauto.Rcheck/00check.log`:
 
 ```
-* checking whether package 'pigauto' can be installed ... [14s/16s] OK
-* checking R files for syntax errors ... OK
-* checking R code for possible problems ... [18s/21s] OK
-* checking Rd files ... OK
-* checking Rd metadata ... OK
-* checking Rd line widths ... OK
 * checking for missing documentation entries ... OK
-* checking for code/documentation mismatches ... OK      <- binds on the new args
-* checking Rd \usage sections ...                        <- died here
+* checking for code/documentation mismatches ... OK
+* checking Rd \usage sections ... OK
+* checking Rd contents ... OK
+* checking examples ... OK
+* DONE
+Status: 2 WARNINGs, 3 NOTEs
 ```
 
-NOTEs seen: hidden files/directories; top-level `results.tsv` and `run.log`. Both
-pre-existing, neither from this lane. `LOOP/` was **not** flagged this time.
+WARNINGs (pre-existing, not wrap): `data/bench_*.rds` not allowed in `data/`;
+`jsonlite` `::` import undeclared in tests. NOTEs: CRAN incoming (version
+`0.10.0.9000` + **BACE not in mainstream repos** + README URL 301); `.uinit`
+hidden dir; top-level `results.tsv` / `run.log`. First `--as-cran` run without
+`FORCE_SUGGESTS=false` ERRORed earlier on missing Suggests `RSpectra` /
+`Rphylopars` / `rgbif` and never reached Rd. PDF-manual run hit pre-existing
+LaTeX `Σ` (U+03A3) in non-wrap Rd and was killed mid "without index".
 
-Full testthat suite was launched separately (`/tmp/pigauto_full_testthat.log`) and was still
-running inside `new-features` at hand-off. **Not claimed as passing.**
+Focused test (pasted):
+
+```
+NOT_CRAN=true Rscript -e 'devtools::load_all("."); testthat::test_file("tests/testthat/test-fit-baseline-bace-final-imp.R")'
+
+SKIP: 'test-fit-baseline-bace-final-imp.R:127:3' ----------
+Reason: installed BACE does export bace_final_imp(); nothing to assert
+
+[ FAIL 0 | WARN 0 | SKIP 1 | PASS 18 ]
+```
 
 ## S3 RESULT — wrap default vs `final_imp` (the measurement that matters)
 
@@ -66,46 +99,81 @@ Harness: `docs/dev-log/2026-08-09-bace-wrap-s3-harness.R`.
 Nominal target 0.95. The default path undercovers by ~28 points; the proper-MI path lands
 essentially on nominal. RMSE also improves slightly (~5%). Cost ~3.9x runtime.
 
-**Caveat, and it is a real one:** 1 of 5 seeds failed inside `bace_final_imp()` with
-*"Mixed model equations singular: use a (stronger) prior"*. The chain path succeeded on all
-5. The final phase refits MCMCglmm per draw and is genuinely less robust.
+**Caveat:** 1 of 5 seeds failed inside `bace_final_imp()` with *"Mixed model equations
+singular"*. The chain path succeeded on all 5. Attributed in `3bfd740` (fail loud, no silent
+fallback). **Regime fence:** simulated BM only, one n, one trait mix, 5 seeds. Wrap-config vs
+wrap-config — **not** a pigauto-vs-BACE comparison.
 
-**Regime fence:** simulated BM only, one n, one trait mix, 5 seeds. Not AVONET, not
-PanTHERIA. This is wrap-config vs wrap-config — it is **not** a pigauto-vs-BACE comparison.
+## LANDING PATH (executed 2026-08-09 — not merged to main)
 
-## FOLLOW-UP APPLIED (uncommitted at time of writing)
+Why main deleted the wrap: `b615579` (Shinichi, 10 Jul 2026) *docs: prepare v0.10.0 CRAN
+release surface* removed `R/fit_baseline_bace.R`, `man/fit_baseline_bace.Rd`, the NAMESPACE
+export, the `_pkgdown.yml` entry, the `[T4]` smoke, and **BACE from Suggests**.
+`cran-comments.md` in that commit states user-facing pages contain **no live BACE
+integration** and BACE pages are historical benches only. Current `origin/main` is `0.10.0`
+(`bf46991`), Suggests has `jomo` not `BACE`, and `0cc11c5` records a CRAN resubmission
+candidate. BACE is not on CRAN, so Suggests BACE is a CRAN blocker.
 
-`bace_final_imp()` is now wrapped in `tryCatch` and re-thrown with context pointing at
-`final_imp = FALSE`, instead of surfacing a bare MCMCglmm message. Deliberately **not** a
-silent fallback: a caller who asked for proper MI must not receive chain averages unknowingly.
-Roxygen + NEWS document the failure mode. Bit-identity re-verified after this change
-(`identical()` TRUE, max diff 0).
+Options (do **not** rebase this 43-behind branch onto main):
+
+1. **New branch from current `origin/main`** that restores the wrap file + folded wrap API
+   (`b57da54` + `3bfd740`), tests, NEWS, NAMESPACE, pkgdown. Cherry-pick of wrap commits
+   alone will not apply — the file is absent on main; restore first, then apply the delta.
+2. **Wait until after #155** is off the `R/` lock, then do (1). #155 does not restore the
+   wrap; waiting only sequences traffic.
+3. **Rebase / merge `handover/2026-08-09-cursor` onto main.** Forbidden; 12 ahead / 43
+   behind; mixed P0 history + uinit dirt.
+
+**LOCKED (Shinichi AskQuestion 2026-08-09):** option **A after #155**. Executed: new branch
+`feat/bace-wrap-restore` from `origin/main`, wrap + folded `b57da54`/`3bfd740` API, T4
+smoke, OVR footnote, NEWS 0.10.0.9000, BACE in Suggests (no Remotes). Keep wrap
+**GitHub-dev-only** until BACE is on CRAN / the v0.10.0 cut ships. Do not merge wrap to
+`main` as part of the CRAN surface. Do not rebase the handover branch. No PR into `main`
+this turn (branch on origin is enough).
+
+Focused restore-branch test (pasted):
+
+```
+NOT_CRAN=true Rscript -e 'devtools::load_all("."); testthat::test_file("tests/testthat/test-fit-baseline-bace-final-imp.R")'
+
+SKIP: 'test-fit-baseline-bace-final-imp.R:127:3' ----------
+Reason: installed BACE does export bace_final_imp(); nothing to assert
+
+[ FAIL 0 | WARN 0 | SKIP 1 | PASS 18 ]
+```
 
 ## OPEN GATES
 
-1. **`origin/main` deleted `R/fit_baseline_bace.R`.** Commit `b615579 docs: prepare v0.10.0
-   CRAN release surface` (Shinichi, 10 Jul 2026) removed the file plus its `NAMESPACE`
-   export, `man/` page, and `_pkgdown.yml` entry. This branch is 43 behind and still carries
-   the pre-deletion file, so the wrap exists **only here**. Neither handover mentioned it.
-   Needs Shinichi before any landing path is designed.
+1. **Landing (in progress; wait for CRAN cut).** Wrap is on `origin/feat/bace-wrap-restore`
+   @ `b180555`. Do **not** merge to `main` until BACE is on CRAN / v0.10.0 ships. Draft PR
+   only if marked DO NOT MERGE; prefer wait.
 2. **S3 gate for public claims.** Numbers above are internal wrap-config comparison only. No
    pigauto-vs-BACE capability sentence ships without Shinichi.
-3. **Scope fence held:** the S3 harness lives in `docs/dev-log/` (gitignored). Promoting it
-   to `script/bench_bace_wrap_final_imp.R` so it is reproducible for others needs a one-line
-   scope OK, since the approved scope was `R/` + `man/` + `tests/` + `NEWS.md`.
+3. **Scope fence held:** S3 harness lives in `docs/dev-log/` (gitignored). Promoting it to
+   `script/bench_bace_wrap_final_imp.R` needs a one-line scope OK.
+
+## PARKED (unchanged)
+
+- No public pigauto-vs-BACE sentence.
+- No Slack to Dan.
+- No vendor-sync of in-tree `pigauto/BACE`.
+- No PR #155 work.
+- No edit to either BACE tree.
+- No EM restore.
+- No rebase / merge to `main`.
+- uinit files and `gnn_attribution` artefacts stay unstaged.
 
 ## TRUTH
 
-Committed `b57da54` (9 files, explicit paths). Uncommitted: the robustness follow-up in
-`R/fit_baseline_bace.R` + `man/fit_baseline_bace.Rd` + `NEWS.md`, plus `LOOP/` updates and
-`docs/dev-log/coordination-board.md`. uinit files and `gnn_attribution` artefacts remain
-unstaged and untouched. PR #155 untouched. Neither BACE tree touched.
+Restore commit: `feat/bace-wrap-restore` @ `b180555` (pushed). Source wrap commits on
+handover: `b57da54`, `3bfd740`. Handover checkout `a5976b0` left dirty; uinit /
+`gnn_attribution` unstaged. Neither BACE tree touched. No merge to `main`. No PR.
 
 ## RESUME
 
 ```
-Wrap lane: S0-S3, M2, N1 done; M1 check in flight; X1/X2 open.
-Default path bit-identical. S3: coverage 0.672 -> 0.940 (nominal 0.95), 1/5 seeds fail in
-bace_final_imp. OPEN GATE: main deleted R/fit_baseline_bace.R in b615579 — ask Shinichi
-whether the wrap should exist before designing any landing.
+KEEP wrap. Landing EXECUTED on feat/bace-wrap-restore @ b180555 (worktree
+/tmp/pigauto-bace-wrap-restore, pushed). GitHub-dev-only until BACE on CRAN / v0.10.0
+ships. Do not merge to main. Do not rebase handover. Focused tests 18 pass / 1 skip.
+Slack / public BACE claim / vendor-sync / EM parked.
 ```
