@@ -25,8 +25,32 @@ One OPEN GATE that predates this lane blocks any landing conversation.
 - **M2** `[ FAIL 0 | WARN 0 | SKIP 1 | PASS 18 ]`.
 - **N1** NEWS written; explicitly **not** an imputed-as-observed fix claim.
 - **S3** measured (see below).
-- **M1** drift + focused tests + bit-identity DONE; `devtools::check()` still in flight
-  (~40 min, buffered — no partial output available).
+- **M1** drift + focused tests + bit-identity DONE. `devtools::check()` **NOT green**: the
+  driver died at `checking Rd \usage sections`. What it did complete is useful and is quoted
+  below; the run must be redone (Codex hand-off).
+- **X1** reconcile at `docs/dev-log/plan-actual/2026-08-09-bace-wrap-reconcile.md`.
+- **X2** brain-write **proposal** (not a write) at
+  `docs/dev-log/2026-08-09-bace-wrap-brain-write-proposal.md`.
+
+## M1c — what the check DID reach before dying
+
+```
+* checking whether package 'pigauto' can be installed ... [14s/16s] OK
+* checking R files for syntax errors ... OK
+* checking R code for possible problems ... [18s/21s] OK
+* checking Rd files ... OK
+* checking Rd metadata ... OK
+* checking Rd line widths ... OK
+* checking for missing documentation entries ... OK
+* checking for code/documentation mismatches ... OK      <- binds on the new args
+* checking Rd \usage sections ...                        <- died here
+```
+
+NOTEs seen: hidden files/directories; top-level `results.tsv` and `run.log`. Both
+pre-existing, neither from this lane. `LOOP/` was **not** flagged this time.
+
+Full testthat suite was launched separately (`/tmp/pigauto_full_testthat.log`) and was still
+running inside `new-features` at hand-off. **Not claimed as passing.**
 
 ## S3 RESULT — wrap default vs `final_imp` (the measurement that matters)
 

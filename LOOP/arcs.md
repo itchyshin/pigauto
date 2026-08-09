@@ -15,8 +15,13 @@ Branch `handover/2026-08-09-cursor`. Plan:
 | S3 | Re-bench wrap (both paths) vs BACE `@ce8bc87` | hand off / local | DONE — coverage 0.672 → 0.940 (nominal 0.95); 1/5 seeds fail in `bace_final_imp` |
 | S3b | Robustness follow-up: contextual error instead of bare MCMCglmm message | Cursor Models | DONE (uncommitted at checkpoint time) |
 | N1 | NEWS entry | Other Models | DONE (+ robustness caveat) |
-| X1 | Melissa reconcile (plan vs git reality) | Other Models | IN PROGRESS |
-| X2 | After-task report + brain-write **proposal** (not a write) | Other Models | TODO |
+| X1 | Melissa reconcile (plan vs git reality) | Other Models | DONE — `docs/dev-log/plan-actual/2026-08-09-bace-wrap-reconcile.md` |
+| X2 | After-task report + brain-write **proposal** (not a write) | Other Models | DONE — `docs/dev-log/2026-08-09-bace-wrap-brain-write-proposal.md`; vault untouched |
+
+## Not green, stated plainly
+
+`devtools::check()` died at `checking Rd \usage sections`; the full testthat suite was still
+running at hand-off. Neither is claimed as passing. Both are Codex hand-off items.
 
 ## Blocking discovery (raised during M1)
 
