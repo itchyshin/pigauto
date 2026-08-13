@@ -155,6 +155,7 @@ reference:
       - make_missing_splits
       - mask_missing
       - fit_baseline
+      - fit_baseline_bace
       - fit_pigauto
       - predict.pigauto_fit
       - evaluate
