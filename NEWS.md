@@ -1,7 +1,8 @@
 # pigauto 0.10.0.9000 (development)
 
-GitHub-dev branch only. This is not the CRAN 0.10.0 tarball. Do not merge
-to `main` until BACE is on CRAN or the v0.10.0 CRAN cut has shipped.
+GitHub-dev after CRAN pigauto 0.10.0 (Date/Publication 2026-07-30).
+This is not a CRAN tarball. BACE is still not on CRAN. The next CRAN
+cut must drop Suggests `BACE` again or wait until BACE is on CRAN.
 
 ## New (opt-in): BACE baseline wrapper restored, with proper-MI draws
 
