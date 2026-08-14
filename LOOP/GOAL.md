@@ -1,5 +1,8 @@
 # GOAL — pigauto BACE wrap, Option B-minus (IMMUTABLE)
 
+> **LANDED 2026-08-13** on `origin/main` `416561b` (PR #156). Mission below is
+> historical lock text. Do not re-restore. Do not CRAN-submit from this `main`.
+
 ## Mission
 `fit_baseline_bace()` gains an opt-in proper-MI path: `final_imp = FALSE` (default) +
 `n_final = 15L`. When `final_imp = TRUE`, call `BACE::bace_final_imp()` on the `bace_imp`

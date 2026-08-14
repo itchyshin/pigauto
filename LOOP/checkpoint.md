@@ -1,9 +1,9 @@
 # Checkpoint — pigauto BACE wrap (Option B-minus)
 
-**Date:** 2026-08-09 · **Landing branch:** `feat/bace-wrap-restore` @ `b180555`
-**Worktree:** `/tmp/pigauto-bace-wrap-restore` (from `origin/main` `bf46991`)
-**Handover checkout:** `handover/2026-08-09-cursor` (closeout docs on top of `88357ef`; dirty uinit + gnn unstaged)
-**Draft PR:** https://github.com/itchyshin/pigauto/pull/156 (**DO NOT MERGE**)
+**Date:** 2026-08-13 · **Landed:** `origin/main` `416561b` (PR #156 MERGED)
+**Wrap worktree:** `.worktrees/bace-wrap-restore` (`feat/bace-wrap-restore` @ `a54e6a4`)
+**Handover checkout:** `handover/2026-08-09-cursor` (docs; dirty uinit + gnn unstaged)
+**PR:** https://github.com/itchyshin/pigauto/pull/156 (**MERGED**)
 **Repo:** `/Users/z3437171/Dropbox/Github Local/pigauto`
 
 > Previous LOOP kit belonged to the **closed P0 lane** and is preserved verbatim at
@@ -11,13 +11,11 @@
 
 ## STATE
 
-**CLOSEOUT DONE. STOP until CRAN.** Restore remains `feat/bace-wrap-restore` @
-`b180555`. Draft PR [#156](https://github.com/itchyshin/pigauto/pull/156) → `main`
-is **DO NOT MERGE** until BACE is on CRAN / the v0.10.0 CRAN cut ships. Suggests
-BACE would block CRAN if merged now. Do not re-restore. Do not merge. Do not start
-DRM.jl / DESCRIPTION claim-gate / EM / Slack / vendor-sync / a public
-pigauto-vs-BACE sentence. D-43: whole ultra-plan is **not** "done" (M1c check
-WARN/NOTE + wrap→main deferred).
+**WRAP MERGED TO MAIN (2026-08-13).** `origin/main` `416561b`, Version `0.10.0.9000`,
+Suggests `BACE`. PR [#156](https://github.com/itchyshin/pigauto/pull/156) MERGED.
+This is GitHub-dev, **not** a CRAN tarball. Do not CRAN-submit. Do not re-restore.
+Do not merge P0 parent in this lane. Slack / vendor-sync / EM / public
+pigauto-vs-BACE still parked. D-43: M1c full check WARN/NOTE remains pre-existing.
 
 ## KEEP-WRAP DECISION (Shinichi, 2026-08-09)
 

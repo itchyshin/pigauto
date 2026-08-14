@@ -5,13 +5,14 @@
 | Lane | Owner | Branch | Handover / truth | Status |
 |---|---|---|---|---|
 | **P0 review blockers + B1–B3** | prior Cursor `/goal` | `fix/p0-review-blockers` | `docs/dev-log/handover/2026-08-08-p0-rose.md` · PR [#155](https://github.com/itchyshin/pigauto/pull/155) → `fix/ci-install-libtorch` | **#155 MERGED** to parent `fix/ci-install-libtorch` (2026-08-09). Not to `main`. |
-| **BACE wrap / re-bench (pigauto remit)** | **CLOSED / wait CRAN** | `feat/bace-wrap-restore` @ `b180555` · draft PR [#156](https://github.com/itchyshin/pigauto/pull/156) → `main` (**DO NOT MERGE**) · LOOP/docs on `handover/2026-08-09-cursor` | Rolling handover: `docs/dev-log/handover/2026-08-11-cursor-handover.md` · `LOOP/checkpoint.md` · after-task `docs/dev-log/after-task/2026-08-09-bace-wrap-closeout.md` · reconcile `docs/dev-log/plan-actual/2026-08-09-bace-wrap-closeout-reconcile.md` | **CLOSED.** Wait for CRAN (v0.10.0 cut ships or BACE on CRAN). Do not merge #156. Do not re-restore. Slack / public BACE claim / vendor-sync / EM parked. |
+| **BACE wrap / re-bench (pigauto remit)** | **LANDED on main** | `origin/main` `416561b` (PR [#156](https://github.com/itchyshin/pigauto/pull/156) **MERGED**) · Version `0.10.0.9000` | Handover: `docs/dev-log/handover/2026-08-13-cursor-handover.md` · plan `docs/dev-log/handover/2026-08-13-wrap-merge-g0-plan.md` · after-task `docs/dev-log/after-task/2026-08-13-bace-wrap-merge.md` | **DONE.** GitHub-dev wrap on `main`. Not a CRAN tarball. BACE still not on CRAN. Do not re-merge. Do not CRAN-submit from this `main`. |
 
 Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orphan a sibling — there is no Live Phase Snapshot in AGENTS.md; **this table is the split**.
 
 ## Current Rule
 
-- Wrap restore lives on `feat/bace-wrap-restore` only. Draft PR [#156](https://github.com/itchyshin/pigauto/pull/156) is **DO NOT MERGE** until BACE is on CRAN / the v0.10.0 CRAN cut has shipped. Suggests BACE would block CRAN if merged now.
+- Wrap **LANDED** on `origin/main` `416561b` (PR #156 MERGED, 2026-08-13). Version `0.10.0.9000`. Suggests `BACE`. **Do not CRAN-submit from this `main`** until BACE is on CRAN or Suggests BACE is dropped again.
+- P0 sibling #155 remains on `fix/ci-install-libtorch` only. Separate G0 to put that parent on `main`.
 - Do not rebase `handover/2026-08-09-cursor` onto main. Leave its dirty uinit / gnn tree unstaged.
 - Do not modify standalone BACE or in-tree `pigauto/BACE`.
 - No EM restore (`max_iter>0`) without a new G0.
@@ -57,3 +58,12 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
   `docs/dev-log/handover/2026-08-11-cursor-handover.md`. `origin/main` still
   Version 0.10.0 (`bf46991`). Do not re-restore. Do not merge #156. DRM.jl is
   a sibling repo with its own handover — this board stays pigauto-only.
+- 2026-08-13 (CRAN live, plan first): CRAN `pigauto` 0.10.0
+  Date/Publication 2026-07-30 17:10:22 UTC. CRAN `BACE` still 404.
+  Shinichi picked **plan first**, not merge. Plan
+  `docs/dev-log/handover/2026-08-13-wrap-merge-g0-plan.md`. #156 remains
+  draft. Do not undraft or merge until G0 lock.
+- 2026-08-13 (G0 locked + merged): Shinichi locked merge G0. NEWS
+  `a54e6a4` on wrap branch. PR [#156](https://github.com/itchyshin/pigauto/pull/156)
+  MERGED (`416561b` on `origin/main`). Version `0.10.0.9000`. Do not
+  CRAN-submit. P0 parent still not on `main`.
