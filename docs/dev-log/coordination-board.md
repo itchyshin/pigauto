@@ -4,18 +4,19 @@
 
 | Lane | Owner | Branch | Handover / truth | Status |
 |---|---|---|---|---|
-| **P0 review blockers + B1–B3** | prior Cursor `/goal` | `fix/p0-review-blockers` | `docs/dev-log/handover/2026-08-08-p0-rose.md` · PR [#155](https://github.com/itchyshin/pigauto/pull/155) → `fix/ci-install-libtorch` | **#155 MERGED** to parent `fix/ci-install-libtorch` (2026-08-09). Not to `main`. |
-| **BACE wrap / re-bench (pigauto remit)** | **LANDED on main** | `origin/main` `416561b` (PR [#156](https://github.com/itchyshin/pigauto/pull/156) **MERGED**) · Version `0.10.0.9000` | Handover: `docs/dev-log/handover/2026-08-13-cursor-handover.md` · plan `docs/dev-log/handover/2026-08-13-wrap-merge-g0-plan.md` · after-task `docs/dev-log/after-task/2026-08-13-bace-wrap-merge.md` | **DONE.** GitHub-dev wrap on `main`. Not a CRAN tarball. BACE still not on CRAN. Do not re-merge. Do not CRAN-submit from this `main`. |
+| **P0 review blockers + B1–B3** | prior Cursor `/goal` | `fix/p0-review-blockers` | `docs/dev-log/handover/2026-08-08-p0-rose.md` · PR [#155](https://github.com/itchyshin/pigauto/pull/155) → `fix/ci-install-libtorch` | **#155 MERGED** to parent `fix/ci-install-libtorch` `21d2ea6` (2026-08-09). **Not** to `main`. Parent 46 behind / 9 unique vs `origin/main` (measured 2026-08-14). |
+| **BACE wrap / re-bench (pigauto remit)** | **LANDED on main** | `origin/main` `416561b` (PR [#156](https://github.com/itchyshin/pigauto/pull/156) **MERGED**) · Version `0.10.0.9000` | Fresh Claude: `docs/dev-log/handover/2026-08-14-claude-handover.md` · prior Cursor: `docs/dev-log/handover/2026-08-13-cursor-handover.md` · plan `docs/dev-log/handover/2026-08-13-wrap-merge-g0-plan.md` · after-task `docs/dev-log/after-task/2026-08-13-bace-wrap-merge.md` | **DONE.** GitHub-dev wrap on `main`. Post-merge CI green. Not a CRAN tarball. BACE still 404. Do not re-merge. Do not CRAN-submit from this `main`. |
 
 Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orphan a sibling — there is no Live Phase Snapshot in AGENTS.md; **this table is the split**.
 
 ## Current Rule
 
-- Wrap **LANDED** on `origin/main` `416561b` (PR #156 MERGED, 2026-08-13). Version `0.10.0.9000`. Suggests `BACE`. **Do not CRAN-submit from this `main`** until BACE is on CRAN or Suggests BACE is dropped again.
-- P0 sibling #155 remains on `fix/ci-install-libtorch` only. Separate G0 to put that parent on `main`.
+- Wrap **LANDED** on `origin/main` `416561b` (PR #156 MERGED, 2026-08-13). Version `0.10.0.9000`. Suggests `BACE`. **Do not re-merge #156. Do not CRAN-submit from this `main`** until BACE is on CRAN or Suggests BACE is dropped again.
+- P0 sibling #155 remains on `fix/ci-install-libtorch` only. **Do not merge that parent to `main` unless Shinichi locks it as a new G0 that day.**
+- Next Claude reads `docs/dev-log/handover/2026-08-14-claude-handover.md`. Rehydrate both Active Lane Split rows. If wrap still landed and no new G0: **STOP**.
 - Do not rebase `handover/2026-08-09-cursor` onto main. Leave its dirty uinit / gnn tree unstaged.
 - Do not modify standalone BACE or in-tree `pigauto/BACE`.
-- No EM restore (`max_iter>0`) without a new G0.
+- No EM restore (`max_iter>0`) without a new G0. No DRM.jl from this board.
 
 ## Status
 
@@ -67,3 +68,10 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
   `a54e6a4` on wrap branch. PR [#156](https://github.com/itchyshin/pigauto/pull/156)
   MERGED (`416561b` on `origin/main`). Version `0.10.0.9000`. Do not
   CRAN-submit. P0 parent still not on `main`.
+- 2026-08-14 (Cursor → Claude handover): Wrap still LANDED `416561b`.
+  Post-merge CI green (R-CMD-check 31755795655, pkgdown 31755795738).
+  CRAN pigauto 0.10.0 live; CRAN BACE 404. Memo verdict
+  **agree-with-corrections**. Recommended next G0 *if named*: land P0
+  on main (parent 46 behind), then claim-gate. **Not locked — STOP.**
+  Fresh handover `docs/dev-log/handover/2026-08-14-claude-handover.md`.
+  Dirty uinit / GNN / 44 foreign unpushed commits stay CARRIED-OVER.

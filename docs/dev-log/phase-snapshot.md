@@ -7,4 +7,4 @@
 > **Multi-lane:** do not replace this with a single-lane START HERE. Rehydrate from the
 > coordination board’s Active Lane Split (every row).
 
-- **2026-08-13** · wrap **LANDED** on `origin/main` `416561b` (PR #156 MERGED) Version `0.10.0.9000` · P0 sibling #155 still on `fix/ci-install-libtorch`, not `main` · **START HERE:** `docs/dev-log/coordination-board.md` · handover `docs/dev-log/handover/2026-08-13-cursor-handover.md` · P0 handover `docs/dev-log/handover/2026-08-08-p0-rose.md`
+- **2026-08-14** · wrap **LANDED** on `origin/main` `416561b` (PR #156 MERGED) Version `0.10.0.9000` · P0 sibling #155 still on `fix/ci-install-libtorch` (46 behind main), not `main` · **START HERE:** `docs/dev-log/coordination-board.md` · Claude handover `docs/dev-log/handover/2026-08-14-claude-handover.md` · P0 handover `docs/dev-log/handover/2026-08-08-p0-rose.md`

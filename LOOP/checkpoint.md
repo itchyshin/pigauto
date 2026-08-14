@@ -1,6 +1,12 @@
 # Checkpoint — pigauto BACE wrap (Option B-minus)
 
-**Date:** 2026-08-13 · **Landed:** `origin/main` `416561b` (PR #156 MERGED)
+> **2026-08-14 live pointer.** Wrap is on `origin/main`. Next session is Claude.
+> Read `docs/dev-log/handover/2026-08-14-claude-handover.md` and the coordination
+> board Active Lane Split (both rows). Do not re-merge #156. Do not CRAN-submit.
+> Do not merge P0 unless Shinichi locks a new G0. Historical sections below
+> remain the wrap-lane record.
+
+**Date:** 2026-08-14 · **Landed:** `origin/main` `416561b` (PR #156 MERGED)
 **Wrap worktree:** `.worktrees/bace-wrap-restore` (`feat/bace-wrap-restore` @ `a54e6a4`)
 **Handover checkout:** `handover/2026-08-09-cursor` (docs; dirty uinit + gnn unstaged)
 **PR:** https://github.com/itchyshin/pigauto/pull/156 (**MERGED**)
@@ -13,9 +19,11 @@
 
 **WRAP MERGED TO MAIN (2026-08-13).** `origin/main` `416561b`, Version `0.10.0.9000`,
 Suggests `BACE`. PR [#156](https://github.com/itchyshin/pigauto/pull/156) MERGED.
-This is GitHub-dev, **not** a CRAN tarball. Do not CRAN-submit. Do not re-restore.
-Do not merge P0 parent in this lane. Slack / vendor-sync / EM / public
-pigauto-vs-BACE still parked. D-43: M1c full check WARN/NOTE remains pre-existing.
+Post-merge CI green (R-CMD-check 31755795655, pkgdown 31755795738). This is
+GitHub-dev, **not** a CRAN tarball. Do not CRAN-submit. Do not re-restore.
+Do not merge P0 parent unless Shinichi locks a new G0 (parent 46 behind main,
+measured 2026-08-14). Slack / vendor-sync / EM / public pigauto-vs-BACE still
+parked. D-43: M1c full check WARN/NOTE remains pre-existing.
 
 ## KEEP-WRAP DECISION (Shinichi, 2026-08-09)
 
@@ -102,25 +110,25 @@ singular"*. The chain path succeeded on all 5. Attributed in `3bfd740` (fail lou
 fallback). **Regime fence:** simulated BM only, one n, one trait mix, 5 seeds. Wrap-config vs
 wrap-config — **not** a pigauto-vs-BACE comparison.
 
-## LANDING PATH (executed + draft PR — not merged to main)
+## LANDING PATH (executed — MERGED 2026-08-13)
 
 Why main deleted the wrap: `b615579` (Shinichi, 10 Jul 2026) *docs: prepare v0.10.0 CRAN
 release surface* removed `R/fit_baseline_bace.R`, `man/fit_baseline_bace.Rd`, the NAMESPACE
 export, the `_pkgdown.yml` entry, the `[T4]` smoke, and **BACE from Suggests**.
-Current `origin/main` is `0.10.0` (`bf46991`). BACE is not on CRAN, so Suggests BACE is a
-CRAN blocker.
+CRAN pigauto 0.10.0 shipped 2026-07-30. Wrap restored on GitHub-dev via #156
+(`416561b` on `origin/main`, Version `0.10.0.9000`). BACE is still not on CRAN,
+so Suggests BACE remains a **next-CRAN** blocker — do not submit this `main`.
 
-**LOCKED:** option **A after #155**. Executed: `feat/bace-wrap-restore` @ `b180555`.
-Draft PR [#156](https://github.com/itchyshin/pigauto/pull/156) is the wait-for-CRAN
-pointer. **Do not merge. Do not `gh pr merge`.**
+**LOCKED and executed:** merge G0 2026-08-13. Do not re-merge. Do not `gh pr merge 156`.
 
 ## OPEN GATES
 
-1. **Wait for CRAN (human).** Do not merge #156 / `feat/bace-wrap-restore` to `main`
-   until BACE is on CRAN or the v0.10.0 CRAN cut has shipped.
-2. **S3 gate for public claims.** Numbers above are internal wrap-config comparison only. No
+1. **#156 is MERGED.** Do not re-merge. Next CRAN cut must drop Suggests BACE or
+   wait until BACE is on CRAN (still 404 as of 2026-08-14).
+2. **P0 parent still off `main`.** Separate G0 if Shinichi locks “land P0 on main.”
+3. **S3 gate for public claims.** Numbers above are internal wrap-config comparison only. No
    pigauto-vs-BACE capability sentence ships without Shinichi.
-3. **Scope fence held:** S3 harness lives in `docs/dev-log/` (gitignored). Promoting it to
+4. **Scope fence held:** S3 harness lives in `docs/dev-log/` (gitignored). Promoting it to
    `script/bench_bace_wrap_final_imp.R` needs a one-line scope OK.
 
 ## PARKED (unchanged)
@@ -137,19 +145,17 @@ pointer. **Do not merge. Do not `gh pr merge`.**
 
 ## TRUTH
 
-Restore: `feat/bace-wrap-restore` @ `b180555` (pushed). Wrap source: `b57da54`, `3bfd740`.
-Draft PR https://github.com/itchyshin/pigauto/pull/156 (DO NOT MERGE). After-task
-`docs/dev-log/after-task/2026-08-09-bace-wrap-closeout.md`. Melissa LIGHT
-`docs/dev-log/plan-actual/2026-08-09-bace-wrap-closeout-reconcile.md`. Handover dirty
-uinit / gnn unstaged. Neither BACE tree touched. No merge to `main`.
+Wrap on `origin/main` `416561b` (PR #156 MERGED). Restore history:
+`feat/bace-wrap-restore` @ `b180555` then NEWS `a54e6a4`. After-task
+`docs/dev-log/after-task/2026-08-13-bace-wrap-merge.md`. Fresh Claude handover
+`docs/dev-log/handover/2026-08-14-claude-handover.md`. Handover dirty uinit /
+gnn unstaged. Neither BACE tree touched. P0 parent still not on `main`.
 
 ## RESUME
 
 ```
-STOP until CRAN. Wrap closeout DONE. feat/bace-wrap-restore @ b180555.
-Draft DO-NOT-MERGE PR https://github.com/itchyshin/pigauto/pull/156 → main.
-Suggests BACE would block CRAN if merged now. Do not merge. Do not re-restore.
-Do not start DRM.jl / DESCRIPTION claim-gate / EM / Slack / vendor-sync /
-public pigauto-vs-BACE. Focused tests this closeout: FAIL 0 WARN 0 SKIP 1 PASS 18.
-D-43: ultra-plan not wholly done (M1c WARN/NOTE + wrap→main deferred).
+STOP unless Shinichi locks a new G0. Wrap LANDED on origin/main 416561b.
+Do not re-merge #156. Do not CRAN-submit. Do not merge P0 without a lock.
+Do not start DRM.jl / EM / Slack / vendor-sync / public pigauto-vs-BACE.
+Read docs/dev-log/handover/2026-08-14-claude-handover.md.
 ```
