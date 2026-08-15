@@ -215,7 +215,8 @@ Still owed if and when it lands: `rcmdcheck --as-cran` (never run — expect the
   convert an honest finding into a hidden regression.
 - Do not run this on DRAC/Totoro. It is a ~45-min local check, and the toolchain is provisioned here.
 
-> Related: **GitHub issue [#157](https://github.com/itchyshin/pigauto/issues/157)** (the
+> Related: **publication roadmap `docs/dev-log/2026-08-15-publication-readiness-roadmap.md`** (what to do, in order, when returning to pigauto) ·
+> **GitHub issue [#157](https://github.com/itchyshin/pigauto/issues/157)** (the
 > cal/predict surface asymmetry — the durable outcome of this lane) ·
 > `docs/dev-log/after-task/2026-08-15-p0-arc.md` ·
 > `docs/dev-log/arc/2026-08-15-p0-onto-main-arc-notes.md` ·
