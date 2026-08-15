@@ -4,7 +4,7 @@
 
 | Lane | Owner | Branch | Handover / truth | Status |
 |---|---|---|---|---|
-| **P0 review blockers + B1–B3** | prior Cursor `/goal` | `fix/p0-review-blockers` | `docs/dev-log/handover/2026-08-08-p0-rose.md` · PR [#155](https://github.com/itchyshin/pigauto/pull/155) → `fix/ci-install-libtorch` | **#155 MERGED** to parent `fix/ci-install-libtorch` `21d2ea6` (2026-08-09). **Not** to `main`. Parent 46 behind / 9 unique vs `origin/main` (measured 2026-08-14). |
+| **P0 review blockers + B1–B3** | Claude (2026-08-15 arc) | `arc/p0-onto-main` `f5e8416` (from `fix/ci-install-libtorch` `21d2ea6`) | `docs/dev-log/handover/2026-08-15-p0-arc-handover.md` · after-task `docs/dev-log/after-task/2026-08-15-p0-arc.md` · PR [#155](https://github.com/itchyshin/pigauto/pull/155) → `fix/ci-install-libtorch` | **MERGED ONTO A BRANCH, NOT LANDED.** 7/7 conflicts resolved, suite run, branch pushed, **no PR**. **BLOCKER:** `test-safety-floor.R:712` strict val-floor passes on `main`, fails on `main`+P0 (controlled). `main` unchanged at `416561b`. |
 | **BACE wrap / re-bench (pigauto remit)** | **LANDED on main** | `origin/main` `416561b` (PR [#156](https://github.com/itchyshin/pigauto/pull/156) **MERGED**) · Version `0.10.0.9000` | Fresh Claude: `docs/dev-log/handover/2026-08-14-claude-handover.md` · prior Cursor: `docs/dev-log/handover/2026-08-13-cursor-handover.md` · plan `docs/dev-log/handover/2026-08-13-wrap-merge-g0-plan.md` · after-task `docs/dev-log/after-task/2026-08-13-bace-wrap-merge.md` | **DONE.** GitHub-dev wrap on `main`. Post-merge CI green. Not a CRAN tarball. BACE still 404. Do not re-merge. Do not CRAN-submit from this `main`. |
 
 Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orphan a sibling — there is no Live Phase Snapshot in AGENTS.md; **this table is the split**.
@@ -83,3 +83,20 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
   **No G0 locked — STOP stands.** P0 remains off `main`. Dirty uinit / GNN and
   the 44 foreign commits stay CARRIED-OVER; no R code ran. Receipt
   `docs/dev-log/after-task/2026-08-14-claude-rehydration.md`.
+- 2026-08-15 (P0 arc — merged, verified, **NOT landed**): Shinichi locked
+  "land P0 + fix the false doc claim" **conditional on a clean check**. Merge
+  of `fix/ci-install-libtorch` onto `416561b` done on `arc/p0-onto-main`
+  `f5e8416` (pushed, **no PR**): 7/7 conflicts resolved exactly as the
+  `git merge-tree` probe predicted, `document()` clean. **Check not clean →
+  did not land.** `test-safety-floor.R:712` strict val-floor **passes on
+  pristine `main`, fails on `main`+P0** (0.3434 / 0.3442 vs 0.3410),
+  controlled comparison, test provably ran not skipped. Hypothesis: P0 fix #4
+  removes a held-out-context leak, so the GNN is honestly worse on val and the
+  5% threshold was calibrated on the leaky pipeline — **not confirmed**; next
+  experiment is `train_mask_heldout = FALSE`. `--as-cran` deliberately NOT run
+  (no value on a branch with an unexplained failure). Claim-gate: **1 BLOCKING**
+  — `gnn-architecture.Rmd` §5 says `pred$se` is "Exact under BM" while `main`'s
+  default path broadcasts one `sd(observed)` to every tip (verified in code);
+  P0 is the fix. `main` UNCHANGED at `416561b`. Shinichi stepping away from
+  pigauto; **do not resume this lane unasked.** Handover
+  `docs/dev-log/handover/2026-08-15-p0-arc-handover.md`.

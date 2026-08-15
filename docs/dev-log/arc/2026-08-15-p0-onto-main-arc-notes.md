@@ -1,0 +1,153 @@
+# Arc notes — P0 → main merge (scratch; becomes the after-task receipt)
+
+Branch: `arc/p0-onto-main`, cut from `origin/main` `416561b`.
+Merged: `origin/fix/ci-install-libtorch` `21d2ea6` (carries PR #155).
+Merge commit `8df0b0e`; doc regen `f5e8416`.
+**Not landed. `main` untouched. Rung 3 gated on Shinichi's G0.**
+
+## Conflict resolutions (7, exactly as the pre-merge probe predicted)
+
+| File | Resolution | Judgement required? |
+|---|---|---|
+| `.Rbuildignore` | union — both sides added different ignore lines | no |
+| `tests/testthat/test-gbif-centroids.R` | took P0 side; difference was **two blank lines only** (verified by printing both sides) | no |
+| `tests/testthat/test-joint-baseline.R` | took P0 side — strictly more informative test name + the `3c31f1d` contract comments | no |
+| `.github/workflows/R-CMD-check.yaml` | took main side — main added a macOS MPS regression canary step; P0 side was empty there. P0's libtorch-install change auto-merged elsewhere in the file. | no |
+| `AGENTS.md` | kept P0's LOAD-FIRST manifest **and** main's cleaned prose; **dropped** the `~/.Codex/projects/…` host note and the "Codex.ai/code" framing | **yes — see F3** |
+| `NEWS.md` | union under `# pigauto 0.10.0.9000 (development)` | **yes — see F2** |
+| `R/fit_helpers.R` | took main's `calibrate_gates()` signature (`seed = NULL`) | **yes — see F1** |
+
+## Findings
+
+### F1 — `seed` default: main's value is the CRAN-requested one
+
+Merge base had `calibrate_gates(seed = 1L)`. **main changed it to `NULL`** and added
+`is.null(seed)` guards through the body. P0 branched earlier, kept `1L`, and only
+reformatted the signature — so P0 never touched the body, and **main's NULL-handling
+code auto-merged silently**. Taking P0's signature would have left code written to
+service a `NULL` default paired with a default that is never `NULL`.
+
+`cran-comments.md` records this as a CRAN reviewer correction for the 0.10.0
+resubmission: *"changes public random-seed defaults to `NULL`, retaining
+reproducibility only when the user explicitly supplies a seed."*
+
+Scope, stated precisely — the public halves were never at risk:
+
+| Function | base | main | merged |
+|---|---|---|---|
+| `impute()` | `1L` | `NULL` | `NULL` (auto-merged) |
+| `multi_impute()` | `1L` | `NULL` | `NULL` (auto-merged) |
+| `calibrate_gates()` internal | `1L` | `NULL` | `NULL` (**conflicted; resolved**) |
+
+Consequence of the wrong choice: an *inconsistent* package (public API honouring
+`NULL`, internal layer reverted to `1L`), and force-seeding on direct
+`pigauto:::calibrate_gates()` calls — i.e. `test-safety-floor.R`. **Not** a production
+behaviour change: `fit_pigauto.R:956` passes `seed = seed` explicitly.
+
+### F2 — NEWS.md placement (an error I made and caught)
+
+First union appended P0's four Fix sections *after* main's block, which ends by opening
+the `# pigauto 0.10.0` heading — filing four never-released fixes under the **released
+CRAN tarball**. Corrected: they now sit under `# pigauto 0.10.0.9000 (development)`,
+matching their placement on P0's own branch. Verified absent from `origin/main:NEWS.md`,
+confirming they never shipped in 0.10.0.
+
+### F3 — AGENTS.md: P0 predates PR #136
+
+P0's side would have reintroduced a `~/.Codex/projects/-Users-…/memory/` path that
+**never existed** (journal 2026-07-08 item #9: FIXED in PR #136) plus a "Codex.ai/code"
+framing main had replaced. Kept P0's intentional addition (the LOAD-FIRST compute
+manifest, commit `18ff66c`); dropped both defects.
+
+### F4 — pre-existing, NOT introduced here
+
+`R/fit_pigauto.R` roxygen still shows `seed = 1)` in an example block while the actual
+default is `NULL`. Present on `origin/main` already. Flagged, not fixed — out of scope
+for a merge resolution.
+
+## Verification status
+
+- [x] no conflict markers anywhere; `R/fit_helpers.R` parses
+- [x] `devtools::document()` — regenerated `man/fit_pigauto.Rd` only (P0's `refine_steps`
+      roxygen; the `.Rd` was stale relative to merged source)
+- [x] `devtools::test()` — **1 failure**, see F5. Everything else green.
+- [ ] `rcmdcheck --as-cran` — **NOT RUN.** Deliberately skipped: a 45-min check on a branch
+      with a known unexplained failure spends the time and adds nothing.
+- [x] claim-gate — 1 BLOCKING, 5 SHOULD-FIX, 3 NOTE → `CLAIM-GATE-FINDINGS.md`
+
+## F5 — BLOCKER: P0 breaks the strict val-floor invariant on main's data
+
+`test-safety-floor.R:712` — *"strict val-floor: pigauto val-loss <= baseline val-loss per
+trait, all types"*, trait `x_cont` (continuous).
+
+```
+Expected loss_blend <= loss_bm * 1.05 + 1e-10
+run 1:  0.3434 > 0.3410
+run 2:  0.3442 > 0.3410
+```
+
+**Controlled comparison — same test, same machine, same data shape:**
+
+| Branch | Result |
+|---|---|
+| pristine `main` `416561b` (detached worktree `.worktrees/p0-control`) | **PASSES** — no Failed section, no Skipped section |
+| `arc/p0-onto-main` (`main` + P0) | **FAILS**, reproducibly, twice |
+
+The control provably *ran* the test rather than skipping it: it emitted the identical
+`Small validation set for 4 trait(s): x_cont (n=10), x_bin (n=10), x_cat (n=13),
+x_cnt (n=15)` line as the failing run.
+
+`loss_bm * 1.05 + 1e-10` is byte-identical (`0.3410`) on every run → the BM baseline is
+deterministic. Only `loss_blend` moves (`0.3434`, `0.3442`) → the nondeterminism is in the
+GNN/torch path, but the *overshoot* is systematic, not a coin-flip flake.
+
+**Leading hypothesis (NOT yet confirmed — this is the open question):** P0 fix #4 stops the
+DAE seeing held-out val/test truth as encoder *context* during training. Pre-fix the GNN
+trained with val cells visible, so its validation loss was flattered. Post-fix it is
+genuinely worse on validation — ~5.7% vs a 5% tolerance. On this reading the failure is the
+fix working, and the threshold was calibrated against the leaky pipeline.
+
+Independent corroboration: the claim-gate agent, working only from the diff with no
+knowledge of this test, wrote that *"any benchmark number that depended on a full
+`fit_pigauto()` GNN training run pre-fix was generated on a training loop with this
+held-out-context leak."* This test is such a number.
+
+**Why that is not sufficient to land on.** The competing explanation — P0 genuinely degrades
+the blend past its own safety invariant — produces the same signature. The strict val-floor
+is a *safety property* (`r_cal = 0` must always remain a valid fallback), so a real breach is
+serious, not cosmetic. One test cannot separate the two readings.
+
+**Ruled out:**
+- *My `seed` resolution (F1).* The test seeds itself: `set.seed(20260429L)` and
+  `seed = 20260429L` passed explicitly. The `seed = NULL` default never fires here.
+- *A merge-resolution error.* `test-safety-floor.R` auto-merged; main's only changes to it
+  are `skip_if_no_libtorch()` refactors, no logic.
+- *Pure MPS flakiness.* Plausible a priori — main pins a *neighbouring* test to CPU citing
+  exactly this ("MPS kernels can vary enough ... to move a single masked cell across the
+  deliberately tight smoke threshold") — but ruled out as sufficient, because the control on
+  `main` passes and the merged branch fails twice.
+
+**Next step for whoever picks this up:** determine whether the degradation is confined to
+fix #4 by fitting with `model_config$train_mask_heldout` forced FALSE on the merged branch.
+If the test passes with the leak restored, the hypothesis is confirmed and the threshold
+needs re-deriving on honest data (with the reason recorded), not loosening.
+
+## F6 — pre-existing oddity, not introduced here
+
+`tests/testthat/test-safety-floor.R` ends with a bare `skip_if_no_libtorch()` at top level,
+outside any `test_that()` block (last line). Present on `origin/main`; looks like a stray
+from main's `skip_if_*` refactor. Harmless but almost certainly unintended. Not fixed here.
+
+## Residual risk the tests must clear
+
+Three files auto-merged **clean** despite heavy independent movement on both sides.
+Textual cleanliness is not semantic correctness. Prime suspect first:
+
+| File | main churn | P0 churn |
+|---|---:|---:|
+| `R/multi_impute.R` | +63 / −95 | 38 lines |
+| `R/fit_pigauto.R` | +25 / −7 | 134 lines |
+| `R/impute.R` | +19 / −49 | 6 lines |
+
+**Risk branch (declared before running):** if failures are not confined to the seven
+conflicted files, STOP and report the diagnosis rather than pushing through to Rung 1.
