@@ -4,7 +4,7 @@
 
 | Lane | Owner | Branch | Handover / truth | Status |
 |---|---|---|---|---|
-| **P0 review blockers + B1–B3** | Claude (2026-08-15 arc) | `arc/p0-onto-main` `f5e8416` (from `fix/ci-install-libtorch` `21d2ea6`) | `docs/dev-log/handover/2026-08-15-p0-arc-handover.md` · after-task `docs/dev-log/after-task/2026-08-15-p0-arc.md` · PR [#155](https://github.com/itchyshin/pigauto/pull/155) → `fix/ci-install-libtorch` | **MERGED ONTO A BRANCH, NOT LANDED.** 7/7 conflicts resolved, suite run, branch pushed, **no PR**. **BLOCKER:** `test-safety-floor.R:712` strict val-floor passes on `main`, fails on `main`+P0 (controlled). `main` unchanged at `416561b`. |
+| **P0 review blockers + B1–B3 + #157 floor** | **LANDED on main** | `origin/main` `3677a85` (PR [#158](https://github.com/itchyshin/pigauto/pull/158) **MERGED** 2026-08-15) | after-task `docs/dev-log/after-task/2026-08-15-p0-land.md` · Melissa `docs/dev-log/plan-actual/2026-08-15-p0-land-reconcile.md` · handover `docs/dev-log/handover/2026-08-15-p0-arc-handover.md` (historical) | **DONE.** P0 honesty fixes + two-layer #157 floor + doc bundle on `main`. Suite green ×2 · --as-cran 0E/0W/1N (known incoming note) · PR CI 3/3. [#157](https://github.com/itchyshin/pigauto/issues/157) CLOSED. |
 | **BACE wrap / re-bench (pigauto remit)** | **LANDED on main** | `origin/main` `416561b` (PR [#156](https://github.com/itchyshin/pigauto/pull/156) **MERGED**) · Version `0.10.0.9000` | Fresh Claude: `docs/dev-log/handover/2026-08-14-claude-handover.md` · prior Cursor: `docs/dev-log/handover/2026-08-13-cursor-handover.md` · plan `docs/dev-log/handover/2026-08-13-wrap-merge-g0-plan.md` · after-task `docs/dev-log/after-task/2026-08-13-bace-wrap-merge.md` | **DONE.** GitHub-dev wrap on `main`. Post-merge CI green. Not a CRAN tarball. BACE still 404. Do not re-merge. Do not CRAN-submit from this `main`. |
 
 Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orphan a sibling — there is no Live Phase Snapshot in AGENTS.md; **this table is the split**.
@@ -12,8 +12,8 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
 ## Current Rule
 
 - Wrap **LANDED** on `origin/main` `416561b` (PR #156 MERGED, 2026-08-13). Version `0.10.0.9000`. Suggests `BACE`. **Do not re-merge #156. Do not CRAN-submit from this `main`** until BACE is on CRAN or Suggests BACE is dropped again.
-- P0 sibling #155 remains on `fix/ci-install-libtorch` only. **Do not merge that parent to `main` unless Shinichi locks it as a new G0 that day.**
-- Next Claude reads `docs/dev-log/handover/2026-08-14-claude-handover.md`. Rehydrate both Active Lane Split rows. If wrap still landed and no new G0: **STOP**.
+- **P0 + the #157 floor are LANDED** on `origin/main` `3677a85` (PR #158 MERGED 2026-08-15, G0 locked by Shinichi same day). Do not re-merge #158. `fix/ci-install-libtorch` / `fix/p0-review-blockers` / `arc/p0-onto-main` are historical.
+- Next session reads `docs/dev-log/after-task/2026-08-15-p0-land.md` + the phase snapshot. Shinichi is stepping away from pigauto — **do not resume unasked**. Next queued work when he returns: Tier-1 bench re-runs (`docs/dev-log/2026-08-15-publication-checklist.md`; Totoro, D-139).
 - Do not rebase `handover/2026-08-09-cursor` onto main. Leave its dirty uinit / gnn tree unstaged.
 - Do not modify standalone BACE or in-tree `pigauto/BACE`.
 - No EM restore (`max_iter>0`) without a new G0. No DRM.jl from this board.
@@ -119,3 +119,16 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
   P0 is the fix. `main` UNCHANGED at `416561b`. Shinichi stepping away from
   pigauto; **do not resume this lane unasked.** Handover
   `docs/dev-log/handover/2026-08-15-p0-arc-handover.md`.
+- 2026-08-15 (P0 + #157 LANDED): Shinichi locked the G0 ("surface B — let's do
+  it"); executed same day. `origin/main` `416561b` → `3677a85` via PR
+  [#158](https://github.com/itchyshin/pigauto/pull/158). Ships: the four P0
+  honesty fixes, the two-layer margin-based BM floor (calibrate_gates +
+  fit_pigauto post-refine), the matched test surface (`.mask_observed_idx`),
+  two deterministic regression tests, and the 9-edit doc-accuracy bundle.
+  Evidence: suite green ×2, --as-cran 0E/0W/1N, PR CI 3/3, #157 fixture
+  gate-open blend beats BM 3/3 reps (0.959–0.981) on the matched surface.
+  **#157 CLOSED.** F5-CODA correction: the earlier "+2% worse on B" was the
+  experiment script's own mis-specified masking (val-only); on the package
+  convention surface the leak-free GNN helps. Next: Tier-1 bench re-runs
+  (publication checklist). Do not re-merge #158. CRAN submission still
+  blocked on Suggests BACE.

@@ -297,3 +297,32 @@ issue whether or not P0 ever lands.
 
 **Filed as GitHub issue [#157](https://github.com/itchyshin/pigauto/issues/157)** (2026-08-15),
 scoped to the asymmetry alone. P0 is explicitly not proposed for merge in that issue.
+
+### F5-CODA — fix implemented 2026-08-15; and a correction to my OWN measurement
+
+**The fix (landing with the P0 PR):** two-layer margin-based BM floor + test-surface change.
+Layer 1 in `calibrate_gates()` (pre-refine calibration surface); layer 2 in `fit_pigauto()`
+after the conformal re-refine (the delivered surface; a closed gate zeroes the delta, so no
+extra forward pass). Margin `cal_min_rel_gain / 2` = 1% so the 2026-04-29 AVONET-Mass
+near-tie class survives while material losses close the gate. Task-12 test now evaluates via
+`.mask_observed_idx = c(val_idx, test_idx)`. Two deterministic regression tests prove the
+floor fires on a half-B-fallback corner and tolerates a within-margin corner.
+
+**The correction: the delta-surface script's "B" was MIS-SPECIFIED.** It masked val cells
+only, leaving TEST cells pinned to their truth — an intermediate surface nothing in the
+package uses. With the masking matched to the package convention (`c(val_idx, test_idx)`,
+as `evaluate()` / `cross_validate()` / `impute()` / `report()` and now the Task-12 test use),
+the #157 fixture's gate-open blend **beats pure BM in all 3 instrumented reps**:
+
+| rep | gate | blend MSE (val+test hidden) | BM | ratio |
+|---|---|---|---|---|
+| 1 | 0.10 | 0.3185 | 0.3248 | 0.981 |
+| 2 | 0.15 | 0.3122 | 0.3248 | 0.961 |
+| 3 | 0.15 | 0.3116 | 0.3248 | 0.959 |
+
+The floor correctly did not fire — there was nothing to correct. So the amended reading of
+F5: the original breach was a genuine surface mismatch in the TEST (fixed); the guard hole
+was the fallback-corner class (fixed, regression-proven); and on the honestly-matched surface
+the leak-free GNN **helps** on this fixture (−2 to −4% MSE vs pure BM). Earlier F5-MECHANISM
+"+2%" B numbers carry the val-only-masking artifact; the qualitative asymmetry findings
+(A ≠ B; predates P0; P0 amplifies) stand, since A vs B2 shows the same ordering.

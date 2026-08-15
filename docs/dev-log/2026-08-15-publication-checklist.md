@@ -8,16 +8,16 @@ number measured before the P0 land may appear in the manuscript.
 
 ## Tier 0 — correctness (local Mac, ~1 week total)
 
-- [ ] **Decide #157**: which surface does the "never worse than baseline" invariant live on —
+- [x] **Decide #157** *(2026-08-15: surface B — decided and shipped)*: which surface does the "never worse than baseline" invariant live on —
       the one users get (truth hidden, recommended) or the one `predict()` currently scores?
       → [github.com/itchyshin/pigauto/issues/157](https://github.com/itchyshin/pigauto/issues/157)
-- [ ] Fix the calibration↔predict context mismatch per that decision; make the gate-acceptance
+- [x] Fix the calibration↔predict context mismatch *(two-layer floor, PR #158)* per that decision; make the gate-acceptance
       guards assert on the delivered surface
-- [ ] **Land P0** (`arc/p0-onto-main` `f5e8416` — merge already done and verified; needs a
+- [x] **Land P0** *(PR #158 merged; `main` = `3677a85`)* (`arc/p0-onto-main` `f5e8416` — merge already done and verified; needs a
       fresh G0 lock that day)
-- [ ] Fix the **BLOCKING** vignette claim ("Exact under BM" → split by path) + 5 SHOULD-FIX
+- [x] Fix the **BLOCKING** vignette claim *(9-edit bundle in PR #158)* ("Exact under BM" → split by path) + 5 SHOULD-FIX
       → `docs/dev-log/arc/2026-08-15-p0-claim-gate-findings.md`
-- [ ] `rcmdcheck --as-cran` clean (expect only the pre-existing 2 WARN / 3 NOTE)
+- [x] `rcmdcheck --as-cran` clean *(0E/0W/1N — known incoming note only)* (expect only the pre-existing 2 WARN / 3 NOTE)
 
 ## Tier 1 — GNN evidence (Totoro; D-139: estimate + pre-run test first)
 

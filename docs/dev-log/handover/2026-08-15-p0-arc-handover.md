@@ -1,5 +1,11 @@
 # Session Handoff: pigauto P0 merged and verified on a branch, NOT landed — one blocker
 
+> **SUPERSEDED 2026-08-15 (same day, later):** the land HAPPENED. Shinichi locked the G0;
+> PR [#158](https://github.com/itchyshin/pigauto/pull/158) MERGED; `origin/main` = `3677a85`;
+> [#157](https://github.com/itchyshin/pigauto/issues/157) CLOSED (fixed by a two-layer floor +
+> matched test surface, not by the blocker standing). Current truth:
+> `docs/dev-log/after-task/2026-08-15-p0-land.md`. This file remains as the investigation record.
+
 Meta: 2026-08-15 · from Claude (`AUTHOR = claude`) · `TARGET = any`
 Authoritative copy: this file. Chat is disposable. You inherit **no** authoring chat.
 
