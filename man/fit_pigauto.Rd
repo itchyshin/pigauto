@@ -143,7 +143,8 @@ ramps from \code{corruption_start} to \code{corruption_rate}
 (default \code{500}).  Set to \code{0} for fixed corruption.}
 
 \item{refine_steps}{integer. Iterative refinement steps at inference
-(default \code{8}).}
+(default \code{8}). Gate calibration and conformal scoring use the
+same number of steps so the calibrated surface matches predict.}
 
 \item{lambda_shrink}{numeric. Weight on the shrinkage penalty
 \code{||delta - baseline||^2} that keeps the GNN correction close
