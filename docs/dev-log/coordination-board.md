@@ -92,8 +92,12 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
   pristine `main`, fails on `main`+P0** (0.3434 / 0.3442 vs 0.3410),
   controlled comparison, test provably ran not skipped. Hypothesis: P0 fix #4
   removes a held-out-context leak, so the GNN is honestly worse on val and the
-  5% threshold was calibrated on the leaky pipeline — **not confirmed**; next
-  experiment is `train_mask_heldout = FALSE`. `--as-cran` deliberately NOT run
+  5% threshold was calibrated on the leaky pipeline — **REFUTED by experiment
+  2026-08-15**: restoring the leak shows the gate CLOSES pre-fix (`r_cal_gnn`
+  0.0, blend == bm) but OPENS to 0.1 under P0 and degrades below pure BM. That
+  is a **safety-invariant failure, not a stale threshold** — `r_cal = 0` stopped
+  being a protective fallback. Next question is why calibration selects a
+  harmful gate; do NOT loosen the threshold. `--as-cran` deliberately NOT run
   (no value on a branch with an unexplained failure). Claim-gate: **1 BLOCKING**
   — `gnn-architecture.Rmd` §5 says `pred$se` is "Exact under BM" while `main`'s
   default path broadcasts one `sd(observed)` to every tip (verified in code);

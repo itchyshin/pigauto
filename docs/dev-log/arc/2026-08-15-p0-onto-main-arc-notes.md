@@ -132,6 +132,58 @@ fix #4 by fitting with `model_config$train_mask_heldout` forced FALSE on the mer
 If the test passes with the leak restored, the hypothesis is confirmed and the threshold
 needs re-deriving on honest data (with the reason recorded), not loosening.
 
+### F5-RESULT — experiment run 2026-08-15. Hypothesis WRONG; the real cause is worse.
+
+Script: `docs/dev-log/arc/2026-08-15-train-mask-heldout-experiment.R`.
+`train_mask_heldout` in `model_config` is a **record, not a switch** (`fit_pigauto.R:1099`);
+the behaviour lives at the single call site `fit_pigauto.R:439`
+`X_fill_heldout <- mask_heldout_with_baseline(X_fill, MU, hold_idx)`, which feeds training,
+val eval, **and gate calibration**. The leak is restored by mocking that function to identity.
+Same fixture, same seed, same device; only the leak differs.
+
+**Losses (`x_cont`, 4 reps each; `bm = 0.3248` in every run; threshold `0.3410`):**
+
+| Condition | blend across reps | Result |
+|---|---|---|
+| LEAKED (pre-fix) | 0.3248, 0.3248, 0.3299, 0.3248 | 4/4 PASS |
+| FIXED (P0) | 0.3422, 0.3403, 0.3330, 0.3415 | **2/4 FAIL** |
+
+**Calibrated gate (`x_cont`, 2 reps each) — the decisive measurement:**
+
+| Condition | `r_cal_bm` | `r_cal_gnn` | `r_cal_mean` |
+|---|---|---|---|
+| LEAKED | **1.0** | **0.0** | 0.0 |
+| FIXED | **0.9** | **0.1** | 0.0 |
+
+**What this means.** Under LEAK the gate closes completely, so `blend == bm` exactly and the
+floor passes trivially. Under P0 the gate **opens 10% to the GNN, and that contribution makes
+the prediction worse than pure BM.** The original hypothesis — "the GNN is honestly worse now,
+so the threshold is stale" — is **wrong**: on the pre-fix path the GNN was not used at all here.
+
+This is a **safety-invariant failure, not a stale threshold.** `calibrate_gates()` is supposed
+to open the gate only when it improves validation loss (relative-gain floor + half-A/half-B
+cross-check). It opened anyway and degraded the result. `r_cal = 0` stopped being the
+protective fallback the architecture documents.
+
+**Inferred mechanism — NOT confirmed, do not cite as fact.** Calibration evaluates with
+held-out cells baseline-filled (P0's masking), while `predict()` later sees those same cells as
+*observed* context. The gate would then be chosen on one surface and applied to another — an
+asymmetry, in the fix named "train/cal/predict symmetry". Confirming this requires comparing
+the delta surface at calibration against the one at predict, which was not done.
+
+**Regime (do not over-generalise).** n = 80, one synthetic 4-trait BM fixture, `x_cont` only,
+30 epochs, single-obs, 4 reps, one machine. This does **not** show P0 breaks the gate in
+general. It shows P0 breaks it reproducibly on the fixture pigauto's own safety test uses.
+
+**Also learned:** the failure is *marginal in isolation* (2/4 reps) but was 2/2 inside the full
+test file, consistent with accumulated torch/MPS state pushing a borderline case over — the
+same effect `main` already documents when it pins a neighbouring test to CPU. The borderline-ness
+is caused by P0 opening the gate; the run-to-run noise only decides which side of the line a
+given run lands on.
+
+**Verdict: do not land P0 as-is.** The next question is why calibration opens a harmful gate —
+not how to make the test green.
+
 ## F6 — pre-existing oddity, not introduced here
 
 `tests/testthat/test-safety-floor.R` ends with a bare `skip_if_no_libtorch()` at top level,

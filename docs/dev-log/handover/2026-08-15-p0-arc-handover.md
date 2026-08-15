@@ -60,12 +60,39 @@ cannot separate the two.
 changes to it are `skip_if_no_libtorch()` refactors); pure MPS flakiness (the control on `main`
 passes).
 
-**The next experiment, and it is cheap:** on `arc/p0-onto-main`, fit with
-`model_config$train_mask_heldout` forced `FALSE` (restoring the leak) and re-run that one test.
-- **Passes with the leak restored** → hypothesis confirmed. The threshold was calibrated on
-  leaked evidence and must be **re-derived on honest data with the reason recorded in the test**
-  — not quietly loosened until it goes green.
-- **Still fails** → P0 degrades the blend for some other reason. Do not land; investigate.
+**THE EXPERIMENT HAS BEEN RUN (2026-08-15). The hypothesis above was WRONG.**
+Script: `docs/dev-log/arc/2026-08-15-train-mask-heldout-experiment.R`. Full write-up: F5-RESULT
+in `docs/dev-log/arc/2026-08-15-p0-onto-main-arc-notes.md`.
+
+The leak was restored by mocking `mask_heldout_with_baseline()` to identity (the flag in
+`model_config` is a *record*, not a switch; the behaviour is at `fit_pigauto.R:439`).
+
+| Condition | `x_cont` blend, 4 reps (`bm` = 0.3248, thr = 0.3410) | `r_cal_bm` / `r_cal_gnn` | Result |
+|---|---|---|---|
+| LEAKED (pre-fix) | 0.3248, 0.3248, 0.3299, 0.3248 | **1.0 / 0.0** | 4/4 PASS |
+| FIXED (P0) | 0.3422, 0.3403, 0.3330, 0.3415 | **0.9 / 0.1** | **2/4 FAIL** |
+
+**Under P0 the calibrated gate OPENS 10% to the GNN and that makes the prediction worse than
+pure BM.** On the pre-fix path the gate closes entirely, so `blend == bm` and the floor passes
+trivially. The GNN was never contributing here before.
+
+So this is **not** a stale threshold — it is a **safety-invariant failure**. `calibrate_gates()`
+must open the gate only when it improves val loss (relative-gain floor + half-A/half-B
+cross-check). It opened anyway and degraded the result. **`r_cal = 0` stopped being the
+protective fallback the architecture guarantees.**
+
+*Inferred, NOT confirmed:* calibration evaluates with held-out cells baseline-filled while
+`predict()` sees them as observed context, so the gate is chosen on one surface and applied to
+another. Confirming needs a comparison of the calibration-time and predict-time delta surfaces.
+
+*Regime:* n=80, one synthetic 4-trait BM fixture, `x_cont`, 30 epochs, single-obs, 4 reps, one
+machine. Narrow — it does not show P0 breaks the gate generally, only reproducibly on the
+fixture pigauto's own safety test uses.
+
+**Next question for whoever resumes: why does calibration select a harmful gate under P0?**
+Start by comparing the delta surface `calibrate_gates()` scores against the one `predict()`
+produces for the same val cells. **Do not "fix" this by loosening the 5% threshold** — that
+converts a real safety finding into a hidden regression.
 
 ## What was accomplished
 
