@@ -498,49 +498,56 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
 
     # ---- Post-calibration full-val invariant check ------------------
     # Single dispatcher (refactored 2026-04-30 per Opus adversarial
-    # review #5).  Both blocks now route through the shared
-    # `compute_corner_loss()` helper via the `cal_mean_loss` closure.
-    # The asymmetry between trait families is captured in a per-family
-    # POLICY:
+    # review #5; unified both-corners check 2026-08-15 per issue #157).
+    # All families route through the shared `compute_corner_loss()`
+    # helper via the `cal_mean_loss` closure.  The asymmetry between
+    # trait families is captured in a per-family POLICY:
     #
     #   continuous family (continuous / count / ordinal / proportion):
-    #     override ONLY if blend loses to pure-MEAN on the full val
-    #     set.  Pure-BM is trusted via the half-A/half-B + median
-    #     cross-check above (which compared blend to pure-BM by half-set
-    #     gain).  A strict pure-BM check on the full val set is too
-    #     sensitive to sampling noise at typical val sizes — see the
-    #     2026-04-29 AVONET Mass over-correction (commit 1ac34b1) where
-    #     blend's val MSE was numerically equal to pure-BM's val MSE on
-    #     a 450-cell val set yet blend was meaningfully better on test.
+    #     override if blend loses to pure-MEAN on the full val set
+    #     (strict at float tolerance), OR loses to pure-BM by MORE
+    #     than a relative margin (cal_min_rel_gain / 2, default 1%).
+    #     The margin exists because a STRICT pure-BM check is too
+    #     sensitive to sampling noise at typical val sizes — in the
+    #     2026-04-29 AVONET Mass over-correction (commit 1ac34b1)
+    #     blend's val MSE was numerically equal to pure-BM's on a
+    #     450-cell val set yet blend was meaningfully better on test.
+    #     Issue #157 is the opposite regime: a gate accepted from
+    #     half-set comparisons (or a half-B fallback corner) can be
+    #     MATERIALLY worse than pure BM on the full val set (+2.1%
+    #     measured), and pre-#157 no check caught it for this family.
+    #     The margin separates the regimes: near-ties survive, material
+    #     losses close the gate.
     #
     #   discrete family (binary / categorical / zi_count):
     #     override if blend loses to EITHER pure-BM or pure-MEAN on the
-    #     full val set; pick whichever pure corner has lower val loss.
-    #     Discrete 0-1 / argmax losses are step functions on a small
-    #     set, so the strict-tie comparison is well-conditioned even
-    #     at typical val sizes (val→test extrapolation noise survives,
-    #     but is at most a few cell-flips per trait).
+    #     full val set, strict at float tolerance.  Discrete 0-1 /
+    #     argmax losses are step functions on a small set, so the
+    #     strict-tie comparison is well-conditioned even at typical
+    #     val sizes (val→test extrapolation noise survives, but is at
+    #     most a few cell-flips per trait).
+    #
+    #   Override target (both families): whichever pure corner has
+    #   lower full-val loss; BM wins ties over MEAN (`lm_bm <= lm_mean`).
     #
     #   multi_proportion: skipped entirely.  cal_mean_loss returns Inf
     #     under safety_floor = TRUE for this type by design (no
     #     per-component mean vector); the legacy gate-naturally-closes
     #     path produces pigauto = baseline at every signal level.
     #
-    # Tie semantics (lb ≤ corner + 1e-12): blend wins ties.  For
-    # continuous-family near-ties this prevents the v1 over-correction
-    # mechanism.  For discrete this preserves a non-zero GNN delta if
-    # it is not strictly worse than the corner.  In the discrete fork's
-    # corner-selection, BM wins ties over MEAN (`lm_bm <= lm_mean`).
-    #
-    # The `1e-12` is a numerical floor against floating-point drift,
-    # not a meaningful tolerance — typical loss scales (0.07 for 0-1
-    # discrete, 0.3 for z-scored MSE, ~1000 for zi_count count^2 MSE)
-    # are all >> 1e-12.  At calibration time this enforces
-    #   loss(blend) ≤ loss(pure_corner)  modulo float noise.
-    # It does NOT guarantee the same invariant at predict time —
-    # `predict.pigauto_fit` runs additional refine_steps and
-    # mask_token substitution that introduce a small (~5 %) drift; see
-    # the Task 12 invariant test's `* 1.05` slack.
+    # Tie semantics (lb ≤ corner + 1e-12, or within the continuous
+    # margin): blend wins.  The `1e-12` is a numerical floor against
+    # floating-point drift, not a meaningful tolerance — typical loss
+    # scales (0.07 for 0-1 discrete, 0.3 for z-scored MSE, ~1000 for
+    # zi_count count^2 MSE) are all >> 1e-12.  This enforces the
+    # invariant on the PRE-REFINE calibration surface (fixed delta_cal,
+    # val/test cells hidden).  A second, identical margin floor runs in
+    # `fit_pigauto()` on the POST-refine calibrated surface (the one
+    # `predict()` delivers) after the conformal re-refine — see the
+    # "Post-refine delivered-surface floor (issue #157)" block there.
+    # The Task 12 invariant test evaluates on the calibration-matched
+    # surface (`.mask_observed_idx`, issue #157) and keeps its `* 1.05`
+    # slack for residual refine drift.
     is_continuous_family <-
       tm$type %in% c("continuous", "count", "ordinal", "proportion")
     is_discrete_family <-
@@ -561,21 +568,21 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
       }
       tol <- 1e-12
 
-      if (is_continuous_family && safety_floor) {
-        # Mean-only check: override only if blend strictly worse than MEAN.
-        if (lb > lm_mean + tol) {
-          w_final <- c(0, 0, 1)
-        }
-      } else if (is_discrete_family) {
-        # Strict both-corners check: BM is always a valid corner; MEAN
-        # only when safety_floor = TRUE (legacy path's `cal_mean_loss`
-        # is undefined for the (0,0,1) gate).
-        bm_corner <- if (safety_floor) c(1, 0, 0) else 0
-        lm_bm <- coerce_loss(cal_mean_loss(bm_corner, val_row_idx))
-        if (lb > lm_bm + tol || lb > lm_mean + tol) {
-          # On ties, BM wins via `<=`.
-          w_final <- if (lm_bm <= lm_mean) c(1, 0, 0) else c(0, 0, 1)
-        }
+      # BM is always a valid corner; MEAN only when safety_floor = TRUE
+      # (legacy path's `cal_mean_loss` is undefined for the (0,0,1)
+      # gate).
+      bm_corner <- if (safety_floor) c(1, 0, 0) else 0
+      lm_bm <- coerce_loss(cal_mean_loss(bm_corner, val_row_idx))
+      # Continuous-family BM comparison is margin-based (see POLICY
+      # above, issue #157); discrete stays strict at float tolerance.
+      bm_threshold <- if (is_continuous_family) {
+        lm_bm * (1 + cal_min_rel_gain / 2)
+      } else {
+        lm_bm + tol
+      }
+      if (lb > bm_threshold || lb > lm_mean + tol) {
+        # On ties, BM wins via `<=`.
+        w_final <- if (lm_bm <= lm_mean) c(1, 0, 0) else c(0, 0, 1)
       }
     }
 

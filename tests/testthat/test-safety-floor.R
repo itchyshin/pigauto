@@ -660,10 +660,16 @@ test_that("strict val-floor: pigauto val-loss <= baseline val-loss per trait, al
   val_mask <- matrix(FALSE, n_obs, p_lat)
   val_mask[splits$val_idx] <- TRUE
 
-  # Recompute mu_cal and delta_cal on val cells via a one-shot predict.
-  # (The fit itself stored conformal scores but not the raw delta;
-  # cleanest is to rerun the model forward in eval mode.)
-  pred_obj <- predict(fit, return_se = FALSE)
+  # Recompute the blend on val cells via a one-shot predict, evaluated on
+  # the CALIBRATION-MATCHED surface (issue #157): val/test cells are
+  # hidden from the DAE input context via `.mask_observed_idx`, exactly
+  # as gate calibration saw them and as `evaluate()` / `cross_validate()`
+  # / `impute()` / `report()` already do.  A plain predict() would pin
+  # each val cell's own truth as input context -- a surface no genuinely
+  # missing cell can ever have in production.
+  pred_obj <- predict(fit, return_se = FALSE,
+                      .mask_observed_idx = c(splits$val_idx,
+                                             splits$test_idx))
   blend_pred <- pred_obj$imputed_latent
 
   # Pure-BM prediction = baseline$mu (single-obs) or expanded to obs level.
@@ -1037,6 +1043,89 @@ test_that("[CV] cv_folds with n_val < K folds back to single_split-like behaviou
   )
   s <- as.numeric(res$r_cal_bm + res$r_cal_gnn + res$r_cal_mean)
   expect_equal(s, 1, tolerance = 1e-8)
+})
+
+# ---- Issue #157: full-val BM floor (margin-based, continuous family) ------
+
+test_that("[#157] full-val BM floor corrects a half-B fallback corner (continuous)", {
+  # Construct the #157 failure shape deterministically: a candidate wins
+  # half A (delta perfect there), fails half-B verification (delta bad
+  # there), and the fallback picks the MEAN corner because MEAN wins on
+  # half B locally -- while on the FULL val set MEAN is catastrophically
+  # worse than pure BM.  Pre-#157 the continuous post-cal check compared
+  # only against MEAN, so the fallback corner shipped unchallenged.  The
+  # margin-based BM floor must override to the BM corner.
+  seed <- 777L
+  n <- 40L
+  # Replicate calibrate_gates()'s deterministic half split (seed + 17L).
+  set.seed(seed + 17L)
+  perm_i <- sample(n)
+  half_a <- perm_i[seq_len(20L)]
+  half_b <- perm_i[21L:40L]
+
+  truth <- numeric(n); truth[half_a] <- 10;    truth[half_b] <- 0
+  mu    <- numeric(n); mu[half_a]    <- 10.05; mu[half_b]    <- 0.5
+  delta <- numeric(n); delta[half_a] <- 10;    delta[half_b] <- 10
+  # Losses this implies: BM full-val MSE ~ 0.126; MEAN corner (predicts
+  # the mean baseline 0) is perfect on half B but ~100 per cell on half
+  # A -> full-val ~ 50, i.e. hundreds of times worse than BM.
+
+  tm <- list(list(name = "x1", type = "continuous",
+                   latent_cols = 1L, mean = 0, sd = 1))
+  res <- pigauto:::calibrate_gates(
+    trait_map = tm,
+    mu_cal    = matrix(mu, ncol = 1L),
+    delta_cal = matrix(delta, ncol = 1L),
+    X_truth_r = matrix(truth, ncol = 1L),
+    val_mask_mat = matrix(TRUE, n, 1L),
+    gate_grid = seq(0, 1, 0.1), gate_cap = 1,
+    safety_floor = TRUE,
+    mean_baseline_per_col = c(x1 = 0),
+    simplex_step = 0.05,
+    latent_names = "x1", verbose = FALSE, seed = seed)
+  expect_equal(as.numeric(res$r_cal_bm), 1)
+  expect_equal(as.numeric(res$r_cal_gnn), 0)
+  expect_equal(as.numeric(res$r_cal_mean), 0)
+})
+
+test_that("[#157] within-margin corner survives the BM floor (no over-correction)", {
+  # Same fallback construction, but the returned MEAN corner is only
+  # ~0.2% worse than pure BM on the full val set -- inside the
+  # cal_min_rel_gain / 2 (1%) margin.  The floor must NOT fire; this
+  # protects the 2026-04-29 AVONET-Mass near-tie behaviour the margin
+  # exists for.
+  seed <- 778L
+  n <- 40L
+  set.seed(seed + 17L)
+  perm_i <- sample(n)
+  half_a <- perm_i[seq_len(20L)]
+  half_b <- perm_i[21L:40L]
+
+  truth <- numeric(n)
+  truth[half_a] <- sqrt(0.501)   # MEAN loss on half A = 0.501 per cell
+  truth[half_b] <- 0
+  mu    <- truth + 0.5           # BM loss = 0.25 per cell everywhere
+  delta <- numeric(n)
+  delta[half_a] <- truth[half_a] # perfect on half A -> wins half A
+  delta[half_b] <- 5             # terrible on half B -> fails B verify
+  # Full-val: BM = 0.25; MEAN = (0.501 * 20 + 0) / 40 = 0.2505.
+  # 0.2505 < 0.25 * 1.01 -> within margin -> corner kept.
+
+  tm <- list(list(name = "x1", type = "continuous",
+                   latent_cols = 1L, mean = 0, sd = 1))
+  res <- pigauto:::calibrate_gates(
+    trait_map = tm,
+    mu_cal    = matrix(mu, ncol = 1L),
+    delta_cal = matrix(delta, ncol = 1L),
+    X_truth_r = matrix(truth, ncol = 1L),
+    val_mask_mat = matrix(TRUE, n, 1L),
+    gate_grid = seq(0, 1, 0.1), gate_cap = 1,
+    safety_floor = TRUE,
+    mean_baseline_per_col = c(x1 = 0),
+    simplex_step = 0.05,
+    latent_names = "x1", verbose = FALSE, seed = seed)
+  expect_equal(as.numeric(res$r_cal_mean), 1)
+  expect_equal(as.numeric(res$r_cal_bm), 0)
 })
 
 test_that("[CV] cv_folds requires gate_cv_folds >= 2", {

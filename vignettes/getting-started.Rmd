@@ -494,6 +494,9 @@ runs.  GBIF requires no API key.  WorldClim raster downloads are
 ~50–500 MB depending on resolution and are cached in
 `worldclim_cache_dir`.  Both functions error with a clear message
 if the optional dependencies (`rgbif`, `terra`) are not installed.
+Both helpers return one row per requested species; alignment is
+enforced by name where names are present, so pass `species =` and
+keep the returned `species` column intact rather than reordering it.
 
 For a worked end-to-end example with covariates, use this section alongside
 `?impute`, `?pull_gbif_centroids`, and `?pull_worldclim_per_species`. The old

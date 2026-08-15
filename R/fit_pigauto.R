@@ -1025,6 +1025,61 @@ fit_pigauto <- function(
     )
     delta_cal <- refined_conf$delta_mat
     fixed_cal <- refined_conf$fixed_mat
+
+    # ---- Post-refine delivered-surface floor (issue #157) -----------------
+    # calibrate_gates() enforces its floor on the PRE-refine calibration
+    # surface (single learned-rs forward).  The refined delta above is the
+    # surface predict() actually delivers (calibrated blend, refine_steps,
+    # val/test hidden).  A gate that legitimately won on the pre-refine
+    # surface can lose to pure BM here — measured +2.0% on the #157
+    # fixture — so the same margin-based floor runs once more on the
+    # refined surface.  Same family policy as calibrate_gates(): the
+    # continuous-family BM comparison uses a relative margin (near-ties
+    # survive, per the 2026-04-29 AVONET Mass case); discrete is strict.
+    # Traits forced by the B2 phylo-signal override are skipped — that
+    # gate already made its own decision.  No extra forward pass is
+    # needed: a closed gate multiplies delta by zero downstream.
+    post_refine_bm_margin <- 0.01  # = calibrate_gates() cal_min_rel_gain / 2
+    for (tm in trait_map) {
+      lc <- tm$latent_cols
+      if (length(gated_latent_cols) > 0L && any(lc %in% gated_latent_cols)) next
+      is_cont <- tm$type %in% c("continuous", "count", "ordinal", "proportion")
+      is_disc <- tm$type %in% c("binary", "categorical", "zi_count")
+      if (!is_cont && !is_disc) next  # multi_proportion: skipped by design
+      rows <- which(val_mask_cal[, lc[1]] & !is.na(X_truth_r[, lc[1]]))
+      if (length(rows) == 0L) next
+      w_tm <- c(calibrated_gates_list$r_cal_bm[lc[1]],
+                calibrated_gates_list$r_cal_gnn[lc[1]],
+                calibrated_gates_list$r_cal_mean[lc[1]])
+      if (w_tm[2] == 0) next  # gate already closed; corners are refine-invariant
+      corner_loss <- function(g) {
+        out <- compute_corner_loss(
+          g, rows, tm, mu_cal, delta_cal, X_truth_r,
+          safety_floor = safety_floor,
+          mean_baseline_per_col = mean_baseline_per_col,
+          fixed_cal = fixed_cal
+        )
+        if (is.finite(out)) out else Inf
+      }
+      lb    <- corner_loss(w_tm)
+      lm_bm <- corner_loss(if (safety_floor) c(1, 0, 0) else 0)
+      lm_mn <- if (safety_floor) corner_loss(c(0, 0, 1)) else Inf
+      bm_threshold <- if (is_cont) lm_bm * (1 + post_refine_bm_margin) else lm_bm + 1e-12
+      if (lb > bm_threshold || lb > lm_mn + 1e-12) {
+        # On ties, BM wins via `<=` (same rule as calibrate_gates()).
+        w_new <- if (lm_bm <= lm_mn) c(1, 0, 0) else c(0, 0, 1)
+        calibrated_gates_list$r_cal_bm[lc]   <- w_new[1]
+        calibrated_gates_list$r_cal_gnn[lc]  <- w_new[2]
+        calibrated_gates_list$r_cal_mean[lc] <- w_new[3]
+        calibrated_gates[lc] <- w_new[2]
+        if (verbose) {
+          message(sprintf(
+            "Post-refine floor (#157): trait %s blend lost to %s on the refined val surface (%.4g > %.4g); gate closed.",
+            tm$name, if (w_new[1] == 1) "pure BM" else "pure MEAN", lb,
+            if (w_new[1] == 1) lm_bm else lm_mn))
+        }
+      }
+    }
   }
 
   # ---- Conformal prediction scores (validation set) -----------------------

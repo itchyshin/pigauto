@@ -141,7 +141,9 @@ head(pred$probabilities$migr)
 head(pred$probabilities$diet)
 ```
 
-The SE matrix provides type-appropriate uncertainty:
+The SE matrix provides type-appropriate uncertainty (see the
+uncertainty-mechanisms table in the GNN architecture vignette for what
+each column's SE does and does not guarantee):
 
 ```{r se}
 head(pred$se)

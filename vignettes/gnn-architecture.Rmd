@@ -308,7 +308,9 @@ with `baseline_mu` masked and `lambda_shrink = 0`) — z-RMSE 1.038 vs
 1.056 vs 1.057; conformal coverage stable at 0.884–0.887. Even with
 the lazy-optimiser trap disarmed, the network regresses against the
 baseline rather than finding new structure. See the NEWS entry for the
-full table.
+full table. (Measured before the 2026-08 GNN train/cal-symmetry fix,
+which removed held-out truth from the training-time input context;
+not yet re-verified on the corrected pipeline.)
 
 The flag ships as opt-in because it may help on datasets where the
 linear $\mathbf{\Sigma}$ assumption is too weak (e.g. functional traits
@@ -346,7 +348,8 @@ different questions and must not be conflated.
 
 | Mechanism | Source | Validity |
 |-----------|--------|----------|
-| `pred$se` (cont./count/ordinal/prop.) | Conditional-MVN SD from the BM baseline, delta-method back-transformed. | Exact under BM, model-dependent. |
+| `pred$se` (cont./count/ordinal/prop., single-column BM path, `R/bm_internal.R`) | Conditional-MVN SD from the BM baseline, delta-method back-transformed. | Exact under BM, model-dependent. |
+| `pred$se` (cont./count/ordinal/prop., joint-MVN/threshold-joint path, default when ≥2 BM-eligible columns) | Per-tip conditional SD $\sigma\sqrt{v_i}$ from the sparse Henderson precision (same factorisation as the mean; 2026-08 fix). | Model-dependent; does not use the un-restored cross-trait EM (`max_iter = 0`). Per-tip conditional variance under the Henderson approximation, not the single-trait closed-form "exact under BM" guarantee. |
 | `pred$se` (binary/categorical) | $\min(p, 1{-}p)$ / $1 - \max_k p_k$ — uncertainty score, **not** a Gaussian SE. | Use for ranking/reporting; do **not** plug into Rubin's rules. |
 | `pred$conformal_lower`, `pred$conformal_upper` | Split conformal residual quantile on the val set: $s = q_{(1-\alpha)}( | y - \hat{y} |_{\text{val}} )$. | Marginal prediction coverage under the split-conformal exchangeability and fixed calibration-procedure assumptions; not an MI draw distribution. |
 
@@ -399,7 +402,8 @@ $$
 $$
 
 where $s_t$ is the split-conformal residual quantile for trait $t$,
-giving $\ge 95\%$ marginal coverage on the original scale.
+giving $\ge 95\%$ marginal coverage on the original scale, under the
+split-conformal exchangeability assumptions stated in §5.
 
 ## 8. Where to look in the code
 
