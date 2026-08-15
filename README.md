@@ -100,7 +100,11 @@ result <- impute(traits, tree300, species_col = "species",
 ```
 
 Covariates must be fully observed. Numeric columns are z-scored;
-factor/ordered columns are one-hot encoded automatically. The calibrated gate
+factor/ordered columns are one-hot encoded automatically. Covariate rows are
+matched to trait rows by name: named covariates (rownames in single-obs mode)
+are aligned to species/observation identity and unmatched names raise an
+error; unnamed covariates follow the input-row order of `traits`, so supply
+them pre-aligned. The calibrated gate
 can close when the phylogenetic baseline already explains the validation cells,
 so covariates should be treated as an evidence-backed addition rather than an
 automatic improvement.

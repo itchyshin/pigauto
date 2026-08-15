@@ -4,6 +4,27 @@ GitHub-dev after CRAN pigauto 0.10.0 (Date/Publication 2026-07-30).
 This is not a CRAN tarball. BACE is still not on CRAN. The next CRAN
 cut must drop Suggests `BACE` again or wait until BACE is on CRAN.
 
+## Fix: full-validation BM floor in gate calibration (#157)
+
+Gate calibration accepted blends from half-set comparisons (or half-B
+fallback corners) that could be materially worse than the pure BM
+baseline on the full validation set — for continuous-family traits no
+full-val BM comparison existed at all. `calibrate_gates()` now checks
+both pure corners on the full validation set for every family; the
+continuous-family BM comparison is margin-based (`cal_min_rel_gain / 2`,
+default 1%) so near-ties survive (the 2026-04-29 AVONET Mass case)
+while material losses close the gate. A second, identical floor runs in
+`fit_pigauto()` on the post-refine calibrated surface — the one
+`predict()` delivers — because a gate that wins on the pre-refine
+surface can lose to pure BM after the calibrated refine pass (+2.0%
+measured on the #157 fixture); a gate closed there costs nothing since
+the delta contribution is zeroed. The strict val-floor test now
+evaluates on the calibration-matched surface
+(`.mask_observed_idx = c(val_idx, test_idx)`), matching `evaluate()` /
+`cross_validate()` / `impute()` / `report()` — a plain `predict()` pins
+each held-out cell's own truth as input context, a surface no genuinely
+missing cell has in production.
+
 ## New (opt-in): BACE baseline wrapper restored, with proper-MI draws
 
 Restores `fit_baseline_bace()` (removed from the v0.10.0 CRAN surface in
@@ -55,6 +76,51 @@ decomposition as "the OVR strategy BACE uses". BACE's
 Rphylopars fits, used so that Rphylopars stays well-conditioned — and
 that motivation is unchanged. Comment/roxygen only; no estimator
 change.
+
+## Fix: covariate rows follow species / observation identity
+
+`preprocess_traits()` / `impute()` reordered trait rows to tree tip
+order but only checked that `covariates` had the same `nrow`. Shuffled
+trait tables with matching-nrow environmental data silently mispaired
+species and climate in the GNN covariate tensor. Covariates are now
+aligned to the same species (single-obs rownames) or observation
+(multi-obs `species_col`) order as `X_scaled`. Unmatched names error.
+Unnamed covariates still follow the input-row permutation of `traits`.
+GNN math is unchanged.
+
+## Fix: zi_count conformal multiple imputation
+
+`multi_impute(draws_method = "conformal")` now scores `zi_count` traits on the log1p-z magnitude latent (held-out non-zeros) and draws count|nonzero from that score, or from the magnitude latent SE when scores are unavailable. The zero-inflation gate stays Bernoulli from P(nonzero). Previously scores were skipped and draws used `pred$se` of E[X], mixing gate uncertainty into the count SD. `draws_method = "mc_dropout"` is unchanged. Reported `$se` of expected count is not rewritten (P1).
+
+## Fix: per-tip BM SE on default K≥2 / threshold-joint path
+
+Under `max_iter = 0` (shipped default; cross-trait EM is not restored),
+the Henderson init used for K≥2 joint MVN and mixed threshold-joint
+baselines recycled one empirical SD for every missing tip. Missing-cell
+SE is now BM-style σ√(1−h_i) from the same sparse Q already used for μ.
+Binary threshold decode (`pnorm(μ / sqrt(1+se²))`) therefore sees
+per-tip uncertainty. Conformal intervals are unchanged (they do not
+consume baseline `se`).
+
+## Fix: train / calibrate / predict symmetry for the GNN path
+
+Three related wiring bugs in the ResidualPhyloDAE fit path (review
+2026-08-07). Defaults and the public API are unchanged; behaviour is
+more honest about what the model sees at train and cal time.
+
+- **Held-out masking (train):** validation and test cells no longer
+  appear as truth in the DAE input during training. They are replaced
+  with the baseline prediction (`mask_heldout_with_baseline()`;
+  `model_config$train_mask_heldout = TRUE`).
+- **Phylo-signal gate without safety floor:** when
+  `phylo_signal_gate` triggers and `safety_floor = FALSE` (so no mean
+  baseline is available), the override falls back to pure BM
+  (`r_cal_bm = 1`) with a warning, instead of the mean corner that
+  would become latent 0 at predict time.
+- **Refine steps at calibration / conformal:** gate calibration and
+  conformal residual scoring now run the same iterative
+  `refine_steps` refine loop that `predict()` uses
+  (`pigauto_refine_forward()`; `model_config$cal_refine_steps`).
 
 # pigauto 0.10.0
 
@@ -201,6 +267,10 @@ Result (z-RMSE, averaged across all scenarios):
 | `pigauto_OFF`   | 1.038  | 0.887    | 2.65  |
 | `pigauto_ON`    | 1.056  | 0.884    | 2.67  |
 | `pigauto_ON_L0` | 1.057  | 0.887    | 2.68  |
+
+(Measured before the 2026-08 GNN train/cal-symmetry fix, which removed
+held-out truth from the training-time input context; not yet
+re-verified on the corrected pipeline.)
 
 At BIEN scale (N=2000) the joint-MVN baseline already encodes the
 cross-trait Σ structure; the within-row attention mechanism injects

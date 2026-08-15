@@ -1,4 +1,7 @@
-test_that("joint_mvn_available() reflects the in-house solver", {
+test_that("joint_mvn_available() reflects the in-house solver (always TRUE; no Rphylopars)", {
+  # Default joint MVN path is R/joint_mvn_solver.R — always available.
+  # Do not gate this on requireNamespace("Rphylopars").
+  # 3c31f1d contract: identical TRUE (not requireNamespace("Rphylopars")).
   res <- joint_mvn_available()
   expect_type(res, "logical")
   expect_length(res, 1L)
@@ -7,7 +10,6 @@ test_that("joint_mvn_available() reflects the in-house solver", {
 
 test_that("fit_joint_mvn_baseline recovers cross-trait structure on correlated BM", {
   skip_on_cran()
-  skip_if_not(joint_mvn_available())
   set.seed(42)
   tree <- ape::rcoal(50)
   # Simulate two correlated BM traits: x1 ~ BM, x2 = 0.8 * x1 + noise (also BM)
@@ -60,7 +62,6 @@ test_that("fit_joint_mvn_baseline recovers cross-trait structure on correlated B
 
 test_that("joint baseline matches per-column BM on single-trait data", {
   skip_on_cran()
-  skip_if_not(joint_mvn_available())
   set.seed(7)
   tree <- ape::rcoal(30)
   # Simulate a single BM trait directly via Cholesky of vcv(tree)
@@ -89,17 +90,16 @@ test_that("joint baseline matches per-column BM on single-trait data", {
   message(sprintf("single-trait back-compat: max |mu diff| = %.2e, max |se diff| = %.2e",
                   max_mu_diff, max_se_diff))
 
-  # Tolerance reflects Rphylopars' REML solver vs our Cholesky nugget; they
-  # should agree within ~1e-3 in practice for n=30.  SE may diverge slightly
-  # more than mu because the two paths use different variance estimators
-  # (profile REML vs plug-in σ²), so SE tolerance is kept at 1e-2.
+  # Tolerance reflects in-house joint MVN vs per-column BM (Cholesky nugget);
+  # they should agree within ~1e-3 in practice for n=30.  SE may diverge
+  # slightly more than mu because the two paths use different variance
+  # estimators, so SE tolerance is kept at 1e-2.
   expect_equal(bl_new$mu, bl_old$mu, tolerance = 1e-3)
   expect_equal(bl_new$se, bl_old$se, tolerance = 1e-2)
 })
 
 test_that("joint baseline does not leak val/test cells into BM fit", {
   skip_on_cran()
-  skip_if_not(joint_mvn_available())
   set.seed(11)
   tree <- ape::rcoal(30)
   # Two independent BM traits (no cross-correlation — so the joint is just
@@ -143,9 +143,8 @@ test_that("joint baseline does not leak val/test cells into BM fit", {
   }
 })
 
-test_that("fit_baseline dispatches to joint MVN when trait count >= 2 and Rphylopars available", {
+test_that("fit_baseline dispatches to joint MVN when trait count >= 2", {
   skip_on_cran()
-  skip_if_not(joint_mvn_available())
   set.seed(17)
   tree <- ape::rcoal(30)
   # Two independent BM traits
@@ -177,10 +176,11 @@ test_that("fit_baseline dispatches to joint MVN when trait count >= 2 and Rphylo
   expect_equal(bl$se, bl_direct$se, tolerance = 1e-8)
 })
 
-test_that("fit_baseline falls back cleanly when Rphylopars is unavailable", {
+test_that("fit_baseline falls back cleanly when joint_mvn_available() is FALSE", {
   skip_on_cran()
   # Use testthat::local_mocked_bindings to shadow joint_mvn_available()
-  # for this test only. testthat 3.1+ syntax.
+  # for this test only. testthat 3.1+ syntax. Production always returns
+  # TRUE (in-house solver); this keeps the per-column fallback path honest.
   testthat::local_mocked_bindings(
     joint_mvn_available = function() FALSE,
     .package = "pigauto"
@@ -204,9 +204,48 @@ test_that("fit_baseline falls back cleanly when Rphylopars is unavailable", {
                                 trait_map = pd$trait_map)
   graph <- build_phylo_graph(tree, k_eigen = 4L)
 
-  # Should succeed without Rphylopars by falling back to per-column BM
+  # Should succeed without the joint path by falling back to per-column BM
   bl <- fit_baseline(pd, tree, splits = splits, graph = graph)
   expect_equal(dim(bl$mu), c(30L, 2L))
   expect_false(any(is.na(bl$mu)))
   expect_false(any(is.na(bl$se)))
+})
+
+# P0 B-Blk1: max_iter=0 Henderson path must return BM-style per-tip SE,
+# not one empirical SD recycled for every missing tip.
+test_that("K>=2 max_iter=0 missing-cell SE is per-tip BM-style, not one empirical SD", {
+  skip_if_not_installed("Matrix")
+  tree <- ape::read.tree(text = paste0(
+    "(((close_obs:0.01,close_miss:0.01):0.04,(a:0.03,b:0.03):0.02):0.95,",
+    "((far_miss:0.90,c:0.05):0.05,(d:0.4,e:0.4):0.1):0.05);"
+  ))
+  tips <- tree$tip.label
+  n <- length(tips)
+  # Two weakly correlated BM-ish columns; only t1 has the designed holes.
+  set.seed(20260808L)
+  t1 <- setNames(as.numeric(tips == "close_obs") * 2 + rnorm(n, sd = 0.15), tips)
+  t2 <- setNames(rnorm(n), tips)
+  L <- cbind(t1 = t1, t2 = t2)
+  L[match(c("close_miss", "far_miss"), rownames(L)), "t1"] <- NA_real_
+
+  fit <- fit_mvn_bm_inhouse(L, tree = tree, max_iter = 0L)
+  se1 <- sqrt(fit$anc_var[, "t1"])
+  se_close <- unname(se1["close_miss"])
+  se_far   <- unname(se1["far_miss"])
+
+  expect_true(is.finite(se_close) && se_close > 0)
+  expect_true(is.finite(se_far) && se_far > 0)
+  # Observed cells keep SE = 0.
+  expect_equal(unname(se1[setdiff(tips, c("close_miss", "far_miss"))]),
+               rep(0, n - 2L))
+  # Heteroscedastic: closer-to-observed tip has strictly smaller SE.
+  expect_lt(se_close, se_far)
+  # Not a single recycled column SD (the pre-fix Henderson contract).
+  expect_false(isTRUE(all.equal(se_close, se_far)))
+
+  # Same ordering as dense BM σ√(1−h_i) on this column.
+  R <- phylo_cor_matrix(tree)
+  dense <- bm_impute_col(L[, "t1"], R)
+  expect_lt(unname(dense$se[tips == "close_miss"]),
+            unname(dense$se[tips == "far_miss"]))
 })

@@ -316,3 +316,32 @@ test_that("[D1.4] bm_impute_col GLS phylogenetic mean matches phylolm BM interce
             label = sprintf("[D1.4] pigauto mu_hat = %.4g, phylolm = %.4g",
                              pigauto_mu_hat, phylolm_intercept))
 })
+
+# P0 B-Blk1: default fit_baseline K>=2 (Henderson / max_iter=0) must not
+# recycle one empirical SD for every missing tip.
+test_that("fit_baseline K>=2 missing-cell SE differs by phylo distance", {
+  skip_if_not_installed("Matrix")
+  tree <- ape::read.tree(text = paste0(
+    "(((close_obs:0.01,close_miss:0.01):0.04,(a:0.03,b:0.03):0.02):0.95,",
+    "((far_miss:0.90,c:0.05):0.05,(d:0.4,e:0.4):0.1):0.05);"
+  ))
+  tips <- tree$tip.label
+  n <- length(tips)
+  set.seed(20260808L)
+  df <- data.frame(
+    t1 = as.numeric(tips == "close_obs") * 2 + rnorm(n, sd = 0.15),
+    t2 = rnorm(n),
+    row.names = tips
+  )
+  df[c("close_miss", "far_miss"), "t1"] <- NA_real_
+  pd <- preprocess_traits(df, tree)
+  bl <- fit_baseline(pd, tree, splits = NULL)
+
+  se_close <- bl$se["close_miss", "t1"]
+  se_far   <- bl$se["far_miss", "t1"]
+  expect_true(is.finite(se_close) && se_close > 0)
+  expect_true(is.finite(se_far) && se_far > 0)
+  expect_equal(unname(bl$se[setdiff(tips, c("close_miss", "far_miss")), "t1"]),
+               rep(0, n - 2L))
+  expect_lt(se_close, se_far)
+})
