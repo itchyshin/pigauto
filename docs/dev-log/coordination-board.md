@@ -132,3 +132,12 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
   convention surface the leak-free GNN helps. Next: Tier-1 bench re-runs
   (publication checklist). Do not re-merge #158. CRAN submission still
   blocked on Suggests BACE.
+- 2026-08-15 (post-land fallout, fixed): post-merge pkgdown on `3677a85` FAILED —
+  the P0 merge carried `docs/design/capability-status.md` onto `main`, and
+  pkgdown's `check_dest_is_pkgdown()` refuses a non-empty `docs/` destination
+  (never bit before: pkgdown skips PRs and the file had never reached `main`).
+  Fixed by PR [#159](https://github.com/itchyshin/pigauto/pull/159) (pure move
+  to `dev/design/`; CI 3/3), merged `c655d75`; site rebuild dispatched via
+  workflow_dispatch (the path filter ignores `dev/**`). R-CMD-check on `main`
+  was green throughout. Instrumentation script preserved:
+  `docs/dev-log/arc/2026-08-15-floor-diagnostic.R`.
