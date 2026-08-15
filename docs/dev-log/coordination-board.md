@@ -104,7 +104,14 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
   train<->cal symmetry and exposed a pre-existing **cal<->predict** asymmetry,
   invisible on `main` only because the gate closes to 0. Candidate fix (needs a
   decision, not yet applied): evaluate the test via
-  `.mask_observed_idx = splits$val_idx`. do NOT loosen the threshold. `--as-cran` deliberately NOT run
+  `.mask_observed_idx = splits$val_idx`. do NOT loosen the threshold.
+  **Gate-open control on pristine `main` (2026-08-15): the asymmetry PREDATES
+  P0** — A != B on `main` too (max|A-B| 0.0289 as-calibrated). Corrects two
+  earlier claims: `main`'s gate is **NOT** closed (`r_cal_gnn = 0.10`; the 0.0
+  came from a mocked chimera, not `main`), and P0 **amplifies** the asymmetry
+  ~3x (mean A-B -0.0059 -> -0.0179) rather than creating it. `main` has margin
+  inside the floor; P0 spends it. The asymmetry is a defect in its own right,
+  independent of P0. `--as-cran` deliberately NOT run
   (no value on a branch with an unexplained failure). Claim-gate: **1 BLOCKING**
   — `gnn-architecture.Rmd` §5 says `pred$se` is "Exact under BM" while `main`'s
   default path broadcasts one `sd(observed)` to every tip (verified in code);

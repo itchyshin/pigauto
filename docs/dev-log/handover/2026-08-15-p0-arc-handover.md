@@ -111,8 +111,27 @@ with held-out cells at baseline, so real data there is out-of-distribution at pr
 train↔cal symmetry and **exposed a pre-existing cal↔predict asymmetry**, invisible on `main`
 only because the gate closes to 0 (at `r_cal_gnn = 0` context cannot affect output).
 
-**Cheapest next check (NOT run):** on pristine `main`, force the gate open and see whether
-A ≠ B there too. If yes, the asymmetry predates P0 and P0 is only the messenger.
+**THAT CHECK HAS BEEN RUN (2026-08-15) — `docs/dev-log/arc/2026-08-15-gate-open-check-on-main.R`.
+The asymmetry PREDATES P0.** On pristine `416561b`, A != B as well:
+
+```
+main AS-CALIBRATED gate: r_cal_bm=0.90 r_cal_gnn=0.10   <- NOT closed
+  A=0.3301  B=0.3266  max|A-B|=0.0289    (BM=0.3248, floor=0.3410)
+main FORCED gate 0.85/0.15, same model:
+  A=0.3349 within floor · B=0.3297 within floor · max|A-B|=0.0434 · mean(A-B)=-0.0059
+```
+
+**Two corrections to the entries above.** (1) "On `main` the gate closes to 0" is **WRONG** —
+that figure came from the *mocked* LEAKED condition, which reverts only one of fix #4's three
+parts and is therefore a P0/main chimera, not pre-fix behaviour. Real `main` calibrates to
+`r_cal_gnn = 0.10`. Do not draw inferences from LEAKED alone. (2) P0 **amplifies** the
+asymmetry rather than creating it — at the same forced gate, mean(A-B) goes -0.0059 (`main`)
+-> -0.0179 (P0), ~3x, and A goes 0.3349 (passes) -> 0.3429 (breaches). `main` has margin
+inside the 5% floor; **P0 spends it.**
+
+**Reframed decision:** the question is not "is P0 broken". `main` already ships this asymmetry
+with an open gate and enough headroom. The asymmetry is the more interesting defect and is
+**independent of P0** — worth its own issue whether or not P0 lands.
 
 **Candidate resolution — needs Shinichi's decision, do NOT just apply it.** Surface B is what
 real users get (a genuinely missing cell has no truth to pin), so the test arguably should

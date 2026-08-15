@@ -252,3 +252,45 @@ Textual cleanliness is not semantic correctness. Prime suspect first:
 
 **Risk branch (declared before running):** if failures are not confined to the seven
 conflicted files, STOP and report the diagnosis rather than pushing through to Rung 1.
+
+### F5-CONTROL — gate-open check on pristine `main`, 2026-08-15. **Asymmetry PREDATES P0.**
+
+Script: `docs/dev-log/arc/2026-08-15-gate-open-check-on-main.R`, run on detached `416561b`.
+
+```
+AS-CALIBRATED gate on main: r_cal_bm=0.90  r_cal_gnn=0.10
+  gate as-is : A=0.3301  B=0.3266  max|A-B|=0.0289   (BM=0.3248, floor=0.3410)
+FORCED gate 0.85/0.15 on the SAME model:
+  A predict (truth PINNED) 0.3349 within floor
+  B calib   (truth HIDDEN) 0.3297 within floor
+  max|A-B|=0.0434  corr=0.9999  mean(A-B)=-0.0059
+```
+
+**A != B on `main`. The cal<->predict asymmetry is PRE-EXISTING, not introduced by P0.**
+
+#### Two corrections to earlier entries in this file
+
+1. **F5-RESULT's "on main the gate closes (r_cal_gnn = 0)" is WRONG.** That value came from the
+   *mocked* LEAKED condition, which I wrongly treated as standing in for `main`. Pristine `main`
+   calibrates to **`r_cal_gnn = 0.10`** — the GNN does contribute there.
+   Why the mock misleads: mocking `mask_heldout_with_baseline()` reverts only ONE of fix #4's
+   three parts (the masking), leaving the phylo-signal-gate fallback and the calibration-time
+   refine loop active. LEAKED was a P0/main chimera, not pre-fix behaviour. Any inference drawn
+   from LEAKED alone is unsafe; this control supersedes it.
+2. **P0 AMPLIFIES the asymmetry, it does not create it.** Like-for-like at the same forced gate:
+
+| | mean(A-B) | max abs(A-B) | A at gate 0.15 | vs floor |
+|---|---|---|---|---|
+| `main` | -0.0059 | 0.0434 | 0.3349 | passes |
+| `main` + P0 | -0.0179 | 0.0723 | 0.3429 | **breaches** |
+
+~3x larger under P0. `main` has enough headroom to stay inside the 5% floor; **P0 consumes it.**
+
+Consistent with the OOD reading (now the third independent measurement pointing the same way):
+P0's model never sees real data in held-out positions during training, so pinning truth there at
+predict hurts it more than it hurts `main`'s model, which trained with that truth visible.
+
+**Reframing for the decision.** The question is not "is P0 broken". `main` already ships this
+asymmetry and already runs an open gate; it merely has margin. P0 spends the margin. The
+asymmetry itself is the more interesting defect and is **independent of P0** — worth its own
+issue whether or not P0 ever lands.
