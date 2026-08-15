@@ -96,8 +96,15 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
   2026-08-15**: restoring the leak shows the gate CLOSES pre-fix (`r_cal_gnn`
   0.0, blend == bm) but OPENS to 0.1 under P0 and degrades below pure BM. That
   is a **safety-invariant failure, not a stale threshold** — `r_cal = 0` stopped
-  being a protective fallback. Next question is why calibration selects a
-  harmful gate; do NOT loosen the threshold. `--as-cran` deliberately NOT run
+  being a protective fallback. **Mechanism then MEASURED**: calibration scores a
+  surface where val truth is hidden (MSE 0.3315, within floor); `predict()`
+  delivers one where val cells are PINNED to their own truth (0.3429, breaches).
+  Same fit, same gate, only context differs. Inferred: P0 trains with held-out
+  cells at baseline, so pinned truth is out-of-distribution at predict — P0 fixed
+  train<->cal symmetry and exposed a pre-existing **cal<->predict** asymmetry,
+  invisible on `main` only because the gate closes to 0. Candidate fix (needs a
+  decision, not yet applied): evaluate the test via
+  `.mask_observed_idx = splits$val_idx`. do NOT loosen the threshold. `--as-cran` deliberately NOT run
   (no value on a branch with an unexplained failure). Claim-gate: **1 BLOCKING**
   — `gnn-architecture.Rmd` §5 says `pred$se` is "Exact under BM" while `main`'s
   default path broadcasts one `sd(observed)` to every tip (verified in code);

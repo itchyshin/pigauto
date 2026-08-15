@@ -89,10 +89,40 @@ another. Confirming needs a comparison of the calibration-time and predict-time 
 machine. Narrow — it does not show P0 breaks the gate generally, only reproducibly on the
 fixture pigauto's own safety test uses.
 
-**Next question for whoever resumes: why does calibration select a harmful gate under P0?**
-Start by comparing the delta surface `calibrate_gates()` scores against the one `predict()`
-produces for the same val cells. **Do not "fix" this by loosening the 5% threshold** — that
-converts a real safety finding into a hidden regression.
+**THAT COMPARISON HAS ALSO BEEN RUN (2026-08-15). The asymmetry is measured.**
+Script: `docs/dev-log/arc/2026-08-15-delta-surface-compare.R`. Write-up: F5-MECHANISM in the
+arc notes. One fit, no refit — model and gate fixed, only input context varies.
+
+| Surface | val MSE `x_cont` (floor = 0.3410, BM = 0.3248) |
+|---|---|
+| **B** calibration-like (val truth HIDDEN) | **0.3315** — within floor |
+| **A** predict surface (val truth PINNED) | **0.3429** — **breaches** |
+
+`corr(A,B) = 0.9996`, `max|A−B| = 0.0723`. **Calibration scores B; the package delivers A.**
+
+- calibration `fit_pigauto.R:819` — val cells start at BM (`t_X_eval`) and are unpinned
+  (`M_obs_mat[c(val_idx,test_idx)] <- FALSE`, `:429`): val truth never enters as context.
+- predict `predict_pigauto.R:339` — `observed_mask <- !is.na(X_scaled)`; val cells are non-NA
+  (held out only for fitting) so they are **pinned to their own truth** every refine step.
+
+Pinning the truth makes it *worse* (0.3429 vs 0.3315). **Inferred, not measured:** P0 trains
+with held-out cells at baseline, so real data there is out-of-distribution at predict; pre-fix
+`main` trained with that truth visible, so pinning was in-distribution. On that reading P0 fixed
+train↔cal symmetry and **exposed a pre-existing cal↔predict asymmetry**, invisible on `main`
+only because the gate closes to 0 (at `r_cal_gnn = 0` context cannot affect output).
+
+**Cheapest next check (NOT run):** on pristine `main`, force the gate open and see whether
+A ≠ B there too. If yes, the asymmetry predates P0 and P0 is only the messenger.
+
+**Candidate resolution — needs Shinichi's decision, do NOT just apply it.** Surface B is what
+real users get (a genuinely missing cell has no truth to pin), so the test arguably should
+evaluate via `predict(fit, .mask_observed_idx = splits$val_idx)`. Restraints: (1) even on B the
+blend (0.3315) is still worse than pure BM (0.3248) — the gate opened for a GNN that does not
+help; (2) whether the val-floor invariant belongs on the pinned or unpinned surface is a design
+question about what the safety property means.
+
+**Do not "fix" this by loosening the 5% threshold** — that converts a real finding into a
+hidden regression.
 
 ## What was accomplished
 

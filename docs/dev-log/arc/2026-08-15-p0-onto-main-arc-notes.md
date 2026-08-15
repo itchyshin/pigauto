@@ -184,6 +184,55 @@ given run lands on.
 **Verdict: do not land P0 as-is.** The next question is why calibration opens a harmful gate —
 not how to make the test green.
 
+### F5-MECHANISM — surface comparison run 2026-08-15. The asymmetry is MEASURED.
+
+Script: `docs/dev-log/arc/2026-08-15-delta-surface-compare.R`. One fit, no refit, so model and
+calibrated gate are held fixed and **only the input context varies**. `.mask_observed_idx`
+un-pins chosen cells at predict, reproducing the calibration-time context.
+
+Gate on this fit: `r_cal_bm = 0.85`, `r_cal_gnn = 0.15`.
+
+| Surface | val MSE (`x_cont`, 10 cells) | vs floor `0.3410` |
+|---|---|---|
+| pure BM baseline | 0.3248 | — |
+| **B** calibration-like (val truth HIDDEN) | **0.3315** | within floor |
+| **A** predict surface (val truth PINNED) | **0.3429** | **BREACHES** |
+
+`corr(A, B) = 0.9996`; `max|A − B| = 0.0723`; `mean(A − B) = −0.0179`. Nearly the same shape,
+a few cells moving enough to cross the line.
+
+**Gate calibration scores surface B; the package delivers surface A.** The code asymmetry:
+
+- **calibration** `fit_pigauto.R:819` — `X_init = t_X_eval` (val cells start at BM),
+  `pin_mask = t_M_obs`, and `M_obs_mat[c(val_idx, test_idx)] <- FALSE` (`:429`) → val truth
+  never enters as DAE context.
+- **predict** `predict_pigauto.R:339` — `observed_mask <- !is.na(object$X_scaled)`. Val cells
+  are genuinely non-NA (held out only for *fitting*), so predict **pins them to their own
+  truth** for every refine step.
+
+**Counter-intuitive and probably the real story:** pinning a cell's own truth makes the
+prediction *worse* (0.3429 vs 0.3315). **Inferred, NOT measured:** P0 trains the DAE with
+held-out cells at baseline, so real data in those positions at predict time is
+**out-of-distribution**; pre-fix `main` trained *with* that truth visible, so pinning it is
+in-distribution and free.
+
+If so, P0 fixed train↔cal symmetry and thereby **exposed a pre-existing cal↔predict
+asymmetry** — invisible on `main` only because the gate closes to 0, and at `r_cal_gnn = 0`
+the input context cannot change the output at all. **Cheap test of that claim (NOT run):** on
+pristine `main`, force the gate open and check whether A ≠ B there too. If it does, the
+asymmetry predates P0 and P0 is the messenger.
+
+**Which surface is correct? B.** A genuinely missing cell has no truth to pin, so B is what
+real users get. That indicts the test: it evaluates val cells through a plain `predict(fit)`,
+leaking their truth into context. Passing `.mask_observed_idx = splits$val_idx` would measure
+the surface that corresponds to use.
+
+**Do not treat that as the fix without a decision.** Two restraints: (1) even on the correct
+surface B, the blend (0.3315) is still **worse** than pure BM (0.3248) — the gate opened for a
+GNN that does not help, merely not badly enough to breach; (2) whether the val-floor invariant
+should be asserted on the pinned or the unpinned surface is a design question about what the
+safety property *means*. That is Shinichi's call, not a merge-resolution decision.
+
 ## F6 — pre-existing oddity, not introduced here
 
 `tests/testthat/test-safety-floor.R` ends with a bare `skip_if_no_libtorch()` at top level,
