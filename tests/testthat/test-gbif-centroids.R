@@ -144,7 +144,6 @@ test_that("pull_gbif_centroids handles species with no GBIF hits gracefully", {
 
 test_that("pull_gbif_centroids(store_points = TRUE) writes points field", {
   skip_if_not_installed("rgbif")
-
   tmp <- tempfile("gbif_"); dir.create(tmp)
   on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
   # Mock rgbif: pretend 5 occurrences for one species
@@ -180,7 +179,6 @@ test_that("pull_gbif_centroids(store_points = TRUE) writes points field", {
 
 test_that("pull_gbif_centroids(store_points = FALSE) omits points (default)", {
   skip_if_not_installed("rgbif")
-
   tmp <- tempfile("gbif_"); dir.create(tmp)
   on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
   fake_records <- data.frame(

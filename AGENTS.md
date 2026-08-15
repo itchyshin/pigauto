@@ -1,5 +1,13 @@
 # AGENTS.md
 
+## LOAD-FIRST manifest
+<!-- Brain dossier manifest (refresh: python3 ~/shinichi-brain/tools/route.py pigauto). Top = salience; drift-checked by route.py. -->
+- Compute is a default condition — for multi-seed imputation benchmarks ask *"Totoro or DRAC?"* (fast CPU ≤100 cores → Totoro; replicated / GPU → DRAC arrays); scale out, never laptop-scale. Playbook: `~/shinichi-brain/projects/COMPUTE-PLAYBOOK.md`.
+- Trust recovery-to-truth (recovery + prediction) over a single diagnostic; run data-size and seed ladders.
+- Diff main before building and keep prediction-path correctness as the first audit lane.
+- Load `r-package-engineer`, `validation-harness`, and the repo instructions below.
+- Preserve `r_cal = 0` as a valid fallback and keep uncertainty propagation first-class.
+
 Shared agent instructions for `pigauto`. Read by Codex natively and by
 Claude Code via the `@AGENTS.md` import in `CLAUDE.md`.
 
@@ -442,3 +450,6 @@ Several spots switch behaviour on `multi_obs`: baseline expansion (`MU <- MU_spe
 ### pkgdown GitHub Actions on pull requests
 
 `.github/workflows/pkgdown.yaml` has a job-level `if: github.event_name != 'pull_request'` that skips the entire pkgdown job on PR events. This is deliberate. The job attaches to the `github-pages` environment at job level (for the deploy step), and that environment has a protection rule that only allows `main` to deploy. The environment check fires BEFORE any `step: if` filter, so PR runs would always fail at the env gate even though the Upload/Deploy steps were themselves already conditionally skipped on PRs. Skipping the whole job on PRs eliminates the spurious red X on PR checks. Do not remove the job-level `if` without splitting into a separate build-on-PR job that does not attach to the `github-pages` environment.
+
+<!-- shinichi-hub -->
+> Read \`~/shinichi-brain/AGENTS.md\` first; this repository's rules override the personal hub where they differ.
