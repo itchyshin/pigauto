@@ -15,12 +15,18 @@ this lane unless he asks.
 3. **ONE BLOCKER stops the land.** `test-safety-floor.R:712` (strict val-floor invariant)
    **passes on `main` and fails on `main` + P0**, reproducibly, under a clean control.
    This is the whole reason P0 is not on `main`. See "The blocker" below.
-4. **Shinichi locked the G0** ("land it, and fix the false doc claim too") **conditional on a
+4. **A defect in `main` was found and filed: GitHub
+   [#157](https://github.com/itchyshin/pigauto/issues/157).** Gate calibration scores a
+   different delta surface than `predict()` delivers, so the val-floor safety property is not
+   enforced on the surface users get. **Present on `main` today, independent of P0** — P0 is
+   only how it was found. This outlives the P0 decision entirely: fix it, or don't, on its own
+   merits. If nothing else in this handover survives, keep this.
+5. **Shinichi locked the G0** ("land it, and fix the false doc claim too") **conditional on a
    clean check.** The check is not clean, so the land did not happen. The lock does **not**
    carry forward to a future session — re-confirm before landing.
-5. **CRAN pigauto 0.10.0 live; CRAN BACE still 404.** Do not CRAN-submit from this `main`
+6. **CRAN pigauto 0.10.0 live; CRAN BACE still 404.** Do not CRAN-submit from this `main`
    while Suggests includes `BACE`.
-6. **PROTECTED / do not touch:** standalone BACE `@ce8bc87`; in-tree `pigauto/BACE` `@de87d8c`;
+7. **PROTECTED / do not touch:** standalone BACE `@ce8bc87`; in-tree `pigauto/BACE` `@de87d8c`;
    the 15 dirty uinit/GNN items on the `handover/2026-08-09-cursor` checkout; the 44 foreign
    unpushed commits; EM (`max_iter > 0`); DRM.jl. Never `git add -A`. Never archive this project.
 
@@ -209,7 +215,10 @@ Still owed if and when it lands: `rcmdcheck --as-cran` (never run — expect the
   convert an honest finding into a hidden regression.
 - Do not run this on DRAC/Totoro. It is a ~45-min local check, and the toolchain is provisioned here.
 
-> Related: `docs/dev-log/after-task/2026-08-15-p0-arc.md` ·
+> Related: **GitHub issue [#157](https://github.com/itchyshin/pigauto/issues/157)** (the
+> cal/predict surface asymmetry — the durable outcome of this lane) ·
+> `docs/dev-log/after-task/2026-08-15-p0-arc.md` ·
 > `docs/dev-log/arc/2026-08-15-p0-onto-main-arc-notes.md` ·
 > `docs/dev-log/arc/2026-08-15-p0-claim-gate-findings.md` ·
+> reproduction scripts `docs/dev-log/arc/2026-08-15-{train-mask-heldout-experiment,delta-surface-compare,gate-open-check-on-main}.R` ·
 > `docs/dev-log/handover/2026-08-14-claude-handover.md` · `docs/dev-log/coordination-board.md`
