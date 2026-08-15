@@ -75,3 +75,11 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
   on main (parent 46 behind), then claim-gate. **Not locked — STOP.**
   Fresh handover `docs/dev-log/handover/2026-08-14-claude-handover.md`.
   Dirty uinit / GNN / 44 foreign unpushed commits stay CARRIED-OVER.
+- 2026-08-14 (Claude rehydration): Claude rehydrated from
+  `docs/dev-log/handover/2026-08-14-claude-handover.md`. All handover claims
+  reconcile against live git/gh/CRAN (wrap `416561b` landed, CI green,
+  #155 parent-only 46/9, CRAN pigauto 200 / BACE 404, #135 OPEN) — zero
+  discrepancies. Brain sweep found **no decision locking "land P0 on main"**.
+  **No G0 locked — STOP stands.** P0 remains off `main`. Dirty uinit / GNN and
+  the 44 foreign commits stay CARRIED-OVER; no R code ran. Receipt
+  `docs/dev-log/after-task/2026-08-14-claude-rehydration.md`.
