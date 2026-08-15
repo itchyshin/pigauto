@@ -111,7 +111,8 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
   came from a mocked chimera, not `main`), and P0 **amplifies** the asymmetry
   ~3x (mean A-B -0.0059 -> -0.0179) rather than creating it. `main` has margin
   inside the floor; P0 spends it. The asymmetry is a defect in its own right,
-  independent of P0. `--as-cran` deliberately NOT run
+  independent of P0 — filed as GitHub
+  [#157](https://github.com/itchyshin/pigauto/issues/157) (2026-08-15). `--as-cran` deliberately NOT run
   (no value on a branch with an unexplained failure). Claim-gate: **1 BLOCKING**
   — `gnn-architecture.Rmd` §5 says `pred$se` is "Exact under BM" while `main`'s
   default path broadcasts one `sd(observed)` to every tip (verified in code);

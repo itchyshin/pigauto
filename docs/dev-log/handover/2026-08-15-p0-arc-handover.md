@@ -129,6 +129,9 @@ asymmetry rather than creating it — at the same forced gate, mean(A-B) goes -0
 -> -0.0179 (P0), ~3x, and A goes 0.3349 (passes) -> 0.3429 (breaches). `main` has margin
 inside the 5% floor; **P0 spends it.**
 
+**Tracked as GitHub issue [#157](https://github.com/itchyshin/pigauto/issues/157)** (opened
+2026-08-15) — the asymmetry is filed as a defect of `main` in its own right, independent of P0.
+
 **Reframed decision:** the question is not "is P0 broken". `main` already ships this asymmetry
 with an open gate and enough headroom. The asymmetry is the more interesting defect and is
 **independent of P0** — worth its own issue whether or not P0 lands.

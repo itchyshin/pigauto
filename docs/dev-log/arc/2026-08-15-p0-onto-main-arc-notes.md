@@ -294,3 +294,6 @@ predict hurts it more than it hurts `main`'s model, which trained with that trut
 asymmetry and already runs an open gate; it merely has margin. P0 spends the margin. The
 asymmetry itself is the more interesting defect and is **independent of P0** — worth its own
 issue whether or not P0 ever lands.
+
+**Filed as GitHub issue [#157](https://github.com/itchyshin/pigauto/issues/157)** (2026-08-15),
+scoped to the asymmetry alone. P0 is explicitly not proposed for merge in that issue.
