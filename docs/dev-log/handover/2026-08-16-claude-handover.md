@@ -43,7 +43,10 @@ follow-up in the repo right now.
 
 **Coverage.** Conformal intervals **undercover at n = 100** (0.853–0.861 vs nominal 0.95,
 6/6 cells inadequate) and are well calibrated at n ≥ 300 (0.948–0.963, 6/6 adequate).
-`conformal_split_val = TRUE` does **not** repair it, which rules out the documented
+**See the CORRECTION at the foot of that doc before using this paragraph** -- the campaign
+was MCAR-only, and the repo's real-data benches show 0.87-0.91 coverage at n up to 10,654,
+which the arithmetic mechanism below cannot explain (a second, likely-exchangeability
+defect). `conformal_split_val = TRUE` does **not** repair it, which rules out the documented
 gate/conformal-reuse explanation. The mechanism is arithmetic: split conformal needs
 n_val ≥ 19 for 95%, and n = 100 with default splits gives n_val ≈ 10, where the ceiling is
 n_val/(n_val+1) ≈ 0.909 — **95% is unreachable before any noise**. This also retires the old
@@ -103,8 +106,16 @@ Classify against **current** git/gh before acting.
    is Shinichi's, from this menu:
    - **The Pagel-λ comparison** (highest value — it decides whether the low-λ regime-map
      gains survive a correctly-specified baseline).
-   - **The coverage remedy**: warn/error at `n_val < 19`, auto-raise `val_frac`, or document
-     a minimum n. Options written up in the coverage results doc.
+   - **One working external comparison (arguably now the top item).** Every BACE
+     head-to-head in `script/` reports "**BACE skipped** (not installed or failed)" --
+     `bench_bace_avonet_head_to_head.md`, `bench_pantheria_bace_head_to_head.md`,
+     `bench_avonet_bace.md`. Rphylopars is a *dependency* (the joint-MVN solver), not a
+     benchmarked comparator. **The repo currently has no working comparison against any
+     external package**, so no comparative claim can ship. Rphylopars standalone on
+     continuous traits is the cheapest credible comparator.
+   - **The real-data coverage defect** (see the CORRECTION): run
+     `bench_missingness_mechanism.R` against the exchangeability hypothesis. The n=100
+     arithmetic fix (warn at `n_val < 19`) is a one-line honesty fix, not the priority.
    - **P1-8** — covariates ignored by the joint/threshold-joint baseline; a real feature with
      a design choice in it.
    - **Paper framing** — Tier 1.2 said the choice waits for the regime map and must not be

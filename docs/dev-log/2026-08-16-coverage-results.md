@@ -82,3 +82,40 @@ is a real, defensible, quantified claim the package could not previously make.
 Simulated BM/λ DGPs (F1 linear, F2 nonlinear), continuous traits only, MCAR at m = 0.30,
 single-obs, 100 reps (n = 100/300) and 40 (n = 1000), one machine. No real-data anchor —
 AVONET300 conformal coverage remains a Tier-3 item.
+
+## CORRECTION (2026-08-16, same day, after Shinichi asked "didn't we check coverage before?")
+
+**This document's original scope claim was wrong, and the error was mine.** It read the
+n >= 300 simulated cells (0.948-0.963) as "well calibrated at n >= 300". That generalises a
+**MCAR simulation with equal per-trait observation counts** to the package's behaviour at
+large n. The repo's own real-data benches contradict it, and predate this campaign:
+
+| bench | n | conformal coverage |
+|---|---:|---|
+| `bench_fishbase.md` | 10,654 | 0.893-0.955 |
+| `bench_bien.md` | 4,745 | 0.896-0.977 |
+| `bench_pantheria_full.md` | 4,027 | 0.868-0.950 |
+| `bench_avonet_full_local.md` | 1,500 | 0.913-0.958 |
+| `bench_pantheria_bace_head_to_head.md` | 500 | **0.653**-0.943 |
+
+**These are two different defects and must not be merged.**
+
+1. **n = 100, simulated (this campaign).** Arithmetic. Split conformal needs
+   n_val >= 19 for 95%; n = 100 gives n_val ~ 10, ceiling n_val/(n_val+1) ~ 0.909.
+   Real, cheap to document, and unremarkable -- ordinary small-sample behaviour.
+2. **Large n, real data (the benches, long-standing).** **NOT** the ceiling. fishbase
+   `Length` has 3,103 test cells, so the order-statistic ceiling is ~0.998; observed
+   coverage is 0.906. The arithmetic explanation cannot apply. The leading candidate is
+   the one assumption split conformal actually requires: **exchangeability between the
+   calibration and test cells.** Real missingness is not MCAR -- species missing a trait
+   differ systematically from those that have it -- so validation residuals are not a
+   valid reference distribution for the missing cells. That is a methodological
+   limitation of applying split conformal to phylogenetic imputation, not a sample-size
+   artifact, and it is the half that bears on publication.
+
+**Untested and directly relevant:** `script/bench_missingness_mechanism.R` varies
+MCAR/MAR/MNAR and has not been run against this question. It is the experiment that
+would confirm or kill the exchangeability explanation.
+
+**Do not repeat the original error:** this campaign simulated MCAR only. No coverage
+claim derived from it transfers to real data.
