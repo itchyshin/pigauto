@@ -255,3 +255,35 @@ test_that("[pagel] impute(lambda_mode=...) threads to baseline and model config"
   expect_equal(res$fit$model_config$lambda_mode, "estimate")
   expect_true(all(is.finite(unlist(res$prediction$imputed, use.names = FALSE))))
 })
+
+# ---- lambda silently dropped under covariates (P1-8 fix 1) ---------------
+
+test_that("[pagel] fit_baseline warns when covariates + lambda_mode != 'fixed_1'", {
+  # bm_impute_col_with_cov() has no lambda argument -- the covariate-aware
+  # GLS path always runs at lambda = 1, so lambda_mode = "estimate" is
+  # silently ignored for BM-eligible columns when covariates are supplied.
+  # A single continuous trait keeps the per-column path selected (no
+  # joint dispatch competing for the warning).
+  set.seed(40L)
+  tree <- ape::rcoal(20L)
+  df <- data.frame(x1 = stats::rnorm(20L), row.names = tree$tip.label)
+  df$x1[c(2L, 9L)] <- NA
+  covs <- data.frame(env = stats::rnorm(20L), row.names = tree$tip.label)
+  pd <- preprocess_traits(df, tree, covariates = covs)
+
+  expect_warning(
+    fit_baseline(pd, tree, lambda_mode = "estimate"),
+    regexp = "lambda_mode.*not supported.*covariate-aware BM baseline"
+  )
+})
+
+test_that("[pagel] fit_baseline does NOT warn for covariates + default lambda_mode", {
+  set.seed(41L)
+  tree <- ape::rcoal(20L)
+  df <- data.frame(x1 = stats::rnorm(20L), row.names = tree$tip.label)
+  df$x1[c(2L, 9L)] <- NA
+  covs <- data.frame(env = stats::rnorm(20L), row.names = tree$tip.label)
+  pd <- preprocess_traits(df, tree, covariates = covs)
+
+  expect_no_warning(fit_baseline(pd, tree))
+})

@@ -220,6 +220,10 @@
 #'   \code{"estimate"}, \code{"cv"}, and \code{"bayes"} delegate lambda
 #'   handling to the per-column BM path. Passed to
 #'   \code{\link{fit_baseline}} and stored in the fitted model config.
+#'   When \code{covariates} are supplied, the covariate-aware BM path has
+#'   no lambda argument and always fits at lambda = 1; a non-\code{"fixed_1"}
+#'   \code{lambda_mode} is then silently ignored for BM-eligible columns
+#'   and \code{fit_baseline} emits a warning.
 #' @param verbose logical. Print training progress (default \code{TRUE}).
 #' @param seed optional integer. When supplied, makes stochastic training and
 #'   calibration reproducible; the default \code{NULL} uses the current RNG

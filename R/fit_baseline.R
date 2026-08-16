@@ -39,7 +39,11 @@
 #' @param lambda_mode character. Pagel-lambda mode for the BM baseline.
 #'   \code{"fixed_1"} preserves the default Brownian correlation matrix;
 #'   \code{"estimate"}, \code{"cv"}, and \code{"bayes"} delegate lambda
-#'   handling to the per-column BM path.
+#'   handling to the per-column BM path. \strong{Covariate caveat}: when
+#'   \code{data$covariates} is supplied, the per-column path switches to
+#'   \code{bm_impute_col_with_cov()}, which has no lambda argument and
+#'   always fits at lambda = 1; \code{lambda_mode != "fixed_1"} is then
+#'   silently ignored for BM-eligible columns and a warning is emitted.
 #' @param em_iterations integer. Number of Phase 6 EM iterations for the
 #'   threshold-joint baseline (binary + ordinal + OVR categorical). Default
 #'   \code{0L} disables the EM loop and preserves v0.9.1 output byte-for-byte.
@@ -539,6 +543,20 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       for (j in seq_len(ncol(cov_design))) {
         bad <- !is.finite(cov_design[, j])
         if (any(bad)) cov_design[bad, j] <- mean(cov_design[!bad, j])
+      }
+      # `bm_impute_col_with_cov()` has no lambda argument -- the
+      # covariate-aware GLS path always runs at lambda = 1, so
+      # lambda_mode = "estimate" / "cv" / "bayes" is silently ignored
+      # for BM-eligible columns when covariates are supplied. Warn once
+      # (not per column).
+      if (lambda_mode != "fixed_1") {
+        warning(
+          "lambda_mode = '", lambda_mode, "' is not supported by the ",
+          "covariate-aware BM baseline; bm_impute_col_with_cov() always ",
+          "runs at lambda = 1 when covariates are supplied. Pagel's ",
+          "lambda is ignored for BM-eligible columns in this fit.",
+          call. = FALSE
+        )
       }
     }
 
