@@ -1,6 +1,6 @@
 # Session Handoff: pigauto Tier 0 CLOSED, P1 queue 8/9, Totoro campaign IN FLIGHT (Cursor)
 
-Meta: 2026-08-16 ~05:40 MDT · from Claude (`AUTHOR = claude`) · `TARGET = cursor`
+Meta: 2026-08-16, written ~05:40 MDT, **refreshed ~07:05 MDT** · from Claude (`AUTHOR = claude`) · `TARGET = cursor`
 Authoritative copy: this file. Chat is disposable. You inherit **no** authoring chat.
 
 You are **Cursor**, picking up **pigauto only**. A long overnight Claude lane closed Tier 0
@@ -9,11 +9,12 @@ re-merge anything. Do not CRAN-submit.
 
 ## Critical Context
 
-1. **`origin/main` = `2ec4af3`**, Version `0.10.0.9000`, Suggests `BACE`. Eight PRs merged
-   overnight (#158–#165). CI green throughout, including post-merge pkgdown.
-2. **A Totoro campaign is IN FLIGHT.** `~/pigauto_regime_map/` on
+1. **`origin/main` = `175ebdc`**, Version `0.10.0.9000`, Suggests `BACE`. **Nine PRs merged**
+   (#158–#166). CI green throughout, including post-merge pkgdown.
+2. **A Totoro campaign is IN FLIGHT and nearly done.** `~/pigauto_regime_map/` on
    `snakagaw@totoro.biology.ualberta.ca`, launched 2026-08-16 ~05:15, 5,400 jobs, 100
-   workers, 0 failures at last check. **It is resumable and must not be relaunched from
+   workers. **At 07:00 MDT: 4,497 / 5,400 done, 102 workers, 0 failures.** Expect completion
+   around 07:30–08:00. **It is resumable and must not be relaunched from
    scratch** — `regime_cell.R` skips existing outputs, so a re-run of `run_campaign.sh`
    resumes rather than duplicates, but only if you leave `results/regime_map/` intact.
 3. **Estimated 1.5 h, actually ~2.5 h** — logged as a D-139 overrun in
@@ -71,6 +72,7 @@ Full narrative: `docs/dev-log/2026-08-16-overnight-report.md`. Summary:
 | [#163](https://github.com/itchyshin/pigauto/pull/163) | P1-12 multi-obs phylo-signal gate |
 | [#164](https://github.com/itchyshin/pigauto/pull/164) | P1-9 zi_count zeros in splits |
 | [#165](https://github.com/itchyshin/pigauto/pull/165) | P1-11 documented (deliberately not fixed) |
+| [#166](https://github.com/itchyshin/pigauto/pull/166) | all 8 bench drivers leaked their PSOCK cluster on any non-success exit — `on.exit` guard added (found by the drmTMB lane) |
 
 **Three silent bugs, each proven against pre-fix code** — the discipline that matters here:
 run the defect on the pre-fix commit before claiming a fix. #157 (surface mismatch),
@@ -96,6 +98,19 @@ duplicated.
     when you start, let them finish or kill them; nothing depends on them.
 - **Not working / blocked:** CRAN submission (Suggests BACE, CRAN BACE 404). P1-8 pending a
   Shinichi decision. Coverage campaign approved but not launched.
+
+### Changed after this handover was first written (05:40 → 07:05)
+
+- **PR #166 merged** — `main` `2ec4af3` → `175ebdc`. All eight bench drivers now guard their
+  PSOCK cluster with `on.exit`; previously any error stranded the whole cluster. This is the
+  root cause of the orphaned masters that disrupted the overnight bench runs.
+- **The brain-write rule's citation was corrected in five repos** on Shinichi's instruction
+  (see the `AGENTS.md` warning above). In pigauto and drmTMB the correction is an uncommitted
+  working-tree edit; in CBIC it was merged to `main`; in the survey repo `AGENTS.md` is
+  untracked. **GLLVM.jl was deliberately left alone** by Shinichi — a `fix/brain-write-citation`
+  branch is pushed there, unmerged, because the rule is not on GLLVM.jl's `main` at all
+  (feature branch only), so merging would *add* a rule rather than correct one.
+- **`zi_count` bench is still retrying** and has produced no `.rds` yet.
 
 ## Key Decisions & Rationale
 
@@ -168,6 +183,8 @@ staging the dirty items are **not OWED**.
      echo "workers=$(pgrep -fc regime_cell.R || echo 0)"; \
      echo "fails=$(grep -c "^FAIL " campaign_regime_map.log || echo 0)"'
    ```
+   - **Likely already finished by the time you read this** (83% at 07:00). Confirm with the
+     command above before assuming either way.
    - Still running → leave it. Check again later.
    - Finished (workers 0, results ≈ 5400, fails 0) → **summarise it** into
      `docs/dev-log/` per the design's Reporting section, then launch the coverage campaign:
@@ -239,15 +256,19 @@ Must not stage: `.gitignore` `AGENTS.md` `CLAUDE.md` `README.md` `_pkgdown.yml` 
 either BACE tree · any foreign branch.
 
 **⚠ `AGENTS.md` on this checkout is UNCOMMITTED and differs from every committed ref.**
-It is one of the 15 carried-over dirty files (` M AGENTS.md`). The on-disk copy carries rules
-that `HEAD` and `origin/main` do **not** — notably a "Brain-write boundary … never write to the
-brain vault without explicit approval; stage a draft and propose" line at `:476`, which is
-absent from both committed refs and whose cited authority (brain D-37) does not contain it.
-Two consequences: (a) if you work from a fresh clone or a `git worktree`, you will load a
-*different* `AGENTS.md` than this lane did, and a rule this lane obeyed all night will simply
-not be there; (b) `git checkout -- AGENTS.md` would delete it silently. **Do not stage it, do
-not restore it, and read it from disk knowing it is not committed state.** Flagged for Shinichi
-in `docs/dev-log/2026-08-15-brain-lesson-drafts.md`.
+It is one of the 15 carried-over dirty files (` M AGENTS.md`). Two consequences: (a) working
+from a fresh clone or a `git worktree` loads a **different** `AGENTS.md` than this lane did —
+`HEAD` and `origin/main` have no "Brain-write boundary" line at all; (b)
+`git checkout -- AGENTS.md` would erase the on-disk version silently. **Do not stage it, do not
+restore it**, and read it knowing it is not committed state.
+
+*Update 07:05:* that line's citation was corrected on Shinichi's instruction — it previously
+cited brain decision **D-37**, which does not contain the rule it claimed (verified: D-37 is
+local-only restoration / health gate / truth repair, and the phrases "without explicit
+approval" and "stage a draft" appear nowhere in `memory/DECISIONS.md`). The rule itself is
+kept — it is Shinichi's standing instruction — and now states that it has no decision record.
+The correction is **still uncommitted in pigauto**, so it inherits the same fragility.
+Background and the fleet-wide picture: `docs/dev-log/2026-08-15-brain-lesson-drafts.md`.
 
 Read order: `AGENTS.md` (with the caveat above) → this file → `docs/dev-log/2026-08-16-overnight-report.md` →
 `docs/dev-log/coordination-board.md` (**both** Active Lane Split rows) →
@@ -264,10 +285,10 @@ Read AGENTS.md and docs/dev-log/handover/2026-08-16-cursor-handover.md. Run the 
 | | |
 |---|---|
 | Repo | `/Users/z3437171/Dropbox/Github Local/pigauto` |
-| main | `2ec4af3` · Version `0.10.0.9000` · Suggests `BACE` |
-| Merged overnight | PRs #158–#165 (8) · CI green · `--as-cran` 0E/0W/1N |
+| main | `175ebdc` · Version `0.10.0.9000` · Suggests `BACE` |
+| Merged overnight | PRs #158–#166 (**9**) · CI green · `--as-cran` 0E/0W/1N |
 | Docs branch | `handover/2026-08-09-cursor` (this handover + all dev-log) |
-| In flight | Totoro regime-map campaign, 5400 jobs, resumable, ~2.5 h |
+| In flight | Totoro regime-map campaign — **4,497/5,400 at 07:00**, 0 failures, resumable |
 | Not launched | coverage campaign (approved, command in step 2) |
 | Rose P1 | 8 of 9 addressed; **P1-8 open, needs Shinichi** |
 | CRAN | pigauto 0.10.0 live · BACE **404** · do not submit |
