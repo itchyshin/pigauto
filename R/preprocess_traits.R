@@ -595,6 +595,8 @@ align_covariates_to_obs <- function(covariates,
 detect_trait_types <- function(traits, overrides = NULL) {
   types <- character(ncol(traits))
   names(types) <- colnames(traits)
+  auto_count_cols <- character(0)
+  neg_int_cols    <- character(0)
 
   for (nm in colnames(traits)) {
     x <- traits[[nm]]
@@ -612,13 +614,44 @@ detect_trait_types <- function(traits, overrides = NULL) {
       nlev <- nlevels(x)
       types[nm] <- if (nlev == 2) "binary" else "categorical"
     } else if (is.integer(x)) {
-      types[nm] <- "count"
+      # A count cannot be negative.  Without this guard a negative integer
+      # column auto-detects as "count" and its log1p encoding produces NaN
+      # (P1-13).  This is a fail-closed correction, not a heuristic: the
+      # data contradict the type.
+      if (any(x < 0, na.rm = TRUE)) {
+        types[nm] <- "continuous"
+        neg_int_cols <- c(neg_int_cols, nm)
+      } else {
+        types[nm] <- "count"
+        auto_count_cols <- c(auto_count_cols, nm)
+      }
     } else if (is.numeric(x)) {
       types[nm] <- "continuous"
     } else {
       stop("Cannot determine type for column '", nm, "' (class: ",
            paste(class(x), collapse = "/"), ").")
     }
+  }
+
+  # P1-13: `read.csv()` returns whole-number columns as integer, so a
+  # continuous trait measured in whole units silently becomes a "count"
+  # (log1p-encoded, count semantics downstream).  Auto-detection cannot
+  # tell the two apart from storage class alone, so surface the decision
+  # rather than making it silently.
+  # A message, not a warning: genuine count traits are common, and warning on
+  # every one of them would cry wolf (and trip `expect_silent()` tests).  The
+  # point is to make the inference visible, not to alarm.
+  if (length(auto_count_cols)) {
+    message("Auto-detected trait type \"count\" (log1p-encoded) for integer ",
+            "column(s): ", paste(auto_count_cols, collapse = ", "),
+            ". If any is a continuous measurement stored as whole numbers ",
+            "(common after read.csv), override it: trait_types = c(",
+            auto_count_cols[1], " = \"continuous\").")
+  }
+  if (length(neg_int_cols)) {
+    message("Integer column(s) with negative values treated as continuous, ",
+            "not count: ", paste(neg_int_cols, collapse = ", "),
+            " (a count cannot be negative).")
   }
   types
 }
@@ -669,7 +702,20 @@ build_trait_map <- function(traits, types, log_set, center, scale,
       }
 
     } else if (tp == "count") {
-      vals <- log1p(as.numeric(x))
+      # P1-10 fail-closed: count encoding is log1p, so a negative value
+      # would silently become NaN and propagate through the whole latent
+      # matrix. Auto-detection now routes negative integers to continuous,
+      # but an explicit trait_types = c(x = "count") can still contradict
+      # the data — refuse rather than encode nonsense.
+      xnum <- as.numeric(x)
+      if (any(xnum < 0, na.rm = TRUE)) {
+        stop("Trait '", nm, "' is typed \"count\" but contains negative ",
+             "value(s) (min = ", min(xnum, na.rm = TRUE), "). Counts cannot ",
+             "be negative and are log1p-encoded, which would produce NaN. ",
+             "Use trait_types = c(", nm, " = \"continuous\") instead.",
+             call. = FALSE)
+      }
+      vals <- log1p(xnum)
       m <- if (center && length(vals) > 0) mean(vals) else 0
       s <- if (scale && length(vals) > 1) stats::sd(vals) else 1
       if (s == 0) s <- 1
@@ -725,8 +771,22 @@ build_trait_map <- function(traits, types, log_set, center, scale,
       entry$sd            <- NA_real_
 
     } else if (tp == "proportion") {
+      # P1-10 fail-closed: the 0.001/0.999 clamp exists to keep qlogis()
+      # finite at exact 0 and 1 — NOT to absorb out-of-range data. Values
+      # like 1.5 or -0.3 (or a 0-100 percentage column mistyped as a
+      # proportion) were silently squashed to the boundary and encoded as
+      # if they were legitimate. Refuse them; keep clamping the boundary.
+      xnum <- as.numeric(x)
+      bad <- which(is.finite(xnum) & (xnum < 0 | xnum > 1))
+      if (length(bad)) {
+        rng <- range(xnum[bad])
+        stop("Trait '", nm, "' is typed \"proportion\" but ", length(bad),
+             " value(s) fall outside [0, 1] (range ", rng[1], " to ", rng[2],
+             "). If these are percentages, divide by 100; if the trait is ",
+             "unbounded, use \"continuous\".", call. = FALSE)
+      }
       # Logit transform: qlogis(clamp(x, 0.001, 0.999)), then z-score
-      vals <- stats::qlogis(pmin(pmax(as.numeric(x), 0.001), 0.999))
+      vals <- stats::qlogis(pmin(pmax(xnum, 0.001), 0.999))
       m <- if (center && length(vals) > 0) mean(vals) else 0
       s <- if (scale && length(vals) > 1) stats::sd(vals) else 1
       if (s == 0) s <- 1
@@ -780,6 +840,31 @@ build_trait_map <- function(traits, types, log_set, center, scale,
       # Only use rows with NO NAs across the group for fitting mean/sd
       complete_rows <- stats::complete.cases(mat_raw)
       mat_fit <- mat_raw[complete_rows, , drop = FALSE]
+
+      # P1-10 fail-closed: the group is documented as summing to 1, but
+      # nothing enforced it. The eps-clamp + renormalise below will happily
+      # turn ANY complete row into a simplex point — including a row of all
+      # zeros (which becomes a uniform composition invented from no data)
+      # and a 0-100 percentage row (silently rescaled). Both then encode as
+      # if legitimate. Check before renormalising.
+      if (nrow(mat_fit) > 0L) {
+        if (any(mat_fit < 0, na.rm = TRUE)) {
+          stop("multi_proportion group '", gnm, "' contains negative value(s) ",
+               "(min = ", min(mat_fit, na.rm = TRUE), "). Compositional ",
+               "components must be non-negative.", call. = FALSE)
+        }
+        rs_check <- rowSums(mat_fit)
+        bad <- which(abs(rs_check - 1) > 0.01)
+        if (length(bad)) {
+          stop("multi_proportion group '", gnm, "' has ", length(bad),
+               " complete row(s) whose components do not sum to 1 ",
+               "(observed sums range ", signif(min(rs_check[bad]), 4), " to ",
+               signif(max(rs_check[bad]), 4), "; tolerance 1%). ",
+               "If these are percentages, divide by 100; if a row is entirely ",
+               "unobserved, set its components to NA rather than 0.",
+               call. = FALSE)
+        }
+      }
 
       # Handle zeros: replace with eps, re-normalise so rows still sum to ~1
       if (nrow(mat_fit) > 0L) {
