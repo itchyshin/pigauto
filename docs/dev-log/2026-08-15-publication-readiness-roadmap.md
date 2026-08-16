@@ -101,11 +101,15 @@ AND unusable: the v0.9.3 ablation (60 reps, one regime) found `pigauto_OFF` beat
 `pigauto_ON` (z-RMSE 1.038 vs 1.056) — and it was measured on the leaky training loop, so it
 cannot be cited in either direction.
 
-### 1.1 Re-run the per-type bench suite post-P0
+### 1.1 Re-run the per-type bench suite post-P0 — **DONE (5/8) 2026-08-16**
 
-All eight `script/bench_*.R` drivers, unchanged, on the corrected pipeline. This is the
-provenance reset every downstream number depends on. *Totoro-scale; D-139 applies — estimate
-and pre-run test before committing the sweep.*
+Ran locally (throttled), not Totoro — each driver is ~15–45 min, well under the D-139 line.
+**Result: the leak had no detectable effect.** Paired per-rep deltas are below 1.1 MCSE in
+every completed type (continuous 0.69, binary 1.05, ordinal 0.08, count 0.39, categorical
+0.45); categorical reproduces 6/7 scenarios exactly, because its gate closes completely.
+Full write-up + caveats (power bounds effects only above ~0.01–0.02; this is not "the leak
+was harmless"): `docs/dev-log/2026-08-16-bench-rerun-results.md`.
+Remaining: proportion, zi_count, multi_proportion.
 
 ### 1.2 Build the regime map (#135)
 

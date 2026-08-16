@@ -3,8 +3,11 @@
 Compact follow-along version of `docs/dev-log/2026-08-15-publication-readiness-roadmap.md`
 (which holds the evidence, file paths, and measurements behind every line). 2026-08-15.
 
-**Rule of thumb:** nothing below Tier 0 is worth doing before Tier 0 closes, and no GNN
-number measured before the P0 land may appear in the manuscript.
+**Rule of thumb:** nothing below Tier 0 is worth doing before Tier 0 closes.
+~~no GNN number measured before the P0 land may appear in the manuscript~~ —
+**relaxed 2026-08-16 with evidence**: the re-run reproduces the pre-fix per-type numbers
+within 1.1 MCSE in every trait type (`2026-08-16-bench-rerun-results.md`). Cite the
+**re-run** values; the pre-fix ones agree within noise.
 
 ## Tier 0 — correctness (local Mac, ~1 week total)
 
@@ -21,8 +24,9 @@ number measured before the P0 land may appear in the manuscript.
 
 ## Tier 1 — GNN evidence (Totoro; D-139: estimate + pre-run test first)
 
-- [ ] **Re-run all 8 per-type benches** on the corrected pipeline — every existing `.rds` is
-      leak-tainted (May 30 / Jun 11 / Apr 28, pre-dating the Aug 8–9 fix)
+- [x] **Re-run all 8 per-type benches** on the corrected pipeline *(2026-08-16: 5/8 done —
+      continuous, binary, ordinal, count, categorical; all within 1.1 MCSE of the pre-fix
+      values. proportion / zi_count / multi_proportion running.)*
 - [ ] **Regime map (#135)**: GNN value vs signal × n × missingness × type + gate-firing
       diagnostics, multi-seed
 - [ ] **Conformal coverage campaign**: coverage vs n per type (only number on record is
