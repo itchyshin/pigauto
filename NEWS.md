@@ -4,6 +4,23 @@ GitHub-dev after CRAN pigauto 0.10.0 (Date/Publication 2026-07-30).
 This is not a CRAN tarball. BACE is still not on CRAN. The next CRAN
 cut must drop Suggests `BACE` again or wait until BACE is on CRAN.
 
+## Fix: phylo-signal gate was a silent no-op in multi-obs mode (P1-12)
+
+`compute_phylo_signal_per_trait()` indexed `species_names` (one entry per
+species) with an observation-length logical drawn from `X_scaled` (one row
+per observation). In multi-obs mode this produced NA tip names,
+`ape::keep.tip()` errored, the caller's `tryCatch` swallowed it to `NA`, and
+`phylo_signal_gate` therefore never fired for any multi-obs trait —
+silently, with no warning. Signal is now computed on species means, matching
+how `fit_baseline()` aggregates multi-obs input. Verified against the
+pre-fix code: a BM-simulated trait returned `NA` before and a finite
+lambda > 0.5 after. Single-obs behaviour is unchanged, and with one
+observation per species the two paths agree exactly.
+
+Multi-obs users with `phylo_signal_gate = TRUE` may see gate decisions that
+previously could not occur. That is the documented behaviour finally taking
+effect, not a change of policy.
+
 ## Fix: full-validation BM floor in gate calibration (#157)
 
 Gate calibration accepted blends from half-set comparisons (or half-B
