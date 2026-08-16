@@ -23,8 +23,9 @@ comparison is therefore **paired per (scenario, rep, trait)**, and the MCSE is
 | ordinal | RMSE | 360 | +0.00048 | 0.00631 | **0.08** |
 | count | RMSE | 360 | +0.00206 | 0.00527 | **0.39** |
 | categorical | accuracy | 280 | +0.00253 | 0.00563 | **0.45** |
+| proportion | RMSE | 640 | +0.00629 | 0.00553 | **1.14** |
 
-Every type sits below 1.1 MCSE. Nothing here is distinguishable from zero.
+Every type sits below 1.15 MCSE. Nothing here is distinguishable from zero.
 
 Per-scenario means tell the same story: continuous deltas within ±0.004 RMSE; binary
 accuracy mostly *improved* (largest +0.017 at signal_1.0); count within +0.006 RMSE.
@@ -55,8 +56,14 @@ the **re-run** values, and note that the pre-fix values agree within MCSE.
 
 ## Status
 
-Complete: continuous, binary, ordinal, count, categorical.
-Pending: proportion, zi_count, multi_proportion (running; this file updates when they land).
+Complete: continuous, binary, ordinal, count, categorical, **proportion**.
+Pending: zi_count, multi_proportion (running).
+
+**Read `zi_count`'s eventual result with care.** P1-9 landed tonight (observed zeros could
+never enter val/test), so its *current* `main` behaviour differs from both the pre-fix and
+the re-run numbers. The re-run is executed on `c655d75`, which predates P1-9, so the
+comparison below stays a clean leak-only contrast — but neither side reflects today's
+`main`. `script/bench_zi_count.*` needs a third run once P1-9 is in the bench worktree.
 
 ## Operational note (cost this lane paid)
 
@@ -66,6 +73,10 @@ cost ~90 minutes:
 1. **`nice`-at-launch kills PSOCK.** Wrapping the launch in `nice -19` made workers miss
    `makePSOCKcluster()`'s connect window ("4 of 16 workers failed to connect"). Renice
    *after* startup instead — a 30 s watcher loop achieves the same politeness.
+1b. **`parLapply` logs nothing until every cell finishes**, so a master at 0% CPU with a
+   log frozen at "Dispatching cells" is *normal*, not hung. I killed at least two healthy
+   drivers on that misread. `bench_proportion` needed **103 min** where `categorical` needed
+   46 — my 60-minute timeout was simply too short for it.
 2. **torch hangs the R process AFTER the work is done.** `bench_categorical` wrote its
    `.rds`/`.md` and logged `done`, then sat at 0% CPU forever, blocking a chain that
    waited on process exit. Drive such chains off the driver's own completion marker in the
