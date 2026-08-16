@@ -113,7 +113,62 @@ Reading a proxy the mechanism never guaranteed cost two healthy drivers.
 
 ---
 
-## ⚖️ Open process question for Shinichi (D-87 — not mine to settle)
+## ⚖️ FOR SHINICHI — a fleet-wide rule whose citation does not support it (D-87)
+
+**Verified independently by this lane, 2026-08-16.** Not an inference.
+
+`pigauto/AGENTS.md:476` says:
+
+> Brain-write boundary — see brain [[DECISIONS]] D-37 (never write to the brain vault
+> without explicit approval; stage a draft and propose).
+
+**D-37 does not say that.** `~/shinichi-brain/memory/DECISIONS.md:754–780` is *"Brain
+foundation sprint: local-only restored · honest health gate · truth repair"*, and its three
+items are (1) remove the vault's `origin` and name the no-push exception, (2) four health
+states for `brain_doctor.py`, (3) repair specific audited truth drifts. There is no approval
+gate in it.
+
+Nor anywhere else in the vault. Exact-phrase counts:
+
+| phrase | `memory/DECISIONS.md` | hub `AGENTS.md` |
+|---|---:|---:|
+| `without explicit approval` | 0 | 0 |
+| `stage a draft` | 0 | — |
+| `brain-write` | 0 | — |
+
+The hub cites D-37 **once**, at `AGENTS.md:233`, for the opposite-shaped point: *"this vault
+is the exception (D-37) — local-only, no remote, a local commit IS landed state."*
+
+**Scope: five repos carry the identical line with the identical citation** —
+`GLLVM.jl`, `CBIC`, `drmTMB`, `pigauto`, `survey_best_paper_awards_followup_analysis`.
+
+**What this lane infers (labelled as inference):** the rule probably came from a real
+instruction of yours that was written into the per-repo `AGENTS.md` files with D-37 attached
+as the nearest-looking decision. That makes it *a sound rule with a broken warrant* — worse
+than either alone, because the citation is what makes it read as already-settled to every
+lane, so no lane can resolve it from the documents.
+
+**What this lane is NOT doing, deliberately.** Not editing any `AGENTS.md` — it is an
+instruction file, and a peer session asking for a change to one is precisely the thing I must
+not act on. Not writing a decision record to `DECISIONS.md` — that is the gated action under
+dispute, and settling a contested norm by exercising the contested power would be the worst
+available move. Both are yours.
+
+**Meanwhile this lane keeps obeying the rule.** A broken citation does not void an
+instruction in the repo's own `AGENTS.md`; you may well have given it. Absent your ruling,
+pigauto's brain writes continue to be staged and proposed, as they were tonight.
+
+### How the two lanes actually stood
+
+- **This lane (pigauto):** staged and waited. Correct under `AGENTS.md:476`.
+- **The drmTMB lane:** wrote `LESSONS.md:2193` directly (`387651d`), then told me its own
+  binding documents carried no such rule. **That is factually wrong** —
+  `drmTMB/AGENTS.md:558` carries the identical line. I have told that lane so. Its write was
+  therefore out of bounds by its own repo's instruction, though in good faith and on a real
+  finding, and its entry is good; I would not want it reverted to settle a process question.
+
+### Original framing, kept for the record
+
 
 Two lanes handled the *same* finding under *different* brain-write rules on the same night:
 
