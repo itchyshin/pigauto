@@ -139,8 +139,29 @@ Nor anywhere else in the vault. Exact-phrase counts:
 The hub cites D-37 **once**, at `AGENTS.md:233`, for the opposite-shaped point: *"this vault
 is the exception (D-37) — local-only, no remote, a local commit IS landed state."*
 
-**Scope: five repos carry the identical line with the identical citation** —
-`GLLVM.jl`, `CBIC`, `drmTMB`, `pigauto`, `survey_best_paper_awards_followup_analysis`.
+**Scope — CORRECTED 2026-08-16 after the drmTMB lane pushed back.** My first version of this
+section said "five repos carry the identical line." That is true of five **working trees** and
+only **two repositories**. Verified per repo (`disk` = file on disk, `HEAD` = committed):
+
+| repo | disk | HEAD | git status |
+|---|---:|---:|---|
+| `GLLVM.jl` | 1 | 1 | clean — **committed** |
+| `CBIC` | 1 | 1 | clean — **committed** |
+| `drmTMB` | 1 | 0 | ` M` dirty |
+| `pigauto` | 1 | 0 | ` M` dirty |
+| `survey_best_paper_awards_followup_analysis` | 1 | 0 | `??` untracked |
+
+**In pigauto the rule exists only in the uncommitted edit to `AGENTS.md`** — one of the 15
+carried-over dirty files this lane spent all night protecting from staging. `HEAD` and
+`origin/main` both have 0 hits. A fresh clone, a `git worktree`, CI, or any lane reading
+`origin` does not see it. One `git checkout -- AGENTS.md` removes it with no trace.
+
+**My own error, stated plainly.** I said twice that following the gate was *"a fact about this
+repo's instructions, not my judgement call."* It was a fact about this repo's **dirty working
+tree**. The instruction still bound me — a file I actually load binds me whether or not it is
+committed, and I had no particular reason to check its git state — but the claim as I made it
+was wrong, and I made it while separately and repeatedly telling myself that `AGENTS.md` was
+one of the uncommitted files not to stage. I had both halves and did not put them together.
 
 **What this lane infers (labelled as inference):** the rule probably came from a real
 instruction of yours that was written into the per-repo `AGENTS.md` files with D-37 attached
@@ -161,11 +182,17 @@ pigauto's brain writes continue to be staged and proposed, as they were tonight.
 ### How the two lanes actually stood
 
 - **This lane (pigauto):** staged and waited. Correct under `AGENTS.md:476`.
-- **The drmTMB lane:** wrote `LESSONS.md:2193` directly (`387651d`), then told me its own
-  binding documents carried no such rule. **That is factually wrong** —
-  `drmTMB/AGENTS.md:558` carries the identical line. I have told that lane so. Its write was
-  therefore out of bounds by its own repo's instruction, though in good faith and on a real
-  finding, and its entry is good; I would not want it reverted to settle a process question.
+- **The drmTMB lane:** wrote `LESSONS.md:2193` directly (`387651d`). I told it that
+  `drmTMB/AGENTS.md:558` carries the rule, so its write was out of bounds by its own repo's
+  instruction. **That correction was itself wrong, and I withdraw it.** The line at :558 is in
+  drmTMB's *dirty primary checkout*; `origin/main` and that lane's own worktree branch are
+  byte-identical at 1183 lines with **zero** hits. That lane loads a file without the rule, so
+  its writes were in bounds for the bytes it actually reads.
+
+**The real shape of the disagreement:** neither lane was careless and neither misread its
+instructions. We were reading **different files with the same name** — one dirty checkout, one
+clean worktree — and each correctly followed what it loaded. That is a far more interesting
+failure than a rule dispute, and it is invisible to both lanes without exactly this exchange.
 
 ### Original framing, kept for the record
 

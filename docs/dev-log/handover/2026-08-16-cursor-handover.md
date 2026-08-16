@@ -238,7 +238,18 @@ Must not stage: `.gitignore` `AGENTS.md` `CLAUDE.md` `README.md` `_pkgdown.yml` 
 `dev/gnn_attribution_*` · `script/*gnn_attribution*` · `script/returned_gnn_attr/` ·
 either BACE tree · any foreign branch.
 
-Read order: `AGENTS.md` → this file → `docs/dev-log/2026-08-16-overnight-report.md` →
+**⚠ `AGENTS.md` on this checkout is UNCOMMITTED and differs from every committed ref.**
+It is one of the 15 carried-over dirty files (` M AGENTS.md`). The on-disk copy carries rules
+that `HEAD` and `origin/main` do **not** — notably a "Brain-write boundary … never write to the
+brain vault without explicit approval; stage a draft and propose" line at `:476`, which is
+absent from both committed refs and whose cited authority (brain D-37) does not contain it.
+Two consequences: (a) if you work from a fresh clone or a `git worktree`, you will load a
+*different* `AGENTS.md` than this lane did, and a rule this lane obeyed all night will simply
+not be there; (b) `git checkout -- AGENTS.md` would delete it silently. **Do not stage it, do
+not restore it, and read it from disk knowing it is not committed state.** Flagged for Shinichi
+in `docs/dev-log/2026-08-15-brain-lesson-drafts.md`.
+
+Read order: `AGENTS.md` (with the caveat above) → this file → `docs/dev-log/2026-08-16-overnight-report.md` →
 `docs/dev-log/coordination-board.md` (**both** Active Lane Split rows) →
 `docs/dev-log/2026-08-16-campaign-go-no-go.md` → `docs/dev-log/2026-08-15-publication-checklist.md`.
 
