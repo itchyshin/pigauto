@@ -3,7 +3,7 @@
 Written for Shinichi returning in the morning. Read this, then
 `2026-08-16-campaign-go-no-go.md` if you want to launch the campaigns.
 
-**One-line state:** Tier 0 is closed, seven of nine Rose P1 items are closed, the
+**One-line state:** Tier 0 is closed, eight of nine Rose P1 items are addressed, the
 benchmark provenance cloud has lifted with MCSE-backed evidence, and both Totoro campaigns
 are staged, priced and waiting on one word from you.
 
@@ -21,7 +21,7 @@ Everything else below is already done and needs nothing from you.
 
 ---
 
-## Landed on `main` (7 PRs merged)
+## Landed on `main` (8 PRs merged)
 
 | PR | What | Why it mattered |
 |---|---|---|
@@ -32,6 +32,7 @@ Everything else below is already done and needs nothing from you.
 | [#162](https://github.com/itchyshin/pigauto/pull/162) | P1-5 | Docs credited `Rphylopars` for work pigauto's own solver does |
 | [#163](https://github.com/itchyshin/pigauto/pull/163) | P1-12 | **Phylo-signal gate was a silent no-op in multi-obs mode** |
 | [#164](https://github.com/itchyshin/pigauto/pull/164) | P1-9 | **zi_count observed zeros could never enter val/test** |
+| [#165](https://github.com/itchyshin/pigauto/pull/165) | P1-11 (documented, not fixed) | tree-MI uses MC-dropout draws, not the better-calibrated conformal ones — and nothing said so |
 
 CI green throughout, including the post-merge pkgdown rebuild. `--as-cran` on the landed
 tree: **0 errors / 0 warnings / 1 note** (the known dev-version + Suggests-BACE incoming
@@ -118,7 +119,10 @@ well-evidenced decision as a deficiency.
 - **P1-8** — covariates ignored by the joint/threshold-joint baseline. A real feature with
   a design choice in it (thread them through vs detect-and-message); wants your input, not
   a 1 AM decision.
-- **P1-11** — tree-MI has no conformal draws.
+- **P1-11** — tree-MI has no conformal draws. *Documented* in #165, deliberately not fixed:
+  threading `draws_method` through changes how a headline feature generates draws and
+  embeds a default choice (back-compat `mc_dropout` vs better-calibrated `conformal`) that
+  is yours to make. Fix sketch is in the PR.
 - **Tier 1.2 / 1.3** — the regime map and coverage campaigns (designed, priced, gated).
 - **Tier 2.2** — no known-Σ recovery simulation for the multivariate machinery.
 - Issue [#135](https://github.com/itchyshin/pigauto/issues/135) remains open; the regime map
