@@ -80,7 +80,13 @@
 #'       are replaced by the MC-averaged point estimate. Convenient for
 #'       reporting but does *not* provide a valid downstream MI analysis.}
 #'     \item{`se`}{Matrix of per-cell uncertainty summaries combining the
-#'       baseline SE and the between-draw standard deviation.}
+#'       baseline SE and the between-draw standard deviation. A
+#'       \strong{descriptive spread for reporting and ranking only} — it is
+#'       \strong{not} a Rubin's-rules pooled standard error (it contains no
+#'       within-imputation variance component and no small-sample df
+#'       correction) and must not be used as one. For valid pooled
+#'       inference, fit your downstream model on each completed dataset via
+#'       [with_imputations()] and pool with [pool_mi()].}
 #'     \item{`imputed_mask`}{Logical matrix; `TRUE` where a cell was
 #'       originally missing.}
 #'     \item{`fit`}{The underlying [`pigauto_fit`][fit_pigauto()]

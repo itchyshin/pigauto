@@ -99,7 +99,13 @@ for prediction diagnostics, not downstream inference.}
 are replaced by the MC-averaged point estimate. Convenient for
 reporting but does \emph{not} provide a valid downstream MI analysis.}
 \item{\code{se}}{Matrix of per-cell uncertainty summaries combining the
-baseline SE and the between-draw standard deviation.}
+baseline SE and the between-draw standard deviation. A
+\strong{descriptive spread for reporting and ranking only} — it is
+\strong{not} a Rubin's-rules pooled standard error (it contains no
+within-imputation variance component and no small-sample df
+correction) and must not be used as one. For valid pooled
+inference, fit your downstream model on each completed dataset via
+\code{\link[=with_imputations]{with_imputations()}} and pool with \code{\link[=pool_mi]{pool_mi()}}.}
 \item{\code{imputed_mask}}{Logical matrix; \code{TRUE} where a cell was
 originally missing.}
 \item{\code{fit}}{The underlying \code{\link[=fit_pigauto]{pigauto_fit}}

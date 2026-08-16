@@ -72,7 +72,8 @@ df$Mass[hide]                                        # held-out truth, for compa
 # `imputed_mask` flags which cells were filled:
 sum(result$imputed_mask[, "Mass"])                   # 30
 
-# Conformal 95% intervals are stored on the prediction object:
+# Conformal 95% (nominal) intervals are stored on the prediction object
+# (see ?fit_pigauto, `conformal_split_val`, for the coverage caveat):
 result$prediction$conformal_lower[hide, "Mass"]
 result$prediction$conformal_upper[hide, "Mass"]
 

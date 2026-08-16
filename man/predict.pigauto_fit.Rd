@@ -111,7 +111,17 @@ scale (BM conditional SD, delta-method back-transformed).
 Binary: \code{min(p, 1-p)} — probability of being wrong (0 = certain,
 0.5 = maximally uncertain); \strong{not} a Gaussian SE.
 Categorical: \code{1 - max(p_k)} — margin from certainty; \strong{not}
-a Gaussian SE.  \code{NULL} if \code{return_se = FALSE}.}
+a Gaussian SE.  Zero-inflated count: delta-method SE of the
+\emph{expected value} \code{E[X] = P(nonzero) * E[count | nonzero]},
+which mixes gate and magnitude uncertainty — \strong{not} a
+magnitude-scale SE.  These three families are therefore
+\strong{incompatible objects sharing one name}: only the
+continuous-family entries are standard errors in the Gaussian
+sense, and \strong{none} of the binary / categorical / zi_count
+entries may be used in Rubin's-rules arithmetic — for valid
+downstream multiple-imputation inference use
+\code{\link{multi_impute}} + \code{\link{with_imputations}} +
+\code{\link{pool_mi}}.  \code{NULL} if \code{return_se = FALSE}.}
 \item{probabilities}{Named list.  Binary traits: numeric probability
 vector.  Categorical traits: n x K probability matrix.  Other
 types: not present.}
