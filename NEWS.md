@@ -30,6 +30,37 @@ smaller strata are arithmetically guaranteed to undercover). Single-obs only:
 locality is defined at species level and multi-obs validation cells are
 per-observation.
 
+## Silent-fallback honesty pass (2026-08-16)
+
+Four places where the pipeline silently did less than the user asked are
+now loud, plus one documentation debt:
+
+- `lambda_mode = "estimate"/"cv"/"bayes"` + covariates: the covariate-aware
+  GLS path (`bm_impute_col_with_cov()`) has no lambda argument, so those
+  modes silently ran at lambda = 1. `fit_baseline()` now warns once.
+- Covariates + joint baselines (P1-8, detect-and-message): the joint MVN
+  and threshold-joint (Rphylopars) baselines have no covariate design, so
+  user covariates never reached the BASELINE (they do reach the GNN).
+  `fit_baseline()` now warns once when a joint path fires with covariates
+  supplied. Threading covariates through the joint solver is future work.
+- Small validation sets: at n_val < 19 the 95% split-conformal target is
+  arithmetically unreachable (achievable ceiling n_val/(n_val+1)), not
+  merely "noisy" as the old warning said. The warning now states the
+  ceiling and fires for the previously-silent 10-18 cell band too
+  (binary/categorical excluded — no conformal scores there).
+- `impute()` now exposes `conformal_split_val` explicitly (previously
+  reachable only via `...`, i.e. undocumented at the primary entry point).
+
+Documentation debt: `lambda_mode` values `"cv"` (per-column CV-selected
+lambda) and `"bayes"` (Bayesian model-averaged prediction over a lambda
+grid, with posterior-mean lambda as a diagnostic; the SE combines
+within- and between-lambda variance) shipped in PR #109 but were never
+recorded in NEWS. The 2026-08-16 lambda-attribution campaign
+(`docs/dev-log/2026-08-16-lambda-attribution-results.md`) measured
+`"bayes"` as the mode that eliminates the ML boundary collapse the
+v0.10.0 "Known limitation" section describes, superseding that section's
+"v0.11 CV-lambda" remedy plan.
+
 ## Fix: phylo-signal gate was a silent no-op in multi-obs mode (P1-12)
 
 `compute_phylo_signal_per_trait()` indexed `species_names` (one entry per

@@ -31,6 +31,7 @@ impute(
   phylo_signal_gate = TRUE,
   phylo_signal_threshold = 0.2,
   phylo_signal_method = "lambda",
+  conformal_split_val = FALSE,
   ...
 )
 }
@@ -105,7 +106,11 @@ contribute fractional liability evidence.  Passed to
 \code{"fixed_1"} preserves the default Brownian correlation matrix;
 \code{"estimate"}, \code{"cv"}, and \code{"bayes"} delegate lambda
 handling to the per-column BM path.  Passed to
-\code{\link{fit_baseline}} and stored in the fitted model config.}
+\code{\link{fit_baseline}} and stored in the fitted model config.
+When \code{covariates} are supplied, the covariate-aware BM path has
+no lambda argument and always fits at lambda = 1; a non-\code{"fixed_1"}
+\code{lambda_mode} is then silently ignored for BM-eligible columns
+and \code{fit_baseline} emits a warning.}
 
 \item{em_iterations}{integer. Phase 6 EM iterations for the
 threshold-joint baseline (binary + ordinal + OVR categorical).
@@ -193,6 +198,14 @@ safeguard, not a guarantee about future held-out data. When
 Safety floor section below.}
 
 \item{phylo_signal_gate, phylo_signal_threshold, phylo_signal_method}{Pass-through to \code{\link[=fit_pigauto]{fit_pigauto()}}. See that help page for details.}
+
+\item{conformal_split_val}{logical. Default \code{FALSE}. When
+\code{TRUE}, the validation cells are split 50/50 per trait into a
+gate-calibration half and a conformal-scoring half, so the conformal
+quantile is not post-selected on the same cells the gate was tuned
+on. Costs interval width at small validation sizes; see
+\code{\link{fit_pigauto}} for details. Previously reachable only via
+\code{...}; exposed here for discoverability.}
 
 \item{...}{additional arguments passed to \code{\link{fit_pigauto}}.}
 }

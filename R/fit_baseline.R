@@ -15,6 +15,16 @@
 #' label-propagation or threshold/liability baseline candidates, with
 #' per-column fallbacks when a joint path is not available.
 #'
+#' \strong{Covariates and the joint baseline (P1-8)}: \code{data$covariates}
+#' is only used by the per-column BM path (\code{bm_impute_col_with_cov()}).
+#' The joint MVN and threshold-joint (Rphylopars) baselines do not accept a
+#' covariate design matrix, so when a joint path is selected (BM-eligible
+#' columns >= 2, or binary/ordinal cols present, with Rphylopars available
+#' and \code{lambda_mode = "fixed_1"}) any supplied covariates are ignored
+#' for the BASELINE and a warning is emitted; covariates still reach the
+#' GNN correction via \code{\link{fit_pigauto}} regardless of which
+#' baseline path fires.
+#'
 #' @param data object of class \code{"pigauto_data"}.
 #' @param tree object of class \code{"phylo"}.
 #' @param splits list (output of \code{\link{make_missing_splits}}) or
@@ -39,7 +49,11 @@
 #' @param lambda_mode character. Pagel-lambda mode for the BM baseline.
 #'   \code{"fixed_1"} preserves the default Brownian correlation matrix;
 #'   \code{"estimate"}, \code{"cv"}, and \code{"bayes"} delegate lambda
-#'   handling to the per-column BM path.
+#'   handling to the per-column BM path. \strong{Covariate caveat}: when
+#'   \code{data$covariates} is supplied, the per-column path switches to
+#'   \code{bm_impute_col_with_cov()}, which has no lambda argument and
+#'   always fits at lambda = 1; \code{lambda_mode != "fixed_1"} is then
+#'   silently ignored for BM-eligible columns and a warning is emitted.
 #' @param em_iterations integer. Number of Phase 6 EM iterations for the
 #'   threshold-joint baseline (binary + ordinal + OVR categorical). Default
 #'   \code{0L} disables the EM loop and preserves v0.9.1 output byte-for-byte.
@@ -236,6 +250,21 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     !force_per_column &&
     joint_mvn_available()
 
+  # P1-8: the joint MVN / threshold-joint (Rphylopars) paths have no covariate
+  # design matrix, so user covariates never reach the BASELINE when a joint
+  # path fires. They still reach the GNN correction in fit_pigauto(). Warn
+  # once rather than silently ignoring them.
+  if (!is.null(data$covariates) && (use_threshold_joint || use_continuous_joint)) {
+    warning(
+      "'covariates' are ignored by the joint ",
+      if (use_threshold_joint) "threshold-joint" else "MVN",
+      " baseline (Rphylopars has no covariate design). The baseline is ",
+      "covariate-free; covariates still reach the GNN correction. To get a ",
+      "covariate-aware baseline, force the per-column path (e.g. supply a ",
+      "single BM-eligible trait, or uninstall/mask Rphylopars).",
+      call. = FALSE
+    )
+  }
 
   if (use_threshold_joint) {
     jt <- if (em_iterations >= 1L) {
@@ -539,6 +568,20 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       for (j in seq_len(ncol(cov_design))) {
         bad <- !is.finite(cov_design[, j])
         if (any(bad)) cov_design[bad, j] <- mean(cov_design[!bad, j])
+      }
+      # `bm_impute_col_with_cov()` has no lambda argument -- the
+      # covariate-aware GLS path always runs at lambda = 1, so
+      # lambda_mode = "estimate" / "cv" / "bayes" is silently ignored
+      # for BM-eligible columns when covariates are supplied. Warn once
+      # (not per column).
+      if (lambda_mode != "fixed_1") {
+        warning(
+          "lambda_mode = '", lambda_mode, "' is not supported by the ",
+          "covariate-aware BM baseline; bm_impute_col_with_cov() always ",
+          "runs at lambda = 1 when covariates are supplied. Pagel's ",
+          "lambda is ignored for BM-eligible columns in this fit.",
+          call. = FALSE
+        )
       }
     }
 

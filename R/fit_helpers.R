@@ -252,6 +252,8 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
   r_cal_gnn_vec <- numeric(p)
   r_cal_mean_vec <- numeric(p)
   low_val_traits <- character(0)
+  low_val_n <- integer(0)
+  conf_unreachable_traits <- character(0)
 
   for (tm in trait_map) {
     lc <- tm$latent_cols
@@ -277,6 +279,17 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
 
     if (n_val < min_val_cells) {
       low_val_traits <- c(low_val_traits, sprintf("%s (n=%d)", tm$name, n_val))
+      low_val_n <- c(low_val_n, n_val)
+    }
+    # Independent of min_val_cells: split-conformal's achievable coverage
+    # ceiling is n_val / (n_val + 1) (the largest quantile level <= 1
+    # reachable with n_val residuals). That ceiling is < 0.95 whenever
+    # n_val < 19, so below 19 val cells the 95% target is not merely
+    # "noisy" -- it is arithmetically unreachable, regardless of model
+    # quality. Conformal scores are only computed for non-discrete types.
+    if (n_val < 19L && !tm$type %in% c("binary", "categorical")) {
+      conf_unreachable_traits <- c(conf_unreachable_traits,
+                                   sprintf("%s (n=%d)", tm$name, n_val))
     }
 
     # ------------------------------------------------------------------
@@ -612,15 +625,31 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
   # fraction of held-out data, (b) use gate_method = "median_splits" +
   # conformal_method = "bootstrap" to smooth the per-split variance,
   # or (c) accept that intervals are approximate.
-  if (length(low_val_traits) > 0L) {
+  if (length(low_val_traits) > 0L || length(conf_unreachable_traits) > 0L) {
     warning(
-      "Small validation set for ",
-      length(low_val_traits),
-      " trait(s): ",
-      paste(low_val_traits, collapse = ", "),
-      ". Calibrated gate and conformal scores will be noisy; ",
-      "coverage may deviate from the 95%% target. See ",
-      "`?fit_pigauto` under 'Calibration at small n' for ",
+      if (length(low_val_traits) > 0L) {
+        paste0(
+          "Small validation set for ", length(low_val_traits),
+          " trait(s): ", paste(low_val_traits, collapse = ", "),
+          ". Calibrated gate and conformal scores will be noisy for ",
+          "these trait(s). "
+        )
+      } else {
+        ""
+      },
+      if (length(conf_unreachable_traits) > 0L) {
+        paste0(
+          "95% split-conformal coverage is NOT achievable for ",
+          length(conf_unreachable_traits), " trait(s) with fewer than 19 ",
+          "validation cells (", paste(conf_unreachable_traits,
+                                      collapse = ", "),
+          "): the achievable ceiling is n_val / (n_val + 1), which only ",
+          "reaches 0.95 at n_val >= 19. "
+        )
+      } else {
+        ""
+      },
+      "See `?fit_pigauto` under 'Calibration at small n' for ",
       "smoothing options.",
       call. = FALSE
     )
