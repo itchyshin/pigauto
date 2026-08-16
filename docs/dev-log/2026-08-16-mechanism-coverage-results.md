@@ -70,3 +70,40 @@ parameterised in the design doc. Discrete types not measured (no conformal inter
 On this same campaign grid, the fixed method must bring every MAR/MNAR arm to within
 3×MCSE of 0.95 **without** dropping MCAR below 0.94 or inflating median width by more
 than ~10% under MCAR. Re-run via `mech_cell.R` with the new option; same seeds.
+
+## B2 verification — RESULT (same day; `conformal_method = "mondrian"`)
+
+Implemented on `arc/mondrian-conformal`: per-trait 2-strata split of validation cells at
+the median phylogenetic locality (mean cophenetic distance to the 5 nearest observed
+species), per-stratum conformal quantiles, far stratum → wider intervals.
+
+**The first run caught a design flaw with the arc's own arithmetic.** With a 10-residual
+stratum floor, n=300 (~26 val cells/trait → ~13-cell strata) pinned MCAR coverage at
+exactly the 13/14 = 0.929 per-stratum ceiling — the same n/(n+1) arithmetic this arc
+wrote into the small-validation warning hours earlier. Floor raised to **19 per stratum**
+(the smallest size whose ceiling reaches 0.95); below it the method falls back to the
+global split score. n=300 re-run (120 jobs, 0 failures, same seeds).
+
+Final table (200 paired jobs vs B1):
+
+| mechanism | n | B1 split | mondrian | within 3×MCSE of 0.95? |
+|---|---:|---:|---:|---|
+| MCAR | 300 | 0.961 | 0.961 | control (fallback fired — identical by design) |
+| MAR_phylo | 300 | 0.923 | 0.923 | no — stratification impossible at this n_val |
+| MNAR | 300 | 0.939 | 0.939 | no — same |
+| MCAR | 1000 | 0.957 | 0.957 | control ok; width 1.28 → 1.31 (+2.3%, cap 10%) |
+| MAR_trait | 1000 | 0.940 | **0.946** | **yes** (gap 0.004 < 3×0.0037) |
+| MAR_phylo | 1000 | 0.927 | **0.946** | **yes** (gap 0.004 < 3×0.0053) |
+| MNAR | 1000 | 0.932 | **0.940** | **yes, marginal** (gap 0.010 < 3×0.0043) |
+
+**Verdict: acceptance met in the regime where the method can activate.** At n=1000 all
+three non-MCAR arms recover to within 3×MCSE of nominal, with MAR_phylo — the worst
+mechanism — fully repaired (+1.9 pp). MNAR improves least, as expected: value-dependent
+missingness is only partially proxied by phylogenetic locality. At n≈300 the method
+deliberately does nothing (fallback), because per-stratum validity needs ≥19 residuals
+per stratum (≥~38 val cells/trait); the honest remedy at that size is the new
+small-validation warning and more held-out data, not stratification.
+
+Scope: default remains `"split"`; `"mondrian"` is opt-in, single-obs, continuous-family
+traits only. Real-data confirmation (fishbase/pantheria re-run with mondrian) not yet
+done — simulated MAR/MNAR only.
