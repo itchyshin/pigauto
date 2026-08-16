@@ -49,8 +49,18 @@ Regime discipline applies throughout: where a number is cited, its regime is nam
   not move the numbers, not that the GNN earns its place. That is Tier 1.2, designed and
   priced, awaiting a go/no-go.
 - Conformal coverage vs n is unmeasured (Tier 1.3, same status).
-- The joint baseline ships as a **single-pass Henderson init** (`max_iter = 0`); cross-trait
-  Σ is never iterated (Tier 2.1 — scope the claim or restore EM under a numerical gate).
+- **CORRECTION (2026-08-16, same night):** an earlier draft of this line said the joint
+  baseline "ships as a single-pass Henderson init; cross-trait Σ is never iterated". That
+  was **wrong**, and it framed a deliberate evidence-based choice as a deficiency. Reading
+  `R/joint_mvn_solver.R:291–305`: with `max_iter = 0` the solver still returns "the
+  closed-form `L̂ᵀR⁻¹L̂/n` Σ estimate — consistent under matrix-normal BM". What is disabled
+  is the **cross-trait EM cell-refinement**, switched off 2026-05-17 because it *diverged*
+  on strong-signal data (Σ blow-up via `build_conditional_prior()` ignoring R-mediated
+  cross-row correlation) and was empirically much worse (0.93 → 0.53 argmax accuracy,
+  K=5 BM, n=100, miss=0.30). Σ estimation is not missing; a refinement loop that made
+  things worse is switched off, with the reason recorded in the source.
+  **The real Tier-2.1 question is therefore narrower:** is the closed-form Σ estimate
+  adequate, and does any doc claim more than it delivers? (See P1-5 below.)
 - No known-Σ recovery simulation exists for the multivariate machinery (Tier 2.2).
 - Five Rose P1 items remain (P1-5, P1-8, P1-9, P1-11, P1-12); four closed overnight
   (P1-6, P1-7, P1-10, P1-13).
