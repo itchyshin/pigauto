@@ -351,3 +351,63 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
   S <- crossprod(L_hat, R_inv %*% L_hat) + diag(colSums(L_var), nrow = K)
   S / n
 }
+
+# Run Rphylopars::phylopars() on the liability matrix L and return the
+# fields pigauto consumes, in the same shape as fit_mvn_bm_inhouse():
+# $anc_recon (tip + internal rows, K cols), $anc_var (variance, not SE),
+# $pars$phylocov (K x K BM rate matrix).
+.fit_mvn_bm_rphylopars <- function(L, tree) {
+  spp <- rownames(L)
+  df <- data.frame(species = spp, L, stringsAsFactors = FALSE)
+  Rphylopars::phylopars(df, tree = tree, model = "BM",
+                        phylo_correlated = TRUE, pheno_correlated = TRUE,
+                        REML = TRUE)
+}
+
+#' Dispatch the joint MVN Sigma solver
+#'
+#' Diagnosed in \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}:
+#' on AVONET300 the in-house single-pass solver
+#' (\code{fit_mvn_bm_inhouse()}, \code{max_iter = 0}) loses 0.14-1.27
+#' z-RMSE to \code{Rphylopars::phylopars()}'s converged REML fit on
+#' comparable data. This dispatcher lets callers opt in to the phylopars
+#' solver while leaving the default (and byte-identical output) on the
+#' in-house path.
+#'
+#' \code{joint_solver = "rphylopars"} is wrapped in a robustness guard:
+#' if the phylopars call errors, or if any tip row of \code{$anc_recon}
+#' is non-finite, this falls back to the in-house solver with a warning.
+#' Rphylopars' own \code{solve(): system is singular} warnings are left
+#' to propagate (an approximate-but-finite solution is not itself a
+#' failure); only a hard error or non-finite output triggers fallback.
+#'
+#' @param L n x K liability matrix (rownames = tip labels, NAs allowed).
+#' @param tree phylo.
+#' @param joint_solver character, \code{"inhouse"} (default) or
+#'   \code{"rphylopars"}.
+#' @return list with the phylopars-compatible fields described in the
+#'   file header comment above (\code{$anc_recon}, \code{$anc_var},
+#'   \code{$pars$phylocov}).
+#' @keywords internal
+#' @noRd
+fit_joint_solver <- function(L, tree, joint_solver = "inhouse") {
+  if (identical(joint_solver, "inhouse")) {
+    return(fit_mvn_bm_inhouse(L = L, tree = tree))
+  }
+
+  fit <- tryCatch(.fit_mvn_bm_rphylopars(L, tree), error = function(e) e)
+  ok <- !inherits(fit, "error")
+  if (ok) {
+    spp <- rownames(L)
+    tip_rows <- match(spp, rownames(fit$anc_recon))
+    ok <- !anyNA(tip_rows) && all(is.finite(fit$anc_recon[tip_rows, , drop = FALSE]))
+  }
+  if (!ok) {
+    msg <- if (inherits(fit, "error")) conditionMessage(fit) else
+      "non-finite tip prediction in $anc_recon"
+    warning("fit_joint_solver: joint_solver = \"rphylopars\" failed (",
+            msg, "); falling back to the in-house solver.", call. = FALSE)
+    return(fit_mvn_bm_inhouse(L = L, tree = tree))
+  }
+  fit
+}

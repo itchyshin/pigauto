@@ -67,12 +67,19 @@
 #'   no lambda argument and always fits at lambda = 1; a non-\code{"fixed_1"}
 #'   \code{lambda_mode} is then silently ignored for BM-eligible columns
 #'   and \code{fit_baseline} emits a warning.
+#' @param joint_solver character. Which solver estimates the joint MVN /
+#'   threshold-joint / OVR categorical baselines. \code{"inhouse"}
+#'   (default) is byte-identical to prior releases; \code{"rphylopars"}
+#'   delegates to \code{Rphylopars::phylopars()}'s converged REML fit,
+#'   with automatic fallback to \code{"inhouse"} on failure. Passed to
+#'   \code{\link{fit_baseline}} and stored in the fitted model config.
+#'   See \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}.
 #' @param em_iterations integer. Phase 6 EM iterations for the
 #'   threshold-joint baseline (binary + ordinal + OVR categorical).
 #'   Default \code{0L} preserves v0.9.1 behaviour byte-for-byte. When
-#'   \code{>= 2L}, the BM rate \eqn{\Sigma} learned by
-#'   \code{Rphylopars::phylopars()} at iteration \eqn{k} is fed back as
-#'   the per-trait prior SD at iteration \eqn{k+1}, up to
+#'   \code{>= 2L}, the BM rate \eqn{\Sigma} learned by the joint solver
+#'   (\code{joint_solver}; the in-house solver by default) at iteration
+#'   \eqn{k} is fed back as the per-trait prior SD at iteration \eqn{k+1}, up to
 #'   \code{em_iterations} times or until \code{em_tol} convergence.
 #'   Passed to \code{\link{fit_baseline}}.
 #' @param em_tol numeric. Relative-Frobenius convergence tolerance for
@@ -295,6 +302,7 @@ impute <- function(traits, tree, species_col = NULL,
                    epochs = 2000L, verbose = TRUE, seed = NULL,
                    multi_obs_aggregation = c("hard", "soft"),
                    lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
+                   joint_solver = c("inhouse", "rphylopars"),
                    em_iterations = 0L,
                    em_tol = 1e-3,
                    em_offdiag = FALSE,
@@ -312,6 +320,7 @@ impute <- function(traits, tree, species_col = NULL,
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
   pool_method <- match.arg(pool_method)
   lambda_mode <- match.arg(lambda_mode)
+  joint_solver <- match.arg(joint_solver)
 
   # Phase B3 Safety Check
   if (n_imputations == 1L && pool_method == "median") {
@@ -392,7 +401,8 @@ impute <- function(traits, tree, species_col = NULL,
                            em_iterations = em_iterations,
                            em_tol = em_tol,
                            em_offdiag = em_offdiag,
-                           lambda_mode = lambda_mode)
+                           lambda_mode = lambda_mode,
+                           joint_solver = joint_solver)
 
   # Free the cached cophenetic distance matrix: fit_pigauto() only
   # needs graph$adj and graph$coords, and at n = 10,000 the ~800 MB
@@ -418,6 +428,7 @@ impute <- function(traits, tree, species_col = NULL,
     phylo_signal_threshold = phylo_signal_threshold,
     phylo_signal_method    = phylo_signal_method,
     lambda_mode            = lambda_mode,
+    joint_solver           = joint_solver,
     conformal_split_val    = conformal_split_val,
     ...
   )

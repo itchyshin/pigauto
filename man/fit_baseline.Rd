@@ -14,7 +14,8 @@ fit_baseline(
   lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
   em_iterations = 0L,
   em_tol = 0.001,
-  em_offdiag = FALSE
+  em_offdiag = FALSE,
+  joint_solver = c("inhouse", "rphylopars")
 )
 }
 \arguments{
@@ -78,6 +79,19 @@ liability of other traits at iteration \eqn{k}, using the full off-
 diagonal entries of \eqn{\Sigma}. Binary + ordinal only (OVR categorical
 stays on Phase 6 diagonal). Default \code{FALSE} preserves Phase 6
 behaviour.}
+
+\item{joint_solver}{character. Which solver estimates the joint
+Sigma / posterior for the joint MVN, threshold-joint, and OVR
+categorical baselines. \code{"inhouse"} (default) uses the
+single-pass in-house solver (\code{R/joint_mvn_solver.R}) and is
+byte-identical to prior releases. \code{"rphylopars"} delegates to
+\code{Rphylopars::phylopars()}'s converged REML fit, which measured
+0.14-1.27 lower z-RMSE than the in-house solver on AVONET300 (see
+\code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}); on
+failure or non-finite output it falls back to \code{"inhouse"} with
+a warning. Only affects the BM-eligible / threshold-joint / OVR
+categorical paths above; ignored when those paths don't fire (e.g.
+\code{lambda_mode != "fixed_1"}, which forces the per-column path).}
 }
 \value{
 A list with:

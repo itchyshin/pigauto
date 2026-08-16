@@ -28,11 +28,14 @@ joint_mvn_available <- function() {
 #'   masked to NA before the joint fit (no leakage).
 #' @param graph output of `build_phylo_graph()` (unused here but kept for
 #'   interface parity with `fit_baseline()`).
+#' @param joint_solver character, `"inhouse"` (default) or `"rphylopars"`.
+#'   See `fit_joint_solver()` in R/joint_mvn_solver.R.
 #' @return list(mu, se), each `n_species x p_latent`.
 #' @keywords internal
 #' @noRd
 fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL,
-                                   soft_aggregate = FALSE) {
+                                   soft_aggregate = FALSE,
+                                   joint_solver = "inhouse") {
   stopifnot(joint_mvn_available())
 
   if (isTRUE(data$multi_obs)) {
@@ -89,13 +92,13 @@ fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL,
     }
   }
 
-  # In-house ML solver: matrix-normal BM via per-column init + EM
-  # refinement using cross-trait Sigma off-diagonals. Returns a list
+  # Dispatch to the in-house solver (default) or Rphylopars (joint_solver
+  # = "rphylopars", with fallback to in-house on failure). Returns a list
   # with $anc_recon and $anc_var on n_tips x q (no internal nodes).
   L_in <- X_bm
   rownames(L_in) <- spp
 
-  fit <- fit_mvn_bm_inhouse(L = L_in, tree = tree)
+  fit <- fit_joint_solver(L = L_in, tree = tree, joint_solver = joint_solver)
 
   tip_rows <- match(spp, rownames(fit$anc_recon))
   mu_bm    <- fit$anc_recon[tip_rows, , drop = FALSE]

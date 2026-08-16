@@ -23,6 +23,8 @@
 #' @param trait_name character, name of the categorical trait.
 #' @param splits output of make_missing_splits() or NULL.
 #' @param graph optional graph (unused).
+#' @param joint_solver character, `"inhouse"` (default) or `"rphylopars"`.
+#'   Forwarded to each per-class `fit_joint_threshold_baseline()` call.
 #' @return numeric matrix (n_species x K) of P(class_k) per species; NA
 #'   for classes whose fit failed.
 #' @keywords internal
@@ -30,7 +32,8 @@
 fit_ovr_categorical_fits <- function(data, tree, trait_name,
                                       splits = NULL, graph = NULL,
                                       soft_aggregate = FALSE,
-                                      sd_prior_k = NULL) {
+                                      sd_prior_k = NULL,
+                                      joint_solver = "inhouse") {
   stopifnot(joint_mvn_available())
   # sd_prior_k: optional length-K vector of per-class prior SDs for Phase 6
   # EM. NULL default (plug-in 1) is the v0.9.1 byte-identical path.
@@ -108,7 +111,8 @@ fit_ovr_categorical_fits <- function(data, tree, trait_name,
       fit_joint_threshold_baseline(pd_k, tree, splits = splits_k,
                                     graph = graph,
                                     soft_aggregate = soft_aggregate,
-                                    sd_prior_vec = sdv),
+                                    sd_prior_vec = sdv,
+                                    joint_solver = joint_solver),
       error = function(e) NULL
     )
     if (is.null(jt)) next
@@ -223,14 +227,16 @@ fit_ovr_categorical_fits_em <- function(data, tree, trait_name,
                                          splits = NULL, graph = NULL,
                                          soft_aggregate = FALSE,
                                          em_iterations = 5L,
-                                         em_tol = 1e-3) {
+                                         em_tol = 1e-3,
+                                         joint_solver = "inhouse") {
   stopifnot(em_iterations >= 1L)
 
   # Discover K by running a single plug-in iter first.
   iter1 <- fit_ovr_categorical_fits(data, tree, trait_name = trait_name,
                                      splits = splits, graph = graph,
                                      soft_aggregate = soft_aggregate,
-                                     sd_prior_k = NULL)
+                                     sd_prior_k = NULL,
+                                     joint_solver = joint_solver)
   K <- ncol(iter1)
   sigma_cat <- rep(1, K)
   probs     <- iter1
@@ -264,7 +270,8 @@ fit_ovr_categorical_fits_em <- function(data, tree, trait_name,
         fit_ovr_categorical_fits(data, tree, trait_name = trait_name,
                                   splits = splits, graph = graph,
                                   soft_aggregate = soft_aggregate,
-                                  sd_prior_k = sd_prior_k),
+                                  sd_prior_k = sd_prior_k,
+                                  joint_solver = joint_solver),
         error = function(e) NULL
       )
       if (is.null(iter_probs)) {
