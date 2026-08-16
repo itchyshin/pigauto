@@ -67,6 +67,7 @@ against the pre-fix outputs (old and new share seeds — confirmed by byte-ident
 | ordinal | +0.00048 | 0.00631 | 0.08 |
 | count | +0.00206 | 0.00527 | 0.39 |
 | categorical | +0.00253 | 0.00563 | 0.45 |
+| proportion | +0.00629 | 0.00553 | 1.14 |
 
 **The held-out-context leak had no detectable effect on any of them.** Categorical
 reproduces 6/7 scenarios *exactly* — its gate closes completely, so a training leak cannot
@@ -77,9 +78,9 @@ pre-fix ones agree within noise. **Not** a claim that the leak was harmless — 
 per-cell val-floor invariant did detect a difference, and power here only bounds effects
 above ~0.01–0.02. Full caveats: `2026-08-16-bench-rerun-results.md`.
 
-5 of 8 types complete. `proportion` is still running; `zi_count` and `multi_proportion`
-remain (and `zi_count`'s bench should be re-run anyway now that P1-9 has landed — its old
-numbers excluded the zeros).
+**6 of 8 types complete**, all below 1.15 MCSE. `zi_count` and `multi_proportion` are
+running. Note `zi_count` will need a *third* run: P1-9 changed which cells are eligible for
+val/test, so neither side of tonight's leak-only comparison reflects today's `main`.
 
 ## Staged and waiting
 

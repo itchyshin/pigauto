@@ -67,12 +67,16 @@ comparison below stays a clean leak-only contrast — but neither side reflects 
 
 ## Operational note (cost this lane paid)
 
-The bench drivers use PSOCK clusters because torch is not fork-safe. Two failure modes
-cost ~90 minutes:
+The bench drivers use PSOCK clusters because torch is not fork-safe. Three failure modes
+cost roughly three hours, and **two of the three were self-inflicted**:
 
-1. **`nice`-at-launch kills PSOCK.** Wrapping the launch in `nice -19` made workers miss
-   `makePSOCKcluster()`'s connect window ("4 of 16 workers failed to connect"). Renice
-   *after* startup instead — a 30 s watcher loop achieves the same politeness.
+1. **Niceness is inherited at fork — never renice a process that will spawn PSOCK
+   workers.** `nice -19` at launch made workers miss `makePSOCKcluster()`'s connect window
+   ("4 of 16 workers failed to connect"). I then "fixed" this by renicing *after* startup
+   via a watcher — which reniced each master **before** it built its cluster, so the
+   workers inherited 19 and hit the same window. Two drivers hung an hour each. A peer
+   session independently hit the same trap by renicing a master it believed was a harmless,
+   reversible intervention. **Bound a cluster campaign by worker count, not priority.**
 1b. **`parLapply` logs nothing until every cell finishes**, so a master at 0% CPU with a
    log frozen at "Dispatching cells" is *normal*, not hung. I killed at least two healthy
    drivers on that misread. `bench_proportion` needed **103 min** where `categorical` needed
@@ -82,5 +86,5 @@ cost ~90 minutes:
    waited on process exit. Drive such chains off the driver's own completion marker in the
    log, not off `wait`.
 
-Both are recorded as candidate brain lessons in
+All three are recorded as candidate brain lessons in
 `docs/dev-log/2026-08-15-brain-lesson-drafts.md`.
