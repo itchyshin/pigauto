@@ -210,6 +210,11 @@ if (n_remaining > 0L) {
 
   log_line("Starting PSOCK cluster...")
   cl <- parallel::makeCluster(min(MC_CORES, n_remaining))
+  # Stranded clusters: stopCluster() below only runs on the success
+  # path. Any error/interrupt between here and there leaves workers
+  # spinning with a 30-day timeout. on.exit covers every other path;
+  # it is a harmless no-op after the explicit stopCluster().
+  on.exit(try(parallel::stopCluster(cl), silent = TRUE), add = TRUE)
 
   # Export helper functions and constants to workers
   parallel::clusterExport(cl, c("here", "run_one_cell", "mean_mode_impute", "tag_rows",
