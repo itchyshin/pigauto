@@ -145,6 +145,13 @@
 #' @param pmm_K integer (>= 1).  Donor pool size for PMM.  Default
 #'   \code{5L} (mice convention).  Ignored when
 #'   \code{match_observed = "none"}.
+#' @param conformal_split_val logical. Default \code{FALSE}. When
+#'   \code{TRUE}, the validation cells are split 50/50 per trait into a
+#'   gate-calibration half and a conformal-scoring half, so the conformal
+#'   quantile is not post-selected on the same cells the gate was tuned
+#'   on. Costs interval width at small validation sizes; see
+#'   \code{\link{fit_pigauto}} for details. Previously reachable only via
+#'   \code{...}; exposed here for discoverability.
 #' @param ... additional arguments passed to \code{\link{fit_pigauto}}.
 #' @return An object of class \code{"pigauto_result"} with components:
 #'   \describe{
@@ -300,6 +307,7 @@ impute <- function(traits, tree, species_col = NULL,
                    phylo_signal_gate = TRUE,
                    phylo_signal_threshold = 0.2,
                    phylo_signal_method = "lambda",
+                   conformal_split_val = FALSE,
                    ...) {
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
   pool_method <- match.arg(pool_method)
@@ -410,6 +418,7 @@ impute <- function(traits, tree, species_col = NULL,
     phylo_signal_threshold = phylo_signal_threshold,
     phylo_signal_method    = phylo_signal_method,
     lambda_mode            = lambda_mode,
+    conformal_split_val    = conformal_split_val,
     ...
   )
 

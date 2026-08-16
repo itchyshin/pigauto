@@ -113,3 +113,20 @@ test_that("[conformal-ceiling] binary traits do not trigger the ceiling warning"
       latent_names = "b", verbose = FALSE, seed = 2035L)
   )
 })
+
+test_that("[split-val] impute() exposes conformal_split_val explicitly", {
+  expect_true("conformal_split_val" %in% names(formals(impute)))
+  set.seed(2036L)
+  n <- 30L
+  tree <- ape::rcoal(n)
+  df <- data.frame(x1 = stats::rnorm(n), x2 = stats::rnorm(n),
+                   row.names = tree$tip.label)
+  df$x1[sample(n, 6L)] <- NA
+  df$x2[sample(n, 6L)] <- NA
+  res <- suppressWarnings(
+    impute(df, tree, epochs = 5L, verbose = FALSE, seed = 2036L,
+           conformal_split_val = TRUE)
+  )
+  expect_s3_class(res, "pigauto_result")
+  expect_false(anyNA(res$completed))
+})
