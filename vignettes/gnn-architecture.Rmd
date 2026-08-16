@@ -112,16 +112,43 @@ columns; binary returns one logit column.
 
 ### 2.3 Joint MVN baseline (Phase 2)
 
-When `Rphylopars` is installed and ≥ 2 continuous-like latent columns
-exist, pigauto upgrades to a joint multivariate-BM baseline. Stack the
-$p$ BM-eligible columns into $\mathbf{Y}$. Under joint BM,
+When ≥ 2 continuous-like latent columns exist, pigauto upgrades to a
+joint multivariate-BM baseline. Stack the $p$ BM-eligible columns into
+$\mathbf{Y}$. Under joint BM,
 $\mathrm{vec}(\mathbf{Y}) \sim \mathcal{N}(\mathrm{vec}(\boldsymbol{\beta}),\,
-\mathbf{\Sigma} \otimes \mathbf{R})$. `Rphylopars::phylopars()` fits
-$\hat{\mathbf{\Sigma}}$ jointly across traits, and the conditional
-posterior is the GLS solution with the Kronecker covariance. This
-captures cross-trait phylogenetic correlation that the per-column path
-loses. The bench in `script/bench_joint_baseline.R` showed a 33.7%
-RMSE lift on simulated correlated BM data.
+\mathbf{\Sigma} \otimes \mathbf{R})$. pigauto's **in-house solver**
+(`R/joint_mvn_solver.R`) fits $\hat{\mathbf{\Sigma}}$ jointly across
+traits and the conditional posterior is the GLS solution with the
+Kronecker covariance. This captures cross-trait phylogenetic
+correlation that the per-column path loses.
+
+Two points of precision, since both were previously misstated here:
+
+*The solver is pigauto's own, not `Rphylopars`.* Earlier versions
+delegated to `Rphylopars::phylopars()` and this section still credited
+it; `joint_mvn_available()` now returns `TRUE` unconditionally and the
+joint path has no `Rphylopars` dependency. (`Rphylopars` remains in
+`Suggests` for comparison benchmarks only.)
+
+*What the shipped default computes.* The solver's `max_iter` argument
+defaults to `0`, which returns the closed-form
+$\hat{\mathbf{\Sigma}} = \mathbf{L}^\top \mathbf{R}^{-1} \mathbf{L} / n$
+estimate — consistent under matrix-normal BM. What `max_iter = 0`
+switches off is the *cross-trait EM cell-refinement* loop, disabled in
+2026-05 because it diverged on strong-signal data (the conditional
+prior ignores $\mathbf{R}$-mediated cross-row correlation, and
+$\mathbf{R}^{-1}$ amplifies the resulting discrepancy into a
+multiplicative $\mathbf{\Sigma}$ blow-up). The non-refined path was
+empirically much better on synthetic $K=5$ BM data (0.93 vs 0.53
+argmax accuracy at $n=100$, 30% missing). So $\hat{\mathbf{\Sigma}}$
+*is* estimated jointly; it is the iterative cell refinement on top that
+is off by default, and deliberately so.
+
+The bench in `script/bench_joint_baseline.R` reported a 33.7% RMSE lift
+on simulated correlated BM data. That figure predates the in-house
+solver and has not been re-measured against it — treat it as
+indicative of the joint-vs-per-column direction, not as a current
+performance number for the shipped path.
 
 ### 2.4 Threshold-joint baseline (Phase 3)
 

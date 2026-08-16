@@ -28,7 +28,7 @@
 #'   allocations. When \code{NULL} (default), both matrices are computed
 #'   here.
 #' @param multi_obs_aggregation character. How to aggregate multiple
-#'   observations per species before the Level-C (Rphylopars) baseline:
+#'   observations per species before the Level-C joint baseline:
 #'   \code{"hard"} (default) thresholds binary proportions at 0.5 and uses
 #'   argmax for categorical, matching Phase 10 behaviour.  \code{"soft"}
 #'   preserves species-level proportions and dispatches the truncated-Gaussian
@@ -43,8 +43,8 @@
 #' @param em_iterations integer. Number of Phase 6 EM iterations for the
 #'   threshold-joint baseline (binary + ordinal + OVR categorical). Default
 #'   \code{0L} disables the EM loop and preserves v0.9.1 output byte-for-byte.
-#'   When \code{>= 1}, the BM rate \eqn{\Sigma} learned by
-#'   \code{Rphylopars::phylopars()} at iteration \eqn{k} is fed back as the
+#'   When \code{>= 1}, the BM rate \eqn{\Sigma} learned by the in-house
+#'   joint solver (\code{R/joint_mvn_solver.R}) at iteration \eqn{k} is fed back as the
 #'   per-trait prior SD at iteration \eqn{k+1}, up to \code{em_iterations}
 #'   times or until \code{em_tol} convergence.  \code{em_iterations = 1L} is
 #'   a degenerate single-pass run and produces the same baseline output as
