@@ -21,6 +21,22 @@ Multi-obs users with `phylo_signal_gate = TRUE` may see gate decisions that
 previously could not occur. That is the documented behaviour finally taking
 effect, not a change of policy.
 
+## Fix: zi_count observed zeros were excluded from val/test splits (P1-9)
+
+`make_missing_splits()` treated a (species, trait) cell as observed only when
+**all** its latent columns were non-NA. `zi_count` encodes an observed zero as
+gate = 0 with the log1p-z magnitude column `NA` — the NA is data ("this count
+is zero"), not missingness — so every observed zero failed that test and could
+never be drawn into validation or test. Because zero-inflation is the defining
+feature of the type, this silently restricted all `zi_count` gate calibration,
+conformal scoring and evaluation to the non-zero subset. Observation status for
+`zi_count` is now decided by the gate column alone.
+
+Measured on a 60-species fixture with 23 observed zeros: **0** of them could be
+held out before the fix; they are eligible after. Any previously reported
+`zi_count` validation or test metric was computed on non-zeros only and should
+be re-measured.
+
 ## Fix: full-validation BM floor in gate calibration (#157)
 
 Gate calibration accepted blends from half-set comparisons (or half-B
