@@ -1,0 +1,62 @@
+[    0.0s] A: pigauto full 7-trait fit ...
+Warning messages:
+1: Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.
+Consider setting: n_imputations = 20L, pool_method = 'mode'.
+See ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls'). 
+2: In stats::cor(t_j[ok], p_j[ok], method = "spearman") :
+  the standard deviation is zero
+3: In stats::cor(t_j[ok], p_j[ok], method = "spearman") :
+  the standard deviation is zero
+[  985.9s] A done. r_cal_gnn range: 0.000..1.000
+[  985.9s] trait types: continuous, continuous, continuous, continuous, categorical, categorical, ordinal
+[  985.9s] dispatch conditions: bin+ord cols = 1, Rphylopars = TRUE => THRESHOLD-JOINT path
+[  986.8s] log_transform flags (cont): Mass=TRUE, Beak.Length_Culmen=TRUE, Tarsus.Length=TRUE, Wing.Length=TRUE
+[  986.9s] C mask: 207 extra cells hidden (pigauto val+test) on top of 360 genuine
+[  986.9s] B: phylopars standalone (bench arm) ...
+
+warning: solve(): system is singular; rcond: 7.08053e-30; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.69154e-18; attempting approx solution
+[  987.8s] B done.
+[  987.8s] C: phylopars standalone with pigauto's val/test also hidden ...
+
+warning: solve(): system is singular; rcond: 6.10875e-63; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.61187e-33; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.41897e-32; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.55338e-22; attempting approx solution
+
+warning: solve(): system is singular; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.25433e-66; attempting approx solution
+
+warning: solve(): system is singular; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.85794e-103; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.58111e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.56912e-159; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.7524e-32; attempting approx solution
+[  988.5s] C done.
+[  988.5s] D: pigauto continuous-only 4-trait fit ...
+[ 1368.1s] D done.
+[ 1368.1s] z-RMSE table:
+                   Mass Beak.Length_Culmen Tarsus.Length Wing.Length
+A_blend           0.499              0.773         1.706       0.529
+A_base            0.574              0.772         1.716       0.531
+D_blend           0.558              0.719         2.130       0.646
+D_base            0.571              0.726         2.141       0.649
+C_taxed_phylopars 0.430              0.366         0.872       0.371
+B_phylopars       0.384              0.366         0.672       0.300
+[ 1368.1s] Decomposition (positive = that layer HURTS):
+                 Mass Beak.Length_Culmen Tarsus.Length Wing.Length
+gate_effect    -0.075              0.001        -0.010      -0.002
+mixedtype_path  0.002              0.046        -0.424      -0.118
+calib_tax       0.046             -0.001         0.200       0.072
+solver_wrapper  0.141              0.360         1.269       0.278
+TOTAL           0.114              0.406         1.034       0.229
+[ 1368.1s] wrote dev/diagnose_continuous_gap.rds
