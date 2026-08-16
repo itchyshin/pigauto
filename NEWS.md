@@ -4,6 +4,32 @@ GitHub-dev after CRAN pigauto 0.10.0 (Date/Publication 2026-07-30).
 This is not a CRAN tarball. BACE is still not on CRAN. The next CRAN
 cut must drop Suggests `BACE` again or wait until BACE is on CRAN.
 
+## Feature: `conformal_method = "mondrian"` (B2) -- locality-stratified conformal intervals
+
+`fit_pigauto()` / `impute()` gain a new `conformal_method` option,
+`"mondrian"`, alongside the existing `"split"` (default) and `"bootstrap"`.
+It targets the exchangeability failure diagnosed in the mechanism-coverage
+campaign (`docs/dev-log/2026-08-16-mechanism-coverage-results.md`): a single
+global conformal quantile per trait is calibrated on the observed
+complement, which sits systematically closer (in cophenetic distance) to
+other observed cells than genuinely-missing cells do -- worst under
+clade-structured missingness (MAR_phylo, -3.4pp coverage vs MCAR at
+n=300/1000).
+
+`"mondrian"` conditions calibration on phylogenetic sampling locality: each
+validation cell's locality is the mean cophenetic distance to its 5 nearest
+species with an observed value for that trait, cells are split into 2
+strata at the median locality, and a split-conformal quantile is computed
+per stratum. Cells in the far (undersampled) stratum get the wider
+quantile at prediction time -- intervals widen in poorly-sampled clades,
+which is the point. Traits with fewer than 19 validation residuals in
+either stratum fall back to the global `"split"` score (19 is the
+smallest stratum whose achievable coverage ceiling n/(n+1) reaches 0.95;
+smaller strata are arithmetically guaranteed to undercover). Single-obs only:
+`fit_pigauto()` errors immediately for multi-observation data, since
+locality is defined at species level and multi-obs validation cells are
+per-observation.
+
 ## Silent-fallback honesty pass (2026-08-16)
 
 Four places where the pipeline silently did less than the user asked are

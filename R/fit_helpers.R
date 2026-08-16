@@ -683,7 +683,7 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
 # (magnitude / log1p-z column only; the gate is discrete). Used at prediction
 # time to construct marginal conformal intervals and as the MI draw width.
 #
-# Two estimators are supported:
+# Three estimators are supported:
 #
 # - `"split"` (default, backward compat): the classical Vovk conformal
 #   quantile at level `ceil((1 - alpha)(n + 1))/n` on the val residuals.
@@ -699,6 +699,26 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
 #   exact exchangeability guarantee from split conformal but stays in the
 #   same asymptotic regime.  Recommended when `n_val` per trait is < 30.
 #
+# - `"mondrian"` (B2, 2026-08-16): stratified conformal that conditions on
+#   phylogenetic sampling locality, fixing the exchangeability failure
+#   documented in `docs/dev-log/2026-08-16-mechanism-coverage-results.md`
+#   (split conformal calibrates on the observed complement, which is
+#   systematically closer to other observed cells than genuinely-missing
+#   cells are -- worst under clade-structured (MAR_phylo) missingness).
+#   For each val cell, a locality statistic is the mean cophenetic
+#   distance to its 5 nearest species with an OBSERVED (non-NA,
+#   non-split-masked) value for that trait (`obs_mask_mat`, `D_sq`). Val
+#   cells are split into two strata at the median locality and a
+#   split-conformal quantile is computed within each stratum at the same
+#   adjusted level. If either stratum has fewer than 19 residuals (the coverage-ceiling minimum), the
+#   trait falls back to the global `"split"` score (recorded in the
+#   `"mondrian"` attribute's `fallback` flag). Per-trait near/far scores
+#   and the stratification threshold are returned via
+#   `attr(., "mondrian")`; the base named-vector value stays the global
+#   split score so callers that ignore the attribute keep a sane single
+#   number. Single-obs only -- see the `multi_obs` guard in
+#   `fit_pigauto()`.
+#
 # @param trait_map         list of trait descriptors
 # @param calibrated_gates  named numeric vector (length p), legacy GNN gate
 #                           used when three-way calibration weights are NULL.
@@ -713,11 +733,21 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
 # @param X_truth_r         numeric matrix (n × p) — truth with NAs
 # @param val_mask_mat      logical matrix (n × p) — TRUE = validation cell
 # @param alpha             numeric — miscoverage level; default 0.05 (→ 95%)
-# @param method            `"split"` or `"bootstrap"`
+# @param method            `"split"`, `"bootstrap"`, or `"mondrian"`
 # @param bootstrap_B       integer — bootstrap resamples when `method = "bootstrap"`
+# @param D_sq              numeric matrix (n_species × n_species), squared
+#                          cophenetic distances (`build_phylo_graph()$D_sq`).
+#                          Required when `method = "mondrian"`.
+# @param obs_mask_mat      logical matrix (n × p) — TRUE = observed AND used
+#                          for training (i.e. not held out for val/test).
+#                          Required when `method = "mondrian"`.
+# @param k_locality         integer — nearest-observed-species count for the
+#                          Mondrian locality statistic (default 5).
 # @param verbose           logical
 # @return named numeric vector; NA for binary/categorical or empty val sets.
-#   zi_count scores are on the magnitude (log1p-z) latent, not E[X].
+#   zi_count scores are on the magnitude (log1p-z) latent, not E[X]. When
+#   `method = "mondrian"`, carries an additional `"mondrian"` attribute
+#   (see above).
 compute_conformal_scores <- function(
   trait_map,
   calibrated_gates,
@@ -726,8 +756,11 @@ compute_conformal_scores <- function(
   X_truth_r,
   val_mask_mat,
   alpha = 0.05,
-  method = c("split", "bootstrap"),
+  method = c("split", "bootstrap", "mondrian"),
   bootstrap_B = 500L,
+  D_sq = NULL,
+  obs_mask_mat = NULL,
+  k_locality = 5L,
   verbose = FALSE,
   r_cal_bm = NULL,
   r_cal_gnn = NULL,
@@ -736,6 +769,12 @@ compute_conformal_scores <- function(
   fixed_cal = NULL
 ) {
   method <- match.arg(method)
+  if (method == "mondrian" && (is.null(D_sq) || is.null(obs_mask_mat))) {
+    stop(
+      "`D_sq` and `obs_mask_mat` are required when method = \"mondrian\".",
+      call. = FALSE
+    )
+  }
   p <- ncol(mu_cal)
   n <- nrow(mu_cal)
 
@@ -807,6 +846,7 @@ compute_conformal_scores <- function(
 
   conformal_scores <- rep(NA_real_, length(trait_map))
   names(conformal_scores) <- vapply(trait_map, "[[", character(1), "name")
+  mondrian_info <- if (method == "mondrian") list() else NULL
 
   for (tm in trait_map) {
     if (
@@ -824,11 +864,17 @@ compute_conformal_scores <- function(
       next
     }
 
+    # species_idx tracks row indices in step with `residuals` so the
+    # Mondrian branch can look up per-cell locality after the finite
+    # filter below.
+    species_idx <- which(val_cells)
     residuals <- abs(
-      X_truth_r[val_cells, score_col] -
-        pred_cal[val_cells, score_col]
+      X_truth_r[species_idx, score_col] -
+        pred_cal[species_idx, score_col]
     )
-    residuals <- residuals[is.finite(residuals)]
+    finite <- is.finite(residuals)
+    residuals <- residuals[finite]
+    species_idx <- species_idx[finite]
     n_val <- length(residuals)
     if (n_val == 0L) {
       next
@@ -840,7 +886,7 @@ compute_conformal_scores <- function(
       conformal_scores[tm$name] <- as.numeric(
         stats::quantile(residuals, q_level, na.rm = TRUE)
       )
-    } else {
+    } else if (method == "bootstrap") {
       # bootstrap: average the split quantile over B resamples
       B <- as.integer(bootstrap_B)
       qs <- vapply(
@@ -852,6 +898,67 @@ compute_conformal_scores <- function(
         numeric(1)
       )
       conformal_scores[tm$name] <- mean(qs, na.rm = TRUE)
+    } else {
+      # mondrian: global (split) score is always computed first, both as
+      # the base named-vector value and as the fallback score.
+      global_score <- as.numeric(
+        stats::quantile(residuals, q_level, na.rm = TRUE)
+      )
+      conformal_scores[tm$name] <- global_score
+
+      obs_idx <- which(obs_mask_mat[, score_col])
+      fallback <- length(obs_idx) == 0L
+      near_score <- global_score
+      far_score  <- global_score
+      threshold  <- NA_real_
+
+      if (!fallback) {
+        locality <- mondrian_locality(D_sq, obs_idx, species_idx,
+                                      k = k_locality)
+        loc_ok <- is.finite(locality)
+        if (sum(loc_ok) == 0L) {
+          fallback <- TRUE
+        } else {
+          threshold <- stats::median(locality[loc_ok])
+          near <- loc_ok & (locality <= threshold)
+          far  <- loc_ok & (locality > threshold)
+          n_near <- sum(near)
+          n_far  <- sum(far)
+          # Each stratum needs >= 19 residuals or its own achievable
+          # coverage ceiling n_s/(n_s+1) sits below 0.95 -- the same
+          # arithmetic as the small-validation warning. Measured on the
+          # 2026-08-16 mech_cov_mondrian verification: with ~13-cell
+          # strata (n=300, ~26 val cells/trait) MCAR coverage landed at
+          # exactly the 13/14 = 0.929 ceiling. Below 19 per stratum,
+          # stratifying is guaranteed to undercover, so fall back to the
+          # global split score.
+          if (n_near < 19L || n_far < 19L) {
+            fallback <- TRUE
+          } else {
+            q_near <- min(ceiling((1 - alpha) * (n_near + 1)) / n_near, 1)
+            q_far  <- min(ceiling((1 - alpha) * (n_far  + 1)) / n_far,  1)
+            near_score <- as.numeric(
+              stats::quantile(residuals[near], q_near, na.rm = TRUE)
+            )
+            far_score <- as.numeric(
+              stats::quantile(residuals[far], q_far, na.rm = TRUE)
+            )
+          }
+        }
+      }
+
+      if (fallback) {
+        near_score <- global_score
+        far_score  <- global_score
+        threshold  <- NA_real_
+      }
+
+      mondrian_info[[tm$name]] <- list(
+        near_score = near_score,
+        far_score  = far_score,
+        threshold  = threshold,
+        fallback   = fallback
+      )
     }
   }
 
@@ -864,7 +971,50 @@ compute_conformal_scores <- function(
     ))
   }
 
+  if (method == "mondrian") {
+    attr(conformal_scores, "mondrian") <- mondrian_info
+  }
+
   conformal_scores
+}
+
+# Mean cophenetic distance from each target species to its `k` nearest
+# OBSERVED species (excluding self). Used by the `"mondrian"` conformal
+# method to condition calibration on phylogenetic sampling locality.
+#
+# @param D_sq        numeric matrix (n_species × n_species), squared
+#                    cophenetic distances (`build_phylo_graph()$D_sq`).
+# @param obs_idx     integer vector of species row/col indices treated as
+#                    "observed" (the calibration donor pool) for one trait.
+# @param target_idx  integer vector of species indices to compute locality
+#                    for.
+# @param k           integer, number of nearest observed species averaged
+#                    (default 5). Uses all available when fewer than `k`.
+# @return numeric vector, same length as `target_idx`; `NA_real_` for a
+#   target with no eligible (non-self) observed species.
+# @noRd
+mondrian_locality <- function(D_sq, obs_idx, target_idx, k = 5L) {
+  obs_idx    <- as.integer(obs_idx)
+  target_idx <- as.integer(target_idx)
+  n_t <- length(target_idx)
+  out <- rep(NA_real_, n_t)
+  if (n_t == 0L || length(obs_idx) == 0L) {
+    return(out)
+  }
+  dist_sub <- sqrt(D_sq[target_idx, obs_idx, drop = FALSE])
+  for (i in seq_len(n_t)) {
+    d <- dist_sub[i, ]
+    self_pos <- which(obs_idx == target_idx[i])
+    if (length(self_pos) > 0L) {
+      d <- d[-self_pos]
+    }
+    if (length(d) == 0L) {
+      next
+    }
+    kk <- min(as.integer(k), length(d))
+    out[i] <- mean(sort(d)[seq_len(kk)])
+  }
+  out
 }
 
 # ---------------------------------------------------------------------------
