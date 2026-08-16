@@ -68,7 +68,18 @@ Cursor gitWorker lock, with the working tree and remote ending byte-correct.
 
 ---
 
-## 5. LESSONS — testing the option you chose is not testing the choice (2026-08-16) — **NEW, unapproved**
+## 5. ~~LESSONS — testing the option you chose is not testing the choice~~ — **RETRACTED: ALREADY FILED**
+
+> **DO NOT APPROVE OR LAND THIS AS A NEW ENTRY.** The drmTMB lane wrote it directly to the
+> shared brain ~20 minutes before this draft existed: `~/shinichi-brain/memory/LESSONS.md:2193`,
+> commit `387651d`, *"A recommendation is code you did not run — test the choice, not the option
+> you chose"*. Verified present, and it already cites pigauto PR #166 / `c536499` as its receipt.
+> Landing this draft too would put **two entries in the vault for one lesson** — the same
+> "two correct implementations of one fix" hazard the lane preflight warns about, and harder to
+> spot in prose than in code.
+>
+> **If anything below reads better than the filed entry, improve that entry in place.** Do not
+> append beside it. Text kept only for that comparison.
 
 *Formulated by the drmTMB lane (`claude/eloquent-driscoll-521fa1`), receipt `665423395`.
 Credit theirs; staged here because the failure had two halves and pigauto owns one.*
@@ -98,3 +109,27 @@ proxies the mechanism never promised to provide — R 4.0's `setup_strategy = "p
 reparents healthy workers to init at birth, and `parLapply` logs nothing until every cell
 finishes. The sound test is the port pair (`lsof -nP -iTCP:<PORT>`, two ESTABLISHED = healthy).
 Reading a proxy the mechanism never guaranteed cost two healthy drivers.
+
+
+---
+
+## ⚖️ Open process question for Shinichi (D-87 — not mine to settle)
+
+Two lanes handled the *same* finding under *different* brain-write rules on the same night:
+
+- **This lane (pigauto):** staged a draft and waited for approval. pigauto's `AGENTS.md` says
+  in terms: *"Brain-write boundary — see brain DECISIONS D-37 (never write to the brain vault
+  without explicit approval; stage a draft and propose)."* So the gate is repo-mandated here.
+- **The drmTMB lane:** wrote straight to `LESSONS.md` and committed (`387651d`), citing the
+  session instruction to write durable findings to a file before the turn ends, plus D-37's
+  own note that the vault is local-only where a local commit *is* landed state.
+
+Both read their instructions defensibly. They cannot both be the norm. Either this lane's gate
+is stricter than intended, or that write was looser than intended — and the practical cost of
+the ambiguity is visible right here: a near-duplicate entry, avoided only because the two lanes
+happened to be talking.
+
+Neither lane should resolve this unilaterally (D-87). The drmTMB lane is surfacing it to you
+from its side and has explicitly **not** reverted its entry — removing a filed finding to settle
+a process question would be the worse error, and I agree. Flagging it from this side so the
+question reaches you once, from both.
