@@ -189,7 +189,7 @@ run_pigauto <- function() {
 run_bace <- function() {
   if (!requireNamespace("BACE", quietly = TRUE)) {
     log_line("BACE not installed -- skipping")
-    return(list(completed = NULL))
+    return(list(completed = NULL, error = "BACE not installed"))
   }
   # BACE (via MCMCglmm) refuses phylogenies with zero-length edges.
   # Replace zero edges with a tiny positive value so MCMCglmm accepts
@@ -215,6 +215,7 @@ run_bace <- function() {
     paste0(v, " ~ ", paste(others, collapse = " + "))
   })
 
+  bace_error <- NULL
   out <- tryCatch({
     BACE::bace(
       fixformula    = fixformula,
@@ -230,11 +231,12 @@ run_bace <- function() {
       skip_conv     = TRUE   # small n: skip convergence retry
     )
   }, error = function(e) {
-    log_line("BACE run failed: ", conditionMessage(e))
+    bace_error <<- conditionMessage(e)
+    log_line("BACE run failed: ", bace_error)
     NULL
   })
 
-  if (is.null(out)) return(list(completed = NULL))
+  if (is.null(out)) return(list(completed = NULL, error = bace_error))
 
   # BACE returns a list with $imputed_datasets (list of M completed
   # data.frames). Pool by mean / mode across draws for the final
@@ -247,9 +249,10 @@ run_bace <- function() {
   }, error = function(e) NULL)
 
   if (is.null(imputed_sets) || !length(imputed_sets)) {
-    log_line("BACE output shape not recognised (keys: ",
-              paste(names(out), collapse = ", "), ")")
-    return(list(completed = NULL))
+    shape_msg <- sprintf("BACE output shape not recognised (keys: %s)",
+                          paste(names(out), collapse = ", "))
+    log_line(shape_msg)
+    return(list(completed = NULL, error = shape_msg))
   }
 
   # Pool: for each cell in mask_test, take mean (continuous) or mode
@@ -278,7 +281,7 @@ run_bace <- function() {
     }
   }
 
-  list(completed = completed)
+  list(completed = completed, error = NULL)
 }
 
 # -------------------------------------------------------------------------
@@ -319,6 +322,12 @@ saveRDS(list(
   bace_ran  = !is.null(ev_bace)
 ), out_rds)
 
+bace_skip_msg <- if (!is.null(ev_bace)) "" else {
+  err <- r_bace$val$error
+  if (is.null(err) || !nzchar(err)) err <- "not installed or failed (no error captured)"
+  sprintf("**BACE skipped**: %s", err)
+}
+
 md <- c(
   "# AVONET x pigauto + BACE head-to-head",
   "",
@@ -327,7 +336,7 @@ md <- c(
           nrow(df), ncol(df)),
   sprintf("Seed = %d, miss_frac = %.2f, n_imputations = %d.",
           SEED, MISS_FRAC, N_IMP),
-  if (is.null(ev_bace)) "**BACE skipped** (not installed or failed)." else "",
+  bace_skip_msg,
   "",
   "## Per-trait metrics",
   "",

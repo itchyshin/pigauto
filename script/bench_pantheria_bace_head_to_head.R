@@ -150,18 +150,90 @@ run_pigauto <- function(em_iter) {
                     n_imputations = 20L)
 }
 
+# Correct BACE::bace() call -- uses fixformula + ran_phylo_form + phylo
+# + data (with a Species column), same pattern as bench_avonet_bace.R.
 run_bace <- function() {
-  if (!requireNamespace("BACE", quietly = TRUE)) return(NULL)
-  tryCatch({
-    res <- BACE::bace(data = df_miss, tree = tree_sub,
-                        n_iter = 2000L, burnin = 500L, thin = 5L,
-                        ovr = TRUE, verbose = FALSE)
-    # BACE return shape varies; try common slots
-    if ("completed" %in% names(res))     res$completed
-    else if ("data"  %in% names(res))    res$data
-    else if ("imputed_data" %in% names(res)) res$imputed_data
+  if (!requireNamespace("BACE", quietly = TRUE)) {
+    return(list(completed = NULL, error = "BACE not installed"))
+  }
+  # BACE (via MCMCglmm) refuses phylogenies with zero-length edges.
+  tree_b <- tree_sub
+  if (any(tree_b$edge.length == 0, na.rm = TRUE)) {
+    tree_b$edge.length[tree_b$edge.length == 0] <- 1e-8
+  }
+
+  df_b <- df_miss
+  df_b$Species <- rownames(df_miss)
+  all_traits <- setdiff(names(df_b), "Species")
+  fixformula <- lapply(all_traits, function(v) {
+    others <- setdiff(all_traits, v)
+    paste0(v, " ~ ", paste(others, collapse = " + "))
+  })
+
+  bace_error <- NULL
+  out <- tryCatch({
+    BACE::bace(
+      fixformula     = fixformula,
+      ran_phylo_form = "~ 1 |Species",
+      phylo          = tree_b,
+      data           = df_b,
+      nitt           = 2000L,
+      burnin         = 500L,
+      thin           = 5L,
+      runs           = 2L,
+      n_final        = 2L,
+      verbose        = FALSE,
+      skip_conv      = TRUE
+    )
+  }, error = function(e) {
+    bace_error <<- conditionMessage(e)
+    message("BACE run failed: ", bace_error)
+    NULL
+  })
+
+  if (is.null(out)) return(list(completed = NULL, error = bace_error))
+
+  # BACE returns a list with $imputed_datasets (list of M completed
+  # data.frames). Pool by median / mode across draws for the final
+  # completed dataset.
+  imputed_sets <- tryCatch({
+    if ("imputed_datasets" %in% names(out)) out$imputed_datasets
+    else if ("imputed_data" %in% names(out)) out$imputed_data
+    else if ("data" %in% names(out)) list(out$data)
     else NULL
-  }, error = function(e) { message("BACE run failed: ", conditionMessage(e)); NULL })
+  }, error = function(e) NULL)
+
+  if (is.null(imputed_sets) || !length(imputed_sets)) {
+    shape_msg <- sprintf("BACE output shape not recognised (keys: %s)",
+                          paste(names(out), collapse = ", "))
+    message(shape_msg)
+    return(list(completed = NULL, error = shape_msg))
+  }
+
+  M <- length(imputed_sets)
+  completed <- df_miss
+  for (v in names(completed)) {
+    if (!any(mask_test[, v])) next
+    draws <- sapply(imputed_sets, function(d) d[[v]])
+    if (!is.matrix(draws)) draws <- matrix(draws, ncol = M)
+    if (is.factor(completed[[v]])) {
+      for (i in which(mask_test[, v])) {
+        vals <- as.character(draws[i, ])
+        vals <- vals[!is.na(vals)]
+        if (!length(vals)) next
+        mode_val <- names(sort(table(vals), decreasing = TRUE))[1]
+        completed[[v]][i] <- factor(mode_val, levels = levels(completed[[v]]),
+                                     ordered = is.ordered(completed[[v]]))
+      }
+    } else {
+      for (i in which(mask_test[, v])) {
+        vals <- as.numeric(draws[i, ])
+        completed[[v]][i] <- stats::median(vals, na.rm = TRUE)
+      }
+    }
+  }
+
+  list(completed = completed, error = NULL)
 }
 
 eval_completed <- function(completed, truth, mask, method_name, wall_s,
@@ -248,7 +320,7 @@ ev_em5 <- eval_completed(r_em5$val$completed, df_sub, mask_test,
 cat("=== BACE (may skip) ===\n")
 r_bace <- timed(run_bace())
 # BACE doesn't expose conformal intervals; pass NULL for res_obj
-ev_bace <- eval_completed(r_bace$val, df_sub, mask_test,
+ev_bace <- eval_completed(r_bace$val$completed, df_sub, mask_test,
                             "bace_default", r_bace$wall, res_obj = NULL)
 
 all_rows <- do.call(rbind, Filter(Negate(is.null), list(ev_def, ev_em5, ev_bace)))
@@ -259,12 +331,18 @@ saveRDS(list(results = all_rows,
               bace_ran = !is.null(ev_bace)),
          out_rds)
 
+bace_skip_msg <- if (!is.null(ev_bace)) "" else {
+  err <- r_bace$val$error
+  if (is.null(err) || !nzchar(err)) err <- "not installed or failed (no error captured)"
+  sprintf("**BACE skipped**: %s", err)
+}
+
 md <- c(
   "# PanTHERIA head-to-head (pigauto vs BACE)",
   "",
   sprintf("Subset: n = %d, seed = %d, miss_frac = %.2f",
           nrow(df_sub), SEED, MISS_FRAC),
-  if (!is.null(ev_bace)) "" else "**BACE skipped** (not installed or failed).",
+  bace_skip_msg,
   "",
   "## Per-trait metrics",
   "",

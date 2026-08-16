@@ -102,29 +102,91 @@ run_pigauto_em5 <- function() {
                     n_imputations = 20L)
 }
 
-# BACE (optional — skipped if BACE is not installed)
+# BACE (optional — skipped if BACE is not installed). Correct
+# BACE::bace() call -- uses fixformula + ran_phylo_form + phylo + data
+# (with a Species column), same pattern as bench_avonet_bace.R.
 run_bace <- function() {
   if (!requireNamespace("BACE", quietly = TRUE)) {
-    return(NULL)
+    return(list(completed = NULL, error = "BACE not installed"))
   }
-  # BACE's canonical API on AVONET: bace() with default prior + OVR. The
-  # precise call varies by BACE version — below is the v0.9.0 comparison
-  # setup. If this errors on a newer BACE, the try() returns NULL and the
-  # pipeline continues.
-  tryCatch({
+  # BACE (via MCMCglmm) refuses phylogenies with zero-length edges.
+  tree_b <- tree
+  if (any(tree_b$edge.length == 0, na.rm = TRUE)) {
+    tree_b$edge.length[tree_b$edge.length == 0] <- 1e-8
+  }
+
+  df_b <- df_miss
+  df_b$Species <- rownames(df_miss)
+  all_traits <- setdiff(names(df_b), "Species")
+  fixformula <- lapply(all_traits, function(v) {
+    others <- setdiff(all_traits, v)
+    paste0(v, " ~ ", paste(others, collapse = " + "))
+  })
+
+  bace_error <- NULL
+  out <- tryCatch({
     BACE::bace(
-      data          = df_miss,
-      tree          = tree,
-      n_iter        = 2000L,
-      burnin        = 500L,
-      thin          = 5L,
-      ovr           = TRUE,
-      verbose       = FALSE
+      fixformula     = fixformula,
+      ran_phylo_form = "~ 1 |Species",
+      phylo          = tree_b,
+      data           = df_b,
+      nitt           = 2000L,
+      burnin         = 500L,
+      thin           = 5L,
+      runs           = 2L,
+      n_final        = 2L,
+      verbose        = FALSE,
+      skip_conv      = TRUE
     )
   }, error = function(e) {
-    message("BACE run failed: ", conditionMessage(e))
+    bace_error <<- conditionMessage(e)
+    message("BACE run failed: ", bace_error)
     NULL
   })
+
+  if (is.null(out)) return(list(completed = NULL, error = bace_error))
+
+  # BACE returns a list with $imputed_datasets (list of M completed
+  # data.frames). Pool by median / mode across draws for the final
+  # completed dataset.
+  imputed_sets <- tryCatch({
+    if ("imputed_datasets" %in% names(out)) out$imputed_datasets
+    else if ("imputed_data" %in% names(out)) out$imputed_data
+    else if ("data" %in% names(out)) list(out$data)
+    else NULL
+  }, error = function(e) NULL)
+
+  if (is.null(imputed_sets) || !length(imputed_sets)) {
+    shape_msg <- sprintf("BACE output shape not recognised (keys: %s)",
+                          paste(names(out), collapse = ", "))
+    message(shape_msg)
+    return(list(completed = NULL, error = shape_msg))
+  }
+
+  M <- length(imputed_sets)
+  completed <- df_miss
+  for (v in names(completed)) {
+    if (!any(user_mask_test[, v])) next
+    draws <- sapply(imputed_sets, function(d) d[[v]])
+    if (!is.matrix(draws)) draws <- matrix(draws, ncol = M)
+    if (is.factor(completed[[v]])) {
+      for (i in which(user_mask_test[, v])) {
+        vals <- as.character(draws[i, ])
+        vals <- vals[!is.na(vals)]
+        if (!length(vals)) next
+        mode_val <- names(sort(table(vals), decreasing = TRUE))[1]
+        completed[[v]][i] <- factor(mode_val, levels = levels(completed[[v]]),
+                                     ordered = is.ordered(completed[[v]]))
+      }
+    } else {
+      for (i in which(user_mask_test[, v])) {
+        vals <- as.numeric(draws[i, ])
+        completed[[v]][i] <- stats::median(vals, na.rm = TRUE)
+      }
+    }
+  }
+
+  list(completed = completed, error = NULL)
 }
 
 # -------------------------------------------------------------------------
@@ -214,24 +276,11 @@ ev_em5$wall_s <- r_em5$wall
 
 cat("\n=== BACE (may skip) ===\n")
 r_bace <- timed(run_bace())
-ev_bace <- if (!is.null(r_bace$val)) {
-  # BACE::bace() output has $data or similar — depends on version. Best
-  # effort: try common slot names; if none match, skip.
-  completed_bace <- tryCatch({
-    if ("completed" %in% names(r_bace$val)) r_bace$val$completed
-    else if ("data"  %in% names(r_bace$val)) r_bace$val$data
-    else if ("imputed_data" %in% names(r_bace$val)) r_bace$val$imputed_data
-    else NULL
-  }, error = function(e) NULL)
-  if (is.null(completed_bace)) {
-    message("BACE output shape not recognised; skipping evaluation.")
-    NULL
-  } else {
-    out <- eval_completed(completed_bace, df, user_mask_test,
-                           method = "bace_default")
-    out$wall_s <- r_bace$wall
-    out
-  }
+ev_bace <- if (!is.null(r_bace$val$completed)) {
+  out <- eval_completed(r_bace$val$completed, df, user_mask_test,
+                         method = "bace_default")
+  out$wall_s <- r_bace$wall
+  out
 } else NULL
 
 all_rows <- do.call(rbind, Filter(Negate(is.null),
@@ -246,12 +295,18 @@ saveRDS(list(results = all_rows,
 # Markdown
 # -------------------------------------------------------------------------
 
+bace_skip_msg <- if (!is.null(ev_bace)) "" else {
+  err <- r_bace$val$error
+  if (is.null(err) || !nzchar(err)) err <- "not installed or failed (no error captured)"
+  sprintf("**BACE skipped**: %s", err)
+}
+
 md <- c(
   "# Phase 8 MVP: AVONET 300 head-to-head (pigauto vs BACE)",
   "",
   sprintf("Seed = %d, miss_frac = %.2f, identical splits across methods.",
           SEED, MISS_FRAC),
-  if (!is.null(ev_bace)) "" else "**BACE skipped** (not installed or failed).",
+  bace_skip_msg,
   "",
   "## Per-trait metrics",
   "",
