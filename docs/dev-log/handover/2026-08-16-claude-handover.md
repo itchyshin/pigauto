@@ -1,5 +1,38 @@
 # Session Handoff: pigauto — Tier 0 + Tier 1 COMPLETE, two campaigns landed (Claude → Claude)
 
+> ## ⚡ UPDATE — 2026-08-16 evening: the "earn-the-claims" arc ran and CLOSED on top of this
+>
+> Everything below remains accurate history, but the state has moved substantially:
+>
+> - **`origin/main` = `1beda8e`** — PRs [#167](https://github.com/itchyshin/pigauto/pull/167)
+>   (silent-fallback honesty: λ/covariate warnings, n_val<19 ceiling, `conformal_split_val`)
+>   and [#168](https://github.com/itchyshin/pigauto/pull/168) (`conformal_method = "mondrian"`)
+>   both merged, CI green, `--as-cran` 0E/0W/1 known NOTE on each.
+> - **Four new campaigns, all 0 failures, all written up on this branch:**
+>   `2026-08-16-lambda-attribution-results.md` (the low-λ GNN gains were baseline
+>   misspecification — λ-fitting reproduces 100–117% of them; the F2-nonlinear lift
+>   SURVIVES λ-fitted baselines at 5.9–8.5 MCSE; `bayes` kills the ML boundary collapse) ·
+>   `2026-08-16-mechanism-coverage-results.md` (exchangeability failure CONFIRMED under
+>   MAR_phylo/MNAR; Mondrian fix verified at n=1000, honest fallback below 19/stratum) ·
+>   `2026-08-16-external-comparison-results.md` (FIRST working BACE head-to-head, plus a
+>   5-seed standalone bench: **raw Rphylopars beats pigauto's continuous output on
+>   AVONET300** — the pipeline layer is net negative for continuous traits there; mixed-type
+>   remains pigauto's win. THE front-page item for the next arc).
+> - **After-task report:** `docs/dev-log/after-task/2026-08-16-earn-the-claims-arc.md`
+>   (§9 lists the seven open items, ranked).
+> - New branches: `arc/bace-comparators` (pushed, bench scripts + outputs, no PR — script/
+>   is build-ignored); worktrees `.worktrees/arc-tier2`, `arc-mondrian`, `arc-bace` hold the
+>   merged/pushed branches and can be pruned at leisure.
+> - Totoro `~/pigauto_regime_map/`: + `results/lambda_attr` (1,920), `results/mech_cov`
+>   (200), `results/mech_cov_mondrian` (200 valid; `_bad300` = superseded first run),
+>   `lib_mondrian/`, summaries. Nothing running.
+> - The 15 carried-over files: still untouched. The stale `.git/index.lock` on this checkout
+>   still needs Shinichi's `rm` + `git reset` (alternate-index commits worked around it all
+>   day — the `D`/`MM` status artifacts vanish after the reset).
+> - D-143 lesson (three lanes on Totoro under one account, 192 cores):
+>   `2026-08-16-lesson-compute-lane-preflight.md` — staged draft for the brain, proposes a
+>   compute-host preflight to ultra-plan.
+
 Meta: 2026-08-16 ~08:20 MDT · from Claude (`AUTHOR = claude`) · `TARGET = claude`
 Authoritative copy: this file. Chat is disposable. You inherit **no** authoring chat.
 

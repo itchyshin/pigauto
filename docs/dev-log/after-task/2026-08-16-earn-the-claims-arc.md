@@ -88,25 +88,29 @@ implementation agents; Fable/Opus kept for design, gates, and verification revie
 
 ## 8. State of the tree
 
-- `origin/main` unchanged (PRs #167, #168 open, CI running, --as-cran gating).
+- `origin/main` = `1beda8e` (#167 + #168 MERGED; CI green ×3 platforms; --as-cran 0E/0W/1N each).
 - `handover/2026-08-09-cursor`: +8 doc commits (designs pre-registered before results;
   results; corrections; checklist ticks; this report).
 - Worktrees added: `.worktrees/arc-tier2` (PR #167), `.worktrees/arc-mondrian`
-  (PR #168), `.worktrees/arc-bace` (bench branch, unpushed).
+  (PR #168), `.worktrees/arc-bace` (arc/bace-comparators, pushed `da78100`). All three prunable.
 - 15 carried-over files: untouched throughout (verified at every commit).
 - Totoro: `~/pigauto_regime_map/` gains lambda_attr (1,920 rds), mech_cov (200),
   mech_cov_mondrian (200 valid + 120 archived bad), summaries, lib_mondrian.
 
 ## 9. Open items for the next session
 
-1. Merge #167 and #168 after --as-cran + CI (mechanical).
-2. Commit + push arc/bace-comparators bench outputs (was held while the C2 agent worked).
-3. Multi-seed external comparison (the single-seed BACE result begs it) — Totoro-sized.
-4. Per-type λ dispatch (λ per-column for continuous + joint for discrete) — removes the
+1. ~~Merge #167 and #168~~ — **DONE** (main `1beda8e`; both --as-cran 0E/0W/1N; the #168
+   CI failure was a platform-dependent hard-coded test reference, rewritten deterministic).
+2. ~~Commit + push arc/bace-comparators~~ — **DONE** (`da78100`).
+3. **Diagnose the continuous gap** (NEW, front page): raw Rphylopars beats pigauto's
+   continuous output on AVONET300 (5 seeds, C2 bench). Testable order: calibration tax
+   (~49% vs 70% visible cells), which baseline path actually fired, λ=1 default.
+4. Multi-seed external comparison (the single-seed BACE result begs it) — Totoro-sized.
+5. Per-type λ dispatch (λ per-column for continuous + joint for discrete) — removes the
    bayes categorical price; natural next code slice.
-5. Real-data Mondrian re-run (fishbase/pantheria).
-6. P1-11 threading; zi_count interval design; P1-6/7 docs consolidation.
-7. Paper framing decision (Shinichi) — the evidence set is now: F2-nonlinear lift on
+6. Real-data Mondrian re-run (fishbase/pantheria).
+7. P1-11 threading; zi_count interval design; P1-6/7 docs consolidation.
+8. Paper framing decision (Shinichi) — the evidence set is now: F2-nonlinear lift on
    λ-fitted baselines + safety-gated architecture + honest coverage story + one working
    external comparison.
 
@@ -118,5 +122,6 @@ each bounded by an explicit failure or limitation in the same document.
 
 ## 11. Handover
 
-Handover refresh + coordination board update follow as the arc's final commits once
-the two PRs merge or the session ends — whichever comes first.
+Done in the same close: ⚡ UPDATE block atop `handover/2026-08-16-claude-handover.md`,
+phase-snapshot replaced (old entry archived verbatim), coordination-board Status entry
+added. START HERE for the next session = the handover's UPDATE block.

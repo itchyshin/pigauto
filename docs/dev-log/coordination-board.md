@@ -22,6 +22,15 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
 
 ## Status
 
+- **2026-08-16 evening: earn-the-claims arc CLOSED (Claude lane).** `main` `1beda8e` —
+  PR #167 (honesty warnings) + #168 (mondrian conformal) merged, CI green, --as-cran clean.
+  Four campaigns 0 failures (λ-attribution 1,920; mech-coverage 200; mondrian verify 320;
+  external comparators 5-seed). Findings: low-λ GNN gains were baseline misspecification
+  (λ-fitting closes them); F2 nonlinear lift survives; exchangeability failure confirmed
+  and repaired at n≥1000; **raw Rphylopars beats pigauto continuous on AVONET300 — next
+  arc's front page**. After-task: `after-task/2026-08-16-earn-the-claims-arc.md`. New
+  pushed branch `arc/bace-comparators` (benches, no PR). Nothing running anywhere.
+
 - 2026-08-09: P0 landed on origin; #155 merge-from-parent done; R-CMD-check running. BACE wrap lane opened via Cursor handover. Dirty uinit / DRAC scripts / README banners stay unstaged.
 - 2026-08-09 (later): Wrap lane ultra-plan Phases 0–2 complete, **stopped at G0**. Sweep found no
   prior wrap attempt (no branch / worktree / stash / brain decision) and that **BACE is not
