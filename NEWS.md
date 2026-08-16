@@ -4,6 +4,22 @@ GitHub-dev after CRAN pigauto 0.10.0 (Date/Publication 2026-07-30).
 This is not a CRAN tarball. BACE is still not on CRAN. The next CRAN
 cut must drop Suggests `BACE` again or wait until BACE is on CRAN.
 
+## Fix: zi_count observed zeros were excluded from val/test splits (P1-9)
+
+`make_missing_splits()` treated a (species, trait) cell as observed only when
+**all** its latent columns were non-NA. `zi_count` encodes an observed zero as
+gate = 0 with the log1p-z magnitude column `NA` — the NA is data ("this count
+is zero"), not missingness — so every observed zero failed that test and could
+never be drawn into validation or test. Because zero-inflation is the defining
+feature of the type, this silently restricted all `zi_count` gate calibration,
+conformal scoring and evaluation to the non-zero subset. Observation status for
+`zi_count` is now decided by the gate column alone.
+
+Measured on a 60-species fixture with 23 observed zeros: **0** of them could be
+held out before the fix; they are eligible after. Any previously reported
+`zi_count` validation or test metric was computed on non-zeros only and should
+be re-measured.
+
 ## Fix: full-validation BM floor in gate calibration (#157)
 
 Gate calibration accepted blends from half-set comparisons (or half-B

@@ -145,6 +145,18 @@ make_missing_splits <- function(X, missing_frac = 0.25, val_frac = 0.25,
   obs_trait <- matrix(TRUE, nrow = n, ncol = n_traits)
   for (j in seq_len(n_traits)) {
     tm <- trait_map[[j]]
+    if (identical(tm$type, "zi_count")) {
+      # P1-9: zi_count encodes an observed ZERO as gate = 0 with the
+      # magnitude column NA — the NA is data ("this count is zero"), not
+      # missingness. The all-columns-non-NA rule below therefore treated
+      # every observed zero as unobserved, so zeros could never be drawn
+      # into val/test. Since zero-inflation is the defining feature of the
+      # type, that silently restricted all zi_count calibration and
+      # evaluation to the non-zero subset. Observation status is decided by
+      # the gate column alone.
+      obs_trait[, j] <- obs_trait[, j] & !is.na(X[, tm$latent_cols[1L]])
+      next
+    }
     for (lc in tm$latent_cols) {
       obs_trait[, j] <- obs_trait[, j] & !is.na(X[, lc])
     }
