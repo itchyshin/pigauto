@@ -76,6 +76,18 @@
 #'   diagonal entries of \eqn{\Sigma}. Binary + ordinal only (OVR categorical
 #'   stays on Phase 6 diagonal). Default \code{FALSE} preserves Phase 6
 #'   behaviour.
+#' @param joint_solver character. Which solver estimates the joint
+#'   Sigma / posterior for the joint MVN, threshold-joint, and OVR
+#'   categorical baselines. \code{"inhouse"} (default) uses the
+#'   single-pass in-house solver (\code{R/joint_mvn_solver.R}) and is
+#'   byte-identical to prior releases. \code{"rphylopars"} delegates to
+#'   \code{Rphylopars::phylopars()}'s converged REML fit, which measured
+#'   0.14-1.27 lower z-RMSE than the in-house solver on AVONET300 (see
+#'   \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}); on
+#'   failure or non-finite output it falls back to \code{"inhouse"} with
+#'   a warning. Only affects the BM-eligible / threshold-joint / OVR
+#'   categorical paths above; ignored when those paths don't fire (e.g.
+#'   \code{lambda_mode != "fixed_1"}, which forces the per-column path).
 #' @return A list with:
 #'   \describe{
 #'     \item{mu}{Numeric matrix (n_species x p_latent), baseline means in
@@ -101,10 +113,12 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                          lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
                          em_iterations = 0L,
                          em_tol = 1e-3,
-                         em_offdiag = FALSE) {
+                         em_offdiag = FALSE,
+                         joint_solver = c("inhouse", "rphylopars")) {
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
   soft_aggregate <- identical(multi_obs_aggregation, "soft")
   lambda_mode <- match.arg(lambda_mode)
+  joint_solver <- match.arg(joint_solver)
   # Translate dispatcher mode to the kernel-layer lambda argument.
   # "fixed_1"  -> lambda = 1.0   (back-compat; bit-identical to v0.9.x)
   # "estimate" -> lambda = "estimate" (per-column ML)
@@ -273,11 +287,13 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                                        soft_aggregate = soft_aggregate,
                                        em_iterations = em_iterations,
                                        em_tol = em_tol,
-                                       em_offdiag = em_offdiag)
+                                       em_offdiag = em_offdiag,
+                                       joint_solver = joint_solver)
     } else {
       fit_joint_threshold_baseline(data, tree, splits = splits,
                                     graph = graph,
-                                    soft_aggregate = soft_aggregate)
+                                    soft_aggregate = soft_aggregate,
+                                    joint_solver = joint_solver)
     }
 
     populated_cols <- integer(0)
@@ -463,7 +479,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
 
   } else if (use_continuous_joint) {
     joint <- fit_joint_mvn_baseline(data, tree, splits = splits, graph = graph,
-                                     soft_aggregate = soft_aggregate)
+                                     soft_aggregate = soft_aggregate,
+                                     joint_solver = joint_solver)
     mu[, bm_cols] <- joint$mu[, bm_cols]
     se[, bm_cols] <- joint$se[, bm_cols]
     bm_cols <- integer(0)
@@ -490,11 +507,13 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                                        splits = splits, graph = graph,
                                        soft_aggregate = soft_aggregate,
                                        em_iterations = em_iterations,
-                                       em_tol = em_tol)
+                                       em_tol = em_tol,
+                                       joint_solver = joint_solver)
         } else {
           fit_ovr_categorical_fits(data, tree, trait_name = trait_name,
                                     splits = splits, graph = graph,
-                                    soft_aggregate = soft_aggregate)
+                                    soft_aggregate = soft_aggregate,
+                                    joint_solver = joint_solver)
         },
         error = function(e) NULL
       )

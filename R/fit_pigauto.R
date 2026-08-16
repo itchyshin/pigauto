@@ -244,6 +244,13 @@
 #'   no lambda argument and always fits at lambda = 1; a non-\code{"fixed_1"}
 #'   \code{lambda_mode} is then silently ignored for BM-eligible columns
 #'   and \code{fit_baseline} emits a warning.
+#' @param joint_solver character. Which solver estimates the joint MVN /
+#'   threshold-joint / OVR categorical baselines. \code{"inhouse"}
+#'   (default) is byte-identical to prior releases; \code{"rphylopars"}
+#'   delegates to \code{Rphylopars::phylopars()}'s converged REML fit,
+#'   with automatic fallback to \code{"inhouse"} on failure. Passed to
+#'   \code{\link{fit_baseline}} and stored in the fitted model config.
+#'   See \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}.
 #' @param verbose logical. Print training progress (default \code{TRUE}).
 #' @param seed optional integer. When supplied, makes stochastic training and
 #'   calibration reproducible; the default \code{NULL} uses the current RNG
@@ -348,11 +355,13 @@ fit_pigauto <- function(
     phylo_signal_method = c("lambda", "blomberg_k"),
     min_val_cells     = 20L,
     lambda_mode       = c("fixed_1", "estimate", "cv", "bayes"),
+    joint_solver      = c("inhouse", "rphylopars"),
     verbose           = TRUE,
     seed = NULL
 ) {
   conformal_method    <- match.arg(conformal_method)
   lambda_mode         <- match.arg(lambda_mode)
+  joint_solver        <- match.arg(joint_solver)
   gate_method         <- match.arg(gate_method)
   phylo_signal_method <- match.arg(phylo_signal_method)
   if (!inherits(data, "pigauto_data")) {
@@ -410,7 +419,8 @@ fit_pigauto <- function(
     # Pass graph through so fit_baseline can reuse graph$D instead of
     # calling ape::cophenetic.phylo() a second time on the same tree.
     baseline <- fit_baseline(data, tree, splits = splits, graph = graph,
-                              lambda_mode = lambda_mode)
+                              lambda_mode = lambda_mode,
+                              joint_solver = joint_solver)
   }
 
   # ---- Trait map ------------------------------------------------------------
@@ -1197,6 +1207,7 @@ fit_pigauto <- function(
     n_trait_heads          = as.integer(n_trait_heads),
     trait_embed_dim        = as.integer(trait_embed_dim),
     lambda_mode            = lambda_mode,
+    joint_solver           = joint_solver,
     dropout                = dropout,
     refine_steps           = refine_steps,
     cal_refine_steps       = as.integer(refine_steps),

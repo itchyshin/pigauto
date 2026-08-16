@@ -270,12 +270,15 @@ build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE,
 
 #' Fit a joint MVN BM on liability-scale columns (Phase 3)
 #'
-#' Runs `build_liability_matrix()` then fits the joint Sigma via the
-#' in-house `fit_mvn_bm_inhouse()` solver (R/joint_mvn_solver.R).
+#' Runs `build_liability_matrix()` then fits the joint Sigma via
+#' `fit_joint_solver()` (R/joint_mvn_solver.R; in-house by default, or
+#' Rphylopars when `joint_solver = "rphylopars"`).
 #' Returns raw liability-scale posterior. Decoding to per-type output scale
 #' happens upstream in the caller / in `fit_baseline()` glue.
 #'
 #' @inheritParams fit_joint_mvn_baseline
+#' @param joint_solver character, `"inhouse"` (default) or `"rphylopars"`.
+#'   See `fit_joint_solver()` in R/joint_mvn_solver.R.
 #' @return list(mu_liab, se_liab, liab_cols, liab_types).
 #' @keywords internal
 #' @noRd
@@ -283,7 +286,8 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
                                         soft_aggregate = FALSE,
                                         sd_prior_vec = NULL,
                                         mu_prior_mat = NULL,
-                                        sd_prior_mat = NULL) {
+                                        sd_prior_mat = NULL,
+                                        joint_solver = "inhouse") {
   stopifnot(joint_mvn_available())
 
   built <- build_liability_matrix(data, splits = splits,
@@ -314,11 +318,12 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
     X_fit <- X_liab[, fit_cols, drop = FALSE]
     rownames(X_fit) <- spp
 
-    # In-house solver: matrix-normal BM ML estimate on the liability
-    # matrix. No external dependency (no Rphylopars). Output contract
-    # matches phylopars' $anc_recon / $anc_var / $pars$phylocov on the
-    # fields pigauto consumes.
-    fit <- fit_mvn_bm_inhouse(L = X_fit, tree = tree)
+    # Dispatch to the in-house solver (default; no external dependency) or
+    # to Rphylopars when joint_solver = "rphylopars" (with fallback to
+    # in-house on failure). Output contract matches phylopars'
+    # $anc_recon / $anc_var / $pars$phylocov on the fields pigauto
+    # consumes -- the in-house solver was built to match it.
+    fit <- fit_joint_solver(L = X_fit, tree = tree, joint_solver = joint_solver)
 
     tip_rows <- match(spp, rownames(fit$anc_recon))
     mu_fit   <- fit$anc_recon[tip_rows, , drop = FALSE]
@@ -518,7 +523,8 @@ fit_joint_threshold_baseline_em <- function(data, tree, splits,
                                              soft_aggregate = FALSE,
                                              em_iterations = 5L,
                                              em_tol = 1e-3,
-                                             em_offdiag = FALSE) {
+                                             em_offdiag = FALSE,
+                                             joint_solver = "inhouse") {
   stopifnot(joint_mvn_available(), em_iterations >= 1L)
 
   # Phase 6 state (diagonal):
@@ -541,7 +547,8 @@ fit_joint_threshold_baseline_em <- function(data, tree, splits,
                                     soft_aggregate = soft_aggregate,
                                     sd_prior_vec = sd_prior_vec,
                                     mu_prior_mat = mu_prior_mat,
-                                    sd_prior_mat = sd_prior_mat),
+                                    sd_prior_mat = sd_prior_mat,
+                                    joint_solver = joint_solver),
       error = function(e) NULL
     )
 

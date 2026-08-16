@@ -4,6 +4,30 @@ GitHub-dev after CRAN pigauto 0.10.0 (Date/Publication 2026-07-30).
 This is not a CRAN tarball. BACE is still not on CRAN. The next CRAN
 cut must drop Suggests `BACE` again or wait until BACE is on CRAN.
 
+## Feature: `joint_solver = "rphylopars"` (opt-in) -- continuous-trait accuracy switch
+
+The continuous-gap diagnosis (`docs/dev-log/2026-08-16-continuous-gap-diagnosis.md`)
+found that the in-house single-pass joint solver (`fit_mvn_bm_inhouse()`,
+`R/joint_mvn_solver.R`) loses 0.14-1.27 z-RMSE to `Rphylopars::phylopars()`'s
+converged REML fit on AVONET300 -- the GNN/gate and the mixed-type path were
+both exonerated by the same diagnosis.
+
+`fit_baseline()`, `fit_pigauto()`, and `impute()` gain a new `joint_solver`
+argument, `c("inhouse", "rphylopars")`. The default, `"inhouse"`, is
+byte-identical to prior releases. `"rphylopars"` routes the joint MVN,
+threshold-joint, and OVR categorical baselines through `Rphylopars::phylopars()`
+instead, whose output contract (`$anc_recon` / `$anc_var` / `$pars$phylocov`)
+the in-house solver was built to match. If the phylopars call errors or
+produces a non-finite tip prediction, pigauto warns and falls back to the
+in-house solver automatically -- phylopars' own `solve(): system is singular`
+warnings are not themselves treated as failure, only a hard error or
+non-finite output is.
+
+Also fixed: the `fit_joint_threshold_baseline()` / `fit_joint_mvn_baseline()`
+roxygen previously said the joint baseline ran "via `Rphylopars::phylopars()`"
+while the code actually called the in-house solver; that stale claim (and
+the matching one in `impute()`'s `em_iterations` docs) is corrected.
+
 ## Feature: `conformal_method = "mondrian"` (B2) -- locality-stratified conformal intervals
 
 `fit_pigauto()` / `impute()` gain a new `conformal_method` option,

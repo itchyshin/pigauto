@@ -48,6 +48,7 @@ fit_pigauto(
   phylo_signal_method = c("lambda", "blomberg_k"),
   min_val_cells = 20L,
   lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
+  joint_solver = c("inhouse", "rphylopars"),
   verbose = TRUE,
   seed = NULL
 )
@@ -298,6 +299,14 @@ When \code{covariates} are supplied, the covariate-aware BM path has
 no lambda argument and always fits at lambda = 1; a non-\code{"fixed_1"}
 \code{lambda_mode} is then silently ignored for BM-eligible columns
 and \code{fit_baseline} emits a warning.}
+
+\item{joint_solver}{character. Which solver estimates the joint MVN /
+threshold-joint / OVR categorical baselines. \code{"inhouse"}
+(default) is byte-identical to prior releases; \code{"rphylopars"}
+delegates to \code{Rphylopars::phylopars()}'s converged REML fit,
+with automatic fallback to \code{"inhouse"} on failure. Passed to
+\code{\link{fit_baseline}} and stored in the fitted model config.
+See \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}.}
 
 \item{verbose}{logical. Print training progress (default \code{TRUE}).}
 

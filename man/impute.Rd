@@ -19,6 +19,7 @@ impute(
   seed = NULL,
   multi_obs_aggregation = c("hard", "soft"),
   lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
+  joint_solver = c("inhouse", "rphylopars"),
   em_iterations = 0L,
   em_tol = 0.001,
   em_offdiag = FALSE,
@@ -112,12 +113,20 @@ no lambda argument and always fits at lambda = 1; a non-\code{"fixed_1"}
 \code{lambda_mode} is then silently ignored for BM-eligible columns
 and \code{fit_baseline} emits a warning.}
 
+\item{joint_solver}{character. Which solver estimates the joint MVN /
+threshold-joint / OVR categorical baselines. \code{"inhouse"}
+(default) is byte-identical to prior releases; \code{"rphylopars"}
+delegates to \code{Rphylopars::phylopars()}'s converged REML fit,
+with automatic fallback to \code{"inhouse"} on failure. Passed to
+\code{\link{fit_baseline}} and stored in the fitted model config.
+See \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}.}
+
 \item{em_iterations}{integer. Phase 6 EM iterations for the
 threshold-joint baseline (binary + ordinal + OVR categorical).
 Default \code{0L} preserves v0.9.1 behaviour byte-for-byte. When
-\code{>= 2L}, the BM rate \eqn{\Sigma} learned by
-\code{Rphylopars::phylopars()} at iteration \eqn{k} is fed back as
-the per-trait prior SD at iteration \eqn{k+1}, up to
+\code{>= 2L}, the BM rate \eqn{\Sigma} learned by the joint solver
+(\code{joint_solver}; the in-house solver by default) at iteration
+\eqn{k} is fed back as the per-trait prior SD at iteration \eqn{k+1}, up to
 \code{em_iterations} times or until \code{em_tol} convergence.
 Passed to \code{\link{fit_baseline}}.}
 
