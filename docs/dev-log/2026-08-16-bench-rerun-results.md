@@ -24,8 +24,23 @@ comparison is therefore **paired per (scenario, rep, trait)**, and the MCSE is
 | count | RMSE | 360 | +0.00206 | 0.00527 | **0.39** |
 | categorical | accuracy | 280 | +0.00253 | 0.00563 | **0.45** |
 | proportion | RMSE | 640 | +0.00629 | 0.00553 | **1.14** |
+| zi_count | RMSE | 420 | −0.12811 | 3.33533 | **0.04** |
+| multi_proportion | Aitchison | 96 | +0.00000 | 0.04382 | **0.00** |
 
-Every type sits below 1.15 MCSE. Nothing here is distinguishable from zero.
+**All eight types now measured; every one sits below 1.15 MCSE.** Nothing here is
+distinguishable from zero.
+
+Two of the last three need their own reading rather than being counted as three more nulls:
+
+- **`multi_proportion` is exactly 0.00000.** Not suspicious — expected. Its gate closes
+  naturally (NEWS: "the legacy gate-naturally-closes path produces pigauto = baseline at
+  every signal level"), so the GNN contributes nothing and a *training* leak cannot move a
+  number it never influences. Same mechanism that made categorical reproduce 6/7 scenarios
+  exactly. This is the architecture's safety behaviour showing up as measurement invariance.
+- **`zi_count`'s MCSE is 3.34**, two to three orders of magnitude larger than the other
+  types', because its RMSE lives on the raw count scale. `|Δ|/MCSE = 0.04` therefore means
+  "no detectable effect **at very low power**", not "no effect". This cell bounds almost
+  nothing; do not cite it as evidence either way.
 
 Per-scenario means tell the same story: continuous deltas within ±0.004 RMSE; binary
 accuracy mostly *improved* (largest +0.017 at signal_1.0); count within +0.006 RMSE.
@@ -56,8 +71,15 @@ the **re-run** values, and note that the pre-fix values agree within MCSE.
 
 ## Status
 
-Complete: continuous, binary, ordinal, count, categorical, **proportion**.
-Pending: zi_count, multi_proportion (running).
+**Complete: all 8 types** — continuous, binary, ordinal, count, categorical, proportion,
+zi_count, multi_proportion. Final walls: zi_count 110.1 min (35 cells), multi_proportion
+43.3 min (24 cells).
+
+**`multi_proportion` had to be run twice.** Its first "run" was a phantom: the driver
+resumes from its own output `.rds`, found a stale copy, logged `Running 0 cells` and
+`Total wall: 0.0s`, and wrote a summary of the April numbers. Caught by the wall time. The
+stale file was moved to `/tmp/stale_mp_rds_backup.rds` (and is the `old` side of the
+comparison above) before the real re-run.
 
 **Read `zi_count`'s eventual result with care.** P1-9 landed tonight (observed zeros could
 never enter val/test), so its *current* `main` behaviour differs from both the pre-fix and
