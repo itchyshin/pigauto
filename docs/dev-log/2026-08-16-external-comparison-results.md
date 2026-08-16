@@ -101,5 +101,44 @@ Three honest readings:
   Do not cite either number as the other's.
 - BACE remains `Suggests:`-only and is 404 on CRAN, so this comparison cannot ship in a
   CRAN build; it is dev-log evidence.
-- Not yet run: the Rphylopars/phylolm standalone arm (`bench_external_comparators.R`) —
-  its agent hit the session limit mid-build. That comparator is still owed.
+- ~~Not yet run: the Rphylopars/phylolm standalone arm~~ — **run, 5 seeds, below.**
+
+## Rphylopars + phylolm standalone (multi-seed, MCSEs) — the uncomfortable one
+
+`script/bench_external_comparators.R` (arc/bace-comparators `c7f6bf0`): AVONET300, same
+30% MCAR masks across methods, 5 reps (seeds 2027–2031), scored on the 4 continuous
+traits. pigauto fits all 7 traits (its selling point); rivals fit the continuous 4.
+z-RMSE from training-portion mean/sd, no leakage. mean ± MCSE:
+
+| trait | pigauto | rphylopars | phylolm(λ) | col-mean |
+|---|---:|---:|---:|---:|
+| Mass | 1.594 ± 0.508 | **1.360 ± 0.341** | 1.629 ± 0.473 | 1.734 |
+| Beak.Length | 0.912 ± 0.162 | **0.445 ± 0.086** | 0.672 ± 0.083 | 1.204 |
+| Tarsus.Length | 1.220 ± 0.270 | **0.639 ± 0.120** | 1.046 ± 0.213 | 1.516 |
+| Wing.Length | 0.688 ± 0.083 | **0.409 ± 0.066** | 0.675 ± 0.105 | 1.120 |
+
+**Raw Rphylopars beats pigauto's delivered predictions on all four traits** (clearly on
+3, within noise on Mass), and phylolm(λ) beats pigauto on Beak/Tarsus. Consistent with
+the BACE result measured independently the same day — two external Bayesian/joint
+solvers now outperform pigauto's continuous-trait output on this dataset.
+
+**What this does and does not mean.** Rphylopars is pigauto's own internal joint-baseline
+solver, so this is NOT "pigauto loses to an unrelated method" — it measures everything
+pigauto's pipeline layers on top of (and around) the raw joint fit, and that layer is
+currently **net negative for continuous traits on AVONET300**. Candidate mechanisms, in
+testable order:
+1. **Calibration tax**: pigauto's baseline sees ~49% of cells (70% observed × val/test
+   held out) vs the standalone's 70% — the price of gate calibration and conformal
+   scores. Quantifiable by refitting the baseline on all observed cells post-calibration.
+2. **Which path fired is unverified**: with ordinal/categorical traits present the
+   threshold-joint (liability) path dispatches, not the pure continuous joint — its
+   continuous columns may be degraded by the liability machinery, or the dispatch may
+   even have fallen back per-column. One diagnostic run answers this.
+3. The λ=1 default (partially — `bayes` closed some of it in the section above).
+
+Mixed-type remains pigauto's win: no rival here can touch the categorical traits at all,
+and BACE loses them by ~30 pp. But the continuous gap is now a measured, replicated,
+multi-seed finding and belongs on the next arc's front page, not in a footnote.
+
+Regime: AVONET300 only, n=300, 30% MCAR, single-obs, 5 reps. pigauto wall ~12–16
+min/rep single-threaded.
