@@ -67,15 +67,44 @@ compute_phylo_signal_per_trait <- function(data, tree,
 .phylo_signal_lambda_continuous <- function(tm, data, tree, method, min_tips) {
   lc <- tm$latent_cols[1L]
   x  <- data$X_scaled[, lc]
+
+  # P1-12: in multi-obs mode `X_scaled` has one row per OBSERVATION while
+  # `species_names` has one entry per SPECIES, so the single-obs indexing
+  # below (`species_names[obs]`) over-indexed and produced NA tip names.
+  # `ape::keep.tip()` then errored, the caller's tryCatch swallowed it to
+  # NA_real_, and the phylo-signal gate silently never fired for any
+  # multi-obs trait. Collapse to species level first — phylogenetic signal
+  # is a species-level quantity, and this matches how `fit_baseline()`
+  # aggregates multi-obs input.
+  multi_obs <- !is.null(data$obs_to_species) &&
+    length(data$obs_to_species) == length(x) &&
+    !is.null(data$species_names) &&
+    length(data$species_names) < length(x)
+  if (multi_obs) {
+    sp_idx <- data$obs_to_species
+    keep <- !is.na(x)
+    if (!any(keep)) return(NA_real_)
+    # species mean over that species' non-NA observations
+    agg <- tapply(x[keep], sp_idx[keep], mean, na.rm = TRUE)
+    x <- rep(NA_real_, length(data$species_names))
+    x[as.integer(names(agg))] <- as.numeric(agg)
+    names(x) <- data$species_names
+  }
+
   # Training-observed species
   obs <- !is.na(x)
   if (sum(obs) < min_tips) return(NA_real_)
   # Standard deviation guard
   if (stats::sd(x[obs], na.rm = TRUE) < 1e-10) return(NA_real_)
   # phylosig needs a named vector keyed by tip label
-  sp_names <- if (!is.null(data$species_names)) data$species_names[obs] else
+  sp_names <- if (multi_obs) {
+    names(x)[obs]
+  } else if (!is.null(data$species_names)) {
+    data$species_names[obs]
+  } else {
     rownames(data$X_scaled)[obs]
-  vals <- x[obs]
+  }
+  vals <- unname(x[obs])
   names(vals) <- sp_names
   # Restrict tree to these tips
   tr <- ape::keep.tip(tree, sp_names)
