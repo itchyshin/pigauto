@@ -13,8 +13,8 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
 
 - Wrap **LANDED** on `origin/main` `416561b` (PR #156 MERGED, 2026-08-13). Version `0.10.0.9000`. Suggests `BACE`. **Do not re-merge #156. Do not CRAN-submit from this `main`** until BACE is on CRAN or Suggests BACE is dropped again.
 - **P0 + the #157 floor are LANDED** on `origin/main` `3677a85` (PR #158 MERGED 2026-08-15, G0 locked by Shinichi same day). Do not re-merge #158. `fix/ci-install-libtorch` / `fix/p0-review-blockers` / `arc/p0-onto-main` are historical.
-- **Next session (Cursor) reads `docs/dev-log/handover/2026-08-16-cursor-handover.md`.** Tier 0 CLOSED; 8 PRs merged (#158–#165); Rose P1 8/9 addressed (only P1-8 open, needs Shinichi).
-- **A Totoro campaign is IN FLIGHT** (`~/pigauto_regime_map/`, 5,400 jobs, launched 2026-08-16 ~05:15, resumable). **Do not relaunch it from zero.** The coverage campaign is approved but NOT started.
+- **Next session (Claude) reads `docs/dev-log/handover/2026-08-16-claude-handover.md`.** (Shinichi stayed on Claude; no Cursor lane was started. The Cursor handover remains accurate about repo state but is superseded.) Tier 0 CLOSED; 8 PRs merged (#158–#165); Rose P1 8/9 addressed (only P1-8 open, needs Shinichi).
+- **Both Totoro campaigns are COMPLETE** (regime map 5,400 · coverage 1,920 · **0 failures**), summarised and committed. Nothing is running. Do not relaunch.
 - The `main-direct` lane in `lane_preflight.sh` is the overnight Claude lane's own PR merges (they commit under Shinichi's GitHub identity), **not** a foreign agent.
 - Do not rebase `handover/2026-08-09-cursor` onto main. Leave its dirty uinit / gnn tree unstaged.
 - Do not modify standalone BACE or in-tree `pigauto/BACE`.
@@ -154,3 +154,17 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
   **Totoro regime-map campaign IN FLIGHT**, ~2.5 h actual vs 1.5 h estimated
   (D-139 overrun logged). Coverage campaign approved, not launched. Handover
   `docs/dev-log/handover/2026-08-16-cursor-handover.md`.
+- 2026-08-16 (Tier 1 complete): Both campaigns landed with zero failures.
+  **Regime map (#135):** at λ=1 where the BM baseline is correctly specified,
+  the linear control F1 is null (mean |Δ|/MCSE 1.51, 11% of cells) while the
+  nonlinear F2 is not (3.29, 58%) — the GNN recovers structure the joint-MVN
+  baseline cannot represent and adds nothing where it can. Large low-λ gains
+  are baseline λ-misspecification, NOT a second win; pigauto ships a Pagel-λ
+  baseline and the comparison was NOT run, so no low-λ claim ships yet.
+  **Coverage:** intervals undercover at n=100 (0.853–0.861 vs 0.95, 6/6 cells
+  inadequate), fine at n≥300 (0.948–0.963). `conformal_split_val` does not fix
+  it. Mechanism is arithmetic — split conformal needs n_val ≥ 19 for 95%, and
+  n=100 gives n_val ≈ 10 where the ceiling is 0.909. Retires the old
+  0.884–0.887 number as real, not leak-taint. Same defect class as #157.
+  Bench suite 8/8: leak undetectable in every trait type. Handover
+  `docs/dev-log/handover/2026-08-16-claude-handover.md`.
