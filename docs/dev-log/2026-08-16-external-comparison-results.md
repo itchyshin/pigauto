@@ -64,8 +64,33 @@ n=100). **The two findings point at the same mechanism**, from simulation and fr
 data respectively.
 
 Follow-up run: `script/bench_avonet_lambda_modes.R` — same data, seed, and mask, comparing
-`lambda_mode = "fixed_1"` against `"bayes"`, so the delta is directly comparable to BACE's
-column above. Results appended below when it completes.
+`lambda_mode = "fixed_1"` against `"bayes"`. **Result (single seed, m=20):**
+
+| trait | fixed_1 | bayes | BACE (ref) | reading |
+|---|---:|---:|---:|---|
+| Mass RMSE | 2625.3 | **2301.7** | 1921.1 | bayes closes ~46% of the gap; Pearson 0.15 → 0.83 (the fixed_1 Mass fit was pathological this run) |
+| Beak RMSE | 22.19 | 21.27 | 14.91 | small lift |
+| Tarsus RMSE | 27.06 | 24.42 | 11.84 | partial |
+| Wing RMSE | 67.77 | 67.89 | 48.78 | no change |
+| Trophic.Level acc | **0.789** | 0.600 | 0.500 | **bayes COSTS categorical** |
+| Primary.Lifestyle acc | **0.667** | 0.578 | 0.389 | same |
+| Migration acc | 0.622 | 0.756 | 0.578 | noise-level swing |
+
+Three honest readings:
+
+1. **Direction confirmed, magnitude partial.** `bayes` improves every continuous trait it
+   can move (Mass dramatically — the λ=1 kriging was actively mis-extrapolating there) but
+   closes only part of the BACE gap. BACE's remaining edge plausibly includes its joint
+   MCMC over the full covariance, not just λ.
+2. **The trade-off nobody would guess from the docs:** λ modes set `force_per_column`,
+   which switches off the joint/threshold/OVR baselines — so **discrete traits silently
+   drop to label propagation** and Trophic.Level loses 19 pp. `lambda_mode = "bayes"` is
+   currently a continuous-trait tool with a categorical price on mixed data. The clean
+   fix is per-type dispatch (λ per-column for continuous, joint for discrete) — filed as
+   the natural next code slice.
+3. **Single-seed noise is material:** the two fixed_1 runs on the *same mask* differ
+   (Mass 2434.9 in the BACE bench vs 2625.3 here — different call settings and GNN
+   stochasticity). Nothing in this section is publishable without the multi-seed version.
 
 ## Regime and honesty notes
 
