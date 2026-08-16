@@ -13,7 +13,9 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
 
 - Wrap **LANDED** on `origin/main` `416561b` (PR #156 MERGED, 2026-08-13). Version `0.10.0.9000`. Suggests `BACE`. **Do not re-merge #156. Do not CRAN-submit from this `main`** until BACE is on CRAN or Suggests BACE is dropped again.
 - **P0 + the #157 floor are LANDED** on `origin/main` `3677a85` (PR #158 MERGED 2026-08-15, G0 locked by Shinichi same day). Do not re-merge #158. `fix/ci-install-libtorch` / `fix/p0-review-blockers` / `arc/p0-onto-main` are historical.
-- Next session reads `docs/dev-log/after-task/2026-08-15-p0-land.md` + the phase snapshot. Shinichi is stepping away from pigauto — **do not resume unasked**. Next queued work when he returns: Tier-1 bench re-runs (`docs/dev-log/2026-08-15-publication-checklist.md`; Totoro, D-139).
+- **Next session (Cursor) reads `docs/dev-log/handover/2026-08-16-cursor-handover.md`.** Tier 0 CLOSED; 8 PRs merged (#158–#165); Rose P1 8/9 addressed (only P1-8 open, needs Shinichi).
+- **A Totoro campaign is IN FLIGHT** (`~/pigauto_regime_map/`, 5,400 jobs, launched 2026-08-16 ~05:15, resumable). **Do not relaunch it from zero.** The coverage campaign is approved but NOT started.
+- The `main-direct` lane in `lane_preflight.sh` is the overnight Claude lane's own PR merges (they commit under Shinichi's GitHub identity), **not** a foreign agent.
 - Do not rebase `handover/2026-08-09-cursor` onto main. Leave its dirty uinit / gnn tree unstaged.
 - Do not modify standalone BACE or in-tree `pigauto/BACE`.
 - No EM restore (`max_iter>0`) without a new G0. No DRM.jl from this board.
@@ -141,3 +143,14 @@ Rehydrate must read **both** rows. A single AGENTS.md snapshot pointer would orp
   workflow_dispatch (the path filter ignores `dev/**`). R-CMD-check on `main`
   was green throughout. Instrumentation script preserved:
   `docs/dev-log/arc/2026-08-15-floor-diagnostic.R`.
+- 2026-08-16 (overnight Claude lane → Cursor): Tier 0 **CLOSED**. 8 PRs merged
+  #158–#165: P0 honesty fixes + two-layer #157 gate floor + doc bundle, pkgdown
+  fallout fix, and Rose P1-5/6/7/9/10/12/13 fixed plus P1-11 documented. Three
+  silent bugs each proven against pre-fix code (#157 surface mismatch; P1-12
+  multi-obs gate returned NA; P1-9 held out 0 of 23 observed zeros). Bench
+  re-run: the training leak had **no detectable effect** on 6 of 8 trait types
+  (all < 1.15 MCSE, paired per-rep) — `2026-08-16-bench-rerun-results.md`.
+  `--as-cran` 0E/0W/1N. Brain lessons filed (vault `0cf87d1`, D-37 approved).
+  **Totoro regime-map campaign IN FLIGHT**, ~2.5 h actual vs 1.5 h estimated
+  (D-139 overrun logged). Coverage campaign approved, not launched. Handover
+  `docs/dev-log/handover/2026-08-16-cursor-handover.md`.
