@@ -123,9 +123,12 @@ test_that("compute_conformal_scores mondrian produces different near/far scores"
 # fallback: < 10 residuals per stratum -> global score, flag set
 # ---------------------------------------------------------------------------
 
-test_that("compute_conformal_scores mondrian falls back below the 10-per-stratum floor", {
+test_that("compute_conformal_scores mondrian falls back below the 19-per-stratum floor", {
   n_obs_species <- 20L
-  n_val_species <- 12L  # 6 near + 6 far -- below the 10-cell floor
+  n_val_species <- 12L  # 6 near + 6 far -- below the 19-cell floor
+  # (19 = the smallest stratum size whose achievable coverage ceiling
+  # n_s/(n_s+1) reaches 0.95; measured failure at 13-cell strata in the
+  # 2026-08-16 mech_cov_mondrian verification)
   n <- n_obs_species + n_val_species
 
   D_sq <- outer(seq_len(n), seq_len(n), function(a, b) (a - b)^2)
@@ -186,8 +189,12 @@ test_that("compute_conformal_scores errors clearly when mondrian inputs are miss
 
 test_that("impute() with conformal_method = 'mondrian' widens intervals in an isolated clade", {
   set.seed(11)
-  main <- ape::rcoal(140)
-  main$tip.label <- paste0("M", seq_len(140))
+  # 300 main tips so the per-trait val set (~45 cells at missing_frac 0.6,
+  # val_frac 0.25) yields >= 19 residuals per stratum -- below that the
+  # 19-per-stratum floor (see compute_conformal_scores) falls back to the
+  # global score and near/far widths would be identical by design.
+  main <- ape::rcoal(300)
+  main$tip.label <- paste0("M", seq_len(300))
   iso <- ape::rcoal(6)
   iso$tip.label <- paste0("I", seq_len(6))
   tree <- ape::bind.tree(main, iso, where = 1L, position = 0)

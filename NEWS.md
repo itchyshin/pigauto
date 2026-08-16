@@ -22,8 +22,10 @@ species with an observed value for that trait, cells are split into 2
 strata at the median locality, and a split-conformal quantile is computed
 per stratum. Cells in the far (undersampled) stratum get the wider
 quantile at prediction time -- intervals widen in poorly-sampled clades,
-which is the point. Traits with fewer than 10 validation residuals in
-either stratum fall back to the global `"split"` score. Single-obs only:
+which is the point. Traits with fewer than 19 validation residuals in
+either stratum fall back to the global `"split"` score (19 is the
+smallest stratum whose achievable coverage ceiling n/(n+1) reaches 0.95;
+smaller strata are arithmetically guaranteed to undercover). Single-obs only:
 `fit_pigauto()` errors immediately for multi-observation data, since
 locality is defined at species level and multi-obs validation cells are
 per-observation.

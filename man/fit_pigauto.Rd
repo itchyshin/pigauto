@@ -194,7 +194,8 @@ conformal calibrates on the observed complement, which sits closer
 missing cells do, undercovering worst under clade-structured
 (MAR_phylo) missingness. Cells in the far stratum get the wider
 quantile — intervals widen in undersampled clades, which is the
-point. If either stratum has fewer than 10 residuals, that trait
+point. If either stratum has fewer than 19 residuals — the minimum whose
+achievable coverage ceiling n/(n+1) reaches 0.95 — that trait
 falls back to the global \code{"split"} score. \strong{Single-obs
 only}: errors immediately if \code{data} is multi-observation, since
 locality is defined at species level via \code{graph$D_sq} and the

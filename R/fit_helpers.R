@@ -681,7 +681,7 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
 #   non-split-masked) value for that trait (`obs_mask_mat`, `D_sq`). Val
 #   cells are split into two strata at the median locality and a
 #   split-conformal quantile is computed within each stratum at the same
-#   adjusted level. If either stratum has fewer than 10 residuals, the
+#   adjusted level. If either stratum has fewer than 19 residuals (the coverage-ceiling minimum), the
 #   trait falls back to the global `"split"` score (recorded in the
 #   `"mondrian"` attribute's `fallback` flag). Per-trait near/far scores
 #   and the stratification threshold are returned via
@@ -895,7 +895,15 @@ compute_conformal_scores <- function(
           far  <- loc_ok & (locality > threshold)
           n_near <- sum(near)
           n_far  <- sum(far)
-          if (n_near < 10L || n_far < 10L) {
+          # Each stratum needs >= 19 residuals or its own achievable
+          # coverage ceiling n_s/(n_s+1) sits below 0.95 -- the same
+          # arithmetic as the small-validation warning. Measured on the
+          # 2026-08-16 mech_cov_mondrian verification: with ~13-cell
+          # strata (n=300, ~26 val cells/trait) MCAR coverage landed at
+          # exactly the 13/14 = 0.929 ceiling. Below 19 per stratum,
+          # stratifying is guaranteed to undercover, so fall back to the
+          # global split score.
+          if (n_near < 19L || n_far < 19L) {
             fallback <- TRUE
           } else {
             q_near <- min(ceiling((1 - alpha) * (n_near + 1)) / n_near, 1)
