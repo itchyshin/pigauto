@@ -102,6 +102,16 @@ joint MVN path when the data and optional dependencies support it. Binary,
 ordinal, categorical, and zero-inflated gate columns use the appropriate
 label-propagation or threshold/liability baseline candidates, with
 per-column fallbacks when a joint path is not available.
+
+\strong{Covariates and the joint baseline (P1-8)}: \code{data$covariates}
+is only used by the per-column BM path (\code{bm_impute_col_with_cov()}).
+The joint MVN and threshold-joint (Rphylopars) baselines do not accept a
+covariate design matrix, so when a joint path is selected (BM-eligible
+columns >= 2, or binary/ordinal cols present, with Rphylopars available
+and \code{lambda_mode = "fixed_1"}) any supplied covariates are ignored
+for the BASELINE and a warning is emitted; covariates still reach the
+GNN correction via \code{\link{fit_pigauto}} regardless of which
+baseline path fires.
 }
 \examples{
 \donttest{
