@@ -35,6 +35,15 @@
 #'   \item{categorical}{\code{softmax()} over K latent columns, argmax}
 #' }
 #'
+#' **Conformal intervals:** \code{conformal_lower} / \code{conformal_upper}
+#' use whatever \code{conformal_method} the fit was trained with
+#' (\code{\link{fit_pigauto}}). For \code{"mondrian"}, the half-width is not
+#' constant across rows: each target cell's phylogenetic locality (mean
+#' cophenetic distance to its 5 nearest training-observed species for that
+#' trait) picks the near- or far-stratum score stored on the fit, so
+#' predictions in undersampled clades get wider intervals. See
+#' \code{\link{fit_pigauto}}'s \code{conformal_method} argument for details.
+#'
 #' @param object object of class \code{"pigauto_fit"}.
 #' @param newdata \code{NULL} (use the training data) or a
 #'   \code{"pigauto_data"} object for new species.
@@ -673,6 +682,26 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     rownames(conformal_lower) <- row_labels
     rownames(conformal_upper) <- row_labels
 
+    # Mondrian (B2, 2026-08-16): each target cell's conformal score
+    # depends on its phylogenetic locality relative to the SAME
+    # training-time observed set used at calibration (fit_pigauto.R's
+    # M_obs_mat = observed AND not held out for val/test). Reconstructed
+    # here from object$X_scaled + object$splits rather than stored
+    # directly on the fit, matching how PMM (match_observed = "pmm")
+    # already recovers observed cells from X_scaled above. Single-obs
+    # only -- fit_pigauto() errors at fit time for multi_obs, so
+    # `multi_obs` here should already be FALSE whenever this fires; the
+    # check is defensive.
+    use_mondrian <- identical(object$conformal_method, "mondrian") &&
+      !is.null(object$conformal_mondrian) &&
+      !is.null(D_sq) && !multi_obs && !is.null(object$X_scaled)
+    obs_mask_train <- NULL
+    if (use_mondrian) {
+      obs_mask_train <- !is.na(object$X_scaled)
+      hold <- c(object$splits$val_idx, object$splits$test_idx)
+      if (length(hold)) obs_mask_train[hold] <- FALSE
+    }
+
     for (tm in trait_map) {
       nm <- tm$name
       lc <- tm$latent_cols
@@ -680,13 +709,31 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
       if (!(tm$type %in% c("continuous", "count", "ordinal", "proportion"))) next
       if (is.na(conformal_scores_out[nm])) next
 
-      q <- conformal_scores_out[nm]
+      # q_vec: per-row conformal half-width. Constant (global score) for
+      # "split" / "bootstrap"; per-row near/far stratum score for
+      # "mondrian" (rows whose locality can't be computed, e.g. no
+      # observed species for this trait, keep the global fallback value).
+      q_vec <- rep(conformal_scores_out[nm], n)
+      if (use_mondrian) {
+        mo <- object$conformal_mondrian[[nm]]
+        if (!is.null(mo) && !isTRUE(mo$fallback)) {
+          obs_idx <- which(obs_mask_train[, lc[1]])
+          if (length(obs_idx) > 0L) {
+            locality <- mondrian_locality(D_sq, obs_idx, seq_len(n), k = 5L)
+            loc_ok <- is.finite(locality)
+            far  <- loc_ok & (locality > mo$threshold)
+            near <- loc_ok & !far
+            q_vec[far]  <- mo$far_score
+            q_vec[near] <- mo$near_score
+          }
+        }
+      }
 
       if (tm$type == "continuous") {
         # Convert conformal score from latent to original scale
         pred_latent <- latent_pred[, lc[1]]
-        pred_low  <- (pred_latent - q) * tm$sd + tm$mean
-        pred_high <- (pred_latent + q) * tm$sd + tm$mean
+        pred_low  <- (pred_latent - q_vec) * tm$sd + tm$mean
+        pred_high <- (pred_latent + q_vec) * tm$sd + tm$mean
         if (isTRUE(tm$log_transform)) {
           conformal_lower[, nm] <- exp(pred_low)
           conformal_upper[, nm] <- exp(pred_high)
@@ -697,23 +744,23 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
 
       } else if (tm$type == "count") {
         pred_latent <- latent_pred[, lc[1]]
-        pred_low  <- (pred_latent - q) * tm$sd + tm$mean
-        pred_high <- (pred_latent + q) * tm$sd + tm$mean
+        pred_low  <- (pred_latent - q_vec) * tm$sd + tm$mean
+        pred_high <- (pred_latent + q_vec) * tm$sd + tm$mean
         conformal_lower[, nm] <- pmax(expm1(pred_low), 0)
         conformal_upper[, nm] <- expm1(pred_high)
 
       } else if (tm$type == "ordinal") {
         pred_latent <- latent_pred[, lc[1]]
-        pred_low  <- (pred_latent - q) * tm$sd + tm$mean
-        pred_high <- (pred_latent + q) * tm$sd + tm$mean
+        pred_low  <- (pred_latent - q_vec) * tm$sd + tm$mean
+        pred_high <- (pred_latent + q_vec) * tm$sd + tm$mean
         K <- length(tm$levels)
         conformal_lower[, nm] <- pmax(round(pred_low), 0)
         conformal_upper[, nm] <- pmin(round(pred_high), K - 1L)
 
       } else if (tm$type == "proportion") {
         pred_latent <- latent_pred[, lc[1]]
-        pred_low  <- (pred_latent - q) * tm$sd + tm$mean
-        pred_high <- (pred_latent + q) * tm$sd + tm$mean
+        pred_low  <- (pred_latent - q_vec) * tm$sd + tm$mean
+        pred_high <- (pred_latent + q_vec) * tm$sd + tm$mean
         conformal_lower[, nm] <- stats::plogis(pred_low)
         conformal_upper[, nm] <- stats::plogis(pred_high)
       }

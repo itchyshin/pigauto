@@ -138,6 +138,25 @@
 #'   into better 95\% coverage stability (coverage SD 0.094 vs 0.102
 #'   across 10 seeds).  Ship as an opt-in experimental knob; defaults to
 #'   \code{"split"}.
+#'   \code{"mondrian"} (B2, 2026-08-16) is a stratified conformal method
+#'   that conditions calibration on phylogenetic sampling locality: each
+#'   validation cell's locality is the mean cophenetic distance to its 5
+#'   nearest species with an observed value for that trait, cells are
+#'   split into 2 strata at the median locality, and a split-conformal
+#'   quantile is computed per stratum. Fixes the exchangeability failure
+#'   documented in
+#'   \code{docs/dev-log/2026-08-16-mechanism-coverage-results.md}: split
+#'   conformal calibrates on the observed complement, which sits closer
+#'   (in cophenetic distance) to other observed cells than genuinely-
+#'   missing cells do, undercovering worst under clade-structured
+#'   (MAR_phylo) missingness. Cells in the far stratum get the wider
+#'   quantile — intervals widen in undersampled clades, which is the
+#'   point. If either stratum has fewer than 10 residuals, that trait
+#'   falls back to the global \code{"split"} score. \strong{Single-obs
+#'   only}: errors immediately if \code{data} is multi-observation, since
+#'   locality is defined at species level via \code{graph$D_sq} and the
+#'   per-observation calibration split does not map cleanly onto species
+#'   distances.
 #' @param conformal_bootstrap_B integer. Bootstrap resamples used when
 #'   \code{conformal_method = "bootstrap"}; default \code{500}.  Ignored
 #'   otherwise.
@@ -312,7 +331,7 @@ fit_pigauto <- function(
     eval_every        = 100L,
     patience          = 10L,
     clip_norm         = 1.0,
-    conformal_method  = c("split", "bootstrap"),
+    conformal_method  = c("split", "bootstrap", "mondrian"),
     conformal_bootstrap_B = 500L,
     conformal_split_val = FALSE,
     gate_method       = c("cv_folds", "median_splits", "single_split"),
@@ -398,6 +417,21 @@ fit_pigauto <- function(
   n_obs      <- nrow(data$X_scaled)
   n_species  <- data$n_species %||% n_obs
   obs_to_sp  <- data$obs_to_species  # NULL when single-obs
+
+  # conformal_method = "mondrian" is single-obs only: locality is defined
+  # at species level via graph$D_sq, and multi-obs' per-observation val
+  # cells don't map onto species distances cleanly (B2, 2026-08-16). Fail
+  # fast, before spending a full training run.
+  if (multi_obs && identical(conformal_method, "mondrian")) {
+    stop(
+      "conformal_method = \"mondrian\" is not supported for multi-",
+      "observation data. Locality is defined at species level via ",
+      "graph$D_sq, and multi-obs validation cells are per-observation, ",
+      "not per-species. Use conformal_method = \"split\" or ",
+      "\"bootstrap\" instead.",
+      call. = FALSE
+    )
+  }
 
   # ---- Data preparation ----------------------------------------------------
   n <- n_obs                           # n = n_obs (rows in X)
@@ -1100,8 +1134,18 @@ fit_pigauto <- function(
       val_mask_mat     = val_mask_conf,
       method           = conformal_method,
       bootstrap_B      = conformal_bootstrap_B,
+      # Mondrian-only; ignored by compute_conformal_scores() for other
+      # methods. D_sq is species-level and multi_obs is blocked above, so
+      # M_obs_mat (also species-level here) lines up with it directly.
+      D_sq             = graph$D_sq,
+      obs_mask_mat     = M_obs_mat,
       verbose          = verbose
     )
+  }
+  conformal_mondrian <- if (identical(conformal_method, "mondrian")) {
+    attr(conformal_scores, "mondrian")
+  } else {
+    NULL
   }
 
   # ---- Final test loss -------------------------------------------------------
@@ -1234,7 +1278,9 @@ fit_pigauto <- function(
       phylo_gate_triggered   = phylo_gate_triggered,
       phylo_signal_method    = phylo_signal_method,
       phylo_signal_threshold = phylo_signal_threshold,
-      conformal_scores = conformal_scores,
+      conformal_scores   = conformal_scores,
+      conformal_method   = conformal_method,
+      conformal_mondrian = conformal_mondrian,
       covariates       = data$covariates,
       cov_means        = data$cov_means,
       cov_sds          = data$cov_sds,

@@ -169,6 +169,15 @@ lifecycle documentation.
 \item{ordinal}{reverse z-score, round to nearest valid integer level}
 \item{categorical}{\code{softmax()} over K latent columns, argmax}
 }
+
+\strong{Conformal intervals:} \code{conformal_lower} / \code{conformal_upper}
+use whatever \code{conformal_method} the fit was trained with
+(\code{\link{fit_pigauto}}). For \code{"mondrian"}, the half-width is not
+constant across rows: each target cell's phylogenetic locality (mean
+cophenetic distance to its 5 nearest training-observed species for that
+trait) picks the near- or far-stratum score stored on the fit, so
+predictions in undersampled clades get wider intervals. See
+\code{\link{fit_pigauto}}'s \code{conformal_method} argument for details.
 }
 \examples{
 \donttest{

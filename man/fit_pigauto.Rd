@@ -36,7 +36,7 @@ fit_pigauto(
   eval_every = 100L,
   patience = 10L,
   clip_norm = 1,
-  conformal_method = c("split", "bootstrap"),
+  conformal_method = c("split", "bootstrap", "mondrian"),
   conformal_bootstrap_B = 500L,
   conformal_split_val = FALSE,
   gate_method = c("cv_folds", "median_splits", "single_split"),
@@ -180,7 +180,26 @@ by ~30\% at small \code{n_val}, but on the simulation design used to
 evaluate it (n=150 species, 35\\% trait_MAR) it did not translate
 into better 95\\% coverage stability (coverage SD 0.094 vs 0.102
 across 10 seeds).  Ship as an opt-in experimental knob; defaults to
-\code{"split"}.}
+\code{"split"}.
+\code{"mondrian"} (B2, 2026-08-16) is a stratified conformal method
+that conditions calibration on phylogenetic sampling locality: each
+validation cell's locality is the mean cophenetic distance to its 5
+nearest species with an observed value for that trait, cells are
+split into 2 strata at the median locality, and a split-conformal
+quantile is computed per stratum. Fixes the exchangeability failure
+documented in
+\code{docs/dev-log/2026-08-16-mechanism-coverage-results.md}: split
+conformal calibrates on the observed complement, which sits closer
+(in cophenetic distance) to other observed cells than genuinely-
+missing cells do, undercovering worst under clade-structured
+(MAR_phylo) missingness. Cells in the far stratum get the wider
+quantile — intervals widen in undersampled clades, which is the
+point. If either stratum has fewer than 10 residuals, that trait
+falls back to the global \code{"split"} score. \strong{Single-obs
+only}: errors immediately if \code{data} is multi-observation, since
+locality is defined at species level via \code{graph$D_sq} and the
+per-observation calibration split does not map cleanly onto species
+distances.}
 
 \item{conformal_bootstrap_B}{integer. Bootstrap resamples used when
 \code{conformal_method = "bootstrap"}; default \code{500}.  Ignored
