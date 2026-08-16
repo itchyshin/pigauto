@@ -1,6 +1,7 @@
 # pigauto — publication readiness: gaps and work plan
 
-Date: 2026-08-15 · Author: Claude (Fable 5), from the P0-arc evidence base
+Date: 2026-08-15, **updated 2026-08-16 (overnight: Tier 0 CLOSED)** · Author: Claude
+(Fable 5 → Opus 5), from the P0-arc evidence base
 Audience: Shinichi, returning to pigauto after a break, deciding what to do before a methods/software paper.
 
 Every item below is motivated by a **measurement or filed finding**, not a hunch. Sources:
@@ -30,28 +31,35 @@ Regime discipline applies throughout: where a number is cited, its regime is nam
   (a) unified mixed-type imputation; (b) conformal intervals tied to validation residuals;
   (c) multi-tree Rubin pooling; (d) multi-obs `obs_refine`; (e) `suggest_next_observation()`.
 
-**Not solid — and each of these is measured, not suspected:**
+**~~Not solid~~ — ALL FOUR CLOSED overnight 2026-08-15/16. Kept for the record:**
 
-- Four correctness fixes (per-tip BM SE, covariate alignment, zi_count conformal, GNN
-  train/cal symmetry) are **off `main`** — merged only to `fix/ci-install-libtorch` via #155,
-  merge onto main prepared on `arc/p0-onto-main` but blocked.
-- `main` ships a **documented guarantee its code does not satisfy**: `gnn-architecture.Rmd` §5
-  says `pred$se` is "Exact under BM" while the default multi-trait path broadcasts one
-  `sd(observed)` to every missing tip (`R/henderson_s_inv.R`), and that SE feeds the
-  binary/ordinal probability decode.
-- **#157**: gate calibration scores a different delta surface than `predict()` delivers, so
-  the val-floor safety property ("never worse than the baseline") is not enforced on the
-  surface users get. Present on `main` today; P0 amplifies it ~3×.
-- **Every GNN benchmark number on record predates the leak fix.** The per-type bench `.rds`
-  files are dated May 30 / Jun 11 / Apr 28; the train/cal-symmetry fix (held-out truth
-  visible as DAE context during training) landed in #155 on Aug 8–9 and is not on `main`.
-  Direction and magnitude of the contamination are unknown without re-running.
+- ~~Four correctness fixes off `main`~~ → **LANDED** via PR #158 (`main` `3677a85`).
+- ~~`main` ships a documented guarantee its code does not satisfy~~ → **FIXED** in the same
+  PR: the `gnn-architecture.Rmd` §5 SE row is split by path, and the per-tip Henderson SE
+  now makes the joint path's claim true.
+- ~~#157 gate/predict surface mismatch~~ → **FIXED and CLOSED**: a two-layer margin-based BM
+  floor (`calibrate_gates()` + a post-refine floor in `fit_pigauto()`), plus the val-floor
+  test moved to the calibration-matched surface.
+- ~~Every GNN benchmark predates the leak fix~~ → **RE-RUN**; the pre-fix numbers reproduce
+  within 1.1 MCSE in every completed type (§1.1). The provenance cloud has lifted.
+
+**What is genuinely not solid, as of 2026-08-16:**
+
+- The GNN's *value* is still unmeasured across regimes (#135) — the re-run says the leak did
+  not move the numbers, not that the GNN earns its place. That is Tier 1.2, designed and
+  priced, awaiting a go/no-go.
+- Conformal coverage vs n is unmeasured (Tier 1.3, same status).
+- The joint baseline ships as a **single-pass Henderson init** (`max_iter = 0`); cross-trait
+  Σ is never iterated (Tier 2.1 — scope the claim or restore EM under a numerical gate).
+- No known-Σ recovery simulation exists for the multivariate machinery (Tier 2.2).
+- Five Rose P1 items remain (P1-5, P1-8, P1-9, P1-11, P1-12); four closed overnight
+  (P1-6, P1-7, P1-10, P1-13).
 
 ---
 
-## TIER 0 — Correctness blockers. Nothing publishable until these close.
+## ~~TIER 0~~ — CLOSED 2026-08-16. Kept for provenance; see `2026-08-15-p0-land.md`.
 
-### 0.1 Decide #157, then land P0
+### 0.1 Decide #157, then land P0 — **DONE** (surface B locked; PR #158 merged; #157 closed)
 
 The paper's central safety claim — the calibrated gate guarantees the blend is never worse
 than the phylogenetic baseline — is currently **enforced on the wrong surface**. Calibration
@@ -75,7 +83,7 @@ main, the SE, covariate, and zi_count claims in any manuscript are false as ship
 *Scope: the #157 decision is hours of thought; the fix is 1–2 focused days
 (calibration/predict context + test surface + guard re-check); the land is already prepared.*
 
-### 0.2 Fix the public claims the audit flagged
+### 0.2 Fix the public claims the audit flagged — **DONE** (9-edit bundle in #158)
 
 - **BLOCKING**: split the `gnn-architecture.Rmd` §5 SE table row by path (single-column
   `bm_internal.R` = "exact under BM" is defensible; joint/threshold-joint Henderson path is
@@ -87,7 +95,7 @@ main, the SE, covariate, and zi_count claims in any manuscript are false as ship
 
 *Scope: half a day, prose only, most wording already drafted in the findings file.*
 
-### 0.3 `--as-cran` on the landed result
+### 0.3 `--as-cran` on the landed result — **DONE** (0 errors / 0 warnings / 1 known note)
 
 Never run on the merged branch (deliberately skipped while the blocker was unexplained).
 Expect the pre-existing 2 WARN / 3 NOTE and nothing new. ~45 min local.
