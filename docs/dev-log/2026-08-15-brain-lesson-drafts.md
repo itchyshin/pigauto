@@ -13,16 +13,29 @@ branch 46 behind / 9 ahead; the real merge produced exactly those 7. The arc est
 built on the probe and the core-resolution budget came in *under*, not over — the
 prediction is what made a "measured" confidence label honest.
 
-## 2. WHAT-WORKS — PSOCK throttling: renice AFTER startup, never nice at launch
+## 2. LESSONS — niceness is inherited at fork: never renice a process that will spawn PSOCK workers
 
-To make an R PSOCK-cluster campaign polite on a shared machine: cap the worker count
-(env-settable `MC_CORES`-style knob) and **renice the master + workers after they start**
-(a 30 s watcher loop). Do **not** wrap the launch in `nice` — nice'd workers start slowly
-and miss `makePSOCKcluster`'s connect window.
+To make an R PSOCK-cluster campaign polite on a shared machine, **cap the worker count**
+(an env-settable `MC_CORES`-style knob). Do **not** reach for `nice`/`renice` on the R
+master — not at launch, and *not after startup either*. Niceness is inherited at fork, so
+a reniced master hands nice-19 to every worker it later spawns, and those workers start
+too slowly to make `makePSOCKcluster()`'s connect window.
 
-*Proof:* pigauto bench re-runs (2026-08-15). `nice -19 Rscript` → "4 of 16 workers failed
-to connect", chain dead in 2.5 min. Post-start renice at 4 workers → cluster up in 4.7 s,
-campaign ran clean while two other R workloads shared the Mac.
+*Proof, in two stages — the second corrects the first:*
+1. `nice -19 Rscript` at launch → *"4 of 16 workers failed to connect"*, chain dead in
+   2.5 min. Obvious lesson: don't nice at launch.
+2. So I reniced **after** startup via a 30 s watcher — and two later drivers hung at
+   "Dispatching cells" with 0% CPU for an hour each. The watcher had reniced each *master*
+   before it built its cluster, so the workers inherited 19 and hit the same window. The
+   one driver that survived had started before the watcher caught it.
+
+**The durable rule:** bound a cluster campaign by *worker count*, not by priority. If you
+must renice, renice only the already-connected worker PIDs, never the parent. `MC_CORES=1`
+on a many-core box is already polite and is stable.
+
+*Meta-lesson:* the first version of this note was written after stage 1 and was confidently
+wrong. A mitigation that has not yet been observed across a full campaign is a hypothesis,
+not a lesson.
 
 ## 3. LESSONS — an evaluation script's masking choice is itself a measurable assumption
 
