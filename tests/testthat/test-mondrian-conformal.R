@@ -235,10 +235,44 @@ test_that("impute() with conformal_method = 'mondrian' widens intervals in an is
 })
 
 # ---------------------------------------------------------------------------
-# back-compat: default "split" results unchanged (fixed-seed reference)
+# back-compat: default "split" results unchanged
 # ---------------------------------------------------------------------------
+# NOTE: an earlier version compared fit$conformal_scores to numbers recorded
+# on one machine; torch RNG differs across platforms, so that failed on CI.
+# The invariant is tested deterministically instead: the "split" branch of
+# compute_conformal_scores() must still produce exactly the pre-mondrian
+# formula, quantile(|truth - blend|, ceiling((1-alpha)(n+1))/n).
 
-test_that("default conformal_method = 'split' is byte-for-byte unchanged", {
+test_that("default conformal_method = 'split' reproduces the split-quantile formula", {
+  set.seed(7)
+  n <- 30L
+  tm <- list(list(name = "x", type = "continuous", latent_cols = 1L,
+                  mean = 0, sd = 1))
+  mu    <- matrix(rnorm(n), n, 1L, dimnames = list(NULL, "x"))
+  delta <- matrix(rnorm(n), n, 1L, dimnames = list(NULL, "x"))
+  truth <- matrix(rnorm(n), n, 1L, dimnames = list(NULL, "x"))
+  val   <- matrix(FALSE, n, 1L)
+  val[1:25, 1L] <- TRUE
+  w_bm <- 0.6; w_gnn <- 0.3; w_mean <- 0.1; mean_col <- 0.2
+
+  scores <- pigauto:::compute_conformal_scores(
+    trait_map = tm, calibrated_gates = c(x = w_gnn),
+    mu_cal = mu, delta_cal = delta, X_truth_r = truth, val_mask_mat = val,
+    method = "split",
+    r_cal_bm = c(x = w_bm), r_cal_gnn = c(x = w_gnn), r_cal_mean = c(x = w_mean),
+    mean_baseline_per_col = c(x = mean_col)
+  )
+
+  blend <- w_bm * mu[1:25, 1] + w_gnn * delta[1:25, 1] + w_mean * mean_col
+  res <- abs(truth[1:25, 1] - blend)
+  q_level <- min(ceiling(0.95 * 26) / 25, 1)
+  expected <- as.numeric(stats::quantile(res, q_level))
+
+  expect_equal(unname(scores["x"]), expected, tolerance = 1e-12)
+  expect_null(attr(scores, "mondrian"))
+})
+
+test_that("a 'split' fit carries no mondrian state and records the method", {
   set.seed(42)
   tree <- ape::rtree(40)
   sp <- tree$tip.label
@@ -248,21 +282,13 @@ test_that("default conformal_method = 'split' is byte-for-byte unchanged", {
     tr1 = abs(stats::rnorm(40)) + 0.5,
     tr2 = abs(stats::rnorm(40)) + 0.5
   )
-
   pd  <- preprocess_traits(df, tree)
   spl <- make_missing_splits(pd$X_scaled, seed = 1, trait_map = pd$trait_map)
   fit <- suppressWarnings(fit_pigauto(
     pd, tree, splits = spl, epochs = 20L, eval_every = 10L, patience = 5L,
     verbose = FALSE, seed = 1, conformal_method = "split"
   ))
-
-  # Reference values recorded from the same call before the "mondrian"
-  # method was added (fit_helpers.R::compute_conformal_scores' split
-  # branch is untouched by this change).
-  expect_equal(unname(fit$conformal_scores["tr1"]), 1.5519832114,
-              tolerance = 1e-6)
-  expect_equal(unname(fit$conformal_scores["tr2"]), 0.8871576332,
-              tolerance = 1e-6)
+  expect_true(all(is.finite(fit$conformal_scores)))
   expect_null(fit$conformal_mondrian)
   expect_identical(fit$conformal_method, "split")
 })
