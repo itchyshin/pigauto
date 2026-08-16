@@ -595,6 +595,8 @@ align_covariates_to_obs <- function(covariates,
 detect_trait_types <- function(traits, overrides = NULL) {
   types <- character(ncol(traits))
   names(types) <- colnames(traits)
+  auto_count_cols <- character(0)
+  neg_int_cols    <- character(0)
 
   for (nm in colnames(traits)) {
     x <- traits[[nm]]
@@ -612,13 +614,44 @@ detect_trait_types <- function(traits, overrides = NULL) {
       nlev <- nlevels(x)
       types[nm] <- if (nlev == 2) "binary" else "categorical"
     } else if (is.integer(x)) {
-      types[nm] <- "count"
+      # A count cannot be negative.  Without this guard a negative integer
+      # column auto-detects as "count" and its log1p encoding produces NaN
+      # (P1-13).  This is a fail-closed correction, not a heuristic: the
+      # data contradict the type.
+      if (any(x < 0, na.rm = TRUE)) {
+        types[nm] <- "continuous"
+        neg_int_cols <- c(neg_int_cols, nm)
+      } else {
+        types[nm] <- "count"
+        auto_count_cols <- c(auto_count_cols, nm)
+      }
     } else if (is.numeric(x)) {
       types[nm] <- "continuous"
     } else {
       stop("Cannot determine type for column '", nm, "' (class: ",
            paste(class(x), collapse = "/"), ").")
     }
+  }
+
+  # P1-13: `read.csv()` returns whole-number columns as integer, so a
+  # continuous trait measured in whole units silently becomes a "count"
+  # (log1p-encoded, count semantics downstream).  Auto-detection cannot
+  # tell the two apart from storage class alone, so surface the decision
+  # rather than making it silently.
+  # A message, not a warning: genuine count traits are common, and warning on
+  # every one of them would cry wolf (and trip `expect_silent()` tests).  The
+  # point is to make the inference visible, not to alarm.
+  if (length(auto_count_cols)) {
+    message("Auto-detected trait type \"count\" (log1p-encoded) for integer ",
+            "column(s): ", paste(auto_count_cols, collapse = ", "),
+            ". If any is a continuous measurement stored as whole numbers ",
+            "(common after read.csv), override it: trait_types = c(",
+            auto_count_cols[1], " = \"continuous\").")
+  }
+  if (length(neg_int_cols)) {
+    message("Integer column(s) with negative values treated as continuous, ",
+            "not count: ", paste(neg_int_cols, collapse = ", "),
+            " (a count cannot be negative).")
   }
   types
 }
