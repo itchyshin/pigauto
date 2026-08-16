@@ -58,7 +58,15 @@ phylopars) trace to the same layer.
 - Tarsus's large numbers partly reflect this rep (bench mean Tarsus total ≈ 0.58; this
   rep's 1.03 is the high side).
 
-## Recommended next slice (not started — Shinichi's call)
+## CONFIRMED (same day): the switch recovers the gap — PR #169
+
+`joint_solver = "rphylopars"` implemented and re-run on the bench's 5 masks:
+Mass 1.594→**1.295** (now beats raw phylopars, 1.360 — with a sound baseline the
+GNN layer adds net value), Beak 0.912→0.602, Tarsus 1.220→0.873, Wing 0.688→0.449.
+Residual vs raw phylopars ≈ the calibration tax. Suite 2057/0, --as-cran clean.
+Evidence: `dev/rerun_pigauto_rphylopars_solver.{R,log}` on `arc/joint-solver-switch`.
+
+## Recommended next slice — as proposed below, now DONE (kept for the record)
 
 The in-house solver's output contract already matches phylopars
 (`$anc_recon` / `$anc_var` / `$pars$phylocov` — by design, see the comment at
