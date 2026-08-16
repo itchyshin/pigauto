@@ -1,4 +1,8 @@
-# PROPOSED brain lessons from 2026-08-15 — NOT yet filed (D-37: awaiting approval)
+# PROPOSED brain lessons — 2026-08-15/16
+
+**Lessons 1–4: APPROVED and FILED** 2026-08-16 (vault `0cf87d1`; #2 skipped as already
+filed by the gllvmTMB lane). **Lesson 5 below is NEW and awaits its own D-37 approval** —
+the earlier approval covered only the four that existed at the time.
 
 Four candidates from today's pigauto session. Each cites the case that proves it.
 On approval: 1, 2, 4 → `[[WHAT-WORKS]]`; 3 → `[[LESSONS]]`.
@@ -60,3 +64,37 @@ default index is stale vs HEAD; one `git reset` (once the lock clears) resyncs i
 
 *Proof:* pigauto close-out (2026-08-15). Three docs commits landed this way around a
 Cursor gitWorker lock, with the working tree and remote ending byte-correct.
+
+
+---
+
+## 5. LESSONS — testing the option you chose is not testing the choice (2026-08-16) — **NEW, unapproved**
+
+*Formulated by the drmTMB lane (`claude/eloquent-driscoll-521fa1`), receipt `665423395`.
+Credit theirs; staged here because the failure had two halves and pigauto owns one.*
+
+Two agents compared two forms of the same fix. **Both tested green. Between them they never
+exercised the one case that distinguished the options.**
+
+- The drmTMB lane recommended `on.exit(parallel::stopCluster(cl), add = TRUE)` **without
+  executing it** — a recommendation did not feel like code. It is code; it just runs in
+  someone else's repository.
+- This lane wrote `on.exit(try(parallel::stopCluster(cl), silent = TRUE), add = TRUE)` and
+  verified **that** version behaviourally. The `try()` wrapper masked the exact failure that
+  justified it, so the test could not distinguish the two forms either.
+
+The bare form errors with `invalid connection` on the success path — it would have traded a
+worker leak for a spurious error at the end of every successful run. That surfaced only
+because one lane asked the other a direct question, days into running.
+
+**The rule.** When you choose between alternatives — including an alternative you are
+*recommending to someone else* — the test must exercise the **rejected** arm. A green test on
+the option you picked measures the option, not the comparison. And a recommendation crossing a
+repository boundary deserves the same execution bar as a commit, because it will become one.
+
+**Companion failure, same shape, same night (pigauto):** `PPID 1` was taken as evidence of an
+orphaned PSOCK worker, and a master at 0% CPU was taken as evidence of a hung driver. Both are
+proxies the mechanism never promised to provide — R 4.0's `setup_strategy = "parallel"`
+reparents healthy workers to init at birth, and `parLapply` logs nothing until every cell
+finishes. The sound test is the port pair (`lsof -nP -iTCP:<PORT>`, two ESTABLISHED = healthy).
+Reading a proxy the mechanism never guaranteed cost two healthy drivers.
