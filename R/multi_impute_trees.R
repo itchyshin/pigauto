@@ -164,6 +164,28 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'   10,000 \tab ~20-40 min \tab ~30-60 min \tab 17-33 hr
 #' }
 #'
+#' @section Which draw mechanism this uses (and its limitation):
+#' Within each tree, the \code{m_per_tree} completions are **MC-dropout**
+#' draws: \code{n_imputations = m_per_tree} is passed to \code{\link{impute}},
+#' which runs the GNN forward repeatedly with dropout active and a fresh BM
+#' posterior draw per imputation.
+#'
+#' This is **not** the same mechanism as \code{\link{multi_impute}}, whose
+#' default \code{draws_method = "conformal"} samples from the calibrated
+#' conformal scores. The package documents conformal draws as the better
+#' calibrated of the two for Rubin's rules, because conformal scores are fitted
+#' against actual held-out residuals, whereas MC-dropout + BM draws reflect
+#' prior uncertainty and are noticeably wider (on AVONET300, Mass MC SD
+#' \eqn{\approx} 290 vs conformal/1.96 \eqn{\approx} 23).
+#'
+#' \code{multi_impute_trees()} currently exposes no \code{draws_method}
+#' argument, so the conformal path is unreachable here. The practical
+#' consequence: pooled SEs from tree-MI carry the more conservative
+#' within-tree component. Between-tree variance — the quantity this function
+#' exists to capture — is unaffected. If within-tree calibration matters more
+#' to you than tree uncertainty, use \code{\link{multi_impute}} on a single
+#' tree instead. Tracked as P1-11.
+#'
 #' @references
 #' Nakagawa S, de Villemereuil P (2019). "A general method for
 #' simultaneously accounting for phylogenetic and species sampling

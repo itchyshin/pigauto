@@ -184,6 +184,30 @@ regimes and does not guarantee tree-variance calibration elsewhere.
 Set \code{share_gnn = FALSE} if you need exact per-tree model independence.
 }
 
+\section{Which draw mechanism this uses (and its limitation)}{
+
+Within each tree, the \code{m_per_tree} completions are \strong{MC-dropout}
+draws: \code{n_imputations = m_per_tree} is passed to \code{\link{impute}},
+which runs the GNN forward repeatedly with dropout active and a fresh BM
+posterior draw per imputation.
+
+This is \strong{not} the same mechanism as \code{\link{multi_impute}}, whose
+default \code{draws_method = "conformal"} samples from the calibrated
+conformal scores. The package documents conformal draws as the better
+calibrated of the two for Rubin's rules, because conformal scores are fitted
+against actual held-out residuals, whereas MC-dropout + BM draws reflect
+prior uncertainty and are noticeably wider (on AVONET300, Mass MC SD
+\eqn{\approx} 290 vs conformal/1.96 \eqn{\approx} 23).
+
+\code{multi_impute_trees()} currently exposes no \code{draws_method}
+argument, so the conformal path is unreachable here. The practical
+consequence: pooled SEs from tree-MI carry the more conservative
+within-tree component. Between-tree variance — the quantity this function
+exists to capture — is unaffected. If within-tree calibration matters more
+to you than tree uncertainty, use \code{\link{multi_impute}} on a single
+tree instead. Tracked as P1-11.
+}
+
 \section{Safety floor + share_gnn (v0.9.1.9002+)}{
 
 When \code{share_gnn = TRUE} with \code{safety_floor = TRUE}, the
