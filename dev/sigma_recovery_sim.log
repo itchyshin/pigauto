@@ -1,0 +1,553 @@
+[   0.0s] fisher_ml available: TRUE
+[   0.0s] cell 1/12: n=100 lambda=1.0 exch07
+[  53.2s] cell 2/12: n=300 lambda=1.0 exch07
+
+warning: solve(): system is singular; rcond: 4.78593e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.27559e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.42623e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.66927e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.97228e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.60857e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.22788e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.05891e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.44843e-23; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.28419e-27; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.62909e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.25726e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.14553e-32; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.20911e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.32801e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.23773e-28; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.74022e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.22045e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.63652e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.95007e-28; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.44158e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.10343e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.20087e-24; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.06696e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.15051e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.03738e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.10349e-26; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.02664e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.44127e-43; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.18912e-35; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.03805e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.57207e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.15441e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.95808e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.42661e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.60765e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.7258e-32; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.13024e-28; attempting approx solution
+[ 172.5s] cell 3/12: n=100 lambda=0.2 exch07
+
+warning: solve(): system is singular; rcond: 4.12816e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.12817e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.49254e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.49255e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.18626e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.7543e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.75497e-19; attempting approx solution
+[ 215.9s] cell 4/12: n=300 lambda=0.2 exch07
+
+warning: solve(): system is singular; rcond: 6.02973e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.54269e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.32332e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.89039e-31; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.92595e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.03524e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.46478e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.72031e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.32675e-31; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.30904e-34; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.17291e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.97445e-35; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.01574e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.01976e-24; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.29812e-24; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.50095e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.68976e-29; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.3929e-23; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.21918e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.83932e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.36966e-27; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.44106e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.01882e-29; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.84369e-39; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.98658e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.32777e-27; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.30204e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.75681e-28; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.53779e-34; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.59809e-33; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.02252e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.71186e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.3459e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.72096e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.59073e-25; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.16169e-24; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.62913e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.28627e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.17609e-20; attempting approx solution
+[ 313.4s] cell 5/12: n=100 lambda=1.0 exch03
+[ 354.0s] cell 6/12: n=300 lambda=1.0 exch03
+[ 456.7s] cell 7/12: n=100 lambda=0.2 exch03
+[ 490.4s] cell 8/12: n=300 lambda=0.2 exch03
+[ 588.5s] cell 9/12: n=100 lambda=1.0 hetero
+
+warning: solve(): system is singular; rcond: 1.33202e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.33202e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.30838e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.69545e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.60415e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.60556e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.56196e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.56206e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.5989e-31; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.5989e-31; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.34846e-25; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.34828e-25; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.54616e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.42081e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.34977e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.34977e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.38342e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.38342e-18; attempting approx solution
+[ 640.1s] cell 10/12: n=300 lambda=1.0 hetero
+
+warning: solve(): system is singular; rcond: 2.30178e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.67898e-30; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.38178e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.03815e-23; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.42122e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.30011e-32; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.03063e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.44201e-25; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.60425e-25; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.41866e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.08842e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.27633e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.88498e-38; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.49903e-30; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.21788e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.46214e-26; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.58818e-27; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.42101e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.05952e-26; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.19124e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.78055e-39; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.85774e-28; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.59181e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.63326e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.62177e-23; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.90943e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.12293e-27; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.47199e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.55499e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.84705e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.23425e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.65046e-23; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.45975e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.55701e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.97643e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.57062e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.84753e-26; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.10093e-32; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.41293e-33; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.00782e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.15956e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.15688e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.50476e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.50261e-35; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.50009e-33; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.87653e-24; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.44742e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.99094e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.71522e-27; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.26422e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.80545e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.18341e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.17481e-30; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.05511e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.67939e-25; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.172e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.50785e-23; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.77065e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.45261e-17; attempting approx solution
+[ 747.9s] cell 11/12: n=100 lambda=0.2 hetero
+
+warning: solve(): system is singular; rcond: 1.3649e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.94529e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.15666e-20; attempting approx solution
+[ 795.9s] cell 12/12: n=300 lambda=0.2 hetero
+
+warning: solve(): system is singular; rcond: 1.056e-23; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.87989e-45; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.79051e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.46807e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.03549e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.7557e-24; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.85421e-30; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.7159e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.02521e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.21526e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.77155e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.55565e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.37031e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.0083e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.31338e-35; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.14675e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.9713e-24; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.72924e-29; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.53405e-25; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.95115e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.99213e-26; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.48053e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.4206e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.4847e-34; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.1125e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.93287e-27; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.40999e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.85882e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.35546e-38; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.04207e-31; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.15567e-24; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.06636e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.55675e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.84289e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.63982e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.86821e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.10013e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.06437e-26; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.31014e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.07506e-35; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.15374e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.55625e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.81875e-28; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.98539e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.64735e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.98992e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.18477e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.50515e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.72811e-34; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.47714e-26; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.34215e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.92634e-23; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.19019e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.26609e-27; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.55153e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.55153e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.04883e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.88669e-25; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.59038e-30; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.12844e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.2955e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.00281e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.87215e-32; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.32265e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.33655e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.89164e-29; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.73236e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.74517e-18; attempting approx solution
+[ 902.5s] failures: 0
+     n lambda sigma_design arm n_rep  frob frob_mcse sign_acc  rmse rmse_mcse
+1  100    0.2       exch03  E0    50 0.290   0.00764    0.987 0.955   0.00900
+13 100    0.2       exch03  E1    50 0.269   0.01060    0.983 0.955   0.00900
+25 100    0.2       exch03  E2    50 0.716   0.00675    0.980 0.922   0.00864
+2  300    0.2       exch03  E0    50 0.258   0.00478    1.000 0.952   0.00401
+14 300    0.2       exch03  E1    50 0.165   0.00600    1.000 0.952   0.00401
+26 300    0.2       exch03  E2    50 0.783   0.00359    1.000 0.890   0.00415
+5  100    0.2       exch07  E0    50 0.421   0.01127    1.000 0.949   0.01042
+17 100    0.2       exch07  E1    50 0.208   0.01625    1.000 0.949   0.01042
+29 100    0.2       exch07  E2    50 0.725   0.00798    1.000 0.660   0.00623
+6  300    0.2       exch07  E0    50 0.402   0.00648    1.000 0.945   0.00606
+18 300    0.2       exch07  E1    50 0.109   0.00763    1.000 0.945   0.00606
+30 300    0.2       exch07  E2    50 0.792   0.00383    1.000 0.638   0.00384
+9  100    0.2       hetero  E0    50 0.283   0.00696    0.950 1.063   0.01129
+21 100    0.2       hetero  E1    50 0.249   0.01214    0.960 1.063   0.01129
+33 100    0.2       hetero  E2    50 0.735   0.00590    0.947 0.888   0.01010
+10 300    0.2       hetero  E0    50 0.236   0.00504    0.993 1.064   0.00593
+22 300    0.2       hetero  E1    50 0.159   0.00728    1.000 1.064   0.00593
+34 300    0.2       hetero  E2    50 0.785   0.00394    0.997 0.871   0.00608
+3  100    1.0       exch03  E0    50 0.339   0.01048    0.990 0.503   0.00711
+15 100    1.0       exch03  E1    50 0.642   0.04402    0.840 0.503   0.00711
+27 100    1.0       exch03  E2    50 0.724   0.00680    0.983 0.483   0.00668
+4  300    1.0       exch03  E0    50 0.318   0.00758    1.000 0.457   0.00330
+16 300    1.0       exch03  E1    50 0.538   0.05813    0.897 0.457   0.00330
+28 300    1.0       exch03  E2    50 0.778   0.00388    1.000 0.430   0.00333
+7  100    1.0       exch07  E0    50 0.405   0.01198    1.000 0.510   0.00824
+19 100    1.0       exch07  E1    50 0.398   0.03485    1.000 0.510   0.00824
+31 100    1.0       exch07  E2    50 0.708   0.00772    1.000 0.356   0.00543
+8  300    1.0       exch07  E0    50 0.421   0.00828    1.000 0.444   0.00360
+20 300    1.0       exch07  E1    50 0.330   0.03230    1.000 0.444   0.00360
+32 300    1.0       exch07  E2    50 0.787   0.00340    1.000 0.306   0.00272
+11 100    1.0       hetero  E0    50 0.327   0.01170    0.970 0.568   0.00997
+23 100    1.0       hetero  E1    50 0.547   0.05282    0.843 0.568   0.00997
+35 100    1.0       hetero  E2    50 0.723   0.00679    0.947 0.484   0.00883
+12 300    1.0       hetero  E0    50 0.308   0.00570    0.997 0.504   0.00554
+24 300    1.0       hetero  E1    50 0.407   0.02278    0.893 0.504   0.00554
+36 300    1.0       hetero  E2    50 0.780   0.00389    0.983 0.417   0.00514
+   cover cover_mcse    wall
+1  0.941    0.00324 0.00356
+13 0.941    0.00324 0.43782
+25 0.931    0.00390 0.23022
+2  0.945    0.00167 0.00668
+14 0.945    0.00167 1.35196
+26 0.942    0.00191 0.59538
+5  0.941    0.00280 0.00374
+17 0.941    0.00280 0.60444
+29 0.929    0.00426 0.25780
+6  0.944    0.00196 0.00636
+18 0.944    0.00196 1.34240
+30 0.944    0.00195 0.59360
+9  0.946    0.00348 0.00458
+21 0.946    0.00348 0.69866
+33 0.925    0.00418 0.25504
+10 0.942    0.00154 0.00672
+22 0.942    0.00154 1.49144
+34 0.943    0.00252 0.62264
+3  0.901    0.00586 0.00346
+15 0.901    0.00586 0.56600
+27 0.930    0.00353 0.24036
+4  0.910    0.00498 0.00690
+16 0.910    0.00498 1.43302
+28 0.942    0.00185 0.60592
+7  0.906    0.00606 0.00552
+19 0.906    0.00606 0.73646
+31 0.928    0.00386 0.31782
+8  0.904    0.00531 0.00728
+20 0.904    0.00531 1.70484
+32 0.942    0.00223 0.66536
+11 0.905    0.00586 0.00384
+23 0.905    0.00586 0.78478
+35 0.927    0.00487 0.24174
+12 0.913    0.00428 0.00660
+24 0.913    0.00428 1.53376
+36 0.941    0.00248 0.60676
+[ 902.5s] wrote dev/sigma_recovery_sim.rds
