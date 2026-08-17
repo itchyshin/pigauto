@@ -229,8 +229,11 @@ that is \code{TRUE} for cells that were imputed (originally
 \code{NA}) and \code{FALSE} for observed cells.}
 \item{prediction}{A \code{pigauto_pred} object from
 \code{\link{predict.pigauto_fit}} containing raw model
-predictions for every cell (observed + missing), standard errors,
-class probabilities, and conformal intervals.}
+predictions for every cell (observed + missing), per-cell
+uncertainty (\code{$se} -- see \code{\link{predict.pigauto_fit}}'s
+"What \code{$se} means per trait type" section; it is
+\strong{not} uniformly a standard error), class probabilities, and
+conformal intervals.}
 \item{fit}{The trained \code{pigauto_fit} object.}
 \item{baseline}{The phylogenetic baseline.}
 \item{data}{The preprocessed \code{pigauto_data} object.}

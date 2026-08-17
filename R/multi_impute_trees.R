@@ -90,6 +90,11 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'   `share_gnn = TRUE`. Default `NULL` selects the maximum-clade-credibility
 #'   tree via `phangorn::maxCladeCred(trees)`. If `phangorn` is not
 #'   installed, falls back to `trees[[1]]` with a warning.
+#' @param draws_method character. How the `m_per_tree` stochastic draws are
+#'   generated for each tree (P1-11). One of `"mc_dropout"` (default, back
+#'   compatible with pre-P1-11 behaviour) or `"conformal"`. See the "Which
+#'   draw mechanism this uses" section below for the trade-off between the
+#'   two.
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
 #'   [impute()].
 #'
@@ -110,6 +115,8 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'     \item{`imputed_mask`}{Logical matrix; `TRUE` where a cell was
 #'       originally missing.}
 #'     \item{`share_gnn`}{Logical; `TRUE` if the shared-GNN path was used.}
+#'     \item{`draws_method`}{Character; `"mc_dropout"` or `"conformal"`,
+#'       echoing the argument this call used (P1-11).}
 #'     \item{`fit`}{Single \code{pigauto_fit} trained on the reference
 #'       tree when `share_gnn = TRUE`; `NULL` otherwise.}
 #'     \item{`fits`}{List of `T` \code{pigauto_fit} objects (one per tree)
@@ -178,13 +185,16 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #' prior uncertainty and are noticeably wider (on AVONET300, Mass MC SD
 #' \eqn{\approx} 290 vs conformal/1.96 \eqn{\approx} 23).
 #'
-#' \code{multi_impute_trees()} currently exposes no \code{draws_method}
-#' argument, so the conformal path is unreachable here. The practical
-#' consequence: pooled SEs from tree-MI carry the more conservative
-#' within-tree component. Between-tree variance — the quantity this function
-#' exists to capture — is unaffected. If within-tree calibration matters more
-#' to you than tree uncertainty, use \code{\link{multi_impute}} on a single
-#' tree instead. Tracked as P1-11.
+#' \code{multi_impute_trees()} now exposes a \code{draws_method} argument
+#' (P1-11). \code{draws_method = "conformal"} runs \code{\link{impute}} with
+#' \code{n_imputations = 1} on each tree and draws the \code{m_per_tree}
+#' completions from the calibrated conformal scores instead, via the same
+#' internal sampling helper \code{multi_impute()} uses. Default remains
+#' \code{"mc_dropout"} for back compatibility. Within-tree calibration
+#' improves with \code{draws_method = "conformal"}; between-tree variance —
+#' the quantity this function exists to capture — is present under either
+#' setting because the baseline (and, when \code{share_gnn = FALSE}, the GNN)
+#' still varies per tree.
 #'
 #' @references
 #' Nakagawa S, de Villemereuil P (2019). "A general method for
@@ -240,7 +250,10 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 1L,
                                seed = NULL,
                                share_gnn = TRUE,
                                reference_tree = NULL,
+                               draws_method = c("mc_dropout", "conformal"),
                                ...) {
+
+  draws_method <- match.arg(draws_method)
 
   # ---- Validate inputs -------------------------------------------------------
   m_per_tree <- as.integer(m_per_tree)
@@ -294,6 +307,7 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 1L,
       covariates = covariates, epochs = as.integer(epochs),
       verbose = verbose, seed = seed,
       reference_tree = resolve_reference_tree(trees, reference_tree),
+      draws_method = draws_method,
       ...
     )
   } else {
@@ -303,7 +317,7 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 1L,
       multi_proportion_groups = multi_proportion_groups,
       log_transform = log_transform, missing_frac = missing_frac,
       covariates = covariates, epochs = as.integer(epochs),
-      verbose = verbose, seed = seed, ...
+      verbose = verbose, seed = seed, draws_method = draws_method, ...
     )
   }
 
@@ -319,7 +333,8 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 1L,
 run_per_tree <- function(traits, trees, m_per_tree,
                          species_col, trait_types, multi_proportion_groups,
                          log_transform, missing_frac, covariates,
-                         epochs, verbose, seed, ...) {
+                         epochs, verbose, seed, draws_method = "mc_dropout",
+                         ...) {
   T_trees      <- length(trees)
   M_total      <- T_trees * m_per_tree
   all_datasets <- vector("list", M_total)
@@ -329,6 +344,7 @@ run_per_tree <- function(traits, trees, m_per_tree,
   pooled_sum   <- NULL
   pooled_n     <- 0L
   trait_cols   <- setdiff(names(traits), species_col)
+  use_conformal <- identical(draws_method, "conformal")
 
   for (t in seq_len(T_trees)) {
     t_seed <- if (is.null(seed)) NULL else as.integer(seed + t - 1L)
@@ -339,7 +355,12 @@ run_per_tree <- function(traits, trees, m_per_tree,
       t_start <- proc.time()
     }
 
-    # Run full pipeline
+    # Run full pipeline. draws_method = "conformal" (P1-11) fits a single
+    # deterministic pass (n_imputations = 1) and draws the m_per_tree
+    # completions from the calibrated conformal scores via .conformal_draws()
+    # -- the same sampling helper multi_impute() uses. draws_method =
+    # "mc_dropout" (default) is unchanged: predict() itself runs m_per_tree
+    # stochastic dropout + BM-draw passes.
     res <- impute(
       traits        = traits,
       tree          = trees[[t]],
@@ -348,7 +369,7 @@ run_per_tree <- function(traits, trees, m_per_tree,
       multi_proportion_groups = multi_proportion_groups,
       log_transform = log_transform,
       missing_frac  = missing_frac,
-      n_imputations = m_per_tree,
+      n_imputations = if (use_conformal) 1L else m_per_tree,
       covariates    = covariates,
       epochs        = as.integer(epochs),
       verbose       = FALSE,
@@ -358,34 +379,45 @@ run_per_tree <- function(traits, trees, m_per_tree,
 
     pred <- res$prediction
 
-    # Build completed data.frames.
-    # When n_imputations=1 predict() returns pred$imputed directly (not a list).
-    # When n_imputations>1 it returns pred$imputed_datasets (a list of m).
-    imp_list <- if (!is.null(pred$imputed_datasets)) {
-      pred$imputed_datasets
-    } else {
-      list(pred$imputed)
-    }
-    if (length(imp_list) != m_per_tree) {
-      stop("Tree ", t, ": predict() did not return ", m_per_tree,
-           " imputed datasets. This is an internal error.", call. = FALSE)
-    }
-
     # `res$data$input_row_order` re-aligns internal-order imputations back
     # to the user's input row order (multi-obs reordering fix, 2026-04-26).
     # Each tree gets its own pigauto_data object, so we read this fresh
     # per tree.
     input_row_order <- res$data$input_row_order
+
+    if (use_conformal) {
+      completed_list <- .conformal_draws(traits, pred, res$imputed_mask,
+                                         res$fit$trait_map, m_per_tree,
+                                         species_col = species_col,
+                                         seed = t_seed,
+                                         input_row_order = input_row_order)
+    } else {
+      # When n_imputations=1 predict() returns pred$imputed directly (not a
+      # list). When n_imputations>1 it returns pred$imputed_datasets (a list
+      # of m).
+      imp_list <- if (!is.null(pred$imputed_datasets)) {
+        pred$imputed_datasets
+      } else {
+        list(pred$imputed)
+      }
+      if (length(imp_list) != m_per_tree) {
+        stop("Tree ", t, ": predict() did not return ", m_per_tree,
+             " imputed datasets. This is an internal error.", call. = FALSE)
+      }
+      completed_list <- lapply(imp_list, function(imp_df) {
+        build_completed(traits, imp_df, species_col,
+                        input_row_order = input_row_order)$completed
+      })
+    }
+
     for (k in seq_len(m_per_tree)) {
       idx <- (t - 1L) * m_per_tree + k
-      completed_info <- build_completed(traits, imp_list[[k]], species_col,
-                                          input_row_order = input_row_order)
-      completed_i <- completed_info$completed
+      completed_i <- completed_list[[k]]
       all_datasets[[idx]] <- completed_i
       tree_index[idx]     <- t
 
       if (is.null(imputed_mask)) {
-        imputed_mask <- completed_info$imputed_mask
+        imputed_mask <- res$imputed_mask
       }
 
       if (is.null(pooled_sum)) {
@@ -433,7 +465,8 @@ run_per_tree <- function(traits, trees, m_per_tree,
     se           = NULL,
     imputed_mask = imputed_mask,
     fits         = all_fits,
-    fit          = NULL
+    fit          = NULL,
+    draws_method = draws_method
   )
 }
 
@@ -442,10 +475,12 @@ run_per_tree <- function(traits, trees, m_per_tree,
 run_shared_gnn <- function(traits, trees, m_per_tree,
                            species_col, trait_types, multi_proportion_groups,
                            log_transform, missing_frac, covariates,
-                           epochs, verbose, seed, reference_tree, ...) {
+                           epochs, verbose, seed, reference_tree,
+                           draws_method = "mc_dropout", ...) {
   T_trees <- length(trees)
   M_total <- T_trees * m_per_tree
   dots <- list(...)
+  use_conformal <- identical(draws_method, "conformal")
   if (verbose) {
     cat(sprintf("multi_impute_trees (share_gnn=TRUE): %d trees x %d imputations = %d datasets\n",
                 T_trees, m_per_tree, M_total))
@@ -502,8 +537,13 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
       em_tol = baseline_arg("em_tol", 1e-3),
       em_offdiag = baseline_arg("em_offdiag", FALSE)
     )
+    # draws_method = "conformal" (P1-11): a single deterministic pass per
+    # tree, then draw m_per_tree completions from the conformal scores held
+    # on fit_ref (calibrated once, on the reference tree) via the same
+    # sampling helper multi_impute() uses. draws_method = "mc_dropout"
+    # (default): unchanged -- m_per_tree stochastic dropout + BM-draw passes.
     pred_t <- stats::predict(fit_ref, return_se = TRUE,
-                              n_imputations = m_per_tree,
+                              n_imputations = if (use_conformal) 1L else m_per_tree,
                               baseline_override = baseline_t)
 
     # Build completed data.frames (reuse build_completed).  In the share-GNN
@@ -512,16 +552,31 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
     # the input data.frame's species column), we can reuse data_ref's
     # input_row_order across all trees.  (Multi-obs reordering fix, 2026-04-26.)
     input_row_order <- data_ref$input_row_order
+
+    if (use_conformal) {
+      # res_ref$imputed_mask does not depend on the tree (only on which
+      # cells are NA in `traits`), so it is safe to reuse across trees --
+      # matching the imputed_mask capture below, which is likewise set once.
+      completed_list <- .conformal_draws(traits, pred_t, res_ref$imputed_mask,
+                                         fit_ref$trait_map, m_per_tree,
+                                         species_col = species_col,
+                                         seed = if (is.null(seed)) NULL else as.integer(seed) + t - 1L,
+                                         input_row_order = input_row_order)
+    } else {
+      completed_list <- lapply(seq_len(m_per_tree), function(k) {
+        one <- if (!is.null(pred_t$imputed_datasets)) pred_t$imputed_datasets[[k]]
+               else pred_t$imputed
+        build_completed(traits, one, species_col,
+                        input_row_order = input_row_order)$completed
+      })
+    }
+
     for (k in seq_len(m_per_tree)) {
       idx <- idx + 1L
-      one <- if (!is.null(pred_t$imputed_datasets)) pred_t$imputed_datasets[[k]]
-             else pred_t$imputed
-      info <- build_completed(traits, one, species_col,
-                                input_row_order = input_row_order)
-      completed_i <- info$completed
+      completed_i <- completed_list[[k]]
       all_datasets[[idx]] <- completed_i
       tree_index[idx]     <- t
-      if (is.null(imputed_mask)) imputed_mask <- info$imputed_mask
+      if (is.null(imputed_mask)) imputed_mask <- res_ref$imputed_mask
 
       # Pool from the user-facing completed datasets, not raw pred_t$imputed:
       # completed_i is already in input row order, preserves species_col and
@@ -581,7 +636,8 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
     se           = pooled_se,
     imputed_mask = imputed_mask,
     fit          = fit_ref,
-    fits         = NULL
+    fits         = NULL,
+    draws_method = draws_method
   )
 }
 
@@ -601,9 +657,14 @@ print.pigauto_mi_trees <- function(x, ...) {
   n_imp_cells <- sum(x$imputed_mask)
   pct <- if (total_cells > 0) 100 * n_imp_cells / total_cells else 0
 
+  method_label <- switch(x$draws_method %||% "mc_dropout",
+    mc_dropout = "MC dropout",
+    conformal  = "conformal-width sampling",
+    x$draws_method
+  )
   cat("pigauto experimental posterior-tree prediction sensitivity\n")
   cat(sprintf("  Trees     : %d posterior phylogenies\n", T_trees))
-  cat(sprintf("  Per tree  : %d completion draws (MC dropout)\n", m_per_tree))
+  cat(sprintf("  Per tree  : %d completion draws (%s)\n", m_per_tree, method_label))
   cat(sprintf("  Total     : %d completed datasets\n", M_total))
   cat(sprintf("  Species   : %d\n", n_sp))
   cat(sprintf("  Traits    : %d -- %s\n", length(trait_cols),

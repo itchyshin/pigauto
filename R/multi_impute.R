@@ -248,22 +248,20 @@ multi_impute <- function(traits, tree, m = 100L,
     imask     <- res$imputed_mask
 
     input_row_order <- res$data$input_row_order
-    datasets <- lapply(seq_len(m), function(i) {
-      # `imask` is in user-input row order (built by build_completed from
-      # the original traits data.frame).  But pred$imputed / pred$se /
-      # pred$probabilities are in INTERNAL (tree-tip) order from the
-      # model.  .sample_conformal_draw must therefore map input-order
-      # mask indices to internal-order before perturbing imp; otherwise
-      # it perturbs the wrong cells and build_completed re-aligns the
-      # unperturbed (internal) values back into the user's missing cells,
-      # producing zero between-imputation variance.  See
-      # adversarial_review_opus.md (HIGH severity finding C.1).
-      imp_df <- .sample_conformal_draw(pred, imask, trait_map,
-                                       seed_i = if (is.null(seed)) NULL else as.integer(seed) + i,
-                                       input_row_order = input_row_order)
-      build_completed(traits, imp_df, species_col,
-                       input_row_order = input_row_order)$completed
-    })
+    # `imask` is in user-input row order (built by build_completed from
+    # the original traits data.frame).  But pred$imputed / pred$se /
+    # pred$probabilities are in INTERNAL (tree-tip) order from the
+    # model.  .sample_conformal_draw (called inside .conformal_draws)
+    # therefore maps input-order mask indices to internal-order before
+    # perturbing imp; otherwise it perturbs the wrong cells and
+    # build_completed re-aligns the unperturbed (internal) values back
+    # into the user's missing cells, producing zero between-imputation
+    # variance.  See adversarial_review_opus.md (HIGH severity finding
+    # C.1).  P1-11: this sampling block is shared with
+    # multi_impute_trees(draws_method = "conformal") via .conformal_draws().
+    datasets <- .conformal_draws(traits, pred, imask, trait_map, m,
+                                 species_col = species_col, seed = seed,
+                                 input_row_order = input_row_order)
   }
 
   structure(
@@ -294,6 +292,44 @@ multi_impute <- function(traits, tree, m = 100L,
     ),
     class = c("pigauto_mi", "list")
   )
+}
+
+
+# ---- Internal: M conformal-width completed datasets from one prediction ----
+# Shared sampling block (P1-11): given a single-pass prediction (`pred`),
+# draws `m` conformal-width stochastic completions and re-aligns each to
+# the user's input row order via build_completed(). Both multi_impute()
+# (draws_method = "conformal") and multi_impute_trees()
+# (draws_method = "conformal") call this so the sampling mechanism is
+# identical in both places -- only how `pred` / `imputed_mask` / `trait_map`
+# are obtained differs (single-tree impute() vs per-tree impute() /
+# predict()).
+#
+# @param traits           original traits data.frame (user input).
+# @param pred              a `pigauto_pred` object from a single-pass
+#                          (`n_imputations = 1`) predict() / impute() call.
+# @param imputed_mask      logical matrix in user-input row order, TRUE for
+#                          originally-missing cells (e.g. `res$imputed_mask`).
+# @param trait_map         trait map from the fit that produced `pred`.
+# @param m                 integer, number of draws to generate.
+# @param species_col       character or NULL, forwarded to build_completed().
+# @param seed              optional integer base seed; draw `i` uses
+#                          `seed + i`. NULL uses the current RNG stream.
+# @param input_row_order    forwarded to .sample_conformal_draw() /
+#                          build_completed() for row re-alignment.
+# @return list of `m` completed data.frames.
+.conformal_draws <- function(traits, pred, imputed_mask, trait_map, m,
+                             species_col = NULL, seed = NULL,
+                             input_row_order = NULL) {
+  lapply(seq_len(m), function(i) {
+    imp_df <- .sample_conformal_draw(
+      pred, imputed_mask, trait_map,
+      seed_i = if (is.null(seed)) NULL else as.integer(seed) + i,
+      input_row_order = input_row_order
+    )
+    build_completed(traits, imp_df, species_col,
+                    input_row_order = input_row_order)$completed
+  })
 }
 
 
