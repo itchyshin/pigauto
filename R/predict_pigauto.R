@@ -44,6 +44,21 @@
 #' predictions in undersampled clades get wider intervals. See
 #' \code{\link{fit_pigauto}}'s \code{conformal_method} argument for details.
 #'
+#' **\code{zi_count} conformal intervals are conditional on non-zero.**
+#' \code{conformal_lower[, nm]} / \code{conformal_upper[, nm]} for a
+#' \code{zi_count} trait back-transform the magnitude latent (log1p-z of the
+#' count \emph{given it is non-zero}) plus/minus the conformal half-width
+#' that was calibrated on that same magnitude column
+#' (\code{\link{fit_pigauto}}'s \code{compute_conformal_scores()} scores
+#' zi_count on \code{latent_cols[2]}, never on the decoded \code{E[X]}).
+#' They are \strong{not} an interval for the expected value
+#' \code{E[X] = P(nonzero) * E[count | nonzero]} -- constructing a naive
+#' \eqn{\pm}quantile interval directly on \code{E[X]} would conflate gate
+#' and magnitude uncertainty into one number with no valid coverage
+#' interpretation. The gate probability \code{P(nonzero)} is available
+#' separately in \code{pred$probabilities[[nm]]}; combine it with the
+#' conditional interval yourself if you need an \code{E[X]}-scale bound.
+#'
 #' @param object object of class \code{"pigauto_fit"}.
 #' @param newdata \code{NULL} (use the training data) or a
 #'   \code{"pigauto_data"} object for new species.
@@ -119,22 +134,9 @@
 #'     \item{imputed_latent}{Numeric matrix (n x p_latent) of predictions in
 #'       latent scale.}
 #'     \item{se}{Numeric matrix (n x n_original_traits) of per-cell
-#'       uncertainty.  Continuous/count/ordinal/proportion: SE in original
-#'       scale (BM conditional SD, delta-method back-transformed).
-#'       Binary: \code{min(p, 1-p)} — probability of being wrong (0 = certain,
-#'       0.5 = maximally uncertain); \strong{not} a Gaussian SE.
-#'       Categorical: \code{1 - max(p_k)} — margin from certainty; \strong{not}
-#'       a Gaussian SE.  Zero-inflated count: delta-method SE of the
-#'       \emph{expected value} \code{E[X] = P(nonzero) * E[count | nonzero]},
-#'       which mixes gate and magnitude uncertainty — \strong{not} a
-#'       magnitude-scale SE.  These three families are therefore
-#'       \strong{incompatible objects sharing one name}: only the
-#'       continuous-family entries are standard errors in the Gaussian
-#'       sense, and \strong{none} of the binary / categorical / zi_count
-#'       entries may be used in Rubin's-rules arithmetic — for valid
-#'       downstream multiple-imputation inference use
-#'       \code{\link{multi_impute}} + \code{\link{with_imputations}} +
-#'       \code{\link{pool_mi}}.  \code{NULL} if \code{return_se = FALSE}.}
+#'       uncertainty. See the "What \code{$se} means per trait type" section
+#'       below for what each trait type's column actually contains.
+#'       \code{NULL} if \code{return_se = FALSE}.}
 #'     \item{probabilities}{Named list.  Binary traits: numeric probability
 #'       vector.  Categorical traits: n x K probability matrix.  Other
 #'       types: not present.}
@@ -146,6 +148,28 @@
 #'     \item{trait_names}{Character vector.}
 #'     \item{n_imputations}{Integer, number of imputations performed.}
 #'   }
+#' @section What \code{$se} means per trait type:
+#' \code{pred$se} is a single \code{n x n_original_traits} matrix, but its
+#' per-column meaning differs by trait type — do not treat every column as
+#' a Gaussian standard error. This table is the definitive reference; other
+#' pigauto documentation (e.g. \code{\link{impute}}'s return value) points
+#' here instead of repeating it.
+#'
+#' \tabular{lll}{
+#'   \strong{Type} \tab \strong{Value} \tab \strong{Is it a Gaussian SE?} \cr
+#'   continuous / count / ordinal / proportion \tab BM conditional SD, delta-method back-transformed to original scale \tab Yes — safe for interval arithmetic. \cr
+#'   binary \tab \code{min(p, 1-p)} \tab No. Probability of being wrong (0 = certain, 0.5 = maximally uncertain). \cr
+#'   categorical \tab \code{1 - max(p_k)} \tab No. Margin from certainty (0 = certain, (K-1)/K = maximally uncertain). \cr
+#'   zi_count \tab delta-method SE of \code{E[X] = P(nonzero) * E[count | nonzero]} \tab No. Mixes gate and magnitude uncertainty into one number; not a magnitude-scale SE. Use \code{conformal_lower} / \code{conformal_upper} (conditional-on-nonzero; see above) plus \code{probabilities} (the gate) for interval-scale zi_count uncertainty instead. \cr
+#'   multi_proportion \tab \code{NA} \tab Not computed; use the CLR latent SE (\code{se_latent}) instead. \cr
+#' }
+#'
+#' These families are \strong{incompatible objects sharing one column name}:
+#' only the continuous-family entries are standard errors in the Gaussian
+#' sense, and \strong{none} of the binary / categorical / zi_count entries
+#' may be used in Rubin's-rules arithmetic. For valid downstream
+#' multiple-imputation inference use \code{\link{multi_impute}} +
+#' \code{\link{with_imputations}} + \code{\link{pool_mi}}.
 #' @examples
 #' \donttest{
 #' data(avonet300, tree300)
@@ -706,8 +730,15 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
       nm <- tm$name
       lc <- tm$latent_cols
 
-      if (!(tm$type %in% c("continuous", "count", "ordinal", "proportion"))) next
+      if (!(tm$type %in%
+            c("continuous", "count", "ordinal", "proportion", "zi_count"))) next
       if (is.na(conformal_scores_out[nm])) next
+
+      # zi_count is scored on the magnitude (log1p-z) column, not the
+      # Bernoulli gate -- must match fit_helpers.R's compute_conformal_scores()
+      # `score_col`, both for reading conformal_scores_out[nm] above and for
+      # the Mondrian locality lookup below.
+      score_col <- if (identical(tm$type, "zi_count")) lc[2L] else lc[1L]
 
       # q_vec: per-row conformal half-width. Constant (global score) for
       # "split" / "bootstrap"; per-row near/far stratum score for
@@ -717,7 +748,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
       if (use_mondrian) {
         mo <- object$conformal_mondrian[[nm]]
         if (!is.null(mo) && !isTRUE(mo$fallback)) {
-          obs_idx <- which(obs_mask_train[, lc[1]])
+          obs_idx <- which(obs_mask_train[, score_col])
           if (length(obs_idx) > 0L) {
             locality <- mondrian_locality(D_sq, obs_idx, seq_len(n), k = 5L)
             loc_ok <- is.finite(locality)
@@ -763,6 +794,20 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
         pred_high <- (pred_latent + q_vec) * tm$sd + tm$mean
         conformal_lower[, nm] <- stats::plogis(pred_low)
         conformal_upper[, nm] <- stats::plogis(pred_high)
+
+      } else if (tm$type == "zi_count") {
+        # Conditional-on-nonzero interval: back-transform the magnitude
+        # latent (log1p-z of counts | nonzero) +/- the conformal half-width,
+        # which was calibrated on this same magnitude column
+        # (fit_helpers.R's compute_conformal_scores(), score_col = lc[2]).
+        # This is NOT an interval for E[X] = P(nonzero) * E[count|nonzero] --
+        # see the "Conformal intervals" details above and pred$probabilities
+        # for the gate probability P(nonzero).
+        pred_latent <- latent_pred[, score_col]
+        pred_low  <- (pred_latent - q_vec) * tm$sd + tm$mean
+        pred_high <- (pred_latent + q_vec) * tm$sd + tm$mean
+        conformal_lower[, nm] <- pmax(expm1(pred_low), 0)
+        conformal_upper[, nm] <- expm1(pred_high)
       }
     }
   }

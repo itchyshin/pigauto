@@ -1,0 +1,10 @@
+Warning message:
+Small validation set for 1 trait(s): Mass (n=18). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (Mass (n=18)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options. 
+wall 1139s
+Mass                   rmse 2540.91
+Beak.Length_Culmen     rmse 22.58
+Tarsus.Length          rmse 24.61
+Wing.Length            rmse 69.10
+Trophic.Level          acc  0.789
+Primary.Lifestyle      acc  0.667
+Migration              acc  0.767
