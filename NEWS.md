@@ -28,6 +28,22 @@ roxygen previously said the joint baseline ran "via `Rphylopars::phylopars()`"
 while the code actually called the in-house solver; that stale claim (and
 the matching one in `impute()`'s `em_iterations` docs) is corrected.
 
+## Internal (opt-in, not yet user-facing): `sigma_method = "fisher_ml"` on the in-house solver
+
+`fit_mvn_bm_inhouse()` and `fit_joint_solver()` (`R/joint_mvn_solver.R`)
+gain a `sigma_method = c("single_pass", "fisher_ml")` argument. The
+default, `"single_pass"`, is byte-identical to prior releases.
+`"fisher_ml"` ports (adapted, not cherry-picked) the never-merged
+commit e7ca41c: it estimates Sigma by maximising the observed-data
+marginal MVN log-likelihood over a Cholesky-parameterised Sigma
+(species treated as iid; phylogeny re-enters through the unchanged
+per-column-BM init and cross-trait EM refinement), as an alternative
+to the default's R-credited Kronecker M-step. Falls back to the
+`single_pass` Sigma estimate, with a warning, if `optim()` errors or
+fails to converge. Not yet threaded through `fit_baseline()` /
+`impute()` -- exposure is gated on a recovery-simulation check
+(`dev/sigma_recovery_sim.R`).
+
 ## Feature: `conformal_method = "mondrian"` (B2) -- locality-stratified conformal intervals
 
 `fit_pigauto()` / `impute()` gain a new `conformal_method` option,
