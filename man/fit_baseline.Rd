@@ -46,10 +46,14 @@ class frequencies contribute fractional liability evidence.  Only
 relevant for multi-obs data with binary or categorical traits when the
 Level-C joint baseline is active.}
 
-\item{lambda_mode}{character. Pagel-lambda mode for the BM baseline.
+\item{lambda_mode}{character. Pagel-lambda mode for the CONTINUOUS-FAMILY
+baseline (continuous, count, ordinal, proportion, zi_count magnitude
+columns only -- see \dQuote{Per-type lambda dispatch} in Details).
 \code{"fixed_1"} preserves the default Brownian correlation matrix;
 \code{"estimate"}, \code{"cv"}, and \code{"bayes"} delegate lambda
-handling to the per-column BM path. \strong{Covariate caveat}: when
+handling to the per-column BM path. Binary/categorical/zi_gate columns
+are unaffected by \code{lambda_mode} and keep the threshold-joint /
+OVR-categorical baseline. \strong{Covariate caveat}: when
 \code{data$covariates} is supplied, the per-column path switches to
 \code{bm_impute_col_with_cov()}, which has no lambda argument and
 always fits at lambda = 1; \code{lambda_mode != "fixed_1"} is then
@@ -89,9 +93,12 @@ byte-identical to prior releases. \code{"rphylopars"} delegates to
 0.14-1.27 lower z-RMSE than the in-house solver on AVONET300 (see
 \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}); on
 failure or non-finite output it falls back to \code{"inhouse"} with
-a warning. Only affects the BM-eligible / threshold-joint / OVR
-categorical paths above; ignored when those paths don't fire (e.g.
-\code{lambda_mode != "fixed_1"}, which forces the per-column path).}
+a warning. Only affects the joint MVN / threshold-joint / OVR
+categorical paths above; ignored when those paths don't fire. Note
+that \code{lambda_mode != "fixed_1"} disables the continuous-only
+joint MVN path (it has no lambda argument) but no longer disables
+the threshold-joint / OVR-categorical paths -- see
+\dQuote{Per-type lambda dispatch} in Details.}
 }
 \value{
 A list with:
@@ -121,11 +128,27 @@ per-column fallbacks when a joint path is not available.
 is only used by the per-column BM path (\code{bm_impute_col_with_cov()}).
 The joint MVN and threshold-joint (Rphylopars) baselines do not accept a
 covariate design matrix, so when a joint path is selected (BM-eligible
-columns >= 2, or binary/ordinal cols present, with Rphylopars available
-and \code{lambda_mode = "fixed_1"}) any supplied covariates are ignored
-for the BASELINE and a warning is emitted; covariates still reach the
-GNN correction via \code{\link{fit_pigauto}} regardless of which
-baseline path fires.
+columns >= 2, or binary/ordinal cols present, with Rphylopars available)
+any supplied covariates are ignored for the BASELINE and a warning is
+emitted; covariates still reach the GNN correction via
+\code{\link{fit_pigauto}} regardless of which baseline path fires.
+
+\strong{Per-type lambda dispatch (arc/lambda-per-type)}: \code{lambda_mode}
+only ever governs the baseline for CONTINUOUS-FAMILY columns (continuous,
+count, ordinal, proportion, zi_count magnitude). Binary, ordinal,
+categorical, and zero-inflated gate columns keep the threshold-joint /
+OVR-categorical joint baseline (always fit at lambda = 1) regardless of
+\code{lambda_mode} -- there is no discrete-trait analogue of Pagel's
+lambda, and previously forcing these columns onto label propagation any
+time \code{lambda_mode != "fixed_1"} cost 19pp of Trophic.Level accuracy
+on AVONET (0.789 -> 0.600; see
+\code{docs/dev-log/2026-08-16-external-comparison-results.md}). When
+\code{lambda_mode != "fixed_1"} and the threshold-joint baseline fires
+for a dataset with binary/ordinal AND continuous-family columns, the
+joint liability fit still uses the continuous-family columns internally
+to inform the joint Sigma (and hence the binary/ordinal posteriors); only
+its continuous-column baseline OUTPUT is discarded in favour of the
+lambda-aware per-column BM fit.
 }
 \examples{
 \donttest{

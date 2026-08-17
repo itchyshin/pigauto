@@ -4,6 +4,32 @@ GitHub-dev after CRAN pigauto 0.10.0 (Date/Publication 2026-07-30).
 This is not a CRAN tarball. BACE is still not on CRAN. The next CRAN
 cut must drop Suggests `BACE` again or wait until BACE is on CRAN.
 
+## Bug fix: `lambda_mode != "fixed_1"` no longer disables the discrete-trait joint baseline
+
+`fit_baseline()` previously set `force_per_column <- TRUE` for
+`lambda_mode %in% c("estimate", "cv", "bayes")`, which disabled the joint
+MVN, threshold-joint, AND OVR-categorical baselines for ALL traits --
+including binary, ordinal, categorical, and zero-inflated gate columns
+that have no lambda concept and were always fit at lambda = 1 regardless.
+Measured cost (`script/bench_avonet_lambda_modes.md` on branch
+`arc/bace-comparators`; `docs/dev-log/2026-08-16-external-comparison-results.md`
+on the handover branch): `lambda_mode = "bayes"` improved every continuous
+trait but dropped Trophic.Level (categorical) accuracy from 0.789 to 0.600
+(19pp) because categorical fell from the joint/OVR baseline to plain label
+propagation.
+
+`lambda_mode` now governs ONLY the baseline for continuous-family columns
+(continuous, count, ordinal, proportion, zi_count magnitude); the
+threshold-joint and OVR-categorical baselines for binary/ordinal/
+categorical/zi_gate columns fire regardless of `lambda_mode`, at
+lambda = 1 as they always have. When the threshold-joint baseline runs
+for `lambda_mode != "fixed_1"`, its joint liability fit still uses the
+continuous-family columns internally (they inform the joint Sigma the
+binary/ordinal posteriors condition on) -- only the fit's continuous-column
+baseline *output* is discarded in favour of the lambda-aware per-column
+`bm_impute_col(..., lambda = bm_lambda)` fit. `lambda_mode = "fixed_1"`
+output is unchanged (see `tests/testthat/test-lambda-per-type.R`).
+
 ## Feature: `joint_solver = "rphylopars"` (opt-in) -- continuous-trait accuracy switch
 
 The continuous-gap diagnosis (`docs/dev-log/2026-08-16-continuous-gap-diagnosis.md`)
