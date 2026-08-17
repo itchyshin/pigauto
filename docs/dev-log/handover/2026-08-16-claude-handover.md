@@ -1,5 +1,26 @@
 # Session Handoff: pigauto — Tier 0 + Tier 1 COMPLETE, two campaigns landed (Claude → Claude)
 
+> ## ⚡⚡ UPDATE 2 — 2026-08-17: Arc 3 ran (solver · per-type λ · UQ tail). READ THIS FIRST.
+>
+> - **`origin/main` = `584ea81`** — PR #170 (per-type λ dispatch) merged on top of #167/#168/#169.
+>   **#171 (UQ tail) open at the gate**, suite green 2127/0, `--as-cran` + CI finishing.
+> - **THE finding of Arc 3** (`2026-08-17-sigma-recovery-results.md`): **the in-house joint
+>   solver estimates Σ and then discards it.** Two different Σ estimators produced
+>   *numerically identical* predictions in all 12 sim cells, because `max_iter = 0`
+>   short-circuits to per-column BM. That — not Σ quality — is the AVONET continuous gap.
+>   The Fisher-ML port therefore **does not ship** (and is independently worse at λ=1).
+> - **The fix is scoped but FENCED**: enabling cross-trait refinement recovers ~85% of the
+>   gap at λ=0.2 but drives SE coverage 0.925 → 0.618 (variance not updated when the mean
+>   moves). That is the EM cell-restore the Arc 2 goal fenced as "needs its own G0" —
+>   **slice 1b is written up and deliberately NOT started.**
+> - `joint_solver = "rphylopars"` stays as the measured yardstick until 1b lands; it is
+>   removable afterwards. Shinichi's dependency-free constraint is satisfiable.
+> - After-task: `docs/dev-log/after-task/2026-08-17-arc3-solver-and-tail.md` (§9 = ranked
+>   open items). Branch `arc/inhouse-sigma-convergence` is **deliberately unmerged** — it
+>   holds the sim harness and the opt-in `sigma_method` that slice 1b needs.
+> - Mission Control was 15 days stale ("LONG HOLD — do not open work here") through two
+>   active arcs; corrected in the vault at `bbac784`.
+>
 > ## ⚡ UPDATE — 2026-08-16 evening: the "earn-the-claims" arc ran and CLOSED on top of this
 >
 > Everything below remains accurate history, but the state has moved substantially:
