@@ -19,11 +19,27 @@
 #' is only used by the per-column BM path (\code{bm_impute_col_with_cov()}).
 #' The joint MVN and threshold-joint (Rphylopars) baselines do not accept a
 #' covariate design matrix, so when a joint path is selected (BM-eligible
-#' columns >= 2, or binary/ordinal cols present, with Rphylopars available
-#' and \code{lambda_mode = "fixed_1"}) any supplied covariates are ignored
-#' for the BASELINE and a warning is emitted; covariates still reach the
-#' GNN correction via \code{\link{fit_pigauto}} regardless of which
-#' baseline path fires.
+#' columns >= 2, or binary/ordinal cols present, with Rphylopars available)
+#' any supplied covariates are ignored for the BASELINE and a warning is
+#' emitted; covariates still reach the GNN correction via
+#' \code{\link{fit_pigauto}} regardless of which baseline path fires.
+#'
+#' \strong{Per-type lambda dispatch (arc/lambda-per-type)}: \code{lambda_mode}
+#' only ever governs the baseline for CONTINUOUS-FAMILY columns (continuous,
+#' count, ordinal, proportion, zi_count magnitude). Binary, ordinal,
+#' categorical, and zero-inflated gate columns keep the threshold-joint /
+#' OVR-categorical joint baseline (always fit at lambda = 1) regardless of
+#' \code{lambda_mode} -- there is no discrete-trait analogue of Pagel's
+#' lambda, and previously forcing these columns onto label propagation any
+#' time \code{lambda_mode != "fixed_1"} cost 19pp of Trophic.Level accuracy
+#' on AVONET (0.789 -> 0.600; see
+#' \code{docs/dev-log/2026-08-16-external-comparison-results.md}). When
+#' \code{lambda_mode != "fixed_1"} and the threshold-joint baseline fires
+#' for a dataset with binary/ordinal AND continuous-family columns, the
+#' joint liability fit still uses the continuous-family columns internally
+#' to inform the joint Sigma (and hence the binary/ordinal posteriors); only
+#' its continuous-column baseline OUTPUT is discarded in favour of the
+#' lambda-aware per-column BM fit.
 #'
 #' @param data object of class \code{"pigauto_data"}.
 #' @param tree object of class \code{"phylo"}.
@@ -46,10 +62,14 @@
 #'   class frequencies contribute fractional liability evidence.  Only
 #'   relevant for multi-obs data with binary or categorical traits when the
 #'   Level-C joint baseline is active.
-#' @param lambda_mode character. Pagel-lambda mode for the BM baseline.
+#' @param lambda_mode character. Pagel-lambda mode for the CONTINUOUS-FAMILY
+#'   baseline (continuous, count, ordinal, proportion, zi_count magnitude
+#'   columns only -- see \dQuote{Per-type lambda dispatch} in Details).
 #'   \code{"fixed_1"} preserves the default Brownian correlation matrix;
 #'   \code{"estimate"}, \code{"cv"}, and \code{"bayes"} delegate lambda
-#'   handling to the per-column BM path. \strong{Covariate caveat}: when
+#'   handling to the per-column BM path. Binary/categorical/zi_gate columns
+#'   are unaffected by \code{lambda_mode} and keep the threshold-joint /
+#'   OVR-categorical baseline. \strong{Covariate caveat}: when
 #'   \code{data$covariates} is supplied, the per-column path switches to
 #'   \code{bm_impute_col_with_cov()}, which has no lambda argument and
 #'   always fits at lambda = 1; \code{lambda_mode != "fixed_1"} is then
@@ -85,9 +105,12 @@
 #'   0.14-1.27 lower z-RMSE than the in-house solver on AVONET300 (see
 #'   \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}); on
 #'   failure or non-finite output it falls back to \code{"inhouse"} with
-#'   a warning. Only affects the BM-eligible / threshold-joint / OVR
-#'   categorical paths above; ignored when those paths don't fire (e.g.
-#'   \code{lambda_mode != "fixed_1"}, which forces the per-column path).
+#'   a warning. Only affects the joint MVN / threshold-joint / OVR
+#'   categorical paths above; ignored when those paths don't fire. Note
+#'   that \code{lambda_mode != "fixed_1"} disables the continuous-only
+#'   joint MVN path (it has no lambda argument) but no longer disables
+#'   the threshold-joint / OVR-categorical paths -- see
+#'   \dQuote{Per-type lambda dispatch} in Details.
 #' @return A list with:
 #'   \describe{
 #'     \item{mu}{Numeric matrix (n_species x p_latent), baseline means in
@@ -246,16 +269,38 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   # Rphylopars has numerical instability with multi-categorical liability
   # matrices (the rank-(K-1) drop + multiple cat groups combine badly).
   # Phase 6 EM will refine this once Sigma is estimated stably.
-  # lambda_mode = "estimate" or "cv" forces the per-column BM path:
-  # joint MVN / threshold-joint use phylopars(model="BM") which is
-  # lambda=1 silently; per-column ML / CV supports lambda estimation
-  # natively. See spec §8 decision 3 (in-house, no phylopars on the
-  # lambda path).
+  #
+  # arc/lambda-per-type (2026-08): `lambda_mode` now governs ONLY where
+  # CONTINUOUS-FAMILY columns get their baseline mu/se, not whether the
+  # discrete-trait joint machinery runs at all. Previously
+  # `lambda_mode != "fixed_1"` set `force_per_column <- TRUE`, which also
+  # disabled `use_threshold_joint` and the OVR-categorical loop below --
+  # i.e. binary/ordinal/categorical traits were pushed onto plain label
+  # propagation any time a user asked for lambda estimation on their
+  # continuous traits. Measured cost: on AVONET data this dropped
+  # Trophic.Level (categorical) accuracy from 0.789 to 0.600 (19pp) while
+  # lambda_mode="bayes" only ever improves continuous traits -- discrete
+  # traits have no lambda concept and were always fit at lambda = 1
+  # regardless (see docs/dev-log/2026-08-16-external-comparison-results.md
+  # and NEWS.md). `force_per_column` below therefore now gates ONLY
+  # `use_continuous_joint` (the continuous-only joint MVN path, which has
+  # no lambda argument); `use_threshold_joint` and the OVR-categorical
+  # dispatch further down are unconditionally eligible whenever their
+  # other preconditions hold, independent of `lambda_mode`.
+  #
+  # This creates a genuine hybrid inside `use_threshold_joint`: the joint
+  # liability fit still INCLUDES continuous-family columns (they inform
+  # the joint Sigma that the binary/ordinal posteriors condition on), but
+  # when `lambda_mode != "fixed_1"` we discard the joint fit's continuous-
+  # column OUTPUT and let those columns fall through to the per-column
+  # lambda-aware `bm_impute_col(..., lambda = bm_lambda)` path below (see
+  # the `cont_idx` block a few lines down). Binary/ordinal/categorical/
+  # zi_gate columns keep the joint/OVR baseline, fit at lambda = 1 as they
+  # always have -- lambda_mode never touches them.
   force_per_column <- lambda_mode %in% c("estimate", "cv", "bayes")
   use_threshold_joint <- (length(binary_cols) + length(ordinal_cols)) >= 1L &&
     length(bm_cols) >= 1L &&
     !has_multi_proportion &&
-    !force_per_column &&
     joint_mvn_available()
 
   use_continuous_joint <- !use_threshold_joint &&
@@ -300,13 +345,29 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
 
     # Continuous-family passthrough (mu_liab on z-score scale).
     # Excludes binary (needs logit decode) and ordinal (needs threshold decode).
+    #
+    # arc/lambda-per-type hybrid: the joint liability fit above (`jt`) still
+    # USED these continuous-family columns internally to estimate the joint
+    # Sigma that the binary/ordinal posteriors condition on -- that's
+    # unavoidable and desirable (it's the whole point of the joint model).
+    # But its continuous-column mu/se are always fit at lambda = 1
+    # (Rphylopars / the in-house solver have no lambda argument). When the
+    # caller asked for lambda estimation (`lambda_mode != "fixed_1"`), we
+    # discard that lambda=1 continuous OUTPUT here and leave these columns
+    # OFF `populated_cols`, so they fall through to `bm_cols` and get fit by
+    # the lambda-aware per-column path a few hundred lines down instead
+    # (`bm_impute_col(..., lambda = bm_lambda)`). Binary/ordinal columns are
+    # unaffected -- they are populated from `jt` below regardless of
+    # `lambda_mode`.
     cont_idx <- which(!(jt$liab_types %in% c("binary", "categorical", "ordinal")))
-    for (idx in cont_idx) {
-      col <- jt$liab_cols[idx]
-      if (any(!is.na(jt$mu_liab[, idx]))) {
-        mu[, col] <- jt$mu_liab[, idx]
-        se[, col] <- jt$se_liab[, idx]
-        populated_cols <- c(populated_cols, col)
+    if (identical(lambda_mode, "fixed_1")) {
+      for (idx in cont_idx) {
+        col <- jt$liab_cols[idx]
+        if (any(!is.na(jt$mu_liab[, idx]))) {
+          mu[, col] <- jt$mu_liab[, idx]
+          se[, col] <- jt$se_liab[, idx]
+          populated_cols <- c(populated_cols, col)
+        }
       }
     }
 
@@ -493,7 +554,12 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   # / continuous-joint dispatchers above ran. If phylopars is unavailable
   # OR a fit fails for any reason, the per-trait result falls through to LP
   # below.
-  if (length(cat_cols) > 0L && joint_mvn_available() && !force_per_column) {
+  #
+  # arc/lambda-per-type: NOT gated on `force_per_column` -- categorical
+  # traits have no lambda concept (OVR fits are threshold-joint calls,
+  # always at lambda = 1), so `lambda_mode` never forces them onto label
+  # propagation. See the dispatch comment above `use_threshold_joint`.
+  if (length(cat_cols) > 0L && joint_mvn_available()) {
     for (tm in trait_map) {
       if (tm$type != "categorical") next
       k_cols <- tm$latent_cols
