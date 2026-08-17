@@ -251,6 +251,20 @@
 #'   with automatic fallback to \code{"inhouse"} on failure. Passed to
 #'   \code{\link{fit_baseline}} and stored in the fitted model config.
 #'   See \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}.
+#' @param joint_refine_iter integer, default \code{0L}. Enables
+#'   cross-trait refinement of the joint baseline's cell imputations
+#'   using the estimated Sigma (the in-house solver's \code{max_iter}
+#'   EM cell-refinement; \code{R/joint_mvn_solver.R}). \code{0L} preserves
+#'   current behaviour byte-for-byte. The refinement is guarded: the
+#'   Sigma step must shrink each iteration, or the loop rolls back to the
+#'   last good iterate and sets \code{$diverged}. Measured (see
+#'   \code{docs/dev-log/2026-08-17-sigma-recovery-results.md}):
+#'   \code{joint_refine_iter = 3L} with \code{refine_variance =
+#'   "conservative"} improves RMSE at low phylogenetic signal, while at
+#'   high signal the divergence guard rolls back and results match
+#'   \code{0L}. In short: helps when phylogenetic signal is
+#'   moderate/low, and is a no-op at very high signal. Passed to
+#'   \code{\link{fit_baseline}} and stored in the fitted model config.
 #' @param verbose logical. Print training progress (default \code{TRUE}).
 #' @param seed optional integer. When supplied, makes stochastic training and
 #'   calibration reproducible; the default \code{NULL} uses the current RNG
@@ -356,6 +370,7 @@ fit_pigauto <- function(
     min_val_cells     = 20L,
     lambda_mode       = c("fixed_1", "estimate", "cv", "bayes"),
     joint_solver      = c("inhouse", "rphylopars"),
+    joint_refine_iter = 0L,
     verbose           = TRUE,
     seed = NULL
 ) {
@@ -364,6 +379,14 @@ fit_pigauto <- function(
   joint_solver        <- match.arg(joint_solver)
   gate_method         <- match.arg(gate_method)
   phylo_signal_method <- match.arg(phylo_signal_method)
+  if (!is.numeric(joint_refine_iter) || length(joint_refine_iter) != 1L ||
+      !is.finite(joint_refine_iter) ||
+      joint_refine_iter != as.integer(joint_refine_iter) ||
+      joint_refine_iter < 0L) {
+    stop("'joint_refine_iter' must be a non-negative integer scalar.",
+         call. = FALSE)
+  }
+  joint_refine_iter <- as.integer(joint_refine_iter)
   if (!inherits(data, "pigauto_data")) {
     stop("'data' must be a pigauto_data object.")
   }
@@ -420,7 +443,8 @@ fit_pigauto <- function(
     # calling ape::cophenetic.phylo() a second time on the same tree.
     baseline <- fit_baseline(data, tree, splits = splits, graph = graph,
                               lambda_mode = lambda_mode,
-                              joint_solver = joint_solver)
+                              joint_solver = joint_solver,
+                              joint_refine_iter = joint_refine_iter)
   }
 
   # ---- Trait map ------------------------------------------------------------
@@ -1208,6 +1232,7 @@ fit_pigauto <- function(
     trait_embed_dim        = as.integer(trait_embed_dim),
     lambda_mode            = lambda_mode,
     joint_solver           = joint_solver,
+    joint_refine_iter      = joint_refine_iter,
     dropout                = dropout,
     refine_steps           = refine_steps,
     cal_refine_steps       = as.integer(refine_steps),

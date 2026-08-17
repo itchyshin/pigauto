@@ -15,7 +15,8 @@ fit_baseline(
   em_iterations = 0L,
   em_tol = 0.001,
   em_offdiag = FALSE,
-  joint_solver = c("inhouse", "rphylopars")
+  joint_solver = c("inhouse", "rphylopars"),
+  joint_refine_iter = 0L
 )
 }
 \arguments{
@@ -92,6 +93,20 @@ failure or non-finite output it falls back to \code{"inhouse"} with
 a warning. Only affects the BM-eligible / threshold-joint / OVR
 categorical paths above; ignored when those paths don't fire (e.g.
 \code{lambda_mode != "fixed_1"}, which forces the per-column path).}
+
+\item{joint_refine_iter}{integer, default \code{0L}. Enables
+cross-trait refinement of the joint baseline's cell imputations
+using the estimated Sigma (the in-house solver's \code{max_iter}
+EM cell-refinement; \code{R/joint_mvn_solver.R}). \code{0L} preserves
+current behaviour byte-for-byte. The refinement is guarded: the
+Sigma step must shrink each iteration, or the loop rolls back to the
+last good iterate and sets \code{$diverged}. Measured (see
+\code{docs/dev-log/2026-08-17-sigma-recovery-results.md}):
+\code{joint_refine_iter = 3L} with \code{refine_variance =
+"conservative"} improves RMSE at low phylogenetic signal, while at
+high signal the divergence guard rolls back and results match
+\code{0L}. In short: helps when phylogenetic signal is
+moderate/low, and is a no-op at very high signal.}
 }
 \value{
 A list with:

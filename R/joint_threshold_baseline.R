@@ -279,6 +279,8 @@ build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE,
 #' @inheritParams fit_joint_mvn_baseline
 #' @param joint_solver character, `"inhouse"` (default) or `"rphylopars"`.
 #'   See `fit_joint_solver()` in R/joint_mvn_solver.R.
+#' @param joint_refine_iter integer, default `0L`. See `fit_joint_solver()`
+#'   in R/joint_mvn_solver.R.
 #' @return list(mu_liab, se_liab, liab_cols, liab_types).
 #' @keywords internal
 #' @noRd
@@ -287,7 +289,8 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
                                         sd_prior_vec = NULL,
                                         mu_prior_mat = NULL,
                                         sd_prior_mat = NULL,
-                                        joint_solver = "inhouse") {
+                                        joint_solver = "inhouse",
+                                        joint_refine_iter = 0L) {
   stopifnot(joint_mvn_available())
 
   built <- build_liability_matrix(data, splits = splits,
@@ -323,7 +326,8 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
     # in-house on failure). Output contract matches phylopars'
     # $anc_recon / $anc_var / $pars$phylocov on the fields pigauto
     # consumes -- the in-house solver was built to match it.
-    fit <- fit_joint_solver(L = X_fit, tree = tree, joint_solver = joint_solver)
+    fit <- fit_joint_solver(L = X_fit, tree = tree, joint_solver = joint_solver,
+                            joint_refine_iter = joint_refine_iter)
 
     tip_rows <- match(spp, rownames(fit$anc_recon))
     mu_fit   <- fit$anc_recon[tip_rows, , drop = FALSE]
@@ -524,7 +528,8 @@ fit_joint_threshold_baseline_em <- function(data, tree, splits,
                                              em_iterations = 5L,
                                              em_tol = 1e-3,
                                              em_offdiag = FALSE,
-                                             joint_solver = "inhouse") {
+                                             joint_solver = "inhouse",
+                                             joint_refine_iter = 0L) {
   stopifnot(joint_mvn_available(), em_iterations >= 1L)
 
   # Phase 6 state (diagonal):
@@ -548,7 +553,8 @@ fit_joint_threshold_baseline_em <- function(data, tree, splits,
                                     sd_prior_vec = sd_prior_vec,
                                     mu_prior_mat = mu_prior_mat,
                                     sd_prior_mat = sd_prior_mat,
-                                    joint_solver = joint_solver),
+                                    joint_solver = joint_solver,
+                                    joint_refine_iter = joint_refine_iter),
       error = function(e) NULL
     )
 

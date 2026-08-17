@@ -30,12 +30,15 @@ joint_mvn_available <- function() {
 #'   interface parity with `fit_baseline()`).
 #' @param joint_solver character, `"inhouse"` (default) or `"rphylopars"`.
 #'   See `fit_joint_solver()` in R/joint_mvn_solver.R.
+#' @param joint_refine_iter integer, default `0L`. See `fit_joint_solver()`
+#'   in R/joint_mvn_solver.R.
 #' @return list(mu, se), each `n_species x p_latent`.
 #' @keywords internal
 #' @noRd
 fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL,
                                    soft_aggregate = FALSE,
-                                   joint_solver = "inhouse") {
+                                   joint_solver = "inhouse",
+                                   joint_refine_iter = 0L) {
   stopifnot(joint_mvn_available())
 
   if (isTRUE(data$multi_obs)) {
@@ -98,7 +101,8 @@ fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL,
   L_in <- X_bm
   rownames(L_in) <- spp
 
-  fit <- fit_joint_solver(L = L_in, tree = tree, joint_solver = joint_solver)
+  fit <- fit_joint_solver(L = L_in, tree = tree, joint_solver = joint_solver,
+                          joint_refine_iter = joint_refine_iter)
 
   tip_rows <- match(spp, rownames(fit$anc_recon))
   mu_bm    <- fit$anc_recon[tip_rows, , drop = FALSE]
