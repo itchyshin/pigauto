@@ -34,12 +34,15 @@ fit_arm <- function(arm, L, tree) {
   if (arm == "E0") return(fit_mvn_bm_inhouse(L = L, tree = tree))
   if (arm == "E1") return(fit_mvn_bm_inhouse(L = L, tree = tree,
                                              sigma_method = "fisher_ml"))
-  if (arm == "E1i1") return(fit_mvn_bm_inhouse(L = L, tree = tree,
-                              sigma_method = "fisher_ml", max_iter = 1L))
-  if (arm == "E1i3") return(fit_mvn_bm_inhouse(L = L, tree = tree,
-                              sigma_method = "fisher_ml", max_iter = 3L))
-  if (arm == "E0i1") return(fit_mvn_bm_inhouse(L = L, tree = tree,
-                              max_iter = 1L))
+  # slice 1b arms: conservative variance (mean-only refinement) vs the
+  # historical pooled rule, at 1/3/5 iterations.
+  if (arm == "C1") return(fit_mvn_bm_inhouse(L = L, tree = tree, max_iter = 1L))
+  if (arm == "C3") return(fit_mvn_bm_inhouse(L = L, tree = tree, max_iter = 3L))
+  if (arm == "C5") return(fit_mvn_bm_inhouse(L = L, tree = tree, max_iter = 5L))
+  if (arm == "P1") return(fit_mvn_bm_inhouse(L = L, tree = tree, max_iter = 1L,
+                              refine_variance = "pooled"))
+  if (arm == "P3") return(fit_mvn_bm_inhouse(L = L, tree = tree, max_iter = 3L,
+                              refine_variance = "pooled"))
   Rphylopars::phylopars(data.frame(species = rownames(L), L,
                                    stringsAsFactors = FALSE),
                         tree = tree, model = "BM",
@@ -79,7 +82,7 @@ for (g in seq_len(nrow(GRID))) {
     # (E0/E1 cov2cor internally -- unaffected; fixes the E2 frob artifact)
     tr_fit$edge.length <- tr_fit$edge.length / max(ape::node.depth.edgelength(tr_fit))
 
-    for (arm in c("E0", "E0i1", if (has_fisher) c("E1", "E1i1", "E1i3"), "E2")) {
+    for (arm in c("E0", "C1", "C3", "C5", "P1", "P3", "E2")) {
       t1 <- proc.time()[["elapsed"]]
       fit <- tryCatch(suppressWarnings(fit_arm(arm, L, tr_fit)),
                       error = function(e) e)
@@ -87,7 +90,8 @@ for (g in seq_len(nrow(GRID))) {
       if (inherits(fit, "error")) {
         rows[[length(rows)+1L]] <- data.frame(cell = g, n = n, lambda = lam,
           sigma_design = sd_name, rep = r, arm = arm, failed = TRUE,
-          frob = NA, sign_acc = NA, rmse = NA, cover = NA, wall = wall)
+          frob = NA, sign_acc = NA, rmse = NA, cover = NA, wall = wall,
+        diverged = NA)
         next
       }
       S_hat <- tryCatch(as.matrix(fit$pars$phylocov), error = function(e) NULL)
@@ -106,7 +110,7 @@ for (g in seq_len(nrow(GRID))) {
       rows[[length(rows)+1L]] <- data.frame(cell = g, n = n, lambda = lam,
         sigma_design = sd_name, rep = r, arm = arm, failed = FALSE,
         frob = frob, sign_acc = sign_acc, rmse = rmse, cover = cover,
-        wall = wall)
+        wall = wall, diverged = isTRUE(fit$diverged))
     }
   }
 }
@@ -122,5 +126,5 @@ rownames(agg) <- NULL
 agg <- agg[order(agg$lambda, agg$sigma_design, agg$n, agg$arm), ]
 say("failures: ", sum(d$failed))
 print(agg, digits = 3)
-saveRDS(list(raw = d, agg = agg), "dev/sigma_recovery_sim.rds")
+saveRDS(list(raw = d, agg = agg), "dev/sigma_recovery_sim_1b.rds")
 say("wrote dev/sigma_recovery_sim.rds")
