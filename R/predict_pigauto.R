@@ -44,6 +44,21 @@
 #' predictions in undersampled clades get wider intervals. See
 #' \code{\link{fit_pigauto}}'s \code{conformal_method} argument for details.
 #'
+#' **\code{zi_count} conformal intervals are conditional on non-zero.**
+#' \code{conformal_lower[, nm]} / \code{conformal_upper[, nm]} for a
+#' \code{zi_count} trait back-transform the magnitude latent (log1p-z of the
+#' count \emph{given it is non-zero}) plus/minus the conformal half-width
+#' that was calibrated on that same magnitude column
+#' (\code{\link{fit_pigauto}}'s \code{compute_conformal_scores()} scores
+#' zi_count on \code{latent_cols[2]}, never on the decoded \code{E[X]}).
+#' They are \strong{not} an interval for the expected value
+#' \code{E[X] = P(nonzero) * E[count | nonzero]} -- constructing a naive
+#' \eqn{\pm}quantile interval directly on \code{E[X]} would conflate gate
+#' and magnitude uncertainty into one number with no valid coverage
+#' interpretation. The gate probability \code{P(nonzero)} is available
+#' separately in \code{pred$probabilities[[nm]]}; combine it with the
+#' conditional interval yourself if you need an \code{E[X]}-scale bound.
+#'
 #' @param object object of class \code{"pigauto_fit"}.
 #' @param newdata \code{NULL} (use the training data) or a
 #'   \code{"pigauto_data"} object for new species.
@@ -706,8 +721,15 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
       nm <- tm$name
       lc <- tm$latent_cols
 
-      if (!(tm$type %in% c("continuous", "count", "ordinal", "proportion"))) next
+      if (!(tm$type %in%
+            c("continuous", "count", "ordinal", "proportion", "zi_count"))) next
       if (is.na(conformal_scores_out[nm])) next
+
+      # zi_count is scored on the magnitude (log1p-z) column, not the
+      # Bernoulli gate -- must match fit_helpers.R's compute_conformal_scores()
+      # `score_col`, both for reading conformal_scores_out[nm] above and for
+      # the Mondrian locality lookup below.
+      score_col <- if (identical(tm$type, "zi_count")) lc[2L] else lc[1L]
 
       # q_vec: per-row conformal half-width. Constant (global score) for
       # "split" / "bootstrap"; per-row near/far stratum score for
@@ -717,7 +739,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
       if (use_mondrian) {
         mo <- object$conformal_mondrian[[nm]]
         if (!is.null(mo) && !isTRUE(mo$fallback)) {
-          obs_idx <- which(obs_mask_train[, lc[1]])
+          obs_idx <- which(obs_mask_train[, score_col])
           if (length(obs_idx) > 0L) {
             locality <- mondrian_locality(D_sq, obs_idx, seq_len(n), k = 5L)
             loc_ok <- is.finite(locality)
@@ -763,6 +785,20 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
         pred_high <- (pred_latent + q_vec) * tm$sd + tm$mean
         conformal_lower[, nm] <- stats::plogis(pred_low)
         conformal_upper[, nm] <- stats::plogis(pred_high)
+
+      } else if (tm$type == "zi_count") {
+        # Conditional-on-nonzero interval: back-transform the magnitude
+        # latent (log1p-z of counts | nonzero) +/- the conformal half-width,
+        # which was calibrated on this same magnitude column
+        # (fit_helpers.R's compute_conformal_scores(), score_col = lc[2]).
+        # This is NOT an interval for E[X] = P(nonzero) * E[count|nonzero] --
+        # see the "Conformal intervals" details above and pred$probabilities
+        # for the gate probability P(nonzero).
+        pred_latent <- latent_pred[, score_col]
+        pred_low  <- (pred_latent - q_vec) * tm$sd + tm$mean
+        pred_high <- (pred_latent + q_vec) * tm$sd + tm$mean
+        conformal_lower[, nm] <- pmax(expm1(pred_low), 0)
+        conformal_upper[, nm] <- expm1(pred_high)
       }
     }
   }

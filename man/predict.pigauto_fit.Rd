@@ -178,6 +178,21 @@ cophenetic distance to its 5 nearest training-observed species for that
 trait) picks the near- or far-stratum score stored on the fit, so
 predictions in undersampled clades get wider intervals. See
 \code{\link{fit_pigauto}}'s \code{conformal_method} argument for details.
+
+\strong{\code{zi_count} conformal intervals are conditional on non-zero.}
+\code{conformal_lower[, nm]} / \code{conformal_upper[, nm]} for a
+\code{zi_count} trait back-transform the magnitude latent (log1p-z of the
+count \emph{given it is non-zero}) plus/minus the conformal half-width
+that was calibrated on that same magnitude column
+(\code{\link{fit_pigauto}}'s \code{compute_conformal_scores()} scores
+zi_count on \code{latent_cols[2]}, never on the decoded \code{E[X]}).
+They are \strong{not} an interval for the expected value
+\code{E[X] = P(nonzero) * E[count | nonzero]} -- constructing a naive
+\eqn{\pm}quantile interval directly on \code{E[X]} would conflate gate
+and magnitude uncertainty into one number with no valid coverage
+interpretation. The gate probability \code{P(nonzero)} is available
+separately in \code{pred$probabilities[[nm]]}; combine it with the
+conditional interval yourself if you need an \code{E[X]}-scale bound.
 }
 \examples{
 \donttest{
