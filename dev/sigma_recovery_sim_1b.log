@@ -1,0 +1,433 @@
+[   0.0s] fisher_ml available: TRUE
+[   0.0s] cell 1/12: n=100 lambda=1.0 exch07
+[  15.3s] cell 2/12: n=300 lambda=1.0 exch07
+
+warning: solve(): system is singular; rcond: 6.81395e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.20286e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.27584e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.20446e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.39204e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.89355e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.24574e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.33173e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.18375e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.44214e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.05786e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.97172e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.39983e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.72187e-23; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.17059e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.44335e-26; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.27154e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.10037e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.719e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.01699e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.53443e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.55159e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.00279e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.42398e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.28668e-24; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.74963e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.43397e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.03738e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.02664e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.42107e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.8171e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.23489e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.08499e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.29686e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.21125e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.90875e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.88939e-30; attempting approx solution
+[  49.3s] cell 3/12: n=100 lambda=0.2 exch07
+
+warning: solve(): system is singular; rcond: 2.0881e-20; attempting approx solution
+[  63.4s] cell 4/12: n=300 lambda=0.2 exch07
+
+warning: solve(): system is singular; rcond: 8.46122e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.02975e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.58255e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.27718e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.56901e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.02169e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.44421e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.47616e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.17291e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.09861e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.6841e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.51306e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.66346e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.78252e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.32777e-27; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.52231e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.5905e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.28822e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.86693e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.58072e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.60977e-18; attempting approx solution
+[  97.9s] cell 5/12: n=100 lambda=1.0 exch03
+[ 111.3s] cell 6/12: n=300 lambda=1.0 exch03
+[ 144.0s] cell 7/12: n=100 lambda=0.2 exch03
+[ 157.9s] cell 8/12: n=300 lambda=0.2 exch03
+[ 192.2s] cell 9/12: n=100 lambda=1.0 hetero
+
+warning: solve(): system is singular; rcond: 6.30998e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.69428e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.69449e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.42083e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.23875e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.23875e-16; attempting approx solution
+[ 205.9s] cell 10/12: n=300 lambda=1.0 hetero
+
+warning: solve(): system is singular; rcond: 2.30178e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.53668e-24; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.01637e-23; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.84304e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.30869e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.44201e-25; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.1478e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.41865e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.53143e-23; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.53651e-23; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.12133e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.58818e-27; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.7009e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.97835e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.97838e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.38036e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.93784e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.29539e-23; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.55499e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.84705e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.7729e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.16921e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.67299e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.35661e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 6.567e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.9283e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.91068e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.44742e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.99094e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.1868e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 9.13617e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.50785e-23; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.24806e-17; attempting approx solution
+[ 238.5s] cell 11/12: n=100 lambda=0.2 hetero
+
+warning: solve(): system is singular; rcond: 3.80755e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.84633e-18; attempting approx solution
+[ 252.4s] cell 12/12: n=300 lambda=0.2 hetero
+
+warning: solve(): system is singular; rcond: 1.0427e-23; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.79051e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.26768e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.85421e-30; attempting approx solution
+
+warning: solve(): system is singular; rcond: 5.21522e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.55565e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.93524e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.00832e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.18974e-16; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.99213e-26; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.91664e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.82769e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 7.54534e-24; attempting approx solution
+
+warning: solve(): system is singular; rcond: 8.63973e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.10052e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.42331e-20; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.16505e-22; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.98992e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.20037e-24; attempting approx solution
+
+warning: solve(): system is singular; rcond: 4.34612e-17; attempting approx solution
+
+warning: solve(): system is singular; rcond: 3.89351e-21; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.0028e-19; attempting approx solution
+
+warning: solve(): system is singular; rcond: 2.74517e-18; attempting approx solution
+
+warning: solve(): system is singular; rcond: 1.07103e-16; attempting approx solution
+[ 286.8s] failures: 0
+     n lambda sigma_design arm n_rep  frob frob_mcse sign_acc  rmse rmse_mcse
+1  100    0.2       exch03  C1    50 0.258   0.00837    0.987 0.934   0.00901
+13 100    0.2       exch03  C3    50 0.238   0.00819    0.993 0.933   0.00918
+25 100    0.2       exch03  C5    50 0.238   0.00824    0.990 0.937   0.00921
+37 100    0.2       exch03  E0    50 0.290   0.00764    0.987 0.955   0.00900
+49 100    0.2       exch03  E2    50 1.139   0.04472    0.980 0.922   0.00864
+61 100    0.2       exch03  P1    50 0.280   0.00912    0.987 0.934   0.00901
+73 100    0.2       exch03  P3    50 0.290   0.00853    0.990 0.930   0.00909
+2  300    0.2       exch03  C1    50 0.215   0.00544    1.000 0.933   0.00386
+14 300    0.2       exch03  C3    50 0.167   0.00561    1.000 0.931   0.00425
+26 300    0.2       exch03  C5    50 0.151   0.00524    1.000 0.932   0.00444
+38 300    0.2       exch03  E0    50 0.258   0.00478    1.000 0.952   0.00401
+50 300    0.2       exch03  E2    50 1.071   0.03340    1.000 0.890   0.00415
+62 300    0.2       exch03  P1    50 0.251   0.00632    1.000 0.933   0.00386
+74 300    0.2       exch03  P3    50 0.251   0.00653    1.000 0.926   0.00411
+5  100    0.2       exch07  C1    50 0.331   0.01264    1.000 0.825   0.00949
+17 100    0.2       exch07  C3    50 0.236   0.01178    1.000 0.726   0.00873
+29 100    0.2       exch07  C5    50 0.206   0.01036    1.000 0.698   0.00852
+41 100    0.2       exch07  E0    50 0.421   0.01127    1.000 0.949   0.01042
+53 100    0.2       exch07  E2    50 1.058   0.06836    1.000 0.660   0.00623
+65 100    0.2       exch07  P1    50 0.342   0.01431    1.000 0.825   0.00949
+77 100    0.2       exch07  P3    50 0.264   0.01527    1.000 0.734   0.00857
+6  300    0.2       exch07  C1    50 0.301   0.00740    1.000 0.811   0.00554
+18 300    0.2       exch07  C3    50 0.188   0.00665    1.000 0.709   0.00481
+30 300    0.2       exch07  C5    50 0.151   0.00526    1.000 0.682   0.00448
+42 300    0.2       exch07  E0    50 0.402   0.00648    1.000 0.945   0.00606
+54 300    0.2       exch07  E2    50 1.022   0.03585    1.000 0.638   0.00384
+66 300    0.2       exch07  P1    50 0.315   0.00855    1.000 0.811   0.00554
+78 300    0.2       exch07  P3    50 0.225   0.00948    1.000 0.716   0.00478
+9  100    0.2       hetero  C1    50 0.263   0.00742    0.947 1.006   0.01119
+21 100    0.2       hetero  C3    50 0.249   0.00808    0.937 0.970   0.01072
+33 100    0.2       hetero  C5    50 0.248   0.00849    0.937 0.961   0.01058
+45 100    0.2       hetero  E0    50 0.283   0.00696    0.950 1.063   0.01129
+57 100    0.2       hetero  E2    50 1.075   0.04936    0.947 0.888   0.01010
+69 100    0.2       hetero  P1    50 0.291   0.00897    0.947 1.006   0.01119
+81 100    0.2       hetero  P3    50 0.302   0.00960    0.950 0.952   0.01070
+10 300    0.2       hetero  C1    50 0.206   0.00531    0.993 1.011   0.00596
+22 300    0.2       hetero  C3    50 0.180   0.00507    0.990 0.977   0.00611
+34 300    0.2       hetero  C5    50 0.172   0.00485    0.987 0.968   0.00623
+46 300    0.2       hetero  E0    50 0.236   0.00504    0.993 1.064   0.00593
+58 300    0.2       hetero  E2    50 1.103   0.02978    0.997 0.871   0.00608
+70 300    0.2       hetero  P1    50 0.243   0.00731    0.993 1.011   0.00596
+82 300    0.2       hetero  P3    50 0.250   0.00791    0.997 0.957   0.00625
+3  100    1.0       exch03  C1    50 0.312   0.01103    0.990 0.527   0.00814
+15 100    1.0       exch03  C3    50 0.338   0.01073    0.990 0.504   0.00735
+27 100    1.0       exch03  C5    50 0.337   0.01092    0.990 0.505   0.00763
+39 100    1.0       exch03  E0    50 0.339   0.01048    0.990 0.503   0.00711
+51 100    1.0       exch03  E2    50 1.256   0.06494    0.983 0.483   0.00668
+63 100    1.0       exch03  P1    50 0.320   0.01099    0.990 0.527   0.00814
+75 100    1.0       exch03  P3    50 0.323   0.01156    0.990 0.523   0.00780
+4  300    1.0       exch03  C1    50 0.288   0.00817    1.000 0.477   0.00429
+16 300    1.0       exch03  C3    50 0.318   0.00758    1.000 0.457   0.00330
+28 300    1.0       exch03  C5    50 0.318   0.00758    1.000 0.457   0.00330
+40 300    1.0       exch03  E0    50 0.318   0.00758    1.000 0.457   0.00330
+52 300    1.0       exch03  E2    50 1.158   0.03845    1.000 0.430   0.00333
+64 300    1.0       exch03  P1    50 0.294   0.00804    1.000 0.477   0.00429
+76 300    1.0       exch03  P3    50 0.314   0.00781    1.000 0.459   0.00338
+7  100    1.0       exch07  C1    50 0.347   0.01254    1.000 0.480   0.00855
+19 100    1.0       exch07  C3    50 0.300   0.01671    1.000 0.498   0.00997
+31 100    1.0       exch07  C5    50 0.280   0.01745    1.000 0.524   0.01112
+43 100    1.0       exch07  E0    50 0.405   0.01198    1.000 0.510   0.00824
+55 100    1.0       exch07  E2    50 1.109   0.05729    1.000 0.356   0.00543
+67 100    1.0       exch07  P1    50 0.352   0.01259    1.000 0.480   0.00855
+79 100    1.0       exch07  P3    50 0.284   0.01294    1.000 0.495   0.00992
+8  300    1.0       exch07  C1    50 0.371   0.00917    1.000 0.423   0.00334
+20 300    1.0       exch07  C3    50 0.369   0.01332    1.000 0.442   0.00381
+32 300    1.0       exch07  C5    50 0.351   0.01534    1.000 0.454   0.00480
+44 300    1.0       exch07  E0    50 0.421   0.00828    1.000 0.444   0.00360
+56 300    1.0       exch07  E2    50 1.066   0.03761    1.000 0.306   0.00272
+68 300    1.0       exch07  P1    50 0.375   0.00917    1.000 0.423   0.00334
+80 300    1.0       exch07  P3    50 0.305   0.01021    1.000 0.444   0.00455
+11 100    1.0       hetero  C1    50 0.305   0.01163    0.960 0.571   0.01021
+23 100    1.0       hetero  C3    50 0.327   0.01176    0.967 0.567   0.00992
+35 100    1.0       hetero  C5    50 0.327   0.01175    0.967 0.568   0.00999
+47 100    1.0       hetero  E0    50 0.327   0.01170    0.970 0.568   0.00997
+59 100    1.0       hetero  E2    50 1.128   0.05286    0.947 0.484   0.00883
+71 100    1.0       hetero  P1    50 0.314   0.01197    0.960 0.571   0.01021
+83 100    1.0       hetero  P3    50 0.313   0.01253    0.957 0.573   0.01068
+12 300    1.0       hetero  C1    50 0.281   0.00619    0.997 0.506   0.00618
+24 300    1.0       hetero  C3    50 0.308   0.00570    0.997 0.504   0.00554
+36 300    1.0       hetero  C5    50 0.308   0.00570    0.997 0.504   0.00554
+48 300    1.0       hetero  E0    50 0.308   0.00570    0.997 0.504   0.00554
+60 300    1.0       hetero  E2    50 1.197   0.03823    0.983 0.417   0.00514
+72 300    1.0       hetero  P1    50 0.289   0.00605    0.997 0.506   0.00618
+84 300    1.0       hetero  P3    50 0.305   0.00574    0.997 0.504   0.00556
+   cover cover_mcse    wall
+1  0.943   0.003433 0.00604
+13 0.943   0.003545 0.01034
+25 0.942   0.003297 0.01526
+37 0.941   0.003235 0.00350
+49 0.931   0.003897 0.22224
+61 0.835   0.005790 0.00590
+73 0.646   0.007249 0.01034
+2  0.949   0.001643 0.01170
+14 0.948   0.001604 0.02456
+26 0.948   0.001631 0.04036
+38 0.945   0.001667 0.00688
+50 0.942   0.001908 0.55490
+62 0.839   0.002670 0.01440
+74 0.653   0.003654 0.02342
+5  0.968   0.002290 0.00570
+17 0.984   0.001517 0.01376
+29 0.989   0.001386 0.01550
+41 0.941   0.002801 0.00384
+53 0.929   0.004265 0.22272
+65 0.859   0.005212 0.00590
+77 0.680   0.006062 0.01074
+6  0.972   0.001511 0.01216
+18 0.987   0.000977 0.02442
+30 0.991   0.000869 0.03746
+42 0.944   0.001955 0.00692
+54 0.944   0.001945 0.56120
+66 0.874   0.003107 0.01226
+78 0.705   0.003244 0.02284
+9  0.957   0.002739 0.00574
+21 0.961   0.002430 0.01004
+33 0.964   0.002315 0.01522
+45 0.946   0.003478 0.00660
+57 0.925   0.004184 0.21864
+69 0.847   0.005690 0.00534
+81 0.668   0.007376 0.01034
+10 0.956   0.001487 0.01530
+22 0.963   0.001332 0.02586
+34 0.964   0.001392 0.03556
+46 0.942   0.001541 0.00610
+58 0.943   0.002523 0.55412
+70 0.847   0.002947 0.01208
+82 0.668   0.003590 0.02298
+3  0.888   0.005709 0.00516
+15 0.899   0.006288 0.00748
+27 0.899   0.006359 0.01088
+39 0.901   0.005862 0.00330
+51 0.930   0.003534 0.22082
+63 0.843   0.006266 0.00592
+75 0.850   0.011765 0.00944
+4  0.899   0.004359 0.01246
+16 0.910   0.004979 0.01772
+28 0.910   0.004979 0.01874
+40 0.910   0.004979 0.00708
+52 0.942   0.001846 0.55596
+64 0.861   0.004250 0.01442
+76 0.905   0.006819 0.01730
+7  0.922   0.005838 0.00738
+19 0.912   0.005267 0.01024
+31 0.891   0.005385 0.01302
+43 0.906   0.006064 0.00446
+55 0.928   0.003862 0.24834
+67 0.868   0.006149 0.00586
+79 0.753   0.009534 0.01108
+8  0.915   0.004634 0.01648
+20 0.905   0.004878 0.02560
+32 0.895   0.005362 0.02526
+44 0.904   0.005306 0.00796
+56 0.942   0.002226 0.55480
+68 0.873   0.005097 0.01516
+80 0.768   0.004793 0.02384
+11 0.904   0.005559 0.00550
+23 0.904   0.005892 0.00768
+35 0.904   0.006004 0.00794
+47 0.905   0.005864 0.00334
+59 0.927   0.004868 0.23030
+71 0.858   0.006632 0.00556
+83 0.846   0.014085 0.00862
+12 0.913   0.003708 0.01166
+24 0.913   0.004277 0.02084
+36 0.913   0.004277 0.01842
+48 0.913   0.004277 0.00686
+60 0.941   0.002482 0.55240
+72 0.872   0.003663 0.01436
+84 0.907   0.006862 0.01772
+[ 286.8s] wrote dev/sigma_recovery_sim.rds

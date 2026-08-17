@@ -74,6 +74,20 @@
 #'   with automatic fallback to \code{"inhouse"} on failure. Passed to
 #'   \code{\link{fit_baseline}} and stored in the fitted model config.
 #'   See \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}.
+#' @param joint_refine_iter integer, default \code{0L}. Enables
+#'   cross-trait refinement of the joint baseline's cell imputations
+#'   using the estimated Sigma (the in-house solver's \code{max_iter}
+#'   EM cell-refinement; \code{R/joint_mvn_solver.R}). \code{0L} preserves
+#'   current behaviour byte-for-byte. The refinement is guarded: the
+#'   Sigma step must shrink each iteration, or the loop rolls back to the
+#'   last good iterate and sets \code{$diverged}. Measured (see
+#'   \code{docs/dev-log/2026-08-17-sigma-recovery-results.md}):
+#'   \code{joint_refine_iter = 3L} with \code{refine_variance =
+#'   "conservative"} improves RMSE at low phylogenetic signal, while at
+#'   high signal the divergence guard rolls back and results match
+#'   \code{0L}. In short: helps when phylogenetic signal is
+#'   moderate/low, and is a no-op at very high signal. Passed to
+#'   \code{\link{fit_baseline}} and stored in the fitted model config.
 #' @param em_iterations integer. Phase 6 EM iterations for the
 #'   threshold-joint baseline (binary + ordinal + OVR categorical).
 #'   Default \code{0L} preserves v0.9.1 behaviour byte-for-byte. When
@@ -306,6 +320,7 @@ impute <- function(traits, tree, species_col = NULL,
                    multi_obs_aggregation = c("hard", "soft"),
                    lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
                    joint_solver = c("inhouse", "rphylopars"),
+                   joint_refine_iter = 0L,
                    em_iterations = 0L,
                    em_tol = 1e-3,
                    em_offdiag = FALSE,
@@ -324,6 +339,14 @@ impute <- function(traits, tree, species_col = NULL,
   pool_method <- match.arg(pool_method)
   lambda_mode <- match.arg(lambda_mode)
   joint_solver <- match.arg(joint_solver)
+  if (!is.numeric(joint_refine_iter) || length(joint_refine_iter) != 1L ||
+      !is.finite(joint_refine_iter) ||
+      joint_refine_iter != as.integer(joint_refine_iter) ||
+      joint_refine_iter < 0L) {
+    stop("'joint_refine_iter' must be a non-negative integer scalar.",
+         call. = FALSE)
+  }
+  joint_refine_iter <- as.integer(joint_refine_iter)
 
   # Phase B3 Safety Check
   if (n_imputations == 1L && pool_method == "median") {
@@ -405,7 +428,8 @@ impute <- function(traits, tree, species_col = NULL,
                            em_tol = em_tol,
                            em_offdiag = em_offdiag,
                            lambda_mode = lambda_mode,
-                           joint_solver = joint_solver)
+                           joint_solver = joint_solver,
+                           joint_refine_iter = joint_refine_iter)
 
   # Free the cached cophenetic distance matrix: fit_pigauto() only
   # needs graph$adj and graph$coords, and at n = 10,000 the ~800 MB
@@ -432,6 +456,7 @@ impute <- function(traits, tree, species_col = NULL,
     phylo_signal_method    = phylo_signal_method,
     lambda_mode            = lambda_mode,
     joint_solver           = joint_solver,
+    joint_refine_iter      = joint_refine_iter,
     conformal_split_val    = conformal_split_val,
     ...
   )

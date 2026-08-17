@@ -15,7 +15,8 @@ fit_baseline(
   em_iterations = 0L,
   em_tol = 0.001,
   em_offdiag = FALSE,
-  joint_solver = c("inhouse", "rphylopars")
+  joint_solver = c("inhouse", "rphylopars"),
+  joint_refine_iter = 0L
 )
 }
 \arguments{
@@ -99,6 +100,26 @@ that \code{lambda_mode != "fixed_1"} disables the continuous-only
 joint MVN path (it has no lambda argument) but no longer disables
 the threshold-joint / OVR-categorical paths -- see
 \dQuote{Per-type lambda dispatch} in Details.}
+
+\item{joint_refine_iter}{integer, default \code{0L}. Enables
+cross-trait refinement of the joint baseline's cell imputations
+using the estimated Sigma (the in-house solver's \code{max_iter}
+EM cell-refinement; \code{R/joint_mvn_solver.R}). \code{0L} preserves
+current behaviour byte-for-byte. The refinement is guarded: the
+Sigma step must shrink each iteration, or the loop rolls back to the
+last good iterate and sets \code{$diverged}.
+
+\strong{Where it helps, measured}
+(\code{docs/dev-log/2026-08-17-refinement-results.md}): at Pagel's
+lambda around 0.2, \code{joint_refine_iter = 3L} lowered simulated
+RMSE by ~13\\% and moved SE coverage from 0.943 to 0.964. At lambda
+near 1 it changes essentially nothing: on AVONET300, whose four
+continuous traits sit at lambda 0.993-0.998, every effect was within
+one Monte Carlo standard error. Note the reason is that refinement
+has nothing to add at high signal -- \emph{not} that the guard
+intervenes; on that data the guard does not fire. Use it when
+phylogenetic signal is moderate or low; expect no benefit on
+strongly conserved traits.}
 }
 \value{
 A list with:

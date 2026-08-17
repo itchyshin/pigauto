@@ -52,6 +52,31 @@
   ev$vectors %*% diag(evals, nrow = K) %*% t(ev$vectors)
 }
 
+# ---- Fisher-ML Sigma (opt-in `sigma_method = "fisher_ml"`) ---------------
+#
+# Ported (adapted, not cherry-picked) from commit e7ca41c (2026-05-16,
+# "autoresearch exp-4 (B-1): Fisher-ML Sigma via Cholesky-optim
+# observed-data NLL"), never merged -- see docs/dev-log/
+# 2026-08-16-continuous-gap-diagnosis.md for why it was revived: the
+# default single-pass solver loses 0.14-1.27 z-RMSE to converged
+# Rphylopars REML on AVONET300. `sigma_method = "single_pass"` (default)
+# is byte-identical to pre-existing behaviour; the machinery below only
+# executes under `sigma_method = "fisher_ml"`.
+#
+# The prototype's own Sigma-init strategy (species-iid pairwise-complete
+# sample covariance) is exactly what the v0.9.2 "Bug fixes: in-house
+# Sigma solver" NEWS entry later replaced with the R-credited Kronecker
+# M-step (`.mvn_sigma_kron_M()` below), because species-iid double-counts
+# correlated tips and produced near-singular Sigma on strongly
+# phylo-conserved data. That fix owns the single_pass default; fisher_ml
+# is a separate, self-contained alternative a caller opts into, not a
+# resurrection of the pre-fix default. It leaves the *other* two v0.9.2
+# fixes untouched: the per-column BM init (`.mvn_init_per_column()`)
+# still goes through Henderson `cor_scale = TRUE` when available, and
+# `max_iter` still defaults to 0L (EM cell-refinement stays opt-in for
+# both sigma_method values, for the same near-sister-tip divergence
+# reason documented in NEWS.md).
+
 # Pack/unpack the K(K+1)/2 free parameters of a K x K SPD Sigma via its
 # lower-triangular Cholesky factor LC, with LC[j, j] = exp(par[diag_idx])
 # so diagonals stay positive without constrained optimisation.
@@ -82,13 +107,12 @@
 
 # Observed-data negative log-likelihood for L | Sigma assuming each
 # species is iid MVN(0, Sigma) (phylogenetic R coupling is dropped from
-# this term; it returns in the cell-imputation step). Drops constant
-# terms. Lower is better.
+# this term; it re-enters at the per-column-BM init and EM cell-
+# refinement steps). Drops constant terms. Lower is better.
 .mvn_obs_nll <- function(par, L, K, eps = 1e-8) {
   LC <- .mvn_par_to_chol(par, K)
   Sigma <- LC %*% t(LC)
   total <- 0
-  n_used <- 0L
   for (i in seq_len(nrow(L))) {
     obs <- !is.na(L[i, ])
     n_obs <- sum(obs)
@@ -101,27 +125,34 @@
     inv_li <- chol2inv(chol_S) %*% li
     quad <- sum(li * inv_li)
     total <- total + 0.5 * (log_det + quad)
-    n_used <- n_used + n_obs
   }
   total
 }
 
-# Fisher-ML refinement of Sigma starting from Sigma_init. Uses optim()
-# over the Cholesky-parameterised free parameters. K is typically 2-8
-# in pigauto's joint paths so the K(K+1)/2 free parameters keep optim
-# cheap (sub-second on 2000-species data).
-.mvn_sigma_fisher_ml <- function(L, Sigma_init, eps = 1e-8, optim_maxit = 50L) {
+# Fisher-ML refinement of Sigma starting from Sigma_start. Uses optim()
+# over the Cholesky-parameterised free parameters (K is typically 2-8 in
+# pigauto's joint paths, so the K(K+1)/2 free parameters keep optim
+# cheap). `fallback_fn()` is the zero-argument "single_pass" Sigma this
+# call site would otherwise have produced; it is invoked -- with a
+# warning -- when optim() errors or fails to converge, so fisher_ml can
+# never leave the caller with a worse Sigma than the default.
+.mvn_sigma_fisher_ml <- function(L, Sigma_start, fallback_fn, eps = 1e-8,
+                                  optim_maxit = 50L) {
   K <- ncol(L)
-  Sigma_init_pd <- .mvn_ensure_pd(Sigma_init, eps = eps)
-  LC_init <- t(chol(Sigma_init_pd))
+  Sigma_start_pd <- .mvn_ensure_pd(Sigma_start, eps = eps)
+  LC_init <- t(chol(Sigma_start_pd))
   par_init <- .mvn_chol_to_par(LC_init)
   fit <- tryCatch(
     stats::optim(par_init, .mvn_obs_nll, L = L, K = K, eps = eps,
-                  method = "BFGS",
-                  control = list(maxit = optim_maxit)),
+                 method = "BFGS", control = list(maxit = optim_maxit)),
     error = function(e) NULL
   )
-  if (is.null(fit)) return(Sigma_init_pd)
+  if (is.null(fit) || fit$convergence != 0L) {
+    warning("fit_mvn_bm_inhouse: sigma_method = \"fisher_ml\" optim() did ",
+            "not converge; falling back to the single_pass Sigma estimate.",
+            call. = FALSE)
+    return(fallback_fn())
+  }
   LC <- .mvn_par_to_chol(fit$par, K)
   LC %*% t(LC)
 }
@@ -184,7 +215,35 @@
 # pooling between the per-column BM posterior and the cross-trait
 # conditional MVN posterior (uses Sigma off-diagonals via
 # build_conditional_prior).
-.mvn_estep_refine <- function(L_obs_mask, L_hat, L_var, Sigma, eps = 1e-8) {
+#
+# `refine_variance` controls what happens to L_var when the mean moves:
+#
+#   "conservative" (default): update the MEAN only; leave L_var at the
+#     per-column BM posterior variance. Rationale: `prec_bm + prec_cross`
+#     is the precision of two INDEPENDENT estimates, but the BM posterior
+#     and the cross-trait conditional posterior are both functions of the
+#     same observed cells -- they are strongly dependent, so adding their
+#     precisions double-counts the information and understates the
+#     variance. Measured (2026-08-17 recovery sim,
+#     docs/dev-log/2026-08-17-sigma-recovery-results.md): the pooled rule
+#     drives 95% SE coverage from 0.925 down to 0.856 at one iteration and
+#     0.618 at three, while the refined MEAN genuinely improves RMSE. So
+#     the mean update is kept and the variance is held at a value we can
+#     defend. Because the refined mean is more accurate at the same
+#     variance, this is conservative (coverage moves UP, not down).
+#
+#   "pooled": the historical `1 / (prec_bm + prec_cross)` rule. Retained
+#     only for reproducing pre-2026-08-17 behaviour and for the recovery
+#     sim's comparison arm. Not recommended: its intervals are
+#     overconfident by construction.
+#
+# The exact conditional variance under vec(L) ~ MVN(0, Sigma %x% R) is what
+# a full joint solve returns; neither rule here computes it. "conservative"
+# errs toward over-coverage, which is the safe direction for a package
+# whose headline UQ claim is interval validity.
+.mvn_estep_refine <- function(L_obs_mask, L_hat, L_var, Sigma, eps = 1e-8,
+                               refine_variance = c("conservative", "pooled")) {
+  refine_variance <- match.arg(refine_variance)
   cross <- build_conditional_prior(Sigma, L_hat, eps = eps)
   L_hat_new <- L_hat
   L_var_new <- L_var
@@ -200,7 +259,10 @@
     prec_cross <- 1 / v_cross
     prec_tot   <- prec_bm + prec_cross
     L_hat_new[idx, j] <- (m_bm * prec_bm + m_cross * prec_cross) / prec_tot
-    L_var_new[idx, j] <- 1 / prec_tot
+    if (identical(refine_variance, "pooled")) {
+      L_var_new[idx, j] <- 1 / prec_tot
+    }
+    # "conservative": L_var_new[idx, j] stays at the BM value.
   }
   list(L_hat = L_hat_new, L_var = L_var_new)
 }
@@ -215,12 +277,22 @@
 #              (default 5).
 #   tol   : relative-Frobenius stopping criterion on Sigma.
 #   eps   : ridge added to covariance solves.
+#   sigma_method : "single_pass" (default, byte-identical to
+#              pre-existing behaviour) or "fisher_ml" (opt-in; see the
+#              "Fisher-ML Sigma" comment block above `.mvn_par_to_chol`
+#              for provenance and the fallback-on-non-convergence
+#              contract).
 #
 # Returns a list with the phylopars-compatible fields described above,
 # plus diagnostics ($n_iter, $converged).
 fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
                                 max_iter = 0L, tol = 1e-4, eps = 1e-8,
-                                use_henderson = TRUE) {
+                                use_henderson = TRUE,
+                                sigma_method = c("single_pass", "fisher_ml"),
+                                refine_variance = c("conservative",
+                                                    "pooled")) {
+  sigma_method <- match.arg(sigma_method)
+  refine_variance <- match.arg(refine_variance)
   if (is.null(R)) {
     if (is.null(tree)) stop("fit_mvn_bm_inhouse: either tree or R must be supplied.")
     R <- phylo_cor_matrix(tree)
@@ -272,10 +344,33 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
   # right order of magnitude. Cross-trait off-diagonals are biased toward
   # zero in this init (per-column BM doesn't see cross-trait correlation),
   # but EM iterations below recover them via the cross-prior E-step.
+  # `single_pass_fallback()` is exactly the Sigma this init block would
+  # produce for K >= 2 without fisher_ml -- reused both as fisher_ml's
+  # own optim() starting value and as its non-convergence fallback.
+  single_pass_fallback <- function() {
+    if (!is.null(henderson)) {
+      .mvn_sigma_kron_M(L_hat, L_var, henderson)
+    } else {
+      S0 <- stats::cov(L, use = "pairwise.complete.obs")
+      S0[!is.finite(S0)] <- 0
+      diag(S0) <- pmax(diag(S0), eps)
+      .mvn_ensure_pd(S0, eps = eps)
+    }
+  }
+
   Sigma <- if (K == 1L) {
     Sig <- stats::var(L[, 1L], na.rm = TRUE)
     if (!is.finite(Sig) || Sig <= 0) Sig <- 1
     matrix(Sig, 1L, 1L)
+  } else if (identical(sigma_method, "fisher_ml")) {
+    # Prototype step 1: pairwise-complete sample covariance seeds the
+    # Cholesky optim (captures cross-trait sign/structure from observed
+    # data before any per-column-BM imputation pollution). Step 2: the
+    # optim() itself, in .mvn_sigma_fisher_ml() above.
+    Sigma0 <- stats::cov(L, use = "pairwise.complete.obs")
+    Sigma0[!is.finite(Sigma0)] <- 0
+    diag(Sigma0) <- pmax(diag(Sigma0), eps)
+    .mvn_sigma_fisher_ml(L, Sigma0, single_pass_fallback, eps = eps)
   } else if (!is.null(henderson)) {
     .mvn_sigma_kron_M(L_hat, L_var, henderson)
   } else {
@@ -312,21 +407,57 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
   }
 
   converged <- FALSE
+  diverged <- FALSE
   iter <- 0L
+  # Divergence guard (2026-08-17). The EM was disabled outright on
+  # 2026-05-17 because Sigma could blow up multiplicatively on
+  # strong-signal data with near-sister tips. Rather than forbid the loop,
+  # track the Sigma step size: it must SHRINK. If an iteration's relative
+  # change exceeds the previous one, the loop is running away -- stop and
+  # return the last good iterate rather than the diverged one. `prev_delta`
+  # starts at Inf so the first iteration can never trip the guard.
+  prev_delta <- Inf
+  L_hat_prev <- L_hat; L_var_prev <- L_var; Sigma_prev <- Sigma
   for (k in seq_len(max(max_iter, 1L))) {
     iter <- k
-    refined <- .mvn_estep_refine(L_obs_mask, L_hat, L_var, Sigma, eps = eps)
-    # Proper Kronecker M-step when Henderson sparse R^{-1} is available;
-    # fall back to closed-form sample-cov (drops R) otherwise. The
-    # Kronecker M-step is the closed-form ML for matrix-normal under EM
-    # and uses the phylogenetic R correctly.
-    Sigma_new <- if (!is.null(henderson)) {
+    refined <- .mvn_estep_refine(L_obs_mask, L_hat, L_var, Sigma, eps = eps,
+                                  refine_variance = refine_variance)
+    # single_pass: proper Kronecker M-step when Henderson sparse R^{-1}
+    # is available; fall back to closed-form sample-cov (drops R)
+    # otherwise. The Kronecker M-step is the closed-form ML for
+    # matrix-normal under EM and uses the phylogenetic R correctly.
+    # fisher_ml: prototype step 4, M-step re-run of the observed-data
+    # NLL optim on the *refined* (fully-completed) L_hat, seeded from
+    # the previous iteration's Sigma -- matches e7ca41c's EM loop, which
+    # passes `refined$L_hat` (not the original NA-carrying L) into the
+    # optim at every M-step.
+    loop_fallback <- function() {
+      if (!is.null(henderson)) {
+        .mvn_sigma_kron_M(refined$L_hat, refined$L_var, henderson)
+      } else {
+        .mvn_sigma_ml(refined$L_hat, refined$L_var,
+                       R_inv = solve(R + diag(eps, n)))
+      }
+    }
+    Sigma_new <- if (identical(sigma_method, "fisher_ml")) {
+      .mvn_sigma_fisher_ml(refined$L_hat, Sigma, loop_fallback, eps = eps)
+    } else if (!is.null(henderson)) {
       .mvn_sigma_kron_M(refined$L_hat, refined$L_var, henderson)
     } else {
       .mvn_sigma_ml(refined$L_hat, refined$L_var,
                      R_inv = solve(R + diag(eps, n)))
     }
     delta <- norm(Sigma_new - Sigma, "F") / max(norm(Sigma, "F"), eps)
+    if (!is.finite(delta) || (k > 1L && delta > prev_delta)) {
+      # Running away (or non-finite): discard this iterate, keep the last
+      # good one. This is the guard that makes max_iter > 0 safe to expose.
+      diverged <- TRUE
+      L_hat <- L_hat_prev; L_var <- L_var_prev; Sigma <- Sigma_prev
+      iter <- k - 1L
+      break
+    }
+    prev_delta <- delta
+    L_hat_prev <- L_hat; L_var_prev <- L_var; Sigma_prev <- Sigma
     L_hat <- refined$L_hat
     L_var <- refined$L_var
     Sigma <- Sigma_new
@@ -336,6 +467,7 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
   list(
     anc_recon = L_hat,
     anc_var   = L_var,
+    diverged  = diverged,
     pars      = list(phylocov = Sigma),
     n_iter    = iter,
     converged = converged
@@ -385,14 +517,27 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
 #' @param tree phylo.
 #' @param joint_solver character, \code{"inhouse"} (default) or
 #'   \code{"rphylopars"}.
+#' @param sigma_method character, \code{"single_pass"} (default) or
+#'   \code{"fisher_ml"}. Only consulted when \code{joint_solver =
+#'   "inhouse"}; see \code{fit_mvn_bm_inhouse()}'s \code{sigma_method}
+#'   argument for the algorithm and fallback contract.
+#' @param joint_refine_iter integer, default \code{0L}. Forwarded to
+#'   \code{fit_mvn_bm_inhouse()}'s \code{max_iter} argument (cross-trait
+#'   EM cell-refinement using the estimated Sigma). \code{0L} preserves
+#'   the single-pass, byte-identical default. Only consulted when
+#'   \code{joint_solver = "inhouse"} (including the fallback path when
+#'   \code{joint_solver = "rphylopars"} fails).
 #' @return list with the phylopars-compatible fields described in the
 #'   file header comment above (\code{$anc_recon}, \code{$anc_var},
 #'   \code{$pars$phylocov}).
 #' @keywords internal
 #' @noRd
-fit_joint_solver <- function(L, tree, joint_solver = "inhouse") {
+fit_joint_solver <- function(L, tree, joint_solver = "inhouse",
+                              sigma_method = "single_pass",
+                              joint_refine_iter = 0L) {
   if (identical(joint_solver, "inhouse")) {
-    return(fit_mvn_bm_inhouse(L = L, tree = tree))
+    return(fit_mvn_bm_inhouse(L = L, tree = tree, sigma_method = sigma_method,
+                               max_iter = joint_refine_iter))
   }
 
   fit <- tryCatch(.fit_mvn_bm_rphylopars(L, tree), error = function(e) e)
@@ -407,7 +552,7 @@ fit_joint_solver <- function(L, tree, joint_solver = "inhouse") {
       "non-finite tip prediction in $anc_recon"
     warning("fit_joint_solver: joint_solver = \"rphylopars\" failed (",
             msg, "); falling back to the in-house solver.", call. = FALSE)
-    return(fit_mvn_bm_inhouse(L = L, tree = tree))
+    return(fit_mvn_bm_inhouse(L = L, tree = tree, max_iter = joint_refine_iter))
   }
   fit
 }
