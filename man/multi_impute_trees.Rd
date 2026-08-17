@@ -19,6 +19,7 @@ multi_impute_trees(
   seed = NULL,
   share_gnn = TRUE,
   reference_tree = NULL,
+  draws_method = c("mc_dropout", "conformal"),
   ...
 )
 }
@@ -74,6 +75,12 @@ behaviour) when you need exact tree-by-tree model independence.}
 tree via \code{phangorn::maxCladeCred(trees)}. If \code{phangorn} is not
 installed, falls back to \code{trees[[1]]} with a warning.}
 
+\item{draws_method}{character. How the \code{m_per_tree} stochastic draws are
+generated for each tree (P1-11). One of \code{"mc_dropout"} (default, back
+compatible with pre-P1-11 behaviour) or \code{"conformal"}. See the "Which
+draw mechanism this uses" section below for the trade-off between the
+two.}
+
 \item{...}{additional arguments forwarded to \code{\link[=fit_pigauto]{fit_pigauto()}} via
 \code{\link[=impute]{impute()}}.}
 }
@@ -95,6 +102,8 @@ the tree index (1..T) for dataset \code{i}.}
 \item{\code{imputed_mask}}{Logical matrix; \code{TRUE} where a cell was
 originally missing.}
 \item{\code{share_gnn}}{Logical; \code{TRUE} if the shared-GNN path was used.}
+\item{\code{draws_method}}{Character; \code{"mc_dropout"} or \code{"conformal"},
+echoing the argument this call used (P1-11).}
 \item{\code{fit}}{Single \code{pigauto_fit} trained on the reference
 tree when \code{share_gnn = TRUE}; \code{NULL} otherwise.}
 \item{\code{fits}}{List of \code{T} \code{pigauto_fit} objects (one per tree)
@@ -199,13 +208,16 @@ against actual held-out residuals, whereas MC-dropout + BM draws reflect
 prior uncertainty and are noticeably wider (on AVONET300, Mass MC SD
 \eqn{\approx} 290 vs conformal/1.96 \eqn{\approx} 23).
 
-\code{multi_impute_trees()} currently exposes no \code{draws_method}
-argument, so the conformal path is unreachable here. The practical
-consequence: pooled SEs from tree-MI carry the more conservative
-within-tree component. Between-tree variance — the quantity this function
-exists to capture — is unaffected. If within-tree calibration matters more
-to you than tree uncertainty, use \code{\link{multi_impute}} on a single
-tree instead. Tracked as P1-11.
+\code{multi_impute_trees()} now exposes a \code{draws_method} argument
+(P1-11). \code{draws_method = "conformal"} runs \code{\link{impute}} with
+\code{n_imputations = 1} on each tree and draws the \code{m_per_tree}
+completions from the calibrated conformal scores instead, via the same
+internal sampling helper \code{multi_impute()} uses. Default remains
+\code{"mc_dropout"} for back compatibility. Within-tree calibration
+improves with \code{draws_method = "conformal"}; between-tree variance —
+the quantity this function exists to capture — is present under either
+setting because the baseline (and, when \code{share_gnn = FALSE}, the GNN)
+still varies per tree.
 }
 
 \section{Safety floor + share_gnn (v0.9.1.9002+)}{
