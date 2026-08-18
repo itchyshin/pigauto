@@ -1,7 +1,11 @@
 # Session Handoff: pigauto — exact Σ⊗R conditional, unmerged and gated (Claude → Codex)
 
 Meta: 2026-08-18 · from Claude (`AUTHOR = claude`) · `TARGET = codex`
-**This file is the authoritative input. You inherit no chat.** Everything needed is here.
+**This is the 5-minute version.** For the lossless account of the whole 15-18 Aug arc — all
+six merged PRs, the full evidence base, six failure patterns, nine ranked open items, and the
+compute state — read **`2026-08-18-codex-handover-EXTENDED.md`** instead.
+
+**You inherit no chat.**
 
 ---
 
