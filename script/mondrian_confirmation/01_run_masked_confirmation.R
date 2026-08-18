@@ -5,6 +5,10 @@
 # mask for split and Mondrian fits.
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 2L) stop("expected: input.rds output_dir [seed] [epochs]", call. = FALSE)
+if (requireNamespace("torch", quietly = TRUE)) {
+  try(torch::torch_set_num_threads(1L), silent = TRUE)
+  try(torch::torch_set_num_interop_threads(1L), silent = TRUE)
+}
 input <- readRDS(args[[1L]])
 if (!is.list(input) || !is.data.frame(input$data) || !inherits(input$tree, "phylo")) {
   stop("input must be list(data = data.frame, tree = phylo, dataset = character)", call. = FALSE)
