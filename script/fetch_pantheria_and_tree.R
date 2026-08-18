@@ -21,7 +21,8 @@ suppressPackageStartupMessages({
   library(ape)
 })
 
-here      <- "/Users/z3437171/Dropbox/Github Local/pigauto"
+here <- Sys.getenv("PIGAUTO_PKG_PATH", unset = getwd())
+here <- normalizePath(here, mustWork = TRUE)
 cache_dir <- file.path(here, "script", "data-cache")
 dir.create(cache_dir, showWarnings = FALSE, recursive = TRUE)
 
