@@ -328,6 +328,7 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
     # $anc_recon / $anc_var / $pars$phylocov on the fields pigauto
     # consumes -- the in-house solver was built to match it.
     fit <- fit_joint_solver(L = X_fit, tree = tree, joint_solver = joint_solver,
+                            predict_method = predict_method,
                             joint_refine_iter = joint_refine_iter)
 
     tip_rows <- match(spp, rownames(fit$anc_recon))
