@@ -16,6 +16,7 @@ fit_baseline(
   em_tol = 0.001,
   em_offdiag = FALSE,
   joint_solver = c("inhouse", "rphylopars"),
+  predict_method = c("per_column", "exact"),
   joint_refine_iter = 0L
 )
 }

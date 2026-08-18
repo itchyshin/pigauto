@@ -49,6 +49,7 @@ fit_pigauto(
   min_val_cells = 20L,
   lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
   joint_solver = c("inhouse", "rphylopars"),
+  predict_method = c("per_column", "exact"),
   joint_refine_iter = 0L,
   verbose = TRUE,
   seed = NULL

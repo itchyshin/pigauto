@@ -531,6 +531,7 @@ fit_joint_threshold_baseline_em <- function(data, tree, splits,
                                              em_tol = 1e-3,
                                              em_offdiag = FALSE,
                                              joint_solver = "inhouse",
+                                          predict_method = "per_column",
                                              joint_refine_iter = 0L) {
   stopifnot(joint_mvn_available(), em_iterations >= 1L)
 
