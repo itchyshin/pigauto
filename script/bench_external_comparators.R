@@ -45,6 +45,7 @@
 # CPU discipline: torch pinned to 1 thread; run under `nice -n 15`.
 
 options(warn = 1, stringsAsFactors = FALSE)
+`%||%` <- function(x, y) if (is.null(x)) y else x
 suppressPackageStartupMessages({
   library(ape)
   pkg_path <- Sys.getenv("PIGAUTO_PKG_PATH", unset = "")
@@ -210,6 +211,49 @@ fit_column_mean_method <- function(df_miss4, mask4) {
   list(completed = out, error = NULL)
 }
 
+fit_missforest_method <- function(df_miss_all) {
+  if (!requireNamespace("missForest", quietly = TRUE)) {
+    return(list(completed = NULL, error = "missForest not installed"))
+  }
+  fit <- tryCatch(missForest::missForest(df_miss_all, verbose = FALSE), error = function(e) e)
+  if (inherits(fit, "error")) return(list(completed = NULL, error = conditionMessage(fit)))
+  list(completed = fit$ximp, error = NULL)
+}
+
+fit_bace_method <- function(df_miss_all, tree, mask_all) {
+  if (!requireNamespace("BACE", quietly = TRUE)) {
+    return(list(completed = NULL, error = "BACE not installed"))
+  }
+  tree_b <- tree
+  tree_b$edge.length[tree_b$edge.length == 0] <- 1e-8
+  data_b <- df_miss_all
+  data_b$Species <- rownames(data_b)
+  traits <- names(df_miss_all)
+  formulae <- lapply(traits, function(v) paste0(v, " ~ ", paste(setdiff(traits, v), collapse = " + ")))
+  fit <- tryCatch(BACE::bace(fixformula = formulae, ran_phylo_form = "~ 1 |Species",
+                             phylo = tree_b, data = data_b, nitt = 2000L,
+                             burnin = 500L, thin = 5L, runs = 2L, n_final = 2L,
+                             verbose = FALSE, skip_conv = TRUE), error = function(e) e)
+  if (inherits(fit, "error")) return(list(completed = NULL, error = conditionMessage(fit)))
+  draws <- fit$imputed_datasets %||% fit$imputed_data %||% if (!is.null(fit$data)) list(fit$data) else NULL
+  if (is.null(draws) || !length(draws)) return(list(completed = NULL, error = "BACE output shape not recognised"))
+  out <- df_miss_all
+  for (v in traits) {
+    for (i in which(mask_all[, v])) {
+      vals <- vapply(draws, function(d) as.character(d[[v]][i]), character(1))
+      vals <- vals[!is.na(vals)]
+      if (!length(vals)) next
+      if (is.factor(out[[v]])) {
+        mode <- names(sort(table(vals), decreasing = TRUE))[1L]
+        out[[v]][i] <- factor(mode, levels = levels(out[[v]]), ordered = is.ordered(out[[v]]))
+      } else {
+        out[[v]][i] <- stats::median(as.numeric(vals), na.rm = TRUE)
+      }
+    }
+  }
+  list(completed = out, error = NULL)
+}
+
 # -------------------------------------------------------------------------
 # 4. Scoring -- z-scored RMSE + Pearson r on held-out cells. z-scale
 #    (mean/sd) is computed from the TRAINING portion only (non-held-out
@@ -304,6 +348,18 @@ for (ds_name in names(DATASETS)) {
     wall <- proc.time()[["elapsed"]] - t0
     log_line(sprintf("  column_mean done in %.1fs", wall))
     methods$column_mean <- list(completed = m$completed, wall = wall, errors = list())
+
+    t0 <- proc.time()[["elapsed"]]
+    m <- fit_missforest_method(df_miss_all)
+    wall <- proc.time()[["elapsed"]] - t0
+    methods$missforest <- list(completed = m$completed, wall = wall,
+      errors = if (!is.null(m$error)) stats::setNames(as.list(rep(m$error, length(cont_traits))), cont_traits) else list())
+
+    t0 <- proc.time()[["elapsed"]]
+    m <- fit_bace_method(df_miss_all, tree, mask_test)
+    wall <- proc.time()[["elapsed"]] - t0
+    methods$bace <- list(completed = m$completed, wall = wall,
+      errors = if (!is.null(m$error)) stats::setNames(as.list(rep(m$error, length(cont_traits))), cont_traits) else list())
 
     for (m_name in names(methods)) {
       mobj <- methods[[m_name]]
@@ -423,7 +479,9 @@ md <- c(
   "4. `phylolm(model = \"lambda\")` per trait, no covariates (y ~ 1) --",
   "   phylogenetic BLUP, mirrors the arm in `script/bench_lambda_sweep.R`",
   "   (`m_phylolm_blup`, ~line 155) with the fixed-effect covariates dropped.",
-  "5. Column mean -- floor.",
+  "5. `missForest::missForest()` -- non-phylogenetic mixed-type comparator.",
+  "6. `BACE::bace()` -- phylogenetic chained-equation comparator (errors retained).",
+  "7. Column mean -- floor.",
   "",
   "## IMPORTANT: what the pigauto-vs-phylopars comparison actually measures",
   "",
