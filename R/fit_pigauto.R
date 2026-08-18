@@ -251,6 +251,14 @@
 #'   with automatic fallback to \code{"inhouse"} on failure. Passed to
 #'   \code{\link{fit_baseline}} and stored in the fitted model config.
 #'   See \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}.
+#' @param predict_method character. Prediction route for the in-house joint
+#'   solver. \code{"per_column"} (default) retains the established
+#'   per-column conditional prediction route. \code{"exact"} is opt-in and,
+#'   when a multi-trait in-house joint fit has a usable sparse phylogenetic
+#'   precision and covariance estimate, uses the exact matrix-normal
+#'   conditional mean and variance. If those numerical gates are not met it
+#'   warns and falls back to \code{"per_column"}. It does not change
+#'   covariance estimation, defaults, or the \code{"rphylopars"} solver.
 #' @param joint_refine_iter integer, default \code{0L}. Enables
 #'   cross-trait refinement of the joint baseline's cell imputations
 #'   using the estimated Sigma (the in-house solver's \code{max_iter}
@@ -370,6 +378,7 @@ fit_pigauto <- function(
     min_val_cells     = 20L,
     lambda_mode       = c("fixed_1", "estimate", "cv", "bayes"),
     joint_solver      = c("inhouse", "rphylopars"),
+    predict_method    = c("per_column", "exact"),
     joint_refine_iter = 0L,
     verbose           = TRUE,
     seed = NULL
@@ -377,6 +386,7 @@ fit_pigauto <- function(
   conformal_method    <- match.arg(conformal_method)
   lambda_mode         <- match.arg(lambda_mode)
   joint_solver        <- match.arg(joint_solver)
+  predict_method      <- match.arg(predict_method)
   gate_method         <- match.arg(gate_method)
   phylo_signal_method <- match.arg(phylo_signal_method)
   if (!is.numeric(joint_refine_iter) || length(joint_refine_iter) != 1L ||
@@ -443,7 +453,7 @@ fit_pigauto <- function(
     # calling ape::cophenetic.phylo() a second time on the same tree.
     baseline <- fit_baseline(data, tree, splits = splits, graph = graph,
                               lambda_mode = lambda_mode,
-                              joint_solver = joint_solver,
+                              joint_solver = joint_solver, predict_method = predict_method,
                               joint_refine_iter = joint_refine_iter)
   }
 

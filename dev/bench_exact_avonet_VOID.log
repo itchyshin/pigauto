@@ -1,0 +1,22 @@
+[   0.0s] rep 1 seed 2027 predict_method=per_column
+[ 558.0s] rep 1 seed 2027 predict_method=exact
+[1053.2s] rep 2 seed 2028 predict_method=per_column
+[1453.6s] rep 2 seed 2028 predict_method=exact
+[1858.0s] rep 3 seed 2029 predict_method=per_column
+[2381.9s] rep 3 seed 2029 predict_method=exact
+[2941.7s] rep 4 seed 2030 predict_method=per_column
+[4256.7s] rep 4 seed 2030 predict_method=exact
+[5093.6s] rep 5 seed 2031 predict_method=per_column
+[5603.8s] rep 5 seed 2031 predict_method=exact
+There were 16 warnings (use warnings() to see them)
+[6088.6s] results:
+              trait       iter n rmse_z   mcse
+ Beak.Length_Culmen      exact 5  0.848 0.1350
+ Beak.Length_Culmen per_column 5  0.924 0.1575
+               Mass      exact 5  1.494 0.5346
+               Mass per_column 5  1.540 0.5192
+      Tarsus.Length      exact 5  1.195 0.2728
+      Tarsus.Length per_column 5  1.179 0.2728
+        Wing.Length      exact 5  0.622 0.1043
+        Wing.Length per_column 5  0.627 0.0992
+[6088.6s] wrote dev/bench_refine_avonet.rds

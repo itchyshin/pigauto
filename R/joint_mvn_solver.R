@@ -290,9 +290,11 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
                                 use_henderson = TRUE,
                                 sigma_method = c("single_pass", "fisher_ml"),
                                 refine_variance = c("conservative",
-                                                    "pooled")) {
+                                                    "pooled"),
+                                predict_method = c("per_column", "exact")) {
   sigma_method <- match.arg(sigma_method)
   refine_variance <- match.arg(refine_variance)
+  predict_method <- match.arg(predict_method)
   if (is.null(R)) {
     if (is.null(tree)) stop("fit_mvn_bm_inhouse: either tree or R must be supplied.")
     R <- phylo_cor_matrix(tree)
@@ -382,6 +384,35 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
     .mvn_ensure_pd(S0, eps = eps)
   }
   Sigma <- .mvn_ensure_pd(Sigma, eps = eps)
+
+  # ---- exact matrix-normal conditional (opt-in) --------------------------
+  # predict_method = "exact" replaces the PREDICTION with the exact
+  # conditional mean/variance under vec(L) ~ MVN(0, Sigma %x% R), computed
+  # in the precision form via Hadfield & Nakagawa (2010) sparse S^{-1}.
+  # Sigma estimation is unchanged (the 2026-08-17 recovery sim showed the
+  # existing estimate is sound; it was the prediction step that discarded
+  # it). Returns NULL on any failure -- oversized problem, singular Sigma,
+  # non-finite output -- and we fall through to the per-column path rather
+  # than degrade silently.
+  # Derivation + gates: docs/dev-log/2026-08-17-exact-conditional-design.md
+  if (identical(predict_method, "exact") && K >= 2L && !is.null(henderson)) {
+    ec <- exact_conditional_mvn(L, Sigma, henderson, cor_scale = TRUE,
+                                 eps = eps)
+    if (!is.null(ec)) {
+      return(list(
+        anc_recon = ec$mu,
+        anc_var   = ec$var,
+        diverged  = FALSE,
+        pars      = list(phylocov = Sigma),
+        n_iter    = 0L,
+        converged = TRUE,
+        predict_method = "exact"
+      ))
+    }
+    warning("fit_mvn_bm_inhouse: predict_method = \"exact\" was not usable ",
+            "here (problem too large, or a numerically unusable Sigma); ",
+            "falling back to the per-column path.", call. = FALSE)
+  }
 
   if (K == 1L || max_iter <= 0L) {
     # K=1: per-column BM is exact ML; nothing to refine.
@@ -533,10 +564,12 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
 #' @keywords internal
 #' @noRd
 fit_joint_solver <- function(L, tree, joint_solver = "inhouse",
+                             predict_method = "per_column",
                               sigma_method = "single_pass",
                               joint_refine_iter = 0L) {
   if (identical(joint_solver, "inhouse")) {
     return(fit_mvn_bm_inhouse(L = L, tree = tree, sigma_method = sigma_method,
+                              predict_method = predict_method,
                                max_iter = joint_refine_iter))
   }
 
@@ -552,7 +585,8 @@ fit_joint_solver <- function(L, tree, joint_solver = "inhouse",
       "non-finite tip prediction in $anc_recon"
     warning("fit_joint_solver: joint_solver = \"rphylopars\" failed (",
             msg, "); falling back to the in-house solver.", call. = FALSE)
-    return(fit_mvn_bm_inhouse(L = L, tree = tree, max_iter = joint_refine_iter))
+    return(fit_mvn_bm_inhouse(L = L, tree = tree, max_iter = joint_refine_iter,
+                              predict_method = predict_method))
   }
   fit
 }
