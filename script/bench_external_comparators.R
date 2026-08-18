@@ -10,8 +10,9 @@
 #
 # Methods compared, all on the SAME 30%-MCAR mask per rep:
 #   1. pigauto::impute()            -- production defaults, all 7 traits
-#   2. Rphylopars::phylopars()      -- standalone, continuous traits only
-#   3. phylolm(model = "lambda")    -- per-trait phylogenetic BLUP,
+#   2. pigauto::impute(exact)       -- opt-in exact conditional route
+#   3. Rphylopars::phylopars()      -- standalone, continuous traits only
+#   4. phylolm(model = "lambda")    -- per-trait phylogenetic BLUP,
 #                                       continuous traits only
 #   4. column mean                  -- floor
 #
@@ -76,8 +77,10 @@ log_line <- function(...) {
   flush.console()
 }
 
-out_rds <- "script/bench_external_comparators.rds"
-out_md  <- "script/bench_external_comparators.md"
+out_dir <- Sys.getenv("PIGAUTO_OUT_DIR", unset = "script")
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+out_rds <- file.path(out_dir, "bench_external_comparators.rds")
+out_md  <- file.path(out_dir, "bench_external_comparators.md")
 
 # -------------------------------------------------------------------------
 # 1. Dataset loader(s) -- a function per dataset so a second one can be
@@ -125,9 +128,10 @@ make_mask <- function(df, miss_frac, seed) {
 # 3. Methods
 # -------------------------------------------------------------------------
 
-fit_pigauto_method <- function(df_miss_all, tree, seed) {
+fit_pigauto_method <- function(df_miss_all, tree, seed, predict_method) {
   res <- tryCatch(
-    pigauto::impute(df_miss_all, tree, seed = seed, verbose = FALSE),
+    pigauto::impute(df_miss_all, tree, seed = seed, verbose = FALSE,
+                    predict_method = predict_method),
     error = function(e) e)
   if (inherits(res, "error")) return(list(completed = NULL, error = conditionMessage(res)))
   list(completed = res$completed, error = NULL)
@@ -257,11 +261,23 @@ for (ds_name in names(DATASETS)) {
     methods <- list()
 
     t0 <- proc.time()[["elapsed"]]
-    m <- fit_pigauto_method(df_miss_all, tree, seed = mask_seed)
+    m <- fit_pigauto_method(df_miss_all, tree, seed = mask_seed,
+                            predict_method = "per_column")
     wall <- proc.time()[["elapsed"]] - t0
     log_line(sprintf("  pigauto done in %.1fs%s", wall,
                       if (!is.null(m$error)) paste0(" -- ERROR: ", m$error) else ""))
-    methods$pigauto <- list(completed = m$completed, wall = wall,
+    methods$pigauto_default <- list(completed = m$completed, wall = wall,
+                              errors = if (!is.null(m$error))
+                                stats::setNames(as.list(rep(m$error, length(cont_traits))), cont_traits)
+                              else list())
+
+    t0 <- proc.time()[["elapsed"]]
+    m <- fit_pigauto_method(df_miss_all, tree, seed = mask_seed,
+                            predict_method = "exact")
+    wall <- proc.time()[["elapsed"]] - t0
+    log_line(sprintf("  pigauto_exact done in %.1fs%s", wall,
+                      if (!is.null(m$error)) paste0(" -- ERROR: ", m$error) else ""))
+    methods$pigauto_exact <- list(completed = m$completed, wall = wall,
                               errors = if (!is.null(m$error))
                                 stats::setNames(as.list(rep(m$error, length(cont_traits))), cont_traits)
                               else list())
@@ -401,12 +417,13 @@ md <- c(
   "",
   "## Methods",
   "",
-  "1. `pigauto::impute()` -- production defaults (all 7 traits fit; scored on 4).",
-  "2. `Rphylopars::phylopars(model = \"BM\")` standalone -- continuous traits only.",
-  "3. `phylolm(model = \"lambda\")` per trait, no covariates (y ~ 1) --",
+  "1. `pigauto::impute(predict_method = \"per_column\")` -- production defaults (all 7 traits fit; scored on 4).",
+  "2. `pigauto::impute(predict_method = \"exact\")` -- opt-in exact conditional route; it does not change the default.",
+  "3. `Rphylopars::phylopars(model = \"BM\")` standalone -- continuous traits only.",
+  "4. `phylolm(model = \"lambda\")` per trait, no covariates (y ~ 1) --",
   "   phylogenetic BLUP, mirrors the arm in `script/bench_lambda_sweep.R`",
   "   (`m_phylolm_blup`, ~line 155) with the fixed-effect covariates dropped.",
-  "4. Column mean -- floor.",
+  "5. Column mean -- floor.",
   "",
   "## IMPORTANT: what the pigauto-vs-phylopars comparison actually measures",
   "",
