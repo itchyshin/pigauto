@@ -102,6 +102,15 @@ joint MVN path (it has no lambda argument) but no longer disables
 the threshold-joint / OVR-categorical paths -- see
 \dQuote{Per-type lambda dispatch} in Details.}
 
+\item{predict_method}{character. Prediction route for the in-house joint
+solver. \code{"per_column"} (default) retains the established
+per-column conditional prediction route. \code{"exact"} is opt-in and,
+when a multi-trait in-house joint fit has a usable sparse phylogenetic
+precision and covariance estimate, uses the exact matrix-normal
+conditional mean and variance. If those numerical gates are not met it
+warns and falls back to \code{"per_column"}. It does not change
+covariance estimation, defaults, or the \code{"rphylopars"} solver.}
+
 \item{joint_refine_iter}{integer, default \code{0L}. Enables
 cross-trait refinement of the joint baseline's cell imputations
 using the estimated Sigma (the in-house solver's \code{max_iter}
