@@ -9,19 +9,17 @@ Meta: 2026-08-18 · from Claude (`AUTHOR = claude`) · `TARGET = codex`
 
 Branch **`arc/exact-conditional`** (worktree `.worktrees/arc-exact`, 6 commits ahead of
 `origin/main`, **pushed**, **no PR opened**) implements the exact matrix-normal conditional.
-It is **evidence-complete and behaviour-verified**, but its **final full-suite run was still
-executing when this handover was written**. Re-run it before opening a PR.
+It is **evidence-complete and fully verified**. **UPDATE (post-write): the full suite
+completed GREEN — `FAIL 0 | WARN 336 | SKIP 8 | PASS 2180`.** The earlier FAIL 4 was the OVR
+regression described in §3, now fixed; default output is bit-identical to `origin/main`.
+
+**So your first step is `--as-cran` (§4.2), not the suite.** Re-run the suite only if you
+change code:
 
 ```sh
 cd "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/arc-exact"
 NOT_CRAN=true nice -n 15 Rscript -e 'devtools::test(stop_on_failure = FALSE)'
 ```
-
-Expected: **FAIL 0**. The last observed count was FAIL 4, but **all four were traced to a
-regression that has since been fixed** (see §3). The three directly-affected files
-(`test-lambda-per-type.R`, `test-exact-conditional.R`, `test-ovr-categorical.R`) each pass
-individually post-fix, and default output is bit-identical to `origin/main`. If FAIL > 0
-persists, **stop and diagnose — do not open the PR.**
 
 ---
 
@@ -103,7 +101,7 @@ export NOT_CRAN=true            # torch/testthat gates
 Rscript -e 'torch::torch_is_installed()'
 ```
 
-1. **Full suite** (above). Expect FAIL 0. If not, diagnose before anything else.
+1. ~~Full suite~~ — **DONE, green (FAIL 0 / PASS 2180).** Re-run only if you change code.
 2. **`--as-cran`** — expect the baseline **0 errors / 0 warnings / 1 known NOTE**
    (version string + `BACE` not in mainstream repos):
    ```sh
