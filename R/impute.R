@@ -320,6 +320,7 @@ impute <- function(traits, tree, species_col = NULL,
                    multi_obs_aggregation = c("hard", "soft"),
                    lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
                    joint_solver = c("inhouse", "rphylopars"),
+                   predict_method = c("per_column", "exact"),
                    joint_refine_iter = 0L,
                    em_iterations = 0L,
                    em_tol = 1e-3,
@@ -339,6 +340,7 @@ impute <- function(traits, tree, species_col = NULL,
   pool_method <- match.arg(pool_method)
   lambda_mode <- match.arg(lambda_mode)
   joint_solver <- match.arg(joint_solver)
+  predict_method <- match.arg(predict_method)
   if (!is.numeric(joint_refine_iter) || length(joint_refine_iter) != 1L ||
       !is.finite(joint_refine_iter) ||
       joint_refine_iter != as.integer(joint_refine_iter) ||
@@ -428,7 +430,7 @@ impute <- function(traits, tree, species_col = NULL,
                            em_tol = em_tol,
                            em_offdiag = em_offdiag,
                            lambda_mode = lambda_mode,
-                           joint_solver = joint_solver,
+                           joint_solver = joint_solver, predict_method = predict_method,
                            joint_refine_iter = joint_refine_iter)
 
   # Free the cached cophenetic distance matrix: fit_pigauto() only
@@ -456,6 +458,7 @@ impute <- function(traits, tree, species_col = NULL,
     phylo_signal_method    = phylo_signal_method,
     lambda_mode            = lambda_mode,
     joint_solver           = joint_solver,
+    predict_method         = predict_method,
     joint_refine_iter      = joint_refine_iter,
     conformal_split_val    = conformal_split_val,
     ...

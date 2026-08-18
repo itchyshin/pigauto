@@ -36,6 +36,8 @@ fit_arm <- function(arm, L, tree) {
                                              sigma_method = "fisher_ml"))
   # slice 1b arms: conservative variance (mean-only refinement) vs the
   # historical pooled rule, at 1/3/5 iterations.
+  if (arm == "EX") return(fit_mvn_bm_inhouse(L = L, tree = tree,
+                              predict_method = "exact"))
   if (arm == "C1") return(fit_mvn_bm_inhouse(L = L, tree = tree, max_iter = 1L))
   if (arm == "C3") return(fit_mvn_bm_inhouse(L = L, tree = tree, max_iter = 3L))
   if (arm == "C5") return(fit_mvn_bm_inhouse(L = L, tree = tree, max_iter = 5L))
@@ -82,7 +84,7 @@ for (g in seq_len(nrow(GRID))) {
     # (E0/E1 cov2cor internally -- unaffected; fixes the E2 frob artifact)
     tr_fit$edge.length <- tr_fit$edge.length / max(ape::node.depth.edgelength(tr_fit))
 
-    for (arm in c("E0", "C1", "C3", "C5", "P1", "P3", "E2")) {
+    for (arm in c("E0", "EX", "E2")) {
       t1 <- proc.time()[["elapsed"]]
       fit <- tryCatch(suppressWarnings(fit_arm(arm, L, tr_fit)),
                       error = function(e) e)
@@ -126,5 +128,5 @@ rownames(agg) <- NULL
 agg <- agg[order(agg$lambda, agg$sigma_design, agg$n, agg$arm), ]
 say("failures: ", sum(d$failed))
 print(agg, digits = 3)
-saveRDS(list(raw = d, agg = agg), "dev/sigma_recovery_sim_1b.rds")
+saveRDS(list(raw = d, agg = agg), "dev/sigma_recovery_sim_exact.rds")
 say("wrote dev/sigma_recovery_sim.rds")

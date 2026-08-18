@@ -370,6 +370,7 @@ fit_pigauto <- function(
     min_val_cells     = 20L,
     lambda_mode       = c("fixed_1", "estimate", "cv", "bayes"),
     joint_solver      = c("inhouse", "rphylopars"),
+    predict_method    = c("per_column", "exact"),
     joint_refine_iter = 0L,
     verbose           = TRUE,
     seed = NULL
@@ -377,6 +378,7 @@ fit_pigauto <- function(
   conformal_method    <- match.arg(conformal_method)
   lambda_mode         <- match.arg(lambda_mode)
   joint_solver        <- match.arg(joint_solver)
+  predict_method      <- match.arg(predict_method)
   gate_method         <- match.arg(gate_method)
   phylo_signal_method <- match.arg(phylo_signal_method)
   if (!is.numeric(joint_refine_iter) || length(joint_refine_iter) != 1L ||
@@ -443,7 +445,7 @@ fit_pigauto <- function(
     # calling ape::cophenetic.phylo() a second time on the same tree.
     baseline <- fit_baseline(data, tree, splits = splits, graph = graph,
                               lambda_mode = lambda_mode,
-                              joint_solver = joint_solver,
+                              joint_solver = joint_solver, predict_method = predict_method,
                               joint_refine_iter = joint_refine_iter)
   }
 

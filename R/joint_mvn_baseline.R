@@ -38,6 +38,7 @@ joint_mvn_available <- function() {
 fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL,
                                    soft_aggregate = FALSE,
                                    joint_solver = "inhouse",
+                       predict_method = "per_column",
                                    joint_refine_iter = 0L) {
   stopifnot(joint_mvn_available())
 
@@ -102,6 +103,7 @@ fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL,
   rownames(L_in) <- spp
 
   fit <- fit_joint_solver(L = L_in, tree = tree, joint_solver = joint_solver,
+                          predict_method = predict_method,
                           joint_refine_iter = joint_refine_iter)
 
   tip_rows <- match(spp, rownames(fit$anc_recon))

@@ -290,6 +290,7 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
                                         mu_prior_mat = NULL,
                                         sd_prior_mat = NULL,
                                         joint_solver = "inhouse",
+                       predict_method = "per_column",
                                         joint_refine_iter = 0L) {
   stopifnot(joint_mvn_available())
 
