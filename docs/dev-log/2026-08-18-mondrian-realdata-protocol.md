@@ -21,3 +21,11 @@ width, elapsed time, errors, and Mondrian activation/fallback metadata.
 otherwise writes the paired reporting table.  Prepare FishBase and PanTHERIA
 inputs using their existing canonical loaders; do not use naturally missing
 cells as truth.  Execution remains separately compute-gated.
+
+## Structural smoke
+
+The runner was exercised locally on a 30-tip, one-trait AVONET subset with a
+shared six-cell observed-only mask and five epochs.  It wrote the mask receipt,
+both method receipts, and the combined table successfully.  The expected
+three-cell validation warnings make this a harness check only: it is neither
+a FishBase/PanTHERIA result nor evidence about interval coverage.
