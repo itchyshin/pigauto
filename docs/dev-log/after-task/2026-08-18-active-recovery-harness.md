@@ -30,6 +30,7 @@ calibration claim.
 - `VALIDATION_LEDGER.md`
 - `docs/dev-log/2026-08-18-active-recovery-{design,results}.md`
 - `docs/dev-log/2026-08-18-{exact-comparator,mondrian-realdata}-protocol.md`
+- `docs/dev-log/2026-08-18-active-prior-art-audit.md`
 - `docs/dev-log/plan-actual/2026-08-18-pigauto-evidence.md`
 
 ## 5. Checks Run
@@ -75,9 +76,9 @@ path into the Shinichi hub, so it was rerun with an explicit worktree path.
 
 No pilot or full evidence result exists. The local 30-tip smoke's two-cell
 validation warning means it is not an effect-size or calibration result. The
-literature scan is in progress and must be checked against primary sources.
-The source-content receipt is a deterministic two-part checksum, not a
-cryptographic hash.
+third-party scan is now primary-source audited but establishes adjacent work,
+not novelty. The source-content receipt is a deterministic two-part checksum,
+not a cryptographic hash.
 
 ## 11. Team Learning
 
