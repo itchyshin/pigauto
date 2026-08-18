@@ -107,3 +107,38 @@ test_that("[exact] threads through impute() and returns a usable result", {
   expect_s3_class(res, "pigauto_result")
   expect_false(anyNA(res$completed))
 })
+
+test_that("[exact] predict_method reaches the solver on MIXED-TYPE data too", {
+  # Regression guard for the void-G4 bug: predict_method reached
+  # fit_joint_threshold_baseline() but was never forwarded to
+  # fit_joint_solver(), so on any dataset with binary/ordinal traits the
+  # option was a SILENT NO-OP. The continuous-only fixture above cannot
+  # catch this -- it takes the continuous-joint path. This one takes the
+  # threshold-joint path, which is what real mixed-type data uses.
+  # Fourth instance of the silent-parameter-drop pattern in this call
+  # chain; see docs/dev-log/2026-08-17-exact-conditional-results.md.
+  #
+  # Asserted on OBSERVED BEHAVIOUR, not on a trace: tracing an internal
+  # function is not reliably intercepted after devtools::load_all(), which
+  # made an earlier version of this test fail while the feature worked.
+  skip_if_not_installed("Matrix")
+  set.seed(4)
+  n <- 40L
+  tree <- ape::rcoal(n)
+  df <- data.frame(
+    x1 = stats::rnorm(n),
+    x2 = stats::rnorm(n),
+    b  = factor(sample(c("no", "yes"), n, TRUE), levels = c("no", "yes")),
+    row.names = tree$tip.label
+  )
+  df$x1[1:6] <- NA; df$x2[7:12] <- NA; df$b[13:18] <- NA
+  pd <- preprocess_traits(df, tree)
+
+  b_ex <- fit_baseline(pd, tree, predict_method = "exact")
+  b_pc <- fit_baseline(pd, tree, predict_method = "per_column")
+
+  # If predict_method were dropped again, these would be identical.
+  expect_false(isTRUE(all.equal(b_pc$mu, b_ex$mu)))
+  expect_true(all(is.finite(b_ex$mu)))
+  expect_equal(dim(b_ex$mu), dim(b_pc$mu))
+})
