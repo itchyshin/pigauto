@@ -11,8 +11,13 @@ fallback and a stated width cost.  This study cannot establish an unconditional
 
 ## Execution contract
 
-`script/mondrian_confirmation/01_run_masked_confirmation.R` accepts a prepared
-`list(data, tree, dataset)` RDS input, masks only originally observed cells,
+`script/mondrian_confirmation/00_prepare_realdata_input.R` prepares the
+canonical PanTHERIA or FishBase input from the existing source caches. It fails
+closed when source data or a tree are unavailable, labels cannot align exactly,
+or a retained trait has fewer than 20 observed cells; it never substitutes a
+synthetic data set or fallback tree. The runner
+`script/mondrian_confirmation/01_run_masked_confirmation.R` accepts that
+prepared `list(data, tree, dataset)` RDS input, masks only originally observed cells,
 and retains a `mask_receipt.rds`.  It runs `conformal_method = "split"` and
 `"mondrian"` with the identical seed and mask, retaining method-specific RDS
 receipts containing trait-wise masked-cell counts, interval counts, coverage,
