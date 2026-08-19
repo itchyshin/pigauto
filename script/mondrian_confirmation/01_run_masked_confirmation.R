@@ -1,8 +1,9 @@
 #!/usr/bin/env Rscript
-# Usage: Rscript 01_run_masked_confirmation.R input.rds output_dir [seed] [epochs]
+# Usage: Rscript 01_run_masked_confirmation.R input.rds output_dir [seed] [epochs] [methods]
 # input.rds is list(data = data.frame, tree = ape::phylo, dataset = character).
 # It deliberately masks only originally observed cells and uses the identical
-# mask for split and Mondrian fits.
+# mask for split and Mondrian fits. `methods` is a comma-separated subset of
+# `split,mondrian`, so expensive methods can be run as independent receipts.
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 2L) stop("expected: input.rds output_dir [seed] [epochs]", call. = FALSE)
 if (requireNamespace("torch", quietly = TRUE)) {
@@ -15,6 +16,10 @@ if (!is.list(input) || !is.data.frame(input$data) || !inherits(input$tree, "phyl
 }
 seed <- if (length(args) >= 3L) as.integer(args[[3L]]) else 20260818L
 epochs <- if (length(args) >= 4L) as.integer(args[[4L]]) else 500L
+methods <- if (length(args) >= 5L) trimws(strsplit(args[[5L]], ",", fixed = TRUE)[[1L]]) else c("split", "mondrian")
+if (!length(methods) || anyDuplicated(methods) || !all(methods %in% c("split", "mondrian"))) {
+  stop("methods must be a non-empty, comma-separated subset of split,mondrian", call. = FALSE)
+}
 `%||%` <- function(x, y) if (is.null(x)) y else x
 if (is.null(rownames(input$data)) || !identical(rownames(input$data), input$tree$tip.label)) {
   stop("input data rows must exactly match tree tip order", call. = FALSE)
@@ -22,17 +27,34 @@ if (is.null(rownames(input$data)) || !identical(rownames(input$data), input$tree
 dir.create(args[[2L]], recursive = TRUE, showWarnings = FALSE)
 set.seed(seed)
 truth <- input$data
-mask <- matrix(FALSE, nrow(truth), ncol(truth), dimnames = dimnames(truth))
-for (nm in names(truth)) {
-  observed <- which(!is.na(truth[[nm]]))
-  if (length(observed) < 20L) next
-  mask[sample(observed, ceiling(0.2 * length(observed))), nm] <- TRUE
+mask_file <- file.path(args[[2L]], "mask_receipt.rds")
+if (file.exists(mask_file)) {
+  prior <- readRDS(mask_file)
+  valid_prior <- is.list(prior) &&
+    identical(prior$seed, seed) &&
+    identical(prior$dataset, input$dataset %||% basename(args[[1L]])) &&
+    identical(rownames(prior$truth), rownames(truth)) &&
+    identical(names(prior$truth), names(truth)) &&
+    identical(prior$tree$tip.label, input$tree$tip.label)
+  if (!valid_prior) {
+    stop("existing mask receipt does not match this input, seed, or dataset", call. = FALSE)
+  }
+  truth <- prior$truth
+  masked <- prior$masked
+  mask <- prior$mask
+} else {
+  mask <- matrix(FALSE, nrow(truth), ncol(truth), dimnames = dimnames(truth))
+  for (nm in names(truth)) {
+    observed <- which(!is.na(truth[[nm]]))
+    if (length(observed) < 20L) next
+    mask[sample(observed, ceiling(0.2 * length(observed))), nm] <- TRUE
+  }
+  masked <- truth
+  for (nm in names(masked)) masked[[nm]][mask[, nm]] <- NA
+  saveRDS(list(dataset = input$dataset %||% basename(args[[1L]]), seed = seed,
+               truth = truth, masked = masked, mask = mask, tree = input$tree),
+          mask_file)
 }
-masked <- truth
-for (nm in names(masked)) masked[[nm]][mask[, nm]] <- NA
-saveRDS(list(dataset = input$dataset %||% basename(args[[1L]]), seed = seed,
-             truth = truth, masked = masked, mask = mask, tree = input$tree),
-        file.path(args[[2L]], "mask_receipt.rds"))
 one_method <- function(method) tryCatch({
   t0 <- proc.time()[["elapsed"]]
   fit <- pigauto::impute(masked, input$tree, seed = seed, epochs = epochs,
@@ -51,4 +73,7 @@ one_method <- function(method) tryCatch({
   list(status = "ok", method = method, elapsed_s = proc.time()[["elapsed"]] - t0,
        metrics = do.call(rbind, Filter(Negate(is.null), rows)), mondrian = mondrian)
 }, error = function(e) list(status = "error", method = method, error = conditionMessage(e)))
-for (method in c("split", "mondrian")) saveRDS(one_method(method), file.path(args[[2L]], paste0(method, ".rds")))
+for (method in methods) {
+  result_file <- file.path(args[[2L]], paste0(method, ".rds"))
+  if (!file.exists(result_file)) saveRDS(one_method(method), result_file)
+}
