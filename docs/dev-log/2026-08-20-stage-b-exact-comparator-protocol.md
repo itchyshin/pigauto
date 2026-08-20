@@ -78,6 +78,15 @@ describe a competitiveness boundary only.  In particular, neutral or unstable
 4. A reviewer who did not build the summary checks the receipts, paired
    contrasts, failure table, and final wording before any public claim.
 
+## Implementation status
+
+`script/bench_external_continuous_core.R` implements the B-continuous
+component with the locked five masks and immutable per-mask RDS receipts.  It
+is intentionally not a substitute for B-mixed: the mixed-type scoring and
+applicability reporter remain a separate implementation requirement.  Neither
+script is authorised to run the claim-bearing comparison until a fresh timing
+smoke, cost estimate, and compute approval are recorded.
+
 ## Explicit non-claims
 
 Stage B cannot establish equality, general parity, universal superiority,
