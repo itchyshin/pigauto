@@ -13,3 +13,29 @@
 The programme is not scientifically complete: Stage A earns only its narrow
 continuous lambda=1 recovery result, not the cross-family headline; Stage B
 awaits PR #173's merge; and Stage C is protocol-only.
+
+## Reconciliation update (2026-08-20)
+
+PR #173 has since merged to `main`.  The post-merge Stage-B comparator
+protocol is now recorded in
+`docs/dev-log/2026-08-20-stage-b-exact-comparator-protocol.md`; it specifies
+two labelled AVONET regimes, five shared masks per regime, retained failures,
+and the no-parity/default-change fence.  No comparator fit has yet been run,
+so Stage B remains a protocol, not a competitiveness result.
+
+Stage C now has a completed observed-only, two-dataset 300-tip operational
+pilot and a completed PanTHERIA full-data timing receipt, but neither is
+calibration evidence.  The first full FishBase CPU receipt was stopped after
+24 hours and 19 minutes with only its mask receipt retained.  The resulting
+scalability correction and the separately bounded Tamia GPU ladder are
+recorded in `docs/dev-log/2026-08-19-mondrian-scalability-correction.md`.
+Tamia job `419940` allocated four H100s but failed before a task ran because
+of an inconsistent nested GRES request; the corrected same-scope job `419946`
+is pending resources at this update.  No GPU timing, calibration, or
+production-campaign claim is made from either queued or failed execution.
+
+The programme therefore remains incomplete: Stage A has the narrow
+continuous-only result and its independent claim review; Stage B awaits its
+approved compute decision; and Stage C awaits a completed feasibility ladder,
+a revised full-campaign cost estimate, explicit campaign approval, and an
+independent calibration-claim review.
