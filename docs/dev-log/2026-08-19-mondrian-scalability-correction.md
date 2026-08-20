@@ -32,10 +32,11 @@ inside `impute()`, so an interrupted individual fit still needs a fresh fit.
 
 Before any renewed full FishBase campaign, run a separately retained,
 one-method CPU-versus-Tamia-GPU scaling ladder on deterministic FishBase
-subsets.  The immediate bounded feasibility receipt is a 1,000-tip, `split`
-fit with a hard one-hour Slurm limit; its purpose is to measure device use and
-identify whether the graph/GNN portion materially changes wall time.  It is
-not a calibration run.
+subsets. Tamia's H100 policy allocates a whole four-GPU node, so the immediate
+bounded feasibility receipt is four independent `split` fits (300, 600, 1,000,
+and 1,500 tips) dispatched one per GPU, with a hard one-hour Slurm limit. Its
+purpose is to measure device use and identify whether the graph/GNN portion
+materially changes wall time. It is not a calibration run.
 
 Only after that receipt reports elapsed time, peak memory, and a credible
 CPU/GPU comparison may a revised multi-mask design be costed.  Production
@@ -43,3 +44,19 @@ would use resumable per-method/per-mask tasks on persistent DRAC project
 storage with explicit time and memory limits.  It remains separately approval
 gated and cannot make a Mondrian calibration claim merely because the
 feasibility ladder completes.
+
+## GPU ladder execution record
+
+The first submitted ladder attempt (Tamia job `419940`) acquired a full H100
+node but failed after three seconds, before any R task started or any
+per-size receipt was written.  The outer allocation used typed
+`h100:4` resources whereas each nested `srun` requested an untyped GPU;
+Tamia Slurm rejected that inconsistent GRES request.  `nvidia-smi` confirms
+that all four H100s were available in the allocation, but this failed attempt
+is not a timing, CUDA, or model result.
+
+The task request is now explicitly typed as `--gres=gpu:h100:1`.  Local shell
+syntax checking and `sbatch --test-only` both passed.  The same bounded
+four-task, one-hour ladder was resubmitted as Tamia job `419946` after the
+approved repair; it is pending scheduler resources at the time of this
+record.  Its only purpose remains the predeclared feasibility/scaling receipt.
