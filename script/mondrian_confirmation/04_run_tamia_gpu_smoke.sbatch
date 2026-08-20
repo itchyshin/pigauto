@@ -25,9 +25,10 @@ status=0
 for n_tips in 300 600 1000 1500; do
   # The outer allocation is typed (`h100`); child requests must preserve that
   # type.  An untyped --gpus-per-task request is rejected by Tamia Slurm.
-  srun --exclusive --nodes=1 --ntasks=1 --cpus-per-task=12 --gres=gpu:h100:1 \
+  srun --exclusive --nodes=1 --ntasks=1 --cpus-per-task=12 \
+    --gres=gpu:h100:1 --gpu-bind=single:1 \
     "$PIGAUTO_STAGEC_ROOT/source/pigauto/script/mondrian_confirmation/05_run_tamia_ladder_task.sh" \
-    "$PIGAUTO_STAGEC_ROOT" "$n_tips" &
+    "$PIGAUTO_STAGEC_ROOT" "$n_tips" "$SLURM_JOB_ID" &
 done
 for pid in $(jobs -p); do wait "$pid" || status=1; done
 exit "$status"

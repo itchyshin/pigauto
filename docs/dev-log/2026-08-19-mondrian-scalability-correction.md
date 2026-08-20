@@ -58,5 +58,19 @@ is not a timing, CUDA, or model result.
 The task request is now explicitly typed as `--gres=gpu:h100:1`.  Local shell
 syntax checking and `sbatch --test-only` both passed.  The same bounded
 four-task, one-hour ladder was resubmitted as Tamia job `419946` after the
-approved repair; it is pending scheduler resources at the time of this
-record.  Its only purpose remains the predeclared feasibility/scaling receipt.
+approved repair.
+
+Job `419946` completed all four `split` tasks successfully in 54 seconds;
+each method receipt has `status = "ok"` and each task confirmed
+`cuda_available=TRUE`.  Its runner elapsed times were 5.83, 4.84, 5.88, and
+8.17 seconds for 300, 600, 1,000, and 1,500 tips respectively.  Slurm
+accounted one H100 per task, but the node-level GPU accounting trace places
+all four CUDA processes on physical GPU 0.  This is valid evidence that the
+CUDA route and the four inputs run, but it is **not** valid four-GPU scaling
+evidence and cannot be compared with the CPU timing receipt.
+
+The next same-scope repair adds `--gpu-bind=single:1` and records each task's
+`CUDA_VISIBLE_DEVICES` value.  A successful rerun must show four distinct
+visible-device assignments before its elapsed times are interpreted as a
+four-GPU feasibility ladder.  It remains a predeclared operational receipt,
+not a calibration result.
