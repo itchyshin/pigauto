@@ -81,11 +81,12 @@ describe a competitiveness boundary only.  In particular, neutral or unstable
 ## Implementation status
 
 `script/bench_external_continuous_core.R` implements the B-continuous
-component with the locked five masks and immutable per-mask RDS receipts.  It
-is intentionally not a substitute for B-mixed: the mixed-type scoring and
-applicability reporter remain a separate implementation requirement.  Neither
-script is authorised to run the claim-bearing comparison until a fresh timing
-smoke, cost estimate, and compute approval are recorded.
+component; `script/bench_external_mixed_core.R` implements B-mixed.  Both use
+the locked five masks and immutable per-mask RDS receipts.  The mixed runner
+records continuous and discrete metrics separately and marks continuous-only
+methods as **not applicable**, rather than failed, for the three discrete
+traits.  Neither script is authorised to run the claim-bearing comparison
+until a fresh timing smoke, cost estimate, and compute approval are recorded.
 
 ## Explicit non-claims
 
