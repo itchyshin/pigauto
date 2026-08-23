@@ -92,19 +92,30 @@ bace_completed <- function(fit, d, mask) {
   }; out
 }
 as_completed <- function(name, fit, d, mask) {
-  if (is.null(fit$value)) return(list(completed = NULL, error = fit$error, wall_s = fit$wall_s))
+  if (is.null(fit$value)) return(list(completed = NULL, probabilities = NULL, error = fit$error, wall_s = fit$wall_s))
   z <- tryCatch(if (name %in% c("pigauto_default", "pigauto_exact")) fit$value$completed else if (name == "bace") bace_completed(fit$value, d, mask) else fit$value, error = function(e) e)
-  if (inherits(z, "error")) return(list(completed = NULL, error = conditionMessage(z), wall_s = fit$wall_s))
-  list(completed = z, error = NULL, wall_s = fit$wall_s)
+  if (inherits(z, "error")) return(list(completed = NULL, probabilities = NULL, error = conditionMessage(z), wall_s = fit$wall_s))
+  list(completed = z,
+       probabilities = if (name %in% c("pigauto_default", "pigauto_exact")) fit$value$prediction$probabilities else NULL,
+       error = NULL, wall_s = fit$wall_s)
 }
-score <- function(pred, truth, hidden, is_cont, train) {
+score <- function(pred, truth, hidden, is_cont, train, probabilities = NULL) {
   i <- which(hidden & !is.na(pred) & !is.na(truth)); n <- length(i)
   if (!n) return(c(n_cells = 0, rmse_raw = NA, rmse_norm = NA, pearson_r = NA, accuracy = NA, brier = NA))
   if (is_cont) {
     err <- as.numeric(pred[i]) - truth[i]; s <- train[["sd"]]
     c(n_cells = n, rmse_raw = sqrt(mean(err^2)), rmse_norm = if (is.finite(s) && s > 0) sqrt(mean((err / s)^2)) else NA, pearson_r = if (n > 2 && stats::sd(pred[i]) > 0) stats::cor(pred[i], truth[i]) else NA, accuracy = NA, brier = NA)
   } else {
-    p <- as.character(pred[i]); y <- as.character(truth[i]); c(n_cells = n, rmse_raw = NA, rmse_norm = NA, pearson_r = NA, accuracy = mean(p == y), brier = NA)
+    p <- as.character(pred[i]); y <- as.character(truth[i]); brier <- NA_real_
+    if (is.matrix(probabilities) && nrow(probabilities) >= max(i)) {
+      lev <- colnames(probabilities); one_hot <- matrix(0, nrow = n, ncol = length(lev))
+      col <- match(y, lev)
+      if (all(!is.na(col))) {
+        one_hot[cbind(seq_len(n), col)] <- 1
+        brier <- mean(rowSums((probabilities[i, , drop = FALSE] - one_hot)^2))
+      }
+    }
+    c(n_cells = n, rmse_raw = NA, rmse_norm = NA, pearson_r = NA, accuracy = mean(p == y), brier = brier)
   }
 }
 
@@ -122,7 +133,9 @@ for (seed in MASK_SEEDS) {
   for (mn in names(methods)) for (v in TRAITS) {
     applicable <- !(mn %in% c("rphylopars", "phylolm_lambda") && v %in% DISC)
     mo <- methods[[mn]]; st <- if (!applicable) "not_applicable" else if (is.null(mo$completed) || is.null(mo$completed[[v]])) "failed" else "ok"
-    tr <- truth[[v]][!mask[, v]]; sc <- if (st == "ok") score(mo$completed[[v]], truth[[v]], mask[, v], v %in% CONT, c(mean = mean(tr, na.rm = TRUE), sd = stats::sd(tr, na.rm = TRUE))) else score(rep(NA, nrow(truth)), truth[[v]], mask[, v], v %in% CONT, c(sd = NA))
+    tr <- truth[[v]][!mask[, v]]
+    prob_v <- if (!is.null(mo$probabilities)) mo$probabilities[[v]] else NULL
+    sc <- if (st == "ok") score(mo$completed[[v]], truth[[v]], mask[, v], v %in% CONT, c(mean = mean(tr, na.rm = TRUE), sd = stats::sd(tr, na.rm = TRUE)), prob_v) else score(rep(NA, nrow(truth)), truth[[v]], mask[, v], v %in% CONT, c(sd = NA))
     rows[[length(rows) + 1L]] <- cbind(
       data.frame(regime = "B-mixed", mask_seed = seed, method = mn, trait = v,
                  status = st, error = if (st == "failed") mo$error else NA_character_,
@@ -134,6 +147,6 @@ for (seed in MASK_SEEDS) {
   saveRDS(list(protocol = "stage_b_mixed_core_v1", mask_seed = seed, miss_frac = MISS_FRAC, source_sha = Sys.getenv("PIGAUTO_SOURCE_SHA", unset = NA_character_), mask = mask, truth = truth, masked = masked, methods = methods, rows = last), file.path(receipt_dir, sprintf("stage_b_mixed_core_mask-%d.rds", seed)))
 }
 results <- do.call(rbind, rows); rownames(results) <- NULL
-summary <- do.call(rbind, lapply(split(results, interaction(results$method, results$trait, drop = TRUE)), function(x) data.frame(method = x$method[1], trait = x$trait[1], n_ok = sum(x$status == "ok"), n_failed = sum(x$status == "failed"), n_not_applicable = sum(x$status == "not_applicable"), rmse_raw_mean = mean(x$rmse_raw, na.rm = TRUE), rmse_norm_mean = mean(x$rmse_norm, na.rm = TRUE), accuracy_mean = mean(x$accuracy, na.rm = TRUE), stringsAsFactors = FALSE)))
+summary <- do.call(rbind, lapply(split(results, interaction(results$method, results$trait, drop = TRUE)), function(x) data.frame(method = x$method[1], trait = x$trait[1], n_ok = sum(x$status == "ok"), n_failed = sum(x$status == "failed"), n_not_applicable = sum(x$status == "not_applicable"), rmse_raw_mean = mean(x$rmse_raw, na.rm = TRUE), rmse_norm_mean = mean(x$rmse_norm, na.rm = TRUE), accuracy_mean = mean(x$accuracy, na.rm = TRUE), brier_mean = mean(x$brier, na.rm = TRUE), stringsAsFactors = FALSE)))
 saveRDS(list(results = results, summary = summary, protocol = "stage_b_mixed_core_v1", mask_seeds = MASK_SEEDS), file.path(out_dir, "stage_b_mixed_core.rds"))
 writeLines(c("# Stage B mixed core: retained comparator output", "", "This is a pre-registered, five-mask runner output. It reports per-method/trait status; continuous RMSE and discrete accuracy are never pooled.", "", "## Summary", "```", capture.output(print(summary, row.names = FALSE)), "```", "", "## Non-claims", "No parity, default-change, or general mixed-type superiority claim follows from this descriptive protocol."), file.path(out_dir, "stage_b_mixed_core.md"))
