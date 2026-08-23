@@ -13,9 +13,11 @@ export LD_LIBRARY_PATH="${EBROOTCUDA:?cuda module not loaded}/targets/x86_64-lin
 # split.rds and thereby falsely appear to have executed.
 result_dir="$PIGAUTO_STAGEC_ROOT/results/attempt-${attempt_id}/fishbase-${n_tips}-split-gpu"
 mkdir -p "$result_dir"
-nvidia-smi --query-gpu=index,name,driver_version,memory.total --format=csv,noheader > "$result_dir/gpu.txt"
+nvidia-smi --query-gpu=index,uuid,pci.bus_id,name,driver_version,memory.total --format=csv,noheader > "$result_dir/gpu.txt"
 {
   printf 'CUDA_VISIBLE_DEVICES=%s\n' "${CUDA_VISIBLE_DEVICES:-UNSET}"
+  printf 'SLURM_PROCID=%s\n' "${SLURM_PROCID:-UNSET}"
+  printf 'SLURM_LOCALID=%s\n' "${SLURM_LOCALID:-UNSET}"
   Rscript --vanilla -e 'stopifnot(requireNamespace("torch", quietly = TRUE)); cat("cuda_available=", torch::cuda_is_available(), "\\n", sep = ""); if (!torch::cuda_is_available()) stop("CUDA is unavailable inside this allocation")'
 } > "$result_dir/device.txt"
 Rscript --vanilla "$PIGAUTO_STAGEC_ROOT/source/pigauto/script/mondrian_confirmation/01_run_masked_confirmation.R" \

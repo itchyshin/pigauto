@@ -55,10 +55,9 @@ Tamia Slurm rejected that inconsistent GRES request.  `nvidia-smi` confirms
 that all four H100s were available in the allocation, but this failed attempt
 is not a timing, CUDA, or model result.
 
-The task request is now explicitly typed as `--gres=gpu:h100:1`.  Local shell
-syntax checking and `sbatch --test-only` both passed.  The same bounded
-four-task, one-hour ladder was resubmitted as Tamia job `419946` after the
-approved repair.
+The task request was then made explicitly typed as `--gres=gpu:h100:1`.
+Local shell syntax checking and `sbatch --test-only` both passed.  Tamia job
+`419946` was the resulting same-scope rerun.
 
 Job `419946` completed all four `split` tasks successfully in 54 seconds;
 each method receipt has `status = "ok"` and each task confirmed
@@ -69,8 +68,20 @@ all four CUDA processes on physical GPU 0.  This is valid evidence that the
 CUDA route and the four inputs run, but it is **not** valid four-GPU scaling
 evidence and cannot be compared with the CPU timing receipt.
 
-The next same-scope repair adds `--gpu-bind=single:1` and records each task's
-`CUDA_VISIBLE_DEVICES` value.  A successful rerun must show four distinct
-visible-device assignments before its elapsed times are interpreted as a
-four-GPU feasibility ladder.  It remains a predeclared operational receipt,
-not a calibration result.
+Tamia job `419948` added `--gpu-bind=single:1`, but repeated the same
+structural mistake in a subtler form: it started four *separate* one-rank
+`srun` steps.  Each step has local rank zero, so Slurm validly exposed a
+single logical device numbered `0` to each task but bound all four processes
+to physical GPU 0.  It completed in 54 seconds, all four task receipts have
+`status = "ok"`, and CUDA was available, but node-level accounting records
+all four processes against PCI bus `00000000:4E:00.0`.  Thus job `419948` is
+also only a CUDA/input smoke—not a valid four-GPU scaling ladder.
+
+The prepared repair now launches **one four-rank `srun` step** with
+`--gpus-per-task=h100:1 --gpu-bind=single:1`; rank selects the nested input
+size.  The next attempt will record Slurm rank plus GPU UUID and PCI bus ID.
+Because Slurm may renumber a task's isolated device as
+`CUDA_VISIBLE_DEVICES=0`, acceptance is **four distinct UUID/PCI-bus values**,
+not four distinct local logical-device numbers.  No further job has been
+submitted: this remains a predeclared operational receipt and needs explicit
+direction before another Tamia allocation.

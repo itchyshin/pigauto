@@ -30,9 +30,12 @@ calibration evidence.  The first full FishBase CPU receipt was stopped after
 scalability correction and the separately bounded Tamia GPU ladder are
 recorded in `docs/dev-log/2026-08-19-mondrian-scalability-correction.md`.
 Tamia job `419940` allocated four H100s but failed before a task ran because
-of an inconsistent nested GRES request; the corrected same-scope job `419946`
-is pending resources at this update.  No GPU timing, calibration, or
-production-campaign claim is made from either queued or failed execution.
+of an inconsistent nested GRES request.  Jobs `419946` and `419948` completed
+the four bounded inputs with CUDA available, but their four independent
+single-rank Slurm steps all executed on physical GPU 0; they are CUDA/input
+smokes, not four-GPU scaling evidence.  A one-step, four-rank repair is
+prepared but deliberately unsubmitted.  No GPU timing, calibration, or
+production-campaign claim is made from these attempts.
 
 The programme therefore remains incomplete: Stage A has the narrow
 continuous-only result and its independent claim review; Stage B awaits its
