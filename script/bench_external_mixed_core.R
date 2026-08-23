@@ -16,7 +16,13 @@ if (requireNamespace("torch", quietly = TRUE)) {
 }
 
 MISS_FRAC <- 0.30
-MASK_SEEDS <- 20260901L:20260905L
+LOCKED_MASK_SEEDS <- 20260901L:20260905L
+smoke_seed <- Sys.getenv("PIGAUTO_TIMING_SMOKE_SEED", unset = "")
+if (nzchar(smoke_seed)) {
+  MASK_SEEDS <- as.integer(smoke_seed)
+  if (is.na(MASK_SEEDS) || !MASK_SEEDS %in% LOCKED_MASK_SEEDS) stop("PIGAUTO_TIMING_SMOKE_SEED must be one of the five locked Stage-B seeds", call. = FALSE)
+  RUN_MODE <- "timing_smoke"
+} else { MASK_SEEDS <- LOCKED_MASK_SEEDS; RUN_MODE <- "claim_bearing_campaign" }
 CONT <- c("Mass", "Beak.Length_Culmen", "Tarsus.Length", "Wing.Length")
 DISC <- c("Trophic.Level", "Primary.Lifestyle", "Migration")
 TRAITS <- c(CONT, DISC)
@@ -144,9 +150,9 @@ for (seed in MASK_SEEDS) {
     )
   }
   last <- rows[(length(rows) - length(methods) * length(TRAITS) + 1L):length(rows)]
-  saveRDS(list(protocol = "stage_b_mixed_core_v1", mask_seed = seed, miss_frac = MISS_FRAC, source_sha = Sys.getenv("PIGAUTO_SOURCE_SHA", unset = NA_character_), mask = mask, truth = truth, masked = masked, methods = methods, rows = last), file.path(receipt_dir, sprintf("stage_b_mixed_core_mask-%d.rds", seed)))
+  saveRDS(list(protocol = "stage_b_mixed_core_v1", run_mode = RUN_MODE, mask_seed = seed, miss_frac = MISS_FRAC, source_sha = Sys.getenv("PIGAUTO_SOURCE_SHA", unset = NA_character_), mask = mask, truth = truth, masked = masked, methods = methods, rows = last), file.path(receipt_dir, sprintf("stage_b_mixed_core_mask-%d.rds", seed)))
 }
 results <- do.call(rbind, rows); rownames(results) <- NULL
 summary <- do.call(rbind, lapply(split(results, interaction(results$method, results$trait, drop = TRUE)), function(x) data.frame(method = x$method[1], trait = x$trait[1], n_ok = sum(x$status == "ok"), n_failed = sum(x$status == "failed"), n_not_applicable = sum(x$status == "not_applicable"), rmse_raw_mean = mean(x$rmse_raw, na.rm = TRUE), rmse_norm_mean = mean(x$rmse_norm, na.rm = TRUE), accuracy_mean = mean(x$accuracy, na.rm = TRUE), brier_mean = mean(x$brier, na.rm = TRUE), stringsAsFactors = FALSE)))
-saveRDS(list(results = results, summary = summary, protocol = "stage_b_mixed_core_v1", mask_seeds = MASK_SEEDS), file.path(out_dir, "stage_b_mixed_core.rds"))
-writeLines(c("# Stage B mixed core: retained comparator output", "", "This is a pre-registered, five-mask runner output. It reports per-method/trait status; continuous RMSE and discrete accuracy are never pooled.", "", "## Summary", "```", capture.output(print(summary, row.names = FALSE)), "```", "", "## Non-claims", "No parity, default-change, or general mixed-type superiority claim follows from this descriptive protocol."), file.path(out_dir, "stage_b_mixed_core.md"))
+saveRDS(list(results = results, summary = summary, protocol = "stage_b_mixed_core_v1", run_mode = RUN_MODE, mask_seeds = MASK_SEEDS), file.path(out_dir, "stage_b_mixed_core.rds"))
+writeLines(c("# Stage B mixed core: retained comparator output", "", sprintf("Run mode: `%s`.", RUN_MODE), "This is a pre-registered runner output. It reports per-method/trait status; continuous RMSE and discrete accuracy are never pooled.", "", "## Summary", "```", capture.output(print(summary, row.names = FALSE)), "```", "", "## Non-claims", "No parity, default-change, or general mixed-type superiority claim follows from this descriptive protocol."), file.path(out_dir, "stage_b_mixed_core.md"))

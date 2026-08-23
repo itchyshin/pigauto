@@ -69,7 +69,18 @@ if (requireNamespace("torch", quietly = TRUE)) {
 }
 
 MISS_FRAC <- 0.30
-MASK_SEEDS <- 20260901L:20260905L
+LOCKED_MASK_SEEDS <- 20260901L:20260905L
+smoke_seed <- Sys.getenv("PIGAUTO_TIMING_SMOKE_SEED", unset = "")
+if (nzchar(smoke_seed)) {
+  MASK_SEEDS <- as.integer(smoke_seed)
+  if (is.na(MASK_SEEDS) || !MASK_SEEDS %in% LOCKED_MASK_SEEDS) {
+    stop("PIGAUTO_TIMING_SMOKE_SEED must be one of the five locked Stage-B seeds", call. = FALSE)
+  }
+  RUN_MODE <- "timing_smoke"
+} else {
+  MASK_SEEDS <- LOCKED_MASK_SEEDS
+  RUN_MODE <- "claim_bearing_campaign"
+}
 N_REPS <- length(MASK_SEEDS)
 
 script_start <- proc.time()[["elapsed"]]
@@ -391,6 +402,7 @@ for (ds_name in names(DATASETS)) {
     }
     saveRDS(list(
       protocol = "stage_b_continuous_core_v1",
+      run_mode = RUN_MODE,
       dataset = d$name,
       rep = rep_id,
       mask_seed = mask_seed,
@@ -442,6 +454,7 @@ saveRDS(list(
   results   = results_df,
   summary   = summary_df,
   errors    = error_rows,
+  run_mode  = RUN_MODE,
   miss_frac = MISS_FRAC,
   mask_seeds = MASK_SEEDS,
   n_reps    = N_REPS,
@@ -484,6 +497,7 @@ md <- c(
   "  for comparability with the continuous-only rivals.",
   sprintf("- Missingness: %.0f%% MCAR on observed cells, %d locked masks (seeds %s).",
           MISS_FRAC * 100, N_REPS, paste(MASK_SEEDS, collapse = ", ")),
+  sprintf("- Run mode: `%s`.", RUN_MODE),
   "- Metric: z-scored RMSE (scale = training-portion mean/sd per",
   "  trait/rep, no leakage from held-out truth) + Pearson r on",
   "  held-out cells. Reported as mean +/- MCSE (sd/sqrt(n_reps_ok)).",
