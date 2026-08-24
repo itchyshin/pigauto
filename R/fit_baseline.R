@@ -111,6 +111,14 @@
 #'   joint MVN path (it has no lambda argument) but no longer disables
 #'   the threshold-joint / OVR-categorical paths -- see
 #'   \dQuote{Per-type lambda dispatch} in Details.
+#' @param predict_method character. Prediction route for the in-house joint
+#'   solver. \code{"per_column"} (default) retains the established
+#'   per-column conditional prediction route. \code{"exact"} is opt-in and,
+#'   when a multi-trait in-house joint fit has a usable sparse phylogenetic
+#'   precision and covariance estimate, uses the exact matrix-normal
+#'   conditional mean and variance. If those numerical gates are not met it
+#'   warns and falls back to \code{"per_column"}. It does not change
+#'   covariance estimation, defaults, or the \code{"rphylopars"} solver.
 #' @param joint_refine_iter integer, default \code{0L}. Enables
 #'   cross-trait refinement of the joint baseline's cell imputations
 #'   using the estimated Sigma (the in-house solver's \code{max_iter}
@@ -157,11 +165,13 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                          em_tol = 1e-3,
                          em_offdiag = FALSE,
                          joint_solver = c("inhouse", "rphylopars"),
+                         predict_method = c("per_column", "exact"),
                          joint_refine_iter = 0L) {
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
   soft_aggregate <- identical(multi_obs_aggregation, "soft")
   lambda_mode <- match.arg(lambda_mode)
   joint_solver <- match.arg(joint_solver)
+  predict_method <- match.arg(predict_method)
   if (!is.numeric(joint_refine_iter) || length(joint_refine_iter) != 1L ||
       !is.finite(joint_refine_iter) ||
       joint_refine_iter != as.integer(joint_refine_iter) ||
@@ -361,13 +371,13 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                                        em_iterations = em_iterations,
                                        em_tol = em_tol,
                                        em_offdiag = em_offdiag,
-                                       joint_solver = joint_solver,
+                                       joint_solver = joint_solver, predict_method = predict_method,
                                        joint_refine_iter = joint_refine_iter)
     } else {
       fit_joint_threshold_baseline(data, tree, splits = splits,
                                     graph = graph,
                                     soft_aggregate = soft_aggregate,
-                                    joint_solver = joint_solver,
+                                    joint_solver = joint_solver, predict_method = predict_method,
                                     joint_refine_iter = joint_refine_iter)
     }
 
@@ -571,7 +581,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   } else if (use_continuous_joint) {
     joint <- fit_joint_mvn_baseline(data, tree, splits = splits, graph = graph,
                                      soft_aggregate = soft_aggregate,
-                                     joint_solver = joint_solver,
+                                     joint_solver = joint_solver, predict_method = predict_method,
                                      joint_refine_iter = joint_refine_iter)
     mu[, bm_cols] <- joint$mu[, bm_cols]
     se[, bm_cols] <- joint$se[, bm_cols]
@@ -605,13 +615,13 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                                        soft_aggregate = soft_aggregate,
                                        em_iterations = em_iterations,
                                        em_tol = em_tol,
-                                       joint_solver = joint_solver,
+                                       joint_solver = joint_solver, predict_method = predict_method,
                                        joint_refine_iter = joint_refine_iter)
         } else {
           fit_ovr_categorical_fits(data, tree, trait_name = trait_name,
                                     splits = splits, graph = graph,
                                     soft_aggregate = soft_aggregate,
-                                    joint_solver = joint_solver,
+                                    joint_solver = joint_solver, predict_method = predict_method,
                                     joint_refine_iter = joint_refine_iter)
         },
         error = function(e) NULL

@@ -37,6 +37,7 @@ fit_ovr_categorical_fits <- function(data, tree, trait_name,
                                       soft_aggregate = FALSE,
                                       sd_prior_k = NULL,
                                       joint_solver = "inhouse",
+                                      predict_method = "per_column",
                                       joint_refine_iter = 0L) {
   stopifnot(joint_mvn_available())
   # sd_prior_k: optional length-K vector of per-class prior SDs for Phase 6
@@ -117,6 +118,7 @@ fit_ovr_categorical_fits <- function(data, tree, trait_name,
                                     soft_aggregate = soft_aggregate,
                                     sd_prior_vec = sdv,
                                     joint_solver = joint_solver,
+                                    predict_method = predict_method,
                                     joint_refine_iter = joint_refine_iter),
       error = function(e) NULL
     )
@@ -234,6 +236,7 @@ fit_ovr_categorical_fits_em <- function(data, tree, trait_name,
                                          em_iterations = 5L,
                                          em_tol = 1e-3,
                                          joint_solver = "inhouse",
+                                         predict_method = "per_column",
                                          joint_refine_iter = 0L) {
   stopifnot(em_iterations >= 1L)
 
@@ -243,6 +246,7 @@ fit_ovr_categorical_fits_em <- function(data, tree, trait_name,
                                      soft_aggregate = soft_aggregate,
                                      sd_prior_k = NULL,
                                      joint_solver = joint_solver,
+                                     predict_method = predict_method,
                                      joint_refine_iter = joint_refine_iter)
   K <- ncol(iter1)
   sigma_cat <- rep(1, K)

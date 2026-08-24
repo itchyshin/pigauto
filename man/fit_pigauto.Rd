@@ -49,6 +49,7 @@ fit_pigauto(
   min_val_cells = 20L,
   lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
   joint_solver = c("inhouse", "rphylopars"),
+  predict_method = c("per_column", "exact"),
   joint_refine_iter = 0L,
   verbose = TRUE,
   seed = NULL
@@ -308,6 +309,15 @@ delegates to \code{Rphylopars::phylopars()}'s converged REML fit,
 with automatic fallback to \code{"inhouse"} on failure. Passed to
 \code{\link{fit_baseline}} and stored in the fitted model config.
 See \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}.}
+
+\item{predict_method}{character. Prediction route for the in-house joint
+solver. \code{"per_column"} (default) retains the established
+per-column conditional prediction route. \code{"exact"} is opt-in and,
+when a multi-trait in-house joint fit has a usable sparse phylogenetic
+precision and covariance estimate, uses the exact matrix-normal
+conditional mean and variance. If those numerical gates are not met it
+warns and falls back to \code{"per_column"}. It does not change
+covariance estimation, defaults, or the \code{"rphylopars"} solver.}
 
 \item{joint_refine_iter}{integer, default \code{0L}. Enables
 cross-trait refinement of the joint baseline's cell imputations
