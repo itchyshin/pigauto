@@ -77,11 +77,19 @@ to physical GPU 0.  It completed in 54 seconds, all four task receipts have
 all four processes against PCI bus `00000000:4E:00.0`.  Thus job `419948` is
 also only a CUDA/input smoke—not a valid four-GPU scaling ladder.
 
-The prepared repair now launches **one four-rank `srun` step** with
+The repair launched **one four-rank `srun` step** with
 `--gpus-per-task=h100:1 --gpu-bind=single:1`; rank selects the nested input
 size.  The next attempt will record Slurm rank plus GPU UUID and PCI bus ID.
 Because Slurm may renumber a task's isolated device as
 `CUDA_VISIBLE_DEVICES=0`, acceptance is **four distinct UUID/PCI-bus values**,
-not four distinct local logical-device numbers.  No further job has been
-submitted: this remains a predeclared operational receipt and needs explicit
-direction before another Tamia allocation.
+not four distinct local logical-device numbers.
+
+Tamia job `424950` completed this corrected ladder in 24 seconds. All four
+retained `split.rds` receipts report `status = "ok"` and `cuda_available=TRUE`;
+their measured runner elapsed times were 7.542, 7.118, 7.030, and 9.650
+seconds for 300, 600, 1,000, and 1,500 tips, respectively. The four tasks
+recorded four distinct physical GPU UUID/PCI pairs (PCI buses `4E:00.0`,
+`CB:00.0`, `5F:00.0`, and `DB:00.0`). It is therefore valid four-device
+**operational** scaling evidence for these bounded split inputs. It remains
+neither a CPU-versus-GPU comparison nor evidence about interval calibration,
+and it does not authorise a full multi-mask campaign.
