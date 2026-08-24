@@ -40,6 +40,18 @@ per-input elapsed times are valid bounded operational ladder evidence, but
 are not a CPU/GPU comparison, calibration evidence, or authority for a full
 campaign.
 
+## Reconciliation update (2026-08-23)
+
+The corrected Stage-B one-mask timing smoke is complete and recorded in
+`docs/dev-log/2026-08-23-stage-b-timing-smoke.md`. Both pigauto default and
+opt-in exact arms completed in the continuous and mixed regimes, together
+with the installed external comparators; their runtime is now measured rather
+than guessed. BACE was explicitly retained as unavailable in both receipts.
+Consequently this is a valid operational/timing receipt but not a complete
+five-mask comparator study or any competitiveness evidence. The next Stage-B
+gate is a concrete BACE source and private-library verification, followed by
+a revised full-run estimate and explicit approval.
+
 The programme therefore remains incomplete: Stage A has the narrow
 continuous-only result and its independent claim review; Stage B awaits its
 approved compute decision; and Stage C awaits a completed feasibility ladder,
