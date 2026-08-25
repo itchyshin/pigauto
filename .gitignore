@@ -56,6 +56,10 @@ BACE/
 # Claude workspace
 .claude/
 
+# Local acceptance-ledger state
+.unlazy/
+.unlazy-hook-state.json
+
 # Git worktrees (parallel feature branches)
 .worktrees/
 
