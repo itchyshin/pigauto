@@ -121,8 +121,11 @@ reference:
       - read_traits
       - read_tree
       - check_pigauto
+      - print.pigauto_check
       - impute
       - completed_data
+      - summary.pigauto_result
+      - print.summary_pigauto_result
 
   - title: "Experimental analysis-aware MI for fixed effects"
     desc: >

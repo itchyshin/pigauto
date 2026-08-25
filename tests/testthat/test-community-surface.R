@@ -59,6 +59,17 @@ test_that("recipes, advanced controls, and bounded claims remain visible", {
   expect_false(grepl("maximally reduce imputation uncertainty|Why this is novel|certified coverage", readme, ignore.case = TRUE))
 })
 
+test_that("public preflight and result methods are indexed by pkgdown", {
+  pkgdown <- paste(
+    readLines(testthat::test_path("..", "..", "_pkgdown.yml"), warn = FALSE),
+    collapse = "\n"
+  )
+  for (topic in c("print.pigauto_check", "summary.pigauto_result",
+                  "print.summary_pigauto_result")) {
+    expect_match(pkgdown, paste0("- ", topic), fixed = TRUE)
+  }
+})
+
 test_that("current public claim surfaces retain their stated boundaries", {
   root <- testthat::test_path("..", "..")
   read_text <- function(...) paste(readLines(file.path(root, ...), warn = FALSE), collapse = "\n")

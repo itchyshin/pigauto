@@ -256,3 +256,19 @@ Repair evidence:
   found no weakened assertion and found no active sibling fixture omitted;
 - no default, exact-route, BACE, Stage-C or claim-scope drift;
 - `git diff --check`: clean.
+
+## R1 second candidate attempt — pkgdown repair accepted
+
+The second atomic attempt, bound to source commit `6f56564`, passed the complete
+source suite in 627.7 seconds. This is the first full-suite pass after the
+fully-observed-input repair. It then stopped before build or freeze because
+`pkgdown::check_pkgdown()` found three new exported and documented public S3
+methods absent from `_pkgdown.yml`'s explicit reference index:
+`print.pigauto_check`, `summary.pigauto_result`, and
+`print.summary_pigauto_result`.
+
+All three methods now appear beside the novice preflight/result entry points in
+the `Start here` reference section. A source regression test requires those
+exact topics to remain indexed. The community-surface suite passes 86
+expectations and `pkgdown::check_pkgdown()` reports `No problems found.` No
+candidate was frozen or promoted by the failed attempt.
