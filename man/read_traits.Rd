@@ -26,13 +26,16 @@ read_traits(
 \item{ordered_cols}{character vector of columns to coerce to \code{ordered}.}
 }
 \value{
-A \code{data.frame} with species names as row names.
+A \code{data.frame} with unique species names as row names.
 }
 \description{
-Loads trait data and sets species names as row names.  If a CSV path is
-supplied, it is read with \code{read.csv}.  By default, all non-species
-columns are returned (numeric, factor, integer, etc.).  Use
-\code{trait_cols} to select a subset.
+Loads trait data and sets species names as row names. If a CSV path is
+supplied, it is read with \code{read.csv}. All species identifiers must be
+present and unique because row names identify one trait row per species. For
+repeated observations, use \code{read.csv()} and pass the resulting data
+frame with \code{species_col} to \code{check_pigauto()} and \code{impute()}.
+By default, all non-species columns are returned (numeric, factor, integer,
+etc.). Use \code{trait_cols} to select a subset.
 }
 \examples{
 df <- data.frame(species = c("Sp_a", "Sp_b"), mass = c(10, 20))

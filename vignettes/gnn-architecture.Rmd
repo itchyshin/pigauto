@@ -292,7 +292,7 @@ $$
 * $\lambda_\text{gate}$ (default 0.01) actively pushes the gate toward
   zero. Without this term, $\rho$ has no gradient when delta ≈ μ (both
   shrinkage and reconstruction losses are zero), so the gate would stay
-  at its init. The explicit penalty guarantees the gate defaults toward
+  at its init. The explicit penalty encourages the gate toward
   baseline-only.
 
 Together with the architectural cap (`gate_cap` ≤ 0.8 by default),
@@ -319,31 +319,9 @@ these $p$ tokens within each row $i$, followed by mean-pool to a
 single $e_d$-dim feature. That feature is concatenated alongside
 $(x, \text{coords}, \text{covs})$ at the encoder input.
 
-The mechanism is intended for trait sets with strong within-row
-functional coupling that the joint MVN baseline cannot already capture
-(non-Gaussian, nonlinear, or non-monotone cross-trait structure).
-**On the BIEN plant bench it did not improve pooled RMSE** — the joint
-MVN/threshold-joint path already encodes $\mathbf{\Sigma}$ for the
-dominant trait types, so the second cross-trait mechanism is redundant.
-
-**Independent verification ([#106](https://github.com/itchyshin/pigauto/issues/106),
-code in [#116](https://github.com/itchyshin/pigauto/pull/116)):** a
-60-replicate ablation at N=2000 (5 seeds per cell, multi-trait DGP that
-fires the joint MVN baseline) confirmed `pigauto_OFF` beats both
-`pigauto_ON` and `pigauto_ON_L0` (the "lazy-optimiser disarmed" arm
-with `baseline_mu` masked and `lambda_shrink = 0`) — z-RMSE 1.038 vs
-1.056 vs 1.057; conformal coverage stable at 0.884–0.887. Even with
-the lazy-optimiser trap disarmed, the network regresses against the
-baseline rather than finding new structure. See the NEWS entry for the
-full table. (Measured before the 2026-08 GNN train/cal-symmetry fix,
-which removed held-out truth from the training-time input context;
-not yet re-verified on the corrected pipeline.)
-
-The flag ships as opt-in because it may help on datasets where the
-linear $\mathbf{\Sigma}$ assumption is too weak (e.g. functional traits
-with phase-transition or interaction structure), or in small-N regimes
-where the joint MVN baseline hasn't yet converged on the cross-trait
-covariance.
+This opt-in mechanism changes the model architecture. Assess it with a
+held-out comparison on the intended data rather than transferring a result
+from another trait set or simulation regime.
 
 Backward-compatible: saved fits without the field default to
 `use_trait_attention = FALSE` and reconstruct identically.
@@ -386,19 +364,15 @@ $\mathcal{N}(\mu, s/1.96)$ on the transformed scale, where $s$ is the
 conformal residual quantile. A conformal prediction interval does not by
 itself establish that these Normal draws are proper multiple imputations.
 `"mc_dropout"` runs $M$ stochastic GNN passes in training mode (dropout
-active) on top of BM-draw inputs. A 3,000-fit campaign found that neither
-legacy draw method passed any of the 12 downstream fixed-effect cells; PMM
-also failed its redesign pilot. These paths are unsupported for inference.
+active) on top of BM-draw inputs. These paths are unsupported for inference.
 
 The separate experimental `multi_impute_analysis()` backend declares the
 substantive model before imputation. It supports one incomplete continuous
 covariate under MAR, dispatching to proper Bayesian normal-regression MI for
 Gaussian `lm`, `smcfcs` for binomial-logit `glm`, and `jomo.smc` for a Gaussian
 `lmer` with one random intercept. `pool_mi()` then applies Rubin's rules to
-fixed effects only. The package implementation passed a warning-free
-6,000-task gate at clean SHA `2e3809d`, with all 24 fixed-effect cells inside
-the predeclared bias, SE-ratio, coverage, fit, and finite-result bounds. The
-interface remains experimental and deliberately narrow.
+fixed effects only. The interface remains experimental and deliberately
+narrow.
 
 ## 6. Posterior-tree prediction sensitivity
 
@@ -428,9 +402,9 @@ $$
 \hat{y}_i \pm s_t,
 $$
 
-where $s_t$ is the split-conformal residual quantile for trait $t$,
-giving $\ge 95\%$ marginal coverage on the original scale, under the
-split-conformal exchangeability assumptions stated in §5.
+where $s_t$ is the split-conformal residual quantile for trait $t$. Treat this
+as a nominal held-out diagnostic under the stated assumptions, not a
+package-wide interval certification.
 
 ## 8. Where to look in the code
 

@@ -88,13 +88,8 @@
 #'   EM cell-refinement; \code{R/joint_mvn_solver.R}). \code{0L} preserves
 #'   current behaviour byte-for-byte. The refinement is guarded: the
 #'   Sigma step must shrink each iteration, or the loop rolls back to the
-#'   last good iterate and sets \code{$diverged}. Measured (see
-#'   \code{docs/dev-log/2026-08-17-sigma-recovery-results.md}):
-#'   \code{joint_refine_iter = 3L} with \code{refine_variance =
-#'   "conservative"} improves RMSE at low phylogenetic signal, while at
-#'   high signal the divergence guard rolls back and results match
-#'   \code{0L}. In short: helps when phylogenetic signal is
-#'   moderate/low, and is a no-op at very high signal. Passed to
+#'   last good iterate and sets \code{$diverged}. Assess this opt-in control
+#'   with held-out evaluation on the intended data. Passed to
 #'   \code{\link{fit_baseline}} and stored in the fitted model config.
 #' @param em_iterations integer. Phase 6 EM iterations for the
 #'   threshold-joint baseline (binary + ordinal + OVR categorical).
@@ -295,11 +290,9 @@
 #'   heavily skewed (e.g. AVONET \code{Migration} is ~78\% Resident /
 #'   ~14\% Partial / ~8\% Full at n=300) can have its calibrated gate
 #'   collapse onto a corner that predicts the majority class
-#'   everywhere.  When this matters, increase \code{n_imputations}
-#'   (>= 20 in our K=3 ordinal benches) and set
-#'   \code{pool_method = "mode"} (Phase H, +6.6 pp on AVONET
-#'   Migration K=3 vs the default median pool).  See
-#'   \code{useful/MEMO_2026-05-01_phase_h_results.md}.
+#'   everywhere. Compare candidate settings, including
+#'   \code{pool_method = "mode"}, with \code{cross_validate()} on the
+#'   intended trait table rather than applying a generic setting.
 #'
 #' @examples
 #' \donttest{

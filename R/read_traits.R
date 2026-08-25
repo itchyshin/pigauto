@@ -1,9 +1,12 @@
 #' Read trait data from a CSV file or data frame
 #'
-#' Loads trait data and sets species names as row names.  If a CSV path is
-#' supplied, it is read with \code{read.csv}.  By default, all non-species
-#' columns are returned (numeric, factor, integer, etc.).  Use
-#' \code{trait_cols} to select a subset.
+#' Loads trait data and sets species names as row names. If a CSV path is
+#' supplied, it is read with \code{read.csv}. All species identifiers must be
+#' present and unique because row names identify one trait row per species. For
+#' repeated observations, use \code{read.csv()} and pass the resulting data
+#' frame with \code{species_col} to \code{check_pigauto()} and \code{impute()}.
+#' By default, all non-species columns are returned (numeric, factor, integer,
+#' etc.). Use \code{trait_cols} to select a subset.
 #'
 #' @param x character path to a CSV file, or a \code{data.frame}.
 #' @param species_col character. Name of the column containing species names
@@ -12,7 +15,7 @@
 #'   \code{NULL} (default), all columns except \code{species_col} are used.
 #' @param factor_cols character vector of columns to coerce to \code{factor}.
 #' @param ordered_cols character vector of columns to coerce to \code{ordered}.
-#' @return A \code{data.frame} with species names as row names.
+#' @return A \code{data.frame} with unique species names as row names.
 #' @examples
 #' df <- data.frame(species = c("Sp_a", "Sp_b"), mass = c(10, 20))
 #' traits <- read_traits(df, species_col = "species")

@@ -90,8 +90,6 @@ navbar:
           href: dev/bench_avonet_missingness.html
         - text: "Missingness mechanisms (MCAR / MAR / MNAR)"
           href: dev/bench_missingness_mechanism.html
-        - text: "Historical tree-sensitivity benchmark"
-          href: dev/bench_tree_uncertainty.html
         - text: "Delhey 5,809-species birds"
           href: dev/bench_delhey.html
         - text: "Multi-observation imputation (CTmax-like)"
@@ -115,14 +113,16 @@ navbar:
         #   bench_bace_avonet_head_to_head, bench_pantheria_bace_head_to_head.
 
 reference:
-  - title: "One-call entry point"
+  - title: "Start here"
     desc: >
-      The main user-facing function. Runs the full pipeline
-      (`preprocess_traits` → `build_phylo_graph` → `fit_baseline` →
-      `fit_pigauto` → `predict` → `evaluate`) and returns a completed
-      data frame.
+      Read traits and a tree, inspect the fit-free input check, run the
+      one-call imputation entry point, and extract completed data.
     contents:
+      - read_traits
+      - read_tree
+      - check_pigauto
       - impute
+      - completed_data
 
   - title: "Experimental analysis-aware MI for fixed effects"
     desc: >
@@ -160,13 +160,11 @@ reference:
       - evaluate
       - evaluate_imputation
 
-  - title: "Active imputation (sampling-design guidance)"
+  - title: "Active imputation (model-based ranking)"
     desc: >
-      Per-candidate-observation expected uncertainty reduction across
-      every currently-missing cell, using closed-form BM
-      (Sherman-Morrison) variance reduction for continuous / count /
-      ordinal / proportion / zi_count magnitude and label-propagation
-      entropy reduction for binary / categorical / zi_count gate.
+      Model-based BM/label-propagation proxy rankings under their stated
+      assumptions. They are not a demonstrated field-gain or an optimal
+      sampling guarantee.
     contents:
       - suggest_next_observation
 
@@ -201,8 +199,6 @@ reference:
 
   - title: "I/O helpers"
     contents:
-      - read_traits
-      - read_tree
       - save_pigauto
       - load_pigauto
 

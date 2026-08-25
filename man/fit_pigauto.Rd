@@ -105,17 +105,9 @@ the model builds per-trait tokens from each row's latent values
 multi-head self-attention block over the trait sequence, mean-pools
 to a \code{trait_embed_dim} feature, and concatenates it alongside
 \code{(x, coords, covs)} at the encoder input. Intended for trait
-sets with strong within-row functional coupling that the joint MVN /
-threshold-joint baseline cannot capture (e.g. nonlinear cross-trait
-structure). On the BIEN n=2000 plant bench it did \strong{not} improve
-pooled RMSE (cross-trait covariance is already captured by the joint
-baseline); kept as
-an opt-in for datasets where it may help. Default \code{FALSE}
-preserves v0.9.2 behaviour exactly. Note: Ablation testing
-demonstrates that this within-row attention recovers only a small,
-sub-material gain, and only when cross-trait structure is explicitly
-non-linear and the joint-MVN baseline is present; it cannot model
-non-linear coupling on its own.}
+sets with within-row functional coupling not represented by the selected
+baseline. Assess this opt-in architecture with held-out evaluation on the
+intended data. Default \code{FALSE} preserves v0.9.2 behaviour exactly.}
 
 \item{n_trait_heads}{integer. Number of attention heads in the within-row
 self-attention block when \code{use_trait_attention = TRUE}. Default
@@ -173,58 +165,28 @@ Set to \code{0} to disable.}
 
 \item{clip_norm}{numeric. Gradient clip norm (default \code{1.0}).}
 
-\item{conformal_method}{character. How the conformal prediction score
-is estimated from validation residuals.  \code{"split"} (default,
-backward-compatible) takes a single sample quantile; \code{"bootstrap"}
-takes \code{conformal_bootstrap_B} bootstrap resamples of the val
-residuals and averages the per-resample quantiles.  Empirically the
-bootstrap variant reduces the conformal-score variance across seeds
-by ~30\% at small \code{n_val}, but on the simulation design used to
-evaluate it (n=150 species, 35\\% trait_MAR) it did not translate
-into better 95\\% coverage stability (coverage SD 0.094 vs 0.102
-across 10 seeds).  Ship as an opt-in experimental knob; defaults to
-\code{"split"}.
-\code{"mondrian"} (B2, 2026-08-16) is a stratified conformal method
-that conditions calibration on phylogenetic sampling locality: each
-validation cell's locality is the mean cophenetic distance to its 5
-nearest species with an observed value for that trait, cells are
-split into 2 strata at the median locality, and a split-conformal
-quantile is computed per stratum. Fixes the exchangeability failure
-documented in
-\code{docs/dev-log/2026-08-16-mechanism-coverage-results.md}: split
-conformal calibrates on the observed complement, which sits closer
-(in cophenetic distance) to other observed cells than genuinely-
-missing cells do, undercovering worst under clade-structured
-(MAR_phylo) missingness. Cells in the far stratum get the wider
-quantile — intervals widen in undersampled clades, which is the
-point. If either stratum has fewer than 19 residuals — the minimum whose
-achievable coverage ceiling n/(n+1) reaches 0.95 — that trait
-falls back to the global \code{"split"} score. \strong{Single-obs
-only}: errors immediately if \code{data} is multi-observation, since
-locality is defined at species level via \code{graph$D_sq} and the
-per-observation calibration split does not map cleanly onto species
-distances.}
+\item{conformal_method}{character. How the conformal residual score is
+estimated from held-out validation cells. \code{"split"} (default,
+backward-compatible) takes a sample quantile; \code{"bootstrap"}
+averages quantiles from \code{conformal_bootstrap_B} bootstrap resamples;
+and \code{"mondrian"} stratifies validation cells by phylogenetic
+sampling locality before estimating a score per stratum. These choices
+support nominal held-out diagnostics, not package-certified coverage.
+\code{"mondrian"} is single-observation only because its locality is
+species-level. If either stratum is too small, that trait uses the global
+\code{"split"} score instead.}
 
 \item{conformal_bootstrap_B}{integer. Bootstrap resamples used when
 \code{conformal_method = "bootstrap"}; default \code{500}.  Ignored
 otherwise.}
 
-\item{conformal_split_val}{logical. Default \code{FALSE} (pre-2026-04-28
-single-set behaviour, retained because forcing the split regresses
-the AVONET300 / OVR-categorical / BIEN safety-floor smoke benches by
-2-26\%). When \code{TRUE}, the validation set is split per latent
-column into a calibration half (used to pick the calibrated blend
-gate) and a conformal half (used to compute the conformal residual
-quantile). This restores split-conformal exchangeability — without
-the split, the gate is selected to minimise residual MSE on the very
-cells whose residuals drive the conformal quantile, producing
-systematic undercoverage (most visible at small \code{n_val}; see
-the \code{coverage_investigation} memo). Use this when accurate 95\%
-coverage matters more than the bench-grade RMSE; the split only
-activates per-column when that column has at least
-\code{2 * min_val_cells} val cells (smaller columns silently fall
-back to the single-set path to keep \code{calibrate_gates()}'s
-half-A / half-B cross-check stable).}
+\item{conformal_split_val}{logical. Default \code{FALSE}: gate selection
+and residual-score estimation share validation cells. When \code{TRUE},
+each eligible latent column separates those tasks into calibration and
+residual-estimation subsets. This separation does not certify package-wide coverage.
+Columns without enough validation cells retain the
+shared-data path. With either setting, use \code{cross_validate()} and
+report held-out diagnostics for the intended data.}
 
 \item{gate_method}{character. How the per-trait calibrated gate is
 chosen.  \code{"single_split"} (default, backward-compatible) runs
@@ -240,10 +202,8 @@ uses larger training sets per split (K-1/K vs 1/2 in
 \code{median_splits}) and has a standard cross-validation
 interpretation, motivated by the open val→test drift observed on
 4/32 binary cells in the discrete-bench memo.
-\code{"median_splits"} slightly reduces gate
-bimodality at small \code{n_val} (SD 0.406 → 0.360 across 10 seeds
-on the evaluation sim) with a small coverage-SD improvement
-(0.094 → 0.086).  Negligible runtime cost (B × cheap grid searches).}
+\code{"median_splits"} repeats the split procedure before taking a
+componentwise median. Assess calibration settings on held-out data.}
 
 \item{gate_splits_B}{integer. Random splits used when
 \code{gate_method = "median_splits"}; default \code{31} (odd so the
@@ -325,14 +285,8 @@ using the estimated Sigma (the in-house solver's \code{max_iter}
 EM cell-refinement; \code{R/joint_mvn_solver.R}). \code{0L} preserves
 current behaviour byte-for-byte. The refinement is guarded: the
 Sigma step must shrink each iteration, or the loop rolls back to the
-last good iterate and sets \code{$diverged}. Measured (see
-\code{docs/dev-log/2026-08-17-sigma-recovery-results.md}):
-\code{joint_refine_iter = 3L} with \code{refine_variance =
-"conservative"} improves RMSE at low phylogenetic signal, while at
-high signal the divergence guard rolls back and results match
-\code{0L}. In short: helps when phylogenetic signal is
-moderate/low, and is a no-op at very high signal. Passed to
-\code{\link{fit_baseline}} and stored in the fitted model config.}
+last good iterate and sets \code{$diverged}. Assess this opt-in control
+with held-out evaluation on the intended data.}
 
 \item{verbose}{logical. Print training progress (default \code{TRUE}).}
 
@@ -390,41 +344,17 @@ toward zero when the GNN correction provides no benefit.
 \section{Calibration at small n}{
 
 
-pigauto's 95\\% intervals are \emph{conformal}, not parametric: the
-interval half-width for each trait is the empirical \code{(1 - alpha)}
-quantile of \eqn{|y - \hat y|} on held-out validation cells.  When the
-number of validation cells per trait (\code{n_val}) is large
-(\eqn{\gtrsim 30}), split-conformal gives near-exact marginal coverage
-under mild exchangeability assumptions.
+Conformal bounds use the empirical \code{(1 - alpha)} quantile of
+\eqn{|y - \hat y|} on held-out validation cells. They are nominal
+held-out diagnostics and do not certify package-wide coverage.
 
-At small \code{n_val} (\eqn{<} 20, and especially \eqn{<} 10) two
-things degrade at once:
-
-\itemize{
-\item The conformal quantile clamps to \code{max(residuals)} because
-the required quantile level exceeds 1.  The score is the single
-largest val residual and has substantial sampling variance across
-fits.
-\item The gate calibration's half-A / half-B split ends up with only
-a few cells per half, so the grid-search winner is essentially
-random between \code{0} and \code{gate_cap}.
-}
-
-Empirically (pigauto simulation harness, n=150 species, 35\\%
-trait_MAR, 10 random seeds), default behaviour produces 92\\% mean
-coverage with per-fit coverage ranging \code{[0.73, 1.00]}.  The mean
-is close to the 95\\% target; the per-fit variance is the issue.
-\code{gate_method = "median_splits"} and \code{conformal_method =
-"bootstrap"} reduce their respective estimator variances but
-empirically do not meaningfully narrow the coverage distribution.
-\strong{Treat the 95\\% intervals as approximate in the small-\code{n}
-regime}; increase \code{missing_frac} (more held-out data for
-calibration) or collect more species if tight per-fit coverage is
-required.
-
-The \code{min_val_cells} warning fires at fit time whenever any trait
-falls below this threshold, so you know when to interpret the
-intervals cautiously.
+Small validation sets make both the residual quantile and gate selection
+unstable. The \code{min_val_cells} warning identifies traits where this is
+especially relevant. \code{conformal_split_val = TRUE} can separate gate
+selection from residual estimation for eligible columns, but it does not
+remove the small-sample limitation. Use \code{cross_validate()} on the
+intended data and report the resulting held-out diagnostics rather than
+treating an interval target as certified.
 }
 
 \examples{

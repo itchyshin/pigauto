@@ -191,7 +191,7 @@ here instead of repeating it.
 
 \tabular{lll}{
 \strong{Type} \tab \strong{Value} \tab \strong{Is it a Gaussian SE?} \cr
-continuous / count / ordinal / proportion \tab BM conditional SD, delta-method back-transformed to original scale \tab Yes — safe for interval arithmetic. \cr
+continuous / count / ordinal / proportion \tab model-dependent BM/joint conditional SD, delta-method back-transformed to original scale \tab It is not total final blended-prediction uncertainty and not a package-certified interval input. \cr
 binary \tab \code{min(p, 1-p)} \tab No. Probability of being wrong (0 = certain, 0.5 = maximally uncertain). \cr
 categorical \tab \code{1 - max(p_k)} \tab No. Margin from certainty (0 = certain, (K-1)/K = maximally uncertain). \cr
 zi_count \tab delta-method SE of \code{E[X] = P(nonzero) * E[count | nonzero]} \tab No. Mixes gate and magnitude uncertainty into one number; not a magnitude-scale SE. Use \code{conformal_lower} / \code{conformal_upper} (conditional-on-nonzero; see above) plus \code{probabilities} (the gate) for interval-scale zi_count uncertainty instead. \cr

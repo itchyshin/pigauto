@@ -1,0 +1,4 @@
+species,mass,clutch,threat_status
+sp_a,10,3,LC
+sp_b,,4,VU
+sp_c,30,,EN

@@ -150,3 +150,41 @@ Final evidence:
 - arbitrary backtick/backslash declaration actions independently round-trip;
 - independent semantic and mechanical re-reviews: pass;
 - documentation regeneration and `git diff --check`: clean.
+
+## P3 receipt — accepted
+
+P3 makes the supported path visible before advanced controls: the README and
+getting-started vignette now teach one six-expression journey from files through
+preflight, imputation, completed-data access and reporting. Installed novice
+fixtures and an executable example preserve that journey for candidate testing.
+Short recipes cover ordered states, integer measurements, proportions and
+zero-inflated counts, compositions, repeated observations and species
+reconciliation. Solver, EM, refinement, calibration and exact-prediction controls
+remain available in a separately labelled advanced section; exact prediction
+remains opt-in.
+
+Claim review also repaired contradictory interval, tree-sensitivity, active-
+sampling, BACE and historical PMM language. The retained tree benchmark path is
+a descriptive-only tombstone, and current help distinguishes conditional
+baseline standard deviations, diagnostic interval outputs and the one supported
+analysis-aware MI route. Historical NEWS entries carry local withdrawal or
+supersession boundaries so a deep link cannot revive an unsupported claim.
+
+The claim gate normalizes Markdown whitespace and includes planted wrapped-text
+negative controls. This closes a review-discovered bypass where ordinary regex
+dot matching did not cross a line break.
+
+Final evidence:
+
+- exact `community-surface` suite: 79 expectations, zero failures, warnings or
+  skips;
+- exact six-expression installed example and all fixture paths parse and resolve;
+- fit-free fixture preflight: `ready` for three tree tips, three traits and two
+  missing cells;
+- README, vignette source and purl output are synchronized;
+- seven changed roxygen source/help pairs regenerate byte-identically;
+- pkgdown navigation, current tree article and descriptive-only tombstone agree;
+- independent mechanical and adversarial re-reviews: pass, including planted
+  wrapped BACE, PMM and tree-inference negatives;
+- no `BACE/`, Stage C, default-route or exact-route implementation drift;
+- `git diff --check`: clean.

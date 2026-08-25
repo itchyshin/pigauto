@@ -42,6 +42,11 @@ phylogenetic baseline and GNN correction both operate in this space,
 and type-specific logic appears only at encoding, loss computation,
 and decoding.
 
+Before fitting a mixed table, use `check_pigauto(traits, tree)`. Its trait
+table records the detected type, declaration source, usable matched rows, and
+copy-ready corrections; its species report distinguishes matched, data-only,
+and tree-only identities.
+
 ## Synthetic example
 
 ```{r simulate}
@@ -197,4 +202,6 @@ BLUPs/conditional modes, and latent loadings are unsupported.
 
 For prediction diagnostics, the lower-level
 `predict(fit, n_imputations = 5L)` interface returns stochastic datasets.
-These are not supported for downstream inference.
+These are not supported for downstream inference. The documented inference
+route begins with `multi_impute_analysis()` and only admits its analysis-aware
+objects to `with_imputations()` and `pool_mi()`.
