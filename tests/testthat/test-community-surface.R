@@ -158,3 +158,27 @@ test_that("NEWS labels superseded public claims in their historical sections", {
   expect_match(news, "Historical PMM rationale — superseded", fixed = TRUE)
   expect_match(news, "multi_impute_analysis()", fixed = TRUE)
 })
+
+test_that("unsafe historical development pages remain tombstones", {
+  root <- testthat::test_path("..", "..", "pkgdown", "assets", "dev")
+  names <- c(
+    "bench_avonet9993_bace.html",
+    "bench_avonet9993_bace_index.html",
+    "bench_avonet9993_bace_n3000.html",
+    "bench_bace_avonet_head_to_head.html",
+    "bench_bien.html",
+    "bench_fishbase.html",
+    "bench_pantheria_bace_head_to_head.html",
+    "calibration_grid.html",
+    "pantheria_summary.html",
+    "phase8_summary.html",
+    "tests_overview.html"
+  )
+  paths <- file.path(root, names)
+  expect_true(all(file.exists(paths)))
+  pages <- vapply(paths, function(path) paste(readLines(path, warn = FALSE), collapse = "\n"), character(1))
+  expect_true(all(grepl("Historical development page withdrawn", pages, fixed = TRUE)))
+  expect_true(all(grepl("external-comparator gate remains open", pages, fixed = TRUE)))
+  expect_false(any(grepl("theoretical guarantee|distribution-free uncertainty quantification remains valid|winner highlighted",
+                         pages, ignore.case = TRUE)))
+})

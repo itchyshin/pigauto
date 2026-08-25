@@ -179,7 +179,7 @@ Final evidence:
 - exact `community-surface` suite: 79 expectations, zero failures, warnings or
   skips;
 - exact six-expression installed example and all fixture paths parse and resolve;
-- fit-free fixture preflight: `ready` for three tree tips, three traits and two
+- fit-free fixture preflight: `ready` for eight tree tips, three traits and two
   missing cells;
 - README, vignette source and purl output are synchronized;
 - seven changed roxygen source/help pairs regenerate byte-identically;
@@ -187,4 +187,40 @@ Final evidence:
 - independent mechanical and adversarial re-reviews: pass, including planted
   wrapped BACE, PMM and tree-inference negatives;
 - no `BACE/`, Stage C, default-route or exact-route implementation drift;
+- `git diff --check`: clean.
+
+## R1 pre-freeze receipt — accepted
+
+The novice pre-run first exposed an invalid three-tip teaching fixture: the
+default four spectral features require a larger tree. The fixture alone was
+expanded to eight tips while retaining three traits and two missing cells. The
+unchanged six-expression, default-argument CPU workflow then completed in 99.14
+seconds and wrote its report. No package default was changed.
+
+Reader-surface review found that unindexed `pkgdown/assets/dev` pages would
+still be copied into a rendered site. Eleven stale comparator, coverage and
+internal-test pages are therefore retained only as stable no-index tombstones;
+their former contents remain recoverable from Git history. The current source
+and rendered-site claim gate requires every exact tombstone and scans all HTML.
+
+Candidate verification is one atomic, fail-closed run from a clean commit. It
+remeasures HEAD and worktree status around every command; records exact
+executables, arguments, directories, environments, timestamps and exit codes;
+binds build, check, install, installed gates and rendered-site gates to one
+tarball and staging root; and hashes the tarball plus hidden-aware installed-
+library and site inventories. A partial freeze is never promoted to `CURRENT`.
+
+Pre-freeze evidence:
+
+- version set to local candidate `0.11.0`, with no submission or release claim;
+- exact G5/G6/G7 focused gates remain 46/90/21 expectations;
+- community-surface gate: 83 expectations, zero failures, warnings or skips;
+- source G9 verifier and all six candidate scripts parse and pass light probes;
+- component ledger enumerates every shipped data/extdata/example/logo/notice
+  component and every asset-bearing excluded root;
+- planted failures closed malformed dependency matching, wrapped prose, path
+  spaces, stale logs, wrong source roots, different installed libraries,
+  different site roots, clean HEAD switches, hidden-file drift and non-stopping
+  source-test failures;
+- independent mechanical and adversarial pre-freeze reviews: pass;
 - `git diff --check`: clean.

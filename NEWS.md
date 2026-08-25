@@ -1,9 +1,9 @@
-# pigauto 0.11.0 (development)
+# pigauto 0.11.0
 
-GitHub-dev after CRAN pigauto 0.10.0 (Date/Publication 2026-07-30).
-This is not a CRAN tarball. The installed BACE bridge has been removed for
-0.11: BACE remains an in-tree comparator only, with no `Suggests` dependency,
-export, or installed help page.
+Local candidate after CRAN pigauto 0.10.0 (Date/Publication 2026-07-30).
+No CRAN submission or public release is implied. The installed BACE bridge has
+been removed for 0.11: BACE remains an in-tree comparator only, with no
+`Suggests` dependency, export, or installed help page.
 
 ## Trust and usability surface
 
