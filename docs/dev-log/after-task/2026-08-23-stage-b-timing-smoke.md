@@ -49,8 +49,9 @@ parameter-drop class again.
   refreshed, and reinstalled in the isolated library.
 - Fixed: source-loading path unnecessarily required `devtools`; used the
   already verified installed package for the receipt.
-- Deferred: BACE is unavailable; CRAN and public `itchyshin` repository
-  searches did not yield a source. Full Stage B cannot proceed unchanged.
+- Deferred: BACE is unavailable in Totoro's private library. CRAN lacks it;
+  the routed project record identifies the upstream source as
+  `daniel1noble/BACE`, which must be installed and verified before full Stage B.
 
 ## 8. Consistency Audit
 

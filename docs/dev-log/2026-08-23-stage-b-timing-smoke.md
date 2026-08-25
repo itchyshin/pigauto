@@ -39,12 +39,12 @@ small-validation and numerical-solver warnings rather than suppressing them.
 
 `BACE` was unavailable in the isolated library and its rows are retained as
 errors (`BACE not installed`) in both receipts. A read-only CRAN index query
-found no BACE package, and a public GitHub repository search under
-`itchyshin` found no BACE source. Therefore this smoke is sufficient to time
-the implemented arms but is not a complete Stage-B comparator run. Do not
-silently remove BACE from the full protocol: either provide and verify its
-source in the private library, or explicitly amend the pre-registered
-comparison boundary before a claim-bearing campaign.
+found no BACE package. An initial public GitHub search under `itchyshin` found
+no source, but the routed project record identifies the upstream package as
+`daniel1noble/BACE`. Therefore this smoke is sufficient to time the
+implemented arms but is not a complete Stage-B comparator run. Install and
+verify that upstream source in the private library before a claim-bearing
+campaign; do not silently remove BACE from the protocol.
 
 ## What this permits and does not permit
 
