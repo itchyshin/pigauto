@@ -175,6 +175,11 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
   if (!is.data.frame(traits)) stop("'traits' must be a data.frame.")
   if (!inherits(tree, "phylo")) stop("'tree' must be a phylo object.")
 
+  # Keep input identity before dropping data-only species.  Internal rows are
+  # later reordered to tree order, while build_completed() must always target
+  # the user's original rows.  Synthetic tree-only rows receive NA below.
+  original_row_id <- seq_len(nrow(traits))
+
   # Phylogenetic imputation needs >= 2 tips to define any signal.  A
   # 1-tip tree silently produces a 1-row pigauto_data that downstream
   # fit_baseline / fit_pigauto cannot use; better to fail loudly here.
@@ -250,6 +255,7 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
     keep_rows <- obs_species_raw %in% tree$tip.label
     traits <- traits[keep_rows, , drop = FALSE]
     obs_species_raw <- obs_species_raw[keep_rows]
+    original_row_id <- original_row_id[keep_rows]
     unique_species <- unique(obs_species_raw)
   }
   # If alignment leaves zero species in common, phylogenetic imputation
@@ -280,7 +286,7 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
     # internal position k.  Used by `build_completed()` (and any downstream
     # caller that needs to re-align internal-order results back to the
     # user's input row order).
-    input_row_order <- as.integer(row_order)
+    input_row_order <- as.integer(original_row_id[row_order])
 
     # Add all-NA rows for tree tips missing from data
     missing_tips <- tree$tip.label[!in_data]
@@ -309,7 +315,7 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
     # internal position k.  `idx[k]` is the row of `traits` (= input row
     # index, since rownames are preserved at this point) that maps to
     # tree$tip.label[k].  When a tip has no input row, idx[k] = NA.
-    input_row_order <- as.integer(idx)
+    input_row_order <- as.integer(original_row_id[idx])
     traits <- traits[idx, , drop = FALSE]
     rownames(traits) <- tree$tip.label
 

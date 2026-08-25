@@ -1,8 +1,9 @@
 #' Generate an HTML benchmark report from a pigauto fit
 #'
-#' Produces a self-contained HTML file with interactive charts comparing the
-#' GNN against the phylogenetic baseline.  The report includes per-trait
-#' metrics, gate values, conformal coverage, and training history.
+#' Produces an HTML file with interactive charts (loading Chart.js from its
+#' public CDN) comparing the GNN against the phylogenetic baseline. The report
+#' includes per-trait metrics, gate values, held-out diagnostic conformal
+#' coverage, and training history.
 #'
 #' @param fit A \code{pigauto_fit} object (or a \code{pigauto_result} from
 #'   \code{\link{impute}}).
@@ -41,9 +42,11 @@ pigauto_report <- function(fit, data = NULL, splits = NULL,
     if (is.null(splits)) splits <- fit$splits
     pred   <- fit$prediction
     fit_obj <- fit$fit
+    saved_check <- fit$check
   } else if (inherits(fit, "pigauto_fit")) {
     fit_obj <- fit
     pred <- predict(fit_obj, return_se = TRUE)
+    saved_check <- NULL
   } else {
     stop("'fit' must be a pigauto_fit or pigauto_result object.")
   }
@@ -72,10 +75,39 @@ pigauto_report <- function(fit, data = NULL, splits = NULL,
     metrics   = metrics,
     trait_map = trait_map
   )
+  html <- sub("</body>", paste0(.report_contract_html(saved_check, fit), "</body>"),
+              html, fixed = TRUE)
 
   writeLines(html, output_path)
   if (open) utils::browseURL(output_path)
   invisible(output_path)
+}
+
+.escape_report_html <- function(x) {
+  x <- as.character(x)
+  x <- gsub("&", "&amp;", x, fixed = TRUE)
+  x <- gsub("<", "&lt;", x, fixed = TRUE)
+  x <- gsub(">", "&gt;", x, fixed = TRUE)
+  x <- gsub("\"", "&quot;", x, fixed = TRUE)
+  gsub("'", "&#39;", x, fixed = TRUE)
+}
+
+.report_contract_html <- function(check, result = NULL) {
+  input <- if (is.null(check)) {
+    "<p>Preflight check unavailable.</p>"
+  } else {
+    msgs <- check$messages
+    rows <- if (is.null(msgs) || !nrow(msgs)) "<tr><td colspan=\"3\">No messages</td></tr>" else paste(vapply(seq_len(nrow(msgs)), function(i) {
+      sprintf("<tr><td>%s</td><td>%s</td><td>%s</td></tr>",
+              .escape_report_html(msgs$code[[i]]), .escape_report_html(msgs$text[[i]]),
+              .escape_report_html(msgs$action[[i]]))
+    }, character(1)), collapse = "")
+    paste0("<p>Status: <strong>", .escape_report_html(check$status),
+           "</strong></p><table><thead><tr><th>Code</th><th>Message</th><th>Action</th></tr></thead><tbody>", rows, "</tbody></table>")
+  }
+  roles <- if (inherits(result, "pigauto_result")) .describe_pigauto_result(result) else data.frame(role = "legacy", text = "Preflight check unavailable for a bare fit.")
+  role_rows <- paste(vapply(seq_len(nrow(roles)), function(i) sprintf("<li><strong>%s:</strong> %s</li>", .escape_report_html(roles$role[[i]]), .escape_report_html(roles$text[[i]])), character(1)), collapse = "")
+  paste0("<h2>Input checks</h2>", input, "<h2>How to use outputs</h2><ul>", role_rows, "</ul>")
 }
 
 
@@ -249,8 +281,7 @@ build_report_html <- function(title, fit_obj, pred, metrics, trait_map) {
       cov <- "&mdash;"
       if (!is.null(m$conformal_coverage)) {
         cov_val <- m$conformal_coverage * 100
-        cov_class <- if (cov_val >= 93) "pos" else if (cov_val >= 85) "zero" else "neg"
-        cov <- sprintf('<span class="%s">%.1f%%</span>', cov_class, cov_val)
+        cov <- sprintf('%.1f%% (held-out diagnostic)', cov_val)
       }
 
       trait_rows <- paste0(trait_rows, sprintf(
@@ -395,7 +426,7 @@ tr:hover{background:#f8f9fa;}
 
 <h2>Per-Trait Performance</h2>
 <table>
-<thead><tr><th>Trait</th><th>Type</th><th class="num">n test</th><th class="num">BM</th><th class="num">GNN</th><th class="num">%%&Delta;</th><th class="num">r (BM)</th><th class="num">r (GNN)</th><th class="num">Coverage</th><th>Verdict</th></tr></thead>
+<thead><tr><th>Trait</th><th>Type</th><th class="num">n test</th><th class="num">BM</th><th class="num">GNN</th><th class="num">%%&Delta;</th><th class="num">r (BM)</th><th class="num">r (GNN)</th><th class="num">Held-out coverage (diagnostic)</th><th>Verdict</th></tr></thead>
 <tbody>%s</tbody>
 </table>
 

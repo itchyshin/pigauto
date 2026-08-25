@@ -203,6 +203,7 @@
 #'     \item{splits}{The val/test splits (or \code{NULL} if
 #'       \code{missing_frac = 0}).}
 #'     \item{evaluation}{Evaluation metrics on test set (or \code{NULL}).}
+#'     \item{check}{A compact \code{pigauto_check} preflight summary.}
 #'   }
 #' @section Trait type auto-detection:
 #' pigauto infers each trait's type from its R class — no \code{trait_types}
@@ -283,16 +284,10 @@
 #'   imputed values themselves are \code{result$completed[result$imputed_mask]}.
 #'
 #'   \strong{Common pitfall.}  If you call \code{impute()} on a fully
-#'   observed trait matrix (no \code{NA}s anywhere), there is nothing
-#'   to impute.  \code{result$completed} is identical to the input,
-#'   \code{sum(result$imputed_mask)} is \code{0}, and
-#'   \code{result$prediction$imputed} is just model predictions for
-#'   already-known values.  This is the right behaviour, but it can
-#'   look surprising: e.g. on \code{avonet300} (fully observed), the
-#'   "imputed" Mass values you see are simply the observed body
-#'   masses passed through (some bird species are 24 kg).  To exercise
-#'   the imputation path on a complete dataset, mask some cells first
-#'   (see Examples).
+#'   observed trait matrix (no \code{NA}s among matched target rows), there
+#'   is nothing to impute. \code{impute()} stops before graph construction or
+#'   training and directs you to \code{cross_validate()} for predictive
+#'   assessment. To exercise imputation, supply a real missing target cell.
 #'
 #'   \strong{Imbalanced K-class traits.}  At default settings
 #'   (\code{n_imputations = 1L}, \code{pool_method = "median"}), a
@@ -406,12 +401,28 @@ impute <- function(traits, tree, species_col = NULL,
     )
   }
 
-  # 1. Preprocess
-  pd <- preprocess_traits(traits, tree, species_col = species_col,
-                          trait_types = trait_types,
-                          multi_proportion_groups = multi_proportion_groups,
-                          log_transform = log_transform,
-                          covariates = covariates)
+  # 1. Preflight and preprocess. The internal checker captures the prepared
+  # object so validation does not repeat preprocessing before graph creation.
+  preflight <- .check_pigauto_internal(
+    traits, tree, species_col = species_col, trait_types = trait_types,
+    multi_proportion_groups = multi_proportion_groups,
+    log_transform = log_transform, covariates = covariates
+  )
+  check <- preflight$check
+  if (identical(check$status, "error")) {
+    problems <- check$messages[check$messages$severity == "error", , drop = FALSE]
+    stop("pigauto input check failed: ", paste(problems$text, collapse = " "),
+         " Action: ", paste(unique(problems$action), collapse = " "), call. = FALSE)
+  }
+  if (identical(check$status, "not_needed")) {
+    stop("All matched target cells are observed; fitting is not needed. Use ",
+         "`cross_validate()` to assess predictive performance.", call. = FALSE)
+  }
+  check_warnings <- check$messages[check$messages$severity == "warning", , drop = FALSE]
+  for (i in seq_len(nrow(check_warnings))) warning(check_warnings$text[[i]], call. = FALSE)
+  prep_messages <- check$messages[check$messages$code == "preprocess_message", , drop = FALSE]
+  for (i in seq_len(nrow(prep_messages))) message(prep_messages$text[[i]])
+  pd <- preflight$prepared
 
   # 2. Create val/test splits (unless user opts out).  We give the
   #    validation set a larger share (50%) than the default so that
@@ -533,7 +544,8 @@ impute <- function(traits, tree, species_col = NULL,
       data         = pd,
       tree         = tree,
       splits       = splits,
-      evaluation   = evaluation
+      evaluation   = evaluation,
+      check        = check
     ),
     class = "pigauto_result"
   )
@@ -597,7 +609,10 @@ build_completed <- function(original, imputed, species_col = NULL,
     if (!(nm %in% names(imputed))) next
     obs_col <- original[[nm]]
     imp_col <- imputed[[nm]][imp_row]
-    missing_i <- is.na(obs_col)
+    # Rows with no internal counterpart are data-only input rows. They remain
+    # visible in `$completed`, but are outside the fitted tree and must neither
+    # be marked as filled nor receive an indexed prediction.
+    missing_i <- is.na(obs_col) & !is.na(imp_row)
     imputed_mask[, nm] <- missing_i
 
     if (is.factor(obs_col)) {
@@ -630,6 +645,11 @@ build_completed <- function(original, imputed, species_col = NULL,
       if (any(missing_i)) {
         new_col[missing_i] <- as.integer(round(imp_col[missing_i]))
       }
+      completed[[nm]] <- new_col
+
+    } else if (is.character(obs_col)) {
+      new_col <- obs_col
+      if (any(missing_i)) new_col[missing_i] <- as.character(imp_col[missing_i])
       completed[[nm]] <- new_col
 
     } else {
@@ -707,6 +727,8 @@ print.pigauto_result <- function(x, ...) {
     }
   }
 
+  roles <- .describe_pigauto_result(x)
   cat("\n  Access the completed data.frame with  result$completed\n")
+  cat("  Note:", roles$text[roles$role == "inference"], "\n")
   invisible(x)
 }

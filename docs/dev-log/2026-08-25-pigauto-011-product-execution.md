@@ -121,3 +121,32 @@ Final evidence:
   help entry;
 - independent adversarial and mechanical re-reviews: pass;
 - `git diff --check`: clean.
+
+## P2 receipt — accepted
+
+P2 adds a fit-free `check_pigauto()` contract, stores its compact summary on
+`pigauto_result`, and gives users `completed_data()`, a result summary and a
+report that share the same output-role language. Fully observed matched target
+data now stop before graph construction or training and point to
+`cross_validate()`.
+
+Review exposed and repaired several neighboring correctness defects before the
+slice was accepted: original row identities were lost around data-only species;
+character predictions could be converted to factor codes; diagnostic draws used
+an incomplete inverse row map; initial summary counts overlapped; and runtime
+readiness reported accelerators without probing the selected device. The final
+checker uses matched rows for type hints, emits parseable declarations even for
+unusual names, preserves partial-species result invariants, and treats an
+attempted but still-missing value as unresolved rather than filled.
+
+Final evidence:
+
+- exact G6 command: `FAIL 0 | WARN 0 | SKIP 0 | PASS 90`;
+- exact G7 command: `FAIL 0 | WARN 0 | SKIP 0 | PASS 21`;
+- neighboring `preprocess|shipping-coverage` suite: 106 expectations, zero
+  failures and seven pre-existing small-fixture warnings;
+- neighboring `new-features|multi-impute` suite: 445 expectations, zero
+  failures, 148 pre-existing warnings and three expected skips;
+- arbitrary backtick/backslash declaration actions independently round-trip;
+- independent semantic and mechanical re-reviews: pass;
+- documentation regeneration and `git diff --check`: clean.

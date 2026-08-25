@@ -61,6 +61,26 @@ pool_unverified <- function(...) {
   result
 }
 
+test_that("conformal draws ignore data-only rows while mapping modeled gaps", {
+  pred <- list(
+    imputed = data.frame(x = c(10, 20)),
+    probabilities = NULL,
+    conformal_scores = c(x = NA_real_),
+    se = matrix(c(1, 1), ncol = 1, dimnames = list(NULL, "x")),
+    imputed_latent = matrix(c(10, 20), ncol = 1),
+    se_latent = matrix(c(1, 1), ncol = 1)
+  )
+  mask <- matrix(c(TRUE, FALSE, TRUE, TRUE), ncol = 1,
+                 dimnames = list(c("ghost_before", "a", "ghost_middle", "c"), "x"))
+  tm <- list(list(name = "x", type = "continuous", latent_cols = 1L,
+                  mean = 0, sd = 1, log_transform = FALSE))
+
+  draw <- .sample_conformal_draw(pred, mask, tm, seed_i = 1L,
+                                 input_row_order = c(2L, 4L))
+  expect_identical(draw$x[[1L]], 10)
+  expect_false(identical(draw$x[[2L]], 20))
+})
+
 
 # ---- 1. multi_impute() structural shape -------------------------------------
 

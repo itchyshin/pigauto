@@ -352,11 +352,12 @@ multi_impute <- function(traits, tree, m = 100L,
   # Build input-row -> internal-row index map.  `imputed_mask` rows are in
   # user-input order; `pred$imputed` / `pred$se` / `pred$probabilities` are
   # in internal (tree-tip) order.  `input_row_order[k] = i` means internal
-  # row k holds original input row i, so the inverse map is
-  # `match(seq_along(input_row_order), input_row_order)`.  When NULL or
+  # row k holds original input row i, so the inverse map is over the full
+  # input mask: `match(seq_len(nrow(imputed_mask)), input_row_order)`.  This
+  # preserves NA entries for data-only rows after filtering. When NULL or
   # identity, internal order == input order and the conversion is a no-op.
   input_to_internal <- if (!is.null(input_row_order)) {
-    match(seq_along(input_row_order), input_row_order)
+    match(seq_len(nrow(imputed_mask)), input_row_order)
   } else NULL
 
   to_internal <- function(rows_input) {

@@ -238,17 +238,14 @@ test_that("[T3] preprocess_traits errors on a single-species tree", {
   )
 })
 
-test_that("[T3] all-observed continuous trait round-trips through impute() as identity", {
-  skip_if_no_libtorch()
+test_that("[T3] all-observed continuous input stops before fitting", {
   set.seed(11L)
   td <- .tcov_make_data(n = 20L, seed = 11L)
-  res <- impute(td$df, td$tree, epochs = 10L, n_imputations = 1L,
-                verbose = FALSE, seed = 11L)
-  # All input cells were observed, so completed should equal input
-  # exactly on the observed mask (no impute happens).
-  expect_equal(res$completed$cont, td$df$cont, tolerance = 1e-9)
-  expect_equal(as.character(res$completed$bin),
-               as.character(td$df$bin))
+  expect_error(
+    impute(td$df, td$tree, epochs = 10L, n_imputations = 1L,
+           verbose = FALSE, seed = 11L),
+    "cross_validate"
+  )
 })
 
 test_that("[T3] all-NA column triggers a clear error rather than silent NaN", {

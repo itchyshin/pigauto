@@ -266,6 +266,7 @@ conformal intervals.}
 \item{splits}{The val/test splits (or \code{NULL} if
 \code{missing_frac = 0}).}
 \item{evaluation}{Evaluation metrics on test set (or \code{NULL}).}
+\item{check}{A compact \code{pigauto_check} preflight summary.}
 }
 }
 \description{
@@ -360,16 +361,10 @@ training cells), \emph{not} as the imputed-values output.  The
 imputed values themselves are \code{result$completed[result$imputed_mask]}.
 
 \strong{Common pitfall.}  If you call \code{impute()} on a fully
-observed trait matrix (no \code{NA}s anywhere), there is nothing
-to impute.  \code{result$completed} is identical to the input,
-\code{sum(result$imputed_mask)} is \code{0}, and
-\code{result$prediction$imputed} is just model predictions for
-already-known values.  This is the right behaviour, but it can
-look surprising: e.g. on \code{avonet300} (fully observed), the
-"imputed" Mass values you see are simply the observed body
-masses passed through (some bird species are 24 kg).  To exercise
-the imputation path on a complete dataset, mask some cells first
-(see Examples).
+observed trait matrix (no \code{NA}s among matched target rows), there
+is nothing to impute. \code{impute()} stops before graph construction or
+training and directs you to \code{cross_validate()} for predictive
+assessment. To exercise imputation, supply a real missing target cell.
 
 \strong{Imbalanced K-class traits.}  At default settings
 (\code{n_imputations = 1L}, \code{pool_method = "median"}), a

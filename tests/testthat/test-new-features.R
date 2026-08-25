@@ -127,6 +127,7 @@ test_that("plot.pigauto_fit conformal produces plots without error", {
 
 test_that("pigauto_report creates an HTML file from pigauto_result", {
   td <- make_test_data_new(n = 20, seed = 109)
+  td$df$tr1[[1L]] <- NA_real_
   result <- impute(td$df, td$tree, epochs = 20L, verbose = FALSE, seed = 109)
 
   expect_s3_class(result, "pigauto_result")
@@ -388,11 +389,12 @@ test_that("covariates with NAs are rejected", {
   tree <- ape::rtree(20)
   sp <- tree$tip.label
   df <- data.frame(row.names = sp, y = rnorm(20))
+  df$y[[1L]] <- NA_real_
 
   covs_bad <- data.frame(temp = c(NA, rnorm(19)))
   expect_error(
     impute(df, tree, covariates = covs_bad, epochs = 10L, verbose = FALSE),
-    regexp = "fully observed"
+    regexp = "fully observed.*covariates|covariates.*fully observed"
   )
 })
 
@@ -401,6 +403,7 @@ test_that("covariates with wrong row count are rejected", {
   tree <- ape::rtree(20)
   sp <- tree$tip.label
   df <- data.frame(row.names = sp, y = rnorm(20))
+  df$y[[1L]] <- NA_real_
 
   covs_bad <- data.frame(temp = rnorm(10))  # wrong n
   expect_error(
@@ -512,6 +515,7 @@ test_that("multi-obs + covariates: obs-level refinement produces within-species 
     species = rep(tree$tip.label, each = 4),
     y = abs(rnorm(40)) + 0.5
   )
+  df$y[c(2L, 18L)] <- NA_real_
   covs <- data.frame(
     temp = rep(c(10, 20, 30, 40), times = 10)  # systematic within-species variation
   )
@@ -546,6 +550,7 @@ test_that("multi-obs WITHOUT covariates: within-species predictions are uniform"
     species = rep(tree$tip.label, each = 4),
     y = abs(rnorm(40)) + 0.5
   )
+  df$y[c(2L, 18L)] <- NA_real_
   # No covariates supplied
 
   result <- impute(df, tree, species_col = "species",
@@ -572,6 +577,7 @@ test_that("multi-obs + covariates: fit stores multi_obs flag and obs metadata", 
     sp = rep(tree$tip.label, each = 2),
     val = abs(rnorm(n_obs)) + 0.5
   )
+  df$val[[3L]] <- NA_real_
   covs <- data.frame(env = rnorm(n_obs))
 
   result <- impute(df, tree, species_col = "sp",

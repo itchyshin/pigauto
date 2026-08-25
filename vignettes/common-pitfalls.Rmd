@@ -30,23 +30,16 @@ If you hit something that isn't here and feels surprising, please
 [open an issue](https://github.com/itchyshin/pigauto/issues/new) — most
 of the items below were added because real users tripped on them.
 
-## 1. "I called `impute()` and `result$prediction$imputed` looks like my input"
+## 1. "`impute()` stopped because my input is fully observed"
 
-**Symptom.** You run `result <- impute(df, tree)` on a fully-observed
-dataset (e.g. the bundled `avonet300`) and read
-`result$prediction$imputed$Mass` expecting "the imputed values" — but
-the values look exactly like your input data, including legitimately
-huge ones (a 25 kg rhea, a 12 kg vulture).
+**Symptom.** You call `impute(df, tree)` on a fully-observed dataset and
+it stops before training.
 
 **Why this happens.** `impute()` only *imputes* cells that are `NA`
-in the input. Your input was fully observed, so nothing was imputed:
-`result$completed` equals the input, `sum(result$imputed_mask)` is
-zero, and `result$prediction$imputed` contains the model's prediction
-for **every** cell — observed and missing alike. For observed cells,
-the well-calibrated gate keeps the prediction close to the input
-value, so what comes back is essentially the original data passed
-through. The slot is intended for diagnostics (checking calibration on
-training cells), not as the imputed-values output.
+in matched target rows. A fully observed input now stops before training
+and directs you to `cross_validate()` for predictive assessment. Supply a
+real missing target cell to use the imputation path. A complete data set is
+for predictive assessment, not an imputation result.
 
 **Diagnose.**
 
@@ -90,9 +83,8 @@ majority class for every species. For example, on `avonet300$Migration`
 
 **Why this happens.** Two things compound:
 
-1. If your input has no `NA`s in that column, there's nothing to impute
-   externally (see Pitfall 1) — `result$prediction$imputed$Migration`
-   reflects the model's calibrated-gate output, not new imputations.
+1. If your input has no `NA`s in that column, `impute()` stops before fitting;
+   use `cross_validate()` instead (see Pitfall 1).
 2. At default settings (`n_imputations = 1L`, `pool_method = "median"`),
    a small ordinal trait whose marginal distribution is heavily skewed
    (AVONET `Migration` is ~78 % Resident / 14 % Partial / 8 % Full at
@@ -107,8 +99,10 @@ data(avonet300, tree300)
 df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
 
 table(df$Migration)              # check the marginal distribution
+hide <- sample(which(!is.na(df$Migration)), 30L)
+df$Migration[hide] <- NA
 result <- impute(df, tree300, verbose = FALSE)
-table(result$prediction$imputed$Migration)
+table(result$completed$Migration[hide])
 ```
 
 **Fix.** For imbalanced K-class ordinal traits, increase
