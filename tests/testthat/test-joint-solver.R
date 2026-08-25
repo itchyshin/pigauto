@@ -104,6 +104,7 @@ test_that("impute() threads joint_solver = 'rphylopars' through to a working fit
   x2 <- 0.8 * x1 + as.numeric(t(L) %*% stats::rnorm(n)) * 0.3
   df <- data.frame(t1 = x1, t2 = x2)
   rownames(df) <- tree$tip.label
+  df$t1[1L] <- NA_real_
 
   result <- impute(df, tree, joint_solver = "rphylopars",
                    epochs = 5L, verbose = FALSE, seed = 45)

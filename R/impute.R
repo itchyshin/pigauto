@@ -337,6 +337,17 @@ impute <- function(traits, tree, species_col = NULL,
   lambda_mode <- match.arg(lambda_mode)
   joint_solver <- match.arg(joint_solver)
   predict_method <- match.arg(predict_method)
+  match_observed <- match.arg(match_observed)
+  clamp_outliers <- isTRUE(clamp_outliers)
+  if (!is.numeric(clamp_factor) || length(clamp_factor) != 1L ||
+      !is.finite(clamp_factor) || clamp_factor < 1) {
+    stop("'clamp_factor' must be a single finite numeric >= 1.",
+         call. = FALSE)
+  }
+  pmm_K <- as.integer(pmm_K)
+  if (length(pmm_K) != 1L || is.na(pmm_K) || pmm_K < 1L) {
+    stop("'pmm_K' must be a single positive integer.", call. = FALSE)
+  }
   if (!is.numeric(joint_refine_iter) || length(joint_refine_iter) != 1L ||
       !is.finite(joint_refine_iter) ||
       joint_refine_iter != as.integer(joint_refine_iter) ||
@@ -487,7 +498,6 @@ impute <- function(traits, tree, species_col = NULL,
     try(torch::cuda_empty_cache(), silent = TRUE)
   }
 
-  match_observed <- match.arg(match_observed)
   # 6. Predict
   pred <- predict(fit, return_se = TRUE,
                   n_imputations = as.integer(n_imputations),

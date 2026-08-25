@@ -605,6 +605,7 @@ test_that("use_trait_attention=TRUE builds, trains, and predicts (smoke)", {
   skip_if_no_libtorch()
 
   td  <- make_test_data_new(n = 30L, seed = 730L)
+  td$df[1L, 1L] <- NA
   result <- impute(td$df, td$tree,
                    use_trait_attention = TRUE,
                    n_trait_heads       = 2L,
@@ -627,6 +628,7 @@ test_that("use_trait_attention default FALSE is backward compatible", {
   skip_if_no_libtorch()
 
   td <- make_test_data_new(n = 30L, seed = 731L)
+  td$df[1L, 1L] <- NA
   result <- impute(td$df, td$tree,
                    epochs     = 20L,
                    eval_every = 10L,

@@ -59,6 +59,10 @@ test_that("check_pigauto identifies a fully observed matched input as not needed
   expect_identical(check$status, "not_needed")
   expect_false(check$ready)
   expect_true(any(check$messages$code == "fully_observed"))
+  expect_error(
+    impute(traits, tree),
+    "All matched target cells are observed"
+  )
 })
 
 test_that("fingerprints are stable, input-sensitive, and survive RDS", {

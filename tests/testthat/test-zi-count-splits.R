@@ -66,6 +66,7 @@ test_that("[P1-9] non-zi traits keep the all-columns-observed rule", {
 test_that("[P1-9] a zi_count fit still runs end to end with zeros held out", {
   skip_if_no_libtorch()
   fx <- make_zi_fixture(n = 60L)
+  fx$df$z[1L] <- NA_integer_
   res <- impute(fx$df, fx$tree, trait_types = c(z = "zi_count"),
                 epochs = 20L, verbose = FALSE, seed = 4L)
   expect_s3_class(res, "pigauto_result")

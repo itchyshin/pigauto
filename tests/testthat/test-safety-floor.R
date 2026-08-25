@@ -641,6 +641,7 @@ test_that("strict val-floor: pigauto val-loss <= baseline val-loss per trait, al
                                     levels = c("no", "yes")),
                    x_cat  = cat3,
                    x_cnt  = as.integer(round(pmax(v4 + 5, 0))))
+  df$x_cont[1L] <- NA_real_
 
   # Fit with safety_floor = TRUE (the path the strict floor protects).
   res <- pigauto::impute(df, tree,

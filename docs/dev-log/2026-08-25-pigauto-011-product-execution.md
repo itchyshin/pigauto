@@ -224,3 +224,35 @@ Pre-freeze evidence:
   source-test failures;
 - independent mechanical and adversarial pre-freeze reviews: pass;
 - `git diff --check`: clean.
+
+## R1 candidate-attempt repair — accepted
+
+The first atomic candidate attempt correctly stopped at the full source-test
+gate and did not create `CURRENT` or a frozen candidate. Its 13 errors were all
+one compatibility class introduced by the approved fully-observed-input stop:
+older integration fixtures asked `impute()` to fit data with no missing target
+cell. Two of those fixtures were invalid-argument tests whose expected
+`clamp_factor` or `pmm_K` error had also been hidden behind the new preflight
+stop.
+
+The repair preserves the safety boundary. `impute()` now validates
+`match_observed`, `clamp_factor` and `pmm_K` before preflight, while every active
+integration fixture that genuinely tests fitting supplies at least one missing
+matched target. A direct public test requires fully observed matched input to
+stop and direct the user to `cross_validate()`.
+
+Repair evidence:
+
+- the failed predecessor remains only under ignored staging and was never
+  promoted;
+- all 13 mapped failures are repaired: two fail-fast precedence cases, eleven
+  fitting fixtures, and the public stop contract;
+- the expanded affected-neighbour suite covering preflight, clamp/PMM,
+  fit/predict, joint solver, feature, safety-floor and zero-inflated-count paths
+  exited zero; its 182 warnings are the pre-existing small-validation and
+  zero-standard-deviation diagnostics exercised by those fixtures;
+- documentation regeneration produced no generated-file drift;
+- independent semantic and reconciliation reviews both accepted the repair,
+  found no weakened assertion and found no active sibling fixture omitted;
+- no default, exact-route, BACE, Stage-C or claim-scope drift;
+- `git diff --check`: clean.
