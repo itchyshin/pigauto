@@ -44,6 +44,23 @@ quick_mi <- function(m = 3L, seed = 123, draws_method = "conformal") {
   list(mi = mi, td = td, traits_with_na = td$df)
 }
 
+pool_unverified <- function(...) {
+  warnings <- character()
+  result <- withCallingHandlers(
+    pool_mi(...),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_length(warnings, 1L)
+  expect_identical(
+    warnings,
+    "pool_mi() received a bare fit list with unverified provenance; Rubin arithmetic will run, but the imputation workflow was not validated by pigauto."
+  )
+  result
+}
+
 
 # ---- 1. multi_impute() structural shape -------------------------------------
 
@@ -52,6 +69,7 @@ test_that("multi_impute returns pigauto_mi with M datasets of the right shape", 
   mi <- setup$mi
 
   expect_s3_class(mi, "pigauto_mi")
+  expect_s3_class(mi, "pigauto_diagnostic_mi")
   expect_equal(mi$m, 3L)
   expect_true(is.list(mi$datasets))
   expect_equal(length(mi$datasets), 3L)
@@ -69,6 +87,7 @@ test_that("multi_impute returns pigauto_mi with M datasets of the right shape", 
   expect_true("imputed_mask" %in% names(mi))
   expect_true("fit"          %in% names(mi))
   expect_true("tree"         %in% names(mi))
+  expect_identical(mi$mi_workflow, "pigauto_diagnostic_mi")
 })
 
 
@@ -139,79 +158,7 @@ test_that("cells that were originally missing vary across at least some datasets
 })
 
 
-# ---- 5. with_imputations() returns a list of length M -----------------------
-
-test_that("with_imputations() returns a pigauto_mi_fits list of length M", {
-  setup <- quick_mi(m = 3L, seed = 15)
-  mi <- setup$mi
-
-  fits <- with_imputations(mi, function(d) {
-    stats::lm(tr1 ~ tr2 + tr3, data = d)
-  }, .progress = FALSE)
-
-  expect_s3_class(fits, "pigauto_mi_fits")
-  expect_equal(length(fits), 3L)
-  expect_true(all(vapply(fits, inherits, logical(1), "lm")))
-  expect_equal(attr(fits, "n_failed"), 0L)
-})
-
-
-# ---- 6. with_imputations() captures errors per-imputation -------------------
-
-test_that("with_imputations() captures errors and continues when .on_error = 'continue'", {
-  setup <- quick_mi(m = 3L, seed = 16)
-  mi <- setup$mi
-
-  counter <- 0L
-  make_partial_fail <- function(d) {
-    counter <<- counter + 1L
-    if (counter == 2L) stop("synthetic failure on imputation 2")
-    stats::lm(tr1 ~ tr2, data = d)
-  }
-
-  fits <- suppressWarnings(
-    with_imputations(mi, make_partial_fail, .progress = FALSE,
-                     .on_error = "continue")
-  )
-
-  expect_equal(length(fits), 3L)
-  expect_equal(attr(fits, "n_failed"), 1L)
-  expect_equal(attr(fits, "failed"), 2L)
-  expect_s3_class(fits[[2]], "pigauto_mi_error")
-  expect_s3_class(fits[[1]], "lm")
-  expect_s3_class(fits[[3]], "lm")
-})
-
-
-# ---- 7. pool_mi() on lm fits returns a tidy data.frame ----------------------
-
-test_that("pool_mi() on lm fits returns a data.frame with Rubin's rules columns", {
-  setup <- quick_mi(m = 3L, seed = 17)
-  mi <- setup$mi
-
-  fits <- with_imputations(mi, function(d) {
-    stats::lm(tr1 ~ tr2 + tr3, data = d)
-  }, .progress = FALSE)
-
-  pooled <- pool_mi(fits)
-
-  expect_s3_class(pooled, "pigauto_pooled")
-  expect_s3_class(pooled, "data.frame")
-  expected_cols <- c("term", "estimate", "std.error", "df", "statistic",
-                     "p.value", "conf.low", "conf.high", "fmi", "riv")
-  expect_equal(names(pooled), expected_cols)
-
-  # Three coefficients: (Intercept), tr2, tr3
-  expect_equal(nrow(pooled), 3L)
-  expect_true(all(c("(Intercept)", "tr2", "tr3") %in% pooled$term))
-  expect_true(all(is.finite(pooled$estimate)))
-  expect_true(all(pooled$std.error > 0))
-  expect_true(all(pooled$df > 0))
-  expect_equal(attr(pooled, "m"), 3L)
-})
-
-
-# ---- 8. Numerical correctness of Rubin's rules against hand calculation ----
+# ---- 5. Numerical correctness of Rubin's rules against hand calculation ----
 
 test_that("pool_mi() matches a hand-computed Rubin's rules reference (M=3, p=2)", {
   # Three synthetic fits with known coef and vcov.
@@ -226,7 +173,7 @@ test_that("pool_mi() matches a hand-computed Rubin's rules reference (M=3, p=2)"
     make_fake(c(a = 0.90, b = 1.80), c(0.015, 0.030))
   )
 
-  pooled <- pool_mi(
+  pooled <- pool_unverified(
     fits,
     coef_fun = function(f) f$beta,
     vcov_fun = function(f) f$V
@@ -281,12 +228,12 @@ test_that("pool_mi() handles Rubin variance boundaries exactly", {
     make_fake(c(a = 1, b = 2), named_vcov(c(0.25, 0.5))),
     simplify = FALSE
   )
-  classical <- pool_mi(same, coef_fun = coef_fun, vcov_fun = vcov_fun)
+  classical <- pool_unverified(same, coef_fun = coef_fun, vcov_fun = vcov_fun)
   expect_equal(classical$riv, c(0, 0))
   expect_equal(classical$fmi, c(0, 0))
   expect_true(all(is.infinite(classical$df)))
 
-  adjusted <- pool_mi(
+  adjusted <- pool_unverified(
     same,
     coef_fun = coef_fun,
     vcov_fun = vcov_fun,
@@ -303,7 +250,7 @@ test_that("pool_mi() handles Rubin variance boundaries exactly", {
     make_fake(c(a = 1, b = 2), named_vcov(c(0, 0))),
     simplify = FALSE
   )
-  zero <- pool_mi(
+  zero <- pool_unverified(
     deterministic,
     coef_fun = coef_fun,
     vcov_fun = vcov_fun,
@@ -323,7 +270,7 @@ test_that("pool_mi() handles Rubin variance boundaries exactly", {
     make_fake(c(a = 1), matrix(0, 1, 1, dimnames = list("a", "a"))),
     make_fake(c(a = 2), matrix(0, 1, 1, dimnames = list("a", "a")))
   )
-  pure_between <- pool_mi(
+  pure_between <- pool_unverified(
     between_only,
     coef_fun = coef_fun,
     vcov_fun = vcov_fun,
@@ -339,13 +286,13 @@ test_that("pool_mi() accepts Matrix covariance objects and validates them", {
   make_fake <- function(V) list(beta = c(a = 1, b = 2), V = V)
   V <- matrix(c(0.2, 0.03, 0.03, 0.4), 2, 2,
               dimnames = list(c("a", "b"), c("a", "b")))
-  base <- pool_mi(
+  base <- pool_unverified(
     list(make_fake(V), make_fake(V)),
     coef_fun = function(f) f$beta,
     vcov_fun = function(f) f$V
   )
   sparse_V <- Matrix::Matrix(V, sparse = TRUE)
-  sparse <- pool_mi(
+  sparse <- pool_unverified(
     list(make_fake(sparse_V), make_fake(sparse_V)),
     coef_fun = function(f) f$beta,
     vcov_fun = function(f) f$V
@@ -407,7 +354,7 @@ test_that("pool_mi() supports a strict tidy extractor contract", {
       std.error = c(0.2, 0.4)
     )
   }
-  pooled <- pool_mi(fits, tidy_fun = tidy_fun)
+  pooled <- pool_unverified(fits, tidy_fun = tidy_fun)
   expect_equal(pooled$term, c("a", "b"))
   expect_equal(pooled$estimate, c(1.5, 3))
 
@@ -431,64 +378,6 @@ test_that("pool_mi() supports a strict tidy extractor contract", {
 })
 
 
-# ---- 9. End-to-end with glmmTMB + propto() ----------------------------------
-
-test_that("pool_mi() works end-to-end with glmmTMB + propto()", {
-  skip_if_not_installed("glmmTMB")
-  # `propto()` is an internal glmmTMB helper resolved by glmmTMB's formula
-  # parser; it is not exported, so we attach glmmTMB to put it on the
-  # search path instead of writing glmmTMB::propto.
-  # Note: we deliberately do NOT detach/unload glmmTMB here. Unloading its
-  # DLL breaks TMB finalizers used by other packages (e.g. Rphylopars) and
-  # causes `FreeADFunObject` errors in downstream test files. Leaving it
-  # attached for the rest of the test run is harmless.
-  suppressPackageStartupMessages(library(glmmTMB))
-
-  # propto() needs more species than predictors to be identifiable; the
-  # 40-species default quick_mi() is too small, so build an 80-species
-  # tree here.
-  td <- make_mi_test_data(n = 80, seed = 18)
-  mi <- multi_impute(
-    traits       = td$df,
-    tree         = td$tree,
-    m            = 3L,
-    epochs       = 20L,
-    missing_frac = 0.25,
-    verbose      = FALSE,
-    seed         = 18,
-    eval_every   = 10L,
-    patience     = 5L
-  )
-  tree <- mi$tree
-  # Vphy must be a CORRELATION matrix, not a covariance: propto() in
-  # glmmTMB estimates sigma^2 freely, so the raw vcv(tree) (diagonal
-  # = tree height) would double-count the variance scale.
-  Vphy <- cov2cor(ape::vcv(tree))
-
-  fits <- suppressWarnings(with_imputations(mi, function(d) {
-    d$species <- factor(rownames(d), levels = rownames(Vphy))
-    d$dummy   <- factor(1)
-    glmmTMB(
-      tr1 ~ tr2 + propto(0 + species | dummy, Vphy),
-      data = d
-    )
-  }, .progress = FALSE, .on_error = "continue"))
-
-  # Some fits may still fail on synthetic data; require at least 2 successful.
-  ok <- vapply(fits, function(f) !inherits(f, "pigauto_mi_error"),
-               logical(1))
-  skip_if(sum(ok) < 2L,
-          "Fewer than 2 glmmTMB fits succeeded on synthetic test data")
-
-  pooled <- suppressWarnings(pool_mi(fits[ok]))
-
-  expect_s3_class(pooled, "pigauto_pooled")
-  expect_true(nrow(pooled) >= 2L)
-  expect_true(all(is.finite(pooled$estimate)))
-  expect_true(all(pooled$std.error >= 0))
-})
-
-
 test_that("automatic fixed-effect adapters cover lm and glm", {
   set.seed(1901)
   dat <- data.frame(
@@ -502,9 +391,9 @@ test_that("automatic fixed-effect adapters cover lm and glm", {
   lm_fit <- stats::lm(y ~ x + z, data = dat)
   glm_fit <- stats::glm(binary ~ x + z, data = dat,
                         family = stats::binomial())
-  expect_equal(pool_mi(list(lm_fit, lm_fit))$term,
+  expect_equal(pool_unverified(list(lm_fit, lm_fit))$term,
                names(stats::coef(lm_fit)))
-  expect_equal(pool_mi(list(glm_fit, glm_fit))$term,
+  expect_equal(pool_unverified(list(glm_fit, glm_fit))$term,
                names(stats::coef(glm_fit)))
 })
 
@@ -529,7 +418,7 @@ test_that("glmmTMB adapter selects conditional fixed effects only", {
   expect_gt(length(fixed$zi), 0L)
   expect_gt(length(fixed$disp), 0L)
 
-  pooled <- pool_mi(list(fit, fit))
+  pooled <- pool_unverified(list(fit, fit))
   expect_equal(pooled$term, names(fixed$cond))
   expect_equal(pooled$estimate, unname(fixed$cond))
   expect_equal(nrow(pooled), length(fixed$cond))
@@ -546,9 +435,9 @@ test_that("automatic fixed-effect adapters cover nlme gls and lme", {
   )
   gls_fit <- nlme::gls(y ~ x + z, data = dat)
   lme_fit <- nlme::lme(y ~ x + z, random = ~1 | g, data = dat)
-  expect_equal(pool_mi(list(gls_fit, gls_fit))$term,
+  expect_equal(pool_unverified(list(gls_fit, gls_fit))$term,
                names(stats::coef(gls_fit)))
-  expect_equal(pool_mi(list(lme_fit, lme_fit))$term,
+  expect_equal(pool_unverified(list(lme_fit, lme_fit))$term,
                names(nlme::fixef(lme_fit)))
 })
 
@@ -561,15 +450,15 @@ test_that("automatic fixed-effect adapter covers lme4 Matrix covariance", {
     g = factor(rep(seq_len(12), each = 5))
   )
   mer_fit <- suppressMessages(lme4::lmer(y ~ x + z + (1 | g), data = dat))
-  mer_pooled <- pool_mi(list(mer_fit, mer_fit))
+  mer_pooled <- pool_unverified(list(mer_fit, mer_fit))
   expect_equal(mer_pooled$term, names(lme4::fixef(mer_fit)))
   expect_true(all(is.finite(mer_pooled$std.error)))
 
-  custom_coef <- pool_mi(
+  custom_coef <- pool_unverified(
     list(mer_fit, mer_fit),
     coef_fun = function(f) lme4::fixef(f)
   )
-  custom_vcov <- pool_mi(
+  custom_vcov <- pool_unverified(
     list(mer_fit, mer_fit),
     vcov_fun = function(f) stats::vcov(f)
   )
@@ -589,7 +478,7 @@ test_that("automatic drmTMB adapter pools all distributional fixed effects", {
   dat$y <- dat$y + rnorm(40, sd = 0.01)
   fit2 <- drm_fit(bf(y ~ x, sigma ~ x), data = dat)
 
-  pooled <- pool_mi(list(fit1, fit2))
+  pooled <- pool_unverified(list(fit1, fit2))
   expect_equal(
     pooled$term,
     c("mu:(Intercept)", "mu:x", "sigma:(Intercept)", "sigma:x")
@@ -626,7 +515,7 @@ test_that("automatic gllvmTMB adapter uses fixed-effect tidy rows only", {
   unloadNamespace("gllvmTMB")
   on.exit(loadNamespace("gllvmTMB"), add = TRUE)
   expect_false("gllvmTMB" %in% loadedNamespaces())
-  pooled <- pool_mi(list(fit, fit))
+  pooled <- pool_unverified(list(fit, fit))
   expect_true("gllvmTMB" %in% loadedNamespaces())
   expect_equal(pooled$term, fixed$term)
   expect_equal(pooled$estimate, fixed$estimate)
@@ -716,6 +605,8 @@ test_that("multi_impute_trees returns pigauto_mi_trees with T*m datasets", {
   # Class hierarchy
 
   expect_s3_class(mi_t, "pigauto_mi_trees")
+  expect_s3_class(mi_t, "pigauto_tree_sensitivity_diagnostic")
+  expect_identical(mi_t$mi_workflow, "pigauto_tree_sensitivity_diagnostic")
   expect_s3_class(mi_t, "pigauto_mi")
 
   # Structure
@@ -742,95 +633,7 @@ test_that("multi_impute_trees returns pigauto_mi_trees with T*m datasets", {
 })
 
 
-# ---- 13. multi_impute_trees() compatible with with_imputations() + pool_mi() --
-
-test_that("multi_impute_trees result works with with_imputations() and pool_mi()", {
-  n <- 40
-  set.seed(210)
-  tree1 <- ape::rtree(n)
-  sp <- tree1$tip.label
-  tree2 <- tree1; tree2$edge.length <- tree1$edge.length * stats::runif(length(tree1$edge.length), 0.5, 1.5)
-  trees <- list(tree1, tree2)
-
-  df <- data.frame(
-    row.names = sp,
-    tr1 = abs(stats::rnorm(n)) + 0.5,
-    tr2 = abs(stats::rnorm(n)) + 0.5
-  )
-  m <- as.matrix(df); idx <- sample.int(n * 2, 10); m[idx] <- NA
-  df <- as.data.frame(m); rownames(df) <- sp
-
-  # suppressWarnings() silences the expected low-M warning (T*m = 4 < 10
-  # in this speed-tuned test). Default share_gnn = TRUE is fine here
-  # because this test only exercises the downstream with_imputations() +
-  # pool_mi() compatibility, not the $fits / $fit distinction.
-  mi_t <- suppressWarnings(multi_impute_trees(
-    traits = df, trees = trees, m_per_tree = 2L,
-    epochs = 20L, missing_frac = 0.25, verbose = FALSE,
-    seed = 210L, eval_every = 10L, patience = 5L
-  ))
-
-  # with_imputations should accept it via pigauto_mi inheritance
-  fits <- with_imputations(mi_t, function(d) {
-    stats::lm(tr1 ~ tr2, data = d)
-  }, .progress = FALSE)
-
-  expect_s3_class(fits, "pigauto_mi_fits")
-  expect_equal(length(fits), 4L)  # 2 trees * 2 imputations
-
-  pooled <- pool_mi(fits)
-  expect_s3_class(pooled, "pigauto_pooled")
-  expect_equal(nrow(pooled), 2L)  # (Intercept) + tr2
-  expect_true(all(is.finite(pooled$estimate)))
-  expect_true(all(pooled$std.error > 0))
-  expect_equal(attr(pooled, "m"), 4L)
-})
-
-test_that("with_imputations() passes tree metadata for tree-aware MI", {
-  sp <- paste0("sp", 1:4)
-  trees <- list(ape::rtree(4L, tip.label = sp),
-                ape::rtree(4L, tip.label = sp))
-  datasets <- lapply(seq_len(4L), function(i) {
-    data.frame(y = c(1, 2, 3, 4) + i / 10,
-               x = c(0, 1, 0, 1),
-               row.names = sp)
-  })
-  mi <- structure(
-    list(
-      datasets = datasets,
-      m = 4L,
-      n_trees = 2L,
-      m_per_tree = 2L,
-      tree_index = c(1L, 1L, 2L, 2L),
-      trees = trees,
-      species_col = NULL
-    ),
-    class = c("pigauto_mi_trees", "pigauto_mi")
-  )
-
-  seen_tree_index <- integer(4L)
-  fits <- with_imputations(mi, function(d, tree, tree_index, imputation) {
-    expect_equal(attr(d, "tree_index"), tree_index)
-    expect_equal(attr(d, "imputation"), imputation)
-    expect_identical(attr(d, "tree"), tree)
-    expect_identical(tree, trees[[tree_index]])
-    seen_tree_index[[imputation]] <<- tree_index
-    stats::lm(y ~ x, data = d)
-  }, .progress = FALSE)
-
-  expect_equal(seen_tree_index, mi$tree_index)
-  expect_equal(attr(fits, "tree_index"), mi$tree_index)
-  expect_equal(attr(fits, "n_trees"), 2L)
-  expect_equal(attr(fits, "m_per_tree"), 2L)
-
-  pooled <- pool_mi(fits)
-  expect_equal(attr(pooled, "tree_index"), mi$tree_index)
-  expect_equal(attr(pooled, "n_trees"), 2L)
-  expect_equal(attr(pooled, "m_per_tree"), 2L)
-})
-
-
-# ---- 14. draws_method = "conformal" explicitly ----------------------------
+# ---- 13. draws_method = "conformal" explicitly ----------------------------
 
 test_that("draws_method='conformal' stores method and produces non-zero between-dataset variance", {
   setup <- quick_mi(m = 5L, seed = 77L, draws_method = "conformal")

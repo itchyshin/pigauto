@@ -104,6 +104,9 @@ originally missing.}
 \item{\code{share_gnn}}{Logical; \code{TRUE} if the shared-GNN path was used.}
 \item{\code{draws_method}}{Character; \code{"mc_dropout"} or \code{"conformal"},
 echoing the argument this call used (P1-11).}
+\item{\code{mi_workflow}}{\code{"pigauto_tree_sensitivity_diagnostic"},
+recording that these are prediction-sensitivity completions and
+cannot be passed to \code{\link[=with_imputations]{with_imputations()}} or \code{\link[=pool_mi]{pool_mi()}}.}
 \item{\code{fit}}{Single \code{pigauto_fit} trained on the reference
 tree when \code{share_gnn = TRUE}; \code{NULL} otherwise.}
 \item{\code{fits}}{List of \code{T} \code{pigauto_fit} objects (one per tree)
@@ -201,12 +204,10 @@ which runs the GNN forward repeatedly with dropout active and a fresh BM
 posterior draw per imputation.
 
 This is \strong{not} the same mechanism as \code{\link{multi_impute}}, whose
-default \code{draws_method = "conformal"} samples from the calibrated
-conformal scores. The package documents conformal draws as the better
-calibrated of the two for Rubin's rules, because conformal scores are fitted
-against actual held-out residuals, whereas MC-dropout + BM draws reflect
-prior uncertainty and are noticeably wider (on AVONET300, Mass MC SD
-\eqn{\approx} 290 vs conformal/1.96 \eqn{\approx} 23).
+default \code{draws_method = "conformal"} samples from calibrated
+conformal scores. MC-dropout + BM draws reflect model and prior uncertainty,
+whereas conformal draws use held-out prediction residuals. Neither mechanism
+validates downstream pooling or inference for posterior-tree completions.
 
 \code{multi_impute_trees()} now exposes a \code{draws_method} argument
 (P1-11). \code{draws_method = "conformal"} runs \code{\link{impute}} with
@@ -214,10 +215,10 @@ prior uncertainty and are noticeably wider (on AVONET300, Mass MC SD
 completions from the calibrated conformal scores instead, via the same
 internal sampling helper \code{multi_impute()} uses. Default remains
 \code{"mc_dropout"} for back compatibility. Within-tree calibration
-improves with \code{draws_method = "conformal"}; between-tree variance —
-the quantity this function exists to capture — is present under either
-setting because the baseline (and, when \code{share_gnn = FALSE}, the GNN)
-still varies per tree.
+changes the within-tree stochastic completion mechanism; both settings are
+prediction-sensitivity diagnostics. Between-tree variation is present under
+either setting because the baseline (and, when \code{share_gnn = FALSE},
+the GNN) still varies per tree.
 }
 
 \section{Safety floor + share_gnn (v0.9.1.9002+)}{

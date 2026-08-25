@@ -84,9 +84,10 @@
 #'       \strong{descriptive spread for reporting and ranking only} — it is
 #'       \strong{not} a Rubin's-rules pooled standard error (it contains no
 #'       within-imputation variance component and no small-sample df
-#'       correction) and must not be used as one. For valid pooled
-#'       inference, fit your downstream model on each completed dataset via
-#'       [with_imputations()] and pool with [pool_mi()].}
+#'       correction) and must not be used for downstream pooling.}
+#'     \item{`mi_workflow`}{`"pigauto_diagnostic_mi"`, recording that these
+#'       are prediction-diagnostic completions and cannot be passed to
+#'       [with_imputations()] or [pool_mi()].}
 #'     \item{`imputed_mask`}{Logical matrix; `TRUE` where a cell was
 #'       originally missing.}
 #'     \item{`fit`}{The underlying [`pigauto_fit`][fit_pigauto()]
@@ -288,9 +289,10 @@ multi_impute <- function(traits, tree, m = 100L,
       data            = res$data,
       tree            = tree,
       species_col     = species_col,
+      mi_workflow     = "pigauto_diagnostic_mi",
       evaluation      = res$evaluation
     ),
-    class = c("pigauto_mi", "list")
+    class = c("pigauto_diagnostic_mi", "pigauto_mi", "list")
   )
 }
 

@@ -103,9 +103,10 @@ baseline SE and the between-draw standard deviation. A
 \strong{descriptive spread for reporting and ranking only} — it is
 \strong{not} a Rubin's-rules pooled standard error (it contains no
 within-imputation variance component and no small-sample df
-correction) and must not be used as one. For valid pooled
-inference, fit your downstream model on each completed dataset via
-\code{\link[=with_imputations]{with_imputations()}} and pool with \code{\link[=pool_mi]{pool_mi()}}.}
+correction) and must not be used for downstream pooling.}
+\item{\code{mi_workflow}}{\code{"pigauto_diagnostic_mi"}, recording that these
+are prediction-diagnostic completions and cannot be passed to
+\code{\link[=with_imputations]{with_imputations()}} or \code{\link[=pool_mi]{pool_mi()}}.}
 \item{\code{imputed_mask}}{Logical matrix; \code{TRUE} where a cell was
 originally missing.}
 \item{\code{fit}}{The underlying \code{\link[=fit_pigauto]{pigauto_fit}}

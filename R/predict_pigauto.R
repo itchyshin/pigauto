@@ -167,9 +167,10 @@
 #' These families are \strong{incompatible objects sharing one column name}:
 #' only the continuous-family entries are standard errors in the Gaussian
 #' sense, and \strong{none} of the binary / categorical / zi_count entries
-#' may be used in Rubin's-rules arithmetic. For valid downstream
-#' multiple-imputation inference use \code{\link{multi_impute}} +
-#' \code{\link{with_imputations}} + \code{\link{pool_mi}}.
+#' may be used in Rubin's-rules arithmetic. The only supported downstream
+#' multiple-imputation route starts with
+#' \code{\link{multi_impute_analysis}}, then uses
+#' \code{\link{with_imputations}} and \code{\link{pool_mi}}.
 #' @examples
 #' \donttest{
 #' data(avonet300, tree300)

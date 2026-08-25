@@ -19,7 +19,9 @@ adapters are provided for \code{\link[stats:lm]{stats::lm}}, \code{\link[stats:g
 \code{nlme::lme}, \code{lme4::merMod}, \code{glmmTMB::glmmTMB}, \code{drmTMB}, and
 \code{gllvmTMB_multi} fits. Other classes implementing \code{coef()} and \code{vcov()}
 also work. The output of \code{\link[=with_imputations]{with_imputations()}} is accepted directly.
-\code{MCMCglmm} fits are rejected -- see Details.}
+\code{MCMCglmm} fits are rejected -- see Details.
+Bare user-supplied fit lists are accepted with an explicit warning because
+their imputation provenance cannot be verified.}
 
 \item{conf.level}{Confidence level for the pooled interval (default
 \code{0.95}).}

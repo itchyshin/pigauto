@@ -61,7 +61,7 @@ navbar:
         # pigauto_workflow_mixed, pigauto_walkthrough_covariates,
         # pigauto_walkthrough_multi_obs) were retired in 2026-05 to
         # dev/archive/ because their version badges, trait-type scope,
-        # and BACE-comparison wording had gone stale.  Do not restore
+        # and comparator wording had gone stale.  Do not restore
         # them as live navbar entries.  If a fresh walk-through is
         # needed, write a new source-backed vignette under vignettes/
         # rather than reanimating the archived HTML.  Audit detail:
@@ -155,7 +155,6 @@ reference:
       - make_missing_splits
       - mask_missing
       - fit_baseline
-      - fit_baseline_bace
       - fit_pigauto
       - predict.pigauto_fit
       - evaluate

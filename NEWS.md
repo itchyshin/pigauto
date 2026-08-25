@@ -1,8 +1,18 @@
-# pigauto 0.10.0.9000 (development)
+# pigauto 0.11.0 (development)
 
 GitHub-dev after CRAN pigauto 0.10.0 (Date/Publication 2026-07-30).
-This is not a CRAN tarball. BACE is still not on CRAN. The next CRAN
-cut must drop Suggests `BACE` again or wait until BACE is on CRAN.
+This is not a CRAN tarball. The installed BACE bridge has been removed for
+0.11: BACE remains an in-tree comparator only, with no `Suggests` dependency,
+export, or installed help page.
+
+## Compatibility and supersession
+
+All chronological entries below are historical unless this 0.11 section says
+otherwise. In particular, older instructions to pass `multi_impute()` or
+`multi_impute_trees()` completions to `with_imputations()` or `pool_mi()`, and
+older claims of Rubin-valid downstream standard errors for those diagnostic or
+tree-sensitivity completions, are superseded. The current supported downstream
+route begins with `multi_impute_analysis()` in its documented narrow regime.
 
 ## Bug fix: `lambda_mode != "fixed_1"` no longer disables the discrete-trait joint baseline
 
@@ -181,10 +191,12 @@ evaluates on the calibration-matched surface
 each held-out cell's own truth as input context, a surface no genuinely
 missing cell has in production.
 
-## New (opt-in): BACE baseline wrapper restored, with proper-MI draws
+## Historical (superseded and removed in 0.11): BACE baseline wrapper restoration
 
-Restores `fit_baseline_bace()` (removed from the v0.10.0 CRAN surface in
-`b615579` because BACE is not on CRAN) and adds `final_imp = FALSE`
+This historical development note described a bridge now removed from the
+installed 0.11 surface. It restored `fit_baseline_bace()` (removed from the
+v0.10.0 CRAN surface in `b615579` because BACE is not on CRAN) and adds
+`final_imp = FALSE`
 (default) plus `n_final = 15L`. With `final_imp = TRUE` the wrapper
 appends `BACE::bace_final_imp()` to the `BACE::bace_imp()` chain it
 already runs and builds `mu` / `se` from that function's `n_final` final

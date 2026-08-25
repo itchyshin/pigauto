@@ -34,7 +34,9 @@
 #'   with [with_imputations()] and [pool_mi()]. The object also records the
 #'   analysis model, formula, engine, controls, engine version, seed, runtime
 #'   provenance, and imputed-variable metadata. Any engine warning aborts the
-#'   call instead of returning an inference-ready object.
+#'   call instead of returning an inference-ready object. `mi_workflow` is a
+#'   stable analysis-aware provenance marker propagated by [with_imputations()]
+#'   and checked by [pool_mi()].
 #'
 #' @section Experimental scope:
 #' This function does not fit pigauto's phylogenetic baseline or graph neural
@@ -131,6 +133,7 @@ multi_impute_analysis <- function(data, formula, missing,
       datasets = datasets,
       m = validated$m,
       draws_method = "analysis_aware",
+      mi_workflow = "pigauto_analysis_mi_v1",
       model = model,
       engine = engine,
       formula = formula,

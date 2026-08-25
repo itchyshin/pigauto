@@ -90,3 +90,34 @@ not approved until every referenced script exists and has been read. The ledger
 is ignored from Git; durable evidence is copied into the final candidate receipt.
 No gate is silently removed. A source change after candidate freeze invalidates
 the tarball and G8-G11.
+
+## P1 receipt — accepted
+
+P1 first went red in ten places against the permissive legacy behavior. The
+initial implementation then failed adversarial review on mixed-class admission,
+forged fit-list provenance, early warning placement and stale public guidance.
+Those failures were reproduced before repair.
+
+The accepted contract now requires both the `pigauto_mi_fits` class and
+`mi_workflow = "pigauto_analysis_mi_v1"`. Diagnostic, tree-sensitivity,
+legacy, unknown and inconsistent objects stop before callbacks or extractors.
+Valid bare user fit lists remain an explicit escape hatch and emit exactly one
+unverified-provenance warning only after a pooled result is successfully built.
+
+The installed BACE bridge, dependency, export, help page and pkgdown reference
+entry are removed. The in-tree BACE package and comparator helpers are
+unchanged. Historical pooling directions in NEWS are explicitly superseded,
+and current package and agent guidance names only the narrow
+`multi_impute_analysis()` route for supported downstream pooling.
+
+Final evidence:
+
+- exact G5 command: `FAIL 0 | WARN 0 | SKIP 0 | PASS 46`;
+- analysis-aware focused suite: 100 expectations, zero failures/warnings, one
+  optional-package skip;
+- diagnostic/tree generation suite: 200 expectations, zero failures and 32
+  pre-existing small-fixture warnings;
+- temporary installation: no BACE dependency, export, namespace binding or
+  help entry;
+- independent adversarial and mechanical re-reviews: pass;
+- `git diff --check`: clean.
