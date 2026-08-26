@@ -1,65 +1,71 @@
-# Checkpoint — GNN evidence sentinel pre-run
+# Checkpoint — GNN evidence Phase A campaign
 
 **Date:** 2026-08-26  
-**Lane:** `evidence/gnn-sentinel-prerun` @ `aa38c7b`  
+**Lane:** `evidence/gnn-sentinel-prerun`  
 **Worktree:** `~/local-scratch/lanes/pigauto-gnn-sentinel-prerun`  
 **Candidate SHA:** `6fddd79`
 
 ## STATE
-S4 **DONE** — driver committed (`script/gnn_evidence_sentinel_prerun.R`).  
-S5 **DONE** — Totoro 12/12 fits, 0 failures, wall ~3.2 min (PID 69761).  
-S6 **DONE** — timing table + revised estimate below.  
-S7 **DONE** — pre-registration committed **before** any full-campaign compute:
-`docs/dev-log/2026-08-26-gnn-evidence-preregistration.md` (+ companion design note).
 
-## NEXT GATE
-**G0 Phase A approval** — Shinichi sign-off on 81-cell MCAR campaign (2,430 fits,
-~1.0–1.5 h @ 100 workers). Copy-paste block at end of prereg doc. No Phase A
-driver or compute until approved.
+**G0 Phase A APPROVED** (Shinichi, 2026-08-26).
 
-## TIMING (Totoro, 12 parallel, OPENBLAS=1)
+| Stage | Status |
+|---|---|
+| Sentinel pre-run (12 fits) | **DONE** — 0 failures, wall ~3.2 min |
+| Pre-registration | **DONE** — `docs/dev-log/2026-08-26-gnn-evidence-preregistration.md` @ `b7e597a` |
+| Phase A driver | **DONE** — `script/gnn_evidence_campaign.R` |
+| Totoro launcher | **DONE** — `script/gnn_evidence_campaign_totoro.sh` |
+| Local smoke (1 fit) | **DONE** — job 0 OK, fit_sec ~200s (laptop) |
+| Totoro launch | **IN FLIGHT** — see below |
 
-| job | family | n | seed | fit_sec | delta | floor |
-|-----|--------|---|------|---------|-------|-------|
-| 0 | F1 | 100 | 101 | 38.0 | +0.059 | yes |
-| 1 | F2 | 100 | 101 | 37.6 | +0.002 | yes |
-| 2 | F3 | 100 | 101 | 39.0 | −0.034 | yes |
-| 3 | F1 | 300 | 101 | 49.6 | +0.015 | yes |
-| 4 | F2 | 300 | 101 | 49.3 | +0.024 | yes |
-| 5 | F3 | 300 | 101 | 50.1 | +0.037 | yes |
-| 6 | F1 | 1000 | 101 | 183.0 | −0.008 | no |
-| 7 | F2 | 1000 | 101 | 185.8 | −0.011 | no |
-| 8 | F3 | 1000 | 101 | 194.3 | 0.000 | no |
-| 9 | F2 | 300 | 112 | 50.0 | −0.024 | no |
-| 10 | F2 | 300 | 123 | 50.0 | −0.004 | no |
-| 11 | F2 | 300 | 134 | 49.9 | +0.003 | no |
+## CAMPAIGN SCOPE (Phase A)
 
-Per-n mean fit_sec: n=100 **38.2s**, n=300 **49.8s**, n=1000 **187.7s**.
+- **81 cells:** F1/F2/F3 × n∈{100,300,1000} × λ∈{0.2,0.5,1.0} × miss∈{10%,30%,50%} × MCAR
+- **2,430 fits:** 30 paired seeds per cell
+- **Primary arm:** `lambda_mode = "fixed_1"`
+- **Sensitivity:** `lambda_mode = "bayes"` on λ∈{0.2,0.5} — **not in this launch** (separate arm)
+- **Host:** Totoro, ≤100 workers, OPENBLAS=1, OMP=1
+- **Wall ceiling:** ≤2 h (G8 stop)
 
-## REVISED FULL-CAMPAIGN ESTIMATE
+## TOTORO LAUNCH
 
-- **108-cell × 30-seed grid (3240 fits):** ~1.5 h wall @100 workers (regime-map anchor 5400/2.5h); ~50 min by measured CPU/n alone (likely optimistic).
-- **81-cell MCAR-only × 30 seeds (2430 fits):** ~1.1 h @ anchor throughput.
-- **Handover 4–8 h band:** still plausible once λ × missingness × mechanism axes expand; n=1000 dominates at ~3 min/fit.
+- **Remote dir:** `~/pigauto_gnn_evidence_campaign`
+- **Launcher:** `nohup bash script/gnn_evidence_campaign_totoro.sh > logs/campaign.log 2>&1 &`
+- **Poll:**
+  ```bash
+  ssh totoro 'bash ~/pigauto_gnn_evidence_campaign/script/gnn_evidence_campaign_totoro.sh status'
+  ssh totoro 'tail -f ~/pigauto_gnn_evidence_campaign/logs/campaign.log'
+  ```
+- **Collect locally:**
+  ```bash
+  bash script/rsync_gnn_evidence_campaign.sh pull
+  ```
 
-## GATE AUDIT (G1–G8)
+## GATE AUDIT (sentinel pre-run)
 
-| Gate | Status | Evidence |
-|------|--------|----------|
-| G1 provenance | PASS | All 12 RDS name candidate/driver/host/seed/family/n/miss |
-| G2 paired isolation | PASS | blend_loss, baseline_loss, paired_delta, r_cal_* recorded |
-| G3 fallback | PASS | floor_fired retained; r_cal_gnn=0 reachable (job 8 F3 n=1000) |
-| G4 positive claim | N/A | Pre-run only; no claim gate |
-| G5 no-benefit | PASS | Mixed deltas retained (F2 n=1000 negative) |
-| G6 missingness | PASS | MCAR only; labeled MCAR |
-| G7 trait boundary | PASS | F1/F2/F3 reported separately |
-| G8 stop | PASS | 0/12 failures; all fields present; wall 3.2 min < approval |
+| Gate | Status |
+|---|---|
+| G1 provenance | PASS |
+| G2 paired isolation | PASS |
+| G3 fallback | PASS |
+| G5 no-benefit retention | PASS |
+| G6 MCAR labeling | PASS |
+| G7 trait boundary | PASS |
+| G8 stop (sentinel) | PASS — 0/12 failures |
+
+Phase A campaign G8 monitored at end of Totoro run (>20% failures or wall >2h).
 
 ## ARTIFACTS
 
-- Totoro: `~/pigauto_gnn_sentinel_prerun/{results,logs}/`
-- Local: `script/returned_gnn_sentinel/`
+| Location | Contents |
+|---|---|
+| Totoro `~/pigauto_gnn_evidence_campaign/results/` | `gnn_campaign_job_*.rds`, summary CSV |
+| Totoro `~/pigauto_gnn_evidence_campaign/logs/` | per-job + campaign.log |
+| Local `script/returned_gnn_campaign/` | post-pull mirror |
 
 ## NEXT
 
-Return deliverables to parent. No push/merge. Optional: commit F3 trait_types fix (`dd66b33+`).
+- Monitor Totoro to completion (G8).
+- Post-run: cell-level Δ/MCSE tables, gate distributions.
+- Sensitivity arm (`bayes` @ low λ): separate G0 or tagged follow-on.
+- F2 @ λ=1 confirm (60 seeds): only after G4 pass — not in Phase A launch.
