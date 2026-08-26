@@ -98,7 +98,7 @@ Under candidate `6fddd79`, paired same-fit estimand, MCAR missingness, F2 nonlin
 ## RESUME
 
 ```
-PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun @ d19ba71 | LANE: gnn-evidence
+PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun @ 485153e | LANE: gnn-evidence
 Phase A COMPLETE. G4 confirm 3/5 PASS. Bayes 0% F2 closure.
 Next: manuscript fence review OR AVONET panel G0 OR Phase B G0.
 ```
