@@ -49,12 +49,27 @@ if (!identical(names(env$traits), names(env$completed))) fail("Trait column orde
 if (!identical(vapply(env$traits, class, character(1)), vapply(env$completed, class, character(1)))) {
   fail("Trait column classes changed")
 }
-observed <- !is.na(env$traits)
-if (!identical(env$completed[observed], env$traits[observed])) fail("Observed cells changed")
+observed_unchanged <- vapply(names(env$traits), function(name) {
+  observed <- !is.na(env$traits[[name]])
+  identical(env$completed[[name]][observed], env$traits[[name]][observed])
+}, logical(1))
+if (!all(observed_unchanged)) {
+  fail("Observed cells changed in: %s", paste(names(observed_unchanged)[!observed_unchanged], collapse = ", "))
+}
 if (anyNA(env$completed)) fail("Novice fixture retains unresolved missing cells")
 if (!file.exists("pigauto_report.html")) fail("Workflow did not write pigauto_report.html")
 report <- paste(readLines("pigauto_report.html", warn = FALSE), collapse = "\n")
 if (!grepl("Completed data", report, fixed = TRUE)) fail("Report omits completed-data role")
-if (!grepl("Supported inference", report, fixed = TRUE)) fail("Report omits inference boundary")
+required_report_boundaries <- c(
+  "How to use outputs",
+  "A pigauto_result does not authorize inference",
+  "multi_impute_analysis() only in its documented narrow route"
+)
+missing_report_boundaries <- required_report_boundaries[
+  !vapply(required_report_boundaries, grepl, logical(1), x = report, fixed = TRUE)
+]
+if (length(missing_report_boundaries)) {
+  fail("Report omits boundary text: %s", paste(missing_report_boundaries, collapse = "; "))
+}
 
 cat("G8 installed novice workflow verified\n")

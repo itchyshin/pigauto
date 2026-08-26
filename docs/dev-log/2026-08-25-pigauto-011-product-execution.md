@@ -444,3 +444,36 @@ All runner Git receipt queries now use explicit `git -C <source_root>`, so their
 meaning no longer depends on the candidate command's working directory. The
 clean check from this stopped attempt remains diagnostic evidence only; the
 atomic candidate run must repeat it from the new committed runner SHA.
+
+## R1 tenth candidate attempt — heterogeneous observed-cell verifier repaired
+
+The tenth atomic attempt, bound to source commit `932c889`, passed all focused
+source gates, pkgdown check, rendered-site and tarball builds. Its exact check
+passed the complete installed-package suite in 1,575.9 seconds, rebuilt every
+vignette, generated both manuals and ended with `Status: OK`. Installation and
+G4 also passed. G8 then completed the real installed novice fit through 2,000
+epochs but stopped on the verifier's final `Observed cells changed` assertion.
+It did not run G9 or create a frozen candidate or `CURRENT`.
+
+A fresh installed-candidate diagnostic replay compared every observed value by
+trait and row. It found no mismatched cell and returned
+`columnwise-observed-identical: TRUE`; the old expression returned
+`matrix-identical: FALSE`. The old verifier indexed a heterogeneous data frame
+with one logical matrix, which flattened integer and character columns through
+a coercing extraction path before `identical()`. The package's completed data
+had not changed the observed cells.
+
+G8 now compares exact observed subsets within each original column and reports
+the trait names on any failure. This retains type-sensitive, value-sensitive
+checking without the heterogeneous flattening artefact. The clean check and fit
+from this stopped attempt remain diagnostic only; a new atomic candidate run is
+still required.
+
+The first exact G8 replay after that repair passed every completed-data
+invariant, then exposed a second stale verifier literal: it expected the phrase
+`Supported inference`, which is not the report contract. The actual report
+states `A pigauto_result does not authorize inference; use
+multi_impute_analysis() only in its documented narrow route.` G8 now requires
+that exact boundary plus the `How to use outputs` section, and the source
+result-contract suite carries the same assertions. Public report wording is
+unchanged.
