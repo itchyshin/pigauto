@@ -344,3 +344,24 @@ returned `Status: OK`, including hidden-file, examples, PDF-manual and
 HTML-manual checks. This confirms the prior vignette and HTML-manual messages
 were interruption artifacts while the hidden-file note was independently
 repaired. The final atomic check must still run tests and rebuild vignettes.
+
+## R1 sixth candidate attempt — executable example timing repaired
+
+The sixth atomic attempt, bound to source commit `769d79d`, passed all focused
+source gates, pkgdown check, rendered-site build in 190.8 seconds and tarball
+build in 93.8 seconds. Before its complete test suite finished,
+`R CMD check` recorded a NOTE because the executable `cross_validate()` example
+took 5.331 seconds, just above R's five-second example threshold. The run was
+stopped and its process tree was explicitly terminated; it created neither a
+frozen candidate nor `CURRENT`.
+
+The example remains executable and still performs real cross-validation, but
+now uses 12 tips, three folds, one epoch, four eigenvectors, an 8-unit hidden
+layer and the legacy block. Its isolated in-process runtime was 2.553 seconds;
+the returned object contained results from all three folds.
+A fresh diagnostic tarball followed by
+`R CMD check --as-cran --run-donttest --no-tests --no-vignettes` completed
+the examples stage in 44 seconds without a timing NOTE. Because that bounded
+probe deliberately omitted vignette building, its expected missing-vignette
+warnings are not a candidate verdict. The final atomic check must still run the
+complete suite and rebuild every vignette.
