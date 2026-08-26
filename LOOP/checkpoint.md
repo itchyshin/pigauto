@@ -16,7 +16,7 @@
 | Phase A driver | **DONE** — `script/gnn_evidence_campaign.R` |
 | Totoro launcher | **DONE** — `script/gnn_evidence_campaign_totoro.sh` |
 | Local smoke (1 fit) | **DONE** — job 0 OK, fit_sec ~200s (laptop) |
-| Totoro launch | **IN FLIGHT** — see below |
+| Totoro launch | **RUNNING** — PID 143201, started 2026-08-26T11:55:50-06:00 |
 
 ## CAMPAIGN SCOPE (Phase A)
 
