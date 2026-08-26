@@ -4,7 +4,7 @@
 **Lane:** `evidence/gnn-sentinel-prerun`  
 **Worktree:** `~/local-scratch/lanes/pigauto-gnn-sentinel-prerun`  
 **Candidate SHA:** `6fddd79`  
-**Branch HEAD:** `f396167` (confirm + bayes analysis)
+**Branch HEAD:** see RESUME block (collectors + durable summary committed)
 
 ## STATE
 
@@ -60,7 +60,8 @@
 | `script/returned_gnn_campaign/results_confirm/` | 300 confirm RDS + G4 cell summary (local pull) |
 | `script/collect_gnn_evidence_f2_confirm.R` | G4 confirm collector |
 | `script/collect_gnn_evidence_bayes_sensitivity.R` | Bayes closure collector |
-| `docs/dev-log/2026-08-26-gnn-evidence-phase-a-results.md` | Phase A + confirm + bayes report |
+| `docs/dev-log/2026-08-26-gnn-evidence-phase-a-results.md` | Phase A + confirm + bayes report (gitignored; local copy) |
+| `script/returned_gnn_campaign/PHASE_A_SUMMARY.md` | Durable committed copy of phase-a-results report |
 
 ## TOTORO JOBS (2026-08-26)
 
@@ -97,7 +98,7 @@ Under candidate `6fddd79`, paired same-fit estimand, MCAR missingness, F2 nonlin
 ## RESUME
 
 ```
-PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun @ f396167 | LANE: gnn-evidence
+PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun @ d19ba71 | LANE: gnn-evidence
 Phase A COMPLETE. G4 confirm 3/5 PASS. Bayes 0% F2 closure.
 Next: manuscript fence review OR AVONET panel G0 OR Phase B G0.
 ```
