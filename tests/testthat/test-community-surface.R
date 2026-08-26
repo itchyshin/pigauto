@@ -45,6 +45,9 @@ test_that("installed novice fixture and script parse without fitting", {
   expect_true(anyNA(traits))
   check <- check_pigauto(traits, tree)
   expect_true(check$status %in% c("ready", "ready_with_warnings"))
+  expect_identical(check$traits$type[check$traits$trait == "mass"], "continuous")
+  expect_false(any(check$messages$code == "integer_auto_ambiguous" &
+                   check$messages$field == "mass"))
   expect_no_error(parse(text = 'traits$state <- ordered(traits$state, levels = c("low", "high"))'))
   expect_no_error(parse(text = 'trait_types = c(length_mm = "continuous", cover = "proportion", parasites = "zi_count")'))
   expect_no_error(parse(text = 'multi_proportion_groups = list(diet = c("diet_insect", "diet_fruit", "diet_seed"))'))

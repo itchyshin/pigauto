@@ -43,6 +43,14 @@ env <- new.env(parent = globalenv())
 sys.source(script, envir = env)
 if (!inherits(env$result, "pigauto_result")) fail("Workflow did not return pigauto_result")
 if (!inherits(env$result$check, "pigauto_check")) fail("Result does not retain pigauto_check")
+mass_type <- env$result$check$traits$type[env$result$check$traits$trait == "mass"]
+if (!identical(mass_type, "continuous")) {
+  fail("Novice workflow must model body mass as continuous; got: %s", paste(mass_type, collapse = ", "))
+}
+if (any(env$result$check$messages$code == "integer_auto_ambiguous" &
+        env$result$check$messages$field == "mass")) {
+  fail("Novice workflow ignored an integer-valued body-mass correction")
+}
 if (!identical(env$completed, pigauto::completed_data(env$result))) fail("completed_data() disagrees with result")
 if (!identical(rownames(env$traits), rownames(env$completed))) fail("Species row identity changed")
 if (!identical(names(env$traits), names(env$completed))) fail("Trait column order changed")
