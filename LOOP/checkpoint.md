@@ -1,14 +1,21 @@
 # Checkpoint — GNN evidence sentinel pre-run
 
 **Date:** 2026-08-26  
-**Lane:** `evidence/gnn-sentinel-prerun` @ `dd66b33`  
+**Lane:** `evidence/gnn-sentinel-prerun` @ `aa38c7b`  
 **Worktree:** `~/local-scratch/lanes/pigauto-gnn-sentinel-prerun`  
 **Candidate SHA:** `6fddd79`
 
 ## STATE
 S4 **DONE** — driver committed (`script/gnn_evidence_sentinel_prerun.R`).  
 S5 **DONE** — Totoro 12/12 fits, 0 failures, wall ~3.2 min (PID 69761).  
-S6 **DONE** — timing table + revised estimate below.
+S6 **DONE** — timing table + revised estimate below.  
+S7 **DONE** — pre-registration committed **before** any full-campaign compute:
+`docs/dev-log/2026-08-26-gnn-evidence-preregistration.md` (+ companion design note).
+
+## NEXT GATE
+**G0 Phase A approval** — Shinichi sign-off on 81-cell MCAR campaign (2,430 fits,
+~1.0–1.5 h @ 100 workers). Copy-paste block at end of prereg doc. No Phase A
+driver or compute until approved.
 
 ## TIMING (Totoro, 12 parallel, OPENBLAS=1)
 
