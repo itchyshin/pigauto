@@ -477,3 +477,24 @@ multi_impute_analysis() only in its documented narrow route.` G8 now requires
 that exact boundary plus the `How to use outputs` section, and the source
 result-contract suite carries the same assertions. Public report wording is
 unchanged.
+
+## V1 first frozen-candidate review — named-log manifest repaired
+
+The atomic run from source commit `70428f6` passed every runner command:
+documentation, focused gates, source community checks, pkgdown, tarball build,
+the complete exact-package check in 1,547.8 seconds, installation, G4, the
+installed novice workflow in 101.2 seconds and G9. It froze tarball SHA-256
+`c1ea9672bf979f29fd88a74c0e7fd96eb3577548ab914ddc2e3357f1003ed0f8`.
+
+Independent G4 and G9 re-verification passed, but the frozen-candidate verifier
+rejected the manifest before accepting G10: all 13 log files and all 13 command
+records were present, but `manifest$logs` had no names. Base `file.path()` had
+dropped the names from the runner's `log_names` vector, so the required named
+log-to-command mapping could not be proven. The frozen bytes remain an audit
+record, but this candidate is rejected and is not a completion receipt.
+
+The runner now constructs the manifest mapping with an explicit
+`setNames(file.path("logs", unname(log_names)), names(log_names))`. The invalid
+`CURRENT` pointer is retained under a `REJECTED-70428f6635cd` name rather than
+being treated as current. A fresh atomic run and independent verification are
+still required.
