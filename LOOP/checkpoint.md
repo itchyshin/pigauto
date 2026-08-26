@@ -18,7 +18,7 @@
 | Phase A primary (`fixed_1`) | **DONE** — 2430/2430 RDS, 0 failures, wall 4736 s (~79 min), G8 PASS |
 | Phase A analysis | **DONE** — `docs/dev-log/2026-08-26-gnn-evidence-phase-a-results.md` |
 | Bayes sensitivity (λ∈{0.2,0.5}) | **DONE** — 1620/1620 RDS, 0 failures, wall 2302 s (~38 min), `results_bayes/` |
-| F2 @ λ=1 60-seed confirm | **IN FLIGHT** — 300 fits, `results_confirm/`, launcher PID ~441886 |
+| F2 @ λ=1 60-seed confirm | **DONE** — 300/300 RDS, 0 failures, wall 693 s (~11.5 min), `results_confirm/` |
 
 ## PHASE A RESULTS (primary arm)
 
@@ -54,7 +54,7 @@
 |---|---|
 | `script/returned_gnn_campaign/results/` | 2430 primary job RDS + summaries (local pull) |
 | Totoro `~/pigauto_gnn_evidence_campaign/results_bayes/` | 1620 bayes sensitivity RDS (complete) |
-| Totoro `~/pigauto_gnn_evidence_campaign/results_confirm/` | F2 confirm RDS (in flight) |
+| Totoro `~/pigauto_gnn_evidence_campaign/results_confirm/` | 300 F2 confirm RDS (complete) |
 | `docs/dev-log/2026-08-26-gnn-evidence-phase-a-results.md` | Phase A results report |
 
 ## TOTORO JOBS (2026-08-26)
@@ -62,7 +62,7 @@
 | Job | Launcher | Fits | Status | Wall |
 |---|---|---:|---|---:|
 | Bayes sensitivity | `gnn_evidence_sensitivity_bayes_totoro.sh` | 1620 | **DONE** 0 fail | 2302 s |
-| F2 confirm | `gnn_evidence_f2_confirm_totoro.sh` | 300 | **RUNNING** | ETA ~10–15 min |
+| F2 confirm | `gnn_evidence_f2_confirm_totoro.sh` | 300 | **DONE** 0 fail | 693 s |
 
 **Poll commands:**
 
@@ -80,7 +80,7 @@ bash script/rsync_gnn_evidence_campaign.sh pull
 
 ## NEXT GATES
 
-1. **F2 confirm complete** → collect `results_confirm/`, run G4 on 60-seed cells.
+1. **F2 confirm analysis** → pull `results_confirm/`, run G4 on 60-seed cells.
 2. **Bayes analysis** → collect `results_bayes/`, compare low-λ `gnn_res` per prereg §4.
 3. **Phase B (MAR/MNAR)** — requires new G0; do not launch.
 4. **PR #174 / product lane** — out of scope.
@@ -89,6 +89,6 @@ bash script/rsync_gnn_evidence_campaign.sh pull
 
 ```
 PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun @ 709ea58 | LANE: gnn-evidence
-Phase A DONE. Bayes sensitivity DONE (1620/1620). F2 confirm IN FLIGHT (poll status).
-After F2 confirm: pull → G4 confirm audit → bayes low-λ comparison doc.
+Phase A DONE. Bayes DONE (1620/1620). F2 confirm DONE (300/300).
+Next: pull results_bayes + results_confirm → G4 confirm audit → bayes low-λ doc.
 ```
