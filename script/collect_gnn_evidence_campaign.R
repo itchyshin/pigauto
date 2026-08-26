@@ -136,7 +136,6 @@ cell_summ <- do.call(rbind, lapply(seq_len(nrow(cell_ids)), function(i) {
   cbind(cell_ids[i, , drop = FALSE], summarize_cell(d))
 }))
 rownames(cell_summ) <- NULL
-write.csv(cell_summ, file.path(results_dir, "gnn_campaign_cell_summary.csv"), row.names = FALSE)
 
 # ---- G4 flag logic ---------------------------------------------------------
 g4_flag <- function(row) {
@@ -148,6 +147,8 @@ g4_flag <- function(row) {
 cell_summ$g4_explore_pass <- vapply(seq_len(nrow(cell_summ)), function(i) {
   g4_flag(cell_summ[i, ])
 }, logical(1))
+
+write.csv(cell_summ, file.path(results_dir, "gnn_campaign_cell_summary.csv"), row.names = FALSE)
 
 g4_cells <- cell_summ[cell_summ$g4_explore_pass, , drop = FALSE]
 

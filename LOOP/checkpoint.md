@@ -7,65 +7,54 @@
 
 ## STATE
 
-**G0 Phase A APPROVED** (Shinichi, 2026-08-26).
+**G0 Phase A APPROVED** (Shinichi, 2026-08-26).  
+**Overnight autonomy:** approved until ~05:00 2026-08-27.
 
 | Stage | Status |
 |---|---|
 | Sentinel pre-run (12 fits) | **DONE** — 0 failures, wall ~3.2 min |
-| Pre-registration | **DONE** — `docs/dev-log/2026-08-26-gnn-evidence-preregistration.md` @ `b7e597a` |
-| Phase A driver | **DONE** — `script/gnn_evidence_campaign.R` |
-| Totoro launcher | **DONE** — `script/gnn_evidence_campaign_totoro.sh` |
-| Local smoke (1 fit) | **DONE** — job 0 OK, fit_sec ~200s (laptop) |
-| Totoro launch | **DONE** — 2430/2430 RDS, 0 failures, wall 4736s (~79 min), G8 PASS |
+| Pre-registration | **DONE** — `docs/dev-log/2026-08-26-gnn-evidence-preregistration.md` |
+| Phase A primary (`fixed_1`) | **DONE** — 2430/2430 RDS, 0 failures, wall 4736 s (~79 min), G8 PASS |
+| Phase A analysis | **DONE** — `docs/dev-log/2026-08-26-gnn-evidence-phase-a-results.md` |
+| Bayes sensitivity (λ∈{0.2,0.5}) | **LAUNCHING** — 1620 fits, `results_bayes/` |
 
-## CAMPAIGN SCOPE (Phase A)
+## PHASE A RESULTS (primary arm)
 
-- **81 cells:** F1/F2/F3 × n∈{100,300,1000} × λ∈{0.2,0.5,1.0} × miss∈{10%,30%,50%} × MCAR
-- **2,430 fits:** 30 paired seeds per cell
-- **Primary arm:** `lambda_mode = "fixed_1"`
-- **Sensitivity:** `lambda_mode = "bayes"` on λ∈{0.2,0.5} — **not in this launch** (separate arm)
-- **Host:** Totoro, ≤100 workers, OPENBLAS=1, OMP=1
-- **Wall ceiling:** ≤2 h (G8 stop)
-
-## TOTORO LAUNCH
-
-- **Remote dir:** `~/pigauto_gnn_evidence_campaign`
-- **Launcher:** `nohup bash script/gnn_evidence_campaign_totoro.sh > logs/campaign.log 2>&1 &`
-- **Poll:**
-  ```bash
-  ssh totoro 'bash ~/pigauto_gnn_evidence_campaign/script/gnn_evidence_campaign_totoro.sh status'
-  ssh totoro 'tail -f ~/pigauto_gnn_evidence_campaign/logs/campaign.log'
-  ```
-- **Collect locally:**
-  ```bash
-  bash script/rsync_gnn_evidence_campaign.sh pull
-  ```
-
-## GATE AUDIT (sentinel pre-run)
-
-| Gate | Status |
+| Metric | Value |
 |---|---|
-| G1 provenance | PASS |
-| G2 paired isolation | PASS |
-| G3 fallback | PASS |
-| G5 no-benefit retention | PASS |
-| G6 MCAR labeling | PASS |
-| G7 trait boundary | PASS |
-| G8 stop (sentinel) | PASS — 0/12 failures |
+| Fits | 2430 / 2430 |
+| Failure rate | 0.0% (G8 PASS) |
+| Wall (Totoro) | 4736 s (~79 min, < 2 h ceiling) |
+| G1–G3, G5–G8 | PASS |
+| F1 @ λ=1 specificity | PASS — no G4 explore passes |
+| F2 @ λ=1 G4 explore | **5 / 9 cells PASS** — 60-seed confirm warranted for passing cells |
+| F3 | Descriptive only (per prereg G7) |
 
-Phase A campaign G8 monitored at end of Totoro run (>20% failures or wall >2h).
+**G4 explore passes (F2 @ λ=1):** n=300 and n=1000 at all miss rates (10/30/50%).  
+**Near-miss:** n=100 @ 10% (z=2.98), n=1000 @ 50% (rel improve 1.16%).
 
 ## ARTIFACTS
 
-| Location | Contents |
+| Path | Contents |
 |---|---|
-| Totoro `~/pigauto_gnn_evidence_campaign/results/` | `gnn_campaign_job_*.rds`, summary CSV |
-| Totoro `~/pigauto_gnn_evidence_campaign/logs/` | per-job + campaign.log |
-| Local `script/returned_gnn_campaign/` | post-pull mirror |
+| `script/returned_gnn_campaign/results/` | 2430 job RDS + summaries (local pull) |
+| `script/returned_gnn_campaign/results/gnn_campaign_cell_summary.csv` | 81-cell Δ/MCSE/gate table |
+| `script/returned_gnn_campaign/results/gnn_campaign_gates.csv` | Full r_cal_gnn per latent col (11340 rows) |
+| `docs/dev-log/2026-08-26-gnn-evidence-phase-a-results.md` | Phase A results report |
+| Totoro `~/pigauto_gnn_evidence_campaign/results_bayes/` | Bayes sensitivity (in flight) |
 
-## NEXT
+## NEXT GATES (for Shinichi @ 05:00)
 
-- Monitor Totoro to completion (G8).
-- Post-run: cell-level Δ/MCSE tables, gate distributions.
-- Sensitivity arm (`bayes` @ low λ): separate G0 or tagged follow-on.
-- F2 @ λ=1 confirm (60 seeds): only after G4 pass — not in Phase A launch.
+1. **F2 @ λ=1 60-seed confirm** — 5 cells passed G4 explore; run separate confirmatory arm before any public GNN-positive prose.
+2. **Bayes sensitivity** — poll `gnn_evidence_sensitivity_bayes_totoro.sh status`; collect to `results_bayes/`; compare low-λ `gnn_res` per prereg §4.
+3. **Phase B (MAR/MNAR)** — requires new G0; do not launch from this checkpoint.
+4. **PR #174 / product lane** — out of scope; no edits.
+
+## RESUME @ 05:00
+
+```
+PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun | LANE: gnn-evidence
+Phase A primary DONE (0/2430 fail, 79 min). F2@λ=1: 5/9 G4 explore passes.
+Check bayes sensitivity status → collect results_bayes → decide 60-seed F2 confirm cells.
+Poll: ssh totoro 'bash ~/pigauto_gnn_evidence_campaign/script/gnn_evidence_sensitivity_bayes_totoro.sh status'
+```
