@@ -9,7 +9,9 @@ frozen_root <- if (length(args)) args[[1L]] else file.path(source_root, "checkpo
 dir.create(frozen_root, recursive = TRUE, showWarnings = FALSE)
 frozen_root <- normalizePath(frozen_root, mustWork = TRUE)
 
-git_out <- function(args) system2("git", args, stdout = TRUE, stderr = TRUE)
+git_out <- function(args) {
+  system2("git", c("-C", shQuote(source_root), args), stdout = TRUE, stderr = TRUE)
+}
 head_sha <- function() trimws(git_out(c("rev-parse", "HEAD"))[[1L]])
 source_sha <- head_sha()
 source_status <- function() paste(git_out(c("status", "--porcelain")), collapse = "\n")

@@ -423,3 +423,24 @@ no-space `/private/tmp` directory. It returned `Status: OK`, including
 `checking HTML version of manual ... OK`. This isolates the prior NOTE to the
 space-bearing check path; it is not treated as the still-pending complete test
 or candidate verdict.
+
+## R1 ninth candidate attempt — repository-relative Git probe repaired
+
+The ninth atomic attempt, bound to source commit `5b2890d`, passed all focused
+source gates, pkgdown check, the rendered-site build in 215.9 seconds and the
+tarball build in 131.7 seconds. Its exact no-space `R CMD check` then passed the
+complete installed-package suite in 27 minutes, rebuilt all vignettes, generated
+both manuals and ended with literal `Status: OK`. This is a clean package-check
+result, but not a frozen-candidate verdict.
+
+Immediately after the command returned, the runner called `git status` and
+`git rev-parse HEAD` while its current directory was still the external check
+directory. Both commands returned status 128 because `/private/tmp` is not a
+Git worktree; the runner conservatively treated that failed integrity probe as
+source dirtiness and stopped. It created neither a frozen candidate nor
+`CURRENT`, and did not continue to installation or G4/G8/G9.
+
+All runner Git receipt queries now use explicit `git -C <source_root>`, so their
+meaning no longer depends on the candidate command's working directory. The
+clean check from this stopped attempt remains diagnostic evidence only; the
+atomic candidate run must repeat it from the new committed runner SHA.
