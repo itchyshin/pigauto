@@ -365,3 +365,25 @@ the examples stage in 44 seconds without a timing NOTE. Because that bounded
 probe deliberately omitted vignette building, its expected missing-vignette
 warnings are not a candidate verdict. The final atomic check must still run the
 complete suite and rebuild every vignette.
+
+## R1 seventh candidate attempt — source-only tombstone test repaired
+
+The seventh atomic attempt, bound to source commit `fae564a`, passed all focused
+source gates, pkgdown check, the rendered-site build in 176.1 seconds and the
+tarball build in 145.7 seconds. The exact-tarball check passed installation,
+code analysis, documentation consistency, installed-vignette and example
+checks, then failed its complete test suite because community-surface assertions
+tried to open `_pkgdown.yml` and 11 `pkgdown/assets/dev/` tombstones. Those
+website-source files are deliberately excluded from the package tarball by
+`.Rbuildignore`, so they existed in the repository test context but could not
+exist in the installed-source context.
+The failed attempt created neither a frozen candidate nor `CURRENT`.
+
+The assertions over `_pkgdown.yml` and the tombstones are now explicitly
+source-only when their non-shipping inputs are absent. Package-shipping README,
+NEWS, source, help and vignette claim checks still run from the tarball, and all
+website-source assertions still run in the repository's focused community gate.
+The separate G9 verifier remains responsible for checking all 11 tombstones in
+both the source tree and the fully rendered site, so the candidate does not lose
+the public-claim check merely because those website assets do not ship inside
+the R package tarball.

@@ -60,10 +60,11 @@ test_that("recipes, advanced controls, and bounded claims remain visible", {
 })
 
 test_that("public preflight and result methods are indexed by pkgdown", {
-  pkgdown <- paste(
-    readLines(testthat::test_path("..", "..", "_pkgdown.yml"), warn = FALSE),
-    collapse = "\n"
-  )
+  path <- testthat::test_path("..", "..", "_pkgdown.yml")
+  if (!file.exists(path)) {
+    skip("source-only pkgdown configuration is excluded from the package tarball")
+  }
+  pkgdown <- paste(readLines(path, warn = FALSE), collapse = "\n")
   for (topic in c("print.pigauto_check", "summary.pigauto_result",
                   "print.summary_pigauto_result")) {
     expect_match(pkgdown, paste0("- ", topic), fixed = TRUE)
@@ -85,19 +86,24 @@ test_that("current public claim surfaces retain their stated boundaries", {
 test_that("tree benchmark and interval help retain current boundaries", {
   root <- testthat::test_path("..", "..")
   read_text <- function(...) paste(readLines(file.path(root, ...), warn = FALSE), collapse = "\n")
-  pkgdown <- read_text("_pkgdown.yml")
-  tombstone <- read_text("pkgdown", "assets", "dev", "bench_tree_uncertainty.html")
   tree_vignette <- read_text("vignettes", "tree-uncertainty.Rmd")
   predict_source <- read_text("R", "predict_pigauto.R")
   predict_rd <- read_text("man", "predict.pigauto_fit.Rd")
   fit_source <- read_text("R", "fit_pigauto.R")
   fit_rd <- read_text("man", "fit_pigauto.Rd")
 
-  expect_false(grepl("dev/bench_tree_uncertainty\\.html", pkgdown))
-  expect_match(tombstone, "Historical tree-sensitivity benchmark", fixed = TRUE)
-  expect_match(tombstone, "articles/tree-uncertainty.html", fixed = TRUE)
-  expect_match(tombstone, "not MI, Rubin pooling, SE, or FMI", fixed = TRUE)
-  expect_false(grepl("Pooled estimates|Rubin's rules", tombstone, fixed = TRUE))
+  pkgdown_path <- file.path(root, "_pkgdown.yml")
+  if (file.exists(pkgdown_path)) {
+    expect_false(grepl("dev/bench_tree_uncertainty\\.html", read_text("_pkgdown.yml")))
+  }
+  tombstone_path <- file.path(root, "pkgdown", "assets", "dev", "bench_tree_uncertainty.html")
+  if (file.exists(tombstone_path)) {
+    tombstone <- read_text("pkgdown", "assets", "dev", "bench_tree_uncertainty.html")
+    expect_match(tombstone, "Historical tree-sensitivity benchmark", fixed = TRUE)
+    expect_match(tombstone, "articles/tree-uncertainty.html", fixed = TRUE)
+    expect_match(tombstone, "not MI, Rubin pooling, SE, or FMI", fixed = TRUE)
+    expect_false(grepl("Pooled estimates|Rubin's rules", tombstone, fixed = TRUE))
+  }
   expect_match(tree_vignette, "descriptive prediction sensitivity only", fixed = TRUE)
   expect_match(tree_vignette, "do not pass them to `pool_mi()`", fixed = TRUE)
 
@@ -172,6 +178,9 @@ test_that("NEWS labels superseded public claims in their historical sections", {
 
 test_that("unsafe historical development pages remain tombstones", {
   root <- testthat::test_path("..", "..", "pkgdown", "assets", "dev")
+  if (!dir.exists(root)) {
+    skip("source-only pkgdown tombstones are excluded from the package tarball")
+  }
   names <- c(
     "bench_avonet9993_bace.html",
     "bench_avonet9993_bace_index.html",
