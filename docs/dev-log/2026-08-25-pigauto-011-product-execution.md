@@ -272,3 +272,28 @@ the `Start here` reference section. A source regression test requires those
 exact topics to remain indexed. The community-surface suite passes 86
 expectations and `pkgdown::check_pkgdown()` reports `No problems found.` No
 candidate was frozen or promoted by the failed attempt.
+
+## R1 third candidate attempt — site-build repair accepted
+
+The third atomic attempt, bound to source commit `f832e8b`, passed the complete
+source suite in 709.5 seconds and passed the repaired pkgdown configuration
+check. It then stopped before build or freeze because local pkgdown 2.2.0 does
+not accept the runner's `dest_dir` argument to `pkgdown::build_site()`.
+
+The runner and independent verifier now use pkgdown's documented
+`override = list(destination = ...)` interface. The destination is required to
+be below the source root, recorded relatively in the exact command and retained
+absolutely in the artifact binding. The build now uses `install = TRUE`, so
+reference examples load a temporary installation of the candidate source
+instead of whichever pigauto version happened to be available in the ambient R
+library.
+
+The first direct probe established a 5-minute upper estimate but reached the
+final search-index stage just after that boundary, so it was stopped and not
+retained as evidence. Under the revised 6–8 minute envelope, a fresh probe built
+the complete site and passed pkgdown's final problem check. The only warnings
+were the two expected `@examplesIf(interactive())` notices. The earlier
+sandbox-only cache/network failure was not repaired in package code; the same
+read-only build succeeded with normal cache and CRAN-metadata access. No
+candidate was frozen or promoted by the failed atomic attempt or either
+incomplete probe.

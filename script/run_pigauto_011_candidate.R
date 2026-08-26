@@ -29,6 +29,9 @@ dir.create(staging, recursive = TRUE)
 logs_dir <- file.path(staging, "logs")
 dir.create(logs_dir)
 site_dir <- file.path(staging, "site")
+site_prefix <- paste0(source_root, .Platform$file.sep)
+if (!startsWith(site_dir, site_prefix)) fail("Staging site is not below the source root")
+site_destination <- substring(site_dir, nchar(site_prefix) + 1L)
 build_dir <- file.path(staging, "build")
 check_dir <- file.path(staging, "check")
 library_dir <- file.path(staging, "candidate-library")
@@ -124,8 +127,8 @@ run_command("pkgdown_check", rscript,
   "R1 pkgdown check verified")
 
 site_expr <- sprintf(
-  "pkgdown::build_site(dest_dir=%s, new_process=FALSE, install=FALSE); cat('R1 pkgdown build verified\\n')",
-  encodeString(site_dir, quote = "\"")
+  "pkgdown::build_site(override=list(destination=%s), new_process=FALSE, install=TRUE); cat('R1 pkgdown build verified\\n')",
+  encodeString(site_destination, quote = "\"")
 )
 run_command("pkgdown_build", rscript, expr_arg(site_expr), "R1 pkgdown build verified")
 

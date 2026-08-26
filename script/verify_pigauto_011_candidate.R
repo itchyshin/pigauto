@@ -180,9 +180,12 @@ rbin <- file.path(R.home("bin"), "R")
 staging_tarball <- manifest$commands$build$bindings$output_tarball_path
 staging_library <- manifest$commands$install$bindings$library_path
 staging_site <- manifest$commands$pkgdown_build$bindings$site_path
+site_prefix <- paste0(manifest$source_root, .Platform$file.sep)
+if (!startsWith(staging_site, site_prefix)) fail("Recorded pkgdown site is not below the source root")
+site_destination <- substring(staging_site, nchar(site_prefix) + 1L)
 site_expr <- sprintf(
-  "pkgdown::build_site(dest_dir=%s, new_process=FALSE, install=FALSE); cat('R1 pkgdown build verified\\n')",
-  encodeString(staging_site, quote = "\"")
+  "pkgdown::build_site(override=list(destination=%s), new_process=FALSE, install=TRUE); cat('R1 pkgdown build verified\\n')",
+  encodeString(site_destination, quote = "\"")
 )
 expected_args <- list(
   document = expr_arg("devtools::document(); cat('R1 documentation verified\\n')"),
