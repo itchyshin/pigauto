@@ -102,6 +102,23 @@ for (name in names(expected_markers)) {
   if (!identical(command$source_status_before, "") || !identical(command$source_status_after, "")) {
     fail("Candidate command did not run against a clean source: %s", name)
   }
+  utc_stamp <- function(x) {
+    is.character(x) && length(x) == 1L && !is.na(x) &&
+      grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} UTC$",
+            x, perl = TRUE)
+  }
+  if (!utc_stamp(command$started_at) || !utc_stamp(command$ended_at)) {
+    fail("Command UTC timestamp receipt is invalid: %s", name)
+  }
+  started <- as.POSIXct(command$started_at, tz = "UTC")
+  ended <- as.POSIXct(command$ended_at, tz = "UTC")
+  if (is.na(started) || is.na(ended) || ended < started ||
+      !is.numeric(command$elapsed_seconds) || length(command$elapsed_seconds) != 1L ||
+      !is.finite(command$elapsed_seconds) || command$elapsed_seconds < 0 ||
+      abs(as.numeric(difftime(ended, started, units = "secs")) -
+          command$elapsed_seconds) > 1.1) {
+    fail("Command timing receipt is invalid: %s", name)
+  }
   path <- file.path(frozen, manifest$logs[[name]])
   if (!file.exists(path) || !file.info(path)$size) fail("Required log is missing or empty: %s", name)
   log <- paste(readLines(path, warn = FALSE), collapse = "\n")

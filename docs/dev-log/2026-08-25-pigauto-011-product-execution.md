@@ -297,3 +297,20 @@ sandbox-only cache/network failure was not repaired in package code; the same
 read-only build succeeded with normal cache and CRAN-metadata access. No
 candidate was frozen or promoted by the failed atomic attempt or either
 incomplete probe.
+
+## R1 fourth candidate attempt — UTC freshness repair accepted
+
+The fourth atomic attempt, bound to source commit `387d6bc`, passed the complete
+source suite in 1,879.3 seconds, the pkgdown configuration check and the full
+rendered-site build in 248.5 seconds. `R CMD build` also completed and produced
+exactly one `pigauto_0.11.0.tar.gz`, but the runner stopped before check or
+install because its freshness guard parsed a recorded UTC timestamp in the
+host's local time zone.
+
+The measured tarball modification time was 2026-08-26 00:42:22 UTC, after the
+recorded build start at 2026-08-26 00:40:38 UTC. The guard had interpreted that
+start as 06:40:38 UTC. It now parses the recorded timestamp with
+`tz = "UTC"`. The independent verifier also validates every command's start,
+end and elapsed-time fields, allowing only the one-second rounding error from
+the human-readable timestamp format. The failed attempt created neither a
+frozen candidate nor `CURRENT`.

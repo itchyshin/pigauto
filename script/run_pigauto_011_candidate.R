@@ -136,7 +136,7 @@ run_command("build", rbin, c("CMD", "build", shQuote(source_root)), "* building"
 tarballs <- list.files(build_dir, pattern = "^pigauto_0[.]11[.]0[.]tar[.]gz$", full.names = TRUE)
 if (length(tarballs) != 1L) fail("Build did not produce exactly one pigauto_0.11.0.tar.gz")
 tarball <- normalizePath(tarballs[[1L]], mustWork = TRUE)
-if (file.info(tarball)$mtime < as.POSIXct(commands$build$started_at)) {
+if (file.info(tarball)$mtime < as.POSIXct(commands$build$started_at, tz = "UTC")) {
   fail("Built tarball predates the recorded build command")
 }
 
