@@ -387,3 +387,39 @@ The separate G9 verifier remains responsible for checking all 11 tombstones in
 both the source tree and the fully rendered site, so the candidate does not lose
 the public-claim check merely because those website assets do not ship inside
 the R package tarball.
+
+## R1 eighth candidate attempt — check-context boundary and safe path repaired
+
+The eighth atomic attempt, bound to source commit `b249d58`, passed all focused
+source gates, pkgdown check, the rendered-site build in 185.3 seconds, tarball
+build in 104.7 seconds, installation, code analysis, documentation consistency,
+installed-vignette and example checks. Its complete test suite then failed nine
+source-surface assertions. `R CMD check` runs copied tests from
+`pigauto.Rcheck/tests`, where `test_path("..", "..")` is the check directory,
+not the unpacked package source. Thus even shipping source files such as
+`README.md` and `NEWS.md` were not reachable through the test's repository-root
+assumption. This disproved the preceding receipt's expectation that those
+source assertions would remain executable in the tarball check context.
+
+The same run completed vignette rebuilding, PDF-manual generation and the HTML
+manual, where it recorded one NOTE: R 4.6 generated the package-logo `img` URI
+from the absolute check source path, and the worktree path contains the literal
+space in `Github Local`. The failed attempt returned `1 ERROR, 1 NOTE` and
+created neither a frozen candidate nor `CURRENT`.
+
+All repository/file claim assertions now explicitly require a source tree and
+remain mandatory in the focused source community gate and G9 source/site gate.
+The installed novice fixture test instead resolves its three shipping files via
+`system.file()` and remains active inside `R CMD check`. The candidate runner
+now performs the exact check from a unique no-space `/private/tmp` directory,
+then copies the complete successful `pigauto.Rcheck` tree into staging and the
+frozen candidate. Its inventory and digest are recorded and independently
+verified; the path change removes the host-path URI artefact without hiding the
+check output.
+
+A bounded full-vignette tarball probe then ran
+`R CMD check --as-cran --run-donttest --no-tests --no-vignettes` from a fresh
+no-space `/private/tmp` directory. It returned `Status: OK`, including
+`checking HTML version of manual ... OK`. This isolates the prior NOTE to the
+space-bearing check path; it is not treated as the still-pending complete test
+or candidate verdict.

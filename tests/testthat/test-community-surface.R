@@ -1,5 +1,13 @@
-test_that("canonical novice journey is present in the public sources", {
+source_root_or_skip <- function() {
   root <- testthat::test_path("..", "..")
+  if (!file.exists(file.path(root, "DESCRIPTION"))) {
+    skip("source-surface assertions run in the dedicated repository gate")
+  }
+  root
+}
+
+test_that("canonical novice journey is present in the public sources", {
+  root <- source_root_or_skip()
   journey <- c(
     'traits <- read_traits("traits.csv")',
     'tree <- read_tree("tree.nwk")',
@@ -15,10 +23,9 @@ test_that("canonical novice journey is present in the public sources", {
 })
 
 test_that("installed novice fixture and script parse without fitting", {
-  fixture_dir <- testthat::test_path("..", "..", "inst", "extdata")
-  traits_path <- file.path(fixture_dir, "novice_traits.csv")
-  tree_path <- file.path(fixture_dir, "novice_tree.nwk")
-  script_path <- testthat::test_path("..", "..", "inst", "examples", "novice-workflow.R")
+  traits_path <- system.file("extdata", "novice_traits.csv", package = "pigauto")
+  tree_path <- system.file("extdata", "novice_tree.nwk", package = "pigauto")
+  script_path <- system.file("examples", "novice-workflow.R", package = "pigauto")
   expect_true(file.exists(traits_path))
   expect_true(file.exists(tree_path))
   expect_true(file.exists(script_path))
@@ -44,7 +51,7 @@ test_that("installed novice fixture and script parse without fitting", {
 })
 
 test_that("recipes, advanced controls, and bounded claims remain visible", {
-  root <- testthat::test_path("..", "..")
+  root <- source_root_or_skip()
   readme <- paste(readLines(file.path(root, "README.md"), warn = FALSE), collapse = "\n")
   getting <- paste(readLines(file.path(root, "vignettes", "getting-started.Rmd"), warn = FALSE), collapse = "\n")
   mixed <- paste(readLines(file.path(root, "vignettes", "mixed-types.Rmd"), warn = FALSE), collapse = "\n")
@@ -72,7 +79,7 @@ test_that("public preflight and result methods are indexed by pkgdown", {
 })
 
 test_that("current public claim surfaces retain their stated boundaries", {
-  root <- testthat::test_path("..", "..")
+  root <- source_root_or_skip()
   read_text <- function(...) paste(readLines(file.path(root, ...), warn = FALSE), collapse = "\n")
   expect_false(grepl("ensures the network only|ensures improvement", read_text("DESCRIPTION"), ignore.case = TRUE))
   expect_false(grepl("maximise imputation precision|maximally reduce|Why this is novel|appears to be new", read_text("R", "active_impute.R"), ignore.case = TRUE))
@@ -84,7 +91,7 @@ test_that("current public claim surfaces retain their stated boundaries", {
 })
 
 test_that("tree benchmark and interval help retain current boundaries", {
-  root <- testthat::test_path("..", "..")
+  root <- source_root_or_skip()
   read_text <- function(...) paste(readLines(file.path(root, ...), warn = FALSE), collapse = "\n")
   tree_vignette <- read_text("vignettes", "tree-uncertainty.Rmd")
   predict_source <- read_text("R", "predict_pigauto.R")
@@ -133,7 +140,7 @@ test_that("tree benchmark and interval help retain current boundaries", {
 })
 
 test_that("NEWS labels superseded public claims in their historical sections", {
-  root <- testthat::test_path("..", "..")
+  root <- source_root_or_skip()
   news <- paste(readLines(file.path(root, "NEWS.md"), warn = FALSE), collapse = "\n")
   news_plain <- gsub("[[:space:]]+", " ", news)
   forbidden_proximity <- paste(

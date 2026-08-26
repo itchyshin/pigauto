@@ -16,7 +16,8 @@ manifest <- readRDS(manifest_path)
 required <- c("package", "version", "source_sha", "tarball", "sha256", "bytes",
               "entry_count", "inventory", "source_status", "logs", "site_inventory",
               "component_ledger", "session_info", "commands", "source_root",
-              "staging_root", "library_digest", "library_inventory", "site_digest", "created_at")
+              "staging_root", "library_digest", "library_inventory", "site_digest",
+              "check_digest", "check_inventory", "created_at")
 missing <- setdiff(required, names(manifest))
 if (length(missing)) fail("Manifest field(s) missing: %s", paste(missing, collapse = ", "))
 if (!identical(manifest$package, "pigauto") || !identical(manifest$version, "0.11.0")) {
@@ -33,7 +34,8 @@ entries <- utils::untar(tarball, list = TRUE)
 if (!identical(length(entries), manifest$entry_count)) fail("Tarball entry count does not match manifest")
 inventory <- readLines(file.path(frozen, manifest$inventory), warn = FALSE)
 if (!identical(entries, inventory)) fail("Tarball inventory does not match manifest")
-for (field in c("site_inventory", "library_inventory", "component_ledger", "session_info")) {
+for (field in c("site_inventory", "library_inventory", "check_inventory",
+                "component_ledger", "session_info")) {
   path <- file.path(frozen, manifest[[field]])
   if (!file.exists(path) || !file.info(path)$size) fail("Frozen %s is missing or empty", field)
 }
@@ -140,6 +142,10 @@ site_state <- tree_state(file.path(frozen, "site"))
 if (!identical(site_state$digest, manifest$site_digest)) fail("Frozen rendered-site content digest mismatch")
 site_inventory <- readLines(file.path(frozen, manifest$site_inventory), warn = FALSE)
 if (!identical(site_state$inventory, site_inventory)) fail("Rendered site inventory mismatch")
+check_state <- tree_state(file.path(frozen, "check"))
+if (!identical(check_state$digest, manifest$check_digest)) fail("Frozen check output digest mismatch")
+check_inventory <- readLines(file.path(frozen, manifest$check_inventory), warn = FALSE)
+if (!identical(check_state$inventory, check_inventory)) fail("Frozen check output inventory mismatch")
 
 for (name in c("check", "install", "g4", "g8", "g9")) {
   binding <- manifest$commands[[name]]$bindings
@@ -181,6 +187,11 @@ if (!identical(manifest$commands$build$bindings$output_tarball_path,
 }
 if (!identical(manifest$commands$install$bindings$library_digest, manifest$library_digest)) {
   fail("Install output library binding mismatch")
+}
+if (!identical(manifest$commands$check$bindings$retained_check_digest, manifest$check_digest) ||
+    !identical(manifest$commands$check$bindings$retained_check_path,
+               file.path(manifest$staging_root, "check"))) {
+  fail("Retained check output binding mismatch")
 }
 if (!identical(manifest$commands$pkgdown_build$bindings$site_digest, manifest$site_digest)) {
   fail("Pkgdown output site binding mismatch")
@@ -230,8 +241,20 @@ source_wd_commands <- setdiff(names(expected_args), c("build", "check"))
 if (any(vapply(manifest$commands[source_wd_commands], function(x) {
   !identical(x$working_directory, manifest$source_root)
 }, logical(1)))) fail("A candidate command used an unexpected source working directory")
+check_wd <- manifest$commands$check$working_directory
+staging_name <- basename(manifest$staging_root)
+expected_staging_name <- paste0(
+  "^[0-9]{8}T[0-9]{6}Z-", substr(manifest$source_sha, 1L, 12L), "$"
+)
+if (!grepl(expected_staging_name, staging_name, perl = TRUE)) {
+  fail("Staging directory does not bind its UTC stamp and source SHA")
+}
+expected_check_wd <- file.path(
+  "/private/tmp", paste0("pigauto-011-check-", staging_name)
+)
 if (!identical(manifest$commands$build$working_directory, file.path(manifest$staging_root, "build")) ||
-    !identical(manifest$commands$check$working_directory, file.path(manifest$staging_root, "check")) ||
+    !identical(check_wd, manifest$commands$check$bindings$check_working_directory) ||
+    !identical(check_wd, expected_check_wd) || grepl(" ", check_wd, fixed = TRUE) ||
     !identical(dirname(staging_tarball), file.path(manifest$staging_root, "build")) ||
     !identical(staging_library, file.path(manifest$staging_root, "candidate-library")) ||
     !identical(staging_site, file.path(manifest$staging_root, "site"))) {

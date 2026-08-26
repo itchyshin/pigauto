@@ -33,10 +33,16 @@ site_prefix <- paste0(source_root, .Platform$file.sep)
 if (!startsWith(site_dir, site_prefix)) fail("Staging site is not below the source root")
 site_destination <- substring(site_dir, nchar(site_prefix) + 1L)
 build_dir <- file.path(staging, "build")
-check_dir <- file.path(staging, "check")
+check_archive_dir <- file.path(staging, "check")
+check_work_dir <- file.path(
+  "/private/tmp",
+  paste0("pigauto-011-check-", stamp, "-", substr(source_sha, 1L, 12L))
+)
 library_dir <- file.path(staging, "candidate-library")
 dir.create(build_dir)
-dir.create(check_dir)
+dir.create(check_archive_dir)
+if (file.exists(check_work_dir)) fail("Fresh check work directory already exists: %s", check_work_dir)
+dir.create(check_work_dir)
 dir.create(library_dir)
 
 rscript <- file.path(R.home("bin"), "Rscript")
@@ -60,6 +66,19 @@ tree_state <- function(root) {
   digest_line <- system2("shasum", c("-a", "256"), input = inventory, stdout = TRUE)
   digest <- strsplit(digest_line[[1L]], "[[:space:]]+")[[1L]][[1L]]
   list(digest = digest, inventory = inventory)
+}
+
+copy_tree <- function(from, to) {
+  dir.create(to, recursive = TRUE, showWarnings = FALSE)
+  files <- list.files(from, recursive = TRUE, all.files = TRUE, no.. = TRUE, full.names = TRUE)
+  dirs <- files[file.info(files)$isdir %in% TRUE]
+  for (dir in dirs) dir.create(file.path(to, substring(dir, nchar(from) + 2L)), recursive = TRUE, showWarnings = FALSE)
+  regular <- files[!file.info(files)$isdir %in% TRUE]
+  for (file in regular) {
+    dest <- file.path(to, substring(file, nchar(from) + 2L))
+    dir.create(dirname(dest), recursive = TRUE, showWarnings = FALSE)
+    if (!file.copy(file, dest, copy.mode = TRUE, copy.date = TRUE)) fail("Could not copy %s", file)
+  }
 }
 
 run_command <- function(name, command, args, marker, wd = source_root, env = character(), bindings = list()) {
@@ -142,8 +161,20 @@ commands$build$bindings <- list(output_tarball_path = tarball,
                                 output_tarball_sha256 = tarball_sha256)
 run_command("check", rbin,
   c("CMD", "check", "--as-cran", "--run-donttest", shQuote(tarball)),
-  "Status: OK", wd = check_dir,
+  "Status: OK", wd = check_work_dir,
   bindings = list(tarball_path = tarball, tarball_sha256 = tarball_sha256))
+check_result_dir <- file.path(check_work_dir, "pigauto.Rcheck")
+if (!dir.exists(check_result_dir)) fail("Successful check did not retain pigauto.Rcheck output")
+copy_tree(check_result_dir, file.path(check_archive_dir, "pigauto.Rcheck"))
+check_archive_state <- tree_state(check_archive_dir)
+commands$check$bindings <- c(
+  commands$check$bindings,
+  list(
+    check_working_directory = check_work_dir,
+    retained_check_path = check_archive_dir,
+    retained_check_digest = check_archive_state$digest
+  )
+)
 run_command("install", rbin,
   c("CMD", "INSTALL", paste0("--library=", shQuote(library_dir)), shQuote(tarball)),
   "* DONE (pigauto)",
@@ -192,19 +223,6 @@ partial <- paste0(target, ".partial-", Sys.getpid())
 if (file.exists(partial)) fail("Partial freeze path already exists: %s", partial)
 dir.create(partial, recursive = TRUE)
 
-copy_tree <- function(from, to) {
-  dir.create(to, recursive = TRUE, showWarnings = FALSE)
-  files <- list.files(from, recursive = TRUE, all.files = TRUE, no.. = TRUE, full.names = TRUE)
-  dirs <- files[file.info(files)$isdir %in% TRUE]
-  for (dir in dirs) dir.create(file.path(to, substring(dir, nchar(from) + 2L)), recursive = TRUE, showWarnings = FALSE)
-  regular <- files[!file.info(files)$isdir %in% TRUE]
-  for (file in regular) {
-    dest <- file.path(to, substring(file, nchar(from) + 2L))
-    dir.create(dirname(dest), recursive = TRUE, showWarnings = FALSE)
-    if (!file.copy(file, dest, copy.mode = TRUE, copy.date = TRUE)) fail("Could not copy %s", file)
-  }
-}
-
 dir.create(file.path(partial, "logs"))
 log_names <- c(
   document = "document.log", g5 = "g5.log", g6 = "g6.log", g7 = "g7.log",
@@ -220,9 +238,11 @@ for (name in names(log_names)) {
 if (!file.copy(tarball, file.path(partial, basename(tarball)))) fail("Could not freeze tarball")
 copy_tree(library_dir, file.path(partial, "candidate-library"))
 copy_tree(site_dir, file.path(partial, "site"))
+copy_tree(check_archive_dir, file.path(partial, "check"))
 writeLines(entries, file.path(partial, "inventory.txt"))
 writeLines(library_final$inventory, file.path(partial, "candidate-library-inventory.txt"))
 writeLines(site_final$inventory, file.path(partial, "pkgdown-site-inventory.txt"))
+writeLines(check_archive_state$inventory, file.path(partial, "check-inventory.txt"))
 if (!file.copy(file.path(source_root, "docs", "dev-log", "2026-08-25-pigauto-011-component-ledger.md"),
                file.path(partial, "component-ledger.md"))) fail("Could not freeze component ledger")
 writeLines(capture.output(sessionInfo()), file.path(partial, "sessionInfo.txt"))
@@ -238,6 +258,8 @@ manifest <- list(
   library_inventory = "candidate-library-inventory.txt",
   site_digest = site_final$digest,
   site_inventory = "pkgdown-site-inventory.txt",
+  check_digest = check_archive_state$digest,
+  check_inventory = "check-inventory.txt",
   component_ledger = "component-ledger.md", session_info = "sessionInfo.txt",
   created_at = format(Sys.time(), tz = "UTC", usetz = TRUE)
 )
