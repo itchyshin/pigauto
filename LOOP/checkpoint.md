@@ -4,7 +4,7 @@
 **Lane:** `evidence/gnn-sentinel-prerun`  
 **Worktree:** `~/local-scratch/lanes/pigauto-gnn-sentinel-prerun`  
 **Candidate SHA:** `6fddd79`  
-**Branch HEAD:** `709ea58` (F2 confirm scripts)
+**Branch HEAD:** `f396167` (confirm + bayes analysis)
 
 ## STATE
 
@@ -17,8 +17,9 @@
 | Pre-registration | **DONE** — `docs/dev-log/2026-08-26-gnn-evidence-preregistration.md` |
 | Phase A primary (`fixed_1`) | **DONE** — 2430/2430 RDS, 0 failures, wall 4736 s (~79 min), G8 PASS |
 | Phase A analysis | **DONE** — `docs/dev-log/2026-08-26-gnn-evidence-phase-a-results.md` |
-| Bayes sensitivity (λ∈{0.2,0.5}) | **DONE** — 1620/1620 RDS, 0 failures, wall 2302 s (~38 min), `results_bayes/` |
-| F2 @ λ=1 60-seed confirm | **DONE** — 300/300 RDS, 0 failures, wall 693 s (~11.5 min), `results_confirm/` |
+| Bayes sensitivity (λ∈{0.2,0.5}) | **DONE** — 1620/1620 RDS, 0 failures; analysis in results md §Bayes |
+| F2 @ λ=1 60-seed confirm | **DONE** — 300/300 RDS, 0 failures; **G4 confirm 3/5 PASS** |
+| G4 confirm + bayes analysis | **DONE** — collectors run, results pulled locally |
 
 ## PHASE A RESULTS (primary arm)
 
@@ -29,12 +30,14 @@
 | Wall (Totoro) | 4736 s (~79 min, < 2 h ceiling) |
 | G1–G3, G5–G8 | PASS |
 | F1 @ λ=1 specificity | PASS — no G4 explore passes |
-| F2 @ λ=1 G4 explore | **5 / 9 cells PASS** — 60-seed confirm launched |
+| F2 @ λ=1 G4 explore | **5 / 9 cells PASS** (30-seed screen) |
+| F2 @ λ=1 G4 confirm | **3 / 5 cells PASS** (60-seed) |
 | F3 | Descriptive only (per prereg G7) |
+| Bayes low-λ closure (F2) | **0% closed** — gnn_res survives on all 5 fixed_1 G4 cells |
 
-**G4 explore passes (F2 @ λ=1, 30-seed):** n=300 @ 10/30/50%; n=1000 @ 10/30%.  
-**Excluded from confirm:** n=1000 @ 50% (rel improve 1.16% < 2% G4 threshold).  
-**Near-miss:** n=100 @ 10% (z=2.98), n=1000 @ 50% (rel improve 1.16%).
+**G4 confirm PASS (manuscript-eligible):** n=300 @ 10%/30%; n=1000 @ 10%.  
+**G4 confirm FAIL:** n=300 @ 50% (z=2.39, rel 1.32%); n=1000 @ 30% (z=7.91 but rel 1.84% < 2%).  
+**Explore-only (not confirmed):** n=100 @ 10% (z=2.98 explore), n=1000 @ 50% (rel 1.16% explore).
 
 ## F2 CONFIRM SPEC (prereg §3.4)
 
@@ -53,9 +56,11 @@
 | Path | Contents |
 |---|---|
 | `script/returned_gnn_campaign/results/` | 2430 primary job RDS + summaries (local pull) |
-| Totoro `~/pigauto_gnn_evidence_campaign/results_bayes/` | 1620 bayes sensitivity RDS (complete) |
-| Totoro `~/pigauto_gnn_evidence_campaign/results_confirm/` | 300 F2 confirm RDS (complete) |
-| `docs/dev-log/2026-08-26-gnn-evidence-phase-a-results.md` | Phase A results report |
+| `script/returned_gnn_campaign/results_bayes/` | 1620 bayes RDS + closure tables (local pull) |
+| `script/returned_gnn_campaign/results_confirm/` | 300 confirm RDS + G4 cell summary (local pull) |
+| `script/collect_gnn_evidence_f2_confirm.R` | G4 confirm collector |
+| `script/collect_gnn_evidence_bayes_sensitivity.R` | Bayes closure collector |
+| `docs/dev-log/2026-08-26-gnn-evidence-phase-a-results.md` | Phase A + confirm + bayes report |
 
 ## TOTORO JOBS (2026-08-26)
 
@@ -80,15 +85,19 @@ bash script/rsync_gnn_evidence_campaign.sh pull
 
 ## NEXT GATES
 
-1. **F2 confirm analysis** → pull `results_confirm/`, run G4 on 60-seed cells.
-2. **Bayes analysis** → collect `results_bayes/`, compare low-λ `gnn_res` per prereg §4.
-3. **Phase B (MAR/MNAR)** — requires new G0; do not launch.
-4. **PR #174 / product lane** — out of scope.
+1. **Manuscript prose** — GNN-positive sentence scoped to 3 confirmed cells only (F2 @ λ=1, n∈{300,1000}, miss∈{10%,30%} subset per table). Do not cite failed confirm cells or explore-only cells.
+2. **AVONET panel** — optional real-data corroboration; not pre-registered in Phase A; requires separate G0 if pursued.
+3. **Phase B (MAR/MNAR)** — requires new G0; do not launch from Phase A results.
+4. **PR #174 / product lane** — out of scope for evidence lane.
+
+## MANUSCRIPT CLAIM FENCE (Phase A, MCAR only)
+
+Under candidate `6fddd79`, paired same-fit estimand, MCAR missingness, F2 nonlinear DGP at Pagel λ=1.0: the calibrated GNN blend beats the fixed-λ=1 phylogenetic baseline on held-out test cells in **3 of 5** confirmatory cells (60 seeds each, G4 prereg thresholds). Confirmed regimes: n=300 at 10% and 30% missing; n=1000 at 10% missing (2.9–4.8% relative RMSE improvement, |Δ|/MCSE ≥ 4.5). F1 specificity control shows no systematic false-positive GNN wins. Low-λ sensitivity (λ_DGP ∈ {0.2, 0.5}, `lambda_mode = "bayes"`) shows **0% closure** on F2 cells that passed G4 under fixed_1 — incremental GNN value survives a λ-aware baseline. **Not claimed:** n=300 @ 50% or n=1000 @ 30% (confirm fail), n=100 cells, λ<1 primary-arm claims, F3 mixed-type, MAR/MNAR.
 
 ## RESUME
 
 ```
-PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun @ 709ea58 | LANE: gnn-evidence
-Phase A DONE. Bayes DONE (1620/1620). F2 confirm DONE (300/300).
-Next: pull results_bayes + results_confirm → G4 confirm audit → bayes low-λ doc.
+PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun @ f396167 | LANE: gnn-evidence
+Phase A COMPLETE. G4 confirm 3/5 PASS. Bayes 0% F2 closure.
+Next: manuscript fence review OR AVONET panel G0 OR Phase B G0.
 ```
