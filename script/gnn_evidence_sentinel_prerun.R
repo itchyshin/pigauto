@@ -171,7 +171,7 @@ family_to_traits <- function(Z, family) {
       binary_trait = factor(ifelse(Z[, 2L] > 0, "yes", "no"),
                             levels = c("no", "yes")),
       cat_trait = factor(cat_vals, levels = c("A", "B", "C")),
-      count_trait = rpois(n, rate),
+      count_trait = as.integer(rpois(n, rate)),
       row.names = spp
     )
     return(df)
@@ -244,7 +244,7 @@ run_one_job <- function(job_id) {
   df_miss <- punch_mcar(df_full, MISS_FRAC, seed = seed + 2000L)
 
   t0 <- proc.time()[["elapsed"]]
-  res <- tryCatch({
+    res <- tryCatch({
     impute(
       traits        = df_miss,
       tree          = tree,
@@ -254,7 +254,8 @@ run_one_job <- function(job_id) {
       verbose       = FALSE,
       safety_floor  = TRUE,
       lambda_mode   = "fixed_1",
-      log_transform = FALSE
+      log_transform = FALSE,
+      trait_types   = if (fam == "F3") c(count_trait = "count") else NULL
     )
   }, error = function(e) {
     list(error = conditionMessage(e))
