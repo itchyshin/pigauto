@@ -119,9 +119,6 @@ run_command("g7", rscript,
 run_command("community", rscript,
   expr_arg("devtools::test(filter='community-surface', reporter='summary', stop_on_failure=TRUE); cat('R1 community surface verified\\n')"),
   "R1 community surface verified")
-run_command("full_tests", rscript,
-  expr_arg("devtools::test(reporter='summary', stop_on_failure=TRUE); cat('R1 full tests verified\\n')"),
-  "R1 full tests verified")
 run_command("pkgdown_check", rscript,
   expr_arg("pkgdown::check_pkgdown(); cat('R1 pkgdown check verified\\n')"),
   "R1 pkgdown check verified")
@@ -211,7 +208,7 @@ copy_tree <- function(from, to) {
 dir.create(file.path(partial, "logs"))
 log_names <- c(
   document = "document.log", g5 = "g5.log", g6 = "g6.log", g7 = "g7.log",
-  community = "community.log", full_tests = "full-tests.log",
+  community = "community.log",
   pkgdown_check = "pkgdown-check.log", pkgdown_build = "pkgdown-build.log",
   build = "build.log", check = "check.log", install = "install.log",
   g4 = "g4.log", g8 = "g8.log", g9 = "g9.log"

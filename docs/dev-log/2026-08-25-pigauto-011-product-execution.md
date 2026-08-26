@@ -314,3 +314,33 @@ start as 06:40:38 UTC. It now parses the recorded timestamp with
 end and elapsed-time fields, allowing only the one-second rounding error from
 the human-readable timestamp format. The failed attempt created neither a
 frozen candidate nor `CURRENT`.
+
+## R1 fifth candidate attempt — duplicate full-suite gate removed
+
+The fifth atomic attempt, bound to source commit `55c23ea`, passed all focused
+source gates, the complete source suite in 1,675.5 seconds, pkgdown check, the
+full rendered-site build in 233.3 seconds and tarball build in 111.7 seconds.
+The exact-tarball `R CMD check` then began the same complete test suite again.
+At the observed progress rate, total time projected beyond the approved
+55-minute ceiling, so the run was interrupted and not retained as pass/fail
+evidence. Its test and vignette `ERROR` entries explicitly followed that
+interrupt and are not package verdicts.
+
+The candidate runner now retains focused pre-build source gates but runs the
+complete suite once, inside exact-tarball `R CMD check`. This is the stronger
+installed-package context and still satisfies G10's separate focused-test,
+full-test and CRAN-style-check requirements without paying for the same full
+suite twice. The verifier requires that exact command/log set.
+
+The interrupted check also exposed one independent packaging defect:
+git-ignored `.unlazy/` was not excluded by `.Rbuildignore`. It is now excluded,
+and the tarball verifier explicitly rejects `.unlazy/` alongside the other
+non-shipping roots. No candidate was frozen or promoted by the interrupted
+attempt.
+
+A fresh diagnostic tarball contained no `.unlazy/` entry. A bounded
+`R CMD check --as-cran --run-donttest --no-tests --no-vignettes` probe then
+returned `Status: OK`, including hidden-file, examples, PDF-manual and
+HTML-manual checks. This confirms the prior vignette and HTML-manual messages
+were interruption artifacts while the hidden-file note was independently
+repaired. The final atomic check must still run tests and rebuild vignettes.

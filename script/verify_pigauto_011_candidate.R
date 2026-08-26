@@ -56,7 +56,7 @@ tree_state <- function(root) {
 }
 
 forbidden <- paste0(
-  "(^|/)([.]git|[.]github|BACE|script|dev|checkpoints|docs|",
+  "(^|/)([.]git|[.]github|[.]unlazy|BACE|script|dev|checkpoints|docs|",
   "avonet|data-raw|useful|pkgdown|misc)(/|$)"
 )
 if (any(grepl(forbidden, entries, perl = TRUE))) fail("Forbidden source path is present in tarball")
@@ -77,7 +77,6 @@ expected_markers <- c(
   g6 = "G6 preflight verified",
   g7 = "G7 result invariants verified",
   community = "R1 community surface verified",
-  full_tests = "R1 full tests verified",
   pkgdown_check = "R1 pkgdown check verified",
   pkgdown_build = "R1 pkgdown build verified",
   build = "* building",
@@ -210,7 +209,6 @@ expected_args <- list(
   g6 = expr_arg("testthat::test_dir('tests/testthat', filter='check-pigauto', stop_on_failure=TRUE, load_package='source', reporter='summary'); cat('G6 preflight verified\\n')"),
   g7 = expr_arg("testthat::test_dir('tests/testthat', filter='result-contract', stop_on_failure=TRUE, load_package='source', reporter='summary'); cat('G7 result invariants verified\\n')"),
   community = expr_arg("devtools::test(filter='community-surface', reporter='summary', stop_on_failure=TRUE); cat('R1 community surface verified\\n')"),
-  full_tests = expr_arg("devtools::test(reporter='summary', stop_on_failure=TRUE); cat('R1 full tests verified\\n')"),
   pkgdown_check = expr_arg("pkgdown::check_pkgdown(); cat('R1 pkgdown check verified\\n')"),
   pkgdown_build = expr_arg(site_expr),
   build = c("CMD", "build", shQuote(manifest$source_root)),
