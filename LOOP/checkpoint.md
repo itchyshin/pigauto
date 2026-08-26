@@ -1,31 +1,20 @@
-# Checkpoint — pigauto P0 review blockers
+# Checkpoint — GNN evidence sentinel pre-run
 
-**Date:** 2026-08-08
-**Repo:** `/Users/z3437171/Dropbox/Github Local/pigauto`
+**Date:** 2026-08-26  
+**Lane:** `evidence/gnn-sentinel-prerun`  
+**Worktree:** `~/local-scratch/lanes/pigauto-gnn-sentinel-prerun`  
+**Candidate SHA:** `6fddd79`
 
 ## STATE
-S7 Melissa **DONE**. Lane closed.
-
-## ARCS DONE (verified)
-- S0–S5, S4b as before
-- S6 — [Rose re-gate](18e1c9cc-dd0d-4195-8c3a-1862a6e98f81): `docs/dev-log/handover/2026-08-08-p0-rose.md` Re-gate section **READY** for “4 P0 blockers + focused P0 tests green”. Threshold file FAIL 0 / SKIP 0 / PASS 96 (Rose’s own run). Kill list still killed (no joint-Σ claim; no all-tests-green — safety-floor still fails; no 95% guarantee).
-
-## ARC IN PROGRESS
-None. S7 landed.
+S4 in progress — driver written; S5 Totoro pending.
 
 ## NEXT
-Lane DoD met (narrow Rose claim). No merge/commit unless Shinichi asks.
-
-## OPEN GATES
-None for code. Public claims still fenced by Rose kill list. No push/PR.
-
-## TRUTH
-`fix/p0-review-blockers` dirty @ 3625201 + uncommitted P0+B1–B3.
-Rose: `docs/dev-log/handover/2026-08-08-p0-rose.md`.
-Melissa: `docs/dev-log/plan-actual/2026-08-08-p0-fix.md` (5 adaptive, 0 drift).
+1. Commit driver on evidence branch
+2. Rsync to Totoro and launch 12-fit pre-run
+3. Pull results; build timing table + revised campaign estimate (S6)
+4. Gate audit G1–G8
 
 ## RESUME
 ```
-/goal pigauto P0 RESUME. LOOP/GOAL.md → checkpoint.md.
-Lane closed. No further slices. No commit unless Shinichi asks.
+/goal pigauto GNN evidence pre-run RESUME. Read LOOP/GOAL.md and checkpoint.md.
 ```
