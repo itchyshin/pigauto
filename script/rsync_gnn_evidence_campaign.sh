@@ -35,6 +35,7 @@ case "${MODE}" in
     rsync -avz "${REMOTE}/results/" "${LOCAL}results/" || true
     rsync -avz "${REMOTE}/logs/" "${LOCAL}logs/" || true
     rsync -avz "${REMOTE}/results_bayes/" "${LOCAL}results_bayes/" 2>/dev/null || true
+    rsync -avz "${REMOTE}/results_confirm/" "${LOCAL}results_confirm/" 2>/dev/null || true
     ;;
   *)
     echo "usage: $0 push|pull" >&2
