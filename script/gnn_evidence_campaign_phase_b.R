@@ -94,11 +94,13 @@ build_all_cells <- function() {
     miss_frac    = c(0.10, 0.30, 0.50),
     stringsAsFactors = FALSE
   )
-  cells <- merge(
-    data.frame(missing_mechanism = ALL_MECHANISMS, stringsAsFactors = FALSE),
-    base,
-    by = NULL
-  )
+  cells <- do.call(rbind, lapply(ALL_MECHANISMS, function(mech) {
+    cbind(
+      data.frame(missing_mechanism = mech, stringsAsFactors = FALSE),
+      base
+    )
+  }))
+  rownames(cells) <- NULL
   cells$cell_id <- seq_len(nrow(cells)) - 1L
   cells
 }
@@ -106,6 +108,16 @@ build_all_cells <- function() {
 build_jobs <- function() {
   cells <- build_all_cells()
   cells <- cells[cells$missing_mechanism %in% MECHANISMS, , drop = FALSE]
+  reps <- data.frame(rep = seq_len(N_REPS))
+  jobs <- merge(cells, reps, by = NULL)
+  jobs$job_id <- seq_len(nrow(jobs)) - 1L
+  jobs$seed <- 30000L + jobs$cell_id * 100L + jobs$rep
+  jobs[, c("job_id", "cell_id", "missing_mechanism", "family", "n_species",
+           "phylo_lambda", "miss_frac", "rep", "seed")]
+}
+
+build_jobs_full <- function() {
+  cells <- build_all_cells()
   reps <- data.frame(rep = seq_len(N_REPS))
   jobs <- merge(cells, reps, by = NULL)
   jobs$job_id <- seq_len(nrow(jobs)) - 1L
@@ -123,11 +135,12 @@ n_jobs <- nrow(jobs)
 
 list_jobs <- Sys.getenv("PIGAUTO_LIST_JOBS", unset = "")
 if (nzchar(list_jobs)) {
+  full <- build_jobs_full()
   filt <- switch(list_jobs,
-                 phylo_cov = jobs$missing_mechanism != "MNAR",
-                 mnar      = jobs$missing_mechanism == "MNAR",
+                 phylo_cov = full$missing_mechanism != "MNAR",
+                 mnar      = full$missing_mechanism == "MNAR",
                  stop("PIGAUTO_LIST_JOBS must be phylo_cov or mnar"))
-  cat(paste(jobs$job_id[filt], collapse = "\n"), "\n", sep = "")
+  cat(paste(full$job_id[filt], collapse = "\n"), "\n", sep = "")
   quit(save = "no")
 }
 
@@ -139,8 +152,9 @@ if (identical(Sys.getenv("PIGAUTO_SMOKE", "0"), "1")) {
 job_env <- Sys.getenv("PIGAUTO_JOB_ID", unset = "")
 run_all <- !nzchar(job_env)
 job_ids <- if (run_all) jobs$job_id else as.integer(strsplit(job_env, ",", fixed = TRUE)[[1L]])
-if (any(is.na(job_ids)) || any(job_ids < 0L) || any(job_ids >= nrow(build_jobs()))) {
-  stop("PIGAUTO_JOB_ID must be in 0..", nrow(build_jobs()) - 1L)
+n_full <- nrow(build_jobs_full())
+if (any(is.na(job_ids)) || any(job_ids < 0L) || any(job_ids >= n_full)) {
+  stop("PIGAUTO_JOB_ID must be in 0..", n_full - 1L)
 }
 
 script_start <- proc.time()[["elapsed"]]
@@ -380,9 +394,13 @@ result_stub <- function(row, fit_ok, error = NA_character_, fit_sec = NA_real_,
 }
 
 run_one_job <- function(job_id) {
-  all_jobs <- build_jobs()
+  all_jobs <- build_jobs_full()
   row <- all_jobs[all_jobs$job_id == job_id, , drop = FALSE]
   stopifnot(nrow(row) == 1L)
+  if (!row$missing_mechanism %in% MECHANISMS) {
+    stop("job ", job_id, " mechanism ", row$missing_mechanism,
+         " not in active arm (", paste(MECHANISMS, collapse = ","), ")")
+  }
 
   out_path <- job_rds_path(job_id)
   if (skip_existing && file.exists(out_path)) {

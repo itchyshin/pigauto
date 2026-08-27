@@ -21,7 +21,8 @@
 | F2 @ λ=1 60-seed confirm | **DONE** — 300/300 RDS; **G4 confirm 3/5 PASS** |
 | Phase B prereg addendum | **DONE** — `docs/dev-log/2026-08-27-gnn-evidence-phase-b-preregistration.md` |
 | Phase B driver + launcher | **DONE** — see ARTIFACTS |
-| Phase B primary (`fixed_1`) | **LAUNCHED** — 7290 fits target on Totoro |
+| Phase B lane 3b (MNAR) | **LAUNCHED** — 2430 fits on Totoro |
+| Phase B lane 3a (phylo/cov MAR) | parallel lane (see 3a checkpoint) |
 
 ## PHASE A RESULTS (primary arm)
 
@@ -64,10 +65,13 @@
 | `script/collect_gnn_evidence_bayes_sensitivity.R` | Bayes closure collector |
 | `docs/dev-log/2026-08-26-gnn-evidence-phase-a-results.md` | Phase A + confirm + bayes report (gitignored; local copy) |
 | `script/returned_gnn_campaign/PHASE_A_SUMMARY.md` | Durable committed copy of phase-a-results report |
-| `script/gnn_evidence_campaign_phase_b.R` | Phase B driver (phylo_MAR / covariate_MAR / MNAR) |
-| `script/gnn_evidence_campaign_phase_b_totoro.sh` | Phase B Totoro launcher (7290 fits) |
-| `script/rsync_gnn_evidence_phase_b.sh` | Phase B push/pull |
-| `script/collect_gnn_evidence_phase_b.R` | Phase B collector + G6 audit |
+| `script/gnn_evidence_campaign_phase_b.R` | Phase B driver; `PIGAUTO_MECHANISM_ARM` hook |
+| `script/gnn_evidence_phase_b_mnar_totoro.sh` | Lane 3b MNAR Totoro launcher (2430 fits) |
+| `script/rsync_gnn_evidence_phase_b_mnar.sh` | Lane 3b push/pull |
+| `script/collect_gnn_evidence_phase_b_mnar.R` | Lane 3b collector + G6 audit |
+| `script/gnn_evidence_campaign_phase_b_totoro.sh` | Monolithic Phase B launcher (7290 fits; optional) |
+| `script/rsync_gnn_evidence_phase_b.sh` | Monolithic push/pull |
+| `script/collect_gnn_evidence_phase_b.R` | Monolithic collector + G6 audit |
 
 ## TOTORO JOBS
 
@@ -76,30 +80,33 @@
 | Phase A primary | `gnn_evidence_campaign_totoro.sh` | 2430 | **DONE** 0 fail | 4736 s |
 | Bayes sensitivity | `gnn_evidence_sensitivity_bayes_totoro.sh` | 1620 | **DONE** 0 fail | 2302 s |
 | F2 confirm | `gnn_evidence_f2_confirm_totoro.sh` | 300 | **DONE** 0 fail | 693 s |
-| **Phase B mechanisms** | `gnn_evidence_campaign_phase_b_totoro.sh` | 7290 | **RUNNING** | est ~4 h |
+| **Phase B lane 3b (MNAR)** | `gnn_evidence_phase_b_mnar_totoro.sh` | 2430 | **RUNNING** | est ~79 min |
+| Phase B lane 3a (MAR arms) | `gnn_evidence_phase_b_phylo_cov_mar_totoro.sh` | 4860 | parallel lane | est ~158 min |
 
-**Phase B poll:**
+**Lane 3b poll:**
 
 ```bash
-ssh totoro 'bash ~/pigauto_gnn_evidence_phase_b/script/gnn_evidence_campaign_phase_b_totoro.sh status'
+ssh totoro 'bash ~/pigauto_gnn_evidence_phase_b_mnar/script/gnn_evidence_phase_b_mnar_totoro.sh status'
 ```
 
-**Phase B pull:**
+**Lane 3b pull:**
 
 ```bash
 cd ~/local-scratch/lanes/pigauto-gnn-sentinel-prerun
-bash script/rsync_gnn_evidence_phase_b.sh pull
-Rscript script/collect_gnn_evidence_phase_b.R
+bash script/rsync_gnn_evidence_phase_b_mnar.sh pull
+Rscript script/collect_gnn_evidence_phase_b_mnar.R
 ```
 
-## PHASE B SCOPE
+## PHASE B SCOPE (lane 3b MNAR)
 
 | Quantity | Value |
 |---|---|
-| Cells | 243 (81 base × 3 mechanisms) |
-| Fits | 7,290 |
-| Mechanisms | phylo_MAR, covariate_MAR (G6 MAR), MNAR |
-| Wall estimate | ~237 min linear (79 min × 3); G8 ceiling ≤ 5 h |
+| Cells | 81 (global cell_id 162–242) |
+| Fits | 2,430 |
+| Mechanism | MNAR only (G6: **not MAR**) |
+| MNAR generator | `P(miss) ∝ plogis(1.5·scale(y))`, calibrated to `miss_frac` |
+| Wall estimate | ~79 min (Phase A anchor); G8 ceiling ≤ 1.5 h |
+| Full Phase B grid | 243 cells / 7,290 fits (3a+3b parallel) |
 
 ## TOTORO JOBS (2026-08-26, historical)
 
@@ -123,7 +130,8 @@ bash script/rsync_gnn_evidence_campaign.sh pull
 |---|---|
 | **Manuscript** | **DEFERRED** — scratch at `script/returned_gnn_campaign/MANUSCRIPT_DRAFT.md` (banner: pending AVONET + Phase B). Do not use for submission. |
 | **AVONET panel** | **ACTIVE** — real-data corroboration; parallel agent lane |
-| **Phase B (MAR/MNAR)** | **RUNNING** — Totoro 7290-fit campaign; no MAR prose until complete |
+| **Phase B lane 3b (MNAR)** | **RUNNING** — 2430 fits; G6: MNAR never labeled MAR |
+| **Phase B lane 3a (MAR arms)** | parallel lane — phylo_MAR + covariate_MAR |
 | **PR #174 / product lane** | Out of scope for evidence lane |
 
 ## MANUSCRIPT CLAIM FENCE (Phase A, MCAR only)
@@ -133,8 +141,8 @@ Under candidate `6fddd79`, paired same-fit estimand, MCAR missingness, F2 nonlin
 ## RESUME
 
 ```
-PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun | LANE: gnn-evidence-phase-b
-OTHER LANES: codex PR#174 (do not touch)
-Phase A COMPLETE. Phase B LAUNCHED (7290 fits, mechanism axis).
-Next: poll Totoro → collect → Phase B gate audit. No MAR claims until done.
+PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun | LANE: gnn-evidence-phase-b-3b
+OTHER LANES: codex PR#174 (do not touch); 3a phylo/cov-MAR parallel
+Phase A COMPLETE. Lane 3b MNAR LAUNCHED (2430 fits @ ~/pigauto_gnn_evidence_phase_b_mnar).
+Next: poll Totoro → pull → collect_gnn_evidence_phase_b_mnar.R. No MNAR/MAR prose until both arms done.
 ```
