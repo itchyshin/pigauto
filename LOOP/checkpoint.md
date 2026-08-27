@@ -23,7 +23,7 @@
 | Phase B driver + launcher | **DONE** — see ARTIFACTS |
 | Phase B lane 3b (MNAR) | **RUNNING** — 284/2430 RDS, 0 failures @ 2026-08-27 05:45 MDT |
 | Phase B lane 3a (phylo/cov MAR) | **RUNNING** — 188/4860 RDS, 0 failures @ 2026-08-27 05:45 MDT |
-| AVONET panel | **PARTIAL** — 10/15 RDS OK (pigauto fixed_1 + bayes, 5 seeds); 5 BACE jobs failed (install race); summary pulled |
+| AVONET panel | **DONE** — 15/15 RDS, 0 failures (bootstrap + launch 2026-08-27 05:47 MDT) |
 
 ## PHASE A RESULTS (primary arm)
 
@@ -77,7 +77,8 @@
 | `script/bootstrap_gnn_evidence_avonet_panel.sh` | Totoro deps bootstrap (Rphylopars + BACE) |
 | `script/collect_gnn_evidence_avonet_panel.R` | AVONET panel collector + MCSE tables |
 | `script/returned_gnn_campaign/AVONET_PANEL_SUMMARY.md` | AVONET panel durable summary |
-| `script/returned_gnn_campaign/results_avonet_panel/` | 10 panel job RDS + CSV summaries |
+| `script/returned_gnn_campaign/results_avonet_panel/` | 15 panel job RDS + CSV summaries |
+| `script/monitor_gnn_evidence_totoro.sh` | 10-min poll loop for 3a + 3b + AVONET |
 
 ## TOTORO JOBS (coordinator poll — 2026-08-27 05:45 MDT)
 
@@ -90,9 +91,9 @@
 | F2 confirm (legacy) | `gnn_evidence_f2_confirm_totoro.sh` | 300/300 | 0 | 693 s | **DONE** — pulled |
 | **Phase B 3a** phylo+cov MAR | `gnn_evidence_phase_b_phylo_cov_mar_totoro.sh` | 188/4860 | 0 | — | **RUNNING** (launched 05:38; ETA ~08:16 MDT) |
 | **Phase B 3b** MNAR | `gnn_evidence_phase_b_mnar_totoro.sh` | 284/2430 | 0 | — | **RUNNING** (launched 05:35; ETA ~06:54 MDT) |
-| **AVONET panel** | `gnn_evidence_avonet_panel_totoro.sh` | 10/15 | 5 (BACE) | ~180 s | **PARTIAL** — pigauto+pulled; BACE re-run pending |
+| **AVONET panel** | `gnn_evidence_avonet_panel_totoro.sh` | 15/15 | 0 | ~180 s | **DONE** — Rphylopars+BACE bootstrapped; summary on Totoro |
 
-**Poll commands (Totoro monitor agent inactive — poll manually or relaunch):**
+**Poll commands (monitor active — `script/monitor_gnn_evidence_totoro.sh loop`):**
 
 ```bash
 ssh totoro 'bash ~/pigauto_gnn_evidence_phase_b_mnar/script/gnn_evidence_phase_b_mnar_totoro.sh status'
@@ -142,9 +143,10 @@ bash script/rsync_gnn_evidence_campaign.sh pull
 | Track | Status |
 |---|---|
 | **Manuscript** | **DEFERRED pending AVONET + Phase B** — scratch `MANUSCRIPT_DRAFT.md` (`1280cb0`). Do not expand or submit. |
-| **AVONET panel** | **PARTIAL** — pigauto arms done; BACE jobs 10–14 need re-run (`BACE=TRUE` post-bootstrap) |
-| **Phase B lane 3b (MNAR)** | **ACTIVE** — Lane 3b; 284/2430; ETA ~06:54 MDT |
-| **Phase B lane 3a (MAR arms)** | **ACTIVE** — Lane 3a; 188/4860; ETA ~08:16 MDT |
+| **AVONET panel** | **DONE** — 15/15 RDS, 0 failures; pull when ready |
+| **Phase B lane 3b (MNAR)** | **RUNNING** — monitor active; ETA ~06:54 MDT |
+| **Phase B lane 3a (MAR arms)** | **RUNNING** — monitor active; ETA ~08:16 MDT |
+| **Totoro monitor** | **ACTIVE** — `script/monitor_gnn_evidence_totoro.sh loop` (pid local) |
 | **PR #174 / product lane** | Out of scope for evidence lane |
 
 ## MANUSCRIPT CLAIM FENCE (Phase A, MCAR only)
@@ -154,9 +156,8 @@ Under candidate `6fddd79`, paired same-fit estimand, MCAR missingness, F2 nonlin
 ## RESUME
 
 ```
-PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun @ 1280cb0 | LANE: gnn-evidence
+PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun | LANE: gnn-evidence-phase-b
 OTHER LANES: codex PR#174 (do not touch)
-Phase A COMPLETE (G4 confirm 3/5). Manuscript DEFERRED pending Phase B + AVONET BACE re-run.
-AVONET panel: 10/15 OK (pigauto fixed_1+bayes pulled). BACE 5/5 fail (install race). Summary: AVONET_PANEL_SUMMARY.md.
-Active lanes 3: Phase B 3a+3b RUNNING. Totoro parallel. No manuscript work.
+Phase A COMPLETE. AVONET panel DONE (15/15, 0 fail). Phase B 3a+3b RUNNING.
+Monitor active (10-min poll). Next: pull AVONET + Phase B when complete. No manuscript.
 ```
