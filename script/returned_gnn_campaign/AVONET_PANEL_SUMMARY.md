@@ -1,6 +1,6 @@
 # AVONET300 multi-seed external validation panel
 
-Generated: 2026-08-27 11:50:51 UTC
+Generated: 2026-08-27 14:08:54 UTC
 Candidate SHA: `6fddd79`
 Driver SHA: `HEAD`
 Dataset: avonet300 (300 species, 7 traits), miss_frac = 30% MCAR (paired per seed).
@@ -176,7 +176,7 @@ accuracy are on comparable scales.
 
 ```
           method  fit_sec
-1           bace  54.5898
+1           bace  42.0698
 2  pigauto_bayes 122.6188
 3 pigauto_fixed1 116.3962
 [1] FALSE
