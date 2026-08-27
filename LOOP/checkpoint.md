@@ -21,8 +21,8 @@
 | F2 @ λ=1 60-seed confirm | **DONE** — 300/300 RDS; **G4 confirm 3/5 PASS** |
 | Phase B prereg addendum | **DONE** — `docs/dev-log/2026-08-27-gnn-evidence-phase-b-preregistration.md` |
 | Phase B driver + launcher | **DONE** — see ARTIFACTS |
-| Phase B lane 3b (MNAR) | **RUNNING** — 810/2430 RDS, 0 failures @ 2026-08-27 06:05 MDT |
-| Phase B lane 3a (phylo/cov MAR) | **RUNNING** — 837/4860 RDS, 0 failures @ 2026-08-27 06:05 MDT |
+| Phase B lane 3b (MNAR) | **COMPLETE** — 2430/2430 RDS, 0 failures @ 2026-08-27 08:08 MDT |
+| Phase B lane 3a (phylo/cov MAR) | **COMPLETE** — 4860/4860 RDS, 0 failures @ 2026-08-27 08:08 MDT |
 | AVONET panel | **COMPLETE** — 15/15 RDS, 0 failures on Totoro (BACE bootstrap fix @ ce8bc87; initial 5/5 bace jobs failed "not installed") |
 
 ## PHASE A RESULTS (primary arm)
