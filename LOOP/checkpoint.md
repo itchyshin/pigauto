@@ -1,25 +1,27 @@
-# Checkpoint — GNN evidence Phase A campaign
+# Checkpoint — GNN evidence campaign (Phase A + Phase B)
 
-**Date:** 2026-08-26  
+**Date:** 2026-08-27 (Phase B launch)  
 **Lane:** `evidence/gnn-sentinel-prerun`  
 **Worktree:** `~/local-scratch/lanes/pigauto-gnn-sentinel-prerun`  
 **Candidate SHA:** `6fddd79`  
-**Branch HEAD:** see RESUME block (collectors + durable summary committed)
+**Branch HEAD:** see RESUME block
 
 ## STATE
 
 **G0 Phase A APPROVED** (Shinichi, 2026-08-26).  
-**Overnight autonomy:** approved until ~05:00 2026-08-27.
+**G0 Phase B APPROVED** (Shinichi, 2026-08-27, tasks 1+2+3).
 
 | Stage | Status |
 |---|---|
 | Sentinel pre-run (12 fits) | **DONE** — 0 failures, wall ~3.2 min |
-| Pre-registration | **DONE** — `docs/dev-log/2026-08-26-gnn-evidence-preregistration.md` |
+| Pre-registration (Phase A) | **DONE** — `docs/dev-log/2026-08-26-gnn-evidence-preregistration.md` |
 | Phase A primary (`fixed_1`) | **DONE** — 2430/2430 RDS, 0 failures, wall 4736 s (~79 min), G8 PASS |
 | Phase A analysis | **DONE** — `docs/dev-log/2026-08-26-gnn-evidence-phase-a-results.md` |
-| Bayes sensitivity (λ∈{0.2,0.5}) | **DONE** — 1620/1620 RDS, 0 failures; analysis in results md §Bayes |
-| F2 @ λ=1 60-seed confirm | **DONE** — 300/300 RDS, 0 failures; **G4 confirm 3/5 PASS** |
-| G4 confirm + bayes analysis | **DONE** — collectors run, results pulled locally |
+| Bayes sensitivity (λ∈{0.2,0.5}) | **DONE** — 1620/1620 RDS, 0 failures |
+| F2 @ λ=1 60-seed confirm | **DONE** — 300/300 RDS; **G4 confirm 3/5 PASS** |
+| Phase B prereg addendum | **DONE** — `docs/dev-log/2026-08-27-gnn-evidence-phase-b-preregistration.md` |
+| Phase B driver + launcher | **DONE** — see ARTIFACTS |
+| Phase B primary (`fixed_1`) | **LAUNCHED** — 7290 fits target on Totoro |
 
 ## PHASE A RESULTS (primary arm)
 
@@ -62,13 +64,44 @@
 | `script/collect_gnn_evidence_bayes_sensitivity.R` | Bayes closure collector |
 | `docs/dev-log/2026-08-26-gnn-evidence-phase-a-results.md` | Phase A + confirm + bayes report (gitignored; local copy) |
 | `script/returned_gnn_campaign/PHASE_A_SUMMARY.md` | Durable committed copy of phase-a-results report |
+| `script/gnn_evidence_campaign_phase_b.R` | Phase B driver (phylo_MAR / covariate_MAR / MNAR) |
+| `script/gnn_evidence_campaign_phase_b_totoro.sh` | Phase B Totoro launcher (7290 fits) |
+| `script/rsync_gnn_evidence_phase_b.sh` | Phase B push/pull |
+| `script/collect_gnn_evidence_phase_b.R` | Phase B collector + G6 audit |
 
-## TOTORO JOBS (2026-08-26)
+## TOTORO JOBS
 
 | Job | Launcher | Fits | Status | Wall |
 |---|---|---:|---|---:|
+| Phase A primary | `gnn_evidence_campaign_totoro.sh` | 2430 | **DONE** 0 fail | 4736 s |
 | Bayes sensitivity | `gnn_evidence_sensitivity_bayes_totoro.sh` | 1620 | **DONE** 0 fail | 2302 s |
 | F2 confirm | `gnn_evidence_f2_confirm_totoro.sh` | 300 | **DONE** 0 fail | 693 s |
+| **Phase B mechanisms** | `gnn_evidence_campaign_phase_b_totoro.sh` | 7290 | **RUNNING** | est ~4 h |
+
+**Phase B poll:**
+
+```bash
+ssh totoro 'bash ~/pigauto_gnn_evidence_phase_b/script/gnn_evidence_campaign_phase_b_totoro.sh status'
+```
+
+**Phase B pull:**
+
+```bash
+cd ~/local-scratch/lanes/pigauto-gnn-sentinel-prerun
+bash script/rsync_gnn_evidence_phase_b.sh pull
+Rscript script/collect_gnn_evidence_phase_b.R
+```
+
+## PHASE B SCOPE
+
+| Quantity | Value |
+|---|---|
+| Cells | 243 (81 base × 3 mechanisms) |
+| Fits | 7,290 |
+| Mechanisms | phylo_MAR, covariate_MAR (G6 MAR), MNAR |
+| Wall estimate | ~237 min linear (79 min × 3); G8 ceiling ≤ 5 h |
+
+## TOTORO JOBS (2026-08-26, historical)
 
 **Poll commands:**
 
@@ -90,7 +123,7 @@ bash script/rsync_gnn_evidence_campaign.sh pull
 |---|---|
 | **Manuscript** | **DEFERRED** — scratch at `script/returned_gnn_campaign/MANUSCRIPT_DRAFT.md` (banner: pending AVONET + Phase B). Do not use for submission. |
 | **AVONET panel** | **ACTIVE** — real-data corroboration; parallel agent lane |
-| **Phase B (MAR/MNAR)** | **ACTIVE** — parallel agent lane; separate G0 from Phase A |
+| **Phase B (MAR/MNAR)** | **RUNNING** — Totoro 7290-fit campaign; no MAR prose until complete |
 | **PR #174 / product lane** | Out of scope for evidence lane |
 
 ## MANUSCRIPT CLAIM FENCE (Phase A, MCAR only)
@@ -100,7 +133,8 @@ Under candidate `6fddd79`, paired same-fit estimand, MCAR missingness, F2 nonlin
 ## RESUME
 
 ```
-PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun @ 34329ed | LANE: gnn-evidence
-Phase A COMPLETE. G4 confirm 3/5 PASS. Bayes 0% F2 closure.
-Manuscript DEFERRED (scratch at MANUSCRIPT_DRAFT.md). Active: AVONET panel + Phase B parallel agents.
+PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun | LANE: gnn-evidence-phase-b
+OTHER LANES: codex PR#174 (do not touch)
+Phase A COMPLETE. Phase B LAUNCHED (7290 fits, mechanism axis).
+Next: poll Totoro → collect → Phase B gate audit. No MAR claims until done.
 ```
