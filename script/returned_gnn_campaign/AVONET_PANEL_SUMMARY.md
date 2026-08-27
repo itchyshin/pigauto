@@ -1,13 +1,11 @@
 # AVONET300 multi-seed external validation panel
 
-Generated: 2026-08-27 11:48:14 UTC
+Generated: 2026-08-27 11:50:10 UTC
 Candidate SHA: `6fddd79`
 Driver SHA: `HEAD`
 Dataset: avonet300 (300 species, 7 traits), miss_frac = 30% MCAR (paired per seed).
 Seeds: 2026, 2027, 2028, 2029, 2030
-Jobs: 10 / 15 OK (pigauto arms complete); **5 BACE jobs failed** — BACE not installed at launch; bootstrap finished after panel dispatch. Re-run jobs 10–14 to complete BACE comparator.
-
-**BACE status:** NOT RUN (install race at launch). Rphylopars baseline available via `baseline_pigauto_fixed1`.
+Jobs: 15 total, 0 failures
 
 **Framing:** Real-data corroboration only — not pre-registered in Phase A.
 BACE may win on continuous morphometrics; pigauto's claim is unified mixed-type
@@ -120,6 +118,17 @@ phylogenetic baseline (Rphylopars joint path when installed).
 | baseline_pigauto_bayes | Primary.Lifestyle | categorical | accuracy_Terrestrial | 0.5467 | 0.0871 | 5 |
 | baseline_pigauto_bayes | Migration | ordinal | rmse | 1.0905 | 0.0806 | 5 |
 | baseline_pigauto_bayes | Migration | ordinal | spearman_rho | 0.4502 | 0.0280 | 5 |
+| bace | Mass | continuous | rmse | 1759.8047 | 217.1571 | 5 |
+| bace | Mass | continuous | pearson_r | 0.6359 | 0.1135 | 5 |
+| bace | Beak.Length_Culmen | continuous | rmse | 20.0210 | 2.1808 | 5 |
+| bace | Beak.Length_Culmen | continuous | pearson_r | 0.8586 | 0.0170 | 5 |
+| bace | Tarsus.Length | continuous | rmse | 22.2066 | 3.7346 | 5 |
+| bace | Tarsus.Length | continuous | pearson_r | 0.8798 | 0.0265 | 5 |
+| bace | Wing.Length | continuous | rmse | 52.3590 | 3.4050 | 5 |
+| bace | Wing.Length | continuous | pearson_r | 0.9128 | 0.0071 | 5 |
+| bace | Trophic.Level | categorical | accuracy | 0.5089 | 0.0184 | 5 |
+| bace | Primary.Lifestyle | categorical | accuracy | 0.3378 | 0.0171 | 5 |
+| bace | Migration | ordinal | accuracy | 0.6267 | 0.0215 | 5 |
 
 ## Bayes λ sensitivity (continuous traits: pigauto_bayes vs pigauto_fixed1)
 
@@ -141,12 +150,24 @@ phylogenetic baseline (Rphylopars joint path when installed).
 | Trophic.Level | categorical | accuracy | 0.7326 | 0.8063 | 0.0737 |
 | Primary.Lifestyle | categorical | accuracy | 0.7766 | 0.7766 | 0.0000 |
 
+## BACE vs pigauto_fixed1 (held-out cells)
+
+| Trait | Type | Metric | pigauto | BACE | Δ (BACE − pigauto) |
+|---|---|---|---:|---:|---:|
+| Mass | continuous | rmse | 0.3616 | 1759.8047 | 1759.4431 |
+| Beak.Length_Culmen | continuous | rmse | 0.5985 | 20.0210 | 19.4225 |
+| Tarsus.Length | continuous | rmse | 0.5049 | 22.2066 | 21.7017 |
+| Wing.Length | continuous | rmse | 0.5224 | 52.3590 | 51.8366 |
+| Trophic.Level | categorical | accuracy | 0.7326 | 0.5089 | -0.2237 |
+| Primary.Lifestyle | categorical | accuracy | 0.7766 | 0.3378 | -0.4388 |
+
 ## Wall time by method (mean seconds per job)
 
 ```
           method  fit_sec
-1  pigauto_bayes 122.6188
-2 pigauto_fixed1 116.3962
+1           bace  54.5898
+2  pigauto_bayes 122.6188
+3 pigauto_fixed1 116.3962
 [1] FALSE
 ```
 

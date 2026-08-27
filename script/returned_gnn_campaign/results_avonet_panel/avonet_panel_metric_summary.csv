@@ -39,7 +39,7 @@
 "baseline_pigauto_fixed1","Wing.Length","continuous","rmse",5,0.589952989531515,0.0836286827118297,0.0373998838824825
 "baseline_pigauto_fixed1","Wing.Length","continuous","pearson_r",5,0.795561304128662,0.061323834935196,0.0274248527112149
 "baseline_pigauto_fixed1","Wing.Length","continuous","mae",5,0.447767705045343,0.0535977584519031,0.0239696462680139
-"baseline_pigauto_fixed1","Trophic.Level","categorical","accuracy",5,0.806265664160401,0.108015398023904,0.0483059545196294
+"baseline_pigauto_fixed1","Trophic.Level","categorical","accuracy",5,0.806265664160401,0.108015398023904,0.0483059545196293
 "baseline_pigauto_fixed1","Trophic.Level","categorical","accuracy_Carnivore",5,0.955,0.0622494979899437,0.0278388218141501
 "baseline_pigauto_fixed1","Trophic.Level","categorical","accuracy_Herbivore",5,0.792063492063492,0.239703562622645,0.107198692094623
 "baseline_pigauto_fixed1","Trophic.Level","categorical","accuracy_Omnivore",5,0.37,0.270903836977051,0.121151878969242
@@ -65,7 +65,7 @@
 "pigauto_bayes","Wing.Length","continuous","rmse",5,0.538251706865822,0.0661525401577873,0.0295843153354194
 "pigauto_bayes","Wing.Length","continuous","pearson_r",5,0.837819408050471,0.0611768901521104,0.0273591370064313
 "pigauto_bayes","Wing.Length","continuous","mae",5,0.422860084380681,0.0414636911699088,0.0185431264107948
-"pigauto_bayes","Wing.Length","continuous","conformal_coverage_95",5,0.915042902139676,0.0774286480227042,0.0346271440769342
+"pigauto_bayes","Wing.Length","continuous","conformal_coverage_95",5,0.915042902139676,0.0774286480227041,0.0346271440769342
 "pigauto_bayes","Trophic.Level","categorical","accuracy",5,0.732581453634085,0.204712969982718,0.0915504233514463
 "pigauto_bayes","Trophic.Level","categorical","accuracy_Carnivore",5,0.98,0.0447213595499958,0.02
 "pigauto_bayes","Trophic.Level","categorical","accuracy_Herbivore",5,0.614285714285714,0.415269767249961,0.185714285714286
@@ -90,7 +90,7 @@
 "baseline_pigauto_bayes","Wing.Length","continuous","rmse",5,0.59316217654988,0.0716583858278877,0.0320466043738129
 "baseline_pigauto_bayes","Wing.Length","continuous","pearson_r",5,0.797447405507963,0.0637100136726275,0.0284919842838872
 "baseline_pigauto_bayes","Wing.Length","continuous","mae",5,0.455904323076072,0.0453760818397816,0.0202928007092691
-"baseline_pigauto_bayes","Trophic.Level","categorical","accuracy",5,0.806265664160401,0.108015398023904,0.0483059545196294
+"baseline_pigauto_bayes","Trophic.Level","categorical","accuracy",5,0.806265664160401,0.108015398023904,0.0483059545196293
 "baseline_pigauto_bayes","Trophic.Level","categorical","accuracy_Carnivore",5,0.955,0.0622494979899437,0.0278388218141501
 "baseline_pigauto_bayes","Trophic.Level","categorical","accuracy_Herbivore",5,0.792063492063492,0.239703562622645,0.107198692094623
 "baseline_pigauto_bayes","Trophic.Level","categorical","accuracy_Omnivore",5,0.37,0.270903836977051,0.121151878969242
@@ -99,5 +99,16 @@
 "baseline_pigauto_bayes","Primary.Lifestyle","categorical","accuracy_Generalist",4,0.5,0.577350269189626,0.288675134594813
 "baseline_pigauto_bayes","Primary.Lifestyle","categorical","accuracy_Insessorial",5,0.961818181818182,0.0523813101486834,0.0234256340485911
 "baseline_pigauto_bayes","Primary.Lifestyle","categorical","accuracy_Terrestrial",5,0.546666666666667,0.194864625374187,0.0871461097493425
-"baseline_pigauto_bayes","Migration","ordinal","rmse",5,1.09051134292093,0.180327842826324,0.0806450629591117
+"baseline_pigauto_bayes","Migration","ordinal","rmse",5,1.09051134292093,0.180327842826324,0.0806450629591118
 "baseline_pigauto_bayes","Migration","ordinal","spearman_rho",5,0.450155683501707,0.0625898413874216,0.0279910280086409
+"bace","Mass","continuous","rmse",5,1759.80465770751,485.578055483983,217.15710808887
+"bace","Mass","continuous","pearson_r",5,0.635902700956273,0.253690046039682,0.113453637631956
+"bace","Beak.Length_Culmen","continuous","rmse",5,20.0210149042997,4.87634236956,2.18076660397971
+"bace","Beak.Length_Culmen","continuous","pearson_r",5,0.858585362847029,0.0380968041397379,0.0170374087563899
+"bace","Tarsus.Length","continuous","rmse",5,22.2065790694382,8.35090499443792,3.73463824824114
+"bace","Tarsus.Length","continuous","pearson_r",5,0.879797523035495,0.0592808354255297,0.0265111955548924
+"bace","Wing.Length","continuous","rmse",5,52.3590147037431,7.6139076038246,3.40504299531087
+"bace","Wing.Length","continuous","pearson_r",5,0.9127761288318,0.0157932614167347,0.00706296122284868
+"bace","Trophic.Level","categorical","accuracy",5,0.508888888888889,0.0411261233851595,0.0183921615080521
+"bace","Primary.Lifestyle","categorical","accuracy",5,0.337777777777778,0.0381679200829281,0.0170692127730413
+"bace","Migration","ordinal","accuracy",5,0.626666666666667,0.0481766297526196,0.0215452438107392

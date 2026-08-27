@@ -22,7 +22,7 @@
 | Phase B prereg addendum | **DONE** — `docs/dev-log/2026-08-27-gnn-evidence-phase-b-preregistration.md` |
 | Phase B driver + launcher | **DONE** — see ARTIFACTS |
 | Phase B lane 3b (MNAR) | **RUNNING** — 284/2430 RDS, 0 failures @ 2026-08-27 05:45 MDT |
-| Phase B lane 3a (phylo/cov MAR) | **RUNNING** — 188/4860 RDS, 0 failures @ 2026-08-27 05:45 MDT |
+| Phase B lane 3a (phylo/cov MAR) | **RUNNING** — 340/4860 RDS, 0 failures @ 2026-08-27 05:47 MDT |
 | AVONET panel | **DONE** — 15/15 RDS, 0 failures (bootstrap + launch 2026-08-27 05:47 MDT) |
 
 ## PHASE A RESULTS (primary arm)
@@ -70,7 +70,7 @@
 | `script/gnn_evidence_phase_b_mnar_totoro.sh` | Lane 3b MNAR Totoro launcher (2430 fits) |
 | `script/rsync_gnn_evidence_phase_b_mnar.sh` | Lane 3b push/pull |
 | `script/collect_gnn_evidence_phase_b_mnar.R` | Lane 3b collector + G6 audit |
-| `script/gnn_evidence_campaign_phase_b_totoro.sh` | Monolithic Phase B launcher (7290 fits; optional) |
+| `script/gnn_evidence_phase_b_phylo_cov_mar_totoro.sh` | Lane 3a phylo_MAR + covariate_MAR launcher (4860 fits) |
 | `script/rsync_gnn_evidence_phase_b.sh` | Monolithic push/pull |
 | `script/gnn_evidence_avonet_panel.R` | AVONET300 panel driver (5 seeds × 3 methods) |
 | `script/gnn_evidence_avonet_panel_totoro.sh` | AVONET panel Totoro launcher |
@@ -89,7 +89,7 @@
 | Phase A primary (legacy) | `gnn_evidence_campaign_totoro.sh` | 2430/2430 | 0 | 4736 s | **DONE** — pulled |
 | Bayes sensitivity (legacy) | `gnn_evidence_sensitivity_bayes_totoro.sh` | 1620/1620 | 0 | 2302 s | **DONE** — pulled |
 | F2 confirm (legacy) | `gnn_evidence_f2_confirm_totoro.sh` | 300/300 | 0 | 693 s | **DONE** — pulled |
-| **Phase B 3a** phylo+cov MAR | `gnn_evidence_phase_b_phylo_cov_mar_totoro.sh` | 188/4860 | 0 | — | **RUNNING** (launched 05:38; ETA ~08:16 MDT) |
+| **Phase B 3a** phylo+cov MAR | `gnn_evidence_phase_b_phylo_cov_mar_totoro.sh` | 340/4860 | 0 | — | **RUNNING** (launched 05:38; ETA ~07:45 MDT @ current rate) |
 | **Phase B 3b** MNAR | `gnn_evidence_phase_b_mnar_totoro.sh` | 284/2430 | 0 | — | **RUNNING** (launched 05:35; ETA ~06:54 MDT) |
 | **AVONET panel** | `gnn_evidence_avonet_panel_totoro.sh` | 15/15 | 0 | ~180 s | **DONE** — Rphylopars+BACE bootstrapped; summary on Totoro |
 
@@ -110,6 +110,18 @@ cd ~/local-scratch/lanes/pigauto-gnn-sentinel-prerun
 bash script/rsync_gnn_evidence_phase_b_mnar.sh pull
 Rscript script/collect_gnn_evidence_phase_b_mnar.R
 ```
+
+## PHASE B SCOPE (lane 3a phylo_MAR + covariate_MAR)
+
+| Quantity | Value |
+|---|---|
+| Cells | 162 (global cell_id interleaved with MNAR) |
+| Fits | 4,860 |
+| Mechanisms | `phylo_MAR` (G6: **not MAR**), `covariate_MAR` (G6: **MAR**) |
+| phylo_MAR generator | `P(miss) ∝ plogis(c − 1.5·scale(z))`, `z ~ MVN(0, R)` |
+| covariate_MAR generator | driver = trait1/cont1 fully observed; `P(miss) ∝ plogis(1.5·scale(driver))` on other cols |
+| Wall estimate | ~158 min (2× Phase A anchor); G8 ceiling ≤ 3.5 h |
+| Totoro dir | `~/pigauto_gnn_evidence_phase_b/results_phase_b/` (shared global job IDs) |
 
 ## PHASE B SCOPE (lane 3b MNAR)
 
