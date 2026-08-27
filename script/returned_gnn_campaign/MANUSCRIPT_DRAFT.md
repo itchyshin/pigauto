@@ -1,3 +1,5 @@
+> **PRELIMINARY — DEFERRED pending AVONET panel + Phase B. Do not use for submission.**
+
 # GNN evidence Phase A — Sys Biol manuscript draft
 
 **Date:** 2026-08-27  

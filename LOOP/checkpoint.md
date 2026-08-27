@@ -86,10 +86,12 @@ bash script/rsync_gnn_evidence_campaign.sh pull
 
 ## NEXT GATES
 
-1. **Manuscript prose** — GNN-positive sentence scoped to 3 confirmed cells only (F2 @ λ=1, n∈{300,1000}, miss∈{10%,30%} subset per table). Do not cite failed confirm cells or explore-only cells.
-2. **AVONET panel** — optional real-data corroboration; not pre-registered in Phase A; requires separate G0 if pursued.
-3. **Phase B (MAR/MNAR)** — requires new G0; do not launch from Phase A results.
-4. **PR #174 / product lane** — out of scope for evidence lane.
+| Track | Status |
+|---|---|
+| **Manuscript** | **DEFERRED** — scratch at `script/returned_gnn_campaign/MANUSCRIPT_DRAFT.md` (banner: pending AVONET + Phase B). Do not use for submission. |
+| **AVONET panel** | **ACTIVE** — real-data corroboration; parallel agent lane |
+| **Phase B (MAR/MNAR)** | **ACTIVE** — parallel agent lane; separate G0 from Phase A |
+| **PR #174 / product lane** | Out of scope for evidence lane |
 
 ## MANUSCRIPT CLAIM FENCE (Phase A, MCAR only)
 
@@ -98,7 +100,7 @@ Under candidate `6fddd79`, paired same-fit estimand, MCAR missingness, F2 nonlin
 ## RESUME
 
 ```
-PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun @ 485153e | LANE: gnn-evidence
+PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun @ 34329ed | LANE: gnn-evidence
 Phase A COMPLETE. G4 confirm 3/5 PASS. Bayes 0% F2 closure.
-Next: manuscript fence review OR AVONET panel G0 OR Phase B G0.
+Manuscript DEFERRED (scratch at MANUSCRIPT_DRAFT.md). Active: AVONET panel + Phase B parallel agents.
 ```
