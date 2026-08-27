@@ -438,7 +438,7 @@
 "baseline_pigauto_bayes","Beak.Length_Culmen","continuous","pearson_r",0.456555694671398,16,126.476,8,2029,"pigauto_bayes"
 "baseline_pigauto_bayes","Beak.Length_Culmen","continuous","mae",0.416340479813396,16,126.476,8,2029,"pigauto_bayes"
 "baseline_pigauto_bayes","Tarsus.Length","continuous","rmse",0.324482902411931,15,126.476,8,2029,"pigauto_bayes"
-"baseline_pigauto_bayes","Tarsus.Length","continuous","pearson_r",0.936026550893351,15,126.476,8,2029,"pigauto_bayes"
+"baseline_pigauto_bayes","Tarsus.Length","continuous","pearson_r",0.93602655089335,15,126.476,8,2029,"pigauto_bayes"
 "baseline_pigauto_bayes","Tarsus.Length","continuous","mae",0.221824988053581,15,126.476,8,2029,"pigauto_bayes"
 "baseline_pigauto_bayes","Wing.Length","continuous","rmse",0.572177319126053,31,126.476,8,2029,"pigauto_bayes"
 "baseline_pigauto_bayes","Wing.Length","continuous","pearson_r",0.805515874723643,31,126.476,8,2029,"pigauto_bayes"

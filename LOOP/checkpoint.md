@@ -23,7 +23,7 @@
 | Phase B driver + launcher | **DONE** — see ARTIFACTS |
 | Phase B lane 3b (MNAR) | **RUNNING** — 284/2430 RDS, 0 failures @ 2026-08-27 05:45 MDT |
 | Phase B lane 3a (phylo/cov MAR) | **RUNNING** — 340/4860 RDS, 0 failures @ 2026-08-27 05:47 MDT |
-| AVONET panel | **DONE** — 15/15 RDS, 0 failures (bootstrap + launch 2026-08-27 05:47 MDT) |
+| AVONET panel | **COMPLETE** — 15/15 RDS, 0 failures; BACE comparator included; summary pulled + collected |
 
 ## PHASE A RESULTS (primary arm)
 
@@ -91,7 +91,7 @@
 | F2 confirm (legacy) | `gnn_evidence_f2_confirm_totoro.sh` | 300/300 | 0 | 693 s | **DONE** — pulled |
 | **Phase B 3a** phylo+cov MAR | `gnn_evidence_phase_b_phylo_cov_mar_totoro.sh` | 340/4860 | 0 | — | **RUNNING** (launched 05:38; ETA ~07:45 MDT @ current rate) |
 | **Phase B 3b** MNAR | `gnn_evidence_phase_b_mnar_totoro.sh` | 284/2430 | 0 | — | **RUNNING** (launched 05:35; ETA ~06:54 MDT) |
-| **AVONET panel** | `gnn_evidence_avonet_panel_totoro.sh` | 15/15 | 0 | ~180 s | **DONE** — Rphylopars+BACE bootstrapped; summary on Totoro |
+| **AVONET panel** | `gnn_evidence_avonet_panel_totoro.sh` | 15/15 | 0 | ~180 s | **COMPLETE** — pulled; `AVONET_PANEL_SUMMARY.md` regenerated locally |
 
 **Poll commands (monitor active — `script/monitor_gnn_evidence_totoro.sh loop`):**
 
@@ -101,7 +101,7 @@ ssh totoro 'bash ~/pigauto_gnn_evidence_phase_b/script/gnn_evidence_phase_b_phyl
 ssh totoro 'bash ~/pigauto_gnn_evidence_campaign/script/gnn_evidence_avonet_panel_totoro.sh status'
 ```
 
-**ETA (Phase A anchor: 4736 s / 2430 fits @ 100 workers):** lane 3b ~79 min from 05:35 → ~06:54 MDT; lane 3a ~158 min from 05:38 → ~08:16 MDT. AVONET pending bootstrap + launch.
+**ETA (Phase A anchor: 4736 s / 2430 fits @ 100 workers):** lane 3b ~79 min from 05:35 → ~06:54 MDT; lane 3a ~158 min from 05:38 → ~08:16 MDT. AVONET **COMPLETE** (do not re-run BACE).
 
 **Lane 3b pull:**
 
@@ -155,7 +155,7 @@ bash script/rsync_gnn_evidence_campaign.sh pull
 | Track | Status |
 |---|---|
 | **Manuscript** | **DEFERRED pending AVONET + Phase B** — scratch `MANUSCRIPT_DRAFT.md` (`1280cb0`). Do not expand or submit. |
-| **AVONET panel** | **DONE** — 15/15 RDS, 0 failures; pull when ready |
+| **AVONET panel** | **COMPLETE** — 15/15 RDS, 0 failures; BACE comparator in summary |
 | **Phase B lane 3b (MNAR)** | **RUNNING** — monitor active; ETA ~06:54 MDT |
 | **Phase B lane 3a (MAR arms)** | **RUNNING** — monitor active; ETA ~08:16 MDT |
 | **Totoro monitor** | **ACTIVE** — `script/monitor_gnn_evidence_totoro.sh loop` (pid local) |
@@ -170,6 +170,6 @@ Under candidate `6fddd79`, paired same-fit estimand, MCAR missingness, F2 nonlin
 ```
 PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun | LANE: gnn-evidence-phase-b
 OTHER LANES: codex PR#174 (do not touch)
-Phase A COMPLETE. AVONET panel DONE (15/15, 0 fail). Phase B 3a+3b RUNNING.
-Monitor active (10-min poll). Next: pull AVONET + Phase B when complete. No manuscript.
+Phase A COMPLETE. AVONET panel COMPLETE (15/15, 0 fail, BACE included). Phase B 3a+3b RUNNING.
+Monitor for Phase B only (3a+3b). Next: pull Phase B when complete. No manuscript.
 ```

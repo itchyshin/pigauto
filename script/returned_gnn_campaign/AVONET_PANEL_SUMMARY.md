@@ -1,6 +1,6 @@
 # AVONET300 multi-seed external validation panel
 
-Generated: 2026-08-27 11:50:10 UTC
+Generated: 2026-08-27 11:50:51 UTC
 Candidate SHA: `6fddd79`
 Driver SHA: `HEAD`
 Dataset: avonet300 (300 species, 7 traits), miss_frac = 30% MCAR (paired per seed).
@@ -152,14 +152,25 @@ phylogenetic baseline (Rphylopars joint path when installed).
 
 ## BACE vs pigauto_fixed1 (held-out cells)
 
-| Trait | Type | Metric | pigauto | BACE | Δ (BACE − pigauto) |
+**Scale note:** pigauto RMSE is on log/z-transformed latent scale; BACE RMSE is on
+raw trait units — do not compare RMSE across methods. Pearson *r* and discrete
+accuracy are on comparable scales.
+
+### Continuous traits (Pearson *r*; higher is better)
+
+| Trait | pigauto | BACE | Δ (BACE − pigauto) | Winner |
+|---|---:|---:|---:|---|
+| Mass | 0.9517 | 0.6359 | -0.3158 | pigauto |
+| Beak.Length_Culmen | 0.7760 | 0.8586 | 0.0826 | BACE |
+| Tarsus.Length | 0.8561 | 0.8798 | 0.0237 | BACE |
+| Wing.Length | 0.8443 | 0.9128 | 0.0685 | BACE |
+
+### Discrete traits (accuracy; higher is better)
+
+| Trait | Type | pigauto | BACE | Δ (BACE − pigauto) |
 |---|---|---|---:|---:|---:|
-| Mass | continuous | rmse | 0.3616 | 1759.8047 | 1759.4431 |
-| Beak.Length_Culmen | continuous | rmse | 0.5985 | 20.0210 | 19.4225 |
-| Tarsus.Length | continuous | rmse | 0.5049 | 22.2066 | 21.7017 |
-| Wing.Length | continuous | rmse | 0.5224 | 52.3590 | 51.8366 |
-| Trophic.Level | categorical | accuracy | 0.7326 | 0.5089 | -0.2237 |
-| Primary.Lifestyle | categorical | accuracy | 0.7766 | 0.3378 | -0.4388 |
+| Trophic.Level | categorical | 0.7326 | 0.5089 | -0.2237 |
+| Primary.Lifestyle | categorical | 0.7766 | 0.3378 | -0.4388 |
 
 ## Wall time by method (mean seconds per job)
 

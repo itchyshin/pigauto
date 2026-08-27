@@ -144,6 +144,7 @@ paired_compare <- function(method_a, method_b, metric_name = "rmse") {
 
 h2h_blend_vs_base <- paired_compare("pigauto_fixed1", "baseline_pigauto_fixed1")
 h2h_bace_vs_blend <- paired_compare("pigauto_fixed1", "bace")
+h2h_bace_vs_blend_r <- paired_compare("pigauto_fixed1", "bace", "pearson_r")
 
 meta <- rows[[1L]]
 n_fail <- sum(!job_df$fit_ok)
@@ -211,20 +212,50 @@ if (!is.null(h2h_blend_vs_base) && nrow(h2h_blend_vs_base)) {
   }
 }
 
+if (!is.null(h2h_bace_vs_blend_r) && nrow(h2h_bace_vs_blend_r)) {
+  cont_h2h <- h2h_bace_vs_blend_r[h2h_bace_vs_blend_r$type == "continuous", , drop = FALSE]
+  if (nrow(cont_h2h)) {
+    md <- c(md, "",
+      "## BACE vs pigauto_fixed1 (held-out cells)",
+      "",
+      "**Scale note:** pigauto RMSE is on log/z-transformed latent scale; BACE RMSE is on",
+      "raw trait units — do not compare RMSE across methods. Pearson *r* and discrete",
+      "accuracy are on comparable scales.",
+      "",
+      "### Continuous traits (Pearson *r*; higher is better)",
+      "",
+      "| Trait | pigauto | BACE | Δ (BACE − pigauto) | Winner |",
+      "|---|---:|---:|---:|---|"
+    )
+    for (i in seq_len(nrow(cont_h2h))) {
+      r <- cont_h2h[i, ]
+      winner <- if (r$delta_b_minus_a > 0) "BACE" else if (r$delta_b_minus_a < 0) "pigauto" else "tie"
+      md <- c(md, sprintf(
+        "| %s | %s | %s | %s | %s |",
+        r$trait, fmt_num(r$mean_a), fmt_num(r$mean_b),
+        fmt_num(r$delta_b_minus_a), winner
+      ))
+    }
+  }
+}
+
 if (!is.null(h2h_bace_vs_blend) && nrow(h2h_bace_vs_blend)) {
-  md <- c(md, "",
-    "## BACE vs pigauto_fixed1 (held-out cells)",
-    "",
-    "| Trait | Type | Metric | pigauto | BACE | Δ (BACE − pigauto) |",
-    "|---|---|---|---:|---:|---:|"
-  )
-  for (i in seq_len(nrow(h2h_bace_vs_blend))) {
-    r <- h2h_bace_vs_blend[i, ]
-    md <- c(md, sprintf(
-      "| %s | %s | %s | %s | %s | %s |",
-      r$trait, r$type, r$metric,
-      fmt_num(r$mean_a), fmt_num(r$mean_b), fmt_num(r$delta_b_minus_a)
-    ))
+  disc <- h2h_bace_vs_blend[h2h_bace_vs_blend$type %in% c("categorical", "ordinal"), , drop = FALSE]
+  if (nrow(disc)) {
+    md <- c(md, "",
+      "### Discrete traits (accuracy; higher is better)",
+      "",
+      "| Trait | Type | pigauto | BACE | Δ (BACE − pigauto) |",
+      "|---|---|---|---:|---:|---:|"
+    )
+    for (i in seq_len(nrow(disc))) {
+      r <- disc[i, ]
+      md <- c(md, sprintf(
+        "| %s | %s | %s | %s | %s |",
+        r$trait, r$type,
+        fmt_num(r$mean_a), fmt_num(r$mean_b), fmt_num(r$delta_b_minus_a)
+      ))
+    }
   }
 }
 
