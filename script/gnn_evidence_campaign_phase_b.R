@@ -394,13 +394,9 @@ result_stub <- function(row, fit_ok, error = NA_character_, fit_sec = NA_real_,
 }
 
 run_one_job <- function(job_id) {
-  all_jobs <- build_jobs_full()
+  all_jobs <- build_jobs()
   row <- all_jobs[all_jobs$job_id == job_id, , drop = FALSE]
   stopifnot(nrow(row) == 1L)
-  if (!row$missing_mechanism %in% MECHANISMS) {
-    stop("job ", job_id, " mechanism ", row$missing_mechanism,
-         " not in active arm (", paste(MECHANISMS, collapse = ","), ")")
-  }
 
   out_path <- job_rds_path(job_id)
   if (skip_existing && file.exists(out_path)) {
