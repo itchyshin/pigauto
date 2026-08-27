@@ -1,31 +1,171 @@
-# Checkpoint — pigauto P0 review blockers
+# Checkpoint — GNN evidence campaign (Phase A + Phase B)
 
-**Date:** 2026-08-08
-**Repo:** `/Users/z3437171/Dropbox/Github Local/pigauto`
+**Date:** 2026-08-27 (Phase B launch)  
+**Lane:** `evidence/gnn-sentinel-prerun`  
+**Worktree:** `~/local-scratch/lanes/pigauto-gnn-sentinel-prerun`  
+**Candidate SHA:** `6fddd79`  
+**Branch HEAD:** see RESUME block
 
 ## STATE
-S7 Melissa **DONE**. Lane closed.
 
-## ARCS DONE (verified)
-- S0–S5, S4b as before
-- S6 — [Rose re-gate](18e1c9cc-dd0d-4195-8c3a-1862a6e98f81): `docs/dev-log/handover/2026-08-08-p0-rose.md` Re-gate section **READY** for “4 P0 blockers + focused P0 tests green”. Threshold file FAIL 0 / SKIP 0 / PASS 96 (Rose’s own run). Kill list still killed (no joint-Σ claim; no all-tests-green — safety-floor still fails; no 95% guarantee).
+**G0 Phase A APPROVED** (Shinichi, 2026-08-26).  
+**G0 Phase B APPROVED** (Shinichi, 2026-08-27, tasks 1+2+3).
 
-## ARC IN PROGRESS
-None. S7 landed.
+| Stage | Status |
+|---|---|
+| Sentinel pre-run (12 fits) | **DONE** — 0 failures, wall ~3.2 min |
+| Pre-registration (Phase A) | **DONE** — `docs/dev-log/2026-08-26-gnn-evidence-preregistration.md` |
+| Phase A primary (`fixed_1`) | **DONE** — 2430/2430 RDS, 0 failures, wall 4736 s (~79 min), G8 PASS |
+| Phase A analysis | **DONE** — `docs/dev-log/2026-08-26-gnn-evidence-phase-a-results.md` |
+| Bayes sensitivity (λ∈{0.2,0.5}) | **DONE** — 1620/1620 RDS, 0 failures |
+| F2 @ λ=1 60-seed confirm | **DONE** — 300/300 RDS; **G4 confirm 3/5 PASS** |
+| Phase B prereg addendum | **DONE** — `docs/dev-log/2026-08-27-gnn-evidence-phase-b-preregistration.md` |
+| Phase B driver + launcher | **DONE** — see ARTIFACTS |
+| Phase B lane 3b (MNAR) | **COMPLETE** — 2430/2430 RDS, 0 failures @ 2026-08-27 08:08 MDT |
+| Phase B lane 3a (phylo/cov MAR) | **COMPLETE** — 4860/4860 RDS, 0 failures @ 2026-08-27 08:08 MDT |
+| AVONET panel | **COMPLETE** — 15/15 RDS, 0 failures on Totoro (BACE bootstrap fix @ ce8bc87; initial 5/5 bace jobs failed "not installed") |
 
-## NEXT
-Lane DoD met (narrow Rose claim). No merge/commit unless Shinichi asks.
+## PHASE A RESULTS (primary arm)
 
-## OPEN GATES
-None for code. Public claims still fenced by Rose kill list. No push/PR.
+| Metric | Value |
+|---|---|
+| Fits | 2430 / 2430 |
+| Failure rate | 0.0% (G8 PASS) |
+| Wall (Totoro) | 4736 s (~79 min, < 2 h ceiling) |
+| G1–G3, G5–G8 | PASS |
+| F1 @ λ=1 specificity | PASS — no G4 explore passes |
+| F2 @ λ=1 G4 explore | **5 / 9 cells PASS** (30-seed screen) |
+| F2 @ λ=1 G4 confirm | **3 / 5 cells PASS** (60-seed) |
+| F3 | Descriptive only (per prereg G7) |
+| Bayes low-λ closure (F2) | **0% closed** — gnn_res survives on all 5 fixed_1 G4 cells |
 
-## TRUTH
-`fix/p0-review-blockers` dirty @ 3625201 + uncommitted P0+B1–B3.
-Rose: `docs/dev-log/handover/2026-08-08-p0-rose.md`.
-Melissa: `docs/dev-log/plan-actual/2026-08-08-p0-fix.md` (5 adaptive, 0 drift).
+**G4 confirm PASS (manuscript-eligible):** n=300 @ 10%/30%; n=1000 @ 10%.  
+**G4 confirm FAIL:** n=300 @ 50% (z=2.39, rel 1.32%); n=1000 @ 30% (z=7.91 but rel 1.84% < 2%).  
+**Explore-only (not confirmed):** n=100 @ 10% (z=2.98 explore), n=1000 @ 50% (rel 1.16% explore).
+
+## F2 CONFIRM SPEC (prereg §3.4)
+
+| confirm_cell | explore_cell_id | n | miss | seeds |
+|---:|---:|---:|---:|---:|
+| 0 | 42 | 300 | 10% | 60 (60000-block) |
+| 1 | 43 | 300 | 30% | 60 |
+| 2 | 44 | 300 | 50% | 60 |
+| 3 | 51 | 1000 | 10% | 60 |
+| 4 | 52 | 1000 | 30% | 60 |
+
+**Total:** 5 cells × 60 seeds = **300 fits**, `lambda_mode=fixed_1`.
+
+## ARTIFACTS
+
+| Path | Contents |
+|---|---|
+| `script/returned_gnn_campaign/results/` | 2430 primary job RDS + summaries (local pull) |
+| `script/returned_gnn_campaign/results_bayes/` | 1620 bayes RDS + closure tables (local pull) |
+| `script/returned_gnn_campaign/results_confirm/` | 300 confirm RDS + G4 cell summary (local pull) |
+| `script/collect_gnn_evidence_f2_confirm.R` | G4 confirm collector |
+| `script/collect_gnn_evidence_bayes_sensitivity.R` | Bayes closure collector |
+| `docs/dev-log/2026-08-26-gnn-evidence-phase-a-results.md` | Phase A + confirm + bayes report (gitignored; local copy) |
+| `script/returned_gnn_campaign/PHASE_A_SUMMARY.md` | Durable committed copy of phase-a-results report |
+| `script/gnn_evidence_campaign_phase_b.R` | Phase B driver; `PIGAUTO_MECHANISM_ARM` hook |
+| `script/gnn_evidence_phase_b_mnar_totoro.sh` | Lane 3b MNAR Totoro launcher (2430 fits) |
+| `script/rsync_gnn_evidence_phase_b_mnar.sh` | Lane 3b push/pull |
+| `script/collect_gnn_evidence_phase_b_mnar.R` | Lane 3b collector + G6 audit |
+| `script/gnn_evidence_phase_b_phylo_cov_mar_totoro.sh` | Lane 3a phylo_MAR + covariate_MAR launcher (4860 fits) |
+| `script/rsync_gnn_evidence_phase_b.sh` | Monolithic push/pull |
+| `script/gnn_evidence_avonet_panel.R` | AVONET300 panel driver (5 seeds × 3 methods) |
+| `script/gnn_evidence_avonet_panel_totoro.sh` | AVONET panel Totoro launcher |
+| `script/bootstrap_gnn_evidence_avonet_panel.sh` | Totoro deps bootstrap (Rphylopars + BACE) |
+| `script/collect_gnn_evidence_avonet_panel.R` | AVONET panel collector + MCSE tables |
+| `script/returned_gnn_campaign/AVONET_PANEL_SUMMARY.md` | AVONET panel durable summary |
+| `script/returned_gnn_campaign/results_avonet_panel/` | 15 panel job RDS + CSV summaries |
+| `script/monitor_gnn_evidence_totoro.sh` | 10-min poll loop for 3a + 3b + AVONET |
+
+## TOTORO JOBS (coordinator final — 2026-08-27 08:10 MDT)
+
+**All active campaigns complete.** Results pulled to `script/returned_gnn_campaign/`. Collectors run locally (0 fit failures on all arms). Manuscript remains **DEFERRED**.
+
+| Job | Launcher | Fits done | Failures | Wall | Next step |
+|---|---|---:|---:|---:|---|
+| Phase A primary (legacy) | `gnn_evidence_campaign_totoro.sh` | 2430/2430 | 0 | 4736 s | Done — in `results/` |
+| Bayes sensitivity (legacy) | `gnn_evidence_sensitivity_bayes_totoro.sh` | 1620/1620 | 0 | 2302 s | Done — in `results_bayes/` |
+| F2 confirm (legacy) | `gnn_evidence_f2_confirm_totoro.sh` | 300/300 | 0 | 693 s | Done — in `results_confirm/` |
+| **Phase B 3a** phylo+cov MAR | `gnn_evidence_phase_b_phylo_cov_mar_totoro.sh` | 4860/4860 | 0 | 8685 s (~2.4 h) | **Done** — `PHASE_B_SUMMARY.md`; G6 PASS |
+| **Phase B 3b** MNAR | `gnn_evidence_phase_b_mnar_totoro.sh` | 2430/2430 | 0 | 3130 s (~52 min resume) | **Done** — `PHASE_B_SUMMARY.md`; G6 PASS |
+| **AVONET panel** | `gnn_evidence_avonet_panel_totoro.sh` | 15/15 | 0 | ~180 s (incl. BACE bootstrap) | **Done** — `AVONET_PANEL_SUMMARY.md` |
+
+**Note:** Lane 3b required two restarts (initial `seq 0–2429` produced only 810 MNAR RDS; fixed via job-ID list resume). Final resume run: 2430/2430, G6 PASS.
+
+**Pull commands used:**
+
+```bash
+cd ~/local-scratch/lanes/pigauto-gnn-sentinel-prerun
+bash script/rsync_gnn_evidence_phase_b.sh pull
+bash script/rsync_gnn_evidence_phase_b_mnar.sh pull
+bash script/rsync_gnn_evidence_campaign.sh pull
+Rscript script/collect_gnn_evidence_phase_b.R
+Rscript script/collect_gnn_evidence_phase_b_mnar.R
+Rscript script/collect_gnn_evidence_avonet_panel.R
+```
+
+## PHASE B SCOPE (lane 3a phylo_MAR + covariate_MAR)
+
+| Quantity | Value |
+|---|---|
+| Cells | 162 (global cell_id interleaved with MNAR) |
+| Fits | 4,860 |
+| Mechanisms | `phylo_MAR` (G6: **not MAR**), `covariate_MAR` (G6: **MAR**) |
+| phylo_MAR generator | `P(miss) ∝ plogis(c − 1.5·scale(z))`, `z ~ MVN(0, R)` |
+| covariate_MAR generator | driver = trait1/cont1 fully observed; `P(miss) ∝ plogis(1.5·scale(driver))` on other cols |
+| Wall estimate | ~158 min (2× Phase A anchor); G8 ceiling ≤ 3.5 h |
+| Totoro dir | `~/pigauto_gnn_evidence_phase_b/results_phase_b/` (shared global job IDs) |
+
+## PHASE B SCOPE (lane 3b MNAR)
+
+| Quantity | Value |
+|---|---|
+| Cells | 81 (global cell_id 162–242) |
+| Fits | 2,430 |
+| Mechanism | MNAR only (G6: **not MAR**) |
+| MNAR generator | `P(miss) ∝ plogis(1.5·scale(y))`, calibrated to `miss_frac` |
+| Wall estimate | ~79 min (Phase A anchor); G8 ceiling ≤ 1.5 h |
+| Full Phase B grid | 243 cells / 7,290 fits (3a+3b parallel) |
+
+## TOTORO JOBS (2026-08-26, historical)
+
+**Poll commands:**
+
+```bash
+ssh totoro 'bash ~/pigauto_gnn_evidence_campaign/script/gnn_evidence_f2_confirm_totoro.sh status'
+ssh totoro 'bash ~/pigauto_gnn_evidence_campaign/script/gnn_evidence_sensitivity_bayes_totoro.sh status'
+```
+
+**Pull when complete:**
+
+```bash
+cd ~/local-scratch/lanes/pigauto-gnn-sentinel-prerun
+bash script/rsync_gnn_evidence_campaign.sh pull
+```
+
+## NEXT GATES
+
+| Track | Status |
+|---|---|
+| **Manuscript** | **DEFERRED** — all evidence arms + G6 gate audit complete; no prose until Shinichi re-opens (`MANUSCRIPT_DRAFT.md` frozen) |
+| **AVONET panel** | **COMPLETE** — 15/15, 0 fit failures; pulled + `AVONET_PANEL_SUMMARY.md` |
+| **Phase B lane 3b (MNAR)** | **COMPLETE** — 2430/2430, 0 failures; collector G6 PASS |
+| **Phase B lane 3a (MAR arms)** | **COMPLETE** — 4860/4860, 0 failures; collector G6 PASS |
+| **PR #174 / product lane** | Out of scope for evidence lane |
+
+## MANUSCRIPT CLAIM FENCE (Phase A, MCAR only)
+
+Under candidate `6fddd79`, paired same-fit estimand, MCAR missingness, F2 nonlinear DGP at Pagel λ=1.0: the calibrated GNN blend beats the fixed-λ=1 phylogenetic baseline on held-out test cells in **3 of 5** confirmatory cells (60 seeds each, G4 prereg thresholds). Confirmed regimes: n=300 at 10% and 30% missing; n=1000 at 10% missing (2.9–4.8% relative RMSE improvement, |Δ|/MCSE ≥ 4.5). F1 specificity control shows no systematic false-positive GNN wins. Low-λ sensitivity (λ_DGP ∈ {0.2, 0.5}, `lambda_mode = "bayes"`) shows **0% closure** on F2 cells that passed G4 under fixed_1 — incremental GNN value survives a λ-aware baseline. **Not claimed:** n=300 @ 50% or n=1000 @ 30% (confirm fail), n=100 cells, λ<1 primary-arm claims, F3 mixed-type, MAR/MNAR.
 
 ## RESUME
+
 ```
-/goal pigauto P0 RESUME. LOOP/GOAL.md → checkpoint.md.
-Lane closed. No further slices. No commit unless Shinichi asks.
+PLATFORM: cursor | ON BRANCH: evidence/gnn-sentinel-prerun | LANE: gnn-evidence-coordinator
+OTHER LANES: codex PR#174 (do not touch)
+ALL CAMPAIGNS COMPLETE (7290 Phase B + 2430 Phase A + 1620 bayes + 300 confirm + 15 AVONET).
+G6 gate audit PASS on both Phase B lanes. PR #175 draft open (base codex/pigauto-0-11-trust-usability).
+Manuscript DEFERRED — await Shinichi before prose or submission.
 ```

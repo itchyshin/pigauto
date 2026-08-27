@@ -1,0 +1,7 @@
+"family","phylo_lambda","n_cells","n_g4_fixed1","n_gnn_res_bayes","n_closed","pct_closed_of_g4","pct_gnn_res_of_cells"
+"F1",0.2,9,0,0,0,NA,0
+"F2",0.2,9,5,6,0,0,66.6666666666667
+"F3",0.2,9,0,0,0,NA,0
+"F1",0.5,9,0,0,0,NA,0
+"F2",0.5,9,5,5,0,0,55.5555555555556
+"F3",0.5,9,0,0,0,NA,0
