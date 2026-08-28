@@ -51,7 +51,9 @@ Its \code{datasets} component is a list of \code{m} completed data frames compat
 with \code{\link[=with_imputations]{with_imputations()}} and \code{\link[=pool_mi]{pool_mi()}}. The object also records the
 analysis model, formula, engine, controls, engine version, seed, runtime
 provenance, and imputed-variable metadata. Any engine warning aborts the
-call instead of returning an inference-ready object.
+call instead of returning an inference-ready object. \code{mi_workflow} is a
+stable analysis-aware provenance marker propagated by \code{\link[=with_imputations]{with_imputations()}}
+and checked by \code{\link[=pool_mi]{pool_mi()}}.
 }
 \description{
 Generate multiple imputations conditional on a specified downstream

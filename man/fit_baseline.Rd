@@ -91,11 +91,9 @@ Sigma / posterior for the joint MVN, threshold-joint, and OVR
 categorical baselines. \code{"inhouse"} (default) uses the
 single-pass in-house solver (\code{R/joint_mvn_solver.R}) and is
 byte-identical to prior releases. \code{"rphylopars"} delegates to
-\code{Rphylopars::phylopars()}'s converged REML fit, which measured
-0.14-1.27 lower z-RMSE than the in-house solver on AVONET300 (see
-\code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}); on
-failure or non-finite output it falls back to \code{"inhouse"} with
-a warning. Only affects the joint MVN / threshold-joint / OVR
+\code{Rphylopars::phylopars()}'s converged REML fit; on failure or
+non-finite output it falls back to \code{"inhouse"} with a warning.
+Only affects the joint MVN / threshold-joint / OVR
 categorical paths above; ignored when those paths don't fire. Note
 that \code{lambda_mode != "fixed_1"} disables the continuous-only
 joint MVN path (it has no lambda argument) but no longer disables
@@ -117,19 +115,7 @@ using the estimated Sigma (the in-house solver's \code{max_iter}
 EM cell-refinement; \code{R/joint_mvn_solver.R}). \code{0L} preserves
 current behaviour byte-for-byte. The refinement is guarded: the
 Sigma step must shrink each iteration, or the loop rolls back to the
-last good iterate and sets \code{$diverged}.
-
-\strong{Where it helps, measured}
-(\code{docs/dev-log/2026-08-17-refinement-results.md}): at Pagel's
-lambda around 0.2, \code{joint_refine_iter = 3L} lowered simulated
-RMSE by ~13\\% and moved SE coverage from 0.943 to 0.964. At lambda
-near 1 it changes essentially nothing: on AVONET300, whose four
-continuous traits sit at lambda 0.993-0.998, every effect was within
-one Monte Carlo standard error. Note the reason is that refinement
-has nothing to add at high signal -- \emph{not} that the guard
-intervenes; on that data the guard does not fire. Use it when
-phylogenetic signal is moderate or low; expect no benefit on
-strongly conserved traits.}
+last good iterate and sets \code{$diverged}.}
 }
 \value{
 A list with:

@@ -138,13 +138,8 @@ using the estimated Sigma (the in-house solver's \code{max_iter}
 EM cell-refinement; \code{R/joint_mvn_solver.R}). \code{0L} preserves
 current behaviour byte-for-byte. The refinement is guarded: the
 Sigma step must shrink each iteration, or the loop rolls back to the
-last good iterate and sets \code{$diverged}. Measured (see
-\code{docs/dev-log/2026-08-17-sigma-recovery-results.md}):
-\code{joint_refine_iter = 3L} with \code{refine_variance =
-"conservative"} improves RMSE at low phylogenetic signal, while at
-high signal the divergence guard rolls back and results match
-\code{0L}. In short: helps when phylogenetic signal is
-moderate/low, and is a no-op at very high signal. Passed to
+last good iterate and sets \code{$diverged}. Assess this opt-in control
+with held-out evaluation on the intended data. Passed to
 \code{\link{fit_baseline}} and stored in the fitted model config.}
 
 \item{em_iterations}{integer. Phase 6 EM iterations for the
@@ -266,6 +261,7 @@ conformal intervals.}
 \item{splits}{The val/test splits (or \code{NULL} if
 \code{missing_frac = 0}).}
 \item{evaluation}{Evaluation metrics on test set (or \code{NULL}).}
+\item{check}{A compact \code{pigauto_check} preflight summary.}
 }
 }
 \description{
@@ -360,16 +356,10 @@ training cells), \emph{not} as the imputed-values output.  The
 imputed values themselves are \code{result$completed[result$imputed_mask]}.
 
 \strong{Common pitfall.}  If you call \code{impute()} on a fully
-observed trait matrix (no \code{NA}s anywhere), there is nothing
-to impute.  \code{result$completed} is identical to the input,
-\code{sum(result$imputed_mask)} is \code{0}, and
-\code{result$prediction$imputed} is just model predictions for
-already-known values.  This is the right behaviour, but it can
-look surprising: e.g. on \code{avonet300} (fully observed), the
-"imputed" Mass values you see are simply the observed body
-masses passed through (some bird species are 24 kg).  To exercise
-the imputation path on a complete dataset, mask some cells first
-(see Examples).
+observed trait matrix (no \code{NA}s among matched target rows), there
+is nothing to impute. \code{impute()} stops before graph construction or
+training and directs you to \code{cross_validate()} for predictive
+assessment. To exercise imputation, supply a real missing target cell.
 
 \strong{Imbalanced K-class traits.}  At default settings
 (\code{n_imputations = 1L}, \code{pool_method = "median"}), a
@@ -377,11 +367,9 @@ small ordinal / categorical trait whose marginal distribution is
 heavily skewed (e.g. AVONET \code{Migration} is ~78\\% Resident /
 ~14\\% Partial / ~8\\% Full at n=300) can have its calibrated gate
 collapse onto a corner that predicts the majority class
-everywhere.  When this matters, increase \code{n_imputations}
-(>= 20 in our K=3 ordinal benches) and set
-\code{pool_method = "mode"} (Phase H, +6.6 pp on AVONET
-Migration K=3 vs the default median pool).  See
-\code{useful/MEMO_2026-05-01_phase_h_results.md}.
+everywhere. Compare candidate settings, including
+\code{pool_method = "mode"}, with \code{cross_validate()} on the
+intended trait table rather than applying a generic setting.
 }
 
 \examples{

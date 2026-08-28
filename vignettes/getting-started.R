@@ -7,6 +7,32 @@ knitr::opts_chunk$set(
 )
 
 
+## ----canonical-journey, eval=FALSE--------------------------------------------
+# library(pigauto)
+#
+# traits <- read_traits("traits.csv")
+# tree <- read_tree("tree.nwk")
+# check_pigauto(traits, tree)
+# result <- impute(traits, tree)
+# completed <- completed_data(result)
+# pigauto_report(result)
+
+
+## ----declarations, eval=FALSE-------------------------------------------------
+# # Ordered ecological states
+# traits$threat <- ordered(traits$threat, levels = c("LC", "NT", "VU", "EN", "CR"))
+#
+# # Integer-valued continuous measurement; integer otherwise means count
+# result <- impute(traits, tree, trait_types = c(length_mm = "continuous"))
+#
+# # Numeric 0-1 proportion and zero-inflated count require explicit declarations
+# result <- impute(traits, tree, trait_types = c(cover = "proportion", parasites = "zi_count"))
+#
+# # A composition is complete by row and its observed components sum to one
+# result <- impute(traits, tree,
+#   multi_proportion_groups = list(diet = c("diet_insect", "diet_fruit", "diet_seed")))
+
+
 ## ----install, eval=FALSE------------------------------------------------------
 # # CRAN release
 # install.packages("pigauto")
@@ -107,25 +133,15 @@ cat("Kernel bandwidth sigma:", round(graph$sigma, 3), "\n")
 # # pred$se:      300 x 4 uncertainty matrix (original units)
 # head(pred$imputed)
 #
-# # Conformal prediction intervals (95% marginal coverage guarantee)
+# # Conformal prediction intervals (nominal held-out diagnostic)
 # pred$conformal_lower[["Mass"]]    # lower bound per species (original units)
 # pred$conformal_upper[["Mass"]]    # upper bound per species (original units)
 # pred$conformal_coverage           # empirical coverage on val set (target ≈ 0.95)
 
 
 ## ----evaluate, eval=FALSE-----------------------------------------------------
-# # BM baseline RMSE on test cells
-# eval_bm <- evaluate_imputation(baseline$mu, pd$X_scaled, splits)
-# eval_bm[eval_bm$split == "test", c("trait", "n", "rmse", "pearson_r")]
-
-
-## ----compare, eval=FALSE------------------------------------------------------
-# # GNN test RMSE stored in fit object
-# data.frame(
-#   trait    = fit$trait_names,
-#   bm_rmse  = eval_bm$rmse[eval_bm$split == "test"],
-#   gnn_rmse = fit$test_rmse
-# )
+# evaluate_imputation(pred$imputed_latent, pd$X_scaled, splits)
+# fit$r_cal
 
 
 ## ----plot-history, eval=FALSE-------------------------------------------------
@@ -163,6 +179,20 @@ cat("Kernel bandwidth sigma:", round(graph$sigma, 3), "\n")
 # # Or aggregated by species (sum of variance reductions across the
 # # species' currently-missing continuous-family traits):
 # suggest_next_observation(res, top_n = 10, by = "species")
+
+
+## ----advanced-controls, eval=FALSE--------------------------------------------
+# result <- impute(
+#   traits, tree,
+#   joint_solver = "rphylopars",
+#   em_iterations = 2L,
+#   joint_refine_iter = 1L,
+#   conformal_split_val = TRUE
+# )
+
+
+## ----exact-route, eval=FALSE--------------------------------------------------
+# result <- impute(traits, tree, predict_method = "exact")
 
 
 ## ----phylo-signal-gate, eval=FALSE--------------------------------------------

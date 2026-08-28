@@ -16,6 +16,52 @@ knitr::opts_chunk$set(
 )
 ```
 
+## Start here
+
+The beginner workflow reads files, checks them before fitting, and keeps the
+completed-data, diagnostic-prediction, uncertainty, and inference roles
+separate.
+
+```{r canonical-journey, eval=FALSE}
+library(pigauto)
+
+traits <- read_traits("traits.csv")
+tree <- read_tree("tree.nwk")
+check_pigauto(traits, tree)
+result <- impute(traits, tree)
+completed <- completed_data(result)
+pigauto_report(result)
+```
+
+`check_pigauto()` is fit-free. Resolve its structured errors before fitting;
+inspect `check$species$matched`, `$data_only`, and `$tree_only` when labels do
+not reconcile. `completed` preserves observed values and contains fills only
+for modeled missing cells. `result$prediction` is an all-cell diagnostic
+output; its uncertainty is type-dependent, and conformal bounds are nominal
+held-out diagnostics. A `pigauto_result` does not authorize downstream
+inference: use `multi_impute_analysis()` only in its documented narrow regime.
+
+`read_traits()` requires unique species identifiers. For repeated observations,
+use `read.csv()` and supply `species_col = "species"` to both the check and
+`impute()`.
+
+### Common declarations
+
+```{r declarations, eval=FALSE}
+# Ordered ecological states
+traits$threat <- ordered(traits$threat, levels = c("LC", "NT", "VU", "EN", "CR"))
+
+# Integer-valued continuous measurement; integer otherwise means count
+result <- impute(traits, tree, trait_types = c(length_mm = "continuous"))
+
+# Numeric 0-1 proportion and zero-inflated count require explicit declarations
+result <- impute(traits, tree, trait_types = c(cover = "proportion", parasites = "zi_count"))
+
+# A composition is complete by row and its observed components sum to one
+result <- impute(traits, tree,
+  multi_proportion_groups = list(diet = c("diet_insect", "diet_fruit", "diet_seed")))
+```
+
 ## What pigauto does
 
 Many comparative datasets have missing trait values: species were not
@@ -78,9 +124,10 @@ library(pigauto)
 library(ape)
 ```
 
-## Quick start
+## Inspecting the internal pipeline
 
-For most users, a single function call is all you need:
+The six-line journey above is the primary interface. The following is the
+fine-grained pipeline for inspection, caching, or benchmarking.
 
 ```{r quickstart, eval=FALSE}
 result <- impute(traits, tree)
@@ -248,7 +295,7 @@ pred <- predict(fit, return_se = TRUE)
 # pred$se:      300 x 4 uncertainty matrix (original units)
 head(pred$imputed)
 
-# Conformal prediction intervals (95% marginal coverage guarantee)
+# Conformal prediction intervals (nominal held-out diagnostic)
 pred$conformal_lower[["Mass"]]    # lower bound per species (original units)
 pred$conformal_upper[["Mass"]]    # upper bound per species (original units)
 pred$conformal_coverage           # empirical coverage on val set (target ≈ 0.95)
@@ -263,45 +310,27 @@ t2  41.2031           18.5034       21.3441     154.832
 ...
 ```
 
-## Step 7: Evaluate and compare baselines
+## Step 7: Evaluate — and read the gate
 
-We compare the BM baseline to the GNN on the held-out test cells
-(both evaluated in z-score scale for comparability).
+`evaluate_imputation()` scores held-out cells on the scale that matches
+the trait type. On **high-signal morphometrics** (AVONET-like mass,
+beak, tarsus, wing) the calibrated gate often **closes**
+(`r_cal = 0`). Then the shipped prediction *is* the phylogenetic
+baseline; the GNN is a no-op, not a guaranteed improvement.
 
 ```{r evaluate, eval=FALSE}
-# BM baseline RMSE on test cells
-eval_bm <- evaluate_imputation(baseline$mu, pd$X_scaled, splits)
-eval_bm[eval_bm$split == "test", c("trait", "n", "rmse", "pearson_r")]
+# Held-out scores (z-score RMSE for continuous traits)
+evaluate_imputation(pred$imputed_latent, pd$X_scaled, splits)
+
+# Per-trait calibrated gate. 0 means baseline-only.
+fit$r_cal
 ```
 
-```
-               trait  n  rmse pearson_r
-Mass            Mass 56 0.872     0.611
-Beak.Length_Culmen Beak.Length_Culmen 56 0.901     0.582
-Tarsus.Length Tarsus.Length 56 0.863     0.628
-Wing.Length Wing.Length 56 0.884     0.595
-```
-
-```{r compare, eval=FALSE}
-# GNN test RMSE stored in fit object
-data.frame(
-  trait    = fit$trait_names,
-  bm_rmse  = eval_bm$rmse[eval_bm$split == "test"],
-  gnn_rmse = fit$test_rmse
-)
-```
-
-```
-               trait bm_rmse gnn_rmse
-1               Mass   0.872    0.831
-2 Beak.Length_Culmen   0.901    0.856
-3      Tarsus.Length   0.863    0.822
-4        Wing.Length   0.884    0.841
-```
-
-In this example output, the GNN reduces test RMSE relative to the BM baseline.
-How large the improvement is depends on the trait, clade, missingness pattern,
-and validation split.
+Do not treat a GNN-versus-BM table as the default story. If the gate is
+closed, a lower GNN training loss on masked cells is not a claim that
+the ensemble beat BM on the test cells you ship. How much (if anything)
+the GNN adds depends on the trait, clade, missingness pattern, and
+whether calibration left the gate open.
 
 ## Step 8: Visualise
 
@@ -330,9 +359,7 @@ Downstream inference requires imputations compatible with the substantive
 analysis. `multi_impute_analysis()` therefore receives the formula and model
 class before drawing one incomplete continuous covariate under MAR.
 
-A warning-free 6,000-task package campaign at clean SHA `2e3809d` passed all
-24 method-by-term cells. Coverage was 93.9%-96.3% and all pooled results were
-finite. This validates only the documented narrow scope; the interface remains
+This validates only the documented narrow scope; the interface remains
 experimental.
 
 ```{r mi-workflow, eval=FALSE}
@@ -370,11 +397,9 @@ inference and cannot currently be combined with `multi_impute_analysis()`.
 
 ## Active imputation: where to measure next
 
-When you can measure k more species but not all of them, which ones
-should you prioritise to maximally reduce imputation uncertainty
-across the rest of your tree? `suggest_next_observation()` answers
-this with a closed-form variance-reduction calculation built on the
-BM conditional MVN.
+`suggest_next_observation()` returns model-based BM/label-propagation proxy
+rankings under its stated assumptions. It is not an optimal sampling guarantee
+or a demonstrated field gain.
 
 ```{r active-impute, eval=FALSE}
 res <- impute(traits, tree)
@@ -388,7 +413,7 @@ suggest_next_observation(res, top_n = 10, by = "cell")
 suggest_next_observation(res, top_n = 10, by = "species")
 ```
 
-The `delta_var_total` column is the closed-form expected reduction
+The `delta_var_total` column is the model-based expected reduction
 in total predictive variance across all currently-missing cells if
 you observed that candidate next:
 
@@ -400,9 +425,8 @@ you observed that candidate next:
 where \(D = R_{mm} - R_{mo} R_{oo}^{-1} R_{om}\) is the residual
 matrix at currently-missing cells, \(\alpha_k = D_{kk}\) is the
 current relative leverage of cell \(k\), and \(\sigma_t^2\) is
-the REML BM variance. The formula is the standard active-learning
-variance-reduction bound (Cohn et al. 1996); applying it to
-phylogenetic trait imputation appears to be new.
+the REML BM variance. Treat it as a proxy ranking conditional on the fitted
+model, rather than a claim about a future sampling campaign.
 
 **Scope.** `suggest_next_observation()` v2 (2026-05-01) supports
 all eight pigauto trait types:
@@ -432,7 +456,25 @@ discrete-only.
 Multi-obs (multiple observations per species) inputs are not
 supported and error with a clear message.
 
-## Optional advanced features
+## Advanced controls
+
+### Solver, calibration, EM, and refinement
+
+```{r advanced-controls, eval=FALSE}
+result <- impute(
+  traits, tree,
+  joint_solver = "rphylopars",
+  em_iterations = 2L,
+  joint_refine_iter = 1L,
+  conformal_split_val = TRUE
+)
+```
+
+### Exact conditional prediction route
+
+```{r exact-route, eval=FALSE}
+result <- impute(traits, tree, predict_method = "exact")
+```
 
 ### Phylogenetic-signal gating
 

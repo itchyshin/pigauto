@@ -24,6 +24,7 @@ make_zi_fixture <- function(n = 60L, seed = 21L) {
 
 test_that("zi_count fit produces finite conformal bounds where magnitude is defined", {
   fx <- make_zi_fixture()
+  fx$df$z[1L] <- NA_integer_
   res <- impute(fx$df, fx$tree, trait_types = c(z = "zi_count"),
                 epochs = 20L, verbose = FALSE, seed = 9L)
   pred <- res$prediction
@@ -42,6 +43,7 @@ test_that("zi_count fit produces finite conformal bounds where magnitude is defi
 
 test_that("zi_count conformal bounds back-transform monotonically with the score width", {
   fx <- make_zi_fixture()
+  fx$df$z[1L] <- NA_integer_
   res <- impute(fx$df, fx$tree, trait_types = c(z = "zi_count"),
                 epochs = 20L, verbose = FALSE, seed = 9L)
   fit <- res$fit
@@ -71,6 +73,7 @@ test_that("zi_count conformal bounds back-transform monotonically with the score
 
 test_that("zi_count conformal interval is conditional -- not an E[X] interval -- and the gate stays separately available", {
   fx <- make_zi_fixture()
+  fx$df$z[1L] <- NA_integer_
   res <- impute(fx$df, fx$tree, trait_types = c(z = "zi_count"),
                 epochs = 20L, verbose = FALSE, seed = 9L)
   pred <- res$prediction

@@ -157,8 +157,8 @@ To bring binary traits inside the joint MVN, pigauto's
 model: each observed binary cell $y \in \{0, 1\}$ is replaced by the
 posterior mean of an underlying continuous *liability* $L$ truncated by
 $y$. With prior $L \sim \mathcal{N}(0, 1)$ this is the standard
-truncated-normal mean. The resulting matrix is then handed to
-`phylopars()` exactly like the continuous case. Binary posteriors are
+truncated-normal mean. The resulting matrix is then handed to the
+same **in-house joint solver** as the continuous case. Binary posteriors are
 decoded back to probabilities via
 $p = \Phi\bigl(\mu_L / \sqrt{1 + \sigma_L^2}\bigr)$, clipped to
 $[0.01, 0.99]$. Ordinal liability uses K-1 interval cuts (B3 ordinal).
@@ -166,11 +166,11 @@ $[0.01, 0.99]$. Ordinal liability uses K-1 interval cuts (B3 ordinal).
 ### 2.5 OVR categorical (Phase 6)
 
 The single-fit approach to categorical liability (K columns into one
-phylopars call) is rank-deficient and unstable. pigauto instead runs $K$
+joint call) is rank-deficient and unstable. pigauto instead runs $K$
 independent threshold-joint fits — class $k$ vs the rest — and
 renormalises the resulting $K$ probabilities into a row-stochastic
-distribution. This one-vs-rest strategy lifts AVONET Trophic.Level
-accuracy from ~42% to ~72%.
+distribution. That is a numerical-stability choice, not a published
+accuracy lift for this package.
 
 ### 2.6 Multi-obs aggregation (Phase 10 + B1 soft)
 
@@ -292,7 +292,7 @@ $$
 * $\lambda_\text{gate}$ (default 0.01) actively pushes the gate toward
   zero. Without this term, $\rho$ has no gradient when delta ≈ μ (both
   shrinkage and reconstruction losses are zero), so the gate would stay
-  at its init. The explicit penalty guarantees the gate defaults toward
+  at its init. The explicit penalty encourages the gate toward
   baseline-only.
 
 Together with the architectural cap (`gate_cap` ≤ 0.8 by default),
@@ -319,31 +319,9 @@ these $p$ tokens within each row $i$, followed by mean-pool to a
 single $e_d$-dim feature. That feature is concatenated alongside
 $(x, \text{coords}, \text{covs})$ at the encoder input.
 
-The mechanism is intended for trait sets with strong within-row
-functional coupling that the joint MVN baseline cannot already capture
-(non-Gaussian, nonlinear, or non-monotone cross-trait structure).
-**On the BIEN plant bench it did not improve pooled RMSE** — the joint
-MVN/threshold-joint path already encodes $\mathbf{\Sigma}$ for the
-dominant trait types, so the second cross-trait mechanism is redundant.
-
-**Independent verification ([#106](https://github.com/itchyshin/pigauto/issues/106),
-code in [#116](https://github.com/itchyshin/pigauto/pull/116)):** a
-60-replicate ablation at N=2000 (5 seeds per cell, multi-trait DGP that
-fires the joint MVN baseline) confirmed `pigauto_OFF` beats both
-`pigauto_ON` and `pigauto_ON_L0` (the "lazy-optimiser disarmed" arm
-with `baseline_mu` masked and `lambda_shrink = 0`) — z-RMSE 1.038 vs
-1.056 vs 1.057; conformal coverage stable at 0.884–0.887. Even with
-the lazy-optimiser trap disarmed, the network regresses against the
-baseline rather than finding new structure. See the NEWS entry for the
-full table. (Measured before the 2026-08 GNN train/cal-symmetry fix,
-which removed held-out truth from the training-time input context;
-not yet re-verified on the corrected pipeline.)
-
-The flag ships as opt-in because it may help on datasets where the
-linear $\mathbf{\Sigma}$ assumption is too weak (e.g. functional traits
-with phase-transition or interaction structure), or in small-N regimes
-where the joint MVN baseline hasn't yet converged on the cross-trait
-covariance.
+This opt-in mechanism changes the model architecture. Assess it with a
+held-out comparison on the intended data rather than transferring a result
+from another trait set or simulation regime.
 
 Backward-compatible: saved fits without the field default to
 `use_trait_attention = FALSE` and reconstruct identically.
@@ -373,12 +351,27 @@ prediction is exactly the baseline.
 pigauto exposes three distinct uncertainty mechanisms; they answer
 different questions and must not be conflated.
 
-| Mechanism | Source | Validity |
-|-----------|--------|----------|
-| `pred$se` (cont./count/ordinal/prop., single-column BM path, `R/bm_internal.R`) | Conditional-MVN SD from the BM baseline, delta-method back-transformed. | Exact under BM, model-dependent. |
-| `pred$se` (cont./count/ordinal/prop., joint-MVN/threshold-joint path, default when ≥2 BM-eligible columns) | Per-tip conditional SD $\sigma\sqrt{v_i}$ from the sparse Henderson precision (same factorisation as the mean; 2026-08 fix). | Model-dependent; does not use the un-restored cross-trait EM (`max_iter = 0`). Per-tip conditional variance under the Henderson approximation, not the single-trait closed-form "exact under BM" guarantee. |
-| `pred$se` (binary/categorical) | $\min(p, 1{-}p)$ / $1 - \max_k p_k$ — uncertainty score, **not** a Gaussian SE. | Use for ranking/reporting; do **not** plug into Rubin's rules. |
-| `pred$conformal_lower`, `pred$conformal_upper` | Split conformal residual quantile on the val set: $s = q_{(1-\alpha)}( | y - \hat{y} |_{\text{val}} )$. | Marginal prediction coverage under the split-conformal exchangeability and fixed calibration-procedure assumptions; not an MI draw distribution. |
+**Baseline `pred$se` (continuous / count / ordinal / proportion).**
+On the single-column BM path (`R/bm_internal.R`) this is the
+conditional-MVN standard deviation, delta-method back-transformed —
+exact under BM, model-dependent. When ≥ 2 BM-eligible columns use the
+joint / threshold-joint path, `pred$se` is the per-tip conditional SD
+$\sigma\sqrt{v_i}$ from the sparse Henderson precision (same
+factorisation as the mean; 2026-08 fix). That is model-dependent
+Henderson variance, not the single-trait closed-form “exact under BM”
+guarantee, and it does not use the un-restored cross-trait EM
+(`max_iter = 0`).
+
+**`pred$se` (binary / categorical).**
+$\min(p, 1-p)$ or $1 - \max_k p_k$ — an uncertainty score, **not** a
+Gaussian standard error. Use it for ranking or reporting. Do **not**
+plug it into Rubin's rules.
+
+**Conformal interval (`pred$conformal_lower`, `pred$conformal_upper`).**
+Split-conformal residual quantile on the validation set:
+$s = q_{(1-\alpha)}(|y - \hat{y}|_{\mathrm{val}})$. This is a
+marginal prediction-coverage diagnostic under exchangeability and a
+fixed calibration procedure. It is not an MI draw distribution.
 
 For prediction diagnostics, `multi_impute()` exposes two stochastic draw
 methods. `"conformal"` (default) uses the heuristic
@@ -386,19 +379,15 @@ $\mathcal{N}(\mu, s/1.96)$ on the transformed scale, where $s$ is the
 conformal residual quantile. A conformal prediction interval does not by
 itself establish that these Normal draws are proper multiple imputations.
 `"mc_dropout"` runs $M$ stochastic GNN passes in training mode (dropout
-active) on top of BM-draw inputs. A 3,000-fit campaign found that neither
-legacy draw method passed any of the 12 downstream fixed-effect cells; PMM
-also failed its redesign pilot. These paths are unsupported for inference.
+active) on top of BM-draw inputs. These paths are unsupported for inference.
 
 The separate experimental `multi_impute_analysis()` backend declares the
 substantive model before imputation. It supports one incomplete continuous
 covariate under MAR, dispatching to proper Bayesian normal-regression MI for
 Gaussian `lm`, `smcfcs` for binomial-logit `glm`, and `jomo.smc` for a Gaussian
 `lmer` with one random intercept. `pool_mi()` then applies Rubin's rules to
-fixed effects only. The package implementation passed a warning-free
-6,000-task gate at clean SHA `2e3809d`, with all 24 fixed-effect cells inside
-the predeclared bias, SE-ratio, coverage, fit, and finite-result bounds. The
-interface remains experimental and deliberately narrow.
+fixed effects only. The interface remains experimental and deliberately
+narrow.
 
 ## 6. Posterior-tree prediction sensitivity
 
@@ -428,9 +417,9 @@ $$
 \hat{y}_i \pm s_t,
 $$
 
-where $s_t$ is the split-conformal residual quantile for trait $t$,
-giving $\ge 95\%$ marginal coverage on the original scale, under the
-split-conformal exchangeability assumptions stated in §5.
+where $s_t$ is the split-conformal residual quantile for trait $t$. Treat this
+as a nominal held-out diagnostic under the stated assumptions, not a
+package-wide interval certification.
 
 ## 8. Where to look in the code
 

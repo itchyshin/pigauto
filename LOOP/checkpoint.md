@@ -1,31 +1,24 @@
-# Checkpoint — pigauto P0 review blockers
+GOAL: see GOAL.md.   STATE: DONE — named repairs on rebuilt site; #174 still draft.
 
-**Date:** 2026-08-08
-**Repo:** `/Users/z3437171/Dropbox/Github Local/pigauto`
+ARCS DONE (verified):
+- S0 inventory (`docs/dev-log/2026-08-27-pkgdown-visual-inventory.md`)
+- S1 extra.css link contrast + callout CSS
+- S2 gnn-architecture claims / §5 blocks
+- S3 getting-started gate interpretation (no GNN-beats table)
+- S4 validation_suite tombstone
+- S5 build_site + check_pkgdown (log `/tmp/pigauto-pkgdown-repair/build.log`; check: No problems found)
+- S6 Read rendered HTML for home, getting-started, gnn-architecture, validation_suite, extra.css
+- S7 close report + plan-actual
 
-## STATE
-S7 Melissa **DONE**. Lane closed.
+ARC IN PROGRESS: none
 
-## ARCS DONE (verified)
-- S0–S5, S4b as before
-- S6 — [Rose re-gate](18e1c9cc-dd0d-4195-8c3a-1862a6e98f81): `docs/dev-log/handover/2026-08-08-p0-rose.md` Re-gate section **READY** for “4 P0 blockers + focused P0 tests green”. Threshold file FAIL 0 / SKIP 0 / PASS 96 (Rose’s own run). Kill list still killed (no joint-Σ claim; no all-tests-green — safety-floor still fails; no 95% guarantee).
+NEXT: Shinichi reviews; undraft #174 is an OPEN GATE (do not cross).
 
-## ARC IN PROGRESS
-None. S7 landed.
+OPEN GATES (need human): undraft/merge #174.
 
-## NEXT
-Lane DoD met (narrow Rose claim). No merge/commit unless Shinichi asks.
+TRUTH LIVES IN:
+- worktree `/Users/z3437171/local-scratch/lanes/pigauto-011-ship` (uncommitted repair files)
+- `docs/dev-log/2026-08-27-pkgdown-visual-gate.md`
+- PR https://github.com/itchyshin/pigauto/pull/174 (draft)
 
-## OPEN GATES
-None for code. Public claims still fenced by Rose kill list. No push/PR.
-
-## TRUTH
-`fix/p0-review-blockers` dirty @ 3625201 + uncommitted P0+B1–B3.
-Rose: `docs/dev-log/handover/2026-08-08-p0-rose.md`.
-Melissa: `docs/dev-log/plan-actual/2026-08-08-p0-fix.md` (5 adaptive, 0 drift).
-
-## RESUME
-```
-/goal pigauto P0 RESUME. LOOP/GOAL.md → checkpoint.md.
-Lane closed. No further slices. No commit unless Shinichi asks.
-```
+RESUME: not needed unless Shinichi asks for polish-later or a commit.

@@ -1,8 +1,38 @@
-# pigauto 0.10.0.9000 (development)
+# pigauto 0.11.0
 
-GitHub-dev after CRAN pigauto 0.10.0 (Date/Publication 2026-07-30).
-This is not a CRAN tarball. BACE is still not on CRAN. The next CRAN
-cut must drop Suggests `BACE` again or wait until BACE is on CRAN.
+Local candidate after CRAN pigauto 0.10.0 (Date/Publication 2026-07-30).
+No CRAN submission or public release is implied. The installed BACE bridge has
+been removed for 0.11: BACE remains an in-tree comparator only, with no
+`Suggests` dependency, export, or installed help page.
+
+## Trust and usability surface
+
+- `check_pigauto()` is now the documented fit-free preflight before
+  `impute()`, and `completed_data()` is the documented completed-data
+  extractor. The beginner journey reads traits and a tree, checks inputs,
+  imputes, extracts completed data, and writes a report.
+- Public output guidance now distinguishes completed data, all-cell diagnostic
+  predictions, type-dependent uncertainty, nominal held-out conformal
+  diagnostics, and the narrow analysis-aware inference route.
+- Active-imputation output is documented as a model-based BM/label-propagation
+  proxy ranking under assumptions, not an optimal sampling guarantee or a
+  demonstrated field gain.
+- The installed package includes a tiny novice trait/tree fixture and matching
+  six-expression workflow script. It is a teaching and smoke input, not a
+  performance benchmark.
+
+## Compatibility and supersession
+
+All chronological entries below are historical unless this 0.11 section says
+otherwise. In particular, older instructions to pass `multi_impute()` or
+`multi_impute_trees()` completions to `with_imputations()` or `pool_mi()`, and
+older claims of Rubin-valid downstream standard errors for those diagnostic or
+tree-sensitivity completions, are superseded. The current supported downstream
+route begins with `multi_impute_analysis()` in its documented narrow regime.
+Older chronological statements about broad interval coverage, active-selection
+optimality or novelty, and solver performance comparisons are historical
+context, not current package-wide claims; use the current README and vignettes
+for user guidance.
 
 ## Bug fix: `lambda_mode != "fixed_1"` no longer disables the discrete-trait joint baseline
 
@@ -10,13 +40,11 @@ cut must drop Suggests `BACE` again or wait until BACE is on CRAN.
 `lambda_mode %in% c("estimate", "cv", "bayes")`, which disabled the joint
 MVN, threshold-joint, AND OVR-categorical baselines for ALL traits --
 including binary, ordinal, categorical, and zero-inflated gate columns
-that have no lambda concept and were always fit at lambda = 1 regardless.
-Measured cost (`script/bench_avonet_lambda_modes.md` on branch
-`arc/bace-comparators`; `docs/dev-log/2026-08-16-external-comparison-results.md`
-on the handover branch): `lambda_mode = "bayes"` improved every continuous
-trait but dropped Trophic.Level (categorical) accuracy from 0.789 to 0.600
-(19pp) because categorical fell from the joint/OVR baseline to plain label
-propagation.
+ that have no lambda concept and were always fit at lambda = 1 regardless.
+This was a dispatch-condition defect: affected discrete columns could take an
+unintended per-column fallback when a continuous-family lambda mode was
+selected. The correction restores the intended type-specific baseline routing;
+it does not make a comparative performance claim.
 
 `lambda_mode` now governs ONLY the baseline for continuous-family columns
 (continuous, count, ordinal, proportion, zi_count magnitude); the
@@ -30,13 +58,7 @@ baseline *output* is discarded in favour of the lambda-aware per-column
 `bm_impute_col(..., lambda = bm_lambda)` fit. `lambda_mode = "fixed_1"`
 output is unchanged (see `tests/testthat/test-lambda-per-type.R`).
 
-## Feature: `joint_solver = "rphylopars"` (opt-in) -- continuous-trait accuracy switch
-
-The continuous-gap diagnosis (`docs/dev-log/2026-08-16-continuous-gap-diagnosis.md`)
-found that the in-house single-pass joint solver (`fit_mvn_bm_inhouse()`,
-`R/joint_mvn_solver.R`) loses 0.14-1.27 z-RMSE to `Rphylopars::phylopars()`'s
-converged REML fit on AVONET300 -- the GNN/gate and the mixed-type path were
-both exonerated by the same diagnosis.
+## Feature: `joint_solver = "rphylopars"` (opt-in routing with fallback)
 
 `fit_baseline()`, `fit_pigauto()`, and `impute()` gain a new `joint_solver`
 argument, `c("inhouse", "rphylopars")`. The default, `"inhouse"`, is
@@ -181,47 +203,15 @@ evaluates on the calibration-matched surface
 each held-out cell's own truth as input context, a surface no genuinely
 missing cell has in production.
 
-## New (opt-in): BACE baseline wrapper restored, with proper-MI draws
+## Historical BACE bridge note — removed and not inference-validated
 
-Restores `fit_baseline_bace()` (removed from the v0.10.0 CRAN surface in
-`b615579` because BACE is not on CRAN) and adds `final_imp = FALSE`
-(default) plus `n_final = 15L`. With `final_imp = TRUE` the wrapper
-appends `BACE::bace_final_imp()` to the `BACE::bace_imp()` chain it
-already runs and builds `mu` / `se` from that function's `n_final` final
-datasets instead of the chain datasets. `BACE` is restored in Suggests
-on this branch; there is no Remotes field. Install BACE from the
-standalone tree at `@ce8bc87`.
-
-Why the opt-in path is worth having: the chain datasets are successive
-sweeps of one chained-equations chain, so they are autocorrelated by
-construction and still carry convergence transient. The between-dataset
-SD pigauto reports as `se` on that path is therefore a dispersion
-summary with no coverage guarantee. `bace_final_imp()`'s runs each start
-independently from the converged chain, so they are proper
-multiple-imputation draws and the resulting `se` is a between-imputation
-SD in the Rubin (1987) sense. Expect it to be substantially larger.
-
-This is a choice about which BACE datasets pigauto summarises. It is
-**not** a correction to the default path's arithmetic, and in particular
-it is unrelated to the imputed-as-observed defect fixed upstream in
-BACE — that defect lived in `bace_final_imp()`, which pigauto has never
-called until now, so no pigauto output was ever affected by it.
-
-`final_imp = TRUE` costs `n_final` extra MCMC fits per trait on top of
-the chain. The default of 15 matches the BACE simulation study; BACE's
-own default is 50, and small values undercover. The default remains
-`FALSE`. If the installed BACE is too old to export `bace_final_imp()`,
-`final_imp = TRUE` errors with an upgrade hint rather than silently
-falling back.
-
-The final phase is less robust than the chain phase — each draw refits
-MCMCglmm and can hit a singular mixed-model equation on data the chain
-handled fine. In that case `final_imp = TRUE` raises an error naming
-the failure and pointing back at `final_imp = FALSE`, rather than
-quietly returning chain averages to a caller who asked for proper MI
-draws.
-
-No pigauto-versus-BACE performance claim is made here.
+This development note recorded an intended `fit_baseline_bace()` bridge,
+including an experimental `bace_final_imp()` path. The installed bridge is
+removed in 0.11; BACE is retained only as an in-tree comparator. Neither the
+historical bridge nor its final-draw path has current pigauto inference
+validation, so it must not be treated as a supported MI or pooling route.
+The current supported downstream route begins with `multi_impute_analysis()`
+in its documented narrow regime.
 
 ## Documentation: pigauto's OVR categorical path vs BACE's default
 
@@ -570,15 +560,11 @@ posterior tree ensembles, not GNN-architecture changes.
 
 # pigauto 0.9.2 (2026-05-17)
 
-First release after the v0.9.1.9000 dev cycle. Headline outcome:
-on the BACE-compatible cross-dataset head-to-head bench (six
-phylogenetic-trait datasets, n=2000 per dataset, 30% MCAR,
-matched against `daniel1noble/BACE`'s snapshot results),
-pigauto's net win-loss vs BACE went from 14–14 (commit 9d4782e,
-PR #102) to **roughly 24–7** in this release. The change is
-driven by three bug fixes in the in-house Σ solver plus a CI
-evaluator alignment with BACE's reporting policy; the underlying
-imputation algorithm is unchanged from v0.9.1.
+Historical comparator snapshot — withdrawn as current evidence. This release
+recorded an in-house-versus-BACE comparison snapshot while the in-house Σ
+solver and reporting alignment were changing. It is not a current ranking or
+release claim; the external comparator gate remains open. The underlying
+imputation algorithm was unchanged from v0.9.1.
 
 ## Bug fixes: in-house Σ solver
 
@@ -620,10 +606,10 @@ together on real phylogenetic data:
    per-column BM L̂ + closed-form Σ̂ MLE without the broken cross-trait
    EM. Callers can still opt in to the EM via `max_iter > 0`.
 
-Net effect on bench: AVONET categorical accuracy lifted from 0.357
-to 0.825 (trophic_level vs BACE 0.816) and 0.350 to 0.823
-(primary_lifestyle vs BACE 0.828). PanTHERIA discrete-trait
-accuracies are now competitive with BACE.
+Historical comparator observation — withdrawn as current evidence. This
+section recorded a changing in-house/BACE snapshot while the solver was being
+repaired. It is not a current cross-package ranking; the external comparator
+gate remains open.
 
 ## Improvements: CI head-to-head evaluator
 
@@ -701,9 +687,12 @@ are directly comparable to BACE's snapshot.
 - The direct `cov_linear` fixed-effect path is now included in training, validation, gate calibration, conformal scoring, and prediction whenever user covariates are present. Previously that path was constructed and returned by the model, but production callers ignored it unless using the optional low-level `baseline_mu` forward path.
 - Conformal residuals are now computed from the same calibrated three-way safety-floor blend used at prediction time, rather than reconstructing a legacy two-way BM/GNN blend from `r_cal_gnn` alone.
 
-## Improvements: tree-aware downstream fitting (2026-05-11)
+## Historical tree workflow — now unsupported (2026-05-11)
 
-- `with_imputations()` now carries tree metadata for `multi_impute_trees()` results. If the fitting callback declares `tree`, `tree_index`, or `imputation` arguments, they are filled with the matching posterior tree, its index, and the imputation number; the returned fits and `pool_mi()` output also retain the successful `tree_index` vector as metadata.
+- This historical metadata feature no longer authorizes fitting or pooling
+  `multi_impute_trees()` completions. Tree completions are descriptive only;
+  the supported inference route begins with `multi_impute_analysis()` in its
+  documented narrow regime.
 
 ## Bug fixes: per-tree tree MI pooling (2026-05-11)
 
@@ -837,11 +826,12 @@ of-observed-range species (the AVONET seed-2032 case).  PMM cannot
 distinguish these two cases by donor-distance alone, so it can hurt
 RMSE just as easily as it can help.
 
-**Where PMM genuinely helps**: in multi-imputation workflows
-(`n_imputations > 1` + `pool_mi()`), the donor-based between-
-imputation variance is well-calibrated to the trait's marginal
-distribution, giving Rubin's rules honest standard errors even
-when the GNN's MC-dropout noise alone underestimates uncertainty.
+### Historical PMM rationale — superseded
+
+This historical inference framing is withdrawn. PMM is an experimental
+stochastic prediction mechanism, not a supported pooling or downstream
+inference route. The current supported downstream route begins with
+`multi_impute_analysis()` in its documented narrow regime.
 
 This release updates the `?impute` and `?predict.pigauto_fit`
 documentation + this NEWS entry to reflect the corrected framing.
@@ -855,14 +845,14 @@ recommended tool remains `clamp_outliers = TRUE` (Phase G PR #60).
 ## Phase G': `match_observed = "pmm"` -- Predictive Mean Matching (2026-05-01)
 
 Adds Predictive Mean Matching (PMM; Little 1988; Buuren &
-Groothuis-Oudshoorn 2011 mice) as an opt-in mechanism for
-multiple-imputation workflows.  PMM replaces each missing cell's
+Groothuis-Oudshoorn 2011 mice) as an opt-in stochastic prediction
+mechanism. PMM replaces each missing cell's
 back-transformed prediction with an actual observed value drawn
 from a donor pool ranked by predicted-value proximity.
 
 \strong{Originally framed as "tail safety", but the bench result
-showed PMM is actually for MI workflows.}  See the v0.9.1.9013
-NEWS section above for the corrected framing.
+showed mixed prediction behavior.} This historical implementation does not
+establish a downstream inference route; see the superseding note above.
 
 ### What changed
 
@@ -909,10 +899,9 @@ PMM opt-in alongside it).  Cross-dataset evidence in v0.9.2 may
 justify flipping the default to `"pmm"` for at-risk types.
 
 Recommended use:
-  * `match_observed = "pmm"` for log-transformed continuous traits
-    with `n_imputations > 1` (multi-imputation context, where
-    each draw picks a different donor and Rubin's rules give
-    properly calibrated SEs).
+  * Treat PMM output as stochastic prediction variation only, not as a
+    downstream inference input. For supported inference, begin with
+    `multi_impute_analysis()` in its documented narrow regime.
   * `clamp_outliers = TRUE, clamp_factor = 5` for users who want
     a deterministic point estimate without PMM stochasticity.
 
@@ -1211,16 +1200,12 @@ default output mixes them by `delta` value, which is approximate
 across metrics.  When precise ranking matters, filter by
 `metric` ("variance" or "entropy") first.
 
-### Why this is novel
+### Historical rationale — novelty not established
 
-To my knowledge, no other phylogenetic-imputation package (Rphylopars,
-BACE, phylolm, mice with phylogenetic correlation) exposes a
-sampling-design helper.  pigauto is uniquely positioned because its
-BM conditional MVN already computes per-cell predictive variance --
-this function just exposes the closed-form variance-reduction
-formula derived from rank-1 update.  The methods are 30 years old
-in optimal-design literature (Cohn et al. 1996, JAIR 4:129–145);
-applying them to phylogenetic trait imputation appears to be new.
+This historical note described why the active-imputation helper was explored.
+The helper is now documented only as a model-based BM/label-propagation proxy
+ranking under its stated assumptions. It makes no uniqueness, novelty,
+optimal-design, or field-gain claim.
 
 ### Files
 
@@ -2131,10 +2116,7 @@ numbers in one place.
 
 pigauto 0.9.1 is a consolidation release on top of 0.9.0. Two headline
 improvements: (a) **tree-sharing GNN is now the default** in
-`multi_impute_trees()`, which makes posterior-tree multiple imputation
-cheap enough that the Nakagawa & de Villemereuil (2019) canonical
-workflow (T = 50 posterior trees × m_per_tree = 1 = M = 50 pooled
-datasets) is the default path at n = 10,000 species; (b) **opt-in
+`multi_impute_trees()` for historical descriptive sensitivity work; and (b) **opt-in
 calibration smoothers** (bootstrap conformal, median-over-splits gate,
 low-val-cells warning) for small-n regimes. This release also ships the
 three post-0.9.0 feature branches (B1 soft-liability, B2 rate-aware
@@ -2165,28 +2147,25 @@ to 10,000 species, and a clean `R CMD check` (0 errors / 0 warnings /
   increase `missing_frac` or collect more species rather than relying
   on estimator smoothing.
 
-## Tree-sharing GNN is now the default in `multi_impute_trees()`
+## Historical tree workflow — now unsupported for pooling or inference
 
 - New default `share_gnn = TRUE` in `multi_impute_trees()`. The GNN is
   trained once on a reference tree (MCC via `phangorn::maxCladeCred`,
   fallback `trees[[1]]`) and reused across posterior trees, with only
-  the BM baseline recomputed per tree. ~10-15x speedup at n=10k x T=50
-  makes the Nakagawa & de Villemereuil (2019) canonical workflow
-  (T=50, m_per_tree=1, M=50 pooled via Rubin's rules) the default path.
-- Default `m_per_tree` flipped from `5L` to `1L` to align with the N&dV
-  2019 canonical workflow. Users with `T < 20` get a runtime warning
-  suggesting they bump `m_per_tree` to keep Rubin's rules stable.
+  the BM baseline recomputed per tree. This historical feature is now
+  descriptive sensitivity only: do not send its completions to downstream
+  fitting or pooling, and do not interpret them as MI, Rubin results, SEs,
+  or FMI.
+- The historical `m_per_tree` setting remains part of the API but does not
+  create an inference-supported tree workflow.
 - Opt-out: `share_gnn = FALSE` restores the pre-v0.9.1 per-tree fit
   path for users who need exact per-tree model independence.
 - New optional arg `reference_tree` lets users override the MCC choice.
 - `predict.pigauto_fit()` gains a `baseline_override` argument (mostly
   internal — used by the shared-GNN path).
 - New Suggests: `phangorn` (for `maxCladeCred()`).
-- Tree-uncertainty propagation analysis: when the calibrated gate
-  closes (the common case on real data — see the v0.9.0 validation
-  suite), the shared-GNN approximation is lossless. When the gate is
-  open, tree variance is slightly under-estimated in the GNN channel
-  only — the baseline channel still carries it.
+- Historical tree-sensitivity analysis: changes across trees may be described,
+  but they are not calibrated uncertainty or downstream inferential output.
 
 ## Full threshold-model ordinal baseline (B3)
 
@@ -2263,13 +2242,13 @@ to 10,000 species, and a clean `R CMD check` (0 errors / 0 warnings /
   path enabled; captures the +12–28pp categorical lift under soft
   aggregation vs hard.
 
-## Documentation
+## Historical tree workflow — now unsupported
 
-- New pkgdown article **"Propagating Tree Uncertainty"**
-  (`vignettes/tree-uncertainty.Rmd`). Decision guide for single-tree vs
-  multi-tree MI, canonical N&dV 2019 workflow under the new
-  `share_gnn = TRUE` default, worked example over posterior trees with
-  `Map()`-based downstream-model refitting, and a timing table.
+- This historical documentation entry described tree completions as a
+  downstream MI workflow. Current tree completions are descriptive sensitivity
+  only: do not fit or pool them, and do not interpret variation as Rubin
+  results, standard errors, or FMI. See `vignettes/tree-uncertainty.Rmd` for
+  the current descriptive boundary.
 - pkgdown trait-type consistency pass: `zi_count` and `multi_proportion`
   are now listed everywhere alongside the other six trait types
   (Getting Started, Mixed Types, the validation suite, and the README).
@@ -2340,9 +2319,8 @@ correlation carries signal.
 - **OVR categorical baseline (`R/ovr_categorical.R`)**. Each K-class
   categorical trait is decomposed into K independent "is_class_k vs
   rest" binary threshold fits, then normalised into a row-stochastic
-  distribution. This is the same OVR strategy BACE uses. On AVONET 300,
-  this lifts Trophic.Level accuracy to **77%** and Primary.Lifestyle to
-  **84%** — beating BACE-OVR's 72% on both. The K-independent-fits path
+  distribution. Historical comparator figures for this path are withdrawn as
+  current evidence; the external comparator gate remains open. The K-independent-fits path
   sidesteps the rank-(K-1) numerical instability that made earlier
   single-fit approaches unstable; each individual fit has only one
   categorical-related column.
@@ -2498,17 +2476,12 @@ Nine new or reran benchmark reports quantifying the release's impact:
 
 # pigauto 0.6.2
 
-## Documentation
+## Historical tree workflow — now unsupported
 
-- **Tree uncertainty workflow clarified.** `multi_impute_trees()`,
-  `trees300`, the README, and `vignette("getting-started")` now all
-  describe the two-step workflow explicitly: step 1 is tree-aware
-  imputation (pigauto's job — already done correctly); step 2 is
-  tree-aware downstream analysis (the user's responsibility,
-  following Nakagawa & de Villemereuil 2019, *Syst. Biol.* 68:632–641).
-  Every doc now includes a complete `Map()`-over-`mi$tree_index` code
-  example showing how to run the corresponding tree in the downstream
-  model.
+- This historical two-step recipe is superseded. `multi_impute_trees()` now
+  supports descriptive prediction sensitivity only; its completions must not
+  be passed to downstream fitting or pooling and do not provide MI, Rubin,
+  standard-error, or FMI output.
 - **Compute-cost table added** to the tree-uncertainty docs: wall-clock
   budgets at `n` = 300 / 5,000 / 10,000 species with `T` = 10 / 50
   trees, plus guidance on reducing `T` for large trees and
@@ -2540,9 +2513,8 @@ Nine new or reran benchmark reports quantifying the release's impact:
 ## New features
 
 - `draws_method = "conformal"` is now the default for `multi_impute()`.
-  Draws sample from the split-conformal calibrated uncertainty
-  distribution (better calibrated than MC dropout for downstream
-  Rubin's-rules pooling).
+  Historical wording about downstream pooling is superseded: these draws are
+  prediction diagnostics and are not supported for downstream inference.
 - `draws_method = "mc_dropout"` remains available and is now correct
   (see bug fix above).
 
@@ -2613,16 +2585,12 @@ regularisation for near-singular submatrices. Validation against
 `Rphylopars` shows r = 0.97–0.98 (expected given univariate vs
 multivariate difference).
 
-## Tree-uncertainty MI via `multi_impute_trees()`
+## Historical tree workflow — now unsupported
 
-New function `multi_impute_trees()` performs multiple imputation
-across a posterior sample of phylogenetic trees, so that phylogenetic
-uncertainty propagates into downstream standard errors via Rubin's
-rules. Demonstrated with the bundled `trees300` dataset (10 BirdTree
-posterior trees). Benchmark results show SE inflation of 1.1–2.1x
-and fraction of missing information (FMI) rising from ~0.03
-(single-tree) to 0.22–0.79 (multi-tree) depending on missingness
-level.
+This historical feature description is superseded. Posterior-tree completions
+may be compared as descriptive prediction sensitivity, but they are not
+multiple-imputation datasets and must not be used for Rubin pooling, standard
+errors, or FMI.
 
 ## New bundled datasets
 
@@ -2926,10 +2894,10 @@ via grid search. This prevents the GNN from adding noise when the
 Brownian motion baseline is already optimal. On the AVONET benchmark,
 this eliminates the RMSE regression seen in earlier versions.
 
-### Conformal prediction intervals
-Distribution-free 95% prediction intervals computed via split conformal
-prediction on the validation residuals. Coverage is guaranteed under
-exchangeability. Available for continuous, count, and ordinal traits via
+### Historical conformal description — superseded
+This historical statement about guaranteed coverage is superseded. Current
+conformal bounds are nominal held-out diagnostics, not package-wide certified
+coverage. They remain available for continuous, count, and ordinal traits via
 `pred$conformal_lower` and `pred$conformal_upper`.
 
 ### Phylogenetic label propagation

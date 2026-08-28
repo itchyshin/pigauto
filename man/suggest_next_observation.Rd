@@ -2,7 +2,7 @@
 % Please edit documentation in R/active_impute.R
 \name{suggest_next_observation}
 \alias{suggest_next_observation}
-\title{Suggest which cell to observe next to maximise imputation precision}
+\title{Suggest model-based candidate observations}
 \usage{
 suggest_next_observation(
   result,
@@ -44,11 +44,11 @@ when \code{by = "cell"}: \code{species}, \code{trait},
 }
 \description{
 For a fitted \code{pigauto_result} (returned by \code{\link{impute}}),
-compute the closed-form expected reduction in total predictive
-variance across all currently-missing cells if each candidate cell
-were observed next.  Useful for sampling-design guidance: when you
-have time/budget to measure \emph{k} more species, this function
-tells you which ones contribute most to imputation precision.
+compute model-based BM/label-propagation proxy reductions in predictive
+variance or entropy across currently-missing cells if each candidate cell
+were observed next. Use the returned ranking as sampling-design guidance
+under those model assumptions; it is not an optimal-design guarantee or a
+demonstrated field gain.
 }
 \details{
 Two metrics are supported, dispatched by trait type:
@@ -96,6 +96,10 @@ entropy reductions are summed separately into
 \code{delta_var_total} when both are populated).  Cross-type
 species-level ranking is approximate -- see the variance-vs-
 entropy caveat above.
+
+The ranking is conditional on the fitted BM or label-propagation proxy and
+its missing-data assumptions. It does not establish that collecting a
+selected observation improves a future field study or downstream analysis.
 
 \code{zi_count} (v2): observing a missing zi_count cell reveals
 the gate value (entropy reduction at the gate column, computed via

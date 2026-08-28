@@ -39,8 +39,8 @@ missing cells. One of:
 originally-missing cell from a Normal distribution centred on the
 point estimate with SD = conformal_score / 1.96. Converting a
 split-conformal residual quantile to a Normal scale is a heuristic;
-the conformal coverage guarantee does not establish that these draws
-are proper multiple imputations. Falls back to BM-SE-based Normal sampling
+a nominal held-out conformal diagnostic does not establish that these
+draws are proper multiple imputations. Falls back to BM-SE-based Normal sampling
 when conformal scores are unavailable, and to Bernoulli / Categorical
 draws for discrete traits.}
 \item{\code{"mc_dropout"}}{Run \code{M} stochastic GNN forward passes in training
@@ -103,9 +103,10 @@ baseline SE and the between-draw standard deviation. A
 \strong{descriptive spread for reporting and ranking only} — it is
 \strong{not} a Rubin's-rules pooled standard error (it contains no
 within-imputation variance component and no small-sample df
-correction) and must not be used as one. For valid pooled
-inference, fit your downstream model on each completed dataset via
-\code{\link[=with_imputations]{with_imputations()}} and pool with \code{\link[=pool_mi]{pool_mi()}}.}
+correction) and must not be used for downstream pooling.}
+\item{\code{mi_workflow}}{\code{"pigauto_diagnostic_mi"}, recording that these
+are prediction-diagnostic completions and cannot be passed to
+\code{\link[=with_imputations]{with_imputations()}} or \code{\link[=pool_mi]{pool_mi()}}.}
 \item{\code{imputed_mask}}{Logical matrix; \code{TRUE} where a cell was
 originally missing.}
 \item{\code{fit}}{The underlying \code{\link[=fit_pigauto]{pigauto_fit}}
@@ -121,11 +122,10 @@ on new data.}
 Run pigauto's full imputation pipeline and return \code{M} stochastic
 completions of the trait matrix instead of a single point estimate.
 The conformal-width and Brownian/MC-dropout draws returned here are
-experimental prediction-diagnostic draws. A 3,000-fit known-DGP campaign
-found that neither method passed any of the 12 downstream fixed-effect
-gate cells. Do not use these datasets for downstream inference or Rubin
-pooling. A separate analysis-aware backend, \code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, has
-passed its package-level fixed-effect gate for a narrow set of analyses.
+experimental prediction-diagnostic draws. Do not use these datasets for
+downstream inference or Rubin pooling. The separate analysis-aware backend,
+\code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, is the only supported route in its documented
+narrow regime.
 }
 \details{
 These draws do not condition on a declared substantive analysis model.
@@ -139,7 +139,7 @@ cells are sampled from
 \eqn{x_{ij}^{(k)} \sim \mathrm{N}(\hat\mu_{ij},\; q_{j}/1.96)}
 where \eqn{q_j} is the trait-level split-conformal residual quantile.
 Dividing this quantile by 1.96 is a pragmatic Normal-scale construction,
-not a consequence of the conformal coverage guarantee. For discrete traits (binary,
+not an inference consequence of a nominal held-out conformal diagnostic. For discrete traits (binary,
 categorical) it uses Bernoulli / categorical draws from the estimated
 probability vector. For \code{zi_count} the gate is Bernoulli from
 P(nonzero) and the conditional magnitude is drawn on the log1p-z

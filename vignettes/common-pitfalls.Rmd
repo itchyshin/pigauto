@@ -30,23 +30,16 @@ If you hit something that isn't here and feels surprising, please
 [open an issue](https://github.com/itchyshin/pigauto/issues/new) — most
 of the items below were added because real users tripped on them.
 
-## 1. "I called `impute()` and `result$prediction$imputed` looks like my input"
+## 1. "`impute()` stopped because my input is fully observed"
 
-**Symptom.** You run `result <- impute(df, tree)` on a fully-observed
-dataset (e.g. the bundled `avonet300`) and read
-`result$prediction$imputed$Mass` expecting "the imputed values" — but
-the values look exactly like your input data, including legitimately
-huge ones (a 25 kg rhea, a 12 kg vulture).
+**Symptom.** You call `impute(df, tree)` on a fully-observed dataset and
+it stops before training.
 
 **Why this happens.** `impute()` only *imputes* cells that are `NA`
-in the input. Your input was fully observed, so nothing was imputed:
-`result$completed` equals the input, `sum(result$imputed_mask)` is
-zero, and `result$prediction$imputed` contains the model's prediction
-for **every** cell — observed and missing alike. For observed cells,
-the well-calibrated gate keeps the prediction close to the input
-value, so what comes back is essentially the original data passed
-through. The slot is intended for diagnostics (checking calibration on
-training cells), not as the imputed-values output.
+in matched target rows. A fully observed input now stops before training
+and directs you to `cross_validate()` for predictive assessment. Supply a
+real missing target cell to use the imputation path. A complete data set is
+for predictive assessment, not an imputation result.
 
 **Diagnose.**
 
@@ -90,9 +83,8 @@ majority class for every species. For example, on `avonet300$Migration`
 
 **Why this happens.** Two things compound:
 
-1. If your input has no `NA`s in that column, there's nothing to impute
-   externally (see Pitfall 1) — `result$prediction$imputed$Migration`
-   reflects the model's calibrated-gate output, not new imputations.
+1. If your input has no `NA`s in that column, `impute()` stops before fitting;
+   use `cross_validate()` instead (see Pitfall 1).
 2. At default settings (`n_imputations = 1L`, `pool_method = "median"`),
    a small ordinal trait whose marginal distribution is heavily skewed
    (AVONET `Migration` is ~78 % Resident / 14 % Partial / 8 % Full at
@@ -107,14 +99,16 @@ data(avonet300, tree300)
 df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
 
 table(df$Migration)              # check the marginal distribution
+hide <- sample(which(!is.na(df$Migration)), 30L)
+df$Migration[hide] <- NA
 result <- impute(df, tree300, verbose = FALSE)
-table(result$prediction$imputed$Migration)
+table(result$completed$Migration[hide])
 ```
 
-**Fix.** For imbalanced K-class ordinal traits, increase
-`n_imputations` and switch to `pool_method = "mode"` (Phase H). On
-the AVONET multi-seed bench this gave +6.6 percentage-point accuracy
-on `Migration` (K = 3) versus the default median pool.
+**Fix.** Compare candidate settings with `cross_validate()` on your own
+trait table and report the held-out result. For an imbalanced ordinal trait,
+one candidate is more draws with `pool_method = "mode"`; it is not a
+package-wide recommendation.
 
 ```{r section2-fix, eval = FALSE}
 set.seed(1L)
@@ -186,17 +180,13 @@ has known cross-trait structure) but the gate is closed:
 
 ## 4. "How do I know if my dataset has enough phylogenetic signal?"
 
-**Symptom.** You aren't sure whether pigauto's BM kriging baseline
-will outperform a simple mean impute on your dataset.
+**Symptom.** You aren't sure whether phylogenetic information is useful for
+your dataset.
 
-**Why this matters.** pigauto's BM baseline buys you accuracy in
-proportion to phylogenetic signal in the trait. At Pagel's λ ≈ 0
-(no signal), BM kriging reduces to the species mean and pigauto won't
-beat a simple mean baseline; at λ ≈ 1 (strong signal), BM kriging
-materially outperforms the mean.  The Phase 8 signal-strength sweep
-(re-running locally produces the evidence; the deployed Methodology
-dropdown surfaces it once the bench HTML is regenerated) shows the
-crossover empirically.
+**Why this matters.** A lambda estimate describes fitted phylogenetic
+structure; it does not determine predictive performance on a new dataset.
+Use held-out evaluation rather than a generic threshold to compare a
+phylogenetic workflow with an appropriate alternative.
 
 **Diagnose.** The fitted object stores the per-trait λ values used by
 `phylo_signal_gate`:
@@ -214,15 +204,10 @@ The output reports λ on the observed cells where it can be estimated. Discrete
 traits use the package's internal continuous proxy on the latent/liability
 scale.
 
-**Fix.** Use the lambda estimate to set expectations:
-
-- λ > 0.7: pigauto's BM baseline alone usually beats grand-mean.
-  GNN may add little if the trait is well-conserved.
-- 0.3 < λ < 0.7: pigauto's GNN typically helps on top of BM,
-  especially if you have covariates.
-- λ < 0.3: phylogenetic information is weak. Consider whether a
-  phylogenetic imputation method is the right tool at all. A simple
-  mean impute or a covariate-only regression may do as well.
+**Fix.** Use the lambda estimate as a diagnostic, then run
+`cross_validate()` on the input and compare the candidate workflows under the
+same held-out design. If phylogenetic structure is weak, consider whether a
+non-phylogenetic analysis is more appropriate for your scientific question.
 
 **See also.** `?fit_pigauto` (`phylo_signal_gate`),
 [Phase 8 signal sweep memo](https://github.com/itchyshin/pigauto/blob/main/script/bench_signal_sweep.md).

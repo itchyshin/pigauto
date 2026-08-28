@@ -16,6 +16,8 @@
 #'   `gllvmTMB_multi` fits. Other classes implementing `coef()` and `vcov()`
 #'   also work. The output of [with_imputations()] is accepted directly.
 #'   `MCMCglmm` fits are rejected -- see Details.
+#'   Bare user-supplied fit lists are accepted with an explicit warning because
+#'   their imputation provenance cannot be verified.
 #' @param conf.level Confidence level for the pooled interval (default
 #'   `0.95`).
 #' @param coef_fun Optional function extracting a named numeric fixed-effect
@@ -133,6 +135,45 @@ pool_mi <- function(fits,
   # ---- Validate input ----
   if (!is.list(fits)) {
     stop("`fits` must be a list of model fits.", call. = FALSE)
+  }
+
+  workflow <- attr(fits, "mi_workflow")
+  unverified_bare <- FALSE
+  if (identical(workflow, "pigauto_diagnostic_mi") ||
+      inherits(fits, "pigauto_diagnostic_mi")) {
+    stop("Prediction-diagnostic completions from `multi_impute()` cannot be ",
+         "pooled. Use `multi_impute_analysis()` for the supported narrow ",
+         "workflow.", call. = FALSE)
+  } else if (identical(workflow, "pigauto_tree_sensitivity_diagnostic") ||
+             inherits(fits, "pigauto_tree_sensitivity_diagnostic") ||
+             inherits(fits, "pigauto_mi_trees")) {
+    stop("Tree-sensitivity diagnostics from `multi_impute_trees()` cannot be ",
+         "pooled. Tree-aware downstream pooling is unsupported; use ",
+         "`multi_impute_analysis()` for the supported narrow workflow.",
+         call. = FALSE)
+  } else if (inherits(fits, "pigauto_mi")) {
+    stop("Legacy `pigauto_mi` fit lists have no analysis-aware provenance. ",
+         "Refit with `multi_impute_analysis()` and `with_imputations()` ",
+         "before pooling.", call. = FALSE)
+  } else if (inherits(fits, "pigauto_mi_fits")) {
+    if (is.null(workflow)) {
+      stop("Legacy `pigauto_mi_fits` objects have no analysis-aware ",
+           "provenance. Refit with `multi_impute_analysis()` and ",
+           "`with_imputations()` before pooling.", call. = FALSE)
+    }
+    if (!identical(workflow, "pigauto_analysis_mi_v1")) {
+      stop("`fits` carries unknown multiple-imputation provenance and cannot be ",
+           "pooled safely.", call. = FALSE)
+    }
+  } else if (identical(workflow, "pigauto_analysis_mi_v1")) {
+    stop("`mi_workflow = \"pigauto_analysis_mi_v1\"` is inconsistent ",
+         "provenance for a fit list not created by `with_imputations()`.",
+         call. = FALSE)
+  } else if (is.null(workflow)) {
+    unverified_bare <- TRUE
+  } else {
+    stop("`fits` carries unknown multiple-imputation provenance and cannot be ",
+         "pooled safely.", call. = FALSE)
   }
 
   tree_index <- attr(fits, "tree_index")
@@ -335,12 +376,18 @@ pool_mi <- function(fits,
   )
   attr(out, "m") <- M
   attr(out, "conf.level") <- conf.level
+  if (!is.null(workflow)) attr(out, "mi_workflow") <- workflow
   if (!is.null(tree_index)) {
     attr(out, "tree_index") <- tree_index
     attr(out, "n_trees") <- n_trees
     attr(out, "m_per_tree") <- m_per_tree
   }
   class(out) <- c("pigauto_pooled", "data.frame")
+  if (unverified_bare) {
+    warning("pool_mi() received a bare fit list with unverified provenance; ",
+            "Rubin arithmetic will run, but the imputation workflow was not ",
+            "validated by pigauto.", call. = FALSE)
+  }
   out
 }
 

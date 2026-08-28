@@ -3,11 +3,10 @@
 #' Run pigauto's full imputation pipeline and return `M` stochastic
 #' completions of the trait matrix instead of a single point estimate.
 #' The conformal-width and Brownian/MC-dropout draws returned here are
-#' experimental prediction-diagnostic draws. A 3,000-fit known-DGP campaign
-#' found that neither method passed any of the 12 downstream fixed-effect
-#' gate cells. Do not use these datasets for downstream inference or Rubin
-#' pooling. A separate analysis-aware backend, [multi_impute_analysis()], has
-#' passed its package-level fixed-effect gate for a narrow set of analyses.
+#' experimental prediction-diagnostic draws. Do not use these datasets for
+#' downstream inference or Rubin pooling. The separate analysis-aware backend,
+#' [multi_impute_analysis()], is the only supported route in its documented
+#' narrow regime.
 #'
 #' @section When to use this:
 #'
@@ -31,8 +30,8 @@
 #'       originally-missing cell from a Normal distribution centred on the
 #'       point estimate with SD = conformal_score / 1.96. Converting a
 #'       split-conformal residual quantile to a Normal scale is a heuristic;
-#'       the conformal coverage guarantee does not establish that these draws
-#'       are proper multiple imputations. Falls back to BM-SE-based Normal sampling
+#'       a nominal held-out conformal diagnostic does not establish that these
+#'       draws are proper multiple imputations. Falls back to BM-SE-based Normal sampling
 #'       when conformal scores are unavailable, and to Bernoulli / Categorical
 #'       draws for discrete traits.}
 #'     \item{`"mc_dropout"`}{Run `M` stochastic GNN forward passes in training
@@ -84,9 +83,10 @@
 #'       \strong{descriptive spread for reporting and ranking only} — it is
 #'       \strong{not} a Rubin's-rules pooled standard error (it contains no
 #'       within-imputation variance component and no small-sample df
-#'       correction) and must not be used as one. For valid pooled
-#'       inference, fit your downstream model on each completed dataset via
-#'       [with_imputations()] and pool with [pool_mi()].}
+#'       correction) and must not be used for downstream pooling.}
+#'     \item{`mi_workflow`}{`"pigauto_diagnostic_mi"`, recording that these
+#'       are prediction-diagnostic completions and cannot be passed to
+#'       [with_imputations()] or [pool_mi()].}
 #'     \item{`imputed_mask`}{Logical matrix; `TRUE` where a cell was
 #'       originally missing.}
 #'     \item{`fit`}{The underlying [`pigauto_fit`][fit_pigauto()]
@@ -110,7 +110,7 @@
 #' \eqn{x_{ij}^{(k)} \sim \mathrm{N}(\hat\mu_{ij},\; q_{j}/1.96)}
 #' where \eqn{q_j} is the trait-level split-conformal residual quantile.
 #' Dividing this quantile by 1.96 is a pragmatic Normal-scale construction,
-#' not a consequence of the conformal coverage guarantee. For discrete traits (binary,
+#' not an inference consequence of a nominal held-out conformal diagnostic. For discrete traits (binary,
 #' categorical) it uses Bernoulli / categorical draws from the estimated
 #' probability vector. For \code{zi_count} the gate is Bernoulli from
 #' P(nonzero) and the conditional magnitude is drawn on the log1p-z
@@ -288,9 +288,10 @@ multi_impute <- function(traits, tree, m = 100L,
       data            = res$data,
       tree            = tree,
       species_col     = species_col,
+      mi_workflow     = "pigauto_diagnostic_mi",
       evaluation      = res$evaluation
     ),
-    class = c("pigauto_mi", "list")
+    class = c("pigauto_diagnostic_mi", "pigauto_mi", "list")
   )
 }
 
@@ -350,11 +351,12 @@ multi_impute <- function(traits, tree, m = 100L,
   # Build input-row -> internal-row index map.  `imputed_mask` rows are in
   # user-input order; `pred$imputed` / `pred$se` / `pred$probabilities` are
   # in internal (tree-tip) order.  `input_row_order[k] = i` means internal
-  # row k holds original input row i, so the inverse map is
-  # `match(seq_along(input_row_order), input_row_order)`.  When NULL or
+  # row k holds original input row i, so the inverse map is over the full
+  # input mask: `match(seq_len(nrow(imputed_mask)), input_row_order)`.  This
+  # preserves NA entries for data-only rows after filtering. When NULL or
   # identity, internal order == input order and the conversion is a no-op.
   input_to_internal <- if (!is.null(input_row_order)) {
-    match(seq_along(input_row_order), input_row_order)
+    match(seq_len(nrow(imputed_mask)), input_row_order)
   } else NULL
 
   to_internal <- function(rows_input) {

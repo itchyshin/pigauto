@@ -30,6 +30,7 @@
 ^\.worktrees$
 ^\.devcontainer$
 ^\.git$
+^\.unlazy$
 ^VALIDATION_LEDGER\.md$
 ^cran-comments\.md$
 ^LOOP$

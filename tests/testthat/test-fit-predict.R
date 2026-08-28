@@ -288,6 +288,7 @@ test_that("fit_pigauto and predict work with multi-obs data", {
 
 test_that("impute() works end-to-end with rownames (single-obs)", {
   td <- make_test_data(n = 20, seed = 60)
+  td$df[1L, 1L] <- NA
   result <- impute(td$df, td$tree, epochs = 20L, verbose = FALSE, seed = 60)
   expect_s3_class(result, "pigauto_result")
   expect_s3_class(result$prediction, "pigauto_pred")
@@ -302,6 +303,7 @@ test_that("impute() works with species_col (multi-obs)", {
     sp = rep(tree$tip.label, each = 2),
     x = abs(stats::rnorm(30)) + 0.5
   )
+  df$x[1L] <- NA_real_
   result <- impute(df, tree, species_col = "sp",
                    epochs = 20L, verbose = FALSE, seed = 61)
   expect_s3_class(result, "pigauto_result")
@@ -514,6 +516,7 @@ test_that("predict.pigauto_fit catches wrong-length calibrated_gates override", 
   traits <- avonet300[1:40, c("Species_Key", "Mass")]
   rownames(traits) <- traits$Species_Key
   traits$Species_Key <- NULL
+  traits$Mass[1L] <- NA_real_
   subtree <- ape::keep.tip(tree300, rownames(traits))
 
   res <- pigauto::impute(traits, subtree, epochs = 20L, verbose = FALSE,

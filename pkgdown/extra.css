@@ -1,14 +1,129 @@
-/* pigauto custom pkgdown styles */
+/* pigauto pkgdown visual-gate / repair styles */
 
-/* Make the home-page logo larger (default is page-header img natural size) */
+/* Body links: brand green on white ≈ 7.4:1 (WCAG AAA for normal text). */
+main a,
+.contents a,
+.page-header a {
+  color: #2c5e4f;
+}
+
+main a:hover,
+.contents a:hover,
+.page-header a:hover {
+  color: #1f4439;
+}
+
+/* Page header: title + hex logo share a row without forcing overflow */
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem 1rem;
+  max-width: 100%;
+}
+
+.page-header h1 {
+  flex: 1 1 14rem;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+}
+
 .page-header .logo {
-  max-width: 260px;
-  width: 260px;
+  flex: 0 0 auto;
+  max-width: 220px;
+  width: auto;
   height: auto;
 }
+
 @media (max-width: 768px) {
-  .page-header .logo {
-    max-width: 160px;
-    width: 160px;
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
   }
+
+  .page-header .logo {
+    max-width: 72px;
+  }
+
+  .page-header h1,
+  main h1 {
+    width: 100%;
+    max-width: 100%;
+    font-size: 1.55rem;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  main,
+  main .section,
+  blockquote,
+  pre,
+  .sourceCode {
+    max-width: 100%;
+  }
+
+  main p,
+  main li {
+    overflow-wrap: break-word;
+  }
+}
+
+/* Narrow viewports: do not clip prose or code.
+   Bootstrap .row is flex; a long <pre> has min-content width and
+   otherwise stretches the column past the viewport. */
+.container,
+.row,
+[class*="col-"],
+main,
+.contents,
+.page-header {
+  min-width: 0;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+pre,
+.sourceCode {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Callouts. GFM [!WARNING] is stripped in after_body; class is added then. */
+blockquote {
+  border-left: 4px solid #2c5e4f;
+  background: #f4f7f6;
+  padding: 0.85rem 1.1rem;
+  margin: 1.25rem 0;
+  color: #1f2937;
+}
+
+blockquote.pa-callout-warning {
+  border-left-color: #b45309;
+  background: #fff8eb;
+}
+
+blockquote.pa-callout-note,
+blockquote.pa-callout-tip {
+  border-left-color: #2c5e4f;
+  background: #f4f7f6;
+}
+
+blockquote.pa-callout-important,
+blockquote.pa-callout-caution {
+  border-left-color: #b45309;
+  background: #fff8eb;
+}
+
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+table {
+  max-width: 100%;
 }

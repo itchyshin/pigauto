@@ -35,9 +35,10 @@ when \code{fit} is a \code{pigauto_result}.}
 The output path (invisibly).
 }
 \description{
-Produces a self-contained HTML file with interactive charts comparing the
-GNN against the phylogenetic baseline.  The report includes per-trait
-metrics, gate values, conformal coverage, and training history.
+Produces an HTML file with interactive charts (loading Chart.js from its
+public CDN) comparing the GNN against the phylogenetic baseline. The report
+includes per-trait metrics, gate values, held-out diagnostic conformal
+coverage, and training history.
 }
 \examples{
 \donttest{

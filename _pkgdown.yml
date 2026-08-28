@@ -10,6 +10,22 @@ template:
     base_font: {google: "Inter"}
     heading_font: {google: "Inter"}
     code_font: {google: "JetBrains Mono"}
+  includes:
+    after_body: |
+      <script>
+      (function () {
+        document.querySelectorAll("blockquote p").forEach(function (p) {
+          var html = p.innerHTML;
+          var m = html.match(/^\[!(WARNING|NOTE|IMPORTANT|TIP|CAUTION)\]\s*/i);
+          if (!m) return;
+          p.innerHTML = html.replace(/^\[![A-Z]+\]\s*/i, "");
+          var bq = p.closest("blockquote");
+          if (bq) {
+            bq.classList.add("pa-callout", "pa-callout-" + m[1].toLowerCase());
+          }
+        });
+      })();
+      </script>
 
 home:
   logo: man/figures/logo.png
@@ -19,12 +35,12 @@ home:
     components:
       status:
         title: Status
-        text: >
-          **Experimental — use at your own risk.** Not complete, not fully
-          human-verified, needs extensive further validation. CRAN
-          availability is not scientific maturity. Point estimates are the
-          supported claim; no cell's interval coverage is certified, and
-          covariance routes have focused-test evidence only.
+        text: |
+          > [!WARNING] **Experimental — use at your own risk.** Not complete, not fully
+          > human-verified, needs extensive further validation. CRAN
+          > availability is not scientific maturity. Point estimates are the
+          > supported claim; no cell's interval coverage is certified, and
+          > covariance routes have focused-test evidence only.
   description: >
     Fill missing values in species trait data using a phylogenetic tree,
     information from other traits, and optional environmental data. Supports
@@ -61,7 +77,7 @@ navbar:
         # pigauto_workflow_mixed, pigauto_walkthrough_covariates,
         # pigauto_walkthrough_multi_obs) were retired in 2026-05 to
         # dev/archive/ because their version badges, trait-type scope,
-        # and BACE-comparison wording had gone stale.  Do not restore
+        # and comparator wording had gone stale.  Do not restore
         # them as live navbar entries.  If a fresh walk-through is
         # needed, write a new source-backed vignette under vignettes/
         # rather than reanimating the archived HTML.  Audit detail:
@@ -90,8 +106,6 @@ navbar:
           href: dev/bench_avonet_missingness.html
         - text: "Missingness mechanisms (MCAR / MAR / MNAR)"
           href: dev/bench_missingness_mechanism.html
-        - text: "Historical tree-sensitivity benchmark"
-          href: dev/bench_tree_uncertainty.html
         - text: "Delhey 5,809-species birds"
           href: dev/bench_delhey.html
         - text: "Multi-observation imputation (CTmax-like)"
@@ -115,14 +129,19 @@ navbar:
         #   bench_bace_avonet_head_to_head, bench_pantheria_bace_head_to_head.
 
 reference:
-  - title: "One-call entry point"
+  - title: "Start here"
     desc: >
-      The main user-facing function. Runs the full pipeline
-      (`preprocess_traits` → `build_phylo_graph` → `fit_baseline` →
-      `fit_pigauto` → `predict` → `evaluate`) and returns a completed
-      data frame.
+      Read traits and a tree, inspect the fit-free input check, run the
+      one-call imputation entry point, and extract completed data.
     contents:
+      - read_traits
+      - read_tree
+      - check_pigauto
+      - print.pigauto_check
       - impute
+      - completed_data
+      - summary.pigauto_result
+      - print.summary_pigauto_result
 
   - title: "Experimental analysis-aware MI for fixed effects"
     desc: >
@@ -155,19 +174,16 @@ reference:
       - make_missing_splits
       - mask_missing
       - fit_baseline
-      - fit_baseline_bace
       - fit_pigauto
       - predict.pigauto_fit
       - evaluate
       - evaluate_imputation
 
-  - title: "Active imputation (sampling-design guidance)"
+  - title: "Active imputation (model-based ranking)"
     desc: >
-      Per-candidate-observation expected uncertainty reduction across
-      every currently-missing cell, using closed-form BM
-      (Sherman-Morrison) variance reduction for continuous / count /
-      ordinal / proportion / zi_count magnitude and label-propagation
-      entropy reduction for binary / categorical / zi_count gate.
+      Model-based BM/label-propagation proxy rankings under their stated
+      assumptions. They are not a demonstrated field-gain or an optimal
+      sampling guarantee.
     contents:
       - suggest_next_observation
 
@@ -202,8 +218,6 @@ reference:
 
   - title: "I/O helpers"
     contents:
-      - read_traits
-      - read_tree
       - save_pigauto
       - load_pigauto
 

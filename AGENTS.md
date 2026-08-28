@@ -20,7 +20,7 @@ Before recommending changes or framing findings, hold yourself to these standard
 2. **Pigauto's actual architectural advantages.** The package's unique selling points, in order:
    (a) unified mixed-type imputation in one model (continuous, binary, categorical, ordinal, count, proportion, zi_count, multi_proportion);
    (b) calibrated conformal prediction intervals tied to validation residuals;
-   (c) multi-tree posterior workflow with Rubin pooling (Nakagawa & de Villemereuil 2019);
+   (c) multi-tree posterior prediction-sensitivity workflow;
    (d) multi-obs covariate refinement via the obs_refine MLP;
    (e) active-imputation guidance via `suggest_next_observation()` (added 2026-04-30 evening): closed-form expected variance reduction (continuous BM via Sherman-Morrison) and entropy reduction (binary/categorical via LP) over all currently-missing cells per candidate observation. To my knowledge no other phylogenetic-imputation package exposes a sampling-design helper.
    Recommendations that compromise any of these need an explicit case for why the trade-off is worth it. Suggesting "replace pigauto's BM baseline with phylolm" is wrong on its face because phylolm is monotype continuous and would dismantle (a). Suggesting "use Rphylopars" is similarly wrong unless you can show the proposal preserves all five.
@@ -114,13 +114,14 @@ preprocess_traits()  →  build_phylo_graph()  →  fit_baseline()  →  fit_pig
 | `pigauto_result` | `impute()` | wraps the above plus `completed` and `imputed_mask` |
 | `pigauto_benchmark` | `simulate_benchmark()` | multi-scenario results data.frame |
 | `pigauto_cv` | `cross_validate()` | per-fold metrics |
-| `pigauto_mi` | `multi_impute()` | `datasets` (list of M), `m`, `pooled_point`, `se`, `imputed_mask`, `fit`, `tree` |
+| `pigauto_mi` | `multi_impute()` | prediction-diagnostic `datasets` (list of M), `m`, `pooled_point`, `se`, `imputed_mask`, `fit`, `tree` |
+| `pigauto_analysis_mi` | `multi_impute_analysis()` | analysis-aware datasets admitted to `with_imputations()` |
 | `pigauto_mi_fits` | `with_imputations()` | list of M downstream fits (or `pigauto_mi_error` for failed draws) |
 | `pigauto_pooled` | `pool_mi()` | tidy data.frame with Rubin's-rules pooled coefficients (`estimate`, `std.error`, `df`, `fmi`, `riv`, ...) |
 
 `evaluate_imputation()` returns a wide-format data.frame. Most types populate `rmse` / `pearson_r` / `mae` / `accuracy` / `brier` / `spearman_rho`. `multi_proportion` additionally populates three compositional-specific columns: `aitchison` (Euclidean distance in CLR space — the natural compositional metric), `rmse_clr` (RMSE on z-scored CLR latent, comparable to continuous RMSE), and `simplex_mae` (mean abs error on the decoded proportions). Other types carry `NA` in these columns.
 
-The pipeline functions are for fine-grained control and for writing benchmarks. For the multiple-imputation → downstream-inference workflow, see `R/multi_impute.R` → `R/with_imputations.R` → `R/pool_mi.R` (Rubin 1987; Barnard & Rubin 1999; Nakagawa & Freckleton 2008, 2011). User-facing tutorial: `vignettes/mixed-types.Rmd` (rendered as `articles/mixed-types.html` on the pkgdown site) is the recommended walk-through on the bundled AVONET 300 mixed-type dataset. An older static HTML walk-through covering Paths A/B/C explicitly lived at `pkgdown/assets/pigauto_workflow_mixed.html` but was retired in 2026-05 to `dev/archive/` because version badges and BACE-comparison wording had gone stale; see `useful/pkgdown_page_rethink.md`.
+The pipeline functions are for fine-grained control and for writing benchmarks. For the supported multiple-imputation → downstream-inference workflow, see `R/multi_impute_analysis.R` → `R/with_imputations.R` → `R/pool_mi.R` (Rubin 1987; Barnard & Rubin 1999; Nakagawa & Freckleton 2008, 2011). User-facing tutorial: `vignettes/mixed-types.Rmd` (rendered as `articles/mixed-types.html` on the pkgdown site) is the recommended walk-through on the bundled AVONET 300 mixed-type dataset. An older static HTML walk-through covering Paths A/B/C explicitly lived at `pkgdown/assets/pigauto_workflow_mixed.html` but was retired in 2026-05 to `dev/archive/` because version badges and BACE-comparison wording had gone stale; see `useful/pkgdown_page_rethink.md`.
 
 ### Trait-type handling
 
@@ -369,7 +370,7 @@ After the training loop:
 
 - `R/` — package source. Everything with an `@export` tag is user-facing.
 - `tests/testthat/` — testthat 3rd edition, 558 tests total. One test file per broad area: preprocess, graph, masking, fit-predict, mixed-types, multi-impute, multi-proportion, new-features.
-- `BACE/` — a **separate, self-contained R package** (Bayesian phylogenetic imputation via MCMCglmm) kept in-tree as a reference implementation and comparison baseline. It has its own `R/`, `tests/`, `vignettes/`, and `DESCRIPTION`. `Grep` and `Glob` results for generic terms (`impute`, `phylo`, `trait`) will include BACE files — always check the path prefix. Pigauto wraps BACE only in `R/fit_baseline_bace.R`. BACE is `Suggests:`-only, `^BACE$` is in `.Rbuildignore`, and BACE's own tests are not part of pigauto's test suite. Do not modify BACE as part of pigauto work.
+- `BACE/` — a **separate, self-contained R package** (Bayesian phylogenetic imputation via MCMCglmm) kept in-tree as a reference implementation and comparison baseline. It has its own `R/`, `tests/`, `vignettes/`, and `DESCRIPTION`. `Grep` and `Glob` results for generic terms (`impute`, `phylo`, `trait`) will include BACE files — always check the path prefix. BACE is comparator-only: pigauto has no installed bridge, `Suggests` dependency, export, or help page for it. `^BACE$` is in `.Rbuildignore`, and BACE's own tests are not part of pigauto's test suite. Do not modify BACE as part of pigauto work.
 - `script/` — benchmark drivers, logs, and HTML/RDS outputs. Ignored by `R CMD build`. Key entries: `validate_avonet_full.{R,log,md,rds}` (full-scale validation), `bench_scaling_v031.{R,log,rds}` (scaling benchmark), `bench_avonet_missingness.{R,rds,md}` + `make_avonet_missingness_html.R` (missingness sweep), and the per-type benchmark suite: `bench_{continuous,binary,ordinal,count,categorical,proportion,zi_count,multi_proportion,missingness_mechanism}.R` (drivers) + `make_bench_*_html.R` (HTML generators). Each driver outputs `.rds` + `.md`; each HTML generator outputs to both `script/` and `pkgdown/assets/dev/`. Anything named `bench_v2.*`, `bench_v3.*`, `bench_v4.*`, or `benchmark_*` is a stale snapshot from earlier phases — do not treat them as reference implementations.
 - `dev/` — scratch experiments. Ignored by `R CMD build`.
 - `avonet/`, `data/`, `data-raw/` — the bundled AVONET 300-species dataset and its build scripts.
@@ -391,10 +392,10 @@ After training, on the held-out validation set: `score_j = quantile(|truth - ble
 **Validity**: split conformal guarantee — exactly ≥95% marginal coverage regardless of model assumptions or trait distribution. No Gaussianity needed.
 **Used in**: `pred$conformal_lower`, `pred$conformal_upper`. This is the primary 95% CI.
 
-### 3. Multiple-imputation draws (`multi_impute()`)
+### 3. Multiple-imputation prediction-diagnostic draws (`multi_impute()`)
 Two methods selectable via `draws_method`:
 - **`"conformal"` (default)**: Single pass; missing cells sampled from N(μ, conformal_score/1.96) on the appropriate transformed scale. Falls back to BM-SE-based Normal sampling when conformal scores are missing, and to Bernoulli/Categorical for discrete types. Preferred because conformal scores are calibrated against actual held-out residuals regardless of gate value.
-- **`"mc_dropout"`**: M GNN forward passes in training mode (dropout active). Each imputation `m` draws `t_BM_draw ~ N(BM_mu, BM_se)` on the latent scale (held fixed for all refine steps of that imputation), then blends `pred = (1 - r_cal) * t_BM_draw + r_cal * GNN_dropout(t_BM_draw)`. When `r_cal = 0` (gate closed — BM dominates): `pred = t_BM_draw` → between-imputation variance = BM posterior variance, non-zero ✓. When `r_cal > 0`: both BM draws and GNN dropout contribute variance. `BM_se = 0` for observed cells so they are never perturbed. **Note on conservatism**: BM-draw MI is wider than conformal MI (AVONET300: Mass MC SD ≈ 290 vs conformal/1.96 ≈ 23) because BM SE reflects prior uncertainty while conformal reflects actual prediction error. For downstream Rubin's rules, conformal is better calibrated. Implementation: `predict_pigauto.R` lines 168–211.
+- **`"mc_dropout"`**: M GNN forward passes in training mode (dropout active). Each imputation `m` draws `t_BM_draw ~ N(BM_mu, BM_se)` on the latent scale (held fixed for all refine steps of that imputation), then blends `pred = (1 - r_cal) * t_BM_draw + r_cal * GNN_dropout(t_BM_draw)`. When `r_cal = 0` (gate closed — BM dominates): `pred = t_BM_draw` → between-imputation variance = BM posterior variance, non-zero ✓. When `r_cal > 0`: both BM draws and GNN dropout contribute variance. `BM_se = 0` for observed cells so they are never perturbed. **Note on conservatism**: BM-draw MI is wider than conformal MI (AVONET300: Mass MC SD ≈ 290 vs conformal/1.96 ≈ 23) because BM SE reflects prior uncertainty while conformal reflects actual prediction error. These diagnostic draws are not admitted to downstream pooling; use `multi_impute_analysis()` for the supported analysis-aware route. Implementation: `predict_pigauto.R` lines 168–211.
 
 ### 4. `pred$se` for discrete types — uncertainty scores, not SEs
 Binary: `min(p, 1-p)` — probability of being wrong (0 = certain, 0.5 = maximally uncertain).
@@ -406,24 +407,9 @@ Categorical: `1 - max(p_k)` — margin from certainty (0 = certain, (K-1)/K = ma
 - Do not back-calculate a "±1.96×SE" interval for discrete types.
 - Do not use BM SE alone as a 95% CI — use the conformal interval instead (it is wider and better calibrated when the GNN adds prediction error beyond BM).
 
-## Tree uncertainty — two-step workflow
+## Tree uncertainty — prediction sensitivity
 
-Tree uncertainty enters the analysis at TWO distinct places. Do not conflate them.
-
-**Step 1 — imputation (pigauto's job).** `multi_impute_trees(traits, trees = trees300, m_per_tree = 5L)` runs a full pigauto fit once per posterior tree, producing `T × m_per_tree` completed datasets. Each dataset is conditional on a specific tree; `mi$tree_index[i]` records which tree produced dataset `i`. No caching across trees is possible — the tree IS the model (graph, baseline, GNN weights all change per tree).
-
-**Step 2 — analysis (user's responsibility).** For each completed dataset, refit the downstream comparative model using the SAME tree that produced it, then pool all T × M fits via `pool_mi()`:
-
-```r
-fits <- Map(function(dat, t_idx) {
-  dat$species <- rownames(dat)
-  nlme::gls(y ~ x, correlation = ape::corBrownian(phy = trees[[t_idx]], form = ~species),
-            data = dat, method = "ML")
-}, mi$datasets, mi$tree_index)
-pool_mi(fits)
-```
-
-This is the Nakagawa & de Villemereuil (2019, *Syst. Biol.* 68:632–641) algorithm — trees as missing data, pooled via Rubin's rules. pigauto handles step 1; step 2 stays with the user because the downstream model is user-chosen.
+`multi_impute_trees(traits, trees = trees300, m_per_tree = 5L)` runs pigauto on each posterior tree, producing `T × m_per_tree` completed datasets. Each completion is conditional on a tree and `mi$tree_index[i]` records that tree. Use these outputs descriptively to assess prediction sensitivity across the tree sample. Neither tree-draw mechanism is validated for downstream fitting or pooling, and `with_imputations()` / `pool_mi()` refuse them.
 
 **Compute cost is linear in T.** Rough budget: n=300 × T=50 ≈ 25–50 min, n=5,000 × T=50 ≈ 4–8 hr, n=10,000 × T=50 ≈ 17–33 hr. At n ≥ 5,000 reduce T to 10–20 (the 2019 paper's "relative efficiency" index typically converges well before T=50) or parallelise across machines.
 
