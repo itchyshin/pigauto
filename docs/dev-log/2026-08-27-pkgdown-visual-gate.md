@@ -1,88 +1,54 @@
-# pigauto 0.11 pkgdown visual gate
+# pigauto 0.11 pkgdown-011-repair — close report
 
-Date: 2026-08-28. Worktree `/Users/z3437171/local-scratch/lanes/pigauto-011-ship` @ `6fddd79` plus scoped CSS/yml fixes. PR [#174](https://github.com/itchyshin/pigauto/pull/174) remains **draft**.
+Date: 2026-08-28  
+Worktree: `/Users/z3437171/local-scratch/lanes/pigauto-011-ship`  
+Branch: `codex/pigauto-0-11-trust-usability` @ `6fddd79` + uncommitted repair edits  
+PR: https://github.com/itchyshin/pigauto/pull/174 — **still draft** (`gh pr view`: `isDraft: true`, MERGEABLE)  
+Lane: pkgdown-011-repair (lease `cursor:pigauto-011-visual-audit` expanded to vignettes + README)
 
-## Verdict
+This run **replaces** the earlier visual-gate-only LOOP. Named G0 defects only. Florence/Tufte **gate**, not redesign. #175 parked. No `R/`, `tests/`, `NEWS.md`, `DESCRIPTION`, `man/` edits. No push / undraft / merge.
 
-**PASS (after fail-to-ship CSS/yml fixes).** Florence/Tufte gate, not redesign. #174 may be considered for undraft on visual grounds. This file is an internal verdict; it is not a public “Florence-clean” claim. CI green was never this gate.
+## Verdict: PASS (named defects)
 
-## Destination check
+Fail-to-ship items in the approved defaults are gone on the rebuilt site. CI green is still not this gate. #174 stays draft until Shinichi undrafts.
 
-A written Florence+Tufte verdict exists for the 0.11 user-facing pages; fail-to-ship defects were fixed in `pkgdown/extra.css` and `_pkgdown.yml`; #175 was not touched; #174 was not undrafted or merged.
+## What changed (source)
 
-## S1 — Local site build
-
-`pkgdown::build_site(devel = TRUE, preview = FALSE)` in this worktree. `devel = TRUE` so the render is the #174 source, not the installed library.
-
-- Exit 0. Warnings only: two `@examplesIf interactive()` are FALSE (not visual).
-- `docs/` had to be emptied first: pkgdown refused a non-pkgdown destination that already held tracked `docs/dev-log/` files. Tracked ledgers were restored after the build.
-- `pkgdown::check_pkgdown()` after yml edit: **No problems found.**
-
-## S0 — Page inventory
-
-See `docs/dev-log/2026-08-27-pkgdown-visual-inventory.md`. In-gate: home, five articles, reference landing, navbar. Methodology = layout + claim-banner only. Tombstones = withdrawn check only. Get started / pitfalls plot chunks remain `eval=FALSE` (G0 default).
-
-## S2 — Emmy (structure vs `_pkgdown.yml`)
-
-| Check | Result |
-| --- | --- |
-| Navbar left: Get started, Articles (5), Methodology (live benches), Reference, Changelog | PASS |
-| Tree-sensitivity bench **not** in navbar; article label “not inferentially validated” | PASS |
-| Reference groups match yml (Start here → experimental MI → stochastic diagnostics → …) | PASS |
-| Tombstones still say “Historical development page withdrawn” (sampled `tests_overview`, `bench_bien`, `bench_avonet9993_bace`) | PASS |
-| `dev/bench_tree_uncertainty.html` is a withdrawn historical page, not a live inferential bench | PASS |
-| Root `AGENTS.md` / `CLAUDE.md` / `VALIDATION_LEDGER.md` / `goodagents.md` built as orphan HTML | polish-later (not in navbar) |
-
-## S3 — Florence / Tufte see-pass
-
-Seen: 1400×900 screenshots of home, getting-started, common-pitfalls, mixed-types, tree-uncertainty, gnn-architecture, reference, `dev/bench_continuous.html`, `dev/tests_overview.html`; plus home after the CSS fix. Layout widths measured via headless DOM (`innerWidth` 500; no element `scrollWidth` > viewport).
-
-| Check | Bucket | Notes |
+| # | Default | Change |
 | --- | --- | --- |
-| Contrast, body text / navbar white on `#2c5e4f` | PASS | Brand green + Inter |
-| Hierarchy (H1 / H2 / code / TOC) | PASS | |
-| Code blocks styled, not raw | PASS | JetBrains Mono |
-| Mixed-types type table: light rules, no grid junk | PASS | |
-| Article hex logos overlap or clip title (desktop) | PASS | |
-| Get started “Visualise” is unevaluated code | polish-later | G0: not an automatic fail |
-| Methodology live benches: own CSS, claim banner present, “not a general dominance claim” | PASS (layout/claim only) | Not a figure rewrite |
-| Tombstone pages look withdrawn, not live benches | PASS | |
-| Literal `[!WARNING]` on home (GFM alert not converted by pkgdown) | **fail-to-ship → fixed** | now a peach callout; token stripped |
-| Forced 260px home logo (`extra.css` pre-fix) | **fail-to-ship → fixed** | `max-width` only; stack on small screens |
-| Long `<pre>` stretching Bootstrap flex columns | **fail-to-ship → fixed** | `min-width: 0` on row/cols |
-| Empty `alt=""` on pkgdown logos | polish-later | pkgdown default |
-| Search placeholder “Search for” | polish-later | |
-| Live `pkgdown.yaml` badge can read failing | polish-later | workflow skipped on PRs by design; not a page-layout defect |
-| 390×844 headless PNGs looked clipped | **not a page bug** | Chrome laid out at 500px CSS and cropped the bitmap to 390 |
+| 1 | Drop Step 7 GNN-beats-BM table | `vignettes/getting-started.Rmd`: Step 7 now tells readers to read `r_cal`; high-signal morphometrics often close the gate. Fake RMSE comparison table removed. |
+| 2 | Tombstone validation suite | `pkgdown/assets/validation_suite.html` replaced in place: withdrawn banner + `noindex`. Copied to `docs/validation_suite.html`. |
+| 3 | Body link contrast | `pkgdown/extra.css`: `main` / `.contents` / `.page-header` links `#2c5e4f` (~7.4:1 on white). |
+| 4 | Florence warning banners | README keeps GFM `[!WARNING]` (GitHub). Home sidebar `_pkgdown.yml` uses the same marker. `after_body` JS adds `pa-callout-warning` (cream `#fff8eb`, amber `#b45309`). |
+| 5 | gnn-architecture claims / §5 | BACE 42%→72% attribution removed. Threshold-joint hands the matrix to the **in-house joint solver**, not `phylopars()`. §5 is three prose blocks (baseline SE, discrete score, conformal). |
+| 6 | AGENTS.md / CLAUDE.md | Not touched. Leftover 42%/72% in `AGENTS.md` remains out of scope. |
 
-## S4 — Rose claim fence
+## What was verified (Read the HTML, not only the Rmd)
 
-Articles and home were grepped for `#175`, sentinel, attribution, outperform / beats / state-of-the-art, certified coverage. **No #175 evidence bleed.**
+- `pkgdown::build_site(preview = FALSE, devel = TRUE)` finished. Log: `/tmp/pigauto-pkgdown-repair/build.log`.
+- `pkgdown::check_pkgdown()`: **No problems found.**
+- `docs/articles/getting-started.html` Step 7: closed-gate prose; no `bm_rmse` / `gnn_rmse` table.
+- `docs/articles/gnn-architecture.html`: “in-house joint solver”; §5 three blocks; no 42%/72%.
+- `docs/validation_suite.html`: withdrawn + `noindex`; no pending-bench table.
+- `docs/extra.css`: link colour `#2c5e4f`; `blockquote.pa-callout-warning` cream/amber.
+- `docs/index.html`: `[!WARNING]` sits in `<blockquote>` plus the after_body script that paints `pa-callout-warning` on load.
+- PR #174 still draft.
 
-- Home + sidebar: experimental; point estimates supported; intervals not certified.
-- Tree article: descriptive sensitivity only; do not `pool_mi()`; not analysis-aware MI.
-- GNN article 33.7% RMSE lift is **caveated** as pre-in-house-solver and not a current shipped-path number.
-- Methodology continuous bench banner: scenario-specific deltas, not general dominance.
-- Reference “Experimental analysis-aware MI” vs “Stochastic prediction diagnostics” split is intact.
+`R CMD check` was **not** run. This pass did not touch package code; `check_pkgdown()` was the named check.
 
-No new public capability claim is made by this pass.
+## Rose fence
 
-## S5 — Fixes applied (visual-audit lease only)
+No #175 sentinel / Phase A/B numbers added. No new “GNN beats BM” public claim. `r_cal = 0` is described as a valid, expected outcome on high-signal morphometrics.
 
-1. `pkgdown/extra.css` — header flex, logo max-width, mobile stack, column `min-width: 0`, blockquote callouts, pre overflow.
-2. `_pkgdown.yml` `template.includes.after_body` — strip leftover GFM `[!WARNING]` / `[!NOTE]` / … tokens and classify the blockquote.
+## Polish-later (not fail-to-ship)
 
-Vignette / README source left to Codex #174 (do not take that lease). Suggested ticket: replace README `[!WARNING]` with a normal paragraph so the JS strip is unnecessary.
+- Warning banners need JS to strip the `[!WARNING]` token; static HTML still shows the marker until the script runs.
+- Get started Visualise chunks remain `eval=FALSE` (G0: do not knit).
+- Home still builds `AGENTS.md` / `CLAUDE.md` / `VALIDATION_LEDGER.md` / `goodagents.md` as extra pages (inventory leftover; out of this G0).
+- `script/validation_suite.html` still has the old suite (not in lease).
+- Full Methodology figure rewrite: out of scope.
+- Overflow / mobile CSS already in `extra.css` from the parallel visual-audit pass; left in place.
 
-## S6 — Re-verify
+## Melissa (plan vs actual)
 
-- `pkgdown::build_home()` after yml change; `extra.css` copied into `docs/`.
-- Home re-seen: experimental callout is a real warning box; no `[!WARNING]` token.
-- `pkgdown::check_pkgdown()`: no problems.
-- `gh pr view 174`: `draft=true state=OPEN`.
-
-## S7 — Close
-
-Plan-vs-actual: `docs/dev-log/plan-actual/2026-08-27-pkgdown-visual-gate.md`.
-
-**OPEN GATE (human):** undraft / merge of #174. This lane stops.
+See `docs/dev-log/plan-actual/2026-08-27-pkgdown-visual-gate.md`.

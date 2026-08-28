@@ -1,31 +1,24 @@
-# Checkpoint — pigauto 0.11 pkgdown visual gate
-
-GOAL: see GOAL.md.   STATE: DONE — written PASS after fail-to-ship CSS/yml fixes. #174 still draft.
+GOAL: see GOAL.md.   STATE: DONE — named repairs on rebuilt site; #174 still draft.
 
 ARCS DONE (verified):
-- S0 inventory — `docs/dev-log/2026-08-27-pkgdown-visual-inventory.md`
-- S1 build — log `/tmp/pigauto-pkgdown-visual/build.log` EXIT:0; `docs/index.html` exists
-- S2 Emmy — navbar/reference/tombstones in verdict
-- S3 Florence — screenshots + DOM widths; fail-to-ship items fixed and re-seen
-- S4 Rose — no #175 bleed; caveats intact
-- S5 CSS/yml — `pkgdown/extra.css`, `_pkgdown.yml` after_body
-- S6 — `pkgdown::check_pkgdown()` clean; PR still draft
-- S7 — `docs/dev-log/2026-08-27-pkgdown-visual-gate.md` + plan-actual
+- S0 inventory (`docs/dev-log/2026-08-27-pkgdown-visual-inventory.md`)
+- S1 extra.css link contrast + callout CSS
+- S2 gnn-architecture claims / §5 blocks
+- S3 getting-started gate interpretation (no GNN-beats table)
+- S4 validation_suite tombstone
+- S5 build_site + check_pkgdown (log `/tmp/pigauto-pkgdown-repair/build.log`; check: No problems found)
+- S6 Read rendered HTML for home, getting-started, gnn-architecture, validation_suite, extra.css
+- S7 close report + plan-actual
 
-ARC IN PROGRESS: none.
+ARC IN PROGRESS: none
 
-NEXT: human gate only — undraft/merge #174. Do not do that in this lane.
+NEXT: Shinichi reviews; undraft #174 is an OPEN GATE (do not cross).
 
 OPEN GATES (need human): undraft/merge #174.
 
 TRUTH LIVES IN:
-- worktree `/Users/z3437171/local-scratch/lanes/pigauto-011-ship`
-- branch `codex/pigauto-0-11-trust-usability`
-- verdict `docs/dev-log/2026-08-27-pkgdown-visual-gate.md`
+- worktree `/Users/z3437171/local-scratch/lanes/pigauto-011-ship` (uncommitted repair files)
+- `docs/dev-log/2026-08-27-pkgdown-visual-gate.md`
 - PR https://github.com/itchyshin/pigauto/pull/174 (draft)
 
-RESUME:
-```
-Lane closed. Visual gate PASS after CSS/yml fixes. Do not undraft or merge #174.
-Read LOOP/GOAL.md and docs/dev-log/2026-08-27-pkgdown-visual-gate.md.
-```
+RESUME: not needed unless Shinichi asks for polish-later or a commit.

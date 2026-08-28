@@ -310,45 +310,27 @@ t2  41.2031           18.5034       21.3441     154.832
 ...
 ```
 
-## Step 7: Evaluate and compare baselines
+## Step 7: Evaluate — and read the gate
 
-We compare the BM baseline to the GNN on the held-out test cells
-(both evaluated in z-score scale for comparability).
+`evaluate_imputation()` scores held-out cells on the scale that matches
+the trait type. On **high-signal morphometrics** (AVONET-like mass,
+beak, tarsus, wing) the calibrated gate often **closes**
+(`r_cal = 0`). Then the shipped prediction *is* the phylogenetic
+baseline; the GNN is a no-op, not a guaranteed improvement.
 
 ```{r evaluate, eval=FALSE}
-# BM baseline RMSE on test cells
-eval_bm <- evaluate_imputation(baseline$mu, pd$X_scaled, splits)
-eval_bm[eval_bm$split == "test", c("trait", "n", "rmse", "pearson_r")]
+# Held-out scores (z-score RMSE for continuous traits)
+evaluate_imputation(pred$imputed_latent, pd$X_scaled, splits)
+
+# Per-trait calibrated gate. 0 means baseline-only.
+fit$r_cal
 ```
 
-```
-               trait  n  rmse pearson_r
-Mass            Mass 56 0.872     0.611
-Beak.Length_Culmen Beak.Length_Culmen 56 0.901     0.582
-Tarsus.Length Tarsus.Length 56 0.863     0.628
-Wing.Length Wing.Length 56 0.884     0.595
-```
-
-```{r compare, eval=FALSE}
-# GNN test RMSE stored in fit object
-data.frame(
-  trait    = fit$trait_names,
-  bm_rmse  = eval_bm$rmse[eval_bm$split == "test"],
-  gnn_rmse = fit$test_rmse
-)
-```
-
-```
-               trait bm_rmse gnn_rmse
-1               Mass   0.872    0.831
-2 Beak.Length_Culmen   0.901    0.856
-3      Tarsus.Length   0.863    0.822
-4        Wing.Length   0.884    0.841
-```
-
-In this example output, the GNN reduces test RMSE relative to the BM baseline.
-How large the improvement is depends on the trait, clade, missingness pattern,
-and validation split.
+Do not treat a GNN-versus-BM table as the default story. If the gate is
+closed, a lower GNN training loss on masked cells is not a claim that
+the ensemble beat BM on the test cells you ship. How much (if anything)
+the GNN adds depends on the trait, clade, missingness pattern, and
+whether calibration left the gate open.
 
 ## Step 8: Visualise
 

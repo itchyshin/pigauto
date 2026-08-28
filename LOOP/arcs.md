@@ -1,16 +1,16 @@
-# Arcs — pigauto 0.11 pkgdown visual gate
+# Arcs — pigauto 0.11 pkgdown-011-repair
 
-G0 approved. Ada defaults locked. #174 stays draft.
+G0 approved. #174 stays draft.
 
 | ID | Name | Gate? | Status |
 | --- | --- | --- | --- |
-| S0 | RECON: page + figure-slot inventory | no | DONE |
-| S1 | Local `pkgdown::build_site()` in this worktree | no | DONE |
-| S2 | Emmy: structure vs `_pkgdown.yml` | no | DONE |
-| S3 | Florence/Tufte see-pass | no | DONE |
-| S4 | Rose claim fence vs #175 | no | DONE |
-| S5 | Fail-to-ship CSS / `_pkgdown.yml` fixes | no | DONE |
-| S6 | MECHANICAL-VERIFY | no | DONE |
-| S7 | Rose close + Melissa plan-vs-actual | no | DONE |
+| S0 | Leftover grep and inventory | no | DONE |
+| S1 | Florence CSS / alerts | no | DONE |
+| S2 | gnn-architecture claims / §5 | no | DONE |
+| S3 | getting-started: drop GNN-beats-BM table | no | DONE |
+| S4 | Tombstone validation_suite.html | no | DONE |
+| S5 | Local build_site + check_pkgdown | no | DONE |
+| S6 | Reverify rendered HTML | no | DONE |
+| S7 | Rose + Melissa close report | no | DONE |
 
 **OPEN GATES (human):** undraft/merge #174 — do not cross.

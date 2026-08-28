@@ -140,18 +140,8 @@ cat("Kernel bandwidth sigma:", round(graph$sigma, 3), "\n")
 
 
 ## ----evaluate, eval=FALSE-----------------------------------------------------
-# # BM baseline RMSE on test cells
-# eval_bm <- evaluate_imputation(baseline$mu, pd$X_scaled, splits)
-# eval_bm[eval_bm$split == "test", c("trait", "n", "rmse", "pearson_r")]
-
-
-## ----compare, eval=FALSE------------------------------------------------------
-# # GNN test RMSE stored in fit object
-# data.frame(
-#   trait    = fit$trait_names,
-#   bm_rmse  = eval_bm$rmse[eval_bm$split == "test"],
-#   gnn_rmse = fit$test_rmse
-# )
+# evaluate_imputation(pred$imputed_latent, pd$X_scaled, splits)
+# fit$r_cal
 
 
 ## ----plot-history, eval=FALSE-------------------------------------------------
