@@ -1,31 +1,31 @@
-# Checkpoint — pigauto P0 review blockers
+# Checkpoint — pigauto 0.11 pkgdown visual gate
 
-**Date:** 2026-08-08
-**Repo:** `/Users/z3437171/Dropbox/Github Local/pigauto`
+GOAL: see GOAL.md.   STATE: DONE — written PASS after fail-to-ship CSS/yml fixes. #174 still draft.
 
-## STATE
-S7 Melissa **DONE**. Lane closed.
+ARCS DONE (verified):
+- S0 inventory — `docs/dev-log/2026-08-27-pkgdown-visual-inventory.md`
+- S1 build — log `/tmp/pigauto-pkgdown-visual/build.log` EXIT:0; `docs/index.html` exists
+- S2 Emmy — navbar/reference/tombstones in verdict
+- S3 Florence — screenshots + DOM widths; fail-to-ship items fixed and re-seen
+- S4 Rose — no #175 bleed; caveats intact
+- S5 CSS/yml — `pkgdown/extra.css`, `_pkgdown.yml` after_body
+- S6 — `pkgdown::check_pkgdown()` clean; PR still draft
+- S7 — `docs/dev-log/2026-08-27-pkgdown-visual-gate.md` + plan-actual
 
-## ARCS DONE (verified)
-- S0–S5, S4b as before
-- S6 — [Rose re-gate](18e1c9cc-dd0d-4195-8c3a-1862a6e98f81): `docs/dev-log/handover/2026-08-08-p0-rose.md` Re-gate section **READY** for “4 P0 blockers + focused P0 tests green”. Threshold file FAIL 0 / SKIP 0 / PASS 96 (Rose’s own run). Kill list still killed (no joint-Σ claim; no all-tests-green — safety-floor still fails; no 95% guarantee).
+ARC IN PROGRESS: none.
 
-## ARC IN PROGRESS
-None. S7 landed.
+NEXT: human gate only — undraft/merge #174. Do not do that in this lane.
 
-## NEXT
-Lane DoD met (narrow Rose claim). No merge/commit unless Shinichi asks.
+OPEN GATES (need human): undraft/merge #174.
 
-## OPEN GATES
-None for code. Public claims still fenced by Rose kill list. No push/PR.
+TRUTH LIVES IN:
+- worktree `/Users/z3437171/local-scratch/lanes/pigauto-011-ship`
+- branch `codex/pigauto-0-11-trust-usability`
+- verdict `docs/dev-log/2026-08-27-pkgdown-visual-gate.md`
+- PR https://github.com/itchyshin/pigauto/pull/174 (draft)
 
-## TRUTH
-`fix/p0-review-blockers` dirty @ 3625201 + uncommitted P0+B1–B3.
-Rose: `docs/dev-log/handover/2026-08-08-p0-rose.md`.
-Melissa: `docs/dev-log/plan-actual/2026-08-08-p0-fix.md` (5 adaptive, 0 drift).
-
-## RESUME
+RESUME:
 ```
-/goal pigauto P0 RESUME. LOOP/GOAL.md → checkpoint.md.
-Lane closed. No further slices. No commit unless Shinichi asks.
+Lane closed. Visual gate PASS after CSS/yml fixes. Do not undraft or merge #174.
+Read LOOP/GOAL.md and docs/dev-log/2026-08-27-pkgdown-visual-gate.md.
 ```

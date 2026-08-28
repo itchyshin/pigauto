@@ -1,13 +1,16 @@
-# Arcs — pigauto P0 review blockers
+# Arcs — pigauto 0.11 pkgdown visual gate
 
-| Slice | Name | Status |
-| --- | --- | --- |
-| S0 | LOOP + branch `fix/p0-review-blockers` | DONE |
-| S1 | D-Blk1 cov align | DONE |
-| S2 | B-Blk1 SE formula | DONE |
-| S3 | C-Blk1 zi_count conformal MI | DONE |
-| S4 | B-Blk2 joint_mvn_available test | DONE (half) |
-| S4b | P0-4 second half: unskip threshold tests | DONE |
-| S5 | verify | DONE |
-| S6 | Rose | READY (narrow; re-gate after S4b) |
-| S7 | Melissa | DONE |
+G0 approved. Ada defaults locked. #174 stays draft.
+
+| ID | Name | Gate? | Status |
+| --- | --- | --- | --- |
+| S0 | RECON: page + figure-slot inventory | no | DONE |
+| S1 | Local `pkgdown::build_site()` in this worktree | no | DONE |
+| S2 | Emmy: structure vs `_pkgdown.yml` | no | DONE |
+| S3 | Florence/Tufte see-pass | no | DONE |
+| S4 | Rose claim fence vs #175 | no | DONE |
+| S5 | Fail-to-ship CSS / `_pkgdown.yml` fixes | no | DONE |
+| S6 | MECHANICAL-VERIFY | no | DONE |
+| S7 | Rose close + Melissa plan-vs-actual | no | DONE |
+
+**OPEN GATES (human):** undraft/merge #174 — do not cross.

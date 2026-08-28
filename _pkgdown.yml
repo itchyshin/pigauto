@@ -10,6 +10,22 @@ template:
     base_font: {google: "Inter"}
     heading_font: {google: "Inter"}
     code_font: {google: "JetBrains Mono"}
+  includes:
+    after_body: |
+      <script>
+      (function () {
+        document.querySelectorAll("blockquote p").forEach(function (p) {
+          var html = p.innerHTML;
+          var m = html.match(/^\[!(WARNING|NOTE|IMPORTANT|TIP|CAUTION)\]\s*/i);
+          if (!m) return;
+          p.innerHTML = html.replace(/^\[![A-Z]+\]\s*/i, "");
+          var bq = p.closest("blockquote");
+          if (bq) {
+            bq.classList.add("pa-callout", "pa-callout-" + m[1].toLowerCase());
+          }
+        });
+      })();
+      </script>
 
 home:
   logo: man/figures/logo.png
@@ -19,12 +35,12 @@ home:
     components:
       status:
         title: Status
-        text: >
-          **Experimental — use at your own risk.** Not complete, not fully
-          human-verified, needs extensive further validation. CRAN
-          availability is not scientific maturity. Point estimates are the
-          supported claim; no cell's interval coverage is certified, and
-          covariance routes have focused-test evidence only.
+        text: |
+          > [!WARNING] **Experimental — use at your own risk.** Not complete, not fully
+          > human-verified, needs extensive further validation. CRAN
+          > availability is not scientific maturity. Point estimates are the
+          > supported claim; no cell's interval coverage is certified, and
+          > covariance routes have focused-test evidence only.
   description: >
     Fill missing values in species trait data using a phylogenetic tree,
     information from other traits, and optional environmental data. Supports
