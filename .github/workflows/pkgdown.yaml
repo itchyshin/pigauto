@@ -64,7 +64,7 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # igraph is pulled in transitively and needs libglpk at load time;
       # without libglpk40 on the runner pkgdown fails with
@@ -107,11 +107,11 @@ jobs:
 
       - name: Upload artifact
         if: github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: docs
 
       - name: Deploy to GitHub Pages
         id: deployment
         if: github.event_name != 'pull_request'
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
