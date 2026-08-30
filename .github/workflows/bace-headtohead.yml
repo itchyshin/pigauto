@@ -33,7 +33,7 @@ jobs:
       TORCH_INSTALL: 1
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: r-lib/actions/setup-r@v2
         with:
@@ -56,7 +56,7 @@ jobs:
           needs: ''
 
       - name: Cache libtorch backend
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cache/torch
@@ -78,7 +78,7 @@ jobs:
 
       - name: Upload per-dataset artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: bench-${{ matrix.dataset }}
           path: script/gha/results/${{ matrix.dataset }}/
@@ -94,7 +94,7 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: r-lib/actions/setup-r@v2
         with:
@@ -110,7 +110,7 @@ jobs:
       - uses: r-lib/actions/setup-pandoc@v2
 
       - name: Download all per-dataset artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: script/gha/results/_artifacts
           pattern: bench-*
@@ -131,7 +131,7 @@ jobs:
 
       - name: Upload cross-dataset summary
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cross-dataset-summary
           path: script/gha/results/cross_dataset/
@@ -150,7 +150,7 @@ jobs:
         # information.
         if: always()
         continue-on-error: true
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: ci-run/${{ github.run_id }}
           commit-message: "ci: archive CI run ${{ github.run_id }}"
