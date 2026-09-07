@@ -12,6 +12,22 @@ on:
       - 'NAMESPACE'
       - '.github/workflows/R-CMD-check.yaml'
   pull_request:
+    # Mirror the push filter above. Without this, a one-line docs PR ran the FULL
+    # matrix -- two ubuntu legs plus macOS, which bills at 10x the Linux rate
+    # (observed on #178, a single-character change to AGENTS.md). `push` has been
+    # filtered since this workflow was written; `pull_request` was simply missed.
+    # main is not branch-protected and these checks are not required, so a skipped
+    # run cannot block a merge -- verified before adding this.
+    paths:
+      - 'R/**'
+      - 'tests/**'
+      - 'vignettes/**'
+      - 'man/**'
+      - 'README.md'
+      - 'NEWS.md'
+      - 'DESCRIPTION'
+      - 'NAMESPACE'
+      - '.github/workflows/R-CMD-check.yaml'
   workflow_dispatch:
 
 name: R-CMD-check
