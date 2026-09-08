@@ -2,7 +2,7 @@
 
 ## LOAD-FIRST manifest
 <!-- Brain dossier manifest (refresh: python3 ~/shinichi-brain/tools/route.py pigauto). Top = salience; drift-checked by route.py. -->
-- Compute is a default condition — for multi-seed imputation benchmarks ask *"Totoro or DRAC?"* (fast CPU ≤100 cores → Totoro; replicated / GPU → DRAC arrays); scale out, never laptop-scale. Playbook: `~/shinichi-brain/projects/COMPUTE-PLAYBOOK.md`.
+- Compute is a default condition — for multi-seed imputation benchmarks ask *"Totoro or DRAC?"* (fast CPU ≤150 cores → Totoro; replicated / GPU → DRAC arrays); scale out, never laptop-scale. Playbook: `~/shinichi-brain/projects/COMPUTE-PLAYBOOK.md`.
 - Trust recovery-to-truth (recovery + prediction) over a single diagnostic; run data-size and seed ladders.
 - Diff main before building and keep prediction-path correctness as the first audit lane.
 - Load `r-package-engineer`, `validation-harness`, and the repo instructions below.
