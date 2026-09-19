@@ -67,7 +67,8 @@
 #'   no GNN is used (baseline-only fit; see [fit_pigauto()]). With
 #'   `draws_method = "mc_dropout"` this degrades gracefully to BM-posterior
 #'   draws (there is no dropout to run) and a one-time message is printed;
-#'   `draws_method = "conformal"` is unaffected.
+#'   `draws_method = "conformal"` is unaffected. User `covariates` are
+#'   ignored under `gnn = FALSE` (with a warning), as in [impute()].
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
 #'   [impute()]. See [fit_pigauto()] for the full list; the "Safety
 #'   floor" section below describes the relevant new v0.9.1.9002

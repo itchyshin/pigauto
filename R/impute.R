@@ -144,6 +144,10 @@
 #'   \code{baseline_full} fit on ALL observed cells (no val/test hold-out);
 #'   \code{result$evaluation} and every other scorer keep using the
 #'   held-out \code{baseline}, so evaluation never leaks test cells.
+#'   User \code{covariates} enter pigauto only through the GNN, so under
+#'   \code{gnn = FALSE} they are ignored (with a warning); without a
+#'   validation split (\code{missing_frac = 0}) the fit is pure baseline
+#'   and carries no conformal scores.
 #' @param clamp_outliers logical.  Phase G (v0.9.1.9011+).  When
 #'   \code{TRUE}, post-back-transform predictions for log-transformed
 #'   continuous, count, and zi_count magnitude traits are capped at

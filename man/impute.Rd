@@ -249,7 +249,11 @@ phylo_signal_gate = FALSE}. Production predictions
 (\code{result$completed}, \code{result$prediction}) use a tax-free
 \code{baseline_full} fit on ALL observed cells (no val/test hold-out);
 \code{result$evaluation} and every other scorer keep using the
-held-out \code{baseline}, so evaluation never leaks test cells.}
+held-out \code{baseline}, so evaluation never leaks test cells.
+User \code{covariates} enter pigauto only through the GNN, so under
+\code{gnn = FALSE} they are ignored (with a warning); without a
+validation split (\code{missing_frac = 0}) the fit is pure baseline
+and carries no conformal scores.}
 
 \item{...}{additional arguments passed to \code{\link{fit_pigauto}}.}
 }

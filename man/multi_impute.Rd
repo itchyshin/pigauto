@@ -87,7 +87,8 @@ draws reproducible; the default \code{NULL} uses the current RNG stream.}
 no GNN is used (baseline-only fit; see \code{\link[=fit_pigauto]{fit_pigauto()}}). With
 \code{draws_method = "mc_dropout"} this degrades gracefully to BM-posterior
 draws (there is no dropout to run) and a one-time message is printed;
-\code{draws_method = "conformal"} is unaffected.}
+\code{draws_method = "conformal"} is unaffected. User \code{covariates} are
+ignored under \code{gnn = FALSE} (with a warning), as in \code{\link[=impute]{impute()}}.}
 
 \item{...}{additional arguments forwarded to \code{\link[=fit_pigauto]{fit_pigauto()}} via
 \code{\link[=impute]{impute()}}. See \code{\link[=fit_pigauto]{fit_pigauto()}} for the full list; the "Safety
