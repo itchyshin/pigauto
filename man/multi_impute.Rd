@@ -18,6 +18,7 @@ multi_impute(
   epochs = 2000L,
   verbose = TRUE,
   seed = NULL,
+  gnn = TRUE,
   ...
 )
 }
@@ -80,6 +81,14 @@ Default \code{NULL} (no covariates).}
 
 \item{seed}{optional integer. When supplied, makes fitting and imputation
 draws reproducible; the default \code{NULL} uses the current RNG stream.}
+
+\item{gnn}{logical. Passed through to \code{\link[=impute]{impute()}} / \code{\link[=fit_pigauto]{fit_pigauto()}}. When
+\code{TRUE} (default), the usual GNN correction is trained. When \code{FALSE},
+no GNN is used (baseline-only fit; see \code{\link[=fit_pigauto]{fit_pigauto()}}). With
+\code{draws_method = "mc_dropout"} this degrades gracefully to BM-posterior
+draws (there is no dropout to run) and a one-time message is printed;
+\code{draws_method = "conformal"} is unaffected. User \code{covariates} are
+ignored under \code{gnn = FALSE} (with a warning), as in \code{\link[=impute]{impute()}}.}
 
 \item{...}{additional arguments forwarded to \code{\link[=fit_pigauto]{fit_pigauto()}} via
 \code{\link[=impute]{impute()}}. See \code{\link[=fit_pigauto]{fit_pigauto()}} for the full list; the "Safety

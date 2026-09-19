@@ -5,6 +5,69 @@ No CRAN submission or public release is implied. The installed BACE bridge has
 been removed for 0.11: BACE remains an in-tree comparator only, with no
 `Suggests` dependency, export, or installed help page.
 
+## Feature: `gnn = FALSE` -- the phylogenetic baseline through the whole pipeline, no GNN
+
+`impute()`, `fit_pigauto()`, `multi_impute()` and `multi_impute_trees()` gain
+`gnn = TRUE`. With `gnn = FALSE` the GNN is never constructed or trained and
+the fit, prediction and every downstream call make **no `torch::` call at all**
+(no device probe, no tensors, no GPU): the latent multivariate phylogenetic
+baseline (joint MVN / threshold-joint / OVR, or per-column BM and label
+propagation) is what runs through preprocessing, calibration, conformal
+scores, prediction, completed data, multiple imputation, `cross_validate()`,
+`simulate_benchmark()` and `evaluate()`. On the 40-tip test fixture
+`impute(gnn = FALSE)` completes in about one second.
+
+Semantics, chosen so that the GNN-on and GNN-off arms differ only in the GNN
+term:
+
+- The blend calibration runs exactly as for the GNN arm, with the GNN corner
+  degenerating to the baseline; `r_cal_gnn` is then folded into `r_cal_bm`.
+  `safety_floor` and `phylo_signal_gate` therefore behave identically in both
+  arms. The pure traditional-statistics arm is
+  `gnn = FALSE, safety_floor = FALSE, phylo_signal_gate = FALSE`.
+- Two baselines are stored. `fit$baseline` is the val/test-masked fit and is
+  what `evaluate()`, `cross_validate()` and every other scorer read, so
+  held-out metrics stay leakage-free. `fit$baseline_full` is a refit with no
+  held-out cells (`splits = NULL`); `predict()` uses it only in production
+  mode (no `baseline_override`, no `.mask_observed_idx`), so completed data
+  no longer pay the held-out-cell cost that gate calibration imposes. Under
+  `gnn = TRUE` predictions are unchanged; the fit object gains three
+  inert slots (`baseline_full = NULL`, `model_config$gnn = TRUE`,
+  `baseline$path`).
+- Conformal scores come from the held-out fit's validation residuals; the
+  production interval is centred on `baseline_full`, so it is conservative
+  when the BM model is right (inference, not a guarantee) and should be
+  measured on user-masked cells rather than through `evaluate()`.
+- `draws_method = "mc_dropout"` under `gnn = FALSE` draws from the BM
+  posterior (no dropout exists); one message says so, no error.
+- `multi_impute_trees(gnn = FALSE)` fits each per-tree baseline without
+  held-out cells, and the per-tree baseline replay now also carries
+  `joint_solver`, `predict_method` and `joint_refine_iter` (pre-existing
+  omission).
+- `fit_baseline()` now returns `path`, a named character vector recording
+  which dispatch produced each trait's baseline (`joint_mvn`,
+  `threshold_joint`, `ovr_categorical`, `per_column_bm`,
+  `multi_proportion_bm`, `label_propagation`, `zi_gate_lp`,
+  `zi_mag_constant`).
+- `summary()`/`print()` show `GNN: off (baseline only)` (and no architecture
+  line); `plot(fit, "history")` explains that no history exists for a
+  `gnn = FALSE` fit; `pigauto_report()` labels the non-BM column
+  `Blend (GNN off)` and shows no BM-vs-GNN verdict.
+- Without a validation split (`missing_frac = 0`, or `fit_pigauto(splits =
+  NULL)`) the GNN-off fit is pure baseline (`r_cal_bm = 1`) with no
+  conformal scores, and still predicts.
+- User `covariates` enter pigauto only through the GNN; under `gnn = FALSE`
+  they are ignored, with a warning.
+
+Scope note: for continuous-only data at `lambda_mode = "fixed_1"` the
+GNN-off arm is a phylopars-style joint BM fit by construction, so a
+comparison against raw Rphylopars there measures the pipeline around the
+solver, not a different method. The arm differs from Rphylopars for mixed
+types, other `lambda_mode` values, multi-proportion and multi-observation
+data, and in its intervals. This entry makes no performance claim; the
+with/without-GNN comparison against Rphylopars and BACE is a separate,
+pre-registered campaign.
+
 ## Trust and usability surface
 
 - `check_pigauto()` is now the documented fit-free preflight before

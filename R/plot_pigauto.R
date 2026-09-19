@@ -23,7 +23,13 @@ plot_history_gg <- function(x, ...) {
   if (!inherits(x, "pigauto_fit")) {
     stop("'x' must be a pigauto_fit object.")
   }
-  if (nrow(x$history) == 0L) stop("No training history available.")
+  if (nrow(x$history) == 0L) {
+    if (isFALSE(x$model_config$gnn)) {
+      stop("No training history available: this fit was produced with ",
+           "gnn = FALSE (no GNN was trained).")
+    }
+    stop("No training history available.")
+  }
 
   val_col <- if ("val_loss" %in% names(x$history)) "val_loss" else "val_rmse"
   df <- x$history[is.finite(x$history[[val_col]]), ]

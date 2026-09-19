@@ -101,6 +101,10 @@ evaluate <- function(fit, data = NULL, splits = NULL) {
   )
 
   # ---- Evaluate baseline predictions if available --------------------------
+  # Always reads the HELD-OUT fit$baseline here, never fit$baseline_full
+  # (the gnn = FALSE production baseline fit on all observed cells): scoring
+  # against test cells must never see a baseline that was itself fit on
+  # those same test cells (docs/dev-log/arc/2026-09-18-gnn-off-contract.md).
   baseline_rows <- NULL
   if (!is.null(fit$baseline)) {
     mu_species <- fit$baseline$mu
@@ -629,10 +633,15 @@ summary.pigauto_fit <- function(object, ..., data = NULL) {
   n_epochs <- if (nrow(object$history) > 0L) max(object$history$epoch) else 0L
   cat(sprintf("Species: %d | Traits: %d | Epochs: %d\n",
               n_species, n_traits, n_epochs))
-  cat(sprintf("Architecture: hidden_dim=%d, k_eigen=%d, n_gnn=%d, attention=%s\n",
-              cfg$hidden_dim, cfg$k_eigen,
-              cfg$n_gnn_layers %||% 1L,
-              if (isTRUE(cfg$use_attention)) "TRUE" else "FALSE"))
+  if (!isFALSE(cfg$gnn)) {
+    cat(sprintf("Architecture: hidden_dim=%d, k_eigen=%d, n_gnn=%d, attention=%s\n",
+                cfg$hidden_dim, cfg$k_eigen,
+                cfg$n_gnn_layers %||% 1L,
+                if (isTRUE(cfg$use_attention)) "TRUE" else "FALSE"))
+  }
+  if (isFALSE(cfg$gnn)) {
+    cat("GNN: off (baseline only)\n")
+  }
 
   if (!is.null(trait_map)) {
     types <- vapply(trait_map, "[[", character(1), "type")

@@ -129,6 +129,28 @@
 #'     \item{mu}{Numeric matrix (n_species x p_latent), baseline means in
 #'       latent scale.}
 #'     \item{se}{Numeric matrix (n_species x p_latent), standard errors.}
+#'     \item{path}{Named character vector, one entry per \code{trait_map}
+#'       entry (name = trait/group name), recording which dispatch branch
+#'       produced that trait's baseline: \code{"joint_mvn"} (Phase 2
+#'       continuous-only joint), \code{"threshold_joint"} (Phase 3/5 binary +
+#'       ordinal + continuous-family liability joint), \code{"ovr_categorical"}
+#'       (Phase 6 one-vs-rest K-fits), \code{"per_column_bm"} (per-column
+#'       Brownian-motion conditional MVN, including the lambda-aware path and
+#'       the per-trait ordinal fallback that beats threshold-joint on held-out
+#'       val MSE), \code{"multi_proportion_bm"} (per-component
+#'       \code{per_column_bm} on the CLR columns of a multi_proportion group
+#'       -- same kernel as \code{"per_column_bm"}, labelled separately because
+#'       multi_proportion is architecturally distinct), \code{"label_propagation"}
+#'       (phylogenetic label propagation for binary/categorical/ordinal, and
+#'       the per-trait ordinal fallback that beats the other two candidates),
+#'       \code{"zi_gate_lp"} (label propagation for a zero-inflated count's
+#'       gate column), or \code{"zi_mag_constant"} (global mean/sd fallback
+#'       for a zero-inflated count's magnitude column when fewer than 5
+#'       non-zero observations exist). For \code{zi_count} traits (2 latent
+#'       columns: gate then magnitude), \code{path} reports the GATE column's
+#'       dispatch -- the magnitude column can independently land on
+#'       \code{"joint_mvn"}, \code{"threshold_joint"}, \code{"per_column_bm"},
+#'       or \code{"zi_mag_constant"} and is not separately surfaced here.}
 #'   }
 #' @examples
 #' \donttest{
@@ -241,15 +263,25 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   dimnames(mu) <- list(spp, data$latent_names)
   dimnames(se) <- list(spp, data$latent_names)
 
+  # Dispatch tracker (S1): one entry per latent column, filled in at the
+  # same site that writes mu[, col] / se[, col] for that column, so it can
+  # never drift from the branch that actually ran. Reduced to a per-trait
+  # `path` vector (first latent column of each trait_map entry) at the end.
+  col_path <- rep(NA_character_, p)
+
   # ---- Identify BM-eligible columns (continuous in latent space) -----------
   bm_cols <- integer(0)
   has_multi_proportion <- FALSE  # track for joint-dispatch guard
+  mp_cols <- integer(0)          # multi_proportion latent cols (path labelling only)
   zi_mag_fallback <- integer(0)  # ZI magnitude cols with too few non-zero obs
   for (tm in trait_map) {
     if (tm$type %in% c("continuous", "count", "ordinal", "proportion",
                        "multi_proportion")) {
       # multi_proportion: K independent BM fits, one per CLR column
-      if (tm$type == "multi_proportion") has_multi_proportion <- TRUE
+      if (tm$type == "multi_proportion") {
+        has_multi_proportion <- TRUE
+        mp_cols <- c(mp_cols, tm$latent_cols)
+      }
       bm_cols <- c(bm_cols, tm$latent_cols)
     } else if (tm$type == "zi_count") {
       # Magnitude column (col 2) is BM-eligible if enough non-zero obs
@@ -263,6 +295,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
         finite_vals <- X[is.finite(X[, mag_col]), mag_col]
         mu[, mag_col] <- if (length(finite_vals) > 0) mean(finite_vals) else 0
         se[, mag_col] <- if (length(finite_vals) > 1) stats::sd(finite_vals) else 0
+        col_path[mag_col] <- "zi_mag_constant"
       }
     }
   }
@@ -393,6 +426,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
           mu[, col] <- jt$mu_liab[, idx]
           se[, col] <- jt$se_liab[, idx]
           populated_cols <- c(populated_cols, col)
+          col_path[col] <- "threshold_joint"
         }
       }
     }
@@ -407,6 +441,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       mu[, col] <- dec$mu_logit
       se[, col] <- 0
       populated_cols <- c(populated_cols, col)
+      col_path[col] <- "threshold_joint"
     }
 
     # Ordinal -> z-scored integer class via threshold decode
@@ -430,6 +465,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       se[, col] <- 0
       populated_cols <- c(populated_cols, col)
       ordinal_threshold_populated <- c(ordinal_threshold_populated, col)
+      col_path[col] <- "threshold_joint"
     }
 
     bm_cols      <- setdiff(bm_cols,      populated_cols)
@@ -555,10 +591,12 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
           if (chosen == "bm_mvn") {
             mu[, col] <- bm_res$mu
             se[, col] <- bm_res$se
+            col_path[col] <- "per_column_bm"
           } else if (chosen == "lp" && !is.null(lp_pred_z)) {
             mu[, col] <- lp_pred_z
             se[, col] <- lp_se_z
-          } # else: threshold_joint already in mu/se
+            col_path[col] <- "label_propagation"
+          } # else: threshold_joint already in mu/se and col_path
           ordinal_path_chosen[as.character(col)] <- chosen
         }
       }
@@ -571,6 +609,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                                      joint_refine_iter = joint_refine_iter)
     mu[, bm_cols] <- joint$mu[, bm_cols]
     se[, bm_cols] <- joint$se[, bm_cols]
+    col_path[bm_cols] <- "joint_mvn"
     bm_cols <- integer(0)
   }
 
@@ -618,6 +657,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       log_probs <- decode_ovr_categorical(probs)
       mu[, k_cols] <- log_probs
       se[, k_cols] <- 0
+      col_path[k_cols] <- "ovr_categorical"
       cat_cols <- setdiff(cat_cols, k_cols)
     }
   }
@@ -708,6 +748,11 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       }
       mu[, bm_cols[j]] <- res_j$mu
       se[, bm_cols[j]] <- res_j$se
+      col_path[bm_cols[j]] <- if (bm_cols[j] %in% mp_cols) {
+        "multi_proportion_bm"
+      } else {
+        "per_column_bm"
+      }
     }
   }
 
@@ -720,6 +765,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     # threshold dispatch; if our `lc` is not in binary_cols, the joint
     # fit already handled it.
     if (!all(lc %in% binary_cols)) next
+    col_path[lc] <- "label_propagation"
 
     # Get species-level observations
     if (multi_obs) {
@@ -759,6 +805,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     K    <- tm$n_latent
     lc   <- tm$latent_cols
     if (!all(lc %in% cat_cols)) next  # handled by threshold-joint path
+    col_path[lc] <- "label_propagation"
     oh   <- X[, lc, drop = FALSE]  # n_obs x K one-hot (with NAs)
 
     # Get species-level one-hot observations
@@ -810,6 +857,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     lc_gate <- tm$latent_cols[1]
     # Phase 5: if threshold-joint handled this gate, skip LP
     if (!(lc_gate %in% binary_cols)) next
+    col_path[lc_gate] <- "zi_gate_lp"
 
     # Get species-level gate values (0 = zero, 1 = non-zero)
     if (multi_obs) {
@@ -843,7 +891,19 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     se[, lc_gate] <- 0
   }
 
-  out <- list(mu = mu, se = se)
+  # ---- Dispatch record (S1) ------------------------------------------------
+  # One entry per trait_map entry, named after that trait/group. Multi-column
+  # traits (categorical, zi_count, multi_proportion) get all their latent
+  # columns from the same dispatch branch EXCEPT zi_count, whose gate and
+  # magnitude columns can go through different branches (e.g. gate via
+  # "zi_gate_lp", magnitude via "per_column_bm"); `path` reports the GATE
+  # column's dispatch there (latent_cols[1]), matching the "zi_gate_lp" name.
+  trait_names_path <- vapply(trait_map, function(tm) tm$name, character(1))
+  path <- vapply(trait_map, function(tm) col_path[tm$latent_cols[1]],
+                 character(1))
+  names(path) <- trait_names_path
+
+  out <- list(mu = mu, se = se, path = path)
   if (exists("ordinal_path_chosen", inherits = FALSE) &&
       length(ordinal_path_chosen) > 0L) {
     out$ordinal_path_chosen <- ordinal_path_chosen
