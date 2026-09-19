@@ -10,8 +10,8 @@
 #           [--epochs 2000] [--bace_nitt 50000 --bace_burnin 10000 --bace_thin 25] [--smoke]
 #
 # DGPs: bm_mixed (4 continuous BM + 1 binary + 1 categorical(3) on ape::rcoal(n)),
-#       ou_mixed (simulate_non_bm OU continuous + same discrete), avonet (bundled avonet300/tree300,
-#       n ignored). Arms and metrics as locked in the plan. `--smoke` shrinks epochs/chains so the
+#       ou_mixed (simulate_non_bm OU continuous + same discrete), bace_dgp (BACE::sim_bace: y + 2 gaussian
+#       + 1 binary predictors, all imputed), avonet (bundled avonet300/tree300, n ignored). Arms and metrics as locked in the plan. `--smoke` shrinks epochs/chains so the
 #       whole cell runs in seconds; it is for checking the invocation, never for results.
 
 suppressPackageStartupMessages({
@@ -51,6 +51,22 @@ make_dgp <- function(dgp, n, seed) {
     utils::data("tree300", package = "pigauto", envir = e)
     df <- e$avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
     return(list(df = df, tree = e$tree300))
+  }
+  if (dgp == "bace_dgp") {
+    # BACE's own simulator (as in script/sim_bace_dgp.R): gaussian response y with
+    # phylogenetic signal 0.4 on three predictors (gaussian, gaussian, binary; signal 0.3),
+    # birth-death tree. All four columns are treated as traits to impute; the campaign's
+    # uniform 30% MCAR mask replaces BACE's response-only missingness.
+    sim <- BACE::sim_bace(response_type = "gaussian",
+                          predictor_types = c("gaussian", "gaussian", "binary"),
+                          beta_resp = 0.5 * c(0.7, 0.4, 0.5), phylo_signal = c(0.4, 0.3, 0.3, 0.3),
+                          n_cases = as.integer(n), n_species = as.integer(n),
+                          missingness = c(0, 0, 0, 0), birth = 0.8, death = 0.4)
+    df <- sim$complete_data; tree <- sim$tree
+    rownames(df) <- as.character(df$Species); df$Species <- NULL
+    df$x3 <- factor(as.character(df$x3), ordered = FALSE)   # binary, not ordered
+    df <- df[tree$tip.label, , drop = FALSE]
+    return(list(df = df, tree = tree))
   }
   tree <- ape::rcoal(n)   # ultrametric: BM-appropriate, and BACE/MCMCglmm requires it
   tree$edge.length <- tree$edge.length / max(ape::node.depth.edgelength(tree))
