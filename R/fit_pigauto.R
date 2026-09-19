@@ -1613,9 +1613,9 @@ build_pigauto_fit <- function(
 #
 # Splits val-set cells into a CALIBRATION half (used by calibrate_gates() to
 # pick per-trait blend weights) and a CONFORMAL half (used by
-# compute_conformal_scores() to estimate residual quantiles) -- Fix C.3
-# (Opus 2026-04-28); see the call site in fit_pigauto() for the full
-# split-conformal-exchangeability rationale. Factored out (S1,
+# compute_conformal_scores() to estimate residual quantiles) -- C.3
+# (Opus 2026-04-28); the rationale is at the call site in fit_pigauto().
+# Factored out (S1,
 # docs/dev-log/arc/2026-09-18-gnn-off-contract.md) so the GNN-on and
 # gnn = FALSE paths share the identical halving logic. Not exported.
 #
