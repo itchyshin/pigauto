@@ -49,8 +49,10 @@ term:
   `threshold_joint`, `ovr_categorical`, `per_column_bm`,
   `multi_proportion_bm`, `label_propagation`, `zi_gate_lp`,
   `zi_mag_constant`).
-- `summary()`/`print()` show `GNN: off (baseline only)`; `plot(fit,
-  "history")` explains that no history exists for a `gnn = FALSE` fit.
+- `summary()`/`print()` show `GNN: off (baseline only)` (and no architecture
+  line); `plot(fit, "history")` explains that no history exists for a
+  `gnn = FALSE` fit; `pigauto_report()` labels the non-BM column
+  `Blend (GNN off)` and shows no BM-vs-GNN verdict.
 - Without a validation split (`missing_frac = 0`, or `fit_pigauto(splits =
   NULL)`) the GNN-off fit is pure baseline (`r_cal_bm = 1`) with no
   conformal scores, and still predicts.

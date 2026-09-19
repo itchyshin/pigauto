@@ -75,6 +75,9 @@ pigauto_report <- function(fit, data = NULL, splits = NULL,
     metrics   = metrics,
     trait_map = trait_map
   )
+  # Column label for the non-BM arm: "GNN", or the calibrated blend when gnn = FALSE.
+  html <- gsub("ARM_LABEL", if (isFALSE(fit_obj$model_config$gnn)) "Blend (GNN off)" else "GNN",
+               html, fixed = TRUE)
   html <- sub("</body>", paste0(.report_contract_html(saved_check, fit), "</body>"),
               html, fixed = TRUE)
 
@@ -247,6 +250,10 @@ build_report_html <- function(title, fit_obj, pred, metrics, trait_map) {
   has_conformal   <- !is.null(fit_obj$conformal_scores)
   k_eigen <- fit_obj$model_config$k_eigen
 
+  # Under gnn = FALSE there is no GNN: the second column is the calibrated baseline
+  # blend (BM, optionally re-weighted against the grand-mean floor), so the header
+  # and the verdict must not read as a BM-vs-GNN comparison.
+  gnn_off <- isFALSE(fit_obj$model_config$gnn)
   # Build metrics table rows
   trait_rows <- ""
   for (m in metrics) {
@@ -276,6 +283,7 @@ build_report_html <- function(title, fit_obj, pred, metrics, trait_map) {
           pct <- sprintf('<span class="zero">%.1f%%</span>', pct_val)
           verdict <- '<span class="pill pill-neutral">tied</span>'
         }
+        if (gnn_off) verdict <- '<span class="pill pill-neutral">GNN off</span>'
       }
 
       cov <- "&mdash;"
@@ -308,6 +316,7 @@ build_report_html <- function(title, fit_obj, pred, metrics, trait_map) {
           pct <- '<span class="zero">0.0 pp</span>'
           verdict <- '<span class="pill pill-neutral">tied</span>'
         }
+        if (gnn_off) verdict <- '<span class="pill pill-neutral">GNN off</span>'
       }
 
       trait_rows <- paste0(trait_rows, sprintf(
@@ -350,7 +359,8 @@ build_report_html <- function(title, fit_obj, pred, metrics, trait_map) {
 
   # Features list
   features <- c(
-    if (has_attention)   "Attention message passing" else "Standard message passing",
+    if (gnn_off) "GNN off: phylogenetic baseline only (no torch)" else
+      if (has_attention) "Attention message passing" else "Standard message passing",
     if (has_calibration) "Validation-calibrated gates",
     if (has_conformal)   "Conformal prediction intervals",
     sprintf("Adaptive spectral encoding (k=%d)", k_eigen),
@@ -426,7 +436,7 @@ tr:hover{background:#f8f9fa;}
 
 <h2>Per-Trait Performance</h2>
 <table>
-<thead><tr><th>Trait</th><th>Type</th><th class="num">n test</th><th class="num">BM</th><th class="num">GNN</th><th class="num">%%&Delta;</th><th class="num">r (BM)</th><th class="num">r (GNN)</th><th class="num">Held-out coverage (diagnostic)</th><th>Verdict</th></tr></thead>
+<thead><tr><th>Trait</th><th>Type</th><th class="num">n test</th><th class="num">BM</th><th class="num">ARM_LABEL</th><th class="num">%%&Delta;</th><th class="num">r (BM)</th><th class="num">r (ARM_LABEL)</th><th class="num">Held-out coverage (diagnostic)</th><th>Verdict</th></tr></thead>
 <tbody>%s</tbody>
 </table>
 
