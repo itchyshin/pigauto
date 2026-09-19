@@ -132,6 +132,18 @@
 #'   Safety floor section below.
 #' @param phylo_signal_gate,phylo_signal_threshold,phylo_signal_method
 #'   Pass-through to [fit_pigauto()]. See that help page for details.
+#' @param gnn logical. When \code{TRUE} (default), trains the
+#'   attention-based GNN correction (see \code{\link{fit_pigauto}}). When
+#'   \code{FALSE}, no GNN is constructed or trained -- \code{impute()} makes
+#'   no torch/GPU calls, and the fit is the phylogenetic baseline alone
+#'   (optionally re-weighted against a grand-mean floor). \code{safety_floor}
+#'   and \code{phylo_signal_gate} keep their usual semantics; the pure
+#'   traditional-stats arm is \code{gnn = FALSE, safety_floor = FALSE,
+#'   phylo_signal_gate = FALSE}. Production predictions
+#'   (\code{result$completed}, \code{result$prediction}) use a tax-free
+#'   \code{baseline_full} fit on ALL observed cells (no val/test hold-out);
+#'   \code{result$evaluation} and every other scorer keep using the
+#'   held-out \code{baseline}, so evaluation never leaks test cells.
 #' @param clamp_outliers logical.  Phase G (v0.9.1.9011+).  When
 #'   \code{TRUE}, post-back-transform predictions for log-transformed
 #'   continuous, count, and zi_count magnitude traits are capped at
@@ -331,6 +343,7 @@ impute <- function(traits, tree, species_col = NULL,
                    phylo_signal_threshold = 0.2,
                    phylo_signal_method = "lambda",
                    conformal_split_val = FALSE,
+                   gnn = TRUE,
                    ...) {
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
   pool_method <- match.arg(pool_method)
@@ -410,7 +423,8 @@ impute <- function(traits, tree, species_col = NULL,
   preflight <- .check_pigauto_internal(
     traits, tree, species_col = species_col, trait_types = trait_types,
     multi_proportion_groups = multi_proportion_groups,
-    log_transform = log_transform, covariates = covariates
+    log_transform = log_transform, covariates = covariates,
+    probe_runtime = isTRUE(gnn)
   )
   check <- preflight$check
   if (identical(check$status, "error")) {
@@ -456,6 +470,24 @@ impute <- function(traits, tree, species_col = NULL,
                            joint_solver = joint_solver, predict_method = predict_method,
                            joint_refine_iter = joint_refine_iter)
 
+  # gnn = FALSE (S3, docs/dev-log/arc/2026-09-18-gnn-off-contract.md): also
+  # fit the tax-free PRODUCTION baseline here (splits = NULL, so every
+  # observed cell can inform every other cell), before graph$D is freed
+  # below, so fit_pigauto() doesn't need to recompute it. `baseline` above
+  # stays the held-out fit used for every scorer (evaluate(), val_rmse,
+  # test_rmse, conformal_scores).
+  baseline_full <- NULL
+  if (isFALSE(gnn)) {
+    baseline_full <- fit_baseline(pd, tree, splits = NULL, graph = graph,
+                                  multi_obs_aggregation = multi_obs_aggregation,
+                                  em_iterations = em_iterations,
+                                  em_tol = em_tol,
+                                  em_offdiag = em_offdiag,
+                                  lambda_mode = lambda_mode,
+                                  joint_solver = joint_solver, predict_method = predict_method,
+                                  joint_refine_iter = joint_refine_iter)
+  }
+
   # Free the cached cophenetic distance matrix: fit_pigauto() only
   # needs graph$adj and graph$coords, and at n = 10,000 the ~800 MB
   # D matrix held in R memory during training caused a large
@@ -465,13 +497,16 @@ impute <- function(traits, tree, species_col = NULL,
   graph$R_phy <- NULL
   invisible(gc(full = TRUE, verbose = FALSE))
 
-  # 5. Train GNN
+  # 5. Train GNN (or, when gnn = FALSE, fit the baseline-only pigauto_fit --
+  # see fit_pigauto()'s gnn = FALSE branch, which makes zero torch:: calls)
   fit <- fit_pigauto(
     data                   = pd,
     tree                   = tree,
     splits                 = splits,
     graph                  = graph,
     baseline               = baseline,
+    gnn                    = gnn,
+    baseline_full          = baseline_full,
     epochs                 = as.integer(epochs),
     verbose                = verbose,
     seed                   = if (is.null(seed)) NULL else as.integer(seed),
@@ -492,10 +527,13 @@ impute <- function(traits, tree, species_col = NULL,
   # internally, but doing it again here handles any R-level references
   # to graph/baseline tensors that may linger between calls.  Essential
   # at n >= 5000 on cards with <= 46 GB to avoid OOM on the first
-  # predict-stage allocation.
-  invisible(gc(full = TRUE, verbose = FALSE))
-  if (torch::cuda_is_available()) {
-    try(torch::cuda_empty_cache(), silent = TRUE)
+  # predict-stage allocation. Skipped entirely under gnn = FALSE: there is
+  # no GNN, no CUDA state, and no torch:: call to make (S3 gnn-off contract).
+  if (isTRUE(gnn)) {
+    invisible(gc(full = TRUE, verbose = FALSE))
+    if (torch::cuda_is_available()) {
+      try(torch::cuda_empty_cache(), silent = TRUE)
+    }
   }
 
   # 6. Predict
@@ -672,6 +710,9 @@ build_completed <- function(original, imputed, species_col = NULL,
 #' @export
 print.pigauto_result <- function(x, ...) {
   cat("pigauto imputation result\n")
+  if (isFALSE(x$fit$model_config$gnn)) {
+    cat("  GNN: off (baseline only)\n")
+  }
   cat("  Species :", length(x$data$species_names), "\n")
   cat("  Traits  :", length(x$data$trait_map),
       "--", paste(vapply(x$data$trait_map, "[[", character(1), "name"),

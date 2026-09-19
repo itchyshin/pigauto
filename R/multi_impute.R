@@ -62,6 +62,12 @@
 #' @param verbose logical. Print progress (default `TRUE`).
 #' @param seed optional integer. When supplied, makes fitting and imputation
 #'   draws reproducible; the default `NULL` uses the current RNG stream.
+#' @param gnn logical. Passed through to [impute()] / [fit_pigauto()]. When
+#'   `TRUE` (default), the usual GNN correction is trained. When `FALSE`,
+#'   no GNN is used (baseline-only fit; see [fit_pigauto()]). With
+#'   `draws_method = "mc_dropout"` this degrades gracefully to BM-posterior
+#'   draws (there is no dropout to run) and a one-time message is printed;
+#'   `draws_method = "conformal"` is unaffected.
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
 #'   [impute()]. See [fit_pigauto()] for the full list; the "Safety
 #'   floor" section below describes the relevant new v0.9.1.9002
@@ -180,7 +186,8 @@ multi_impute <- function(traits, tree, m = 100L,
                          log_transform = TRUE,
                          missing_frac = 0.25,
                          covariates = NULL,
-                         epochs = 2000L, verbose = TRUE, seed = NULL, ...) {
+                         epochs = 2000L, verbose = TRUE, seed = NULL,
+                         gnn = TRUE, ...) {
 
   draws_method <- match.arg(draws_method)
   m <- as.integer(m)
@@ -190,6 +197,13 @@ multi_impute <- function(traits, tree, m = 100L,
   }
 
   if (draws_method == "mc_dropout") {
+    # gnn = FALSE: there is no GNN to run dropout on, so predict() draws
+    # from the BM posterior instead (see fit_pigauto()'s gnn = FALSE
+    # contract). Not an error -- just a different (still valid) source of
+    # between-imputation variance.
+    if (isFALSE(gnn)) {
+      message("gnn = FALSE: mc_dropout draws are BM-posterior draws (no dropout).")
+    }
     # ---- MC dropout: M stochastic GNN forward passes (training mode) --------
     # Run the pipeline with n_imputations = m so predict() runs the model M
     # times with dropout active. Each pass yields a different latent matrix;
@@ -207,6 +221,7 @@ multi_impute <- function(traits, tree, m = 100L,
       epochs        = as.integer(epochs),
       verbose       = verbose,
       seed          = if (is.null(seed)) NULL else as.integer(seed),
+      gnn           = gnn,
       ...
     )
 
@@ -240,6 +255,7 @@ multi_impute <- function(traits, tree, m = 100L,
       epochs        = as.integer(epochs),
       verbose       = verbose,
       seed          = if (is.null(seed)) NULL else as.integer(seed),
+      gnn           = gnn,
       ...
     )
 

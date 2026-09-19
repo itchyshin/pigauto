@@ -95,6 +95,13 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'   compatible with pre-P1-11 behaviour) or `"conformal"`. See the "Which
 #'   draw mechanism this uses" section below for the trade-off between the
 #'   two.
+#' @param gnn logical. Passed through to [impute()] / [fit_pigauto()] for
+#'   every tree. When `TRUE` (default), the usual GNN correction is trained
+#'   (once, on the reference tree, when `share_gnn = TRUE`). When `FALSE`,
+#'   no GNN is used anywhere in the pipeline -- baseline-only fits
+#'   throughout. Under `share_gnn = TRUE`, each tree's per-tree baseline is
+#'   then fit tax-free (`splits = NULL`), matching the production
+#'   `baseline_full` semantics [fit_pigauto()] uses.
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
 #'   [impute()].
 #'
@@ -252,6 +259,7 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 1L,
                                share_gnn = TRUE,
                                reference_tree = NULL,
                                draws_method = c("mc_dropout", "conformal"),
+                               gnn = TRUE,
                                ...) {
 
   draws_method <- match.arg(draws_method)
@@ -309,6 +317,7 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 1L,
       verbose = verbose, seed = seed,
       reference_tree = resolve_reference_tree(trees, reference_tree),
       draws_method = draws_method,
+      gnn = gnn,
       ...
     )
   } else {
@@ -318,7 +327,8 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 1L,
       multi_proportion_groups = multi_proportion_groups,
       log_transform = log_transform, missing_frac = missing_frac,
       covariates = covariates, epochs = as.integer(epochs),
-      verbose = verbose, seed = seed, draws_method = draws_method, ...
+      verbose = verbose, seed = seed, draws_method = draws_method,
+      gnn = gnn, ...
     )
   }
 
@@ -337,7 +347,7 @@ run_per_tree <- function(traits, trees, m_per_tree,
                          species_col, trait_types, multi_proportion_groups,
                          log_transform, missing_frac, covariates,
                          epochs, verbose, seed, draws_method = "mc_dropout",
-                         ...) {
+                         gnn = TRUE, ...) {
   T_trees      <- length(trees)
   M_total      <- T_trees * m_per_tree
   all_datasets <- vector("list", M_total)
@@ -377,6 +387,7 @@ run_per_tree <- function(traits, trees, m_per_tree,
       epochs        = as.integer(epochs),
       verbose       = FALSE,
       seed          = t_seed,
+      gnn           = gnn,
       ...
     )
 
@@ -479,7 +490,7 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
                            species_col, trait_types, multi_proportion_groups,
                            log_transform, missing_frac, covariates,
                            epochs, verbose, seed, reference_tree,
-                           draws_method = "mc_dropout", ...) {
+                           draws_method = "mc_dropout", gnn = TRUE, ...) {
   T_trees <- length(trees)
   M_total <- T_trees * m_per_tree
   dots <- list(...)
@@ -498,7 +509,8 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
     log_transform = log_transform, missing_frac = missing_frac,
     n_imputations = m_per_tree, covariates = covariates,
     epochs = as.integer(epochs), verbose = FALSE,
-    seed = if (is.null(seed)) NULL else as.integer(seed), ...
+    seed = if (is.null(seed)) NULL else as.integer(seed),
+    gnn = gnn, ...
   )
   fit_ref    <- res_ref$fit
   data_ref   <- res_ref$data
@@ -528,17 +540,30 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
     # Do not pass graph_ref here. The shared GNN keeps the reference-tree
     # graph inside fit_ref for prediction, but each tree-specific baseline
     # must recompute its own cophenetic distances and phylogenetic covariance.
+    #
+    # gnn = FALSE (S3, docs/dev-log/arc/2026-09-18-gnn-off-contract.md):
+    # fit each tree's baseline tax-free (splits = NULL, every observed cell
+    # informs every other cell), matching the production `baseline_full`
+    # semantics fit_pigauto()/impute() use elsewhere. gnn = TRUE keeps the
+    # held-out splits_ref fit, unchanged.
     baseline_t <- fit_baseline(
-      data_ref, 
-      trees[[t]], 
-      splits = splits_ref,
+      data_ref,
+      trees[[t]],
+      splits = if (isFALSE(gnn)) NULL else splits_ref,
       graph = NULL,
-      # Replay all the config options:
+      # Replay all the config options (joint_solver / predict_method /
+      # joint_refine_iter added here -- pre-existing omission, now
+      # load-bearing since gnn = FALSE fits go through the joint /
+      # threshold-joint baseline dispatch more often than the GNN-on
+      # default):
       lambda_mode = baseline_arg("lambda_mode", "fixed_1"),
       multi_obs_aggregation = baseline_arg("multi_obs_aggregation", "hard"),
       em_iterations = baseline_arg("em_iterations", 0L),
       em_tol = baseline_arg("em_tol", 1e-3),
-      em_offdiag = baseline_arg("em_offdiag", FALSE)
+      em_offdiag = baseline_arg("em_offdiag", FALSE),
+      joint_solver = baseline_arg("joint_solver", "inhouse"),
+      predict_method = baseline_arg("predict_method", "per_column"),
+      joint_refine_iter = baseline_arg("joint_refine_iter", 0L)
     )
     # draws_method = "conformal" (P1-11): a single deterministic pass per
     # tree, then draw m_per_tree completions from the conformal scores held

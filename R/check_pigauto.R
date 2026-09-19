@@ -103,7 +103,8 @@ check_pigauto <- function(traits, tree, species_col = NULL,
 .check_pigauto_internal <- function(traits, tree, species_col = NULL,
                                     trait_types = NULL,
                                     multi_proportion_groups = NULL,
-                                    log_transform = TRUE, covariates = NULL) {
+                                    log_transform = TRUE, covariates = NULL,
+                                    probe_runtime = TRUE) {
   messages <- .check_pigauto_messages()
   empty <- list(names = character(), examples = character(), count = 0L,
                 consequence = "")
@@ -223,8 +224,16 @@ check_pigauto <- function(traits, tree, species_col = NULL,
       if (any(trait_table$constant & !trait_table$all_missing)) messages <- .check_pigauto_add(messages, "warning", "trait_constant", "traits", "At least one matched trait is constant.", "Review whether a constant trait is informative.")
     }
   }
-  runtime <- .check_pigauto_runtime()
-  if (!isTRUE(runtime$torch_is_installed) || isTRUE(runtime$unavailable)) messages <- .check_pigauto_add(messages, "error", "torch_unavailable", "runtime", runtime$detail, "Install or repair torch before fitting.")
+  # `probe_runtime = FALSE` (impute(gnn = FALSE)) skips the torch device probe
+  # entirely: the GNN-off path makes no torch:: call, so a missing or broken
+  # torch runtime is not an error for it and must not be touched on its behalf.
+  runtime <- if (isTRUE(probe_runtime)) {
+    .check_pigauto_runtime()
+  } else {
+    list(torch_package = NA, torch_is_installed = NA, device = "not_probed",
+         unavailable = FALSE, detail = "torch runtime not probed (gnn = FALSE)")
+  }
+  if (isTRUE(probe_runtime) && (!isTRUE(runtime$torch_is_installed) || isTRUE(runtime$unavailable))) messages <- .check_pigauto_add(messages, "error", "torch_unavailable", "runtime", runtime$detail, "Install or repair torch before fitting.")
   n_species <- if (!is.null(prepared)) prepared$n_species else length(matched)
   n_obs <- if (!is.null(prepared)) prepared$n_obs else sum(ids %in% matched)
   p_latent <- if (!is.null(prepared)) prepared$p_latent else NA_integer_

@@ -148,6 +148,22 @@ supported for downstream inference. Use \code{multi_impute_analysis()} for
 the narrow analysis-aware backend after consulting its supported-model and
 lifecycle documentation.
 
+\strong{\code{gnn = FALSE} fits (traditional-stats mode):} when the fit was
+produced with \code{gnn = FALSE}, no GNN was ever trained, so this
+function makes no \code{torch::} calls at all -- prediction is the
+calibrated baseline blend \code{r_cal_bm * baseline + r_cal_mean *
+mean_baseline_per_col} (\code{r_cal_gnn} is always zero) computed on
+plain R matrices. Two baselines are available: in production mode (the
+default, no \code{.mask_observed_idx}) predictions use \code{baseline_full}
+-- fit with \code{splits = NULL}, so every observed cell can inform every
+other cell; in evaluation mode (\code{.mask_observed_idx} supplied, as
+used internally for val/test scoring) predictions use the held-out
+\code{baseline} instead, so scored cells never see their own value.
+\code{n_imputations > 1} draws are BM posterior samples
+\code{MU_m ~ N(baseline_mu, baseline_se)} at originally-missing cells
+(observed cells are always restored to their true value), with no GNN
+dropout contribution.
+
 \strong{Decoding per type:}
 \describe{
 \item{continuous}{reverse z-score, then \code{exp()} if log-transformed}

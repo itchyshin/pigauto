@@ -123,6 +123,28 @@ A list with:
 \item{mu}{Numeric matrix (n_species x p_latent), baseline means in
 latent scale.}
 \item{se}{Numeric matrix (n_species x p_latent), standard errors.}
+\item{path}{Named character vector, one entry per \code{trait_map}
+entry (name = trait/group name), recording which dispatch branch
+produced that trait's baseline: \code{"joint_mvn"} (Phase 2
+continuous-only joint), \code{"threshold_joint"} (Phase 3/5 binary +
+ordinal + continuous-family liability joint), \code{"ovr_categorical"}
+(Phase 6 one-vs-rest K-fits), \code{"per_column_bm"} (per-column
+Brownian-motion conditional MVN, including the lambda-aware path and
+the per-trait ordinal fallback that beats threshold-joint on held-out
+val MSE), \code{"multi_proportion_bm"} (per-component
+\code{per_column_bm} on the CLR columns of a multi_proportion group
+-- same kernel as \code{"per_column_bm"}, labelled separately because
+multi_proportion is architecturally distinct), \code{"label_propagation"}
+(phylogenetic label propagation for binary/categorical/ordinal, and
+the per-trait ordinal fallback that beats the other two candidates),
+\code{"zi_gate_lp"} (label propagation for a zero-inflated count's
+gate column), or \code{"zi_mag_constant"} (global mean/sd fallback
+for a zero-inflated count's magnitude column when fewer than 5
+non-zero observations exist). For \code{zi_count} traits (2 latent
+columns: gate then magnitude), \code{path} reports the GATE column's
+dispatch -- the magnitude column can independently land on
+\code{"joint_mvn"}, \code{"threshold_joint"}, \code{"per_column_bm"},
+or \code{"zi_mag_constant"} and is not separately surfaced here.}
 }
 }
 \description{

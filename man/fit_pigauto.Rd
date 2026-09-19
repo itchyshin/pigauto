@@ -10,6 +10,8 @@ fit_pigauto(
   splits = NULL,
   graph = NULL,
   baseline = NULL,
+  gnn = TRUE,
+  baseline_full = NULL,
   hidden_dim = 64L,
   k_eigen = "auto",
   n_gnn_layers = 2L,
@@ -67,6 +69,32 @@ fit_pigauto(
 \code{NULL}.}
 
 \item{baseline}{list (output of \code{\link{fit_baseline}}) or \code{NULL}.}
+
+\item{gnn}{logical. When \code{TRUE} (default), trains the attention-based
+GNN correction as described above. When \code{FALSE}, no GNN is
+constructed or trained and \code{fit_pigauto()} makes \strong{zero}
+\code{torch::} calls -- the fit is the phylogenetic baseline alone,
+optionally re-weighted against a grand-mean floor. \code{safety_floor}
+and \code{phylo_signal_gate} keep their usual semantics: the blend
+collapses to \eqn{r_{BM} \cdot \mu_{BM} + r_{MEAN} \cdot \mu_{MEAN}}
+(the GNN corner degenerates to the baseline, so its calibrated weight
+is folded into \eqn{r_{BM}}). The pure traditional-stats arm is
+\code{gnn = FALSE, safety_floor = FALSE, phylo_signal_gate = FALSE}.
+\code{conformal_method = "mondrian"} is not supported when
+\code{gnn = FALSE} (its locality statistic conditions on a calibrated
+GNN prediction surface that does not exist here) and raises an error.}
+
+\item{baseline_full}{list (output of \code{\link{fit_baseline}} with
+\code{splits = NULL}) or \code{NULL}. Only used when \code{gnn = FALSE}:
+the production-mode baseline, fit on ALL observed cells (no val/test
+hold-out), used by \code{predict.pigauto_fit()} for ordinary
+(non-evaluation) predictions. \code{baseline} itself always stays the
+held-out fit and is what every scorer (\code{val_rmse}, \code{test_rmse},
+\code{conformal_scores}, \code{evaluate()}) reads. When \code{NULL}
+(default) and \code{gnn = FALSE}, it is computed internally via
+\code{fit_baseline(data, tree, splits = NULL, ...)}; ignored when
+\code{gnn = TRUE} unless explicitly supplied (e.g. by \code{impute()}),
+in which case it is stored but not used for training.}
 
 \item{hidden_dim}{integer. Hidden layer width (default \code{64}).}
 
