@@ -2,6 +2,48 @@
 
 You are Claude, picking up in the pigauto repository on a fresh account. You have no access to Shinichi's second-brain vault, to his Mac, or to the Totoro / DRAC compute servers, and you inherit no chat. This file, `AGENTS.md`, and the repository at `origin/main` are your whole context. Written 2026-09-19 by Claude Code (Shinichi's Mac session) after `main` reached d72ad06.
 
+## Start here: from zero to a working lane (nothing on this list assumes Shinichi's machine)
+
+Both repositories are public; no GitHub credentials are needed to clone or install.
+
+1. **Pick a folder and clone.** Any folder works; the examples use `~/work`.
+
+   ```bash
+   mkdir -p ~/work && cd ~/work
+   git clone https://github.com/itchyshin/pigauto.git
+   cd pigauto
+   git log --oneline -1        # expect d72ad06 or later on main
+   ```
+
+   Everything for this lane is inside this one repository: the package (`R/`, `tests/`), the runners (`script/campaign_*.R`), the results so far (`script/campaign_*_results/`), the plan and notes (`docs/dev-log/arc/`), this handover (`docs/dev-log/handover/`). There is no second repository to fetch; BACE is installed as an R package, not cloned.
+
+2. **Install R and the packages** (R 4.4 or later; the feasibility runs used 4.6.0). From the repo root:
+
+   ```bash
+   Rscript -e 'install.packages(c("remotes","devtools","torch","ape","Rphylopars","castor","MCMCglmm","missForest","phylolm","ggplot2"), repos="https://cloud.r-project.org")'
+   Rscript -e 'torch::install_torch()'                            # downloads libtorch; needed for arm 4 (GNN on) only
+   Rscript -e 'remotes::install_github("daniel1noble/BACE")'      # BACE, public
+   Rscript -e 'remotes::install_local(".")'                       # pigauto from this clone (main), or remotes::install_github("itchyshin/pigauto")
+   ```
+
+3. **Verify the setup** (each line prints what it checks; all must be TRUE, the last one runs in seconds):
+
+   ```bash
+   Rscript -e 'for (p in c("pigauto","torch","Rphylopars","castor","BACE","MCMCglmm","missForest")) cat(p, requireNamespace(p, quietly=TRUE), as.character(tryCatch(packageVersion(p), error=function(e) NA)), "\n"); cat("gnn formal:", "gnn" %in% names(formals(pigauto::impute)), "\n")'
+   NOT_CRAN=true Rscript -e 'devtools::test(".", filter = "gnn-off")'
+   Rscript script/campaign_gnn_off_cell.R --dgp types_mixed --n 60 --seed 1 --out /tmp/smoke --arms gnn_on,gnn_off,gnn_off_pure,freq,bace,floor --smoke
+   ```
+
+   The last command must print one `done in` line per arm and no `ERROR`, and write `/tmp/smoke/types_mixed_n60_s1_smoke.rds`. `--smoke` shrinks epochs and BACE iterations so the whole cell takes seconds; it proves the invocation, never results.
+
+4. **Where to work.** Runners: `script/campaign_gnn_off_cell.R` (one cell), `script/campaign_gnn_off_lib.R` (DGPs, mask, scoring, the frequentist and hybrid arms). Aggregation and reporting: `script/campaign_gnn_off_aggregate.R`, `campaign_gnn_off_tables.R`, `campaign_gnn_off_figures.R`. Results directories are written wherever `--out` points; commit only aggregated results (an rds plus csv) under `script/<campaign>_results/`, never raw per-cell files or logs. Notes go to `docs/dev-log/arc/<date>-<slug>.md`; `docs/` is git-ignored, so add notes with `git add -f`.
+
+5. **Git rules.** Work on a branch (`arc/<slug>`), never on `main`; open a PR; Shinichi merges. Commit messages end with a `Co-Authored-By` line naming the model. Do not push or rebase any branch you did not create.
+
+6. **Compute.** Your machine runs the smoke, single cells at n = 100 or 300 (a full cell with BACE at n = 300 takes about 12 minutes on 4 threads) and the pre-run. The full study (about 3,600 core-hours) runs on Shinichi's servers (Totoro or DRAC), which you cannot reach; you hand him the driver command and he launches it.
+
+7. **What to tell Claude.** Paste the one-command resume at the end of this file into a fresh Claude Code session started in the repo root.
+
 ## Critical context
 
 - **Mission for this lane.** Run the simulation study that compares four phylogenetic trait-imputation arms on accuracy, probability calibration and interval coverage: (1) the frequentist stack (Rphylopars for continuous-family traits, castor's Mk model for discrete traits), (2) BACE (Bayesian, joint), (3) pigauto with the GNN off, (4) pigauto with the GNN on. Two papers from one set of runs: the BACE paper reports arms 1 and 2; the pigauto paper (later) reports 1 to 4.
@@ -81,7 +123,7 @@ FINDING-OF-RECORD: `gnn = FALSE` semantics and the two-baseline contract; the ca
 
 ## How to resume
 
-Environment: a clone of github.com/itchyshin/pigauto at `main`, R 4.4 or later, packages per the plan's environment table; `NOT_CRAN=true` for tests; no credentials needed for anything in this lane. Safe verification: `Rscript -e 'devtools::test(filter = "gnn-off")'` and the `--smoke` invocation above. Do not stage `.unlazy/`, `LOOP/`, `results*/`, `logs*/`, or anything under `docs/` that is a build output (the `docs/` directory is git-ignored except force-added dev-log files; add dev-log files with `git add -f`).
+Environment: the "Start here" section above (a public clone of github.com/itchyshin/pigauto at `main`, R 4.4 or later, the listed packages); `NOT_CRAN=true` for tests; no credentials needed for anything in this lane. Safe verification: `Rscript -e 'devtools::test(filter = "gnn-off")'` and the `--smoke` invocation above. Do not stage `.unlazy/`, `LOOP/`, `results*/`, `logs*/`, or anything under `docs/` that is a build output (the `docs/` directory is git-ignored except force-added dev-log files; add dev-log files with `git add -f`).
 
 One-command resume, run from the repo root in your own terminal:
 
