@@ -1502,6 +1502,7 @@ latent_names_from_map <- function(trait_map) {
 #' @export
 print.pigauto_fit <- function(x, ...) {
   cat("pigauto_fit\n")
+  if (isFALSE(x$model_config$gnn)) cat("  GNN     : off (baseline only)\n")
   cat("  Species :", length(x$species_names), "\n")
   cat("  Traits  :", length(x$trait_names),
       "--", paste(x$trait_names, collapse = ", "), "\n")

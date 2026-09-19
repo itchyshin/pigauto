@@ -323,15 +323,18 @@ signal, neutral/slight hurt at moderate).
 `gnn = TRUE`. With `gnn = FALSE` no GNN is built and **the whole path makes
 zero `torch::` calls** (the `impute()` preflight skips its device probe via
 `probe_runtime = FALSE`; `fit_pigauto()` returns before `get_device()`;
-`predict()` fills `latent_runs` in plain R). Invariants, all gated in
-`tests/testthat/test-gnn-off.R`:
+`predict()` fills `latent_runs` in plain R). Invariants (the ones marked
+[T] are asserted in `tests/testthat/test-gnn-off.R`; the rest are
+contract clauses checked by review, not by a test):
 
+- [T] Zero torch calls for `impute()`, `predict()`, `multi_impute_trees()`
+  under `gnn = FALSE`; no-split fallback is pure baseline; covariates warn.
 - Arms differ only in the GNN term: calibration runs `calibrate_gates()` with
   `delta_cal = mu_cal`, then `r_cal_bm += r_cal_gnn; r_cal_gnn[] <- 0`.
   `safety_floor` / `phylo_signal_gate` semantics are shared. The pure
   traditional-stats arm is `gnn = FALSE, safety_floor = FALSE,
   phylo_signal_gate = FALSE`.
-- `fit$baseline` (val/test-masked) feeds every scorer — `evaluate()`,
+- [T] `fit$baseline` (val/test-masked) feeds every scorer — `evaluate()`,
   `cross_validate()`, `summary()` — never `fit$baseline_full`.
   `fit$baseline_full` (`splits = NULL`, computed in `impute()` before
   `graph$D <- NULL`) is used by `predict()` only in production mode
@@ -339,6 +342,8 @@ zero `torch::` calls** (the `impute()` preflight skips its device probe via
   `baseline_full`; that is test-cell leakage.
 - `predict()` stores the raw blend at every cell in `latent_runs` (as the
   GNN-on path does); observed cells are not overwritten there.
+- User covariates are GNN-only (`obs_refine`, `cov_linear`); `gnn = FALSE`
+  ignores them with a warning. `gnn` must be a single TRUE/FALSE.
 - Fit slots: `model_state = list()`, `model_config$gnn = FALSE`,
   `history` 0-row, `val_rmse`/`test_rmse` numeric (never NULL),
   `baseline$path` and `baseline_full$path` name the dispatch per trait. Both

@@ -31,7 +31,9 @@ term:
   held-out cells (`splits = NULL`); `predict()` uses it only in production
   mode (no `baseline_override`, no `.mask_observed_idx`), so completed data
   no longer pay the held-out-cell cost that gate calibration imposes. Under
-  `gnn = TRUE` nothing changes (`baseline_full` is `NULL` unless supplied).
+  `gnn = TRUE` predictions are unchanged; the fit object gains three
+  inert slots (`baseline_full = NULL`, `model_config$gnn = TRUE`,
+  `baseline$path`).
 - Conformal scores come from the held-out fit's validation residuals; the
   production interval is centred on `baseline_full`, so it is conservative
   when the BM model is right (inference, not a guarantee) and should be
@@ -49,6 +51,11 @@ term:
   `zi_mag_constant`).
 - `summary()`/`print()` show `GNN: off (baseline only)`; `plot(fit,
   "history")` explains that no history exists for a `gnn = FALSE` fit.
+- Without a validation split (`missing_frac = 0`, or `fit_pigauto(splits =
+  NULL)`) the GNN-off fit is pure baseline (`r_cal_bm = 1`) with no
+  conformal scores, and still predicts.
+- User `covariates` enter pigauto only through the GNN; under `gnn = FALSE`
+  they are ignored, with a warning.
 
 Scope note: for continuous-only data at `lambda_mode = "fixed_1"` the
 GNN-off arm is a phylopars-style joint BM fit by construction, so a

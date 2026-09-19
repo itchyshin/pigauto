@@ -275,9 +275,18 @@ test_that("multi_impute_trees(gnn = FALSE) works and calls no torch", {
   on.exit(try(untrace(torch::torch_tensor, where = asNamespace("torch")),
               silent = TRUE), add = TRUE)
 
-  mi_t <- suppressWarnings(multi_impute_trees(
-    fx$df, trees, m_per_tree = 2L, gnn = FALSE, verbose = FALSE, seed = 5L
-  ))
+  # Two expected warnings on this tiny fixture, neither about the GNN-off path:
+  # "Few tree-sensitivity draws" (T * m_per_tree = 4) and the per-trait
+  # "Small validation set" calibration warning.
+  expect_warning(
+    expect_warning(
+      mi_t <- multi_impute_trees(
+        fx$df, trees, m_per_tree = 2L, gnn = FALSE, verbose = FALSE, seed = 5L
+      ),
+      "Few tree-sensitivity draws"
+    ),
+    "Small validation set"
+  )
 
   expect_s3_class(mi_t, "pigauto_mi_trees")
   expect_length(mi_t$datasets, 4L)
@@ -321,13 +330,74 @@ test_that("gnn = TRUE default path is unchanged", {
   skip_if_no_libtorch()
   fx <- make_gnn_off_fixture()
 
-  res <- impute(fx$df, fx$tree, epochs = 5L, verbose = FALSE)
+  res <- suppressWarnings(impute(fx$df, fx$tree, epochs = 5L, verbose = FALSE))
 
-  expect_true(res$fit$model_config$gnn)
-  bf <- res$fit$baseline_full
-  if (!is.null(bf)) {
-    expect_equal(dim(bf$mu), dim(res$fit$baseline$mu))
-  }
+  # The GNN arm records gnn = TRUE, computes no production refit, and still
+  # builds and runs the network at predict time.
+  expect_true(isTRUE(res$fit$model_config$gnn))
+  expect_null(res$fit$baseline_full)
+  expect_true(length(res$fit$model_state) > 0L)
+  n_tensor <- 0L
+  trace(torch::torch_tensor, tracer = function() n_tensor <<- n_tensor + 1L,
+        print = FALSE, where = asNamespace("torch"))
+  on.exit(try(untrace(torch::torch_tensor, where = asNamespace("torch")),
+              silent = TRUE), add = TRUE)
+  invisible(predict(res$fit, return_se = FALSE))
+  expect_gt(n_tensor, 0L)
+})
+
+
+test_that("gnn = FALSE without a validation split falls back to pure baseline and predicts", {
+  skip_on_cran()
+  fx <- make_gnn_off_fixture()
+
+  res <- impute(fx$df, fx$tree, gnn = FALSE, missing_frac = 0, verbose = FALSE, seed = 5L)
+  fit <- res$fit
+  expect_equal(unname(fit$r_cal_bm), rep(1, length(fit$r_cal_bm)))
+  expect_equal(unname(fit$r_cal_gnn), rep(0, length(fit$r_cal_gnn)))
+  expect_true(is.na(fit$val_rmse))
+  expect_null(fit$conformal_scores)
+  pred <- predict(fit, return_se = TRUE)
+  expect_s3_class(pred, "pigauto_pred")
+  expect_false(anyNA(res$completed$mass))
+})
+
+
+test_that("gnn = FALSE warns that user covariates are ignored", {
+  skip_on_cran()
+  fx <- make_gnn_off_fixture()
+  covs <- data.frame(temp = rnorm(nrow(fx$df)), row.names = rownames(fx$df))
+
+  # Muffle the unrelated small-validation-set warning so only the covariate
+  # warning reaches expect_warning().
+  expect_warning(
+    withCallingHandlers(
+      impute(fx$df, fx$tree, gnn = FALSE, covariates = covs,
+             verbose = FALSE, seed = 5L),
+      warning = function(w) {
+        if (!grepl("covariates are not used", conditionMessage(w))) {
+          invokeRestart("muffleWarning")
+        }
+      }
+    ),
+    "covariates are not used"
+  )
+})
+
+
+test_that("gnn must be TRUE or FALSE", {
+  fx <- make_gnn_off_fixture()
+  expect_error(impute(fx$df, fx$tree, gnn = NA, verbose = FALSE), "'gnn' must be TRUE or FALSE")
+  expect_error(impute(fx$df, fx$tree, gnn = "no", verbose = FALSE), "'gnn' must be TRUE or FALSE")
+})
+
+
+test_that("print() and summary() announce a GNN-off fit", {
+  skip_on_cran()
+  fx <- make_gnn_off_fixture()
+  res <- impute(fx$df, fx$tree, gnn = FALSE, verbose = FALSE, seed = 5L)
+  expect_output(print(res$fit), "GNN     : off")
+  expect_output(summary(res$fit), "GNN: off")
 })
 
 

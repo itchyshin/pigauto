@@ -63,6 +63,10 @@
 #'   \code{conformal_method = "mondrian"} is not supported when
 #'   \code{gnn = FALSE} (its locality statistic conditions on a calibrated
 #'   GNN prediction surface that does not exist here) and raises an error.
+#'   User \code{covariates} enter pigauto only through the GNN, so under
+#'   \code{gnn = FALSE} they are ignored (with a warning). Without a
+#'   validation split (\code{splits = NULL}) the fit is pure baseline
+#'   (\eqn{r_{BM} = 1}) and carries no conformal scores.
 #' @param baseline_full list (output of \code{\link{fit_baseline}} with
 #'   \code{splits = NULL}) or \code{NULL}. Only used when \code{gnn = FALSE}:
 #'   the production-mode baseline, fit on ALL observed cells (no val/test
@@ -440,6 +444,9 @@ fit_pigauto <- function(
   # prediction surface, which does not exist under gnn = FALSE (see
   # "Semantics of gnn = FALSE" in the gnn-off contract). Fail fast rather
   # than relying on compute_conformal_scores() to notice.
+  if (!is.logical(gnn) || length(gnn) != 1L || is.na(gnn)) {
+    stop("'gnn' must be TRUE or FALSE.", call. = FALSE)
+  }
   if (isFALSE(gnn) && identical(conformal_method, "mondrian")) {
     stop(
       "conformal_method = \"mondrian\" is not supported when gnn = FALSE: ",
@@ -480,6 +487,13 @@ fit_pigauto <- function(
   # the baseline) and fixed_cal = NULL.
   # ===========================================================================
   if (isFALSE(gnn)) {
+    # User covariates enter pigauto only through the GNN (obs_refine MLP /
+    # cov_linear fixed effect). With no GNN they contribute nothing; say so
+    # rather than let them vanish silently.
+    if (!is.null(data$covariates) && ncol(data$covariates) > 0L) {
+      warning("gnn = FALSE: user covariates are not used by the phylogenetic ",
+              "baseline and are ignored for this fit.", call. = FALSE)
+    }
     if (is.null(baseline_full)) {
       if (verbose) message("Fitting production baseline (splits = NULL)...")
       baseline_full <- fit_baseline(data, tree, splits = NULL, graph = graph,
@@ -633,6 +647,21 @@ fit_pigauto <- function(
           sqrt(mean(test_cells^2))
         }
       }
+    }
+
+    # No validation split (missing_frac = 0, splits = NULL) or no trait_map:
+    # calibration cannot run, so the fit is pure baseline (r_bm = 1). The
+    # GNN path reaches predict() with calibrated_gates = NULL and falls back
+    # to the learned gate; there is no learned gate here, so make the
+    # weights explicit instead of leaving predict() to reject the object.
+    if (is.null(calibrated_gates_list)) {
+      latent_nm <- colnames(data$X_scaled)
+      one  <- stats::setNames(rep(1, p), latent_nm)
+      zero <- stats::setNames(rep(0, p), latent_nm)
+      calibrated_gates_list <- list(r_cal_bm = one, r_cal_gnn = zero,
+                                    r_cal_mean = zero)
+      calibrated_gates <- zero
+      mean_baseline_per_col <- NULL
     }
 
     history <- data.frame(

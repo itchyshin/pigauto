@@ -2,6 +2,10 @@
 
 Changes to this contract go through the orchestrator; builders do not drift it.
 
+Amended after V2 (Rose): no-split fallback = pure baseline (r_bm = 1, no conformal); user covariates
+are ignored under gnn = FALSE with a warning; `gnn` is validated as a single TRUE/FALSE; `latent_runs`
+stores the raw blend at every cell (observed cells not overwritten), matching GNN-on.
+
 ## Semantics of `gnn = FALSE`
 
 - `fit_pigauto(gnn = TRUE, baseline_full = NULL, ...)` and `impute(gnn = TRUE, ...)`. When `gnn = FALSE`
@@ -22,8 +26,8 @@ Changes to this contract go through the orchestrator; builders do not drift it.
   itself only when `gnn = FALSE` and `baseline_full` is NULL.
 - `fit_baseline()` returns `path`: a named character vector (one entry per trait_map name) naming the
   dispatch that produced it: "joint_mvn", "threshold_joint", "ovr_categorical", "per_column_bm",
-  "label_propagation", "multi_proportion_bm", or "zi_gate_lp" (names may be refined by S1 but must be
-  stable and documented in the roxygen @return).
+  "label_propagation", "multi_proportion_bm", "zi_gate_lp", or "zi_mag_constant" (as implemented in
+  S1 and documented in the roxygen @return; zi_count reports the gate column's dispatch).
 
 ## `pigauto_fit` slots under `gnn = FALSE`
 

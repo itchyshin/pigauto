@@ -82,7 +82,11 @@ is folded into \eqn{r_{BM}}). The pure traditional-stats arm is
 \code{gnn = FALSE, safety_floor = FALSE, phylo_signal_gate = FALSE}.
 \code{conformal_method = "mondrian"} is not supported when
 \code{gnn = FALSE} (its locality statistic conditions on a calibrated
-GNN prediction surface that does not exist here) and raises an error.}
+GNN prediction surface that does not exist here) and raises an error.
+User \code{covariates} enter pigauto only through the GNN, so under
+\code{gnn = FALSE} they are ignored (with a warning). Without a
+validation split (\code{splits = NULL}) the fit is pure baseline
+(\eqn{r_{BM} = 1}) and carries no conformal scores.}
 
 \item{baseline_full}{list (output of \code{\link{fit_baseline}} with
 \code{splits = NULL}) or \code{NULL}. Only used when \code{gnn = FALSE}:

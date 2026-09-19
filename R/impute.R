@@ -352,6 +352,9 @@ impute <- function(traits, tree, species_col = NULL,
   predict_method <- match.arg(predict_method)
   match_observed <- match.arg(match_observed)
   clamp_outliers <- isTRUE(clamp_outliers)
+  if (!is.logical(gnn) || length(gnn) != 1L || is.na(gnn)) {
+    stop("'gnn' must be TRUE or FALSE.", call. = FALSE)
+  }
   if (!is.numeric(clamp_factor) || length(clamp_factor) != 1L ||
       !is.finite(clamp_factor) || clamp_factor < 1) {
     stop("'clamp_factor' must be a single finite numeric >= 1.",
