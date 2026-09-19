@@ -28,6 +28,25 @@ make_dgp <- function(dgp, n, seed) {
     df <- df[tree$tip.label, , drop = FALSE]
     return(list(df = df, tree = tree))
   }
+  if (dgp == "types_mixed") {
+    # Every pigauto trait type on one tree, each from its own BM latent (independent liabilities):
+    # 2 continuous, 1 count (Poisson, log link), 1 proportion (logit-normal), 1 binary, 1 ordinal
+    # (4 levels), 1 categorical (3 levels). Used for the per-type small tests.
+    tree <- ape::rcoal(n); sp <- tree$tip.label
+    lat <- function() ape::rTraitCont(tree, model = "BM", sigma = 1)
+    l_cnt <- lat(); l_prp <- lat(); l_bin <- lat(); l_ord <- lat(); l_cat <- lat()
+    ord_breaks <- stats::quantile(l_ord, c(0, .25, .5, .75, 1))
+    df <- data.frame(row.names = sp,
+      c1 = lat(), c2 = lat(),
+      cnt = as.integer(stats::rpois(n, exp(1.5 + 0.8 * l_cnt))),
+      prp = stats::plogis(l_prp + stats::rnorm(n, 0, 0.3)),
+      bin = factor(ifelse(l_bin > stats::median(l_bin), "yes", "no")),
+      ord = factor(cut(l_ord, ord_breaks, labels = c("L1", "L2", "L3", "L4"), include.lowest = TRUE),
+                   levels = c("L1", "L2", "L3", "L4"), ordered = TRUE),
+      cat3 = factor(cut(l_cat, stats::quantile(l_cat, c(0, 1/3, 2/3, 1)), labels = c("A", "B", "C"), include.lowest = TRUE)))
+    df$prp <- pmin(pmax(df$prp, 1e-4), 1 - 1e-4)
+    return(list(df = df, tree = tree, trait_types = c(prp = "proportion")))
+  }
   tree <- ape::rcoal(n)   # ultrametric: BM-appropriate, and BACE/MCMCglmm requires it
   tree$edge.length <- tree$edge.length / max(ape::node.depth.edgelength(tree))
   sp <- tree$tip.label
@@ -63,7 +82,8 @@ make_cell <- function(dgp, n, seed, miss_frac = 0.30) {
   }
   df_miss <- truth; for (v in names(truth)) df_miss[mask[, v], v] <- NA
   list(truth = truth, tree = tree, mask = mask, df_miss = df_miss,
-       cont_traits = names(truth)[vapply(truth, is.numeric, logical(1))])
+       cont_traits = names(truth)[vapply(truth, is.numeric, logical(1))],
+       trait_types = d$trait_types)
 }
 
 # ---- scoring ------------------------------------------------------------------------------
@@ -88,3 +108,32 @@ score_arm <- function(arm, completed, lower = NULL, upper = NULL) {
   do.call(rbind, rows)
 }
 
+
+# ---- frequentist stack: Rphylopars on the continuous-family columns (count on log1p, proportion on
+# logit, back-transformed), castor Mk (ML hidden-state prediction) on each discrete trait separately.
+run_freq <- function(df_miss, truth, mask, tree, cont_traits, trait_types = NULL) {
+  comp <- truth; comp[] <- NA
+  # continuous family
+  is_prop <- names(truth) %in% names(trait_types)[trait_types == "proportion"]
+  is_cnt  <- vapply(truth, is.integer, logical(1))
+  tf <- function(v, x) if (is_prop[match(v, names(truth))]) stats::qlogis(x) else if (is_cnt[match(v, names(truth))]) log1p(x) else x
+  itf <- function(v, x) if (is_prop[match(v, names(truth))]) stats::plogis(x) else if (is_cnt[match(v, names(truth))]) pmax(expm1(x), 0) else x
+  df4 <- df_miss[, cont_traits, drop = FALSE]
+  for (v in cont_traits) df4[[v]] <- tf(v, as.numeric(df4[[v]]))
+  df_in <- data.frame(species = rownames(df4), df4, stringsAsFactors = FALSE)
+  fit <- Rphylopars::phylopars(df_in, tree = tree, model = "BM", phylo_correlated = TRUE, pheno_correlated = TRUE, REML = TRUE)
+  rec <- fit$anc_recon[rownames(df4), cont_traits, drop = FALSE]
+  for (v in cont_traits) { comp[[v]] <- df_miss[[v]]; comp[mask[, v], v] <- itf(v, rec[mask[, v], v]) }
+  # discrete traits: castor Mk, equal rates for binary/categorical, stepwise (SUEDE) for ordinal
+  for (v in setdiff(names(truth), cont_traits)) {
+    f <- df_miss[[v]]; lev <- levels(f); tip <- as.integer(f)  # NA where masked
+    tip_full <- tip[match(tree$tip.label, rownames(df_miss))]
+    rm <- if (is.ordered(f)) "SUEDE" else "ER"
+    h <- castor::hsp_mk_model(tree, tip_states = tip_full, Nstates = length(lev), rate_model = rm, Ntrials = 3, Nthreads = 1)
+    pred <- max.col(h$likelihoods[seq_along(tree$tip.label), , drop = FALSE])
+    pred <- pred[match(rownames(df_miss), tree$tip.label)]
+    out <- as.character(f); out[mask[, v]] <- lev[pred[mask[, v]]]
+    comp[[v]] <- factor(out, levels = lev, ordered = is.ordered(f))
+  }
+  list(completed = comp)
+}

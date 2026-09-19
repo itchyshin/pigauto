@@ -9,7 +9,9 @@
 #           [--arms gnn_on,gnn_off,gnn_off_pure,rphylopars,bace,floor] \
 #           [--epochs 2000] [--bace_nitt 50000 --bace_burnin 10000 --bace_thin 25] [--smoke]
 #
-# DGPs: bm_mixed (4 continuous BM + 1 binary + 1 categorical(3) on ape::rcoal(n)),
+# Arm "freq" = frequentist stack: Rphylopars (continuous family) + castor Mk (discrete traits).
+# DGPs: bm_mixed (4 continuous BM + 1 binary + 1 categorical(3) on ape::rcoal(n)), types_mixed (every
+#       pigauto trait type: 2 continuous, count, proportion, binary, ordinal, categorical),
 #       ou_mixed (simulate_non_bm OU continuous + same discrete), bace_dgp (BACE::sim_bace: y + 2 gaussian
 #       + 1 binary predictors, all imputed), avonet (bundled avonet300/tree300, n ignored). Arms and metrics as locked in the plan. `--smoke` shrinks epochs/chains so the
 #       whole cell runs in seconds; it is for checking the invocation, never for results.
@@ -47,7 +49,7 @@ log_line <- function(...) cat(sprintf("[%s] %s\n", format(Sys.time(), "%H:%M:%S"
 source(file.path(dirname(sub("--file=", "", grep("--file=", commandArgs(), value = TRUE)[1])), "campaign_gnn_off_lib.R"))
 cell_data <- make_cell(dgp, n, seed, miss_frac)
 truth <- cell_data$truth; tree <- cell_data$tree; mask <- cell_data$mask
-df_miss <- cell_data$df_miss; cont_traits <- cell_data$cont_traits
+df_miss <- cell_data$df_miss; cont_traits <- cell_data$cont_traits; trait_types <- cell_data$trait_types
 log_line("cell %s: n=%d traits=%d (continuous %d) masked=%d", tag, nrow(truth), ncol(truth),
          length(cont_traits), sum(mask))
 
@@ -57,7 +59,8 @@ run_pigauto <- function(arm) {
     gnn_on       = list(gnn = TRUE,  epochs = epochs),
     gnn_off      = list(gnn = FALSE),
     gnn_off_pure = list(gnn = FALSE, safety_floor = FALSE, phylo_signal_gate = FALSE))
-  res <- do.call(pigauto::impute, c(list(traits = df_miss, tree = tree, verbose = FALSE, seed = seed), extra))
+  res <- do.call(pigauto::impute, c(list(traits = df_miss, tree = tree, verbose = FALSE, seed = seed,
+                                         trait_types = trait_types), extra))
   path <- res$fit$baseline$path
   pred <- res$prediction
   comp <- res$completed[rownames(truth), names(truth)]
@@ -126,6 +129,7 @@ for (arm in arms) {
   r <- tryCatch({
     if (arm %in% c("gnn_on", "gnn_off", "gnn_off_pure")) run_pigauto(arm)
     else if (arm == "rphylopars") run_rphylopars()
+    else if (arm == "freq") run_freq(df_miss, truth, mask, tree, cont_traits, trait_types)
     else if (arm == "bace") run_bace()
     else if (arm == "floor") run_floor()
     else stop("unknown arm ", arm)
