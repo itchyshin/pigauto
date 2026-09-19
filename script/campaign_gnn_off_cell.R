@@ -10,6 +10,7 @@
 #           [--epochs 2000] [--bace_nitt 50000 --bace_burnin 10000 --bace_thin 25] [--smoke]
 #
 # Arm "freq" = frequentist stack: Rphylopars (continuous family) + castor Mk (discrete traits).
+# Arm "mf_phylo" = missForest on traits + phylogenetic eigenvectors (Gendre et al. 2024 hybrid).
 # DGPs: bm_mixed (4 continuous BM + 1 binary + 1 categorical(3) on ape::rcoal(n)), types_mixed (every
 #       pigauto trait type: 2 continuous, count, proportion, binary, ordinal, categorical),
 #       ou_mixed (simulate_non_bm OU continuous + same discrete), bace_dgp (BACE::sim_bace: y + 2 gaussian
@@ -130,6 +131,7 @@ for (arm in arms) {
     if (arm %in% c("gnn_on", "gnn_off", "gnn_off_pure")) run_pigauto(arm)
     else if (arm == "rphylopars") run_rphylopars()
     else if (arm == "freq") run_freq(df_miss, truth, mask, tree, cont_traits, trait_types)
+    else if (arm == "mf_phylo") run_mf_phylo(df_miss, truth, mask, tree)
     else if (arm == "bace") run_bace()
     else if (arm == "floor") run_floor()
     else stop("unknown arm ", arm)

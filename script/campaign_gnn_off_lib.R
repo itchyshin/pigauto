@@ -137,3 +137,30 @@ run_freq <- function(df_miss, truth, mask, tree, cont_traits, trait_types = NULL
   }
   list(completed = comp)
 }
+
+# ---- phylogeny + machine-learning hybrid (the approach of Gendre, Hauffe, Pimiento and Silvestro 2024, MEE,
+# TDIP's missForest_phylo): missForest on the trait table plus phylogenetic eigenvectors. Eigenvectors are the
+# principal coordinates of the cophenetic distance matrix (PVR-style), keeping axes that explain `variance_fraction`
+# of the variance (TDIP's default idea), capped at `max_axes`.
+phylo_eigenvectors <- function(tree, variance_fraction = 0.9, max_axes = 20L) {
+  D <- ape::cophenetic.phylo(tree); n <- nrow(D)
+  J <- diag(n) - matrix(1 / n, n, n); B <- -0.5 * J %*% (D^2) %*% J
+  e <- eigen(B, symmetric = TRUE); keep <- e$values > 1e-8
+  vals <- e$values[keep]; vecs <- e$vectors[, keep, drop = FALSE]
+  k <- min(max_axes, which(cumsum(vals) / sum(vals) >= variance_fraction)[1])
+  ev <- vecs[, seq_len(k), drop = FALSE] %*% diag(sqrt(vals[seq_len(k)]), k, k)
+  rownames(ev) <- rownames(D); colnames(ev) <- paste0("pev", seq_len(k)); ev
+}
+run_mf_phylo <- function(df_miss, truth, mask, tree, variance_fraction = 0.9) {
+  ev <- phylo_eigenvectors(tree, variance_fraction)[rownames(df_miss), , drop = FALSE]
+  X <- cbind(df_miss, as.data.frame(ev))
+  for (v in names(df_miss)) if (is.ordered(X[[v]])) X[[v]] <- factor(as.character(X[[v]]), levels = levels(df_miss[[v]]))
+  imp <- missForest::missForest(X, maxiter = 10, ntree = 100, verbose = FALSE)$ximp
+  comp <- truth; comp[] <- NA
+  for (v in names(df_miss)) {
+    x <- imp[[v]]
+    if (is.factor(df_miss[[v]])) comp[[v]] <- factor(as.character(x), levels = levels(df_miss[[v]]), ordered = is.ordered(df_miss[[v]]))
+    else if (is.integer(df_miss[[v]])) comp[[v]] <- as.integer(round(x)) else comp[[v]] <- x
+  }
+  list(completed = comp)
+}
