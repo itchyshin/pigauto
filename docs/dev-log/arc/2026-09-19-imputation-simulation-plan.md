@@ -105,6 +105,56 @@ Pre-run before any submit (D-139): one replicate per core cell at n = 100 and n 
 | 10 full results incl. failures | per-cell table with failure rate; no fit dropped |
 | 11 MCSE on every number | section P table; aggregator computes MCSE for every summary |
 
+## Environment and reproduction, self-contained
+
+Written so that a machine with no access to Shinichi's notes or servers can set up and run the cells. Versions are the ones the feasibility runs used.
+
+| software | version used | install |
+|---|---|---|
+| R | 4.6.0 | any 4.4 or later should do |
+| pigauto | main at commit ebbf63e or later (0.11.0 with `gnn = FALSE`) | `remotes::install_github("itchyshin/pigauto")` |
+| torch (R) | 0.17.0 | `install.packages("torch"); torch::install_torch()` (arm 4 only; arm 3 makes no torch call) |
+| Rphylopars | 0.3.10 | CRAN |
+| castor | 1.8.7 | CRAN |
+| BACE | 0.0.0.9000 | `remotes::install_github("daniel1noble/BACE")` (public), plus MCMCglmm 2.36 from CRAN |
+| missForest | CRAN current | for the hybrid arm |
+| ape, phylolm, ggplot2 | 5.8.1, 2.6.5, 4.0.3 | CRAN (phylolm only for the covariate variant of arm 1) |
+
+Scripts, all in `script/`: `campaign_gnn_off_lib.R` (DGPs, seeded mask, scoring, the frequentist-stack and hybrid arms), `campaign_gnn_off_cell.R` (one cell, every arm, one rds; `--smoke` for an invocation check), `campaign_gnn_off_aggregate.R`, `campaign_gnn_off_tables.R`, `campaign_gnn_off_figures.R`, `campaign_solver_cell.R`, `campaign_solver_aggregate.R`.
+
+Run discipline: `OPENBLAS_NUM_THREADS=1`; 4 threads per cell for torch (`OMP_NUM_THREADS=4 TORCH_NUM_THREADS=4`), 1 thread when running arms 1 and 3 only; one process per cell; a cell whose rds exists is skipped, so runs resume. Every rds records the pigauto version, host and time; save `sessionInfo()` beside the results.
+
+A cloud session cannot reach Totoro or DRAC (campus network, personal SSH keys). Its job is the `--smoke` invocation and one real cell at n = 100; the campaign is launched from a session on Shinichi's Mac.
+
+## Prior benchmark to position against
+
+Gendre, Hauffe, Pimiento and Silvestro (2024, *MEE* 15, "Benchmarking imputation methods for categorical biological data"; package TDIP, github.com/Matgend/TDIP) compared phylogenetic comparative methods (corHMM), machine learning (missForest, kNN, MICE), deep learning (GAIN) and a phylogeny + ML hybrid and ensemble on simulated categorical traits under varied missing rates, mechanisms, phylogenetic missingness bias and evolutionary models, and found the hybrid ensemble most robust. Consequences: castor is the same model class as their phylogenetic arm (TDIP itself imports castor); their phylogenetically biased missingness mechanism should join our DGP; their hybrid is reproduced here as the `mf_phylo` arm (missForest + phylogenetic eigenvectors) and lost to castor on the discrete traits of the small test; their full ensemble and GAIN are untested and remain an open item. Our calibration and coverage targets go beyond their accuracy-only benchmark.
+
+## Feasibility appendix: the per-type small test (2026-09-19)
+
+Every arm ran on every trait type with no failures: `types_mixed` at n = 100 and 300 and AVONET300, 5 seeds, 30% MCAR, real settings. Five seeds: feasibility, not evidence. Mean z-RMSE (continuous, count, proportion) or accuracy (binary, ordinal, categorical). Raw: `script/campaign_types_results/`.
+
+| arm, `types_mixed` n = 300 | continuous | count | proportion | binary | ordinal | categorical |
+|---|---:|---:|---:|---:|---:|---:|
+| frequentist stack (Rphylopars + castor) | 0.153 | 0.600 | 0.470 | 0.916 | 0.884 | 0.880 |
+| hybrid: missForest + eigenvectors | 0.296 | 0.465 | 0.442 | 0.920 | 0.829 | 0.856 |
+| BACE | 0.173 | 0.533 | 0.479 | 0.916 | 0.840 | 0.851 |
+| pigauto, GNN off (pure) | 0.153 | 0.489 | 0.449 | 0.918 | 0.893 | 0.880 |
+| pigauto, GNN on | 0.189 | 0.521 | 0.453 | 0.913 | 0.851 | 0.878 |
+| mean / mode floor | 1.002 | 0.950 | 1.007 | 0.458 | 0.202 | 0.262 |
+
+| arm, AVONET300 | continuous (4) | ordinal (Migration) | categorical (2) |
+|---|---:|---:|---:|
+| frequentist stack | 0.614 | 0.769 | 0.771 |
+| hybrid | 0.648 | 0.780 | 0.777 |
+| BACE | 0.693 | 0.744 | 0.727 |
+| pigauto, GNN off (pure, in-house solver) | 0.873 | 0.758 | 0.777 |
+| pigauto, GNN on | 0.848 | 0.720 | 0.726 |
+
+Wall per fit at n = 300: BACE 729 s, GNN on 185 s, GNN off 6 s (pure 0.5 s), frequentist stack 0.9 s, hybrid 1.0 s.
+
+Settled: castor stays as the frequentist discrete arm (matches or beats the hybrid on simulated discrete traits, within noise on AVONET); counts are the frequentist stack's weak type (Rphylopars on log1p fell below the floor at n = 100), so the plan names a phylogenetic Poisson GLM (`phylolm::phyloglm(method = "poisson_GEE")`) or the hybrid for counts; the AVONET continuous gap is pigauto's in-house solver (arc C), the open decision for arm 3; BACE is competitive on every type and its cost sizes the study.
+
 ## Open before launch (decide with Shinichi and Szymek)
 
 - Phylogenetic signal: lambda in {0.3, 0.7, 1.0} on the tree covariance is one parameterisation; BACE's own simulator uses a "phylo_signal" fraction of variance. Agree one definition and state it in both papers.
@@ -114,3 +164,6 @@ Pre-run before any submit (D-139): one replicate per core cell at n = 100 and n 
 - BACE chain length: fix by convergence, then re-estimate compute.
 - Whether to add a single-trait-type sensitivity (each type alone) for the BACE paper's per-type claims; the `types_mixed` DGP already yields per-type metrics from one run.
 - Compute target: Totoro core slice first, DRAC array for the factorial.
+- Count traits in the frequentist stack: phyloglm Poisson or the hybrid; state it.
+- TDIP's own ensemble and GAIN: untested; include as an extra discrete-trait arm only if it installs cleanly on the runner.
+- Phylogenetically biased missingness (whole clades unsampled), from Gendre et al. 2024: add as a fourth missingness level.
