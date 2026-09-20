@@ -1,0 +1,208 @@
+<title>Four Imputation Arms</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#F6F8F7; --surface:#FFFFFF; --sunk:#EDF1EF;
+    --ink:#15201C; --muted:#5B6A63; --line:#DCE4E0;
+    --accent:#2F6F5E; --accent-soft:#DCEBE5;
+    --good:#2E7D52; --bad:#A33A2E; --warn:#9A6B12;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --bg:#101614; --surface:#18201D; --sunk:#131A18;
+    --ink:#E7EDEA; --muted:#93A39B; --line:#26312C;
+    --accent:#6FC3A8; --accent-soft:#1D2F29;
+    --good:#6FC08C; --bad:#E08A7C; --warn:#D8A54A;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#101614; --surface:#18201D; --sunk:#131A18;
+    --ink:#E7EDEA; --muted:#93A39B; --line:#26312C;
+    --accent:#6FC3A8; --accent-soft:#1D2F29;
+    --good:#6FC08C; --bad:#E08A7C; --warn:#D8A54A;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);margin:0;
+       padding-inline:16px;padding-block:0 48px;line-height:1.5}
+  .wrap{max-width:1080px;margin:0 auto}
+  header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;
+         padding-block:18px 10px;border-bottom:1px solid var(--line)}
+  h1{font-size:22px;font-weight:600;margin:0;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:13px;margin-top:3px}
+  .warnbar{margin-top:10px;background:var(--accent-soft);color:var(--ink);border-left:3px solid var(--accent);
+           padding:8px 12px;font-size:13px;border-radius:0 4px 4px 0}
+  nav{display:flex;gap:4px;margin-top:12px;flex-wrap:wrap}
+  nav button{font:inherit;font-size:13px;padding:6px 12px;border:1px solid var(--line);background:var(--surface);
+             color:var(--muted);border-radius:4px;cursor:pointer}
+  nav button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+  nav button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .filters{display:flex;gap:14px;flex-wrap:wrap;align-items:end;margin:18px 0 12px}
+  .filters label{display:flex;flex-direction:column;gap:3px;font-size:11px;letter-spacing:.06em;
+                 text-transform:uppercase;color:var(--muted)}
+  .filters select{font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--line);
+                  border-radius:4px;background:var(--surface);color:var(--ink)}
+  section{margin-top:8px}
+  h2{font-size:15px;font-weight:600;margin:24px 0 2px}
+  .note{color:var(--muted);font-size:12.5px;margin:0 0 10px;max-width:68ch}
+  .scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{padding:7px 12px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+  th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500;
+     background:var(--sunk);position:sticky;top:0}
+  th:first-child,td:first-child{text-align:left}
+  tbody tr:last-child td{border-bottom:none}
+  td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .mcse{color:var(--muted);font-size:11px}
+  .arm{font-weight:500}
+  .pill{display:inline-block;font-size:10.5px;padding:1px 6px;border-radius:999px;margin-left:6px;
+        border:1px solid currentColor;font-weight:500}
+  .pill.good{color:var(--good)} .pill.bad{color:var(--bad)}
+  .bars{display:grid;gap:5px;margin-top:6px}
+  .bar{display:grid;grid-template-columns:170px 1fr 92px;gap:10px;align-items:center;font-size:12.5px}
+  .bar .track{background:var(--sunk);border-radius:3px;height:16px;position:relative;overflow:hidden}
+  .bar .fill{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:3px}
+  .bar .fill.ref{background:var(--muted);opacity:.45}
+  .bar .v{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+  .empty{color:var(--muted);font-size:13px;padding:18px;border:1px dashed var(--line);border-radius:6px}
+  footer{color:var(--muted);font-size:12px;margin-top:34px;border-top:1px solid var(--line);padding-top:12px;max-width:72ch}
+  code{font-family:var(--mono);font-size:12px;background:var(--sunk);padding:1px 4px;border-radius:3px}
+  @media (max-width:560px){ .bar{grid-template-columns:120px 1fr 74px} }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Four Imputation Arms</h1>
+  <div class="sub" id="sub"></div>
+  <div class="warnbar" id="status"></div>
+  <nav role="tablist">
+    <button role="tab" aria-selected="true" data-tab="dan">Frequentist vs BACE</button>
+    <button role="tab" aria-selected="false" data-tab="all">All four arms</button>
+    <button role="tab" aria-selected="false" data-tab="diag">Cost and failures</button>
+  </nav>
+</header>
+
+<div class="filters">
+  <label>Species <select id="f-n"></select></label>
+  <label>Signal (lambda) <select id="f-lambda"></select></label>
+  <label>Cross-trait (rho) <select id="f-rho"></select></label>
+  <label>Missingness <select id="f-miss"></select></label>
+</div>
+
+<section id="panel"></section>
+
+<footer id="foot"></footer>
+</div>
+
+<script id="simdata" type="application/json">__DATA__</script>
+<script>
+(function(){
+  var D = JSON.parse(document.getElementById('simdata').textContent);
+  var ARM_LABEL = {
+    freq:'1 Frequentist stack', bace:'2 BACE', gnn_off:'3a pigauto GNN off',
+    gnn_off_rphylopars:'3b pigauto, Rphylopars solver', gnn_on:'4 pigauto GNN on',
+    gnn_on_full:'4b GNN on, full baseline', floor:'Mean / mode floor'
+  };
+  var ORDER = ['freq','bace','gnn_off','gnn_off_rphylopars','gnn_on','gnn_on_full','floor'];
+  var tab = 'dan';
+  var uniq = function(k){ var s={}; D.pooled.forEach(function(r){ s[r[k]]=1; });
+    return Object.keys(s).sort(function(a,b){ return (+a||a) > (+b||b) ? 1 : -1; }); };
+
+  var sel = {};
+  [['f-n','n'],['f-lambda','lambda'],['f-rho','rho'],['f-miss','miss']].forEach(function(p){
+    var el = document.getElementById(p[0]), vals = uniq(p[1]);
+    vals.forEach(function(v){ var o=document.createElement('option'); o.value=v; o.textContent=v; el.appendChild(o); });
+    el.value = vals[0]; sel[p[1]] = vals[0];
+    el.addEventListener('change', function(){ sel[p[1]] = el.value; render(); });
+  });
+
+  document.getElementById('sub').textContent =
+    D.meta.cells + ' cells aggregated, up to ' + D.meta.maxReps +
+    ' replicates, generated ' + D.meta.generated + '. Every figure carries its Monte Carlo standard error.';
+
+  function rows(metric, kind){
+    return D.pooled.filter(function(r){
+      return r.metric===metric && r.kind===kind &&
+        String(r.n)===String(sel.n) && String(r.lambda)===String(sel.lambda) &&
+        String(r.rho)===String(sel.rho) && String(r.miss)===String(sel.miss);
+    }).sort(function(a,b){ return ORDER.indexOf(a.arm) - ORDER.indexOf(b.arm); });
+  }
+  function fmt(v,d){ return (v===null||v===undefined||!isFinite(v)) ? '—' : (+v).toFixed(d===undefined?3:d); }
+
+  function metricTable(title, note, metric, kind, arms, lowerBetter, target){
+    var rs = rows(metric, kind).filter(function(r){ return arms.indexOf(r.arm) >= 0; });
+    if(!rs.length) return '<h2>'+title+'</h2><p class="note">'+note+'</p><div class="empty">No cell yet for this combination. The campaign is still computing.</div>';
+    var floor = rows(metric, kind).filter(function(r){ return r.arm==='floor'; })[0];
+    var max = Math.max.apply(null, rs.map(function(r){ return Math.abs(r.mean)||0; }).concat([target||0]));
+    var h = '<h2>'+title+'</h2><p class="note">'+note+'</p><div class="bars">';
+    rs.forEach(function(r){
+      var w = max ? Math.min(100, Math.abs(r.mean)/max*100) : 0;
+      var better = floor && isFinite(floor.mean) && r.arm!=='floor'
+        ? (lowerBetter ? r.mean < floor.mean : r.mean > floor.mean) : null;
+      var pill = better===null ? '' :
+        (better ? '<span class="pill good">beats floor</span>' : '<span class="pill bad">worse than floor</span>');
+      h += '<div class="bar"><div>'+(ARM_LABEL[r.arm]||r.arm)+'</div>'+
+           '<div class="track"><div class="fill'+(r.arm==='floor'?' ref':'')+'" style="width:'+w+'%"></div></div>'+
+           '<div class="v">'+fmt(r.mean)+'</div></div>';
+      h += '<div class="bar"><div class="mcse">'+(r.reps)+' reps'+pill+'</div><div class="mcse">MCSE '+fmt(r.mcse)+
+           ' over '+r.traits+' trait'+(r.traits===1?'':'s')+'</div><div></div></div>';
+    });
+    return h + '</div>';
+  }
+
+  function pairedTable(){
+    var ps = (D.paired||[]).filter(function(r){
+      return String(r.n)===String(sel.n) && String(r.lambda)===String(sel.lambda) &&
+             String(r.rho)===String(sel.rho) && String(r.miss)===String(sel.miss) &&
+             r.metric==='zRMSE' && r.arm==='bace';
+    });
+    if(!ps.length) return '';
+    var h = '<h2>BACE against the reference, paired by mask</h2>'+
+      '<p class="note">Differences are taken within a replicate, on the mask both arms saw, so the error term is the MCSE of the difference rather than of two separate means. Negative favours BACE.</p>'+
+      '<div class="scroll"><table><thead><tr><th>Trait</th><th>Reference</th><th>Common seeds</th><th>Mean difference</th><th>MCSE</th></tr></thead><tbody>';
+    ps.forEach(function(r){
+      h += '<tr><td>'+r.trait+'</td><td>'+(ARM_LABEL[r.reference]||r.reference)+'</td>'+
+           '<td class="num">'+r.n_common_seeds+'</td><td class="num">'+fmt(r.mean_diff)+
+           '</td><td class="num mcse">'+fmt(r.mcse_diff)+'</td></tr>';
+    });
+    return h+'</tbody></table></div>';
+  }
+
+  function render(){
+    var p = document.getElementById('panel'), h = '';
+    var two = ['freq','bace','floor'];
+    var four = ['freq','bace','gnn_off','gnn_off_rphylopars','gnn_on','floor'];
+    if(tab==='dan'){
+      h += metricTable('Point accuracy, continuous-family traits','z-RMSE on masked cells, standardised by the training SD, pooled over the continuous, count and proportion traits. Lower is better.','zRMSE','continuous',two,true);
+      h += metricTable('Interval coverage','Empirical 95% interval coverage. The target is 0.95, and coverage is only meaningful beside the width below: the three arms build different kinds of interval, which the methods note spells out.','coverage','continuous',two,false,0.95);
+      h += metricTable('Interval score','Gneiting and Raftery, the proper score that trades coverage against width. Lower is better.','interval_score','continuous',two,true);
+      h += metricTable('Discrete accuracy','Proportion of masked discrete cells recovered, pooled over the binary, ordinal and categorical traits. Higher is better.','accuracy','discrete',two,false);
+      h += pairedTable();
+    } else if(tab==='all'){
+      h += metricTable('Point accuracy, continuous-family traits','All four arms plus the floor. z-RMSE, lower is better.','zRMSE','continuous',four,true);
+      h += metricTable('Discrete accuracy','All four arms plus the floor. Higher is better.','accuracy','discrete',four,false);
+      h += metricTable('Interval coverage','Nominal 95%. pigauto reports a split-conformal interval, BACE a posterior predictive one and the frequentist stack a model-based one.','coverage','continuous',four,false,0.95);
+      h += metricTable('Brier score','Probability calibration on discrete traits, lower is better.','brier','discrete',four,true);
+    } else {
+      h += '<h2>Cost and failures</h2><p class="note">Wall time and failure counts are recorded per cell by the runner. A fit that fails is scored at the floor and reported, never dropped. This panel fills once the campaign completes and the failure table is pooled.</p>'+
+           '<div class="empty">Populated at the end of the run from <code>failures.csv</code> and the stored wall times.</div>';
+    }
+    p.innerHTML = h;
+  }
+
+  document.querySelectorAll('nav button').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('nav button').forEach(function(x){ x.setAttribute('aria-selected', x===b); });
+      tab = b.dataset.tab; render();
+    });
+  });
+
+  document.getElementById('status').textContent = __STATUS__;
+  document.getElementById('foot').innerHTML =
+    'Arms: 1 the frequentist stack (Rphylopars joint BM, castor Mk, phyloglm Poisson for counts), 2 BACE, '+
+    '3a pigauto with the GNN off, 3b the same with the Rphylopars solver, 4 pigauto with the GNN on, against a mean or mode floor. '+
+    'The primary contrast was fixed before any result was seen: BACE against the frequentist stack on z-RMSE and 95% coverage, core slice, pooled over trait types. '+
+    'Everything else on this page is secondary. Design and settings: <code>docs/dev-log/arc/2026-09-20-simulation-methods-bace.md</code>.';
+  render();
+})();
+</script>
