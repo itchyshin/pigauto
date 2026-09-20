@@ -15,7 +15,12 @@
 set -euo pipefail
 
 STAGE="${1:?stage}"; N="${2:?n}"; TIME="${3:?--time HH:MM:SS}"
-BLOCK="${BLOCK:-5}"; HALF="${HALF:-}"; THROTTLE="${THROTTLE:-400}"; CPUS="${CPUS:-4}"; MEM="${MEM:-16G}"
+BLOCK="${BLOCK:-5}"; HALF="${HALF:-}"; THROTTLE="${THROTTLE:-400}"
+# Measured on fir 2026-09-20 (seff over a completed BACE n = 1000 task): CPU efficiency 24.9% of a
+# 4-core allocation, memory efficiency 92% of 16 GB with 200 of 600 tasks killed OUT_OF_MEMORY.
+# BACE is single-threaded and memory-hungry, so a Bayesian-only array asks for 1 core and 32 GB;
+# the GNN arm is the only one that uses several threads. Override with CPUS= / MEM=.
+CPUS="${CPUS:-4}"; MEM="${MEM:-16G}"
 ROOT="${PIG_SIM_ROOT:-$HOME/projects/def-snakagaw/snakagaw/pigauto_sim}"
 OUT="$ROOT/results/$STAGE"; LOG="$ROOT/logs"; mkdir -p "$OUT" "$LOG"
 
