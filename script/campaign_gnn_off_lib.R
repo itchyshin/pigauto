@@ -457,7 +457,15 @@ run_mf_phylo <- function(df_miss, truth, mask, tree, variance_fraction = 0.9) {
 # continuous-family traits, class frequency for discrete traits) is a POSTERIOR PREDICTIVE interval
 # for the masked cell, not a posterior interval of the mean -- UNVERIFIED against BACE's own
 # documentation of `$imputed_datasets`'s exact sampling distribution beyond the source inspected here.
-run_bace <- function(df_miss, truth, mask, tree, cont_traits, bace_nitt, bace_burnin, bace_thin, bace_runs = 2L) {
+# bace_runs: BACE's initial imputation iterations, the sequence its own assess_convergence() reads.
+# That function has min_iterations = 3, so runs = 2 cannot be assessed at all -- it was why every
+# pre-run cell came back converged = FALSE. BACE's vignette uses runs = 5 for demonstrations and
+# runs = 15 with nitt = 100000 for a real analysis; 10 is the bounded middle for a campaign.
+# skip_conv stays TRUE (the vignette discourages it, but the alternative retries up to max_attempts
+# and makes per-cell cost unbounded across thousands of cells). The verdict is recorded per cell
+# instead, and the convergence RATE is reported as a result.
+run_bace <- function(df_miss, truth, mask, tree, cont_traits, bace_nitt, bace_burnin, bace_thin,
+                     bace_runs = as.integer(Sys.getenv("PIG_BACE_RUNS", "10"))) {
   tree_b <- tree; if (any(tree_b$edge.length == 0)) tree_b$edge.length[tree_b$edge.length == 0] <- 1e-8
   df_b <- df_miss; df_b$Species <- rownames(df_miss)
   all_traits <- setdiff(names(df_b), "Species")
