@@ -16,15 +16,19 @@ set -euo pipefail
 STAGE="${1:?stage: prerun|core|factorial|avonet}"
 PAR="${2:-36}"
 ROOT="${PIG_SIM_ROOT:-$HOME/pigauto_sim}"
-OUT="$ROOT/results/$STAGE"; [ "$STAGE" = prerun ] && OUT="$ROOT/prerun"
+OUT="${OUT_DIR:-$ROOT/results/$STAGE}"; [ -z "${OUT_DIR:-}" ] && [ "$STAGE" = prerun ] && OUT="$ROOT/prerun"
 LOG="$ROOT/logs"; mkdir -p "$OUT" "$LOG"
 
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1
 export PIG_TORCH_THREADS="${PIG_TORCH_THREADS:-4}"
 export NOT_CRAN=true
 
-ARMS_ALL="gnn_on,gnn_off,gnn_off_rphylopars,freq,bace,floor"
-ARMS_NOBACE="gnn_on,gnn_off,gnn_off_rphylopars,freq,floor"
+# ARMS / ARMS_BACE override the defaults so the slow Bayesian arm can run as its own concurrent
+# wave: the fast arms answer the design questions in minutes, BACE reports when it reports.
+#   ARMS=gnn_on,gnn_off,gnn_off_rphylopars,freq,floor  bash ... prerun 16   # fast wave
+#   ARMS=bace ARMS_BACE=bace                           bash ... prerun 16   # BACE wave
+ARMS_ALL="${ARMS_BACE:-gnn_on,gnn_off,gnn_off_rphylopars,freq,bace,floor}"
+ARMS_NOBACE="${ARMS:-gnn_on,gnn_off,gnn_off_rphylopars,freq,floor}"
 
 # Expand the design into one line per (cell, seed): "<args for campaign_sim_cell.R>"
 JOBS="$LOG/${STAGE}_jobs.txt"

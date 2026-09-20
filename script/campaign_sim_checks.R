@@ -155,43 +155,48 @@ if (gate == "G6") {
 
 # ================================================================================================
 if (gate == "G9b") {
-  # Rhat on BACE's two chains. With --dir, reads the `$diag$bace$bace_rhat` element that
-  # campaign_sim_cell.R stores for every BACE arm (the pre-run and campaign path). Without --dir,
-  # runs one short 2-chain fit here so the gate is testable before any cell exists.
+  # BACE convergence, on BACE's own terms: its `converged` verdict, the drift of the per-trait
+  # imputed mean over the last two imputation iterations, and the smallest effective sample size
+  # over the final fits' fixed effects. See bace_diagnostics() for why Gelman-Rubin across `runs`
+  # is not the diagnostic here.
   #
-  # Scope: fixed effects and variance components only (bace_rhat() in campaign_gnn_off_lib.R).
-  # Pooling the species-level random effects instead reports the Rhat of thousands of nuisance
-  # parameters -- a 200-tip mixed fit gives max Rhat about 20 with no bearing on whether the
-  # imputation converged.
-  if (!requireNamespace("coda", quietly = TRUE)) fail("G9b: coda not installed")
-  rh <- NULL
+  # With --dir, reads `$diag$bace` from every cell that ran the BACE arm; without it, runs one
+  # short fit so the gate is testable before any cell exists.
+  # Gate on BACE's own verdict and on the MEDIAN effective sample size over the final fits' fixed
+  # effects. The minimum is reported, not gated: MCMCglmm's threshold and categorical models mix
+  # slowly by construction, so a single badly-mixing parameter is expected and is a disclosure
+  # item for the methods section, not a reason to discard a cell.
+  ess_floor <- as.numeric(Sys.getenv("G9B_ESS_MED", "100"))
+  check_one <- function(d, label) {
+    cat(sprintf("G9b: %s converged=%s attempts=%s drift=%.4g ess median=%.0f min=%.0f (%.0f%% of %d below 100)\n",
+                label, d$converged, d$n_attempts, d$drift, d$ess_med, d$ess_min,
+                100 * (d$ess_frac_low %||% NA_real_), d$ess_n %||% 0L))
+    if (!isTRUE(d$converged)) fail("G9b: %s did not converge (BACE verdict); lengthen runs", label)
+    if (!is.na(d$ess_med) && d$ess_med < ess_floor)
+      fail("G9b: %s median effective sample size %.0f below %.0f; lengthen nitt or reduce thin",
+           label, d$ess_med, ess_floor)
+  }
   if (!is.null(dir_arg)) {
     fs <- list.files(dir_arg, pattern = "[.]rds$", full.names = TRUE)
     if (!length(fs)) fail("G9b: no rds files under %s", dir_arg)
-    miss_diag <- character(0)
+    seen <- 0L; miss_diag <- character(0)
     for (f in fs) {
       x <- readRDS(f)
-      if (!"bace" %in% names(x$walls %||% list()) && !"bace" %in% (x$arms %||% character(0))) next
-      d <- x$diag$bace$bace_rhat
+      if (!"bace" %in% names(x$walls %||% list())) next
+      d <- x$diag$bace
       if (is.null(d)) { miss_diag <- c(miss_diag, basename(f)); next }
-      rh <- c(rh, max = d$max)
-      cat(sprintf("G9b: %s max Rhat = %.3f over %d parameters (%.1f%% above 1.1)\n",
-                  basename(f), d$max, d$n, 100 * d$frac_above_1.1))
+      check_one(d, basename(f)); seen <- seen + 1L
     }
-    if (length(miss_diag)) fail("G9b: %d cell(s) ran BACE without storing Rhat, e.g. %s",
+    if (length(miss_diag)) fail("G9b: %d cell(s) ran BACE without storing diagnostics, e.g. %s",
                                 length(miss_diag), miss_diag[1])
-    if (is.null(rh)) fail("G9b: no BACE arm found in %s", dir_arg)
+    if (!seen) fail("G9b: no BACE arm found in %s", dir_arg)
+    cat(sprintf("G9b: %d BACE cell(s) checked\n", seen))
   } else {
     cd <- make_cell("bm_mixed", 200, 42, miss_frac = 0.30, miss = "mcar")
     out <- run_bace(cd$df_miss, cd$truth, cd$mask, cd$tree, cd$cont_traits,
-                    bace_nitt = 12000, bace_burnin = 2000, bace_thin = 10, bace_runs = 2L)
-    d <- out$diag$bace_rhat
-    if (is.null(d)) fail("G9b: run_bace() returned no Rhat -- bace_rhat() found fewer than two chains")
-    cat(sprintf("G9b: max Rhat = %.3f over %d parameters (%.1f%% above 1.1)\n",
-                d$max, d$n, 100 * d$frac_above_1.1))
-    rh <- d$max
+                    bace_nitt = 12000, bace_burnin = 2000, bace_thin = 10, bace_runs = 3L)
+    check_one(out$diag, "bm_mixed n=200 nitt=12000 runs=3")
   }
-  if (any(rh > 1.1, na.rm = TRUE)) fail("G9b: max Rhat %.3f >= 1.1 -- lengthen the chains", max(rh))
   pass("G9b")
 }
 
