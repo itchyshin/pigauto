@@ -112,23 +112,78 @@ BACE dominates the budget (roughly 84% of it).
 
 ## 8. NEXT UNFINISHED STEPS (in order)
 
-**CURRENT STATE (checked 2026-09-20 13:50 MDT): G0 APPROVED. EVERY HOST IS SATURATED AND HEALTHY.
-DO NOT RELAUNCH ANYTHING. Measured this check:**
+**CURRENT STATE (checked 2026-09-20 15:50 MDT): campaign running on all four hosts, healthy, nothing
+relaunched. Measured this check:**
 
-| host | job | tasks | state |
-|---|---|---:|---|
-| Totoro | core fast arms, 62 slots | 3600 | 139 rds landed, 127 procs, load 144 of the 250-core cap, **~29 results/min, ETA ~2.1 h** |
-| nibi | core BACE n=100 (22339703), n=300 (22339823), factorial BACE n=100 (22340187) | 964 | 468 RUNNING, 496 PENDING |
-| rorqual | core BACE n=1000 (21475732) | 600 | all PENDING, not yet started |
-| fir | factorial BACE n=1000 HALF=A (60661338) | 1356 | 194 RUNNING (started 13:47), 1162 PENDING |
+| host | job | queued | results landed | note |
+|---|---|---:|---:|---|
+| Totoro | core fast arms, 62 slots | 127 procs | 2334 of 3600 | n=100 done (1200), n=300 at 1127, n=1000 not started. ~15.4 rds/min on the cheap cells; n=1000 is ~10 min per cell-seed so ETA ~3.5 h |
+| nibi | core BACE n=300 (22339823), factorial BACE n=100 (22340187) | 152 | core 952, factorial 871 | core BACE n=100 (22339703) FINISHED |
+| rorqual | core BACE n=1000 (21475732) | 201 | core 1 | 200 tasks RUNNING at ~1h55m each, `--time 03:30:00`. **Zero successful completions.** |
+| fir | factorial BACE n=1000 HALF=A (60661338) | 251 | factorial 47 | 250 RUNNING; the 47 landed are all the SAME cell, all BACE failures |
 
-A landed core cell was opened and checked: 5 arms, 144 result rows, `failed` and `errors` both empty,
-walls recorded (gnn_on 173 s, gnn_off_rphylopars 36 s at n = 100, both within ~30% of the pre-run under
-62-way contention). No error strings anywhere in the Totoro logs.
+### The n = 1000 BACE wall question is now PARTLY answered, and the answer is bad
 
-**The n = 1000 BACE wall check is still BLOCKED: nothing n = 1000 has finished.** rorqual has not started
-a single task and fir's array is three minutes old. That measurement gates the remaining submissions,
-so the next run should check it first.
+Two separate things are happening at n = 1000, and they must not be confused.
+
+1. **Where BACE fails, it fails fast.** All 47 landed fir cells are
+   `types_mixed_BM_l1_r0_mcar0.1_n1000`, seeds 10..99, every one
+   `failed$bace = TRUE`, error `"Mixed model equations singular: use a (stronger) prior"`,
+   wall 0.9 s. rorqual's single landed core cell
+   (`types_mixed_BM_l0.7_r0_mcar0.3_n1000_s60`) is the same failure at 113 s.
+   This is the documented failure mode from section 7, not a runner bug, and it is scored at the
+   floor and reported. But **100% failure on the cells seen so far at n = 1000** is a much higher
+   rate than the pre-run suggested, and it is itself a headline result if it holds.
+2. **Where BACE does NOT fail, it has not finished in 1 h 55 m.** rorqual's other 200 tasks have all
+   been RUNNING that long with nothing written. `--time` is 03:30:00. If the true wall is longer,
+   those tasks TIMEOUT and produce nothing, burning ~2,100 core-hours. **Check this first next run**:
+   `sacct -j 21475732 -n -X -o State | sort | uniq -c` on rorqual. A wave of TIMEOUT means the
+   n = 1000 BACE arm needs a longer `--time` (and a re-derived budget), not a resubmission at 3:30.
+
+### Two arm failures found in the core slice (Totoro), both recorded, neither fixed
+
+Across the 2,334 landed core cells there are exactly 118 arm failures, 59 + 59, and they fall on the
+**same 59 (cell, seed) pairs**, only in the `lambda = 1` mixed cells:
+
+| cell | freq | gnn_on |
+|---|---:|---:|
+| types_mixed_BM_l1_r0_mcar0.3_n100 | 15 | 15 |
+| types_mixed_BM_l1_r0_mcar0.3_n300 | 14 | 14 |
+| types_mixed_BM_l1_r0.5_mcar0.3_n100 | 17 | 17 |
+| types_mixed_BM_l1_r0.5_mcar0.3_n300 | 13 | 13 |
+
+- `freq`: `"Need at least 2 states to fit an Mk model"` — under lambda = 1 plus 30% masking a
+  categorical or binary trait sometimes has only one observed state left. Legitimate, data-dependent.
+- `gnn_on`: torch `"Dimension out of range (expected to be in range of [-1, 1], but got 2)"` — the
+  same degenerate single-level factor, hitting a pigauto GNN code path that assumes >= 2 levels.
+  `gnn_off` does NOT fail on these cells, so it is specific to the GNN arm.
+
+Rate: 59 / 2334 = 2.5% overall, but ~7.4% within the lambda = 1 mixed cells. **Do not fix this** —
+`R/` is out of scope for this lane. Report it as a measured arm failure rate, and file it as a
+pigauto issue separately.
+
+### A filename constraint that governs where anything can be submitted
+
+`campaign_sim_cell.R:58` names its output `<dgp>_<evo>_l<lambda>_r<rho>_<miss><frac>_n<n>_s<seed>.rds`
+— **the arm set is NOT in the filename** — and line 61 skips the cell entirely if that file exists.
+So a BACE-only wave and a fast-arm wave for the same (cell, seed) **cannot share a results
+directory**: whichever lands first makes the other a silent no-op. This is why the core slice already
+splits fast arms (Totoro) from BACE (nibi, rorqual) across hosts, and it means aggregation must
+`rbind` the per-arm `results` tables across hosts rather than pick one file per cell. Add that to
+MECHANICAL-VERIFY.
+
+Concretely: factorial fast arms **cannot** go to nibi (its `results/factorial` already holds 871
+BACE-only rds for the n = 100 cells, seeds 1..100) and cannot go to fir for n = 1000 (HALF=A BACE
+rds). fir's factorial n = 100 is clean (0 files) and that is where they belong.
+
+### rorqual /project is at its inode quota and the running job may lose results
+
+`diskusage_report` on rorqual: `/project (def-snakagaw) 29GB/10TB -> 499K/500K files`. The core BACE
+n = 1000 job writes both its 600 rds and its 600 slurm `.out` files under
+`/project/def-snakagaw/snakagaw/pigauto_sim`, which needs ~1,200 inodes against ~1,000 free. The
+inodes belong to **other lanes** (`drmTMB-aoi2` 374K, `drmtmb-qseries` 89K) — do not touch them.
+Nothing is lost permanently if writes fail: the resume logic simply leaves those (cell, seed) missing
+and they can be re-run on fir or nibi. Watch for write errors in rorqual's logs next run.
 
 **Submission capacity is the binding constraint, not approval.** DRAC MaxSubmit is ~1000 array tasks per
 user per cluster (fir accepted 1400, so its limit is higher). Right now nibi is at 964 and rorqual at 600.
@@ -157,26 +212,44 @@ approves. If he has not answered, do not re-run the pre-run and do not launch; j
 5. **S7a** Artifact -> Shinichi decides -> **S7b** methods note, **S7c** pkgdown article.
 6. **S8** after-task, Melissa reconcile, handover, PR.
 
-## 8b. PENDING CLUSTER SUBMISSIONS (submit as capacity frees; DRAC MaxSubmit = 1000 job/array tasks per user per cluster)
+## 8b. PENDING CLUSTER SUBMISSIONS
 
-Submitted and running as of 2026-09-20 13:50:
-- Totoro: core fast arms, 3600 jobs, 62 slots -> `~/pigauto_sim/results/core`
-- nibi: core BACE n=100 (22339703), n=300 (22339823), factorial BACE n=100 (22340187)
-- rorqual: core BACE n=1000 (21475732, BLOCK=1, --time 03:30:00)
-- fir: factorial BACE n=1000 HALF=A (60661338, BLOCK=1, --time 03:30:00)
+Running as of 2026-09-20 15:50:
+- Totoro: core fast arms, 3600 jobs, 62 slots -> `~/pigauto_sim/results/core` (2334 landed)
+- nibi: core BACE n=300 (22339823), factorial BACE n=100 (22340187). n=100 core (22339703) FINISHED.
+- rorqual: core BACE n=1000 (21475732, BLOCK=1, --time 03:30:00) — 200 RUNNING at ~2 h, 1 done (failed)
+- fir: factorial BACE n=1000 HALF=A (60661338, BLOCK=1, --time 03:30:00) — 250 RUNNING, 47 done (all failed)
 
-STILL TO SUBMIT (both were refused with AssocMaxSubmitJobLimit; retry when that cluster's
-`squeue -u snakagaw -h | wc -l` drops well below 1000):
-1. factorial BACE n=1000 **HALF=B** -> whichever of rorqual / fir / nibi has room:
-   `export PIG_SIM_ROOT=<that cluster's root>; cd $PIG_SIM_ROOT && HALF=B ARMS_BACE=bace ARMS=bace SEEDS=bace BLOCK=1 THROTTLE=200 bash script/campaign_sim_nibi_array.sh factorial 1000 03:30:00`
-2. factorial FAST arms, n=100 and n=1000 (arms gnn_on,gnn_off,gnn_off_rphylopars,freq,floor; no SEEDS cap):
-   `ARMS_BACE=gnn_on,gnn_off,gnn_off_rphylopars,freq,floor ARMS=$ARMS_BACE BLOCK=5 THROTTLE=200 bash script/campaign_sim_nibi_array.sh factorial 100 01:00:00` and the same for `1000 02:00:00`.
-   These can also run on Totoro once its core fast arms finish.
-3. AVONET300 case study (stage `avonet`) and the covariate sensitivity: Totoro, after the core slice.
+### BLOCKED ON A PERMISSION, NOT ON CAPACITY — needs Shinichi
+
+**Item 2, factorial FAST arms n = 100, was ready to submit and was refused by Claude Code's auto-mode
+permission classifier ("Modify Shared Resources").** Everything else about it checks out: fir has
+room (251 queued, limit > 1000), fir `/home` is at 202K/500K inodes and 16/48 GiB, and fir's
+`results/factorial` holds **zero** n = 100 files so there is no silent-skip collision. Estimated cost
+(D-139): 162 s per cell-seed x 10 seeds = 27 min per task against a 1 h limit; 5,600 cell-seeds =
+~252 task-hours, ~1.4 h wall at 200 concurrent. The exact command, verified against the driver:
+
+```
+ssh -o BatchMode=yes -o ConnectTimeout=15 snakagaw@fir.alliancecan.ca 'export PIG_SIM_ROOT=/home/snakagaw/pigauto_sim; cd $PIG_SIM_ROOT && ARMS_BACE=gnn_on,gnn_off,gnn_off_rphylopars,freq,floor ARMS=gnn_on,gnn_off,gnn_off_rphylopars,freq,floor BLOCK=10 THROTTLE=200 bash script/campaign_sim_nibi_array.sh factorial 100 01:00:00'
+```
+
+`BLOCK=10`, not the 5 written here earlier: at 5 the array is 1,120 tasks and DRAC's MaxSubmit is
+~1,000. At 10 it is 560.
+
+### Still queued, and now correctly targeted
+
+1. **factorial BACE n = 1000 HALF=B** — HOLD. Do not submit until the rorqual n = 1000 wall question
+   above is answered. Submitting 700 more n = 1000 BACE tasks before we know whether any of them
+   finishes inside `--time` would multiply a possible 2,100 core-hour loss.
+2. **factorial FAST arms n = 1000** (560 tasks at BLOCK=10, `--time 03:00:00`) — must go to a root
+   whose `results/factorial` has no n = 1000 rds. fir is disqualified (HALF=A BACE rds are there) and
+   rorqual `/project` is at its inode quota. **Totoro** once its core slice finishes (~3.5 h) is the
+   clean target, via `script/campaign_sim_totoro.sh`.
+3. AVONET300 case study (stage `avonet`) and covariate sensitivity: Totoro, after the core slice.
 
 Cluster roots: nibi `~/projects/def-snakagaw/snakagaw/pigauto_sim`; rorqual
-`/project/def-snakagaw/snakagaw/pigauto_sim`; **fir `/home/snakagaw/pigauto_sim`** (its /project is
-at 500K/500K files, so everything there lives on /home). Always `export PIG_SIM_ROOT=` on rorqual and fir.
+`/project/def-snakagaw/snakagaw/pigauto_sim`; **fir `/home/snakagaw/pigauto_sim`**. Always
+`export PIG_SIM_ROOT=` on rorqual and fir.
 
 ## 9. Pauses that require Shinichi (never proceed past these alone)
 
@@ -197,3 +270,17 @@ at 500K/500K files, so everything there lives on /home). Always `export PIG_SIM_
   Verified Totoro core slice healthy (139 rds, 5 arms, zero failures, ETA ~2.1 h) and confirmed fir's
   bootstrap PASS. n=1000 BACE wall still unmeasurable: rorqual 600 tasks all PENDING, fir array 3 min old.
   Section 8b items 1 and 2 stay queued; no cluster has room.
+- 2026-09-20 15:50 — scheduled check. Nothing relaunched; all four hosts still running. Totoro core
+  2334/3600 (n=100 done, n=300 nearly, n=1000 not started, ETA ~3.5 h). nibi core n=100 finished.
+  **Measured the n=1000 BACE wall at last**: where BACE fails it fails in ~1-113 s, and all 48 landed
+  n=1000 cells across rorqual and fir are that same singular-mixed-model failure; where it does not
+  fail, 200 rorqual tasks have run 1 h 55 m without finishing against a 3:30 limit, so a TIMEOUT wave
+  is possible and must be checked first next run. **Found a real arm-failure pair in the core slice**:
+  59 (cell, seed) pairs in the lambda=1 mixed cells fail BOTH `freq` (Mk needs 2 states) and `gnn_on`
+  (torch dimension error), same root cause, a collapsed single-level factor; gnn_off is unaffected;
+  2.5% overall, 7.4% within those cells; recorded, not fixed (R/ is out of scope). **Found a
+  submission constraint**: the rds filename omits the arm set and existing files are skipped, so a
+  BACE wave and a fast wave cannot share a results directory. **Found a risk**: rorqual /project is at
+  499K/500K inodes (other lanes' files) and the running core BACE job needs ~1,200 more. Attempted to
+  submit factorial fast arms n=100 to fir — **refused by the auto-mode permission classifier**; the
+  verified command is in section 8b and needs Shinichi's go-ahead or a Bash permission rule.
