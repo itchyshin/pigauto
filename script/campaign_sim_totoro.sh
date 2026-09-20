@@ -28,15 +28,16 @@ export NOT_CRAN=true
 # ARMS / ARMS_BACE override the defaults so the slow Bayesian arm can run as its own concurrent
 # wave: the fast arms answer the design questions in minutes, BACE reports when it reports.
 #   ARMS=gnn_on,gnn_off,gnn_off_rphylopars,freq,floor  bash ... prerun 16   # fast wave
-#   ARMS=bace ARMS_BACE=bace                           bash ... prerun 16   # BACE wave
+#   ARMS=bace ARMS_BACE=bace SEEDS=bace                bash ... core 40     # BACE wave, seeds 1..bace_reps
 ARMS_ALL="${ARMS_BACE:-gnn_on,gnn_off,gnn_off_rphylopars,freq,bace,floor}"
 ARMS_NOBACE="${ARMS:-gnn_on,gnn_off,gnn_off_rphylopars,freq,floor}"
 
 # Expand the design into one line per (cell, seed): "<args for campaign_sim_cell.R>"
 JOBS="$LOG/${STAGE}_jobs.txt"
-Rscript "$ROOT/script/campaign_sim_design.R" --stage "$STAGE" | awk -F, -v out="$OUT" -v all="$ARMS_ALL" -v nob="$ARMS_NOBACE" '
+Rscript "$ROOT/script/campaign_sim_design.R" --stage "$STAGE" | awk -F, -v out="$OUT" -v all="$ARMS_ALL" -v nob="$ARMS_NOBACE" -v seeds="${SEEDS:-all}" '
 NR > 1 {
-  for (s = 1; s <= $10; s++) {
+  lim = (seeds == "bace") ? $11 : $10
+  for (s = 1; s <= lim; s++) {
     arms = (s <= $11) ? all : nob
     printf "--dgp %s --evo %s --lambda %s --rho %s --miss %s --frac %s --n %s --seed %d --arms %s --driver --thresholds fixed --out %s\n",
            $3, $4, $5, $6, $7, $8, $9, s, arms, out
