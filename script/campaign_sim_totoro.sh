@@ -8,7 +8,9 @@
 #   bash script/campaign_sim_totoro.sh avonet 20
 #
 # Second argument = number of concurrent cell processes. Each process uses PIG_TORCH_THREADS
-# (default 4) torch threads and 1 BLAS thread, so 36 processes = 144 threads (Totoro cap 150, D-143).
+# (default 4) torch threads and 1 BLAS thread, so 62 processes = 248 threads. Shinichi raised this
+# lane's Totoro allowance to 250 cores on 2026-09-20 (D-143's 150 is the standing default; this is
+# his explicit override for snakagaw). Stay at or below it: the machine is shared.
 # Resume: a (cell, seed) whose rds exists is skipped by campaign_sim_cell.R. Detached with setsid so a
 # dropped ssh cannot kill or orphan the run. Progress: tail -f logs/<stage>.log ; stop: kill -- -<pgid>
 set -euo pipefail
