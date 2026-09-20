@@ -225,12 +225,76 @@ if (gate == "G12") {
 }
 
 # ================================================================================================
-if (gate %in% c("G10", "G11", "G14")) {
-  cat(sprintf("%s: TODO STUB -- not implemented in this lane. ", gate))
-  if (gate == "G10") cat("Intended check: full-factorial coverage / completeness audit across the locked (n, lambda, rho, miss, evo) design grid, reading an index csv of completed cells.\n")
-  if (gate == "G11") cat("Intended check: cross-arm paired-difference significance / sign-consistency audit against the aggregator's paired.csv.\n")
-  if (gate == "G14") cat("Intended check: TDIP ensemble / GAIN comparison arm, if it installs cleanly (open item in the plan doc).\n")
-  fail("%s: TODO stub -- fails loudly by design, not implemented", gate)
+# ================================================================================================
+# Completeness and reproducibility gates. --dir is the results directory holding the per-cell rds
+# (or the aggregator's raw_index.csv). These read the design table so "complete" means the design,
+# not whatever happens to be on disk.
+design_tab <- function(stage) {
+  p <- file.path(script_dir, "campaign_sim_design.R")
+  read.csv(text = paste(system2("Rscript", c(p, "--stage", stage), stdout = TRUE), collapse = "\n"),
+           stringsAsFactors = FALSE)
+}
+cells_present <- function(dir) {
+  fs <- list.files(dir, pattern = "[.]rds$", full.names = TRUE, recursive = TRUE)
+  if (!length(fs)) fail("no rds under %s", dir)
+  do.call(rbind, lapply(fs, function(f) {
+    x <- try(readRDS(f), silent = TRUE)
+    if (inherits(x, "try-error")) return(NULL)
+    data.frame(cell = sub("_s[0-9]+$", "", x$tag), seed = x$seed,
+               arms = paste(names(x$walls), collapse = ","),
+               failed = length(x$failed), stringsAsFactors = FALSE)
+  }))
+}
+if (gate %in% c("G10", "G11")) {
+  stage <- if (gate == "G10") "core" else "factorial"
+  if (is.null(dir_arg)) fail("%s: --dir <results dir> required", gate)
+  d <- design_tab(stage); have <- cells_present(dir_arg)
+  # Which arms a seed owes depends on whether it is inside the Bayesian replicate range.
+  missing <- 0L; report <- list()
+  for (i in seq_len(nrow(d))) {
+    got <- have[have$cell == d$cell[i], ]
+    want_fast <- d$reps[i]; want_bace <- d$bace_reps[i]
+    n_fast <- length(unique(got$seed))
+    n_bace <- length(unique(got$seed[grepl("bace", got$arms)]))
+    if (n_fast < want_fast || n_bace < want_bace) {
+      missing <- missing + (want_fast - n_fast) + (want_bace - n_bace)
+      report[[length(report) + 1L]] <- sprintf("  %s: %d/%d replicates, %d/%d with BACE",
+                                               d$cell[i], n_fast, want_fast, n_bace, want_bace)
+    }
+  }
+  cat(sprintf("%s: %d design cells, %d rds present, %d replicate-arms missing\n",
+              gate, nrow(d), nrow(have), missing))
+  if (length(report)) cat(paste(head(report, 10), collapse = "\n"), "\n")
+  if (missing > 0L) fail("%s: %d replicate-arms missing from stage %s", gate, missing, stage)
+  cat(sprintf("%s: failure rate recorded on %d of %d cells\n", gate, sum(have$failed > 0), nrow(have)))
+  pass(gate)
+}
+
+if (gate == "G14") {
+  # Cross-host reproducibility: the same (cell, seed) run on two machines must agree on the data,
+  # the mask and the deterministic arms. RNGkind("L'Ecuyer-CMRG") is set in campaign_sim_cell.R.
+  # --dir takes two comma-separated directories holding overlapping cells.
+  if (is.null(dir_arg) || !grepl(",", dir_arg)) fail("G14: --dir <dirA>,<dirB> required")
+  dirs <- strsplit(dir_arg, ",")[[1]]
+  fa <- list.files(dirs[1], pattern = "[.]rds$", full.names = TRUE)
+  nm <- basename(fa); nb <- basename(list.files(dirs[2], pattern = "[.]rds$"))
+  both <- intersect(nm, nb)
+  if (!length(both)) fail("G14: no cell appears in both %s and %s", dirs[1], dirs[2])
+  checked <- 0L
+  for (b in head(both, 5L)) {
+    xa <- readRDS(file.path(dirs[1], b)); xb <- readRDS(file.path(dirs[2], b))
+    if (!isTRUE(all.equal(xa$truth, xb$truth))) fail("G14: truth differs for %s", b)
+    if (!identical(xa$mask, xb$mask)) fail("G14: mask differs for %s", b)
+    ra <- xa$results[xa$results$arm == "freq", ]; rb <- xb$results[xb$results$arm == "freq", ]
+    if (nrow(ra) && nrow(rb)) {
+      m <- merge(ra, rb, by = c("arm", "trait", "metric"))
+      if (nrow(m) && max(abs(m$value.x - m$value.y), na.rm = TRUE) > 1e-10)
+        fail("G14: freq arm differs for %s by %.3g", b, max(abs(m$value.x - m$value.y), na.rm = TRUE))
+    }
+    checked <- checked + 1L
+  }
+  cat(sprintf("G14: %d overlapping cell(s) checked, truth/mask/freq identical\n", checked))
+  pass("G14")
 }
 
 if (!(gate %in% c("G3", "G4", "G5", "G6", "Gold", "G9b", "G10", "G11", "G12", "G14"))) {
