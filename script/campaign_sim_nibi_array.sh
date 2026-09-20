@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# nibi (DRAC) job-array driver for the factorial stage of the imputation simulation.
+# DRAC job-array driver for the factorial stage of the imputation simulation (nibi, rorqual, fir: same script).
 #
 #   ssh nibi; cd ~/projects/def-snakagaw/snakagaw/pigauto_sim
 #   bash script/campaign_sim_nibi_array.sh factorial 100  00:50:00     # n = 100 cells
 #   bash script/campaign_sim_nibi_array.sh factorial 1000 04:30:00     # n = 1000 cells
+#   HALF=A|B splits the design cells alternately across two clusters (A = odd rows, B = even rows);
+#   unset = every cell. Finished (cell, seed) rds are skipped, so any cluster can take over another's remainder.
 #
 # One array task = one cell x BLOCK consecutive seeds (default 5). Arrays are per n so --time can be
 # sized from the pre-run walls (seff on the first finished task, then re-submit the rest with the
@@ -13,7 +15,7 @@
 set -euo pipefail
 
 STAGE="${1:?stage}"; N="${2:?n}"; TIME="${3:?--time HH:MM:SS}"
-BLOCK="${BLOCK:-5}"; THROTTLE="${THROTTLE:-400}"; CPUS="${CPUS:-4}"; MEM="${MEM:-16G}"
+BLOCK="${BLOCK:-5}"; HALF="${HALF:-}"; THROTTLE="${THROTTLE:-400}"; CPUS="${CPUS:-4}"; MEM="${MEM:-16G}"
 ROOT="${PIG_SIM_ROOT:-$HOME/projects/def-snakagaw/snakagaw/pigauto_sim}"
 OUT="$ROOT/results/$STAGE"; LOG="$ROOT/logs"; mkdir -p "$OUT" "$LOG"
 
@@ -21,23 +23,23 @@ ARMS_ALL="gnn_on,gnn_off,gnn_off_rphylopars,freq,bace,floor"
 ARMS_NOBACE="gnn_on,gnn_off,gnn_off_rphylopars,freq,floor"
 
 # Task table: one line per (cell, seed block). Column 1 = the cell args, column 2 = first seed, 3 = last.
-TASKS="$LOG/${STAGE}_n${N}_tasks.txt"
+TASKS="$LOG/${STAGE}_n${N}${HALF:+_half$HALF}_tasks.txt"
 source "$ROOT/env.sh"
-Rscript "$ROOT/script/campaign_sim_design.R" --stage "$STAGE" | awk -F, -v n="$N" -v blk="$BLOCK" '
-NR > 1 && $9 == n {
+Rscript "$ROOT/script/campaign_sim_design.R" --stage "$STAGE" | awk -F, -v n="$N" -v blk="$BLOCK" -v half="$HALF" '
+NR > 1 && $9 == n && (half == "" || (half == "A" && (NR % 2) == 0) || (half == "B" && (NR % 2) == 1)) {
   for (s = 1; s <= $10; s += blk) {
     e = s + blk - 1; if (e > $10) e = $10
     printf "--dgp %s --evo %s --lambda %s --rho %s --miss %s --frac %s --n %s --driver --thresholds fixed\t%d\t%d\t%d\n", $3, $4, $5, $6, $7, $8, $9, s, e, $11
   }
 }' > "$TASKS"
 NT=$(wc -l < "$TASKS")
-echo "stage=$STAGE n=$N tasks=$NT block=$BLOCK time=$TIME throttle=$THROTTLE"
+echo "stage=$STAGE n=$N half=${HALF:-all} tasks=$NT block=$BLOCK time=$TIME throttle=$THROTTLE"
 
-SB="$LOG/${STAGE}_n${N}.sbatch"
+SB="$LOG/${STAGE}_n${N}${HALF:+_half$HALF}.sbatch"
 cat > "$SB" <<EOF
 #!/bin/bash
 #SBATCH --account=def-snakagaw_cpu
-#SBATCH --job-name=pig_${STAGE}_n${N}
+#SBATCH --job-name=pig_${STAGE}_n${N}${HALF}
 #SBATCH --time=$TIME
 #SBATCH --cpus-per-task=$CPUS
 #SBATCH --mem=$MEM
