@@ -61,7 +61,7 @@ than assumed. `skip_conv` stays `TRUE`; the alternative retries up to `max_attem
 cost unbounded across thousands of cells.
 
 Effective sample size is reported, not gated on its minimum. Median ESS per cell ran 42 to 1,457, while
-the worst single parameter sat near 1 — expected for MCMCglmm threshold and categorical models, and a
+the worst single parameter sat near 1; that is expected for MCMCglmm threshold and categorical models, and a
 disclosure item for the methods section.
 
 ## Failures
