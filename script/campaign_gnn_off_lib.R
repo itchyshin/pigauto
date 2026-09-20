@@ -22,7 +22,8 @@
 # = tree height for every tip), NOT derived from pigauto::simulate_non_bm (that function simulates
 # trait VALUES under OU, not a reusable correlation matrix) -- UNVERIFIED against a first-principles
 # OU tip-covariance derivation; flagged in the report.
-sim_latents <- function(tree, K, lambda = 1, rho = 0, evo = c("BM", "OU"), ou_alpha = 2) {
+sim_latents <- function(tree, K, lambda = 1, rho = 0, evo = c("BM", "OU"), ou_alpha = 2,
+                        driver_col = NULL, rho_driver = 0.35) {
   evo <- match.arg(evo)
   sp <- tree$tip.label; n <- length(sp)
   V <- cov2cor(ape::vcv(tree))[sp, sp]
@@ -33,6 +34,16 @@ sim_latents <- function(tree, K, lambda = 1, rho = 0, evo = c("BM", "OU"), ou_al
   V_lambda <- lambda * V + (1 - lambda) * diag(n)
   dimnames(V_lambda) <- list(sp, sp)
   Sigma_rho <- matrix(rho, K, K); diag(Sigma_rho) <- 1
+  # The MAR driver keeps its own correlation to the scored traits, independent of rho. Without this,
+  # a rho = 0 cell makes the driver independent of everything it is supposed to predict, and "MAR"
+  # there is MCAR on an unrelated variable.
+  if (!is.null(driver_col)) {
+    Sigma_rho[driver_col, -driver_col] <- rho_driver
+    Sigma_rho[-driver_col, driver_col] <- rho_driver
+    Sigma_rho[driver_col, driver_col] <- 1
+    ev <- min(eigen(Sigma_rho, symmetric = TRUE, only.values = TRUE)$values)
+    if (ev <= 1e-8) stop(sprintf("driver correlation %.2f makes Sigma non-PD at rho = %.2f", rho_driver, rho))
+  }
   Z <- matrix(stats::rnorm(n * K), n, K)
   L <- t(chol(V_lambda)) %*% Z %*% chol(Sigma_rho)
   rownames(L) <- sp
@@ -141,7 +152,7 @@ make_dgp <- function(dgp, n, seed, lambda = 1, rho = 0, evo = NULL, thresholds =
   sp <- tree$tip.label
   if (dgp == "types_mixed") {
     K <- 7L + if (driver) 1L else 0L
-    L <- sim_latents(tree, K, lambda, rho, evo_use)
+    L <- sim_latents(tree, K, lambda, rho, evo_use, driver_col = if (driver) K else NULL)
     df <- data.frame(row.names = sp,
       c1 = L[, 1], c2 = L[, 2],
       cnt = as.integer(stats::rpois(n, exp(1.5 + 0.8 * L[, 3]))),
@@ -157,7 +168,7 @@ make_dgp <- function(dgp, n, seed, lambda = 1, rho = 0, evo = NULL, thresholds =
   # bm_mixed / ou_mixed under the corrected design: same trait mix as before (4 continuous + binary
   # + categorical), now drawn through the shared lambda/rho/evo latent machinery.
   K <- 6L + if (driver) 1L else 0L
-  L <- sim_latents(tree, K, lambda, rho, evo_use)
+  L <- sim_latents(tree, K, lambda, rho, evo_use, driver_col = if (driver) K else NULL)
   df <- data.frame(row.names = sp, c1 = L[, 1], c2 = L[, 2], c3 = L[, 3], c4 = L[, 4],
                     bin = factor(ifelse(threshold_binary(L[, 5], thresholds), "yes", "no")),
                     cat3 = threshold_categorical(L[, 6], thresholds, c("A", "B", "C")))
@@ -274,12 +285,17 @@ score_arm <- function(arm, completed, lower = NULL, upper = NULL, prob = NULL) {
       truv <- as.character(truth[[v]][idx]); prv <- as.character(completed[[v]][idx])
       acc <- mean(truv == prv)
       levs <- levels(truth[[v]])
-      f1s <- vapply(levs, function(k) {
+      # Macro-F1 averages only over classes PRESENT in the masked truth. A class absent from both
+      # truth and prediction has an undefined F1; scoring it 0 and averaging it in deflates the
+      # metric, and deflates it most in the low-prevalence cells where the arms actually differ.
+      levs_scored <- levs[levs %in% truv]
+      f1s <- vapply(levs_scored, function(k) {
         tp <- sum(prv == k & truv == k); fp <- sum(prv == k & truv != k); fn <- sum(prv != k & truv == k)
         prec <- if (tp + fp == 0) 0 else tp / (tp + fp); rec <- if (tp + fn == 0) 0 else tp / (tp + fn)
         if (prec + rec == 0) 0 else 2 * prec * rec / (prec + rec)
       }, numeric(1))
-      macro_f1 <- mean(f1s)
+      macro_f1 <- if (length(f1s)) mean(f1s) else NA_real_
+      n_classes_scored <- length(levs_scored)
       brier <- NA_real_
       if (!is.null(prob) && v %in% names(prob) && !is.null(prob[[v]])) {
         pv <- prob[[v]]
@@ -307,6 +323,7 @@ score_arm <- function(arm, completed, lower = NULL, upper = NULL, prob = NULL) {
       }
       rows[[length(rows) + 1L]] <- data.frame(arm = arm, trait = v, metric = "accuracy", value = acc, coverage = NA_real_)
       rows[[length(rows) + 1L]] <- data.frame(arm = arm, trait = v, metric = "macroF1", value = macro_f1, coverage = NA_real_)
+      rows[[length(rows) + 1L]] <- data.frame(arm = arm, trait = v, metric = "n_classes_scored", value = n_classes_scored, coverage = NA_real_)
       rows[[length(rows) + 1L]] <- data.frame(arm = arm, trait = v, metric = "brier", value = brier, coverage = NA_real_)
     }
   }
@@ -445,7 +462,11 @@ run_bace <- function(df_miss, truth, mask, tree, cont_traits, bace_nitt, bace_bu
   df_b <- df_miss; df_b$Species <- rownames(df_miss)
   all_traits <- setdiff(names(df_b), "Species")
   fixformula <- lapply(all_traits, function(v) paste0(v, " ~ ", paste(setdiff(all_traits, v), collapse = " + ")))
-  n_final <- max(5L, min(400L, floor((bace_nitt - bace_burnin) / bace_thin) * bace_runs))
+  # n_final is the number of FULL imputation runs (bace_final_imp refits MCMCglmm per response for
+  # each one), not a thinning of one chain: each dataset is one posterior predictive draw (K = 1L in
+  # BACE:::.predict_bace). Cost is linear in n_final, so it is a budget constant, not a chain length.
+  # 50 gives usable 2.5/97.5 percentiles; the pre-run times it at production size.
+  n_final <- as.integer(Sys.getenv("PIG_BACE_NFINAL", "50"))
   outb <- BACE::bace(fixformula = fixformula, ran_phylo_form = "~ 1 |Species", phylo = tree_b,
                      data = df_b, nitt = bace_nitt, burnin = bace_burnin, thin = bace_thin,
                      runs = bace_runs, n_final = n_final, verbose = FALSE, skip_conv = TRUE, ovr_categorical = TRUE)
@@ -473,7 +494,43 @@ run_bace <- function(df_miss, truth, mask, tree, cont_traits, bace_nitt, bace_bu
       prob[[v]] <- full
     }
   }
-  list(completed = comp, lower = lower, upper = upper, prob = prob, n_final = n_final)
+  list(completed = comp, lower = lower, upper = upper, prob = prob, n_final = n_final,
+       diag = list(bace_rhat = bace_rhat(outb, bace_runs)))
+}
+
+# Gelman-Rubin Rhat over BACE's two chains, on the fixed effects and variance components only (the
+# species-level random effects are thousands of nuisance parameters whose Rhat is not the convergence
+# question). Models are grouped by an identical (fixed-effect names, VCV names) signature so the two
+# chains of the same response are compared; OVR/categorical fits differ in their reference level
+# and would otherwise be paired wrongly. Returns NULL when fewer than two chains are found.
+bace_rhat <- function(outb, runs) {
+  if (runs < 2L || !requireNamespace("coda", quietly = TRUE)) return(NULL)
+  find_mcmcglmm <- function(x) {
+    if (inherits(x, "MCMCglmm")) return(list(x))
+    if (is.list(x)) return(unlist(lapply(x, find_mcmcglmm), recursive = FALSE))
+    NULL
+  }
+  models <- find_mcmcglmm(outb)
+  if (length(models) < 2L) return(NULL)
+  par_mat <- function(m) {
+    nfl <- m$Fixed$nfl %||% ncol(m$Sol)
+    cbind(as.matrix(m$Sol)[, seq_len(nfl), drop = FALSE], as.matrix(m$VCV))
+  }
+  sig <- vapply(models, function(m) paste(colnames(par_mat(m)), collapse = "|"), "")
+  out <- list()
+  for (s in unique(sig)) {
+    grp <- models[sig == s]
+    if (length(grp) < 2L) next
+    ml <- tryCatch(coda::mcmc.list(lapply(grp[1:2], function(m) coda::as.mcmc(par_mat(m)))),
+                   error = function(e) NULL)
+    if (is.null(ml)) next
+    r <- tryCatch(coda::gelman.diag(ml, multivariate = FALSE, autoburnin = FALSE)$psrf[, 1],
+                  error = function(e) NULL)
+    if (!is.null(r)) out[[length(out) + 1L]] <- r
+  }
+  if (!length(out)) return(NULL)
+  r <- unlist(out)
+  list(max = max(r, na.rm = TRUE), n = length(r), frac_above_1.1 = mean(r > 1.1, na.rm = TRUE), psrf = r)
 }
 
 run_floor <- function(df_miss, truth, mask) {
@@ -559,7 +616,7 @@ run_arms <- function(cell, arms, opts) {
     list(completed = comp)
   }
 
-  results <- list(); calibs <- list(); walls <- list(); errors <- list(); paths <- list(); failed <- list()
+  results <- list(); calibs <- list(); walls <- list(); errors <- list(); paths <- list(); failed <- list(); diags <- list()
   for (arm in arms) {
     t0 <- Sys.time()
     r <- tryCatch({
@@ -587,6 +644,7 @@ run_arms <- function(cell, arms, opts) {
     sc <- score_arm(arm, r$completed, r$lower, r$upper, prob = r$prob)
     results[[arm]] <- sc; calibs[[arm]] <- attr(sc, "calib")
     paths[[arm]] <- r$path
+    if (!is.null(r$diag)) diags[[arm]] <- r$diag
     for (dn in names(r$derived)) {
       dr <- r$derived[[dn]]
       scd <- score_arm(dn, dr$completed, dr$lower, dr$upper, prob = dr$prob)
@@ -597,5 +655,5 @@ run_arms <- function(cell, arms, opts) {
   }
   tab <- do.call(rbind, results); if (!is.null(tab)) rownames(tab) <- NULL
   calib <- do.call(rbind, calibs)
-  list(results = tab, calib = calib, walls = walls, errors = errors, paths = paths, failed = failed)
+  list(results = tab, calib = calib, walls = walls, errors = errors, paths = paths, failed = failed, diag = diags)
 }

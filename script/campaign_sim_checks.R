@@ -112,10 +112,17 @@ if (gate == "Gold") {
 # ================================================================================================
 if (gate == "G6") {
   if (!requireNamespace("parallel", quietly = TRUE)) fail("G6: parallel not installed")
-  reps <- 20L
+  # Regime (state it wherever this gate's number is quoted): bm_mixed, lambda = 1, MCAR 0.30,
+  # n = 300, 20 replicates, BACE nitt 20000 / burnin 4000 / thin 20 with PIG_BACE_NFINAL imputation
+  # runs. n = 300 rather than 1000 because n_final is a count of full MCMCglmm refits: this gate
+  # exists to catch an interval that is built wrongly, and that shows up at any n.
+  reps <- as.integer(Sys.getenv("G6_REPS", "20"))
+  n_g6 <- as.integer(Sys.getenv("G6_N", "300"))
   bace_nitt <- 20000L; bace_burnin <- 4000L; bace_thin <- 20L
+  cat(sprintf("G6 regime: bm_mixed lambda=1 MCAR 0.30 n=%d reps=%d nitt=%d n_final=%s\n",
+              n_g6, reps, bace_nitt, Sys.getenv("PIG_BACE_NFINAL", "50")))
   one_rep <- function(s) {
-    cd <- make_cell("bm_mixed", 1000, 3000 + s, miss_frac = 0.30, miss = "mcar", lambda = 1)
+    cd <- make_cell("bm_mixed", n_g6, 3000 + s, miss_frac = 0.30, miss = "mcar", lambda = 1)
     cell_obj <- list(truth = cd$truth, tree = cd$tree, mask = cd$mask, df_miss = cd$df_miss,
                       cont_traits = cd$cont_traits, trait_types = cd$trait_types)
     out <- run_arms(cell_obj, c("freq", "bace"),
@@ -145,37 +152,43 @@ if (gate == "G6") {
 
 # ================================================================================================
 if (gate == "G9b") {
-  # Rhat < 1.1 from stored BACE chains (runs = 2). Requires cells produced with campaign_sim_cell.R
-  # that stored a BACE gelman.diag() per fit -- see run_bace() TODO: gelman diagnostics are not yet
-  # persisted per-cell by run_bace()/run_arms(); this gate needs `--dir` pointing at rds files that
-  # carry a `$bace_gelman` element (a future run_bace() addition), OR runs a fresh 2-chain BACE fit
-  # directly and computes Rhat via coda::gelman.diag() here.
+  # Rhat on BACE's two chains. With --dir, reads the `$diag$bace$bace_rhat` element that
+  # campaign_sim_cell.R stores for every BACE arm (the pre-run and campaign path). Without --dir,
+  # runs one short 2-chain fit here so the gate is testable before any cell exists.
+  #
+  # Scope: fixed effects and variance components only (bace_rhat() in campaign_gnn_off_lib.R).
+  # Pooling the species-level random effects instead reports the Rhat of thousands of nuisance
+  # parameters -- a 200-tip mixed fit gives max Rhat about 20 with no bearing on whether the
+  # imputation converged.
   if (!requireNamespace("coda", quietly = TRUE)) fail("G9b: coda not installed")
-  cd <- make_cell("bm_mixed", 200, 42, miss_frac = 0.30, miss = "mcar")
-  tree_b <- cd$tree; if (any(tree_b$edge.length == 0)) tree_b$edge.length[tree_b$edge.length == 0] <- 1e-8
-  df_b <- cd$df_miss; df_b$Species <- rownames(cd$df_miss)
-  all_traits <- setdiff(names(df_b), "Species")
-  fixformula <- lapply(all_traits, function(v) paste0(v, " ~ ", paste(setdiff(all_traits, v), collapse = " + ")))
-  outb <- BACE::bace(fixformula = fixformula, ran_phylo_form = "~ 1 |Species", phylo = tree_b,
-                     data = df_b, nitt = 4000, burnin = 1000, thin = 5, runs = 2L, n_final = 10L,
-                     verbose = FALSE, skip_conv = TRUE, ovr_categorical = TRUE)
-  # locate per-chain MCMCglmm fits inside the returned object to build coda::mcmc.list per response
-  fits <- outb$pooled_models %||% outb$final_results
-  rhat_ok <- TRUE; checked <- 0L
-  find_mcmcglmm <- function(x) {
-    if (inherits(x, "MCMCglmm")) return(list(x))
-    if (is.list(x)) return(unlist(lapply(x, find_mcmcglmm), recursive = FALSE))
-    NULL
+  rh <- NULL
+  if (!is.null(dir_arg)) {
+    fs <- list.files(dir_arg, pattern = "[.]rds$", full.names = TRUE)
+    if (!length(fs)) fail("G9b: no rds files under %s", dir_arg)
+    miss_diag <- character(0)
+    for (f in fs) {
+      x <- readRDS(f)
+      if (!"bace" %in% names(x$walls %||% list()) && !"bace" %in% (x$arms %||% character(0))) next
+      d <- x$diag$bace$bace_rhat
+      if (is.null(d)) { miss_diag <- c(miss_diag, basename(f)); next }
+      rh <- c(rh, max = d$max)
+      cat(sprintf("G9b: %s max Rhat = %.3f over %d parameters (%.1f%% above 1.1)\n",
+                  basename(f), d$max, d$n, 100 * d$frac_above_1.1))
+    }
+    if (length(miss_diag)) fail("G9b: %d cell(s) ran BACE without storing Rhat, e.g. %s",
+                                length(miss_diag), miss_diag[1])
+    if (is.null(rh)) fail("G9b: no BACE arm found in %s", dir_arg)
+  } else {
+    cd <- make_cell("bm_mixed", 200, 42, miss_frac = 0.30, miss = "mcar")
+    out <- run_bace(cd$df_miss, cd$truth, cd$mask, cd$tree, cd$cont_traits,
+                    bace_nitt = 12000, bace_burnin = 2000, bace_thin = 10, bace_runs = 2L)
+    d <- out$diag$bace_rhat
+    if (is.null(d)) fail("G9b: run_bace() returned no Rhat -- bace_rhat() found fewer than two chains")
+    cat(sprintf("G9b: max Rhat = %.3f over %d parameters (%.1f%% above 1.1)\n",
+                d$max, d$n, 100 * d$frac_above_1.1))
+    rh <- d$max
   }
-  models <- find_mcmcglmm(outb)
-  if (length(models) >= 2) {
-    mlist <- coda::mcmc.list(lapply(models[1:2], function(m) m$Sol))
-    rh <- tryCatch(coda::gelman.diag(mlist, multivariate = FALSE)$psrf[, 1], error = function(e) NULL)
-    if (!is.null(rh)) { checked <- length(rh); if (any(rh > 1.1, na.rm = TRUE)) rhat_ok <- FALSE }
-  }
-  if (checked == 0L) fail("G9b: could not locate >= 2 MCMCglmm chains inside BACE's returned object to compute Rhat -- TODO stub, see comment")
-  cat("G9b: checked", checked, "parameters, max Rhat =", max(rh, na.rm = TRUE), "\n")
-  if (!rhat_ok) fail("G9b: Rhat >= 1.1 for at least one parameter")
+  if (any(rh > 1.1, na.rm = TRUE)) fail("G9b: max Rhat %.3f >= 1.1 -- lengthen the chains", max(rh))
   pass("G9b")
 }
 
