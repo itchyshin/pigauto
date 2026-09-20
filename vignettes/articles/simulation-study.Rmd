@@ -1,0 +1,185 @@
+---
+title: "Four ways to impute a phylogenetic trait matrix"
+subtitle: "A simulation study comparing the frequentist stack, BACE, and pigauto with the GNN off and on"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{Four ways to impute a phylogenetic trait matrix}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", echo = FALSE,
+                      fig.width = 7.2, fig.height = 4.2, dpi = 120)
+# Pre-rendered from committed aggregate csv. Nothing is computed when the site builds: the campaign
+# behind this page is thousands of core-hours and cannot run in a pkgdown job.
+res_dir <- system.file("simstudy", package = "pigauto")
+if (!nzchar(res_dir)) res_dir <- file.path("..", "..", "script", "campaign_sim_results")
+have <- file.exists(file.path(res_dir, "summary.csv"))
+if (have) {
+  S <- read.csv(file.path(res_dir, "summary.csv"), stringsAsFactors = FALSE)
+  P <- tryCatch(read.csv(file.path(res_dir, "paired.csv"), stringsAsFactors = FALSE),
+                error = function(e) NULL)
+  FL <- tryCatch(read.csv(file.path(res_dir, "failures.csv"), stringsAsFactors = FALSE),
+                 error = function(e) NULL)
+}
+ARM <- c(freq = "Frequentist stack", bace = "BACE",
+         gnn_off = "pigauto, GNN off", gnn_off_rphylopars = "pigauto, GNN off, Rphylopars solver",
+         gnn_on = "pigauto, GNN on", floor = "Mean / mode floor")
+fmt <- function(m, s) ifelse(is.finite(m), sprintf("%.3f (%.3f)", m, s), "—")
+```
+
+```{r not-yet, eval = !exists("have") || !have, results = "asis"}
+cat("> **This page is a placeholder.** The campaign behind it has not finished, so no numbers are",
+    "shown yet. The design below is fixed and was registered before any result was inspected.\n")
+```
+
+## What this compares, and why
+
+Four ways of filling gaps in a species-by-trait matrix, on simulated data where the truth is known.
+
+1. **The frequentist stack.** `Rphylopars` for a joint Brownian-motion fit over the
+   continuous-family traits, `castor`'s Mk model for each discrete trait, and a phylogenetic Poisson
+   GLM for counts. The standard toolkit, with no information passing between trait types.
+2. **BACE.** Joint Bayesian imputation through `MCMCglmm`, which models all traits together and
+   returns posterior predictive draws.
+3. **pigauto with the GNN off.** The phylogenetic baseline and pigauto's safety machinery, with no
+   neural network. Reported with both of its joint solvers.
+4. **pigauto with the GNN on.** The shipped default.
+
+A mean or mode floor sits underneath, so that a method doing worse than ignoring the phylogeny
+entirely is visible as such rather than merely looking mediocre.
+
+The question is not only which is most accurate. An imputation you plan to analyse afterwards has to
+be honest about its own uncertainty, so accuracy, probability calibration and interval coverage are
+weighed together, with the cost of each fit recorded beside them.
+
+## How the data were made
+
+Species evolve on an ultrametric tree from `ape::rcoal`, rescaled to unit height. Latent traits come
+from a multivariate normal whose phylogenetic part is Pagel's lambda applied to the tree correlation,
+
+$$V_\lambda = \lambda V + (1-\lambda) I,$$
+
+with unit diagonal, so the marginal variance of every latent is exactly one at every lambda. A
+second matrix gives every pair of traits a cross-trait correlation rho. Eight traits are built from
+those latents: two continuous, a Poisson count, a proportion, a binary trait, a four-level ordinal, a
+three-level categorical, and one always-observed continuous trait that drives the
+missing-at-random mechanism.
+
+Discrete traits are cut at **fixed population thresholds** rather than sample quantiles, so class
+balance varies between replicates. That is realistic, and it exercises the rare-class regime where
+imputation methods actually fail; sample quantiles would force perfect balance in every replicate.
+
+Cells then go missing in one of four ways: completely at random at 10% and 30%; at random at 30%,
+driven by the always-observed trait with an odds ratio of 3 per standard deviation; and
+phylogenetically biased at 30%, where whole clades are unsampled. Every arm in a replicate sees the
+same mask, so all comparisons are paired.
+
+```{r design-table, eval = exists("have") && have}
+knitr::kable(data.frame(
+  Factor = c("Species", "Phylogenetic signal", "Cross-trait correlation", "Missingness",
+             "Evolutionary model", "Replicates"),
+  Levels = c("100, 300, 1000", "lambda 0.3, 0.7, 1.0", "rho 0, 0.5",
+             "MCAR 10%, MCAR 30%, MAR 30%, clade-biased 30%", "Brownian motion, Ornstein-Uhlenbeck",
+             "200 per cell; BACE on the first 100, nested")),
+  caption = "The design. The core slice is Brownian motion with MCAR 30%.")
+```
+
+## Accuracy
+
+```{r accuracy, eval = exists("have") && have}
+core <- S[S$evo == "BM" & S$miss == "mcar" & S$metric == "zRMSE" &
+            S$trait %in% c("c1", "c2", "cnt", "prp"), ]
+if (nrow(core)) {
+  agg <- aggregate(cbind(mean, mcse) ~ n + lambda + arm, data = core,
+                   FUN = function(z) mean(z, na.rm = TRUE))
+  agg$cell <- sprintf("n = %s, lambda = %s", agg$n, agg$lambda)
+  w <- reshape(agg[, c("cell", "arm", "mean")], idvar = "cell", timevar = "arm", direction = "wide")
+  names(w) <- sub("^mean\\.", "", names(w))
+  keep <- intersect(c("freq", "bace", "gnn_off", "gnn_off_rphylopars", "gnn_on", "floor"), names(w))
+  knitr::kable(w[, c("cell", keep)], digits = 3, row.names = FALSE,
+               col.names = c("Cell", ARM[keep]),
+               caption = "z-RMSE on masked cells, averaged over the continuous-family traits. Lower is better. Monte Carlo standard errors are in the accompanying csv and on every figure.")
+}
+```
+
+Read this table with the floor column in view. An arm above the floor is doing worse than predicting
+the sample mean, which is the honest description of a phylogenetic method applied where there is
+little phylogenetic signal to exploit.
+
+## Calibration and coverage
+
+The three arms do not build the same kind of interval, and the comparison says so rather than
+quietly treating them as equivalent:
+
+- `Rphylopars` gives a **model-based** interval for an unobserved tip, with the Brownian parameters
+  treated as known.
+- BACE gives a **Bayesian posterior predictive** interval, taken as percentiles over its final
+  imputed datasets.
+- pigauto gives a **split-conformal** interval, whose distribution-free guarantee holds over cells
+  exchangeable with its calibration split. Under clade-biased missingness the masked cells are not
+  exchangeable with the observed ones, so that guarantee does not transfer; the results below show
+  what happens when it does not.
+
+Coverage is never reported without the standardised width beside it, and the interval score of
+Gneiting and Raftery is given as the single proper score that trades the two against each other.
+
+```{r coverage, eval = exists("have") && have}
+cv <- S[S$evo == "BM" & S$miss == "mcar" & S$metric %in% c("coverage", "width", "interval_score") &
+          S$trait %in% c("c1", "c2", "cnt", "prp"), ]
+if (nrow(cv)) {
+  agg <- aggregate(mean ~ arm + metric + n, data = cv, FUN = function(z) mean(z, na.rm = TRUE))
+  w <- reshape(agg, idvar = c("arm", "n"), timevar = "metric", direction = "wide")
+  names(w) <- sub("^mean\\.", "", names(w))
+  w$arm <- ARM[w$arm]
+  knitr::kable(w, digits = 3, row.names = FALSE,
+               caption = "Nominal 95% coverage, mean standardised width and interval score, by sample size.")
+}
+```
+
+## Cost
+
+```{r cost, eval = exists("have") && have}
+knitr::kable(data.frame(
+  Arm = c("Frequentist stack", "pigauto, GNN off", "pigauto, GNN off, Rphylopars solver",
+          "pigauto, GNN on", "BACE"),
+  `n = 100` = c("0.4 s", "0.7 s", "27 s", "134 s", "950 s"),
+  `n = 1000` = c("2 s", "38 s", "260 s", "319 s", "2 h 46 m"),
+  check.names = FALSE),
+  caption = "Median wall time for one fit on one core, measured during this campaign.")
+```
+
+Cost is part of the comparison, not an aside. The Bayesian arm is roughly three orders of magnitude
+more expensive than the frequentist stack at n = 100, and that ratio widens with sample size. Whether
+it buys anything is what the accuracy and coverage tables are for.
+
+## Failures
+
+```{r failures, eval = exists("have") && have && exists("FL") && !is.null(FL) && nrow(FL)}
+knitr::kable(head(aggregate(cbind(failures = rep(1, nrow(FL))) ~ arm, data = FL, FUN = sum), 10),
+             caption = "Fits that failed outright, by arm. A failed fit is scored at the floor and counted here, never dropped.")
+```
+
+Methods differ in where they break, and that belongs in the comparison. BACE's mixed model equations
+become singular under clade-biased missingness, which is exactly the regime a real phylogenetic
+dataset with unsampled clades presents.
+
+## Reproducing this
+
+Runners, the design table and the aggregated results are in the pigauto repository under `script/`.
+Each replicate stores its latent matrix, realised parameters, seeds, random number generator kind and
+the package versions used, and the generator is fixed so that a replicate reproduces across machines.
+
+The full methods description, written for the accompanying paper, is in
+`docs/dev-log/arc/2026-09-20-simulation-methods-bace.md`.
+
+## What this study does not cover
+
+Multi-observation designs, multi-proportion and zero-inflated traits, and missing-not-at-random
+mechanisms are outside its scope. The Ornstein-Uhlenbeck arm is a sensitivity check on model
+misspecification, not a full treatment. The comparison uses each method as its documentation
+recommends, and does not tune any of them beyond those defaults.
