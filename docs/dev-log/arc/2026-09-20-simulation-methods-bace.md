@@ -156,6 +156,24 @@ effects are reported alongside, with the median rather than the minimum used as 
 MCMCglmm's threshold and categorical models mix slowly by construction and a single badly-mixing
 parameter is expected.
 
+#### A failure mode both arms share
+
+At lambda = 1 with fixed population thresholds, a discrete trait can come out monomorphic among the
+observed cells: maximum phylogenetic signal plus a threshold cut can leave every observed species on
+one side. Measured over the core slice, this happened in 69 replicates, all at lambda = 1, spread
+over n = 100 (32), n = 300 (29) and n = 1000 (8), about 6% of the lambda = 1 replicates and none
+anywhere else.
+
+castor cannot fit an Mk model to a trait with one observed state, and reports so. That is a real
+property of the frequentist stack and is reported as a failure, scored at the floor. pigauto's
+GNN-on arm fails on exactly the same cells for an unrelated reason, a dimension error on the
+collapsed one-hot encoding, which is a robustness defect in the package rather than a statement
+about the method; it is recorded here and fixed separately, outside this study.
+
+Because both arms fail on the same cells and both are scored at the floor, the paired contrast
+between them is not distorted, but the absolute figures for both at lambda = 1 are pulled toward the
+floor. Any lambda = 1 number for those two arms should be read with that in mind.
+
 #### Reference
 
 A mean or mode floor, so that an arm doing worse than ignoring the phylogeny entirely
