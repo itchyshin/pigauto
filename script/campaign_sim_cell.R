@@ -98,6 +98,7 @@ cell <- list(tag = tag, dgp = dgp, n = nrow(truth), seed = seed, arms = arms, sm
              epochs = epochs, bace = c(nitt = bace_nitt, burnin = bace_burnin, thin = bace_thin),
              results = tab, calib = out_arms$calib, walls = unlist(out_arms$walls),
              failed = out_arms$failed, errors = out_arms$errors, paths = out_arms$paths,
+             diag = out_arms$diag,
              L = cell_data$L, truth = truth, mask = mask,
              RNGkind = RNGkind(), sessionInfo = utils::sessionInfo(),
              pigauto_version = as.character(utils::packageVersion("pigauto")),
