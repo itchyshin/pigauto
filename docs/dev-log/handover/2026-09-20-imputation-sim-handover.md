@@ -4,14 +4,14 @@
 `origin/main` fd0b513, 23 commits, worktree
 `/Users/z3437171/Dropbox/Github Local/pigauto-imputation-sim`.
 
-**Read `.unlazy/imputation-sim/PROGRESS.md` first.** It is the live record: goal, completion
+Read `.unlazy/imputation-sim/PROGRESS.md` first. It is the live record: goal, completion
 criteria, what is done, every output location, the compute rules, the findings not to re-derive, the
 pending submissions, and the overnight authority Shinichi granted. This file is the orientation; that
 file is the state.
 
 ## Where it stands
 
-The campaign is **running**, not finished.
+The campaign is still running.
 
 | stream | machine | state at handover |
 |---|---|---|
@@ -23,7 +23,7 @@ The campaign is **running**, not finished.
 | factorial BACE, n = 100 | nibi | running |
 | factorial fast arms, AVONET300, covariate sensitivity | not yet submitted | wait for Totoro to free |
 
-rorqual is **retired** from this campaign. Its project allocation is at its file-count quota, so
+rorqual is retired from this campaign. Its project allocation is at its file-count quota, so
 result writes fail, and its nodes are slow enough that a replicate which takes 2 h 46 m on fir hit a
 3 h 30 m wall there. Nine salvaged cells remain in its results directory and must be included when
 pooling.
@@ -50,14 +50,14 @@ then republish that html to the artifact URL. Run the same three for `factorial`
 
 ## Traps that already cost time
 
-- **Pool per host, never flatten.** Totoro and the clusters write the same filename for the same
+- Pool per host, never flatten: Totoro and the clusters write the same filename for the same
   cell, carrying different arms. `rsync --ignore-existing` silently discarded 1,034 Bayesian cells.
-- **Never wrap MCMCglmm in `mclapply`.** It segfaults. Parallelism is one process per cell.
-- **BACE wants one core and 32 GB.** Measured CPU efficiency was 24.9% of four cores, and 200 tasks
+- Never wrap MCMCglmm in `mclapply`; it segfaults. Parallelism is one process per cell.
+- BACE wants one core and 32 GB: measured CPU efficiency was 24.9% of four cores, and 200 tasks
   were killed at 16 GB.
-- **BACE's `runs` are imputation iterations, not chains.** Gelman-Rubin across them is meaningless;
+- BACE's `runs` are imputation iterations rather than chains, so Gelman-Rubin across them is meaningless;
   its own `assess_convergence()` needs at least three and the campaign uses five.
-- **DRAC's 1,000-job cap counts array tasks**, so bundle replicates per task rather than submitting
+- DRAC's 1,000-job cap counts array tasks, so bundle replicates per task rather than submitting
   one task per replicate.
 - Connect only through the existing ControlMaster sockets, or Duo fires.
 
@@ -70,9 +70,9 @@ the branch and open a draft PR.
 
 ## Two gates that need Shinichi
 
-- **Publication.** The article stays unlisted and unpublished until he has read the board. He has
+- Publication: the article stays unlisted and unpublished until he has read the board. He has
   already approved everything short of publishing and merging.
-- **Merge.** No agent merges a PR here.
+- Merge: no agent merges a PR here.
 
 ## Residual unknowns
 
