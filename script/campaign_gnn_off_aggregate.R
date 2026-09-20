@@ -12,10 +12,16 @@ get_flag <- function(flag, default = NULL) { i <- match(flag, args); if (is.na(i
 reference_arm <- get_flag("--reference", "floor")
 pos <- args[!grepl("^--", args)]; pos <- pos[!(pos %in% c(reference_arm))]
 res_dir <- pos[1]; out <- pos[2]
-fs <- list.files(res_dir, pattern = "\\.rds$", full.names = TRUE)
+# recursive: a pooled directory holds one subdirectory per machine, and the same (cell, seed) can
+# appear in two of them carrying DIFFERENT arms (fast arms on Totoro, BACE on the clusters). Both
+# are kept; their `results` rows carry distinct arms, so rbind below merges rather than duplicates.
+fs <- list.files(res_dir, pattern = "\\.rds$", full.names = TRUE, recursive = TRUE)
 fs <- fs[!grepl("_smoke", fs)]
-cells <- lapply(fs, readRDS)
-cat(length(cells), "cells read\n")
+cells <- lapply(fs, function(f) tryCatch(readRDS(f), error = function(e) NULL))
+bad <- sum(vapply(cells, is.null, TRUE))
+cells <- cells[!vapply(cells, is.null, TRUE)]
+cat(length(cells), "cells read", if (bad) sprintf("(%d unreadable, skipped)", bad) else "", "\n")
+if (!length(cells)) stop("no readable cells under ", res_dir)
 tab <- do.call(rbind, lapply(cells, function(c) { r <- c$results; if (is.null(r) || !nrow(r)) return(NULL); r$dgp <- c$dgp; r$n <- c$n; r$seed <- c$seed; r }))
 walls <- do.call(rbind, lapply(cells, function(c) data.frame(dgp = c$dgp, n = c$n, seed = c$seed, arm = names(c$walls), wall = as.numeric(unlist(c$walls)))))
 errs <- do.call(rbind, lapply(cells, function(c) if (length(c$errors)) data.frame(dgp = c$dgp, n = c$n, seed = c$seed, arm = names(c$errors), error = unlist(c$errors)) else NULL))
