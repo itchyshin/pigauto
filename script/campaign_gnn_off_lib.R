@@ -498,42 +498,57 @@ run_bace <- function(df_miss, truth, mask, tree, cont_traits, bace_nitt, bace_bu
     }
   }
   list(completed = comp, lower = lower, upper = upper, prob = prob, n_final = n_final,
-       diag = list(bace_rhat = bace_rhat(outb, bace_runs)))
+       diag = bace_diagnostics(outb))
 }
 
-# Gelman-Rubin Rhat over BACE's two chains, on the fixed effects and variance components only (the
-# species-level random effects are thousands of nuisance parameters whose Rhat is not the convergence
-# question). Models are grouped by an identical (fixed-effect names, VCV names) signature so the two
-# chains of the same response are compared; OVR/categorical fits differ in their reference level
-# and would otherwise be paired wrongly. Returns NULL when fewer than two chains are found.
-bace_rhat <- function(outb, runs) {
-  if (runs < 2L || !requireNamespace("coda", quietly = TRUE)) return(NULL)
-  find_mcmcglmm <- function(x) {
-    if (inherits(x, "MCMCglmm")) return(list(x))
-    if (is.list(x)) return(unlist(lapply(x, find_mcmcglmm), recursive = FALSE))
-    NULL
+# BACE convergence, reported the way BACE defines it.
+#
+# `runs` are SEQUENTIAL imputation iterations for BACE's own convergence check (its help: "the
+# number of initial imputation iterations for convergence checking"), not parallel chains of one
+# posterior. Successive runs condition on different completed datasets by construction, so
+# Gelman-Rubin across them diagnoses nothing: measured on a converged n = 300 fit it returned
+# max Rhat 5.7, and 20 when the species-level random effects were pooled in as well.
+#
+# What is reported instead:
+#   converged / n_attempts  BACE's own verdict (assessed even under skip_conv = TRUE)
+#   drift                   max relative change in the per-trait imputed mean over the last two
+#                           iterations of convergence$summary_stats -- the trace behind that verdict
+#   ess_min                 smallest effective sample size over the fixed effects of the final
+#                           MCMCglmm fits. A single-chain diagnostic, which is what these are.
+bace_diagnostics <- function(outb) {
+  conv <- outb$convergence
+  drift <- NA_real_
+  ss <- conv$summary_stats
+  if (is.data.frame(ss) && nrow(ss) >= 2L) {
+    num <- setdiff(names(ss), "iteration")
+    last <- as.numeric(ss[nrow(ss), num]); prev <- as.numeric(ss[nrow(ss) - 1L, num])
+    drift <- max(abs(last - prev) / pmax(abs(prev), 1e-8), na.rm = TRUE)
   }
-  models <- find_mcmcglmm(outb)
-  if (length(models) < 2L) return(NULL)
-  par_mat <- function(m) {
-    nfl <- m$Fixed$nfl %||% ncol(m$Sol)
-    cbind(as.matrix(m$Sol)[, seq_len(nfl), drop = FALSE], as.matrix(m$VCV))
+  ess_min <- ess_med <- ess_frac_low <- NA_real_; ess_n <- 0L
+  if (requireNamespace("coda", quietly = TRUE)) {
+    find_mcmcglmm <- function(x) {
+      if (inherits(x, "MCMCglmm")) return(list(x))
+      if (is.list(x)) return(unlist(lapply(x, find_mcmcglmm), recursive = FALSE))
+      NULL
+    }
+    models <- find_mcmcglmm(outb)
+    if (length(models)) {
+      es <- unlist(lapply(models, function(m) {
+        nfl <- m$Fixed$nfl %||% ncol(m$Sol)
+        tryCatch(coda::effectiveSize(coda::as.mcmc(as.matrix(m$Sol)[, seq_len(nfl), drop = FALSE])),
+                 error = function(e) NULL)
+      }))
+      if (length(es)) {
+        ess_min <- min(es, na.rm = TRUE)
+        ess_med <- stats::median(es, na.rm = TRUE)
+        ess_frac_low <- mean(es < 100, na.rm = TRUE)
+        ess_n <- length(es)
+      }
+    }
   }
-  sig <- vapply(models, function(m) paste(colnames(par_mat(m)), collapse = "|"), "")
-  out <- list()
-  for (s in unique(sig)) {
-    grp <- models[sig == s]
-    if (length(grp) < 2L) next
-    ml <- tryCatch(coda::mcmc.list(lapply(grp[1:2], function(m) coda::as.mcmc(par_mat(m)))),
-                   error = function(e) NULL)
-    if (is.null(ml)) next
-    r <- tryCatch(coda::gelman.diag(ml, multivariate = FALSE, autoburnin = FALSE)$psrf[, 1],
-                  error = function(e) NULL)
-    if (!is.null(r)) out[[length(out) + 1L]] <- r
-  }
-  if (!length(out)) return(NULL)
-  r <- unlist(out)
-  list(max = max(r, na.rm = TRUE), n = length(r), frac_above_1.1 = mean(r > 1.1, na.rm = TRUE), psrf = r)
+  list(converged = isTRUE(outb$converged), n_attempts = outb$n_attempts %||% NA_integer_,
+       drift = drift, ess_min = ess_min, ess_med = ess_med, ess_frac_low = ess_frac_low,
+       ess_n = ess_n, summary_stats = ss)
 }
 
 run_floor <- function(df_miss, truth, mask) {
