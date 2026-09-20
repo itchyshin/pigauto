@@ -465,11 +465,14 @@ run_bace <- function(df_miss, truth, mask, tree, cont_traits, bace_nitt, bace_bu
   # n_final is the number of FULL imputation runs (bace_final_imp refits MCMCglmm per response for
   # each one), not a thinning of one chain: each dataset is one posterior predictive draw (K = 1L in
   # BACE:::.predict_bace). Cost is linear in n_final, so it is a budget constant, not a chain length.
-  # 50 gives usable 2.5/97.5 percentiles; the pre-run times it at production size.
+  # 50 gives usable 2.5/97.5 percentiles; the pre-run times it at production size. n_cores = 1L is
+  # BACE's own default, pinned explicitly: parallelism here is one process per cell (xargs on Totoro,
+  # array tasks on DRAC), and a fork inside MCMCglmm segfaults when the caller has already forked.
   n_final <- as.integer(Sys.getenv("PIG_BACE_NFINAL", "50"))
   outb <- BACE::bace(fixformula = fixformula, ran_phylo_form = "~ 1 |Species", phylo = tree_b,
                      data = df_b, nitt = bace_nitt, burnin = bace_burnin, thin = bace_thin,
-                     runs = bace_runs, n_final = n_final, verbose = FALSE, skip_conv = TRUE, ovr_categorical = TRUE)
+                     runs = bace_runs, n_final = n_final, n_cores = 1L,
+                     verbose = FALSE, skip_conv = TRUE, ovr_categorical = TRUE)
   sets <- if ("imputed_datasets" %in% names(outb)) outb$imputed_datasets else
           if ("imputed_data" %in% names(outb)) outb$imputed_data else list(outb$data)
   comp <- df_miss

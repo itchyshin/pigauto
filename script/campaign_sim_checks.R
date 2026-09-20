@@ -132,7 +132,10 @@ if (gate == "G6") {
       NA_integer_
     }, error = function(e) NA_integer_))
   }
-  reps_out <- parallel::mclapply(seq_len(reps), one_rep, mc.cores = 4L)
+  # Sequential: MCMCglmm segfaults inside a forked worker, and BACE already runs one process per
+  # cell. Parallelism for this gate would have to be separate R processes, which is what the
+  # campaign drivers do.
+  reps_out <- lapply(seq_len(reps), one_rep)
   errs <- unlist(lapply(reps_out, function(r) names(r$errors)))
   if (length(errs)) cat("G6: arm errors across replicates:", paste(errs, collapse = ","), "\n")
   tab <- do.call(rbind, lapply(seq_along(reps_out), function(i) { d <- reps_out[[i]]$results; if (!is.null(d)) d$rep <- i; d }))
