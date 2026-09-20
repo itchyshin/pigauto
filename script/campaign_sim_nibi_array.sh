@@ -19,16 +19,19 @@ BLOCK="${BLOCK:-5}"; HALF="${HALF:-}"; THROTTLE="${THROTTLE:-400}"; CPUS="${CPUS
 ROOT="${PIG_SIM_ROOT:-$HOME/projects/def-snakagaw/snakagaw/pigauto_sim}"
 OUT="$ROOT/results/$STAGE"; LOG="$ROOT/logs"; mkdir -p "$OUT" "$LOG"
 
-ARMS_ALL="gnn_on,gnn_off,gnn_off_rphylopars,freq,bace,floor"
-ARMS_NOBACE="gnn_on,gnn_off,gnn_off_rphylopars,freq,floor"
+# ARMS / ARMS_BACE override the arm sets, as on Totoro. SEEDS=bace caps the seed range at the
+# design's bace_reps so a Bayesian-only wave does not run seeds the other arms own.
+ARMS_ALL="${ARMS_BACE:-gnn_on,gnn_off,gnn_off_rphylopars,freq,bace,floor}"
+ARMS_NOBACE="${ARMS:-gnn_on,gnn_off,gnn_off_rphylopars,freq,floor}"
 
 # Task table: one line per (cell, seed block). Column 1 = the cell args, column 2 = first seed, 3 = last.
 TASKS="$LOG/${STAGE}_n${N}${HALF:+_half$HALF}_tasks.txt"
 source "$ROOT/env.sh"
-Rscript "$ROOT/script/campaign_sim_design.R" --stage "$STAGE" | awk -F, -v n="$N" -v blk="$BLOCK" -v half="$HALF" '
+Rscript "$ROOT/script/campaign_sim_design.R" --stage "$STAGE" | awk -F, -v n="$N" -v blk="$BLOCK" -v half="$HALF" -v seeds="${SEEDS:-all}" '
 NR > 1 && $9 == n && (half == "" || (half == "A" && (NR % 2) == 0) || (half == "B" && (NR % 2) == 1)) {
-  for (s = 1; s <= $10; s += blk) {
-    e = s + blk - 1; if (e > $10) e = $10
+  lim = (seeds == "bace") ? $11 : $10
+  for (s = 1; s <= lim; s += blk) {
+    e = s + blk - 1; if (e > lim) e = lim
     printf "--dgp %s --evo %s --lambda %s --rho %s --miss %s --frac %s --n %s --driver --thresholds fixed\t%d\t%d\t%d\n", $3, $4, $5, $6, $7, $8, $9, s, e, $11
   }
 }' > "$TASKS"
@@ -48,6 +51,7 @@ cat > "$SB" <<EOF
 set -euo pipefail
 source "$ROOT/env.sh"
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PIG_TORCH_THREADS=$CPUS NOT_CRAN=true
+export PIG_BACE_RUNS=${PIG_BACE_RUNS:-5} PIG_BACE_NFINAL=${PIG_BACE_NFINAL:-20}
 cd "$ROOT"
 line=\$(sed -n "\${SLURM_ARRAY_TASK_ID}p" "$TASKS")
 cellargs=\$(printf '%s' "\$line" | cut -f1); s0=\$(printf '%s' "\$line" | cut -f2); s1=\$(printf '%s' "\$line" | cut -f3); nb=\$(printf '%s' "\$line" | cut -f4)
