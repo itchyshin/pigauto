@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# nibi (DRAC) job-array driver for the factorial stage of the imputation simulation.
+#
+#   ssh nibi; cd ~/projects/def-snakagaw/snakagaw/pigauto_sim
+#   bash script/campaign_sim_nibi_array.sh factorial 100  00:50:00     # n = 100 cells
+#   bash script/campaign_sim_nibi_array.sh factorial 1000 04:30:00     # n = 1000 cells
+#
+# One array task = one cell x BLOCK consecutive seeds (default 5). Arrays are per n so --time can be
+# sized from the pre-run walls (seff on the first finished task, then re-submit the rest with the
+# measured time + 30%). %THROTTLE caps concurrent tasks. Resume is free: finished (cell, seed) rds are
+# skipped by campaign_sim_cell.R, so re-submitting the same array only runs what is missing.
+# Never run this on the login node's shell for compute: it only writes and submits the sbatch script.
+set -euo pipefail
+
+STAGE="${1:?stage}"; N="${2:?n}"; TIME="${3:?--time HH:MM:SS}"
+BLOCK="${BLOCK:-5}"; THROTTLE="${THROTTLE:-400}"; CPUS="${CPUS:-4}"; MEM="${MEM:-16G}"
+ROOT="${PIG_SIM_ROOT:-$HOME/projects/def-snakagaw/snakagaw/pigauto_sim}"
+OUT="$ROOT/results/$STAGE"; LOG="$ROOT/logs"; mkdir -p "$OUT" "$LOG"
+
+ARMS_ALL="gnn_on,gnn_off,gnn_off_rphylopars,freq,bace,floor"
+ARMS_NOBACE="gnn_on,gnn_off,gnn_off_rphylopars,freq,floor"
+
+# Task table: one line per (cell, seed block). Column 1 = the cell args, column 2 = first seed, 3 = last.
+TASKS="$LOG/${STAGE}_n${N}_tasks.txt"
+source "$ROOT/env.sh"
+Rscript "$ROOT/script/campaign_sim_design.R" --stage "$STAGE" | awk -F, -v n="$N" -v blk="$BLOCK" '
+NR > 1 && $9 == n {
+  for (s = 1; s <= $10; s += blk) {
+    e = s + blk - 1; if (e > $10) e = $10
+    printf "--dgp %s --evo %s --lambda %s --rho %s --miss %s --frac %s --n %s --driver --thresholds fixed\t%d\t%d\t%d\n", $3, $4, $5, $6, $7, $8, $9, s, e, $11
+  }
+}' > "$TASKS"
+NT=$(wc -l < "$TASKS")
+echo "stage=$STAGE n=$N tasks=$NT block=$BLOCK time=$TIME throttle=$THROTTLE"
+
+SB="$LOG/${STAGE}_n${N}.sbatch"
+cat > "$SB" <<EOF
+#!/bin/bash
+#SBATCH --account=def-snakagaw_cpu
+#SBATCH --job-name=pig_${STAGE}_n${N}
+#SBATCH --time=$TIME
+#SBATCH --cpus-per-task=$CPUS
+#SBATCH --mem=$MEM
+#SBATCH --array=1-${NT}%${THROTTLE}
+#SBATCH --output=$LOG/%x-%A_%a.out
+set -euo pipefail
+source "$ROOT/env.sh"
+export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PIG_TORCH_THREADS=$CPUS NOT_CRAN=true
+cd "$ROOT"
+line=\$(sed -n "\${SLURM_ARRAY_TASK_ID}p" "$TASKS")
+cellargs=\$(printf '%s' "\$line" | cut -f1); s0=\$(printf '%s' "\$line" | cut -f2); s1=\$(printf '%s' "\$line" | cut -f3); nb=\$(printf '%s' "\$line" | cut -f4)
+echo "host=\$(hostname) task=\$SLURM_ARRAY_TASK_ID seeds=\$s0..\$s1"
+for seed in \$(seq "\$s0" "\$s1"); do
+  if [ "\$seed" -le "\$nb" ]; then arms="$ARMS_ALL"; else arms="$ARMS_NOBACE"; fi
+  Rscript script/campaign_sim_cell.R \$cellargs --seed "\$seed" --arms "\$arms" --out "$OUT"
+done
+EOF
+sbatch "$SB"
