@@ -256,6 +256,22 @@ approves. If he has not answered, do not re-run the pre-run and do not launch; j
 5. **S7a** Artifact -> Shinichi decides -> **S7b** methods note, **S7c** pkgdown article.
 6. **S8** after-task, Melissa reconcile, handover, PR.
 
+## 8a. CLUSTER FACTS LEARNED THE HARD WAY (2026-09-20, do not repeat)
+
+- **rorqual is UNUSABLE for this campaign** until its project quota is cleared. `/project
+  def-snakagaw` is at 500K/500K files, so result writes die with `Disk quota exceeded` (379 of 600
+  tasks failed in 6 s). Its nodes are also slower: the same BACE n = 1000 replicate that takes
+  2 h 46 m on fir hit the 3 h 30 m wall there (44 TIMEOUT). Array 21475732 was cancelled; 9 cells
+  were salvaged and live in `/project/def-snakagaw/snakagaw/pigauto_sim/results/core`.
+- **fir writes to `/home`** (`ROOT=/home/snakagaw/pigauto_sim`, 203K of 500K files) and is the
+  fastest of the three: 18 s queue wait.
+- **BACE needs 32 GB, not 16.** At 16 GB, 200 of 600 fir tasks were killed OUT_OF_MEMORY and the
+  survivors ran at 92% memory efficiency.
+- **BACE is single-threaded: ask for 1 core, not 4.** Measured CPU efficiency 24.87% of a 4-core
+  allocation. `CPUS=1 MEM=32G` for every Bayesian-only array; this is four times the throughput per
+  core-hour and schedules sooner.
+- **True BACE n = 1000 wall: 2 h 46 m** (fir, runs = 5, n_final = 20). Use `--time 04:30:00`.
+
 ## 8b. PENDING CLUSTER SUBMISSIONS
 
 Running as of 2026-09-20 18:50 MDT (nothing new submitted this check; every host is saturated):
@@ -345,3 +361,17 @@ Cluster roots: nibi `~/projects/def-snakagaw/snakagaw/pigauto_sim`; rorqual
   is core n=100 535/600, core n=300 492/600, factorial n=100 1341/2800. Recovery is a straight resubmit
   at double the wall and 32G once those arrays drain — inside budget, queued as item 1 in section 8b.
   The fir factorial-fast-arms submission is still refused by the auto-mode permission classifier.
+- 2026-09-20 ~14:05 — rorqual array cancelled (quota + slow nodes); core BACE n=1000 moved to fir
+  (60681249) and factorial half A resubmitted (60681245) with CPUS=1 MEM=32G --time 04:30:00 after
+  seff showed 24.9% CPU efficiency and 200 OOM kills. True BACE n=1000 wall measured: 2 h 46 m.
+- 2026-09-20 ~14:20 — **aggregation path PROVEN on partial core results** (Totoro
+  `results/core_agg_*.csv`): 2160 summary rows all carrying MCSE, 1800 paired-difference rows with
+  mcse_diff, failures and raw_index written. Non-finite MCSE only where a metric is structurally
+  absent (coverage/width/interval_score for arms with no interval). Submitted factorial BACE n=1000
+  HALF=B on nibi (22352507) with BLOCK=2 (the 1000-job cap counts ARRAY TASKS, so 1400 never fits).
+  INTERIM READ, fast arms only, n=100 rho=0 trait c1, 200 reps, z-RMSE (NOT a result; BACE absent):
+  lambda 0.3 freq 1.254 vs floor 1.006 (the frequentist stack is worse than the mean at low signal,
+  pigauto arms sit at the floor); lambda 1.0 gnn_off 0.264 vs freq 0.298 vs gnn_on 0.348 (the
+  held-out-cell tax). MCSE 0.011-0.029.
+- 2026-09-20 ~14:30 — G10/G11/G14 implemented and committed; G10 exercised against the partial core
+  slice and correctly refused (BACE lives on the clusters). Added the pooling step to section 8.
