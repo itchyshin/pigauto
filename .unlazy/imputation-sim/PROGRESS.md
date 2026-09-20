@@ -112,33 +112,77 @@ BACE dominates the budget (roughly 84% of it).
 
 ## 8. NEXT UNFINISHED STEPS (in order)
 
-**CURRENT STATE (checked 2026-09-20 15:50 MDT): campaign running on all four hosts, healthy, nothing
-relaunched. Measured this check:**
+**CURRENT STATE (checked 2026-09-20 18:50 MDT / 16:50 UTC-6): campaign running on all four hosts,
+nothing relaunched, no new submissions. Measured this check:**
 
 | host | job | queued | results landed | note |
 |---|---|---:|---:|---|
-| Totoro | core fast arms, 62 slots | 127 procs | 2334 of 3600 | n=100 done (1200), n=300 at 1127, n=1000 not started. ~15.4 rds/min on the cheap cells; n=1000 is ~10 min per cell-seed so ETA ~3.5 h |
-| nibi | core BACE n=300 (22339823), factorial BACE n=100 (22340187) | 152 | core 952, factorial 871 | core BACE n=100 (22339703) FINISHED |
-| rorqual | core BACE n=1000 (21475732) | 201 | core 1 | 200 tasks RUNNING at ~1h55m each, `--time 03:30:00`. **Zero successful completions.** |
-| fir | factorial BACE n=1000 HALF=A (60661338) | 251 | factorial 47 | 250 RUNNING; the 47 landed are all the SAME cell, all BACE failures |
+| Totoro | core fast arms, 62 slots | 127 procs | 2653 of 3600 | n=100 DONE (1200), n=300 DONE (1200), n=1000 at 253/1200. ETA ~3 h |
+| nibi | core BACE n=300 (22339823), factorial BACE n=100 (22340187) | 165 | core 1027 (n100 535, n300 492), factorial 1341 | **224 tasks TIMEOUT across the two arrays** |
+| rorqual | core BACE n=1000 (21475732) | 201 | core 1 | 200 tasks at 02:56 elapsed against `--time 03:30`. No TIMEOUT yet; the wall arrives ~19:20 EDT |
+| fir | factorial BACE n=1000 HALF=A (60661338) | 240 | factorial 130 | **125 tasks OUT_OF_MEMORY at `--mem=16G`**, 129 COMPLETED |
 
-### The n = 1000 BACE wall question is now PARTLY answered, and the answer is bad
+### The n = 1000 BACE wall question is now ANSWERED, and it needs Shinichi's decision
 
-Two separate things are happening at n = 1000, and they must not be confused.
+Measured on fir (`sacct -j 60661338`, 254 tasks finished, BLOCK=1 so one task = one cell-seed):
 
-1. **Where BACE fails, it fails fast.** All 47 landed fir cells are
-   `types_mixed_BM_l1_r0_mcar0.1_n1000`, seeds 10..99, every one
-   `failed$bace = TRUE`, error `"Mixed model equations singular: use a (stronger) prior"`,
-   wall 0.9 s. rorqual's single landed core cell
-   (`types_mixed_BM_l0.7_r0_mcar0.3_n1000_s60`) is the same failure at 113 s.
-   This is the documented failure mode from section 7, not a runner bug, and it is scored at the
-   floor and reported. But **100% failure on the cells seen so far at n = 1000** is a much higher
-   rate than the pre-run suggested, and it is itself a headline result if it holds.
-2. **Where BACE does NOT fail, it has not finished in 1 h 55 m.** rorqual's other 200 tasks have all
-   been RUNNING that long with nothing written. `--time` is 03:30:00. If the true wall is longer,
-   those tasks TIMEOUT and produce nothing, burning ~2,100 core-hours. **Check this first next run**:
-   `sacct -j 21475732 -n -X -o State | sort | uniq -c` on rorqual. A wave of TIMEOUT means the
-   n = 1000 BACE arm needs a longer `--time` (and a re-derived budget), not a resubmission at 3:30.
+- **129 COMPLETED**, each running **02:44 to 02:50** of wall.
+- **125 OUT_OF_MEMORY**, each after **~02:44** of wall. `--mem=16G` is not enough for BACE at n = 1000.
+  That is 49% of finished tasks, ~1,370 core-hours, producing nothing.
+- rorqual runs the same `--mem=16G` and `--time 03:30:00`. Its 200 tasks sat at 02:56 elapsed at this
+  check with 33 minutes of wall left, so a mixed TIMEOUT/OOM wave there is likely, not certain.
+
+Reading the 130 landed fir rds directly: **93 of 130 (72%) are BACE failures**, 84 of them
+`"Mixed model equations singular: use a (stronger) prior"`, 9 `"argument is of length zero"`;
+37 succeeded. The failures cluster in the **lambda = 1** cells (`l1_r0_mcar0.1_n1000` 57 rds,
+`l1_r0.5_mcar0.1_n1000` 46) and cost about a second each. The **lambda = 0.3** cells are the ones that
+succeed, and they are the ones that cost ~3 h and blow 16 GB.
+
+So the two behaviours are now separated and both are measured:
+
+| n = 1000 BACE, by cell | outcome | wall | memory |
+|---|---|---|---|
+| lambda = 1 | singular failure, ~100% | ~1 s | trivial |
+| lambda = 0.3 | succeeds, or OOM at 16G | 2h44 to 2h50+ | **> 16 GB** |
+
+**Budget consequence.** A successful n = 1000 BACE fit costs ~3 h x 4 cores = ~12 core-hours. Core
+n = 1000 is 600 cell-seeds and each factorial n = 1000 half is 1,400. If the successful fraction held at
+the fir rate (~28%), n = 1000 BACE alone is roughly 400 + 2 x 940 = ~2,300 successful fits x 12 =
+**~28,000 core-hours**, against an approved whole-campaign budget of 11,564 slot-hours. The approved
+budget assumed a wall that the measurement has now overturned.
+
+**Therefore: the n = 1000 BACE arm needs Shinichi's decision before any resubmission.** The options,
+with what each costs:
+
+1. **Resubmit at `--mem=32G --time 05:00:00`** and accept ~28,000 core-hours for the n = 1000 BACE arm.
+   Resume is free, so only the missing cell-seeds re-run.
+2. **Keep n = 1000 BACE but at reduced replication** (BACE seeds 1..30 instead of 1..100 at n = 1000
+   only). Costs ~8,400 core-hours; MCSE on the BACE arm at n = 1000 widens by ~1.8x.
+3. **Report n = 1000 BACE as a measured non-completion** — the 72% singular-failure rate and the
+   ~3 h / >16 GB cost are themselves a finding about BACE's scaling, and the primary contrast
+   (BACE vs the frequentist stack) still has n = 100 and n = 300 at full replication.
+
+No option is taken without him. **Do not resubmit n = 1000 BACE at 16G/3:30 under any circumstance** —
+that configuration is now measured to waste roughly half its allocation.
+
+### nibi lost 224 tasks to TIMEOUT and they must be re-run at a longer wall
+
+| array | stage | `--time` | BLOCK | TIMEOUT | COMPLETED | still RUNNING |
+|---|---|---|---:|---:|---:|---:|
+| 22339823 | core BACE n=300 | 02:00:00 | 2 | 92 | 193 | 14 |
+| 22340187 | factorial BACE n=100 | 01:30:00 | 5 | 132 | 103 | 150 |
+
+Landed vs expected: core n=100 **535/600**, core n=300 **492/600** (14 tasks still in flight),
+factorial n=100 **1341/2800** (150 tasks still in flight). So even the cheap BACE cells overrun a
+1 h / 30 min per-cell-seed allowance on some seeds.
+
+**Next action for these, once the two arrays fully drain** (do not resubmit while tasks are RUNNING —
+the skip check reads the directory at task start, so a concurrent resubmission re-runs cells already in
+flight): resubmit the same two stages on nibi with `--time` doubled (core n=300 at `04:00:00`,
+factorial n=100 at `03:00:00`) and `--mem=32G`. Resume makes this cheap: only the missing
+(cell, seed) pairs run. Estimated (D-139): core n=300 ~108 missing cell-seeds x ~1 h x 4 cores =
+~430 core-hours; factorial n=100 ~700 missing x ~20 min x 4 = ~930 core-hours. Both are inside the
+approved budget and need no new decision, only an idle array slot.
 
 ### Two arm failures found in the core slice (Totoro), both recorded, neither fixed
 
@@ -214,38 +258,41 @@ approves. If he has not answered, do not re-run the pre-run and do not launch; j
 
 ## 8b. PENDING CLUSTER SUBMISSIONS
 
-Running as of 2026-09-20 15:50:
-- Totoro: core fast arms, 3600 jobs, 62 slots -> `~/pigauto_sim/results/core` (2334 landed)
-- nibi: core BACE n=300 (22339823), factorial BACE n=100 (22340187). n=100 core (22339703) FINISHED.
-- rorqual: core BACE n=1000 (21475732, BLOCK=1, --time 03:30:00) — 200 RUNNING at ~2 h, 1 done (failed)
-- fir: factorial BACE n=1000 HALF=A (60661338, BLOCK=1, --time 03:30:00) — 250 RUNNING, 47 done (all failed)
+Running as of 2026-09-20 18:50 MDT (nothing new submitted this check; every host is saturated):
+- Totoro: core fast arms, 62 slots -> `~/pigauto_sim/results/core` (2653 landed; n=100 and n=300 DONE, n=1000 253/1200)
+- nibi: core BACE n=300 (22339823, 14 RUNNING), factorial BACE n=100 (22340187, 150 RUNNING). 224 TIMEOUT between them.
+- rorqual: core BACE n=1000 (21475732) — 200 RUNNING at 02:56 against `--time 03:30`, 1 done (failed)
+- fir: factorial BACE n=1000 HALF=A (60661338) — 239 RUNNING, 129 COMPLETED, **125 OUT_OF_MEMORY at 16G**
 
-### BLOCKED ON A PERMISSION, NOT ON CAPACITY — needs Shinichi
+### NEEDS SHINICHI — the n = 1000 BACE budget
 
-**Item 2, factorial FAST arms n = 100, was ready to submit and was refused by Claude Code's auto-mode
-permission classifier ("Modify Shared Resources").** Everything else about it checks out: fir has
-room (251 queued, limit > 1000), fir `/home` is at 202K/500K inodes and 16/48 GiB, and fir's
-`results/factorial` holds **zero** n = 100 files so there is no silent-skip collision. Estimated cost
-(D-139): 162 s per cell-seed x 10 seeds = 27 min per task against a 1 h limit; 5,600 cell-seeds =
-~252 task-hours, ~1.4 h wall at 200 concurrent. The exact command, verified against the driver:
+See section 8. `--mem=16G --time 03:30:00` is measured to be wrong for n = 1000 BACE: 49% of fir's
+finished tasks died OOM after ~2h45 of compute. The honest re-derived cost of the n = 1000 BACE arm is
+~28,000 core-hours against an approved whole-campaign budget of 11,564 slot-hours. Three options are
+laid out in section 8 (full resubmission at 32G/5h · reduced replication at n = 1000 · report the
+scaling failure as a result). **Nothing is resubmitted at n = 1000 until he picks one.**
+
+### Ready to run, no new decision needed, waiting only for an idle slot
+
+1. **nibi TIMEOUT recovery** — resubmit core BACE n=300 at `--time 04:00:00 --mem=32G` and factorial
+   BACE n=100 at `--time 03:00:00 --mem=32G`, **after** arrays 22339823 and 22340187 fully drain.
+   ~1,360 core-hours total, inside the approved budget. Resume runs only the ~800 missing cell-seeds.
+2. **factorial FAST arms n = 100** — still blocked by the Claude Code auto-mode permission classifier
+   ("Modify Shared Resources"), not by capacity. fir `results/factorial` now holds 130 BACE-only
+   **n = 1000** rds, and **zero n = 100** rds, so the no-collision argument still holds. Verified command:
 
 ```
 ssh -o BatchMode=yes -o ConnectTimeout=15 snakagaw@fir.alliancecan.ca 'export PIG_SIM_ROOT=/home/snakagaw/pigauto_sim; cd $PIG_SIM_ROOT && ARMS_BACE=gnn_on,gnn_off,gnn_off_rphylopars,freq,floor ARMS=gnn_on,gnn_off,gnn_off_rphylopars,freq,floor BLOCK=10 THROTTLE=200 bash script/campaign_sim_nibi_array.sh factorial 100 01:00:00'
 ```
 
-`BLOCK=10`, not the 5 written here earlier: at 5 the array is 1,120 tasks and DRAC's MaxSubmit is
-~1,000. At 10 it is 560.
-
-### Still queued, and now correctly targeted
-
-1. **factorial BACE n = 1000 HALF=B** — HOLD. Do not submit until the rorqual n = 1000 wall question
-   above is answered. Submitting 700 more n = 1000 BACE tasks before we know whether any of them
-   finishes inside `--time` would multiply a possible 2,100 core-hour loss.
-2. **factorial FAST arms n = 1000** (560 tasks at BLOCK=10, `--time 03:00:00`) — must go to a root
-   whose `results/factorial` has no n = 1000 rds. fir is disqualified (HALF=A BACE rds are there) and
-   rorqual `/project` is at its inode quota. **Totoro** once its core slice finishes (~3.5 h) is the
-   clean target, via `script/campaign_sim_totoro.sh`.
-3. AVONET300 case study (stage `avonet`) and covariate sensitivity: Totoro, after the core slice.
+3. **factorial FAST arms n = 1000** (560 tasks at BLOCK=10, `--time 03:00:00`) — must go to a root whose
+   `results/factorial` has no n = 1000 rds. fir is disqualified (HALF=A BACE rds live there) and rorqual
+   `/project` is at its inode quota. **Totoro** once its core slice finishes (~3 h) is the clean target,
+   via `script/campaign_sim_totoro.sh`.
+4. **factorial BACE n = 1000 HALF=B** — HOLD, and the hold is now justified by measurement, not caution.
+   HALF=A is measured at 49% OOM and ~3 h per successful fit. Submitting HALF=B before Shinichi decides
+   would repeat a known waste at scale.
+5. AVONET300 case study (stage `avonet`) and covariate sensitivity: Totoro, after the core slice.
 
 Cluster roots: nibi `~/projects/def-snakagaw/snakagaw/pigauto_sim`; rorqual
 `/project/def-snakagaw/snakagaw/pigauto_sim`; **fir `/home/snakagaw/pigauto_sim`**. Always
@@ -284,3 +331,17 @@ Cluster roots: nibi `~/projects/def-snakagaw/snakagaw/pigauto_sim`; rorqual
   499K/500K inodes (other lanes' files) and the running core BACE job needs ~1,200 more. Attempted to
   submit factorial fast arms n=100 to fir — **refused by the auto-mode permission classifier**; the
   verified command is in section 8b and needs Shinichi's go-ahead or a Bash permission rule.
+- 2026-09-20 18:50 — scheduled check. **No new compute launched; nothing relaunched.** Totoro core fast
+  arms: n=100 and n=300 COMPLETE (1200 each), n=1000 at 253/1200, ETA ~3 h. **Answered the n=1000 BACE
+  wall question**: on fir, 125 of 254 finished tasks died **OUT_OF_MEMORY at `--mem=16G`** after ~2h45
+  of compute, and the 129 that completed took 02:44 to 02:50 each. Reading the 130 landed rds, 93 (72%)
+  are BACE failures — 84 singular-mixed-model, 9 zero-length-argument — concentrated in the lambda = 1
+  cells, which fail in about a second; the lambda = 0.3 cells are the ones that succeed and the ones that
+  cost ~3 h and more than 16 GB. Re-derived n=1000 BACE cost ~28,000 core-hours vs an approved 11,564
+  slot-hour campaign budget, so **the n=1000 BACE arm now needs Shinichi's decision** (three costed
+  options in section 8). rorqual's 200 tasks were at 02:56 against a 03:30 wall with no TIMEOUT yet, and
+  run the same 16G, so expect the same wave there. **Also found: nibi lost 224 tasks to TIMEOUT** (92 on
+  core BACE n=300 at `--time 02:00`, 132 on factorial BACE n=100 at `--time 01:30`); landed vs expected
+  is core n=100 535/600, core n=300 492/600, factorial n=100 1341/2800. Recovery is a straight resubmit
+  at double the wall and 32G once those arrays drain — inside budget, queued as item 1 in section 8b.
+  The fir factorial-fast-arms submission is still refused by the auto-mode permission classifier.
