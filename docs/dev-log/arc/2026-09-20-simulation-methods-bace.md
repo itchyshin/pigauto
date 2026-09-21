@@ -305,8 +305,11 @@ intended.
 | 1000 | 0.7 | 0.842 | 0.875 | 0.906 |
 | 1000 | 1.0 | 0.885 | 0.908 | 0.902 |
 
-No arm reaches the nominal 0.95 anywhere in the core slice. That is the second finding of this study
-and it applies to the Bayesian and the frequentist route alike. Coverage improves with n and with
+Neither the Bayesian nor the frequentist arm reaches the nominal 0.95 anywhere in the core slice.
+That is the second finding of this study, and it applies to both routes compared here. It is not a
+property of phylogenetic imputation in general: in the companion four-arm study, pigauto's split
+conformal intervals reach 0.95 to 0.96 at n = 300 and n = 1000, because they are calibrated on
+held-out residuals rather than derived from the fitted model. Coverage improves with n and with
 lambda for every arm, which is the signature of intervals that are too narrow because they condition
 on a fitted model rather than integrating over it. `freq_lambda` is closest to nominal across the
 board, between 0.881 and 0.906, and BACE is furthest away at low signal, at 0.803 where nominal is
