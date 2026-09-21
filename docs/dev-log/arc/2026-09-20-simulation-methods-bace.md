@@ -69,6 +69,14 @@ checks the smallest eigenvalue at run time. Without this, a replicate at `rho = 
 driver independent of everything it is supposed to predict, and the missing-at-random condition would
 be missing-completely-at-random wearing another label.
 
+`d1` is present in every cell of every mechanism, including those with no MAR component. That is worth stating
+plainly because it changes what the rho factor measures. A fully observed trait correlated 0.35 with
+all seven scored traits is available to any method that models traits jointly, so even at rho = 0 the
+joint arms have cross-trait information to exploit. The rho factor should therefore be read as the
+trait-to-trait correlation over and above that shared observed covariate, rather than as the
+presence or absence of any cross-trait information at all. Every arm sees `d1` on equal terms, so
+the comparison between arms is unaffected; what changes is the interpretation of the rho axis.
+
 #### Missingness
 
 Applied to the complete data, with the same mask given to every arm within a
@@ -131,7 +139,14 @@ as interchangeable, and coverage is never called better without the standardised
 `Rphylopars::phylopars(model = "BM", phylo_correlated = TRUE,
 pheno_correlated = TRUE, REML = TRUE)` fitted jointly to the continuous-family columns, with counts
 and proportions transformed and back-transformed. `castor::hsp_mk_model` per discrete trait, with
-equal rates for binary and categorical traits and a stepwise model for the ordinal trait. Counts go
+equal rates for binary and categorical traits and a stepwise model for the ordinal trait. The evolutionary model is left at
+Rphylopars' default, `model = "BM"`, for every cell, including the cells whose data were generated
+with Pagel's lambda below 1. This is deliberate, and it costs the arm accuracy: at
+lambda = 0.3, n = 100 the frequentist stack reaches a z-RMSE of 1.25 against a mean floor of 1.01,
+meaning it does worse than ignoring the phylogeny, because it extrapolates a phylogenetic signal the
+data do not contain. BACE, which estimates its own signal parameter, reaches 1.10 on the same cells.
+Rphylopars does offer `model = "lambda"`, and a reader should take these results as describing the
+package at its documented default rather than the best the package can do. Counts go
 through `phylolm::phyloglm(method = "poisson_GEE")` rather than a log1p Gaussian fit, because
 Rphylopars on log1p counts fell below the mean floor at n = 100 in the feasibility test; its interval
 is a marginal Poisson band, the same for every masked cell of that trait, and the results table says

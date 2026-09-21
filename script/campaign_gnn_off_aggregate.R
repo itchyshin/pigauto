@@ -71,8 +71,12 @@ print(summary_arm, digits = 3, row.names = FALSE)
 # ---- Section I: campaign_sim_cell.R rds shape (lambda/rho/evo/miss/calib/failed present) ------
 is_sim_shape <- length(cells) > 0 && !is.null(cells[[1]]$lambda)
 if (is_sim_shape) {
+  # `frac` belongs in the key. Without it MCAR 0.10 and MCAR 0.30 share the key "mcar" and are
+  # averaged into one reported cell across the whole factorial, and the paired merge below forms a
+  # Cartesian product across the two mechanisms. Found by the harness audit, 2026-09-21.
   regime_of <- function(c) data.frame(lambda = c$lambda %||% NA, rho = c$rho %||% NA, evo = c$evo %||% NA,
-                                       miss = c$miss %||% NA, thresholds = c$thresholds %||% NA)
+                                       miss = c$miss %||% NA, frac = c$miss_frac %||% NA,
+                                       thresholds = c$thresholds %||% NA)
   `%||%` <- function(a, b) if (is.null(a)) b else a
   tab2 <- do.call(rbind, lapply(cells, function(c) {
     r <- c$results; if (is.null(r) || !nrow(r)) return(NULL)
@@ -83,8 +87,8 @@ if (is_sim_shape) {
     b <- replicate(R, mean(sample(x, length(x), replace = TRUE)))
     stats::sd(b)
   }
-  cell_key <- c("dgp", "n", "lambda", "rho", "evo", "miss")
-  summary_i <- do.call(rbind, lapply(split(tab2, list(tab2$dgp, tab2$n, tab2$lambda, tab2$rho, tab2$evo, tab2$miss, tab2$arm, tab2$trait, tab2$metric), drop = TRUE), function(d)
+  cell_key <- c("dgp", "n", "lambda", "rho", "evo", "miss", "frac")
+  summary_i <- do.call(rbind, lapply(split(tab2, list(tab2$dgp, tab2$n, tab2$lambda, tab2$rho, tab2$evo, tab2$miss, tab2$frac, tab2$arm, tab2$trait, tab2$metric), drop = TRUE), function(d)
     data.frame(d[1, cell_key], arm = d$arm[1], trait = d$trait[1], metric = d$metric[1], reps = nrow(d),
                mean = mean(d$value, na.rm = TRUE), mcse = mcse(d$value[!is.na(d$value)]))))
   # Coverage is NOT a metric row: the runner carries it as a side column on each zRMSE row, so the
@@ -94,7 +98,7 @@ if (is_sim_shape) {
   # `metric` see it, with the same mean-and-MCSE-over-seeds treatment as every other number.
   cov_src <- tab2[tab2$metric == "zRMSE" & !is.na(tab2$coverage), ]
   if (nrow(cov_src)) {
-    cov_rows <- do.call(rbind, lapply(split(cov_src, list(cov_src$dgp, cov_src$n, cov_src$lambda, cov_src$rho, cov_src$evo, cov_src$miss, cov_src$arm, cov_src$trait), drop = TRUE), function(d)
+    cov_rows <- do.call(rbind, lapply(split(cov_src, list(cov_src$dgp, cov_src$n, cov_src$lambda, cov_src$rho, cov_src$evo, cov_src$miss, cov_src$frac, cov_src$arm, cov_src$trait), drop = TRUE), function(d)
       data.frame(d[1, cell_key], arm = d$arm[1], trait = d$trait[1], metric = "coverage", reps = nrow(d),
                  mean = mean(d$coverage, na.rm = TRUE), mcse = mcse(d$coverage[!is.na(d$coverage)]))))
     summary_i <- rbind(summary_i, cov_rows)
@@ -105,7 +109,7 @@ if (is_sim_shape) {
 
   # paired difference vs reference_arm, on common seeds only
   paired_rows <- list()
-  for (grp in split(tab2, list(tab2$dgp, tab2$n, tab2$lambda, tab2$rho, tab2$evo, tab2$miss, tab2$trait, tab2$metric), drop = TRUE)) {
+  for (grp in split(tab2, list(tab2$dgp, tab2$n, tab2$lambda, tab2$rho, tab2$evo, tab2$miss, tab2$frac, tab2$trait, tab2$metric), drop = TRUE)) {
     ref <- grp[grp$arm == reference_arm, ]
     if (!nrow(ref)) next
     for (a in setdiff(unique(grp$arm), reference_arm)) {
@@ -133,12 +137,30 @@ if (is_sim_shape) {
         (sum(idx) / length(conf)) * abs(mean(correct[idx]) - mean(conf[idx]))
       }, numeric(1)))
     }
+    # POOLED, as the methods note claims: bin every masked cell of the whole (cell, arm, trait)
+    # together, then bin. The previous line computed ece_one() per replicate and averaged, which is
+    # the estimator the note explicitly rejects: on a few dozen cells per replicate each per-seed ECE
+    # carries a positive small-sample bias of roughly 0.29 that does not cancel under averaging, and
+    # it grows with how many bins an arm's probabilities occupy, so it penalises the sharper arm.
+    # Found by the harness audit, 2026-09-21, which measured a perfectly calibrated arm scoring
+    # 0.108 under the old estimator against 0.007 under this one.
+    #
+    # `trait` joins the key as well: binary confidences floor at 0.5 and three-class at 0.33, so
+    # pooling them into one number compares nothing.
+    ece_key <- c(cell_key, "trait")
     ece <- do.call(rbind, lapply(split(calib_all, list(calib_all$dgp, calib_all$n, calib_all$lambda, calib_all$rho,
-                                                        calib_all$evo, calib_all$miss, calib_all$arm), drop = TRUE), function(d) {
-      by_seed <- split(d, d$seed)
-      per_seed_ece <- vapply(by_seed, function(s) ece_one(s$confidence, s$correct), numeric(1))
-      data.frame(d[1, cell_key], arm = d$arm[1], n_reps = length(per_seed_ece),
-                 ece = mean(per_seed_ece), ece_mcse = mcse_boot(per_seed_ece))
+                                                        calib_all$evo, calib_all$miss, calib_all$frac,
+                                                        calib_all$arm, calib_all$trait), drop = TRUE), function(d) {
+      pooled <- ece_one(d$confidence, d$correct)
+      # MCSE by bootstrapping REPLICATES and re-pooling, so the resample unit stays the replicate.
+      seeds <- unique(d$seed)
+      boot <- if (length(seeds) < 2) NA_real_ else stats::sd(replicate(200L, {
+        pick <- sample(seeds, length(seeds), replace = TRUE)
+        ece_one(unlist(lapply(pick, function(s) d$confidence[d$seed == s])),
+                unlist(lapply(pick, function(s) d$correct[d$seed == s])))
+      }))
+      data.frame(d[1, ece_key], arm = d$arm[1], n_reps = length(seeds), n_cells = nrow(d),
+                 ece = pooled, ece_mcse = boot)
     }))
     write.csv(ece, paste0(out, "_ece.csv"), row.names = FALSE)
   }

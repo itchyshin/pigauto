@@ -421,8 +421,15 @@ score_arm <- function(arm, completed, lower = NULL, upper = NULL, prob = NULL) {
 #               the SAME lambda for every masked cell: the prediction is now tip-specific.
 #   discrete    castor::hsp_mk_model takes no covariates at all. UNCHANGED, and reported as such:
 #               the discrete traits of arm 1 are covariate-free even in the covariate slice.
+# phylo_model: the evolutionary model handed to Rphylopars for the joint continuous-family fit.
+# "BM" is Rphylopars' own default and the arm the campaign has always run; it assumes lambda = 1, so
+# on a DGP with lambda < 1 it extrapolates signal the data do not contain and can land worse than the
+# mean floor (measured: z-RMSE 1.25 against a floor of 1.01 at lambda = 0.3, n = 100). "lambda" lets
+# Rphylopars estimate the signal instead, which is the package used as its documentation intends.
+# Both run, as arms `freq` and `freq_lambda`, so the paper can report what the common default costs.
 run_freq <- function(df_miss, truth, mask, tree, cont_traits, trait_types = NULL,
-                      count_method = c("phyloglm_poisson_gee", "log1p_rphylopars"), covs = NULL) {
+                      count_method = c("phyloglm_poisson_gee", "log1p_rphylopars"), covs = NULL,
+                      phylo_model = "BM") {
   count_method <- match.arg(count_method)
   cov_names <- if (!is.null(covs)) names(covs) else character(0)
   X <- if (length(cov_names)) as.matrix(covs[rownames(truth), , drop = FALSE]) else NULL
@@ -454,7 +461,7 @@ run_freq <- function(df_miss, truth, mask, tree, cont_traits, trait_types = NULL
       }
     }
     df_in <- data.frame(species = rownames(df4), df4, stringsAsFactors = FALSE)
-    fit <- Rphylopars::phylopars(df_in, tree = tree, model = "BM", phylo_correlated = TRUE, pheno_correlated = TRUE, REML = TRUE)
+    fit <- Rphylopars::phylopars(df_in, tree = tree, model = phylo_model, phylo_correlated = TRUE, pheno_correlated = TRUE, REML = TRUE)
     rec <- fit$anc_recon[rownames(df4), cont_for_joint, drop = FALSE] + xb[rownames(df4), cont_for_joint, drop = FALSE]
     for (v in cont_for_joint) { comp[[v]] <- df_miss[[v]]; comp[mask[, v], v] <- itf(v, rec[mask[, v], v]) }
     if (!is.null(fit$anc_var)) {
@@ -789,6 +796,7 @@ run_arms <- function(cell, arms, opts) {
       if (arm %in% c("gnn_on", "gnn_off", "gnn_off_pure", "gnn_off_rphylopars")) run_pigauto(arm)
       else if (arm == "rphylopars") run_rphylopars()
       else if (arm == "freq") run_freq(df_miss, truth, mask, tree, cont_traits, trait_types, covs = covs)
+      else if (arm == "freq_lambda") run_freq(df_miss, truth, mask, tree, cont_traits, trait_types, covs = covs, phylo_model = "lambda")
       else if (arm == "freq_log1p") run_freq(df_miss, truth, mask, tree, cont_traits, trait_types, count_method = "log1p_rphylopars", covs = covs)
       else if (arm == "mf_phylo") run_mf_phylo(df_miss, truth, mask, tree)
       else if (arm == "bace") run_bace(df_miss, truth, mask, tree, cont_traits, bace_nitt, bace_burnin, bace_thin, covs = covs)
