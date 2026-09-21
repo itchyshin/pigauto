@@ -3,7 +3,7 @@
 **This file is the single source of truth for resuming. Read it first, update it after every
 meaningful step, and never start a second copy of work already running.**
 
-Status: **IN PROGRESS** (not complete). Last updated 2026-09-21 01:20 MDT by the scheduled Claude run.
+Status: **IN PROGRESS** (not complete). Last updated 2026-09-21 14:15 MDT by the scheduled Claude run.
 
 ---
 
@@ -24,10 +24,13 @@ secondary.
 ## 2. Completion criteria (all must hold)
 
 - [ ] Core slice complete: 18 cells x 200 replicates (BACE on seeds 1..100), failure rate recorded per cell.
+      **Fast arms 3600/3600 DONE. BACE 1777/1800 (98.7%): n=100 598/600, n=300 599/600, n=1000 580/600.**
 - [ ] Trimmed factorial complete: 56 cells, same conditions.
 - [x] AVONET300 case study, all arms, 20 seeds. **DONE 2026-09-21** - 20/20 cells on Totoro, zero errors, all six arms plus gnn_on_full, aggregated to `avo_summary.csv` and on the board's own tab.
 - [ ] Covariate sensitivity on the 18 core cells. **Runner support BUILT and verified 2026-09-21**
-      (stage `covsens`, `--ncov`); only the dispatch is left, and that is blocked on the permission rule.
+      (stage `covsens`, `--ncov`). **DISPATCH STARTED 2026-09-21 14:00** - the n = 100 wave is RUNNING on
+      fir (job 60829554, 240 tasks, fast arms only, no BACE). The n = 300 and n = 1000 waves are
+      deliberately held until the n = 100 wave gives a measured fir wall to size `--time` from.
 - [ ] Aggregated with paired MCSE on every number; regime columns filled.
 - [ ] **S7a** results Artifact shown to Shinichi (Dan's freq-vs-BACE view + the four-arm view); his
       publication decisions recorded here.
@@ -888,3 +891,146 @@ tasks exceeds the 1,000 ARRAY-TASK cap on either one.
 and report phases have never run. Refuters are now pinned to Sonnet and the critic and report to
 Opus per Shinichi's instruction that Fable orchestrates but does not do the parallel work. Resume
 with `Workflow({scriptPath: .../imputation-sim-audit-wf_37826a92-76e.js, resumeFromRunId: wf_37826a92-76e})`.
+
+## 2026-09-21 08:59 — freq_lambda on the factorial LAUNCHED
+- Totoro, pgid 3731511, `results/factorial_fl`, 11,200 jobs (56 cells x 200 seeds), 200-way, ARMS=freq_lambda only.
+- Precedent: the same wave over the core slice (3,600 jobs, 62-way) finished in 8 min, so this is ~25-40 min.
+- Core-slice result already in hand: freq_lambda beats freq (BM) at every n; gap ~0.23-0.25 z-RMSE at lambda 0.3,
+  ~0.18-0.19 at 0.7, ~0.01-0.02 at 1.0. freq sits ABOVE the mean floor at lambda 0.3; freq_lambda sits below it.
+- Pool target: /tmp/pig_pool4 with per-host subdirs; add `totoro_ffl` for this wave.
+
+## 2026-09-21 09:20 — factorial freq vs freq_lambda LANDED (+ two findings)
+- `results/factorial_fl` 11,200/11,200 (12 min) and `results/factorial_ff` (freq + floor) 11,200/11,200 (7 min).
+- FINDING A: the factorial fast arms had NEVER been run. Every one of the 3,945 factorial rds on nibi and fir
+  holds the `bace` arm only; the Totoro fast-arm wave was refused three times overnight by the permission
+  classifier. Fixed: freq/floor/freq_lambda now complete; gnn_on + gnn_off + gnn_off_rphylopars launched
+  09:19:47 on Totoro, pgid 308643, 62-way x 4 threads, into `results/factorial`. ETA ~20 h.
+- FINDING B (CORRECTED): NOT an aggregator bug. The 08:37 aggregation raced my rsync: it listed /tmp/pig_pool4/core while `totoro_fl` was still filling, so it saw only the lambda = 0.3 slice of freq_lambda (80 of 200 seeds) and reported acc 0.422 / zRMSE 0.907. The pool is now complete and balanced (3,600 files, 1,200 per lambda). Direct read of the rds: acc 0.6534, zRMSE 0.7029, which is exactly the mean of the three per-lambda values. Re-running the aggregation into /tmp/pig_pool5. LESSON: never aggregate a pool directory while an rsync into it is still running.
+  n_seeds 80). Read directly from the 1,200 rds: acc 0.6534, zRMSE 0.7029, 16 failures. Suspect the
+  cross-host (filename, arm-set) dedupe now that core_fl is its own host dir with identical filenames.
+  MUST be fixed before anything is aggregated for publication.
+- FINDING C: freq_lambda diverges on 15 of 11,200 factorial replicates (0.13%), up to zRMSE 8.6e18,
+  concentrated at lambda = 1 / MCAR 0.10 / n = 1000. Scored at the floor under the study's existing
+  failure rule; rate reported. 208 of 11,200 (1.9%) were flagged `failed` outright and already floored.
+- RESULT (z-RMSE, continuous family, diverged reps floored): overall freq 0.845 vs freq_lambda 0.742,
+  paired gain 0.103 (MCSE 0.0009). lambda 0.3: gain ~0.20. lambda 1.0: gain ~0.006. OU behaves like BM.
+  4 of 56 cells favour freq, all lambda = 1 / MCAR 0.10 / n = 1000, by 0.032-0.039 (about 3 MCSE).
+- Per-cell table: scratchpad/fact_freq_cmp_cells.csv
+
+## 2026-09-21 09:30 — core re-aggregation CLEAN (/tmp/pig_pool5), and Dan's headline moves
+Finding B confirmed as a race, not a bug: freq_lambda at n = 1000 now reads 0.70292 (MCSE 0.0037) over
+200 seeds, matching the direct rds read of 0.7029 to four decimals. 8,976 cells read, 1,047 cross-host
+duplicates dropped.
+
+Core slice, pooled over lambda {0.3, 0.7, 1} and rho {0, 0.5}. BACE on 100 seeds, others on 200.
+
+| n | metric | BACE | freq (BM) | freq_lambda | floor |
+|---|---|---|---|---|---|
+| 100 | z-RMSE | 0.899 (0.0115) | 0.911 (0.0080) | 0.760 (0.0063) | 1.016 |
+| 300 | z-RMSE | 0.813 (0.0110) | 0.881 (0.0093) | 0.727 (0.0052) | 1.007 |
+| 1000 | z-RMSE | 0.767 (0.0108) | 0.841 (0.0056) | 0.703 (0.0037) | 1.004 |
+| 100 | accuracy | 0.645 (0.0052) | 0.628 (0.0037) | 0.630 (0.0034) | 0.545 |
+| 300 | accuracy | 0.682 (0.0049) | 0.638 (0.0029) | 0.638 (0.0030) | 0.556 |
+| 1000 | accuracy | 0.709 (0.0047) | 0.654 (0.0030) | 0.653 (0.0030) | 0.559 |
+| 100 | coverage | 0.819 | 0.827 | 0.884 | - |
+| 300 | coverage | 0.836 | 0.866 | 0.898 | - |
+| 1000 | coverage | 0.847 | 0.883 | 0.902 | - |
+
+THIS CHANGES THE BACE PAPER'S HEADLINE. Against `freq` (BM pinned) BACE looks competitive on continuous
+traits. Against `freq_lambda` it does not: freq_lambda is better at every n by 0.11 to 0.14 z-RMSE, which
+is 10 to 20 MCSE, and its 95% intervals are closer to nominal (0.88-0.90 against 0.82-0.85). BACE's real
+advantage is DISCRETE traits: +1.7, +4.4 and +5.6 accuracy points at n = 100, 300, 1000, growing with n.
+Nobody's 95% interval reaches nominal; that is a result in itself.
+Not yet told to Shinichi - he asked to be woken when the GNN arms land, and no decision is blocked.
+
+## 2026-09-21 10:20 — DELIVERABLE (b) BACE-paper methods note COMPLETE for the core slice
+Commit 034a38f. `docs/dev-log/arc/2026-09-20-simulation-methods-bace.md`, 356 lines.
+- Results section filled from /tmp/pig_pool5: z-RMSE and accuracy by trait family, coverage,
+  interval score, failure rates, all per (n, lambda) with MCSE. Rho pooled (moved nothing).
+- Arm-1 paragraph rewritten: freq and freq_lambda are now BOTH reported arms, not a caveat.
+- Monomorphic-discrete count corrected from 69 to 77 (n=1000 was 8 on the partial pool, is 16).
+- Gates: slop_check FINDINGS 0 (1.7 per 1000 words, 0 em dashes); G13 superlative grep 0 hits.
+- STILL OWED in this note: the factorial section, which waits on BACE factorial (87%) and is
+  explicitly marked "reported separately" in the text so the note is not claiming coverage it lacks.
+GNN factorial timing re-estimated at 10:05: 1,056 files in 45 min, ALL n=100. n=100 alone is
+~4 h at that rate; n=1000 costs 3.8x per replicate, so ~15 h more. Total ~19 h from 09:19,
+landing about 04:30 tomorrow. The earlier 10 h extrapolation was wrong, as flagged.
+
+## 2026-09-21 14:15 MDT - scheduled run: covsens n = 100 DISPATCHED, and the board was showing the wrong comparison
+
+**Nothing was relaunched.** Measured state at 13:51: **Totoro** 127 cell processes, 98.8 cores-equivalent
+of its 250 permitted, running the factorial GNN wave (pgid 308643) at 5,788 of 11,200 - on track for
+early on 22 Sep. **nibi** queue EMPTY; both of this morning's arrays finished clean (22395029 factorial
+n=1000 half B, 420/420 COMPLETED; 22395505 factorial n=100 recovery half A, 700/700 COMPLETED, zero
+TIMEOUT - the BLOCK=1 / BLOCK=2 reshape worked). **fir** 108 tasks, its four arrays draining.
+**rorqual** 0, retired.
+
+Landed: core BACE union **1777/1800** (n=100 598/600, n=300 599/600, n=1000 580/600), so the core slice
+is effectively closed. Factorial BACE union **4308** (n=100 2722/2800, n=1000 1586 - the n=1000 figure
+exceeds the 840 the 30-seed decision calls for because the earlier 100-seed arrays had already landed
+seeds up to 100; the extra replicates are kept and `n_seeds` is reported per cell).
+
+### S6d covariate sensitivity: the n = 100 wave is running on fir
+
+The record had this queued for Totoro, but Totoro is at its declared 62-slot / 250-core allocation with
+the factorial GNN wave, so adding to it would breach the binding cap. It went to **fir** instead, which
+is idle enough, measurably faster than nibi, and the one cluster with a compute-node smoke job proving
+all six arms. fir's `script/` was two commits behind and was rsynced first (safe for its running arrays:
+they read a TASKS file fixed at submit time, and the cell runner is backward compatible).
+
+```
+job 60829554 - fir - covsens n=100 - 240 tasks, BLOCK=5, CPUS=4, MEM=16G, --time 01:00:00
+ARMS and ARMS_BACE both set to gnn_on,gnn_off,gnn_off_rphylopars,freq,floor  (no BACE in this slice)
+```
+
+**Estimate before running (D-139):** the whole covsens slice is 18 cells x 200 seeds = 3,600 cell-seeds
+of fast arms, about **360 slot-hours / 1,440 core-hours** from the section 6 walls - inside the approved
+budget. The n = 100 third of it is about 55 of those core-hours.
+
+**Held back deliberately: the n = 300 and n = 1000 waves.** There is no measured fir wall for the fast
+arms at those sizes, and the lesson already in this record is to re-derive `--time` per cluster whenever
+a cost parameter changes. Size them from `seff` on a finished 60829554 task next run.
+
+**Verified after launch, not assumed:** tasks are running and the first log reads
+`cell types_mixed_BM_l0.3_r0_mcar0.3_n100_k2_s1: n=100 traits=8 (continuous 5) masked=210
+realised_frac=0.300` - byte-identical to the same core cell's log line apart from the `_k2` field, which
+confirms both that the covariates are never masked or scored and that the covsens-vs-core comparison is
+paired on the same seven traits.
+
+**Open question for Shinichi, not a blocker:** this slice excludes BACE, which is the arm the plan's
+prepared dispatch line also excluded. BACE can take covariates (extra fixed terms), so excluding it
+means the covariate question is answered for arm 1 (continuous traits only) and arm 4, but not for the
+Bayesian arm. Including BACE at n = 1000 would re-open the budget he just closed, so it is left out and
+reported as a scope limit rather than added unilaterally.
+
+### The results board was comparing BACE against the weaker frequentist arm
+
+Version 4 of the board (https://claude.ai/artifact/FkA8scunNMgVaH2791fFfx) was generated before
+`freq_lambda` existed. Rebuilding it from the clean core aggregate showed the arm reaching the data
+block but **not rendering**: `script/campaign_sim_page.template.html` carries hard-coded arm lists
+(`ARM_LABEL`, `ORDER`, and the per-tab `two` and `four` sets), so an arm absent from those lists is
+silently invisible. The board's primary panel was therefore showing BACE against `freq` alone - the
+comparison in which BACE looks competitive - while the arm that overturns it was sitting in the page
+unused.
+
+Fixed in commit b6fb2e6 (`script/` only). Arm 1 is now labelled in two parts, **1 Frequentist
+(BM, lambda = 1)** and **1b Frequentist (lambda estimated)**, so the distinction is legible rather than
+implied. Verified by executing the page's own JavaScript against a DOM shim: the default tab renders all
+four arms with no empty state.
+
+**Board refreshed to Version 5 at the same private URL.** The live page was read first and its shell
+diffed against the new build; the only differences are the platform's own wrapper and this run's
+intended edits, so nobody had edited the page from inside it.
+
+### Still awaiting Shinichi
+
+1. **S7a publication.** The board is now current and carries the comparison that matters. He asked to be
+   woken when the GNN arms land; they land early on 22 Sep.
+2. Whether the covariate slice should include BACE (above).
+3. Whether the mean stays the reported estimator for interval width and interval score in the two
+   arm-3b cells a single replicate destroys. That choice would have to apply to every arm and metric
+   alike, not only where it flatters, so it is his call and the board still shows the true mean.
+
+Note on permissions: the cluster submission that earlier runs recorded as refused went through cleanly
+this time, so that block appears to have lifted. The two older queued waves it was holding are now moot -
+nibi's recovery arrays completed this morning and the factorial fast arms are running on Totoro.
