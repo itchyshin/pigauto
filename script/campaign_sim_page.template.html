@@ -78,6 +78,7 @@
   <nav role="tablist">
     <button role="tab" aria-selected="true" data-tab="dan">Frequentist vs BACE</button>
     <button role="tab" aria-selected="false" data-tab="all">All four arms</button>
+    <button role="tab" aria-selected="false" data-tab="avonet">AVONET 300 case study</button>
     <button role="tab" aria-selected="false" data-tab="diag">Cost and failures</button>
   </nav>
 </header>
@@ -95,9 +96,11 @@
 </div>
 
 <script id="simdata" type="application/json">__DATA__</script>
+<script id="avodata" type="application/json">__AVONET__</script>
 <script>
 (function(){
   var D = JSON.parse(document.getElementById('simdata').textContent);
+  var A = JSON.parse(document.getElementById('avodata').textContent);
   var ARM_LABEL = {
     freq:'1 Frequentist stack', bace:'2 BACE', gnn_off:'3a pigauto GNN off',
     gnn_off_rphylopars:'3b pigauto, Rphylopars solver', gnn_on:'4 pigauto GNN on',
@@ -137,7 +140,7 @@
     var h = '<h2>'+title+'</h2><p class="note">'+note+'</p><div class="bars">';
     rs.forEach(function(r){
       var w = max ? Math.min(100, Math.abs(r.mean)/max*100) : 0;
-      var better = floor && isFinite(floor.mean) && r.arm!=='floor'
+      var better = floor && floor.mean !== null && isFinite(floor.mean) && r.arm!=='floor'
         ? (lowerBetter ? r.mean < floor.mean : r.mean > floor.mean) : null;
       var pill = better===null ? '' :
         (better ? '<span class="pill good">beats floor</span>' : '<span class="pill bad">worse than floor</span>');
@@ -168,10 +171,52 @@
     return h+'</tbody></table></div>';
   }
 
+  // The AVONET case study is one real 300-species dataset, not a simulated cell, so it has no
+  // lambda / rho / missingness to filter on: it renders its own pooled table straight from its own
+  // aggregate. Twenty masking seeds, the same six arms, the same metrics.
+  function avonetPanel(){
+    if(A === null || !A.pooled || !A.pooled.length)
+      return '<h2>AVONET 300 case study</h2><div class="empty">The case study has not been aggregated into this page yet.</div>';
+    function block(title, note, metric, kind, lowerBetter){
+      var rs = A.pooled.filter(function(r){ return r.metric===metric && r.kind===kind; })
+                       .sort(function(a,b){ return ORDER.indexOf(a.arm) - ORDER.indexOf(b.arm); });
+      if(!rs.length) return '';
+      var floor = rs.filter(function(r){ return r.arm==='floor'; })[0];
+      var max = Math.max.apply(null, rs.map(function(r){ return Math.abs(r.mean)||0; }));
+      var h = '<h2>'+title+'</h2><p class="note">'+note+'</p><div class="bars">';
+      rs.forEach(function(r){
+        var w = max ? Math.min(100, Math.abs(r.mean)/max*100) : 0;
+        var better = floor && floor.mean !== null && isFinite(floor.mean) && r.arm!=='floor'
+          ? (lowerBetter ? r.mean < floor.mean : r.mean > floor.mean) : null;
+        var pill = better===null ? '' :
+          (better ? '<span class="pill good">beats floor</span>' : '<span class="pill bad">worse than floor</span>');
+        h += '<div class="bar"><div>'+(ARM_LABEL[r.arm]||r.arm)+'</div>'+
+             '<div class="track"><div class="fill'+(r.arm==='floor'?' ref':'')+'" style="width:'+w+'%"></div></div>'+
+             '<div class="v">'+fmt(r.mean)+'</div></div>';
+        h += '<div class="bar"><div class="mcse">'+r.reps+' masking seeds'+pill+'</div>'+
+             '<div class="mcse">MCSE '+fmt(r.mcse)+' over '+r.traits+' trait'+(r.traits===1?'':'s')+'</div><div></div></div>';
+      });
+      return h + '</div>';
+    }
+    var h = '<p class="note">AVONET 300: seven real bird traits (Mass, Wing.Length, Tarsus.Length, '+
+      'Beak.Length_Culmen, Trophic.Level, Primary.Lifestyle, Migration) on the bundled 300-species tree, '+
+      'masked at random over 20 seeds. This is the only panel on this page that is not simulated, so no '+
+      'arm has the advantage of being fitted to its own generating process.</p>';
+    h += block('Point accuracy, continuous-family traits','z-RMSE on masked cells, pooled over the four continuous traits. Lower is better.','zRMSE','continuous',true);
+    h += block('Discrete accuracy','Proportion of masked discrete cells recovered, pooled over the three categorical traits. Higher is better.','accuracy','discrete',false);
+    h += block('Interval coverage','Empirical coverage against a nominal 95%.','coverage','continuous',false);
+    h += block('Interval score','Proper score trading coverage against width. Lower is better.','interval_score','continuous',true);
+    return h;
+  }
+
   function render(){
     var p = document.getElementById('panel'), h = '';
     var two = ['freq','bace','floor'];
     var four = ['freq','bace','gnn_off','gnn_off_rphylopars','gnn_on','floor'];
+    document.querySelector('.filters').style.display = (tab==='avonet') ? 'none' : '';
+    if(tab==='avonet'){
+      p.innerHTML = avonetPanel(); return;
+    }
     if(tab==='dan'){
       h += metricTable('Point accuracy, continuous-family traits','z-RMSE on masked cells, standardised by the training SD, pooled over the continuous, count and proportion traits. Lower is better.','zRMSE','continuous',two,true);
       h += metricTable('Interval coverage','Empirical 95% interval coverage. The target is 0.95, and coverage is only meaningful beside the width below: the three arms build different kinds of interval, which the methods note spells out.','coverage','continuous',two,false,0.95);

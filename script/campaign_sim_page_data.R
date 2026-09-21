@@ -33,8 +33,12 @@ keep_metrics <- c("zRMSE", "accuracy", "macroF1", "brier", "coverage", "width", 
 s <- s[s$metric %in% keep_metrics, ]
 
 # trait type, so the page can pool continuous-family and discrete separately
-cont <- c("c1", "c2", "c3", "c4", "cnt", "prp")
-s$kind <- ifelse(s$trait %in% cont, "continuous", "discrete")
+# Derived from the METRIC, not from a hard-coded list of simulated trait names: the aggregator only
+# ever writes zRMSE / width / interval_score / coverage for a continuous-family trait and
+# accuracy / macroF1 / brier for a discrete one, and the AVONET case study carries real trait names
+# (Mass, Trophic.Level, ...) that no simulated-name list can cover.
+cont_metrics <- c("zRMSE", "width", "interval_score", "coverage")
+s$kind <- ifelse(s$metric %in% cont_metrics, "continuous", "discrete")
 
 # pooled over traits within (cell, arm, metric): the primary contrast is stated pooled over types
 pool <- do.call(rbind, lapply(

@@ -87,6 +87,20 @@ if (is_sim_shape) {
   summary_i <- do.call(rbind, lapply(split(tab2, list(tab2$dgp, tab2$n, tab2$lambda, tab2$rho, tab2$evo, tab2$miss, tab2$arm, tab2$trait, tab2$metric), drop = TRUE), function(d)
     data.frame(d[1, cell_key], arm = d$arm[1], trait = d$trait[1], metric = d$metric[1], reps = nrow(d),
                mean = mean(d$value, na.rm = TRUE), mcse = mcse(d$value[!is.na(d$value)]))))
+  # Coverage is NOT a metric row: the runner carries it as a side column on each zRMSE row, so the
+  # split above never emitted it and _summary.csv held no coverage at all (measured 2026-09-20 --
+  # the results board's coverage panel, half the pre-registered primary contrast, therefore rendered
+  # its empty state on every version). Emit it as its own metric so consumers that filter on
+  # `metric` see it, with the same mean-and-MCSE-over-seeds treatment as every other number.
+  cov_src <- tab2[tab2$metric == "zRMSE" & !is.na(tab2$coverage), ]
+  if (nrow(cov_src)) {
+    cov_rows <- do.call(rbind, lapply(split(cov_src, list(cov_src$dgp, cov_src$n, cov_src$lambda, cov_src$rho, cov_src$evo, cov_src$miss, cov_src$arm, cov_src$trait), drop = TRUE), function(d)
+      data.frame(d[1, cell_key], arm = d$arm[1], trait = d$trait[1], metric = "coverage", reps = nrow(d),
+                 mean = mean(d$coverage, na.rm = TRUE), mcse = mcse(d$coverage[!is.na(d$coverage)]))))
+    summary_i <- rbind(summary_i, cov_rows)
+    cat(sprintf("coverage emitted as a metric: %d rows from %d zRMSE rows carrying it\n",
+                nrow(cov_rows), nrow(cov_src)))
+  }
   write.csv(summary_i, paste0(out, "_summary.csv"), row.names = FALSE)
 
   # paired difference vs reference_arm, on common seeds only
