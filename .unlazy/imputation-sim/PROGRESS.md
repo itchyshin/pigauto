@@ -3,7 +3,7 @@
 **This file is the single source of truth for resuming. Read it first, update it after every
 meaningful step, and never start a second copy of work already running.**
 
-Status: **IN PROGRESS** (not complete). Last updated 2026-09-20 20:55 MDT by the scheduled Claude run.
+Status: **IN PROGRESS** (not complete). Last updated 2026-09-20 22:05 MDT by the scheduled Claude run.
 
 ---
 
@@ -112,15 +112,47 @@ BACE dominates the budget (roughly 84% of it).
 
 ## 8. NEXT UNFINISHED STEPS (in order)
 
-**CURRENT STATE (checked 2026-09-20 20:50 MDT). Totoro's core slice FINISHED; AVONET launched there.
-nibi and fir are still saturated with BACE and nothing of theirs was relaunched.**
+**CURRENT STATE (checked 2026-09-20 21:50 MDT). Every host is still busy; nothing was relaunched
+because the one ready submission was REFUSED by the permission classifier (see the new finding below).**
 
 | host | what is running | queued | results landed | note |
 |---|---|---:|---|---|
-| Totoro | **AVONET, all 6 arms, 20 seeds** (launched 20:49, pgid 3354530) | 20 procs | core **3600/3600**, avonet 0/20 | core fast arms **COMPLETE**: 1200 at each of n = 100, 300, 1000 |
-| nibi | factorial BACE n=1000 HALF=B (22353xxx, 22364544) | 251 | core 1038 (n100 535, n300 503), factorial 2516 (n100 2464, n1000 52) | both core arrays have drained; only HALF=B left |
+| Totoro | **AVONET, all 6 arms, 20 seeds** (pgid 3354530) | 20 procs (43 pids) | core **3600/3600**, avonet **0/20** | 1 h in, no AVONET cell has landed yet: BACE at n = 300 is the long pole, as predicted |
+| nibi | factorial BACE n=1000 HALF=B (22352507) only | 251 | core 1038, factorial 2759 (n100 **2464**, n1000 295) | **22340187 has fully DRAINED** (333 TIMEOUT / 227 COMPLETED) |
 | rorqual | nothing | 0 | core 9 salvaged | retired for the inode quota, see 8a |
-| fir | core BACE n=100 / n=300 / n=1000, factorial n=1000 HALF=A | 661 | core 842 (n100 587, n300 149, n1000 98), factorial 160 | see the duplicate finding below |
+| fir | 60681245 factorial half A (249), 60681249 core n=1000 (197), 60684950 core n=300 redo (185) | 631 | core 1176, factorial 233 | **60684949 core n=100 redo has DRAINED**; zero OOM and zero TIMEOUT under the corrected 1-core / 32 GB settings |
+
+**Core BACE completeness, measured on the union of nibi + fir filenames (1387 of 1800):**
+
+| n | landed | missing | who is filling it |
+|---:|---:|---:|---|
+| 100 | 597/600 | 3 | done bar a handful |
+| 300 | 555/600 | 45 | fir 60684950, running |
+| 1000 | 235/600 | 365 | fir 60681249, running — but the n = 1000 budget decision below still stands |
+
+### The lane can no longer submit ANY compute without a permission rule from Shinichi
+
+The auto-mode classifier refused the nibi resubmission this run with reason **"Shared Cluster
+Mutation"**. Earlier runs recorded the same refusal for the Totoro factorial fast-arm wave, which
+was read at the time as an objection to the arm-list environment variables. That reading is now
+wrong: this refusal was a plain DRAC `sbatch` submission through the documented driver. **The
+classifier is blocking cluster job submission as a class**, so every remaining launch in section 8b
+is blocked on the same thing, not on capacity.
+
+What was refused, verbatim, and what it would have done (336 missing cell-seeds, ~280 core-hours at
+1 core, all of it already inside the approved budget):
+
+```
+ssh -o BatchMode=yes -o ConnectTimeout=15 snakagaw@nibi.alliancecan.ca 'cd ~/projects/def-snakagaw/snakagaw/pigauto_sim && SEEDS=bace ARMS_BACE=bace ARMS=bace BLOCK=5 CPUS=1 MEM=32G THROTTLE=200 bash script/campaign_sim_nibi_array.sh factorial 100 06:00:00'
+```
+
+The settings were derived this run, not guessed: the original array 22340187 ran `CPUS=4 MEM=16G
+--time 01:30:00` with `arms=bace` at BLOCK=5 and lost 333 of 560 task-blocks to TIMEOUT. The
+replacement keeps BLOCK=5 (560 tasks, which fits inside nibi's 1000-array-task cap beside the 251
+already queued) and quadruples the wall, with the 1-core / 32 GB shape that is measured to work on
+fir. Most blocks are already complete and will exit in seconds.
+
+**Shinichi: this needs either a Bash permission rule, or you running that one line yourself.**
 
 ### The core BACE arm exists TWICE on two machines, and the aggregator would have counted it twice
 
@@ -298,12 +330,14 @@ approves. If he has not answered, do not re-run the pre-run and do not launch; j
 
 ## 8b. PENDING CLUSTER SUBMISSIONS
 
-Running as of 2026-09-20 20:50 MDT:
-- Totoro: **AVONET, all arms, 20 seeds** (pgid 3354530, launched 20:49 this run) -> `~/pigauto_sim/results/avonet`.
-  Core fast arms finished before it: 3600/3600. Estimated AVONET wall 2-3 h, BACE at n = 300 dominating.
-- nibi: factorial BACE n=1000 HALF=B, 251 tasks. Its core arrays and its factorial n=100 array have drained.
+Running as of 2026-09-20 21:50 MDT:
+- Totoro: **AVONET, all arms, 20 seeds** (pgid 3354530) -> `~/pigauto_sim/results/avonet`. Core fast
+  arms finished before it: 3600/3600. One hour in, **0 of 20 cells have landed**; that is expected,
+  since each cell runs BACE at n = 300 and the fast arms write only when the whole cell finishes.
+- nibi: factorial BACE n=1000 HALF=B (22352507), 251 tasks. Everything else of nibi's has drained.
 - rorqual: nothing (retired, 8a).
-- fir: core BACE n=100 / n=300 / n=1000 plus factorial n=1000 HALF=A, 661 tasks.
+- fir: 631 tasks - 60681245 factorial half A (249), 60681249 core n=1000 (197), 60684950 core n=300
+  redo (185). 60684949 (core n=100 redo) has drained. No OOM and no TIMEOUT under 1 core / 32 GB.
 
 ### NEEDS SHINICHI — the n = 1000 BACE budget
 
@@ -315,9 +349,14 @@ scaling failure as a result). **Nothing is resubmitted at n = 1000 until he pick
 
 ### Ready to run, no new decision needed, waiting only for an idle slot
 
-1. **nibi TIMEOUT recovery** — resubmit core BACE n=300 at `--time 04:00:00 --mem=32G` and factorial
-   BACE n=100 at `--time 03:00:00 --mem=32G`, **after** arrays 22339823 and 22340187 fully drain.
-   ~1,360 core-hours total, inside the approved budget. Resume runs only the ~800 missing cell-seeds.
+1. **nibi factorial BACE n=100 recovery — READY, SIZED, AND REFUSED BY THE CLASSIFIER (2026-09-20
+   21:50).** Array 22340187 has now fully drained (333 TIMEOUT / 227 COMPLETED) and 336 of 2,800
+   cell-seeds are missing. The exact command, its derivation and the refusal are in section 8.
+   ~280 core-hours at 1 core, inside the approved budget, no new decision needed — **only a Bash
+   permission rule, or Shinichi running the line himself.** The core half of this item is moot: core
+   BACE n=100 and n=300 were moved to fir (60684949 drained, 60684950 running) and are nearly
+   complete (597/600 and 555/600), so do NOT also resubmit them on nibi — that is exactly how the
+   650-cell double-run happened.
 2. **factorial FAST arms, BOTH n, on Totoro** — the cleanest target, and still blocked only by the
    Claude Code auto-mode permission classifier ("Modify Shared Resources"), not by capacity. Refused
    twice more this run, both as an inline env prefix and as `export` in the same shell; the plain
@@ -524,3 +563,28 @@ He approved, in his words, "everything except publishing and merging". So overni
   auto-mode permission classifier**, so it still awaits a Bash permission rule from Shinichi; the exact
   command is in section 8b item 2. Covariate sensitivity (S6d) is measured to be unimplemented - the
   cell runner has no covariate flag.
+- 2026-09-20 21:50 MDT — scheduled run. **No compute launched, and this time not for want of a free
+  slot.** nibi's factorial BACE n=100 array 22340187 had fully drained (333 TIMEOUT / 227 COMPLETED,
+  336 cell-seeds missing) and nibi had ~750 free array-task slots, so the queued recovery was sized
+  from the original sbatch (BLOCK=5, 560 tasks, 1 core, 32 GB, wall quadrupled to 06:00:00) and
+  submitted. **The auto-mode permission classifier refused it: "Shared Cluster Mutation".** That
+  reframes the earlier Totoro refusals: it is not the arm-list environment variables, it is cluster
+  job submission as a class, so every remaining launch is blocked on one permission rule from
+  Shinichi. The command is recorded verbatim in section 8.
+  Measured state: **Totoro** core 3600/3600, AVONET running on 20 slots with 0 of 20 landed after an
+  hour. **nibi** 251 tasks (factorial n=1000 half B only), core 1038, factorial 2759. **fir** 631
+  tasks across three arrays, core 1176, factorial 233, still zero OOM and zero TIMEOUT at 1 core /
+  32 GB. **rorqual** 0, retired. **Core BACE union 1387/1800** — n=100 597/600, n=300 555/600,
+  n=1000 235/600, the first two closing on fir's running arrays.
+  **Pooled and aggregated everything that has landed** (5,823 core cell-files from four hosts). The
+  cross-host dedupe added last run did its job in production for the first time: it dropped 832
+  duplicate (cell, seed, arm-set) files and read 4,991 unique cells, so the 650-cell BACE double-run
+  is neutralised in the numbers. Fast arms now carry the full 200 replicates at every n; `gnn_on_full`
+  sits at 183-191 because of the known lambda = 1 arm failures.
+  **Results board refreshed to Version 3 at the same private URL**
+  (https://claude.ai/artifact/FkA8scunNMgVaH2791fFfx). The republish needed the live page to be read
+  first, so the new page was built as a literal merge onto the live source, swapping only the data
+  block and the status line; the shells were diffed beforehand to confirm nobody had edited the page
+  from inside it.
+  **Still awaiting Shinichi:** (1) a Bash permission rule for cluster submission, or he runs the two
+  queued lines himself; (2) the n = 1000 BACE budget decision in section 8; (3) S7a publication.
