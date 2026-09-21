@@ -314,6 +314,22 @@ Cluster roots: nibi `~/projects/def-snakagaw/snakagaw/pigauto_sim`; rorqual
 `/project/def-snakagaw/snakagaw/pigauto_sim`; **fir `/home/snakagaw/pigauto_sim`**. Always
 `export PIG_SIM_ROOT=` on rorqual and fir.
 
+## 8c. OVERNIGHT AUTHORITY (Shinichi, 2026-09-20, before leaving for the night)
+
+He approved, in his words, "everything except publishing and merging". So overnight:
+
+- DO: run all remaining compute; pool and aggregate; refresh the private results Artifact
+  (https://claude.ai/artifact/FkA8scunNMgVaH2791fFfx — republish the SAME file path
+  `scratchpad/sim-results.html`, or pass that url, so it keeps the URL); run the gates; write the
+  after-task report, the Melissa reconcile and the handover; push `arc/imputation-sim` and open a
+  **DRAFT** PR; write `vignettes/articles/simulation-study.Rmd` but leave it UNPUBLISHED.
+- DO NOT: publish the pkgdown article, merge any PR, or make any public claim. Those wait for him
+  to read the board.
+- On a cluster failure or stall: diagnose, move the work to a healthy cluster with corrected
+  settings, and log it in section 10 (as was done for rorqual). Never recompute a finished cell.
+- Priority if short of time: **core slice and AVONET first**, factorial last. The core slice carries
+  the primary contrast; the factorial is sensitivity and may finish the next day.
+
 ## 9. Pauses that require Shinichi (never proceed past these alone)
 
 - **G0** after the pre-run note (launching the campaign is the irreversible compute commitment).
@@ -375,3 +391,83 @@ Cluster roots: nibi `~/projects/def-snakagaw/snakagaw/pigauto_sim`; rorqual
   held-out-cell tax). MCSE 0.011-0.029.
 - 2026-09-20 ~14:30 — G10/G11/G14 implemented and committed; G10 exercised against the partial core
   slice and correctly refused (BACE lives on the clusters). Added the pooling step to section 8.
+- 2026-09-20 ~14:45 — BACE-paper METHODS NOTE written (`docs/dev-log/arc/2026-09-20-simulation-methods-bace.md`,
+  slop check clean, no superlatives) — deliverable S7b is drafted ahead of the results. Added
+  `script/campaign_sim_pool.sh`. **Caught a silent data-loss bug**: pooling with rsync
+  --ignore-existing dropped every BACE cell (same filename, different arms); pool is now per-host
+  and the aggregator recurses. Verified on partial data: 3905 cell-files, 7 arms, 336 BACE rows.
+- 2026-09-20 ~17:40 — **results board PUBLISHED (partial, private)**:
+  https://claude.ai/artifact/FkA8scunNMgVaH2791fFfx from `script/campaign_sim_page{_data.R,_build.sh,.template.html}`.
+  Rebuild with: `bash script/campaign_sim_pool.sh core /tmp/pig_pool2 && Rscript script/campaign_gnn_off_aggregate.R
+  --dir /tmp/pig_pool2/core --out /tmp/pig_pool2/agg --reference floor && bash script/campaign_sim_page_build.sh
+  /tmp/pig_pool2/agg <scratchpad>/sim-results.html "<status>"`, then republish the same path.
+  Overnight authority recorded in section 8c.
+- 2026-09-20 ~17:50 — **deliverable S7c DRAFTED**: `vignettes/articles/simulation-study.Rmd`,
+  pre-rendered from committed csv, guarded to show a placeholder until results land, slop check
+  clean, no superlatives, knitr chunks parse. `^vignettes/articles$` added to .Rbuildignore (Rose's
+  blocking finding: an Rmd there ships in the built package and breaks R CMD check by reading
+  script/). NOT in the navbar and NOT published, per section 8c.
+- 2026-09-20 ~18:00 — after-task report and handover written and committed
+  (`docs/dev-log/after-task/2026-09-20-imputation-sim-lane.md`,
+  `docs/dev-log/handover/2026-09-20-imputation-sim-handover.md`). check-after-task.R correctly
+  refuses while the ledger gates are unmet; re-run it at close. Totoro core fast at 2922/3600.
+  Remaining tonight is compute plus the close-out trio.
+- 2026-09-20 17:47 MDT — **scheduled run: STOOD DOWN, nothing launched, nothing relaunched.** The
+  interactive lane (`claude:pigauto:84704`, PID 84704, alive 7 h 19 m) is still working this project
+  and wrote the 18:00 entry above 21 s before this check, so a second lane would have duplicated it.
+  Measured state at stand-down: **Totoro** 127 procs, core 2924/3600. **nibi** 346 array tasks queued
+  (22340187 factorial BACE n=100 at 95 RUNNING; 22352507 factorial BACE n=1000 HALF=B at 251);
+  results/core 1038 (n100 535, n300 503), results/factorial 1774; array 22339823 has fully DRAINED
+  (708 COMPLETED, 95 TIMEOUT, 95 CANCELLED, 2 FAILED). **rorqual** 0 jobs, as expected after the
+  cancellation. **fir** 374 tasks (60661338 at 251, 60681245 at 53, 60681249 at 70). Note for
+  whoever runs next: nibi core BACE is now unblocked for the section 8b item 1 recovery — both core
+  arrays have drained and 162 cell-seeds are missing (65 at n=100, 97 at n=300), which fits inside
+  nibi's remaining submit capacity. The factorial n=100 recovery still has to wait for 22340187.
+- 2026-09-20 ~18:10 — **operational error found and fixed on fir**: the ORIGINAL factorial half-A
+  array 60661338 (CPUS=4 MEM=16G --time 03:30:00) was never cancelled when its corrected replacement
+  60681245 was submitted, so 251 of its tasks were holding fir's slots while heading for the same
+  out-of-memory kill (final tally 143 completed, 200 OOM, 251 cancelled). Cancelled it; its 143
+  completed cells are kept and the new array skips them. LESSON: when resubmitting a corrected
+  array, scancel the old job id in the same breath. Arrays now on fir: 60681245 (factorial half A)
+  and 60681249 (core n=1000), both CPUS=1 MEM=32G --time 04:30:00.
+- 2026-09-20 ~18:25 — Melissa reconcile landed (2 adaptive, 2 drift). Both drifts CLOSED: branch
+  pushed and **draft PR #184 opened**; leaf-runner.md gate evidence recorded (G6 honestly marked NOT
+  OBTAINED). Melissa also surfaced a co-failure investigated here: 69 replicates, ALL at lambda = 1
+  (n=100 32, n=300 29, n=1000 8), lose both the freq and gnn_on arms. One cause: a discrete trait
+  monomorphic among observed cells at maximum signal. castor legitimately cannot fit it (reportable
+  result); pigauto's GNN path hits a torch dim error (package bug, R/ is fenced, spawned as
+  task_8676910b). Disclosed in the methods note. Both arms score at the floor on those cells, so the
+  paired contrast holds but absolute lambda = 1 figures for those two arms are pulled toward the floor.
+- 2026-09-20 ~18:35 — **nibi timing out in bulk**: core BACE n=100 array 62 TIMEOUT / 58 done,
+  n=300 95 TIMEOUT / 204 done, factorial n=100 227 TIMEOUT / 145 done. Cause: the --time values were
+  sized from the n_final=20 measurement BEFORE runs was raised 2 -> 5, which adds three full model
+  fits per replicate, and nibi's nodes are slower than fir's. Fix applied: resubmitted the missing
+  core work on **fir** with smaller blocks and about 3x margin (60684949 n=100 BLOCK=2 --time 1:30;
+  60684950 n=300 BLOCK=1 --time 2:00). nibi refused more (402 jobs, at its 1000 ARRAY-TASK cap).
+  Finished cells are skipped, so only the gaps re-run. STILL TO REDO: factorial BACE n=100's 227
+  timed-out task-blocks, once a cluster has room.
+  LESSON: re-derive --time whenever a cost parameter changes, and size it per CLUSTER; fir is
+  measurably faster than nibi for the same replicate.
+- 2026-09-20 ~18:45 — board refreshed to Version 2 from 4009 pooled cell-files (same URL).
+  Core-slice resubmissions confirmed queued on fir. State at handover to the overnight schedule:
+  Totoro ~2960/3600 core fast; nibi at its array-task cap working factorial half B; fir carrying
+  core n=1000, core n=100 and n=300 redo, and factorial half A.
+- 2026-09-20 18:47 MDT — **scheduled run: nothing launched, nothing relaunched.** Every host is
+  saturated, so STEP 2 applies: collect and record only. The interactive lane (PID 84704, alive
+  8 h 18 m) last wrote PROGRESS.md at 17:58 and last committed at 17:54, so it still owns the board
+  refresh and the close-out docs. Measured state:
+  **Totoro** 128 procs, core 3212/3600 (n=1000 at about 812/1200).
+  **nibi** 367 tasks: 22340187 factorial BACE n=100 at 116 RUNNING with 260 TIMEOUT / 184 COMPLETED
+  (the timeout wave continues, recovery still blocked until it drains); 22352507 factorial BACE
+  n=1000 half B at 250 RUNNING, 3 COMPLETED. results/core 1038, results/factorial 2262 (2251 at
+  n=100, 19 at n=1000).
+  **rorqual** 0 jobs, as expected since the cancellation.
+  **fir** 447 tasks and the corrected settings are holding: 60681245 factorial half A has 110
+  COMPLETED and **zero OOM and zero TIMEOUT** at CPUS=1 MEM=32G --time 04:30:00, against 200 OOM
+  under the old 16G configuration. 60681249 core n=1000 has 1 COMPLETED and 181 RUNNING; 60684949
+  core n=100 redo has 51 RUNNING; 60684950 core n=300 redo is still PENDING. results/core 1,
+  results/factorial 143.
+  Nothing new is submittable: nibi is at its 1000 array-task cap, fir is carrying four arrays, Totoro
+  is full until the core slice finishes, and rorqual stays out on its inode quota. The two queued
+  items (factorial fast arms, and the 260 timed-out factorial BACE n=100 blocks) both wait on a slot.
+  **Still awaiting Shinichi:** the n = 1000 BACE budget decision in section 8, and S7a publication.
