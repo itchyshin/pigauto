@@ -3,7 +3,7 @@
 **This file is the single source of truth for resuming. Read it first, update it after every
 meaningful step, and never start a second copy of work already running.**
 
-Status: **IN PROGRESS** (not complete). Last updated 2026-09-20 22:55 MDT by the scheduled Claude run.
+Status: **IN PROGRESS** (not complete). Last updated 2026-09-21 00:45 MDT by the scheduled Claude run.
 
 ---
 
@@ -25,7 +25,7 @@ secondary.
 
 - [ ] Core slice complete: 18 cells x 200 replicates (BACE on seeds 1..100), failure rate recorded per cell.
 - [ ] Trimmed factorial complete: 56 cells, same conditions.
-- [ ] AVONET300 case study, all arms, 20 seeds.
+- [x] AVONET300 case study, all arms, 20 seeds. **DONE 2026-09-21** - 20/20 cells on Totoro, zero errors, all six arms plus gnn_on_full, aggregated to `avo_summary.csv` and on the board's own tab.
 - [ ] Covariate sensitivity on the 18 core cells.
 - [ ] Aggregated with paired MCSE on every number; regime columns filled.
 - [ ] **S7a** results Artifact shown to Shinichi (Dan's freq-vs-BACE view + the four-arm view); his
@@ -157,6 +157,52 @@ expensive than it was written, because retries are now part of it. The correct s
 BACE array is **BLOCK=1** (one cell-seed per task, wall 05:00:00), which makes a task's cost
 independent of which cells it draws and removes this class of loss entirely. Core n=1000 (60681249)
 is already BLOCK=1 and has zero TIMEOUT, which is the control case.
+
+### NEW: coverage was never reaching the aggregate, so half the primary contrast was invisible
+
+Found and fixed this run (commit 5a5480c, `script/` only, `R/` untouched). The cell runner carries
+`coverage` as a SIDE COLUMN on each zRMSE row, not as a `metric` row of its own. The Section I
+aggregator splits by `metric`, so coverage was dropped before `_summary.csv` was written: measured,
+the core summary held 372 accuracy rows, 496 zRMSE rows and **zero** coverage rows. The results
+board filters on `metric`, so its interval-coverage panel rendered "No cell yet for this
+combination" on Versions 1, 2 and 3 - and coverage is half the pre-registered primary contrast.
+
+Coverage is now emitted as its own metric with the same mean-and-MCSE-over-seeds treatment
+(420 rows on the core slice, 24 on AVONET), and appears on the board for the first time in
+Version 4. Two smaller defects were fixed alongside it: the page decided continuous-vs-discrete
+from a hard-coded list of SIMULATED trait names, so every real AVONET trait fell into the discrete
+bucket; and `isFinite(null)` is true in JavaScript, so the floor arm - which has no interval at all -
+was read as a phantom zero and every other arm was pilled "worse than floor" on interval score.
+
+**First reading of the coverage numbers** (pooled over the four continuous-family traits, rho = 0,
+MCAR 0.3, nominal 95%). This is a result, not a diagnostic:
+
+| n | lambda | BACE | frequentist | pigauto GNN off |
+|---:|---:|---:|---:|---:|
+| 100 | 0.3 | 0.804 | 0.801 | 0.878 |
+| 300 | 0.3 | 0.812 | 0.845 | 0.957 |
+| 300 | 0.7 | 0.824 | 0.852 | 0.954 |
+| 1000 | 0.3 | 0.820 | 0.869 | 0.957 |
+| 1000 | 0.7 | 0.826 | 0.876 | 0.954 |
+
+Both arms of the primary contrast **under-cover**, BACE the more so, and neither closes the gap as n
+grows. pigauto's split-conformal intervals sit essentially on nominal from n = 300. Caveat carried
+forward: BACE's lambda = 1 rows rest on 39 to 48 replicates rather than 100, because that is where it
+fails singular.
+
+### NEW: one replicate in 200 destroys two cells of arm 3b's interval summary
+
+In `gnn_off_rphylopars` the interval width and interval score on the **count** trait blow up in
+exactly two cells - n = 100 lambda = 0.7 rho = 0, and n = 300 lambda = 1 rho = 0 - to 6.6e20 and
+7.2e05 respectively, with MCSE equal to the mean. Traced to a single seed: in the n = 100 cell,
+**seed 146 alone** returns a width of 1.3e23 against a median of 3.44 over the 200 replicates, and
+it is the only replicate above 100. The point estimate is unaffected (no zRMSE cell exceeds 10), so
+this is confined to the interval on the back-transformed count scale.
+
+The mean is therefore not a usable summary for interval width or interval score in those two cells.
+The board is left reporting the true mean, with the caveat in its status line, rather than the
+estimator being quietly swapped for a median - **that choice is Shinichi's**, and it would have to
+apply to every arm and metric alike, not just where it flatters.
 
 ### The lane can no longer submit ANY compute without a permission rule from Shinichi
 
@@ -411,7 +457,8 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 snakagaw@fir.alliancecan.ca 'export PI
 4. **factorial BACE n = 1000 HALF=B** — HOLD, and the hold is now justified by measurement, not caution.
    HALF=A is measured at 49% OOM and ~3 h per successful fit. Submitting HALF=B before Shinichi decides
    would repeat a known waste at scale.
-5. ~~AVONET300 case study (stage `avonet`)~~ **LAUNCHED 2026-09-20 20:49 on Totoro**, 20 cell-seeds,
+5. ~~AVONET300 case study (stage `avonet`)~~ **COMPLETE 2026-09-21** - 20/20 cell-seeds landed on
+   Totoro, zero errors, all six arms. Aggregated and on the board's own tab. Launched 2026-09-20 20:49, 20 cell-seeds,
    all six arms, path smoke-checked first into a scratch directory (freq 1.6 s, gnn_off 2.6 s, seven
    real traits scored, realised mask 0.300). Covariate sensitivity (S6d) is still not started and is
    **not yet implemented**: `script/campaign_sim_cell.R` has no covariate flag, so S6d needs a small
@@ -638,5 +685,30 @@ He approved, in his words, "everything except publishing and merging". So overni
   BLOCK=1 at `--time 05:00:00`. This makes option 1 of the budget question dearer than written, since
   retries are now part of its cost. Cross-host core duplication has also grown from 650 to 992 files;
   the aggregator's dedupe already neutralises it in the numbers.
+  **Still awaiting Shinichi:** (1) a Bash permission rule for cluster submission, or he runs the two
+  queued lines himself; (2) the n = 1000 BACE budget decision in section 8; (3) S7a publication.
+
+- 2026-09-21 00:45 MDT - scheduled run. **Nothing launched and nothing relaunched**: nibi (251 tasks)
+  and fir (449 tasks) are still saturated with BACE, rorqual stays retired, and Totoro's one free
+  queue is the factorial fast-arm wave that the permission classifier still refuses. So this run did
+  the aggregation step instead, and it was the right time for it: **AVONET is COMPLETE (20/20 cells,
+  zero errors, all six arms)** and **core BACE n = 300 has closed (599/600)**, both new since the
+  22:55 check. Core BACE union is now **1461/1800** (n=100 597/600, n=300 599/600, n=1000 265/600);
+  fir's two redo arrays 60684949 and 60684950 have fully drained and fir alone now holds a superset
+  of nibi's core files.
+  Pooled 6,109 core cell-files from four hosts and 20 AVONET cells, then aggregated both. The
+  cross-host dedupe dropped 1,047 duplicate (cell, seed, arm-set) files and read 5,062 unique core
+  cells.
+  **Found and fixed three defects in the aggregation and reporting path** (commit 5a5480c, `script/`
+  only, `R/` untouched) - the important one being that **interval coverage was never reaching
+  `_summary.csv` at all**, so the board's coverage panel, half the pre-registered primary contrast,
+  had been showing its empty state on every previous version. Both findings and the first reading of
+  the coverage numbers are written up in section 8. Verified the fix by evaluating the page's own
+  JavaScript against a DOM shim rather than by eye: the coverage panel renders data, and the new
+  AVONET panel renders all seven arms across four metrics with their MCSEs.
+  **Results board refreshed to Version 4 at the same private URL**
+  (https://claude.ai/artifact/FkA8scunNMgVaH2791fFfx). The live page was read first and its shell
+  diffed against the new build: the only differences are this run's four intentional edits, so
+  nobody had edited the page from inside it.
   **Still awaiting Shinichi:** (1) a Bash permission rule for cluster submission, or he runs the two
   queued lines himself; (2) the n = 1000 BACE budget decision in section 8; (3) S7a publication.
