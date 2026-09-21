@@ -3,7 +3,7 @@
 **This file is the single source of truth for resuming. Read it first, update it after every
 meaningful step, and never start a second copy of work already running.**
 
-Status: **IN PROGRESS** (not complete). Last updated 2026-09-20 22:05 MDT by the scheduled Claude run.
+Status: **IN PROGRESS** (not complete). Last updated 2026-09-20 22:55 MDT by the scheduled Claude run.
 
 ---
 
@@ -112,23 +112,51 @@ BACE dominates the budget (roughly 84% of it).
 
 ## 8. NEXT UNFINISHED STEPS (in order)
 
-**CURRENT STATE (checked 2026-09-20 21:50 MDT). Every host is still busy; nothing was relaunched
-because the one ready submission was REFUSED by the permission classifier (see the new finding below).**
+**CURRENT STATE (checked 2026-09-20 22:50 MDT). Every host is still busy; nothing was relaunched.
+The one ready submission is still REFUSED by the permission classifier (see the finding below).**
 
 | host | what is running | queued | results landed | note |
 |---|---|---:|---|---|
-| Totoro | **AVONET, all 6 arms, 20 seeds** (pgid 3354530) | 20 procs (43 pids) | core **3600/3600**, avonet **0/20** | 1 h in, no AVONET cell has landed yet: BACE at n = 300 is the long pole, as predicted |
-| nibi | factorial BACE n=1000 HALF=B (22352507) only | 251 | core 1038, factorial 2759 (n100 **2464**, n1000 295) | **22340187 has fully DRAINED** (333 TIMEOUT / 227 COMPLETED) |
+| Totoro | **AVONET, all 6 arms, 20 seeds** (pgid 3354530) | 20 procs (43 pids) | core **3600/3600**, avonet **0/20** | 2 h in and HEALTHY: 20 R processes at 105% CPU and 7.5 GB RSS each, all inside BACE at n = 300. About 20 of Totoro's 250 permitted cores are in use, so the machine has room; only the permission rule is missing |
+| nibi | factorial BACE n=1000 HALF=B (22352507) only | 251 | core 1038, factorial 2759 (n100 2464, n1000 295) | BLOCK=2, 1 core, 32 GB, `--time 06:00:00`. 37 COMPLETED, zero TIMEOUT yet, completed blocks at 3h26 to 4h04 |
 | rorqual | nothing | 0 | core 9 salvaged | retired for the inode quota, see 8a |
-| fir | 60681245 factorial half A (249), 60681249 core n=1000 (197), 60684950 core n=300 redo (185) | 631 | core 1176, factorial 233 | **60684949 core n=100 redo has DRAINED**; zero OOM and zero TIMEOUT under the corrected 1-core / 32 GB settings |
+| fir | 60681245 factorial half A (249 R), 60681249 core n=1000 (200 R), 60684950 core n=300 redo (68 R) | 524 | core **1372**, factorial **302** | core n=300 redo nearly drained (531 COMPLETED, 1 FAILED). Still zero OOM at 32 GB, but **74 TIMEOUT has now appeared on the factorial n=1000 array**, see the new finding below |
 
-**Core BACE completeness, measured on the union of nibi + fir filenames (1387 of 1800):**
+**Core BACE completeness, measured on the union of nibi + fir filenames (1438 of 1800):**
 
 | n | landed | missing | who is filling it |
 |---:|---:|---:|---|
-| 100 | 597/600 | 3 | done bar a handful |
-| 300 | 555/600 | 45 | fir 60684950, running |
-| 1000 | 235/600 | 365 | fir 60681249, running — but the n = 1000 budget decision below still stands |
+| 100 | 597/600 | 3 | fir array drained; these 3 are the residue |
+| 300 | 592/600 | 8 | fir 60684950, 68 tasks left, finishes within the hour |
+| 1000 | 249/600 | 351 | fir 60681249, running, but the n = 1000 budget decision below still stands |
+
+Cross-host duplication has grown from 650 to **992** identical core filenames on both nibi and fir.
+The aggregator's (filename, arm set) dedupe neutralises this in the numbers; it is recorded as waste,
+not repeated. Once fir's core arrays drain, fir alone holds a near-complete n = 100 and n = 300 set.
+
+### NEW: BLOCK=2 is the wrong shape for n = 1000 BACE, and it is costing whole tasks
+
+`--mem=32G` fixed the out-of-memory problem: fir has recorded **zero OOM** since the switch. But
+fir's factorial half-A array 60681245 has now accumulated **74 TIMEOUT against 303 COMPLETED**
+(20% of finished tasks), every one of them stopping at exactly 04:30:0x.
+
+The cause is arithmetic, not a node problem. That array is `627-1400`, i.e. **BLOCK=2**, and a
+successful BACE fit at n = 1000 is now measured at **03:17 to 04:04** of wall on fir and nibi (slower
+than the 02:46 measured on an empty fir). Two successes in one task therefore need about 7 h and
+cannot fit inside a 4h30 wall. A block times out whenever it happens to draw two lambda = 0.3 cells;
+it completes in seconds when it draws two lambda = 1 cells, which fail singular in about 5 s
+(core array 60681249 shows exactly this bimodality: most COMPLETED tasks at 5 to 8 s, the successes
+at 03:17:15).
+
+nibi's half B (22352507) is the same BLOCK=2 shape at a 6 h wall, so it will lose its two-success
+blocks too, just fewer of them. It has no TIMEOUT yet only because its completed blocks so far have
+each held one success plus one fast failure.
+
+**Consequence for the decision Shinichi still owes:** option 1 in the budget question below is more
+expensive than it was written, because retries are now part of it. The correct shape for any n = 1000
+BACE array is **BLOCK=1** (one cell-seed per task, wall 05:00:00), which makes a task's cost
+independent of which cells it draws and removes this class of loss entirely. Core n=1000 (60681249)
+is already BLOCK=1 and has zero TIMEOUT, which is the control case.
 
 ### The lane can no longer submit ANY compute without a permission rule from Shinichi
 
@@ -586,5 +614,29 @@ He approved, in his words, "everything except publishing and merging". So overni
   first, so the new page was built as a literal merge onto the live source, swapping only the data
   block and the status line; the shells were diffed beforehand to confirm nobody had edited the page
   from inside it.
+  **Still awaiting Shinichi:** (1) a Bash permission rule for cluster submission, or he runs the two
+  queued lines himself; (2) the n = 1000 BACE budget decision in section 8; (3) S7a publication.
+
+- 2026-09-20 22:55 MDT - scheduled run. **Nothing launched, nothing relaunched; every host is still
+  busy, so STEP 2 applies and this run collected and recorded only.** No pooling or board refresh
+  either: core BACE has moved only 1387 to 1438 since the 21:50 refresh and AVONET is still at 0 of
+  20, so a Version 4 board would have restated Version 3. The next run, once AVONET lands and core
+  n = 300 closes, is the right refresh point.
+  Measured state: **Totoro** core 3600/3600, AVONET 0/20 but demonstrably healthy at 2 h in (20 R
+  processes, 105% CPU and 7.5 GB RSS each, all inside BACE at n = 300); it is using about 20 of its
+  250 permitted cores, so the machine has capacity and only the permission rule is missing.
+  **nibi** 251 tasks (factorial n=1000 half B), core 1038, factorial 2759. **fir** 524 tasks, core
+  1372, factorial 302; core n=300 redo 60684950 is nearly drained (531 COMPLETED, 1 FAILED, 68 left).
+  **rorqual** 0, retired. Core BACE union **1438/1800** (n=100 597/600, n=300 592/600, n=1000 249/600).
+  **New finding, recorded in section 8: BLOCK=2 is the wrong shape for n = 1000 BACE.** 32 GB fixed
+  the out-of-memory problem (zero OOM on fir since the switch), but fir's factorial half-A array has
+  now taken **74 TIMEOUT against 303 COMPLETED**, all at exactly 04:30:0x. The cause is arithmetic: a
+  successful n = 1000 BACE fit now measures 03:17 to 04:04 of wall, so two of them in one BLOCK=2 task
+  need about 7 h and cannot fit a 4h30 wall, while two lambda = 1 cells finish in seconds. Core
+  n=1000 (60681249) is BLOCK=1 and has zero TIMEOUT, which is the control. nibi's half B is BLOCK=2 at
+  a 6 h wall and will lose its two-success blocks as well. Any future n = 1000 BACE array should be
+  BLOCK=1 at `--time 05:00:00`. This makes option 1 of the budget question dearer than written, since
+  retries are now part of its cost. Cross-host core duplication has also grown from 650 to 992 files;
+  the aggregator's dedupe already neutralises it in the numbers.
   **Still awaiting Shinichi:** (1) a Bash permission rule for cluster submission, or he runs the two
   queued lines himself; (2) the n = 1000 BACE budget decision in section 8; (3) S7a publication.
