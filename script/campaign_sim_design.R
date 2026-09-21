@@ -58,6 +58,12 @@ tab$stage <- stage
 tab$cell <- cell_key(tab)
 tab$reps <- if (stage == "prerun") 1L else if (stage == "avonet") 20L else 200L
 tab$bace_reps <- if (stage == "prerun") 1L else if (stage == "avonet") 20L else 100L
+# Shinichi, 2026-09-21: BACE at n = 1000 in the FACTORIAL runs 30 seeds, not 100. Measured on fir, a
+# successful n = 1000 fit costs about 3 h and over 16 GB, and 72% of lambda = 1 fits fail singular in
+# a second, so full replication there would cost roughly 28,000 core-hours against an approved
+# whole-campaign budget of 11,564. The core slice keeps 100 (580 of 600 already computed). MCSE on
+# the BACE arm widens by about 1.8x at n = 1000 in the factorial and is reported as such.
+if (stage == "factorial") tab$bace_reps[tab$n == 1000L] <- 30L
 tab$ncov <- if (stage == "covsens") 2L else 0L
 tab <- tab[, c("stage", "cell", "dgp", "evo", "lambda", "rho", "miss", "frac", "n", "reps", "bace_reps", "ncov")]
 write.csv(tab, stdout(), row.names = FALSE, quote = FALSE)
