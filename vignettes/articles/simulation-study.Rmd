@@ -26,10 +26,12 @@ if (have) {
   FL <- tryCatch(read.csv(file.path(res_dir, "failures.csv"), stringsAsFactors = FALSE),
                  error = function(e) NULL)
 }
-ARM <- c(freq = "Frequentist stack", bace = "BACE",
+ARM <- c(freq = "Frequentist, BM default", freq_lambda = "Frequentist, lambda estimated",
+         bace = "BACE",
          gnn_off = "pigauto, GNN off", gnn_off_rphylopars = "pigauto, GNN off, Rphylopars solver",
          gnn_on = "pigauto, GNN on", floor = "Mean / mode floor")
-fmt <- function(m, s) ifelse(is.finite(m), sprintf("%.3f (%.3f)", m, s), "—")
+KEEP <- c("freq", "freq_lambda", "bace", "gnn_off", "gnn_off_rphylopars", "gnn_on", "floor")
+fmt <- function(m, s) ifelse(is.finite(m), sprintf("%.3f (%.3f)", m, s), "n/a")
 ```
 
 ```{r not-yet, eval = !exists("have") || !have, results = "asis"}
@@ -37,13 +39,22 @@ cat("> **This page is a placeholder.** The campaign behind it has not finished, 
     "shown yet. The design below is fixed and was registered before any result was inspected.\n")
 ```
 
+> **Scope of the numbers on this page.** Everything below is the *core slice*: Brownian motion,
+> MCAR at 30%, no covariates, lambda in {0.3, 0.7, 1.0}, rho in {0, 0.5}, n in {100, 300, 1000},
+> 200 replicates per cell and 100 for BACE. The factorial extension over the evolutionary model,
+> the missingness mechanism and the missing fraction is still computing and will be added here
+> rather than replacing anything. The design was fixed before any result was inspected.
+
 ## What this compares, and why
 
-Four ways of filling gaps in a species-by-trait matrix, on simulated data where the truth is known.
+Four ways of filling gaps in a species-by-trait matrix, scored against a known truth.
 
-1. **The frequentist stack.** `Rphylopars` for a joint Brownian-motion fit over the
+1. **The frequentist stack.** `Rphylopars` for a joint fit over the
    continuous-family traits, `castor`'s Mk model for each discrete trait, and a phylogenetic Poisson
-   GLM for counts. The standard toolkit, with no information passing between trait types.
+   GLM for counts. The standard toolkit, with no information passing between trait types. It is
+   reported twice, because the choice of evolutionary model turns out to matter more than the
+   choice of method: once at Rphylopars' documented default `model = "BM"`, and once at
+   `model = "lambda"`, which estimates the phylogenetic signal from the data.
 2. **BACE.** Joint Bayesian imputation through `MCMCglmm`, which models all traits together and
    returns posterior predictive draws.
 3. **pigauto with the GNN off.** The phylogenetic baseline and pigauto's safety machinery, with no
@@ -93,14 +104,14 @@ knitr::kable(data.frame(
 
 ```{r accuracy, eval = exists("have") && have}
 core <- S[S$evo == "BM" & S$miss == "mcar" & S$metric == "zRMSE" &
-            S$trait %in% c("c1", "c2", "cnt", "prp"), ]
+            S$frac == 0.3 & S$trait %in% c("c1", "c2", "cnt", "prp"), ]
 if (nrow(core)) {
   agg <- aggregate(cbind(mean, mcse) ~ n + lambda + arm, data = core,
                    FUN = function(z) mean(z, na.rm = TRUE))
   agg$cell <- sprintf("n = %s, lambda = %s", agg$n, agg$lambda)
   w <- reshape(agg[, c("cell", "arm", "mean")], idvar = "cell", timevar = "arm", direction = "wide")
   names(w) <- sub("^mean\\.", "", names(w))
-  keep <- intersect(c("freq", "bace", "gnn_off", "gnn_off_rphylopars", "gnn_on", "floor"), names(w))
+  keep <- intersect(KEEP, names(w))
   knitr::kable(w[, c("cell", keep)], digits = 3, row.names = FALSE,
                col.names = c("Cell", ARM[keep]),
                caption = "z-RMSE on masked cells, averaged over the continuous-family traits. Lower is better. Monte Carlo standard errors are in the accompanying csv and on every figure.")
@@ -110,6 +121,45 @@ if (nrow(core)) {
 Read this table with the floor column in view. An arm above the floor is doing worse than predicting
 the sample mean, which is the honest description of a phylogenetic method applied where there is
 little phylogenetic signal to exploit.
+
+```{r accuracy-discrete, eval = exists("have") && have}
+cored <- S[S$evo == "BM" & S$miss == "mcar" & S$frac == 0.3 & S$metric == "accuracy" &
+             S$trait %in% c("bin", "ord", "cat3"), ]
+if (nrow(cored)) {
+  agg <- aggregate(mean ~ n + lambda + arm, data = cored, FUN = function(z) mean(z, na.rm = TRUE))
+  agg$cell <- sprintf("n = %s, lambda = %s", agg$n, agg$lambda)
+  w <- reshape(agg[, c("cell", "arm", "mean")], idvar = "cell", timevar = "arm", direction = "wide")
+  names(w) <- sub("^mean\\.", "", names(w))
+  keep <- intersect(KEEP, names(w))
+  knitr::kable(w[, c("cell", keep)], digits = 3, row.names = FALSE,
+               col.names = c("Cell", ARM[keep]),
+               caption = "Accuracy on masked cells, averaged over the binary, ordinal and three-level categorical traits. Higher is better.")
+}
+```
+
+### What the two tables say
+
+The ranking is not stable across the design, and that is the main result rather than a complication.
+
+Phylogenetic signal decides who wins on continuous traits. At lambda = 0.3 every arm that assumes
+maximum signal sits at or above the floor, and the two that estimate the signal, BACE and the
+frequentist stack at `model = "lambda"`, are the only ones clearly below it. At lambda = 1 the order
+inverts: pigauto with the GNN off reaches 0.379 at n = 1000 against BACE's 0.659, and BACE is last.
+
+The frequentist stack's evolutionary model matters more here than the choice of method. Moving
+Rphylopars from its `model = "BM"` default to `model = "lambda"` improves z-RMSE by about 0.23 at
+lambda = 0.3 and by about 0.18 at lambda = 0.7, which is larger than the gap between most pairs of
+methods in the same cell. At the default the stack sits above the floor at lambda = 0.3; with the
+signal estimated it never does.
+
+Discrete traits run the other way. BACE is ahead by 11 to 17 accuracy points wherever signal is
+low or moderate, and every other arm is at or below the mode floor at lambda = 0.3. At lambda = 1
+that reverses and the Mk and label-propagation paths reach 0.96 against BACE's 0.84.
+
+The two pigauto solvers are not interchangeable. The in-house solver and the Rphylopars solver
+agree in most cells, but the Rphylopars solver is unstable at high signal and small n: at lambda = 1
+and n = 100 it reaches a z-RMSE of 1.654 against the in-house solver's 0.487, and its interval score
+diverges in two cells. That is a reason to keep the in-house solver as the default.
 
 ## Calibration and coverage
 
@@ -128,9 +178,24 @@ quietly treating them as equivalent:
 Coverage is never reported without the standardised width beside it, and the interval score of
 Gneiting and Raftery is given as the single proper score that trades the two against each other.
 
+### What the coverage table says
+
+Only one of the three interval constructions reaches its nominal level. pigauto's split-conformal
+intervals cover 0.95 to 0.96 at n = 300 and n = 1000, across every lambda. BACE's posterior
+predictive intervals reach 0.80 to 0.89 and are furthest from nominal where the signal is weakest.
+The model-based Rphylopars intervals fall between the two, at 0.80 to 0.91.
+
+The pattern has a simple reading. The conformal interval is calibrated on held-out residuals, so it
+absorbs whatever error the model actually makes; the other two are derived from a fitted model and
+inherit its optimism. The exception proves it: at n = 100 pigauto drops to 0.85 to 0.88, because a
+100-tip tree leaves too few validation residuals for the conformal quantile to be stable. Coverage
+is not a free property of being Bayesian or of being frequentist, and on this evidence it is bought
+by calibrating against held-out error.
+
 ```{r coverage, eval = exists("have") && have}
-cv <- S[S$evo == "BM" & S$miss == "mcar" & S$metric %in% c("coverage", "width", "interval_score") &
-          S$trait %in% c("c1", "c2", "cnt", "prp"), ]
+cv <- S[S$evo == "BM" & S$miss == "mcar" & S$frac == 0.3 &
+          S$metric %in% c("coverage", "width", "interval_score") &
+          S$arm %in% KEEP & S$trait %in% c("c1", "c2", "cnt", "prp"), ]
 if (nrow(cv)) {
   agg <- aggregate(mean ~ arm + metric + n, data = cv, FUN = function(z) mean(z, na.rm = TRUE))
   w <- reshape(agg, idvar = c("arm", "n"), timevar = "metric", direction = "wide")
@@ -160,7 +225,7 @@ it buys anything is what the accuracy and coverage tables are for.
 ## Failures
 
 ```{r failures, eval = exists("have") && have && exists("FL") && !is.null(FL) && nrow(FL)}
-knitr::kable(head(aggregate(cbind(failures = rep(1, nrow(FL))) ~ arm, data = FL, FUN = sum), 10),
+knitr::kable(aggregate(n_failed ~ arm, data = FL[FL$arm %in% KEEP, ], FUN = sum),
              caption = "Fits that failed outright, by arm. A failed fit is scored at the floor and counted here, never dropped.")
 ```
 

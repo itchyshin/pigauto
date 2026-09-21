@@ -1,0 +1,13 @@
+"dgp","n","arm","n_failed"
+"types_mixed",100,"bace",112
+"types_mixed",300,"bace",113
+"types_mixed",1000,"bace",96
+"types_mixed",100,"freq",32
+"types_mixed",300,"freq",29
+"types_mixed",1000,"freq",16
+"types_mixed",100,"freq_lambda",32
+"types_mixed",300,"freq_lambda",29
+"types_mixed",1000,"freq_lambda",16
+"types_mixed",100,"gnn_on",32
+"types_mixed",300,"gnn_on",29
+"types_mixed",1000,"gnn_on",16
