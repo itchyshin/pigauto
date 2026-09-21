@@ -3,7 +3,7 @@
 **This file is the single source of truth for resuming. Read it first, update it after every
 meaningful step, and never start a second copy of work already running.**
 
-Status: **IN PROGRESS** (not complete). Last updated 2026-09-21 00:45 MDT by the scheduled Claude run.
+Status: **IN PROGRESS** (not complete). Last updated 2026-09-21 01:20 MDT by the scheduled Claude run.
 
 ---
 
@@ -26,7 +26,8 @@ secondary.
 - [ ] Core slice complete: 18 cells x 200 replicates (BACE on seeds 1..100), failure rate recorded per cell.
 - [ ] Trimmed factorial complete: 56 cells, same conditions.
 - [x] AVONET300 case study, all arms, 20 seeds. **DONE 2026-09-21** - 20/20 cells on Totoro, zero errors, all six arms plus gnn_on_full, aggregated to `avo_summary.csv` and on the board's own tab.
-- [ ] Covariate sensitivity on the 18 core cells.
+- [ ] Covariate sensitivity on the 18 core cells. **Runner support BUILT and verified 2026-09-21**
+      (stage `covsens`, `--ncov`); only the dispatch is left, and that is blocked on the permission rule.
 - [ ] Aggregated with paired MCSE on every number; regime columns filled.
 - [ ] **S7a** results Artifact shown to Shinichi (Dan's freq-vs-BACE view + the four-arm view); his
       publication decisions recorded here.
@@ -203,6 +204,113 @@ The mean is therefore not a usable summary for interval width or interval score 
 The board is left reporting the true mean, with the caveat in its status line, rather than the
 estimator being quietly swapped for a median - **that choice is Shinichi's**, and it would have to
 apply to every arm and metric alike, not just where it flatters.
+
+### NEW: S6d covariate support is BUILT (the last piece that needed no cluster and no decision)
+
+S6d was the one remaining completion criterion blocked on code rather than on Shinichi or on a free
+slot: `script/campaign_sim_cell.R` had no covariate flag at all. It does now. `script/` only; `R/`,
+`BACE/` and PR #175 untouched.
+
+What shipped (commit below): a `covsens` stage in `campaign_sim_design.R` (the same 18 core cells,
+`ncov = 2`), an `--ncov` / `--rho_cov` pair on the cell runner, an `_k<ncov>` field in the rds
+filename so covariate cells can never collide with core cells, and `--ncov` threaded through both
+drivers.
+
+**The plan does not specify how the covariate is generated or how strongly it correlates with the
+traits** (it says only "18 core cells with 2 covariates"). Those were chosen here and each is one
+flag to change:
+
+- `cov_j = rho_cov * L[, target_j] + sqrt(1 - rho_cov^2) * e_j`, with `e_j` an independent column
+  carrying the same phylogenetic structure. Targets are `c1` (continuous) and `cnt` (the count
+  trait) - the two places arm 1 can actually put a covariate.
+- `rho_cov = 0.6`. Measured realised correlation 0.605 / 0.604 over 40 seeds, Pagel's lambda of the
+  covariate itself 1.000 at lambda = 1. At the driver's 0.35 a covariate explains only 12% of a
+  trait's variance, which risks a sensitivity slice too weak to detect anything; 0.6 gives 36% and
+  still leaves the phylogeny doing most of the work.
+- Covariates are fully observed, never masked, never scored.
+
+**Two things measured while building it, both of which changed the implementation:**
+
+1. **The obvious construction is not positive definite.** Imposing the covariate correlations
+   directly on `Sigma_rho` fails at rho = 0: two covariates each correlated r with seven mutually
+   independent traits imply a mutual correlation of 7r^2, so pinning them to 0 breaks the matrix -
+   min eigenvalue **-0.32 at r = 0.25**, before `rho_driver` is even applied. This is the same
+   ceiling the existing comment on `rho_driver = 0.35` records ("the largest keeping Sigma PD with
+   seven traits"), and a second such column does not fit under it. The generative construction above
+   is PD for any |rho_cov| < 1 by construction and needs no eigen check.
+2. **Drawing the covariate noise inside the shared latent matrix silently corrupted the pairing.**
+   Widening `Z` from K = 8 to K = 10 shifts the RNG stream that `rpois()` and `rnorm()` read
+   afterwards, so the count and proportion traits changed: measured, 6 of 60 counts moved and the
+   proportions by up to 0.24. The covariates are now drawn AFTER the traits from their own
+   `rnorm()`, so a covsens cell has traits **byte-identical** to the core cell at the same seed.
+   That makes covsens-vs-core a **paired** comparison on the same data rather than two independent
+   draws - materially more powerful, and it was nearly lost by accident.
+
+Where the covariate reaches each arm, and where it cannot:
+
+| arm | covariate enters | how |
+|---|---|---|
+| 1 freq, continuous | yes | OLS residualisation on the covariates over observed rows, joint BM on the residuals, contribution added back. Beta treated as known when forming the interval - a documented approximation |
+| 1 freq, count | fitted, rarely adopted | `phyloglm(y ~ cov1 + cov2)` is fitted BESIDE the intercept-only model and adopted only if it predicts the observed counts better (Poisson deviance). On this DGP it never wins - see below - so the count trait ends up covariate-free in practice |
+| 1 freq, discrete | **no** | `castor::hsp_mk_model` takes no covariates at all. Reported as covariate-free, not silently ignored |
+| 2 BACE | yes | extra fixed terms on the RHS of every `fixformula`; never a response, so never imputed or scored |
+| 3a / 3b pigauto GNN off | **no** | pigauto threads covariates through the GNN only, so a GNN-off fit cannot use them. This is what the plan means by "arm 3 reported covariate-free" |
+| 4 pigauto GNN on | yes | `covariates =` on `pigauto::impute` |
+| floor | no | unchanged |
+
+**Verified before claiming it works** (all on the Mac, no cluster):
+
+- `ncov = 0` reproduces the old DGP exactly - truth, mask and the latent matrix all `identical()`
+  to the pre-change code. **Every core / factorial / avonet result already on disk stays valid**,
+  and the filename is unchanged, so resume still skips them.
+- `ncov = 2` leaves all seven traits byte-identical at the same seed (the pairing above).
+- Cell counts per stage unchanged: core 18, factorial 56, prerun 16, avonet 1, covsens 18, so gates
+  G10/G11 still count against the right totals.
+- The `ncov` column is the LAST column of the design table, so both drivers' positional `awk`
+  (`$3..$9` cell args, `$10` reps, `$11` bace_reps) keeps working; both were exercised and emit
+  `--ncov 2` on covsens and `--ncov 0` on core.
+- End-to-end cell runs at n = 100 with and without covariates (see the run log for the result).
+
+**A measured finding about arm 1, found while building this and worth reporting as a result.** The
+count path was the one place a covariate could most obviously help: the DGP is
+`cnt ~ Poisson(exp(1.5 + 0.8 * L3))` and `cov2` is a reading of `L3` at r = 0.6, so a correct
+Poisson regression on it should do well. It does not. `phylolm::phyloglm(..., method =
+"poisson_GEE")` is a MARGINAL estimator and on this data it returns badly conditioned coefficients
+(it warns `system is singular` on most seeds). Measured over 25 seeds at n = 100, lambda = 0.7,
+rho = 0.5, taking its tip-specific `exp(x'beta)` at face value:
+
+| count trait, arm 1 | mean zRMSE | covariate better in |
+|---|---:|---|
+| intercept-only (the existing arm) | 1.163 | - |
+| naive `exp(x'beta)` | **9.727** | 1 of 25 seeds |
+| after the deviance guard | 1.163 | 0 of 25 (guard always prefers the intercept) |
+
+Two defects surfaced on the way and both are fixed: `exp(x'beta)` **overflowed to non-finite** on at
+least one seed, which made the count zRMSE `NA` for the whole trait (it would have silently voided
+the count column across all 18 x 200 covsens cells); and even when finite it was an order of
+magnitude worse than the constant mean. The fix is a clamp plus **in-sample model selection** - the
+covariate model is adopted only when it beats intercept-only on Poisson deviance over the observed
+rows - so the covariate version can never make the arm worse than the covariate-free arm. The honest
+reading is that **the frequentist stack cannot exploit a covariate on the count trait with the
+estimator this campaign uses**, which is a reportable property of arm 1, not a bug in the harness.
+
+For the continuous traits the covariate path is stable and does something small: mean zRMSE 0.876 ->
+0.857 over the same 25 seeds, mean paired difference -0.019 with MCSE 0.019 (p = 0.34). So at
+n = 100 / lambda = 0.7 the effect is **not distinguishable from zero on 25 seeds** - the real slice
+runs 200, and the pairing (identical traits per seed) is what will give it the power to resolve.
+
+Not done, and deliberately: no covsens cell has been dispatched. That is a launch, and launches are
+refused (below). The dispatch line, for whenever the permission rule exists - Totoro, fast arms,
+18 cells x 200 reps:
+
+```
+ssh -o BatchMode=yes -o ConnectTimeout=15 snakagaw@totoro.biology.ualberta.ca 'cd ~/pigauto_sim; export ARMS=gnn_on,gnn_off,gnn_off_rphylopars,freq,floor; export ARMS_BACE=gnn_on,gnn_off,gnn_off_rphylopars,freq,floor; bash script/campaign_sim_totoro.sh covsens 42'
+```
+
+Note the scripts must be rsynced to the hosts first. That is safe for the running arrays: a DRAC
+array expands the design into its TASKS file at SUBMIT time and running tasks read that file, not
+the design script - and `campaign_sim_cell.R`, which IS re-read per task, is backward compatible
+(no `--ncov` means `ncov = 0`, same behaviour, same filename).
 
 ### The lane can no longer submit ANY compute without a permission rule from Shinichi
 
@@ -712,3 +820,40 @@ He approved, in his words, "everything except publishing and merging". So overni
   nobody had edited the page from inside it.
   **Still awaiting Shinichi:** (1) a Bash permission rule for cluster submission, or he runs the two
   queued lines himself; (2) the n = 1000 BACE budget decision in section 8; (3) S7a publication.
+
+- 2026-09-21 01:20 MDT - scheduled run. **Nothing launched.** Totoro had gone fully idle (core
+  3600/3600, AVONET 20/20, load average 0.10) so the queued factorial fast-arm wave was attempted;
+  the auto-mode permission classifier **refused it again ("Modify Shared Resources")**, as it has
+  every run since 20:50. nibi (251 tasks) and fir (422) are still saturated with BACE, rorqual stays
+  retired. No pooling or board refresh: the previous run finished ~00:05 and core BACE has barely
+  moved since, so a Version 5 would have restated Version 4.
+  So this run did the one remaining completion criterion that needed neither a cluster nor a
+  decision from Shinichi: **S6d covariate support is now BUILT and verified** (`script/` only; `R/`,
+  `BACE/` and PR #175 untouched). A `covsens` stage, an `--ncov` / `--rho_cov` pair on the cell
+  runner, an `_k<ncov>` filename field so covariate cells cannot collide with core cells, and
+  `--ncov` threaded through both drivers. Full write-up, including the covariate's generative model
+  and the `rho_cov = 0.6` choice the plan leaves unspecified, is in section 8.
+  **Three defects were caught by measurement rather than by eye, and all three are fixed:**
+  (1) the obvious construction - imposing the covariate correlations on `Sigma_rho` - is **not
+  positive definite** at rho = 0 (min eigenvalue -0.32 at r = 0.25), so the covariates are built
+  generatively instead; (2) drawing the covariate noise inside the shared latent matrix **shifted
+  the RNG stream** and silently changed the count and proportion traits, which would have thrown
+  away the pairing between covsens and core - the covariates are now drawn afterwards and a covsens
+  cell's traits are byte-identical to the core cell at the same seed, making the comparison paired;
+  (3) the new `exp(x'beta)` count prediction **overflowed to non-finite** on at least 1 of 25 seeds
+  and, even when finite, was an order of magnitude worse than the existing intercept-only prediction
+  (zRMSE 9.73 vs 1.16, worse in 24 of 25 seeds), so the covariate model is now adopted only when it
+  wins on in-sample Poisson deviance. That third one is also a **result**: the frequentist stack
+  cannot exploit a covariate on the count trait with `poisson_GEE`, and castor's Mk takes none on
+  the discrete traits, so arm 1's covariate benefit rests on the continuous traits alone.
+  Verified before claiming any of it: `ncov = 0` reproduces the old DGP `identical()` (every result
+  on disk stays valid, filenames unchanged); per-stage cell counts unchanged (core 18, factorial 56,
+  prerun 16, avonet 1, covsens 18) so G10/G11 still count correctly; both drivers' positional awk
+  exercised and emitting `--ncov` correctly; two end-to-end cell runs at n = 100, all six arms, zero
+  errors, with the wiring confirmed by differential test - `freq` changes on continuous and count
+  but is **identical on the discrete traits**, `gnn_off` / `gnn_off_rphylopars` / `floor` are
+  identical everywhere (covariate-free by construction), `gnn_on` changes throughout.
+  **Still awaiting Shinichi:** (1) a Bash permission rule for cluster submission, or he runs the
+  queued lines himself - this is now blocking THREE waves (factorial fast arms, the nibi factorial
+  n=100 recovery, and the new covsens slice); (2) the n = 1000 BACE budget decision in section 8;
+  (3) S7a publication.

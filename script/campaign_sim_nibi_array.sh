@@ -37,7 +37,7 @@ NR > 1 && $9 == n && (half == "" || (half == "A" && (NR % 2) == 0) || (half == "
   lim = (seeds == "bace") ? $11 : $10
   for (s = 1; s <= lim; s += blk) {
     e = s + blk - 1; if (e > lim) e = lim
-    printf "--dgp %s --evo %s --lambda %s --rho %s --miss %s --frac %s --n %s --driver --thresholds fixed\t%d\t%d\t%d\n", $3, $4, $5, $6, $7, $8, $9, s, e, $11
+    printf "--dgp %s --evo %s --lambda %s --rho %s --miss %s --frac %s --n %s --ncov %s --driver --thresholds fixed\t%d\t%d\t%d\n", $3, $4, $5, $6, $7, $8, $9, $12, s, e, $11
   }
 }' > "$TASKS"
 NT=$(wc -l < "$TASKS")

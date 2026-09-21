@@ -15,7 +15,7 @@
 # dropped ssh cannot kill or orphan the run. Progress: tail -f logs/<stage>.log ; stop: kill -- -<pgid>
 set -euo pipefail
 
-STAGE="${1:?stage: prerun|core|factorial|avonet}"
+STAGE="${1:?stage: prerun|core|factorial|avonet|covsens}"
 PAR="${2:-36}"
 ROOT="${PIG_SIM_ROOT:-$HOME/pigauto_sim}"
 OUT="${OUT_DIR:-$ROOT/results/$STAGE}"; [ -z "${OUT_DIR:-}" ] && [ "$STAGE" = prerun ] && OUT="$ROOT/prerun"
@@ -39,8 +39,8 @@ NR > 1 {
   lim = (seeds == "bace") ? $11 : $10
   for (s = 1; s <= lim; s++) {
     arms = (s <= $11) ? all : nob
-    printf "--dgp %s --evo %s --lambda %s --rho %s --miss %s --frac %s --n %s --seed %d --arms %s --driver --thresholds fixed --out %s\n",
-           $3, $4, $5, $6, $7, $8, $9, s, arms, out
+    printf "--dgp %s --evo %s --lambda %s --rho %s --miss %s --frac %s --n %s --ncov %s --seed %d --arms %s --driver --thresholds fixed --out %s\n",
+           $3, $4, $5, $6, $7, $8, $9, $12, s, arms, out
   }
 }' > "$JOBS"
 echo "[$(date +%FT%T)] stage=$STAGE jobs=$(wc -l < "$JOBS") parallel=$PAR out=$OUT" | tee -a "$LOG/$STAGE.log"
