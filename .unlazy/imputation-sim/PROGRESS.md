@@ -857,3 +857,34 @@ He approved, in his words, "everything except publishing and merging". So overni
   queued lines himself - this is now blocking THREE waves (factorial fast arms, the nibi factorial
   n=100 recovery, and the new covsens slice); (2) the n = 1000 BACE budget decision in section 8;
   (3) S7a publication.
+
+## 2026-09-21 morning: the n = 1000 BACE decision is TAKEN, and every blocked wave is queued
+
+**Shinichi decided (2026-09-21): option 2, reduce BACE to 30 seeds at n = 1000 in the FACTORIAL
+only.** The core slice keeps 100 seeds (580 of 600 already landed on fir, 20 TIMEOUT). Recorded in
+`script/campaign_sim_design.R` with the measurement that motivated it, commit 2463cc6. Factorial
+n = 1000 BACE therefore drops from 2,800 replicate-jobs to 840, and the BACE MCSE at n = 1000 in the
+factorial widens by about 1.8x, which is reported with the number.
+
+Submitted this morning, after cancelling the two 100-seed n = 1000 arrays (60681245, 22352507):
+
+| job | cluster | stage | shape |
+|---|---|---|---|
+| 60776371 | fir | factorial n=1000 BACE half A | 420 tasks, BLOCK=1, 32G, 05:00:00 |
+| 22395029 | nibi | factorial n=1000 BACE half B | 420 tasks, BLOCK=1, 32G, 05:00:00 |
+| 22395505 | nibi | factorial n=100 BACE recovery half A | 700 tasks, BLOCK=2, 32G, 02:00:00 |
+| 60776422 | fir | factorial n=100 BACE recovery half B | 700 tasks, BLOCK=2, 32G, 02:00:00 |
+| 60776430 | fir | core n=300 BACE gap | 600 tasks, BLOCK=1, 32G, 02:30:00 |
+| 60776431 | fir | core n=100 BACE gap | 600 tasks, BLOCK=1, 32G, 01:30:00 |
+
+Two shapes changed from what timed out: BLOCK=1 wherever a single n = 1000 fit needs its own wall,
+and BLOCK=2 with a 2 h wall for the n = 100 recovery, since BLOCK=5 at 1 h 30 was the thing that
+lost 227 blocks. The factorial n=100 wave had to be split A/B across both clusters because 2,800
+tasks exceeds the 1,000 ARRAY-TASK cap on either one.
+
+**Audit workflow status:** two attempts, both killed by the session limit after the find phase.
+118 candidate defects are cached in the run journal
+(`subagents/workflows/wf_37826a92-76e/journal.jsonl`) and replay free on resume; the refute, critic
+and report phases have never run. Refuters are now pinned to Sonnet and the critic and report to
+Opus per Shinichi's instruction that Fable orchestrates but does not do the parallel work. Resume
+with `Workflow({scriptPath: .../imputation-sim-audit-wf_37826a92-76e.js, resumeFromRunId: wf_37826a92-76e})`.
