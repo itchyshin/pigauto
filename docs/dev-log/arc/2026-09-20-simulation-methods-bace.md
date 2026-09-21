@@ -139,14 +139,13 @@ as interchangeable, and coverage is never called better without the standardised
 `Rphylopars::phylopars(model = "BM", phylo_correlated = TRUE,
 pheno_correlated = TRUE, REML = TRUE)` fitted jointly to the continuous-family columns, with counts
 and proportions transformed and back-transformed. `castor::hsp_mk_model` per discrete trait, with
-equal rates for binary and categorical traits and a stepwise model for the ordinal trait. The evolutionary model is left at
-Rphylopars' default, `model = "BM"`, for every cell, including the cells whose data were generated
-with Pagel's lambda below 1. This is deliberate, and it costs the arm accuracy: at
-lambda = 0.3, n = 100 the frequentist stack reaches a z-RMSE of 1.25 against a mean floor of 1.01,
-meaning it does worse than ignoring the phylogeny, because it extrapolates a phylogenetic signal the
-data do not contain. BACE, which estimates its own signal parameter, reaches 1.10 on the same cells.
-Rphylopars does offer `model = "lambda"`, and a reader should take these results as describing the
-package at its documented default rather than the best the package can do. Counts go
+equal rates for binary and categorical traits and a stepwise model for the ordinal trait. The evolutionary model is the one setting on which this arm is reported twice.
+Rphylopars' documented default is `model = "BM"`, which pins the phylogenetic signal at its maximum
+even in cells whose data were generated with Pagel's lambda below 1. Because a reader could
+reasonably take either the default or the signal-estimating variant as the thing being compared,
+both were run on every cell as separate arms: `freq` with `model = "BM"` and `freq_lambda` with
+`model = "lambda"`, which estimates the signal from the data. The difference is large enough that it
+changes the conclusion, and it is reported in full below rather than left as a caveat. Counts go
 through `phylolm::phyloglm(method = "poisson_GEE")` rather than a log1p Gaussian fit, because
 Rphylopars on log1p counts fell below the mean floor at n = 100 in the feasibility test; its interval
 is a marginal Poisson band, the same for every masked cell of that trait, and the results table says
@@ -175,9 +174,9 @@ parameter is expected.
 
 At lambda = 1 with fixed population thresholds, a discrete trait can come out monomorphic among the
 observed cells: maximum phylogenetic signal plus a threshold cut can leave every observed species on
-one side. Measured over the core slice, this happened in 69 replicates, all at lambda = 1, spread
-over n = 100 (32), n = 300 (29) and n = 1000 (8), about 6% of the lambda = 1 replicates and none
-anywhere else.
+one side. Measured over the complete core slice, this happened in 77 replicates, all at lambda = 1,
+spread over n = 100 (32), n = 300 (29) and n = 1000 (16), about 6% of the lambda = 1 replicates and
+none anywhere else.
 
 castor cannot fit an Mk model to a trait with one observed state, and reports so. That is a real
 property of the frequentist stack and is reported as a failure, scored at the floor. pigauto's
@@ -222,8 +221,136 @@ with their per-cell seed and failure tables are committed beside them.
 Compute ran on a 384-core shared server and on three Digital Research Alliance of Canada clusters,
 one process per cell, with BLAS threads pinned to one.
 
-## Results placeholder
+## Results
 
-Filled from `script/campaign_sim_results/summary.csv` and `paired.csv` once the campaign completes.
-Every number here must carry its regime: DGP, n, lambda, rho, mechanism, arm, replicate count and
-MCSE.
+All figures below come from the core slice: types_mixed, Brownian motion, MCAR at 0.30, no
+covariates, lambda in {0.3, 0.7, 1.0}, rho in {0, 0.5}, n in {100, 300, 1000}. Rho is pooled because
+it moved nothing of substance. The frequentist arms ran 200 replicates per cell and BACE ran 100.
+Monte Carlo standard errors are in parentheses. Continuous-family figures pool the two continuous
+traits, the count and the proportion; discrete-family figures pool the binary, ordinal and
+three-level categorical traits.
+
+### Accuracy on the continuous family, z-RMSE
+
+| n | lambda | BACE | freq (BM) | freq_lambda | floor |
+|---|---|---|---|---|---|
+| 100 | 0.3 | 1.015 (0.0104) | 1.161 (0.0076) | 0.913 (0.0056) | 1.014 |
+| 100 | 0.7 | 0.879 (0.0110) | 0.985 (0.0073) | 0.801 (0.0053) | 1.015 |
+| 100 | 1.0 | 0.801 (0.0133) | 0.585 (0.0066) | 0.566 (0.0062) | 1.018 |
+| 300 | 0.3 | 0.923 (0.0057) | 1.140 (0.0096) | 0.888 (0.0036) | 1.007 |
+| 300 | 0.7 | 0.777 (0.0058) | 0.972 (0.0078) | 0.778 (0.0035) | 1.004 |
+| 300 | 1.0 | 0.737 (0.0127) | 0.531 (0.0058) | 0.515 (0.0054) | 1.008 |
+| 1000 | 0.3 | 0.892 (0.0036) | 1.106 (0.0043) | 0.878 (0.0023) | 1.006 |
+| 1000 | 0.7 | 0.743 (0.0044) | 0.943 (0.0048) | 0.766 (0.0030) | 1.004 |
+| 1000 | 1.0 | 0.659 (0.0132) | 0.475 (0.0048) | 0.464 (0.0044) | 1.002 |
+
+The primary contrast, stated in advance, is BACE against the frequentist stack on z-RMSE. It has two
+answers, and which one is reported depends entirely on how the frequentist stack is specified.
+
+Against `freq`, the documented default, BACE wins wherever the phylogenetic signal is below its
+maximum. Paired differences, negative favouring BACE: 0.134 (0.0116) at n = 100 and lambda = 0.3,
+0.234 (0.0169) at n = 300, 0.205 (0.0045) at n = 1000, with smaller but same-signed differences at
+lambda = 0.7. At lambda = 1 the sign reverses and BACE loses by 0.168 to 0.218, because Brownian
+motion is then the true process and the default specification is correct.
+
+Against `freq_lambda`, which estimates the same signal parameter BACE estimates, the advantage
+disappears. At lambda = 0.3 freq_lambda is ahead by 0.10 at n = 100 and by 0.03 at n = 300 and
+n = 1000. At lambda = 0.7 the two are within one to three MCSE of each other in both directions. At
+lambda = 1 freq_lambda is ahead by 0.20 to 0.24.
+
+The honest summary is that BACE's apparent advantage on continuous traits is an advantage over a
+misspecified competitor rather than over the frequentist approach. Once both estimate the signal,
+the two are close at low and moderate signal and BACE is behind at high signal.
+
+Note also that `freq` at lambda = 0.3 sits above the mean floor at every n, between 1.106 and 1.161
+against a floor near 1.01. Used at its default, the stack does worse than ignoring the phylogeny.
+`freq_lambda` sits below the floor in every cell.
+
+### Accuracy on the discrete family
+
+| n | lambda | BACE | freq (BM) | freq_lambda | floor |
+|---|---|---|---|---|---|
+| 100 | 0.3 | 0.528 (0.0043) | 0.421 (0.0036) | 0.421 (0.0035) | 0.458 |
+| 100 | 0.7 | 0.641 (0.0059) | 0.563 (0.0054) | 0.568 (0.0053) | 0.545 |
+| 100 | 1.0 | 0.767 (0.0075) | 0.901 (0.0030) | 0.901 (0.0030) | 0.630 |
+| 300 | 0.3 | 0.565 (0.0031) | 0.414 (0.0028) | 0.414 (0.0028) | 0.472 |
+| 300 | 0.7 | 0.687 (0.0040) | 0.560 (0.0049) | 0.562 (0.0049) | 0.557 |
+| 300 | 1.0 | 0.794 (0.0076) | 0.938 (0.0023) | 0.938 (0.0023) | 0.638 |
+| 1000 | 0.3 | 0.587 (0.0025) | 0.422 (0.0025) | 0.422 (0.0025) | 0.481 |
+| 1000 | 0.7 | 0.705 (0.0039) | 0.575 (0.0047) | 0.574 (0.0047) | 0.562 |
+| 1000 | 1.0 | 0.840 (0.0076) | 0.964 (0.0019) | 0.964 (0.0019) | 0.636 |
+
+This is where BACE has a real and substantial advantage, and it is the opposite pattern to the
+continuous one. At lambda = 0.3 BACE is ahead by 10.7, 15.1 and 16.5 accuracy points at n = 100, 300
+and 1000, and the frequentist stack is below the mode floor in every one of those cells. At
+lambda = 0.7 BACE is ahead by 7 to 13 points. At lambda = 1 the frequentist stack is ahead by 12 to
+14 points, because `castor`'s Mk model recovers a strongly conserved discrete trait very well.
+
+The two frequentist arms are identical on discrete traits to within 0.5 of a point, as they must be:
+the `model` argument changes only the Rphylopars fit on the continuous family, and the discrete path
+through `castor` is shared. This serves as an internal check that the two arms differ only where
+intended.
+
+### Interval coverage and interval score
+
+| n | lambda | BACE | freq (BM) | freq_lambda |
+|---|---|---|---|---|
+| 100 | 0.3 | 0.803 | 0.799 | 0.881 |
+| 100 | 0.7 | 0.813 | 0.807 | 0.887 |
+| 100 | 1.0 | 0.871 | 0.883 | 0.885 |
+| 300 | 0.3 | 0.824 | 0.846 | 0.894 |
+| 300 | 0.7 | 0.833 | 0.853 | 0.902 |
+| 300 | 1.0 | 0.879 | 0.902 | 0.899 |
+| 1000 | 0.3 | 0.837 | 0.867 | 0.897 |
+| 1000 | 0.7 | 0.842 | 0.875 | 0.906 |
+| 1000 | 1.0 | 0.885 | 0.908 | 0.902 |
+
+No arm reaches the nominal 0.95 anywhere in the core slice. That is the second finding of this study
+and it applies to the Bayesian and the frequentist route alike. Coverage improves with n and with
+lambda for every arm, which is the signature of intervals that are too narrow because they condition
+on a fitted model rather than integrating over it. `freq_lambda` is closest to nominal across the
+board, between 0.881 and 0.906, and BACE is furthest away at low signal, at 0.803 where nominal is
+0.95. At 200 replicates the coverage MCSE is 1.5 points and at BACE's 100 replicates it is 2.2
+points, so these gaps are many MCSE wide.
+
+Interval score, which penalises width and non-coverage together and is the one-number comparison,
+lower being better:
+
+| n | lambda | BACE | freq (BM) | freq_lambda |
+|---|---|---|---|---|
+| 100 | 0.3 | 6.78 | 9.89 | 5.46 |
+| 100 | 0.7 | 5.66 | 8.21 | 4.77 |
+| 100 | 1.0 | 2.74 | 3.63 | 3.44 |
+| 300 | 0.3 | 5.87 | 9.12 | 5.07 |
+| 300 | 0.7 | 4.72 | 7.70 | 4.39 |
+| 300 | 1.0 | 1.98 | 3.27 | 2.99 |
+| 1000 | 0.3 | 5.45 | 8.84 | 5.03 |
+| 1000 | 0.7 | 4.40 | 7.54 | 4.41 |
+| 1000 | 1.0 | 1.74 | 3.22 | 2.91 |
+
+BACE's intervals are better than either frequentist arm's at lambda = 1 and are beaten by
+`freq_lambda` at lambda = 0.3 and 0.7. The default `freq` intervals are worst everywhere.
+
+### Failures and convergence
+
+Failed fits are scored at the mean or mode floor and are never dropped, so every figure above
+includes them.
+
+| arm | n = 100 | n = 300 | n = 1000 |
+|---|---|---|---|
+| BACE | 112 of 600 (18.7%) | 113 of 600 (18.8%) | 96 of 600 (16.0%) |
+| freq | 32 of 1200 (2.7%) | 29 of 1200 (2.4%) | 16 of 1200 (1.3%) |
+| freq_lambda | 32 of 1200 (2.7%) | 29 of 1200 (2.4%) | 16 of 1200 (1.3%) |
+
+BACE fails on roughly one replicate in six, with "mixed model equations singular" the dominant
+message, and the rate barely improves with sample size. The frequentist failures are the
+monomorphic-discrete case described above and are confined to lambda = 1. This difference in
+robustness is a practical cost of the Bayesian route that a user will meet, and it is reported here
+rather than hidden by dropping the failed cells.
+
+### What this study does not cover
+
+These results describe one tree shape, one set of seven traits, MCAR missingness at 0.30, and no
+covariates. The factorial extension varying the evolutionary model, the missingness mechanism and
+the missing fraction is reported separately. Nothing here speaks to trees larger than 1000 tips, to
+multiple observations per species, or to missingness that depends on the missing value itself.
