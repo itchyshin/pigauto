@@ -102,11 +102,12 @@
   var D = JSON.parse(document.getElementById('simdata').textContent);
   var A = JSON.parse(document.getElementById('avodata').textContent);
   var ARM_LABEL = {
-    freq:'1 Frequentist stack', bace:'2 BACE', gnn_off:'3a pigauto GNN off',
+    freq:'1 Frequentist (BM, lambda = 1)', freq_lambda:'1b Frequentist (lambda estimated)',
+    bace:'2 BACE', gnn_off:'3a pigauto GNN off',
     gnn_off_rphylopars:'3b pigauto, Rphylopars solver', gnn_on:'4 pigauto GNN on',
     gnn_on_full:'4b GNN on, full baseline', floor:'Mean / mode floor'
   };
-  var ORDER = ['freq','bace','gnn_off','gnn_off_rphylopars','gnn_on','gnn_on_full','floor'];
+  var ORDER = ['freq','freq_lambda','bace','gnn_off','gnn_off_rphylopars','gnn_on','gnn_on_full','floor'];
   var tab = 'dan';
   var uniq = function(k){ var s={}; D.pooled.forEach(function(r){ s[r[k]]=1; });
     return Object.keys(s).sort(function(a,b){ return (+a||a) > (+b||b) ? 1 : -1; }); };
@@ -211,8 +212,8 @@
 
   function render(){
     var p = document.getElementById('panel'), h = '';
-    var two = ['freq','bace','floor'];
-    var four = ['freq','bace','gnn_off','gnn_off_rphylopars','gnn_on','floor'];
+    var two = ['freq','freq_lambda','bace','floor'];
+    var four = ['freq','freq_lambda','bace','gnn_off','gnn_off_rphylopars','gnn_on','floor'];
     document.querySelector('.filters').style.display = (tab==='avonet') ? 'none' : '';
     if(tab==='avonet'){
       p.innerHTML = avonetPanel(); return;
