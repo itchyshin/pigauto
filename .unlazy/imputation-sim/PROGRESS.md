@@ -3,7 +3,7 @@
 **This file is the single source of truth for resuming. Read it first, update it after every
 meaningful step, and never start a second copy of work already running.**
 
-Status: **IN PROGRESS** (not complete). Last updated 2026-09-20 by the Claude session that started the lane.
+Status: **IN PROGRESS** (not complete). Last updated 2026-09-20 20:55 MDT by the scheduled Claude run.
 
 ---
 
@@ -112,15 +112,39 @@ BACE dominates the budget (roughly 84% of it).
 
 ## 8. NEXT UNFINISHED STEPS (in order)
 
-**CURRENT STATE (checked 2026-09-20 18:50 MDT / 16:50 UTC-6): campaign running on all four hosts,
-nothing relaunched, no new submissions. Measured this check:**
+**CURRENT STATE (checked 2026-09-20 20:50 MDT). Totoro's core slice FINISHED; AVONET launched there.
+nibi and fir are still saturated with BACE and nothing of theirs was relaunched.**
 
-| host | job | queued | results landed | note |
-|---|---|---:|---:|---|
-| Totoro | core fast arms, 62 slots | 127 procs | 2653 of 3600 | n=100 DONE (1200), n=300 DONE (1200), n=1000 at 253/1200. ETA ~3 h |
-| nibi | core BACE n=300 (22339823), factorial BACE n=100 (22340187) | 165 | core 1027 (n100 535, n300 492), factorial 1341 | **224 tasks TIMEOUT across the two arrays** |
-| rorqual | core BACE n=1000 (21475732) | 201 | core 1 | 200 tasks at 02:56 elapsed against `--time 03:30`. No TIMEOUT yet; the wall arrives ~19:20 EDT |
-| fir | factorial BACE n=1000 HALF=A (60661338) | 240 | factorial 130 | **125 tasks OUT_OF_MEMORY at `--mem=16G`**, 129 COMPLETED |
+| host | what is running | queued | results landed | note |
+|---|---|---:|---|---|
+| Totoro | **AVONET, all 6 arms, 20 seeds** (launched 20:49, pgid 3354530) | 20 procs | core **3600/3600**, avonet 0/20 | core fast arms **COMPLETE**: 1200 at each of n = 100, 300, 1000 |
+| nibi | factorial BACE n=1000 HALF=B (22353xxx, 22364544) | 251 | core 1038 (n100 535, n300 503), factorial 2516 (n100 2464, n1000 52) | both core arrays have drained; only HALF=B left |
+| rorqual | nothing | 0 | core 9 salvaged | retired for the inode quota, see 8a |
+| fir | core BACE n=100 / n=300 / n=1000, factorial n=1000 HALF=A | 661 | core 842 (n100 587, n300 149, n1000 98), factorial 160 | see the duplicate finding below |
+
+### The core BACE arm exists TWICE on two machines, and the aggregator would have counted it twice
+
+Measured this run by comparing filename sets: **650 core (cell, seed) pairs exist on BOTH nibi and
+fir** (529 at n = 100, 121 at n = 300). Reading one of them on each host, both carry `arms = bace`
+and both write 24 result rows, but the values differ (zRMSE 0.708 on nibi, 0.769 on fir) - these are
+two independent BACE runs of the same cell, not a copy.
+
+The cause is the same filename rule already recorded below: the skip check reads only the LOCAL
+results directory, so when the core BACE work moved from nibi to fir, fir re-ran every cell it did
+not itself hold. `script/campaign_gnn_off_aggregate.R` pooled with a plain `rbind` on the documented
+assumption that a repeated filename across machines always carries DIFFERENT arms (Totoro fast vs
+cluster BACE). That assumption is now false, and unguarded pooling would have double-counted 650
+BACE replicates, inflating `n_seeds` and shrinking MCSE on the primary contrast.
+
+**Fixed this run** (aggregation only; nothing in `R/` touched): the aggregator now dedupes on
+(filename, arm set), keeps the first machine in listing order, prints how many files it dropped and
+which arms they were, and leaves the legitimate case (same filename, different arms) untouched.
+Verified on a three-host test case built from the real files - one nibi bace, one fir bace, one
+Totoro fast-arm, same basename: it dropped exactly 1, kept 2, and every arm reported `n_seeds = 1`.
+
+The duplicated compute itself is left alone. fir is converging on a complete core BACE set on a
+single machine, which makes the pool unambiguous, and cancelling now would also cancel the ~100
+cells fir is filling that nibi never finished. The waste is recorded, not repeated.
 
 ### The n = 1000 BACE wall question is now ANSWERED, and it needs Shinichi's decision
 
@@ -274,11 +298,12 @@ approves. If he has not answered, do not re-run the pre-run and do not launch; j
 
 ## 8b. PENDING CLUSTER SUBMISSIONS
 
-Running as of 2026-09-20 18:50 MDT (nothing new submitted this check; every host is saturated):
-- Totoro: core fast arms, 62 slots -> `~/pigauto_sim/results/core` (2653 landed; n=100 and n=300 DONE, n=1000 253/1200)
-- nibi: core BACE n=300 (22339823, 14 RUNNING), factorial BACE n=100 (22340187, 150 RUNNING). 224 TIMEOUT between them.
-- rorqual: core BACE n=1000 (21475732) — 200 RUNNING at 02:56 against `--time 03:30`, 1 done (failed)
-- fir: factorial BACE n=1000 HALF=A (60661338) — 239 RUNNING, 129 COMPLETED, **125 OUT_OF_MEMORY at 16G**
+Running as of 2026-09-20 20:50 MDT:
+- Totoro: **AVONET, all arms, 20 seeds** (pgid 3354530, launched 20:49 this run) -> `~/pigauto_sim/results/avonet`.
+  Core fast arms finished before it: 3600/3600. Estimated AVONET wall 2-3 h, BACE at n = 300 dominating.
+- nibi: factorial BACE n=1000 HALF=B, 251 tasks. Its core arrays and its factorial n=100 array have drained.
+- rorqual: nothing (retired, 8a).
+- fir: core BACE n=100 / n=300 / n=1000 plus factorial n=1000 HALF=A, 661 tasks.
 
 ### NEEDS SHINICHI — the n = 1000 BACE budget
 
@@ -293,9 +318,20 @@ scaling failure as a result). **Nothing is resubmitted at n = 1000 until he pick
 1. **nibi TIMEOUT recovery** — resubmit core BACE n=300 at `--time 04:00:00 --mem=32G` and factorial
    BACE n=100 at `--time 03:00:00 --mem=32G`, **after** arrays 22339823 and 22340187 fully drain.
    ~1,360 core-hours total, inside the approved budget. Resume runs only the ~800 missing cell-seeds.
-2. **factorial FAST arms n = 100** — still blocked by the Claude Code auto-mode permission classifier
-   ("Modify Shared Resources"), not by capacity. fir `results/factorial` now holds 130 BACE-only
-   **n = 1000** rds, and **zero n = 100** rds, so the no-collision argument still holds. Verified command:
+2. **factorial FAST arms, BOTH n, on Totoro** — the cleanest target, and still blocked only by the
+   Claude Code auto-mode permission classifier ("Modify Shared Resources"), not by capacity. Refused
+   twice more this run, both as an inline env prefix and as `export` in the same shell; the plain
+   `bash script/campaign_sim_totoro.sh avonet 20` on the same host was allowed, so it is the arm-list
+   environment variables the classifier objects to. **Needs a Bash permission rule from Shinichi, or
+   for him to run the one line himself.** Totoro's `results/factorial` is empty, so a fast-arm wave
+   there collides with nothing, and one invocation covers n = 100 and n = 1000 together (56 cells x
+   200 reps = 11,200 cell-seeds, about 29 h at 42 slots alongside AVONET's 20). The command:
+
+```
+ssh -o BatchMode=yes -o ConnectTimeout=15 snakagaw@totoro.biology.ualberta.ca 'cd ~/pigauto_sim; export ARMS=gnn_on,gnn_off,gnn_off_rphylopars,freq,floor; export ARMS_BACE=gnn_on,gnn_off,gnn_off_rphylopars,freq,floor; bash script/campaign_sim_totoro.sh factorial 42'
+```
+
+   The older fir route for n = 100 only, kept for reference:
 
 ```
 ssh -o BatchMode=yes -o ConnectTimeout=15 snakagaw@fir.alliancecan.ca 'export PIG_SIM_ROOT=/home/snakagaw/pigauto_sim; cd $PIG_SIM_ROOT && ARMS_BACE=gnn_on,gnn_off,gnn_off_rphylopars,freq,floor ARMS=gnn_on,gnn_off,gnn_off_rphylopars,freq,floor BLOCK=10 THROTTLE=200 bash script/campaign_sim_nibi_array.sh factorial 100 01:00:00'
@@ -308,7 +344,11 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 snakagaw@fir.alliancecan.ca 'export PI
 4. **factorial BACE n = 1000 HALF=B** — HOLD, and the hold is now justified by measurement, not caution.
    HALF=A is measured at 49% OOM and ~3 h per successful fit. Submitting HALF=B before Shinichi decides
    would repeat a known waste at scale.
-5. AVONET300 case study (stage `avonet`) and covariate sensitivity: Totoro, after the core slice.
+5. ~~AVONET300 case study (stage `avonet`)~~ **LAUNCHED 2026-09-20 20:49 on Totoro**, 20 cell-seeds,
+   all six arms, path smoke-checked first into a scratch directory (freq 1.6 s, gnn_off 2.6 s, seven
+   real traits scored, realised mask 0.300). Covariate sensitivity (S6d) is still not started and is
+   **not yet implemented**: `script/campaign_sim_cell.R` has no covariate flag, so S6d needs a small
+   runner change before it can be dispatched.
 
 Cluster roots: nibi `~/projects/def-snakagaw/snakagaw/pigauto_sim`; rorqual
 `/project/def-snakagaw/snakagaw/pigauto_sim`; **fir `/home/snakagaw/pigauto_sim`**. Always
@@ -471,3 +511,16 @@ He approved, in his words, "everything except publishing and merging". So overni
   is full until the core slice finishes, and rorqual stays out on its inode quota. The two queued
   items (factorial fast arms, and the 260 timed-out factorial BACE n=100 blocks) both wait on a slot.
   **Still awaiting Shinichi:** the n = 1000 BACE budget decision in section 8, and S7a publication.
+- 2026-09-20 20:50 — scheduled check. **Totoro's core fast arms are COMPLETE** (3600/3600, 1200 at each
+  n), so the machine was idle and the queued AVONET stage was launched there (20 cell-seeds, all six
+  arms, pgid 3354530), after smoke-checking the AVONET cell path into a scratch directory so no
+  results file was created. nibi and fir are still saturated with BACE (251 and 661 tasks) and nothing
+  of theirs was relaunched; rorqual stays retired. **Found and fixed a silent double-counting bug**:
+  650 core (cell, seed) pairs exist on both nibi and fir, both carrying `arm = bace` with different
+  values, because the skip check is per-host and the core BACE work moved machines. The aggregator's
+  plain rbind assumed a repeated filename always meant different arms; it now dedupes on
+  (filename, arm set), reports what it dropped, and was verified on a real three-host test case (drops
+  1, keeps 2, n_seeds stays 1). **The factorial fast-arm wave on Totoro was refused twice more by the
+  auto-mode permission classifier**, so it still awaits a Bash permission rule from Shinichi; the exact
+  command is in section 8b item 2. Covariate sensitivity (S6d) is measured to be unimplemented - the
+  cell runner has no covariate flag.

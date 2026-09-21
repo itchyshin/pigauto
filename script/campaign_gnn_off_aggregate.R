@@ -19,7 +19,21 @@ fs <- list.files(res_dir, pattern = "\\.rds$", full.names = TRUE, recursive = TR
 fs <- fs[!grepl("_smoke", fs)]
 cells <- lapply(fs, function(f) tryCatch(readRDS(f), error = function(e) NULL))
 bad <- sum(vapply(cells, is.null, TRUE))
-cells <- cells[!vapply(cells, is.null, TRUE)]
+keep <- !vapply(cells, is.null, TRUE)
+fs <- fs[keep]; cells <- cells[keep]
+# Two machines can also hold the SAME (cell, seed) carrying the SAME arm, which rbind would count
+# twice: measured 2026-09-20, 650 core cell-seeds existed on both nibi and fir, both arm = bace,
+# with different values (a BACE re-run, not a copy). Dedupe on (filename, arm set) keeping the
+# first host in listing order, and say how many were dropped. The legitimate cross-host case --
+# same filename, DIFFERENT arms -- has a different key and is untouched.
+dup_key <- vapply(seq_along(fs), function(i)
+  paste(basename(fs[i]), paste(sort(as.character(cells[[i]]$arms)), collapse = ","), sep = "|"), "")
+dup <- duplicated(dup_key)
+if (any(dup)) {
+  cat(sprintf("dropped %d duplicate (cell, seed, arm-set) files present on more than one machine\n", sum(dup)))
+  print(utils::head(sort(table(sub("^[^|]*[|]", "", dup_key[dup])), decreasing = TRUE), 5))
+  fs <- fs[!dup]; cells <- cells[!dup]
+}
 cat(length(cells), "cells read", if (bad) sprintf("(%d unreadable, skipped)", bad) else "", "\n")
 if (!length(cells)) stop("no readable cells under ", res_dir)
 tab <- do.call(rbind, lapply(cells, function(c) { r <- c$results; if (is.null(r) || !nrow(r)) return(NULL); r$dgp <- c$dgp; r$n <- c$n; r$seed <- c$seed; r }))
