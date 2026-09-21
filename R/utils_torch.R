@@ -149,10 +149,11 @@ compute_mixed_loss <- function(pred, truth, corrupt_mask, trait_map) {
       n_corrupt <- as.numeric(species_mask$sum()$item())
       if (n_corrupt == 0) next
 
-      # logits: (n_corrupt x K)
-      logits_corrupt <- pred[species_mask, ][, lc]
+      # logits: (n_corrupt x K). drop = FALSE keeps the K axis when K == 1
+      # (a single-level factor), where torch would otherwise return a vector.
+      logits_corrupt <- pred[species_mask, ][, lc, drop = FALSE]
       # truth one-hot: (n_corrupt x K) -> class indices
-      truth_onehot <- truth[species_mask, ][, lc]
+      truth_onehot <- truth[species_mask, ][, lc, drop = FALSE]
       targets <- truth_onehot$argmax(dim = 2L)
 
       loss_t <- torch::nnf_cross_entropy(logits_corrupt, targets)
@@ -231,8 +232,8 @@ composite_val_loss <- function(pred, truth, val_mask, trait_map) {
       species_mask <- val_mask[, lc[1]]
       n_val <- as.numeric(species_mask$sum()$item())
       if (n_val == 0) next
-      logits_val <- pred[species_mask, ][, lc]
-      truth_oh   <- truth[species_mask, ][, lc]
+      logits_val <- pred[species_mask, ][, lc, drop = FALSE]
+      truth_oh   <- truth[species_mask, ][, lc, drop = FALSE]
       targets    <- truth_oh$argmax(dim = 2L)
       l <- as.numeric(torch::nnf_cross_entropy(logits_val, targets)$item())
       losses <- c(losses, l)
