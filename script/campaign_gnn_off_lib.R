@@ -22,8 +22,9 @@
 # = tree height for every tip), NOT derived from pigauto::simulate_non_bm (that function simulates
 # trait VALUES under OU, not a reusable correlation matrix) -- UNVERIFIED against a first-principles
 # OU tip-covariance derivation; flagged in the report.
-sim_latents <- function(tree, K, lambda = 1, rho = 0, evo = c("BM", "OU"), ou_alpha = 2,
-                        driver_col = NULL, rho_driver = 0.35) {
+# Tip correlation under lambda-scaled BM (or the stationary OU approximation). Factored out of
+# sim_latents() so the S6d covariate noise can be drawn with the SAME phylogenetic structure.
+phylo_corr <- function(tree, lambda = 1, evo = c("BM", "OU"), ou_alpha = 2) {
   evo <- match.arg(evo)
   sp <- tree$tip.label; n <- length(sp)
   V <- cov2cor(ape::vcv(tree))[sp, sp]
@@ -33,6 +34,14 @@ sim_latents <- function(tree, K, lambda = 1, rho = 0, evo = c("BM", "OU"), ou_al
   }
   V_lambda <- lambda * V + (1 - lambda) * diag(n)
   dimnames(V_lambda) <- list(sp, sp)
+  V_lambda
+}
+
+sim_latents <- function(tree, K, lambda = 1, rho = 0, evo = c("BM", "OU"), ou_alpha = 2,
+                        driver_col = NULL, rho_driver = 0.35) {
+  evo <- match.arg(evo)
+  sp <- tree$tip.label; n <- length(sp)
+  V_lambda <- phylo_corr(tree, lambda, evo, ou_alpha)
   Sigma_rho <- matrix(rho, K, K); diag(Sigma_rho) <- 1
   # The MAR driver keeps its own correlation to the scored traits, independent of rho. Without this,
   # a rho = 0 cell makes the driver independent of everything it is supposed to predict, and "MAR"
@@ -74,7 +83,50 @@ threshold_categorical <- function(l, thresholds, labels) {
 }
 
 # ---- data ---------------------------------------------------------------------------------
-make_dgp <- function(dgp, n, seed, lambda = 1, rho = 0, evo = NULL, thresholds = "sample", driver = FALSE) {
+# S6d covariates:  cov_j = rho_cov * L[, target_j] + sqrt(1 - rho_cov^2) * e_j,  where e_j is an
+# INDEPENDENT column with the same phylogenetic structure as the traits. Unit variance, exact target
+# correlation rho_cov, positive definite for any |rho_cov| < 1 by construction.
+#
+# Two things this construction deliberately gets right:
+#
+# (a) It is built AFTER the traits are drawn, from its own rnorm() call, so it does not widen the
+#     shared Z and does not shift the RNG stream that rpois()/rnorm() read for the count and
+#     proportion traits. A covsens cell therefore has traits BYTE-IDENTICAL to the core cell at the
+#     same seed, and covsens-vs-core is a paired comparison on the same data rather than two
+#     independent draws. (Measured before this was fixed: widening Z moved 6 of 60 counts and the
+#     proportions by up to 0.24.)
+# (b) Imposing the covariate correlations directly on Sigma_rho instead -- the obvious first attempt
+#     -- is NOT positive definite at rho = 0: two covariates each correlated r with seven mutually
+#     independent traits imply a mutual correlation of 7r^2, so pinning them to 0 breaks the matrix
+#     (measured: min eigenvalue -0.32 at r = 0.25, before rho_driver is even applied).
+build_covs <- function(tree, L, target_cols, n_cov, rho_cov, lambda, evo, ou_alpha = 2) {
+  n_cov <- as.integer(n_cov %||% 0L)
+  if (n_cov < 1L) return(NULL)
+  stopifnot(rho_cov > -1, rho_cov < 1)
+  sp <- tree$tip.label; n <- length(sp)
+  E <- t(chol(phylo_corr(tree, lambda, evo, ou_alpha))) %*% matrix(stats::rnorm(n * n_cov), n, n_cov)
+  tg <- rep_len(target_cols, n_cov)
+  m <- vapply(seq_len(n_cov), function(j)
+    rho_cov * L[, tg[j]] + sqrt(1 - rho_cov^2) * E[, j], numeric(n))
+  m <- as.data.frame(m)
+  names(m) <- paste0("cov", seq_len(n_cov)); rownames(m) <- sp
+  m
+}
+
+# n_cov / rho_cov drive the S6d covariate-sensitivity slice. n_cov = 0 (the default) reproduces the
+# old RNG stream and the old outputs EXACTLY -- build_covs() returns NULL and draws nothing -- so
+# every core / factorial / avonet result already on disk stays valid.
+#
+# Construction (the plan specifies "2 covariates" and nothing else; this is the choice made here and
+# it is a single flag to change): covariate j is a noisy reading of ONE trait's latent,
+#   cov_j = rho_cov * L[, target_j] + sqrt(1 - rho_cov^2) * L[, cov_col_j],
+# with the targets chosen as the first continuous trait and the count trait -- the two places the
+# frequentist arm can actually put a covariate (castor's Mk model takes none). Consequences, measured
+# on iid tips at rho_cov = 0.6: corr(cov_j, its target) = 0.600 exactly at every rho; corr(cov1, cov2)
+# is 0 at rho = 0 and 0.18 at rho = 0.5, i.e. the covariates are related only insofar as the traits
+# are, rather than by an imposed constant; each covariate is itself phylogenetically structured.
+make_dgp <- function(dgp, n, seed, lambda = 1, rho = 0, evo = NULL, thresholds = "sample", driver = FALSE,
+                     n_cov = 0L, rho_cov = 0.6) {
   set.seed(seed)
   if (dgp == "avonet") {
     e <- new.env(); utils::data("avonet300", package = "pigauto", envir = e)
@@ -162,7 +214,10 @@ make_dgp <- function(dgp, n, seed, lambda = 1, rho = 0, evo = NULL, thresholds =
       cat3 = threshold_categorical(L[, 7], thresholds, c("A", "B", "C")))
     df$prp <- pmin(pmax(df$prp, 1e-4), 1 - 1e-4)
     if (driver) df$d1 <- L[, 8]
-    return(list(df = df, tree = tree, trait_types = c(prp = "proportion"),
+    # targets: c1 (latent 1, continuous) and cnt (latent 3, the count trait)
+    covs <- build_covs(tree, L, target_cols = c(1L, 3L), n_cov = n_cov, rho_cov = rho_cov,
+                       lambda = lambda, evo = evo_use)
+    return(list(df = df, tree = tree, trait_types = c(prp = "proportion"), covs = covs,
                 L = L, lambda = lambda, rho = rho, evo = evo_use, thresholds = thresholds))
   }
   # bm_mixed / ou_mixed under the corrected design: same trait mix as before (4 continuous + binary
@@ -173,15 +228,21 @@ make_dgp <- function(dgp, n, seed, lambda = 1, rho = 0, evo = NULL, thresholds =
                     bin = factor(ifelse(threshold_binary(L[, 5], thresholds), "yes", "no")),
                     cat3 = threshold_categorical(L[, 6], thresholds, c("A", "B", "C")))
   if (driver) df$d1 <- L[, 7]
-  list(df = df, tree = tree, L = L, lambda = lambda, rho = rho, evo = evo_use, thresholds = thresholds)
+  # no count trait in this branch: both covariates target continuous latents
+  covs <- build_covs(tree, L, target_cols = c(1L, 3L), n_cov = n_cov, rho_cov = rho_cov,
+                     lambda = lambda, evo = evo_use)
+  list(df = df, tree = tree, covs = covs, L = L, lambda = lambda, rho = rho, evo = evo_use,
+       thresholds = thresholds)
 }
 
 # Build the cell: truth, tree, the seeded mask, df_miss. mask + set.seed(seed + 1000L) convention
 # unchanged. miss = "mcar" with all defaults reproduces the OLD code exactly (mask_cols == names(truth)
 # whenever there is no "d1" driver column, which is the case unless driver = TRUE).
 make_cell <- function(dgp, n, seed, miss_frac = 0.30, miss = "mcar", lambda = 1, rho = 0,
-                       evo = NULL, thresholds = "sample", driver = FALSE) {
-  d <- make_dgp(dgp, n, seed, lambda = lambda, rho = rho, evo = evo, thresholds = thresholds, driver = driver)
+                       evo = NULL, thresholds = "sample", driver = FALSE,
+                       n_cov = 0L, rho_cov = 0.6) {
+  d <- make_dgp(dgp, n, seed, lambda = lambda, rho = rho, evo = evo, thresholds = thresholds, driver = driver,
+                n_cov = n_cov, rho_cov = rho_cov)
   truth <- d$df; tree <- d$tree
   set.seed(seed + 1000L)
   mask <- matrix(FALSE, nrow(truth), ncol(truth), dimnames = dimnames(truth))
@@ -243,7 +304,9 @@ make_cell <- function(dgp, n, seed, miss_frac = 0.30, miss = "mcar", lambda = 1,
   }
 
   df_miss <- truth; for (v in names(truth)) df_miss[mask[, v], v] <- NA
-  list(truth = truth, tree = tree, mask = mask, df_miss = df_miss,
+  # Covariates are predictors, never targets: they live outside `truth`, so they are never masked by
+  # the loop above and never enter score_arm()'s `for (v in names(truth))`.
+  list(truth = truth, tree = tree, mask = mask, df_miss = df_miss, covs = d$covs,
        cont_traits = names(truth)[vapply(truth, is.numeric, logical(1))],
        trait_types = d$trait_types, realised_frac = realised_frac, mechanism = miss, L = d$L)
 }
@@ -347,9 +410,22 @@ score_arm <- function(arm, completed, lower = NULL, upper = NULL, prob = NULL) {
 # diagonal on top would double-count residual variance. Verified by comparing empirical coverage in
 # gate G6 (frequentist-stack coverage lands near 0.95, not badly over-covered) rather than by reading
 # Rphylopars' internals line-by-line -- flagged UNVERIFIED against Rphylopars source.
+# covs (S6d): a fully observed data.frame of predictors, rownames matching df_miss, or NULL. Where it
+# enters, per the plan's "arm 1 = phylolm/phyloglm/castor variant":
+#   continuous  Rphylopars has no fixed-effect interface, so each trait is residualised on the
+#               covariates by OLS over its OBSERVED rows, phylopars is fitted to the residuals, and
+#               the covariate contribution is added back for the masked rows. Beta is treated as
+#               known when forming the interval, so the interval ignores the uncertainty in beta --
+#               a documented approximation, not an exact fixed-effect phylogenetic GLS.
+#   count       phyloglm(y ~ cov1 + ...), which also removes the current ~ 1 limitation of predicting
+#               the SAME lambda for every masked cell: the prediction is now tip-specific.
+#   discrete    castor::hsp_mk_model takes no covariates at all. UNCHANGED, and reported as such:
+#               the discrete traits of arm 1 are covariate-free even in the covariate slice.
 run_freq <- function(df_miss, truth, mask, tree, cont_traits, trait_types = NULL,
-                      count_method = c("phyloglm_poisson_gee", "log1p_rphylopars")) {
+                      count_method = c("phyloglm_poisson_gee", "log1p_rphylopars"), covs = NULL) {
   count_method <- match.arg(count_method)
+  cov_names <- if (!is.null(covs)) names(covs) else character(0)
+  X <- if (length(cov_names)) as.matrix(covs[rownames(truth), , drop = FALSE]) else NULL
   comp <- truth; comp[] <- NA
   is_prop <- names(truth) %in% names(trait_types)[trait_types == "proportion"]
   is_cnt  <- vapply(truth, is.integer, logical(1))
@@ -362,9 +438,24 @@ run_freq <- function(df_miss, truth, mask, tree, cont_traits, trait_types = NULL
   if (length(cont_for_joint)) {
     df4 <- df_miss[, cont_for_joint, drop = FALSE]
     for (v in cont_for_joint) df4[[v]] <- tf(v, as.numeric(df4[[v]]))
+    # covariate fixed part, removed before the joint BM fit and added back after
+    xb <- matrix(0, nrow(df4), length(cont_for_joint), dimnames = list(rownames(df4), cont_for_joint))
+    if (!is.null(X)) {
+      Xd <- X[rownames(df4), , drop = FALSE]
+      for (v in cont_for_joint) {
+        y <- df4[[v]]; obs <- !is.na(y)
+        if (sum(obs) > ncol(Xd) + 1L) {
+          b <- tryCatch(stats::lm.fit(cbind(1, Xd[obs, , drop = FALSE]), y[obs])$coefficients, error = function(e) NULL)
+          if (!is.null(b) && all(is.finite(b))) {
+            xb[, v] <- drop(cbind(1, Xd) %*% b)
+            df4[[v]] <- y - xb[, v]
+          }
+        }
+      }
+    }
     df_in <- data.frame(species = rownames(df4), df4, stringsAsFactors = FALSE)
     fit <- Rphylopars::phylopars(df_in, tree = tree, model = "BM", phylo_correlated = TRUE, pheno_correlated = TRUE, REML = TRUE)
-    rec <- fit$anc_recon[rownames(df4), cont_for_joint, drop = FALSE]
+    rec <- fit$anc_recon[rownames(df4), cont_for_joint, drop = FALSE] + xb[rownames(df4), cont_for_joint, drop = FALSE]
     for (v in cont_for_joint) { comp[[v]] <- df_miss[[v]]; comp[mask[, v], v] <- itf(v, rec[mask[, v], v]) }
     if (!is.null(fit$anc_var)) {
       var_out <- fit$anc_var[rownames(df4), cont_for_joint, drop = FALSE]
@@ -383,18 +474,54 @@ run_freq <- function(df_miss, truth, mask, tree, cont_traits, trait_types = NULL
       y <- df_miss[[v]]; obs <- !is.na(y)
       tree_obs <- ape::keep.tip(tree, rownames(df_miss)[obs])
       dat <- data.frame(y = y[obs], row.names = rownames(df_miss)[obs])
+      if (!is.null(X)) dat <- cbind(dat, X[rownames(dat), , drop = FALSE])
       dat <- dat[tree_obs$tip.label, , drop = FALSE]
       fitp <- tryCatch(phylolm::phyloglm(y ~ 1, phy = tree_obs, data = dat, method = "poisson_GEE"), error = function(e) NULL)
+      # S6d: the covariate model is fitted BESIDE the intercept-only one and only adopted if it
+      # actually predicts the OBSERVED counts better (Poisson deviance on the observed rows).
+      # Measured reason: phyloglm's poisson_GEE is a marginal estimator and on this DGP it returns
+      # badly conditioned betas (it warns "system is singular"), so the tip-specific exp(x'beta) was
+      # far WORSE than the constant mean -- mean zRMSE 1.16 -> 9.73 over 25 seeds, worse in 24 of
+      # them, and non-finite on at least one. Selecting on in-sample fit keeps the covariate version
+      # where it helps and can never do worse than the covariate-free arm.
+      use_cov <- FALSE; fitc <- NULL
+      if (length(cov_names)) {
+        fmlc <- stats::as.formula(paste("y ~", paste(cov_names, collapse = " + ")))
+        fitc <- tryCatch(phylolm::phyloglm(fmlc, phy = tree_obs, data = dat, method = "poisson_GEE"), error = function(e) NULL)
+        if (!is.null(fitc)) {
+          pdev <- function(mu) { mu <- pmax(mu, 1e-8); yo <- dat$y
+            2 * sum(ifelse(yo > 0, yo * log(yo / mu), 0) - (yo - mu)) }
+          bc <- unname(stats::coef(fitc))
+          mu_c <- exp(pmin(pmax(drop(cbind(1, as.matrix(dat[, cov_names, drop = FALSE])) %*% bc), -20), 20))
+          mu_0 <- if (!is.null(fitp)) rep(exp(unname(stats::coef(fitp))[1]), nrow(dat)) else rep(mean(dat$y), nrow(dat))
+          if (all(is.finite(mu_c)) && pdev(mu_c) < pdev(mu_0)) { use_cov <- TRUE; fitp <- fitc }
+        }
+      }
       comp[[v]] <- df_miss[[v]]
       if (!is.null(fitp)) {
-        # Documented limitation: phyloglm's poisson_GEE fits a MARGINAL Poisson mean structure
-        # (beta0 only, no random effect / BLUP per species); the same exp(beta0) is predicted for
-        # every missing cell of this trait, and the interval is a plain Poisson quantile band, not
-        # a tip-specific phylogenetic prediction interval.
-        lam <- exp(unname(stats::coef(fitp))[1])
-        comp[mask[, v], v] <- as.integer(round(lam))
-        qs <- stats::qpois(c(0.025, 0.975), lam)
-        lower[mask[, v], v] <- qs[1]; upper[mask[, v], v] <- qs[2]
+        # phyloglm's poisson_GEE fits a MARGINAL Poisson mean structure (no random effect / BLUP per
+        # species). WITHOUT covariates that means the same exp(beta0) for every missing cell of this
+        # trait, and a plain Poisson quantile band rather than a tip-specific phylogenetic interval.
+        # WITH covariates (S6d) the mean is tip-specific through exp(x_i'beta), though still marginal.
+        bb <- unname(stats::coef(fitp))
+        obsv <- y[obs]
+        if (use_cov) {
+          # With covariates the mean is tip-specific, so exp() is applied to a per-tip linear
+          # predictor rather than to one intercept -- and it OVERFLOWS when phyloglm returns a badly
+          # estimated beta (it warns "system is singular" on some seeds). Unclamped this produced a
+          # non-finite lambda, hence NA counts and an NA zRMSE for the whole trait: measured, it hit
+          # at least one of 25 seeds at n = 100. Clamp the linear predictor to a range the observed
+          # counts can support, and fall back to the intercept-only mean if anything is still not
+          # finite. The no-covariate path is a single well-behaved intercept and is unaffected.
+          cap <- log(max(10, 10 * max(obsv, na.rm = TRUE) + 10))
+          eta <- drop(cbind(1, X[rownames(truth), , drop = FALSE]) %*% bb)
+          lam <- exp(pmin(pmax(eta, -20), cap))
+          if (!all(is.finite(lam))) lam <- rep(mean(obsv), nrow(truth))
+        } else lam <- rep(exp(bb[1]), nrow(truth))
+        names(lam) <- rownames(truth)
+        idx <- mask[, v]
+        comp[idx, v] <- as.integer(round(lam[idx]))
+        lower[idx, v] <- stats::qpois(0.025, lam[idx]); upper[idx, v] <- stats::qpois(0.975, lam[idx])
       } else {
         obsv <- df_miss[[v]][!is.na(df_miss[[v]])]
         comp[mask[, v], v] <- as.integer(round(mean(obsv)))
@@ -465,11 +592,20 @@ run_mf_phylo <- function(df_miss, truth, mask, tree, variance_fraction = 0.9) {
 # and makes per-cell cost unbounded across thousands of cells). The verdict is recorded per cell
 # instead, and the convergence RATE is reported as a result.
 run_bace <- function(df_miss, truth, mask, tree, cont_traits, bace_nitt, bace_burnin, bace_thin,
-                     bace_runs = as.integer(Sys.getenv("PIG_BACE_RUNS", "10"))) {
+                     bace_runs = as.integer(Sys.getenv("PIG_BACE_RUNS", "10")), covs = NULL) {
   tree_b <- tree; if (any(tree_b$edge.length == 0)) tree_b$edge.length[tree_b$edge.length == 0] <- 1e-8
   df_b <- df_miss; df_b$Species <- rownames(df_miss)
   all_traits <- setdiff(names(df_b), "Species")
-  fixformula <- lapply(all_traits, function(v) paste0(v, " ~ ", paste(setdiff(all_traits, v), collapse = " + ")))
+  # S6d: covariates join df_b so BACE can read them, but they are NOT added to all_traits, so no
+  # formula is ever built with a covariate as the RESPONSE -- they are fully observed predictors
+  # only, and they stay out of `comp` (which is seeded from df_miss) so they are never scored.
+  cov_names <- character(0)
+  if (!is.null(covs)) {
+    cov_names <- names(covs)
+    df_b <- cbind(df_b, covs[rownames(df_miss), , drop = FALSE])
+  }
+  fixformula <- lapply(all_traits, function(v)
+    paste0(v, " ~ ", paste(c(setdiff(all_traits, v), cov_names), collapse = " + ")))
   # n_final is the number of FULL imputation runs (bace_final_imp refits MCMCglmm per response for
   # each one), not a thinning of one chain: each dataset is one posterior predictive draw (K = 1L in
   # BACE:::.predict_bace). Cost is linear in n_final, so it is a budget constant, not a chain length.
@@ -586,7 +722,7 @@ run_floor <- function(df_miss, truth, mask) {
 #              walls =, errors =, paths =).
 run_arms <- function(cell, arms, opts) {
   truth <- cell$truth; tree <- cell$tree; mask <- cell$mask; df_miss <- cell$df_miss
-  cont_traits <- cell$cont_traits; trait_types <- cell$trait_types
+  cont_traits <- cell$cont_traits; trait_types <- cell$trait_types; covs <- cell$covs
   # score_arm() (defined at this file's top level) reads `truth`/`mask` from ITS OWN lexical scope,
   # i.e. the global environment where this file is normally sourced -- not from run_arms()'s local
   # frame. Publish them there so score_arm() sees the right cell regardless of which caller script
@@ -608,8 +744,12 @@ run_arms <- function(cell, arms, opts) {
       gnn_off             = list(gnn = FALSE),
       gnn_off_pure        = list(gnn = FALSE, safety_floor = FALSE, phylo_signal_gate = FALSE),
       gnn_off_rphylopars  = list(gnn = FALSE, joint_solver = "rphylopars"))
+    # pigauto threads covariates through the GNN only (R/impute.R), so a GNN-off arm cannot use them
+    # at all: arms 3a/3b stay covariate-free by construction, which is what the plan specifies
+    # ("arm 3 reported covariate-free"). Passing them to a gnn = FALSE fit would be silently inert.
+    cov_arg <- if (!is.null(covs) && isTRUE(extra$gnn)) list(covariates = covs[rownames(df_miss), , drop = FALSE]) else list()
     res <- do.call(pigauto::impute, c(list(traits = df_miss, tree = tree, verbose = FALSE, seed = seed,
-                                           trait_types = trait_types), extra))
+                                           trait_types = trait_types), cov_arg, extra))
     path <- res$fit$baseline$path
     pred <- res$prediction
     comp <- res$completed[rownames(truth), names(truth)]
@@ -648,10 +788,10 @@ run_arms <- function(cell, arms, opts) {
     r <- tryCatch({
       if (arm %in% c("gnn_on", "gnn_off", "gnn_off_pure", "gnn_off_rphylopars")) run_pigauto(arm)
       else if (arm == "rphylopars") run_rphylopars()
-      else if (arm == "freq") run_freq(df_miss, truth, mask, tree, cont_traits, trait_types)
-      else if (arm == "freq_log1p") run_freq(df_miss, truth, mask, tree, cont_traits, trait_types, count_method = "log1p_rphylopars")
+      else if (arm == "freq") run_freq(df_miss, truth, mask, tree, cont_traits, trait_types, covs = covs)
+      else if (arm == "freq_log1p") run_freq(df_miss, truth, mask, tree, cont_traits, trait_types, count_method = "log1p_rphylopars", covs = covs)
       else if (arm == "mf_phylo") run_mf_phylo(df_miss, truth, mask, tree)
-      else if (arm == "bace") run_bace(df_miss, truth, mask, tree, cont_traits, bace_nitt, bace_burnin, bace_thin)
+      else if (arm == "bace") run_bace(df_miss, truth, mask, tree, cont_traits, bace_nitt, bace_burnin, bace_thin, covs = covs)
       else if (arm == "floor") run_floor(df_miss, truth, mask)
       else stop("unknown arm ", arm)
     }, error = function(e) e)

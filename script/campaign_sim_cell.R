@@ -10,9 +10,18 @@
 #   Rscript script/campaign_sim_cell.R --dgp types_mixed --n 300 --seed 1 --out results/ \
 #           [--arms gnn_on,gnn_off,gnn_off_rphylopars,freq,bace,floor] \
 #           [--lambda 1 --rho 0 --evo BM --miss mcar --frac 0.30 --thresholds sample --driver] \
-#           [--epochs 2000 --bace_nitt 50000 --bace_burnin 10000 --bace_thin 25] [--smoke]
+#           [--epochs 2000 --bace_nitt 50000 --bace_burnin 10000 --bace_thin 25] [--smoke] \
+#           [--ncov 2 --rho_cov 0.6]
 #
-# Output filename: <dgp>_<evo>_l<lambda>_r<rho>_<miss><frac>_n<n>_s<seed>.rds
+# --ncov n (S6d covariate sensitivity) adds n fully observed, phylogenetically structured covariates
+# that are predictors only -- never masked, never scored. They reach arm 1 (freq: continuous via
+# residualisation, counts via phyloglm; castor's discrete Mk takes none), arm 2 (BACE: extra fixed
+# terms) and arm 4 (pigauto GNN on). Arms 3a/3b are covariate-free by construction because pigauto
+# threads covariates through the GNN only. --ncov 0 is the default and reproduces the old outputs
+# byte-for-byte, including the filename.
+#
+# Output filename: <dgp>_<evo>_l<lambda>_r<rho>_<miss><frac>_n<n>[_k<ncov>]_s<seed>.rds
+# (the _k<ncov> field appears only when ncov > 0, so covariate cells never collide with core cells)
 # Resumable: a cell whose rds already exists is skipped.
 
 suppressPackageStartupMessages({
@@ -46,6 +55,8 @@ smoke      <- isTRUE(get_arg("--smoke", FALSE))
 bace_nitt   <- as.integer(get_arg("--bace_nitt", 50000L))
 bace_burnin <- as.integer(get_arg("--bace_burnin", 10000L))
 bace_thin   <- as.integer(get_arg("--bace_thin", 25L))
+ncov        <- as.integer(get_arg("--ncov", 0L))
+rho_cov     <- as.numeric(get_arg("--rho_cov", 0.6))
 if (smoke) { epochs <- 20L; bace_nitt <- 600L; bace_burnin <- 100L; bace_thin <- 5L }
 
 # mar requires an always-observed driver trait
@@ -54,7 +65,8 @@ if (miss == "mar" && !driver) { driver <- TRUE }
 dir.create(out, showWarnings = FALSE, recursive = TRUE)
 default_evo <- if (dgp == "ou_mixed") "OU" else "BM"
 evo_tag <- if (is.null(evo)) default_evo else evo
-tag <- sprintf("%s_%s_l%s_r%s_%s%s_n%d_s%d", dgp, evo_tag, format(lambda), format(rho), miss, format(frac), n, seed)
+tag <- sprintf("%s_%s_l%s_r%s_%s%s_n%d%s_s%d", dgp, evo_tag, format(lambda), format(rho), miss,
+               format(frac), n, if (ncov > 0L) sprintf("_k%d", ncov) else "", seed)
 out_path <- file.path(out, paste0(tag, if (smoke) "_smoke" else "", ".rds"))
 log_line <- function(...) cat(sprintf("[%s] %s\n", format(Sys.time(), "%H:%M:%S"), sprintf(...)))
 
@@ -78,14 +90,15 @@ git_hash <- tryCatch({
 }, error = function(e) NA_character_)
 
 cell_data <- make_cell(dgp, n, seed, miss_frac = frac, miss = miss, lambda = lambda, rho = rho,
-                        evo = evo, thresholds = thresholds, driver = driver)
+                        evo = evo, thresholds = thresholds, driver = driver,
+                        n_cov = ncov, rho_cov = rho_cov)
 truth <- cell_data$truth; tree <- cell_data$tree; mask <- cell_data$mask
 df_miss <- cell_data$df_miss; cont_traits <- cell_data$cont_traits; trait_types <- cell_data$trait_types
 log_line("cell %s: n=%d traits=%d (continuous %d) masked=%d realised_frac=%.3f", tag, nrow(truth),
          ncol(truth), length(cont_traits), sum(mask), cell_data$realised_frac)
 
 cell_obj <- list(truth = truth, tree = tree, mask = mask, df_miss = df_miss,
-                  cont_traits = cont_traits, trait_types = trait_types)
+                  cont_traits = cont_traits, trait_types = trait_types, covs = cell_data$covs)
 opts <- list(seed = seed, epochs = epochs, bace_nitt = bace_nitt, bace_burnin = bace_burnin,
              bace_thin = bace_thin, log_line = log_line)
 out_arms <- run_arms(cell_obj, arms, opts)
@@ -95,6 +108,7 @@ if (!is.null(tab)) { tab$dgp <- dgp; tab$n <- nrow(truth); tab$seed <- seed }
 cell <- list(tag = tag, dgp = dgp, n = nrow(truth), seed = seed, arms = arms, smoke = smoke,
              lambda = lambda, rho = rho, evo = evo_tag, thresholds = thresholds, driver = driver,
              miss = miss, miss_frac = frac, realised_frac = cell_data$realised_frac,
+             ncov = ncov, rho_cov = rho_cov, covs = cell_data$covs,
              epochs = epochs, bace = c(nitt = bace_nitt, burnin = bace_burnin, thin = bace_thin),
              results = tab, calib = out_arms$calib, walls = unlist(out_arms$walls),
              failed = out_arms$failed, errors = out_arms$errors, paths = out_arms$paths,

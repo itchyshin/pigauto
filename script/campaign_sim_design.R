@@ -14,7 +14,11 @@
 #   prerun    the 12 core cells at n {100, 1000} + 4 sentinels at n = 1000
 #             (OU lambda 0.3, MAR, clade, MCAR 0.1)                                     16 cells
 #   avonet    the bundled AVONET300 data, every arm                                      1 cell
+#   covsens   S6d: the 18 core cells re-run with 2 covariates (ncov = 2)                 18 cells
 # Replicates: 200 for arms freq, gnn_off, gnn_off_rphylopars, gnn_on, floor; BACE on seeds 1..100.
+#
+# The ncov column is emitted for EVERY stage (0 everywhere but covsens) and is the LAST column, so
+# the drivers' positional awk ($3..$9 cell args, $10 reps, $11 bace_reps) keeps working unchanged.
 
 args <- commandArgs(trailingOnly = TRUE)
 get <- function(flag, default) { i <- match(flag, args); if (is.na(i)) default else args[i + 1L] }
@@ -46,11 +50,14 @@ prerun <- rbind(core[core$n %in% c(100L, 1000L), ], sent)
 avonet <- data.frame(dgp = "avonet", evo = "BM", lambda = 1, rho = 0, miss = "mcar", frac = 0.3, n = 300L,
                      stringsAsFactors = FALSE)
 
+covsens <- core   # same 18 cells, distinguished only by ncov (and so by the rds filename)
+
 tab <- switch(stage, core = core, factorial = fact, prerun = prerun, avonet = avonet,
-              stop("unknown --stage ", stage))
+              covsens = covsens, stop("unknown --stage ", stage))
 tab$stage <- stage
 tab$cell <- cell_key(tab)
 tab$reps <- if (stage == "prerun") 1L else if (stage == "avonet") 20L else 200L
 tab$bace_reps <- if (stage == "prerun") 1L else if (stage == "avonet") 20L else 100L
-tab <- tab[, c("stage", "cell", "dgp", "evo", "lambda", "rho", "miss", "frac", "n", "reps", "bace_reps")]
+tab$ncov <- if (stage == "covsens") 2L else 0L
+tab <- tab[, c("stage", "cell", "dgp", "evo", "lambda", "rho", "miss", "frac", "n", "reps", "bace_reps", "ncov")]
 write.csv(tab, stdout(), row.names = FALSE, quote = FALSE)
