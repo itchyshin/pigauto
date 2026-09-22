@@ -351,9 +351,110 @@ monomorphic-discrete case described above and are confined to lambda = 1. This d
 robustness is a practical cost of the Bayesian route that a user will meet, and it is reported here
 rather than hidden by dropping the failed cells.
 
+## Factorial extension
+
+The factorial varies what the core slice held fixed: the evolutionary model (Brownian motion or
+Ornstein-Uhlenbeck with alpha = 2), the missingness mechanism (MCAR at 10% and 30%, MAR at 30%
+driven by an always-observed trait, and clade-biased at 30%), lambda in {0.3, 1.0}, rho in {0, 0.5}
+and n in {100, 1000}, minus the eight cells already in the core: 56 cells. The frequentist arms ran
+200 replicates per cell. BACE ran 100 at n = 100 and 30 at n = 1000, a reduction Shinichi approved
+on 2026-09-21 after a successful n = 1000 fit measured at about 3 hours and over 16 GB, with the
+MCSE widening by about 1.8x at n = 1000 and reported as such. Strata below give equal weight to
+each cell and pool over rho, which again moved nothing of substance.
+
+Two things were added to the scoring rule for this stage, and both are reported rather than
+absorbed. First, a fit that returns a finite but absurd value is treated as a failure that did not
+throw: an arm is divergent on a replicate if its z-RMSE exceeds three times the mean floor or its
+interval score exceeds 1,000, where the sane range across every arm and cell is 2 to 12. A divergent
+replicate is scored at the floor, like an errored one, and its interval is dropped. This caught 15
+`freq_lambda`, 34 Rphylopars-solver and 2 BACE replicates out of 11,200, values up to 8.6 x 10^18,
+any one of which would otherwise dominate a stratum mean. Second, `freq_lambda` acquired a failure
+mode of its own: 51 replicates, all in the OU, lambda = 1, MCAR 10%, n = 1000 cell, where Rphylopars'
+singular-solve fallback ends in a type error. These are floored and counted.
+
+### z-RMSE on the continuous family
+
+| evolutionary model | lambda | BACE | freq (BM) | freq_lambda | floor |
+|---|---|---|---|---|---|
+| Brownian motion | 0.3 | 1.037 | 1.128 | 0.924 | 1.043 |
+| Brownian motion | 1.0 | 0.876 | 0.579 | 0.572 | 1.070 |
+| Ornstein-Uhlenbeck | 0.3 | 0.997 | 1.109 | 0.911 | 1.035 |
+| Ornstein-Uhlenbeck | 1.0 | 0.610 | 0.569 | 0.562 | 1.051 |
+
+| mechanism | BACE | freq (BM) | freq_lambda | floor |
+|---|---|---|---|---|
+| MCAR 10% | 0.727 | 0.784 | 0.690 | 1.000 |
+| MCAR 30% | 0.746 | 0.815 | 0.697 | 1.009 |
+| MAR 30% | 0.948 | 0.897 | 0.774 | 1.113 |
+| clade-biased 30% | 0.994 | 0.869 | 0.784 | 1.054 |
+
+The core-slice conclusion holds in every stratum. Against the BM default BACE wins at lambda = 0.3
+and loses at lambda = 1; against the signal-estimating specification it loses everywhere on the
+continuous family. Paired on BACE's own replicates, `freq_lambda` is ahead by 0.123 (MCSE 0.0085)
+under Brownian motion at lambda = 0.3, by 0.095 (0.0058) under Ornstein-Uhlenbeck at lambda = 0.3,
+and by 0.258 (0.0111) and 0.046 (0.0070) at lambda = 1. Ornstein-Uhlenbeck changes the magnitudes
+and not the signs, so this is about estimating the signal, not about which process generated the
+data.
+
+The mechanism table carries the one new result. Under MAR and clade-biased missingness BACE falls to
+0.948 and 0.994, close to the floors of 1.113 and 1.054, while the frequentist arms are unaffected in
+their ranking. Partitioned by cause, as it should be before it is read: at lambda = 0.3 BACE fails
+on no replicate under any mechanism, and its clade-biased figure of 1.181 at n = 100 and 1.140 at
+n = 1000 under Brownian motion is a genuine accuracy result, worse than predicting the mean. At
+lambda = 1 the picture inverts and becomes a failure result: BACE errors with "mixed model equations
+singular" on 35% of MCAR 10% replicates, 39% of MAR and 39% of clade-biased ones, rising to 53% and
+86% in the Brownian clade-biased cells at n = 100 and n = 1000. On the replicates where it does fit
+there, it reaches 0.816 and 0.545, behind the frequentist arms but not collapsed. The two halves
+belong side by side: at low signal BACE is inaccurate under phylogenetically biased missingness, and
+at high signal it is fragile under it.
+
+### Accuracy on the discrete family
+
+| evolutionary model | lambda | BACE | freq (BM) | freq_lambda | floor |
+|---|---|---|---|---|---|
+| Brownian motion | 0.3 | 0.552 | 0.418 | 0.418 | 0.461 |
+| Brownian motion | 1.0 | 0.752 | 0.910 | 0.908 | 0.605 |
+| Ornstein-Uhlenbeck | 0.3 | 0.544 | 0.406 | 0.406 | 0.436 |
+| Ornstein-Uhlenbeck | 1.0 | 0.824 | 0.875 | 0.872 | 0.541 |
+
+BACE's discrete advantage at low signal survives the factorial intact: 13 to 14 points over the
+frequentist stack at lambda = 0.3 under both processes, with the frequentist stack below the mode
+floor in every one of those cells. At lambda = 1 the frequentist stack is ahead by 16 points under
+Brownian motion and 5 under Ornstein-Uhlenbeck. Across mechanisms BACE's lead is 3 to 5 points under
+MCAR and vanishes under clade-biased missingness, where all three arms sit at 0.62.
+
+### Coverage and interval score
+
+| mechanism | BACE | freq (BM) | freq_lambda |
+|---|---|---|---|
+| MCAR 10% | 0.874 | 0.869 | 0.887 |
+| MCAR 30% | 0.842 | 0.856 | 0.884 |
+| MAR 30% | 0.846 | 0.867 | 0.886 |
+| clade-biased 30% | 0.835 | 0.915 | 0.894 |
+
+Neither route reaches nominal 0.95 anywhere in the factorial either. The model-based Rphylopars
+interval is the one construction that improves under clade-biased missingness, to 0.915 at the
+default and 0.894 with lambda estimated, while BACE's posterior predictive interval is at its worst
+there, 0.835. Interval scores follow: BACE 5.77 against `freq_lambda` 4.83 under clade-biased
+missingness, and BACE ahead only under MCAR 10%, 3.48 against 6.71, where `freq_lambda`'s score is
+inflated by its own type-error failures in one cell.
+
+### Failures across the factorial
+
+| arm | MCAR 10% | MCAR 30% | MAR 30% | clade 30% |
+|---|---|---|---|---|
+| BACE | 17.6% | 8.7% | 20.1% | 20.3% |
+| freq | 1.6% | 0.3% | 1.7% | 1.6% |
+| freq_lambda | 3.6% | 0.3% | 1.6% | 1.7% |
+
+Percentages are of replicates, errored or divergent, both scored at the floor. BACE's failures are
+confined to lambda = 1 and are the fixed-threshold monomorphic regime described above; every BACE
+failure at lambda = 0.3 count is zero. The frequentist failures are the same monomorphic `castor`
+case, plus `freq_lambda`'s Rphylopars type error in one cell.
+
 ### What this study does not cover
 
-These results describe one tree shape, one set of seven traits, MCAR missingness at 0.30, and no
-covariates. The factorial extension varying the evolutionary model, the missingness mechanism and
-the missing fraction is reported separately. Nothing here speaks to trees larger than 1000 tips, to
-multiple observations per species, or to missingness that depends on the missing value itself.
+These results describe one tree shape, one set of seven traits, and no covariates; a covariate
+sensitivity run on the 18 core cells is reported separately. Nothing here speaks to trees larger
+than 1000 tips, to multiple observations per species, or to missingness that depends on the missing
+value itself.
