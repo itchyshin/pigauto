@@ -82,6 +82,38 @@ if (is_sim_shape) {
     r <- c$results; if (is.null(r) || !nrow(r)) return(NULL)
     cbind(r, regime_of(c))
   }))
+  # Divergence rule (2026-09-22). A fit that returns a finite but absurd value is a failure that did
+  # not throw. Measured across the factorial: 15 freq_lambda and 34 gnn_off_rphylopars replicates
+  # returned z-RMSE up to 8.6e18 or interval scores up to 3.5e20, and a single one destroys a cell
+  # mean. For a (cell, seed, trait), an arm is divergent if its zRMSE exceeds 3x the floor arm's
+  # zRMSE, or its interval_score exceeds 1e3 (the sane range over every arm and cell is 2 to 12).
+  # A divergent replicate is scored at the floor for zRMSE, the same rule as an errored fit, and its
+  # coverage, width and interval_score are set to NA because a diverged fit has no usable interval.
+  # The count is written to failures.csv as n_divergent beside n_failed, never silently absorbed.
+  div_cols <- c("dgp", "n", "seed", "lambda", "rho", "evo", "miss", "frac", "trait")
+  fl_z <- tab2[tab2$arm == "floor" & tab2$metric == "zRMSE", c(div_cols, "value")]
+  names(fl_z)[ncol(fl_z)] <- "floor_z"
+  tab2 <- merge(tab2, unique(fl_z), by = div_cols, all.x = TRUE, sort = FALSE)
+  bad_z <- tab2$metric == "zRMSE" & tab2$arm != "floor" & is.finite(tab2$value) &
+    is.finite(tab2$floor_z) & tab2$value > 3 * tab2$floor_z
+  bad_i <- tab2$metric == "interval_score" & is.finite(tab2$value) & tab2$value > 1e3
+  div_key <- unique(tab2[bad_z | bad_i, c(div_cols, "arm")])
+  tab2$divergent <- FALSE
+  if (nrow(div_key)) {
+    div_key$divergent <- TRUE
+    tab2$divergent <- NULL
+    tab2 <- merge(tab2, div_key, by = c(div_cols, "arm"), all.x = TRUE, sort = FALSE)
+    tab2$divergent[is.na(tab2$divergent)] <- FALSE
+    zz <- tab2$divergent & tab2$metric == "zRMSE"; tab2$value[zz] <- tab2$floor_z[zz]
+    ii <- tab2$divergent & tab2$metric %in% c("interval_score", "width"); tab2$value[ii] <- NA_real_
+    tab2$coverage[tab2$divergent] <- NA_real_
+  }
+  div_reps <- if (nrow(div_key)) unique(div_key[, setdiff(names(div_key), c("trait", "divergent"))]) else NULL
+  if (!is.null(div_reps)) div_reps$n_divergent <- 1L
+  divergent_rate <- if (!is.null(div_reps))
+    aggregate(n_divergent ~ dgp + n + arm, data = div_reps, FUN = sum) else NULL
+  cat(sprintf("divergence rule: %d arm-replicates (%d arm-replicate-traits) scored at the floor\n",
+              if (is.null(div_reps)) 0L else nrow(div_reps), nrow(div_key)))
   mcse_boot <- function(x, R = 500L) {
     x <- x[is.finite(x)]; if (length(x) < 2) return(NA_real_)
     b <- replicate(R, mean(sample(x, length(x), replace = TRUE)))
@@ -172,6 +204,12 @@ if (is_sim_shape) {
   }))
   failure_rate <- if (!is.null(fail_rows)) do.call(rbind, lapply(split(fail_rows, list(fail_rows$dgp, fail_rows$n, fail_rows$arm), drop = TRUE), function(d)
     data.frame(dgp = d$dgp[1], n = d$n[1], arm = d$arm[1], n_failed = nrow(d)))) else NULL
+  if (!is.null(divergent_rate)) {
+    failure_rate <- if (is.null(failure_rate)) divergent_rate else
+      merge(failure_rate, divergent_rate, by = c("dgp", "n", "arm"), all = TRUE)
+    failure_rate$n_failed[is.na(failure_rate$n_failed)] <- 0L
+    failure_rate$n_divergent[is.na(failure_rate$n_divergent)] <- 0L
+  } else if (!is.null(failure_rate)) failure_rate$n_divergent <- 0L
   write.csv(if (is.null(failure_rate)) data.frame() else failure_rate, paste0(out, "_failures.csv"), row.names = FALSE)
 
   raw_index <- do.call(rbind, lapply(seq_along(cells), function(i) {
