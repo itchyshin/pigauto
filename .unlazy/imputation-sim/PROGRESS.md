@@ -3,7 +3,7 @@
 **This file is the single source of truth for resuming. Read it first, update it after every
 meaningful step, and never start a second copy of work already running.**
 
-Status: **IN PROGRESS** (not complete). Last updated 2026-09-21 18:55 MDT by the scheduled Claude run.
+Status: **IN PROGRESS** (not complete). Last updated 2026-09-21 20:55 MDT by the scheduled Claude run.
 
 ---
 
@@ -26,12 +26,23 @@ secondary.
 - [ ] Core slice complete: 18 cells x 200 replicates (BACE on seeds 1..100), failure rate recorded per cell.
       **Fast arms 3600/3600 DONE. BACE 1777/1800 (98.7%): n=100 598/600, n=300 599/600, n=1000 580/600.**
 - [ ] Trimmed factorial complete: 56 cells, same conditions.
+      **Measured per arm family 2026-09-21 20:52 MDT (fast arms and BACE are counted separately
+      because they live on different hosts under the same filenames).**
+      - Fast arms (freq, freq_lambda, floor, 3a, 3b, GNN), target 56 x 200 = 11,200: **freq/floor/
+        freq_lambda 11,200/11,200 DONE**; the gnn wave on Totoro is **7,649/11,200**, n = 100
+        **5,600/5,600 COMPLETE**, n = 1000 **2,049/5,600**. This is the one binding gap left.
+      - BACE, target 28 x 100 at n = 100 plus 28 x **30** at n = 1000 (Shinichi's 30-seed decision):
+        n = 100 **2,746/2,800 (98.1%)**, n = 1000 **779/840 (92.7%)**. Only **115 cell-seeds** are
+        missing in total, across 7 OU cells at n = 100 and 6 BM cells at n = 1000, and **every one
+        of them sits inside the two fir arrays that are running now** (60776422 and 60776371).
+        nibi holding no jobs is CORRECT: its half B at n = 1000 is complete at 30 seeds.
 - [x] AVONET300 case study, all arms, 20 seeds. **DONE 2026-09-21** - 20/20 cells on Totoro, zero errors, all six arms plus gnn_on_full, aggregated to `avo_summary.csv` and on the board's own tab.
 - [ ] Covariate sensitivity on the 18 core cells. **Runner support BUILT and verified 2026-09-21**
       (stage `covsens`, `--ncov`). **ALL THREE WAVES NOW DISPATCHED on fir**, fast arms only, no BACE.
-      Landed 2026-09-21 18:50: n = 100 796/1200, n = 300 229/1200, n = 1000 0/1200.
-      Both recovery arrays (60895448, 60895543) are still PENDING with reason Priority, so neither has
-      run a task yet and there is no n = 1000 wall to measure.
+      Landed 2026-09-21 19:51: n = 100 796/1200, n = 300 295/1200, n = 1000 0/1200.
+      60895543 (n = 1000) is still PENDING with reason Priority, zero tasks started, so there is still
+      no n = 1000 wall to measure. 60895448 (n = 100) has 19 COMPLETED tasks but all are resume-skips.
+      fir's fair share is 0.157, so every queued array is scheduling-limited, not mis-submitted.
       - n = 100: first array 60829554 (BLOCK=5, 4 cores, 1 h) DRAINED at **138 TIMEOUT / 102 COMPLETED**.
         Recovery **60895448** submitted 18:40 - BLOCK=1, **CPUS=1**, MEM=8G, `--time 01:00:00`, 1200 tasks.
       - n = 300: **60894610 etc.** running since ~14:55 (BLOCK=5, 4 cores, 1 h 30), 34 COMPLETED, no TIMEOUT yet.
@@ -1174,6 +1185,159 @@ array fully drains, resubmit the same stage with resume on; only the ~29 gaps wi
 slice, and either raise THROTTLE or bring the number to Shinichi; (2) if 60776371 has drained,
 resubmit the factorial BACE tail to recover the 29 NODE_FAIL/TIMEOUT cell-seeds; (3) if the Totoro
 factorial GNN wave has finished (estimate ~05:30 on 09-22), pool and run G10/G11/G14.
+
+**Still awaiting Shinichi (unchanged):** (1) S7a publication, the results Artifact
+(https://claude.ai/artifact/M5HtGRnNGfwsK2Se4gMX24) is current for the core slice; (2) whether the
+covariate slice should include BACE; (3) whether the mean stays the reported estimator for interval
+width and interval score in the two arm-3b cells that one replicate destroys.
+
+## 2026-09-21 19:55 MDT - scheduled run: all three prescribed steps still blocked; fir is fair-share throttled, not mis-submitted
+
+**Nothing was launched, relaunched or cancelled.** The three steps the 18:55 entry prescribed were
+each checked and each is still blocked:
+
+1. **Price covsens n = 1000 (array 60895543).** Still `PENDING`, zero tasks started
+   (`sacct -j 60895543 -X` reads one PENDING head). No wall exists to `seff`. THROTTLE stays at 8.
+2. **Resubmit the factorial BACE tail (60776371).** Still **32 RUNNING** (359 COMPLETED,
+   24 NODE_FAIL, 5 TIMEOUT). The recorded rule holds: do not resubmit while tasks are in flight,
+   because the skip check reads the directory at task start.
+3. **Pool the Totoro factorial GNN wave.** Still running, see the revised estimate below.
+
+### Measured state at 19:51 MDT
+
+| host | in flight | landed |
+|---|---|---|
+| Totoro | 128 cell processes, factorial GNN wave (pgid 308643), load 123 of 250 permitted cores | core 3600/3600, factorial **7,374/11,200**, avonet 20/20 |
+| fir | 49 queue entries. Only two arrays are RUNNING: factorial n=100 half B (60776422, 12 tasks) and the factorial n=1000 BACE tail (60776371, 32 tasks). **All five other arrays are PENDING with reason Priority.** | core 1,777, factorial 1,773, covsens 1,091 |
+| nibi | empty | - |
+| rorqual | empty, retired | - |
+
+covsens by n on fir: **n = 100 796/1200, n = 300 295/1200, n = 1000 0/1200.**
+
+### The n = 300 throttle scare was a misreading, and the real constraint is fair share
+
+`squeue`'s truncated array field printed `60866290_[63-240%2`, which looked like a throttle of 2 and
+a 50 hour wall. `scontrol show job 60866290` reads **`ArrayTaskThrottle=250`**. The `%2` was the
+column clipping `%250`. **No throttle change was made and none is needed.**
+
+What is actually holding every queued array is fair share:
+
+```
+sshare -U -u snakagaw
+def-snakagaw_cpu   FairShare 0.156898   RawUsage 1.79e11
+```
+
+At that level fir will drip-feed the campaign whatever shape the arrays take. Resubmitting anything
+in a cheaper shape buys queue position, not scheduling, so **churn was deliberately avoided this run**.
+
+### covsens n = 300 is priced, and it confirms the single-thread finding at a second problem size
+
+`seff` over the last six COMPLETED tasks of 60866290 (BLOCK=5, 4 cores, 16 GB, 1 h 30):
+
+| measure | value |
+|---|---|
+| wall per task (5 cell-seeds) | 00:20:16 to 00:43:36, so **4 to 9 min per cell-seed** |
+| CPU efficiency | **25.3 to 26.0% of 4 cores** on 6 of 6 tasks |
+| memory efficiency | 4.6 to 4.9% of 16 GB, i.e. **0.78 GB** |
+
+The 18:45 entry measured 24.6 to 25.0% at n = 100 and left 4 cores in place for larger n in case
+torch behaved differently. It does not: at n = 300 the fast arms are **single-threaded too**, and
+16 GB is 20x the real footprint. Zero TIMEOUT so far at BLOCK=5 (59 COMPLETED, 3 NODE_FAIL), so the
+shape is not losing tasks and was left alone. **Recorded for the next resubmission of this stage:
+CPUS=1, MEM=8G.** Remaining cost of the n = 300 slice: 905 cell-seeds x ~6.5 min = **~98 core-hours**.
+
+The n = 100 recovery array 60895448 now has 19 COMPLETED tasks but **zero new cell-seeds** (796
+unchanged). Array tasks run in index order and the first 796 indices are already on disk, so those
+19 are all resume-skips at about 7 s each. The array reaches real work only after it walks past the
+landed block. Nothing is wrong; it is just not measurable yet either.
+
+### Totoro's landing estimate slips to the morning of 22 Sep
+
+factorial by n on Totoro: **n = 100 5,600/5,600 COMPLETE**, n = 1000 **1,790/5,600**.
+Rate from the last two observations (7,064 at 18:50, 7,374 at 19:51) is **310 rds/h**; over the
+longer 18:33 to 19:51 window it is 262/h. The 3,810 remaining n = 1000 cell-seeds therefore land
+between **08:00 and 10:30 MDT on 22 Sep**, not the ~05:30 previously recorded. Revised here rather
+than left stale, because the pooling step (G10/G11/G14) is scheduled off it.
+
+**Next run, in order, unchanged:** (1) if 60895543 has finished tasks, `seff` them, price the covsens
+n = 1000 slice, and either raise THROTTLE or bring the number to Shinichi; (2) if 60776371 has
+drained, resubmit the factorial BACE tail to recover the ~29 NODE_FAIL/TIMEOUT cell-seeds;
+(3) if the Totoro factorial GNN wave has finished, pool and run G10/G11/G14.
+
+**Still awaiting Shinichi (unchanged):** (1) S7a publication, the results Artifact
+(https://claude.ai/artifact/M5HtGRnNGfwsK2Se4gMX24) is current for the core slice; (2) whether the
+covariate slice should include BACE; (3) whether the mean stays the reported estimator for interval
+width and interval score in the two arm-3b cells that one replicate destroys.
+
+## 2026-09-21 20:52 MDT - scheduled run: nothing to launch, but the factorial is far further along than the record said
+
+**Nothing was launched, relaunched or cancelled.** All three steps the 19:55 entry prescribed were
+checked and all three are still blocked, for the same reasons:
+
+1. **Price covsens n = 1000 (60895543).** Still `PENDING`, still zero tasks started. No wall to `seff`.
+2. **Resubmit the factorial BACE tail (60776371).** Still **32 RUNNING** (359 COMPLETED, 24 NODE_FAIL,
+   5 TIMEOUT). The rule holds: do not resubmit while tasks are in flight.
+3. **Pool the Totoro factorial GNN wave.** Still running, 127 cell processes, load 99 of 250 permitted.
+
+### fir is no longer starved
+
+The 19:55 entry recorded two RUNNING arrays and everything else `PENDING` on Priority. fir now has
+**117 tasks RUNNING** across three arrays (60776371 32, 60776422 52, 60866290 33). Fair share
+loosened on its own; no shape was changed to get this and none was needed.
+
+### The factorial accounting was wrong, and correcting it changes what is left
+
+Previous entries reported one number, "factorial 7,374/11,200 on Totoro", beside a separate fir
+count. That mixes two different denominators. Every factorial rds on fir and nibi holds the `bace`
+arm only (FINDING A, 09:20 entry, re-confirmed this run by reading
+`logs/factorial_n1000_halfA.sbatch`: `arms="bace"` on both branches of its `if`), while Totoro's
+files hold the fast and GNN arms. Identical filenames on different hosts are **complementary arm
+sets, not duplicates**, which is exactly why the aggregator dedupes on (filename, arm set).
+
+Counted properly, by host and against each arm family's own target:
+
+| arm family | target | landed | missing |
+|---|---:|---:|---:|
+| fast arms, n = 100 | 5,600 | **5,600** | 0 |
+| fast arms, n = 1000 | 5,600 | 2,049 | **3,551** |
+| BACE, n = 100 | 2,800 | 2,746 | 54 |
+| BACE, n = 1000 (30 seeds) | 840 | 779 | 61 |
+
+The BACE factorial is **97% complete**, not the 78% a 100-seed denominator implies. Shinichi's
+30-seed decision for factorial n = 1000 (recorded in the morning entry, commit 2463cc6) had never
+been carried into the progress counts, so the remaining BACE work has been overstated all day.
+
+The 115 missing BACE cell-seeds were named, not estimated. At n = 100 they are 7 OU cells, 83 to 99
+seeds each, all in fir's half B array 60776422, which is running. At n = 1000 they are 6 BM cells
+(3, 18, 18, 25, 27 and 28 of 30 seeds), all in fir's half A array 60776371, which is running. So
+every gap is already inside a live array and **no resubmission is warranted anywhere**.
+
+### nibi being empty is correct, not a stall
+
+nibi holds no jobs and its last `pig_factorial_n1000B` tasks show CANCELLED at 07:40:49, which looked
+like a wave that died. It is not. Those cancellations are the morning's deliberate switch off the
+100-seed arrays. nibi's half B at n = 1000 is the 14 OU cells, and all 14 are complete at 30 seeds.
+nibi has nothing left to run in this campaign.
+
+### covsens and the n = 100 walk-past
+
+covsens on fir: **n = 100 796/1200 (unchanged), n = 300 356/1200 (up 61), n = 1000 0/1200.**
+The n = 100 recovery array 60895448 now shows 97 COMPLETED with no new cell-seeds, which looked like
+a slow drip. `sacct` says otherwise: tasks 1 to 97 all started at 19:50:27 and all finished in 4 to
+6 s. The scheduler handed it a burst of about 100 slots and the array spent them walking resume-skips
+at 6 s each. Its throttle is 200, so the remaining ~700 skips cost a couple of bursts and a few
+minutes of compute, not hours. Nothing to fix.
+
+### Totoro landing estimate holds
+
+7,374 rds at 19:51, 7,643 at 20:52, so **269/h**, against the 262 to 310/h recorded earlier. The
+3,551 remaining n = 1000 fast-arm cell-seeds land at about **10:00 MDT on 22 Sep**. Totoro has 39 of
+the 56 factorial cells touched; the 17 untouched are all n = 1000 and are queued behind the running
+62-way wave.
+
+**Next run, in order:** (1) if 60895543 has started tasks, `seff` them and price the covsens n = 1000
+slice; (2) if 60776371 and 60776422 have drained, check the 115 named cell-seeds landed and resubmit
+only what did not; (3) if the Totoro GNN wave has finished, pool and run G10/G11/G14.
 
 **Still awaiting Shinichi (unchanged):** (1) S7a publication, the results Artifact
 (https://claude.ai/artifact/M5HtGRnNGfwsK2Se4gMX24) is current for the core slice; (2) whether the
