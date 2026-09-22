@@ -3,7 +3,7 @@
 **This file is the single source of truth for resuming. Read it first, update it after every
 meaningful step, and never start a second copy of work already running.**
 
-Status: **IN PROGRESS** (not complete). Last updated 2026-09-21 18:45 MDT by the scheduled Claude run.
+Status: **IN PROGRESS** (not complete). Last updated 2026-09-21 18:55 MDT by the scheduled Claude run.
 
 ---
 
@@ -29,7 +29,9 @@ secondary.
 - [x] AVONET300 case study, all arms, 20 seeds. **DONE 2026-09-21** - 20/20 cells on Totoro, zero errors, all six arms plus gnn_on_full, aggregated to `avo_summary.csv` and on the board's own tab.
 - [ ] Covariate sensitivity on the 18 core cells. **Runner support BUILT and verified 2026-09-21**
       (stage `covsens`, `--ncov`). **ALL THREE WAVES NOW DISPATCHED on fir**, fast arms only, no BACE.
-      Landed 2026-09-21 18:40: n = 100 796/1200, n = 300 211/1200, n = 1000 0/1200.
+      Landed 2026-09-21 18:50: n = 100 796/1200, n = 300 229/1200, n = 1000 0/1200.
+      Both recovery arrays (60895448, 60895543) are still PENDING with reason Priority, so neither has
+      run a task yet and there is no n = 1000 wall to measure.
       - n = 100: first array 60829554 (BLOCK=5, 4 cores, 1 h) DRAINED at **138 TIMEOUT / 102 COMPLETED**.
         Recovery **60895448** submitted 18:40 - BLOCK=1, **CPUS=1**, MEM=8G, `--time 01:00:00`, 1200 tasks.
       - n = 300: **60894610 etc.** running since ~14:55 (BLOCK=5, 4 cores, 1 h 30), 34 COMPLETED, no TIMEOUT yet.
@@ -1138,3 +1140,42 @@ competing with the factorial BACE tail for slots.
 woken when the GNN arms land, which is early on 22 Sep; (2) whether the covariate slice should include
 BACE; (3) whether the mean stays the reported estimator for interval width and interval score in the
 two arm-3b cells that one replicate destroys.
+
+## 2026-09-21 18:55 MDT - scheduled run: fired 10 minutes after the last one, nothing measurable yet
+
+This run started at 18:42, seven minutes after the previous entry was written. **Nothing was
+launched, relaunched or cancelled.** The prescribed next step (`seff` the first finished tasks of
+covsens n = 1000 array 60895543 and price the slice) **cannot be done yet**: `sacct -j 60895543 -X`
+shows a single PENDING array head, zero tasks started. Its `squeue` reason is `Priority`, i.e. fair
+share, not a bad submission.
+
+Measured state at 18:50:
+
+| host | in flight | landed |
+|---|---|---|
+| Totoro | 127 cell processes, factorial GNN wave (pgid 308643) | core 3600/3600, factorial **7,064/11,200**, avonet 20/20 |
+| fir | 53 queue entries: covsens n = 300 (60866290, 18 R), factorial BACE tail (60776371, 30 R), plus the two PENDING covsens recoveries | core 1,777, factorial 1,741, covsens 1,025 |
+| nibi | empty | - |
+| rorqual | empty, retired | - |
+
+covsens by n on fir: **n = 100 796/1200, n = 300 229/1200, n = 1000 0/1200**. The n = 100 recovery
+array 60895448 has one COMPLETED task, and `seff` on it reads 7 s wall / 555 MB, which is the
+resume-skip path on a cell-seed that already existed. So it confirms the 8 GB request is ample but
+prices nothing.
+
+**New, and it needs an action later:** the factorial BACE tail 60776371 no longer has a clean record.
+It now reads **348 COMPLETED, 30 RUNNING, 24 NODE_FAIL, 5 TIMEOUT** against the zero TIMEOUT recorded
+at 13:50. The 29 lost tasks are BLOCK=1 cell-seeds and will simply be missing from
+`results/factorial`. **Do not resubmit while 30 tasks are still RUNNING** (the skip check reads the
+directory at task start, so a concurrent resubmission re-runs cells already in flight). Once the
+array fully drains, resubmit the same stage with resume on; only the ~29 gaps will run.
+
+**Next run, in order:** (1) if 60895543 has finished tasks, `seff` them, price the covsens n = 1000
+slice, and either raise THROTTLE or bring the number to Shinichi; (2) if 60776371 has drained,
+resubmit the factorial BACE tail to recover the 29 NODE_FAIL/TIMEOUT cell-seeds; (3) if the Totoro
+factorial GNN wave has finished (estimate ~05:30 on 09-22), pool and run G10/G11/G14.
+
+**Still awaiting Shinichi (unchanged):** (1) S7a publication, the results Artifact
+(https://claude.ai/artifact/M5HtGRnNGfwsK2Se4gMX24) is current for the core slice; (2) whether the
+covariate slice should include BACE; (3) whether the mean stays the reported estimator for interval
+width and interval score in the two arm-3b cells that one replicate destroys.
