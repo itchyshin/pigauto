@@ -84,6 +84,11 @@ after-task finalised). Remaining:
 3. Then run `closeout.py check` from the worktree (it passes only once G13c is closed) and the
    `handoff_gate.sh`; commit.
 
+## Ordered follow-on lane (not this arc)
+
+D-278 (2026-09-22): estimate Pagel's lambda in the joint baseline and make it the default; plan stub
+`docs/dev-log/arc/2026-09-22-joint-lambda-default-plan.md`; opens after PR #184 merges, own worktree and branch.
+
 ## Blockers / Open Questions
 
 - G13c: Shinichi has not yet read the board or recorded the publication decisions.
