@@ -360,7 +360,9 @@ and n in {100, 1000}, minus the eight cells already in the core: 56 cells. The f
 200 replicates per cell. BACE ran 100 at n = 100 and 30 at n = 1000, a reduction Shinichi approved
 on 2026-09-21 after a successful n = 1000 fit measured at about 3 hours and over 16 GB, with the
 MCSE widening by about 1.8x at n = 1000 and reported as such. Strata below give equal weight to
-each cell and pool over rho, which again moved nothing of substance.
+each cell and pool over rho, which again moved nothing of substance. Every figure comes from the
+committed aggregate (`script/campaign_sim_results/summary.csv`), the same file the pkgdown article
+renders from.
 
 Two things were added to the scoring rule for this stage, and both are reported rather than
 absorbed. First, a fit that returns a finite but absurd value is treated as a failure that did not
@@ -376,17 +378,17 @@ singular-solve fallback ends in a type error. These are floored and counted.
 
 | evolutionary model | lambda | BACE | freq (BM) | freq_lambda | floor |
 |---|---|---|---|---|---|
-| Brownian motion | 0.3 | 1.037 | 1.128 | 0.924 | 1.043 |
-| Brownian motion | 1.0 | 0.876 | 0.579 | 0.572 | 1.070 |
-| Ornstein-Uhlenbeck | 0.3 | 0.997 | 1.109 | 0.911 | 1.035 |
-| Ornstein-Uhlenbeck | 1.0 | 0.610 | 0.569 | 0.562 | 1.051 |
+| Brownian motion | 0.3 | 1.027 | 1.125 | 0.924 | 1.043 |
+| Brownian motion | 1.0 | 0.872 | 0.579 | 0.572 | 1.070 |
+| Ornstein-Uhlenbeck | 0.3 | 0.989 | 1.106 | 0.912 | 1.035 |
+| Ornstein-Uhlenbeck | 1.0 | 0.608 | 0.568 | 0.562 | 1.051 |
 
 | mechanism | BACE | freq (BM) | freq_lambda | floor |
 |---|---|---|---|---|
-| MCAR 10% | 0.727 | 0.784 | 0.690 | 1.000 |
-| MCAR 30% | 0.746 | 0.815 | 0.697 | 1.009 |
-| MAR 30% | 0.948 | 0.897 | 0.774 | 1.113 |
-| clade-biased 30% | 0.994 | 0.869 | 0.784 | 1.054 |
+| MCAR 10% | 0.725 | 0.783 | 0.691 | 1.000 |
+| MCAR 30% | 0.743 | 0.814 | 0.697 | 1.009 |
+| MAR 30% | 0.938 | 0.895 | 0.774 | 1.113 |
+| clade-biased 30% | 0.986 | 0.867 | 0.783 | 1.054 |
 
 The core-slice conclusion holds in every stratum. Against the BM default BACE wins at lambda = 0.3
 and loses at lambda = 1; against the signal-estimating specification it loses everywhere on the
@@ -397,7 +399,7 @@ and not the signs, so this is about estimating the signal, not about which proce
 data.
 
 The mechanism table carries the one new result. Under MAR and clade-biased missingness BACE falls to
-0.948 and 0.994, close to the floors of 1.113 and 1.054, while the frequentist arms are unaffected in
+0.938 and 0.986, close to the floors of 1.113 and 1.054, while the frequentist arms are unaffected in
 their ranking. Partitioned by cause, as it should be before it is read: at lambda = 0.3 BACE fails
 on no replicate under any mechanism, and its clade-biased figure of 1.181 at n = 100 and 1.140 at
 n = 1000 under Brownian motion is a genuine accuracy result, worse than predicting the mean. At
@@ -427,16 +429,16 @@ MCAR and vanishes under clade-biased missingness, where all three arms sit at 0.
 
 | mechanism | BACE | freq (BM) | freq_lambda |
 |---|---|---|---|
-| MCAR 10% | 0.874 | 0.869 | 0.887 |
+| MCAR 10% | 0.874 | 0.869 | 0.890 |
 | MCAR 30% | 0.842 | 0.856 | 0.884 |
 | MAR 30% | 0.846 | 0.867 | 0.886 |
-| clade-biased 30% | 0.835 | 0.915 | 0.894 |
+| clade-biased 30% | 0.836 | 0.915 | 0.894 |
 
 Neither route reaches nominal 0.95 anywhere in the factorial either. The model-based Rphylopars
 interval is the one construction that improves under clade-biased missingness, to 0.915 at the
 default and 0.894 with lambda estimated, while BACE's posterior predictive interval is at its worst
-there, 0.835. Interval scores follow: BACE 5.77 against `freq_lambda` 4.83 under clade-biased
-missingness, and BACE ahead only under MCAR 10%, 3.48 against 6.71, where `freq_lambda`'s score is
+there, 0.836. Interval scores follow: BACE 5.70 against `freq_lambda` 4.82 under clade-biased
+missingness, and BACE ahead only under MCAR 10%, 3.47 against 6.75, where `freq_lambda`'s score is
 inflated by its own type-error failures in one cell.
 
 ### Failures across the factorial
