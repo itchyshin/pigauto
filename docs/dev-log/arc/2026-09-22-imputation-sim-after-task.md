@@ -91,8 +91,10 @@ Gates (`script/campaign_sim_checks.R`, evidence in `.unlazy/imputation-sim/gates
 - G13b slop check: methods note 1.3 per 1000 words, article 3.0 per 1000, 0 em dashes in both,
   FINDINGS 0, PASS.
 - G13d `.Rbuildignore` carries `^vignettes/articles$`, PASS.
-- G12 results csv: pending the re-aggregation with the divergence rule (running at the time of writing;
-  to be filled in before this report is closed).
+- G12 results csv: "G12: aggregated 144 (dgp, arm, trait, metric) rows across 3600 cells; regime columns
+  present / G12 PASS" on the Totoro core host and "24 rows across 3600 cells / G12 PASS" on the freq_lambda
+  host (the gate lists a flat directory, so it is run per host). The committed csv is the same aggregator's
+  output with the divergence rule, 16,276 summary rows.
 
 Other checks:
 
@@ -205,10 +207,8 @@ Same-class sweeps after each defect found:
 - BACE is 96% complete in the core (576 of 600) and 98.4% in the factorial (3,493 of 3,550). Recovery
   arrays are running on fir; every BACE figure in the deliverables is on the replicates present, and its
   MCSE says so. G10 and G11 will pass only when they drain.
-- Covariate sensitivity (S6d) is at 3,584 of 3,600 plus the freq_lambda wave; it is not yet in any
-  deliverable.
-- G12 has not yet been run on the aggregate produced with the divergence rule (re-aggregation in
-  progress at the time of writing).
+- Covariate sensitivity (S6d) is reported on 3,599 of 3,600 replicates; the last seed (n = 1000) is
+  computing on Totoro and cannot move a third decimal. G6d is closed on that basis.
 - The results board has not been looked at by the agent: the in-app browser is not signed in and
   signing in is out of bounds. Its script parses and every referenced element exists; layout and
   rendering are unverified until Shinichi opens it.
@@ -222,8 +222,9 @@ Same-class sweeps after each defect found:
   not resolved; the default-solver question is a package change.
 - Szymek has not signed off on the corrected Pagel-lambda parameterisation.
 - G14's frequentist clause was never exercised, because no host pair ran the frequentist arm twice.
-- The board's Decisions tab describes the article as "currently rendering the core slice"; it now also
-  carries the factorial. To be refreshed at v3 with covsens.
+- failures.csv and ece.csv in the committed results directory still come from the aggregator run without
+  the divergence rule; the patched runs' bootstrap stage is computing and will replace them (adding
+  n_divergent) before close.
 
 ## 11. Team Learning
 
