@@ -288,6 +288,25 @@ knitr::kable(ff, row.names = FALSE, col.names = c("Arm", "Errored", "Divergent")
              caption = "Fits that errored, and fits that returned a value outside any sane range, across the core slice and the factorial. Both are scored at the floor and counted here, never dropped.")
 ```
 
+## Covariates
+
+The 18 core cells were run again with two continuous covariates handed to every arm that accepts
+them: the frequentist stack through `phylolm` and `phyloglm`, pigauto's GNN through its covariate
+input. pigauto with the GNN off does not take covariates, and its change on identical replicates is
+exactly zero, which is the check that the two runs share their seeds.
+
+| lambda | Frequentist, BM default | Frequentist, lambda estimated | pigauto, GNN on |
+|---|---|---|---|
+| 0.3 | -0.051 (0.0022) | -0.032 (0.0008) | -0.012 (0.0006) |
+| 0.7 | -0.024 (0.0023) | -0.012 (0.0008) | -0.015 (0.0008) |
+| 1.0 | +0.003 (0.0009) | +0.002 (0.0007) | -0.000 (0.0004) |
+
+Change in z-RMSE with covariates, paired on identical replicates, MCSE in parentheses; 3,599 of 3,600
+replicates. Covariates help where phylogenetic signal is weak and do nothing where it is strong, they
+help the frequentist stack more than the GNN, and they move no ranking. On the discrete traits the GNN
+gains 1.6 accuracy points at lambda = 0.3 and loses 1.4 at lambda = 1; coverage changes by less than
+0.002 for every arm. BACE was not part of this run.
+
 ## Cost
 
 ```{r cost, eval = exists("have") && have}

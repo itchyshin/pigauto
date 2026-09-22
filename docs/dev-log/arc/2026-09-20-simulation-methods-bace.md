@@ -454,9 +454,21 @@ confined to lambda = 1 and are the fixed-threshold monomorphic regime described 
 failure at lambda = 0.3 count is zero. The frequentist failures are the same monomorphic `castor`
 case, plus `freq_lambda`'s Rphylopars type error in one cell.
 
+### Covariate sensitivity
+
+The 18 core cells were re-run with two continuous covariates supplied to every arm that can take them
+(ncov = 2; 3,599 of 3,600 replicates at the time of writing, the last one computing). The frequentist
+stack receives them through `phylolm` and `phyloglm`; pigauto's GNN receives them through its covariate
+input; pigauto with the GNN off ignores them by construction, and its change is exactly zero, which is
+the internal check that the two runs share their seeds. Paired on identical replicates, the covariates
+improve the frequentist stack's z-RMSE by 0.051 (MCSE 0.0022) at lambda = 0.3, 0.024 (0.0023) at
+lambda = 0.7 and nothing at lambda = 1, with `freq_lambda` gaining 0.032, 0.012 and nothing; coverage
+moves by less than 0.002 everywhere. No ranking in the core slice changes. BACE was not part of this
+run because its cost at n = 1000 put it outside the approved budget, so nothing here compares BACE with
+or without covariates.
+
 ### What this study does not cover
 
-These results describe one tree shape, one set of seven traits, and no covariates; a covariate
-sensitivity run on the 18 core cells is reported separately. Nothing here speaks to trees larger
+These results describe one tree shape, one set of seven traits, and two synthetic covariates at most. Nothing here speaks to trees larger
 than 1000 tips, to multiple observations per species, or to missingness that depends on the missing
 value itself.
