@@ -3,7 +3,7 @@
 **This file is the single source of truth for resuming. Read it first, update it after every
 meaningful step, and never start a second copy of work already running.**
 
-Status: **IN PROGRESS** (not complete). Last updated 2026-09-21 14:15 MDT by the scheduled Claude run.
+Status: **IN PROGRESS** (not complete). Last updated 2026-09-21 18:45 MDT by the scheduled Claude run.
 
 ---
 
@@ -28,9 +28,13 @@ secondary.
 - [ ] Trimmed factorial complete: 56 cells, same conditions.
 - [x] AVONET300 case study, all arms, 20 seeds. **DONE 2026-09-21** - 20/20 cells on Totoro, zero errors, all six arms plus gnn_on_full, aggregated to `avo_summary.csv` and on the board's own tab.
 - [ ] Covariate sensitivity on the 18 core cells. **Runner support BUILT and verified 2026-09-21**
-      (stage `covsens`, `--ncov`). **DISPATCH STARTED 2026-09-21 14:00** - the n = 100 wave is RUNNING on
-      fir (job 60829554, 240 tasks, fast arms only, no BACE). The n = 300 and n = 1000 waves are
-      deliberately held until the n = 100 wave gives a measured fir wall to size `--time` from.
+      (stage `covsens`, `--ncov`). **ALL THREE WAVES NOW DISPATCHED on fir**, fast arms only, no BACE.
+      Landed 2026-09-21 18:40: n = 100 796/1200, n = 300 211/1200, n = 1000 0/1200.
+      - n = 100: first array 60829554 (BLOCK=5, 4 cores, 1 h) DRAINED at **138 TIMEOUT / 102 COMPLETED**.
+        Recovery **60895448** submitted 18:40 - BLOCK=1, **CPUS=1**, MEM=8G, `--time 01:00:00`, 1200 tasks.
+      - n = 300: **60894610 etc.** running since ~14:55 (BLOCK=5, 4 cores, 1 h 30), 34 COMPLETED, no TIMEOUT yet.
+      - n = 1000: **60895543** submitted 18:41 - BLOCK=1, 4 cores, 16 GB, `--time 04:00:00`, **THROTTLE=8**.
+        Deliberately throttled: this IS the D-139 pre-run test for an unmeasured regime (see section 8).
 - [ ] Aggregated with paired MCSE on every number; regime columns filled.
 - [ ] **S7a** results Artifact shown to Shinichi (Dan's freq-vs-BACE view + the four-arm view); his
       publication decisions recorded here.
@@ -1034,3 +1038,103 @@ intended edits, so nobody had edited the page from inside it.
 Note on permissions: the cluster submission that earlier runs recorded as refused went through cleanly
 this time, so that block appears to have lifted. The two older queued waves it was holding are now moot -
 nibi's recovery arrays completed this morning and the factorial fast arms are running on Totoro.
+
+## 2026-09-21 13:50 — state after the session gap; three "missing" BACE cells RESOLVED
+Everything survived the logoff: Totoro detached with setsid, DRAC arrays owned by Slurm. Only my
+in-session watcher died (re-armed as btj1iu4eh).
+- Totoro GNN factorial 5,662/11,200. n=100 COMPLETE (5,600/5,600) in 4.2 h, matching the 4 h estimate.
+  n=1000 started; 3.8x per replicate => ~16 h => lands about 05:30 on 09-22.
+- BACE factorial 3,441/3,550 in-design (96.9%), up from 86.9%. nibi arrays drained; fir has 110 R + 4 PD.
+- The 3 cells with ZERO BACE rds are all BM clade0.3 n=1000 (l0.3 r0, l0.3 r0.5, l1 r0.5). NOT a gap and
+  NOT a failure: they are the tail of fir array 60776371 (420 tasks, %250). Tasks 301-330 are 30/30
+  RUNNING at 3:01 against a 5 h limit; 368-420 are PENDING with reason Priority. Zero TIMEOUT on this
+  array. A singular-BACE failure would finish in seconds and still write a floored rds, so 3 h of CPU
+  with no file means genuine computation. Array started 05:49; expect these this evening, well inside
+  the GNN window. BACE is not the critical path.
+- Note: 149 of 310 completed tasks on that array finished in 3-7 s, the resume-skip path for
+  (cell, seed) rds that already existed. That is why it drains faster than 420 x 3 h.
+
+## 2026-09-21 15:10 — DELIVERABLE (a) results Artifact PUBLISHED (private), v1 = core slice complete
+URL: https://claude.ai/artifact/M5HtGRnNGfwsK2Se4gMX24  ·  source: scratchpad/sim-results.html
+Six tabs: Frequentist vs BACE (Dan) · All arms · Factorial (freq/freq_lambda only so far) · AVONET ·
+Cost & failures · Decisions (six, each with my reading). Palette validated both modes (dataviz
+validator: ok, light-mode relief satisfied by direct labels + tables). Status strip states exactly
+what is complete and what is still computing. Republish the SAME file path to update in place.
+Also: (c) pkgdown article filled from the core slice, commit 1347c06, renders clean, unlisted.
+AVONET freq_lambda ran (20/20): identical to freq to 4 dp => estimated lambda ~ 1 on real data.
+Walls (median s, one core): freq .4/.8/2.7 · freq_lambda 2.0/3.9/10.6 · gnn_off .7/3.0/45.3 ·
+gnn_off_rph 34.4/85.9/353.4 · gnn_on 107.7/132.5/338.6 · bace 1161/3050/11019.
+REMAINING: factorial GNN arms (Totoro, ~05:30-09:40 on 09-22) -> factorial BACE tail (fir, this
+evening) -> full pool -> G10/G11/G14 -> add factorial to article + methods note + Artifact v2 ->
+covsens (S6d) -> after-task, Melissa, handover. Publication of the article waits on Shinichi
+reading the Artifact.
+
+## 2026-09-21 18:45 MDT - scheduled run: the covsens n = 100 timeout wave is measured and resubmitted; n = 1000 launched as a throttled pre-run
+
+**Nothing already running was relaunched or cancelled.** Measured state at 18:33:
+**Totoro** 127 cell processes on the factorial GNN wave (pgid 308643) at **7,033 / 11,200** - n = 100 complete,
+n = 1000 filling, still on the ~05:30 on 09-22 landing estimate. **nibi** queue EMPTY. **rorqual** 0, retired.
+**fir** 52 tasks: the factorial n = 1000 BACE tail 60776371 draining (its `results/factorial` at 1,733),
+plus a covsens n = 300 wave that a later session launched at ~14:55 and that the 14:15 entry had recorded
+as held. That n = 300 wave was left alone.
+
+### The covsens n = 100 wave lost 138 of 240 tasks, and `seff` says why
+
+`sacct` on 60829554: **138 TIMEOUT against 102 COMPLETED** at `--time 01:00:00`, BLOCK=5. Only
+**796 of 1,200** cell-seeds landed, and the shortfall is not spread evenly - the r = 0.5 cells are the
+starved ones (l0.3 141, l0.7 65, l1 26) against 178-199 for the r = 0 cells.
+
+`seff` over five COMPLETED tasks gives the two numbers that fix it:
+
+| measure | value | consequence |
+|---|---|---|
+| wall, 5 cell-seeds | 18 to 32 min | a fast task costs 3.6 to 6.4 min per cell-seed |
+| CPU efficiency | **24.6 to 25.0% of 4 cores** (5 of 5 tasks) | the fast arms are effectively **single-threaded** here |
+| memory efficiency | 3.8 to 4.4% of 16 GB | **0.7 GB** is the real footprint, not 16 |
+
+The timed-out tasks wrote about 2 of their 5 cell-seeds before the kill, so the slow cell-seeds cost
+roughly **24 min** each against the fast ones' 5. That bimodality inside a BLOCK=5 task is the same
+arithmetic that cost the n = 1000 BACE arrays their blocks: a task's wall depends on which cells it
+draws. The recorded fix applies unchanged - **BLOCK=1**.
+
+The CPU-efficiency reading is new and it matters beyond this wave: the lesson already in section 8a
+("BACE is single-threaded: ask for 1 core, not 4") is now measured to hold for the **fast arms at
+n = 100 too**. `PIG_TORCH_THREADS` is set to `CPUS`, so the GNN arm simply is not using the four
+threads at this problem size. Asking for 1 core is four times the throughput per core-hour and
+schedules sooner. Left at 4 cores for n = 1000, where torch may behave differently and nothing has
+been measured.
+
+**Resubmitted** (estimate stated before running, D-139: 404 missing cell-seeds x ~12 min at 1 effective
+core = **~80 core-hours**, ~1 h of wall at THROTTLE=200):
+
+```
+job 60895448 - fir - covsens n=100 - 1200 tasks, BLOCK=1, CPUS=1, MEM=8G, --time 01:00:00
+```
+
+The 796 already-landed cell-seeds are skipped by the resume check, so only the 404 gaps run.
+
+### covsens n = 1000 is launched, but THROTTLED to 8 tasks - that is the pre-run test, not caution
+
+There is no measured wall for the fast arms at n = 1000 **with covariates**, and the honest range is
+wide. The 15:10 walls table gives ~740 s per cell-seed for these five arms at n = 1000 without
+covariates; the covsens n = 100 wave just measured **2 to 10x** the table's n = 100 figure. So the
+slice is somewhere between **500 and 2,400 slot-hours**, and the top of that range is a fifth of the
+whole approved campaign budget. D-139 forbids committing to that on a guess.
+
+```
+job 60895543 - fir - covsens n=1000 - 1200 tasks, BLOCK=1, CPUS=4, MEM=16G, --time 04:00:00, THROTTLE=8
+```
+
+THROTTLE=8 bounds the commitment to about **32 cores** while the wall is measured. **Next run: `seff`
+the first finished tasks of 60895543, compute the real slice cost, then either raise the throttle (if
+it is inside budget) or bring the number to Shinichi.** Do not raise the throttle before that
+measurement exists.
+
+Both arrays were accepted and were PENDING at 18:44; fir was carrying only 54 tasks, so neither is
+competing with the factorial BACE tail for slots.
+
+**Still awaiting Shinichi (unchanged):** (1) S7a publication - the results Artifact
+(https://claude.ai/artifact/M5HtGRnNGfwsK2Se4gMX24) is current for the core slice and he asked to be
+woken when the GNN arms land, which is early on 22 Sep; (2) whether the covariate slice should include
+BACE; (3) whether the mean stays the reported estimator for interval width and interval score in the
+two arm-3b cells that one replicate destroys.
