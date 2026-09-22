@@ -347,7 +347,22 @@ section below), written as errored + divergent.
 | freq_lambda | 32 + 1 of 1200 (2.8%) | 29 of 1200 (2.4%) | 16 of 1200 (1.3%) |
 
 BACE fails on roughly one replicate in six, with "mixed model equations singular" the dominant
-message, and the rate barely improves with sample size. The frequentist failures are the
+message, and the rate barely improves with sample size.
+
+Convergence is a separate matter from failure, and it was promised above as a reported rate. Every fit
+from the runner of 2026-09-20 onward stores BACE's own `assess_convergence()` verdict over its five
+imputation iterations, its drift, and the effective sample sizes of the final fits; 1,774 successful
+fits across the core slice and the factorial carry them. By BACE's own verdict, **15% of fits
+converged at lambda = 0.3 in the core and 20% in the factorial, 33% at lambda = 0.7, and 81% and 67%
+at lambda = 1**; by sample size, 23 to 28% at n = 100, 43% at n = 300 and 48 to 61% at n = 1000. Median
+effective sample size over the fixed effects is comfortable throughout, 572 at n = 100 rising to 1,600
+at n = 1000, with a tenth percentile of 66 to 315. So the chains mix; what BACE's autocorrelation,
+percent-change, trend and Geweke criteria object to is drift of the imputed values across the five
+sequential iterations, most often where the phylogenetic signal is weak. Because `skip_conv = TRUE`, the
+imputations scored in every table are the ones BACE produced regardless of that verdict. A user who
+followed the package's retry path would pay an unbounded multiple of the 3-hour n = 1000 fit for it; a
+user who did not would be using imputations BACE itself flags as unconverged in most low-signal cells.
+Either way it is a cost of the Bayesian route that belongs beside its accuracy figures. The frequentist failures are the
 monomorphic-discrete case described above and are confined to lambda = 1. This difference in
 robustness is a practical cost of the Bayesian route that a user will meet, and it is reported here
 rather than hidden by dropping the failed cells.
