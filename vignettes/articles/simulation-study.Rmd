@@ -39,11 +39,11 @@ cat("> **This page is a placeholder.** The campaign behind it has not finished, 
     "shown yet. The design below is fixed and was registered before any result was inspected.\n")
 ```
 
-> **Scope of the numbers on this page.** Everything below is the *core slice*: Brownian motion,
+> **Scope of the numbers on this page.** The first tables are the *core slice*: Brownian motion,
 > MCAR at 30%, no covariates, lambda in {0.3, 0.7, 1.0}, rho in {0, 0.5}, n in {100, 300, 1000},
 > 200 replicates per cell and 100 for BACE. The factorial extension over the evolutionary model,
-> the missingness mechanism and the missing fraction is still computing and will be added here
-> rather than replacing anything. The design was fixed before any result was inspected.
+> the missingness mechanism and the missing fraction follows in its own section. The design was
+> fixed before any result was inspected.
 
 ## What this compares, and why
 
@@ -206,6 +206,88 @@ if (nrow(cv)) {
 }
 ```
 
+## The factorial
+
+The factorial varies what the core slice held fixed: Brownian motion or Ornstein-Uhlenbeck, four
+missingness mechanisms, lambda in {0.3, 1.0}, rho in {0, 0.5} and n in {100, 1000}, minus the
+eight cells already in the core, so 56 cells. Every fast arm ran 200 replicates per cell. BACE ran
+100 at n = 100 and 30 at n = 1000; its MCSE is correspondingly wider and its columns say so.
+
+One scoring rule was added for this stage. A fit that returns a finite but absurd value is a
+failure that did not throw: an arm is divergent on a replicate if its z-RMSE exceeds three times
+the mean floor or its interval score exceeds 1,000, where the sane range across every arm and cell
+is 2 to 12. Divergent replicates are scored at the floor, like errored ones, their intervals are
+dropped, and the count is reported. It caught 15 `freq_lambda`, 34 Rphylopars-solver and 2 BACE
+replicates out of 11,200. Strata below weight each cell equally and pool over rho.
+
+```{r fact-z, eval = exists("have") && have}
+fz <- S[!(S$evo == "BM" & S$miss == "mcar" & S$frac == 0.3) & S$metric == "zRMSE" &
+          S$trait %in% c("c1", "c2", "cnt", "prp") & S$arm %in% KEEP, ]
+strat <- function(d, by, metric_label, digits = 3) {
+  # one number per cell first (mean over the family's traits), then equal weight per cell
+  cell_cols <- c("evo", "lambda", "rho", "n", "miss", "frac", "arm")
+  cm <- aggregate(d$mean, by = d[cell_cols], FUN = mean); names(cm)[ncol(cm)] <- "v"
+  sm <- aggregate(cm$v, by = cm[c(by, "arm")], FUN = mean); names(sm)[ncol(sm)] <- "v"
+  w <- reshape(sm, idvar = by, timevar = "arm", direction = "wide"); names(w) <- sub("^v\\.", "", names(w))
+  keep <- intersect(KEEP, names(w)); w <- w[do.call(order, w[by]), c(by, keep)]
+  knitr::kable(w, digits = digits, row.names = FALSE, col.names = c(by, ARM[keep]), caption = metric_label)
+}
+if (nrow(fz)) strat(fz, c("evo", "lambda"),
+  "z-RMSE, continuous family, by evolutionary model and lambda, pooled over mechanism, rho and n. Lower is better.")
+```
+
+```{r fact-z-miss, eval = exists("have") && have}
+if (nrow(fz)) strat(fz, c("miss", "frac"),
+  "z-RMSE by missingness mechanism, pooled over evolutionary model, lambda, rho and n.")
+```
+
+The core ranking replicates in every stratum. At lambda = 0.3 the two arms that estimate the
+signal are the only ones clearly below the floor; at lambda = 1 pigauto with the GNN off leads and
+BACE is last. Ornstein-Uhlenbeck changes the magnitudes and not the signs. The one new result is in
+the mechanism table: BACE falls to within a few hundredths of the floor under MAR and clade-biased
+missingness, and that figure has two causes that must be read separately. At lambda = 0.3 BACE fails
+on no replicate and its clade-biased z-RMSE of 1.15 to 1.18 is a genuine accuracy result, worse than
+predicting the mean. At lambda = 1 it errors with singular mixed-model equations on 53% of Brownian
+clade-biased replicates at n = 100 and 86% at n = 1000, and the floored failures dominate the mean;
+on the replicates where it fits it reaches 0.82 and 0.55, behind pigauto's 0.62 and 0.48 but not
+collapsed. Inaccurate at low signal, fragile at high signal, under the missingness pattern a real
+comparative dataset most often presents.
+
+```{r fact-acc, eval = exists("have") && have}
+fa <- S[!(S$evo == "BM" & S$miss == "mcar" & S$frac == 0.3) & S$metric == "accuracy" &
+          S$trait %in% c("bin", "ord", "cat3") & S$arm %in% KEEP, ]
+if (nrow(fa)) strat(fa, c("evo", "lambda"),
+  "Accuracy, discrete family, by evolutionary model and lambda. Higher is better.")
+```
+
+BACE's discrete advantage at low signal survives the factorial: 13 to 14 points over the
+frequentist stack and about 10 over pigauto at lambda = 0.3 under both processes. At lambda = 1 it
+is behind by 16 points under Brownian motion and 5 under Ornstein-Uhlenbeck. Across mechanisms the
+lead is 3 to 5 points under MCAR and vanishes under clade-biased missingness, where every arm sits
+at 0.62 to 0.64.
+
+```{r fact-cov, eval = exists("have") && have}
+fc <- S[!(S$evo == "BM" & S$miss == "mcar" & S$frac == 0.3) & S$metric == "coverage" &
+          S$trait %in% c("c1", "c2", "cnt", "prp") & S$arm %in% setdiff(KEEP, "floor"), ]
+if (nrow(fc)) strat(fc, c("miss", "frac"),
+  "95% interval coverage by missingness mechanism. Nominal is 0.95.")
+```
+
+The coverage table is where the design's own warning comes true. Under clade-biased missingness
+the masked cells are not exchangeable with pigauto's calibration split, and the conformal coverage
+drops from 0.92 to 0.93 under MCAR to 0.86. The model-based Rphylopars interval is the one
+construction that improves there, to 0.91 to 0.92, and BACE's posterior predictive interval is at
+its worst, 0.84. No arm reaches 0.95 under any mechanism in the factorial; the conformal intervals
+do so only at n = 1000 under MCAR, at 0.95.
+
+```{r fact-fail, eval = exists("have") && have && exists("FL") && !is.null(FL) && "n_divergent" %in% names(FL)}
+ff <- FL[FL$arm %in% setdiff(KEEP, "floor"), ]
+ff <- aggregate(cbind(n_failed, n_divergent) ~ arm, data = ff, FUN = sum)
+ff$arm <- ARM[ff$arm]
+knitr::kable(ff, row.names = FALSE, col.names = c("Arm", "Errored", "Divergent"),
+             caption = "Fits that errored, and fits that returned a value outside any sane range, across the core slice and the factorial. Both are scored at the floor and counted here, never dropped.")
+```
+
 ## Cost
 
 ```{r cost, eval = exists("have") && have}
@@ -247,4 +329,6 @@ The full methods description, written for the accompanying paper, is in
 Multi-observation designs, multi-proportion and zero-inflated traits, and missing-not-at-random
 mechanisms are outside its scope. The Ornstein-Uhlenbeck arm is a sensitivity check on model
 misspecification, not a full treatment. The comparison uses each method as its documentation
-recommends, and does not tune any of them beyond those defaults.
+recommends, and does not tune any of them beyond those defaults, with one deliberate exception:
+the frequentist stack is reported both at Rphylopars' `model = "BM"` default and at
+`model = "lambda"`, because the difference between the two turned out to be a finding.

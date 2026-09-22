@@ -36,3 +36,46 @@ and the push itself, which touches no other lane, was not done.
 - S6c (AVONET300) and S6d (covariate sensitivity), both correctly deferred until the core slice
   finishes.
 - Shinichi's read of the S7a Artifact, and his call on whether and when S7c is published.
+
+## Reconcile 2, 2026-09-22 (Melissa mode; six axes only)
+
+The 09-20 carried-over items first, since they are what this reconcile owes: the draft PR (#184) turned
+out to exist since the evening of 09-20 and the branch is now current on it; the ledger leaves now carry evidence for G14, G6c, G13a, G13b, G13d with
+G10, G11, G6d, G12 recorded as open with their causes; the n = 1000 BACE decision was taken (30
+replicates, Shinichi 2026-09-21); nibi's TIMEOUT cell-seeds were resubmitted and have drained; S6c is
+done and S6d is at 3,584 of 3,600; the Artifact read and the S7c publication call remain with Shinichi.
+
+| axis | planned | actual | tag | owner |
+|---|---|---|---|---|
+| scope | four arms plus floor (plan, Q1) | five: `freq_lambda` added as a fifth arm on Shinichi's word ("OK changed my mind. Yes, at the lambda stuff as the fifth arm.", 2026-09-21), run on core, factorial, AVONET and covsens | adaptive | Ada |
+| scope | factorial "40 cells after the Q7 trim" (plan) | the design table has always emitted 56 (the plan's 40 omitted MCAR 0.30); G11 and the article say 56 | adaptive, and the plan text was wrong | Ada |
+| evidence / verification | S6b factorial fast arms on nibi arrays, concurrent with the core slice | the fast-arm wave did not run for about 24 h: the Totoro launch was refused three times overnight and each refusal was logged without the completion summary saying the wave had NOT run; found 2026-09-21 morning when the factorial pool proved BACE-only; launched 09:19, landed 2026-09-22 09:02 on Totoro, not nibi | drift | Rose |
+| evidence / verification | "every reported number carries MCSE" and "failures scored at the floor" (plan) | the aggregator had no rule for a fit that returns a finite absurd value; 15 + 34 + 2 such replicates dominated whole strata of the first factorial summary. Rule added and committed (1ec3e98) before any factorial number shipped; count reported as `n_divergent` | adaptive | Ada, verified by the per-replicate cross-check |
+| evidence / verification | G14: 5 cells on two hosts agree on truth, mask and the frequentist arm | PASS on three host pairs for truth and mask; the frequentist clause is vacuous because nibi and fir hold BACE only. Stated as such in the ledger and the after-task | adaptive | Rose |
+| public claims | methods note reports each arm at its documented default | note says "No arm reaches nominal 0.95" for a paragraph that covered only two arms; pigauto's conformal intervals do. Scoped the same day (bee0e87) | drift caught in-arc | Rose |
+| public claims | the results Artifact "shown" to Shinichi | v1 and v2 published private; not visually inspected by the agent (browser not signed in; sign-in declined by rule). JS parse-checked, ids verified. Shinichi has not yet confirmed reading it | unclear | Shinichi |
+| model routing | Fable orchestrates; Sonnet builders; Opus for load-bearing review | Shinichi corrected mid-arc ("do not use Fable for parallel work"; "you use Fable as appropriate and orchestrating jobs"); refuters pinned to Sonnet, critic to Opus | adaptive | Ada |
+| safety gates | D-139 pre-run before any run over 30 min | held for the campaign; the `freq_lambda` waves (12 min, 7 min, 12 min) were under the line and launched on precedent | adaptive | Ada |
+| handoff state | overnight authority: push and draft PR | draft PR #184 was opened 2026-09-20 23:52 UTC, so the 09-20 row above was written minutes before it happened and is stale, not a gap; the remote branch had then fallen 46 commits behind, and was brought current today with the PR body refreshed to the present state | adaptive (09-20 row corrected) | Rose |
+
+```
+DECISION RECEIPT
+  Questions asked      — Q6 thresholds, Q7 factorial trim, Q8 primary contrast (Phase 0.4, 09-20);
+                         G0 budget approval (after the pre-run, 09-20); n = 1000 BACE replication
+                         (three costed options, 09-21); fifth arm yes/no (09-21); core-now vs
+                         factorial-later for freq_lambda (09-21)
+  Answers received     — "Go ahead" (G0); "option 2, reduce BACE to 30 seeds at n = 1000 in the
+                         FACTORIAL"; "Keep model = BM only and disclose" then "OK changed my mind. Yes,
+                         at the lambda stuff as the fifth arm."; "Core slice now, factorial after";
+                         "totoro you can use up to 250 for snakagaw OK"
+  Defaults accepted    — arms 3a and 3b both run (Q1 default); covariate sensitivity after the main
+                         runs (Q2); phyloglm Poisson GEE for counts (Q3); fir substituted for the
+                         retired rorqual without asking (reasoned, logged, reversible)
+  Adaptive decisions   — divergence rule; per-host pool subdirectories; BACE convergence by BACE's own
+                         verdict; freq_lambda run on AVONET and covsens for arm parity; the covsens
+                         n = 1000 array cancelled and resubmitted when stuck
+  Unresolved           — Shinichi's read of the Artifact and the six publication decisions on its last
+                         tab (G13c); whether the pkgdown article goes public, unlisted, or stays
+                         internal; Szymek's sign-off on the corrected Pagel-lambda form; the arm-3
+                         default solver as a package change -> Rose
+```
