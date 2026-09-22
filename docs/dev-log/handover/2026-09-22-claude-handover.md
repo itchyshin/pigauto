@@ -50,11 +50,14 @@ stays pigauto's default. Standing constraints: never edit `R/`, `BACE/`, PR #175
 
 ## Landing State
 
-Run `~/shinichi-brain/tools/handoff_gate.sh pigauto` before trusting this table; refresh it at close.
+`handoff_gate.sh` run 2026-09-22 14:35: PR #184 OPEN; branch current; acceptance ledger 23 of 26 gates met, 3
+declared open below (G10, G11: BACE tails computing; G13c: Shinichi). G6 and G9b were resolved by the campaign's
+own measurements and are marked so in the ledger. Two unrelated branches (`shannon-install`, `spec/vulcan-gpu-avonet9993`)
+carry unpushed commits from other lanes and are not this arc's.
 
 | Artifact / branch | Committed | Pushed | PR | State |
 |---|---|---|---|---|
-| `pigauto` `arc/imputation-sim` `077b4de` (worktree `../pigauto-imputation-sim`) | y | y | #184 draft | LANDED on the branch; NOT merged (merge is Shinichi's call after G13c) |
+| `pigauto` `arc/imputation-sim` (worktree `../pigauto-imputation-sim`), HEAD at close | y | y | #184 draft | LANDED on the branch; NOT merged (merge is Shinichi's call after G13c) |
 | `.unlazy/imputation-sim/**` (goal, progress, ledger) | n (git-ignored by design) | n | none | CARRIED-OVER: lives only in the worktree; resume = read the files above |
 | Results board source `scratchpad/sim-results.html` | n (scratchpad) | published v3 | none | CARRIED-OVER: republish the same path to update; source also mirrored in PROGRESS notes |
 | Raw rds pools `/tmp/pig_pool4`, `/tmp/pig_pool6`, `/tmp/pig_pool7` on the Mac; `~/pigauto_sim/results/*` on Totoro; `results/` on nibi and fir | n (data, never git) | n/a | none | CARRIED-OVER: keepers are on Totoro and on the clusters' /project; the Mac copies are working pools |
@@ -67,24 +70,19 @@ awaits Shinichi's approval per the brain-write boundary. Until then: **FINDINGS-
 
 ## Next Immediate Steps
 
-1. When Totoro's BACE tails finish (watcher biu95j9dm; logs/core.log DONE >= 3 and logs/factorial.log DONE
-   >= 4): rsync `results/core_bace` and `results/factorial_bace` into `/tmp/pig_pool4/core/totoro_bace`
-   and `/tmp/pig_pool6/factorial/totoro_bace`; re-run G10 and G11 (direct `Rscript`, not through
-   gate-check's 120 s timeout); cancel the now-redundant nibi and fir recovery arrays.
-2. When the ECE stage lands: copy `agg_failures.csv`/`agg_ece.csv` (core, pool7) and `fact_*` (factorial,
-   pool6/agg) into `script/campaign_sim_results/` as `failures.csv` (concatenate) and `ece.csv`; re-render
-   the article; commit.
-3. Covsens: seed Totoro `results/covsens` from `/tmp/pig_pool6/covsens/fir`, run the covsens stage (fast
-   arms) to fill the last seed, pull `covsens` and `covsens_fl` to `/tmp/pig_pool6/covsens/{totoro,totoro_fl}`,
-   aggregate with the patched script, add one paragraph each to the methods note and the article, board v4,
-   G6d.
-4. Re-aggregate core and factorial once the BACE tails are pooled so the committed csv are final; re-render;
-   commit; refresh PR #184 body.
-5. Finish after-task sections 5 and 10 with the final gate lines; run
-   `python3 ~/shinichi-brain/tools/closeout.py check <abs path>` from the worktree; run
-   `gate-check.mjs --reverify --approve` on every leaf; commit.
-6. Refresh this handover's Landing State from `handoff_gate.sh`; commit; push.
-7. Wait for Shinichi: read the board, record the six decisions (G13c), decide article visibility and merge.
+Items 2, 3 and 5 of the earlier list are DONE (bootstrap csv committed 4e61cc7; covsens complete and reported;
+after-task finalised). Remaining:
+
+1. BACE tails. Factorial: 57 seeds on Totoro (pgid 1840886; `logs/factorial.log` gets a 4th DONE line).
+   Core: 24 seeds on nibi (array 22472376, seeded with the pool; writes into nibi `results/core`). When each
+   lands, rsync into `/tmp/pig_pool6/factorial/totoro_bace` and `/tmp/pig_pool4/core/nibi` (rsync -a, no
+   --info flag), re-run G10 and G11 directly with `Rscript`, re-aggregate both stages with
+   `script/campaign_gnn_off_aggregate.R --reference freq`, rebuild `script/campaign_sim_results/*.csv` by
+   concatenating core and factorial outputs, re-render the article, republish the board with the same
+   file path, commit, refresh PR #184's body, mark G10/G11 [x].
+2. Wait for Shinichi: read the board, record the six decisions (G13c), decide article visibility and merge.
+3. Then run `closeout.py check` from the worktree (it passes only once G13c is closed) and the
+   `handoff_gate.sh`; commit.
 
 ## Blockers / Open Questions
 

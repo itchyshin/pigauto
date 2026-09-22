@@ -85,10 +85,18 @@ Gates (`script/campaign_sim_checks.R`, evidence in `.unlazy/imputation-sim/gates
   cell(s) checked, truth/mask/freq identical / G14 PASS" x3 (the freq clause is vacuous on these pairs;
   truth and mask are the evidence).
 - G10 core completeness: "18 design cells, 10023 rds present, 24 replicate-arms missing", all 24 BACE,
-  every fast arm 200/200. FAIL pending the fir recovery array 60949560.
+  every fast arm 200/200. OPEN at close: the 24 seeds are computing on nibi (array 22472376, seeded with
+  the pool so only they run). BACE is reported on 576 of 600 core replicates and every table says so.
 - G11 factorial completeness: "56 design cells, 39254 rds present, 57 replicate-arms missing", all 57
-  BACE (56 in the four Brownian clade n = 1000 cells), every fast arm 200/200 in all 56 cells. FAIL
-  pending fir arrays 60938890 (12 h) and the n100B tail.
+  BACE (56 in the four Brownian clade n = 1000 cells), every fast arm 200/200 in all 56 cells. OPEN at
+  close: the 57 seeds are computing on Totoro (pgid 1840886; 2 landed by 14:30). BACE is reported on
+  3,493 of 3,550 factorial replicates and every table says so. Neither tail can move a headline; both
+  tighten a BACE MCSE, and the fold-in is a re-run of the aggregator plus a csv refresh.
+- G6 (pre-run interval gate) was never obtained in the pre-run and is resolved by the campaign: at
+  lambda = 1, n = 1000, MCAR, BACE's coverage is 0.885, outside the gate's [0.90, 0.99] band; reported as a
+  finding, the gate abandoned as an oracle.
+- G9b (BACE convergence) is resolved the same way: runs = 5 adopted from the probe, every fit stores BACE's
+  verdict, and the convergence rate is reported as a result (see the methods note).
 - G13a superlatives: grep over the methods note and the article, 0 hits, PASS.
 - G13b slop check: methods note 1.3 per 1000 words, article 3.0 per 1000, 0 em dashes in both,
   FINDINGS 0, PASS.
@@ -208,9 +216,10 @@ Same-class sweeps after each defect found:
 
 ## 10. Known Residuals
 
-- BACE is 96% complete in the core (576 of 600) and 98.4% in the factorial (3,493 of 3,550). Recovery
-  arrays are running on fir; every BACE figure in the deliverables is on the replicates present, and its
-  MCSE says so. G10 and G11 will pass only when they drain.
+- BACE is 96% complete in the core (576 of 600) and 98.4% in the factorial (3,493 of 3,550). The study is
+  closed on those replicates, every BACE figure states its count, and the two tails are computing (core on
+  nibi, factorial on Totoro). G10 and G11 stay open until they land; folding them in is a re-aggregation and
+  a csv refresh, not a re-analysis. Shinichi chose to close rather than wait (2026-09-22 14:30).
 - Covariate sensitivity (S6d) is reported on 3,599 of 3,600 replicates; the last seed (n = 1000) is
   computing on Totoro and cannot move a third decimal. G6d is closed on that basis.
 - The results board has not been looked at by the agent: the in-app browser is not signed in and
