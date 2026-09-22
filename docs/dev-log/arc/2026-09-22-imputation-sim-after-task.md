@@ -48,7 +48,12 @@ Deliverables:
   across `runs` (which are sequential imputation iterations, not chains). `runs = 5`, `n_final = 20`.
 - **Failures scored at the floor and reported beside every metric**, including BACE's 16 to 39% error rate
   at lambda = 1. Rejected: reporting BACE on its successful fits only.
-- **In-house joint solver stays pigauto's default.** The Rphylopars solver returned finite but absurd
+- **Decision 7 (Shinichi, 2026-09-22, brain D-278): pigauto's joint baseline will estimate Pagel's lambda by
+  default, covariates included, benchmarked on the core slice, in a separate lane and PR after #184
+  (`docs/dev-log/arc/2026-09-22-joint-lambda-default-plan.md`). Taken because every pigauto arm here assumed
+  lambda = 1 in the joint path, which is why they sit at the floor at lambda 0.3 where BACE and freq_lambda,
+  both of which estimate the phylo/non-phylo split, do not.
+- **In-house joint solver stays pigauto's default for now.** The Rphylopars solver returned finite but absurd
   values on 50 core and 34 factorial replicates (floored and counted); once floored it trails the in-house
   solver by 0.03 to 0.07 z-RMSE at lambda = 1 and matches it elsewhere, while the in-house solver diverged
   on no replicate. It is the most accurate arm on AVONET. That split is recorded, not resolved here (a
