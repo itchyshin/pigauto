@@ -156,10 +156,13 @@ Discrete traits run the other way. BACE is ahead by 11 to 17 accuracy points whe
 low or moderate, and every other arm is at or below the mode floor at lambda = 0.3. At lambda = 1
 that reverses and the Mk and label-propagation paths reach 0.96 against BACE's 0.84.
 
-The two pigauto solvers are not interchangeable. The in-house solver and the Rphylopars solver
-agree in most cells, but the Rphylopars solver is unstable at high signal and small n: at lambda = 1
-and n = 100 it reaches a z-RMSE of 1.654 against the in-house solver's 0.487, and its interval score
-diverges in two cells. That is a reason to keep the in-house solver as the default.
+The two pigauto solvers are not interchangeable. The Rphylopars joint solver returned a finite but
+absurd value on 50 of the 3,600 core replicates (28 at n = 100, 10 at n = 300, 12 at n = 1000),
+including a z-RMSE of 8.9 for one trait; under the scoring rule those replicates are floored and
+counted. With them floored it trails the in-house solver by 0.03 to 0.07 z-RMSE at lambda = 1
+(0.558 against 0.487 at n = 100, 0.415 against 0.379 at n = 1000) and matches it elsewhere. The
+in-house solver diverged on no replicate. That, rather than a large accuracy gap, is the reason to
+keep the in-house solver as the default.
 
 ## Calibration and coverage
 

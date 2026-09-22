@@ -234,11 +234,11 @@ three-level categorical traits.
 
 | n | lambda | BACE | freq (BM) | freq_lambda | floor |
 |---|---|---|---|---|---|
-| 100 | 0.3 | 1.015 (0.0104) | 1.161 (0.0076) | 0.913 (0.0056) | 1.014 |
-| 100 | 0.7 | 0.879 (0.0110) | 0.985 (0.0073) | 0.801 (0.0053) | 1.015 |
-| 100 | 1.0 | 0.801 (0.0133) | 0.585 (0.0066) | 0.566 (0.0062) | 1.018 |
-| 300 | 0.3 | 0.923 (0.0057) | 1.140 (0.0096) | 0.888 (0.0036) | 1.007 |
-| 300 | 0.7 | 0.777 (0.0058) | 0.972 (0.0078) | 0.778 (0.0035) | 1.004 |
+| 100 | 0.3 | 1.004 (0.0089) | 1.158 (0.0074) | 0.913 (0.0056) | 1.014 |
+| 100 | 0.7 | 0.874 (0.0105) | 0.984 (0.0072) | 0.801 (0.0053) | 1.015 |
+| 100 | 1.0 | 0.794 (0.0123) | 0.584 (0.0065) | 0.566 (0.0062) | 1.018 |
+| 300 | 0.3 | 0.923 (0.0057) | 1.127 (0.0055) | 0.888 (0.0036) | 1.007 |
+| 300 | 0.7 | 0.777 (0.0058) | 0.965 (0.0057) | 0.778 (0.0035) | 1.004 |
 | 300 | 1.0 | 0.737 (0.0127) | 0.531 (0.0058) | 0.515 (0.0054) | 1.008 |
 | 1000 | 0.3 | 0.892 (0.0036) | 1.106 (0.0043) | 0.878 (0.0023) | 1.006 |
 | 1000 | 0.7 | 0.743 (0.0044) | 0.943 (0.0048) | 0.766 (0.0030) | 1.004 |
@@ -248,9 +248,9 @@ The primary contrast, stated in advance, is BACE against the frequentist stack o
 answers, and which one is reported depends entirely on how the frequentist stack is specified.
 
 Against `freq`, the documented default, BACE wins wherever the phylogenetic signal is below its
-maximum. Paired differences, negative favouring BACE: 0.134 (0.0116) at n = 100 and lambda = 0.3,
-0.234 (0.0169) at n = 300, 0.205 (0.0045) at n = 1000, with smaller but same-signed differences at
-lambda = 0.7. At lambda = 1 the sign reverses and BACE loses by 0.168 to 0.218, because Brownian
+maximum. Paired differences, negative favouring BACE: 0.141 (0.0094) at n = 100 and lambda = 0.3,
+0.207 (0.0074) at n = 300, 0.205 (0.0045) at n = 1000, with smaller but same-signed differences at
+lambda = 0.7. At lambda = 1 the sign reverses and BACE loses by 0.168 to 0.213, because Brownian
 motion is then the true process and the default specification is correct.
 
 Against `freq_lambda`, which estimates the same signal parameter BACE estimates, the advantage
@@ -262,7 +262,7 @@ The honest summary is that BACE's apparent advantage on continuous traits is an 
 misspecified competitor rather than over the frequentist approach. Once both estimate the signal,
 the two are close at low and moderate signal and BACE is behind at high signal.
 
-Note also that `freq` at lambda = 0.3 sits above the mean floor at every n, between 1.106 and 1.161
+Note also that `freq` at lambda = 0.3 sits above the mean floor at every n, between 1.106 and 1.158
 against a floor near 1.01. Used at its default, the stack does worse than ignoring the phylogeny.
 `freq_lambda` sits below the floor in every cell.
 
@@ -298,7 +298,7 @@ intended.
 | 100 | 0.3 | 0.803 | 0.799 | 0.881 |
 | 100 | 0.7 | 0.813 | 0.807 | 0.887 |
 | 100 | 1.0 | 0.871 | 0.883 | 0.885 |
-| 300 | 0.3 | 0.824 | 0.846 | 0.894 |
+| 300 | 0.3 | 0.824 | 0.845 | 0.894 |
 | 300 | 0.7 | 0.833 | 0.853 | 0.902 |
 | 300 | 1.0 | 0.879 | 0.902 | 0.899 |
 | 1000 | 0.3 | 0.837 | 0.867 | 0.897 |
@@ -321,11 +321,11 @@ lower being better:
 
 | n | lambda | BACE | freq (BM) | freq_lambda |
 |---|---|---|---|---|
-| 100 | 0.3 | 6.78 | 9.89 | 5.46 |
-| 100 | 0.7 | 5.66 | 8.21 | 4.77 |
-| 100 | 1.0 | 2.74 | 3.63 | 3.44 |
-| 300 | 0.3 | 5.87 | 9.12 | 5.07 |
-| 300 | 0.7 | 4.72 | 7.70 | 4.39 |
+| 100 | 0.3 | 6.77 | 9.86 | 5.46 |
+| 100 | 0.7 | 5.66 | 8.20 | 4.77 |
+| 100 | 1.0 | 2.69 | 3.63 | 3.44 |
+| 300 | 0.3 | 5.87 | 8.95 | 5.07 |
+| 300 | 0.7 | 4.72 | 7.60 | 4.39 |
 | 300 | 1.0 | 1.98 | 3.27 | 2.99 |
 | 1000 | 0.3 | 5.45 | 8.84 | 5.03 |
 | 1000 | 0.7 | 4.40 | 7.54 | 4.41 |
@@ -337,13 +337,14 @@ BACE's intervals are better than either frequentist arm's at lambda = 1 and are 
 ### Failures and convergence
 
 Failed fits are scored at the mean or mode floor and are never dropped, so every figure above
-includes them.
+includes them. Counts are errored plus divergent (a finite but absurd value, defined in the factorial
+section below), written as errored + divergent.
 
 | arm | n = 100 | n = 300 | n = 1000 |
 |---|---|---|---|
-| BACE | 112 of 600 (18.7%) | 113 of 600 (18.8%) | 96 of 600 (16.0%) |
-| freq | 32 of 1200 (2.7%) | 29 of 1200 (2.4%) | 16 of 1200 (1.3%) |
-| freq_lambda | 32 of 1200 (2.7%) | 29 of 1200 (2.4%) | 16 of 1200 (1.3%) |
+| BACE | 112 + 7 of 600 (19.8%) | 113 of 600 (18.8%) | 96 of 600 (16.0%) |
+| freq | 32 + 4 of 1200 (3.0%) | 29 + 6 of 1200 (2.9%) | 16 of 1200 (1.3%) |
+| freq_lambda | 32 + 1 of 1200 (2.8%) | 29 of 1200 (2.4%) | 16 of 1200 (1.3%) |
 
 BACE fails on roughly one replicate in six, with "mixed model equations singular" the dominant
 message, and the rate barely improves with sample size. The frequentist failures are the

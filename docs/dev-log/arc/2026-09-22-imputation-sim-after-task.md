@@ -48,9 +48,11 @@ Deliverables:
   across `runs` (which are sequential imputation iterations, not chains). `runs = 5`, `n_final = 20`.
 - **Failures scored at the floor and reported beside every metric**, including BACE's 16 to 39% error rate
   at lambda = 1. Rejected: reporting BACE on its successful fits only.
-- **In-house joint solver stays pigauto's default.** The Rphylopars solver diverges at high signal and
-  small n in simulation (34 divergent replicates, z-RMSE 1.654 vs 0.487 at lambda = 1, n = 100) yet is the
-  most accurate arm on AVONET; that split is recorded, not resolved here (a package change is fenced).
+- **In-house joint solver stays pigauto's default.** The Rphylopars solver returned finite but absurd
+  values on 50 core and 34 factorial replicates (floored and counted); once floored it trails the in-house
+  solver by 0.03 to 0.07 z-RMSE at lambda = 1 and matches it elsewhere, while the in-house solver diverged
+  on no replicate. It is the most accurate arm on AVONET. That split is recorded, not resolved here (a
+  package change is fenced).
 - **Per-host pool subdirectories with recursive read**, after `rsync --ignore-existing` silently dropped
   1,034 BACE cells that shared filenames with fast-arm cells.
 
@@ -145,7 +147,9 @@ Fixed this arc:
 - Duplicated BACE wave (wrong env var), stale array left running, rorqual inode exhaustion, fir OOM at
   16 GB (-> 1 core, 32 GB), nibi/fir TIMEOUTs after `runs` 2 -> 5 (-> longer `--time`, resume-skip).
 - The factorial fast-arm wave never having run (three overnight refusals) -> launched 2026-09-21 09:19.
-- Divergent fits dominating stratum means -> divergence rule in the aggregator (1ec3e98).
+- Divergent fits dominating stratum and cell means -> divergence rule in the aggregator (1ec3e98). Applying
+  it to the core slice moved 68 arm-replicates to the floor and corrected the earlier "Rphylopars solver reaches
+  1.654" reading to 0.558; every deliverable was moved onto the patched aggregate.
 - Over-broad coverage claim in the methods note -> scoped to the two arms it compares (bee0e87).
 - My own misdiagnosis of an "aggregator bug" -> it was a race with my rsync; corrected in the record.
 - Mac rsync 2.6.9 lacking `--info=stats1`, hidden by a grep -> flag removed.
