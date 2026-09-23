@@ -1343,3 +1343,337 @@ only what did not; (3) if the Totoro GNN wave has finished, pool and run G10/G11
 (https://claude.ai/artifact/M5HtGRnNGfwsK2Se4gMX24) is current for the core slice; (2) whether the
 covariate slice should include BACE; (3) whether the mean stays the reported estimator for interval
 width and interval score in the two arm-3b cells that one replicate destroys.
+
+## 2026-09-22 09:35 — factorial GNN arms LANDED (Totoro 09:02), pooling into /tmp/pig_pool6
+- Totoro results/factorial 11,200/11,200 (5,600 n=100 + 5,600 n=1000); wave took 23 h 43 m from 09:19 09-21.
+- Error lines in factorial.cells.log, classified: 159 gnn_on "Dimension out of range" (known monomorphic
+  one-hot defect, floored), 153 freq + 151 freq_lambda castor "Need at least 2 states" (monomorphic,
+  floored), and ONE NEW MODE: 50 freq_lambda "Not compatible with requested type: character -> double"
+  preceded by Rphylopars singular-solve warnings, in OU_l1_r0_mcar0.1_n1000. A Rphylopars internal
+  failure at lambda=1 under OU; floored and to be reported as its own failure mode.
+- fir is NOT fully drained: pig_factorial_n100B has 9 R + 1 PD (last BACE n=100 half-B tasks);
+  pig_fact_n1000A_long (12 h limit, tasks 4-420, resume-skip) PENDING as the TIMEOUT recovery;
+  pig_covsens_n1000 PENDING on JobArrayTaskLimit. covsens rds 3,584 of 3,600 non-BACE.
+- Pool layout: /tmp/pig_pool6/factorial/{totoro (gnn arms), totoro_fl, totoro_ff, nibi (bace), fir (bace)}
+  + /tmp/pig_pool6/avonet/totoro_fl. nibi pulled (3,434; rsync exit 23 = local chmod only).
+- Next: finish pulls -> gates G10/G11/G14 -> aggregate factorial (background; ECE bootstrap is the slow part)
+  -> factorial sections into methods note, article, board v2 -> covsens when fir finishes -> after-task.
+
+## 2026-09-22 10:05 — pool complete for every fast arm; gates run
+Pool /tmp/pig_pool6/factorial: totoro 11,200 (gnn_on, gnn_off, gnn_off_rphylopars) · totoro_fl 11,200 ·
+totoro_ff 11,200 (freq, floor) · nibi 3,434 (bace) · fir 2,220 (bace). 39,254 rds. Mac rsync 2.6.9 does
+not know --info=stats1; the first Totoro pull died on the usage message and my grep hid it. Fixed.
+- G14 PASS x3 (totoro_fl/nibi, totoro_ff/fir, nibi/fir): truth and mask bit-identical across hosts.
+  The freq clause is vacuous on those pairs (nibi, fir hold bace only); the evidence is data + mask.
+- G10 (core) FAIL on BACE only: 24 of 600 seeds missing in 5 cells (576/600 = 96%); every fast arm
+  200/200. Recovery: core n1000 BACE array 60949560 submitted on fir (600 tasks, resume-skip, ~24 compute).
+  core n100/n300 recovery arrays were already queued.
+- G11 (factorial) FAIL on BACE only: 57 of 3,550 seeds missing in 5 cells (98.4%); every fast arm
+  200/200 in all 56 cells. 56 of the 57 are the four BM clade0.3 n=1000 cells (3, 18, 25, 18 of 30):
+  the 5 h --time was too short for clade-masked BACE at n=1000; pig_fact_n1000A_long (12 h, resume-skip)
+  is PENDING on fir as the recovery. One seed missing in OU_l0.3_r0.5_mar0.3_n100.
+- Factorial aggregation running (bye0og36m) -> /tmp/pig_pool6/agg/fact_*.
+- New freq_lambda failure mode confirmed: 50 replicates, all OU_l1_r0_mcar0.1_n1000, Rphylopars
+  singular solve -> type error. Floored; disclose as its own row.
+
+## 2026-09-22 10:25 — analysis phase running in parallel
+- Aggregator on /tmp/pig_pool6/factorial (bye0og36m) -> /tmp/pig_pool6/agg/fact_*  (slow: ECE bootstrap).
+- Direct per-replicate extracts (faster, bypass the aggregator): scratchpad/fact_gnn.csv (bqjk0rh4m),
+  fact_bace.csv (brxpkjzmc, nibi+fir deduped on (cell, seed)); ff_totoro.csv + fl_totoro.csv from yesterday.
+  Paired script ready: scratchpad/fact_paired.R (joins all five arms + floor by (cell, seed); floors
+  divergent fits under the study rule; paired contrasts vs BACE on BACE's own seeds).
+- Failure bookkeeping check from the rds (not the log) running -> scratchpad/fail_{gnn,fl,ff}.csv.
+- covsens_fl launched on Totoro 09:43 (3,600 jobs); waiter bbst8pssw pulls fir covsens + totoro covsens_fl
+  into /tmp/pig_pool6/covsens/{fir,totoro_fl} when both reach 3,600.
+- Ledger: leaf-campaign.md G14 [x], G6c [x], G10/G11 evidence recorded (BACE-only gaps, recoveries queued);
+  leaf-results.md G13a/G13b/G13d [x]. Open: G10, G11 (await BACE recovery), G6d (await covsens), G12
+  (after aggregation), G13c (Shinichi reads the Artifact).
+
+## 2026-09-22 10:40 — FACTORIAL, ALL ARMS, z-RMSE (direct per-replicate reads; 11,200 paired rows, 56 cells)
+Divergent fits floored under the study rule: freq 1, freq_lambda 15, bace 2, gnn_off 0, gnn_off_rph 32, gnn_on 0.
+BACE on every seed it ran (4,434 incl. out-of-design n=1000 seeds 31-100; 1,220 cross-host dups dropped).
+| evo | lambda | freq | freq_lambda | bace | gnn_off | gnn_off_rph | gnn_on | floor |
+| BM | 0.3 | 1.128 | 0.924 | 1.037 | 1.048 | 1.030 | 1.044 | 1.043 |
+| BM | 1.0 | 0.579 | 0.572 | 0.876 | 0.486 | 0.536 | 0.533 | 1.070 |
+| OU | 0.3 | 1.109 | 0.911 | 0.997 | 1.035 | 1.008 | 1.032 | 1.035 |
+| OU | 1.0 | 0.569 | 0.562 | 0.610 | 0.501 | 0.546 | 0.525 | 1.051 |
+By mechanism: clade  freq .869 fl .784 BACE .994 gnn_off .801 (floor 1.054)
+              mar    freq .897 fl .774 BACE .948 gnn_off .816 (floor 1.113)
+              mcar.1 freq .784 fl .690 BACE .727 gnn_off .706 (floor 1.000)
+Paired vs BACE on BACE's seeds (neg = better than BACE): BM l0.3 fl -0.123 (.0085), gnn_off +0.003;
+  BM l1: every arm beats BACE by 0.25-0.35 (gnn_off -0.349 (.0108)); OU l1: gnn_off -0.108 (.0069).
+NEW RESULT: BACE under clade-biased missingness at BM lambda=1 sits AT OR ABOVE THE FLOOR (0.994 n=100,
+1.067 n=1000) while gnn_off is 0.621 / 0.475. This is the "mixed model equations singular" regime,
+floored failures dominating. Must report the per-cell BACE failure rate beside it (fail_count running).
+Under OU the collapse is milder (0.860 / 0.664). BACE is competitive only at OU lambda=1 MCAR n=1000
+(0.425 vs gnn_off 0.346) and beats pigauto nowhere on continuous traits in the factorial.
+The core-slice ranking inversion replicates in every stratum: at lambda=0.3 only freq_lambda is clearly
+below the floor everywhere; BACE below it only under MCAR; pigauto arms sit at the floor (gate closed).
+
+## 2026-09-22 10:50 — the BACE clade result partitioned by mechanism (Fisher's rule: failures first)
+BACE errored-and-floored rate by lambda: 0% everywhere at lambda=0.3; at lambda=1: MCAR.1 35%, MCAR.3 18%,
+MAR 39%, clade 39% (of 339-709 replicates). Clade cells by evo x n at lambda=1: BM 53% (n=100), 86% (n=1000);
+OU 19%, 28%. So "BACE at or above the floor under clade masking at lambda=1" is mostly failures scored at the
+floor. Among the replicates where BACE FITS, clade lambda=1: BM 0.816 (k=94) / 0.545 (k=6); OU 0.811 / 0.469,
+against gnn_off 0.621 / 0.475 and 0.727 / 0.506. Worse than pigauto, not catastrophic. At lambda=0.3 under
+clade masking BACE is above the floor even with zero failures (1.181, 1.149 vs floor ~1.03): a real
+accuracy result, not a failure artefact. Both halves go in the report, side by side.
+The lambda=1 failure surge is the fixed-threshold monomorphic regime ("mixed model equations singular").
+
+## 2026-09-22 11:00 — divergence rule moved INTO the committed aggregator; covsens n300 recovery
+- script/campaign_gnn_off_aggregate.R: after tab2, an arm-replicate-trait is divergent if zRMSE > 3x the
+  floor arm's zRMSE for the same (cell, seed, trait) OR interval_score > 1e3; zRMSE -> floor value,
+  coverage/width/interval_score -> NA; failures.csv gains n_divergent beside n_failed. Smoke on the one
+  divergent cell (OU_l1_r0_mcar0.1_n1000; dir renamed because the script drops any path containing
+  "_smoke"). Lane check on docs/gnn-off-campaign: that branch holds the ORIGINAL 152-line-shorter
+  version from the closed arc, not a fork of this fix.
+- Superseded factorial aggregation (bye0og36m, unpatched) stopped; relaunch after the smoke passes,
+  then re-aggregate core into /tmp/pig_pool5 so the committed csv carry n_divergent too.
+- Methods note factorial section committed 9f2d39a (1.3 per 1000, 0 em dashes, 0 superlatives).
+- covsens: Totoro covsens_fl 3,600/3,600 DONE. fir covsens 3,584/3,600: n300 missing 15 (old array
+  237 COMPLETED + 3 NODE_FAIL at BLOCK=5) -> recovery 60950427 submitted (fast arms, BLOCK=1, 01:30:00);
+  n1000 missing 1, array 60895543 [344-1200] PD on JobArrayTaskLimit with 0 running (odd; resume-skip
+  will clear it when the throttle releases; re-check in an hour, scancel+resubmit if still 0 R).
+- fir also holds: pig_core_n1000 (core BACE recovery) PD, pig_fact_n1000A_long PD, n100B 4 R.
+
+## 2026-09-22 11:25 — board v2 published; article factorial section written; aggregations re-running
+- Artifact v2 (same URL M5HtGRnNGfwsK2Se4gMX24, label "Factorial, all arms"): Factorial tab now carries
+  all arms (z-RMSE by evo x lambda and by mechanism, discrete accuracy, coverage by mechanism, the
+  BACE clade partition by cause, failure rate by mechanism, the divergence rule); status strip updated;
+  Decisions "not yet" paragraph updated. JS parse-checked with node --check; every getElementById id exists.
+  Not visually inspected: the in-app browser is not signed in and I will not sign it in.
+- Aggregator committed 1ec3e98 (divergence rule + n_divergent). Factorial re-aggregation bl8eg0fqy ->
+  /tmp/pig_pool6/agg/fact_*; core re-aggregation b2cafpz0s -> /tmp/pig_pool7/agg_*. When both land:
+  concatenate summary/paired/failures (same schema) into script/campaign_sim_results/, render the
+  article, G12 on the combined dir, commit.
+- vignettes/articles/simulation-study.Rmd: "The factorial" section added before Cost (five chunks:
+  fact-z, fact-z-miss, fact-acc, fact-cov, fact-fail; `strat()` helper does cell means then equal
+  weight per cell); scope note rewritten; "does not cover" names the two-specification exception.
+  Renders only once summary.csv holds factorial rows.
+- fir: covsens n1000 array 60895543 stuck (0 R, "JobArrayTaskLimit") -> scancel + resubmitted with
+  resume-skip; covsens n300 recovery 60950427 12 R; core n1000 BACE recovery PD; _long PD; n100B 3 R.
+
+## 2026-09-22 10:05 (Mac clock) — PR, reconcile, after-task scaffold
+- Draft PR #184 (https://github.com/itchyshin/pigauto/pull/184) has existed since 2026-09-20 23:52 UTC; the
+  09-20 reconcile's "no PR" row predates it. Remote branch was 46 commits behind -> pushed
+  (1a389ab..1ec3e98); body refreshed from /tmp/pr_body.md; agent_mention_check G-20 clean.
+- docs/dev-log/plan-actual/2026-09-20-imputation-sim-reconcile.md: "Reconcile 2, 2026-09-22" appended
+  (six axes, DECISION RECEIPT). Not yet committed (commit with the article once it renders).
+- docs/dev-log/arc/2026-09-22-imputation-sim-after-task.md scaffolded with closeout.py; sections 2, 3a,
+  4, 7a, 9, 11, 12 drafted; 5, 6, 8, 10 wait on G12 and the BACE tails. NOTE closeout.py auto-filled
+  section 4 from the BRAIN repo's git status because I ran it from ~/shinichi-brain; overwritten with the
+  real list.
+- GOAL.md arcs block refreshed to the current state.
+- Re-aggregations (factorial bl8eg0fqy, core b2cafpz0s) still reading rds at 10:04.
+
+## 2026-09-22 10:15 (Mac) — deliverables aligned on the committed aggregate; waiting on machines only
+- Aggregator with the divergence rule is the single authority: script/campaign_sim_results/{summary,paired,
+  per_trait}.csv = core (pool7) + factorial (pool6/agg), 16,276 summary rows, commit 077b4de, pushed.
+- Article renders the factorial from it (verified); methods note tables moved onto it (12 replacements,
+  max shift 0.011, BACE and Rphylopars-solver cells only, because the aggregator floors per (replicate,
+  trait) and my cross-check floored whole replicates); board v3 = same numbers.
+- G12 PASS (core totoro + totoro_fl hosts); G13a/b/d PASS via gate-check --approve; G14 PASS x3.
+  Open: G10, G11 (BACE tails), G6d (covsens), G13c (Shinichi).
+- OWED when machines land: (1) failures.csv (n_divergent) + ece.csv from both aggregations -> results dir ->
+  re-render (fact-fail chunk) -> commit. (2) covsens: pull, aggregate with the patched script, one paragraph
+  each in note/article, board v4, G6d. (3) BACE tails -> G10/G11 -> after-task 5/10 final -> closeout check
+  from the worktree -> handover (protocols/handoff.md template; run handoff_gate.sh first).
+- fir at 10:15: every array PD on Priority (core_n1000 BACE, covsens_n1000, covsens_n300, fact_n1000A_long,
+  factorial_n100B); covsens 3,599/3,600; core 1,777/1,800; factorial 2,232.
+
+## 2026-09-22 10:18 (Mac) — stall rule applied: BACE tails handed to Totoro (and nibi once seeded)
+- fir: all five arrays PD on Priority with no start estimate; 3,000+ nodes drained/draining. Plan's stall
+  rule (no task started 2 h after submit -> hand remaining cells elsewhere) applies.
+- Totoro: seeded results/core_bace (1,776 = the pooled nibi+fir BACE rds) and results/factorial_bace
+  (4,434) so campaign_sim_cell.R's resume-skip leaves only the missing seeds; launched core (pgid 1840413)
+  and factorial (pgid 1840886) BACE-only waves at 40-way, 1 core each. Expected to run 24 + 57 seeds;
+  n=1000 BACE ~3 h each -> both done by ~13:30-14:00 if RAM holds (watch free -g; 40 x ~16-20 GB).
+- nibi: my first core n1000 array 22471569 would have RECOMPUTED 576 finished seeds because nibi's own
+  results/core holds no n=1000 BACE (those ran on fir) -> cancelled within a minute. Seeding nibi with fir's
+  core (1,776) and factorial (2,232) rds first (btn9r8kwu); then resubmit core n1000, factorial n1000 half A
+  (12 h), factorial n100 half B. sbatch --test-only says nibi would start them ~12:17. Whichever host lands
+  a seed first wins; the aggregator's (filename, arm-set) dedupe keeps one copy.
+- LESSON: resume-skip is per-host. Before submitting a recovery array on a host, seed its results dir with
+  every finished rds from the pool, or the "recovery" recomputes the campaign.
+- 10:20 correction: the Totoro core BACE tail is RUNNING (49 cell processes on core_bace, 81 on
+  factorial_bace; log shows seeds 37-68 of BM_l0.7_r0.5_mcar0.3_n1000 fitting). My "DONE already"
+  reading counted core.log's second DONE, which belongs to the 09-21 core_fl wave. Watcher re-armed on
+  core DONE >= 3 and factorial DONE >= 4 (biu95j9dm). All 2,814 core and 5,654 factorial pooled BACE
+  files carry a bace arm (no partial files), so the 24 + 57 are genuinely uncomputed seeds.
+- covsens: fir's array for the last n300 seed is PD with no start estimate; pulling fir's 3,599 covsens
+  rds to the Mac so the seed can run on Totoro against a seeded directory, then pool by hand (the
+  covsens waiter bbst8pssw watches fir and will not fire).
+
+## 2026-09-22 10:23 (Mac) — covsens moving to Totoro; handover committed
+- Handover docs/dev-log/handover/2026-09-22-claude-handover.md committed 30278b3 and pushed (landing state as
+  of 10:20; refresh at close). Board decision-4 text updated for v4 (not yet republished).
+- covsens: fir pool pulled (3,599; the one missing seed is n=1000, not n=300 as I first read). Seeding Totoro
+  results/covsens from it and running the covsens stage there (fast arms, PAR 10) so the single seed fills
+  (bls8v1er2); covsens_fl (3,600) pulling to /tmp/pig_pool6/covsens/totoro_fl (bvutekccy). Per-replicate
+  extracts for core (totoro, totoro_fl) and covsens (fir) running -> scratchpad/all_core_*.csv, all_cov_fir.csv;
+  scratchpad/covsens_cmp.R compares covsens minus core on identical (cell, seed, arm).
+- Totoro BACE tails at 10:22: 65 R processes, RAM 100 GB of 1,007, core_bace still 1,776 (n=1000 fits ~3 h).
+- Still waiting: nibi seeding rsync; ECE stage of both aggregations (6 R processes on the Mac).
+
+## 2026-09-22 10:26 (Mac) — S6d covariate sensitivity DONE (3,599/3,600); board v4
+- covsens minus core, paired on identical (cell, seed, arm), divergence rule applied to both sides (20 + 16
+  floored): freq -0.051 (0.0022) / -0.024 (0.0023) / +0.003 (0.0009) z-RMSE at lambda 0.3/0.7/1;
+  freq_lambda -0.032 / -0.012 / +0.002; gnn_on -0.012 / -0.015 / -0.000; gnn_off exactly 0 (covariate-free by
+  design; the shared-seed check); coverage moves < 0.002; gnn_on accuracy +1.6 pts at lambda 0.3, -1.4 at 1.
+  No ranking changes. BACE not in this run (budget).
+- Written into the methods note ("Covariate sensitivity") and the article ("## Covariates"), commit 77c34ed,
+  pushed; slop 1.2 / 2.0 per 1000, 0 em dashes; G13a PASS; render OK. Board v4 published with a covsens
+  section on the All arms tab and the status strip updated. G6d [x] in leaf-campaign.md.
+- Remaining machine-bound: Totoro BACE tails (watcher biu95j9dm), the last covsens seed on Totoro, the ECE
+  stage of both aggregations, nibi seeding (backup arrays not yet resubmitted; fir arrays still PD).
+- 10:35 nibi seeded (core 1,776 incl. 580 n=1000; factorial 4,434). Backup core n1000 BACE array 22472376
+  submitted (600 tasks, resume-skip -> 24 compute). The two factorial backups were REFUSED:
+  AssocMaxSubmitJobLimit (1,000 array tasks per user; 600 + 420 + 700 exceeds it). Not resubmitted: Totoro
+  carries every tail; nibi and fir arrays are insurance only and get cancelled once Totoro's rds are pooled.
+
+## 2026-09-22 10:50 (Mac) — CORRECTION: the core aggregate with the divergence rule moves the solver story
+Patched core re-aggregation (pool7) landed: 68 divergent arm-replicates in the CORE, not the "3" I had
+assumed: gnn_off_rphylopars 28/10/12 at n=100/300/1000, bace 7 (n=100), freq 4+6, freq_lambda 1. With them
+floored, the Rphylopars-solver core z-RMSE at lambda=1 becomes 0.558 / 0.476 / 0.415 (was 1.654 / 0.540 /
+0.590) against the in-house 0.487 / 0.426 / 0.379. The "solver diverges catastrophically" sentence in the
+board, the article prose and the after-task must become "50 replicates diverged and were floored; once
+floored the solver is 0.03 to 0.07 behind the in-house one". BACE core cells move by <= 0.011 (1.015 -> 1.004,
+0.879 -> 0.874, 0.801 -> 0.794), freq by <= 0.014 (1.161 -> 1.158, 1.140 -> 1.127, 0.972 -> 0.965).
+The committed summary.csv already carries the patched core (built from pool7), so the ARTICLE TABLES are
+right; its prose, the methods note tables, the board's CORE data and the PR body are being moved now.
+covsens final 3,600/3,600: identical to three decimals; G6d closed.
+- 10:52 correction landed everywhere: methods note (16 replacements, commit b0da85b), article solver
+  paragraph (renders from the patched csv already), after-task 3a and issue ledger, board v5 (26 data and
+  prose replacements; kv "0.09 - 0.21"; decision 5 reworded). Every core number in all three deliverables
+  now comes from /tmp/pig_pool7 (= script/campaign_sim_results core half). Pushed.
+- Remaining: factorial ECE stage (54 min in) -> failures.csv/ece.csv (concat core pool7 + factorial) ->
+  re-render -> commit; Totoro BACE tails (core_bace 1,776/1,800, factorial_bace 4,435; ~13:20); then
+  G10/G11, final re-aggregation of both stages with the tails, final csv, after-task 5/10, closeout check,
+  handover landing state, cancel fir/nibi backup arrays.
+- 10:58 factorial bootstrap landed: "38034 cells read, 1220 duplicates dropped, divergence rule: 188
+  arm-replicates (216 traits)". failures.csv (core + factorial, n_divergent) and ece.csv assembled into
+  script/campaign_sim_results, article re-rendered (failure table renders: BACE 1,097 + 56, freq 237 + 46,
+  freq_lambda 285 + 21, gnn_off 0 + 1, Rphylopars solver 0 + 130, gnn_on 237 + 1), commit 4e61cc7 pushed.
+  ONLY the Totoro BACE tails remain machine-bound (watcher biu95j9dm).
+
+## 2026-09-22 14:40 (Mac) — CLOSE on the replicates present (Shinichi: "all done - what are you waiting??")
+- Decision: the study is closed on BACE 576/600 core and 3,493/3,550 factorial, stated in every table; the
+  tails compute (core on nibi 22472376 running 2 h+, factorial on Totoro pgid 1840886, 2 of 57 landed) and
+  fold in by re-aggregation. fir arrays all cancelled (queue 0). Totoro core BACE wave killed at RAM 803 GB
+  (shared machine); nibi covers those 24. Totoro RAM 723 GB with 42 factorial fits.
+- Ledger: 23 of 26 met. G6 and G9b resolved by the campaign's measurements (BACE coverage 0.885 at
+  lambda=1 n=1000 is outside the pre-run gate's band -> finding; convergence rate reported). Open: G10, G11
+  (tails), G13c (Shinichi reads the board, six decisions).
+- BACE convergence rate (1,774 fits with diagnostics, runner >= 09-20): converged by BACE's verdict 15%/20%
+  (core/fact) at lambda 0.3, 33% at 0.7, 81%/67% at 1; by n 23-28% / 43% / 48-61%; median ESS 572 -> 1600.
+  Added to the methods note "Failures and convergence" (commit after be1dc48). Not yet on the board.
+- after-task finalised (be1dc48); handover refreshed (be1dc48); closeout.py check will pass only after G13c.
+- 14:39 Totoro RAM reached 976 GB of 1,007 with 42 clade-masked BACE fits at 4 h 18 m: killed the factorial
+  BACE wave (pgid 1840886) by hand ahead of the 940 GB guard, losing those partial fits, and relaunched the
+  same wave at 20-way with resume-skip (55 seeds left). Clade n=1000 BACE fits run 5 to 6 h each, so three
+  waves: ~15 h, landing ~06:00 on 09-23. nibi core tail: 20 tasks at 1 h 06 m, ~16:30 today. Neither
+  changes a deliverable; both fold in by re-aggregation. Guard task stopped (replaced by the lower width).
+- 15:12 RAM guard fired at 927 GB and killed the 20-way wave (pgid 2301135) -- but Totoro still read 942 GB
+  with our 2 R processes: user ortegara has one cc1plus (C++ compile) process at 930 GB since 14:57. Not
+  ours to touch; flagged once. Totoro cannot host the BACE tail until it clears. The 14:38 976 GB reading
+  WAS ours (42 fits); this one is not. Factorial tail (55 seeds) moved to nibi: half A n1000 (12 h) and
+  half B n100 (BLOCK 5) submitted against the seeded results/factorial; core tail already on nibi (20 R,
+  3 h in). Totoro watcher biu95j9dm stopped. LESSON: read per-user RSS before blaming your own wave.
+- 15:40 Decision 7 taken by Shinichi ("Yes — open a lane for spec decision 3 with lambda estimated as the new
+  default, covariates included; use the core slice as the benchmark; separate PR after #184"). Recorded:
+  vault D-278 (local commit), board v7 (Decisions tab, seventh item marked decided), after-task 3a, handover,
+  and the lane plan stub docs/dev-log/arc/2026-09-22-joint-lambda-default-plan.md. NOT started in this arc
+  (package change, fenced). Shinichi: "finish this arc when we finish the goal" -> remaining: his six
+  publication decisions (G13c) and the BACE tails on nibi (G10/G11).
+- 16:30 Shinichi opened the lambda-default lane himself. My arc-1 agent stopped before writing anything but
+  three PROGRESS lines in ../pigauto-lambda-default/.unlazy/lambda-default/ (its finding: the gap is the joint
+  solver, which has no likelihood to profile lambda with). No commits, no edits, lease claude:pigauto:lambda
+  released so his session can claim. This session finishes the simulation arc only.
+
+## 2026-09-22 17:45 (Mac) — tails: core n1000 COMPLETE on nibi; 4 core seeds + 55 factorial seeds in flight
+- nibi array 22472376 (core n1000 BACE) finished all 600 tasks; pooled to /tmp/pig_pool4/core/nibi (600 n1000).
+  Core BACE now 596/600; the 4 missing are BM_l0.7_r0.5_mcar0.3 n100 s38/s51/s52 and n300 s55 (fir's cancelled
+  arrays owned them). Resubmitted on nibi: core n100 array 22502324 (resume-skip, 3 compute) and a single-task
+  job 22502338 for n300 s55 (a 600-task n300 array hit AssocMaxSubmitJobLimit and was pointless for one seed).
+  Watcher pulls + runs G10 when both leave the queue (~1 h).
+- Factorial tail: 60 clade n1000 tasks RUNNING on nibi since ~17:05 MDT (5 to 6 h each) -> land ~23:00-00:00 MDT;
+  watcher bod0meuyq pulls when the arrays drain. Then: G11, re-aggregate both stages, refresh csv/article/board,
+  after-task 5/10 final, closeout check, handover landing state.
+- Shinichi opened the lambda-default lane himself (D-278); this session finishes only the simulation arc.
+
+## 2026-09-22 20:55 (Mac) — factorial BACE tail LANDED (nibi 420/420 COMPLETED, ~3.8 h per clade fit)
+- /tmp/pig_pool6/factorial/nibi now 4,496 rds (>= 4,489 expected; extras are out-of-design seeds). G11 running
+  directly (bg); final factorial aggregation -> /tmp/pig_pool6/agg2/fact_* (bg, ~1 h with the ECE bootstrap).
+- Core 1,797/1,800: n300 s55 landed; n100 s38/s51/s52 running on nibi (~40 min in). Watcher bzl3tob0o pulls
+  and runs G10 when they finish; then final core aggregation -> /tmp/pig_pool8.
+- Then: concat csv -> script/campaign_sim_results, re-render article, board v8 (status 100%), commit, ledger
+  G10/G11 [x], after-task 5/10, closeout check from the worktree, handoff_gate + handover landing state,
+  PR #184 body. Only G13c (Shinichi's six decisions) will remain open.
+- 20:58 G11 PASS: "56 design cells, 40316 rds present, 0 replicate-arms missing". Factorial BACE 3,550/3,550.
+- 22:05 core tail: s52 (n100) landed in 21.7 min; s38 and s51 (n100) TIMED OUT at 01:30 (slow outliers in the
+  BM_l0.7_r0.5 cell, not crashes); s55 (n300) SEGFAULTED in MCMCglmm (R aborted; no rds, so the runner could
+  not floor it). Retries as single tasks: n100 x2 at 04:00:00 (first retries at 01:30 cancelled), n300 at
+  02:30:00 with 48 GB. Watcher pulls + runs G10 when they drain. If s55 segfaults again it is recorded as a
+  BACE crash (1 of 600), disclosed, not fabricated.
+- Final factorial aggregation (agg2) Section I landed; committed summary/paired/per_trait rebuilt (core pool7 +
+  factorial agg2); article re-rendering. failures/ece follow the ECE stage.
+- 23:10 final factorial aggregation (agg2) complete: 38,096 cells, 2,220 cross-host duplicates dropped, 188
+  divergent arm-replicates floored. failures.csv/ece.csv rebuilt (core pool7 + factorial agg2), article
+  re-rendered, commit d36e682 pushed. Checking whether any factorial stratum figure moved with the 57 added
+  BACE seeds (they were all clade n=1000 cells). Core retries still running on nibi (watcher b3qj1d9qp).
+- 23:25 Completing the 57 clade seeds moved two factorial BACE figures materially: BM lambda=1 z-RMSE 0.872 ->
+  0.842; clade mechanism 0.986 -> 0.962; BM lambda=1 clade n=1000 failure 86% of 43 -> 63% of 60 and fitted
+  z-RMSE 0.545 (k=6) -> 0.472 (k=22), level with pigauto's 0.475. Everything else moved <= 0.003. Methods note,
+  article, after-task (b0be521) and board v8 carry the final figures. Remaining: the 3 core seeds on nibi
+  (watcher b3qj1d9qp -> G10), final core aggregation, board status 100%, closeout, handover, PR body. G13c open.
+- 23:40 core seed 55 (BM_l0.7_r0.5_mcar0.3_n300): BACE segfaults the R process deterministically (exit 139 at
+  1 min 25 s, nibi 22502338 and 22517730, 48 GB). The runner cannot floor a crash, so the failed-arm record was
+  written BY HAND from the runner's own floor arm on the same seed (cell script --arms floor, rows relabelled
+  bace, failed$bace = TRUE, errors$bace = the crash text), placed in /tmp/pig_pool4/core/nibi and copied to
+  nibi results/core. Disclosed in the methods note "Failures and convergence". Two n100 retries still running.
+- 22:55 seed-55 failed-arm record written (24 result rows, arm bace, failed$bace TRUE, errors$bace = crash text,
+  note field) into /tmp/pig_pool4/core/nibi and the nibi keeper (core 1,798/1,800 there). The two n100 retries
+  (s38, s51) are at 47 min of a 4 h limit; watcher b3qj1d9qp pulls and runs G10 when they finish, then the
+  final core aggregation, board v9, ledger, closeout, handover, PR body. G13c still open.
+
+## 2026-09-23 02:20 — G10 PASS; every cell present in both stages
+- Core: "18 design cells, 10785 rds present, 0 replicate-arms missing". BACE 600/600 with three hand-assembled
+  failed-arm records (s55 n300 segfault x2; s38/s51 n100 TIMEOUT at 4 h x2, sibling median 22 min), each
+  labelled in the file (note, errors$bace) and disclosed in the methods note and after-task (65f1a14).
+- Final core aggregation running -> /tmp/pig_pool8/agg_* (then core half of the committed csv, render, commit,
+  board v9 with the 100% strip, after-task 5/10 final, closeout check, handoff_gate + handover, PR body).
+- Ledger after this: only G13c (Shinichi's six decisions) open.
+- 02:30 final core aggregate (pool8): BACE 100/100 in every core cell. One figure moved past the third decimal
+  (BACE z-RMSE at n=1000 lambda=1: 0.659 -> 0.647; paired loss to freq 0.168 -> 0.158; accuracy 0.840 -> 0.845).
+  Note, article, committed csv (a0c8e0e) and board v9 carry the final figures. gate-check --approve unchecked
+  G11 on its 120 s timeout; re-marked [x] with the direct-run PASS and a do-not-re-approve note.
+  Ledger: 25 of 26 met; only G13c open. Remaining: pool8 failures/ece -> csv -> commit; closeout check;
+  handoff_gate; handover Landing State with the final HEAD.
+- 02:25 validators at close: gate-check --status "UNMET: 1 (met: 25, 6 never executed)" = G13c only;
+  handoff_gate FAIL (counts never-executed evidence-only gates + G13c) -- declared verbatim in the handover;
+  closeout.py structure PASS, ledger stage blocked by other projects' .unlazy in the vault and by G13c.
+  WORKTREE: lines added to every leaf (bare path). Waiting only on pool8 failures/ece for the last csv commit.
+
+## 2026-09-23 02:45 — ARC COMPLETE except G13c
+- Final core bootstrap landed (9,000 cells read, 1,785 duplicates dropped, 68 divergent floored). Committed
+  failures.csv/ece.csv now cover both stages at 100% (a0df635). Core BACE errored 114/114/96 (+7 divergent at
+  n=100) after the three hand records; methods note table updated.
+- Deliverables final: board v9 (private), methods note, article (renders from the final csv), after-task,
+  reconcile 2, handover with validators quoted. PR #184 body current. Ledger 25/26; open G13c only.
+- Nothing is running anywhere: Totoro idle (our waves ended), nibi queue empty, fir queue empty. Pools on the
+  Mac under /tmp/pig_pool4 (core), /tmp/pig_pool6 (factorial, covsens, avonet), aggregates pool8 (core) and
+  pool6/agg2 (factorial); keepers on nibi results/core + results/factorial and Totoro results/*.
+- To close the arc: Shinichi answers the six decisions on the board -> mark G13c [x] with his words -> run
+  gate-check --status (expect 26/26 met) -> commit -> he decides on article visibility and the #184 merge.
+- 02:50 PAUSED AT THE HUMAN GATE. Every reversible step is landed (HEAD 8a69e55, pushed; 25/26 gates; nothing
+  running anywhere). G13c is Shinichi's six publication decisions and is not something an agent may fill in.
+  Resume: on his answers, write them verbatim into leaf-results.md G13c EVIDENCE, mark [x], gate-check --status
+  (expect 26/26), commit, then his call on article visibility and the #184 merge. Until then: no further work.
+
+## 2026-09-23 — ARC COMPLETE. G13c recorded; ledger ALL MET (26 of 26).
+Shinichi's answers: both specifications with the gap as a finding; lead with discrete, both costs beside it;
+article unlisted until Szymek signs off; PR #184 stays draft until he reads the board. Board v10 marks all seven
+decisions. No further work on this arc. Follow-on: the lambda-default lane (Shinichi's own session).
+- STOPPED by Shinichi ("I think we stop now as we want to redo simulations"). Nothing running on any machine.
+  All results, csv, board (v10), note, article, after-task, handover pushed at the HEAD above; they stand as the
+  record of this run. The redo is a new arc (likely after the lambda-default lane changes pigauto's baseline).
