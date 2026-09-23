@@ -1,0 +1,15 @@
+leaf-S2.md:G1 MET exit=0 :: FAIL 0 | PASS 27 | [joint-lambda] recovery (n = 40 seeds): bias = -0.0577, -0.0744, -0.0050 | MAE = 0.1307, 0.1166, 0.0050
+leaf-S2.md:G2 MET exit=0 :: RECOVERY tests 2 fail 0 | [joint-lambda] recovery (n = 40 seeds): bias = -0.0577, -0.0744, -0.0050 | MAE = 0.1307, 0.1166, 0.0050
+leaf-S2.md:G2b MET exit=0 :: MEANMODEL tests 1 fail 0 | [joint-lambda] recovery (n = 40 seeds): bias = -0.0577, -0.0744, -0.0050 | MAE = 0.1307, 0.1166, 0.0050
+leaf-S3.md:G3 MET exit=0 :: FAIL 0 | PASS 18 | [lambda-cov] n = 300, 600 seeds: mean(lambda_hat) = 0.2614, bias = -0.0386, MAE = 0.1414 (MAE not gated)
+leaf-S4.md:G4 MET exit=0 :: ══ DONE ════════════════════════════════════════════════════════════════════════ | FAIL 0 | PASS 41
+leaf-S4.md:G5 UNMET exit=0 :: ══ DONE ════════════════════════════════════════════════════════════════════════ | PERTYPE FAIL 0 | PASS 20
+leaf-S4.md:G5b MET exit=0 :: CALLSITE_BY_NAME 1
+leaf-S5.md:G6 UNMET exit=1 :: Error: '\(' is an unrecognized escape in character string (<input>:1:37) | Execution halted
+leaf-S5.md:G7 MET exit=0 :: 4: In stats::cor(t_j[ok], p_j[ok]) : the standard deviation is zero | 5: In stats::cor(t_j[ok], p_j[ok]) : the standard deviation is zero
+leaf-S5.md:G7b MET exit=0 :: ══ DONE ════════════════════════════════════════════════════════════════════════ | REBUILD tests 1 fail 0
+leaf-S5.md:G7c MET exit=0 :: ══ DONE ════════════════════════════════════════════════════════════════════════ | PERTREE tests 1 fail 0
+leaf-S6.md:G8 MET exit=0 :: Calibrated gates: Dummy_Size=1 | Conformal scores (latent scale, method=split): Dummy_Size=1.4898
+leaf-S6.md:G9 MET exit=0 :: CHECK errors 0 warnings 0 notes 1
+leaf-S6.md:G10 MET exit=0 :: Consider setting: n_imputations = 20L, pool_method = 'mode'. | See ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').
+SOME UNMET

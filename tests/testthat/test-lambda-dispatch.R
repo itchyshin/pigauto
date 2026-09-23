@@ -297,3 +297,18 @@ test_that("[lambda-dispatch] ordinal stays at lambda = 1 under estimate", {
                 info = paste("seed", seed))
   }
 })
+
+test_that("[lambda-dispatch] a fully observed column reports its estimated lambda, not 1", {
+  set.seed(3)
+  tr <- ape::rcoal(60)
+  P <- matrix(rexp(180), 60, 3); P <- P / rowSums(P)
+  df <- data.frame(a = P[, 1], b = P[, 2], c = P[, 3], x = rnorm(60),
+                   row.names = tr$tip.label)
+  df[1:8, c("a", "b", "c")] <- NA
+  pd <- preprocess_traits(df, tr, multi_proportion_groups = list(comp = c("a", "b", "c")))
+  bl <- fit_baseline(pd, tr, lambda_mode = "estimate")
+  # x is iid noise with no missing cells: its lambda estimate sits at the lower bound
+  expect_lt(unname(bl$lambda_per_trait["x"]), 0.5)
+  bl1 <- fit_baseline(pd, tr, lambda_mode = "fixed_1")
+  expect_equal(unname(bl1$lambda_per_trait["x"]), 1)
+})

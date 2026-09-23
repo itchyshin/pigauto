@@ -84,7 +84,7 @@ test_that("[lambda-default] predict rebuild: predict() reproduces the fit-time b
   expected <- .lambda_gnn_off_blend(fit, fit$baseline_full$mu)
   expect_equal(pred$imputed_latent[miss], expected[miss], tolerance = 1e-6)
 
-  # S4 contract: fit_baseline(..., lambda_fixed = <named numeric>) rebuilds
+  # Contract: fit_baseline(..., lambda_fixed = <named numeric>) rebuilds
   # the SAME baseline at previously-estimated per-trait lambda values
   # without re-running ML estimation for each column -- this is the
   # mechanism predict() uses to rebuild a baseline consistent with fit time

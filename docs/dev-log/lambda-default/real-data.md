@@ -14,7 +14,7 @@ bayes. Score: z-RMSE on the masked cells (log scale for positive skewed traits).
 | GlobTherm | 300 | 0.712 | 0.665 | -6.5% |
 | GlobTherm | 1969 | 0.655 | 0.622 | -5.1% |
 | AmphiBIO | 2000 | 0.685 | 0.665 | -2.8% |
-| AVONET 300 (bundled) | 300 | 0.569 | 0.560 | -1.7% |
+| AVONET 300 (bundled) | 300 | 0.569 | 0.555 | -2.5% |
 | LepTraits | 300 | 0.947 | 0.935 | -1.3% |
 | AmphiBIO | 300 | 0.884 | 0.874 | -1.1% |
 | BIEN | 2000 | 0.813 | 0.807 | -0.7% |
@@ -23,11 +23,14 @@ bayes. Score: z-RMSE on the masked cells (log scale for positive skewed traits).
 | AVONET | 2000 | 0.419 | 0.419 | +0.1% |
 | LepTraits | 2000 | 0.893 | 0.901 | +0.9% |
 
-Estimated lambda helps or ties in 12 of 13 cases and is never worse by more than 1%. Binary and
-categorical accuracy (habitat, trophic level, terrestriality, primary lifestyle) is identical under all
-four modes. The ordinal trait migration moved slightly on AVONET at 2,000 species (0.820 at lambda = 1,
-0.823 otherwise): an ordinal code path was picking up the lambda setting, which the final review found and
-which was fixed after this run, so ordinal traits now stay at lambda = 1 as designed.
+Estimated lambda helps or ties in 12 of 13 cases and is never worse by more than 1%. The table is from the
+final build (rerun 2026-09-23 14:21 after the review fixes, `lambda_datasets_final_report.txt`); the first
+run gave the same numbers except AVONET 300 (-1.7% then). Binary, categorical and ordinal accuracy
+(habitat, trophic level, terrestriality, primary lifestyle, migration) is identical between "estimate" and
+fixed_1. In the first run, migration moved on AVONET at 2,000 species (0.820 against 0.823) because an
+ordinal code path picked up the lambda setting; the final review found it and it is fixed. The older
+"cv" mode still moves migration slightly (0.818), because "cv" reroutes every column through the
+per-column path, as it did before this lane.
 Median fit time under "estimate" is within 0 to 12% of fixed_1; "cv" and "bayes" cost 10 to 50% more for
 little extra gain, which supports "estimate" as the default.
 

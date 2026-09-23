@@ -46,8 +46,26 @@ default path was never affected. This arm is 26 times slower under lambda (45 s 
 
 Launched 07:38, 30 parallel x 4 torch threads, 100 seeds per cell. Another Totoro user started a job using
 about 159 cores during the run, which cut our share to about 61 cores; n = 1,000 jobs took 844 s each. At
-12:13 Shinichi chose to cap n = 1,000 at 50 seeds (n = 100 and 300 keep 100 seeds). Results appended here
-when it finishes.
+12:13 Shinichi chose to cap n = 1,000 at 50 seeds (n = 100 and 300 keep 100 seeds; some n = 1,000 cells
+had already reached 100 before the cap). Done 14:18, 1,598 result files. Aggregate:
+`core_lambda_gnn_agg_summary.csv`. The committed yardstick has 200 seeds per cell.
+
+| lambda | n | committed | lambda default | change | gap to freq_lambda closed |
+|---|---|---|---|---|---|
+| 0.3 | 100 | 1.009 | 0.994 | -0.015 | 13% |
+| 0.3 | 300 | 1.011 | 0.975 | -0.035 | 29% |
+| 0.3 | 1000 | 0.992 | 0.968 | -0.024 | 19% |
+| 0.7 | 100 | 0.902 | 0.840 | -0.062 | 61% |
+| 0.7 | 300 | 0.883 | 0.810 | -0.073 | 70% |
+| 0.7 | 1000 | 0.874 | 0.797 | -0.077 | 71% |
+| 1 | 100 | 0.536 | 0.476 | -0.061 | |
+| 1 | 300 | 0.476 | 0.406 | -0.069 | |
+| 1 | 1000 | 0.383 | 0.359 | -0.024 | |
+
+Every cell improves, the same pattern as the no-GNN arm. Conformal coverage for c1 and c2 at n >= 300 is
+0.955 to 0.959. Discrete accuracy in this arm moves by -0.006 to +0.031 (mostly up) against the committed
+run: the GNN takes the continuous baseline as an input, so its discrete outputs can shift even though the
+baseline keeps discrete traits at lambda = 1.
 
 ## Decision on the gate (Shinichi, 2026-09-23)
 

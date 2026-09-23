@@ -884,6 +884,11 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
         res_j$lambda_hat
       } else if (is.numeric(lam_j)) {
         lam_j
+      } else if (identical(lam_j, "estimate") && sum(!is.na(X_sp[, j])) >= 10L) {
+        # bm_impute_col() returns early for a fully observed column (nothing to
+        # impute) without estimating lambda. Report the estimate anyway so the
+        # stored lambda_per_trait describes the trait, not the missingness.
+        ml_lambda_for_col(X_sp[, j], R_phy)
       } else {
         1
       }
