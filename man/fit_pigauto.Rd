@@ -49,7 +49,7 @@ fit_pigauto(
   phylo_signal_threshold = 0.2,
   phylo_signal_method = c("lambda", "blomberg_k"),
   min_val_cells = 20L,
-  lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
+  lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
   joint_solver = c("inhouse", "rphylopars"),
   predict_method = c("per_column", "exact"),
   joint_refine_iter = 0L,
@@ -285,10 +285,18 @@ achieve this by increasing \code{missing_frac} or collecting more
 species.  See \strong{Calibration at small n} below.}
 
 \item{lambda_mode}{character. Pagel-lambda mode for the BM baseline.
-\code{"fixed_1"} preserves the default Brownian correlation matrix;
-\code{"estimate"}, \code{"cv"}, and \code{"bayes"} delegate lambda
-handling to the per-column BM path. Passed to
-\code{\link{fit_baseline}} and stored in the fitted model config.
+\code{"estimate"} (default) fits a per-trait Pagel's lambda on each
+continuous-family (BM-eligible) latent column; discrete traits
+(binary, categorical, zi gate, and OVR synthetic columns) stay at
+lambda = 1 unless the joint threshold-joint / OVR delegates inherit
+the continuous block's shared \code{lambda_block}.  \code{"fixed_1"}
+preserves the pre-lambda Brownian correlation matrix everywhere;
+\code{"cv"} and \code{"bayes"} are alternative per-column estimators.
+When \code{predict_method = "exact"} or \code{joint_refine_iter > 0},
+the joint (multi-trait) prediction path uses the single shared
+\code{lambda_block}, not the per-trait estimates, because those paths
+need one common phylogenetic correlation matrix across traits. Passed
+to \code{\link{fit_baseline}} and stored in the fitted model config.
 When \code{covariates} are supplied, the covariate-aware BM path has
 no lambda argument and always fits at lambda = 1; a non-\code{"fixed_1"}
 \code{lambda_mode} is then silently ignored for BM-eligible columns

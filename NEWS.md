@@ -1,3 +1,44 @@
+# pigauto 0.11.0.9000 (dev)
+
+## Default flip: `lambda_mode = "estimate"`
+
+`impute()`, `fit_pigauto()`, and `multi_impute()` now default `lambda_mode`
+to `"estimate"` (previously `"fixed_1"`); `"fixed_1"`, `"cv"`, and `"bayes"`
+remain available. `multi_impute()` gains an explicit `lambda_mode` argument
+(previously only reachable via `...`). `multi_impute_trees()`'s per-tree
+baseline refit now falls back to `"estimate"` (not `"fixed_1"`) when the
+reference fit's `model_config$lambda_mode` is unset, so tree-specific
+baselines estimate their own per-tree Pagel's lambda by default.
+
+Under `lambda_mode = "estimate"`, each continuous-family (BM-eligible)
+latent column gets its own per-trait Pagel's lambda via the existing
+per-column ML estimator (`bm_impute_col(lambda = "estimate")`); discrete
+traits (binary, categorical, zi gate, OVR synthetic columns) stay at
+lambda = 1, unaffected by `lambda_mode` (see `fit_baseline()`'s "Per-type
+lambda dispatch" details).
+
+**This is a real change to default baseline numbers, not just a relabelling.**
+Measured max abs difference in baseline `mu` of ~0.38 (z-scored latent
+scale) between `lambda_mode = "fixed_1"` and `"estimate"` on a 2-trait,
+40-tip smoke fixture, with the joint MVN baseline active on both sides
+(`bl$path` reports `"joint_mvn"` for both) -- the joint solver itself now
+estimates lambda, rather than falling back to the per-column path. See
+the joint-solver lane reports under `docs/dev-log/lambda-default/` for
+the estimation mechanism. Binary/ordinal/categorical/zi-gate columns are
+unaffected (still threshold-joint / OVR, still lambda = 1 unless the
+joint delegate inherits the continuous block's `lambda_block`).
+
+`fit$model_config` gains `lambda_per_trait` (named numeric per latent
+column) and `lambda_block` (a single shared lambda used by the joint/exact
+prediction paths, i.e. `predict_method = "exact"` or `joint_refine_iter >
+0`, which need one common phylogenetic correlation matrix across traits
+rather than per-trait values), sourced from `fit_baseline()`'s own
+`$lambda_per_trait` / `$lambda_block`. `fit_baseline()` also gains
+`lambda_fixed` (a named numeric vector), letting a caller rebuild a
+baseline at previously-estimated per-trait lambda values instead of
+re-running ML estimation -- the mechanism a future predict-time rebuild
+would use.
+
 # pigauto 0.11.0
 
 Local candidate after CRAN pigauto 0.10.0 (Date/Publication 2026-07-30).

@@ -178,18 +178,67 @@
   M / n
 }
 
+# Observed-cell GLS phylogenetic mean under R(lambda), for one column:
+#
+#   mu_hat(lambda) = (1' R_oo(lambda)^{-1} 1)^{-1} 1' R_oo(lambda)^{-1} y_o
+#
+# This is exactly bm_impute_col()'s own `mu_hat` (bm_internal.R, the
+# "1. GLS phylogenetic mean" step), duplicated here rather than exposed
+# from R/bm_internal.R or R/pagel_lambda.R (both owned by a concurrent
+# lane in this worktree) so this file stays self-contained. Used only to
+# give henderson_bm_predict() the same free-mean model that
+# bm_impute_col() and the lambda_k profile use, since henderson_bm_predict
+# itself assumes a zero root state (mean-model consistency, S2
+# correction / Rose review section 7 B(i)).
+.mvn_gls_mean_at_lambda <- function(y, R, lambda, nugget = 1e-8) {
+  obs <- which(!is.na(y))
+  n_o <- length(obs)
+  if (n_o < 1L) return(0)
+  R_oo <- R[obs, obs, drop = FALSE]
+  if (lambda < 1) {
+    diag_R <- diag(R_oo)
+    R_oo <- lambda * R_oo
+    diag(R_oo) <- lambda * diag_R + (1 - lambda)
+  }
+  R_oo <- R_oo + diag(nugget, n_o)
+  chol_R <- tryCatch(chol(R_oo), error = function(e) NULL)
+  if (is.null(chol_R)) return(mean(y[obs]))
+  chol_solve <- function(b) backsolve(chol_R, forwardsolve(t(chol_R), b))
+  ones <- rep(1, n_o)
+  a <- chol_solve(ones)
+  b <- chol_solve(y[obs])
+  sum(b) / sum(a)
+}
+
 # Per-column BM init: exact univariate-BM conditional MVN.
 # Returns L_hat (NAs replaced) and L_var (0 at observed cells, > 0 at
 # imputed cells). For columns with < 2 observed values, leaves the
 # column at zero with unit variance (uninformative prior).
 #
 # Two code paths share the same numerical answer to ~1e-3:
-#   - bm_impute_col(yj, R)         legacy dense O(n_obs^3) per column.
+#   - bm_impute_col(yj, R, lambda = lambda_vec[j])  legacy dense
+#     O(n_obs^3) per column, lambda-aware, free GLS mean throughout.
 #   - henderson_bm_predict(yj, H)  sparse O(n) per column via Hadfield-
-#     Nakagawa (2010) eq 29. Cuts init time at large n from minutes to
+#     Nakagawa (2010) eq 29, where H is already built on the Pagel-
+#     transformed tree T(lambda_vec[j]). This path assumes a ZERO root
+#     state, so when lambda_vec[j] != 1 the column is first centered at
+#     its own .mvn_gls_mean_at_lambda() before the Henderson call and
+#     the mean is added back to the result -- otherwise the sparse and
+#     dense paths disagree by the observed-subset mean as lambda falls
+#     (measured by Rose's review, section 7 B(i): max |delta mu| grows
+#     from ~0.001 at lambda=1 to ~0.25 at lambda=0.3 on non-centered
+#     data). At lambda_vec[j] == 1 no centering happens, matching the
+#     pre-lane path exactly. Cuts init time at large n from minutes to
 #     seconds (~18x at n=2000) and avoids forming dense (n x n) R^{-1}.
-.mvn_init_per_column <- function(L, R, eps = 1e-8, henderson = NULL) {
+#
+# `henderson_for_col(j)` returns the Henderson object to use for column
+# j (already built at that column's lambda), or NULL to force the dense
+# fallback (K == 1, no tree, Matrix unavailable, or use_henderson =
+# FALSE). `lambda_vec` (length K) is consulted on both paths.
+.mvn_init_per_column <- function(L, R, eps = 1e-8, henderson_for_col = NULL,
+                                  lambda_vec = NULL) {
   n <- nrow(L); K <- ncol(L)
+  if (is.null(lambda_vec)) lambda_vec <- rep(1, K)
   L_hat <- L; L_var <- matrix(0, n, K, dimnames = dimnames(L))
   for (j in seq_len(K)) {
     yj <- L[, j]
@@ -199,16 +248,145 @@
       L_var[!obs, j] <- 1
       next
     }
-    res <- if (!is.null(henderson)) {
-      henderson_bm_predict(yj, henderson, eps = eps, cor_scale = TRUE)
+    henderson_j <- if (!is.null(henderson_for_col)) henderson_for_col(j) else NULL
+    lam_j <- lambda_vec[j]
+    if (!is.null(henderson_j) && lam_j != 1) {
+      mu_gls <- .mvn_gls_mean_at_lambda(yj, R, lam_j, nugget = eps)
+      res <- henderson_bm_predict(yj - mu_gls, henderson_j, eps = eps,
+                                    cor_scale = TRUE)
+      res$mu <- res$mu + mu_gls
+    } else if (!is.null(henderson_j)) {
+      res <- henderson_bm_predict(yj, henderson_j, eps = eps, cor_scale = TRUE)
     } else {
-      bm_impute_col(yj, R, nugget = eps)
+      res <- bm_impute_col(yj, R, nugget = eps, lambda = lam_j)
     }
     L_hat[, j] <- res$mu
     L_var[, j] <- res$se^2
     L_var[obs, j] <- 0
   }
   list(L_hat = L_hat, L_var = L_var)
+}
+
+# ---- Pagel's lambda resolution (S2, feat/joint-lambda-default) -----------
+#
+# Design: docs/dev-log/2026-09-22-joint-lambda-alignment.md, sections 2-7.
+# `lambda_cols` names the "continuous-family" columns (continuous, count,
+# ordinal, proportion, zi magnitude); NULL means all columns are eligible.
+# Discrete liability columns (binary, zi gate, ordinal-via-OVR synthetic
+# columns) are excluded by the caller and stay at lambda = 1 -- section 7's
+# post-review decision (B iii cut): the spec's decision 4 describes a
+# lambda estimated over the WHOLE liability block, which this lane does
+# not build, and `tests/testthat/test-lambda-per-type.R` already locks in
+# lambda = 1 on the discrete path (the August arc/lambda-per-type fix).
+# `lambda_block` (the block value below) is used only by the Sigma
+# M-step, the opt-in exact conditional, and the opt-in EM refine -- never
+# to override a non-lambda_cols column's own lambda.
+.mvn_resolve_lambda_cols <- function(lambda_cols, K) {
+  if (is.null(lambda_cols)) return(seq_len(K))
+  if (is.logical(lambda_cols)) {
+    if (length(lambda_cols) != K) {
+      stop("fit_mvn_bm_inhouse: logical 'lambda_cols' must have length ",
+           "ncol(L).", call. = FALSE)
+    }
+    return(which(lambda_cols))
+  }
+  lambda_cols <- as.integer(lambda_cols)
+  if (anyNA(lambda_cols) || any(lambda_cols < 1L) || any(lambda_cols > K)) {
+    stop("fit_mvn_bm_inhouse: 'lambda_cols' indices out of range.",
+         call. = FALSE)
+  }
+  lambda_cols
+}
+
+# Resolves `lambda` ("fixed_1", "estimate", or a numeric scalar in
+# [0, 1]) into a per-column vector, a single block value, and a tag
+# recording which mode ran. "fixed_1" takes a literal shortcut (no
+# caches, no optim()) so it is identical to the pre-lane solver.
+#
+# "estimate": lambda_bar (the block value) is the argmin over [0.01,
+# 0.99] of the SUM of the profile-REML NLL caches of the lambda_cols
+# columns (build_pagel_nll_cache(), reused from R/pagel_lambda.R). Each
+# lambda_cols column with >= 10 observed cells then gets its own
+# per-trait lambda_k via ml_lambda_for_col() (R/bm_internal.R; reused,
+# not duplicated); a lambda_cols column with < 10 observed cells falls
+# back to lambda_bar (too little data for its own estimate). Every
+# column OUTSIDE lambda_cols is fixed at lambda = 1 (section 7's B iii
+# cut) -- lambda_bar is never imposed on a column the caller did not
+# name.
+.mvn_resolve_lambda <- function(lambda, L, R, lambda_cols_idx, eps = 1e-8) {
+  K <- ncol(L)
+  col_names <- colnames(L)
+  if (identical(lambda, "fixed_1")) {
+    return(list(lambda_vec = stats::setNames(rep(1, K), col_names),
+                lambda_block = 1,
+                lambda_mode_used = "fixed_1"))
+  }
+  if (is.numeric(lambda) && length(lambda) == 1L) {
+    if (!is.finite(lambda) || lambda < 0 || lambda > 1) {
+      stop("fit_mvn_bm_inhouse: numeric 'lambda' must be a scalar in ",
+           "[0, 1]; got: ", lambda, call. = FALSE)
+    }
+    return(list(lambda_vec = stats::setNames(rep(lambda, K), col_names),
+                lambda_block = lambda,
+                lambda_mode_used = "numeric"))
+  }
+  if (is.numeric(lambda) && length(lambda) == K) {
+    # S4 (dispatcher, predict-time lambda_fixed rebuild): a full per-column
+    # vector supplied by the caller. Every entry is used as-is -- lambda_cols
+    # is irrelevant here because the caller has already decided every
+    # column's value (typically by replaying a previous fit's own
+    # $lambda_per_trait). `lambda_block` is a diagnostic mean, only
+    # consulted by the opt-in Sigma M-step / exact conditional / EM refine.
+    if (!all(is.finite(lambda)) || any(lambda < 0) || any(lambda > 1)) {
+      stop("fit_mvn_bm_inhouse: numeric 'lambda' vector must have all ",
+           "entries in [0, 1].", call. = FALSE)
+    }
+    lambda_vec <- stats::setNames(as.numeric(lambda), col_names)
+    return(list(lambda_vec = lambda_vec,
+                lambda_block = mean(lambda_vec),
+                lambda_mode_used = "numeric_vector"))
+  }
+  if (!identical(lambda, "estimate")) {
+    stop("fit_mvn_bm_inhouse: 'lambda' must be \"fixed_1\", \"estimate\", ",
+         "or a numeric scalar in [0, 1]; got: ", paste(lambda, collapse = ", "),
+         call. = FALSE)
+  }
+
+  caches <- lapply(lambda_cols_idx, function(j) {
+    build_pagel_nll_cache(L[, j], R, nugget = eps)
+  })
+  lambda_block <- if (length(caches) == 0L) {
+    1.0
+  } else {
+    block_obj <- function(lam) {
+      sum(vapply(caches, function(cc) cc$nll(lam), numeric(1L)))
+    }
+    opt <- tryCatch(stats::optimize(block_obj, interval = c(0.01, 0.99)),
+                     error = function(e) NULL)
+    if (is.null(opt) || !is.finite(opt$objective) || !is.finite(opt$minimum)) {
+      1.0
+    } else {
+      opt$minimum
+    }
+  }
+
+  # Every column starts at lambda = 1 (the B iii cut: nothing outside
+  # lambda_cols is ever touched), then lambda_cols columns are
+  # overwritten with their own estimate or, for a low-n column, with
+  # lambda_bar.
+  lambda_vec <- rep(1, K)
+  for (j in lambda_cols_idx) {
+    n_obs_j <- sum(!is.na(L[, j]))
+    lambda_vec[j] <- if (n_obs_j >= 10L) {
+      ml_lambda_for_col(L[, j], R, nugget = eps)
+    } else {
+      lambda_block
+    }
+  }
+  names(lambda_vec) <- col_names
+
+  list(lambda_vec = lambda_vec, lambda_block = lambda_block,
+       lambda_mode_used = "estimate")
 }
 
 # E-step: refine imputations at originally-NA cells via inverse-variance
@@ -282,16 +460,37 @@
 #              "Fisher-ML Sigma" comment block above `.mvn_par_to_chol`
 #              for provenance and the fallback-on-non-convergence
 #              contract).
+#   lambda : "fixed_1" (default, identical to the pre-lane solver -- no
+#              new code path executes), "estimate" (per-trait Pagel's
+#              lambda via profile REML on `lambda_cols`; every other
+#              column stays at lambda = 1; see `.mvn_resolve_lambda()`),
+#              a numeric scalar in [0, 1] applied to every column, or a
+#              numeric vector of length `ncol(L)` giving each column's
+#              own fixed value directly (S4 / dispatcher predict-time
+#              rebuild: typically a previous fit's own
+#              `$lambda_per_trait`, replayed rather than re-estimated).
+#   lambda_cols : integer/logical index into columns of `L` naming the
+#              continuous-family columns eligible for their own
+#              lambda_k under `lambda = "estimate"`. NULL (default)
+#              means all columns. Ignored for "fixed_1" and any numeric
+#              `lambda` (every column's value is already decided).
 #
 # Returns a list with the phylopars-compatible fields described above,
-# plus diagnostics ($n_iter, $converged).
+# plus diagnostics ($n_iter, $converged) and $lambda_per_trait,
+# $lambda_block, $lambda_mode_used (see docs/dev-log/
+# 2026-09-22-joint-lambda-alignment.md sections 4, 6 and 7).
+# $lambda_block is a diagnostic only: it feeds the Sigma M-step, the
+# opt-in `predict_method = "exact"`, and the opt-in `max_iter > 0` EM
+# refine, never a `lambda_cols` decision.
 fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
                                 max_iter = 0L, tol = 1e-4, eps = 1e-8,
                                 use_henderson = TRUE,
                                 sigma_method = c("single_pass", "fisher_ml"),
                                 refine_variance = c("conservative",
                                                     "pooled"),
-                                predict_method = c("per_column", "exact")) {
+                                predict_method = c("per_column", "exact"),
+                                lambda = "fixed_1",
+                                lambda_cols = NULL) {
   sigma_method <- match.arg(sigma_method)
   refine_variance <- match.arg(refine_variance)
   predict_method <- match.arg(predict_method)
@@ -306,25 +505,63 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
 
   L_obs_mask <- !is.na(L)
 
-  # Build Hadfield-Nakagawa (2010) sparse S^{-1} once; reuse across the
-  # K per-column BM imputations. O(n) build time vs O(n^3) for dense
-  # R^{-1}; >= 10x speed-up at n=2000 with identical mean predictions
-  # to ~1e-3 vs the dense path. Falls back to dense when tree is unset
-  # or Matrix package is unavailable.
-  #
-  # K=1 stays on the legacy dense path: bm_impute_col estimates a GLS
-  # phylogenetic mean from data, while henderson_bm_predict assumes a
-  # zero root state. For joint (K>=2) liability matrices the inputs
-  # are centered by build_liability_matrix so the zero-root assumption
-  # is correct; for single-trait back-compat the GLS-mean estimate
-  # matters.
-  henderson <- if (isTRUE(use_henderson) && K >= 2L && !is.null(tree) &&
-                    requireNamespace("Matrix", quietly = TRUE)) {
-    tryCatch(build_henderson_S_inv(tree), error = function(e) NULL)
-  } else NULL
+  # ---- Pagel's lambda resolution ------------------------------------------
+  lambda_cols_idx <- .mvn_resolve_lambda_cols(lambda_cols, K)
+  lam <- .mvn_resolve_lambda(lambda, L, R, lambda_cols_idx, eps = eps)
+  lambda_vec <- lam$lambda_vec
+  lambda_block <- lam$lambda_block
+  lambda_mode_used <- lam$lambda_mode_used
 
-  # ---- L_hat init: per-column BM (uses phylo R correctly per column) -----
-  init <- .mvn_init_per_column(L, R, eps = eps, henderson = henderson)
+  # Build Hadfield-Nakagawa (2010) sparse S^{-1} on demand, keyed by
+  # lambda rounded to 1e-3 so at most K distinct builds happen (usually
+  # far fewer -- most columns share lambda = 1 or lambda_block). The
+  # build itself is O(n^2) in time and memory (build_henderson_S_inv
+  # opens with `diag(ape::vcv(tree))`, which forms the dense n x n
+  # covariance just to read its diagonal); it is the downstream SOLVE
+  # that is O(n) via the sparse Q. Both are cheap relative to the
+  # O(n^3) dense R^{-1} this replaces (>= 10x speed-up at n=2000).
+  # Falls back to dense when tree is unset or Matrix package is
+  # unavailable.
+  #
+  # K=1 stays on the legacy dense path (bm_impute_col, which estimates
+  # a free GLS mean directly). For K>=2, henderson_bm_predict's own
+  # zero-root assumption is corrected below by centering each column at
+  # its own lambda-dependent GLS mean before the Henderson call and
+  # adding it back after (mean-model consistency, section 7 B(i)).
+  #
+  # lambda_val == 1 reuses `tree` untransformed rather than routing
+  # through transform_tree_pagel(tree, 1) -- both are mathematically
+  # identical (internal edges * 1, terminal edges + 0 * depth), but the
+  # literal reuse is what makes `lambda = "fixed_1"` identical to the
+  # pre-lane solver rather than merely numerically close.
+  henderson_cache <- new.env(parent = emptyenv())
+  get_henderson_at <- function(lambda_val) {
+    if (!isTRUE(use_henderson) || K < 2L || is.null(tree) ||
+        !requireNamespace("Matrix", quietly = TRUE)) {
+      return(NULL)
+    }
+    key <- sprintf("%.3f", round(lambda_val, 3))
+    if (exists(key, envir = henderson_cache, inherits = FALSE)) {
+      return(get(key, envir = henderson_cache, inherits = FALSE))
+    }
+    tr <- if (lambda_val == 1) tree else transform_tree_pagel(tree, lambda_val)
+    h <- tryCatch(build_henderson_S_inv(tr), error = function(e) NULL)
+    assign(key, h, envir = henderson_cache)
+    h
+  }
+
+  # Shared Henderson object at lambda_block: used by the Sigma M-step,
+  # the opt-in exact conditional, and the opt-in EM refine -- all three
+  # need one common R(lambda) per the hybrid design (section 4 of the
+  # dev-log). At lambda = "fixed_1" this is the same build as before.
+  henderson_bar <- get_henderson_at(lambda_block)
+
+  # ---- L_hat init: per-column BM, each column at its own lambda_k --------
+  init <- .mvn_init_per_column(L, R, eps = eps,
+                                henderson_for_col = function(j) {
+                                  get_henderson_at(lambda_vec[j])
+                                },
+                                lambda_vec = lambda_vec)
   L_hat <- init$L_hat
   L_var <- init$L_var
 
@@ -350,8 +587,8 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
   # produce for K >= 2 without fisher_ml -- reused both as fisher_ml's
   # own optim() starting value and as its non-convergence fallback.
   single_pass_fallback <- function() {
-    if (!is.null(henderson)) {
-      .mvn_sigma_kron_M(L_hat, L_var, henderson)
+    if (!is.null(henderson_bar)) {
+      .mvn_sigma_kron_M(L_hat, L_var, henderson_bar)
     } else {
       S0 <- stats::cov(L, use = "pairwise.complete.obs")
       S0[!is.finite(S0)] <- 0
@@ -373,8 +610,8 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
     Sigma0[!is.finite(Sigma0)] <- 0
     diag(Sigma0) <- pmax(diag(Sigma0), eps)
     .mvn_sigma_fisher_ml(L, Sigma0, single_pass_fallback, eps = eps)
-  } else if (!is.null(henderson)) {
-    .mvn_sigma_kron_M(L_hat, L_var, henderson)
+  } else if (!is.null(henderson_bar)) {
+    .mvn_sigma_kron_M(L_hat, L_var, henderson_bar)
   } else {
     # No tree: closed-form M-step needs dense R^{-1}. Fall back to
     # pairwise-complete (PD-stabilised) and accept the species-iid bias.
@@ -395,8 +632,8 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
   # non-finite output -- and we fall through to the per-column path rather
   # than degrade silently.
   # Derivation + gates: docs/dev-log/2026-08-17-exact-conditional-design.md
-  if (identical(predict_method, "exact") && K >= 2L && !is.null(henderson)) {
-    ec <- exact_conditional_mvn(L, Sigma, henderson, cor_scale = TRUE,
+  if (identical(predict_method, "exact") && K >= 2L && !is.null(henderson_bar)) {
+    ec <- exact_conditional_mvn(L, Sigma, henderson_bar, cor_scale = TRUE,
                                  eps = eps)
     if (!is.null(ec)) {
       return(list(
@@ -406,7 +643,10 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
         pars      = list(phylocov = Sigma),
         n_iter    = 0L,
         converged = TRUE,
-        predict_method = "exact"
+        predict_method = "exact",
+        lambda_per_trait = lambda_vec,
+        lambda_block = lambda_block,
+        lambda_mode_used = lambda_mode_used
       ))
     }
     warning("fit_mvn_bm_inhouse: predict_method = \"exact\" was not usable ",
@@ -433,7 +673,10 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
       anc_var   = L_var,
       pars      = list(phylocov = Sigma),
       n_iter    = 0L,
-      converged = TRUE
+      converged = TRUE,
+      lambda_per_trait = lambda_vec,
+      lambda_block = lambda_block,
+      lambda_mode_used = lambda_mode_used
     ))
   }
 
@@ -463,8 +706,8 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
     # passes `refined$L_hat` (not the original NA-carrying L) into the
     # optim at every M-step.
     loop_fallback <- function() {
-      if (!is.null(henderson)) {
-        .mvn_sigma_kron_M(refined$L_hat, refined$L_var, henderson)
+      if (!is.null(henderson_bar)) {
+        .mvn_sigma_kron_M(refined$L_hat, refined$L_var, henderson_bar)
       } else {
         .mvn_sigma_ml(refined$L_hat, refined$L_var,
                        R_inv = solve(R + diag(eps, n)))
@@ -472,8 +715,8 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
     }
     Sigma_new <- if (identical(sigma_method, "fisher_ml")) {
       .mvn_sigma_fisher_ml(refined$L_hat, Sigma, loop_fallback, eps = eps)
-    } else if (!is.null(henderson)) {
-      .mvn_sigma_kron_M(refined$L_hat, refined$L_var, henderson)
+    } else if (!is.null(henderson_bar)) {
+      .mvn_sigma_kron_M(refined$L_hat, refined$L_var, henderson_bar)
     } else {
       .mvn_sigma_ml(refined$L_hat, refined$L_var,
                      R_inv = solve(R + diag(eps, n)))
@@ -501,7 +744,10 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
     diverged  = diverged,
     pars      = list(phylocov = Sigma),
     n_iter    = iter,
-    converged = converged
+    converged = converged,
+    lambda_per_trait = lambda_vec,
+    lambda_block = lambda_block,
+    lambda_mode_used = lambda_mode_used
   )
 }
 
@@ -519,10 +765,15 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
 # fields pigauto consumes, in the same shape as fit_mvn_bm_inhouse():
 # $anc_recon (tip + internal rows, K cols), $anc_var (variance, not SE),
 # $pars$phylocov (K x K BM rate matrix).
-.fit_mvn_bm_rphylopars <- function(L, tree) {
+#
+# `model = "lambda"` lets phylopars estimate its own (single, shared)
+# Pagel's lambda; this is NOT read back into $lambda_per_trait /
+# $lambda_block in this slice (fit_joint_solver() sets both to
+# NA_real_ on the rphylopars path) -- see that dispatcher's roxygen.
+.fit_mvn_bm_rphylopars <- function(L, tree, model = "BM") {
   spp <- rownames(L)
   df <- data.frame(species = spp, L, stringsAsFactors = FALSE)
-  Rphylopars::phylopars(df, tree = tree, model = "BM",
+  Rphylopars::phylopars(df, tree = tree, model = model,
                         phylo_correlated = TRUE, pheno_correlated = TRUE,
                         REML = TRUE)
 }
@@ -558,22 +809,41 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
 #'   the single-pass, byte-identical default. Only consulted when
 #'   \code{joint_solver = "inhouse"} (including the fallback path when
 #'   \code{joint_solver = "rphylopars"} fails).
+#' @param lambda \code{"fixed_1"} (default), \code{"estimate"}, or a
+#'   numeric scalar in [0, 1]. Forwarded to \code{fit_mvn_bm_inhouse()}
+#'   when \code{joint_solver = "inhouse"} (including its fallback path).
+#'   When \code{joint_solver = "rphylopars"}, only whether \code{lambda}
+#'   is \code{"fixed_1"} matters: it selects \code{model = "BM"} vs
+#'   \code{model = "lambda"} in \code{.fit_mvn_bm_rphylopars()}.
+#'   Phylopars' own lambda estimate is not read back in this slice --
+#'   \code{$lambda_per_trait} and \code{$lambda_block} are set to
+#'   \code{NA_real_} on that path.
+#' @param lambda_cols integer/logical index into columns of \code{L}, or
+#'   NULL (default, all columns). Forwarded to \code{fit_mvn_bm_inhouse()}
+#'   when \code{joint_solver = "inhouse"}; see its \code{lambda_cols}
+#'   argument. Not consulted on the \code{"rphylopars"} path.
 #' @return list with the phylopars-compatible fields described in the
 #'   file header comment above (\code{$anc_recon}, \code{$anc_var},
-#'   \code{$pars$phylocov}).
+#'   \code{$pars$phylocov}), plus \code{$lambda_per_trait} and
+#'   \code{$lambda_block}.
 #' @keywords internal
 #' @noRd
 fit_joint_solver <- function(L, tree, joint_solver = "inhouse",
                              predict_method = "per_column",
                               sigma_method = "single_pass",
-                              joint_refine_iter = 0L) {
+                              joint_refine_iter = 0L,
+                              lambda = "fixed_1",
+                              lambda_cols = NULL) {
   if (identical(joint_solver, "inhouse")) {
     return(fit_mvn_bm_inhouse(L = L, tree = tree, sigma_method = sigma_method,
                               predict_method = predict_method,
-                               max_iter = joint_refine_iter))
+                               max_iter = joint_refine_iter,
+                               lambda = lambda, lambda_cols = lambda_cols))
   }
 
-  fit <- tryCatch(.fit_mvn_bm_rphylopars(L, tree), error = function(e) e)
+  model <- if (identical(lambda, "fixed_1")) "BM" else "lambda"
+  fit <- tryCatch(.fit_mvn_bm_rphylopars(L, tree, model = model),
+                   error = function(e) e)
   ok <- !inherits(fit, "error")
   if (ok) {
     spp <- rownames(L)
@@ -586,7 +856,10 @@ fit_joint_solver <- function(L, tree, joint_solver = "inhouse",
     warning("fit_joint_solver: joint_solver = \"rphylopars\" failed (",
             msg, "); falling back to the in-house solver.", call. = FALSE)
     return(fit_mvn_bm_inhouse(L = L, tree = tree, max_iter = joint_refine_iter,
-                              predict_method = predict_method))
+                              predict_method = predict_method,
+                              lambda = lambda, lambda_cols = lambda_cols))
   }
+  fit$lambda_per_trait <- NA_real_
+  fit$lambda_block <- NA_real_
   fit
 }

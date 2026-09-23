@@ -19,6 +19,7 @@ multi_impute(
   verbose = TRUE,
   seed = NULL,
   gnn = TRUE,
+  lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
   ...
 )
 }
@@ -89,6 +90,16 @@ no GNN is used (baseline-only fit; see \code{\link[=fit_pigauto]{fit_pigauto()}}
 draws (there is no dropout to run) and a one-time message is printed;
 \code{draws_method = "conformal"} is unaffected. User \code{covariates} are
 ignored under \code{gnn = FALSE} (with a warning), as in \code{\link[=impute]{impute()}}.}
+
+\item{lambda_mode}{character. Pagel-lambda mode for the BM baseline,
+forwarded to \code{\link[=impute]{impute()}} / \code{\link[=fit_pigauto]{fit_pigauto()}}. \code{"estimate"} (default) fits
+a per-trait Pagel's lambda on each continuous-family (BM-eligible)
+latent column; discrete traits stay at lambda = 1. \code{"fixed_1"}
+preserves the pre-lambda Brownian correlation matrix everywhere;
+\code{"cv"} and \code{"bayes"} are alternative per-column estimators. See
+\code{\link[=fit_pigauto]{fit_pigauto()}} for the full contract, including the
+\code{predict_method = "exact"} / \code{joint_refine_iter > 0} interaction with
+\code{lambda_block}.}
 
 \item{...}{additional arguments forwarded to \code{\link[=fit_pigauto]{fit_pigauto()}} via
 \code{\link[=impute]{impute()}}. See \code{\link[=fit_pigauto]{fit_pigauto()}} for the full list; the "Safety

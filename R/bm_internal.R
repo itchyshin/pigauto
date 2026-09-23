@@ -289,18 +289,52 @@ ml_lambda_for_col <- function(y, R, nugget = 1e-6,
 #'   noise on data where covariates do not actually help.  Default
 #'   \code{0.02} (covariates must reduce residual variance by >= 2%).
 #'   Set to \code{0} to disable the gate entirely.
+#' @param lambda numeric scalar in \code{[0, 1]}, or \code{"estimate"}.
+#'   Pagel's lambda applied to \code{R} exactly as in
+#'   \code{\link{bm_impute_col}}: \code{R(lambda) = lambda * R + (1 -
+#'   lambda) * I}. Default \code{1.0} is bit-identical to the pre-lambda
+#'   behaviour (no new code executes). \code{"estimate"} profiles lambda
+#'   jointly with the GLS coefficients via \code{build_pagel_nll_cache(y,
+#'   R, X = X)} and reports the optimum as \code{$lambda_hat}. Because the
+#'   transform is applied to \code{R} up front, the LRT gate below (which
+#'   compares the cov-aware fit to an intercept-only fit) compares both
+#'   models at the SAME lambda.
 #' @return A list with \code{mu}, \code{se}, \code{beta_hat}
 #'   (the fitted GLS coefficients, length \code{p_x}), and
 #'   \code{used_cov} (logical -- TRUE if the cov-aware fit was used,
-#'   FALSE if the LRT gate fell back to no-cov).
+#'   FALSE if the LRT gate fell back to no-cov). When \code{lambda =
+#'   "estimate"}, also \code{lambda_hat} (the profiled optimum).
 #' @keywords internal
 #' @noRd
 bm_impute_col_with_cov <- function(y, X, R, nugget = 1e-6,
                                     ridge = 0.0,
-                                    lrt_threshold = 0.02) {
+                                    lrt_threshold = 0.02,
+                                    lambda = 1.0) {
   n <- length(y)
   stopifnot(is.matrix(X), nrow(X) == n)
   p_x <- ncol(X)
+
+  # Pagel's lambda: same transform as bm_impute_col() (lines ~107-111).
+  # At lambda = 1 this branch does not execute, so the rest of the
+  # function is untouched and bit-identical to the pre-lambda version.
+  lambda_hat <- NULL
+  if (identical(lambda, "estimate")) {
+    cache <- build_pagel_nll_cache(y, R, nugget = nugget, X = X)
+    opt <- stats::optimize(cache$nll, interval = c(0.01, 0.99), tol = 1e-4)
+    lambda_hat <- opt$minimum
+    lambda <- lambda_hat
+  }
+  if (!is.numeric(lambda) || length(lambda) != 1L || !is.finite(lambda) ||
+      lambda < 0 || lambda > 1) {
+    stop("'lambda' must be a numeric scalar in [0, 1] or \"estimate\"; got: ",
+         paste(lambda, collapse = ", "), call. = FALSE)
+  }
+  if (lambda < 1) {
+    diag_R <- diag(R)
+    R <- lambda * R
+    diag(R) <- lambda * diag_R + (1 - lambda)
+  }
+
   mu_out <- numeric(n)
   se_out <- numeric(n)
 
@@ -411,5 +445,7 @@ bm_impute_col_with_cov <- function(y, X, R, nugget = 1e-6,
   mu_out[miss_idx] <- mu_m
   se_out[miss_idx] <- sqrt(cond_var)
 
-  list(mu = mu_out, se = se_out, beta_hat = beta_hat, used_cov = used_cov)
+  out <- list(mu = mu_out, se = se_out, beta_hat = beta_hat, used_cov = used_cov)
+  if (!is.null(lambda_hat)) out$lambda_hat <- lambda_hat
+  out
 }

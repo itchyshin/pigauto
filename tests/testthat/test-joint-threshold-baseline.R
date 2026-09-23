@@ -461,8 +461,14 @@ test_that("fit_baseline ordinal selection picks BM when threshold-joint loses on
   splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.30,
                                  seed = 2027, trait_map = pd$trait_map)
 
-  # Run fit_baseline as usual (selection enabled)
-  bl <- fit_baseline(pd, tree, splits = splits)
+  # Run fit_baseline as usual (selection enabled). Pinned to
+  # lambda_mode = "fixed_1" (S4, feat/joint-lambda-default): fit_baseline()'s
+  # default changed to "estimate", which would make the internal
+  # bm_mvn-alternative candidate below run at an ESTIMATED lambda while the
+  # test's own independent `bm_alt` (below) hardcodes lambda = 1 -- pin so
+  # both sides use the same lambda and this stays a test of the SELECTION
+  # logic, not of lambda_mode.
+  bl <- fit_baseline(pd, tree, splits = splits, lambda_mode = "fixed_1")
   o_col <- pd$trait_map[[2]]$latent_cols
   chosen <- bl$ordinal_path_chosen[[as.character(o_col)]]
 

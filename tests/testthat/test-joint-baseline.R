@@ -78,8 +78,13 @@ test_that("joint baseline matches per-column BM on single-trait data", {
                                 trait_map = pd$trait_map)
   graph  <- build_phylo_graph(tree, k_eigen = 4L)
 
-  # Path A: current per-column BM
-  bl_old <- fit_baseline(pd, tree, splits = splits, graph = graph)
+  # Path A: current per-column BM. Pinned to lambda_mode = "fixed_1" (S4,
+  # feat/joint-lambda-default): fit_baseline()'s default changed to
+  # "estimate", but this comparison is against fit_joint_mvn_baseline()
+  # below, which still defaults to lambda = 1 -- pin both sides so the
+  # comparison stays about the joint-vs-per-column MATH, not lambda.
+  bl_old <- fit_baseline(pd, tree, splits = splits, graph = graph,
+                         lambda_mode = "fixed_1")
 
   # Path B: joint MVN (single trait should collapse to the same math)
   bl_new <- fit_joint_mvn_baseline(pd, tree, splits = splits, graph = graph)
@@ -164,8 +169,12 @@ test_that("fit_baseline dispatches to joint MVN when trait count >= 2", {
                                 trait_map = pd$trait_map)
   graph <- build_phylo_graph(tree, k_eigen = 4L)
 
-  # Call fit_baseline() — should internally use joint MVN path
-  bl <- fit_baseline(pd, tree, splits = splits, graph = graph)
+  # Call fit_baseline() — should internally use joint MVN path. Pinned to
+  # lambda_mode = "fixed_1" (S4): fit_baseline()'s default changed to
+  # "estimate", but the comparison below is against fit_joint_mvn_baseline()
+  # at its own default (lambda = 1) -- pin both sides.
+  bl <- fit_baseline(pd, tree, splits = splits, graph = graph,
+                     lambda_mode = "fixed_1")
   expect_equal(dim(bl$mu), c(30L, 2L))
   expect_equal(dim(bl$se), c(30L, 2L))
   expect_false(any(is.na(bl$mu)))

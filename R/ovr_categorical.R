@@ -112,6 +112,17 @@ fit_ovr_categorical_fits <- function(data, tree, trait_name,
     which_synth <- which(built_k$liab_cols == synth_col)
     if (length(which_synth) == 1L) sdv[which_synth] <- sd_k
 
+    # S4 (dispatcher, feat/joint-lambda-default): deliberately NOT threading
+    # lambda_mode / lambda_fixed here -- fit_joint_threshold_baseline()'s
+    # default (lambda_mode = "fixed_1") always applies. With max_iter = 0
+    # and predict_method = "per_column" the synthetic one-vs-rest binary
+    # column's prediction does not depend on the continuous columns' own
+    # lambda, so estimating lambda per OVR call would be K wasted
+    # optimisations (K per-class fits per categorical trait) that change
+    # nothing about the categorical output; it would also make this trait's
+    # baseline depend on lambda_mode, which tests/testthat/test-lambda-per-
+    # type.R locks at lambda = 1 regardless of lambda_mode (the August
+    # arc/lambda-per-type fix, section 7 B iii of the alignment note).
     jt <- tryCatch(
       fit_joint_threshold_baseline(pd_k, tree, splits = splits_k,
                                     graph = graph,

@@ -1,0 +1,19 @@
+Calibrating gates on validation set (baseline only)...
+Calibrated gates: Mass=0, Beak.Length_Culmen=0, Tarsus.Length=0, Wing.Length=0, Trophic.Level=Carnivore=0, Trophic.Level=Herbivore=0, Trophic.Level=Omnivore=0, Trophic.Level=Scavenger=0, Primary.Lifestyle=Aerial=0, Primary.Lifestyle=Aquatic=0, Primary.Lifestyle=Generalist=0, Primary.Lifestyle=Insessorial=0, Primary.Lifestyle=Terrestrial=0, Migration=0
+Conformal scores (latent scale, method=split): Mass=2.0285, Beak.Length_Culmen=1.3235, Tarsus.Length=2.3465, Wing.Length=1.1752, Migration=2.8405
+Warning message:
+Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.
+Consider setting: n_imputations = 20L, pool_method = 'mode'.
+See ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls'). 
+Calibrating gates on validation set (baseline only)...
+Calibrated gates: Mass=0, Beak.Length_Culmen=0, Tarsus.Length=0, Wing.Length=0, Trophic.Level=Carnivore=0, Trophic.Level=Herbivore=0, Trophic.Level=Omnivore=0, Trophic.Level=Scavenger=0, Primary.Lifestyle=Aerial=0, Primary.Lifestyle=Aquatic=0, Primary.Lifestyle=Generalist=0, Primary.Lifestyle=Insessorial=0, Primary.Lifestyle=Terrestrial=0, Migration=0.412
+Conformal scores (latent scale, method=split): Mass=1.4143, Beak.Length_Culmen=2.4852, Tarsus.Length=1.7499, Wing.Length=1.4474, Migration=2.6101
+Warning message:
+Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.
+Consider setting: n_imputations = 20L, pool_method = 'mode'.
+See ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls'). 
+fixed_1 : 0.4207 0.5794 0.4989 0.4459 
+estimate: 0.4253 0.581 0.4911 0.451 
+lambda_per_trait: Mass 0.995 Beak.Length_Culmen 0.99 Tarsus.Length 0.995 Wing.Length 0.995 Trophic.Level=Carnivore 1 Trophic.Level=Herbivore 1 Trophic.Level=Omnivore 1 Trophic.Level=Scavenger 1 Primary.Lifestyle=Aerial 1 Primary.Lifestyle=Aquatic 1 Primary.Lifestyle=Generalist 1 Primary.Lifestyle=Insessorial 1 Primary.Lifestyle=Terrestrial 1 Migration 1 
+relative change in mean z-RMSE: +0.18%
+AVONET_OK

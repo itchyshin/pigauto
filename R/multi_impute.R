@@ -69,6 +69,15 @@
 #'   draws (there is no dropout to run) and a one-time message is printed;
 #'   `draws_method = "conformal"` is unaffected. User `covariates` are
 #'   ignored under `gnn = FALSE` (with a warning), as in [impute()].
+#' @param lambda_mode character. Pagel-lambda mode for the BM baseline,
+#'   forwarded to [impute()] / [fit_pigauto()]. `"estimate"` (default) fits
+#'   a per-trait Pagel's lambda on each continuous-family (BM-eligible)
+#'   latent column; discrete traits stay at lambda = 1. `"fixed_1"`
+#'   preserves the pre-lambda Brownian correlation matrix everywhere;
+#'   `"cv"` and `"bayes"` are alternative per-column estimators. See
+#'   [fit_pigauto()] for the full contract, including the
+#'   `predict_method = "exact"` / `joint_refine_iter > 0` interaction with
+#'   `lambda_block`.
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
 #'   [impute()]. See [fit_pigauto()] for the full list; the "Safety
 #'   floor" section below describes the relevant new v0.9.1.9002
@@ -188,9 +197,12 @@ multi_impute <- function(traits, tree, m = 100L,
                          missing_frac = 0.25,
                          covariates = NULL,
                          epochs = 2000L, verbose = TRUE, seed = NULL,
-                         gnn = TRUE, ...) {
+                         gnn = TRUE,
+                         lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
+                         ...) {
 
   draws_method <- match.arg(draws_method)
+  lambda_mode <- match.arg(lambda_mode)
   m <- as.integer(m)
   if (!is.finite(m) || m < 2L) {
     stop("`m` must be an integer >= 2 (stochastic diagnostics need at least ",
@@ -223,6 +235,7 @@ multi_impute <- function(traits, tree, m = 100L,
       verbose       = verbose,
       seed          = if (is.null(seed)) NULL else as.integer(seed),
       gnn           = gnn,
+      lambda_mode   = lambda_mode,
       ...
     )
 
@@ -257,6 +270,7 @@ multi_impute <- function(traits, tree, m = 100L,
       verbose       = verbose,
       seed          = if (is.null(seed)) NULL else as.integer(seed),
       gnn           = gnn,
+      lambda_mode   = lambda_mode,
       ...
     )
 

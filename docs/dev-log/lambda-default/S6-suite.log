@@ -1,0 +1,830 @@
+active-impute: ..........WWWW.....W.......W...WWW......WWW.W............W..WWW........WWWWW.W.......W.....Auto-detected trait type "count" (log1p-encoded) for integer column(s): parasites. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(parasites = "continuous").
+
+WWWWW.........Auto-detected trait type "count" (log1p-encoded) for integer column(s): parasites. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(parasites = "continuous").
+
+WWWWW....
+bace-compat-eval: ....................
+bm-internal: ..........................................................
+check-pigauto: 1 tree tip(s) have no trait data and will have all-NA rows.
+...........................................................................................
+clamp-outliers: Auto-detected trait type "count" (log1p-encoded) for integer column(s): counts. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(counts = "continuous").
+..........WWWWWW.......
+community-surface: ........................................................................................
+compute-corner-loss: .............................
+count-mi-pooling: .........
+covariate-alignment: .............
+exact-conditional: ......................
+fit-predict: W........W.....W...W..............W.........WWW....WWW......W....W.....W....WWW............W.............
+gbif-centroids: .....................S.....................S
+gha-helpers: .........................................
+gnn-off: Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Loading required package: torch
+Tracing function "torch_tensor" in package "torch"
+W..................Untracing function "torch_tensor" in package "torch"
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+WTracing function "nn_parameter" in package "torch"
+Tracing function "torch_tensor" in package "torch"
+........Untracing function "nn_parameter" in package "torch"
+Untracing function "torch_tensor" in package "torch"
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+W.....Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+W.......Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+W.Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+W...Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+W..Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+W...Tracing function "torch_tensor" in package "torch"
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+.....Untracing function "torch_tensor" in package "torch"
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+WWW..Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+W..Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+...Tracing function "torch_tensor" in package "torch"
+.Untracing function "torch_tensor" in package "torch"
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+......Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+...Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+W..Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+W..
+gnn-train-cal-symmetry: ....W.W.....W..W..
+graph-transformer-block: ..........
+graph: ............................
+henderson-s-inv: ..................
+honesty-warnings: ........
+joint-baseline: ........single-trait back-compat: max |mu diff| = 3.16e-05, max |se diff| = 1.71e-04
+..................
+joint-lambda: .........[joint-lambda] recovery (n = 40 seeds): bias = -0.0577, -0.0744, -0.0050 | MAE = 0.1307, 0.1166, 0.0050
+................
+joint-refine-iter: ...........W.
+joint-solver: .............W.
+joint-threshold-baseline: ................................................................................................
+lambda-covariates: .......[lambda-cov] n = 300, 600 seeds: mean(lambda_hat) = 0.2614, bias = -0.0386, MAE = 0.1414 (MAE not gated)
+...........
+lambda-default: ...........
+lambda-dispatch: ................
+lambda-per-type: ....................
+liability: .........................................................................
+masking: ...............................
+mi-pool-robust: ...........
+mi-provenance: ..............................................
+mixed-types: Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+.......Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+....Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+....Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+....
+mondrian-conformal: ..........................
+monomorphic-discrete: ...WW.....WWWW...WW......WW........W..WW..
+multi-impute-analysis: ............................................................................................S........
+multi-impute-trees: WWWWWW..........WWWWWW.................WWWWWWWWWWW..........WWWWWW.
+multi-impute: ..WWWWW........................WWWWWW.........WWWWWWW.........WWWWWWW..........................................................................................................................................WWWWWWW....................
+multi-proportion: ....................
+multiobs-levelc: ..........................................................
+new-features: WWW..........W.W.WWW...WWW.W.W.W.WWWW.WW....WWW.......WWWWWWWWWWWWWWWWWWWWW.......WWWWWWWWWWWWW.....WWWWWWWWWWWWWWW..W.........WModel saved to /var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpoeLe6c/file1f095267e705.pigauto (432,893 bytes)
+.....W..WW...........WW............W..........W.WWW...W.......W.....WWW.
+ovr-categorical: .............W....
+pagel-bayes: ...................
+pagel-cv: ........
+  ml lambda_hat = 0.005, cv lambda_hat = 0.010 (true mix = 0.2)
+
+pagel-eigendecomp: ...................................................................................................................................
+  [pagel-perf] eigendecomp + 11 NLL evals at n=600: 0.02 s
+.
+pagel-lambda: ....................................
+phase6-em: ..........WW........
+phase7-em: ...............
+phase9-integration: ........W.......W..W......W.....
+phylo-signal-gate: ......W.....WW....W.W..WW...S
+phylo-signal-multiobs: .........
+pmm: ......................WWW.WWW..WWW.WWWWWW.WWW.W...WWWWWW.WWWWWW.....
+preprocess: ...........Auto-detected trait type "count" (log1p-encoded) for integer column(s): count_trait. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(count_trait = "continuous").
+..............................................
+property-invariants: Auto-detected trait type "count" (log1p-encoded) for integer column(s): cnt. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(cnt = "continuous").
+
+W........
+result-contract: ........................
+safety-floor: ................W...........W........W..W..W..W.WW......Note: model was saved with pigauto 0.9.1.9000; current version is 0.11.0.9000
+........W.......WWWW.......SAuto-detected trait type "count" (log1p-encoded) for integer column(s): x_cnt. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(x_cnt = "continuous").
+
+W......W................W........
+safety-nets: Using device: mps
+Calibrating gates on validation set...
+Calibrated gates: Mass=0, Beak.Length_Culmen=0, Tarsus.Length=0, Wing.Length=0, Trophic.Level=Carnivore=0, Trophic.Level=Herbivore=0, Trophic.Level=Omnivore=0, Trophic.Level=Scavenger=0, Primary.Lifestyle=Aerial=0, Primary.Lifestyle=Aquatic=0, Primary.Lifestyle=Generalist=0, Primary.Lifestyle=Insessorial=0, Primary.Lifestyle=Terrestrial=0, Migration=0
+Conformal scores (latent scale, method=split): Mass=0.9031, Beak.Length_Culmen=1.2122, Tarsus.Length=1.7023, Wing.Length=1.2588, Migration=2.877
+.Using device: mps
+Calibrating gates on validation set...
+Calibrated gates: Dummy_Size=0.643
+Conformal scores (latent scale, method=split): Dummy_Size=1.4898
+WW..
+share-gnn: W...................................
+shipping-coverage: ...........................W.W.WWW........W....W........
+sigma-fisher-ml: ...................
+simulate: .............................................................................
+type-detection: ..................
+worldclim-covariates: ...............................S........SS
+zi-count-conformal-intervals: WWW......WWW...WWW.....
+zi-count-conformal-mi: ..........................
+zi-count-splits: ...WWW...
+
+══ Skipped ═════════════════════════════════════════════════════════════════════
+1. .gbif_fetch_one reports helpful error when rgbif missing ('test-gbif-centroids.R:92:3') - Reason: rgbif IS installed; cannot test missing-rgbif branch
+
+2. end-to-end: GBIF centroids don't regress plants RMSE (>=1.10x guardrail on env traits) ('test-gbif-centroids.R:241:3') - Reason: BIEN cache not found
+
+3. glm route has an informative optional-package guard ('test-multi-impute-analysis.R:244:3') - Reason: smcfcs is installed; integration test covers this route
+
+4. plants smoke: BIEN plant traits with weak phylo signal are gated ('test-phylo-signal-gate.R:153:3') - Reason: BIEN cache not found
+
+5. safety_floor = TRUE keeps plants continuous RMSE <= 1.02 * mean_RMSE on cached BIEN subset ('test-safety-floor.R:509:3') - Reason: BIEN cache not found -- run script/bench_bien.R once to build
+
+6. pull_worldclim_per_species stops with clear error when terra absent ('test-worldclim-covariates.R:175:3') - Reason: terra IS installed; cannot test missing-terra branch
+
+7. end-to-end: bioclim lifts plants RMSE >= 10% on sla/leaf_area at n=200 (NOT_CRAN) ('test-worldclim-covariates.R:277:3') - Reason: BIEN cache not found
+
+8. per-occurrence bioclim lifts plants SLA >= 10% over centroid-only at n=200 (NOT_CRAN) ('test-worldclim-covariates.R:377:3') - Reason: BIEN cache not found
+
+══ Warnings ════════════════════════════════════════════════════════════════════
+1. [active] suggest_next_observation returns top-N by descending delta_var_total ('test-active-impute.R:158:3') - Small validation set for 2 trait(s): cont1 (n=5), cont2 (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (cont1 (n=5), cont2 (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+2. [active] suggest_next_observation returns top-N by descending delta_var_total ('test-active-impute.R:158:3') - the standard deviation is zero
+
+3. [active] suggest_next_observation returns top-N by descending delta_var_total ('test-active-impute.R:158:3') - the standard deviation is zero
+
+4. [active] suggest_next_observation returns top-N by descending delta_var_total ('test-active-impute.R:158:3') - the standard deviation is zero
+
+5. [active] suggest_next_observation by = 'species' aggregates across traits ('test-active-impute.R:189:3') - Small validation set for 2 trait(s): cont1 (n=4), cont2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (cont1 (n=4), cont2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+6. [active] suggest_next_observation returns empty when no missing cells ('test-active-impute.R:219:3') - Small validation set for 1 trait(s): cont (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+7. [active] suggest_next_observation handles binary trait via entropy reduction ('test-active-impute.R:262:3') - Small validation set for 2 trait(s): cont (n=2), bin (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+8. [active] suggest_next_observation handles binary trait via entropy reduction ('test-active-impute.R:262:3') - the standard deviation is zero
+
+9. [active] suggest_next_observation handles binary trait via entropy reduction ('test-active-impute.R:262:3') - the standard deviation is zero
+
+10. [active] suggest_next_observation skips discrete when types excludes them ('test-active-impute.R:287:3') - Small validation set for 2 trait(s): cont (n=2), bin (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+11. [active] suggest_next_observation skips discrete when types excludes them ('test-active-impute.R:287:3') - the standard deviation is zero
+
+12. [active] suggest_next_observation skips discrete when types excludes them ('test-active-impute.R:287:3') - the standard deviation is zero
+
+13. [active] suggest_next_observation handles K=3 categorical via entropy reduction ('test-active-impute.R:306:3') - Small validation set for 1 trait(s): cat3 (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+14. [active] suggest_next_observation returns 'pigauto_active' class ('test-active-impute.R:382:3') - Small validation set for 1 trait(s): cont (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+15. [active v2] zi_count: hybrid variance + entropy populated ('test-active-impute.R:404:3') - Small validation set for 1 trait(s): parasites (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (parasites (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+16. [active v2] zi_count: hybrid variance + entropy populated ('test-active-impute.R:404:3') - the standard deviation is zero
+
+17. [active v2] zi_count: hybrid variance + entropy populated ('test-active-impute.R:404:3') - the standard deviation is zero
+
+18. [active v2] zi_count: types argument can exclude zi_count ('test-active-impute.R:436:3') - Small validation set for 2 trait(s): parasites (n=3), cont (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (parasites (n=3), cont (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+19. [active v2] zi_count: types argument can exclude zi_count ('test-active-impute.R:436:3') - the standard deviation is zero
+
+20. [active v2] zi_count: types argument can exclude zi_count ('test-active-impute.R:436:3') - the standard deviation is zero
+
+21. [active v2] zi_count: types argument can exclude zi_count ('test-active-impute.R:436:3') - the standard deviation is zero
+
+22. [active v2] zi_count: types argument can exclude zi_count ('test-active-impute.R:436:3') - the standard deviation is zero
+
+23. [active v2] multi_proportion: per-component BM variance summed ('test-active-impute.R:462:3') - Small validation set for 1 trait(s): colour (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (colour (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+24. [active v2] multi_proportion: delta equals K-component sum ('test-active-impute.R:497:3') - Small validation set for 1 trait(s): colour (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (colour (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+25. [active T1] suggest_next_observation handles count + ordinal + proportion in one mixed fixture ('test-active-impute.R:572:3') - Small validation set for 3 trait(s): parasites (n=7), stage (n=1), p (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (parasites (n=7), stage (n=1), p (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+26. [active T1] suggest_next_observation handles count + ordinal + proportion in one mixed fixture ('test-active-impute.R:572:3') - the standard deviation is zero
+
+27. [active T1] suggest_next_observation handles count + ordinal + proportion in one mixed fixture ('test-active-impute.R:572:3') - the standard deviation is zero
+
+28. [active T1] suggest_next_observation handles count + ordinal + proportion in one mixed fixture ('test-active-impute.R:572:3') - the standard deviation is zero
+
+29. [active T1] suggest_next_observation handles count + ordinal + proportion in one mixed fixture ('test-active-impute.R:572:3') - the standard deviation is zero
+
+30. [active T1] suggest_next_observation respects types argument for count/ordinal/proportion ('test-active-impute.R:616:3') - Small validation set for 3 trait(s): parasites (n=3), stage (n=4), p (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (parasites (n=3), stage (n=4), p (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+31. [active T1] suggest_next_observation respects types argument for count/ordinal/proportion ('test-active-impute.R:616:3') - the standard deviation is zero
+
+32. [active T1] suggest_next_observation respects types argument for count/ordinal/proportion ('test-active-impute.R:616:3') - the standard deviation is zero
+
+33. [active T1] suggest_next_observation respects types argument for count/ordinal/proportion ('test-active-impute.R:616:3') - the standard deviation is zero
+
+34. [active T1] suggest_next_observation respects types argument for count/ordinal/proportion ('test-active-impute.R:616:3') - the standard deviation is zero
+
+35. [Phase G] clamp_outliers = FALSE is the default and is a no-op ('test-clamp-outliers.R:71:3') - Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+36. [Phase G] clamp_outliers = FALSE is the default and is a no-op ('test-clamp-outliers.R:71:3') - the standard deviation is zero
+
+37. [Phase G] clamp_outliers = FALSE is the default and is a no-op ('test-clamp-outliers.R:71:3') - the standard deviation is zero
+
+38. [Phase G] clamp_outliers = FALSE is the default and is a no-op ('test-clamp-outliers.R:74:3') - Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+39. [Phase G] clamp_outliers = FALSE is the default and is a no-op ('test-clamp-outliers.R:74:3') - the standard deviation is zero
+
+40. [Phase G] clamp_outliers = FALSE is the default and is a no-op ('test-clamp-outliers.R:74:3') - the standard deviation is zero
+
+41. fit_pigauto returns a pigauto_fit object ('test-fit-predict.R:20:3') - Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+42. predict.pigauto_fit returns pigauto_pred with correct dimensions ('test-fit-predict.R:46:3') - Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+43. predicted values are finite ('test-fit-predict.R:62:3') - Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+44. predict with n_imputations > 1 returns multiple datasets ('test-fit-predict.R:84:3') - Small validation set for 2 trait(s): tr1 (n=1), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=1), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+45. fit_pigauto and predict work with multi-obs data ('test-fit-predict.R:269:3') - Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+46. impute() works end-to-end with rownames (single-obs) ('test-fit-predict.R:292:3') - Small validation set for 2 trait(s): tr1 (n=2), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=2), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+47. impute() works end-to-end with rownames (single-obs) ('test-fit-predict.R:292:3') - the standard deviation is zero
+
+48. impute() works end-to-end with rownames (single-obs) ('test-fit-predict.R:292:3') - the standard deviation is zero
+
+49. impute() works with species_col (multi-obs) ('test-fit-predict.R:307:3') - Small validation set for 1 trait(s): x (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (x (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+50. impute() works with species_col (multi-obs) ('test-fit-predict.R:307:3') - the standard deviation is zero
+
+51. impute() works with species_col (multi-obs) ('test-fit-predict.R:307:3') - the standard deviation is zero
+
+52. fit_pigauto with attention produces valid fit ('test-fit-predict.R:371:3') - Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+53. fit_pigauto stores calibrated_gates and conformal_scores ('test-fit-predict.R:385:3') - Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+54. predict with conformal scores returns intervals ('test-fit-predict.R:399:3') - Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+55. predict returns conformal intervals for proportion traits ('test-fit-predict.R:421:3') - Small validation set for 1 trait(s): prop (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (prop (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+56. predict returns conformal intervals for proportion traits ('test-fit-predict.R:421:3') - the standard deviation is zero
+
+57. predict returns conformal intervals for proportion traits ('test-fit-predict.R:421:3') - the standard deviation is zero
+
+58. attention + calibration + conformal work with mixed types ('test-fit-predict.R:494:3') - Small validation set for 7 trait(s): Mass (n=1), Beak.Length_Culmen (n=3), Tarsus.Length (n=2), Wing.Length (n=3), Trophic.Level (n=2), Primary.Lifestyle (n=6), Migration (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 5 trait(s) with fewer than 19 validation cells (Mass (n=1), Beak.Length_Culmen (n=3), Tarsus.Length (n=2), Wing.Length (n=3), Migration (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+59. fit_pigauto(gnn = FALSE) returns a contract-conformant fit with zero torch calls ('test-gnn-off.R:70:3') - Small validation set for 4 trait(s): mass (n=2), clutch (n=3), nocturnal (n=1), diet (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (mass (n=2), clutch (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+60. predict() on a GNN-off fit builds no model and reproduces the blended baseline ('test-gnn-off.R:109:3') - Small validation set for 4 trait(s): mass (n=2), clutch (n=3), nocturnal (n=1), diet (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (mass (n=2), clutch (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+61. predict(n_imputations = 5) on a GNN-off fit yields BM-posterior draws ('test-gnn-off.R:163:3') - Small validation set for 4 trait(s): mass (n=2), clutch (n=3), nocturnal (n=1), diet (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (mass (n=2), clutch (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+62. impute(gnn = FALSE) runs the whole pipeline fast ('test-gnn-off.R:196:3') - Small validation set for 4 trait(s): mass (n=3), clutch (n=6), nocturnal (n=5), diet (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (mass (n=3), clutch (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+63. evaluate() on a GNN-off fit scores the held-out baseline (no leakage) ('test-gnn-off.R:215:3') - Small validation set for 4 trait(s): mass (n=3), clutch (n=6), nocturnal (n=5), diet (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (mass (n=3), clutch (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+64. evaluate() on a GNN-off fit scores the held-out baseline (no leakage) ('test-gnn-off.R:230:3') - Small validation set for 4 trait(s): mass (n=3), clutch (n=6), nocturnal (n=5), diet (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (mass (n=3), clutch (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+65. multi_impute(gnn = FALSE) works with both draw methods ('test-gnn-off.R:250:3') - Small validation set for 4 trait(s): mass (n=3), clutch (n=6), nocturnal (n=5), diet (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (mass (n=3), clutch (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+66. multi_impute(gnn = FALSE) works with both draw methods ('test-gnn-off.R:255:3') - Small validation set for 4 trait(s): mass (n=3), clutch (n=6), nocturnal (n=5), diet (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (mass (n=3), clutch (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+67. cross_validate(gnn = FALSE) runs ('test-gnn-off.R:302:3') - Small validation set for 4 trait(s): mass (n=11), clutch (n=11), nocturnal (n=11), diet (n=11). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (mass (n=11), clutch (n=11)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+68. cross_validate(gnn = FALSE) runs ('test-gnn-off.R:302:3') - Small validation set for 4 trait(s): mass (n=11), clutch (n=11), nocturnal (n=11), diet (n=11). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (mass (n=11), clutch (n=11)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+69. cross_validate(gnn = FALSE) runs ('test-gnn-off.R:302:3') - Small validation set for 4 trait(s): mass (n=12), clutch (n=12), nocturnal (n=12), diet (n=12). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (mass (n=12), clutch (n=12)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+70. save_pigauto / load_pigauto round-trip a GNN-off fit ('test-gnn-off.R:316:3') - Small validation set for 4 trait(s): mass (n=2), clutch (n=3), nocturnal (n=1), diet (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (mass (n=2), clutch (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+71. print() and summary() announce a GNN-off fit ('test-gnn-off.R:398:3') - Small validation set for 4 trait(s): mass (n=3), clutch (n=6), nocturnal (n=5), diet (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (mass (n=3), clutch (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+72. pure traditional-stats arm: gnn = FALSE with safety_floor = FALSE and phylo_signal_gate = FALSE ('test-gnn-off.R:410:3') - Small validation set for 4 trait(s): mass (n=2), clutch (n=3), nocturnal (n=1), diet (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (mass (n=2), clutch (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+73. training forward does not see held-out truth (B1 smoke) ('test-gnn-train-cal-symmetry.R:38:3') - Small validation set for 2 trait(s): x1 (n=4), x2 (n=5). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (x1 (n=4), x2 (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+74. phylo_signal_gate + safety_floor=FALSE falls back to BM, not mean/zero ('test-gnn-train-cal-symmetry.R:65:3') - Small validation set for 1 trait(s): noise (n=8). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (noise (n=8)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+75. gate calibration uses refine_steps matching predict (B3) ('test-gnn-train-cal-symmetry.R:99:3') - Small validation set for 1 trait(s): y (n=5). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (y (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+76. pigauto_refine_forward() returns delta_mat with refine_steps >= 1 ('test-gnn-train-cal-symmetry.R:121:3') - Small validation set for 1 trait(s): y (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (y (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+77. impute() threads joint_refine_iter = 2L through to a working fit ('test-joint-refine-iter.R:106:3') - Small validation set for 2 trait(s): t1 (n=2), t2 (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (t1 (n=2), t2 (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+78. impute() threads joint_solver = 'rphylopars' through to a working fit ('test-joint-solver.R:109:3') - Small validation set for 2 trait(s): t1 (n=2), t2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (t1 (n=2), t2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+79. impute() predicts the single class for a one-level factor ('test-monomorphic-discrete.R:71:3') - At least one matched trait is constant.
+
+80. impute() predicts the single class for a one-level factor ('test-monomorphic-discrete.R:71:3') - Small validation set for 2 trait(s): disc (n=5), cont (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+81. impute() predicts the single class for a one-level ordered factor ('test-monomorphic-discrete.R:88:3') - At least one matched trait is constant.
+
+82. impute() predicts the single class for a one-level ordered factor ('test-monomorphic-discrete.R:88:3') - Small validation set for 2 trait(s): disc (n=5), cont (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (disc (n=5), cont (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+83. impute() predicts the single class for a one-level ordered factor ('test-monomorphic-discrete.R:88:3') - the standard deviation is zero
+
+84. impute() predicts the single class for a one-level ordered factor ('test-monomorphic-discrete.R:88:3') - the standard deviation is zero
+
+85. impute() handles a K-level factor monomorphic among observed cells ('test-monomorphic-discrete.R:103:5') - At least one matched trait is constant.
+
+86. impute() handles a K-level factor monomorphic among observed cells ('test-monomorphic-discrete.R:103:5') - Small validation set for 2 trait(s): disc (n=5), cont (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+87. impute() handles a K-level factor monomorphic among observed cells ('test-monomorphic-discrete.R:103:5') - At least one matched trait is constant.
+
+88. impute() handles a K-level factor monomorphic among observed cells ('test-monomorphic-discrete.R:103:5') - Small validation set for 2 trait(s): disc (n=5), cont (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+89. the whole pipeline survives a single-level categorical trait ('test-monomorphic-discrete.R:133:3') - Small validation set for 2 trait(s): disc (n=3), cont (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+90. the whole pipeline survives a single-level categorical trait ('test-monomorphic-discrete.R:138:3') - the standard deviation is zero
+
+91. the whole pipeline survives a single-level categorical trait ('test-monomorphic-discrete.R:138:3') - the standard deviation is zero
+
+92. multi_impute_trees defaults to draws_method = 'mc_dropout' ('test-multi-impute-trees.R:52:3') - Few tree-sensitivity draws (T * m_per_tree = 4). Descriptive sensitivity summaries may be unstable.
+
+93. multi_impute_trees defaults to draws_method = 'mc_dropout' ('test-multi-impute-trees.R:52:3') - Small validation set for 2 trait(s): tr1 (n=2), tr2 (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=2), tr2 (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+94. multi_impute_trees defaults to draws_method = 'mc_dropout' ('test-multi-impute-trees.R:52:3') - the standard deviation is zero
+
+95. multi_impute_trees defaults to draws_method = 'mc_dropout' ('test-multi-impute-trees.R:52:3') - the standard deviation is zero
+
+96. multi_impute_trees defaults to draws_method = 'mc_dropout' ('test-multi-impute-trees.R:52:3') - the standard deviation is zero
+
+97. multi_impute_trees defaults to draws_method = 'mc_dropout' ('test-multi-impute-trees.R:52:3') - the standard deviation is zero
+
+98. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = TRUE) ('test-multi-impute-trees.R:69:3') - Few tree-sensitivity draws (T * m_per_tree = 4). Descriptive sensitivity summaries may be unstable.
+
+99. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = TRUE) ('test-multi-impute-trees.R:69:3') - Small validation set for 2 trait(s): tr1 (n=4), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=4), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+100. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = TRUE) ('test-multi-impute-trees.R:69:3') - the standard deviation is zero
+
+101. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = TRUE) ('test-multi-impute-trees.R:69:3') - the standard deviation is zero
+
+102. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = TRUE) ('test-multi-impute-trees.R:69:3') - the standard deviation is zero
+
+103. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = TRUE) ('test-multi-impute-trees.R:69:3') - the standard deviation is zero
+
+104. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE) ('test-multi-impute-trees.R:101:3') - Few tree-sensitivity draws (T * m_per_tree = 4). Descriptive sensitivity summaries may be unstable.
+
+105. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE) ('test-multi-impute-trees.R:101:3') - Small validation set for 2 trait(s): tr1 (n=5), tr2 (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=5), tr2 (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+106. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE) ('test-multi-impute-trees.R:101:3') - the standard deviation is zero
+
+107. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE) ('test-multi-impute-trees.R:101:3') - the standard deviation is zero
+
+108. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE) ('test-multi-impute-trees.R:101:3') - the standard deviation is zero
+
+109. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE) ('test-multi-impute-trees.R:101:3') - the standard deviation is zero
+
+110. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE) ('test-multi-impute-trees.R:101:3') - Small validation set for 2 trait(s): tr1 (n=4), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=4), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+111. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE) ('test-multi-impute-trees.R:101:3') - the standard deviation is zero
+
+112. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE) ('test-multi-impute-trees.R:101:3') - the standard deviation is zero
+
+113. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE) ('test-multi-impute-trees.R:101:3') - the standard deviation is zero
+
+114. draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE) ('test-multi-impute-trees.R:101:3') - the standard deviation is zero
+
+115. print.pigauto_mi_trees reports the draws_method actually used ('test-multi-impute-trees.R:125:3') - Few tree-sensitivity draws (T * m_per_tree = 4). Descriptive sensitivity summaries may be unstable.
+
+116. print.pigauto_mi_trees reports the draws_method actually used ('test-multi-impute-trees.R:125:3') - Small validation set for 2 trait(s): tr1 (n=4), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=4), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+117. print.pigauto_mi_trees reports the draws_method actually used ('test-multi-impute-trees.R:125:3') - the standard deviation is zero
+
+118. print.pigauto_mi_trees reports the draws_method actually used ('test-multi-impute-trees.R:125:3') - the standard deviation is zero
+
+119. print.pigauto_mi_trees reports the draws_method actually used ('test-multi-impute-trees.R:125:3') - the standard deviation is zero
+
+120. print.pigauto_mi_trees reports the draws_method actually used ('test-multi-impute-trees.R:125:3') - the standard deviation is zero
+
+121. multi_impute returns pigauto_mi with M datasets of the right shape ('test-multi-impute.R:88:3') - Small validation set for 3 trait(s): tr1 (n=3), tr2 (n=6), tr3 (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=6), tr3 (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+122. multi_impute returns pigauto_mi with M datasets of the right shape ('test-multi-impute.R:88:3') - the standard deviation is zero
+
+123. multi_impute returns pigauto_mi with M datasets of the right shape ('test-multi-impute.R:88:3') - the standard deviation is zero
+
+124. multi_impute returns pigauto_mi with M datasets of the right shape ('test-multi-impute.R:88:3') - the standard deviation is zero
+
+125. multi_impute returns pigauto_mi with M datasets of the right shape ('test-multi-impute.R:88:3') - the standard deviation is zero
+
+126. all M datasets have matching rownames, colnames, and column classes ('test-multi-impute.R:117:3') - Small validation set for 3 trait(s): tr1 (n=1), tr2 (n=3), tr3 (n=8). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=1), tr2 (n=3), tr3 (n=8)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+127. all M datasets have matching rownames, colnames, and column classes ('test-multi-impute.R:117:3') - the standard deviation is zero
+
+128. all M datasets have matching rownames, colnames, and column classes ('test-multi-impute.R:117:3') - the standard deviation is zero
+
+129. all M datasets have matching rownames, colnames, and column classes ('test-multi-impute.R:117:3') - the standard deviation is zero
+
+130. all M datasets have matching rownames, colnames, and column classes ('test-multi-impute.R:117:3') - the standard deviation is zero
+
+131. all M datasets have matching rownames, colnames, and column classes ('test-multi-impute.R:117:3') - the standard deviation is zero
+
+132. cells that were observed in the input are identical across datasets ('test-multi-impute.R:136:3') - Small validation set for 3 trait(s): tr1 (n=5), tr2 (n=2), tr3 (n=5). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=5), tr2 (n=2), tr3 (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+133. cells that were observed in the input are identical across datasets ('test-multi-impute.R:136:3') - the standard deviation is zero
+
+134. cells that were observed in the input are identical across datasets ('test-multi-impute.R:136:3') - the standard deviation is zero
+
+135. cells that were observed in the input are identical across datasets ('test-multi-impute.R:136:3') - the standard deviation is zero
+
+136. cells that were observed in the input are identical across datasets ('test-multi-impute.R:136:3') - the standard deviation is zero
+
+137. cells that were observed in the input are identical across datasets ('test-multi-impute.R:136:3') - the standard deviation is zero
+
+138. cells that were observed in the input are identical across datasets ('test-multi-impute.R:136:3') - the standard deviation is zero
+
+139. cells that were originally missing vary across at least some datasets ('test-multi-impute.R:160:3') - Small validation set for 3 trait(s): tr1 (n=5), tr2 (n=3), tr3 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=5), tr2 (n=3), tr3 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+140. cells that were originally missing vary across at least some datasets ('test-multi-impute.R:160:3') - the standard deviation is zero
+
+141. cells that were originally missing vary across at least some datasets ('test-multi-impute.R:160:3') - the standard deviation is zero
+
+142. cells that were originally missing vary across at least some datasets ('test-multi-impute.R:160:3') - the standard deviation is zero
+
+143. cells that were originally missing vary across at least some datasets ('test-multi-impute.R:160:3') - the standard deviation is zero
+
+144. cells that were originally missing vary across at least some datasets ('test-multi-impute.R:160:3') - the standard deviation is zero
+
+145. cells that were originally missing vary across at least some datasets ('test-multi-impute.R:160:3') - the standard deviation is zero
+
+146. draws_method='conformal' stores method and produces non-zero between-dataset variance ('test-multi-impute.R:659:3') - Small validation set for 3 trait(s): tr1 (n=4), tr2 (n=6), tr3 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=4), tr2 (n=6), tr3 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+147. draws_method='conformal' stores method and produces non-zero between-dataset variance ('test-multi-impute.R:659:3') - the standard deviation is zero
+
+148. draws_method='conformal' stores method and produces non-zero between-dataset variance ('test-multi-impute.R:659:3') - the standard deviation is zero
+
+149. draws_method='conformal' stores method and produces non-zero between-dataset variance ('test-multi-impute.R:659:3') - the standard deviation is zero
+
+150. draws_method='conformal' stores method and produces non-zero between-dataset variance ('test-multi-impute.R:659:3') - the standard deviation is zero
+
+151. draws_method='conformal' stores method and produces non-zero between-dataset variance ('test-multi-impute.R:659:3') - the standard deviation is zero
+
+152. draws_method='conformal' stores method and produces non-zero between-dataset variance ('test-multi-impute.R:659:3') - the standard deviation is zero
+
+153. evaluate returns a data.frame with expected columns ('test-new-features.R:36:3') - Small validation set for 1 trait(s): tr2 (n=5). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (tr2 (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+154. evaluate returns a data.frame with expected columns ('test-new-features.R:37:3') - the standard deviation is zero
+
+155. evaluate returns a data.frame with expected columns ('test-new-features.R:37:3') - the standard deviation is zero
+
+156. evaluate errors when data is missing ('test-new-features.R:55:3') - Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+157. summary.pigauto_fit runs without error and prints header ('test-new-features.R:63:3') - Small validation set for 2 trait(s): tr1 (n=1), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=1), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+158. summary.pigauto_fit with data prints trait metrics ('test-new-features.R:69:3') - Small validation set for 2 trait(s): tr1 (n=2), tr2 (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=2), tr2 (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+159. summary.pigauto_fit with data prints trait metrics ('test-new-features.R:71:3') - the standard deviation is zero
+
+160. summary.pigauto_fit with data prints trait metrics ('test-new-features.R:71:3') - the standard deviation is zero
+
+161. summary.pigauto_fit returns evaluation invisibly ('test-new-features.R:79:3') - Small validation set for 2 trait(s): tr1 (n=4), tr2 (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=4), tr2 (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+162. summary.pigauto_fit returns evaluation invisibly ('test-new-features.R:80:3') - the standard deviation is zero
+
+163. summary.pigauto_fit returns evaluation invisibly ('test-new-features.R:80:3') - the standard deviation is zero
+
+164. plot.pigauto_fit history produces plots without error ('test-new-features.R:93:3') - Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+165. plot.pigauto_fit gates produces plots without error ('test-new-features.R:102:3') - Small validation set for 2 trait(s): tr1 (n=1), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=1), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+166. plot.pigauto_fit conformal produces plots without error ('test-new-features.R:114:3') - Small validation set for 2 trait(s): tr1 (n=2), tr2 (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=2), tr2 (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+167. pigauto_report creates an HTML file from pigauto_result ('test-new-features.R:131:3') - Small validation set for 2 trait(s): tr1 (n=1), tr2 (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=1), tr2 (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+168. pigauto_report creates an HTML file from pigauto_result ('test-new-features.R:131:3') - the standard deviation is zero
+
+169. pigauto_report creates an HTML file from pigauto_result ('test-new-features.R:131:3') - the standard deviation is zero
+
+170. pigauto_report creates an HTML file from pigauto_result ('test-new-features.R:131:3') - the standard deviation is zero
+
+171. pigauto_report creates an HTML file from pigauto_result ('test-new-features.R:138:3') - the standard deviation is zero
+
+172. pigauto_report creates an HTML file from pigauto_result ('test-new-features.R:138:3') - the standard deviation is zero
+
+173. pigauto_report works with a pigauto_fit object and data ('test-new-features.R:150:3') - Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+174. pigauto_report works with a pigauto_fit object and data ('test-new-features.R:155:3') - the standard deviation is zero
+
+175. pigauto_report works with a pigauto_fit object and data ('test-new-features.R:155:3') - the standard deviation is zero
+
+176. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - Small validation set for 3 trait(s): tr1 (n=17), tr2 (n=17), tr3 (n=17). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=17), tr2 (n=17), tr3 (n=17)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+177. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+178. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+179. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+180. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+181. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+182. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+183. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - Small validation set for 3 trait(s): tr1 (n=16), tr2 (n=16), tr3 (n=16). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=16), tr2 (n=16), tr3 (n=16)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+184. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+185. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+186. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+187. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+188. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+189. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+190. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - Small validation set for 3 trait(s): tr1 (n=17), tr2 (n=17), tr3 (n=17). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=17), tr2 (n=17), tr3 (n=17)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+191. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+192. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+193. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+194. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+195. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+196. cross_validate returns pigauto_cv object ('test-new-features.R:211:3') - the standard deviation is zero
+
+197. cross_validate results have expected structure ('test-new-features.R:235:3') - Small validation set for 3 trait(s): tr1 (n=17), tr2 (n=17), tr3 (n=17). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=17), tr2 (n=17), tr3 (n=17)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+198. cross_validate results have expected structure ('test-new-features.R:235:3') - the standard deviation is zero
+
+199. cross_validate results have expected structure ('test-new-features.R:235:3') - the standard deviation is zero
+
+200. cross_validate results have expected structure ('test-new-features.R:235:3') - the standard deviation is zero
+
+201. cross_validate results have expected structure ('test-new-features.R:235:3') - the standard deviation is zero
+
+202. cross_validate results have expected structure ('test-new-features.R:235:3') - Small validation set for 3 trait(s): tr1 (n=16), tr2 (n=16), tr3 (n=16). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=16), tr2 (n=16), tr3 (n=16)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+203. cross_validate results have expected structure ('test-new-features.R:235:3') - the standard deviation is zero
+
+204. cross_validate results have expected structure ('test-new-features.R:235:3') - the standard deviation is zero
+
+205. cross_validate results have expected structure ('test-new-features.R:235:3') - Small validation set for 3 trait(s): tr1 (n=17), tr2 (n=17), tr3 (n=17). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=17), tr2 (n=17), tr3 (n=17)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+206. cross_validate results have expected structure ('test-new-features.R:235:3') - the standard deviation is zero
+
+207. cross_validate results have expected structure ('test-new-features.R:235:3') - the standard deviation is zero
+
+208. cross_validate results have expected structure ('test-new-features.R:235:3') - the standard deviation is zero
+
+209. cross_validate results have expected structure ('test-new-features.R:235:3') - the standard deviation is zero
+
+210. cross_validate print and summary methods work ('test-new-features.R:269:3') - Small validation set for 3 trait(s): tr1 (n=17), tr2 (n=17), tr3 (n=17). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=17), tr2 (n=17), tr3 (n=17)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+211. cross_validate print and summary methods work ('test-new-features.R:269:3') - the standard deviation is zero
+
+212. cross_validate print and summary methods work ('test-new-features.R:269:3') - the standard deviation is zero
+
+213. cross_validate print and summary methods work ('test-new-features.R:269:3') - the standard deviation is zero
+
+214. cross_validate print and summary methods work ('test-new-features.R:269:3') - the standard deviation is zero
+
+215. cross_validate print and summary methods work ('test-new-features.R:269:3') - the standard deviation is zero
+
+216. cross_validate print and summary methods work ('test-new-features.R:269:3') - the standard deviation is zero
+
+217. cross_validate print and summary methods work ('test-new-features.R:269:3') - Small validation set for 3 trait(s): tr1 (n=16), tr2 (n=16), tr3 (n=16). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=16), tr2 (n=16), tr3 (n=16)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+218. cross_validate print and summary methods work ('test-new-features.R:269:3') - the standard deviation is zero
+
+219. cross_validate print and summary methods work ('test-new-features.R:269:3') - the standard deviation is zero
+
+220. cross_validate print and summary methods work ('test-new-features.R:269:3') - Small validation set for 3 trait(s): tr1 (n=17), tr2 (n=17), tr3 (n=17). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=17), tr2 (n=17), tr3 (n=17)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+221. cross_validate print and summary methods work ('test-new-features.R:269:3') - the standard deviation is zero
+
+222. cross_validate print and summary methods work ('test-new-features.R:269:3') - the standard deviation is zero
+
+223. cross_validate print and summary methods work ('test-new-features.R:269:3') - the standard deviation is zero
+
+224. cross_validate print and summary methods work ('test-new-features.R:269:3') - the standard deviation is zero
+
+225. simulate_benchmark runs and returns expected structure ('test-new-features.R:281:3') - Small validation set for 2 trait(s): trait1 (n=1), trait2 (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (trait1 (n=1), trait2 (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+226. save_pigauto and load_pigauto round-trip correctly ('test-new-features.R:303:3') - Small validation set for 2 trait(s): tr1 (n=4), tr2 (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=4), tr2 (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+227. simulate_benchmark mixed scenario handles discrete traits ('test-new-features.R:325:3') - Small validation set for 4 trait(s): cont1 (n=1), cont2 (n=1), binary_trait (n=1), cat_trait (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (cont1 (n=1), cont2 (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+228. impute() accepts covariates and threads them through the pipeline ('test-new-features.R:357:3') - 'covariates' are ignored by the joint MVN baseline (Rphylopars has no covariate design). The baseline is covariate-free; covariates still reach the GNN correction. To get a covariate-aware baseline, force the per-column path (e.g. supply a single BM-eligible trait, or uninstall/mask Rphylopars).
+
+229. impute() accepts covariates and threads them through the pipeline ('test-new-features.R:357:3') - Small validation set for 2 trait(s): y (n=3), x1 (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (y (n=3), x1 (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+230. impute() with species_col + covariates runs end-to-end ('test-new-features.R:440:3') - 'covariates' are ignored by the joint MVN baseline (Rphylopars has no covariate design). The baseline is covariate-free; covariates still reach the GNN correction. To get a covariate-aware baseline, force the per-column path (e.g. supply a single BM-eligible trait, or uninstall/mask Rphylopars).
+
+231. impute() with species_col + covariates runs end-to-end ('test-new-features.R:440:3') - Small validation set for 2 trait(s): y1 (n=6), y2 (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (y1 (n=6), y2 (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+232. multi_impute() with species_col + covariates runs end-to-end ('test-new-features.R:484:3') - Small validation set for 1 trait(s): trait1 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (trait1 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+233. multi-obs + covariates: obs-level refinement produces within-species variation ('test-new-features.R:523:3') - Small validation set for 1 trait(s): y (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (y (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+234. multi-obs WITHOUT covariates: within-species predictions are uniform ('test-new-features.R:556:3') - Small validation set for 1 trait(s): y (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (y (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+235. multi-obs WITHOUT covariates: within-species predictions are uniform ('test-new-features.R:556:3') - the standard deviation is zero
+
+236. multi-obs WITHOUT covariates: within-species predictions are uniform ('test-new-features.R:556:3') - the standard deviation is zero
+
+237. multi-obs + covariates: fit stores multi_obs flag and obs metadata ('test-new-features.R:583:3') - Small validation set for 1 trait(s): val (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (val (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+238. use_trait_attention=TRUE builds, trains, and predicts (smoke) ('test-new-features.R:609:3') - Small validation set for 2 trait(s): tr1 (n=2), tr2 (n=5). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=2), tr2 (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+239. use_trait_attention default FALSE is backward compatible ('test-new-features.R:632:3') - Small validation set for 2 trait(s): tr1 (n=4), tr2 (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=4), tr2 (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+240. use_trait_attention default FALSE is backward compatible ('test-new-features.R:632:3') - the standard deviation is zero
+
+241. use_trait_attention default FALSE is backward compatible ('test-new-features.R:632:3') - the standard deviation is zero
+
+242. fit_pigauto end-to-end works with OVR categorical baseline ('test-ovr-categorical.R:84:3') - Small validation set for 3 trait(s): x (n=1), y (n=2), z (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (x (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+243. em_iterations = 0L via impute() matches default impute() baseline ('test-phase6-em.R:126:3') - Small validation set for 2 trait(s): trait1 (n=5), trait2 (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (trait1 (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+244. em_iterations = 0L via impute() matches default impute() baseline ('test-phase6-em.R:128:3') - Small validation set for 2 trait(s): trait1 (n=5), trait2 (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (trait1 (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+245. fit_pigauto end-to-end with transformer blocks on synthetic data ('test-phase9-integration.R:128:3') - Small validation set for 2 trait(s): x (n=1), z (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (x (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+246. legacy architecture (use_transformer_blocks = FALSE) still trains ('test-phase9-integration.R:165:3') - Small validation set for 2 trait(s): x (n=1), y (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (x (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+247. fit_pigauto end-to-end converges with transformer blocks on small data ('test-phase9-integration.R:193:3') - Small validation set for 5 trait(s): Mass (n=17), Beak.Length_Culmen (n=18), Trophic.Level (n=17), Primary.Lifestyle (n=19), Migration (n=15). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (Mass (n=17), Beak.Length_Culmen (n=18), Migration (n=15)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+248. fit_pigauto end-to-end converges with transformer blocks on small data ('test-phase9-integration.R:210:3') - Small validation set for 5 trait(s): Mass (n=17), Beak.Length_Culmen (n=18), Trophic.Level (n=17), Primary.Lifestyle (n=19), Migration (n=15). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (Mass (n=17), Beak.Length_Culmen (n=18), Migration (n=15)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+249. fit_pigauto(phylo_signal_gate = TRUE) stores phylo_signal slots ('test-phylo-signal-gate.R:61:3') - Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.
+Consider setting: n_imputations = 20L, pool_method = 'mode'.
+See ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').
+
+250. fit_pigauto gates weak-signal traits to (0, 0, 1) exactly ('test-phylo-signal-gate.R:87:3') - the standard deviation is zero
+
+251. fit_pigauto gates weak-signal traits to (0, 0, 1) exactly ('test-phylo-signal-gate.R:87:3') - the standard deviation is zero
+
+252. impute(phylo_signal_gate = TRUE) is the default and threads to fit ('test-phylo-signal-gate.R:112:3') - Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.
+Consider setting: n_imputations = 20L, pool_method = 'mode'.
+See ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').
+
+253. impute(phylo_signal_gate = TRUE) is the default and threads to fit ('test-phylo-signal-gate.R:115:3') - Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.
+Consider setting: n_imputations = 20L, pool_method = 'mode'.
+See ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').
+
+254. print.pigauto_fit shows phylogenetic-signal section when gate triggered ('test-phylo-signal-gate.R:131:3') - the standard deviation is zero
+
+255. print.pigauto_fit shows phylogenetic-signal section when gate triggered ('test-phylo-signal-gate.R:131:3') - the standard deviation is zero
+
+256. [Phase G' L3] PMM imputed values are EXACTLY in the observed value set ('test-pmm.R:154:3') - Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+257. [Phase G' L3] PMM imputed values are EXACTLY in the observed value set ('test-pmm.R:154:3') - the standard deviation is zero
+
+258. [Phase G' L3] PMM imputed values are EXACTLY in the observed value set ('test-pmm.R:154:3') - the standard deviation is zero
+
+259. [Phase G' L3] PMM never produces values outside observed range ('test-pmm.R:177:3') - Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+260. [Phase G' L3] PMM never produces values outside observed range ('test-pmm.R:177:3') - the standard deviation is zero
+
+261. [Phase G' L3] PMM never produces values outside observed range ('test-pmm.R:177:3') - the standard deviation is zero
+
+262. [Phase G' L3] PMM does NOT modify observed values ('test-pmm.R:198:3') - Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+263. [Phase G' L3] PMM does NOT modify observed values ('test-pmm.R:198:3') - the standard deviation is zero
+
+264. [Phase G' L3] PMM does NOT modify observed values ('test-pmm.R:198:3') - the standard deviation is zero
+
+265. [Phase G' L4] match_observed = 'none' default preserves backward compat ('test-pmm.R:221:3') - Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+266. [Phase G' L4] match_observed = 'none' default preserves backward compat ('test-pmm.R:221:3') - the standard deviation is zero
+
+267. [Phase G' L4] match_observed = 'none' default preserves backward compat ('test-pmm.R:221:3') - the standard deviation is zero
+
+268. [Phase G' L4] match_observed = 'none' default preserves backward compat ('test-pmm.R:224:3') - Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+269. [Phase G' L4] match_observed = 'none' default preserves backward compat ('test-pmm.R:224:3') - the standard deviation is zero
+
+270. [Phase G' L4] match_observed = 'none' default preserves backward compat ('test-pmm.R:224:3') - the standard deviation is zero
+
+271. [Phase G' L4] match_observed = 'pmm' and clamp_outliers = TRUE coexist ('test-pmm.R:244:3') - Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+272. [Phase G' L4] match_observed = 'pmm' and clamp_outliers = TRUE coexist ('test-pmm.R:244:3') - the standard deviation is zero
+
+273. [Phase G' L4] match_observed = 'pmm' and clamp_outliers = TRUE coexist ('test-pmm.R:244:3') - the standard deviation is zero
+
+274. [Phase G' L4] non-eligible trait types pass through PMM unchanged ('test-pmm.R:264:3') - Small validation set for 1 trait(s): bin (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+275. [Phase G' L5] PMM with K=1 is fully deterministic given a seed ('test-pmm.R:308:3') - Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+276. [Phase G' L5] PMM with K=1 is fully deterministic given a seed ('test-pmm.R:308:3') - the standard deviation is zero
+
+277. [Phase G' L5] PMM with K=1 is fully deterministic given a seed ('test-pmm.R:308:3') - the standard deviation is zero
+
+278. [Phase G' L5] PMM with K=1 is fully deterministic given a seed ('test-pmm.R:312:3') - Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+279. [Phase G' L5] PMM with K=1 is fully deterministic given a seed ('test-pmm.R:312:3') - the standard deviation is zero
+
+280. [Phase G' L5] PMM with K=1 is fully deterministic given a seed ('test-pmm.R:312:3') - the standard deviation is zero
+
+281. [Phase G' acceptance] PMM caps a synthetic tail blow-up better than no-clamp ('test-pmm.R:343:3') - Small validation set for 1 trait(s): mass (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+282. [Phase G' acceptance] PMM caps a synthetic tail blow-up better than no-clamp ('test-pmm.R:343:3') - the standard deviation is zero
+
+283. [Phase G' acceptance] PMM caps a synthetic tail blow-up better than no-clamp ('test-pmm.R:343:3') - the standard deviation is zero
+
+284. [Phase G' acceptance] PMM caps a synthetic tail blow-up better than no-clamp ('test-pmm.R:348:3') - Small validation set for 1 trait(s): mass (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+285. [Phase G' acceptance] PMM caps a synthetic tail blow-up better than no-clamp ('test-pmm.R:348:3') - the standard deviation is zero
+
+286. [Phase G' acceptance] PMM caps a synthetic tail blow-up better than no-clamp ('test-pmm.R:348:3') - the standard deviation is zero
+
+287. impute() preserves observed (non-NA) cells exactly for every trait type ('test-property-invariants.R:52:3') - Small validation set for 5 trait(s): cont (n=2), cnt (n=1), bin (n=5), cat3 (n=2), prop (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (cont (n=2), cnt (n=1), prop (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+288. calibrate_gates() returns list with r_cal_bm/r_cal_gnn/r_cal_mean ('test-safety-floor.R:104:3') - 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (x1 (n=10)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+289. fit_pigauto(safety_floor = TRUE) stores mean_baseline_per_col + simplex weights on fit ('test-safety-floor.R:195:3') - Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.
+Consider setting: n_imputations = 20L, pool_method = 'mode'.
+See ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').
+
+290. fit_pigauto(safety_floor = FALSE) reproduces v0.9.1 behaviour (r_mean = 0, mean_baseline_per_col NULL or 0) ('test-safety-floor.R:219:3') - Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.
+Consider setting: n_imputations = 20L, pool_method = 'mode'.
+See ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').
+
+291. calibrate_gates(safety_floor = TRUE, median_splits) produces finite weights ('test-safety-floor.R:241:3') - 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (x1 (n=15)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+292. predict.pigauto_fit uses 3-way blend when r_cal_mean > 0 ('test-safety-floor.R:270:3') - Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.
+Consider setting: n_imputations = 20L, pool_method = 'mode'.
+See ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').
+
+293. predict.pigauto_fit falls back to 2-way blend on legacy v0.9.1 fits (null r_cal_mean) ('test-safety-floor.R:295:3') - Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.
+Consider setting: n_imputations = 20L, pool_method = 'mode'.
+See ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').
+
+294. multi_impute_trees(share_gnn = TRUE, safety_floor = TRUE) reuses safety weights across trees ('test-safety-floor.R:331:3') - Few tree-sensitivity draws (T * m_per_tree = 3). Descriptive sensitivity summaries may be unstable.
+
+295. multi_impute_trees(share_gnn = TRUE, safety_floor = TRUE) reuses safety weights across trees ('test-safety-floor.R:331:3') - Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.
+Consider setting: n_imputations = 20L, pool_method = 'mode'.
+See ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').
+
+296. multi_impute(safety_floor = TRUE) pooled point + SE are finite ('test-safety-floor.R:382:3') - Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.
+Consider setting: n_imputations = 20L, pool_method = 'mode'.
+See ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').
+
+297. safety_floor = TRUE preserves vertebrate lift on AVONET300 (within +2% RMSE / -1pp acc) ('test-safety-floor.R:439:3') - Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.
+Consider setting: n_imputations = 20L, pool_method = 'mode'.
+See ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').
+
+298. safety_floor = TRUE preserves vertebrate lift on AVONET300 (within +2% RMSE / -1pp acc) ('test-safety-floor.R:439:3') - Small validation set for 1 trait(s): Mass (n=18). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (Mass (n=18)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+299. safety_floor = TRUE preserves vertebrate lift on AVONET300 (within +2% RMSE / -1pp acc) ('test-safety-floor.R:442:3') - Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.
+Consider setting: n_imputations = 20L, pool_method = 'mode'.
+See ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').
+
+300. safety_floor = TRUE preserves vertebrate lift on AVONET300 (within +2% RMSE / -1pp acc) ('test-safety-floor.R:442:3') - Small validation set for 1 trait(s): Mass (n=18). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (Mass (n=18)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+301. strict val-floor: pigauto val-loss <= baseline val-loss per trait, all types ('test-safety-floor.R:647:3') - Small validation set for 4 trait(s): x_cont (n=10), x_bin (n=9), x_cat (n=14), x_cnt (n=14). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (x_cont (n=10), x_cnt (n=14)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+302. [B4] discrete strict floor: BM wins ties over MEAN in corner selection ('test-safety-floor.R:813:3') - Small validation set for 1 trait(s): b (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+303. [CV] cv_folds with n_val < K folds back to single_split-like behaviour ('test-safety-floor.R:1033:3') - Small validation set for 1 trait(s): x (n=5). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (x (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+304. Phase B3 warning stays silent for balanced K=5 ordinal trait ('test-safety-nets.R:40:5') - the standard deviation is zero
+
+305. Phase B3 warning stays silent for balanced K=5 ordinal trait ('test-safety-nets.R:40:5') - the standard deviation is zero
+
+306. predict.pigauto_fit accepts baseline_override and uses it in place of object$baseline ('test-share-gnn.R:13:3') - Small validation set for 2 trait(s): trait1 (n=1), trait2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (trait1 (n=1), trait2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+307. [T2A] plot_history_gg returns a ggplot for a fit with $history ('test-shipping-coverage.R:108:3') - Small validation set for 2 trait(s): cont (n=1), bin (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+308. [T2A] plot_uncertainty returns a ggplot for a continuous trait ('test-shipping-coverage.R:120:3') - Small validation set for 2 trait(s): cont (n=3), bin (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+309. [T2B] multi_impute(draws_method = 'mc_dropout') returns m completed datasets ('test-shipping-coverage.R:136:3') - Small validation set for 2 trait(s): cont (n=3), bin (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+310. [T2B] multi_impute(draws_method = 'mc_dropout') returns m completed datasets ('test-shipping-coverage.R:136:3') - the standard deviation is zero
+
+311. [T2B] multi_impute(draws_method = 'mc_dropout') returns m completed datasets ('test-shipping-coverage.R:136:3') - the standard deviation is zero
+
+312. [T2B] fit_pigauto(use_attention = FALSE) runs end-to-end and predicts ('test-shipping-coverage.R:152:3') - Small validation set for 2 trait(s): cont (n=2), bin (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+313. [T2B] fit_pigauto(conformal_method = 'bootstrap') stores conformal scores ('test-shipping-coverage.R:168:3') - Small validation set for 2 trait(s): cont (n=1), bin (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+314. zi_count fit produces finite conformal bounds where magnitude is defined ('test-zi-count-conformal-intervals.R:28:3') - Small validation set for 2 trait(s): z (n=8), x (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (z (n=8), x (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+315. zi_count fit produces finite conformal bounds where magnitude is defined ('test-zi-count-conformal-intervals.R:28:3') - the standard deviation is zero
+
+316. zi_count fit produces finite conformal bounds where magnitude is defined ('test-zi-count-conformal-intervals.R:28:3') - the standard deviation is zero
+
+317. zi_count conformal bounds back-transform monotonically with the score width ('test-zi-count-conformal-intervals.R:47:3') - Small validation set for 2 trait(s): z (n=8), x (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (z (n=8), x (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+318. zi_count conformal bounds back-transform monotonically with the score width ('test-zi-count-conformal-intervals.R:47:3') - the standard deviation is zero
+
+319. zi_count conformal bounds back-transform monotonically with the score width ('test-zi-count-conformal-intervals.R:47:3') - the standard deviation is zero
+
+320. zi_count conformal interval is conditional -- not an E[X] interval -- and the gate stays separately available ('test-zi-count-conformal-intervals.R:77:3') - Small validation set for 2 trait(s): z (n=8), x (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (z (n=8), x (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+321. zi_count conformal interval is conditional -- not an E[X] interval -- and the gate stays separately available ('test-zi-count-conformal-intervals.R:77:3') - the standard deviation is zero
+
+322. zi_count conformal interval is conditional -- not an E[X] interval -- and the gate stays separately available ('test-zi-count-conformal-intervals.R:77:3') - the standard deviation is zero
+
+323. [P1-9] a zi_count fit still runs end to end with zeros held out ('test-zi-count-splits.R:70:3') - Small validation set for 2 trait(s): z (n=6), x (n=5). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (z (n=6), x (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+324. [P1-9] a zi_count fit still runs end to end with zeros held out ('test-zi-count-splits.R:70:3') - the standard deviation is zero
+
+325. [P1-9] a zi_count fit still runs end to end with zeros held out ('test-zi-count-splits.R:70:3') - the standard deviation is zero
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+[1] file   test   failed error 
+<0 rows> (or 0-length row.names)
+SUITE FAIL 0 | PASS 2565 | files 66

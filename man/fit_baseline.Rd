@@ -11,7 +11,8 @@ fit_baseline(
   model = "BM",
   graph = NULL,
   multi_obs_aggregation = c("hard", "soft"),
-  lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
+  lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
+  lambda_fixed = NULL,
   em_iterations = 0L,
   em_tol = 0.001,
   em_offdiag = FALSE,
@@ -49,17 +50,35 @@ relevant for multi-obs data with binary or categorical traits when the
 Level-C joint baseline is active.}
 
 \item{lambda_mode}{character. Pagel-lambda mode for the CONTINUOUS-FAMILY
-baseline (continuous, count, ordinal, proportion, zi_count magnitude
-columns only -- see \dQuote{Per-type lambda dispatch} in Details).
-\code{"fixed_1"} preserves the default Brownian correlation matrix;
-\code{"estimate"}, \code{"cv"}, and \code{"bayes"} delegate lambda
-handling to the per-column BM path. Binary/categorical/zi_gate columns
-are unaffected by \code{lambda_mode} and keep the threshold-joint /
-OVR-categorical baseline. \strong{Covariate caveat}: when
-\code{data$covariates} is supplied, the per-column path switches to
-\code{bm_impute_col_with_cov()}, which has no lambda argument and
-always fits at lambda = 1; \code{lambda_mode != "fixed_1"} is then
-silently ignored for BM-eligible columns and a warning is emitted.}
+baseline (continuous, count, proportion, zi_count magnitude columns;
+NOT ordinal, which the threshold-joint path treats as a liability
+column via \code{estep_liability_ordinal()} -- see \dQuote{Per-type
+lambda dispatch} in Details). \code{"estimate"} (default, S4) fits
+each continuous-family column's own Pagel's lambda via profile REML;
+when the joint MVN or threshold-joint baseline fires, this now runs
+INSIDE that joint fit (\code{R/joint_mvn_solver.R}'s per-column
+\code{lambda_cols}) rather than being discarded in favour of a
+separate per-column re-fit. \code{"fixed_1"} preserves the classic
+Brownian correlation matrix (lambda = 1 everywhere). \code{"cv"} and
+\code{"bayes"} have no joint analogue and force the per-column BM path
+for continuous-family columns (as before); binary/ordinal/categorical/
+zi_gate columns are unaffected by \code{lambda_mode} in every case and
+keep the threshold-joint / OVR-categorical baseline at lambda = 1.
+\strong{Covariate caveat}: when \code{data$covariates} is supplied,
+the per-column path switches to \code{bm_impute_col_with_cov()},
+which accepts a numeric lambda or \code{"estimate"} but not
+\code{"cv"} / \code{"bayes"}; those two modes are silently ignored
+(fit at lambda = 1) for BM-eligible columns and a warning is emitted.}
+
+\item{lambda_fixed}{optional named numeric vector (names = latent column
+names, i.e. \code{colnames(data$X_scaled)}) giving a FIXED lambda per
+continuous-family column, overriding \code{lambda_mode} entirely for
+those columns (spec 4.5: reproduce a previous fit's exact per-trait
+lambda at predict time without re-estimating -- typically supply that
+fit's own \code{$lambda_per_trait}). Columns not present in
+\code{lambda_fixed} keep their lambda = 1 default. \code{NULL}
+(default) means every continuous-family column follows
+\code{lambda_mode} normally.}
 
 \item{em_iterations}{integer. Number of Phase 6 EM iterations for the
 threshold-joint baseline (binary + ordinal + OVR categorical). Default
@@ -145,6 +164,18 @@ columns: gate then magnitude), \code{path} reports the GATE column's
 dispatch -- the magnitude column can independently land on
 \code{"joint_mvn"}, \code{"threshold_joint"}, \code{"per_column_bm"},
 or \code{"zi_mag_constant"} and is not separately surfaced here.}
+\item{lambda_per_trait}{Named numeric vector (length \code{p_latent},
+names = \code{colnames(data$X_scaled)}), the lambda actually used
+for each latent column: 1 for every column not eligible for lambda
+estimation (all discrete columns; continuous-family columns under
+\code{lambda_mode \%in\% c("cv", "bayes")}), else the estimated or
+fixed value.}
+\item{lambda_block}{Numeric scalar, the shared lambda used internally
+by whichever joint fit ran for its Sigma M-step / opt-in exact
+conditional / opt-in EM refine (see \code{R/joint_mvn_solver.R}'s
+\code{$lambda_block}); \code{NA} when no joint fit ran.}
+\item{lambda_mode}{Character, echoes the resolved \code{lambda_mode}
+argument.}
 }
 }
 \description{

@@ -32,14 +32,31 @@ joint_mvn_available <- function() {
 #'   See `fit_joint_solver()` in R/joint_mvn_solver.R.
 #' @param joint_refine_iter integer, default `0L`. See `fit_joint_solver()`
 #'   in R/joint_mvn_solver.R.
-#' @return list(mu, se), each `n_species x p_latent`.
+#' @param lambda_mode character, `"fixed_1"` (default) or `"estimate"`.
+#'   S4 (dispatcher, feat/joint-lambda-default): every column this function
+#'   fits IS already continuous-family (this path only ever runs when no
+#'   binary/ordinal columns are present -- see `fit_baseline.R`'s
+#'   `use_continuous_joint` guard), so under `"estimate"` every column is
+#'   eligible for its own Pagel's lambda (`lambda_cols = NULL` downstream).
+#'   `"cv"` / `"bayes"` have no joint analogue; callers must translate those
+#'   to `"fixed_1"` before calling this function (see `fit_baseline.R`).
+#' @param lambda_fixed optional named numeric vector (names = latent column
+#'   names of `data$X_scaled`) giving a fixed lambda per column, overriding
+#'   `lambda_mode` entirely (spec 4.5 predict-time rebuild: typically a
+#'   previous fit's own `$lambda_per_trait`, replayed rather than
+#'   re-estimated).
+#' @return list(mu, se, lambda_per_trait, lambda_block), mu/se each
+#'   `n_species x p_latent`; `lambda_per_trait` is named by the BM-eligible
+#'   columns actually fit (a subset of `colnames(data$X_scaled)`).
 #' @keywords internal
 #' @noRd
 fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL,
                                    soft_aggregate = FALSE,
                                    joint_solver = "inhouse",
                        predict_method = "per_column",
-                                   joint_refine_iter = 0L) {
+                                   joint_refine_iter = 0L,
+                                   lambda_mode = "fixed_1",
+                                   lambda_fixed = NULL) {
   stopifnot(joint_mvn_available())
 
   if (isTRUE(data$multi_obs)) {
@@ -102,9 +119,23 @@ fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL,
   L_in <- X_bm
   rownames(L_in) <- spp
 
+  # S4: every column of L_in is already continuous-family (this function
+  # only ever runs when fit_baseline()'s use_continuous_joint fires, which
+  # requires zero binary/ordinal columns), so there is no liability-column
+  # exclusion to compute here -- lambda_cols = NULL (all columns eligible)
+  # covers it. lambda_fixed, when supplied, takes priority over lambda_mode
+  # entirely (predict-time rebuild).
+  lambda_arg <- if (!is.null(lambda_fixed)) {
+    unname(lambda_fixed[colnames(L_in)])
+  } else if (identical(lambda_mode, "estimate")) {
+    "estimate"
+  } else {
+    "fixed_1"
+  }
   fit <- fit_joint_solver(L = L_in, tree = tree, joint_solver = joint_solver,
                           predict_method = predict_method,
-                          joint_refine_iter = joint_refine_iter)
+                          joint_refine_iter = joint_refine_iter,
+                          lambda = lambda_arg)
 
   tip_rows <- match(spp, rownames(fit$anc_recon))
   mu_bm    <- fit$anc_recon[tip_rows, , drop = FALSE]
@@ -116,5 +147,19 @@ fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL,
   mu[, bm_cols] <- mu_bm
   se[, bm_cols] <- se_bm
 
-  list(mu = mu, se = se)
+  # fit$lambda_per_trait is a scalar NA_real_ on the rphylopars path
+  # (fit_joint_solver() does not read phylopars' own lambda back in this
+  # slice) -- broadcast to a named length-K vector so the caller always
+  # gets one entry per column, honestly reporting "not tracked" as NA
+  # rather than defaulting those columns to a possibly-wrong 1.
+  lambda_per_trait <- fit$lambda_per_trait
+  if (!is.null(lambda_per_trait)) {
+    if (length(lambda_per_trait) != ncol(L_in)) {
+      lambda_per_trait <- rep(lambda_per_trait[1], ncol(L_in))
+    }
+    names(lambda_per_trait) <- colnames(L_in)
+  }
+
+  list(mu = mu, se = se, lambda_per_trait = lambda_per_trait,
+       lambda_block = fit$lambda_block)
 }

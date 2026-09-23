@@ -281,7 +281,21 @@ build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE,
 #'   See `fit_joint_solver()` in R/joint_mvn_solver.R.
 #' @param joint_refine_iter integer, default `0L`. See `fit_joint_solver()`
 #'   in R/joint_mvn_solver.R.
-#' @return list(mu_liab, se_liab, liab_cols, liab_types).
+#' @param lambda_mode character, `"fixed_1"` (default) or `"estimate"`.
+#'   S4: continuous-family columns of `liab_types` (continuous, count,
+#'   proportion -- NOT ordinal, which enters this matrix as a liability
+#'   posterior via `estep_liability_ordinal()`, not the z-scored numeric,
+#'   and NOT binary) get their own Pagel's lambda under `"estimate"` via
+#'   `fit_joint_solver()`'s `lambda_cols`. Binary and ordinal liability
+#'   columns always stay at lambda = 1 (section 7 B iii cut). `"cv"` /
+#'   `"bayes"` have no joint analogue; callers must translate those to
+#'   `"fixed_1"` before calling this function (see `fit_baseline.R`).
+#' @param lambda_fixed optional named numeric vector (names = latent column
+#'   names) giving a fixed lambda per continuous-family column, overriding
+#'   `lambda_mode` entirely (spec 4.5 predict-time rebuild).
+#' @return list(mu_liab, se_liab, liab_cols, liab_types, lambda_per_trait_fit,
+#'   lambda_block); `lambda_per_trait_fit` is named by `colnames(X_fit)`
+#'   (i.e. `colnames(X_liab)[fit_cols]`), NULL when no fit ran.
 #' @keywords internal
 #' @noRd
 fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
@@ -291,7 +305,9 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
                                         sd_prior_mat = NULL,
                                         joint_solver = "inhouse",
                        predict_method = "per_column",
-                                        joint_refine_iter = 0L) {
+                                        joint_refine_iter = 0L,
+                                        lambda_mode = "fixed_1",
+                                        lambda_fixed = NULL) {
   stopifnot(joint_mvn_available())
 
   built <- build_liability_matrix(data, splits = splits,
@@ -318,9 +334,31 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
                         dimnames = list(spp, colnames(X_liab)))
 
   phylopars_fit <- NULL
+  lambda_per_trait_fit <- NULL
+  lambda_block <- NA_real_
   if (length(fit_cols) >= 1L) {
     X_fit <- X_liab[, fit_cols, drop = FALSE]
     rownames(X_fit) <- spp
+
+    # S4: which of X_fit's OWN columns (not the full liab_cols space) are
+    # continuous-family and therefore eligible for their own lambda_k.
+    # liab_types[fit_cols] is aligned with X_fit's columns 1:length(fit_cols).
+    lambda_family_idx <- which(liab_types[fit_cols] %in%
+                                  c("continuous", "count", "proportion"))
+    if (!is.null(lambda_fixed)) {
+      lam_arg <- rep(1, length(fit_cols))
+      if (length(lambda_family_idx) > 0L) {
+        lam_arg[lambda_family_idx] <-
+          unname(lambda_fixed[colnames(X_fit)[lambda_family_idx]])
+      }
+      lam_cols_arg <- NULL   # full vector supplied; lambda_cols unused
+    } else if (identical(lambda_mode, "estimate")) {
+      lam_arg <- "estimate"
+      lam_cols_arg <- lambda_family_idx
+    } else {
+      lam_arg <- "fixed_1"
+      lam_cols_arg <- NULL
+    }
 
     # Dispatch to the in-house solver (default; no external dependency) or
     # to Rphylopars when joint_solver = "rphylopars" (with fallback to
@@ -329,7 +367,8 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
     # consumes -- the in-house solver was built to match it.
     fit <- fit_joint_solver(L = X_fit, tree = tree, joint_solver = joint_solver,
                             predict_method = predict_method,
-                            joint_refine_iter = joint_refine_iter)
+                            joint_refine_iter = joint_refine_iter,
+                            lambda = lam_arg, lambda_cols = lam_cols_arg)
 
     tip_rows <- match(spp, rownames(fit$anc_recon))
     mu_fit   <- fit$anc_recon[tip_rows, , drop = FALSE]
@@ -346,6 +385,18 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
     mu_liab[, fit_cols] <- mu_fit
     se_liab[, fit_cols] <- se_fit
     phylopars_fit <- fit
+    if (!is.null(fit$lambda_per_trait)) {
+      # fit$lambda_per_trait is a scalar NA_real_ on the rphylopars path
+      # (fit_joint_solver() does not read phylopars' own lambda back in
+      # this slice); broadcast to length(fit_cols) so every X_fit column
+      # gets one entry, honestly reporting "not tracked" as NA.
+      lambda_per_trait_fit <- fit$lambda_per_trait
+      if (length(lambda_per_trait_fit) != ncol(X_fit)) {
+        lambda_per_trait_fit <- rep(lambda_per_trait_fit[1], ncol(X_fit))
+      }
+      names(lambda_per_trait_fit) <- colnames(X_fit)
+    }
+    if (!is.null(fit$lambda_block)) lambda_block <- fit$lambda_block
   }
 
   # phylopars_fit and fit_cols_idx are additive fields used by Phase 6 EM to
@@ -356,7 +407,9 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
        liab_cols    = liab_cols,
        liab_types   = liab_types,
        phylopars_fit = phylopars_fit,
-       fit_cols_idx = fit_cols)
+       fit_cols_idx = fit_cols,
+       lambda_per_trait_fit = lambda_per_trait_fit,
+       lambda_block = lambda_block)
 }
 
 #' Decode liability-scale posterior to logit(P(y=1)) for binary traits
@@ -532,7 +585,9 @@ fit_joint_threshold_baseline_em <- function(data, tree, splits,
                                              em_offdiag = FALSE,
                                              joint_solver = "inhouse",
                                           predict_method = "per_column",
-                                             joint_refine_iter = 0L) {
+                                             joint_refine_iter = 0L,
+                                             lambda_mode = "fixed_1",
+                                             lambda_fixed = NULL) {
   stopifnot(joint_mvn_available(), em_iterations >= 1L)
 
   # Phase 6 state (diagonal):
@@ -557,7 +612,9 @@ fit_joint_threshold_baseline_em <- function(data, tree, splits,
                                     mu_prior_mat = mu_prior_mat,
                                     sd_prior_mat = sd_prior_mat,
                                     joint_solver = joint_solver,
-                                    joint_refine_iter = joint_refine_iter),
+                                    joint_refine_iter = joint_refine_iter,
+                                    lambda_mode = lambda_mode,
+                                    lambda_fixed = lambda_fixed),
       error = function(e) NULL
     )
 
