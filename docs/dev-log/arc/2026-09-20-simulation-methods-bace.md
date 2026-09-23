@@ -347,7 +347,11 @@ section below), written as errored + divergent.
 | freq_lambda | 32 + 1 of 1200 (2.8%) | 29 of 1200 (2.4%) | 16 of 1200 (1.3%) |
 
 BACE fails on roughly one replicate in six, with "mixed model equations singular" the dominant
-message, and the rate barely improves with sample size.
+message, and the rate barely improves with sample size. One core replicate (Brownian motion,
+lambda = 0.7, rho = 0.5, n = 300, seed 55) went further and crashed the R process inside MCMCglmm, a
+segmentation fault reproduced on two separate submissions with 48 GB of memory. A crash leaves no
+record for the runner to floor, so its record was written by hand from the runner's own floor arm on
+the same seed and is labelled as such inside the file; it counts as one BACE failure among the 600.
 
 Convergence is a separate matter from failure, and it was promised above as a reported rate. Every fit
 from the runner of 2026-09-20 onward stores BACE's own `assess_convergence()` verdict over its five
