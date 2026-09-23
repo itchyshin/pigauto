@@ -197,22 +197,32 @@ one simulated tree (`script/mondrian_confirmation/13_mi_gls_attenuation_diag.R`;
 - Under phylogenetic GLS, the same draws give slopes of 0.33 to 0.38.
 - An oracle proper imputation, which draws the missing x from its exact conditional
   distribution given the observed x and all of y under the true bivariate Brownian model,
-  gives GLS slopes of 0.72 to 0.73.
-- The oracle's conditional SD is 0.138. pigauto's draw SD is 0.293, set by the conformal
-  score, which is calibrated on the point-prediction error (residual SD 0.339). The draws
-  therefore add about twice the proper amount of noise, and GLS, which weights contrasts
-  between close relatives, turns that tip-level noise into a large attenuation.
-  Phylogenetically correlated noise of the same size attenuates equally (slope 0.33), so
-  the issue is the amount of noise relative to the proper conditional spread, not only
-  its independence across tips.
+  gives GLS slopes of 0.62 to 0.67 (mean 0.655, 10 draws), against 0.638 for GLS on the
+  complete truth: unbiased.
+- Two things separate pigauto's draws from the oracle. First, the centre: under the
+  default `predict_method = "per_column"`, pigauto's point prediction for missing x
+  tracks the conditional mean given x alone (correlation 0.991; residual SD 0.325, equal
+  to the x-only oracle's 0.325) rather than the joint conditional mean given x and y
+  (residual SD 0.239). The information in y about the missing x is left out, and that
+  lost part acts as noise uncorrelated with y. `predict_method = "exact"` recovers part
+  of it (residual SD 0.289). Second, the spread: pigauto's draw SD is 0.293, set by the
+  conformal score calibrated on the point-prediction error, against the oracle's
+  conditional SD of 0.218. Proper-sized but independent noise around the oracle centre
+  already attenuates slightly (0.617); the larger noise around the weaker centre halves
+  the slope under GLS, which weights contrasts between close relatives heavily.
+- Correction (2026-09-23): an earlier version of this section reported an oracle
+  conditional SD of 0.138 and oracle slopes of 0.72. That oracle used the sample SD of
+  the tip values as the trait scale, which understates the variance under Brownian
+  motion; the figures above use the true unit scale.
 
 **Answer to the motivating question.** The Mondrian half-width is not a justified SD for
 multiple-imputation draws feeding a phylogenetic GLS. Neither is the split half-width. A
 conformal half-width measures how wrong the point prediction can be, while proper
 imputation needs the spread of the missing value given everything observed, including
 the other traits. The two coincide only when the point prediction is already the
-conditional mean under the analysis model. In this regime it is not: the residual SD is
-2.5 times the oracle's conditional SD. Mondrian makes the draw scale follow tree
+conditional mean under the analysis model. In this regime it is not: the point residual
+SD (0.325) is 1.5 times the oracle's conditional SD (0.218), because the default
+prediction route does not use y. Mondrian makes the draw scale follow tree
 locality, which is the right direction for interval coverage, but it adds noise where
 the split scale already adds too much.
 
