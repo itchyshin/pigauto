@@ -9,7 +9,8 @@
 #SBATCH --array=1-9
 #SBATCH --output=/scratch/snakagaw/pigauto-mondrian-rd/logs/cell-%A_%a.out
 set -uo pipefail
-module load StdEnv/2023 gcc/12.3 r/4.4.0
+module load StdEnv/2023 gcc/12.3 cuda/12.6 r/4.4.0
+export LD_LIBRARY_PATH="$EBROOTCUDA/targets/x86_64-linux/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 P=/scratch/snakagaw/pigauto-mondrian-rd
 export R_LIBS=$P/lib:$HOME/R/x86_64-pc-linux-gnu-library/4.4
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
