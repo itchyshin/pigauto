@@ -32,3 +32,5 @@ OOM 07:11: fir campaign cells 2-6 (PanTHERIA) OUT_OF_MEMORY at 8G after ~7 min; 
 CELL1 DONE 07:43: pantheria-mcar-m20260818 mondrian + split on Totoro, pulled to returned/.
 OVERRUN fishbase kohaku 08:48: 2 h at 100% of one thread, 0% GPU, 13 GB, still before training (dense n = 10,484 algebra with OPENBLAS_NUM_THREADS=1). Estimate was 1.5 h per method. Shinichi chose restart with 8 BLAS threads. Killed pid 3604412; log kept as run-1thread.log; mask receipt reused (identical cells). Relaunched R pid 3629481 with OMP/OPENBLAS/MKL = 8 (conda R links threaded OpenBLAS 0.3.34). First minute: 3.5 CPU-min per wall-min.
 MI-SIM RESULT 08:40: 500/500 reps; both pre-registered MI claims fail; both arms halve the GLS slope; diagnostic 13_ localises it to draw noise about twice the proper conditional SD (pre-existing, split path). Memo Result section written; separate task flagged.
+G10 full suite on 9f8f2b8 (local Mac): FAIL=0 PASS=2509 SKIP=8, 23.4 min.
+MEASURED fishbase kohaku mondrian (8 BLAS threads): done after ~1 h 50 min; peak GPU 11.2 GB; split now running.
