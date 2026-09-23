@@ -122,6 +122,15 @@ From `git diff --stat origin/main...HEAD` (39 files, excluding receipts):
 - FishBase ran single-threaded for 2 h in its dense phase before being restarted with
   8 BLAS threads.
 - My own MI oracle used the wrong trait scale; corrected and recorded.
+- The acceptance ledger was first run without `--cwd`, so its checks ran from `.unlazy/`
+  and could not find repository files; approvals then stayed bound to that directory and
+  `--approve` skipped gates the ledger already marked met. Fixed by resetting runnable
+  gates to pending and approving from the worktree root.
+- Fan-out exceeded the plan's cap of six new children without a recorded amendment
+  (about ten: recon, instrumentation, MI draws, paper, kohaku install, results builder,
+  MI-GLS builder, method audit, traceability, claim gate, reconciliation). Each was a
+  bounded Sonnet or Haiku slice except the planned Fable claim gate. Recorded as drift in
+  the plan-actual reconciliation.
 
 ## 10. Known Residuals
 
