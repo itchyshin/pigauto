@@ -80,7 +80,7 @@ From `git diff --stat origin/main...HEAD` (39 files, excluding receipts):
 - Review panel: method audit (Sonnet; hand re-derivation matched to 4 decimals; three
   rule-code deviations fixed), traceability (Sonnet; 0 mismatches), claim gate (Fable;
   1 blocking and 14 required items, all addressed).
-- gate-check --reverify: see the PR description.
+- gate-check --reverify from the worktree root: 14 of 14 gates met (12 runnable re-run and passed, including the full suite; 2 manual reviews with recorded evidence).
 
 ## 6. Tests of the Tests
 
