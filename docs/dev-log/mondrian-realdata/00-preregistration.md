@@ -77,3 +77,15 @@ decision rule's condition 1 (structured arm, far stratum) is evaluated on PanTHE
 on FishBase if it runs; condition 2 (near-stratum non-inferiority) and condition 3 (near
 width ratio) use every arm that exists. Campaign receipts: PanTHERIA 2 arms x 3 masks x
 2 methods = 12; AVONET 1 arm x 3 masks x 2 methods = 6; total 18 before FishBase.
+
+## Amendment 2 (2026-09-23, before any structured-arm receipt was read)
+
+The structured arm needs real missingness to fit a propensity to. A trait whose real
+missing fraction is below 5% gives a propensity that is flat or degenerate, so its
+structured mask is effectively random. Decision-rule condition 1 (structured arm, far
+stratum) is therefore evaluated only on traits with at least 5% real missingness. Those
+traits are all PanTHERIA traits (13.8% to 74.9%) and FishBase Weight, DepthRangeDeep and
+Troph (54% to 82%). FishBase Length (2.4%), BodyShapeI (0.4%) and Vulnerability (0%)
+are reported, but in the MCAR-like condition 2 and 3 tables only. The trigger was
+glm non-convergence and 0/1 fitted probabilities in the FishBase propensity fit, seen in
+the run log; the per-trait propensity quantiles are recorded in each mask receipt.
