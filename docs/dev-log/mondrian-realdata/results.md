@@ -1,8 +1,8 @@
 # Mondrian real-data confirmation: results
 
 Pre-registration: [00-preregistration.md](00-preregistration.md), Amendments 1 and 2.
-Source SHA: b4d34e7
-Generated: 2026-09-23 17:49:17 UTC from RESULTS_ROOT=script/mondrian_confirmation/returned
+Source SHA: 26d842c
+Generated: 2026-09-23 18:07:50 UTC from RESULTS_ROOT=script/mondrian_confirmation/returned
 
 Method notes. Table 1 pools across masks (seeds) within each dataset x arm x
 trait x stratum. Coverage and Winkler score pool exactly, as n_test-weighted
@@ -14,6 +14,24 @@ coverage and n. Amendment 2: cond1_eligible marks traits with real_missing_frac
 at least 0.05; Table 2's structured-arm far-stratum aggregates use eligible
 traits only and name the traits excluded. Between-mask SD uses up to 3
 masks (2 df); NA when fewer than 2 masks contributed.
+
+Decision-rule script. 08_apply_decision_rule.R was rewritten at 5709a7f (after
+all results were read) to evaluate conditions 1 and 3 per dataset, as the
+pre-registration says, to fail closed on condition 2 with no evidence, and to
+gate on mask completeness. The verdict is KEEP_SPLIT under both the earlier
+pooled version and the current one: conditions 1 and 3 pass under both
+readings and condition 2 fails under both. Condition 1 also passes with and
+without Amendment 2 (FishBase median far gain 0.0164 either way; minimum
+Mondrian far coverage 0.923 over five traits without it, 0.963 over three
+with it; PanTHERIA 0.0110 and 0.922 unchanged).
+
+Condition-2 statistic. The one-sided non-inferiority test (one_sided_binom_z,
+fixed at 7af133a before any receipt) uses an unpaired pooled-binomial SE on
+n_test-weighted coverage per dataset and omits the calibration term of the
+pre-registered MCSE; both make it conservative for demonstrating
+non-inferiority. FishBase, pre-registered as descriptive, is nevertheless in
+the Holm family; the verdict is unchanged with it removed, because AVONET
+fails alone.
 
 ## Missing or incomplete cells
 

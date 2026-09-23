@@ -201,8 +201,8 @@ one simulated tree (`script/mondrian_confirmation/13_mi_gls_attenuation_diag.R`;
   complete truth: unbiased.
 - Two things separate pigauto's draws from the oracle. First, the centre: under the
   default `predict_method = "per_column"`, pigauto's point prediction for missing x
-  tracks the conditional mean given x alone (correlation 0.991; residual SD 0.325, equal
-  to the x-only oracle's 0.325) rather than the joint conditional mean given x and y
+  tracks the conditional mean given x alone (correlation 0.991; residual SD 0.327, against
+  the x-only oracle's 0.325) rather than the joint conditional mean given x and y
   (residual SD 0.239). The information in y about the missing x is left out, and that
   lost part acts as noise uncorrelated with y. `predict_method = "exact"` recovers part
   of it (residual SD 0.289). Second, the spread: pigauto's draw SD is 0.293, set by the
@@ -210,6 +210,10 @@ one simulated tree (`script/mondrian_confirmation/13_mi_gls_attenuation_diag.R`;
   conditional SD of 0.218. Proper-sized but independent noise around the oracle centre
   already attenuates slightly (0.617); the larger noise around the weaker centre halves
   the slope under GLS, which weights contrasts between close relatives heavily.
+- Provenance: the figures in the two bullets above come from
+  `script/mondrian_confirmation/13b_mi_centre_and_scale_diag.R` (same tree and seed as the
+  first diagnostic), whose output is committed as
+  `docs/dev-log/mondrian-realdata/13b_mi_centre_and_scale_diag.log`.
 - Correction (2026-09-23): an earlier version of this section reported an oracle
   conditional SD of 0.138 and oracle slopes of 0.72. That oracle used the sample SD of
   the tip values as the trait scale, which understates the variance under Brownian
