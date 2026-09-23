@@ -34,3 +34,5 @@ OVERRUN fishbase kohaku 08:48: 2 h at 100% of one thread, 0% GPU, 13 GB, still b
 MI-SIM RESULT 08:40: 500/500 reps; both pre-registered MI claims fail; both arms halve the GLS slope; diagnostic 13_ localises it to draw noise about twice the proper conditional SD (pre-existing, split path). Memo Result section written; separate task flagged.
 G10 full suite on 9f8f2b8 (local Mac): FAIL=0 PASS=2509 SKIP=8, 23.4 min.
 MEASURED fishbase kohaku mondrian (8 BLAS threads): done after ~1 h 50 min; peak GPU 11.2 GB; split now running.
+GATES 13:00-13:45: first ledger run lacked --cwd (checks ran from .unlazy/ and failed on missing paths); rerun with --root/--cwd at the worktree; G4, G10, G11 checks corrected (regex escape, 120 s default timeout, file argument); nine approvals stayed bound to the wrong directory because --approve skips gates already marked met; runnable gates reset to pending and re-approved.
+RECONCILE: docs/dev-log/plan-actual/2026-09-23-mondrian-realdata.md (5 adaptive, 3 drift, 3 unclear); fan-out over the 6-child cap recorded as drift.
