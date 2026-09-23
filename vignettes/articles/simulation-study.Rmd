@@ -214,7 +214,8 @@ if (nrow(cv)) {
 The factorial varies what the core slice held fixed: Brownian motion or Ornstein-Uhlenbeck, four
 missingness mechanisms, lambda in {0.3, 1.0}, rho in {0, 0.5} and n in {100, 1000}, minus the
 eight cells already in the core, so 56 cells. Every fast arm ran 200 replicates per cell. BACE ran
-100 at n = 100 and 30 at n = 1000; its MCSE is correspondingly wider and its columns say so.
+100 at n = 100 and at least 30 at n = 1000 (30 to 100 per cell); its MCSE is correspondingly wider and
+the committed csv carries the replicate count on every row.
 
 One scoring rule was added for this stage. A fit that returns a finite but absurd value is a
 failure that did not throw: an arm is divergent on a replicate if its z-RMSE exceeds three times
