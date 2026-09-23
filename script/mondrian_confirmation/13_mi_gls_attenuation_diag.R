@@ -46,7 +46,7 @@ e <- as.numeric(t(chol(Vm + 1e-8 * diag(length(miss)))) %*% rnorm(length(miss)))
 dc <- res$completed; dc$x[miss] <- xi + e; dc$species <- rownames(dc)
 cat("gls slope, BM-correlated noise of equal size:", round(coef(nlme::gls(y ~ x, correlation = corBrownian(phy = tree, form = ~species), data = dc, method = "ML"))[2], 3), "\n")
 # Oracle proper imputation: (x, y) ~ N(0, Sig %x% V) up to trait scale; condition x_mis on x_obs and all y
-s <- c(sd(truth$x), sd(truth$y)); S <- diag(s) %*% Sig %*% diag(s)
+S <- Sig  # true unit scale; the sample SD of tip values understates BM variance (corrected 2026-09-23)
 C <- kronecker(S, V)                        # order: x(1..n), y(1..n)
 im <- miss; io <- c(setdiff(1:n, miss), n + 1:n)
 obs <- c(truth$x[-miss], truth$y)
