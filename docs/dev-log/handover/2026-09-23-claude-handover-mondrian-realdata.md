@@ -49,7 +49,7 @@ two branches, two worktrees. Platform-neutral; any tool resumes from this file.
 
 | Artifact / branch | Committed | Pushed | PR | State |
 |---|---|---|---|---|
-| `arc/mondrian-realdata` | y | see PR | draft PR (link in session summary) | LANDED as draft; not merged |
+| `arc/mondrian-realdata` | y | y | draft PR https://github.com/itchyshin/pigauto/pull/188 | LANDED as draft; not merged; merge is Shinichi's call |
 | `arc/mi-gls-attenuation` (67a8df8) | y | n | none | CARRIED-OVER: sweep running on fir |
 | Checkout `handover/2026-08-09-cursor` (18 dirty files) | n | n | none | PROTECTED, another lane's |
 
