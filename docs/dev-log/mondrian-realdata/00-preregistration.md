@@ -69,6 +69,10 @@ proxy than the random arm, not the real thing.
 
 ## Amendment 1 (2026-09-23, before any campaign receipt)
 
+Clarification added after results (claim-gate review): more precisely, before any campaign
+outcome. The first mask receipt was written at 06:01:28 and this amendment was committed at
+06:01:35; it concerns AVONET, whose first receipt was written at 06:49.
+
 AVONET is almost fully observed (at most 20 missing cells per trait in the 9,993-species
 bundle), so the structured arm has no real missingness pattern to fit a propensity to.
 AVONET therefore runs the MCAR arm only, as a no-harm control, on the same 1,500-species
@@ -80,6 +84,13 @@ width ratio) use every arm that exists. Campaign receipts: PanTHERIA 2 arms x 3 
 
 ## Amendment 2 (2026-09-23, before any structured-arm receipt was read)
 
+Clarification added after results (claim-gate review): more precisely, before any
+structured-arm outcome existed (the earliest was written at 07:46). The trigger was the
+FishBase structured mask receipt's propensity summary, read at about 06:49. Condition 1
+passes with and without this amendment: without it, FishBase's median far-stratum gain is
+0.0164 with minimum Mondrian far coverage 0.923 over five traits; with it, 0.0164 and 0.963
+over three; PanTHERIA is unchanged (0.0110 and 0.922).
+
 The structured arm needs real missingness to fit a propensity to. A trait whose real
 missing fraction is below 5% gives a propensity that is flat or degenerate, so its
 structured mask is effectively random. Decision-rule condition 1 (structured arm, far
@@ -89,3 +100,7 @@ Troph (54% to 82%). FishBase Length (2.4%), BodyShapeI (0.4%) and Vulnerability 
 are reported, but in the MCAR-like condition 2 and 3 tables only. The trigger was
 glm non-convergence and 0/1 fitted probabilities in the FishBase propensity fit, seen in
 the run log; the per-trait propensity quantiles are recorded in each mask receipt.
+
+Note (2026-09-23, after results): BodyShapeI is categorical and has no conformal interval,
+so it appears in no table; the Amendment 2 sentence naming it should have named Length and
+Vulnerability only.

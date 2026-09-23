@@ -275,7 +275,7 @@ conformal quantile is computed within each stratum at the same adjusted level. A
 prediction time a missing cell receives the half-width of the stratum its own locality
 places it in, so intervals widen in undersampled clades, which is where the error is.
 Within a stratum the near-versus-far mismatch that broke exchangeability is largely
-removed, and the coverage guarantee holds per stratum rather than only on average. On the
+removed, and the marginal guarantee then holds within each stratum, provided the cells to be imputed are exchangeable with the validation cells of their stratum; the structured mask approximates that condition for real missing cells but cannot establish it (Section 8.3). On the
 same simulation grid this recovered clade-structured coverage to 0.946 at n = 1000,
 within three Monte Carlo standard errors of nominal, while widening the median interval
 under random missingness by 2.3%.
@@ -338,12 +338,13 @@ propensity for real missingness, fitted per trait on phylogenetic eigenvectors, 
 test cells sit where genuinely missing cells sit. PanTHERIA (4,027 mammals) ran both
 arms with three masks each; AVONET (1,500 birds) is almost completely observed and ran
 the random arm only; FishBase (10,484 fishes) ran the structured arm with one mask.
-Mondrian activated for every continuous trait in all three databases.
+Mondrian activated for every continuous trait in all three databases. Ordinal traits also received Mondrian intervals but were not scored; the evidence covers the continuous and count traits listed in Table S-UQ2 only.
 
 **Table S-UQ2.** Coverage of nominal 95% intervals, pooled over traits (weighted by test
-cells) and masks, by the stratum of each test cell.
+cells) and masks, by the stratum of each test cell. The last column is the median over
+traits of the per-trait width ratio. FishBase rests on one mask and is descriptive.
 
-| database | mask arm | stratum | split | Mondrian | median width ratio (Mondrian / split) |
+| database | mask arm | stratum | split | Mondrian | width ratio (Mondrian / split) |
 |---|---|---|---:|---:|---:|
 | PanTHERIA | structured | far | 0.919 | 0.940 | 1.18 |
 | PanTHERIA | structured | near | 0.974 | 0.958 | 0.84 |
@@ -354,16 +355,22 @@ cells) and masks, by the stratum of each test cell.
 | AVONET | random | far | 0.929 | 0.964 | 1.67 |
 | AVONET | random | near | 0.984 | 0.961 | 0.81 |
 
-The split quantile undercovers in the far stratum and overcovers in the near stratum in
-every database, including under the random mask. Mondrian moves both towards nominal:
-far-stratum coverage rises to 0.94-0.96 at the cost of wider intervals there, and
-near-stratum intervals narrow by about a fifth while their coverage stays at or above
-0.95. Our pre-registered rule for changing the default also required that Mondrian's
+Pooled over traits, the split quantile undercovers in the far stratum and overcovers in
+the near stratum in every database, including under the random mask. Mondrian moves both
+towards nominal: far-stratum coverage rises to 0.94-0.96 at the cost of wider intervals
+there, and near-stratum intervals narrow by about a fifth while their pooled coverage
+stays at or above 0.95. Per trait the picture is noisier: six of nineteen near rows fall
+below 0.95 under Mondrian, and in three far rows split was already at or above nominal. Our pre-registered rule for changing the default also required that Mondrian's
 near-stratum coverage fall no more than two percentage points below split's. That
-condition was not met for AVONET and FishBase, where removing split's over-coverage
-lowered near coverage by more than that margin, so the default remains split. We report
-Mondrian as the recommended option when missing species are concentrated in poorly
-sampled clades. Per-trait results, uncertainty and the decision script are in the
+condition was not met. For AVONET the pooled near-stratum drop (2.3 points) exceeded the
+margin. For FishBase the drop (1.6 points) was inside the margin but, with a single mask,
+could not be shown non-inferior (one-sided p = 0.22, Holm-adjusted 0.43). PanTHERIA
+passed (drop 1.2 points, adjusted p = 0.025). The AVONET result alone decides the
+verdict, so the default remains split. Mondrian remains an opt-in. The far-stratum gains
+under the structured mask (condition 1 passed on both databases that ran it) are the
+evidence for choosing it when missing species are concentrated in poorly sampled clades;
+the price is wider far intervals and a 1 to 2 point drop in near-stratum coverage, which
+fell below 0.95 for six of nineteen trait rows. Per-trait results, uncertainty and the decision script are in the
 repository.
 
 ### References

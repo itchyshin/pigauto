@@ -1,8 +1,7 @@
 # After-task: Mondrian conformal real-data confirmation (2026-09-23)
 
 Branch `arc/mondrian-realdata`, worktree `pigauto-mondrian-realdata`. Platform: Claude
-(Opus 5.5 session). Status: DRAFT until the FishBase cell, the decision rule and the
-review panel are in; sections marked PENDING are filled at close.
+(Opus 5.5 session). Status: complete; results, decision, NEWS and review panel are in.
 
 ## 1. Goal
 
@@ -24,11 +23,16 @@ draw SD in multiple imputation.
   use per-cell Mondrian scores when the fit is Mondrian.
 - Paper section 8 (uncertainty quantification) with five references checked; one
   citation corrected (Boström and Johansson 2020, PMLR 128).
-- Pre-registration plus two amendments, each committed before the data it governs were
-  read.
+- Pre-registration plus two amendments, each committed before any outcome it governs
+  existed (exact receipt and commit times are in the dated clarifications under each
+  amendment header).
 - MI draw-scale memo and a 500-replicate simulation; a one-tree diagnostic localising
   the GLS attenuation.
-- PENDING: results table with FishBase; decision; NEWS entry.
+- Results table from all 20 method receipts (PanTHERIA 12, AVONET 6, FishBase 2); rule
+  verdict KEEP_SPLIT (condition 2, near-stratum non-inferiority, failed; conditions 1
+  and 3 passed on every dataset); NEWS records the verdict and the MI GLS caveat;
+  paper section 8.3 reports Table S-UQ2.
+- Fallback message now names the realised stratum sizes (claim-gate blocking item).
 
 ## 3a. Decisions and Rejected Alternatives
 
@@ -43,10 +47,29 @@ draw SD in multiple imputation.
   install proved the GPU route.
 - MI: did not wire a fix into `multi_impute()`; the attenuation is pre-existing and was
   spun into its own lane (`arc/mi-gls-attenuation`).
+- The decision-rule script was rewritten at `5709a7f`, after all results were read, to
+  evaluate conditions 1 and 3 per dataset as the pre-registration says, to fail closed on
+  condition 2 with no evidence, and to gate on mask completeness. The verdict is
+  KEEP_SPLIT under both versions; conditions 1 and 3 pass and condition 2 fails under
+  both readings.
+- Applied the rule as registered rather than re-reading it after the data: its near
+  non-inferiority condition penalises removal of over-coverage, which is Shinichi's call
+  to revisit, not this arc's.
 
 ## 4. Files Touched
 
-PENDING (generated from `git diff --stat origin/main...arc/mondrian-realdata` at close).
+From `git diff --stat origin/main...HEAD` (39 files, excluding receipts):
+
+- R/: `fit_helpers.R`, `multi_impute.R`, `predict_pigauto.R`.
+- tests/: `test-mondrian-conformal.R`, `test-mondrian-mi-draws.R` (new).
+- script/mondrian_confirmation/: `00` to `13b` (harness, launchers, generators, rule,
+  diagnostics) and `returned/` (20 method receipts plus mask receipts).
+- docs/dev-log/: the 08-16 and 08-18/19 records; `mondrian-realdata/` (pre-registration,
+  recon, run log, kohaku install, results, MI summary and diagnostic log, M2 audit);
+  `review/` (traceability, claim gate); this report.
+- useful/: `paper_section_draft.md`, `mondrian-methods-paragraph.md`,
+  `mondrian-mi-se-justification.md`.
+- NEWS.md.
 
 ## 5. Checks Run
 
@@ -54,14 +77,21 @@ PENDING (generated from `git diff --stat origin/main...arc/mondrian-realdata` at
 - Full suite on 9f8f2b8: FAIL 0, PASS 2509, SKIP 8 (23.4 min).
 - Smoke gate: SMOKE_OK for both arms. Decision-rule self-test: SELFTEST_OK.
 - Results CSV regenerated from receipts: ROWS_MATCH.
-- PENDING: gate-check --reverify on the full ledger; review panel.
+- Review panel: method audit (Sonnet; hand re-derivation matched to 4 decimals; three
+  rule-code deviations fixed), traceability (Sonnet; 0 mismatches), claim gate (Fable;
+  1 blocking and 14 required items, all addressed).
+- gate-check --reverify: see the PR description.
 
 ## 6. Tests of the Tests
 
 - G2b negative control: the stratum-size fields are absent on origin/main
   (LACKS_FIELDS) and present on the branch (FIELDS_OK).
 - Decision-rule self-test exercises both verdicts on synthetic fixtures.
-- PENDING: one coverage and one MCSE re-derived by hand from a receipt (reviewer M2).
+- Manual gate M2: the method auditor re-derived PanTHERIA gestation_d far-stratum
+  coverage and paired MCSE from the raw receipts with independent code; they match the
+  table to 4 decimals.
+- The fallback test was first changed to expect the realised stratum sizes and seen to
+  fail (FAIL 2) before the fix.
 
 ## 7a. Issue Ledger
 
@@ -97,7 +127,10 @@ PENDING (generated from `git diff --stat origin/main...arc/mondrian-realdata` at
 
 - Coverage on masked observed cells is a proxy for coverage on cells users impute.
 - FishBase has one mask and is descriptive only.
-- PENDING: anything the review panel raises.
+- The rule's near non-inferiority condition penalises removal of over-coverage; the
+  decision stands as registered.
+- Six of nineteen near-stratum trait rows fall below 0.95 under Mondrian.
+- Ordinal traits were masked but not scored.
 
 ## 11. Team Learning
 
@@ -109,7 +142,7 @@ PENDING (generated from `git diff --stat origin/main...arc/mondrian-realdata` at
 
 ## 12. Cross-Product Coverage
 
-Covers: single-observation continuous-family traits, gnn on, three databases, two mask
-arms. Does NOT cover: multi-observation data (Mondrian stops there by design), discrete
+Covers: single-observation continuous traits and one count trait (litter_size), gnn on,
+three databases, two mask arms. Ordinal traits were masked but not scored. Does NOT cover: multi-observation data (Mondrian stops there by design), discrete
 traits (no conformal intervals), `gnn = FALSE` (Mondrian stops there), MNAR beyond what
 the structured arm captures, trees other than the three used.
