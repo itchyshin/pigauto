@@ -241,8 +241,8 @@ three-level categorical traits.
 | 300 | 0.7 | 0.777 (0.0058) | 0.965 (0.0057) | 0.778 (0.0035) | 1.004 |
 | 300 | 1.0 | 0.737 (0.0127) | 0.531 (0.0058) | 0.515 (0.0054) | 1.008 |
 | 1000 | 0.3 | 0.892 (0.0036) | 1.106 (0.0043) | 0.878 (0.0023) | 1.006 |
-| 1000 | 0.7 | 0.743 (0.0044) | 0.943 (0.0048) | 0.766 (0.0030) | 1.004 |
-| 1000 | 1.0 | 0.659 (0.0132) | 0.475 (0.0048) | 0.464 (0.0044) | 1.002 |
+| 1000 | 0.7 | 0.744 (0.0043) | 0.943 (0.0048) | 0.766 (0.0030) | 1.004 |
+| 1000 | 1.0 | 0.647 (0.0130) | 0.475 (0.0048) | 0.464 (0.0044) | 1.002 |
 
 The primary contrast, stated in advance, is BACE against the frequentist stack on z-RMSE. It has two
 answers, and which one is reported depends entirely on how the frequentist stack is specified.
@@ -250,7 +250,7 @@ answers, and which one is reported depends entirely on how the frequentist stack
 Against `freq`, the documented default, BACE wins wherever the phylogenetic signal is below its
 maximum. Paired differences, negative favouring BACE: 0.141 (0.0094) at n = 100 and lambda = 0.3,
 0.207 (0.0074) at n = 300, 0.205 (0.0045) at n = 1000, with smaller but same-signed differences at
-lambda = 0.7. At lambda = 1 the sign reverses and BACE loses by 0.168 to 0.213, because Brownian
+lambda = 0.7. At lambda = 1 the sign reverses and BACE loses by 0.158 to 0.213, because Brownian
 motion is then the true process and the default specification is correct.
 
 Against `freq_lambda`, which estimates the same signal parameter BACE estimates, the advantage
@@ -277,8 +277,8 @@ against a floor near 1.01. Used at its default, the stack does worse than ignori
 | 300 | 0.7 | 0.687 (0.0040) | 0.560 (0.0049) | 0.562 (0.0049) | 0.557 |
 | 300 | 1.0 | 0.794 (0.0076) | 0.938 (0.0023) | 0.938 (0.0023) | 0.638 |
 | 1000 | 0.3 | 0.587 (0.0025) | 0.422 (0.0025) | 0.422 (0.0025) | 0.481 |
-| 1000 | 0.7 | 0.705 (0.0039) | 0.575 (0.0047) | 0.574 (0.0047) | 0.562 |
-| 1000 | 1.0 | 0.840 (0.0076) | 0.964 (0.0019) | 0.964 (0.0019) | 0.636 |
+| 1000 | 0.7 | 0.705 (0.0038) | 0.575 (0.0047) | 0.574 (0.0047) | 0.562 |
+| 1000 | 1.0 | 0.845 (0.0074) | 0.964 (0.0019) | 0.964 (0.0019) | 0.636 |
 
 This is where BACE has a real and substantial advantage, and it is the opposite pattern to the
 continuous one. At lambda = 0.3 BACE is ahead by 10.7, 15.1 and 16.5 accuracy points at n = 100, 300
@@ -303,7 +303,7 @@ intended.
 | 300 | 1.0 | 0.879 | 0.902 | 0.899 |
 | 1000 | 0.3 | 0.837 | 0.867 | 0.897 |
 | 1000 | 0.7 | 0.842 | 0.875 | 0.906 |
-| 1000 | 1.0 | 0.885 | 0.908 | 0.902 |
+| 1000 | 1.0 | 0.884 | 0.908 | 0.902 |
 
 Neither the Bayesian nor the frequentist arm reaches the nominal 0.95 anywhere in the core slice.
 That is the second finding of this study, and it applies to both routes compared here. It is not a
@@ -328,7 +328,7 @@ lower being better:
 | 300 | 0.7 | 4.72 | 7.60 | 4.39 |
 | 300 | 1.0 | 1.98 | 3.27 | 2.99 |
 | 1000 | 0.3 | 5.45 | 8.84 | 5.03 |
-| 1000 | 0.7 | 4.40 | 7.54 | 4.41 |
+| 1000 | 0.7 | 4.41 | 7.54 | 4.41 |
 | 1000 | 1.0 | 1.74 | 3.22 | 2.91 |
 
 BACE's intervals are better than either frequentist arm's at lambda = 1 and are beaten by

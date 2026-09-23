@@ -144,7 +144,7 @@ The ranking is not stable across the design, and that is the main result rather 
 Phylogenetic signal decides who wins on continuous traits. At lambda = 0.3 every arm that assumes
 maximum signal sits at or above the floor, and the two that estimate the signal, BACE and the
 frequentist stack at `model = "lambda"`, are the only ones clearly below it. At lambda = 1 the order
-inverts: pigauto with the GNN off reaches 0.379 at n = 1000 against BACE's 0.659, and BACE is last.
+inverts: pigauto with the GNN off reaches 0.379 at n = 1000 against BACE's 0.647, and BACE is last.
 
 The frequentist stack's evolutionary model matters more here than the choice of method. Moving
 Rphylopars from its `model = "BM"` default to `model = "lambda"` improves z-RMSE by about 0.23 at
