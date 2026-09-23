@@ -5,7 +5,7 @@
 # (docs/dev-log/mondrian-realdata/RUNLOG.md) at submission: sbatch --time=HH:MM:SS
 #SBATCH --account=def-snakagaw
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=8G
+#SBATCH --mem=32G
 #SBATCH --array=1-9
 #SBATCH --output=/scratch/snakagaw/pigauto-mondrian-rd/logs/cell-%A_%a.out
 set -uo pipefail
