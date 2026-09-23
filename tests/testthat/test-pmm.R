@@ -157,13 +157,9 @@ test_that("[Phase G' L3] PMM imputed values are EXACTLY in the observed value se
                           pmm_K = 5L,
                           verbose = FALSE, seed = 2080L)
   imputed <- res$completed$mass[miss_idx]
-  # EVERY imputed value must equal one of the observed values. The PMM donor
-  # pool is rebuilt from the scaled data (recover_X_orig(): exp(z * sd + mean)),
-  # so equality holds only to floating-point rounding and exact %in% is
-  # platform-dependent; check to 1e-10 relative.
-  rel_gap <- vapply(imputed, function(v) min(abs(v - obs_values) / abs(obs_values)), numeric(1))
-  expect_true(all(rel_gap < 1e-10),
-              info = sprintf("[Phase G' L3] PMM imputed values must come from observed pool (max relative gap %.3g)", max(rel_gap)))
+  # EVERY imputed value must equal one of the observed values exactly
+  expect_true(all(imputed %in% obs_values),
+              info = "[Phase G' L3] PMM imputed values must come from observed pool")
 })
 
 test_that("[Phase G' L3] PMM never produces values outside observed range", {
@@ -354,13 +350,18 @@ test_that("[Phase G' acceptance] PMM caps a synthetic tail blow-up better than n
                               match_observed = "pmm", pmm_K = 5L,
                               verbose = FALSE, seed = 2087L)
   pmm_val <- as.numeric(res_pmm$completed$mass[1L])
-  # PMM imputation must be exactly equal to one of the observed mass values
   obs_vals <- df$mass[-1L]
-  # Same floating-point caveat as the L3 test above: this exact %in% failed on
-  # the Ubuntu CI runners (PR #187) while passing on macOS and Totoro Linux.
-  rel_gap <- min(abs(pmm_val - obs_vals) / abs(obs_vals))
-  expect_true(rel_gap < 1e-10,
-              info = sprintf("[Phase G' accept] PMM imputation must equal an observed value (min relative gap %.3g)", rel_gap))
+  # PMM's guarantee is per draw: every one of the M draws is a donor value.
+  # The pooled `completed` value is the median of the M = 10 draws, which is
+  # an observed value only when the two middle draws pick the same donor. It
+  # did under lambda = 1; under the estimated-lambda default (lambda near 0
+  # here, so the prediction sits near the grand mean with several equally
+  # close donors) the draws spread and the median can fall between donors
+  # (seen on the Ubuntu CI runners, PR #187). Assert the per-draw guarantee.
+  draws <- vapply(res_pmm$prediction$imputed_datasets,
+                  function(d) as.numeric(d$mass[1L]), numeric(1))
+  expect_true(all(draws %in% obs_vals),
+              info = "[Phase G' accept] every PMM draw must equal an observed value")
   # PMM must be at most obs_max (no extrapolation)
   expect_lte(pmm_val, obs_max,
               label = "[Phase G' accept] PMM imputation cannot exceed observed max")
