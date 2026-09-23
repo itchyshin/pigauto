@@ -373,7 +373,8 @@ The factorial varies what the core slice held fixed: the evolutionary model (Bro
 Ornstein-Uhlenbeck with alpha = 2), the missingness mechanism (MCAR at 10% and 30%, MAR at 30%
 driven by an always-observed trait, and clade-biased at 30%), lambda in {0.3, 1.0}, rho in {0, 0.5}
 and n in {100, 1000}, minus the eight cells already in the core: 56 cells. The frequentist arms ran
-200 replicates per cell. BACE ran 100 at n = 100 and 30 at n = 1000, a reduction Shinichi approved
+200 replicates per cell. BACE ran 100 at n = 100 and at least 30 at n = 1000 (30 to 100 per cell: the
+replicates already computed before the reduction were kept), a reduction Shinichi approved
 on 2026-09-21 after a successful n = 1000 fit measured at about 3 hours and over 16 GB, with the
 MCSE widening by about 1.8x at n = 1000 and reported as such. Strata below give equal weight to
 each cell and pool over rho, which again moved nothing of substance. Every figure comes from the
