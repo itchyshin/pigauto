@@ -845,14 +845,29 @@ fit_joint_solver <- function(L, tree, joint_solver = "inhouse",
   fit <- tryCatch(.fit_mvn_bm_rphylopars(L, tree, model = model),
                    error = function(e) e)
   ok <- !inherits(fit, "error")
+  msg <- "non-finite tip prediction in $anc_recon"
   if (ok) {
     spp <- rownames(L)
     tip_rows <- match(spp, rownames(fit$anc_recon))
     ok <- !anyNA(tip_rows) && all(is.finite(fit$anc_recon[tip_rows, , drop = FALSE]))
+    # Plausibility guard (feat/joint-lambda-default, 2026-09-23). Under
+    # model = "lambda", phylopars occasionally returns finite but explosive
+    # tip predictions: in the 18-cell simulation, 1 of 200 seeds at lambda 0.7,
+    # n 100 and 6-8 of ~198 at lambda 1, n 1000 reached z-RMSE of 10^3 to 10^5,
+    # while the in-house solver never exceeded 1.3. A prediction more than 10x
+    # beyond the observed range of its column is not a usable imputation.
+    if (ok) {
+      obs_max <- max(abs(L), na.rm = TRUE)
+      pred_max <- max(abs(fit$anc_recon[tip_rows, , drop = FALSE]))
+      if (is.finite(obs_max) && pred_max > 10 * max(obs_max, 1)) {
+        ok <- FALSE
+        msg <- sprintf("implausible tip prediction (max |pred| %.3g vs max |observed| %.3g)",
+                       pred_max, obs_max)
+      }
+    }
   }
   if (!ok) {
-    msg <- if (inherits(fit, "error")) conditionMessage(fit) else
-      "non-finite tip prediction in $anc_recon"
+    if (inherits(fit, "error")) msg <- conditionMessage(fit)
     warning("fit_joint_solver: joint_solver = \"rphylopars\" failed (",
             msg, "); falling back to the in-house solver.", call. = FALSE)
     return(fit_mvn_bm_inhouse(L = L, tree = tree, max_iter = joint_refine_iter,

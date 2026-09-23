@@ -277,3 +277,22 @@ test_that("[joint-lambda] rphylopars model: lambda = 'estimate' returns finite a
   }
   expect_true(all(is.na(fit$lambda_per_trait)))
 })
+
+test_that("[joint-lambda] rphylopars plausibility guard falls back on explosive predictions", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(11)
+  tree <- ape::rcoal(30)
+  L <- matrix(rnorm(60), 30, 2, dimnames = list(tree$tip.label, c("a", "b")))
+  L[1:5, 1] <- NA
+  # Stub the phylopars call to return a finite but explosive prediction.
+  fake <- function(L, tree, model = "BM") {
+    list(anc_recon = matrix(1e6, nrow(L), ncol(L), dimnames = dimnames(L)),
+         anc_var = matrix(0, nrow(L), ncol(L), dimnames = dimnames(L)),
+         pars = list(phylocov = diag(2)))
+  }
+  local_mocked_bindings(.fit_mvn_bm_rphylopars = fake)
+  expect_warning(
+    fit <- fit_joint_solver(L, tree, joint_solver = "rphylopars", lambda = "estimate"),
+    "implausible tip prediction")
+  expect_true(all(abs(fit$anc_recon) < 100))
+})
