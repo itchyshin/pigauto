@@ -89,14 +89,13 @@ Gates (`script/campaign_sim_checks.R`, evidence in `.unlazy/imputation-sim/gates
 - G14 cross-host reproducibility: `--dir totoro_fl,nibi`, `totoro_ff,fir`, `nibi,fir`: "5 overlapping
   cell(s) checked, truth/mask/freq identical / G14 PASS" x3 (the freq clause is vacuous on these pairs;
   truth and mask are the evidence).
-- G10 core completeness: "18 design cells, 10023 rds present, 24 replicate-arms missing", all 24 BACE,
-  every fast arm 200/200. OPEN at close: the 24 seeds are computing on nibi (array 22472376, seeded with
-  the pool so only they run). BACE is reported on 576 of 600 core replicates and every table says so.
-- G11 factorial completeness: "56 design cells, 39254 rds present, 57 replicate-arms missing", all 57
-  BACE (56 in the four Brownian clade n = 1000 cells), every fast arm 200/200 in all 56 cells. OPEN at
-  close: the 57 seeds are computing on Totoro (pgid 1840886; 2 landed by 14:30). BACE is reported on
-  3,493 of 3,550 factorial replicates and every table says so. Neither tail can move a headline; both
-  tighten a BACE MCSE, and the fold-in is a re-run of the aggregator plus a csv refresh.
+- G10 core completeness: FINAL "18 design cells, 10785 rds present, 0 replicate-arms missing / G10 PASS"
+  (2026-09-23 02:20). BACE 600 of 600, three of them hand-assembled failure records (segfault; two 4-hour
+  timeouts), labelled inside the files and disclosed.
+- G11 factorial completeness: FINAL "56 design cells, 40316 rds present, 0 replicate-arms missing / G11 PASS"
+  (2026-09-22 20:58). BACE 3,550 of 3,550. Completing the 57 clade n = 1000 seeds moved BACE's Brownian
+  lambda = 1 z-RMSE from 0.872 to 0.842 and its clade-mechanism figure from 0.986 to 0.962; every other
+  stratum moved by 0.003 or less; all deliverables carry the final figures.
 - G6 (pre-run interval gate) was never obtained in the pre-run and is resolved by the campaign: at
   lambda = 1, n = 1000, MCAR, BACE's coverage is 0.885, outside the gate's [0.90, 0.99] band; reported as a
   finding, the gate abandoned as an oracle.
@@ -226,10 +225,9 @@ Same-class sweeps after each defect found:
 
 ## 10. Known Residuals
 
-- BACE is 96% complete in the core (576 of 600) and 98.4% in the factorial (3,493 of 3,550). The study is
-  closed on those replicates, every BACE figure states its count, and the two tails are computing (core on
-  nibi, factorial on Totoro). G10 and G11 stay open until they land; folding them in is a re-aggregation and
-  a csv refresh, not a re-analysis. Shinichi chose to close rather than wait (2026-09-22 14:30).
+- Every cell is present in both stages (G10, G11 PASS). Three of 600 core BACE replicates are hand-assembled
+  failure records rather than runner output (one MCMCglmm segfault, two four-hour timeouts), labelled inside
+  the files; a reader who wants BACE on runner-written records only can drop those three (0.5%).
 - Covariate sensitivity (S6d) is reported on 3,599 of 3,600 replicates; the last seed (n = 1000) is
   computing on Totoro and cannot move a third decimal. G6d is closed on that basis.
 - The results board has not been looked at by the agent: the in-app browser is not signed in and

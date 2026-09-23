@@ -50,8 +50,8 @@ stays pigauto's default. Standing constraints: never edit `R/`, `BACE/`, PR #175
 
 ## Landing State
 
-`handoff_gate.sh` run 2026-09-22 14:35: PR #184 OPEN; branch current; acceptance ledger 23 of 26 gates met, 3
-declared open below (G10, G11: BACE tails computing; G13c: Shinichi). G6 and G9b were resolved by the campaign's
+`handoff_gate.sh` run 2026-09-22 14:35: PR #184 OPEN; branch current; acceptance ledger 25 of 26 gates met after the tails landed on 2026-09-23 (G10, G11 PASS); the one open gate is
+G13c (Shinichi's six publication decisions). G6 and G9b were resolved by the campaign's
 own measurements and are marked so in the ledger. Two unrelated branches (`shannon-install`, `spec/vulcan-gpu-avonet9993`)
 carry unpushed commits from other lanes and are not this arc's.
 
@@ -73,13 +73,10 @@ awaits Shinichi's approval per the brain-write boundary. Until then: **FINDINGS-
 Items 2, 3 and 5 of the earlier list are DONE (bootstrap csv committed 4e61cc7; covsens complete and reported;
 after-task finalised). Remaining:
 
-1. BACE tails. Factorial: 57 seeds on Totoro (pgid 1840886; `logs/factorial.log` gets a 4th DONE line).
-   Core: 24 seeds on nibi (array 22472376, seeded with the pool; writes into nibi `results/core`). When each
-   lands, rsync into `/tmp/pig_pool6/factorial/totoro_bace` and `/tmp/pig_pool4/core/nibi` (rsync -a, no
-   --info flag), re-run G10 and G11 directly with `Rscript`, re-aggregate both stages with
-   `script/campaign_gnn_off_aggregate.R --reference freq`, rebuild `script/campaign_sim_results/*.csv` by
-   concatenating core and factorial outputs, re-render the article, republish the board with the same
-   file path, commit, refresh PR #184's body, mark G10/G11 [x].
+1. DONE 2026-09-23: both BACE tails landed (factorial on nibi, core on nibi after Totoro was ruled out by
+   another user's 930 GB process), G10 and G11 PASS, both stages re-aggregated, csv rebuilt, article
+   re-rendered, board republished, PR #184 body refreshed. Keepers: nibi `results/core` and `results/factorial`
+   hold every BACE rds including the three hand-assembled failure records.
 2. Wait for Shinichi: read the board, record the six decisions (G13c), decide article visibility and merge.
 3. Then run `closeout.py check` from the worktree (it passes only once G13c is closed) and the
    `handoff_gate.sh`; commit.
