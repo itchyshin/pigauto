@@ -166,4 +166,58 @@ repeated here since it does not extrapolate linearly to the full design.
 
 ## Result
 
-Pending: pre-run then campaign.
+Campaign: 500 paired replicates, n = 1000, MAR_phylo missingness on x (about 301 of
+1000 cells missing), y fully observed, m = 20, 500 epochs, pigauto `bfecd84`; reps 1 to 5
+on Totoro, 6 to 500 on DRAC fir. No replicate failed in either arm. Summary file:
+`docs/dev-log/mondrian-realdata/mi_se_summary.rds`.
+
+| arm | mean pooled SE | empirical SD | SE ratio (MCSE) | bias | 95% CI coverage |
+|---|---|---|---|---|---|
+| complete-data reference | | | | +0.001 | |
+| split draws | 0.0376 | 0.0550 | 0.683 (0.022) | -0.348 | 0.000 |
+| Mondrian draws | 0.0372 | 0.0608 | 0.611 (0.020) | -0.380 | 0.000 |
+
+Per-cell draw coverage of the masked truth: split 0.846 (one global scale); Mondrian
+0.868 in the far stratum and 0.896 in the near stratum.
+
+**Both pre-registered claims fail.** The SE ratio moved away from 1 under Mondrian
+(|ratio - 1| of 0.389 against 0.317 for split), and far-stratum draw coverage (0.868)
+is outside the pre-set band of 0.93 to 0.97.
+
+**The failure is not specific to Mondrian, and the comparison it was designed for is
+not interpretable.** Both arms estimate the slope at about half its true value (0.35 and
+0.32 against 0.70), while the complete-data reference is unbiased (0.701). A diagnostic on
+one simulated tree (`script/mondrian_confirmation/13_mi_gls_attenuation_diag.R`; n = 400,
+120 cells of x missing completely at random, 150 epochs) localised the cause:
+
+- The point imputation is sound. Imputed x correlates 0.81 with y among missing cells
+  (true value 0.80), and a single-imputation GLS slope is 0.65.
+- The MI draws look sound marginally. Per-draw OLS slopes are 0.81 to 0.86, close to OLS
+  on the truth (0.85), and each draw correlates 0.76 with y.
+- Under phylogenetic GLS, the same draws give slopes of 0.33 to 0.38.
+- An oracle proper imputation, which draws the missing x from its exact conditional
+  distribution given the observed x and all of y under the true bivariate Brownian model,
+  gives GLS slopes of 0.72 to 0.73.
+- The oracle's conditional SD is 0.138. pigauto's draw SD is 0.293, set by the conformal
+  score, which is calibrated on the point-prediction error (residual SD 0.339). The draws
+  therefore add about twice the proper amount of noise, and GLS, which weights contrasts
+  between close relatives, turns that tip-level noise into a large attenuation.
+  Phylogenetically correlated noise of the same size attenuates equally (slope 0.33), so
+  the issue is the amount of noise relative to the proper conditional spread, not only
+  its independence across tips.
+
+**Answer to the motivating question.** The Mondrian half-width is not a justified SD for
+multiple-imputation draws feeding a phylogenetic GLS. Neither is the split half-width. A
+conformal half-width measures how wrong the point prediction can be, while proper
+imputation needs the spread of the missing value given everything observed, including
+the other traits. The two coincide only when the point prediction is already the
+conditional mean under the analysis model. In this regime it is not: the residual SD is
+2.5 times the oracle's conditional SD. Mondrian makes the draw scale follow tree
+locality, which is the right direction for interval coverage, but it adds noise where
+the split scale already adds too much.
+
+**Scope.** Simulated bivariate Brownian traits with rho = 0.7, one missing trait, a
+phylogenetic GLS analysis model. The attenuation of the default split MI path is
+pre-existing; this arc did not change that path. It bears directly on the documented
+`multi_impute()` to `pool_mi()` workflow with phylogenetic downstream models and needs
+its own investigation before any claim about MI calibration is made.
