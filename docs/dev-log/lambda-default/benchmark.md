@@ -46,3 +46,9 @@ default path was never affected. This arm is 26 times slower under lambda (45 s 
 
 Launched 07:38, 30 parallel x 4 torch threads. Capped at 100 seeds because the full 200 would take
 about 8 hours at the 150-core limit. Results appended here when it finishes.
+
+## Decision on the gate (Shinichi, 2026-09-23)
+
+The pre-registered rule paused the default flip if lambda 0.3 did not close half the gap. Asked with the
+wave-1 and real-data results in hand, Shinichi chose to keep `lambda_mode = "estimate"` as the default.
+The shortfall at weak signal stays documented as a known limitation.
