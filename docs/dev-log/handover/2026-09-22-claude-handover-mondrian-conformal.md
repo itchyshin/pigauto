@@ -1,4 +1,4 @@
-# Session Handoff: Mondrian conformal, from shipped code to a defensible default
+# Session Handoff (to Claude): Mondrian conformal, from shipped code to a defensible default
 
 Meta: 2026-09-22 evening · from Claude (Fable 5.1, vault session, lease `claude:shinichi-brain:76566` on
 `docs/dev-log/handover/,useful/` only) · platform-agnostic; either tool resumes from this file.
@@ -122,3 +122,19 @@ grep -n "mondrian" R/fit_helpers.R | head -40
 ```
 Then step 1 above. Read order: this file → 08-16 results → `NEWS.md` "mondrian" entry →
 `tests/testthat/test-mondrian-conformal.R` → the three bench scripts.
+
+**One-command resume (paste into a fresh Claude session opened in the pigauto repository):**
+
+```text
+Read AGENTS.md and docs/dev-log/handover/2026-09-22-claude-handover-mondrian-conformal.md. Run the handover rehydration steps, reconcile them with the current git state, then continue only the OWED Next Immediate Steps.
+```
+
+Rehydration for Claude: run `tools/lane_preflight.sh` from the vault, name the one lane you take, then
+classify every item above as OWED / DONE / RETRACTED / PROTECTED against `origin/main` before doing
+anything. Expected as of 2026-09-22: Mondrian code DONE (PR #168); real-data re-run OWED; paper UQ
+section OWED; the 18 dirty files and 13 unpushed branches PROTECTED (other lanes). No snapshot pointer
+exists in this repo's `AGENTS.md` and there is no coordination board; with a foreign lane and four
+Claude lanes live, none was added, so that a single pointer cannot orphan a sibling (handover-skill
+Step 4). Environment: R with torch installed as this repo's `AGENTS.md` describes; safe verification
+is `devtools::test(filter = "mondrian-conformal")`; campaigns go to Totoro under the 150-core cap, never
+run locally at scale (D-200). Do not stage anything under `dev/` or `script/` you did not create.
