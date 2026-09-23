@@ -908,6 +908,8 @@ compute_conformal_scores <- function(
 
       obs_idx <- which(obs_mask_mat[, score_col])
       fallback <- length(obs_idx) == 0L
+      n_near <- NA_integer_  # realised stratum sizes; kept on fallback
+      n_far  <- NA_integer_
       near_score <- global_score
       far_score  <- global_score
       threshold  <- NA_real_
@@ -953,8 +955,6 @@ compute_conformal_scores <- function(
         near_score <- global_score
         far_score  <- global_score
         threshold  <- NA_real_
-        n_near <- NA_integer_
-        n_far  <- NA_integer_
       }
 
       if (verbose && fallback) {

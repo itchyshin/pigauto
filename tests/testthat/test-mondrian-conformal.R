@@ -168,8 +168,9 @@ test_that("compute_conformal_scores mondrian falls back below the 19-per-stratum
   expect_equal(mo$near_score, mo$far_score, tolerance = 1e-12)
   expect_true(is.na(mo$threshold))
   expect_equal(mo$n_val, n_val_species)
-  expect_true(is.na(mo$n_near))
-  expect_true(is.na(mo$n_far))
+  # Realised stratum sizes are kept on fallback so users see why it fell back.
+  expect_equal(mo$n_near + mo$n_far, n_val_species)
+  expect_true(mo$n_near < 19L || mo$n_far < 19L)
   expect_equal(unname(mo$near_score), unname(scores_split["t1"]), tolerance = 1e-10)
   expect_equal(unname(scores_mond["t1"]), unname(scores_split["t1"]), tolerance = 1e-10)
 })
