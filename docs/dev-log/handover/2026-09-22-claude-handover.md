@@ -70,7 +70,7 @@ carry unpushed commits from other lanes and are not this arc's.
 
 | Artifact / branch | Committed | Pushed | PR | State |
 |---|---|---|---|---|
-| `pigauto` `arc/imputation-sim` (worktree `../pigauto-imputation-sim`), HEAD at close | y | y | #184 draft | LANDED on the branch; NOT merged (merge is Shinichi's call after G13c) |
+| `pigauto` `arc/imputation-sim` (worktree `../pigauto-imputation-sim`), HEAD at close = the commit after a0df635 | y | y | #184 draft | LANDED on the branch; NOT merged (merge is Shinichi's call after G13c) |
 | `.unlazy/imputation-sim/**` (goal, progress, ledger) | n (git-ignored by design) | n | none | CARRIED-OVER: lives only in the worktree; resume = read the files above |
 | Results board source `scratchpad/sim-results.html` | n (scratchpad) | published v3 | none | CARRIED-OVER: republish the same path to update; source also mirrored in PROGRESS notes |
 | Raw rds pools `/tmp/pig_pool4`, `/tmp/pig_pool6`, `/tmp/pig_pool7` on the Mac; `~/pigauto_sim/results/*` on Totoro; `results/` on nibi and fir | n (data, never git) | n/a | none | CARRIED-OVER: keepers are on Totoro and on the clusters' /project; the Mac copies are working pools |
