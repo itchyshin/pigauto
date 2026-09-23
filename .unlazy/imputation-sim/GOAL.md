@@ -12,30 +12,23 @@ after-task, Melissa reconcile and handover.
 
 Arcs (state on disk here; update the line when an arc closes):
 - S1 ledger + worktree + lease ................ DONE 2026-09-20
-- S2b Totoro env (agent totoro-env) ........... RUNNING
-- S2c nibi env (agent nibi-env) ............... RUNNING
-- S3 runner corrected design (agent runner-build) RUNNING
-- S3-verify (fresh Opus reviewer, symbolic alignment) pending
-- S5 drivers (design.R, totoro.sh, nibi_array.sh) DRAFTED 2026-09-20; smoke against the wrapper once S3 lands
-- S4 pre-run Totoro 16 cells, note, STOP for G0 . pending
-- G0 Shinichi .................................. pending
-- S6a core Totoro / S6b factorial split nibi (half A) + rorqual (half B), fir hot backup / S6c AVONET / S6d covariates  pending
-  (Shinichi 2026-09-20 "think backup plans, parallel"; measured: nibi 38k idle, rorqual 6k idle + fairshare 1.31,
-   fir 8.6k idle, narval fairshare 0.09; Totoro 383/384 idle. Stall rule: a cluster with no task started 2 h after
-   submit hands its remaining cells to the other or to fir; finished (cell, seed) rds are never re-run.)
-- S2c' rorqual bootstrap: replay the nibi bootstrap script once nibi's smoke passes (own /project library)  pending
-- MECHANICAL-VERIFY (Haiku) ..................... pending
-- S7 aggregate; S7a Artifact (Shinichi decides); S7b BACE methods; S7c article  pending
-- S8 after-task, Melissa, handover, PR .......... pending
+- S2 environments (Mac, Totoro, nibi, fir) .... DONE 2026-09-20
+- S3 runner + S3-verify ....................... DONE 2026-09-20 (freq_lambda fifth arm 09-21; divergence rule in the aggregator 09-22)
+- S5 drivers .................................. DONE 2026-09-20
+- S4 pre-run + G0 ............................. DONE 2026-09-20 ("Go ahead")
+- S6a core slice, every arm ................... DONE; BACE 600/600 on 2026-09-23 02:12 (3 hand-assembled failure records, disclosed); G10 PASS
+- S6b factorial, every arm .................... DONE; BACE 3,550/3,550 on 2026-09-22 20:52; G11 PASS
+- S6c AVONET300 ............................... DONE 2026-09-21
+- S6d covariate sensitivity ................... DONE 2026-09-22 (3,600/3,600 + freq_lambda); G6d [x]
+- MECHANICAL-VERIFY ........................... G14 PASS x3; G12 PASS
+- S7 aggregate ................................ DONE: committed csv = final core (pool8) + final factorial (agg2), divergence rule applied
+- S7a Artifact ................................ v9 PUBLISHED (private) 2026-09-23; G13c waits on Shinichi's six decisions
+- S7b BACE methods note ....................... DONE (core, factorial, covariates, convergence rate, crash disclosure)
+- S7c pkgdown article ......................... DONE, renders from the committed csv; unlisted, unpublished pending G13c
+- S8 after-task ............................... DONE (sections 1-12; closeout.py passes structure; ledger gate waits on G13c)
+- S8 Melissa reconcile ........................ DONE (Reconcile 2 appended, decision receipt)
+- S8 handover ................................. committed; Landing State refreshed at close
+- Decision 7 / D-278 .......................... recorded; lambda-default lane opened by Shinichi himself (../pigauto-lambda-default)
+OPEN: G13c only (Shinichi reads the board and records the six decisions; article visibility; merge of PR #184).
 
-Compute allowances: Totoro 250 cores for snakagaw (Shinichi, 2026-09-20, raising this lane above
-D-143's standing 150) = 62 concurrent cells at 4 threads. nibi and rorqual: def-snakagaw_cpu arrays.
-rorqual note: /project def-snakagaw is at its FILE-COUNT quota (about 499k/500k inodes), so its R
-library and torch home live under /home there.
-
-Pauses for Shinichi: G0 (after the pre-run note) and S7a (after the Artifact). Otherwise autonomous.
-Must stop: edits to R/, BACE/, PR #175 files, the dirty main checkout; a Duo prompt; a merge; publishing the
-article before Shinichi reads the Artifact.
-Design facts locked: arms 1 freq (Rphylopars + castor + phyloglm Poisson), 2 BACE, 3a/3b pigauto GNN off, 4 GNN on;
-fixed thresholds; trimmed factorial = 56 cells (clade included); primary contrast = BACE vs freq, z-RMSE + 95%
-coverage (interval score), core slice, pooled over types.
+STATUS: COMPLETE 2026-09-23. v1 closed and handed off (docs/dev-log/arc/2026-09-23-simulation-v1-summary.md, 601628b). The 140 Totoro processes writing results/core_lambda_core_fast belong to the lambda-default lane, not this arc.
