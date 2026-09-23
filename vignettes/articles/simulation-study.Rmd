@@ -252,9 +252,9 @@ the mechanism table: BACE falls to within a few hundredths of the floor under MA
 missingness, and that figure has two causes that must be read separately. At lambda = 0.3 BACE fails
 on no replicate and its clade-biased z-RMSE of 1.15 to 1.18 is a genuine accuracy result, worse than
 predicting the mean. At lambda = 1 it errors with singular mixed-model equations on 53% of Brownian
-clade-biased replicates at n = 100 and 86% at n = 1000, and the floored failures dominate the mean;
-on the replicates where it fits it reaches 0.82 and 0.55, behind pigauto's 0.62 and 0.48 but not
-collapsed. Inaccurate at low signal, fragile at high signal, under the missingness pattern a real
+clade-biased replicates at n = 100 and 63% at n = 1000, and the floored failures dominate the mean;
+on the replicates where it fits it reaches 0.82 and 0.47, behind pigauto's 0.62 at n = 100 and level
+with its 0.48 at n = 1000. Inaccurate at low signal, fragile at high signal, under the missingness pattern a real
 comparative dataset most often presents.
 
 ```{r fact-acc, eval = exists("have") && have}

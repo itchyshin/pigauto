@@ -395,8 +395,8 @@ singular-solve fallback ends in a type error. These are floored and counted.
 
 | evolutionary model | lambda | BACE | freq (BM) | freq_lambda | floor |
 |---|---|---|---|---|---|
-| Brownian motion | 0.3 | 1.027 | 1.125 | 0.924 | 1.043 |
-| Brownian motion | 1.0 | 0.872 | 0.579 | 0.572 | 1.070 |
+| Brownian motion | 0.3 | 1.024 | 1.125 | 0.924 | 1.043 |
+| Brownian motion | 1.0 | 0.842 | 0.579 | 0.572 | 1.070 |
 | Ornstein-Uhlenbeck | 0.3 | 0.989 | 1.106 | 0.912 | 1.035 |
 | Ornstein-Uhlenbeck | 1.0 | 0.608 | 0.568 | 0.562 | 1.051 |
 
@@ -404,8 +404,8 @@ singular-solve fallback ends in a type error. These are floored and counted.
 |---|---|---|---|---|
 | MCAR 10% | 0.725 | 0.783 | 0.691 | 1.000 |
 | MCAR 30% | 0.743 | 0.814 | 0.697 | 1.009 |
-| MAR 30% | 0.938 | 0.895 | 0.774 | 1.113 |
-| clade-biased 30% | 0.986 | 0.867 | 0.783 | 1.054 |
+| MAR 30% | 0.937 | 0.895 | 0.774 | 1.113 |
+| clade-biased 30% | 0.962 | 0.867 | 0.783 | 1.054 |
 
 The core-slice conclusion holds in every stratum. Against the BM default BACE wins at lambda = 0.3
 and loses at lambda = 1; against the signal-estimating specification it loses everywhere on the
@@ -416,14 +416,14 @@ and not the signs, so this is about estimating the signal, not about which proce
 data.
 
 The mechanism table carries the one new result. Under MAR and clade-biased missingness BACE falls to
-0.938 and 0.986, close to the floors of 1.113 and 1.054, while the frequentist arms are unaffected in
+0.937 and 0.962, close to the floors of 1.113 and 1.054, while the frequentist arms are unaffected in
 their ranking. Partitioned by cause, as it should be before it is read: at lambda = 0.3 BACE fails
-on no replicate under any mechanism, and its clade-biased figure of 1.181 at n = 100 and 1.140 at
+on no replicate under any mechanism, and its clade-biased figure of 1.181 at n = 100 and 1.040 at
 n = 1000 under Brownian motion is a genuine accuracy result, worse than predicting the mean. At
 lambda = 1 the picture inverts and becomes a failure result: BACE errors with "mixed model equations
 singular" on 35% of MCAR 10% replicates, 39% of MAR and 39% of clade-biased ones, rising to 53% and
-86% in the Brownian clade-biased cells at n = 100 and n = 1000. On the replicates where it does fit
-there, it reaches 0.816 and 0.545, behind the frequentist arms but not collapsed. The two halves
+63% in the Brownian clade-biased cells at n = 100 and n = 1000. On the replicates where it does fit
+there, it reaches 0.816 and 0.472, behind the frequentist arms at n = 100 and level with them at n = 1000. The two halves
 belong side by side: at low signal BACE is inaccurate under phylogenetically biased missingness, and
 at high signal it is fragile under it.
 
@@ -431,14 +431,14 @@ at high signal it is fragile under it.
 
 | evolutionary model | lambda | BACE | freq (BM) | freq_lambda | floor |
 |---|---|---|---|---|---|
-| Brownian motion | 0.3 | 0.552 | 0.418 | 0.418 | 0.461 |
-| Brownian motion | 1.0 | 0.752 | 0.910 | 0.908 | 0.605 |
+| Brownian motion | 0.3 | 0.549 | 0.418 | 0.418 | 0.461 |
+| Brownian motion | 1.0 | 0.764 | 0.910 | 0.908 | 0.605 |
 | Ornstein-Uhlenbeck | 0.3 | 0.544 | 0.406 | 0.406 | 0.436 |
 | Ornstein-Uhlenbeck | 1.0 | 0.824 | 0.875 | 0.872 | 0.541 |
 
 BACE's discrete advantage at low signal survives the factorial intact: 13 to 14 points over the
 frequentist stack at lambda = 0.3 under both processes, with the frequentist stack below the mode
-floor in every one of those cells. At lambda = 1 the frequentist stack is ahead by 16 points under
+floor in every one of those cells. At lambda = 1 the frequentist stack is ahead by 15 points under
 Brownian motion and 5 under Ornstein-Uhlenbeck. Across mechanisms BACE's lead is 3 to 5 points under
 MCAR and vanishes under clade-biased missingness, where all three arms sit at 0.62.
 
@@ -449,12 +449,12 @@ MCAR and vanishes under clade-biased missingness, where all three arms sit at 0.
 | MCAR 10% | 0.874 | 0.869 | 0.890 |
 | MCAR 30% | 0.842 | 0.856 | 0.884 |
 | MAR 30% | 0.846 | 0.867 | 0.886 |
-| clade-biased 30% | 0.836 | 0.915 | 0.894 |
+| clade-biased 30% | 0.838 | 0.915 | 0.894 |
 
 Neither route reaches nominal 0.95 anywhere in the factorial either. The model-based Rphylopars
 interval is the one construction that improves under clade-biased missingness, to 0.915 at the
 default and 0.894 with lambda estimated, while BACE's posterior predictive interval is at its worst
-there, 0.836. Interval scores follow: BACE 5.70 against `freq_lambda` 4.82 under clade-biased
+there, 0.838. Interval scores follow: BACE 5.70 against `freq_lambda` 4.82 under clade-biased
 missingness, and BACE ahead only under MCAR 10%, 3.47 against 6.75, where `freq_lambda`'s score is
 inflated by its own type-error failures in one cell.
 
@@ -462,7 +462,7 @@ inflated by its own type-error failures in one cell.
 
 | arm | MCAR 10% | MCAR 30% | MAR 30% | clade 30% |
 |---|---|---|---|---|
-| BACE | 17.6% | 8.7% | 20.1% | 20.3% |
+| BACE | 17.6% | 8.7% | 20.0% | 19.4% |
 | freq | 1.6% | 0.3% | 1.7% | 1.6% |
 | freq_lambda | 3.6% | 0.3% | 1.6% | 1.7% |
 
