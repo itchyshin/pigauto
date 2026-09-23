@@ -24,22 +24,26 @@
 #' emitted; covariates still reach the GNN correction via
 #' \code{\link{fit_pigauto}} regardless of which baseline path fires.
 #'
-#' \strong{Per-type lambda dispatch (arc/lambda-per-type)}: \code{lambda_mode}
-#' only ever governs the baseline for CONTINUOUS-FAMILY columns (continuous,
-#' count, ordinal, proportion, zi_count magnitude). Binary, ordinal,
-#' categorical, and zero-inflated gate columns keep the threshold-joint /
-#' OVR-categorical joint baseline (always fit at lambda = 1) regardless of
-#' \code{lambda_mode} -- there is no discrete-trait analogue of Pagel's
-#' lambda, and previously forcing these columns onto label propagation any
-#' time \code{lambda_mode != "fixed_1"} cost 19pp of Trophic.Level accuracy
-#' on AVONET (0.789 -> 0.600; see
-#' \code{docs/dev-log/2026-08-16-external-comparison-results.md}). When
-#' \code{lambda_mode != "fixed_1"} and the threshold-joint baseline fires
-#' for a dataset with binary/ordinal AND continuous-family columns, the
-#' joint liability fit still uses the continuous-family columns internally
-#' to inform the joint Sigma (and hence the binary/ordinal posteriors); only
-#' its continuous-column baseline OUTPUT is discarded in favour of the
-#' lambda-aware per-column BM fit.
+#' \strong{Per-type lambda dispatch (arc/lambda-per-type; corrected in S4/S6,
+#' feat/joint-lambda-default)}: \code{lambda_mode} only ever governs the
+#' baseline for CONTINUOUS-FAMILY columns (continuous, count, proportion,
+#' zi_count magnitude) -- NOT ordinal. Binary, ordinal, categorical, and
+#' zero-inflated gate columns always stay at lambda = 1 in EVERY path
+#' (threshold-joint, OVR-categorical, label propagation, and the per-trait
+#' ordinal path-selection fallback below), regardless of \code{lambda_mode}
+#' -- there is no discrete-trait analogue of Pagel's lambda, and previously
+#' forcing these columns onto label propagation any time \code{lambda_mode
+#' != "fixed_1"} cost 19pp of Trophic.Level accuracy on AVONET (0.789 ->
+#' 0.600; see \code{docs/dev-log/2026-08-16-external-comparison-results.md}).
+#' When \code{lambda_mode != "fixed_1"} and the threshold-joint baseline
+#' fires for a dataset with binary/ordinal AND continuous-family columns,
+#' the joint liability fit's own continuous-column OUTPUT is now USED
+#' (each continuous-family column gets its own \code{lambda_k} via the
+#' joint solver's \code{lambda_cols}), rather than being discarded for a
+#' separate lambda-aware per-column BM re-fit as in the pre-S4 design.
+#' Ordinal liability columns inside that same joint fit, and the
+#' BM-via-MVN / K-class-OVR-LP alternatives the "Per-trait ordinal path
+#' selection" block below compares against it, all stay at lambda = 1.
 #'
 #' @param data object of class \code{"pigauto_data"}.
 #' @param tree object of class \code{"phylo"}.
@@ -116,16 +120,25 @@
 #' @param joint_solver character. Which solver estimates the joint
 #'   Sigma / posterior for the joint MVN, threshold-joint, and OVR
 #'   categorical baselines. \code{"inhouse"} (default) uses the
-#'   single-pass in-house solver (\code{R/joint_mvn_solver.R}) and is
-#'   byte-identical to prior releases. \code{"rphylopars"} delegates to
-#'   \code{Rphylopars::phylopars()}'s converged REML fit; on failure or
-#'   non-finite output it falls back to \code{"inhouse"} with a warning.
-#'   Only affects the joint MVN / threshold-joint / OVR
-#'   categorical paths above; ignored when those paths don't fire. Note
-#'   that \code{lambda_mode != "fixed_1"} disables the continuous-only
-#'   joint MVN path (it has no lambda argument) but no longer disables
-#'   the threshold-joint / OVR-categorical paths -- see
-#'   \dQuote{Per-type lambda dispatch} in Details.
+#'   single-pass in-house solver (\code{R/joint_mvn_solver.R}); under
+#'   \code{lambda_mode = "fixed_1"} it is byte-identical to prior
+#'   releases, but \code{lambda_mode = "estimate"} (the current default)
+#'   is new behaviour, not a byte-compatibility guarantee.
+#'   \code{"rphylopars"} delegates to \code{Rphylopars::phylopars()};
+#'   under \code{"estimate"} this calls it with \code{model = "lambda"}
+#'   (substantially slower than \code{model = "BM"}), with automatic
+#'   fallback to \code{"inhouse"} on failure or implausible output (a
+#'   plausibility guard that also fires under \code{lambda_mode =
+#'   "fixed_1"} -- see NEWS). Only affects the joint MVN / threshold-joint
+#'   / OVR categorical paths above; ignored when those paths don't fire.
+#'   \code{lambda_mode} does NOT disable the continuous-only joint MVN
+#'   path: both \code{fit_joint_mvn_baseline()} and
+#'   \code{fit_joint_threshold_baseline()} accept a \code{lambda_mode} /
+#'   \code{lambda_fixed} argument and estimate lambda inside the joint fit
+#'   via \code{lambda_cols} -- see \dQuote{Per-type lambda dispatch} in
+#'   Details. Only \code{"cv"} / \code{"bayes"} force continuous-family
+#'   columns off the joint path entirely (no joint analogue for those two
+#'   modes).
 #' @param predict_method character. Prediction route for the in-house joint
 #'   solver. \code{"per_column"} (default) retains the established
 #'   per-column conditional prediction route. \code{"exact"} is opt-in and,
@@ -603,7 +616,14 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
         # species-level; for single-obs n_species == n_obs).
         tj_pred <- mu[, col]
         # BM-via-MVN alternative on the masked z-scored ordinal column.
-        bm_res <- bm_impute_col(X[, col], R_phy_local, lambda = bm_lambda)
+        # Ordinal columns are documented to stay at lambda = 1 regardless
+        # of `lambda_mode` (there is no discrete-trait analogue of Pagel's
+        # lambda) -- see "Per-type lambda dispatch" in the roxygen Details
+        # above. Do NOT substitute `bm_lambda` here: it tracks the
+        # continuous-family setting and would leak an estimated lambda into
+        # this candidate even though `lambda_per_trait` keeps reporting 1
+        # for ordinal columns (Rose review, 2026-09-23).
+        bm_res <- bm_impute_col(X[, col], R_phy_local, lambda = 1.0)
         # Val MSE for both paths.
         truth_j  <- truth_full[val_rows_j, col]
         finite_t <- is.finite(truth_j)

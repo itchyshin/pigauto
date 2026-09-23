@@ -24,7 +24,7 @@ In-house pigauto without the GNN (the default path):
 | 1 | 300 | 0.426 | 0.393 | -0.033 | |
 | 1 | 1000 | 0.363 | 0.342 | -0.021 | |
 
-Every cell improves. Conformal coverage for c1 and c2 at n >= 300 is 0.957 to 0.960 (committed 0.950
+Every cell improves. Conformal coverage for c1 and c2 at n >= 300 is 0.957 to 0.969 (committed 0.950
 to 0.968). No seed exceeded z-RMSE 1.3.
 
 Against the pre-registered gate G12:
@@ -33,7 +33,7 @@ Against the pre-registered gate G12:
   81%. Weak signal at lambda 0.3 is where the per-column estimate's downward bias and small n bite most.
 - The lambda = 1 cells moved by 0.021 to 0.033, beyond the 0.01 limit, in the improving direction. The
   guard was written to catch regressions; none occurred.
-- Coverage (>= 0.94) and completeness pass.
+- Coverage (>= 0.94) and completeness pass. The comparison script reports BENCH_FAIL overall because of the two criteria above.
 
 Rphylopars comparator (`joint_solver = "rphylopars"`, now `model = "lambda"`): medians improve (for
 example 0.824 at lambda 0.7, n 100), but a few seeds explode (1 of 200 at lambda 0.7, n 100; 6 to 8 of
@@ -42,10 +42,12 @@ the run: `fit_joint_solver()` now falls back to the in-house solver when phylopa
 predictions more than 10 times beyond the observed range (test in `test-joint-lambda.R`). The in-house
 default path was never affected. This arm is 26 times slower under lambda (45 s against 1.7 s per fit).
 
-## Wave 2: gnn_on, 100 seeds per cell
+## Wave 2: gnn_on
 
-Launched 07:38, 30 parallel x 4 torch threads. Capped at 100 seeds because the full 200 would take
-about 8 hours at the 150-core limit. Results appended here when it finishes.
+Launched 07:38, 30 parallel x 4 torch threads, 100 seeds per cell. Another Totoro user started a job using
+about 159 cores during the run, which cut our share to about 61 cores; n = 1,000 jobs took 844 s each. At
+12:13 Shinichi chose to cap n = 1,000 at 50 seeds (n = 100 and 300 keep 100 seeds). Results appended here
+when it finishes.
 
 ## Decision on the gate (Shinichi, 2026-09-23)
 

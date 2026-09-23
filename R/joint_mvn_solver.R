@@ -235,10 +235,19 @@
 # j (already built at that column's lambda), or NULL to force the dense
 # fallback (K == 1, no tree, Matrix unavailable, or use_henderson =
 # FALSE). `lambda_vec` (length K) is consulted on both paths.
+#
+# `mu_hat_vec` (optional, length K, NA where not precomputed): the GLS
+# mean at column j's OWN lambda_j, when the caller already has it from
+# the same eigendecomposition used to estimate lambda_j (S6 perf fix,
+# Rose review 2026-09-23: `.mvn_resolve_lambda()`'s "estimate" branch
+# gets this for free from `ml_lambda_and_mu_for_col()`). When
+# `mu_hat_vec[j]` is finite it is used as-is; otherwise this function
+# falls back to its own `.mvn_gls_mean_at_lambda()` call, unchanged.
 .mvn_init_per_column <- function(L, R, eps = 1e-8, henderson_for_col = NULL,
-                                  lambda_vec = NULL) {
+                                  lambda_vec = NULL, mu_hat_vec = NULL) {
   n <- nrow(L); K <- ncol(L)
   if (is.null(lambda_vec)) lambda_vec <- rep(1, K)
+  if (is.null(mu_hat_vec)) mu_hat_vec <- rep(NA_real_, K)
   L_hat <- L; L_var <- matrix(0, n, K, dimnames = dimnames(L))
   for (j in seq_len(K)) {
     yj <- L[, j]
@@ -251,7 +260,11 @@
     henderson_j <- if (!is.null(henderson_for_col)) henderson_for_col(j) else NULL
     lam_j <- lambda_vec[j]
     if (!is.null(henderson_j) && lam_j != 1) {
-      mu_gls <- .mvn_gls_mean_at_lambda(yj, R, lam_j, nugget = eps)
+      mu_gls <- if (is.finite(mu_hat_vec[j])) {
+        mu_hat_vec[j]
+      } else {
+        .mvn_gls_mean_at_lambda(yj, R, lam_j, nugget = eps)
+      }
       res <- henderson_bm_predict(yj - mu_gls, henderson_j, eps = eps,
                                     cor_scale = TRUE)
       res$mu <- res$mu + mu_gls
@@ -352,6 +365,14 @@
          call. = FALSE)
   }
 
+  # S6 perf fix (Rose review, 2026-09-23, "SPEED"): build each
+  # lambda_cols_idx column's eigendecomposition cache ONCE and reuse it
+  # for BOTH the lambda_block search below and this column's own
+  # per-trait lambda_k / GLS mean, via `.pagel_lambda_from_cache()`
+  # (R/pagel_lambda.R). Before this fix, `ml_lambda_for_col()` rebuilt
+  # the same O(n_o^3) cache a second time per column, and
+  # `.mvn_init_per_column()`'s Henderson-centering step rebuilt it a
+  # third time (as a dense Cholesky) via `.mvn_gls_mean_at_lambda()`.
   caches <- lapply(lambda_cols_idx, function(j) {
     build_pagel_nll_cache(L[, j], R, nugget = eps)
   })
@@ -373,20 +394,26 @@
   # Every column starts at lambda = 1 (the B iii cut: nothing outside
   # lambda_cols is ever touched), then lambda_cols columns are
   # overwritten with their own estimate or, for a low-n column, with
-  # lambda_bar.
+  # lambda_bar. `mu_hat_vec` carries each column's GLS mean AT its own
+  # lambda_k, read off the same cache, for `.mvn_init_per_column()` to
+  # reuse (NA where not computed, e.g. low-n columns using lambda_block).
   lambda_vec <- rep(1, K)
-  for (j in lambda_cols_idx) {
+  mu_hat_vec <- rep(NA_real_, K)
+  for (idx in seq_along(lambda_cols_idx)) {
+    j <- lambda_cols_idx[idx]
     n_obs_j <- sum(!is.na(L[, j]))
-    lambda_vec[j] <- if (n_obs_j >= 10L) {
-      ml_lambda_for_col(L[, j], R, nugget = eps)
+    if (n_obs_j >= 10L) {
+      lm_j <- .pagel_lambda_from_cache(caches[[idx]])
+      lambda_vec[j] <- lm_j$lambda_hat
+      mu_hat_vec[j] <- lm_j$mu_hat
     } else {
-      lambda_block
+      lambda_vec[j] <- lambda_block
     }
   }
   names(lambda_vec) <- col_names
 
   list(lambda_vec = lambda_vec, lambda_block = lambda_block,
-       lambda_mode_used = "estimate")
+       lambda_mode_used = "estimate", mu_hat_vec = mu_hat_vec)
 }
 
 # E-step: refine imputations at originally-NA cells via inverse-variance
@@ -511,6 +538,7 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
   lambda_vec <- lam$lambda_vec
   lambda_block <- lam$lambda_block
   lambda_mode_used <- lam$lambda_mode_used
+  mu_hat_vec <- lam$mu_hat_vec
 
   # Build Hadfield-Nakagawa (2010) sparse S^{-1} on demand, keyed by
   # lambda rounded to 1e-3 so at most K distinct builds happen (usually
@@ -561,7 +589,8 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
                                 henderson_for_col = function(j) {
                                   get_henderson_at(lambda_vec[j])
                                 },
-                                lambda_vec = lambda_vec)
+                                lambda_vec = lambda_vec,
+                                mu_hat_vec = mu_hat_vec)
   L_hat <- init$L_hat
   L_var <- init$L_var
 

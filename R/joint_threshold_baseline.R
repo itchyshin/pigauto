@@ -348,8 +348,13 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
     if (!is.null(lambda_fixed)) {
       lam_arg <- rep(1, length(fit_cols))
       if (length(lambda_family_idx) > 0L) {
-        lam_arg[lambda_family_idx] <-
-          unname(lambda_fixed[colnames(X_fit)[lambda_family_idx]])
+        # Columns missing from `lambda_fixed` default to lambda = 1, per
+        # the documented contract on `fit_baseline()`'s `lambda_fixed`
+        # argument (Rose review, 2026-09-23: this used to leave those
+        # entries NA and error downstream instead of defaulting to 1).
+        lam_vals <- unname(lambda_fixed[colnames(X_fit)[lambda_family_idx]])
+        lam_vals[is.na(lam_vals)] <- 1.0
+        lam_arg[lambda_family_idx] <- lam_vals
       }
       lam_cols_arg <- NULL   # full vector supplied; lambda_cols unused
     } else if (identical(lambda_mode, "estimate")) {

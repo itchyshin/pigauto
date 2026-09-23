@@ -13,9 +13,9 @@ baselines estimate their own per-tree Pagel's lambda by default.
 Under `lambda_mode = "estimate"`, each continuous-family (BM-eligible)
 latent column gets its own per-trait Pagel's lambda via the existing
 per-column ML estimator (`bm_impute_col(lambda = "estimate")`); discrete
-traits (binary, categorical, zi gate, OVR synthetic columns) stay at
-lambda = 1, unaffected by `lambda_mode` (see `fit_baseline()`'s "Per-type
-lambda dispatch" details).
+traits (binary, categorical, zi gate, OVR synthetic columns) AND ordinal
+stay at lambda = 1, unaffected by `lambda_mode` (see `fit_baseline()`'s
+"Per-type lambda dispatch" details).
 
 **This is a real change to default baseline numbers, not just a relabelling.**
 Measured max abs difference in baseline `mu` of ~0.38 (z-scored latent
@@ -25,8 +25,11 @@ scale) between `lambda_mode = "fixed_1"` and `"estimate"` on a 2-trait,
 estimates lambda, rather than falling back to the per-column path. See
 the joint-solver lane reports under `docs/dev-log/lambda-default/` for
 the estimation mechanism. Binary/ordinal/categorical/zi-gate columns are
-unaffected (still threshold-joint / OVR, still lambda = 1 unless the
-joint delegate inherits the continuous block's `lambda_block`).
+unaffected: still threshold-joint / OVR, still lambda = 1 in every path.
+The opt-in `predict_method = "exact"` / `joint_refine_iter > 0` paths use
+the shared `lambda_block` only for cross-trait computations that need one
+common phylogenetic correlation matrix; they never override an individual
+discrete or ordinal column's own lambda = 1.
 
 `fit$model_config` gains `lambda_per_trait` (named numeric per latent
 column) and `lambda_block` (a single shared lambda used by the joint/exact
@@ -37,7 +40,46 @@ rather than per-trait values), sourced from `fit_baseline()`'s own
 `lambda_fixed` (a named numeric vector), letting a caller rebuild a
 baseline at previously-estimated per-trait lambda values instead of
 re-running ML estimation -- the mechanism a future predict-time rebuild
-would use.
+would use. Columns not named in `lambda_fixed` default to lambda = 1, on
+both the per-column and the joint MVN / threshold-joint paths.
+
+**Covariate-aware baselines now estimate lambda too.** When
+`data$covariates` is supplied, the per-column covariate path
+(`bm_impute_col_with_cov()`) accepts a numeric lambda or `"estimate"`, so
+`lambda_mode %in% c("estimate", "fixed_1")` reaches it and each
+covariate-aware BM-eligible column gets its own estimated lambda.
+`"cv"` / `"bayes"` are not supported there and fall back to lambda = 1
+for BM-eligible columns, with a warning.
+
+**`joint_solver = "rphylopars"` now runs `model = "lambda"` under
+`lambda_mode = "estimate"`** (previously always `model = "BM"`), letting
+Rphylopars estimate its own shared lambda instead of pigauto's in-house
+per-trait estimator. Measured about 26x slower than `model = "BM"` on the
+lane's benchmark datasets, with occasional explosive tip predictions on
+small or weak-signal data; a plausibility guard (tip predictions more
+than 10x the observed range) falls back to the in-house solver with a
+warning when that happens. The same guard also now fires under
+`lambda_mode = "fixed_1"` (`model = "BM"`), not just under `"estimate"`.
+
+**`cross_validate()`, `compare_methods()`, `simulate_benchmark()`, and
+`multi_impute_trees()` all inherit the new `"estimate"` default**, because
+none of them pass an explicit `lambda_mode` to `fit_pigauto()` /
+`fit_baseline()`. Known gap: `simulate_benchmark()` fits its own baseline
+directly (`fit_baseline(pd, tree, splits = spl)`, always `"estimate"`)
+and then passes it to `fit_pigauto(..., baseline = bl, ...)`; a
+`lambda_mode` supplied through `simulate_benchmark(...)`'s `...` reaches
+`fit_pigauto()` and is recorded in `fit$model_config$lambda_mode`, but
+never reaches the already-fitted `bl`, so the recorded `lambda_mode` can
+disagree with the baseline that was actually used.
+
+**Known limitation.** `suggest_next_observation()` still scores candidate
+observations' expected variance/entropy reduction using the tree's raw
+phylogenetic correlation matrix (`fit$graph$R_phy`, lambda = 1); it does
+not read the fit's own `model_config$lambda_per_trait`. Under the new
+default the imputation baseline itself estimates lambda, so this
+sampling-design helper and the baseline it is meant to complement can now
+disagree on the phylogenetic correlation structure. Not changed in this
+release.
 
 # pigauto 0.11.0
 

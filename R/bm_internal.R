@@ -215,45 +215,45 @@ bm_impute_col <- function(y, R, nugget = 1e-6, lambda = 1.0) {
 # @noRd
 ml_lambda_for_col <- function(y, R, nugget = 1e-6,
                                 lambda_grid = c(0.005, 0.995)) {
+  ml_lambda_and_mu_for_col(y, R, nugget = nugget,
+                            lambda_grid = lambda_grid)$lambda_hat
+}
+
+# ---- ml_lambda_and_mu_for_col -----------------------------------------------
+#
+# Same estimate as ml_lambda_for_col(), but also returns the GLS
+# phylogenetic mean AT that estimated lambda, read off the SAME
+# eigendecomposition cache used to search for lambda_hat
+# (build_pagel_nll_cache()'s $mu_at(), R/pagel_lambda.R) instead of a
+# second O(n_o^3) factorisation of R_oo. A caller that needs both (e.g.
+# the joint baseline's Henderson-centering step in
+# `.mvn_init_per_column()`, R/joint_mvn_solver.R) should call this
+# instead of pairing `ml_lambda_for_col()` with a separate
+# `.mvn_gls_mean_at_lambda()` call (Rose review, 2026-09-23, "SPEED":
+# that pairing did two O(n^3) factorisations per column).
+#
+# Returns list(lambda_hat, mu_hat). mu_hat is NA_real_ whenever the
+# lambda estimate itself falls back to 1 (n_o < 10 or a degenerate
+# cache) -- callers should use their own GLS-mean fallback in that case,
+# same as before this helper existed.
+# @noRd
+ml_lambda_and_mu_for_col <- function(y, R, nugget = 1e-6,
+                                       lambda_grid = c(0.005, 0.995)) {
   obs <- which(!is.na(y))
   n_o <- length(obs)
-  if (n_o < 10L) return(1.0)
+  if (n_o < 10L) return(list(lambda_hat = 1.0, mu_hat = NA_real_))
 
   # v0.11 perf: build the eigendecomp cache ONCE; each NLL evaluation
   # below is O(n_o) instead of O(n_o^3). At n_o = 1500 this drops the
   # 16-evaluation grid + optim loop from ~5 sec to ~0.05 sec.
   # Spec: 2026-05-18-pagel-lambda-eigendecomp-speedup-design.md.
+  #
+  # The grid-then-refine search itself lives in `.pagel_lambda_from_cache()`
+  # (R/pagel_lambda.R) so a caller that already built this column's cache
+  # for another reason (e.g. `.mvn_resolve_lambda()`'s lambda_block search,
+  # R/joint_mvn_solver.R) can reuse it instead of calling this wrapper.
   cache <- build_pagel_nll_cache(y, R, nugget = nugget)
-  nll <- cache$nll
-
-  # Robustness: stats::optimise (golden-section) can get stuck near a
-  # boundary when the NLL has plateau regions or weak curvature. We do a
-  # coarse 11-point grid scan first, then refine via optimise() in a
-  # narrowed bracket around the best grid point. Cost: 11 extra Cholesky
-  # solves per trait, ~10ms at n=500. Buys substantial stability.
-  grid <- seq(lambda_grid[1L], lambda_grid[2L], length.out = 11L)
-  grid_nll <- vapply(grid, nll, numeric(1L))
-  if (!any(is.finite(grid_nll))) return(1.0)
-  best_idx <- which.min(grid_nll)
-  # Narrow bracket around the best grid point (use neighbours).
-  lo <- grid[max(1L, best_idx - 1L)]
-  hi <- grid[min(length(grid), best_idx + 1L)]
-  if (lo == hi) {
-    # Single grid point is best (boundary case); return it.
-    return(grid[best_idx])
-  }
-  opt <- tryCatch(
-    stats::optimise(nll, interval = c(lo, hi), tol = 1e-4),
-    error = function(e) NULL
-  )
-  if (is.null(opt) || !is.finite(opt$minimum)) return(grid[best_idx])
-  # Compare optimise result against grid best; keep whichever is lower.
-  if (opt$objective <= grid_nll[best_idx] + 1e-8) {
-    lambda_hat <- max(0, min(1, opt$minimum))
-  } else {
-    lambda_hat <- grid[best_idx]
-  }
-  lambda_hat
+  .pagel_lambda_from_cache(cache, lambda_grid = lambda_grid)
 }
 
 # ---- bm_impute_col_with_cov -------------------------------------------------

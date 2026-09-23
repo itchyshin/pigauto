@@ -23,8 +23,11 @@ bayes. Score: z-RMSE on the masked cells (log scale for positive skewed traits).
 | AVONET | 2000 | 0.419 | 0.419 | +0.1% |
 | LepTraits | 2000 | 0.893 | 0.901 | +0.9% |
 
-Estimated lambda helps or ties in 12 of 13 cases and is never worse by more than 1%. Discrete accuracy
-(habitat, migration, trophic level, terrestriality, primary lifestyle) is identical under all four modes.
+Estimated lambda helps or ties in 12 of 13 cases and is never worse by more than 1%. Binary and
+categorical accuracy (habitat, trophic level, terrestriality, primary lifestyle) is identical under all
+four modes. The ordinal trait migration moved slightly on AVONET at 2,000 species (0.820 at lambda = 1,
+0.823 otherwise): an ordinal code path was picking up the lambda setting, which the final review found and
+which was fixed after this run, so ordinal traits now stay at lambda = 1 as designed.
 Median fit time under "estimate" is within 0 to 12% of fixed_1; "cv" and "bayes" cost 10 to 50% more for
 little extra gain, which supports "estimate" as the default.
 

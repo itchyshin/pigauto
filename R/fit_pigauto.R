@@ -225,21 +225,29 @@
 #'   species.  See \strong{Calibration at small n} below.
 #' @param lambda_mode character. Pagel-lambda mode for the BM baseline.
 #'   \code{"estimate"} (default) fits a per-trait Pagel's lambda on each
-#'   continuous-family (BM-eligible) latent column; discrete traits
-#'   (binary, categorical, zi gate, and OVR synthetic columns) stay at
-#'   lambda = 1 unless the joint threshold-joint / OVR delegates inherit
-#'   the continuous block's shared \code{lambda_block}.  \code{"fixed_1"}
-#'   preserves the pre-lambda Brownian correlation matrix everywhere;
-#'   \code{"cv"} and \code{"bayes"} are alternative per-column estimators.
-#'   When \code{predict_method = "exact"} or \code{joint_refine_iter > 0},
-#'   the joint (multi-trait) prediction path uses the single shared
-#'   \code{lambda_block}, not the per-trait estimates, because those paths
-#'   need one common phylogenetic correlation matrix across traits. Passed
-#'   to \code{\link{fit_baseline}} and stored in the fitted model config.
-#'   When \code{covariates} are supplied, the covariate-aware BM path has
-#'   no lambda argument and always fits at lambda = 1; a non-\code{"fixed_1"}
-#'   \code{lambda_mode} is then silently ignored for BM-eligible columns
-#'   and \code{fit_baseline} emits a warning.
+#'   continuous-family (BM-eligible) latent column -- continuous, count,
+#'   proportion, and zi_count magnitude, via the joint MVN /
+#'   threshold-joint baseline's own \code{lambda_cols} machinery when that
+#'   joint path fires, or a per-column re-fit otherwise. Discrete traits
+#'   (binary, categorical, zi gate) AND ordinal always stay at lambda = 1
+#'   in every path -- there is no discrete-trait analogue of Pagel's
+#'   lambda. \code{"fixed_1"} preserves the pre-lambda Brownian
+#'   correlation matrix everywhere; \code{"cv"} and \code{"bayes"} are
+#'   alternative per-column estimators that force continuous-family
+#'   columns onto the per-column BM path (no joint analogue). When
+#'   \code{predict_method = "exact"} or \code{joint_refine_iter > 0}, the
+#'   joint (multi-trait) prediction path additionally uses the single
+#'   shared \code{lambda_block} for cross-trait computations that need one
+#'   common phylogenetic correlation matrix, never overriding an
+#'   individual column's own lambda_k or a discrete/ordinal column's
+#'   lambda = 1. Passed to \code{\link{fit_baseline}} and stored in the
+#'   fitted model config. When \code{covariates} are supplied, the
+#'   covariate-aware BM path (\code{bm_impute_col_with_cov()}) accepts a
+#'   numeric lambda or \code{"estimate"}, so \code{lambda_mode \%in\%
+#'   c("estimate", "fixed_1")} reaches it and each covariate-aware
+#'   BM-eligible column gets its own estimated lambda; it does NOT accept
+#'   \code{"cv"} / \code{"bayes"}, which fall back to lambda = 1 for
+#'   BM-eligible columns with a warning from \code{fit_baseline}.
 #' @param joint_solver character. Which solver estimates the joint MVN /
 #'   threshold-joint / OVR categorical baselines. \code{"inhouse"}
 #'   (default) is byte-identical to prior releases; \code{"rphylopars"}
@@ -694,7 +702,7 @@ fit_pigauto <- function(
       lambda_mode            = lambda_mode,
       # gnn = FALSE production predictions use baseline_full (splits = NULL);
       # fall back to baseline if baseline_full wasn't computed for some
-      # reason. NULL until S4 adds these to fit_baseline()'s return value.
+      # reason. NULL only for baselines built before this field existed.
       lambda_per_trait       = baseline_full$lambda_per_trait %||%
         baseline$lambda_per_trait %||% NULL,
       lambda_block           = baseline_full$lambda_block %||%
@@ -1457,8 +1465,8 @@ fit_pigauto <- function(
     n_trait_heads          = as.integer(n_trait_heads),
     trait_embed_dim        = as.integer(trait_embed_dim),
     lambda_mode            = lambda_mode,
-    # S4 (R/fit_baseline.R) adds these to the baseline object; NULL until
-    # then. GNN-on fits always use object$baseline for prediction (see
+    # fit_baseline() returns these (NULL only for baselines built before the
+    # lambda fields existed). GNN-on fits always use object$baseline for prediction (see
     # predict.pigauto_fit), so these come from `baseline`, not
     # `baseline_full`.
     lambda_per_trait       = baseline$lambda_per_trait %||% NULL,

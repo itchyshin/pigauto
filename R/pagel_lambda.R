@@ -167,6 +167,14 @@ cv_lambda_for_col <- function(y, R, nugget = 1e-6,
 #
 # Returns a list with:
 #   $nll(lambda)  -- closure that evaluates NLL at any lambda in [0, 1]
+#   $mu_at(lambda) -- closure returning the GLS phylogenetic mean at that
+#                     lambda (intercept-only branch only; reuses the same
+#                     eigenbasis as $nll, so a caller that needs both the
+#                     ML lambda and its GLS mean -- e.g. the joint
+#                     baseline's Henderson-centering step -- does not pay
+#                     for a second O(n_o^3) factorisation of R_oo. See
+#                     `ml_lambda_and_mu_for_col()` in R/bm_internal.R.
+#                     NULL on the X-aware branch (no scalar mean there).
 #   $n_o          -- number of observed cells (for callers that need it)
 # @noRd
 build_pagel_nll_cache <- function(y, R, nugget = 1e-6, X = NULL) {
@@ -177,6 +185,7 @@ build_pagel_nll_cache <- function(y, R, nugget = 1e-6, X = NULL) {
     # so optimisers correctly back off.
     return(list(
       nll = function(lambda) .Machine$double.xmax,
+      mu_at = function(lambda) NA_real_,
       n_o = n_o
     ))
   }
@@ -214,7 +223,15 @@ build_pagel_nll_cache <- function(y, R, nugget = 1e-6, X = NULL) {
       log_det <- sum(log(d))
       0.5 * ((n_o - 1L) * log(sigma2) + log_det)
     }
-    return(list(nll = nll_at, n_o = n_o))
+    mu_at <- function(lambda) {
+      d <- lambda * evals + (1 - lambda) + nugget
+      if (any(d <= 0)) return(NA_real_)
+      inv_d <- 1 / d
+      sum_a <- sum(c_1 * c_1 * inv_d)
+      sum_b <- sum(c_1 * c_y * inv_d)
+      sum_b / sum_a
+    }
+    return(list(nll = nll_at, mu_at = mu_at, n_o = n_o))
   }
 
   # X-aware branch: same eigenbasis, but profile a p-column GLS regression
@@ -247,7 +264,52 @@ build_pagel_nll_cache <- function(y, R, nugget = 1e-6, X = NULL) {
     # here rather than introducing an asymmetric correction.
     0.5 * ((n_o - p_x) * log(sigma2) + log_det)
   }
-  list(nll = nll_at_x, n_o = n_o)
+  list(nll = nll_at_x, mu_at = NULL, n_o = n_o)
+}
+
+# ---- .pagel_lambda_from_cache -----------------------------------------------
+#
+# Grid-then-refine ML search over lambda in [0, 1], given an
+# ALREADY-BUILT NLL cache (build_pagel_nll_cache()). Factored out of
+# `ml_lambda_and_mu_for_col()` (R/bm_internal.R) so a caller that has
+# already built the cache for another reason (e.g.
+# `.mvn_resolve_lambda()`'s lambda_block search over the same columns,
+# R/joint_mvn_solver.R) can reuse it for the per-column estimate too,
+# instead of paying for a second O(n_o^3) eigendecomposition of the
+# same R_oo (Rose review, 2026-09-23, "SPEED").
+#
+# Returns list(lambda_hat, mu_hat). mu_hat is NA_real_ when
+# `cache$mu_at` is NULL (the X-aware cache branch has no scalar mean)
+# or the cache is degenerate (its $nll is always +Inf).
+# @noRd
+.pagel_lambda_from_cache <- function(cache, lambda_grid = c(0.005, 0.995)) {
+  nll   <- cache$nll
+  mu_at <- cache$mu_at
+  grid <- seq(lambda_grid[1L], lambda_grid[2L], length.out = 11L)
+  grid_nll <- vapply(grid, nll, numeric(1L))
+  if (!any(is.finite(grid_nll))) {
+    return(list(lambda_hat = 1.0, mu_hat = NA_real_))
+  }
+  best_idx <- which.min(grid_nll)
+  lo <- grid[max(1L, best_idx - 1L)]
+  hi <- grid[min(length(grid), best_idx + 1L)]
+  if (lo == hi) {
+    lambda_hat <- grid[best_idx]
+  } else {
+    opt <- tryCatch(
+      stats::optimise(nll, interval = c(lo, hi), tol = 1e-4),
+      error = function(e) NULL
+    )
+    if (is.null(opt) || !is.finite(opt$minimum)) {
+      lambda_hat <- grid[best_idx]
+    } else if (opt$objective <= grid_nll[best_idx] + 1e-8) {
+      lambda_hat <- max(0, min(1, opt$minimum))
+    } else {
+      lambda_hat <- grid[best_idx]
+    }
+  }
+  list(lambda_hat = lambda_hat,
+       mu_hat = if (is.null(mu_at)) NA_real_ else mu_at(lambda_hat))
 }
 
 # Scale internal edges of a phylo tree by lambda, with compensation

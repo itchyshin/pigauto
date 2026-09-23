@@ -17,8 +17,9 @@ Paired against the committed run on the same 20 seeds (aggregated with the same 
 | gnn_on | c1 | 1.009 | 0.953 | -0.056 |
 | gnn_on | prp | 1.004 | 0.957 | -0.047 |
 
-Binary and categorical accuracy: delta 0 in every arm (the discrete path is unchanged by design).
-Ordinal accuracy moves by at most 0.004 in the in-house arms. Conformal coverage for c1 and c2 stays in
+Binary and categorical accuracy: delta 0 in every arm. Ordinal accuracy moved by up to 0.004 in the
+in-house arms because one ordinal code path used the lambda setting; the final review found this and it
+was fixed, so ordinal traits now stay at lambda = 1. Conformal coverage for c1 and c2 stays in
 0.95 to 0.97.
 
 Runtime decision: 221 s per job projects the full 3,600-job core run to about 9 h at 36 parallel, over the

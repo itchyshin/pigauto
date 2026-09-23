@@ -126,7 +126,13 @@ fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL,
   # covers it. lambda_fixed, when supplied, takes priority over lambda_mode
   # entirely (predict-time rebuild).
   lambda_arg <- if (!is.null(lambda_fixed)) {
-    unname(lambda_fixed[colnames(L_in)])
+    # Columns missing from `lambda_fixed` default to lambda = 1, per the
+    # documented contract on `fit_baseline()`'s `lambda_fixed` argument
+    # (Rose review, 2026-09-23: this used to leave those entries NA and
+    # error downstream instead of defaulting to 1).
+    la <- unname(lambda_fixed[colnames(L_in)])
+    la[is.na(la)] <- 1.0
+    la
   } else if (identical(lambda_mode, "estimate")) {
     "estimate"
   } else {
