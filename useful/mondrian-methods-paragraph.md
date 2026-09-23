@@ -38,7 +38,7 @@ background), empirical coverage of the nominal 95% interval fell to 0.923 at n =
 not diminish with sample size (`docs/dev-log/2026-08-16-mechanism-coverage-results.md`).
 
 To restore the condition where it fails, pigauto offers a locality-stratified variant
-(`conformal_method = "mondrian"`; Vovk 2012; Boström et al. 2021). For each validation cell a
+(`conformal_method = "mondrian"`; Vovk 2012; Boström & Johansson 2020). For each validation cell a
 locality statistic is computed as the mean cophenetic distance from its species to the five nearest
 species with an observed value for that trait. Validation cells are split at the median locality
 into a near and a far stratum, and a separate conformal quantile is computed within each stratum at
