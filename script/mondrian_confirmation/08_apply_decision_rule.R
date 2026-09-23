@@ -1,20 +1,29 @@
 #!/usr/bin/env Rscript
 # Usage:
-#   Rscript 08_apply_decision_rule.R script/mondrian_confirmation/returned NEWS.md
+#   Rscript 08_apply_decision_rule.R script/mondrian_confirmation/results_table.csv NEWS.md
+#   Rscript 08_apply_decision_rule.R script/mondrian_confirmation/returned NEWS.md   (back-compat)
 #   Rscript 08_apply_decision_rule.R --selftest
 #
 # Implements the pre-registered decision rule verbatim from
 # docs/dev-log/mondrian-realdata/00-preregistration.md "Decision rule for the
-# default". Reads per-dataset summary .rds files (each the output of
-# 02_summarise_masked_confirmation.R, i.e. list(stratum = data.frame(...))
-# with columns method/trait/stratum/n_test/coverage/median_half_width/fallback,
-# arm carried in the file name or an `arm` column) from `returned/`, applies
-# the three conditions with Holm adjustment across datasets for condition 2's
-# one-sided test, and prints RULE_VERDICT=KEEP_SPLIT or FLIP_MONDRIAN. It then
-# checks whether NEWS.md already records that verdict in a line mentioning
-# "mondrian" and prints NEWS_MATCHES=TRUE/FALSE.
+# default". Primary input is results_table.csv, as written by
+# 12_build_results_doc.R (one row per dataset x arm x trait x stratum,
+# already pooled across masks; columns include coverage_mondrian,
+# coverage_split, coverage_gain, width_ratio, n_test_mondrian, n_test_split,
+# fallback, and, per Amendment 2, cond1_eligible). If given a directory
+# instead, it falls back to scanning per-dataset summary .rds files there
+# (each the output of 02_summarise_masked_confirmation.R) via
+# build_long_table() -- kept for scripts still invoking the old signature;
+# that path has no cond1_eligible column and so applies no Amendment 2
+# filter. Applies the three conditions with Holm adjustment across datasets
+# for condition 2's one-sided test, and prints RULE_VERDICT=KEEP_SPLIT or
+# FLIP_MONDRIAN. It then checks whether NEWS.md already records that verdict
+# in a line mentioning "mondrian" and prints NEWS_MATCHES=TRUE/FALSE.
 #
 # Traits whose mondrian fit fell back count as NO EVIDENCE, never a pass.
+# Amendment 2 (2026-09-23): condition 1 (structured arm, far stratum) is
+# further restricted to traits with real missing fraction >= 5%
+# (cond1_eligible in results_table.csv, computed by 12_build_results_doc.R).
 
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
@@ -60,8 +69,14 @@ apply_decision_rule <- function(long) {
   active <- long[!isTRUE_vec(long$fallback), , drop = FALSE]
   if (!nrow(active)) return(list(verdict = "KEEP_SPLIT", detail = "no activated trait"))
 
-  # Condition 1: structured arm, far stratum.
+  # Condition 1: structured arm, far stratum, Amendment 2's
+  # cond1_eligible traits only (real missing fraction >= 5%) when that
+  # column is present (results_table.csv route; absent on the back-compat
+  # directory route, which applies no Amendment 2 filter).
   far_struct <- active[active$arm == "structured" & active$stratum == "far", , drop = FALSE]
+  if (!is.null(far_struct$cond1_eligible)) {
+    far_struct <- far_struct[isTRUE_vec(far_struct$cond1_eligible), , drop = FALSE]
+  }
   cond1 <- if (!nrow(far_struct)) FALSE else {
     gain <- stats::median(far_struct$coverage_gain)
     gain >= 0 && all(far_struct$coverage_mondrian >= 0.90)
@@ -153,20 +168,30 @@ if (identical(Sys.getenv("PIGAUTO_08_SOURCE_ONLY"), "")) {
   if (length(args) == 1L && identical(args[[1L]], "--selftest")) {
     selftest()
   } else if (length(args) == 2L) {
-    returned_dir <- args[[1L]]
+    input_path <- args[[1L]]
     news_path <- args[[2L]]
-    files <- list.files(returned_dir, pattern = "\\.rds$", full.names = TRUE)
-    if (!length(files)) stop("no .rds files found in ", returned_dir, call. = FALSE)
-    returned <- stats::setNames(lapply(files, readRDS), tools::file_path_sans_ext(basename(files)))
-    for (nm in names(returned)) {
-      if (is.null(returned[[nm]]$dataset)) returned[[nm]]$dataset <- nm
+    if (dir.exists(input_path)) {
+      # Back-compat: a directory of per-dataset summary .rds files.
+      files <- list.files(input_path, pattern = "\\.rds$", full.names = TRUE)
+      if (!length(files)) stop("no .rds files found in ", input_path, call. = FALSE)
+      returned <- stats::setNames(lapply(files, readRDS), tools::file_path_sans_ext(basename(files)))
+      for (nm in names(returned)) {
+        if (is.null(returned[[nm]]$dataset)) returned[[nm]]$dataset <- nm
+      }
+      long <- build_long_table(returned)
+    } else {
+      if (!file.exists(input_path)) stop("no such file or directory: ", input_path, call. = FALSE)
+      long <- utils::read.csv(input_path, stringsAsFactors = FALSE)
+      if (nrow(long)) {
+        long$fallback <- as.logical(long$fallback)
+        if (!is.null(long$cond1_eligible)) long$cond1_eligible <- as.logical(long$cond1_eligible)
+      }
     }
-    long <- build_long_table(returned)
-    if (is.null(long) || !nrow(long)) stop("no paired evidence found across returned receipts", call. = FALSE)
+    if (is.null(long) || !nrow(long)) stop("no paired evidence found in ", input_path, call. = FALSE)
     res <- apply_decision_rule(long)
     cat(sprintf("RULE_VERDICT=%s\n", res$verdict))
     cat(sprintf("NEWS_MATCHES=%s\n", news_matches(news_path, res$verdict)))
   } else {
-    stop("expected: returned_dir NEWS.md   OR   --selftest", call. = FALSE)
+    stop("expected: results_table.csv NEWS.md   OR   returned_dir NEWS.md   OR   --selftest", call. = FALSE)
   }
 }
