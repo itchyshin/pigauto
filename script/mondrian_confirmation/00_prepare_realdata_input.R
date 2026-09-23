@@ -4,17 +4,20 @@
 # Usage:
 #   Rscript 00_prepare_realdata_input.R pantheria output.rds cache_dir [n_subset]
 #   Rscript 00_prepare_realdata_input.R fishbase   output.rds cache_dir [n_subset]
+#   Rscript 00_prepare_realdata_input.R avonet     output.rds cache_dir [n_subset]
 #
 # The output deliberately contains native missing values, but the runner masks
 # only originally observed values and retains that mask as its ground-truth
-# receipt.  `cache_dir` must already contain the downloaded source data; this
-# script never silently substitutes a synthetic tree or data set.
+# receipt.  `cache_dir` must already contain the downloaded source data for
+# pantheria/fishbase; this script never silently substitutes a synthetic tree
+# or data set. `avonet` needs no cache_dir (bundled with pigauto) -- the
+# argument is accepted and ignored for a uniform CLI.
 
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 3L || length(args) > 4L) {
   stop("expected: dataset output.rds cache_dir [n_subset]", call. = FALSE)
 }
-dataset <- match.arg(args[[1L]], c("pantheria", "fishbase"))
+dataset <- match.arg(args[[1L]], c("pantheria", "fishbase", "avonet"))
 out_file <- args[[2L]]
 cache_dir <- args[[3L]]
 n_subset <- if (length(args) == 4L) as.integer(args[[4L]]) else NA_integer_
@@ -121,7 +124,22 @@ prepare_fishbase <- function() {
   align_input(out, tree, "FishBase")
 }
 
-prepared <- if (identical(dataset, "pantheria")) prepare_pantheria() else prepare_fishbase()
+prepare_avonet <- function() {
+  e <- new.env(parent = emptyenv())
+  utils::data("avonet_full", package = "pigauto", envir = e)
+  utils::data("tree_full",   package = "pigauto", envir = e)
+  df   <- e$avonet_full
+  tree <- e$tree_full
+  rownames(df) <- df$Species_Key
+  df$Species_Key <- NULL
+  align_input(df, tree, "AVONET")
+}
+
+prepared <- switch(dataset,
+  pantheria = prepare_pantheria(),
+  fishbase  = prepare_fishbase(),
+  avonet    = prepare_avonet()
+)
 if (!is.na(n_subset) && n_subset < nrow(prepared$data)) {
   set.seed(20260818L)
   keep <- sort(sample(rownames(prepared$data), n_subset))
