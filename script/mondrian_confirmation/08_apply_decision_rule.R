@@ -77,15 +77,20 @@ apply_decision_rule <- function(long) {
   if (!is.null(far_struct$cond1_eligible)) {
     far_struct <- far_struct[isTRUE_vec(far_struct$cond1_eligible), , drop = FALSE]
   }
-  cond1 <- if (!nrow(far_struct)) FALSE else {
-    gain <- stats::median(far_struct$coverage_gain)
-    gain >= 0 && all(far_struct$coverage_mondrian >= 0.90)
-  }
+  # Pre-registration: conditions hold "on every dataset", so conditions 1
+  # and 3 are evaluated per dataset and all must pass (review audit
+  # 2026-09-23: an earlier version pooled across datasets).
+  cond1_by_ds <- if (!nrow(far_struct)) logical(0) else
+    vapply(split(far_struct, far_struct$dataset), function(g)
+      stats::median(g$coverage_gain) >= 0 && all(g$coverage_mondrian >= 0.90),
+      logical(1))
+  cond1 <- length(cond1_by_ds) > 0 && all(cond1_by_ds)
 
   # Condition 2: structured + MCAR arms, near stratum, non-inferiority,
   # Holm-adjusted across datasets on the pooled paired cells per dataset.
+  # Fails closed: no near-stratum evidence is not a pass.
   near <- active[active$stratum == "near", , drop = FALSE]
-  cond2 <- TRUE
+  cond2 <- FALSE
   if (nrow(near)) {
     per_dataset <- split(near, near$dataset)
     pvals <- vapply(per_dataset, function(g) {
@@ -102,14 +107,28 @@ apply_decision_rule <- function(long) {
     }
   }
 
-  # Condition 3: near stratum, paired half-width ratio.
-  cond3 <- if (!nrow(near)) FALSE else stats::median(near$width_ratio) <= 1.10
+  # Condition 3: near stratum, paired half-width ratio, per dataset.
+  cond3_by_ds <- if (!nrow(near)) logical(0) else
+    vapply(split(near, near$dataset), function(g)
+      stats::median(g$width_ratio) <= 1.10, logical(1))
+  cond3 <- length(cond3_by_ds) > 0 && all(cond3_by_ds)
 
-  pass <- isTRUE(cond1) && isTRUE(cond2) && isTRUE(cond3)
+  # Completeness gate: every row must carry its pre-registered mask count
+  # (Amendment 1: PanTHERIA 3, AVONET 3, FishBase 1), or no flip.
+  expected_masks <- c(pantheria = 3L, avonet = 3L, fishbase = 1L)
+  complete <- TRUE
+  if (!is.null(active$n_masks)) {
+    exp_n <- expected_masks[as.character(active$dataset)]
+    complete <- all(is.na(exp_n) | active$n_masks >= exp_n)
+  }
+
+  pass <- isTRUE(cond1) && isTRUE(cond2) && isTRUE(cond3) && isTRUE(complete)
   list(
     verdict = if (pass) "FLIP_MONDRIAN" else "KEEP_SPLIT",
-    detail = list(cond1_far_coverage = cond1, cond2_near_noninferior = cond2,
-                  cond3_near_width = cond3)
+    detail = list(cond1_far_coverage = cond1, cond1_by_dataset = cond1_by_ds,
+                  cond2_near_noninferior = cond2,
+                  cond3_near_width = cond3, cond3_by_dataset = cond3_by_ds,
+                  masks_complete = complete)
   )
 }
 
@@ -190,6 +209,10 @@ if (identical(Sys.getenv("PIGAUTO_08_SOURCE_ONLY"), "")) {
     if (is.null(long) || !nrow(long)) stop("no paired evidence found in ", input_path, call. = FALSE)
     res <- apply_decision_rule(long)
     cat(sprintf("RULE_VERDICT=%s\n", res$verdict))
+    if (is.list(res$detail)) for (k in names(res$detail)) {
+      v <- res$detail[[k]]
+      cat(sprintf("  %s: %s\n", k, paste(names(v), v, sep = if (is.null(names(v))) "" else "=", collapse = " ")))
+    }
     cat(sprintf("NEWS_MATCHES=%s\n", news_matches(news_path, res$verdict)))
   } else {
     stop("expected: results_table.csv NEWS.md   OR   returned_dir NEWS.md   OR   --selftest", call. = FALSE)
