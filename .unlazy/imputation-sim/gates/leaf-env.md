@@ -1,5 +1,7 @@
 # Gates: environments (Mac, Totoro, nibi)
 
+WORKTREE: /Users/z3437171/Dropbox/Github Local/pigauto-imputation-sim
+
 OWNS: (no repo files; R libraries on three hosts)
 
 Scope: pigauto 0.11 (gnn argument) plus castor, Rphylopars, BACE, MCMCglmm, missForest, phylolm, torch installed and smoke-proven on Mac, Totoro and nibi.

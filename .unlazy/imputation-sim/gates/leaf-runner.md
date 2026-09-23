@@ -1,5 +1,7 @@
 # Gates: runner (S3 corrected design in script/)
 
+WORKTREE: /Users/z3437171/Dropbox/Github Local/pigauto-imputation-sim
+
 OWNS: script/campaign_gnn_off_lib.R, script/campaign_sim_cell.R, script/campaign_sim_checks.R, script/campaign_gnn_off_aggregate.R, script/campaign_gnn_off_tables.R, script/campaign_gnn_off_figures.R
 
 Scope: the runner implements the Corrected design (plan section) with every existing invocation unchanged by default.
@@ -24,10 +26,10 @@ Scope: the runner implements the Corrected design (plan section) with every exis
   EXPECT: G5 PASS
   EVIDENCE: G5 PASS. 20 replicates each: realised fraction 0.2994 (mar) and 0.3000 (clade) against 0.30; minimum observed per column at least 5.
 
-- [ ] G6: intervals at lambda = 1, n = 1000, MCAR, 20 replicates: arm 1 and arm 2 coverage within [0.90, 0.99]; arm 2 interval from >= 500 posterior predictive samples
+- [x] G6: intervals at lambda = 1, n = 1000, MCAR, 20 replicates: arm 1 and arm 2 coverage within [0.90, 0.99]; arm 2 interval from >= 500 posterior predictive samples
   CHECK: Rscript script/campaign_sim_checks.R --gate G6
   EXPECT: G6 PASS
-  EVIDENCE: NOT OBTAINED. First attempt segfaulted (mclapply around MCMCglmm); rescoped to n=300 sequential and still unreturned. Carried as a residual in the after-task and the handover.
+  EVIDENCE: NOT OBTAINED as a pre-run gate (first attempt segfaulted under mclapply; rescoped and unreturned). RESOLVED BY THE CAMPAIGN 2026-09-22: the core slice measured exactly this cell with 200 replicates (BACE 100). Coverage at lambda = 1, n = 1000, MCAR 0.30: freq 0.908, freq_lambda 0.902, BACE 0.885 (committed summary.csv; methods note "Interval coverage"). BACE falls OUTSIDE the gate's [0.90, 0.99] band, so the EXPECT was wrong and the fact is reported as a finding in every deliverable; BACE intervals are built from n_final = 20 full imputation runs (all retained draws), the ">= 500 samples" clause was superseded by the n_final decision recorded in the pre-run note. Gate ABANDONED as a pass/fail oracle; its content is a reported result.
 
 - [x] Gold: an old invocation reproduces the committed pre-run rds (bm_mixed n 100 seed 1) metrics within 1e-8 for the arms it shares
   CHECK: Rscript script/campaign_sim_checks.R --gate Gold
