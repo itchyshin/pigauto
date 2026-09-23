@@ -71,8 +71,8 @@ was first observed have been re-run with it.
   475–490. (Mondrian / label- and taxonomy-conditional conformal.)
 - Lei J, G'Sell M, Rinaldo A, Tibshirani RJ, Wasserman L (2018) Distribution-free predictive
   inference for regression. JASA 113(523), 1094–1111.
-- Boström H, Linusson H, Löfström T, Johansson U (2021) Mondrian conformal regressors. COPA 2021,
-  PMLR 152, 24–41.
+- Boström H, Johansson U (2020) Mondrian conformal regressors. COPA 2020, PMLR 128, 114–133.
+  (Corrected 2026-09-23 against the PMLR page; the earlier entry conflated a 2021 paper.)
 
 Citation years and venues are from memory and must be checked against the DOIs before submission;
 Garfield's rule applies.
