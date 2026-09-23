@@ -233,8 +233,10 @@ Same-class sweeps after each defect found:
 - The results board has not been looked at by the agent: the in-app browser is not signed in and
   signing in is out of bounds. Its script parses and every referenced element exists; layout and
   rendering are unverified until Shinichi opens it.
-- G13c (Shinichi has read the board and recorded the six publication decisions) is open; the pkgdown
-  article stays unpublished until it is closed.
+- G13c closed 2026-09-23: frequentist stack reported both ways with the gap as a finding; the discrete-trait
+  result leads the BACE paper with the failure rate and convergence verdict beside it; the article stays
+  unlisted until Szymek signs off on the corrected Pagel-lambda form; PR #184 stays a draft until Shinichi has
+  read the board in full.
 - pigauto `gnn_on` errors on a monomorphic one-hot at lambda = 1 (160 factorial and 77 core replicates,
   floored). A package defect, out of scope here, with a test file already on the main checkout's dirty tree.
 - Rphylopars at `model = "lambda"` fails with a type error after a singular solve in one OU cell (51

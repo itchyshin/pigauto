@@ -90,7 +90,9 @@ after-task finalised). Remaining:
    another user's 930 GB process), G10 and G11 PASS, both stages re-aggregated, csv rebuilt, article
    re-rendered, board republished, PR #184 body refreshed. Keepers: nibi `results/core` and `results/factorial`
    hold every BACE rds including the three hand-assembled failure records.
-2. Wait for Shinichi: read the board, record the six decisions (G13c), decide article visibility and merge.
+2. DONE 2026-09-23: decisions recorded (G13c; ledger ALL MET, 26 of 26). Remaining human steps only: Shinichi
+   reads the board in full, then says whether #184 goes ready for review; Szymek signs off on the corrected
+   Pagel-lambda form, then the article goes public.
 3. Then run `closeout.py check` from the worktree (it passes only once G13c is closed) and the
    `handoff_gate.sh`; commit.
 
