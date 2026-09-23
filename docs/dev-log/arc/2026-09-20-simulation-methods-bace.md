@@ -351,7 +351,11 @@ message, and the rate barely improves with sample size. One core replicate (Brow
 lambda = 0.7, rho = 0.5, n = 300, seed 55) went further and crashed the R process inside MCMCglmm, a
 segmentation fault reproduced on two separate submissions with 48 GB of memory. A crash leaves no
 record for the runner to floor, so its record was written by hand from the runner's own floor arm on
-the same seed and is labelled as such inside the file; it counts as one BACE failure among the 600.
+the same seed and is labelled as such inside the file. Two more replicates in the neighbouring n = 100
+cell (seeds 38 and 51) never returned: BACE ran past a 4-hour limit on two attempts where the cell's
+other seeds finish in a median 22 minutes. They are treated the same way. Three of the 600 core BACE
+replicates therefore carry hand-assembled failure records, all in the lambda = 0.7, rho = 0.5 cells,
+and all counted as failures.
 
 Convergence is a separate matter from failure, and it was promised above as a reported rate. Every fit
 from the runner of 2026-09-20 onward stores BACE's own `assess_convergence()` verdict over its five
