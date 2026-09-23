@@ -66,3 +66,14 @@ default stays `"split"` and the fallback message names the realised stratum size
 It cannot establish an unconditional 95% guarantee. Coverage on masked observed cells
 is a proxy for coverage on the cells users impute, and the structured arm is a better
 proxy than the random arm, not the real thing.
+
+## Amendment 1 (2026-09-23, before any campaign receipt)
+
+AVONET is almost fully observed (at most 20 missing cells per trait in the 9,993-species
+bundle), so the structured arm has no real missingness pattern to fit a propensity to.
+AVONET therefore runs the MCAR arm only, as a no-harm control, on the same 1,500-species
+subset the committed bench used (`set.seed(2026); sample(rownames, 1500)`). The
+decision rule's condition 1 (structured arm, far stratum) is evaluated on PanTHERIA, and
+on FishBase if it runs; condition 2 (near-stratum non-inferiority) and condition 3 (near
+width ratio) use every arm that exists. Campaign receipts: PanTHERIA 2 arms x 3 masks x
+2 methods = 12; AVONET 1 arm x 3 masks x 2 methods = 6; total 18 before FishBase.
