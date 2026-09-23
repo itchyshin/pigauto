@@ -50,7 +50,20 @@ stays pigauto's default. Standing constraints: never edit `R/`, `BACE/`, PR #175
 
 ## Landing State
 
-`handoff_gate.sh` run 2026-09-22 14:35: PR #184 OPEN; branch current; acceptance ledger 25 of 26 gates met after the tails landed on 2026-09-23 (G10, G11 PASS); the one open gate is
+Validators at close (2026-09-23 02:25), quoted rather than summarised:
+
+- `gate-check.mjs --status` over the five leaves: **"UNMET: 1 (met: 25, 6 never executed)"**, the one being
+  `leaf-results:G13c` (Shinichi's six publication decisions). The "6 never executed" are the evidence-only gates
+  (G0, G6c, G6d, G9c, Galign, G13c) plus checks whose CHECK exceeds the checker's 120 s cap (G11, 39k rds) and were
+  run directly; their evidence lines say so.
+- `handoff_gate.sh`: **"GATE FAIL -- 5 acceptance ledger(s) have UNMET gates"**. It counts the never-executed
+  gates above as unmet and G13c is genuinely open, so this is the expected reading until Shinichi records his
+  decisions; every unlanded item is declared in the table below.
+- `closeout.py check`: structure PASS ("after-task structure check passed"); its acceptance-ledger stage halts on
+  unmet gates in *other* projects' ledgers under the vault's `.unlazy/` (book-format, brain-campaign) and on
+  G13c here. Not this arc's to fix.
+
+`handoff_gate.sh` first run 2026-09-22 14:35: PR #184 OPEN; branch current; acceptance ledger 25 of 26 gates met after the tails landed on 2026-09-23 (G10, G11 PASS); the one open gate is
 G13c (Shinichi's six publication decisions). G6 and G9b were resolved by the campaign's
 own measurements and are marked so in the ledger. Two unrelated branches (`shannon-install`, `spec/vulcan-gpu-avonet9993`)
 carry unpushed commits from other lanes and are not this arc's.
