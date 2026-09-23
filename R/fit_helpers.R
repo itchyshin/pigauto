@@ -911,6 +911,8 @@ compute_conformal_scores <- function(
       near_score <- global_score
       far_score  <- global_score
       threshold  <- NA_real_
+      n_near <- NA_integer_
+      n_far  <- NA_integer_
 
       if (!fallback) {
         locality <- mondrian_locality(D_sq, obs_idx, species_idx,
@@ -951,13 +953,27 @@ compute_conformal_scores <- function(
         near_score <- global_score
         far_score  <- global_score
         threshold  <- NA_real_
+        n_near <- NA_integer_
+        n_far  <- NA_integer_
+      }
+
+      if (verbose && fallback) {
+        message(sprintf(
+          "Mondrian conformal fallback for trait '%s': n_near=%s, n_far=%s (floor 19)",
+          tm$name,
+          if (is.na(n_near)) "NA" else n_near,
+          if (is.na(n_far)) "NA" else n_far
+        ))
       }
 
       mondrian_info[[tm$name]] <- list(
         near_score = near_score,
         far_score  = far_score,
         threshold  = threshold,
-        fallback   = fallback
+        fallback   = fallback,
+        n_val      = n_val,
+        n_near     = n_near,
+        n_far      = n_far
       )
     }
   }
