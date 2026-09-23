@@ -288,10 +288,8 @@ At n = 300 in the simulation above this fallback fired for every trait and the v
 changed nothing; the remedy at that size is more held-out data rather than
 stratification. The stratified variant is currently limited to single-observation data,
 because its locality is defined per species, and to traits that receive conformal
-intervals at all. It has been evaluated on simulated missingness mechanisms only; the
-default stays the unstratified split quantile pending confirmation on real trait
-databases, and we make no claim here about its performance on real data because that
-study has not yet been run.
+intervals at all. The default remains the unstratified split quantile; Section 8.3
+reports the real-data confirmation and why.
 
 ### 8.2 Supplementary Table S-UQ1: mechanism-coverage simulation
 
@@ -330,8 +328,43 @@ coverage is unchanged by construction.
 
 ### 8.3 Real-data confirmation
 
-Real-data confirmation (PanTHERIA, AVONET, FishBase) under a pre-registered two-arm
-design: results pending; see `docs/dev-log/mondrian-realdata/00-preregistration.md`.
+Masking originally observed cells gives true values to score against. We did this on
+three trait databases under a pre-registered design
+(`docs/dev-log/mondrian-realdata/00-preregistration.md`). Two mask arms were used. A
+random mask of 20% of observed cells makes test cells exchangeable with the validation
+cells, so split conformal is valid there by construction; it served as a no-harm
+control. A structured mask drew the same 20% with probability proportional to a
+propensity for real missingness, fitted per trait on phylogenetic eigenvectors, so that
+test cells sit where genuinely missing cells sit. PanTHERIA (4,027 mammals) ran both
+arms with three masks each; AVONET (1,500 birds) is almost completely observed and ran
+the random arm only; FishBase (10,484 fishes) ran the structured arm with one mask.
+Mondrian activated for every continuous trait in all three databases.
+
+**Table S-UQ2.** Coverage of nominal 95% intervals, pooled over traits (weighted by test
+cells) and masks, by the stratum of each test cell.
+
+| database | mask arm | stratum | split | Mondrian | median width ratio (Mondrian / split) |
+|---|---|---|---:|---:|---:|
+| PanTHERIA | structured | far | 0.919 | 0.940 | 1.18 |
+| PanTHERIA | structured | near | 0.974 | 0.958 | 0.84 |
+| PanTHERIA | random | far | 0.931 | 0.957 | 1.23 |
+| PanTHERIA | random | near | 0.978 | 0.968 | 0.83 |
+| FishBase | structured | far | 0.930 | 0.949 | 1.14 |
+| FishBase | structured | near | 0.966 | 0.950 | 0.78 |
+| AVONET | random | far | 0.929 | 0.964 | 1.67 |
+| AVONET | random | near | 0.984 | 0.961 | 0.81 |
+
+The split quantile undercovers in the far stratum and overcovers in the near stratum in
+every database, including under the random mask. Mondrian moves both towards nominal:
+far-stratum coverage rises to 0.94-0.96 at the cost of wider intervals there, and
+near-stratum intervals narrow by about a fifth while their coverage stays at or above
+0.95. Our pre-registered rule for changing the default also required that Mondrian's
+near-stratum coverage fall no more than two percentage points below split's. That
+condition was not met for AVONET and FishBase, where removing split's over-coverage
+lowered near coverage by more than that margin, so the default remains split. We report
+Mondrian as the recommended option when missing species are concentrated in poorly
+sampled clades. Per-trait results, uncertainty and the decision script are in the
+repository.
 
 ### References
 
