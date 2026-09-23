@@ -100,6 +100,10 @@ Gates (`script/campaign_sim_checks.R`, evidence in `.unlazy/imputation-sim/gates
 - G6 (pre-run interval gate) was never obtained in the pre-run and is resolved by the campaign: at
   lambda = 1, n = 1000, MCAR, BACE's coverage is 0.885, outside the gate's [0.90, 0.99] band; reported as a
   finding, the gate abandoned as an oracle.
+- One core BACE replicate (BM, lambda 0.7, rho 0.5, n = 300, seed 55) segfaults the R process inside
+  MCMCglmm deterministically (twice, 48 GB). Its failed-arm record was written by hand from the runner's own
+  floor arm on the same seed and labelled as such inside the file (`errors$bace`, `note`); it counts as one
+  BACE failure among 600 and is disclosed in the methods note.
 - G9b (BACE convergence) is resolved the same way: runs = 5 adopted from the probe, every fit stores BACE's
   verdict, and the convergence rate is reported as a result (see the methods note).
 - G13a superlatives: grep over the methods note and the article, 0 hits, PASS.
