@@ -143,3 +143,31 @@ test_that("[draws] errors clearly on a malformed fit_or_result", {
   expect_error(draw_conditional_bm(list(foo = 1), m = 3L),
               "must expose \\$data")
 })
+
+test_that(".dcb_sigma_em equals the closed form on complete data", {
+  skip_if_not_installed("ape")
+  set.seed(11); n <- 60; tree <- ape::rtree(n)
+  R <- stats::cov2cor(ape::vcv(tree))
+  L <- t(chol(R + 1e-8 * diag(n))) %*% matrix(rnorm(n * 2), n, 2) %*%
+    chol(matrix(c(1, .6, .6, 1), 2))
+  closed <- crossprod(L, solve(R, L)) / n
+  em <- .dcb_sigma_em(L, R)
+  expect_equal(unname(em), unname(closed), tolerance = 1e-8)
+})
+
+test_that(".dcb_sigma_em recovers cross-trait correlation when both traits are missing", {
+  skip_if_not_installed("ape")
+  got <- ref <- numeric(0)
+  for (s in 1:4) {
+    set.seed(100 + s); n <- 200; tree <- ape::rtree(n)
+    R <- stats::cov2cor(ape::vcv(tree))
+    L <- t(chol(R + 1e-8 * diag(n))) %*% matrix(rnorm(n * 2), n, 2) %*%
+      chol(matrix(c(1, .7, .7, 1), 2))
+    ref <- c(ref, stats::cov2cor(crossprod(L, solve(R, L)) / n)[1, 2])
+    Lm <- L; Lm[sample(n, 60), 1] <- NA; Lm[sample(n, 60), 2] <- NA
+    got <- c(got, stats::cov2cor(.dcb_sigma_em(Lm, R))[1, 2])
+  }
+  # EM under MCAR is consistent: within Monte Carlo noise of the complete-data
+  # estimate, not shrunk by a third as the plug-in estimate was (0.456 vs 0.674).
+  expect_lt(abs(mean(got) - mean(ref)), 0.05)
+})

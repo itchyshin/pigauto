@@ -187,6 +187,10 @@ complete_result <- method_result("complete", list(truth), NA_real_)
 complete_result$wall_s <- proc.time()[["elapsed"]] - t0
 results$complete <- complete_result
 
+# MI_GLS_FAST=1 skips the GNN-based methods (their results do not depend on
+# the draw prototype) and runs only complete, the conditional draws and oracle.
+fast <- identical(Sys.getenv("MI_GLS_FAST"), "1")
+if (!fast) {
 # ---- single imputation ----------------------------------------------------------
 t0 <- proc.time()[["elapsed"]]
 single_res <- tryCatch(
@@ -228,11 +232,14 @@ results$mi_dropout <- if (inherits(mi_drop, "error")) {
   method_result("mi_dropout", mi_drop$datasets, wall)
 }
 
+}
+
 # ---- draw_conditional_bm() (R/draws_conditional.R prototype) -----------------
 t0 <- proc.time()[["elapsed"]]
 draw_res <- tryCatch({
   pd <- preprocess_traits(df, tree, log_transform = FALSE)
-  draw_conditional_bm(list(data = pd, tree = tree), m = m, seed = seed)
+  draw_conditional_bm(list(data = pd, tree = tree), m = m, seed = seed,
+                      sigma_method = "em")
 }, error = function(e) e)
 wall <- proc.time()[["elapsed"]] - t0
 if (inherits(draw_res, "error")) {
@@ -241,6 +248,20 @@ if (inherits(draw_res, "error")) {
 } else {
   results$draw_cond <- method_result("draw_cond", draw_res$datasets, wall)
   draw_cond_error <- NA_character_
+}
+
+# ---- draw_conditional_bm with the plug-in (inhouse) Sigma, for comparison ----
+t0 <- proc.time()[["elapsed"]]
+draw_res_ih <- tryCatch({
+  pd <- preprocess_traits(df, tree, log_transform = FALSE)
+  draw_conditional_bm(list(data = pd, tree = tree), m = m, seed = seed,
+                      sigma_method = "inhouse")
+}, error = function(e) e)
+wall <- proc.time()[["elapsed"]] - t0
+results$draw_cond_inhouse <- if (inherits(draw_res_ih, "error")) {
+  error_result("draw_cond_inhouse", wall)
+} else {
+  method_result("draw_cond_inhouse", draw_res_ih$datasets, wall)
 }
 
 # ---- oracle proper MI (true model; lambda == 1 & missing == "x_only" only) --

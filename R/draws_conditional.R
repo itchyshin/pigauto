@@ -91,6 +91,10 @@
 #'   draws is generated from one reproducible `set.seed(seed)` call (draws
 #'   differ by column of the underlying random matrix, not by re-seeding
 #'   per draw).
+#' @param sigma_method `"em"` (default) estimates the trait covariance by
+#'   EM maximum likelihood with missing cells; `"inhouse"` reuses the
+#'   plug-in estimate from `fit_mvn_bm_inhouse(max_iter = 0)`, which shrinks
+#'   cross-trait covariance when several traits have missing cells.
 #' @param eps numeric ridge added to `Sigma` and to edge lengths before
 #'   inversion (default `1e-8`).
 #' @param max_cells integer safety cap on the number of unknown
@@ -117,7 +121,9 @@
 #' @keywords internal
 #' @noRd
 draw_conditional_bm <- function(fit_or_result, m = 20L, seed = NULL,
-                                 eps = 1e-8, max_cells = 60000L) {
+                                 eps = 1e-8, max_cells = 60000L,
+                                 sigma_method = c("em", "inhouse")) {
+  sigma_method <- match.arg(sigma_method)
   if (!requireNamespace("Matrix", quietly = TRUE)) {
     stop("draw_conditional_bm() requires the 'Matrix' package.", call. = FALSE)
   }
@@ -168,9 +174,16 @@ draw_conditional_bm <- function(fit_or_result, m = 20L, seed = NULL,
   # also returns is NOT used here; the joint (not just per-cell) conditional
   # is built separately below because it needs the Cholesky factor itself,
   # not just its diagonal.
-  sig_fit <- fit_mvn_bm_inhouse(L = X, tree = tree, R = NULL, max_iter = 0L,
-                                 predict_method = "per_column")
-  Sigma <- sig_fit$pars$phylocov
+  if (identical(sigma_method, "inhouse")) {
+    sig_fit <- fit_mvn_bm_inhouse(L = X, tree = tree, R = NULL, max_iter = 0L,
+                                   predict_method = "per_column")
+    Sigma <- sig_fit$pars$phylocov
+  } else {
+    # EM ML estimate (see .dcb_sigma_em): the plug-in "inhouse" estimate
+    # shrinks cross-trait covariance when several traits have missing cells.
+    R_tip <- stats::cov2cor(ape::vcv(tree))[rownames(X), rownames(X)]
+    Sigma <- .dcb_sigma_em(X, R_tip)
+  }
   Sigma <- (Sigma + t(Sigma)) / 2
 
   Sig_inv <- tryCatch(solve(Sigma + diag(eps, K)), error = function(e) NULL)
@@ -297,4 +310,57 @@ draw_conditional_bm <- function(fit_or_result, m = 20L, seed = NULL,
          sigma_hat = Sigma, imputed_mask = imputed_mask, m = m),
     class = "pigauto_draws_conditional_bm"
   )
+}
+
+# ---------------------------------------------------------------------------
+# .dcb_sigma_em(L, R): EM maximum-likelihood estimate of the K x K trait
+# covariance Sigma for vec(L) ~ MVN(0, Sigma %x% R) with missing cells.
+#
+# Why (2026-09-23, arc/mi-gls-attenuation): the plug-in estimate from
+# fit_mvn_bm_inhouse(max_iter = 0) fills each column with its own per-column
+# conditional mean, which carries no cross-trait information, and omits the
+# conditional-covariance term. With 30% of both traits missing it shrank a
+# true phylogenetic correlation of 0.67 to 0.46 (six trees, n = 300), and its
+# EM option returned the same value. This estimator is the textbook EM for a
+# matrix-normal model with missing entries:
+#   E-step: mu_m = C_mo C_oo^{-1} l_o and V_m = C_mm - C_mo C_oo^{-1} C_om,
+#           with C = Sigma %x% R;
+#   M-step: Sigma_jk = (1/n) [ Lhat_j' R^{-1} Lhat_k
+#                              + sum_{a,b} R^{-1}_ab V[(a,j), (b,k)] ].
+# Dense linear algebra: intended for the prototype's sizes (n <= ~1000,
+# K small). On complete data it returns the closed form in one step.
+# ---------------------------------------------------------------------------
+.dcb_sigma_em <- function(L, R, max_iter = 200L, tol = 1e-7) {
+  L <- as.matrix(L); n <- nrow(L); K <- ncol(L)
+  Rinv <- solve(R)
+  miss <- is.na(L)
+  Lf <- L
+  for (j in seq_len(K)) Lf[miss[, j], j] <- 0
+  Sigma <- crossprod(Lf, Rinv %*% Lf) / n
+  if (!any(miss)) return((Sigma + t(Sigma)) / 2)
+  diag(Sigma) <- pmax(diag(Sigma), 1e-6)
+  v <- as.vector(L)
+  m_idx <- which(is.na(v)); o_idx <- which(!is.na(v))
+  tip_of <- ((seq_along(v) - 1L) %% n) + 1L
+  trait_of <- ((seq_along(v) - 1L) %/% n) + 1L
+  for (it in seq_len(max_iter)) {
+    C <- kronecker(Sigma, R)
+    C_oo <- C[o_idx, o_idx]; C_mo <- C[m_idx, o_idx]
+    A <- t(solve(C_oo, t(C_mo)))                 # C_mo C_oo^{-1}
+    mu_m <- as.vector(A %*% v[o_idx])
+    V_m <- C[m_idx, m_idx] - A %*% t(C_mo)
+    Lhat <- L; Lhat[miss] <- mu_m
+    S_new <- crossprod(Lhat, Rinv %*% Lhat)
+    ta <- tip_of[m_idx]; tr <- trait_of[m_idx]
+    W <- Rinv[ta, ta] * V_m                      # R^{-1}_ab V[(a,j),(b,k)]
+    for (j in seq_len(K)) for (k in seq_len(K)) {
+      S_new[j, k] <- S_new[j, k] + sum(W[tr == j, tr == k, drop = FALSE])
+    }
+    S_new <- (S_new + t(S_new)) / (2 * n)
+    if (max(abs(S_new - Sigma)) < tol * max(1, max(abs(Sigma)))) {
+      Sigma <- S_new; break
+    }
+    Sigma <- S_new
+  }
+  Sigma
 }
