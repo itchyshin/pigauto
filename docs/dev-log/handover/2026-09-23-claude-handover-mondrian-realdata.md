@@ -53,6 +53,8 @@ two branches, two worktrees. Platform-neutral; any tool resumes from this file.
 | `arc/mi-gls-attenuation` (67a8df8) | y | n | none | CARRIED-OVER: sweep running on fir |
 | Checkout `handover/2026-08-09-cursor` (18 dirty files) | n | n | none | PROTECTED, another lane's |
 
+FINDING-OF-RECORD: Mondrian real-data confirmation (default stays split; far-stratum gain, near over-coverage trimmed) and pre-existing conformal-MI attenuation under phylogenetic GLS  vault-note: [[pigauto-mondrian-realdata-and-mi-gls]] (proposed; draft staged at `docs/dev-log/mondrian-realdata/vault-note-draft.md`; not written to the vault without Shinichi's approval)
+
 ## Next Immediate Steps
 
 1. MI-GLS: when array `61137481` finishes, `rsync` the results into
