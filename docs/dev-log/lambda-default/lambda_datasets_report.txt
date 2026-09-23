@@ -1,0 +1,198 @@
+jobs read: 260  ok: 260  failed: 0 
+
+== mean z-RMSE over continuous traits (masked cells, 5 seeds), gnn = FALSE ==
+   dataset    size    n bayes    cv estimate fixed_1 est_vs_fixed_pct     best
+  amphibio   small  300 0.874 0.876    0.874   0.884             -1.1 estimate
+  amphibio   large 2000 0.667 0.668    0.665   0.685             -2.8 estimate
+    avonet   small  300 0.626 0.628    0.626   0.629             -0.3    bayes
+    avonet   large 2000 0.419 0.422    0.419   0.419              0.1  fixed_1
+ avonet300 bundled  300 0.556 0.559    0.560   0.569             -1.7    bayes
+      bien   small  300 1.047 1.056    1.053   1.054             -0.2    bayes
+      bien   large 2000 0.807 0.808    0.807   0.813             -0.7 estimate
+ globtherm   small  300 0.666 0.669    0.665   0.712             -6.5 estimate
+ globtherm    full 1969 0.621 0.621    0.622   0.655             -5.1       cv
+ leptraits   small  300 0.935 0.931    0.935   0.947             -1.3       cv
+ leptraits   large 2000 0.901 0.886    0.901   0.893              0.9       cv
+ pantheria   small  300 0.497 0.493    0.496   0.583            -14.8       cv
+ pantheria   large 2000 0.361 0.364    0.358   0.415            -13.7 estimate
+
+== estimated lambda per trait (mean over seeds) ==
+   dataset    size                 trait lambda_hat
+    avonet   large beak_length_culmen_mm      0.983
+    avonet   small beak_length_culmen_mm      0.988
+ avonet300 bundled    Beak.Length_Culmen      0.992
+  amphibio   large           body_mass_g      0.930
+ pantheria   large           body_mass_g      0.985
+  amphibio   small           body_mass_g      0.016
+ pantheria   small           body_mass_g      0.832
+  amphibio   large          body_size_mm      0.969
+  amphibio   small          body_size_mm      0.877
+ globtherm    full         elevation_max      0.718
+ globtherm   small         elevation_max      0.538
+ leptraits   large       flight_duration      0.353
+ leptraits   small       flight_duration      0.025
+ pantheria   large           gestation_d      0.975
+ pantheria   small           gestation_d      0.932
+ pantheria   large   head_body_length_mm      0.976
+ pantheria   small   head_body_length_mm      0.885
+      bien   large              height_m      0.951
+      bien   small              height_m      0.989
+      bien   large             leaf_area      0.838
+      bien   small             leaf_area      0.368
+ avonet300 bundled                  Mass      0.995
+    avonet   large                mass_g      0.987
+    avonet   small                mass_g      0.992
+ pantheria   large       max_longevity_m      0.862
+ pantheria   small       max_longevity_m      0.853
+ leptraits   large  n_hostplant_families      0.109
+ leptraits   small  n_hostplant_families      0.005
+      bien   large             seed_mass      0.981
+      bien   small             seed_mass      0.948
+      bien   large                   sla      0.558
+      bien   small                   sla      0.401
+    avonet   large        tail_length_mm      0.985
+    avonet   small        tail_length_mm      0.990
+    avonet   large      tarsus_length_mm      0.992
+    avonet   small      tarsus_length_mm      0.995
+ avonet300 bundled         Tarsus.Length      0.995
+ globtherm    full                  Tmax      0.968
+ globtherm   small                  Tmax      0.823
+ globtherm    full                  Tmin      0.946
+ globtherm   small                  Tmin      0.911
+    avonet   large        wing_length_mm      0.993
+    avonet   small        wing_length_mm      0.992
+ avonet300 bundled           Wing.Length      0.995
+ leptraits   large        wingspan_lower      0.649
+ leptraits   small        wingspan_lower      0.582
+      bien   large          wood_density      0.796
+      bien   small          wood_density      0.562
+
+== per trait z-RMSE ==
+   dataset    size                 trait bayes    cv estimate fixed_1
+  amphibio   large           body_mass_g 0.785 0.787    0.783   0.800
+  amphibio   large          body_size_mm 0.548 0.550    0.548   0.569
+  amphibio   small           body_mass_g 1.045 1.052    1.045   1.055
+  amphibio   small          body_size_mm 0.703 0.700    0.703   0.712
+    avonet   large beak_length_culmen_mm 0.446 0.448    0.445   0.444
+    avonet   large                mass_g 0.341 0.343    0.341   0.341
+    avonet   large        tail_length_mm 0.518 0.520    0.518   0.517
+    avonet   large      tarsus_length_mm 0.359 0.361    0.359   0.359
+    avonet   large        wing_length_mm 0.432 0.439    0.432   0.431
+    avonet   small beak_length_culmen_mm 0.650 0.651    0.655   0.657
+    avonet   small                mass_g 0.555 0.555    0.555   0.572
+    avonet   small        tail_length_mm 0.695 0.694    0.694   0.692
+    avonet   small      tarsus_length_mm 0.540 0.545    0.537   0.537
+    avonet   small        wing_length_mm 0.692 0.694    0.692   0.684
+ avonet300 bundled    Beak.Length_Culmen 0.616 0.616    0.616   0.630
+ avonet300 bundled                  Mass 0.486 0.488    0.486   0.501
+ avonet300 bundled         Tarsus.Length 0.558 0.559    0.558   0.568
+ avonet300 bundled           Wing.Length 0.562 0.571    0.579   0.579
+      bien   large              height_m 0.778 0.779    0.778   0.777
+      bien   large             leaf_area 0.859 0.858    0.858   0.849
+      bien   large             seed_mass 0.628 0.633    0.627   0.628
+      bien   large                   sla 0.963 0.970    0.963   1.006
+      bien   large          wood_density 0.809 0.802    0.808   0.802
+      bien   small              height_m 1.008 1.003    1.003   1.010
+      bien   small             leaf_area 1.030 1.054    1.061   1.047
+      bien   small             seed_mass 0.894 0.900    0.893   0.894
+      bien   small                   sla 1.291 1.306    1.291   1.288
+      bien   small          wood_density 1.013 1.020    1.016   1.033
+ globtherm    full         elevation_max 0.884 0.886    0.885   0.947
+ globtherm    full                  Tmax 0.600 0.598    0.600   0.620
+ globtherm    full                  Tmin 0.380 0.378    0.380   0.397
+ globtherm   small         elevation_max 0.796 0.800    0.796   0.878
+ globtherm   small                  Tmax 0.779 0.780    0.778   0.793
+ globtherm   small                  Tmin 0.421 0.427    0.422   0.464
+ leptraits   large       flight_duration 1.000 0.972    1.000   0.968
+ leptraits   large  n_hostplant_families 1.024 1.023    1.024   1.023
+ leptraits   large        wingspan_lower 0.679 0.663    0.679   0.687
+ leptraits   small       flight_duration 0.995 0.995    0.995   0.995
+ leptraits   small  n_hostplant_families 1.059 1.059    1.059   1.059
+ leptraits   small        wingspan_lower 0.752 0.739    0.752   0.787
+ pantheria   large           body_mass_g 0.277 0.288    0.270   0.277
+ pantheria   large           gestation_d 0.266 0.270    0.263   0.370
+ pantheria   large   head_body_length_mm 0.314 0.316    0.311   0.342
+ pantheria   large       max_longevity_m 0.589 0.581    0.589   0.672
+ pantheria   small           body_mass_g 0.442 0.426    0.442   0.453
+ pantheria   small           gestation_d 0.465 0.454    0.464   0.564
+ pantheria   small   head_body_length_mm 0.432 0.428    0.431   0.511
+ pantheria   small       max_longevity_m 0.648 0.663    0.648   0.802
+ est_vs_fixed_pct
+             -2.2
+             -3.8
+             -1.0
+             -1.3
+              0.2
+              0.0
+              0.3
+             -0.2
+              0.2
+             -0.4
+             -3.0
+              0.3
+              0.0
+              1.1
+             -2.2
+             -3.0
+             -1.7
+              0.1
+              0.0
+              1.0
+             -0.2
+             -4.2
+              0.7
+             -0.7
+              1.4
+             -0.2
+              0.2
+             -1.7
+             -6.6
+             -3.2
+             -4.2
+             -9.3
+             -1.9
+             -9.1
+              3.3
+              0.1
+             -1.2
+              0.0
+              0.0
+             -4.5
+             -2.5
+            -28.9
+             -9.2
+            -12.3
+             -2.6
+            -17.7
+            -15.6
+            -19.3
+
+== discrete accuracy (masked cells) ==
+   dataset    size             trait bayes    cv estimate fixed_1
+  amphibio   large           habitat 0.859 0.859    0.859   0.859
+  amphibio   small           habitat 0.794 0.794    0.794   0.794
+    avonet   large         migration 0.823 0.823    0.823   0.820
+    avonet   small         migration 0.793 0.793    0.793   0.793
+ avonet300 bundled         Migration 0.813 0.813    0.813   0.813
+ avonet300 bundled Primary.Lifestyle 0.753 0.753    0.753   0.753
+ pantheria   large    terrestriality 0.936 0.936    0.936   0.936
+ pantheria   small    terrestriality 0.850 0.850    0.850   0.850
+    avonet   large     trophic_level 0.831 0.831    0.831   0.831
+    avonet   small     trophic_level 0.780 0.780    0.780   0.780
+ avonet300 bundled     Trophic.Level 0.797 0.797    0.797   0.797
+
+== median seconds per fit ==
+   dataset    size  bayes     cv estimate fixed_1
+ avonet300 bundled   6.25   7.69     5.04    4.82
+ globtherm    full  73.65  87.67    54.23   51.43
+  amphibio   large  98.13 102.76    92.66   85.32
+    avonet   large 346.94 363.50   295.66  308.86
+      bien   large  39.26  44.52    20.88   18.69
+ leptraits   large  55.78  64.54    46.52   39.16
+ pantheria   large  92.86 102.32    72.07   67.46
+  amphibio   small   2.77   3.45     2.67    2.38
+    avonet   small   6.18   8.99     4.67    4.46
+      bien   small   2.38   2.61     1.68    1.67
+ globtherm   small   2.21   3.04     2.03    1.63
+ leptraits   small   2.32   2.91     1.90    1.75
+ pantheria   small   3.33   5.22     2.64    2.33
