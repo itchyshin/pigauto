@@ -1,0 +1,27 @@
+# Mondrian vs split multi_impute() Rubin-SE campaign summary
+
+Reps found: 500. True slope (rho): 0.7000.
+
+## SE ratio (mean pooled SE / empirical SD of pooled estimate)
+
+| arm | n_ok | n_failed | mean SE | empirical SD | SE ratio | MCSE(ratio) | bias | 95% CI coverage | mean FMI |
+|---|---|---|---|---|---|---|---|---|---|
+| split | 500 | 0 | 0.0376 | 0.0550 | 0.6829 | 0.0219 | -0.3480 | 0.0000 | 0.5723 |
+| mondrian | 500 | 0 | 0.0372 | 0.0608 | 0.6111 | 0.0197 | -0.3801 | 0.0000 | 0.5967 |
+
+Pre-registered claim: |SE ratio - 1| smaller for mondrian than split by >= 0.03. Observed: split=0.3171, mondrian=0.3889, delta=-0.0718.
+
+## Per-cell draw PIT / coverage by stratum -- split arm
+
+| stratum | n | mean PIT | coverage |
+|---|---|---|---|
+| unknown | 150456 | 0.5003 | 0.8456 |
+
+## Per-cell draw PIT / coverage by stratum -- mondrian arm
+
+| stratum | n | mean PIT | coverage |
+|---|---|---|---|
+| far | 116402 | 0.5007 | 0.8680 |
+| near | 34054 | 0.4987 | 0.8959 |
+
+Pre-registered claim: far-stratum coverage in [0.93, 0.97]. Observed (mondrian arm, far): 0.8680.
