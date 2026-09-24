@@ -37,6 +37,28 @@ Sys.setenv(OMP_NUM_THREADS = "1", OPENBLAS_NUM_THREADS = "1", MKL_NUM_THREADS = 
 suppressMessages({ devtools::load_all(quiet = TRUE); library(ape); library(nlme) })
 source(file.path("script", "mi_gls", "dgp_v2.R"))
 
+# DIAG_PAR_CHAINS=k runs the k chains of ONE fit in parallel (forked). This
+# only shortens the wall time of the long 2x / 4x re-runs. Each chain seeds
+# itself (set.seed(chain_seed) at the top of .mip_run_chain()), so the chains,
+# the proper draws, the diagnostics and the posterior_full slopes are
+# identical to the serial run. The plug-in draws (posterior_none) are NOT:
+# they are drawn after the chains from the global RNG stream, which the
+# serial run leaves at chain 4's end state. The package source is not
+# edited; the loaded namespace copy of .mip_fit() is swapped in memory.
+par_chains <- as.integer(Sys.getenv("DIAG_PAR_CHAINS", "1"))
+if (par_chains > 1L) {
+  ns <- asNamespace("pigauto")
+  src <- deparse(get(".mip_fit", envir = ns))
+  hit <- grep("chains <- lapply(seq_len(ctl$n_chains), run1)", src, fixed = TRUE)
+  if (length(hit) != 1L) stop("DIAG_PAR_CHAINS: .mip_fit() chain loop not found", call. = FALSE)
+  src[hit] <- sub("lapply(seq_len(ctl$n_chains), run1)",
+                  sprintf("parallel::mclapply(seq_len(ctl$n_chains), run1, mc.cores = %dL)", par_chains),
+                  src[hit], fixed = TRUE)
+  f <- eval(parse(text = src))
+  environment(f) <- ns
+  assignInNamespace(".mip_fit", f, ns = "pigauto")
+}
+
 env_int_or_null <- function(name) {
   v <- Sys.getenv(name, "")
   if (nzchar(v)) as.integer(v) else NULL
