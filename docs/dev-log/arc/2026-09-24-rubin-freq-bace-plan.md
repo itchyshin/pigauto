@@ -8,6 +8,19 @@ plug into the same estimands later). Owns `script/rubin_*`, `docs/dev-log/arc/20
 
 ## Why (from v1, 2026-09-24)
 
+> **Correction (2026-09-24, later the same day; supersedes point 2 below).** The installed BACE, the
+> code `BACE::bace()` actually runs (built 2026-08-09, `~/Library/R/arm64/4.6/library/BACE`), does draw a
+> residual. `bace_final_imp()` calls `.predict_bace(..., sample = TRUE)`, and for a gaussian trait that
+> branch takes one posterior iteration's fitted value and adds `rnorm(0, sqrt(sigma2_units))` from the same
+> iteration before back-transforming. Each final dataset is therefore a posterior predictive draw. Point 2
+> was verified against the in-tree `BACE/` clone, which is stale (commit `de87d8c`, 2026-04-01) and still
+> takes the posterior mean. Checked by deparsing the installed namespace, after the S3 builder flagged it.
+> Consequences: the "BACE + residual draw" arm adds a second residual on top of BACE's own, so it is kept
+> in the smoke only as a measured contrast and its place in the campaign goes back to Shinichi; nothing
+> should reach Dan saying BACE imputes posterior means; and every compute host must run the same BACE build
+> (the pre-run checks for `sample = TRUE` in `bace_final_imp`). Point 1 (the percentile interval's 0.872
+> ceiling) is unaffected.
+
 1. v1 scored per-cell prediction intervals, not multiple imputation. BACE's interval was the 2.5 and 97.5
    percentile of 20 imputed datasets, whose coverage ceiling is 0.872 under a correct model; the Rubin
    interval from the same 20 draws, mean plus or minus `qt(0.975, M - 1) * sqrt((1 + 1/M) * B)`, covers 0.950
