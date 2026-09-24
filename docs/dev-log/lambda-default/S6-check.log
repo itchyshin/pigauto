@@ -1,0 +1,10 @@
+CHECK errors 0 warnings 0 notes 1
+--- errors ---
+
+--- warnings ---
+
+--- notes ---
+checking CRAN incoming feasibility ... [4s/23s] NOTE
+Maintainer: ‘Shinichi Nakagawa <itchyshin@gmail.com>’
+
+Version contains large components (0.11.0.9000)

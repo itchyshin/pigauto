@@ -1,0 +1,74 @@
+# Core simulation benchmark under the lambda default
+
+18 core cells of the four-arm simulation (types_mixed, BM, lambda {0.3, 0.7, 1}, rho {0, 0.5}, MCAR 30%,
+n {100, 300, 1000}), pigauto 0.11.0.9000 from `~/R/lib-lambda` on Totoro, campaign scripts unmodified.
+Committed yardstick: `script/campaign_sim_results/summary.csv` on arc/imputation-sim (#184). Comparison
+script: `compare_benchmark.R` (mean z-RMSE over c1, c2, cnt, prp and rho).
+
+## Wave 1: no-GNN arms (gnn_off, gnn_off_rphylopars), 200 seeds per cell
+
+Launched 05:52 MDT 2026-09-23, 140 parallel, done 07:38. 3,595 of 3,600 jobs; the 5 failures are one
+error in the campaign's F1 helper (`if (tp + fp == 0)`), outside the package.
+
+In-house pigauto without the GNN (the default path):
+
+| lambda | n | committed | lambda default | change | gap to freq_lambda closed |
+|---|---|---|---|---|---|
+| 0.3 | 100 | 1.019 | 0.998 | -0.021 | 17% |
+| 0.3 | 300 | 1.012 | 0.977 | -0.034 | 28% |
+| 0.3 | 1000 | 0.990 | 0.965 | -0.025 | 20% |
+| 0.7 | 100 | 0.916 | 0.848 | -0.068 | 59% |
+| 0.7 | 300 | 0.888 | 0.806 | -0.082 | 75% |
+| 0.7 | 1000 | 0.873 | 0.787 | -0.086 | 81% |
+| 1 | 100 | 0.491 | 0.466 | -0.025 | |
+| 1 | 300 | 0.426 | 0.393 | -0.033 | |
+| 1 | 1000 | 0.363 | 0.342 | -0.021 | |
+
+Every cell improves. Conformal coverage for c1 and c2 at n >= 300 is 0.957 to 0.969 (committed 0.950
+to 0.968). No seed exceeded z-RMSE 1.3.
+
+Against the pre-registered gate G12:
+
+- Gap closed at lambda 0.3, n 100 is 17%, below the 50% the gate asked for. At lambda 0.7 it is 59 to
+  81%. Weak signal at lambda 0.3 is where the per-column estimate's downward bias and small n bite most.
+- The lambda = 1 cells moved by 0.021 to 0.033, beyond the 0.01 limit, in the improving direction. The
+  guard was written to catch regressions; none occurred.
+- Coverage (>= 0.94) and completeness pass. The comparison script reports BENCH_FAIL overall because of the two criteria above.
+
+Rphylopars comparator (`joint_solver = "rphylopars"`, now `model = "lambda"`): medians improve (for
+example 0.824 at lambda 0.7, n 100), but a few seeds explode (1 of 200 at lambda 0.7, n 100; 6 to 8 of
+about 198 at lambda 1, n 1000) with z-RMSE up to 10^5, so its means are not interpretable. Fixed after
+the run: `fit_joint_solver()` now falls back to the in-house solver when phylopars returns tip
+predictions more than 10 times beyond the observed range (test in `test-joint-lambda.R`). The in-house
+default path was never affected. This arm is 26 times slower under lambda (45 s against 1.7 s per fit).
+
+## Wave 2: gnn_on
+
+Launched 07:38, 30 parallel x 4 torch threads, 100 seeds per cell. Another Totoro user started a job using
+about 159 cores during the run, which cut our share to about 61 cores; n = 1,000 jobs took 844 s each. At
+12:13 Shinichi chose to cap n = 1,000 at 50 seeds (n = 100 and 300 keep 100 seeds; some n = 1,000 cells
+had already reached 100 before the cap). Done 14:18, 1,598 result files. Aggregate:
+`core_lambda_gnn_agg_summary.csv`. The committed yardstick has 200 seeds per cell.
+
+| lambda | n | committed | lambda default | change | gap to freq_lambda closed |
+|---|---|---|---|---|---|
+| 0.3 | 100 | 1.009 | 0.994 | -0.015 | 13% |
+| 0.3 | 300 | 1.011 | 0.975 | -0.035 | 29% |
+| 0.3 | 1000 | 0.992 | 0.968 | -0.024 | 19% |
+| 0.7 | 100 | 0.902 | 0.840 | -0.062 | 61% |
+| 0.7 | 300 | 0.883 | 0.810 | -0.073 | 70% |
+| 0.7 | 1000 | 0.874 | 0.797 | -0.077 | 71% |
+| 1 | 100 | 0.536 | 0.476 | -0.061 | |
+| 1 | 300 | 0.476 | 0.406 | -0.069 | |
+| 1 | 1000 | 0.383 | 0.359 | -0.024 | |
+
+Every cell improves, the same pattern as the no-GNN arm. Conformal coverage for c1 and c2 at n >= 300 is
+0.955 to 0.959. Discrete accuracy in this arm moves by -0.006 to +0.031 (mostly up) against the committed
+run: the GNN takes the continuous baseline as an input, so its discrete outputs can shift even though the
+baseline keeps discrete traits at lambda = 1.
+
+## Decision on the gate (Shinichi, 2026-09-23)
+
+The pre-registered rule paused the default flip if lambda 0.3 did not close half the gap. Asked with the
+wave-1 and real-data results in hand, Shinichi chose to keep `lambda_mode = "estimate"` as the default.
+The shortfall at weak signal stays documented as a known limitation.

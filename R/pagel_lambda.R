@@ -158,11 +158,26 @@ cv_lambda_for_col <- function(y, R, nugget = 1e-6,
 #
 # Spec: specs/2026-05-18-pagel-lambda-eigendecomp-speedup-design.md.
 #
+# Optional design matrix X (n x p, full length, same row order as y):
+# when supplied, the GLS coefficients beta are profiled out inside the
+# NLL instead of fixing the model to an intercept-only mean, so a
+# covariate-aware caller (bm_impute_col_with_cov) can estimate lambda
+# jointly with beta. X = NULL reproduces the intercept-only closure
+# below exactly -- that branch is untouched by the X-aware addition.
+#
 # Returns a list with:
 #   $nll(lambda)  -- closure that evaluates NLL at any lambda in [0, 1]
+#   $mu_at(lambda) -- closure returning the GLS phylogenetic mean at that
+#                     lambda (intercept-only branch only; reuses the same
+#                     eigenbasis as $nll, so a caller that needs both the
+#                     ML lambda and its GLS mean -- e.g. the joint
+#                     baseline's Henderson-centering step -- does not pay
+#                     for a second O(n_o^3) factorisation of R_oo. See
+#                     `ml_lambda_and_mu_for_col()` in R/bm_internal.R.
+#                     NULL on the X-aware branch (no scalar mean there).
 #   $n_o          -- number of observed cells (for callers that need it)
 # @noRd
-build_pagel_nll_cache <- function(y, R, nugget = 1e-6) {
+build_pagel_nll_cache <- function(y, R, nugget = 1e-6, X = NULL) {
   obs <- which(!is.na(y))
   n_o <- length(obs)
   if (n_o < 2L) {
@@ -170,6 +185,7 @@ build_pagel_nll_cache <- function(y, R, nugget = 1e-6) {
     # so optimisers correctly back off.
     return(list(
       nll = function(lambda) .Machine$double.xmax,
+      mu_at = function(lambda) NA_real_,
       n_o = n_o
     ))
   }
@@ -183,48 +199,142 @@ build_pagel_nll_cache <- function(y, R, nugget = 1e-6) {
   c_y <- as.numeric(crossprod(U, y_o))
   c_1 <- as.numeric(crossprod(U, rep(1, n_o)))
 
-  nll_at <- function(lambda) {
-    # d_i(lambda) = lambda * Lambda_i + (1 - lambda), plus a tiny nugget on
-    # the diagonal of R_oo(lambda) for parity with the dense-Cholesky path.
+  if (is.null(X)) {
+    nll_at <- function(lambda) {
+      # d_i(lambda) = lambda * Lambda_i + (1 - lambda), plus a tiny nugget on
+      # the diagonal of R_oo(lambda) for parity with the dense-Cholesky path.
+      d <- lambda * evals + (1 - lambda) + nugget
+      if (any(d <= 0)) return(.Machine$double.xmax)
+      inv_d <- 1 / d
+      # GLS phylogenetic mean. In the original basis:
+      #   sum_a = 1^T R_oo(lambda)^{-1} 1
+      #         = 1^T U diag(1/d) U^T 1
+      #         = c_1^T diag(1/d) c_1 = sum(c_1^2 * inv_d)
+      #   sum_b = 1^T R_oo(lambda)^{-1} y_o
+      #         = c_1^T diag(1/d) c_y = sum(c_1 * inv_d * c_y)
+      sum_a <- sum(c_1 * c_1 * inv_d)
+      sum_b <- sum(c_1 * c_y * inv_d)
+      mu_hat <- sum_b / sum_a
+      # Residual rotated to the eigenbasis: c_e = U^T (y - mu*1) = c_y - mu*c_1.
+      c_e <- c_y - mu_hat * c_1
+      # REML variance.
+      sigma2 <- sum(c_e * c_e * inv_d) / max(n_o - 1L, 1L)
+      if (!is.finite(sigma2) || sigma2 <= 0) return(.Machine$double.xmax)
+      log_det <- sum(log(d))
+      0.5 * ((n_o - 1L) * log(sigma2) + log_det)
+    }
+    mu_at <- function(lambda) {
+      d <- lambda * evals + (1 - lambda) + nugget
+      if (any(d <= 0)) return(NA_real_)
+      inv_d <- 1 / d
+      sum_a <- sum(c_1 * c_1 * inv_d)
+      sum_b <- sum(c_1 * c_y * inv_d)
+      sum_b / sum_a
+    }
+    return(list(nll = nll_at, mu_at = mu_at, n_o = n_o))
+  }
+
+  # X-aware branch: same eigenbasis, but profile a p-column GLS regression
+  # instead of a scalar GLS mean. c_X = U^T X_o rotates the design matrix
+  # into the same basis as c_y / c_1 above, so beta(lambda), like mu_hat(lambda)
+  # above, is O(n_o) per evaluation after this one-off O(n_o * p) rotation.
+  X_o <- X[obs, , drop = FALSE]
+  p_x <- ncol(X_o)
+  c_X <- crossprod(U, X_o)  # n_o x p_x
+
+  nll_at_x <- function(lambda) {
     d <- lambda * evals + (1 - lambda) + nugget
     if (any(d <= 0)) return(.Machine$double.xmax)
     inv_d <- 1 / d
-    # GLS phylogenetic mean. In the original basis:
-    #   sum_a = 1^T R_oo(lambda)^{-1} 1
-    #         = 1^T U diag(1/d) U^T 1
-    #         = c_1^T diag(1/d) c_1 = sum(c_1^2 * inv_d)
-    #   sum_b = 1^T R_oo(lambda)^{-1} y_o
-    #         = c_1^T diag(1/d) c_y = sum(c_1 * inv_d * c_y)
-    sum_a <- sum(c_1 * c_1 * inv_d)
-    sum_b <- sum(c_1 * c_y * inv_d)
-    mu_hat <- sum_b / sum_a
-    # Residual rotated to the eigenbasis: c_e = U^T (y - mu*1) = c_y - mu*c_1.
-    c_e <- c_y - mu_hat * c_1
-    # REML variance.
-    sigma2 <- sum(c_e * c_e * inv_d) / max(n_o - 1L, 1L)
+    # beta(lambda) = (c_X' D^-1 c_X)^-1 c_X' D^-1 c_y, D = diag(d).
+    XtDinvX <- crossprod(c_X, c_X * inv_d)
+    XtDinvy <- crossprod(c_X, c_y * inv_d)
+    beta <- tryCatch(solve(XtDinvX, XtDinvy), error = function(e) NULL)
+    if (is.null(beta) || !all(is.finite(beta))) return(.Machine$double.xmax)
+    # Residual rotated to the eigenbasis: c_e = c_y - c_X %*% beta.
+    c_e <- c_y - as.numeric(c_X %*% beta)
+    sigma2 <- sum(c_e * c_e * inv_d) / max(n_o - p_x, 1L)
     if (!is.finite(sigma2) || sigma2 <= 0) return(.Machine$double.xmax)
     log_det <- sum(log(d))
-    0.5 * ((n_o - 1L) * log(sigma2) + log_det)
+    # Profile REML NLL, dropping the log|X' R(lambda)^-1 X| correction term
+    # that full REML adds when beta is also profiled out (Harville 1977).
+    # The intercept-only branch above drops the analogous scalar term
+    # (log(sum_a)) for the same reason: this file's convention is a profile
+    # likelihood over the mean structure, not full REML. Kept consistent
+    # here rather than introducing an asymmetric correction.
+    0.5 * ((n_o - p_x) * log(sigma2) + log_det)
   }
+  list(nll = nll_at_x, mu_at = NULL, n_o = n_o)
+}
 
-  list(nll = nll_at, n_o = n_o)
+# ---- .pagel_lambda_from_cache -----------------------------------------------
+#
+# Grid-then-refine ML search over lambda in [0, 1], given an
+# ALREADY-BUILT NLL cache (build_pagel_nll_cache()). Factored out of
+# `ml_lambda_and_mu_for_col()` (R/bm_internal.R) so a caller that has
+# already built the cache for another reason (e.g.
+# `.mvn_resolve_lambda()`'s lambda_block search over the same columns,
+# R/joint_mvn_solver.R) can reuse it for the per-column estimate too,
+# instead of paying for a second O(n_o^3) eigendecomposition of the
+# same R_oo (Rose review, 2026-09-23, "SPEED").
+#
+# Returns list(lambda_hat, mu_hat). mu_hat is NA_real_ when
+# `cache$mu_at` is NULL (the X-aware cache branch has no scalar mean)
+# or the cache is degenerate (its $nll is always +Inf).
+# @noRd
+.pagel_lambda_from_cache <- function(cache, lambda_grid = c(0.005, 0.995)) {
+  nll   <- cache$nll
+  mu_at <- cache$mu_at
+  grid <- seq(lambda_grid[1L], lambda_grid[2L], length.out = 11L)
+  grid_nll <- vapply(grid, nll, numeric(1L))
+  if (!any(is.finite(grid_nll))) {
+    return(list(lambda_hat = 1.0, mu_hat = NA_real_))
+  }
+  best_idx <- which.min(grid_nll)
+  lo <- grid[max(1L, best_idx - 1L)]
+  hi <- grid[min(length(grid), best_idx + 1L)]
+  if (lo == hi) {
+    lambda_hat <- grid[best_idx]
+  } else {
+    opt <- tryCatch(
+      stats::optimise(nll, interval = c(lo, hi), tol = 1e-4),
+      error = function(e) NULL
+    )
+    if (is.null(opt) || !is.finite(opt$minimum)) {
+      lambda_hat <- grid[best_idx]
+    } else if (opt$objective <= grid_nll[best_idx] + 1e-8) {
+      lambda_hat <- max(0, min(1, opt$minimum))
+    } else {
+      lambda_hat <- grid[best_idx]
+    }
+  }
+  list(lambda_hat = lambda_hat,
+       mu_hat = if (is.null(mu_at)) NA_real_ else mu_at(lambda_hat))
 }
 
 # Scale internal edges of a phylo tree by lambda, with compensation
-# on terminal edges that preserves root-to-tip distances for
-# ultrametric trees.
+# on terminal edges that preserves root-to-tip distances.
 #
 # Concretely: each terminal edge t (parent height h_p, child = tip)
 # is replaced by
 #   t' = t + (1 - lambda) * h_p
-# and each internal edge i is scaled by lambda. The result is that
-# cov2cor(vcv(out)) equals lambda * cov2cor(vcv(tree)) + (1-lambda)*I
-# exactly (when the tree is ultrametric).
+# and each internal edge i is scaled by lambda.
 #
-# For non-ultrametric trees the formula is a close approximation but
-# not exact; the diagonal of the new correlation matrix still equals
-# one, while off-diagonals are scaled approximately by lambda. Users
-# with strongly non-ultrametric trees should be aware.
+# This is exact on the CORRELATION scale for any tree, ultrametric or
+# not: for tips i, j with MRCA depth d_ij, every edge on the root-to-MRCA
+# path is internal, so vcv(out)[i, j] = lambda * d_ij = lambda * A[i, j].
+# Root-to-tip depth is preserved by construction (lambda * h_p + t' =
+# h_p + t = A[i, i]), so the diagonal stays at A[i, i] and
+#   cov2cor(vcv(out)) = lambda * cov2cor(vcv(tree)) + (1 - lambda) * I
+# exactly, for any tree topology or branch lengths.
+#
+# On the COVARIANCE scale the identity only holds approximately for a
+# non-ultrametric tree: vcv(out) = lambda * A + (1 - lambda) * diag(A),
+# not lambda * A + (1 - lambda) * I, because diag(A) is not constant
+# when tips are not equidistant from the root. The solver here always
+# works on the correlation scale, so this does not affect it, but a
+# caller reading vcv(out) directly on a non-ultrametric tree should be
+# aware of the distinction.
 #
 # @param tree object of class "phylo".
 # @param lambda numeric scalar in [0, 1].

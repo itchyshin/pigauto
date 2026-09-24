@@ -152,7 +152,7 @@ test_that("[lambda-per-type] lambda_mode = 'bayes' also leaves categorical basel
 
 # ---- lambda_mode != "fixed_1": continuous-family takes the lambda path ----
 
-test_that("[lambda-per-type] lambda_mode = 'estimate' routes continuous columns through the per-column lambda path", {
+test_that("[lambda-per-type] lambda_mode = 'estimate' routes continuous columns through the lambda-aware joint path", {
   td  <- make_mixed_data_lpt()
   pd  <- preprocess_traits(td$df, td$tree)
   spl <- make_missing_splits(pd$X_scaled, seed = 1, trait_map = pd$trait_map)
@@ -168,19 +168,28 @@ test_that("[lambda-per-type] lambda_mode = 'estimate' routes continuous columns 
   expect_false(isTRUE(all.equal(bl_est$mu[, mass_col], bl_fixed$mu[, mass_col])))
   expect_false(isTRUE(all.equal(bl_est$mu[, wing_col], bl_fixed$mu[, wing_col])))
 
-  # And it matches a direct per-column bm_impute_col(lambda = "estimate")
-  # call on the same masked column + phylogenetic correlation matrix that
-  # fit_baseline() uses internally -- i.e. continuous columns went through
-  # the lambda-aware per-column BM path, not the (lambda-blind) joint fit.
+  # feat/joint-lambda-default (D-278): continuous columns now STAY on the
+  # joint path, which estimates a per-trait lambda internally (before this
+  # lane, "estimate" forced them onto the per-column path). The per-trait
+  # lambda is reported, differs from 1, and the joint prediction agrees with
+  # a direct per-column bm_impute_col() at that same lambda to the
+  # sparse-vs-dense tolerance (~1e-3), not to 1e-8: the two are different
+  # algorithms (Henderson on the transformed tree with GLS centring vs dense
+  # conditional MVN).
+  expect_false(bl_est$path[["mass"]] == "per_column_bm")
+  expect_true(is.numeric(bl_est$lambda_per_trait))
+  expect_false(isTRUE(all.equal(unname(bl_est$lambda_per_trait[mass_col]), 1)))
+
   X <- pd$X_scaled
   X[spl$val_idx]  <- NA
   X[spl$test_idx] <- NA
   R_phy <- pigauto:::phylo_cor_matrix(td$tree)[rownames(X), rownames(X)]
 
-  direct_mass <- pigauto:::bm_impute_col(X[, mass_col], R_phy, lambda = "estimate")
-  direct_wing <- pigauto:::bm_impute_col(X[, wing_col], R_phy, lambda = "estimate")
+  direct_mass <- pigauto:::bm_impute_col(X[, mass_col], R_phy,
+                                         lambda = unname(bl_est$lambda_per_trait[mass_col]))
+  direct_wing <- pigauto:::bm_impute_col(X[, wing_col], R_phy,
+                                         lambda = unname(bl_est$lambda_per_trait[wing_col]))
 
-  expect_equal(unname(bl_est$mu[, mass_col]), unname(direct_mass$mu), tolerance = 1e-8)
-  expect_equal(unname(bl_est$se[, mass_col]), unname(direct_mass$se), tolerance = 1e-8)
-  expect_equal(unname(bl_est$mu[, wing_col]), unname(direct_wing$mu), tolerance = 1e-8)
+  expect_equal(unname(bl_est$mu[, mass_col]), unname(direct_mass$mu), tolerance = 1e-3)
+  expect_equal(unname(bl_est$mu[, wing_col]), unname(direct_wing$mu), tolerance = 1e-3)
 })

@@ -524,6 +524,9 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
   pooled_n     <- 0L
   trait_cols   <- setdiff(names(traits), species_col)
   idx <- 0L
+  # Per-tree Pagel's lambda from each tree's fit_baseline() (NULL only for
+  # baselines built before the lambda fields existed). One entry per tree (length T_trees, not M_total).
+  lambda_per_trait_by_tree <- vector("list", T_trees)
 
   for (t in seq_len(T_trees)) {
     if (verbose) cat(sprintf("  Tree %d/%d: baseline only...", t, T_trees))
@@ -556,7 +559,7 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
       # load-bearing since gnn = FALSE fits go through the joint /
       # threshold-joint baseline dispatch more often than the GNN-on
       # default):
-      lambda_mode = baseline_arg("lambda_mode", "fixed_1"),
+      lambda_mode = baseline_arg("lambda_mode", "estimate"),
       multi_obs_aggregation = baseline_arg("multi_obs_aggregation", "hard"),
       em_iterations = baseline_arg("em_iterations", 0L),
       em_tol = baseline_arg("em_tol", 1e-3),
@@ -565,6 +568,8 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
       predict_method = baseline_arg("predict_method", "per_column"),
       joint_refine_iter = baseline_arg("joint_refine_iter", 0L)
     )
+    # NULL only for baselines built before lambda_per_trait existed.
+    lambda_per_trait_by_tree[[t]] <- baseline_t$lambda_per_trait
     # draws_method = "conformal" (P1-11): a single deterministic pass per
     # tree, then draw m_per_tree completions from the conformal scores held
     # on fit_ref (calibrated once, on the reference tree) via the same
@@ -665,7 +670,11 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
     imputed_mask = imputed_mask,
     fit          = fit_ref,
     fits         = NULL,
-    draws_method = draws_method
+    draws_method = draws_method,
+    # List of length T_trees (indexed like tree_index's distinct values),
+    # each element the per-tree baseline's lambda_per_trait. NULL entries
+    # only for baselines built before this field existed.
+    lambda_per_trait_by_tree = lambda_per_trait_by_tree
   )
 }
 

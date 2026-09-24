@@ -11,7 +11,8 @@ fit_baseline(
   model = "BM",
   graph = NULL,
   multi_obs_aggregation = c("hard", "soft"),
-  lambda_mode = c("fixed_1", "estimate", "cv", "bayes"),
+  lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
+  lambda_fixed = NULL,
   em_iterations = 0L,
   em_tol = 0.001,
   em_offdiag = FALSE,
@@ -49,17 +50,35 @@ relevant for multi-obs data with binary or categorical traits when the
 Level-C joint baseline is active.}
 
 \item{lambda_mode}{character. Pagel-lambda mode for the CONTINUOUS-FAMILY
-baseline (continuous, count, ordinal, proportion, zi_count magnitude
-columns only -- see \dQuote{Per-type lambda dispatch} in Details).
-\code{"fixed_1"} preserves the default Brownian correlation matrix;
-\code{"estimate"}, \code{"cv"}, and \code{"bayes"} delegate lambda
-handling to the per-column BM path. Binary/categorical/zi_gate columns
-are unaffected by \code{lambda_mode} and keep the threshold-joint /
-OVR-categorical baseline. \strong{Covariate caveat}: when
-\code{data$covariates} is supplied, the per-column path switches to
-\code{bm_impute_col_with_cov()}, which has no lambda argument and
-always fits at lambda = 1; \code{lambda_mode != "fixed_1"} is then
-silently ignored for BM-eligible columns and a warning is emitted.}
+baseline (continuous, count, proportion, zi_count magnitude columns;
+NOT ordinal, which the threshold-joint path treats as a liability
+column via \code{estep_liability_ordinal()} -- see \dQuote{Per-type
+lambda dispatch} in Details). \code{"estimate"} (default, S4) fits
+each continuous-family column's own Pagel's lambda via profile REML;
+when the joint MVN or threshold-joint baseline fires, this now runs
+INSIDE that joint fit (\code{R/joint_mvn_solver.R}'s per-column
+\code{lambda_cols}) rather than being discarded in favour of a
+separate per-column re-fit. \code{"fixed_1"} preserves the classic
+Brownian correlation matrix (lambda = 1 everywhere). \code{"cv"} and
+\code{"bayes"} have no joint analogue and force the per-column BM path
+for continuous-family columns (as before); binary/ordinal/categorical/
+zi_gate columns are unaffected by \code{lambda_mode} in every case and
+keep the threshold-joint / OVR-categorical baseline at lambda = 1.
+\strong{Covariate caveat}: when \code{data$covariates} is supplied,
+the per-column path switches to \code{bm_impute_col_with_cov()},
+which accepts a numeric lambda or \code{"estimate"} but not
+\code{"cv"} / \code{"bayes"}; those two modes are silently ignored
+(fit at lambda = 1) for BM-eligible columns and a warning is emitted.}
+
+\item{lambda_fixed}{optional named numeric vector (names = latent column
+names, i.e. \code{colnames(data$X_scaled)}) giving a FIXED lambda per
+continuous-family column, overriding \code{lambda_mode} entirely for
+those columns (spec 4.5: reproduce a previous fit's exact per-trait
+lambda at predict time without re-estimating -- typically supply that
+fit's own \code{$lambda_per_trait}). Columns not present in
+\code{lambda_fixed} keep their lambda = 1 default. \code{NULL}
+(default) means every continuous-family column follows
+\code{lambda_mode} normally.}
 
 \item{em_iterations}{integer. Number of Phase 6 EM iterations for the
 threshold-joint baseline (binary + ordinal + OVR categorical). Default
@@ -89,16 +108,25 @@ behaviour.}
 \item{joint_solver}{character. Which solver estimates the joint
 Sigma / posterior for the joint MVN, threshold-joint, and OVR
 categorical baselines. \code{"inhouse"} (default) uses the
-single-pass in-house solver (\code{R/joint_mvn_solver.R}) and is
-byte-identical to prior releases. \code{"rphylopars"} delegates to
-\code{Rphylopars::phylopars()}'s converged REML fit; on failure or
-non-finite output it falls back to \code{"inhouse"} with a warning.
-Only affects the joint MVN / threshold-joint / OVR
-categorical paths above; ignored when those paths don't fire. Note
-that \code{lambda_mode != "fixed_1"} disables the continuous-only
-joint MVN path (it has no lambda argument) but no longer disables
-the threshold-joint / OVR-categorical paths -- see
-\dQuote{Per-type lambda dispatch} in Details.}
+single-pass in-house solver (\code{R/joint_mvn_solver.R}); under
+\code{lambda_mode = "fixed_1"} it is byte-identical to prior
+releases, but \code{lambda_mode = "estimate"} (the current default)
+is new behaviour, not a byte-compatibility guarantee.
+\code{"rphylopars"} delegates to \code{Rphylopars::phylopars()};
+under \code{"estimate"} this calls it with \code{model = "lambda"}
+(substantially slower than \code{model = "BM"}), with automatic
+fallback to \code{"inhouse"} on failure or implausible output (a
+plausibility guard that also fires under \code{lambda_mode =
+"fixed_1"} -- see NEWS). Only affects the joint MVN / threshold-joint
+/ OVR categorical paths above; ignored when those paths don't fire.
+\code{lambda_mode} does NOT disable the continuous-only joint MVN
+path: both \code{fit_joint_mvn_baseline()} and
+\code{fit_joint_threshold_baseline()} accept a \code{lambda_mode} /
+\code{lambda_fixed} argument and estimate lambda inside the joint fit
+via \code{lambda_cols} -- see \dQuote{Per-type lambda dispatch} in
+Details. Only \code{"cv"} / \code{"bayes"} force continuous-family
+columns off the joint path entirely (no joint analogue for those two
+modes).}
 
 \item{predict_method}{character. Prediction route for the in-house joint
 solver. \code{"per_column"} (default) retains the established
@@ -145,6 +173,18 @@ columns: gate then magnitude), \code{path} reports the GATE column's
 dispatch -- the magnitude column can independently land on
 \code{"joint_mvn"}, \code{"threshold_joint"}, \code{"per_column_bm"},
 or \code{"zi_mag_constant"} and is not separately surfaced here.}
+\item{lambda_per_trait}{Named numeric vector (length \code{p_latent},
+names = \code{colnames(data$X_scaled)}), the lambda actually used
+for each latent column: 1 for every column not eligible for lambda
+estimation (all discrete columns; continuous-family columns under
+\code{lambda_mode \%in\% c("cv", "bayes")}), else the estimated or
+fixed value.}
+\item{lambda_block}{Numeric scalar, the shared lambda used internally
+by whichever joint fit ran for its Sigma M-step / opt-in exact
+conditional / opt-in EM refine (see \code{R/joint_mvn_solver.R}'s
+\code{$lambda_block}); \code{NA} when no joint fit ran.}
+\item{lambda_mode}{Character, echoes the resolved \code{lambda_mode}
+argument.}
 }
 }
 \description{
@@ -172,22 +212,26 @@ any supplied covariates are ignored for the BASELINE and a warning is
 emitted; covariates still reach the GNN correction via
 \code{\link{fit_pigauto}} regardless of which baseline path fires.
 
-\strong{Per-type lambda dispatch (arc/lambda-per-type)}: \code{lambda_mode}
-only ever governs the baseline for CONTINUOUS-FAMILY columns (continuous,
-count, ordinal, proportion, zi_count magnitude). Binary, ordinal,
-categorical, and zero-inflated gate columns keep the threshold-joint /
-OVR-categorical joint baseline (always fit at lambda = 1) regardless of
-\code{lambda_mode} -- there is no discrete-trait analogue of Pagel's
-lambda, and previously forcing these columns onto label propagation any
-time \code{lambda_mode != "fixed_1"} cost 19pp of Trophic.Level accuracy
-on AVONET (0.789 -> 0.600; see
-\code{docs/dev-log/2026-08-16-external-comparison-results.md}). When
-\code{lambda_mode != "fixed_1"} and the threshold-joint baseline fires
-for a dataset with binary/ordinal AND continuous-family columns, the
-joint liability fit still uses the continuous-family columns internally
-to inform the joint Sigma (and hence the binary/ordinal posteriors); only
-its continuous-column baseline OUTPUT is discarded in favour of the
-lambda-aware per-column BM fit.
+\strong{Per-type lambda dispatch (arc/lambda-per-type; corrected in S4/S6,
+feat/joint-lambda-default)}: \code{lambda_mode} only ever governs the
+baseline for CONTINUOUS-FAMILY columns (continuous, count, proportion,
+zi_count magnitude) -- NOT ordinal. Binary, ordinal, categorical, and
+zero-inflated gate columns always stay at lambda = 1 in EVERY path
+(threshold-joint, OVR-categorical, label propagation, and the per-trait
+ordinal path-selection fallback below), regardless of \code{lambda_mode}
+-- there is no discrete-trait analogue of Pagel's lambda, and previously
+forcing these columns onto label propagation any time \code{lambda_mode
+!= "fixed_1"} cost 19pp of Trophic.Level accuracy on AVONET (0.789 ->
+0.600; see \code{docs/dev-log/2026-08-16-external-comparison-results.md}).
+When \code{lambda_mode != "fixed_1"} and the threshold-joint baseline
+fires for a dataset with binary/ordinal AND continuous-family columns,
+the joint liability fit's own continuous-column OUTPUT is now USED
+(each continuous-family column gets its own \code{lambda_k} via the
+joint solver's \code{lambda_cols}), rather than being discarded for a
+separate lambda-aware per-column BM re-fit as in the pre-S4 design.
+Ordinal liability columns inside that same joint fit, and the
+BM-via-MVN / K-class-OVR-LP alternatives the "Per-trait ordinal path
+selection" block below compares against it, all stay at lambda = 1.
 }
 \examples{
 \donttest{

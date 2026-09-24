@@ -1,0 +1,70 @@
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): parasites. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(parasites = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): parasites. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(parasites = "continuous").
+
+1 tree tip(s) have no trait data and will have all-NA rows.
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): counts. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(counts = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Loading required package: torch
+Tracing function "torch_tensor" in package "torch"
+Untracing function "torch_tensor" in package "torch"
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Tracing function "nn_parameter" in package "torch"
+Tracing function "torch_tensor" in package "torch"
+Untracing function "nn_parameter" in package "torch"
+Untracing function "torch_tensor" in package "torch"
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Tracing function "torch_tensor" in package "torch"
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Untracing function "torch_tensor" in package "torch"
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Tracing function "torch_tensor" in package "torch"
+Untracing function "torch_tensor" in package "torch"
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+single-trait back-compat: max |mu diff| = 3.16e-05, max |se diff| = 1.71e-04
+[joint-lambda] recovery (n = 40 seeds): bias = -0.0577, -0.0744, -0.0050 | MAE = 0.1307, 0.1166, 0.0050
+[lambda-cov] n = 300, 600 seeds: mean(lambda_hat) = 0.2614, bias = -0.0386, MAE = 0.1414 (MAE not gated)
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Model saved to /var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpqGkFrt/file1043a15c309dd.pigauto (432,961 bytes)
+
+  ml lambda_hat = 0.005, cv lambda_hat = 0.010 (true mix = 0.2)
+
+  [pagel-perf] eigendecomp + 11 NLL evals at n=600: 0.02 s
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): count_trait. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(count_trait = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): cnt. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(cnt = "continuous").
+
+Note: model was saved with pigauto 0.9.1.9000; current version is 0.11.0.9000
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): x_cnt. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(x_cnt = "continuous").
+
+Using device: mps
+Calibrating gates on validation set...
+Calibrated gates: Mass=0, Beak.Length_Culmen=0, Tarsus.Length=0, Wing.Length=0, Trophic.Level=Carnivore=0, Trophic.Level=Herbivore=0, Trophic.Level=Omnivore=0, Trophic.Level=Scavenger=0, Primary.Lifestyle=Aerial=0, Primary.Lifestyle=Aquatic=0, Primary.Lifestyle=Generalist=0, Primary.Lifestyle=Insessorial=0, Primary.Lifestyle=Terrestrial=0, Migration=0
+Conformal scores (latent scale, method=split): Mass=0.9031, Beak.Length_Culmen=1.2122, Tarsus.Length=1.7023, Wing.Length=1.2588, Migration=2.9202
+Using device: mps
+Calibrating gates on validation set...
+Calibrated gates: Dummy_Size=1
+Conformal scores (latent scale, method=split): Dummy_Size=1.4898
+SUITE FAIL 0 | PASS 2596

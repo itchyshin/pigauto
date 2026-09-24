@@ -179,6 +179,12 @@ test_that('[pagel] bm_impute_col(lambda = "estimate") recovers low lambda on iid
 # ---- fit_baseline + dispatcher threading ----------------------------------
 
 test_that("[pagel] fit_baseline(lambda_mode='fixed_1') is back-compatible (no behaviour change)", {
+  # S4 (feat/joint-lambda-default) changed fit_baseline()'s DEFAULT
+  # lambda_mode from "fixed_1" to "estimate", so "no lambda_mode arg" is no
+  # longer equivalent to "fixed_1" -- that equivalence was this test's
+  # entire premise. Pinned: both calls now explicit "fixed_1", checking
+  # that two calls with the SAME requested mode agree (idempotence), which
+  # is what remains true and worth protecting here.
   set.seed(30L)
   tree <- ape::rcoal(30L)
   df <- data.frame(
@@ -189,7 +195,7 @@ test_that("[pagel] fit_baseline(lambda_mode='fixed_1') is back-compatible (no be
   df$x1[c(2L, 5L, 17L)] <- NA
   df$x2[c(3L, 11L)] <- NA
   pd <- preprocess_traits(df, tree)
-  bl_default <- fit_baseline(pd, tree)
+  bl_default <- fit_baseline(pd, tree, lambda_mode = "fixed_1")
   bl_fixed   <- fit_baseline(pd, tree, lambda_mode = "fixed_1")
   expect_equal(bl_fixed$mu, bl_default$mu, tolerance = 1e-12)
   expect_equal(bl_fixed$se, bl_default$se, tolerance = 1e-12)
@@ -258,12 +264,14 @@ test_that("[pagel] impute(lambda_mode=...) threads to baseline and model config"
 
 # ---- lambda silently dropped under covariates (P1-8 fix 1) ---------------
 
-test_that("[pagel] fit_baseline warns when covariates + lambda_mode != 'fixed_1'", {
-  # bm_impute_col_with_cov() has no lambda argument -- the covariate-aware
-  # GLS path always runs at lambda = 1, so lambda_mode = "estimate" is
-  # silently ignored for BM-eligible columns when covariates are supplied.
-  # A single continuous trait keeps the per-column path selected (no
-  # joint dispatch competing for the warning).
+test_that("[pagel] fit_baseline warns when covariates + lambda_mode is 'cv' or 'bayes'", {
+  # S4 (feat/joint-lambda-default): bm_impute_col_with_cov() gained a
+  # `lambda` argument (S3) that accepts a numeric scalar or "estimate", so
+  # lambda_mode = "estimate" no longer triggers this warning -- only "cv"
+  # and "bayes" have no covariate-aware analogue (see the complementary
+  # "does NOT warn" test below, which now covers "estimate" via the new
+  # default). A single continuous trait keeps the per-column path selected
+  # (no joint dispatch competing for the warning).
   set.seed(40L)
   tree <- ape::rcoal(20L)
   df <- data.frame(x1 = stats::rnorm(20L), row.names = tree$tip.label)
@@ -272,9 +280,10 @@ test_that("[pagel] fit_baseline warns when covariates + lambda_mode != 'fixed_1'
   pd <- preprocess_traits(df, tree, covariates = covs)
 
   expect_warning(
-    fit_baseline(pd, tree, lambda_mode = "estimate"),
+    fit_baseline(pd, tree, lambda_mode = "cv"),
     regexp = "lambda_mode.*not supported.*covariate-aware BM baseline"
   )
+  expect_no_warning(fit_baseline(pd, tree, lambda_mode = "estimate"))
 })
 
 test_that("[pagel] fit_baseline does NOT warn for covariates + default lambda_mode", {
