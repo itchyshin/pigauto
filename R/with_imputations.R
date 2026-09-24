@@ -3,15 +3,27 @@
 #' Apply a user-supplied model-fitting function `.f` to each of the `M`
 #' complete datasets stored in an analysis-aware MI object and return the list
 #' of fits. This is the supported fitting entry for
-#' [multi_impute_analysis()] only. Prediction-diagnostic and posterior-tree
-#' sensitivity completions stop with an actionable error before any model is
-#' fitted. The analysis-aware workflow is experimental and limited to
-#' fixed-effect coefficients and their covariance matrices.
+#' [multi_impute_analysis()] and for
+#' [multi_impute()] with `draws_method = "posterior"`. Prediction-diagnostic
+#' (`"conformal"`, `"mc_dropout"`) and posterior-tree sensitivity completions
+#' stop with an actionable error before any model is fitted. The workflow is
+#' experimental and limited to fixed-effect coefficients and their covariance
+#' matrices.
+#'
+#' @section Posterior draws and congeniality:
+#' The `draws_method = "posterior"` completions are proper imputations under
+#' a joint phylogenetic mixed model of the imputed traits only. They are
+#' proper for analyses whose variables are all among those imputed traits,
+#' for example a phylogenetic regression of one imputed trait on others.
+#' Analyses that add covariates from outside the imputed traits are not
+#' covered, because the imputation model does not contain them. The formula
+#' passed to `.f` is not checked; this is the analyst's responsibility.
 #'
 #' @param mi A `pigauto_analysis_mi` object returned by
-#'   [multi_impute_analysis()]. Legacy `pigauto_mi` objects, diagnostic
-#'   completions, tree-sensitivity completions, and bare dataset lists are not
-#'   supported fitting inputs.
+#'   [multi_impute_analysis()], or a `pigauto_posterior_mi` object returned
+#'   by [multi_impute()] with `draws_method = "posterior"`. Legacy
+#'   `pigauto_mi` objects, diagnostic completions, tree-sensitivity
+#'   completions, and bare dataset lists are not supported fitting inputs.
 #' @param .f A function of the form `function(dataset, ...)` that fits
 #'   a model to one complete data.frame and returns a model object.
 #'   [pool_mi()] supplies automatic fixed-effect adapters for its documented
@@ -75,13 +87,16 @@ with_imputations <- function(mi, .f, ...,
          "use `multi_impute_analysis()` for the supported narrow workflow.",
          call. = FALSE)
   }
-  if (inherits(mi, "pigauto_mi") && !inherits(mi, "pigauto_analysis_mi")) {
+  is_posterior <- inherits(mi, "pigauto_posterior_mi") &&
+    identical(workflow, "pigauto_posterior_mi_v1")
+  if (inherits(mi, "pigauto_mi") && !inherits(mi, "pigauto_analysis_mi") &&
+      !is_posterior) {
     stop("Legacy `pigauto_mi` objects have no analysis-aware provenance. ",
          "Create a new object with `multi_impute_analysis()` before ",
          "`with_imputations()`.", call. = FALSE)
   }
-  if (!inherits(mi, "pigauto_analysis_mi") ||
-      !identical(workflow, "pigauto_analysis_mi_v1")) {
+  if (!is_posterior && (!inherits(mi, "pigauto_analysis_mi") ||
+      !identical(workflow, "pigauto_analysis_mi_v1"))) {
     stop("`with_imputations()` requires an analysis-aware object from ",
          "`multi_impute_analysis()`.", call. = FALSE)
   }

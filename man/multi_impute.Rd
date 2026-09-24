@@ -8,7 +8,7 @@ multi_impute(
   traits,
   tree,
   m = 100L,
-  draws_method = c("conformal", "mc_dropout"),
+  draws_method = c("conformal", "mc_dropout", "posterior"),
   species_col = NULL,
   trait_types = NULL,
   multi_proportion_groups = NULL,
@@ -20,6 +20,7 @@ multi_impute(
   seed = NULL,
   gnn = TRUE,
   lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
+  posterior_control = list(),
   ...
 )
 }
@@ -49,7 +50,17 @@ draws for discrete traits.}
 mode (dropout active) on top of stochastic Brownian-motion baseline
 draws. Brownian draws still contribute between-draw variation
 when a calibrated GNN gate is zero.}
-}}
+\item{\code{"posterior"}}{Continuous traits only, one row per species, no
+covariates. Fit a Bayesian multivariate phylogenetic mixed model by
+MCMC and return \code{m} completions drawn from the posterior predictive
+distribution of the missing cells. No GNN is fitted. See "Posterior
+draws" below.}
+}
+Conformal and MC-dropout draws are generated independently per cell
+around a point prediction. In a 16-regime simulation of a downstream
+phylogenetic regression they attenuated the pooled slope (bias -0.20 to
+-0.46) with near-zero confidence-interval coverage. For downstream
+inference on continuous traits use \code{"posterior"}.}
 
 \item{species_col}{character or \code{NULL}. If set, marks the column
 in \code{traits} containing species identifiers and enables multiple
@@ -101,6 +112,26 @@ preserves the pre-lambda Brownian correlation matrix everywhere;
 \code{predict_method = "exact"} / \code{joint_refine_iter > 0} interaction with
 \code{lambda_block}.}
 
+\item{posterior_control}{list of settings for \code{draws_method = "posterior"} (ignored otherwise). Elements, with defaults:
+\describe{
+\item{\code{n_chains}}{\code{4L}. Number of MCMC chains, started from dispersed
+values around the per-trait REML Pagel's lambda.}
+\item{\code{n_iter}}{\code{5000L}. Sweeps per chain after burn-in.}
+\item{\code{burnin}}{\code{1000L}. Burn-in sweeps per chain (also used to tune
+the Metropolis step sizes).}
+\item{\code{thin}}{Default: \code{n_iter} integer-divided by
+\code{ceiling(keep_draws / n_chains)}, so
+that the chains together keep \code{keep_draws} sweeps.}
+\item{\code{keep_draws}}{\code{1000L}. Minimum number of kept posterior
+predictive draws across chains, used for the per-cell intervals.
+Must be at least \code{m}.}
+\item{\code{param_uncertainty}}{\code{"full"} (default) or \code{"none"}. \code{"none"}
+is an improper plug-in mode for validation only: the covariance
+matrices are fixed at their posterior means from a full run, and
+only the missing cells (and the trait means) are drawn.}
+\item{\code{seed}}{Integer or \code{NULL}. Defaults to \code{seed}.}
+}}
+
 \item{...}{additional arguments forwarded to \code{\link[=fit_pigauto]{fit_pigauto()}} via
 \code{\link[=impute]{impute()}}. See \code{\link[=fit_pigauto]{fit_pigauto()}} for the full list; the "Safety
 floor" section below describes the relevant new v0.9.1.9002
@@ -136,6 +167,19 @@ on new data.}
 \item{\code{tree}}{The input phylogeny.}
 \item{\code{species_col}}{Passed-through species-column name or
 \code{NULL}.}
+\item{\code{posterior}}{\code{draws_method = "posterior"} only. A list with
+\code{cell_interval} (data.frame: \code{row} (row of \code{traits}), \code{trait},
+\code{lower}, \code{upper}, \code{median}; 95\% posterior predictive interval on
+the original scale), \code{diagnostics} (data.frame: \code{parameter}, \code{rhat},
+\code{ess_bulk}, with attribute \code{"converged"}), \code{params} (list:
+\code{Sigma_P} and \code{Sigma_E} as \verb{K x K x draws} arrays, \code{lambda} and \code{mu}
+as \verb{draws x K} matrices, on the latent scale), \code{converged},
+\code{control}, \code{hyper} (priors), \code{start} (REML lambda and chain-1 start
+lambda), \code{draw_index} (kept sweeps used for the \code{m} datasets),
+\code{wall_s} and \code{sweeps}. For this method \code{fit} is \code{NULL}, \code{se} holds
+the posterior predictive SD of each imputed cell, the class is
+\code{c("pigauto_posterior_mi", "pigauto_mi", "list")} and
+\code{mi_workflow} is \code{"pigauto_posterior_mi_v1"}.}
 }
 }
 \description{
@@ -143,9 +187,11 @@ Run pigauto's full imputation pipeline and return \code{M} stochastic
 completions of the trait matrix instead of a single point estimate.
 The conformal-width and Brownian/MC-dropout draws returned here are
 experimental prediction-diagnostic draws. Do not use these datasets for
-downstream inference or Rubin pooling. The separate analysis-aware backend,
-\code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, is the only supported route in its documented
-narrow regime.
+downstream inference or Rubin pooling. For continuous traits,
+\code{draws_method = "posterior"} instead returns proper Bayesian posterior
+imputations that can be passed to \code{\link[=with_imputations]{with_imputations()}} and \code{\link[=pool_mi]{pool_mi()}}
+(see "Posterior draws" below). The separate analysis-aware backend,
+\code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, covers its own documented narrow regime.
 }
 \details{
 These draws do not condition on a declared substantive analysis model.
@@ -174,6 +220,8 @@ training mode (dropout active) on top of stochastic BM baseline draws.
 When \code{r_cal = 0}, the GNN-dropout term disappears but the BM draw still
 contributes between-draw variance.
 
+\strong{\code{draws_method = "posterior"}}: see the "Posterior draws" section.
+
 Nakagawa & Freckleton (2008, 2011) review the consequences of
 ignoring missing data in ecological and comparative analyses and
 argue for multiple imputation as the default.
@@ -186,6 +234,42 @@ one tree. It is not the analysis-aware inferential backend.
 
 \code{\link[=multi_impute_trees]{multi_impute_trees()}} provides an experimental posterior-tree sensitivity
 path, but tree uncertainty is not supported by \code{\link[=multi_impute_analysis]{multi_impute_analysis()}}.
+}
+
+\section{Posterior draws}{
+
+With \code{draws_method = "posterior"}, the latent (z-scored, optionally
+log-transformed) traits follow the multivariate phylogenetic mixed model
+\deqn{\mathrm{vec}(Y) \sim \mathrm{N}(1\mu^\top,\;
+  \Sigma_P \otimes R + \Sigma_E \otimes I_n),}
+with \eqn{R} the phylogenetic correlation matrix of the tree, full
+\eqn{K \times K} phylogenetic (\eqn{\Sigma_P}) and residual
+(\eqn{\Sigma_E}) covariance matrices, and a flat prior on \eqn{\mu}.
+The implied Pagel's lambda of trait \eqn{k} is
+\eqn{\Sigma_P[k,k] / (\Sigma_P[k,k] + \Sigma_E[k,k])}. Priors follow
+MCMCglmm's parameter-expanded defaults (Hadfield 2010; Gelman 2006). The
+sampler draws the phylogenetic effects, the trait means and the missing
+cells as one block with a sparse Cholesky factor of the Hadfield and
+Nakagawa (2010) node precision, and updates the covariance matrices by
+parameter-expanded Gibbs steps plus Metropolis moves with the
+phylogenetic effects integrated out. Convergence is checked with
+rank-normalised split R-hat and bulk effective sample size (Vehtari et
+al. 2021); \code{mi$posterior$diagnostics} reports them, and a warning is
+raised when any R-hat is at least 1.05 or any ESS is at most 400.
+
+The \code{m} datasets are posterior predictive draws spaced evenly across the
+kept sweeps of all chains. Per-cell 95\% intervals in
+\code{mi$posterior$cell_interval} come from all kept sweeps (at least
+\code{keep_draws}), never from the \code{m} datasets.
+
+These draws are proper imputations for analyses whose variables are all
+among the imputed traits, for example a phylogenetic regression of one
+imputed trait on others. Analyses that add covariates from outside the
+imputed traits are not covered, because the imputation model does not
+contain them. The GNN is not used, and \code{gnn}, \code{epochs}, \code{missing_frac},
+\code{lambda_mode} and other fitting arguments are ignored (a message lists
+any that were supplied). Non-continuous traits, multiple observations per
+species and \code{covariates} are errors.
 }
 
 \section{Safety floor (v0.9.1.9002+)}{
@@ -225,6 +309,22 @@ Wiley.
 Nakagawa S, Freckleton RP (2008). "Missing inaction: the dangers of
 ignoring missing data." \emph{Trends in Ecology & Evolution} 23(11):
 592-596.
+
+Gelman A (2006). "Prior distributions for variance parameters in
+hierarchical models." \emph{Bayesian Analysis} 1(3): 515-534.
+
+Hadfield JD (2010). "MCMC methods for multi-response generalized linear
+mixed models: the MCMCglmm R package." \emph{Journal of Statistical Software}
+33(2): 1-22.
+
+Hadfield JD, Nakagawa S (2010). "General quantitative genetic methods for
+comparative biology: phylogenies, taxonomies and multi-trait models for
+continuous and categorical characters." \emph{Journal of Evolutionary Biology}
+23(3): 494-508.
+
+Vehtari A, Gelman A, Simpson D, Carpenter B, Buerkner P-C (2021).
+"Rank-normalization, folding, and localization: an improved R-hat for
+assessing convergence of MCMC." \emph{Bayesian Analysis} 16(2): 667-718.
 
 Nakagawa S, Freckleton RP (2011). "Model averaging, missing data and
 multiple imputation: a case study for behavioural ecology."

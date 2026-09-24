@@ -161,12 +161,14 @@ pool_mi <- function(fits,
            "provenance. Refit with `multi_impute_analysis()` and ",
            "`with_imputations()` before pooling.", call. = FALSE)
     }
-    if (!identical(workflow, "pigauto_analysis_mi_v1")) {
+    if (!(workflow %in% c("pigauto_analysis_mi_v1",
+                          "pigauto_posterior_mi_v1"))) {
       stop("`fits` carries unknown multiple-imputation provenance and cannot be ",
            "pooled safely.", call. = FALSE)
     }
-  } else if (identical(workflow, "pigauto_analysis_mi_v1")) {
-    stop("`mi_workflow = \"pigauto_analysis_mi_v1\"` is inconsistent ",
+  } else if (identical(workflow, "pigauto_analysis_mi_v1") ||
+             identical(workflow, "pigauto_posterior_mi_v1")) {
+    stop("`mi_workflow = \"", workflow, "\"` is inconsistent ",
          "provenance for a fit list not created by `with_imputations()`.",
          call. = FALSE)
   } else if (is.null(workflow)) {

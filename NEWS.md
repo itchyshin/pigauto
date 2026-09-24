@@ -1,5 +1,48 @@
 # pigauto 0.11.0.9000 (dev)
 
+## New: `multi_impute(draws_method = "posterior")` for continuous traits
+
+`multi_impute()` gains `draws_method = "posterior"`, which returns proper
+Bayesian multiple imputations for continuous traits. It fits the
+multivariate phylogenetic mixed model
+`vec(Y) ~ N(1 mu', Sigma_P %x% R + Sigma_E %x% I_n)` on pigauto's latent
+scale, with full phylogenetic and residual covariance matrices (so a separate
+Pagel's lambda per trait) and MCMCglmm-style parameter-expanded priors. Each
+of the `m` completed datasets is a draw from the posterior predictive
+distribution of the missing cells, so imputation uncertainty is correlated
+across tips and traits and includes parameter uncertainty. The sampler draws
+the phylogenetic effects, trait means and missing cells as one block with a
+sparse Cholesky factor of the Hadfield and Nakagawa (2010) node precision, so
+cost grows roughly linearly in the number of species. Metropolis moves with
+the effects integrated out keep it mixing near lambda = 0 and lambda = 1.
+
+- New argument `posterior_control` (chains, burn-in, iterations, thinning,
+  `keep_draws`, `param_uncertainty`, `seed`).
+- `mi$posterior` holds per-cell 95% posterior predictive intervals
+  (`cell_interval`, computed from all kept draws, not from the `m`
+  datasets), convergence diagnostics (`diagnostics`: rank-normalised split
+  R-hat and bulk ESS; attribute `"converged"`), and the parameter draws
+  (`params`). A warning is raised if the chains have not converged.
+- The result can be passed to `with_imputations()` and `pool_mi()`, which
+  now accept the provenance marker `"pigauto_posterior_mi_v1"` alongside
+  `"pigauto_analysis_mi_v1"`. The draws are proper for analyses whose
+  variables are all among the imputed traits; analyses that add external
+  covariates are not covered, because the imputation model does not contain
+  them.
+- Not supported (clear errors): non-continuous traits, multiple
+  observations per species, and `covariates`. The GNN is not used, and
+  fitting arguments such as `gnn` and `epochs` are ignored with a message.
+
+The default draws method is unchanged (`"conformal"`).
+
+**Caveat for downstream inference with the other draws methods.** The
+`"conformal"` and `"mc_dropout"` draws perturb each missing cell
+independently around a point prediction. In a 16-regime simulation of a
+downstream phylogenetic regression (branch `arc/mi-gls-attenuation`,
+`docs/dev-log/mi-gls/`), they attenuated the pooled slope, with bias of
+-0.20 to -0.46 and near-zero confidence-interval coverage. For downstream
+inference on continuous traits, use `draws_method = "posterior"`.
+
 ## Default flip: `lambda_mode = "estimate"`
 
 `impute()`, `fit_pigauto()`, and `multi_impute()` now default `lambda_mode`

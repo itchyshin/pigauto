@@ -1,0 +1,184 @@
+# API of multi_impute(draws_method = "posterior") (design.md sections 4 and
+# 5a items 7 to 11). Short chains keep this fast; non-convergence warnings
+# are expected and muffled.
+
+post_data <- function(n = 30L, seed = 21L) {
+  set.seed(seed)
+  tree <- ape::rtree(n)
+  R <- stats::cov2cor(ape::vcv(tree))
+  Z <- t(chol(R + diag(1e-10, n))) %*% matrix(stats::rnorm(2L * n), n) %*%
+    chol(matrix(c(1, 0.6, 0.6, 1), 2))
+  df <- data.frame(mass = exp(Z[, 1] + 3), wing = Z[, 2] * 2 + 10,
+                   row.names = tree$tip.label)
+  df$mass[c(2, 5, 9, 14)] <- NA
+  df$wing[c(5, 7, 20, 25, 28)] <- NA
+  # Shuffle rows so input order differs from tree tip order.
+  df <- df[sample.int(n), , drop = FALSE]
+  list(df = df, tree = tree)
+}
+
+fast_ctl <- list(n_chains = 2L, burnin = 60L, n_iter = 120L, keep_draws = 40L)
+
+run_post <- function(df, tree, m = 4L, seed = 3L, ctl = fast_ctl, ...) {
+  suppressWarnings(multi_impute(df, tree, m = m, draws_method = "posterior",
+                                posterior_control = ctl, seed = seed,
+                                verbose = FALSE, ...))
+}
+
+test_that("posterior output has the frozen section-4 shape", {
+  pd <- post_data()
+  mi <- run_post(pd$df, pd$tree)
+  expect_s3_class(mi, "pigauto_posterior_mi")
+  expect_s3_class(mi, "pigauto_mi")
+  expect_identical(mi$draws_method, "posterior")
+  expect_identical(mi$mi_workflow, "pigauto_posterior_mi_v1")
+  expect_length(mi$datasets, 4L)
+  expect_identical(mi$m, 4L)
+  for (d in mi$datasets) {
+    expect_identical(dim(d), dim(pd$df))
+    expect_identical(rownames(d), rownames(pd$df))
+    expect_false(anyNA(d))
+  }
+  ci <- mi$posterior$cell_interval
+  expect_identical(names(ci), c("row", "trait", "lower", "upper", "median"))
+  expect_identical(nrow(ci), sum(is.na(pd$df)))
+  expect_true(all(ci$lower <= ci$median & ci$median <= ci$upper))
+  expect_true(all(is.na(pd$df[cbind(ci$row, match(ci$trait, names(pd$df)))])))
+  expect_true(all(ci$lower[ci$trait == "mass"] > 0))   # log-scale decode
+  dg <- mi$posterior$diagnostics
+  expect_identical(names(dg), c("parameter", "rhat", "ess_bulk"))
+  expect_true(is.logical(attr(dg, "converged")))
+  expect_setequal(dg$parameter,
+                  c("Sigma_P[1,1]", "Sigma_P[1,2]", "Sigma_P[2,2]",
+                    "Sigma_E[1,1]", "Sigma_E[1,2]", "Sigma_E[2,2]",
+                    "lambda[1]", "lambda[2]"))
+  pr <- mi$posterior$params
+  expect_identical(names(pr)[1:4], c("Sigma_P", "Sigma_E", "lambda", "mu"))
+  expect_equal(dim(pr$Sigma_P), c(2L, 2L, 40L))
+  expect_equal(dim(pr$Sigma_E), c(2L, 2L, 40L))
+  expect_equal(dim(pr$lambda), c(40L, 2L))
+  expect_equal(dim(pr$mu), c(40L, 2L))
+  expect_identical(colnames(pr$lambda), c("mass", "wing"))
+})
+
+test_that("observed cells are never altered and imputed cells vary", {
+  pd <- post_data()
+  mi <- run_post(pd$df, pd$tree, m = 5L)
+  obs <- !is.na(as.matrix(pd$df))
+  for (d in mi$datasets) {
+    expect_identical(as.matrix(d)[obs], as.matrix(pd$df)[obs])
+  }
+  stack <- vapply(mi$datasets, function(d) as.matrix(d)[!obs], numeric(sum(!obs)))
+  expect_true(all(apply(stack, 1L, stats::sd) > 0))
+  expect_identical(mi$imputed_mask, is.na(as.matrix(pd$df)))
+  # Imputed values lie inside or near their own cell's interval (row
+  # alignment): at least most of them are within the 95% interval.
+  ci <- mi$posterior$cell_interval
+  v <- as.matrix(mi$datasets[[1]])[cbind(ci$row, match(ci$trait, names(pd$df)))]
+  expect_gte(mean(v >= ci$lower & v <= ci$upper), 0.6)
+})
+
+test_that("the same seed reproduces the draws; another seed does not", {
+  pd <- post_data()
+  a <- run_post(pd$df, pd$tree, seed = 5L)
+  b <- run_post(pd$df, pd$tree, seed = 5L)
+  c <- run_post(pd$df, pd$tree, seed = 6L)
+  expect_identical(a$datasets, b$datasets)
+  expect_identical(a$posterior$params, b$posterior$params)
+  expect_false(identical(a$datasets, c$datasets))
+  # posterior_control$seed overrides seed.
+  d <- run_post(pd$df, pd$tree, seed = 99L, ctl = c(fast_ctl, list(seed = 5L)))
+  expect_identical(a$datasets, d$datasets)
+})
+
+test_that("non-continuous traits, multi-obs data and covariates are clear errors", {
+  pd <- post_data()
+  df <- pd$df
+  df$diet <- factor(sample(c("a", "b"), nrow(df), replace = TRUE))
+  expect_error(run_post(df, pd$tree), "continuous traits only.*diet \\(binary\\)")
+  df2 <- pd$df
+  df2$clutch <- sample(1:5, nrow(df2), replace = TRUE)
+  expect_error(run_post(df2, pd$tree), "clutch \\(count\\)")
+  df3 <- pd$df
+  df3$size <- factor(sample(c("s", "m", "l"), nrow(df3), replace = TRUE),
+                     levels = c("s", "m", "l"), ordered = TRUE)
+  expect_error(run_post(df3, pd$tree), "size \\(ordinal\\)")
+  multi <- rbind(pd$df, pd$df[1:3, ])
+  multi$species <- c(rownames(pd$df), rownames(pd$df)[1:3])
+  rownames(multi) <- NULL
+  expect_error(run_post(multi, pd$tree, species_col = "species"),
+               "one observation per species")
+  cov <- data.frame(temp = stats::rnorm(nrow(pd$df)))
+  expect_error(run_post(pd$df, pd$tree, covariates = cov),
+               "does not support `covariates`")
+  expect_error(run_post(pd$df, pd$tree, ctl = list(chains = 2L)),
+               "Unknown `posterior_control`")
+  expect_error(run_post(pd$df, pd$tree, m = 50L), "keep_draws.*at least m")
+})
+
+test_that("GNN and fitting arguments are ignored with a message", {
+  pd <- post_data()
+  expect_message(run_post(pd$df, pd$tree, gnn = FALSE, epochs = 3L),
+                 "ignoring: gnn, epochs")
+  expect_no_message(run_post(pd$df, pd$tree))
+})
+
+test_that("with_imputations() and pool_mi() run on a posterior object", {
+  pd <- post_data()
+  mi <- run_post(pd$df, pd$tree, m = 4L)
+  fits <- with_imputations(mi, function(d) stats::lm(wing ~ log(mass), data = d),
+                           .progress = FALSE)
+  expect_s3_class(fits, "pigauto_mi_fits")
+  expect_identical(attr(fits, "mi_workflow"), "pigauto_posterior_mi_v1")
+  pooled <- pool_mi(fits)
+  expect_s3_class(pooled, "pigauto_pooled")
+  expect_true(all(is.finite(pooled$estimate)))
+  expect_true(all(pooled$std.error > 0))
+  # A hand-built list stamped with the posterior marker is inconsistent.
+  forged <- lapply(mi$datasets, function(d) stats::lm(wing ~ mass, data = d))
+  attr(forged, "mi_workflow") <- "pigauto_posterior_mi_v1"
+  expect_error(pool_mi(forged), "inconsistent provenance")
+  # A posterior-looking object without the class is still refused.
+  fake <- unclass(mi)
+  class(fake) <- c("pigauto_mi", "list")
+  expect_error(with_imputations(fake, stats::lm, .progress = FALSE),
+               "Legacy `pigauto_mi`")
+})
+
+test_that("print() reports the method and convergence", {
+  pd <- post_data()
+  mi <- run_post(pd$df, pd$tree)
+  out <- utils::capture.output(print(mi))
+  expect_true(any(grepl("posterior multiple imputation", out)))
+  expect_true(any(grepl("Converged", out)))
+  expect_true(any(grepl("with_imputations", out)))
+})
+
+test_that("a non-converged run warns", {
+  pd <- post_data()
+  expect_warning(
+    multi_impute(pd$df, pd$tree, m = 2L, draws_method = "posterior",
+                 posterior_control = list(n_chains = 2L, burnin = 5L,
+                                          n_iter = 20L, keep_draws = 10L),
+                 seed = 1L, verbose = FALSE),
+    "did not meet the convergence rule")
+})
+
+test_that("improper mode returns fixed parameters through the API", {
+  pd <- post_data()
+  mi <- run_post(pd$df, pd$tree,
+                 ctl = c(fast_ctl, list(param_uncertainty = "none")))
+  sp <- mi$posterior$params$Sigma_P
+  expect_equal(max(abs(sweep(sp, c(1L, 2L), sp[, , 1L]))), 0)
+  expect_identical(mi$posterior$control$param_uncertainty, "none")
+})
+
+test_that("conformal multi_impute() objects are still refused by with_imputations()", {
+  skip_if_no_libtorch()
+  pd <- post_data()
+  mi <- suppressWarnings(
+    multi_impute(pd$df, pd$tree, m = 2L, draws_method = "conformal",
+                 epochs = 5L, verbose = FALSE, seed = 1L))
+  expect_error(with_imputations(mi, stats::lm, .progress = FALSE),
+               "prediction-diagnostic completions")
+})

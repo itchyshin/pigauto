@@ -4,9 +4,11 @@
 #' completions of the trait matrix instead of a single point estimate.
 #' The conformal-width and Brownian/MC-dropout draws returned here are
 #' experimental prediction-diagnostic draws. Do not use these datasets for
-#' downstream inference or Rubin pooling. The separate analysis-aware backend,
-#' [multi_impute_analysis()], is the only supported route in its documented
-#' narrow regime.
+#' downstream inference or Rubin pooling. For continuous traits,
+#' `draws_method = "posterior"` instead returns proper Bayesian posterior
+#' imputations that can be passed to [with_imputations()] and [pool_mi()]
+#' (see "Posterior draws" below). The separate analysis-aware backend,
+#' [multi_impute_analysis()], covers its own documented narrow regime.
 #'
 #' @section When to use this:
 #'
@@ -38,7 +40,17 @@
 #'       mode (dropout active) on top of stochastic Brownian-motion baseline
 #'       draws. Brownian draws still contribute between-draw variation
 #'       when a calibrated GNN gate is zero.}
+#'     \item{`"posterior"`}{Continuous traits only, one row per species, no
+#'       covariates. Fit a Bayesian multivariate phylogenetic mixed model by
+#'       MCMC and return `m` completions drawn from the posterior predictive
+#'       distribution of the missing cells. No GNN is fitted. See "Posterior
+#'       draws" below.}
 #'   }
+#'   Conformal and MC-dropout draws are generated independently per cell
+#'   around a point prediction. In a 16-regime simulation of a downstream
+#'   phylogenetic regression they attenuated the pooled slope (bias -0.20 to
+#'   -0.46) with near-zero confidence-interval coverage. For downstream
+#'   inference on continuous traits use `"posterior"`.
 #' @param species_col character or `NULL`. If set, marks the column
 #'   in `traits` containing species identifiers and enables multiple
 #'   observations per species. See [impute()] for details.
@@ -78,6 +90,26 @@
 #'   [fit_pigauto()] for the full contract, including the
 #'   `predict_method = "exact"` / `joint_refine_iter > 0` interaction with
 #'   `lambda_block`.
+#' @param posterior_control list of settings for `draws_method =
+#'   "posterior"` (ignored otherwise). Elements, with defaults:
+#'   \describe{
+#'     \item{`n_chains`}{`4L`. Number of MCMC chains, started from dispersed
+#'       values around the per-trait REML Pagel's lambda.}
+#'     \item{`n_iter`}{`5000L`. Sweeps per chain after burn-in.}
+#'     \item{`burnin`}{`1000L`. Burn-in sweeps per chain (also used to tune
+#'       the Metropolis step sizes).}
+#'     \item{`thin`}{Default: `n_iter` integer-divided by
+#'       `ceiling(keep_draws / n_chains)`, so
+#'       that the chains together keep `keep_draws` sweeps.}
+#'     \item{`keep_draws`}{`1000L`. Minimum number of kept posterior
+#'       predictive draws across chains, used for the per-cell intervals.
+#'       Must be at least `m`.}
+#'     \item{`param_uncertainty`}{`"full"` (default) or `"none"`. `"none"`
+#'       is an improper plug-in mode for validation only: the covariance
+#'       matrices are fixed at their posterior means from a full run, and
+#'       only the missing cells (and the trait means) are drawn.}
+#'     \item{`seed`}{Integer or `NULL`. Defaults to `seed`.}
+#'   }
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
 #'   [impute()]. See [fit_pigauto()] for the full list; the "Safety
 #'   floor" section below describes the relevant new v0.9.1.9002
@@ -112,6 +144,19 @@
 #'     \item{`tree`}{The input phylogeny.}
 #'     \item{`species_col`}{Passed-through species-column name or
 #'       `NULL`.}
+#'     \item{`posterior`}{`draws_method = "posterior"` only. A list with
+#'       `cell_interval` (data.frame: `row` (row of `traits`), `trait`,
+#'       `lower`, `upper`, `median`; 95% posterior predictive interval on
+#'       the original scale), `diagnostics` (data.frame: `parameter`, `rhat`,
+#'       `ess_bulk`, with attribute `"converged"`), `params` (list:
+#'       `Sigma_P` and `Sigma_E` as `K x K x draws` arrays, `lambda` and `mu`
+#'       as `draws x K` matrices, on the latent scale), `converged`,
+#'       `control`, `hyper` (priors), `start` (REML lambda and chain-1 start
+#'       lambda), `draw_index` (kept sweeps used for the `m` datasets),
+#'       `wall_s` and `sweeps`. For this method `fit` is `NULL`, `se` holds
+#'       the posterior predictive SD of each imputed cell, the class is
+#'       `c("pigauto_posterior_mi", "pigauto_mi", "list")` and
+#'       `mi_workflow` is `"pigauto_posterior_mi_v1"`.}
 #'   }
 #'
 #' @details
@@ -141,6 +186,8 @@
 #' When `r_cal = 0`, the GNN-dropout term disappears but the BM draw still
 #' contributes between-draw variance.
 #'
+#' **`draws_method = "posterior"`**: see the "Posterior draws" section.
+#'
 #' Nakagawa & Freckleton (2008, 2011) review the consequences of
 #' ignoring missing data in ecological and comparative analyses and
 #' argue for multiple imputation as the default.
@@ -153,9 +200,59 @@
 #' ignoring missing data." *Trends in Ecology & Evolution* 23(11):
 #' 592-596.
 #'
+#' Gelman A (2006). "Prior distributions for variance parameters in
+#' hierarchical models." *Bayesian Analysis* 1(3): 515-534.
+#'
+#' Hadfield JD (2010). "MCMC methods for multi-response generalized linear
+#' mixed models: the MCMCglmm R package." *Journal of Statistical Software*
+#' 33(2): 1-22.
+#'
+#' Hadfield JD, Nakagawa S (2010). "General quantitative genetic methods for
+#' comparative biology: phylogenies, taxonomies and multi-trait models for
+#' continuous and categorical characters." *Journal of Evolutionary Biology*
+#' 23(3): 494-508.
+#'
+#' Vehtari A, Gelman A, Simpson D, Carpenter B, Buerkner P-C (2021).
+#' "Rank-normalization, folding, and localization: an improved R-hat for
+#' assessing convergence of MCMC." *Bayesian Analysis* 16(2): 667-718.
+#'
 #' Nakagawa S, Freckleton RP (2011). "Model averaging, missing data and
 #' multiple imputation: a case study for behavioural ecology."
 #' *Behavioral Ecology and Sociobiology* 65(1): 103-116.
+#'
+#' @section Posterior draws:
+#' With `draws_method = "posterior"`, the latent (z-scored, optionally
+#' log-transformed) traits follow the multivariate phylogenetic mixed model
+#' \deqn{\mathrm{vec}(Y) \sim \mathrm{N}(1\mu^\top,\;
+#'   \Sigma_P \otimes R + \Sigma_E \otimes I_n),}
+#' with \eqn{R} the phylogenetic correlation matrix of the tree, full
+#' \eqn{K \times K} phylogenetic (\eqn{\Sigma_P}) and residual
+#' (\eqn{\Sigma_E}) covariance matrices, and a flat prior on \eqn{\mu}.
+#' The implied Pagel's lambda of trait \eqn{k} is
+#' \eqn{\Sigma_P[k,k] / (\Sigma_P[k,k] + \Sigma_E[k,k])}. Priors follow
+#' MCMCglmm's parameter-expanded defaults (Hadfield 2010; Gelman 2006). The
+#' sampler draws the phylogenetic effects, the trait means and the missing
+#' cells as one block with a sparse Cholesky factor of the Hadfield and
+#' Nakagawa (2010) node precision, and updates the covariance matrices by
+#' parameter-expanded Gibbs steps plus Metropolis moves with the
+#' phylogenetic effects integrated out. Convergence is checked with
+#' rank-normalised split R-hat and bulk effective sample size (Vehtari et
+#' al. 2021); `mi$posterior$diagnostics` reports them, and a warning is
+#' raised when any R-hat is at least 1.05 or any ESS is at most 400.
+#'
+#' The `m` datasets are posterior predictive draws spaced evenly across the
+#' kept sweeps of all chains. Per-cell 95% intervals in
+#' `mi$posterior$cell_interval` come from all kept sweeps (at least
+#' `keep_draws`), never from the `m` datasets.
+#'
+#' These draws are proper imputations for analyses whose variables are all
+#' among the imputed traits, for example a phylogenetic regression of one
+#' imputed trait on others. Analyses that add covariates from outside the
+#' imputed traits are not covered, because the imputation model does not
+#' contain them. The GNN is not used, and `gnn`, `epochs`, `missing_frac`,
+#' `lambda_mode` and other fitting arguments are ignored (a message lists
+#' any that were supplied). Non-continuous traits, multiple observations per
+#' species and `covariates` are errors.
 #'
 #' @section Safety floor (v0.9.1.9002+):
 #'   When \code{fit_pigauto()} was called with \code{safety_floor = TRUE}
@@ -189,7 +286,8 @@
 #'
 #' @export
 multi_impute <- function(traits, tree, m = 100L,
-                         draws_method = c("conformal", "mc_dropout"),
+                         draws_method = c("conformal", "mc_dropout",
+                                          "posterior"),
                          species_col = NULL,
                          trait_types = NULL,
                          multi_proportion_groups = NULL,
@@ -199,14 +297,35 @@ multi_impute <- function(traits, tree, m = 100L,
                          epochs = 2000L, verbose = TRUE, seed = NULL,
                          gnn = TRUE,
                          lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
+                         posterior_control = list(),
                          ...) {
 
+  # Recorded before match.arg() reassigns lambda_mode (used only by
+  # draws_method = "posterior" to report ignored fitting arguments).
+  supplied_fit_args <- c(if (!missing(gnn)) "gnn",
+                         if (!missing(epochs)) "epochs",
+                         if (!missing(missing_frac)) "missing_frac",
+                         if (!missing(lambda_mode)) "lambda_mode")
   draws_method <- match.arg(draws_method)
   lambda_mode <- match.arg(lambda_mode)
   m <- as.integer(m)
   if (!is.finite(m) || m < 2L) {
     stop("`m` must be an integer >= 2 (stochastic diagnostics need at least ",
          "two draws). Got m = ", m, ".", call. = FALSE)
+  }
+
+  if (draws_method == "posterior") {
+    # ---- Posterior: Bayesian phylogenetic mixed model (R/mi_posterior.R) ----
+    # No GNN is fitted; arguments that only configure the GNN fit are
+    # reported as ignored.
+    ignored <- c(supplied_fit_args, names(list(...)))
+    return(.multi_impute_posterior(
+      traits = traits, tree = tree, m = m, species_col = species_col,
+      trait_types = trait_types,
+      multi_proportion_groups = multi_proportion_groups,
+      log_transform = log_transform, covariates = covariates,
+      verbose = verbose, seed = seed, control = posterior_control,
+      ignored_args = ignored))
   }
 
   if (draws_method == "mc_dropout") {
@@ -537,6 +656,10 @@ print.pigauto_mi <- function(x, ...) {
   n_imp_cells <- sum(x$imputed_mask)
   pct <- if (total_cells > 0) 100 * n_imp_cells / total_cells else 0
 
+  if (identical(x$draws_method, "posterior")) {
+    return(.print_posterior_mi(x, n_sp, traits, p, n_imp_cells, total_cells,
+                               pct))
+  }
   cat("pigauto experimental stochastic completion diagnostics\n")
   method_label <- switch(x$draws_method %||% "mc_dropout",
     mc_dropout = "MC dropout",
@@ -553,5 +676,39 @@ print.pigauto_mi <- function(x, ...) {
   cat("\n  Access diagnostic draws:  mi$datasets[[i]]\n")
   cat("  Downstream inference:     unsupported for these draws\n")
   cat("  Analysis-aware MI:        multi_impute_analysis(...)\n")
+  invisible(x)
+}
+
+
+# ---- Internal: print method body for draws_method = "posterior" ------------
+.print_posterior_mi <- function(x, n_sp, traits, p, n_imp_cells, total_cells,
+                                pct) {
+  post <- x$posterior
+  ctl <- post$control
+  dg <- post$diagnostics
+  cat("pigauto posterior multiple imputation (phylogenetic mixed model)\n")
+  cat(sprintf("  M        : %d completed datasets (posterior predictive)\n",
+              x$m))
+  cat(sprintf("  Species  : %d\n", n_sp))
+  cat(sprintf("  Traits   : %d -- %s\n", p, paste(traits, collapse = ", ")))
+  cat(sprintf("  Cells    : %d imputed / %d total (%.1f%%)\n",
+              n_imp_cells, total_cells, pct))
+  cat(sprintf("  MCMC     : %d chains x (%d burn-in + %d sweeps, thin %d)%s\n",
+              ctl$n_chains, ctl$burnin, ctl$n_iter, ctl$thin,
+              if (identical(ctl$param_uncertainty, "none"))
+                "; covariances fixed (plug-in mode)" else ""))
+  lam <- colMeans(post$params$lambda)
+  cat(sprintf("  lambda   : %s (posterior means)\n",
+              paste(sprintf("%s = %.2f", names(lam), lam), collapse = ", ")))
+  cat(sprintf(paste0("  Converged: %s (max R-hat %.3f, needs < 1.05; ",
+                     "min bulk ESS %.0f, needs > 400)\n"),
+              if (isTRUE(post$converged)) "yes" else "NO",
+              max(dg$rhat, na.rm = TRUE), min(dg$ess_bulk, na.rm = TRUE)))
+  if (!isTRUE(post$converged)) {
+    cat("             Increase posterior_control$n_iter before using these draws.\n")
+  }
+  cat("\n  Access datasets:          mi$datasets[[i]]\n")
+  cat("  Per-cell 95% intervals:   mi$posterior$cell_interval\n")
+  cat("  Downstream inference:     with_imputations(mi, f) then pool_mi()\n")
   invisible(x)
 }

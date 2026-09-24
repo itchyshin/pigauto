@@ -14,9 +14,10 @@ with_imputations(
 }
 \arguments{
 \item{mi}{A \code{pigauto_analysis_mi} object returned by
-\code{\link[=multi_impute_analysis]{multi_impute_analysis()}}. Legacy \code{pigauto_mi} objects, diagnostic
-completions, tree-sensitivity completions, and bare dataset lists are not
-supported fitting inputs.}
+\code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, or a \code{pigauto_posterior_mi} object returned
+by \code{\link[=multi_impute]{multi_impute()}} with \code{draws_method = "posterior"}. Legacy
+\code{pigauto_mi} objects, diagnostic completions, tree-sensitivity
+completions, and bare dataset lists are not supported fitting inputs.}
 
 \item{.f}{A function of the form \verb{function(dataset, ...)} that fits
 a model to one complete data.frame and returns a model object.
@@ -47,11 +48,24 @@ filters error elements automatically.
 Apply a user-supplied model-fitting function \code{.f} to each of the \code{M}
 complete datasets stored in an analysis-aware MI object and return the list
 of fits. This is the supported fitting entry for
-\code{\link[=multi_impute_analysis]{multi_impute_analysis()}} only. Prediction-diagnostic and posterior-tree
-sensitivity completions stop with an actionable error before any model is
-fitted. The analysis-aware workflow is experimental and limited to
-fixed-effect coefficients and their covariance matrices.
+\code{\link[=multi_impute_analysis]{multi_impute_analysis()}} and for
+\code{\link[=multi_impute]{multi_impute()}} with \code{draws_method = "posterior"}. Prediction-diagnostic
+(\code{"conformal"}, \code{"mc_dropout"}) and posterior-tree sensitivity completions
+stop with an actionable error before any model is fitted. The workflow is
+experimental and limited to fixed-effect coefficients and their covariance
+matrices.
 }
+\section{Posterior draws and congeniality}{
+
+The \code{draws_method = "posterior"} completions are proper imputations under
+a joint phylogenetic mixed model of the imputed traits only. They are
+proper for analyses whose variables are all among those imputed traits,
+for example a phylogenetic regression of one imputed trait on others.
+Analyses that add covariates from outside the imputed traits are not
+covered, because the imputation model does not contain them. The formula
+passed to \code{.f} is not checked; this is the analyst's responsibility.
+}
+
 \examples{
 \donttest{
 dat <- data.frame(y = stats::rnorm(30L), x = stats::rnorm(30L),
