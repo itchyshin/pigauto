@@ -81,6 +81,35 @@ solver returned absurd values on 84 simulated replicates, and the in-house solve
    The GNN-on half is fixed on main (#185, keep the K axis for a single-level categorical trait); castor
    still fails by design and is scored at the floor.
 
+## Correction found after close (2026-09-24): BACE's coverage is mostly a construction artefact
+
+BACE's 95% interval in v1 is the 2.5 and 97.5 percentile over its `n_final = 20` imputed datasets
+(`run_bace()` in `script/campaign_gnn_off_lib.R`). With 20 draws those quantiles cover a new exchangeable
+draw only **0.872** of the time even if BACE's model were exactly right (measured by simulation, 200,000
+replicates). The observed BACE coverage of 0.80 to 0.89 therefore sits at or near that ceiling in most cells,
+so v1's statement that BACE's intervals fall well short of 0.95 is mostly our artefact, not BACE's. The plan
+had flagged this (a reviewer's HIGH finding: build the interval from all retained MCMC samples, gate G6 asked
+for at least 500) and the fix was never implemented; G6's resolution in the ledger waived that clause
+wrongly. Two further unknowns: whether each imputed dataset is a posterior predictive draw (with residual
+noise) or a draw of the conditional mean, which would push coverage lower still.
+
+What still stands: pigauto's conformal coverage (0.95 to 0.96 at n >= 300) and the frequentist stack's
+model-based coverage (0.80 to 0.91) are unaffected, and the accuracy results are unaffected. What does not
+stand: any comparison of BACE's coverage with the other arms.
+
+None of the v1 intervals use Rubin's rules, and none should: Rubin pools a downstream estimate (a regression
+coefficient fitted on each completed dataset) as total variance `W + (1 + 1/M) B`, whereas v1 scores the
+per-cell prediction interval for the missing value itself. v1 never measured a downstream estimand, so the
+multiple-imputation-plus-Rubin workflow (`multi_impute()` -> `with_imputations()` -> `pool_mi()`) was not
+evaluated for any arm.
+
+**v2 must:** (1) build BACE's interval from enough draws that the construction ceiling is at 0.95 (many more
+final imputations, or quantiles over the retained posterior predictive samples if BACE exposes them), and
+confirm what one imputed dataset is; (2) add a downstream estimand (for example the slope of one continuous
+trait on another, fitted with a phylogenetic GLS on every completed dataset) and score its bias and 95%
+coverage after Rubin pooling for pigauto (`multi_impute`, M = 20 or more) and BACE (its `n_final` datasets),
+with the complete-data fit as the reference.
+
 ## Operational lessons (keep these)
 
 - Divergence rule in the aggregator: z-RMSE above 3x the floor or interval score above 1e3 is a failure
