@@ -12,7 +12,7 @@
 #   prior_pkg_dir   scratch copy of frozen_pkg_dir with ONE prior change
 set -euo pipefail
 BASE=$1; DIAG=$2; PKG=$3; PRIOR=$4
-PKG_SHA=$(cat "$PKG/../CODE_SHA" 2>/dev/null || echo 69670d44f9)
+PKG_SHA=$(cat "$PKG/SHA")
 DIAG_SHA=$(cat "$DIAG/SHA")
 OUT=$BASE/out; LOG=$BASE/logs
 mkdir -p "$OUT" "$LOG"
