@@ -168,8 +168,15 @@ so the two lambdas are the same quantity.
 7. **Zero-length branches** are floored at 1e-6 of the tree height before Qc is built.
 8. **`with_imputations()` and `pool_mi()`** accept the new provenance marker
    `pigauto_posterior_mi_v1` (orchestrator decision, option B). Conformal and mc_dropout objects are
-   still refused. The docs state the congeniality scope: the draws are proper for analyses whose
-   variables are all among the imputed traits, not for analyses that add external covariates.
+   still refused. The docs state the congeniality scope (narrowed after the S5 review):
+   - covered: analyses that are linear in the imputed traits on the imputation scale (the log
+     scale for traits that `log_transform` logged), with every analysis variable among the imputed
+     traits;
+   - not covered: external covariates, nonlinear terms or interactions among the imputed traits, or
+     a log-transformed trait analysed on its raw scale.
+
+   Draws from `param_uncertainty = "none"` carry the marker `pigauto_posterior_plugin_diagnostic`,
+   which `with_imputations()` and `pool_mi()` refuse.
 
 ## 3. Outputs
 
