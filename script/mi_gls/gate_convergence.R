@@ -14,6 +14,12 @@
 # Usage: Rscript script/mi_gls/gate_convergence.R
 #
 # Env vars: MI_POST_CHAINS (default 4), MI_POST_KEEP (default 1000).
+#
+# The printed wall_s is ONE posterior_full fit at m = 5 on two n = 300
+# regimes. It is NOT a campaign sizing source: a campaign cell also runs
+# the complete-data fits, posterior_none (both-missing regimes) and the
+# conformal arm, and half the regimes are n = 1000. Size campaigns from a
+# timed 01_cell_v2.R cell (see 11_fir_array.sbatch).
 
 Sys.setenv(OMP_NUM_THREADS = "1", OPENBLAS_NUM_THREADS = "1", MKL_NUM_THREADS = "1")
 suppressMessages({ devtools::load_all(quiet = TRUE); library(ape) })
@@ -35,10 +41,12 @@ keep     <- as.integer(Sys.getenv("MI_POST_KEEP", "1000"))
 
 check_one <- function(regime_id, rep_i) {
   cell <- simulate_regime_cell(regime_id, rep_i)
+  t0 <- proc.time()[["elapsed"]]
   mi <- multi_impute(cell$df, cell$tree, m = 5L, draws_method = "posterior",
                      posterior_control = list(n_chains = n_chains, keep_draws = keep,
                                               param_uncertainty = "full",
                                               seed = cell$seed))
+  wall_s <- proc.time()[["elapsed"]] - t0
   diag <- mi$posterior$diagnostics
   if (is.null(diag) || !nrow(diag)) {
     stop("regime ", regime_id, " rep ", rep_i,
@@ -47,7 +55,7 @@ check_one <- function(regime_id, rep_i) {
   list(regime_id = regime_id, rep = rep_i,
       max_rhat  = max(diag$rhat, na.rm = TRUE),
       min_ess   = min(diag$ess_bulk, na.rm = TRUE),
-      converged = isTRUE(attr(diag, "converged")))
+      converged = isTRUE(attr(diag, "converged")), wall_s = wall_s)
 }
 
 results <- tryCatch(
@@ -62,8 +70,8 @@ if (is.null(results)) quit(save = "no", status = 1L)
 ok <- TRUE
 for (r in results) {
   cat(sprintf(
-    "regime %d rep %d: max_rhat=%.4f min_ess=%.1f converged=%s\n",
-    r$regime_id, r$rep, r$max_rhat, r$min_ess, r$converged))
+    "regime %d rep %d: n_chains=%d max_rhat=%.4f min_ess=%.1f converged=%s wall_s=%.1f\n",
+    r$regime_id, r$rep, n_chains, r$max_rhat, r$min_ess, r$converged, r$wall_s))
   if (!isTRUE(r$converged)) {
     cat(sprintf("NONCONVERGED regime %d: attr(diagnostics, \"converged\") is not TRUE\n",
                r$regime_id))

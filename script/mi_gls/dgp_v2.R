@@ -43,8 +43,11 @@ mcar_mask <- function(n_tip, m_miss = 0.3) stats::runif(n_tip) < m_miss
 # Returns: regime_id, rep, seed, regime (1-row data.frame from `regimes`),
 # tree, truth (fully observed 2-col data.frame, rownames = tip labels), df
 # (truth with regime's missingness applied), mask_x, mask_y (logical,
-# length n), true_beta (population regression coefficient of y on x; see
-# script/mi_gls/regimes.R for the 17-24 caveat).
+# length n), true_beta (regimes$true_beta_pop: rho = 0.7 in regimes 1-16,
+# the exact target of any analysis model there; in 17-24 the marginal OLS
+# value, DESCRIPTIVE only, because the downstream-coverage truth there is
+# the complete-data pseudo-truth computed in 03_summarise_v2.R; see
+# script/mi_gls/regimes.R and design.md section 5c, D1).
 simulate_regime_cell <- function(regime_id, rep_i) {
   reg <- regimes[regimes$regime_id == regime_id, ]
   if (nrow(reg) != 1L) stop("unknown regime_id: ", regime_id, call. = FALSE)
@@ -70,7 +73,7 @@ simulate_regime_cell <- function(regime_id, rep_i) {
     A  <- Lr %*% matrix(stats::rnorm(n * 2), n, 2) %*% chol(sg$Sigma_P)   # phylogenetic effect
     E  <- matrix(stats::rnorm(n * 2), n, 2) %*% chol(sg$Sigma_E)          # i.i.d. residual
     Z  <- A + E
-    true_beta <- reg$true_beta_pop
+    true_beta <- reg$true_beta_pop   # descriptive only here (OLS estimand; D1)
   }
   truth <- data.frame(row.names = tree$tip.label, x = Z[, 1], y = Z[, 2])
 

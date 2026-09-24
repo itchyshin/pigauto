@@ -84,17 +84,19 @@ build_sigma_pair <- function(lambda_x, lambda_y, corr_phylo, corr_resid) {
   list(Sigma_P = Sigma_P, Sigma_E = Sigma_E)
 }
 
-# Population regression coefficient of y on x (marginal, single-tip
-# covariance: R_ii = 1 for every i regardless of tree shape, so this does
-# not depend on the tree). Well-defined for ANY analysis model's estimand
-# in the sense that GLS with a fixed (possibly misspecified) weight matrix
-# is unbiased for it when X is exogenous -- see docs/dev-log/mi-posterior/
-# design.md section 5's caveat that the *nonlinear* lambda-ML fit
-# (phylolm) need not target exactly this value under a misspecified
-# single-shared-lambda working model (regimes 17-20, where the true DGP has
-# DIFFERENT per-trait lambdas). Recorded here as the best available
-# population value; the primary G6 metric is paired bias (MI - complete on
-# the same replicate), which sidesteps this ambiguity.
+# Marginal (single-tip) regression coefficient of y on x: R_ii = 1 for
+# every tip, so this does not depend on the tree. It is the OLS estimand
+# ONLY. In regimes 17-24 Cov(x) = Sp11 R + Se11 I and Cov(y, x) =
+# Sp12 R + Se12 I are not proportional, so E[y | x] is not a scalar times
+# x and neither analysis model targets this value: corBrownian GLS and
+# phylolm(lambda) weight tips by the tree and converge elsewhere (review
+# finding dgp#0; complete-data coverage of this value is near 0 there).
+# It is therefore DESCRIPTIVE only. The downstream-coverage truth for
+# regimes 17-24 is a pseudo-truth, the mean complete-data slope over the
+# expected reps of that (regime, analysis model), computed in
+# 03_summarise_v2.R (design.md section 5c, decision D1). Regimes 1-16
+# keep rho = 0.7, which is exact for any analysis model there because the
+# DGP covariance is proportional (E[y | x] = 0.7 x).
 true_beta_pop_kron <- function(Sigma_P, Sigma_E) unname(Sigma_P[1, 2] + Sigma_E[1, 2])
 
 extra <- expand.grid(
@@ -132,6 +134,68 @@ regimes$true_beta_pop <- regimes$rho   # well-defined and identical to rho for 1
 extra <- extra[, names(regimes)]
 regimes <- rbind(regimes, extra)
 rownames(regimes) <- NULL
+
+## ---- expected campaign grid (arc/mi-posterior, 2026-09-24) ---------------
+##
+## One source for which rows the v2 harness must produce, read by
+## 01_cell_v2.R (which methods to run), 03_summarise_v2.R (which summary
+## rows to write) and the G6/G7 gates (which rows must exist). The grid is
+## always built from `regimes`, never from the files on disk (design.md
+## section 5c, decisions D3 and D6).
+
+# Replicates per regime in the approved plan.
+mi_gls_v2_planned_reps <- 200L
+
+# Posterior MI methods run in a regime. posterior_none (parameters fixed)
+# exists only for G6 rule 4 (proper vs improper SE ratio in the
+# both-missing regimes), so it runs only where both traits are missing.
+mi_gls_v2_methods <- function(missing) {
+  if (identical(missing, "both")) c("posterior_full", "posterior_none") else "posterior_full"
+}
+
+# Traits with masked cells in a regime (per-cell coverage keys).
+mi_gls_v2_traits <- function(missing) {
+  if (identical(missing, "both")) c("x", "y") else "x"
+}
+
+# "1-3,7" -> c(1L, 2L, 3L, 7L)
+mi_gls_v2_parse_ids <- function(spec) {
+  parts <- trimws(strsplit(spec, ",", fixed = TRUE)[[1L]])
+  parts <- parts[nzchar(parts)]
+  ids <- unlist(lapply(parts, function(p) {
+    if (grepl("^[0-9]+-[0-9]+$", p)) {
+      ab <- as.integer(strsplit(p, "-", fixed = TRUE)[[1L]])
+      seq(ab[1L], ab[2L])
+    } else if (grepl("^[0-9]+$", p)) {
+      as.integer(p)
+    } else {
+      stop("cannot parse regime spec '", spec, "' (use e.g. 1-24 or 1,21)", call. = FALSE)
+    }
+  }))
+  sort(unique(ids))
+}
+
+# Expected grid for the summariser and the gates. Env MI_REGIMES (default:
+# every regime in `regimes`) and MI_N_REPS (default
+# mi_gls_v2_planned_reps). `full` is TRUE only for the planned grid (all
+# regimes, at least the planned rep count); the gates print their pass
+# token only when `full` is TRUE.
+mi_gls_v2_expected <- function() {
+  spec <- Sys.getenv("MI_REGIMES", "")
+  ids <- if (nzchar(spec)) mi_gls_v2_parse_ids(spec) else regimes$regime_id
+  bad <- setdiff(ids, regimes$regime_id)
+  if (length(bad)) {
+    stop("MI_REGIMES names unknown regime id(s): ", paste(bad, collapse = ", "), call. = FALSE)
+  }
+  n_reps <- suppressWarnings(as.integer(Sys.getenv("MI_N_REPS", as.character(mi_gls_v2_planned_reps))))
+  if (!is.finite(n_reps) || n_reps < 1L) {
+    stop("MI_N_REPS must be a positive integer; got '", Sys.getenv("MI_N_REPS"), "'", call. = FALSE)
+  }
+  list(regime_ids = ids, n_reps = n_reps,
+       full = setequal(ids, regimes$regime_id) && n_reps >= mi_gls_v2_planned_reps,
+       label = sprintf("regimes=%s (%d) reps=%d", if (nzchar(spec)) spec else "all",
+                       length(ids), n_reps))
+}
 
 if (sys.nframe() == 0L) {
   print(regimes)

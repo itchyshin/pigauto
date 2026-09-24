@@ -244,6 +244,61 @@ say so). `gnn` is ignored with a message. `pool_mi()` and `with_imputations()` w
   Boundary bias (posterior mean minus truth at lambda 0.05 and at 1) is written to the gate output
   and reported, even when it passes.
 
+### 5c. Harness decisions (2026-09-24)
+
+Orchestrator decisions on the simulation harness (`script/mi_gls/`), made after the verified review
+of the v2 harness (findings dgp#0, estimands#0-5, gates#0-4, cluster#0-6). They change how G6 and
+G7 are computed, not the thresholds of the approved plan.
+
+- **D1. Downstream-coverage truth.** Regimes 1-16 keep 0.7. It is exact for any analysis model there,
+  because the DGP covariance is proportional, so E[y | x] = 0.7 x. In regimes 17-24,
+  `Sigma_P[1,2] + Sigma_E[1,2]` is the OLS estimand only; neither corBrownian GLS nor
+  phylolm(lambda) targets it, and complete-data coverage of it is near 0. There the truth is a
+  pseudo-truth: the mean complete-data slope over the expected reps of that (regime, analysis
+  model), computed in `03_summarise_v2.R`. `covered` is recomputed in 03 for complete and every
+  method from the saved estimate, se and df (t quantile with the saved df; normal if df is
+  missing). The `true_beta_pop` coverage is kept only as a descriptive column (`coverage_pop`).
+- **D2. Complete-data reference rows.** 03 writes `method == "complete"` rows per (regime, analysis
+  model) with SE ratio, coverage and R. G6 rule 3 (SE ratio in [0.90, 1.15] under phylolm) is
+  selectable by env `MI_SE_RULE`: `absolute` (default, the approved plan) or `relative` (MI SE ratio
+  divided by the complete-data SE ratio). Both numbers are printed per regime, plus an
+  `ANALYSIS_MODEL_SE_RATIO` line whenever the complete-data ratio is itself outside the band.
+  Which rule G6 uses is Shinichi's decision; until then the gate runs `absolute`.
+- **D3. Completeness, fail-closed.** Expected reps come from env `MI_N_REPS` (default 200). The
+  expected grid is built from `regimes.R`, never from the files. A missing rep file counts as a fit
+  failure and as non-converged. A missing (regime, analysis model, method) row, R or n <= 0, or any
+  non-finite gated quantity fails; nothing is skipped. G7 does the same over the expected MCAR set
+  (trait x in x_only regimes; x and y in both-missing regimes), and also fails a row where a
+  converged rep has no cell intervals for that trait (`n_reps_scored < n_converged`). The 2% limits
+  (fit failures, non-convergence) fail only above 2%, compared on counts: exactly 4/200 passes and
+  5/200 fails. A run restricted with `MI_REGIMES` or fewer than 200 reps can pass its rules but
+  never prints the G6 or G7 token.
+- **D4. G6 rule 4 (proper > improper SE ratio).** The mean comparison is required separately within
+  regimes 9-16 and within 17-24, per analysis model, so a failure confined to the new two-lambda
+  regimes cannot be hidden by regimes 9-16. Per-regime pairs are printed as descriptive. A missing
+  pair fails.
+- **D5. Mean shortfall** is the positive part, `mean(pmax(complete_coverage - coverage, 0))` over the
+  posterior_full rows, so over-coverage in one row cannot cancel under-coverage in another. The
+  per-row rule, coverage >= complete - 0.05, is unchanged.
+- **D6. posterior_none runs only where both traits are missing** (it exists for rule 4), and the
+  expected grid reflects that. It comes from the same chain run as posterior_full, via
+  `param_uncertainty = "both"` (section 2.5), so it adds no second 4-chain run.
+- **D7. Conformal arm.** Each cell also runs `impute(<same masked df>, tree, gnn = FALSE, seed =
+  <cell seed>)` with pigauto defaults otherwise, and scores `prediction$conformal_lower/upper` on
+  exactly the masked cells, against the same truth on the original scale as the posterior per-cell
+  coverage. Coverage and mean width are recorded per trait, next to the posterior widths.
+  `05_cell_coverage.R` prints conformal beside posterior_full per regime x trait x mechanism,
+  descriptive and never gated. A conformal failure is recorded and does not stop the cell.
+- **D8. Frozen code and routing.** Each cell output records `code_sha` (env `MI_POST_SHA`), the
+  pigauto version, R version and host. The cell script keeps `devtools::load_all()` from its working
+  directory, which in the campaign is a `git archive` of one SHA. Totoro is the primary route
+  (`12_totoro_campaign.sh`: at most 150 parallel cells, single-threaded BLAS, n = 1000 regimes
+  first, completed cells skipped, `CELL_FAILED` lines without stopping the rest, one code SHA per
+  output directory). Both runners refuse a git checkout as the code directory, since `load_all()`
+  would also source untracked files. 03 writes the G6/G7 CSVs into `docs/dev-log/mi-posterior/`,
+  which are copied back to the worktree where the ledger CHECK lines read them.
+  `11_fir_array.sbatch` is the DRAC fallback, fixed per the cluster findings.
+
 ## 6. Out of scope here
 
 Discrete, mixed and multi-observation data; GNN blending; covariates in the imputation model; changing

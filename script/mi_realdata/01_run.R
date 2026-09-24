@@ -6,15 +6,40 @@
 # Usage: Rscript 01_run.R dataset arm seed outdir
 #
 # Requires script/mi_realdata/inputs/<dataset>-<arm>-m<seed>/mask_receipt.rds
-# to already exist (run 00_fetch_masks.R first).
+# (run 00_fetch_masks.R first). Conformal results come from
+# inputs/<cell>/conformal_metrics.rds when present
+# (`00_fetch_masks.R --with-conformal`), otherwise from `git show` on
+# arc/mondrian-realdata.
+#
+# Environment (all optional):
+#   MI_REALDATA_OFFLINE=1  never call git: conformal_metrics.rds must exist
+#                          (Totoro / DRAC compute nodes).
+#   PIGAUTO_PKG_PATH       package root to devtools::load_all(); otherwise
+#                          library(pigauto).
+#   MI_POST_SHA            code commit recorded in the receipt; otherwise
+#                          `git rev-parse HEAD` when available. Required
+#                          with MI_REALDATA_OFFLINE=1 (G8 rejects a receipt
+#                          without a SHA, so the run refuses up front).
+#   MI_POST_NITER, MI_POST_BURNIN
+#                          override posterior_control n_iter / burnin for
+#                          quick local smokes only. Unset means pigauto's
+#                          defaults. An override is recorded in the receipt
+#                          and makes the cell fail G8 (03_acceptance.R).
+# There is no n_cores control: the chains of one cell run sequentially in
+# one R process, so parallelise across cells (12_totoro_run.sh, or one
+# 1-CPU array task per cell in 10_fir.sbatch).
 #
 # Writes <outdir>/<dataset>-<arm>-m<seed>/mi_posterior.rds, a list with
 # `status` "ok" or "error" (see below), that 02_summarise.R / 03_acceptance.R
-# consume.
+# consume. The first thing it does is overwrite that file with a status
+# "running" placeholder, so a crash or kill (e.g. out of memory) can never
+# leave an older "ok" receipt from a previous run or SHA in place.
 
+# Rscript passes a script path containing spaces as `~+~` in --file=
+# (e.g. ".../Github~+~Local/..."); undo that before normalizePath().
 here <- function() {
   a <- commandArgs(FALSE)
-  f <- sub("^--file=", "", a[grepl("^--file=", a)])
+  f <- gsub("~+~", " ", sub("^--file=", "", a[grepl("^--file=", a)]), fixed = TRUE)
   if (length(f)) dirname(normalizePath(f)) else getwd()
 }
 here_dir <- here()
@@ -29,10 +54,44 @@ name <- cell_name(dataset, arm, seed)
 receipt_dir <- file.path(outdir, name)
 dir.create(receipt_dir, recursive = TRUE, showWarnings = FALSE)
 receipt_file <- file.path(receipt_dir, "mi_posterior.rds")
+saveRDS(list(status = "running", stage = "started", dataset = dataset, arm = arm, seed = seed,
+             name = name, started_at = format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"),
+             error = "01_run.R started but did not write a final receipt (crashed, killed or still running)"),
+        receipt_file)
+
+offline <- identical(Sys.getenv("MI_REALDATA_OFFLINE"), "1")
+
+# Code provenance: MI_POST_SHA (set by 12_totoro_run.sh from code_dir/SHA),
+# else git HEAD of this checkout, flagged when R/ or DESCRIPTION has
+# uncommitted changes (load_all() would then run code that no SHA names).
+code_sha <- Sys.getenv("MI_POST_SHA")
+code_sha_source <- "MI_POST_SHA"
+if (!nzchar(code_sha)) {
+  code_sha <- if (offline) NA_character_ else git_rev_parse("HEAD", dir = here_dir)
+  code_sha_source <- if (is.na(code_sha)) "unknown" else "git HEAD"
+  if (!is.na(code_sha)) {
+    top <- git_rev_parse("--show-toplevel", dir = here_dir)
+    dirty <- if (is.na(top)) character(0) else
+      tryCatch(suppressWarnings(system2("git", c("-C", top, "status", "--porcelain", "--", "R", "DESCRIPTION"),
+                                        stdout = TRUE, stderr = FALSE)), error = function(e) character(0))
+    if (length(dirty)) code_sha_source <- "git HEAD, R/ or DESCRIPTION has uncommitted changes"
+  }
+}
 
 write_receipt <- function(x) {
+  x$receipt_schema <- receipt_schema_current
+  x$code_sha <- code_sha
+  x$code_sha_source <- code_sha_source
   saveRDS(x, receipt_file)
   invisible(x)
+}
+
+if (offline && is.na(code_sha)) {
+  msg <- paste0("MI_REALDATA_OFFLINE=1 needs MI_POST_SHA (the commit of this code): G8 rejects a ",
+                "receipt without a code SHA, so the run would be wasted.")
+  write_receipt(list(status = "error", stage = "provenance", dataset = dataset, arm = arm,
+                      seed = seed, name = name, error = msg))
+  stop("[", name, "] ", msg, call. = FALSE)
 }
 
 # ---- 1. load the mask receipt (truth / masked / mask / tree) --------------
@@ -66,14 +125,70 @@ if (length(kept) == 0L) {
 }
 traits_sub <- masked[, kept, drop = FALSE]
 
+# ---- 2b. conformal results: READ ONLY, never rerun ------------------------
+# Read before the sampler so a missing input fails in seconds, not after
+# the run. A receipt whose own status is not "ok" is recorded as it is
+# (G8 then fails and names it); an unreadable source stops here.
+cm_file <- conformal_metrics_path(file.path(here_dir, "inputs"), name)
+if (file.exists(cm_file)) {
+  cm <- readRDS(cm_file)
+  conformal_source <- list(kind = "inputs file", file = cm_file, source = cm$source)
+} else if (offline) {
+  msg <- paste0("MI_REALDATA_OFFLINE=1 and ", cm_file, " does not exist; run ",
+                "`Rscript 00_fetch_masks.R --all --with-conformal` on a machine with the git history ",
+                "and copy inputs/ over.")
+  write_receipt(list(status = "error", stage = "conformal_inputs", dataset = dataset, arm = arm,
+                      seed = seed, name = name, error = msg))
+  stop("[", name, "] ", msg, call. = FALSE)
+} else {
+  cm <- tryCatch(fetch_conformal_metrics(dataset, arm, seed), error = function(e) e)
+  if (inherits(cm, "condition")) {
+    write_receipt(list(status = "error", stage = "conformal_inputs", dataset = dataset, arm = arm,
+                        seed = seed, name = name, error = conditionMessage(cm)))
+    stop("[", name, "] could not read conformal results: ", conditionMessage(cm), call. = FALSE)
+  }
+  conformal_source <- list(kind = "git show", source = cm$source)
+}
+keep_kept <- function(co) {
+  if (identical(co$status, "ok")) co$metrics <- co$metrics[co$metrics$trait %in% kept, , drop = FALSE]
+  co
+}
+split_conformal <- keep_kept(cm$split)
+mondrian_conformal <- keep_kept(cm$mondrian)
+cat(sprintf("[%s] conformal (%s): split=%s mondrian=%s\n", name, conformal_source$kind,
+            split_conformal$status, mondrian_conformal$status))
+
 # ---- 3. run multi_impute(draws_method = "posterior") ----------------------
-suppressPackageStartupMessages(library(pigauto))
+pkg_path <- Sys.getenv("PIGAUTO_PKG_PATH")
+if (nzchar(pkg_path)) {
+  suppressPackageStartupMessages(devtools::load_all(pkg_path, quiet = TRUE))
+} else {
+  suppressPackageStartupMessages(library(pigauto))
+}
+
+# Sampler settings: pigauto defaults (4 chains, run one after another),
+# keep_draws = 1000 for the per-cell intervals. MI_POST_NITER /
+# MI_POST_BURNIN are for quick local smokes only and are recorded.
+env_int <- function(var) {
+  v <- Sys.getenv(var)
+  if (!nzchar(v)) return(NULL)
+  out <- suppressWarnings(as.integer(v))
+  if (is.na(out)) stop(var, " must be an integer, got '", v, "'", call. = FALSE)
+  out
+}
+overrides <- Filter(Negate(is.null), list(n_iter = env_int("MI_POST_NITER"),
+                                          burnin = env_int("MI_POST_BURNIN")))
+posterior_control <- c(list(keep_draws = 1000L), overrides)
+if (length(overrides)) {
+  cat(sprintf("[%s] SAMPLER OVERRIDE (smoke only, fails G8): %s\n", name,
+              paste(names(overrides), unlist(overrides), sep = " = ", collapse = ", ")))
+}
 
 t0 <- proc.time()[["elapsed"]]
 mi <- tryCatch(
   pigauto::multi_impute(
     traits_sub, tree, m = 20L, draws_method = "posterior",
-    posterior_control = list(keep_draws = 1000L),
+    posterior_control = posterior_control,
     verbose = FALSE, seed = seed
   ),
   error = function(e) e
@@ -84,7 +199,7 @@ if (inherits(mi, "condition")) {
   msg <- conditionMessage(mi)
   write_receipt(list(status = "error", stage = "multi_impute", dataset = dataset, arm = arm,
                       seed = seed, name = name, kept_traits = kept, dropped_traits = dropped,
-                      wall_time_s = wall_time_s, error = msg))
+                      wall_time_s = wall_time_s, sampler = list(overrides = overrides), error = msg))
   stop(
     "[", name, "] multi_impute(draws_method = 'posterior') is not available or failed:\n  ", msg, "\n",
     "This harness is coded exactly against the frozen API in ",
@@ -113,6 +228,13 @@ cat(sprintf("[%s] convergence: max_rhat=%.3f min_ess=%.0f converged=%s\n",
             name, convergence$max_rhat, convergence$min_ess, convergence$converged))
 
 # ---- 4. per-cell model-based coverage / width, from mi$posterior ----------
+# Widths are summarised like for like with the conformal receipts: mean
+# AND median of (upper - lower) over the masked cells, on the original
+# trait scale (cell_interval is decoded, as are conformal lo/hi).
+# n_matched counts only masked cells with a FINITE lower and upper bound,
+# and nothing below drops NA: one missing interval or truth makes
+# n_matched < n_masked or coverage NA, and G8 names the trait (schema 3,
+# 2026-09-24 repair).
 # design.md section 4 documents mi$posterior$cell_interval as
 # data.frame(row, trait, lower, upper, median) but doesn't pin down
 # whether `row` is a tip index into tree$tip.label / rownames(masked)
@@ -128,37 +250,23 @@ ci$.row_idx <- resolve_row_idx(ci$row, rownames(masked))
 model_coverage <- do.call(rbind, lapply(kept, function(nm) {
   midx <- which(mask[, nm])
   sub <- ci[ci$trait == nm & ci$.row_idx %in% midx, , drop = FALSE]
-  n_matched <- nrow(sub)
-  if (n_matched == 0L) {
+  n_matched <- sum(is.finite(sub$lower) & is.finite(sub$upper))
+  if (nrow(sub) == 0L) {
     return(data.frame(trait = nm, n_masked = length(midx), n_matched = 0L,
-                       coverage = NA_real_, median_width = NA_real_))
+                       coverage = NA_real_, mean_width = NA_real_, median_width = NA_real_))
   }
   tv <- truth[[nm]][sub$.row_idx]
-  cov <- mean(tv >= sub$lower & tv <= sub$upper, na.rm = TRUE)
-  wid <- stats::median(sub$upper - sub$lower, na.rm = TRUE)
+  cov <- mean(tv >= sub$lower & tv <= sub$upper)
+  w <- sub$upper - sub$lower
   data.frame(trait = nm, n_masked = length(midx), n_matched = n_matched,
-             coverage = cov, median_width = wid)
+             coverage = cov, mean_width = mean(w), median_width = stats::median(w))
 }))
 cat("[", name, "] model-based per-cell coverage:\n"); print(model_coverage)
 
-# ---- 5. conformal comparison -- READ ONLY, never rerun ---------------------
-read_conformal <- function(leaf) {
-  res <- tryCatch(read_mondrian_rds(dataset, arm, seed, leaf), error = function(e) e)
-  if (inherits(res, "condition")) {
-    return(list(status = "error", error = conditionMessage(res), metrics = NULL))
-  }
-  if (!identical(res$status, "ok") || is.null(res$metrics)) {
-    return(list(status = res$status %||% "error", error = res$error %||% "no metrics in receipt",
-                metrics = NULL))
-  }
-  list(status = "ok", error = NULL, metrics = res$metrics[res$metrics$trait %in% kept, , drop = FALSE])
-}
-split_conformal <- read_conformal("split.rds")
-mondrian_conformal <- read_conformal("mondrian.rds")
+# ---- 5. conformal comparison: read in step 2b (split_conformal,
+# mondrian_conformal), restricted to the kept traits.
 
 # ---- 6. downstream slope check for pre-registered pairs on this dataset ---
-trait_map <- mi$data$trait_map
-
 # Paired design: the reference and the MI legs use the SAME species (rows
 # where both traits were observed before the Mondrian mask) and the SAME
 # analysis model (phylolm, model = "lambda", on the pruned tree), so the only
@@ -166,7 +274,9 @@ trait_map <- mi$data$trait_map
 # phylolm is O(n) per likelihood evaluation; dense gls(corPagel) is not
 # feasible at these n. MI pooling is Rubin's rules with the Barnard-Rubin df
 # (complete-data df = n - 2), written out here because pool_mi() has no
-# phylolm adapter.
+# phylolm adapter. The analysis scale (y_log, x_log) is pre-registered per
+# pair in pairs.R and used for both legs; pigauto's trait_map$log_transform
+# is not consulted (it would re-log the already-logged PanTHERIA traits).
 pair_frame <- function(src, sp, y_nm, x_nm, y_log, x_log) {
   d <- data.frame(row.names = sp)
   d$y <- if (y_log) log(src[sp, y_nm]) else src[sp, y_nm]
@@ -174,6 +284,10 @@ pair_frame <- function(src, sp, y_nm, x_nm, y_log, x_log) {
   d
 }
 fit_phylolm <- function(d, tr) {
+  # A non-finite value (e.g. log of a non-positive imputed value) would make
+  # phylolm drop or reject rows and break the pairing: count it as a failed
+  # fit instead.
+  if (!all(is.finite(d$y)) || !all(is.finite(d$x))) return(NULL)
   fit <- tryCatch(suppressWarnings(phylolm::phylolm(y ~ x, data = d, phy = tr, model = "lambda")),
                   error = function(e) e)
   if (inherits(fit, "condition")) return(NULL)
@@ -186,8 +300,9 @@ pair_setup <- function(pair) {
   if (!(y_nm %in% kept) || !(x_nm %in% kept)) {
     return(list(status = "skipped", error = "response/predictor not in continuous-family kept traits"))
   }
-  y_log <- isTRUE(trait_map[[y_nm]]$log_transform)
-  x_log <- isTRUE(trait_map[[x_nm]]$log_transform)
+  y_log <- pair$y_log; x_log <- pair$x_log
+  stopifnot(is.logical(y_log), length(y_log) == 1L, !is.na(y_log),
+            is.logical(x_log), length(x_log) == 1L, !is.na(x_log))
   sp <- rownames(truth)[!is.na(truth[[y_nm]]) & !is.na(truth[[x_nm]])]
   d <- pair_frame(truth, sp, y_nm, x_nm, y_log, x_log)
   sp <- rownames(d)[is.finite(d$y) & is.finite(d$x)]
@@ -207,11 +322,14 @@ ref_slope_one <- function(ps) {
 
 mi_slope_one <- function(ps) {
   if (!identical(ps$status, "ok")) return(ps[c("status", "error")])
-  fits <- lapply(mi$datasets, function(dat)
-    fit_phylolm(pair_frame(dat, ps$sp, ps$y_nm, ps$x_nm, ps$y_log, ps$x_log), ps$tr))
+  frames <- lapply(mi$datasets, function(dat) pair_frame(dat, ps$sp, ps$y_nm, ps$x_nm, ps$y_log, ps$x_log))
+  n_nonfinite <- sum(vapply(frames, function(d) !all(is.finite(d$y)) || !all(is.finite(d$x)), logical(1)))
+  fits <- lapply(frames, fit_phylolm, tr = ps$tr)
   ok <- !vapply(fits, is.null, logical(1))
   if (sum(ok) < 2L) {
-    return(list(status = "error", error = sprintf("only %d/%d phylolm fits succeeded", sum(ok), length(fits))))
+    return(list(status = "error", n_nonfinite = n_nonfinite,
+                error = sprintf("only %d/%d phylolm fits succeeded (%d completions non-finite on the analysis scale)",
+                                sum(ok), length(fits), n_nonfinite)))
   }
   est <- vapply(fits[ok], `[[`, numeric(1), "slope")
   se  <- vapply(fits[ok], `[[`, numeric(1), "se")
@@ -221,7 +339,7 @@ mi_slope_one <- function(ps) {
   nu_com <- length(ps$sp) - 2
   nu_old <- (m - 1) / max(lam, 1e-12)^2
   nu_obs <- (nu_com + 1) / (nu_com + 3) * nu_com * (1 - lam)
-  list(status = "ok", m_used = m, m_total = length(fits), n = length(ps$sp),
+  list(status = "ok", m_used = m, m_total = length(fits), n_nonfinite = n_nonfinite, n = length(ps$sp),
        slope = qbar, se = sqrt(tvar), df = 1 / (1 / nu_old + 1 / nu_obs), fmi = lam,
        y_log = ps$y_log, x_log = ps$x_log)
 }
@@ -231,28 +349,31 @@ pair_results <- lapply(pairs_here, function(p) {
   ps <- pair_setup(p)
   ref <- ref_slope_one(ps)
   mip <- mi_slope_one(ps)
-  rel_diff <- NA_real_; se_ratio <- NA_real_
-  if (identical(ref$status, "ok") && identical(mip$status, "ok") && is.finite(ref$slope) && ref$slope != 0) {
-    rel_diff <- (mip$slope - ref$slope) / ref$slope
-    se_ratio <- mip$se / ref$se
-  }
-  list(dataset = p$dataset, response = p$response, predictor = p$predictor,
-       rationale = p$rationale, reference = ref, mi = mip,
-       rel_diff = rel_diff, se_ratio = se_ratio)
+  c(list(dataset = p$dataset, response = p$response, predictor = p$predictor,
+         rationale = p$rationale, reference = ref, mi = mip),
+    pair_contrast(ref, mip))  # diff, rel_diff, diff_ref_se, se_ratio
 })
 cat(sprintf("[%s] pair slopes: %d pre-registered pairs for dataset '%s'\n", name, length(pair_results), dataset))
 for (pr in pair_results) {
-  cat(sprintf("  %s ~ %s: ref=%s mi=%s\n", pr$response, pr$predictor,
+  cat(sprintf("  %s ~ %s: ref=%s mi=%s rel_diff=%s\n", pr$response, pr$predictor,
               if (identical(pr$reference$status, "ok")) sprintf("%.4g", pr$reference$slope) else pr$reference$status,
-              if (identical(pr$mi$status, "ok")) sprintf("%.4g", pr$mi$slope) else pr$mi$status))
+              if (identical(pr$mi$status, "ok")) sprintf("%.4g", pr$mi$slope) else pr$mi$status,
+              format(signif(pr$rel_diff, 3))))
 }
 
 # ---- 7. write receipt -------------------------------------------------------
+ctl <- mi$posterior$control
 receipt <- list(
   status = "ok", dataset = dataset, arm = arm, seed = seed, name = name,
   n_species = nrow(masked), kept_traits = kept, dropped_traits = dropped,
   wall_time_s = wall_time_s, model_coverage = model_coverage,
   split_conformal = split_conformal, mondrian_conformal = mondrian_conformal,
+  conformal_source = conformal_source,
+  sampler = list(overrides = overrides,
+                 control = ctl[intersect(c("n_chains", "n_iter", "burnin", "thin", "keep_draws",
+                                           "param_uncertainty"), names(ctl))],
+                 sweeps = mi$posterior$sweeps, wall_s = mi$posterior$wall_s),
+  pkg_source = if (nzchar(pkg_path)) paste0("devtools::load_all(", pkg_path, ")") else "library(pigauto)",
   diagnostics = mi$posterior$diagnostics, convergence = convergence, pairs = pair_results
 )
 write_receipt(receipt)
