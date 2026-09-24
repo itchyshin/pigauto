@@ -1,0 +1,60 @@
+G3: n = 1000, K = 2, 4 chains x (1000 burn-in + 5000 sweeps, thin 20); 12 fits in parallel
+
+Total wall time: 220.8 s
+
+ setting seed lam1_true lam1_post lam1_sd lam1_reml lam2_true lam2_post lam2_sd
+       A    1      1.00     0.997   0.001     0.995      1.00     0.998   0.001
+       B    1      0.50     0.572   0.050     0.551      0.50     0.494   0.055
+       C    1      0.30     0.382   0.060     0.371      0.90     0.921   0.020
+       D    1      0.05     0.114   0.042     0.104      0.95     0.975   0.013
+       A    2      1.00     0.997   0.003     0.993      1.00     0.996   0.002
+       B    2      0.50     0.352   0.064     0.347      0.50     0.562   0.056
+       C    2      0.30     0.148   0.056     0.138      0.90     0.891   0.022
+       D    2      0.05     0.015   0.015     0.005      0.95     0.960   0.014
+       A    3      1.00     0.997   0.002     0.995      1.00     0.998   0.002
+       B    3      0.50     0.492   0.057     0.461      0.50     0.574   0.054
+       C    3      0.30     0.269   0.065     0.251      0.90     0.919   0.020
+       D    3      0.05     0.058   0.039     0.031      0.95     0.969   0.014
+ lam2_reml rho_true rho_post max_rhat  min_ess converged ok_lambda ok_rho
+     0.995      0.7    0.697    1.002 3291.567      TRUE      TRUE   TRUE
+     0.480      0.7    0.652    1.001 3898.946      TRUE      TRUE   TRUE
+     0.914      0.0   -0.065    1.001 3688.110      TRUE      TRUE   TRUE
+     0.965      0.7    0.439    1.004  926.473      TRUE      TRUE     NA
+     0.995      0.7    0.723    1.005 2075.086      TRUE      TRUE   TRUE
+     0.550      0.7    0.682    1.002 3662.914      TRUE     FALSE   TRUE
+     0.886      0.0    0.230    1.001 3789.513      TRUE     FALSE  FALSE
+     0.952      0.7    0.355    1.002 1957.587      TRUE      TRUE     NA
+     0.995      0.7    0.715    1.002 2330.436      TRUE      TRUE   TRUE
+     0.552      0.7    0.672    1.001 3837.301      TRUE      TRUE   TRUE
+     0.912      0.0    0.082    1.001 3482.896      TRUE      TRUE   TRUE
+     0.960      0.7    0.403    1.003 1394.336      TRUE      TRUE     NA
+ ok_reml  wall_s ms_per_sweep
+    TRUE 208.939        8.688
+    TRUE 214.198        8.907
+    TRUE 212.846        8.851
+    TRUE 212.549        8.839
+    TRUE 216.269        8.993
+    TRUE 217.822        9.058
+    TRUE 213.027        8.859
+    TRUE 217.305        9.037
+    TRUE 214.358        8.914
+    TRUE 220.425        9.167
+    TRUE 218.622        9.092
+    TRUE 220.160        9.156
+
+Boundary bias (posterior mean - truth):
+                       where    bias.mean     bias.min     bias.max
+1 lambda = 0.05 (D, trait 1)  0.012439250 -0.035152664  0.064050304
+2 lambda = 0.95 (D, trait 2)  0.018041564  0.010033425  0.024632840
+3    lambda = 1 (A, trait 1) -0.003028794 -0.003365981 -0.002656656
+4    lambda = 1 (A, trait 2) -0.002843530 -0.003877657 -0.002157496
+
+Convergence: 12 of 12 fits converged (max R-hat < 1.05, min ESS > 400)
+
+G3 FAILED in:
+ setting seed lam1_true lam1_post lam1_reml lam2_true lam2_post lam2_reml
+       B    2       0.5     0.352     0.347       0.5     0.562     0.550
+       C    2       0.3     0.148     0.138       0.9     0.891     0.886
+ rho_true rho_post ok_lambda ok_rho ok_reml
+      0.7    0.682     FALSE   TRUE    TRUE
+      0.0    0.230     FALSE  FALSE    TRUE
