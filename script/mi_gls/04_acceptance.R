@@ -22,10 +22,12 @@
 # downstream (gls, phylolm) needs a "complete" row and a posterior_full
 # row, plus a posterior_none row where missing == "both" (D6). A missing
 # row, a duplicate row, a row built for a different rep count
-# (n_expected != MI_N_REPS) or a row with R <= 0 FAILS; nothing is
-# skipped. A regime with no rows at all also prints a loud MISSING_REGIME
-# line. A non-finite rule value is a rule outcome: it fails in a gated
-# regime and is reported in a stress regime.
+# (n_expected != MI_N_REPS), a row with fewer rep files present than
+# expected (n_present < MI_N_REPS, e.g. 150 of 200) or a row with R <= 0
+# FAILS; nothing is skipped. A regime with no rows at all also prints a
+# loud MISSING_REGIME line. A non-finite rule value is a rule outcome: it
+# fails in a gated regime and is reported in a stress regime, and so are
+# non-converged or failed fits when every rep file is present.
 #
 # Rules (every expected regime x downstream unless noted):
 #   1. |paired bias| <= max(0.02, 2.5 * paired_bias_mcse)
@@ -103,7 +105,7 @@ run_gate <- function(df, regime_ids = regimes$regime_id,
   key <- function(d) paste(d$regime_id, d$method, d$downstream)
   is_gated <- function(rid) mi_gls_v2_is_gated(rid) %in% TRUE
 
-  need_cols <- c("regime_id", "method", "downstream", "n_expected", "R", "paired_bias",
+  need_cols <- c("regime_id", "method", "downstream", "n_expected", "n_present", "R", "paired_bias",
                  "paired_bias_mcse", "se_ratio", "coverage", "fit_failure_rate",
                  "n_fits", "n_converged")
   miss_cols <- setdiff(need_cols, names(df))
@@ -131,6 +133,10 @@ run_gate <- function(df, regime_ids = regimes$regime_id,
     if (!is.finite(hit$n_expected) || hit$n_expected != n_reps) {
       fails <- c(fails, sprintf("%s: n_expected=%s but the gate expects %d reps%s",
                                 lab, hit$n_expected, n_reps, tag))
+    }
+    if (!is.finite(hit$n_present) || hit$n_present < n_reps) {
+      fails <- c(fails, sprintf("%s: n_present=%s of %d expected rep files%s",
+                                lab, hit$n_present, n_reps, tag))
     }
     if (!is.finite(hit$R) || hit$R <= 0) {
       fails <- c(fails, sprintf("%s: R=%s, no usable reps%s", lab, hit$R, tag))
@@ -290,6 +296,7 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
     req <- required_rows(regimes$regime_id)
     d <- req
     d$n_expected <- n_reps
+    d$n_present <- n_reps
     d$R <- n_reps
     d$paired_bias <- ifelse(d$method == "complete", NA_real_, 0.005)
     d$paired_bias_mcse <- ifelse(d$method == "complete", NA_real_, 0.01)
@@ -318,9 +325,14 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
   d <- make_pass(); fx$missing_twin <- d[d$regime_id != 33, ]      # twin regime missing: FAILS
   d <- make_pass(); d$R[at(d, 3, "posterior_full")] <- 0L
   fx$stress_no_usable_reps <- d                           # stress row with R = 0: report incomplete
-  d <- make_pass(); d$n_converged[at(d, 27, "posterior_full")] <- 150L
+  d <- make_pass(); d$n_present[d$regime_id == 27] <- 150L; d$R[d$regime_id == 27] <- 150L
+  d$n_converged[at(d, 27, "posterior_full")] <- 150L
   d$fit_failure_rate[at(d, 27, "posterior_full")] <- 0.25
   fx$short_reps <- d                                      # 150/200 rep files present (twin 27)
+  d <- make_pass(); d$n_present[d$regime_id == 3] <- 150L; d$R[d$regime_id == 3] <- 150L
+  d$n_converged[at(d, 3, "posterior_full")] <- 150L
+  d$fit_failure_rate[at(d, 3, "posterior_full")] <- 0.25
+  fx$stress_short_files <- d                              # stress regime, 150/200 rep files: FAILS
   fx$wrong_n_expected <- make_pass(n_reps = 100L)         # summary built for 100 reps
   d <- make_pass(); d$se_ratio[at(d, 21, "posterior_full", "phylolm")] <- NA
   fx$nonfinite <- d
@@ -350,7 +362,7 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
   sx$stress_coverage <- d                                 # per-row and mean shortfall in 1-16
   d <- make_pass(); d$n_converged[at(d, 3, "posterior_full")] <- 150L
   d$fit_failure_rate[at(d, 3, "posterior_full")] <- 0.25
-  sx$stress_short_reps <- d
+  sx$stress_failed_fits <- d                              # every rep file present, 25% failed fits
   d <- make_pass(); d$se_ratio[at(d, 2, "posterior_full", "phylolm")] <- NA
   sx$stress_nonfinite <- d
 
@@ -362,7 +374,8 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
                       missing_regime = "missing row: regime 5 .*stress-test regime",
                       missing_twin = "missing row: regime 33 ",
                       stress_no_usable_reps = "regime 3 posterior_full gls: R=0, no usable reps",
-                      short_reps = "regime 27: non-converged|fit_failure: regime 27",
+                      short_reps = "^regime 27 posterior_full gls: n_present=150 of 200 expected rep files$",
+                      stress_short_files = "^regime 3 complete gls: n_present=150 of 200 expected rep files \\(stress-test regime",
                       wrong_n_expected = "n_expected=100",
                       nonfinite = "se_ratio: .*non-finite for regime 21 phylolm",
                       shortfall_cancel = "mean shortfall .*gated regimes", missing_pair = "regime 12 posterior_none gls",
@@ -370,7 +383,7 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
   stress_pattern <- c(stress_bias = "^STRESS_VIOLATION bias: regime 3 phylolm",
                       stress_nonconverged = "^STRESS_VIOLATION regime 1: non-converged fraction 0.0500",
                       stress_coverage = "^STRESS_VIOLATION coverage: mean shortfall .*stress-test regimes",
-                      stress_short_reps = "^STRESS_VIOLATION fit_failure: regime 3 ",
+                      stress_failed_fits = "^STRESS_VIOLATION fit_failure: regime 3 ",
                       stress_nonfinite = "^STRESS_VIOLATION se_ratio: .*non-finite for regime 2 phylolm")
 
   ok <- TRUE

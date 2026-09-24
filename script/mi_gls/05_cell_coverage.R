@@ -5,8 +5,8 @@
 # for multi_impute(draws_method = "posterior"), method = "posterior_full",
 # using the cell-coverage CSV written by script/mi_gls/03_summarise_v2.R
 # (its 4th argument). Columns expected: regime_id, method, trait,
-# mechanism, n, covered_sum, mean_width, n_expected, n_reps_scored, n_fits,
-# n_converged, median_max_rhat, median_min_ess.
+# mechanism, n, covered_sum, mean_width, n_expected, n_present,
+# n_reps_scored, n_fits, n_converged, median_max_rhat, median_min_ess.
 #
 # Gated regimes (CP2 follow-up, Shinichi 2026-09-24; design.md section
 # 5e): only the in-model regimes 17-40 (Kronecker 17-24, twins 25-40) can
@@ -20,14 +20,19 @@
 # Expected MCAR set, fail-closed (design.md section 5c, D3), built from
 # regimes.R for every regime of the grid: trait x in x_only regimes, traits
 # x and y in both-missing regimes. Completeness fails in ANY regime,
-# stress regimes included (the report must be complete): a missing row, a
-# duplicate row, a row built for a different rep count
-# (n_expected != MI_N_REPS), n <= 0, or a row where fewer reps were scored
-# than converged (n_reps_scored < n_converged: a converged rep without cell
-# intervals for that trait). Rule outcomes (coverage outside the band, a
-# non-finite coverage, non-convergence) fail in gated regimes and are
-# reported for stress regimes. MAR_phylo (clade-biased) masks are reported
-# but never gated (design.md section 5 / review R5).
+# stress regimes included (the report must be complete): a regime with no
+# posterior_full rows at all (any mask; it also prints a loud
+# MISSING_REGIME line), fewer rep files present than expected
+# (n_present < MI_N_REPS, e.g. 150 of 200; any mask), a missing or
+# duplicate row (MCAR and MAR_phylo rows alike), and for the MCAR rows a
+# row built for a different rep count (n_expected != MI_N_REPS), n <= 0,
+# or a row where fewer reps were scored than converged
+# (n_reps_scored < n_converged: a converged rep without cell intervals for
+# that trait). Rule outcomes (coverage outside the band, a non-finite
+# coverage, non-convergence with every rep file present) fail in gated
+# regimes and are reported for stress regimes. MAR_phylo (clade-biased)
+# masks are reported but their coverage is never gated (design.md section
+# 5 / review R5).
 #
 # Conformal comparator (D7): the conformal per-cell coverage and mean width
 # (impute(gnn = FALSE) on the same masked cells) are printed beside
@@ -101,7 +106,7 @@ check_nonconverged <- function(sub) {
 # "stress" (the STRESS TEST block for regimes 1-16, never failing).
 run_gate <- function(df, regime_ids = regimes$regime_id, n_reps = mi_gls_v2_planned_reps) {
   need_cols <- c("regime_id", "method", "trait", "mechanism", "n", "covered_sum",
-                 "n_expected", "n_reps_scored", "n_fits", "n_converged")
+                 "n_expected", "n_present", "n_reps_scored", "n_fits", "n_converged")
   miss_cols <- setdiff(need_cols, names(df))
   if (length(miss_cols)) {
     return(structure(sprintf("cell-coverage CSV lacks column(s): %s (rebuild it with 03_summarise_v2.R)",
@@ -113,9 +118,31 @@ run_gate <- function(df, regime_ids = regimes$regime_id, n_reps = mi_gls_v2_plan
   df$coverage <- ifelse(is.finite(df$n) & df$n > 0, df$covered_sum / df$n, NA_real_)
   sub <- df[df$method == "posterior_full", ]
   fails <- character(0)
+  ctag <- function(rid) if (is_gated(rid)) "" else " (stress-test regime; the report must be complete)"
   for (rid in regime_ids[!(regime_ids %in% sub$regime_id)]) {
     cat(sprintf("MISSING_REGIME regime %d (%s): no posterior_full rows\n", rid,
                 if (is_gated(rid)) "gated" else "stress test: not gated, but the report must be complete"))
+    fails <- c(fails, sprintf("missing regime: regime %d has no posterior_full rows%s", rid, ctag(rid)))
+  }
+  # Rep files present per regime (any mask): fewer than expected FAILS in
+  # every regime, stress included; non-converged fits with every file
+  # present are a rule outcome (below).
+  for (rid in intersect(regime_ids, sub$regime_id)) {
+    np <- sub$n_present[sub$regime_id == rid]
+    np <- if (all(is.finite(np))) min(np) else NA
+    if (!is.finite(np) || np < n_reps) {
+      fails <- c(fails, sprintf("regime %d: n_present=%s of %d expected rep files%s", rid, np, n_reps, ctag(rid)))
+    }
+  }
+  # MAR_phylo rows: completeness only (their coverage is reported, never gated).
+  exp_mar <- expected_cells(regime_ids, "MAR_phylo")
+  for (i in seq_len(if (is.null(exp_mar)) 0L else nrow(exp_mar))) {
+    rid <- exp_mar$regime_id[i]
+    if (!(rid %in% sub$regime_id)) next   # whole regime missing: failed above
+    k <- sum(sub$regime_id == rid & sub$trait == exp_mar$trait[i])
+    lab <- sprintf("regime %d trait %s", rid, exp_mar$trait[i])
+    if (k == 0L) fails <- c(fails, sprintf("missing MAR_phylo row: %s%s", lab, ctag(rid)))
+    if (k > 1L)  fails <- c(fails, sprintf("duplicate MAR_phylo rows (%d): %s%s", k, lab, ctag(rid)))
   }
 
   # Rule violations of every regime, split into gate failures (gated
@@ -206,7 +233,7 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
     e <- expected_cells(regimes$regime_id)
     data.frame(e, method = "posterior_full", n = 1000L,
                covered_sum = ifelse(e$mechanism == "MCAR", 950L, 850L),   # MAR 0.85: not gated
-               mean_width = 3.9, n_expected = n_reps, n_reps_scored = n_reps,
+               mean_width = 3.9, n_expected = n_reps, n_present = n_reps, n_reps_scored = n_reps,
                n_fits = n_reps, n_converged = n_reps)
   }
   at <- function(d, rid, tr = c("x", "y")) d$regime_id %in% rid & d$trait %in% tr
@@ -222,8 +249,15 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
   d <- make_pass(); fx$missing_regime <- d[d$regime_id != 2, ]   # stress regime missing: FAILS
   d <- make_pass(); fx$missing_twin <- d[d$regime_id != 34, ]    # twin regime missing: FAILS
   d <- make_pass(); fx$missing_trait_y <- d[!at(d, 21, "y"), ]
-  d <- make_pass(); d$n_converged[d$regime_id == 22] <- 150L
+  d <- make_pass(); d$n_present[d$regime_id == 22] <- 150L
+  d$n_converged[d$regime_id == 22] <- 150L; d$n_reps_scored[d$regime_id == 22] <- 150L
   fx$short_reps <- d                                           # 150/200 rep files present
+  d <- make_pass(); d$n_present[d$regime_id == 5] <- 150L
+  d$n_converged[d$regime_id == 5] <- 150L; d$n_reps_scored[d$regime_id == 5] <- 150L
+  fx$stress_short_files <- d                                   # MAR stress regime, 150/200 files: FAILS
+  d <- make_pass(); fx$missing_mar_twin <- d[d$regime_id != 31, ]    # MAR twin missing: FAILS
+  d <- make_pass(); fx$missing_mar_stress <- d[d$regime_id != 5, ]   # MAR stress regime missing: FAILS
+  d <- make_pass(); fx$missing_mar_trait <- d[!at(d, 39, "y"), ]     # one MAR row missing: FAILS
   fx$wrong_n_expected <- make_pass(n_reps = 100L)
   d <- make_pass(); d$covered_sum[at(d, 17, "y")] <- NA
   fx$nonfinite <- d
@@ -245,7 +279,12 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
                       missing_regime = "missing MCAR row: regime 2 trait x (stress-test regime",
                       missing_twin = "missing MCAR row: regime 34 trait x",
                       missing_trait_y = "missing MCAR row: regime 21 trait y",
-                      short_reps = "regime 22: non-converged", wrong_n_expected = "n_expected=100",
+                      short_reps = "regime 22: n_present=150 of 200 expected rep files",
+                      stress_short_files = "regime 5: n_present=150 of 200 expected rep files (stress-test regime",
+                      missing_mar_twin = "missing regime: regime 31 has no posterior_full rows",
+                      missing_mar_stress = "missing regime: regime 5 has no posterior_full rows (stress-test regime",
+                      missing_mar_trait = "missing MAR_phylo row: regime 39 trait y",
+                      wrong_n_expected = "n_expected=100",
                       nonfinite = "regime 17 trait y: coverage non-finite", zero_n = "regime 9 trait x: n=0",
                       reps_unscored = "regime 1 trait x: n_reps_scored=197 < n_converged=200",
                       reps_unscored_twin = "regime 35 trait y: n_reps_scored=197 < n_converged=200",
@@ -262,7 +301,7 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
   d <- make_pass(); d$n_converged[d$regime_id == 1] <- 190L
   sx$stress_nonconverged <- d
   d <- make_pass(); d$n_converged[d$regime_id == 5] <- 150L; d$n_reps_scored[d$regime_id == 5] <- 150L
-  sx$stress_nonconverged_mar <- d
+  sx$stress_nonconverged_mar <- d                              # every rep file present, 50 non-converged
   d <- make_pass(); d$covered_sum[at(d, 12, "y")] <- NA
   sx$stress_nonfinite <- d
   stress_pattern <- c(stress_coverage_band = "^STRESS_VIOLATION regime 1 trait x: MCAR coverage=0.6000",

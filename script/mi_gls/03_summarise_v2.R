@@ -41,12 +41,25 @@
 # chains and diagnostics of the same seed). "complete" has no convergence
 # concept and uses every expected rep with a finite estimate.
 #
+# Several output folders (design.md section 5e: the 69670d4 rep files of
+# regimes 1-24, then the new-code re-run of 25-40 and of the non-converged
+# cells of 1-24): pass them comma-separated as <indir>. A later folder
+# overrides an earlier one for the same regime_<id>_rep_<k>.rds file name;
+# a SOURCE line per folder prints how many files it gave and replaced, and
+# a folder that does not exist stops the run.
+#
+# The cell-coverage CSV carries n_present, the regime's rep files present
+# (1..MI_N_REPS), so G7 can fail an incomplete regime (G6 reads n_present
+# from the summary CSV).
+#
 # Usage:
-#   Rscript script/mi_gls/03_summarise_v2.R <indir> <out_summary.csv> [out.md] [out_cell_coverage.csv]
+#   Rscript script/mi_gls/03_summarise_v2.R <indir>[,<indir2>...] <out_summary.csv> [out.md] [out_cell_coverage.csv]
 
 args <- commandArgs(trailingOnly = TRUE)
-if (length(args) < 2L) stop("expected: indir out_summary.csv [out.md] [out_cell_coverage.csv]", call. = FALSE)
-indir       <- args[[1L]]
+if (length(args) < 2L) stop("expected: indir[,indir2...] out_summary.csv [out.md] [out_cell_coverage.csv]", call. = FALSE)
+indirs      <- trimws(strsplit(args[[1L]], ",", fixed = TRUE)[[1L]])
+indirs      <- indirs[nzchar(indirs)]
+indir       <- paste(indirs, collapse = ", ")
 out_csv     <- args[[2L]]
 out_md      <- if (length(args) >= 3L && nzchar(args[[3L]])) args[[3L]] else NA_character_
 out_cell_csv <- if (length(args) >= 4L && nzchar(args[[4L]])) args[[4L]] else NA_character_
@@ -58,7 +71,19 @@ exp_regimes <- regimes[regimes$regime_id %in% ex$regime_ids, ]
 n_reps <- ex$n_reps
 cat(sprintf("EXPECTED_GRID %s%s\n", ex$label, if (ex$full) "" else " (NOT the planned grid)"))
 
-files <- list.files(indir, pattern = "^regime_[0-9]+_rep_[0-9]+\\.rds$", full.names = TRUE)
+if (!length(indirs)) stop("no input folder given", call. = FALSE)
+if (any(!dir.exists(indirs))) {
+  stop("input folder(s) not found: ", paste(indirs[!dir.exists(indirs)], collapse = ", "), call. = FALSE)
+}
+files <- character(0)
+for (d in indirs) {
+  fd <- list.files(d, pattern = "^regime_[0-9]+_rep_[0-9]+\\.rds$", full.names = TRUE)
+  over <- basename(files) %in% basename(fd)
+  files <- c(files[!over], fd)
+  if (length(indirs) > 1L) {
+    cat(sprintf("SOURCE %s: %d rep file(s), replacing %d from earlier folder(s)\n", d, length(fd), sum(over)))
+  }
+}
 if (length(files) == 0L) stop("no .rds files found in ", indir, call. = FALSE)
 
 cells <- list(); diags <- list(); cell_dets <- list(); prov <- list(); conf_err <- list()
@@ -301,6 +326,7 @@ if (!is.na(out_cell_csv)) {
           covered_sum = if (n) sum(sub$covered) else NA_integer_,   # NA propagates (fail-closed)
           mean_width = if (n) mean(sub$width) else NA_real_,
           n_expected = n_reps,
+          n_present = sum(present$regime_id == k$regime_id),   # rep files of this regime
           n_reps_scored = if (n) length(unique(sub$rep)) else 0L,
           if (is_post) conv_summary(k$regime_id, k$method) else no_conv)
   })
