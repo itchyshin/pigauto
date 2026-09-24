@@ -238,14 +238,21 @@ summarise_cell_coverage <- function(cell_df) {
 extract_diag <- function(mi) {
   d <- mi$posterior$diagnostics
   if (is.null(d) || !nrow(d)) {
-    return(list(max_rhat = NA_real_, min_ess = NA_real_, converged = NA))
+    return(list(max_rhat = NA_real_, min_ess = NA_real_, converged = NA,
+                n_extensions = NA_integer_, sweeps_per_chain = NA_integer_))
   }
+  # n_extensions / sweeps_per_chain: automatic chain extension (design.md 5e);
+  # NULL on fits from code before that feature, recorded as NA.
+  ne <- attr(d, "n_extensions"); sp <- attr(d, "sweeps_per_chain")
   list(max_rhat  = max(d$rhat, na.rm = TRUE),
       min_ess   = min(d$ess_bulk, na.rm = TRUE),
-      converged = isTRUE(attr(d, "converged")))
+      converged = isTRUE(attr(d, "converged")),
+      n_extensions = if (is.null(ne)) NA_integer_ else as.integer(ne),
+      sweeps_per_chain = if (is.null(sp)) NA_integer_ else as.integer(sp))
 }
 
-na_diag <- list(max_rhat = NA_real_, min_ess = NA_real_, converged = NA)
+na_diag <- list(max_rhat = NA_real_, min_ess = NA_real_, converged = NA,
+                n_extensions = NA_integer_, sweeps_per_chain = NA_integer_)
 
 # Score one posterior result set (datasets + cell_interval) as one method.
 score_posterior <- function(method_name, datasets, ci, diag, wall) {
@@ -369,7 +376,8 @@ for (method_name in posterior_methods) {
   if (!is.null(out$cell_summary))  cell_summaries[[method_name]] <- out$cell_summary
   diagnostics[[method_name]] <- data.frame(
     method = method_name, max_rhat = out$diag$max_rhat,
-    min_ess = out$diag$min_ess, converged = out$diag$converged)
+    min_ess = out$diag$min_ess, converged = out$diag$converged,
+    n_extensions = out$diag$n_extensions, sweeps_per_chain = out$diag$sweeps_per_chain)
   posterior_errors[[method_name]] <- out$err
 }
 

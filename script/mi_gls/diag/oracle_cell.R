@@ -53,6 +53,10 @@ if (file.exists(out_f)) { cat("SKIP", out_f, "\n"); quit(save = "no") }
 
 cell <- simulate_regime_cell(regime_id, rep_i)
 reg <- cell$regime
+if (!is.null(reg$dgp) && !identical(reg$dgp, "tree_raw")) {
+  stop("oracle_cell.R builds the raw-tree covariance of regimes 1-16 only; regime ",
+       reg$regime_id, " has dgp '", reg$dgp, "'", call. = FALSE)
+}
 tree <- cell$tree
 tips <- tree$tip.label
 stopifnot(identical(rownames(cell$truth), tips))

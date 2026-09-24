@@ -119,7 +119,7 @@ if ! (cd "${CODE_DIR}" && Rscript -e '
 fi
 
 TASK_ID="${SLURM_ARRAY_TASK_ID:-0}"
-N_REGIMES=24
+N_REGIMES=40   # regimes 1-40 (25-40: in-model twins of 1-16, design.md 5e)
 N_REPS=200
 REPS_PER_TASK=100
 START=$(( TASK_ID * REPS_PER_TASK ))

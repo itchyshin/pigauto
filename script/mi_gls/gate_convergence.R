@@ -55,7 +55,8 @@ check_one <- function(regime_id, rep_i) {
   list(regime_id = regime_id, rep = rep_i,
       max_rhat  = max(diag$rhat, na.rm = TRUE),
       min_ess   = min(diag$ess_bulk, na.rm = TRUE),
-      converged = isTRUE(attr(diag, "converged")), wall_s = wall_s)
+      converged = isTRUE(attr(diag, "converged")), wall_s = wall_s,
+      n_extensions = as.integer(attr(diag, "n_extensions") %||% NA_integer_))
 }
 
 results <- tryCatch(
@@ -70,8 +71,8 @@ if (is.null(results)) quit(save = "no", status = 1L)
 ok <- TRUE
 for (r in results) {
   cat(sprintf(
-    "regime %d rep %d: n_chains=%d max_rhat=%.4f min_ess=%.1f converged=%s wall_s=%.1f\n",
-    r$regime_id, r$rep, n_chains, r$max_rhat, r$min_ess, r$converged, r$wall_s))
+    "regime %d rep %d: n_chains=%d max_rhat=%.4f min_ess=%.1f converged=%s n_extensions=%s wall_s=%.1f\n",
+    r$regime_id, r$rep, n_chains, r$max_rhat, r$min_ess, r$converged, format(r$n_extensions), r$wall_s))
   if (!isTRUE(r$converged)) {
     cat(sprintf("NONCONVERGED regime %d: attr(diagnostics, \"converged\") is not TRUE\n",
                r$regime_id))
