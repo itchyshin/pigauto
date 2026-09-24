@@ -1,7 +1,7 @@
 # Posterior multiple imputation: results
 
 2026-09-24. Branch `arc/mi-posterior`, stacked on PR #187. Status: **simulation complete; G6 fails on 8
-checks (diagnosis running); real data 9 of 10 cells done (FishBase running); not ready to merge.**
+checks (diagnosed: mostly a harness model mismatch, see diagnosis.md); real data 9 of 10 cells done (FishBase running); not ready to merge.**
 
 Every number below comes from a committed file:
 - `sim_summary.csv` and `cell_coverage.csv` (written by `script/mi_gls/03_summarise_v2.R`);
@@ -102,12 +102,33 @@ The 8 G6 failures:
 4. Relative SE ratio just below 0.90 under phylolm in regime 8 (0.879) and regime 15 (0.897). Both
    are within about 1.5 Monte Carlo SE of the floor.
 
-Pattern: every lambda = 1 regime has a small negative paired bias (phylolm -0.008 to -0.026; gls
--0.002 to -0.013). The plug-in arm shows the same bias, so the cause is not parameter uncertainty. The
-cause is not yet known. A diagnosis is running (`diagnosis.md` when it lands):
-- an oracle arm with the true covariances;
-- a prior-sensitivity arm;
-- longer chains for the non-converged fits.
+Diagnosis (`diagnosis.md`, about 55 min on Totoro; oracle, in-model twin, prior and longer-chain
+arms).
+
+**The lambda = 1 slope bias is mostly a harness effect.** Regimes 1 to 16 reuse the v1 data
+generator: non-ultrametric `ape::rtree()` trees with the raw covariance `vcv(tree)`, so tip variances
+differ up to about 7-fold. The sampler, like the rest of pigauto, models the correlation
+`cov2cor(vcv(tree))`, which gives every tip the same variance, so regimes 1 to 16 lie outside its
+model family. Evidence:
+- exact imputations under the true covariance give a paired bias within 2.5 MCSE of 0 (largest
+  -0.003);
+- the package's own draws at the model's best attainable (KL) parameters already carry -0.008 to
+  -0.016 under phylolm;
+- on an in-model twin of regime 3 (each tip rescaled) the phylolm bias falls from -0.017 to -0.003.
+
+For ultrametric (dated) trees the two matrices are proportional and the issue does not arise.
+
+**A smaller component comes from the Sigma_E prior.** At lambda near 1 the prior pulls the residual
+correlation towards 0 (0.17 to 0.27, against 0.7 in the KL pseudo-truth). A 100-fold smaller prior
+scale removes 0.003 to 0.005 of bias but made 2 of 24 fits fail numerically, so it is not
+recommended as is.
+
+**Unresolved:** a gap of about -0.02 in regime 9, and the positive gls bias in the lambda = 0.5
+regimes.
+
+**Non-convergence is an efficiency shortfall, not a failure to converge.** All 32 non-converged fits
+fail on bulk ESS (190 to 395) and none on R-hat (at most 1.028). At twice the chain length 30 of 32
+converge, and at four times all 32 do. Their pooled slopes do not move beyond Monte Carlo noise.
 
 ## Real data (preview, 9 of 10 cells; G8 pending)
 
