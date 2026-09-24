@@ -23,3 +23,15 @@ Reading: the posterior is calibrated for lambda and the phylogenetic correlation
 Timing on Totoro at n = 1000, K = 2: 206 to 220 s per fit at the defaults, 8.6 to 9.2 ms per sweep.
 
 Incident: the first launch of the calibration run exported no thread caps. Setting them inside R is too late for BLAS, and the load average reached about 18,000 for about 10 minutes. The run was killed and relaunched with `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1` exported at launch, giving 76 processes and 77 threads.
+
+## G3 gate evidence at the campaign commit (2026-09-24)
+
+`g3_calibration.rds`, `g3_calibration_run.log`: `script/mi_gls/gate_calibration.R run` at commit 69670d4
+on Totoro. Settings A to D, seeds 101 to 150 (200 fits, all converged), 10 cores, 7,566 s wall under
+full machine load. `Rscript script/mi_gls/gate_calibration.R check` prints `RECOVERY_OK`.
+
+- A (lambda 1, 1): bias -0.004 and -0.003; rho_P coverage 0.96.
+- B to D reproduce the 7a0f470 numbers above exactly (same seeds), which confirms the sampler did not
+  change between the two commits.
+- D's rho_P (bias -0.14) is not gated, because lambda_1 = 0.05 leaves almost no phylogenetic
+  variance in trait 1 to identify the phylogenetic correlation.
