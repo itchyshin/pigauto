@@ -12,7 +12,8 @@ plug into the same estimands later). Owns `script/rubin_*`, `docs/dev-log/arc/20
 > code `BACE::bace()` actually runs (built 2026-08-09, `~/Library/R/arm64/4.6/library/BACE`), does draw a
 > residual. `bace_final_imp()` calls `.predict_bace(..., sample = TRUE)`, and for a gaussian trait that
 > branch takes one posterior iteration's fitted value and adds `rnorm(0, sqrt(sigma2_units))` from the same
-> iteration before back-transforming. Each final dataset is therefore a posterior predictive draw. Point 2
+> iteration before back-transforming. Each final dataset is a posterior predictive draw, but only conditional
+> on a shared anchor: every final run starts from the same converged dataset (see the review note below). Point 2
 > was verified against the in-tree `BACE/` clone, which is stale (commit `de87d8c`, 2026-04-01) and still
 > takes the posterior mean. Checked by deparsing the installed namespace, after the S3 builder flagged it.
 > Consequences: the "BACE + residual draw" arm adds a second residual on top of BACE's own, so it is kept
@@ -20,6 +21,14 @@ plug into the same estimands later). Owns `script/rubin_*`, `docs/dev-log/arc/20
 > should reach Dan saying BACE imputes posterior means; and every compute host must run the same BACE build
 > (the pre-run checks for `sample = TRUE` in `bace_final_imp`). Point 1 (the percentile interval's 0.872
 > ceiling) is unaffected.
+
+> **Review note (Meng, 2026-09-24; `docs/dev-log/arc/2026-09-24-rubin-review.md`).** In the installed build
+> every final run starts from the same `last_data`, the last convergence iterate, whose fills came from
+> `sample = FALSE` runs. Predictors later in the formula order are therefore identical across the M datasets
+> (c1's design matrix was identical in all 20 final runs of the smoke fit). In a tree-free toy, this scheme
+> covered the slope 0.900 and cells 0.88 to 0.90, against 0.95 for independent chains; chaining final run i
+> from dataset i-1 restored 0.950. The size in the phylogenetic DGP is not measured. A `bace_chain` arm built
+> from BACE's own functions is the proposed replacement for `bace_resid`; that is Shinichi's call.
 
 1. v1 scored per-cell prediction intervals, not multiple imputation. BACE's interval was the 2.5 and 97.5
    percentile of 20 imputed datasets, whose coverage ceiling is 0.872 under a correct model; the Rubin
@@ -43,8 +52,8 @@ are. Changing BACE is out of scope for this repo (and is Dan's code); options fo
 
 | arm | imputations (M = 20) | what it tests |
 |---|---|---|
-| BACE as shipped | its `n_final` datasets (posterior means for continuous) | what a BACE user gets today |
-| BACE + residual draw (if Q1 = yes) | each posterior-mean value plus a draw from N(0, sigma_units) using that fit's residual variance, taken from the returned model objects | whether proper predictive draws fix BACE's coverage |
+| BACE as shipped | its `n_final` datasets (installed build: one posterior draw plus residual per final run, all runs starting from one converged dataset) | what a BACE user gets today |
+| BACE + residual draw (negative control after the correction) | BACE's datasets plus a second draw from N(0, sigma_units) | how coverage responds to a doubled residual; a chained BACE arm is the proposed replacement (review B2) |
 | freq A: parametric bootstrap then draw | refit Rphylopars `model = "lambda"` (and castor Mk, phyloglm) on a parametric bootstrap sample, then draw missing cells from that fit's conditional normal | proper MI: carries Sigma and lambda uncertainty |
 | freq B: draws from one fit | M draws from N(prediction, anc_var) of a single fit | improper contrast: parameters fixed |
 | floor | mean / mode, no MI | reference |
@@ -59,7 +68,9 @@ paper reports both specifications in its v1 tables.
 2. Downstream slope: phylogenetic GLS of continuous trait c2 on c1 (`nlme::gls`, `corPagel` on the true
    tree) fitted on every completed dataset; pooled with `W + (1 + 1/M) B`, Barnard-Rubin df. Score bias,
    RMSE and 95% coverage against the same model fitted on the complete true data.
-3. Downstream correlation: Pearson correlation of c1 and c2 on Fisher's z, pooled the same way.
+3. Downstream correlation: GLS-whitened phylogenetic correlation of c1 and c2 on Fisher's z (normal
+   reference), pooled the same way. A tip-level Pearson correlation was replaced in planning because its
+   1/(n-3) variance is wrong under phylogeny.
 4. Diagnostics: fraction of missing information per estimand; BACE convergence verdict and ESS as in v1.
 
 ## Design

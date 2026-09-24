@@ -164,6 +164,9 @@ est_pgls_slope <- function(df, tree) {
 est_phylo_cor <- function(df, tree, lambda = NULL) {
   if (is.null(lambda)) lambda <- est_pgls_slope(df, tree)$lambda_hat
   sp <- rownames(df); n <- length(sp)
+  # A failed slope fit leaves lambda NA; return NA fields rather than erroring in chol() (Meng B1).
+  if (!is.finite(lambda)) return(list(r = NA_real_, z = NA_real_, variance = 1 / (n - 3), df_com = n - 3,
+                                     lambda_used = NA_real_))
   V <- cov2cor(ape::vcv(tree))[sp, sp]
   C <- lambda * V + (1 - lambda) * diag(n)
   Cinv <- chol2inv(chol(C))
@@ -192,7 +195,8 @@ pool_cor <- function(z_vec, n, conf = 0.95) {
   m <- length(z_vec)
   n <- rep_len(n, m)
   u <- 1 / (n - 3)
-  df_com <- mean(n) - 3
-  zp <- rubin_pool(z_vec, u, df_com = df_com, conf = conf)
+  # Fisher's z has a normal complete-data reference, so df_com = Inf (mice's default); a t_{n-3}
+  # reference here disagreed with the qnorm complete-data check (Meng review N2).
+  zp <- rubin_pool(z_vec, u, df_com = Inf, conf = conf)
   list(r = tanh(zp$estimate), lower = tanh(zp$lower), upper = tanh(zp$upper), z_pool = zp)
 }

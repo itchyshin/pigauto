@@ -16,7 +16,7 @@ BACE's own convergence check too rarely. Per setting, the pre-run records BACE's
 median ESS, the wall time, the failure count, and the per-cell Rubin coverage and width of both BACE arms.
 
 Proposed selection rule: take the cheapest setting where (a) at least 80% of fits pass BACE's convergence
-check, (b) median ESS is at least 100 (v1's G9b bar), and (c) per-cell Rubin coverage lies within Monte
+check, (b) median ESS is at least 100 (v1's G9b bar), and (c) the `bace` arm's per-cell Rubin coverage lies within Monte
 Carlo error of the most expensive setting's. If no setting meets (a), report that rather than pick one.
 
 ## Grid
@@ -78,5 +78,10 @@ n = 300 fits run more than 30% over their row above, the run stops and I re-repo
 - **Same BACE build everywhere.** The in-tree `BACE/` clone (2026-04-01) imputes posterior means; the
   installed build (2026-08-09) draws posterior predictive values. The launch script refuses a host with the
   old build.
-- **`bace_resid` is under review.** With the installed build it adds a second residual. It costs nothing to
-  keep in the pre-run; whether it stays in the campaign is Shinichi's call.
+- **`bace_resid` is a negative control.** With the installed build it adds a second residual, so it plays no
+  part in the selection rule. It costs nothing to keep in the pre-run.
+- **More `runs` or `nitt` cannot fix BACE's shared anchor** (review B2): every final run starts from one
+  converged dataset. The pre-run chooses chain settings for BACE as shipped; if Shinichi approves a chained
+  BACE arm, it can be sized in the same run or after it.
+- **Review status.** Meng's verdict is GO WITH FIXES for this pre-run; the three pre-run fixes are applied
+  (guarded scoring, bace-only rule (c), corrected text). The campaign stays blocked on B2.

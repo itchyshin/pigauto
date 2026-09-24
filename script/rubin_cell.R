@@ -7,11 +7,14 @@
 #   slope      : PGLS slope of c2 on c1 (corPagel), pooled W + (1 + 1/M) B, Barnard-Rubin df
 #   correlation: GLS-whitened phylogenetic correlation of c1 and c2, pooled on Fisher's z
 # In this DGP the population slope and the population phylogenetic correlation both equal rho, so coverage is
-# scored against rho; bias is also reported against the complete-data estimate ("ref_full").
+# scored against rho. Each cell also carries a "complete" row (the same estimands on the complete data, same df
+# convention), because the complete-data coverage itself falls short of 0.95 at small n (Meng review N3).
 #
 # Arms: freqA (parametric bootstrap then joint conditional draw), freqB (joint conditional draws at one fixed
-# Rphylopars-lambda fit), bace (as shipped: continuous imputations are posterior means), bace_resid (BACE plus a
-# post hoc residual draw from each final fit's units posterior).
+# Rphylopars-lambda fit), bace (as shipped: the installed build draws one posterior iteration plus a residual per
+# final run, but every final run starts from the same converged dataset; Meng review B2), bace_resid (BACE plus
+# a second, post hoc residual draw: a negative control, not a fix).
+# Each arm reseeds with seed + a fixed offset, so an arm's draws do not depend on which arms ran before it.
 #
 # Usage:
 #   Rscript script/rubin_cell.R --n 100 --seed 1 --lambda 0.7 --rho 0.5 --out results/ \
@@ -84,7 +87,9 @@ score_cells <- function(arm, sets) {
     idx <- which(mask[, v]); if (!length(idx)) next
     draws <- t(vapply(sets, function(s) as.numeric(s[[v]][idx]), numeric(length(idx))))
     if (length(idx) == 1L) draws <- matrix(draws, ncol = 1L)
-    if (anyNA(draws)) next                      # trait not imputed by this arm (e.g. outside the freq block)
+    if (all(is.na(draws))) next                 # trait not imputed by this arm (e.g. outside the freq block)
+    n_na <- sum(is.na(draws))                   # a partial failure is recorded, never hidden (Meng N14)
+    if (n_na) draws <- draws[stats::complete.cases(draws), , drop = FALSE]
     ci <- rubin_cell_intervals(draws)
     tr <- truth[[v]][idx]
     sdt <- stats::sd(truth[[v]][!mask[, v]])
@@ -95,21 +100,23 @@ score_cells <- function(arm, sets) {
       coverage = mean(tr >= lo & tr <= hi),
       width = mean((hi - lo) / sdt),
       interval_score = mean(((hi - lo) + (2 / a) * (lo - tr) * (tr < lo) + (2 / a) * (tr - hi) * (tr > hi)) / sdt),
-      frac_B0 = mean(ci$B == 0))
+      frac_B0 = mean(ci$B == 0), n_na = n_na, m_used = nrow(draws))
   }
   do.call(rbind, rows)
 }
 
 ref_slope <- est_pgls_slope(truth, tree)
-ref_cor   <- est_phylo_cor(truth, tree)
+ref_cor   <- est_phylo_cor(truth, tree, lambda = ref_slope$lambda_hat)
 
 score_estimands <- function(arm, sets) {
   sl <- lapply(sets, est_pgls_slope, tree = tree)
   ok <- vapply(sl, function(s) is.finite(s$estimate) && is.finite(s$variance), logical(1))
+  # the correlation reuses each dataset's slope-fit lambda instead of refitting (Meng N4)
+  co <- Map(function(s, fit) est_phylo_cor(s, tree, lambda = fit$lambda_hat), sets, sl)
+  okc <- vapply(co, function(s) is.finite(s$z), logical(1))
+  if (sum(ok) < 2L || sum(okc) < 2L) stop(sprintf("%s: fewer than 2 analysable imputations", arm))
   ps <- rubin_pool(vapply(sl[ok], `[[`, numeric(1), "estimate"), vapply(sl[ok], `[[`, numeric(1), "variance"),
                    df_com = n - 2)
-  co <- lapply(sets, est_phylo_cor, tree = tree)
-  okc <- vapply(co, function(s) is.finite(s$z), logical(1))
   pc <- pool_cor(vapply(co[okc], `[[`, numeric(1), "z"), n)
   rbind(
     data.frame(arm = arm, estimand = "slope", estimate = ps$estimate, se = ps$se, lower = ps$lower,
@@ -132,30 +139,48 @@ run_arm <- function(arm, expr) {
   res
 }
 
+# Scoring is guarded per arm (Meng B1): a failed draw or estimand records an error and the cell still writes its
+# rds. NULL datasets (freq A draws whose refits failed twice) are dropped and counted.
+score_arm_sets <- function(arm, sets) {
+  sets <- Filter(Negate(is.null), sets)
+  res <- tryCatch(list(cells = score_cells(arm, sets), est = score_estimands(arm, sets)),
+                  error = function(e) e)
+  if (inherits(res, "error")) {
+    errors[[paste0(arm, "_score")]] <<- conditionMessage(res)
+    log_line("arm %s scoring ERROR: %s", arm, conditionMessage(res)); return(invisible(NULL))
+  }
+  cells_tab[[arm]] <<- res$cells; est_tab[[arm]] <<- res$est
+}
+arm_seed <- function(offset) set.seed(seed + offset)
+
+est_tab$complete <- tryCatch(score_estimands("complete", list(truth, truth)), error = function(e) NULL)
+if (!is.null(est_tab$complete)) {
+  # two copies of the truth give B = 0, so the pooled interval is the complete-data interval with the same
+  # df convention as the MI arms; FMI is 0 by construction
+  est_tab$complete$m_ok <- 1L
+  est_tab$complete$fmi <- 0   # mice's small-sample fmi formula gives 2/(df+3) at B = 0, not 0
+}
+
 if ("freqA" %in% arms) {
-  a <- run_arm("freqA", mi_freq_A(cell, M))
+  arm_seed(101L); a <- run_arm("freqA", mi_freq_A(cell, M))
   if (!is.null(a)) {
-    cells_tab$freqA <- score_cells("freqA", a$datasets); est_tab$freqA <- score_estimands("freqA", a$datasets)
-    diag$freqA <- list(n_fail = a$n_fail, lambda_star = vapply(a$pars_star, function(p) p$lambda, numeric(1)))
+    score_arm_sets("freqA", a$datasets)
+    diag$freqA <- list(n_fail = a$n_fail, m_used = sum(!vapply(a$datasets, is.null, logical(1))),
+                       lambda_star = vapply(Filter(Negate(is.null), a$pars_star), function(p) p$lambda, numeric(1)))
   }
 }
 if ("freqB" %in% arms) {
-  b <- run_arm("freqB", mi_freq_B(cell, M))
-  if (!is.null(b)) { cells_tab$freqB <- score_cells("freqB", b$datasets); est_tab$freqB <- score_estimands("freqB", b$datasets) }
+  arm_seed(202L); b <- run_arm("freqB", mi_freq_B(cell, M))
+  if (!is.null(b)) score_arm_sets("freqB", b$datasets)
 }
 if (any(c("bace", "bace_resid") %in% arms)) {
+  arm_seed(303L)
   fb <- run_arm("bace_fit", fit_bace_mi(cell, M = M, nitt = bace_nitt, burnin = bace_burnin, thin = bace_thin,
                                         runs = bace_runs))
   if (!is.null(fb)) {
     diag$bace <- fb$diag
-    if ("bace" %in% arms) {
-      s <- mi_bace_shipped(fb$outb, df_miss)
-      cells_tab$bace <- score_cells("bace", s); est_tab$bace <- score_estimands("bace", s)
-    }
-    if ("bace_resid" %in% arms) {
-      s <- mi_bace_resid(fb$outb, df_miss, seed = seed)
-      cells_tab$bace_resid <- score_cells("bace_resid", s); est_tab$bace_resid <- score_estimands("bace_resid", s)
-    }
+    if ("bace" %in% arms) score_arm_sets("bace", mi_bace_shipped(fb$outb, df_miss))
+    if ("bace_resid" %in% arms) score_arm_sets("bace_resid", mi_bace_resid(fb$outb, df_miss, seed = seed))
   }
 }
 

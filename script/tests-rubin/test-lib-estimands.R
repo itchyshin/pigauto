@@ -47,3 +47,10 @@ testthat::test_that("est_pgls_slope / est_phylo_cor recover rho = 0.5 on average
   testthat::expect_equal(mean(rs), rho_true, tolerance = 0.05, scale = 1)
   testthat::expect_lt(elapsed, 180)
 })
+
+testthat::test_that("est_phylo_cor returns NA fields, not an error, when lambda is not finite (Meng B1)", {
+  cell <- make_cell("types_mixed", n = 40, seed = 3L, lambda = 0.7, rho = 0.5)
+  r <- est_phylo_cor(cell$truth, cell$tree, lambda = NA_real_)
+  testthat::expect_true(is.na(r$r) && is.na(r$z))
+  testthat::expect_equal(r$variance, 1 / 37)
+})

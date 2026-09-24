@@ -23,12 +23,14 @@ if (identical(gate, "G-S4a")) {
   cc <- x$cells
   stopifnot("non-finite per-cell score" = all(is.finite(cc$zRMSE) & is.finite(cc$coverage) & is.finite(cc$width)),
             "zero-width intervals outside bace (as shipped)" = all(cc$frac_B0[cc$arm != "bace"] == 0))
-  e <- x$estimands
+  stopifnot("complete-data reference row missing" = sum(x$estimands$arm == "complete") == 2L)
+  e <- x$estimands[x$estimands$arm %in% want, ]
   stopifnot("both estimands per arm" = all(table(e$arm)[want] == 2L),
             "non-finite pooled estimand" = all(is.finite(e$estimate) & is.finite(e$lower) & is.finite(e$upper)),
             "FMI missing or outside [0, 1]" = all(is.finite(e$fmi) & e$fmi >= 0 & e$fmi <= 1),
             "every imputation analysed" = all(e$m_ok == x$M))
   stopifnot("BACE convergence/ESS not recorded" = !is.null(x$diag$bace) && length(x$diag$bace) > 0L)
+  stopifnot("partial NA imputations" = all(cc$n_na == 0L))
   cat(sprintf("smoke %s: %d cell rows, %d estimand rows; walls %s\n", basename(f[1]), nrow(cc), nrow(e),
               paste(names(x$walls), round(x$walls), sep = "=", collapse = " ")))
   cat("G-S4a PASS\n")

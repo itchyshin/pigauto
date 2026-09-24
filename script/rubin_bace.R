@@ -36,6 +36,12 @@
 # gaussian traits. Both arms are still well-defined and testable as written; whether "BACE +
 # residual draw" remains the right label, or whether the plan doc's Q1 needs revisiting, is a
 # design call outside this file (flagged to main).
+#
+# Review update (Meng, 2026-09-24, B2 and N8): with the installed build this arm is a NEGATIVE CONTROL
+# (a doubled residual), not a fix. A further property matters more: every final run starts from the
+# same converged dataset (bace_final_imp: .one_final_run(run, last_data)), whose fills came from
+# sample = FALSE runs, so predictors later in the formula order are identical across the M datasets.
+# A BACE arm that chains final runs is the candidate replacement; that design call is Shinichi's.
 
 #' Fit BACE with n_final = M, reusing run_bace()'s data-prep conventions (script/campaign_gnn_off_lib.R
 #' L601-653: Species column from rownames, one formula per trait regressed on all the others,
@@ -89,28 +95,15 @@ mi_bace_shipped <- function(outb, df_miss) {
   })
 }
 
-#' The mean/sd BACE's OWN .data_prep()/.extract_gaussian_attrs() used to z-transform trait v for
-#' the model that produced final dataset i -- reconstructed exactly (not approximated) from
-#' public fields, because that gaussian column is only ever written by ITS OWN model fit: at the
-#' moment trait v is fit in final run i, its column in BACE's running dataset still holds
-#' whatever it held at the END of final run i - 1 (run 1 reads the converged initial dataset
-#' instead). mean/sd are computed BACE's way -- mean(x, na.rm = TRUE), sd(x, na.rm = TRUE) over
-#' whatever is currently non-NA -- which is observed cells PLUS any earlier-chain-imputed cells,
-#' not observed cells only (see file header).
+#' sd_val BACE used to z-score gaussian trait v: .extract_gaussian_attrs() runs on the response with its
+#' missing rows reset to NA, so it is the sd of the OBSERVED values, the same in every final run (Meng
+#' review N8, docs/dev-log/arc/2026-09-24-rubin-review.md; the earlier run-chaining reconstruction was
+#' wrong because every final run starts from the same converged dataset).
 #'
-#' @param outb a "bace_complete" object
-#' @param i final-run index (1-based)
+#' @param df_miss the cell's missing-data data.frame
 #' @param v a gaussian-modelled trait name
 #' @return numeric scalar, sd_val on the data scale
-.bace_gaussian_sd <- function(outb, i, v) {
-  src <- if (i == 1L) {
-    init_data <- outb$initial_results$data
-    init_data[[length(init_data)]]
-  } else {
-    outb$imputed_datasets[[i - 1L]]
-  }
-  stats::sd(src[[v]], na.rm = TRUE)
-}
+.bace_gaussian_sd <- function(df_miss, v) stats::sd(df_miss[[v]], na.rm = TRUE)
 
 #' BACE's shipped datasets (mi_bace_shipped()) plus an independent residual draw added to every
 #' MISSING cell of every trait BACE modelled as "gaussian" (identified from
@@ -136,14 +129,14 @@ mi_bace_resid <- function(outb, df_miss, seed) {
   gaussian_traits <- intersect(gaussian_traits, names(df_miss))
   M <- length(out)
 
-  set.seed(seed)
+  set.seed(seed + 7919L)   # distinct from the DGP seed (Meng N8)
   for (i in seq_len(M)) {
     for (v in gaussian_traits) {
       miss_idx <- which(is.na(df_miss[[v]]))
       if (!length(miss_idx)) next
       fit_v <- outb$final_results$all_models[[i]][[v]]
       if (is.null(fit_v)) next   # defensive: gaussian traits with missing data are always fit
-      sd_val <- .bace_gaussian_sd(outb, i, v)
+      sd_val <- .bace_gaussian_sd(df_miss, v)
       units <- as.matrix(fit_v$VCV)[, "units"]
       sigma2_units_i <- units[sample.int(length(units), 1L)]   # NOT sample(units, 1): sample() on
       # a length-1 numeric would sample from 1:units instead of returning units itself

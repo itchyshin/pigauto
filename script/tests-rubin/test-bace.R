@@ -108,7 +108,7 @@ testthat::test_that("residual draw variance matches mean(VCV[,'units']) * sd_val
     noise[r] <- draw[[i]][[v]][row1] - base
   }
 
-  sd_val <- .bace_gaussian_sd(fit$outb, i, v)
+  sd_val <- .bace_gaussian_sd(df_miss, v)
   units <- as.matrix(fit$outb$final_results$all_models[[i]][[v]]$VCV)[, "units"]
   theoretical_var <- mean(units) * sd_val^2
   empirical_var <- stats::var(noise)
