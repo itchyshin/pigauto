@@ -40,8 +40,9 @@ checkpoints_bin/
 !tests/testthat/fixtures/*.rds
 !useful/bace_results_snapshot/*.rds
 
-# pkgdown / rsconnect
+# pkgdown / rsconnect (the site builds into _site/; docs/ is ignored except for force-added dev-log notes)
 docs/
+_site/
 rsconnect/
 
 # OAuth
