@@ -48,7 +48,14 @@
 #
 # Build Q = S^{-1} from a phylo tree by walking tree$edge once. No
 # explicit Cholesky / inverse needed: equation 29 is closed-form.
-build_henderson_S_inv <- function(tree, eps = 1e-12) {
+#
+# `tip_depths` (optional): root-to-tip depths in tree$tip.label order. When
+# NULL (the default) they are read from diag(ape::vcv(tree)), which forms
+# the dense n x n covariance; callers that must stay O(n) in memory (the
+# posterior sampler, R/mi_posterior.R) pass
+# ape::node.depth.edgelength(tree)[seq_len(n_tips)] instead. The default
+# path is unchanged because this is a shared kernel (joint baseline).
+build_henderson_S_inv <- function(tree, eps = 1e-12, tip_depths = NULL) {
   stopifnot(inherits(tree, "phylo"))
   if (!requireNamespace("Matrix", quietly = TRUE)) {
     stop("build_henderson_S_inv requires the 'Matrix' package.",
@@ -63,7 +70,16 @@ build_henderson_S_inv <- function(tree, eps = 1e-12) {
   # ultrametric trees diag(A) is constant and the two scales coincide
   # up to a global factor, but for coalescent / variable-depth trees
   # the difference is substantial.
-  tip_depths <- diag(ape::vcv(tree))[tree$tip.label]
+  if (is.null(tip_depths)) {
+    tip_depths <- diag(ape::vcv(tree))[tree$tip.label]
+  } else {
+    if (!is.numeric(tip_depths) ||
+        length(tip_depths) != length(tree$tip.label)) {
+      stop("build_henderson_S_inv: `tip_depths` must be a numeric vector ",
+           "with one value per tip (internal error).", call. = FALSE)
+    }
+    tip_depths <- stats::setNames(as.numeric(tip_depths), tree$tip.label)
+  }
   tip_sqrt_d <- sqrt(pmax(tip_depths, eps))
 
   n_tips <- length(tree$tip.label)

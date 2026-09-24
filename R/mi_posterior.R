@@ -72,14 +72,20 @@
 # ---------------------------------------------------------------------------
 
 # Qc = D Q D (design.md 2.0). Zero-length edges are floored at 1e-6 of the
-# tree height before Q is built so that 1 / edge length stays finite.
+# tree height before Q is built so that 1 / edge length stays finite. The
+# tip depths are passed in from ape::node.depth.edgelength() (O(n)), so the
+# dense n x n vcv(tree) is never formed here; the values are the same as
+# diag(vcv(tree)).
 .mip_build_Qc <- function(tree) {
+  tip_depths <- NULL
   if (!is.null(tree$edge.length)) {
     h <- max(ape::node.depth.edgelength(tree))
     floor_len <- 1e-6 * if (is.finite(h) && h > 0) h else 1
     tree$edge.length <- pmax(tree$edge.length, floor_len)
+    tip_depths <- ape::node.depth.edgelength(tree)[
+      seq_len(length(tree$tip.label))]
   }
-  hs <- build_henderson_S_inv(tree)
+  hs <- build_henderson_S_inv(tree, tip_depths = tip_depths)
   d <- c(hs$tip_sqrt_d, rep(1, hs$n_internal_nonroot))
   Dm <- Matrix::Diagonal(x = d)
   Qc <- Matrix::forceSymmetric(Dm %*% hs$Q %*% Dm, uplo = "U")
@@ -933,8 +939,11 @@
       improper <- list(ymis = fx$ymis, Sigma_P = SP_hat, Sigma_E = SE_hat)
     }
   }
+  # Index the diagonals directly: with K = 1, SP[, , d] drops to a scalar
+  # and diag(scalar) would build an identity matrix instead.
   lambda <- t(vapply(seq_len(dim(SP)[3L]), function(d) {
-    diag(SP[, , d]) / (diag(SP[, , d]) + diag(SE[, , d]))
+    ii <- cbind(seq_len(K), seq_len(K), d)
+    SP[ii] / (SP[ii] + SE[ii])
   }, numeric(K)))
   if (K == 1L) lambda <- matrix(lambda, ncol = 1L)
   dimnames(SP) <- dimnames(SE) <- list(nm, nm, NULL)
@@ -954,6 +963,18 @@
   K1 <- dim(xs[[1L]])[1L]; K2 <- dim(xs[[1L]])[2L]
   n <- sum(vapply(xs, function(x) dim(x)[3L], integer(1)))
   array(unlist(xs, use.names = FALSE), c(K1, K2, n))
+}
+
+# Refusal message for plug-in draws (param_uncertainty = "none"), shared by
+# with_imputations() and pool_mi().
+.mip_plugin_refusal <- function() {
+  paste0("These are plug-in draws from multi_impute(draws_method = ",
+         "\"posterior\") with posterior_control$param_uncertainty = \"none\" ",
+         "(mi_workflow \"pigauto_posterior_plugin_diagnostic\"): the ",
+         "covariance matrices are fixed at their posterior means, so the ",
+         "draws leave out parameter uncertainty and are for validation only. ",
+         "Downstream inference on them is unsupported. Rerun multi_impute() ",
+         "with the default param_uncertainty = \"full\".")
 }
 
 # ---------------------------------------------------------------------------
@@ -982,9 +1003,17 @@
                             multi_proportion_groups = multi_proportion_groups,
                             log_transform = log_transform)
   if (isTRUE(data$multi_obs)) {
-    stop("draws_method = \"posterior\" supports one observation per species ",
-         "only; `traits` has multiple rows for some species. Summarise to ",
-         "one row per species first.", call. = FALSE)
+    # preprocess_traits() sets multi_obs whenever species_col is given, so
+    # check for repeated species before saying there are any.
+    if (anyDuplicated(as.character(traits[[species_col]]))) {
+      stop("draws_method = \"posterior\" supports one observation per ",
+           "species only; `traits` has multiple rows for some species. ",
+           "Summarise to one row per species first.", call. = FALSE)
+    }
+    stop("draws_method = \"posterior\" does not support `species_col` ",
+         "(multi-observation input). Each species has one row here, so drop ",
+         "`species_col` and give the species names as rownames(traits).",
+         call. = FALSE)
   }
   trait_map <- data$trait_map
   types <- vapply(trait_map, `[[`, character(1), "type")
@@ -994,7 +1023,11 @@
     stop("draws_method = \"posterior\" supports continuous traits only. ",
          "Non-continuous trait(s): ",
          paste(sprintf("%s (%s)", names(bad), bad), collapse = ", "),
-         ". Use draws_method = \"conformal\" for these, or drop them.",
+         ". Drop them from `traits` to use posterior MI for the continuous ",
+         "traits. pigauto has no analysis-aware MI path for missing ",
+         "non-continuous traits: draws_method = \"conformal\" or ",
+         "\"mc_dropout\" imputes them, but only as prediction-diagnostic ",
+         "completions, which `with_imputations()` and `pool_mi()` refuse.",
          call. = FALSE)
   }
 
@@ -1005,6 +1038,10 @@
     tree_use <- ape::keep.tip(tree, rownames(X))
   }
   X <- X[tree_use$tip.label, , drop = FALSE]
+  if (!anyNA(X)) {
+    stop("draws_method = \"posterior\": no missing cells to impute; every ",
+         "trait cell in `traits` is observed.", call. = FALSE)
+  }
   fit <- .mip_fit(X, tree_use, ctl, verbose = verbose)
 
   miss <- fit$miss
@@ -1102,7 +1139,14 @@
       data            = data,
       tree            = tree,
       species_col     = species_col,
-      mi_workflow     = "pigauto_posterior_mi_v1",
+      # param_uncertainty = "none" returns plug-in draws (covariances fixed
+      # at their posterior means, validation only); a distinct marker makes
+      # with_imputations() and pool_mi() refuse them.
+      mi_workflow     = if (identical(ctl$param_uncertainty, "none")) {
+        "pigauto_posterior_plugin_diagnostic"
+      } else {
+        "pigauto_posterior_mi_v1"
+      },
       posterior       = list(
         cell_interval = cell_interval,
         diagnostics   = diagnostics,

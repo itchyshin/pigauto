@@ -25,23 +25,36 @@ the effects integrated out keep it mixing near lambda = 0 and lambda = 1.
   (`params`). A warning is raised if the chains have not converged.
 - The result can be passed to `with_imputations()` and `pool_mi()`, which
   now accept the provenance marker `"pigauto_posterior_mi_v1"` alongside
-  `"pigauto_analysis_mi_v1"`. The draws are proper for analyses whose
-  variables are all among the imputed traits; analyses that add external
-  covariates are not covered, because the imputation model does not contain
-  them.
-- Not supported (clear errors): non-continuous traits, multiple
-  observations per species, and `covariates`. The GNN is not used, and
-  fitting arguments such as `gnn` and `epochs` are ignored with a message.
+  `"pigauto_analysis_mi_v1"`. The draws come from a linear-Gaussian model of
+  the imputed traits on the scale where they were imputed (the log scale
+  for traits log-transformed by `log_transform`). They are proper for
+  analyses that are linear in the imputed traits on that scale and whose
+  variables are all among the imputed traits. Not covered: external
+  covariates, because the imputation model does not contain them; nonlinear
+  terms or interactions among imputed traits; and analysing a
+  log-transformed trait on its raw scale.
+- `posterior_control$param_uncertainty = "none"` (plug-in draws with the
+  covariance matrices fixed at their posterior means, for validation only)
+  returns the marker `"pigauto_posterior_plugin_diagnostic"`, which
+  `with_imputations()` and `pool_mi()` refuse.
+- Not supported (clear errors, raised before any MCMC is run):
+  non-continuous traits, multiple observations per species (or any
+  `species_col`), `covariates`, and input with no missing cells. The GNN is
+  not used, and fitting arguments such as `gnn` and `epochs` are ignored
+  with a message.
 
 The default draws method is unchanged (`"conformal"`).
 
 **Caveat for downstream inference with the other draws methods.** The
-`"conformal"` and `"mc_dropout"` draws perturb each missing cell
-independently around a point prediction. In a 16-regime simulation of a
-downstream phylogenetic regression (branch `arc/mi-gls-attenuation`,
-`docs/dev-log/mi-gls/`), they attenuated the pooled slope, with bias of
--0.20 to -0.46 and near-zero confidence-interval coverage. For downstream
-inference on continuous traits, use `draws_method = "posterior"`.
+`"conformal"` and `"mc_dropout"` draws perturb missing cells around a point
+prediction rather than drawing them jointly from their conditional
+distribution given the observed data. In a 16-regime simulation of a
+downstream phylogenetic regression (PGLS slope; branch
+`arc/mi-gls-attenuation`, `docs/dev-log/mi-gls/results.md`), conformal
+draws biased the pooled slope by -0.20 to -0.46, and the pooled 95%
+intervals covered the truth in 0 to 17% of replicates, in all 16 regimes;
+MC-dropout draws biased it by -0.03 to -0.38. For downstream inference on
+continuous traits, use `draws_method = "posterior"`.
 
 ## Default flip: `lambda_mode = "estimate"`
 

@@ -56,11 +56,15 @@ MCMC and return \code{m} completions drawn from the posterior predictive
 distribution of the missing cells. No GNN is fitted. See "Posterior
 draws" below.}
 }
-Conformal and MC-dropout draws are generated independently per cell
-around a point prediction. In a 16-regime simulation of a downstream
-phylogenetic regression they attenuated the pooled slope (bias -0.20 to
--0.46) with near-zero confidence-interval coverage. For downstream
-inference on continuous traits use \code{"posterior"}.}
+Conformal and MC-dropout draws perturb missing cells around a point
+prediction rather than drawing them jointly from their conditional
+distribution given the observed data. In a 16-regime simulation of a
+downstream phylogenetic regression (PGLS slope, two traits, 120
+replicates per regime), conformal draws biased the pooled slope by
+-0.20 to -0.46, and the pooled 95\% intervals covered the truth in 0 to
+17\% of replicates, in all 16 regimes; MC-dropout draws biased it by
+-0.03 to -0.38. For downstream inference on continuous traits use
+\code{"posterior"}.}
 
 \item{species_col}{character or \code{NULL}. If set, marks the column
 in \code{traits} containing species identifiers and enables multiple
@@ -114,21 +118,29 @@ preserves the pre-lambda Brownian correlation matrix everywhere;
 
 \item{posterior_control}{list of settings for \code{draws_method = "posterior"} (ignored otherwise). Elements, with defaults:
 \describe{
-\item{\code{n_chains}}{\code{4L}. Number of MCMC chains, started from dispersed
-values around the per-trait REML Pagel's lambda.}
+\item{\code{n_chains}}{\code{4L}. Number of MCMC chains. Chain 1 starts at the
+per-trait REML Pagel's lambda (up to 2,000 tips; above that, or if
+the REML fit fails, at lambda = 0.9), and the other chains start
+from values dispersed around it. The values used are returned in
+\code{mi$posterior$start}.}
 \item{\code{n_iter}}{\code{5000L}. Sweeps per chain after burn-in.}
 \item{\code{burnin}}{\code{1000L}. Burn-in sweeps per chain (also used to tune
 the Metropolis step sizes).}
 \item{\code{thin}}{Default: \code{n_iter} integer-divided by
 \code{ceiling(keep_draws / n_chains)}, so
 that the chains together keep \code{keep_draws} sweeps.}
-\item{\code{keep_draws}}{\code{1000L}. Minimum number of kept posterior
+\item{\code{keep_draws}}{\code{1000L}. Target number of kept posterior
 predictive draws across chains, used for the per-cell intervals.
-Must be at least \code{m}.}
+Must be at least \code{m}. The default \code{thin} keeps at least this many
+whenever \code{n_iter} is at least \code{ceiling(keep_draws / n_chains)}. If
+a user-set \code{n_iter} or \code{thin} keeps fewer, a warning is raised and
+the intervals use the sweeps that were kept.}
 \item{\code{param_uncertainty}}{\code{"full"} (default), \code{"none"} or \code{"both"}.
 \code{"none"} is an improper plug-in mode for validation only: the
 covariance matrices are fixed at their posterior means from a full
 run, and only the missing cells (and the trait means) are drawn.
+Its result carries \code{mi_workflow = "pigauto_posterior_plugin_diagnostic"}, and \code{\link[=with_imputations]{with_imputations()}}
+and \code{\link[=pool_mi]{pool_mi()}} refuse it.
 \code{"both"} is also for validation only: it runs the sampler once and
 returns the proper results exactly as \code{"full"} does, plus the
 plug-in draws from the same run in \code{mi$posterior_improper}.}
@@ -182,7 +194,10 @@ lambda), \code{draw_index} (kept sweeps used for the \code{m} datasets),
 \code{wall_s} and \code{sweeps}. For this method \code{fit} is \code{NULL}, \code{se} holds
 the posterior predictive SD of each imputed cell, the class is
 \code{c("pigauto_posterior_mi", "pigauto_mi", "list")} and
-\code{mi_workflow} is \code{"pigauto_posterior_mi_v1"}.}
+\code{mi_workflow} is \code{"pigauto_posterior_mi_v1"}
+(\code{"pigauto_posterior_plugin_diagnostic"} with
+\code{posterior_control$param_uncertainty = "none"}, which
+\code{\link[=with_imputations]{with_imputations()}} and \code{\link[=pool_mi]{pool_mi()}} refuse).}
 \item{\code{posterior_improper}}{Only with
 \code{posterior_control$param_uncertainty = "both"} (validation only). A
 list with \code{datasets} (\code{m} completed data.frames drawn with the
@@ -200,8 +215,9 @@ experimental prediction-diagnostic draws. Do not use these datasets for
 downstream inference or Rubin pooling. For continuous traits,
 \code{draws_method = "posterior"} instead returns proper Bayesian posterior
 imputations that can be passed to \code{\link[=with_imputations]{with_imputations()}} and \code{\link[=pool_mi]{pool_mi()}}
-(see "Posterior draws" below). The separate analysis-aware backend,
-\code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, covers its own documented narrow regime.
+for the analyses described in "Posterior draws" below. The separate
+analysis-aware backend, \code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, covers its own
+documented narrow regime.
 }
 \details{
 These draws do not condition on a declared substantive analysis model.
@@ -256,9 +272,23 @@ with \eqn{R} the phylogenetic correlation matrix of the tree, full
 \eqn{K \times K} phylogenetic (\eqn{\Sigma_P}) and residual
 (\eqn{\Sigma_E}) covariance matrices, and a flat prior on \eqn{\mu}.
 The implied Pagel's lambda of trait \eqn{k} is
-\eqn{\Sigma_P[k,k] / (\Sigma_P[k,k] + \Sigma_E[k,k])}. Priors follow
-MCMCglmm's parameter-expanded defaults (Hadfield 2010; Gelman 2006). The
-sampler draws the phylogenetic effects, the trait means and the missing
+\eqn{\Sigma_P[k,k] / (\Sigma_P[k,k] + \Sigma_E[k,k])}.
+
+Priors: \eqn{\Sigma_P = \mathrm{diag}(\alpha)\,\Sigma_W\,
+\mathrm{diag}(\alpha)} with \eqn{\Sigma_W \sim \mathrm{IW}(K+1, I_K)} and
+\eqn{\alpha \sim \mathrm{N}(0, 1000\, I_K)} (parameter expansion as in
+MCMCglmm; Hadfield 2010; Gelman 2006);
+\eqn{\Sigma_E \sim \mathrm{IW}(K+1,\, 0.01\,\mathrm{diag}(s^2))}, where
+\eqn{s^2} are the observed variances of the latent traits; and a flat
+prior on \eqn{\mu}. Here \eqn{\mathrm{IW}(\nu, S)} has density
+proportional to
+\eqn{|\Sigma|^{-(\nu+K+1)/2}\exp\{-\mathrm{tr}(S\Sigma^{-1})/2\}}.
+MCMCglmm parameterises the inverse-Wishart by \eqn{(V, \nu)} with scale
+matrix \eqn{\nu V}, so its equivalent of the \eqn{\Sigma_W} prior is
+\eqn{V = I_K/(K+1)}, \eqn{\nu = K+1}, not MCMCglmm's default prior. The
+prior settings used are returned in \code{mi$posterior$hyper}.
+
+The sampler draws the phylogenetic effects, the trait means and the missing
 cells as one block with a sparse Cholesky factor of the Hadfield and
 Nakagawa (2010) node precision, and updates the covariance matrices by
 parameter-expanded Gibbs steps plus Metropolis moves with the
@@ -269,17 +299,23 @@ raised when any R-hat is at least 1.05 or any ESS is at most 400.
 
 The \code{m} datasets are posterior predictive draws spaced evenly across the
 kept sweeps of all chains. Per-cell 95\% intervals in
-\code{mi$posterior$cell_interval} come from all kept sweeps (at least
-\code{keep_draws}), never from the \code{m} datasets.
+\code{mi$posterior$cell_interval} come from all kept sweeps (\code{keep_draws} of
+them by default), never from the \code{m} datasets.
 
-These draws are proper imputations for analyses whose variables are all
-among the imputed traits, for example a phylogenetic regression of one
-imputed trait on others. Analyses that add covariates from outside the
-imputed traits are not covered, because the imputation model does not
-contain them. The GNN is not used, and \code{gnn}, \code{epochs}, \code{missing_frac},
-\code{lambda_mode} and other fitting arguments are ignored (a message lists
-any that were supplied). Non-continuous traits, multiple observations per
-species and \code{covariates} are errors.
+These draws come from a linear-Gaussian model of the imputed traits on
+the scale where they were imputed (the log scale for traits
+log-transformed by \code{log_transform}). They are proper imputations for
+analyses that are linear in the imputed traits on that scale and whose
+variables are all among the imputed traits, for example a phylogenetic
+regression of one imputed trait on others (on the log scale for
+log-transformed traits). Not covered: covariates from outside the imputed
+traits, because the imputation model does not contain them; nonlinear
+terms (such as squares) or interactions among imputed traits; and
+analysing a log-transformed trait on its raw scale. The GNN is not used,
+and \code{gnn}, \code{epochs}, \code{missing_frac}, \code{lambda_mode} and other fitting
+arguments are ignored (a message lists any that were supplied).
+Non-continuous traits, multiple observations per species (or any
+\code{species_col}), \code{covariates}, and input with no missing cells are errors.
 }
 
 \section{Safety floor (v0.9.1.9002+)}{
