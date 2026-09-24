@@ -136,11 +136,20 @@ so the two lambdas are the same quantity.
    from its full conditional, so the sweep is a valid partially collapsed Gibbs sampler (van Dyk and
    Park 2008). Step sizes adapt during burn-in only, so the kept phase is a fixed kernel.
 
-   Checked in three ways:
-   - the moves alone, the Gibbs steps alone and both together agree on every parameter
-     (|z| <= 1.5);
-   - the full sampler matches MCMCglmm run with the same priors;
+   Evidence that the posterior is still the right one:
+   - The committed test "the Metropolis-only and Gibbs-only kernels target the same posterior"
+     (`tests/testthat/test-mi-posterior.R`) runs both kernels on one fixture. It requires agreement
+     within 3.5 combined MCSE for lambda, the log variances and both correlations; the clean code
+     reaches max |z| about 1.8. The S5 checker confirmed it catches mutants that break a prior, a
+     degrees-of-freedom term or a Jacobian.
    - G2 (exactness) passes.
+   - The G3 calibration run: 95% intervals for lambda and rho_P cover 92 to 98% over 150 fits
+     (`evidence/README.md`).
+
+   During the build, S1 also reported that the moves alone, the Gibbs steps alone and both together
+   agree within |z| <= 1.5, and that the sampler matches MCMCglmm under the same priors. Those scripts
+   were not committed, so the claims are recorded only as the builder's report. The committed test
+   above replaces the first one.
 
    Cost: 5 to 7 times more per sweep. Measured on the Mac Studio at K = 2: 4.9 ms per sweep at
    n = 300 and 10.2 to 10.7 ms at n = 1000.
