@@ -338,6 +338,39 @@ G7 are computed, not the thresholds of the approved plan.
    "proper > improper" need not hold when everything is right.
 5. **The real-data 5% slope criterion is reported, not gated** (decision R3, unchanged).
 
+### 5e. CP2 follow-up decisions (Shinichi, 2026-09-24, after the diagnosis)
+
+Evidence: `diagnosis.md`.
+
+1. **In-model twin regimes 25 to 40.** Regimes 1 to 16 simulate from the raw covariance of
+   non-ultrametric trees, which is outside the model the sampler fits. So each of them gets an
+   in-model twin, regimes 25 to 40:
+   - same seeds, trees and masks as the source regime;
+   - each tip's row divided by sqrt(diag(V_sim)), so vec(Y) ~ N(0, Sig %x% (lambda R + (1 - lambda) I))
+     with R = cov2cor(vcv(tree)).
+
+   The G6 and G7 gates apply to the in-model regimes (17 to 40). Regimes 1 to 16 are kept, unchanged,
+   as a reported misspecification stress test.
+2. **Automatic chain extension.** When the convergence rule fails after the default run, every chain
+   continues from its saved state and RNG state for another n_iter kept-phase sweeps. This repeats
+   up to `max_extend` times (default 3, so at most 4x the default length) before the draws are
+   returned.
+   - Adaptation stays confined to the burn-in, so an extended chain equals a longer run.
+   - A fit that converges first time is byte-identical to the previous code.
+   - Motivation: all 32 non-converged campaign fits failed on ESS only, and 4x chains converged them
+     all without moving the pooled slopes.
+
+   Users pay the extra time only when a fit needs it (usability, D-139).
+3. **The re-run uses the new code for:**
+   - regimes 25 to 40 (3,200 fits);
+   - the 44 previously non-converged cells of regimes 1 to 24.
+
+   The 4,756 converged cells of regimes 1 to 24 keep their 69670d4 results. The new code must
+   reproduce them byte for byte; this is checked on a sample before the campaign.
+4. **Not changed:** the priors, including the Sigma_E prior (its smaller-scale variant failed
+   numerically in 2 of 24 fits), and the `cov2cor(vcv(tree))` convention. Both are listed as open
+   items.
+
 ## 6. Out of scope here
 
 Discrete, mixed and multi-observation data; GNN blending; covariates in the imputation model; changing
