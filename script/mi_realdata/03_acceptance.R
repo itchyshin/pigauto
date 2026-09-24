@@ -99,7 +99,7 @@ report <- function(outdir, planned, pairs_list, label) {
   # Clade-biased ("structured") masks are descriptive only here, same as
   # the coverage/slope tables -- no separate convergence rule for them.
   nonconverged <- conv_tab[!is.na(conv_tab$converged) & !conv_tab$converged, , drop = FALSE]
-  cat("\n--- Convergence (reported separately; does not gate REALDATA_COMPLETE) ---\n")
+  cat("\n--- Convergence (reported separately; not part of the G8 completeness gate) ---\n")
   if (nrow(nonconverged)) {
     for (i in seq_len(nrow(nonconverged))) {
       cat(sprintf("NONCONVERGED %s/%s (max_rhat=%.3f, min_ess=%.0f)\n",
@@ -167,4 +167,7 @@ if (acc$complete) {
   cat("\nREALDATA_COMPLETE\n")
 } else {
   cat(sprintf("\nNOT complete: %d G8 condition(s) failed (FAIL lines above).\n", length(acc$failures)))
+  # Fail closed: a non-zero exit, so the ledger cannot count a failed run as met
+  # (gate-check requires exit 0 AND the EXPECT token).
+  quit(save = "no", status = 1L)
 }
