@@ -121,6 +121,47 @@ identified and are neither reported nor diagnosed.
 is Sigma_P[k,k] R + Sigma_E[k,k] I = (Sigma_P[k,k] + Sigma_E[k,k]) (lambda_k R + (1 - lambda_k) I),
 so the two lambdas are the same quantity.
 
+### 2.5 Changes made during the build (S1, 2026-09-24)
+
+1. **Collapsed Metropolis moves before step 1.** With the section 2.2 sweep alone, mixing near the
+   boundaries was too slow to use: at n = 1000, bulk ESS for lambda was 20 to 41 from 4 x 10,000
+   sweeps at truth lambda = 1 and 0.95, and 58 to 144 for Sigma_P[1,2]. So, per trait k, three
+   multiplicative moves run on the expanded state with (a, mu, y_mis) integrated out:
+   - alpha_k scaled by c;
+   - row and column k of Sigma_E scaled by d;
+   - a "ridge" move with log c = -log d, which moves lambda_k.
+
+   Each proposal is symmetric on the log scale, so the acceptance ratio carries the Jacobians c and
+   d^(K+1). The target is p(alpha, Sigma_E | Sigma_W, y_obs). Step 1 then redraws (a, mu, y_mis)
+   from its full conditional, so the sweep is a valid partially collapsed Gibbs sampler (van Dyk and
+   Park 2008). Step sizes adapt during burn-in only, so the kept phase is a fixed kernel.
+
+   Checked in three ways:
+   - the moves alone, the Gibbs steps alone and both together agree on every parameter
+     (|z| <= 1.5);
+   - the full sampler matches MCMCglmm run with the same priors;
+   - G2 (exactness) passes.
+
+   Cost: 5 to 7 times more per sweep. Measured on the Mac Studio at K = 2: 4.9 ms per sweep at
+   n = 300 and 10.2 to 10.7 ms at n = 1000.
+2. **Defaults.** 4 chains, each 1,000 burn-in plus 5,000 sweeps, thinned so that 1,000 draws are kept
+   in total (thin 20). With 3,000 sweeps per chain the worst G3 setting already had min ESS 473.
+3. **Chains run one after another within a fit.** `parallel` is not in DESCRIPTION, so campaigns
+   parallelise across cells instead.
+4. **`cell_interval$row`** is the integer row of the user's `traits`. A test covers rows shuffled
+   relative to the tree.
+5. **Start values.** Chain 1 starts at #187's REML lambda split when n <= 2,000 tips. Above that, the
+   REML start would need a dense n x n matrix, so chain 1 starts at lambda = 0.9.
+6. **Improper mode** fixes Sigma_P and Sigma_E at the posterior means of the same run. #187's REML
+   gives only the per-trait lambdas, not the two full K x K matrices. Every improper draw is an exact
+   independent draw. An internal `param_uncertainty = "both"` returns the proper and improper draws
+   from one run, and the simulation uses it.
+7. **Zero-length branches** are floored at 1e-6 of the tree height before Qc is built.
+8. **`with_imputations()` and `pool_mi()`** accept the new provenance marker
+   `pigauto_posterior_mi_v1` (orchestrator decision, option B). Conformal and mc_dropout objects are
+   still refused. The docs state the congeniality scope: the draws are proper for analyses whose
+   variables are all among the imputed traits, not for analyses that add external covariates.
+
 ## 3. Outputs
 
 - **m imputations** (default 20) for Rubin pooling: completed latent matrices from m kept sweeps spaced
