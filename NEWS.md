@@ -17,12 +17,28 @@ cost grows roughly linearly in the number of species. Metropolis moves with
 the effects integrated out keep it mixing near lambda = 0 and lambda = 1.
 
 - New argument `posterior_control` (chains, burn-in, iterations, thinning,
-  `keep_draws`, `param_uncertainty`, `seed`).
+  `keep_draws`, `param_uncertainty`, `seed`, `auto_extend`, `max_extend`).
 - `mi$posterior` holds per-cell 95% posterior predictive intervals
   (`cell_interval`, computed from all kept draws, not from the `m`
   datasets), convergence diagnostics (`diagnostics`: rank-normalised split
   R-hat and bulk ESS; attribute `"converged"`), and the parameter draws
-  (`params`). A warning is raised if the chains have not converged.
+  (`params`). A warning is raised if the chains have not converged after
+  any automatic extensions (next item).
+- Automatic chain extension. When the chains fail the convergence rule (any
+  split R-hat at least 1.05 or any bulk ESS at most 400), every chain
+  continues from its saved sampler state and random-number state for another
+  `n_iter` sweeps, up to `posterior_control$max_extend` times (default 3, so
+  at most 4 times the default length), and the diagnostics are recomputed on
+  all sweeps after burn-in. Burn-in is not repeated and the Metropolis step
+  sizes stay as tuned in burn-in, so an extended chain is the same chain as
+  one run longer from the start. The number of kept draws does not change:
+  after `k` extensions they are every `thin * (k + 1)`-th sweep.
+  `posterior_control$auto_extend = FALSE` turns this off. A fit that meets
+  the rule first time returns exactly what it returned before.
+  `mi$posterior$diagnostics` records the extensions made (attribute
+  `"n_extensions"`) and the sweeps after burn-in per chain
+  (`"sweeps_per_chain"`); `print()` and the non-convergence warning report
+  the extensions.
 - The result can be passed to `with_imputations()` and `pool_mi()`, which
   now accept the provenance marker `"pigauto_posterior_mi_v1"` alongside
   `"pigauto_analysis_mi_v1"`. The draws come from a linear-Gaussian model of

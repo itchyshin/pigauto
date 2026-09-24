@@ -381,3 +381,89 @@ test_that("param_uncertainty = 'none' fixes Sigma_P and Sigma_E across draws", {
   expect_gt(stats::sd(f$params$mu[, 1L]), 0)       # mu is still drawn
   expect_gt(min(apply(f$ymis, 1L, stats::sd)), 0)  # cells still vary
 })
+
+# ---- Automatic chain extension (design.md 5e) --------------------------------
+test_that("posterior_control validates auto_extend and max_extend", {
+  def <- .mip_resolve_control(list(), m = 5L)
+  expect_identical(def$auto_extend, TRUE)
+  expect_identical(def$max_extend, 3L)
+  expect_identical(.mip_resolve_control(list(max_extend = 10), m = 5L)$max_extend,
+                   10L)
+  off <- .mip_resolve_control(list(auto_extend = FALSE, max_extend = 0L), m = 5L)
+  expect_identical(off$auto_extend, FALSE)
+  expect_identical(off$max_extend, 0L)
+  for (bad in list(NA, "yes", c(TRUE, FALSE), 1, logical(0))) {
+    expect_error(.mip_resolve_control(list(auto_extend = bad), m = 5L),
+                 "`posterior_control\\$auto_extend` must be TRUE or FALSE")
+  }
+  for (bad in list(-1, 11, 1.5, NA, NA_integer_, "2", c(1, 2), Inf,
+                   integer(0))) {
+    expect_error(.mip_resolve_control(list(max_extend = bad), m = 5L),
+                 "`posterior_control\\$max_extend` must be a whole number from 0 to 10")
+  }
+})
+
+test_that("a resumed chain is the same chain as one run longer from the start", {
+  # Before any subsampling: segment 1 (n_iter = 31) plus a continuation from
+  # its saved sampler and RNG state (n_iter = 31) against one run with
+  # n_iter = 62 and the same seed and thin. 31 is not a multiple of thin = 3,
+  # so the kept-sweep count has to carry across the segment boundary.
+  d <- mip_sim(n = 25L, seed = 3L)
+  Y <- d$Y
+  Y[1:5, 1] <- NA; Y[4:9, 2] <- NA
+  prob <- .mip_problem(Y, d$tree)
+  hyper <- list(nu_W = 3, S_W = diag(2), V_alpha = 1000, nu_E = 3,
+                S_E = diag(0.01 * prob$obs_var, 2))
+  start <- list(Sigma_P = d$SP, Sigma_E = d$SE)
+  long <- .mip_run_chain(prob, start, hyper, burnin = 20L, n_iter = 62L,
+                         thin = 3L, seed = 7L)
+  seg1 <- .mip_run_chain(prob, start, hyper, burnin = 20L, n_iter = 31L,
+                         thin = 3L, seed = 7L)
+  set.seed(99)
+  stats::runif(5L)          # the caller's RNG stream moves on in between
+  seg2 <- .mip_run_chain(prob, NULL, hyper, burnin = 20L, n_iter = 31L,
+                         thin = 3L, resume = seg1$state)
+  expect_identical(dim(seg1$ymis), c(nrow(prob$miss), 10L))   # sweeps 3..30
+  expect_identical(dim(seg2$ymis), c(nrow(prob$miss), 10L))   # sweeps 33..60
+  joined <- .mip_join_segments(seg1, seg2)
+  for (k in c("trace", "ymis", "Sigma_P", "Sigma_E", "mu", "mh_step",
+              "mh_accept")) {
+    expect_identical(joined[[k]], long[[k]], info = k)
+  }
+  expect_identical(joined$state$j, 62L)
+  # The global RNG stream ends where the single long run left it.
+  expect_identical(get(".Random.seed", envir = globalenv()), long$state$rng)
+})
+
+test_that("an extended fit equals one run longer with the thinning scaled", {
+  # After subsampling: n_iter = 30, thin = 3 and one extension against
+  # n_iter = 60, thin = 6 and no extension. 2 chains x 60 sweeps cannot
+  # reach bulk ESS 400, so exactly one extension is made. "both" also
+  # checks the plug-in draws, whose covariances are the posterior means
+  # over the whole extended run.
+  d <- mip_sim(n = 25L, seed = 3L)
+  Y <- d$Y
+  Y[1:5, 1] <- NA; Y[4:9, 2] <- NA
+  base <- list(n_chains = 2L, burnin = 20L, keep_draws = 20L, seed = 4L,
+               param_uncertainty = "both")
+  ext <- .mip_fit(Y, d$tree, .mip_resolve_control(
+    c(base, list(n_iter = 30L, thin = 3L, max_extend = 1L)), m = 4L))
+  one <- .mip_fit(Y, d$tree, .mip_resolve_control(
+    c(base, list(n_iter = 60L, thin = 6L, auto_extend = FALSE)), m = 4L))
+  expect_identical(attr(ext$diagnostics, "n_extensions"), 1L)
+  expect_identical(attr(one$diagnostics, "n_extensions"), 0L)
+  expect_identical(attr(ext$diagnostics, "sweeps_per_chain"), 60L)
+  expect_identical(attr(one$diagnostics, "sweeps_per_chain"), 60L)
+  expect_false(isTRUE(attr(ext$diagnostics, "converged")))
+  expect_identical(dim(ext$ymis), c(nrow(ext$miss), 20L))  # 10 per chain
+  expect_identical(ext$ymis, one$ymis)
+  expect_identical(ext$params, one$params)
+  expect_identical(ext$improper, one$improper)
+  expect_identical(ext$sweeps, one$sweeps)
+  expect_identical(ext$sweeps, 2L * (20L + 60L))
+  dg <- ext$diagnostics
+  attr(dg, "n_extensions") <- 0L
+  expect_identical(dg, one$diagnostics)
+  expect_equal(ext$improper$Sigma_P,
+               apply(ext$params$Sigma_P, c(1L, 2L), mean), ignore_attr = TRUE)
+})

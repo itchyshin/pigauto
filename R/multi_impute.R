@@ -126,6 +126,20 @@
 #'       returns the proper results exactly as `"full"` does, plus the
 #'       plug-in draws from the same run in `mi$posterior_improper`.}
 #'     \item{`seed`}{Integer or `NULL`. Defaults to `seed`.}
+#'     \item{`auto_extend`}{`TRUE`. If the chains fail the convergence rule
+#'       (any split R-hat at least 1.05 or any bulk ESS at most 400), every
+#'       chain continues from where it stopped for another `n_iter` sweeps
+#'       and the diagnostics are recomputed on all sweeps after burn-in; this
+#'       repeats until the rule is met or `max_extend` extensions have been
+#'       made. Burn-in is not repeated and the Metropolis step sizes stay as
+#'       tuned in burn-in, so an extended chain is the same chain as one run
+#'       longer from the start. After `k` extensions the kept draws are every
+#'       `thin * (k + 1)`-th sweep, spread over the whole run, so their
+#'       number does not change. A fit that meets the rule first time is not
+#'       affected. `FALSE` never extends.}
+#'     \item{`max_extend`}{`3L`. Maximum number of extensions, a whole
+#'       number from 0 to 10. The default allows at most 4 times `n_iter`
+#'       sweeps per chain after burn-in.}
 #'   }
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
 #'   [impute()]. See [fit_pigauto()] for the full list; the "Safety
@@ -165,12 +179,15 @@
 #'       `cell_interval` (data.frame: `row` (row of `traits`), `trait`,
 #'       `lower`, `upper`, `median`; 95% posterior predictive interval on
 #'       the original scale), `diagnostics` (data.frame: `parameter`, `rhat`,
-#'       `ess_bulk`, with attribute `"converged"`), `params` (list:
-#'       `Sigma_P` and `Sigma_E` as `K x K x draws` arrays, `lambda` and `mu`
+#'       `ess_bulk`, with attributes `"converged"`, `"n_extensions"` (the
+#'       number of automatic extensions made) and `"sweeps_per_chain"` (the
+#'       sweeps after burn-in per chain that the diagnostics use)), `params`
+#'       (list: `Sigma_P` and `Sigma_E` as `K x K x draws` arrays, `lambda` and `mu`
 #'       as `draws x K` matrices, on the latent scale), `converged`,
 #'       `control`, `hyper` (priors), `start` (REML lambda and chain-1 start
 #'       lambda), `draw_index` (kept sweeps used for the `m` datasets),
-#'       `wall_s` and `sweeps`. For this method `fit` is `NULL`, `se` holds
+#'       `wall_s` and `sweeps` (all sweeps, burn-in included, summed over
+#'       chains). For this method `fit` is `NULL`, `se` holds
 #'       the posterior predictive SD of each imputed cell, the class is
 #'       `c("pigauto_posterior_mi", "pigauto_mi", "list")` and
 #'       `mi_workflow` is `"pigauto_posterior_mi_v1"`
@@ -278,8 +295,10 @@
 #' parameter-expanded Gibbs steps plus Metropolis moves with the
 #' phylogenetic effects integrated out. Convergence is checked with
 #' rank-normalised split R-hat and bulk effective sample size (Vehtari et
-#' al. 2021); `mi$posterior$diagnostics` reports them, and a warning is
-#' raised when any R-hat is at least 1.05 or any ESS is at most 400.
+#' al. 2021); `mi$posterior$diagnostics` reports them. When any R-hat is at
+#' least 1.05 or any ESS is at most 400, the chains are extended
+#' automatically (`posterior_control$auto_extend` and `max_extend`), and a
+#' warning is raised if the rule still fails after the last extension.
 #'
 #' The `m` datasets are posterior predictive draws spaced evenly across the
 #' kept sweeps of all chains. Per-cell 95% intervals in
@@ -741,8 +760,13 @@ print.pigauto_mi <- function(x, ...) {
   cat(sprintf("  Traits   : %d -- %s\n", p, paste(traits, collapse = ", ")))
   cat(sprintf("  Cells    : %d imputed / %d total (%.1f%%)\n",
               n_imp_cells, total_cells, pct))
-  cat(sprintf("  MCMC     : %d chains x (%d burn-in + %d sweeps, thin %d)%s\n",
-              ctl$n_chains, ctl$burnin, ctl$n_iter, ctl$thin,
+  # After k automatic extensions each chain ran (k + 1) * n_iter sweeps
+  # after burn-in and the kept draws are every thin * (k + 1)-th sweep.
+  n_ext <- attr(dg, "n_extensions") %||% 0L
+  cat(sprintf("  MCMC     : %d chains x (%d burn-in + %d sweeps, thin %d)%s%s\n",
+              ctl$n_chains, ctl$burnin, (n_ext + 1L) * ctl$n_iter,
+              (n_ext + 1L) * ctl$thin,
+              if (n_ext > 0L) sprintf(", extended %d time(s)", n_ext) else "",
               switch(ctl$param_uncertainty,
                      none = "; covariances fixed (plug-in mode)",
                      both = "; plug-in draws also in mi$posterior_improper",

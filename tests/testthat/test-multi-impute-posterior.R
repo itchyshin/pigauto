@@ -17,7 +17,11 @@ post_data <- function(n = 30L, seed = 21L) {
   list(df = df, tree = tree)
 }
 
-fast_ctl <- list(n_chains = 2L, burnin = 60L, n_iter = 120L, keep_draws = 40L)
+# auto_extend = FALSE: these short chains never meet the convergence rule, so
+# the default would extend every run 3 times; extension is tested at the end
+# of this file.
+fast_ctl <- list(n_chains = 2L, burnin = 60L, n_iter = 120L, keep_draws = 40L,
+                 auto_extend = FALSE)
 
 run_post <- function(df, tree, m = 4L, seed = 3L, ctl = fast_ctl, ...) {
   suppressWarnings(multi_impute(df, tree, m = m, draws_method = "posterior",
@@ -342,4 +346,165 @@ test_that("param_uncertainty = 'both' adds plug-in draws from the same run", {
   # variance is concave in the covariance, so the Jensen gap of the
   # posterior-mean plug-in (about 0.010 on the latent scale) exceeds the
   # parameter-uncertainty term Var(E[y | theta]) (about 0.005).
+})
+
+# ---- Automatic chain extension (design.md 5e) --------------------------------
+
+# One continuous trait on an ultrametric tree with lambda = 0.5: it mixes
+# fast enough for the convergence rule to be met in a few seconds (4 chains
+# x 600 sweeps: min bulk ESS about 750; x 150 sweeps: about 200).
+k1_data <- function(n = 100L, seed = 13L) {
+  set.seed(seed)
+  tree <- ape::rcoal(n)
+  R <- stats::cov2cor(ape::vcv(tree))
+  y <- as.vector(t(chol(0.5 * R + 0.5 * diag(n))) %*% stats::rnorm(n))
+  df <- data.frame(y = y, row.names = tree$tip.label)
+  df$y[seq(3L, n, by = 6L)] <- NA
+  list(df = df, tree = tree)
+}
+
+test_that("a fit that converges first time is unchanged by auto_extend", {
+  skip_on_cran()
+  kd <- k1_data()
+  ctl <- list(n_chains = 4L, burnin = 100L, n_iter = 600L, keep_draws = 100L)
+  on <- run_post(kd$df, kd$tree, m = 5L, seed = 2L, ctl = ctl)
+  off <- run_post(kd$df, kd$tree, m = 5L, seed = 2L,
+                  ctl = c(ctl, list(auto_extend = FALSE)))
+  expect_true(on$posterior$converged)
+  expect_identical(attr(on$posterior$diagnostics, "n_extensions"), 0L)
+  expect_identical(attr(on$posterior$diagnostics, "sweeps_per_chain"), 600L)
+  expect_identical(on$posterior$control$auto_extend, TRUE)
+  expect_identical(off$posterior$control$auto_extend, FALSE)
+  # Everything except the run time and the auto_extend setting itself is
+  # byte-identical: draws, datasets, intervals, parameters, diagnostics.
+  strip <- function(x) {
+    x$posterior$wall_s <- NULL
+    x$posterior$control$auto_extend <- NULL
+    x
+  }
+  expect_identical(strip(on), strip(off))
+  out <- utils::capture.output(print(on))
+  expect_false(any(grepl("extended", out)))
+  expect_true(any(grepl("4 chains x \\(100 burn-in \\+ 600 sweeps, thin 24\\)",
+                        out)))
+})
+
+test_that("extension stops at the first extension that meets the rule", {
+  skip_on_cran()
+  kd <- k1_data()
+  ctl <- list(n_chains = 4L, burnin = 100L, n_iter = 150L, keep_draws = 100L,
+              max_extend = 5L)
+  first <- run_post(kd$df, kd$tree, m = 5L, seed = 2L,
+                    ctl = c(ctl, list(auto_extend = FALSE)))
+  ext <- run_post(kd$df, kd$tree, m = 5L, seed = 2L, ctl = ctl)
+  k <- attr(ext$posterior$diagnostics, "n_extensions")
+  expect_false(first$posterior$converged)
+  expect_gte(k, 1L)
+  expect_lt(k, 5L)
+  expect_true(ext$posterior$converged)
+  expect_gt(min(ext$posterior$diagnostics$ess_bulk),
+            min(first$posterior$diagnostics$ess_bulk))
+  expect_identical(attr(ext$posterior$diagnostics, "sweeps_per_chain"),
+                   (k + 1L) * 150L)
+  expect_identical(ext$posterior$sweeps, 4L * (100L + (k + 1L) * 150L))
+  # With one extension fewer allowed, the same chains stop short of the rule.
+  short <- run_post(kd$df, kd$tree, m = 5L, seed = 2L,
+                    ctl = utils::modifyList(ctl, list(max_extend = k - 1L)))
+  expect_false(short$posterior$converged)
+  expect_identical(attr(short$posterior$diagnostics, "n_extensions"), k - 1L)
+  # Still 100 kept draws (4 chains x 25), now every (k + 1)-th stored sweep.
+  expect_equal(dim(ext$posterior$params$Sigma_P), c(1L, 1L, 100L))
+  expect_equal(dim(ext$posterior$params$lambda), c(100L, 1L))
+  expect_equal(ext$posterior$draw_index, round(seq(1, 100, length.out = 5L)))
+  obs <- !is.na(kd$df$y)
+  for (d in ext$datasets) {
+    expect_identical(d$y[obs], kd$df$y[obs])
+    expect_false(anyNA(d))
+  }
+  out <- utils::capture.output(print(ext))
+  expect_true(any(grepl(sprintf("\\+ %d sweeps, thin %d\\), extended %d time\\(s\\)",
+                                (k + 1L) * 150L, (k + 1L) * 6L, k), out)))
+  expect_true(any(grepl("Converged: yes", out)))
+})
+
+test_that("a short run that fails the rule is extended up to max_extend", {
+  pd <- post_data()
+  tiny <- list(n_chains = 2L, burnin = 30L, n_iter = 40L, keep_draws = 20L)
+  expect_warning(
+    mi <- multi_impute(pd$df, pd$tree, m = 4L, draws_method = "posterior",
+                       posterior_control = c(tiny, list(max_extend = 2L)),
+                       seed = 1L, verbose = FALSE),
+    paste0("did not meet the convergence rule .* after 2 automatic ",
+           "extension\\(s\\) of every chain, to 120 post-burn-in sweeps ",
+           "per chain \\(posterior_control\\$max_extend = 2\\)"))
+  dg <- mi$posterior$diagnostics
+  expect_identical(attr(dg, "n_extensions"), 2L)                 # the cap
+  expect_identical(attr(dg, "sweeps_per_chain"), 120L)
+  expect_false(mi$posterior$converged)
+  expect_identical(mi$posterior$sweeps, 2L * (30L + 120L))
+  # keep_draws kept draws in total (2 chains x 40 %/% 4), spread over all
+  # 120 sweeps of each chain; the m datasets are spaced across them.
+  pr <- mi$posterior$params
+  expect_equal(dim(pr$Sigma_P), c(2L, 2L, 20L))
+  expect_equal(dim(pr$lambda), c(20L, 2L))
+  expect_equal(dim(pr$mu), c(20L, 2L))
+  expect_equal(mi$posterior$draw_index, round(seq(1, 20, length.out = 4L)))
+  obs <- !is.na(as.matrix(pd$df))
+  for (d in mi$datasets) {
+    expect_identical(as.matrix(d)[obs], as.matrix(pd$df)[obs])
+    expect_false(anyNA(d))
+  }
+  expect_identical(nrow(mi$posterior$cell_interval), sum(!obs))
+  out <- utils::capture.output(print(mi))
+  expect_true(any(grepl(paste0("2 chains x \\(30 burn-in \\+ 120 sweeps, ",
+                               "thin 12\\), extended 2 time\\(s\\)"), out)))
+  # max_extend = 1 caps at one extension.
+  one <- run_post(pd$df, pd$tree, m = 4L, seed = 1L,
+                  ctl = c(tiny, list(max_extend = 1L)))
+  expect_identical(attr(one$posterior$diagnostics, "n_extensions"), 1L)
+  expect_identical(attr(one$posterior$diagnostics, "sweeps_per_chain"), 80L)
+  # verbose = TRUE announces each extension.
+  msgs <- testthat::capture_messages(
+    suppressWarnings(multi_impute(pd$df, pd$tree, m = 4L,
+                                  draws_method = "posterior",
+                                  posterior_control = c(tiny,
+                                                        list(max_extend = 1L)),
+                                  seed = 1L, verbose = TRUE)))
+  expect_true(any(grepl(
+    "extending each chain by 40 sweeps \\(extension 1 of at most 1\\)", msgs)))
+})
+
+test_that("auto_extend = FALSE and max_extend = 0 never extend", {
+  pd <- post_data()
+  tiny <- list(n_chains = 2L, burnin = 30L, n_iter = 40L, keep_draws = 20L)
+  w <- NULL
+  off <- withCallingHandlers(
+    multi_impute(pd$df, pd$tree, m = 4L, draws_method = "posterior",
+                 posterior_control = c(tiny, list(auto_extend = FALSE)),
+                 seed = 1L, verbose = FALSE),
+    warning = function(cnd) {
+      w <<- conditionMessage(cnd)
+      invokeRestart("muffleWarning")
+    })
+  expect_match(w, "did not meet the convergence rule")
+  expect_no_match(w, "extension")
+  expect_identical(attr(off$posterior$diagnostics, "n_extensions"), 0L)
+  expect_identical(attr(off$posterior$diagnostics, "sweeps_per_chain"), 40L)
+  expect_identical(off$posterior$sweeps, 2L * (30L + 40L))
+  zero <- run_post(pd$df, pd$tree, m = 4L, seed = 1L,
+                   ctl = c(tiny, list(max_extend = 0L)))
+  strip <- function(x) {
+    x$posterior$wall_s <- NULL
+    x$posterior$control[c("auto_extend", "max_extend")] <- NULL
+    x
+  }
+  expect_identical(strip(off), strip(zero))
+  out <- utils::capture.output(print(off))
+  expect_false(any(grepl("extended", out)))
+  # Invalid settings stop before any MCMC is run.
+  local_mocked_bindings(.mip_fit = function(...) stop("the MCMC ran"))
+  expect_error(run_post(pd$df, pd$tree, ctl = c(tiny, list(max_extend = 11))),
+               "max_extend` must be a whole number from 0 to 10")
+  expect_error(run_post(pd$df, pd$tree, ctl = c(tiny, list(auto_extend = NA))),
+               "auto_extend` must be TRUE or FALSE")
 })

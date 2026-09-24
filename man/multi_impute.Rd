@@ -145,6 +145,20 @@ and \code{\link[=pool_mi]{pool_mi()}} refuse it.
 returns the proper results exactly as \code{"full"} does, plus the
 plug-in draws from the same run in \code{mi$posterior_improper}.}
 \item{\code{seed}}{Integer or \code{NULL}. Defaults to \code{seed}.}
+\item{\code{auto_extend}}{\code{TRUE}. If the chains fail the convergence rule
+(any split R-hat at least 1.05 or any bulk ESS at most 400), every
+chain continues from where it stopped for another \code{n_iter} sweeps
+and the diagnostics are recomputed on all sweeps after burn-in; this
+repeats until the rule is met or \code{max_extend} extensions have been
+made. Burn-in is not repeated and the Metropolis step sizes stay as
+tuned in burn-in, so an extended chain is the same chain as one run
+longer from the start. After \code{k} extensions the kept draws are every
+\code{thin * (k + 1)}-th sweep, spread over the whole run, so their
+number does not change. A fit that meets the rule first time is not
+affected. \code{FALSE} never extends.}
+\item{\code{max_extend}}{\code{3L}. Maximum number of extensions, a whole
+number from 0 to 10. The default allows at most 4 times \code{n_iter}
+sweeps per chain after burn-in.}
 }}
 
 \item{...}{additional arguments forwarded to \code{\link[=fit_pigauto]{fit_pigauto()}} via
@@ -186,12 +200,15 @@ on new data.}
 \code{cell_interval} (data.frame: \code{row} (row of \code{traits}), \code{trait},
 \code{lower}, \code{upper}, \code{median}; 95\% posterior predictive interval on
 the original scale), \code{diagnostics} (data.frame: \code{parameter}, \code{rhat},
-\code{ess_bulk}, with attribute \code{"converged"}), \code{params} (list:
-\code{Sigma_P} and \code{Sigma_E} as \verb{K x K x draws} arrays, \code{lambda} and \code{mu}
+\code{ess_bulk}, with attributes \code{"converged"}, \code{"n_extensions"} (the
+number of automatic extensions made) and \code{"sweeps_per_chain"} (the
+sweeps after burn-in per chain that the diagnostics use)), \code{params}
+(list: \code{Sigma_P} and \code{Sigma_E} as \verb{K x K x draws} arrays, \code{lambda} and \code{mu}
 as \verb{draws x K} matrices, on the latent scale), \code{converged},
 \code{control}, \code{hyper} (priors), \code{start} (REML lambda and chain-1 start
 lambda), \code{draw_index} (kept sweeps used for the \code{m} datasets),
-\code{wall_s} and \code{sweeps}. For this method \code{fit} is \code{NULL}, \code{se} holds
+\code{wall_s} and \code{sweeps} (all sweeps, burn-in included, summed over
+chains). For this method \code{fit} is \code{NULL}, \code{se} holds
 the posterior predictive SD of each imputed cell, the class is
 \code{c("pigauto_posterior_mi", "pigauto_mi", "list")} and
 \code{mi_workflow} is \code{"pigauto_posterior_mi_v1"}
@@ -294,8 +311,10 @@ Nakagawa (2010) node precision, and updates the covariance matrices by
 parameter-expanded Gibbs steps plus Metropolis moves with the
 phylogenetic effects integrated out. Convergence is checked with
 rank-normalised split R-hat and bulk effective sample size (Vehtari et
-al. 2021); \code{mi$posterior$diagnostics} reports them, and a warning is
-raised when any R-hat is at least 1.05 or any ESS is at most 400.
+al. 2021); \code{mi$posterior$diagnostics} reports them. When any R-hat is at
+least 1.05 or any ESS is at most 400, the chains are extended
+automatically (\code{posterior_control$auto_extend} and \code{max_extend}), and a
+warning is raised if the rule still fails after the last extension.
 
 The \code{m} datasets are posterior predictive draws spaced evenly across the
 kept sweeps of all chains. Per-cell 95\% intervals in

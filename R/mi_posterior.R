@@ -53,6 +53,16 @@
 # dependency; they are computed on every post-burn-in sweep of the
 # parameters (not only on the thinned, kept sweeps).
 #
+# AUTOMATIC EXTENSION (design.md 5e; posterior_control$auto_extend,
+# max_extend). If the rule (max R-hat < 1.05, min bulk ESS > 400) fails,
+# every chain continues from its saved sampler state and RNG state for
+# another n_iter post-burn-in sweeps, up to max_extend times, and the
+# diagnostics are recomputed on all post-burn-in sweeps. Burn-in is not
+# repeated and the step sizes adapt only in burn-in, so an extended chain is
+# the same chain as one run longer from the start. The kept draws are then
+# every thin * (k + 1)-th sweep after k extensions, so their number does not
+# change. A fit that meets the rule first time is unchanged.
+#
 # IMPROPER MODE (param_uncertainty = "none" or "both", validation only).
 # "both" returns the proper draws exactly as "full" does, plus the plug-in
 # draws below from the SAME chain run (drawn after the chains, so the proper
@@ -553,28 +563,58 @@
 #
 # start: list(Sigma_P, Sigma_E). hyper: list(nu_W, S_W, V_alpha, nu_E, S_E).
 # Returns the post-burn-in parameter trace (every sweep) and the kept sweeps
-# (every thin-th) with y_mis and the full matrices.
+# (every thin-th) with y_mis and the full matrices, plus `state`: the full
+# sampler state and the RNG state (.Random.seed) after the last sweep.
+#
+# CONTINUATION (automatic chain extension, .mip_fit). With resume = the
+# `state` of an earlier call, the chain runs n_iter further post-burn-in
+# sweeps from where that call stopped: the RNG state is restored first, and
+# burnin, thin, mh and gibbs are taken from the state (start and seed are
+# ignored). Burn-in is not repeated and the step sizes stay frozen (they
+# adapt only in burn-in), so the kernel is the same fixed kernel as before.
+# Post-burn-in sweeps are counted from the end of burn-in across calls, and
+# a sweep is kept when that count is a multiple of thin. So a run with
+# n_iter = N followed by a continuation with n_iter = N returns, joined by
+# .mip_join_segments(), exactly the trace and kept sweeps of one run with
+# n_iter = 2N and the same thin.
 .mip_run_chain <- function(prob, start, hyper, burnin, n_iter, thin,
-                           seed = NULL, mh = TRUE, gibbs = TRUE) {
-  if (!is.null(seed)) set.seed(seed)
+                           seed = NULL, mh = TRUE, gibbs = TRUE,
+                           resume = NULL) {
   K <- prob$K; n <- prob$n; N <- prob$N
-  tpl <- .mip_template(prob, include_mu = TRUE)
-  Sigma_E <- start$Sigma_E
-  alpha <- rep(1, K)
-  Sigma_W <- start$Sigma_P
-  Sigma_P <- Sigma_W
-  step <- matrix(0.5, K, 3L)
-  acc_win <- matrix(0, K, 3L)
-  acc_kept <- matrix(0, K, 3L)
   n_pair <- K * (K - 1L) / 2L
-  step_off <- matrix(0.2, max(n_pair, 0L), 3L)
+  if (is.null(resume)) {
+    if (!is.null(seed)) set.seed(seed)
+    tpl <- .mip_template(prob, include_mu = TRUE)
+    Sigma_E <- start$Sigma_E
+    alpha <- rep(1, K)
+    Sigma_W <- start$Sigma_P
+    Sigma_P <- Sigma_W
+    step <- matrix(0.5, K, 3L)
+    acc_kept <- matrix(0, K, 3L)
+    step_off <- matrix(0.2, max(n_pair, 0L), 3L)
+    acc_kept_off <- matrix(0, max(n_pair, 0L), 3L)
+    j0 <- 0L                       # post-burn-in sweeps already done
+    it_first <- 1L
+  } else {
+    assign(".Random.seed", resume$rng, envir = .GlobalEnv)
+    tpl <- resume$tpl
+    Sigma_E <- resume$Sigma_E; alpha <- resume$alpha
+    Sigma_W <- resume$Sigma_W; Sigma_P <- resume$Sigma_P
+    step <- resume$step; step_off <- resume$step_off
+    acc_kept <- resume$acc_kept; acc_kept_off <- resume$acc_kept_off
+    burnin <- resume$burnin; thin <- resume$thin
+    mh <- resume$mh; gibbs <- resume$gibbs
+    j0 <- resume$j
+    it_first <- burnin + j0 + 1L
+  }
+  acc_win <- matrix(0, K, 3L)
   acc_win_off <- matrix(0, max(n_pair, 0L), 3L)
-  acc_kept_off <- matrix(0, max(n_pair, 0L), 3L)
   adapt <- function(st, rate, it) {
     st <- st * exp(ifelse(rate > 0.44, 1, -1) * min(0.5, 5 / sqrt(it / 50)))
     pmin(pmax(st, 1e-3), 5)
   }
-  n_kept <- n_iter %/% thin
+  j_end <- j0 + n_iter
+  n_kept <- j_end %/% thin - j0 %/% thin
   up <- which(upper.tri(diag(K), diag = TRUE))
   trace <- matrix(NA_real_, n_iter, 2L * length(up) + 2L * K)
   kept_ymis <- matrix(NA_real_, nrow(prob$miss), n_kept)
@@ -582,7 +622,7 @@
   kept_SE <- array(NA_real_, c(K, K, n_kept))
   kept_mu <- matrix(NA_real_, n_kept, K)
   qc <- prob$Qc
-  for (it in seq_len(burnin + n_iter)) {
+  for (it in it_first:(burnin + j_end)) {
     # 0. Collapsed Metropolis moves on (alpha_k, Sigma_E) (see .mip_mh_moves).
     if (mh) {
       mv <- .mip_mh_moves(prob, tpl, alpha, Sigma_W, Sigma_E, hyper, step,
@@ -632,11 +672,11 @@
     Sigma_E <- .mip_riwish(hyper$nu_E + n, hyper$S_E + crossprod(e))
     }
     if (it > burnin) {
-      j <- it - burnin
+      j <- it - burnin             # post-burn-in sweep, counted across calls
       lam <- diag(Sigma_P) / (diag(Sigma_P) + diag(Sigma_E))
-      trace[j, ] <- c(Sigma_P[up], Sigma_E[up], lam, mu)
+      trace[j - j0, ] <- c(Sigma_P[up], Sigma_E[up], lam, mu)
       if (j %% thin == 0L) {
-        kk <- j %/% thin
+        kk <- j %/% thin - j0 %/% thin
         kept_ymis[, kk] <- Yc[prob$miss]
         kept_SP[, , kk] <- Sigma_P
         kept_SE[, , kk] <- Sigma_E
@@ -646,8 +686,25 @@
   }
   list(trace = trace, ymis = kept_ymis, Sigma_P = kept_SP, Sigma_E = kept_SE,
        mu = kept_mu, mh_step = list(scale = step, off = step_off),
-       mh_accept = if (mh) list(scale = acc_kept / n_iter,
-                                off = acc_kept_off / n_iter) else NULL)
+       mh_accept = if (mh) list(scale = acc_kept / j_end,
+                                off = acc_kept_off / j_end) else NULL,
+       state = list(alpha = alpha, Sigma_W = Sigma_W, Sigma_E = Sigma_E,
+                    Sigma_P = Sigma_P, tpl = tpl, step = step,
+                    step_off = step_off, acc_kept = acc_kept,
+                    acc_kept_off = acc_kept_off, j = j_end,
+                    burnin = burnin, thin = thin, mh = mh, gibbs = gibbs,
+                    rng = get(".Random.seed", envir = .GlobalEnv,
+                              inherits = FALSE)))
+}
+
+# Append a continuation segment (from .mip_run_chain(resume = )) to a chain.
+.mip_join_segments <- function(chain, seg) {
+  list(trace = rbind(chain$trace, seg$trace),
+       ymis = cbind(chain$ymis, seg$ymis),
+       Sigma_P = .mip_abind3(chain$Sigma_P, seg$Sigma_P),
+       Sigma_E = .mip_abind3(chain$Sigma_E, seg$Sigma_E),
+       mu = rbind(chain$mu, seg$mu),
+       mh_step = seg$mh_step, mh_accept = seg$mh_accept, state = seg$state)
 }
 
 .mip_param_names <- function(K) {
@@ -832,7 +889,7 @@
 .mip_default_control <- function() {
   list(n_chains = 4L, n_iter = NULL, burnin = NULL, thin = NULL,
        keep_draws = 1000L, param_uncertainty = c("full", "none", "both"),
-       seed = NULL)
+       seed = NULL, auto_extend = TRUE, max_extend = 3L)
 }
 
 .mip_resolve_control <- function(control, m) {
@@ -855,6 +912,20 @@
     stop("`posterior_control$n_chains` must be a positive integer.",
          call. = FALSE)
   }
+  # Automatic chain extension (design.md 5e); see .mip_fit().
+  ae <- ctl$auto_extend %||% TRUE
+  if (!is.logical(ae) || length(ae) != 1L || is.na(ae)) {
+    stop("`posterior_control$auto_extend` must be TRUE or FALSE.",
+         call. = FALSE)
+  }
+  me <- ctl$max_extend %||% 3L
+  if (!is.numeric(me) || length(me) != 1L || !is.finite(me) ||
+      me != round(me) || me < 0 || me > 10) {
+    stop("`posterior_control$max_extend` must be a whole number from 0 to ",
+         "10.", call. = FALSE)
+  }
+  ctl$auto_extend <- ae
+  ctl$max_extend <- as.integer(me)
   ctl$keep_draws <- as.integer(ctl$keep_draws)
   if (!is.finite(ctl$keep_draws) || ctl$keep_draws < m) {
     stop("`posterior_control$keep_draws` must be at least m (", m, ").",
@@ -914,8 +985,51 @@
   # Chains run serially (each seeds itself, so results do not depend on
   # scheduling); parallelise across fits in the caller if needed.
   chains <- lapply(seq_len(ctl$n_chains), run1)
-  wall <- proc.time()[["elapsed"]] - t0
   diagnostics <- .mip_diagnostics(lapply(chains, `[[`, "trace"), K)
+  # Automatic extension (design.md 5e). While the convergence rule fails,
+  # every chain continues from its saved sampler and RNG state for another
+  # n_iter post-burn-in sweeps (no new burn-in, step sizes still frozen),
+  # and the diagnostics are recomputed on all post-burn-in sweeps so far.
+  # A chain extended k times is therefore the same chain as one run with
+  # n_iter * (k + 1) sweeps. A fit that meets the rule first time takes no
+  # branch below, so its output is that of the code without extension.
+  n_ext <- 0L
+  max_ext <- if (isTRUE(ctl$auto_extend)) {
+    as.integer(ctl$max_extend %||% 3L)
+  } else 0L
+  while (!isTRUE(attr(diagnostics, "converged")) && n_ext < max_ext) {
+    n_ext <- n_ext + 1L
+    if (verbose) {
+      message(sprintf(paste0(
+        "posterior: not converged (max R-hat %.3f, min bulk ESS %.0f); ",
+        "extending each chain by %d sweeps (extension %d of at most %d)"),
+        max(diagnostics$rhat, na.rm = TRUE),
+        min(diagnostics$ess_bulk, na.rm = TRUE), ctl$n_iter, n_ext, max_ext))
+    }
+    chains <- lapply(chains, function(ch) {
+      .mip_join_segments(ch, .mip_run_chain(prob, NULL, hyper, ctl$burnin,
+                                            ctl$n_iter, ctl$thin,
+                                            resume = ch$state))
+    })
+    diagnostics <- .mip_diagnostics(lapply(chains, `[[`, "trace"), K)
+  }
+  wall <- proc.time()[["elapsed"]] - t0
+  if (n_ext > 0L) {
+    # Keep the original number of draws per chain, evenly spaced over the
+    # whole post-burn-in run: every (k + 1)-th stored sweep, i.e. every
+    # thin * (k + 1)-th sweep, exactly what a single run with
+    # n_iter * (k + 1) sweeps and thin * (k + 1) would keep.
+    sel <- (n_ext + 1L) * seq_len(ctl$n_iter %/% ctl$thin)
+    chains <- lapply(chains, function(ch) {
+      ch$ymis <- ch$ymis[, sel, drop = FALSE]
+      ch$Sigma_P <- ch$Sigma_P[, , sel, drop = FALSE]
+      ch$Sigma_E <- ch$Sigma_E[, , sel, drop = FALSE]
+      ch$mu <- ch$mu[sel, , drop = FALSE]
+      ch
+    })
+  }
+  attr(diagnostics, "n_extensions") <- n_ext
+  attr(diagnostics, "sweeps_per_chain") <- (n_ext + 1L) * ctl$n_iter
   SP <- do.call(.mip_abind3, lapply(chains, `[[`, "Sigma_P"))
   SE <- do.call(.mip_abind3, lapply(chains, `[[`, "Sigma_E"))
   mu <- do.call(rbind, lapply(chains, `[[`, "mu"))
@@ -954,7 +1068,7 @@
        start = list(lambda_reml = if (is.null(lam_reml)) NULL else
                       stats::setNames(lam_reml, nm),
                     lambda_start = stats::setNames(lambda0, nm)),
-       sweeps = ctl$n_chains * (ctl$burnin + ctl$n_iter),
+       sweeps = ctl$n_chains * (ctl$burnin + (n_ext + 1L) * ctl$n_iter),
        wall_s = wall, hyper = hyper, improper = improper)
 }
 
@@ -1121,12 +1235,20 @@
   diagnostics <- fit$diagnostics
   if (verbose || !isTRUE(attr(diagnostics, "converged"))) {
     if (!isTRUE(attr(diagnostics, "converged"))) {
+      # Without an extension the message is the pre-extension one.
+      n_ext <- attr(diagnostics, "n_extensions") %||% 0L
+      ext_txt <- if (n_ext > 0L) {
+        sprintf(paste0(" after %d automatic extension(s) of every chain, to ",
+                       "%d post-burn-in sweeps per chain ",
+                       "(posterior_control$max_extend = %d)"),
+                n_ext, attr(diagnostics, "sweeps_per_chain"), ctl$max_extend)
+      } else ""
       warning(sprintf(paste0(
         "draws_method = \"posterior\": chains did not meet the convergence ",
-        "rule (max R-hat %.3f, needs < 1.05; min bulk ESS %.0f, needs > 400). ",
-        "Increase posterior_control$n_iter / burnin."),
+        "rule (max R-hat %.3f, needs < 1.05; min bulk ESS %.0f, needs > 400)",
+        "%s. Increase posterior_control$n_iter / burnin."),
         max(diagnostics$rhat, na.rm = TRUE),
-        min(diagnostics$ess_bulk, na.rm = TRUE)), call. = FALSE)
+        min(diagnostics$ess_bulk, na.rm = TRUE), ext_txt), call. = FALSE)
     }
   }
 
