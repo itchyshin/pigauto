@@ -16,6 +16,7 @@
 #
 # Caller must already have run devtools::load_all() (for
 # transform_tree_pagel()) and library(ape) before sourcing this file.
+# Run directly, the file self-checks the twin DGP (block at the end).
 
 source(file.path("script", "mi_gls", "regimes.R"))
 
@@ -46,8 +47,9 @@ mcar_mask <- function(n_tip, m_miss = 0.3) stats::runif(n_tip) < m_miss
 
 # ---- in-model twin of a regime 1-16 cell --------------------------------------
 # The body is script/mi_gls/diag/rerun_cell.R's DIAG_TWIN block verbatim, so
-# a campaign twin equals the diagnosis twin (checked with identical() on
-# the truth and the masked data). V_sim is recomputed exactly as the source
+# a campaign twin equals the diagnosis twin (identical() on the truth and
+# the masked data, asserted by the self-check at the end of this file).
+# V_sim is recomputed exactly as the source
 # regime simulated from it (Pagel-transformed tree at lambda = 0.5, scaled
 # by its maximum); the source Z has covariance Sig %x% (V_sim + 1e-8 I), so
 # after the division vec(truth) ~ N(0, Sig %x% cov2cor(V_sim)) up to that
@@ -134,4 +136,81 @@ simulate_regime_cell <- function(regime_id, rep_i) {
   list(regime_id = regime_id, rep = rep_i, seed = seed, regime = reg,
       tree = tree, truth = truth, df = df, mask_x = mask_x, mask_y = mask_y,
       true_beta = true_beta)
+}
+
+# ---- self-check of the twin DGP ----------------------------------------------
+# Run directly (cwd = the package root; it calls devtools::load_all()):
+#   OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 Rscript script/mi_gls/dgp_v2.R
+# Sourcing the file never runs it. For twins 27 (lambda 1, MCAR, x_only),
+# 36 (lambda 0.5, MCAR, both) and 38 (lambda 0.5, MAR_phylo, both) at rep 1,
+# against the SOURCE cell (twin_of) drawn by simulate_regime_cell():
+#   (a) seed, tree, mask_x, mask_y and the NA pattern equal the source's,
+#       and the observed cells of df equal the twin truth;
+#   (b) twin truth * sqrt(diag(V_sim / max V_sim)) equals the source truth
+#       to 1e-12, V_sim recomputed here from the source's tree and lambda;
+#   (c) max |cov2cor(V_sim) - (lambda R + (1 - lambda) I)| < 1e-12 with
+#       R = cov2cor(vcv(tree)), i.e. the twin is the sampler's model;
+#   (d) identical() to the diagnosis twin: the `if (twin) {...}` block of
+#       script/mi_gls/diag/rerun_cell.R, found by parsing that file and
+#       evaluated on the source cell.
+# Prints SELFTEST_OK and exits 0, or SELFTEST FAILED and exits 1.
+if (sys.nframe() == 0L) {
+  suppressMessages({ devtools::load_all(quiet = TRUE); library(ape) })
+  ok <- TRUE
+  check <- function(cond, what) {
+    cond <- isTRUE(cond)
+    cat(sprintf("  %-70s %s\n", what, if (cond) "yes" else "NO"))
+    if (!cond) ok <<- FALSE
+  }
+
+  diag_f <- file.path("script", "mi_gls", "diag", "rerun_cell.R")
+  diag_ex <- parse(diag_f, keep.source = FALSE)
+  diag_head <- vapply(diag_ex, function(e) deparse(e)[1L], "")
+  diag_twin <- diag_ex[diag_head == "if (twin) {"]
+  cat(sprintf("diagnosis twin block (%s): %d found (want 1)\n", diag_f, length(diag_twin)))
+  if (length(diag_twin) != 1L) ok <- FALSE
+
+  for (tid in c(27L, 36L, 38L)) {
+    tw  <- simulate_regime_cell(tid, 1L)
+    sid <- tw$regime$twin_of
+    src <- simulate_regime_cell(sid, 1L)
+    lam <- src$regime$lambda
+    cat(sprintf("twin %d (source %d: lambda %.1f, n %d, %s, %s) rep 1\n", tid, sid, lam,
+                src$regime$n, src$regime$mechanism, src$regime$missing))
+    check(identical(tw$regime_id, tid) && identical(tw$regime$dgp, "twin") && identical(tw$true_beta, 0.7),
+          "(a) regime id, dgp = twin, true_beta = 0.7")
+    check(identical(tw$seed, src$seed) && identical(tw$tree, src$tree), "(a) seed and tree equal the source's")
+    check(identical(tw$mask_x, src$mask_x) && identical(tw$mask_y, src$mask_y),
+          "(a) mask_x and mask_y equal the source's")
+    check(identical(is.na(tw$df), is.na(src$df)) && identical(dimnames(tw$df), dimnames(src$df)),
+          "(a) NA pattern and dimnames of df equal the source's")
+    obs <- !is.na(as.matrix(tw$df))
+    check(identical(as.matrix(tw$df)[obs], as.matrix(tw$truth)[obs]),
+          "(a) observed cells of df equal the twin truth")
+
+    tips <- rownames(src$truth)
+    sim_tree <- if (lam == 1) src$tree else transform_tree_pagel(src$tree, lam)
+    V_sim <- ape::vcv(sim_tree)[tips, tips]
+    V_sim <- V_sim / max(V_sim)
+    d_b <- max(abs(as.matrix(tw$truth) * sqrt(diag(V_sim)) - as.matrix(src$truth)))
+    check(d_b < 1e-12, sprintf("(b) max|twin * sqrt(diag(V_sim)) - source| = %.2e < 1e-12", d_b))
+    R <- stats::cov2cor(ape::vcv(src$tree)[tips, tips])
+    d_c <- max(abs(stats::cov2cor(V_sim) - (lam * R + (1 - lam) * diag(length(tips)))))
+    check(d_c < 1e-12, sprintf("(c) max|cov2cor(V_sim) - (lambda R + (1-lambda) I)| = %.2e < 1e-12", d_c))
+
+    if (length(diag_twin) == 1L) {
+      e <- new.env(parent = globalenv())
+      assign("twin", TRUE, e); assign("regime_id", sid, e); assign("rep_i", 1L, e)
+      assign("cell", simulate_regime_cell(sid, 1L), e)
+      eval(diag_twin[[1L]], e)
+      dg <- get("cell", e)
+      check(identical(tw$df, dg$df) && identical(tw$truth, dg$truth),
+            "(d) identical() df and truth vs the rerun_cell.R diagnosis twin")
+      check(identical(tw$mask_x, dg$mask_x) && identical(tw$mask_y, dg$mask_y) &&
+              identical(tw$tree, dg$tree),
+            "(d) identical() masks and tree vs the rerun_cell.R diagnosis twin")
+    }
+  }
+  cat(if (ok) "SELFTEST_OK\n" else "SELFTEST FAILED\n")
+  quit(save = "no", status = if (ok) 0L else 1L)
 }
