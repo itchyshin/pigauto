@@ -7,19 +7,33 @@
 # script/mi_gls/03_summarise_v2.R. Decisions D1-D6 are recorded in
 # docs/dev-log/mi-posterior/design.md section 5c.
 #
-# Completeness, fail-closed (D3): the expected rows come from
-# script/mi_gls/regimes.R, never from the CSV: every regime x downstream
-# (gls, phylolm) needs a "complete" row and a posterior_full row, plus a
-# posterior_none row where missing == "both" (D6). A missing row, a row
-# built for a different rep count (n_expected != MI_N_REPS), a row with
-# R <= 0, or a non-finite gated value FAILS; nothing is skipped.
+# Gated regimes (CP2 follow-up, Shinichi 2026-09-24; design.md section
+# 5e): every rule is evaluated for every regime, but only the gated
+# (in-model) regimes 17-40 can FAIL the gate: the Kronecker regimes 17-24
+# and the in-model twins 25-40. Regimes 1-16 simulate from the raw
+# covariance of a non-ultrametric tree, outside the sampler's model; their
+# rule outcomes are printed under a "STRESS TEST (reported, not gated)"
+# block. Which regimes are gated comes from regimes.R (regimes$gated),
+# never from the CSV.
+#
+# Completeness, fail-closed (D3), for EVERY regime of the grid, stress
+# regimes included (the report must be complete): the expected rows come
+# from script/mi_gls/regimes.R, never from the CSV: every regime x
+# downstream (gls, phylolm) needs a "complete" row and a posterior_full
+# row, plus a posterior_none row where missing == "both" (D6). A missing
+# row, a duplicate row, a row built for a different rep count
+# (n_expected != MI_N_REPS) or a row with R <= 0 FAILS; nothing is
+# skipped. A regime with no rows at all also prints a loud MISSING_REGIME
+# line. A non-finite rule value is a rule outcome: it fails in a gated
+# regime and is reported in a stress regime.
 #
 # Rules (every expected regime x downstream unless noted):
 #   1. |paired bias| <= max(0.02, 2.5 * paired_bias_mcse)
 #   2. coverage >= complete coverage - 0.05 per row, and mean shortfall
 #      <= 0.02, where shortfall = pmax(complete - coverage, 0) (the
-#      positive part, D5), averaged over all posterior_full rows. The
-#      coverage truth is rho = 0.7 in regimes 1-16 and the complete-data
+#      positive part, D5), averaged over the gated posterior_full rows (the
+#      stress rows' mean is reported separately). The coverage truth is
+#      rho = 0.7 in regimes 1-16 and 25-40 and the complete-data
 #      pseudo-truth in 17-24 (D1, computed in 03).
 #   3. SE ratio in [0.90, 1.15] under the lambda (phylolm) analysis. Env
 #      MI_SE_RULE selects the reading (D2): "relative" (DEFAULT since CP1,
@@ -33,14 +47,16 @@
 #      plug-in intervals come out about 1.5% wider at these sample sizes
 #      (Jensen; S1 measurement), so "proper > improper" need not hold when
 #      everything is right. Mean posterior_full vs posterior_none se_ratio
-#      is printed within regimes 9-16 and 17-24 per downstream model, plus
-#      per-regime pairs. A missing posterior_none row still fails through
-#      the completeness check.
+#      is printed per downstream model within each both-missing block
+#      (9-16 stress test, 17-24 Kronecker, 33-40 twins), plus per-regime
+#      pairs. A missing posterior_none row still fails through the
+#      completeness check.
 #   5. fit failures <= 2% (missing rep files count as failures, D3)
 #   6. (design review B3) non-converged posterior_full fits <= 2% of the
 #      expected reps (a missing rep file counts as non-converged); a
 #      regime over that prints a loud "NONCONVERGED regime <id>: <k>/<n>"
-#      line and FAILS. Rules 1-4 use converged reps only (03).
+#      line and FAILS (a stress regime's line says "stress test, not
+#      gated"). Rules 1-4 use converged reps only (03).
 #   Rules 5 and 6 fail only ABOVE 2%: rule 6 compares counts
 #   (non-converged > floor(0.02 n)) and rule 5 allows 1e-9 of rounding, so
 #   exactly 4/200 passes and 5/200 fails (1 - 196/200 is 0.02000000000000002
@@ -73,7 +89,10 @@ required_rows <- function(regime_ids) {
   }))
 }
 
-# Returns the failure messages; attr "report" holds the descriptive lines.
+# Returns the gate failure messages. Attributes: "report" (descriptive
+# lines), "gated_rules" (per-row rule outcomes of the gated regimes) and
+# "stress" (the STRESS TEST block: rule outcomes and violations of the
+# regimes 1-16, reported, never failing).
 run_gate <- function(df, regime_ids = regimes$regime_id,
                      n_reps = mi_gls_v2_planned_reps, se_rule = "relative") {
   if (!(se_rule %in% c("absolute", "relative"))) {
@@ -82,6 +101,7 @@ run_gate <- function(df, regime_ids = regimes$regime_id,
   fails <- character(0)
   report <- character(0)
   key <- function(d) paste(d$regime_id, d$method, d$downstream)
+  is_gated <- function(rid) mi_gls_v2_is_gated(rid) %in% TRUE
 
   need_cols <- c("regime_id", "method", "downstream", "n_expected", "R", "paired_bias",
                  "paired_bias_mcse", "se_ratio", "coverage", "fit_failure_rate",
@@ -89,25 +109,31 @@ run_gate <- function(df, regime_ids = regimes$regime_id,
   miss_cols <- setdiff(need_cols, names(df))
   if (length(miss_cols)) {
     return(structure(sprintf("summary CSV lacks column(s): %s (rebuild it with 03_summarise_v2.R)",
-                             paste(miss_cols, collapse = ", ")), report = report))
+                             paste(miss_cols, collapse = ", ")),
+                     report = report, gated_rules = character(0), stress = character(0)))
   }
 
-  # ---- completeness (D3) ----------------------------------------------------
+  # ---- completeness (D3), every regime including the stress test -------------
   req <- required_rows(regime_ids)
   df <- df[df$regime_id %in% regime_ids, , drop = FALSE]
+  for (rid in regime_ids[!(regime_ids %in% df$regime_id)]) {
+    cat(sprintf("MISSING_REGIME regime %d (%s): no summary rows\n", rid,
+                if (is_gated(rid)) "gated" else "stress test: not gated, but the report must be complete"))
+  }
   k_df <- key(df)
   for (i in seq_len(nrow(req))) {
     kk <- key(req[i, ])
     hit <- df[k_df == kk, , drop = FALSE]
     lab <- sprintf("regime %d %s %s", req$regime_id[i], req$method[i], req$downstream[i])
-    if (nrow(hit) == 0L) { fails <- c(fails, sprintf("missing row: %s", lab)); next }
-    if (nrow(hit) > 1L)  { fails <- c(fails, sprintf("duplicate rows (%d): %s", nrow(hit), lab)); next }
+    tag <- if (is_gated(req$regime_id[i])) "" else " (stress-test regime; the report must be complete)"
+    if (nrow(hit) == 0L) { fails <- c(fails, sprintf("missing row: %s%s", lab, tag)); next }
+    if (nrow(hit) > 1L)  { fails <- c(fails, sprintf("duplicate rows (%d): %s%s", nrow(hit), lab, tag)); next }
     if (!is.finite(hit$n_expected) || hit$n_expected != n_reps) {
-      fails <- c(fails, sprintf("%s: n_expected=%s but the gate expects %d reps",
-                                lab, hit$n_expected, n_reps))
+      fails <- c(fails, sprintf("%s: n_expected=%s but the gate expects %d reps%s",
+                                lab, hit$n_expected, n_reps, tag))
     }
     if (!is.finite(hit$R) || hit$R <= 0) {
-      fails <- c(fails, sprintf("%s: R=%s, no usable reps", lab, hit$R))
+      fails <- c(fails, sprintf("%s: R=%s, no usable reps%s", lab, hit$R, tag))
     }
   }
 
@@ -117,60 +143,84 @@ run_gate <- function(df, regime_ids = regimes$regime_id,
   pf <- merge(df[df$method == "posterior_full", ], cmp, by = c("regime_id", "downstream"), all.x = TRUE)
   pn <- df[df$method == "posterior_none", ]
   pf <- pf[order(pf$regime_id, pf$downstream), ]
+  pf$gated <- is_gated(pf$regime_id)
   lab_pf <- sprintf("regime %d %s", pf$regime_id, pf$downstream)
-  nonfinite <- function(rule, what, bad) {
-    if (any(bad)) sprintf("%s: %s non-finite for %s", rule, what, lab_pf[bad]) else character(0)
-  }
 
-  # ---- rule 6: non-convergence (loud, blocking) -----------------------------
+  # Rule violations of every regime; split into gate failures (gated
+  # regimes) and stress-test lines (regimes 1-16) at the end.
+  v_id <- integer(0); v_msg <- character(0)
+  flag <- function(bad, msg) {
+    bad <- bad %in% TRUE
+    if (any(bad)) { v_id <<- c(v_id, pf$regime_id[bad]); v_msg <<- c(v_msg, msg[bad]) }
+  }
+  nonfinite <- function(rule, what, bad) flag(bad, sprintf("%s: %s non-finite for %s", rule, what, lab_pf))
+  outcome <- function(ok, bad) ifelse(!ok, "NONFINITE", ifelse(bad, "FAIL", "PASS"))
+
+  # ---- rule 6: non-convergence (loud; blocking in gated regimes) ------------
   nc <- unique(pf[, c("regime_id", "n_fits", "n_converged")])
+  conv_out <- character(0)
   for (i in seq_len(nrow(nc))) {
-    n <- nc$n_fits[i]; k <- nc$n_converged[i]
+    rid <- nc$regime_id[i]; n <- nc$n_fits[i]; k <- nc$n_converged[i]
     if (!is.finite(n) || !is.finite(k) || n <= 0) {
-      fails <- c(fails, sprintf("non-converged: regime %d n_fits/n_converged non-finite", nc$regime_id[i]))
+      v_id <- c(v_id, rid)
+      v_msg <- c(v_msg, sprintf("non-converged: regime %d n_fits/n_converged non-finite", rid))
+      conv_out[as.character(rid)] <- "NONFINITE"
       next
     }
     frac <- 1 - k / n
     if ((n - k) > floor(NONCONVERGED_THRESHOLD * n + 1e-9)) {
-      cat(sprintf("NONCONVERGED regime %d: %d/%d non-converged (> %.0f%%)\n",
-                  nc$regime_id[i], n - k, n, 100 * NONCONVERGED_THRESHOLD))
-      fails <- c(fails, sprintf("regime %d: non-converged fraction %.4f > %.2f",
-                                nc$regime_id[i], frac, NONCONVERGED_THRESHOLD))
+      cat(sprintf("NONCONVERGED regime %d: %d/%d non-converged (> %.0f%%)%s\n",
+                  rid, n - k, n, 100 * NONCONVERGED_THRESHOLD,
+                  if (is_gated(rid)) "" else " [stress test, not gated]"))
+      v_id <- c(v_id, rid)
+      v_msg <- c(v_msg, sprintf("regime %d: non-converged fraction %.4f > %.2f",
+                                rid, frac, NONCONVERGED_THRESHOLD))
+      conv_out[as.character(rid)] <- sprintf("FAIL(%d/%d)", k, n)
+    } else {
+      conv_out[as.character(rid)] <- sprintf("PASS(%d/%d)", k, n)
     }
   }
 
   # ---- rule 1: paired bias --------------------------------------------------
   ok1 <- is.finite(pf$paired_bias) & is.finite(pf$paired_bias_mcse)
-  fails <- c(fails, nonfinite("bias", "paired_bias/paired_bias_mcse", !ok1))
+  nonfinite("bias", "paired_bias/paired_bias_mcse", !ok1)
   bad1 <- ok1 & abs(pf$paired_bias) > pmax(0.02, 2.5 * pf$paired_bias_mcse)
-  if (any(bad1)) fails <- c(fails, sprintf(
-    "bias: %s |bias|=%.4f > max(0.02, 2.5*MCSE=%.4f)",
-    lab_pf[bad1], abs(pf$paired_bias[bad1]), pf$paired_bias_mcse[bad1]))
+  flag(bad1, sprintf("bias: %s |bias|=%.4f > max(0.02, 2.5*MCSE=%.4f)",
+                     lab_pf, abs(pf$paired_bias), pf$paired_bias_mcse))
 
   # ---- rule 2: coverage vs complete (D1, D5) --------------------------------
   shortfall <- pf$c_coverage - pf$coverage
   ok2 <- is.finite(shortfall)
-  fails <- c(fails, nonfinite("coverage", "coverage/complete coverage", !ok2))
+  nonfinite("coverage", "coverage/complete coverage", !ok2)
   bad2 <- ok2 & shortfall > 0.05
-  if (any(bad2)) fails <- c(fails, sprintf(
-    "coverage: %s coverage=%.4f complete=%.4f shortfall=%.4f > 0.05",
-    lab_pf[bad2], pf$coverage[bad2], pf$c_coverage[bad2], shortfall[bad2]))
-  if (any(ok2)) {
-    mean_shortfall <- mean(pmax(shortfall[ok2], 0))
-    report <- c(report, sprintf("MEAN_SHORTFALL %.4f over %d posterior_full rows (positive part; signed mean %.4f)",
-                                mean_shortfall, sum(ok2), mean(shortfall[ok2])))
-    if (mean_shortfall > 0.02) fails <- c(fails, sprintf(
-      "coverage: mean shortfall (positive part) = %.4f > 0.02", mean_shortfall))
+  flag(bad2, sprintf("coverage: %s coverage=%.4f complete=%.4f shortfall=%.4f > 0.05",
+                     lab_pf, pf$coverage, pf$c_coverage, shortfall))
+  mean_sf <- list(); stress_sf_line <- character(0)
+  for (grp in c("gated", "stress")) {
+    sel <- ok2 & (pf$gated == (grp == "gated"))
+    if (!any(sel)) next
+    ms <- mean(pmax(shortfall[sel], 0))
+    mean_sf[[grp]] <- ms
+    line <- sprintf("MEAN_SHORTFALL %s %.4f over %d posterior_full rows (positive part; signed mean %.4f)%s",
+                    grp, ms, sum(sel), mean(shortfall[sel]),
+                    if (grp == "gated") "" else " [stress test, not gated]")
+    if (grp == "gated") report <- c(report, line) else stress_sf_line <- line
   }
+  if (!is.null(mean_sf$gated) && mean_sf$gated > 0.02) fails <- c(fails, sprintf(
+    "coverage: mean shortfall (positive part) over the gated regimes = %.4f > 0.02", mean_sf$gated))
+  stress_mean_sf <- if (!is.null(mean_sf$stress) && mean_sf$stress > 0.02) sprintf(
+    "coverage: mean shortfall (positive part) over the stress-test regimes = %.4f > 0.02", mean_sf$stress) else character(0)
 
   # ---- rule 3: SE ratio under phylolm (D2) ----------------------------------
   rel <- pf$se_ratio / pf$c_se_ratio
   for (i in seq_len(nrow(pf))) {
-    gated <- pf$downstream[i] == "phylolm"
+    gated3 <- pf$downstream[i] == "phylolm"
     report <- c(report, sprintf("SE_RATIO regime=%d downstream=%s posterior_full=%s complete=%s relative=%s%s",
                                 pf$regime_id[i], pf$downstream[i], fmt4(pf$se_ratio[i]),
                                 fmt4(pf$c_se_ratio[i]), fmt4(rel[i]),
-                                if (gated) sprintf(" (gated, rule=%s)", se_rule) else " (descriptive)"))
+                                if (!gated3) " (descriptive)"
+                                else if (pf$gated[i]) sprintf(" (gated, rule=%s)", se_rule)
+                                else sprintf(" (stress test, rule=%s, not gated)", se_rule)))
     if (is.finite(pf$c_se_ratio[i]) &&
         (pf$c_se_ratio[i] < SE_BAND[1] || pf$c_se_ratio[i] > SE_BAND[2])) {
       report <- c(report, sprintf("ANALYSIS_MODEL_SE_RATIO regime=%d complete=%.4f downstream=%s",
@@ -181,18 +231,18 @@ run_gate <- function(df, regime_ids = regimes$regime_id,
   val3 <- if (se_rule == "absolute") pf$se_ratio else rel
   what3 <- if (se_rule == "absolute") "se_ratio" else "se_ratio/complete se_ratio"
   ok3 <- is.finite(val3)
-  fails <- c(fails, nonfinite("se_ratio", what3, r3 & !ok3))
+  nonfinite("se_ratio", what3, r3 & !ok3)
   bad3 <- r3 & ok3 & (val3 < SE_BAND[1] | val3 > SE_BAND[2])
-  if (any(bad3)) fails <- c(fails, sprintf(
-    "se_ratio: %s %s=%.4f outside [%.2f, %.2f] (rule=%s)",
-    lab_pf[bad3], what3, val3[bad3], SE_BAND[1], SE_BAND[2], se_rule))
+  flag(bad3, sprintf("se_ratio: %s %s=%.4f outside [%.2f, %.2f] (rule=%s)",
+                     lab_pf, what3, val3, SE_BAND[1], SE_BAND[2], se_rule))
 
-  # ---- rule 4: proper > improper, per block and downstream (D4) -------------
-  both_ids <- regimes$regime_id[regimes$missing == "both" & regimes$regime_id %in% regime_ids]
-  blocks <- list("9-16" = both_ids[both_ids <= 16L], "17-24" = both_ids[both_ids > 16L])
-  for (bn in names(blocks)) {
-    ids <- blocks[[bn]]
+  # ---- rule 4: proper > improper, per both-missing block (D4), reported ----
+  both <- regimes[regimes$missing == "both", ]
+  for (dg in c("tree_raw", "kronecker", "twin")) {
+    all_ids <- both$regime_id[both$dgp == dg]
+    ids <- all_ids[all_ids %in% regime_ids]
     if (!length(ids)) next
+    bn <- sprintf("%d-%d", min(all_ids), max(all_ids))
     for (ds in c("gls", "phylolm")) {
       full <- pf$se_ratio[match(paste(ids, ds), paste(pf$regime_id, pf$downstream))]
       none <- pn$se_ratio[match(paste(ids, ds), paste(pn$regime_id, pn$downstream))]
@@ -200,24 +250,42 @@ run_gate <- function(df, regime_ids = regimes$regime_id,
         "SE_RATIO_PAIR regime=%d downstream=%s full=%s none=%s", ids[j], ds, fmt4(full[j]), fmt4(none[j])))
       okp <- is.finite(full) & is.finite(none)
       report <- c(report, sprintf(
-        "SE_RATIO_ORDER (reported, not gated) regimes %s %s: mean posterior_full=%s posterior_none=%s proper_wider=%s (pairs %d of %d finite)",
-        bn, ds, fmt4(mean(full[okp])), fmt4(mean(none[okp])),
+        "SE_RATIO_ORDER (reported, not gated) regimes %s %s [%s]: mean posterior_full=%s posterior_none=%s proper_wider=%s (pairs %d of %d finite)",
+        bn, ds, dg, fmt4(mean(full[okp])), fmt4(mean(none[okp])),
         if (any(okp)) mean(full[okp]) > mean(none[okp]) else NA, sum(okp), length(ids)))
     }
   }
 
   # ---- rule 5: fit failures -------------------------------------------------
   ok5 <- is.finite(pf$fit_failure_rate)
-  fails <- c(fails, nonfinite("fit_failure", "fit_failure_rate", !ok5))
+  nonfinite("fit_failure", "fit_failure_rate", !ok5)
   bad5 <- ok5 & pf$fit_failure_rate > 0.02 + 1e-9
-  if (any(bad5)) fails <- c(fails, sprintf(
-    "fit_failure: %s failure_rate=%.4f > 0.02", lab_pf[bad5], pf$fit_failure_rate[bad5]))
+  flag(bad5, sprintf("fit_failure: %s failure_rate=%.4f > 0.02", lab_pf, pf$fit_failure_rate))
 
-  structure(fails, report = report)
+  # ---- per-row outcomes, gate failures and the stress-test block ------------
+  cv <- conv_out[as.character(pf$regime_id)]
+  rules <- sprintf("RULES regime=%d downstream=%s bias=%s coverage=%s se_ratio=%s fit_fail=%s converged=%s",
+                   pf$regime_id, pf$downstream, outcome(ok1, bad1), outcome(ok2, bad2),
+                   ifelse(r3, outcome(ok3, bad3), "n/a"), outcome(ok5, bad5),
+                   ifelse(is.na(cv), "NA", cv))
+  v_gated <- is_gated(v_id)
+  fails <- c(fails, v_msg[v_gated])
+  stress_ids <- regime_ids[!is_gated(regime_ids)]
+  stress <- if (length(stress_ids)) {
+    n_bad <- length(unique(v_id[!v_gated]))
+    c(rules[!pf$gated],
+      stress_sf_line,
+      if (length(v_msg[!v_gated]) || length(stress_mean_sf)) paste("STRESS_VIOLATION", c(v_msg[!v_gated], stress_mean_sf)),
+      sprintf("STRESS_SUMMARY %d rule violation(s) in %d of %d stress-test regime(s); reported, not gated",
+              sum(!v_gated) + length(stress_mean_sf), n_bad, length(stress_ids)))
+  } else character(0)
+  structure(fails, report = report, gated_rules = rules[pf$gated], stress = stress)
 }
 
 if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
-  # A passing summary over the FULL planned grid, then fixtures that must fail.
+  # A passing summary over the FULL planned grid (regimes 1-40), then
+  # fixtures that must fail (gated regimes 17-40, or incomplete data in any
+  # regime) and stress-test fixtures (regimes 1-16) that must NOT fail.
   make_pass <- function(n_reps = mi_gls_v2_planned_reps) {
     req <- required_rows(regimes$regime_id)
     d <- req
@@ -238,12 +306,21 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
   fx <- list()
   d <- make_pass(); d$paired_bias[at(d, 17, "posterior_full", "gls")] <- 0.5
   fx$bias <- d
+  d <- make_pass(); d$paired_bias[at(d, 27, "posterior_full", "phylolm")] <- 0.5
+  fx$twin_bias <- d                                       # gated twin (of 3)
+  d <- make_pass(); d$coverage[at(d, 35, "posterior_full", "gls")] <- 0.80
+  fx$twin_coverage <- d
   d <- make_pass(); d$n_converged[at(d, 17, "posterior_full")] <- 190L
   fx$nonconverged <- d                                    # 10/200 = 5% > 2%
-  d <- make_pass(); fx$missing_regime <- d[d$regime_id != 5, ]
-  d <- make_pass(); d$n_converged[at(d, 3, "posterior_full")] <- 150L
-  d$fit_failure_rate[at(d, 3, "posterior_full")] <- 0.25
-  fx$short_reps <- d                                      # 150/200 rep files present
+  d <- make_pass(); d$n_converged[at(d, 36, "posterior_full")] <- 190L
+  fx$twin_nonconverged <- d
+  d <- make_pass(); fx$missing_regime <- d[d$regime_id != 5, ]     # stress regime missing: FAILS
+  d <- make_pass(); fx$missing_twin <- d[d$regime_id != 33, ]      # twin regime missing: FAILS
+  d <- make_pass(); d$R[at(d, 3, "posterior_full")] <- 0L
+  fx$stress_no_usable_reps <- d                           # stress row with R = 0: report incomplete
+  d <- make_pass(); d$n_converged[at(d, 27, "posterior_full")] <- 150L
+  d$fit_failure_rate[at(d, 27, "posterior_full")] <- 0.25
+  fx$short_reps <- d                                      # 150/200 rep files present (twin 27)
   fx$wrong_n_expected <- make_pass(n_reps = 100L)         # summary built for 100 reps
   d <- make_pass(); d$se_ratio[at(d, 21, "posterior_full", "phylolm")] <- NA
   fx$nonfinite <- d
@@ -253,7 +330,7 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
   d$coverage[pfr] <- rep(c(0.99, 0.905), length.out = length(pfr))
   fx$shortfall_cancel <- d                                # signed mean ~0.0025, positive part 0.0225
   d <- make_pass(); d <- d[!at(d, 12, "posterior_none", "gls"), ]
-  fx$missing_pair <- d
+  fx$missing_pair <- d                                    # stress regime row missing: FAILS
   d <- make_pass(); d$n_converged[at(d, 22, "posterior_full")] <- 195L
   d$fit_failure_rate[at(d, 22, "posterior_full")] <- 1 - 195 / 200
   fx$nonconverged_5of200 <- d                             # 2.5% > 2%: both rules fail
@@ -263,18 +340,49 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
   d$fit_failure_rate[at(d, 22, "posterior_full")] <- 1 - 196 / 200
   edge_2pct <- d                                          # exactly 4/200 = 2%: passes
 
-  expect_pattern <- c(bias = "^bias:", nonconverged = "non-converged",
-                      missing_regime = "missing row: regime 5 ",
-                      short_reps = "non-converged|fit_failure",
+  # Stress-test fixtures (regimes 1-16): reported, must NOT fail the gate.
+  sx <- list()
+  d <- make_pass(); d$paired_bias[at(d, 3, "posterior_full", "phylolm")] <- -0.5
+  sx$stress_bias <- d
+  d <- make_pass(); d$n_converged[at(d, 1, "posterior_full")] <- 190L
+  sx$stress_nonconverged <- d
+  d <- make_pass(); d$coverage[d$method == "posterior_full" & d$regime_id <= 16] <- 0.80
+  sx$stress_coverage <- d                                 # per-row and mean shortfall in 1-16
+  d <- make_pass(); d$n_converged[at(d, 3, "posterior_full")] <- 150L
+  d$fit_failure_rate[at(d, 3, "posterior_full")] <- 0.25
+  sx$stress_short_reps <- d
+  d <- make_pass(); d$se_ratio[at(d, 2, "posterior_full", "phylolm")] <- NA
+  sx$stress_nonfinite <- d
+
+  expect_pattern <- c(bias = "^bias: regime 17 gls",
+                      twin_bias = "^bias: regime 27 phylolm",
+                      twin_coverage = "^coverage: regime 35 gls coverage=0.8000",
+                      nonconverged = "regime 17: non-converged",
+                      twin_nonconverged = "regime 36: non-converged",
+                      missing_regime = "missing row: regime 5 .*stress-test regime",
+                      missing_twin = "missing row: regime 33 ",
+                      stress_no_usable_reps = "regime 3 posterior_full gls: R=0, no usable reps",
+                      short_reps = "regime 27: non-converged|fit_failure: regime 27",
                       wrong_n_expected = "n_expected=100",
-                      nonfinite = "non-finite",
-                      shortfall_cancel = "mean shortfall", missing_pair = "regime 12 posterior_none gls",
+                      nonfinite = "se_ratio: .*non-finite for regime 21 phylolm",
+                      shortfall_cancel = "mean shortfall .*gated regimes", missing_pair = "regime 12 posterior_none gls",
                       nonconverged_5of200 = "regime 22: non-converged fraction 0.0250")
+  stress_pattern <- c(stress_bias = "^STRESS_VIOLATION bias: regime 3 phylolm",
+                      stress_nonconverged = "^STRESS_VIOLATION regime 1: non-converged fraction 0.0500",
+                      stress_coverage = "^STRESS_VIOLATION coverage: mean shortfall .*stress-test regimes",
+                      stress_short_reps = "^STRESS_VIOLATION fit_failure: regime 3 ",
+                      stress_nonfinite = "^STRESS_VIOLATION se_ratio: .*non-finite for regime 2 phylolm")
 
   ok <- TRUE
   pass_fails <- run_gate(make_pass())
   cat(sprintf("pass fixture: %d failure(s)\n", length(pass_fails)))
   if (length(pass_fails)) { ok <- FALSE; cat(paste(" -", pass_fails), sep = "\n") }
+  st0 <- attr(pass_fails, "stress")
+  st_ok <- any(grepl("^STRESS_SUMMARY 0 rule violation\\(s\\) in 0 of 16 stress-test regime", st0)) &&
+    sum(grepl("^RULES regime=", st0)) == 32L && length(attr(pass_fails, "gated_rules")) == 48L
+  cat(sprintf("pass fixture: 32 stress RULES lines + clean STRESS_SUMMARY, 48 gated RULES lines: %s\n",
+              if (st_ok) "yes" else "NO"))
+  if (!st_ok) ok <- FALSE
   pass_rel <- run_gate(make_pass(), se_rule = "relative")
   cat(sprintf("pass fixture (MI_SE_RULE=relative): %d failure(s)\n", length(pass_rel)))
   if (length(pass_rel)) ok <- FALSE
@@ -285,15 +393,32 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
   for (nm in names(fx)) {
     f <- suppressMessages(capture.output(r <- run_gate(fx[[nm]]), type = "output"))
     hit <- any(grepl(expect_pattern[[nm]], r))
-    cat(sprintf("fail fixture %-18s: %d failure(s), expected reason %s: %s\n",
+    cat(sprintf("fail fixture %-22s: %d failure(s), expected reason %s: %s\n",
                 nm, length(r), shQuote(expect_pattern[[nm]]), if (hit) "yes" else "NO"))
     if (!length(r) || !hit) { ok <- FALSE; cat(paste(" -", r), sep = "\n") }
   }
+  for (nm in names(sx)) {
+    f <- capture.output(r <- run_gate(sx[[nm]]), type = "output")
+    st <- attr(r, "stress")
+    hit <- any(grepl(stress_pattern[[nm]], st))
+    cat(sprintf("stress fixture %-20s: %d gate failure(s) (want 0), reported in STRESS TEST block %s: %s\n",
+                nm, length(r), shQuote(stress_pattern[[nm]]), if (hit) "yes" else "NO"))
+    if (length(r) || !hit) { ok <- FALSE; cat(paste(" -", c(r, st)), sep = "\n") }
+  }
+  f <- capture.output(r <- run_gate(sx$stress_nonconverged), type = "output")
+  loud <- any(grepl("^NONCONVERGED regime 1: 10/200 non-converged .*stress test, not gated", f))
+  cat(sprintf("stress NONCONVERGED line labelled 'stress test, not gated': %s\n", if (loud) "yes" else "NO"))
+  if (!loud) ok <- FALSE
+  f <- capture.output(r <- run_gate(fx$missing_regime), type = "output")
+  loud <- any(grepl("^MISSING_REGIME regime 5 \\(stress test", f))
+  cat(sprintf("missing stress regime prints a loud MISSING_REGIME line: %s\n", if (loud) "yes" else "NO"))
+  if (!loud) ok <- FALSE
   r4 <- run_gate(rule4_reported)
   r4_line <- any(grepl("^SE_RATIO_ORDER .*regimes 17-24 gls.*proper_wider=FALSE", attr(r4, "report")))
-  cat(sprintf("rule-4 fixture (improper wider in 17-24): %d failure(s) (want 0), reported %s\n",
-              length(r4), if (r4_line) "yes" else "NO"))
-  if (length(r4) || !r4_line) ok <- FALSE
+  r4_twin <- any(grepl("^SE_RATIO_ORDER .*regimes 33-40 phylolm \\[twin\\]", attr(r4, "report")))
+  cat(sprintf("rule-4 fixture (improper wider in 17-24): %d failure(s) (want 0), reported %s, twin block 33-40 %s\n",
+              length(r4), if (r4_line) "yes" else "NO", if (r4_twin) "yes" else "NO"))
+  if (length(r4) || !r4_line || !r4_twin) ok <- FALSE
   am_abs <- run_gate(analysis_model, se_rule = "absolute")
   am_rel <- run_gate(analysis_model, se_rule = "relative")
   am_line <- any(grepl("^ANALYSIS_MODEL_SE_RATIO regime=21 complete=0.8000", attr(am_rel, "report")))
@@ -319,6 +444,13 @@ if ("code_sha" %in% names(df)) cat(sprintf("PROVENANCE code_sha=%s\n", paste(uni
 fails <- run_gate(df, regime_ids = ex$regime_ids, n_reps = ex$n_reps, se_rule = se_rule)
 rep_lines <- attr(fails, "report")
 if (length(rep_lines)) cat(rep_lines, sep = "\n")
+g_ids <- ex$regime_ids[mi_gls_v2_is_gated(ex$regime_ids) %in% TRUE]
+cat(sprintf("GATED REGIMES (in-model: Kronecker 17-24, twins 25-40; Shinichi, CP2 follow-up 2026-09-24): %s\n",
+            if (length(g_ids)) paste(g_ids, collapse = " ") else "none in this grid"))
+if (length(attr(fails, "gated_rules"))) cat(paste(" ", attr(fails, "gated_rules")), sep = "\n")
+cat("STRESS TEST (reported, not gated): regimes 1-16, raw tree covariance outside the sampler's model\n")
+st <- attr(fails, "stress")
+if (length(st)) cat(paste(" ", st), sep = "\n") else cat("  no stress-test regimes in this grid\n")
 if (length(fails)) {
   cat("G6 FAILURES:\n")
   for (f in fails) cat(" -", f, "\n")

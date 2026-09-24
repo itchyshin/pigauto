@@ -22,15 +22,19 @@
 # rep file counts as a fit failure (fit_failure_rate = 1 - finite
 # estimates / expected reps) and as non-converged (n_fits = expected reps).
 # Every expected row is written even when no rep file exists for it, so
-# the gates see the gap.
+# the gates see the gap. The default grid is regimes 1-40 (25-40 are the
+# in-model twins of 1-16, CP2 follow-up 2026-09-24). Both CSVs carry the
+# regime's `dgp` ("tree_raw", "kronecker", "twin") and `gated` (TRUE for
+# 17-40; 1-16 are the reported stress test) from regimes.R.
 #
-# Downstream-coverage truth (D1): regimes 1-16 use regimes$true_beta_pop
-# (rho = 0.7, exact for any analysis model under the proportional DGP).
-# Regimes 17-24 use a pseudo-truth: the mean complete-data slope over the
-# expected reps of that (regime, downstream). `covered` is recomputed here
-# for complete and every method from the saved estimate/se/df (t quantile
-# with the saved df; normal quantile if df is missing). The saved
-# true_beta_pop coverage is kept as the descriptive column coverage_pop.
+# Downstream-coverage truth (D1): regimes 1-16 and their twins 25-40 use
+# regimes$true_beta_pop (rho = 0.7, exact for any analysis model under
+# the proportional DGP). The Kronecker regimes 17-24 use a pseudo-truth:
+# the mean complete-data slope over the expected reps of that (regime,
+# downstream). `covered` is recomputed here for complete and every method
+# from the saved estimate/se/df (t quantile with the saved df; normal
+# quantile if df is missing). The saved true_beta_pop coverage is kept as
+# the descriptive column coverage_pop.
 #
 # Design-review item B3: paired bias, SE ratio and coverage for the
 # posterior methods use converged reps only (posterior_none shares the
@@ -124,7 +128,7 @@ covers_t <- function(est, se, dfr, truth, conf = 0.95) {
 
 truth_rows <- do.call(rbind, lapply(exp_regimes$regime_id, function(rid) {
   do.call(rbind, lapply(c("gls", "phylolm"), function(ds) {
-    if (rid <= 16L) {
+    if (regimes$dgp[regimes$regime_id == rid] != "kronecker") {   # tree_raw 1-16, twin 25-40
       data.frame(regime_id = rid, downstream = ds,
                  truth = regimes$true_beta_pop[regimes$regime_id == rid],
                  truth_source = "rho", n_truth = NA_integer_)
@@ -242,10 +246,12 @@ names(cref) <- c("regime_id", "downstream", "complete_se_ratio", "complete_cover
                  "complete_coverage_pop")
 summary_df <- merge(summary_df, cref, by = c("regime_id", "downstream"), all.x = TRUE)
 summary_df$code_sha <- code_sha_label
+summary_df$dgp   <- regimes$dgp[match(summary_df$regime_id, regimes$regime_id)]
+summary_df$gated <- regimes$gated[match(summary_df$regime_id, regimes$regime_id)]
 method_order <- c("complete", "posterior_full", "posterior_none")
 summary_df <- summary_df[order(summary_df$regime_id, match(summary_df$method, method_order),
                                summary_df$downstream), ]
-lead <- c("regime_id", "method", "downstream")
+lead <- c("regime_id", "method", "downstream", "dgp", "gated")
 summary_df <- summary_df[, c(lead, setdiff(names(summary_df), lead))]
 rownames(summary_df) <- NULL
 
@@ -291,7 +297,7 @@ if (!is.na(out_cell_csv)) {
                 all_cellD$trait == k$trait & all_cellD$rep %in% keep, ]
     n <- if (is.null(sub)) 0L else nrow(sub)
     reg_row <- regimes[regimes$regime_id == k$regime_id, ]
-    cbind(k, mechanism = reg_row$mechanism, n = n,
+    cbind(k, mechanism = reg_row$mechanism, dgp = reg_row$dgp, gated = reg_row$gated, n = n,
           covered_sum = if (n) sum(sub$covered) else NA_integer_,   # NA propagates (fail-closed)
           mean_width = if (n) mean(sub$width) else NA_real_,
           n_expected = n_reps,

@@ -12,7 +12,8 @@
 #     out_dir   results (regime_<id>_rep_<k>.rds), logs/ (one log per cell), CODE_SHA
 #     n_jobs    cells run in parallel, 1..150 (the Totoro cap for this lane, D-143);
 #               each cell is single-threaded (BLAS pinned to 1 thread, chains serial)
-#     regimes   ids or ranges from script/mi_gls/regimes.R, e.g. 1-24 (default), 22,24, 9-16,21
+#     regimes   ids or ranges from script/mi_gls/regimes.R, e.g. 1-40 (default: the planned
+#               grid, 1-24 plus the in-model twins 25-40), 25-40, 22,24, 9-16,21
 #     reps      N for reps 1..N (default 200), or a range a-b
 #
 # Cells whose .rds already exists are skipped, so rerunning the same
@@ -56,11 +57,11 @@ set -euo pipefail
 
 die() { echo "12_totoro_campaign: $*" >&2; exit 2; }
 
-[[ $# -ge 3 ]] || die "usage: $0 <code_dir> <out_dir> <n_jobs> [regimes (default 1-24)] [reps (default 200)]"
+[[ $# -ge 3 ]] || die "usage: $0 <code_dir> <out_dir> <n_jobs> [regimes (default 1-40)] [reps (default 200)]"
 CODE_DIR=$1
 OUT_DIR=$2
 N_JOBS=$3
-REGIMES_SPEC=${4:-1-24}
+REGIMES_SPEC=${4:-1-40}
 REPS_SPEC=${5:-200}
 
 # Decimal only, no leading zero, at most 3 digits: bash arithmetic reads a
