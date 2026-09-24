@@ -92,7 +92,12 @@ Fixed in this lane: ordinal columns picked up the lambda setting (Rose final rev
 continuous column reported lambda = 1 because the per-column kernel returns before estimating (found while
 auditing section 12; predictions were unaffected); partial
 `lambda_fixed` errored on joint paths; two eigendecompositions per column; phylopars lambda blow-ups;
-stale roxygen and NEWS gaps; overclaims in the reports (discrete "identical", coverage range).
+stale roxygen and NEWS gaps; overclaims in the reports (discrete "identical", coverage range). On CI (2026-09-23 and 24):
+the PMM acceptance test asserted the pooled median of 10 draws was a donor value, which fails when the
+draws spread under the estimated lambda; it now asserts every draw is a donor value. The clamp no-op test
+compared two separately trained fits bit for bit and failed on the macOS runner, where seeded training was
+not repeatable; it now compares two predictions from one fit. Pinning torch to one thread was tried first
+and dropped: torch ignores the setting once parallel work has started in the process.
 Deferred: `suggest_next_observation()` still scores under lambda = 1 (NEWS known limitation); downward
 bias of the lambda estimate at weak signal.
 
