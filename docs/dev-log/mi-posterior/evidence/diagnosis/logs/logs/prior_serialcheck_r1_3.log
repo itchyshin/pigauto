@@ -1,0 +1,4 @@
+posterior: 4 chains x (1000 burn-in + 5000 sweeps, thin 20)
+Error in .updateCHMfactor(object, parent, mult) : 
+  leading principal minor of order 1198 is not positive
+Execution halted
