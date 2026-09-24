@@ -51,7 +51,34 @@ EOF
   sbatch "$SB"; exit 0
 fi
 
-[ "$MODE" = submit ] || { echo "mode must be check or submit"; exit 1; }
+if [ "$MODE" = freqtime ]; then
+  # Frequentist timing pre-run: the 18 core cells x 2 seeds, arms freqA and freqB, one replicate per task.
+  # Measures per-replicate cost at n = 100, 300, 1000 for the campaign budget (a sub-30-minute pre-run, D-139).
+  TASKS="$LOG/freqtime_tasks.txt"; : > "$TASKS"
+  for n in 1000 300 100; do for lambda in 0.3 0.7 1; do for rho in 0 0.5; do for seed in 1 2; do
+    echo "--n $n --seed $seed --lambda $lambda --rho $rho --M 20 --arms freqA,freqB --out $ROOT/freqtime" >> "$TASKS"
+  done; done; done; done
+  NT=$(wc -l < "$TASKS"); SB="$LOG/freqtime.sbatch"
+  cat > "$SB" <<SBEOF
+#!/bin/bash
+#SBATCH --account=def-snakagaw_cpu
+#SBATCH --job-name=rubin_freqtime
+#SBATCH --time=00:45:00
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=8G
+#SBATCH --array=1-${NT}
+#SBATCH --output=$LOG/%x-%A_%a.out
+set -euo pipefail
+source "$ENV_SH"
+cd "$ROOT"
+args=\$(sed -n "\${SLURM_ARRAY_TASK_ID}p" "$TASKS")
+echo "host=\$(hostname) task=\$SLURM_ARRAY_TASK_ID args=\$args"
+Rscript script/rubin_cell.R \$args
+SBEOF
+  echo "freqtime tasks=$NT"; sbatch "$SB"; exit 0
+fi
+
+[ "$MODE" = submit ] || { echo "mode must be check, submit or freqtime"; exit 1; }
 # group: n nitt --time
 while read -r N NITT TIME; do
   TASKS="$LOG/prerun_n${N}_nitt${NITT}_tasks.txt"; : > "$TASKS"
