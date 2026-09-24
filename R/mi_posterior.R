@@ -53,7 +53,10 @@
 # dependency; they are computed on every post-burn-in sweep of the
 # parameters (not only on the thinned, kept sweeps).
 #
-# IMPROPER MODE (param_uncertainty = "none", validation only). The full
+# IMPROPER MODE (param_uncertainty = "none" or "both", validation only).
+# "both" returns the proper draws exactly as "full" does, plus the plug-in
+# draws below from the SAME chain run (drawn after the chains, so the proper
+# results are identical to "full" with the same seed). The full
 # sampler runs first (same chains and lengths; its diagnostics are the ones
 # reported). Sigma_P and Sigma_E are then fixed at their posterior means and
 # only step 1 runs; with the covariances fixed the precision does not change,
@@ -822,7 +825,7 @@
 
 .mip_default_control <- function() {
   list(n_chains = 4L, n_iter = NULL, burnin = NULL, thin = NULL,
-       keep_draws = 1000L, param_uncertainty = c("full", "none"),
+       keep_draws = 1000L, param_uncertainty = c("full", "none", "both"),
        seed = NULL)
 }
 
@@ -839,7 +842,8 @@
          paste(names(def), collapse = ", "), ".", call. = FALSE)
   }
   ctl <- utils::modifyList(def, control)
-  ctl$param_uncertainty <- match.arg(ctl$param_uncertainty, c("full", "none"))
+  ctl$param_uncertainty <- match.arg(ctl$param_uncertainty,
+                                     c("full", "none", "both"))
   ctl$n_chains <- as.integer(ctl$n_chains)
   if (!is.finite(ctl$n_chains) || ctl$n_chains < 1L) {
     stop("`posterior_control$n_chains` must be a positive integer.",
@@ -910,21 +914,29 @@
   SE <- do.call(.mip_abind3, lapply(chains, `[[`, "Sigma_E"))
   mu <- do.call(rbind, lapply(chains, `[[`, "mu"))
   ymis <- do.call(cbind, lapply(chains, `[[`, "ymis"))
-  if (identical(ctl$param_uncertainty, "none")) {
+  nm <- colnames(Y)
+  improper <- NULL
+  if (ctl$param_uncertainty %in% c("none", "both")) {
+    # Plug-in draws at the posterior-mean covariances. Drawn after the
+    # chains, so the RNG stream of the proper results is untouched.
     SP_hat <- apply(SP, c(1L, 2L), mean)
     SE_hat <- apply(SE, c(1L, 2L), mean)
     n_draws <- ncol(ymis)
     fx <- .mip_fixed_draws(prob, SP_hat, SE_hat, n_draws)
-    ymis <- fx$ymis
-    mu <- fx$mu
-    SP <- array(SP_hat, c(K, K, n_draws))
-    SE <- array(SE_hat, c(K, K, n_draws))
+    if (identical(ctl$param_uncertainty, "none")) {
+      ymis <- fx$ymis
+      mu <- fx$mu
+      SP <- array(SP_hat, c(K, K, n_draws))
+      SE <- array(SE_hat, c(K, K, n_draws))
+    } else {
+      dimnames(SP_hat) <- dimnames(SE_hat) <- list(nm, nm)
+      improper <- list(ymis = fx$ymis, Sigma_P = SP_hat, Sigma_E = SE_hat)
+    }
   }
   lambda <- t(vapply(seq_len(dim(SP)[3L]), function(d) {
     diag(SP[, , d]) / (diag(SP[, , d]) + diag(SE[, , d]))
   }, numeric(K)))
   if (K == 1L) lambda <- matrix(lambda, ncol = 1L)
-  nm <- colnames(Y)
   dimnames(SP) <- dimnames(SE) <- list(nm, nm, NULL)
   colnames(lambda) <- colnames(mu) <- nm
   list(ymis = ymis, miss = prob$miss,
@@ -934,7 +946,7 @@
                       stats::setNames(lam_reml, nm),
                     lambda_start = stats::setNames(lambda0, nm)),
        sweeps = ctl$n_chains * (ctl$burnin + ctl$n_iter),
-       wall_s = wall, hyper = hyper)
+       wall_s = wall, hyper = hyper, improper = improper)
 }
 
 .mip_abind3 <- function(...) {
@@ -1014,15 +1026,36 @@
   }
   latent_cols <- vapply(trait_map, function(tm) tm$latent_cols[1L], integer(1))
   cell_trait <- match(miss[, 2L], latent_cols)
-  decoded <- decode_cells(fit$ymis, cell_trait)
+  in_row <- input_row_order[miss[, 1L]]
 
-  datasets <- lapply(idx, function(d) {
-    Xk <- X
-    Xk[miss] <- fit$ymis[, d]
-    dec <- .dcb_decode_latent(Xk, trait_map)
-    build_completed(traits, dec, species_col = NULL,
-                    input_row_order = input_row_order)$completed
-  })
+  # Latent y_mis draws (n_mis x draws) -> m completed datasets (original
+  # scale), per-cell 95% intervals from all draws, per-cell SD.
+  assemble <- function(ymis) {
+    decoded <- decode_cells(ymis, cell_trait)
+    datasets <- lapply(idx, function(d) {
+      Xk <- X
+      Xk[miss] <- ymis[, d]
+      dec <- .dcb_decode_latent(Xk, trait_map)
+      build_completed(traits, dec, species_col = NULL,
+                      input_row_order = input_row_order)$completed
+    })
+    q <- t(apply(decoded, 1L, stats::quantile, probs = c(0.025, 0.5, 0.975),
+                 names = FALSE))
+    if (nrow(miss) == 1L) q <- matrix(q, nrow = 1L)
+    cell_interval <- data.frame(
+      row = as.integer(in_row),
+      trait = names(types)[cell_trait],
+      lower = q[, 1L], upper = q[, 3L], median = q[, 2L],
+      stringsAsFactors = FALSE)
+    cell_interval <- cell_interval[!is.na(cell_interval$row), , drop = FALSE]
+    rownames(cell_interval) <- NULL
+    list(datasets = datasets, cell_interval = cell_interval,
+         sd_cell = apply(decoded, 1L, stats::sd))
+  }
+
+  proper <- assemble(fit$ymis)
+  datasets <- proper$datasets
+  cell_interval <- proper$cell_interval
   Xbar <- X
   Xbar[miss] <- rowMeans(fit$ymis)
   pooled <- build_completed(traits, .dcb_decode_latent(Xbar, trait_map),
@@ -1030,24 +1063,20 @@
                             input_row_order = input_row_order)
   imputed_mask <- pooled$imputed_mask
 
-  in_row <- input_row_order[miss[, 1L]]
-  q <- t(apply(decoded, 1L, stats::quantile, probs = c(0.025, 0.5, 0.975),
-               names = FALSE))
-  if (nrow(miss) == 1L) q <- matrix(q, nrow = 1L)
-  cell_interval <- data.frame(
-    row = as.integer(in_row),
-    trait = names(types)[cell_trait],
-    lower = q[, 1L], upper = q[, 3L], median = q[, 2L],
-    stringsAsFactors = FALSE)
-  cell_interval <- cell_interval[!is.na(cell_interval$row), , drop = FALSE]
-  rownames(cell_interval) <- NULL
-
   se <- matrix(0, nrow(imputed_mask), ncol(imputed_mask),
                dimnames = dimnames(imputed_mask))
-  sd_cell <- apply(decoded, 1L, stats::sd)
   ok <- !is.na(in_row)
   se[cbind(in_row[ok], match(names(types)[cell_trait[ok]], colnames(se)))] <-
-    sd_cell[ok]
+    proper$sd_cell[ok]
+
+  posterior_improper <- NULL
+  if (!is.null(fit$improper)) {
+    imp <- assemble(fit$improper$ymis)
+    posterior_improper <- list(datasets = imp$datasets,
+                               cell_interval = imp$cell_interval,
+                               Sigma_P = fit$improper$Sigma_P,
+                               Sigma_E = fit$improper$Sigma_E)
+  }
 
   diagnostics <- fit$diagnostics
   if (verbose || !isTRUE(attr(diagnostics, "converged"))) {
@@ -1061,7 +1090,7 @@
     }
   }
 
-  structure(
+  out <- structure(
     list(
       datasets        = datasets,
       m               = length(datasets),
@@ -1089,4 +1118,8 @@
     ),
     class = c("pigauto_posterior_mi", "pigauto_mi", "list")
   )
+  # param_uncertainty = "both" (validation only): plug-in draws from the same
+  # chain run, beside (never instead of) the proper results.
+  if (!is.null(posterior_improper)) out$posterior_improper <- posterior_improper
+  out
 }

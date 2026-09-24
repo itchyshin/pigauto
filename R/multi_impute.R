@@ -104,10 +104,13 @@
 #'     \item{`keep_draws`}{`1000L`. Minimum number of kept posterior
 #'       predictive draws across chains, used for the per-cell intervals.
 #'       Must be at least `m`.}
-#'     \item{`param_uncertainty`}{`"full"` (default) or `"none"`. `"none"`
-#'       is an improper plug-in mode for validation only: the covariance
-#'       matrices are fixed at their posterior means from a full run, and
-#'       only the missing cells (and the trait means) are drawn.}
+#'     \item{`param_uncertainty`}{`"full"` (default), `"none"` or `"both"`.
+#'       `"none"` is an improper plug-in mode for validation only: the
+#'       covariance matrices are fixed at their posterior means from a full
+#'       run, and only the missing cells (and the trait means) are drawn.
+#'       `"both"` is also for validation only: it runs the sampler once and
+#'       returns the proper results exactly as `"full"` does, plus the
+#'       plug-in draws from the same run in `mi$posterior_improper`.}
 #'     \item{`seed`}{Integer or `NULL`. Defaults to `seed`.}
 #'   }
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
@@ -157,6 +160,13 @@
 #'       the posterior predictive SD of each imputed cell, the class is
 #'       `c("pigauto_posterior_mi", "pigauto_mi", "list")` and
 #'       `mi_workflow` is `"pigauto_posterior_mi_v1"`.}
+#'     \item{`posterior_improper`}{Only with
+#'       `posterior_control$param_uncertainty = "both"` (validation only). A
+#'       list with `datasets` (`m` completed data.frames drawn with the
+#'       covariance matrices fixed at their posterior means, from the same
+#'       chain run as `datasets`), `cell_interval` (same columns as
+#'       `posterior$cell_interval`), and the fixed `Sigma_P` and `Sigma_E`.
+#'       Not for downstream inference: it ignores parameter uncertainty.}
 #'   }
 #'
 #' @details
@@ -695,8 +705,10 @@ print.pigauto_mi <- function(x, ...) {
               n_imp_cells, total_cells, pct))
   cat(sprintf("  MCMC     : %d chains x (%d burn-in + %d sweeps, thin %d)%s\n",
               ctl$n_chains, ctl$burnin, ctl$n_iter, ctl$thin,
-              if (identical(ctl$param_uncertainty, "none"))
-                "; covariances fixed (plug-in mode)" else ""))
+              switch(ctl$param_uncertainty,
+                     none = "; covariances fixed (plug-in mode)",
+                     both = "; plug-in draws also in mi$posterior_improper",
+                     "")))
   lam <- colMeans(post$params$lambda)
   cat(sprintf("  lambda   : %s (posterior means)\n",
               paste(sprintf("%s = %.2f", names(lam), lam), collapse = ", ")))

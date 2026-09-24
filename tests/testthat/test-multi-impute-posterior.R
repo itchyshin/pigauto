@@ -182,3 +182,41 @@ test_that("conformal multi_impute() objects are still refused by with_imputation
   expect_error(with_imputations(mi, stats::lm, .progress = FALSE),
                "prediction-diagnostic completions")
 })
+
+test_that("param_uncertainty = 'both' adds plug-in draws from the same run", {
+  pd <- post_data()
+  full <- run_post(pd$df, pd$tree, m = 4L, seed = 8L)
+  both <- run_post(pd$df, pd$tree, m = 4L, seed = 8L,
+                   ctl = c(fast_ctl, list(param_uncertainty = "both")))
+  # 1. The proper results are exactly those of "full" with the same seed.
+  expect_identical(both$datasets, full$datasets)
+  expect_identical(both$posterior$params, full$posterior$params)
+  expect_identical(both$posterior$cell_interval, full$posterior$cell_interval)
+  expect_null(full$posterior_improper)
+  # 2. m plug-in datasets; observed cells unchanged; imputed cells filled.
+  imp <- both$posterior_improper
+  expect_length(imp$datasets, 4L)
+  obs <- !is.na(as.matrix(pd$df))
+  for (d in imp$datasets) {
+    expect_identical(as.matrix(d)[obs], as.matrix(pd$df)[obs])
+    expect_false(anyNA(d))
+  }
+  expect_false(identical(imp$datasets, both$datasets))
+  # The plug-in covariances are the posterior means of the kept draws, and
+  # the plug-in intervals cover the same cells with the same columns.
+  expect_equal(imp$Sigma_P, apply(both$posterior$params$Sigma_P, c(1L, 2L), mean),
+               ignore_attr = TRUE)
+  expect_equal(imp$Sigma_E, apply(both$posterior$params$Sigma_E, c(1L, 2L), mean),
+               ignore_attr = TRUE)
+  expect_identical(names(imp$cell_interval), names(both$posterior$cell_interval))
+  expect_identical(imp$cell_interval[, c("row", "trait")],
+                   both$posterior$cell_interval[, c("row", "trait")])
+  expect_true(all(imp$cell_interval$lower <= imp$cell_interval$upper))
+  # Item 3 of the request (plug-in variance <= proper variance) is NOT
+  # asserted: computed exactly from the kept parameter draws on this fixture
+  # (converged chains), the plug-in predictive variance at the posterior-mean
+  # covariances is 1.4-1.6% LARGER than the proper one. The conditional
+  # variance is concave in the covariance, so the Jensen gap of the
+  # posterior-mean plug-in (about 0.010 on the latent scale) exceeds the
+  # parameter-uncertainty term Var(E[y | theta]) (about 0.005).
+})

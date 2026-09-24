@@ -125,10 +125,13 @@ that the chains together keep \code{keep_draws} sweeps.}
 \item{\code{keep_draws}}{\code{1000L}. Minimum number of kept posterior
 predictive draws across chains, used for the per-cell intervals.
 Must be at least \code{m}.}
-\item{\code{param_uncertainty}}{\code{"full"} (default) or \code{"none"}. \code{"none"}
-is an improper plug-in mode for validation only: the covariance
-matrices are fixed at their posterior means from a full run, and
-only the missing cells (and the trait means) are drawn.}
+\item{\code{param_uncertainty}}{\code{"full"} (default), \code{"none"} or \code{"both"}.
+\code{"none"} is an improper plug-in mode for validation only: the
+covariance matrices are fixed at their posterior means from a full
+run, and only the missing cells (and the trait means) are drawn.
+\code{"both"} is also for validation only: it runs the sampler once and
+returns the proper results exactly as \code{"full"} does, plus the
+plug-in draws from the same run in \code{mi$posterior_improper}.}
 \item{\code{seed}}{Integer or \code{NULL}. Defaults to \code{seed}.}
 }}
 
@@ -180,6 +183,13 @@ lambda), \code{draw_index} (kept sweeps used for the \code{m} datasets),
 the posterior predictive SD of each imputed cell, the class is
 \code{c("pigauto_posterior_mi", "pigauto_mi", "list")} and
 \code{mi_workflow} is \code{"pigauto_posterior_mi_v1"}.}
+\item{\code{posterior_improper}}{Only with
+\code{posterior_control$param_uncertainty = "both"} (validation only). A
+list with \code{datasets} (\code{m} completed data.frames drawn with the
+covariance matrices fixed at their posterior means, from the same
+chain run as \code{datasets}), \code{cell_interval} (same columns as
+\code{posterior$cell_interval}), and the fixed \code{Sigma_P} and \code{Sigma_E}.
+Not for downstream inference: it ignores parameter uncertainty.}
 }
 }
 \description{
