@@ -14,3 +14,8 @@ HOST SPLIT (2026-09-24 19:5x nibi): BACE n300 seeds 1-102 on nibi (22634023, 204
   seed 103-200 elements), seeds 103-200 on fir (61366948, 294 tasks, BLOCK 2). BACE n100 all seeds on nibi (22634022).
   freq: n100/300 seeds 1-50 on nibi root pigauto_rubin_freq (22633907/909), the rest on fir (61365818/19/20).
   A5 (n1000 BACE) will split seeds 2-100 across nibi/fir/rorqual/narval by disjoint ranges.
+HOST SPLIT v2 (20:0x nibi; nibi BACE arrays still all PENDING after 2 h, fir/rorqual start in minutes):
+  BACE n100: seeds 1-100 nibi (22634022, 120 tasks), 101-200 rorqual (21772063, 120 tasks).
+  BACE n300: seeds 1-51 nibi (22634023, 102 tasks), 52-102 rorqual (21772064, 102 tasks), 103-200 fir (61366948, 294 tasks).
+  rorqual validation 21771783 G-S4a PASS. narval validation FAILED: illegal instruction in ape (fir-built library not portable
+  to narval CPUs) -> narval not used (rebuild would be needed). Totoro still over this user's 150 cap.
