@@ -103,7 +103,14 @@ per-cell prediction interval for the missing value itself. v1 never measured a d
 multiple-imputation-plus-Rubin workflow (`multi_impute()` -> `with_imputations()` -> `pool_mi()`) was not
 evaluated for any arm.
 
-**v2 must:** (1) build BACE's interval from enough draws that the construction ceiling is at 0.95 (many more
+Measured on 200,000 simulated sets of 20 exchangeable normal draws: the percentile interval covers a new
+draw 0.872 of the time; the Rubin-style interval from the same 20 draws, mean plus or minus
+`qt(0.975, M - 1) * sqrt((1 + 1/M) * B)` (within-imputation variance is zero for the missing value itself),
+covers **0.950**. So the ceiling is a construction choice, fixed without more draws. It is distinct from
+parameter uncertainty: BACE's draws already integrate over sigma and lambda through the MCMC posterior; the
+frequentist stack's plug-in SE does not, which is the likelier reason its coverage sits at 0.80 to 0.91.
+
+**v2 must:** (1) build BACE's interval the Rubin way above (or from enough draws that the ceiling is 0.95) (many more
 final imputations, or quantiles over the retained posterior predictive samples if BACE exposes them), and
 confirm what one imputed dataset is; (2) add a downstream estimand (for example the slope of one continuous
 trait on another, fitted with a phylogenetic GLS on every completed dataset) and score its bias and 95%
