@@ -5,15 +5,15 @@
 #SBATCH --time=SET_ME           # REQUIRED; sbatch rejects this token on purpose. See "Sizing" below.
 #SBATCH --mem=4G                # finite starting value; refine with `seff <jobid>` after a one-task pre-run
 #SBATCH --cpus-per-task=1
-#SBATCH --array=0-47
+#SBATCH --array=0-79
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=itchyshin@gmail.com
 #SBATCH --output=logs/mi_posterior-%A_%a.out
 
 # pigauto: posterior-MI validation sweep (arc/mi-posterior), fir CPU array.
-# 24 regimes (script/mi_gls/regimes.R) x 200 reps = 4800 cells, split into
-# 48 tasks of 100 reps each. Task t (0-indexed) handles global cell indices
-# [t*100, t*100+99] over a row-major (regime_id 1..24) x (rep 1..200) grid,
+# 40 regimes (script/mi_gls/regimes.R; 25-40 are in-model twins of 1-16) x 200 reps = 8000 cells, split into
+# 80 tasks of 100 reps each. Task t (0-indexed) handles global cell indices
+# [t*100, t*100+99] over a row-major (regime_id 1..40) x (rep 1..200) grid,
 # so every task holds 100 reps of ONE regime.
 #
 # Sizing (review cluster#3, cluster#4, estimands#4). Size --time and --mem
@@ -30,7 +30,7 @@
 #     Rscript script/mi_gls/01_cell_v2.R 24 1 "$SLURM_TMPDIR/sz"
 # Then --time = that wall time x 100 reps x 1.5, and --mem = 1.5 x its
 # "Maximum resident set size". Or submit --array=0 first, read `seff`, and
-# only then submit 1-47. Edit the --time line in the copy you submit
+# only then submit 1-79 (regimes 25-40 alone are tasks 48-79). Edit the --time line in the copy you submit
 # (bootstrap step 4): sbatch reads #SBATCH lines before the command line,
 # so an invalid SET_ME here fails the submission even with --time given.
 #

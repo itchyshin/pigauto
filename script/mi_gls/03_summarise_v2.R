@@ -88,6 +88,7 @@ if (length(files) == 0L) stop("no .rds files found in ", indir, call. = FALSE)
 
 cells <- list(); diags <- list(); cell_dets <- list(); prov <- list(); conf_err <- list()
 n_ignored <- 0L
+n_nondefault <- 0L
 for (f in files) {
   r <- readRDS(f)
   if (!(r$regime_id %in% ex$regime_ids) || r$rep < 1L || r$rep > n_reps) {
@@ -101,8 +102,20 @@ for (f in files) {
   if (!("n_ok" %in% names(d))) d$n_ok <- NA_integer_
   d$regime_id <- r$regime_id; d$rep <- r$rep
   cells[[length(cells) + 1L]] <- d
+  # Campaign settings guard (round-2 review): a merged campaign combines runs
+  # launched separately, so every rep file must use the campaign settings
+  # (no smoke overrides; m = 20, keep_draws = 1000, 4 chains) unless
+  # MI_ALLOW_NONDEFAULT=1 (local cheap checks).
+  bad_set <- !is.null(r$n_iter_override) || !is.null(r$burnin_override) ||
+    !identical(as.integer(r$m), 20L) || !identical(as.integer(r$keep_draws), 1000L) ||
+    !identical(as.integer(r$n_chains), 4L)
+  if (bad_set) n_nondefault <- n_nondefault + 1L
   if (!is.null(r$diagnostics) && nrow(r$diagnostics)) {
-    dg <- r$diagnostics; dg$regime_id <- r$regime_id; dg$rep <- r$rep
+    dg <- r$diagnostics
+    # Rep files from before ea119dc (the 69670d4 cells reused per design.md 5e)
+    # lack the chain-extension columns; pad so old and new files bind.
+    for (nm in c("n_extensions", "sweeps_per_chain")) if (!nm %in% names(dg)) dg[[nm]] <- NA_integer_
+    dg$regime_id <- r$regime_id; dg$rep <- r$rep
     diags[[length(diags) + 1L]] <- dg
   }
   if (!is.null(r$cell_detail) && nrow(r$cell_detail)) {
@@ -118,6 +131,11 @@ for (f in files) {
   }
 }
 if (n_ignored > 0L) cat(sprintf("IGNORED %d rep file(s) outside the expected grid\n", n_ignored))
+cat(sprintf("SETTINGS %d of %d rep file(s) use non-campaign settings (overrides, or m/keep_draws/n_chains != 20/1000/4)\n",
+            n_nondefault, length(files) - n_ignored))
+if (n_nondefault > 0L && !identical(Sys.getenv("MI_ALLOW_NONDEFAULT"), "1")) {
+  stop("rep files with non-campaign settings found; set MI_ALLOW_NONDEFAULT=1 only for local cheap checks", call. = FALSE)
+}
 if (!length(cells)) stop("no rep files inside the expected grid (", ex$label, ") in ", indir, call. = FALSE)
 
 all_cells <- do.call(rbind, cells)

@@ -406,6 +406,8 @@ out <- list(
   conformal_error = conf$err, conformal_wall_s = conf$wall,
   code_sha = code_sha, code_sha_source = code_sha_source,
   pigauto_version = pigauto_version, r_version = R.version.string,
+  pkg_versions = vapply(c("Matrix", "ape", "nlme", "phylolm"), function(p)
+    tryCatch(as.character(utils::packageVersion(p)), error = function(e) NA_character_), ""),
   host = unname(Sys.info()[["nodename"]]),
   results = res_df,
   cell_detail = cell_detail_df,

@@ -94,6 +94,10 @@ else
   echo "$SHA" > "$OUT_DIR/CODE_SHA"
 fi
 
+# Campaign runs use the package defaults: refuse any smoke override (round-2 review).
+for v in MI_POST_NITER MI_POST_BURNIN MI_POST_M MI_POST_KEEP MI_POST_CHAINS; do
+  [[ -z "${!v:-}" ]] || die "$v is set ('${!v}'); campaign runs must use the defaults (unset it)"
+done
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
 export MI_POST_SHA="$SHA"
 
