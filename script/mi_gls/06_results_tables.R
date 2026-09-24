@@ -32,6 +32,7 @@ reg_label <- function(id) {
 lines <- c("## Downstream slope (posterior_full vs complete data, same analysis model)", "",
            "Paired bias = mean over reps of (MI pooled slope - complete-data slope in the same rep); MCSE in brackets.",
            "SE ratio = mean pooled SE / empirical SD of the pooled slope; 'rel' = MI ratio / complete ratio (gated under phylolm, [0.90, 1.15]).",
+           "rel_mcse: approximate Monte Carlo SE of 'rel', treating the two empirical SDs as independent (each has relative SE about 1/sqrt(2(R-1))); reported only, not part of any gate.",
            "Coverage truth: 0.7 in regimes 1-16; mean complete-data slope in 17-24.", "")
 pf <- s[s$method == "posterior_full", ]
 pn <- s[s$method == "posterior_none", ]
@@ -43,6 +44,7 @@ rows <- lapply(seq_len(nrow(pf)), function(i) {
     paired_bias = sprintf("%s (%s)", f3(x$paired_bias), f3(x$paired_bias_mcse)),
     se_ratio = f2(x$se_ratio), complete_se_ratio = f2(x$complete_se_ratio),
     rel = f2(x$se_ratio / x$complete_se_ratio),
+    rel_mcse = f2((x$se_ratio / x$complete_se_ratio) * sqrt(1 / (2 * (x$R - 1)) + 1 / (2 * (x$n_expected - 1)))),
     coverage = f3(x$coverage), complete_coverage = f3(x$complete_coverage),
     plugin_se_ratio = if (nrow(n)) f2(n$se_ratio) else "",
     plugin_coverage = if (nrow(n)) f3(n$coverage) else "",
