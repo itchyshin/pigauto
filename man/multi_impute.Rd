@@ -315,7 +315,8 @@ analysing a log-transformed trait on its raw scale. The GNN is not used,
 and \code{gnn}, \code{epochs}, \code{missing_frac}, \code{lambda_mode} and other fitting
 arguments are ignored (a message lists any that were supplied).
 Non-continuous traits, multiple observations per species (or any
-\code{species_col}), \code{covariates}, and input with no missing cells are errors.
+\code{species_col}), \code{covariates}, and input with no missing cells in the rows
+of \code{traits} (tree tips absent from \code{traits} do not count) are errors.
 }
 
 \section{Safety floor (v0.9.1.9002+)}{

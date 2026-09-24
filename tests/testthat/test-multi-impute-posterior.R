@@ -239,6 +239,14 @@ test_that("a fully observed input stops before any MCMC is run", {
   full$wing[is.na(full$wing)] <- 10
   local_mocked_bindings(.mip_fit = function(...) stop("the MCMC ran"))
   expect_error(run_post(full, pd$tree), "no missing cells to impute")
+  # Tree tips with no row in `traits` are padded with all-NA rows
+  # internally; they must not count as cells to impute.
+  sub <- full[setdiff(rownames(full), pd$tree$tip.label[1:6]), , drop = FALSE]
+  expect_lt(nrow(sub), ape::Ntip(pd$tree))
+  expect_error(run_post(sub, pd$tree), "no missing cells to impute")
+  # A missing cell among the rows of `traits` still reaches the MCMC.
+  sub$wing[1] <- NA
+  expect_error(run_post(sub, pd$tree), "the MCMC ran")
 })
 
 test_that("the m datasets are spaced across chains; intervals use every kept draw", {

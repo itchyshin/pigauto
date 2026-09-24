@@ -1038,7 +1038,12 @@
     tree_use <- ape::keep.tip(tree, rownames(X))
   }
   X <- X[tree_use$tip.label, , drop = FALSE]
-  if (!anyNA(X)) {
+  input_row_order <- data$input_row_order
+  input_row_order <- input_row_order[match(rownames(X), data$species_names)]
+  # Tree tips with no row in `traits` are padded with all-NA rows by
+  # preprocess_traits(); only rows that come from `traits` count here.
+  in_traits <- !is.na(input_row_order)
+  if (!anyNA(X[in_traits, , drop = FALSE])) {
     stop("draws_method = \"posterior\": no missing cells to impute; every ",
          "trait cell in `traits` is observed.", call. = FALSE)
   }
@@ -1047,8 +1052,6 @@
   miss <- fit$miss
   n_draws <- ncol(fit$ymis)
   idx <- unique(round(seq(1, n_draws, length.out = m)))
-  input_row_order <- data$input_row_order
-  input_row_order <- input_row_order[match(rownames(X), data$species_names)]
 
   decode_cells <- function(z, cols) {
     out <- z

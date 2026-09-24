@@ -299,7 +299,8 @@
 #' and `gnn`, `epochs`, `missing_frac`, `lambda_mode` and other fitting
 #' arguments are ignored (a message lists any that were supplied).
 #' Non-continuous traits, multiple observations per species (or any
-#' `species_col`), `covariates`, and input with no missing cells are errors.
+#' `species_col`), `covariates`, and input with no missing cells in the rows
+#' of `traits` (tree tips absent from `traits` do not count) are errors.
 #'
 #' @section Safety floor (v0.9.1.9002+):
 #'   When \code{fit_pigauto()} was called with \code{safety_floor = TRUE}

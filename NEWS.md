@@ -39,7 +39,8 @@ the effects integrated out keep it mixing near lambda = 0 and lambda = 1.
   `with_imputations()` and `pool_mi()` refuse.
 - Not supported (clear errors, raised before any MCMC is run):
   non-continuous traits, multiple observations per species (or any
-  `species_col`), `covariates`, and input with no missing cells. The GNN is
+  `species_col`), `covariates`, and input with no missing cells in the rows
+  of `traits` (tree tips absent from `traits` do not count). The GNN is
   not used, and fitting arguments such as `gnn` and `epochs` are ignored
   with a message.
 
