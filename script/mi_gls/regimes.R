@@ -8,7 +8,22 @@
 # multi_impute(draws_method = "posterior") (docs/dev-log/mi-posterior/
 # design.md) when BOTH traits are missing and have DIFFERENT phylogenetic
 # signal, which the shared-lambda tree-transform DGP of regimes 1-16 cannot
-# express.
+# express. Regimes 25-40 are the in-model twins of regimes 1-16 (CP2
+# follow-up, Shinichi 2026-09-24; design.md section 5e): regime 24 + k is
+# the twin of regime k, with the same lambda, n, mechanism, missing and
+# rho, the same seed, tree, random draws and masks, and each tip's row
+# divided by sqrt(diag(V_sim)) (script/mi_gls/dgp_v2.R).
+#
+# Columns added for the CP2 follow-up (regimes 1-24 are unchanged in every
+# older column):
+#   dgp     "tree_raw" (1-16: raw covariance of a non-ultrametric tree,
+#           outside the sampler's model), "kronecker" (17-24) or "twin"
+#           (25-40: in-model, vec(Y) ~ N(0, Sig %x% (lambda R + (1 - lambda) I))
+#           with R = cov2cor(vcv(tree))).
+#   twin_of the source regime of a twin, NA otherwise.
+#   gated   dgp != "tree_raw". The G6/G7 gates apply to the gated
+#           (in-model) regimes 17-40; regimes 1-16 are a reported
+#           misspecification stress test.
 #
 # rho (trait correlation between x and y) is fixed at 0.7 throughout
 # regimes 1-16 -- it is not part of that grid.
@@ -135,6 +150,31 @@ extra <- extra[, names(regimes)]
 regimes <- rbind(regimes, extra)
 rownames(regimes) <- NULL
 
+## ---- regimes 25-40: in-model twins of regimes 1-16 (CP2, 2026-09-24) ----
+##
+## design.md section 5e, decision 1. Regimes 1-16 simulate from the raw
+## covariance V_sim of a non-ultrametric tree (Pagel-transformed at
+## lambda = 0.5), which is outside the model the sampler fits. Twin
+## 24 + k keeps regime k's parameters and its simulated cell (dgp_v2.R
+## draws the SOURCE cell with the source seed, then divides each tip's row
+## by sqrt(diag(V_sim)[i])), so vec(Y) ~ N(0, Sig %x% R_lambda) with
+## R_lambda = lambda R + (1 - lambda) I = cov2cor(V_sim) and
+## R = cov2cor(vcv(tree)): the sampler's own model, with
+## Sigma_P = lambda Sig and Sigma_E = (1 - lambda) Sig. The covariance is
+## proportional, so E[y | x] = rho x for any analysis model and
+## true_beta_pop = rho = 0.7 is exact. run_oracle is FALSE: the v1 oracle
+## (01_cell.R) is derived for the raw DGP and v1 has no twin DGP.
+regimes$dgp <- ifelse(regimes$regime_id <= 16L, "tree_raw", "kronecker")
+regimes$twin_of <- NA_integer_
+twins <- regimes[regimes$dgp == "tree_raw", ]
+twins$twin_of <- twins$regime_id
+twins$regime_id <- 24L + twins$regime_id
+twins$dgp <- "twin"
+twins$run_oracle <- FALSE
+regimes <- rbind(regimes, twins)
+rownames(regimes) <- NULL
+regimes$gated <- regimes$dgp != "tree_raw"
+
 ## ---- expected campaign grid (arc/mi-posterior, 2026-09-24) ---------------
 ##
 ## One source for which rows the v2 harness must produce, read by
@@ -197,6 +237,11 @@ mi_gls_v2_expected <- function() {
                        length(ids), n_reps))
 }
 
+# TRUE for a gated (in-model) regime, 17-40; FALSE for the stress-test
+# regimes 1-16 (CP2 follow-up, Shinichi 2026-09-24). The gates decide
+# which regimes can fail from here, never from a CSV column.
+mi_gls_v2_is_gated <- function(regime_id) regimes$gated[match(regime_id, regimes$regime_id)]
+
 if (sys.nframe() == 0L) {
   print(regimes)
 
@@ -233,4 +278,16 @@ if (sys.nframe() == 0L) {
                chk$corr_resid_target, chk$corr_resid_emp,
                chk$var_x_emp, chk$var_y_emp, r$true_beta_pop))
   }
+
+  cat("\n---- regimes 25-40: each twin carries its source regime's parameters ----\n")
+  tw  <- regimes[regimes$dgp == "twin", ]
+  src <- regimes[match(tw$twin_of, regimes$regime_id), ]
+  same <- vapply(c("lambda", "n", "mechanism", "missing", "rho", "true_beta_pop"),
+                 function(cl) identical(tw[[cl]], src[[cl]]), logical(1))
+  print(same)
+  stopifnot(all(same), nrow(tw) == 16L, identical(tw$regime_id, tw$twin_of + 24L),
+            all(src$dgp == "tree_raw"), identical(regimes$gated, regimes$dgp != "tree_raw"))
+  cat(sprintf("gated regimes: %s\nstress-test regimes (not gated): %s\n",
+              paste(regimes$regime_id[regimes$gated], collapse = " "),
+              paste(regimes$regime_id[!regimes$gated], collapse = " ")))
 }

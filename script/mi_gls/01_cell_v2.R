@@ -3,8 +3,9 @@
 #
 # One (regime, rep) job for the posterior-MI validation sweep
 # (arc/mi-posterior). Extends script/mi_gls/01_cell.R to
-# multi_impute(draws_method = "posterior") across ALL 24 regimes (see
-# script/mi_gls/regimes.R). Usage:
+# multi_impute(draws_method = "posterior") across ALL 40 regimes (see
+# script/mi_gls/regimes.R; 25-40 are the in-model twins of 1-16, simulated
+# in script/mi_gls/dgp_v2.R with the source regime's seed). Usage:
 #   OPENBLAS_NUM_THREADS=1 Rscript script/mi_gls/01_cell_v2.R <regime_id> <rep> <outdir>
 #
 # Methods:
@@ -34,8 +35,9 @@
 # Pooled via pigauto::pool_mi(); "complete" (1 dataset) reports the raw
 # model SE/df. Each row keeps estimate, se, df and n_ok (downstream fits
 # pooled). `covered_pop` is coverage of regimes$true_beta_pop and is
-# descriptive in regimes 17-24; 03_summarise_v2.R recomputes the gated
-# coverage from estimate/se/df against the right truth (D1).
+# descriptive in regimes 17-24 (exact, 0.7, in 1-16 and 25-40);
+# 03_summarise_v2.R recomputes the gated coverage from estimate/se/df
+# against the right truth (D1).
 #
 # Per-cell: coverage of the masked truth (and interval width) by
 # mi$posterior$cell_interval's 95% predictive interval, split by missing
@@ -147,7 +149,7 @@ fit_downstream <- function(dat) {
 }
 
 # Coverage of regimes$true_beta_pop (column covered_pop). Exact truth in
-# regimes 1-16, descriptive in 17-24 (see header and D1).
+# regimes 1-16 and 25-40, descriptive in 17-24 (see header and D1).
 covers <- function(est, se, dfr, truth_val = true_beta, conf = 0.95) {
   if (!is.finite(est) || !is.finite(se) || !is.finite(dfr) || dfr <= 0) return(NA)
   tcrit <- stats::qt(1 - (1 - conf) / 2, dfr)
