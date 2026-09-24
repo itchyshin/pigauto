@@ -16,3 +16,9 @@ OVERNIGHT 2026-09-24 -> 05:00 (Shinichi away; "work autonomously and keep workin
  4. Campaign plan + launch scripts (NOT launched): arms, reps (BACE 200 per Meng N12?), budget from measured rates (+25% at n=300).
  5. Meng N10: prp per-cell scoring on the logit scale (tests).
  6. Commit, push, handover note for 05:00. MUST NOT: launch the campaign, message Dan, edit R/ or BACE/, write to the brain vault.
+
+STATE 2026-09-24 17:30 nibi (overnight items 1-5 DONE): pre-run 240/240, results page https://claude.ai/artifact/WMHxQ8idafD5sLAVEJtg9Q
+(copy docs/dev-log/arc/2026-09-25-rubin-prerun-results.html). Freq timing 36/36 (freqA 31/69/268 s per rep at n 100/300/1000).
+Fast exact PGLS in the runner; prp logit scoring; campaign launcher script/rubin_campaign_nibi.sh (dry run, NOT launched).
+WAITING ON SHINICHI: (1) drop BACE convergence rule, runs 5 nitt 50k; (2) arms incl. bace_resid as control; (3) option B
+~7,400 core-h after a 6-fit n = 1000 BACE timing check; (4) when to tell Dan. Nothing launched beyond the pre-run.
