@@ -69,7 +69,7 @@ BACE settings are not fixed yet: step 2 below chooses them.
 3. Campaign on the approved settings. Budget re-derived from step 2; BACE at n = 1000 dominates it.
 4. Aggregate, report for Dan: a results section in the methods note, board update.
 
-## Open questions for Shinichi (drafted)
+## Decisions (Shinichi, 2026-09-24: "yes yes yes" to Q1, Q2, Q3 below)
 
 - Q1: *"Add a 'BACE + residual draw' arm built in our runner from BACE's returned model objects, so the paper
   can separate BACE-as-shipped from BACE-with-proper-draws? yes / no"* (Tell Dan either way: this is a
@@ -78,7 +78,25 @@ BACE settings are not fixed yet: step 2 below chooses them.
   yes / no"*
 - Q3: *"Downstream estimands: PGLS slope of c2 on c1 plus their correlation, on the core cells? yes / no"*
 
-## Compute and constraints
+## Compute plan: Totoro + DRAC (Shinichi 2026-09-24: "plan simulations using DRAC + totoro")
 
-Totoro is shared: read per-user RSS and `free -g` before every launch; the lambda-default lane's benchmark
-was using about 140 cores on 2026-09-23. nibi for anything queued. No DRAC login-node compute; no Duo.
+Split by what each machine is good at, measured in v1:
+
+| work | where | why | v1 measurement it rests on |
+|---|---|---|---|
+| step 1 smoke (n = 60) | Mac | minutes | |
+| frequentist arms, all cells (A needs M = 20 refits per replicate) | **Totoro**, `script/campaign_sim_totoro.sh` pattern, <= 150 cores (D-143; 250 was a temporary allowance) | no queue; v1's freq_lambda wave did 11,200 replicates in 12 min, so A at 20 refits is roughly 4 h for the core | freq_lambda 2.0 / 3.9 / 10.6 s per replicate at n = 100 / 300 / 1000 |
+| step 2 BACE settings pre-run (n = 100, 300) | **Totoro** | fits are 20 to 50 min, RAM modest, results within hours | BACE 1,161 / 3,050 s at n = 100 / 300 |
+| BACE campaign at n = 100 and 300 | **nibi** job arrays (`script/campaign_sim_nibi_array.sh` pattern), 1 core, 32 GB per task | many independent long single-threaded fits; nibi drained v1's BACE fastest | median 1,161 / 3,050 s at v1 settings; scale by the chosen `nitt` x (`runs` + `n_final`) |
+| BACE campaign at n = 1000 | **nibi** arrays, 1 core, 32 to 48 GB, `--time` 12:00:00 | 3 h per fit at v1 settings, 5 to 6 h for clade-masked; fir as backup only | 11,019 s median at n = 1000; clade cells timed out at 5 h |
+
+Rules carried from v1 (see `docs/dev-log/arc/2026-09-23-simulation-v1-summary.md`, operational lessons):
+read `free -g` and per-user RSS on Totoro before every launch (another user held 930 GB on 2026-09-22; the
+lambda-default lane's benchmark used about 140 cores on 2026-09-23); nibi caps a user at 1,000 submitted array
+tasks, so split arrays by n; resume-skip is per host, so seed a host's results directory from the pool before
+any recovery array; per-host pool subdirectories and (filename, arm set) dedupe; never aggregate while an rsync
+runs; a segfault or a timeout leaves no rds, so the runner cannot floor it (record by hand and label it). No
+DRAC login-node compute; attach through the `~/.ssh/cm-*` ControlMaster sockets, never trigger Duo.
+
+The full-campaign budget is re-derived from step 2 and approved by Shinichi before anything beyond the
+pre-run is submitted (D-139).
