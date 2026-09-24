@@ -69,7 +69,38 @@ fit_bace_mi <- function(cell, M = 20L, nitt, burnin, thin, runs) {
   wall_s <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
 
   d <- bace_diagnostics(outb)   # same convergence/ESS extraction v1/G9b use (campaign_gnn_off_lib.R)
-  list(outb = outb, wall_s = wall_s, converged = d$converged, ess_med = d$ess_med, diag = d)
+  list(outb = outb, wall_s = wall_s, converged = d$converged, ess_med = d$ess_med, diag = d,
+       fixformula = fixformula, tree_b = tree_b, mcmc = c(nitt = nitt, burnin = burnin, thin = thin))
+}
+
+#' Chained BACE (the arm Meng's review B2 proposed; Shinichi approved it 2026-09-24). BACE's own final
+#' step starts all n_final runs from the same converged dataset, so predictors later in the formula order
+#' are identical across the M imputations. Here final run m starts from final dataset m - 1 instead
+#' (run 1 from BACE's converged dataset), using BACE's own bace_final_imp() with n_final = 1 and the same
+#' MCMC settings; BACE's code is called, never edited. It reuses the shipped fit's convergence phase
+#' (fb$outb$initial_results), so the shipped and chained arms are paired on one fit. Cost: M extra
+#' sweeps, run sequentially.
+#'
+#' @param fb a fit_bace_mi() result
+#' @param df_miss the cell's missing-data data.frame
+#' @param M number of chained datasets
+#' @return list(datasets = M data.frames aligned like mi_bace_shipped(), models = per-run model lists,
+#'   wall_s = chain wall time)
+mi_bace_chain <- function(fb, df_miss, M = 20L) {
+  obj <- fb$outb$initial_results
+  k <- length(obj$data)
+  raw <- vector("list", M); models <- vector("list", M)
+  t0 <- Sys.time()
+  for (m in seq_len(M)) {
+    r <- BACE:::bace_final_imp(obj, fixformula = fb$fixformula, ran_phylo_form = "~1|Species",
+                               phylo = fb$tree_b, nitt = fb$mcmc[["nitt"]], thin = fb$mcmc[["thin"]],
+                               burnin = fb$mcmc[["burnin"]], n_final = 1L, species = FALSE,
+                               verbose = FALSE, n_cores = 1L, ovr_categorical = TRUE)
+    raw[[m]] <- r$all_datasets[[1]]; models[[m]] <- r$all_models[[1]]
+    obj$data[[k]] <- raw[[m]]   # the next run starts from this draw
+  }
+  wall_s <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+  list(datasets = mi_bace_shipped(list(imputed_datasets = raw), df_miss), models = models, wall_s = wall_s)
 }
 
 #' BACE's own n_final imputed datasets, unchanged, aligned to df_miss's row order/column

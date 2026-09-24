@@ -47,7 +47,7 @@ for runs in 5 10 15; do
   for nitt in 50000 100000; do
     burnin=$(( nitt / 5 )); thin=$(( (nitt - burnin) / 1600 ))
     for lambda in 0.3 0.7; do for rho in 0 0.5; do for n in 100 300; do for seed in 1 2 3 4 5; do
-      echo "--n $n --seed $seed --lambda $lambda --rho $rho --M 20 --arms bace,bace_resid" \
+      echo "--n $n --seed $seed --lambda $lambda --rho $rho --M 20 --arms bace,bace_chain,bace_resid" \
            "--bace_nitt $nitt --bace_burnin $burnin --bace_thin $thin --bace_runs $runs" \
            "--out $OUT/runs${runs}_nitt${nitt}" >> "$JOBS"
     done; done; done; done

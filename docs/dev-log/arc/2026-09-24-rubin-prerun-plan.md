@@ -1,4 +1,14 @@
-# BACE settings pre-run: ready to launch, waiting for Shinichi (D-139)
+# BACE settings pre-run: approved and launched with the chained arm
+
+> **Update (2026-09-24, after approval).** Shinichi approved the pre-run and a chained BACE arm, sized in the
+> same run ("yes go ahead" to: yes to the pre-run; yes, build bace_chain and size it in the same pre-run).
+> `bace_chain` runs BACE's own final step M times, each run starting from the previous draw, on the same fit
+> as `bace` (gate G-S3b: c1's design matrix is identical across the shipped runs and varies across the
+> chained ones). The chain adds M = 20 sweeps per fit, so cost becomes `nitt x (runs + 40)`: 22.5M units per
+> cell-seed over the grid, **421 core-hours**, longest fit about 3.7 h (n = 300, runs 15, nitt 100k), and
+> wall-clock about **4 to 4.5 h at 120 processes**. Mac smoke: chain 72 s against a 90 s shipped fit, a
+> 1.79x total, as predicted. The tables below give the shipped-arm cost alone; selection rule (c) now also
+> reads `bace_chain`'s coverage, since the chain is the candidate headline BACE arm.
 
 Lane `arc/rubin-freq-bace`, step 2 of `docs/dev-log/arc/2026-09-24-rubin-freq-bace-plan.md`. Nothing here
 has been launched. The run takes about 2.5 to 3 hours on Totoro, so it needs approval first.

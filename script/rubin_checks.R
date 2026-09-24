@@ -16,7 +16,7 @@ if (identical(gate, "G-S4a")) {
   f <- list.files(dir, "^rubin_.*\\.rds$", full.names = TRUE)
   stopifnot("no rubin rds in --dir" = length(f) >= 1L)
   x <- readRDS(f[1])
-  want <- c("freqA", "freqB", "bace", "bace_resid")
+  want <- c("freqA", "freqB", "bace", "bace_chain", "bace_resid")
   stopifnot("errors recorded" = length(x$errors) == 0L,
             "missing arm in cells" = all(want %in% x$cells$arm),
             "missing arm in estimands" = all(want %in% x$estimands$arm))
