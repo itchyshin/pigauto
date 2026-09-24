@@ -22,15 +22,20 @@
 #      coverage truth is rho = 0.7 in regimes 1-16 and the complete-data
 #      pseudo-truth in 17-24 (D1, computed in 03).
 #   3. SE ratio in [0.90, 1.15] under the lambda (phylolm) analysis. Env
-#      MI_SE_RULE selects the reading (D2): "absolute" (default, the
-#      approved plan) gates the posterior_full ratio itself; "relative"
-#      gates posterior_full ratio / complete-data ratio. Both numbers are
-#      always printed, plus an ANALYSIS_MODEL_SE_RATIO line whenever the
-#      complete-data ratio is itself outside the band.
-#   4. proper > improper SE ratio (D4): mean posterior_full se_ratio >
-#      mean posterior_none se_ratio, separately within regimes 9-16 and
-#      within 17-24, per downstream model. Per-regime pairs are printed
-#      (descriptive). A missing or non-finite pair fails.
+#      MI_SE_RULE selects the reading (D2): "relative" (DEFAULT since CP1,
+#      Shinichi 2026-09-24) gates posterior_full ratio / complete-data
+#      ratio; "absolute" (the original plan) gates the posterior_full ratio
+#      itself. Both numbers are always printed, plus an
+#      ANALYSIS_MODEL_SE_RATIO line whenever the complete-data ratio is
+#      itself outside the band.
+#   4. proper vs improper SE ratio (D4): REPORTED, NOT GATED since CP1
+#      (Shinichi 2026-09-24). With Sigma fixed at the posterior mean the
+#      plug-in intervals come out about 1.5% wider at these sample sizes
+#      (Jensen; S1 measurement), so "proper > improper" need not hold when
+#      everything is right. Mean posterior_full vs posterior_none se_ratio
+#      is printed within regimes 9-16 and 17-24 per downstream model, plus
+#      per-regime pairs. A missing posterior_none row still fails through
+#      the completeness check.
 #   5. fit failures <= 2% (missing rep files count as failures, D3)
 #   6. (design review B3) non-converged posterior_full fits <= 2% of the
 #      expected reps (a missing rep file counts as non-converged); a
@@ -43,7 +48,7 @@
 #
 # Env: MI_N_REPS (default 200), MI_REGIMES (default all; a restricted run
 # can pass its rules but never prints the G6 token), MI_SE_RULE
-# (absolute | relative, default absolute).
+# (relative | absolute, default relative).
 #
 # Usage:
 #   Rscript script/mi_gls/04_acceptance.R <summary.csv>
@@ -70,7 +75,7 @@ required_rows <- function(regime_ids) {
 
 # Returns the failure messages; attr "report" holds the descriptive lines.
 run_gate <- function(df, regime_ids = regimes$regime_id,
-                     n_reps = mi_gls_v2_planned_reps, se_rule = "absolute") {
+                     n_reps = mi_gls_v2_planned_reps, se_rule = "relative") {
   if (!(se_rule %in% c("absolute", "relative"))) {
     stop("MI_SE_RULE must be 'absolute' or 'relative'; got '", se_rule, "'", call. = FALSE)
   }
@@ -193,15 +198,11 @@ run_gate <- function(df, regime_ids = regimes$regime_id,
       none <- pn$se_ratio[match(paste(ids, ds), paste(pn$regime_id, pn$downstream))]
       for (j in seq_along(ids)) report <- c(report, sprintf(
         "SE_RATIO_PAIR regime=%d downstream=%s full=%s none=%s", ids[j], ds, fmt4(full[j]), fmt4(none[j])))
-      badp <- !is.finite(full) | !is.finite(none)
-      if (any(badp)) {
-        fails <- c(fails, sprintf("se_ratio ordering: regime %d %s pair missing or non-finite",
-                                  ids[badp], ds))
-        next
-      }
-      if (!(mean(full) > mean(none))) fails <- c(fails, sprintf(
-        "se_ratio ordering: regimes %s %s mean posterior_full=%.4f not > posterior_none=%.4f",
-        bn, ds, mean(full), mean(none)))
+      okp <- is.finite(full) & is.finite(none)
+      report <- c(report, sprintf(
+        "SE_RATIO_ORDER (reported, not gated) regimes %s %s: mean posterior_full=%s posterior_none=%s proper_wider=%s (pairs %d of %d finite)",
+        bn, ds, fmt4(mean(full[okp])), fmt4(mean(none[okp])),
+        if (any(okp)) mean(full[okp]) > mean(none[okp]) else NA, sum(okp), length(ids)))
     }
   }
 
@@ -247,7 +248,7 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
   d <- make_pass(); d$se_ratio[at(d, 21, "posterior_full", "phylolm")] <- NA
   fx$nonfinite <- d
   d <- make_pass(); d$se_ratio[at(d, 17:24, "posterior_none", "gls")] <- 1.2
-  fx$rule4_block_17_24 <- d                               # hidden if 9-16 and 17-24 were pooled
+  rule4_reported <- d                                     # improper wider: reported, must NOT fail
   d <- make_pass(); pfr <- which(d$method == "posterior_full")
   d$coverage[pfr] <- rep(c(0.99, 0.905), length.out = length(pfr))
   fx$shortfall_cancel <- d                                # signed mean ~0.0025, positive part 0.0225
@@ -266,7 +267,7 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
                       missing_regime = "missing row: regime 5 ",
                       short_reps = "non-converged|fit_failure",
                       wrong_n_expected = "n_expected=100",
-                      nonfinite = "non-finite", rule4_block_17_24 = "regimes 17-24 gls",
+                      nonfinite = "non-finite",
                       shortfall_cancel = "mean shortfall", missing_pair = "regime 12 posterior_none gls",
                       nonconverged_5of200 = "regime 22: non-converged fraction 0.0250")
 
@@ -288,6 +289,11 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
                 nm, length(r), shQuote(expect_pattern[[nm]]), if (hit) "yes" else "NO"))
     if (!length(r) || !hit) { ok <- FALSE; cat(paste(" -", r), sep = "\n") }
   }
+  r4 <- run_gate(rule4_reported)
+  r4_line <- any(grepl("^SE_RATIO_ORDER .*regimes 17-24 gls.*proper_wider=FALSE", attr(r4, "report")))
+  cat(sprintf("rule-4 fixture (improper wider in 17-24): %d failure(s) (want 0), reported %s\n",
+              length(r4), if (r4_line) "yes" else "NO"))
+  if (length(r4) || !r4_line) ok <- FALSE
   am_abs <- run_gate(analysis_model, se_rule = "absolute")
   am_rel <- run_gate(analysis_model, se_rule = "relative")
   am_line <- any(grepl("^ANALYSIS_MODEL_SE_RATIO regime=21 complete=0.8000", attr(am_rel, "report")))
@@ -306,7 +312,7 @@ if (length(args) < 1L) stop("expected: <summary.csv> or --selftest", call. = FAL
 summary_csv <- args[[1L]]
 df <- utils::read.csv(summary_csv, stringsAsFactors = FALSE)
 ex <- mi_gls_v2_expected()
-se_rule <- Sys.getenv("MI_SE_RULE", "absolute")
+se_rule <- Sys.getenv("MI_SE_RULE", "relative")
 cat(sprintf("EXPECTED_GRID %s se_rule=%s\n", ex$label, se_rule))
 if ("code_sha" %in% names(df)) cat(sprintf("PROVENANCE code_sha=%s\n", paste(unique(df$code_sha), collapse = "|")))
 

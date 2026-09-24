@@ -299,6 +299,29 @@ G7 are computed, not the thresholds of the approved plan.
   which are copied back to the worktree where the ledger CHECK lines read them.
   `11_fir_array.sbatch` is the DRAC fallback, fixed per the cluster findings.
 
+### 5d. CP1 decisions (Shinichi, 2026-09-24, after the smoke run)
+
+1. The full campaign was launched on Totoro from commit 69670d4:
+   - simulation: 24 regimes x 200 reps on 130 cores;
+   - real data: 10 cells on 10 cores;
+   - G3 calibration rerun: 200 fits on 10 cores.
+2. **G3 becomes a calibration check** (`script/mi_gls/gate_calibration.R`). The per-fit 0.1 tolerance
+   is about 1.7 posterior SD at lambda = 0.5, so honest fits fail it. 150 fits at commit 7a0f470
+   showed the posterior is calibrated (`evidence/README.md`). Rules:
+   - 50 or more seeds per setting, all from one code SHA;
+   - converged in at least 98% of fits per setting;
+   - 95% interval coverage of lambda_k and of rho_P in [0.88, 1.00];
+   - |mean bias| <= 0.03;
+   - REML agreement in at least 90% of fits.
+3. **The SE ratio is judged relative to complete data** under the same analysis model:
+   (MI SE ratio) / (complete SE ratio) in [0.90, 1.15]. The complete-data ratio itself can sit near
+   0.80 where the analysis model is misspecified (regimes 21 and 23 under phylolm, per the harness
+   review).
+4. **Proper vs improper SE ratio is reported, not gated.** Fixing Sigma at its posterior mean gives
+   plug-in intervals about 1.5% wider at these sample sizes, a Jensen effect (S1 measurement). So
+   "proper > improper" need not hold when everything is right.
+5. **The real-data 5% slope criterion is reported, not gated** (decision R3, unchanged).
+
 ## 6. Out of scope here
 
 Discrete, mixed and multi-observation data; GNN blending; covariates in the imputation model; changing
