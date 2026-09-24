@@ -408,6 +408,8 @@ test_that("a resumed chain is the same chain as one run longer from the start", 
   # its saved sampler and RNG state (n_iter = 31) against one run with
   # n_iter = 62 and the same seed and thin. 31 is not a multiple of thin = 3,
   # so the kept-sweep count has to carry across the segment boundary.
+  # burnin = 100 so the step sizes adapt (at sweeps 50 and 100) and the
+  # resumed segment has to restore the adapted values, not the start values.
   d <- mip_sim(n = 25L, seed = 3L)
   Y <- d$Y
   Y[1:5, 1] <- NA; Y[4:9, 2] <- NA
@@ -415,13 +417,16 @@ test_that("a resumed chain is the same chain as one run longer from the start", 
   hyper <- list(nu_W = 3, S_W = diag(2), V_alpha = 1000, nu_E = 3,
                 S_E = diag(0.01 * prob$obs_var, 2))
   start <- list(Sigma_P = d$SP, Sigma_E = d$SE)
-  long <- .mip_run_chain(prob, start, hyper, burnin = 20L, n_iter = 62L,
+  long <- .mip_run_chain(prob, start, hyper, burnin = 100L, n_iter = 62L,
                          thin = 3L, seed = 7L)
-  seg1 <- .mip_run_chain(prob, start, hyper, burnin = 20L, n_iter = 31L,
+  seg1 <- .mip_run_chain(prob, start, hyper, burnin = 100L, n_iter = 31L,
                          thin = 3L, seed = 7L)
+  # Adaptation really happened, so restoring the step sizes is exercised.
+  expect_false(all(seg1$state$step == 0.5))
+  expect_false(all(seg1$state$step_off == 0.2))
   set.seed(99)
   stats::runif(5L)          # the caller's RNG stream moves on in between
-  seg2 <- .mip_run_chain(prob, NULL, hyper, burnin = 20L, n_iter = 31L,
+  seg2 <- .mip_run_chain(prob, NULL, hyper, burnin = 100L, n_iter = 31L,
                          thin = 3L, resume = seg1$state)
   expect_identical(dim(seg1$ymis), c(nrow(prob$miss), 10L))   # sweeps 3..30
   expect_identical(dim(seg2$ymis), c(nrow(prob$miss), 10L))   # sweeps 33..60
@@ -444,7 +449,7 @@ test_that("an extended fit equals one run longer with the thinning scaled", {
   d <- mip_sim(n = 25L, seed = 3L)
   Y <- d$Y
   Y[1:5, 1] <- NA; Y[4:9, 2] <- NA
-  base <- list(n_chains = 2L, burnin = 20L, keep_draws = 20L, seed = 4L,
+  base <- list(n_chains = 2L, burnin = 100L, keep_draws = 20L, seed = 4L,
                param_uncertainty = "both")
   ext <- .mip_fit(Y, d$tree, .mip_resolve_control(
     c(base, list(n_iter = 30L, thin = 3L, max_extend = 1L)), m = 4L))
@@ -460,7 +465,7 @@ test_that("an extended fit equals one run longer with the thinning scaled", {
   expect_identical(ext$params, one$params)
   expect_identical(ext$improper, one$improper)
   expect_identical(ext$sweeps, one$sweeps)
-  expect_identical(ext$sweeps, 2L * (20L + 60L))
+  expect_identical(ext$sweeps, 2L * (100L + 60L))
   dg <- ext$diagnostics
   attr(dg, "n_extensions") <- 0L
   expect_identical(dg, one$diagnostics)
