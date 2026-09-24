@@ -44,7 +44,8 @@ test_that("posterior output has the frozen section-4 shape", {
   expect_identical(nrow(ci), sum(is.na(pd$df)))
   expect_true(all(ci$lower <= ci$median & ci$median <= ci$upper))
   expect_true(all(is.na(pd$df[cbind(ci$row, match(ci$trait, names(pd$df)))])))
-  expect_true(all(ci$lower[ci$trait == "mass"] > 0))   # log-scale decode
+  # Back-transformed to the original scale (not left on the log scale).
+  expect_true(all(ci$median[ci$trait == "mass"] > min(pd$df$mass, na.rm = TRUE) / 5))
   dg <- mi$posterior$diagnostics
   expect_identical(names(dg), c("parameter", "rhat", "ess_bulk"))
   expect_true(is.logical(attr(dg, "converged")))
@@ -96,6 +97,9 @@ test_that("non-continuous traits, multi-obs data and covariates are clear errors
   df <- pd$df
   df$diet <- factor(sample(c("a", "b"), nrow(df), replace = TRUE))
   expect_error(run_post(df, pd$tree), "continuous traits only.*diet \\(binary\\)")
+  # The message does not send users to a path that with_imputations() refuses.
+  expect_error(run_post(df, pd$tree),
+               "no analysis-aware MI path.*`with_imputations\\(\\)` and `pool_mi\\(\\)` refuse")
   df2 <- pd$df
   df2$clutch <- sample(1:5, nrow(df2), replace = TRUE)
   expect_error(run_post(df2, pd$tree), "clutch \\(count\\)")
@@ -108,6 +112,12 @@ test_that("non-continuous traits, multi-obs data and covariates are clear errors
   rownames(multi) <- NULL
   expect_error(run_post(multi, pd$tree, species_col = "species"),
                "one observation per species")
+  # species_col with one row per species: no false claim of duplicates.
+  single <- pd$df
+  single$species <- rownames(single)
+  rownames(single) <- NULL
+  expect_error(run_post(single, pd$tree, species_col = "species"),
+               "does not support `species_col`.*one row here")
   cov <- data.frame(temp = stats::rnorm(nrow(pd$df)))
   expect_error(run_post(pd$df, pd$tree, covariates = cov),
                "does not support `covariates`")
@@ -143,6 +153,15 @@ test_that("with_imputations() and pool_mi() run on a posterior object", {
   class(fake) <- c("pigauto_mi", "list")
   expect_error(with_imputations(fake, stats::lm, .progress = FALSE),
                "Legacy `pigauto_mi`")
+  # pool_mi() on the MI object itself says what to do instead.
+  expect_error(pool_mi(mi),
+               "takes the list of fits returned by `with_imputations\\(\\)`")
+  # Diagnostic completions are refused with a pointer to the posterior path.
+  diag_obj <- structure(list(datasets = mi$datasets,
+                             mi_workflow = "pigauto_diagnostic_mi"),
+                        class = c("pigauto_mi", "list"))
+  expect_error(with_imputations(diag_obj, stats::lm, .progress = FALSE),
+               "prediction-diagnostic.*multi_impute\\(draws_method = \"posterior\"\\)")
 })
 
 test_that("print() reports the method and convergence", {
@@ -173,6 +192,99 @@ test_that("improper mode returns fixed parameters through the API", {
   expect_identical(mi$posterior$control$param_uncertainty, "none")
 })
 
+test_that("plug-in draws (param_uncertainty = 'none') cannot be pooled", {
+  pd <- post_data()
+  mi <- run_post(pd$df, pd$tree,
+                 ctl = c(fast_ctl, list(param_uncertainty = "none")))
+  expect_s3_class(mi, "pigauto_posterior_mi")
+  expect_identical(mi$mi_workflow, "pigauto_posterior_plugin_diagnostic")
+  f <- function(d) stats::lm(wing ~ log(mass), data = d)
+  expect_error(with_imputations(mi, f, .progress = FALSE),
+               "plug-in draws.*param_uncertainty = \"none\"")
+  expect_error(pool_mi(mi), "plug-in draws")
+  # Fits stamped with the plug-in marker are refused, with or without the
+  # pigauto_mi_fits class.
+  stamped <- lapply(mi$datasets, f)
+  attr(stamped, "mi_workflow") <- "pigauto_posterior_plugin_diagnostic"
+  expect_error(pool_mi(stamped), "plug-in draws")
+  class(stamped) <- c("pigauto_mi_fits", "list")
+  expect_error(pool_mi(stamped), "plug-in draws")
+  out <- utils::capture.output(print(mi))
+  expect_true(any(grepl("Downstream inference: +unsupported for these draws",
+                        out)))
+  expect_false(any(grepl("with_imputations\\(mi, f\\) then pool_mi", out)))
+})
+
+test_that("a single continuous trait (K = 1) works through multi_impute()", {
+  pd <- post_data()
+  df1 <- pd$df[, "mass", drop = FALSE]
+  for (pu in c("full", "none")) {
+    mi <- run_post(df1, pd$tree,
+                   ctl = c(fast_ctl, list(param_uncertainty = pu)))
+    pr <- mi$posterior$params
+    expect_equal(dim(pr$lambda), c(40L, 1L))
+    expect_identical(colnames(pr$lambda), "mass")
+    expect_equal(as.numeric(pr$lambda),
+                 pr$Sigma_P[1, 1, ] / (pr$Sigma_P[1, 1, ] + pr$Sigma_E[1, 1, ]))
+    expect_true(all(pr$lambda > 0 & pr$lambda < 1))
+    expect_identical(nrow(mi$posterior$cell_interval), sum(is.na(df1$mass)))
+    for (d in mi$datasets) expect_false(anyNA(d))
+  }
+})
+
+test_that("a fully observed input stops before any MCMC is run", {
+  pd <- post_data()
+  full <- pd$df
+  full$mass[is.na(full$mass)] <- 50
+  full$wing[is.na(full$wing)] <- 10
+  local_mocked_bindings(.mip_fit = function(...) stop("the MCMC ran"))
+  expect_error(run_post(full, pd$tree), "no missing cells to impute")
+})
+
+test_that("the m datasets are spaced across chains; intervals use every kept draw", {
+  pd <- post_data()
+  mi <- run_post(pd$df, pd$tree, m = 4L)
+  ctl <- mi$posterior$control
+  n_kept <- ctl$n_chains * (ctl$n_iter %/% ctl$thin)       # 2 chains x 20
+  expect_identical(n_kept, 40L)
+  idx <- mi$posterior$draw_index
+  expect_equal(idx, round(seq(1, n_kept, length.out = 4L)))
+  per_chain <- n_kept / ctl$n_chains
+  expect_true(any(idx <= per_chain) && any(idx > per_chain))  # both chains
+  # Rebuild the same run (.mip_fit reseeds from ctl$seed) and decode every
+  # kept draw to the original scale.
+  X <- mi$data$X_scaled
+  rownames(X) <- mi$data$species_names
+  X <- X[pd$tree$tip.label, , drop = FALSE]
+  f <- .mip_fit(X, pd$tree, ctl)
+  expect_equal(ncol(f$ymis), n_kept)
+  dec <- f$ymis
+  for (tm in mi$data$trait_map) {
+    sel <- f$miss[, 2L] == tm$latent_cols[1L]
+    v <- dec[sel, , drop = FALSE] * tm$sd + tm$mean
+    if (isTRUE(tm$log_transform)) v <- exp(v)
+    dec[sel, ] <- v
+  }
+  q <- t(apply(dec, 1L, stats::quantile, probs = c(0.025, 0.5, 0.975),
+               names = FALSE))
+  ci <- mi$posterior$cell_interval
+  expect_identical(nrow(ci), nrow(f$miss))
+  # The intervals are the quantiles of all kept draws...
+  expect_equal(ci$lower, q[, 1L], tolerance = 1e-10)
+  expect_equal(ci$median, q[, 2L], tolerance = 1e-10)
+  expect_equal(ci$upper, q[, 3L], tolerance = 1e-10)
+  # ...the m datasets are the kept draws at draw_index...
+  j <- match(ci$trait, names(pd$df))
+  stack <- vapply(mi$datasets, function(d) as.matrix(d)[cbind(ci$row, j)],
+                  numeric(nrow(ci)))
+  expect_equal(stack, dec[, idx], tolerance = 1e-10, ignore_attr = TRUE)
+  # ...and the intervals are not the spread of those m draws.
+  expect_false(isTRUE(all.equal(
+    ci$upper - ci$lower, apply(stack, 1L, function(v) diff(range(v))))))
+  expect_false(isTRUE(all.equal(
+    ci$lower, apply(stack, 1L, stats::quantile, 0.025, names = FALSE))))
+})
+
 test_that("conformal multi_impute() objects are still refused by with_imputations()", {
   skip_if_no_libtorch()
   pd <- post_data()
@@ -180,7 +292,7 @@ test_that("conformal multi_impute() objects are still refused by with_imputation
     multi_impute(pd$df, pd$tree, m = 2L, draws_method = "conformal",
                  epochs = 5L, verbose = FALSE, seed = 1L))
   expect_error(with_imputations(mi, stats::lm, .progress = FALSE),
-               "prediction-diagnostic completions")
+               "prediction-diagnostic completions.*draws_method = \"posterior\"")
 })
 
 test_that("param_uncertainty = 'both' adds plug-in draws from the same run", {
@@ -193,6 +305,9 @@ test_that("param_uncertainty = 'both' adds plug-in draws from the same run", {
   expect_identical(both$posterior$params, full$posterior$params)
   expect_identical(both$posterior$cell_interval, full$posterior$cell_interval)
   expect_null(full$posterior_improper)
+  # The proper draws keep the poolable marker in "full" and "both" modes.
+  expect_identical(full$mi_workflow, "pigauto_posterior_mi_v1")
+  expect_identical(both$mi_workflow, "pigauto_posterior_mi_v1")
   # 2. m plug-in datasets; observed cells unchanged; imputed cells filled.
   imp <- both$posterior_improper
   expect_length(imp$datasets, 4L)

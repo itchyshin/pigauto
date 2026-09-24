@@ -42,6 +42,29 @@ test_that("Qc = D Q D has tip-block marginal R on ultrametric and non-ultrametri
   expect_gt(stats::sd(diag(ape::vcv(tr))), 0.01)
 })
 
+# ---- O(n) tip depths: .mip_build_Qc never forms the dense vcv ---------------
+test_that("tip depths from node.depth.edgelength() match diag(vcv()) and Qc avoids vcv", {
+  set.seed(15)
+  for (tree in list(ape::rcoal(30), ape::rtree(30))) {
+    n <- length(tree$tip.label)
+    h_dense <- build_henderson_S_inv(tree)
+    h_sparse <- build_henderson_S_inv(
+      tree, tip_depths = ape::node.depth.edgelength(tree)[seq_len(n)])
+    expect_lt(max(abs(h_sparse$tip_sqrt_d - h_dense$tip_sqrt_d)), 1e-12)
+    expect_identical(names(h_sparse$tip_sqrt_d), tree$tip.label)
+    expect_identical(h_sparse$Q, h_dense$Q)
+  }
+  expect_gt(stats::sd(h_dense$tip_sqrt_d), 0.01)   # the rtree is non-ultrametric
+  # The posterior path gets the same values without calling ape::vcv().
+  ref <- .mip_build_Qc(tree)
+  local_mocked_bindings(vcv = function(...) stop("dense vcv formed"),
+                        .package = "ape")
+  expect_error(ape::vcv(tree), "dense vcv formed")
+  qc <- .mip_build_Qc(tree)
+  expect_lt(max(abs(qc$tip_sqrt_d - h_dense$tip_sqrt_d)), 1e-12)
+  expect_identical(qc$Qc, ref$Qc)
+})
+
 # ---- Item 2: xi' Qc xi against the dense reference ---------------------------
 test_that("the Sigma_W sufficient statistic xi' Qc xi matches the dense form", {
   set.seed(2)
@@ -102,7 +125,7 @@ test_that("Sigma_P = lambda Sigma, Sigma_E = (1 - lambda) Sigma gives Sigma %x% 
 })
 
 # ---- Item 6: only tip rows of a enter residuals and completions -------------
-test_that("internal-node rows of a never enter the completed data", {
+test_that("the completion keeps observed cells and the tips-first mapping is right", {
   d <- mip_sim(n = 15L, seed = 6L)
   Y <- d$Y
   Y[2:5, 1] <- NA; Y[6:9, 2] <- NA; Y[10, ] <- NA
@@ -112,18 +135,80 @@ test_that("internal-node rows of a never enter the completed data", {
   tpl <- .mip_refactor(tpl, d$SP, lb)
   s <- .mip_amu(prob, tpl, .mip_linear(prob, tpl, lb), 0L)
   expect_equal(dim(s$a), c(prob$N, 2L))
-  a_tip <- s$a[seq_len(prob$n), , drop = FALSE]
-  a_bad <- s$a
-  a_bad[(prob$n + 1L):prob$N, ] <- 1e6       # corrupt internal rows only
-  y1 <- .mip_fill_ymis(prob, a_tip, s$mu, d$SE, draw = FALSE)
-  y2 <- .mip_fill_ymis(prob, a_bad[seq_len(prob$n), , drop = FALSE], s$mu,
+  y1 <- .mip_fill_ymis(prob, s$a[seq_len(prob$n), , drop = FALSE], s$mu,
                        d$SE, draw = FALSE)
-  expect_identical(y1, y2)
   expect_identical(y1[!is.na(Y)], Y[!is.na(Y)])
   # The tip block of the mean is what the dense conditional predicts, so the
   # tips-first index mapping is right.
   expect_equal(.mip_cond_mean(prob, d$SP, d$SE, mu = d$mu),
                dense_cond(d$C, Y, d$mu)$mean, tolerance = 1e-8)
+})
+
+test_that("inside the sampler, only tip rows of a reach the completion, alpha and Sigma_E steps", {
+  # One Gibbs sweep of .mip_run_chain (no burn-in, no Metropolis moves), with
+  # probes on the functions that receive rows of a. `internal` overwrites the
+  # internal-node rows of the step-1 draw of a before the sweep uses it.
+  d <- mip_sim(n = 15L, seed = 6L)
+  Y <- d$Y
+  Y[2:5, 1] <- NA; Y[6:9, 2] <- NA; Y[10, ] <- NA
+  prob <- .mip_problem(Y, d$tree)
+  n <- prob$n; N <- prob$N
+  hyper <- list(nu_W = 3, S_W = diag(2), V_alpha = 1000, nu_E = 3,
+                S_E = diag(0.01 * prob$obs_var, 2))
+  start <- list(Sigma_P = d$SP, Sigma_E = d$SE)
+  real_amu <- .mip_amu; real_fill <- .mip_fill_ymis
+  real_alpha <- .mip_draw_alpha; real_iw <- .mip_riwish
+  one_sweep <- function(internal = NULL) {
+    cap <- new.env()
+    cap$iw <- list()
+    local_mocked_bindings(
+      .mip_amu = function(prob, tpl, b, n_draws = 1L) {
+        s <- real_amu(prob, tpl, b, n_draws)
+        if (!is.null(internal)) s$a[(n + 1L):N, ] <- internal
+        cap$a <- s$a
+        s
+      },
+      .mip_fill_ymis = function(prob, a_tip, mu, Sigma_E, draw = TRUE) {
+        cap$fill_a <- a_tip
+        real_fill(prob, a_tip, mu, Sigma_E, draw)
+      },
+      .mip_draw_alpha = function(xi_tip, Rres, Sigma_E, V_alpha) {
+        al <- real_alpha(xi_tip, Rres, Sigma_E, V_alpha)
+        cap$xi_tip <- xi_tip; cap$Rres <- Rres; cap$alpha <- al
+        al
+      },
+      .mip_riwish = function(nu, S) {
+        cap$iw[[length(cap$iw) + 1L]] <- S
+        real_iw(nu, S)
+      }
+    )
+    ch <- .mip_run_chain(prob, start, hyper, burnin = 0L, n_iter = 1L,
+                         thin = 1L, seed = 1L, mh = FALSE, gibbs = TRUE)
+    list(ch = ch, cap = cap)
+  }
+  clean <- one_sweep()
+  dirty <- one_sweep(matrix(seq(-50, 50, length.out = 2L * (N - n)), N - n, 2L))
+  # The corrupted rows did reach the sampler: step 4 (Sigma_W | xi) uses
+  # every node, so its scale matrix and Sigma_P change.
+  expect_false(isTRUE(all.equal(clean$cap$iw[[1L]], dirty$cap$iw[[1L]])))
+  expect_false(isTRUE(all.equal(clean$ch$Sigma_P, dirty$ch$Sigma_P)))
+  # The completion (step 1b), alpha (step 3) and Sigma_E (step 5) do not.
+  expect_identical(dirty$ch$ymis, clean$ch$ymis)
+  expect_identical(dirty$ch$mu, clean$ch$mu)
+  expect_identical(dirty$cap$alpha, clean$cap$alpha)
+  expect_identical(dirty$ch$Sigma_E, clean$ch$Sigma_E)
+  # Exact row checks, which also catch a permutation of the tip rows.
+  for (r in list(clean, dirty)) {
+    a_tip <- r$cap$a[seq_len(n), , drop = FALSE]
+    expect_identical(r$cap$fill_a, a_tip)          # step 1b
+    expect_identical(r$cap$xi_tip, a_tip)          # step 3 (alpha = 1 at start)
+    Yc <- prob$Y
+    Yc[prob$miss] <- r$ch$ymis[, 1L]
+    expect_equal(r$cap$Rres, sweep(Yc, 2L, r$ch$mu[1L, ]), ignore_attr = TRUE)
+    e <- r$cap$Rres - sweep(a_tip, 2L, r$cap$alpha, "*")   # step 5 residual
+    expect_equal(r$cap$iw[[2L]], hyper$S_E + crossprod(e), tolerance = 1e-12,
+                 ignore_attr = TRUE)
+  }
 })
 
 # ---- Exactness at fixed parameters (G2 in miniature) ------------------------
@@ -190,6 +275,14 @@ test_that("bulk ESS and split R-hat behave on known chains", {
   expect_lt(ess_ar, 2 * 20000 * 0.1 / 1.9)
   shifted <- iid + rep(c(0, 0, 0, 3), each = 1000)
   expect_gt(.mip_rhat(shifted), 1.1)
+  # Same location, one chain three times wider: only the folded (tail)
+  # R-hat detects it (Vehtari et al. 2021), so this fails if .mip_rhat()
+  # computed only the bulk version.
+  wide <- iid
+  wide[, 4] <- wide[, 4] * 3
+  expect_lt(.mip_rhat_basic(.mip_rank_normalise(.mip_split_chains(wide))),
+            1.01)
+  expect_gt(.mip_rhat(wide), 1.05)
   d <- .mip_diagnostics(list(matrix(stats::rnorm(1000 * 10), 1000),
                              matrix(stats::rnorm(1000 * 10), 1000)), 2L)
   expect_identical(names(d), c("parameter", "rhat", "ess_bulk"))
@@ -211,6 +304,64 @@ test_that("a short full run returns finite, positive-definite parameter draws", 
   mins <- apply(f$params$Sigma_P, 3L, function(S) min(eigen(S)$values))
   expect_true(all(mins > 0))
   expect_true(all(f$params$lambda > 0 & f$params$lambda < 1))
+})
+
+# ---- Kernel agreement: Metropolis-only vs Gibbs-only (design.md 2.5) ---------
+test_that("the Metropolis-only and Gibbs-only kernels target the same posterior", {
+  skip_on_cran()
+  # Two valid kernels for the same target, run through .mip_run_chain's test
+  # hooks: (a) the collapsed Metropolis moves plus step 1 (mh = TRUE,
+  # gibbs = FALSE); (b) the parameter-expanded Gibbs steps 1 to 5 (mh =
+  # FALSE, gibbs = TRUE). A wrong Jacobian, prior term, degrees of freedom or
+  # node precision in either kernel moves its stationary distribution away
+  # from the other's. Fixture chosen so that both kernels mix (posterior
+  # lambda near 0.5). About 25 s.
+  d <- mip_sim(n = 80L, seed = 13L, ultrametric = TRUE,
+               SP = matrix(c(0.5, 0.2, 0.2, 0.5), 2),
+               SE = matrix(c(0.5, 0.15, 0.15, 0.5), 2))
+  Y <- d$Y
+  Y[1:8, 1] <- NA; Y[5:14, 2] <- NA
+  prob <- .mip_problem(Y, d$tree)
+  hyper <- list(nu_W = 3, S_W = diag(2), V_alpha = 1000, nu_E = 3,
+                S_E = diag(0.01 * prob$obs_var, 2))
+  set.seed(4)
+  starts <- .mip_starts(prob, rep(0.5, 2), 4L)
+  derive <- function(tr) {
+    colnames(tr) <- .mip_param_names(2L)
+    cbind(lambda1 = tr[, "lambda[1]"], lambda2 = tr[, "lambda[2]"],
+          logSP11 = log(tr[, "Sigma_P[1,1]"]),
+          logSP22 = log(tr[, "Sigma_P[2,2]"]),
+          logSE11 = log(tr[, "Sigma_E[1,1]"]),
+          logSE22 = log(tr[, "Sigma_E[2,2]"]),
+          rhoP = tr[, "Sigma_P[1,2]"] /
+            sqrt(tr[, "Sigma_P[1,1]"] * tr[, "Sigma_P[2,2]"]),
+          rhoE = tr[, "Sigma_E[1,2]"] /
+            sqrt(tr[, "Sigma_E[1,1]"] * tr[, "Sigma_E[2,2]"]))
+  }
+  kernel <- function(mh, gibbs, n_iter, seed0) {
+    lapply(seq_len(4L), function(c) {
+      derive(.mip_run_chain(prob, starts[[c]], hyper, burnin = 200L,
+                            n_iter = n_iter, thin = n_iter, seed = seed0 + c,
+                            mh = mh, gibbs = gibbs)$trace)
+    })
+  }
+  # Posterior mean and its MCSE = sd / sqrt(bulk ESS) per quantity.
+  summarise <- function(chains) {
+    t(vapply(seq_len(ncol(chains[[1L]])), function(j) {
+      s <- vapply(chains, function(x) x[, j], numeric(nrow(chains[[1L]])))
+      c(mean = mean(s), mcse = stats::sd(as.vector(s)) / sqrt(.mip_ess_bulk(s)))
+    }, numeric(2L)))
+  }
+  mh_only <- kernel(TRUE, FALSE, 1000L, 100L)
+  gibbs_only <- kernel(FALSE, TRUE, 4000L, 200L)
+  a <- summarise(mh_only)
+  b <- summarise(gibbs_only)
+  z <- (a[, "mean"] - b[, "mean"]) / sqrt(a[, "mcse"]^2 + b[, "mcse"]^2)
+  names(z) <- colnames(mh_only[[1L]])
+  expect_true(all(is.finite(z)))
+  expect(max(abs(z)) < 3.5,
+         paste0("Metropolis-only and Gibbs-only kernels disagree: |z| = ",
+                paste(sprintf("%s %.2f", names(z), abs(z)), collapse = ", ")))
 })
 
 # ---- Item 11: improper mode holds the parameters fixed -----------------------
