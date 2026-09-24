@@ -293,6 +293,12 @@ intended.
 
 ### Interval coverage and interval score
 
+> **Correction (2026-09-24).** BACE's interval here is the 2.5 and 97.5 percentile over its 20 final imputed
+> datasets. With 20 draws that construction covers a new exchangeable draw only 0.872 of the time even under
+> a correct model, so BACE's coverage below cannot be compared with the other arms' and is not evidence that
+> BACE's intervals are too narrow. The comparison is withdrawn pending v2, which builds the interval from
+> enough draws. The frequentist and pigauto coverage figures are unaffected.
+
 | n | lambda | BACE | freq (BM) | freq_lambda |
 |---|---|---|---|---|
 | 100 | 0.3 | 0.803 | 0.799 | 0.881 |
