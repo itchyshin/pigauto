@@ -9,6 +9,17 @@
 > wall-clock about **4 to 4.5 h at 120 processes**. Mac smoke: chain 72 s against a 90 s shipped fit, a
 > 1.79x total, as predicted. The tables below give the shipped-arm cost alone; selection rule (c) now also
 > reads `bace_chain`'s coverage, since the chain is the candidate headline BACE arm.
+>
+> **Launched on nibi, not Totoro (2026-09-24, 13:17).** At launch this user already held about 200 Totoro
+> cores in other lanes (the MI-posterior campaign and an 82-core fit), over D-143's 150, so the pre-run went
+> to nibi, which the lane's compute plan already names for BACE and where v1's timing rates were measured.
+> nibi's BACE is labelled 0.1.0 (Mac: 0.0.0.9000), but `bace_final_imp`, `.predict_bace` and `bace_imp` are
+> byte-identical (deparse digests). A validation job (22614229) passed G-S4a on a compute node in 3 min 50 s
+> (BACE fit 105 s, chain 83 s). Arrays, one BACE fit per task, 1 core, 16 GB, `--time` about 1.75x each
+> group's slowest predicted fit: 22614567 (n 100, nitt 50k, 1:15), 22614569 (n 100, 100k, 2:30), 22614570
+> (n 300, 50k, 3:15), 22614571 (n 300, 100k, 6:30). Driver: `script/rubin_prerun_nibi.sh`. Results:
+> `~/projects/def-snakagaw/snakagaw/pigauto_rubin/prerun/runs<r>_nitt<nitt>/` on nibi. Wall-clock now also
+> depends on queue waits.
 
 Lane `arc/rubin-freq-bace`, step 2 of `docs/dev-log/arc/2026-09-24-rubin-freq-bace-plan.md`. Nothing here
 has been launched. The run takes about 2.5 to 3 hours on Totoro, so it needs approval first.
