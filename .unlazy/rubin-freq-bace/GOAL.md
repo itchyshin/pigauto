@@ -7,3 +7,12 @@ D-143), so the pre-run runs on nibi: arrays 22614567 22614569 22614570 22614571 
 Results on nibi: ~/projects/def-snakagaw/snakagaw/pigauto_rubin/prerun/. Next: read the first finished rds early; stop and re-report
 if the first fits run >30% over their row (D-139); when done, aggregate per setting (convergence, ESS, failures, bace vs bace_chain
 coverage) and apply the selection rule. Campaign still needs Shinichi's approval of settings. Never edit R/ or BACE/.
+
+OVERNIGHT 2026-09-24 -> 05:00 (Shinichi away; "work autonomously and keep working to finish what you need to do"):
+ 1. Pre-run completes -> aggregate (script/rubin_prerun_summary.R on nibi) -> docs/dev-log/arc/2026-09-25-rubin-prerun-results.md
+    with the full table + settings recommendation + convergence-check recommendation.
+ 2. Read the installed BACE convergence check; document what it tests (why it fails 70-90% with ESS 750-1600).
+ 3. Freq-arm timing pre-run on nibi: 18 core cells x 2 seeds, arms freqA,freqB, <= 30 min wall (D-139 ok) -> measured rates incl. n=1000.
+ 4. Campaign plan + launch scripts (NOT launched): arms, reps (BACE 200 per Meng N12?), budget from measured rates (+25% at n=300).
+ 5. Meng N10: prp per-cell scoring on the logit scale (tests).
+ 6. Commit, push, handover note for 05:00. MUST NOT: launch the campaign, message Dan, edit R/ or BACE/, write to the brain vault.

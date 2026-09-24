@@ -200,3 +200,69 @@ pool_cor <- function(z_vec, n, conf = 0.95) {
   zp <- rubin_pool(z_vec, u, df_com = Inf, conf = conf)
   list(r = tanh(zp$estimate), lower = tanh(zp$lower), upper = tanh(zp$upper), z_pool = zp)
 }
+
+#' Per-cell scoring scale (Meng review N10). A proportion is scored on the logit scale, where symmetric
+#' t intervals make sense; draws outside (0, 1), which BACE's gaussian model of prp can produce, are clipped
+#' to [eps, 1 - eps] first and counted. Every other trait is scored as is.
+#'
+#' @param v trait name
+#' @param x numeric vector or matrix of values (truth or draws)
+#' @param eps clipping margin for the logit
+#' @return list(x = values on the scoring scale, n_oob = number of values clipped)
+score_scale <- function(v, x, eps = 1e-4) {
+  if (v != "prp") return(list(x = x, n_oob = 0L))
+  n_oob <- sum(x <= 0 | x >= 1, na.rm = TRUE)
+  x[] <- stats::qlogis(pmin(pmax(x, eps), 1 - eps))
+  list(x = x, n_oob = n_oob)
+}
+
+#' Eigendecomposition of the tip correlation matrix, computed once per tree and reused by
+#' est_pgls_slope_fast() for every dataset on that tree. Pagel's C_lambda = lambda R + (1 - lambda) I shares
+#' R's eigenvectors for every lambda, so after this one O(n^3) step each lambda costs O(n).
+#'
+#' @param tree phylo
+#' @param sp tip order of the data rows
+#' @return list(U = eigenvectors, d = eigenvalues, sp = sp)
+pagel_eigen <- function(tree, sp) {
+  R <- cov2cor(ape::vcv(tree))[sp, sp]
+  e <- eigen(R, symmetric = TRUE)
+  list(U = e$vectors, d = pmax(e$values, 0), sp = sp)
+}
+
+#' Fast exact PGLS slope of c2 ~ c1 under Pagel's lambda, REML, lambda bounded to [0, 1]. Same estimator as
+#' est_pgls_slope() (nlme::gls + corPagel, REML, bounded profile fallback), computed in the eigenbasis of the
+#' tip correlation matrix: with y* = U'y and X* = U'X, C_lambda is diagonal with entries
+#' lambda d_i + (1 - lambda), so the restricted log-likelihood profiled over sigma^2,
+#'   l(lambda) = -0.5 [ (n - p) log(RSS / (n - p)) + sum log(w_i^-1) + log|X*' W X*| ],
+#' is O(n) per lambda. Maximised by optimize() on [0, 1] with both endpoints checked. The variance is
+#' sigma2_REML (X*' W X*)^-1, as vcov() of the gls fit. Tested against est_pgls_slope() in
+#' script/tests-rubin/test-lib-fast.R.
+#'
+#' @param df data.frame with columns c1, c2; rownames = species
+#' @param tree phylo
+#' @param eig optional pagel_eigen(tree, rownames(df)) to reuse across datasets on the same tree
+#' @return list(estimate, variance, df_com = n - 2, lambda_hat, converged)
+est_pgls_slope_fast <- function(df, tree, eig = NULL) {
+  sp <- rownames(df)
+  if (is.null(eig) || !identical(eig$sp, sp)) eig <- pagel_eigen(tree, sp)
+  n <- length(sp); p <- 2L
+  X <- cbind(1, df$c1); y <- df$c2
+  Xs <- crossprod(eig$U, X); ys <- as.numeric(crossprod(eig$U, y))
+  fit_at <- function(lam) {
+    v <- lam * eig$d + (1 - lam); w <- 1 / v
+    XtWX <- crossprod(Xs, w * Xs); XtWy <- crossprod(Xs, w * ys)
+    beta <- solve(XtWX, XtWy)
+    r <- ys - as.numeric(Xs %*% beta); rss <- sum(w * r^2)
+    ll <- -0.5 * ((n - p) * log(rss / (n - p)) + sum(log(v)) + as.numeric(determinant(XtWX)$modulus))
+    list(ll = ll, beta = beta, XtWX = XtWX, s2 = rss / (n - p))
+  }
+  ll_at <- function(lam) { f <- tryCatch(fit_at(lam), error = function(e) NULL); if (is.null(f)) -Inf else f$ll }
+  opt <- stats::optimize(ll_at, c(0, 1), maximum = TRUE, tol = 1e-6)
+  cand <- c(0, opt$maximum, 1)
+  lam <- cand[which.max(vapply(cand, ll_at, numeric(1)))]
+  f <- tryCatch(fit_at(lam), error = function(e) NULL)
+  if (is.null(f) || !is.finite(f$ll)) return(list(estimate = NA_real_, variance = NA_real_, df_com = n - 2,
+                                                  lambda_hat = NA_real_, converged = FALSE))
+  V <- f$s2 * solve(f$XtWX)
+  list(estimate = f$beta[2, 1], variance = V[2, 2], df_com = n - 2, lambda_hat = lam, converged = TRUE)
+}

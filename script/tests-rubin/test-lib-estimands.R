@@ -54,3 +54,12 @@ testthat::test_that("est_phylo_cor returns NA fields, not an error, when lambda 
   testthat::expect_true(is.na(r$r) && is.na(r$z))
   testthat::expect_equal(r$variance, 1 / 37)
 })
+
+testthat::test_that("score_scale puts prp on the logit scale and counts out-of-range draws (Meng N10)", {
+  s <- score_scale("prp", matrix(c(0.5, 0.2, 1.07, -0.01), 2))
+  testthat::expect_equal(s$n_oob, 2L)
+  testthat::expect_equal(s$x[1, 1], 0)
+  testthat::expect_equal(s$x[2, 1], stats::qlogis(0.2))
+  testthat::expect_true(all(is.finite(s$x)))
+  testthat::expect_identical(score_scale("c1", c(-3, 2))$x, c(-3, 2))
+})

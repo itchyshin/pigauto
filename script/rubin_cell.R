@@ -91,9 +91,10 @@ score_cells <- function(arm, sets) {
     if (all(is.na(draws))) next                 # trait not imputed by this arm (e.g. outside the freq block)
     n_na <- sum(is.na(draws))                   # a partial failure is recorded, never hidden (Meng N14)
     if (n_na) draws <- draws[stats::complete.cases(draws), , drop = FALSE]
+    sc <- score_scale(v, draws); draws <- sc$x          # prp scored on the logit scale (Meng N10)
     ci <- rubin_cell_intervals(draws)
-    tr <- truth[[v]][idx]
-    sdt <- stats::sd(truth[[v]][!mask[, v]])
+    tr <- score_scale(v, truth[[v]][idx])$x
+    sdt <- stats::sd(score_scale(v, truth[[v]][!mask[, v]])$x)
     lo <- ci$lower; hi <- ci$upper; a <- 0.05
     rows[[length(rows) + 1L]] <- data.frame(
       arm = arm, trait = v, n_cells = length(idx),
@@ -101,16 +102,21 @@ score_cells <- function(arm, sets) {
       coverage = mean(tr >= lo & tr <= hi),
       width = mean((hi - lo) / sdt),
       interval_score = mean(((hi - lo) + (2 / a) * (lo - tr) * (tr < lo) + (2 / a) * (tr - hi) * (tr > hi)) / sdt),
-      frac_B0 = mean(ci$B == 0), n_na = n_na, m_used = nrow(draws))
+      frac_B0 = mean(ci$B == 0), n_na = n_na, m_used = nrow(draws), n_oob = sc$n_oob,
+      scale = if (v == "prp") "logit" else "raw")
   }
   do.call(rbind, rows)
 }
 
-ref_slope <- est_pgls_slope(truth, tree)
+# The fast eigenbasis estimator (est_pgls_slope_fast; equal to nlme::gls REML with corPagel to ~1e-5, gate
+# test-lib-fast.R) replaces gls here: every dataset in a cell shares the tree, so one eigendecomposition
+# serves them all, and a bounded-lambda fit at n = 1000 drops from about a minute to milliseconds.
+eig <- pagel_eigen(tree, rownames(truth))
+ref_slope <- est_pgls_slope_fast(truth, tree, eig = eig)
 ref_cor   <- est_phylo_cor(truth, tree, lambda = ref_slope$lambda_hat)
 
 score_estimands <- function(arm, sets) {
-  sl <- lapply(sets, est_pgls_slope, tree = tree)
+  sl <- lapply(sets, est_pgls_slope_fast, tree = tree, eig = eig)
   ok <- vapply(sl, function(s) is.finite(s$estimate) && is.finite(s$variance), logical(1))
   # the correlation reuses each dataset's slope-fit lambda instead of refitting (Meng N4)
   co <- Map(function(s, fit) est_phylo_cor(s, tree, lambda = fit$lambda_hat), sets, sl)
