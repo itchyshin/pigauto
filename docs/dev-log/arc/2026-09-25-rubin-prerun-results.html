@@ -1,0 +1,437 @@
+<title>Rubin Pre-run Results</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+:root {
+  --page: #f6f6f3;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --rule: #dcdbd3;
+  --chain: #2a78d6;
+  --shipped: #eb6834;
+  --resid: #1baf7a;
+  --complete: #6f6e69;
+  --good: #006300;
+  --good-bg: #e3f1e3;
+  --warn-bg: #fbeee2;
+  --warn-ink: #8a3b12;
+  --note-bg: #eef3fb;
+  --focus: #2a78d6;
+  --shadow: 0 1px 2px rgba(20, 20, 18, 0.06);
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-head: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0f0f0e;
+    --surface: #1a1a19;
+    --ink: #f4f4f1;
+    --ink-2: #c3c2b7;
+    --muted: #8f8d86;
+    --grid: #2c2c2a;
+    --axis: #45443f;
+    --rule: #33332f;
+    --chain: #3987e5;
+    --shipped: #d95926;
+    --resid: #199e70;
+    --complete: #a3a19a;
+    --good: #5cc45c;
+    --good-bg: #16301a;
+    --warn-bg: #3a2416;
+    --warn-ink: #f0b48f;
+    --note-bg: #172234;
+    --focus: #6da7ec;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0f0f0e;
+  --surface: #1a1a19;
+  --ink: #f4f4f1;
+  --ink-2: #c3c2b7;
+  --muted: #8f8d86;
+  --grid: #2c2c2a;
+  --axis: #45443f;
+  --rule: #33332f;
+  --chain: #3987e5;
+  --shipped: #d95926;
+  --resid: #199e70;
+  --complete: #a3a19a;
+  --good: #5cc45c;
+  --good-bg: #16301a;
+  --warn-bg: #3a2416;
+  --warn-ink: #f0b48f;
+  --note-bg: #172234;
+  --focus: #6da7ec;
+  --shadow: none;
+}
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  line-height: 1.6;
+  padding-inline: 16px;
+  padding-block: 28px 64px;
+}
+.wrap { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 44px; }
+h1, h2, h3 { font-family: var(--font-head); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(30px, 5vw, 42px); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 24px; font-weight: 600; }
+h3 { font-size: 17px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.num, td.n, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+section { display: flex; flex-direction: column; gap: 14px; }
+.lede { font-size: 17.5px; color: var(--ink-2); max-width: 64ch; }
+header.top { display: flex; flex-direction: column; gap: 14px; padding-bottom: 22px; border-bottom: 1px solid var(--rule); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-family: var(--font-mono); font-size: 12.5px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink-2); display: inline-flex; gap: 6px; align-items: center; }
+.chip b { color: var(--ink); font-weight: 500; }
+.chip.ok { background: var(--good-bg); border-color: transparent; color: var(--good); }
+.chip.hold { background: var(--warn-bg); border-color: transparent; color: var(--warn-ink); }
+.findings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 760px) { .findings { grid-template-columns: 1fr; } }
+.finding { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow); }
+.finding .big { font-family: var(--font-mono); font-size: 26px; font-weight: 500; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.finding .big small { font-size: 14px; color: var(--muted); font-weight: 400; }
+.finding p { font-size: 14.5px; color: var(--ink-2); }
+.figure { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 18px 18px 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow); }
+.figure .cap { font-size: 13.5px; color: var(--ink-2); max-width: 78ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.sw { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.sw.ref { width: 16px; height: 0; border-top: 2px dashed var(--muted); border-radius: 0; }
+.chart { width: 100%; overflow-x: auto; }
+.chart svg { display: block; width: 100%; height: auto; min-width: 520px; }
+.chart svg text { font-family: var(--font-body); }
+.chart svg .tick { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); }
+.chart svg .rowlab { font-size: 12.5px; fill: var(--ink-2); }
+.chart svg .grouplab { font-family: var(--font-head); font-size: 13.5px; font-weight: 600; fill: var(--ink); }
+.chart svg .vallab { font-family: var(--font-mono); font-size: 11.5px; fill: var(--ink-2); }
+.chart svg .dot { cursor: pointer; }
+.chart svg .dot:focus { outline: none; }
+.chart svg .dot:focus-visible { stroke: var(--focus); stroke-width: 3; }
+.tip { position: fixed; pointer-events: none; z-index: 10; background: var(--ink); color: var(--surface); font-size: 12.5px; line-height: 1.45; padding: 7px 10px; border-radius: 6px; max-width: 260px; font-family: var(--font-body); }
+.tip b { font-family: var(--font-mono); font-weight: 500; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { padding: 7px 12px; text-align: left; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { font-family: var(--font-head); font-weight: 600; font-size: 13px; color: var(--ink-2); background: var(--surface); }
+td.n { text-align: right; }
+th.n { text-align: right; }
+tbody tr:last-child td { border-bottom: none; }
+tr.sep td { border-top: 2px solid var(--rule); }
+.bar { display: inline-block; height: 8px; border-radius: 4px; background: var(--complete); vertical-align: middle; }
+.barcell { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+details { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 14px; }
+details summary { cursor: pointer; font-family: var(--font-head); font-weight: 600; font-size: 14.5px; color: var(--ink-2); }
+details[open] summary { margin-bottom: 10px; }
+details .tablewrap { border: none; }
+.decisions { display: flex; flex-direction: column; gap: 12px; }
+.decision { border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); padding: 16px 18px; display: grid; grid-template-columns: 34px 1fr; gap: 4px 12px; box-shadow: var(--shadow); }
+.decision .k { font-family: var(--font-mono); font-size: 13px; color: var(--muted); padding-top: 2px; }
+.decision h3 { grid-column: 2; }
+.decision p, .decision .rec { grid-column: 2; font-size: 14.5px; color: var(--ink-2); }
+.decision .rec { background: var(--note-bg); border-radius: 6px; padding: 8px 10px; color: var(--ink); }
+.reply { background: var(--surface); border: 1px dashed var(--axis); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.reply code { font-family: var(--font-mono); font-size: 13.5px; white-space: pre-wrap; color: var(--ink); }
+.reply button { align-self: flex-start; font-family: var(--font-head); font-weight: 600; font-size: 13.5px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--axis); background: var(--page); color: var(--ink); cursor: pointer; }
+.reply button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+ul.plain { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; max-width: 72ch; }
+ul.plain li { color: var(--ink-2); }
+ul.plain li b { color: var(--ink); font-weight: 600; }
+footer { border-top: 1px solid var(--rule); padding-top: 18px; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+footer .mono { font-size: 12.5px; color: var(--ink-2); }
+@media (prefers-reduced-motion: no-preference) { .chart svg .dot { transition: r 120ms ease; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">pigauto · lane arc/rubin-freq-bace · BACE settings pre-run · 24 Sep 2026</div>
+    <h1>Chained BACE fixes most of the coverage gap; BACE's convergence check can't choose settings</h1>
+    <p class="lede">Multiple imputation of phylogenetic traits, scored with Rubin's rules. 240 BACE fits on nibi compared BACE as shipped with a chained variant under six chain settings, on the same simulated datasets. Frequentist timing is measured too. Nothing beyond the pre-run has been launched.</p>
+    <div class="chips">
+      <span class="chip ok">240 / 240 fits · 0 failures</span>
+      <span class="chip"><b>n</b> 100 and 300</span>
+      <span class="chip"><b>M</b> 20 imputations</span>
+      <span class="chip"><b>λ</b> 0.3, 0.7 · <b>ρ</b> 0, 0.5 · MCAR 30%</span>
+      <span class="chip hold">Campaign waiting for your approval</span>
+    </div>
+  </header>
+
+  <section aria-labelledby="h-findings">
+    <h2 id="h-findings">What the pre-run shows</h2>
+    <div class="findings">
+      <div class="finding">
+        <div class="eyebrow">Per-cell coverage</div>
+        <div class="big" id="f1"></div>
+        <p>Chaining BACE's final runs raises per-cell coverage of c1 and c2 at both sample sizes. The chained arm is higher in about 9 of 10 paired fits.</p>
+      </div>
+      <div class="finding">
+        <div class="eyebrow">Downstream, n = 300</div>
+        <div class="big" id="f2"></div>
+        <p>BACE as shipped under-covers the slope and the phylogenetic correlation at n = 300. The chained arm stays near 0.95. These rest on 20 datasets, so read them as direction.</p>
+      </div>
+      <div class="finding">
+        <div class="eyebrow">Chain settings</div>
+        <div class="big">no effect <small>on coverage</small></div>
+        <p>More runs or a longer chain change neither arm's coverage. ESS is 750 to 1,600 everywhere, while BACE's own convergence check passes only 10 to 35% of fits.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-cell">
+    <h2 id="h-cell">Per-cell intervals</h2>
+    <p>Coverage of the true value by each missing cell's Rubin interval, mean ± t<sub>19</sub>·√((1 + 1/M)·B), pooled over c1 and c2 and over the six chain settings. Whiskers are ±2 Monte Carlo SE, clustered by dataset (20 datasets per n).</p>
+    <div class="figure">
+      <div class="legend" id="leg-cell"></div>
+      <div class="chart" id="chart-cell" role="img" aria-label="Dot plot of per-cell coverage by arm and sample size"></div>
+      <div class="cap">BACE + residual reaches nominal coverage by adding a second residual draw, so its intervals are the widest (see the table). It is a negative control, not a candidate method.</div>
+    </div>
+    <details>
+      <summary>Table: per-cell coverage, paired difference and interval width</summary>
+      <div class="tablewrap"><table id="tab-cell"></table></div>
+    </details>
+  </section>
+
+  <section aria-labelledby="h-down">
+    <h2 id="h-down">Downstream estimands</h2>
+    <p>Coverage of ρ by the Rubin-pooled 95% interval for the PGLS slope of c2 on c1 (Barnard–Rubin df) and the GLS-whitened phylogenetic correlation (Fisher z). In this simulation the true slope and correlation both equal ρ. The complete-data row fits the same model to the data before masking.</p>
+    <div class="figure">
+      <div class="legend" id="leg-down"></div>
+      <div class="chart" id="chart-down" role="img" aria-label="Dot plot of downstream coverage by estimand, sample size and arm"></div>
+      <div class="cap">Each point pools the six settings over the same 20 datasets, so the SE is about 0.07 for the lower values and a single dataset moves a point by 0.05. The campaign's 100 to 200 datasets per cell will settle the levels.</div>
+    </div>
+    <details>
+      <summary>Table: downstream coverage and median fraction of missing information</summary>
+      <div class="tablewrap"><table id="tab-down"></table></div>
+    </details>
+  </section>
+
+  <section aria-labelledby="h-conv">
+    <h2 id="h-conv">Why BACE's convergence check can't choose settings</h2>
+    <p>The selection rule asked for at least 80% of fits to pass BACE's own check. No setting came close, and more runs made it slightly worse. The installed code explains why: <span class="mono">assess_convergence(method = "summary")</span> tests the convergence phase, whose fills are deterministic (<span class="mono">sample = FALSE</span>), not the final draws. For each trait it tracks the mean imputed value per iteration and passes the trait if two of three criteria hold.</p>
+    <div class="tablewrap"><table id="tab-conv"></table></div>
+    <ul class="plain">
+      <li><b>The percent-change criterion divides by the trait's mean.</b> c1 and c2 are centred near zero in this simulation (mean level about 0.3), so small changes read as large percentages. prp, at level 0.53, passes 78% of the time; c1 and c2 pass 22%.</li>
+      <li><b>The autocorrelation criterion needs more iterations than BACE supplies.</b> Pure white noise passes |acf| &lt; 0.3 only <span id="wn"></span> of the time at runs 5, 10 and 15. At runs 5 the criterion fails most stationary series.</li>
+      <li><b>ESS says the chains mix.</b> Median ESS across fits is 750 to 1,060 at n = 100 and reaches the 1,600-sample maximum at n = 300.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="h-settings">
+    <h2 id="h-settings">All twelve settings</h2>
+    <p>20 fits per row. Wall times are medians on one nibi core; the chain adds 20 BACE sweeps to each fit.</p>
+    <div class="tablewrap"><table id="tab-settings"></table></div>
+  </section>
+
+  <section aria-labelledby="h-budget">
+    <h2 id="h-budget">Cost of the campaign</h2>
+    <p>The frequentist arms are cheap: a fast exact PGLS (one eigendecomposition per tree, equal to <span class="mono">nlme::gls</span> to 1e-5) cut scoring at n = 1000 from about a minute per fit to milliseconds. BACE at n = 1000 dominates, and its cost there is extrapolated from v1 rather than measured with the chain.</p>
+    <div class="tablewrap"><table id="tab-freq"></table></div>
+    <div class="tablewrap"><table id="tab-budget"></table></div>
+  </section>
+
+  <section aria-labelledby="h-decide">
+    <h2 id="h-decide">Decisions for you</h2>
+    <div class="decisions">
+      <div class="decision">
+        <div class="k">1</div>
+        <h3>Drop BACE's convergence check from the selection rule</h3>
+        <p>It tests the deterministic convergence phase, is scale-dependent, and did not respond to chain length. Select on ESS and on coverage stability instead.</p>
+        <div class="rec">Recommended: yes. Then the rule picks the cheapest setting, runs 5 and nitt 50,000, at both n.</div>
+      </div>
+      <div class="decision">
+        <div class="k">2</div>
+        <h3>Campaign arms</h3>
+        <p>freq A (bootstrap then draw), freq B (one fit), BACE as shipped, chained BACE. BACE + residual shares the BACE fit, so it costs only scoring.</p>
+        <div class="rec">Recommended: all five, with BACE + residual reported as a negative control.</div>
+      </div>
+      <div class="decision">
+        <div class="k">3</div>
+        <h3>Replicates and budget</h3>
+        <p>100 BACE replicates give a coverage SE of about 0.022; 200 give about 0.015. The n = 1000 BACE cost is an extrapolation, so run 6 fits there first (about 7 h wall on nibi).</p>
+        <div class="rec">Recommended: option B, about 7,400 core-hours on nibi arrays, after the n = 1000 timing check.</div>
+      </div>
+      <div class="decision">
+        <div class="k">4</div>
+        <h3>What to tell Dan, and when</h3>
+        <p>Two findings concern BACE itself: its final runs share one starting dataset, which costs coverage, and its convergence check does not track mixing. Both are measured here, but only at n = 100 and 300.</p>
+        <div class="rec">Recommended: share after the campaign confirms the size of the effect, with the chained arm as a ready fix.</div>
+      </div>
+    </div>
+    <div class="reply">
+      <div class="eyebrow">A reply you can send back</div>
+      <code id="reply-text">yes to 1-3 (option B, n = 1000 timing check first); hold Dan until the campaign is in</code>
+      <button type="button" id="copy-btn">Copy reply</button>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-limits">
+    <h2 id="h-limits">What this does not cover</h2>
+    <ul class="plain">
+      <li><b>Frequentist coverage.</b> The frequentist runs were a timing check (2 seeds per cell); their coverage comes from the campaign.</li>
+      <li><b>n = 1000, λ = 1 and missing-at-random data.</b> The pre-run used λ 0.3 and 0.7, n 100 and 300, MCAR only.</li>
+      <li><b>Independence of the 120 fits per n.</b> They share 20 datasets; every SE on this page is clustered by dataset.</li>
+      <li><b>Discrete traits.</b> Rubin scoring here covers c1, c2 and prp (logit scale); bin, ord and cat3 are imputed but not scored.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <div>Branch <span class="mono">arc/rubin-freq-bace</span> · runner <span class="mono">script/rubin_cell.R</span> · aggregator <span class="mono">script/rubin_prerun_summary.R</span> · review <span class="mono">docs/dev-log/arc/2026-09-24-rubin-review.md</span></div>
+    <div>nibi arrays <span class="mono">22614567 · 22614569 · 22614570 · 22614571</span> (BACE) and <span class="mono">22632570</span> (frequentist timing). BACE internals byte-identical on the Mac and nibi.</div>
+  </footer>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const DATA = {"settings":[{"runs":5,"nitt":50000,"n":100,"cost_units":2250000,"found":20,"expected":20,"fit_errors":0,"conv_pass":0.2,"ess_med":855.8287,"wall_fit_s":1240.679,"wall_chain_s":987.1425,"bace_cell":0.8858,"bace_cell_mcse":0.0121,"chain_cell":0.9375,"chain_cell_mcse":0.0059,"bace_slope":1,"chain_slope":1,"bace_cor":1,"chain_cor":1},{"runs":10,"nitt":50000,"n":100,"cost_units":2500000,"found":20,"expected":20,"fit_errors":0,"conv_pass":0.25,"ess_med":752.1211,"wall_fit_s":1433.6545,"wall_chain_s":863.337,"bace_cell":0.8733,"bace_cell_mcse":0.0106,"chain_cell":0.945,"chain_cell_mcse":0.0058,"bace_slope":0.95,"chain_slope":1,"bace_cor":0.95,"chain_cor":1},{"runs":15,"nitt":50000,"n":100,"cost_units":2750000,"found":20,"expected":20,"fit_errors":0,"conv_pass":0.1,"ess_med":852.2635,"wall_fit_s":1769.418,"wall_chain_s":991.2225,"bace_cell":0.875,"bace_cell_mcse":0.0096,"chain_cell":0.9433,"chain_cell_mcse":0.0053,"bace_slope":1,"chain_slope":1,"bace_cor":1,"chain_cor":1},{"runs":5,"nitt":100000,"n":100,"cost_units":4500000,"found":20,"expected":20,"fit_errors":0,"conv_pass":0.35,"ess_med":1063.1703,"wall_fit_s":2276.954,"wall_chain_s":1912.2695,"bace_cell":0.8917,"bace_cell_mcse":0.0089,"chain_cell":0.9425,"chain_cell_mcse":0.0065,"bace_slope":1,"chain_slope":1,"bace_cor":1,"chain_cor":1},{"runs":10,"nitt":100000,"n":100,"cost_units":5000000,"found":20,"expected":20,"fit_errors":0,"conv_pass":0.1,"ess_med":1013.1784,"wall_fit_s":3027.968,"wall_chain_s":2021.2345,"bace_cell":0.8842,"bace_cell_mcse":0.0128,"chain_cell":0.9417,"chain_cell_mcse":0.0062,"bace_slope":0.95,"chain_slope":1,"bace_cor":0.95,"chain_cor":1},{"runs":15,"nitt":100000,"n":100,"cost_units":5500000,"found":20,"expected":20,"fit_errors":0,"conv_pass":0.15,"ess_med":1046.8605,"wall_fit_s":3403.1485,"wall_chain_s":1675.488,"bace_cell":0.8758,"bace_cell_mcse":0.0134,"chain_cell":0.9483,"chain_cell_mcse":0.0053,"bace_slope":1,"chain_slope":1,"bace_cor":1,"chain_cor":1},{"runs":5,"nitt":50000,"n":300,"cost_units":2250000,"found":20,"expected":20,"fit_errors":0,"conv_pass":0.3,"ess_med":1600,"wall_fit_s":3953.085,"wall_chain_s":3124.498,"bace_cell":0.9036,"bace_cell_mcse":0.0084,"chain_cell":0.9481,"chain_cell_mcse":0.0043,"bace_slope":0.85,"chain_slope":1,"bace_cor":0.8,"chain_cor":1},{"runs":10,"nitt":50000,"n":300,"cost_units":2500000,"found":20,"expected":20,"fit_errors":0,"conv_pass":0.1,"ess_med":1600,"wall_fit_s":4557.7335,"wall_chain_s":2950.588,"bace_cell":0.9039,"bace_cell_mcse":0.0076,"chain_cell":0.94,"chain_cell_mcse":0.0046,"bace_slope":0.9,"chain_slope":1,"bace_cor":0.75,"chain_cor":1},{"runs":15,"nitt":50000,"n":300,"cost_units":2750000,"found":20,"expected":20,"fit_errors":0,"conv_pass":0.15,"ess_med":1600,"wall_fit_s":5518.94,"wall_chain_s":3031.783,"bace_cell":0.9061,"bace_cell_mcse":0.0071,"chain_cell":0.9464,"chain_cell_mcse":0.0029,"bace_slope":0.9,"chain_slope":1,"bace_cor":0.85,"chain_cor":0.85},{"runs":5,"nitt":100000,"n":300,"cost_units":4500000,"found":20,"expected":20,"fit_errors":0,"conv_pass":0.3,"ess_med":1600,"wall_fit_s":8018.146,"wall_chain_s":6239.3905,"bace_cell":0.8942,"bace_cell_mcse":0.0102,"chain_cell":0.9364,"chain_cell_mcse":0.005,"bace_slope":0.75,"chain_slope":1,"bace_cor":0.7,"chain_cor":0.9},{"runs":10,"nitt":100000,"n":300,"cost_units":5000000,"found":20,"expected":20,"fit_errors":0,"conv_pass":0.15,"ess_med":1600,"wall_fit_s":9245.395,"wall_chain_s":6157.694,"bace_cell":0.9039,"bace_cell_mcse":0.0069,"chain_cell":0.9428,"chain_cell_mcse":0.0033,"bace_slope":0.8,"chain_slope":0.95,"bace_cor":0.8,"chain_cor":0.9},{"runs":15,"nitt":100000,"n":300,"cost_units":5500000,"found":20,"expected":20,"fit_errors":0,"conv_pass":0.15,"ess_med":1600,"wall_fit_s":10308.425,"wall_chain_s":5691.568,"bace_cell":0.9053,"bace_cell_mcse":0.0071,"chain_cell":0.9411,"chain_cell_mcse":0.0048,"bace_slope":0.85,"chain_slope":0.9,"bace_cor":0.8,"chain_cor":0.85}],"paired":[{"n":100,"diff":0.0621,"se":0.0075,"datasets":20,"chain_higher_share":0.8667},{"n":300,"diff":0.0396,"se":0.0057,"datasets":20,"chain_higher_share":0.9167}],"cell_by":[{"arm":"bace","n":100,"lambda":0.3,"cov":0.8739,"se":0.0127,"width":3.3744,"datasets":10,"fits":60,"_row":"bace.100.0.3"},{"arm":"bace_chain","n":100,"lambda":0.3,"cov":0.9394,"se":0.0055,"width":3.9173,"datasets":10,"fits":60,"_row":"bace_chain.100.0.3"},{"arm":"bace_resid","n":100,"lambda":0.3,"cov":0.9481,"se":0.0075,"width":4.3992,"datasets":10,"fits":60,"_row":"bace_resid.100.0.3"},{"arm":"bace","n":300,"lambda":0.3,"cov":0.9037,"se":0.0098,"width":3.131,"datasets":10,"fits":60,"_row":"bace.300.0.3"},{"arm":"bace_chain","n":300,"lambda":0.3,"cov":0.9415,"se":0.0038,"width":3.4485,"datasets":10,"fits":60,"_row":"bace_chain.300.0.3"},{"arm":"bace_resid","n":300,"lambda":0.3,"cov":0.9719,"se":0.004,"width":4.3198,"datasets":10,"fits":60,"_row":"bace_resid.300.0.3"},{"arm":"bace","n":100,"lambda":0.7,"cov":0.8881,"se":0.0137,"width":2.7427,"datasets":10,"fits":60,"_row":"bace.100.0.7"},{"arm":"bace_chain","n":100,"lambda":0.7,"cov":0.9467,"se":0.0056,"width":3.1777,"datasets":10,"fits":60,"_row":"bace_chain.100.0.7"},{"arm":"bace_resid","n":100,"lambda":0.7,"cov":0.9542,"se":0.0052,"width":3.519,"datasets":10,"fits":60,"_row":"bace_resid.100.0.7"},{"arm":"bace","n":300,"lambda":0.7,"cov":0.9019,"se":0.0094,"width":2.6201,"datasets":10,"fits":60,"_row":"bace.300.0.7"},{"arm":"bace_chain","n":300,"lambda":0.7,"cov":0.9434,"se":0.0056,"width":2.8987,"datasets":10,"fits":60,"_row":"bace_chain.300.0.7"},{"arm":"bace_resid","n":300,"lambda":0.7,"cov":0.9681,"se":0.005,"width":3.5524,"datasets":10,"fits":60,"_row":"bace_resid.300.0.7"}],"cell_n":[{"arm":"bace","n":100,"cov":0.881,"se":0.0092,"width":3.0585,"datasets":20,"fits":120,"_row":"bace.100"},{"arm":"bace_chain","n":100,"cov":0.9431,"se":0.0039,"width":3.5475,"datasets":20,"fits":120,"_row":"bace_chain.100"},{"arm":"bace_resid","n":100,"cov":0.9511,"se":0.0045,"width":3.9591,"datasets":20,"fits":120,"_row":"bace_resid.100"},{"arm":"bace","n":300,"cov":0.9028,"se":0.0066,"width":2.8756,"datasets":20,"fits":120,"_row":"bace.300"},{"arm":"bace_chain","n":300,"cov":0.9425,"se":0.0033,"width":3.1736,"datasets":20,"fits":120,"_row":"bace_chain.300"},{"arm":"bace_resid","n":300,"cov":0.97,"se":0.0031,"width":3.9361,"datasets":20,"fits":120,"_row":"bace_resid.300"}],"down":[{"arm":"bace","n":100,"estimand":"cor","cov":0.9833,"se":0.0167,"fmi":0.4084,"width":0.497,"datasets":20,"fits":120,"_row":"bace.100.cor"},{"arm":"bace_chain","n":100,"estimand":"cor","cov":1,"se":0,"fmi":0.4949,"width":0.5469,"datasets":20,"fits":120,"_row":"bace_chain.100.cor"},{"arm":"bace_resid","n":100,"estimand":"cor","cov":0.9833,"se":0.0167,"fmi":0.4519,"width":0.5117,"datasets":20,"fits":120,"_row":"bace_resid.100.cor"},{"arm":"complete","n":100,"estimand":"cor","cov":1,"se":0,"fmi":null,"width":0.345,"datasets":20,"fits":120,"_row":"complete.100.cor"},{"arm":"bace","n":300,"estimand":"cor","cov":0.7833,"se":0.0746,"fmi":0.4185,"width":0.2642,"datasets":20,"fits":120,"_row":"bace.300.cor"},{"arm":"bace_chain","n":300,"estimand":"cor","cov":0.9167,"se":0.0373,"fmi":0.4967,"width":0.2867,"datasets":20,"fits":120,"_row":"bace_chain.300.cor"},{"arm":"bace_resid","n":300,"estimand":"cor","cov":0.85,"se":0.0704,"fmi":0.4721,"width":0.2837,"datasets":20,"fits":120,"_row":"bace_resid.300.cor"},{"arm":"complete","n":300,"estimand":"cor","cov":1,"se":0,"fmi":null,"width":0.2,"datasets":20,"fits":120,"_row":"complete.300.cor"},{"arm":"bace","n":100,"estimand":"slope","cov":0.9833,"se":0.0167,"fmi":0.4304,"width":0.5383,"datasets":20,"fits":120,"_row":"bace.100.slope"},{"arm":"bace_chain","n":100,"estimand":"slope","cov":1,"se":0,"fmi":0.5077,"width":0.5881,"datasets":20,"fits":120,"_row":"bace_chain.100.slope"},{"arm":"bace_resid","n":100,"estimand":"slope","cov":0.9833,"se":0.0167,"fmi":0.46,"width":0.5509,"datasets":20,"fits":120,"_row":"bace_resid.100.slope"},{"arm":"complete","n":100,"estimand":"slope","cov":1,"se":0,"fmi":null,"width":0.3672,"datasets":20,"fits":120,"_row":"complete.100.slope"},{"arm":"bace","n":300,"estimand":"slope","cov":0.8417,"se":0.071,"fmi":0.4248,"width":0.298,"datasets":20,"fits":120,"_row":"bace.300.slope"},{"arm":"bace_chain","n":300,"estimand":"slope","cov":0.975,"se":0.0137,"fmi":0.4773,"width":0.3227,"datasets":20,"fits":120,"_row":"bace_chain.300.slope"},{"arm":"bace_resid","n":300,"estimand":"slope","cov":0.95,"se":0.0273,"fmi":0.4701,"width":0.3164,"datasets":20,"fits":120,"_row":"bace_resid.300.slope"},{"arm":"complete","n":300,"estimand":"slope","cov":1,"se":0,"fmi":null,"width":0.2246,"datasets":20,"fits":120,"_row":"complete.300.slope"}],"down_l":[{"arm":"bace","n":100,"estimand":"cor","lambda":0.3,"cov":0.9667,"se":0.0333,"datasets":10,"fits":60,"_row":"bace.100.cor.0.3"},{"arm":"bace_chain","n":100,"estimand":"cor","lambda":0.3,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"bace_chain.100.cor.0.3"},{"arm":"bace_resid","n":100,"estimand":"cor","lambda":0.3,"cov":0.9667,"se":0.0333,"datasets":10,"fits":60,"_row":"bace_resid.100.cor.0.3"},{"arm":"complete","n":100,"estimand":"cor","lambda":0.3,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"complete.100.cor.0.3"},{"arm":"bace","n":300,"estimand":"cor","lambda":0.3,"cov":0.7667,"se":0.1144,"datasets":10,"fits":60,"_row":"bace.300.cor.0.3"},{"arm":"bace_chain","n":300,"estimand":"cor","lambda":0.3,"cov":0.8667,"se":0.0694,"datasets":10,"fits":60,"_row":"bace_chain.300.cor.0.3"},{"arm":"bace_resid","n":300,"estimand":"cor","lambda":0.3,"cov":0.8333,"se":0.1024,"datasets":10,"fits":60,"_row":"bace_resid.300.cor.0.3"},{"arm":"complete","n":300,"estimand":"cor","lambda":0.3,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"complete.300.cor.0.3"},{"arm":"bace","n":100,"estimand":"slope","lambda":0.3,"cov":0.9667,"se":0.0333,"datasets":10,"fits":60,"_row":"bace.100.slope.0.3"},{"arm":"bace_chain","n":100,"estimand":"slope","lambda":0.3,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"bace_chain.100.slope.0.3"},{"arm":"bace_resid","n":100,"estimand":"slope","lambda":0.3,"cov":0.9667,"se":0.0333,"datasets":10,"fits":60,"_row":"bace_resid.100.slope.0.3"},{"arm":"complete","n":100,"estimand":"slope","lambda":0.3,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"complete.100.slope.0.3"},{"arm":"bace","n":300,"estimand":"slope","lambda":0.3,"cov":0.85,"se":0.1008,"datasets":10,"fits":60,"_row":"bace.300.slope.0.3"},{"arm":"bace_chain","n":300,"estimand":"slope","lambda":0.3,"cov":0.95,"se":0.0255,"datasets":10,"fits":60,"_row":"bace_chain.300.slope.0.3"},{"arm":"bace_resid","n":300,"estimand":"slope","lambda":0.3,"cov":0.9333,"se":0.0444,"datasets":10,"fits":60,"_row":"bace_resid.300.slope.0.3"},{"arm":"complete","n":300,"estimand":"slope","lambda":0.3,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"complete.300.slope.0.3"},{"arm":"bace","n":100,"estimand":"cor","lambda":0.7,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"bace.100.cor.0.7"},{"arm":"bace_chain","n":100,"estimand":"cor","lambda":0.7,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"bace_chain.100.cor.0.7"},{"arm":"bace_resid","n":100,"estimand":"cor","lambda":0.7,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"bace_resid.100.cor.0.7"},{"arm":"complete","n":100,"estimand":"cor","lambda":0.7,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"complete.100.cor.0.7"},{"arm":"bace","n":300,"estimand":"cor","lambda":0.7,"cov":0.8,"se":0.1018,"datasets":10,"fits":60,"_row":"bace.300.cor.0.7"},{"arm":"bace_chain","n":300,"estimand":"cor","lambda":0.7,"cov":0.9667,"se":0.0222,"datasets":10,"fits":60,"_row":"bace_chain.300.cor.0.7"},{"arm":"bace_resid","n":300,"estimand":"cor","lambda":0.7,"cov":0.8667,"se":0.1018,"datasets":10,"fits":60,"_row":"bace_resid.300.cor.0.7"},{"arm":"complete","n":300,"estimand":"cor","lambda":0.7,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"complete.300.cor.0.7"},{"arm":"bace","n":100,"estimand":"slope","lambda":0.7,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"bace.100.slope.0.7"},{"arm":"bace_chain","n":100,"estimand":"slope","lambda":0.7,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"bace_chain.100.slope.0.7"},{"arm":"bace_resid","n":100,"estimand":"slope","lambda":0.7,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"bace_resid.100.slope.0.7"},{"arm":"complete","n":100,"estimand":"slope","lambda":0.7,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"complete.100.slope.0.7"},{"arm":"bace","n":300,"estimand":"slope","lambda":0.7,"cov":0.8333,"se":0.1054,"datasets":10,"fits":60,"_row":"bace.300.slope.0.7"},{"arm":"bace_chain","n":300,"estimand":"slope","lambda":0.7,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"bace_chain.300.slope.0.7"},{"arm":"bace_resid","n":300,"estimand":"slope","lambda":0.7,"cov":0.9667,"se":0.0333,"datasets":10,"fits":60,"_row":"bace_resid.300.slope.0.7"},{"arm":"complete","n":300,"estimand":"slope","lambda":0.7,"cov":1,"se":0,"datasets":10,"fits":60,"_row":"complete.300.slope.0.7"}],"freq":[{"n":100,"freqA_mean":31,"freqA_max":39,"freqB_mean":1},{"n":300,"freqA_mean":69,"freqA_max":80,"freqB_mean":3},{"n":1000,"freqA_mean":268,"freqA_max":337,"freqB_mean":12}],"conv":[{"trait":"bin","acf":0.4,"trend":0.883,"pct":0.304,"pass":0.533,"level":0.479},{"trait":"c1","acf":0.225,"trend":0.838,"pct":0.221,"pass":0.304,"level":0.337},{"trait":"c2","acf":0.292,"trend":0.754,"pct":0.217,"pass":0.304,"level":0.297},{"trait":"cat3","acf":null,"trend":0.883,"pct":0.225,"pass":0.492,"level":0.314},{"trait":"cnt","acf":0.338,"trend":0.758,"pct":0.475,"pass":0.479,"level":6.479},{"trait":"ord","acf":null,"trend":0.804,"pct":0.362,"pass":0.475,"level":0.341},{"trait":"prp","acf":0.263,"trend":0.8,"pct":0.783,"pass":0.667,"level":0.528}],"conv_runs":{"runs":[5,10,15],"c1":[0.36,0.3,0.25],"c2":[0.39,0.28,0.25]},"white_noise_acf":{"runs":[5,10,15],"pass":[0.21,0.58,0.72]}}
+;
+const ARMS = {
+  complete:   { label: "Complete data", color: "var(--complete)" },
+  bace:       { label: "BACE as shipped", color: "var(--shipped)" },
+  bace_chain: { label: "Chained BACE", color: "var(--chain)" },
+  bace_resid: { label: "BACE + residual (control)", color: "var(--resid)" }
+};
+const f3 = (v) => (v == null || isNaN(v)) ? "–" : v.toFixed(3);
+const f2 = (v) => (v == null || isNaN(v)) ? "–" : v.toFixed(2);
+const fint = (v) => Math.round(v).toLocaleString("en-US");
+const tip = document.getElementById("tip");
+function showTip(e, html) {
+  tip.innerHTML = html; tip.hidden = false;
+  const r = tip.getBoundingClientRect();
+  let x = e.clientX + 14, y = e.clientY + 14;
+  if (x + r.width > window.innerWidth - 8) x = e.clientX - r.width - 14;
+  if (y + r.height > window.innerHeight - 8) y = e.clientY - r.height - 14;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function hideTip() { tip.hidden = true; }
+function legend(el, arms, ref) {
+  el.innerHTML = arms.map(a => `<span><i class="sw" style="background:${ARMS[a].color}"></i>${ARMS[a].label}</span>`).join("")
+    + (ref ? `<span><i class="sw ref"></i>Nominal 0.95</span>` : "");
+}
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+// Horizontal dot plot: groups of rows; each row = {label, arm, cov, se, extra}
+function dotplot(container, groups, xmin, xmax, ticks) {
+  const W = 820, left = 250, right = 84, rowH = 26, groupGap = 18, top = 8, axisH = 30;
+  const nrows = groups.reduce((s, g) => s + g.rows.length, 0);
+  const H = top + groups.length * 24 + nrows * rowH + (groups.length - 1) * groupGap + axisH;
+  const x = (v) => left + (Math.min(Math.max(v, xmin), xmax) - xmin) / (xmax - xmin) * (W - left - right);
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: "xMidYMid meet" });
+  const plotBottom = H - axisH;
+  ticks.forEach(t => {
+    el("line", { x1: x(t), x2: x(t), y1: top, y2: plotBottom, stroke: "var(--grid)", "stroke-width": 1 }, svg);
+    el("text", { x: x(t), y: plotBottom + 18, "text-anchor": "middle", class: "tick" }, svg, t.toFixed(2));
+  });
+  el("line", { x1: x(0.95), x2: x(0.95), y1: top, y2: plotBottom, stroke: "var(--muted)", "stroke-width": 1.5, "stroke-dasharray": "4 4" }, svg);
+  let y = top;
+  groups.forEach((g, gi) => {
+    y += 16;
+    el("text", { x: 0, y: y, class: "grouplab" }, svg, g.title);
+    y += 8;
+    g.rows.forEach(r => {
+      const cy = y + rowH / 2;
+      el("text", { x: 12, y: cy + 4, class: "rowlab" }, svg, ARMS[r.arm].label);
+      const lo = r.cov - 2 * r.se, hi = Math.min(r.cov + 2 * r.se, 1);
+      if (r.se > 0) el("line", { x1: x(lo), x2: x(hi), y1: cy, y2: cy, stroke: ARMS[r.arm].color, "stroke-width": 2, "stroke-linecap": "round" }, svg);
+      const dot = el("circle", { cx: x(r.cov), cy: cy, r: 6, fill: ARMS[r.arm].color, stroke: "var(--surface)", "stroke-width": 2, class: "dot", tabindex: 0,
+                                 "aria-label": `${g.title}, ${ARMS[r.arm].label}: ${f3(r.cov)}` }, svg);
+      const html = `<div>${g.title} · ${ARMS[r.arm].label}</div><div>coverage <b>${f3(r.cov)}</b> ± ${f3(2 * r.se)} (2 SE)</div>${r.extra || ""}`;
+      dot.addEventListener("mousemove", e => showTip(e, html));
+      dot.addEventListener("mouseleave", hideTip);
+      dot.addEventListener("focus", () => { const b = dot.getBoundingClientRect(); showTip({ clientX: b.right, clientY: b.bottom }, html); });
+      dot.addEventListener("blur", hideTip);
+      el("text", { x: W - right + 10, y: cy + 4, class: "vallab" }, svg, f3(r.cov));
+      y += rowH;
+    });
+    if (gi < groups.length - 1) y += groupGap;
+  });
+  container.appendChild(svg);
+}
+
+// ---- findings tiles
+const cellN = (arm, n) => DATA.cell_n.find(d => d.arm === arm && d.n === n);
+const down = (arm, n, est) => DATA.down.find(d => d.arm === arm && d.n === n && d.estimand === est);
+const pr = (n) => DATA.paired.find(d => d.n === n);
+document.getElementById("f1").innerHTML = `+${pr(100).diff.toFixed(3)} <small>at n 100</small><br>+${pr(300).diff.toFixed(3)} <small>at n 300</small>`;
+document.getElementById("f2").innerHTML = `${f2(down("bace", 300, "slope").cov)} → ${f2(down("bace_chain", 300, "slope").cov)} <small>slope</small>`;
+document.getElementById("wn").textContent = DATA.white_noise_acf.pass.map(v => Math.round(v * 100) + "%").join(", ");
+
+// ---- per-cell chart
+legend(document.getElementById("leg-cell"), ["bace", "bace_chain", "bace_resid"], true);
+dotplot(document.getElementById("chart-cell"), [100, 300].map(n => ({
+  title: `n = ${n}`,
+  rows: ["bace", "bace_chain", "bace_resid"].map(a => { const d = cellN(a, n);
+    return { arm: a, cov: d.cov, se: d.se, extra: `<div>mean width ${f2(d.width)} SD units · ${d.datasets} datasets</div>` }; })
+})), 0.85, 1.0, [0.85, 0.90, 0.95, 1.00]);
+
+const tc = document.getElementById("tab-cell");
+tc.innerHTML = `<thead><tr><th>n</th><th>Arm</th><th class="n">Coverage</th><th class="n">2 SE</th><th class="n">Width (SD units)</th></tr></thead><tbody>` +
+  [100, 300].map((n, i) => ["bace", "bace_chain", "bace_resid"].map((a, j) => { const d = cellN(a, n);
+    return `<tr${i && !j ? ' class="sep"' : ""}><td class="n">${j ? "" : n}</td><td>${ARMS[a].label}</td><td class="n">${f3(d.cov)}</td><td class="n">${f3(2 * d.se)}</td><td class="n">${f2(d.width)}</td></tr>`; }).join("") +
+    `<tr><td></td><td>Chained minus shipped (paired)</td><td class="n">+${f3(pr(n).diff)}</td><td class="n">${f3(2 * pr(n).se)}</td><td class="n">higher in ${Math.round(pr(n).chain_higher_share * 100)}% of fits</td></tr>`).join("") + `</tbody>`;
+
+// ---- downstream chart
+const dArms = ["complete", "bace", "bace_chain", "bace_resid"];
+legend(document.getElementById("leg-down"), dArms, true);
+const groupsDown = [];
+[["slope", "PGLS slope"], ["cor", "Phylogenetic correlation"]].forEach(([e, name]) => [100, 300].forEach(n =>
+  groupsDown.push({ title: `${name} · n = ${n}`, rows: dArms.map(a => { const d = down(a, n, e);
+    return { arm: a, cov: d.cov, se: d.se, extra: `<div>${d.datasets} datasets${d.fmi != null ? " · median FMI " + f2(d.fmi) : ""}</div>` }; }) })));
+dotplot(document.getElementById("chart-down"), groupsDown, 0.6, 1.0, [0.60, 0.70, 0.80, 0.90, 1.00]);
+
+const td = document.getElementById("tab-down");
+td.innerHTML = `<thead><tr><th>Estimand</th><th>n</th><th>Arm</th><th class="n">Coverage</th><th class="n">2 SE</th><th class="n">Median FMI</th><th class="n">Mean CI width</th></tr></thead><tbody>` +
+  groupsDown.map((g, gi) => { const [e, n] = [gi < 2 ? "slope" : "cor", gi % 2 ? 300 : 100];
+    return dArms.map((a, j) => { const d = down(a, n, e);
+      return `<tr${gi && !j ? ' class="sep"' : ""}><td>${j ? "" : (e === "slope" ? "Slope" : "Correlation")}</td><td class="n">${j ? "" : n}</td><td>${ARMS[a].label}</td><td class="n">${f3(d.cov)}</td><td class="n">${f3(2 * d.se)}</td><td class="n">${d.fmi == null ? "–" : f2(d.fmi)}</td><td class="n">${f3(d.width)}</td></tr>`; }).join(""); }).join("") + `</tbody>`;
+
+// ---- convergence table with inline bars
+const tconv = document.getElementById("tab-conv");
+const bar = (v) => v == null ? '<span class="num">n/a</span>' : `<span class="barcell"><span class="num">${Math.round(v * 100)}%</span><span class="bar" style="width:${Math.round(v * 64)}px"></span></span>`;
+tconv.innerHTML = `<thead><tr><th>Trait</th><th class="n">Mean level</th><th class="n">|acf| &lt; 0.3</th><th class="n">No trend</th><th class="n">Change &lt; 5%</th><th class="n">Trait passes</th></tr></thead><tbody>` +
+  DATA.conv.map(c => `<tr><td class="mono">${c.trait}</td><td class="n">${f2(c.level)}</td><td class="n">${bar(c.acf)}</td><td class="n">${bar(c.trend)}</td><td class="n">${bar(c.pct)}</td><td class="n">${bar(c.pass)}</td></tr>`).join("") +
+  `<tr class="sep"><td>White noise</td><td class="n">–</td><td class="n">${DATA.white_noise_acf.pass.map(v => Math.round(v * 100) + "%").join(" / ")}</td><td class="n">95%</td><td class="n">–</td><td class="n">at runs 5 / 10 / 15</td></tr></tbody>`;
+
+// ---- settings table
+const ts = document.getElementById("tab-settings");
+const S = DATA.settings.slice().sort((a, b) => a.n - b.n || a.nitt - b.nitt || a.runs - b.runs);
+ts.innerHTML = `<thead><tr><th class="n">n</th><th class="n">nitt</th><th class="n">runs</th><th class="n">BACE check pass</th><th class="n">Median ESS</th><th class="n">Fit (min)</th><th class="n">Chain (min)</th><th class="n">Cell cov, shipped</th><th class="n">Cell cov, chained</th></tr></thead><tbody>` +
+  S.map((s, i) => `<tr${i === 6 ? ' class="sep"' : ""}><td class="n">${s.n}</td><td class="n">${fint(s.nitt)}</td><td class="n">${s.runs}</td><td class="n">${Math.round(s.conv_pass * 100)}%</td><td class="n">${fint(s.ess_med)}</td><td class="n">${fint(s.wall_fit_s / 60)}</td><td class="n">${fint(s.wall_chain_s / 60)}</td><td class="n">${f3(s.bace_cell)}</td><td class="n">${f3(s.chain_cell)}</td></tr>`).join("") + `</tbody>`;
+
+// ---- frequentist timing and budget
+document.getElementById("tab-freq").innerHTML = `<thead><tr><th>Frequentist timing, one replicate</th><th class="n">n = 100</th><th class="n">n = 300</th><th class="n">n = 1000</th></tr></thead><tbody>
+  <tr><td>freq A (20 bootstrap refits), mean / max</td>${DATA.freq.map(f => `<td class="n">${f.freqA_mean} / ${f.freqA_max} s</td>`).join("")}</tr>
+  <tr><td>freq B (one fit), mean</td>${DATA.freq.map(f => `<td class="n">${f.freqB_mean} s</td>`).join("")}</tr>
+  <tr><td>Refit failures · errors (36 replicates)</td><td class="n" colspan="3">0 · 0</td></tr></tbody>`;
+document.getElementById("tab-budget").innerHTML = `<thead><tr><th>Campaign option (18 core cells, M = 20)</th><th class="n">BACE reps</th><th class="n">Core-hours</th><th class="n">Coverage SE</th></tr></thead><tbody>
+  <tr><td>Frequentist arms, 200 reps per cell</td><td class="n">–</td><td class="n">≈ 165</td><td class="n">0.015</td></tr>
+  <tr><td>A · BACE, 200 reps at every n</td><td class="n">200</td><td class="n">≈ 11,600</td><td class="n">0.015</td></tr>
+  <tr><td><b>B · BACE, 200 reps at n 100 and 300, 100 at n 1000</b></td><td class="n">200 / 100</td><td class="n">≈ 7,400</td><td class="n">0.015 / 0.022</td></tr>
+  <tr><td>C · BACE, 100 reps at every n</td><td class="n">100</td><td class="n">≈ 5,900</td><td class="n">0.022</td></tr>
+  <tr><td colspan="4" style="white-space:normal;color:var(--ink-2)">BACE per fit at runs 5, nitt 50,000, including the chain: 0.63 h at n = 100 and 1.97 h at n = 300 (measured); about 6.9 h at n = 1000 (extrapolated from v1 with the +25% seen at n = 300). Core-hours include the frequentist arms.</td></tr></tbody>`;
+
+// ---- copy reply
+document.getElementById("copy-btn").addEventListener("click", async (ev) => {
+  const txt = document.getElementById("reply-text").textContent;
+  try { await navigator.clipboard.writeText(txt); ev.target.textContent = "Copied"; }
+  catch (e) { const r = document.createRange(); r.selectNodeContents(document.getElementById("reply-text")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); ev.target.textContent = "Selected: press Ctrl/Cmd+C"; }
+});
+</script>

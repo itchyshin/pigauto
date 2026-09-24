@@ -1,4 +1,13 @@
-# BACE settings pre-run: approved and launched with the chained arm
+# BACE settings pre-run: approved, launched, complete
+
+> **Results (2026-09-24, 17:24 nibi time).** 240 of 240 fits, no failures. Full page:
+> `docs/dev-log/arc/2026-09-25-rubin-prerun-results.html` (published privately at
+> https://claude.ai/artifact/WMHxQ8idafD5sLAVEJtg9Q). Per-cell coverage of c1/c2, BACE as shipped vs chained:
+> 0.881 vs 0.943 (n = 100), 0.903 vs 0.943 (n = 300); paired difference +0.062 (SE 0.008) and +0.040
+> (SE 0.006), SEs clustered by dataset (the six settings reuse 20 datasets per n). Chain settings changed
+> neither arm's coverage; ESS 750 to 1,600 everywhere; BACE's own convergence check passed 10 to 35% and no
+> setting met rule (a). Audit of that check: `script/rubin_convcheck.R`. Recommendation (Shinichi decides):
+> drop rule (a), take runs 5 and nitt 50,000.
 
 > **Update (2026-09-24, after approval).** Shinichi approved the pre-run and a chained BACE arm, sized in the
 > same run ("yes go ahead" to: yes to the pre-run; yes, build bace_chain and size it in the same pre-run).
