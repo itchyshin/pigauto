@@ -19,3 +19,12 @@ HOST SPLIT v2 (20:0x nibi; nibi BACE arrays still all PENDING after 2 h, fir/ror
   BACE n300: seeds 1-51 nibi (22634023, 102 tasks), 52-102 rorqual (21772064, 102 tasks), 103-200 fir (61366948, 294 tasks).
   rorqual validation 21771783 G-S4a PASS. narval validation FAILED: illegal instruction in ape (fir-built library not portable
   to narval CPUs) -> narval not used (rebuild would be needed). Totoro still over this user's 150 cap.
+BACE LAMBDA = 1 (2026-09-24 ~20:50 nibi): BACE as shipped fails most lambda = 1 fits (fixed thresholds leave empty discrete
+  levels; MCMCglmm "Mixed model equations singular", or "argument is of length zero"). v1 saw the same (114 bace failures n100).
+  FIX (rubin_bace.R cc7daf75, gate G-S3c): fit_bace_mi drops unused factor levels and leaves out a discrete trait with < 2
+  observed classes; recorded in diag$input_fix; no-op otherwise. Failed as-shipped rds moved to results/bace_asshipped_failed/
+  (the as-shipped failure-rate record). Retry arrays (retry1): fir 61371997 (n300, 69), rorqual 21774491 (n100, 71),
+  21774492 (n300, 27). nibi's queued lambda = 1 tasks run the fixed code. TODO after first pass: rerun
+  rubin_retry_prep.R on every host (tasks that started before the deploy fail as-shipped) and resubmit (retry2).
+FREQ BLOW-UPS: 5/600 freq-cmp fits (0.8%) have astronomically wide intervals on nibi compute; Mac reproduces the same
+  cell cleanly; not the BLAS backend (fir BACE test). Diagnostic job nibi 22635770 pending. Fix still to decide.

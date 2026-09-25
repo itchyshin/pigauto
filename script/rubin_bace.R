@@ -56,7 +56,22 @@
 fit_bace_mi <- function(cell, M = 20L, nitt, burnin, thin, runs) {
   tree_b <- cell$tree
   if (any(tree_b$edge.length == 0)) tree_b$edge.length[tree_b$edge.length == 0] <- 1e-8
-  df_b <- cell$df_miss; df_b$Species <- rownames(cell$df_miss)
+  # Input cleaning (2026-09-24, campaign): at lambda = 1 with fixed thresholds most datasets leave a discrete
+  # level unobserved, and BACE passes the unused level to MCMCglmm, which stops at once with "Mixed model
+  # equations singular". A careful user drops unused levels, so do that; a discrete trait with fewer than two
+  # observed classes cannot be modelled and is left out of BACE's model (discrete traits are not scored).
+  # A no-op on datasets without empty levels. Every change is recorded in diag$input_fix.
+  df_b <- cell$df_miss; input_fix <- character(0)
+  for (v in names(df_b)) if (is.factor(df_b[[v]])) {
+    obs_lv <- unique(as.character(df_b[[v]][!is.na(df_b[[v]])]))
+    if (length(obs_lv) < 2L) {
+      df_b[[v]] <- NULL; input_fix <- c(input_fix, sprintf("%s: left out (%d observed class)", v, length(obs_lv)))
+    } else if (nlevels(droplevels(df_b[[v]])) < nlevels(df_b[[v]])) {
+      input_fix <- c(input_fix, sprintf("%s: dropped %d empty level(s)", v, nlevels(df_b[[v]]) - nlevels(droplevels(df_b[[v]]))))
+      df_b[[v]] <- droplevels(df_b[[v]])
+    }
+  }
+  df_b$Species <- rownames(cell$df_miss)
   all_traits <- setdiff(names(df_b), "Species")
   fixformula <- lapply(all_traits, function(v)
     paste0(v, " ~ ", paste(setdiff(all_traits, v), collapse = " + ")))
@@ -69,6 +84,7 @@ fit_bace_mi <- function(cell, M = 20L, nitt, burnin, thin, runs) {
   wall_s <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
 
   d <- bace_diagnostics(outb)   # same convergence/ESS extraction v1/G9b use (campaign_gnn_off_lib.R)
+  d$input_fix <- input_fix
   list(outb = outb, wall_s = wall_s, converged = d$converged, ess_med = d$ess_med, diag = d,
        fixformula = fixformula, tree_b = tree_b, mcmc = c(nitt = nitt, burnin = burnin, thin = thin))
 }
@@ -113,6 +129,7 @@ mi_bace_chain <- function(fb, df_miss, M = 20L) {
 #' @return list of length M, each a data.frame shaped like df_miss
 mi_bace_shipped <- function(outb, df_miss) {
   lapply(outb$imputed_datasets, function(d) {
+    for (v in setdiff(names(df_miss), names(d))) d[[v]] <- df_miss[[v]][match(rownames(d), rownames(df_miss))]  # left-out trait
     d <- d[rownames(df_miss), names(df_miss), drop = FALSE]
     for (v in names(df_miss)) {
       if (is.integer(df_miss[[v]]) && !is.integer(d[[v]])) {

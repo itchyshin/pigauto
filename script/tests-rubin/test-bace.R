@@ -36,7 +36,9 @@ testthat::test_that("fit_bace_mi returns the bace object, wall time, and BACE's 
   testthat::expect_length(fit$outb$imputed_datasets, 5L)
   testthat::expect_true(is.numeric(fit$wall_s) && fit$wall_s > 0)
   testthat::expect_identical(fit$converged, isTRUE(fit$outb$converged))
-  testthat::expect_identical(fit$diag, bace_diagnostics(fit$outb))
+  bd <- bace_diagnostics(fit$outb)
+  testthat::expect_identical(fit$diag[names(bd)], bd)   # plus the input-cleaning record
+  testthat::expect_true(is.character(fit$diag$input_fix))
 })
 
 testthat::test_that("mi_bace_shipped is outb$imputed_datasets, aligned to df_miss row order/columns only", {

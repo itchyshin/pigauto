@@ -31,13 +31,20 @@ case "$ARMSET" in
   *) echo "ARMSET must be freq or bace"; exit 1 ;;
 esac
 
-TASKS="$LOG/campaign_${ARMSET}_n${N}_s${S0}-${S1}_tasks.txt"; : > "$TASKS"
-for lambda in 0.3 0.7 1; do for rho in 0 0.5; do
+TASKS="$LOG/campaign_${ARMSET}_n${N}_s${S0}-${S1}${TAG:+_$TAG}_tasks.txt"; : > "$TASKS"
+# RETRY_FILE: explicit (lambda rho seed) triples, one per line, instead of the full grid (reruns of named fits).
+if [ -n "${RETRY_FILE:-}" ]; then
+  while read -r lambda rho seed; do
+    printf '%s\t%d\t%d\n' "--n $N --lambda $lambda --rho $rho --M 20 --arms $ARMS $EXTRA --out $OUT" "$seed" "$seed" >> "$TASKS"
+  done < "$RETRY_FILE"
+else
+for lambda in ${LAMBDAS:-0.3 0.7 1}; do for rho in 0 0.5; do
   for (( s = S0; s <= S1; s += BLOCK )); do
     e=$(( s + BLOCK - 1 )); [ "$e" -gt "$S1" ] && e=$S1
     printf '%s\t%d\t%d\n' "--n $N --lambda $lambda --rho $rho --M 20 --arms $ARMS $EXTRA --out $OUT" "$s" "$e" >> "$TASKS"
   done
 done; done
+fi
 NT=$(wc -l < "$TASKS")
 if [ "$NT" -gt "$CAP" ]; then
   echo "$NT tasks exceeds the $CAP cap; use BLOCK >= $(( ( (S1 - S0 + 1) * 6 + CAP - 1 ) / CAP )) or split SEEDS"; exit 1
@@ -45,7 +52,7 @@ fi
 echo "armset=$ARMSET n=$N seeds=$S0..$S1 block=$BLOCK tasks=$NT time=$TIME mem=$MEM"
 [ "${CONFIRM:-no}" = yes ] || { echo "dry run: set CONFIRM=yes to submit (needs Shinichi's approval)"; exit 0; }
 
-SB="$LOG/campaign_${ARMSET}_n${N}_s${S0}-${S1}.sbatch"
+SB="$LOG/campaign_${ARMSET}_n${N}_s${S0}-${S1}${TAG:+_$TAG}.sbatch"
 cat > "$SB" <<SBEOF
 #!/bin/bash
 #SBATCH --account=def-snakagaw_cpu
