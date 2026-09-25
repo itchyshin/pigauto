@@ -513,3 +513,23 @@ test_that("[route] in multi-obs data the split keeps all observations of a speci
   expect_length(intersect(unit[rs$route_idx], unit[rs$score_idx]), 0L)
   expect_identical(unname(rs$n_route[["a"]] + rs$n_score[["a"]]), 100L)
 })
+
+test_that("[route] ordinal traits are scored by class error rate, with squared error breaking ties", {
+  tm <- list(name = "o", type = "ordinal", latent_cols = 1L,
+             levels = c("a", "b", "c"), mean = 2, sd = 1)
+  # truth classes 1, 2, 3, 2 on the z-scale (z = class - 2)
+  X_truth <- matrix(c(-1, 0, 1, 0), ncol = 1)
+  # A: every class right but far from the class centres (large squared error).
+  mu_a <- matrix(c(-1.45, 0.45, 0.55, -0.45), ncol = 1)
+  # B: one class wrong but close to the centres (small squared error).
+  mu_b <- matrix(c(-1, 0, 0.4, 0), ncol = 1)
+  la <- pigauto:::.pigauto_route_val_loss(tm, 1:4, 1:4, X_truth, mu_a)
+  lb <- pigauto:::.pigauto_route_val_loss(tm, 1:4, 1:4, X_truth, mu_b)
+  expect_equal(la$loss, 0)
+  expect_equal(lb$loss, 0.25)
+  expect_lt(la$loss, lb$loss)          # squared error alone would prefer B
+  expect_gt(la$tiebreak, lb$tiebreak)
+  # Predictions outside the level range clamp to the end classes.
+  mu_c <- matrix(c(-5, 0, 5, 0), ncol = 1)
+  expect_equal(pigauto:::.pigauto_route_val_loss(tm, 1:4, 1:4, X_truth, mu_c)$loss, 0)
+})

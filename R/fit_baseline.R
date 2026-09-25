@@ -1352,6 +1352,24 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
 #' @noRd
 .pigauto_route_val_loss <- function(tm, val_row, species_row, X_truth, mu) {
   type <- tm$type
+  # Ordinal: score class error rate (what users see after decoding), with
+  # latent squared error as the tie-break, since error rates tie often.
+  # Classes decode as round(z * sd + mean) on 1..K (as in the ordinal path
+  # selection above), clamped to the level range.
+  if (identical(type, "ordinal") && length(tm$levels) >= 2L &&
+      is.finite(tm$sd %||% NA_real_) && tm$sd > 0) {
+    col   <- tm$latent_cols[1]
+    truth <- X_truth[val_row, col]
+    pred  <- mu[species_row, col]
+    ok    <- is.finite(truth) & is.finite(pred)
+    n     <- sum(ok)
+    if (n == 0L) return(list(n = 0L, loss = NA_real_))
+    K <- length(tm$levels)
+    cls_t <- round(truth[ok] * tm$sd + tm$mean)
+    cls_p <- pmin(pmax(round(pred[ok] * tm$sd + tm$mean), 1), K)
+    return(list(n = n, loss = mean(cls_p != cls_t),
+                tiebreak = mean((pred[ok] - truth[ok])^2)))
+  }
   if (type %in% c("continuous", "count", "ordinal", "proportion")) {
     col   <- tm$latent_cols[1]
     truth <- X_truth[val_row, col]
@@ -1452,11 +1470,18 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     res_exact <- .pigauto_route_val_loss(tm, vr, sr, X_truth, fit_exact$mu)
     res_pc    <- .pigauto_route_val_loss(tm, vr, sr, X_truth, fit_pc$mu)
     n_total <- max(res_exact$n, res_pc$n)
-    if (n_total < 5L || !is.finite(res_exact$loss) || !is.finite(res_pc$loss) ||
-        isTRUE(all.equal(res_exact$loss, res_pc$loss))) {
-      next  # tie / insufficient evidence -> whatever fit_exact actually ran
+    if (n_total < 5L || !is.finite(res_exact$loss) || !is.finite(res_pc$loss)) {
+      next  # insufficient evidence -> whatever fit_exact actually ran
     }
-    route[[tm$name]] <- if (res_pc$loss < res_exact$loss) "per_column" else "exact"
+    le <- res_exact$loss; lp <- res_pc$loss
+    if (isTRUE(all.equal(le, lp)) && !is.null(res_exact$tiebreak) &&
+        !is.null(res_pc$tiebreak)) {
+      le <- res_exact$tiebreak; lp <- res_pc$tiebreak
+    }
+    if (!is.finite(le) || !is.finite(lp) || isTRUE(all.equal(le, lp))) {
+      next  # tie -> whatever fit_exact actually ran
+    }
+    route[[tm$name]] <- if (lp < le) "per_column" else "exact"
   }
   route
 }
