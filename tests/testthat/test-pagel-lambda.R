@@ -296,3 +296,37 @@ test_that("[pagel] fit_baseline does NOT warn for covariates + default lambda_mo
 
   expect_no_warning(fit_baseline(pd, tree))
 })
+
+# ---- full-REML fix (2026-09-24) --------------------------------------------
+
+test_that("[pagel] full REML term reduces the low bias at weak signal", {
+  # build_pagel_nll_cache() (R/pagel_lambda.R) now includes the REML
+  # determinant correction 0.5 * log(1' R_oo(lambda)^-1 1) for profiling
+  # out the scalar GLS mean. Regime: n = 300, 30% MCAR, BM DGP at
+  # lambda = 0.3, observed mean shifted +1.5 (matches the diagnostic that
+  # motivated this fix). Verified (temporarily reverting the REML term)
+  # that this exact test fails on the pre-fix estimator: old bias
+  # |mean(lambda_hat) - 0.3| ~= 0.061, well above the 0.04 gate.
+  skip_on_cran()
+  n <- 300L
+  n_miss <- 90L
+  lambda_true <- 0.3
+  n_seeds <- 100L
+  lambda_hats <- numeric(n_seeds)
+  for (s in seq_len(n_seeds)) {
+    set.seed(s)
+    tree <- ape::rcoal(n)
+    R <- stats::cov2cor(ape::vcv.phylo(tree))
+    R <- R[tree$tip.label, tree$tip.label]
+    Lc <- chol(R)
+    y <- sqrt(lambda_true) * drop(crossprod(Lc, rnorm(n))) +
+      sqrt(1 - lambda_true) * rnorm(n) + 1.5
+    y[sample(n, n_miss)] <- NA
+    lambda_hats[s] <- pigauto:::ml_lambda_for_col(y, R)
+  }
+  bias <- mean(lambda_hats) - lambda_true
+  message(sprintf(
+    "[pagel] full-REML weak-signal recovery (n = %d seeds): mean(lambda_hat) = %.4f, bias = %.4f",
+    n_seeds, mean(lambda_hats), bias))
+  expect_lt(abs(bias), 0.04)
+})

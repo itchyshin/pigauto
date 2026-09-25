@@ -67,19 +67,24 @@ test_that("[joint-lambda] fixed_1 is identical within 1e-12 to the origin/main r
 
 # ---- recovery ----------------------------------------------------------
 
-# Deviation from the literal spec (documented in
-# docs/dev-log/lambda-default/S2-solver-report.md): the per-column ML
-# lambda estimator has a genuine, stable negative bias of roughly
-# -0.05 to -0.07 at n = 300 / 30% MCAR for intermediate true lambda
-# (0.3, 0.7) -- confirmed by re-running this exact estimator at 20, 40,
-# 50, 80 and 150 seeds; the bias does not shrink toward 0 as the seed
-# count grows, so it is a property of the estimator, not Monte Carlo
-# noise. A bias bound of 0.05 at exactly 20 seeds is therefore a coin
-# flip (bootstrap over a 150-seed pool: P(|20-seed bias| < 0.05) is
-# 0.42-0.54 depending on the column) rather than a reproducible gate.
-# This test uses 40 seeds (still cheap) and a bias bound of 0.08, which
-# both the 40-seed and the 150-seed pooled estimates clear with margin.
-# MAE (expected ~0.10-0.14, consistent with the coordinator's own
+# Update (2026-09-24, R/pagel_lambda.R full-REML fix): `build_pagel_nll_cache()`
+# now includes the REML determinant correction for the profiled-out GLS
+# mean, which substantially reduces the per-column estimator's weak-signal
+# low bias. Re-measured with this exact simulate_lambda_L() harness:
+#   seeds 1:40:  bias = -0.0272 (lambda=0.3), -0.0553 (lambda=0.7), -0.0050 (lambda=1)
+#   seeds 1:150: bias = -0.0145 (lambda=0.3), -0.0338 (lambda=0.7), -0.0050 (lambda=1)
+# The 150-seed pooled estimate clears 0.05 with margin, but the actual
+# 40-seed window this test runs (seeds 1:40) does NOT -- its lambda=0.7
+# bias (-0.0553) exceeds 0.05 outright, and a spot-check across seven
+# further non-overlapping 40-seed windows (41:320) shows the same-column
+# bias ranging from -0.0146 to -0.0553 (Monte Carlo noise at n = 40 is
+# large relative to the true ~-0.03 bias). Tightening straight to 0.05
+# would therefore make this test fail deterministically as written, not
+# "sometimes" -- so the bound is tightened to 0.07 (down from 0.08)
+# rather than 0.05: it still reflects the real improvement (old
+# estimator's bias was -0.05 to -0.07 in this same regime) while clearing
+# every measured 40-seed window, including the production one, with
+# margin. MAE (expected ~0.10-0.14, consistent with the coordinator's own
 # "MAE ~0.14 by construction" note) is reported via `message()`, not
 # asserted.
 test_that("[joint-lambda] recovery: per-trait lambda_hat is not badly biased", {
@@ -107,9 +112,9 @@ test_that("[joint-lambda] recovery: per-trait lambda_hat is not badly biased", {
     paste(sprintf("%.4f", bias), collapse = ", "),
     paste(sprintf("%.4f", mae), collapse = ", ")
   ))
-  expect_lt(abs(bias[1]), 0.08)
-  expect_lt(abs(bias[2]), 0.08)
-  expect_lt(abs(bias[3]), 0.08)
+  expect_lt(abs(bias[1]), 0.07)
+  expect_lt(abs(bias[2]), 0.07)
+  expect_lt(abs(bias[3]), 0.07)
 })
 
 # ---- negative control ---------------------------------------------------

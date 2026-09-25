@@ -35,7 +35,11 @@
 # Mathematically: w_i propto exp(-nll(lambda_i)), normalised. Under a
 # flat prior over [0, 1] this is exactly the marginal posterior on a
 # coarse grid; the eigendecomp cache makes evaluation cheap enough that
-# a 41-point grid is essentially free.
+# a 41-point grid is essentially free. Since 2026-09-24, nll(lambda) is
+# full REML (the GLS mean's determinant correction is included), so this
+# is now a REML posterior rather than a profile-likelihood posterior --
+# the weighting still integrates the same likelihood-weighted surface,
+# just with the mean-uncertainty penalty folded in.
 #
 # This is the deterministic analogue of what BACE's MCMCglmm does via
 # Markov-chain samples from the phylo / residual variance-component
@@ -143,13 +147,21 @@ cv_lambda_for_col <- function(y, R, nugget = 1e-6,
 #
 # One-time eigendecomposition cache for the Pagel's lambda profile NLL.
 #
-# The profile-REML negative log-likelihood for Pagel's lambda on a column y
-# observed at cells `obs`, with phylo correlation R restricted to R_oo, is:
+# The full-REML (restricted likelihood, GLS mean profiled out) negative
+# log-likelihood for Pagel's lambda on a column y observed at cells `obs`,
+# with phylo correlation R restricted to R_oo, is:
 #
 #   nll(lambda) = 0.5 * ( (n_o - 1) * log(sigma2_hat(lambda))
-#                       + log|R_oo(lambda)| )
+#                       + log|R_oo(lambda)|
+#                       + log(1' R_oo(lambda)^-1 1) )
 #
-# where R_oo(lambda) = lambda * R_oo + (1 - lambda) * I.
+# where R_oo(lambda) = lambda * R_oo + (1 - lambda) * I. The third term is
+# the REML determinant correction (Harville 1977) for profiling out the
+# scalar GLS mean; omitting it (as earlier versions of this file did)
+# biases lambda_hat low at weak signal. Measured (200 seeds, n = 300, 30%
+# MCAR, BM DGP, observed-mean shift +1.5): bias -0.061 -> -0.022 at
+# lambda = 0.3, -0.038 -> -0.027 at lambda = 0.7, unchanged (-0.005) at
+# lambda = 1 (2026-09-24).
 #
 # Eigendecompose R_oo = U Lambda U^T once (O(n_o^3)). Then for any lambda,
 # d_i(lambda) = lambda * Lambda_i + (1 - lambda), and R_oo(lambda)^{-1} =
@@ -221,7 +233,12 @@ build_pagel_nll_cache <- function(y, R, nugget = 1e-6, X = NULL) {
       sigma2 <- sum(c_e * c_e * inv_d) / max(n_o - 1L, 1L)
       if (!is.finite(sigma2) || sigma2 <= 0) return(.Machine$double.xmax)
       log_det <- sum(log(d))
-      0.5 * ((n_o - 1L) * log(sigma2) + log_det)
+      # Full-REML determinant correction for profiling out the scalar GLS
+      # mean: 0.5 * log(1' R_oo(lambda)^-1 1) = 0.5 * log(sum_a). Guard
+      # against sum_a <= 0 (should not happen once d > 0, but mirrors the
+      # other singular guards in this file).
+      if (!is.finite(sum_a) || sum_a <= 0) return(.Machine$double.xmax)
+      0.5 * ((n_o - 1L) * log(sigma2) + log_det + log(sum_a))
     }
     mu_at <- function(lambda) {
       d <- lambda * evals + (1 - lambda) + nugget
@@ -256,13 +273,15 @@ build_pagel_nll_cache <- function(y, R, nugget = 1e-6, X = NULL) {
     sigma2 <- sum(c_e * c_e * inv_d) / max(n_o - p_x, 1L)
     if (!is.finite(sigma2) || sigma2 <= 0) return(.Machine$double.xmax)
     log_det <- sum(log(d))
-    # Profile REML NLL, dropping the log|X' R(lambda)^-1 X| correction term
-    # that full REML adds when beta is also profiled out (Harville 1977).
-    # The intercept-only branch above drops the analogous scalar term
-    # (log(sum_a)) for the same reason: this file's convention is a profile
-    # likelihood over the mean structure, not full REML. Kept consistent
-    # here rather than introducing an asymmetric correction.
-    0.5 * ((n_o - p_x) * log(sigma2) + log_det)
+    # Full-REML NLL: adds the log|X' R(lambda)^-1 X| = log|XtDinvX|
+    # determinant correction for profiling out beta (Harville 1977), the
+    # matrix analogue of the intercept-only branch's log(sum_a) term above.
+    log_det_x <- tryCatch(
+      determinant(XtDinvX, logarithm = TRUE)$modulus,
+      error = function(e) NA_real_
+    )
+    if (!is.finite(log_det_x)) return(.Machine$double.xmax)
+    0.5 * ((n_o - p_x) * log(sigma2) + log_det + as.numeric(log_det_x))
   }
   list(nll = nll_at_x, mu_at = NULL, n_o = n_o)
 }
