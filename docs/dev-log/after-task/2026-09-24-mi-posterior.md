@@ -145,8 +145,7 @@ Per gate: (details in `results.md`):
 - G7: `CELL_COVERAGE_PASS`.
 - G8: pending the FishBase cell.
 
-CI on PR #189: R CMD check passed on macOS (R release) and Ubuntu (R release, R devel); pkgdown
-skipped on PRs by design.
+CI on PR #189: R CMD check passed at 3cd3139 on macOS (R release) and Ubuntu (R release, R devel). That commit includes the last change to `R/` and `tests/` (8d2f612); later pushes were docs-only and their runs were superseded. pkgdown is skipped on PRs by design.
 
 Campaign integrity: - `SETTINGS 0 of 8000` non-campaign files;
 - `MIXED_CODE_SHA`, as expected;
@@ -290,4 +289,15 @@ Does NOT cover:
 
 ## Final gate state
 
-(Filled in at the end of the overnight run.)
+Ledger (`.unlazy/mi-posterior/GATES.md`, local; re-verified 2026-09-25):
+
+| Gate | State |
+|---|---|
+| G1 to G5c | met at the final code |
+| G6 | not met: 3 in-model rows of the relative SE-ratio rule; decision owed by Shinichi |
+| G7 | met |
+| G8 | see the handover's Final state (depends on the FishBase cell) |
+| M1 | met (design review) |
+| M2 | pending: findings fixed; the D-43 panel withheld nothing; the formal PROCEED waits for the final real-data section |
+
+`check-after-task.R` correctly refuses to call the work finished while G6, G8 and M2 are unmet.
