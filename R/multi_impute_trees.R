@@ -549,6 +549,18 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
     # informs every other cell), matching the production `baseline_full`
     # semantics fit_pigauto()/impute() use elsewhere. gnn = TRUE keeps the
     # held-out splits_ref fit, unchanged.
+    # S5b: for gnn = FALSE (splits = NULL below, production-baseline
+    # semantics) there are no validation cells for this per-tree refit to
+    # re-decide "auto" with, so reuse the reference tree's own per-trait
+    # route (fit_ref$model_config$predict_method_by_trait, from its own
+    # held-out `baseline`) via predict_route. For gnn = TRUE (splits_ref
+    # below, real validation cells), let "auto" re-decide per tree as
+    # usual -- no predict_route override needed.
+    predict_route_arg <- if (isFALSE(gnn)) {
+      baseline_arg("predict_method_by_trait", NULL)
+    } else {
+      NULL
+    }
     baseline_t <- fit_baseline(
       data_ref,
       trees[[t]],
@@ -565,8 +577,10 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
       em_tol = baseline_arg("em_tol", 1e-3),
       em_offdiag = baseline_arg("em_offdiag", FALSE),
       joint_solver = baseline_arg("joint_solver", "inhouse"),
-      predict_method = baseline_arg("predict_method", "per_column"),
-      joint_refine_iter = baseline_arg("joint_refine_iter", 0L)
+      predict_method = baseline_arg("predict_method", "auto"),
+      joint_refine_iter = baseline_arg("joint_refine_iter", 0L),
+      predict_route = predict_route_arg,
+      seed = if (is.null(seed)) NULL else as.integer(seed) + t
     )
     # NULL only for baselines built before lambda_per_trait existed.
     lambda_per_trait_by_tree[[t]] <- baseline_t$lambda_per_trait

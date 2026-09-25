@@ -71,7 +71,13 @@ test_that("[lambda-per-type] lambda_mode = 'fixed_1' is unchanged (numerical reg
   pd  <- preprocess_traits(td$df, td$tree)
   spl <- make_missing_splits(pd$X_scaled, seed = 1, trait_map = pd$trait_map)
 
-  bl <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "fixed_1")
+  # S3 default flip: pinned to predict_method = "per_column" -- the mu
+  # values below were pinned against the pre-S3 default (per-column
+  # prediction); predict_method = "exact" (now the default) legitimately
+  # produces different numbers at imputed cells, so this regression pin
+  # must fix the route it is testing rather than move with the default.
+  bl <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "fixed_1",
+                     predict_method = "per_column")
 
   expect_true(is.matrix(bl$mu))
   expect_true(all(is.finite(bl$mu)))
@@ -111,8 +117,19 @@ test_that("[lambda-per-type] lambda_mode = 'estimate' leaves binary/categorical 
   pd  <- preprocess_traits(td$df, td$tree)
   spl <- make_missing_splits(pd$X_scaled, seed = 1, trait_map = pd$trait_map)
 
-  bl_fixed <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "fixed_1")
-  bl_est   <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "estimate")
+  # S3 default flip: pinned to predict_method = "per_column". Under
+  # predict_method = "exact" (the default), discrete liability columns
+  # deliberately share the joint fit's lambda_block instead of staying
+  # fixed at lambda = 1 (Shinichi's decision -- the exact conditional's
+  # covariance model needs ONE internally-consistent R(lambda_block) for
+  # every column). So under "exact", lambda_mode = "estimate" DOES move
+  # the discrete columns relative to fixed_1, which is exactly what this
+  # test checks does NOT happen -- that invariant is a per-column-path
+  # property now, not a global one.
+  bl_fixed <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "fixed_1",
+                           predict_method = "per_column")
+  bl_est   <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "estimate",
+                           predict_method = "per_column")
 
   migr_col  <- pd$trait_map$migr$latent_cols
   diet_cols <- pd$trait_map$diet$latent_cols
@@ -141,8 +158,13 @@ test_that("[lambda-per-type] lambda_mode = 'bayes' also leaves categorical basel
   pd  <- preprocess_traits(td$df, td$tree)
   spl <- make_missing_splits(pd$X_scaled, seed = 1, trait_map = pd$trait_map)
 
-  bl_fixed <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "fixed_1")
-  bl_bayes <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "bayes")
+  # S3 default flip: pinned to predict_method = "per_column" -- same
+  # reasoning as the "estimate" case above (discrete columns share
+  # lambda_block under "exact" by design).
+  bl_fixed <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "fixed_1",
+                           predict_method = "per_column")
+  bl_bayes <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "bayes",
+                           predict_method = "per_column")
 
   diet_cols <- pd$trait_map$diet$latent_cols
   migr_col  <- pd$trait_map$migr$latent_cols
@@ -157,8 +179,17 @@ test_that("[lambda-per-type] lambda_mode = 'estimate' routes continuous columns 
   pd  <- preprocess_traits(td$df, td$tree)
   spl <- make_missing_splits(pd$X_scaled, seed = 1, trait_map = pd$trait_map)
 
-  bl_fixed <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "fixed_1")
-  bl_est   <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "estimate")
+  # S3 default flip: pinned to predict_method = "per_column" -- this test's
+  # core assertion is that the joint threshold-baseline's continuous-column
+  # PREDICTION matches a direct per-column bm_impute_col() call at the same
+  # per-trait lambda. That equivalence is a per-column-path property: under
+  # predict_method = "exact" (now the default) the prediction is the joint
+  # cross-trait conditional, which legitimately differs from a per-column
+  # reference at imputed cells (observed cells still match exactly).
+  bl_fixed <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "fixed_1",
+                           predict_method = "per_column")
+  bl_est   <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "estimate",
+                           predict_method = "per_column")
 
   mass_col <- pd$trait_map$mass$latent_cols
   wing_col <- pd$trait_map$wing$latent_cols

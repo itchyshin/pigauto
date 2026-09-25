@@ -94,7 +94,8 @@ ignored under \code{gnn = FALSE} (with a warning), as in \code{\link[=impute]{im
 \item{lambda_mode}{character. Pagel-lambda mode for the BM baseline,
 forwarded to \code{\link[=impute]{impute()}} / \code{\link[=fit_pigauto]{fit_pigauto()}}. \code{"estimate"} (default) fits
 a per-trait Pagel's lambda on each continuous-family (BM-eligible)
-latent column; discrete traits stay at lambda = 1. \code{"fixed_1"}
+latent column; discrete traits stay at lambda = 1 unless routed to
+\code{predict_method = "exact"}, where they share \code{lambda_block}. \code{"fixed_1"}
 preserves the pre-lambda Brownian correlation matrix everywhere;
 \code{"cv"} and \code{"bayes"} are alternative per-column estimators. See
 \code{\link[=fit_pigauto]{fit_pigauto()}} for the full contract, including the

@@ -43,6 +43,43 @@
 # collapsed to near-random. Fisher-ML on observed cells avoids that
 # imputation pollution entirely.
 
+# ---- S3 default flip: predict_method = "exact" is now the default -------
+#
+# docs/dev-log/exact-default/S3-default-report.md. `predict_method = "exact"`
+# can be unusable for a given fit (too many unknown cells, a singular Sigma,
+# fewer than 2 joint columns, or no Henderson precision available) and falls
+# back to the per-column path. When the caller EXPLICITLY asked for "exact",
+# that fallback still warns every time (unchanged behaviour). When "exact"
+# is running only because it's the DEFAULT, warning on every fit would be
+# noisy for something the caller never asked for, so this fires a single
+# message() -- not a warning() -- at most once per R session, via this
+# package-level flag.
+.pigauto_exact_fallback_env <- new.env(parent = emptyenv())
+.pigauto_exact_fallback_env$notified <- FALSE
+
+#' @keywords internal
+#' @noRd
+.pigauto_exact_fallback_reset <- function() {
+  .pigauto_exact_fallback_env$notified <- FALSE
+  invisible(NULL)
+}
+
+.pigauto_exact_fallback_notify <- function(reason) {
+  if (isTRUE(.pigauto_exact_fallback_env$notified)) return(invisible(NULL))
+  .pigauto_exact_fallback_env$notified <- TRUE
+  message(
+    "pigauto: the exact (\"exact\") joint baseline route was not usable ",
+    "for a fit (", reason, "); used the per-column baseline for that fit ",
+    "instead. This happens either while predict_method = \"auto\" (the ",
+    "default) is comparing its \"exact\" candidate, or when \"exact\" is ",
+    "itself the resolved route and fell back. This message is shown at ",
+    "most once per R session; pass predict_method = \"per_column\" to use ",
+    "the per-column path throughout, or predict_method = \"exact\" ",
+    "explicitly if you want a warning every time this happens."
+  )
+  invisible(NULL)
+}
+
 # Force a symmetric matrix to be positive-definite via eigen-clip.
 .mvn_ensure_pd <- function(M, eps = 1e-8) {
   if (!isSymmetric(M, tol = 100 * eps)) M <- (M + t(M)) / 2
@@ -326,7 +363,8 @@
 # column OUTSIDE lambda_cols is fixed at lambda = 1 (section 7's B iii
 # cut) -- lambda_bar is never imposed on a column the caller did not
 # name.
-.mvn_resolve_lambda <- function(lambda, L, R, lambda_cols_idx, eps = 1e-8) {
+.mvn_resolve_lambda <- function(lambda, L, R, lambda_cols_idx, eps = 1e-8,
+                                 predict_method = "per_column") {
   K <- ncol(L)
   col_names <- colnames(L)
   if (identical(lambda, "fixed_1")) {
@@ -355,8 +393,31 @@
            "entries in [0, 1].", call. = FALSE)
     }
     lambda_vec <- stats::setNames(as.numeric(lambda), col_names)
+    # S4 fix (docs/dev-log/exact-default/S4-fixes-report.md, root cause A):
+    # a caller rebuilding a baseline from a previous fit's own
+    # $lambda_per_trait (e.g. predict-time rebuild, or fit_baseline(...,
+    # lambda_fixed = bl$lambda_per_trait)) must reproduce lambda_block
+    # EXACTLY, not just approximately via mean(lambda_vec) -- the original
+    # "estimate" fit's lambda_block came from the argmin of the SUMMED
+    # profile-REML NLL over lambda_cols, which need not equal the mean of
+    # the resulting per-column lambda_hat values (and, under
+    # predict_method = "exact", the non-lambda_cols columns are already
+    # fixed AT lambda_block, which would bias mean(lambda_vec) toward it
+    # without exactly reproducing it). `fit_baseline()` attaches the
+    # original lambda_block as an attribute on the $lambda_per_trait vector
+    # it returns precisely so a caller can replay it here; fall back to
+    # mean() only when that attribute is absent (e.g. a bare numeric vector
+    # built by hand, or one that has lost its attributes via subsetting
+    # upstream of this call).
+    lambda_block_attr <- attr(lambda, "lambda_block")
+    lambda_block_val <- if (!is.null(lambda_block_attr) &&
+                              is.finite(lambda_block_attr)) {
+      lambda_block_attr
+    } else {
+      mean(lambda_vec)
+    }
     return(list(lambda_vec = lambda_vec,
-                lambda_block = mean(lambda_vec),
+                lambda_block = lambda_block_val,
                 lambda_mode_used = "numeric_vector"))
   }
   if (!identical(lambda, "estimate")) {
@@ -397,7 +458,22 @@
   # lambda_bar. `mu_hat_vec` carries each column's GLS mean AT its own
   # lambda_k, read off the same cache, for `.mvn_init_per_column()` to
   # reuse (NA where not computed, e.g. low-n columns using lambda_block).
-  lambda_vec <- rep(1, K)
+  #
+  # EXCEPTION (S3, default flip, docs/dev-log/exact-default/
+  # S3-default-report.md, Shinichi's decision): under
+  # `predict_method = "exact"` every column outside `lambda_cols` (the
+  # discrete liability columns: binary, zi gate, ordinal-via-OVR
+  # synthetic columns) starts at `lambda_block` instead of 1. The exact
+  # conditional's covariance model is vec(L) ~ MVN(0, Sigma %x%
+  # R(lambda_block)) -- ONE shared R for every column via the single
+  # `henderson_bar` built at `lambda_block` -- so the Sigma estimate
+  # feeding that model must itself come from an L_hat init that is
+  # internally consistent with that same R(lambda_block), not a mix of
+  # R(1) for discrete columns and R(lambda_k) for continuous ones. Under
+  # `predict_method = "per_column"` this is unchanged (still 1): the
+  # per-column path never uses a single shared R across columns, so
+  # there is no such consistency requirement.
+  lambda_vec <- rep(if (identical(predict_method, "exact")) lambda_block else 1, K)
   mu_hat_vec <- rep(NA_real_, K)
   for (idx in seq_along(lambda_cols_idx)) {
     j <- lambda_cols_idx[idx]
@@ -509,15 +585,51 @@
 # $lambda_block is a diagnostic only: it feeds the Sigma M-step, the
 # opt-in `predict_method = "exact"`, and the opt-in `max_iter > 0` EM
 # refine, never a `lambda_cols` decision.
+#
+#   exact_centre : logical, default TRUE. Only consulted when
+#              `predict_method = "exact"`. `exact_conditional_mvn()`
+#              assumes vec(L) ~ MVN(0, Sigma %x% R(lambda_block)) --
+#              i.e. a ZERO column mean -- the same zero-root assumption
+#              `henderson_bm_predict()` makes for K = 1 (see
+#              `.mvn_init_per_column()`'s own centring comment above).
+#              When TRUE, each column k is centred at its own GLS
+#              phylogenetic mean at lambda_block
+#              (`.mvn_gls_mean_at_lambda()`) before the exact solve,
+#              and the mean is added back to the returned mean at
+#              every cell; the returned VARIANCE is left unchanged,
+#              because centring by a known constant does not change a
+#              Gaussian conditional variance -- this mirrors the
+#              per-column path, which also does not propagate
+#              uncertainty in mu_hat into its posterior variance.
+#              FALSE reproduces the pre-S1 exact output (implicit zero
+#              mean) exactly, and exists only so a caller can reproduce
+#              or benchmark against the old behaviour.
 fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
                                 max_iter = 0L, tol = 1e-4, eps = 1e-8,
                                 use_henderson = TRUE,
                                 sigma_method = c("single_pass", "fisher_ml"),
                                 refine_variance = c("conservative",
                                                     "pooled"),
-                                predict_method = c("per_column", "exact"),
+                                predict_method = c("exact", "per_column"),
                                 lambda = "fixed_1",
-                                lambda_cols = NULL) {
+                                lambda_cols = NULL,
+                                exact_centre = TRUE,
+                                predict_method_explicit = NULL) {
+  # S3 default flip (docs/dev-log/exact-default/S3-default-report.md):
+  # `missing()` must be read BEFORE match.arg() reassigns the local
+  # variable -- reassignment does not affect what missing() reports, but
+  # this still has to run first for clarity. `predict_method_explicit`
+  # lets a caller further up the stack (fit_joint_solver(), fit_baseline(),
+  # etc.) override the local missing() check with the ORIGINAL top-level
+  # caller's explicit/default status, since every internal layer always
+  # supplies a concrete value to the next one, which would otherwise make
+  # missing() report FALSE (explicit) at every level below the true entry
+  # point. NULL (the default) means "nothing has resolved this yet -- use
+  # my own missing() check", which is exactly right for a direct call
+  # (e.g. from a test).
+  if (is.null(predict_method_explicit)) {
+    predict_method_explicit <- !missing(predict_method)
+  }
   sigma_method <- match.arg(sigma_method)
   refine_variance <- match.arg(refine_variance)
   predict_method <- match.arg(predict_method)
@@ -534,7 +646,8 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
 
   # ---- Pagel's lambda resolution ------------------------------------------
   lambda_cols_idx <- .mvn_resolve_lambda_cols(lambda_cols, K)
-  lam <- .mvn_resolve_lambda(lambda, L, R, lambda_cols_idx, eps = eps)
+  lam <- .mvn_resolve_lambda(lambda, L, R, lambda_cols_idx, eps = eps,
+                              predict_method = predict_method)
   lambda_vec <- lam$lambda_vec
   lambda_block <- lam$lambda_block
   lambda_mode_used <- lam$lambda_mode_used
@@ -661,26 +774,74 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
   # non-finite output -- and we fall through to the per-column path rather
   # than degrade silently.
   # Derivation + gates: docs/dev-log/2026-08-17-exact-conditional-design.md
-  if (identical(predict_method, "exact") && K >= 2L && !is.null(henderson_bar)) {
-    ec <- exact_conditional_mvn(L, Sigma, henderson_bar, cor_scale = TRUE,
-                                 eps = eps)
+  #
+  # exact_centre (S1, docs/dev-log/exact-default/S1-centring-report.md):
+  # exact_conditional_mvn() assumes a ZERO column mean, same as
+  # henderson_bm_predict() for K = 1 above. Uncorrected, that disagrees
+  # with the observed-subset mean by as much as the per-column path's own
+  # pre-centring bug did (up to 0.25 at lambda 0.3; measured here even at
+  # lambda_block = 1, see the S1 report). Centre each column k at its own
+  # GLS mean at lambda_block, run the exact solve on the centred matrix,
+  # add mu_k back to every cell of the returned mean. The returned
+  # variance is left untouched: centring by a constant does not change a
+  # Gaussian conditional variance, and (as with the per-column path) this
+  # ignores uncertainty in mu_k itself -- a known, shared approximation.
+  #
+  # S3 default flip: the K < 2L / no-henderson_bar cases used to fall
+  # through this whole block SILENTLY (the `if` condition simply never
+  # matched). Now that "exact" is the default rather than an explicit
+  # opt-in, those cases are surfaced too, via the same quiet-message /
+  # explicit-warning split as the exact_conditional_mvn() == NULL case.
+  if (identical(predict_method, "exact")) {
+    ec <- NULL
+    reason <- NULL
+    mu_exact <- rep(0, K)
+    if (K < 2L) {
+      reason <- "fewer than 2 joint columns (K < 2)"
+    } else if (is.null(henderson_bar)) {
+      reason <- paste("no Henderson sparse precision available for this fit",
+                       "(no tree, or the Matrix package is unavailable)")
+    } else {
+      L_exact <- L
+      if (isTRUE(exact_centre)) {
+        mu_exact <- vapply(seq_len(K), function(j) {
+          .mvn_gls_mean_at_lambda(L[, j], R, lambda_block, nugget = eps)
+        }, numeric(1L))
+        for (j in seq_len(K)) L_exact[, j] <- L[, j] - mu_exact[j]
+      }
+      ec <- exact_conditional_mvn(L_exact, Sigma, henderson_bar, cor_scale = TRUE,
+                                   eps = eps)
+      if (is.null(ec)) {
+        reason <- "problem too large, or a numerically unusable Sigma"
+      }
+    }
     if (!is.null(ec)) {
+      mu_final <- ec$mu
+      if (isTRUE(exact_centre)) {
+        mu_final <- sweep(mu_final, 2L, mu_exact, `+`)
+      }
       return(list(
-        anc_recon = ec$mu,
+        anc_recon = mu_final,
         anc_var   = ec$var,
         diverged  = FALSE,
         pars      = list(phylocov = Sigma),
         n_iter    = 0L,
         converged = TRUE,
         predict_method = "exact",
+        predict_method_used = "exact",
         lambda_per_trait = lambda_vec,
         lambda_block = lambda_block,
         lambda_mode_used = lambda_mode_used
       ))
     }
-    warning("fit_mvn_bm_inhouse: predict_method = \"exact\" was not usable ",
-            "here (problem too large, or a numerically unusable Sigma); ",
-            "falling back to the per-column path.", call. = FALSE)
+    msg <- paste0("fit_mvn_bm_inhouse: predict_method = \"exact\" was not ",
+                  "usable here (", reason, "); falling back to the ",
+                  "per-column path.")
+    if (isTRUE(predict_method_explicit)) {
+      warning(msg, call. = FALSE)
+    } else {
+      .pigauto_exact_fallback_notify(reason)
+    }
   }
 
   if (K == 1L || max_iter <= 0L) {
@@ -703,6 +864,7 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
       pars      = list(phylocov = Sigma),
       n_iter    = 0L,
       converged = TRUE,
+      predict_method_used = "per_column",
       lambda_per_trait = lambda_vec,
       lambda_block = lambda_block,
       lambda_mode_used = lambda_mode_used
@@ -774,6 +936,7 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
     pars      = list(phylocov = Sigma),
     n_iter    = iter,
     converged = converged,
+    predict_method_used = "per_column",
     lambda_per_trait = lambda_vec,
     lambda_block = lambda_block,
     lambda_mode_used = lambda_mode_used
@@ -851,23 +1014,47 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
 #'   NULL (default, all columns). Forwarded to \code{fit_mvn_bm_inhouse()}
 #'   when \code{joint_solver = "inhouse"}; see its \code{lambda_cols}
 #'   argument. Not consulted on the \code{"rphylopars"} path.
+#' @param exact_centre logical, default \code{TRUE}. Forwarded to
+#'   \code{fit_mvn_bm_inhouse()} when \code{joint_solver = "inhouse"}
+#'   (including its fallback path); only consulted when
+#'   \code{predict_method = "exact"}. See its \code{exact_centre}
+#'   argument. Not consulted on the \code{"rphylopars"} path. Internal
+#'   only in this slice -- not exposed via \code{impute()} /
+#'   \code{fit_baseline()}.
+#' @param predict_method_explicit logical or NULL (default). Internal use
+#'   only: propagates whether the ORIGINAL top-level caller (e.g.
+#'   \code{impute()}) explicitly requested \code{predict_method}, so the
+#'   one-time exact-fallback message is only suppressed for the default.
+#'   \code{NULL} resolves via this function's own \code{missing()} check
+#'   (correct for a direct call); a caller further up the stack that has
+#'   already resolved this should pass the concrete \code{TRUE}/\code{FALSE}.
 #' @return list with the phylopars-compatible fields described in the
 #'   file header comment above (\code{$anc_recon}, \code{$anc_var},
-#'   \code{$pars$phylocov}), plus \code{$lambda_per_trait} and
-#'   \code{$lambda_block}.
+#'   \code{$pars$phylocov}), plus \code{$lambda_per_trait},
+#'   \code{$lambda_block}, and \code{$predict_method_used}
+#'   (\code{"exact"}, \code{"per_column"}, or \code{NA_character_} on the
+#'   \code{"rphylopars"} path, where the exact/per_column dichotomy does
+#'   not apply).
 #' @keywords internal
 #' @noRd
 fit_joint_solver <- function(L, tree, joint_solver = "inhouse",
-                             predict_method = "per_column",
+                             predict_method = "exact",
                               sigma_method = "single_pass",
                               joint_refine_iter = 0L,
                               lambda = "fixed_1",
-                              lambda_cols = NULL) {
+                              lambda_cols = NULL,
+                              exact_centre = TRUE,
+                              predict_method_explicit = NULL) {
+  if (is.null(predict_method_explicit)) {
+    predict_method_explicit <- !missing(predict_method)
+  }
   if (identical(joint_solver, "inhouse")) {
     return(fit_mvn_bm_inhouse(L = L, tree = tree, sigma_method = sigma_method,
                               predict_method = predict_method,
                                max_iter = joint_refine_iter,
-                               lambda = lambda, lambda_cols = lambda_cols))
+                               lambda = lambda, lambda_cols = lambda_cols,
+                               exact_centre = exact_centre,
+                               predict_method_explicit = predict_method_explicit))
   }
 
   model <- if (identical(lambda, "fixed_1")) "BM" else "lambda"
@@ -901,9 +1088,12 @@ fit_joint_solver <- function(L, tree, joint_solver = "inhouse",
             msg, "); falling back to the in-house solver.", call. = FALSE)
     return(fit_mvn_bm_inhouse(L = L, tree = tree, max_iter = joint_refine_iter,
                               predict_method = predict_method,
-                              lambda = lambda, lambda_cols = lambda_cols))
+                              lambda = lambda, lambda_cols = lambda_cols,
+                              exact_centre = exact_centre,
+                              predict_method_explicit = predict_method_explicit))
   }
   fit$lambda_per_trait <- NA_real_
   fit$lambda_block <- NA_real_
+  fit$predict_method_used <- NA_character_
   fit
 }

@@ -72,7 +72,8 @@
 #' @param lambda_mode character. Pagel-lambda mode for the BM baseline,
 #'   forwarded to [impute()] / [fit_pigauto()]. `"estimate"` (default) fits
 #'   a per-trait Pagel's lambda on each continuous-family (BM-eligible)
-#'   latent column; discrete traits stay at lambda = 1. `"fixed_1"`
+#'   latent column; discrete traits stay at lambda = 1 unless routed to
+#'   `predict_method = "exact"`, where they share `lambda_block`. `"fixed_1"`
 #'   preserves the pre-lambda Brownian correlation matrix everywhere;
 #'   `"cv"` and `"bayes"` are alternative per-column estimators. See
 #'   [fit_pigauto()] for the full contract, including the

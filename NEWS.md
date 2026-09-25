@@ -1,5 +1,70 @@
 # pigauto 0.11.0.9000 (dev)
 
+## New default: `predict_method = "auto"` (cross-trait prediction, chosen per trait)
+
+`impute()`, `fit_pigauto()` and `fit_baseline()` now default `predict_method` to `"auto"` (previously
+`"per_column"`). `"auto"` fits the phylogenetic baseline two ways and keeps, for each trait, the one with the
+lower error on that trait's validation cells:
+
+- `"exact"`: the full cross-trait conditional of `vec(L) ~ MVN(0, Sigma x R(lambda_block))`, solved in sparse
+  precision form (Hadfield & Nakagawa, 2010), with each trait centred at its phylogenetic GLS mean. It uses
+  the other traits' observed values to predict a missing one.
+- `"per_column"`: each trait predicted from its own observed values only (the previous default).
+
+Validation error is squared error on the latent scale for continuous, count, proportion, ordinal and
+zero-inflated magnitude traits, and log-loss for binary, zero-inflated gate and categorical traits. The unit of
+validation is the held-out trait row (the species, in data with several observations per species). A trait
+with at least 38 held-out rows, whose two candidate fits differ, splits its rows in two: one half chooses the
+route and the other calibrates the gate and the conformal intervals, so no row does both. With fewer rows the
+same rows do both, because a 95% conformal interval needs at least 19 calibration rows; when the two fits
+agree (for example a single trait) no choice is made and every row calibrates. A trait with fewer than 5
+validation cells, or a fit with no validation split, uses `"exact"`. The choice is recorded in
+`fit$model_config$predict_method_by_trait`, and the final refit on all data reuses it (new `predict_route`
+argument of `fit_baseline()`). `"exact"` and `"per_column"` remain available as explicit choices. In two
+timings the `"auto"` baseline took about 1.4 to 1.5 times as long as a single baseline fit.
+
+Measured against the previous default with the GNN off (18 core simulation cells, 200 seeds each, results
+averaged over two cross-trait correlations): mean z-RMSE of the continuous-family traits falls by 3.1 to 6.6%
+at true lambda 0.3 and by 6.1 to 9.4% at lambda 0.7. At lambda 1 it falls by 1.2% (100 species) and 0.3%
+(300) and rises by 0.4% at 1,000 species. Mean discrete accuracy rises by 0.009 to 0.032 at lambda 0.3 and
+0.7 and is unchanged (within 0.001) at lambda 1; no single scenario falls by more than 0.004. Interval
+coverage of the continuous traits rises by 0.003 to 0.010 at lambda 0.3 and 0.7. At lambda 1 with 100
+species, where the previous default already covered only 0.86 to 0.92 of cells, coverage falls by a further
+0.006 to 0.018 (largest for the count and proportion traits); with 300 species it falls by at most 0.008.
+The GNN-on default of `impute()` was not re-benchmarked for this change.
+
+On 13 real-data cases (continuous traits, 5 seeds each, GNN off, no Monte Carlo error computed), z-RMSE falls
+by 17 to 51% on AVONET and PanTHERIA and by 2.5% on AmphiBIO (2,000 species); the other seven cases change by
+-0.9 to +0.8%, the largest rise on the full GlobTherm set (1,969 species). Evidence:
+`docs/dev-log/exact-default/`.
+
+Details:
+
+- Under `"exact"`, discrete traits (binary, zero-inflated gate, ordinal) share the block lambda used for the
+  whole joint fit instead of staying at lambda = 1; under `"per_column"` they still stay at 1.
+- `"exact"` falls back to `"per_column"` above about 20,000 unknown cells (roughly 4,000 species with 5
+  traits), for a numerically unusable Sigma, or with fewer than two joint traits. Under the default this is
+  reported once per session with `message()`; an explicit `predict_method = "exact"` still warns.
+  `model_config$predict_method_used` records the route that ran.
+- Fixed: `em_iterations >= 1` silently ignored `predict_method` inside the threshold-joint and categorical EM
+  loops; both now pass it through.
+- A baseline rebuilt from stored lambdas (`fit_baseline(..., lambda_fixed = )`) now reproduces the original
+  fit under `"exact"`, because the block lambda is stored with the per-trait values.
+
+Known limitation: the route choice scores ordinal traits by squared error on the latent scale rather than by
+class accuracy. A fix is planned.
+
+## Fix: full REML likelihood for Pagel's lambda (PR #191)
+
+The profile likelihood used the REML variance divisor but dropped the REML
+determinant term `0.5 * log(1' R(lambda)^-1 1)` (`0.5 * log|X' R^-1 X|`
+with covariates), which biased the lambda estimate low at weak signal.
+Measured at n = 300, 30% missing, 200 seeds: bias -0.061 -> -0.022 at true
+lambda 0.3, and -0.038 -> -0.027 at 0.7; unchanged at lambda = 1. Prediction
+error changes little (knowing the true lambda improves it by about 0.3%),
+so this mainly makes the reported `lambda_per_trait` trustworthy.
+`lambda_mode = "fixed_1"` is unaffected.
+
 ## Default flip: `lambda_mode = "estimate"`
 
 `impute()`, `fit_pigauto()`, and `multi_impute()` now default `lambda_mode`
