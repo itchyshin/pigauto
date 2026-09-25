@@ -40,3 +40,7 @@ FREQ v3 (2026-09-24 ~21:50 nibi): v2 still had 2/2858 blow-ups: refits returning
   lambda + prp's non-phylogenetic noise, a frequentist-model finding for the report). rubin_freq.R 431cab36. Freq of
   record now fir ~/pigauto_rubin_f3 (61376909/10/11); v2 (f2) superseded. At final pooling: move the Mac pool's old
   freq/ aside before rubin_pool.sh.
+FREQ v3 DONE (2026-09-24 ~22:25 nibi): 3599/3600 (1 running); max per-cell width 4.41 SD, max downstream CI 0.87 (no
+  blow-ups); 12 degenerate draws + 59 refit failures redrawn; 3 fits failed in both arms (2 implausible original
+  Rphylopars fits, 1 Rphylopars type error) = the frequentist failure rate to report.
+  BACE lambda = 1 with the input fix: fir 47/47 new-code fits needed cleaning and completed.
