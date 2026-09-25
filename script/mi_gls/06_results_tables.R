@@ -47,20 +47,25 @@ groups <- list(
 lines <- c("## Downstream slope (posterior_full vs complete data, same analysis model)", "",
            "Paired bias = mean over reps of (MI pooled slope - complete-data slope in the same rep); MCSE in brackets.",
            "SE ratio = mean pooled SE / empirical SD of the pooled slope; 'rel' = MI ratio / complete ratio (gated under phylolm, [0.90, 1.15]).",
-           "rel_mcse: approximate Monte Carlo SE of 'rel', treating the two empirical SDs as independent (each has relative SE about 1/sqrt(2(R-1))); reported only, not part of any gate.",
+           "rel_mcse: approximate Monte Carlo SE of 'rel', allowing for the pairing of the two empirical SDs over the same reps: rel * sqrt((1 - rho^2) / (R - 1)), where rho (column rho) is the per-rep correlation of the MI and complete-data slopes, recovered from emp_sd of both rows and paired_bias_mcse (see 07_se_ratio_noise.R); reported only, not part of any gate.",
            "Coverage truth: 0.7 in regimes 1-16 and 25-40; mean complete-data slope in 17-24.",
            "Twin rows: source_paired_bias and source_coverage are the source regime's (twin_of) values under the same analysis model.", "")
 pf <- s[s$method == "posterior_full", ]
 pn <- s[s$method == "posterior_none", ]
+pc <- s[s$method == "complete", ]
 pf <- pf[order(pf$regime_id, pf$downstream), ]
 down_row <- function(x) {
   n <- pn[pn$regime_id == x$regime_id & pn$downstream == x$downstream, ]
+  cm <- pc[pc$regime_id == x$regime_id & pc$downstream == x$downstream, ]
+  sd_c <- if (nrow(cm) == 1L) cm$emp_sd else NA_real_
+  rho <- min(1, (x$emp_sd^2 + sd_c^2 - x$paired_bias_mcse^2 * x$R) / (2 * x$emp_sd * sd_c))
+  rel <- x$se_ratio / x$complete_se_ratio
   d <- data.frame(
     regime = reg_label(x$regime_id), analysis = x$downstream,
     paired_bias = sprintf("%s (%s)", f3(x$paired_bias), f3(x$paired_bias_mcse)),
     se_ratio = f2(x$se_ratio), complete_se_ratio = f2(x$complete_se_ratio),
-    rel = f2(x$se_ratio / x$complete_se_ratio),
-    rel_mcse = f2((x$se_ratio / x$complete_se_ratio) * sqrt(1 / (2 * (x$R - 1)) + 1 / (2 * (x$n_expected - 1)))),
+    rel = f2(rel), rho = f2(rho),
+    rel_mcse = f3(rel * sqrt((1 - rho^2) / (x$R - 1))),
     coverage = f3(x$coverage), complete_coverage = f3(x$complete_coverage),
     stringsAsFactors = FALSE)
   if (identical(dgp_of(x$regime_id), "twin")) {

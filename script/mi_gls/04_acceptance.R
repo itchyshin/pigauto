@@ -45,10 +45,15 @@
 #      ANALYSIS_MODEL_SE_RATIO line whenever the complete-data ratio is
 #      itself outside the band.
 #   4. proper vs improper SE ratio (D4): REPORTED, NOT GATED since CP1
-#      (Shinichi 2026-09-24). With Sigma fixed at the posterior mean the
-#      plug-in intervals come out about 1.5% wider at these sample sizes
-#      (Jensen; S1 measurement), so "proper > improper" need not hold when
-#      everything is right. Mean posterior_full vs posterior_none se_ratio
+#      (Shinichi 2026-09-24). On the 30-tip S1 test fixture, fixing Sigma
+#      at its posterior mean gave a per-cell predictive variance 1.4-1.6%
+#      LARGER than the proper one (intervals about 0.7-0.8% wider; Jensen),
+#      so "proper > improper" need not hold when everything is right
+#      (design.md 5d.4). At campaign sizes the direction reversed: plug-in
+#      per-cell widths were 0.002-0.18% narrower in 48 of 48 rows
+#      (cell_coverage.csv) and the plug-in SE ratio was lower in 48 of 48
+#      pairs (sim_summary.csv; both-missing regimes 9-24 and 33-40).
+#      Mean posterior_full vs posterior_none se_ratio
 #      is printed per downstream model within each both-missing block
 #      (9-16 stress test, 17-24 Kronecker, 33-40 twins), plus per-regime
 #      pairs. A missing posterior_none row still fails through the
@@ -62,7 +67,10 @@
 #   Rules 5 and 6 fail only ABOVE 2%: rule 6 compares counts
 #   (non-converged > floor(0.02 n)) and rule 5 allows 1e-9 of rounding, so
 #   exactly 4/200 passes and 5/200 fails (1 - 196/200 is 0.02000000000000002
-#   in floating point).
+#   in floating point). Rule 2 likewise fails only ABOVE 0.05 per row and
+#   above 0.02 in the mean, with the same 1e-9 allowance: a shortfall of
+#   exactly 10/200 passes (0.905 - 0.855 is 0.05000000000000004 in floating
+#   point; M2 review 2026-09-24).
 #
 # Env: MI_N_REPS (default 200), MI_REGIMES (default all; a restricted run
 # can pass its rules but never prints the G6 token), MI_SE_RULE
@@ -198,7 +206,7 @@ run_gate <- function(df, regime_ids = regimes$regime_id,
   shortfall <- pf$c_coverage - pf$coverage
   ok2 <- is.finite(shortfall)
   nonfinite("coverage", "coverage/complete coverage", !ok2)
-  bad2 <- ok2 & shortfall > 0.05
+  bad2 <- ok2 & shortfall > 0.05 + 1e-9
   flag(bad2, sprintf("coverage: %s coverage=%.4f complete=%.4f shortfall=%.4f > 0.05",
                      lab_pf, pf$coverage, pf$c_coverage, shortfall))
   mean_sf <- list(); stress_sf_line <- character(0)
@@ -212,9 +220,9 @@ run_gate <- function(df, regime_ids = regimes$regime_id,
                     if (grp == "gated") "" else " [stress test, not gated]")
     if (grp == "gated") report <- c(report, line) else stress_sf_line <- line
   }
-  if (!is.null(mean_sf$gated) && mean_sf$gated > 0.02) fails <- c(fails, sprintf(
+  if (!is.null(mean_sf$gated) && mean_sf$gated > 0.02 + 1e-9) fails <- c(fails, sprintf(
     "coverage: mean shortfall (positive part) over the gated regimes = %.4f > 0.02", mean_sf$gated))
-  stress_mean_sf <- if (!is.null(mean_sf$stress) && mean_sf$stress > 0.02) sprintf(
+  stress_mean_sf <- if (!is.null(mean_sf$stress) && mean_sf$stress > 0.02 + 1e-9) sprintf(
     "coverage: mean shortfall (positive part) over the stress-test regimes = %.4f > 0.02", mean_sf$stress) else character(0)
 
   # ---- rule 3: SE ratio under phylolm (D2) ----------------------------------
@@ -351,6 +359,9 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
   d <- make_pass(); d$n_converged[at(d, 22, "posterior_full")] <- 196L
   d$fit_failure_rate[at(d, 22, "posterior_full")] <- 1 - 196 / 200
   edge_2pct <- d                                          # exactly 4/200 = 2%: passes
+  d <- make_pass(); d$coverage[at(d, 27, "complete", "phylolm")] <- 0.905
+  d$coverage[at(d, 27, "posterior_full", "phylolm")] <- 0.855
+  edge_cov <- d                                           # shortfall exactly 10/200 = 0.05: passes
 
   # Stress-test fixtures (regimes 1-16): reported, must NOT fail the gate.
   sx <- list()
@@ -403,6 +414,10 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
   cat(sprintf("pass fixture, exactly 4/200 non-converged and failed in regime 22: %d failure(s) (want 0)\n",
               length(edge)))
   if (length(edge)) { ok <- FALSE; cat(paste(" -", edge), sep = "\n") }
+  edge_c <- run_gate(edge_cov)
+  cat(sprintf("pass fixture, coverage shortfall exactly 10/200 = 0.05 in regime 27: %d failure(s) (want 0)\n",
+              length(edge_c)))
+  if (length(edge_c)) { ok <- FALSE; cat(paste(" -", edge_c), sep = "\n") }
   for (nm in names(fx)) {
     f <- suppressMessages(capture.output(r <- run_gate(fx[[nm]]), type = "output"))
     hit <- any(grepl(expect_pattern[[nm]], r))

@@ -1,0 +1,32 @@
+# Re-run of script/mi_gls/03_summarise_v2.R over the two campaign folders, 2026-09-24 23:27 MDT (Totoro).
+# Purpose: record the console lines (SOURCE, SETTINGS, MIXED_CODE_SHA) of the merge that produced the
+# committed sim_summary.csv, sim_summary.md and cell_coverage.csv. Outputs went to a temporary folder,
+# were compared with the committed files by md5, and the folder was then deleted.
+# Code: ~/pigauto_mi_posterior/9597e18b79/code (the round-2 campaign code folder); its 03_summarise_v2.R and regimes.R
+# have the same md5 as at the committing HEAD. Thread caps OMP/OPENBLAS/MKL_NUM_THREADS=1.
+# Command:
+#   Rscript script/mi_gls/03_summarise_v2.R \
+#     /home/snakagaw/pigauto_mi_posterior/69670d44f9/campaign/sim,/home/snakagaw/pigauto_mi_posterior/9597e18b79/campaign/sim \
+#     $T/sim_summary.csv $T/sim_summary.md $T/cell_coverage.csv
+
+EXPECTED_GRID regimes=all (40) reps=200
+SOURCE /home/snakagaw/pigauto_mi_posterior/69670d44f9/campaign/sim: 4800 rep file(s), replacing 0 from earlier folder(s)
+SOURCE /home/snakagaw/pigauto_mi_posterior/9597e18b79/campaign/sim: 3258 rep file(s), replacing 58 from earlier folder(s)
+SETTINGS 0 of 8000 rep file(s) use non-campaign settings (overrides, or m/keep_draws/n_chains != 20/1000/4)
+PROVENANCE code_sha=MIXED:69670d44f96e5934d194abac8c6653ee82e11811|9597e18b79c752555bf80d83cd377bb3cf8059cb pigauto_version=0.11.0.9000
+MIXED_CODE_SHA: rep files come from more than one code version
+wrote $T/sim_summary.csv ( 208 rows )
+wrote $T/sim_summary.md 
+wrote $T/cell_coverage.csv ( 176 rows )
+Elapsed (wall clock) time (h:mm:ss or m:ss): 1:14.53
+Maximum resident set size (kbytes): 2824604
+EXIT 0
+
+# md5 of the re-run outputs (Totoro) and of the committed files:
+ad691e979b7340ae45f3e3f3058e6c22  $T/cell_coverage.csv
+7f1d1d61eca9628afea50fe82913d071  $T/sim_summary.csv
+cd3e8cbdcda0521acdb3ec9b674362e8  $T/sim_summary.md
+7f1d1d61eca9628afea50fe82913d071  docs/dev-log/mi-posterior/sim_summary.csv
+cd3e8cbdcda0521acdb3ec9b674362e8  docs/dev-log/mi-posterior/sim_summary.md
+ad691e979b7340ae45f3e3f3058e6c22  docs/dev-log/mi-posterior/cell_coverage.csv
+# All three pairs match: the committed CSVs are exactly this merge.

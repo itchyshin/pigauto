@@ -1,0 +1,7 @@
+CAMPAIGN_START sha=9597e18b79c752555bf80d83cd377bb3cf8059cb code_dir=/home/snakagaw/pigauto_mi_posterior/9597e18b79/code out_dir=/home/snakagaw/pigauto_mi_posterior/9597e18b79/campaign/sim n_jobs=1
+  regimes (run order)=11
+  reps=37 planned=37 skipped_existing=0 to_run=37
+  host=totoro nproc=1 load=159.20 221.97 268.05
+  started Thu Sep 24 10:24:53 PM MDT 2026
+Terminated
+CELL_FAILED regime=11 rep=5 status=143

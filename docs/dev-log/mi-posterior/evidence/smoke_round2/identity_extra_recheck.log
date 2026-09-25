@@ -1,0 +1,105 @@
+# Re-check, 2026-09-24 (MDT) on Totoro, just before the summariser re-run in ../summarise_round2.log, of the 14 converged cells that the round-2 campaign re-ran by accident
+# (regime 1 reps 1-10, regime 11 reps 1-4): identity_check.R (same md5 as the committed copy) on each
+# 69670d4 rep file against its 9597e18 copy. Thread caps OMP/OPENBLAS/MKL_NUM_THREADS=1. Command:
+#   cd ~/pigauto_mi_posterior; for each cell f=regime_<r>_rep_<k>.rds:
+#   Rscript 9597e18b79/identity_check.R 69670d44f9/campaign/sim/$f 9597e18b79/campaign/sim/$f
+# The five fields compared: results (minus wall time), cell_detail, cell_coverage (minus wall time),
+# core diagnostics (method, max_rhat, min_ess, converged) and the numbers of missing cells.
+== regime_1_rep_1.rds
+         results      cell_detail    cell_coverage diagnostics_core 
+            TRUE             TRUE             TRUE             TRUE 
+       n_missing 
+            TRUE 
+new n_extensions: 0 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_OK
+== regime_1_rep_2.rds
+         results      cell_detail    cell_coverage diagnostics_core 
+            TRUE             TRUE             TRUE             TRUE 
+       n_missing 
+            TRUE 
+new n_extensions: 0 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_OK
+== regime_1_rep_3.rds
+         results      cell_detail    cell_coverage diagnostics_core 
+            TRUE             TRUE             TRUE             TRUE 
+       n_missing 
+            TRUE 
+new n_extensions: 0 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_OK
+== regime_1_rep_4.rds
+         results      cell_detail    cell_coverage diagnostics_core 
+            TRUE             TRUE             TRUE             TRUE 
+       n_missing 
+            TRUE 
+new n_extensions: 0 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_OK
+== regime_1_rep_5.rds
+         results      cell_detail    cell_coverage diagnostics_core 
+            TRUE             TRUE             TRUE             TRUE 
+       n_missing 
+            TRUE 
+new n_extensions: 0 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_OK
+== regime_1_rep_6.rds
+         results      cell_detail    cell_coverage diagnostics_core 
+            TRUE             TRUE             TRUE             TRUE 
+       n_missing 
+            TRUE 
+new n_extensions: 0 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_OK
+== regime_1_rep_7.rds
+         results      cell_detail    cell_coverage diagnostics_core 
+            TRUE             TRUE             TRUE             TRUE 
+       n_missing 
+            TRUE 
+new n_extensions: 0 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_OK
+== regime_1_rep_8.rds
+         results      cell_detail    cell_coverage diagnostics_core 
+            TRUE             TRUE             TRUE             TRUE 
+       n_missing 
+            TRUE 
+new n_extensions: 0 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_OK
+== regime_1_rep_9.rds
+         results      cell_detail    cell_coverage diagnostics_core 
+            TRUE             TRUE             TRUE             TRUE 
+       n_missing 
+            TRUE 
+new n_extensions: 0 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_OK
+== regime_1_rep_10.rds
+         results      cell_detail    cell_coverage diagnostics_core 
+            TRUE             TRUE             TRUE             TRUE 
+       n_missing 
+            TRUE 
+new n_extensions: 0 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_OK
+== regime_11_rep_1.rds
+         results      cell_detail    cell_coverage diagnostics_core 
+            TRUE             TRUE             TRUE             TRUE 
+       n_missing 
+            TRUE 
+new n_extensions: 0,0 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_OK
+== regime_11_rep_2.rds
+         results      cell_detail    cell_coverage diagnostics_core 
+            TRUE             TRUE             TRUE             TRUE 
+       n_missing 
+            TRUE 
+new n_extensions: 0,0 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_OK
+== regime_11_rep_3.rds
+         results      cell_detail    cell_coverage diagnostics_core 
+            TRUE             TRUE             TRUE             TRUE 
+       n_missing 
+            TRUE 
+new n_extensions: 0,0 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_OK
+== regime_11_rep_4.rds
+         results      cell_detail    cell_coverage diagnostics_core 
+            TRUE             TRUE             TRUE             TRUE 
+       n_missing 
+            TRUE 
+new n_extensions: 0,0 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_OK

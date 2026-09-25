@@ -35,3 +35,12 @@ full machine load. `Rscript script/mi_gls/gate_calibration.R check` prints `RECO
   change between the two commits.
 - D's rho_P (bias -0.14) is not gated, because lambda_1 = 0.05 leaves almost no phylogenetic
   variance in trait 1 to identify the phylogenetic correlation.
+
+## Round-2 merge and byte-identity (2026-09-24)
+
+- `summarise_round2.log`: a re-run of `script/mi_gls/03_summarise_v2.R` over the 69670d4 and 9597e18
+  campaign folders on Totoro, with its console lines (SOURCE: 4,800 files, then 3,258 replacing 58;
+  `SETTINGS 0 of 8000`; `MIXED_CODE_SHA`). Its three outputs have the same md5 as the committed
+  `sim_summary.csv`, `sim_summary.md` and `cell_coverage.csv`.
+- `smoke_round2/`: the round-2 smoke run and the byte-identity checks, including the 14 converged
+  cells the round-2 campaign re-ran by accident (`smoke_round2/README.md`).

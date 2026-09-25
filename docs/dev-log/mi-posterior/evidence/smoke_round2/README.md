@@ -14,6 +14,24 @@ Wall time per cell under a Totoro load of about 180 (mostly other users): 4.5 mi
 about 11 to 12 min at n = 1000, and 8.3 min for the extended n = 300 cell. Peak RSS was 0.53 to
 0.73 GB.
 
+## The 14 cells re-run by accident in the round-2 campaign
+
+The campaign driver (`campaign_logs/driver.sh`) passed a single rep number for regimes 1 and 11
+("118", "37"). `12_totoro_campaign.sh` reads a single number as a count, so it planned reps 1 to 118
+and 1 to 37 (`campaign_logs/phase2_regime_1.log`, `phase2_regime_11.log`). Those two runs were
+stopped after regime 1 reps 1 to 10 and regime 11 reps 1 to 4 had finished; reps 118 and 37 were then
+run on their own. The 14 finished cells had all converged at 69670d4. Their 9597e18 copies are
+byte-identical to the 69670d4 files on the five compared fields, so the merge (which keeps the later
+copy) gives the same summary either way (`../summarise_round2.log`).
+
 Files:
-- `identity_check.R`, `identity_check.log`: the comparison;
+- `identity_check.R`, `identity_check.log`: the comparison for the smoke cells;
+- `identity_extra.log`: the verdict line for each of the 14 accidental re-runs (regime 1 reps 1 to 10,
+  regime 11 reps 1 to 4), all `IDENTITY_OK`; the loop that wrote it was not recorded;
+- `identity_extra_recheck.log`: the same 14 comparisons re-run on Totoro with `identity_check.R`,
+  with the command and the per-field output; all `IDENTITY_OK`;
+- `campaign_logs/`: the round-2 driver and the two phase-2 logs above, copied from Totoro;
 - `cell_*.log`, `regime_*.rds`: the cells.
+
+Regime 1 rep 1 appears both here (smoke run) and among the 14, so the identity checks cover 16
+comparisons of 15 distinct converged cells.
