@@ -10,7 +10,7 @@
   terms (MI SE ratio 0.98 to 1.06); they fail because the complete-data analysis is over-confident
   there (ratio 0.85 to 0.90). Every other gated rule passes. A decision is proposed below; no gate
   has been changed.
-- Real data: 9 of 10 cells done; the FishBase cell is still running.
+- Real data: all 10 cells done; G8 met (`REALDATA_COMPLETE`).
 - Not ready to merge.
 
 Every number below comes from a committed file, except the G1, G2 and G5 run outputs named in the
@@ -176,7 +176,7 @@ its committed source where one exists.
 | G5a suite / G5b solver / G5c check | met at the final code | `gate-check --reverify` re-ran every runnable gate: `SUITE_GREEN`, `SOLVER_UNTOUCHED`, R CMD check --as-cran `ERR=0 WARN=0` (`evidence/ledger/gate_reverify_2026-09-25.log`; its `R/` and `tests/` trees, e99198b and 9f5ac75, equal the branch head's) |
 | **G6 simulation acceptance** | **not met (3 in-model rows, one rule)** | relative SE ratio above 1.15 under phylolm in twins 35 (1.186), 38 (1.167) and 36 (1.153); more than Monte Carlo noise predicts; every other gated rule passes |
 | G7 per-cell coverage | **met** | `CELL_COVERAGE_PASS` |
-| G8 real data | pending | FishBase cell still running |
+| G8 real data | **met** | `REALDATA_COMPLETE` (all 10 cells, one code SHA 69670d4; `script/mi_realdata/returned/`) |
 | M2 fresh review | pending final confirmation | the M2 statistical review's findings are fixed (f03837b, 1c8e4da) and a three-member completion panel (D-43) withheld no claim; the formal PROCEED is recorded after the real-data section is final |
 
 ### The three G6 failures are not Monte Carlo noise (`se_ratio_noise.txt`)
@@ -298,6 +298,24 @@ at 69670d4, because G8 requires one code SHA (`real_preview/receipts.csv`).
     mass ~ head-body length shift depends on the mask type.
   - A `log_transform = FALSE` sensitivity run is the natural follow-up.
 - The full G8 report follows when FishBase finishes.
+
+### FishBase (final cell, added 2026-09-25; `script/mi_realdata/returned/`)
+
+The FishBase cell (10,484 species, 5 traits, clade-structured mask) finished after about 21 h. It
+converged, with max R-hat 1.007 and min ESS 830.
+
+| Trait | Model coverage | Split conformal | Mondrian |
+|---|---|---|---|
+| Length | 0.942 | 0.939 | 0.940 |
+| Weight | 0.939 | 0.950 | 0.979 |
+| DepthRangeDeep | 0.957 | 0.966 | 0.962 |
+| Vulnerability | 0.950 | 0.954 | 0.949 |
+| Troph | 0.933 | 0.939 | 0.946 |
+
+Pooled slopes against the complete-row reference differ by -0.7% (Weight ~ Length), +1.1%
+(DepthRangeDeep ~ Length) and +2.9% (Troph ~ Length). Over all 10 cells, 23 of 30 pair-cells are
+within 5%; this is reported, not gated. The two PanTHERIA cells short on ESS (368 and 366) are
+reported by G8 as `NONCONVERGED`, but convergence is not part of its completeness rule.
 
 ## What this does not cover
 
