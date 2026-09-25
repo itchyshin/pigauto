@@ -136,7 +136,7 @@ so the two lambdas are the same quantity.
    Each proposal is symmetric on the log scale, so the acceptance ratio carries the Jacobians c and
    d^(K+1). These three moves hold Sigma_W fixed. Two further kinds of move follow in the same block.
    - Per trait k, a prior-only rebalance: row and column k of Sigma_W are scaled by d and alpha_k by
-     1/d, so Sigma_P and the likelihood do not change. The step is fixed (log d ~ N(0, 0.5)) and the
+     1/d, so Sigma_P and the likelihood do not change. The step is fixed (log d ~ N(0, 0.5^2), i.e. SD 0.5) and the
      Jacobian is d^K. This keeps the expanded chain irreducible in diag(Sigma_W) when the Gibbs
      steps are switched off (a test hook).
    - Per trait pair (k, l), three off-diagonal moves: Fisher-z random walks on the Sigma_E and on the
@@ -362,8 +362,12 @@ G7 are computed, not the thresholds of the approved plan.
 4. **Proper vs improper SE ratio is reported, not gated.** On the 30-tip test fixture (S1
    measurement; `tests/testthat/test-multi-impute-posterior.R`), fixing Sigma at its posterior mean
    gave a per-cell predictive variance 1.4-1.6% larger than the proper one (intervals about 0.7-0.8%
-   wider), a Jensen effect. No measurement at the campaign sizes is recorded. So "proper > improper"
-   need not hold when everything is right.
+   wider), a Jensen effect. No campaign-size measurement existed at CP1. So "proper > improper"
+   need not hold when everything is right. At the campaign sizes (commit 69670d4) the width
+   direction reversed: in the both-missing regimes 9-24 the plug-in per-cell intervals were
+   0.02-0.19% narrower than the proper ones for both traits (`cell_coverage.csv`, `mean_width`),
+   and the plug-in SE ratio was lower in all 32 regime x analysis pairs (`sim_summary.csv`,
+   `se_ratio`).
 5. **The real-data 5% slope criterion is reported, not gated** (decision R3, unchanged).
 
 ### 5e. CP2 follow-up decisions (Shinichi, 2026-09-24, after the diagnosis)
