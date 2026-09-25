@@ -68,7 +68,7 @@ Sigma_E, R = cov2cor(vcv(tree)) and per-trait lambda_k = Sigma_P[k,k] / (Sigma_P
 Design: `design.md`. Reviews: `review-design.md` and `review.md` (S5). The round-2 review and the
 claims audit are recorded only through their fixes (commits 9597e18, 79bf98e and 8d2f612); their
 findings are not in a committed file. The M2 statistical review corrected the SE-ratio noise analysis
-and several numbers in this document (this revision).
+and several numbers in this document.
 
 ## Simulation design
 
@@ -169,14 +169,15 @@ its committed source where one exists.
 
 | Gate | Result | Detail |
 |---|---|---|
-| G1 unit tests | met | two posterior test files: 118 + 196 expectations, 0 failures (includes the pinned 69670d4 regression test); run at 3cd3139 during the M2 review, not in a committed file |
-| G2 exactness | met | `EXACTNESS_OK` (`review.md`, at 5b0d6f9; re-run at 3cd3139 during the M2 review) |
+| G1 unit tests | met | two posterior test files: 118 + 196 expectations, 0 failures (includes the pinned 69670d4 regression test); `evidence/ledger/g1_counts.log` and `evidence/ledger/gate_reverify_2026-09-25.log` |
+| G2 exactness | met | `EXACTNESS_OK` (`evidence/ledger/gate_reverify_2026-09-25.log`) |
 | G3 calibration | met | `RECOVERY_OK` (`gate_calibration.R check` on `evidence/g3_calibration.rds`): 200 fits at 69670d4, 50 per setting. For the gated quantities (lambda in settings B to D; rho_P in A to C, where both lambda >= 0.3), 95% interval coverage is 0.92 to 0.98. Not gated: lambda = 1 in setting A sits on the boundary, so no interval can cover it (coverage 0.00; bias -0.004 and -0.003); rho_P in setting D (lambda_1 = 0.05) is weakly identified (bias -0.14, coverage 0.98). See `evidence/README.md` |
 | G4 smoke convergence | met | `CONVERGENCE_OK` (`evidence/smoke/g4.log`) |
-| G5a suite / G5b solver / G5c check | met at 9059f87; being re-run through the ledger at the final HEAD | `R/` and `tests/` changed after 9059f87 (74215f3, af5ff87, 9597e18, 79bf98e, 8d2f612) |
+| G5a suite / G5b solver / G5c check | met at the final code | `gate-check --reverify` re-ran every runnable gate: `SUITE_GREEN`, `SOLVER_UNTOUCHED`, R CMD check --as-cran `ERR=0 WARN=0` (`evidence/ledger/gate_reverify_2026-09-25.log`; its `R/` and `tests/` trees, e99198b and 9f5ac75, equal the branch head's) |
 | **G6 simulation acceptance** | **not met (3 in-model rows, one rule)** | relative SE ratio above 1.15 under phylolm in twins 35 (1.186), 38 (1.167) and 36 (1.153); more than Monte Carlo noise predicts; every other gated rule passes |
 | G7 per-cell coverage | **met** | `CELL_COVERAGE_PASS` |
 | G8 real data | pending | FishBase cell still running |
+| M2 fresh review | pending final confirmation | the M2 statistical review's findings are fixed (f03837b, 1c8e4da) and a three-member completion panel (D-43) withheld no claim; the formal PROCEED is recorded after the real-data section is final |
 
 ### The three G6 failures are not Monte Carlo noise (`se_ratio_noise.txt`)
 
