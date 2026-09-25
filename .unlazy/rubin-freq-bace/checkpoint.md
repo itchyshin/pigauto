@@ -61,3 +61,9 @@ A5 LAUNCHED (2026-09-24 23:55 nibi): n1000 timing gate evaluated on the shipped-
   Shinichi's "timing check first" asked). n1000 BACE: fir seeds 2-60 (61390620, 354 tasks, 40G, 12h), rorqual seeds
   61-100 (21781308, 240 tasks). Seed 1 = timing check (nibi 22634021). Expected finish ~07:00-10:00 nibi if they start
   promptly. Watch the first finished fits' total wall and MaxRSS; stop and re-report if > 30% over (D-139).
+RETRY RULE (2026-09-25 00:2x nibi): BACE fits are deterministic given seed + code (arm_seed 303), so retrying a failure
+  on the FIXED code repeats it. Only failures from tasks that started on the OLD code (before the ~20:50 deploy) are
+  retried; identify by the task log's "cell <tag>:" start time. rorqual: 17 old-code failures -> bace_failed_pass2/,
+  resubmitted 21782231 (n100, 14) + 21782232 (n300, 3); 10 new-code failures stay in results/bace = after-fix failures.
+  fir retry2 (61390210, 8) were mostly new-code failures (6 of 8 failed twice) and will repeat; harmless (fail in ~1 s).
+  nibi: check old-code failures the same way at the end of its first pass. Pool now also pulls bace_failed_pass2.
