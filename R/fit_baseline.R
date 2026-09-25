@@ -1493,8 +1493,17 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     tm    <- trait_map[[i]]
     idx_j <- val_idx[val_col %in% tm$latent_cols]
     n_j   <- length(idx_j)
-    if (n_j < 10L) {
+    # Split only when each half keeps at least 19 cells, the fewest for which a
+    # 95% split-conformal interval can reach nominal coverage (ceiling
+    # n / (n + 1)). Benchmark round 3 (docs/dev-log/exact-default/) split every
+    # trait with >= 10 cells and lost up to 0.032 coverage at n <= 300 because
+    # the conformal half fell below that size; the shared-cell version (round 2)
+    # lost at most 0.006. Below the threshold, all cells both choose the route
+    # and calibrate (the chooser still defaults to "exact" under 5 cells).
+    if (n_j < 38L) {
+      route_idx <- c(route_idx, idx_j)
       score_idx <- c(score_idx, idx_j)
+      n_route[[tm$name]] <- n_j
       n_score[[tm$name]] <- n_j
       next
     }

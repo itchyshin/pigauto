@@ -266,15 +266,34 @@ test_that("[route] under auto, the route half and score half of each trait's val
 
   rsplit <- pigauto:::.pigauto_split_route_score(spl$val_idx, nrow(pd$X_scaled),
                                                   pd$trait_map, seed = 99)
-  expect_length(intersect(rsplit$route_idx, rsplit$score_idx), 0L)
-  expect_setequal(c(rsplit$route_idx, rsplit$score_idx), spl$val_idx)
+  # Split only when each half keeps >= 19 cells (n_j >= 38): then the halves
+  # are disjoint and partition the trait's validation cells. Below that, the
+  # same cells both choose the route and calibrate. Check each trait by rule.
+  val_col <- ((spl$val_idx - 1L) %/% nrow(pd$X_scaled)) + 1L
+  n_split <- 0L; n_shared <- 0L
+  for (tm in pd$trait_map) {
+    idx_j <- spl$val_idx[val_col %in% tm$latent_cols]
+    r_j <- intersect(rsplit$route_idx, idx_j); s_j <- intersect(rsplit$score_idx, idx_j)
+    if (length(idx_j) >= 38L) {
+      n_split <- n_split + 1L
+      expect_length(intersect(r_j, s_j), 0L)
+      expect_setequal(c(r_j, s_j), idx_j)
+    } else {
+      n_shared <- n_shared + 1L
+      expect_setequal(r_j, idx_j)
+      expect_setequal(s_j, idx_j)
+    }
+  }
+  expect_gt(n_split + n_shared, 0L)
 
   # fit_baseline()'s own "auto" output surfaces the SAME score half (what
   # fit_pigauto()/impute() restrict gate calibration + conformal scoring
   # to) and the same per-trait route/score counts.
   bl <- fit_baseline(pd, tree, spl, seed = 99)
   expect_setequal(bl$score_val_idx, rsplit$score_idx)
-  expect_length(intersect(bl$score_val_idx, rsplit$route_idx), 0L)
+  # Overlap with the route cells is allowed only for traits below the split threshold.
+  expect_setequal(intersect(bl$score_val_idx, rsplit$route_idx),
+                  intersect(rsplit$score_idx, rsplit$route_idx))
   for (tm in pd$trait_map) {
     expect_identical(unname(bl$route_val_n[[tm$name]]),
                       unname(rsplit$n_route[[tm$name]]))
@@ -408,4 +427,27 @@ test_that("[route] predict_route warns once on a name that matches no trait", {
     fit_baseline(pd, tree, spl, predict_route = c(c1 = "bogus")),
     "must be a named character vector"
   )
+})
+
+test_that("[route] traits with at least 38 validation cells split into disjoint halves; smaller ones share", {
+  skip_if_not_installed("Matrix")
+  set.seed(43)
+  n <- 800L
+  tree <- ape::rtree(n)
+  df <- data.frame(row.names = tree$tip.label, c1 = stats::rnorm(n), c2 = stats::rnorm(n))
+  df <- mask_frac(df, frac = 0.3, seed = 44)
+  pd  <- preprocess_traits(df, tree)
+  spl <- make_missing_splits(pd$X_scaled, trait_map = pd$trait_map, seed = 6)
+  rs <- pigauto:::.pigauto_split_route_score(spl$val_idx, nrow(pd$X_scaled), pd$trait_map, seed = 7)
+  val_col <- ((spl$val_idx - 1L) %/% nrow(pd$X_scaled)) + 1L
+  sizes <- vapply(pd$trait_map, function(tm) sum(val_col %in% tm$latent_cols), integer(1))
+  expect_true(any(sizes >= 38L))
+  for (i in which(sizes >= 38L)) {
+    tm <- pd$trait_map[[i]]
+    expect_true(rs$n_route[[tm$name]] >= 19L && rs$n_score[[tm$name]] >= 19L)
+    expect_length(intersect(rs$route_idx[rs$route_idx %in% spl$val_idx[val_col %in% tm$latent_cols]],
+                            rs$score_idx), 0L)
+  }
+  small <- pigauto:::.pigauto_split_route_score(spl$val_idx[seq_len(20)], nrow(pd$X_scaled), pd$trait_map, seed = 7)
+  expect_setequal(small$route_idx, small$score_idx)
 })

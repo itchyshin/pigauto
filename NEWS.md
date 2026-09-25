@@ -13,15 +13,22 @@ lower error on that trait's validation cells:
 
 Validation error is squared error on the latent scale for continuous, count, proportion, ordinal and
 zero-inflated magnitude traits, and log-loss for binary, zero-inflated gate and categorical traits. A trait
-with fewer than 5 validation cells, or a fit with no validation split, uses `"exact"`. The choice is recorded
+with at least 38 validation cells splits them in two: one half chooses the route and the other calibrates the
+gate and the conformal intervals, so no cell is used twice. A trait with fewer cells uses the same cells for
+both, because a 95% conformal interval needs at least 19 calibration cells. A trait with fewer than 5
+validation cells, or a fit with no validation split, uses `"exact"`. The choice is recorded
 in `fit$model_config$predict_method_by_trait`, and the final refit on all data reuses it (new `predict_route`
 argument of `fit_baseline()`). `"exact"` and `"per_column"` remain available as explicit choices. `"auto"`
 takes about 1.4 to 1.5 times as long as a single fit.
 
-Measured against the previous default (pigauto without the GNN): z-RMSE falls by 3 to 10% at true lambda
-0.3 and 0.7 and by 0.1 to 1.2% at lambda 1 across the 18 core simulation cells (200 seeds), and by 17 to 51%
-on AVONET and PanTHERIA among 13 real-data cases; no case is worse by more than 0.1%. Discrete accuracy rises
-by up to 0.044 and interval coverage is equal or higher. Evidence: `docs/dev-log/exact-default/`.
+Measured against the previous default (pigauto without the GNN, 18 core simulation cells, 200 seeds each):
+mean z-RMSE falls by 3.1 to 6.6% at true lambda 0.3 and by 6.1 to 9.4% at lambda 0.7. At lambda 1 it falls by
+1.2% (100 species) and 0.3% (300) and rises by 0.4% at 1,000 species. Discrete accuracy rises by up to 0.050
+at lambda 0.3 and 0.7; the largest fall, 0.009 for the three-class categorical trait, is within Monte Carlo
+error. Interval coverage rises by up to 0.010 at lambda 0.3 and 0.7, but falls at lambda 1 with 100 species
+(by 0.007 for the continuous traits and up to 0.017 for the count trait) and slightly with 300 species. On
+13 real-data cases, z-RMSE falls in 12 (by 17 to 51% on AVONET and PanTHERIA, by 0.1 to 2.5% elsewhere) and
+rises by 0.8% on the full GlobTherm set (1,969 species). Evidence: `docs/dev-log/exact-default/`.
 
 Details:
 
@@ -36,9 +43,8 @@ Details:
 - A baseline rebuilt from stored lambdas (`fit_baseline(..., lambda_fixed = )`) now reproduces the original
   fit under `"exact"`, because the block lambda is stored with the per-trait values.
 
-Known limitation: at true lambda = 1 with 1,000 species, ordinal accuracy is about 0.006 lower than under the
-previous default, because the per-trait choice scores ordinal traits by squared error rather than class
-accuracy. A fix is planned.
+Known limitation: the route choice scores ordinal traits by squared error on the latent scale rather than by
+class accuracy. A fix is planned.
 
 ## Fix: full REML likelihood for Pagel's lambda (PR #191)
 
