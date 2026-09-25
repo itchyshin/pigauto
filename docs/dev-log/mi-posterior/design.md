@@ -102,8 +102,10 @@ prior on the phylogenetic correlations. Other priors:
 5. **Sigma_E | e.** IW(nu_E + n, S_E + e'e), with e = Y_completed - 1 mu' - a_tip.
 
 Reported per kept sweep: Sigma_P, Sigma_E, lambda_k = Sigma_P[k,k] / (Sigma_P[k,k] + Sigma_E[k,k]),
-mu, and y_mis. Also stored: cov2cor(Sigma_P) and cov2cor(Sigma_E). alpha and Sigma_W are not
-identified and are neither reported nor diagnosed.
+mu, and y_mis. The correlations cov2cor(Sigma_P) and cov2cor(Sigma_E) are not stored; compute them
+per draw from the stored `params$Sigma_P` and `params$Sigma_E` arrays (K x K x draws), for example
+`array(apply(Sigma_P, 3, cov2cor), dim(Sigma_P))`. alpha and Sigma_W are not identified and are
+neither reported nor diagnosed.
 
 ### 2.3 Chains and diagnostics
 
@@ -125,16 +127,35 @@ so the two lambdas are the same quantity.
 
 1. **Collapsed Metropolis moves before step 1.** With the section 2.2 sweep alone, mixing near the
    boundaries was too slow to use: at n = 1000, bulk ESS for lambda was 20 to 41 from 4 x 10,000
-   sweeps at truth lambda = 1 and 0.95, and 58 to 144 for Sigma_P[1,2]. So, per trait k, three
-   multiplicative moves run on the expanded state with (a, mu, y_mis) integrated out:
+   sweeps at truth lambda = 1 and 0.95. So Metropolis moves run on the expanded state with
+   (a, mu, y_mis) integrated out. Per trait k, three multiplicative moves:
    - alpha_k scaled by c;
    - row and column k of Sigma_E scaled by d;
    - a "ridge" move with log c = -log d, which moves lambda_k.
 
    Each proposal is symmetric on the log scale, so the acceptance ratio carries the Jacobians c and
-   d^(K+1). The target is p(alpha, Sigma_E | Sigma_W, y_obs). Step 1 then redraws (a, mu, y_mis)
-   from its full conditional, so the sweep is a valid partially collapsed Gibbs sampler (van Dyk and
-   Park 2008). Step sizes adapt during burn-in only, so the kept phase is a fixed kernel.
+   d^(K+1). These three moves hold Sigma_W fixed. Two further kinds of move follow in the same block.
+   - Per trait k, a prior-only rebalance: row and column k of Sigma_W are scaled by d and alpha_k by
+     1/d, so Sigma_P and the likelihood do not change. The step is fixed (log d ~ N(0, 0.5)) and the
+     Jacobian is d^K. This keeps the expanded chain irreducible in diag(Sigma_W) when the Gibbs
+     steps are switched off (a test hook).
+   - Per trait pair (k, l), three off-diagonal moves: Fisher-z random walks on the Sigma_E and on the
+     Sigma_W correlation, with the diagonals fixed and Jacobian (1 - r_new^2)/(1 - r_old^2); and a
+     covariance ridge, Sigma_P[k,l] += delta and Sigma_E[k,l] -= delta (implemented as
+     Sigma_W[k,l] += delta/(alpha_k alpha_l)), with delta = eps sqrt(v_k v_l),
+     v = diag(Sigma_P + Sigma_E), and unit Jacobian. A proposal that is not positive definite is
+     rejected. The pair moves were added because the total cross-trait covariance is well identified
+     but its split between Sigma_P and Sigma_E is not, and Gibbs steps 4-5 traverse that split
+     slowly: bulk ESS for Sigma_P[1,2] was 58 to about 140 at n = 1000 (the builder's
+     measurement, not committed; the code comment gives 140 and an earlier version of this section
+     gave 144).
+
+   The three per-trait moves target p(alpha, Sigma_E | Sigma_W, y_obs). The rebalance, the Sigma_W
+   correlation walk and the covariance ridge also change Sigma_W, so the whole Metropolis block
+   leaves p(alpha, Sigma_W, Sigma_E | y_obs), the (a, mu, y_mis)-marginal, invariant. Step 1 then
+   redraws (a, mu, y_mis) from its full conditional, so the sweep is a valid partially collapsed
+   Gibbs sampler (van Dyk and Park 2008). Step sizes of the per-trait and pair moves adapt during
+   burn-in only, so the kept phase is a fixed kernel.
 
    Evidence that the posterior is still the right one:
    - The committed test "the Metropolis-only and Gibbs-only kernels target the same posterior"
@@ -183,11 +204,13 @@ so the two lambdas are the same quantity.
 - **m imputations** (default 20) for Rubin pooling: completed latent matrices from m kept sweeps spaced
   across chains, decoded to the original scale with pigauto's existing decode path.
 - **Per-cell predictive draws** (default at least 1,000 kept sweeps across chains) of each missing
-  cell, from step 2; per-cell 95% interval = 2.5% and 97.5% quantiles. Never taken from the m
+  cell, from step 1(b); per-cell 95% interval = 2.5% and 97.5% quantiles. Never taken from the m
   imputations.
 - **Parameter draws**: Sigma_P, Sigma_E, lambda_k, mu per kept sweep.
-- **Improper mode** (`param_uncertainty = "none"`): parameters fixed at their posterior mean (or #187's
-  REML estimate); only steps 1-2 run. For comparison in validation only.
+- **Improper mode** (`param_uncertainty = "none"`): the full sampler runs first. Sigma_P and Sigma_E
+  are then fixed at their posterior means from that run (not #187's REML; see 2.5 item 6), and only
+  step 1 is redrawn, as exact independent draws, so mu is still drawn. For comparison in validation
+  only.
 
 ## 4. Frozen API (S3 and S4 code against this; S1 and S2 implement it)
 
@@ -276,10 +299,10 @@ G7 are computed, not the thresholds of the approved plan.
   missing). The `true_beta_pop` coverage is kept only as a descriptive column (`coverage_pop`).
 - **D2. Complete-data reference rows.** 03 writes `method == "complete"` rows per (regime, analysis
   model) with SE ratio, coverage and R. G6 rule 3 (SE ratio in [0.90, 1.15] under phylolm) is
-  selectable by env `MI_SE_RULE`: `absolute` (default, the approved plan) or `relative` (MI SE ratio
-  divided by the complete-data SE ratio). Both numbers are printed per regime, plus an
-  `ANALYSIS_MODEL_SE_RATIO` line whenever the complete-data ratio is itself outside the band.
-  Which rule G6 uses is Shinichi's decision; until then the gate runs `absolute`.
+  selectable by env `MI_SE_RULE`: `relative` (default since CP1, section 5d.3: MI SE ratio divided
+  by the complete-data SE ratio) or `absolute` (the original approved plan). Both numbers are
+  printed per regime, plus an `ANALYSIS_MODEL_SE_RATIO` line whenever the complete-data ratio is
+  itself outside the band. Shinichi chose `relative` at CP1 (5d.3).
 - **D3. Completeness, fail-closed.** Expected reps come from env `MI_N_REPS` (default 200). The
   expected grid is built from `regimes.R`, never from the files. A missing rep file counts as a fit
   failure and as non-converged. A missing (regime, analysis model, method) row, R or n <= 0, or any
@@ -289,10 +312,11 @@ G7 are computed, not the thresholds of the approved plan.
   (fit failures, non-convergence) fail only above 2%, compared on counts: exactly 4/200 passes and
   5/200 fails. A run restricted with `MI_REGIMES` or fewer than 200 reps can pass its rules but
   never prints the G6 or G7 token.
-- **D4. G6 rule 4 (proper > improper SE ratio).** The mean comparison is required separately within
-  regimes 9-16 and within 17-24, per analysis model, so a failure confined to the new two-lambda
-  regimes cannot be hidden by regimes 9-16. Per-regime pairs are printed as descriptive. A missing
-  pair fails.
+- **D4. G6 rule 4 (proper vs improper SE ratio).** Superseded by 5d.4: reported, not gated. The
+  mean posterior_full vs posterior_none SE ratio is printed per analysis model within each
+  both-missing block (9-16 stress test, 17-24 Kronecker, 33-40 twins), and per-regime pairs are
+  printed too. Neither decides the gate, and a non-finite pair is counted, not failed. A missing
+  posterior_none row still fails, through the completeness check (D3).
 - **D5. Mean shortfall** is the positive part, `mean(pmax(complete_coverage - coverage, 0))` over the
   posterior_full rows, so over-coverage in one row cannot cancel under-coverage in another. The
   per-row rule, coverage >= complete - 0.05, is unchanged.
@@ -326,16 +350,20 @@ G7 are computed, not the thresholds of the approved plan.
    showed the posterior is calibrated (`evidence/README.md`). Rules:
    - 50 or more seeds per setting, all from one code SHA;
    - converged in at least 98% of fits per setting;
-   - 95% interval coverage of lambda_k and of rho_P in [0.88, 1.00];
-   - |mean bias| <= 0.03;
+   - 95% interval coverage in [0.88, 1.00] for lambda_k where the truth is inside (0, 1) (settings
+     B-D; the lambda = 1 truths of A sit on the boundary), and for rho_P where both lambda_k >= 0.3
+     (settings A-C);
+   - |mean bias| <= 0.03 for every lambda_k, and for rho_P where its coverage is gated;
    - REML agreement in at least 90% of fits.
 3. **The SE ratio is judged relative to complete data** under the same analysis model:
    (MI SE ratio) / (complete SE ratio) in [0.90, 1.15]. The complete-data ratio itself can sit near
    0.80 where the analysis model is misspecified (regimes 21 and 23 under phylolm, per the harness
    review).
-4. **Proper vs improper SE ratio is reported, not gated.** Fixing Sigma at its posterior mean gives
-   plug-in intervals about 1.5% wider at these sample sizes, a Jensen effect (S1 measurement). So
-   "proper > improper" need not hold when everything is right.
+4. **Proper vs improper SE ratio is reported, not gated.** On the 30-tip test fixture (S1
+   measurement; `tests/testthat/test-multi-impute-posterior.R`), fixing Sigma at its posterior mean
+   gave a per-cell predictive variance 1.4-1.6% larger than the proper one (intervals about 0.7-0.8%
+   wider), a Jensen effect. No measurement at the campaign sizes is recorded. So "proper > improper"
+   need not hold when everything is right.
 5. **The real-data 5% slope criterion is reported, not gated** (decision R3, unchanged).
 
 ### 5e. CP2 follow-up decisions (Shinichi, 2026-09-24, after the diagnosis)
@@ -357,8 +385,12 @@ Evidence: `diagnosis.md`.
    returned.
    - Adaptation stays confined to the burn-in, so an extended chain equals a longer run.
    - A fit that converges first time is byte-identical to the previous code.
-   - Motivation: all 32 non-converged campaign fits failed on ESS only, and 4x chains converged them
-     all without moving the pooled slopes.
+   - Motivation: all 44 non-converged campaign fits in regimes 1 to 24 failed on ESS only (min bulk
+     ESS 190 to 395, max split R-hat at most 1.028; `evidence/diagnosis/campaign_cells.csv`). The 32
+     in regimes 5, 21 and 23, the regimes over the 2% limit, were re-run at 4x length (burn-in 4,000
+     and 20,000 sweeps). That re-run also lengthened burn-in, which the extension does not do. All 32
+     converged, and the pooled slopes did not move (`diagnosis.md`, Failure 2). The other 12 were not
+     re-run at 2x or 4x.
 
    Users pay the extra time only when a fit needs it (usability, D-139).
 3. **The re-run uses the new code for:**

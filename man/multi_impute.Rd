@@ -119,10 +119,11 @@ preserves the pre-lambda Brownian correlation matrix everywhere;
 \item{posterior_control}{list of settings for \code{draws_method = "posterior"} (ignored otherwise). Elements, with defaults:
 \describe{
 \item{\code{n_chains}}{\code{4L}. Number of MCMC chains. Chain 1 starts at the
-per-trait REML Pagel's lambda (up to 2,000 tips; above that, or if
-the REML fit fails, at lambda = 0.9), and the other chains start
-from values dispersed around it. The values used are returned in
-\code{mi$posterior$start}.}
+per-trait REML Pagel's lambda clamped to [0.02, 0.98] (up to 2,000
+tips; above that, or if the REML fit fails, at lambda = 0.9), and the
+other chains start from values dispersed around it.
+\code{mi$posterior$start} holds the REML lambda and chain 1's lambda
+before clamping.}
 \item{\code{n_iter}}{\code{5000L}. Sweeps per chain after burn-in.}
 \item{\code{burnin}}{\code{1000L}. Burn-in sweeps per chain (also used to tune
 the Metropolis step sizes).}
@@ -133,8 +134,9 @@ that the chains together keep \code{keep_draws} sweeps.}
 predictive draws across chains, used for the per-cell intervals.
 Must be at least \code{m}. The default \code{thin} keeps at least this many
 whenever \code{n_iter} is at least \code{ceiling(keep_draws / n_chains)}. If
-a user-set \code{n_iter} or \code{thin} keeps fewer, a warning is raised and
-the intervals use the sweeps that were kept.}
+a user-set \code{n_iter} or \code{thin} keeps fewer (but at least \code{m}), a
+warning is raised and the intervals use the sweeps that were kept;
+keeping fewer than \code{m} is an error.}
 \item{\code{param_uncertainty}}{\code{"full"} (default), \code{"none"} or \code{"both"}.
 \code{"none"} is an improper plug-in mode for validation only: the
 covariance matrices are fixed at their posterior means from a full
@@ -173,7 +175,12 @@ An object of class \code{"pigauto_mi"} with components:
 data.frame with the same shape and column types as the input
 \code{traits}; observed cells are preserved and missing cells are
 filled with the corresponding stochastic draw. These datasets are
-for prediction diagnostics, not downstream inference.}
+for prediction diagnostics, not downstream inference, except with
+\code{draws_method = "posterior"} (unless
+\code{posterior_control$param_uncertainty = "none"}), whose datasets are
+posterior imputations: fit the analysis to them with
+\code{\link[=with_imputations]{with_imputations()}} and pool the fits with \code{\link[=pool_mi]{pool_mi()}} (see
+\code{posterior} below and "Posterior draws").}
 \item{\code{m}}{Number of stochastic completion datasets.}
 \item{\code{pooled_point}}{A single data.frame whose missing cells
 are replaced by the MC-averaged point estimate. Convenient for
@@ -206,7 +213,8 @@ sweeps after burn-in per chain that the diagnostics use)), \code{params}
 (list: \code{Sigma_P} and \code{Sigma_E} as \verb{K x K x draws} arrays, \code{lambda} and \code{mu}
 as \verb{draws x K} matrices, on the latent scale), \code{converged},
 \code{control}, \code{hyper} (priors), \code{start} (REML lambda and chain-1 start
-lambda), \code{draw_index} (kept sweeps used for the \code{m} datasets),
+lambda, before clamping to [0.02, 0.98]), \code{draw_index} (kept
+sweeps used for the \code{m} datasets),
 \code{wall_s} and \code{sweeps} (all sweeps, burn-in included, summed over
 chains). For this method \code{fit} is \code{NULL}, \code{se} holds
 the posterior predictive SD of each imputed cell, the class is
@@ -231,13 +239,14 @@ The conformal-width and Brownian/MC-dropout draws returned here are
 experimental prediction-diagnostic draws. Do not use these datasets for
 downstream inference or Rubin pooling. For continuous traits,
 \code{draws_method = "posterior"} instead returns proper Bayesian posterior
-imputations that can be passed to \code{\link[=with_imputations]{with_imputations()}} and \code{\link[=pool_mi]{pool_mi()}}
-for the analyses described in "Posterior draws" below. The separate
-analysis-aware backend, \code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, covers its own
-documented narrow regime.
+imputations for the analyses described in "Posterior draws" below: fit
+the analysis to them with \code{\link[=with_imputations]{with_imputations()}} and pool the resulting
+fits with \code{\link[=pool_mi]{pool_mi()}}. The separate analysis-aware backend,
+\code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, covers its own documented narrow regime.
 }
 \details{
-These draws do not condition on a declared substantive analysis model.
+The conformal and MC-dropout draws do not condition on a declared
+substantive analysis model.
 Consequently, stochastic variation alone does not make them proper or
 congenial multiple imputations. The analysis-aware backend requires the
 analysis model before generating draws and dispatches only across its
@@ -272,8 +281,14 @@ argue for multiple imputation as the default.
 \section{When to use this}{
 
 
-This function is useful for comparing stochastic prediction behavior from
-one tree. It is not the analysis-aware inferential backend.
+With \code{draws_method = "conformal"} or \code{"mc_dropout"}, this function is
+useful for comparing stochastic prediction behavior from one tree; those
+draws are not for downstream inference. With \code{draws_method = "posterior"}
+(continuous traits), it returns proper posterior imputations for the
+analyses described in "Posterior draws": \code{\link[=with_imputations]{with_imputations()}} fits the
+analysis to them and \code{\link[=pool_mi]{pool_mi()}} pools those fits.
+\code{\link[=multi_impute_analysis]{multi_impute_analysis()}} is the separate analysis-aware backend for its
+own documented regime.
 
 \code{\link[=multi_impute_trees]{multi_impute_trees()}} provides an experimental posterior-tree sensitivity
 path, but tree uncertainty is not supported by \code{\link[=multi_impute_analysis]{multi_impute_analysis()}}.

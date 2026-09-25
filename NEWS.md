@@ -34,15 +34,17 @@ the effects integrated out keep it mixing near lambda = 0 and lambda = 1.
   one run longer from the start. The number of kept draws does not change:
   after `k` extensions they are every `thin * (k + 1)`-th sweep.
   `posterior_control$auto_extend = FALSE` turns this off. A fit that meets
-  the rule first time returns exactly what it returned before.
+  the rule first time is not extended; its draws and diagnostics are the
+  same as with `auto_extend = FALSE`.
   `mi$posterior$diagnostics` records the extensions made (attribute
   `"n_extensions"`) and the sweeps after burn-in per chain
   (`"sweeps_per_chain"`); `print()` and the non-convergence warning report
   the extensions.
-- The result can be passed to `with_imputations()` and `pool_mi()`, which
-  now accept the provenance marker `"pigauto_posterior_mi_v1"` alongside
-  `"pigauto_analysis_mi_v1"`. The draws come from a linear-Gaussian model of
-  the imputed traits on the scale where they were imputed (the log scale
+- The result can be passed to `with_imputations()`, and the fits it returns
+  to `pool_mi()`; both now accept the provenance marker
+  `"pigauto_posterior_mi_v1"` alongside `"pigauto_analysis_mi_v1"`. The
+  draws come from a linear-Gaussian model of the imputed traits on the
+  scale where they were imputed (the log scale
   for traits log-transformed by `log_transform`). They are proper for
   analyses that are linear in the imputed traits on that scale and whose
   variables are all among the imputed traits. Not covered: external

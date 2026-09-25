@@ -6,15 +6,21 @@
 #' experimental prediction-diagnostic draws. Do not use these datasets for
 #' downstream inference or Rubin pooling. For continuous traits,
 #' `draws_method = "posterior"` instead returns proper Bayesian posterior
-#' imputations that can be passed to [with_imputations()] and [pool_mi()]
-#' for the analyses described in "Posterior draws" below. The separate
-#' analysis-aware backend, [multi_impute_analysis()], covers its own
-#' documented narrow regime.
+#' imputations for the analyses described in "Posterior draws" below: fit
+#' the analysis to them with [with_imputations()] and pool the resulting
+#' fits with [pool_mi()]. The separate analysis-aware backend,
+#' [multi_impute_analysis()], covers its own documented narrow regime.
 #'
 #' @section When to use this:
 #'
-#' This function is useful for comparing stochastic prediction behavior from
-#' one tree. It is not the analysis-aware inferential backend.
+#' With `draws_method = "conformal"` or `"mc_dropout"`, this function is
+#' useful for comparing stochastic prediction behavior from one tree; those
+#' draws are not for downstream inference. With `draws_method = "posterior"`
+#' (continuous traits), it returns proper posterior imputations for the
+#' analyses described in "Posterior draws": [with_imputations()] fits the
+#' analysis to them and [pool_mi()] pools those fits.
+#' [multi_impute_analysis()] is the separate analysis-aware backend for its
+#' own documented regime.
 #'
 #' [multi_impute_trees()] provides an experimental posterior-tree sensitivity
 #' path, but tree uncertainty is not supported by [multi_impute_analysis()].
@@ -99,10 +105,11 @@
 #'   "posterior"` (ignored otherwise). Elements, with defaults:
 #'   \describe{
 #'     \item{`n_chains`}{`4L`. Number of MCMC chains. Chain 1 starts at the
-#'       per-trait REML Pagel's lambda (up to 2,000 tips; above that, or if
-#'       the REML fit fails, at lambda = 0.9), and the other chains start
-#'       from values dispersed around it. The values used are returned in
-#'       `mi$posterior$start`.}
+#'       per-trait REML Pagel's lambda clamped to \[0.02, 0.98\] (up to 2,000
+#'       tips; above that, or if the REML fit fails, at lambda = 0.9), and the
+#'       other chains start from values dispersed around it.
+#'       `mi$posterior$start` holds the REML lambda and chain 1's lambda
+#'       before clamping.}
 #'     \item{`n_iter`}{`5000L`. Sweeps per chain after burn-in.}
 #'     \item{`burnin`}{`1000L`. Burn-in sweeps per chain (also used to tune
 #'       the Metropolis step sizes).}
@@ -113,8 +120,9 @@
 #'       predictive draws across chains, used for the per-cell intervals.
 #'       Must be at least `m`. The default `thin` keeps at least this many
 #'       whenever `n_iter` is at least `ceiling(keep_draws / n_chains)`. If
-#'       a user-set `n_iter` or `thin` keeps fewer, a warning is raised and
-#'       the intervals use the sweeps that were kept.}
+#'       a user-set `n_iter` or `thin` keeps fewer (but at least `m`), a
+#'       warning is raised and the intervals use the sweeps that were kept;
+#'       keeping fewer than `m` is an error.}
 #'     \item{`param_uncertainty`}{`"full"` (default), `"none"` or `"both"`.
 #'       `"none"` is an improper plug-in mode for validation only: the
 #'       covariance matrices are fixed at their posterior means from a full
@@ -152,7 +160,12 @@
 #'       data.frame with the same shape and column types as the input
 #'       `traits`; observed cells are preserved and missing cells are
 #'       filled with the corresponding stochastic draw. These datasets are
-#'       for prediction diagnostics, not downstream inference.}
+#'       for prediction diagnostics, not downstream inference, except with
+#'       `draws_method = "posterior"` (unless
+#'       `posterior_control$param_uncertainty = "none"`), whose datasets are
+#'       posterior imputations: fit the analysis to them with
+#'       [with_imputations()] and pool the fits with [pool_mi()] (see
+#'       `posterior` below and "Posterior draws").}
 #'     \item{`m`}{Number of stochastic completion datasets.}
 #'     \item{`pooled_point`}{A single data.frame whose missing cells
 #'       are replaced by the MC-averaged point estimate. Convenient for
@@ -185,7 +198,8 @@
 #'       (list: `Sigma_P` and `Sigma_E` as `K x K x draws` arrays, `lambda` and `mu`
 #'       as `draws x K` matrices, on the latent scale), `converged`,
 #'       `control`, `hyper` (priors), `start` (REML lambda and chain-1 start
-#'       lambda), `draw_index` (kept sweeps used for the `m` datasets),
+#'       lambda, before clamping to \[0.02, 0.98\]), `draw_index` (kept
+#'       sweeps used for the `m` datasets),
 #'       `wall_s` and `sweeps` (all sweeps, burn-in included, summed over
 #'       chains). For this method `fit` is `NULL`, `se` holds
 #'       the posterior predictive SD of each imputed cell, the class is
@@ -204,7 +218,8 @@
 #'   }
 #'
 #' @details
-#' These draws do not condition on a declared substantive analysis model.
+#' The conformal and MC-dropout draws do not condition on a declared
+#' substantive analysis model.
 #' Consequently, stochastic variation alone does not make them proper or
 #' congenial multiple imputations. The analysis-aware backend requires the
 #' analysis model before generating draws and dispatches only across its
@@ -772,8 +787,11 @@ print.pigauto_mi <- function(x, ...) {
                      both = "; plug-in draws also in mi$posterior_improper",
                      "")))
   lam <- colMeans(post$params$lambda)
-  cat(sprintf("  lambda   : %s (posterior means)\n",
-              paste(sprintf("%s = %.2f", names(lam), lam), collapse = ", ")))
+  cat(sprintf("  lambda   : %s (%s)\n",
+              paste(sprintf("%s = %.2f", names(lam), lam), collapse = ", "),
+              switch(ctl$param_uncertainty,
+                     none = "at the posterior-mean covariances",
+                     "posterior means")))
   cat(sprintf(paste0("  Converged: %s (max R-hat %.3f, needs < 1.05; ",
                      "min bulk ESS %.0f, needs > 400)\n"),
               if (isTRUE(post$converged)) "yes" else "NO",
