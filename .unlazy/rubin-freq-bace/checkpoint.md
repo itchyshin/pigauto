@@ -67,3 +67,8 @@ RETRY RULE (2026-09-25 00:2x nibi): BACE fits are deterministic given seed + cod
   resubmitted 21782231 (n100, 14) + 21782232 (n300, 3); 10 new-code failures stay in results/bace = after-fix failures.
   fir retry2 (61390210, 8) were mostly new-code failures (6 of 8 failed twice) and will repeat; harmless (fail in ~1 s).
   nibi: check old-code failures the same way at the end of its first pass. Pool now also pulls bace_failed_pass2.
+N1000 HOST SPLIT v2 (2026-09-25 ~01:00 nibi): fir started 1/354 (40G/12h jobs queue slowly; low fairshare) -> cancelled
+  180 PENDING fir tasks (seeds 31-60). Now: fir seeds 2-30 (61390620, 174), Totoro seeds 31-40 (60 fits, PAR 30,
+  pgid 401996, ~/pigauto_rubin, driver script/rubin_totoro.sh, BACE digests identical), nibi seeds 41-60 (22645293, 120),
+  rorqual seeds 61-100 (21781308, 240). Seed 1 = nibi timing check. Totoro counts in rubin_status.sh (totoro line).
+  Pool: add Totoro results (rsync totoro:pigauto_rubin/results/bace -> pool/bace/totoro) at final pooling.

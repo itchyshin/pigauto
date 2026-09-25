@@ -6,11 +6,12 @@
 # Never aggregate while this runs (v1 lesson).
 set -euo pipefail
 POOL="${1:-$HOME/pigauto_rubin_pool}"
-mkdir -p "$POOL"/{bace,bace_asshipped_failed,bace_failed_later,freq}/{nibi,fir,rorqual}
+mkdir -p "$POOL"/{bace,bace_asshipped_failed,bace_failed_later,freq}/{nibi,fir,rorqual,totoro}
 pull() { rsync -a --include='*.rds' --exclude='*' "$1:$2/" "$POOL/$3/" 2>/dev/null || echo "note: nothing at $1:$2"; }
 pull nibi    projects/def-snakagaw/snakagaw/pigauto_rubin/results/bace                   bace/nibi
 pull fir     pigauto_rubin/results/bace                                                  bace/fir
 pull rorqual projects/def-snakagaw/snakagaw/pigauto_rubin/results/bace                   bace/rorqual
+pull totoro  pigauto_rubin/results/bace                                                  bace/totoro
 pull nibi    projects/def-snakagaw/snakagaw/pigauto_rubin/results/bace_asshipped_failed  bace_asshipped_failed/nibi
 pull fir     pigauto_rubin/results/bace_asshipped_failed                                 bace_asshipped_failed/fir
 pull rorqual projects/def-snakagaw/snakagaw/pigauto_rubin/results/bace_asshipped_failed  bace_asshipped_failed/rorqual

@@ -9,4 +9,4 @@ cnt='for a in bace freq; do for n in 100 300 1000; do c=$(find "$R/results/$a" -
 echo "nibi    $(q nibi "R=~/projects/def-snakagaw/snakagaw/pigauto_rubin; $cnt") | freq-cmp $(q nibi 'find ~/projects/def-snakagaw/snakagaw/pigauto_rubin_freq/results/freq -name "*.rds" | wc -l')"
 echo "fir     $(q fir "R=~/pigauto_rubin; $cnt") | freq-v3 $(q fir "R=~/pigauto_rubin_f3; $cnt")"
 echo "rorqual $(q rorqual "R=~/projects/def-snakagaw/snakagaw/pigauto_rubin; $cnt")"
-echo "narval  $(q narval "R=~/projects/def-snakagaw/snakagaw/pigauto_rubin; $cnt")"
+echo "totoro  $(q totoro 'c=$(find ~/pigauto_rubin/results/bace -name "*_n1000_M20_*.rds" 2>/dev/null | wc -l); r=$(pgrep -u $USER -fc "rubin_cell.R"); echo "bace_n1000=$c running=$r"')"
