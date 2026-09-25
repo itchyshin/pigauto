@@ -68,12 +68,14 @@
   if (isTRUE(.pigauto_exact_fallback_env$notified)) return(invisible(NULL))
   .pigauto_exact_fallback_env$notified <- TRUE
   message(
-    "pigauto: predict_method = \"exact\" (the default) was not usable for ",
-    "a joint baseline fit (", reason, "); used the per-column baseline for ",
-    "that fit instead. This message is shown at most once per R session; ",
-    "pass predict_method = \"per_column\" to use the per-column path ",
-    "throughout, or predict_method = \"exact\" explicitly if you want a ",
-    "warning every time this happens."
+    "pigauto: the exact (\"exact\") joint baseline route was not usable ",
+    "for a fit (", reason, "); used the per-column baseline for that fit ",
+    "instead. This happens either while predict_method = \"auto\" (the ",
+    "default) is comparing its \"exact\" candidate, or when \"exact\" is ",
+    "itself the resolved route and fell back. This message is shown at ",
+    "most once per R session; pass predict_method = \"per_column\" to use ",
+    "the per-column path throughout, or predict_method = \"exact\" ",
+    "explicitly if you want a warning every time this happens."
   )
   invisible(NULL)
 }

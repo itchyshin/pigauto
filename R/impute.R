@@ -126,7 +126,12 @@
 #'   estimation or the \code{"rphylopars"} solver. The route actually used
 #'   is recorded in \code{fit$model_config$predict_method_used}
 #'   (\code{"exact"}, \code{"per_column"}, or \code{"auto"}) and, per
-#'   trait, in \code{fit$model_config$predict_method_by_trait}.
+#'   trait, in \code{fit$model_config$predict_method_by_trait}. Under
+#'   \code{"auto"} with real validation cells, \code{fit$model_config
+#'   $route_val_n} / \code{$score_val_n} record, per trait, how many of
+#'   its validation cells chose the route versus were reserved for gate
+#'   calibration and conformal scoring (see \code{\link{fit_baseline}}'s
+#'   \code{predict_method} docs).
 #' @param joint_refine_iter integer, default \code{0L}. Enables
 #'   cross-trait refinement of the joint baseline's cell imputations
 #'   using the estimated Sigma (the in-house solver's \code{max_iter}
@@ -134,7 +139,11 @@
 #'   current behaviour byte-for-byte. The refinement is guarded: the
 #'   Sigma step must shrink each iteration, or the loop rolls back to the
 #'   last good iterate and sets \code{$diverged}. Assess this opt-in control
-#'   with held-out evaluation on the intended data. Passed to
+#'   with held-out evaluation on the intended data. Has no effect on any
+#'   trait predicted by the \code{"exact"} route (see
+#'   \code{\link{fit_baseline}}'s \code{predict_method} docs); under the
+#'   default \code{predict_method = "auto"} it therefore only applies to
+#'   traits \code{"auto"} routes to \code{"per_column"}. Passed to
 #'   \code{\link{fit_baseline}} and stored in the fitted model config.
 #' @param em_iterations integer. Phase 6 EM iterations for the
 #'   threshold-joint baseline (binary + ordinal + OVR categorical).
@@ -515,7 +524,7 @@ impute <- function(traits, tree, species_col = NULL,
   graph <- build_phylo_graph(tree, k_eigen = "auto")
 
   # 4. Fit phylogenetic baseline (reuses graph$D for label propagation)
-  baseline <- fit_baseline(pd, tree, splits = splits, graph = graph,
+  baseline <- .fit_baseline_dispatch(pd, tree, splits = splits, graph = graph,
                            multi_obs_aggregation = multi_obs_aggregation,
                            em_iterations = em_iterations,
                            em_tol = em_tol,
@@ -523,7 +532,8 @@ impute <- function(traits, tree, species_col = NULL,
                            lambda_mode = lambda_mode,
                            joint_solver = joint_solver, predict_method = predict_method,
                            joint_refine_iter = joint_refine_iter,
-                           predict_method_explicit = predict_method_explicit)
+                           predict_method_explicit = predict_method_explicit,
+                           seed = seed)
 
   # gnn = FALSE (S3, docs/dev-log/arc/2026-09-18-gnn-off-contract.md): also
   # fit the tax-free PRODUCTION baseline here (splits = NULL, so every
@@ -538,7 +548,7 @@ impute <- function(traits, tree, species_col = NULL,
     # own to re-decide with. predict_route overrides predict_method inside
     # fit_baseline(); falls back to predict_method unchanged when
     # `baseline` predates this field.
-    baseline_full <- fit_baseline(pd, tree, splits = NULL, graph = graph,
+    baseline_full <- .fit_baseline_dispatch(pd, tree, splits = NULL, graph = graph,
                                   multi_obs_aggregation = multi_obs_aggregation,
                                   em_iterations = em_iterations,
                                   em_tol = em_tol,

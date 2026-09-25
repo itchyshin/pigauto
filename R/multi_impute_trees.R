@@ -579,7 +579,8 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
       joint_solver = baseline_arg("joint_solver", "inhouse"),
       predict_method = baseline_arg("predict_method", "auto"),
       joint_refine_iter = baseline_arg("joint_refine_iter", 0L),
-      predict_route = predict_route_arg
+      predict_route = predict_route_arg,
+      seed = if (is.null(seed)) NULL else as.integer(seed) + t
     )
     # NULL only for baselines built before lambda_per_trait existed.
     lambda_per_trait_by_tree[[t]] <- baseline_t$lambda_per_trait

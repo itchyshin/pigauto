@@ -291,7 +291,13 @@
 #'   estimation or the \code{"rphylopars"} solver. The route actually used
 #'   is recorded in \code{$model_config$predict_method_used}
 #'   (\code{"exact"}, \code{"per_column"}, or \code{"auto"}) and, per
-#'   trait, in \code{$model_config$predict_method_by_trait}.
+#'   trait, in \code{$model_config$predict_method_by_trait}. Under
+#'   \code{"auto"} with real validation cells, \code{$model_config
+#'   $route_val_n} / \code{$score_val_n} record, per trait, how many of
+#'   its validation cells chose the route versus were reserved for gate
+#'   calibration and conformal scoring (see \code{\link{fit_baseline}}'s
+#'   \code{predict_method} docs); both are \code{NULL} under an explicit
+#'   \code{"exact"}/\code{"per_column"} request.
 #' @param joint_refine_iter integer, default \code{0L}. Enables
 #'   cross-trait refinement of the joint baseline's cell imputations
 #'   using the estimated Sigma (the in-house solver's \code{max_iter}
@@ -299,7 +305,11 @@
 #'   current behaviour byte-for-byte. The refinement is guarded: the
 #'   Sigma step must shrink each iteration, or the loop rolls back to the
 #'   last good iterate and sets \code{$diverged}. Assess this opt-in control
-#'   with held-out evaluation on the intended data.
+#'   with held-out evaluation on the intended data. Has no effect on any
+#'   trait predicted by the \code{"exact"} route (see
+#'   \code{\link{fit_baseline}}'s \code{predict_method} docs); under the
+#'   default \code{predict_method = "auto"} it therefore only applies to
+#'   traits \code{"auto"} routes to \code{"per_column"}.
 #' @param verbose logical. Print training progress (default \code{TRUE}).
 #' @param seed optional integer. When supplied, makes stochastic training and
 #'   calibration reproducible; the default \code{NULL} uses the current RNG
@@ -459,11 +469,12 @@ fit_pigauto <- function(
     if (verbose) message("Fitting baseline...")
     # Pass graph through so fit_baseline can reuse graph$D instead of
     # calling ape::cophenetic.phylo() a second time on the same tree.
-    baseline <- fit_baseline(data, tree, splits = splits, graph = graph,
+    baseline <- .fit_baseline_dispatch(data, tree, splits = splits, graph = graph,
                               lambda_mode = lambda_mode,
                               joint_solver = joint_solver, predict_method = predict_method,
                               joint_refine_iter = joint_refine_iter,
-                              predict_method_explicit = predict_method_explicit)
+                              predict_method_explicit = predict_method_explicit,
+                              seed = seed)
   }
 
   # ---- Trait map ------------------------------------------------------------
@@ -552,7 +563,7 @@ fit_pigauto <- function(
       # evidence, via `predict_route` (which takes precedence over
       # `predict_method` inside fit_baseline()). Falls back to
       # `predict_method` unchanged when `baseline` predates this field.
-      baseline_full <- fit_baseline(data, tree, splits = NULL, graph = graph,
+      baseline_full <- .fit_baseline_dispatch(data, tree, splits = NULL, graph = graph,
                                      lambda_mode = lambda_mode,
                                      joint_solver = joint_solver,
                                      predict_method = predict_method,
@@ -596,7 +607,16 @@ fit_pigauto <- function(
       val_mask_mat <- matrix(FALSE, n, p)
       val_mask_mat[splits$val_idx] <- TRUE
 
-      split_res     <- split_val_cal_conf(val_mask_mat, conformal_split_val,
+      # S5c required change 1: calibrate_gates()/compute_conformal_scores()
+      # must not see the cells that (under "auto") chose the per-trait
+      # route -- restrict THEIR OWN input mask to the SCORE half. The
+      # safety-floor mean and val_rmse reporting below still use the FULL
+      # `val_mask_mat` (every held-out cell stays excluded from the
+      # training mean regardless of which half scored it).
+      val_mask_score <- matrix(FALSE, n, p)
+      val_mask_score[.pigauto_calibration_val_idx(splits, baseline, predict_method)] <- TRUE
+
+      split_res     <- split_val_cal_conf(val_mask_score, conformal_split_val,
                                            min_val_cells, seed)
       val_mask_cal  <- split_res$val_mask_cal
       val_mask_conf <- split_res$val_mask_conf
@@ -766,6 +786,14 @@ fit_pigauto <- function(
         baseline$predict_method_used %||% NULL,
       predict_method_by_trait = baseline_full$predict_method_by_trait %||%
         baseline$predict_method_by_trait %||% NULL,
+      # S5c required change 1: per-trait validation-cell counts recording
+      # which cells chose the route ("auto" only; NULL under an explicit
+      # "exact"/"per_column" request, or a baseline built before this
+      # field existed). Always read from `baseline` (the splits-based fit
+      # that actually did the route choice); `baseline_full` has no
+      # validation cells of its own.
+      route_val_n            = baseline$route_val_n %||% NULL,
+      score_val_n            = baseline$score_val_n %||% NULL,
       joint_solver           = joint_solver,
       joint_refine_iter      = joint_refine_iter,
       dropout                = dropout,
@@ -1269,6 +1297,15 @@ fit_pigauto <- function(
     val_mask_mat <- matrix(FALSE, n, p)
     val_mask_mat[splits$val_idx] <- TRUE
 
+    # S5c required change 1: calibrate_gates()/compute_conformal_scores()
+    # must not see the cells that (under "auto") chose the per-trait route
+    # -- restrict THEIR OWN input mask to the SCORE half via
+    # `val_mask_score` below. The safety-floor mean still uses the FULL
+    # `val_mask_mat` (every held-out cell stays excluded from the training
+    # mean regardless of which half scored it).
+    val_mask_score <- matrix(FALSE, n, p)
+    val_mask_score[.pigauto_calibration_val_idx(splits, baseline, predict_method)] <- TRUE
+
     # Fix C.3 (Opus 2026-04-28): split val into a CALIBRATION half (used by
     # `calibrate_gates()` to pick per-trait blend weights) and a CONFORMAL
     # half (used by `compute_conformal_scores()` to estimate residual
@@ -1291,7 +1328,7 @@ fit_pigauto <- function(
     # `conformal_split_val = FALSE` to disable splitting everywhere.
     # Factored into split_val_cal_conf() (S1) so the gnn = FALSE path
     # shares the identical halving logic.
-    split_res     <- split_val_cal_conf(val_mask_mat, conformal_split_val,
+    split_res     <- split_val_cal_conf(val_mask_score, conformal_split_val,
                                          min_val_cells, seed)
     val_mask_cal  <- split_res$val_mask_cal
     val_mask_conf <- split_res$val_mask_conf
@@ -1532,6 +1569,10 @@ fit_pigauto <- function(
     lambda_block           = baseline$lambda_block %||% NULL,
     predict_method_used    = baseline$predict_method_used %||% NULL,
     predict_method_by_trait = baseline$predict_method_by_trait %||% NULL,
+    # S5c required change 1: per-trait validation-cell counts recording
+    # which cells chose the route ("auto" only).
+    route_val_n            = baseline$route_val_n %||% NULL,
+    score_val_n            = baseline$score_val_n %||% NULL,
     joint_solver           = joint_solver,
     joint_refine_iter      = joint_refine_iter,
     dropout                = dropout,
@@ -1695,6 +1736,36 @@ build_pigauto_fit <- function(
     ),
     class = "pigauto_fit"
   )
+}
+
+# ---------------------------------------------------------------------------
+# .pigauto_calibration_val_idx()
+# ---------------------------------------------------------------------------
+#
+# S5c (rose-review.md required change 1): under predict_method = "auto"
+# with real validation cells, `baseline` (fit_baseline()'s "auto" fit) has
+# already split each trait's validation cells into a ROUTE half (used only
+# to choose that trait's route) and a SCORE half
+# (`baseline$score_val_idx`). Gate calibration and conformal scoring must
+# use the SCORE half, not the full validation set -- otherwise the same
+# cells that picked the route also calibrate the gate and score the
+# conformal residuals, making those residuals optimistic (the mechanism
+# the review's finding 1 measured as undercoverage at lambda = 1, small
+# n). Under an explicit "exact"/"per_column" request (no routing decision
+# was made) this returns the full validation set unchanged, matching
+# pre-S5c behaviour exactly.
+#
+# @param splits list (output of make_missing_splits()) or NULL.
+# @param baseline list, fit_baseline()'s return value.
+# @param predict_method character, the top-level resolved request ("auto",
+#   "exact", or "per_column").
+# @return integer vector of linear indices into the n_obs x p_latent
+#   matrix (same format as `splits$val_idx`).
+.pigauto_calibration_val_idx <- function(splits, baseline, predict_method) {
+  if (identical(predict_method, "auto") && !is.null(baseline$score_val_idx)) {
+    return(baseline$score_val_idx)
+  }
+  splits$val_idx
 }
 
 # ---------------------------------------------------------------------------

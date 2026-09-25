@@ -19,8 +19,20 @@ validation loss (squared error on the latent scale; log-loss for binary and cate
 | 1 | 300 | 0.393 | 0.402 | 0.392 | -0.3% | -0.001 |
 | 1 | 1000 | 0.341 | 0.350 | 0.341 | -0.1% | -0.002 |
 
-Every cell is at or below main; the round-1 losses at lambda = 1 are gone. Coverage (c1, c2) is at or above
-main in every cell. The discrete change at lambda = 1, n = 1000 comes from ordinal accuracy, about -0.006
+Every cell is at or below main in z-RMSE; the round-1 losses at lambda = 1 are gone. Coverage is NOT uniformly
+at or above main (an earlier version of this report said it was; that was a misreading, corrected after
+review). Mean coverage for c1 and c2:
+
+| true lambda | n 100 main / auto | n 300 main / auto | n 1000 main / auto |
+|---|---|---|---|
+| 0.3 | 0.877 / 0.880 | 0.958 / 0.962 | 0.956 / 0.964 |
+| 0.7 | 0.861 / 0.869 | 0.960 / 0.965 | 0.957 / 0.966 |
+| 1 | 0.900 / 0.894 | 0.969 / 0.966 | 0.968 / 0.968 |
+
+At lambda = 1 coverage falls slightly (per trait, 27 of 72 trait-cells are lower; for example c1 0.889 to 0.883
+and count 0.876 to 0.858 at n = 100). Round 1 (exact everywhere) did not lower coverage, which points to the
+route choice and the conformal scores using the same validation cells; the fix (split the validation cells)
+is in progress and this benchmark will be re-run. The discrete change at lambda = 1, n = 1000 comes from ordinal accuracy, about -0.006
 (roughly 3 unpaired standard errors); binary and categorical are unchanged there. Ordinal gains about +0.06
 at lambda 0.7. Likely cause: the route choice scores ordinal traits by squared error rather than class
 accuracy. Follow-up agreed with Shinichi: score ordinal by class accuracy in the next change.
@@ -45,5 +57,6 @@ accuracy. Follow-up agreed with Shinichi: score ordinal by class accuracy in the
 
 Discrete accuracy is equal to or above main in every dataset (AmphiBIO 300 habitat 0.794, as on main).
 
-Decision (Shinichi, 2026-09-25): ship "auto" as the default and document the one ordinal cell.
+Decision (Shinichi, 2026-09-25): ship "auto" with the one ordinal cell documented; then, after review found the
+coverage drop, split the validation cells between route choice and conformal calibration and re-benchmark.
 Checks on this code: suite FAIL 0 / PASS 2663; R CMD check 0 errors, 0 warnings, 1 note (dev version).

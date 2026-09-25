@@ -140,17 +140,28 @@
 #'   columns off the joint path entirely (no joint analogue for those two
 #'   modes).
 #' @param predict_method character. Prediction route for the in-house joint
-#'   solver. \code{"auto"} (default, S5b) fits the baseline once with the
-#'   \code{"exact"} route and once with the \code{"per_column"} route, then
-#'   for each TRAIT (each \code{trait_map} entry; a categorical trait's K
-#'   latent columns and a zi_count trait's gate + magnitude columns are
-#'   chosen together) picks whichever route has the lower loss on that
-#'   trait's cells in \code{splits$val_idx}: mean squared error on the
-#'   z-scored latent scale for continuous/count/proportion/ordinal/zi_count
-#'   magnitude, mean log-loss of \code{plogis(mu)} against the observed 0/1
-#'   truth for binary/zi_count gate, and mean multinomial log-loss for
-#'   categorical. A trait falls back to \code{"exact"} on a tie, when fewer
-#'   than 5 validation cells belong to it, or when \code{splits} is
+#'   solver. \code{"auto"} (default, S5b/S5c) fits the baseline once with
+#'   the \code{"exact"} route and once with the \code{"per_column"} route,
+#'   then for each TRAIT (each \code{trait_map} entry; a categorical
+#'   trait's K latent columns and a zi_count trait's gate + magnitude
+#'   columns are chosen together) picks whichever route has the lower loss
+#'   on that trait's cells: mean squared error on the z-scored latent
+#'   scale for continuous/count/proportion/ordinal/zi_count magnitude,
+#'   mean log-loss of \code{plogis(mu)} against the observed 0/1 truth for
+#'   binary/zi_count gate, and mean multinomial log-loss for categorical.
+#'   \strong{Which cells the choice sees (S5c)}: when \code{splits} has 10
+#'   or more validation cells for a trait, that trait's val cells are
+#'   split into two halves (seeded via \code{seed}, or the ambient RNG
+#'   state when \code{seed = NULL}) -- the route choice sees only half A.
+#'   Half B is reserved so \code{fit_pigauto()}/\code{impute()} can
+#'   calibrate the GNN gate and compute conformal scores on cells that
+#'   never informed the route choice, instead of the same cells that
+#'   picked it (which would make those residuals optimistic). Below 10
+#'   cells for a trait there is too little evidence to split 5-and-5, so
+#'   the route falls back to \code{"exact"} (per the existing insufficient-
+#'   evidence tie-break below) and ALL of that trait's cells stay
+#'   available for calibration/conformal scoring. A trait also falls back
+#'   to \code{"exact"} on a genuine tie, or when \code{splits} is
 #'   \code{NULL} (no validation cells at all makes every trait
 #'   \code{"exact"}). The chosen route per trait is returned as
 #'   \code{$predict_method_by_trait}. \code{"exact"} uses the full
@@ -181,25 +192,37 @@
 #'   EM cell-refinement; \code{R/joint_mvn_solver.R}). \code{0L} preserves
 #'   current behaviour byte-for-byte. The refinement is guarded: the
 #'   Sigma step must shrink each iteration, or the loop rolls back to the
-#'   last good iterate and sets \code{$diverged}.
-#' @param predict_method_explicit Internal use only; do not set directly.
-#'   \code{fit_pigauto()} uses this to propagate whether ITS OWN caller
-#'   explicitly requested \code{predict_method}, so the one-time exact
-#'   fallback message is only suppressed for the true default. Leave as
-#'   \code{NULL}.
+#'   last good iterate and sets \code{$diverged}. \strong{Has no effect on
+#'   any trait predicted by the \code{"exact"} route}: the exact
+#'   conditional solve returns its analytic posterior directly and never
+#'   enters this EM loop. Under the default \code{predict_method =
+#'   "auto"}, \code{joint_refine_iter} therefore only ever applies to
+#'   traits that \code{"auto"} routes to \code{"per_column"} (see
+#'   \code{$predict_method_by_trait} below).
 #' @param predict_route optional named character vector (names = trait
 #'   names, i.e. \code{vapply(data$trait_map, function(tm) tm$name,
 #'   character(1))}; values \code{"exact"} or \code{"per_column"}). Forces
 #'   the prediction route for each named trait, bypassing the
 #'   \code{"auto"} validation-loss comparison entirely (and overriding
 #'   \code{predict_method}, if a value other than \code{"auto"} was also
-#'   supplied). Traits not named default to \code{"exact"}. Used
-#'   internally to replay a validation-split \code{"auto"} choice onto a
-#'   production refit that has no validation cells (e.g.
-#'   \code{fit_pigauto()}'s \code{baseline_full}, fit with
+#'   supplied). Traits not named default to \code{"exact"}. A name that
+#'   matches no trait in \code{data$trait_map} is ignored, with a warning
+#'   (once per call). Used internally to replay a validation-split
+#'   \code{"auto"} choice onto a production refit that has no validation
+#'   cells (e.g. \code{fit_pigauto()}'s \code{baseline_full}, fit with
 #'   \code{splits = NULL}) so that refit reuses the SAME per-trait route
 #'   rather than re-deciding with zero validation evidence. \code{NULL}
 #'   (default) disables forcing; \code{predict_method} governs normally.
+#' @param seed optional integer. Seeds the deterministic half-A (route
+#'   choice) / half-B (reserved for \code{fit_pigauto()}/\code{impute()}'s
+#'   gate calibration and conformal scoring) split of each trait's
+#'   validation cells under \code{predict_method = "auto"} with real
+#'   validation cells (see \dQuote{"auto"} above). \code{NULL} (default)
+#'   leaves the split to whatever the ambient RNG state is at call time,
+#'   matching this package's other optional \code{seed} arguments.
+#'   Ignored when \code{predict_method} is \code{"exact"} /
+#'   \code{"per_column"}, when \code{predict_route} is supplied, or when
+#'   there are no validation cells.
 #' @return A list with:
 #'   \describe{
 #'     \item{mu}{Numeric matrix (n_species x p_latent), baseline means in
@@ -281,12 +304,50 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                          joint_solver = c("inhouse", "rphylopars"),
                          predict_method = c("auto", "exact", "per_column"),
                          joint_refine_iter = 0L,
+                         predict_route = NULL,
+                         seed = NULL) {
+  # S5c (rose-review.md, required change 4): `predict_method_explicit` used
+  # to be a documented-but-"internal use only" argument of this exported
+  # signature. It is resolved here, from THIS call's own missing() check,
+  # and threaded to the unexported .fit_baseline_dispatch() instead --
+  # fit_pigauto()/impute() (the only callers that need to propagate a
+  # DIFFERENT caller's missing() verdict) call .fit_baseline_dispatch()
+  # directly rather than this exported wrapper.
+  predict_method_explicit <- !missing(predict_method)
+  .fit_baseline_dispatch(
+    data = data, tree = tree, splits = splits, model = model, graph = graph,
+    multi_obs_aggregation = multi_obs_aggregation, lambda_mode = lambda_mode,
+    lambda_fixed = lambda_fixed, em_iterations = em_iterations, em_tol = em_tol,
+    em_offdiag = em_offdiag, joint_solver = joint_solver,
+    predict_method = predict_method, joint_refine_iter = joint_refine_iter,
+    predict_method_explicit = predict_method_explicit,
+    predict_route = predict_route, seed = seed)
+}
+
+# S5b/S5c: "auto" and `predict_route` are dispatcher-level concerns, handled
+# entirely by this unexported dispatcher -- .fit_baseline_core() (the
+# pre-S5b fit_baseline() body) only ever sees a concrete "exact" /
+# "per_column". Takes `predict_method_explicit` directly (unlike the
+# exported fit_baseline(), which infers it from its OWN missing() check)
+# so fit_pigauto()/impute() can propagate whether THEIR OWN caller
+# explicitly requested `predict_method`, without exposing that plumbing on
+# the public signature.
+#
+#' @noRd
+.fit_baseline_dispatch <- function(data, tree, splits = NULL, model = "BM",
+                         graph = NULL,
+                         multi_obs_aggregation = c("hard", "soft"),
+                         lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
+                         lambda_fixed = NULL,
+                         em_iterations = 0L,
+                         em_tol = 1e-3,
+                         em_offdiag = FALSE,
+                         joint_solver = c("inhouse", "rphylopars"),
+                         predict_method = c("auto", "exact", "per_column"),
+                         joint_refine_iter = 0L,
                          predict_method_explicit = NULL,
-                         predict_route = NULL) {
-  # S5b (docs/dev-log/exact-default/S5b-route-choice-report.md): "auto" and
-  # `predict_route` are dispatcher-level concerns, handled entirely by this
-  # thin wrapper -- .fit_baseline_core() below (the pre-S5b fit_baseline()
-  # body, renamed) only ever sees a concrete "exact" / "per_column".
+                         predict_route = NULL,
+                         seed = NULL) {
   if (is.null(predict_method_explicit)) {
     predict_method_explicit <- !missing(predict_method)
   }
@@ -314,7 +375,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       multi_obs_aggregation = multi_obs_aggregation, lambda_mode = lambda_mode,
       lambda_fixed = lambda_fixed, em_iterations = em_iterations,
       em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,
-      joint_refine_iter = joint_refine_iter))
+      joint_refine_iter = joint_refine_iter, seed = seed))
   }
 
   .fit_baseline_core(
@@ -455,6 +516,19 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   # never drift from the branch that actually ran. Reduced to a per-trait
   # `path` vector (first latent column of each trait_map entry) at the end.
   col_path <- rep(NA_character_, p)
+
+  # S5c (rose-review.md, required change 3): per-column "exact"/"per_column"
+  # route actually used, tracked at the same sites that set `col_path` to a
+  # joint-dispatch branch. Unlike `predict_method_used` (a single aggregate
+  # over every joint fit in this call), this lets `predict_method_by_trait`
+  # report each trait's OWN outcome even when only SOME joint fits in a
+  # concrete "exact"/"per_column" request fell back (e.g. one OVR class
+  # fit). Left NA_character_ until the corresponding dispatch site sets it;
+  # any column that never goes through a joint call (label propagation,
+  # per-column BM, multi_proportion, zi magnitude constant) is filled with
+  # "per_column" right before `path` / `predict_method_by_trait` are built
+  # below.
+  trait_route <- rep(NA_character_, p)
 
   # S4 lambda diagnostics: one entry per latent column, 1 for every column
   # never touched by lambda estimation (every discrete column, and every
@@ -718,6 +792,13 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       col_path[col] <- "threshold_joint"
     }
 
+    # S5c: attribute this joint fit's own exact/per_column verdict to every
+    # column it actually populated (may be downgraded below for an ordinal
+    # column that the path-selection block re-routes to bm_mvn/lp).
+    if (!is.null(jt$predict_method_used) && !is.na(jt$predict_method_used)) {
+      trait_route[populated_cols] <- jt$predict_method_used
+    }
+
     bm_cols      <- setdiff(bm_cols,      populated_cols)
     binary_cols  <- setdiff(binary_cols,  populated_cols)
     ordinal_cols <- setdiff(ordinal_cols, populated_cols)
@@ -849,11 +930,15 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
             mu[, col] <- bm_res$mu
             se[, col] <- bm_res$se
             col_path[col] <- "per_column_bm"
+            # S5c: this column's own outcome is now a per-column route,
+            # regardless of what the threshold-joint fit as a whole did.
+            trait_route[col] <- "per_column"
           } else if (chosen == "lp" && !is.null(lp_pred_z)) {
             mu[, col] <- lp_pred_z
             se[, col] <- lp_se_z
             col_path[col] <- "label_propagation"
-          } # else: threshold_joint already in mu/se and col_path
+            trait_route[col] <- "per_column"
+          } # else: threshold_joint already in mu/se, col_path, trait_route
           ordinal_path_chosen[as.character(col)] <- chosen
         }
       }
@@ -870,6 +955,9 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     mu[, bm_cols] <- joint$mu[, bm_cols]
     se[, bm_cols] <- joint$se[, bm_cols]
     col_path[bm_cols] <- "joint_mvn"
+    if (!is.null(joint$predict_method_used) && !is.na(joint$predict_method_used)) {
+      trait_route[bm_cols] <- joint$predict_method_used
+    }
     if (!is.null(joint$lambda_per_trait)) {
       lambda_per_trait[names(joint$lambda_per_trait)] <- joint$lambda_per_trait
     }
@@ -928,6 +1016,9 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       pmu <- attr(probs, "predict_method_used")
       if (!is.null(pmu) && !is.na(pmu)) {
         predict_method_used_all <- c(predict_method_used_all, pmu)
+        # S5c: this categorical trait's OWN outcome, not the aggregate
+        # across every other joint fit in this call.
+        trait_route[k_cols] <- pmu
       }
       log_probs <- decode_ovr_categorical(probs)
       mu[, k_cols] <- log_probs
@@ -1228,14 +1319,19 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   if (is.finite(lambda_block_out)) {
     attr(lambda_per_trait, "lambda_block") <- lambda_block_out
   }
-  # S5b: this core function only ever ran ONE concrete route for the whole
-  # baseline, so every trait's "route actually used" is that same
-  # predict_method_used value. .fit_baseline_auto() / .fit_baseline_route()
-  # (below) compute a genuinely per-trait vector by mixing two of these
-  # core fits; this uniform vector is what a concrete "exact" / "per_column"
-  # request (no auto, no predict_route) reports.
-  predict_method_by_trait <- stats::setNames(
-    rep(predict_method_used, length(trait_names_path)), trait_names_path)
+  # S5c (rose-review.md, required change 3): report each trait's OWN
+  # route, read off `trait_route` (tracked at every dispatch site above),
+  # not the single aggregate `predict_method_used`. Previously this was
+  # `rep(predict_method_used, ...)`, which meant one fallen-back joint fit
+  # (e.g. a single OVR class) mislabelled every OTHER trait as
+  # "per_column" too, even traits whose own joint fit achieved exact.  Any
+  # column that never went through a tracked joint call (label
+  # propagation, per-column BM, multi_proportion, zi magnitude constant)
+  # is genuinely "per_column"; the final NA-fill below covers those.
+  trait_route[is.na(trait_route)] <- "per_column"
+  predict_method_by_trait <- vapply(
+    trait_map, function(tm) trait_route[tm$latent_cols[1]], character(1))
+  names(predict_method_by_trait) <- trait_names_path
 
   out <- list(mu = mu, se = se, path = path,
               lambda_per_trait = lambda_per_trait,
@@ -1328,7 +1424,18 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
 .pigauto_choose_predict_route <- function(data, splits, fit_exact, fit_pc) {
   trait_map   <- data$trait_map
   trait_names <- vapply(trait_map, function(tm) tm$name, character(1))
-  route <- stats::setNames(rep("exact", length(trait_names)), trait_names)
+  # S5c (rose-review.md, "Edge case B"): default each trait to whatever
+  # fit_exact ITSELF actually ran for that trait (from its own, now
+  # per-trait-accurate $predict_method_by_trait -- see required change 3),
+  # not a hardcoded "exact" label. When fit_exact's own exact route was not
+  # usable for a trait (too large, singular Sigma, etc.) it already fell
+  # back to per_column internally; reporting "exact" here on a tie would
+  # misdescribe what actually ran. Falls back to a plain "exact" default
+  # only if fit_exact predates this field.
+  route <- fit_exact$predict_method_by_trait
+  if (is.null(route)) {
+    route <- stats::setNames(rep("exact", length(trait_names)), trait_names)
+  }
 
   X_truth <- data$X_scaled
   n_obs   <- nrow(X_truth)
@@ -1348,20 +1455,93 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     n_total <- max(res_exact$n, res_pc$n)
     if (n_total < 5L || !is.finite(res_exact$loss) || !is.finite(res_pc$loss) ||
         isTRUE(all.equal(res_exact$loss, res_pc$loss))) {
-      next  # tie / insufficient evidence -> "exact" (already the default)
+      next  # tie / insufficient evidence -> whatever fit_exact actually ran
     }
-    if (res_pc$loss < res_exact$loss) {
-      route[[tm$name]] <- "per_column"
-    }
+    route[[tm$name]] <- if (res_pc$loss < res_exact$loss) "per_column" else "exact"
   }
   route
+}
+
+# ---- S5c: per-trait route (half A) / calibration+conformal (half B) -----
+# validation-cell split for "auto" (rose-review.md required change 1). The
+# SAME validation cells were previously used to (a) choose the route, (b)
+# calibrate the GNN gate, and (c) compute conformal scores -- picking the
+# route that minimises validation error makes those same residuals
+# optimistic, undercovering the conformal interval. This splits each
+# trait's val cells into a ROUTE half (used only by
+# .pigauto_choose_predict_route()) and a SCORE half (the cells
+# fit_pigauto()/impute() restrict calibration + conformal to, under "auto"
+# only -- see their `eff_val_idx` construction). Below 10 total val cells
+# for a trait there is too little evidence to split 5-and-5, so the route
+# is left unsplit (whatever `fit_exact`/`fit_pc` already decide via the
+# existing n_total < 5 tie-break in .pigauto_choose_predict_route(), which
+# defaults to "exact") and ALL of that trait's cells stay available for
+# scoring -- there is no route-selection bias to correct for when nothing
+# was chosen on this trait's own evidence.
+#
+#' @noRd
+.pigauto_split_route_score <- function(val_idx, n_obs, trait_map, seed) {
+  trait_names <- vapply(trait_map, function(tm) tm$name, character(1))
+  val_col <- ((val_idx - 1L) %/% n_obs) + 1L
+
+  route_idx <- integer(0)
+  score_idx <- integer(0)
+  n_route <- stats::setNames(integer(length(trait_map)), trait_names)
+  n_score <- stats::setNames(integer(length(trait_map)), trait_names)
+
+  for (i in seq_along(trait_map)) {
+    tm    <- trait_map[[i]]
+    idx_j <- val_idx[val_col %in% tm$latent_cols]
+    n_j   <- length(idx_j)
+    if (n_j < 10L) {
+      score_idx <- c(score_idx, idx_j)
+      n_score[[tm$name]] <- n_j
+      next
+    }
+    if (!is.null(seed)) set.seed(seed + 29L + i)
+    route_n  <- ceiling(n_j / 2)
+    route_ix <- sample(idx_j, route_n)
+    score_ix <- setdiff(idx_j, route_ix)
+    route_idx <- c(route_idx, route_ix)
+    score_idx <- c(score_idx, score_ix)
+    n_route[[tm$name]] <- length(route_ix)
+    n_score[[tm$name]] <- length(score_ix)
+  }
+
+  list(route_idx = route_idx, score_idx = score_idx,
+       n_route = n_route, n_score = n_score)
+}
+
+# S5c (required change 2): resolve which `lambda_fixed` vector a given
+# route should use, consulting a `lambda_by_route` attribute when present.
+# `.fit_baseline_auto()` / `.fit_baseline_route()` attach this attribute
+# (a list with $exact / $per_column, each a full per-column lambda vector
+# from the fit that actually produced that route) to the $lambda_per_trait
+# they return, precisely so that a later `fit_baseline(..., lambda_fixed =
+# bl$lambda_per_trait)` rebuild of a MIXED-route "auto"/`predict_route` fit
+# replays each route's OWN lambda values -- not a single merged vector
+# that would, for example, pin a per_column-routed discrete trait's lambda
+# at 1 inside what would otherwise be a fresh "exact" candidate fit,
+# perturbing that fit's Sigma estimate (and therefore every other exact-
+# routed trait's mu, through shared cross-trait covariance) relative to
+# the original. Falls back to using `lambda_fixed` as-is when the
+# attribute is absent (a bare vector, or a single-route fit).
+#
+#' @noRd
+.pigauto_lambda_fixed_for_route <- function(lambda_fixed, route) {
+  if (is.null(lambda_fixed)) return(lambda_fixed)
+  by_route <- attr(lambda_fixed, "lambda_by_route")
+  if (!is.null(by_route) && !is.null(by_route[[route]])) {
+    return(by_route[[route]])
+  }
+  lambda_fixed
 }
 
 #' @noRd
 .fit_baseline_auto <- function(data, tree, splits, model, graph,
                                 multi_obs_aggregation, lambda_mode, lambda_fixed,
                                 em_iterations, em_tol, em_offdiag, joint_solver,
-                                joint_refine_iter) {
+                                joint_refine_iter, seed = NULL) {
   trait_map   <- data$trait_map
   trait_names <- vapply(trait_map, function(tm) tm$name, character(1))
 
@@ -1370,7 +1550,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     out <- .fit_baseline_core(
       data = data, tree = tree, splits = splits, model = model, graph = graph,
       multi_obs_aggregation = multi_obs_aggregation, lambda_mode = lambda_mode,
-      lambda_fixed = lambda_fixed, em_iterations = em_iterations,
+      lambda_fixed = .pigauto_lambda_fixed_for_route(lambda_fixed, "exact"),
+      em_iterations = em_iterations,
       em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,
       predict_method = "exact", joint_refine_iter = joint_refine_iter,
       predict_method_explicit = FALSE)
@@ -1382,25 +1563,39 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     # large or a singular Sigma -- the exact-fallback machinery already
     # handles that below fit_baseline(), unrelated to "auto").
     out$predict_method_used <- "auto"
+    out$score_val_idx <- if (is.null(splits)) integer(0) else splits$val_idx
+    out$route_val_n <- stats::setNames(integer(length(trait_names)), trait_names)
+    out$score_val_n <- stats::setNames(integer(length(trait_names)), trait_names)
     return(out)
   }
 
   fit_exact <- .fit_baseline_core(
     data = data, tree = tree, splits = splits, model = model, graph = graph,
     multi_obs_aggregation = multi_obs_aggregation, lambda_mode = lambda_mode,
-    lambda_fixed = lambda_fixed, em_iterations = em_iterations,
+    lambda_fixed = .pigauto_lambda_fixed_for_route(lambda_fixed, "exact"),
+    em_iterations = em_iterations,
     em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,
     predict_method = "exact", joint_refine_iter = joint_refine_iter,
     predict_method_explicit = FALSE)
   fit_pc <- .fit_baseline_core(
     data = data, tree = tree, splits = splits, model = model, graph = graph,
     multi_obs_aggregation = multi_obs_aggregation, lambda_mode = lambda_mode,
-    lambda_fixed = lambda_fixed, em_iterations = em_iterations,
+    lambda_fixed = .pigauto_lambda_fixed_for_route(lambda_fixed, "per_column"),
+    em_iterations = em_iterations,
     em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,
     predict_method = "per_column", joint_refine_iter = joint_refine_iter,
     predict_method_explicit = FALSE)
 
-  route <- .pigauto_choose_predict_route(data, splits, fit_exact, fit_pc)
+  # S5c required change 1: choose the route on a RANDOM HALF of each
+  # trait's validation cells (`route_idx`); the other half (`score_idx`) is
+  # reserved for fit_pigauto()/impute()'s gate calibration + conformal
+  # scoring, so those residuals are not post-selected on the same cells
+  # that picked the route.
+  rsplit <- .pigauto_split_route_score(splits$val_idx, nrow(data$X_scaled),
+                                        trait_map, seed)
+  splits_route <- splits
+  splits_route$val_idx <- rsplit$route_idx
+  route <- .pigauto_choose_predict_route(data, splits_route, fit_exact, fit_pc)
 
   mu   <- fit_exact$mu
   se   <- fit_exact$se
@@ -1416,13 +1611,20 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   }
   lb_attr <- attr(fit_exact$lambda_per_trait, "lambda_block")
   if (!is.null(lb_attr)) attr(lambda_per_trait, "lambda_block") <- lb_attr
+  attr(lambda_per_trait, "lambda_by_route") <- list(
+    exact = fit_exact$lambda_per_trait,
+    per_column = fit_pc$lambda_per_trait
+  )
 
   out <- list(mu = mu, se = se, path = path,
               lambda_per_trait = lambda_per_trait,
               lambda_block = fit_exact$lambda_block,
               lambda_mode = fit_exact$lambda_mode,
               predict_method_used = "auto",
-              predict_method_by_trait = route)
+              predict_method_by_trait = route,
+              score_val_idx = rsplit$score_idx,
+              route_val_n = rsplit$n_route,
+              score_val_n = rsplit$n_score)
   if (!is.null(fit_exact$ordinal_path_chosen)) {
     out$ordinal_path_chosen <- fit_exact$ordinal_path_chosen
   }
@@ -1439,6 +1641,16 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   resolved <- stats::setNames(rep("exact", length(trait_names)), trait_names)
   known <- intersect(names(predict_route), trait_names)
   resolved[known] <- predict_route[known]
+  # S5c (required change 4): warn once per call on a name that matches no
+  # trait in this dataset -- previously silently ignored, so a misspelled
+  # trait name gave no feedback at all.
+  unknown_names <- setdiff(names(predict_route), trait_names)
+  if (length(unknown_names) > 0L) {
+    warning(
+      "'predict_route' has name(s) that match no trait in this dataset ",
+      "(ignored): ", paste(unknown_names, collapse = ", "), call. = FALSE
+    )
+  }
 
   needed <- unique(resolved)
   fits <- list()
@@ -1446,7 +1658,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     fits[[r]] <- .fit_baseline_core(
       data = data, tree = tree, splits = splits, model = model, graph = graph,
       multi_obs_aggregation = multi_obs_aggregation, lambda_mode = lambda_mode,
-      lambda_fixed = lambda_fixed, em_iterations = em_iterations,
+      lambda_fixed = .pigauto_lambda_fixed_for_route(lambda_fixed, r),
+      em_iterations = em_iterations,
       em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,
       predict_method = r, joint_refine_iter = joint_refine_iter,
       predict_method_explicit = TRUE)
@@ -1474,6 +1687,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   }
   lb_attr <- attr(base$lambda_per_trait, "lambda_block")
   if (!is.null(lb_attr)) attr(lambda_per_trait, "lambda_block") <- lb_attr
+  attr(lambda_per_trait, "lambda_by_route") <- lapply(fits, function(f) f$lambda_per_trait)
 
   out <- list(mu = mu, se = se, path = path,
               lambda_per_trait = lambda_per_trait,

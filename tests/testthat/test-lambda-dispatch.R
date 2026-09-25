@@ -71,7 +71,13 @@ test_that("[lambda-dispatch] joint path under estimate", {
 
 test_that("[lambda-dispatch] lambda_per_trait populated", {
   fx <- make_lambda_dispatch_fixture()
-  fit <- fit_dispatch_baseline(fx, lambda_mode = "estimate")
+  # S5c (rose-review.md, required change 5): this test's b1/lambda_block
+  # assertion below is specifically about the "exact" route's own
+  # exact-route exception (S3) -- it is not about what "auto" happens to
+  # pick for b1 on this particular fixture/seed. Force the route explicitly
+  # instead of relying on "auto" (the default) to land on "exact".
+  fit <- fit_dispatch_baseline(fx, lambda_mode = "estimate",
+                                predict_method = "exact")
   pd <- fit$pd; bl <- fit$bl
 
   expect_true(is.numeric(bl$lambda_per_trait))
@@ -415,7 +421,20 @@ test_that("[lambda-dispatch] ordinal mu is finite and reports lambda_block under
     spl <- make_missing_splits(pd$X_scaled, seed = seed,
                                 trait_map = pd$trait_map)
 
-    bl_est <- fit_baseline(pd, fx$tree, splits = spl, lambda_mode = "estimate")
+    # S5c (rose-review.md, required change 5): this test is about the
+    # EXACT route's OWN ordinal-lambda contract (see title), not about
+    # what "auto" (the default since S5b) happens to pick. Force it
+    # explicitly. Before S5c's fix 3 (predict_method_by_trait is now
+    # genuinely per-trait, reading the ordinal path-selection block's
+    # OWN per-column override), a fit_exact whose ordinal column
+    # internally chose bm_mvn/lp over threshold_joint was still
+    # mislabelled "exact" in aggregate, so "auto" defaulting to that
+    # label on a tie accidentally reproduced this test's old
+    # (unforced) expectation. That mislabelling is exactly what fix 3
+    # corrects; pinning here keeps this test about the exact route's
+    # contract instead of re-encoding the bug it fixed.
+    bl_est <- fit_baseline(pd, fx$tree, splits = spl, lambda_mode = "estimate",
+                            predict_method = "exact")
     o1_col <- colnames(pd$X_scaled)[pd$trait_map$o1$latent_cols]
 
     expect_true(all(is.finite(bl_est$mu[, o1_col])), info = paste("seed", seed))

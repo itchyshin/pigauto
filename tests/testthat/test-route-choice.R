@@ -96,11 +96,17 @@ test_that("[route] auto chooses per_column for at least one continuous trait whe
   chosen <- bl_auto$predict_method_by_trait[cont_names]
   expect_true(any(chosen == "per_column"))
 
-  # Per-trait validation MSE on the z-scored latent scale, using the same
-  # linear-index decode fit_baseline() uses internally for splits$val_idx.
+  # S5c (rose-review.md, required change 5): score the chosen route on
+  # cells NOT used to choose it. `bl_auto$score_val_idx` is exactly the
+  # per-trait SCORE half (.pigauto_split_route_score()'s complement of the
+  # ROUTE half `.pigauto_choose_predict_route()` actually saw) -- using
+  # the FULL validation set here (as this test did pre-S5c) would include
+  # the same cells that picked the route, which cannot fail except by a
+  # coding error and is not evidence the choice helps.
+  expect_false(is.null(bl_auto$score_val_idx))
   X_truth <- pd$X_scaled
   n_obs   <- nrow(X_truth)
-  val_idx <- spl$val_idx
+  val_idx <- bl_auto$score_val_idx
   val_col <- ((val_idx - 1L) %/% n_obs) + 1L
   val_row <- ((val_idx - 1L) %% n_obs) + 1L
 
@@ -122,12 +128,18 @@ test_that("[route] auto chooses per_column for at least one continuous trait whe
     mse_auto  <- mse_for(bl_auto, tm)
     results <- c(results, sprintf("%s: chosen=%s exact=%.4f per_column=%.4f",
                                    nm, chosen[[nm]], mse_exact, mse_pc))
-    # auto's MSE for this trait must not be worse than the route it did NOT
-    # pick, i.e. it must equal whichever of the two is lower.
+    # auto's MSE for this trait equals whichever candidate it actually
+    # used (true by construction, not independent evidence).
     expect_lte(mse_auto, max(mse_exact, mse_pc) + 1e-8)
-    if (identical(chosen[[nm]], "per_column")) {
-      expect_lte(mse_pc, mse_exact + 1e-8)
-    }
+    # S5c (rose-review.md, required change 5): unlike the pre-S5c version
+    # of this test, `mse_exact`/`mse_pc` above are now scored on the SCORE
+    # half -- cells that did NOT inform the route choice (made on the
+    # ROUTE half only). On this independent half, the route chosen from
+    # half A is NOT guaranteed to also win on half B (that guarantee was
+    # exactly the tautology the review flagged: scoring on the SAME cells
+    # that made the choice cannot fail except by a coding error). No
+    # further per-trait MSE assertion is made here; `results` below still
+    # reports both numbers for visibility.
   }
   # Report which traits chose what and their MSEs (visible with
   # testthat::test_file(..., reporter = "summary") / -v).
@@ -234,4 +246,166 @@ test_that("[route] splits = NULL gives every trait 'exact'", {
   bl2 <- fit_baseline(pd, tree, spl_empty)
   expect_identical(bl2$predict_method_used, "auto")
   expect_true(all(bl2$predict_method_by_trait == "exact"))
+})
+
+# ---- (g) route split and score split are disjoint, and reused downstream
+
+test_that("[route] under auto, the route half and score half of each trait's validation cells are disjoint and partition it", {
+  skip_if_not_installed("Matrix")
+  set.seed(41)
+  n <- 200L
+  tree <- ape::rtree(n)
+  df <- data.frame(
+    row.names = tree$tip.label,
+    c1 = stats::rnorm(n), c2 = stats::rnorm(n),
+    b1 = factor(sample(c("no", "yes"), n, replace = TRUE))
+  )
+  df <- mask_frac(df, frac = 0.3, seed = 42)
+  pd  <- preprocess_traits(df, tree)
+  spl <- make_missing_splits(pd$X_scaled, trait_map = pd$trait_map, seed = 5)
+
+  rsplit <- pigauto:::.pigauto_split_route_score(spl$val_idx, nrow(pd$X_scaled),
+                                                  pd$trait_map, seed = 99)
+  expect_length(intersect(rsplit$route_idx, rsplit$score_idx), 0L)
+  expect_setequal(c(rsplit$route_idx, rsplit$score_idx), spl$val_idx)
+
+  # fit_baseline()'s own "auto" output surfaces the SAME score half (what
+  # fit_pigauto()/impute() restrict gate calibration + conformal scoring
+  # to) and the same per-trait route/score counts.
+  bl <- fit_baseline(pd, tree, spl, seed = 99)
+  expect_setequal(bl$score_val_idx, rsplit$score_idx)
+  expect_length(intersect(bl$score_val_idx, rsplit$route_idx), 0L)
+  for (tm in pd$trait_map) {
+    expect_identical(unname(bl$route_val_n[[tm$name]]),
+                      unname(rsplit$n_route[[tm$name]]))
+    expect_identical(unname(bl$score_val_n[[tm$name]]),
+                      unname(rsplit$n_score[[tm$name]]))
+  }
+
+  # Integration: impute()'s model_config records the same counts, and
+  # calibration/conformal never see a routing cell.
+  res <- suppressWarnings(impute(df, tree, gnn = FALSE, missing_frac = 0.3,
+                                  seed = 99, verbose = FALSE))
+  cfg <- res$fit$model_config
+  expect_false(is.null(cfg$route_val_n))
+  expect_false(is.null(cfg$score_val_n))
+})
+
+# ---- (h) mixed-route auto baseline reproduces exactly via lambda_fixed ---
+
+test_that("[route] a mixed-route auto baseline reproduces mu/se exactly when rebuilt with lambda_fixed (12 seeds)", {
+  skip_if_not_installed("Matrix")
+  n <- 150L
+  mixed_seeds <- integer(0)
+  for (sd in 1:12) {
+    tree <- ape::rtree(n)
+    tree$edge.length <- tree$edge.length / max(ape::node.depth.edgelength(tree))
+    R <- pigauto:::phylo_cor_matrix(tree)[tree$tip.label, tree$tip.label]
+
+    L_cont  <- sim_joint_mvn(tree, R, lambda = 0.3, Sigma = diag(2), seed = 2000 + sd)
+    lat_bin <- sim_joint_mvn(tree, R, lambda = 0.3, Sigma = matrix(1, 1, 1),
+                              seed = 3000 + sd)[, 1]
+    lat_ord <- sim_joint_mvn(tree, R, lambda = 0.3, Sigma = matrix(1, 1, 1),
+                              seed = 4000 + sd)[, 1]
+
+    df <- data.frame(
+      row.names = tree$tip.label,
+      c1 = L_cont[, 1], c2 = L_cont[, 2],
+      b1 = factor(ifelse(lat_bin > 0, "yes", "no")),
+      o1 = factor(findInterval(lat_ord, stats::quantile(lat_ord, c(0.33, 0.66))),
+                  ordered = TRUE)
+    )
+    df <- mask_frac(df, frac = 0.25, seed = 5000 + sd)
+
+    pd  <- preprocess_traits(df, tree)
+    spl <- make_missing_splits(pd$X_scaled, trait_map = pd$trait_map, seed = 6000 + sd)
+
+    bl <- fit_baseline(pd, tree, spl, seed = 7000 + sd)
+    if (length(unique(bl$predict_method_by_trait)) < 2L) next  # not mixed this seed
+
+    mixed_seeds <- c(mixed_seeds, sd)
+    bl_rebuilt <- fit_baseline(pd, tree, spl, lambda_fixed = bl$lambda_per_trait,
+                                seed = 7000 + sd)
+
+    expect_identical(bl_rebuilt$predict_method_by_trait,
+                      bl$predict_method_by_trait, info = paste("seed", sd))
+    expect_equal(bl_rebuilt$mu, bl$mu, tolerance = 1e-8, info = paste("seed", sd))
+    expect_equal(bl_rebuilt$se, bl$se, tolerance = 1e-8, info = paste("seed", sd))
+  }
+  # A vacuous pass (every seed uniform-route) would not be evidence of
+  # anything -- require at least one genuinely mixed-route seed.
+  expect_gt(length(mixed_seeds), 0L)
+  message("mixed-route seeds (of 12): ", paste(mixed_seeds, collapse = ", "))
+})
+
+# ---- (i) a single OVR class fallback reports per_column only for its trait
+
+test_that("[route] a single joint fit's fallback reports per_column only for the traits it covers", {
+  skip_if_not_installed("Matrix")
+  pigauto:::.pigauto_exact_fallback_reset()
+  real_ecm <- pigauto:::exact_conditional_mvn
+  call_n <- 0L
+  testthat::local_mocked_bindings(
+    exact_conditional_mvn = function(...) {
+      call_n <<- call_n + 1L
+      # Call 1 is the continuous-only joint fit for c1/c2; calls 2 and 3
+      # are the two OVR class fits for k1. Fail only the first OVR class.
+      if (call_n == 2L) return(NULL)
+      real_ecm(...)
+    },
+    .package = "pigauto"
+  )
+
+  set.seed(51)
+  n <- 60L
+  tree <- ape::rcoal(n)
+  df <- data.frame(
+    row.names = tree$tip.label,
+    c1 = stats::rnorm(n), c2 = stats::rnorm(n),
+    # 3 levels: preprocess_traits() auto-detects factor(>2) as
+    # "categorical" (K independent OVR fits below); factor(2) would be
+    # "binary" and go through the SAME single threshold-joint call as
+    # c1/c2, defeating the point of this test.
+    k1 = factor(sample(c("a", "b", "c"), n, replace = TRUE))
+  )
+  df$c1[1:5]  <- NA
+  df$c2[6:10] <- NA
+  df$k1[11:15] <- NA
+  pd <- preprocess_traits(df, tree)
+
+  bl <- suppressWarnings(fit_baseline(pd, tree, splits = NULL,
+                                       predict_method = "exact"))
+
+  expect_identical(unname(bl$predict_method_by_trait[["c1"]]), "exact")
+  expect_identical(unname(bl$predict_method_by_trait[["c2"]]), "exact")
+  expect_identical(unname(bl$predict_method_by_trait[["k1"]]), "per_column")
+})
+
+# ---- (j) predict_route warns once on an unknown trait name --------------
+
+test_that("[route] predict_route warns once on a name that matches no trait", {
+  skip_if_not_installed("Matrix")
+  set.seed(61)
+  n <- 60L
+  tree <- ape::rtree(n)
+  df <- data.frame(
+    row.names = tree$tip.label,
+    c1 = stats::rnorm(n), c2 = stats::rnorm(n)
+  )
+  df <- mask_frac(df, frac = 0.2, seed = 62)
+  pd  <- preprocess_traits(df, tree)
+  spl <- make_missing_splits(pd$X_scaled, trait_map = pd$trait_map, seed = 7)
+
+  route <- c(c1 = "exact", not_a_trait = "per_column")
+  expect_warning(
+    bl <- fit_baseline(pd, tree, spl, predict_route = route),
+    "not_a_trait"
+  )
+  expect_identical(unname(bl$predict_method_by_trait[["c1"]]), "exact")
+
+  # Values outside exact/per_column still error (unchanged contract).
+  expect_error(
+    fit_baseline(pd, tree, spl, predict_route = c(c1 = "bogus")),
+    "must be a named character vector"
+  )
 })

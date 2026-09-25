@@ -354,7 +354,13 @@ the prediction step). None of the three options change covariance
 estimation or the \code{"rphylopars"} solver. The route actually used
 is recorded in \code{$model_config$predict_method_used}
 (\code{"exact"}, \code{"per_column"}, or \code{"auto"}) and, per
-trait, in \code{$model_config$predict_method_by_trait}.}
+trait, in \code{$model_config$predict_method_by_trait}. Under
+\code{"auto"} with real validation cells, \code{$model_config
+$route_val_n} / \code{$score_val_n} record, per trait, how many of
+its validation cells chose the route versus were reserved for gate
+calibration and conformal scoring (see \code{\link{fit_baseline}}'s
+\code{predict_method} docs); both are \code{NULL} under an explicit
+\code{"exact"}/\code{"per_column"} request.}
 
 \item{joint_refine_iter}{integer, default \code{0L}. Enables
 cross-trait refinement of the joint baseline's cell imputations
@@ -363,7 +369,11 @@ EM cell-refinement; \code{R/joint_mvn_solver.R}). \code{0L} preserves
 current behaviour byte-for-byte. The refinement is guarded: the
 Sigma step must shrink each iteration, or the loop rolls back to the
 last good iterate and sets \code{$diverged}. Assess this opt-in control
-with held-out evaluation on the intended data.}
+with held-out evaluation on the intended data. Has no effect on any
+trait predicted by the \code{"exact"} route (see
+\code{\link{fit_baseline}}'s \code{predict_method} docs); under the
+default \code{predict_method = "auto"} it therefore only applies to
+traits \code{"auto"} routes to \code{"per_column"}.}
 
 \item{verbose}{logical. Print training progress (default \code{TRUE}).}
 
