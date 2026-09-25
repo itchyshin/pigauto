@@ -48,6 +48,31 @@ fit_block <- function(df_raw, tree, block_traits, trait_types = NULL, phylo_mode
        phylo_model = phylo_model)
 }
 
+# Plausibility of a fitted parameter set (2026-09-24 campaign): about 1 in 1,500 Rphylopars refits at lambda
+# near 1 returns a self-consistent but absurd phylogenetic covariance (variances inflated by 1e4 to 1e12), which
+# passes the moment bounds in cond_draw() because those bounds scale with the inflated variance. The yardstick is
+# the sample variance of the tips that a parameter set implies, Sigma_p[j, j] * (tr(C_lambda) - 1'C_lambda 1 / n) /
+# (n - 1): comparable across lambda (it absorbs the lambda / sigma^2 trade-off) and directly comparable with the
+# observed variance. A fit is implausible if lambda leaves [0, 1], Sigma_p is not positive definite, or an implied
+# variance differs from the reference by more than `factor`. Two uses, with measured margins:
+#   bootstrap refit vs the original fit's implied variance, factor 50 (normal refits sit within 0.5 to 1.7);
+#   original fit vs the observed variance, factor 1e4. The original fit is legitimately inflated for prp at
+#   lambda near 1 (one shared lambda, but prp carries non-phylogenetic noise; measured up to 204-fold at
+#   n = 1000), so only the absurd failures (1e4 to 1e12) are caught there.
+implied_var <- function(pars, tree) {
+  C <- ape::vcv(tree)[pars$species, pars$species]; n <- nrow(C)
+  Cl <- pars$lambda * C + (1 - pars$lambda) * diag(diag(C))
+  diag(pars$Sigma_p) * (sum(diag(Cl)) - sum(Cl) / n) / (n - 1)
+}
+plausible_pars <- function(pars, ref_var, tree, factor = 50) {
+  sp <- pars$Sigma_p
+  if (is.null(sp) || any(!is.finite(sp)) || !is.finite(pars$lambda) || pars$lambda < 0 || pars$lambda > 1) return(FALSE)
+  if (min(eigen(sp, symmetric = TRUE, only.values = TRUE)$values) <= 0) return(FALSE)
+  r <- implied_var(pars, tree) / ref_var
+  all(is.finite(r)) && all(r < factor & r > 1 / factor)
+}
+obs_var <- function(df_miss, block_traits, is_prp) apply(transform_block(df_miss, block_traits, is_prp), 2, stats::var, na.rm = TRUE)
+
 # ---- 2. joint_cov -------------------------------------------------------------------------------
 # Cov(vec(Y)), Y an n(species) x p(trait) matrix, vec = R's column-major as.vector (species fastest
 # within each trait block) -- matches kronecker(Sigma_p, C_lambda). C_lambda verified (test-freq-
@@ -151,6 +176,8 @@ mi_freq_B <- function(cell, M, block_traits = NULL, phylo_model = "lambda") {
   df_miss <- cell$df_miss; tree <- cell$tree; trait_types <- cell$trait_types
 
   pars <- fit_block(df_miss, tree, block_traits, trait_types, phylo_model)
+  if (!plausible_pars(pars, obs_var(df_miss, block_traits, pars$is_prp), tree, factor = 1e4))
+    stop("degenerate fit: implausible Rphylopars parameters (see plausible_pars)")
   Yt <- transform_block(df_miss, block_traits, pars$is_prp)
   cd <- cond_draw(Yt, pars, tree, M)
 
@@ -172,6 +199,9 @@ mi_freq_A <- function(cell, M, block_traits = NULL, phylo_model = "lambda") {
   df_miss <- cell$df_miss; tree <- cell$tree; trait_types <- cell$trait_types; mask <- cell$mask
 
   pars0 <- fit_block(df_miss, tree, block_traits, trait_types, phylo_model)
+  if (!plausible_pars(pars0, obs_var(df_miss, block_traits, pars0$is_prp), tree, factor = 1e4))
+    stop("degenerate fit: implausible Rphylopars parameters (see plausible_pars)")
+  iv0 <- implied_var(pars0, tree)
   jc0 <- joint_cov(pars0, tree)
   sp <- jc0$species; n <- jc0$n; p <- jc0$p
   L0 <- chol(jc0$V)
@@ -198,6 +228,7 @@ mi_freq_A <- function(cell, M, block_traits = NULL, phylo_model = "lambda") {
     for (attempt in seq_len(max_attempts)) {
       fit_star <- refit(simulate_boot())
       if (is.null(fit_star)) { n_fail <- n_fail + 1L; next }
+      if (!plausible_pars(fit_star, iv0, tree)) { n_degenerate <- n_degenerate + 1L; next }
       Yt_orig <- transform_block(df_miss, block_traits, fit_star$is_prp)
       cd <- tryCatch(cond_draw(Yt_orig, fit_star, tree, 1L), error = function(e) NULL)
       if (is.null(cd)) { n_degenerate <- n_degenerate + 1L; next }   # redraw the bootstrap sample

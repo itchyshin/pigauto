@@ -34,3 +34,9 @@ FREQ FIX (2026-09-24 ~21:10 nibi): blow-ups were not nibi-only (fir: 6 rows up t
   freq A redraws the bootstrap sample up to 5 times (n_fail, n_degenerate); freq B records a failure. Gate G-S2d.
   rubin_cell.R 9dfb7926 records n_degenerate. FREQ RERUN of record: fir ~/pigauto_rubin_f2 jobs 61373104/05/06 (all 3600).
   Superseded (kept, not used): fir ~/pigauto_rubin/results/freq, nibi pigauto_rubin_freq/results/freq.
+FREQ v3 (2026-09-24 ~21:50 nibi): v2 still had 2/2858 blow-ups: refits returning absurd but self-consistent Sigma_p
+  (bounds scale with it). Added plausible_pars() on the implied tip variance: refit vs original fit factor 50 (normal
+  0.5-1.7); original fit vs observed variance factor 1e4 (prp is legitimately inflated up to 204x at lambda 1: shared
+  lambda + prp's non-phylogenetic noise, a frequentist-model finding for the report). rubin_freq.R 431cab36. Freq of
+  record now fir ~/pigauto_rubin_f3 (61376909/10/11); v2 (f2) superseded. At final pooling: move the Mac pool's old
+  freq/ aside before rubin_pool.sh.

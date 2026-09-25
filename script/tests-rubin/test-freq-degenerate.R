@@ -28,3 +28,13 @@ testthat::test_that("mi_freq_A redraws after a failed conditional draw and count
   testthat::expect_identical(res$n_degenerate, 2L)
   testthat::expect_length(Filter(Negate(is.null), res$datasets), 6L)
 })
+
+testthat::test_that("an absurd but self-consistent parameter set is rejected by plausible_pars", {
+  ref <- obs_var(cell$df_miss, bt, pars$is_prp)
+  testthat::expect_true(plausible_pars(pars, ref, cell$tree))
+  inflated <- pars; inflated$Sigma_p <- inflated$Sigma_p * 1e6                 # the campaign's failure shape
+  testthat::expect_false(plausible_pars(inflated, ref, cell$tree, factor = 1e4))  # even the coarse original-fit guard
+  testthat::expect_false(plausible_pars(inflated, implied_var(pars, cell$tree), cell$tree))
+  outside <- pars; outside$lambda <- 1.2
+  testthat::expect_false(plausible_pars(outside, ref, cell$tree))
+})
