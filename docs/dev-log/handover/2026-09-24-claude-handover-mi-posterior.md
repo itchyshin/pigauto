@@ -111,7 +111,9 @@ was killed by this lane. Leases: released at the end of the run (`lane_lease.sh 
 - Shinichi chose G6 option 3. `04_acceptance.R` gates the mean relative SE ratio over the 24 gated
   phylolm rows in [0.95, 1.10] (`MI_SE_RULE=pooled_relative`, the new default) and reports each
   row. Result: 1.0591, `SIM_ACCEPT_PASS`. Recorded in `design.md` 5f.
-- Ledger: all 12 gates met; full `--reverify` log in
-  `docs/dev-log/mi-posterior/evidence/ledger/gate_reverify_2026-09-25_g6.log`.
+- Ledger: all 12 gates met. G6 was re-run after the rule change. A full `--reverify` was started
+  and stopped at Shinichi's request; the last complete one is `evidence/ledger/gate_reverify_2026-09-25.log`
+  (the `R/` and `tests/` trees are unchanged since). To redo it:
+  `node ~/.claude/skills/unlazy/scripts/gate-check.mjs --reverify --root <worktree> --cwd <worktree> --timeout 3600 .unlazy/mi-posterior/GATES.md`.
 - The "Final state" section above is the record as of 04:30 and is kept as written.
 - Still owed by Shinichi: the default draws method, the merge of #189, and the brain proposals.

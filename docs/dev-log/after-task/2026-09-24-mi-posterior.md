@@ -301,4 +301,4 @@ Ledger (`.unlazy/mi-posterior/GATES.md`, local; re-verified 2026-09-25):
 | M1 | met (design review) |
 | M2 | met: findings fixed; the D-43 panel withheld nothing; PROCEED recorded once the real-data section was final |
 
-All 12 gates met (`gate-check --reverify`, `evidence/ledger/gate_reverify_2026-09-25_g6.log`).
+All 12 gates met (`gate-check`: G6 run on 2026-09-25 after the rule change; the other gates from `evidence/ledger/gate_reverify_2026-09-25.log`, whose `R/` and `tests/` trees are unchanged). A full re-verify after the G6 change was started and stopped at Shinichi's request.
