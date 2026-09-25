@@ -44,3 +44,10 @@ FREQ v3 DONE (2026-09-24 ~22:25 nibi): 3599/3600 (1 running); max per-cell width
   blow-ups); 12 degenerate draws + 59 refit failures redrawn; 3 fits failed in both arms (2 implausible original
   Rphylopars fits, 1 Rphylopars type error) = the frequentist failure rate to report.
   BACE lambda = 1 with the input fix: fir 47/47 new-code fits needed cleaning and completed.
+REPORT PIPELINE READY (2026-09-24 ~23:00 nibi): bash script/rubin_pool.sh -> Rscript script/rubin_campaign_aggregate.R ->
+  bash script/rubin_report_build.sh -> docs/dev-log/arc/2026-09-25-rubin-campaign-report.html (interim chip until
+  bace >= 3000 and freq >= 3600). Publish as a NEW artifact (title "BACE and Frequentist MI"), update it at the end.
+NEXT (in order): (1) n1000 timing check done (~02:40 nibi) -> gate (<= 9 h/fit incl chain, MaxRSS) -> launch A5 split:
+  seeds 2-100 across fir / rorqual / nibi by disjoint ranges (seed 1 from timing check; rerun seed 1 for lambda = 1 only if
+  it failed as-shipped). (2) first pass of n100/300 done -> retry-prep pass 2 on every host -> resubmit. (3) publish interim
+  report once n100/300 BACE complete. (4) final: pool, aggregate, report, after-task, Melissa, commit, push, tell Shinichi.
