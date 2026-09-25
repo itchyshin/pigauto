@@ -88,3 +88,8 @@ N1000 TAIL CUT (2026-09-25 ~04:05 nibi): fir 24G resubmission 61453939 now 169 R
   seeds 31-40) continue; the unstarted second wave (lambda 0.7 rho 0.5, lambda 1 both rho, seeds 31-40) -> fir 61472904.
   rorqual: 59 PENDING n1000 tasks cancelled -> fir 61472913 (24G). rorqual keeps 180 running. nibi 118 running.
   All 594 n1000 fits now running or just submitted; expected done ~10:00-11:00 nibi (08:00-09:00 Edmonton).
+BACE n100 + n300 COMPLETE (2026-09-25 ~06:00 nibi): 1200/1200 each (reruns of the timeout block and both segfault
+  blocks all succeeded: segfaults were not deterministic). Report republished v3 (same URL) with n100/300 final and a
+  per-n bias statement (BACE attenuates the slope at n = 100 vs freq A; within MC error at n = 300 for BACE as shipped).
+N1000 (06:30 nibi): 75/600. Totoro batch 1 (30) done; Totoro batch 2 = 40 of fir's pending (61472913) moved,
+  pgid 593856, file logs/n1000_from_fir.txt; fir keeps 22 pending (8 in 61472904, 14 in 61472913) + ~175 running.
