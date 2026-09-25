@@ -93,3 +93,8 @@ BACE n100 + n300 COMPLETE (2026-09-25 ~06:00 nibi): 1200/1200 each (reruns of th
   per-n bias statement (BACE attenuates the slope at n = 100 vs freq A; within MC error at n = 300 for BACE as shipped).
 N1000 (06:30 nibi): 75/600. Totoro batch 1 (30) done; Totoro batch 2 = 40 of fir's pending (61472913) moved,
   pgid 593856, file logs/n1000_from_fir.txt; fir keeps 22 pending (8 in 61472904, 14 in 61472913) + ~175 running.
+N1000 SLOW-TAIL HEDGE (2026-09-25 07:50 nibi): rorqual fits are slower (shipped median 3.9 h, max 6.6 h; chain ~3 h).
+  Duplicated on fir the 6 still in the shipped phase after 7.5 h (61480858: 1/0/61; 0.3/0/80,81,82; 0.7/0/64,65) and
+  the 3 with shipped > 6 h (61480879: 0.3/0/71,72,79), all certain or likely to hit rorqual's 12 h limit. Whichever copy
+  finishes writes the rds (same filename; results are the same fit up to platform rounding). Expect all n1000 by
+  ~12:30-13:00 nibi (10:30-11:00 Edmonton); report ~1 h later.
