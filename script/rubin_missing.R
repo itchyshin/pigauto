@@ -10,7 +10,7 @@ pool <- if (length(a)) a[1] else file.path(Sys.getenv("HOME"), "pigauto_rubin_po
 dir.create(file.path(pool, "agg"), showWarnings = FALSE)
 seeds <- list(bace = list(`100` = 1:200, `300` = 1:200, `1000` = 1:100), freq = list(`100` = 1:200, `300` = 1:200, `1000` = 1:200))
 dirs <- list(bace = c("bace", "bace_asshipped_failed", "bace_failed_later"), freq = "freq")
-tag <- function(n, l, r, s) sprintf("rubin_types_mixed_BM_l%s_r%s_mcar0.3_n%d_M20_s%d.rds", format(l), format(r), n, s)
+tag <- function(n, l, r, s) sprintf("rubin_types_mixed_BM_l%s_r%s_mcar0.3_n%d_M20_s%d.rds", as.character(l), as.character(r), n, s)
 for (set in names(seeds)) {
   have <- unique(basename(unlist(lapply(dirs[[set]], function(d) list.files(file.path(pool, d), "\\.rds$", recursive = TRUE)))))
   have <- sub("_dup[0-9]+\\.rds$", ".rds", have)
