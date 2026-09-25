@@ -1,0 +1,132 @@
+<title>Rubin Campaign Accuracy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--page:#f6f6f3;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--muted:#898781;--grid:#e1e0d9;--rule:#dcdbd3;
+--chain:#2a78d6;--shipped:#eb6834;--resid:#1baf7a;--complete:#6f6e69;--freqA:#eda100;--freqB:#e87ba4;--note-bg:#eef3fb;
+--fb:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--fh:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;--fm:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--page:#0f0f0e;--surface:#1a1a19;--ink:#f4f4f1;--ink-2:#c3c2b7;--muted:#8f8d86;--grid:#2c2c2a;--rule:#33332f;--chain:#3987e5;--shipped:#d95926;--resid:#199e70;--complete:#a3a19a;--freqA:#c98500;--freqB:#d55181;--note-bg:#172234}}
+:root[data-theme="dark"]{color-scheme:dark;--page:#0f0f0e;--surface:#1a1a19;--ink:#f4f4f1;--ink-2:#c3c2b7;--muted:#8f8d86;--grid:#2c2c2a;--rule:#33332f;--chain:#3987e5;--shipped:#d95926;--resid:#199e70;--complete:#a3a19a;--freqA:#c98500;--freqB:#d55181;--note-bg:#172234}
+body{background:var(--page);color:var(--ink);font:15px/1.6 var(--fb);padding-inline:16px;padding-block:28px 64px}
+.wrap{max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+h1,h2{font-family:var(--fh);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(28px,4.8vw,40px);font-weight:700}h2{font-size:23px;font-weight:600}
+p{margin:0;max-width:70ch}.eyebrow{font:12px var(--fm);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+section{display:flex;flex-direction:column;gap:12px}.lede{font-size:17px;color:var(--ink-2)}
+.note{font-size:13.5px;color:var(--ink-2)}.callout{background:var(--note-bg);border-radius:8px;padding:10px 14px;font-size:14.5px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--ink-2)}.legend span{display:inline-flex;align-items:center;gap:7px}
+.sw{width:11px;height:11px;border-radius:50%;display:inline-block}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}@media (max-width:760px){.grid3{grid-template-columns:1fr}}
+.panel{border:1px solid var(--grid);border-radius:8px;padding:8px;background:var(--surface)}
+.panel h4{margin:0 0 4px 4px;font:600 13.5px var(--fh)}svg{display:block;width:100%;height:auto}
+svg text{fill:var(--muted);font:10.5px var(--fm)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font:600 12.5px var(--fh);color:var(--ink-2)}th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+td{font-family:var(--fm)}td.best{font-weight:600;color:var(--ink)}tr.sep td{border-top:2px solid var(--rule)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}.tabs button{font:500 13px var(--fb);padding:5px 12px;border-radius:999px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}.tabs button:focus-visible{outline:2px solid var(--chain);outline-offset:2px}
+footer{border-top:1px solid var(--rule);padding-top:16px;font-size:13px;color:var(--muted)}
+</style>
+<div class="wrap">
+<header style="display:flex;flex-direction:column;gap:12px">
+  <div class="eyebrow">pigauto · companion to "Frequentist and BACE multiple imputation under Rubin's rules"</div>
+  <h1>How accurate is each imputation method, beside its coverage?</h1>
+  <p class="lede">The campaign page reports coverage. Coverage says whether intervals are honest; it does not say whether the imputed values are close to the truth. This page shows accuracy from the same runs: error of each imputed value, interval score, and error of the downstream slope and correlation.</p>
+  <p class="callout" id="callout"></p>
+</header>
+
+<section>
+  <h2>Per-value error of imputed c1 and c2</h2>
+  <div class="tabs" role="group" aria-label="Metric">
+    <button id="m-z" aria-pressed="true" data-m="zrmse">z-RMSE</button>
+    <button id="m-i" aria-pressed="false" data-m="iscore">Interval score</button>
+    <button id="m-w" aria-pressed="false" data-m="width">Interval width</button>
+  </div>
+  <div class="legend" id="leg1"></div>
+  <div class="grid3" id="g1"></div>
+  <p class="note" id="mnote"></p>
+</section>
+
+<section>
+  <h2>Table: per-value accuracy by sample size and λ</h2>
+  <div class="tablewrap"><table id="t1"></table></div>
+  <p class="note">z-RMSE is the root-mean-square error of the pooled imputation (mean of the 20 draws) on masked cells, divided by the trait's SD; lower is better. Bold marks the lowest in each row. Each row pools ρ = 0 and 0.5.</p>
+</section>
+
+<section>
+  <h2>Downstream estimates: error of the slope and correlation</h2>
+  <div class="tabs" role="group" aria-label="Estimand" id="etabs"></div>
+  <div class="legend" id="leg2"></div>
+  <div class="grid3" id="g2"></div>
+  <div class="tablewrap"><table id="t2"></table></div>
+  <p class="note">RMSE and bias of the Rubin-pooled estimate against the true value ρ, over datasets. The complete-data row is the same analysis before masking, the floor any imputation method can reach.</p>
+</section>
+
+<section>
+  <h2>What this does not cover</h2>
+  <p class="note">Discrete traits (binary, ordinal, categorical) are imputed in the campaign but not scored, so there is no discrete accuracy here. BACE at n = 1000 uses 100 datasets per cell (200 elsewhere), and datasets where a BACE fit errored are left out (see the campaign page's failures table). Numbers come from the campaign aggregate (report.json), the same data as the campaign page.</p>
+</section>
+<footer>Source: script/rubin_campaign_aggregate.R output, built by script/rubin_report_build.sh from script/rubin_accuracy_template.html (lane arc/rubin-freq-bace).</footer>
+</div>
+<script>
+const D = __DATA__;
+const ARMS = [["freqA","freq A","--freqA"],["freqB","freq B","--freqB"],["bace","BACE as shipped","--shipped"],["bace_chain","chained BACE","--chain"],["bace_resid","BACE + residual","--resid"]];
+const NS=[100,300,1000], LS=[0.3,0.7,1];
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const SVG="http://www.w3.org/2000/svg", el=(t,a,p)=>{const e=document.createElementNS(SVG,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e};
+const find=(rows,arm,n,l,extra)=>rows.find(r=>r.arm===arm&&r.n===n&&(l==null||r.lambda===l)&&(!extra||extra(r)));
+function legend(id, arms){document.getElementById(id).innerHTML=arms.map(a=>`<span><i class="sw" style="background:var(${a[2]})"></i>${a[1]}</span>`).join("")}
+function panels(host, arms, get, fmt){
+  host.innerHTML="";
+  LS.forEach(l=>{
+    const div=document.createElement("div");div.className="panel";div.innerHTML=`<h4>λ = ${l}</h4>`;
+    const W=280,H=190,L=40,R=28,T=8,B=24; const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"},div);
+    const vals=[];arms.forEach(a=>NS.forEach(n=>{const v=get(a[0],n,l);if(v!=null)vals.push(v)}));
+    let lo=Math.min(...vals),hi=Math.max(...vals);const pad=(hi-lo)*0.08||0.05;lo-=pad;hi+=pad;
+    const x=i=>L+(W-L-R)*i/2,y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+    for(let k=0;k<=4;k++){const v=lo+(hi-lo)*k/4;el("line",{x1:L,x2:W-R,y1:y(v),y2:y(v),stroke:css("--grid")},svg);const t=el("text",{x:L-5,y:y(v)+3,"text-anchor":"end"},svg);t.textContent=fmt(v)}
+    NS.forEach((n,i)=>{const t=el("text",{x:x(i),y:H-8,"text-anchor":"middle"},svg);t.textContent="n = "+n});
+    arms.forEach(a=>{const pts=NS.map((n,i)=>{const v=get(a[0],n,l);return v==null?null:[x(i),y(v)]}).filter(Boolean);
+      el("polyline",{points:pts.map(p=>p.join(",")).join(" "),fill:"none",stroke:css(a[2]),"stroke-width":2,"stroke-dasharray":a[0]==="freqB"?"5 4":"none"},svg);
+      pts.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:3,fill:css(a[2])},svg))});
+    host.appendChild(div)});
+}
+let metric="zrmse", est=null;
+const MNOTE={zrmse:"Root-mean-square error of the pooled imputation, in SD units. Lower is better. freq B (dashed) lies almost exactly on freq A.",iscore:"Interval score (Gneiting and Raftery): width plus a penalty for each miss. Lower is better; it rewards intervals that are both tight and honest.",width:"Mean width of the 95% Rubin interval. Narrower is better only if coverage holds; BACE as shipped is narrow because it under-covers."};
+function drawCells(){legend("leg1",ARMS);panels(document.getElementById("g1"),ARMS,(a,n,l)=>{const r=find(D.cl,a,n,l);return r?r[metric]:null},v=>v.toFixed(2));document.getElementById("mnote").textContent=MNOTE[metric]}
+function drawT1(){let h="<thead><tr><th>n</th><th>λ</th>"+ARMS.map(a=>`<th>${a[1]}</th>`).join("")+"</tr></thead><tbody>";
+  NS.forEach((n,ni)=>LS.forEach((l,li)=>{const v=ARMS.map(a=>{const r=find(D.cl,a[0],n,l);return r?r.zrmse:null});const m=Math.min(...v.filter(x=>x!=null));
+    h+=`<tr${li===0&&ni>0?' class="sep"':''}><td>${n}</td><td>${l}</td>`+v.map(x=>`<td class="${x===m?'best':''}">${x==null?'–':x.toFixed(3)}</td>`).join("")+"</tr>"}));
+  document.getElementById("t1").innerHTML=h+"</tbody>"}
+const ests=[...new Set(D.dl.map(r=>r.estimand))];
+const ARMS2=[["complete","complete data","--complete"]].concat(ARMS);
+function drawDown(){legend("leg2",ARMS2);panels(document.getElementById("g2"),ARMS2,(a,n,l)=>{const r=find(D.dl,a,n,l,r=>r.estimand===est);return r?r.rmse:null},v=>v.toFixed(3));
+  let h="<thead><tr><th>n</th><th>arm</th><th>RMSE</th><th>bias</th><th>coverage</th></tr></thead><tbody>";
+  NS.forEach((n,ni)=>ARMS2.forEach((a,ai)=>{const r=find(D.dn,a[0],n,null,r=>r.estimand===est);if(!r)return;
+    h+=`<tr${ai===0&&ni>0?' class="sep"':''}><td>${n}</td><td style="font-family:var(--fb)">${a[1]}</td><td>${r.rmse.toFixed(3)}</td><td>${r.bias.toFixed(3)}</td><td>${r.coverage.toFixed(3)}</td></tr>`}));
+  document.getElementById("t2").innerHTML=h+"</tbody>"}
+document.getElementById("etabs").innerHTML=ests.map((e,i)=>`<button id="e-${i}" aria-pressed="${i===0}" data-e="${e}">${e==="cor"?"Phylogenetic correlation":e==="slope"?"PGLS slope":e}</button>`).join("");
+est=ests[0];
+document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{metric=b.dataset.m;document.querySelectorAll('[data-m]').forEach(o=>o.setAttribute("aria-pressed",String(o===b)));drawCells()});
+document.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{est=b.dataset.e;document.querySelectorAll('[data-e]').forEach(o=>o.setAttribute("aria-pressed",String(o===b)));drawDown()});
+(function(){
+  const c=(a,n)=>find(D.cn,a,n,null), d=(a,n,e)=>find(D.dn,a,n,null,r=>r.estimand===e);
+  const f3=v=>v.toFixed(3);
+  const same=(a,b,n)=>{const x=c(a,n),y=c(b,n);return Math.abs(x.zrmse-y.zrmse)<=2*Math.sqrt(x.zrmse_se**2+y.zrmse_se**2)};
+  const bestF=NS.map(n=>Math.min(c("freqA",n).zrmse,c("freqB",n).zrmse));
+  const eq=NS.filter(n=>same("bace_chain","freqA",n)), worse=NS.filter(n=>!same("bace_chain","freqA",n)&&c("bace_chain",n).zrmse>c("freqA",n).zrmse);
+  const list=a=>a.map(n=>"n = "+n).join(" and ");
+  const s3=d("freqA",300,"slope"), b3=d("freqB",300,"slope");
+  document.getElementById("callout").textContent =
+    `Short answer: freq A and freq B are the most accurate or tied for most accurate per value at every sample size (z-RMSE ${NS.map(n=>f3(c("freqA",n).zrmse)).join(", ")} at n = ${NS.join(", ")}). `+
+    (eq.length?`Chained BACE is as accurate at ${list(eq)} (${eq.map(n=>f3(c("bace_chain",n).zrmse)).join(", ")}; differences under 2 SE are called equal)`:"")+
+    (worse.length?`${eq.length?" but":"Chained BACE is"} less accurate at ${list(worse)} (${worse.map(n=>f3(c("bace_chain",n).zrmse)).join(", ")}). `:". ")+
+    `BACE as shipped is the least accurate; the residual-noise control widens its intervals without making it more accurate. `+
+    `Downstream, freq A and freq B have the same error (slope RMSE ${f3(s3.rmse)} against ${f3(b3.rmse)} at n = 300) while their coverage differs (${f3(s3.coverage)} against ${f3(b3.coverage)}): improper imputation costs honesty, not accuracy.`;
+})();
+function all(){drawCells();drawT1();drawDown()} all();
+new MutationObserver(all).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",all);
+</script>

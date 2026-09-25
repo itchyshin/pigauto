@@ -98,7 +98,9 @@ the report template (its recommendations section had never rendered), and the te
   Frequentist: 3 Rphylopars failures of 3,600.
 - At lambda = 1 and n = 1000, freq A and chained BACE both cover slightly above 0.95 (0.959, 0.958); downstream slope
   coverage at n = 1000 is 0.967 (freq A) and 0.975 (chained). Not investigated; the pages state it.
-- The accuracy companion page (CGGmi4Km6unGPhxEiv94qk) was built on partial n = 1000 data and is not rebuilt.
+- The accuracy companion (CGGmi4Km6unGPhxEiv94qk) is rebuilt on the final data from `script/rubin_accuracy_template.html`
+  via `rubin_report_build.sh`; its summary paragraph is now computed from the data. With the final data, chained BACE
+  is as accurate as freq A at n = 300 and 1000 (0.565, 0.518 against 0.564, 0.525) and less accurate only at n = 100.
 - Dan not contacted (Shinichi's hold). Pages are private until Shinichi shares them.
 
 ## 11. Team Learning
