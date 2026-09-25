@@ -149,19 +149,18 @@
 #'   scale for continuous/count/proportion/ordinal/zi_count magnitude,
 #'   mean log-loss of \code{plogis(mu)} against the observed 0/1 truth for
 #'   binary/zi_count gate, and mean multinomial log-loss for categorical.
-#'   \strong{Which cells the choice sees (S5c)}: when \code{splits} has 10
-#'   or more validation cells for a trait, that trait's val cells are
-#'   split into two halves (seeded via \code{seed}, or the ambient RNG
-#'   state when \code{seed = NULL}) -- the route choice sees only half A.
-#'   Half B is reserved so \code{fit_pigauto()}/\code{impute()} can
-#'   calibrate the GNN gate and compute conformal scores on cells that
-#'   never informed the route choice, instead of the same cells that
-#'   picked it (which would make those residuals optimistic). Below 10
-#'   cells for a trait there is too little evidence to split 5-and-5, so
-#'   the route falls back to \code{"exact"} (per the existing insufficient-
-#'   evidence tie-break below) and ALL of that trait's cells stay
-#'   available for calibration/conformal scoring. A trait also falls back
-#'   to \code{"exact"} on a genuine tie, or when \code{splits} is
+#'   \strong{Which cells the choice sees}: a trait's held-out validation
+#'   rows (species in multi-observation data) are split into two halves
+#'   (seeded via \code{seed}, or the ambient RNG state when
+#'   \code{seed = NULL}) when the trait has at least 38 of them and the two
+#'   candidate fits predict it differently. The route choice sees only half
+#'   A; half B is reserved so \code{fit_pigauto()}/\code{impute()} calibrate
+#'   the GNN gate and compute conformal scores on rows that never informed
+#'   the choice. Below 38 rows each half would keep fewer than the 19 a 95\%
+#'   split-conformal interval needs, so the same rows both choose the route
+#'   and calibrate; when both fits agree, no choice is made and all rows
+#'   calibrate. With fewer than 5 validation cells, or on a genuine tie, a
+#'   trait keeps \code{"exact"}, as it does when \code{splits} is
 #'   \code{NULL} (no validation cells at all makes every trait
 #'   \code{"exact"}). The chosen route per trait is returned as
 #'   \code{$predict_method_by_trait}. \code{"exact"} uses the full
@@ -1462,27 +1461,40 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   route
 }
 
-# ---- S5c: per-trait route (half A) / calibration+conformal (half B) -----
-# validation-cell split for "auto" (rose-review.md required change 1). The
-# SAME validation cells were previously used to (a) choose the route, (b)
-# calibrate the GNN gate, and (c) compute conformal scores -- picking the
-# route that minimises validation error makes those same residuals
-# optimistic, undercovering the conformal interval. This splits each
-# trait's val cells into a ROUTE half (used only by
+# ---- per-trait route (half A) / calibration+conformal (half B) -----------
+# validation split for "auto" (rose-review.md required change 1; unit and
+# no-choice rules from rose-review-2.md B1/B2). Choosing the route that
+# minimises validation error makes those same residuals optimistic, so a
+# trait's validation UNITS are split into a ROUTE half (used only by
 # .pigauto_choose_predict_route()) and a SCORE half (the cells
-# fit_pigauto()/impute() restrict calibration + conformal to, under "auto"
-# only -- see their `eff_val_idx` construction). Below 10 total val cells
-# for a trait there is too little evidence to split 5-and-5, so the route
-# is left unsplit (whatever `fit_exact`/`fit_pc` already decide via the
-# existing n_total < 5 tie-break in .pigauto_choose_predict_route(), which
-# defaults to "exact") and ALL of that trait's cells stay available for
-# scoring -- there is no route-selection bias to correct for when nothing
-# was chosen on this trait's own evidence.
+# fit_pigauto()/impute() restrict gate calibration + conformal scoring to,
+# under "auto" only).
+#
+# The unit is the held-out trait row, not the latent cell: make_missing_splits()
+# holds out all K cells of a categorical row (2 for zi_count), and
+# calibrate_gates() keeps a row only by its first latent column, so a
+# cell-level split leaked rows across halves and shrank calibration. In
+# multi-obs data the unit is the species, because the route loss is scored
+# on species-level baseline predictions.
+#
+# A trait is split only when (a) both candidate fits give different
+# predictions on its validation cells (otherwise no route is chosen and
+# halving would only widen its conformal interval: single-trait fits,
+# multi_proportion, traits the joint path cannot reach), and (b) it has at
+# least 38 units, so each half keeps the 19 a 95% split-conformal interval
+# needs. Benchmark round 3 split every trait with >= 10 cells and lost up to
+# 0.032 coverage at n <= 300. Otherwise all its cells both choose the route
+# and calibrate.
 #
 #' @noRd
-.pigauto_split_route_score <- function(val_idx, n_obs, trait_map, seed) {
+.pigauto_split_route_score <- function(val_idx, n_obs, trait_map, seed,
+                                        mu_exact = NULL, mu_pc = NULL,
+                                        unit_of_row = NULL) {
   trait_names <- vapply(trait_map, function(tm) tm$name, character(1))
   val_col <- ((val_idx - 1L) %/% n_obs) + 1L
+  val_row <- ((val_idx - 1L) %% n_obs) + 1L
+  val_unit <- if (is.null(unit_of_row)) val_row else unit_of_row[val_row]
+  base_row <- if (is.null(unit_of_row)) val_row else unit_of_row[val_row]
 
   route_idx <- integer(0)
   score_idx <- integer(0)
@@ -1491,16 +1503,19 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
 
   for (i in seq_along(trait_map)) {
     tm    <- trait_map[[i]]
-    idx_j <- val_idx[val_col %in% tm$latent_cols]
-    n_j   <- length(idx_j)
-    # Split only when each half keeps at least 19 cells, the fewest for which a
-    # 95% split-conformal interval can reach nominal coverage (ceiling
-    # n / (n + 1)). Benchmark round 3 (docs/dev-log/exact-default/) split every
-    # trait with >= 10 cells and lost up to 0.032 coverage at n <= 300 because
-    # the conformal half fell below that size; the shared-cell version (round 2)
-    # lost at most 0.006. Below the threshold, all cells both choose the route
-    # and calibrate (the chooser still defaults to "exact" under 5 cells).
-    if (n_j < 38L) {
+    keep  <- val_col %in% tm$latent_cols
+    idx_j <- val_idx[keep]
+    units <- unique(val_unit[keep])
+    n_j   <- length(units)
+
+    differs <- TRUE
+    if (!is.null(mu_exact) && !is.null(mu_pc)) {
+      cells <- cbind(base_row[keep], val_col[keep])
+      d <- abs(mu_exact[cells] - mu_pc[cells])
+      differs <- any(is.finite(d) & d > 1e-10)
+    }
+
+    if (!differs || n_j < 38L) {
       route_idx <- c(route_idx, idx_j)
       score_idx <- c(score_idx, idx_j)
       n_route[[tm$name]] <- n_j
@@ -1508,13 +1523,12 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       next
     }
     if (!is.null(seed)) set.seed(seed + 29L + i)
-    route_n  <- ceiling(n_j / 2)
-    route_ix <- sample(idx_j, route_n)
-    score_ix <- setdiff(idx_j, route_ix)
-    route_idx <- c(route_idx, route_ix)
-    score_idx <- c(score_idx, score_ix)
-    n_route[[tm$name]] <- length(route_ix)
-    n_score[[tm$name]] <- length(score_ix)
+    route_u <- sample(units, ceiling(n_j / 2))
+    in_route <- val_unit[keep] %in% route_u
+    route_idx <- c(route_idx, idx_j[in_route])
+    score_idx <- c(score_idx, idx_j[!in_route])
+    n_route[[tm$name]] <- length(route_u)
+    n_score[[tm$name]] <- n_j - length(route_u)
   }
 
   list(route_idx = route_idx, score_idx = score_idx,
@@ -1600,8 +1614,10 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   # reserved for fit_pigauto()/impute()'s gate calibration + conformal
   # scoring, so those residuals are not post-selected on the same cells
   # that picked the route.
-  rsplit <- .pigauto_split_route_score(splits$val_idx, nrow(data$X_scaled),
-                                        trait_map, seed)
+  rsplit <- .pigauto_split_route_score(
+    splits$val_idx, nrow(data$X_scaled), trait_map, seed,
+    mu_exact = fit_exact$mu, mu_pc = fit_pc$mu,
+    unit_of_row = if (isTRUE(data$multi_obs)) data$obs_to_species else NULL)
   splits_route <- splits
   splits_route$val_idx <- rsplit$route_idx
   route <- .pigauto_choose_predict_route(data, splits_route, fit_exact, fit_pc)
@@ -1671,7 +1687,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       em_iterations = em_iterations,
       em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,
       predict_method = r, joint_refine_iter = joint_refine_iter,
-      predict_method_explicit = TRUE)
+      predict_method_explicit = FALSE)
   }
 
   if (length(needed) == 1L) {

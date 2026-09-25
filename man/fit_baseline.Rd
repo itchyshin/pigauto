@@ -140,19 +140,18 @@ on that trait's cells: mean squared error on the z-scored latent
 scale for continuous/count/proportion/ordinal/zi_count magnitude,
 mean log-loss of \code{plogis(mu)} against the observed 0/1 truth for
 binary/zi_count gate, and mean multinomial log-loss for categorical.
-\strong{Which cells the choice sees (S5c)}: when \code{splits} has 10
-or more validation cells for a trait, that trait's val cells are
-split into two halves (seeded via \code{seed}, or the ambient RNG
-state when \code{seed = NULL}) -- the route choice sees only half A.
-Half B is reserved so \code{fit_pigauto()}/\code{impute()} can
-calibrate the GNN gate and compute conformal scores on cells that
-never informed the route choice, instead of the same cells that
-picked it (which would make those residuals optimistic). Below 10
-cells for a trait there is too little evidence to split 5-and-5, so
-the route falls back to \code{"exact"} (per the existing insufficient-
-evidence tie-break below) and ALL of that trait's cells stay
-available for calibration/conformal scoring. A trait also falls back
-to \code{"exact"} on a genuine tie, or when \code{splits} is
+\strong{Which cells the choice sees}: a trait's held-out validation
+rows (species in multi-observation data) are split into two halves
+(seeded via \code{seed}, or the ambient RNG state when
+\code{seed = NULL}) when the trait has at least 38 of them and the two
+candidate fits predict it differently. The route choice sees only half
+A; half B is reserved so \code{fit_pigauto()}/\code{impute()} calibrate
+the GNN gate and compute conformal scores on rows that never informed
+the choice. Below 38 rows each half would keep fewer than the 19 a 95\\%
+split-conformal interval needs, so the same rows both choose the route
+and calibrate; when both fits agree, no choice is made and all rows
+calibrate. With fewer than 5 validation cells, or on a genuine tie, a
+trait keeps \code{"exact"}, as it does when \code{splits} is
 \code{NULL} (no validation cells at all makes every trait
 \code{"exact"}). The chosen route per trait is returned as
 \code{$predict_method_by_trait}. \code{"exact"} uses the full

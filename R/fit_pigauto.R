@@ -233,7 +233,8 @@
 #'   analogue of Pagel's lambda of their own -- there is no lambda_k to
 #'   estimate for them. Under \code{predict_method = "per_column"} (see
 #'   below) they stay fixed at lambda = 1 in every path, matching pre-S3
-#'   behaviour. Under \code{predict_method = "exact"} (the default) they
+#'   behaviour. Under \code{predict_method = "exact"} (and for traits the
+#'   default \code{"auto"} routes to \code{"exact"}) they
 #'   instead share the joint fit's \code{lambda_block} -- the exact
 #'   conditional's covariance model uses ONE shared phylogenetic
 #'   correlation matrix \code{R(lambda_block)} for every column, so the
@@ -1762,7 +1763,8 @@ build_pigauto_fit <- function(
 # @return integer vector of linear indices into the n_obs x p_latent
 #   matrix (same format as `splits$val_idx`).
 .pigauto_calibration_val_idx <- function(splits, baseline, predict_method) {
-  if (identical(predict_method, "auto") && !is.null(baseline$score_val_idx)) {
+  if (identical(predict_method, "auto") && !is.null(baseline$score_val_idx) &&
+      all(baseline$score_val_idx %in% splits$val_idx)) {
     return(baseline$score_val_idx)
   }
   splits$val_idx

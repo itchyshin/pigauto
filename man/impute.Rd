@@ -116,7 +116,8 @@ joint path fires, or a per-column re-fit otherwise. Discrete traits
 analogue of Pagel's lambda of their own -- there is no lambda_k to
 estimate for them. Under \code{predict_method = "per_column"} (see
 below) they stay fixed at lambda = 1 in every path, matching pre-S3
-behaviour. Under \code{predict_method = "exact"} (the default) they
+behaviour. Under \code{predict_method = "exact"} (and for traits the
+default \code{"auto"} routes to \code{"exact"}) they
 instead share the joint fit's \code{lambda_block} -- the exact
 conditional's covariance model uses ONE shared phylogenetic
 correlation matrix \code{R(lambda_block)} for every column, so the

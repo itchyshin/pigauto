@@ -451,3 +451,65 @@ test_that("[route] traits with at least 38 validation cells split into disjoint 
   small <- pigauto:::.pigauto_split_route_score(spl$val_idx[seq_len(20)], nrow(pd$X_scaled), pd$trait_map, seed = 7)
   expect_setequal(small$route_idx, small$score_idx)
 })
+
+test_that("[route] the split keeps every latent cell of a held-out categorical row in one half and counts rows", {
+  skip_if_not_installed("Matrix")
+  set.seed(45)
+  n <- 1200L
+  tree <- ape::rtree(n)
+  df <- data.frame(row.names = tree$tip.label, c1 = stats::rnorm(n),
+                   k4 = factor(sample(letters[1:4], n, replace = TRUE)))
+  df <- mask_frac(df, frac = 0.3, seed = 46)
+  pd  <- preprocess_traits(df, tree)
+  spl <- make_missing_splits(pd$X_scaled, trait_map = pd$trait_map, seed = 8)
+  rs <- pigauto:::.pigauto_split_route_score(spl$val_idx, nrow(pd$X_scaled), pd$trait_map, seed = 9)
+  n_obs <- nrow(pd$X_scaled)
+  tm <- pd$trait_map[["k4"]]
+  row_of <- function(idx) ((idx - 1L) %% n_obs) + 1L
+  col_of <- function(idx) ((idx - 1L) %/% n_obs) + 1L
+  cat_val <- spl$val_idx[col_of(spl$val_idx) %in% tm$latent_cols]
+  rows <- unique(row_of(cat_val))
+  expect_gte(length(rows), 38L)
+  r_rows <- unique(row_of(intersect(rs$route_idx, cat_val)))
+  s_rows <- unique(row_of(intersect(rs$score_idx, cat_val)))
+  expect_length(intersect(r_rows, s_rows), 0L)
+  expect_setequal(c(r_rows, s_rows), rows)
+  expect_identical(unname(rs$n_route[["k4"]] + rs$n_score[["k4"]]), length(rows))
+  # Every cell of a route row is in the route half (all K columns travel together).
+  expect_setequal(intersect(rs$route_idx, cat_val), cat_val[row_of(cat_val) %in% r_rows])
+})
+
+test_that("[route] a trait whose two candidate fits agree is not split", {
+  mu <- matrix(stats::rnorm(400), 200, 2)
+  tmap <- list(a = list(name = "a", type = "continuous", latent_cols = 1L),
+               b = list(name = "b", type = "continuous", latent_cols = 2L))
+  val_idx <- c(1:60, 200L + (1:60))
+  mu_pc <- mu
+  mu_pc[1:60, 2] <- mu_pc[1:60, 2] + 0.1     # only trait b differs
+  rs <- pigauto:::.pigauto_split_route_score(val_idx, 200L, tmap, seed = 1,
+                                              mu_exact = mu, mu_pc = mu_pc)
+  expect_setequal(intersect(rs$route_idx, 1:60), 1:60)
+  expect_setequal(intersect(rs$score_idx, 1:60), 1:60)
+  expect_length(intersect(intersect(rs$route_idx, 200L + (1:60)), rs$score_idx), 0L)
+
+  # End to end: a single continuous trait gives identical exact and
+  # per_column fits, so all its validation cells stay for calibration.
+  skip_if_not_installed("Matrix")
+  set.seed(47)
+  tree <- ape::rtree(300L)
+  df <- data.frame(row.names = tree$tip.label, y = stats::rnorm(300L))
+  df <- mask_frac(df, frac = 0.3, seed = 48)
+  pd  <- preprocess_traits(df, tree)
+  spl <- make_missing_splits(pd$X_scaled, trait_map = pd$trait_map, seed = 10)
+  bl <- fit_baseline(pd, tree, spl, seed = 11)
+  expect_setequal(bl$score_val_idx, spl$val_idx)
+})
+
+test_that("[route] in multi-obs data the split keeps all observations of a species in one half", {
+  tmap <- list(a = list(name = "a", type = "continuous", latent_cols = 1L))
+  unit <- rep(seq_len(100L), each = 2L)
+  rs <- pigauto:::.pigauto_split_route_score(1:200, 200L, tmap, seed = 2,
+                                              unit_of_row = unit)
+  expect_length(intersect(unit[rs$route_idx], unit[rs$score_idx]), 0L)
+  expect_identical(unname(rs$n_route[["a"]] + rs$n_score[["a"]]), 100L)
+})

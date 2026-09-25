@@ -154,7 +154,8 @@ result <- impute(
   conformal_split_val = TRUE
 )
 
-# Exact conditional prediction route
+# Prediction route: the default "auto" chooses per trait between the
+# cross-trait "exact" conditional and "per_column"; force one with
 result <- impute(traits, tree, predict_method = "exact")
 ```
 
