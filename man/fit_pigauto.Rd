@@ -51,7 +51,7 @@ fit_pigauto(
   min_val_cells = 20L,
   lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
   joint_solver = c("inhouse", "rphylopars"),
-  predict_method = c("exact", "per_column"),
+  predict_method = c("auto", "exact", "per_column"),
   joint_refine_iter = 0L,
   verbose = TRUE,
   seed = NULL
@@ -328,7 +328,16 @@ with automatic fallback to \code{"inhouse"} on failure. Passed to
 See \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}.}
 
 \item{predict_method}{character. Prediction route for the in-house joint
-solver. \code{"exact"} (default) uses the full cross-trait conditional
+solver, passed to \code{\link{fit_baseline}}. \code{"auto"} (default,
+S5b) fits the baseline with both the \code{"exact"} and
+\code{"per_column"} routes and picks, per trait, whichever has the
+lower loss on that trait's validation cells (mean squared error on the
+z-scored latent scale for continuous/count/proportion/ordinal/zi_count
+magnitude; mean log-loss for binary/zi_count gate; mean multinomial
+log-loss for categorical), falling back to \code{"exact"} on a tie or
+when fewer than 5 validation cells belong to that trait (including
+when there is no validation split at all). \code{"exact"} uses the
+full cross-trait conditional
 mean and variance of \code{vec(L) ~ MVN(0, Sigma \%x\% R(lambda_block))}
 (Hadfield & Nakagawa, 2010 sparse precision form), each column
 GLS-mean-centred at \code{lambda_block} before the solve; discrete
@@ -341,10 +350,11 @@ Henderson sparse precision are available; prints a one-time
 its default, or a \code{warning()} every time when \code{"exact"} was
 requested explicitly. \code{"per_column"} retains the original
 per-column conditional prediction route (no cross-trait borrowing in
-the prediction step). Neither option changes covariance estimation or
-the \code{"rphylopars"} solver. The route actually used is recorded in
-\code{$model_config$predict_method_used} (\code{"exact"} or
-\code{"per_column"}).}
+the prediction step). None of the three options change covariance
+estimation or the \code{"rphylopars"} solver. The route actually used
+is recorded in \code{$model_config$predict_method_used}
+(\code{"exact"}, \code{"per_column"}, or \code{"auto"}) and, per
+trait, in \code{$model_config$predict_method_by_trait}.}
 
 \item{joint_refine_iter}{integer, default \code{0L}. Enables
 cross-trait refinement of the joint baseline's cell imputations

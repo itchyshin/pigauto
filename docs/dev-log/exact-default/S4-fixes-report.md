@@ -3,23 +3,13 @@
 Branch: feat/exact-default (worktree /Users/z3437171/Dropbox/Github
 Local/pigauto-exact-default). Not committed, not pushed, per instructions.
 
-STATUS AT HANDBACK: all six named test files individually re-run FAIL 0,
-and a `NOT_CRAN=true` full-suite run produced **SUITE FAIL 0 | PASS 2637**.
-`rcmdcheck::rcmdcheck(args = c("--as-cran", "--no-manual"))` was launched in
-the background and was STILL RUNNING when this report was forced to hand
-back before it produced a result. Its output is being written to
-`/tmp/rcmdcheck_out.log` on the authoring machine; whoever picks this up
-next should read that file (or re-run the command below) and record the
-`CHECK errors/warnings/notes` line here before treating S4 as fully closed.
-Do not claim a CRAN-check-clean result from this report.
-
-Resume command:
-```r
-r <- rcmdcheck::rcmdcheck(args = c("--as-cran", "--no-manual"),
-                           error_on = "never", quiet = TRUE)
-cat(sprintf("CHECK errors %d warnings %d notes %d\n",
-            length(r$errors), length(r$warnings), length(r$notes)))
-```
+STATUS: DONE. All six named test files individually re-run FAIL 0, a
+`NOT_CRAN=true` full-suite run produced **SUITE FAIL 0 | PASS 2637**, and
+`rcmdcheck::rcmdcheck(args = c("--as-cran", "--no-manual"))` completed with
+**CHECK errors 0 warnings 0 notes 1** (the single NOTE is
+"checking CRAN incoming feasibility" flagging the maintainer email and
+that the version string "contains large components" (0.11.0.9000) --
+routine for a dev version, not caused by this slice).
 
 `devtools::document()` was run: no `.Rd` changes resulted (no roxygen tags
 were touched in this slice, only code comments and test files). The one
@@ -226,6 +216,15 @@ Full suite (`NOT_CRAN=true`):
 SUITE FAIL 0 | PASS 2637
 ```
 
-`rcmdcheck::rcmdcheck(args = c("--as-cran", "--no-manual"))`: **launched,
-not completed by handback** -- see "STATUS AT HANDBACK" above. This is the
-one open item.
+`rcmdcheck::rcmdcheck(args = c("--as-cran", "--no-manual"))`:
+
+```
+CHECK errors 0 warnings 0 notes 1
+[1] "checking CRAN incoming feasibility ... [4s/24s] NOTE
+Maintainer: 'Shinichi Nakagawa <itchyshin@gmail.com>'
+
+Version contains large components (0.11.0.9000)"
+```
+
+This NOTE is routine for a dev-version maintainer/incoming-feasibility
+check and is not caused by this slice.

@@ -265,7 +265,16 @@
 #'   \code{\link{fit_baseline}} and stored in the fitted model config.
 #'   See \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}.
 #' @param predict_method character. Prediction route for the in-house joint
-#'   solver. \code{"exact"} (default) uses the full cross-trait conditional
+#'   solver, passed to \code{\link{fit_baseline}}. \code{"auto"} (default,
+#'   S5b) fits the baseline with both the \code{"exact"} and
+#'   \code{"per_column"} routes and picks, per trait, whichever has the
+#'   lower loss on that trait's validation cells (mean squared error on the
+#'   z-scored latent scale for continuous/count/proportion/ordinal/zi_count
+#'   magnitude; mean log-loss for binary/zi_count gate; mean multinomial
+#'   log-loss for categorical), falling back to \code{"exact"} on a tie or
+#'   when fewer than 5 validation cells belong to that trait (including
+#'   when there is no validation split at all). \code{"exact"} uses the
+#'   full cross-trait conditional
 #'   mean and variance of \code{vec(L) ~ MVN(0, Sigma \%x\% R(lambda_block))}
 #'   (Hadfield & Nakagawa, 2010 sparse precision form), each column
 #'   GLS-mean-centred at \code{lambda_block} before the solve; discrete
@@ -278,10 +287,11 @@
 #'   its default, or a \code{warning()} every time when \code{"exact"} was
 #'   requested explicitly. \code{"per_column"} retains the original
 #'   per-column conditional prediction route (no cross-trait borrowing in
-#'   the prediction step). Neither option changes covariance estimation or
-#'   the \code{"rphylopars"} solver. The route actually used is recorded in
-#'   \code{$model_config$predict_method_used} (\code{"exact"} or
-#'   \code{"per_column"}).
+#'   the prediction step). None of the three options change covariance
+#'   estimation or the \code{"rphylopars"} solver. The route actually used
+#'   is recorded in \code{$model_config$predict_method_used}
+#'   (\code{"exact"}, \code{"per_column"}, or \code{"auto"}) and, per
+#'   trait, in \code{$model_config$predict_method_by_trait}.
 #' @param joint_refine_iter integer, default \code{0L}. Enables
 #'   cross-trait refinement of the joint baseline's cell imputations
 #'   using the estimated Sigma (the in-house solver's \code{max_iter}
@@ -373,7 +383,7 @@ fit_pigauto <- function(
     min_val_cells     = 20L,
     lambda_mode       = c("estimate", "fixed_1", "cv", "bayes"),
     joint_solver      = c("inhouse", "rphylopars"),
-    predict_method    = c("exact", "per_column"),
+    predict_method    = c("auto", "exact", "per_column"),
     joint_refine_iter = 0L,
     verbose           = TRUE,
     seed = NULL
@@ -536,12 +546,29 @@ fit_pigauto <- function(
     }
     if (is.null(baseline_full)) {
       if (verbose) message("Fitting production baseline (splits = NULL)...")
+      # S5b: a splits = NULL refit has no validation cells of its own, so
+      # "auto" can't re-decide anything here -- reuse the per-trait route
+      # `baseline` (above, fit WITH splits) already chose on real held-out
+      # evidence, via `predict_route` (which takes precedence over
+      # `predict_method` inside fit_baseline()). Falls back to
+      # `predict_method` unchanged when `baseline` predates this field.
       baseline_full <- fit_baseline(data, tree, splits = NULL, graph = graph,
                                      lambda_mode = lambda_mode,
                                      joint_solver = joint_solver,
                                      predict_method = predict_method,
                                      joint_refine_iter = joint_refine_iter,
-                                     predict_method_explicit = predict_method_explicit)
+                                     predict_method_explicit = predict_method_explicit,
+                                     predict_route = baseline$predict_method_by_trait)
+      # A forced predict_route always reports predict_method_used = "auto"
+      # (fit_baseline() has no way to tell a genuine "auto" request from a
+      # uniform forced route from here); relabel with `baseline`'s own
+      # verdict (its splits-based fit, which actually ran "auto" / "exact" /
+      # "per_column" per the top-level request) so an explicit
+      # predict_method = "exact"/"per_column" request is not misreported as
+      # "auto" once replayed onto baseline_full.
+      if (!is.null(baseline$predict_method_used)) {
+        baseline_full$predict_method_used <- baseline$predict_method_used
+      }
     }
     graph$D <- NULL
 
@@ -737,6 +764,8 @@ fit_pigauto <- function(
       # Same baseline_full-over-baseline precedence as lambda_block above.
       predict_method_used    = baseline_full$predict_method_used %||%
         baseline$predict_method_used %||% NULL,
+      predict_method_by_trait = baseline_full$predict_method_by_trait %||%
+        baseline$predict_method_by_trait %||% NULL,
       joint_solver           = joint_solver,
       joint_refine_iter      = joint_refine_iter,
       dropout                = dropout,
@@ -1502,6 +1531,7 @@ fit_pigauto <- function(
     lambda_per_trait       = baseline$lambda_per_trait %||% NULL,
     lambda_block           = baseline$lambda_block %||% NULL,
     predict_method_used    = baseline$predict_method_used %||% NULL,
+    predict_method_by_trait = baseline$predict_method_by_trait %||% NULL,
     joint_solver           = joint_solver,
     joint_refine_iter      = joint_refine_iter,
     dropout                = dropout,

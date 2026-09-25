@@ -17,9 +17,10 @@ fit_baseline(
   em_tol = 0.001,
   em_offdiag = FALSE,
   joint_solver = c("inhouse", "rphylopars"),
-  predict_method = c("exact", "per_column"),
+  predict_method = c("auto", "exact", "per_column"),
   joint_refine_iter = 0L,
-  predict_method_explicit = NULL
+  predict_method_explicit = NULL,
+  predict_route = NULL
 )
 }
 \arguments{
@@ -130,7 +131,21 @@ columns off the joint path entirely (no joint analogue for those two
 modes).}
 
 \item{predict_method}{character. Prediction route for the in-house joint
-solver. \code{"exact"} (default) uses the full cross-trait conditional
+solver. \code{"auto"} (default, S5b) fits the baseline once with the
+\code{"exact"} route and once with the \code{"per_column"} route, then
+for each TRAIT (each \code{trait_map} entry; a categorical trait's K
+latent columns and a zi_count trait's gate + magnitude columns are
+chosen together) picks whichever route has the lower loss on that
+trait's cells in \code{splits$val_idx}: mean squared error on the
+z-scored latent scale for continuous/count/proportion/ordinal/zi_count
+magnitude, mean log-loss of \code{plogis(mu)} against the observed 0/1
+truth for binary/zi_count gate, and mean multinomial log-loss for
+categorical. A trait falls back to \code{"exact"} on a tie, when fewer
+than 5 validation cells belong to it, or when \code{splits} is
+\code{NULL} (no validation cells at all makes every trait
+\code{"exact"}). The chosen route per trait is returned as
+\code{$predict_method_by_trait}. \code{"exact"} uses the full
+cross-trait conditional
 mean and variance of \code{vec(L) ~ MVN(0, Sigma \%x\% R(lambda_block))}
 in the sparse precision form (Hadfield & Nakagawa, 2010), with each
 column centred at its own GLS phylogenetic mean at \code{lambda_block}
@@ -165,6 +180,20 @@ last good iterate and sets \code{$diverged}.}
 explicitly requested \code{predict_method}, so the one-time exact
 fallback message is only suppressed for the true default. Leave as
 \code{NULL}.}
+
+\item{predict_route}{optional named character vector (names = trait
+names, i.e. \code{vapply(data$trait_map, function(tm) tm$name,
+character(1))}; values \code{"exact"} or \code{"per_column"}). Forces
+the prediction route for each named trait, bypassing the
+\code{"auto"} validation-loss comparison entirely (and overriding
+\code{predict_method}, if a value other than \code{"auto"} was also
+supplied). Traits not named default to \code{"exact"}. Used
+internally to replay a validation-split \code{"auto"} choice onto a
+production refit that has no validation cells (e.g.
+\code{fit_pigauto()}'s \code{baseline_full}, fit with
+\code{splits = NULL}) so that refit reuses the SAME per-trait route
+rather than re-deciding with zero validation evidence. \code{NULL}
+(default) disables forcing; \code{predict_method} governs normally.}
 }
 \value{
 A list with:
@@ -206,13 +235,23 @@ conditional / opt-in EM refine (see \code{R/joint_mvn_solver.R}'s
 \code{$lambda_block}); \code{NA} when no joint fit ran.}
 \item{lambda_mode}{Character, echoes the resolved \code{lambda_mode}
 argument.}
-\item{predict_method_used}{Character scalar, \code{"exact"} or
-\code{"per_column"}: the route actually used, aggregated across
-every joint fit that ran. \code{"exact"} only if every joint fit
-achieved exact; \code{"per_column"} if any fell back, if none ran
-(a pure per-column baseline), or if every joint fit used
-\code{joint_solver = "rphylopars"} (no exact/per_column
-dichotomy there).}
+\item{predict_method_used}{Character scalar, \code{"exact"},
+\code{"per_column"}, or \code{"auto"}. Under a concrete
+\code{predict_method} (\code{"exact"} / \code{"per_column"}),
+aggregated across every joint fit that ran: \code{"exact"} only if
+every joint fit achieved exact; \code{"per_column"} if any fell
+back, if none ran (a pure per-column baseline), or if every joint
+fit used \code{joint_solver = "rphylopars"} (no exact/per_column
+dichotomy there). Under \code{predict_method = "auto"} (or a
+forced \code{predict_route}), always \code{"auto"}; see
+\code{$predict_method_by_trait} for the resolved per-trait routes.}
+\item{predict_method_by_trait}{Named character vector (names =
+trait names), one entry per \code{trait_map} entry, giving the
+route (\code{"exact"} or \code{"per_column"}) actually used for
+that trait's cells. Under a concrete \code{predict_method}, every
+entry equals \code{predict_method_used}. Under \code{"auto"} (or a
+forced \code{predict_route}), the per-trait validation choice (see
+\code{predict_method}'s \code{"auto"} entry above).}
 }
 }
 \description{

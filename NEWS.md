@@ -1,66 +1,44 @@
 # pigauto 0.11.0.9000 (dev)
 
-## Default flip: `predict_method = "exact"`
+## New default: `predict_method = "auto"` (cross-trait prediction, chosen per trait)
 
-`impute()`, `fit_pigauto()`, and `fit_baseline()` now default
-`predict_method` to `"exact"` (previously `"per_column"`); `"per_column"`
-remains available. `"exact"` uses the full cross-trait conditional mean and
-variance of `vec(L) ~ MVN(0, Sigma %x% R(lambda_block))` in the sparse
-precision form (Hadfield & Nakagawa, 2010), with each column GLS-mean-centred
-at `lambda_block` before the solve (S1, mean-model consistency: uncorrected,
-the exact conditional's implicit zero mean disagreed with data whose
-observed-subset mean was not zero by as much as 1.33 on a small test
-fixture). Pre-run benchmarking on Totoro (6 cells x 20 seeds) found exact
-never worse than per_column and helping at n = 100, beating the per_column
-default in every cell tested (e.g. lambda 0.7, n = 1000: z-RMSE 0.732 vs
-0.778), with discrete (binary/categorical) accuracy improving too (0.466 vs
-0.457, 0.632 vs 0.604 across two fixtures).
+`impute()`, `fit_pigauto()` and `fit_baseline()` now default `predict_method` to `"auto"` (previously
+`"per_column"`). `"auto"` fits the phylogenetic baseline two ways and keeps, for each trait, the one with the
+lower error on that trait's validation cells:
 
-**Discrete liability columns now share `lambda_block` under `"exact"`**
-(binary, zi gate, ordinal-via-OVR synthetic columns), rather than staying
-fixed at lambda = 1 as they do under `"per_column"` and as every column did
-before this release. The exact conditional's covariance model uses ONE
-shared `R(lambda_block)` for every column in the joint fit, so the Sigma
-estimate feeding it needs an internally consistent init across all
-columns, not a mix of `R(1)` for discrete columns and `R(lambda_k)` for
-continuous ones (Shinichi's decision). Under `predict_method =
-"per_column"` nothing changes: discrete columns still stay at lambda = 1
-in every path.
+- `"exact"`: the full cross-trait conditional of `vec(L) ~ MVN(0, Sigma x R(lambda_block))`, solved in sparse
+  precision form (Hadfield & Nakagawa, 2010), with each trait centred at its phylogenetic GLS mean. It uses
+  the other traits' observed values to predict a missing one.
+- `"per_column"`: each trait predicted from its own observed values only (the previous default).
 
-**Fallback behaviour.** `"exact"` falls back to `"per_column"` above
-roughly 20000 unknown cells (roughly 4000 species at 5 traits), on a
-singular/unusable Sigma, or when fewer than 2 joint columns or no
-Henderson sparse precision are available (the last two cases were
-previously silent; K = 1, e.g. a single continuous trait, is one such
-case, and no longer silent -- see below). When `predict_method` was left
-at its default, the fallback prints a `message()` -- not a `warning()` --
-**at most once per R session**, naming the reason and that per_column was
-used; when `"exact"` was requested explicitly, it warns every time
-(unchanged behaviour). `fit$model_config$predict_method_used` (also
-`fit_baseline()`'s own `$predict_method_used`) records the route actually
-used, `"exact"` or `"per_column"`, aggregated across every joint fit that
-ran; `NA` on the `joint_solver = "rphylopars"` path, where the dichotomy
-does not apply.
+Validation error is squared error on the latent scale for continuous, count, proportion, ordinal and
+zero-inflated magnitude traits, and log-loss for binary, zero-inflated gate and categorical traits. A trait
+with fewer than 5 validation cells, or a fit with no validation split, uses `"exact"`. The choice is recorded
+in `fit$model_config$predict_method_by_trait`, and the final refit on all data reuses it (new `predict_route`
+argument of `fit_baseline()`). `"exact"` and `"per_column"` remain available as explicit choices. `"auto"`
+takes about 1.4 to 1.5 times as long as a single fit.
 
-**Fixed two pre-existing silent-parameter-drop bugs found while wiring this
-default flip**: `fit_joint_threshold_baseline_em()`'s internal call to
-`fit_joint_threshold_baseline()`, and `fit_ovr_categorical_fits_em()`'s
-iter-2-onward internal call to `fit_ovr_categorical_fits()`, both dropped
-`predict_method` entirely, so under `em_iterations >= 1` the EM path always
-used `fit_joint_threshold_baseline()` / `fit_ovr_categorical_fits()`'s own
-hardcoded default regardless of what the caller passed. Both now forward
-`predict_method` (and the internal `predict_method_explicit` flag) through.
+Measured against the previous default (pigauto without the GNN): z-RMSE falls by 3 to 10% at true lambda
+0.3 and 0.7 and by 0.1 to 1.2% at lambda 1 across the 18 core simulation cells (200 seeds), and by 17 to 51%
+on AVONET and PanTHERIA among 13 real-data cases; no case is worse by more than 0.1%. Discrete accuracy rises
+by up to 0.044 and interval coverage is equal or higher. Evidence: `docs/dev-log/exact-default/`.
 
-**Corrects an earlier claim in this same file** (the `lambda_mode =
-"estimate"` entry below): "the opt-in `predict_method = 'exact'` ... never
-overrides ... a discrete or ordinal column's own lambda = 1" was true only
-under `"per_column"`, and is now wrong for `"exact"`'s new default status,
-per the discrete-liability change above; ordinal is unaffected (ordinal
-liability columns are continuous-family and were already lambda-eligible).
+Details:
 
-Not exposed via `impute()` / `fit_baseline()` in this release: the internal
-`exact_centre` argument (default `TRUE`, always applied) that performs the
-GLS-mean centring described above.
+- Under `"exact"`, discrete traits (binary, zero-inflated gate, ordinal) share the block lambda used for the
+  whole joint fit instead of staying at lambda = 1; under `"per_column"` they still stay at 1.
+- `"exact"` falls back to `"per_column"` above about 20,000 unknown cells (roughly 4,000 species with 5
+  traits), for a numerically unusable Sigma, or with fewer than two joint traits. Under the default this is
+  reported once per session with `message()`; an explicit `predict_method = "exact"` still warns.
+  `model_config$predict_method_used` records the route that ran.
+- Fixed: `em_iterations >= 1` silently ignored `predict_method` inside the threshold-joint and categorical EM
+  loops; both now pass it through.
+- A baseline rebuilt from stored lambdas (`fit_baseline(..., lambda_fixed = )`) now reproduces the original
+  fit under `"exact"`, because the block lambda is stored with the per-trait values.
+
+Known limitation: at true lambda = 1 with 1,000 species, ordinal accuracy is about 0.006 lower than under the
+previous default, because the per-trait choice scores ordinal traits by squared error rather than class
+accuracy. A fix is planned.
 
 ## Fix: full REML likelihood for Pagel's lambda (PR #191)
 

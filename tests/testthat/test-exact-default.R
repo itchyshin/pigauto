@@ -42,10 +42,15 @@ discrete_accuracy <- function(bl, pd, spl) {
   list(acc = correct / total, n = total)
 }
 
-test_that("[exact-default] impute()/fit_pigauto()/fit_baseline() default to predict_method = 'exact'", {
-  expect_identical(eval(formals(fit_baseline)$predict_method)[1], "exact")
-  expect_identical(eval(formals(fit_pigauto)$predict_method)[1], "exact")
-  expect_identical(eval(formals(impute)$predict_method)[1], "exact")
+test_that("[exact-default] impute()/fit_pigauto()/fit_baseline() default to predict_method = 'auto'", {
+  # S5b (docs/dev-log/exact-default/S5b-route-choice-report.md): the
+  # dispatcher default moved from "exact" to "auto" (per-trait choice on
+  # the validation split); "exact" is still the SECOND enum entry (the
+  # concrete route .fit_baseline_core() runs when the auto path falls
+  # through with no validation evidence).
+  expect_identical(eval(formals(fit_baseline)$predict_method)[1], "auto")
+  expect_identical(eval(formals(fit_pigauto)$predict_method)[1], "auto")
+  expect_identical(eval(formals(impute)$predict_method)[1], "auto")
 })
 
 test_that("[exact-default] model_config$predict_method_used is 'exact' on a small fit", {
@@ -55,7 +60,12 @@ test_that("[exact-default] model_config$predict_method_used is 'exact' on a smal
   tree <- ape::rcoal(n)
   df <- data.frame(a = stats::rnorm(n), b = stats::rnorm(n), row.names = tree$tip.label)
   df$a[1:5] <- NA; df$b[6:10] <- NA
-  res <- suppressWarnings(impute(df, tree, epochs = 5L, verbose = FALSE, seed = 1))
+  # Pinned to predict_method = "exact" (S5b): this test is about the
+  # EXACT route's own $model_config$predict_method_used bookkeeping, not
+  # about what the "auto" default happens to pick on this particular
+  # random draw. See tests/testthat/test-route-choice.R for "auto" itself.
+  res <- suppressWarnings(impute(df, tree, epochs = 5L, verbose = FALSE, seed = 1,
+                                  predict_method = "exact"))
   expect_identical(res$fit$model_config$predict_method_used, "exact")
 })
 
@@ -72,8 +82,18 @@ test_that("[exact-default] oversized/mocked exact under the default: message, pe
   df$a[1:5] <- NA; df$b[6:10] <- NA; df$c[11:15] <- NA
   pd <- preprocess_traits(df, tree)
 
+  # Left at the true default (S5b: "auto"), no predict_method argument: with
+  # splits = NULL there are no validation cells for "auto" to compare
+  # routes with, so it runs the exact route internally with
+  # predict_method_explicit = FALSE (docs/dev-log/exact-default/
+  # S5b-route-choice-report.md, "No splits ... use exact for every trait")
+  # -- same message-not-warning behaviour as the pre-S5b "exact" default.
+  # $predict_method_used is now the constant "auto" marker;
+  # $predict_method_by_trait carries the real per-trait outcome, which
+  # still shows "per_column" here because of the mocked fallback.
   bl <- expect_no_warning(fit_baseline(pd, tree))
-  expect_identical(bl$predict_method_used, "per_column")
+  expect_identical(bl$predict_method_used, "auto")
+  expect_true(all(bl$predict_method_by_trait == "per_column"))
 
   pigauto:::.pigauto_exact_fallback_reset()
   msgs <- character(0)
@@ -116,7 +136,10 @@ test_that("[exact-default] discrete accuracy under exact is not worse than per_c
     fx  <- mixed_fixture(n = 60, seed = 200 + s)
     pd  <- preprocess_traits(fx$df, fx$tree)
     spl <- make_missing_splits(pd$X_scaled, seed = s, trait_map = pd$trait_map)
-    bl_exact <- fit_baseline(pd, fx$tree, splits = spl)                          # default = exact
+    # Pinned to predict_method = "exact" (S5b): this test compares the
+    # concrete exact and per_column routes against each other, not "auto"
+    # (the new default) against per_column.
+    bl_exact <- fit_baseline(pd, fx$tree, splits = spl, predict_method = "exact")
     bl_pc    <- fit_baseline(pd, fx$tree, splits = spl, predict_method = "per_column")
     acc_exact[s] <- discrete_accuracy(bl_exact, pd, spl)$acc
     acc_pc[s]    <- discrete_accuracy(bl_pc, pd, spl)$acc
