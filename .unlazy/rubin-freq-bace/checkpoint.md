@@ -51,3 +51,7 @@ NEXT (in order): (1) n1000 timing check done (~02:40 nibi) -> gate (<= 9 h/fit i
   seeds 2-100 across fir / rorqual / nibi by disjoint ranges (seed 1 from timing check; rerun seed 1 for lambda = 1 only if
   it failed as-shipped). (2) first pass of n100/300 done -> retry-prep pass 2 on every host -> resubmit. (3) publish interim
   report once n100/300 BACE complete. (4) final: pool, aggregate, report, after-task, Melissa, commit, push, tell Shinichi.
+RETRY PASS 2 fir (2026-09-24 ~23:50 nibi): 8 lambda = 1 n300 failures moved, resubmitted as fir 61390210 (retry2). Pass-1
+  as-shipped counts (from the retry-prep outputs, authoritative): fir 69 (68 lambda 1 + 1 lambda 0.7), rorqual 98 (all
+  lambda 1). The pass-2 move on fir overwrote 6 pass-1 records = 6 fits that failed AGAIN after the fix (retry1). Fixed
+  rubin_retry_prep.R: later passes use results/bace_failed_pass<k>/, never overwrite. Use dest bace_failed_pass3 next.
