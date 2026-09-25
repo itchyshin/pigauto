@@ -1,0 +1,7 @@
+oracle x-only (ignores y) residual SD: 0.325 
+oracle (true scale) joint residual SD: 0.239  mean cond SD: 0.218 
+per_column : point residual SD 0.327  cor with oracle joint mean 0.946  cor with x-only mean 0.991 
+exact : point residual SD 0.289  cor with oracle joint mean 0.976  cor with x-only mean 0.976 
+oracle proper MI (true scale) GLS slopes: 0.67 0.662 0.624 0.657 0.648 0.671 0.665 0.645 0.661 0.643  mean 0.655 
+GLS slope on truth: 0.638 
+oracle mean + INDEPENDENT noise of the proper marginal SD: 0.617 

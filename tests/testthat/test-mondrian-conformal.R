@@ -114,6 +114,9 @@ test_that("compute_conformal_scores mondrian produces different near/far scores"
   expect_equal(mo$near_score, 0.1, tolerance = 1e-10)
   expect_equal(mo$far_score, 5, tolerance = 1e-10)
   expect_true(mo$far_score > mo$near_score)
+  expect_equal(mo$n_val, 40L)
+  expect_equal(mo$n_near, 20L)
+  expect_equal(mo$n_far, 20L)
   # Base named vector carries a finite global score for callers that
   # ignore the "mondrian" attribute.
   expect_true(is.finite(unname(scores["t1"])))
@@ -164,6 +167,10 @@ test_that("compute_conformal_scores mondrian falls back below the 19-per-stratum
   expect_true(mo$fallback)
   expect_equal(mo$near_score, mo$far_score, tolerance = 1e-12)
   expect_true(is.na(mo$threshold))
+  expect_equal(mo$n_val, n_val_species)
+  # Realised stratum sizes are kept on fallback so users see why it fell back.
+  expect_equal(mo$n_near + mo$n_far, n_val_species)
+  expect_true(mo$n_near < 19L || mo$n_far < 19L)
   expect_equal(unname(mo$near_score), unname(scores_split["t1"]), tolerance = 1e-10)
   expect_equal(unname(scores_mond["t1"]), unname(scores_split["t1"]), tolerance = 1e-10)
 })

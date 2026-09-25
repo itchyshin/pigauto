@@ -278,6 +278,22 @@ multi_impute <- function(traits, tree, m = 100L,
     trait_map <- res$fit$trait_map
     imask     <- res$imputed_mask
 
+    # Mondrian (2026-09-23): when the fit was calibrated with
+    # conformal_method = "mondrian", draws below use the per-cell
+    # near/far stratum score instead of the single global conformal
+    # score. mondrian_cell_scores() (R/predict_pigauto.R) is the same
+    # helper predict.pigauto_fit() uses for its conformal intervals, so
+    # the two are identical in latent scale and stratum assignment. NULL
+    # for any other conformal_method (split / bootstrap / none), in which
+    # case .sample_conformal_draw() falls back to the global score
+    # unchanged.
+    cell_scores <- if (identical(res$fit$conformal_method, "mondrian")) {
+      mondrian_cell_scores(res$fit, res$fit$graph$D_sq, trait_map,
+                            nrow(pred$imputed_latent))
+    } else {
+      NULL
+    }
+
     input_row_order <- res$data$input_row_order
     # `imask` is in user-input row order (built by build_completed from
     # the original traits data.frame).  But pred$imputed / pred$se /
@@ -292,7 +308,8 @@ multi_impute <- function(traits, tree, m = 100L,
     # multi_impute_trees(draws_method = "conformal") via .conformal_draws().
     datasets <- .conformal_draws(traits, pred, imask, trait_map, m,
                                  species_col = species_col, seed = seed,
-                                 input_row_order = input_row_order)
+                                 input_row_order = input_row_order,
+                                 mondrian_scores = cell_scores)
   }
 
   structure(
@@ -352,12 +369,14 @@ multi_impute <- function(traits, tree, m = 100L,
 # @return list of `m` completed data.frames.
 .conformal_draws <- function(traits, pred, imputed_mask, trait_map, m,
                              species_col = NULL, seed = NULL,
-                             input_row_order = NULL) {
+                             input_row_order = NULL,
+                             mondrian_scores = NULL) {
   lapply(seq_len(m), function(i) {
     imp_df <- .sample_conformal_draw(
       pred, imputed_mask, trait_map,
       seed_i = if (is.null(seed)) NULL else as.integer(seed) + i,
-      input_row_order = input_row_order
+      input_row_order = input_row_order,
+      mondrian_scores = mondrian_scores
     )
     build_completed(traits, imp_df, species_col,
                     input_row_order = input_row_order)$completed
@@ -372,8 +391,19 @@ multi_impute <- function(traits, tree, m = 100L,
 # on the magnitude log1p-z latent (conformal score or se_latent mag),
 # never pred$se of E[X]. Falls back to BM / latent SE when the conformal
 # score is not available for a trait.
+#
+# Converting a conformal half-width to a Normal SD via /1.96 is already a
+# heuristic (see multi_impute()'s roxygen). When `mondrian_scores` is
+# supplied (fit calibrated with conformal_method = "mondrian"), that same
+# /1.96 conversion is applied per cell to a score that is itself a coarse
+# near/far stratum step function (mondrian_cell_scores() /
+# mondrian_locality() in R/predict_pigauto.R and R/fit_helpers.R), not a
+# smooth function of phylogenetic distance -- two compounding
+# approximations, not one. NULL (any non-Mondrian conformal_method) keeps
+# the single global score, unchanged from before this parameter existed.
 .sample_conformal_draw <- function(pred, imputed_mask, trait_map, seed_i,
-                                    input_row_order = NULL) {
+                                    input_row_order = NULL,
+                                    mondrian_scores = NULL) {
   if (!is.null(seed_i)) set.seed(seed_i)
   imp    <- pred$imputed
   probs  <- pred$probabilities
@@ -437,12 +467,22 @@ multi_impute <- function(traits, tree, m = 100L,
     if (length(rows) == 0L) next
     N    <- length(rows)
 
-    # Conformal half-width → approximate 1-sigma SD
+    # Conformal half-width → approximate 1-sigma SD. Per-cell (vector,
+    # one value per row) when this fit used Mondrian conformal and the
+    # trait has a populated stratum score; otherwise the single global
+    # score (scalar), recycled by rnorm() exactly as before.
     cs <- if (!is.null(cscores) && nm %in% names(cscores) &&
-               is.finite(cscores[nm]))
-            cscores[nm] / 1.96
-          else
+               is.finite(cscores[nm])) {
+            if (!is.null(mondrian_scores) &&
+                nm %in% colnames(mondrian_scores$scores) &&
+                !is.na(mondrian_scores$scores[1L, nm])) {
+              mondrian_scores$scores[rows, nm] / 1.96
+            } else {
+              cscores[nm] / 1.96
+            }
+          } else {
             NULL
+          }
 
     if (tm$type == "continuous") {
       mu       <- imp[[nm]][rows]           # original-scale point estimate

@@ -236,3 +236,155 @@ delhey_covariates, gnn_earnings, gnn_earnings_v2,
 gnn_earnings_multitrait, multi_obs}.R`. Architecture documentation:
 `useful/GNN_ARCHITECTURE_EXPLAINED.md`. Verdict figure:
 `useful/fix_G_real_data_verdict.png`.
+
+## 8. Uncertainty quantification
+
+### 8.1 Prediction intervals
+
+For every imputed continuous, count, ordinal or proportion trait we report a 95%
+prediction interval built by split conformal prediction (Papadopoulos et al. 2002; Vovk
+et al. 2005). Before training, a random 25% of the observed cells is withheld and further
+divided into a validation set (one quarter) and a test set. The model is fitted without
+them. On the validation cells the absolute residual between the true value and the
+blended prediction is computed on the latent (standardised) scale, and for each trait the
+interval half-width is taken as the empirical quantile of these residuals at level
+⌈(1 − α)(n + 1)⌉ / n, with n the number of validation residuals and α = 0.05. The
+interval for a missing cell is the prediction plus or minus this half-width,
+back-transformed to the trait's original scale. The construction is distribution-free: if
+the residual of a new cell is exchangeable with the validation residuals, the interval
+contains the true value with probability at least 1 − α (Lei et al. 2018).
+
+That exchangeability condition is the one assumption the method makes, and phylogenetic
+data violate it in a specific way. Validation cells are drawn from the observed part of
+the matrix, which sits in well-sampled regions of the tree where the baseline can lean on
+close relatives and prediction errors are small. The cells a user actually needs to
+impute are not so placed; in real trait databases missingness concentrates in poorly
+sampled clades, where errors are larger. A single quantile calibrated on the first
+population and applied to the second is too short. In a simulation with clade-structured
+missingness (two clades at 7:1 odds of being missing against the background), empirical
+coverage of the nominal 95% interval fell to 0.923 at n = 300 species and 0.927 at
+n = 1000, against 0.961 and 0.957 under completely random missingness; the shortfall did
+not diminish with sample size (Supplementary Table S-UQ1).
+
+To restore the condition where it fails, pigauto offers a locality-stratified variant
+(`conformal_method = "mondrian"`; Vovk 2012; Boström & Johansson 2020). For each
+validation cell a locality statistic is computed as the mean cophenetic distance from its
+species to the five nearest species with an observed value for that trait. Validation
+cells are split at the median locality into a near and a far stratum, and a separate
+conformal quantile is computed within each stratum at the same adjusted level. At
+prediction time a missing cell receives the half-width of the stratum its own locality
+places it in, so intervals widen in undersampled clades, which is where the error is.
+Within a stratum the near-versus-far mismatch that broke exchangeability is largely
+removed, and the marginal guarantee then holds within each stratum, provided the cells to be imputed are exchangeable with the validation cells of their stratum; the structured mask approximates that condition for real missing cells but cannot establish it (Section 8.3). On the
+same simulation grid this recovered clade-structured coverage to 0.946 at n = 1000,
+within three Monte Carlo standard errors of nominal, while widening the median interval
+under random missingness by 2.3%.
+
+The variant has a floor. A stratum's own conservative quantile can only reach 0.95 when
+it holds at least 19 residuals (the smallest n for which n / (n + 1) ≥ 0.95), so a trait
+whose validation cells would leave either stratum below 19 (roughly 38 validation cells
+per trait) falls back to the global split quantile, and the software records that it did.
+At n = 300 in the simulation above this fallback fired for every trait and the variant
+changed nothing; the remedy at that size is more held-out data rather than
+stratification. The stratified variant is currently limited to single-observation data,
+because its locality is defined per species, and to traits that receive conformal
+intervals at all. The default remains the unstratified split quantile; Section 8.3
+reports the real-data confirmation and why.
+
+### 8.2 Supplementary Table S-UQ1: mechanism-coverage simulation
+
+Regime: F1 continuous, λ = 1, 30% missing, single-obs, simulated. Coverage is scored on
+genuinely-missing cells at nominal 0.95; MCSE = sd(per-rep coverage)/√n_rep.
+
+**B1: split conformal (baseline)**
+
+| mechanism | n | n_rep | split coverage | MCSE |
+|---|---:|---:|---:|---:|
+| MCAR | 300 | 30 | 0.961 | 0.004 |
+| MAR_trait | 300 | 30 | 0.949 | 0.003 |
+| MAR_phylo | 300 | 30 | 0.923 | 0.006 |
+| MNAR | 300 | 30 | 0.939 | 0.006 |
+| MCAR | 1000 | 20 | 0.957 | 0.002 |
+| MAR_trait | 1000 | 20 | 0.940 | 0.004 |
+| MAR_phylo | 1000 | 20 | 0.927 | 0.005 |
+| MNAR | 1000 | 20 | 0.932 | 0.003 |
+
+**B2: split vs. Mondrian conformal, paired re-run**
+
+| mechanism | n | split coverage | mondrian coverage | MCSE (split / mondrian) |
+|---|---:|---:|---:|---:|
+| MCAR | 300 | 0.961 | 0.961 | fallback fired; identical by design |
+| MAR_phylo | 300 | 0.923 | 0.923 | fallback fired; stratification impossible at this n_val |
+| MNAR | 300 | 0.939 | 0.939 | fallback fired; same |
+| MCAR | 1000 | 0.957 | 0.957 | width +2.3% (cap 10%) |
+| MAR_trait | 1000 | 0.940 | 0.946 | gap 0.004 < 3×0.0037 |
+| MAR_phylo | 1000 | 0.927 | 0.946 | gap 0.004 < 3×0.0053 |
+| MNAR | 1000 | 0.932 | 0.940 | gap 0.010 < 3×0.0043, marginal |
+
+At n = 1000 all three non-MCAR mechanisms recover to within 3×MCSE of the nominal 0.95,
+with MAR_phylo, the worst mechanism, fully repaired. At n = 300 the per-stratum floor of
+19 residuals is not met for any trait, so the method falls back to the split quantile and
+coverage is unchanged by construction.
+
+### 8.3 Real-data confirmation
+
+Masking originally observed cells gives true values to score against. We did this on
+three trait databases under a pre-registered design
+(`docs/dev-log/mondrian-realdata/00-preregistration.md`). Two mask arms were used. A
+random mask of 20% of observed cells makes test cells exchangeable with the validation
+cells, so split conformal is valid there by construction; it served as a no-harm
+control. A structured mask drew the same 20% with probability proportional to a
+propensity for real missingness, fitted per trait on phylogenetic eigenvectors, so that
+test cells sit where genuinely missing cells sit. PanTHERIA (4,027 mammals) ran both
+arms with three masks each; AVONET (1,500 birds) is almost completely observed and ran
+the random arm only; FishBase (10,484 fishes) ran the structured arm with one mask.
+Mondrian activated for every continuous trait in all three databases. Ordinal traits also received Mondrian intervals but were not scored; the evidence covers the continuous and count traits listed in Table S-UQ2 only.
+
+**Table S-UQ2.** Coverage of nominal 95% intervals, pooled over traits (weighted by test
+cells) and masks, by the stratum of each test cell. The last column is the median over
+traits of the per-trait width ratio. FishBase rests on one mask and is descriptive.
+
+| database | mask arm | stratum | split | Mondrian | width ratio (Mondrian / split) |
+|---|---|---|---:|---:|---:|
+| PanTHERIA | structured | far | 0.919 | 0.940 | 1.18 |
+| PanTHERIA | structured | near | 0.974 | 0.958 | 0.84 |
+| PanTHERIA | random | far | 0.931 | 0.957 | 1.23 |
+| PanTHERIA | random | near | 0.978 | 0.968 | 0.83 |
+| FishBase | structured | far | 0.930 | 0.949 | 1.14 |
+| FishBase | structured | near | 0.966 | 0.950 | 0.78 |
+| AVONET | random | far | 0.929 | 0.964 | 1.67 |
+| AVONET | random | near | 0.984 | 0.961 | 0.81 |
+
+Pooled over traits, the split quantile undercovers in the far stratum and overcovers in
+the near stratum in every database, including under the random mask. Mondrian moves both
+towards nominal: far-stratum coverage rises to 0.94-0.96 at the cost of wider intervals
+there, and near-stratum intervals narrow by about a fifth while their pooled coverage
+stays at or above 0.95. Per trait the picture is noisier: six of nineteen near rows fall
+below 0.95 under Mondrian, and in three far rows split was already at or above nominal. Our pre-registered rule for changing the default also required that Mondrian's
+near-stratum coverage fall no more than two percentage points below split's. That
+condition was not met. For AVONET the pooled near-stratum drop (2.3 points) exceeded the
+margin. For FishBase the drop (1.6 points) was inside the margin but, with a single mask,
+could not be shown non-inferior (one-sided p = 0.22, Holm-adjusted 0.43). PanTHERIA
+passed (drop 1.2 points, adjusted p = 0.025). The AVONET result alone decides the
+verdict, so the default remains split. Mondrian remains an opt-in. The far-stratum gains
+under the structured mask (condition 1 passed on both databases that ran it) are the
+evidence for choosing it when missing species are concentrated in poorly sampled clades;
+the price is wider far intervals and a 1 to 2 point drop in near-stratum coverage, which
+fell below 0.95 for six of nineteen trait rows. Per-trait results, uncertainty and the decision script are in the
+repository.
+
+### References
+
+- Papadopoulos H, Proedrou K, Vovk V, Gammerman A (2002) Inductive confidence machines
+  for regression. In: *Machine Learning: ECML 2002*, Lecture Notes in Computer Science
+  vol. 2430, Springer, 345–356. DOI: 10.1007/3-540-36755-1_29.
+- Vovk V, Gammerman A, Shafer G (2005) *Algorithmic Learning in a Random World*. Springer.
+  DOI: 10.1007/b106715.
+- Vovk V (2012) Conditional validity of inductive conformal predictors. In: *Proceedings
+  of the 4th Asian Conference on Machine Learning*, PMLR 25, 475–490.
+- Lei J, G'Sell M, Rinaldo A, Tibshirani RJ, Wasserman L (2018) Distribution-free
+  predictive inference for regression. *Journal of the American Statistical Association*
+  113(523), 1094–1111. DOI: 10.1080/01621459.2017.1307116.
+- Boström H, Johansson U (2020) Mondrian conformal regressors. In: *Proceedings of the
+  Ninth Symposium on Conformal and Probabilistic Prediction and Applications*, PMLR 128,
+  114–133.

@@ -88,6 +88,50 @@ No CRAN submission or public release is implied. The installed BACE bridge has
 been removed for 0.11: BACE remains an in-tree comparator only, with no
 `Suggests` dependency, export, or installed help page.
 
+## Mondrian conformal on real data: the default stays `"split"`
+
+The pre-registered real-data confirmation of `conformal_method = "mondrian"`
+(`docs/dev-log/mondrian-realdata/`) ran on PanTHERIA (n = 4,027; random and
+phylogenetically structured masks, 3 each), AVONET (n = 1,500; random mask, 3)
+and FishBase (n = 10,484; structured mask, 1).
+Rule verdict for the mondrian default: KEEP_SPLIT. The default remains `"split"`.
+
+What the data showed, in every dataset and arm: Mondrian raises coverage in the
+far (undersampled) stratum from about 0.92-0.93 to 0.94-0.96 by widening those
+intervals, and narrows near-stratum intervals by about 20%, lowering near
+coverage from 0.97-0.98 to 0.95-0.97 (pooled over traits). The pre-registered
+rule failed on its near-stratum non-inferiority condition (Mondrian near
+coverage no more than 2 points below split's), which failed for AVONET (pooled
+near coverage 2.3 points below split's) and could not be demonstrated for
+FishBase from its single mask (1.6 points below, p = 0.22); PanTHERIA passed.
+`"mondrian"` remains available and opt-in. In the far stratum it raised
+coverage in all 18 trait-by-arm rows at the cost of wider intervals there, and
+it lowered near-stratum coverage by 1 to 2 points, in six trait rows to below
+0.95. Users whose missing cells sit in undersampled clades may prefer that
+trade; the study measured it on masked observed cells, not on real missing
+cells.
+
+`compute_conformal_scores()` now records `n_val`, `n_near` and `n_far` for each
+Mondrian trait, and a verbose fit names the trait and its stratum sizes when
+Mondrian falls back to the split score.
+
+## Change: Mondrian-scaled conformal MI draws, with a caveat for phylogenetic GLS
+
+`multi_impute(draws_method = "conformal")` now draws each missing cell with its
+own Mondrian stratum score when the fit used `conformal_method = "mondrian"`
+(the per-cell scores come from the new internal `mondrian_cell_scores()`, also
+used by `predict()`, whose output is unchanged). Split fits are unchanged.
+
+Caveat, measured on simulated bivariate Brownian traits (500 replicates,
+n = 1000): conformal draws, split or Mondrian, halved a phylogenetic GLS slope
+(0.35 and 0.32 against a true 0.70) while OLS on the same draws was nearly
+unbiased. A one-tree diagnostic points to two causes: the draw spread is
+calibrated on point-prediction error, which was 1.3 times the proper
+conditional spread there, and the default prediction route does not use the
+other observed traits. Treat conformal MI followed by a phylogenetic
+GLS with caution until this is resolved; an investigation is under way on
+`arc/mi-gls-attenuation`. See `useful/mondrian-mi-se-justification.md`.
+
 ## Feature: `gnn = FALSE` -- the phylogenetic baseline through the whole pipeline, no GNN
 
 `impute()`, `fit_pigauto()`, `multi_impute()` and `multi_impute_trees()` gain

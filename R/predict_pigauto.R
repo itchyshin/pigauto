@@ -828,14 +828,14 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     # only -- fit_pigauto() errors at fit time for multi_obs, so
     # `multi_obs` here should already be FALSE whenever this fires; the
     # check is defensive.
-    use_mondrian <- identical(object$conformal_method, "mondrian") &&
-      !is.null(object$conformal_mondrian) &&
-      !is.null(D_sq) && !multi_obs && !is.null(object$X_scaled)
-    obs_mask_train <- NULL
-    if (use_mondrian) {
-      obs_mask_train <- !is.na(object$X_scaled)
-      hold <- c(object$splits$val_idx, object$splits$test_idx)
-      if (length(hold)) obs_mask_train[hold] <- FALSE
+    #
+    # Per-cell stratum logic extracted to mondrian_cell_scores() so
+    # multi_impute()'s conformal draws can reuse it identically (see that
+    # function's roxygen for the refactor rationale).
+    cell_scores <- if (!multi_obs) {
+      mondrian_cell_scores(object, D_sq, trait_map, n)
+    } else {
+      NULL
     }
 
     for (tm in trait_map) {
@@ -848,28 +848,17 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
 
       # zi_count is scored on the magnitude (log1p-z) column, not the
       # Bernoulli gate -- must match fit_helpers.R's compute_conformal_scores()
-      # `score_col`, both for reading conformal_scores_out[nm] above and for
-      # the Mondrian locality lookup below.
+      # `score_col`, both for reading conformal_scores_out[nm] above.
       score_col <- if (identical(tm$type, "zi_count")) lc[2L] else lc[1L]
 
       # q_vec: per-row conformal half-width. Constant (global score) for
       # "split" / "bootstrap"; per-row near/far stratum score for
       # "mondrian" (rows whose locality can't be computed, e.g. no
       # observed species for this trait, keep the global fallback value).
-      q_vec <- rep(conformal_scores_out[nm], n)
-      if (use_mondrian) {
-        mo <- object$conformal_mondrian[[nm]]
-        if (!is.null(mo) && !isTRUE(mo$fallback)) {
-          obs_idx <- which(obs_mask_train[, score_col])
-          if (length(obs_idx) > 0L) {
-            locality <- mondrian_locality(D_sq, obs_idx, seq_len(n), k = 5L)
-            loc_ok <- is.finite(locality)
-            far  <- loc_ok & (locality > mo$threshold)
-            near <- loc_ok & !far
-            q_vec[far]  <- mo$far_score
-            q_vec[near] <- mo$near_score
-          }
-        }
+      q_vec <- if (!is.null(cell_scores) && !is.na(cell_scores$scores[1L, nm])) {
+        cell_scores$scores[, nm]
+      } else {
+        rep(conformal_scores_out[nm], n)
       }
 
       if (tm$type == "continuous") {
@@ -1576,4 +1565,92 @@ print.pigauto_pred <- function(x, ...) {
     cat("  Conformal 95% intervals: yes\n")
   }
   invisible(x)
+}
+
+
+# ---- Internal: per-cell Mondrian conformal half-width (latent scale) ------
+#' Per-cell Mondrian conformal half-widths (internal)
+#'
+#' Extracted from `predict.pigauto_fit()`'s conformal-interval loop (B2,
+#' 2026-08-16) so [multi_impute()]'s conformal draws can reuse the identical
+#' per-row near/far stratum logic instead of the single global conformal
+#' score. `predict.pigauto_fit()` calls this and its numeric output is
+#' unchanged by the refactor.
+#'
+#' Only trait types scored by `compute_conformal_scores()` (continuous,
+#' count, ordinal, proportion, zi_count magnitude) get a populated column;
+#' other columns, and any trait with no conformal score at all, are left
+#' `NA`. When `object$conformal_method` is not `"mondrian"`, or the fit
+#' does not carry the pieces Mondrian needs (`conformal_mondrian`,
+#' `X_scaled`, and a non-NULL `D_sq`), every populated column is just the
+#' constant global score repeated `n` times -- i.e. this degrades to the
+#' "split" / "bootstrap" behaviour exactly.
+#'
+#' @param object a `pigauto_fit`.
+#' @param D_sq `n_species x n_species` squared cophenetic distance matrix
+#'   (`object$graph$D_sq`), or `NULL`.
+#' @param trait_map trait map (list of descriptors) for the predicted data.
+#' @param n number of prediction rows. Mondrian is single-obs-only, so this
+#'   is `n_species`.
+#' @return `NULL` if `object$conformal_scores` is `NULL`; otherwise a list
+#'   with `scores` (`n x n_traits` matrix, latent scale, `NA` columns for
+#'   traits with no conformal score; column names are trait names) and
+#'   `score_cols` (named integer vector, trait name -> the latent column
+#'   each trait's score was computed on; zi_count uses the magnitude
+#'   column, not the gate).
+#' @keywords internal
+#' @noRd
+mondrian_cell_scores <- function(object, D_sq, trait_map, n) {
+  cs <- object$conformal_scores
+  if (is.null(cs)) return(NULL)
+
+  trait_names <- vapply(trait_map, "[[", character(1), "name")
+  n_traits <- length(trait_names)
+  scores <- matrix(NA_real_, nrow = n, ncol = n_traits,
+                    dimnames = list(NULL, trait_names))
+  score_cols <- stats::setNames(integer(n_traits), trait_names)
+
+  use_mondrian <- identical(object$conformal_method, "mondrian") &&
+    !is.null(object$conformal_mondrian) &&
+    !is.null(D_sq) && !is.null(object$X_scaled)
+
+  obs_mask_train <- NULL
+  if (use_mondrian) {
+    obs_mask_train <- !is.na(object$X_scaled)
+    hold <- c(object$splits$val_idx, object$splits$test_idx)
+    if (length(hold)) obs_mask_train[hold] <- FALSE
+  }
+
+  for (tm in trait_map) {
+    nm <- tm$name
+    lc <- tm$latent_cols
+    if (!(tm$type %in%
+          c("continuous", "count", "ordinal", "proportion", "zi_count"))) next
+    if (is.na(cs[nm])) next
+
+    # zi_count is scored on the magnitude (log1p-z) column, not the
+    # Bernoulli gate -- must match fit_helpers.R's compute_conformal_scores()
+    # `score_col`.
+    score_col <- if (identical(tm$type, "zi_count")) lc[2L] else lc[1L]
+    score_cols[nm] <- score_col
+
+    q_vec <- rep(cs[nm], n)
+    if (use_mondrian) {
+      mo <- object$conformal_mondrian[[nm]]
+      if (!is.null(mo) && !isTRUE(mo$fallback)) {
+        obs_idx <- which(obs_mask_train[, score_col])
+        if (length(obs_idx) > 0L) {
+          locality <- mondrian_locality(D_sq, obs_idx, seq_len(n), k = 5L)
+          loc_ok <- is.finite(locality)
+          far  <- loc_ok & (locality > mo$threshold)
+          near <- loc_ok & !far
+          q_vec[far]  <- mo$far_score
+          q_vec[near] <- mo$near_score
+        }
+      }
+    }
+    scores[, nm] <- q_vec
+  }
+
+  list(scores = scores, score_cols = score_cols)
 }
