@@ -83,3 +83,8 @@ INTERIM REPORT PUBLISHED (2026-09-25 ~03:35 nibi): https://claude.ai/artifact/PF
   slightly at lambda 1); freq A ~0.95 everywhere; freq B under-covers the correlation.
   Missing reruns: rorqual 21787578 (n100 seeds 51-55 lambda 0.7 rho 0.5, the nibi timeout block), 21788702 (n300:
   lambda 0.7 rho 0.5 seeds 55-57 = rorqual segfault block; lambda 0.7 rho 0 seeds 151-152 = fir segfault block).
+N1000 TAIL CUT (2026-09-25 ~04:05 nibi): fir 24G resubmission 61453939 now 169 RUNNING (24G fixed fir scheduling).
+  Totoro: stopped the xargs dispatcher (pid 402000) only; its 30 running fits (lambda 0.3 both rho + lambda 0.7 rho 0,
+  seeds 31-40) continue; the unstarted second wave (lambda 0.7 rho 0.5, lambda 1 both rho, seeds 31-40) -> fir 61472904.
+  rorqual: 59 PENDING n1000 tasks cancelled -> fir 61472913 (24G). rorqual keeps 180 running. nibi 118 running.
+  All 594 n1000 fits now running or just submitted; expected done ~10:00-11:00 nibi (08:00-09:00 Edmonton).
