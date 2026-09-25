@@ -6,6 +6,7 @@
 #     and still returns M datasets.
 root <- normalizePath(file.path(testthat::test_path(), "..", ".."))
 suppressMessages({ source(file.path(root, "script", "campaign_gnn_off_lib.R")); source(file.path(root, "script", "rubin_freq.R")) })
+old_rng <- RNGkind()[1]
 RNGkind("L'Ecuyer-CMRG")
 cell <- make_cell("types_mixed", 60L, 3L, lambda = 0.7, rho = 0.5, thresholds = "fixed", driver = TRUE)
 bt <- default_block_traits(cell)
@@ -38,3 +39,5 @@ testthat::test_that("an absurd but self-consistent parameter set is rejected by 
   outside <- pars; outside$lambda <- 1.2
   testthat::expect_false(plausible_pars(outside, ref, cell$tree))
 })
+
+RNGkind(old_rng)  # do not leak the RNG kind into later test files (make_cell() datasets depend on it)

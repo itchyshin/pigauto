@@ -1,3 +1,10 @@
+GOAL: see GOAL.md (+ arcs.md).   STATE 2026-09-25 13:40: CAMPAIGN COMPLETE. BACE 3000 / freq 3600 fits, 0 missing.
+DONE (verified): pooled + completeness 0 missing; aggregate; report v5 https://claude.ai/artifact/PFkoRFtTjox4tndEbuBtPQ and
+  summary v3 https://claude.ai/artifact/9vNrmz2PUfjW9vZwuKmvFc republished (headline n = 1000); lane tests FAIL 0 PASS 234;
+  after-task docs/dev-log/after-task/2026-09-25-rubin-campaign.md filled. No jobs left on any cluster.
+POOL: ~/pigauto_rubin_pool (Mac, outside Dropbox); agg/ holds report.json and csvs.
+OPEN FOR SHINICHI: share pages / contact Dan (on hold by his instruction); rebuild accuracy companion on final data?
+---- earlier checkpoint below ----
 GOAL: see GOAL.md (+ arcs.md).   STATE: campaign running on nibi + fir; rorqual/narval validating (2026-09-24 ~17:50 nibi).
 ARCS DONE (verified): pre-run (240/240), freq timing (36/36), results page v1.
 ARC IN PROGRESS: A1 (nibi 22634021), A2 (nibi 22634022/22634023), A3 (nibi 22633907/909, root pigauto_rubin_freq),

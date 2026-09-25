@@ -234,7 +234,7 @@ function el(t, a, p, x) { const e = document.createElementNS(NS, t); for (const 
 const tip = document.getElementById("tip");
 function showTip(e, h) { tip.innerHTML = h; tip.hidden = false; const r = tip.getBoundingClientRect(); let x = e.clientX + 14, y = e.clientY + 14; if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14; if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14; tip.style.left = x + "px"; tip.style.top = y + "px"; }
 const C = DATA.counts, done = C.bace >= 3000 && C.freq >= 3600;
-const N = [300, 100].find(n => get(DATA.cells_n, { arm: "bace", n: n }) && get(DATA.cells_n, { arm: "freqA", n: n })) || 300;
+const N = [1000, 300, 100].find(n => get(DATA.cells_n, { arm: "bace", n: n }) && get(DATA.cells_n, { arm: "freqA", n: n })) || 300;
 const cn = (a, n) => get(DATA.cells_n, { arm: a, n: n }), cl = (a, n, l) => get(DATA.cells_l, { arm: a, n: n, lambda: l }), dn = (a, n, e) => get(DATA.down_n, { arm: a, n: n, estimand: e });
 document.getElementById("chips").innerHTML = [`<span class="chip"><b>${(C.freq + C.bace).toLocaleString()}</b> imputation fits</span>`, `<span class="chip"><b>18</b> cells · M = 20</span>`, `<span class="chip ok">paired: every arm imputed the same datasets</span>`,
   done ? `<span class="chip ok">campaign complete</span>` : `<span class="chip hold">Interim: BACE at n = 1000 still running (${Math.round(100 * C.bace / 3000)}% of BACE fits in)</span>`].join("");
@@ -243,8 +243,8 @@ const lo = [0.3, 0.7].map(l => cl("bace", N, l)).filter(Boolean), hi = cl("bace"
 const k = [];
 if (cn("bace", N)) {
   k.push(`<li><b>BACE as shipped under-covers when phylogenetic signal is moderate.</b> Per-cell coverage is ${lo.map(r => f3(r.coverage)).join(" and ")} at λ = 0.3 and 0.7 (nominal 0.95), because its 20 final runs all start from the same converged dataset. At λ = 1 it is close to nominal (${f3(hi && hi.coverage)}).</li>`);
-  k.push(`<li><b>Chaining BACE's final runs fixes it.</b> Starting each run from the previous draw gives ${f3(cn("bace_chain", N).coverage)} per cell and ${f3(dn("bace_chain", N, "cor") && dn("bace_chain", N, "cor").coverage)} for the correlation; it is slightly conservative at λ = 1 (${f3(chi && chi.coverage)}).</li>`);
-  k.push(`<li><b>Proper frequentist MI is nominal throughout.</b> freq A covers ${f3(cn("freqA", N).coverage)} per cell and ${f3(dn("freqA", N, "cor") && dn("freqA", N, "cor").coverage)} for the correlation, with imputation error no larger than chained BACE's (${f3(cn("freqA", N).zrmse)} against ${f3(cn("bace_chain", N).zrmse)} SD).</li>`);
+  k.push(`<li><b>Chaining BACE's final runs fixes it.</b> Starting each run from the previous draw gives ${f3(cn("bace_chain", N).coverage)} per cell and ${f3(dn("bace_chain", N, "cor") && dn("bace_chain", N, "cor").coverage)} for the correlation; it is slightly conservative at λ = 1 (${f3(chi && chi.coverage)}), as freq A is (${f3(cl("freqA", N, 1) && cl("freqA", N, 1).coverage)}).</li>`);
+  k.push(`<li><b>Proper frequentist MI is close to nominal throughout.</b> freq A covers ${f3(cn("freqA", N).coverage)} per cell and ${f3(dn("freqA", N, "cor") && dn("freqA", N, "cor").coverage)} for the correlation, with imputation error about the same as chained BACE's (${f3(cn("freqA", N).zrmse)} against ${f3(cn("bace_chain", N).zrmse)} SD).</li>`);
   k.push(`<li><b>Improper imputation shows up downstream, not in single values.</b> freq B, which holds its parameters fixed, covers single values at ${f3(cn("freqB", N).coverage)} but the correlation at only ${f3(dn("freqB", N, "cor") && dn("freqB", N, "cor").coverage)}.</li>`);
 }
 document.getElementById("key").innerHTML = k.join("");
@@ -267,7 +267,7 @@ const fig = document.getElementById("fig");
   d.appendChild(svg); fig.appendChild(d); });
 const DA = ["complete"].concat(ORDER);
 document.getElementById("tab-down").innerHTML = `<thead><tr><th>Arm</th><th class="n">Slope coverage</th><th class="n">Slope bias</th><th class="n">Correlation coverage</th><th class="n">Correlation bias</th></tr></thead><tbody>` +
-  [100, N === 100 ? null : N].filter(Boolean).map((n, i) => `<tr${i ? ' class="sep"' : ""}><td colspan="5"><b>n = ${n}</b></td></tr>` + DA.map(a => { const s = dn(a, n, "slope"), c = dn(a, n, "cor"); if (!s || !c) return ""; return `<tr><td><span class="sw" style="background:${ARMS[a].color}"></span> ${ARMS[a].label}</td><td class="n">${f3(s.coverage)}</td><td class="n">${f3(s.bias)}</td><td class="n">${f3(c.coverage)}</td><td class="n">${f3(c.bias)}</td></tr>`; }).join("")).join("") + `</tbody>`;
+  [100, 300, 1000].filter(n => n <= N).map((n, i) => `<tr${i ? ' class="sep"' : ""}><td colspan="5"><b>n = ${n}</b></td></tr>` + DA.map(a => { const s = dn(a, n, "slope"), c = dn(a, n, "cor"); if (!s || !c) return ""; return `<tr><td><span class="sw" style="background:${ARMS[a].color}"></span> ${ARMS[a].label}</td><td class="n">${f3(s.coverage)}</td><td class="n">${f3(s.bias)}</td><td class="n">${f3(c.coverage)}</td><td class="n">${f3(c.bias)}</td></tr>`; }).join("")).join("") + `</tbody>`;
 const g = (a, n) => dn(a, n, "slope");
 document.getElementById("do").innerHTML = [
   `<li><b>State what BACE's imputations are.</b> Its 20 final runs share one starting dataset, so they are not independent draws; report coverage by λ, not pooled.</li>`,

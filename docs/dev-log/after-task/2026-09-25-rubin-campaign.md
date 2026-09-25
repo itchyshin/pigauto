@@ -32,12 +32,25 @@ a complete frequentist-vs-BACE report. Shinichi approved decisions 1 to 3 and as
 
 ## 4. Files Touched
 
-FILL AT CLOSE (git diff --stat 3f28e26..HEAD).
+`git diff --stat 3f28e26..HEAD`: 37 files, about 3,450 lines added, all under `script/rubin_*`, `script/tests-rubin/`,
+`docs/dev-log/` and `.unlazy/rubin-freq-bace/`. Nothing in `R/` or `BACE/` (`git diff --stat 3f28e26..HEAD -- R/ BACE/` is
+empty). The close commit adds the n = 1000 headline and data-driven freq A wording to both templates, the `bc` fix in
+the report template (its recommendations section had never rendered), and the test fixes below.
 
 ## 5. Checks Run
 
-FILL AT CLOSE: gate ledger re-verify, completeness check, sanity line (complete-data estimates identical across arm
-sets), final counts.
+- Completeness (`rubin_missing.R`): BACE 1200 / 1200 / 600 and frequentist 1200 / 1200 / 1200 files at n = 100 / 300 / 1000;
+  none missing.
+- Sanity line: complete-data estimates identical between BACE and frequentist files on all 6,000 matched datasets
+  (max |diff| 0).
+- Lane suite `testthat::test_dir("script/tests-rubin")`: FAIL 0, PASS 234 after the fix below. The first close run
+  gave FAIL 3 in G-S1d (fast PGLS vs `nlme::gls`). Cause: two test files set `RNGkind("L'Ecuyer-CMRG")` and never
+  reset it, so G-S1d built different datasets; on one (lambda 0.3, n 60, seed 502) the REML optimum is at lambda = 0
+  and `gls` with free starts stops at 0.108 with a lower restricted log-likelihood (-66.474 against -66.450; a grid
+  over [0, 1] agrees with the fast estimator). The fast estimator used for all campaign scoring is the correct one.
+  Fixed: the two files restore the RNG kind, G-S1d pins it, and a new test asserts the fast estimator reaches at least
+  `gls`'s log-likelihood at that boundary case.
+- Both pages rendered headless in Chrome with no console errors and no NaN; `slop_check.py` 0 findings on both.
 
 ## 6. Tests of the Tests
 
@@ -53,7 +66,12 @@ sets), final counts.
 - FIXED: PGLS scoring too slow at n = 1000 (58 s per fit with gls; milliseconds with the eigenbasis estimator).
 - FOUND: BACE's convergence check tests the deterministic convergence phase and is scale-dependent.
 - FOUND: the frequentist model's shared lambda inflates prp's variance at lambda near 1 (c1, c2 unaffected).
-- Crashes: MCMCglmm segfaults (not deterministic on rerun), one BACE hang (timeout); counts FILL AT CLOSE.
+- Crashes and scheduler outcomes (sacct, rubin_ jobs since 2026-09-24 13:30): nibi 699 completed, 1 timeout; fir
+  1162 completed, 1 failed, 1 cancelled (a duplicate), 2 redundant duplicates cancelled at close; rorqual 524
+  completed, 1 failed, 4 timeouts, 1 cancelled. Every lost fit was rerun; the completeness check is the tally of record.
+- FIXED: G-S1d test leaked RNG state and treated `gls` as ground truth at a boundary (see Checks).
+- FIXED: report template referenced an undefined `bc`, so the recommendations, design note and n = 1000 limitation
+  never rendered in versions 1 to 4 of the published report.
 
 ## 8. Consistency Audit
 
@@ -75,7 +93,13 @@ sets), final counts.
 
 ## 10. Known Residuals
 
-FILL AT CLOSE.
+- BACE fits that error inside a file even after input cleaning are recorded, not scored: 77 datasets (47 at n = 100,
+  20 at n = 300, 10 at n = 1000), so BACE rows rest on 1153, 1180 and 590 datasets rather than 1200, 1200 and 600.
+  Frequentist: 3 Rphylopars failures of 3,600.
+- At lambda = 1 and n = 1000, freq A and chained BACE both cover slightly above 0.95 (0.959, 0.958); downstream slope
+  coverage at n = 1000 is 0.967 (freq A) and 0.975 (chained). Not investigated; the pages state it.
+- The accuracy companion page (CGGmi4Km6unGPhxEiv94qk) was built on partial n = 1000 data and is not rebuilt.
+- Dan not contacted (Shinichi's hold). Pages are private until Shinichi shares them.
 
 ## 11. Team Learning
 
