@@ -302,7 +302,8 @@ G7 are computed, not the thresholds of the approved plan.
   selectable by env `MI_SE_RULE`: `relative` (default since CP1, section 5d.3: MI SE ratio divided
   by the complete-data SE ratio) or `absolute` (the original approved plan). Both numbers are
   printed per regime, plus an `ANALYSIS_MODEL_SE_RATIO` line whenever the complete-data ratio is
-  itself outside the band. Shinichi chose `relative` at CP1 (5d.3).
+  itself outside the band. Shinichi chose `relative` at CP1 (5d.3), then the pooled reading
+  `pooled_relative` after the campaign (5f).
 - **D3. Completeness, fail-closed.** Expected reps come from env `MI_N_REPS` (default 200). The
   expected grid is built from `regimes.R`, never from the files. A missing rep file counts as a fit
   failure and as non-converged. A missing (regime, analysis model, method) row, R or n <= 0, or any
@@ -406,6 +407,31 @@ Evidence: `diagnosis.md`.
 4. **Not changed:** the priors, including the Sigma_E prior (its smaller-scale variant failed
    numerically in 2 of 24 fits), and the `cov2cor(vcv(tree))` convention. Both are listed as open
    items.
+
+### 5f. G6 decision (Shinichi, 2026-09-25, after the campaign)
+
+Evidence: `results.md` (G6 section) and `se_ratio_noise.txt`.
+
+Under the per-row relative rule, 3 in-model rows failed: twins 35, 36 and 38 under phylolm, with
+relative ratios 1.153 to 1.186. The correlation-aware MCSE shows this is real between-regime
+spread, not noise. In those rows the absolute MI SE ratio is 0.98 to 1.06; the complete-data
+analysis is over-confident there (ratio 0.85 to 0.90).
+
+Shinichi chose option 3: gate the **mean** relative ratio over the 24 gated phylolm rows (regimes
+17 to 40) in [0.95, 1.10]. This is the band stated with the option in `results.md`, tighter than
+the per-row band.
+- `04_acceptance.R`: new `MI_SE_RULE = "pooled_relative"`, now the default. It prints every row's
+  relative ratio, an `SE_RATIO_ROW_OUTSIDE` line for each row outside [0.90, 1.15] (reported, not
+  gated), and a `POOLED_SE_RATIO` line for the gated and the stress rows. A non-finite gated row
+  still fails. `relative` and `absolute` remain selectable.
+- Result on the committed `sim_summary.csv`: pooled mean 1.0591 (95% CI 1.035 to 1.084 from the
+  between-regime SD), `SIM_ACCEPT_PASS`.
+- The known weakness, stated with the option: a pooled mean cannot see a single bad regime. The
+  per-row ratios therefore stay in the report and in `results.md`, and the three high rows are
+  named there.
+- Self-test fixtures: `pooled_high` (every gated row 1.12, all inside the per-row band) must fail;
+  `pooled_rows` (rows 35, 36 and 38 at 1.18) fails the per-row rule 3 times and passes the pooled
+  rule with 3 reported lines.
 
 ## 6. Out of scope here
 

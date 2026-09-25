@@ -4,14 +4,15 @@
 
 **Status:**
 - Simulation complete.
-- In-model G7 passes. In-model G6 fails on 3 rows, all of them the relative SE-ratio band (twins 35,
-  36 and 38 under phylolm). Monte Carlo noise does not explain them: noise alone predicts 0.6 rows
-  outside the band (P(3 or more) = 0.02). In all three the MI SEs are well calibrated in absolute
-  terms (MI SE ratio 0.98 to 1.06); they fail because the complete-data analysis is over-confident
-  there (ratio 0.85 to 0.90). Every other gated rule passes. A decision is proposed below; no gate
-  has been changed.
+- In-model G6 and G7 pass. G6 now gates the pooled mean relative SE ratio (Shinichi's decision,
+  2026-09-25, option (c) below; `design.md` 5f): 1.059 over the 24 gated phylolm rows, inside
+  [0.95, 1.10]. Three rows (twins 35, 36 and 38) sit above the per-row band [0.90, 1.15] at 1.15
+  to 1.19. They are reported, not gated. Monte Carlo noise does not explain them (noise alone
+  predicts 0.6 rows outside the band; P(3 or more) = 0.02). In all three the MI SEs are well
+  calibrated in absolute terms (MI SE ratio 0.98 to 1.06); the complete-data analysis is
+  over-confident there (ratio 0.85 to 0.90).
 - Real data: all 10 cells done; G8 met (`REALDATA_COMPLETE`).
-- Not ready to merge.
+- Every gate of the ledger is met. Merge and the default draws method remain Shinichi's calls.
 
 Every number below comes from a committed file, except the G1, G2 and G5 run outputs named in the
 gate table:
@@ -174,10 +175,10 @@ its committed source where one exists.
 | G3 calibration | met | `RECOVERY_OK` (`gate_calibration.R check` on `evidence/g3_calibration.rds`): 200 fits at 69670d4, 50 per setting. For the gated quantities (lambda in settings B to D; rho_P in A to C, where both lambda >= 0.3), 95% interval coverage is 0.92 to 0.98. Not gated: lambda = 1 in setting A sits on the boundary, so no interval can cover it (coverage 0.00; bias -0.004 and -0.003); rho_P in setting D (lambda_1 = 0.05) is weakly identified (bias -0.14, coverage 0.98). See `evidence/README.md` |
 | G4 smoke convergence | met | `CONVERGENCE_OK` (`evidence/smoke/g4.log`) |
 | G5a suite / G5b solver / G5c check | met at the final code | `gate-check --reverify` re-ran every runnable gate: `SUITE_GREEN`, `SOLVER_UNTOUCHED`, R CMD check --as-cran `ERR=0 WARN=0` (`evidence/ledger/gate_reverify_2026-09-25.log`; its `R/` and `tests/` trees, e99198b and 9f5ac75, equal the branch head's) |
-| **G6 simulation acceptance** | **not met (3 in-model rows, one rule)** | relative SE ratio above 1.15 under phylolm in twins 35 (1.186), 38 (1.167) and 36 (1.153); more than Monte Carlo noise predicts; every other gated rule passes |
+| **G6 simulation acceptance** | **met** | `SIM_ACCEPT_PASS` under the pooled relative SE-ratio rule (`MI_SE_RULE=pooled_relative`, `design.md` 5f): mean 1.0591 over 24 gated phylolm rows, band [0.95, 1.10]. Reported, not gated: twins 35 (1.186), 38 (1.167) and 36 (1.153) above the per-row band, more than Monte Carlo noise predicts. Every other gated rule passes |
 | G7 per-cell coverage | **met** | `CELL_COVERAGE_PASS` |
 | G8 real data | **met** | `REALDATA_COMPLETE` (all 10 cells, one code SHA 69670d4; `script/mi_realdata/returned/`) |
-| M2 fresh review | pending final confirmation | the M2 statistical review's findings are fixed (f03837b, 1c8e4da) and a three-member completion panel (D-43) withheld no claim; the formal PROCEED is recorded after the real-data section is final |
+| M2 fresh review | met | the M2 statistical review's findings are fixed (f03837b, 1c8e4da) and a three-member completion panel (D-43) withheld no claim; PROCEED recorded in the ledger once the real-data section was final (2026-09-25) |
 
 ### The three G6 failures are not Monte Carlo noise (`se_ratio_noise.txt`)
 
@@ -210,7 +211,10 @@ bootstrap agrees with the corrected formula (0.049 against 0.050; independence 0
   27 and 30; MI ratio 0.80 to 0.90). There the complete-data analysis is miscalibrated to the same
   degree (complete ratio 0.79 to 0.87 in those rows), and the relative ratio is 0.98 to 1.09.
 
-**Decision for Shinichi (no gate changed).** The consequence of each option on the current numbers
+**Decision (Shinichi, 2026-09-25): option (c), the pooled mean relative ratio in [0.95, 1.10].**
+Applied in `04_acceptance.R` as `MI_SE_RULE=pooled_relative` (`design.md` 5f); G6 passes at 1.059.
+The rule cannot see a single bad regime, so the per-row ratios stay in the report and the three high
+rows are named above. The options as presented, with their consequences on the current numbers
 (`se_ratio_noise.txt`, OPTIONS block):
 - **(a) Keep the relative rule and accept G6 as failed on it.** 3 rows fail (35, 36, 38), all on the
   conservative side; report them with the reading above.
@@ -226,13 +230,14 @@ bootstrap agrees with the corrected formula (0.049 against 0.050; independence 0
   - the pooled mean relative ratio in [0.95, 1.10]: 1.059 passes, and its 95% CI (1.035 to 1.084)
     lies inside the band. This rule cannot see a single bad regime.
 
-The gate is unchanged pending your decision.
 
 ## Stress test: regimes 1 to 16 (raw covariance of non-ultrametric trees; reported only)
 
-G6 rule outcomes (`04_acceptance.R`, STRESS block): 4 violations in 4 of 16 regimes.
+G6 rule outcomes (`04_acceptance.R`, STRESS block): 2 violations in 2 of 16 regimes under the pooled
+SE-ratio rule (4 in 4 under the earlier per-row rule).
 - Paired bias under phylolm in regime 1 (-0.026) and regime 9 (-0.020).
-- Relative SE ratio in regime 8 (0.879) and regime 15 (0.897).
+- Relative SE ratio below the per-row band in regime 8 (0.879) and regime 15 (0.897); reported as
+  `SE_RATIO_ROW_OUTSIDE`. The stress rows' pooled mean is 1.012.
 - Regime 3 under phylolm has a coverage shortfall of exactly 10/200 = 0.050, so it meets the rule
   "coverage >= complete - 0.05". The earlier output counted it as a violation through a
   floating-point comparison; `04_acceptance.R` now allows 1e-9 there, as its other rules do.

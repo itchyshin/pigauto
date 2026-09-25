@@ -90,8 +90,9 @@ Rejected: (`diagnosis.md`):
 - a 100x smaller Sigma_E prior, which failed numerically in 2 of 24 fits;
 - doubling the default chain length, which costs every user twice the wall time.
 
-The G6 relative SE-ratio rule was not changed after the results: The three failures are
-presented to Shinichi as a decision, with options (`results.md`).
+The G6 SE-ratio rule was not changed by the agent after the results. The three failing rows were
+presented to Shinichi as a decision with three options (`results.md`). On 2026-09-25 he chose the
+pooled mean relative ratio in [0.95, 1.10] (`design.md` 5f); the per-row ratios stay reported.
 
 ## 4. Files Touched
 
@@ -141,9 +142,10 @@ Per gate: (details in `results.md`):
 - G5a: full suite 2,840 pass, 0 fail (9059f87).
 - G5b: `SOLVER_UNTOUCHED`.
 - G5c: R CMD check --as-cran, 0 errors and 0 warnings, 1 NOTE for the dev version (9059f87).
-- G6: fails 3 in-model rows, relative SE ratio.
+- G6: `SIM_ACCEPT_PASS` under the pooled relative SE-ratio rule (Shinichi, 2026-09-25): mean 1.0591
+  over the 24 gated phylolm rows. Twins 35, 36 and 38 sit above the per-row band and are reported.
 - G7: `CELL_COVERAGE_PASS`.
-- G8: pending the FishBase cell.
+- G8: `REALDATA_COMPLETE`, all 10 cells at 69670d4; FishBase converged (R-hat 1.007, ESS 830).
 
 CI on PR #189: R CMD check passed at 3cd3139 on macOS (R release) and Ubuntu (R release, R devel). That commit includes the last change to `R/` and `tests/` (8d2f612); later pushes were docs-only and their runs were superseded. pkgdown is skipped on PRs by design.
 
@@ -188,8 +190,7 @@ Fixed: - Design review: B1 (Qc scaling), B2 (parameter-expansion equations), B3 
 - The G8 false pass.
 - The thread-cap hole in the GATES check lines.
 
-Deferred (for Shinichi): - the G6 relative-SE-ratio decision;
-- the default draws method;
+Deferred (for Shinichi): - the default draws method;
 - a `log_transform = FALSE` sensitivity run for PanTHERIA;
 - the Sigma_E prior's pull on the residual correlation at lambda near 1 (possible remedy: an
   off-diagonal-aware scale);
@@ -231,10 +232,10 @@ Deferred (for Shinichi): - the G6 relative-SE-ratio decision;
 
 ## 10. Known Residuals
 
-- G6: is not met on 3 in-model rows (relative SE ratio 1.153 to 1.186). The absolute MI SE ratio
-  in those rows is 0.98 to 1.06; the complete-data analysis there is over-confident (0.85 to 0.90).
-  Decision pending.
-- G8: is pending the FishBase cell. FINAL STATE AT THE END OF THIS REPORT.
+- G6 passes on the pooled SE-ratio rule, which cannot see a single bad regime. Three in-model rows
+  (twins 35, 36, 38) have relative SE ratios of 1.153 to 1.186, above the per-row band and beyond
+  Monte Carlo noise. The absolute MI SE ratio there is 0.98 to 1.06; the complete-data analysis is
+  over-confident (0.85 to 0.90). The error is on the conservative side.
 - **At lambda = 1**, all 16 twin rows show a small negative paired bias (-0.004 to -0.014, 2.7 to 8.7
   MCSE). They pass only through the 0.02 floor.
 - Per-cell coverage: is slightly below 0.95 in regimes 17 to 24 and in the lambda = 0.5 twins
@@ -294,10 +295,10 @@ Ledger (`.unlazy/mi-posterior/GATES.md`, local; re-verified 2026-09-25):
 | Gate | State |
 |---|---|
 | G1 to G5c | met at the final code |
-| G6 | not met: 3 in-model rows of the relative SE-ratio rule; decision owed by Shinichi |
+| G6 | met: pooled relative SE ratio 1.0591 in [0.95, 1.10] (Shinichi's rule, 2026-09-25; `design.md` 5f) |
 | G7 | met |
-| G8 | see the handover's Final state (depends on the FishBase cell) |
+| G8 | met: `REALDATA_COMPLETE`, all 10 cells |
 | M1 | met (design review) |
-| M2 | pending: findings fixed; the D-43 panel withheld nothing; the formal PROCEED waits for the final real-data section |
+| M2 | met: findings fixed; the D-43 panel withheld nothing; PROCEED recorded once the real-data section was final |
 
-`check-after-task.R` correctly refuses to call the work finished while G6, G8 and M2 are unmet.
+All 12 gates met (`gate-check --reverify`, `evidence/ledger/gate_reverify_2026-09-25_g6.log`).

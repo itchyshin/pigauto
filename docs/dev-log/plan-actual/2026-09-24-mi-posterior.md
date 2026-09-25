@@ -128,3 +128,13 @@ connection to this arc, if any, is not evidenced here.
   this worktree; the mi-posterior docs above were force-added), so it is not committed.
 - **Handover**: no `docs/dev-log/handover/2026-09-24-*mi-posterior*` file exists yet.
 - **Lease release**: not checked here; out of this reconcile's scope.
+
+## Addendum (2026-09-25, after this reconciliation)
+
+- G6: Shinichi chose option 3 of `results.md`, the pooled mean relative SE ratio over the 24 gated
+  phylolm rows in [0.95, 1.10] (`design.md` 5f). It is the third change to the G6 SE-ratio rule
+  (absolute, then per-row relative at CP1, then pooled). G6 now passes at 1.059; the three high rows
+  are reported.
+- G8: met; all 10 real-data cells finished at one SHA.
+- M2: PROCEED recorded. PR #189 body and the after-task report were refreshed.
+- Ledger: 12 of 12 met.

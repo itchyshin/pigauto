@@ -38,12 +38,17 @@
 #      rho = 0.7 in regimes 1-16 and 25-40 and the complete-data
 #      pseudo-truth in 17-24 (D1, computed in 03).
 #   3. SE ratio in [0.90, 1.15] under the lambda (phylolm) analysis. Env
-#      MI_SE_RULE selects the reading (D2): "relative" (DEFAULT since CP1,
-#      Shinichi 2026-09-24) gates posterior_full ratio / complete-data
-#      ratio; "absolute" (the original plan) gates the posterior_full ratio
-#      itself. Both numbers are always printed, plus an
-#      ANALYSIS_MODEL_SE_RATIO line whenever the complete-data ratio is
-#      itself outside the band.
+#      MI_SE_RULE selects the reading (D2): "pooled_relative" (DEFAULT since
+#      Shinichi's G6 decision, 2026-09-25, option 3) gates the MEAN of
+#      posterior_full ratio / complete-data ratio over the gated phylolm
+#      rows in the tighter band [0.95, 1.10], and reports each row's
+#      relative ratio (rows outside [0.90, 1.15] get an
+#      SE_RATIO_ROW_OUTSIDE line, not gated); "relative" (CP1,
+#      Shinichi 2026-09-24) gates that relative ratio per row; "absolute"
+#      (the original plan) gates the posterior_full ratio itself per row.
+#      A non-finite gated row fails under every reading. Both numbers are
+#      always printed, plus an ANALYSIS_MODEL_SE_RATIO line whenever the
+#      complete-data ratio is itself outside the band.
 #   4. proper vs improper SE ratio (D4): REPORTED, NOT GATED since CP1
 #      (Shinichi 2026-09-24). On the 30-tip S1 test fixture, fixing Sigma
 #      at its posterior mean gave a per-cell predictive variance 1.4-1.6%
@@ -74,7 +79,7 @@
 #
 # Env: MI_N_REPS (default 200), MI_REGIMES (default all; a restricted run
 # can pass its rules but never prints the G6 token), MI_SE_RULE
-# (relative | absolute, default relative).
+# (pooled_relative | relative | absolute, default pooled_relative).
 #
 # Usage:
 #   Rscript script/mi_gls/04_acceptance.R <summary.csv>
@@ -86,6 +91,7 @@ source(file.path("script", "mi_gls", "regimes.R"))
 
 NONCONVERGED_THRESHOLD <- 0.02
 SE_BAND <- c(0.90, 1.15)
+POOLED_BAND <- c(0.95, 1.10)   # G6 option 3 (Shinichi, 2026-09-25; results.md option c)
 
 fmt4 <- function(x) ifelse(is.finite(x), sprintf("%.4f", x), "NA")
 
@@ -104,9 +110,10 @@ required_rows <- function(regime_ids) {
 # "stress" (the STRESS TEST block: rule outcomes and violations of the
 # regimes 1-16, reported, never failing).
 run_gate <- function(df, regime_ids = regimes$regime_id,
-                     n_reps = mi_gls_v2_planned_reps, se_rule = "relative") {
-  if (!(se_rule %in% c("absolute", "relative"))) {
-    stop("MI_SE_RULE must be 'absolute' or 'relative'; got '", se_rule, "'", call. = FALSE)
+                     n_reps = mi_gls_v2_planned_reps, se_rule = "pooled_relative") {
+  if (!(se_rule %in% c("absolute", "relative", "pooled_relative"))) {
+    stop("MI_SE_RULE must be 'pooled_relative', 'relative' or 'absolute'; got '", se_rule, "'",
+         call. = FALSE)
   }
   fails <- character(0)
   report <- character(0)
@@ -246,9 +253,32 @@ run_gate <- function(df, regime_ids = regimes$regime_id,
   what3 <- if (se_rule == "absolute") "se_ratio" else "se_ratio/complete se_ratio"
   ok3 <- is.finite(val3)
   nonfinite("se_ratio", what3, r3 & !ok3)
-  bad3 <- r3 & ok3 & (val3 < SE_BAND[1] | val3 > SE_BAND[2])
-  flag(bad3, sprintf("se_ratio: %s %s=%.4f outside [%.2f, %.2f] (rule=%s)",
-                     lab_pf, what3, val3, SE_BAND[1], SE_BAND[2], se_rule))
+  out3 <- r3 & ok3 & (val3 < SE_BAND[1] | val3 > SE_BAND[2])
+  if (se_rule == "pooled_relative") {
+    # Per-row relative ratios are reported; the gate is their mean over the
+    # gated rows (Shinichi, 2026-09-25). The stress rows' mean is reported.
+    bad3 <- rep(FALSE, nrow(pf))
+    for (i in which(out3)) report <- c(report, sprintf(
+      "SE_RATIO_ROW_OUTSIDE (reported, not gated) %s relative=%.4f outside [%.2f, %.2f]",
+      lab_pf[i], val3[i], SE_BAND[1], SE_BAND[2]))
+    for (grp in c("gated", "stress")) {
+      sel <- r3 & ok3 & (pf$gated == (grp == "gated"))
+      if (!any(sel)) next
+      pm <- mean(val3[sel])
+      report <- c(report, sprintf(
+        "POOLED_SE_RATIO %s mean relative=%.4f over %d phylolm rows, band [%.2f, %.2f] (range %.4f-%.4f; %d row(s) outside [%.2f, %.2f])%s",
+        grp, pm, sum(sel), POOLED_BAND[1], POOLED_BAND[2], min(val3[sel]), max(val3[sel]),
+        sum(out3 & sel), SE_BAND[1], SE_BAND[2],
+        if (grp == "gated") "" else " [stress test, not gated]"))
+      if (grp == "gated" && (pm < POOLED_BAND[1] || pm > POOLED_BAND[2])) fails <- c(fails, sprintf(
+        "se_ratio: pooled mean relative ratio over the gated phylolm rows = %.4f outside [%.2f, %.2f]",
+        pm, POOLED_BAND[1], POOLED_BAND[2]))
+    }
+  } else {
+    bad3 <- out3
+    flag(bad3, sprintf("se_ratio: %s %s=%.4f outside [%.2f, %.2f] (rule=%s)",
+                       lab_pf, what3, val3, SE_BAND[1], SE_BAND[2], se_rule))
+  }
 
   # ---- rule 4: proper > improper, per both-missing block (D4), reported ----
   both <- regimes[regimes$missing == "both", ]
@@ -280,7 +310,8 @@ run_gate <- function(df, regime_ids = regimes$regime_id,
   cv <- conv_out[as.character(pf$regime_id)]
   rules <- sprintf("RULES regime=%d downstream=%s bias=%s coverage=%s se_ratio=%s fit_fail=%s converged=%s",
                    pf$regime_id, pf$downstream, outcome(ok1, bad1), outcome(ok2, bad2),
-                   ifelse(r3, outcome(ok3, bad3), "n/a"), outcome(ok5, bad5),
+                   ifelse(r3, ifelse(ok3 & !bad3 & out3, "OUTSIDE(pooled)", outcome(ok3, bad3)), "n/a"),
+                   outcome(ok5, bad5),
                    ifelse(is.na(cv), "NA", cv))
   v_gated <- is_gated(v_id)
   fails <- c(fails, v_msg[v_gated])
@@ -356,6 +387,10 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
   fx$nonconverged_5of200 <- d                             # 2.5% > 2%: both rules fail
   d <- make_pass(); d$se_ratio[at(d, 21, c("complete", "posterior_full"), "phylolm")] <- 0.80
   analysis_model <- d                                     # fails absolute, passes relative
+  d <- make_pass(); d$se_ratio[at(d, c(35, 36, 38), "posterior_full", "phylolm")] <- 1.18
+  pooled_rows <- d                                        # 3 rows outside: fails relative, passes pooled
+  d <- make_pass(); d$se_ratio[at(d, 17:40, "posterior_full", "phylolm")] <- 1.12
+  fx$pooled_high <- d                                     # pooled mean 1.12 > 1.10: FAILS (rows in [0.90, 1.15])
   d <- make_pass(); d$n_converged[at(d, 22, "posterior_full")] <- 196L
   d$fit_failure_rate[at(d, 22, "posterior_full")] <- 1 - 196 / 200
   edge_2pct <- d                                          # exactly 4/200 = 2%: passes
@@ -389,6 +424,7 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
                       stress_short_files = "^regime 3 complete gls: n_present=150 of 200 expected rep files \\(stress-test regime",
                       wrong_n_expected = "n_expected=100",
                       nonfinite = "se_ratio: .*non-finite for regime 21 phylolm",
+                      pooled_high = "^se_ratio: pooled mean relative ratio .* = 1.1200 outside \\[0.95, 1.10\\]",
                       shortfall_cancel = "mean shortfall .*gated regimes", missing_pair = "regime 12 posterior_none gls",
                       nonconverged_5of200 = "regime 22: non-converged fraction 0.0250")
   stress_pattern <- c(stress_bias = "^STRESS_VIOLATION bias: regime 3 phylolm",
@@ -453,6 +489,13 @@ if (length(args) >= 1L && identical(args[[1L]], "--selftest")) {
   cat(sprintf("analysis-model fixture: absolute %d failure(s) (want >0), relative %d (want 0), ANALYSIS_MODEL line %s\n",
               length(am_abs), length(am_rel), if (am_line) "printed" else "MISSING"))
   if (!length(am_abs) || length(am_rel) || !am_line) ok <- FALSE
+  pr_rel <- run_gate(pooled_rows, se_rule = "relative")
+  pr_pool <- run_gate(pooled_rows, se_rule = "pooled_relative")
+  pr_lines <- sum(grepl("^SE_RATIO_ROW_OUTSIDE .*regime (35|36|38) phylolm relative=1.1800", attr(pr_pool, "report")))
+  pr_mean <- any(grepl("^POOLED_SE_RATIO gated mean relative=1.0225 over 24 phylolm rows", attr(pr_pool, "report")))
+  cat(sprintf("pooled-rows fixture: relative %d failure(s) (want 3), pooled_relative %d (want 0), ROW_OUTSIDE lines %d (want 3), POOLED line %s\n",
+              length(pr_rel), length(pr_pool), pr_lines, if (pr_mean) "printed" else "MISSING"))
+  if (length(pr_rel) != 3L || length(pr_pool) || pr_lines != 3L || !pr_mean) ok <- FALSE
   bad_rule <- tryCatch({ run_gate(make_pass(), se_rule = "loose"); FALSE }, error = function(e) TRUE)
   cat(sprintf("invalid MI_SE_RULE rejected: %s\n", if (bad_rule) "yes" else "NO"))
   if (!bad_rule) ok <- FALSE
@@ -465,7 +508,7 @@ if (length(args) < 1L) stop("expected: <summary.csv> or --selftest", call. = FAL
 summary_csv <- args[[1L]]
 df <- utils::read.csv(summary_csv, stringsAsFactors = FALSE)
 ex <- mi_gls_v2_expected()
-se_rule <- Sys.getenv("MI_SE_RULE", "relative")
+se_rule <- Sys.getenv("MI_SE_RULE", "pooled_relative")
 cat(sprintf("EXPECTED_GRID %s se_rule=%s\n", ex$label, se_rule))
 if ("code_sha" %in% names(df)) cat(sprintf("PROVENANCE code_sha=%s\n", paste(unique(df$code_sha), collapse = "|")))
 

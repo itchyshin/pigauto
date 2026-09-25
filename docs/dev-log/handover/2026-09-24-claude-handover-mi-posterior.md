@@ -20,16 +20,16 @@ documentation and NEWS.
 
 Simulation: 40 regimes x 200 reps.
 - In-model G7 (per-cell coverage) passes.
-- In-model G6 fails on 3 rows of the relative SE-ratio rule. The M2 review showed these are real
-  heterogeneity, not noise; the MI SE ratio there is 0.98 to 1.06 in absolute terms.
+- In-model G6 passes on the pooled relative SE-ratio rule Shinichi chose on 2026-09-25 (mean
+  1.059 in [0.95, 1.10]; `design.md` 5f). Three rows (twins 35, 36, 38) sit above the per-row band;
+  the M2 review showed this is real heterogeneity, not noise. They are reported, not gated; the MI
+  SE ratio there is 0.98 to 1.06 in absolute terms.
 
-Real data: 9 of 10 cells done (preview in `real_preview/`). G8 is pending the FishBase cell; see
-"Final state" below.
+Real data: all 10 cells done; G8 met (`REALDATA_COMPLETE`).
 
 ## Decisions owed by Shinichi
 
-1. **The G6 relative SE-ratio rule.** Options with their consequences are in `results.md` (G6
-   section) and `se_ratio_noise.txt`. Nothing has been applied.
+1. ~~The G6 SE-ratio rule~~: decided 2026-09-25 (pooled mean, option 3) and applied.
 2. **Default draws method.** It is still `"conformal"`; changing it was never in scope.
 3. **Merge of PR #189**, after 1 and 2.
 4. **Optional follow-ups:**
@@ -43,8 +43,8 @@ Real data: 9 of 10 cells done (preview in `real_preview/`). G8 is pending the Fi
 
 | Item | State | Why | Resume |
 |---|---|---|---|
-| `arc/mi-posterior` | pushed; draft PR #189 open | CARRIED-OVER: awaiting Shinichi's decisions (G6 rule, default, merge) | `cd <worktree>; git pull; gh pr view 189` |
-| `.unlazy/mi-posterior/GATES.md` | local only (`.unlazy/` in `info/exclude`) | the acceptance ledger; unmet: G6 (decision), G8 (see Final state), M2 (final confirmation) | `node ~/.claude/skills/unlazy/scripts/gate-check.mjs --status .unlazy/mi-posterior/GATES.md` from the worktree |
+| `arc/mi-posterior` | pushed; draft PR #189 open | CARRIED-OVER: awaiting Shinichi's decisions (default, merge) | `cd <worktree>; git pull; gh pr view 189` |
+| `.unlazy/mi-posterior/GATES.md` | local only (`.unlazy/` in `info/exclude`) | the acceptance ledger; all 12 gates met (2026-09-25) | `node ~/.claude/skills/unlazy/scripts/gate-check.mjs --status .unlazy/mi-posterior/GATES.md` from the worktree |
 | Totoro run folders `/home/snakagaw/pigauto_mi_posterior/{69670d44f9,9597e18b79,7a0f47030f,diag_*}` | on Totoro (home, not scratch) | raw campaign outputs; summaries and evidence are committed | ssh via `~/.ssh/cm-snakagaw@totoro.biology.ualberta.ca:22` |
 | Unpushed commits on other branches (reported by `handoff_gate.sh`: `spec/vulcan-gpu-avonet9993`, several `codex/*`, `experiment/*`, `handover/*` and others) | not this lane's | other lanes' state; not touched (D-88) | owners of those lanes |
 
@@ -103,3 +103,15 @@ decision is Shinichi's.
 
 Processes of this lane still running on Totoro: only the FishBase cell. Everything else finished or
 was killed by this lane. Leases: released at the end of the run (`lane_lease.sh --list pigauto`).
+
+## Update (2026-09-25, after the G6 decision)
+
+- FishBase finished and converged; G8 is met with all 10 cells at 69670d4 (commit 2a89591). No
+  process of this lane runs on Totoro now.
+- Shinichi chose G6 option 3. `04_acceptance.R` gates the mean relative SE ratio over the 24 gated
+  phylolm rows in [0.95, 1.10] (`MI_SE_RULE=pooled_relative`, the new default) and reports each
+  row. Result: 1.0591, `SIM_ACCEPT_PASS`. Recorded in `design.md` 5f.
+- Ledger: all 12 gates met; full `--reverify` log in
+  `docs/dev-log/mi-posterior/evidence/ledger/gate_reverify_2026-09-25_g6.log`.
+- The "Final state" section above is the record as of 04:30 and is kept as written.
+- Still owed by Shinichi: the default draws method, the merge of #189, and the brain proposals.
