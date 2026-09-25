@@ -1,5 +1,80 @@
 # pigauto 0.11.0.9000 (dev)
 
+## New: `multi_impute(draws_method = "posterior")` for continuous traits
+
+`multi_impute()` gains `draws_method = "posterior"`, which returns proper
+Bayesian multiple imputations for continuous traits. It fits the
+multivariate phylogenetic mixed model
+`vec(Y) ~ N(1 mu', Sigma_P %x% R + Sigma_E %x% I_n)` on pigauto's latent
+scale, with full phylogenetic and residual covariance matrices (so a separate
+Pagel's lambda per trait) and MCMCglmm-style parameter-expanded priors. Each
+of the `m` completed datasets is a draw from the posterior predictive
+distribution of the missing cells, so imputation uncertainty is correlated
+across tips and traits and includes parameter uncertainty. The sampler draws
+the phylogenetic effects, trait means and missing cells as one block with a
+sparse Cholesky factor of the Hadfield and Nakagawa (2010) node precision, so
+cost grows roughly linearly in the number of species. Metropolis moves with
+the effects integrated out keep it mixing near lambda = 0 and lambda = 1.
+
+- New argument `posterior_control` (chains, burn-in, iterations, thinning,
+  `keep_draws`, `param_uncertainty`, `seed`, `auto_extend`, `max_extend`).
+- `mi$posterior` holds per-cell 95% posterior predictive intervals
+  (`cell_interval`, computed from all kept draws, not from the `m`
+  datasets), convergence diagnostics (`diagnostics`: rank-normalised split
+  R-hat and bulk ESS; attribute `"converged"`), and the parameter draws
+  (`params`). A warning is raised if the chains have not converged after
+  any automatic extensions (next item).
+- Automatic chain extension. When the chains fail the convergence rule (any
+  split R-hat at least 1.05 or any bulk ESS at most 400), every chain
+  continues from its saved sampler state and random-number state for another
+  `n_iter` sweeps, up to `posterior_control$max_extend` times (default 3, so
+  at most 4 times the default length), and the diagnostics are recomputed on
+  all sweeps after burn-in. Burn-in is not repeated and the Metropolis step
+  sizes stay as tuned in burn-in, so an extended chain is the same chain as
+  one run longer from the start. The number of kept draws does not change:
+  after `k` extensions they are every `thin * (k + 1)`-th sweep.
+  `posterior_control$auto_extend = FALSE` turns this off. A fit that meets
+  the rule first time is not extended; its draws and diagnostics are the
+  same as with `auto_extend = FALSE`.
+  `mi$posterior$diagnostics` records the extensions made (attribute
+  `"n_extensions"`) and the sweeps after burn-in per chain
+  (`"sweeps_per_chain"`); `print()` and the non-convergence warning report
+  the extensions.
+- The result can be passed to `with_imputations()`, and the fits it returns
+  to `pool_mi()`; both now accept the provenance marker
+  `"pigauto_posterior_mi_v1"` alongside `"pigauto_analysis_mi_v1"`. The
+  draws come from a linear-Gaussian model of the imputed traits on the
+  scale where they were imputed (the log scale
+  for traits log-transformed by `log_transform`). They are proper for
+  analyses that are linear in the imputed traits on that scale and whose
+  variables are all among the imputed traits. Not covered: external
+  covariates, because the imputation model does not contain them; nonlinear
+  terms or interactions among imputed traits; and analysing a
+  log-transformed trait on its raw scale.
+- `posterior_control$param_uncertainty = "none"` (plug-in draws with the
+  covariance matrices fixed at their posterior means, for validation only)
+  returns the marker `"pigauto_posterior_plugin_diagnostic"`, which
+  `with_imputations()` and `pool_mi()` refuse.
+- Not supported (clear errors, raised before any MCMC is run):
+  non-continuous traits, multiple observations per species (or any
+  `species_col`), `covariates`, and input with no missing cells in the rows
+  of `traits` (tree tips absent from `traits` do not count). The GNN is
+  not used, and fitting arguments such as `gnn` and `epochs` are ignored
+  with a message.
+
+The default draws method is unchanged (`"conformal"`).
+
+**Caveat for downstream inference with the other draws methods.** The
+`"conformal"` and `"mc_dropout"` draws perturb missing cells around a point
+prediction rather than drawing them jointly from their conditional
+distribution given the observed data. In a 16-regime simulation of a
+downstream phylogenetic regression (PGLS slope; branch
+`arc/mi-gls-attenuation`, `docs/dev-log/mi-gls/results.md`), conformal
+draws biased the pooled slope by -0.20 to -0.46, and the pooled 95%
+intervals covered the truth in 0 to 17% of replicates, in all 16 regimes;
+MC-dropout draws biased it by -0.03 to -0.38. For downstream inference on
+continuous traits, use `draws_method = "posterior"`.
+
 ## Default flip: `lambda_mode = "estimate"`
 
 `impute()`, `fit_pigauto()`, and `multi_impute()` now default `lambda_mode`

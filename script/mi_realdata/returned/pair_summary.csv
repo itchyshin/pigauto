@@ -1,0 +1,10 @@
+"dataset","response","predictor","y_log","x_log","n_cells_attempted","n_cells_ok_slope","n_cells_degraded","has_ok_slope","n_within_5pct","n_rel_finite","all_within_5pct","max_abs_rel_diff","max_abs_diff","max_abs_diff_ref_se"
+"pantheria","body_mass_g","head_body_length_mm",FALSE,FALSE,6,6,0,TRUE,6,6,TRUE,0.0328122120996792,0.0937722935875249,4.04586529877079
+"pantheria","gestation_d","body_mass_g",FALSE,FALSE,6,6,0,TRUE,2,6,FALSE,0.221615039179341,0.0146097243064749,2.27471287027904
+"pantheria","max_longevity_m","body_mass_g",FALSE,FALSE,6,6,0,TRUE,3,6,FALSE,0.17453155386277,0.0313782350397684,3.2884002236546
+"avonet","Wing.Length","Mass",TRUE,TRUE,3,3,0,TRUE,3,3,TRUE,0.025754274063442,0.00852269513582632,1.2196244982224
+"avonet","Tarsus.Length","Mass",TRUE,TRUE,3,3,0,TRUE,3,3,TRUE,0.0339937185311756,0.011103076562321,1.67979679084947
+"avonet","Beak.Length_Culmen","Mass",TRUE,TRUE,3,3,0,TRUE,3,3,TRUE,0.00751110080874249,0.00270104204930732,0.36181983665838
+"fishbase","Weight","Length",TRUE,TRUE,1,1,0,TRUE,1,1,TRUE,0.00746614602269476,0.0205770039934126,0.662578099270439
+"fishbase","DepthRangeDeep","Length",FALSE,TRUE,1,1,0,TRUE,1,1,TRUE,0.0109215908718566,1.09386736427184,0.0778166616596438
+"fishbase","Troph","Length",FALSE,TRUE,1,1,0,TRUE,1,1,TRUE,0.0294514369246732,0.00488951894111359,0.432207481046485

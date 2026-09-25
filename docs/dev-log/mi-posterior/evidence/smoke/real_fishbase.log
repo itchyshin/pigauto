@@ -1,0 +1,45 @@
+[fishbase-structured-m20260818] 6 traits total, 5 kept (continuous), 1 dropped
+  dropped BodyShapeI                factor       dropped: (unordered) factor -> pigauto type 'binary'/'categorical', not continuous
+[fishbase-structured-m20260818] conformal (inputs file): split=ok mondrian=ok
+[fishbase-structured-m20260818] SAMPLER OVERRIDE (smoke only, fails G8): n_iter = 100, burnin = 50
+Warning messages:
+1: posterior: only 400 kept sweeps (keep_draws = 1000); cell intervals use 400 draws. 
+2: draws_method = "posterior": chains did not meet the convergence rule (max R-hat 1.420, needs < 1.05; min bulk ESS 9, needs > 400). Increase posterior_control$n_iter / burnin. 
+[fishbase-structured-m20260818] multi_impute(posterior) OK in 688.1s, m = 20
+[fishbase-structured-m20260818] convergence: max_rhat=1.420 min_ess=9 converged=FALSE
+[ fishbase-structured-m20260818 ] model-based per-cell coverage:
+           trait n_masked n_matched  coverage   mean_width median_width
+1         Length     2047      2047 0.9404006 3.975936e+01    25.162866
+2         Weight      377       377 0.9389920 1.339414e+05  6668.455469
+3 DepthRangeDeep      938       938 0.9552239 1.888806e+03  1824.479146
+4  Vulnerability     2097      2097 0.9494516 2.688838e+01    23.299121
+5          Troph      966       966 0.9358178 1.730474e+00     1.724575
+[fishbase-structured-m20260818] pair slopes: 3 pre-registered pairs for dataset 'fishbase'
+  Weight ~ Length: ref=2.756 mi=2.74 rel_diff=-0.00597
+  DepthRangeDeep ~ Length: ref=100.2 mi=99.67 rel_diff=-0.00489
+  Troph ~ Length: ref=0.166 mi=0.1702 rel_diff=0.0254
+[fishbase-structured-m20260818] wrote /home/snakagaw/pigauto_mi_posterior/69670d44f9/smoke/real/fishbase-structured-m20260818/mi_posterior.rds
+MI_REALDATA_CELL_OK
+	Command being timed: "Rscript script/mi_realdata/01_run.R fishbase structured 20260818 /home/snakagaw/pigauto_mi_posterior/69670d44f9/smoke/real"
+	User time (seconds): 718.68
+	System time (seconds): 1.35
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 12:00.13
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1503552
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 2510593
+	Voluntary context switches: 312
+	Involuntary context switches: 2275
+	Swaps: 0
+	File system inputs: 82946
+	File system outputs: 18
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

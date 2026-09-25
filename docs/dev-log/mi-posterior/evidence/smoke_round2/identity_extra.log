@@ -1,0 +1,15 @@
+# Verdict lines only, one per cell: the 14 converged 69670d4 cells re-run by accident in the round-2 campaign at 9597e18. Producing loop not recorded; see identity_extra_recheck.log for a full re-check with the command.
+regime_1_rep_1.rds IDENTITY_OK
+regime_1_rep_2.rds IDENTITY_OK
+regime_1_rep_3.rds IDENTITY_OK
+regime_1_rep_4.rds IDENTITY_OK
+regime_1_rep_5.rds IDENTITY_OK
+regime_1_rep_6.rds IDENTITY_OK
+regime_1_rep_7.rds IDENTITY_OK
+regime_1_rep_8.rds IDENTITY_OK
+regime_1_rep_9.rds IDENTITY_OK
+regime_1_rep_10.rds IDENTITY_OK
+regime_11_rep_1.rds IDENTITY_OK
+regime_11_rep_2.rds IDENTITY_OK
+regime_11_rep_3.rds IDENTITY_OK
+regime_11_rep_4.rds IDENTITY_OK

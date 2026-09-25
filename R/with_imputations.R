@@ -3,14 +3,34 @@
 #' Apply a user-supplied model-fitting function `.f` to each of the `M`
 #' complete datasets stored in an analysis-aware MI object and return the list
 #' of fits. This is the supported fitting entry for
-#' [multi_impute_analysis()] only. Prediction-diagnostic and posterior-tree
-#' sensitivity completions stop with an actionable error before any model is
-#' fitted. The analysis-aware workflow is experimental and limited to
-#' fixed-effect coefficients and their covariance matrices.
+#' [multi_impute_analysis()] and for
+#' [multi_impute()] with `draws_method = "posterior"`. Prediction-diagnostic
+#' (`"conformal"`, `"mc_dropout"`) and posterior-tree sensitivity completions
+#' stop with an actionable error before any model is fitted. The workflow is
+#' experimental and limited to fixed-effect coefficients and their covariance
+#' matrices.
+#'
+#' @section Posterior draws and congeniality:
+#' The `draws_method = "posterior"` completions come from a linear-Gaussian
+#' phylogenetic mixed model of the imputed traits only, on the scale where
+#' they were imputed (the log scale for traits log-transformed by
+#' `log_transform`). They are proper imputations for analyses that are
+#' linear in the imputed traits on that scale and whose variables are all
+#' among the imputed traits, for example a phylogenetic regression of one
+#' imputed trait on others (on the log scale for log-transformed traits).
+#' Not covered: covariates from outside the imputed traits, nonlinear terms
+#' (such as squares) or interactions among imputed traits, and analysing a
+#' log-transformed trait on its raw scale. The formula passed to `.f` is not
+#' checked; this is the analyst's responsibility. Plug-in draws from
+#' `posterior_control$param_uncertainty = "none"` (validation only) are
+#' refused.
 #'
 #' @param mi A `pigauto_analysis_mi` object returned by
-#'   [multi_impute_analysis()]. Legacy `pigauto_mi` objects, diagnostic
-#'   completions, tree-sensitivity completions, and bare dataset lists are not
+#'   [multi_impute_analysis()], or a `pigauto_posterior_mi` object returned
+#'   by [multi_impute()] with `draws_method = "posterior"` (and
+#'   `param_uncertainty = "full"`, the default, or `"both"`). Legacy
+#'   `pigauto_mi` objects, diagnostic completions, tree-sensitivity
+#'   completions, plug-in posterior draws, and bare dataset lists are not
 #'   supported fitting inputs.
 #' @param .f A function of the form `function(dataset, ...)` that fits
 #'   a model to one complete data.frame and returns a model object.
@@ -65,7 +85,8 @@ with_imputations <- function(mi, .f, ...,
       inherits(mi, "pigauto_diagnostic_mi")) {
     stop("`multi_impute()` returns prediction-diagnostic completions, not ",
          "analysis-aware MI. Use `multi_impute_analysis()` before ",
-         "`with_imputations()`.", call. = FALSE)
+         "`with_imputations()`, or, for continuous traits, ",
+         "`multi_impute(draws_method = \"posterior\")`.", call. = FALSE)
   }
   if (identical(workflow, "pigauto_tree_sensitivity_diagnostic") ||
       inherits(mi, "pigauto_tree_sensitivity_diagnostic") ||
@@ -75,13 +96,19 @@ with_imputations <- function(mi, .f, ...,
          "use `multi_impute_analysis()` for the supported narrow workflow.",
          call. = FALSE)
   }
-  if (inherits(mi, "pigauto_mi") && !inherits(mi, "pigauto_analysis_mi")) {
+  if (identical(workflow, "pigauto_posterior_plugin_diagnostic")) {
+    stop(.mip_plugin_refusal(), call. = FALSE)
+  }
+  is_posterior <- inherits(mi, "pigauto_posterior_mi") &&
+    identical(workflow, "pigauto_posterior_mi_v1")
+  if (inherits(mi, "pigauto_mi") && !inherits(mi, "pigauto_analysis_mi") &&
+      !is_posterior) {
     stop("Legacy `pigauto_mi` objects have no analysis-aware provenance. ",
          "Create a new object with `multi_impute_analysis()` before ",
          "`with_imputations()`.", call. = FALSE)
   }
-  if (!inherits(mi, "pigauto_analysis_mi") ||
-      !identical(workflow, "pigauto_analysis_mi_v1")) {
+  if (!is_posterior && (!inherits(mi, "pigauto_analysis_mi") ||
+      !identical(workflow, "pigauto_analysis_mi_v1"))) {
     stop("`with_imputations()` requires an analysis-aware object from ",
          "`multi_impute_analysis()`.", call. = FALSE)
   }

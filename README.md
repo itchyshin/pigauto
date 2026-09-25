@@ -53,9 +53,10 @@ The output roles are deliberately separate:
 - `result$prediction$se` is type-dependent uncertainty; discrete values are
   not Gaussian standard errors. Conformal bounds are nominal held-out
   diagnostics.
-- A `pigauto_result` does not itself authorize downstream inference. The only
-  supported pooling entry begins with `multi_impute_analysis()` in its
-  documented narrow regime.
+- A `pigauto_result` does not itself authorize downstream inference. The
+  supported pooling entries begin with `multi_impute_analysis()` in its
+  documented narrow regime or, for continuous traits,
+  `multi_impute(draws_method = "posterior")`.
 
 Tiny installed example inputs are available at
 `system.file("extdata", "novice_traits.csv", package = "pigauto")` and

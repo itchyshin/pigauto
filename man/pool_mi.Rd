@@ -70,7 +70,10 @@ dataset -- into a single pooled table using Rubin's rules. The pooled
 standard errors combine within-imputation sampling variance and
 between-imputation variance. Correct Rubin arithmetic does not make an
 incompatible imputation model inferentially valid. For pigauto inference,
-fits should come from the documented \code{\link[=multi_impute_analysis]{multi_impute_analysis()}} workflow.
+fits should come from the documented \code{\link[=multi_impute_analysis]{multi_impute_analysis()}} workflow,
+or, for continuous traits, from \code{\link[=multi_impute]{multi_impute()}} with
+\code{draws_method = "posterior"} (see \code{\link[=with_imputations]{with_imputations()}} for the analyses
+those draws cover), via \code{\link[=with_imputations]{with_imputations()}}.
 The backend is experimental and supports fixed-effect coefficients only. Variance
 components, correlations, random-effect predictions, BLUPs/conditional
 modes, latent loadings, and other structured parameters are unsupported.

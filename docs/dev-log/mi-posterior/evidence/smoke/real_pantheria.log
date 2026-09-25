@@ -1,0 +1,47 @@
+[pantheria-mcar-m20260818] 8 traits total, 4 kept (continuous), 4 dropped
+  dropped litter_size               integer      dropped: integer -> pigauto type 'count', not continuous
+  dropped diet_breadth              ordered/factor dropped: ordered factor -> pigauto type 'ordinal', not continuous
+  dropped habitat_breadth           ordered/factor dropped: ordered factor -> pigauto type 'ordinal', not continuous
+  dropped terrestriality            factor       dropped: (unordered) factor -> pigauto type 'binary'/'categorical', not continuous
+[pantheria-mcar-m20260818] conformal (inputs file): split=ok mondrian=ok
+[pantheria-mcar-m20260818] SAMPLER OVERRIDE (smoke only, fails G8): n_iter = 100, burnin = 50
+Warning messages:
+1: posterior: only 400 kept sweeps (keep_draws = 1000); cell intervals use 400 draws. 
+2: draws_method = "posterior": chains did not meet the convergence rule (max R-hat 1.266, needs < 1.05; min bulk ESS 13, needs > 400). Increase posterior_control$n_iter / burnin. 
+[pantheria-mcar-m20260818] multi_impute(posterior) OK in 59.9s, m = 20
+[pantheria-mcar-m20260818] convergence: max_rhat=1.266 min_ess=13 converged=FALSE
+[ pantheria-mcar-m20260818 ] model-based per-cell coverage:
+                trait n_masked n_matched  coverage mean_width median_width
+1         body_mass_g      695       695 0.9453237  3.0143624    2.3305257
+2 head_body_length_mm      382       382 0.9581152  0.7495230    0.6654123
+3         gestation_d      271       271 0.9335793  0.9957191    0.9225448
+4     max_longevity_m      202       202 0.9504950  1.9472568    1.9013496
+[pantheria-mcar-m20260818] pair slopes: 3 pre-registered pairs for dataset 'pantheria'
+  body_mass_g ~ head_body_length_mm: ref=2.858 mi=2.923 rel_diff=0.0226
+  gestation_d ~ body_mass_g: ref=0.06592 mi=0.05877 rel_diff=-0.109
+  max_longevity_m ~ body_mass_g: ref=0.1798 mi=0.1497 rel_diff=-0.167
+[pantheria-mcar-m20260818] wrote /home/snakagaw/pigauto_mi_posterior/69670d44f9/smoke/real/pantheria-mcar-m20260818/mi_posterior.rds
+MI_REALDATA_CELL_OK
+	Command being timed: "Rscript script/mi_realdata/01_run.R pantheria mcar 20260818 /home/snakagaw/pigauto_mi_posterior/69670d44f9/smoke/real"
+	User time (seconds): 68.53
+	System time (seconds): 0.51
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:09.05
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 708816
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 835231
+	Voluntary context switches: 96
+	Involuntary context switches: 140
+	Swaps: 0
+	File system inputs: 82061
+	File system outputs: 18
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

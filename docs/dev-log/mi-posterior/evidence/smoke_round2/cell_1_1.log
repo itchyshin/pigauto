@@ -1,0 +1,38 @@
+posterior: 4 chains x (1000 burn-in + 5000 sweeps, thin 20)
+Warning messages:
+1: pool_mi() received a bare fit list with unverified provenance; Rubin arithmetic will run, but the imputation workflow was not validated by pigauto. 
+2: pool_mi() received a bare fit list with unverified provenance; Rubin arithmetic will run, but the imputation workflow was not validated by pigauto. 
+OK regime=1 rep=1 n=300 mech=MCAR missing=x_only code_sha=9597e18b79c752555bf80d83cd377bb3cf8059cb pigauto=0.11.0.9000
+          method  wall_s downstream  estimate         se       df n_ok
+1       complete   0.119        gls 0.6492897 0.04180729  298.000    1
+2       complete   0.119    phylolm 0.6608441 0.04146485  298.000    1
+3 posterior_full 255.418        gls 0.6409247 0.04075083 1931.056   20
+4 posterior_full 255.418    phylolm 0.6474768 0.04122219  760.277   20
+  covered_pop
+1        TRUE
+2        TRUE
+3        TRUE
+4        TRUE
+	Command being timed: "Rscript script/mi_gls/01_cell_v2.R 1 1 /home/snakagaw/pigauto_mi_posterior/9597e18b79/smoke"
+	User time (seconds): 270.70
+	System time (seconds): 1.50
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 4:32.20
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 530724
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 728067
+	Voluntary context switches: 181
+	Involuntary context switches: 162
+	Swaps: 0
+	File system inputs: 92966
+	File system outputs: 62
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
