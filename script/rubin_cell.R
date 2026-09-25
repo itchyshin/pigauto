@@ -172,7 +172,7 @@ if ("freqA" %in% arms) {
   arm_seed(101L); a <- run_arm("freqA", mi_freq_A(cell, M))
   if (!is.null(a)) {
     score_arm_sets("freqA", a$datasets)
-    diag$freqA <- list(n_fail = a$n_fail, m_used = sum(!vapply(a$datasets, is.null, logical(1))),
+    diag$freqA <- list(n_fail = a$n_fail, n_degenerate = a$n_degenerate, m_used = sum(!vapply(a$datasets, is.null, logical(1))),
                        lambda_star = vapply(Filter(Negate(is.null), a$pars_star), function(p) p$lambda, numeric(1)))
   }
 }

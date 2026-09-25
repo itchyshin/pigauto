@@ -28,3 +28,9 @@ BACE LAMBDA = 1 (2026-09-24 ~20:50 nibi): BACE as shipped fails most lambda = 1 
   rubin_retry_prep.R on every host (tasks that started before the deploy fail as-shipped) and resubmit (retry2).
 FREQ BLOW-UPS: 5/600 freq-cmp fits (0.8%) have astronomically wide intervals on nibi compute; Mac reproduces the same
   cell cleanly; not the BLAS backend (fir BACE test). Diagnostic job nibi 22635770 pending. Fix still to decide.
+FREQ FIX (2026-09-24 ~21:10 nibi): blow-ups were not nibi-only (fir: 6 rows up to 2e67, 8 fits with errors, of 3000).
+  Cause: degenerate bootstrap refits (lambda* = 1 + near-singular Sigma_p) and a solve() + silent ginv() fallback. Fix in
+  rubin_freq.R (0bca6ad1): Cholesky solves + hard bounds (cond var <= marginal var; |cond mean - mu| <= 20 marginal SD);
+  freq A redraws the bootstrap sample up to 5 times (n_fail, n_degenerate); freq B records a failure. Gate G-S2d.
+  rubin_cell.R 9dfb7926 records n_degenerate. FREQ RERUN of record: fir ~/pigauto_rubin_f2 jobs 61373104/05/06 (all 3600).
+  Superseded (kept, not used): fir ~/pigauto_rubin/results/freq, nibi pigauto_rubin_freq/results/freq.

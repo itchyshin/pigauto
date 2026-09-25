@@ -32,14 +32,6 @@ transform_block <- function(df_raw, block_traits, is_prp) {
   as.matrix(Y)
 }
 
-solve_stable <- function(A, B) {
-  out <- tryCatch(suppressWarnings(solve(A, B)), error = function(e) NULL)
-  if (is.null(out) || anyNA(out) || any(!is.finite(out))) {
-    out <- MASS::ginv(A) %*% B
-  }
-  out
-}
-
 # ---- 1. fit_block ------------------------------------------------------------------------------
 # Same call/transforms as run_freq's joint continuous-family fit (campaign_gnn_off_lib.R L446-465).
 fit_block <- function(df_raw, tree, block_traits, trait_types = NULL, phylo_model = "lambda") {
@@ -105,11 +97,27 @@ cond_draw <- function(Y, pars, tree, M) {
   mu_o <- mu_vec[obs_idx]; mu_m <- mu_vec[mis_idx]
   y_o <- y_vec[obs_idx]
 
-  Voo_inv_Vom <- solve_stable(V_oo, t(V_mo))
-  cond_mean <- as.vector(mu_m + V_mo %*% solve_stable(V_oo, y_o - mu_o))
-  cond_cov <- V_mm - V_mo %*% Voo_inv_Vom
+  # Cholesky solves, then a hard validity check (2026-09-24 campaign): about 1 in 300 bootstrap refits lands
+  # on a degenerate parameter set (lambda* = 1 with a near-singular phylogenetic covariance), and the old
+  # solve() + silent ginv() fallback then returned conditional draws of 1e6 to 1e67. A conditional variance can
+  # never exceed the marginal variance, and a conditional mean cannot sit 20 marginal SDs from the mean; a
+  # violation (or a failed Cholesky) is a numerical failure, reported as an error the caller handles.
+  R_oo <- tryCatch(chol(V_oo), error = function(e) NULL)
+  if (is.null(R_oo)) stop("degenerate conditional distribution: chol(V_oo) failed")
+  a <- backsolve(R_oo, forwardsolve(t(R_oo), y_o - mu_o))
+  W <- backsolve(R_oo, forwardsolve(t(R_oo), t(V_mo)))
+  cond_mean <- as.vector(mu_m + V_mo %*% a)
+  cond_cov <- V_mm - V_mo %*% W
   cond_cov <- (cond_cov + t(cond_cov)) / 2
-  L <- chol(cond_cov)  # upper-triangular, t(L) %*% L ... i.e. crossprod(L, z) has cov cond_cov
+  marg_var <- diag(V_mm); cvar <- diag(cond_cov)
+  if (any(!is.finite(cond_mean)) || any(!is.finite(cvar)) || any(cvar > 1.01 * marg_var + 1e-8) ||
+      any(cvar < -1e-8 * max(marg_var)) || any(abs(cond_mean - mu_m) > 20 * sqrt(marg_var)))
+    stop("degenerate conditional distribution: moments outside their bounds")
+  L <- tryCatch(chol(cond_cov), error = function(e) NULL)
+  if (is.null(L)) {                 # PSD projection: clip tiny negative eigenvalues from rounding
+    e <- eigen(cond_cov, symmetric = TRUE)
+    L <- t(e$vectors %*% diag(sqrt(pmax(e$values, 0)), length(e$values)))
+  }
 
   n_mis <- length(mis_idx)
   draws <- vector("list", M)
@@ -156,10 +164,9 @@ mi_freq_B <- function(cell, M, block_traits = NULL, phylo_model = "lambda") {
 # ---- 5. mi_freq_A -----------------------------------------------------------------------------
 # Parametric bootstrap: fit once (pars0), then for m = 1..M simulate a full Y* ~ N(mu0, V0), apply
 # the ORIGINAL missingness pattern, refit fit_block() on Y* (theta*_m), and draw the ORIGINAL data's
-# missing cells jointly from the conditional normal under theta*_m. A refit failure is retried once
-# with a fresh bootstrap sample; if that also fails the draw m is recorded (NULL in datasets/
-# pars_star) and skipped -- never silently. n_fail counts every failed fit_block() call (0, 1, or 2
-# per m).
+# missing cells jointly from the conditional normal under theta*_m. A failed refit (n_fail) or a
+# degenerate conditional distribution (n_degenerate, see cond_draw) redraws the bootstrap sample, up to 5
+# attempts per m; if all fail the draw m is NULL and the runner drops and counts it -- never silently.
 mi_freq_A <- function(cell, M, block_traits = NULL, phylo_model = "lambda") {
   if (is.null(block_traits)) block_traits <- default_block_traits(cell)
   df_miss <- cell$df_miss; tree <- cell$tree; trait_types <- cell$trait_types; mask <- cell$mask
@@ -185,20 +192,20 @@ mi_freq_A <- function(cell, M, block_traits = NULL, phylo_model = "lambda") {
 
   datasets <- vector("list", M)
   pars_star <- vector("list", M)
-  n_fail <- 0L
+  n_fail <- 0L; n_degenerate <- 0L; max_attempts <- 5L
 
   for (m in seq_len(M)) {
-    fit_star <- refit(simulate_boot())
-    if (is.null(fit_star)) {
-      n_fail <- n_fail + 1L
+    for (attempt in seq_len(max_attempts)) {
       fit_star <- refit(simulate_boot())
       if (is.null(fit_star)) { n_fail <- n_fail + 1L; next }
+      Yt_orig <- transform_block(df_miss, block_traits, fit_star$is_prp)
+      cd <- tryCatch(cond_draw(Yt_orig, fit_star, tree, 1L), error = function(e) NULL)
+      if (is.null(cd)) { n_degenerate <- n_degenerate + 1L; next }   # redraw the bootstrap sample
+      raw <- cd$backtransform(cd$draws[[1L]])
+      datasets[[m]] <- apply_block_draw(df_miss, block_traits, raw)
+      pars_star[[m]] <- list(lambda = fit_star$lambda, Sigma_p = fit_star$Sigma_p, Sigma_e = fit_star$Sigma_e)
+      break
     }
-    Yt_orig <- transform_block(df_miss, block_traits, fit_star$is_prp)
-    cd <- cond_draw(Yt_orig, fit_star, tree, 1L)
-    raw <- cd$backtransform(cd$draws[[1L]])
-    datasets[[m]] <- apply_block_draw(df_miss, block_traits, raw)
-    pars_star[[m]] <- list(lambda = fit_star$lambda, Sigma_p = fit_star$Sigma_p, Sigma_e = fit_star$Sigma_e)
   }
-  list(datasets = datasets, pars_star = pars_star, n_fail = n_fail)
+  list(datasets = datasets, pars_star = pars_star, n_fail = n_fail, n_degenerate = n_degenerate)
 }
