@@ -53,10 +53,14 @@ joint_mvn_available <- function() {
 fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL,
                                    soft_aggregate = FALSE,
                                    joint_solver = "inhouse",
-                       predict_method = "per_column",
+                       predict_method = "exact",
                                    joint_refine_iter = 0L,
                                    lambda_mode = "fixed_1",
-                                   lambda_fixed = NULL) {
+                                   lambda_fixed = NULL,
+                                   predict_method_explicit = NULL) {
+  if (is.null(predict_method_explicit)) {
+    predict_method_explicit <- !missing(predict_method)
+  }
   stopifnot(joint_mvn_available())
 
   if (isTRUE(data$multi_obs)) {
@@ -132,6 +136,13 @@ fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL,
     # error downstream instead of defaulting to 1).
     la <- unname(lambda_fixed[colnames(L_in)])
     la[is.na(la)] <- 1.0
+    # S4 fix (root cause A): carry the original fit's lambda_block through
+    # the name-subset, which drops custom attributes -- see
+    # R/joint_mvn_solver.R's .mvn_resolve_lambda() numeric-vector branch.
+    lb_fixed <- attr(lambda_fixed, "lambda_block")
+    if (!is.null(lb_fixed) && is.finite(lb_fixed)) {
+      attr(la, "lambda_block") <- lb_fixed
+    }
     la
   } else if (identical(lambda_mode, "estimate")) {
     "estimate"
@@ -141,7 +152,8 @@ fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL,
   fit <- fit_joint_solver(L = L_in, tree = tree, joint_solver = joint_solver,
                           predict_method = predict_method,
                           joint_refine_iter = joint_refine_iter,
-                          lambda = lambda_arg)
+                          lambda = lambda_arg,
+                          predict_method_explicit = predict_method_explicit)
 
   tip_rows <- match(spp, rownames(fit$anc_recon))
   mu_bm    <- fit$anc_recon[tip_rows, , drop = FALSE]
@@ -167,5 +179,6 @@ fit_joint_mvn_baseline <- function(data, tree, splits, graph = NULL,
   }
 
   list(mu = mu, se = se, lambda_per_trait = lambda_per_trait,
-       lambda_block = fit$lambda_block)
+       lambda_block = fit$lambda_block,
+       predict_method_used = fit$predict_method_used %||% NA_character_)
 }

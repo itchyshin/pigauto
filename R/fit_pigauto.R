@@ -229,19 +229,28 @@
 #'   proportion, and zi_count magnitude, via the joint MVN /
 #'   threshold-joint baseline's own \code{lambda_cols} machinery when that
 #'   joint path fires, or a per-column re-fit otherwise. Discrete traits
-#'   (binary, categorical, zi gate) AND ordinal always stay at lambda = 1
-#'   in every path -- there is no discrete-trait analogue of Pagel's
-#'   lambda. \code{"fixed_1"} preserves the pre-lambda Brownian
-#'   correlation matrix everywhere; \code{"cv"} and \code{"bayes"} are
-#'   alternative per-column estimators that force continuous-family
-#'   columns onto the per-column BM path (no joint analogue). When
-#'   \code{predict_method = "exact"} or \code{joint_refine_iter > 0}, the
-#'   joint (multi-trait) prediction path additionally uses the single
-#'   shared \code{lambda_block} for cross-trait computations that need one
-#'   common phylogenetic correlation matrix, never overriding an
-#'   individual column's own lambda_k or a discrete/ordinal column's
-#'   lambda = 1. Passed to \code{\link{fit_baseline}} and stored in the
-#'   fitted model config. When \code{covariates} are supplied, the
+#'   (binary, categorical, zi gate) AND ordinal have no discrete-trait
+#'   analogue of Pagel's lambda of their own -- there is no lambda_k to
+#'   estimate for them. Under \code{predict_method = "per_column"} (see
+#'   below) they stay fixed at lambda = 1 in every path, matching pre-S3
+#'   behaviour. Under \code{predict_method = "exact"} (the default) they
+#'   instead share the joint fit's \code{lambda_block} -- the exact
+#'   conditional's covariance model uses ONE shared phylogenetic
+#'   correlation matrix \code{R(lambda_block)} for every column, so the
+#'   Sigma estimate feeding it must itself come from an internally
+#'   consistent init, not a mix of \code{R(1)} for discrete columns and
+#'   \code{R(lambda_k)} for continuous ones (Shinichi's decision,
+#'   docs/dev-log/exact-default/S3-default-report.md). \code{"fixed_1"}
+#'   preserves the pre-lambda Brownian correlation matrix everywhere;
+#'   \code{"cv"} and \code{"bayes"} are alternative per-column estimators
+#'   that force continuous-family columns onto the per-column BM path (no
+#'   joint analogue). When \code{predict_method = "exact"} or
+#'   \code{joint_refine_iter > 0}, the joint (multi-trait) prediction path
+#'   additionally uses the single shared \code{lambda_block} for
+#'   cross-trait computations that need one common phylogenetic
+#'   correlation matrix, never overriding a continuous-family column's own
+#'   estimated lambda_k. Passed to \code{\link{fit_baseline}} and stored in
+#'   the fitted model config. When \code{covariates} are supplied, the
 #'   covariate-aware BM path (\code{bm_impute_col_with_cov()}) accepts a
 #'   numeric lambda or \code{"estimate"}, so \code{lambda_mode \%in\%
 #'   c("estimate", "fixed_1")} reaches it and each covariate-aware
@@ -256,13 +265,23 @@
 #'   \code{\link{fit_baseline}} and stored in the fitted model config.
 #'   See \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}.
 #' @param predict_method character. Prediction route for the in-house joint
-#'   solver. \code{"per_column"} (default) retains the established
-#'   per-column conditional prediction route. \code{"exact"} is opt-in and,
-#'   when a multi-trait in-house joint fit has a usable sparse phylogenetic
-#'   precision and covariance estimate, uses the exact matrix-normal
-#'   conditional mean and variance. If those numerical gates are not met it
-#'   warns and falls back to \code{"per_column"}. It does not change
-#'   covariance estimation, defaults, or the \code{"rphylopars"} solver.
+#'   solver. \code{"exact"} (default) uses the full cross-trait conditional
+#'   mean and variance of \code{vec(L) ~ MVN(0, Sigma \%x\% R(lambda_block))}
+#'   (Hadfield & Nakagawa, 2010 sparse precision form), each column
+#'   GLS-mean-centred at \code{lambda_block} before the solve; discrete
+#'   liability columns share \code{lambda_block} under this route (see
+#'   \code{lambda_mode} above). Falls back to \code{"per_column"} above
+#'   roughly 20000 unknown cells (roughly 4000 species at 5 traits), on a
+#'   singular/unusable Sigma, or when fewer than 2 joint columns or no
+#'   Henderson sparse precision are available; prints a one-time
+#'   \code{message()} per R session when \code{predict_method} was left at
+#'   its default, or a \code{warning()} every time when \code{"exact"} was
+#'   requested explicitly. \code{"per_column"} retains the original
+#'   per-column conditional prediction route (no cross-trait borrowing in
+#'   the prediction step). Neither option changes covariance estimation or
+#'   the \code{"rphylopars"} solver. The route actually used is recorded in
+#'   \code{$model_config$predict_method_used} (\code{"exact"} or
+#'   \code{"per_column"}).
 #' @param joint_refine_iter integer, default \code{0L}. Enables
 #'   cross-trait refinement of the joint baseline's cell imputations
 #'   using the estimated Sigma (the in-house solver's \code{max_iter}
@@ -354,11 +373,15 @@ fit_pigauto <- function(
     min_val_cells     = 20L,
     lambda_mode       = c("estimate", "fixed_1", "cv", "bayes"),
     joint_solver      = c("inhouse", "rphylopars"),
-    predict_method    = c("per_column", "exact"),
+    predict_method    = c("exact", "per_column"),
     joint_refine_iter = 0L,
     verbose           = TRUE,
     seed = NULL
 ) {
+  # S3 default flip: capture BEFORE match.arg() reassigns predict_method
+  # (see fit_baseline()'s identical comment for why order matters here but
+  # reassignment afterwards does not).
+  predict_method_explicit <- !missing(predict_method)
   conformal_method    <- match.arg(conformal_method)
   lambda_mode         <- match.arg(lambda_mode)
   joint_solver        <- match.arg(joint_solver)
@@ -429,7 +452,8 @@ fit_pigauto <- function(
     baseline <- fit_baseline(data, tree, splits = splits, graph = graph,
                               lambda_mode = lambda_mode,
                               joint_solver = joint_solver, predict_method = predict_method,
-                              joint_refine_iter = joint_refine_iter)
+                              joint_refine_iter = joint_refine_iter,
+                              predict_method_explicit = predict_method_explicit)
   }
 
   # ---- Trait map ------------------------------------------------------------
@@ -516,7 +540,8 @@ fit_pigauto <- function(
                                      lambda_mode = lambda_mode,
                                      joint_solver = joint_solver,
                                      predict_method = predict_method,
-                                     joint_refine_iter = joint_refine_iter)
+                                     joint_refine_iter = joint_refine_iter,
+                                     predict_method_explicit = predict_method_explicit)
     }
     graph$D <- NULL
 
@@ -707,6 +732,11 @@ fit_pigauto <- function(
         baseline$lambda_per_trait %||% NULL,
       lambda_block           = baseline_full$lambda_block %||%
         baseline$lambda_block %||% NULL,
+      # S3 default flip: the route actually used by the joint baseline
+      # fit(s), aggregated by fit_baseline() -- "exact" or "per_column".
+      # Same baseline_full-over-baseline precedence as lambda_block above.
+      predict_method_used    = baseline_full$predict_method_used %||%
+        baseline$predict_method_used %||% NULL,
       joint_solver           = joint_solver,
       joint_refine_iter      = joint_refine_iter,
       dropout                = dropout,
@@ -1471,6 +1501,7 @@ fit_pigauto <- function(
     # `baseline_full`.
     lambda_per_trait       = baseline$lambda_per_trait %||% NULL,
     lambda_block           = baseline$lambda_block %||% NULL,
+    predict_method_used    = baseline$predict_method_used %||% NULL,
     joint_solver           = joint_solver,
     joint_refine_iter      = joint_refine_iter,
     dropout                = dropout,

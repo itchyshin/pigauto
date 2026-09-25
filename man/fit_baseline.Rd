@@ -17,8 +17,9 @@ fit_baseline(
   em_tol = 0.001,
   em_offdiag = FALSE,
   joint_solver = c("inhouse", "rphylopars"),
-  predict_method = c("per_column", "exact"),
-  joint_refine_iter = 0L
+  predict_method = c("exact", "per_column"),
+  joint_refine_iter = 0L,
+  predict_method_explicit = NULL
 )
 }
 \arguments{
@@ -129,13 +130,27 @@ columns off the joint path entirely (no joint analogue for those two
 modes).}
 
 \item{predict_method}{character. Prediction route for the in-house joint
-solver. \code{"per_column"} (default) retains the established
-per-column conditional prediction route. \code{"exact"} is opt-in and,
-when a multi-trait in-house joint fit has a usable sparse phylogenetic
-precision and covariance estimate, uses the exact matrix-normal
-conditional mean and variance. If those numerical gates are not met it
-warns and falls back to \code{"per_column"}. It does not change
-covariance estimation, defaults, or the \code{"rphylopars"} solver.}
+solver. \code{"exact"} (default) uses the full cross-trait conditional
+mean and variance of \code{vec(L) ~ MVN(0, Sigma \%x\% R(lambda_block))}
+in the sparse precision form (Hadfield & Nakagawa, 2010), with each
+column centred at its own GLS phylogenetic mean at \code{lambda_block}
+before the solve (mean-model consistency; see
+\code{docs/dev-log/exact-default/}). Discrete liability columns
+(binary, zi gate, ordinal-via-OVR synthetic columns) share
+\code{lambda_block} under \code{"exact"} rather than staying fixed at
+lambda = 1, so the whole joint fit uses one internally-consistent
+\code{R(lambda_block)}. Falls back to \code{"per_column"} above
+roughly 20000 unknown cells (roughly 4000 species at 5 traits), on a
+singular/unusable Sigma, or when fewer than 2 joint columns or no
+Henderson sparse precision are available; the fallback prints a
+one-time \code{message()} (not a warning) per R session when
+\code{predict_method} was left at its default, or a \code{warning()}
+every time when \code{"exact"} was requested explicitly.
+\code{"per_column"} retains the original per-column conditional
+prediction route (each column's own posterior, no cross-trait
+borrowing in the prediction step; \code{se} is that column's own
+conditional SE). Neither option changes covariance estimation or the
+\code{"rphylopars"} solver.}
 
 \item{joint_refine_iter}{integer, default \code{0L}. Enables
 cross-trait refinement of the joint baseline's cell imputations
@@ -144,6 +159,12 @@ EM cell-refinement; \code{R/joint_mvn_solver.R}). \code{0L} preserves
 current behaviour byte-for-byte. The refinement is guarded: the
 Sigma step must shrink each iteration, or the loop rolls back to the
 last good iterate and sets \code{$diverged}.}
+
+\item{predict_method_explicit}{Internal use only; do not set directly.
+\code{fit_pigauto()} uses this to propagate whether ITS OWN caller
+explicitly requested \code{predict_method}, so the one-time exact
+fallback message is only suppressed for the true default. Leave as
+\code{NULL}.}
 }
 \value{
 A list with:
@@ -185,6 +206,13 @@ conditional / opt-in EM refine (see \code{R/joint_mvn_solver.R}'s
 \code{$lambda_block}); \code{NA} when no joint fit ran.}
 \item{lambda_mode}{Character, echoes the resolved \code{lambda_mode}
 argument.}
+\item{predict_method_used}{Character scalar, \code{"exact"} or
+\code{"per_column"}: the route actually used, aggregated across
+every joint fit that ran. \code{"exact"} only if every joint fit
+achieved exact; \code{"per_column"} if any fell back, if none ran
+(a pure per-column baseline), or if every joint fit used
+\code{joint_solver = "rphylopars"} (no exact/per_column
+dichotomy there).}
 }
 }
 \description{

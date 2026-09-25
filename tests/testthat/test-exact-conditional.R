@@ -77,7 +77,11 @@ test_that("[exact] blocked variance solve is independent of block size", {
   expect_equal(a$mu, b$mu)
 })
 
-test_that("[exact] fit_baseline default is unchanged and 'exact' differs", {
+test_that("[exact] fit_baseline default is 'exact' and 'per_column' differs", {
+  # S3 default flip (docs/dev-log/exact-default/S3-default-report.md):
+  # predict_method's default changed from "per_column" to "exact", so the
+  # default now matches the explicit "exact" call and differs from the
+  # explicit "per_column" call -- the inverse of the pre-S3 assertion here.
   skip_if_not_installed("Matrix")
   set.seed(1)
   tree <- ape::rcoal(30)
@@ -88,8 +92,8 @@ test_that("[exact] fit_baseline default is unchanged and 'exact' differs", {
   b_def <- fit_baseline(pd, tree)
   b_pc  <- fit_baseline(pd, tree, predict_method = "per_column")
   b_ex  <- fit_baseline(pd, tree, predict_method = "exact")
-  expect_equal(b_def$mu, b_pc$mu)                 # default == per_column
-  expect_false(isTRUE(all.equal(b_def$mu, b_ex$mu)))
+  expect_equal(b_def$mu, b_ex$mu)                 # default == exact
+  expect_false(isTRUE(all.equal(b_def$mu, b_pc$mu)))
   expect_true(all(is.finite(b_ex$mu)))
   expect_equal(dim(b_ex$mu), dim(b_def$mu))
 })

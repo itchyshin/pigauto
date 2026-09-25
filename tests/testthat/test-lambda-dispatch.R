@@ -90,7 +90,28 @@ test_that("[lambda-dispatch] lambda_per_trait populated", {
   expect_false(all(lam_cont == 1))
 
   disc_names <- setdiff(colnames(pd$X_scaled), cont_names)
-  expect_true(all(bl$lambda_per_trait[disc_names] == 1))
+  # b1 (binary) is fit IN THE SAME threshold-joint call as c1/c2/c3, so it
+  # is subject to .mvn_resolve_lambda()'s exact-route exception (S3):
+  # under predict_method = "exact" (the default) it deliberately shares
+  # lambda_block rather than staying fixed at 1 -- the exact conditional
+  # needs one internally-consistent R(lambda) shared across every column
+  # in that fit. k1 (categorical, 3 levels) never goes through that
+  # call at all: R/ovr_categorical.R runs K independent binary fits, each
+  # deliberately pinned to lambda_mode = "fixed_1" regardless of the
+  # caller's lambda_mode/predict_method (see its own header comment), so
+  # its latent columns stay at 1 in EVERY route. See
+  # docs/dev-log/exact-default/S4-fixes-report.md.
+  bin_names <- colnames(pd$X_scaled)[pd$trait_map$b1$latent_cols]
+  cat_names <- setdiff(disc_names, bin_names)
+
+  expect_true(is.finite(bl$lambda_block))
+  expect_equal(unname(bl$lambda_per_trait[bin_names]),
+               rep(bl$lambda_block, length(bin_names)))
+  expect_true(all(bl$lambda_per_trait[cat_names] == 1))
+
+  bl_pc <- fit_dispatch_baseline(fx, lambda_mode = "estimate",
+                                  predict_method = "per_column")$bl
+  expect_true(all(bl_pc$lambda_per_trait[disc_names] == 1))
 })
 
 # ---- covariates keep lambda --------------------------------------------
@@ -151,8 +172,15 @@ test_that("[lambda-dispatch] lambda_fixed rebuild", {
 # missing names first, leaving NA. Threshold-joint variant (this fixture
 # has a binary + categorical column, so `use_threshold_joint` fires):
 test_that("[lambda-dispatch] partial lambda_fixed defaults missing columns to 1 (threshold-joint)", {
+  # per-column contract; under the exact default this does not hold
+  # because the exact conditional couples every joint column through one
+  # shared Sigma / R(lambda_block) -- fixing ONE column's lambda still
+  # changes the OTHER columns' predictions (they are not independent), so
+  # "other columns match a fixed_1 fit" is a per-column-only property. See
+  # docs/dev-log/exact-default/S4-fixes-report.md.
   fx <- make_lambda_dispatch_fixture()
-  fit <- fit_dispatch_baseline(fx, lambda_mode = "estimate")
+  fit <- fit_dispatch_baseline(fx, lambda_mode = "estimate",
+                                predict_method = "per_column")
   pd <- fit$pd; spl <- fit$splits; bl <- fit$bl
 
   partial <- bl$lambda_per_trait["c1"]  # names only ONE of the three continuous columns
@@ -160,9 +188,11 @@ test_that("[lambda-dispatch] partial lambda_fixed defaults missing columns to 1 
   bl_partial <- NULL
   expect_no_error(
     bl_partial <- fit_baseline(pd, fx$tree, splits = spl,
-                                lambda_fixed = partial)
+                                lambda_fixed = partial,
+                                predict_method = "per_column")
   )
-  bl_fixed1 <- fit_baseline(pd, fx$tree, splits = spl, lambda_mode = "fixed_1")
+  bl_fixed1 <- fit_baseline(pd, fx$tree, splits = spl, lambda_mode = "fixed_1",
+                             predict_method = "per_column")
 
   other_cols <- setdiff(colnames(pd$X_scaled), names(partial))
   expect_equal(bl_partial$mu[, other_cols], bl_fixed1$mu[, other_cols],
@@ -171,10 +201,36 @@ test_that("[lambda-dispatch] partial lambda_fixed defaults missing columns to 1 
                tolerance = 1e-8)
 })
 
+# Exact-route counterpart (S4): a partial lambda_fixed still runs under the
+# default and the NAMED column is fit at exactly the given lambda, even
+# though (per the per-column-contract test above) the other columns are
+# allowed to move because they are coupled through the shared exact
+# conditional.
+test_that("[lambda-dispatch] partial lambda_fixed runs under exact and uses the named lambda (threshold-joint)", {
+  fx <- make_lambda_dispatch_fixture()
+  fit <- fit_dispatch_baseline(fx, lambda_mode = "estimate")
+  pd <- fit$pd; spl <- fit$splits; bl <- fit$bl
+
+  partial <- bl$lambda_per_trait["c1"]
+
+  bl_partial <- NULL
+  expect_no_error(
+    bl_partial <- fit_baseline(pd, fx$tree, splits = spl,
+                                lambda_fixed = partial)
+  )
+  expect_true(all(is.finite(bl_partial$mu)))
+  expect_equal(unname(bl_partial$lambda_per_trait["c1"]), unname(partial))
+})
+
 # Continuous-only variant (>= 2 continuous columns, no binary/ordinal),
 # which dispatches to `use_continuous_joint` / `fit_joint_mvn_baseline()`
 # instead -- the OTHER call site the review flagged
 # (R/joint_mvn_baseline.R:~129).
+#
+# per-column contract; under the exact default this does not hold because
+# the exact conditional couples every joint column through one shared
+# Sigma / R(lambda_block), so fixing c1's lambda still moves c2's
+# prediction. See docs/dev-log/exact-default/S4-fixes-report.md.
 test_that("[lambda-dispatch] partial lambda_fixed defaults missing columns to 1 (joint MVN)", {
   set.seed(903L)
   n <- 80L
@@ -195,21 +251,58 @@ test_that("[lambda-dispatch] partial lambda_fixed defaults missing columns to 1 
   pd  <- preprocess_traits(df, tree)
   spl <- make_missing_splits(pd$X_scaled, seed = 1, trait_map = pd$trait_map)
 
-  bl <- fit_baseline(pd, tree, splits = spl, lambda_mode = "estimate")
+  bl <- fit_baseline(pd, tree, splits = spl, lambda_mode = "estimate",
+                      predict_method = "per_column")
   expect_identical(unname(bl$path[c("c1", "c2")]), c("joint_mvn", "joint_mvn"))
 
   partial <- bl$lambda_per_trait["c1"]
 
   bl_partial <- NULL
   expect_no_error(
-    bl_partial <- fit_baseline(pd, tree, splits = spl, lambda_fixed = partial)
+    bl_partial <- fit_baseline(pd, tree, splits = spl, lambda_fixed = partial,
+                                predict_method = "per_column")
   )
-  bl_fixed1 <- fit_baseline(pd, tree, splits = spl, lambda_mode = "fixed_1")
+  bl_fixed1 <- fit_baseline(pd, tree, splits = spl, lambda_mode = "fixed_1",
+                             predict_method = "per_column")
 
   expect_equal(unname(bl_partial$mu[, "c2"]), unname(bl_fixed1$mu[, "c2"]),
                tolerance = 1e-8)
   expect_equal(unname(bl_partial$se[, "c2"]), unname(bl_fixed1$se[, "c2"]),
                tolerance = 1e-8)
+})
+
+# Exact-route counterpart (S4): the partial call still runs under the
+# default and c1 is fit at exactly the given lambda (see the
+# threshold-joint counterpart above for the same reasoning).
+test_that("[lambda-dispatch] partial lambda_fixed runs under exact and uses the named lambda (joint MVN)", {
+  set.seed(903L)
+  n <- 80L
+  tree <- ape::rcoal(n)
+  R <- stats::cov2cor(ape::vcv.phylo(tree))
+  R <- R[tree$tip.label, tree$tip.label]
+  Lc <- chol(R)
+  gen_bm_lambda <- function(lam) {
+    phylo_part <- as.numeric(t(Lc) %*% stats::rnorm(n))
+    iid_part <- stats::rnorm(n)
+    sqrt(lam) * phylo_part + sqrt(1 - lam) * iid_part
+  }
+  df <- data.frame(c1 = gen_bm_lambda(0.3), c2 = gen_bm_lambda(0.3),
+                    row.names = tree$tip.label)
+  df$c1[sample(n, round(0.3 * n))] <- NA
+  df$c2[sample(n, round(0.3 * n))] <- NA
+
+  pd  <- preprocess_traits(df, tree)
+  spl <- make_missing_splits(pd$X_scaled, seed = 1, trait_map = pd$trait_map)
+
+  bl <- fit_baseline(pd, tree, splits = spl, lambda_mode = "estimate")
+  partial <- bl$lambda_per_trait["c1"]
+
+  bl_partial <- NULL
+  expect_no_error(
+    bl_partial <- fit_baseline(pd, tree, splits = spl, lambda_fixed = partial)
+  )
+  expect_true(all(is.finite(bl_partial$mu)))
+  expect_equal(unname(bl_partial$lambda_per_trait["c1"]), unname(partial))
 })
 
 # ---- cv and bayes still per-column --------------------------------------
@@ -224,11 +317,17 @@ test_that("[lambda-dispatch] cv and bayes still per-column", {
 
 # ---- fixed_1 dispatcher reference ---------------------------------------
 
+# per-column contract; under the exact default this does not hold because
+# `ref` was captured (ab02e31) before predict_method = "exact" existed as
+# the default -- the exact conditional legitimately produces different
+# imputed-cell numbers even at lambda = 1. See
+# docs/dev-log/exact-default/S4-fixes-report.md.
 test_that("[lambda-dispatch] fixed_1 dispatcher reference", {
   ref <- readRDS(testthat::test_path("fixtures",
                                       "lambda_fixed1_reference_ab02e31.rds"))
   pd <- preprocess_traits(ref$df, ref$tree)
-  bl <- fit_baseline(pd, ref$tree, splits = ref$splits, lambda_mode = "fixed_1")
+  bl <- fit_baseline(pd, ref$tree, splits = ref$splits, lambda_mode = "fixed_1",
+                      predict_method = "per_column")
 
   expect_equal(bl$mu, ref$baseline$mu, tolerance = 1e-12)
   expect_equal(bl$se, ref$baseline$se, tolerance = 1e-12)
@@ -271,6 +370,12 @@ make_ordinal_lambda_fixture <- function(seed, n = 100L, lambda_true = 0.3,
   list(tree = tree, df = df)
 }
 
+# per-column contract; under the exact default this does not hold because
+# S3 (docs/dev-log/exact-default/S3-default-report.md) deliberately moves
+# discrete liability columns (ordinal-via-OVR synthetic columns included)
+# to lambda_block, not 1, so the exact conditional has one
+# internally-consistent R(lambda) across every joint column. See
+# docs/dev-log/exact-default/S4-fixes-report.md.
 test_that("[lambda-dispatch] ordinal stays at lambda = 1 under estimate", {
   for (seed in 900:905) {
     fx <- make_ordinal_lambda_fixture(seed)
@@ -278,23 +383,46 @@ test_that("[lambda-dispatch] ordinal stays at lambda = 1 under estimate", {
     spl <- make_missing_splits(pd$X_scaled, seed = seed,
                                 trait_map = pd$trait_map)
 
-    bl_fixed <- fit_baseline(pd, fx$tree, splits = spl, lambda_mode = "fixed_1")
-    bl_est   <- fit_baseline(pd, fx$tree, splits = spl, lambda_mode = "estimate")
+    bl_fixed <- fit_baseline(pd, fx$tree, splits = spl, lambda_mode = "fixed_1",
+                              predict_method = "per_column")
+    bl_est   <- fit_baseline(pd, fx$tree, splits = spl, lambda_mode = "estimate",
+                              predict_method = "per_column")
 
     o1_col <- colnames(pd$X_scaled)[pd$trait_map$o1$latent_cols]
 
     # Documented contract (R/fit_baseline.R roxygen, "Per-type lambda
-    # dispatch"): ordinal columns stay at lambda = 1 in EVERY path under
-    # "estimate", so their mu/se must be bit-identical to the fixed_1 fit
-    # -- not just close, and `lambda_per_trait["o1"]` must actually equal
-    # the lambda that was used (1), not just report 1 while a different
-    # lambda leaked into mu (the bug this test guards against).
+    # dispatch"): ordinal columns stay at lambda = 1 in EVERY per_column
+    # path under "estimate", so their mu/se must be bit-identical to the
+    # fixed_1 fit -- not just close, and `lambda_per_trait["o1"]` must
+    # actually equal the lambda that was used (1), not just report 1 while
+    # a different lambda leaked into mu (the bug this test guards against).
     expect_identical(unname(bl_fixed$mu[, o1_col]), unname(bl_est$mu[, o1_col]),
                       info = paste("seed", seed))
     expect_identical(unname(bl_fixed$se[, o1_col]), unname(bl_est$se[, o1_col]),
                       info = paste("seed", seed))
     expect_true(unname(bl_est$lambda_per_trait[o1_col]) == 1,
                 info = paste("seed", seed))
+  }
+})
+
+# Exact-route counterpart (S4): under the default, the ordinal column's mu
+# is finite and reports lambda_block (not 1), matching the joint fit it
+# was actually solved in.
+test_that("[lambda-dispatch] ordinal mu is finite and reports lambda_block under exact estimate", {
+  for (seed in 900:902) {
+    fx <- make_ordinal_lambda_fixture(seed)
+    pd <- preprocess_traits(fx$df, fx$tree)
+    spl <- make_missing_splits(pd$X_scaled, seed = seed,
+                                trait_map = pd$trait_map)
+
+    bl_est <- fit_baseline(pd, fx$tree, splits = spl, lambda_mode = "estimate")
+    o1_col <- colnames(pd$X_scaled)[pd$trait_map$o1$latent_cols]
+
+    expect_true(all(is.finite(bl_est$mu[, o1_col])), info = paste("seed", seed))
+    if (is.finite(bl_est$lambda_block)) {
+      expect_equal(unname(bl_est$lambda_per_trait[o1_col]), bl_est$lambda_block,
+                   info = paste("seed", seed))
+    }
   }
 })
 

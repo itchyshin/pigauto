@@ -140,13 +140,27 @@
 #'   columns off the joint path entirely (no joint analogue for those two
 #'   modes).
 #' @param predict_method character. Prediction route for the in-house joint
-#'   solver. \code{"per_column"} (default) retains the established
-#'   per-column conditional prediction route. \code{"exact"} is opt-in and,
-#'   when a multi-trait in-house joint fit has a usable sparse phylogenetic
-#'   precision and covariance estimate, uses the exact matrix-normal
-#'   conditional mean and variance. If those numerical gates are not met it
-#'   warns and falls back to \code{"per_column"}. It does not change
-#'   covariance estimation, defaults, or the \code{"rphylopars"} solver.
+#'   solver. \code{"exact"} (default) uses the full cross-trait conditional
+#'   mean and variance of \code{vec(L) ~ MVN(0, Sigma \%x\% R(lambda_block))}
+#'   in the sparse precision form (Hadfield & Nakagawa, 2010), with each
+#'   column centred at its own GLS phylogenetic mean at \code{lambda_block}
+#'   before the solve (mean-model consistency; see
+#'   \code{docs/dev-log/exact-default/}). Discrete liability columns
+#'   (binary, zi gate, ordinal-via-OVR synthetic columns) share
+#'   \code{lambda_block} under \code{"exact"} rather than staying fixed at
+#'   lambda = 1, so the whole joint fit uses one internally-consistent
+#'   \code{R(lambda_block)}. Falls back to \code{"per_column"} above
+#'   roughly 20000 unknown cells (roughly 4000 species at 5 traits), on a
+#'   singular/unusable Sigma, or when fewer than 2 joint columns or no
+#'   Henderson sparse precision are available; the fallback prints a
+#'   one-time \code{message()} (not a warning) per R session when
+#'   \code{predict_method} was left at its default, or a \code{warning()}
+#'   every time when \code{"exact"} was requested explicitly.
+#'   \code{"per_column"} retains the original per-column conditional
+#'   prediction route (each column's own posterior, no cross-trait
+#'   borrowing in the prediction step; \code{se} is that column's own
+#'   conditional SE). Neither option changes covariance estimation or the
+#'   \code{"rphylopars"} solver.
 #' @param joint_refine_iter integer, default \code{0L}. Enables
 #'   cross-trait refinement of the joint baseline's cell imputations
 #'   using the estimated Sigma (the in-house solver's \code{max_iter}
@@ -154,6 +168,11 @@
 #'   current behaviour byte-for-byte. The refinement is guarded: the
 #'   Sigma step must shrink each iteration, or the loop rolls back to the
 #'   last good iterate and sets \code{$diverged}.
+#' @param predict_method_explicit Internal use only; do not set directly.
+#'   \code{fit_pigauto()} uses this to propagate whether ITS OWN caller
+#'   explicitly requested \code{predict_method}, so the one-time exact
+#'   fallback message is only suppressed for the true default. Leave as
+#'   \code{NULL}.
 #' @return A list with:
 #'   \describe{
 #'     \item{mu}{Numeric matrix (n_species x p_latent), baseline means in
@@ -193,6 +212,13 @@
 #'       \code{$lambda_block}); \code{NA} when no joint fit ran.}
 #'     \item{lambda_mode}{Character, echoes the resolved \code{lambda_mode}
 #'       argument.}
+#'     \item{predict_method_used}{Character scalar, \code{"exact"} or
+#'       \code{"per_column"}: the route actually used, aggregated across
+#'       every joint fit that ran. \code{"exact"} only if every joint fit
+#'       achieved exact; \code{"per_column"} if any fell back, if none ran
+#'       (a pure per-column baseline), or if every joint fit used
+#'       \code{joint_solver = "rphylopars"} (no exact/per_column
+#'       dichotomy there).}
 #'   }
 #' @examples
 #' \donttest{
@@ -216,8 +242,20 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                          em_tol = 1e-3,
                          em_offdiag = FALSE,
                          joint_solver = c("inhouse", "rphylopars"),
-                         predict_method = c("per_column", "exact"),
-                         joint_refine_iter = 0L) {
+                         predict_method = c("exact", "per_column"),
+                         joint_refine_iter = 0L,
+                         predict_method_explicit = NULL) {
+  # S3 default flip (docs/dev-log/exact-default/S3-default-report.md):
+  # resolve BEFORE match.arg() reassigns `predict_method` (reassignment
+  # does not retroactively change what missing() reports, but this still
+  # has to run first). A concrete TRUE/FALSE passed in by a caller further
+  # up the stack (fit_pigauto(), impute()) overrides the local missing()
+  # check, because those callers always forward a resolved concrete value
+  # here, which would otherwise make missing() wrongly report FALSE
+  # (explicit) regardless of what the ORIGINAL top-level caller did.
+  if (is.null(predict_method_explicit)) {
+    predict_method_explicit <- !missing(predict_method)
+  }
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
   soft_aggregate <- identical(multi_obs_aggregation, "soft")
   lambda_mode <- match.arg(lambda_mode)
@@ -469,6 +507,15 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     )
   }
 
+  # Aggregated across whichever joint dispatcher(s) run below, into the
+  # $predict_method_used field on this function's return value (S3 default
+  # flip). "exact" only if every joint fit that ran achieved exact;
+  # "per_column" if any fell back, failed, or if no joint fit ran at all
+  # (i.e. the whole baseline is per-column); NA_character_ only if every
+  # joint fit used joint_solver = "rphylopars" (where the dichotomy does
+  # not apply) and none fell back to in-house.
+  predict_method_used_all <- character(0)
+
   if (use_threshold_joint) {
     jt <- if (em_iterations >= 1L) {
       fit_joint_threshold_baseline_em(data, tree, splits = splits,
@@ -480,7 +527,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                                        joint_solver = joint_solver, predict_method = predict_method,
                                        joint_refine_iter = joint_refine_iter,
                                        lambda_mode = lambda_mode_joint,
-                                       lambda_fixed = lambda_fixed)
+                                       lambda_fixed = lambda_fixed,
+                                       predict_method_explicit = predict_method_explicit)
     } else {
       fit_joint_threshold_baseline(data, tree, splits = splits,
                                     graph = graph,
@@ -488,7 +536,11 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                                     joint_solver = joint_solver, predict_method = predict_method,
                                     joint_refine_iter = joint_refine_iter,
                                     lambda_mode = lambda_mode_joint,
-                                    lambda_fixed = lambda_fixed)
+                                    lambda_fixed = lambda_fixed,
+                                    predict_method_explicit = predict_method_explicit)
+    }
+    if (!is.null(jt$predict_method_used) && !is.na(jt$predict_method_used)) {
+      predict_method_used_all <- c(predict_method_used_all, jt$predict_method_used)
     }
 
     populated_cols <- integer(0)
@@ -719,7 +771,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                                      joint_solver = joint_solver, predict_method = predict_method,
                                      joint_refine_iter = joint_refine_iter,
                                      lambda_mode = lambda_mode_joint,
-                                     lambda_fixed = lambda_fixed)
+                                     lambda_fixed = lambda_fixed,
+                                     predict_method_explicit = predict_method_explicit)
     mu[, bm_cols] <- joint$mu[, bm_cols]
     se[, bm_cols] <- joint$se[, bm_cols]
     col_path[bm_cols] <- "joint_mvn"
@@ -728,6 +781,9 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     }
     if (!is.null(joint$lambda_block) && is.finite(joint$lambda_block)) {
       lambda_block_out <- joint$lambda_block
+    }
+    if (!is.null(joint$predict_method_used) && !is.na(joint$predict_method_used)) {
+      predict_method_used_all <- c(predict_method_used_all, joint$predict_method_used)
     }
     bm_cols <- integer(0)
   }
@@ -760,19 +816,25 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                                        em_iterations = em_iterations,
                                        em_tol = em_tol,
                                        joint_solver = joint_solver, predict_method = predict_method,
-                                       joint_refine_iter = joint_refine_iter)
+                                       joint_refine_iter = joint_refine_iter,
+                                       predict_method_explicit = predict_method_explicit)
         } else {
           fit_ovr_categorical_fits(data, tree, trait_name = trait_name,
                                     splits = splits, graph = graph,
                                     soft_aggregate = soft_aggregate,
                                     joint_solver = joint_solver, predict_method = predict_method,
-                                    joint_refine_iter = joint_refine_iter)
+                                    joint_refine_iter = joint_refine_iter,
+                                    predict_method_explicit = predict_method_explicit)
         },
         error = function(e) NULL
       )
       if (is.null(probs)) next
       # If OVR came back all-NA (every class's fit failed), leave for LP.
       if (all(is.na(probs))) next
+      pmu <- attr(probs, "predict_method_used")
+      if (!is.null(pmu) && !is.na(pmu)) {
+        predict_method_used_all <- c(predict_method_used_all, pmu)
+      }
       log_probs <- decode_ovr_categorical(probs)
       mu[, k_cols] <- log_probs
       se[, k_cols] <- 0
@@ -1047,10 +1109,36 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                  character(1))
   names(path) <- trait_names_path
 
+  # predict_method_used (S3 default flip): "exact" only if every joint fit
+  # that ran achieved exact; "per_column" if any joint fit fell back or
+  # failed, if no joint fit ran at all (a pure per-column baseline is
+  # genuinely "per_column", whether or not the caller asked for "exact"),
+  # or if every joint fit used the rphylopars solver (where the
+  # exact/per_column dichotomy does not apply and fit_joint_solver()
+  # reports NA_character_, filtered out of predict_method_used_all above).
+  predict_method_used <- if (length(predict_method_used_all) == 0L) {
+    "per_column"
+  } else if (all(predict_method_used_all == "exact")) {
+    "exact"
+  } else {
+    "per_column"
+  }
+
+  # S4 fix (root cause A, docs/dev-log/exact-default/S4-fixes-report.md):
+  # attach the block value used internally as an attribute on the returned
+  # $lambda_per_trait vector, so a caller that replays it as a later
+  # fit_baseline(lambda_fixed = ...) call reproduces this fit's mu/se
+  # exactly rather than approximating lambda_block via mean(lambda_vec)
+  # (see .mvn_resolve_lambda()'s numeric-vector branch in
+  # R/joint_mvn_solver.R). NA when no joint fit ran (nothing to carry).
+  if (is.finite(lambda_block_out)) {
+    attr(lambda_per_trait, "lambda_block") <- lambda_block_out
+  }
   out <- list(mu = mu, se = se, path = path,
               lambda_per_trait = lambda_per_trait,
               lambda_block = lambda_block_out,
-              lambda_mode = lambda_mode)
+              lambda_mode = lambda_mode,
+              predict_method_used = predict_method_used)
   if (exists("ordinal_path_chosen", inherits = FALSE) &&
       length(ordinal_path_chosen) > 0L) {
     out$ordinal_path_chosen <- ordinal_path_chosen

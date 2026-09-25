@@ -36,9 +36,16 @@ test_that("sigma_method = 'single_pass' numeric regression on a fixed-seed L/tre
   # stable at generous tolerance. Values computed at write-time on the
   # authoring machine via fit_mvn_bm_inhouse(L, tree = tree) with
   # seed = 42, n = 25 (see make_correlated_liability()).
+  #
+  # per-column contract; under the exact default this does not hold
+  # because $anc_recon / $anc_var pinned below were computed via the
+  # per-column prediction (predict_method = "exact" now returns the exact
+  # matrix-normal conditional mean/variance instead). $pars$phylocov is
+  # unaffected (Sigma estimation is unchanged by predict_method). See
+  # docs/dev-log/exact-default/S4-fixes-report.md.
   d <- make_correlated_liability(seed = 42, n = 25)
 
-  fit <- fit_mvn_bm_inhouse(d$L, tree = d$tree)
+  fit <- fit_mvn_bm_inhouse(d$L, tree = d$tree, predict_method = "per_column")
 
   expect_equal(
     fit$pars$phylocov,

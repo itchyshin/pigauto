@@ -1,5 +1,78 @@
 # pigauto 0.11.0.9000 (dev)
 
+## Default flip: `predict_method = "exact"`
+
+`impute()`, `fit_pigauto()`, and `fit_baseline()` now default
+`predict_method` to `"exact"` (previously `"per_column"`); `"per_column"`
+remains available. `"exact"` uses the full cross-trait conditional mean and
+variance of `vec(L) ~ MVN(0, Sigma %x% R(lambda_block))` in the sparse
+precision form (Hadfield & Nakagawa, 2010), with each column GLS-mean-centred
+at `lambda_block` before the solve (S1, mean-model consistency: uncorrected,
+the exact conditional's implicit zero mean disagreed with data whose
+observed-subset mean was not zero by as much as 1.33 on a small test
+fixture). Pre-run benchmarking on Totoro (6 cells x 20 seeds) found exact
+never worse than per_column and helping at n = 100, beating the per_column
+default in every cell tested (e.g. lambda 0.7, n = 1000: z-RMSE 0.732 vs
+0.778), with discrete (binary/categorical) accuracy improving too (0.466 vs
+0.457, 0.632 vs 0.604 across two fixtures).
+
+**Discrete liability columns now share `lambda_block` under `"exact"`**
+(binary, zi gate, ordinal-via-OVR synthetic columns), rather than staying
+fixed at lambda = 1 as they do under `"per_column"` and as every column did
+before this release. The exact conditional's covariance model uses ONE
+shared `R(lambda_block)` for every column in the joint fit, so the Sigma
+estimate feeding it needs an internally consistent init across all
+columns, not a mix of `R(1)` for discrete columns and `R(lambda_k)` for
+continuous ones (Shinichi's decision). Under `predict_method =
+"per_column"` nothing changes: discrete columns still stay at lambda = 1
+in every path.
+
+**Fallback behaviour.** `"exact"` falls back to `"per_column"` above
+roughly 20000 unknown cells (roughly 4000 species at 5 traits), on a
+singular/unusable Sigma, or when fewer than 2 joint columns or no
+Henderson sparse precision are available (the last two cases were
+previously silent; K = 1, e.g. a single continuous trait, is one such
+case, and no longer silent -- see below). When `predict_method` was left
+at its default, the fallback prints a `message()` -- not a `warning()` --
+**at most once per R session**, naming the reason and that per_column was
+used; when `"exact"` was requested explicitly, it warns every time
+(unchanged behaviour). `fit$model_config$predict_method_used` (also
+`fit_baseline()`'s own `$predict_method_used`) records the route actually
+used, `"exact"` or `"per_column"`, aggregated across every joint fit that
+ran; `NA` on the `joint_solver = "rphylopars"` path, where the dichotomy
+does not apply.
+
+**Fixed two pre-existing silent-parameter-drop bugs found while wiring this
+default flip**: `fit_joint_threshold_baseline_em()`'s internal call to
+`fit_joint_threshold_baseline()`, and `fit_ovr_categorical_fits_em()`'s
+iter-2-onward internal call to `fit_ovr_categorical_fits()`, both dropped
+`predict_method` entirely, so under `em_iterations >= 1` the EM path always
+used `fit_joint_threshold_baseline()` / `fit_ovr_categorical_fits()`'s own
+hardcoded default regardless of what the caller passed. Both now forward
+`predict_method` (and the internal `predict_method_explicit` flag) through.
+
+**Corrects an earlier claim in this same file** (the `lambda_mode =
+"estimate"` entry below): "the opt-in `predict_method = 'exact'` ... never
+overrides ... a discrete or ordinal column's own lambda = 1" was true only
+under `"per_column"`, and is now wrong for `"exact"`'s new default status,
+per the discrete-liability change above; ordinal is unaffected (ordinal
+liability columns are continuous-family and were already lambda-eligible).
+
+Not exposed via `impute()` / `fit_baseline()` in this release: the internal
+`exact_centre` argument (default `TRUE`, always applied) that performs the
+GLS-mean centring described above.
+
+## Fix: full REML likelihood for Pagel's lambda (PR #191)
+
+The profile likelihood used the REML variance divisor but dropped the REML
+determinant term `0.5 * log(1' R(lambda)^-1 1)` (`0.5 * log|X' R^-1 X|`
+with covariates), which biased the lambda estimate low at weak signal.
+Measured at n = 300, 30% missing, 200 seeds: bias -0.061 -> -0.022 at true
+lambda 0.3, and -0.038 -> -0.027 at 0.7; unchanged at lambda = 1. Prediction
+error changes little (knowing the true lambda improves it by about 0.3%),
+so this mainly makes the reported `lambda_per_trait` trustworthy.
+`lambda_mode = "fixed_1"` is unaffected.
+
 ## Default flip: `lambda_mode = "estimate"`
 
 `impute()`, `fit_pigauto()`, and `multi_impute()` now default `lambda_mode`

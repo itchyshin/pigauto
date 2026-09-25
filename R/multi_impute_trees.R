@@ -565,7 +565,7 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
       em_tol = baseline_arg("em_tol", 1e-3),
       em_offdiag = baseline_arg("em_offdiag", FALSE),
       joint_solver = baseline_arg("joint_solver", "inhouse"),
-      predict_method = baseline_arg("predict_method", "per_column"),
+      predict_method = baseline_arg("predict_method", "exact"),
       joint_refine_iter = baseline_arg("joint_refine_iter", 0L)
     )
     # NULL only for baselines built before lambda_per_trait existed.
