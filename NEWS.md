@@ -12,23 +12,31 @@ lower error on that trait's validation cells:
 - `"per_column"`: each trait predicted from its own observed values only (the previous default).
 
 Validation error is squared error on the latent scale for continuous, count, proportion, ordinal and
-zero-inflated magnitude traits, and log-loss for binary, zero-inflated gate and categorical traits. A trait
-with at least 38 validation cells splits them in two: one half chooses the route and the other calibrates the
-gate and the conformal intervals, so no cell is used twice. A trait with fewer cells uses the same cells for
-both, because a 95% conformal interval needs at least 19 calibration cells. A trait with fewer than 5
-validation cells, or a fit with no validation split, uses `"exact"`. The choice is recorded
-in `fit$model_config$predict_method_by_trait`, and the final refit on all data reuses it (new `predict_route`
-argument of `fit_baseline()`). `"exact"` and `"per_column"` remain available as explicit choices. `"auto"`
-takes about 1.4 to 1.5 times as long as a single fit.
+zero-inflated magnitude traits, and log-loss for binary, zero-inflated gate and categorical traits. The unit of
+validation is the held-out trait row (the species, in data with several observations per species). A trait
+with at least 38 held-out rows, whose two candidate fits differ, splits its rows in two: one half chooses the
+route and the other calibrates the gate and the conformal intervals, so no row does both. With fewer rows the
+same rows do both, because a 95% conformal interval needs at least 19 calibration rows; when the two fits
+agree (for example a single trait) no choice is made and every row calibrates. A trait with fewer than 5
+validation cells, or a fit with no validation split, uses `"exact"`. The choice is recorded in
+`fit$model_config$predict_method_by_trait`, and the final refit on all data reuses it (new `predict_route`
+argument of `fit_baseline()`). `"exact"` and `"per_column"` remain available as explicit choices. In two
+timings the `"auto"` baseline took about 1.4 to 1.5 times as long as a single baseline fit.
 
-Measured against the previous default (pigauto without the GNN, 18 core simulation cells, 200 seeds each):
-mean z-RMSE falls by 3.1 to 6.6% at true lambda 0.3 and by 6.1 to 9.4% at lambda 0.7. At lambda 1 it falls by
-1.2% (100 species) and 0.3% (300) and rises by 0.4% at 1,000 species. Discrete accuracy rises by up to 0.050
-at lambda 0.3 and 0.7; the largest fall, 0.009 for the three-class categorical trait, is within Monte Carlo
-error. Interval coverage rises by up to 0.010 at lambda 0.3 and 0.7, but falls at lambda 1 with 100 species
-(by 0.007 for the continuous traits and up to 0.017 for the count trait) and slightly with 300 species. On
-13 real-data cases, z-RMSE falls in 12 (by 17 to 51% on AVONET and PanTHERIA, by 0.1 to 2.5% elsewhere) and
-rises by 0.8% on the full GlobTherm set (1,969 species). Evidence: `docs/dev-log/exact-default/`.
+Measured against the previous default with the GNN off (18 core simulation cells, 200 seeds each, results
+averaged over two cross-trait correlations): mean z-RMSE of the continuous-family traits falls by 3.1 to 6.6%
+at true lambda 0.3 and by 6.1 to 9.4% at lambda 0.7. At lambda 1 it falls by 1.2% (100 species) and 0.3%
+(300) and rises by 0.4% at 1,000 species. Mean discrete accuracy rises by 0.009 to 0.032 at lambda 0.3 and
+0.7 and is unchanged (within 0.001) at lambda 1; no single scenario falls by more than 0.004. Interval
+coverage of the continuous traits rises by 0.003 to 0.010 at lambda 0.3 and 0.7. At lambda 1 with 100
+species, where the previous default already covered only 0.86 to 0.92 of cells, coverage falls by a further
+0.006 to 0.018 (largest for the count and proportion traits); with 300 species it falls by at most 0.008.
+The GNN-on default of `impute()` was not re-benchmarked for this change.
+
+On 13 real-data cases (continuous traits, 5 seeds each, GNN off, no Monte Carlo error computed), z-RMSE falls
+by 17 to 51% on AVONET and PanTHERIA and by 2.5% on AmphiBIO (2,000 species); the other seven cases change by
+-0.9 to +0.8%, the largest rise on the full GlobTherm set (1,969 species). Evidence:
+`docs/dev-log/exact-default/`.
 
 Details:
 
