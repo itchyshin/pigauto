@@ -1,0 +1,278 @@
+<title>Rubin Campaign Summary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+:root {
+  --page: #f6f6f3;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --rule: #dcdbd3;
+  --chain: #2a78d6;
+  --shipped: #eb6834;
+  --resid: #1baf7a;
+  --complete: #6f6e69;
+  --freqA: #eda100;
+  --freqB: #e87ba4;
+  --good: #006300;
+  --good-bg: #e3f1e3;
+  --warn-bg: #fbeee2;
+  --warn-ink: #8a3b12;
+  --note-bg: #eef3fb;
+  --focus: #2a78d6;
+  --shadow: 0 1px 2px rgba(20, 20, 18, 0.06);
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-head: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0f0f0e;
+    --surface: #1a1a19;
+    --ink: #f4f4f1;
+    --ink-2: #c3c2b7;
+    --muted: #8f8d86;
+    --grid: #2c2c2a;
+    --axis: #45443f;
+    --rule: #33332f;
+    --chain: #3987e5;
+    --shipped: #d95926;
+    --resid: #199e70;
+    --complete: #a3a19a;
+    --freqA: #c98500;
+    --freqB: #d55181;
+    --good: #5cc45c;
+    --good-bg: #16301a;
+    --warn-bg: #3a2416;
+    --warn-ink: #f0b48f;
+    --note-bg: #172234;
+    --focus: #6da7ec;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0f0f0e;
+  --surface: #1a1a19;
+  --ink: #f4f4f1;
+  --ink-2: #c3c2b7;
+  --muted: #8f8d86;
+  --grid: #2c2c2a;
+  --axis: #45443f;
+  --rule: #33332f;
+  --chain: #3987e5;
+  --shipped: #d95926;
+  --resid: #199e70;
+  --complete: #a3a19a;
+  --freqA: #c98500;
+  --freqB: #d55181;
+  --good: #5cc45c;
+  --good-bg: #16301a;
+  --warn-bg: #3a2416;
+  --warn-ink: #f0b48f;
+  --note-bg: #172234;
+  --focus: #6da7ec;
+  --shadow: none;
+}
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  line-height: 1.6;
+  padding-inline: 16px;
+  padding-block: 28px 64px;
+}
+.wrap { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 44px; }
+h1, h2, h3 { font-family: var(--font-head); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(30px, 5vw, 42px); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 24px; font-weight: 600; }
+h3 { font-size: 17px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.num, td.n, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+section { display: flex; flex-direction: column; gap: 14px; }
+.lede { font-size: 17.5px; color: var(--ink-2); max-width: 64ch; }
+header.top { display: flex; flex-direction: column; gap: 14px; padding-bottom: 22px; border-bottom: 1px solid var(--rule); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-family: var(--font-mono); font-size: 12.5px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink-2); display: inline-flex; gap: 6px; align-items: center; }
+.chip b { color: var(--ink); font-weight: 500; }
+.chip.ok { background: var(--good-bg); border-color: transparent; color: var(--good); }
+.chip.hold { background: var(--warn-bg); border-color: transparent; color: var(--warn-ink); }
+.findings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 760px) { .findings { grid-template-columns: 1fr; } }
+.finding { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow); }
+.finding .big { font-family: var(--font-mono); font-size: 26px; font-weight: 500; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.finding .big small { font-size: 14px; color: var(--muted); font-weight: 400; }
+.finding p { font-size: 14.5px; color: var(--ink-2); }
+.figure { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 18px 18px 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow); }
+.figure .cap { font-size: 13.5px; color: var(--ink-2); max-width: 78ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.sw { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.sw.ref { width: 16px; height: 0; border-top: 2px dashed var(--muted); border-radius: 0; }
+.chart { width: 100%; overflow-x: auto; }
+.chart svg { display: block; width: 100%; height: auto; min-width: 520px; }
+.chart svg text { font-family: var(--font-body); }
+.chart svg .tick { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); }
+.chart svg .rowlab { font-size: 12.5px; fill: var(--ink-2); }
+.chart svg .grouplab { font-family: var(--font-head); font-size: 13.5px; font-weight: 600; fill: var(--ink); }
+.chart svg .vallab { font-family: var(--font-mono); font-size: 11.5px; fill: var(--ink-2); }
+.chart svg .dot { cursor: pointer; }
+.chart svg .dot:focus { outline: none; }
+.chart svg .dot:focus-visible { stroke: var(--focus); stroke-width: 3; }
+.tip { position: fixed; pointer-events: none; z-index: 10; background: var(--ink); color: var(--surface); font-size: 12.5px; line-height: 1.45; padding: 7px 10px; border-radius: 6px; max-width: 260px; font-family: var(--font-body); }
+.tip b { font-family: var(--font-mono); font-weight: 500; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { padding: 7px 12px; text-align: left; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { font-family: var(--font-head); font-weight: 600; font-size: 13px; color: var(--ink-2); background: var(--surface); }
+td.n { text-align: right; }
+th.n { text-align: right; }
+tbody tr:last-child td { border-bottom: none; }
+tr.sep td { border-top: 2px solid var(--rule); }
+.bar { display: inline-block; height: 8px; border-radius: 4px; background: var(--complete); vertical-align: middle; }
+.barcell { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+details { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 14px; }
+details summary { cursor: pointer; font-family: var(--font-head); font-weight: 600; font-size: 14.5px; color: var(--ink-2); }
+details[open] summary { margin-bottom: 10px; }
+details .tablewrap { border: none; }
+.decisions { display: flex; flex-direction: column; gap: 12px; }
+.decision { border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); padding: 16px 18px; display: grid; grid-template-columns: 34px 1fr; gap: 4px 12px; box-shadow: var(--shadow); }
+.decision .k { font-family: var(--font-mono); font-size: 13px; color: var(--muted); padding-top: 2px; }
+.decision h3 { grid-column: 2; }
+.decision p, .decision .rec { grid-column: 2; font-size: 14.5px; color: var(--ink-2); }
+.decision .rec { background: var(--note-bg); border-radius: 6px; padding: 8px 10px; color: var(--ink); }
+.reply { background: var(--surface); border: 1px dashed var(--axis); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.reply code { font-family: var(--font-mono); font-size: 13.5px; white-space: pre-wrap; color: var(--ink); }
+.reply button { align-self: flex-start; font-family: var(--font-head); font-weight: 600; font-size: 13.5px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--axis); background: var(--page); color: var(--ink); cursor: pointer; }
+.reply button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+ul.plain { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; max-width: 72ch; }
+ul.plain li { color: var(--ink-2); }
+ul.plain li b { color: var(--ink); font-weight: 600; }
+footer { border-top: 1px solid var(--rule); padding-top: 18px; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+footer .mono { font-size: 12.5px; color: var(--ink-2); }
+@media (prefers-reduced-motion: no-preference) { .chart svg .dot { transition: r 120ms ease; } }
+
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 860px) { .grid3 { grid-template-columns: 1fr; } }
+.panel { border: 1px solid var(--grid); border-radius: 8px; padding: 8px 8px 4px; background: var(--surface); }
+.panel h4 { margin: 0 0 2px 4px; font-family: var(--font-head); font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.panel svg { display: block; width: 100%; height: auto; }
+.panel svg text { font-family: var(--font-body); }
+.panel svg .tick { font-family: var(--font-mono); font-size: 10.5px; fill: var(--muted); }
+.panel svg .rowlab { font-size: 11.5px; fill: var(--ink-2); }
+.panel svg .vallab { font-family: var(--font-mono); font-size: 10.5px; fill: var(--ink-2); }
+.panel svg .dot { cursor: pointer; }
+.panel svg .dot:focus-visible { stroke: var(--focus); stroke-width: 3; }
+.rowhead { font-family: var(--font-mono); font-size: 12px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin: 6px 0 2px; }
+.note { font-size: 13.5px; color: var(--ink-2); max-width: 78ch; }
+.pill { display: inline-block; font-family: var(--font-mono); font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--note-bg); color: var(--ink); }
+</style>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">pigauto · freq vs BACE under Rubin's rules · one-page summary</div>
+    <h1>BACE's imputations need chaining; proper frequentist MI is already nominal</h1>
+    <p class="lede" id="lede"></p>
+    <div class="chips" id="chips"></div>
+  </header>
+
+  <section aria-labelledby="h-key">
+    <h2 id="h-key">Four findings</h2>
+    <ol class="plain" id="key"></ol>
+  </section>
+
+  <section aria-labelledby="h-fig">
+    <h2 id="h-fig">Per-cell coverage by signal strength</h2>
+    <p class="note" id="fig-note"></p>
+    <div class="figure">
+      <div class="legend" id="leg"></div>
+      <div class="grid3" id="fig"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-down">
+    <h2 id="h-down">Downstream estimates</h2>
+    <div class="tablewrap"><table id="tab-down"></table></div>
+    <p class="note">Coverage of the true value ρ by the Rubin-pooled 95% interval; bias of the pooled estimate. The complete-data row is the same analysis before masking.</p>
+  </section>
+
+  <section aria-labelledby="h-do">
+    <h2 id="h-do">For the BACE paper</h2>
+    <ul class="plain" id="do"></ul>
+  </section>
+
+  <section aria-labelledby="h-more">
+    <h2 id="h-more">More detail</h2>
+    <ul class="plain">
+      <li><b>Full campaign report</b> (every cell, paired contrasts, failure ledger): <a href="https://claude.ai/artifact/PFkoRFtTjox4tndEbuBtPQ">claude.ai/artifact/PFkoRFtTjox4tndEbuBtPQ</a></li>
+      <li><b>BACE settings pre-run</b> (why BACE's convergence check could not pick settings): <a href="https://claude.ai/artifact/WMHxQ8idafD5sLAVEJtg9Q">claude.ai/artifact/WMHxQ8idafD5sLAVEJtg9Q</a></li>
+      <li><b>Code and records</b>: branch <span class="mono">arc/rubin-freq-bace</span>, <span class="mono">docs/dev-log/arc/</span> and <span class="mono">docs/dev-log/after-task/</span>.</li>
+    </ul>
+  </section>
+  <footer><div id="prov"></div></footer>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const DATA = __DATA__;
+const ARMS = { freqA: { label: "freq A", color: "var(--freqA)" }, freqB: { label: "freq B", color: "var(--freqB)" },
+  bace: { label: "BACE as shipped", color: "var(--shipped)" }, bace_chain: { label: "chained BACE", color: "var(--chain)" },
+  complete: { label: "complete data", color: "var(--complete)" } };
+const ORDER = ["freqA", "freqB", "bace", "bace_chain"];
+const f3 = v => (v == null || isNaN(v)) ? "–" : Number(v).toFixed(3);
+const MIN_DS = 30;
+const get = (arr, q) => arr.find(r => Object.keys(q).every(k => r[k] === q[k]) && (r.datasets == null || r.datasets >= MIN_DS));
+const NS = "http://www.w3.org/2000/svg";
+function el(t, a, p, x) { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (x != null) e.textContent = x; if (p) p.appendChild(e); return e; }
+const tip = document.getElementById("tip");
+function showTip(e, h) { tip.innerHTML = h; tip.hidden = false; const r = tip.getBoundingClientRect(); let x = e.clientX + 14, y = e.clientY + 14; if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14; if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14; tip.style.left = x + "px"; tip.style.top = y + "px"; }
+const C = DATA.counts, done = C.bace >= 3000 && C.freq >= 3600;
+const N = [300, 100].find(n => get(DATA.cells_n, { arm: "bace", n: n }) && get(DATA.cells_n, { arm: "freqA", n: n })) || 300;
+const cn = (a, n) => get(DATA.cells_n, { arm: a, n: n }), cl = (a, n, l) => get(DATA.cells_l, { arm: a, n: n, lambda: l }), dn = (a, n, e) => get(DATA.down_n, { arm: a, n: n, estimand: e });
+document.getElementById("chips").innerHTML = [`<span class="chip"><b>${(C.freq + C.bace).toLocaleString()}</b> imputation fits</span>`, `<span class="chip"><b>18</b> cells · M = 20</span>`, `<span class="chip ok">paired: every arm imputed the same datasets</span>`,
+  done ? `<span class="chip ok">campaign complete</span>` : `<span class="chip hold">Interim: BACE at n = 1000 still running (${Math.round(100 * C.bace / 3000)}% of BACE fits in)</span>`].join("");
+document.getElementById("lede").textContent = `We compared four ways of multiply imputing phylogenetic traits on the same simulated datasets and scored them with Rubin's rules: a proper frequentist method (freq A: parametric bootstrap, then draw), an improper one (freq B: one fit), BACE as shipped, and BACE with its final runs chained. The per-cell and downstream results below are at n = ${N} unless stated.`;
+const lo = [0.3, 0.7].map(l => cl("bace", N, l)).filter(Boolean), hi = cl("bace", N, 1), chi = cl("bace_chain", N, 1);
+const k = [];
+if (cn("bace", N)) {
+  k.push(`<li><b>BACE as shipped under-covers when phylogenetic signal is moderate.</b> Per-cell coverage is ${lo.map(r => f3(r.coverage)).join(" and ")} at λ = 0.3 and 0.7 (nominal 0.95), because its 20 final runs all start from the same converged dataset. At λ = 1 it is close to nominal (${f3(hi && hi.coverage)}).</li>`);
+  k.push(`<li><b>Chaining BACE's final runs fixes it.</b> Starting each run from the previous draw gives ${f3(cn("bace_chain", N).coverage)} per cell and ${f3(dn("bace_chain", N, "cor") && dn("bace_chain", N, "cor").coverage)} for the correlation; it is slightly conservative at λ = 1 (${f3(chi && chi.coverage)}).</li>`);
+  k.push(`<li><b>Proper frequentist MI is nominal throughout.</b> freq A covers ${f3(cn("freqA", N).coverage)} per cell and ${f3(dn("freqA", N, "cor") && dn("freqA", N, "cor").coverage)} for the correlation, with imputation error no larger than chained BACE's (${f3(cn("freqA", N).zrmse)} against ${f3(cn("bace_chain", N).zrmse)} SD).</li>`);
+  k.push(`<li><b>Improper imputation shows up downstream, not in single values.</b> freq B, which holds its parameters fixed, covers single values at ${f3(cn("freqB", N).coverage)} but the correlation at only ${f3(dn("freqB", N, "cor") && dn("freqB", N, "cor").coverage)}.</li>`);
+}
+document.getElementById("key").innerHTML = k.join("");
+document.getElementById("fig-note").textContent = `Coverage of each missing c1 and c2 value by its Rubin interval at n = ${N}, by λ (pooled over ρ). Whiskers ±2 Monte Carlo SE.`;
+document.getElementById("leg").innerHTML = ORDER.map(a => `<span><i class="sw" style="background:${ARMS[a].color}"></i>${ARMS[a].label}</span>`).join("") + `<span><i class="sw ref"></i>nominal 0.95</span>`;
+const fig = document.getElementById("fig");
+[0.3, 0.7, 1].forEach(l => {
+  const W = 300, left = 104, right = 44, rowH = 22, top = 4, axisH = 22, rows = ORDER, H = top + rows.length * rowH + axisH, xmin = 0.85, xmax = 1.0;
+  const x = v => left + (Math.min(Math.max(v, xmin), xmax) - xmin) / (xmax - xmin) * (W - left - right);
+  const d = document.createElement("div"); d.className = "panel"; d.innerHTML = `<h4>λ = ${l}</h4>`;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }), yb = top + rows.length * rowH;
+  [0.85, 0.90, 0.95, 1.0].forEach(t => { el("line", { x1: x(t), x2: x(t), y1: top, y2: yb, stroke: "var(--grid)" }, svg); el("text", { x: x(t), y: yb + 15, "text-anchor": "middle", class: "tick" }, svg, t.toFixed(2)); });
+  el("line", { x1: x(0.95), x2: x(0.95), y1: top, y2: yb, stroke: "var(--muted)", "stroke-width": 1.4, "stroke-dasharray": "4 4" }, svg);
+  rows.forEach((a, i) => { const r = cl(a, N, l), cy = top + i * rowH + rowH / 2; el("text", { x: 2, y: cy + 4, class: "rowlab" }, svg, ARMS[a].label); if (!r) return;
+    el("line", { x1: x(r.coverage - 2 * r.coverage_se), x2: x(Math.min(r.coverage + 2 * r.coverage_se, 1)), y1: cy, y2: cy, stroke: ARMS[a].color, "stroke-width": 2, "stroke-linecap": "round" }, svg);
+    const c = el("circle", { cx: x(r.coverage), cy: cy, r: 5, fill: ARMS[a].color, stroke: "var(--surface)", "stroke-width": 1.5, class: "dot", tabindex: 0 }, svg);
+    const h = `<div>λ = ${l} · ${ARMS[a].label}</div><div>coverage <b>${f3(r.coverage)}</b> ± ${f3(2 * r.coverage_se)}</div><div>${r.datasets} datasets</div>`;
+    c.addEventListener("mousemove", e => showTip(e, h)); c.addEventListener("mouseleave", () => tip.hidden = true);
+    el("text", { x: W - right + 6, y: cy + 4, class: "vallab" }, svg, f3(r.coverage)); });
+  d.appendChild(svg); fig.appendChild(d); });
+const DA = ["complete"].concat(ORDER);
+document.getElementById("tab-down").innerHTML = `<thead><tr><th>Arm</th><th class="n">Slope coverage</th><th class="n">Slope bias</th><th class="n">Correlation coverage</th><th class="n">Correlation bias</th></tr></thead><tbody>` +
+  [100, N === 100 ? null : N].filter(Boolean).map((n, i) => `<tr${i ? ' class="sep"' : ""}><td colspan="5"><b>n = ${n}</b></td></tr>` + DA.map(a => { const s = dn(a, n, "slope"), c = dn(a, n, "cor"); if (!s || !c) return ""; return `<tr><td><span class="sw" style="background:${ARMS[a].color}"></span> ${ARMS[a].label}</td><td class="n">${f3(s.coverage)}</td><td class="n">${f3(s.bias)}</td><td class="n">${f3(c.coverage)}</td><td class="n">${f3(c.bias)}</td></tr>`; }).join("")).join("") + `</tbody>`;
+const g = (a, n) => dn(a, n, "slope");
+document.getElementById("do").innerHTML = [
+  `<li><b>State what BACE's imputations are.</b> Its 20 final runs share one starting dataset, so they are not independent draws; report coverage by λ, not pooled.</li>`,
+  `<li><b>Adopt the chained final step</b> (final run m starts from dataset m − 1): a small change in BACE that restores nominal coverage at the cost of M extra sweeps.</li>`,
+  `<li><b>Use Rubin intervals, not percentiles of the imputations</b>: 20 percentile draws cover about 0.87 even under a correct model.</li>`,
+  `<li><b>Drop unused factor levels before BACE</b>, or its fits stop whenever a discrete level is unobserved (common at high λ).</li>`,
+  g("bace", 100) && g("freqA", 100) ? `<li><b>Note BACE's attenuation at small n</b>: at n = 100 the slope's bias is ${f3(g("bace", 100).bias)} (shipped) and ${f3(g("bace_chain", 100) && g("bace_chain", 100).bias)} (chained) against ${f3(g("freqA", 100).bias)} for freq A.</li>` : ""].join("");
+document.getElementById("prov").innerHTML = `${DATA.sanity}. ${C.bace.toLocaleString()} BACE and ${C.freq.toLocaleString()} frequentist result files.`;
+</script>
