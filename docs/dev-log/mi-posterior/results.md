@@ -102,7 +102,8 @@ Coverage is close to 95% but not uniformly nominal (`cell_coverage.csv`):
   is 0.001 to 0.002, and 15 of the 16 rows are more than 2 SE below 0.95. That SE treats cells as
   independent. Cells of one replicate are correlated, so it understates the MCSE somewhat, but the
   largest shortfall (row 17 y, 1.7 points, 9 binomial SE) is not noise.
-- Most lambda = 0.5 twin rows (regimes 28, 34, 36, 38 and 40) are also below: 0.942 to 0.948.
+- All 12 lambda = 0.5 twin rows are below 0.95 (0.942 to 0.949); in regimes 28, 34, 36, 38 and 40
+  every row is more than 2 binomial SE below (26, 30 and 32 are within 2 SE).
 - The lambda = 1 MCAR twins cover 0.950 to 0.955.
 - Conformal over-covers (0.954 to 0.971 in the gated MCAR rows). Part of the width gap therefore
   comes from the two coverage offsets. Rescaled to equal coverage under a normal approximation, the
@@ -252,8 +253,9 @@ does not arise.
 
 ## How we got here (round 1)
 
-The first campaign (24 regimes, commit 69670d4) failed G6 on 8 checks: non-convergence in three
-n = 300 regimes, the lambda = 1 bias, one coverage shortfall and two SE ratios. `diagnosis.md`:
+The first campaign (24 regimes, commit 69670d4) failed G6 on 8 checks (`04_acceptance.R` on the
+first-campaign `sim_summary.csv` at commit f12ed09): non-convergence in three n = 300 regimes, the
+lambda = 1 bias, one coverage shortfall and two SE ratios. `diagnosis.md`:
 - **The lambda = 1 bias under phylolm** was mostly the harness DGP lying outside the model family.
   Exact imputations under the true covariance removed nearly all of it (about -0.003 remained at
   n = 300 with only x missing). In a 20-rep check on regime 3 the in-model twin removed 86% of the
