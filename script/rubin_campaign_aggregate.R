@@ -53,6 +53,7 @@ summ <- function(d, by, vars) do.call(rbind, lapply(split(d, d[by], drop = TRUE)
   r$datasets <- nrow(g); r }))
 cells <- summ(per_ds, c("arm", "n", "lambda", "rho"), c("coverage", "width", "zrmse", "iscore"))
 cells_n <- summ(per_ds, c("arm", "n"), c("coverage", "width", "zrmse", "iscore"))
+cells_l <- summ(per_ds, c("arm", "n", "lambda"), c("coverage", "width", "zrmse", "iscore"))
 prp <- cl[cl$trait == "prp", ]
 prp_s <- if (nrow(prp)) summ(transform(prp, iscore = interval_score, zrmse = zRMSE), c("arm", "n"), c("coverage", "width", "zrmse")) else NULL
 
@@ -62,6 +63,10 @@ down <- do.call(rbind, lapply(split(dd, dd[c("arm", "n", "lambda", "rho", "estim
   g[1, c("arm", "n", "lambda", "rho", "estimand")], coverage = mean(g$covered), coverage_se = se(g$covered),
   bias = mean(g$err_rho), bias_se = se(g$err_rho), rmse = sqrt(mean(g$err_rho^2)), bias_vs_complete = mean(g$err_cd),
   ci_width = mean(g$ciw), fmi_median = if (all(is.na(g$fmi))) NA else median(g$fmi, na.rm = TRUE), datasets = nrow(g), row.names = NULL)))
+down_l <- do.call(rbind, lapply(split(dd, dd[c("arm", "n", "lambda", "estimand")], drop = TRUE), function(g) data.frame(
+  g[1, c("arm", "n", "lambda", "estimand")], coverage = mean(g$covered), coverage_se = se(g$covered), bias = mean(g$err_rho),
+  rmse = sqrt(mean(g$err_rho^2)), ci_width = mean(g$ciw), fmi_median = if (all(is.na(g$fmi))) NA else median(g$fmi, na.rm = TRUE),
+  datasets = nrow(g), row.names = NULL)))
 down_n <- do.call(rbind, lapply(split(dd, dd[c("arm", "n", "estimand")], drop = TRUE), function(g) data.frame(
   g[1, c("arm", "n", "estimand")], coverage = mean(g$covered), coverage_se = se(g$covered), bias = mean(g$err_rho),
   rmse = sqrt(mean(g$err_rho^2)), ci_width = mean(g$ciw), fmi_median = if (all(is.na(g$fmi))) NA else median(g$fmi, na.rm = TRUE),
@@ -90,9 +95,9 @@ failures <- do.call(rbind, lapply(split(fr, fr[c("set", "n", "lambda")], drop = 
   set = g$set[1], n = g$n[1], lambda = g$lambda[1], files = nrow(g), bace_errors = sum(g$bace_error), freq_errors = sum(g$freq_error),
   bace_cleaned = sum(g$cleaned), freqA_refit_fail = sum(g$fA_fail, na.rm = TRUE), freqA_degenerate = sum(g$fA_degen, na.rm = TRUE), row.names = NULL)))
 
-for (nm in c("cells", "cells_n", "down", "down_n", "paired", "failures")) write.csv(get(nm), file.path(out, paste0(nm, ".csv")), row.names = FALSE)
+for (nm in c("cells", "cells_n", "cells_l", "down", "down_n", "down_l", "paired", "failures")) write.csv(get(nm), file.path(out, paste0(nm, ".csv")), row.names = FALSE)
 writeLines(c(sanity, sprintf("BACE files %d, freq files %d, as-shipped failure records %d", length(B), length(F), length(A))), file.path(out, "sanity.txt"))
-writeLines(toJSON(list(cells = cells, cells_n = cells_n, prp = prp_s, down = down, down_n = down_n, paired = paired, failures = failures,
+writeLines(toJSON(list(cells = cells, cells_n = cells_n, cells_l = cells_l, prp = prp_s, down = down, down_n = down_n, down_l = down_l, paired = paired, failures = failures,
                        sanity = sanity, counts = list(bace = length(B), freq = length(F), asshipped_failed = length(A))),
                   digits = 5, na = "null", auto_unbox = TRUE, dataframe = "rows"), file.path(out, "report.json"))
 cat(readLines(file.path(out, "sanity.txt")), sep = "\n"); print(cells_n, digits = 3, row.names = FALSE); print(down_n, digits = 3, row.names = FALSE)

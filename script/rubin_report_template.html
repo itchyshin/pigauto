@@ -1,0 +1,383 @@
+<title>BACE and Frequentist MI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+:root {
+  --page: #f6f6f3;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --rule: #dcdbd3;
+  --chain: #2a78d6;
+  --shipped: #eb6834;
+  --resid: #1baf7a;
+  --complete: #6f6e69;
+  --freqA: #eda100;
+  --freqB: #e87ba4;
+  --good: #006300;
+  --good-bg: #e3f1e3;
+  --warn-bg: #fbeee2;
+  --warn-ink: #8a3b12;
+  --note-bg: #eef3fb;
+  --focus: #2a78d6;
+  --shadow: 0 1px 2px rgba(20, 20, 18, 0.06);
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-head: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0f0f0e;
+    --surface: #1a1a19;
+    --ink: #f4f4f1;
+    --ink-2: #c3c2b7;
+    --muted: #8f8d86;
+    --grid: #2c2c2a;
+    --axis: #45443f;
+    --rule: #33332f;
+    --chain: #3987e5;
+    --shipped: #d95926;
+    --resid: #199e70;
+    --complete: #a3a19a;
+    --freqA: #c98500;
+    --freqB: #d55181;
+    --good: #5cc45c;
+    --good-bg: #16301a;
+    --warn-bg: #3a2416;
+    --warn-ink: #f0b48f;
+    --note-bg: #172234;
+    --focus: #6da7ec;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0f0f0e;
+  --surface: #1a1a19;
+  --ink: #f4f4f1;
+  --ink-2: #c3c2b7;
+  --muted: #8f8d86;
+  --grid: #2c2c2a;
+  --axis: #45443f;
+  --rule: #33332f;
+  --chain: #3987e5;
+  --shipped: #d95926;
+  --resid: #199e70;
+  --complete: #a3a19a;
+  --freqA: #c98500;
+  --freqB: #d55181;
+  --good: #5cc45c;
+  --good-bg: #16301a;
+  --warn-bg: #3a2416;
+  --warn-ink: #f0b48f;
+  --note-bg: #172234;
+  --focus: #6da7ec;
+  --shadow: none;
+}
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  line-height: 1.6;
+  padding-inline: 16px;
+  padding-block: 28px 64px;
+}
+.wrap { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 44px; }
+h1, h2, h3 { font-family: var(--font-head); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(30px, 5vw, 42px); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 24px; font-weight: 600; }
+h3 { font-size: 17px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.num, td.n, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+section { display: flex; flex-direction: column; gap: 14px; }
+.lede { font-size: 17.5px; color: var(--ink-2); max-width: 64ch; }
+header.top { display: flex; flex-direction: column; gap: 14px; padding-bottom: 22px; border-bottom: 1px solid var(--rule); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-family: var(--font-mono); font-size: 12.5px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink-2); display: inline-flex; gap: 6px; align-items: center; }
+.chip b { color: var(--ink); font-weight: 500; }
+.chip.ok { background: var(--good-bg); border-color: transparent; color: var(--good); }
+.chip.hold { background: var(--warn-bg); border-color: transparent; color: var(--warn-ink); }
+.findings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 760px) { .findings { grid-template-columns: 1fr; } }
+.finding { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow); }
+.finding .big { font-family: var(--font-mono); font-size: 26px; font-weight: 500; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.finding .big small { font-size: 14px; color: var(--muted); font-weight: 400; }
+.finding p { font-size: 14.5px; color: var(--ink-2); }
+.figure { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 18px 18px 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow); }
+.figure .cap { font-size: 13.5px; color: var(--ink-2); max-width: 78ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.sw { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.sw.ref { width: 16px; height: 0; border-top: 2px dashed var(--muted); border-radius: 0; }
+.chart { width: 100%; overflow-x: auto; }
+.chart svg { display: block; width: 100%; height: auto; min-width: 520px; }
+.chart svg text { font-family: var(--font-body); }
+.chart svg .tick { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); }
+.chart svg .rowlab { font-size: 12.5px; fill: var(--ink-2); }
+.chart svg .grouplab { font-family: var(--font-head); font-size: 13.5px; font-weight: 600; fill: var(--ink); }
+.chart svg .vallab { font-family: var(--font-mono); font-size: 11.5px; fill: var(--ink-2); }
+.chart svg .dot { cursor: pointer; }
+.chart svg .dot:focus { outline: none; }
+.chart svg .dot:focus-visible { stroke: var(--focus); stroke-width: 3; }
+.tip { position: fixed; pointer-events: none; z-index: 10; background: var(--ink); color: var(--surface); font-size: 12.5px; line-height: 1.45; padding: 7px 10px; border-radius: 6px; max-width: 260px; font-family: var(--font-body); }
+.tip b { font-family: var(--font-mono); font-weight: 500; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { padding: 7px 12px; text-align: left; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { font-family: var(--font-head); font-weight: 600; font-size: 13px; color: var(--ink-2); background: var(--surface); }
+td.n { text-align: right; }
+th.n { text-align: right; }
+tbody tr:last-child td { border-bottom: none; }
+tr.sep td { border-top: 2px solid var(--rule); }
+.bar { display: inline-block; height: 8px; border-radius: 4px; background: var(--complete); vertical-align: middle; }
+.barcell { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+details { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 14px; }
+details summary { cursor: pointer; font-family: var(--font-head); font-weight: 600; font-size: 14.5px; color: var(--ink-2); }
+details[open] summary { margin-bottom: 10px; }
+details .tablewrap { border: none; }
+.decisions { display: flex; flex-direction: column; gap: 12px; }
+.decision { border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); padding: 16px 18px; display: grid; grid-template-columns: 34px 1fr; gap: 4px 12px; box-shadow: var(--shadow); }
+.decision .k { font-family: var(--font-mono); font-size: 13px; color: var(--muted); padding-top: 2px; }
+.decision h3 { grid-column: 2; }
+.decision p, .decision .rec { grid-column: 2; font-size: 14.5px; color: var(--ink-2); }
+.decision .rec { background: var(--note-bg); border-radius: 6px; padding: 8px 10px; color: var(--ink); }
+.reply { background: var(--surface); border: 1px dashed var(--axis); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.reply code { font-family: var(--font-mono); font-size: 13.5px; white-space: pre-wrap; color: var(--ink); }
+.reply button { align-self: flex-start; font-family: var(--font-head); font-weight: 600; font-size: 13.5px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--axis); background: var(--page); color: var(--ink); cursor: pointer; }
+.reply button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+ul.plain { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; max-width: 72ch; }
+ul.plain li { color: var(--ink-2); }
+ul.plain li b { color: var(--ink); font-weight: 600; }
+footer { border-top: 1px solid var(--rule); padding-top: 18px; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+footer .mono { font-size: 12.5px; color: var(--ink-2); }
+@media (prefers-reduced-motion: no-preference) { .chart svg .dot { transition: r 120ms ease; } }
+
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 860px) { .grid3 { grid-template-columns: 1fr; } }
+.panel { border: 1px solid var(--grid); border-radius: 8px; padding: 8px 8px 4px; background: var(--surface); }
+.panel h4 { margin: 0 0 2px 4px; font-family: var(--font-head); font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.panel svg { display: block; width: 100%; height: auto; }
+.panel svg text { font-family: var(--font-body); }
+.panel svg .tick { font-family: var(--font-mono); font-size: 10.5px; fill: var(--muted); }
+.panel svg .rowlab { font-size: 11.5px; fill: var(--ink-2); }
+.panel svg .vallab { font-family: var(--font-mono); font-size: 10.5px; fill: var(--ink-2); }
+.panel svg .dot { cursor: pointer; }
+.panel svg .dot:focus-visible { stroke: var(--focus); stroke-width: 3; }
+.rowhead { font-family: var(--font-mono); font-size: 12px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin: 6px 0 2px; }
+.note { font-size: 13.5px; color: var(--ink-2); max-width: 78ch; }
+.pill { display: inline-block; font-family: var(--font-mono); font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--note-bg); color: var(--ink); }
+</style>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">pigauto · lane arc/rubin-freq-bace · campaign report · for Dan Noble's BACE paper</div>
+    <h1 id="thesis">Frequentist and BACE multiple imputation under Rubin's rules</h1>
+    <p class="lede" id="lede"></p>
+    <div class="chips" id="chips"></div>
+  </header>
+
+  <section aria-labelledby="h-find">
+    <h2 id="h-find">What the campaign shows</h2>
+    <div class="findings" id="findings"></div>
+  </section>
+
+  <section aria-labelledby="h-design">
+    <h2 id="h-design">Design</h2>
+    <p>Each simulated dataset is a random coalescent tree with 7 traits (continuous c1, c2; count; proportion; binary; ordinal; three-class categorical) plus a fully observed driver, generated as <span class="mono">vec(L) ~ N(0, Σ<sub>ρ</sub> ⊗ V<sub>λ</sub>)</span> with 30% of cells missing completely at random. Every arm imputes the same datasets (same seed), M = 20 times, and every estimate is pooled with Rubin's rules. In this design the true PGLS slope of c2 on c1 and the true phylogenetic correlation both equal ρ.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Arm</th><th>How the 20 imputations are made</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><span class="sw" style="background:var(--freqA)"></span> freq A</td><td style="white-space:normal">Rphylopars (Pagel's λ, one joint fit of c1, c2, logit prp, driver); parametric bootstrap, refit, then a joint conditional draw of the missing cells under the refit parameters</td><td>proper frequentist MI</td></tr>
+        <tr><td><span class="sw" style="background:var(--freqB)"></span> freq B</td><td style="white-space:normal">the same model fitted once; 20 joint conditional draws with the parameters held fixed</td><td>improper contrast</td></tr>
+        <tr><td><span class="sw" style="background:var(--shipped)"></span> BACE as shipped</td><td style="white-space:normal">BACE 0.1.0 (MCMCglmm chained equations), runs 5, nitt 50,000, burnin 10,000, thin 25; its 20 final datasets, each run starting from the same converged dataset</td><td>what a BACE user gets</td></tr>
+        <tr><td><span class="sw" style="background:var(--chain)"></span> chained BACE</td><td style="white-space:normal">BACE's own final step run 20 times, each run starting from the previous draw; same fit as BACE as shipped</td><td>BACE with independent draws</td></tr>
+        <tr><td><span class="sw" style="background:var(--resid)"></span> BACE + residual</td><td style="white-space:normal">BACE as shipped plus a second residual draw</td><td>negative control</td></tr>
+        <tr><td><span class="sw" style="background:var(--complete)"></span> complete data</td><td style="white-space:normal">the same analysis on the data before masking</td><td>reference</td></tr>
+      </tbody></table></div>
+    <p class="note" id="design-note"></p>
+  </section>
+
+  <section aria-labelledby="h-cell">
+    <h2 id="h-cell">Per-cell intervals</h2>
+    <p>Coverage of each missing c1 and c2 value by its Rubin interval (mean ± t<sub>19</sub>·√((1 + 1/M)·B)), averaged within a dataset and then over datasets. Whiskers are ±2 Monte Carlo SE over datasets. Rows are sample sizes, columns are λ; each panel pools ρ = 0 and 0.5.</p>
+    <div class="figure">
+      <div class="legend" id="leg-cell"></div>
+      <div id="grid-cell"></div>
+    </div>
+    <div class="tablewrap"><table id="tab-acc"></table></div>
+  </section>
+
+  <section aria-labelledby="h-down">
+    <h2 id="h-down">Downstream estimands</h2>
+    <p>Coverage of ρ by the Rubin-pooled 95% interval (Barnard–Rubin df) for the PGLS slope of c2 on c1 and for the GLS-whitened phylogenetic correlation (Fisher z). The complete-data row is the same analysis before masking; it sits a little below 0.95 at small n because λ is estimated.</p>
+    <div class="figure">
+      <div class="legend" id="leg-down"></div>
+      <div class="rowhead">PGLS slope</div>
+      <div id="grid-slope"></div>
+      <div class="rowhead">Phylogenetic correlation</div>
+      <div id="grid-cor"></div>
+    </div>
+    <div class="tablewrap"><table id="tab-down"></table></div>
+  </section>
+
+  <section aria-labelledby="h-pair">
+    <h2 id="h-pair">Paired contrasts on the same datasets</h2>
+    <p>Differences in coverage between two arms, computed per dataset and averaged; ±SE over datasets. Positive means the first arm covers more often.</p>
+    <div class="tablewrap"><table id="tab-pair"></table></div>
+  </section>
+
+  <section aria-labelledby="h-fail">
+    <h2 id="h-fail">Failures and what was fixed</h2>
+    <div class="tablewrap"><table id="tab-fail"></table></div>
+    <ul class="plain" id="fail-notes"></ul>
+  </section>
+
+  <section aria-labelledby="h-mean">
+    <h2 id="h-mean">What this means for the BACE paper</h2>
+    <ul class="plain" id="meaning"></ul>
+  </section>
+
+  <section aria-labelledby="h-limits">
+    <h2 id="h-limits">What this does not cover</h2>
+    <ul class="plain">
+      <li><b>One simulation design.</b> Brownian motion with Pagel's λ, MCAR 30%, 7 traits, random coalescent trees. Missing-at-random, clade-structured missingness, OU evolution and real trees are not run here.</li>
+      <li><b>Discrete traits are imputed but not scored</b> under Rubin's rules; per-cell scoring covers c1, c2 and prp (logit scale).</li>
+      <li><b>The frequentist model shares one λ across its traits.</b> prp carries extra non-phylogenetic noise in this design, so at λ near 1 its fitted variance is inflated (up to about 200-fold at n = 1000). The c1 and c2 estimands are not affected.</li>
+      <li id="lim-n1000"></li>
+    </ul>
+  </section>
+
+  <footer>
+    <div>Branch <span class="mono">arc/rubin-freq-bace</span> · runner <span class="mono">script/rubin_cell.R</span> · aggregator <span class="mono">script/rubin_campaign_aggregate.R</span> · pre-run page and statistics review in <span class="mono">docs/dev-log/arc/</span></div>
+    <div id="prov"></div>
+  </footer>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const DATA = __DATA__;
+const ARMS = {
+  freqA:      { label: "freq A", color: "var(--freqA)" },
+  freqB:      { label: "freq B", color: "var(--freqB)" },
+  bace:       { label: "BACE as shipped", color: "var(--shipped)" },
+  bace_chain: { label: "chained BACE", color: "var(--chain)" },
+  bace_resid: { label: "BACE + residual", color: "var(--resid)" },
+  complete:   { label: "complete data", color: "var(--complete)" }
+};
+const ORDER = ["freqA", "freqB", "bace", "bace_chain", "bace_resid"];
+const f3 = v => (v == null || isNaN(v)) ? "–" : Number(v).toFixed(3);
+const f2 = v => (v == null || isNaN(v)) ? "–" : Number(v).toFixed(2);
+const pct = v => (v == null || isNaN(v)) ? "–" : (100 * v).toFixed(1) + "%";
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent, text) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; if (parent) parent.appendChild(e); return e; }
+const tip = document.getElementById("tip");
+function showTip(e, html) { tip.innerHTML = html; tip.hidden = false; const r = tip.getBoundingClientRect(); let x = e.clientX + 14, y = e.clientY + 14; if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14; if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14; tip.style.left = x + "px"; tip.style.top = y + "px"; }
+const hideTip = () => { tip.hidden = true; };
+function legend(id, arms) { document.getElementById(id).innerHTML = arms.map(a => `<span><i class="sw" style="background:${ARMS[a].color}"></i>${ARMS[a].label}</span>`).join("") + `<span><i class="sw ref"></i>nominal 0.95</span>`; }
+
+const NS_ = [100, 300, 1000], LS = [0.3, 0.7, 1];
+const get = (arr, q) => arr.find(r => Object.keys(q).every(k => r[k] === q[k]));
+function panel(container, title, rows, xmin, xmax, ticks) {
+  const W = 300, left = 104, right = 44, rowH = 20, top = 4, axisH = 22, H = top + rows.length * rowH + axisH;
+  const x = v => left + (Math.min(Math.max(v, xmin), xmax) - xmin) / (xmax - xmin) * (W - left - right);
+  const div = document.createElement("div"); div.className = "panel"; div.innerHTML = `<h4>${title}</h4>`;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}` });
+  const yb = top + rows.length * rowH;
+  ticks.forEach(t => { el("line", { x1: x(t), x2: x(t), y1: top, y2: yb, stroke: "var(--grid)", "stroke-width": 1 }, svg); el("text", { x: x(t), y: yb + 15, "text-anchor": "middle", class: "tick" }, svg, t.toFixed(2)); });
+  el("line", { x1: x(0.95), x2: x(0.95), y1: top, y2: yb, stroke: "var(--muted)", "stroke-width": 1.4, "stroke-dasharray": "4 4" }, svg);
+  rows.forEach((r, i) => {
+    const cy = top + i * rowH + rowH / 2;
+    el("text", { x: 2, y: cy + 4, class: "rowlab" }, svg, ARMS[r.arm].label);
+    if (r.cov == null) { el("text", { x: x(xmin) + 4, y: cy + 4, class: "vallab" }, svg, "not run"); return; }
+    const lo = r.cov - 2 * (r.se || 0), hi = Math.min(r.cov + 2 * (r.se || 0), 1);
+    if (r.se > 0) el("line", { x1: x(lo), x2: x(hi), y1: cy, y2: cy, stroke: ARMS[r.arm].color, "stroke-width": 2, "stroke-linecap": "round" }, svg);
+    const d = el("circle", { cx: x(r.cov), cy: cy, r: 5, fill: ARMS[r.arm].color, stroke: "var(--surface)", "stroke-width": 1.5, class: "dot", tabindex: 0, "aria-label": `${title} ${ARMS[r.arm].label} ${f3(r.cov)}` }, svg);
+    const html = `<div>${title} · ${ARMS[r.arm].label}</div><div>coverage <b>${f3(r.cov)}</b> ± ${f3(2 * (r.se || 0))}</div><div>${r.k} datasets${r.extra || ""}</div>`;
+    d.addEventListener("mousemove", e => showTip(e, html)); d.addEventListener("mouseleave", hideTip);
+    d.addEventListener("focus", () => { const b = d.getBoundingClientRect(); showTip({ clientX: b.right, clientY: b.bottom }, html); }); d.addEventListener("blur", hideTip);
+    el("text", { x: W - right + 6, y: cy + 4, class: "vallab" }, svg, f3(r.cov));
+  });
+  div.appendChild(svg); container.appendChild(div);
+}
+function grid(id, maker, xmin, xmax, ticks) {
+  const root = document.getElementById(id);
+  NS_.forEach(n => { const g = document.createElement("div"); g.className = "grid3"; LS.forEach(l => panel(g, `n = ${n} · λ = ${l}`, maker(n, l), xmin, xmax, ticks)); root.appendChild(g); root.appendChild(Object.assign(document.createElement("div"), { style: "height:10px" })); });
+}
+
+// ---- header numbers
+const C = DATA.counts, datasets = new Set(DATA.cells.map(r => `${r.n}_${r.lambda}_${r.rho}`)).size;
+document.getElementById("chips").innerHTML = [
+  `<span class="chip"><b>${(C.freq).toLocaleString()}</b> frequentist fits</span>`,
+  `<span class="chip"><b>${(C.bace).toLocaleString()}</b> BACE fits</span>`,
+  `<span class="chip"><b>18</b> cells: n 100, 300, 1000 × λ 0.3, 0.7, 1 × ρ 0, 0.5</span>`,
+  `<span class="chip"><b>M</b> 20 imputations</span>`,
+  `<span class="chip ok">complete-data estimates identical across arm sets</span>`,
+  (C.bace >= 3000 && C.freq >= 3600) ? `<span class="chip ok">campaign complete</span>`
+    : `<span class="chip hold">Interim: ${Math.round(100 * C.bace / 3000)}% of BACE fits and ${Math.round(100 * C.freq / 3600)}% of frequentist fits in</span>`].join("");
+const cn = (a, n) => get(DATA.cells_n, { arm: a, n: n }), dn = (a, n, e) => get(DATA.down_n, { arm: a, n: n, estimand: e });
+const nb = n => cn("bace", n) ? n : null;
+const nBig = [300, 100].find(n => cn("bace", n) && cn("freqA", n));
+document.getElementById("lede").textContent = `Five ways of imputing phylogenetic traits, 20 times each, scored on the missing values themselves and on two downstream estimates. The comparison is paired: every arm imputed the same simulated datasets. BACE as shipped under-covers because its 20 final runs share one starting dataset; letting each run start from the previous draw brings it to nominal. The proper frequentist arm (freq A) is nominal throughout and the most accurate; the improper one (freq B) is fine for single values but under-covers the correlation.`;
+const tiles = [];
+if (nBig) {
+  tiles.push(`<div class="finding"><div class="eyebrow">Per-cell coverage, n = ${nBig}</div><div class="big">${f3(cn("bace", nBig).coverage)} <small>shipped</small><br>${f3(cn("bace_chain", nBig).coverage)} <small>chained</small> · ${f3(cn("freqA", nBig).coverage)} <small>freq A</small></div><p>BACE as shipped misses the true value more often than 5% of the time; chained BACE and freq A sit at 0.95.</p></div>`);
+  const b = dn("bace", nBig, "cor"), c = dn("bace_chain", nBig, "cor"), fa = dn("freqA", nBig, "cor"), fb = dn("freqB", nBig, "cor");
+  tiles.push(`<div class="finding"><div class="eyebrow">Correlation coverage, n = ${nBig}</div><div class="big">${f3(b.coverage)} <small>shipped</small><br>${f3(c.coverage)} <small>chained</small> · ${f3(fa.coverage)} <small>freq A</small></div><p>freq B, which holds its parameters fixed, covers only ${f3(fb.coverage)}: improper imputation shows up downstream, not in single values.</p></div>`);
+  tiles.push(`<div class="finding"><div class="eyebrow">Accuracy, n = ${nBig}</div><div class="big">${f2(cn("freqA", nBig).zrmse)} <small>freq A</small><br>${f2(cn("bace_chain", nBig).zrmse)} <small>chained</small> · ${f2(cn("bace", nBig).zrmse)} <small>shipped</small></div><p>Error of the mean imputation in trait SD units. freq A is the most accurate and its intervals are narrower than chained BACE's (${f2(cn("freqA", nBig).width)} against ${f2(cn("bace_chain", nBig).width)} SD).</p></div>`);
+}
+document.getElementById("findings").innerHTML = tiles.join("");
+
+// ---- per-cell grid and accuracy table
+legend("leg-cell", ORDER);
+grid("grid-cell", (n, l) => ORDER.map(a => { const r = get(DATA.cells_l, { arm: a, n: n, lambda: l }); return r ? { arm: a, cov: r.coverage, se: r.coverage_se, k: r.datasets, extra: ` · width ${f2(r.width)} SD · error ${f2(r.zrmse)}` } : { arm: a, cov: null }; }), 0.84, 1.0, [0.85, 0.90, 0.95, 1.00]);
+document.getElementById("tab-acc").innerHTML = `<thead><tr><th class="n">n</th><th>Arm</th><th class="n">Coverage</th><th class="n">2 SE</th><th class="n">Width (SD)</th><th class="n">Error (SD)</th><th class="n">Interval score</th><th class="n">Datasets</th></tr></thead><tbody>` +
+  NS_.map((n, i) => ORDER.map((a, j) => { const r = cn(a, n); if (!r) return ""; return `<tr${i && !j ? ' class="sep"' : ""}><td class="n">${j ? "" : n}</td><td><span class="sw" style="background:${ARMS[a].color}"></span> ${ARMS[a].label}</td><td class="n">${f3(r.coverage)}</td><td class="n">${f3(2 * r.coverage_se)}</td><td class="n">${f2(r.width)}</td><td class="n">${f2(r.zrmse)}</td><td class="n">${f2(r.iscore)}</td><td class="n">${r.datasets}</td></tr>`; }).join("")).join("") + `</tbody>`;
+
+// ---- downstream grids and table
+const DARMS = ["complete"].concat(ORDER);
+legend("leg-down", DARMS);
+["slope", "cor"].forEach(e => grid(`grid-${e}`, (n, l) => DARMS.map(a => { const r = get(DATA.down_l, { arm: a, n: n, lambda: l, estimand: e }); return r ? { arm: a, cov: r.coverage, se: r.coverage_se, k: r.datasets, extra: ` · bias ${f3(r.bias)} · RMSE ${f3(r.rmse)}${r.fmi_median != null && a !== "complete" ? " · FMI " + f2(r.fmi_median) : ""}` } : { arm: a, cov: null }; }), 0.70, 1.0, [0.70, 0.80, 0.90, 1.00]));
+document.getElementById("tab-down").innerHTML = `<thead><tr><th>Estimand</th><th class="n">n</th><th>Arm</th><th class="n">Coverage</th><th class="n">2 SE</th><th class="n">Bias</th><th class="n">RMSE</th><th class="n">CI width</th><th class="n">Median FMI</th></tr></thead><tbody>` +
+  ["slope", "cor"].map((e, ei) => NS_.map((n, i) => DARMS.map((a, j) => { const r = dn(a, n, e); if (!r) return ""; return `<tr${(ei || i) && !j ? ' class="sep"' : ""}><td>${j ? "" : (e === "slope" ? "Slope" : "Correlation")}</td><td class="n">${j ? "" : n}</td><td><span class="sw" style="background:${ARMS[a].color}"></span> ${ARMS[a].label}</td><td class="n">${f3(r.coverage)}</td><td class="n">${f3(2 * r.coverage_se)}</td><td class="n">${f3(r.bias)}</td><td class="n">${f3(r.rmse)}</td><td class="n">${f3(r.ci_width)}</td><td class="n">${a === "complete" ? "–" : f2(r.fmi_median)}</td></tr>`; }).join("")).join("")).join("") + `</tbody>`;
+
+// ---- paired contrasts (pooled over lambda, weighted by datasets)
+const pairs = {};
+DATA.paired.forEach(p => { const k = `${p.contrast}|${p.measure}|${p.n}`; const o = pairs[k] || (pairs[k] = { contrast: p.contrast, measure: p.measure, n: p.n, w: 0, s: 0, v: 0 }); o.w += p.datasets; o.s += p.diff * p.datasets; o.v += (p.se * p.datasets) ** 2; });
+const PL = { "bace_chain - bace": "chained BACE − BACE as shipped", "freqA - bace_chain": "freq A − chained BACE", "freqA - bace": "freq A − BACE as shipped", "freqA - freqB": "freq A − freq B" };
+const PM = { cell: "per-cell", slope: "slope", cor: "correlation" };
+document.getElementById("tab-pair").innerHTML = `<thead><tr><th>Contrast</th><th>Measure</th><th class="n">n</th><th class="n">Difference</th><th class="n">± SE</th><th class="n">Datasets</th></tr></thead><tbody>` +
+  Object.values(pairs).sort((a, b) => a.contrast.localeCompare(b.contrast) || a.measure.localeCompare(b.measure) || a.n - b.n).map(o => `<tr><td>${PL[o.contrast] || o.contrast}</td><td>${PM[o.measure]}</td><td class="n">${o.n}</td><td class="n">${(o.s / o.w >= 0 ? "+" : "") + f3(o.s / o.w)}</td><td class="n">${f3(Math.sqrt(o.v) / o.w)}</td><td class="n">${o.w}</td></tr>`).join("") + `</tbody>`;
+
+// ---- failures
+const F = DATA.failures;
+const bset = (set, n, l) => F.filter(r => r.set === set && (n == null || r.n === n) && (l == null || r.lambda === l));
+const sum = (arr, k) => arr.reduce((s, r) => s + (r[k] || 0), 0);
+document.getElementById("tab-fail").innerHTML = `<thead><tr><th>Set</th><th class="n">n</th><th class="n">λ</th><th class="n">Result files</th><th class="n">BACE fit errors</th><th class="n">Inputs cleaned</th><th class="n">freq fit errors</th><th class="n">freq A refits redrawn</th></tr></thead><tbody>` +
+  F.slice().sort((a, b) => a.set.localeCompare(b.set) || a.n - b.n || a.lambda - b.lambda).map(r => `<tr><td>${r.set === "bace_asshipped_failed" ? "BACE as shipped, failed first pass" : r.set}</td><td class="n">${r.n}</td><td class="n">${r.lambda}</td><td class="n">${r.files}</td><td class="n">${r.bace_errors}</td><td class="n">${r.bace_cleaned}</td><td class="n">${r.freq_errors}</td><td class="n">${r.freqA_refit_fail + r.freqA_degenerate}</td></tr>`).join("") + `</tbody>`;
+const asl = sum(bset("bace_asshipped_failed"), "files");
+const fq = bset("freq"), fqFiles = sum(fq, "files"), fqErr = sum(fq, "freq_errors");
+document.getElementById("fail-notes").innerHTML = [
+  `<li><b>BACE as shipped fails at λ = 1 when a discrete level is unobserved.</b> With thresholds fixed at population quantiles, λ = 1 often leaves an ordinal or categorical level empty in the observed data; BACE passes the unused level to MCMCglmm, which stops ("Mixed model equations singular"). ${asl} first-pass fits failed this way and are kept as a record. The runner now drops unused levels (and leaves out a discrete trait with fewer than 2 observed classes) before fitting; discrete traits are not scored, and the change does nothing on datasets without empty levels.</li>`,
+  `<li><b>The frequentist arms fail rarely.</b> ${fqErr} of ${fqFiles.toLocaleString()} fits (${pct(fqErr / fqFiles)}) failed in Rphylopars itself. Bootstrap refits that land on a degenerate parameter set are redrawn and counted (${sum(fq, "freqA_refit_fail") + sum(fq, "freqA_degenerate")} across the campaign); before that check, about 1 fit in 300 produced intervals of astronomical width that trivially covered.</li>`,
+  `<li><b>Crashes that leave no file</b> (segmentation faults inside MCMCglmm) are not in the table; the campaign ledger records them by hand.</li>`].join("");
+
+// ---- meaning
+const m = [];
+if (nBig) {
+  m.push(`<li><b>Say what BACE's imputations are.</b> Each final run starts from the same converged dataset, so the 20 imputations are not independent draws. Per-cell coverage is ${f3(cn("bace", nBig).coverage)} at n = ${nBig} and the correlation's is ${f3(dn("bace", nBig, "cor").coverage)}, against a nominal 0.95.</li>`);
+  m.push(`<li><b>A one-line change in BACE fixes it.</b> Starting final run m from dataset m − 1 (the chained arm) gives ${f3(cn("bace_chain", nBig).coverage)} per cell and ${f3(dn("bace_chain", nBig, "cor").coverage)} for the correlation, at the cost of 20 extra sweeps per fit.</li>`);
+  m.push(`<li><b>Compare BACE with proper frequentist MI, not with single imputation.</b> freq A matches chained BACE's coverage with lower error and narrower intervals in this Brownian-motion design, where its model is correct for c1 and c2.</li>`);
+  m.push(`<li><b>Use Rubin intervals, not percentiles of the imputations.</b> The percentile interval of 20 draws covers only about 0.87 even when the model is right; the Rubin interval covers 0.95.</li>`);
+  m.push(`<li><b>Clean discrete inputs before running BACE</b>, or its fits fail whenever a level is empty.</li>`);
+}
+document.getElementById("meaning").innerHTML = m.join("");
+document.getElementById("design-note").textContent = `Datasets per arm and n are in the tables. freq arms: 200 datasets per cell. BACE: 200 per cell at n = 100 and 300, 100 at n = 1000. Monte Carlo SEs are over datasets.`;
+document.getElementById("lim-n1000").innerHTML = cn("bace", 1000) ? `<b>BACE at n = 1000</b> uses 100 datasets per cell, so its coverage SEs are about 1.4 times the others'.` : `<b>BACE at n = 1000 is not in this version yet</b>; the frequentist arms are.`;
+document.getElementById("prov").innerHTML = `${DATA.sanity}. Counts: ${C.bace} BACE files, ${C.freq} frequentist files, ${C.asshipped_failed} as-shipped failure records.`;
+</script>
