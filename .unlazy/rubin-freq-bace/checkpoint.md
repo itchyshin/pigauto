@@ -76,3 +76,10 @@ N1000 FIRST COMPLETE FIT (2026-09-25 01:36 nibi): timing task 5 total 5:55:49 (f
   18.8 GB; estimate 6.9 h -> 14% under (D-139 pass). fir's 172 pending n1000 tasks (seeds 2-30 minus the 2 running)
   resubmitted at 24G/10h as 61453939 (two accidental duplicates of the running seeds 2,3 at lambda 0.3 rho 0 were
   cancelled before they started). Running n1000 at 01:40 nibi: fir 2, rorqual 78, nibi 70, Totoro 30.
+INTERIM REPORT PUBLISHED (2026-09-25 ~03:35 nibi): https://claude.ai/artifact/PFkoRFtTjox4tndEbuBtPQ (file
+  docs/dev-log/arc/2026-09-25-rubin-campaign-report.html; republish the same path to update). Rows with < 30 datasets are
+  withheld as "running"; narrative is data-driven (accuracy claims need > 2 SE). Findings so far: BACE as shipped
+  under-covers at lambda 0.3/0.7 (0.88-0.91 per cell), near nominal at lambda 1; chained BACE ~0.95 (over-covers
+  slightly at lambda 1); freq A ~0.95 everywhere; freq B under-covers the correlation.
+  Missing reruns: rorqual 21787578 (n100 seeds 51-55 lambda 0.7 rho 0.5, the nibi timeout block), 21788702 (n300:
+  lambda 0.7 rho 0.5 seeds 55-57 = rorqual segfault block; lambda 0.7 rho 0 seeds 151-152 = fir segfault block).
