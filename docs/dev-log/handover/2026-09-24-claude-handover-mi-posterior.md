@@ -68,6 +68,38 @@ FINDING-OF-RECORD: in-model twins separate model-family mismatch from estimator 
 - The FishBase real-data cell (10,484 tips, 5 traits) ran for more than 16 h at 69670d4.
 - All of this lane's processes are listed under Final state.
 
-## Final state
+## Final state (2026-09-25, about 04:30)
 
-(Updated at the end of the overnight run: G8/FishBase, ledger re-verification, leases.)
+Ledger (local `.unlazy/mi-posterior/GATES.md`, re-verified with `gate-check --reverify` at the final
+`R/` and `tests/` trees):
+
+| Gate | State |
+|---|---|
+| G1 to G5c | met |
+| G6 | not met: 3 relative SE-ratio rows (decision owed) |
+| G7 | met |
+| G8 | not met yet: the FishBase cell was still running (see below) |
+| M1 | met |
+| M2 | findings fixed; the D-43 panel withheld nothing (`docs/dev-log/mi-posterior/d43-panel.md`); the formal PROCEED waits for the final real-data section |
+
+Evidence: `docs/dev-log/mi-posterior/evidence/ledger/`.
+
+The FishBase cell, 69670d4 code, is the last real-data cell. It had run for more than 19.5 h. It uses
+1 core on Totoro (pid in `ps -u snakagaw`, command `01_run.R --args fishbase structured 20260818`). A
+tiny timing run at 02:16 measured about 1.1 s per sweep on a quiet machine, so a full cell needs
+about 7.3 h unloaded; the day's heavy contention slowed it several-fold. To finish G8 once
+`real_run.log` shows 10 `CELL_OK`:
+
+1. `rsync -a -e "ssh -o ControlPath=$HOME/.ssh/cm-snakagaw@totoro.biology.ualberta.ca:22" --exclude logs snakagaw@totoro.biology.ualberta.ca:/home/snakagaw/pigauto_mi_posterior/69670d44f9/campaign/real/ <worktree>/script/mi_realdata/returned/`
+2. From the worktree: `Rscript script/mi_realdata/02_summarise.R`, then `Rscript script/mi_realdata/03_acceptance.R`
+   (G8 prints `REALDATA_COMPLETE` only if all 10 cells are ok, fail-closed).
+3. Replace `docs/dev-log/mi-posterior/real_preview/` with the final tables. Update the real-data section
+   of `results.md`, recomputing every number. Then record M2's PROCEED in `GATES.md` and run
+   `gate-check --reverify`.
+
+If the cell is killed or fails, G8 cannot pass on one code SHA without rerunning FishBase. Rerunning
+it at the new code would also require the other 9 cells at that code (G8 requires one SHA). That
+decision is Shinichi's.
+
+Processes of this lane still running on Totoro: only the FishBase cell. Everything else finished or
+was killed by this lane. Leases: released at the end of the run (`lane_lease.sh --list pigauto`).
