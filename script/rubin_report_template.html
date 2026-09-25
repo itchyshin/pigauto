@@ -282,7 +282,9 @@ const hideTip = () => { tip.hidden = true; };
 function legend(id, arms) { document.getElementById(id).innerHTML = arms.map(a => `<span><i class="sw" style="background:${ARMS[a].color}"></i>${ARMS[a].label}</span>`).join("") + `<span><i class="sw ref"></i>nominal 0.95</span>`; }
 
 const NS_ = [100, 300, 1000], LS = [0.3, 0.7, 1];
-const get = (arr, q) => arr.find(r => Object.keys(q).every(k => r[k] === q[k]));
+// Rows with fewer than MIN_DS datasets are withheld (shown as "running") so a partial arm cannot be misread.
+const MIN_DS = 30;
+const get = (arr, q) => arr.find(r => Object.keys(q).every(k => r[k] === q[k]) && (r.datasets == null || r.datasets >= MIN_DS));
 function panel(container, title, rows, xmin, xmax, ticks) {
   const W = 300, left = 104, right = 44, rowH = 20, top = 4, axisH = 22, H = top + rows.length * rowH + axisH;
   const x = v => left + (Math.min(Math.max(v, xmin), xmax) - xmin) / (xmax - xmin) * (W - left - right);
@@ -294,7 +296,7 @@ function panel(container, title, rows, xmin, xmax, ticks) {
   rows.forEach((r, i) => {
     const cy = top + i * rowH + rowH / 2;
     el("text", { x: 2, y: cy + 4, class: "rowlab" }, svg, ARMS[r.arm].label);
-    if (r.cov == null) { el("text", { x: x(xmin) + 4, y: cy + 4, class: "vallab" }, svg, "not run"); return; }
+    if (r.cov == null) { el("text", { x: x(xmin) + 4, y: cy + 4, class: "vallab" }, svg, "running"); return; }
     const lo = r.cov - 2 * (r.se || 0), hi = Math.min(r.cov + 2 * (r.se || 0), 1);
     if (r.se > 0) el("line", { x1: x(lo), x2: x(hi), y1: cy, y2: cy, stroke: ARMS[r.arm].color, "stroke-width": 2, "stroke-linecap": "round" }, svg);
     const d = el("circle", { cx: x(r.cov), cy: cy, r: 5, fill: ARMS[r.arm].color, stroke: "var(--surface)", "stroke-width": 1.5, class: "dot", tabindex: 0, "aria-label": `${title} ${ARMS[r.arm].label} ${f3(r.cov)}` }, svg);
@@ -323,13 +325,20 @@ document.getElementById("chips").innerHTML = [
 const cn = (a, n) => get(DATA.cells_n, { arm: a, n: n }), dn = (a, n, e) => get(DATA.down_n, { arm: a, n: n, estimand: e });
 const nb = n => cn("bace", n) ? n : null;
 const nBig = [300, 100].find(n => cn("bace", n) && cn("freqA", n));
-document.getElementById("lede").textContent = `Five ways of imputing phylogenetic traits, 20 times each, scored on the missing values themselves and on two downstream estimates. The comparison is paired: every arm imputed the same simulated datasets. BACE as shipped under-covers because its 20 final runs share one starting dataset; letting each run start from the previous draw brings it to nominal. The proper frequentist arm (freq A) is nominal throughout and the most accurate; the improper one (freq B) is fine for single values but under-covers the correlation.`;
+const cl = (a, n, l) => get(DATA.cells_l, { arm: a, n: n, lambda: l });
+const lowL = [0.3, 0.7].map(l => cl("bace", nBig || 100, l)).filter(Boolean).map(r => r.coverage);
+const hiL = cl("bace", nBig || 100, 1), hiC = cl("bace_chain", nBig || 100, 1);
+document.getElementById("lede").textContent = `Five ways of imputing phylogenetic traits, 20 times each, scored on the missing values themselves and on two downstream estimates. The comparison is paired: every arm imputed the same simulated datasets. BACE as shipped under-covers when phylogenetic signal is moderate (λ = 0.3 and 0.7${lowL.length ? ": " + lowL.map(f3).join(" and ") + " per cell at n = " + (nBig || 100) : ""}) because its 20 final runs share one starting dataset; letting each run start from the previous draw brings it to nominal. At λ = 1 BACE as shipped is close to nominal${hiL ? " (" + f3(hiL.coverage) + ")" : ""} and the chained version slightly over-covers${hiC ? " (" + f3(hiC.coverage) + ")" : ""}. The proper frequentist arm (freq A) is at nominal throughout; the improper one (freq B) is fine for single values but under-covers the correlation.`;
 const tiles = [];
+const cmp = (a, b, n, v) => { const x = cn(a, n), y = cn(b, n); if (!x || !y) return 0; const d = x[v] - y[v], se = Math.sqrt(x[v + "_se"] ** 2 + y[v + "_se"] ** 2); return Math.abs(d) > 2 * se ? Math.sign(d) : 0; };
 if (nBig) {
   tiles.push(`<div class="finding"><div class="eyebrow">Per-cell coverage, n = ${nBig}</div><div class="big">${f3(cn("bace", nBig).coverage)} <small>shipped</small><br>${f3(cn("bace_chain", nBig).coverage)} <small>chained</small> · ${f3(cn("freqA", nBig).coverage)} <small>freq A</small></div><p>BACE as shipped misses the true value more often than 5% of the time; chained BACE and freq A sit at 0.95.</p></div>`);
   const b = dn("bace", nBig, "cor"), c = dn("bace_chain", nBig, "cor"), fa = dn("freqA", nBig, "cor"), fb = dn("freqB", nBig, "cor");
   tiles.push(`<div class="finding"><div class="eyebrow">Correlation coverage, n = ${nBig}</div><div class="big">${f3(b.coverage)} <small>shipped</small><br>${f3(c.coverage)} <small>chained</small> · ${f3(fa.coverage)} <small>freq A</small></div><p>freq B, which holds its parameters fixed, covers only ${f3(fb.coverage)}: improper imputation shows up downstream, not in single values.</p></div>`);
-  tiles.push(`<div class="finding"><div class="eyebrow">Accuracy, n = ${nBig}</div><div class="big">${f2(cn("freqA", nBig).zrmse)} <small>freq A</small><br>${f2(cn("bace_chain", nBig).zrmse)} <small>chained</small> · ${f2(cn("bace", nBig).zrmse)} <small>shipped</small></div><p>Error of the mean imputation in trait SD units. freq A is the most accurate and its intervals are narrower than chained BACE's (${f2(cn("freqA", nBig).width)} against ${f2(cn("bace_chain", nBig).width)} SD).</p></div>`);
+  const acc = cmp("freqA", "bace_chain", nBig, "zrmse"), wid = cmp("freqA", "bace_chain", nBig, "width");
+  const accTxt = acc < 0 ? "freq A is more accurate than chained BACE" : acc > 0 ? "chained BACE is more accurate than freq A" : "freq A and chained BACE are about equally accurate";
+  const widTxt = wid < 0 ? "freq A's intervals are narrower" : wid > 0 ? "chained BACE's intervals are narrower" : "their intervals are about as wide";
+  tiles.push(`<div class="finding"><div class="eyebrow">Accuracy, n = ${nBig}</div><div class="big">${f2(cn("freqA", nBig).zrmse)} <small>freq A</small><br>${f2(cn("bace_chain", nBig).zrmse)} <small>chained</small> · ${f2(cn("bace", nBig).zrmse)} <small>shipped</small></div><p>Error of the mean imputation in trait SD units. ${accTxt}, and ${widTxt} (${f2(cn("freqA", nBig).width)} against ${f2(cn("bace_chain", nBig).width)} SD); differences smaller than 2 SE are called equal.</p></div>`);
 }
 document.getElementById("findings").innerHTML = tiles.join("");
 
@@ -372,7 +381,9 @@ const m = [];
 if (nBig) {
   m.push(`<li><b>Say what BACE's imputations are.</b> Each final run starts from the same converged dataset, so the 20 imputations are not independent draws. Per-cell coverage is ${f3(cn("bace", nBig).coverage)} at n = ${nBig} and the correlation's is ${f3(dn("bace", nBig, "cor").coverage)}, against a nominal 0.95.</li>`);
   m.push(`<li><b>A one-line change in BACE fixes it.</b> Starting final run m from dataset m − 1 (the chained arm) gives ${f3(cn("bace_chain", nBig).coverage)} per cell and ${f3(dn("bace_chain", nBig, "cor").coverage)} for the correlation, at the cost of 20 extra sweeps per fit.</li>`);
-  m.push(`<li><b>Compare BACE with proper frequentist MI, not with single imputation.</b> freq A matches chained BACE's coverage with lower error and narrower intervals in this Brownian-motion design, where its model is correct for c1 and c2.</li>`);
+  const acc100 = cmp("freqA", "bace_chain", 100, "zrmse"), acc300 = cmp("freqA", "bace_chain", 300, "zrmse");
+  m.push(`<li><b>Compare BACE with proper frequentist MI, not with single imputation.</b> freq A matches chained BACE's coverage in this Brownian-motion design, where its model is correct for c1 and c2; its imputation error is ${acc100 < 0 ? "lower" : acc100 > 0 ? "higher" : "about the same"} at n = 100 (${f2(cn("freqA", 100) && cn("freqA", 100).zrmse)} against ${f2(cn("bace_chain", 100) && cn("bace_chain", 100).zrmse)} SD) and ${acc300 < 0 ? "lower" : acc300 > 0 ? "higher" : "about the same"} at n = 300.</li>`);
+  m.push(`<li><b>The shared-anchor effect depends on signal.</b> BACE as shipped loses coverage at λ = 0.3 and 0.7 and is close to nominal at λ = 1, where chaining over-covers slightly; a methods section should report coverage by λ, not pooled.</li>`);
   m.push(`<li><b>Use Rubin intervals, not percentiles of the imputations.</b> The percentile interval of 20 draws covers only about 0.87 even when the model is right; the Rubin interval covers 0.95.</li>`);
   m.push(`<li><b>Clean discrete inputs before running BACE</b>, or its fits fail whenever a level is empty.</li>`);
 }
