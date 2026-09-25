@@ -72,3 +72,7 @@ N1000 HOST SPLIT v2 (2026-09-25 ~01:00 nibi): fir started 1/354 (40G/12h jobs qu
   pgid 401996, ~/pigauto_rubin, driver script/rubin_totoro.sh, BACE digests identical), nibi seeds 41-60 (22645293, 120),
   rorqual seeds 61-100 (21781308, 240). Seed 1 = nibi timing check. Totoro counts in rubin_status.sh (totoro line).
   Pool: add Totoro results (rsync totoro:pigauto_rubin/results/bace -> pool/bace/totoro) at final pooling.
+N1000 FIRST COMPLETE FIT (2026-09-25 01:36 nibi): timing task 5 total 5:55:49 (fit 12,136 s + chain 9,204 s), MaxRSS
+  18.8 GB; estimate 6.9 h -> 14% under (D-139 pass). fir's 172 pending n1000 tasks (seeds 2-30 minus the 2 running)
+  resubmitted at 24G/10h as 61453939 (two accidental duplicates of the running seeds 2,3 at lambda 0.3 rho 0 were
+  cancelled before they started). Running n1000 at 01:40 nibi: fir 2, rorqual 78, nibi 70, Totoro 30.
