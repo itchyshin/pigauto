@@ -68,7 +68,7 @@ down_l <- do.call(rbind, lapply(split(dd, dd[c("arm", "n", "lambda", "estimand")
   rmse = sqrt(mean(g$err_rho^2)), ci_width = mean(g$ciw), fmi_median = if (all(is.na(g$fmi))) NA else median(g$fmi, na.rm = TRUE),
   datasets = nrow(g), row.names = NULL)))
 down_n <- do.call(rbind, lapply(split(dd, dd[c("arm", "n", "estimand")], drop = TRUE), function(g) data.frame(
-  g[1, c("arm", "n", "estimand")], coverage = mean(g$covered), coverage_se = se(g$covered), bias = mean(g$err_rho),
+  g[1, c("arm", "n", "estimand")], coverage = mean(g$covered), coverage_se = se(g$covered), bias = mean(g$err_rho), bias_se = se(g$err_rho),
   rmse = sqrt(mean(g$err_rho^2)), ci_width = mean(g$ciw), fmi_median = if (all(is.na(g$fmi))) NA else median(g$fmi, na.rm = TRUE),
   datasets = nrow(g), row.names = NULL)))
 
