@@ -55,3 +55,9 @@ RETRY PASS 2 fir (2026-09-24 ~23:50 nibi): 8 lambda = 1 n300 failures moved, res
   as-shipped counts (from the retry-prep outputs, authoritative): fir 69 (68 lambda 1 + 1 lambda 0.7), rorqual 98 (all
   lambda 1). The pass-2 move on fir overwrote 6 pass-1 records = 6 fits that failed AGAIN after the fix (retry1). Fixed
   rubin_retry_prep.R: later passes use results/bace_failed_pass<k>/, never overwrite. Use dest bace_failed_pass3 next.
+A5 LAUNCHED (2026-09-24 23:55 nibi): n1000 timing gate evaluated on the shipped-fit phase: 6/6 fits 12,136-13,540 s vs
+  13,750 predicted (1-12% under), incl. both lambda = 1; chain phase = 20 of the same sweeps -> ~6.4-6.8 h/fit total vs
+  6.9 h estimate; MaxRSS 16 GB so far. Launched without waiting for the chain phase (answers the time/memory question
+  Shinichi's "timing check first" asked). n1000 BACE: fir seeds 2-60 (61390620, 354 tasks, 40G, 12h), rorqual seeds
+  61-100 (21781308, 240 tasks). Seed 1 = timing check (nibi 22634021). Expected finish ~07:00-10:00 nibi if they start
+  promptly. Watch the first finished fits' total wall and MaxRSS; stop and re-report if > 30% over (D-139).
