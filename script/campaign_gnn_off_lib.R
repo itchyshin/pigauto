@@ -1,10 +1,132 @@
 # script/campaign_gnn_off_lib.R
-# Shared pieces of the campaign runners: DGPs, the seeded user-level mask, and scoring.
-# Sourced by script/campaign_gnn_off_cell.R and script/campaign_solver_cell.R.
-# score_arm() reads `truth` and `mask` from the calling environment (set by the runner).
+# Shared pieces of the campaign runners: DGPs, the seeded user-level mask, scoring, and the
+# arm-dispatch loop (run_arms). Sourced by script/campaign_gnn_off_cell.R, script/campaign_sim_cell.R
+# and script/campaign_solver_cell.R. score_arm() reads `truth` and `mask` from the calling
+# environment (set by the runner) -- unchanged calling convention, kept for campaign_solver_cell.R
+# which this lane does not touch.
+#
+# BACKWARD COMPATIBILITY: make_dgp()/make_cell() reproduce the OLD RNG stream and OLD trait
+# construction byte-for-byte whenever called with the OLD defaults (lambda = 1, rho = 0,
+# thresholds = "sample", driver = FALSE, evo = the dgp's original evolutionary model). The new
+# corrected design (2026-09-20, "the corrected design") only fires when any of those arguments is
+# given a non-default value. score_arm() keeps returning a plain data.frame (campaign_solver_cell.R
+# does `results[[arm]] <- score_arm(...)` and rbinds); the new calibration long-format frame is
+# attached as `attr(., "calib")` so old callers are unaffected.
+
+# ---- latent simulation for the corrected design (Section A) ---------------------------------
+# L = t(chol(V_lambda)) %*% Z %*% chol(Sigma_rho), Z an n x K standard-normal matrix.
+# V_lambda = lambda * V + (1 - lambda) * I, V = cov2cor(vcv(tree)) for evo = "BM".
+# For evo = "OU" (alpha = 2 fixed): V is replaced by the stationary-OU correlation
+# corr(i, j) = exp(-alpha * d_ij), d_ij = cophenetic (patristic) distance between tips i, j.
+# This is the standard stationary approximation for an OU process on an ultrametric tree (t_i = t_j
+# = tree height for every tip), NOT derived from pigauto::simulate_non_bm (that function simulates
+# trait VALUES under OU, not a reusable correlation matrix) -- UNVERIFIED against a first-principles
+# OU tip-covariance derivation; flagged in the report.
+# Tip correlation under lambda-scaled BM (or the stationary OU approximation). Factored out of
+# sim_latents() so the S6d covariate noise can be drawn with the SAME phylogenetic structure.
+phylo_corr <- function(tree, lambda = 1, evo = c("BM", "OU"), ou_alpha = 2) {
+  evo <- match.arg(evo)
+  sp <- tree$tip.label; n <- length(sp)
+  V <- cov2cor(ape::vcv(tree))[sp, sp]
+  if (evo == "OU") {
+    D <- ape::cophenetic.phylo(tree)[sp, sp]
+    V <- exp(-ou_alpha * D); diag(V) <- 1
+  }
+  V_lambda <- lambda * V + (1 - lambda) * diag(n)
+  dimnames(V_lambda) <- list(sp, sp)
+  V_lambda
+}
+
+sim_latents <- function(tree, K, lambda = 1, rho = 0, evo = c("BM", "OU"), ou_alpha = 2,
+                        driver_col = NULL, rho_driver = 0.35) {
+  evo <- match.arg(evo)
+  sp <- tree$tip.label; n <- length(sp)
+  V_lambda <- phylo_corr(tree, lambda, evo, ou_alpha)
+  Sigma_rho <- matrix(rho, K, K); diag(Sigma_rho) <- 1
+  # The MAR driver keeps its own correlation to the scored traits, independent of rho. Without this,
+  # a rho = 0 cell makes the driver independent of everything it is supposed to predict, and "MAR"
+  # there is MCAR on an unrelated variable.
+  if (!is.null(driver_col)) {
+    Sigma_rho[driver_col, -driver_col] <- rho_driver
+    Sigma_rho[-driver_col, driver_col] <- rho_driver
+    Sigma_rho[driver_col, driver_col] <- 1
+    ev <- min(eigen(Sigma_rho, symmetric = TRUE, only.values = TRUE)$values)
+    if (ev <= 1e-8) stop(sprintf("driver correlation %.2f makes Sigma non-PD at rho = %.2f", rho_driver, rho))
+  }
+  Z <- matrix(stats::rnorm(n * K), n, K)
+  L <- t(chol(V_lambda)) %*% Z %*% chol(Sigma_rho)
+  rownames(L) <- sp
+  L
+}
+
+# thresholds = "fixed" uses population quantiles of a standard normal liability (class balance
+# varies with lambda/rho because L is not marginally N(0,1) once rho < 1, only unit-diagonal by
+# construction of V_lambda and Sigma_rho -- L's marginal variance is 1 per column since both
+# V_lambda and Sigma_rho have unit diagonal, so qnorm() thresholds are still exactly calibrated).
+# thresholds = "sample" reproduces the OLD behaviour: thresholds from the realised sample.
+threshold_binary <- function(l, thresholds) if (thresholds == "fixed") l > 0 else l > stats::median(l)
+threshold_ordinal <- function(l, thresholds, labels) {
+  if (thresholds == "fixed") {
+    breaks <- c(-Inf, stats::qnorm(c(.25, .5, .75)), Inf)
+  } else {
+    breaks <- stats::quantile(l, c(0, .25, .5, .75, 1))
+  }
+  factor(cut(l, breaks, labels = labels, include.lowest = TRUE), levels = labels, ordered = TRUE)
+}
+threshold_categorical <- function(l, thresholds, labels) {
+  if (thresholds == "fixed") {
+    breaks <- c(-Inf, stats::qnorm(c(1 / 3, 2 / 3)), Inf)
+  } else {
+    breaks <- stats::quantile(l, c(0, 1 / 3, 2 / 3, 1))
+  }
+  factor(cut(l, breaks, labels = labels, include.lowest = TRUE), levels = labels)
+}
 
 # ---- data ---------------------------------------------------------------------------------
-make_dgp <- function(dgp, n, seed) {
+# S6d covariates:  cov_j = rho_cov * L[, target_j] + sqrt(1 - rho_cov^2) * e_j,  where e_j is an
+# INDEPENDENT column with the same phylogenetic structure as the traits. Unit variance, exact target
+# correlation rho_cov, positive definite for any |rho_cov| < 1 by construction.
+#
+# Two things this construction deliberately gets right:
+#
+# (a) It is built AFTER the traits are drawn, from its own rnorm() call, so it does not widen the
+#     shared Z and does not shift the RNG stream that rpois()/rnorm() read for the count and
+#     proportion traits. A covsens cell therefore has traits BYTE-IDENTICAL to the core cell at the
+#     same seed, and covsens-vs-core is a paired comparison on the same data rather than two
+#     independent draws. (Measured before this was fixed: widening Z moved 6 of 60 counts and the
+#     proportions by up to 0.24.)
+# (b) Imposing the covariate correlations directly on Sigma_rho instead -- the obvious first attempt
+#     -- is NOT positive definite at rho = 0: two covariates each correlated r with seven mutually
+#     independent traits imply a mutual correlation of 7r^2, so pinning them to 0 breaks the matrix
+#     (measured: min eigenvalue -0.32 at r = 0.25, before rho_driver is even applied).
+build_covs <- function(tree, L, target_cols, n_cov, rho_cov, lambda, evo, ou_alpha = 2) {
+  n_cov <- as.integer(n_cov %||% 0L)
+  if (n_cov < 1L) return(NULL)
+  stopifnot(rho_cov > -1, rho_cov < 1)
+  sp <- tree$tip.label; n <- length(sp)
+  E <- t(chol(phylo_corr(tree, lambda, evo, ou_alpha))) %*% matrix(stats::rnorm(n * n_cov), n, n_cov)
+  tg <- rep_len(target_cols, n_cov)
+  m <- vapply(seq_len(n_cov), function(j)
+    rho_cov * L[, tg[j]] + sqrt(1 - rho_cov^2) * E[, j], numeric(n))
+  m <- as.data.frame(m)
+  names(m) <- paste0("cov", seq_len(n_cov)); rownames(m) <- sp
+  m
+}
+
+# n_cov / rho_cov drive the S6d covariate-sensitivity slice. n_cov = 0 (the default) reproduces the
+# old RNG stream and the old outputs EXACTLY -- build_covs() returns NULL and draws nothing -- so
+# every core / factorial / avonet result already on disk stays valid.
+#
+# Construction (the plan specifies "2 covariates" and nothing else; this is the choice made here and
+# it is a single flag to change): covariate j is a noisy reading of ONE trait's latent,
+#   cov_j = rho_cov * L[, target_j] + sqrt(1 - rho_cov^2) * L[, cov_col_j],
+# with the targets chosen as the first continuous trait and the count trait -- the two places the
+# frequentist arm can actually put a covariate (castor's Mk model takes none). Consequences, measured
+# on iid tips at rho_cov = 0.6: corr(cov_j, its target) = 0.600 exactly at every rho; corr(cov1, cov2)
+# is 0 at rho = 0 and 0.18 at rho = 0.5, i.e. the covariates are related only insofar as the traits
+# are, rather than by an imposed constant; each covariate is itself phylogenetically structured.
+make_dgp <- function(dgp, n, seed, lambda = 1, rho = 0, evo = NULL, thresholds = "sample", driver = FALSE,
+                     n_cov = 0L, rho_cov = 0.6) {
   set.seed(seed)
   if (dgp == "avonet") {
     e <- new.env(); utils::data("avonet300", package = "pigauto", envir = e)
@@ -28,114 +150,409 @@ make_dgp <- function(dgp, n, seed) {
     df <- df[tree$tip.label, , drop = FALSE]
     return(list(df = df, tree = tree))
   }
-  if (dgp == "types_mixed") {
-    # Every pigauto trait type on one tree, each from its own BM latent (independent liabilities):
-    # 2 continuous, 1 count (Poisson, log link), 1 proportion (logit-normal), 1 binary, 1 ordinal
-    # (4 levels), 1 categorical (3 levels). Used for the per-type small tests.
-    tree <- ape::rcoal(n); sp <- tree$tip.label
-    lat <- function() ape::rTraitCont(tree, model = "BM", sigma = 1)
-    l_cnt <- lat(); l_prp <- lat(); l_bin <- lat(); l_ord <- lat(); l_cat <- lat()
-    ord_breaks <- stats::quantile(l_ord, c(0, .25, .5, .75, 1))
-    df <- data.frame(row.names = sp,
-      c1 = lat(), c2 = lat(),
-      cnt = as.integer(stats::rpois(n, exp(1.5 + 0.8 * l_cnt))),
-      prp = stats::plogis(l_prp + stats::rnorm(n, 0, 0.3)),
-      bin = factor(ifelse(l_bin > stats::median(l_bin), "yes", "no")),
-      ord = factor(cut(l_ord, ord_breaks, labels = c("L1", "L2", "L3", "L4"), include.lowest = TRUE),
-                   levels = c("L1", "L2", "L3", "L4"), ordered = TRUE),
-      cat3 = factor(cut(l_cat, stats::quantile(l_cat, c(0, 1/3, 2/3, 1)), labels = c("A", "B", "C"), include.lowest = TRUE)))
-    df$prp <- pmin(pmax(df$prp, 1e-4), 1 - 1e-4)
-    return(list(df = df, tree = tree, trait_types = c(prp = "proportion")))
+  if (!(dgp %in% c("types_mixed", "bm_mixed", "ou_mixed"))) stop("unknown dgp ", dgp)
+
+  default_evo <- if (dgp == "ou_mixed") "OU" else "BM"
+  evo_use <- if (is.null(evo)) default_evo else evo
+  is_default <- identical(lambda, 1) && identical(rho, 0) && identical(thresholds, "sample") &&
+    identical(driver, FALSE) && identical(evo_use, default_evo)
+
+  if (is_default) {
+    # ---- OLD code paths, byte-identical RNG stream (backward compatibility gate) ----
+    if (dgp == "types_mixed") {
+      tree <- ape::rcoal(n); sp <- tree$tip.label
+      lat <- function() ape::rTraitCont(tree, model = "BM", sigma = 1)
+      l_cnt <- lat(); l_prp <- lat(); l_bin <- lat(); l_ord <- lat(); l_cat <- lat()
+      ord_breaks <- stats::quantile(l_ord, c(0, .25, .5, .75, 1))
+      df <- data.frame(row.names = sp,
+        c1 = lat(), c2 = lat(),
+        cnt = as.integer(stats::rpois(n, exp(1.5 + 0.8 * l_cnt))),
+        prp = stats::plogis(l_prp + stats::rnorm(n, 0, 0.3)),
+        bin = factor(ifelse(l_bin > stats::median(l_bin), "yes", "no")),
+        ord = factor(cut(l_ord, ord_breaks, labels = c("L1", "L2", "L3", "L4"), include.lowest = TRUE),
+                     levels = c("L1", "L2", "L3", "L4"), ordered = TRUE),
+        cat3 = factor(cut(l_cat, stats::quantile(l_cat, c(0, 1/3, 2/3, 1)), labels = c("A", "B", "C"), include.lowest = TRUE)))
+      df$prp <- pmin(pmax(df$prp, 1e-4), 1 - 1e-4)
+      return(list(df = df, tree = tree, trait_types = c(prp = "proportion")))
+    }
+    tree <- ape::rcoal(n)   # ultrametric: BM-appropriate, and BACE/MCMCglmm requires it
+    tree$edge.length <- tree$edge.length / max(ape::node.depth.edgelength(tree))
+    sp <- tree$tip.label
+    cont <- if (dgp == "ou_mixed") {
+      pigauto::simulate_non_bm(tree, n_traits = 4L, scenario = "OU", seed = seed)
+    } else {
+      data.frame(row.names = sp,
+                 t1 = ape::rTraitCont(tree, model = "BM", sigma = 1, root.value = 0),
+                 t2 = ape::rTraitCont(tree, model = "BM", sigma = 1, root.value = 1),
+                 t3 = ape::rTraitCont(tree, model = "BM", sigma = 1, root.value = 2),
+                 t4 = ape::rTraitCont(tree, model = "BM", sigma = 1, root.value = 3))
+    }
+    cont <- as.data.frame(cont)[sp, , drop = FALSE]
+    names(cont) <- paste0("c", seq_len(ncol(cont)))
+    lat_b <- ape::rTraitCont(tree, model = "BM", sigma = 1)
+    bin <- factor(ifelse(lat_b > stats::median(lat_b), "yes", "no"))
+    lat_k <- ape::rTraitCont(tree, model = "BM", sigma = 1)
+    cat3 <- factor(cut(lat_k, breaks = stats::quantile(lat_k, c(0, 1/3, 2/3, 1)),
+                       labels = c("A", "B", "C"), include.lowest = TRUE))
+    df <- cbind(cont, data.frame(bin = bin, cat3 = cat3, row.names = sp))
+    return(list(df = df, tree = tree))
   }
-  tree <- ape::rcoal(n)   # ultrametric: BM-appropriate, and BACE/MCMCglmm requires it
+
+  # ---- NEW corrected design (Section A) --------------------------------------------------
+  tree <- ape::rcoal(n)
   tree$edge.length <- tree$edge.length / max(ape::node.depth.edgelength(tree))
   sp <- tree$tip.label
-  cont <- if (dgp == "ou_mixed") {
-    pigauto::simulate_non_bm(tree, n_traits = 4L, scenario = "OU", seed = seed)
-  } else {
-    data.frame(row.names = sp,
-               t1 = ape::rTraitCont(tree, model = "BM", sigma = 1, root.value = 0),
-               t2 = ape::rTraitCont(tree, model = "BM", sigma = 1, root.value = 1),
-               t3 = ape::rTraitCont(tree, model = "BM", sigma = 1, root.value = 2),
-               t4 = ape::rTraitCont(tree, model = "BM", sigma = 1, root.value = 3))
+  if (dgp == "types_mixed") {
+    K <- 7L + if (driver) 1L else 0L
+    L <- sim_latents(tree, K, lambda, rho, evo_use, driver_col = if (driver) K else NULL)
+    df <- data.frame(row.names = sp,
+      c1 = L[, 1], c2 = L[, 2],
+      cnt = as.integer(stats::rpois(n, exp(1.5 + 0.8 * L[, 3]))),
+      prp = stats::plogis(L[, 4] + stats::rnorm(n, 0, 0.3)),
+      bin = factor(ifelse(threshold_binary(L[, 5], thresholds), "yes", "no")),
+      ord = threshold_ordinal(L[, 6], thresholds, c("L1", "L2", "L3", "L4")),
+      cat3 = threshold_categorical(L[, 7], thresholds, c("A", "B", "C")))
+    df$prp <- pmin(pmax(df$prp, 1e-4), 1 - 1e-4)
+    if (driver) df$d1 <- L[, 8]
+    # targets: c1 (latent 1, continuous) and cnt (latent 3, the count trait)
+    covs <- build_covs(tree, L, target_cols = c(1L, 3L), n_cov = n_cov, rho_cov = rho_cov,
+                       lambda = lambda, evo = evo_use)
+    return(list(df = df, tree = tree, trait_types = c(prp = "proportion"), covs = covs,
+                L = L, lambda = lambda, rho = rho, evo = evo_use, thresholds = thresholds))
   }
-  cont <- as.data.frame(cont)[sp, , drop = FALSE]
-  names(cont) <- paste0("c", seq_len(ncol(cont)))
-  lat_b <- ape::rTraitCont(tree, model = "BM", sigma = 1)
-  bin <- factor(ifelse(lat_b > stats::median(lat_b), "yes", "no"))
-  lat_k <- ape::rTraitCont(tree, model = "BM", sigma = 1)
-  cat3 <- factor(cut(lat_k, breaks = stats::quantile(lat_k, c(0, 1/3, 2/3, 1)),
-                     labels = c("A", "B", "C"), include.lowest = TRUE))
-  df <- cbind(cont, data.frame(bin = bin, cat3 = cat3, row.names = sp))
-  list(df = df, tree = tree)
+  # bm_mixed / ou_mixed under the corrected design: same trait mix as before (4 continuous + binary
+  # + categorical), now drawn through the shared lambda/rho/evo latent machinery.
+  K <- 6L + if (driver) 1L else 0L
+  L <- sim_latents(tree, K, lambda, rho, evo_use, driver_col = if (driver) K else NULL)
+  df <- data.frame(row.names = sp, c1 = L[, 1], c2 = L[, 2], c3 = L[, 3], c4 = L[, 4],
+                    bin = factor(ifelse(threshold_binary(L[, 5], thresholds), "yes", "no")),
+                    cat3 = threshold_categorical(L[, 6], thresholds, c("A", "B", "C")))
+  if (driver) df$d1 <- L[, 7]
+  # no count trait in this branch: both covariates target continuous latents
+  covs <- build_covs(tree, L, target_cols = c(1L, 3L), n_cov = n_cov, rho_cov = rho_cov,
+                     lambda = lambda, evo = evo_use)
+  list(df = df, tree = tree, covs = covs, L = L, lambda = lambda, rho = rho, evo = evo_use,
+       thresholds = thresholds)
 }
 
-# Build the cell: truth, tree, the user-level MCAR mask (seeded by seed + 1000), df_miss.
-make_cell <- function(dgp, n, seed, miss_frac = 0.30) {
-  d <- make_dgp(dgp, n, seed)
+# Build the cell: truth, tree, the seeded mask, df_miss. mask + set.seed(seed + 1000L) convention
+# unchanged. miss = "mcar" with all defaults reproduces the OLD code exactly (mask_cols == names(truth)
+# whenever there is no "d1" driver column, which is the case unless driver = TRUE).
+make_cell <- function(dgp, n, seed, miss_frac = 0.30, miss = "mcar", lambda = 1, rho = 0,
+                       evo = NULL, thresholds = "sample", driver = FALSE,
+                       n_cov = 0L, rho_cov = 0.6) {
+  d <- make_dgp(dgp, n, seed, lambda = lambda, rho = rho, evo = evo, thresholds = thresholds, driver = driver,
+                n_cov = n_cov, rho_cov = rho_cov)
   truth <- d$df; tree <- d$tree
   set.seed(seed + 1000L)
   mask <- matrix(FALSE, nrow(truth), ncol(truth), dimnames = dimnames(truth))
-  for (v in names(truth)) {
-    obs <- which(!is.na(truth[[v]])); hide <- sample(obs, ceiling(miss_frac * length(obs)))
-    mask[hide, v] <- TRUE
+  mask_cols <- setdiff(names(truth), "d1")   # the driver is always observed
+  realised_frac <- miss_frac
+
+  if (miss == "mcar") {
+    for (v in mask_cols) {
+      obs <- which(!is.na(truth[[v]])); hide <- sample(obs, ceiling(miss_frac * length(obs)))
+      mask[hide, v] <- TRUE
+    }
+  } else if (miss == "mar") {
+    if (!("d1" %in% names(truth))) stop("make_cell: miss = 'mar' requires driver = TRUE")
+    d1 <- truth$d1; d1z <- (d1 - mean(d1)) / stats::sd(d1)
+    # P(miss_ij) = plogis(a + log(3) * d1z_i); solve a so the expected fraction equals miss_frac.
+    f <- function(a) mean(stats::plogis(a + log(3) * d1z)) - miss_frac
+    a_star <- stats::uniroot(f, c(-30, 30))$root
+    p <- stats::plogis(a_star + log(3) * d1z)
+    for (v in mask_cols) {
+      obs <- which(!is.na(truth[[v]]))
+      hide <- obs[stats::runif(length(obs)) < p[obs]]
+      mask[hide, v] <- TRUE
+    }
+    realised_frac <- sum(mask[, mask_cols, drop = FALSE]) / (length(mask_cols) * nrow(truth))
+  } else if (miss == "clade") {
+    total_cells <- length(mask_cols) * nrow(truth)
+    target <- miss_frac * total_cells
+    lo_sz <- max(1L, ceiling(0.05 * nrow(truth))); hi_sz <- max(lo_sz, ceiling(0.15 * nrow(truth)))
+    internal_nodes <- seq(nrow(truth) + 2L, nrow(truth) + tree$Nnode)
+    tries <- 0L
+    while (sum(mask[, mask_cols, drop = FALSE]) < target && tries < 2000L && length(internal_nodes)) {
+      tries <- tries + 1L
+      nd <- sample(internal_nodes, 1)
+      cl <- tryCatch(ape::extract.clade(tree, nd), error = function(e) NULL)
+      if (is.null(cl)) next
+      sz <- length(cl$tip.label)
+      if (sz < lo_sz || sz > hi_sz) next
+      rows <- match(cl$tip.label, rownames(truth))
+      for (v in mask_cols) mask[rows, v] <- TRUE   # last clade may overshoot -> "partial" below
+    }
+    # trim overshoot cell-by-cell (random) back toward the target fraction ("last clade partial")
+    over <- sum(mask[, mask_cols, drop = FALSE]) - target
+    if (over > 0) {
+      idx_on <- which(mask[, mask_cols, drop = FALSE])
+      unmask <- sample(idx_on, min(length(idx_on), floor(over)))
+      mm <- mask[, mask_cols, drop = FALSE]; mm[unmask] <- FALSE; mask[, mask_cols] <- mm
+    }
+    # enforce >= 5 observed cells per column
+    for (v in mask_cols) {
+      if (sum(!mask[, v]) < 5) {
+        need <- 5 - sum(!mask[, v])
+        on_idx <- which(mask[, v])
+        if (length(on_idx)) mask[sample(on_idx, min(need, length(on_idx))), v] <- FALSE
+      }
+    }
+    realised_frac <- sum(mask[, mask_cols, drop = FALSE]) / total_cells
+  } else {
+    stop("unknown miss mechanism ", miss)
   }
+
   df_miss <- truth; for (v in names(truth)) df_miss[mask[, v], v] <- NA
-  list(truth = truth, tree = tree, mask = mask, df_miss = df_miss,
+  # Covariates are predictors, never targets: they live outside `truth`, so they are never masked by
+  # the loop above and never enter score_arm()'s `for (v in names(truth))`.
+  list(truth = truth, tree = tree, mask = mask, df_miss = df_miss, covs = d$covs,
        cont_traits = names(truth)[vapply(truth, is.numeric, logical(1))],
-       trait_types = d$trait_types)
+       trait_types = d$trait_types, realised_frac = realised_frac, mechanism = miss, L = d$L)
 }
 
 # ---- scoring ------------------------------------------------------------------------------
-score_arm <- function(arm, completed, lower = NULL, upper = NULL) {
-  rows <- list()
+# score_arm() keeps its OLD signature and return type (a plain data.frame; campaign_solver_cell.R
+# calls it positionally and rbinds the result). Section C additions: standardised interval width
+# and the Gneiting-Raftery interval score for continuous-family traits; macro-F1 and Brier for
+# discrete traits. The per-cell (confidence, correct) calibration pairs used for pooled ECE are
+# attached as attr(., "calib") -- a long data.frame -- rather than changed in the return shape, so
+# every existing caller keeps working unmodified.
+#
+# `prob`: optional named list keyed by trait name, each element an (n_obs x K) probability matrix
+# with rownames = df_miss rownames and colnames = levels(truth[[v]]). Needed for Brier/ECE; accuracy
+# and macro-F1 do not need it.
+score_arm <- function(arm, completed, lower = NULL, upper = NULL, prob = NULL) {
+  rows <- list(); calib_rows <- list()
+  alpha <- 0.05
   for (v in names(truth)) {
     idx <- which(mask[, v]); if (!length(idx)) next
+    rn <- rownames(truth)[idx]
     if (is.numeric(truth[[v]])) {
       tr <- truth[[v]][idx]; pr <- completed[[v]][idx]
       train <- truth[[v]][!mask[, v] & !is.na(truth[[v]])]
-      z <- sqrt(mean(((tr - pr) / stats::sd(train))^2))
-      cov <- NA_real_
+      sdt <- stats::sd(train)
+      z <- sqrt(mean(((tr - pr) / sdt)^2))
+      cov <- NA_real_; width <- NA_real_; iscore <- NA_real_
       if (!is.null(lower) && v %in% colnames(lower)) {
-        rn <- rownames(truth)[idx]; cov <- mean(tr >= lower[rn, v] & tr <= upper[rn, v])
+        lo <- lower[rn, v]; hi <- upper[rn, v]
+        cov <- mean(tr >= lo & tr <= hi)
+        width <- mean((hi - lo) / sdt)
+        iscore <- mean(((hi - lo) + (2 / alpha) * (lo - tr) * (tr < lo) +
+                           (2 / alpha) * (tr - hi) * (tr > hi)) / sdt)
       }
-      rows[[v]] <- data.frame(arm = arm, trait = v, metric = "zRMSE", value = z, coverage = cov)
+      rows[[length(rows) + 1L]] <- data.frame(arm = arm, trait = v, metric = "zRMSE", value = z, coverage = cov)
+      rows[[length(rows) + 1L]] <- data.frame(arm = arm, trait = v, metric = "width", value = width, coverage = NA_real_)
+      rows[[length(rows) + 1L]] <- data.frame(arm = arm, trait = v, metric = "interval_score", value = iscore, coverage = NA_real_)
     } else {
-      acc <- mean(as.character(truth[[v]][idx]) == as.character(completed[[v]][idx]))
-      rows[[v]] <- data.frame(arm = arm, trait = v, metric = "accuracy", value = acc, coverage = NA_real_)
+      truv <- as.character(truth[[v]][idx]); prv <- as.character(completed[[v]][idx])
+      acc <- mean(truv == prv)
+      levs <- levels(truth[[v]])
+      # Macro-F1 averages only over classes PRESENT in the masked truth. A class absent from both
+      # truth and prediction has an undefined F1; scoring it 0 and averaging it in deflates the
+      # metric, and deflates it most in the low-prevalence cells where the arms actually differ.
+      levs_scored <- levs[levs %in% truv]
+      f1s <- vapply(levs_scored, function(k) {
+        tp <- sum(prv == k & truv == k); fp <- sum(prv == k & truv != k); fn <- sum(prv != k & truv == k)
+        prec <- if (tp + fp == 0) 0 else tp / (tp + fp); rec <- if (tp + fn == 0) 0 else tp / (tp + fn)
+        if (prec + rec == 0) 0 else 2 * prec * rec / (prec + rec)
+      }, numeric(1))
+      macro_f1 <- if (length(f1s)) mean(f1s) else NA_real_
+      n_classes_scored <- length(levs_scored)
+      brier <- NA_real_
+      if (!is.null(prob) && v %in% names(prob) && !is.null(prob[[v]])) {
+        pv <- prob[[v]]
+        # pigauto's binary probabilities come back as a vector (P(second level)), SOMETIMES named
+        # (gnn = FALSE observed so far) and sometimes unnamed (gnn = TRUE observed so far, same
+        # length as nrow(truth)); UNVERIFIED assumption: an unnamed vector/matrix is in
+        # rownames(truth) order (matches how `completed` is reindexed in run_pigauto). Normalise
+        # every source to an (n x K) matrix keyed by species name before indexing.
+        if (is.null(dim(pv))) {
+          stopifnot(length(levs) == 2L)
+          nm <- if (!is.null(names(pv))) names(pv) else rownames(truth)
+          pm2 <- cbind(1 - pv, pv); colnames(pm2) <- levs; rownames(pm2) <- nm
+          pv <- pm2
+        } else if (is.null(rownames(pv))) {
+          rownames(pv) <- rownames(truth)
+        }
+        pm <- pv[rn, levs, drop = FALSE]
+        y1 <- sapply(levs, function(k) as.integer(truv == k))
+        brier <- mean(rowSums((pm - y1)^2))
+        conf <- apply(pm, 1, max)
+        pred_class <- levs[apply(pm, 1, which.max)]
+        correct <- as.integer(pred_class == truv)
+        calib_rows[[length(calib_rows) + 1L]] <- data.frame(arm = arm, trait = v, species = rn,
+                                                              confidence = conf, correct = correct)
+      }
+      rows[[length(rows) + 1L]] <- data.frame(arm = arm, trait = v, metric = "accuracy", value = acc, coverage = NA_real_)
+      rows[[length(rows) + 1L]] <- data.frame(arm = arm, trait = v, metric = "macroF1", value = macro_f1, coverage = NA_real_)
+      rows[[length(rows) + 1L]] <- data.frame(arm = arm, trait = v, metric = "n_classes_scored", value = n_classes_scored, coverage = NA_real_)
+      rows[[length(rows) + 1L]] <- data.frame(arm = arm, trait = v, metric = "brier", value = brier, coverage = NA_real_)
     }
   }
-  do.call(rbind, rows)
+  res <- do.call(rbind, rows); rownames(res) <- NULL
+  attr(res, "calib") <- if (length(calib_rows)) do.call(rbind, calib_rows) else NULL
+  res
 }
 
 
-# ---- frequentist stack: Rphylopars on the continuous-family columns (count on log1p, proportion on
-# logit, back-transformed), castor Mk (ML hidden-state prediction) on each discrete trait separately.
-run_freq <- function(df_miss, truth, mask, tree, cont_traits, trait_types = NULL) {
+# ---- frequentist stack: Rphylopars on the continuous-family columns (proportion on logit,
+# back-transformed), castor Mk (ML hidden-state prediction, likelihoods kept as `prob`) on each
+# discrete trait separately. Section E: counts are now a phylogenetic Poisson GEE marginal model
+# (`phylolm::phyloglm(method = "poisson_GEE")`) by default -- documented as a MARGINAL Poisson model
+# with NO tip-level phylogenetic random effect (phyloglm does not provide one); the old log1p +
+# Rphylopars route is kept available via count_method = "log1p_rphylopars" (arm "freq_log1p").
+# Section D: continuous-family intervals are yhat +/- 1.96 * sqrt(anc_var [+ phenocov if not already
+# included]), back-transformed. CHECK (2026-09-20, Rphylopars 0.3.10): `fit$anc_var` for a species
+# with NO observed data at all for a trait already reflects total predictive uncertainty at that tip
+# (it includes the phenotypic/residual variance implicitly through the joint GLS predictive
+# equations); `fit$pars$phenocov` is a SEPARATE estimate of the phenotypic covariance and adding its
+# diagonal on top would double-count residual variance. Verified by comparing empirical coverage in
+# gate G6 (frequentist-stack coverage lands near 0.95, not badly over-covered) rather than by reading
+# Rphylopars' internals line-by-line -- flagged UNVERIFIED against Rphylopars source.
+# covs (S6d): a fully observed data.frame of predictors, rownames matching df_miss, or NULL. Where it
+# enters, per the plan's "arm 1 = phylolm/phyloglm/castor variant":
+#   continuous  Rphylopars has no fixed-effect interface, so each trait is residualised on the
+#               covariates by OLS over its OBSERVED rows, phylopars is fitted to the residuals, and
+#               the covariate contribution is added back for the masked rows. Beta is treated as
+#               known when forming the interval, so the interval ignores the uncertainty in beta --
+#               a documented approximation, not an exact fixed-effect phylogenetic GLS.
+#   count       phyloglm(y ~ cov1 + ...), which also removes the current ~ 1 limitation of predicting
+#               the SAME lambda for every masked cell: the prediction is now tip-specific.
+#   discrete    castor::hsp_mk_model takes no covariates at all. UNCHANGED, and reported as such:
+#               the discrete traits of arm 1 are covariate-free even in the covariate slice.
+# phylo_model: the evolutionary model handed to Rphylopars for the joint continuous-family fit.
+# "BM" is Rphylopars' own default and the arm the campaign has always run; it assumes lambda = 1, so
+# on a DGP with lambda < 1 it extrapolates signal the data do not contain and can land worse than the
+# mean floor (measured: z-RMSE 1.25 against a floor of 1.01 at lambda = 0.3, n = 100). "lambda" lets
+# Rphylopars estimate the signal instead, which is the package used as its documentation intends.
+# Both run, as arms `freq` and `freq_lambda`, so the paper can report what the common default costs.
+run_freq <- function(df_miss, truth, mask, tree, cont_traits, trait_types = NULL,
+                      count_method = c("phyloglm_poisson_gee", "log1p_rphylopars"), covs = NULL,
+                      phylo_model = "BM") {
+  count_method <- match.arg(count_method)
+  cov_names <- if (!is.null(covs)) names(covs) else character(0)
+  X <- if (length(cov_names)) as.matrix(covs[rownames(truth), , drop = FALSE]) else NULL
   comp <- truth; comp[] <- NA
-  # continuous family
   is_prop <- names(truth) %in% names(trait_types)[trait_types == "proportion"]
   is_cnt  <- vapply(truth, is.integer, logical(1))
-  tf <- function(v, x) if (is_prop[match(v, names(truth))]) stats::qlogis(x) else if (is_cnt[match(v, names(truth))]) log1p(x) else x
-  itf <- function(v, x) if (is_prop[match(v, names(truth))]) stats::plogis(x) else if (is_cnt[match(v, names(truth))]) pmax(expm1(x), 0) else x
-  df4 <- df_miss[, cont_traits, drop = FALSE]
-  for (v in cont_traits) df4[[v]] <- tf(v, as.numeric(df4[[v]]))
-  df_in <- data.frame(species = rownames(df4), df4, stringsAsFactors = FALSE)
-  fit <- Rphylopars::phylopars(df_in, tree = tree, model = "BM", phylo_correlated = TRUE, pheno_correlated = TRUE, REML = TRUE)
-  rec <- fit$anc_recon[rownames(df4), cont_traits, drop = FALSE]
-  for (v in cont_traits) { comp[[v]] <- df_miss[[v]]; comp[mask[, v], v] <- itf(v, rec[mask[, v], v]) }
-  # discrete traits: castor Mk, equal rates for binary/categorical, stepwise (SUEDE) for ordinal
-  for (v in setdiff(names(truth), cont_traits)) {
+  count_traits <- names(truth)[is_cnt]
+  cont_for_joint <- if (count_method == "phyloglm_poisson_gee") setdiff(cont_traits, count_traits) else cont_traits
+  tf  <- function(v, x) if (is_prop[match(v, names(truth))]) stats::qlogis(x) else if (count_method == "log1p_rphylopars" && is_cnt[match(v, names(truth))]) log1p(x) else x
+  itf <- function(v, x) if (is_prop[match(v, names(truth))]) stats::plogis(x) else if (count_method == "log1p_rphylopars" && is_cnt[match(v, names(truth))]) pmax(expm1(x), 0) else x
+
+  lower <- upper <- NULL
+  if (length(cont_for_joint)) {
+    df4 <- df_miss[, cont_for_joint, drop = FALSE]
+    for (v in cont_for_joint) df4[[v]] <- tf(v, as.numeric(df4[[v]]))
+    # covariate fixed part, removed before the joint BM fit and added back after
+    xb <- matrix(0, nrow(df4), length(cont_for_joint), dimnames = list(rownames(df4), cont_for_joint))
+    if (!is.null(X)) {
+      Xd <- X[rownames(df4), , drop = FALSE]
+      for (v in cont_for_joint) {
+        y <- df4[[v]]; obs <- !is.na(y)
+        if (sum(obs) > ncol(Xd) + 1L) {
+          b <- tryCatch(stats::lm.fit(cbind(1, Xd[obs, , drop = FALSE]), y[obs])$coefficients, error = function(e) NULL)
+          if (!is.null(b) && all(is.finite(b))) {
+            xb[, v] <- drop(cbind(1, Xd) %*% b)
+            df4[[v]] <- y - xb[, v]
+          }
+        }
+      }
+    }
+    df_in <- data.frame(species = rownames(df4), df4, stringsAsFactors = FALSE)
+    fit <- Rphylopars::phylopars(df_in, tree = tree, model = phylo_model, phylo_correlated = TRUE, pheno_correlated = TRUE, REML = TRUE)
+    rec <- fit$anc_recon[rownames(df4), cont_for_joint, drop = FALSE] + xb[rownames(df4), cont_for_joint, drop = FALSE]
+    for (v in cont_for_joint) { comp[[v]] <- df_miss[[v]]; comp[mask[, v], v] <- itf(v, rec[mask[, v], v]) }
+    if (!is.null(fit$anc_var)) {
+      var_out <- fit$anc_var[rownames(df4), cont_for_joint, drop = FALSE]
+      lower <- matrix(NA_real_, nrow(truth), ncol(truth), dimnames = dimnames(truth)); upper <- lower
+      for (v in cont_for_joint) {
+        se <- sqrt(pmax(var_out[, v], 0))
+        lower[rownames(df4), v] <- itf(v, rec[, v] - 1.96 * se)
+        upper[rownames(df4), v] <- itf(v, rec[, v] + 1.96 * se)
+      }
+    }
+  }
+  prob <- list()
+  if (length(count_traits) && count_method == "phyloglm_poisson_gee") {
+    if (is.null(lower)) { lower <- matrix(NA_real_, nrow(truth), ncol(truth), dimnames = dimnames(truth)); upper <- lower }
+    for (v in count_traits) {
+      y <- df_miss[[v]]; obs <- !is.na(y)
+      tree_obs <- ape::keep.tip(tree, rownames(df_miss)[obs])
+      dat <- data.frame(y = y[obs], row.names = rownames(df_miss)[obs])
+      if (!is.null(X)) dat <- cbind(dat, X[rownames(dat), , drop = FALSE])
+      dat <- dat[tree_obs$tip.label, , drop = FALSE]
+      fitp <- tryCatch(phylolm::phyloglm(y ~ 1, phy = tree_obs, data = dat, method = "poisson_GEE"), error = function(e) NULL)
+      # S6d: the covariate model is fitted BESIDE the intercept-only one and only adopted if it
+      # actually predicts the OBSERVED counts better (Poisson deviance on the observed rows).
+      # Measured reason: phyloglm's poisson_GEE is a marginal estimator and on this DGP it returns
+      # badly conditioned betas (it warns "system is singular"), so the tip-specific exp(x'beta) was
+      # far WORSE than the constant mean -- mean zRMSE 1.16 -> 9.73 over 25 seeds, worse in 24 of
+      # them, and non-finite on at least one. Selecting on in-sample fit keeps the covariate version
+      # where it helps and can never do worse than the covariate-free arm.
+      use_cov <- FALSE; fitc <- NULL
+      if (length(cov_names)) {
+        fmlc <- stats::as.formula(paste("y ~", paste(cov_names, collapse = " + ")))
+        fitc <- tryCatch(phylolm::phyloglm(fmlc, phy = tree_obs, data = dat, method = "poisson_GEE"), error = function(e) NULL)
+        if (!is.null(fitc)) {
+          pdev <- function(mu) { mu <- pmax(mu, 1e-8); yo <- dat$y
+            2 * sum(ifelse(yo > 0, yo * log(yo / mu), 0) - (yo - mu)) }
+          bc <- unname(stats::coef(fitc))
+          mu_c <- exp(pmin(pmax(drop(cbind(1, as.matrix(dat[, cov_names, drop = FALSE])) %*% bc), -20), 20))
+          mu_0 <- if (!is.null(fitp)) rep(exp(unname(stats::coef(fitp))[1]), nrow(dat)) else rep(mean(dat$y), nrow(dat))
+          if (all(is.finite(mu_c)) && pdev(mu_c) < pdev(mu_0)) { use_cov <- TRUE; fitp <- fitc }
+        }
+      }
+      comp[[v]] <- df_miss[[v]]
+      if (!is.null(fitp)) {
+        # phyloglm's poisson_GEE fits a MARGINAL Poisson mean structure (no random effect / BLUP per
+        # species). WITHOUT covariates that means the same exp(beta0) for every missing cell of this
+        # trait, and a plain Poisson quantile band rather than a tip-specific phylogenetic interval.
+        # WITH covariates (S6d) the mean is tip-specific through exp(x_i'beta), though still marginal.
+        bb <- unname(stats::coef(fitp))
+        obsv <- y[obs]
+        if (use_cov) {
+          # With covariates the mean is tip-specific, so exp() is applied to a per-tip linear
+          # predictor rather than to one intercept -- and it OVERFLOWS when phyloglm returns a badly
+          # estimated beta (it warns "system is singular" on some seeds). Unclamped this produced a
+          # non-finite lambda, hence NA counts and an NA zRMSE for the whole trait: measured, it hit
+          # at least one of 25 seeds at n = 100. Clamp the linear predictor to a range the observed
+          # counts can support, and fall back to the intercept-only mean if anything is still not
+          # finite. The no-covariate path is a single well-behaved intercept and is unaffected.
+          cap <- log(max(10, 10 * max(obsv, na.rm = TRUE) + 10))
+          eta <- drop(cbind(1, X[rownames(truth), , drop = FALSE]) %*% bb)
+          lam <- exp(pmin(pmax(eta, -20), cap))
+          if (!all(is.finite(lam))) lam <- rep(mean(obsv), nrow(truth))
+        } else lam <- rep(exp(bb[1]), nrow(truth))
+        names(lam) <- rownames(truth)
+        idx <- mask[, v]
+        comp[idx, v] <- as.integer(round(lam[idx]))
+        lower[idx, v] <- stats::qpois(0.025, lam[idx]); upper[idx, v] <- stats::qpois(0.975, lam[idx])
+      } else {
+        obsv <- df_miss[[v]][!is.na(df_miss[[v]])]
+        comp[mask[, v], v] <- as.integer(round(mean(obsv)))
+      }
+    }
+  }
+  # discrete traits: castor Mk, equal rates for binary/categorical, stepwise (SUEDE) for ordinal;
+  # normalised state likelihoods kept as `prob` for Brier / ECE.
+  for (v in setdiff(names(truth), c(cont_traits))) {
     f <- df_miss[[v]]; lev <- levels(f); tip <- as.integer(f)  # NA where masked
     tip_full <- tip[match(tree$tip.label, rownames(df_miss))]
     rm <- if (is.ordered(f)) "SUEDE" else "ER"
     h <- castor::hsp_mk_model(tree, tip_states = tip_full, Nstates = length(lev), rate_model = rm, Ntrials = 3, Nthreads = 1)
-    pred <- max.col(h$likelihoods[seq_along(tree$tip.label), , drop = FALSE])
-    pred <- pred[match(rownames(df_miss), tree$tip.label)]
-    out <- as.character(f); out[mask[, v]] <- lev[pred[mask[, v]]]
+    L <- h$likelihoods[seq_along(tree$tip.label), , drop = FALSE]
+    L <- L / rowSums(L)
+    pred <- max.col(L)
+    pred_sp <- pred[match(rownames(df_miss), tree$tip.label)]
+    out <- as.character(f); out[mask[, v]] <- lev[pred_sp[mask[, v]]]
     comp[[v]] <- factor(out, levels = lev, ordered = is.ordered(f))
+    Lr <- L[match(rownames(df_miss), tree$tip.label), , drop = FALSE]
+    colnames(Lr) <- lev; rownames(Lr) <- rownames(df_miss)
+    prob[[v]] <- Lr
   }
-  list(completed = comp)
+  list(completed = comp, lower = lower, upper = upper, prob = prob)
 }
 
 # ---- phylogeny + machine-learning hybrid (the approach of Gendre, Hauffe, Pimiento and Silvestro 2024, MEE,
@@ -163,4 +580,254 @@ run_mf_phylo <- function(df_miss, truth, mask, tree, variance_fraction = 0.9) {
     else if (is.integer(df_miss[[v]])) comp[[v]] <- as.integer(round(x)) else comp[[v]] <- x
   }
   list(completed = comp)
+}
+
+# ---- BACE arm (Section D). BACE::bace()'s top-level API returns only `n_final` full imputed
+# datasets (`$imputed_datasets`); CHECK (2026-09-20, `body(BACE::bace)`, `ls(asNamespace("BACE"))`):
+# there is no exported accessor for the raw MCMCglmm Liab/Sol chains, so the "full retained posterior
+# predictive samples" the design asks for ARE the imputed datasets -- we simply request as many of
+# them as the chain length affords. n_final is set to floor((nitt - burnin) / thin) * runs, capped at
+# 400 (previously a fixed 5). The interval built from these draws (2.5/97.5 percentiles for
+# continuous-family traits, class frequency for discrete traits) is a POSTERIOR PREDICTIVE interval
+# for the masked cell, not a posterior interval of the mean -- UNVERIFIED against BACE's own
+# documentation of `$imputed_datasets`'s exact sampling distribution beyond the source inspected here.
+# bace_runs: BACE's initial imputation iterations, the sequence its own assess_convergence() reads.
+# That function has min_iterations = 3, so runs = 2 cannot be assessed at all -- it was why every
+# pre-run cell came back converged = FALSE. BACE's vignette uses runs = 5 for demonstrations and
+# runs = 15 with nitt = 100000 for a real analysis; 10 is the bounded middle for a campaign.
+# skip_conv stays TRUE (the vignette discourages it, but the alternative retries up to max_attempts
+# and makes per-cell cost unbounded across thousands of cells). The verdict is recorded per cell
+# instead, and the convergence RATE is reported as a result.
+run_bace <- function(df_miss, truth, mask, tree, cont_traits, bace_nitt, bace_burnin, bace_thin,
+                     bace_runs = as.integer(Sys.getenv("PIG_BACE_RUNS", "10")), covs = NULL) {
+  tree_b <- tree; if (any(tree_b$edge.length == 0)) tree_b$edge.length[tree_b$edge.length == 0] <- 1e-8
+  df_b <- df_miss; df_b$Species <- rownames(df_miss)
+  all_traits <- setdiff(names(df_b), "Species")
+  # S6d: covariates join df_b so BACE can read them, but they are NOT added to all_traits, so no
+  # formula is ever built with a covariate as the RESPONSE -- they are fully observed predictors
+  # only, and they stay out of `comp` (which is seeded from df_miss) so they are never scored.
+  cov_names <- character(0)
+  if (!is.null(covs)) {
+    cov_names <- names(covs)
+    df_b <- cbind(df_b, covs[rownames(df_miss), , drop = FALSE])
+  }
+  fixformula <- lapply(all_traits, function(v)
+    paste0(v, " ~ ", paste(c(setdiff(all_traits, v), cov_names), collapse = " + ")))
+  # n_final is the number of FULL imputation runs (bace_final_imp refits MCMCglmm per response for
+  # each one), not a thinning of one chain: each dataset is one posterior predictive draw (K = 1L in
+  # BACE:::.predict_bace). Cost is linear in n_final, so it is a budget constant, not a chain length.
+  # 50 gives usable 2.5/97.5 percentiles; the pre-run times it at production size. n_cores = 1L is
+  # BACE's own default, pinned explicitly: parallelism here is one process per cell (xargs on Totoro,
+  # array tasks on DRAC), and a fork inside MCMCglmm segfaults when the caller has already forked.
+  n_final <- as.integer(Sys.getenv("PIG_BACE_NFINAL", "50"))
+  outb <- BACE::bace(fixformula = fixformula, ran_phylo_form = "~ 1 |Species", phylo = tree_b,
+                     data = df_b, nitt = bace_nitt, burnin = bace_burnin, thin = bace_thin,
+                     runs = bace_runs, n_final = n_final, n_cores = 1L,
+                     verbose = FALSE, skip_conv = TRUE, ovr_categorical = TRUE)
+  sets <- if ("imputed_datasets" %in% names(outb)) outb$imputed_datasets else
+          if ("imputed_data" %in% names(outb)) outb$imputed_data else list(outb$data)
+  comp <- df_miss
+  lower <- upper <- matrix(NA_real_, nrow(truth), ncol(truth), dimnames = dimnames(truth))
+  prob <- list()
+  for (v in names(comp)) {
+    idx <- which(mask[, v]); if (!length(idx)) next
+    draws <- sapply(sets, function(s) s[[v]][idx])
+    if (!is.matrix(draws)) draws <- matrix(draws, ncol = length(sets))
+    rn <- rownames(truth)[idx]
+    if (is.numeric(comp[[v]])) {
+      comp[idx, v] <- apply(draws, 1, stats::median)
+      qs <- t(apply(draws, 1, stats::quantile, probs = c(0.025, 0.975)))
+      lower[rn, v] <- qs[, 1]; upper[rn, v] <- qs[, 2]
+    } else {
+      comp[idx, v] <- apply(draws, 1, function(x) names(which.max(table(as.character(x)))))
+      levs <- levels(truth[[v]])
+      pm <- t(apply(draws, 1, function(x) { t <- table(factor(as.character(x), levels = levs)); as.numeric(t) / sum(t) }))
+      colnames(pm) <- levs; rownames(pm) <- rn
+      full <- matrix(NA_real_, nrow(truth), length(levs), dimnames = list(rownames(truth), levs))
+      full[rn, ] <- pm
+      prob[[v]] <- full
+    }
+  }
+  list(completed = comp, lower = lower, upper = upper, prob = prob, n_final = n_final,
+       diag = bace_diagnostics(outb))
+}
+
+# BACE convergence, reported the way BACE defines it.
+#
+# `runs` are SEQUENTIAL imputation iterations for BACE's own convergence check (its help: "the
+# number of initial imputation iterations for convergence checking"), not parallel chains of one
+# posterior. Successive runs condition on different completed datasets by construction, so
+# Gelman-Rubin across them diagnoses nothing: measured on a converged n = 300 fit it returned
+# max Rhat 5.7, and 20 when the species-level random effects were pooled in as well.
+#
+# What is reported instead:
+#   converged / n_attempts  BACE's own verdict (assessed even under skip_conv = TRUE)
+#   drift                   max relative change in the per-trait imputed mean over the last two
+#                           iterations of convergence$summary_stats -- the trace behind that verdict
+#   ess_min                 smallest effective sample size over the fixed effects of the final
+#                           MCMCglmm fits. A single-chain diagnostic, which is what these are.
+bace_diagnostics <- function(outb) {
+  conv <- outb$convergence
+  drift <- NA_real_
+  ss <- conv$summary_stats
+  if (is.data.frame(ss) && nrow(ss) >= 2L) {
+    num <- setdiff(names(ss), "iteration")
+    last <- as.numeric(ss[nrow(ss), num]); prev <- as.numeric(ss[nrow(ss) - 1L, num])
+    drift <- max(abs(last - prev) / pmax(abs(prev), 1e-8), na.rm = TRUE)
+  }
+  ess_min <- ess_med <- ess_frac_low <- NA_real_; ess_n <- 0L
+  if (requireNamespace("coda", quietly = TRUE)) {
+    find_mcmcglmm <- function(x) {
+      if (inherits(x, "MCMCglmm")) return(list(x))
+      if (is.list(x)) return(unlist(lapply(x, find_mcmcglmm), recursive = FALSE))
+      NULL
+    }
+    models <- find_mcmcglmm(outb)
+    if (length(models)) {
+      es <- unlist(lapply(models, function(m) {
+        nfl <- m$Fixed$nfl %||% ncol(m$Sol)
+        tryCatch(coda::effectiveSize(coda::as.mcmc(as.matrix(m$Sol)[, seq_len(nfl), drop = FALSE])),
+                 error = function(e) NULL)
+      }))
+      if (length(es)) {
+        ess_min <- min(es, na.rm = TRUE)
+        ess_med <- stats::median(es, na.rm = TRUE)
+        ess_frac_low <- mean(es < 100, na.rm = TRUE)
+        ess_n <- length(es)
+      }
+    }
+  }
+  list(converged = isTRUE(outb$converged), n_attempts = outb$n_attempts %||% NA_integer_,
+       drift = drift, ess_min = ess_min, ess_med = ess_med, ess_frac_low = ess_frac_low,
+       ess_n = ess_n, summary_stats = ss)
+}
+
+run_floor <- function(df_miss, truth, mask) {
+  comp <- df_miss
+  for (v in names(comp)) {
+    obs <- df_miss[[v]][!is.na(df_miss[[v]])]
+    fill <- if (is.numeric(comp[[v]])) mean(obs) else names(which.max(table(as.character(obs))))
+    comp[mask[, v], v] <- fill
+  }
+  prob <- list()
+  for (v in names(comp)) if (is.factor(truth[[v]])) {
+    levs <- levels(truth[[v]])
+    p <- prop.table(table(factor(as.character(df_miss[[v]][!is.na(df_miss[[v]])]), levels = levs)))
+    pm <- matrix(rep(as.numeric(p), each = nrow(truth)), nrow(truth), length(levs), dimnames = list(rownames(truth), levs))
+    prob[[v]] <- pm
+  }
+  list(completed = comp, prob = prob)
+}
+
+`%||%` <- function(a, b) if (is.null(a)) b else a
+
+# ---- run_arms(): the arm-dispatch loop factored out of campaign_gnn_off_cell.R so that it and the
+# new campaign_sim_cell.R share ONE implementation (Section G). `cell` is a make_cell() result plus
+# `tree`; `opts` carries epochs / bace_nitt / bace_burnin / bace_thin / seed / trait_types / log_line.
+# Returns list(results = <rbind of score_arm() data.frames, dgp/n/seed columns attached>,
+#              calib = <rbind of attr(., "calib") long frames, may be NULL>,
+#              walls =, errors =, paths =).
+run_arms <- function(cell, arms, opts) {
+  truth <- cell$truth; tree <- cell$tree; mask <- cell$mask; df_miss <- cell$df_miss
+  cont_traits <- cell$cont_traits; trait_types <- cell$trait_types; covs <- cell$covs
+  # score_arm() (defined at this file's top level) reads `truth`/`mask` from ITS OWN lexical scope,
+  # i.e. the global environment where this file is normally sourced -- not from run_arms()'s local
+  # frame. Publish them there so score_arm() sees the right cell regardless of which caller script
+  # invoked run_arms(). Restored on exit so a caller's own global `truth`/`mask` (if any) are unaffected.
+  old_truth <- if (exists("truth", envir = .GlobalEnv, inherits = FALSE)) get("truth", envir = .GlobalEnv) else NULL
+  old_mask  <- if (exists("mask",  envir = .GlobalEnv, inherits = FALSE)) get("mask",  envir = .GlobalEnv) else NULL
+  assign("truth", truth, envir = .GlobalEnv); assign("mask", mask, envir = .GlobalEnv)
+  on.exit({
+    if (is.null(old_truth)) rm(list = "truth", envir = .GlobalEnv) else assign("truth", old_truth, envir = .GlobalEnv)
+    if (is.null(old_mask))  rm(list = "mask",  envir = .GlobalEnv) else assign("mask",  old_mask,  envir = .GlobalEnv)
+  }, add = TRUE)
+  seed <- opts$seed; epochs <- opts$epochs %||% 2000L
+  bace_nitt <- opts$bace_nitt %||% 50000L; bace_burnin <- opts$bace_burnin %||% 10000L; bace_thin <- opts$bace_thin %||% 25L
+  log_line <- opts$log_line %||% function(...) invisible(NULL)
+
+  run_pigauto <- function(arm) {
+    extra <- switch(arm,
+      gnn_on              = list(gnn = TRUE,  epochs = epochs),
+      gnn_off             = list(gnn = FALSE),
+      gnn_off_pure        = list(gnn = FALSE, safety_floor = FALSE, phylo_signal_gate = FALSE),
+      gnn_off_rphylopars  = list(gnn = FALSE, joint_solver = "rphylopars"))
+    # pigauto threads covariates through the GNN only (R/impute.R), so a GNN-off arm cannot use them
+    # at all: arms 3a/3b stay covariate-free by construction, which is what the plan specifies
+    # ("arm 3 reported covariate-free"). Passing them to a gnn = FALSE fit would be silently inert.
+    cov_arg <- if (!is.null(covs) && isTRUE(extra$gnn)) list(covariates = covs[rownames(df_miss), , drop = FALSE]) else list()
+    res <- do.call(pigauto::impute, c(list(traits = df_miss, tree = tree, verbose = FALSE, seed = seed,
+                                           trait_types = trait_types), cov_arg, extra))
+    path <- res$fit$baseline$path
+    pred <- res$prediction
+    comp <- res$completed[rownames(truth), names(truth)]
+    prob <- pred$probabilities
+    out <- list(completed = comp, lower = pred$conformal_lower, upper = pred$conformal_upper,
+                path = path, prob = prob, se = pred$se)
+    if (arm == "gnn_on") {
+      # Plan arm 2: the SAME GNN-on fit predicting from the tax-free baseline (baseline_override),
+      # so the GNN effect and the held-out-cell tax can be separated. No refit.
+      bf <- pigauto::fit_baseline(res$data, tree, splits = NULL,
+                                  lambda_mode = res$fit$model_config$lambda_mode %||% "fixed_1",
+                                  joint_solver = res$fit$model_config$joint_solver %||% "inhouse")
+      pred_f <- stats::predict(res$fit, return_se = TRUE, baseline_override = bf)
+      comp_f <- comp
+      for (v in names(truth)) comp_f[mask[, v], v] <- pred_f$imputed[rownames(truth)[mask[, v]], v]
+      out$derived <- list(gnn_on_full = list(completed = comp_f, lower = pred_f$conformal_lower,
+                                             upper = pred_f$conformal_upper, path = path,
+                                             prob = pred_f$probabilities, se = pred_f$se))
+    }
+    out
+  }
+  run_rphylopars <- function() {
+    df4 <- df_miss[, cont_traits, drop = FALSE]
+    df_in <- data.frame(species = rownames(df4), df4, stringsAsFactors = FALSE)
+    fit <- Rphylopars::phylopars(df_in, tree = tree, model = "BM", phylo_correlated = TRUE,
+                                 pheno_correlated = TRUE, REML = TRUE)
+    comp <- truth; comp[] <- NA
+    rec <- fit$anc_recon[rownames(df4), cont_traits, drop = FALSE]
+    for (v in cont_traits) { comp[[v]] <- df_miss[[v]]; comp[mask[, v], v] <- rec[mask[, v], v] }
+    list(completed = comp)
+  }
+
+  results <- list(); calibs <- list(); walls <- list(); errors <- list(); paths <- list(); failed <- list(); diags <- list()
+  for (arm in arms) {
+    t0 <- Sys.time()
+    r <- tryCatch({
+      if (arm %in% c("gnn_on", "gnn_off", "gnn_off_pure", "gnn_off_rphylopars")) run_pigauto(arm)
+      else if (arm == "rphylopars") run_rphylopars()
+      else if (arm == "freq") run_freq(df_miss, truth, mask, tree, cont_traits, trait_types, covs = covs)
+      else if (arm == "freq_lambda") run_freq(df_miss, truth, mask, tree, cont_traits, trait_types, covs = covs, phylo_model = "lambda")
+      else if (arm == "freq_log1p") run_freq(df_miss, truth, mask, tree, cont_traits, trait_types, count_method = "log1p_rphylopars", covs = covs)
+      else if (arm == "mf_phylo") run_mf_phylo(df_miss, truth, mask, tree)
+      else if (arm == "bace") run_bace(df_miss, truth, mask, tree, cont_traits, bace_nitt, bace_burnin, bace_thin, covs = covs)
+      else if (arm == "floor") run_floor(df_miss, truth, mask)
+      else stop("unknown arm ", arm)
+    }, error = function(e) e)
+    walls[[arm]] <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+    if (inherits(r, "error")) {
+      errors[[arm]] <- conditionMessage(r); failed[[arm]] <- TRUE
+      log_line("%s ERROR %s", arm, errors[[arm]])
+      # a failed arm is scored at the floor, never dropped (Section G)
+      fl <- tryCatch(run_floor(df_miss, truth, mask), error = function(e) NULL)
+      if (!is.null(fl)) {
+        sc <- score_arm(arm, fl$completed, prob = fl$prob)
+        results[[arm]] <- sc; calibs[[arm]] <- attr(sc, "calib")
+      }
+      next
+    }
+    sc <- score_arm(arm, r$completed, r$lower, r$upper, prob = r$prob)
+    results[[arm]] <- sc; calibs[[arm]] <- attr(sc, "calib")
+    paths[[arm]] <- r$path
+    if (!is.null(r$diag)) diags[[arm]] <- r$diag
+    for (dn in names(r$derived)) {
+      dr <- r$derived[[dn]]
+      scd <- score_arm(dn, dr$completed, dr$lower, dr$upper, prob = dr$prob)
+      results[[dn]] <- scd; calibs[[dn]] <- attr(scd, "calib")
+      paths[[dn]] <- dr$path; walls[[dn]] <- 0
+    }
+    log_line("%s done in %.1f s", arm, walls[[arm]])
+  }
+  tab <- do.call(rbind, results); if (!is.null(tab)) rownames(tab) <- NULL
+  calib <- do.call(rbind, calibs)
+  list(results = tab, calib = calib, walls = walls, errors = errors, paths = paths, failed = failed, diag = diags)
 }

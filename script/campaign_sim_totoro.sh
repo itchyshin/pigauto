@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Totoro driver for the four-arm imputation simulation (arc/imputation-sim).
+#
+#   ssh totoro
+#   cd ~/pigauto_sim
+#   bash script/campaign_sim_totoro.sh prerun 16         # 16 cells x 1 rep, all arms
+#   bash script/campaign_sim_totoro.sh core   36         # 18 cells x 200 reps, BACE on seeds 1..100
+#   bash script/campaign_sim_totoro.sh avonet 20
+#
+# Second argument = number of concurrent cell processes. Each process uses PIG_TORCH_THREADS
+# (default 4) torch threads and 1 BLAS thread, so 62 processes = 248 threads. Shinichi raised this
+# lane's Totoro allowance to 250 cores on 2026-09-20 (D-143's 150 is the standing default; this is
+# his explicit override for snakagaw). Stay at or below it: the machine is shared.
+# Resume: a (cell, seed) whose rds exists is skipped by campaign_sim_cell.R. Detached with setsid so a
+# dropped ssh cannot kill or orphan the run. Progress: tail -f logs/<stage>.log ; stop: kill -- -<pgid>
+set -euo pipefail
+
+STAGE="${1:?stage: prerun|core|factorial|avonet|covsens}"
+PAR="${2:-36}"
+ROOT="${PIG_SIM_ROOT:-$HOME/pigauto_sim}"
+OUT="${OUT_DIR:-$ROOT/results/$STAGE}"; [ -z "${OUT_DIR:-}" ] && [ "$STAGE" = prerun ] && OUT="$ROOT/prerun"
+LOG="$ROOT/logs"; mkdir -p "$OUT" "$LOG"
+
+export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1
+export PIG_TORCH_THREADS="${PIG_TORCH_THREADS:-4}"
+export NOT_CRAN=true
+
+# ARMS / ARMS_BACE override the defaults so the slow Bayesian arm can run as its own concurrent
+# wave: the fast arms answer the design questions in minutes, BACE reports when it reports.
+#   ARMS=gnn_on,gnn_off,gnn_off_rphylopars,freq,floor  bash ... prerun 16   # fast wave
+#   ARMS=bace ARMS_BACE=bace SEEDS=bace                bash ... core 40     # BACE wave, seeds 1..bace_reps
+ARMS_ALL="${ARMS_BACE:-gnn_on,gnn_off,gnn_off_rphylopars,freq,bace,floor}"
+ARMS_NOBACE="${ARMS:-gnn_on,gnn_off,gnn_off_rphylopars,freq,floor}"
+
+# Expand the design into one line per (cell, seed): "<args for campaign_sim_cell.R>"
+JOBS="$LOG/${STAGE}_jobs.txt"
+Rscript "$ROOT/script/campaign_sim_design.R" --stage "$STAGE" | awk -F, -v out="$OUT" -v all="$ARMS_ALL" -v nob="$ARMS_NOBACE" -v seeds="${SEEDS:-all}" '
+NR > 1 {
+  lim = (seeds == "bace") ? $11 : $10
+  for (s = 1; s <= lim; s++) {
+    arms = (s <= $11) ? all : nob
+    printf "--dgp %s --evo %s --lambda %s --rho %s --miss %s --frac %s --n %s --ncov %s --seed %d --arms %s --driver --thresholds fixed --out %s\n",
+           $3, $4, $5, $6, $7, $8, $9, $12, s, arms, out
+  }
+}' > "$JOBS"
+echo "[$(date +%FT%T)] stage=$STAGE jobs=$(wc -l < "$JOBS") parallel=$PAR out=$OUT" | tee -a "$LOG/$STAGE.log"
+
+# One process per (cell, seed). xargs -P bounds concurrency; setsid detaches the whole group.
+setsid nohup bash -c "
+  cd '$ROOT' && xargs -P '$PAR' -L 1 -a '$JOBS' -I{} sh -c \
+    'Rscript script/campaign_sim_cell.R {} >> \"$LOG/$STAGE.cells.log\" 2>&1' \
+  ; echo \"[\$(date +%FT%T)] stage=$STAGE DONE\" >> '$LOG/$STAGE.log'
+" > "$LOG/$STAGE.nohup.log" 2>&1 &
+echo "pgid=$! (kill -- -$! to stop)" | tee -a "$LOG/$STAGE.log"

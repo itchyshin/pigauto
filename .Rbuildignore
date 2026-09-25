@@ -35,3 +35,4 @@
 ^VALIDATION_LEDGER\.md$
 ^cran-comments\.md$
 ^LOOP$
+^vignettes/articles$
