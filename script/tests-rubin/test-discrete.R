@@ -157,3 +157,20 @@ testthat::test_that("c1 ~ bin: undefined when bin is constant in every imputed d
   e0 <- score_discrete_estimand("x", rep(list(cell$truth), 3), cell$truth, cell$tree, eig, nrow(one), L5 = L5, lambda = 0.7, rho = 0)
   testthat::expect_equal(e0$target_cond, 0)
 })
+
+testthat::test_that("the joint draw stops (never returns NA) when the observed tips are impossible under Q", {
+  tip2 <- rep(c(1L, 2L), 20); tip2[1:5] <- NA
+  testthat::expect_error(mk_joint_draw(tree, tip2, matrix(0, 2, 2), c(.5, .5), 3L), "zero likelihood")
+})
+
+testthat::test_that("freq A rejects bootstrap rates under which the observed tips are impossible, and never leaves NA", {
+  orig <- .castor_fit; calls <- 0L
+  .castor_fit <<- function(tree, tip, K, rate_model) {             # every refit after the first fit returns Q = 0
+    calls <<- calls + 1L; if (calls == 1L) orig(tree, tip, K, rate_model) else matrix(0, K, K)
+  }
+  on.exit(.castor_fit <<- orig, add = TRUE)
+  c1 <- cell; c1$truth <- cell$truth[, c("c1", "bin")]; c1$df_miss <- cell$df_miss[, c("c1", "bin")]
+  a <- mi_castor(c1, 2L, proper = TRUE)
+  testthat::expect_equal(a$diag$n_fallback, 2L); testthat::expect_equal(a$diag$n_reject, 40L)
+  testthat::expect_false(anyNA(a$datasets[[1]]$bin)); testthat::expect_false(anyNA(a$datasets[[2]]$bin))
+})

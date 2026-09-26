@@ -39,7 +39,8 @@ CASTOR_V1   <- c(binary = "ER",  categorical = "ER",  ordinal = "SUEDE")
 #' Joint conditional draws of the missing tip states of one Mk trait.
 #' @param tree ape phylo; @param tip integer states 1..K in tree$tip.label order, NA = missing
 #' @param Q K x K transition-rate matrix; @param root_prior length-K probabilities; @param M number of draws
-#' @return M x Ntip integer matrix of complete tip states (observed tips kept)
+#' @return M x Ntip integer matrix of complete tip states (observed tips kept). Stops if the observed tips have zero
+#'   likelihood under Q (possible for a bootstrap refit with rates at exactly 0), instead of returning NA draws.
 mk_joint_draw <- function(tree, tip, Q, root_prior, M) {
   K <- nrow(Q); nt <- length(tree$tip.label); nn <- tree$Nnode
   tr <- ape::reorder.phylo(tree, "postorder")
@@ -49,11 +50,15 @@ mk_joint_draw <- function(tree, tip, Q, root_prior, M) {
   for (i in seq_len(nrow(tr$edge))) {
     p <- tr$edge[i, 1]; c <- tr$edge[i, 2]
     lik[p, ] <- lik[p, ] * as.numeric(P[[i]] %*% lik[c, ])
-    lik[p, ] <- lik[p, ] / max(lik[p, ])   # rescale against underflow; sampling ignores the scale
+    mx <- max(lik[p, ])
+    if (!is.finite(mx) || mx <= 0) stop("the observed tips have zero likelihood under Q")
+    lik[p, ] <- lik[p, ] / mx              # rescale against underflow; sampling ignores the scale
   }
   root <- nt + 1L
   draw_cat <- function(pr) {                 # pr: M x K unnormalised probabilities, one row per draw
-    cp <- t(apply(pr / rowSums(pr), 1, cumsum))
+    rs <- rowSums(pr)
+    if (any(!is.finite(rs) | rs <= 0)) stop("the observed tips have zero likelihood under Q")
+    cp <- t(apply(pr / rs, 1, cumsum))
     1L + rowSums(cp < stats::runif(nrow(pr)))
   }
   st <- matrix(NA_integer_, M, nt + nn)
@@ -81,7 +86,8 @@ mk_joint_draw <- function(tree, tip, Q, root_prior, M) {
 #'   filled; default copies of df_miss
 #' @param models named rate models for binary, categorical and ordinal traits (CASTOR_FLEX or CASTOR_V1)
 #' @return list(datasets, diag = per-trait data.frame: rate model, degenerate flag, largest exit rate of the fit and
-#'   median over bootstrap refits, bootstrap re-simulations, failed refits (the fit's Q used instead), error)
+#'   median over the refits used, bootstrap re-simulations (< 2 observed classes), failed refits, rejected refits
+#'   (observed tips impossible under Q*), draws that fell back to the fitted Q, error)
 mi_castor <- function(cell, M, proper, base_sets = NULL, models = CASTOR_FLEX) {
   tree <- cell$tree; df <- cell$df_miss
   sets <- base_sets %||% rep(list(df), M)
@@ -92,31 +98,41 @@ mi_castor <- function(cell, M, proper, base_sets = NULL, models = CASTOR_FLEX) {
     rm <- models[[.trait_kind(f)]]
     miss_sp <- tree$tip.label[is.na(tip)]
     row <- data.frame(trait = v, rate_model = rm, degenerate = FALSE, q_hat = NA_real_, q_star_med = NA_real_,
-                      n_resim = 0L, n_refit_fail = 0L, error = NA_character_)
+                      n_resim = 0L, n_refit_fail = 0L, n_reject = 0L, n_fallback = 0L, error = NA_character_)
     if (length(unique(tip[!is.na(tip)])) < 2L) {   # castor cannot fit; leave NA for fill_degenerate()
       row$degenerate <- TRUE; dg[[v]] <- row; next
     }
     res <- tryCatch({
       Q <- .castor_fit(tree, tip, K, rm); prior <- .empirical_prior(tip, K)
-      n_resim <- 0L; n_fail <- 0L
+      n_resim <- 0L; n_fail <- 0L; n_reject <- 0L; n_fallback <- 0L
       if (!proper) {
         draws <- mk_joint_draw(tree, tip, Q, prior, M); q_star <- rep(max(-diag(Q)), M)
       } else {
         draws <- matrix(NA_integer_, M, length(tip)); q_star <- numeric(M)
         obs <- !is.na(tip)
         for (m in seq_len(M)) {
-          repeat {                             # a bootstrap sample needs >= 2 observed classes to refit
-            sim <- castor::simulate_mk_model(tree, Q, root_probabilities = prior, include_nodes = FALSE)$tip_states
-            tip_b <- ifelse(obs, sim, NA_integer_)
-            if (length(unique(tip_b[obs])) >= 2L || n_resim > 50L * M) break
-            n_resim <- n_resim + 1L
+          dm <- NULL; tries <- 0L
+          # A bootstrap Q* is kept only if the observed tips are possible under it (a refit can put rates at exactly
+          # 0); otherwise it is redrawn. After 20 failed tries the fitted Q is used. All three events are counted.
+          while (is.null(dm) && tries < 20L) {
+            tries <- tries + 1L
+            repeat {                           # a bootstrap sample needs >= 2 observed classes to refit
+              sim <- castor::simulate_mk_model(tree, Q, root_probabilities = prior, include_nodes = FALSE)$tip_states
+              tip_b <- ifelse(obs, sim, NA_integer_)
+              if (length(unique(tip_b[obs])) >= 2L || n_resim > 50L * M) break
+              n_resim <- n_resim + 1L
+            }
+            Qm <- tryCatch(.castor_fit(tree, tip_b, K, rm), error = function(e) NULL)
+            if (is.null(Qm)) { n_fail <- n_fail + 1L; next }
+            dm <- tryCatch(mk_joint_draw(tree, tip, Qm, prior, 1L), error = function(e) NULL)
+            if (is.null(dm)) n_reject <- n_reject + 1L
           }
-          Qm <- tryCatch(.castor_fit(tree, tip_b, K, rm), error = function(e) NULL)
-          if (is.null(Qm)) { Qm <- Q; n_fail <- n_fail + 1L }
-          draws[m, ] <- mk_joint_draw(tree, tip, Qm, prior, 1L); q_star[m] <- max(-diag(Qm))
+          if (is.null(dm)) { Qm <- Q; dm <- mk_joint_draw(tree, tip, Q, prior, 1L); n_fallback <- n_fallback + 1L }
+          draws[m, ] <- dm; q_star[m] <- max(-diag(Qm))
         }
       }
-      list(draws = draws, q_hat = max(-diag(Q)), q_star = q_star, n_resim = n_resim, n_fail = n_fail)
+      list(draws = draws, q_hat = max(-diag(Q)), q_star = q_star, n_resim = n_resim, n_fail = n_fail,
+           n_reject = n_reject, n_fallback = n_fallback)
     }, error = function(e) e)
     if (inherits(res, "error")) { row$error <- conditionMessage(res); dg[[v]] <- row; next }
     draws <- res$draws; colnames(draws) <- tree$tip.label
@@ -125,7 +141,8 @@ mi_castor <- function(cell, M, proper, base_sets = NULL, models = CASTOR_FLEX) {
       sets[[m]][[v]] <- factor(x, levels = lev, ordered = is.ordered(f))
     }
     row$q_hat <- res$q_hat; row$q_star_med <- stats::median(res$q_star)
-    row$n_resim <- res$n_resim; row$n_refit_fail <- res$n_fail
+    row$n_resim <- res$n_resim; row$n_refit_fail <- res$n_fail; row$n_reject <- res$n_reject
+    row$n_fallback <- res$n_fallback
     dg[[v]] <- row
   }
   list(datasets = sets, diag = do.call(rbind, dg))
