@@ -18,7 +18,7 @@ Ordinal accuracy, change against the merged code (mean over two cross-trait corr
 
 Accuracy is lower in 13 of 18 scenarios and higher in one (+0.001); the largest single-scenario fall is -0.014
 (unpaired |z| up to 1.4). Macro F1 moves the same way. No other trait changed. The merged code's ordinal
-accuracy is already 0.011 to 0.044 above the previous default at lambda 0.3 and 0.7 and within 0.001 at
+accuracy is already 0.016 to 0.051 above the previous default at lambda 0.3 and 0.7 and within 0.001 at
 lambda 1.
 
 Decision: not shipped. A likely reason (not tested) is that a 0-1 loss on half of a trait's validation rows is
