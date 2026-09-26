@@ -20,7 +20,8 @@ cells_l <- rd("cells_l.csv"); cells_n <- rd("cells_n.csv"); down_l <- rd("down_l
 paired <- rd("paired.csv"); failures <- rd("failures.csv")
 fits <- utils::read.csv(file.path(d, "fits.csv"), stringsAsFactors = FALSE)
 diag <- utils::read.csv(file.path(d, "bace_diagnostics.csv"), stringsAsFactors = FALSE)
-disc_dir <- file.path(d, "discrete"); has_disc <- dir.exists(disc_dir) && length(list.files(disc_dir, "\\.csv$")) > 0
+disc_dir <- file.path(d, "discrete")   # the truth table lives there before any result, so test for the aggregates
+has_disc <- all(file.exists(file.path(disc_dir, c("agg_disc_cells.csv", "agg_disc_cells_l.csv", "agg_disc_down.csv", "agg_disc_paired.csv"))))
 lab <- c(complete = "complete data", freqA = "freq A (proper)", freqB = "freq B (improper)",
          bace = "BACE as shipped", bace_chain = "chained BACE", bace_resid = "BACE + residual (control)")
 ord <- names(lab)
@@ -238,20 +239,146 @@ if (!has_disc) cat("*Not yet run.* Results will appear here from `data/discrete/
 
 The discrete extension mirrors the continuous design:
 
-| element | continuous (done) | discrete (planned) |
+| element | continuous | discrete |
 |---|---|---|
 | datasets | 18 cells, seeds as above | the **same** cells, seeds and datasets (`bin`, `ord`, `cat3` of each dataset) |
 | M | 20 | 20 |
-| proper frequentist | freq A: bootstrap refit, then draw | castor Mk hidden-state prediction with a parametric bootstrap of the rates before each draw |
-| improper frequentist | freq B: one fit | castor Mk with rates held at the fitted values (as in simulation v1) |
-| Bayesian | BACE as shipped; chained BACE | the same BACE fits (re-run with imputations saved; the continuous rows should reproduce) |
-| per-value scores | coverage, width, z-RMSE, interval score | class accuracy, Brier score, calibration, coverage of the 20-draw prediction set |
-| downstream, Rubin-pooled | PGLS slope, phylogenetic correlation | an estimate involving a discrete trait (for example the slope of c1 on `bin`), truth computed on the liability scale or by Monte Carlo |
+| proper frequentist | freq A: bootstrap refit, then draw | castor Mk fit, then for each *m* a parametric bootstrap refit of the rates and a joint conditional draw of the missing tips (forward filtering, backward sampling on the tree); filled into freq A's continuous draws |
+| improper frequentist | freq B: one fit | the same castor fit, 20 joint conditional draws at the fitted rates; filled into freq B's continuous draws |
+| rate model | Pagel's λ (falls back to the sample mean at low signal) | all rates different (ARD) for `bin` and `cat3`, stepwise with every rate different (SRD) for `ord`: their stationary distribution can match the observed class frequencies, so they fall back to those at low signal |
+| comparison arms | none | freq A and freq B with simulation v1's equal-rates models (ER, ER, SUEDE), scored on discrete traits only |
+| Bayesian | BACE as shipped; chained BACE | the same BACE fits, re-run with the imputations saved |
+| per-value scores | coverage, width, z-RMSE, interval score | class accuracy, Brier score, coverage and size of the 95% class set from the 20 draws |
+| downstream, Rubin-pooled | PGLS slope, phylogenetic correlation | PGLS slope of c1 on `bin`, scored against a per-dataset target and a population target (below) |
 | replicates | 200 per cell (BACE 100 at n = 1000) | n = 100 and 300 first, same counts; n = 1000 decided after |
 
 castor models one trait at a time, while BACE conditions each trait on the others, so the contrast tests
-whether BACE's use of correlated traits pays off. Simulation v1 (accuracy only, earlier BACE settings) found
-BACE ahead at λ = 0.3 and castor ahead at λ = 1.
+whether BACE's use of correlated traits pays off. Simulation v1 (accuracy only, earlier BACE settings, equal-rates
+castor) found BACE ahead at λ = 0.3 and castor ahead at λ = 1. Equal rates run to their bound at low λ and then
+impute uniform classes, below the observed-frequency floor (review of 2026-09-26), which is why the flexible models
+are the primary frequentist arms here.
+
+```{r disc-data, eval = has_disc}
+dd <- function(f) utils::read.csv(file.path(disc_dir, f), stringsAsFactors = FALSE)
+dcl <- dd("agg_disc_cells_l.csv"); dcr <- dd("agg_disc_cells.csv"); ddn <- dd("agg_disc_down.csv"); dpr <- dd("agg_disc_paired.csv")
+rp <- if (file.exists(file.path(disc_dir, "repro.csv"))) dd("repro.csv") else NULL
+labd <- c(lab, freqA_er = "freq A, equal rates (v1)", freqB_er = "freq B, equal rates (v1)", mode_floor = "mode floor")
+trait_ord <- c("bin", "ord", "cat3")
+f3n <- function(x) f3(as.numeric(x))   # read.csv gives an all-NA column (e.g. SEs of one dataset) as logical
+cell_se <- function(v, s) ifelse(is.na(v), "", ifelse(is.na(s), f3n(v), paste0(f3n(v), " (", f3n(s), ")")))
+# rows x columns table; `cell` maps the aggregate rows to the printed cell; a combination without rows prints blank
+wide_d <- function(df, cell, rows, arms, col = "arm", labels = labd) {
+  df <- df[df[[col]] %in% arms, ]; df$cell <- cell(df)
+  if ("trait" %in% rows) df$trait <- factor(df$trait, levels = trait_ord)
+  w <- stats::reshape(df[, c(rows, col, "cell")], idvar = rows, timevar = col, direction = "wide")
+  names(w) <- sub("^cell\\.", "", names(w)); keep <- intersect(arms, names(w))
+  w <- w[do.call(order, w[rows]), c(rows, keep)]
+  for (k in keep) w[[k]][is.na(w[[k]])] <- ""
+  names(w)[-seq_along(rows)] <- labels[keep]; w
+}
+```
+
+```{r disc-value, results = "asis", eval = has_disc}
+cat("## Per-value scores\n\n")
+cat("Each arm is scored from its 20 draws of every missing value: accuracy of the modal class (ties counted ",
+    "fractionally), multi-class Brier score of the draw frequencies, and coverage and size of the smallest class set ",
+    "holding 95% of the draws. The mode floor predicts the most frequent observed class of the dataset in every ",
+    "missing cell. The tables pool ρ = 0 and 0.5 (by ρ: `data/discrete/agg_disc_cells.csv`). BACE + residual is not ",
+    "shown: its extra draw changes Gaussian traits only, so its discrete draws are those of BACE as shipped.\n\n", sep = "")
+arms_v <- c("freqA", "freqB", "bace", "bace_chain")
+caps <- c(accuracy = "Accuracy of the modal imputed class (Monte Carlo SE), pooled over ρ. Higher is better.",
+          brier = "Multi-class Brier score of the draw frequencies (Monte Carlo SE), pooled over ρ. Lower is better.",
+          set_coverage = "Coverage of the smallest class set holding 95% of the 20 draws (Monte Carlo SE), pooled over ρ. Nominal 0.95.",
+          set_size = "Mean number of classes in that set (Monte Carlo SE), pooled over ρ.")
+for (m in names(caps)) {
+  cat(tab(wide_d(dcl, function(g) cell_se(g[[m]], g[[paste0(m, "_se")]]), c("trait", "n", "lambda"),
+                 if (m == "accuracy") c(arms_v, "mode_floor") else arms_v), caps[[m]]), sep = "\n")
+  cat("\n\n")
+}
+ab <- dcr[dcr$arm == "mode_floor", ]   # one row per dataset and trait, whichever arm set holds the dataset
+ab <- stats::aggregate(cbind(absent = n_fits_trait_absent, all = n_fits + n_fits_trait_absent + n_fits_missing) ~ trait + n, ab, sum)
+ab <- ab[ab$absent > 0, ]
+na_d <- dcr[dcr$arm != "mode_floor" & !is.na(dcr$n_na_draws) & dcr$n_na_draws > 0, ]
+na_d <- if (nrow(na_d)) stats::aggregate(n_na_draws ~ arm + trait, na_d, sum) else na_d
+cat(if (nrow(ab)) paste0("Traits with one class in the complete data have nothing to predict and are skipped by every arm: ",
+                         paste(sprintf("`%s` in %d of %d datasets at n = %d", ab$trait, ab$absent, ab$all, ab$n), collapse = "; "),
+                         ". ") else "No trait had a single class in the complete data. ",
+    sprintf("Per-value rows missing for another reason (an arm or scoring error; see `data/discrete/fit_disc_cells.csv.gz`): %d. ",
+            sum(dcr$n_fits_missing[dcr$arm != "mode_floor"])),
+    if (nrow(na_d)) paste0("Draws returned as NA, dropped cell by cell before scoring: ",
+                           paste(sprintf("%s `%s` %d", labd[na_d$arm], na_d$trait, na_d$n_na_draws), collapse = "; "), ".")
+    else "No arm returned NA draws.", "\n\n", sep = "")
+cat("Interpretation: to be written from the results.\n\n")
+```
+
+```{r disc-down, results = "asis", eval = has_disc}
+cat("## Downstream estimate: PGLS slope of c1 on bin\n\n")
+tt <- if (file.exists(file.path(disc_dir, "truth_slope_c1_bin.csv"))) dd("truth_slope_c1_bin.csv") else NULL
+cat("The Rubin-pooled PGLS slope of c1 on `bin` (`bin` = yes coded 1) has two targets. The per-dataset target is ρ ",
+    "times the GLS slope, at the true λ, of `bin`'s liability on `bin`: the expected complete-data estimate given the ",
+    "tree and that liability. The population target is the mean complete-data estimate over ",
+    if (is.null(tt)) "fresh datasets" else paste0(paste(format(sort(unique(tt$R)), big.mark = ","), collapse = " or "),
+                                                  " fresh datasets (Monte Carlo SE at most ", f3n(max(tt$mc_se)), ")"),
+    " per cell (`data/discrete/truth_slope_c1_bin.csv`). Neither is ρ. At λ ≤ 0.7, or ρ = 0, the two nearly agree. At ",
+    "λ = 1 and ρ = 0.5 the per-dataset target varies between datasets by more than the standard error (`bin` is ",
+    "almost constant within clades), so even the complete-data interval covers the population target in only 31% to ",
+    "56% of datasets; coverage there is read against the per-dataset target. The complete-data column applies the ",
+    "same analysis to the data before masking, with the t interval on n − 2 df.\n\n", sep = "")
+dn <- ddn; dn$truth <- f3n(dn$truth); rows_d <- c("n", "lambda", "rho", "truth")
+arms_d <- c("complete", "freqA", "freqB", "freqA_er", "freqB_er", "bace", "bace_chain", "bace_resid")
+cat(tab(wide_d(dn, function(g) cell_se(g$coverage_cond, g$coverage_cond_se), rows_d, arms_d),
+        "c1 ~ bin: coverage of the per-dataset target by the pooled 95% interval (Monte Carlo SE). Nominal 0.95."), sep = "\n"); cat("\n\n")
+cat(tab(wide_d(dn, function(g) cell_se(g$bias_cond, g$bias_cond_se), rows_d, arms_d),
+        "c1 ~ bin: bias of the pooled estimate against the per-dataset target (Monte Carlo SE)."), sep = "\n"); cat("\n\n")
+cat(tab(wide_d(dn, function(g) cell_se(g$coverage, g$coverage_se), rows_d, arms_d),
+        "c1 ~ bin: coverage of the population target (the truth column) by the pooled 95% interval (Monte Carlo SE)."), sep = "\n"); cat("\n\n")
+cat(tab(wide_d(dn, function(g) ifelse(is.na(g$diff_cd_mean), "", paste0(f3n(g$diff_cd_mean), " (", f3n(g$diff_cd_sd), ")")),
+               rows_d, setdiff(arms_d, "complete")),
+        "c1 ~ bin: pooled estimate minus the complete-data estimate of the same dataset, mean (SD over datasets)."), sep = "\n")
+cat("\n\n")
+ex <- ddn[ddn$arm == "complete", ]
+ex <- stats::aggregate(cbind(excluded = n_excluded, undefined = n_undefined, all = n_fits + n_excluded + n_undefined + n_missing) ~ n, ex, sum)
+cat("The estimand is undefined when `bin` has one class in the complete data, or one observed class (every imputed ",
+    "dataset then has a constant `bin`); those datasets are left out of every arm (",
+    paste(sprintf("%d and %d of %d at n = %d", ex$excluded, ex$undefined, ex$all, ex$n), collapse = "; "), "). ",
+    sprintf("Fits with no c1 ~ bin row for another reason (an arm or scoring error; see `data/discrete/fit_disc_estimands.csv.gz`): %d.\n\n",
+            sum(ddn$n_missing[ddn$arm != "complete"])), sep = "")
+cat("Interpretation: to be written from the results.\n\n")
+```
+
+```{r disc-paired, results = "asis", eval = has_disc}
+cat("## Paired contrasts: BACE against the frequentist arms\n\n")
+clab <- c("bace_chain - freqA" = "chained BACE − freq A", "bace - freqA" = "BACE as shipped − freq A",
+          "bace_chain - bace" = "chained BACE − BACE as shipped", "freqA - freqB" = "freq A − freq B",
+          "freqA - freqA_er" = "freq A: flexible − equal rates", "freqB - freqB_er" = "freq B: flexible − equal rates")
+for (ms in c("accuracy", "brier")) {
+  w <- wide_d(dpr[dpr$measure == ms, ], function(g) cell_se(g$diff, g$se), c("trait", "n", "lambda", "rho"), names(clab),
+              col = "contrast", labels = clab)
+  cat(tab(w, paste0("Paired per-dataset difference in ", if (ms == "accuracy") "accuracy" else "Brier score",
+                    " (SE over datasets; counts in `data/discrete/agg_disc_paired.csv`). ",
+                    if (ms == "accuracy") "Positive favours the first arm." else "Negative favours the first arm.")),
+      sep = "\n"); cat("\n\n")
+}
+cat("Interpretation: to be written from the results.\n\n")
+```
+
+```{r disc-repro, results = "asis", eval = has_disc}
+cat("## Reproduction of the continuous results\n\n")
+# an exact match is possible only where the same cluster (same R and BACE builds) ran both the stored and the new
+# fit; a pair of clusters gives an independent replicate
+rb <- if (!is.null(rp)) rp[rp$set == "bace" & rp$arm == "all" & rp$host != "all", ] else NULL
+if (is.null(rb) || !nrow(rb)) {
+  cat("No BACE fit of the discrete re-run was found in the continuous pool, so the stored continuous rows were not re-checked.\n\n")
+} else {
+  same <- rb[rb$host == rb$cont_host, ]; cross <- rb[rb$host != rb$cont_host, ]
+  cat(sprintf(paste("BACE fits re-run on the cluster that ran the stored fit: %d, of which %d reproduced every stored",
+                    "continuous row (pooled estimates and SEs, per-value z-RMSE and coverage) to within %g. Fits re-run on",
+                    "another cluster: %d; they are independent replicates of the stored fits (largest difference in a",
+                    "pooled estimate %s). Details by cluster pair and arm: `data/discrete/repro.csv`.\n\n"),
+              sum(same$n_fits), sum(same$n_fits_identical), rb$tol[1], sum(cross$n_fits),
+              if (nrow(cross)) formatC(max(cross$max_abs_estimate, na.rm = TRUE), format = "g", digits = 2) else "none"))
+}
+```
 
 # Limitations
 

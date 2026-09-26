@@ -11,6 +11,7 @@ Everything needed to report the freq-vs-BACE multiple-imputation simulation: the
   continuous results, so the two parts pair dataset by dataset. `study.qmd` picks them up when present.
 - `build_data.R`: rebuilds `data/` from the result pool (`~/pigauto_rubin_pool`) after `script/rubin_pool.sh`
   and `script/rubin_campaign_aggregate.R`.
+- `script/rubin_discrete_aggregate.R` writes the tables in `data/discrete/`; `build_data.R [POOL] [DISC_POOL]` adds their compute record.
 
 The raw per-fit `rds` files (556 MB) are not in git. They stay in `~/pigauto_rubin_pool` on the Mac and in the
 results folders on nibi, fir, rorqual and Totoro. Never delete them.

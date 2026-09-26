@@ -74,3 +74,42 @@ for (f in c("cells.csv", "cells_n.csv", "cells_l.csv", "down.csv", "down_n.csv",
 
 cat(sprintf("fits %d (bace %d, freq %d); cell rows %d; estimand rows %d; BACE diagnostics %d; failure records %d\n",
             nrow(F), sum(F$set == "bace"), sum(F$set == "freq"), nrow(C), nrow(E), nrow(D), NROW(FR)))
+
+# ---- discrete traits (appended 2026-09-26) ------------------------------------------------------------------------
+# The discrete re-run (rubin_cell.R --save_imp --discrete, on the same datasets) is pooled apart from the continuous
+# fits, in DISC_POOL/{bace,freq}/<host>/ (second argument; default ~/pigauto_rubin_disc_pool):
+#   Rscript script/rubin_study/build_data.R [POOL_DIR] [DISC_POOL_DIR]
+# Its result tables are written straight into data/discrete/ by script/rubin_discrete_aggregate.R. This section adds
+# the compute record of those fits, with the columns of fits.csv and bace_diagnostics.csv above plus the castor
+# version and whether the M imputations were saved: data/discrete/fits.csv, data/discrete/bace_diagnostics.csv
+disc_pool <- if (length(a) >= 2) a[2] else file.path(Sys.getenv("HOME"), "pigauto_rubin_disc_pool")
+dfiles <- list.files(file.path(disc_pool, c("bace", "freq")), "\\.rds$", recursive = TRUE, full.names = TRUE)
+dfiles <- dfiles[!duplicated(paste(set_of(dfiles), sub("_dup[0-9]+\\.rds$", ".rds", basename(dfiles))))]
+if (length(dfiles)) {
+  dout <- file.path(out, "discrete"); dir.create(dout, recursive = TRUE, showWarnings = FALSE)
+  dfits <- vector("list", length(dfiles)); ddiag <- dfits
+  for (i in seq_along(dfiles)) {
+    x <- readRDS(dfiles[i]); si <- x$sessionInfo; w <- x$walls %||% numeric(0)
+    id <- data.frame(set = set_of(dfiles[i]), tag = x$tag, n = x$n, lambda = x$lambda, rho = x$rho, seed = x$seed,
+                     stringsAsFactors = FALSE)
+    dfits[[i]] <- cbind(id, data.frame(
+      cluster = cluster_of(dfiles[i]), node = x$host %||% NA, time = format(x$time %||% NA),
+      M = x$M, arms = paste(x$arms, collapse = ";"), realised_frac = x$realised_frac,
+      wall_s_total = sum(w), wall_s = paste(names(w), round(w, 1), sep = "=", collapse = ";"),
+      n_errors = length(x$errors), errors = paste(names(x$errors), collapse = ";"),
+      R = if (!is.null(si)) paste(si$R.version$major, si$R.version$minor, sep = ".") else NA,
+      BACE = pkgv(si, "BACE"), MCMCglmm = pkgv(si, "MCMCglmm"), Rphylopars = pkgv(si, "Rphylopars"),
+      castor = pkgv(si, "castor"), git_hash = x$git_hash %||% NA, imputations_saved = !is.null(x$imputations),
+      stringsAsFactors = FALSE))
+    d <- x$diag$bace
+    if (!is.null(d)) ddiag[[i]] <- cbind(id, data.frame(
+      converged = d$converged %||% NA, n_attempts = d$n_attempts %||% NA, drift = d$drift %||% NA,
+      ess_min = d$ess_min %||% NA, ess_med = d$ess_med %||% NA, ess_frac_low = d$ess_frac_low %||% NA,
+      input_fix = paste(d$input_fix %||% character(0), collapse = ";"), stringsAsFactors = FALSE))
+  }
+  DF <- bind(dfits); DD <- bind(ddiag)
+  utils::write.csv(DF, file.path(dout, "fits.csv"), row.names = FALSE)
+  if (!is.null(DD)) utils::write.csv(DD, file.path(dout, "bace_diagnostics.csv"), row.names = FALSE)
+  cat(sprintf("discrete fits %d (bace %d, freq %d); BACE diagnostics %d\n", nrow(DF), sum(DF$set == "bace"),
+              sum(DF$set == "freq"), NROW(DD)))
+} else cat(sprintf("no discrete fits under %s: data/discrete/fits.csv not written\n", disc_pool))
