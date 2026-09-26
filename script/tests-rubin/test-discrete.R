@@ -51,8 +51,10 @@ cell$df_miss <- cell$truth; cell$df_miss[cell$mask] <- NA
 for (v in names(cell$truth)) { x <- cell$truth[[v]]; x[cell$mask[, v]] <- NA; cell$df_miss[[v]] <- x }
 
 testthat::test_that("castor arms fill every missing discrete cell and leave observed cells and continuous traits alone", {
-  for (proper in c(FALSE, TRUE)) {
-    a <- mi_castor(cell, 4L, proper = proper)
+  for (cfg in list(list(FALSE, CASTOR_FLEX), list(TRUE, CASTOR_FLEX), list(TRUE, CASTOR_V1))) {
+    proper <- cfg[[1]]
+    a <- mi_castor(cell, 4L, proper = proper, models = cfg[[2]])
+    testthat::expect_true(all(is.na(a$diag$error)))
     testthat::expect_length(a$datasets, 4L)
     for (s in a$datasets) for (v in disc_traits_of(cell$truth)) {
       testthat::expect_false(anyNA(s[[v]]))
@@ -66,7 +68,7 @@ testthat::test_that("castor arms fill every missing discrete cell and leave obse
 testthat::test_that("fill_degenerate imputes a single observed class and counts the cells", {
   df <- data.frame(b = factor(c("yes", "yes", NA, NA), levels = c("no", "yes")))
   f <- fill_degenerate(list(df, df), df, "b")
-  testthat::expect_true(all(f$sets[[2]]$b == "yes")); testthat::expect_equal(f$n_filled[["b"]], 4L)
+  testthat::expect_true(all(f$sets[[2]]$b == "yes")); testthat::expect_equal(f$n_filled[["b"]], 2L)   # cells, not cell-draws
 })
 
 testthat::test_that("score_discrete: perfect draws score 1/0/1/1; a 50:50 binary tie counts half", {
@@ -95,4 +97,63 @@ testthat::test_that("the c1 ~ bin row carries the complete-data interval (t, n -
   e <- score_discrete_estimand("x", rep(list(cell$truth), 3), cell$truth, cell$tree, NULL, nrow(cell$truth))
   testthat::expect_equal(e$complete_upper - e$complete_data, stats::qt(0.975, nrow(cell$truth) - 2) * e$complete_se)
   testthat::expect_equal(e$estimate, e$complete_data)
+})
+
+
+testthat::test_that("transition probabilities are right for a defective (boundary) rate matrix, and the joint draw runs", {
+  a <- 1.3; Q <- matrix(c(-a, a, 0, 0), 2, byrow = TRUE)     # one rate exactly 0: a Jordan block, not diagonalisable
+  P <- .edge_P(Q, c(0, 0.4, 2))
+  testthat::expect_equal(P[[1]], diag(2))
+  testthat::expect_equal(P[[2]], matrix(c(exp(-a * 0.4), 1 - exp(-a * 0.4), 0, 1), 2, byrow = TRUE), tolerance = 1e-12)
+  sued <- function(up, down, K = 4) { Q <- matrix(0, K, K); for (i in 1:(K - 1)) { Q[i, i + 1] <- up; Q[i + 1, i] <- down }; diag(Q) <- -rowSums(Q); Q }
+  for (Qb in list(sued(2, 0), sued(0, 2))) {
+    Pb <- .edge_P(Qb, c(0.1, 0.7))
+    testthat::expect_equal(Pb[[1]] %*% Pb[[1]], .edge_P(Qb, 0.2)[[1]], tolerance = 1e-10)   # semigroup
+    testthat::expect_equal(rowSums(Pb[[2]]), rep(1, 4))
+  }
+  Qb <- sued(2, 0); tip <- castor::simulate_mk_model(tree, Qb, root_probabilities = c(.7, .1, .1, .1))$tip_states
+  tip[sample(40, 12)] <- NA; K <- 4; prior <- .empirical_prior(tip, K)
+  d <- mk_joint_draw(tree, tip, Qb, prior, 4000L)
+  miss <- which(is.na(tip))
+  emp <- t(vapply(miss, function(i) tabulate(d[, i], K) / nrow(d), numeric(K)))
+  exact <- t(vapply(miss, function(i) brute_marginal(tip, Qb, prior, i), numeric(K)))
+  testthat::expect_lt(max(abs(emp - exact)), 0.035)
+})
+
+testthat::test_that("a castor failure on one trait leaves that trait missing and fills the others", {
+  orig <- .castor_fit
+  .castor_fit <<- function(tree, tip, K, rate_model) if (rate_model == "SRD") stop("boom") else orig(tree, tip, K, rate_model)
+  on.exit(.castor_fit <<- orig, add = TRUE)
+  a <- mi_castor(cell, 3L, proper = TRUE)
+  testthat::expect_equal(a$diag$error[a$diag$trait == "ord"], "boom")
+  testthat::expect_true(all(is.na(a$datasets[[1]]$ord[cell$mask[, "ord"]])))
+  testthat::expect_false(anyNA(a$datasets[[1]]$bin)); testthat::expect_false(anyNA(a$datasets[[1]]$cat3))
+  s <- score_discrete("x", a$datasets, cell$truth, cell$mask)
+  testthat::expect_setequal(s$trait, c("bin", "cat3"))      # all-NA cells dropped: ord has no scorable cell
+})
+
+testthat::test_that("score_discrete: fractional ties at the edge of the 95% set, one-class traits skipped, all-NA cells counted", {
+  tr <- data.frame(row.names = paste0("s", 1:3), k = factor(c("A", "B", "A"), levels = c("A", "B", "C")),
+                   o = factor(c("L2", "L2", "L2"), levels = c("L1", "L2", "L3"), ordered = TRUE))
+  mk <- matrix(c(FALSE, TRUE, TRUE, FALSE, TRUE, FALSE), 3, dimnames = list(rownames(tr), c("k", "o")))
+  draw <- function(cls2, cls3) { d <- tr; d$k <- factor(c("A", cls2, cls3), levels = levels(tr$k)); d }
+  sets <- c(rep(list(draw("A", NA)), 18), list(draw("B", NA)), list(draw("C", NA)))   # cell 2: 18 A, 1 B, 1 C; cell 3: all NA
+  s <- score_discrete("x", sets, tr, mk)
+  testthat::expect_equal(nrow(s), 1L)                        # o has one realised class in the complete data: skipped
+  testthat::expect_equal(s$n_cells, 1L); testthat::expect_equal(s$n_cells_all_na, 1L)
+  testthat::expect_equal(s$set_size, 2); testthat::expect_equal(s$set_coverage, 0.5)   # B tied with C for the second place
+  testthat::expect_equal(s$accuracy, 0)
+})
+
+testthat::test_that("c1 ~ bin: undefined when bin is constant in every imputed dataset; per-dataset target is rho x GLS slope of L5", {
+  one <- cell$truth; one$bin[] <- levels(one$bin)[2L]
+  testthat::expect_null(score_discrete_estimand("x", rep(list(one), 3), cell$truth, cell$tree, NULL, nrow(one)))
+  eig <- pagel_eigen(cell$tree, rownames(cell$truth)); L5 <- cell$L[rownames(cell$truth), 5]
+  e <- score_discrete_estimand("x", rep(list(cell$truth), 3), cell$truth, cell$tree, eig, nrow(one), L5 = L5,
+                               lambda = 0.7, rho = 0.5)
+  x01 <- as.numeric(cell$truth$bin == "yes"); V <- 0.7 * cov2cor(ape::vcv(cell$tree))[rownames(cell$truth), rownames(cell$truth)] + 0.3 * diag(nrow(one))
+  X <- cbind(1, x01); b <- solve(t(X) %*% solve(V, X), t(X) %*% solve(V, L5))[2]
+  testthat::expect_equal(e$target_cond, 0.5 * b, tolerance = 1e-8)
+  e0 <- score_discrete_estimand("x", rep(list(cell$truth), 3), cell$truth, cell$tree, eig, nrow(one), L5 = L5, lambda = 0.7, rho = 0)
+  testthat::expect_equal(e0$target_cond, 0)
 })

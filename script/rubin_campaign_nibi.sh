@@ -34,26 +34,32 @@ case "$ARMSET" in
 esac
 EXTRA="$EXTRA ${CELL_FLAGS:-}"
 
-TASKS="$LOG/campaign_${ARMSET}_n${N}_s${S0}-${S1}${TAG:+_$TAG}_tasks.txt"; : > "$TASKS"
+# The task list is built in a temporary file and moves into place only on submission, so a dry run or a later
+# submission never rewrites the file that queued array tasks of an earlier submission read.
+TASKS="$LOG/campaign_${ARMSET}_n${N}_s${S0}-${S1}${TAG:+_$TAG}_tasks.txt"; TMP_TASKS="$TASKS.tmp.$$"; : > "$TMP_TASKS"
 # RETRY_FILE: explicit (lambda rho seed) triples, one per line, instead of the full grid (reruns of named fits).
 if [ -n "${RETRY_FILE:-}" ]; then
   while read -r lambda rho seed; do
-    printf '%s\t%d\t%d\n' "--n $N --lambda $lambda --rho $rho --M 20 --arms $ARMS $EXTRA --out $OUT" "$seed" "$seed" >> "$TASKS"
+    printf '%s\t%d\t%d\n' "--n $N --lambda $lambda --rho $rho --M 20 --arms $ARMS $EXTRA --out $OUT" "$seed" "$seed" >> "$TMP_TASKS"
   done < "$RETRY_FILE"
 else
 for lambda in ${LAMBDAS:-0.3 0.7 1}; do for rho in 0 0.5; do
   for (( s = S0; s <= S1; s += BLOCK )); do
     e=$(( s + BLOCK - 1 )); [ "$e" -gt "$S1" ] && e=$S1
-    printf '%s\t%d\t%d\n' "--n $N --lambda $lambda --rho $rho --M 20 --arms $ARMS $EXTRA --out $OUT" "$s" "$e" >> "$TASKS"
+    printf '%s\t%d\t%d\n' "--n $N --lambda $lambda --rho $rho --M 20 --arms $ARMS $EXTRA --out $OUT" "$s" "$e" >> "$TMP_TASKS"
   done
 done; done
 fi
-NT=$(wc -l < "$TASKS")
+NT=$(wc -l < "$TMP_TASKS")
 if [ "$NT" -gt "$CAP" ]; then
-  echo "$NT tasks exceeds the $CAP cap; use BLOCK >= $(( ( (S1 - S0 + 1) * 6 + CAP - 1 ) / CAP )) or split SEEDS"; exit 1
+  echo "$NT tasks exceeds the $CAP cap; use BLOCK >= $(( ( (S1 - S0 + 1) * 6 + CAP - 1 ) / CAP )) or split SEEDS"; rm -f "$TMP_TASKS"; exit 1
 fi
 echo "armset=$ARMSET n=$N seeds=$S0..$S1 block=$BLOCK tasks=$NT time=$TIME mem=$MEM"
-[ "${CONFIRM:-no}" = yes ] || { echo "dry run: set CONFIRM=yes to submit (needs Shinichi's approval)"; exit 0; }
+[ "${CONFIRM:-no}" = yes ] || { echo "dry run: set CONFIRM=yes to submit (needs Shinichi's approval)"; head -2 "$TMP_TASKS"; rm -f "$TMP_TASKS"; exit 0; }
+if [ -e "$TASKS" ] && squeue -u "$USER" -h -o "%j" 2>/dev/null | grep -qx "rubin_${ARMSET}_n${N}${TAG:+_$TAG}"; then
+  echo "jobs named rubin_${ARMSET}_n${N}${TAG:+_$TAG} are queued and read $TASKS; not overwriting it"; rm -f "$TMP_TASKS"; exit 1
+fi
+mv "$TMP_TASKS" "$TASKS"
 
 SB="$LOG/campaign_${ARMSET}_n${N}_s${S0}-${S1}${TAG:+_$TAG}.sbatch"
 cat > "$SB" <<SBEOF
