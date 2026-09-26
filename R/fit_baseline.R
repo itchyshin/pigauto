@@ -1350,8 +1350,37 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
 # `predict_method` / `predict_route` roxygen on fit_baseline() above.
 
 #' @noRd
-.pigauto_route_val_loss <- function(tm, val_row, species_row, X_truth, mu) {
+.pigauto_route_val_loss <- function(tm, val_row, species_row, X_truth, mu,
+                                    se = NULL) {
   type <- tm$type
+  # Ordinal (BENCHMARK HOOK, removed before release): score by class error
+  # rate ("class") or by the log-probability of the true class under
+  # N(mu, se^2) on the latent z-scale ("logloss"); "sq" keeps squared error.
+  # Ordinal traits are coded 0..K-1 before z-scoring (preprocess_traits()).
+  ord_mode <- Sys.getenv("PIGAUTO_ORD_ROUTE", "sq")
+  if (identical(type, "ordinal") && ord_mode %in% c("class", "logloss") &&
+      length(tm$levels) >= 2L && is.finite(tm$sd %||% NA_real_) && tm$sd > 0) {
+    col   <- tm$latent_cols[1]
+    truth <- X_truth[val_row, col]
+    pred  <- mu[species_row, col]
+    ok    <- is.finite(truth) & is.finite(pred)
+    n     <- sum(ok)
+    if (n == 0L) return(list(n = 0L, loss = NA_real_))
+    K     <- length(tm$levels)
+    cls_t <- pmin(pmax(round(truth[ok] * tm$sd + tm$mean), 0), K - 1)
+    sq    <- mean((pred[ok] - truth[ok])^2)
+    if (identical(ord_mode, "class")) {
+      cls_p <- pmin(pmax(round(pred[ok] * tm$sd + tm$mean), 0), K - 1)
+      return(list(n = n, loss = mean(cls_p != cls_t), tiebreak = sq))
+    }
+    s <- if (is.null(se)) rep(1, n) else se[species_row, col][ok]
+    s[!is.finite(s)] <- 1
+    s <- pmax(s, 1e-3)
+    lo <- ifelse(cls_t == 0, -Inf, (cls_t - 0.5 - tm$mean) / tm$sd)
+    hi <- ifelse(cls_t == K - 1, Inf, (cls_t + 0.5 - tm$mean) / tm$sd)
+    p  <- stats::pnorm((hi - pred[ok]) / s) - stats::pnorm((lo - pred[ok]) / s)
+    return(list(n = n, loss = mean(-log(pmax(p, 1e-6))), tiebreak = sq))
+  }
   if (type %in% c("continuous", "count", "ordinal", "proportion")) {
     col   <- tm$latent_cols[1]
     truth <- X_truth[val_row, col]
@@ -1449,14 +1478,21 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     if (!any(keep)) next
     vr <- val_row[keep]
     sr <- species_row[keep]
-    res_exact <- .pigauto_route_val_loss(tm, vr, sr, X_truth, fit_exact$mu)
-    res_pc    <- .pigauto_route_val_loss(tm, vr, sr, X_truth, fit_pc$mu)
+    res_exact <- .pigauto_route_val_loss(tm, vr, sr, X_truth, fit_exact$mu, fit_exact$se)
+    res_pc    <- .pigauto_route_val_loss(tm, vr, sr, X_truth, fit_pc$mu, fit_pc$se)
     n_total <- max(res_exact$n, res_pc$n)
-    if (n_total < 5L || !is.finite(res_exact$loss) || !is.finite(res_pc$loss) ||
-        isTRUE(all.equal(res_exact$loss, res_pc$loss))) {
-      next  # tie / insufficient evidence -> whatever fit_exact actually ran
+    if (n_total < 5L || !is.finite(res_exact$loss) || !is.finite(res_pc$loss)) {
+      next  # insufficient evidence -> whatever fit_exact actually ran
     }
-    route[[tm$name]] <- if (res_pc$loss < res_exact$loss) "per_column" else "exact"
+    le <- res_exact$loss; lp <- res_pc$loss
+    if (isTRUE(all.equal(le, lp)) && !is.null(res_exact$tiebreak) &&
+        !is.null(res_pc$tiebreak)) {
+      le <- res_exact$tiebreak; lp <- res_pc$tiebreak
+    }
+    if (!is.finite(le) || !is.finite(lp) || isTRUE(all.equal(le, lp))) {
+      next  # tie -> whatever fit_exact actually ran
+    }
+    route[[tm$name]] <- if (lp < le) "per_column" else "exact"
   }
   route
 }
