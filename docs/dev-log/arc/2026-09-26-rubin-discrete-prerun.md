@@ -76,6 +76,14 @@ n, so the study tables do not show it.
   finite or sum to zero (`.predict_bace`: `if (any(!is.finite(p)) || sum(p) <= 0) NA_character_`); about 8% of
   `cat3` draws in the first nibi fits (44 to 54 of 600), none for `bin` or `ord`. They are a BACE property, not our
   alignment; scores use the remaining draws per cell, and the counts are reported.
+- **Frequentist arms done** (Totoro, 09:11 to 10:06, 40 cores): 2,400 of 2,400 files, 0 errors, 0 castor
+  failures, 0 fallbacks, 0 NA draws; 1,253 bootstrap refits rejected and redrawn (observed tips impossible under
+  the refit). `c1 ~ bin`: 9,344 rows scored, 256 undefined (64 datasets x 4 arms with one observed `bin` class),
+  0 errors. Continuous rows against the frequentist results of record (fir): 2,374 files reproduce within 1e-4;
+  26 files (60 of 14,396 estimate rows; 51 freq A, 9 freq B) differ by up to 0.17. The differences are cross-host
+  numerical paths (R 4.5.3 on Totoro, R 4.5.0 on fir): freq A's bootstrap refits diverge (for example 11 against 58
+  redrawn refits), and for seed 38 at n = 300 the Rphylopars fit itself converges elsewhere. The continuous
+  results of record stay fir's; the discrete part uses the Totoro draws, whose c1 enters `c1 ~ bin`.
 - **Slip, corrected.** I read the stored pool's file for one of these datasets as a successful fit (it is the
   failure record) and resubmitted the 8 on fir (job 61679247, TAG disc_retry1). They failed there too; the job was
   cancelled after 4 minutes, its 4 outputs moved to `results_disc/bace_retry1_duplicates/` on fir (outside the
