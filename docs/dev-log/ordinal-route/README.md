@@ -31,7 +31,17 @@ moves the same way. No other trait changed. Squared error stays.
 An earlier run of A (branch `feat/ordinal-route-accuracy`) decoded classes as 1 to K and so scored every
 lowest-class prediction as wrong; its result is superseded by the run above.
 
-Separate finding, not addressed here: the ordinal label-propagation candidate in `fit_baseline()`
-(`R/fit_baseline.R`, Phase F, commit a3b89e6) also decodes classes as 1 to K, which drops every lowest-class
-observation from that candidate. It is chosen only when it wins on validation error, so the effect is most
-likely that it rarely competes; this has not been measured.
+## The ordinal label-propagation candidate (removed)
+
+The label-propagation candidate in the ordinal path selection (`R/fit_baseline.R`, Phase F, commit a3b89e6)
+also decoded classes as 1 to K, so it dropped every lowest-class observation. Two options were benchmarked
+against the merged code on the same 18 cells:
+
+- Fixed decoding (branch `fix/ordinal-lp-class-coding`, `core_lambda_lpfix_off_agg_summary.csv`): chosen more
+  often; ordinal accuracy mean -0.003 (lower in 11 of 18, worst -0.015), macro F1 mean +0.003. Not kept.
+- Candidate removed (`core_lambda_nolp_off_agg_summary.csv`): ordinal accuracy -0.002 to +0.007 by lambda and
+  n (mean +0.001; 7 higher, 5 lower, 3 identical of 18 scenarios), macro F1 -0.009 to +0.002 (mean -0.004).
+  No other trait changed. Adopted (Shinichi, 2026-09-26).
+
+On AVONET 300 Migration (10 seeds, 60 held-out cells each) the merged code chose the per-column BM path in 9 of
+10 fits and threshold-joint in 1, so removing the candidate does not change that case.

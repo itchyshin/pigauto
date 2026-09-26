@@ -71,7 +71,7 @@ Unmerged provenance branches: `feat/ordinal-route-accuracy` (buggy first ordinal
 | refit warned every time under default | second review | fixed (2be557f) |
 | NEWS overclaims | both reviews | fixed |
 | ordinal scorer decoded 1..K | own check | re-run with 0..K-1 |
-| LP ordinal candidate decodes 1..K | own check | open, not in scope |
+| LP ordinal candidate decodes 1..K | own check | candidate removed (#195) |
 
 ## 8. Consistency Audit
 
@@ -91,7 +91,7 @@ Checked every caller of the split and route functions (`fit_pigauto`, `impute`, 
 
 - Coverage at lambda 1 with 100 species falls by 0.006 to 0.018 per trait (main already 0.86 to 0.92).
 - z-RMSE +0.4% at lambda 1 with 1,000 species; GlobTherm full +0.8%.
-- The label-propagation ordinal candidate drops lowest-class observations (commit a3b89e6); unmeasured.
+- Removing the ordinal label-propagation candidate (#195) lowered ordinal macro F1 by 0.004 on average.
 - `multi_impute_trees()` offsets the seed per tree, so tree 1 does not reproduce the reference fit's split.
 
 ## 11. Team Learning
