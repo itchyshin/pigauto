@@ -69,6 +69,13 @@ n, so the study tables do not show it.
   deterministic: the first 8 in this run are all in the stored set, although they failed on rorqual here and on
   fir before. BACE arms of these datasets are missing in both parts; paired contrasts use datasets where both arms
   exist, and the failure counts are reported.
+- **Exact reproduction.** The first nibi BACE fits (n = 100, λ = 0.3, ρ = 0, seeds 1 and 11) reproduce the stored
+  continuous rows to the last digit (every pooled estimate and SE of all three BACE arms, and the per-value
+  scores: maximum difference 0). The re-run therefore confirms the continuous BACE results and extends them.
+- **BACE's NA categorical draws.** BACE returns NA for a `cat3` draw when that cell's class probabilities are not
+  finite or sum to zero (`.predict_bace`: `if (any(!is.finite(p)) || sum(p) <= 0) NA_character_`); about 8% of
+  `cat3` draws in the first nibi fits (44 to 54 of 600), none for `bin` or `ord`. They are a BACE property, not our
+  alignment; scores use the remaining draws per cell, and the counts are reported.
 - **Slip, corrected.** I read the stored pool's file for one of these datasets as a successful fit (it is the
   failure record) and resubmitted the 8 on fir (job 61679247, TAG disc_retry1). They failed there too; the job was
   cancelled after 4 minutes, its 4 outputs moved to `results_disc/bace_retry1_duplicates/` on fir (outside the
