@@ -55,6 +55,15 @@ The route choice scores ordinal traits by squared error on the latent scale. Two
 rate and the log-probability of the true class, were tested on the 18 core simulation cells and both lowered
 ordinal accuracy (on average by 0.002 and 0.019), so neither was adopted (`docs/dev-log/ordinal-route/`).
 
+## Fix: ordinal path selection no longer offers label propagation
+
+For each ordinal trait, the threshold-joint baseline picks between the threshold-joint fit and a per-column BM
+fit on validation error. A third candidate, label propagation (added in May 2026), decoded the 0 to K-1 class
+coding as 1 to K, so it ignored every observation in the lowest class. It has been removed. On the 18 core
+simulation cells (GNN off, 200 seeds) ordinal accuracy changes by -0.002 to +0.007 (mean +0.001) and macro F1
+by -0.009 to +0.002 (mean -0.004); no other trait changes. A version with the decoding fixed lowered ordinal
+accuracy (mean -0.003) and was not kept. Evidence: `docs/dev-log/ordinal-route/`.
+
 ## Fix: full REML likelihood for Pagel's lambda (PR #191)
 
 The profile likelihood used the REML variance divisor but dropped the REML
