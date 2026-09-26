@@ -61,6 +61,19 @@ Two review points stand as reported limitations, not fixes: BACE returns some NA
 600 in the smoke; scored on the remaining draws and counted), and mean ECE over 30 to 90 cells is biased at small
 n, so the study tables do not show it.
 
+## During the run (2026-09-26)
+
+- **Expected BACE failures.** BACE stops with MCMCglmm's "Mixed model equations singular" on 67 of the 2,400
+  datasets at n <= 300 (all at λ = 1: 47 at n = 100, 20 at n = 300; 10 more at n = 1000). The continuous campaign
+  has the same 77 as result files without BACE rows ("recorded but not scored", study.qmd). The failures are
+  deterministic: the first 8 in this run are all in the stored set, although they failed on rorqual here and on
+  fir before. BACE arms of these datasets are missing in both parts; paired contrasts use datasets where both arms
+  exist, and the failure counts are reported.
+- **Slip, corrected.** I read the stored pool's file for one of these datasets as a successful fit (it is the
+  failure record) and resubmitted the 8 on fir (job 61679247, TAG disc_retry1). They failed there too; the job was
+  cancelled after 4 minutes, its 4 outputs moved to `results_disc/bace_retry1_duplicates/` on fir (outside the
+  pool), and the 8 rorqual records left in place. The monitor now flags only failures outside the stored set.
+
 ## What the smoke measured
 
 | check | result |
