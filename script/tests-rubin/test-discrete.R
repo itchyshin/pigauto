@@ -90,3 +90,9 @@ testthat::test_that("a trait with one class in the complete data is skipped by b
   testthat::expect_false("bin" %in% s$trait)
   testthat::expect_null(score_discrete_estimand("x", rep(list(tr), 3), tr, cell$tree, NULL, nrow(tr)))
 })
+
+testthat::test_that("the c1 ~ bin row carries the complete-data interval (t, n - 2 df)", {
+  e <- score_discrete_estimand("x", rep(list(cell$truth), 3), cell$truth, cell$tree, NULL, nrow(cell$truth))
+  testthat::expect_equal(e$complete_upper - e$complete_data, stats::qt(0.975, nrow(cell$truth) - 2) * e$complete_se)
+  testthat::expect_equal(e$estimate, e$complete_data)
+})

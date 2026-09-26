@@ -20,7 +20,9 @@ BLOCK="${BLOCK:-1}"; SEEDS="${SEEDS:-1-200}"; MEM="${MEM:-8G}"; THROTTLE="${THRO
 RUNS="${RUNS:-5}"; NITT="${NITT:-50000}"; CAP="${THROTTLE_CAP:-900}"
 ROOT="${RUBIN_ROOT:-$HOME/projects/def-snakagaw/snakagaw/pigauto_rubin}"
 ENV_SH="${RUBIN_ENV:-$HOME/projects/def-snakagaw/snakagaw/pigauto_sim/env.sh}"
-OUT="$ROOT/results/$ARMSET"; LOG="$ROOT/logs"; mkdir -p "$OUT" "$LOG"
+# RUBIN_OUT: results parent folder (default results/); CELL_FLAGS: extra rubin_cell.R flags, e.g. the discrete
+# re-run: RUBIN_OUT=$ROOT/results_disc CELL_FLAGS="--save_imp --discrete" TAG=disc
+OUT="${RUBIN_OUT:-$ROOT/results}/$ARMSET"; LOG="$ROOT/logs"; mkdir -p "$OUT" "$LOG"
 S0="${SEEDS%-*}"; S1="${SEEDS#*-}"
 
 case "$ARMSET" in
@@ -30,6 +32,7 @@ case "$ARMSET" in
         EXTRA="--bace_nitt $NITT --bace_burnin $BURNIN --bace_thin $THIN --bace_runs $RUNS" ;;
   *) echo "ARMSET must be freq or bace"; exit 1 ;;
 esac
+EXTRA="$EXTRA ${CELL_FLAGS:-}"
 
 TASKS="$LOG/campaign_${ARMSET}_n${N}_s${S0}-${S1}${TAG:+_$TAG}_tasks.txt"; : > "$TASKS"
 # RETRY_FILE: explicit (lambda rho seed) triples, one per line, instead of the full grid (reruns of named fits).
@@ -56,7 +59,7 @@ SB="$LOG/campaign_${ARMSET}_n${N}_s${S0}-${S1}${TAG:+_$TAG}.sbatch"
 cat > "$SB" <<SBEOF
 #!/bin/bash
 #SBATCH --account=def-snakagaw_cpu
-#SBATCH --job-name=rubin_${ARMSET}_n${N}
+#SBATCH --job-name=rubin_${ARMSET}_n${N}${TAG:+_$TAG}
 #SBATCH --time=$TIME
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=$MEM

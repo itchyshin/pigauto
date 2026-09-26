@@ -186,6 +186,10 @@ score_discrete_estimand <- function(arm, sets, truth, tree, eig, n) {
   ps <- rubin_pool(vapply(sl[ok], `[[`, numeric(1), "estimate"), vapply(sl[ok], `[[`, numeric(1), "variance"),
                    df_com = n - 2)
   ref <- est_pgls_xy(truth, tree, y = "c1", x = "bin", eig = eig)
+  # the complete-data interval (t with n - 2 df), the coverage baseline, as the continuous "complete" row
+  ref_se <- sqrt(ref$variance); tq <- stats::qt(0.975, n - 2)
   data.frame(arm = arm, estimand = "slope_c1_bin", estimate = ps$estimate, se = ps$se, lower = ps$lower,
-             upper = ps$upper, df = ps$df, fmi = ps$fmi, m_ok = sum(ok), complete_data = ref$estimate)
+             upper = ps$upper, df = ps$df, fmi = ps$fmi, m_ok = sum(ok), complete_data = ref$estimate,
+             complete_se = ref_se, complete_lower = ref$estimate - tq * ref_se,
+             complete_upper = ref$estimate + tq * ref_se)
 }
