@@ -3072,7 +3072,13 @@ vertical-align: -.125em;
   <li><a href="#paired-contrasts" id="toc-paired-contrasts" class="nav-link" data-scroll-target="#paired-contrasts"><span class="header-section-number">4.4</span> Paired contrasts</a></li>
   <li><a href="#failures-and-diagnostics" id="toc-failures-and-diagnostics" class="nav-link" data-scroll-target="#failures-and-diagnostics"><span class="header-section-number">4.5</span> Failures and diagnostics</a></li>
   </ul></li>
-  <li><a href="#sec-discrete" id="toc-sec-discrete" class="nav-link" data-scroll-target="#sec-discrete"><span class="header-section-number">5</span> Discrete traits</a></li>
+  <li><a href="#sec-discrete" id="toc-sec-discrete" class="nav-link" data-scroll-target="#sec-discrete"><span class="header-section-number">5</span> Discrete traits</a>
+  <ul class="collapse">
+  <li><a href="#per-value-scores" id="toc-per-value-scores" class="nav-link" data-scroll-target="#per-value-scores"><span class="header-section-number">5.1</span> Per-value scores</a></li>
+  <li><a href="#downstream-estimate-pgls-slope-of-c1-on-bin" id="toc-downstream-estimate-pgls-slope-of-c1-on-bin" class="nav-link" data-scroll-target="#downstream-estimate-pgls-slope-of-c1-on-bin"><span class="header-section-number">5.2</span> Downstream estimate: PGLS slope of c1 on bin</a></li>
+  <li><a href="#paired-contrasts-bace-against-the-frequentist-arms" id="toc-paired-contrasts-bace-against-the-frequentist-arms" class="nav-link" data-scroll-target="#paired-contrasts-bace-against-the-frequentist-arms"><span class="header-section-number">5.3</span> Paired contrasts: BACE against the frequentist arms</a></li>
+  <li><a href="#reproduction-of-the-continuous-results" id="toc-reproduction-of-the-continuous-results" class="nav-link" data-scroll-target="#reproduction-of-the-continuous-results"><span class="header-section-number">5.4</span> Reproduction of the continuous results</a></li>
+  </ul></li>
   <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations"><span class="header-section-number">6</span> Limitations</a></li>
   <li><a href="#files-and-reproduction" id="toc-files-and-reproduction" class="nav-link" data-scroll-target="#files-and-reproduction"><span class="header-section-number">7</span> Files and reproduction</a></li>
   </ul>
@@ -3108,7 +3114,7 @@ vertical-align: -.125em;
 
 <section id="summary" class="level1" data-number="1">
 <h1 data-number="1"><span class="header-section-number">1</span> Summary</h1>
-<p>We compared four ways of multiply imputing missing phylogenetic trait values, plus a negative control, on the same simulated datasets, and scored each with Rubin’s rules: per missing value and on two downstream estimates. The continuous part is complete: 3,000 BACE fits and 3,600 frequentist fits over 18 simulation cells, with no dataset missing. The discrete part (binary, ordinal, categorical traits) extends the same design on the same datasets (<a href="#sec-discrete" class="quarto-xref">Section 5</a>).</p>
+<p>We compared four ways of multiply imputing missing phylogenetic trait values, plus a negative control, on the same simulated datasets, and scored each with Rubin’s rules: per missing value and on two downstream estimates. The continuous part is complete: 3,000 BACE fits and 3,600 frequentist fits over 18 simulation cells, with no dataset missing. The discrete part (binary, ordinal and categorical traits) is complete at n = 100 and 300: 2,400 BACE fits and 2,400 frequentist fits on the same datasets (<a href="#sec-discrete" class="quarto-xref">Section 5</a>).</p>
 <p>Main continuous findings:</p>
 <ul>
 <li><strong>BACE as shipped gives improper imputations.</strong> Its 20 final runs all start from the same converged dataset, so the imputations are not independent draws. Per-value coverage is below nominal at λ = 0.3 and 0.7 (about 0.91), and downstream coverage of the phylogenetic correlation is about 0.90 at n = 300 and 1000.</li>
@@ -3116,7 +3122,15 @@ vertical-align: -.125em;
 <li><strong>Proper frequentist imputation (freq A) is close to nominal throughout</strong>; the improper version (freq B) is fine per value but under-covers the correlation, so improperness shows up downstream.</li>
 <li><strong>Accuracy.</strong> freq A and chained BACE are equally accurate at n = 300 and 1000; at n = 100 chained BACE is less accurate and pulls the downstream slope toward zero.</li>
 </ul>
-<p>This is the frequentist method’s home ground: the scored traits are continuous, evolve by Brownian motion with Pagel’s λ, and Rphylopars fits exactly that model. It does not test BACE’s claimed advantage, one model for mixed trait types; the discrete extension does.</p>
+<p>Main discrete findings (n = 100 and 300):</p>
+<ul>
+<li><strong>At low and moderate signal BACE imputes discrete traits more accurately.</strong> At λ = 0.3 and 0.7 chained BACE’s modal class is right more often than castor’s (freq A) in every cell, by 0.04 to 0.15 (5 to 28 SEs, paired on the same datasets). At λ = 0.3 castor, even with flexible rates, is 0.01 to 0.02 below always guessing the most frequent observed class. At λ = 1 castor leads by up to 0.016 at n = 100, and the two are within 0.006 at n = 300.</li>
+<li><strong>Imputing one trait at a time biases associations toward zero.</strong> castor imputes <code>bin</code> without c1, so at ρ = 0.5 and λ ≤ 0.7 the pooled PGLS slope of c1 on <code>bin</code> is 0.21 to 0.29 too small, and its coverage falls as n grows (0.89 at n = 100; 0.34 to 0.46 at n = 300). BACE, which imputes each trait given the others, is within 0.025 of the target.</li>
+<li><strong>Chaining helps again.</strong> At λ ≤ 0.7 BACE as shipped covers the downstream slope in 0.895 to 0.945 of datasets and chained BACE in 0.940 to 0.965. BACE’s 95% class sets under-cover at λ = 0.3 and n = 100 (0.86 to 0.91; chained 0.89 to 0.94), and chaining lowers the Brier score in every λ ≤ 0.7 cell.</li>
+<li><strong>BACE cannot fit some λ = 1 datasets.</strong> MCMCglmm stops (“Mixed model equations singular”) on 63 of the 2,400 datasets, all at λ = 1 (44 at n = 100, 19 at n = 300); 62 of them failed in the continuous campaign too. castor fits every dataset.</li>
+<li><strong>The re-run reproduces the stored BACE fits.</strong> On the cluster that ran the stored fit, 417 of 423 re-runs match it to the last digit; re-runs on another cluster are independent replicates (median difference in a pooled estimate 0.004 to 0.016).</li>
+</ul>
+<p>The continuous part is the frequentist method’s home ground: the scored traits are continuous, evolve by Brownian motion with Pagel’s λ, and Rphylopars fits exactly that model. The discrete part is BACE’s home ground in turn: the discrete traits are thresholded Brownian liabilities, the model family BACE fits, while castor models one trait at a time, with an Mk process and no covariates. No off-the-shelf phylogenetic frequentist method imputes discrete traits jointly with continuous ones, so the comparison is between the methods a user can actually run.</p>
 </section>
 <section id="design-ademp" class="level1" data-number="2">
 <h1 data-number="2"><span class="header-section-number">2</span> Design (ADEMP)</h1>
@@ -5280,7 +5294,6 @@ Figure 1: Per-value coverage by sample size and λ; whiskers ±2 Monte Carlo SE
 </section>
 <section id="sec-discrete" class="level1" data-number="5">
 <h1 data-number="5"><span class="header-section-number">5</span> Discrete traits</h1>
-<p><em>Not yet run.</em> Results will appear here from <code>data/discrete/</code>.</p>
 <p>The discrete extension mirrors the continuous design:</p>
 <table class="caption-top table">
 <colgroup>
@@ -5291,8 +5304,8 @@ Figure 1: Per-value coverage by sample size and λ; whiskers ±2 Monte Carlo SE
 <thead>
 <tr class="header">
 <th>element</th>
-<th>continuous (done)</th>
-<th>discrete (planned)</th>
+<th>continuous</th>
+<th>discrete</th>
 </tr>
 </thead>
 <tbody>
@@ -5309,27 +5322,37 @@ Figure 1: Per-value coverage by sample size and λ; whiskers ±2 Monte Carlo SE
 <tr class="odd">
 <td>proper frequentist</td>
 <td>freq A: bootstrap refit, then draw</td>
-<td>castor Mk hidden-state prediction with a parametric bootstrap of the rates before each draw</td>
+<td>castor Mk fit, then for each <em>m</em> a parametric bootstrap refit of the rates and a joint conditional draw of the missing tips (forward filtering, backward sampling on the tree); filled into freq A’s continuous draws</td>
 </tr>
 <tr class="even">
 <td>improper frequentist</td>
 <td>freq B: one fit</td>
-<td>castor Mk with rates held at the fitted values (as in simulation v1)</td>
+<td>the same castor fit, 20 joint conditional draws at the fitted rates; filled into freq B’s continuous draws</td>
+</tr>
+<tr class="odd">
+<td>rate model</td>
+<td>Pagel’s λ (falls back to the sample mean at low signal)</td>
+<td>all rates different (ARD) for <code>bin</code> and <code>cat3</code>, stepwise with every rate different (SRD) for <code>ord</code>: their stationary distribution can match the observed class frequencies, so they fall back to those at low signal</td>
+</tr>
+<tr class="even">
+<td>comparison arms</td>
+<td>none</td>
+<td>freq A and freq B with simulation v1’s equal-rates models (ER, ER, SUEDE), scored on discrete traits only</td>
 </tr>
 <tr class="odd">
 <td>Bayesian</td>
 <td>BACE as shipped; chained BACE</td>
-<td>the same BACE fits (re-run with imputations saved; the continuous rows should reproduce)</td>
+<td>the same BACE fits, re-run with the imputations saved</td>
 </tr>
 <tr class="even">
 <td>per-value scores</td>
 <td>coverage, width, z-RMSE, interval score</td>
-<td>class accuracy, Brier score, calibration, coverage of the 20-draw prediction set</td>
+<td>class accuracy, Brier score, coverage and size of the 95% class set from the 20 draws</td>
 </tr>
 <tr class="odd">
 <td>downstream, Rubin-pooled</td>
 <td>PGLS slope, phylogenetic correlation</td>
-<td>an estimate involving a discrete trait (for example the slope of c1 on <code>bin</code>), truth computed on the liability scale or by Monte Carlo</td>
+<td>PGLS slope of c1 on <code>bin</code>, scored against a per-dataset target and a population target (below)</td>
 </tr>
 <tr class="even">
 <td>replicates</td>
@@ -5338,7 +5361,2519 @@ Figure 1: Per-value coverage by sample size and λ; whiskers ±2 Monte Carlo SE
 </tr>
 </tbody>
 </table>
-<p>castor models one trait at a time, while BACE conditions each trait on the others, so the contrast tests whether BACE’s use of correlated traits pays off. Simulation v1 (accuracy only, earlier BACE settings) found BACE ahead at λ = 0.3 and castor ahead at λ = 1.</p>
+<p>castor models one trait at a time, while BACE conditions each trait on the others, so the contrast tests whether BACE’s use of correlated traits pays off. Simulation v1 (accuracy only, earlier BACE settings, equal-rates castor) found BACE ahead at λ = 0.3 and castor ahead at λ = 1. Equal rates run to their bound at low λ and then impute uniform classes, below the observed-frequency floor (review of 2026-09-26), which is why the flexible models are the primary frequentist arms here.</p>
+<section id="per-value-scores" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="per-value-scores"><span class="header-section-number">5.1</span> Per-value scores</h2>
+<p>Each arm is scored from its 20 draws of every missing value: accuracy of the modal class (ties counted fractionally), multi-class Brier score of the draw frequencies, and coverage and size of the smallest class set holding 95% of the draws. The mode floor predicts the most frequent observed class of the dataset in every missing cell. The tables pool ρ = 0 and 0.5 (by ρ: <code>data/discrete/agg_disc_cells.csv</code>). BACE + residual is not shown: its extra draw changes Gaussian traits only, so its discrete draws are those of BACE as shipped.</p>
+<table class="caption-top table">
+<caption>Accuracy of the modal imputed class (Monte Carlo SE), pooled over ρ. Higher is better.</caption>
+<colgroup>
+<col style="width: 6%">
+<col style="width: 4%">
+<col style="width: 7%">
+<col style="width: 16%">
+<col style="width: 18%">
+<col style="width: 16%">
+<col style="width: 14%">
+<col style="width: 14%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">trait</th>
+<th style="text-align: left;">n</th>
+<th style="text-align: left;">lambda</th>
+<th style="text-align: left;">freq A (proper)</th>
+<th style="text-align: left;">freq B (improper)</th>
+<th style="text-align: left;">BACE as shipped</th>
+<th style="text-align: left;">chained BACE</th>
+<th style="text-align: left;">mode floor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.584 (0.006)</td>
+<td style="text-align: left;">0.585 (0.006)</td>
+<td style="text-align: left;">0.668 (0.005)</td>
+<td style="text-align: left;">0.665 (0.005)</td>
+<td style="text-align: left;">0.597 (0.006)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.727 (0.008)</td>
+<td style="text-align: left;">0.726 (0.008)</td>
+<td style="text-align: left;">0.767 (0.006)</td>
+<td style="text-align: left;">0.779 (0.006)</td>
+<td style="text-align: left;">0.676 (0.008)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.951 (0.003)</td>
+<td style="text-align: left;">0.950 (0.003)</td>
+<td style="text-align: left;">0.932 (0.004)</td>
+<td style="text-align: left;">0.938 (0.003)</td>
+<td style="text-align: left;">0.719 (0.009)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.603 (0.005)</td>
+<td style="text-align: left;">0.602 (0.005)</td>
+<td style="text-align: left;">0.715 (0.003)</td>
+<td style="text-align: left;">0.718 (0.003)</td>
+<td style="text-align: left;">0.619 (0.005)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.734 (0.007)</td>
+<td style="text-align: left;">0.732 (0.007)</td>
+<td style="text-align: left;">0.808 (0.004)</td>
+<td style="text-align: left;">0.814 (0.004)</td>
+<td style="text-align: left;">0.695 (0.007)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.971 (0.002)</td>
+<td style="text-align: left;">0.972 (0.002)</td>
+<td style="text-align: left;">0.969 (0.002)</td>
+<td style="text-align: left;">0.969 (0.002)</td>
+<td style="text-align: left;">0.733 (0.007)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.335 (0.006)</td>
+<td style="text-align: left;">0.333 (0.006)</td>
+<td style="text-align: left;">0.411 (0.005)</td>
+<td style="text-align: left;">0.414 (0.006)</td>
+<td style="text-align: left;">0.343 (0.006)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.488 (0.008)</td>
+<td style="text-align: left;">0.482 (0.009)</td>
+<td style="text-align: left;">0.542 (0.007)</td>
+<td style="text-align: left;">0.543 (0.008)</td>
+<td style="text-align: left;">0.434 (0.008)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.885 (0.004)</td>
+<td style="text-align: left;">0.891 (0.004)</td>
+<td style="text-align: left;">0.871 (0.004)</td>
+<td style="text-align: left;">0.873 (0.004)</td>
+<td style="text-align: left;">0.538 (0.009)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.324 (0.004)</td>
+<td style="text-align: left;">0.319 (0.005)</td>
+<td style="text-align: left;">0.439 (0.004)</td>
+<td style="text-align: left;">0.439 (0.004)</td>
+<td style="text-align: left;">0.343 (0.005)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.456 (0.007)</td>
+<td style="text-align: left;">0.455 (0.007)</td>
+<td style="text-align: left;">0.573 (0.005)</td>
+<td style="text-align: left;">0.572 (0.005)</td>
+<td style="text-align: left;">0.422 (0.007)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.930 (0.002)</td>
+<td style="text-align: left;">0.930 (0.002)</td>
+<td style="text-align: left;">0.929 (0.002)</td>
+<td style="text-align: left;">0.927 (0.002)</td>
+<td style="text-align: left;">0.531 (0.008)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.421 (0.006)</td>
+<td style="text-align: left;">0.426 (0.006)</td>
+<td style="text-align: left;">0.496 (0.006)</td>
+<td style="text-align: left;">0.496 (0.006)</td>
+<td style="text-align: left;">0.432 (0.007)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.566 (0.008)</td>
+<td style="text-align: left;">0.567 (0.008)</td>
+<td style="text-align: left;">0.623 (0.007)</td>
+<td style="text-align: left;">0.628 (0.007)</td>
+<td style="text-align: left;">0.523 (0.008)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.913 (0.004)</td>
+<td style="text-align: left;">0.913 (0.004)</td>
+<td style="text-align: left;">0.891 (0.004)</td>
+<td style="text-align: left;">0.895 (0.004)</td>
+<td style="text-align: left;">0.606 (0.009)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.434 (0.006)</td>
+<td style="text-align: left;">0.433 (0.006)</td>
+<td style="text-align: left;">0.545 (0.004)</td>
+<td style="text-align: left;">0.543 (0.005)</td>
+<td style="text-align: left;">0.454 (0.006)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.583 (0.008)</td>
+<td style="text-align: left;">0.585 (0.008)</td>
+<td style="text-align: left;">0.678 (0.005)</td>
+<td style="text-align: left;">0.677 (0.005)</td>
+<td style="text-align: left;">0.555 (0.008)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.953 (0.002)</td>
+<td style="text-align: left;">0.953 (0.002)</td>
+<td style="text-align: left;">0.949 (0.002)</td>
+<td style="text-align: left;">0.949 (0.002)</td>
+<td style="text-align: left;">0.624 (0.009)</td>
+</tr>
+</tbody>
+</table>
+<table class="caption-top table">
+<caption>Multi-class Brier score of the draw frequencies (Monte Carlo SE), pooled over ρ. Lower is better.</caption>
+<colgroup>
+<col style="width: 7%">
+<col style="width: 4%">
+<col style="width: 8%">
+<col style="width: 19%">
+<col style="width: 22%">
+<col style="width: 19%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">trait</th>
+<th style="text-align: left;">n</th>
+<th style="text-align: left;">lambda</th>
+<th style="text-align: left;">freq A (proper)</th>
+<th style="text-align: left;">freq B (improper)</th>
+<th style="text-align: left;">BACE as shipped</th>
+<th style="text-align: left;">chained BACE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.500 (0.005)</td>
+<td style="text-align: left;">0.502 (0.005)</td>
+<td style="text-align: left;">0.492 (0.007)</td>
+<td style="text-align: left;">0.465 (0.007)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.373 (0.008)</td>
+<td style="text-align: left;">0.379 (0.008)</td>
+<td style="text-align: left;">0.345 (0.008)</td>
+<td style="text-align: left;">0.317 (0.007)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.085 (0.005)</td>
+<td style="text-align: left;">0.084 (0.005)</td>
+<td style="text-align: left;">0.104 (0.005)</td>
+<td style="text-align: left;">0.099 (0.005)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.482 (0.003)</td>
+<td style="text-align: left;">0.484 (0.003)</td>
+<td style="text-align: left;">0.401 (0.004)</td>
+<td style="text-align: left;">0.379 (0.004)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.364 (0.007)</td>
+<td style="text-align: left;">0.368 (0.007)</td>
+<td style="text-align: left;">0.281 (0.005)</td>
+<td style="text-align: left;">0.266 (0.005)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.049 (0.003)</td>
+<td style="text-align: left;">0.048 (0.003)</td>
+<td style="text-align: left;">0.050 (0.002)</td>
+<td style="text-align: left;">0.049 (0.002)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.769 (0.004)</td>
+<td style="text-align: left;">0.772 (0.004)</td>
+<td style="text-align: left;">0.747 (0.006)</td>
+<td style="text-align: left;">0.724 (0.006)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.647 (0.008)</td>
+<td style="text-align: left;">0.655 (0.008)</td>
+<td style="text-align: left;">0.607 (0.009)</td>
+<td style="text-align: left;">0.584 (0.008)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.181 (0.006)</td>
+<td style="text-align: left;">0.175 (0.006)</td>
+<td style="text-align: left;">0.193 (0.005)</td>
+<td style="text-align: left;">0.192 (0.005)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.762 (0.003)</td>
+<td style="text-align: left;">0.764 (0.003)</td>
+<td style="text-align: left;">0.682 (0.004)</td>
+<td style="text-align: left;">0.668 (0.003)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.661 (0.006)</td>
+<td style="text-align: left;">0.665 (0.006)</td>
+<td style="text-align: left;">0.549 (0.006)</td>
+<td style="text-align: left;">0.539 (0.006)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.117 (0.003)</td>
+<td style="text-align: left;">0.117 (0.003)</td>
+<td style="text-align: left;">0.111 (0.003)</td>
+<td style="text-align: left;">0.112 (0.003)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.685 (0.005)</td>
+<td style="text-align: left;">0.682 (0.005)</td>
+<td style="text-align: left;">0.703 (0.007)</td>
+<td style="text-align: left;">0.680 (0.007)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.559 (0.008)</td>
+<td style="text-align: left;">0.559 (0.008)</td>
+<td style="text-align: left;">0.540 (0.010)</td>
+<td style="text-align: left;">0.522 (0.009)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.142 (0.005)</td>
+<td style="text-align: left;">0.142 (0.006)</td>
+<td style="text-align: left;">0.167 (0.006)</td>
+<td style="text-align: left;">0.162 (0.006)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.659 (0.004)</td>
+<td style="text-align: left;">0.660 (0.004)</td>
+<td style="text-align: left;">0.583 (0.004)</td>
+<td style="text-align: left;">0.571 (0.004)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.537 (0.008)</td>
+<td style="text-align: left;">0.537 (0.007)</td>
+<td style="text-align: left;">0.442 (0.006)</td>
+<td style="text-align: left;">0.435 (0.006)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.081 (0.003)</td>
+<td style="text-align: left;">0.080 (0.003)</td>
+<td style="text-align: left;">0.079 (0.003)</td>
+<td style="text-align: left;">0.079 (0.003)</td>
+</tr>
+</tbody>
+</table>
+<table class="caption-top table">
+<caption>Coverage of the smallest class set holding 95% of the 20 draws (Monte Carlo SE), pooled over ρ. Nominal 0.95.</caption>
+<colgroup>
+<col style="width: 7%">
+<col style="width: 4%">
+<col style="width: 8%">
+<col style="width: 19%">
+<col style="width: 22%">
+<col style="width: 19%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">trait</th>
+<th style="text-align: left;">n</th>
+<th style="text-align: left;">lambda</th>
+<th style="text-align: left;">freq A (proper)</th>
+<th style="text-align: left;">freq B (improper)</th>
+<th style="text-align: left;">BACE as shipped</th>
+<th style="text-align: left;">chained BACE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.988 (0.001)</td>
+<td style="text-align: left;">0.984 (0.002)</td>
+<td style="text-align: left;">0.909 (0.003)</td>
+<td style="text-align: left;">0.940 (0.002)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.966 (0.002)</td>
+<td style="text-align: left;">0.962 (0.002)</td>
+<td style="text-align: left;">0.940 (0.003)</td>
+<td style="text-align: left;">0.961 (0.002)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.983 (0.002)</td>
+<td style="text-align: left;">0.979 (0.002)</td>
+<td style="text-align: left;">0.984 (0.002)</td>
+<td style="text-align: left;">0.988 (0.001)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.995 (0.001)</td>
+<td style="text-align: left;">0.993 (0.001)</td>
+<td style="text-align: left;">0.957 (0.001)</td>
+<td style="text-align: left;">0.976 (0.001)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.970 (0.002)</td>
+<td style="text-align: left;">0.969 (0.002)</td>
+<td style="text-align: left;">0.958 (0.001)</td>
+<td style="text-align: left;">0.970 (0.001)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.987 (0.001)</td>
+<td style="text-align: left;">0.986 (0.001)</td>
+<td style="text-align: left;">0.992 (0.001)</td>
+<td style="text-align: left;">0.993 (0.001)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.918 (0.003)</td>
+<td style="text-align: left;">0.918 (0.003)</td>
+<td style="text-align: left;">0.859 (0.004)</td>
+<td style="text-align: left;">0.888 (0.003)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.908 (0.003)</td>
+<td style="text-align: left;">0.897 (0.003)</td>
+<td style="text-align: left;">0.886 (0.003)</td>
+<td style="text-align: left;">0.908 (0.003)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.973 (0.002)</td>
+<td style="text-align: left;">0.961 (0.002)</td>
+<td style="text-align: left;">0.975 (0.002)</td>
+<td style="text-align: left;">0.978 (0.002)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.943 (0.002)</td>
+<td style="text-align: left;">0.942 (0.002)</td>
+<td style="text-align: left;">0.915 (0.002)</td>
+<td style="text-align: left;">0.936 (0.001)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.919 (0.002)</td>
+<td style="text-align: left;">0.914 (0.002)</td>
+<td style="text-align: left;">0.933 (0.002)</td>
+<td style="text-align: left;">0.946 (0.001)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.975 (0.001)</td>
+<td style="text-align: left;">0.970 (0.001)</td>
+<td style="text-align: left;">0.985 (0.001)</td>
+<td style="text-align: left;">0.987 (0.001)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.956 (0.002)</td>
+<td style="text-align: left;">0.951 (0.003)</td>
+<td style="text-align: left;">0.892 (0.003)</td>
+<td style="text-align: left;">0.906 (0.003)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.938 (0.003)</td>
+<td style="text-align: left;">0.930 (0.003)</td>
+<td style="text-align: left;">0.920 (0.003)</td>
+<td style="text-align: left;">0.929 (0.003)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.976 (0.002)</td>
+<td style="text-align: left;">0.969 (0.002)</td>
+<td style="text-align: left;">0.977 (0.002)</td>
+<td style="text-align: left;">0.980 (0.002)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.971 (0.001)</td>
+<td style="text-align: left;">0.970 (0.001)</td>
+<td style="text-align: left;">0.941 (0.001)</td>
+<td style="text-align: left;">0.954 (0.001)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.942 (0.002)</td>
+<td style="text-align: left;">0.941 (0.002)</td>
+<td style="text-align: left;">0.945 (0.001)</td>
+<td style="text-align: left;">0.952 (0.001)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.981 (0.001)</td>
+<td style="text-align: left;">0.978 (0.001)</td>
+<td style="text-align: left;">0.987 (0.001)</td>
+<td style="text-align: left;">0.988 (0.001)</td>
+</tr>
+</tbody>
+</table>
+<table class="caption-top table">
+<caption>Mean number of classes in that set (Monte Carlo SE), pooled over ρ.</caption>
+<colgroup>
+<col style="width: 7%">
+<col style="width: 4%">
+<col style="width: 8%">
+<col style="width: 19%">
+<col style="width: 22%">
+<col style="width: 19%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">trait</th>
+<th style="text-align: left;">n</th>
+<th style="text-align: left;">lambda</th>
+<th style="text-align: left;">freq A (proper)</th>
+<th style="text-align: left;">freq B (improper)</th>
+<th style="text-align: left;">BACE as shipped</th>
+<th style="text-align: left;">chained BACE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">1.961 (0.005)</td>
+<td style="text-align: left;">1.952 (0.005)</td>
+<td style="text-align: left;">1.621 (0.007)</td>
+<td style="text-align: left;">1.708 (0.007)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">1.729 (0.015)</td>
+<td style="text-align: left;">1.711 (0.015)</td>
+<td style="text-align: left;">1.499 (0.009)</td>
+<td style="text-align: left;">1.562 (0.009)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">1.206 (0.008)</td>
+<td style="text-align: left;">1.146 (0.008)</td>
+<td style="text-align: left;">1.246 (0.007)</td>
+<td style="text-align: left;">1.288 (0.008)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">1.975 (0.003)</td>
+<td style="text-align: left;">1.973 (0.004)</td>
+<td style="text-align: left;">1.697 (0.007)</td>
+<td style="text-align: left;">1.769 (0.007)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">1.733 (0.015)</td>
+<td style="text-align: left;">1.725 (0.015)</td>
+<td style="text-align: left;">1.455 (0.010)</td>
+<td style="text-align: left;">1.507 (0.011)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">1.099 (0.004)</td>
+<td style="text-align: left;">1.073 (0.004)</td>
+<td style="text-align: left;">1.124 (0.004)</td>
+<td style="text-align: left;">1.134 (0.004)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">3.468 (0.018)</td>
+<td style="text-align: left;">3.461 (0.019)</td>
+<td style="text-align: left;">2.779 (0.017)</td>
+<td style="text-align: left;">2.941 (0.017)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">2.741 (0.027)</td>
+<td style="text-align: left;">2.675 (0.030)</td>
+<td style="text-align: left;">2.259 (0.020)</td>
+<td style="text-align: left;">2.372 (0.021)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">1.597 (0.014)</td>
+<td style="text-align: left;">1.382 (0.012)</td>
+<td style="text-align: left;">1.524 (0.012)</td>
+<td style="text-align: left;">1.566 (0.013)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">3.611 (0.014)</td>
+<td style="text-align: left;">3.610 (0.014)</td>
+<td style="text-align: left;">2.920 (0.011)</td>
+<td style="text-align: left;">3.069 (0.012)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">2.881 (0.026)</td>
+<td style="text-align: left;">2.857 (0.026)</td>
+<td style="text-align: left;">2.373 (0.016)</td>
+<td style="text-align: left;">2.452 (0.017)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">1.315 (0.008)</td>
+<td style="text-align: left;">1.219 (0.006)</td>
+<td style="text-align: left;">1.306 (0.006)</td>
+<td style="text-align: left;">1.316 (0.007)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">2.781 (0.011)</td>
+<td style="text-align: left;">2.768 (0.012)</td>
+<td style="text-align: left;">2.309 (0.010)</td>
+<td style="text-align: left;">2.377 (0.010)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">2.315 (0.023)</td>
+<td style="text-align: left;">2.275 (0.023)</td>
+<td style="text-align: left;">2.045 (0.015)</td>
+<td style="text-align: left;">2.102 (0.015)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">1.460 (0.013)</td>
+<td style="text-align: left;">1.287 (0.011)</td>
+<td style="text-align: left;">1.497 (0.013)</td>
+<td style="text-align: left;">1.534 (0.013)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">2.818 (0.011)</td>
+<td style="text-align: left;">2.817 (0.011)</td>
+<td style="text-align: left;">2.359 (0.010)</td>
+<td style="text-align: left;">2.428 (0.011)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">2.289 (0.022)</td>
+<td style="text-align: left;">2.276 (0.023)</td>
+<td style="text-align: left;">1.923 (0.014)</td>
+<td style="text-align: left;">1.962 (0.015)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">1.214 (0.007)</td>
+<td style="text-align: left;">1.135 (0.005)</td>
+<td style="text-align: left;">1.201 (0.006)</td>
+<td style="text-align: left;">1.212 (0.006)</td>
+</tr>
+</tbody>
+</table>
+<p>Traits with one class in the complete data have nothing to predict and are skipped by every arm: <code>bin</code> in 32 of 1200 datasets at n = 100; <code>cat3</code> in 8 of 1200 datasets at n = 100; <code>bin</code> in 29 of 1200 datasets at n = 300; <code>cat3</code> in 6 of 1200 datasets at n = 300; <code>ord</code> in 2 of 1200 datasets at n = 300. Per-value rows missing for another reason (an arm or scoring error; see <code>data/discrete/fit_disc_cells.csv.gz</code>): 581. Draws returned as NA, dropped cell by cell before scoring: BACE as shipped <code>cat3</code> 45316; chained BACE <code>cat3</code> 46955; BACE + residual (control) <code>cat3</code> 45316.</p>
+<p>At λ = 0.3 and 0.7 BACE is the more accurate imputer of all three discrete traits: chained BACE beats freq A in every cell, by 0.04 to 0.15. castor adds nothing to the observed class frequencies at λ = 0.3 (freq A is 0.008 to 0.020 below the mode floor), while chained BACE is 0.06 to 0.10 above it. BACE’s lead is 0.04 to 0.10 at ρ = 0, where its only correlated predictor is the always-observed driver d1 (correlation 0.35), and 0.06 to 0.15 at ρ = 0.5, where the other traits add information; its threshold model is also the model that generated these traits. At λ = 1 castor leads by up to 0.016 at n = 100, and the two are within 0.006 at n = 300. Flexible rates matter for castor: simulation v1’s equal rates lose up to 0.08 accuracy at λ ≤ 0.7. The 95% class sets repeat the continuous result: BACE as shipped under-covers at λ = 0.3 and n = 100 (0.86 to 0.91), chaining brings it to 0.89 to 0.94, and castor’s <code>bin</code> sets over-cover there (0.99) because they usually hold both classes. BACE returns NA for 1.6% of its <code>cat3</code> draws (its class probabilities are not finite); no cell lost all 20 draws.</p>
+</section>
+<section id="downstream-estimate-pgls-slope-of-c1-on-bin" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="downstream-estimate-pgls-slope-of-c1-on-bin"><span class="header-section-number">5.2</span> Downstream estimate: PGLS slope of c1 on bin</h2>
+<p>The Rubin-pooled PGLS slope of c1 on <code>bin</code> (<code>bin</code> = yes coded 1) has two targets. The per-dataset target is ρ times the GLS slope, at the true λ, of <code>bin</code>’s liability on <code>bin</code>: the expected complete-data estimate given the tree and that liability. The population target is the mean complete-data estimate over 5,000 fresh datasets (Monte Carlo SE at most 0.007) per cell (<code>data/discrete/truth_slope_c1_bin.csv</code>). Neither is ρ. At λ ≤ 0.7, or ρ = 0, the two nearly agree. At λ = 1 and ρ = 0.5 the per-dataset target varies between datasets by more than the standard error (<code>bin</code> is almost constant within clades), so even the complete-data interval covers the population target in only 31% to 56% of datasets; coverage there is read against the per-dataset target. The complete-data column applies the same analysis to the data before masking, with the t interval on n − 2 df.</p>
+<table class="caption-top table">
+<caption>c1 ~ bin: coverage of the per-dataset target by the pooled 95% interval (Monte Carlo SE). Nominal 0.95.</caption>
+<colgroup>
+<col style="width: 2%">
+<col style="width: 3%">
+<col style="width: 2%">
+<col style="width: 3%">
+<col style="width: 7%">
+<col style="width: 9%">
+<col style="width: 10%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 9%">
+<col style="width: 7%">
+<col style="width: 14%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">n</th>
+<th style="text-align: left;">lambda</th>
+<th style="text-align: left;">rho</th>
+<th style="text-align: left;">truth</th>
+<th style="text-align: left;">complete data</th>
+<th style="text-align: left;">freq A (proper)</th>
+<th style="text-align: left;">freq B (improper)</th>
+<th style="text-align: left;">freq A, equal rates (v1)</th>
+<th style="text-align: left;">freq B, equal rates (v1)</th>
+<th style="text-align: left;">BACE as shipped</th>
+<th style="text-align: left;">chained BACE</th>
+<th style="text-align: left;">BACE + residual (control)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.002</td>
+<td style="text-align: left;">0.905 (0.021)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.900 (0.021)</td>
+<td style="text-align: left;">0.940 (0.017)</td>
+<td style="text-align: left;">0.930 (0.018)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.720</td>
+<td style="text-align: left;">0.980 (0.010)</td>
+<td style="text-align: left;">0.885 (0.023)</td>
+<td style="text-align: left;">0.870 (0.024)</td>
+<td style="text-align: left;">0.850 (0.025)</td>
+<td style="text-align: left;">0.850 (0.025)</td>
+<td style="text-align: left;">0.920 (0.019)</td>
+<td style="text-align: left;">0.950 (0.015)</td>
+<td style="text-align: left;">0.945 (0.016)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.005</td>
+<td style="text-align: left;">0.955 (0.015)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">0.940 (0.017)</td>
+<td style="text-align: left;">0.965 (0.013)</td>
+<td style="text-align: left;">0.955 (0.015)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.526</td>
+<td style="text-align: left;">0.985 (0.009)</td>
+<td style="text-align: left;">0.890 (0.022)</td>
+<td style="text-align: left;">0.890 (0.022)</td>
+<td style="text-align: left;">0.890 (0.022)</td>
+<td style="text-align: left;">0.875 (0.023)</td>
+<td style="text-align: left;">0.945 (0.016)</td>
+<td style="text-align: left;">0.960 (0.014)</td>
+<td style="text-align: left;">0.960 (0.014)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.005</td>
+<td style="text-align: left;">0.973 (0.012)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">0.984 (0.009)</td>
+<td style="text-align: left;">0.984 (0.009)</td>
+<td style="text-align: left;">0.989 (0.008)</td>
+<td style="text-align: left;">0.994 (0.006)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">0.994 (0.006)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.253</td>
+<td style="text-align: left;">0.973 (0.012)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.989 (0.008)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.961 (0.016)</td>
+<td style="text-align: left;">0.987 (0.009)</td>
+<td style="text-align: left;">0.961 (0.016)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.001</td>
+<td style="text-align: left;">0.950 (0.015)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.900 (0.021)</td>
+<td style="text-align: left;">0.940 (0.017)</td>
+<td style="text-align: left;">0.920 (0.019)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.706</td>
+<td style="text-align: left;">0.955 (0.015)</td>
+<td style="text-align: left;">0.335 (0.033)</td>
+<td style="text-align: left;">0.290 (0.032)</td>
+<td style="text-align: left;">0.230 (0.030)</td>
+<td style="text-align: left;">0.220 (0.029)</td>
+<td style="text-align: left;">0.920 (0.019)</td>
+<td style="text-align: left;">0.945 (0.016)</td>
+<td style="text-align: left;">0.950 (0.015)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.002</td>
+<td style="text-align: left;">0.935 (0.017)</td>
+<td style="text-align: left;">0.990 (0.007)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.895 (0.022)</td>
+<td style="text-align: left;">0.945 (0.016)</td>
+<td style="text-align: left;">0.930 (0.018)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.506</td>
+<td style="text-align: left;">0.965 (0.013)</td>
+<td style="text-align: left;">0.455 (0.035)</td>
+<td style="text-align: left;">0.460 (0.035)</td>
+<td style="text-align: left;">0.425 (0.035)</td>
+<td style="text-align: left;">0.435 (0.035)</td>
+<td style="text-align: left;">0.920 (0.019)</td>
+<td style="text-align: left;">0.955 (0.015)</td>
+<td style="text-align: left;">0.955 (0.015)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.003</td>
+<td style="text-align: left;">0.962 (0.014)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.989 (0.008)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">0.989 (0.008)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.179</td>
+<td style="text-align: left;">0.962 (0.014)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.966 (0.014)</td>
+<td style="text-align: left;">0.966 (0.014)</td>
+<td style="text-align: left;">0.961 (0.015)</td>
+</tr>
+</tbody>
+</table>
+<table class="caption-top table">
+<caption>c1 ~ bin: bias of the pooled estimate against the per-dataset target (Monte Carlo SE).</caption>
+<colgroup>
+<col style="width: 2%">
+<col style="width: 3%">
+<col style="width: 2%">
+<col style="width: 3%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 10%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 14%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">n</th>
+<th style="text-align: left;">lambda</th>
+<th style="text-align: left;">rho</th>
+<th style="text-align: left;">truth</th>
+<th style="text-align: left;">complete data</th>
+<th style="text-align: left;">freq A (proper)</th>
+<th style="text-align: left;">freq B (improper)</th>
+<th style="text-align: left;">freq A, equal rates (v1)</th>
+<th style="text-align: left;">freq B, equal rates (v1)</th>
+<th style="text-align: left;">BACE as shipped</th>
+<th style="text-align: left;">chained BACE</th>
+<th style="text-align: left;">BACE + residual (control)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.002</td>
+<td style="text-align: left;">0.014 (0.015)</td>
+<td style="text-align: left;">0.047 (0.011)</td>
+<td style="text-align: left;">0.048 (0.011)</td>
+<td style="text-align: left;">0.045 (0.011)</td>
+<td style="text-align: left;">0.049 (0.010)</td>
+<td style="text-align: left;">0.010 (0.020)</td>
+<td style="text-align: left;">0.009 (0.018)</td>
+<td style="text-align: left;">0.009 (0.020)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.720</td>
+<td style="text-align: left;">-0.002 (0.011)</td>
+<td style="text-align: left;">-0.279 (0.009)</td>
+<td style="text-align: left;">-0.281 (0.009)</td>
+<td style="text-align: left;">-0.295 (0.009)</td>
+<td style="text-align: left;">-0.292 (0.009)</td>
+<td style="text-align: left;">-0.011 (0.017)</td>
+<td style="text-align: left;">-0.017 (0.016)</td>
+<td style="text-align: left;">-0.008 (0.017)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.005</td>
+<td style="text-align: left;">0.003 (0.014)</td>
+<td style="text-align: left;">0.037 (0.010)</td>
+<td style="text-align: left;">0.039 (0.011)</td>
+<td style="text-align: left;">0.034 (0.011)</td>
+<td style="text-align: left;">0.036 (0.011)</td>
+<td style="text-align: left;">0.025 (0.019)</td>
+<td style="text-align: left;">0.014 (0.016)</td>
+<td style="text-align: left;">0.025 (0.018)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.526</td>
+<td style="text-align: left;">0.005 (0.010)</td>
+<td style="text-align: left;">-0.210 (0.009)</td>
+<td style="text-align: left;">-0.208 (0.009)</td>
+<td style="text-align: left;">-0.200 (0.010)</td>
+<td style="text-align: left;">-0.203 (0.010)</td>
+<td style="text-align: left;">-0.013 (0.016)</td>
+<td style="text-align: left;">-0.017 (0.015)</td>
+<td style="text-align: left;">-0.007 (0.016)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.005</td>
+<td style="text-align: left;">0.012 (0.030)</td>
+<td style="text-align: left;">0.040 (0.028)</td>
+<td style="text-align: left;">0.045 (0.032)</td>
+<td style="text-align: left;">0.040 (0.031)</td>
+<td style="text-align: left;">0.046 (0.031)</td>
+<td style="text-align: left;">0.000 (0.024)</td>
+<td style="text-align: left;">-0.006 (0.017)</td>
+<td style="text-align: left;">0.001 (0.024)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.253</td>
+<td style="text-align: left;">0.006 (0.028)</td>
+<td style="text-align: left;">-0.055 (0.027)</td>
+<td style="text-align: left;">-0.019 (0.032)</td>
+<td style="text-align: left;">-0.027 (0.032)</td>
+<td style="text-align: left;">-0.017 (0.031)</td>
+<td style="text-align: left;">-0.101 (0.024)</td>
+<td style="text-align: left;">-0.106 (0.024)</td>
+<td style="text-align: left;">-0.100 (0.024)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.001</td>
+<td style="text-align: left;">0.016 (0.008)</td>
+<td style="text-align: left;">0.049 (0.006)</td>
+<td style="text-align: left;">0.048 (0.005)</td>
+<td style="text-align: left;">0.046 (0.005)</td>
+<td style="text-align: left;">0.045 (0.005)</td>
+<td style="text-align: left;">-0.022 (0.012)</td>
+<td style="text-align: left;">0.005 (0.011)</td>
+<td style="text-align: left;">-0.024 (0.012)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.706</td>
+<td style="text-align: left;">-0.000 (0.007)</td>
+<td style="text-align: left;">-0.290 (0.006)</td>
+<td style="text-align: left;">-0.292 (0.006)</td>
+<td style="text-align: left;">-0.306 (0.005)</td>
+<td style="text-align: left;">-0.307 (0.005)</td>
+<td style="text-align: left;">0.015 (0.010)</td>
+<td style="text-align: left;">0.006 (0.009)</td>
+<td style="text-align: left;">0.015 (0.010)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.002</td>
+<td style="text-align: left;">0.003 (0.008)</td>
+<td style="text-align: left;">0.028 (0.006)</td>
+<td style="text-align: left;">0.028 (0.006)</td>
+<td style="text-align: left;">0.029 (0.006)</td>
+<td style="text-align: left;">0.030 (0.006)</td>
+<td style="text-align: left;">-0.011 (0.011)</td>
+<td style="text-align: left;">-0.002 (0.010)</td>
+<td style="text-align: left;">-0.012 (0.011)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.506</td>
+<td style="text-align: left;">-0.003 (0.007)</td>
+<td style="text-align: left;">-0.210 (0.007)</td>
+<td style="text-align: left;">-0.209 (0.007)</td>
+<td style="text-align: left;">-0.208 (0.007)</td>
+<td style="text-align: left;">-0.209 (0.007)</td>
+<td style="text-align: left;">0.007 (0.009)</td>
+<td style="text-align: left;">0.003 (0.009)</td>
+<td style="text-align: left;">0.008 (0.009)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.003</td>
+<td style="text-align: left;">-0.012 (0.022)</td>
+<td style="text-align: left;">-0.004 (0.016)</td>
+<td style="text-align: left;">-0.006 (0.021)</td>
+<td style="text-align: left;">-0.005 (0.021)</td>
+<td style="text-align: left;">-0.005 (0.020)</td>
+<td style="text-align: left;">-0.017 (0.014)</td>
+<td style="text-align: left;">-0.013 (0.014)</td>
+<td style="text-align: left;">-0.016 (0.014)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.179</td>
+<td style="text-align: left;">0.020 (0.020)</td>
+<td style="text-align: left;">-0.011 (0.019)</td>
+<td style="text-align: left;">0.012 (0.021)</td>
+<td style="text-align: left;">0.011 (0.020)</td>
+<td style="text-align: left;">0.016 (0.022)</td>
+<td style="text-align: left;">-0.031 (0.013)</td>
+<td style="text-align: left;">-0.041 (0.014)</td>
+<td style="text-align: left;">-0.030 (0.013)</td>
+</tr>
+</tbody>
+</table>
+<table class="caption-top table">
+<caption>c1 ~ bin: coverage of the population target (the truth column) by the pooled 95% interval (Monte Carlo SE).</caption>
+<colgroup>
+<col style="width: 2%">
+<col style="width: 3%">
+<col style="width: 2%">
+<col style="width: 3%">
+<col style="width: 7%">
+<col style="width: 9%">
+<col style="width: 10%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 9%">
+<col style="width: 7%">
+<col style="width: 14%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">n</th>
+<th style="text-align: left;">lambda</th>
+<th style="text-align: left;">rho</th>
+<th style="text-align: left;">truth</th>
+<th style="text-align: left;">complete data</th>
+<th style="text-align: left;">freq A (proper)</th>
+<th style="text-align: left;">freq B (improper)</th>
+<th style="text-align: left;">freq A, equal rates (v1)</th>
+<th style="text-align: left;">freq B, equal rates (v1)</th>
+<th style="text-align: left;">BACE as shipped</th>
+<th style="text-align: left;">chained BACE</th>
+<th style="text-align: left;">BACE + residual (control)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.002</td>
+<td style="text-align: left;">0.905 (0.021)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.900 (0.021)</td>
+<td style="text-align: left;">0.935 (0.017)</td>
+<td style="text-align: left;">0.935 (0.017)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.720</td>
+<td style="text-align: left;">0.955 (0.015)</td>
+<td style="text-align: left;">0.875 (0.023)</td>
+<td style="text-align: left;">0.855 (0.025)</td>
+<td style="text-align: left;">0.825 (0.027)</td>
+<td style="text-align: left;">0.830 (0.027)</td>
+<td style="text-align: left;">0.930 (0.018)</td>
+<td style="text-align: left;">0.950 (0.015)</td>
+<td style="text-align: left;">0.945 (0.016)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.005</td>
+<td style="text-align: left;">0.955 (0.015)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">0.940 (0.017)</td>
+<td style="text-align: left;">0.970 (0.012)</td>
+<td style="text-align: left;">0.955 (0.015)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.526</td>
+<td style="text-align: left;">0.960 (0.014)</td>
+<td style="text-align: left;">0.855 (0.025)</td>
+<td style="text-align: left;">0.850 (0.025)</td>
+<td style="text-align: left;">0.855 (0.025)</td>
+<td style="text-align: left;">0.845 (0.026)</td>
+<td style="text-align: left;">0.950 (0.015)</td>
+<td style="text-align: left;">0.960 (0.014)</td>
+<td style="text-align: left;">0.960 (0.014)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.005</td>
+<td style="text-align: left;">0.973 (0.012)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">0.984 (0.009)</td>
+<td style="text-align: left;">0.984 (0.009)</td>
+<td style="text-align: left;">0.989 (0.008)</td>
+<td style="text-align: left;">0.994 (0.006)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">0.994 (0.006)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.253</td>
+<td style="text-align: left;">0.555 (0.037)</td>
+<td style="text-align: left;">0.632 (0.036)</td>
+<td style="text-align: left;">0.643 (0.036)</td>
+<td style="text-align: left;">0.637 (0.036)</td>
+<td style="text-align: left;">0.648 (0.035)</td>
+<td style="text-align: left;">0.721 (0.036)</td>
+<td style="text-align: left;">0.752 (0.036)</td>
+<td style="text-align: left;">0.734 (0.036)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.001</td>
+<td style="text-align: left;">0.950 (0.015)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.900 (0.021)</td>
+<td style="text-align: left;">0.940 (0.017)</td>
+<td style="text-align: left;">0.920 (0.019)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.706</td>
+<td style="text-align: left;">0.935 (0.017)</td>
+<td style="text-align: left;">0.345 (0.034)</td>
+<td style="text-align: left;">0.305 (0.033)</td>
+<td style="text-align: left;">0.260 (0.031)</td>
+<td style="text-align: left;">0.225 (0.030)</td>
+<td style="text-align: left;">0.910 (0.020)</td>
+<td style="text-align: left;">0.935 (0.017)</td>
+<td style="text-align: left;">0.930 (0.018)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.002</td>
+<td style="text-align: left;">0.940 (0.017)</td>
+<td style="text-align: left;">0.990 (0.007)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.900 (0.021)</td>
+<td style="text-align: left;">0.945 (0.016)</td>
+<td style="text-align: left;">0.935 (0.017)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.506</td>
+<td style="text-align: left;">0.960 (0.014)</td>
+<td style="text-align: left;">0.425 (0.035)</td>
+<td style="text-align: left;">0.400 (0.035)</td>
+<td style="text-align: left;">0.400 (0.035)</td>
+<td style="text-align: left;">0.400 (0.035)</td>
+<td style="text-align: left;">0.930 (0.018)</td>
+<td style="text-align: left;">0.950 (0.015)</td>
+<td style="text-align: left;">0.955 (0.015)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.003</td>
+<td style="text-align: left;">0.962 (0.014)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.995 (0.005)</td>
+<td style="text-align: left;">0.994 (0.006)</td>
+<td style="text-align: left;">1.000 (0.000)</td>
+<td style="text-align: left;">0.994 (0.006)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.179</td>
+<td style="text-align: left;">0.303 (0.034)</td>
+<td style="text-align: left;">0.351 (0.035)</td>
+<td style="text-align: left;">0.362 (0.035)</td>
+<td style="text-align: left;">0.357 (0.035)</td>
+<td style="text-align: left;">0.346 (0.035)</td>
+<td style="text-align: left;">0.365 (0.036)</td>
+<td style="text-align: left;">0.369 (0.036)</td>
+<td style="text-align: left;">0.371 (0.036)</td>
+</tr>
+</tbody>
+</table>
+<table class="caption-top table">
+<caption>c1 ~ bin: pooled estimate minus the complete-data estimate of the same dataset, mean (SD over datasets).</caption>
+<colgroup>
+<col style="width: 2%">
+<col style="width: 4%">
+<col style="width: 2%">
+<col style="width: 4%">
+<col style="width: 9%">
+<col style="width: 11%">
+<col style="width: 15%">
+<col style="width: 15%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">n</th>
+<th style="text-align: left;">lambda</th>
+<th style="text-align: left;">rho</th>
+<th style="text-align: left;">truth</th>
+<th style="text-align: left;">freq A (proper)</th>
+<th style="text-align: left;">freq B (improper)</th>
+<th style="text-align: left;">freq A, equal rates (v1)</th>
+<th style="text-align: left;">freq B, equal rates (v1)</th>
+<th style="text-align: left;">BACE as shipped</th>
+<th style="text-align: left;">chained BACE</th>
+<th style="text-align: left;">BACE + residual (control)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.002</td>
+<td style="text-align: left;">0.033 (0.142)</td>
+<td style="text-align: left;">0.034 (0.148)</td>
+<td style="text-align: left;">0.031 (0.145)</td>
+<td style="text-align: left;">0.035 (0.147)</td>
+<td style="text-align: left;">-0.004 (0.209)</td>
+<td style="text-align: left;">-0.005 (0.182)</td>
+<td style="text-align: left;">-0.005 (0.209)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.720</td>
+<td style="text-align: left;">-0.277 (0.125)</td>
+<td style="text-align: left;">-0.279 (0.129)</td>
+<td style="text-align: left;">-0.293 (0.131)</td>
+<td style="text-align: left;">-0.290 (0.132)</td>
+<td style="text-align: left;">-0.009 (0.188)</td>
+<td style="text-align: left;">-0.015 (0.171)</td>
+<td style="text-align: left;">-0.006 (0.186)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.005</td>
+<td style="text-align: left;">0.035 (0.138)</td>
+<td style="text-align: left;">0.037 (0.133)</td>
+<td style="text-align: left;">0.031 (0.131)</td>
+<td style="text-align: left;">0.033 (0.140)</td>
+<td style="text-align: left;">0.023 (0.202)</td>
+<td style="text-align: left;">0.012 (0.173)</td>
+<td style="text-align: left;">0.023 (0.201)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.526</td>
+<td style="text-align: left;">-0.215 (0.133)</td>
+<td style="text-align: left;">-0.213 (0.129)</td>
+<td style="text-align: left;">-0.205 (0.137)</td>
+<td style="text-align: left;">-0.208 (0.139)</td>
+<td style="text-align: left;">-0.018 (0.181)</td>
+<td style="text-align: left;">-0.021 (0.180)</td>
+<td style="text-align: left;">-0.012 (0.181)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.005</td>
+<td style="text-align: left;">0.028 (0.186)</td>
+<td style="text-align: left;">0.033 (0.205)</td>
+<td style="text-align: left;">0.028 (0.201)</td>
+<td style="text-align: left;">0.034 (0.206)</td>
+<td style="text-align: left;">-0.002 (0.314)</td>
+<td style="text-align: left;">-0.006 (0.300)</td>
+<td style="text-align: left;">-0.002 (0.314)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.253</td>
+<td style="text-align: left;">-0.061 (0.240)</td>
+<td style="text-align: left;">-0.025 (0.275)</td>
+<td style="text-align: left;">-0.033 (0.275)</td>
+<td style="text-align: left;">-0.022 (0.255)</td>
+<td style="text-align: left;">-0.069 (0.211)</td>
+<td style="text-align: left;">-0.075 (0.211)</td>
+<td style="text-align: left;">-0.067 (0.211)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.001</td>
+<td style="text-align: left;">0.032 (0.080)</td>
+<td style="text-align: left;">0.032 (0.080)</td>
+<td style="text-align: left;">0.030 (0.079)</td>
+<td style="text-align: left;">0.029 (0.078)</td>
+<td style="text-align: left;">-0.039 (0.122)</td>
+<td style="text-align: left;">-0.012 (0.106)</td>
+<td style="text-align: left;">-0.040 (0.123)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.706</td>
+<td style="text-align: left;">-0.289 (0.080)</td>
+<td style="text-align: left;">-0.292 (0.079)</td>
+<td style="text-align: left;">-0.306 (0.084)</td>
+<td style="text-align: left;">-0.307 (0.083)</td>
+<td style="text-align: left;">0.015 (0.103)</td>
+<td style="text-align: left;">0.006 (0.087)</td>
+<td style="text-align: left;">0.016 (0.103)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.002</td>
+<td style="text-align: left;">0.025 (0.082)</td>
+<td style="text-align: left;">0.025 (0.085)</td>
+<td style="text-align: left;">0.026 (0.085)</td>
+<td style="text-align: left;">0.027 (0.086)</td>
+<td style="text-align: left;">-0.014 (0.115)</td>
+<td style="text-align: left;">-0.005 (0.100)</td>
+<td style="text-align: left;">-0.015 (0.116)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.506</td>
+<td style="text-align: left;">-0.207 (0.082)</td>
+<td style="text-align: left;">-0.207 (0.084)</td>
+<td style="text-align: left;">-0.205 (0.083)</td>
+<td style="text-align: left;">-0.206 (0.083)</td>
+<td style="text-align: left;">0.010 (0.087)</td>
+<td style="text-align: left;">0.006 (0.081)</td>
+<td style="text-align: left;">0.010 (0.087)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.003</td>
+<td style="text-align: left;">0.008 (0.098)</td>
+<td style="text-align: left;">0.006 (0.057)</td>
+<td style="text-align: left;">0.006 (0.058)</td>
+<td style="text-align: left;">0.007 (0.061)</td>
+<td style="text-align: left;">-0.004 (0.123)</td>
+<td style="text-align: left;">-0.001 (0.110)</td>
+<td style="text-align: left;">-0.004 (0.123)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.179</td>
+<td style="text-align: left;">-0.031 (0.128)</td>
+<td style="text-align: left;">-0.008 (0.159)</td>
+<td style="text-align: left;">-0.009 (0.142)</td>
+<td style="text-align: left;">-0.004 (0.165)</td>
+<td style="text-align: left;">-0.040 (0.166)</td>
+<td style="text-align: left;">-0.051 (0.167)</td>
+<td style="text-align: left;">-0.040 (0.166)</td>
+</tr>
+</tbody>
+</table>
+<p>The estimand is undefined when <code>bin</code> has one class in the complete data, or one observed class (every imputed dataset then has a constant <code>bin</code>); those datasets are left out of every arm (32 and 3 of 1200 at n = 100; 29 and 0 of 1200 at n = 300). Fits with no c1 ~ bin row for another reason (an arm or scoring error; see <code>data/discrete/fit_disc_estimands.csv.gz</code>): 181.</p>
+<p>The downstream estimate shows the cost of imputing one trait at a time. At ρ = 0.5 and λ ≤ 0.7 castor’s imputations pull the slope of c1 on <code>bin</code> toward zero by 0.21 to 0.29. The bias does not shrink with n while the standard error does, so coverage falls from 0.89 at n = 100 to 0.34 to 0.46 at n = 300. At ρ = 0 the same draws cover too often (0.99 to 1.00): noise around a true zero only widens the interval. BACE imputes <code>bin</code> given c1 and is within 0.025 of the per-dataset target at λ ≤ 0.7; BACE as shipped covers 0.895 to 0.945 and chained BACE 0.940 to 0.965, against 0.905 to 0.985 for the complete data. At λ = 1 every arm struggles: <code>bin</code> is nearly constant within clades, BACE’s slope is 0.10 too small at n = 100 and ρ = 0.5 (castor’s 0.055), and a few imputed datasets give very large standard errors.</p>
+</section>
+<section id="paired-contrasts-bace-against-the-frequentist-arms" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="paired-contrasts-bace-against-the-frequentist-arms"><span class="header-section-number">5.3</span> Paired contrasts: BACE against the frequentist arms</h2>
+<table class="caption-top table">
+<caption>Paired per-dataset difference in accuracy (SE over datasets; counts in <code>data/discrete/agg_disc_paired.csv</code>). Positive favours the first arm.</caption>
+<colgroup>
+<col style="width: 3%">
+<col style="width: 2%">
+<col style="width: 3%">
+<col style="width: 2%">
+<col style="width: 12%">
+<col style="width: 14%">
+<col style="width: 17%">
+<col style="width: 9%">
+<col style="width: 17%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">trait</th>
+<th style="text-align: left;">n</th>
+<th style="text-align: left;">lambda</th>
+<th style="text-align: left;">rho</th>
+<th style="text-align: left;">chained BACE − freq A</th>
+<th style="text-align: left;">BACE as shipped − freq A</th>
+<th style="text-align: left;">chained BACE − BACE as shipped</th>
+<th style="text-align: left;">freq A − freq B</th>
+<th style="text-align: left;">freq A: flexible − equal rates</th>
+<th style="text-align: left;">freq B: flexible − equal rates</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">0.063 (0.008)</td>
+<td style="text-align: left;">0.063 (0.008)</td>
+<td style="text-align: left;">0.000 (0.005)</td>
+<td style="text-align: left;">-0.001 (0.006)</td>
+<td style="text-align: left;">0.053 (0.009)</td>
+<td style="text-align: left;">0.066 (0.010)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.100 (0.009)</td>
+<td style="text-align: left;">0.104 (0.009)</td>
+<td style="text-align: left;">-0.005 (0.004)</td>
+<td style="text-align: left;">0.000 (0.006)</td>
+<td style="text-align: left;">0.039 (0.009)</td>
+<td style="text-align: left;">0.043 (0.010)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">0.042 (0.007)</td>
+<td style="text-align: left;">0.026 (0.008)</td>
+<td style="text-align: left;">0.015 (0.004)</td>
+<td style="text-align: left;">0.002 (0.004)</td>
+<td style="text-align: left;">0.044 (0.008)</td>
+<td style="text-align: left;">0.044 (0.008)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.061 (0.007)</td>
+<td style="text-align: left;">0.053 (0.008)</td>
+<td style="text-align: left;">0.008 (0.003)</td>
+<td style="text-align: left;">0.002 (0.004)</td>
+<td style="text-align: left;">0.020 (0.007)</td>
+<td style="text-align: left;">0.031 (0.007)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.016 (0.003)</td>
+<td style="text-align: left;">-0.022 (0.004)</td>
+<td style="text-align: left;">0.007 (0.003)</td>
+<td style="text-align: left;">0.002 (0.001)</td>
+<td style="text-align: left;">0.003 (0.002)</td>
+<td style="text-align: left;">0.000 (0.002)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.007 (0.003)</td>
+<td style="text-align: left;">-0.013 (0.004)</td>
+<td style="text-align: left;">0.005 (0.002)</td>
+<td style="text-align: left;">0.001 (0.001)</td>
+<td style="text-align: left;">0.002 (0.002)</td>
+<td style="text-align: left;">0.002 (0.002)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">0.097 (0.006)</td>
+<td style="text-align: left;">0.094 (0.006)</td>
+<td style="text-align: left;">0.003 (0.003)</td>
+<td style="text-align: left;">0.000 (0.003)</td>
+<td style="text-align: left;">0.070 (0.006)</td>
+<td style="text-align: left;">0.081 (0.007)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.134 (0.006)</td>
+<td style="text-align: left;">0.130 (0.006)</td>
+<td style="text-align: left;">0.004 (0.002)</td>
+<td style="text-align: left;">0.001 (0.003)</td>
+<td style="text-align: left;">0.077 (0.006)</td>
+<td style="text-align: left;">0.074 (0.006)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">0.068 (0.006)</td>
+<td style="text-align: left;">0.063 (0.006)</td>
+<td style="text-align: left;">0.004 (0.002)</td>
+<td style="text-align: left;">0.001 (0.003)</td>
+<td style="text-align: left;">0.031 (0.005)</td>
+<td style="text-align: left;">0.035 (0.005)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.092 (0.006)</td>
+<td style="text-align: left;">0.085 (0.006)</td>
+<td style="text-align: left;">0.007 (0.002)</td>
+<td style="text-align: left;">0.003 (0.002)</td>
+<td style="text-align: left;">0.045 (0.006)</td>
+<td style="text-align: left;">0.047 (0.007)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">-0.002 (0.001)</td>
+<td style="text-align: left;">0.000 (0.001)</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">-0.001 (0.000)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">-0.002 (0.001)</td>
+<td style="text-align: left;">-0.000 (0.001)</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">-0.000 (0.001)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">0.057 (0.008)</td>
+<td style="text-align: left;">0.058 (0.008)</td>
+<td style="text-align: left;">-0.001 (0.005)</td>
+<td style="text-align: left;">0.003 (0.007)</td>
+<td style="text-align: left;">0.002 (0.007)</td>
+<td style="text-align: left;">-0.000 (0.007)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.100 (0.008)</td>
+<td style="text-align: left;">0.092 (0.008)</td>
+<td style="text-align: left;">0.008 (0.005)</td>
+<td style="text-align: left;">0.002 (0.006)</td>
+<td style="text-align: left;">0.013 (0.008)</td>
+<td style="text-align: left;">0.005 (0.007)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">0.046 (0.007)</td>
+<td style="text-align: left;">0.040 (0.007)</td>
+<td style="text-align: left;">0.006 (0.005)</td>
+<td style="text-align: left;">-0.000 (0.006)</td>
+<td style="text-align: left;">0.018 (0.007)</td>
+<td style="text-align: left;">0.020 (0.006)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.064 (0.007)</td>
+<td style="text-align: left;">0.069 (0.007)</td>
+<td style="text-align: left;">-0.005 (0.005)</td>
+<td style="text-align: left;">0.012 (0.005)</td>
+<td style="text-align: left;">0.034 (0.006)</td>
+<td style="text-align: left;">0.024 (0.008)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.010 (0.004)</td>
+<td style="text-align: left;">-0.013 (0.004)</td>
+<td style="text-align: left;">0.003 (0.003)</td>
+<td style="text-align: left;">-0.007 (0.002)</td>
+<td style="text-align: left;">-0.010 (0.003)</td>
+<td style="text-align: left;">-0.004 (0.003)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.006 (0.004)</td>
+<td style="text-align: left;">-0.005 (0.004)</td>
+<td style="text-align: left;">-0.001 (0.003)</td>
+<td style="text-align: left;">-0.005 (0.002)</td>
+<td style="text-align: left;">-0.006 (0.003)</td>
+<td style="text-align: left;">-0.001 (0.003)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">0.087 (0.005)</td>
+<td style="text-align: left;">0.087 (0.005)</td>
+<td style="text-align: left;">0.000 (0.004)</td>
+<td style="text-align: left;">0.003 (0.004)</td>
+<td style="text-align: left;">0.010 (0.004)</td>
+<td style="text-align: left;">0.007 (0.004)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.145 (0.005)</td>
+<td style="text-align: left;">0.143 (0.005)</td>
+<td style="text-align: left;">0.002 (0.003)</td>
+<td style="text-align: left;">0.006 (0.004)</td>
+<td style="text-align: left;">0.006 (0.004)</td>
+<td style="text-align: left;">-0.003 (0.005)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">0.093 (0.006)</td>
+<td style="text-align: left;">0.093 (0.006)</td>
+<td style="text-align: left;">0.000 (0.003)</td>
+<td style="text-align: left;">-0.002 (0.003)</td>
+<td style="text-align: left;">0.019 (0.004)</td>
+<td style="text-align: left;">0.021 (0.005)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.139 (0.006)</td>
+<td style="text-align: left;">0.140 (0.006)</td>
+<td style="text-align: left;">-0.002 (0.003)</td>
+<td style="text-align: left;">0.003 (0.003)</td>
+<td style="text-align: left;">0.027 (0.005)</td>
+<td style="text-align: left;">0.021 (0.005)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.006 (0.002)</td>
+<td style="text-align: left;">-0.004 (0.002)</td>
+<td style="text-align: left;">-0.002 (0.001)</td>
+<td style="text-align: left;">0.001 (0.001)</td>
+<td style="text-align: left;">0.000 (0.001)</td>
+<td style="text-align: left;">-0.002 (0.001)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.001 (0.002)</td>
+<td style="text-align: left;">0.002 (0.002)</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">0.001 (0.001)</td>
+<td style="text-align: left;">-0.000 (0.001)</td>
+<td style="text-align: left;">-0.002 (0.001)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">0.054 (0.008)</td>
+<td style="text-align: left;">0.054 (0.008)</td>
+<td style="text-align: left;">-0.001 (0.004)</td>
+<td style="text-align: left;">-0.008 (0.007)</td>
+<td style="text-align: left;">0.054 (0.009)</td>
+<td style="text-align: left;">0.066 (0.009)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.095 (0.008)</td>
+<td style="text-align: left;">0.096 (0.008)</td>
+<td style="text-align: left;">-0.001 (0.005)</td>
+<td style="text-align: left;">-0.001 (0.006)</td>
+<td style="text-align: left;">0.064 (0.009)</td>
+<td style="text-align: left;">0.067 (0.009)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">0.046 (0.007)</td>
+<td style="text-align: left;">0.040 (0.007)</td>
+<td style="text-align: left;">0.006 (0.004)</td>
+<td style="text-align: left;">-0.002 (0.005)</td>
+<td style="text-align: left;">0.065 (0.008)</td>
+<td style="text-align: left;">0.071 (0.008)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.078 (0.008)</td>
+<td style="text-align: left;">0.073 (0.009)</td>
+<td style="text-align: left;">0.005 (0.004)</td>
+<td style="text-align: left;">-0.000 (0.005)</td>
+<td style="text-align: left;">0.066 (0.009)</td>
+<td style="text-align: left;">0.057 (0.009)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.014 (0.004)</td>
+<td style="text-align: left;">-0.016 (0.004)</td>
+<td style="text-align: left;">0.002 (0.002)</td>
+<td style="text-align: left;">-0.002 (0.001)</td>
+<td style="text-align: left;">-0.004 (0.002)</td>
+<td style="text-align: left;">-0.000 (0.002)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.011 (0.004)</td>
+<td style="text-align: left;">-0.017 (0.004)</td>
+<td style="text-align: left;">0.005 (0.003)</td>
+<td style="text-align: left;">0.001 (0.002)</td>
+<td style="text-align: left;">-0.002 (0.002)</td>
+<td style="text-align: left;">-0.003 (0.003)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">0.086 (0.005)</td>
+<td style="text-align: left;">0.092 (0.006)</td>
+<td style="text-align: left;">-0.006 (0.003)</td>
+<td style="text-align: left;">-0.001 (0.004)</td>
+<td style="text-align: left;">0.070 (0.007)</td>
+<td style="text-align: left;">0.079 (0.007)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.131 (0.006)</td>
+<td style="text-align: left;">0.130 (0.006)</td>
+<td style="text-align: left;">0.001 (0.003)</td>
+<td style="text-align: left;">0.004 (0.004)</td>
+<td style="text-align: left;">0.075 (0.007)</td>
+<td style="text-align: left;">0.078 (0.007)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">0.076 (0.006)</td>
+<td style="text-align: left;">0.078 (0.006)</td>
+<td style="text-align: left;">-0.002 (0.003)</td>
+<td style="text-align: left;">-0.001 (0.003)</td>
+<td style="text-align: left;">0.066 (0.006)</td>
+<td style="text-align: left;">0.076 (0.006)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.112 (0.006)</td>
+<td style="text-align: left;">0.113 (0.006)</td>
+<td style="text-align: left;">-0.000 (0.002)</td>
+<td style="text-align: left;">-0.003 (0.003)</td>
+<td style="text-align: left;">0.069 (0.007)</td>
+<td style="text-align: left;">0.084 (0.007)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">-0.003 (0.001)</td>
+<td style="text-align: left;">0.001 (0.001)</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">-0.000 (0.001)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.003 (0.001)</td>
+<td style="text-align: left;">-0.003 (0.001)</td>
+<td style="text-align: left;">0.000 (0.001)</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+</tr>
+</tbody>
+</table>
+<table class="caption-top table">
+<caption>Paired per-dataset difference in Brier score (SE over datasets; counts in <code>data/discrete/agg_disc_paired.csv</code>). Negative favours the first arm.</caption>
+<colgroup>
+<col style="width: 3%">
+<col style="width: 2%">
+<col style="width: 3%">
+<col style="width: 2%">
+<col style="width: 12%">
+<col style="width: 14%">
+<col style="width: 17%">
+<col style="width: 9%">
+<col style="width: 17%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">trait</th>
+<th style="text-align: left;">n</th>
+<th style="text-align: left;">lambda</th>
+<th style="text-align: left;">rho</th>
+<th style="text-align: left;">chained BACE − freq A</th>
+<th style="text-align: left;">BACE as shipped − freq A</th>
+<th style="text-align: left;">chained BACE − BACE as shipped</th>
+<th style="text-align: left;">freq A − freq B</th>
+<th style="text-align: left;">freq A: flexible − equal rates</th>
+<th style="text-align: left;">freq B: flexible − equal rates</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.018 (0.008)</td>
+<td style="text-align: left;">0.012 (0.009)</td>
+<td style="text-align: left;">-0.030 (0.005)</td>
+<td style="text-align: left;">-0.002 (0.004)</td>
+<td style="text-align: left;">-0.023 (0.006)</td>
+<td style="text-align: left;">-0.028 (0.007)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.052 (0.009)</td>
+<td style="text-align: left;">-0.028 (0.010)</td>
+<td style="text-align: left;">-0.024 (0.005)</td>
+<td style="text-align: left;">-0.003 (0.004)</td>
+<td style="text-align: left;">-0.015 (0.006)</td>
+<td style="text-align: left;">-0.012 (0.006)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.042 (0.007)</td>
+<td style="text-align: left;">-0.007 (0.008)</td>
+<td style="text-align: left;">-0.035 (0.004)</td>
+<td style="text-align: left;">-0.007 (0.003)</td>
+<td style="text-align: left;">-0.027 (0.006)</td>
+<td style="text-align: left;">-0.027 (0.006)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.070 (0.007)</td>
+<td style="text-align: left;">-0.049 (0.008)</td>
+<td style="text-align: left;">-0.021 (0.004)</td>
+<td style="text-align: left;">-0.005 (0.003)</td>
+<td style="text-align: left;">-0.015 (0.005)</td>
+<td style="text-align: left;">-0.021 (0.005)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">0.017 (0.004)</td>
+<td style="text-align: left;">0.025 (0.005)</td>
+<td style="text-align: left;">-0.008 (0.003)</td>
+<td style="text-align: left;">0.001 (0.001)</td>
+<td style="text-align: left;">0.001 (0.002)</td>
+<td style="text-align: left;">0.000 (0.002)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.004 (0.005)</td>
+<td style="text-align: left;">0.010 (0.005)</td>
+<td style="text-align: left;">-0.005 (0.002)</td>
+<td style="text-align: left;">0.000 (0.001)</td>
+<td style="text-align: left;">0.000 (0.002)</td>
+<td style="text-align: left;">-0.002 (0.002)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.082 (0.004)</td>
+<td style="text-align: left;">-0.057 (0.005)</td>
+<td style="text-align: left;">-0.025 (0.003)</td>
+<td style="text-align: left;">-0.002 (0.002)</td>
+<td style="text-align: left;">-0.032 (0.004)</td>
+<td style="text-align: left;">-0.037 (0.004)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.125 (0.004)</td>
+<td style="text-align: left;">-0.104 (0.005)</td>
+<td style="text-align: left;">-0.020 (0.002)</td>
+<td style="text-align: left;">-0.001 (0.002)</td>
+<td style="text-align: left;">-0.033 (0.004)</td>
+<td style="text-align: left;">-0.032 (0.004)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.082 (0.005)</td>
+<td style="text-align: left;">-0.065 (0.005)</td>
+<td style="text-align: left;">-0.016 (0.002)</td>
+<td style="text-align: left;">-0.002 (0.002)</td>
+<td style="text-align: left;">-0.020 (0.003)</td>
+<td style="text-align: left;">-0.021 (0.004)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.116 (0.006)</td>
+<td style="text-align: left;">-0.102 (0.005)</td>
+<td style="text-align: left;">-0.014 (0.002)</td>
+<td style="text-align: left;">-0.004 (0.002)</td>
+<td style="text-align: left;">-0.029 (0.004)</td>
+<td style="text-align: left;">-0.026 (0.005)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.000 (0.002)</td>
+<td style="text-align: left;">0.001 (0.002)</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">0.001 (0.001)</td>
+<td style="text-align: left;">0.001 (0.001)</td>
+<td style="text-align: left;">0.001 (0.001)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">bin</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.002 (0.002)</td>
+<td style="text-align: left;">-0.000 (0.002)</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">0.001 (0.001)</td>
+<td style="text-align: left;">0.001 (0.001)</td>
+<td style="text-align: left;">0.000 (0.001)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.026 (0.007)</td>
+<td style="text-align: left;">-0.005 (0.007)</td>
+<td style="text-align: left;">-0.022 (0.004)</td>
+<td style="text-align: left;">-0.004 (0.004)</td>
+<td style="text-align: left;">0.004 (0.004)</td>
+<td style="text-align: left;">0.008 (0.004)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.063 (0.007)</td>
+<td style="text-align: left;">-0.039 (0.008)</td>
+<td style="text-align: left;">-0.024 (0.004)</td>
+<td style="text-align: left;">-0.002 (0.004)</td>
+<td style="text-align: left;">0.006 (0.005)</td>
+<td style="text-align: left;">0.008 (0.004)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.048 (0.006)</td>
+<td style="text-align: left;">-0.025 (0.007)</td>
+<td style="text-align: left;">-0.023 (0.004)</td>
+<td style="text-align: left;">-0.008 (0.003)</td>
+<td style="text-align: left;">-0.022 (0.005)</td>
+<td style="text-align: left;">-0.018 (0.005)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.077 (0.006)</td>
+<td style="text-align: left;">-0.054 (0.007)</td>
+<td style="text-align: left;">-0.022 (0.004)</td>
+<td style="text-align: left;">-0.010 (0.003)</td>
+<td style="text-align: left;">-0.033 (0.005)</td>
+<td style="text-align: left;">-0.023 (0.006)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">0.013 (0.004)</td>
+<td style="text-align: left;">0.014 (0.004)</td>
+<td style="text-align: left;">-0.002 (0.003)</td>
+<td style="text-align: left;">0.007 (0.002)</td>
+<td style="text-align: left;">0.008 (0.003)</td>
+<td style="text-align: left;">0.003 (0.003)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.004 (0.005)</td>
+<td style="text-align: left;">-0.002 (0.005)</td>
+<td style="text-align: left;">-0.001 (0.003)</td>
+<td style="text-align: left;">0.007 (0.002)</td>
+<td style="text-align: left;">0.009 (0.002)</td>
+<td style="text-align: left;">0.003 (0.003)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.070 (0.004)</td>
+<td style="text-align: left;">-0.053 (0.004)</td>
+<td style="text-align: left;">-0.017 (0.002)</td>
+<td style="text-align: left;">0.000 (0.002)</td>
+<td style="text-align: left;">-0.001 (0.002)</td>
+<td style="text-align: left;">0.001 (0.002)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.118 (0.004)</td>
+<td style="text-align: left;">-0.107 (0.004)</td>
+<td style="text-align: left;">-0.011 (0.002)</td>
+<td style="text-align: left;">-0.004 (0.002)</td>
+<td style="text-align: left;">0.001 (0.002)</td>
+<td style="text-align: left;">0.008 (0.003)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.103 (0.005)</td>
+<td style="text-align: left;">-0.090 (0.005)</td>
+<td style="text-align: left;">-0.012 (0.002)</td>
+<td style="text-align: left;">-0.004 (0.002)</td>
+<td style="text-align: left;">-0.024 (0.003)</td>
+<td style="text-align: left;">-0.020 (0.003)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.142 (0.005)</td>
+<td style="text-align: left;">-0.133 (0.005)</td>
+<td style="text-align: left;">-0.009 (0.002)</td>
+<td style="text-align: left;">-0.005 (0.002)</td>
+<td style="text-align: left;">-0.025 (0.003)</td>
+<td style="text-align: left;">-0.020 (0.003)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.001 (0.002)</td>
+<td style="text-align: left;">-0.002 (0.002)</td>
+<td style="text-align: left;">0.001 (0.001)</td>
+<td style="text-align: left;">-0.000 (0.001)</td>
+<td style="text-align: left;">0.000 (0.001)</td>
+<td style="text-align: left;">-0.000 (0.001)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ord</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.011 (0.002)</td>
+<td style="text-align: left;">-0.011 (0.002)</td>
+<td style="text-align: left;">0.001 (0.001)</td>
+<td style="text-align: left;">-0.000 (0.001)</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">0.000 (0.001)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">0.016 (0.008)</td>
+<td style="text-align: left;">0.042 (0.009)</td>
+<td style="text-align: left;">-0.026 (0.004)</td>
+<td style="text-align: left;">0.004 (0.004)</td>
+<td style="text-align: left;">-0.013 (0.006)</td>
+<td style="text-align: left;">-0.019 (0.006)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.026 (0.008)</td>
+<td style="text-align: left;">-0.006 (0.008)</td>
+<td style="text-align: left;">-0.020 (0.004)</td>
+<td style="text-align: left;">0.002 (0.004)</td>
+<td style="text-align: left;">-0.013 (0.006)</td>
+<td style="text-align: left;">-0.016 (0.006)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.016 (0.007)</td>
+<td style="text-align: left;">0.004 (0.008)</td>
+<td style="text-align: left;">-0.019 (0.004)</td>
+<td style="text-align: left;">-0.002 (0.004)</td>
+<td style="text-align: left;">-0.052 (0.006)</td>
+<td style="text-align: left;">-0.050 (0.006)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.058 (0.008)</td>
+<td style="text-align: left;">-0.042 (0.008)</td>
+<td style="text-align: left;">-0.016 (0.004)</td>
+<td style="text-align: left;">0.001 (0.003)</td>
+<td style="text-align: left;">-0.051 (0.006)</td>
+<td style="text-align: left;">-0.049 (0.006)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">0.014 (0.004)</td>
+<td style="text-align: left;">0.018 (0.004)</td>
+<td style="text-align: left;">-0.002 (0.002)</td>
+<td style="text-align: left;">0.004 (0.002)</td>
+<td style="text-align: left;">-0.001 (0.002)</td>
+<td style="text-align: left;">-0.006 (0.002)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">0.007 (0.005)</td>
+<td style="text-align: left;">0.016 (0.005)</td>
+<td style="text-align: left;">-0.007 (0.003)</td>
+<td style="text-align: left;">-0.002 (0.003)</td>
+<td style="text-align: left;">-0.001 (0.003)</td>
+<td style="text-align: left;">0.000 (0.003)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.069 (0.004)</td>
+<td style="text-align: left;">-0.054 (0.004)</td>
+<td style="text-align: left;">-0.015 (0.002)</td>
+<td style="text-align: left;">0.000 (0.002)</td>
+<td style="text-align: left;">-0.031 (0.004)</td>
+<td style="text-align: left;">-0.032 (0.004)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.3</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.108 (0.004)</td>
+<td style="text-align: left;">-0.100 (0.005)</td>
+<td style="text-align: left;">-0.008 (0.002)</td>
+<td style="text-align: left;">-0.002 (0.002)</td>
+<td style="text-align: left;">-0.033 (0.004)</td>
+<td style="text-align: left;">-0.032 (0.004)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.080 (0.005)</td>
+<td style="text-align: left;">-0.070 (0.005)</td>
+<td style="text-align: left;">-0.010 (0.002)</td>
+<td style="text-align: left;">-0.003 (0.002)</td>
+<td style="text-align: left;">-0.063 (0.004)</td>
+<td style="text-align: left;">-0.065 (0.005)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">0.7</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.124 (0.005)</td>
+<td style="text-align: left;">-0.119 (0.005)</td>
+<td style="text-align: left;">-0.005 (0.002)</td>
+<td style="text-align: left;">0.002 (0.002)</td>
+<td style="text-align: left;">-0.054 (0.005)</td>
+<td style="text-align: left;">-0.061 (0.005)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.0</td>
+<td style="text-align: left;">-0.002 (0.002)</td>
+<td style="text-align: left;">-0.001 (0.002)</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">0.001 (0.001)</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+<td style="text-align: left;">-0.001 (0.001)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cat3</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">-0.004 (0.002)</td>
+<td style="text-align: left;">-0.005 (0.002)</td>
+<td style="text-align: left;">0.000 (0.001)</td>
+<td style="text-align: left;">0.001 (0.001)</td>
+<td style="text-align: left;">0.001 (0.001)</td>
+<td style="text-align: left;">-0.000 (0.001)</td>
+</tr>
+</tbody>
+</table>
+<p>On identical datasets the contrasts are large and precise: chained BACE minus freq A accuracy is 0.04 to 0.15 at λ ≤ 0.7 (5 to 28 SEs) and −0.016 to 0.001 at λ = 1. Chaining leaves BACE’s accuracy unchanged (−0.006 to 0.015) but lowers its Brier score in every λ ≤ 0.7 cell (by 0.005 to 0.035). Proper and improper frequentist imputation are equally accurate per value (freq A minus freq B −0.008 to 0.012); improperness shows in the downstream interval, not in the point imputations.</p>
+</section>
+<section id="reproduction-of-the-continuous-results" class="level2" data-number="5.4">
+<h2 data-number="5.4" class="anchored" data-anchor-id="reproduction-of-the-continuous-results"><span class="header-section-number">5.4</span> Reproduction of the continuous results</h2>
+<p>BACE fits re-run on the cluster that ran the stored fit: 423, of which 417 reproduced every stored continuous row (pooled estimates and SEs, per-value z-RMSE and coverage) to within 1e-05. Fits re-run on another cluster: 1977; they are independent replicates of the stored fits (largest difference in a pooled estimate 0.62). Details by cluster pair and arm: <code>data/discrete/repro.csv</code>.</p>
+</section>
 </section>
 <section id="limitations" class="level1" data-number="6">
 <h1 data-number="6"><span class="header-section-number">6</span> Limitations</h1>
@@ -5347,6 +7882,9 @@ Figure 1: Per-value coverage by sample size and λ; whiskers ±2 Monte Carlo SE
 <li>The frequentist model shares one λ across its traits; prp carries extra non-phylogenetic noise, so its fitted variance is inflated at λ near 1 (c1 and c2 are unaffected).</li>
 <li>BACE at n = 1000 has 100 datasets per cell, so its Monte Carlo SEs are about 1.4 times the others’.</li>
 <li>At λ = 1 and n = 1000 freq A and chained BACE both cover slightly above 0.95; not investigated.</li>
+<li>Discrete part: the traits are thresholded Brownian liabilities, BACE’s own model family; castor’s Mk model is misspecified for them and uses no covariates. n = 1000 is not yet run.</li>
+<li>At λ = 1 and ρ = 0.5 the <code>c1 ~ bin</code> target varies between datasets by more than its standard error, so coverage there is read against the per-dataset target.</li>
+<li>Whether BACE can fit a fragile λ = 1 dataset depends on the machine: 6 datasets differ between the continuous and the discrete runs (5 fit only in the discrete run, 1 only in the continuous run).</li>
 </ul>
 </section>
 <section id="files-and-reproduction" class="level1" data-number="7">
@@ -5389,7 +7927,7 @@ Figure 1: Per-value coverage by sample size and λ; whiskers ±2 Monte Carlo SE
 </tr>
 <tr class="odd">
 <td><code>data/discrete/</code></td>
-<td>discrete results (to come)</td>
+<td>discrete results: per-fit and aggregated tables, the Monte Carlo truth, the compute record (<code>fits.csv</code>), reproduction check, castor diagnostics</td>
 </tr>
 </tbody>
 </table>

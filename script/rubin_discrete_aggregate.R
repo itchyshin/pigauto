@@ -32,9 +32,9 @@
 #                              complete_covered (the same for the complete-data interval; NA in files written
 #                              before 7a9d2ee); target_cond (the per-dataset target, rho x GLS slope of the bin
 #                              liability on bin; NA before 4a4395a), covered_cond, complete_covered_cond
-#   disc_fill.csv              fit x arm x trait: missing cells filled by fill_degenerate (per dataset; summed over
+#   disc_fill.csv.gz           fit x arm x trait: missing cells filled by fill_degenerate (per dataset; summed over
 #                              the M datasets in files written before 4a4395a), masked cells, classes observed
-#   castor_diag.csv            freq fit x arm x trait: rate model, castor's fitted rate, bootstrap median rate,
+#   castor_diag.csv.gz         freq fit x arm x trait: rate model, castor's fitted rate, bootstrap median rate,
 #                              resimulations, failed refits, the trait's error, wall time; one row with the error when
 #                              castor did not run
 #   agg_disc_cells.csv         n, lambda, rho, arm, trait: n_fits, mean and MC SE of each score, n_fits_trait_absent
@@ -472,9 +472,9 @@ aggregate_disc <- function(pool, truth_csv, out, cont_pool = NULL) {
   dir.create(out, recursive = TRUE, showWarnings = FALSE)
   utils::write.csv(FC, gzfile(file.path(out, "fit_disc_cells.csv.gz")), row.names = FALSE)
   utils::write.csv(FE, gzfile(file.path(out, "fit_disc_estimands.csv.gz")), row.names = FALSE)
-  utils::write.csv(FILL, file.path(out, "disc_fill.csv"), row.names = FALSE)
+  utils::write.csv(FILL, gzfile(file.path(out, "disc_fill.csv.gz")), row.names = FALSE)
   utils::write.csv(CAS %||% data.frame(set = character(0), host = character(0), tag = character(0), arm = character(0),
-                                       trait = character(0)), file.path(out, "castor_diag.csv"), row.names = FALSE)
+                                       trait = character(0)), gzfile(file.path(out, "castor_diag.csv.gz")), row.names = FALSE)
   utils::write.csv(agg_cells, file.path(out, "agg_disc_cells.csv"), row.names = FALSE)
   utils::write.csv(agg_cells_l, file.path(out, "agg_disc_cells_l.csv"), row.names = FALSE)
   utils::write.csv(agg_down, file.path(out, "agg_disc_down.csv"), row.names = FALSE)

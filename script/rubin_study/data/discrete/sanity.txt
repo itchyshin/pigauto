@@ -1,0 +1,12 @@
+files 4800 after dropping 0 duplicate(s) (same set and tag on another host); bace 2400, freq 2400
+by set and host: bace fir = 1076; bace nibi = 321; bace rorqual = 1003; freq totoro = 2400
+datasets in both sets 2400: mask and discrete traits identical, max |c1 difference| 3.65e-13
+same dataset across fits: max range of the mode floor 0.00e+00, of the complete-data c1 ~ bin estimate 3.68e-08
+BACE + residual vs BACE as shipped, discrete per-value scores: max |difference| 0
+per-value rows (fit x arm x trait, mode floor included): scored 63526, one class in the complete data 693, missing 581
+c1 ~ bin rows (fit x arm): scored 16171, bin one class in the complete data 427, undefined (bin constant in every imputed dataset) 21, missing 181
+scored c1 ~ bin rows without the per-dataset target (files written before 4a4395a): 0
+NA draws among scored cells (dropped cell by cell by score_discrete): bace cat3 45316; bace_chain cat3 46955; bace_resid cat3 45316
+scored c1 ~ bin rows without a truth row: 0
+files without the complete-data interval (written before 7a9d2ee): 0; files without saved imputations: 0
+reproduction check: 4800 fit(s) matched in the continuous pool /Users/z3437171/pigauto_rubin_pool (0 unreadable)

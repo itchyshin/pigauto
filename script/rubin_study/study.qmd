@@ -43,8 +43,8 @@ We compared four ways of multiply imputing missing phylogenetic trait values, pl
 same simulated datasets, and scored each with Rubin's rules: per missing value and on two downstream estimates.
 The continuous part is complete: `r format(sum(fits$set == "bace"), big.mark = ",")` BACE fits and
 `r format(sum(fits$set == "freq"), big.mark = ",")` frequentist fits over 18 simulation cells, with no dataset
-missing. The discrete part (binary, ordinal, categorical traits) extends the same design on the same datasets
-(@sec-discrete).
+missing. The discrete part (binary, ordinal and categorical traits) is complete at n = 100 and 300: 2,400 BACE fits
+and 2,400 frequentist fits on the same datasets (@sec-discrete).
 
 Main continuous findings:
 
@@ -58,9 +58,32 @@ Main continuous findings:
 - **Accuracy.** freq A and chained BACE are equally accurate at n = 300 and 1000; at n = 100 chained BACE is less
   accurate and pulls the downstream slope toward zero.
 
-This is the frequentist method's home ground: the scored traits are continuous, evolve by Brownian motion with
-Pagel's λ, and Rphylopars fits exactly that model. It does not test BACE's claimed advantage, one model for
-mixed trait types; the discrete extension does.
+Main discrete findings (n = 100 and 300):
+
+- **At low and moderate signal BACE imputes discrete traits more accurately.** At λ = 0.3 and 0.7 chained BACE's
+  modal class is right more often than castor's (freq A) in every cell, by 0.04 to 0.15 (5 to 28 SEs, paired on
+  the same datasets). At λ = 0.3 castor, even with flexible rates, is 0.01 to 0.02 below always guessing the most
+  frequent observed class. At λ = 1 castor leads by up to 0.016 at n = 100, and the two are within 0.006 at
+  n = 300.
+- **Imputing one trait at a time biases associations toward zero.** castor imputes `bin` without c1, so at
+  ρ = 0.5 and λ ≤ 0.7 the pooled PGLS slope of c1 on `bin` is 0.21 to 0.29 too small, and its coverage falls as n
+  grows (0.89 at n = 100; 0.34 to 0.46 at n = 300). BACE, which imputes each trait given the others, is within
+  0.025 of the target.
+- **Chaining helps again.** At λ ≤ 0.7 BACE as shipped covers the downstream slope in 0.895 to 0.945 of datasets
+  and chained BACE in 0.940 to 0.965. BACE's 95% class sets under-cover at λ = 0.3 and n = 100 (0.86 to 0.91;
+  chained 0.89 to 0.94), and chaining lowers the Brier score in every λ ≤ 0.7 cell.
+- **BACE cannot fit some λ = 1 datasets.** MCMCglmm stops ("Mixed model equations singular") on 63 of the 2,400
+  datasets, all at λ = 1 (44 at n = 100, 19 at n = 300); 62 of them failed in the continuous campaign too.
+  castor fits every dataset.
+- **The re-run reproduces the stored BACE fits.** On the cluster that ran the stored fit, 417 of 423 re-runs match
+  it to the last digit; re-runs on another cluster are independent replicates (median difference in a pooled
+  estimate 0.004 to 0.016).
+
+The continuous part is the frequentist method's home ground: the scored traits are continuous, evolve by Brownian
+motion with Pagel's λ, and Rphylopars fits exactly that model. The discrete part is BACE's home ground in turn:
+the discrete traits are thresholded Brownian liabilities, the model family BACE fits, while castor models one
+trait at a time, with an Mk process and no covariates. No off-the-shelf phylogenetic frequentist method imputes
+discrete traits jointly with continuous ones, so the comparison is between the methods a user can actually run.
 
 # Design (ADEMP)
 
@@ -308,7 +331,18 @@ cat(if (nrow(ab)) paste0("Traits with one class in the complete data have nothin
     if (nrow(na_d)) paste0("Draws returned as NA, dropped cell by cell before scoring: ",
                            paste(sprintf("%s `%s` %d", labd[na_d$arm], na_d$trait, na_d$n_na_draws), collapse = "; "), ".")
     else "No arm returned NA draws.", "\n\n", sep = "")
-cat("Interpretation: to be written from the results.\n\n")
+cat("At λ = 0.3 and 0.7 BACE is the more accurate imputer of all three discrete traits: chained BACE beats freq A ",
+    "in every cell, by 0.04 to 0.15. castor adds nothing to the observed class frequencies at λ = 0.3 (freq A is ",
+    "0.008 to 0.020 below the mode floor), while chained BACE is 0.06 to 0.10 above it. BACE's lead is 0.04 to 0.10 ",
+    "at ρ = 0, where its only correlated predictor is the always-observed driver d1 (correlation 0.35), and 0.06 to ",
+    "0.15 at ρ = 0.5, where the other traits add information; its threshold model is also the model that generated ",
+    "these traits. At λ = 1 castor leads by up to 0.016 at n = 100, and the two are within 0.006 at n = 300. ",
+    "Flexible rates matter ",
+    "for castor: simulation v1's equal rates lose up to 0.08 accuracy at λ ≤ 0.7. The 95% class sets repeat the ",
+    "continuous result: BACE as shipped under-covers at λ = 0.3 and n = 100 (0.86 to 0.91), chaining brings it to ",
+    "0.89 to 0.94, and castor's `bin` sets over-cover there (0.99) because they usually hold both classes. BACE ",
+    "returns NA for 1.6% ",
+    "of its `cat3` draws (its class probabilities are not finite); no cell lost all 20 draws.\n\n", sep = "")
 ```
 
 ```{r disc-down, results = "asis", eval = has_disc}
@@ -343,7 +377,14 @@ cat("The estimand is undefined when `bin` has one class in the complete data, or
     paste(sprintf("%d and %d of %d at n = %d", ex$excluded, ex$undefined, ex$all, ex$n), collapse = "; "), "). ",
     sprintf("Fits with no c1 ~ bin row for another reason (an arm or scoring error; see `data/discrete/fit_disc_estimands.csv.gz`): %d.\n\n",
             sum(ddn$n_missing[ddn$arm != "complete"])), sep = "")
-cat("Interpretation: to be written from the results.\n\n")
+cat("The downstream estimate shows the cost of imputing one trait at a time. At ρ = 0.5 and λ ≤ 0.7 castor's ",
+    "imputations pull the slope of c1 on `bin` toward zero by 0.21 to 0.29. The bias does not shrink with n while the ",
+    "standard error does, so coverage falls from 0.89 at n = 100 to 0.34 to 0.46 at n = 300. At ρ = 0 the same draws ",
+    "cover too often (0.99 to 1.00): noise around a true zero only widens the interval. BACE imputes `bin` given c1 ",
+    "and is within 0.025 of the per-dataset target at λ ≤ 0.7; BACE as shipped covers 0.895 to 0.945 and chained ",
+    "BACE 0.940 to 0.965, against 0.905 to 0.985 for the complete data. At λ = 1 every arm struggles: `bin` is nearly ",
+    "constant within clades, BACE's slope is 0.10 too small at n = 100 and ρ = 0.5 (castor's 0.055), and a few ",
+    "imputed datasets give very large standard errors.\n\n", sep = "")
 ```
 
 ```{r disc-paired, results = "asis", eval = has_disc}
@@ -359,7 +400,11 @@ for (ms in c("accuracy", "brier")) {
                     if (ms == "accuracy") "Positive favours the first arm." else "Negative favours the first arm.")),
       sep = "\n"); cat("\n\n")
 }
-cat("Interpretation: to be written from the results.\n\n")
+cat("On identical datasets the contrasts are large and precise: chained BACE minus freq A accuracy is 0.04 to 0.15 ",
+    "at λ ≤ 0.7 (5 to 28 SEs) and −0.016 to 0.001 at λ = 1. Chaining leaves BACE's accuracy unchanged (−0.006 to ",
+    "0.015) but lowers its Brier score in every λ ≤ 0.7 cell (by 0.005 to 0.035). Proper and improper frequentist ",
+    "imputation are equally accurate per value (freq A minus freq B −0.008 to 0.012); improperness shows in the ",
+    "downstream interval, not in the point imputations.\n\n", sep = "")
 ```
 
 ```{r disc-repro, results = "asis", eval = has_disc}
@@ -388,6 +433,12 @@ if (is.null(rb) || !nrow(rb)) {
   variance is inflated at λ near 1 (c1 and c2 are unaffected).
 - BACE at n = 1000 has 100 datasets per cell, so its Monte Carlo SEs are about 1.4 times the others'.
 - At λ = 1 and n = 1000 freq A and chained BACE both cover slightly above 0.95; not investigated.
+- Discrete part: the traits are thresholded Brownian liabilities, BACE's own model family; castor's Mk model is
+  misspecified for them and uses no covariates. n = 1000 is not yet run.
+- At λ = 1 and ρ = 0.5 the `c1 ~ bin` target varies between datasets by more than its standard error, so coverage
+  there is read against the per-dataset target.
+- Whether BACE can fit a fragile λ = 1 dataset depends on the machine: 6 datasets differ between the continuous and
+  the discrete runs (5 fit only in the discrete run, 1 only in the continuous run).
 
 # Files and reproduction
 
@@ -399,7 +450,7 @@ if (is.null(rb) || !nrow(rb)) {
 | `data/bace_diagnostics.csv` | BACE convergence verdict, drift, ESS, input cleaning |
 | `data/failure_records.csv` | first-pass BACE failures kept as records |
 | `data/agg/` | aggregated tables used above, and `report.json` for the web pages |
-| `data/discrete/` | discrete results (to come) |
+| `data/discrete/` | discrete results: per-fit and aggregated tables, the Monte Carlo truth, the compute record (`fits.csv`), reproduction check, castor diagnostics |
 
 Pipeline (worktree root): `script/rubin_cell.R` (one dataset, all arms of a set) run on the clusters with
 `script/rubin_campaign_nibi.sh` and `script/rubin_totoro.sh`; `script/rubin_pool.sh` copies results to the pool;

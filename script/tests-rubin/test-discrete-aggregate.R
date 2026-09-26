@@ -83,7 +83,7 @@ testthat::test_that("end to end: duplicates dropped, statuses, truth join, cover
   testthat::expect_equal(attr(list_pool(pool), "n_dup"), 2L)
   utils::capture.output(aggregate_disc(pool, truth_csv(dir), file.path(dir, "out"), cont_pool = NULL))
   out <- file.path(dir, "out")
-  for (f in c("fit_disc_cells.csv.gz", "fit_disc_estimands.csv.gz", "disc_fill.csv", "castor_diag.csv", "agg_disc_cells.csv",
+  for (f in c("fit_disc_cells.csv.gz", "fit_disc_estimands.csv.gz", "disc_fill.csv.gz", "castor_diag.csv.gz", "agg_disc_cells.csv",
               "agg_disc_cells_l.csv", "agg_disc_down.csv", "agg_disc_paired.csv", "repro.csv", "sanity.txt"))
     testthat::expect_true(file.exists(file.path(out, f)), info = f)
   fc <- utils::read.csv(file.path(out, "fit_disc_cells.csv.gz"), stringsAsFactors = FALSE)
