@@ -866,60 +866,15 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                       mean(bm_diff[is.finite(bm_diff)]^2)
                     } else NA_real_
 
-        # ---- Phase F (2026-05-01): LP via K-class OVR --------------------
-        # Run K binary LPs (one per ordinal class), normalise across K,
-        # then compute E[class] = sum_k p_k * k on the integer-class scale
-        # and z-score back to match threshold_joint / bm_mvn output scale.
-        # Targets the K=3 ordinal regime (e.g. AVONET Migration) where
-        # threshold_joint is systematically misspecified; see
-        # `useful/MEMO_2026-04-29_phase6_migration_bisect.md` and
-        # `specs/2026-05-01-phase-f-lp-corner-ordinal-design.md`.
-        lp_pred_z <- NULL
-        lp_se_z   <- NULL
-        lp_mse    <- NA_real_
-        # Locate the trait_map entry for this latent col.
-        tm_ord <- NULL
-        for (tm_x in trait_map) {
-          if (identical(tm_x$type, "ordinal") && col %in% tm_x$latent_cols) {
-            tm_ord <- tm_x; break
-          }
-        }
-        if (!is.null(tm_ord) && !is.null(sim_phylo) &&
-            length(tm_ord$levels) >= 2L &&
-            is.finite(tm_ord$sd) && tm_ord$sd > 0) {
-          K_ord  <- length(tm_ord$levels)
-          z_vals <- X[, col]
-          cls_int <- round(z_vals * tm_ord$sd + tm_ord$mean)
-          obs_lp  <- !is.na(cls_int) &
-                     cls_int >= 1L & cls_int <= K_ord
-          if (sum(obs_lp) >= K_ord) {
-            P_lp <- matrix(0.0, nrow = length(spp), ncol = K_ord)
-            sim_obs <- sim_phylo[, obs_lp, drop = FALSE]
-            rw      <- rowSums(sim_obs)
-            rw[rw < 1e-10] <- 1e-10
-            for (kk in seq_len(K_ord)) {
-              y_k <- as.numeric(cls_int[obs_lp] == kk)
-              P_lp[, kk] <- as.numeric(sim_obs %*% y_k) / rw
-            }
-            P_lp <- pmax(P_lp, 1e-6)
-            P_lp <- P_lp / rowSums(P_lp)
-            e_cls <- as.numeric(P_lp %*% seq_len(K_ord))
-            var_cls <- vapply(seq_len(nrow(P_lp)), function(i) {
-              sum(P_lp[i, ] * (seq_len(K_ord) - e_cls[i])^2)
-            }, numeric(1L))
-            lp_pred_z <- (e_cls - tm_ord$mean) / tm_ord$sd
-            lp_se_z   <- sqrt(pmax(var_cls, 0)) / tm_ord$sd
-            lp_diff <- lp_pred_z[val_rows_j[finite_t]] - truth_j[finite_t]
-            lp_mse <- if (any(is.finite(lp_diff))) {
-                        mean(lp_diff[is.finite(lp_diff)]^2)
-                      } else NA_real_
-          }
-        }
+        # A third candidate, label propagation via K-class OVR (Phase F,
+        # a3b89e6), was removed on 2026-09-26: it decoded the 0..K-1 ordinal
+        # coding as 1..K and so dropped every lowest-class observation, and
+        # with that fixed it lowered ordinal accuracy on the 18 core cells
+        # (docs/dev-log/ordinal-route/).
 
-        # Pick the lowest finite val MSE among the three options.
+        # Pick the lower finite val MSE of the two options.
         mses <- c(threshold_joint = tj_mse,
-                  bm_mvn          = bm_mse,
-                  lp              = lp_mse)
+                  bm_mvn          = bm_mse)
         mses <- mses[is.finite(mses)]
         if (length(mses) == 0L) {
           ordinal_path_chosen[as.character(col)] <- "threshold_joint"
@@ -931,11 +886,6 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
             col_path[col] <- "per_column_bm"
             # S5c: this column's own outcome is now a per-column route,
             # regardless of what the threshold-joint fit as a whole did.
-            trait_route[col] <- "per_column"
-          } else if (chosen == "lp" && !is.null(lp_pred_z)) {
-            mu[, col] <- lp_pred_z
-            se[, col] <- lp_se_z
-            col_path[col] <- "label_propagation"
             trait_route[col] <- "per_column"
           } # else: threshold_joint already in mu/se, col_path, trait_route
           ordinal_path_chosen[as.character(col)] <- chosen
