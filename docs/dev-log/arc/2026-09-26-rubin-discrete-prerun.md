@@ -1,9 +1,11 @@
 # Discrete traits in the Rubin study: pre-run plan (2026-09-26)
 
-Status (updated 2026-09-26, afternoon): Shinichi approved the plan ("go ahead", recommendations accepted). An
+Status (updated 2026-09-26, 09:15): Shinichi approved the plan ("go ahead", recommendations accepted). An
 adversarial review then changed the frequentist rate models and the downstream target, and fixed bugs (section
-"After approval: review and changes" below). Code at commit 55a0998 on all four hosts. Campaign NOT yet running:
-the job submission was blocked by the session's permission check and waits for Shinichi (commands at the end).
+"After approval: review and changes" below). Campaign LAUNCHED 09:11 at commit 55a0998 (Shinichi: "let's go ahead
+and do the simulation"): nibi job 22721311 (BACE n = 100), fir 61677143 and rorqual 21855230 (BACE n = 300), Totoro
+freq + castor (process group 1061449, 40 cores). The Totoro files record git_hash "HEAD" (their folder sits in a
+git repository without commits); they ran 55a0998 (script/DISC_COMMIT, checksums verified at launch).
 
 **What will be built, in one sentence.** The same 18 cells, seeds and datasets as the continuous campaign, re-run
 with BACE (as shipped, chained, and the residual control) and the frequentist arms, saving all 20 imputations,
@@ -45,7 +47,10 @@ touches the BACE runs. Changes, all in commits 4a4395a and 55a0998 (lane suite F
    error, and even complete-data intervals cover the population target in only 31% (n = 300) to 56% (n = 100) of
    datasets. Each result now stores the per-dataset target, ρ times the GLS slope (at the true λ) of `bin`'s
    liability on `bin`; complete-data coverage of it is about 0.96 in every cell. Coverage is read against it,
-   with the population target reported beside it.
+   with the population target reported beside it. Checked on the campaign's own 2,339 datasets with a defined
+   estimand (n 100 and 300, seeds 1 to 200): complete-data coverage of the per-dataset target 0.905 to 0.985 by
+   cell (lowest at n = 100, λ = 0.3, ρ = 0, the small-n shortfall of the complete-data analysis itself); of the
+   population target 0.557 (n = 100) and 0.303 (n = 300) at λ = 1, ρ = 0.5, and 0.905 to 0.973 elsewhere.
 5. Smaller fixes: `c1 ~ bin` is "undefined" (not an error) when `bin` has one observed class; per-value scores and
    the estimand are recorded separately; traits with one realised class are skipped for every trait type; ties at
    the edge of the 95% set and in the ordinal class distance count fractionally; cells whose draws are all NA are
