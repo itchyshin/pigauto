@@ -1,6 +1,6 @@
 # Discrete traits in the Rubin study: pre-run plan (2026-09-26)
 
-Status (2026-09-26, 13:30): CAMPAIGN COMPLETE for n = 100 and 300. 2,400 BACE and 2,400 frequentist result files, none
+Status (2026-09-26, 14:00): CAMPAIGN COMPLETE for n = 100 and 300; the three campaign pages show the discrete results (commit 648aa21); n = 1000 on hold (Shinichi). 2,400 BACE and 2,400 frequentist result files, none
 missing; results and write-up in `script/rubin_study/` (commit de7cc00); after-task report
 `docs/dev-log/after-task/2026-09-26-rubin-discrete-campaign.md`. Earlier status (09:15): Shinichi approved the plan ("go ahead", recommendations accepted). An
 adversarial review then changed the frequentist rate models and the downstream target, and fixed bugs (section

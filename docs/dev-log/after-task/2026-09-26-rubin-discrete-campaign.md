@@ -112,8 +112,13 @@ tables under `script/rubin_study/data/discrete/`), all under `script/rubin_*`, `
   none missing. Reported, not scored.
 - Totoro's result files record `git_hash` "HEAD" (its copy sits in a git repository without commits); they ran
   55a0998. Fixed in the code for future runs (95dce1a), not synced mid-run.
-- n = 1000 not run (about 3,400 core-hours of BACE); the published pages (report, summary, accuracy) do not yet show
-  the discrete results; ECE is computed but not shown (biased at 30 to 90 cells).
+- n = 1000 not run (about 3,400 core-hours of BACE); on hold (Shinichi, 2026-09-26). ECE is computed but not shown
+  (biased at 30 to 90 cells).
+- Pages updated with the discrete results (Shinichi, 2026-09-26; commit 648aa21): report
+  https://claude.ai/artifact/PFkoRFtTjox4tndEbuBtPQ (v6), summary https://claude.ai/artifact/9vNrmz2PUfjW9vZwuKmvFc
+  (v5), accuracy https://claude.ai/artifact/CGGmi4Km6unGPhxEiv94qk (v3); still private. Built from the templates via
+  `script/rubin_report_build.sh` (discrete data: `script/rubin_disc_pages_data.py` to `data/discrete/pages.json`).
+  The page build exposed a double rounding in `study.qmd` (largest lead 0.1446 written as 0.15), now 0.14.
 - Brain notes not written (need Shinichi's approval): castor is pigauto's frequentist discrete arm; the finding of
   record; the lessons below.
 - Dan not contacted (Shinichi's hold).
