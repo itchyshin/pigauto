@@ -51,10 +51,9 @@ Details:
 - A baseline rebuilt from stored lambdas (`fit_baseline(..., lambda_fixed = )`) now reproduces the original
   fit under `"exact"`, because the block lambda is stored with the per-trait values.
 
-The route choice scores ordinal traits by squared error on the latent scale. Scoring them by class error rate
-instead was tested and lowered ordinal accuracy in 13 of 18 simulation cells (by up to 0.010 averaged over
-cross-trait correlations), so it was not adopted (`docs/dev-log/ordinal-route/` on branch
-`feat/ordinal-route-accuracy`).
+The route choice scores ordinal traits by squared error on the latent scale. Two alternatives, class error
+rate and the log-probability of the true class, were tested on the 18 core simulation cells and both lowered
+ordinal accuracy (on average by 0.002 and 0.019), so neither was adopted (`docs/dev-log/ordinal-route/`).
 
 ## Fix: full REML likelihood for Pagel's lambda (PR #191)
 
