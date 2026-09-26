@@ -22,8 +22,9 @@ launch a campaign without his approval: it will exceed the 3-hour line (D-287).
    discrete columns.
 2. **The continuous campaign was the frequentist method's home ground.** Only c1, c2 (and prp) were scored,
    under Brownian motion, where Rphylopars is the correct model. The frequentist arms impute only the
-   continuous block; BACE imputes every trait. BACE's claimed advantage (one model for mixed trait types) was
-   never measured. That is what the discrete study is for.
+   continuous block; BACE imputes every trait. This campaign did not measure BACE's claimed advantage (one
+   model for mixed trait types). Simulation v1 measured discrete per-value accuracy only, against castor (see
+   Q1), without multiple imputation, Rubin pooling or a downstream estimand. The discrete study fills that gap.
 3. **Hold Dan.** Shinichi's standing instruction: do not contact Dan Noble. The pages are private.
 
 ## What was accomplished (continuous campaign, 2026-09-24 to 26)
@@ -118,9 +119,27 @@ Candidates:
   a phylogenetic random effect; installed), parametric bootstrap for properness. This mirrors BACE's
   chained-equation structure, so it isolates "frequentist vs Bayesian". But `glmmTMB` has no ordinal family and
   no multinomial, and getting the random effect for species with a missing response needs a feasibility check.
-- Suggested recommendation: start with **binary only** under (b) if the smoke shows it works, with (a) as
-  the fallback. Treat ordinal and categorical as BACE-only arms, and report the missing frequentist route as a
-  finding.
+- (c) **castor Mk hidden-state prediction, already used in simulation v1** (`run_freq()` in
+  `script/campaign_gnn_off_lib.R`: `castor::hsp_mk_model`, equal rates for binary and categorical, stepwise
+  SUEDE for ordinal, tip likelihoods kept as class probabilities). It covers all three discrete types, but it
+  is single-trait: it cannot use c1, c2 or the driver. As used in v1 it is a plug-in (fixed fitted rates),
+  so it is the analogue of freq B. A proper version (freq A analogue) needs a parametric bootstrap of the Mk
+  rates (simulate states on the tree at the fitted rates, refit, recompute tip probabilities) before each
+  draw. Draws from castor's per-tip marginal probabilities ignore dependence between tips, so a joint draw
+  needs checking. v1 failure to reuse: castor errors on a monomorphic trait (common at λ = 1 with fixed
+  thresholds), and v1 scored it at the floor.
+- v1 already measured discrete ACCURACY (no MI, no Rubin, no downstream estimand), per
+  `docs/dev-log/arc/2026-09-23-simulation-v1-summary.md` and the board
+  https://claude.ai/artifact/M5HtGRnNGfwsK2Se4gMX24 (v10). At λ = 0.3 BACE leads by 11 to 17 accuracy points
+  (0.587 against 0.422 at n = 1000), and every other arm is at or below the mode floor. At λ = 1 castor and
+  pigauto lead (0.96 to 0.97 against BACE's 0.85). A plausible reading, AGENT-INFERRED and untested: at low
+  signal the tree carries little information, so BACE's use of the correlated continuous traits is what
+  helps, and single-trait castor cannot do that. Note that v1's BACE ran before the chaining fix and the input
+  cleaning.
+- Suggested recommendation: use castor as the frequentist arm for all three discrete types (plug-in = freq
+  B analogue; bootstrap = freq A analogue), plus (b) for binary only if the smoke shows the random effect for
+  missing species can be recovered. Its lack of cross-trait information is the comparison the BACE paper
+  needs.
 
 **Q2. What do we score?** Per value: accuracy of the imputed class, Brier score and calibration of the pooled
 class probabilities. There is no natural "coverage" for a class, so a coverage analogue would be the rate
@@ -153,7 +172,8 @@ Environment: R with BACE (installed), MCMCglmm, Rphylopars, glmmTMB, phylolm, nl
 `Rscript -e 'testthat::test_dir("script/tests-rubin")'` from the worktree (about 5 minutes; expect FAIL 0).
 Cluster status: `bash script/rubin_status.sh`. Never stage `.unlazy/imputation-sim/` or files outside this lane.
 
-Read in order: this file, `docs/dev-log/after-task/2026-09-25-rubin-campaign.md`,
+Read in order: this file, `docs/dev-log/arc/2026-09-23-simulation-v1-summary.md` (v1's discrete results and
+castor), `docs/dev-log/after-task/2026-09-25-rubin-campaign.md`,
 `docs/dev-log/arc/2026-09-24-rubin-freq-bace-plan.md`, then the repo `AGENTS.md`.
 
 ```text
