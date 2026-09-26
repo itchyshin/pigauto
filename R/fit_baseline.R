@@ -887,28 +887,10 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
         if (!is.null(tm_ord) && !is.null(sim_phylo) &&
             length(tm_ord$levels) >= 2L &&
             is.finite(tm_ord$sd) && tm_ord$sd > 0) {
-          K_ord  <- length(tm_ord$levels)
-          z_vals <- X[, col]
-          cls_int <- round(z_vals * tm_ord$sd + tm_ord$mean)
-          obs_lp  <- !is.na(cls_int) &
-                     cls_int >= 1L & cls_int <= K_ord
-          if (sum(obs_lp) >= K_ord) {
-            P_lp <- matrix(0.0, nrow = length(spp), ncol = K_ord)
-            sim_obs <- sim_phylo[, obs_lp, drop = FALSE]
-            rw      <- rowSums(sim_obs)
-            rw[rw < 1e-10] <- 1e-10
-            for (kk in seq_len(K_ord)) {
-              y_k <- as.numeric(cls_int[obs_lp] == kk)
-              P_lp[, kk] <- as.numeric(sim_obs %*% y_k) / rw
-            }
-            P_lp <- pmax(P_lp, 1e-6)
-            P_lp <- P_lp / rowSums(P_lp)
-            e_cls <- as.numeric(P_lp %*% seq_len(K_ord))
-            var_cls <- vapply(seq_len(nrow(P_lp)), function(i) {
-              sum(P_lp[i, ] * (seq_len(K_ord) - e_cls[i])^2)
-            }, numeric(1L))
-            lp_pred_z <- (e_cls - tm_ord$mean) / tm_ord$sd
-            lp_se_z   <- sqrt(pmax(var_cls, 0)) / tm_ord$sd
+          lp_c <- .ordinal_lp_candidate(X[, col], sim_phylo, tm_ord)
+          if (!is.null(lp_c)) {
+            lp_pred_z <- lp_c$pred_z
+            lp_se_z   <- lp_c$se_z
             lp_diff <- lp_pred_z[val_rows_j[finite_t]] - truth_j[finite_t]
             lp_mse <- if (any(is.finite(lp_diff))) {
                         mean(lp_diff[is.finite(lp_diff)]^2)
@@ -1343,6 +1325,33 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     out$ordinal_path_chosen <- ordinal_path_chosen
   }
   out
+}
+
+# Label-propagation candidate for one ordinal column (Phase F). Ordinal traits
+# are coded 0..K-1 before z-scoring (preprocess_traits()); the Phase F code
+# decoded them as 1..K, which dropped every lowest-class observation and
+# shifted the class probabilities up one class. Returns NULL when fewer than
+# K observed cells are available.
+#' @noRd
+.ordinal_lp_candidate <- function(z_vals, sim_phylo, tm_ord) {
+  K     <- length(tm_ord$levels)
+  codes <- 0:(K - 1L)
+  cls   <- round(z_vals * tm_ord$sd + tm_ord$mean)
+  obs   <- !is.na(cls) & cls >= 0 & cls <= K - 1L
+  if (sum(obs) < K) return(NULL)
+  sim_obs <- sim_phylo[, obs, drop = FALSE]
+  rw <- rowSums(sim_obs)
+  rw[rw < 1e-10] <- 1e-10
+  P <- matrix(0.0, nrow = nrow(sim_phylo), ncol = K)
+  for (k in seq_len(K)) {
+    P[, k] <- as.numeric(sim_obs %*% as.numeric(cls[obs] == codes[k])) / rw
+  }
+  P <- pmax(P, 1e-6)
+  P <- P / rowSums(P)
+  e_cls   <- as.numeric(P %*% codes)
+  var_cls <- rowSums(P * outer(e_cls, codes, function(e, c) (c - e)^2))
+  list(pred_z = (e_cls - tm_ord$mean) / tm_ord$sd,
+       se_z   = sqrt(pmax(var_cls, 0)) / tm_ord$sd)
 }
 
 # ---- S5b: "auto" per-trait route selection --------------------------------
