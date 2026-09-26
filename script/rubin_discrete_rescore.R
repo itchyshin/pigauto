@@ -13,6 +13,7 @@ source(file.path(here, "campaign_gnn_off_lib.R")); source(file.path(here, "rubin
 source(file.path(here, "rubin_discrete.R"))
 git_hash <- tryCatch(system2("git", c("-C", here, "rev-parse", "HEAD"), stdout = TRUE, stderr = FALSE)[1],
                      error = function(e) NA_character_, warning = function(w) NA_character_)
+if (!isTRUE(grepl("^[0-9a-f]{40}$", git_hash))) git_hash <- NA_character_   # a repo without commits prints "HEAD"
 if (is.na(git_hash) && file.exists(file.path(here, "DISC_COMMIT"))) git_hash <- readLines(file.path(here, "DISC_COMMIT"))[1]
 
 rescore_file <- function(f) {

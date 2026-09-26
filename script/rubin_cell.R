@@ -81,7 +81,7 @@ if (discrete) source(file.path(here, "rubin_discrete.R"))
 
 git_hash <- tryCatch({
   h <- system2("git", c("-C", here, "rev-parse", "HEAD"), stdout = TRUE, stderr = FALSE)
-  if (length(h) == 1 && nzchar(h)) h else NA_character_
+  if (length(h) == 1 && grepl("^[0-9a-f]{40}$", h)) h else NA_character_   # a repo without commits prints "HEAD"
 }, error = function(e) NA_character_)
 # cluster copies are rsynced, not git checkouts: fall back to the commit recorded at sync time (script/DISC_COMMIT)
 if (is.na(git_hash) && file.exists(file.path(here, "DISC_COMMIT"))) git_hash <- readLines(file.path(here, "DISC_COMMIT"))[1]
