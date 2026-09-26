@@ -84,6 +84,15 @@ n, so the study tables do not show it.
   numerical paths (R 4.5.3 on Totoro, R 4.5.0 on fir): freq A's bootstrap refits diverge (for example 11 against 58
   redrawn refits), and for seed 38 at n = 300 the Rphylopars fit itself converges elsewhere. The continuous
   results of record stay fir's; the discrete part uses the Totoro draws, whose c1 enters `c1 ~ bin`.
+- **n = 100 moved off nibi (10:12).** nibi started its n = 100 tasks slowly (160 of 600 running after an hour; each
+  task runs two fits), while rorqual ran all 600 of its tasks at once and finished n = 300 fits in about 49 min
+  (fit plus chain). nibi's 440 queued tasks (indices 161 to 600: λ = 0.3, ρ = 0.5 seeds 121 to 200, all of
+  λ = 0.7 and λ = 1) were cancelled before starting and their 880 seeds resubmitted one per task: 400 on rorqual
+  (job 21857550; rorqual caps a user at 1,000 submitted tasks) and 480 on fir (job 61682569). nibi keeps its 160
+  running tasks (320 fits). No seed runs twice; the pool keeps one result per dataset.
+- **Reproduction is exact within a cluster, not across.** nibi re-runs of nibi-stored fits match to the last digit;
+  rorqual re-runs of fir-stored fits (n = 300, λ = 1) differ by about 0.02 in pooled estimates. Cross-cluster fits
+  are independent replicates; the study's reproduction table splits the two.
 - **Slip, corrected.** I read the stored pool's file for one of these datasets as a successful fit (it is the
   failure record) and resubmitted the 8 on fir (job 61679247, TAG disc_retry1). They failed there too; the job was
   cancelled after 4 minutes, its 4 outputs moved to `results_disc/bace_retry1_duplicates/` on fir (outside the

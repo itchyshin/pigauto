@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Pool the discrete re-run of the Rubin study (results_disc/, written with --save_imp --discrete) from every host into
 # per-host folders on the Mac, separate from the continuous pool (~/pigauto_rubin_pool, never touched here).
-# Launch record: BACE n = 100 on nibi, BACE n = 300 seeds 1-100 on fir and 101-200 on rorqual, freq + castor on Totoro.
+# Launch record: BACE n = 300 seeds 1-100 on fir and 101-200 on rorqual; BACE n = 100 started on nibi, and its 880 queued
+# seeds were moved to rorqual (400) and fir (480) at 10:12; freq + castor on Totoro.
 #   bash script/rubin_disc_pool.sh [POOL_DIR]      (default ~/pigauto_rubin_disc_pool)
 # Never aggregate while this runs.
 set -euo pipefail
