@@ -20,7 +20,7 @@
 # Usage:
 #   Rscript script/rubin_cell.R --n 100 --seed 1 --lambda 0.7 --rho 0.5 --out results/ \
 #           [--arms freqA,freqB,bace,bace_chain,bace_resid] [--M 20] [--miss mcar --frac 0.30] \
-#           [--thresholds fixed] [--no_driver] \
+#           [--thresholds fixed] [--no_driver] [--save_imp] [--discrete] \
 #           [--bace_nitt 50000 --bace_burnin 10000 --bace_thin 25 --bace_runs 10] [--smoke]
 #
 # Output: rubin_types_mixed_BM_l<lambda>_r<rho>_<miss><frac>_n<n>_M<M>_s<seed>[_smoke].rds
@@ -50,6 +50,13 @@ frac     <- as.numeric(get_arg("--frac", 0.30))
 thresholds <- get_arg("--thresholds", "fixed")
 driver     <- !isTRUE(get_arg("--no_driver", FALSE))
 smoke    <- isTRUE(get_arg("--smoke", FALSE))
+# --save_imp keeps each arm's M completed datasets in the rds (res$imputations), so discrete traits can be
+# scored later; off by default, which leaves the continuous campaign's output unchanged.
+save_imp <- isTRUE(get_arg("--save_imp", FALSE))
+# --discrete adds the discrete traits (script/rubin_discrete.R): castor Mk fills the freq A (bootstrapped rates)
+# and freq B (fixed rates) datasets after their continuous draws, under their own seeds (505, 606), so the
+# continuous draws and scores do not change; every arm is also scored on bin, ord, cat3 and on c1 ~ bin.
+discrete <- isTRUE(get_arg("--discrete", FALSE))
 bace_nitt   <- as.integer(get_arg("--bace_nitt", 50000L))
 bace_burnin <- as.integer(get_arg("--bace_burnin", 10000L))
 bace_thin   <- as.integer(get_arg("--bace_thin", 25L))
@@ -68,6 +75,7 @@ source(file.path(here, "campaign_gnn_off_lib.R"))
 source(file.path(here, "rubin_lib.R"))
 source(file.path(here, "rubin_freq.R"))
 source(file.path(here, "rubin_bace.R"))
+if (discrete) source(file.path(here, "rubin_discrete.R"))
 
 git_hash <- tryCatch({
   h <- system2("git", c("-C", here, "rev-parse", "HEAD"), stdout = TRUE, stderr = FALSE)
@@ -136,7 +144,8 @@ score_estimands <- function(arm, sets) {
 }
 
 # ---- arms ----------------------------------------------------------------------------------------
-cells_tab <- list(); est_tab <- list(); walls <- list(); errors <- list(); diag <- list()
+cells_tab <- list(); est_tab <- list(); walls <- list(); errors <- list(); diag <- list(); imps <- list()
+disc_cells_tab <- list(); disc_est_tab <- list(); disc_fill <- list()
 run_arm <- function(arm, expr) {
   t0 <- proc.time()[["elapsed"]]
   res <- tryCatch(expr, error = function(e) e)
@@ -150,6 +159,7 @@ run_arm <- function(arm, expr) {
 # rds. NULL datasets (freq A draws whose refits failed twice) are dropped and counted.
 score_arm_sets <- function(arm, sets) {
   sets <- Filter(Negate(is.null), sets)
+  if (save_imp) imps[[arm]] <<- sets
   res <- tryCatch(list(cells = score_cells(arm, sets), est = score_estimands(arm, sets)),
                   error = function(e) e)
   if (inherits(res, "error")) {
@@ -157,6 +167,26 @@ score_arm_sets <- function(arm, sets) {
     log_line("arm %s scoring ERROR: %s", arm, conditionMessage(res)); return(invisible(NULL))
   }
   cells_tab[[arm]] <<- res$cells; est_tab[[arm]] <<- res$est
+  if (discrete) {
+    dres <- tryCatch({
+      f <- fill_degenerate(sets, df_miss, disc_traits_of(truth))
+      list(cells = score_discrete(arm, f$sets, truth, mask),
+           est = score_discrete_estimand(arm, f$sets, truth, tree, eig, n), fill = f$n_filled)
+    }, error = function(e) e)
+    if (inherits(dres, "error")) {
+      errors[[paste0(arm, "_disc_score")]] <<- conditionMessage(dres)
+      log_line("arm %s discrete scoring ERROR: %s", arm, conditionMessage(dres)); return(invisible(NULL))
+    }
+    disc_cells_tab[[arm]] <<- dres$cells; disc_est_tab[[arm]] <<- dres$est; disc_fill[[arm]] <<- dres$fill
+  }
+}
+castor_fill <- function(arm, sets, offset, proper) {
+  if (!discrete) return(sets)
+  arm_seed(offset)
+  cf <- run_arm(paste0(arm, "_castor"), mi_castor(cell, length(sets), proper = proper, base_sets = sets))
+  if (is.null(cf)) return(sets)
+  diag[[paste0(arm, "_castor")]] <<- cf$diag
+  cf$datasets
 }
 arm_seed <- function(offset) set.seed(seed + offset)
 
@@ -171,14 +201,14 @@ if (!is.null(est_tab$complete)) {
 if ("freqA" %in% arms) {
   arm_seed(101L); a <- run_arm("freqA", mi_freq_A(cell, M))
   if (!is.null(a)) {
-    score_arm_sets("freqA", a$datasets)
+    score_arm_sets("freqA", castor_fill("freqA", Filter(Negate(is.null), a$datasets), 505L, proper = TRUE))
     diag$freqA <- list(n_fail = a$n_fail, n_degenerate = a$n_degenerate, m_used = sum(!vapply(a$datasets, is.null, logical(1))),
                        lambda_star = vapply(Filter(Negate(is.null), a$pars_star), function(p) p$lambda, numeric(1)))
   }
 }
 if ("freqB" %in% arms) {
   arm_seed(202L); b <- run_arm("freqB", mi_freq_B(cell, M))
-  if (!is.null(b)) score_arm_sets("freqB", b$datasets)
+  if (!is.null(b)) score_arm_sets("freqB", castor_fill("freqB", Filter(Negate(is.null), b$datasets), 606L, proper = FALSE))
 }
 if (any(c("bace", "bace_resid", "bace_chain") %in% arms)) {
   arm_seed(303L)
@@ -203,6 +233,10 @@ res <- list(tag = tag, n = n, seed = seed, M = M, arms = arms, smoke = smoke, la
             cells = cells_df, estimands = est_df,
             reference = list(slope = ref_slope, cor = ref_cor),
             walls = unlist(walls), errors = errors, diag = diag, truth = truth, mask = mask,
+            imputations = if (save_imp) imps else NULL,
+            disc_cells = if (discrete) do.call(rbind, disc_cells_tab) else NULL,
+            disc_estimands = if (discrete) do.call(rbind, disc_est_tab) else NULL,
+            disc_fill = if (discrete) disc_fill else NULL,
             RNGkind = RNGkind(), sessionInfo = utils::sessionInfo(), git_hash = git_hash,
             host = Sys.info()[["nodename"]], time = Sys.time())
 saveRDS(res, out_path)
