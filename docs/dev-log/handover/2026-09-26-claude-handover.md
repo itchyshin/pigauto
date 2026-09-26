@@ -10,6 +10,14 @@ same seeds and therefore the same simulated datasets, so discrete and continuous
 Your job is to plan that extension and bring Shinichi a pre-run plan with a measured time estimate. It will
 exceed the 3-hour line, so do not launch the campaign without his approval (D-287).
 
+**The study has one home: `script/rubin_study/`** (`study.qmd` write-up with design, computing and results;
+per-fit and aggregated CSVs in `data/`; `README.md`). Shinichi wants this reported as **one simulation in one
+publication**, so the discrete design must **mirror the continuous one**: the same cells, seeds, datasets and
+M = 20; a proper and an improper frequentist arm (castor with bootstrapped rates, castor with fixed rates) beside
+the same BACE arms; per-value and Rubin-pooled downstream scores. The mirror table is in `study.qmd`,
+section "Discrete traits". Write discrete results to `script/rubin_study/data/discrete/`, extend `build_data.R`,
+and fill that section of `study.qmd`.
+
 ## Mission control
 
 | Repo / worktree | Branch | State | What shipped | Next, by leverage |

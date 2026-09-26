@@ -1,0 +1,375 @@
+"folder","cluster","tag","n","lambda","rho","seed","errors"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l0.7_r0_mcar0.3_n300_M20_s123",300,0.7,0,123,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s105",300,1,0,105,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s106",300,1,0,106,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s107",300,1,0,107,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s109",300,1,0,109,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s110",300,1,0,110,"argument is of length zero"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s117",300,1,0,117,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s121",300,1,0,121,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s123",300,1,0,123,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s124",300,1,0,124,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s127",300,1,0,127,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s128",300,1,0,128,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s137",300,1,0,137,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s143",300,1,0,143,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s145",300,1,0,145,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s146",300,1,0,146,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s147",300,1,0,147,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s149",300,1,0,149,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s151",300,1,0,151,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s155",300,1,0,155,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s156",300,1,0,156,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s157",300,1,0,157,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s163",300,1,0,163,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s164",300,1,0,164,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s167",300,1,0,167,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s168",300,1,0,168,"argument is of length zero"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s177",300,1,0,177,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s178",300,1,0,178,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s181",300,1,0,181,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s182",300,1,0,182,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s185",300,1,0,185,"argument is of length zero"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s186",300,1,0,186,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s195",300,1,0,195,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s199",300,1,0,199,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s200",300,1,0,200,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s103",300,1,0.5,103,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s105",300,1,0.5,105,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s111",300,1,0.5,111,"argument is of length zero"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s114",300,1,0.5,114,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s117",300,1,0.5,117,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s119",300,1,0.5,119,"argument is of length zero"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s120",300,1,0.5,120,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s121",300,1,0.5,121,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s123",300,1,0.5,123,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s127",300,1,0.5,127,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s128",300,1,0.5,128,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s129",300,1,0.5,129,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s130",300,1,0.5,130,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s131",300,1,0.5,131,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s133",300,1,0.5,133,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s137",300,1,0.5,137,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s138",300,1,0.5,138,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s143",300,1,0.5,143,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s145",300,1,0.5,145,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s147",300,1,0.5,147,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s149",300,1,0.5,149,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s151",300,1,0.5,151,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s157",300,1,0.5,157,"argument is of length zero"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s158",300,1,0.5,158,"argument is of length zero"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s165",300,1,0.5,165,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s167",300,1,0.5,167,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s168",300,1,0.5,168,"argument is of length zero"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s170",300,1,0.5,170,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s183",300,1,0.5,183,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s184",300,1,0.5,184,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s185",300,1,0.5,185,"argument is of length zero"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s186",300,1,0.5,186,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s187",300,1,0.5,187,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s188",300,1,0.5,188,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s191",300,1,0.5,191,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","fir","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s195",300,1,0.5,195,"argument is of length zero"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s101",100,1,0,101,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s106",100,1,0,106,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s111",100,1,0,111,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s112",100,1,0,112,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s113",100,1,0,113,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s114",100,1,0,114,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s116",100,1,0,116,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s122",100,1,0,122,"argument is of length zero"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s131",100,1,0,131,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s137",100,1,0,137,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s141",100,1,0,141,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s143",100,1,0,143,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s146",100,1,0,146,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s147",100,1,0,147,"argument is of length zero"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s148",100,1,0,148,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s149",100,1,0,149,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s152",100,1,0,152,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s153",100,1,0,153,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s154",100,1,0,154,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s156",100,1,0,156,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s157",100,1,0,157,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s158",100,1,0,158,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s159",100,1,0,159,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s161",100,1,0,161,"argument is of length zero"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s163",100,1,0,163,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s167",100,1,0,167,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s172",100,1,0,172,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s173",100,1,0,173,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s176",100,1,0,176,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s177",100,1,0,177,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s181",100,1,0,181,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s182",100,1,0,182,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s183",100,1,0,183,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s184",100,1,0,184,"argument is of length zero"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s185",100,1,0,185,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s196",100,1,0,196,"argument is of length zero"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s197",100,1,0,197,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s198",100,1,0,198,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s200",100,1,0,200,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s55",300,1,0,55,"argument is of length zero"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s58",300,1,0,58,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s59",300,1,0,59,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s60",300,1,0,60,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s61",300,1,0,61,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s62",300,1,0,62,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s63",300,1,0,63,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s64",300,1,0,64,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s65",300,1,0,65,"argument is of length zero"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s70",300,1,0,70,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s71",300,1,0,71,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s73",300,1,0,73,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s76",300,1,0,76,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s82",300,1,0,82,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s85",300,1,0,85,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s88",300,1,0,88,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s89",300,1,0,89,"argument is of length zero"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s94",300,1,0,94,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s95",300,1,0,95,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s96",300,1,0,96,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s106",100,1,0.5,106,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s116",100,1,0.5,116,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s117",100,1,0.5,117,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s121",100,1,0.5,121,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s122",100,1,0.5,122,"argument is of length zero"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s126",100,1,0.5,126,"argument is of length zero"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s127",100,1,0.5,127,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s128",100,1,0.5,128,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s129",100,1,0.5,129,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s131",100,1,0.5,131,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s136",100,1,0.5,136,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s137",100,1,0.5,137,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s141",100,1,0.5,141,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s151",100,1,0.5,151,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s157",100,1,0.5,157,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s158",100,1,0.5,158,"argument is of length zero"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s159",100,1,0.5,159,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s161",100,1,0.5,161,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s162",100,1,0.5,162,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s163",100,1,0.5,163,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s176",100,1,0.5,176,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s178",100,1,0.5,178,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s181",100,1,0.5,181,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s182",100,1,0.5,182,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s184",100,1,0.5,184,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s185",100,1,0.5,185,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s192",100,1,0.5,192,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s196",100,1,0.5,196,"argument is of length zero"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s197",100,1,0.5,197,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s198",100,1,0.5,198,"argument is of length zero"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s199",100,1,0.5,199,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s200",100,1,0.5,200,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s55",300,1,0.5,55,"argument is of length zero"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s61",300,1,0.5,61,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s70",300,1,0.5,70,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s71",300,1,0.5,71,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s72",300,1,0.5,72,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s82",300,1,0.5,82,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_asshipped_failed","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n300_M20_s97",300,1,0.5,97,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","nibi","rubin_types_mixed_BM_l0.7_r0_mcar0.3_n100_M20_s96",100,0.7,0,96,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","nibi","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s11",100,1,0,11,"argument is of length zero"
+"bace_failed_later","nibi","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s16",100,1,0,16,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","nibi","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s41",100,1,0,41,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","nibi","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s42",100,1,0,42,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","nibi","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s51",100,1,0,51,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","nibi","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s52",100,1,0,52,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","nibi","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s61",100,1,0,61,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","nibi","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s62",100,1,0,62,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","nibi","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s63",100,1,0,63,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","nibi","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s64",100,1,0,64,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","nibi","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s66",100,1,0,66,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","nibi","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s67",100,1,0,67,"argument is of length zero"
+"bace_failed_later","nibi","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s16",100,1,0.5,16,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s101",100,1,0,101,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s137",100,1,0,137,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s155",100,1,0,155,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s158",100,1,0,158,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s172",100,1,0,172,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n100_M20_s184",100,1,0,184,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s59",300,1,0,59,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s62",300,1,0,62,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0_mcar0.3_n300_M20_s94",300,1,0,94,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s131",100,1,0.5,131,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s137",100,1,0.5,137,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s141",100,1,0.5,141,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s147",100,1,0.5,147,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s162",100,1,0.5,162,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s192",100,1,0.5,192,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s193",100,1,0.5,193,"Mixed model equations singular: use a (stronger) prior
+"
+"bace_failed_later","rorqual","rubin_types_mixed_BM_l1_r0.5_mcar0.3_n100_M20_s199",100,1,0.5,199,"Mixed model equations singular: use a (stronger) prior
+"

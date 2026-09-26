@@ -1,0 +1,281 @@
+---
+title: "Frequentist and Bayesian multiple imputation of phylogenetic traits under Rubin's rules"
+subtitle: "Simulation study record: design, compute and results"
+date: last-modified
+format:
+  html:
+    toc: true
+    embed-resources: true
+    number-sections: true
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup}
+d <- "data"; ag <- file.path(d, "agg")
+rd <- function(f) utils::read.csv(file.path(ag, f), stringsAsFactors = FALSE)
+cells_l <- rd("cells_l.csv"); cells_n <- rd("cells_n.csv"); down_l <- rd("down_l.csv"); down_n <- rd("down_n.csv")
+paired <- rd("paired.csv"); failures <- rd("failures.csv")
+fits <- utils::read.csv(file.path(d, "fits.csv"), stringsAsFactors = FALSE)
+diag <- utils::read.csv(file.path(d, "bace_diagnostics.csv"), stringsAsFactors = FALSE)
+disc_dir <- file.path(d, "discrete"); has_disc <- dir.exists(disc_dir) && length(list.files(disc_dir, "\\.csv$")) > 0
+lab <- c(complete = "complete data", freqA = "freq A (proper)", freqB = "freq B (improper)",
+         bace = "BACE as shipped", bace_chain = "chained BACE", bace_resid = "BACE + residual (control)")
+ord <- names(lab)
+f3 <- function(x) formatC(x, format = "f", digits = 3)
+tab <- function(x, caption) knitr::kable(x, caption = caption, align = "l", row.names = FALSE)
+wide <- function(df, value, se = NULL, rows = c("n", "lambda")) {
+  df <- df[df$arm %in% ord, ]
+  df$cell <- if (is.null(se)) f3(df[[value]]) else paste0(f3(df[[value]]), " (", f3(df[[se]]), ")")
+  w <- stats::reshape(df[, c(rows, "arm", "cell")], idvar = rows, timevar = "arm", direction = "wide")
+  names(w) <- sub("^cell\\.", "", names(w))
+  keep <- intersect(ord, names(w)); w <- w[, c(rows, keep)]; names(w)[-seq_along(rows)] <- lab[keep]
+  w[do.call(order, w[rows]), ]
+}
+```
+
+# Summary
+
+We compared four ways of multiply imputing missing phylogenetic trait values, plus a negative control, on the
+same simulated datasets, and scored each with Rubin's rules: per missing value and on two downstream estimates.
+The continuous part is complete: `r format(sum(fits$set == "bace"), big.mark = ",")` BACE fits and
+`r format(sum(fits$set == "freq"), big.mark = ",")` frequentist fits over 18 simulation cells, with no dataset
+missing. The discrete part (binary, ordinal, categorical traits) extends the same design on the same datasets
+(@sec-discrete).
+
+Main continuous findings:
+
+- **BACE as shipped gives improper imputations.** Its 20 final runs all start from the same converged dataset,
+  so the imputations are not independent draws. Per-value coverage is below nominal at λ = 0.3 and 0.7 (about
+  0.91), and downstream coverage of the phylogenetic correlation is about 0.90 at n = 300 and 1000.
+- **Chaining BACE's final runs fixes coverage.** Starting final run *m* from dataset *m* − 1 gives near-nominal
+  per-value coverage; downstream it is slightly conservative.
+- **Proper frequentist imputation (freq A) is close to nominal throughout**; the improper version (freq B) is
+  fine per value but under-covers the correlation, so improperness shows up downstream.
+- **Accuracy.** freq A and chained BACE are equally accurate at n = 300 and 1000; at n = 100 chained BACE is less
+  accurate and pulls the downstream slope toward zero.
+
+This is the frequentist method's home ground: the scored traits are continuous, evolve by Brownian motion with
+Pagel's λ, and Rphylopars fits exactly that model. It does not test BACE's claimed advantage, one model for
+mixed trait types; the discrete extension does.
+
+# Design (ADEMP)
+
+## Aims
+
+Does BACE, a Bayesian chained-equation imputer built on MCMCglmm, give proper multiple imputations, measured by
+Rubin-pooled coverage and bias against a proper and an improper frequentist imputer, when the frequentist model
+is correctly specified?
+
+## Data-generating mechanism
+
+- Tree: `ape::rcoal(n)`; tip correlation matrix *C* = cov2cor(vcv(tree)).
+- Latent liabilities for seven traits: vec(*L*) ~ N(0, Σ~ρ~ ⊗ *V*~λ~), with *V*~λ~ = λ*C* + (1 − λ)*I* (Pagel's λ
+  on the correlation scale) and Σ~ρ~ with unit variances and every off-diagonal equal to ρ.
+- Observed traits: two continuous (c1, c2), a count, a proportion (prp), a binary trait, a four-level ordinal
+  trait and a three-class categorical trait, derived from the liabilities with thresholds fixed at population
+  quantiles, plus a fully observed driver (d1). Exact transforms: `make_cell()` in
+  `script/campaign_gnn_off_lib.R`.
+- Missingness: MCAR, 30% of cells of the seven traits (realised fraction
+  `r f3(mean(fits$realised_frac))` on average); the driver is always observed.
+- Factors (full factorial, 18 cells): n ∈ {100, 300, 1000}, λ ∈ {0.3, 0.7, 1}, ρ ∈ {0, 0.5}.
+- Replicates: 200 datasets per cell for every arm, except BACE at n = 1000 with 100 datasets per cell. Datasets
+  are indexed by seed; each arm set regenerates the same dataset from (n, λ, ρ, seed), confirmed by identical
+  complete-data estimates across arm sets.
+
+Under this mechanism c2 = ρ·c1 + *e* with *e* ~ N(0, (1 − ρ²)*V*~λ~), so the population PGLS slope of c2 on c1
+is ρ, the model `nlme::gls(c2 ~ c1, corPagel(λ))` is correctly specified, and the phylogenetic correlation of
+c1 and c2 is also ρ.
+
+## Estimands
+
+1. **Each missing value** of c1 and c2 (and prp, on the logit scale, reported separately).
+2. **PGLS slope** of c2 on c1 (Pagel's λ estimated by REML, bounded to [0, 1]); true value ρ.
+3. **Phylogenetic correlation** of c1 and c2 (GLS-whitened with the estimated λ, Fisher's z, variance
+   1/(n − 3), complete-data df treated as infinite); true value ρ.
+
+## Methods (arms), M = 20 imputations each
+
+| arm | how the 20 imputations are made | role |
+|---|---|---|
+| freq A | Rphylopars, Pagel's λ, one joint fit of c1, c2, logit(prp) and the driver; for each *m*, a parametric bootstrap refit, then a joint conditional draw of the missing cells under the refit parameters | proper frequentist MI |
+| freq B | the same model fitted once; 20 joint conditional draws with parameters held fixed | improper contrast |
+| BACE as shipped | BACE (MCMCglmm chained equations), runs 5, nitt 50,000, burnin 10,000, thin 25; its 20 final datasets | what a BACE user gets |
+| chained BACE | BACE's own final step run 20 times, each run starting from the previous draw; same fitted chains | BACE with independent draws |
+| BACE + residual | BACE as shipped plus an extra residual draw (σ² from the posterior) | negative control |
+| complete data | the same analyses on the data before masking | reference |
+
+Frequentist safeguards: Cholesky solves, hard bounds on every conditional distribution, and a plausibility
+check on every bootstrap refit (implied tip variance within a factor of 50 of the original fit); a failed draw
+redraws the bootstrap sample and is counted. BACE inputs are cleaned before fitting: unused factor levels are
+dropped and a discrete trait with fewer than two observed classes is left out (otherwise BACE stops at λ = 1).
+
+## Performance measures
+
+- Per value: coverage of the Rubin interval mean ± *t*~M−1~·√((1 + 1/M)·*B*) (within-imputation variance is zero
+  for a missing value), interval width, z-RMSE (RMSE of the pooled mean divided by the trait's SD) and interval
+  score. Coverage is averaged within a dataset over c1 and c2, then over datasets.
+- Downstream: Rubin pooling with Barnard–Rubin degrees of freedom; coverage of ρ, bias, RMSE, interval width,
+  fraction of missing information.
+- Monte Carlo SEs are over datasets (clustered by dataset). A 20-draw percentile interval would cover only 0.872
+  under a correct model, so no percentile intervals are used.
+
+# Computing
+
+```{r compute}
+fits$hours <- fits$wall_s_total / 3600
+host <- as.data.frame.matrix(table(fits$cluster, fits$set)); host$nodes <- tapply(fits$node, fits$cluster, function(x) length(unique(x)))[rownames(host)]
+host <- cbind(cluster = rownames(host), host); rownames(host) <- NULL
+tab(host, "Fits of record by cluster (after removing duplicate submissions) and number of distinct compute nodes.")
+w <- aggregate(hours ~ set + n, fits, function(x) c(median = median(x), p90 = unname(quantile(x, 0.9)), max = max(x)))
+w <- data.frame(set = w$set, n = w$n, round(w$hours, 2)); names(w)[3:5] <- c("median h", "90th pct h", "max h")
+tab(w[order(w$set, w$n), ], "Wall time per fit (one dataset, all arms of the set), single-threaded.")
+```
+
+| host | hardware | used for |
+|---|---|---|
+| fir (Digital Research Alliance of Canada) | 192-core nodes, 768 GB; Slurm, 1-day limit | frequentist campaign (all 3,600); BACE at n = 300 and 1000 |
+| rorqual (Alliance) | 192-core nodes, 768 GB; Slurm, 3-day limit | BACE at n = 100, 300, 1000 |
+| nibi (Alliance) | 192-core nodes, 766 GB; Slurm, 3-day limit | BACE at n = 100, 300, 1000; BACE settings pre-run (240 fits) |
+| Totoro (University of Alberta) | AMD EPYC 9655, 384 cores, about 1 TB; no queue; capped at 150 cores | BACE at n = 1000 (70 fits) |
+
+Every fit ran on one core (`OPENBLAS_NUM_THREADS = 1`). Total single-core time of the fits of record: about
+`r format(round(sum(fits$hours[fits$set == "bace"])), big.mark = ",")` hours for BACE and
+`r format(round(sum(fits$hours[fits$set == "freq"])), big.mark = ",")` for the frequentist arms. Slurm
+accounting over all campaign jobs, including reruns, duplicates and superseded passes, was about 6,750
+core-hours (fir 2,350, rorqual 2,231, nibi 2,169). Peak memory for one BACE fit at n = 1000 was 18.8 GB.
+Runs: `r min(substr(fits$time, 1, 10))` to `r max(substr(fits$time, 1, 10))`.
+
+```{r versions}
+v <- function(x) paste(names(table(x)), collapse = ", ")
+tab(data.frame(software = c("R", "BACE", "MCMCglmm", "Rphylopars"),
+               version = c(v(fits$R), v(fits$BACE), v(fits$MCMCglmm), v(fits$Rphylopars))),
+    "Software versions recorded in the result files.")
+```
+
+BACE reports version 0.1.0 on the Alliance clusters and 0.0.0.9000 on Totoro; its fitting functions were checked
+byte-identical across all hosts. The cluster copies of the scripts are not git checkouts, so the git hash is not
+recorded per fit; the code of record is branch `arc/rubin-freq-bace` of pigauto.
+
+# Results: continuous traits
+
+## Per-value coverage
+
+```{r cellcov}
+tab(wide(cells_l, "coverage", "coverage_se"), "Per-value coverage of the Rubin interval for missing c1 and c2 (Monte Carlo SE), pooled over ρ. Nominal 0.95.")
+```
+
+```{r fig-cov, fig.width = 9, fig.height = 5.5, fig.cap = "Per-value coverage by sample size and λ; whiskers ±2 Monte Carlo SE."}
+arms <- c("freqA", "freqB", "bace", "bace_chain", "bace_resid"); cols <- c("#e69f00", "#cc79a7", "#d55e00", "#0072b2", "#009e73")
+op <- par(mfrow = c(1, 3), mar = c(4, 4, 2, 1))
+for (l in c(0.3, 0.7, 1)) {
+  s <- cells_l[cells_l$lambda == l & cells_l$arm %in% arms, ]
+  plot(NA, xlim = c(0.7, 3.3), ylim = c(0.85, 1), xaxt = "n", xlab = "n", ylab = "coverage", main = paste("λ =", l))
+  axis(1, 1:3, c(100, 300, 1000)); abline(h = 0.95, lty = 2, col = "grey40")
+  for (j in seq_along(arms)) { r <- s[s$arm == arms[j], ]; r <- r[order(r$n), ]; x <- match(r$n, c(100, 300, 1000)) + (j - 3) * 0.08
+    segments(x, r$coverage - 2 * r$coverage_se, x, r$coverage + 2 * r$coverage_se, col = cols[j]); points(x, r$coverage, pch = 19, col = cols[j]) }
+  if (l == 0.3) legend("bottomright", lab[arms], col = cols, pch = 19, bty = "n", cex = 0.8)
+}
+par(op)
+```
+
+## Downstream estimates
+
+```{r down, results = "asis"}
+for (e in c("slope", "cor")) {
+  s <- down_n[down_n$estimand == e & down_n$arm %in% ord, ]
+  s <- s[order(s$n, match(s$arm, ord)), ]
+  cat(tab(data.frame(n = s$n, arm = lab[s$arm], coverage = paste0(f3(s$coverage), " (", f3(s$coverage_se), ")"),
+                       bias = paste0(f3(s$bias), " (", f3(s$bias_se), ")"), RMSE = f3(s$rmse), `CI width` = f3(s$ci_width),
+                       FMI = f3(s$fmi_median), datasets = s$datasets, check.names = FALSE),
+            paste0("Rubin-pooled ", if (e == "slope") "PGLS slope of c2 on c1" else "phylogenetic correlation of c1 and c2",
+                   ": coverage of ρ and bias (Monte Carlo SE), pooled over λ and ρ.")), sep = "\n"); cat("\n\n")
+}
+```
+
+```{r down-l}
+tab(wide(down_l[down_l$estimand == "cor", ], "coverage"), "Coverage of ρ by the pooled phylogenetic correlation, by n and λ.")
+```
+
+## Accuracy
+
+```{r acc}
+tab(wide(cells_l, "zrmse", "zrmse_se"), "z-RMSE of the pooled imputation for missing c1 and c2 (SD units; Monte Carlo SE). Lower is better.")
+tab(wide(cells_l, "iscore"), "Interval score of the per-value Rubin interval. Lower is better.")
+```
+
+## Paired contrasts
+
+```{r paired}
+p <- paired; p$diff <- paste0(f3(p$diff), " (", f3(p$se), ")")
+tab(p[, c("contrast", "measure", "n", "lambda", "diff", "datasets")], "Paired differences on the same datasets (SE over datasets).")
+```
+
+## Failures and diagnostics
+
+```{r fail}
+tab(failures, "Per n and λ: result files, BACE and Rphylopars errors inside a file, BACE fits needing input cleaning, and bootstrap refits redrawn by the frequentist safeguards.")
+```
+
+- `r nrow(utils::read.csv(file.path(d, "failure_records.csv")))` first-pass BACE fits failed before input cleaning
+  (an unobserved discrete level at λ = 1) and are kept as records in `data/failure_records.csv`; each was rerun
+  with cleaning.
+- BACE fits that still errored inside a result file are recorded but not scored, so BACE rows rest on fewer
+  datasets than the design (see the `datasets` columns).
+- BACE's own convergence check passed on `r f3(mean(diag$converged, na.rm = TRUE))` of fits; median ESS `r round(median(diag$ess_med, na.rm = TRUE))`.
+  The check tests BACE's deterministic convergence phase and is
+  scale-dependent, so it was not used to select settings (pre-run page, 240 fits).
+- MCMCglmm segmentation faults and scheduler timeouts left no result file; every affected dataset was rerun
+  until the completeness check showed none missing.
+
+# Discrete traits {#sec-discrete}
+
+```{r disc, results = "asis"}
+if (!has_disc) cat("*Not yet run.* Results will appear here from `data/discrete/`.\n")
+```
+
+The discrete extension mirrors the continuous design:
+
+| element | continuous (done) | discrete (planned) |
+|---|---|---|
+| datasets | 18 cells, seeds as above | the **same** cells, seeds and datasets (`bin`, `ord`, `cat3` of each dataset) |
+| M | 20 | 20 |
+| proper frequentist | freq A: bootstrap refit, then draw | castor Mk hidden-state prediction with a parametric bootstrap of the rates before each draw |
+| improper frequentist | freq B: one fit | castor Mk with rates held at the fitted values (as in simulation v1) |
+| Bayesian | BACE as shipped; chained BACE | the same BACE fits (re-run with imputations saved; the continuous rows should reproduce) |
+| per-value scores | coverage, width, z-RMSE, interval score | class accuracy, Brier score, calibration, coverage of the 20-draw prediction set |
+| downstream, Rubin-pooled | PGLS slope, phylogenetic correlation | an estimate involving a discrete trait (for example the slope of c1 on `bin`), truth computed on the liability scale or by Monte Carlo |
+| replicates | 200 per cell (BACE 100 at n = 1000) | n = 100 and 300 first, same counts; n = 1000 decided after |
+
+castor models one trait at a time, while BACE conditions each trait on the others, so the contrast tests
+whether BACE's use of correlated traits pays off. Simulation v1 (accuracy only, earlier BACE settings) found
+BACE ahead at λ = 0.3 and castor ahead at λ = 1.
+
+# Limitations
+
+- One mechanism: Brownian motion with Pagel's λ, MCAR 30%, random coalescent trees. No MAR or clade-structured
+  missingness, no OU, no real trees.
+- The frequentist model shares one λ across its traits; prp carries extra non-phylogenetic noise, so its fitted
+  variance is inflated at λ near 1 (c1 and c2 are unaffected).
+- BACE at n = 1000 has 100 datasets per cell, so its Monte Carlo SEs are about 1.4 times the others'.
+- At λ = 1 and n = 1000 freq A and chained BACE both cover slightly above 0.95; not investigated.
+
+# Files and reproduction
+
+| file | contents |
+|---|---|
+| `data/fits.csv` | one row per fit: cell, seed, cluster, node, time, wall times, errors, versions |
+| `data/fit_cells.csv.gz` | fit × arm × trait: per-value coverage, width, z-RMSE, interval score |
+| `data/fit_estimands.csv.gz` | fit × arm × estimand: pooled estimate, SE, interval, df, FMI, truth, covered |
+| `data/bace_diagnostics.csv` | BACE convergence verdict, drift, ESS, input cleaning |
+| `data/failure_records.csv` | first-pass BACE failures kept as records |
+| `data/agg/` | aggregated tables used above, and `report.json` for the web pages |
+| `data/discrete/` | discrete results (to come) |
+
+Pipeline (worktree root): `script/rubin_cell.R` (one dataset, all arms of a set) run on the clusters with
+`script/rubin_campaign_nibi.sh` and `script/rubin_totoro.sh`; `script/rubin_pool.sh` copies results to the pool;
+`script/rubin_missing.R` checks completeness; `script/rubin_campaign_aggregate.R` aggregates;
+`script/rubin_study/build_data.R` writes this folder's tables; `quarto render script/rubin_study/study.qmd`.
+Tests: `script/tests-rubin/`. The raw per-fit files (556 MB) stay in the pool and on the clusters.
