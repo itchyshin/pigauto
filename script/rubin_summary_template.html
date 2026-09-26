@@ -202,6 +202,16 @@ footer .mono { font-size: 12.5px; color: var(--ink-2); }
     <p class="note">Coverage of the true value ρ by the Rubin-pooled 95% interval; bias of the pooled estimate. The complete-data row is the same analysis before masking.</p>
   </section>
 
+  <section aria-labelledby="h-disc">
+    <h2 id="h-disc">Discrete traits (n = 100 and 300)</h2>
+    <p class="note">The same datasets, imputed again and scored on the binary, ordinal and three-class traits. The BACE arms are the same fits. freq A and freq B use castor's Mk model one trait at a time (flexible rates; freq A redraws the rates by parametric bootstrap before each imputation).</p>
+    <ol class="plain" id="dkey"></ol>
+    <div class="tablewrap"><table id="tab-dacc"></table></div>
+    <p class="note">Accuracy of the modal imputed class at n = 300, pooled over ρ. The mode floor always guesses the most frequent observed class.</p>
+    <div class="tablewrap"><table id="tab-ddown"></table></div>
+    <p class="note">PGLS slope of c1 on the binary trait at ρ = 0.5: coverage of the per-dataset target by the Rubin-pooled 95% interval, and the bias of the pooled estimate.</p>
+  </section>
+
   <section aria-labelledby="h-do">
     <h2 id="h-do">For the BACE paper</h2>
     <ul class="plain" id="do"></ul>
@@ -210,8 +220,8 @@ footer .mono { font-size: 12.5px; color: var(--ink-2); }
   <section aria-labelledby="h-more">
     <h2 id="h-more">More detail</h2>
     <ul class="plain">
-      <li><b>Full campaign report</b> (every cell, paired contrasts, failure ledger): <a href="https://claude.ai/artifact/PFkoRFtTjox4tndEbuBtPQ">claude.ai/artifact/PFkoRFtTjox4tndEbuBtPQ</a></li>
-      <li><b>Accuracy companion</b> (error of each imputed value, interval score, and error of the downstream slope and correlation, beside coverage): <a href="https://claude.ai/artifact/CGGmi4Km6unGPhxEiv94qk">claude.ai/artifact/CGGmi4Km6unGPhxEiv94qk</a>. In short: freq A and freq B are the most accurate per value; chained BACE matches them at n = 300 and 1000 but not at n = 100; freq A and freq B have the same downstream error while their coverage differs, so improper imputation costs honesty, not accuracy.</li>
+      <li><b>Full campaign report</b> (every cell, paired contrasts, failure ledger, and the discrete section with every trait and cell): <a href="https://claude.ai/artifact/PFkoRFtTjox4tndEbuBtPQ">claude.ai/artifact/PFkoRFtTjox4tndEbuBtPQ</a></li>
+      <li><b>Accuracy companion</b> (error of each imputed value, interval score, and error of the downstream slope and correlation, beside coverage): <a href="https://claude.ai/artifact/CGGmi4Km6unGPhxEiv94qk">claude.ai/artifact/CGGmi4Km6unGPhxEiv94qk</a>. In short: freq A and freq B are the most accurate per value; chained BACE matches them at n = 300 and 1000 but not at n = 100; freq A and freq B have the same downstream error while their coverage differs, so improper imputation costs honesty, not accuracy. It now also has the discrete traits: accuracy, Brier score and 95% class sets for every arm.</li>
       <li><b>BACE settings pre-run</b> (why BACE's convergence check could not pick settings): <a href="https://claude.ai/artifact/WMHxQ8idafD5sLAVEJtg9Q">claude.ai/artifact/WMHxQ8idafD5sLAVEJtg9Q</a></li>
       <li><b>Code and records</b>: branch <span class="mono">arc/rubin-freq-bace</span>, <span class="mono">docs/dev-log/arc/</span> and <span class="mono">docs/dev-log/after-task/</span>.</li>
     </ul>
@@ -222,6 +232,7 @@ footer .mono { font-size: 12.5px; color: var(--ink-2); }
 
 <script>
 const DATA = __DATA__;
+const DISC = __DISC__;
 const ARMS = { freqA: { label: "freq A", color: "var(--freqA)" }, freqB: { label: "freq B", color: "var(--freqB)" },
   bace: { label: "BACE as shipped", color: "var(--shipped)" }, bace_chain: { label: "chained BACE", color: "var(--chain)" },
   complete: { label: "complete data", color: "var(--complete)" } };
@@ -276,4 +287,35 @@ document.getElementById("do").innerHTML = [
   `<li><b>Drop unused factor levels before BACE</b>, or its fits stop whenever a discrete level is unobserved (common at high λ).</li>`,
   g("bace", 100) && g("freqA", 100) ? `<li><b>Note BACE's attenuation at small n</b>: at n = 100 the slope's bias is ${f3(g("bace", 100).bias)} (shipped) and ${f3(g("bace_chain", 100) && g("bace_chain", 100).bias)} (chained) against ${f3(g("freqA", 100).bias)} for freq A.</li>` : ""].join("");
 document.getElementById("prov").innerHTML = `${DATA.sanity}. ${C.bace.toLocaleString()} BACE and ${C.freq.toLocaleString()} frequentist result files.`;
+// ---- discrete traits (n = 100 and 300)
+const dM = DISC.meta, TR = { bin: "binary", ord: "ordinal", cat3: "categorical" }, TRS = ["bin", "ord", "cat3"];
+const dcl = (a, n, l, t) => DISC.cl.find(r => r.arm === a && r.n === n && r.lambda === l && r.trait === t);
+const ddn = (a, n, l, rho) => DISC.dn.find(r => r.arm === a && r.n === n && r.lambda === l && r.rho === rho);
+const mfix = s => s.replace(/^-/, "−");
+const rng = (v, d = 2) => { const x = v.filter(u => u != null); if (!x.length) return "–"; const a = mfix(Math.min(...x).toFixed(d)), b = mfix(Math.max(...x).toFixed(d)); return a === b ? a : `${a} to ${b}`; };
+const pAcc = DISC.pr.filter(p => p.contrast === "bace_chain - freqA" && p.measure === "accuracy");
+const lead = pAcc.filter(p => p.lambda < 1).map(p => p.diff), lead1 = pAcc.filter(p => p.lambda === 1).map(p => p.diff);
+const floorGap = TRS.flatMap(t => [100, 300].map(n => { const f = dcl("freqA", n, 0.3, t), m = dcl("mode_floor", n, 0.3, t); return f && m ? m.accuracy - f.accuracy : null; }));
+const bF = [0.3, 0.7].flatMap(l => [100, 300].map(n => { const r = ddn("freqA", n, l, 0.5); return r ? -r.bias_cond : null; }));
+const cF = n => [0.3, 0.7].map(l => { const r = ddn("freqA", n, l, 0.5); return r ? r.coverage_cond : null; });
+const cB = [0.3, 0.7].flatMap(l => [100, 300].flatMap(n => [0, 0.5].map(rho => { const r = ddn("bace", n, l, rho); return r ? r.coverage_cond : null; })));
+const cC = [0.3, 0.7].flatMap(l => [100, 300].flatMap(n => [0, 0.5].map(rho => { const r = ddn("bace_chain", n, l, rho); return r ? r.coverage_cond : null; })));
+const pBr = DISC.pr.filter(p => p.contrast === "bace_chain - bace" && p.measure === "brier" && p.lambda < 1).map(p => -p.diff);
+document.getElementById("dkey").innerHTML = [
+  `<li><b>At low and moderate signal BACE imputes discrete traits more accurately.</b> At λ = 0.3 and 0.7 chained BACE's modal class is right more often than castor's in every cell, by ${rng(lead)} (paired on the same datasets). At λ = 0.3 castor is ${rng(floorGap)} below always guessing the most frequent observed class.</li>`,
+  `<li><b>Imputing one trait at a time biases associations toward zero.</b> castor imputes the binary trait without c1, so at ρ = 0.5 and λ ≤ 0.7 the pooled slope of c1 on it is ${rng(bF)} too small, and coverage falls as n grows (${rng(cF(100))} at n = 100; ${rng(cF(300))} at n = 300).</li>`,
+  `<li><b>Chaining helps again.</b> At λ ≤ 0.7 BACE as shipped covers the downstream slope in ${rng(cB, 3)} of datasets and chained BACE in ${rng(cC, 3)}; chaining also lowers the Brier score in every cell (by ${rng(pBr, 3)}).</li>`,
+  `<li><b>At high signal castor holds its own.</b> At λ = 1 chained BACE minus castor accuracy is ${rng(lead1, 3)}, and BACE cannot fit ${dM.bace_fit_fail} of the 2,400 datasets (all at λ = 1); castor fits every one. The discrete traits are thresholded liabilities, BACE's model family, as the continuous traits follow the frequentist model.</li>`].join("");
+const SA = ["freqA", "bace", "bace_chain"];
+document.getElementById("tab-dacc").innerHTML = `<thead><tr><th>Trait</th><th class="n">λ</th>${SA.map(a => `<th class="n">${ARMS[a].label}</th>`).join("")}<th class="n">mode floor</th></tr></thead><tbody>` +
+  TRS.map((t, ti) => [0.3, 0.7, 1].map((l, li) => { const m = dcl("mode_floor", 300, l, t);
+    return `<tr${ti && !li ? ' class="sep"' : ""}><td>${li ? "" : TR[t]}</td><td class="n">${l}</td>${SA.map(a => { const r = dcl(a, 300, l, t); return `<td class="n">${f3(r && r.accuracy)}</td>`; }).join("")}<td class="n" style="color:var(--muted)">${f3(m && m.accuracy)}</td></tr>`; }).join("")).join("") + `</tbody>`;
+const DA2 = ["complete", "freqA", "bace", "bace_chain"];
+document.getElementById("tab-ddown").innerHTML = `<thead><tr><th class="n">n</th><th class="n">λ</th>${DA2.map(a => `<th class="n">${ARMS[a].label}</th>`).join("")}<th class="n">Bias, freq A</th><th class="n">Bias, chained BACE</th></tr></thead><tbody>` +
+  [100, 300].map((n, ni) => [0.3, 0.7, 1].map((l, li) => { const r = a => ddn(a, n, l, 0.5);
+    return `<tr${ni && !li ? ' class="sep"' : ""}><td class="n">${li ? "" : n}</td><td class="n">${l}</td>${DA2.map(a => `<td class="n">${f3(r(a) && r(a).coverage_cond)}</td>`).join("")}<td class="n">${f3(r("freqA") && r("freqA").bias_cond)}</td><td class="n">${f3(r("bace_chain") && r("bace_chain").bias_cond)}</td></tr>`; }).join("")).join("") + `</tbody>`;
+document.getElementById("chips").insertAdjacentHTML("beforeend", `<span class="chip"><b>${(dM.bace_files + dM.freq_files).toLocaleString()}</b> discrete-part fits (n 100, 300)</span>`);
+document.getElementById("lede").textContent += ` On discrete traits, at n = 100 and 300, BACE's imputed classes are ${rng(lead)} more accurate than castor's when signal is moderate, and castor's one-trait-at-a-time imputation pulls associations with a binary trait toward zero.`;
+document.getElementById("do").insertAdjacentHTML("beforeend", `<li><b>Show the discrete results beside the continuous ones.</b> BACE's advantage is on discrete traits and on associations that involve them; castor, the available frequentist tool, imputes one trait at a time and loses ${rng(bF)} of the c1 ~ binary slope at ρ = 0.5.</li>`);
+document.getElementById("prov").innerHTML += ` Discrete part: ${dM.bace_files.toLocaleString()} BACE and ${dM.freq_files.toLocaleString()} frequentist files.`;
 </script>

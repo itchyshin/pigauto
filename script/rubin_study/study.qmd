@@ -61,7 +61,7 @@ Main continuous findings:
 Main discrete findings (n = 100 and 300):
 
 - **At low and moderate signal BACE imputes discrete traits more accurately.** At λ = 0.3 and 0.7 chained BACE's
-  modal class is right more often than castor's (freq A) in every cell, by 0.04 to 0.15 (5 to 28 SEs, paired on
+  modal class is right more often than castor's (freq A) in every cell, by 0.04 to 0.14 (5.6 to 28.4 SEs, paired on
   the same datasets). At λ = 0.3 castor, even with flexible rates, is 0.01 to 0.02 below always guessing the most
   frequent observed class. At λ = 1 castor leads by up to 0.016 at n = 100, and the two are within 0.006 at
   n = 300.
@@ -332,10 +332,10 @@ cat(if (nrow(ab)) paste0("Traits with one class in the complete data have nothin
                            paste(sprintf("%s `%s` %d", labd[na_d$arm], na_d$trait, na_d$n_na_draws), collapse = "; "), ".")
     else "No arm returned NA draws.", "\n\n", sep = "")
 cat("At λ = 0.3 and 0.7 BACE is the more accurate imputer of all three discrete traits: chained BACE beats freq A ",
-    "in every cell, by 0.04 to 0.15. castor adds nothing to the observed class frequencies at λ = 0.3 (freq A is ",
+    "in every cell, by 0.04 to 0.14. castor adds nothing to the observed class frequencies at λ = 0.3 (freq A is ",
     "0.008 to 0.020 below the mode floor), while chained BACE is 0.06 to 0.10 above it. BACE's lead is 0.04 to 0.10 ",
     "at ρ = 0, where its only correlated predictor is the always-observed driver d1 (correlation 0.35), and 0.06 to ",
-    "0.15 at ρ = 0.5, where the other traits add information; its threshold model is also the model that generated ",
+    "0.14 at ρ = 0.5, where the other traits add information; its threshold model is also the model that generated ",
     "these traits. At λ = 1 castor leads by up to 0.016 at n = 100, and the two are within 0.006 at n = 300. ",
     "Flexible rates matter ",
     "for castor: simulation v1's equal rates lose up to 0.08 accuracy at λ ≤ 0.7. The 95% class sets repeat the ",
@@ -400,8 +400,8 @@ for (ms in c("accuracy", "brier")) {
                     if (ms == "accuracy") "Positive favours the first arm." else "Negative favours the first arm.")),
       sep = "\n"); cat("\n\n")
 }
-cat("On identical datasets the contrasts are large and precise: chained BACE minus freq A accuracy is 0.04 to 0.15 ",
-    "at λ ≤ 0.7 (5 to 28 SEs) and −0.016 to 0.001 at λ = 1. Chaining leaves BACE's accuracy unchanged (−0.006 to ",
+cat("On identical datasets the contrasts are large and precise: chained BACE minus freq A accuracy is 0.04 to 0.14 ",
+    "at λ ≤ 0.7 (5.6 to 28.4 SEs) and −0.016 to 0.001 at λ = 1. Chaining leaves BACE's accuracy unchanged (−0.006 to ",
     "0.015) but lowers its Brier score in every λ ≤ 0.7 cell (by 0.005 to 0.035). Proper and improper frequentist ",
     "imputation are equally accurate per value (freq A minus freq B −0.008 to 0.012); improperness shows in the ",
     "downstream interval, not in the point imputations.\n\n", sep = "")

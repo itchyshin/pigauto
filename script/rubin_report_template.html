@@ -232,6 +232,27 @@ footer .mono { font-size: 12.5px; color: var(--ink-2); }
     <div class="tablewrap"><table id="tab-pair"></table></div>
   </section>
 
+  <section aria-labelledby="h-disc">
+    <h2 id="h-disc">Discrete traits (n = 100 and 300)</h2>
+    <p>The same datasets (all 12 cells at n = 100 and 300, 200 seeds each) were imputed again, keeping all 20 imputations, and scored on the binary, ordinal and three-class traits. The BACE arms are the same fits as above, re-run. The frequentist arms use castor's Mk model one trait at a time: freq A redraws the transition rates by parametric bootstrap before each imputation, freq B keeps the fitted rates, and both use flexible rates (all rates different for the binary and categorical traits, stepwise with every rate different for the ordinal one). Simulation v1's equal-rates model runs as a comparison arm. Each set of missing classes is drawn jointly on the tree.</p>
+    <div class="findings" id="disc-findings"></div>
+    <div class="figure">
+      <div class="legend" id="leg-dacc"></div>
+      <div id="grid-dacc"></div>
+      <p class="cap" id="cap-dacc"></p>
+    </div>
+    <div class="tablewrap"><table id="tab-dacc"></table></div>
+    <h3>Downstream: PGLS slope of c1 on the binary trait</h3>
+    <p id="ddown-text"></p>
+    <div class="figure">
+      <div class="legend" id="leg-ddown"></div>
+      <div id="grid-ddown"></div>
+      <p class="cap">Coverage of the per-dataset target by the Rubin-pooled 95% interval at ρ = 0.5, where c1 and the binary trait are correlated. Whiskers are ±2 Monte Carlo SE over datasets. At ρ = 0 the target is 0 (table).</p>
+    </div>
+    <div class="tablewrap"><table id="tab-ddown"></table></div>
+    <ul class="plain" id="disc-notes"></ul>
+  </section>
+
   <section aria-labelledby="h-fail">
     <h2 id="h-fail">Failures and what was fixed</h2>
     <div class="tablewrap"><table id="tab-fail"></table></div>
@@ -247,7 +268,7 @@ footer .mono { font-size: 12.5px; color: var(--ink-2); }
     <h2 id="h-limits">What this does not cover</h2>
     <ul class="plain">
       <li><b>One simulation design.</b> Brownian motion with Pagel's λ, MCAR 30%, 7 traits, random coalescent trees. Missing-at-random, clade-structured missingness, OU evolution and real trees are not run here.</li>
-      <li><b>Discrete traits are imputed but not scored</b> under Rubin's rules; per-cell scoring covers c1, c2 and prp (logit scale).</li>
+      <li><b>Discrete traits are scored at n = 100 and 300 only.</b> They are thresholded Brownian liabilities, the model family BACE fits, while castor models one trait at a time with an Mk process and no covariates; no off-the-shelf phylogenetic frequentist method imputes discrete traits jointly with continuous ones.</li>
       <li><b>The frequentist model shares one λ across its traits.</b> prp carries extra non-phylogenetic noise in this design, so at λ near 1 its fitted variance is inflated (up to about 200-fold at n = 1000). The c1 and c2 estimands are not affected.</li>
       <li id="lim-n1000"></li>
     </ul>
@@ -262,6 +283,7 @@ footer .mono { font-size: 12.5px; color: var(--ink-2); }
 
 <script>
 const DATA = __DATA__;
+const DISC = __DISC__;
 const ARMS = {
   freqA:      { label: "freq A", color: "var(--freqA)" },
   freqB:      { label: "freq B", color: "var(--freqB)" },
@@ -396,4 +418,82 @@ document.getElementById("meaning").innerHTML = m.join("");
 document.getElementById("design-note").textContent = `Datasets per arm and n are in the tables. freq arms: 200 datasets per cell. BACE: 200 per cell at n = 100 and 300, 100 at n = 1000. Monte Carlo SEs are over datasets.`;
 document.getElementById("lim-n1000").innerHTML = cn("bace", 1000) ? `<b>BACE at n = 1000</b> uses 100 datasets per cell, so its coverage SEs are about 1.4 times the others'.` : `<b>BACE at n = 1000 is not in this version yet</b>; the frequentist arms are.`;
 document.getElementById("prov").innerHTML = `${DATA.sanity}. Counts: ${C.bace} BACE files, ${C.freq} frequentist files, ${C.asshipped_failed} as-shipped failure records.`;
+// ---- discrete traits (n = 100 and 300; data/discrete/pages.json)
+ARMS.freqA_er = { label: "freq A, equal rates", color: "var(--freqA)" };
+const TR = { bin: "binary", ord: "ordinal", cat3: "categorical" }, TRS = ["bin", "ord", "cat3"], DN = [100, 300];
+const dM = DISC.meta, dcl = (a, n, l, t) => DISC.cl.find(r => r.arm === a && r.n === n && r.lambda === l && r.trait === t);
+const ddn = (a, n, l, rho) => DISC.dn.find(r => r.arm === a && r.n === n && r.lambda === l && r.rho === rho);
+const mfix = s => s.replace(/^-/, "−");
+const rng = (v, d = 2) => { const x = v.filter(u => u != null); if (!x.length) return "–"; const a = mfix(Math.min(...x).toFixed(d)), b = mfix(Math.max(...x).toFixed(d)); return a === b ? a : `${a} to ${b}`; };
+const pAcc = DISC.pr.filter(p => p.contrast === "bace_chain - freqA" && p.measure === "accuracy");
+const lead = pAcc.filter(p => p.lambda < 1).map(p => p.diff), lead1 = n => pAcc.filter(p => p.lambda === 1 && p.n === n).map(p => p.diff);
+const zLead = pAcc.filter(p => p.lambda < 1).map(p => p.diff / p.se);
+const floorGap = TRS.flatMap(t => DN.map(n => { const f = dcl("freqA", n, 0.3, t), m = dcl("mode_floor", n, 0.3, t); return f && m ? f.accuracy - m.accuracy : null; }));
+const cov = (a, n, l) => { const r = ddn(a, n, l, 0.5); return r ? r.coverage_cond : null; };
+const biasF = [0.3, 0.7].flatMap(l => DN.map(n => { const r = ddn("freqA", n, l, 0.5); return r ? r.bias_cond : null; }));
+const biasB = [0.3, 0.7].flatMap(l => DN.flatMap(n => [0, 0.5].map(rho => { const r = ddn("bace_chain", n, l, rho); return r ? r.bias_cond : null; })));
+document.getElementById("disc-findings").innerHTML = [
+  `<div class="finding"><div class="eyebrow">Class accuracy, λ ≤ 0.7</div><div class="big">+${rng(lead)} <small>chained BACE − freq&nbsp;A</small></div><p>Paired on the same datasets, in every cell (${rng(zLead, 1)} SEs). At λ = 0.3 castor is ${rng(floorGap.map(v => -v))} below always guessing the most frequent observed class.</p></div>`,
+  `<div class="finding"><div class="eyebrow">c1 ~ binary coverage, n = 300, ρ = 0.5</div><div class="big">${f3(cov("freqA", 300, 0.3))} · ${f3(cov("freqA", 300, 0.7))} <small>freq&nbsp;A</small><br>${f3(cov("bace_chain", 300, 0.3))} · ${f3(cov("bace_chain", 300, 0.7))} <small>chained</small></div><p>At λ = 0.3 and 0.7. castor imputes the binary trait without c1, so the slope is pulled toward zero by ${rng(biasF.map(v => -v))}; chained BACE is within ${Math.max(...biasB.map(Math.abs)).toFixed(3)} of its target.</p></div>`,
+  `<div class="finding"><div class="eyebrow">High signal, λ = 1</div><div class="big">${rng(lead1(100), 3)} <small>n&nbsp;=&nbsp;100</small><br>${rng(lead1(300), 3)} <small>n&nbsp;=&nbsp;300</small></div><p>Chained BACE minus freq A accuracy: castor is as accurate or slightly better. BACE cannot fit ${dM.bace_fit_fail} of the 2,400 datasets, all at λ = 1; castor fits every one.</p></div>`].join("");
+function apanel(container, title, rows, xmin, xmax, ticks, floor) {
+  const W = 300, left = 118, right = 44, rowH = 20, top = 16, axisH = 22, H = top + rows.length * rowH + axisH;
+  const x = v => left + (Math.min(Math.max(v, xmin), xmax) - xmin) / (xmax - xmin) * (W - left - right);
+  const div = document.createElement("div"); div.className = "panel"; div.innerHTML = `<h4>${title}</h4>`;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }), yb = top + rows.length * rowH;
+  ticks.forEach(t => { el("line", { x1: x(t), x2: x(t), y1: top, y2: yb, stroke: "var(--grid)", "stroke-width": 1 }, svg); el("text", { x: x(t), y: yb + 15, "text-anchor": "middle", class: "tick" }, svg, t.toFixed(1)); });
+  if (floor != null) { el("line", { x1: x(floor), x2: x(floor), y1: top, y2: yb, stroke: "var(--muted)", "stroke-width": 1.4, "stroke-dasharray": "4 4" }, svg);
+    el("text", { x: x(floor), y: top - 5, "text-anchor": floor > (xmin + xmax) / 2 ? "end" : "start", class: "tick" }, svg, "mode floor"); }
+  rows.forEach((r, i) => {
+    const cy = top + i * rowH + rowH / 2;
+    el("text", { x: 2, y: cy + 4, class: "rowlab" }, svg, ARMS[r.arm].label);
+    if (r.v == null) return;
+    if (r.se > 0) el("line", { x1: x(r.v - 2 * r.se), x2: x(Math.min(r.v + 2 * r.se, 1)), y1: cy, y2: cy, stroke: ARMS[r.arm].color, "stroke-width": 2, "stroke-linecap": "round" }, svg);
+    const d = el("circle", { cx: x(r.v), cy: cy, r: 5, fill: ARMS[r.arm].color, stroke: "var(--surface)", "stroke-width": 1.5, class: "dot", tabindex: 0, "aria-label": `${title} ${ARMS[r.arm].label} ${f3(r.v)}` }, svg);
+    const html = `<div>${title} · ${ARMS[r.arm].label}</div><div>accuracy <b>${f3(r.v)}</b> ± ${f3(2 * (r.se || 0))}</div><div>${r.k} datasets${r.extra || ""}</div>`;
+    d.addEventListener("mousemove", e => showTip(e, html)); d.addEventListener("mouseleave", hideTip);
+    d.addEventListener("focus", () => { const b = d.getBoundingClientRect(); showTip({ clientX: b.right, clientY: b.bottom }, html); }); d.addEventListener("blur", hideTip);
+    el("text", { x: W - right + 6, y: cy + 4, class: "vallab" }, svg, f3(r.v));
+  });
+  div.appendChild(svg); container.appendChild(div);
+}
+const DACC = ["freqA", "freqB", "bace", "bace_chain"];
+legend("leg-dacc", DACC);
+document.getElementById("leg-dacc").innerHTML = document.getElementById("leg-dacc").innerHTML.replace("nominal 0.95", "mode floor: most frequent observed class");
+(() => { const root = document.getElementById("grid-dacc");
+  TRS.forEach(t => { const g = document.createElement("div"); g.className = "grid3";
+    LS.forEach(l => { const m = dcl("mode_floor", 300, l, t);
+      apanel(g, `${TR[t]} · λ = ${l}`, DACC.map(a => { const r = dcl(a, 300, l, t); return r ? { arm: a, v: r.accuracy, se: r.accuracy_se, k: r.n_fits, extra: ` · Brier ${f3(r.brier)} · 95% set ${f3(r.set_coverage)}` } : { arm: a, v: null }; }), 0.2, 1.0, [0.2, 0.4, 0.6, 0.8, 1.0], m ? m.accuracy : null); });
+    root.appendChild(g); root.appendChild(Object.assign(document.createElement("div"), { style: "height:10px" })); }); })();
+document.getElementById("cap-dacc").textContent = `Accuracy of the modal imputed class at n = 300 (ties counted fractionally), pooled over ρ; whiskers ±2 Monte Carlo SE over datasets. The dashed line is the mode floor. n = 100 is in the table.`;
+const TACC = ["freqA", "freqB", "freqA_er", "bace", "bace_chain"];
+document.getElementById("tab-dacc").innerHTML = `<thead><tr><th>Trait</th><th class="n">n</th><th class="n">λ</th>${TACC.map(a => `<th class="n">${ARMS[a].label}</th>`).join("")}<th class="n">mode floor</th></tr></thead><tbody>` +
+  TRS.map((t, ti) => DN.map((n, ni) => LS.map((l, li) => { const v = TACC.map(a => { const r = dcl(a, n, l, t); return r ? r.accuracy : null; }), best = Math.max(...v.filter(u => u != null)), m = dcl("mode_floor", n, l, t);
+    return `<tr${(ti || ni) && !li ? ' class="sep"' : ""}><td>${!ni && !li ? TR[t] : ""}</td><td class="n">${li ? "" : n}</td><td class="n">${l}</td>${v.map(u => `<td class="n"${u === best ? ' style="font-weight:600;color:var(--ink)"' : ""}>${f3(u)}</td>`).join("")}<td class="n" style="color:var(--muted)">${f3(m && m.accuracy)}</td></tr>`; }).join("")).join("")).join("") + `</tbody>`;
+document.getElementById("ddown-text").textContent = `The Rubin-pooled PGLS slope of c1 on the binary trait (yes = 1). Its target is not ρ: it is ρ times the GLS slope, at the true λ, of the binary trait's liability on the trait itself, the expected complete-data estimate given the tree and that liability. A population-average target (the mean complete-data estimate over ${dM.truth_R.map(v => v.toLocaleString()).join(", ")} fresh datasets per cell) agrees with it except at λ = 1 and ρ = 0.5, where it varies between datasets by more than the standard error, so even the complete data cover the population target only about half the time there.`;
+const DDA = ["complete", "freqA", "freqB", "bace", "bace_chain"];
+legend("leg-ddown", DDA);
+(() => { const root = document.getElementById("grid-ddown");
+  DN.forEach(n => { const g = document.createElement("div"); g.className = "grid3";
+    LS.forEach(l => panel(g, `n = ${n} · λ = ${l}`, DDA.map(a => { const r = ddn(a, n, l, 0.5); return r ? { arm: a, cov: r.coverage_cond, se: r.coverage_cond_se, k: r.n_fits, extra: a === "complete" ? "" : ` · bias ${f3(r.bias_cond)}` } : { arm: a, cov: null }; }), 0.2, 1.0, [0.2, 0.4, 0.6, 0.8, 1.0]));
+    root.appendChild(g); root.appendChild(Object.assign(document.createElement("div"), { style: "height:10px" })); }); })();
+document.getElementById("tab-ddown").innerHTML = `<thead><tr><th class="n">n</th><th class="n">λ</th><th class="n">ρ</th>${DDA.map(a => `<th class="n">${ARMS[a].label}</th>`).join("")}<th class="n">Bias, freq A</th><th class="n">Bias, chained</th></tr></thead><tbody>` +
+  DN.map((n, ni) => LS.map((l, li) => [0, 0.5].map((rho, ri) => { const b = a => { const r = ddn(a, n, l, rho); return r ? r.bias_cond : null; };
+    return `<tr${(ni || li) && !ri ? ' class="sep"' : ""}><td class="n">${!li && !ri ? n : ""}</td><td class="n">${ri ? "" : l}</td><td class="n">${rho}</td>${DDA.map(a => { const r = ddn(a, n, l, rho); return `<td class="n">${f3(r && r.coverage_cond)}</td>`; }).join("")}<td class="n">${f3(b("freqA"))}</td><td class="n">${f3(b("bace_chain"))}</td></tr>`; }).join("")).join("")).join("") + `</tbody>`;
+const pBr = DISC.pr.filter(p => p.contrast === "bace_chain - bace" && p.measure === "brier" && p.lambda < 1).map(p => p.diff);
+const pEr = DISC.pr.filter(p => p.contrast === "freqA - freqA_er" && p.measure === "accuracy" && p.lambda < 1).map(p => p.diff);
+const lead0 = pAcc.filter(p => p.lambda < 1 && p.rho === 0).map(p => p.diff), lead5 = pAcc.filter(p => p.lambda < 1 && p.rho === 0.5).map(p => p.diff);
+document.getElementById("disc-notes").innerHTML = [
+  `<li><b>BACE's lead holds even when the traits are uncorrelated</b> (${rng(lead0)} at ρ = 0, ${rng(lead5)} at ρ = 0.5). At ρ = 0 its only correlated predictor is the always-observed driver (correlation 0.35), and its threshold model is the model that generated these traits. The discrete part is BACE's home ground, as the continuous part is the frequentist method's.</li>`,
+  `<li><b>Chaining helps again.</b> It leaves BACE's accuracy unchanged but lowers its Brier score in every λ ≤ 0.7 cell (by ${rng(pBr.map(v => -v), 3)}) and brings its 95% class sets closer to nominal.</li>`,
+  `<li><b>castor needs flexible rates.</b> With simulation v1's equal rates, its accuracy drops by up to ${Math.max(...pEr).toFixed(2)} at λ ≤ 0.7, because the fitted rate runs to its bound and the imputed classes become uniform.</li>`,
+  `<li><b>BACE fit failures.</b> MCMCglmm stops ("Mixed model equations singular") on ${dM.bace_fit_fail} datasets (${dM.bace_fit_fail_n["100"]} at n = 100, ${dM.bace_fit_fail_n["300"]} at n = 300), all at λ = 1; ${dM.fail_both_runs} of them failed in the continuous campaign too. The chained arm fails on ${dM.chain_only_fail} more. BACE also returns no class for ${(100 * dM.na_cat3.bace).toFixed(1)}% of its categorical draws (non-finite class probabilities); scores use the remaining draws.</li>`,
+  `<li><b>The re-run reproduces the stored BACE fits</b> on the same cluster (${dM.repro.same_ident} of ${dM.repro.same_n} to the last digit); re-runs on another cluster are independent replicates (median difference in a pooled estimate ${dM.repro.cross_median_min.toFixed(3)} to ${dM.repro.cross_median_max.toFixed(3)}).</li>`].join("");
+// discrete additions to the header, the meaning list and the provenance line
+document.getElementById("lede").textContent += ` The discrete part, on the same datasets at n = 100 and 300, finds BACE's imputed classes ${rng(lead)} more accurate than castor's one-trait-at-a-time imputation when signal is moderate; castor's imputations also pull a downstream association with a binary trait toward zero.`;
+document.getElementById("chips").insertAdjacentHTML("beforeend", `<span class="chip"><b>${(dM.bace_files + dM.freq_files).toLocaleString()}</b> fits in the discrete part (n 100, 300)</span>`);
+document.getElementById("meaning").insertAdjacentHTML("beforeend", [
+  `<li><b>For discrete traits BACE has a real advantage.</b> It imputes each trait given the others; castor, the available frequentist tool, sees one trait at a time. BACE's classes are ${rng(lead)} more accurate at λ ≤ 0.7, and downstream associations with a discrete trait keep their size (castor's pooled c1 ~ binary slope is ${rng(biasF.map(v => -v))} too small at ρ = 0.5, with coverage ${f3(cov("freqA", 300, 0.3))} and ${f3(cov("freqA", 300, 0.7))} at n = 300).</li>`,
+  `<li><b>Report the design's home ground.</b> The discrete traits are thresholded liabilities, BACE's model family; the continuous traits follow the frequentist model. Each method wins where the simulation matches its model, and chained BACE is close to nominal in both parts.</li>`].join(""));
+document.getElementById("prov").innerHTML += ` Discrete part: ${dM.bace_files.toLocaleString()} BACE and ${dM.freq_files.toLocaleString()} frequentist files (script/rubin_study/data/discrete/).`;
 </script>

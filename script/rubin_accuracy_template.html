@@ -33,7 +33,7 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-size:13px;color:va
 <header style="display:flex;flex-direction:column;gap:12px">
   <div class="eyebrow">pigauto · companion to "Frequentist and BACE multiple imputation under Rubin's rules"</div>
   <h1>How accurate is each imputation method, beside its coverage?</h1>
-  <p class="lede">The campaign page reports coverage. Coverage says whether intervals are honest; it does not say whether the imputed values are close to the truth. This page shows accuracy from the same runs: error of each imputed value, interval score, and error of the downstream slope and correlation.</p>
+  <p class="lede">The campaign page reports coverage. Coverage says whether intervals are honest; it does not say whether the imputed values are close to the truth. This page shows accuracy from the same runs: error of each imputed value, interval score, and error of the downstream slope and correlation, and for the discrete traits how often the imputed class is right.</p>
   <p class="callout" id="callout"></p>
 </header>
 
@@ -65,13 +65,27 @@ footer{border-top:1px solid var(--rule);padding-top:16px;font-size:13px;color:va
 </section>
 
 <section>
+  <h2>Discrete traits: how often the imputed class is right</h2>
+  <p class="note">The discrete part of the campaign (n = 100 and 300, the same datasets): every arm's 20 draws of each missing binary, ordinal and three-class value. freq A and freq B are castor's Mk model, one trait at a time, with flexible rates; the equal-rates column is simulation v1's model. Each row pools ρ = 0 and 0.5.</p>
+  <div class="tabs" role="group" aria-label="Discrete metric">
+    <button id="dm-a" aria-pressed="true" data-dm="accuracy">Accuracy</button>
+    <button id="dm-b" aria-pressed="false" data-dm="brier">Brier score</button>
+    <button id="dm-c" aria-pressed="false" data-dm="set_coverage">95% class set coverage</button>
+    <button id="dm-s" aria-pressed="false" data-dm="set_size">Class set size</button>
+  </div>
+  <div class="tablewrap"><table id="t3"></table></div>
+  <p class="note" id="dnote"></p>
+</section>
+
+<section>
   <h2>What this does not cover</h2>
-  <p class="note">Discrete traits (binary, ordinal, categorical) are imputed in the campaign but not scored, so there is no discrete accuracy here. BACE at n = 1000 uses 100 datasets per cell (200 elsewhere), and datasets where a BACE fit errored are left out (see the campaign page's failures table). Numbers come from the campaign aggregate (report.json), the same data as the campaign page.</p>
+  <p class="note">The discrete traits are scored at n = 100 and 300 only (section above); n = 1000 is not run for them. BACE at n = 1000 uses 100 datasets per cell (200 elsewhere), and datasets where a BACE fit errored are left out (see the campaign page's failures table). Numbers come from the campaign aggregate (report.json), the same data as the campaign page.</p>
 </section>
 <footer>Source: script/rubin_campaign_aggregate.R output, built by script/rubin_report_build.sh from script/rubin_accuracy_template.html (lane arc/rubin-freq-bace).</footer>
 </div>
 <script>
 const D = __DATA__;
+const DISC = __DISC__;
 const ARMS = [["freqA","freq A","--freqA"],["freqB","freq B","--freqB"],["bace","BACE as shipped","--shipped"],["bace_chain","chained BACE","--chain"],["bace_resid","BACE + residual","--resid"]];
 const NS=[100,300,1000], LS=[0.3,0.7,1];
 const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
@@ -125,6 +139,37 @@ document.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{est=b.dataset.e;
     (worse.length?`${eq.length?" but":"Chained BACE is"} less accurate at ${list(worse)} (${worse.map(n=>f3(c("bace_chain",n).zrmse)).join(", ")}). `:". ")+
     `BACE as shipped is the least accurate; the residual-noise control widens its intervals without making it more accurate. `+
     `Downstream, freq A and freq B have the same error (slope RMSE ${f3(s3.rmse)} against ${f3(b3.rmse)} at n = 300) while their coverage differs (${f3(s3.coverage)} against ${f3(b3.coverage)}): improper imputation costs honesty, not accuracy.`;
+})();
+// ---- discrete traits (n = 100 and 300)
+const DARM = [["freqA","freq A"],["freqB","freq B"],["freqA_er","freq A, equal rates"],["bace","BACE as shipped"],["bace_chain","chained BACE"]];
+const TRN = { bin: "binary", ord: "ordinal", cat3: "categorical" };
+const dcl = (a, n, l, t) => DISC.cl.find(r => r.arm === a && r.n === n && r.lambda === l && r.trait === t);
+let dmetric = "accuracy";
+const DNOTE = {
+  accuracy: "Share of missing values whose modal imputed class (the most frequent of the 20 draws; ties counted fractionally) is the true class. Higher is better. Bold marks the highest in each row; the mode floor always guesses the most frequent observed class.",
+  brier: "Multi-class Brier score of the 20 draws' class frequencies against the true class (0 is perfect). Lower is better; it rewards confident and correct draws. Bold marks the lowest in each row.",
+  set_coverage: "How often the true class is inside the smallest set of classes that holds 95% of the draws. Nominal 0.95; bold marks the closest to it. castor's binary sets over-cover at λ = 0.3 because they usually hold both classes.",
+  set_size: "Mean number of classes in that 95% set: 1 means the draws are nearly unanimous. Smaller is better only when coverage holds."};
+function drawT3() {
+  const withFloor = dmetric === "accuracy";
+  let h = "<thead><tr><th>trait</th><th>n</th><th>λ</th>" + DARM.map(a => `<th>${a[1]}</th>`).join("") + (withFloor ? "<th>mode floor</th>" : "") + "</tr></thead><tbody>";
+  ["bin", "ord", "cat3"].forEach((t, ti) => [100, 300].forEach((n, ni) => LS.forEach((l, li) => {
+    const v = DARM.map(a => { const r = dcl(a[0], n, l, t); return r ? r[dmetric] : null; }), ok = v.filter(x => x != null);
+    const best = dmetric === "accuracy" ? Math.max(...ok) : dmetric === "brier" ? Math.min(...ok) : dmetric === "set_coverage" ? ok.reduce((b, x) => Math.abs(x - 0.95) < Math.abs(b - 0.95) ? x : b, ok[0]) : null;
+    const m = dcl("mode_floor", n, l, t);
+    h += `<tr${(ti || ni) && li === 0 ? ' class="sep"' : ''}><td style="font-family:var(--fb)">${ni === 0 && li === 0 ? TRN[t] : ""}</td><td>${li === 0 ? n : ""}</td><td>${l}</td>` +
+      v.map(x => `<td class="${x != null && x === best ? 'best' : ''}">${x == null ? '–' : x.toFixed(3)}</td>`).join("") +
+      (withFloor ? `<td style="color:var(--muted)">${m ? m.accuracy.toFixed(3) : '–'}</td>` : "") + "</tr>"; })));
+  document.getElementById("t3").innerHTML = h + "</tbody>";
+  document.getElementById("dnote").textContent = DNOTE[dmetric];
+}
+document.querySelectorAll('[data-dm]').forEach(b => b.onclick = () => { dmetric = b.dataset.dm; document.querySelectorAll('[data-dm]').forEach(o => o.setAttribute("aria-pressed", String(o === b))); drawT3(); });
+drawT3();
+(function () {
+  const pA = DISC.pr.filter(p => p.contrast === "bace_chain - freqA" && p.measure === "accuracy");
+  const lo = pA.filter(p => p.lambda < 1).map(p => p.diff), hi1 = pA.filter(p => p.lambda === 1).map(p => p.diff);
+  const mf = x => x.replace(/^-/, "−"), r = (v, d) => { const lo = mf(Math.min(...v).toFixed(d)), hi = mf(Math.max(...v).toFixed(d)); return lo === hi ? lo : `${lo} to ${hi}`; };
+  document.getElementById("callout").textContent += ` Discrete traits (n = 100 and 300): chained BACE's imputed class is right ${r(lo, 2)} more often than castor's at λ = 0.3 and 0.7, in every cell; at λ = 1 the difference is ${r(hi1, 3)}.`;
 })();
 function all(){drawCells();drawT1();drawDown()} all();
 new MutationObserver(all).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
