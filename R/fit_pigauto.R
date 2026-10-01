@@ -229,19 +229,29 @@
 #'   proportion, and zi_count magnitude, via the joint MVN /
 #'   threshold-joint baseline's own \code{lambda_cols} machinery when that
 #'   joint path fires, or a per-column re-fit otherwise. Discrete traits
-#'   (binary, categorical, zi gate) AND ordinal always stay at lambda = 1
-#'   in every path -- there is no discrete-trait analogue of Pagel's
-#'   lambda. \code{"fixed_1"} preserves the pre-lambda Brownian
-#'   correlation matrix everywhere; \code{"cv"} and \code{"bayes"} are
-#'   alternative per-column estimators that force continuous-family
-#'   columns onto the per-column BM path (no joint analogue). When
-#'   \code{predict_method = "exact"} or \code{joint_refine_iter > 0}, the
-#'   joint (multi-trait) prediction path additionally uses the single
-#'   shared \code{lambda_block} for cross-trait computations that need one
-#'   common phylogenetic correlation matrix, never overriding an
-#'   individual column's own lambda_k or a discrete/ordinal column's
-#'   lambda = 1. Passed to \code{\link{fit_baseline}} and stored in the
-#'   fitted model config. When \code{covariates} are supplied, the
+#'   (binary, categorical, zi gate) AND ordinal have no discrete-trait
+#'   analogue of Pagel's lambda of their own -- there is no lambda_k to
+#'   estimate for them. Under \code{predict_method = "per_column"} (see
+#'   below) they stay fixed at lambda = 1 in every path, matching pre-S3
+#'   behaviour. Under \code{predict_method = "exact"} (and for traits the
+#'   default \code{"auto"} routes to \code{"exact"}) they
+#'   instead share the joint fit's \code{lambda_block} -- the exact
+#'   conditional's covariance model uses ONE shared phylogenetic
+#'   correlation matrix \code{R(lambda_block)} for every column, so the
+#'   Sigma estimate feeding it must itself come from an internally
+#'   consistent init, not a mix of \code{R(1)} for discrete columns and
+#'   \code{R(lambda_k)} for continuous ones (Shinichi's decision,
+#'   docs/dev-log/exact-default/S3-default-report.md). \code{"fixed_1"}
+#'   preserves the pre-lambda Brownian correlation matrix everywhere;
+#'   \code{"cv"} and \code{"bayes"} are alternative per-column estimators
+#'   that force continuous-family columns onto the per-column BM path (no
+#'   joint analogue). When \code{predict_method = "exact"} or
+#'   \code{joint_refine_iter > 0}, the joint (multi-trait) prediction path
+#'   additionally uses the single shared \code{lambda_block} for
+#'   cross-trait computations that need one common phylogenetic
+#'   correlation matrix, never overriding a continuous-family column's own
+#'   estimated lambda_k. Passed to \code{\link{fit_baseline}} and stored in
+#'   the fitted model config. When \code{covariates} are supplied, the
 #'   covariate-aware BM path (\code{bm_impute_col_with_cov()}) accepts a
 #'   numeric lambda or \code{"estimate"}, so \code{lambda_mode \%in\%
 #'   c("estimate", "fixed_1")} reaches it and each covariate-aware
@@ -256,13 +266,39 @@
 #'   \code{\link{fit_baseline}} and stored in the fitted model config.
 #'   See \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}.
 #' @param predict_method character. Prediction route for the in-house joint
-#'   solver. \code{"per_column"} (default) retains the established
-#'   per-column conditional prediction route. \code{"exact"} is opt-in and,
-#'   when a multi-trait in-house joint fit has a usable sparse phylogenetic
-#'   precision and covariance estimate, uses the exact matrix-normal
-#'   conditional mean and variance. If those numerical gates are not met it
-#'   warns and falls back to \code{"per_column"}. It does not change
-#'   covariance estimation, defaults, or the \code{"rphylopars"} solver.
+#'   solver, passed to \code{\link{fit_baseline}}. \code{"auto"} (default,
+#'   S5b) fits the baseline with both the \code{"exact"} and
+#'   \code{"per_column"} routes and picks, per trait, whichever has the
+#'   lower loss on that trait's validation cells (mean squared error on the
+#'   z-scored latent scale for continuous/count/proportion/ordinal/zi_count
+#'   magnitude; mean log-loss for binary/zi_count gate; mean multinomial
+#'   log-loss for categorical), falling back to \code{"exact"} on a tie or
+#'   when fewer than 5 validation cells belong to that trait (including
+#'   when there is no validation split at all). \code{"exact"} uses the
+#'   full cross-trait conditional
+#'   mean and variance of \code{vec(L) ~ MVN(0, Sigma \%x\% R(lambda_block))}
+#'   (Hadfield & Nakagawa, 2010 sparse precision form), each column
+#'   GLS-mean-centred at \code{lambda_block} before the solve; discrete
+#'   liability columns share \code{lambda_block} under this route (see
+#'   \code{lambda_mode} above). Falls back to \code{"per_column"} above
+#'   roughly 20000 unknown cells (roughly 4000 species at 5 traits), on a
+#'   singular/unusable Sigma, or when fewer than 2 joint columns or no
+#'   Henderson sparse precision are available; prints a one-time
+#'   \code{message()} per R session when \code{predict_method} was left at
+#'   its default, or a \code{warning()} every time when \code{"exact"} was
+#'   requested explicitly. \code{"per_column"} retains the original
+#'   per-column conditional prediction route (no cross-trait borrowing in
+#'   the prediction step). None of the three options change covariance
+#'   estimation or the \code{"rphylopars"} solver. The route actually used
+#'   is recorded in \code{$model_config$predict_method_used}
+#'   (\code{"exact"}, \code{"per_column"}, or \code{"auto"}) and, per
+#'   trait, in \code{$model_config$predict_method_by_trait}. Under
+#'   \code{"auto"} with real validation cells, \code{$model_config
+#'   $route_val_n} / \code{$score_val_n} record, per trait, how many of
+#'   its validation cells chose the route versus were reserved for gate
+#'   calibration and conformal scoring (see \code{\link{fit_baseline}}'s
+#'   \code{predict_method} docs); both are \code{NULL} under an explicit
+#'   \code{"exact"}/\code{"per_column"} request.
 #' @param joint_refine_iter integer, default \code{0L}. Enables
 #'   cross-trait refinement of the joint baseline's cell imputations
 #'   using the estimated Sigma (the in-house solver's \code{max_iter}
@@ -270,7 +306,11 @@
 #'   current behaviour byte-for-byte. The refinement is guarded: the
 #'   Sigma step must shrink each iteration, or the loop rolls back to the
 #'   last good iterate and sets \code{$diverged}. Assess this opt-in control
-#'   with held-out evaluation on the intended data.
+#'   with held-out evaluation on the intended data. Has no effect on any
+#'   trait predicted by the \code{"exact"} route (see
+#'   \code{\link{fit_baseline}}'s \code{predict_method} docs); under the
+#'   default \code{predict_method = "auto"} it therefore only applies to
+#'   traits \code{"auto"} routes to \code{"per_column"}.
 #' @param verbose logical. Print training progress (default \code{TRUE}).
 #' @param seed optional integer. When supplied, makes stochastic training and
 #'   calibration reproducible; the default \code{NULL} uses the current RNG
@@ -354,11 +394,15 @@ fit_pigauto <- function(
     min_val_cells     = 20L,
     lambda_mode       = c("estimate", "fixed_1", "cv", "bayes"),
     joint_solver      = c("inhouse", "rphylopars"),
-    predict_method    = c("per_column", "exact"),
+    predict_method    = c("auto", "exact", "per_column"),
     joint_refine_iter = 0L,
     verbose           = TRUE,
     seed = NULL
 ) {
+  # S3 default flip: capture BEFORE match.arg() reassigns predict_method
+  # (see fit_baseline()'s identical comment for why order matters here but
+  # reassignment afterwards does not).
+  predict_method_explicit <- !missing(predict_method)
   conformal_method    <- match.arg(conformal_method)
   lambda_mode         <- match.arg(lambda_mode)
   joint_solver        <- match.arg(joint_solver)
@@ -426,10 +470,12 @@ fit_pigauto <- function(
     if (verbose) message("Fitting baseline...")
     # Pass graph through so fit_baseline can reuse graph$D instead of
     # calling ape::cophenetic.phylo() a second time on the same tree.
-    baseline <- fit_baseline(data, tree, splits = splits, graph = graph,
+    baseline <- .fit_baseline_dispatch(data, tree, splits = splits, graph = graph,
                               lambda_mode = lambda_mode,
                               joint_solver = joint_solver, predict_method = predict_method,
-                              joint_refine_iter = joint_refine_iter)
+                              joint_refine_iter = joint_refine_iter,
+                              predict_method_explicit = predict_method_explicit,
+                              seed = seed)
   }
 
   # ---- Trait map ------------------------------------------------------------
@@ -512,11 +558,29 @@ fit_pigauto <- function(
     }
     if (is.null(baseline_full)) {
       if (verbose) message("Fitting production baseline (splits = NULL)...")
-      baseline_full <- fit_baseline(data, tree, splits = NULL, graph = graph,
+      # S5b: a splits = NULL refit has no validation cells of its own, so
+      # "auto" can't re-decide anything here -- reuse the per-trait route
+      # `baseline` (above, fit WITH splits) already chose on real held-out
+      # evidence, via `predict_route` (which takes precedence over
+      # `predict_method` inside fit_baseline()). Falls back to
+      # `predict_method` unchanged when `baseline` predates this field.
+      baseline_full <- .fit_baseline_dispatch(data, tree, splits = NULL, graph = graph,
                                      lambda_mode = lambda_mode,
                                      joint_solver = joint_solver,
                                      predict_method = predict_method,
-                                     joint_refine_iter = joint_refine_iter)
+                                     joint_refine_iter = joint_refine_iter,
+                                     predict_method_explicit = predict_method_explicit,
+                                     predict_route = baseline$predict_method_by_trait)
+      # A forced predict_route always reports predict_method_used = "auto"
+      # (fit_baseline() has no way to tell a genuine "auto" request from a
+      # uniform forced route from here); relabel with `baseline`'s own
+      # verdict (its splits-based fit, which actually ran "auto" / "exact" /
+      # "per_column" per the top-level request) so an explicit
+      # predict_method = "exact"/"per_column" request is not misreported as
+      # "auto" once replayed onto baseline_full.
+      if (!is.null(baseline$predict_method_used)) {
+        baseline_full$predict_method_used <- baseline$predict_method_used
+      }
     }
     graph$D <- NULL
 
@@ -544,7 +608,16 @@ fit_pigauto <- function(
       val_mask_mat <- matrix(FALSE, n, p)
       val_mask_mat[splits$val_idx] <- TRUE
 
-      split_res     <- split_val_cal_conf(val_mask_mat, conformal_split_val,
+      # S5c required change 1: calibrate_gates()/compute_conformal_scores()
+      # must not see the cells that (under "auto") chose the per-trait
+      # route -- restrict THEIR OWN input mask to the SCORE half. The
+      # safety-floor mean and val_rmse reporting below still use the FULL
+      # `val_mask_mat` (every held-out cell stays excluded from the
+      # training mean regardless of which half scored it).
+      val_mask_score <- matrix(FALSE, n, p)
+      val_mask_score[.pigauto_calibration_val_idx(splits, baseline, predict_method)] <- TRUE
+
+      split_res     <- split_val_cal_conf(val_mask_score, conformal_split_val,
                                            min_val_cells, seed)
       val_mask_cal  <- split_res$val_mask_cal
       val_mask_conf <- split_res$val_mask_conf
@@ -707,6 +780,21 @@ fit_pigauto <- function(
         baseline$lambda_per_trait %||% NULL,
       lambda_block           = baseline_full$lambda_block %||%
         baseline$lambda_block %||% NULL,
+      # S3 default flip: the route actually used by the joint baseline
+      # fit(s), aggregated by fit_baseline() -- "exact" or "per_column".
+      # Same baseline_full-over-baseline precedence as lambda_block above.
+      predict_method_used    = baseline_full$predict_method_used %||%
+        baseline$predict_method_used %||% NULL,
+      predict_method_by_trait = baseline_full$predict_method_by_trait %||%
+        baseline$predict_method_by_trait %||% NULL,
+      # S5c required change 1: per-trait validation-cell counts recording
+      # which cells chose the route ("auto" only; NULL under an explicit
+      # "exact"/"per_column" request, or a baseline built before this
+      # field existed). Always read from `baseline` (the splits-based fit
+      # that actually did the route choice); `baseline_full` has no
+      # validation cells of its own.
+      route_val_n            = baseline$route_val_n %||% NULL,
+      score_val_n            = baseline$score_val_n %||% NULL,
       joint_solver           = joint_solver,
       joint_refine_iter      = joint_refine_iter,
       dropout                = dropout,
@@ -1210,6 +1298,15 @@ fit_pigauto <- function(
     val_mask_mat <- matrix(FALSE, n, p)
     val_mask_mat[splits$val_idx] <- TRUE
 
+    # S5c required change 1: calibrate_gates()/compute_conformal_scores()
+    # must not see the cells that (under "auto") chose the per-trait route
+    # -- restrict THEIR OWN input mask to the SCORE half via
+    # `val_mask_score` below. The safety-floor mean still uses the FULL
+    # `val_mask_mat` (every held-out cell stays excluded from the training
+    # mean regardless of which half scored it).
+    val_mask_score <- matrix(FALSE, n, p)
+    val_mask_score[.pigauto_calibration_val_idx(splits, baseline, predict_method)] <- TRUE
+
     # Fix C.3 (Opus 2026-04-28): split val into a CALIBRATION half (used by
     # `calibrate_gates()` to pick per-trait blend weights) and a CONFORMAL
     # half (used by `compute_conformal_scores()` to estimate residual
@@ -1232,7 +1329,7 @@ fit_pigauto <- function(
     # `conformal_split_val = FALSE` to disable splitting everywhere.
     # Factored into split_val_cal_conf() (S1) so the gnn = FALSE path
     # shares the identical halving logic.
-    split_res     <- split_val_cal_conf(val_mask_mat, conformal_split_val,
+    split_res     <- split_val_cal_conf(val_mask_score, conformal_split_val,
                                          min_val_cells, seed)
     val_mask_cal  <- split_res$val_mask_cal
     val_mask_conf <- split_res$val_mask_conf
@@ -1471,6 +1568,12 @@ fit_pigauto <- function(
     # `baseline_full`.
     lambda_per_trait       = baseline$lambda_per_trait %||% NULL,
     lambda_block           = baseline$lambda_block %||% NULL,
+    predict_method_used    = baseline$predict_method_used %||% NULL,
+    predict_method_by_trait = baseline$predict_method_by_trait %||% NULL,
+    # S5c required change 1: per-trait validation-cell counts recording
+    # which cells chose the route ("auto" only).
+    route_val_n            = baseline$route_val_n %||% NULL,
+    score_val_n            = baseline$score_val_n %||% NULL,
     joint_solver           = joint_solver,
     joint_refine_iter      = joint_refine_iter,
     dropout                = dropout,
@@ -1634,6 +1737,37 @@ build_pigauto_fit <- function(
     ),
     class = "pigauto_fit"
   )
+}
+
+# ---------------------------------------------------------------------------
+# .pigauto_calibration_val_idx()
+# ---------------------------------------------------------------------------
+#
+# S5c (rose-review.md required change 1): under predict_method = "auto"
+# with real validation cells, `baseline` (fit_baseline()'s "auto" fit) has
+# already split each trait's validation cells into a ROUTE half (used only
+# to choose that trait's route) and a SCORE half
+# (`baseline$score_val_idx`). Gate calibration and conformal scoring must
+# use the SCORE half, not the full validation set -- otherwise the same
+# cells that picked the route also calibrate the gate and score the
+# conformal residuals, making those residuals optimistic (the mechanism
+# the review's finding 1 measured as undercoverage at lambda = 1, small
+# n). Under an explicit "exact"/"per_column" request (no routing decision
+# was made) this returns the full validation set unchanged, matching
+# pre-S5c behaviour exactly.
+#
+# @param splits list (output of make_missing_splits()) or NULL.
+# @param baseline list, fit_baseline()'s return value.
+# @param predict_method character, the top-level resolved request ("auto",
+#   "exact", or "per_column").
+# @return integer vector of linear indices into the n_obs x p_latent
+#   matrix (same format as `splits$val_idx`).
+.pigauto_calibration_val_idx <- function(splits, baseline, predict_method) {
+  if (identical(predict_method, "auto") && !is.null(baseline$score_val_idx) &&
+      all(baseline$score_val_idx %in% splits$val_idx)) {
+    return(baseline$score_val_idx)
+  }
+  splits$val_idx
 }
 
 # ---------------------------------------------------------------------------

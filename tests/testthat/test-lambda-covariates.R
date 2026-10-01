@@ -58,7 +58,11 @@ test_that("[lambda-cov] build_pagel_nll_cache(y, R) with X = NULL is unchanged",
   y2[c(2L, 7L, 15L, 22L)] <- NA
 
   cache <- pigauto:::build_pagel_nll_cache(y2, R2)
-  expect_equal(cache$nll(0.4), -16.2152757282217, tolerance = 1e-10)
+  # Reference re-captured 2026-09-24 after the full-REML fix to
+  # build_pagel_nll_cache() (R/pagel_lambda.R) added the
+  # 0.5 * log(1' R_oo(lambda)^-1 1) determinant term; the pre-fix value
+  # was -16.2152757282217.
+  expect_equal(cache$nll(0.4), -15.2177731244722, tolerance = 1e-10)
 
   # X = NULL explicitly is the same as omitting it.
   cache_explicit <- pigauto:::build_pagel_nll_cache(y2, R2, X = NULL)

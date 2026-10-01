@@ -580,6 +580,18 @@ test_that("conformal_split_val=TRUE changes conformal scores (no double-dipping)
   # n=200 + 50% missing + 40% val per masked-trait gives ~40 val cells
   # per column, just above the default `2 * min_val_cells = 40` split
   # threshold so the per-column split actually fires here.
+  #
+  # S5c (rose-review.md required change 1): under the default
+  # predict_method = "auto", fit_pigauto() first restricts calibration/
+  # conformal to the trait's SCORE half of validation cells (the half not
+  # used to choose the route) -- roughly halving the ~40 cells per column
+  # this test relies on, below the 2 * min_val_cells = 40 threshold, so
+  # conformal_split_val's OWN per-column split no longer fires and this
+  # test's two fits become identical for a reason unrelated to what it is
+  # testing. Pin predict_method = "per_column" (no routing decision is
+  # made, so the full validation set is used, matching this test's
+  # original cell-count assumption) -- this test is about the C.3
+  # calibration/conformal split, not about "auto".
   set.seed(90)
   tree <- ape::rtree(200)
   df   <- data.frame(
@@ -594,10 +606,12 @@ test_that("conformal_split_val=TRUE changes conformal scores (no double-dipping)
   fit_split <- fit_pigauto(pd, tree, splits = spl,
                             epochs = 30L, eval_every = 10L, patience = 5L,
                             verbose = FALSE, seed = 90,
+                            predict_method = "per_column",
                             conformal_split_val = TRUE)
   fit_full  <- fit_pigauto(pd, tree, splits = spl,
                             epochs = 30L, eval_every = 10L, patience = 5L,
                             verbose = FALSE, seed = 90,
+                            predict_method = "per_column",
                             conformal_split_val = FALSE)
 
   expect_true(!is.null(fit_split$conformal_scores))

@@ -39,10 +39,18 @@ test_that("joint_refine_iter = 3L runs, returns finite mu/se of identical shape,
   skip_on_cran()
   d <- make_two_trait_bm_data(seed = 5)
 
+  # S3 default flip (docs/dev-log/exact-default/S3-default-report.md):
+  # pinned to "per_column". Under "exact" (now the default),
+  # fit_mvn_bm_inhouse() returns from its exact-conditional branch before
+  # the joint_refine_iter EM loop ever runs, so joint_refine_iter has no
+  # effect at all when exact succeeds -- bl3 and bl0 would be byte-
+  # identical, which is exactly the property this test checks is FALSE.
+  # The EM-refinement effect this test targets only exists on the
+  # per-column path.
   bl0 <- fit_baseline(d$pd, d$tree, splits = d$splits, graph = d$graph,
-                       joint_refine_iter = 0L)
+                       joint_refine_iter = 0L, predict_method = "per_column")
   bl3 <- fit_baseline(d$pd, d$tree, splits = d$splits, graph = d$graph,
-                       joint_refine_iter = 3L)
+                       joint_refine_iter = 3L, predict_method = "per_column")
 
   expect_identical(dim(bl3$mu), dim(bl0$mu))
   expect_identical(dim(bl3$se), dim(bl0$se))

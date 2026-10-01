@@ -1,0 +1,80 @@
+pigauto: the exact ("exact") joint baseline route was not usable for a fit (fewer than 2 joint columns (K < 2)); used the per-column baseline for that fit instead. This happens either while predict_method = "auto" (the default) is comparing its "exact" candidate, or when "exact" is itself the resolved route and fell back. This message is shown at most once per R session; pass predict_method = "per_column" to use the per-column path throughout, or predict_method = "exact" explicitly if you want a warning every time this happens.
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): parasites. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(parasites = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): parasites. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(parasites = "continuous").
+
+1 tree tip(s) have no trait data and will have all-NA rows.
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): counts. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(counts = "continuous").
+pigauto: the exact ("exact") joint baseline route was not usable for a fit (problem too large, or a numerically unusable Sigma); used the per-column baseline for that fit instead. This happens either while predict_method = "auto" (the default) is comparing its "exact" candidate, or when "exact" is itself the resolved route and fell back. This message is shown at most once per R session; pass predict_method = "per_column" to use the per-column path throughout, or predict_method = "exact" explicitly if you want a warning every time this happens.
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Loading required package: torch
+Tracing function "torch_tensor" in package "torch"
+Untracing function "torch_tensor" in package "torch"
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Tracing function "nn_parameter" in package "torch"
+Tracing function "torch_tensor" in package "torch"
+Untracing function "nn_parameter" in package "torch"
+Untracing function "torch_tensor" in package "torch"
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Tracing function "torch_tensor" in package "torch"
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Untracing function "torch_tensor" in package "torch"
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Tracing function "torch_tensor" in package "torch"
+Untracing function "torch_tensor" in package "torch"
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+pigauto: the exact ("exact") joint baseline route was not usable for a fit (fewer than 2 joint columns (K < 2)); used the per-column baseline for that fit instead. This happens either while predict_method = "auto" (the default) is comparing its "exact" candidate, or when "exact" is itself the resolved route and fell back. This message is shown at most once per R session; pass predict_method = "per_column" to use the per-column path throughout, or predict_method = "exact" explicitly if you want a warning every time this happens.
+single-trait back-compat: max |mu diff| = 3.16e-05, max |se diff| = 1.71e-04
+[joint-lambda] recovery (n = 40 seeds): bias = -0.0272, -0.0553, -0.0050 | MAE = 0.1203, 0.1006, 0.0050
+[lambda-cov] n = 300, 600 seeds: mean(lambda_hat) = 0.2697, bias = -0.0303, MAE = 0.1226 (MAE not gated)
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Model saved to /var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//Rtmp3Ix1iY/filea5546268bcc6.pigauto (433,168 bytes)
+
+  ml lambda_hat = 0.005, cv lambda_hat = 0.010 (true mix = 0.2)
+
+  [pagel-perf] eigendecomp + 11 NLL evals at n=600: 0.02 s
+[pagel] full-REML weak-signal recovery (n = 100 seeds): mean(lambda_hat) = 0.2900, bias = -0.0100
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): count_trait. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(count_trait = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): cnt. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(cnt = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): cnt. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(cnt = "continuous").
+c1: chosen=exact exact=0.1817 per_column=0.2215; c2: chosen=per_column exact=0.3039 per_column=0.2961
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): cnt. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(cnt = "continuous").
+
+mixed-route seeds (of 12): 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12
+Note: model was saved with pigauto 0.9.1.9000; current version is 0.11.0.9000
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): x_cnt. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(x_cnt = "continuous").
+
+Using device: mps
+Calibrating gates on validation set...
+Calibrated gates: Mass=0, Beak.Length_Culmen=0, Tarsus.Length=0, Wing.Length=0, Trophic.Level=Carnivore=0, Trophic.Level=Herbivore=0, Trophic.Level=Omnivore=0, Trophic.Level=Scavenger=0, Primary.Lifestyle=Aerial=0, Primary.Lifestyle=Aquatic=0, Primary.Lifestyle=Generalist=0, Primary.Lifestyle=Insessorial=0, Primary.Lifestyle=Terrestrial=0, Migration=0
+Conformal scores (latent scale, method=split): Mass=0.3537, Beak.Length_Culmen=0.7579, Tarsus.Length=0.9738, Wing.Length=0.6616, Migration=2.9202
+pigauto: the exact ("exact") joint baseline route was not usable for a fit (fewer than 2 joint columns (K < 2)); used the per-column baseline for that fit instead. This happens either while predict_method = "auto" (the default) is comparing its "exact" candidate, or when "exact" is itself the resolved route and fell back. This message is shown at most once per R session; pass predict_method = "per_column" to use the per-column path throughout, or predict_method = "exact" explicitly if you want a warning every time this happens.
+Using device: mps
+Calibrating gates on validation set...
+Calibrated gates: Dummy_Size=1
+Conformal scores (latent scale, method=split): Dummy_Size=1.4898
+SUITE FAIL 0 | PASS 2724

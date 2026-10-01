@@ -17,8 +17,10 @@ fit_baseline(
   em_tol = 0.001,
   em_offdiag = FALSE,
   joint_solver = c("inhouse", "rphylopars"),
-  predict_method = c("per_column", "exact"),
-  joint_refine_iter = 0L
+  predict_method = c("auto", "exact", "per_column"),
+  joint_refine_iter = 0L,
+  predict_route = NULL,
+  seed = NULL
 )
 }
 \arguments{
@@ -129,13 +131,51 @@ columns off the joint path entirely (no joint analogue for those two
 modes).}
 
 \item{predict_method}{character. Prediction route for the in-house joint
-solver. \code{"per_column"} (default) retains the established
-per-column conditional prediction route. \code{"exact"} is opt-in and,
-when a multi-trait in-house joint fit has a usable sparse phylogenetic
-precision and covariance estimate, uses the exact matrix-normal
-conditional mean and variance. If those numerical gates are not met it
-warns and falls back to \code{"per_column"}. It does not change
-covariance estimation, defaults, or the \code{"rphylopars"} solver.}
+solver. \code{"auto"} (default, S5b/S5c) fits the baseline once with
+the \code{"exact"} route and once with the \code{"per_column"} route,
+then for each TRAIT (each \code{trait_map} entry; a categorical
+trait's K latent columns and a zi_count trait's gate + magnitude
+columns are chosen together) picks whichever route has the lower loss
+on that trait's cells: mean squared error on the z-scored latent
+scale for continuous/count/proportion/ordinal/zi_count magnitude,
+mean log-loss of \code{plogis(mu)} against the observed 0/1 truth for
+binary/zi_count gate, and mean multinomial log-loss for categorical.
+\strong{Which cells the choice sees}: a trait's held-out validation
+rows (species in multi-observation data) are split into two halves
+(seeded via \code{seed}, or the ambient RNG state when
+\code{seed = NULL}) when the trait has at least 38 of them and the two
+candidate fits predict it differently. The route choice sees only half
+A; half B is reserved so \code{fit_pigauto()}/\code{impute()} calibrate
+the GNN gate and compute conformal scores on rows that never informed
+the choice. Below 38 rows each half would keep fewer than the 19 a 95\\%
+split-conformal interval needs, so the same rows both choose the route
+and calibrate; when both fits agree, no choice is made and all rows
+calibrate. With fewer than 5 validation cells, or on a genuine tie, a
+trait keeps \code{"exact"}, as it does when \code{splits} is
+\code{NULL} (no validation cells at all makes every trait
+\code{"exact"}). The chosen route per trait is returned as
+\code{$predict_method_by_trait}. \code{"exact"} uses the full
+cross-trait conditional
+mean and variance of \code{vec(L) ~ MVN(0, Sigma \%x\% R(lambda_block))}
+in the sparse precision form (Hadfield & Nakagawa, 2010), with each
+column centred at its own GLS phylogenetic mean at \code{lambda_block}
+before the solve (mean-model consistency; see
+\code{docs/dev-log/exact-default/}). Discrete liability columns
+(binary, zi gate, ordinal-via-OVR synthetic columns) share
+\code{lambda_block} under \code{"exact"} rather than staying fixed at
+lambda = 1, so the whole joint fit uses one internally-consistent
+\code{R(lambda_block)}. Falls back to \code{"per_column"} above
+roughly 20000 unknown cells (roughly 4000 species at 5 traits), on a
+singular/unusable Sigma, or when fewer than 2 joint columns or no
+Henderson sparse precision are available; the fallback prints a
+one-time \code{message()} (not a warning) per R session when
+\code{predict_method} was left at its default, or a \code{warning()}
+every time when \code{"exact"} was requested explicitly.
+\code{"per_column"} retains the original per-column conditional
+prediction route (each column's own posterior, no cross-trait
+borrowing in the prediction step; \code{se} is that column's own
+conditional SE). Neither option changes covariance estimation or the
+\code{"rphylopars"} solver.}
 
 \item{joint_refine_iter}{integer, default \code{0L}. Enables
 cross-trait refinement of the joint baseline's cell imputations
@@ -143,7 +183,39 @@ using the estimated Sigma (the in-house solver's \code{max_iter}
 EM cell-refinement; \code{R/joint_mvn_solver.R}). \code{0L} preserves
 current behaviour byte-for-byte. The refinement is guarded: the
 Sigma step must shrink each iteration, or the loop rolls back to the
-last good iterate and sets \code{$diverged}.}
+last good iterate and sets \code{$diverged}. \strong{Has no effect on
+any trait predicted by the \code{"exact"} route}: the exact
+conditional solve returns its analytic posterior directly and never
+enters this EM loop. Under the default \code{predict_method =
+"auto"}, \code{joint_refine_iter} therefore only ever applies to
+traits that \code{"auto"} routes to \code{"per_column"} (see
+\code{$predict_method_by_trait} below).}
+
+\item{predict_route}{optional named character vector (names = trait
+names, i.e. \code{vapply(data$trait_map, function(tm) tm$name,
+character(1))}; values \code{"exact"} or \code{"per_column"}). Forces
+the prediction route for each named trait, bypassing the
+\code{"auto"} validation-loss comparison entirely (and overriding
+\code{predict_method}, if a value other than \code{"auto"} was also
+supplied). Traits not named default to \code{"exact"}. A name that
+matches no trait in \code{data$trait_map} is ignored, with a warning
+(once per call). Used internally to replay a validation-split
+\code{"auto"} choice onto a production refit that has no validation
+cells (e.g. \code{fit_pigauto()}'s \code{baseline_full}, fit with
+\code{splits = NULL}) so that refit reuses the SAME per-trait route
+rather than re-deciding with zero validation evidence. \code{NULL}
+(default) disables forcing; \code{predict_method} governs normally.}
+
+\item{seed}{optional integer. Seeds the deterministic half-A (route
+choice) / half-B (reserved for \code{fit_pigauto()}/\code{impute()}'s
+gate calibration and conformal scoring) split of each trait's
+validation cells under \code{predict_method = "auto"} with real
+validation cells (see \dQuote{"auto"} above). \code{NULL} (default)
+leaves the split to whatever the ambient RNG state is at call time,
+matching this package's other optional \code{seed} arguments.
+Ignored when \code{predict_method} is \code{"exact"} /
+\code{"per_column"}, when \code{predict_route} is supplied, or when
+there are no validation cells.}
 }
 \value{
 A list with:
@@ -185,6 +257,23 @@ conditional / opt-in EM refine (see \code{R/joint_mvn_solver.R}'s
 \code{$lambda_block}); \code{NA} when no joint fit ran.}
 \item{lambda_mode}{Character, echoes the resolved \code{lambda_mode}
 argument.}
+\item{predict_method_used}{Character scalar, \code{"exact"},
+\code{"per_column"}, or \code{"auto"}. Under a concrete
+\code{predict_method} (\code{"exact"} / \code{"per_column"}),
+aggregated across every joint fit that ran: \code{"exact"} only if
+every joint fit achieved exact; \code{"per_column"} if any fell
+back, if none ran (a pure per-column baseline), or if every joint
+fit used \code{joint_solver = "rphylopars"} (no exact/per_column
+dichotomy there). Under \code{predict_method = "auto"} (or a
+forced \code{predict_route}), always \code{"auto"}; see
+\code{$predict_method_by_trait} for the resolved per-trait routes.}
+\item{predict_method_by_trait}{Named character vector (names =
+trait names), one entry per \code{trait_map} entry, giving the
+route (\code{"exact"} or \code{"per_column"}) actually used for
+that trait's cells. Under a concrete \code{predict_method}, every
+entry equals \code{predict_method_used}. Under \code{"auto"} (or a
+forced \code{predict_route}), the per-trait validation choice (see
+\code{predict_method}'s \code{"auto"} entry above).}
 }
 }
 \description{

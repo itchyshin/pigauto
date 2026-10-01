@@ -68,17 +68,21 @@ test_that("[Phase G] clamp_outliers = FALSE is the default and is a no-op", {
   )
   df$mass[c(2L, 5L, 9L)] <- NA
 
-  res_default <- pigauto::impute(df, tree,
-                                  epochs = 10L, n_imputations = 1L,
-                                  verbose = FALSE, seed = 2051L)
-  res_explicit_off <- pigauto::impute(df, tree,
-                                       clamp_outliers = FALSE,
-                                       epochs = 10L, n_imputations = 1L,
-                                       verbose = FALSE, seed = 2051L)
-  # Identical predictions on the imputed cells (no-op confirmation)
+  # The default is FALSE on both user entry points.
+  expect_false(eval(formals(pigauto::impute)$clamp_outliers))
+  expect_false(eval(formals(pigauto:::predict.pigauto_fit)$clamp_outliers))
+
+  # No-op check on ONE fit. The previous version trained two fits and compared
+  # them bit for bit, which assumes training is repeatable; on the macOS CI
+  # runner two identically seeded fits differed (PR #187), so the test failed
+  # for reasons unrelated to clamping. Comparing two predictions from the same
+  # fitted model isolates the clamp step.
+  res <- pigauto::impute(df, tree, epochs = 10L, n_imputations = 1L,
+                         verbose = FALSE, seed = 2051L)
   miss <- which(is.na(df$mass))
-  expect_equal(res_default$completed$mass[miss],
-               res_explicit_off$completed$mass[miss],
+  pred_default <- predict(res$fit)
+  pred_off     <- predict(res$fit, clamp_outliers = FALSE)
+  expect_equal(pred_default$imputed$mass[miss], pred_off$imputed$mass[miss],
                tolerance = 1e-9,
                info = "[Phase G] default and clamp_outliers=FALSE must be identical")
 })

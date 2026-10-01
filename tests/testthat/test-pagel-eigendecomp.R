@@ -1,8 +1,10 @@
 # Tests for the v0.11 eigendecomposition-cached Pagel-λ NLL.
 # Spec: specs/2026-05-18-pagel-lambda-eigendecomp-speedup-design.md.
 
-# Dense-Cholesky reference implementation (matches v0.10 ml_lambda_for_col's
-# inner nll), used to verify the cached version produces identical results.
+# Dense-Cholesky reference implementation (matches the full-REML nll in
+# build_pagel_nll_cache(), R/pagel_lambda.R), used to verify the cached
+# version produces identical results. Includes the REML determinant
+# correction 0.5 * log(1' R_l^-1 1) = 0.5 * log(sum(a)) added 2026-09-24.
 .nll_dense_reference <- function(y, R, lambda, nugget = 1e-6) {
   obs <- which(!is.na(y))
   n_o <- length(obs)
@@ -15,12 +17,13 @@
   chol_solve <- function(b) backsolve(L, forwardsolve(t(L), b))
   a <- chol_solve(ones)
   b <- chol_solve(y_o)
-  mu_hat <- sum(b) / sum(a)
+  sum_a <- sum(a)
+  mu_hat <- sum(b) / sum_a
   e <- y_o - mu_hat
   e_solve <- chol_solve(e)
   sigma2 <- as.numeric(crossprod(e, e_solve)) / max(n_o - 1L, 1L)
   log_det <- 2 * sum(log(diag(L)))
-  0.5 * ((n_o - 1L) * log(sigma2) + log_det)
+  0.5 * ((n_o - 1L) * log(sigma2) + log_det + log(sum_a))
 }
 
 # ---- correctness ----------------------------------------------------------

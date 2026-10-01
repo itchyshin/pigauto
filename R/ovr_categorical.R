@@ -37,8 +37,12 @@ fit_ovr_categorical_fits <- function(data, tree, trait_name,
                                       soft_aggregate = FALSE,
                                       sd_prior_k = NULL,
                                       joint_solver = "inhouse",
-                                      predict_method = "per_column",
-                                      joint_refine_iter = 0L) {
+                                      predict_method = "exact",
+                                      joint_refine_iter = 0L,
+                                      predict_method_explicit = NULL) {
+  if (is.null(predict_method_explicit)) {
+    predict_method_explicit <- !missing(predict_method)
+  }
   stopifnot(joint_mvn_available())
   # sd_prior_k: optional length-K vector of per-class prior SDs for Phase 6
   # EM. NULL default (plug-in 1) is the v0.9.1 byte-identical path.
@@ -130,7 +134,8 @@ fit_ovr_categorical_fits <- function(data, tree, trait_name,
                                     sd_prior_vec = sdv,
                                     joint_solver = joint_solver,
                                     predict_method = predict_method,
-                                    joint_refine_iter = joint_refine_iter),
+                                    joint_refine_iter = joint_refine_iter,
+                                    predict_method_explicit = predict_method_explicit),
       error = function(e) NULL
     )
     if (is.null(jt)) next
@@ -152,6 +157,23 @@ fit_ovr_categorical_fits <- function(data, tree, trait_name,
   }
 
   attr(probs, "per_class_fits") <- per_class_fits
+  # Aggregate the K per-class predict_method_used values into one summary
+  # for this categorical trait: "exact" only if every class that ran
+  # achieved exact; "per_column" if any class fell back or failed;
+  # NA_character_ if no class produced a usable value at all (e.g. every
+  # class's fit errored, or joint_solver = "rphylopars" throughout).
+  used_vals <- vapply(per_class_fits, function(cf) {
+    if (is.null(cf) || is.null(cf$jt)) return(NA_character_)
+    cf$jt$predict_method_used %||% NA_character_
+  }, character(1L))
+  used_vals <- used_vals[!is.na(used_vals)]
+  attr(probs, "predict_method_used") <- if (length(used_vals) == 0L) {
+    NA_character_
+  } else if (all(used_vals == "exact")) {
+    "exact"
+  } else {
+    "per_column"
+  }
   probs
 }
 
@@ -247,8 +269,12 @@ fit_ovr_categorical_fits_em <- function(data, tree, trait_name,
                                          em_iterations = 5L,
                                          em_tol = 1e-3,
                                          joint_solver = "inhouse",
-                                         predict_method = "per_column",
-                                         joint_refine_iter = 0L) {
+                                         predict_method = "exact",
+                                         joint_refine_iter = 0L,
+                                         predict_method_explicit = NULL) {
+  if (is.null(predict_method_explicit)) {
+    predict_method_explicit <- !missing(predict_method)
+  }
   stopifnot(em_iterations >= 1L)
 
   # Discover K by running a single plug-in iter first.
@@ -258,7 +284,8 @@ fit_ovr_categorical_fits_em <- function(data, tree, trait_name,
                                      sd_prior_k = NULL,
                                      joint_solver = joint_solver,
                                      predict_method = predict_method,
-                                     joint_refine_iter = joint_refine_iter)
+                                     joint_refine_iter = joint_refine_iter,
+                                     predict_method_explicit = predict_method_explicit)
   K <- ncol(iter1)
   sigma_cat <- rep(1, K)
   probs     <- iter1
@@ -294,7 +321,9 @@ fit_ovr_categorical_fits_em <- function(data, tree, trait_name,
                                   soft_aggregate = soft_aggregate,
                                   sd_prior_k = sd_prior_k,
                                   joint_solver = joint_solver,
-                                  joint_refine_iter = joint_refine_iter),
+                                  predict_method = predict_method,
+                                  joint_refine_iter = joint_refine_iter,
+                                  predict_method_explicit = predict_method_explicit),
         error = function(e) NULL
       )
       if (is.null(iter_probs)) {

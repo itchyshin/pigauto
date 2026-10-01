@@ -1,6 +1,9 @@
 url: https://itchyshin.github.io/pigauto
 
-destination: docs
+# Build into _site/, not docs/: docs/ holds the tracked dev-log notes, and pkgdown refuses
+# to write into a non-empty folder it did not create (check_dest_is_pkgdown), which failed
+# every main build from at least 2026-09-19 to 2026-09-24.
+destination: _site
 
 template:
   bootstrap: 5
@@ -118,7 +121,7 @@ navbar:
         #     href: articles/methodology.html
         #
         # -------- Historical benchmark evidence --------
-        # The following pre-v0.10 snapshot pages remain under docs/dev/ as
+        # The following pre-v0.10 snapshot pages remain under _site/dev/ as
         # historical benchmark evidence, but are intentionally absent from
         # the release navbar. Re-add them only after their script/make_*_html.R
         # driver has been rerun against the release code and the claims have

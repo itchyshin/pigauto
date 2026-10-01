@@ -149,6 +149,12 @@ test_that("[lambda-default] multi_impute_trees stores different lambda_per_trait
 # checked the reported `lambda_per_trait` value (not that it reaches mu)
 # or replayed `lambda_fixed` against itself (trivially self-consistent
 # even when lambda is silently 1 everywhere).
+# per-column contract; under the exact default this does not hold because
+# part (b) below compares the fit's prediction directly against an
+# INDEPENDENT per-column bm_impute_col() call -- the exact conditional
+# jointly predicts both columns from one shared Sigma / R(lambda_block),
+# so it legitimately differs from a per-column BM call even at the same
+# lambda. See docs/dev-log/exact-default/S4-fixes-report.md.
 test_that("[lambda-default] estimated lambda is applied", {
   skip_if_not_installed("Matrix")
   set.seed(80L)
@@ -175,12 +181,14 @@ test_that("[lambda-default] estimated lambda is applied", {
                                       missing_frac = 0.2, verbose = FALSE,
                                       seed = 80L, lambda_mode = "estimate",
                                       safety_floor = FALSE,
-                                      phylo_signal_gate = FALSE))
+                                      phylo_signal_gate = FALSE,
+                                      predict_method = "per_column"))
   res_f1  <- suppressWarnings(impute(df, tree, gnn = FALSE,
                                       missing_frac = 0.2, verbose = FALSE,
                                       seed = 80L, lambda_mode = "fixed_1",
                                       safety_floor = FALSE,
-                                      phylo_signal_gate = FALSE))
+                                      phylo_signal_gate = FALSE,
+                                      predict_method = "per_column"))
 
   # (a) default ("estimate") and fixed_1 must give different completed
   # values on data simulated under lambda_true = 0.3 (a non-trivial

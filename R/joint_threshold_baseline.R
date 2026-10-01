@@ -304,10 +304,14 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
                                         mu_prior_mat = NULL,
                                         sd_prior_mat = NULL,
                                         joint_solver = "inhouse",
-                       predict_method = "per_column",
+                       predict_method = "exact",
                                         joint_refine_iter = 0L,
                                         lambda_mode = "fixed_1",
-                                        lambda_fixed = NULL) {
+                                        lambda_fixed = NULL,
+                                        predict_method_explicit = NULL) {
+  if (is.null(predict_method_explicit)) {
+    predict_method_explicit <- !missing(predict_method)
+  }
   stopifnot(joint_mvn_available())
 
   built <- build_liability_matrix(data, splits = splits,
@@ -346,15 +350,29 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
     lambda_family_idx <- which(liab_types[fit_cols] %in%
                                   c("continuous", "count", "proportion"))
     if (!is.null(lambda_fixed)) {
-      lam_arg <- rep(1, length(fit_cols))
-      if (length(lambda_family_idx) > 0L) {
-        # Columns missing from `lambda_fixed` default to lambda = 1, per
-        # the documented contract on `fit_baseline()`'s `lambda_fixed`
-        # argument (Rose review, 2026-09-23: this used to leave those
-        # entries NA and error downstream instead of defaulting to 1).
-        lam_vals <- unname(lambda_fixed[colnames(X_fit)[lambda_family_idx]])
-        lam_vals[is.na(lam_vals)] <- 1.0
-        lam_arg[lambda_family_idx] <- lam_vals
+      # Columns missing from `lambda_fixed` default to lambda = 1, per the
+      # documented contract on `fit_baseline()`'s `lambda_fixed` argument
+      # (Rose review, 2026-09-23: this used to leave those entries NA and
+      # error downstream instead of defaulting to 1). S4 fix (root cause
+      # A, docs/dev-log/exact-default/S4-fixes-report.md): look up EVERY
+      # X_fit column by name (not just the continuous-family
+      # `lambda_family_idx` subset) -- under predict_method = "exact",
+      # discrete liability columns can legitimately carry lambda_block
+      # (not 1) in a previous fit's own $lambda_per_trait (see
+      # .mvn_resolve_lambda()'s exact-route exception), and forcing them
+      # back to 1 here would desynchronise a lambda_fixed rebuild from the
+      # fit it was replaying. A discrete column simply absent from
+      # `lambda_fixed` (the common case for a hand-built or partial
+      # vector) still defaults to 1, unchanged.
+      lam_vals <- unname(lambda_fixed[colnames(X_fit)])
+      lam_vals[is.na(lam_vals)] <- 1.0
+      lam_arg <- lam_vals
+      # Carry the original fit's lambda_block through the name-subset,
+      # which drops custom attributes -- see R/joint_mvn_solver.R's
+      # .mvn_resolve_lambda() numeric-vector branch.
+      lb_fixed <- attr(lambda_fixed, "lambda_block")
+      if (!is.null(lb_fixed) && is.finite(lb_fixed)) {
+        attr(lam_arg, "lambda_block") <- lb_fixed
       }
       lam_cols_arg <- NULL   # full vector supplied; lambda_cols unused
     } else if (identical(lambda_mode, "estimate")) {
@@ -373,7 +391,8 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
     fit <- fit_joint_solver(L = X_fit, tree = tree, joint_solver = joint_solver,
                             predict_method = predict_method,
                             joint_refine_iter = joint_refine_iter,
-                            lambda = lam_arg, lambda_cols = lam_cols_arg)
+                            lambda = lam_arg, lambda_cols = lam_cols_arg,
+                            predict_method_explicit = predict_method_explicit)
 
     tip_rows <- match(spp, rownames(fit$anc_recon))
     mu_fit   <- fit$anc_recon[tip_rows, , drop = FALSE]
@@ -414,7 +433,12 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
        phylopars_fit = phylopars_fit,
        fit_cols_idx = fit_cols,
        lambda_per_trait_fit = lambda_per_trait_fit,
-       lambda_block = lambda_block)
+       lambda_block = lambda_block,
+       predict_method_used = if (!is.null(phylopars_fit)) {
+         phylopars_fit$predict_method_used %||% NA_character_
+       } else {
+         NA_character_
+       })
 }
 
 #' Decode liability-scale posterior to logit(P(y=1)) for binary traits
@@ -589,10 +613,14 @@ fit_joint_threshold_baseline_em <- function(data, tree, splits,
                                              em_tol = 1e-3,
                                              em_offdiag = FALSE,
                                              joint_solver = "inhouse",
-                                          predict_method = "per_column",
+                                          predict_method = "exact",
                                              joint_refine_iter = 0L,
                                              lambda_mode = "fixed_1",
-                                             lambda_fixed = NULL) {
+                                             lambda_fixed = NULL,
+                                             predict_method_explicit = NULL) {
+  if (is.null(predict_method_explicit)) {
+    predict_method_explicit <- !missing(predict_method)
+  }
   stopifnot(joint_mvn_available(), em_iterations >= 1L)
 
   # Phase 6 state (diagonal):
@@ -617,9 +645,11 @@ fit_joint_threshold_baseline_em <- function(data, tree, splits,
                                     mu_prior_mat = mu_prior_mat,
                                     sd_prior_mat = sd_prior_mat,
                                     joint_solver = joint_solver,
+                                    predict_method = predict_method,
                                     joint_refine_iter = joint_refine_iter,
                                     lambda_mode = lambda_mode,
-                                    lambda_fixed = lambda_fixed),
+                                    lambda_fixed = lambda_fixed,
+                                    predict_method_explicit = predict_method_explicit),
       error = function(e) NULL
     )
 

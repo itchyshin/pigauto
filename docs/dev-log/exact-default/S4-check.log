@@ -1,0 +1,22 @@
+CHECK errors 1 warnings 0 notes 1
+checking tests ...
+  Running ‘testthat.R’ [12m/17m]
+ [12m/17m] ERROR
+Running the tests in ‘tests/testthat.R’ failed.
+Last 13 lines of output:
+  Differences:
+    `actual`: -36.20
+  `expected`: -36.38
+  
+  ── Failure ('test-sigma-fisher-ml.R:51:3'): sigma_method = 'single_pass' numeric regression on a fixed-seed L/tree ──
+  Expected `sum(fit$anc_var)` to equal 0.124196977768639.
+  Differences:
+    `actual`: 0.114
+  `expected`: 0.124
+  
+  
+  [ FAIL 23 | WARN 300 | SKIP 71 | PASS 2299 ]
+  Error:
+  ! Test failures.
+  Execution halted
+
