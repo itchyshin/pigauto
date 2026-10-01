@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Totoro driver for the pig_post pre-run (pigauto posterior MI, PR #189) of the Rubin study.
+# docs/dev-log/arc/2026-10-01-rubin-pigauto-prerun.md. Approved as part of the 2026-10-01 plan (36 fits, <= 40 cores,
+# <= 1 h); the full campaign is NOT launched by this script (D-287: needs Shinichi's approval).
+#
+#   ssh totoro            # through the ~/.ssh/cm-* ControlMaster socket
+#   cd ~/pigauto_rubin
+#   PIGAUTO_SHA=<merged main sha> CONFIRM=yes bash script/rubin_pig_prerun_totoro.sh 36
+#
+# Grid: n {100, 300, 1000} x lambda {0.3, 0.7, 1} x rho {0, 0.5} x seeds {1, 2} = 36 cells, arm pig_post only,
+# M = 20, MCAR 30%: the same datasets as the stored campaign (rubin_cell.R regenerates them from (n, lambda, rho, seed)).
+# Output goes to its own directory (the cell tag does not name the arms). Resume: existing rds are skipped.
+set -euo pipefail
+
+PAR="${1:-36}"
+ROOT="${RUBIN_ROOT:-$HOME/pigauto_rubin}"
+OUT="$ROOT/prerun_pig"; LOG="$ROOT/logs"; mkdir -p "$OUT" "$LOG"
+[ "$PAR" -le 40 ] || { echo "PAR=$PAR exceeds the 40 cores approved for this pre-run"; exit 1; }
+
+free -g
+BUSY=$(ps -u "$USER" -o pcpu= | awk '{s+=$1} END {printf "%d", s/100 + 0.5}')
+echo "cores already busy for $USER: $BUSY"
+[ $(( BUSY + PAR )) -le 150 ] || { echo "PAR=$PAR + $BUSY busy exceeds the 150-core cap (D-143)"; exit 1; }
+
+# The installed pigauto must be the merged-main build, installed from GitHub so DESCRIPTION carries RemoteSha.
+: "${PIGAUTO_SHA:?set PIGAUTO_SHA to the merged main sha}"
+Rscript -e "d <- utils::packageDescription('pigauto'); s <- if (is.null(d\$RemoteSha)) '' else d\$RemoteSha;
+  stopifnot('installed pigauto is not the expected sha' = identical(s, '$PIGAUTO_SHA'),
+            'installed pigauto has no posterior draws' = 'posterior' %in% eval(formals(pigauto::multi_impute)\$draws_method));
+  cat('pigauto', s, 'OK\n')"
+for f in campaign_gnn_off_lib.R rubin_lib.R rubin_freq.R rubin_bace.R rubin_cell.R rubin_pigauto.R; do
+  [ -s "$ROOT/script/$f" ] || { echo "missing $ROOT/script/$f (rsync the lane's script/ first)"; exit 1; }
+done
+
+[ "${CONFIRM:-no}" = yes ] || { echo "dry run: set CONFIRM=yes to launch"; exit 0; }
+
+export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1
+
+JOBS="$LOG/prerun_pig_jobs.txt"; : > "$JOBS"
+for n in 1000 300 100; do for lambda in 0.3 0.7 1; do for rho in 0 0.5; do for seed in 1 2; do
+  echo "--n $n --seed $seed --lambda $lambda --rho $rho --M 20 --arms pig_post --out $OUT" >> "$JOBS"
+done; done; done; done
+echo "[$(date +%FT%T)] prerun_pig jobs=$(wc -l < "$JOBS") parallel=$PAR out=$OUT sha=$PIGAUTO_SHA" | tee -a "$LOG/prerun_pig.log"
+
+setsid nohup bash -c "
+  xargs -P $PAR -L 1 -a '$JOBS' bash -c 'Rscript \"$ROOT/script/rubin_cell.R\" \"\$@\" >> \"$LOG/prerun_pig_cells.log\" 2>&1' _
+  echo \"[\$(date +%FT%T)] prerun_pig done\" >> '$LOG/prerun_pig.log'
+" > /dev/null 2>&1 &
+echo "launched; pgid $(ps -o pgid= $! | tr -d ' '); stop with: kill -- -<pgid>"
