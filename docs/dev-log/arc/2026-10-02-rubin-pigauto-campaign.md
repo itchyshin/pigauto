@@ -126,6 +126,22 @@ avoid the trade-off, untested: a scale that shrinks with n (for example 0.1 / n,
 1e-3 at n = 100), or parameter expansion on Sigma_E as on Sigma_P. Branch `fix/mi-posterior-sigma-e-prior` holds the
 flat-1e-4 change as work in progress (the pinned first-run test is deliberately not re-pinned).
 
+### Variant C, S_E scale 0.1 / n (2026-10-02): does not avoid the trade-off
+
+Same datasets and scoring. At n = 1000 C equals A by construction (1e-4) and gives identical results (lambda = 1 gap
+to the oracle -0.006 against -0.030 for the current prior). At n = 100 (scale 1e-3):
+
+| cell | current | A (1e-4) | C (0.1 / n) |
+|---|---|---|---|
+| lambda 0.3: converged, gap to oracle | 8 of 10, +0.025 | 8 of 10, +0.020 | 10 of 10, +0.021 |
+| lambda 0.7: converged, gap to oracle | 8 of 10, +0.017 | 4 of 9, +0.024 | 4 of 9, +0.043 |
+
+C also crashed on lambda 0.7, seed 9, as A did. Any smaller S_E scale, fixed or shrinking with n, worsens mixing
+when the residual variance is real at small n. Ten seeds per cell is a screen (4 of 9 against 8 of 10 is suggestive,
+not decisive), but A and C agree. The remaining options are parameter expansion on Sigma_E (as on Sigma_P), which
+targets mixing near Sigma_E = 0 without moving the prior's scale, or keeping the current prior and documenting the
+large-n, lambda = 1 caveat.
+
 ## Does NOT cover
 
 Discrete traits (posterior MI is continuous-only); MAR or clade missingness; real trees; the 12 sampler failures (a pigauto fix); `study.qmd` and the published report pages are not
