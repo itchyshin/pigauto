@@ -32,9 +32,11 @@
 #'
 #' @param x An object of class \code{"pigauto_fit"}.
 #' @param type Character.
-#'   \code{"history"} (default): 2x2 panel of training loss components
-#'     (reconstruction, shrinkage, gate regularisation) and validation
-#'     loss over epochs.
+#'   \code{"history"} (default when a GNN was trained): 2x2 panel of
+#'     training loss components (reconstruction, shrinkage, gate
+#'     regularisation) and validation loss over epochs. A fit with
+#'     \code{gnn = FALSE} (the default) has no training history, so
+#'     \code{plot(fit)} then shows \code{"gates"} instead.
 #'   \code{"gates"}: bar plot of calibrated gate values per trait,
 #'     coloured by trait type (green = continuous, blue = count,
 #'     orange = ordinal, red = binary, purple = categorical).
@@ -52,7 +54,7 @@
 #' data <- preprocess_traits(traits, tree)
 #' splits <- make_missing_splits(data$X_scaled, trait_map = data$trait_map)
 #' fit <- fit_pigauto(data, tree, splits = splits, epochs = 5L,
-#'                    eval_every = 1L, verbose = FALSE)
+#'                    eval_every = 1L, verbose = FALSE, gnn = TRUE)
 #' plot(fit)
 #' plot(fit, type = "history")
 #' plot(fit, type = "gates")
@@ -65,6 +67,11 @@
 #' @importFrom stats predict setNames
 #' @export
 plot.pigauto_fit <- function(x, type = "history", ...) {
+  # A gnn = FALSE fit (the default) trains no network and has no history;
+  # an unqualified plot(fit) shows the calibrated gates instead of erroring.
+  if (missing(type) && (is.null(x$history) || NROW(x$history) == 0L)) {
+    type <- "gates"
+  }
   type <- match.arg(type, c("history", "gates", "conformal"))
 
   if (type == "history") {
@@ -83,6 +90,11 @@ plot.pigauto_fit <- function(x, type = "history", ...) {
 .plot_history <- function(x, ...) {
   h <- x$history
   if (is.null(h) || nrow(h) == 0L) {
+    if (isFALSE(x$model_config$gnn)) {
+      stop("No training history available: this fit was produced with ",
+           "gnn = FALSE (no GNN was trained). Use type = \"gates\", or refit ",
+           "with gnn = TRUE.", call. = FALSE)
+    }
     stop("No training history available in this pigauto_fit object.")
   }
 

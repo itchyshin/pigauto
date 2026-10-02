@@ -35,7 +35,7 @@ impute(
   phylo_signal_threshold = 0.2,
   phylo_signal_method = "lambda",
   conformal_split_val = FALSE,
-  gnn = TRUE,
+  gnn = FALSE,
   ...
 )
 }
@@ -293,9 +293,9 @@ on. Costs interval width at small validation sizes; see
 \code{\link{fit_pigauto}} for details. Previously reachable only via
 \code{...}; exposed here for discoverability.}
 
-\item{gnn}{logical. When \code{TRUE} (default), trains the
+\item{gnn}{logical. When \code{TRUE}, trains the
 attention-based GNN correction (see \code{\link{fit_pigauto}}). When
-\code{FALSE}, no GNN is constructed or trained -- \code{impute()} makes
+\code{FALSE} (default), no GNN is constructed or trained -- \code{impute()} makes
 no torch/GPU calls, and the fit is the phylogenetic baseline alone
 (optionally re-weighted against a grand-mean floor). \code{safety_floor}
 and \code{phylo_signal_gate} keep their usual semantics; the pure
@@ -308,7 +308,14 @@ held-out \code{baseline}, so evaluation never leaks test cells.
 User \code{covariates} enter pigauto only through the GNN, so under
 \code{gnn = FALSE} they are ignored (with a warning); without a
 validation split (\code{missing_frac = 0}) the fit is pure baseline
-and carries no conformal scores.}
+and carries no conformal scores.
+Default \code{FALSE} since pigauto 0.11.0.9001: on simulated and real
+data at the current baseline defaults the GNN did not lower
+imputation error and took 20 to 90 times longer to fit
+(\code{docs/dev-log/arc/2026-10-02-campaign-gnn-rerun.md}). Set
+\code{gnn = TRUE} to train it, for example to use \code{covariates},
+which only the GNN uses, or to restore the behaviour of earlier
+versions.}
 
 \item{...}{additional arguments passed to \code{\link{fit_pigauto}}.}
 }

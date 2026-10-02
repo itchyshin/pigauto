@@ -85,15 +85,20 @@ single call to `impute()`.
 
 ### How it works (briefly)
 
-pigauto combines a phylogenetic baseline with a graph neural network
-(GNN) correction. The baseline uses Brownian-motion conditional
-imputation for continuous-family latent columns and phylogenetic
-label-propagation or threshold/liability candidates for discrete-family
-columns. The GNN learns
-additional patterns from tree topology and cross-trait structure. A
+By default pigauto fits a phylogenetic baseline: Brownian-motion
+conditional imputation for continuous-family latent columns and
+phylogenetic label-propagation or threshold/liability candidates for
+discrete-family columns, with a per-trait Pagel's lambda. A held-out
+validation split calibrates the blend and the conformal intervals.
+
+An optional graph neural network (GNN) correction is trained when you
+set `gnn = TRUE`. It learns additional patterns from tree topology,
+cross-trait structure and user `covariates` (which only the GNN uses). A
 per-trait gate controls how much the GNN contributes: when the baseline
 is already good enough, the gate closes and the GNN stays out of the
-way. This is verified on held-out data after training.
+way. The GNN has been off by default since version 0.11.0.9001 because,
+at the current baseline defaults, it did not lower imputation error on
+simulated or real benchmark data and took 20 to 90 times longer to fit.
 
 > **Technical note.** The internal class name `ResidualPhyloDAE` refers
 > to the ResNet-style skip connections inside the GNN layers, not to a
@@ -137,8 +142,9 @@ result$imputed_mask # logical matrix: TRUE where a cell was imputed
 result$prediction$se # per-cell uncertainty (original units)
 ```
 
-`impute()` runs the full pipeline internally — preprocessing, baseline fitting,
-graph construction, GNN training, calibration, and prediction. The rest of this
+`impute()` runs the full pipeline internally: preprocessing, baseline fitting,
+graph construction, calibration, and prediction (plus GNN training when
+`gnn = TRUE`). The rest of this
 vignette walks through each step individually for users who need fine-grained
 control, want to cache intermediate objects, or are benchmarking components.
 
@@ -198,7 +204,7 @@ test cells provide the final unbiased performance estimate.
 ## Step 3: Fit the BM baseline
 
 `fit_baseline()` fits the phylogenetic BM baseline after masking the held-out cells. This
-gives the benchmark against which the GNN will be compared.
+gives the benchmark against which an optional GNN would be compared.
 
 ```{r baseline, eval=TRUE}
 baseline <- fit_baseline(pd, tree300, splits = splits, model = "BM")
@@ -231,7 +237,9 @@ recomputation.
 
 ## Step 5: Train the model
 
-The training loop corrupts a random 55% of observed cells each epoch with a
+With the default `gnn = FALSE`, `fit_pigauto()` fits no network and makes
+no torch calls; it calibrates the baseline and the conformal intervals.
+The chunk below sets `gnn = TRUE` to show the optional GNN. Its training loop corrupts a random 55% of observed cells each epoch with a
 learnable mask token, then minimises the type-appropriate loss on the
 corrupted cells plus a shrinkage penalty on `delta - baseline` that
 pulls the GNN toward the baseline. Early stopping is based on held-out
@@ -254,7 +262,8 @@ fit <- fit_pigauto(
   eval_every      = 100,
   patience        = 10,
   verbose         = TRUE,
-  seed            = 1
+  seed            = 1,
+  gnn             = TRUE
 )
 ```
 
@@ -529,7 +538,7 @@ clim <- pull_worldclim_per_species(species             = rownames(my_traits),
 #> data.frame with bio1..bio19 medians + IQRs + n_extracted per species
 
 # Step 3: hand the whole climate frame to impute() as covariates
-result <- impute(my_traits, my_tree, covariates = clim)
+result <- impute(my_traits, my_tree, covariates = clim, gnn = TRUE)
 ```
 
 Caching is on by default — both helpers write to the

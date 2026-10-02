@@ -93,12 +93,13 @@
 #' @param seed optional integer. When supplied, makes fitting and imputation
 #'   draws reproducible; the default `NULL` uses the current RNG stream.
 #' @param gnn logical. Passed through to [impute()] / [fit_pigauto()]. When
-#'   `TRUE` (default), the usual GNN correction is trained. When `FALSE`,
+#'   `TRUE`, the usual GNN correction is trained. When `FALSE` (default),
 #'   no GNN is used (baseline-only fit; see [fit_pigauto()]). With
 #'   `draws_method = "mc_dropout"` this degrades gracefully to BM-posterior
 #'   draws (there is no dropout to run) and a one-time message is printed;
 #'   `draws_method = "conformal"` is unaffected. User `covariates` are
-#'   ignored under `gnn = FALSE` (with a warning), as in [impute()].
+#'   ignored under `gnn = FALSE` (with a warning), as in [impute()]. The
+#'   default changed from `TRUE` to `FALSE` in 0.11.0.9001; see [impute()].
 #' @param lambda_mode character. Pagel-lambda mode for the BM baseline,
 #'   forwarded to [impute()] / [fit_pigauto()]. `"estimate"` (default) fits
 #'   a per-trait Pagel's lambda on each continuous-family (BM-eligible)
@@ -385,7 +386,7 @@ multi_impute <- function(traits, tree, m = 100L,
                          missing_frac = 0.25,
                          covariates = NULL,
                          epochs = 2000L, verbose = TRUE, seed = NULL,
-                         gnn = TRUE,
+                         gnn = FALSE,
                          lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
                          posterior_control = list(),
                          ...) {

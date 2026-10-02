@@ -132,6 +132,10 @@ table(result_mode$completed$Migration[hide], df$Migration[hide])
 
 ## 3. "The gate stays closed and the GNN seems to do nothing"
 
+This section applies when you fit with `gnn = TRUE`. With the default
+`gnn = FALSE` no GNN is trained, so `r_cal_gnn` is 0 by construction and
+predictions come from the calibrated baseline.
+
 **Symptom.** You expected the GNN to dominate, but inspecting the
 fitted model shows the calibrated gate is fully or near-fully closed
 (`r_cal_gnn` ≈ 0) — predictions equal the BM baseline.
