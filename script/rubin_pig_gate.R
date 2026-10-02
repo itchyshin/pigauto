@@ -38,8 +38,15 @@ if (identical(mode, "arms")) {
   cat("ARMS_OK", sum(ok), "\n")
 } else if (identical(mode, "identity")) {
   x <- one_file(); y <- stored_twin(x)
-  if (!identical(x$truth, y$truth)) stop("truth differs from the stored campaign dataset")
+  # Cross-platform (Mac vs the cluster that wrote the stored file): numeric traits agree to floating-point
+  # rounding (measured 1.7e-15), so they are compared at 1e-12; the mask and discrete traits must be identical.
   if (!identical(x$mask, y$mask)) stop("mask differs from the stored campaign dataset")
+  if (!identical(names(x$truth), names(y$truth)) || !identical(rownames(x$truth), rownames(y$truth))) stop("truth layout differs")
+  for (v in names(x$truth)) {
+    a <- x$truth[[v]]; b <- y$truth[[v]]
+    same <- if (is.numeric(a)) isTRUE(max(abs(a - b)) <= 1e-12) else identical(a, b)
+    if (!same) stop("truth column ", v, " differs from the stored campaign dataset")
+  }
   cat("IDENTITY_OK\n")
 } else if (identical(mode, "repro")) {
   x <- one_file(); y <- stored_twin(x)
@@ -47,7 +54,8 @@ if (identical(mode, "arms")) {
   for (a in c("complete", "freqA", "freqB")) {
     ex <- x$estimands[x$estimands$arm == a, ]; ey <- y$estimands[y$estimands$arm == a, ]
     ex <- ex[order(ex$estimand), key]; ey <- ey[order(ey$estimand), key]
-    if (nrow(ex) != 2L || !isTRUE(all.equal(unname(as.matrix(ex)), unname(as.matrix(ey)), tolerance = 1e-10)))
+    # relative 1e-6: cross-platform rounding measured up to 2.4e-9 (freqA); a disturbed arm moves estimates ~1e-2
+    if (nrow(ex) != 2L || !isTRUE(all.equal(unname(as.matrix(ex)), unname(as.matrix(ey)), tolerance = 1e-6)))
       stop(a, " does not reproduce the stored campaign row")
   }
   cat("REPRO_OK\n")
