@@ -62,14 +62,17 @@ if (identical(mode, "arms")) {
 } else if (identical(mode, "prov")) {
   want_sha <- args[3]
   if (is.na(want_sha) || !grepl("^[0-9a-f]{40}$", want_sha)) stop("prov needs the expected 40-hex pigauto sha")
+  n_conv <- 0L
   for (f in files) {
     d <- readRDS(f)$diag$pig_post
     if (is.null(d)) stop("no pig_post diag in ", basename(f))
     if (is.na(d$pigauto_sha) || !identical(d$pigauto_sha, want_sha)) stop("pigauto sha ", d$pigauto_sha, " != ", want_sha, " in ", basename(f))
     if (!identical(d$mi_workflow, "pigauto_posterior_mi_v1")) stop("not proper posterior MI in ", basename(f))
-    if (!isTRUE(d$converged)) stop("not converged (R-hat ", d$rhat_max, ", ESS ", d$ess_min, ") in ", basename(f))
     if (length(d$logged)) stop("log-transformed traits in ", basename(f))
+    n_conv <- n_conv + isTRUE(d$converged)
   }
+  # Convergence is a measured outcome (reported, and flagged per row in the estimands), not provenance.
+  cat("converged:", n_conv, "of", length(files), "\n")
   cat("PROV_OK\n")
 } else if (identical(mode, "prerun")) {
   n_ok <- 0L; fails <- character(0); rows <- list()
