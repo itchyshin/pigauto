@@ -42,7 +42,7 @@
 # Bayesian Analysis 1: 515-534) for the scaled-F prior it implies on each
 # standard deviation, and Hadfield (2010, J. Stat. Softw. 33(2)) for the
 # multivariate form. Priors: Sigma_W ~ IW(K + 1, I_K), alpha ~ N(0, 1000 I_K),
-# Sigma_E ~ IW(K + 1, 0.01 diag(observed latent variances)). alpha and
+# Sigma_E ~ IW(K + 1, 1e-4 diag(observed latent variances)). alpha and
 # Sigma_W are not identified; only Sigma_P, Sigma_E, lambda and mu are
 # reported and diagnosed.
 #
@@ -966,8 +966,13 @@
 .mip_fit <- function(Y, tree, ctl, verbose = FALSE) {
   prob <- .mip_problem(Y, tree)
   K <- prob$K
+  # S_E scale 1e-4 (was 0.01 in #189). At lambda = 1 the true Sigma_E is 0; the 0.01 scale held its posterior
+  # above 0 with a correlation pulled towards 0, and that small, nearly uncorrelated noise on every imputed cell
+  # attenuated a downstream PGLS slope (Rubin study, n = 1000, lambda = 1: slope error -0.034 against -0.004 for
+  # oracle MI; 1e-4 gives -0.010 there and leaves lambda = 0.7 unchanged). arc/rubin-freq-bace,
+  # docs/dev-log/arc/2026-10-02-rubin-pigauto-campaign.md.
   hyper <- list(nu_W = K + 1, S_W = diag(K), V_alpha = 1000,
-                nu_E = K + 1, S_E = diag(0.01 * prob$obs_var, K))
+                nu_E = K + 1, S_E = diag(1e-4 * prob$obs_var, K))
   if (!is.null(ctl$seed)) set.seed(as.integer(ctl$seed))
   chain_seeds <- sample.int(.Machine$integer.max, ctl$n_chains)
   lam_reml <- .mip_reml_lambda(prob, tree)

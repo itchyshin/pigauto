@@ -505,3 +505,19 @@ test_that("the first run is pinned on a fixed fixture (re-pinned after the full-
   expect_equal(unname(f$params$lambda[1:3, ]), ref_lambda, tolerance = 1e-8)
   expect_false(isTRUE(attr(f$diagnostics, "converged")))
 })
+
+test_that("the default Sigma_E prior scale is 1e-4 of the observed latent variances", {
+  # Rubin study (arc/rubin-freq-bace): the earlier 0.01 scale held Sigma_E above its true value of 0 at
+  # lambda = 1 and attenuated downstream slopes; see the comment at the hyper definition in .mip_fit().
+  skip_on_cran()
+  set.seed(3)
+  tree <- ape::rtree(30)
+  Y <- matrix(stats::rnorm(60), 30, 2, dimnames = list(tree$tip.label, c("t1", "t2")))
+  Y[c(2, 9), 1] <- NA
+  ctl <- .mip_resolve_control(list(n_chains = 2L, burnin = 20L, n_iter = 20L, keep_draws = 10L, seed = 1L), m = 2L)
+  ctl$auto_extend <- FALSE
+  f <- .mip_fit(Y, tree, ctl)
+  prob <- .mip_problem(Y, tree)
+  expect_equal(f$hyper$S_E, diag(1e-4 * prob$obs_var, 2))
+  expect_equal(f$hyper$nu_E, 3)
+})
