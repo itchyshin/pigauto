@@ -11,6 +11,7 @@ compare_methods(
   seeds = NULL,
   epochs = 500L,
   verbose = TRUE,
+  gnn = TRUE,
   ...
 )
 }
@@ -28,6 +29,11 @@ default \code{NULL} performs one run using the current RNG stream.}
 \item{epochs}{number of training epochs.}
 
 \item{verbose}{logical.}
+
+\item{gnn}{logical. Whether the pigauto arm trains the GNN. Default
+\code{TRUE}, so this function keeps comparing the baseline with the
+GNN-corrected model even though \code{\link{fit_pigauto}} and
+\code{\link{impute}} default to \code{gnn = FALSE}.}
 
 \item{...}{additional arguments passed to \code{\link{fit_pigauto}}.}
 }

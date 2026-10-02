@@ -109,18 +109,18 @@ bl <- fit_baseline(pd, tree, splits = spl)
 dim(bl$mu)
 ```
 
-## Training
+## Fitting
 
-`fit_pigauto()` uses type-specific losses and trait-level corruption
-masking automatically when a `trait_map` is present:
+`fit_pigauto()` calibrates the phylogenetic baseline for every trait
+type on the validation cells and computes the conformal intervals. With
+the default `gnn = FALSE` no network is trained. With `gnn = TRUE` it also
+trains the GNN correction, using type-specific losses and trait-level
+corruption masking when a `trait_map` is present.
 
 ```{r train, message = FALSE}
 fit <- fit_pigauto(
   pd, tree,
   splits = spl,
-  epochs = 200L,
-  eval_every = 50L,
-  patience = 5L,
   verbose = FALSE,
   seed = 1
 )

@@ -99,7 +99,7 @@ test_that("predict.pigauto_fit uses observed latent cells as DAE context", {
   pd  <- preprocess_traits(td$df, td$tree)
   spl <- make_missing_splits(pd$X_scaled, missing_frac = 0.1,
                              seed = 20260511, trait_map = pd$trait_map)
-  fit <- fit_pigauto(pd, td$tree, splits = spl,
+  fit <- fit_pigauto(pd, td$tree, splits = spl, gnn = TRUE,
                      epochs = 2L, eval_every = 1L, patience = 2L,
                      refine_steps = 1L, dropout = 0,
                      use_transformer_blocks = FALSE,
@@ -520,7 +520,7 @@ test_that("predict.pigauto_fit catches wrong-length calibrated_gates override", 
   subtree <- ape::keep.tip(tree300, rownames(traits))
 
   res <- pigauto::impute(traits, subtree, epochs = 20L, verbose = FALSE,
-                         seed = 1L, missing_frac = 0.0)
+                         seed = 1L, missing_frac = 0.0, gnn = TRUE)
   fit <- res$fit
   p   <- as.integer(fit$model_config$input_dim)
 

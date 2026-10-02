@@ -193,7 +193,7 @@ test_that("fit_pigauto end-to-end converges with transformer blocks on small dat
   fit_t <- fit_pigauto(
     data = pd, tree = tree300, splits = splits, graph = graph,
     baseline = baseline,
-    epochs = 30L, eval_every = 5L, verbose = FALSE, seed = 500L
+    epochs = 30L, eval_every = 5L, verbose = FALSE, seed = 500L, gnn = TRUE
   )
   expect_s3_class(fit_t, "pigauto_fit")
   # history$loss_rec is the per-epoch training reconstruction loss
@@ -211,7 +211,7 @@ test_that("fit_pigauto end-to-end converges with transformer blocks on small dat
     data = pd, tree = tree300, splits = splits, graph = graph,
     baseline = baseline,
     use_transformer_blocks = FALSE,
-    epochs = 30L, eval_every = 5L, verbose = FALSE, seed = 500L
+    epochs = 30L, eval_every = 5L, verbose = FALSE, seed = 500L, gnn = TRUE
   )
   expect_s3_class(fit_l, "pigauto_fit")
   expect_true(nrow(fit_l$history) > 0L)

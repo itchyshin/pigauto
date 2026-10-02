@@ -96,10 +96,10 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'   draw mechanism this uses" section below for the trade-off between the
 #'   two.
 #' @param gnn logical. Passed through to [impute()] / [fit_pigauto()] for
-#'   every tree. When `TRUE` (default), the usual GNN correction is trained
+#'   every tree. When `TRUE`, the usual GNN correction is trained
 #'   (once, on the reference tree, when `share_gnn = TRUE`). When `FALSE`,
 #'   no GNN is used anywhere in the pipeline -- baseline-only fits
-#'   throughout. Under `share_gnn = TRUE`, each tree's per-tree baseline is
+#'   throughout (the default since 0.11.0.9001; see [impute()]). Under `share_gnn = TRUE`, each tree's per-tree baseline is
 #'   then fit tax-free (`splits = NULL`), matching the production
 #'   `baseline_full` semantics [fit_pigauto()] uses.
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
@@ -260,7 +260,7 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 1L,
                                share_gnn = TRUE,
                                reference_tree = NULL,
                                draws_method = c("mc_dropout", "conformal"),
-                               gnn = TRUE,
+                               gnn = FALSE,
                                ...) {
 
   draws_method <- match.arg(draws_method)
@@ -348,7 +348,7 @@ run_per_tree <- function(traits, trees, m_per_tree,
                          species_col, trait_types, multi_proportion_groups,
                          log_transform, missing_frac, covariates,
                          epochs, verbose, seed, draws_method = "mc_dropout",
-                         gnn = TRUE, ...) {
+                         gnn = FALSE, ...) {
   T_trees      <- length(trees)
   M_total      <- T_trees * m_per_tree
   all_datasets <- vector("list", M_total)
@@ -491,7 +491,7 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
                            species_col, trait_types, multi_proportion_groups,
                            log_transform, missing_frac, covariates,
                            epochs, verbose, seed, reference_tree,
-                           draws_method = "mc_dropout", gnn = TRUE, ...) {
+                           draws_method = "mc_dropout", gnn = FALSE, ...) {
   T_trees <- length(trees)
   M_total <- T_trees * m_per_tree
   dots <- list(...)

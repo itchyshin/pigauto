@@ -50,8 +50,8 @@
 #' @param graph list (output of \code{\link{build_phylo_graph}}) or
 #'   \code{NULL}.
 #' @param baseline list (output of \code{\link{fit_baseline}}) or \code{NULL}.
-#' @param gnn logical. When \code{TRUE} (default), trains the attention-based
-#'   GNN correction as described above. When \code{FALSE}, no GNN is
+#' @param gnn logical. When \code{TRUE}, trains the attention-based
+#'   GNN correction as described above. When \code{FALSE} (default), no GNN is
 #'   constructed or trained and \code{fit_pigauto()} makes \strong{zero}
 #'   \code{torch::} calls -- the fit is the phylogenetic baseline alone,
 #'   optionally re-weighted against a grand-mean floor. \code{safety_floor}
@@ -67,6 +67,13 @@
 #'   \code{gnn = FALSE} they are ignored (with a warning). Without a
 #'   validation split (\code{splits = NULL}) the fit is pure baseline
 #'   (\eqn{r_{BM} = 1}) and carries no conformal scores.
+#'   Default \code{FALSE} since pigauto 0.11.0.9001: on simulated and real
+#'   data at the current baseline defaults the GNN did not lower
+#'   imputation error and took 20 to 90 times longer to fit
+#'   (\code{docs/dev-log/arc/2026-10-02-campaign-gnn-rerun.md}). Set
+#'   \code{gnn = TRUE} to train it, for example to use \code{covariates},
+#'   which only the GNN uses, or to restore the behaviour of earlier
+#'   versions.
 #' @param baseline_full list (output of \code{\link{fit_baseline}} with
 #'   \code{splits = NULL}) or \code{NULL}. Only used when \code{gnn = FALSE}:
 #'   the production-mode baseline, fit on ALL observed cells (no val/test
@@ -354,7 +361,7 @@ fit_pigauto <- function(
     splits            = NULL,
     graph             = NULL,
     baseline          = NULL,
-    gnn               = TRUE,
+    gnn               = FALSE,
     baseline_full     = NULL,
     hidden_dim        = 64L,
     k_eigen           = "auto",
@@ -515,7 +522,7 @@ fit_pigauto <- function(
       "conformal_method = \"mondrian\" is not supported when gnn = FALSE: ",
       "its locality statistic conditions on the calibrated GNN prediction ",
       "surface, which does not exist without a trained GNN. Use ",
-      "conformal_method = \"split\" or \"bootstrap\" instead.",
+      "conformal_method = \"split\" or \"bootstrap\", or set gnn = TRUE.",
       call. = FALSE
     )
   }
@@ -554,8 +561,9 @@ fit_pigauto <- function(
     # cov_linear fixed effect). With no GNN they contribute nothing; say so
     # rather than let them vanish silently.
     if (!is.null(data$covariates) && ncol(data$covariates) > 0L) {
-      warning("gnn = FALSE: user covariates are not used by the phylogenetic ",
-              "baseline and are ignored for this fit.", call. = FALSE)
+      warning("gnn = FALSE (the default): user covariates are used only by the ",
+              "GNN and are ignored for this fit. Set gnn = TRUE to use them.",
+              call. = FALSE)
     }
     if (is.null(baseline_full)) {
       if (verbose) message("Fitting production baseline (splits = NULL)...")

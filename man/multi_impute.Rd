@@ -18,7 +18,7 @@ multi_impute(
   epochs = 2000L,
   verbose = TRUE,
   seed = NULL,
-  gnn = TRUE,
+  gnn = FALSE,
   lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
   posterior_control = list(),
   ...
@@ -99,12 +99,13 @@ Default \code{NULL} (no covariates).}
 draws reproducible; the default \code{NULL} uses the current RNG stream.}
 
 \item{gnn}{logical. Passed through to \code{\link[=impute]{impute()}} / \code{\link[=fit_pigauto]{fit_pigauto()}}. When
-\code{TRUE} (default), the usual GNN correction is trained. When \code{FALSE},
+\code{TRUE}, the usual GNN correction is trained. When \code{FALSE} (default),
 no GNN is used (baseline-only fit; see \code{\link[=fit_pigauto]{fit_pigauto()}}). With
 \code{draws_method = "mc_dropout"} this degrades gracefully to BM-posterior
 draws (there is no dropout to run) and a one-time message is printed;
 \code{draws_method = "conformal"} is unaffected. User \code{covariates} are
-ignored under \code{gnn = FALSE} (with a warning), as in \code{\link[=impute]{impute()}}.}
+ignored under \code{gnn = FALSE} (with a warning), as in \code{\link[=impute]{impute()}}. The
+default changed from \code{TRUE} to \code{FALSE} in 0.11.0.9001; see \code{\link[=impute]{impute()}}.}
 
 \item{lambda_mode}{character. Pagel-lambda mode for the BM baseline,
 forwarded to \code{\link[=impute]{impute()}} / \code{\link[=fit_pigauto]{fit_pigauto()}}. \code{"estimate"} (default) fits
