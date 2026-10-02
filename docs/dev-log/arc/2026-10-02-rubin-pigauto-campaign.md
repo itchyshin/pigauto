@@ -89,6 +89,25 @@ the #189 acceptance sweep and this cell (n = 1000, lambda = 1).
 - n = 100: pig_post is close to freqA (slope coverage 0.941 against 0.949 overall), lower at lambda 0.7 on cor.
 - On the downstream estimands pig_post covers better than freqB (improper MI) in every cell except n = 1000 at lambda = 1 (paired +0.005 to +0.046); per-cell coverage at n = 100 goes the other way (-0.011 and -0.018 at lambda 0.3 and 0.7).
 
+## Prior trial (2026-10-02)
+
+`script/rubin_pig_prior_trial.R` patches `.mip_fit()` in memory only (no package edit) and refits 8 datasets
+(n = 1000, rho = 0.5; lambda = 1 seeds 1 to 6, lambda = 0.7 seeds 1 to 2) under three Sigma_E priors; scored by
+`script/rubin_pig_prior_trial_summary.R` against the oracle on the same datasets.
+
+| variant | Sigma_E prior scale | lambda = 1: slope error minus oracle | covered rho | per-cell coverage (20-draw) | lambda = 0.7: minus oracle |
+|---|---|---|---|---|---|
+| base (current) | diag(0.01 obs var) | -0.030 | 5 of 6 | 0.898 | -0.009 |
+| A | diag(1e-4 obs var) | -0.006 | 6 of 6 | 0.876 | -0.010 |
+| B | 0.01 x observed covariance | -0.019 | 5 of 6 | 0.893 | -0.011 |
+| oracle | | 0 | | 0.867 | |
+
+Variant A removes about 80 percent of the gap to the oracle at lambda = 1, leaves lambda = 0.7 unchanged, and brings
+per-cell calibration closer to the oracle's (the current prior's intervals are too wide by the same spurious noise).
+It is also about 8 percent faster. Before it ships it must pass, on the package side: the #189 acceptance sweep (G3,
+G6, G7), the low-signal and small-n cells where the sampler failures and non-convergence occurred (lambda 0.3,
+n = 100), and this cell. Eight datasets is a screen, not evidence.
+
 ## Does NOT cover
 
 Discrete traits (posterior MI is continuous-only); MAR or clade missingness; real trees; the 12 sampler failures (a pigauto fix); `study.qmd` and the published report pages are not
