@@ -57,3 +57,27 @@ pigauto_install_sha <- function() {
   if (is.null(sha) || !nzchar(sha)) NA_character_ else sha
 }
 `%||%` <- function(a, b) if (is.null(a)) b else a
+
+# pig_conf: pigauto's default conformal MI draws on the same block, as an opt-in NEGATIVE CONTROL only. Conformal draws
+# are known to bias the downstream slope (arc/mi-gls-attenuation); Shinichi (2026-10-01) does not want them in the
+# campaign, so this arm exists to show that failure on the Rubin datasets if asked, not as a contender.
+mi_pig_conf <- function(cell, M, seed) {
+  if (!requireNamespace("pigauto", quietly = TRUE)) stop("pigauto is not installed")
+  df_miss <- cell$df_miss; tree <- cell$tree; trait_types <- cell$trait_types
+  block_traits <- default_block_traits(cell)
+  is_prp <- block_traits %in% names(trait_types)[trait_types == "proportion"]
+  Yt <- as.data.frame(transform_block(df_miss, block_traits, is_prp)); rownames(Yt) <- rownames(df_miss)
+  t0 <- proc.time()[["elapsed"]]
+  mi <- pigauto::multi_impute(Yt, tree, m = M, draws_method = "conformal", log_transform = FALSE, seed = seed,
+                              verbose = FALSE)
+  datasets <- lapply(mi$datasets, function(d) {
+    raw <- as.matrix(d[rownames(df_miss), block_traits, drop = FALSE])
+    for (i in seq_along(block_traits)) if (is_prp[i]) raw[, i] <- stats::plogis(raw[, i])
+    apply_block_draw(df_miss, block_traits, raw)
+  })
+  list(datasets = datasets,
+       diag = list(block_traits = block_traits, draws_method = "conformal",
+                   wall_s = proc.time()[["elapsed"]] - t0,
+                   pigauto_version = as.character(utils::packageVersion("pigauto")),
+                   pigauto_sha = pigauto_install_sha()))
+}

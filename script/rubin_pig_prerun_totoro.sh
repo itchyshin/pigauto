@@ -15,7 +15,8 @@ set -euo pipefail
 
 PAR="${1:-36}"
 ROOT="${RUBIN_ROOT:-$HOME/pigauto_rubin}"
-OUT="$ROOT/prerun_pig"; LOG="$ROOT/logs"; mkdir -p "$OUT" "$LOG"
+ARMS="${ARMS:-pig_post}"   # pig_conf = the opt-in conformal negative control
+OUT="$ROOT/prerun_${ARMS//,/_}"; [ "$ARMS" = pig_post ] && OUT="$ROOT/prerun_pig"; LOG="$ROOT/logs"; mkdir -p "$OUT" "$LOG"
 [ "$PAR" -le 40 ] || { echo "PAR=$PAR exceeds the 40 cores approved for this pre-run"; exit 1; }
 
 free -g
@@ -39,14 +40,14 @@ done
 
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1
 
-JOBS="$LOG/prerun_pig_jobs.txt"; : > "$JOBS"
+JOBS="$LOG/prerun_${ARMS//,/_}_jobs.txt"; : > "$JOBS"
 for n in 1000 300 100; do for lambda in 0.3 0.7 1; do for rho in 0 0.5; do for seed in 1 2; do
-  echo "--n $n --seed $seed --lambda $lambda --rho $rho --M 20 --arms pig_post --out $OUT" >> "$JOBS"
+  echo "--n $n --seed $seed --lambda $lambda --rho $rho --M 20 --arms $ARMS --out $OUT" >> "$JOBS"
 done; done; done; done
-echo "[$(date +%FT%T)] prerun_pig jobs=$(wc -l < "$JOBS") parallel=$PAR out=$OUT sha=$PIGAUTO_SHA" | tee -a "$LOG/prerun_pig.log"
+echo "[$(date +%FT%T)] prerun_${ARMS} jobs=$(wc -l < "$JOBS") parallel=$PAR out=$OUT sha=$PIGAUTO_SHA" | tee -a "$LOG/prerun_${ARMS//,/_}.log"
 
 setsid nohup bash -c "
-  xargs -P $PAR -L 1 -a '$JOBS' bash -c 'timeout 3600 Rscript \"$ROOT/script/rubin_cell.R\" \"\$@\" >> \"$LOG/prerun_pig_cells.log\" 2>&1' _
-  echo \"[\$(date +%FT%T)] prerun_pig done\" >> '$LOG/prerun_pig.log'
+  xargs -P $PAR -L 1 -a '$JOBS' bash -c 'timeout 3600 Rscript \"$ROOT/script/rubin_cell.R\" \"\$@\" >> \"$LOG/prerun_${ARMS//,/_}_cells.log\" 2>&1' _
+  echo \"[\$(date +%FT%T)] prerun done\" >> '$LOG/prerun_${ARMS//,/_}.log'
 " > /dev/null 2>&1 &
 echo "launched; pgid $(ps -o pgid= $! | tr -d ' '); stop with: kill -- -<pgid>"

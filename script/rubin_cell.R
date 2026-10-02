@@ -15,13 +15,14 @@
 # final run, but every final run starts from the same converged dataset; Meng review B2), bace_resid (BACE plus
 # a second, post hoc residual draw: a negative control, not a fix), bace_chain (BACE's own final step run M times,
 # each run starting from the previous draw instead of the shared converged dataset; paired with bace on one fit).
-# pig_post (opt-in, script/rubin_pigauto.R) is pigauto posterior MI, offset 909; write it to its own --out
+# pig_post (opt-in, script/rubin_pigauto.R) is pigauto posterior MI, offset 909; pig_conf (opt-in negative
+# control) is pigauto's conformal MI, offset 1010; write it to its own --out
 # directory, because the output filename does not name the arms and an existing file is skipped (resume).
 # Each arm reseeds with seed + a fixed offset, so an arm's draws do not depend on which arms ran before it.
 #
 # Usage:
 #   Rscript script/rubin_cell.R --n 100 --seed 1 --lambda 0.7 --rho 0.5 --out results/ \
-#           [--arms freqA,freqB,bace,bace_chain,bace_resid,pig_post] [--M 20] [--miss mcar --frac 0.30] \
+#           [--arms freqA,freqB,bace,bace_chain,bace_resid,pig_post,pig_conf] [--M 20] [--miss mcar --frac 0.30] \
 #           [--thresholds fixed] [--no_driver] [--save_imp] [--discrete] \
 #           [--bace_nitt 50000 --bace_burnin 10000 --bace_thin 25 --bace_runs 10] [--smoke]
 #
@@ -61,7 +62,7 @@ save_imp <- isTRUE(get_arg("--save_imp", FALSE))
 # 808), fill the same continuous draws with simulation v1's equal-rates models and are scored on discrete traits
 # only. Every arm is scored on bin, ord, cat3 and on c1 ~ bin.
 discrete <- isTRUE(get_arg("--discrete", FALSE))
-if (discrete && "pig_post" %in% arms) stop("pig_post is continuous-only; run it without --discrete")
+if (discrete && any(c("pig_post", "pig_conf") %in% arms)) stop("pig_post and pig_conf are continuous-only; run them without --discrete")
 bace_nitt   <- as.integer(get_arg("--bace_nitt", 50000L))
 bace_burnin <- as.integer(get_arg("--bace_burnin", 10000L))
 bace_thin   <- as.integer(get_arg("--bace_thin", 25L))
@@ -80,7 +81,7 @@ source(file.path(here, "campaign_gnn_off_lib.R"))
 source(file.path(here, "rubin_lib.R"))
 source(file.path(here, "rubin_freq.R"))
 source(file.path(here, "rubin_bace.R"))
-if ("pig_post" %in% arms) source(file.path(here, "rubin_pigauto.R"))
+if (any(c("pig_post", "pig_conf") %in% arms)) source(file.path(here, "rubin_pigauto.R"))
 if (discrete) source(file.path(here, "rubin_discrete.R"))
 
 git_hash <- tryCatch({
@@ -241,6 +242,11 @@ if ("pig_post" %in% arms) {
     # pigauto only warns on non-convergence; flag the rows so the aggregation can decide (review R5)
     if (!is.null(est_tab$pig_post)) est_tab$pig_post$converged <- isTRUE(pp$diag$converged)
   }
+}
+if ("pig_conf" %in% arms) {
+  # opt-in negative control: pigauto's default conformal draws (known downstream attenuation); offset 1010
+  arm_seed(1010L); pc <- run_arm("pig_conf", mi_pig_conf(cell, M, seed = seed + 1010L))
+  if (!is.null(pc)) { score_arm_sets("pig_conf", pc$datasets); diag$pig_conf <- pc$diag }
 }
 if (any(c("bace", "bace_resid", "bace_chain") %in% arms)) {
   arm_seed(303L)
