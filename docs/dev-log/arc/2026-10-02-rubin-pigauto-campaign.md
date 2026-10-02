@@ -51,10 +51,17 @@ Downstream estimands (Rubin-pooled PGLS slope of c2 on c1, and phylogenetic corr
   under-covers (0.85 to 0.86) with a bias of -0.021 on both estimands (freqA -0.013 to -0.014; similar interval
   width, 0.162 against 0.160). The #189 sweep already found a small negative bias at lambda = 1 (-0.004 to -0.014);
   at n = 1000 the intervals are narrow enough for it to break coverage.
-- Inference, not tested: if the sampler's prior or parameterisation pulls lambda below 1, a true lambda of 1 is
-  under-estimated and the imputed phylogenetic correlation is attenuated. Known so far: only the starting values are
-  clamped to [0.02, 0.98] (`.mip_starts()`). To test it, read the posterior lambda draws on a few n = 1000,
-  lambda = 1 datasets.
+- Tested and ruled out (2026-10-02): lambda is not under-estimated. Sixteen campaign fits were refitted exactly
+  (`script/rubin_pig_lambda_diag.R`, summary `script/rubin_pig_lambda_diag_summary.R`; n = 1000, lambda = 1, rho 0 and
+  0.5, seeds 1 to 6, plus lambda = 0.7, rho = 0.5, seeds 1 to 4) with the posterior draws saved. At lambda = 1 the
+  posterior mean lambda is 1.000 for c1, c2 and d1 in all 12 fits, every draw above 0.99 (only prp sits lower, at
+  0.93, and prp is not in the slope); Sigma_E for c1 is about 0; the posterior phylogenetic correlation of c1 and c2
+  is 0.47 to 0.58 at a true rho of 0.5. freqA also estimates lambda at the boundary (0.9996).
+- Where the error is: at lambda = 1 and rho = 0.5 the mean slope error against complete data is -0.034 for pig_post
+  and -0.013 for freqA (pig_post worse in 5 of 6 datasets); at rho = 0 they agree (+0.006 and +0.004); at
+  lambda = 0.7, rho = 0.5 pig_post is unbiased (-0.000 against +0.006). The cause is open: lambda, Sigma_E and the
+  Sigma_P correlation all look right, so the next step is to compare pig_post's conditional imputation of c2 given
+  an observed c1 with the exact conditional under the true model on these datasets.
 - n = 100: pig_post is close to freqA (slope coverage 0.941 against 0.949 overall), lower at lambda 0.7 on cor.
 - On the downstream estimands pig_post covers better than freqB (improper MI) in every cell except n = 1000 at lambda = 1 (paired +0.005 to +0.046); per-cell coverage at n = 100 goes the other way (-0.011 and -0.018 at lambda 0.3 and 0.7).
 
