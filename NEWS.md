@@ -1,5 +1,24 @@
 # pigauto 0.11.0.9000 (dev)
 
+## New default: `multi_impute(draws_method = "auto")`
+
+`multi_impute()` now defaults to `draws_method = "auto"`. It uses
+`"posterior"` when every trait is continuous, there is one row per species,
+and no `covariates` or `multi_proportion_groups` are given; these are proper
+multiple imputations that `with_imputations()` and `pool_mi()` accept.
+Otherwise it uses `"conformal"` and prints one line saying why and that
+those draws cannot be pooled. `result$draws_method` records the choice. To
+get the previous default, set `draws_method = "conformal"`.
+
+Why. With the old default, a user who called `multi_impute()` and followed
+the documented `with_imputations()` / `pool_mi()` route was stopped at the
+last step, because conformal draws are refused for inference: in a
+16-regime simulation of a phylogenetic regression slope they biased the
+pooled slope towards zero by 0.20 to 0.46 with 0 to 17% interval coverage
+(see the `draws_method` documentation). Note that the posterior sampler is
+slower than conformal draws: about ten minutes per fit for 300 species and
+four traits on one core.
+
 ## New: `multi_impute(draws_method = "posterior")` for continuous traits
 
 `multi_impute()` gains `draws_method = "posterior"`, which returns proper

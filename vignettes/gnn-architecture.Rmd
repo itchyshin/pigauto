@@ -374,7 +374,8 @@ marginal prediction-coverage diagnostic under exchangeability and a
 fixed calibration procedure. It is not an MI draw distribution.
 
 For prediction diagnostics, `multi_impute()` exposes two stochastic draw
-methods. `"conformal"` (default) uses the heuristic
+methods. `"conformal"` (chosen by the default `draws_method = "auto"` when
+the posterior route does not apply) uses the heuristic
 $\mathcal{N}(\mu, s/1.96)$ on the transformed scale, where $s$ is the
 conformal residual quantile. A conformal prediction interval does not by
 itself establish that these Normal draws are proper multiple imputations.

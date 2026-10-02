@@ -8,7 +8,7 @@ multi_impute(
   traits,
   tree,
   m = 100L,
-  draws_method = c("conformal", "mc_dropout", "posterior"),
+  draws_method = c("auto", "conformal", "mc_dropout", "posterior"),
   species_col = NULL,
   trait_types = NULL,
   multi_proportion_groups = NULL,
@@ -38,7 +38,14 @@ datasets; only originally-missing cells vary.}
 \item{draws_method}{character. How stochastic draws are generated for
 missing cells. One of:
 \describe{
-\item{\code{"conformal"}}{(default) Run the model once, then sample each
+\item{\code{"auto"}}{(default; previously \code{"conformal"}) Use \code{"posterior"} when
+the data fit its requirements (every trait continuous, one row per
+species, no \code{covariates}, no \code{multi_proportion_groups}); otherwise
+use \code{"conformal"} and print a message saying why and that the draws
+cannot be pooled. The chosen method is stored in
+\code{result$draws_method}. To get the previous default, set
+\code{draws_method = "conformal"}.}
+\item{\code{"conformal"}}{Run the model once, then sample each
 originally-missing cell from a Normal distribution centred on the
 point estimate with SD = conformal_score / 1.96. Converting a
 split-conformal residual quantile to a Normal scale is a heuristic;

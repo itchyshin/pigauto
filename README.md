@@ -56,7 +56,9 @@ The output roles are deliberately separate:
 - A `pigauto_result` does not itself authorize downstream inference. The
   supported pooling entries begin with `multi_impute_analysis()` in its
   documented narrow regime or, for continuous traits,
-  `multi_impute(draws_method = "posterior")`.
+  `multi_impute(draws_method = "posterior")`. `multi_impute()`'s default,
+  `draws_method = "auto"`, picks `"posterior"` whenever the data allow it
+  and otherwise says why it fell back to non-poolable conformal draws.
 
 Tiny installed example inputs are available at
 `system.file("extdata", "novice_traits.csv", package = "pigauto")` and
