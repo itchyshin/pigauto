@@ -91,7 +91,7 @@ the #189 acceptance sweep and this cell (n = 1000, lambda = 1).
 
 ## Does NOT cover
 
-Discrete traits (posterior MI is continuous-only); MAR or clade missingness; real trees;  the 12 sampler failures (a pigauto fix); `study.qmd` and the published report pages are not
+Discrete traits (posterior MI is continuous-only); MAR or clade missingness; real trees; the 12 sampler failures (a pigauto fix); `study.qmd` and the published report pages are not
 yet updated with the pig_post arm.
 
 ## Next
