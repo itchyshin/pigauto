@@ -71,7 +71,11 @@ run_pigauto <- function(arm) {
     # so the GNN effect and the held-out-cell tax can be separated. No refit.
     bf <- pigauto::fit_baseline(res$data, tree, splits = NULL,
                                 lambda_mode = res$fit$model_config$lambda_mode %||% "fixed_1",
-                                joint_solver = res$fit$model_config$joint_solver %||% "inhouse")
+                                joint_solver = res$fit$model_config$joint_solver %||% "inhouse",
+                                # 2026-10-02 rerun: replay the held-out fit's per-trait
+                                # predict_method route, as fit_pigauto(gnn = FALSE) does for
+                                # its own baseline_full (R/fit_pigauto.R, S5b).
+                                predict_route = res$fit$baseline$predict_method_by_trait)
     pred_f <- stats::predict(res$fit, return_se = TRUE, baseline_override = bf)
     comp_f <- comp
     for (v in names(truth)) comp_f[mask[, v], v] <- pred_f$imputed[rownames(truth)[mask[, v]], v]

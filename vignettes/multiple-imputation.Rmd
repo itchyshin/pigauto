@@ -1,0 +1,260 @@
+---
+title: "Multiple imputation and downstream models"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Multiple imputation and downstream models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  eval     = FALSE
+)
+```
+
+This article shows how to carry imputation uncertainty into a downstream
+model: impute the missing cells `m` times, fit the same model to each
+completed dataset, and combine the fits. The chunks are not evaluated when
+the article is built because the posterior sampler takes minutes. They were
+run end to end once with shortened sampler chains.
+
+## Which imputations can be pooled
+
+`multi_impute()` offers three ways to draw the missing cells. Only one of
+them is a proper multiple imputation for downstream inference. The default,
+`draws_method = "auto"`, uses `"posterior"` whenever the data meet its
+requirements (below) and otherwise falls back to `"conformal"` with a
+message saying why.
+
+| `draws_method` | Use it for | Pass to `with_imputations()` and `pool_mi()`? |
+|---|---|---|
+| `"posterior"` | Downstream inference on continuous traits | Yes |
+| `"conformal"` (`"auto"` fallback) | Looking at the spread of plausible values | No, refused |
+| `"mc_dropout"` | Looking at the spread of plausible values | No, refused |
+
+The conformal and MC-dropout draws perturb each missing cell around a point
+prediction. They do not draw the cells jointly from their distribution given
+the observed data. In a simulation of a phylogenetic regression slope (16
+regimes: two traits, n = 300 or 1000, Pagel's lambda 1 or 0.5, random or
+clade-structured missingness, 120 replicates each), conformal draws biased
+the pooled slope towards zero by 0.20 to 0.46 and the pooled 95% intervals
+covered the true slope in 0 to 17% of replicates. Other estimands were not
+measured. `with_imputations()` therefore refuses these draws. A list of fits
+built by hand is still pooled by `pool_mi()`, with a warning that its
+provenance cannot be checked; do not do this with conformal or MC-dropout
+draws.
+
+This applies to the draws, not to the per-cell conformal intervals that
+`impute()` reports. Those intervals summarise uncertainty about a single
+imputed value and were close to 95% coverage in simulation (0.954 to 0.971,
+GNN off, random missingness), but coverage can fall below 95% at small n
+(about 100 species) and when missingness is clustered in clades.
+
+`draws_method = "posterior"` fits a Bayesian multivariate phylogenetic mixed
+model and samples each completed dataset from the posterior predictive
+distribution of the missing cells. It currently requires:
+
+- continuous traits only,
+- one row per species (no `species_col`),
+- no `covariates`.
+
+For one incomplete covariate in a Gaussian `lm`, a binomial `glm` or an
+`lmer` with one random intercept, `multi_impute_analysis()` provides a
+narrower analysis-aware route; see `?multi_impute_analysis`.
+
+## Impute
+
+The bundled AVONET300 data are complete for the four continuous traits, so
+we delete some values to have something to impute.
+
+```{r impute}
+library(pigauto)
+data(avonet300, tree300)
+
+traits <- avonet300[, c("Mass", "Wing.Length",
+                        "Beak.Length_Culmen", "Tarsus.Length")]
+rownames(traits) <- avonet300$Species_Key
+
+set.seed(1)
+traits$Mass[sample(nrow(traits), 60)] <- NA
+traits$Wing.Length[sample(nrow(traits), 45)] <- NA
+
+mi <- multi_impute(traits, tree300, m = 20L,
+                   draws_method = "posterior", seed = 1L)
+mi
+```
+
+With the default sampler settings, a simulated four-trait dataset of 300
+species took about ten minutes per fit on one core (median 616 s, Totoro
+server); fits that need automatic chain extensions take longer. Check
+convergence before using the draws: `mi$posterior$diagnostics`
+holds split R-hat and bulk effective sample size for each parameter, and
+`multi_impute()` warns if the chains have not converged after its automatic
+extensions.
+
+```{r diagnostics}
+mi$posterior$diagnostics
+attr(mi$posterior$diagnostics, "converged")
+```
+
+`mi$datasets` is a list of `m` completed data frames with species as row
+names. Observed values are unchanged in every dataset; only the missing
+cells differ.
+
+## Fit and pool
+
+`with_imputations()` applies a model-fitting function to every completed
+dataset and records where the datasets came from. `pool_mi()` then combines
+the fixed-effect estimates with Rubin's rules (Rubin 1987; Barnard and Rubin
+1999) and returns one row per coefficient with the pooled estimate, standard
+error, degrees of freedom, confidence interval and the fraction of missing
+information (`fmi`).
+
+The question in every example is the same: how does wing length scale with
+body mass?
+
+### Phylogenetic regression (nlme)
+
+```{r gls}
+fits <- with_imputations(mi, function(d) {
+  d$species <- rownames(d)
+  nlme::gls(log(Wing.Length) ~ log(Mass), data = d,
+            correlation = ape::corBrownian(phy = tree300, form = ~species),
+            method = "ML")
+})
+pool_mi(fits)
+```
+
+### Mixed models (lme4 and glmmTMB)
+
+Variables that were not imputed can be joined to each completed dataset
+inside the fitting function. Here diet category (`Trophic.Level`) becomes a
+random intercept.
+
+```{r mixed}
+add_diet <- function(d) {
+  d$Trophic.Level <- avonet300$Trophic.Level[
+    match(rownames(d), avonet300$Species_Key)]
+  d
+}
+
+fits_lmer <- with_imputations(mi, function(d) {
+  lme4::lmer(log(Wing.Length) ~ log(Mass) + (1 | Trophic.Level),
+             data = add_diet(d))
+})
+pool_mi(fits_lmer)
+
+fits_tmb <- with_imputations(mi, function(d) {
+  glmmTMB::glmmTMB(log(Wing.Length) ~ log(Mass) + (1 | Trophic.Level),
+                   data = add_diet(d))
+})
+pool_mi(fits_tmb)
+```
+
+For `glmmTMB` fits, `pool_mi()` pools the conditional (mean) model only;
+zero-inflation and dispersion coefficients are not included.
+
+A caveat on joined variables: the posterior imputation model conditions on
+the imputed traits and the tree, not on `Trophic.Level`. When a variable
+that matters for the analysis is left out of the imputation model, its
+association with the imputed traits is weakened in the imputed cells.
+Because the posterior route accepts continuous traits only, a categorical
+variable such as diet cannot currently be added to the imputation model;
+treat its estimated effects with this in mind. (Diet is also a small
+grouping factor here, four levels, one of them with a single species, so
+the random-intercept variance is poorly estimated.)
+
+### Location-scale models (drmTMB)
+
+`drmTMB` models the mean and the residual standard deviation together.
+`pool_mi()` pools both sets of fixed effects, labelled `mu:` and `sigma:`.
+The posterior imputation model has a constant residual variance, so the
+imputed cells carry no relationship between body mass and residual spread.
+We expect this to weaken a pooled `sigma:` slope when many cells are
+imputed; this has not been measured.
+
+```{r drmtmb}
+fits_drm <- with_imputations(mi, function(d) {
+  drmTMB::drmTMB(drmTMB::bf(log(Wing.Length) ~ log(Mass),
+                            sigma ~ log(Mass)),
+                 data = d)
+})
+pool_mi(fits_drm)
+```
+
+### Multivariate latent-variable models (gllvmTMB)
+
+`gllvmTMB` fits all traits jointly in long format. `pool_mi()` pools its
+fixed effects (here the trait means); latent loadings and variance
+components are not pooled. gllvmTMB can be installed from GitHub with
+`remotes::install_github("itchyshin/gllvmTMB")`.
+
+```{r gllvmtmb}
+to_long <- function(d) {
+  tr <- names(d)
+  data.frame(species = factor(rep(rownames(d), times = length(tr))),
+             trait   = factor(rep(tr, each = nrow(d)), levels = tr),
+             value   = log(unlist(d, use.names = FALSE)))
+}
+
+fits_gllvm <- with_imputations(mi, function(d) {
+  gllvmTMB::gllvmTMB(value ~ 0 + trait + latent(0 + trait | species, d = 1),
+                     data = to_long(d), trait = "trait", unit = "species",
+                     silent = TRUE)
+})
+pool_mi(fits_gllvm)
+```
+
+### Other models
+
+Any fit with `coef()` and `vcov()` methods can be pooled. For other classes,
+pass extractor functions to `pool_mi()` through `coef_fun` and `vcov_fun`,
+or a `tidy_fun` returning `term`, `estimate` and `std.error`.
+
+## Bayesian models: concatenate, do not pool
+
+Rubin's rules combine point estimates and standard errors. A Bayesian fit
+already has a posterior distribution, and the right way to combine
+imputations is to stack the posterior draws from all `m` fits into one
+sample. `pool_mi()` refuses `brmsfit` and `MCMCglmm` objects for this
+reason.
+
+With brms, `brm_multiple()` fits every completed dataset and combines the
+draws for you:
+
+```{r brms}
+fit_b <- brms::brm_multiple(log(Wing.Length) ~ log(Mass),
+                            data = mi$datasets, chains = 2, refresh = 0)
+summary(fit_b)
+```
+
+Check the per-dataset convergence diagnostics in `fit_b$rhats`; the combined
+R-hat can look poor simply because the imputed datasets differ. Stacking
+draws needs more imputations than Rubin's rules for stable results (Zhou
+and Reiter 2010), so prefer a larger `m` than the 20 used here.
+
+With MCMCglmm, fit each dataset and bind the fixed-effect samples:
+
+```{r mcmcglmm}
+fits_mc <- lapply(mi$datasets, function(d) {
+  MCMCglmm::MCMCglmm(log(Wing.Length) ~ log(Mass), data = d, verbose = FALSE)
+})
+sol <- coda::as.mcmc(do.call(rbind, lapply(fits_mc, function(f) f$Sol)))
+summary(sol)
+```
+
+## References
+
+Barnard J, Rubin DB (1999). Small-sample degrees of freedom with multiple
+imputation. *Biometrika* 86: 948-955.
+
+Nakagawa S, Freckleton RP (2008). Missing inaction: the dangers of ignoring
+missing data. *Trends in Ecology and Evolution* 23: 592-596.
+
+Rubin DB (1987). *Multiple Imputation for Nonresponse in Surveys*. Wiley.
+
+Zhou X, Reiter JP (2010). A note on Bayesian inference after multiple
+imputation. *The American Statistician* 64: 159-163.

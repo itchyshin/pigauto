@@ -19,7 +19,7 @@ adapters are provided for \code{\link[stats:lm]{stats::lm}}, \code{\link[stats:g
 \code{nlme::lme}, \code{lme4::merMod}, \code{glmmTMB::glmmTMB}, \code{drmTMB}, and
 \code{gllvmTMB_multi} fits. Other classes implementing \code{coef()} and \code{vcov()}
 also work. The output of \code{\link[=with_imputations]{with_imputations()}} is accepted directly.
-\code{MCMCglmm} fits are rejected -- see Details.
+Bayesian fits (\code{brms}, \code{MCMCglmm}) are rejected; see Details.
 Bare user-supplied fit lists are accepted with an explicit warning because
 their imputation provenance cannot be verified.}
 
@@ -113,10 +113,19 @@ adapter includes named distributional fixed-effect blocks such as regression
 coefficients for \code{mu} and \code{sigma}; those are fixed coefficients, not
 random-effect variance components.
 
-\strong{MCMCglmm fits} are rejected because Rubin's rules are not the right
-tool for posterior samples: variance decomposition does not generalise
-cleanly to posterior distributions. No MCMCglmm downstream workflow is
-supported by the initial analysis-aware backend.
+\strong{Supported classes.} \code{lm}, \code{glm}, \code{gls}, \code{lme}, \code{merMod} (lme4),
+\code{glmmTMB} (conditional component), \code{drmTMB}, and \code{gllvmTMB_multi} are
+handled automatically. Other classes are pooled through their
+\code{coef()} / \code{vcov()} methods, or through \code{coef_fun} / \code{vcov_fun} /
+\code{tidy_fun}.
+
+\strong{Bayesian fits (brms, MCMCglmm) are rejected} because Rubin's rules are
+not the right tool for posterior samples: they are pooled by concatenating
+posterior draws across imputations. For brms, use
+\code{brms::brm_multiple(formula, data = mi$datasets)}, or
+\code{brms::combine_models()} on a list of existing fits. For MCMCglmm,
+concatenate the \code{Sol} samples across fits. No Bayesian downstream
+workflow is supported by the analysis-aware backend.
 }
 \examples{
 \donttest{

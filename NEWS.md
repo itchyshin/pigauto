@@ -19,6 +19,28 @@ pooled slope towards zero by 0.20 to 0.46 with 0 to 17% interval coverage
 slower than conformal draws: about ten minutes per fit for 300 species and
 four traits on one core.
 
+## Multiple imputation with downstream models: docs and brms guard
+
+- New article, "Multiple imputation and downstream models"
+  (`vignettes/multiple-imputation.Rmd`): which `draws_method` can be pooled,
+  and worked `multi_impute(draws_method = "posterior")` ->
+  `with_imputations()` -> `pool_mi()` examples for nlme, lme4, glmmTMB,
+  drmTMB and gllvmTMB, plus brms and MCMCglmm by posterior concatenation.
+- `pool_mi()` now refuses `brmsfit` objects, as it already did for
+  MCMCglmm, and points to `brms::brm_multiple()`. Previously a `brmsfit`
+  fell through to `coef()` and `vcov()`, and `coef()` on a brmsfit does not
+  return its fixed effects.
+- brms, drmTMB and gllvmTMB are added to Suggests. New end-to-end tests run
+  the posterior route through `with_imputations()` and `pool_mi()` for
+  glmmTMB, lme4, drmTMB and gllvmTMB.
+- README: a "Defaults, and when to change them" section.
+- Documentation fixes: `fit_pigauto()`'s `gate_method` default is
+  `"cv_folds"` and `min_val_cells` defaults to 20; the help pages said
+  `"single_split"` and 10.
+- No default changed. The defaults audit behind these edits, with proposals
+  for `draws_method`, `gnn` and `joint_solver`, is in
+  `docs/dev-log/defaults-audit/2026-10-02-defaults-audit.md`.
+
 ## New: `multi_impute(draws_method = "posterior")` for continuous traits
 
 `multi_impute()` gains `draws_method = "posterior"`, which returns proper
@@ -992,7 +1014,6 @@ are directly comparable to BACE's snapshot.
   checks for `henderson_bm_predict()`.
 - Full suite: 1511 pass / 0 fail (299 pre-existing small-n
   warnings unchanged).
-
 
 # pigauto 0.9.1.9014 (dev)
 
