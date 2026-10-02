@@ -1,0 +1,21 @@
+posterior: 4 chains x (1000 burn-in + 5000 sweeps, thin 20)
+Warning messages:
+1: pool_mi() received a bare fit list with unverified provenance; Rubin arithmetic will run, but the imputation workflow was not validated by pigauto. 
+2: pool_mi() received a bare fit list with unverified provenance; Rubin arithmetic will run, but the imputation workflow was not validated by pigauto. 
+3: pool_mi() received a bare fit list with unverified provenance; Rubin arithmetic will run, but the imputation workflow was not validated by pigauto. 
+4: pool_mi() received a bare fit list with unverified provenance; Rubin arithmetic will run, but the imputation workflow was not validated by pigauto. 
+OK regime=22 rep=1 n=1000 mech=MCAR missing=both code_sha=69670d44f96e5934d194abac8c6653ee82e11811 pigauto=0.11.0.9000
+          method  wall_s downstream   estimate         se        df n_ok
+1       complete   0.888        gls 0.13499435 0.02773313 998.00000    1
+2       complete   0.888    phylolm 0.25255912 0.03182255 998.00000    1
+3 posterior_full 188.023        gls 0.09429639 0.04921547  53.76400   20
+4 posterior_full 188.023    phylolm 0.17804183 0.05350152  50.97645   20
+5 posterior_none 188.023        gls 0.08226487 0.04829124  53.13366   20
+6 posterior_none 188.023    phylolm 0.16905321 0.05056305  59.87722   20
+  covered_pop
+1       FALSE
+2       FALSE
+3       FALSE
+4       FALSE
+5       FALSE
+6       FALSE

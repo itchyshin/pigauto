@@ -1,0 +1,8 @@
+posterior: 4 chains x (1000 burn-in + 5000 sweeps, thin 20)
+Warning messages:
+1: pool_mi() received a bare fit list with unverified provenance; Rubin arithmetic will run, but the imputation workflow was not validated by pigauto. 
+2: pool_mi() received a bare fit list with unverified provenance; Rubin arithmetic will run, but the imputation workflow was not validated by pigauto. 
+Warning messages:
+1: pool_mi() received a bare fit list with unverified provenance; Rubin arithmetic will run, but the imputation workflow was not validated by pigauto. 
+2: pool_mi() received a bare fit list with unverified provenance; Rubin arithmetic will run, but the imputation workflow was not validated by pigauto. 
+OK f2_x1 regime=23 rep=196 wall=282s converged=FALSE gls=0.17602 phylolm=0.29749

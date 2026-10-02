@@ -14,8 +14,11 @@ with_imputations(
 }
 \arguments{
 \item{mi}{A \code{pigauto_analysis_mi} object returned by
-\code{\link[=multi_impute_analysis]{multi_impute_analysis()}}. Legacy \code{pigauto_mi} objects, diagnostic
-completions, tree-sensitivity completions, and bare dataset lists are not
+\code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, or a \code{pigauto_posterior_mi} object returned
+by \code{\link[=multi_impute]{multi_impute()}} with \code{draws_method = "posterior"} (and
+\code{param_uncertainty = "full"}, the default, or \code{"both"}). Legacy
+\code{pigauto_mi} objects, diagnostic completions, tree-sensitivity
+completions, plug-in posterior draws, and bare dataset lists are not
 supported fitting inputs.}
 
 \item{.f}{A function of the form \verb{function(dataset, ...)} that fits
@@ -47,11 +50,30 @@ filters error elements automatically.
 Apply a user-supplied model-fitting function \code{.f} to each of the \code{M}
 complete datasets stored in an analysis-aware MI object and return the list
 of fits. This is the supported fitting entry for
-\code{\link[=multi_impute_analysis]{multi_impute_analysis()}} only. Prediction-diagnostic and posterior-tree
-sensitivity completions stop with an actionable error before any model is
-fitted. The analysis-aware workflow is experimental and limited to
-fixed-effect coefficients and their covariance matrices.
+\code{\link[=multi_impute_analysis]{multi_impute_analysis()}} and for
+\code{\link[=multi_impute]{multi_impute()}} with \code{draws_method = "posterior"}. Prediction-diagnostic
+(\code{"conformal"}, \code{"mc_dropout"}) and posterior-tree sensitivity completions
+stop with an actionable error before any model is fitted. The workflow is
+experimental and limited to fixed-effect coefficients and their covariance
+matrices.
 }
+\section{Posterior draws and congeniality}{
+
+The \code{draws_method = "posterior"} completions come from a linear-Gaussian
+phylogenetic mixed model of the imputed traits only, on the scale where
+they were imputed (the log scale for traits log-transformed by
+\code{log_transform}). They are proper imputations for analyses that are
+linear in the imputed traits on that scale and whose variables are all
+among the imputed traits, for example a phylogenetic regression of one
+imputed trait on others (on the log scale for log-transformed traits).
+Not covered: covariates from outside the imputed traits, nonlinear terms
+(such as squares) or interactions among imputed traits, and analysing a
+log-transformed trait on its raw scale. The formula passed to \code{.f} is not
+checked; this is the analyst's responsibility. Plug-in draws from
+\code{posterior_control$param_uncertainty = "none"} (validation only) are
+refused.
+}
+
 \examples{
 \donttest{
 dat <- data.frame(y = stats::rnorm(30L), x = stats::rnorm(30L),

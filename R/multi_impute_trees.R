@@ -226,8 +226,9 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'   per-tree baseline without re-calibrating the safety floor; it does not
 #'   establish downstream inferential validity.
 #'
-#' @seealso [multi_impute()] for single-tree prediction diagnostics,
-#'   [multi_impute_analysis()] for analysis-aware MI, and [trees300]
+#' @seealso [multi_impute()] for single-tree prediction diagnostics or,
+#'   with `draws_method = "posterior"`, single-tree inference on continuous
+#'   traits; [multi_impute_analysis()] for analysis-aware MI; and [trees300]
 #'
 #' @examples
 #' \donttest{

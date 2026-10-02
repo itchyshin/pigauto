@@ -273,6 +273,7 @@ global diversity of birds in space and time." \emph{Nature}
 491(7424): 444-448.
 }
 \seealso{
-\code{\link[=multi_impute]{multi_impute()}} for single-tree prediction diagnostics,
-\code{\link[=multi_impute_analysis]{multi_impute_analysis()}} for analysis-aware MI, and \link{trees300}
+\code{\link[=multi_impute]{multi_impute()}} for single-tree prediction diagnostics or,
+with \code{draws_method = "posterior"}, single-tree inference on continuous
+traits; \code{\link[=multi_impute_analysis]{multi_impute_analysis()}} for analysis-aware MI; and \link{trees300}
 }

@@ -1,0 +1,6 @@
+CAMPAIGN_START sha=69670d44f96e5934d194abac8c6653ee82e11811 code_dir=/home/snakagaw/pigauto_mi_posterior/69670d44f9/code out_dir=/home/snakagaw/pigauto_mi_posterior/69670d44f9/smoke/sim n_jobs=5
+  regimes (run order)=12 22 3 23 1
+  reps=1 planned=5 skipped_existing=0 to_run=5
+  host=totoro nproc=1 load=0.04 50.49 1390.41
+  started Thu Sep 24 07:40:02 AM MDT 2026
+CAMPAIGN_DONE sha=69670d44f96e5934d194abac8c6653ee82e11811 planned=5 skipped_existing=0 ran=5 ok=5 failed=0 finished=Thu Sep 24 07:43:59 AM MDT 2026

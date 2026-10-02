@@ -5,7 +5,10 @@
 #' standard errors combine within-imputation sampling variance and
 #' between-imputation variance. Correct Rubin arithmetic does not make an
 #' incompatible imputation model inferentially valid. For pigauto inference,
-#' fits should come from the documented [multi_impute_analysis()] workflow.
+#' fits should come from the documented [multi_impute_analysis()] workflow,
+#' or, for continuous traits, from [multi_impute()] with
+#' `draws_method = "posterior"` (see [with_imputations()] for the analyses
+#' those draws cover), via [with_imputations()].
 #' The backend is experimental and supports fixed-effect coefficients only. Variance
 #' components, correlations, random-effect predictions, BLUPs/conditional
 #' modes, latent loadings, and other structured parameters are unsupported.
@@ -143,13 +146,25 @@ pool_mi <- function(fits,
       inherits(fits, "pigauto_diagnostic_mi")) {
     stop("Prediction-diagnostic completions from `multi_impute()` cannot be ",
          "pooled. Use `multi_impute_analysis()` for the supported narrow ",
-         "workflow.", call. = FALSE)
+         "workflow, or, for continuous traits, ",
+         "`multi_impute(draws_method = \"posterior\")`.", call. = FALSE)
   } else if (identical(workflow, "pigauto_tree_sensitivity_diagnostic") ||
              inherits(fits, "pigauto_tree_sensitivity_diagnostic") ||
              inherits(fits, "pigauto_mi_trees")) {
     stop("Tree-sensitivity diagnostics from `multi_impute_trees()` cannot be ",
          "pooled. Tree-aware downstream pooling is unsupported; use ",
          "`multi_impute_analysis()` for the supported narrow workflow.",
+         call. = FALSE)
+  } else if (identical(workflow, "pigauto_posterior_plugin_diagnostic") ||
+             (inherits(fits, "pigauto_posterior_mi") &&
+              identical(fits$mi_workflow,
+                        "pigauto_posterior_plugin_diagnostic"))) {
+    stop(.mip_plugin_refusal(), call. = FALSE)
+  } else if (inherits(fits, "pigauto_posterior_mi") ||
+             inherits(fits, "pigauto_analysis_mi")) {
+    stop("`pool_mi()` takes the list of fits returned by ",
+         "`with_imputations()`, not the imputation object itself. Run ",
+         "`fits <- with_imputations(mi, .f)` and then `pool_mi(fits)`.",
          call. = FALSE)
   } else if (inherits(fits, "pigauto_mi")) {
     stop("Legacy `pigauto_mi` fit lists have no analysis-aware provenance. ",
@@ -161,12 +176,14 @@ pool_mi <- function(fits,
            "provenance. Refit with `multi_impute_analysis()` and ",
            "`with_imputations()` before pooling.", call. = FALSE)
     }
-    if (!identical(workflow, "pigauto_analysis_mi_v1")) {
+    if (!(workflow %in% c("pigauto_analysis_mi_v1",
+                          "pigauto_posterior_mi_v1"))) {
       stop("`fits` carries unknown multiple-imputation provenance and cannot be ",
            "pooled safely.", call. = FALSE)
     }
-  } else if (identical(workflow, "pigauto_analysis_mi_v1")) {
-    stop("`mi_workflow = \"pigauto_analysis_mi_v1\"` is inconsistent ",
+  } else if (identical(workflow, "pigauto_analysis_mi_v1") ||
+             identical(workflow, "pigauto_posterior_mi_v1")) {
+    stop("`mi_workflow = \"", workflow, "\"` is inconsistent ",
          "provenance for a fit list not created by `with_imputations()`.",
          call. = FALSE)
   } else if (is.null(workflow)) {

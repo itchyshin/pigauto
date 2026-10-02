@@ -1,0 +1,15 @@
+== regime_1_rep_1
+       n_missing 
+            TRUE 
+new n_extensions: 0 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_OK
+== regime_12_rep_1
+       n_missing 
+            TRUE 
+new n_extensions: 0,0 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_OK
+== regime_23_rep_196
+[2] "Component “se”: Mean relative difference: 0.03732145"      
+[3] "Component “df”: Mean relative difference: 0.3170073"       
+new n_extensions: 1,1 | code_sha old 69670d44f9 new 9597e18b79
+IDENTITY_DIFF

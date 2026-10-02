@@ -1,0 +1,11 @@
+--- /home/snakagaw/pigauto_mi_posterior/diag_3f0e0fbd3c/../69670d44f9/code/R/mi_posterior.R	2026-09-24 07:38:58.000000000 -0600
++++ R/mi_posterior.R	2026-09-24 14:28:51.712154646 -0600
+@@ -890,7 +890,7 @@
+   prob <- .mip_problem(Y, tree)
+   K <- prob$K
+   hyper <- list(nu_W = K + 1, S_W = diag(K), V_alpha = 1000,
+-                nu_E = K + 1, S_E = diag(0.01 * prob$obs_var, K))
++                nu_E = K + 1, S_E = diag(1e-4 * prob$obs_var, K))
+   if (!is.null(ctl$seed)) set.seed(as.integer(ctl$seed))
+   chain_seeds <- sample.int(.Machine$integer.max, ctl$n_chains)
+   lam_reml <- .mip_reml_lambda(prob, tree)

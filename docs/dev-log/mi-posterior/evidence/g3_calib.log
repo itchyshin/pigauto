@@ -1,0 +1,4 @@
+fits: 150 of 150
+B (n=50): lam1 cover 0.920  sd(mean) 0.065  mean(post sd) 0.057 | lam2 cover 0.980  sd(mean) 0.055  mean(post sd) 0.058 | rho cover 0.980  sd(mean) 0.084  mean(post sd) 0.091 | REML sd 0.067 0.062 | converged 50
+C (n=50): lam1 cover 0.940  sd(mean) 0.068  mean(post sd) 0.063 | lam2 cover 0.920  sd(mean) 0.024  mean(post sd) 0.022 | rho cover 0.920  sd(mean) 0.139  mean(post sd) 0.129 | REML sd 0.068 0.024 | converged 50
+D (n=50): lam1 cover 0.980  sd(mean) 0.032  mean(post sd) 0.033 | lam2 cover 0.920  sd(mean) 0.014  mean(post sd) 0.014 | rho cover 0.980  sd(mean) 0.136  mean(post sd) 0.202 | REML sd 0.034 0.012 | converged 50

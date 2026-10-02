@@ -217,10 +217,11 @@ multi_proportion \tab \code{NA} \tab Not computed; use the CLR latent SE (\code{
 These families are \strong{incompatible objects sharing one column name}:
 only the continuous-family entries are standard errors in the Gaussian
 sense, and \strong{none} of the binary / categorical / zi_count entries
-may be used in Rubin's-rules arithmetic. The only supported downstream
-multiple-imputation route starts with
-\code{\link{multi_impute_analysis}}, then uses
-\code{\link{with_imputations}} and \code{\link{pool_mi}}.
+may be used in Rubin's-rules arithmetic. The supported downstream
+multiple-imputation routes start with
+\code{\link{multi_impute_analysis}} or, for continuous traits,
+\code{\link{multi_impute}} with \code{draws_method = "posterior"}, then
+use \code{\link{with_imputations}} and \code{\link{pool_mi}}.
 }
 
 \examples{
