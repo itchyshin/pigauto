@@ -8,7 +8,7 @@
 - Default `lambda_mode = "estimate"`, `predict_method = "auto"`, `joint_solver = "inhouse"` unless an arm says otherwise. BACE was not rerun (its 2026-09-19 numbers stand; it was the costliest arm and is not a defaults question).
 - Pass 1 (no torch): GNN off (default safety machinery), GNN off pure (`safety_floor = FALSE, phylo_signal_gate = FALSE`), raw `Rphylopars::phylopars(model = "BM")` on continuous columns, mean/mode floor; plus the solver runner (`script/campaign_solver_cell.R`): in-house default, `joint_solver = "rphylopars"` default and pure, raw Rphylopars. 48 concurrent cells x 2 threads; 400 cells, 0 errors, 12 min wall.
 - Pass 2: GNN on as shipped (2000 epochs) and the derived GNN on predicting from the full baseline. 36 concurrent cells x 4 threads (144 cores). Merged per cell with `script/campaign_gnn_rerun_merge.R`, aggregated with `script/campaign_gnn_off_aggregate.R`.
-- Aggregates: `script/campaign_gnn_rerun_results/` (`agg_gnn.rds`, `agg_solver.rds`, summary CSVs). Raw cell files on Totoro: `~/defaults-audit/results_{off,on,merged,solver}/`.
+- Aggregates: summary CSVs in `script/campaign_gnn_rerun_results/` (the repo does not track `.rds`). Full aggregates (`agg_gnn.rds`, `agg_solver.rds`) and raw cell files are on Totoro under `~/defaults-audit/`.
 
 ## Joint solver (pass 1)
 

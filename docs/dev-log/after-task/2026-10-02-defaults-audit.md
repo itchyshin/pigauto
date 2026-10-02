@@ -32,7 +32,7 @@ My calls: chunks in the vignette are `eval = FALSE` like the other vignettes, be
 ## 4. Files Touched
 
 Modified: `DESCRIPTION`, `NEWS.md`, `R/fit_pigauto.R`, `R/pool_mi.R`, `README.md`, `_pkgdown.yml`, `man/fit_pigauto.Rd`, `man/pool_mi.Rd`, `script/campaign_gnn_off_cell.R`.
-Created: `docs/dev-log/defaults-audit/2026-10-02-defaults-audit.md`, `docs/dev-log/arc/2026-10-02-campaign-gnn-rerun.md`, `docs/dev-log/after-task/2026-10-02-defaults-audit.md`, `script/campaign_gnn_rerun_merge.R`, `script/campaign_gnn_rerun_results/{agg_gnn.rds, agg_gnn_summary_arm.csv, agg_gnn_per_trait.csv, agg_solver.rds, agg_solver_summary_arm.csv}`, `tests/testthat/test-pool-mi-backends.R`, `vignettes/multiple-imputation.Rmd`.
+Created: `docs/dev-log/defaults-audit/2026-10-02-defaults-audit.md`, `docs/dev-log/arc/2026-10-02-campaign-gnn-rerun.md`, `docs/dev-log/after-task/2026-10-02-defaults-audit.md`, `script/campaign_gnn_rerun_merge.R`, `script/campaign_gnn_rerun_results/{agg_gnn_summary_arm.csv, agg_gnn_per_trait.csv, agg_solver_summary_arm.csv}` (the `.rds` aggregates stay on Totoro; `*.rds` is git-ignored), `tests/testthat/test-pool-mi-backends.R`, `vignettes/multiple-imputation.Rmd`.
 Not tracked: `.unlazy/defaults-audit/` (gate ledger). Totoro: `~/defaults-audit/` (private library, raw cells, logs).
 
 ## 5. Checks Run
