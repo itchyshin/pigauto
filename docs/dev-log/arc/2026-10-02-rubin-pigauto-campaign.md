@@ -108,6 +108,24 @@ It is also about 8 percent faster. Before it ships it must pass, on the package 
 G6, G7), the low-signal and small-n cells where the sampler failures and non-convergence occurred (lambda 0.3,
 n = 100), and this cell. Eight datasets is a screen, not evidence.
 
+### Small-n check of variant A (2026-10-02): not a clean win
+
+Campaign datasets at n = 100, rho = 0.5, lambda 0.3 and 0.7, seeds 1 to 10, current prior against A (same scripts).
+
+| cell | prior | slope error minus oracle | converged | per-cell coverage (20-draw) |
+|---|---|---|---|---|
+| lambda 0.3 | current | +0.025 | 8 of 10 | 0.865 |
+| lambda 0.3 | A | +0.020 | 8 of 10 | 0.847 |
+| lambda 0.7 | current | +0.017 | 8 of 10 | 0.838 |
+| lambda 0.7 | A | +0.024 | 4 of 9 | 0.830 |
+
+A also crashed once (lambda 0.7, seed 9, the CHOLMOD "not positive definite" error) where the current prior did not.
+With real residual variance at small n, the tiny prior scale lets Sigma_E wander towards 0 and mixing suffers. A flat
+1e-4 trades the large-n lambda = 1 bias for worse small-n convergence, so it is not shipped. Candidates that might
+avoid the trade-off, untested: a scale that shrinks with n (for example 0.1 / n, which equals A at n = 1000 and
+1e-3 at n = 100), or parameter expansion on Sigma_E as on Sigma_P. Branch `fix/mi-posterior-sigma-e-prior` holds the
+flat-1e-4 change as work in progress (the pinned first-run test is deliberately not re-pinned).
+
 ## Does NOT cover
 
 Discrete traits (posterior MI is continuous-only); MAR or clade missingness; real trees; the 12 sampler failures (a pigauto fix); `study.qmd` and the published report pages are not
