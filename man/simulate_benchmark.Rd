@@ -13,6 +13,7 @@ simulate_benchmark(
   epochs = 500L,
   verbose = TRUE,
   seed = NULL,
+  gnn = TRUE,
   ...
 )
 }
@@ -40,6 +41,11 @@ Default runs all.}
 
 \item{seed}{optional integer.  When supplied, makes the generated
 benchmark replicates reproducible.}
+
+\item{gnn}{logical. Whether the pigauto arm trains the GNN. Default
+\code{TRUE}, so this function keeps comparing the baseline with the
+GNN-corrected model even though \code{\link{fit_pigauto}} and
+\code{\link{impute}} default to \code{gnn = FALSE}.}
 
 \item{...}{additional arguments passed to \code{\link{fit_pigauto}}.}
 }

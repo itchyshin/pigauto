@@ -511,6 +511,10 @@ eval_test_cells_legacy <- function(pred_latent, truth_latent,
 #'   default \code{NULL} performs one run using the current RNG stream.
 #' @param epochs number of training epochs.
 #' @param verbose logical.
+#' @param gnn logical. Whether the pigauto arm trains the GNN. Default
+#'   \code{TRUE}, so this function keeps comparing the baseline with the
+#'   GNN-corrected model even though \code{\link{fit_pigauto}} and
+#'   \code{\link{impute}} default to \code{gnn = FALSE}.
 #' @param ... additional arguments passed to \code{\link{fit_pigauto}}.
 #' @return A \code{data.frame} with columns: \code{method}, \code{trait},
 #'   \code{type}, \code{metric}, \code{value}, \code{rep}.
@@ -527,7 +531,7 @@ eval_test_cells_legacy <- function(pred_latent, truth_latent,
 #' }
 #' @export
 compare_methods <- function(data, tree, splits = NULL, seeds = NULL,
-                            epochs = 500L, verbose = TRUE, ...) {
+                            epochs = 500L, verbose = TRUE, gnn = TRUE, ...) {
   if (!inherits(data, "pigauto_data")) {
     stop("'data' must be a pigauto_data object.")
   }
@@ -573,6 +577,7 @@ compare_methods <- function(data, tree, splits = NULL, seeds = NULL,
       epochs  = as.integer(epochs),
       verbose = verbose,
       seed    = s,
+      gnn     = gnn,
       ...
     )
 

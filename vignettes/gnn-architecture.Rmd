@@ -23,6 +23,13 @@ baseline (joint MVN / threshold-joint / OVR), the GNN's transformer
 blocks, the optional within-row cross-trait attention added in v0.9.3,
 and the calibration / uncertainty quantification machinery on top.
 
+The GNN described here runs only when `gnn = TRUE`. Since version
+0.11.0.9001 the default is `gnn = FALSE`, which fits the phylogenetic
+baseline and the calibration and uncertainty machinery without a network;
+at the current baseline defaults the GNN did not lower imputation error
+on simulated or real benchmark data. User `covariates` are used only by
+the GNN.
+
 We assume familiarity with maximum-likelihood Brownian motion (BM) on
 trees and with standard transformer attention. We do **not** assume
 familiarity with the package's internals.

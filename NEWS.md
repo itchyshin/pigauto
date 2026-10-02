@@ -1,4 +1,38 @@
-# pigauto 0.11.0.9000 (dev)
+# pigauto 0.11.0.9001 (dev)
+
+## Breaking change: the GNN is off by default (`gnn = FALSE`)
+
+`impute()`, `fit_pigauto()`, `multi_impute()` and `multi_impute_trees()` now
+default to `gnn = FALSE`: they fit the calibrated phylogenetic baseline,
+with its conformal intervals, and train no graph neural network. Results
+from code that relied on the old default will change. To restore the
+previous behaviour, pass `gnn = TRUE`.
+
+Why. A rerun of the with/without-GNN campaign at the current baseline
+defaults (`docs/dev-log/arc/2026-10-02-campaign-gnn-rerun.md`; Totoro,
+200 cells, 20 seeds, single-observation data, 30% missing at random) found:
+
+- GNN on was worse than GNN off in all ten data-set and size cells: 12 to
+  23% higher continuous z-RMSE on the Brownian-motion, OU and AVONET300
+  data and 1 to 2% on a low-signal simulation.
+- Predicting from the baseline fit on all observed cells removed that loss
+  but did not go below GNN off (AVONET300 -0.018, MCSE 0.011).
+- GNN on took 122 to 496 s per fit against 1.4 to 24 s for GNN off
+  (n = 100 to 1000, 4 threads).
+
+What to know.
+
+- User `covariates` are used only by the GNN. With `gnn = FALSE` they are
+  ignored, and the warning now says to set `gnn = TRUE` to use them.
+- `conformal_method = "mondrian"` needs the GNN; its error now says so.
+- `multi_impute(draws_method = "mc_dropout")` and the
+  `multi_impute_trees()` default draw from the baseline posterior when
+  `gnn = FALSE`, with a message.
+- `compare_methods()` and `simulate_benchmark()` gain a `gnn` argument
+  that defaults to `TRUE`, so they keep comparing the baseline with the
+  GNN-corrected model.
+- No torch call is made with `gnn = FALSE`; torch is still in Imports.
+
 
 ## New: `multi_impute(draws_method = "posterior")` for continuous traits
 

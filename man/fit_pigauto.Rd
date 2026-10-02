@@ -10,7 +10,7 @@ fit_pigauto(
   splits = NULL,
   graph = NULL,
   baseline = NULL,
-  gnn = TRUE,
+  gnn = FALSE,
   baseline_full = NULL,
   hidden_dim = 64L,
   k_eigen = "auto",
@@ -70,8 +70,8 @@ fit_pigauto(
 
 \item{baseline}{list (output of \code{\link{fit_baseline}}) or \code{NULL}.}
 
-\item{gnn}{logical. When \code{TRUE} (default), trains the attention-based
-GNN correction as described above. When \code{FALSE}, no GNN is
+\item{gnn}{logical. When \code{TRUE}, trains the attention-based
+GNN correction as described above. When \code{FALSE} (default), no GNN is
 constructed or trained and \code{fit_pigauto()} makes \strong{zero}
 \code{torch::} calls -- the fit is the phylogenetic baseline alone,
 optionally re-weighted against a grand-mean floor. \code{safety_floor}
@@ -86,7 +86,14 @@ GNN prediction surface that does not exist here) and raises an error.
 User \code{covariates} enter pigauto only through the GNN, so under
 \code{gnn = FALSE} they are ignored (with a warning). Without a
 validation split (\code{splits = NULL}) the fit is pure baseline
-(\eqn{r_{BM} = 1}) and carries no conformal scores.}
+(\eqn{r_{BM} = 1}) and carries no conformal scores.
+Default \code{FALSE} since pigauto 0.11.0.9001: on simulated and real
+data at the current baseline defaults the GNN did not lower
+imputation error and took 20 to 90 times longer to fit
+(\code{docs/dev-log/arc/2026-10-02-campaign-gnn-rerun.md}). Set
+\code{gnn = TRUE} to train it, for example to use \code{covariates},
+which only the GNN uses, or to restore the behaviour of earlier
+versions.}
 
 \item{baseline_full}{list (output of \code{\link{fit_baseline}} with
 \code{splits = NULL}) or \code{NULL}. Only used when \code{gnn = FALSE}:

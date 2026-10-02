@@ -213,11 +213,11 @@ test_that("impute() with conformal_method = 'mondrian' widens intervals in an is
 
   fit_split <- suppressWarnings(impute(
     df, tree, conformal_method = "split", epochs = 30L,
-    missing_frac = 0.6, verbose = FALSE, seed = 5
+    missing_frac = 0.6, verbose = FALSE, seed = 5, gnn = TRUE
   ))
   fit_mond <- suppressWarnings(impute(
     df, tree, conformal_method = "mondrian", epochs = 30L,
-    missing_frac = 0.6, verbose = FALSE, seed = 5
+    missing_frac = 0.6, verbose = FALSE, seed = 5, gnn = TRUE
   ))
 
   lo_s <- fit_split$prediction$conformal_lower[, "trait1"]

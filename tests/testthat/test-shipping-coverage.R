@@ -107,7 +107,7 @@ test_that("[T2A] plot_history_gg returns a ggplot for a fit with $history", {
   spl <- make_missing_splits(pd$X_scaled, seed = 1, trait_map = pd$trait_map)
   fit <- fit_pigauto(pd, td$tree, splits = spl,
                      epochs = 10L, eval_every = 5L, patience = 5L,
-                     verbose = FALSE, seed = 1)
+                     verbose = FALSE, seed = 1, gnn = TRUE)
   p <- tryCatch(plot_history_gg(fit), error = function(e) e)
   expect_s3_class(p, "ggplot")
 })

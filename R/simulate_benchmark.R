@@ -36,6 +36,10 @@
 #' @param n_reps integer.  Number of replicate trees per scenario
 #'   (default 3).
 #' @param epochs integer.  Maximum GNN training epochs (default 500).
+#' @param gnn logical. Whether the pigauto arm trains the GNN. Default
+#'   \code{TRUE}, so this function keeps comparing the baseline with the
+#'   GNN-corrected model even though \code{\link{fit_pigauto}} and
+#'   \code{\link{impute}} default to \code{gnn = FALSE}.
 #' @param verbose logical.  Print progress (default \code{TRUE}).
 #' @param seed optional integer.  When supplied, makes the generated
 #'   benchmark replicates reproducible.
@@ -68,6 +72,7 @@ simulate_benchmark <- function(
     epochs     = 500L,
     verbose    = TRUE,
     seed       = NULL,
+    gnn        = TRUE,
     ...
 ) {
   all_scenarios <- c("BM", "OU", "regime_shift", "nonlinear", "mixed")
@@ -106,7 +111,7 @@ simulate_benchmark <- function(
         bl  <- fit_baseline(pd, tree, splits = spl)
         fit <- fit_pigauto(pd, tree, splits = spl, baseline = bl,
                            epochs = as.integer(epochs),
-                           verbose = FALSE, seed = rep_seed, ...)
+                           verbose = FALSE, seed = rep_seed, gnn = gnn, ...)
         ev <- evaluate(fit, data = pd, splits = spl)
         ev$scenario <- scen
         ev$rep <- rep

@@ -325,12 +325,13 @@ test_that("save_pigauto / load_pigauto round-trip a GNN-off fit", {
 })
 
 
-test_that("gnn = TRUE default path is unchanged", {
+test_that("gnn = TRUE path is unchanged", {
   skip_on_cran()
   skip_if_no_libtorch()
   fx <- make_gnn_off_fixture()
 
-  res <- suppressWarnings(impute(fx$df, fx$tree, epochs = 5L, verbose = FALSE))
+  res <- suppressWarnings(impute(fx$df, fx$tree, epochs = 5L, verbose = FALSE,
+                                gnn = TRUE))
 
   # The GNN arm records gnn = TRUE, computes no production refit, and still
   # builds and runs the network at predict time.
@@ -375,12 +376,12 @@ test_that("gnn = FALSE warns that user covariates are ignored", {
       impute(fx$df, fx$tree, gnn = FALSE, covariates = covs,
              verbose = FALSE, seed = 5L),
       warning = function(w) {
-        if (!grepl("covariates are not used", conditionMessage(w))) {
+        if (!grepl("covariates are used only by the", conditionMessage(w))) {
           invokeRestart("muffleWarning")
         }
       }
     ),
-    "covariates are not used"
+    "covariates are used only by the"
   )
 })
 
@@ -417,4 +418,53 @@ test_that("pure traditional-stats arm: gnn = FALSE with safety_floor = FALSE and
     expect_equal(unname(fit$r_cal_mean), rep(0, length(fit$r_cal_mean)),
                  tolerance = 1e-8)
   }
+})
+
+test_that("gnn defaults: FALSE for the imputation entry points, TRUE for benchmarks", {
+  default_of <- function(f) eval(formals(f)$gnn)
+  expect_false(default_of(impute))
+  expect_false(default_of(fit_pigauto))
+  expect_false(default_of(multi_impute))
+  expect_false(default_of(multi_impute_trees))
+  # Benchmark helpers exist to compare the baseline with the GNN.
+  expect_true(default_of(compare_methods))
+  expect_true(default_of(simulate_benchmark))
+})
+
+test_that("impute() with no gnn argument equals impute(gnn = FALSE)", {
+  skip_on_cran()
+  fx <- make_gnn_off_fixture()
+  res_default <- impute(fx$df, fx$tree, verbose = FALSE, seed = 5L)
+  res_off     <- impute(fx$df, fx$tree, gnn = FALSE, verbose = FALSE, seed = 5L)
+  expect_false(res_default$fit$model_config$gnn)
+  expect_equal(res_default$completed, res_off$completed)
+})
+
+test_that("covariates under the default gnn = FALSE warn and say how to use them", {
+  skip_on_cran()
+  fx <- make_gnn_off_fixture()
+  set.seed(3L)
+  covs <- data.frame(temp = rnorm(nrow(fx$df)), row.names = rownames(fx$df))
+  expect_warning(
+    withCallingHandlers(
+      impute(fx$df, fx$tree, covariates = covs, verbose = FALSE, seed = 5L),
+      warning = function(w) {
+        if (!grepl("Set gnn = TRUE", conditionMessage(w))) {
+          invokeRestart("muffleWarning")
+        }
+      }
+    ),
+    "Set gnn = TRUE to use them"
+  )
+})
+
+test_that("plot() on a default (gnn = FALSE) fit shows gates; history explains why it is absent", {
+  skip_on_cran()
+  fx <- make_gnn_off_fixture()
+  res <- suppressWarnings(impute(fx$df, fx$tree, verbose = FALSE, seed = 5L))
+  tmp <- tempfile(fileext = ".pdf")
+  grDevices::pdf(tmp)
+  on.exit({ grDevices::dev.off(); unlink(tmp) }, add = TRUE)
+  expect_no_error(plot(res$fit))
+  expect_error(plot(res$fit, type = "history"), "gnn = FALSE")
 })

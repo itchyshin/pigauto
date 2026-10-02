@@ -25,7 +25,7 @@ build_quick_fit <- function(seed = 100) {
   spl <- make_missing_splits(pd$X_scaled, seed = seed, trait_map = pd$trait_map)
   fit <- fit_pigauto(pd, td$tree, splits = spl,
                      epochs = 20L, eval_every = 10L, patience = 5L,
-                     verbose = FALSE, seed = seed)
+                     verbose = FALSE, seed = seed, gnn = TRUE)
   list(fit = fit, pd = pd, spl = spl, tree = td$tree)
 }
 
@@ -354,7 +354,7 @@ test_that("impute() accepts covariates and threads them through the pipeline", {
     precipitation = rnorm(n, 1000, 200)
   )
 
-  res <- impute(df, tree, covariates = covs, epochs = 20L,
+  res <- impute(df, tree, covariates = covs, epochs = 20L, gnn = TRUE,
                 verbose = FALSE, seed = 500L,
                 eval_every = 10L, patience = 5L)
 
@@ -521,7 +521,7 @@ test_that("multi-obs + covariates: obs-level refinement produces within-species 
   )
 
   result <- impute(df, tree, species_col = "species",
-                   covariates = covs,
+                   covariates = covs, gnn = TRUE,
                    epochs = 30L, verbose = FALSE, seed = 602L,
                    eval_every = 10L, patience = 5L,
                    missing_frac = 0.25)

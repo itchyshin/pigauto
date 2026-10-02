@@ -20,7 +20,7 @@ multi_impute_trees(
   share_gnn = TRUE,
   reference_tree = NULL,
   draws_method = c("mc_dropout", "conformal"),
-  gnn = TRUE,
+  gnn = FALSE,
   ...
 )
 }
@@ -83,10 +83,10 @@ draw mechanism this uses" section below for the trade-off between the
 two.}
 
 \item{gnn}{logical. Passed through to \code{\link[=impute]{impute()}} / \code{\link[=fit_pigauto]{fit_pigauto()}} for
-every tree. When \code{TRUE} (default), the usual GNN correction is trained
+every tree. When \code{TRUE}, the usual GNN correction is trained
 (once, on the reference tree, when \code{share_gnn = TRUE}). When \code{FALSE},
 no GNN is used anywhere in the pipeline -- baseline-only fits
-throughout. Under \code{share_gnn = TRUE}, each tree's per-tree baseline is
+throughout (the default since 0.11.0.9001; see \code{\link[=impute]{impute()}}). Under \code{share_gnn = TRUE}, each tree's per-tree baseline is
 then fit tax-free (\code{splits = NULL}), matching the production
 \code{baseline_full} semantics \code{\link[=fit_pigauto]{fit_pigauto()}} uses.}
 
