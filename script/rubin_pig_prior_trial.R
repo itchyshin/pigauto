@@ -8,6 +8,7 @@
 #   variant base: S_E = diag(0.01 * obs_var)                (pigauto b565cad, unchanged)
 #   variant A   : S_E = diag(1e-4 * obs_var)                (smaller scale)
 #   variant B   : S_E = 0.01 * pairwise covariance of the observed latents (residual correlation follows the data)
+#   variant C   : S_E = diag((0.1 / n) * obs_var)            (shrinks with n: 1e-4 at n = 1000, 1e-3 at n = 100)
 #
 #   Rscript script/rubin_pig_prior_trial.R --variant A --n 1000 --lambda 1 --rho 0.5 --seed 1 --out <dir>
 
@@ -24,6 +25,7 @@ old <- "S_E = diag(0.01 * prob$obs_var, K)"
 new <- switch(variant,
   base = old,
   A = "S_E = diag(1e-04 * prob$obs_var, K)",
+  C = "S_E = diag((0.1 / prob$n) * prob$obs_var, K)",
   B = paste0("S_E = { C0 <- stats::cov(prob$Y, use = \"pairwise.complete.obs\"); C0 <- (C0 + t(C0)) / 2; ",
              "ev <- eigen(C0, symmetric = TRUE); 0.01 * (ev$vectors %*% diag(pmax(ev$values, 1e-3 * max(ev$values)), K) %*% t(ev$vectors)) }"),
   stop("unknown variant"))
