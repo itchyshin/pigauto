@@ -26,6 +26,11 @@ echo "cores already busy for $USER: $BUSY"
 
 # pigauto comes from a private library ($ROOT/rlib) so other Totoro lanes keep their installed build.
 export R_LIBS="$ROOT/rlib:${R_LIBS:-}"
+# pig_conf fits pigauto's GNN, which needs the torch runtime: a private copy in $ROOT/torch_home (torch::install_torch()
+# with TORCH_HOME set), so the shared ~/R/lib torch package is untouched. Checked before launch: the 2026-10-01 first
+# pig_conf launch failed in every cell on a missing runtime.
+export TORCH_HOME="$ROOT/torch_home"
+case "$ARMS" in *pig_conf*) Rscript -e 'stopifnot("torch runtime missing (set TORCH_HOME, run torch::install_torch())" = torch::torch_is_installed()); cat("torch runtime OK\n")' ;; esac
 # The installed pigauto must be the merged-main build, installed from GitHub so DESCRIPTION carries RemoteSha.
 : "${PIGAUTO_SHA:?set PIGAUTO_SHA to the merged main sha}"
 Rscript -e "d <- utils::packageDescription('pigauto'); s <- if (is.null(d\$RemoteSha)) '' else d\$RemoteSha;
