@@ -18,7 +18,7 @@
 #'   `nlme::lme`, `lme4::merMod`, `glmmTMB::glmmTMB`, `drmTMB`, and
 #'   `gllvmTMB_multi` fits. Other classes implementing `coef()` and `vcov()`
 #'   also work. The output of [with_imputations()] is accepted directly.
-#'   `MCMCglmm` fits are rejected -- see Details.
+#'   Bayesian fits (`brms`, `MCMCglmm`) are rejected; see Details.
 #'   Bare user-supplied fit lists are accepted with an explicit warning because
 #'   their imputation provenance cannot be verified.
 #' @param conf.level Confidence level for the pooled interval (default
@@ -92,10 +92,19 @@
 #' coefficients for `mu` and `sigma`; those are fixed coefficients, not
 #' random-effect variance components.
 #'
-#' **MCMCglmm fits** are rejected because Rubin's rules are not the right
-#' tool for posterior samples: variance decomposition does not generalise
-#' cleanly to posterior distributions. No MCMCglmm downstream workflow is
-#' supported by the initial analysis-aware backend.
+#' **Supported classes.** `lm`, `glm`, `gls`, `lme`, `merMod` (lme4),
+#' `glmmTMB` (conditional component), `drmTMB`, and `gllvmTMB_multi` are
+#' handled automatically. Other classes are pooled through their
+#' `coef()` / `vcov()` methods, or through `coef_fun` / `vcov_fun` /
+#' `tidy_fun`.
+#'
+#' **Bayesian fits (brms, MCMCglmm) are rejected** because Rubin's rules are
+#' not the right tool for posterior samples: they are pooled by concatenating
+#' posterior draws across imputations. For brms, use
+#' `brms::brm_multiple(formula, data = mi$datasets)`, or
+#' `brms::combine_models()` on a list of existing fits. For MCMCglmm,
+#' concatenate the `Sol` samples across fits. No Bayesian downstream
+#' workflow is supported by the analysis-aware backend.
 #'
 #' @references
 #' Rubin DB (1987). *Multiple Imputation for Nonresponse in Surveys.*
@@ -224,6 +233,19 @@ pool_mi <- function(fits,
       "`coda::as.mcmc(do.call(rbind, lapply(fits, function(f) f$Sol)))`. ",
       "For the frequentist Rubin's-rules path, see ",
       "`vignette('mixed-types', package = 'pigauto')`.",
+      call. = FALSE
+    )
+  }
+
+  # brms detection -- Bayesian fits are pooled by concatenating draws.
+  if (inherits(fits[[1]], "brmsfit")) {
+    stop(
+      "pool_mi() applies Rubin's rules and is not appropriate for ",
+      "brmsfit objects. Bayesian fits are pooled by concatenating ",
+      "posterior draws across imputations, not by Rubin's rules. Fit ",
+      "all imputations in one call with ",
+      "`brms::brm_multiple(formula, data = mi$datasets)`, or combine ",
+      "existing fits with `brms::combine_models()`.",
       call. = FALSE
     )
   }

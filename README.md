@@ -140,6 +140,28 @@ check$species$tree_only
 `data_only` rows remain in `completed` but are not modeled or filled.
 `tree_only` tips are internal all-missing rows used only while fitting.
 
+## Defaults, and when to change them
+
+`impute(traits, tree)` with its defaults is the starting point. The table
+says which route to take for each need; reach for another route only for
+the need in the left-hand column.
+
+| You want | Use | Default? |
+|---|---|---|
+| Filled-in traits | `impute(traits, tree)` | Yes |
+| Uncertainty for one imputed value | the per-cell conformal interval in `result$prediction` | Yes |
+| A downstream model (regression, PGLS, mixed model) that accounts for imputation | `multi_impute(traits, tree, draws_method = "posterior")`, then `with_imputations()` and `pool_mi()` | No: continuous traits only, one row per species, no covariates |
+| One incomplete covariate in `lm`, `glm` or `lmer` | `multi_impute_analysis()` | No |
+
+`multi_impute()`'s default draws (`"conformal"`) and `"mc_dropout"` describe
+the spread of plausible values but are not proper multiple imputations: in
+a simulation of a phylogenetic regression they biased the pooled slope
+towards zero, and `with_imputations()` refuses them. Bayesian downstream fits (brms, MCMCglmm) are
+combined by stacking posterior draws, for example with
+`brms::brm_multiple()`, not with `pool_mi()`. Worked examples for nlme,
+lme4, glmmTMB, drmTMB, gllvmTMB and brms are in the
+[multiple imputation article](https://itchyshin.github.io/pigauto/articles/multiple-imputation.html).
+
 ## Advanced controls
 
 The default journey above is the supported starting point. These controls are
@@ -167,6 +189,7 @@ refinement, and prediction controls.
 
 - [Getting started](https://itchyshin.github.io/pigauto/articles/getting-started.html)
 - [Mixed-type traits](https://itchyshin.github.io/pigauto/articles/mixed-types.html)
+- [Multiple imputation and downstream models](https://itchyshin.github.io/pigauto/articles/multiple-imputation.html)
 - [Common pitfalls](https://itchyshin.github.io/pigauto/articles/common-pitfalls.html)
 - [Tree prediction sensitivity](https://itchyshin.github.io/pigauto/articles/tree-uncertainty.html)
 
