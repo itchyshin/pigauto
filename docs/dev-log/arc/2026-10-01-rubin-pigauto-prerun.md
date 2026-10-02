@@ -1,5 +1,7 @@
 # Rubin study: pigauto posterior MI arm (pig_post), pre-run results
 
+Results page (private): https://claude.ai/artifact/Y644K1sLxbrWsAmTQvZspC
+
 Lane `claude:pigauto-mi-posterior` · branch `arc/rubin-freq-bace` · 2026-10-01 · Claude Code (Opus 5.5)
 
 ## What was run
