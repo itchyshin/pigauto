@@ -59,20 +59,43 @@ Downstream estimands (Rubin-pooled PGLS slope of c2 on c1, and phylogenetic corr
   is 0.47 to 0.58 at a true rho of 0.5. freqA also estimates lambda at the boundary (0.9996).
 - Where the error is: at lambda = 1 and rho = 0.5 the mean slope error against complete data is -0.034 for pig_post
   and -0.013 for freqA (pig_post worse in 5 of 6 datasets); at rho = 0 they agree (+0.006 and +0.004); at
-  lambda = 0.7, rho = 0.5 pig_post is unbiased (-0.000 against +0.006). The cause is open: lambda, Sigma_E and the
-  Sigma_P correlation all look right, so the next step is to compare pig_post's conditional imputation of c2 given
-  an observed c1 with the exact conditional under the true model on these datasets.
+  lambda = 0.7, rho = 0.5 pig_post is unbiased (-0.000 against +0.006). Cause found (below).
+
+## Cause of the lambda = 1 slope bias (2026-10-02)
+
+Eight campaign datasets were refitted keeping the completed datasets (`script/rubin_pig_cond_diag.R`; n = 1000,
+rho = 0.5, lambda = 1 seeds 1 to 6, lambda = 0.7 seeds 1 to 2) and compared with the exact conditional under the true
+model (`script/rubin_pig_cond_summary.R`, `script/rubin_pig_oracle.R`, `script/rubin_pig_oracle_plus_e.R`).
+
+1. Cell level, pig_post is right. For missing c2 with c1 observed, at lambda = 1: mean difference from the exact
+   conditional 0.000, shrinkage slope 0.999, SD ratio 1.02, RMSE against truth 0.037 against the exact 0.036. The
+   same holds for c1, for rows with both missing, and at lambda = 0.7. freqA also matches (SD ratio 0.94 to 0.97).
+2. Oracle MI (20 joint draws from the exact conditional, scored with the campaign's estimator and Rubin pooling):
+   mean slope error against complete data -0.004 at lambda = 1, against freqA -0.013 and pig_post -0.034. pig_post is
+   0.023 to 0.039 below the oracle in every one of the 6 datasets, so the bias is pigauto's and systematic.
+3. Mechanism. Adding pig_post's own posterior Sigma_E (from the lambda refits of the same datasets) as noise on the
+   oracle's imputed cells moves the oracle from -0.004 to -0.028, about 80 percent of pig_post's error, downward in
+   all 6 datasets. That noise is tiny (variance about 1e-4 per trait on the data scale) and nearly uncorrelated
+   between c1 and c2 (0.05 to 0.17 against a true rho of 0.5). At lambda = 1 the true Sigma_E is 0; the prior
+   Sigma_E ~ IW(K + 1, 0.01 diag(observed latent variances)) keeps it above 0 and pulls its correlation towards 0.
+   With n = 1000 and lambda = 1 the PGLS slope rests on sister-pair differences of a similar size (imputation RMSE
+   0.04), so this residual noise attenuates the slope. At rho = 0 there is no correlation to attenuate, and at
+   lambda < 1 Sigma_E is real and estimated, which matches where the bias appears.
+
+What would fix it is a pigauto package change, not a study change, and the choice is Shinichi's: a smaller or
+data-adaptive Sigma_E prior scale, a prior that lets Sigma_E reach 0 (parameter expansion on Sigma_E as on Sigma_P),
+or a parameterisation in which the residual correlation follows the phylogenetic one. Any of these needs re-running
+the #189 acceptance sweep and this cell (n = 1000, lambda = 1).
 - n = 100: pig_post is close to freqA (slope coverage 0.941 against 0.949 overall), lower at lambda 0.7 on cor.
 - On the downstream estimands pig_post covers better than freqB (improper MI) in every cell except n = 1000 at lambda = 1 (paired +0.005 to +0.046); per-cell coverage at n = 100 goes the other way (-0.011 and -0.018 at lambda 0.3 and 0.7).
 
 ## Does NOT cover
 
-Discrete traits (posterior MI is continuous-only); MAR or clade missingness; real trees; the cause of the lambda = 1
-bias (inference above); the 12 sampler failures (a pigauto fix); `study.qmd` and the published report pages are not
+Discrete traits (posterior MI is continuous-only); MAR or clade missingness; real trees;  the 12 sampler failures (a pigauto fix); `study.qmd` and the published report pages are not
 yet updated with the pig_post arm.
 
 ## Next
 
-1. pigauto: diagnose the lambda = 1 bias (posterior lambda at n = 1000, lambda = 1) and the Cholesky failures; both
-   are package work for a separate lane.
+1. pigauto: fix the Sigma_E prior behaviour at lambda = 1 (cause above) and the Cholesky failures; both are package
+   work for a separate lane.
 2. Study: add pig_post to `study.qmd` and the report pages once (1) says whether the lambda = 1 result is a bug.
