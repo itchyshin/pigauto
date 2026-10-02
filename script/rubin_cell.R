@@ -67,6 +67,7 @@ bace_nitt   <- as.integer(get_arg("--bace_nitt", 50000L))
 bace_burnin <- as.integer(get_arg("--bace_burnin", 10000L))
 bace_thin   <- as.integer(get_arg("--bace_thin", 25L))
 bace_runs   <- as.integer(get_arg("--bace_runs", 10L))
+pig_max_extend <- get_arg("--pig_max_extend", NULL)   # pig_post: posterior_control$max_extend (pigauto default 3)
 if (smoke) { bace_nitt <- 6000L; bace_burnin <- 1000L; bace_thin <- 5L; bace_runs <- 3L }
 
 dir.create(out, showWarnings = FALSE, recursive = TRUE)
@@ -236,7 +237,8 @@ if ("freqB" %in% arms) {
 }
 if ("pig_post" %in% arms) {
   # pigauto posterior MI (PR #189) on the frequentist block; seed offset 909 is unused by the other arms
-  arm_seed(909L); pp <- run_arm("pig_post", mi_pig_post(cell, M, seed = seed + 909L))
+  arm_seed(909L); pp <- run_arm("pig_post", mi_pig_post(cell, M, seed = seed + 909L,
+  control = if (is.null(pig_max_extend)) list() else list(max_extend = as.integer(pig_max_extend))))
   if (!is.null(pp)) {
     score_arm_sets("pig_post", pp$datasets); diag$pig_post <- pp$diag
     # pigauto only warns on non-convergence; flag the rows so the aggregation can decide (review R5)
