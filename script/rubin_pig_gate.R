@@ -7,7 +7,7 @@
 #   Rscript script/rubin_pig_gate.R identity <smoke dir> [pool dir]
 #   Rscript script/rubin_pig_gate.R repro    <smoke dir> [pool dir]
 #   Rscript script/rubin_pig_gate.R prov     <smoke dir> <expected pigauto sha>
-#   Rscript script/rubin_pig_gate.R prerun   <pre-run dir>
+#   Rscript script/rubin_pig_gate.R prerun   <pre-run dir> [arm, default pig_post]
 
 `%||%` <- function(a, b) if (is.null(a)) b else a
 args <- commandArgs(trailingOnly = TRUE)
@@ -75,16 +75,17 @@ if (identical(mode, "arms")) {
   cat("converged:", n_conv, "of", length(files), "\n")
   cat("PROV_OK\n")
 } else if (identical(mode, "prerun")) {
+  arm <- if (length(args) >= 3) args[3] else "pig_post"
   n_ok <- 0L; fails <- character(0); rows <- list()
   for (f in files) {
-    x <- readRDS(f); e <- x$estimands[x$estimands$arm == "pig_post", ]; d <- x$diag$pig_post
+    x <- readRDS(f); e <- x$estimands[x$estimands$arm == arm, ]; d <- x$diag[[arm]]
     ok <- nrow(e) == 2L && all(is.finite(e$estimate))
     if (ok) n_ok <- n_ok + 1L else fails <- c(fails, sprintf("%s [%s]", basename(f), paste(unlist(x$errors), collapse = "; ")))
     rows[[f]] <- data.frame(n = x$n, lambda = x$lambda, rho = x$rho, seed = x$seed, ok = ok,
-                            converged = isTRUE(d$converged), n_ext = d$n_extensions %||% NA, wall_s = x$walls[["pig_post"]] %||% NA)
+                            converged = isTRUE(d$converged), n_ext = d$n_extensions %||% NA, wall_s = x$walls[[arm]] %||% NA)
   }
   tab <- do.call(rbind, rows)
-  print(aggregate(cbind(converged, n_ext, wall_s) ~ n, tab, mean))
-  cat("files:", length(files), " pig_post failures:", length(fails), "\n"); if (length(fails)) cat(fails, sep = "\n")
+  print(aggregate(cbind(converged, n_ext, wall_s) ~ n, tab, mean, na.action = na.pass))
+  cat("files:", length(files), "", arm, "failures:", length(fails), "\n"); if (length(fails)) cat(fails, sep = "\n")
   cat("PRERUN", n_ok, "\n")
 } else stop("unknown mode ", mode)

@@ -11,8 +11,8 @@ Lane `claude:pigauto-mi-posterior` · branch `arc/rubin-freq-bace` · 2026-10-01
   `apply_block_draw()` (`script/rubin_pigauto.R`). Opt-in in `script/rubin_cell.R`, seed offset 909.
 - pigauto build: Main at b565cad (#189 merged), installed from GitHub into a private Totoro library, so each fit
   records `RemoteSha`.
-- No conformal arm: Conformal draws already failed the downstream test (`arc/mi-gls-attenuation`, 16 regimes:
-  slope bias -0.20 to -0.46, coverage 0 to 17 percent). Shinichi, 2026-10-01.
+- Conformal arm, opt-in negative control only (`pig_conf`, offset 1010): conformal draws already failed the downstream test (`arc/mi-gls-attenuation`, 16 regimes:
+  slope bias -0.20 to -0.46, coverage 0 to 17 percent). Shinichi, 2026-10-01: keep them out of the campaign. The arm exists to show that failure on these datasets.
 - Pre-run: n {100, 300, 1000} x lambda {0.3, 0.7, 1} x rho {0, 0.5} x seeds {1, 2} = 36 fits, MCAR 30 percent,
   Totoro, 36 cores, 1 h cap per cell. Started 19:22, finished 19:53. Same datasets as the stored campaign.
 - Mac smoke: n = 100, lambda 0.7, rho 0.5, seed 1, all six arms.
@@ -68,6 +68,25 @@ as evidence).
 | 1000 | bace_chain | -0.021 | 1.37 | 0.92 | -0.023 | 1.00 |
 
 No arm separates from the others at this size. Nothing here supports a claim in either direction.
+
+## pig_conf negative control (same 36 datasets)
+
+36 of 36 fits succeeded (gate GB7), 93 s, 113 s and 360 s mean per fit at n = 100, 300 and 1000. The first launch
+failed in every cell because Totoro's shared torch package had no runtime; the runtime now lives in a private
+`~/pigauto_rubin/torch_home`, and the driver checks it before launch. The failed files are kept in
+`prerun_pig_conf_failed_no_torch_20261001`.
+
+| n | arm | slope d | slope covered | cor d | cor covered |
+|---|---|---|---|---|---|
+| 100 | pig_conf | -0.081 | 0.92 | -0.086 | 0.92 |
+| 100 | pig_post | -0.040 | 1.00 | -0.037 | 1.00 |
+| 300 | pig_conf | -0.102 | 0.50 | -0.095 | 0.50 |
+| 300 | pig_post | -0.053 | 1.00 | -0.047 | 0.92 |
+| 1000 | pig_conf | -0.145 | 0.50 | -0.140 | 0.50 |
+| 1000 | pig_post | -0.028 | 0.92 | -0.031 | 0.92 |
+
+Conformal draws attenuate both estimands and lose coverage as n grows, as in `arc/mi-gls-attenuation`. The
+campaign proposal below covers pig_post only.
 
 ## Campaign proposal (not launched; needs Shinichi's approval, D-287)
 
