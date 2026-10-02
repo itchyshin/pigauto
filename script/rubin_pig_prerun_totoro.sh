@@ -8,7 +8,8 @@
 #   PIGAUTO_SHA=<merged main sha> CONFIRM=yes bash script/rubin_pig_prerun_totoro.sh 36
 #
 # Grid: n {100, 300, 1000} x lambda {0.3, 0.7, 1} x rho {0, 0.5} x seeds {1, 2} = 36 cells, arm pig_post only,
-# M = 20, MCAR 30%: the same datasets as the stored campaign (rubin_cell.R regenerates them from (n, lambda, rho, seed)).
+# M = 20, MCAR 30%. Each cell is capped at 1 h (timeout 3600): a capped cell is a lower bound on fit time, and the
+# pre-run cannot outlast the approved hour. Same datasets as the stored campaign (rubin_cell.R regenerates them from (n, lambda, rho, seed)).
 # Output goes to its own directory (the cell tag does not name the arms). Resume: existing rds are skipped.
 set -euo pipefail
 
@@ -22,6 +23,8 @@ BUSY=$(ps -u "$USER" -o pcpu= | awk '{s+=$1} END {printf "%d", s/100 + 0.5}')
 echo "cores already busy for $USER: $BUSY"
 [ $(( BUSY + PAR )) -le 150 ] || { echo "PAR=$PAR + $BUSY busy exceeds the 150-core cap (D-143)"; exit 1; }
 
+# pigauto comes from a private library ($ROOT/rlib) so other Totoro lanes keep their installed build.
+export R_LIBS="$ROOT/rlib:${R_LIBS:-}"
 # The installed pigauto must be the merged-main build, installed from GitHub so DESCRIPTION carries RemoteSha.
 : "${PIGAUTO_SHA:?set PIGAUTO_SHA to the merged main sha}"
 Rscript -e "d <- utils::packageDescription('pigauto'); s <- if (is.null(d\$RemoteSha)) '' else d\$RemoteSha;
@@ -43,7 +46,7 @@ done; done; done; done
 echo "[$(date +%FT%T)] prerun_pig jobs=$(wc -l < "$JOBS") parallel=$PAR out=$OUT sha=$PIGAUTO_SHA" | tee -a "$LOG/prerun_pig.log"
 
 setsid nohup bash -c "
-  xargs -P $PAR -L 1 -a '$JOBS' bash -c 'Rscript \"$ROOT/script/rubin_cell.R\" \"\$@\" >> \"$LOG/prerun_pig_cells.log\" 2>&1' _
+  xargs -P $PAR -L 1 -a '$JOBS' bash -c 'timeout 3600 Rscript \"$ROOT/script/rubin_cell.R\" \"\$@\" >> \"$LOG/prerun_pig_cells.log\" 2>&1' _
   echo \"[\$(date +%FT%T)] prerun_pig done\" >> '$LOG/prerun_pig.log'
 " > /dev/null 2>&1 &
 echo "launched; pgid $(ps -o pgid= $! | tr -d ' '); stop with: kill -- -<pgid>"

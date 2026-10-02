@@ -257,6 +257,8 @@ if (any(c("bace", "bace_resid", "bace_chain") %in% arms)) {
   }
 }
 
+# pig_post rows carry a converged flag; give every other arm the column (NA) so the tables bind
+if (!is.null(est_tab$pig_post)) est_tab <- lapply(est_tab, function(e) { if (!"converged" %in% names(e)) e$converged <- NA; e })
 cells_df <- do.call(rbind, cells_tab); est_df <- do.call(rbind, est_tab)
 res <- list(tag = tag, n = n, seed = seed, M = M, arms = arms, smoke = smoke, lambda = lambda, rho = rho,
             miss = miss, miss_frac = frac, realised_frac = cell$realised_frac,
