@@ -168,11 +168,11 @@
 #'   shared-data path. With either setting, use \code{cross_validate()} and
 #'   report held-out diagnostics for the intended data.
 #' @param gate_method character. How the per-trait calibrated gate is
-#'   chosen.  \code{"single_split"} (default, backward-compatible) runs
+#'   chosen.  \code{"single_split"} runs
 #'   the grid search on a single random half-A / half-B split of the val
 #'   rows; \code{"median_splits"} repeats the whole procedure for
 #'   \code{gate_splits_B} random splits and takes the median
-#'   \code{best_g}.  \code{"cv_folds"} (2026-04-30) partitions val cells
+#'   \code{best_g}.  \code{"cv_folds"} (default since PR #102, 2026-05-17) partitions val cells
 #'   into \code{gate_cv_folds} (default 5) deterministic non-overlapping
 #'   folds and runs the grid + half-B-verify procedure once per fold
 #'   (training set = K-1 folds, held-out = remaining fold), taking the
@@ -216,9 +216,10 @@
 #'   selecting K must supply a K-appropriate threshold.
 #' @param min_val_cells integer. Warn at fit time if any trait has fewer
 #'   than \code{min_val_cells} validation cells available for gate
-#'   calibration and conformal-score estimation.  Default \code{10}: the
-#'   floor of pathological territory, where the conformal quantile
-#'   collapses to \code{max(val_residuals)} and gate calibration becomes
+#'   calibration and conformal-score estimation.  Default \code{20}: with
+#'   fewer than 19 cells the split-conformal level \eqn{n/(n+1)} is below
+#'   0.95; with 38 or fewer cells the conformal score is the largest
+#'   validation residual; and with very few cells gate calibration becomes
 #'   essentially a coin flip between \code{0} and \code{gate_cap}.
 #'   Recommended operational target is \code{n_val >= 20-30} per trait;
 #'   achieve this by increasing \code{missing_frac} or collecting more

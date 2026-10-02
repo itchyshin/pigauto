@@ -72,6 +72,8 @@ navbar:
           href: articles/common-pitfalls.html
         - text: "Mixed-type traits"
           href: articles/mixed-types.html
+        - text: "Multiple imputation and downstream models"
+          href: articles/multiple-imputation.html
         - text: "Tree sensitivity (not inferentially validated)"
           href: articles/tree-uncertainty.html
         - text: "GNN architecture and the math behind pigauto"
