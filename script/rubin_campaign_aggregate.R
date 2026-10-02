@@ -23,14 +23,16 @@ read_dir <- function(d) {
 B <- Filter(Negate(is.null), read_dir(file.path(pool, "bace")))
 F <- Filter(Negate(is.null), read_dir(file.path(pool, "freq")))
 A <- Filter(Negate(is.null), read_dir(file.path(pool, "bace_asshipped_failed")))
+# pigauto posterior MI arm (pig_post), run 2026-10-01/02 on the same datasets; absent pool = the original tables
+P <- if (dir.exists(file.path(pool, "pig"))) Filter(Negate(is.null), read_dir(file.path(pool, "pig"))) else list()
 key <- function(x) sprintf("n%d_l%s_r%s_s%d", x$n, format(x$lambda), format(x$rho), x$seed)
 
 # ---- long tables ----------------------------------------------------------------------------------
 cells_long <- function(L) do.call(rbind, lapply(L, function(x) if (!is.null(x$cells)) cbind(ds = key(x), n = x$n, lambda = x$lambda,
                                                    rho = x$rho, seed = x$seed, x$cells)))
 est_long <- function(L) do.call(rbind, lapply(L, function(x) if (!is.null(x$estimands)) cbind(ds = key(x), n = x$n, lambda = x$lambda,
-                                                   rho = x$rho, seed = x$seed, x$estimands)))
-cl <- rbind(cells_long(B), cells_long(F)); el <- rbind(est_long(B), est_long(F))
+                                                   rho = x$rho, seed = x$seed, x$estimands[setdiff(names(x$estimands), "converged")])))
+cl <- rbind(cells_long(B), cells_long(F), cells_long(P)); el <- rbind(est_long(B), est_long(F), est_long(P))
 cl <- cl[!(cl$arm == "complete"), ]
 # the complete-data reference must agree between the two arm sets on the same dataset (same simulated data)
 cb <- el[el$arm == "complete" & el$ds %in% vapply(B, key, ""), ]; cf <- el[el$arm == "complete" & el$ds %in% vapply(F, key, ""), ]
@@ -38,6 +40,13 @@ mm <- merge(cb[!duplicated(paste(cb$ds, cb$estimand)), c("ds", "estimand", "esti
             cf[!duplicated(paste(cf$ds, cf$estimand)), c("ds", "estimand", "estimate")], by = c("ds", "estimand"))
 sanity <- sprintf("complete-data estimate, BACE files vs freq files, same dataset: %d pairs, max |diff| %.2e",
                   nrow(mm), if (nrow(mm)) max(abs(mm$estimate.x - mm$estimate.y)) else NA)
+if (length(P)) {
+  cp <- el[el$arm == "complete" & el$ds %in% vapply(P, key, ""), ]
+  mp <- merge(cp[!duplicated(paste(cp$ds, cp$estimand)), c("ds", "estimand", "estimate")],
+              cf[!duplicated(paste(cf$ds, cf$estimand)), c("ds", "estimand", "estimate")], by = c("ds", "estimand"))
+  sanity <- c(sanity, sprintf("complete-data estimate, pig files vs freq files, same dataset: %d pairs, max |diff| %.2e",
+                              nrow(mp), if (nrow(mp)) max(abs(mp$estimate.x - mp$estimate.y)) else NA))
+}
 el <- el[!duplicated(paste(el$ds, el$arm, el$estimand)), ]
 
 # ---- per-cell (c1, c2 pooled within a dataset) ----------------------------------------------------------
@@ -81,7 +90,11 @@ pair <- function(a1, a2, what) {
   do.call(rbind, lapply(split(m, m[c("n", "lambda")], drop = TRUE), function(g) data.frame(
     contrast = paste(a1, "-", a2), measure = what, n = g$n[1], lambda = g$lambda[1], diff = mean(g$d), se = se(g$d), datasets = nrow(g))))
 }
+pig_pairs <- if (length(P)) list(c("pig_post", "freqA"), c("pig_post", "bace_chain"), c("pig_post", "freqB")) else list()
 paired <- do.call(rbind, c(
+  lapply(pig_pairs, function(p) pair(p[1], p[2], "cell")),
+  lapply(pig_pairs, function(p) pair(p[1], p[2], "slope")),
+  lapply(pig_pairs, function(p) pair(p[1], p[2], "cor")),
   lapply(list(c("bace_chain", "bace"), c("freqA", "bace_chain"), c("freqA", "bace"), c("freqA", "freqB")), function(p) pair(p[1], p[2], "cell")),
   lapply(list(c("bace_chain", "bace"), c("freqA", "bace_chain"), c("freqA", "bace")), function(p) pair(p[1], p[2], "slope")),
   lapply(list(c("bace_chain", "bace"), c("freqA", "bace_chain"), c("freqA", "bace")), function(p) pair(p[1], p[2], "cor"))))
@@ -89,15 +102,17 @@ paired <- do.call(rbind, c(
 # ---- failures ledger ------------------------------------------------------------------------------------
 fl <- function(L, what) if (length(L)) do.call(rbind, lapply(L, function(x) data.frame(set = what, n = x$n, lambda = x$lambda,
   bace_error = !is.null(x$errors$bace_fit), freq_error = any(grepl("^freq", names(x$errors))),
-  cleaned = length(x$diag$bace$input_fix) > 0, fA_fail = x$diag$freqA$n_fail %||% NA, fA_degen = x$diag$freqA$n_degenerate %||% NA)))
-fr <- rbind(fl(B, "bace"), fl(F, "freq"), fl(A, "bace_asshipped_failed"))
+  cleaned = length(x$diag$bace$input_fix) > 0, fA_fail = x$diag$freqA$n_fail %||% NA, fA_degen = x$diag$freqA$n_degenerate %||% NA,
+  pig_error = !is.null(x$errors$pig_post), pig_unconv = !is.null(x$diag$pig_post) && !isTRUE(x$diag$pig_post$converged))))
+fr <- rbind(fl(B, "bace"), fl(F, "freq"), fl(A, "bace_asshipped_failed"), fl(P, "pig"))
 failures <- do.call(rbind, lapply(split(fr, fr[c("set", "n", "lambda")], drop = TRUE), function(g) data.frame(
   set = g$set[1], n = g$n[1], lambda = g$lambda[1], files = nrow(g), bace_errors = sum(g$bace_error), freq_errors = sum(g$freq_error),
-  bace_cleaned = sum(g$cleaned), freqA_refit_fail = sum(g$fA_fail, na.rm = TRUE), freqA_degenerate = sum(g$fA_degen, na.rm = TRUE), row.names = NULL)))
+  bace_cleaned = sum(g$cleaned), freqA_refit_fail = sum(g$fA_fail, na.rm = TRUE), freqA_degenerate = sum(g$fA_degen, na.rm = TRUE),
+  pig_errors = sum(g$pig_error), pig_unconverged = sum(g$pig_unconv), row.names = NULL)))
 
 for (nm in c("cells", "cells_n", "cells_l", "down", "down_n", "down_l", "paired", "failures")) write.csv(get(nm), file.path(out, paste0(nm, ".csv")), row.names = FALSE)
-writeLines(c(sanity, sprintf("BACE files %d, freq files %d, as-shipped failure records %d", length(B), length(F), length(A))), file.path(out, "sanity.txt"))
+writeLines(c(sanity, sprintf("BACE files %d, freq files %d, as-shipped failure records %d, pig files %d", length(B), length(F), length(A), length(P))), file.path(out, "sanity.txt"))
 writeLines(toJSON(list(cells = cells, cells_n = cells_n, cells_l = cells_l, prp = prp_s, down = down, down_n = down_n, down_l = down_l, paired = paired, failures = failures,
-                       sanity = sanity, counts = list(bace = length(B), freq = length(F), asshipped_failed = length(A))),
+                       sanity = sanity, counts = list(bace = length(B), freq = length(F), asshipped_failed = length(A), pig = length(P))),
                   digits = 5, na = "null", auto_unbox = TRUE, dataframe = "rows"), file.path(out, "report.json"))
 cat(readLines(file.path(out, "sanity.txt")), sep = "\n"); print(cells_n, digits = 3, row.names = FALSE); print(down_n, digits = 3, row.names = FALSE)
