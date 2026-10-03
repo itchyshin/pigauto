@@ -61,6 +61,14 @@ distribution of the missing cells. It currently requires:
 - one row per species (no `species_col`),
 - no `covariates`.
 
+Known limitation: with many species (about 1,000) and traits close to
+Brownian motion (Pagel's lambda near 1), posterior draws slightly attenuate
+correlations between traits, and Rubin-pooled intervals for a downstream
+slope or correlation can under-cover (about 0.86 instead of 0.95 in
+simulation at n = 1000, lambda = 1, trait correlation 0.5). Per-cell
+imputations are unaffected. The cause is the weak prior on the residual
+covariance; a fix is under study.
+
 For one incomplete covariate in a Gaussian `lm`, a binomial `glm` or an
 `lmer` with one random intercept, `multi_impute_analysis()` provides a
 narrower analysis-aware route; see `?multi_impute_analysis`.

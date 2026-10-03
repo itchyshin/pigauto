@@ -61,7 +61,14 @@ when a calibrated GNN gate is zero.}
 covariates. Fit a Bayesian multivariate phylogenetic mixed model by
 MCMC and return \code{m} completions drawn from the posterior predictive
 distribution of the missing cells. No GNN is fitted. See "Posterior
-draws" below.}
+draws" below. Known limitation: with many species (about 1,000)
+and traits close to Brownian motion (Pagel's lambda near 1),
+posterior draws slightly attenuate correlations between traits, and
+Rubin-pooled intervals for a downstream slope or correlation can
+under-cover (about 0.86 instead of 0.95 in simulation at n = 1000,
+lambda = 1, trait correlation 0.5). Per-cell imputations are
+unaffected. The cause is the weak prior on the residual covariance;
+a fix is under study.}
 }
 Conformal and MC-dropout draws perturb missing cells around a point
 prediction rather than drawing them jointly from their conditional

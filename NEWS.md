@@ -1,4 +1,27 @@
-# pigauto 0.11.0.9001 (dev)
+# pigauto 0.11.0.9002 (dev)
+
+## New default: `multi_impute(draws_method = "auto")`
+
+`multi_impute()` now defaults to `draws_method = "auto"`. It uses
+`"posterior"` when every trait is continuous, there is one row per species,
+and no `covariates` or `multi_proportion_groups` are given; these are proper
+multiple imputations that `with_imputations()` and `pool_mi()` accept.
+Otherwise it uses `"conformal"` and prints one line saying why and that
+those draws cannot be pooled. `result$draws_method` records the choice. To
+get the previous default, set `draws_method = "conformal"`.
+
+Why. With the old default, a user who called `multi_impute()` and followed
+the documented `with_imputations()` / `pool_mi()` route was stopped at the
+last step, because conformal draws are refused for inference: in a
+16-regime simulation of a phylogenetic regression slope they biased the
+pooled slope towards zero by 0.20 to 0.46 with 0 to 17% interval coverage
+(see the `draws_method` documentation). Note that the posterior sampler is
+slower than conformal draws: about ten minutes per fit for 300 species and
+four traits on one core.
+
+Posterior draws have a known limitation at large n with lambda near 1 and
+correlated traits: downstream interval coverage was about 0.86 at n = 1000,
+lambda = 1 in simulation; see `?multi_impute`.
 
 ## Breaking change: the GNN is off by default (`gnn = FALSE`)
 
@@ -33,25 +56,6 @@ What to know.
   GNN-corrected model.
 - No torch call is made with `gnn = FALSE`; torch is still in Imports.
 
-
-## New default: `multi_impute(draws_method = "auto")`
-
-`multi_impute()` now defaults to `draws_method = "auto"`. It uses
-`"posterior"` when every trait is continuous, there is one row per species,
-and no `covariates` or `multi_proportion_groups` are given; these are proper
-multiple imputations that `with_imputations()` and `pool_mi()` accept.
-Otherwise it uses `"conformal"` and prints one line saying why and that
-those draws cannot be pooled. `result$draws_method` records the choice. To
-get the previous default, set `draws_method = "conformal"`.
-
-Why. With the old default, a user who called `multi_impute()` and followed
-the documented `with_imputations()` / `pool_mi()` route was stopped at the
-last step, because conformal draws are refused for inference: in a
-16-regime simulation of a phylogenetic regression slope they biased the
-pooled slope towards zero by 0.20 to 0.46 with 0 to 17% interval coverage
-(see the `draws_method` documentation). Note that the posterior sampler is
-slower than conformal draws: about ten minutes per fit for 300 species and
-four traits on one core.
 
 ## Multiple imputation with downstream models: docs and brms guard
 
