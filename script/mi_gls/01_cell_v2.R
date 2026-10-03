@@ -314,7 +314,7 @@ run_posterior <- function(param_uncertainty) {
   }
   pc <- mi$posterior$control
   list(res = res,
-       ctl = if (!is.null(pc)) pc[intersect(c("n_chains", "burnin", "n_iter", "thin", "keep_draws"),
+       ctl = if (!is.null(pc)) pc[intersect(c("n_chains", "burnin", "n_iter", "thin", "keep_draws", "residual_prior"),
                                             names(pc))] else NULL)
 }
 
