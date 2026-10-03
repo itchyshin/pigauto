@@ -395,7 +395,9 @@ terms such as `z_sq`. Fixed effects are the only supported pooling targets.
 
 Conformal-width, Brownian/MC-dropout, and PMM draws remain experimental
 prediction diagnostics. They failed the downstream fixed-effect gate and must
-not be passed to `with_imputations()`/`pool_mi()` for inference.
+not be passed to `with_imputations()`/`pool_mi()` for inference. For
+continuous traits with one row per species, `multi_impute()` with its
+default `draws_method = "auto"` uses posterior draws, which can be pooled.
 
 ## Phylogenetic tree uncertainty
 

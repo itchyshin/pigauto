@@ -214,7 +214,7 @@ test_that("[lambda-default] estimated lambda is applied", {
 
 # ---- (vi) NEWS mentions lambda early --------------------------------------
 
-test_that("[lambda-default] NEWS.md mentions lambda in its first 60 lines", {
+test_that("[lambda-default] NEWS.md mentions lambda in the unreleased section", {
   news_path <- system.file("..", "NEWS.md", package = "pigauto")
   if (!nzchar(news_path) || !file.exists(news_path)) {
     # Not installed with NEWS.md (e.g. devtools::load_all from source):
@@ -222,6 +222,11 @@ test_that("[lambda-default] NEWS.md mentions lambda in its first 60 lines", {
     news_path <- testthat::test_path("..", "..", "NEWS.md")
   }
   skip_if_not(file.exists(news_path), "NEWS.md not found")
-  head_lines <- readLines(news_path, n = 60L, warn = FALSE)
-  expect_true(any(grepl("lambda", head_lines, ignore.case = TRUE)))
+  # The unreleased section runs from the top to the first released version
+  # header ("# pigauto x.y.z", no ".9xxx" development suffix). A fixed line
+  # count broke as soon as later entries were added above the lambda one.
+  news <- readLines(news_path, warn = FALSE)
+  released <- grep("^# pigauto [0-9]+\\.[0-9]+\\.[0-9]+\\s*$", news)
+  dev_lines <- if (length(released)) news[seq_len(released[1] - 1L)] else news
+  expect_true(any(grepl("lambda", dev_lines, ignore.case = TRUE)))
 })

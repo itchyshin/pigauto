@@ -56,7 +56,9 @@ The output roles are deliberately separate:
 - A `pigauto_result` does not itself authorize downstream inference. The
   supported pooling entries begin with `multi_impute_analysis()` in its
   documented narrow regime or, for continuous traits,
-  `multi_impute(draws_method = "posterior")`.
+  `multi_impute(draws_method = "posterior")`. `multi_impute()`'s default,
+  `draws_method = "auto"`, picks `"posterior"` whenever the data allow it
+  and otherwise says why it fell back to non-poolable conformal draws.
 
 Tiny installed example inputs are available at
 `system.file("extdata", "novice_traits.csv", package = "pigauto")` and
@@ -150,13 +152,14 @@ the need in the left-hand column.
 |---|---|---|
 | Filled-in traits | `impute(traits, tree)` | Yes |
 | Uncertainty for one imputed value | the per-cell conformal interval in `result$prediction` | Yes |
-| A downstream model (regression, PGLS, mixed model) that accounts for imputation | `multi_impute(traits, tree, draws_method = "posterior")`, then `with_imputations()` and `pool_mi()` | No: continuous traits only, one row per species, no covariates |
+| A downstream model (regression, PGLS, mixed model) that accounts for imputation | `multi_impute(traits, tree)`, then `with_imputations()` and `pool_mi()` | Yes, when every trait is continuous, with one row per species and no covariates: the default `draws_method = "auto"` then uses posterior draws |
 | One incomplete covariate in `lm`, `glm` or `lmer` | `multi_impute_analysis()` | No |
 
-`multi_impute()`'s default draws (`"conformal"`) and `"mc_dropout"` describe
-the spread of plausible values but are not proper multiple imputations: in
-a simulation of a phylogenetic regression they biased the pooled slope
-towards zero, and `with_imputations()` refuses them. Bayesian downstream fits (brms, MCMCglmm) are
+For other data, `draws_method = "auto"` falls back to `"conformal"` draws
+and says so. Those draws, like `"mc_dropout"`, describe the spread of
+plausible values but are not proper multiple imputations: in a simulation
+of a phylogenetic regression they biased the pooled slope towards zero, and
+`with_imputations()` refuses them. Bayesian downstream fits (brms, MCMCglmm) are
 combined by stacking posterior draws, for example with
 `brms::brm_multiple()`, not with `pool_mi()`. Worked examples for nlme,
 lme4, glmmTMB, drmTMB, gllvmTMB and brms are in the

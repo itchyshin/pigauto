@@ -8,7 +8,7 @@ multi_impute(
   traits,
   tree,
   m = 100L,
-  draws_method = c("conformal", "mc_dropout", "posterior"),
+  draws_method = c("auto", "conformal", "mc_dropout", "posterior"),
   species_col = NULL,
   trait_types = NULL,
   multi_proportion_groups = NULL,
@@ -38,7 +38,14 @@ datasets; only originally-missing cells vary.}
 \item{draws_method}{character. How stochastic draws are generated for
 missing cells. One of:
 \describe{
-\item{\code{"conformal"}}{(default) Run the model once, then sample each
+\item{\code{"auto"}}{(default; previously \code{"conformal"}) Use \code{"posterior"} when
+the data fit its requirements (every trait continuous, one row per
+species, no \code{covariates}, no \code{multi_proportion_groups}); otherwise
+use \code{"conformal"} and print a message saying why and that the draws
+cannot be pooled. The chosen method is stored in
+\code{result$draws_method}. To get the previous default, set
+\code{draws_method = "conformal"}.}
+\item{\code{"conformal"}}{Run the model once, then sample each
 originally-missing cell from a Normal distribution centred on the
 point estimate with SD = conformal_score / 1.96. Converting a
 split-conformal residual quantile to a Normal scale is a heuristic;
@@ -54,7 +61,14 @@ when a calibrated GNN gate is zero.}
 covariates. Fit a Bayesian multivariate phylogenetic mixed model by
 MCMC and return \code{m} completions drawn from the posterior predictive
 distribution of the missing cells. No GNN is fitted. See "Posterior
-draws" below.}
+draws" below. Known limitation: with many species (about 1,000)
+and traits close to Brownian motion (Pagel's lambda near 1),
+posterior draws slightly attenuate correlations between traits, and
+Rubin-pooled intervals for a downstream slope or correlation can
+under-cover (about 0.86 instead of 0.95 in simulation at n = 1000,
+lambda = 1, trait correlation 0.5). Per-cell imputations are
+unaffected. The cause is the weak prior on the residual covariance;
+a fix is under study.}
 }
 Conformal and MC-dropout draws perturb missing cells around a point
 prediction rather than drawing them jointly from their conditional

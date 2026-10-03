@@ -35,7 +35,14 @@
 #' @param draws_method character. How stochastic draws are generated for
 #'   missing cells. One of:
 #'   \describe{
-#'     \item{`"conformal"`}{(default) Run the model once, then sample each
+#'     \item{`"auto"`}{(default; previously `"conformal"`) Use `"posterior"` when
+#'       the data fit its requirements (every trait continuous, one row per
+#'       species, no `covariates`, no `multi_proportion_groups`); otherwise
+#'       use `"conformal"` and print a message saying why and that the draws
+#'       cannot be pooled. The chosen method is stored in
+#'       `result$draws_method`. To get the previous default, set
+#'       `draws_method = "conformal"`.}
+#'     \item{`"conformal"`}{Run the model once, then sample each
 #'       originally-missing cell from a Normal distribution centred on the
 #'       point estimate with SD = conformal_score / 1.96. Converting a
 #'       split-conformal residual quantile to a Normal scale is a heuristic;
@@ -51,7 +58,14 @@
 #'       covariates. Fit a Bayesian multivariate phylogenetic mixed model by
 #'       MCMC and return `m` completions drawn from the posterior predictive
 #'       distribution of the missing cells. No GNN is fitted. See "Posterior
-#'       draws" below.}
+#'       draws" below. Known limitation: with many species (about 1,000)
+#'       and traits close to Brownian motion (Pagel's lambda near 1),
+#'       posterior draws slightly attenuate correlations between traits, and
+#'       Rubin-pooled intervals for a downstream slope or correlation can
+#'       under-cover (about 0.86 instead of 0.95 in simulation at n = 1000,
+#'       lambda = 1, trait correlation 0.5). Per-cell imputations are
+#'       unaffected. The cause is the weak prior on the residual covariance;
+#'       a fix is under study.}
 #'   }
 #'   Conformal and MC-dropout draws perturb missing cells around a point
 #'   prediction rather than drawing them jointly from their conditional
@@ -370,7 +384,7 @@
 #'
 #' @export
 multi_impute <- function(traits, tree, m = 100L,
-                         draws_method = c("conformal", "mc_dropout",
+                         draws_method = c("auto", "conformal", "mc_dropout",
                                           "posterior"),
                          species_col = NULL,
                          trait_types = NULL,
@@ -392,6 +406,14 @@ multi_impute <- function(traits, tree, m = 100L,
                          if (!missing(lambda_mode)) "lambda_mode")
   draws_method <- match.arg(draws_method)
   lambda_mode <- match.arg(lambda_mode)
+  if (draws_method == "auto") {
+    draws_method <- .mi_resolve_draws_auto(
+      traits = traits, tree = tree, species_col = species_col,
+      trait_types = trait_types,
+      multi_proportion_groups = multi_proportion_groups,
+      log_transform = log_transform, covariates = covariates,
+      verbose = verbose)
+  }
   m <- as.integer(m)
   if (!is.finite(m) || m < 2L) {
     stop("`m` must be an integer >= 2 (stochastic diagnostics need at least ",
@@ -811,4 +833,50 @@ print.pigauto_mi <- function(x, ...) {
     cat("  Downstream inference:     with_imputations(mi, f) then pool_mi()\n")
   }
   invisible(x)
+}
+
+
+# ---- Internal: resolve draws_method = "auto" --------------------------------
+# "posterior" when the data fit the posterior route's input contract
+# (.multi_impute_posterior() in R/mi_posterior.R: continuous traits only, one
+# row per species, no covariates); otherwise "conformal", with a message
+# saying why and that those draws cannot be pooled. Missing-cell and tree
+# checks are left to the chosen route so its own error messages apply.
+.mi_resolve_draws_auto <- function(traits, tree, species_col, trait_types,
+                                   multi_proportion_groups, log_transform,
+                                   covariates, verbose = TRUE) {
+  reason <- NULL
+  if (!is.null(covariates)) {
+    reason <- "`covariates` were supplied"
+  } else if (!is.null(species_col)) {
+    reason <- "`species_col` was supplied (multiple observations per species)"
+  } else if (!is.null(multi_proportion_groups)) {
+    reason <- "`multi_proportion_groups` were supplied"
+  } else {
+    data <- suppressMessages(preprocess_traits(
+      traits, tree, trait_types = trait_types,
+      multi_proportion_groups = multi_proportion_groups,
+      log_transform = log_transform))
+    types <- vapply(data$trait_map, `[[`, character(1), "type")
+    names(types) <- vapply(data$trait_map, `[[`, character(1), "name")
+    bad <- types[types != "continuous"]
+    if (length(bad)) {
+      reason <- paste0("some traits are not continuous (",
+                       paste(sprintf("%s: %s", names(bad), bad),
+                             collapse = ", "), ")")
+    }
+  }
+  if (is.null(reason)) {
+    if (verbose) {
+      message("draws_method = \"auto\": all traits are continuous, so using ",
+              "\"posterior\" (proper multiple imputation for downstream ",
+              "analysis; the sampler can take several minutes).")
+    }
+    return("posterior")
+  }
+  message("draws_method = \"auto\": using \"conformal\" because ", reason,
+          ". These draws show the spread of plausible values but are not ",
+          "proper multiple imputations; with_imputations() and pool_mi() ",
+          "refuse them. See ?multi_impute.")
+  "conformal"
 }
