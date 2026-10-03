@@ -416,7 +416,13 @@
 #         collapsed Metropolis moves.
 .mip_log_prior_E <- function(S, hyper) {
   if (!identical(hyper$E_prior, "sep")) return(.mip_log_iw(S, hyper$nu_E, hyper$S_E))
-  if (inherits(tryCatch(chol(S), error = function(e) e), "error")) return(-Inf)
+  # Numerical floor: the standardised residual covariance keeps eigenvalues
+  # >= 1e-6, so the (a, mu) precision stays factorisable. Without it the
+  # half-Cauchy lets Sigma_E collapse at lambda = 1 and the sparse Cholesky
+  # of the current state fails (Rubin trial, n = 1000, lambda = 1: 6 of 6).
+  Z <- S / tcrossprod(hyper$A_E)
+  ev <- tryCatch(eigen(Z, symmetric = TRUE, only.values = TRUE)$values, error = function(e) -Inf)
+  if (min(ev) < 1e-6) return(-Inf)
   s <- sqrt(diag(S))
   sum(-log1p((s / hyper$A_E)^2)) - length(s) * sum(log(s))
 }

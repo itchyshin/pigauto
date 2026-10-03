@@ -540,6 +540,7 @@ test_that("the separation-strategy residual prior is finite on PD matrices and -
   S <- matrix(c(1, 0.3, 0.3, 2), 2)
   expect_true(is.finite(.mip_log_prior_E(S, hyper)))
   expect_identical(.mip_log_prior_E(matrix(c(1, 2, 2, 1), 2), hyper), -Inf)
+  expect_identical(.mip_log_prior_E(diag(c(1e-8, 1)), hyper), -Inf)   # below the 1e-6 standardised floor
   # change of variables: with R fixed, log p(Sigma) = sum log halfCauchy(s) - K sum log s
   s <- sqrt(diag(S))
   expect_equal(.mip_log_prior_E(S, hyper), sum(-log1p((s / hyper$A_E)^2)) - 2 * sum(log(s)))
