@@ -19,9 +19,10 @@ pooled slope towards zero by 0.20 to 0.46 with 0 to 17% interval coverage
 slower than conformal draws: about ten minutes per fit for 300 species and
 four traits on one core.
 
-Posterior draws have a known limitation at large n with lambda near 1 and
-correlated traits: downstream interval coverage was about 0.86 at n = 1000,
-lambda = 1 in simulation; see `?multi_impute`.
+Posterior draws have a known limitation for correlated traits with lambda
+near 1: in simulation at lambda = 1 and trait correlation 0.5, a downstream
+slope was biased by about -0.05 and 95% interval coverage fell to 0.88 at
+n = 300 and 0.75 at n = 1000; see `?multi_impute`.
 
 ## Breaking change: the GNN is off by default (`gnn = FALSE`)
 
