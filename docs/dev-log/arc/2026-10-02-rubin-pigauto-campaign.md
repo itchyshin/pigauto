@@ -16,6 +16,22 @@ Results page (private): https://claude.ai/artifact/Y644K1sLxbrWsAmTQvZspC
   `script/rubin_study/data/agg_pig/` from `script/rubin_campaign_aggregate.R` (extended; the original tables are
   reproduced byte for byte when no `pig/` pool exists).
 
+## Correction (2026-10-02): the lambda = 1 numbers above are pooled over rho
+
+The 0.85 to 0.86 coverage and the -0.021 bias quoted above for n = 1000, lambda = 1 average rho = 0 (where pig_post
+covers 0.97) with rho = 0.5. The problem is entirely in the correlated case, it is larger, and it already shows at
+n = 300 (found by the study-report pass; checked against `script/rubin_study/data/agg_pig/down.csv`):
+
+| lambda = 1, rho = 0.5 | n = 100 | n = 300 | n = 1000 |
+|---|---|---|---|
+| pig_post slope coverage | 0.955 | 0.875 | 0.750 |
+| pig_post correlation coverage | 0.940 | 0.890 | 0.735 |
+| freqA slope coverage | 0.955 | 0.920 | 0.935 |
+| slope bias, pig_post / freqA | -0.061 / -0.021 | -0.050 / -0.026 | -0.045 / -0.022 |
+
+At lambda 0.3 and 0.7 with rho = 0.5, pig_post covers 0.93 to 0.98 with bias under 0.01; at rho = 0 it is fine at
+every lambda. The pigauto caveat merged in #201 quoted the pooled 0.86; PR #202 corrects it to these numbers.
+
 ## Failures and convergence
 
 | n | lambda | sampler errors | unconverged |
