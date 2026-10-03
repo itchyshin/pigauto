@@ -528,3 +528,37 @@ test_that("a proposal whose likelihood cannot be factorised is rejected, not fat
   expect_true(all(mv$acc == 0))
   expect_true(all(mv$acc_off == 0))
 })
+
+test_that("residual_prior defaults to the inverse-Wishart and validates", {
+  expect_identical(.mip_resolve_control(list(), m = 5L)$residual_prior, "iw")
+  expect_identical(.mip_resolve_control(list(residual_prior = "sep"), m = 5L)$residual_prior, "sep")
+  expect_error(.mip_resolve_control(list(residual_prior = "nope"), m = 5L))
+})
+
+test_that("the separation-strategy residual prior is finite on PD matrices and -Inf otherwise", {
+  hyper <- list(E_prior = "sep", A_E = c(1, 2))
+  S <- matrix(c(1, 0.3, 0.3, 2), 2)
+  expect_true(is.finite(.mip_log_prior_E(S, hyper)))
+  expect_identical(.mip_log_prior_E(matrix(c(1, 2, 2, 1), 2), hyper), -Inf)
+  # change of variables: with R fixed, log p(Sigma) = sum log halfCauchy(s) - K sum log s
+  s <- sqrt(diag(S))
+  expect_equal(.mip_log_prior_E(S, hyper), sum(-log1p((s / hyper$A_E)^2)) - 2 * sum(log(s)))
+  # the default path is the inverse-Wishart, unchanged
+  h2 <- list(nu_E = 3, S_E = diag(0.01, 2))
+  expect_identical(.mip_log_prior_E(S, h2), .mip_log_iw(S, 3, diag(0.01, 2)))
+})
+
+test_that("a short run under residual_prior = 'sep' returns finite, positive-definite draws", {
+  skip_on_cran()
+  d <- mip_sim(n = 30L, seed = 4L)
+  Y <- d$Y; Y[1:6, 1] <- NA; Y[5:10, 2] <- NA
+  ctl <- .mip_resolve_control(list(n_chains = 2L, burnin = 60L, n_iter = 60L, keep_draws = 20L, seed = 2L,
+                                   residual_prior = "sep"), m = 5L)
+  ctl$auto_extend <- FALSE
+  f <- .mip_fit(Y, d$tree, ctl)
+  expect_identical(f$hyper$E_prior, "sep")
+  SE <- f$params$Sigma_E
+  expect_true(all(is.finite(SE)))
+  expect_true(all(apply(SE, 3L, function(S) all(eigen(S, symmetric = TRUE, only.values = TRUE)$values > 0))))
+  expect_true(all(is.finite(f$ymis)))
+})
