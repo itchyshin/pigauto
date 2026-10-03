@@ -20,7 +20,7 @@ cell_cov <- function(sets, x) {
   mean((tr >= lo & tr <= hi)[mk])
 }
 
-files <- list.files(dir, "^prior_(base|A|B|C)_n.*[.]rds$", full.names = TRUE)
+files <- list.files(dir, "^prior_(base|A|B|C|SEP)_n.*[.]rds$", full.names = TRUE)
 oracle_cache <- list(); rows <- list()
 for (f in files) {
   x <- readRDS(f); key <- sprintf("l%s_s%d", format(x$lambda), x$seed)
