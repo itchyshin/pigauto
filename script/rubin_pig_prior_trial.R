@@ -23,9 +23,9 @@ if (file.exists(f_out)) quit(save = "no", status = 0)
 
 # variant SEP: pigauto's opt-in residual_prior = "sep" (research branch research/mi-posterior-sep-prior); no patch
 old <- "S_E = diag(0.01 * prob$obs_var, K)"
-if (identical(variant, "SEP")) variant_control <- list(residual_prior = "sep") else variant_control <- list()
+if (variant %in% c("SEP", "SEPF")) variant_control <- list(residual_prior = "sep") else variant_control <- list()
 new <- switch(variant,
-  base = old, SEP = old,
+  base = old, SEP = old, SEPF = old,
   A = "S_E = diag(1e-04 * prob$obs_var, K)",
   C = "S_E = diag((0.1 / prob$n) * prob$obs_var, K)",
   B = paste0("S_E = { C0 <- stats::cov(prob$Y, use = \"pairwise.complete.obs\"); C0 <- (C0 + t(C0)) / 2; ",
