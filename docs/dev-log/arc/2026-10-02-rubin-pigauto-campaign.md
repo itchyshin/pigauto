@@ -158,6 +158,28 @@ not decisive), but A and C agree. The remaining options are parameter expansion 
 targets mixing near Sigma_E = 0 without moving the prior's scale, or keeping the current prior and documenting the
 large-n, lambda = 1 caveat.
 
+## Separation-strategy residual prior (2026-10-02): passes the screen
+
+pigauto branch `research/mi-posterior-sep-prior` (opt-in `posterior_control$residual_prior = "sep"`, default "iw"):
+Sigma_E = diag(s) R diag(s), s_k ~ half-Cauchy(0, observed SD of trait k), R ~ LKJ(1), as a density on Sigma_E's
+entries (Jacobian 2^K prod s_k^K) so the existing Metropolis moves stay valid; the conjugate IW draw is skipped. A
+first version crashed in all 6 n = 1000, lambda = 1 fits (the half-Cauchy let Sigma_E collapse and the precision of
+the current state could not be factorised); a floor of 1e-6 on the eigenvalues of the standardised Sigma_E fixed it.
+Screen with the floor (variant SEPF; same datasets and oracle as above; 28 fits, 0 crashes):
+
+| cell | current prior | flat 1e-4 (A) | SEPF |
+|---|---|---|---|
+| n = 1000, lambda = 1: gap to oracle | -0.030 | -0.006 | -0.002 |
+| n = 1000, lambda = 0.7: gap to oracle | -0.009 | -0.010 | -0.019 |
+| n = 100, lambda = 0.3: converged, gap | 8 of 10, +0.025 | 8 of 10, +0.020 | 10 of 10, -0.002 |
+| n = 100, lambda = 0.7: converged, gap | 8 of 10, +0.017 | 4 of 9, +0.024 | 10 of 10, -0.016 |
+| per-cell coverage n = 100 (oracle about 0.87) | 0.865, 0.838 | 0.847, 0.830 | 0.867, 0.880 |
+| mean time per fit, n = 100 | about 470 s | about 570 s | about 320 s |
+
+SEPF removes the lambda = 1 bias without the small-n convergence cost of the scale fixes, and is faster at n = 100.
+The n = 1000, lambda = 0.7 gap (-0.019, 2 datasets) needs the full run to settle. This is a screen (2 to 10 datasets
+per cell), not evidence; making "sep" the default needs the #189 acceptance sweep and the Rubin campaign re-run under it.
+
 ## Does NOT cover
 
 Discrete traits (posterior MI is continuous-only); MAR or clade missingness; real trees; the 12 sampler failures (a pigauto fix); `study.qmd` and the published report pages are not
