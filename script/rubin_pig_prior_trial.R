@@ -21,9 +21,11 @@ dir.create(out, showWarnings = FALSE, recursive = TRUE)
 f_out <- file.path(out, sprintf("prior_%s_n%d_l%s_r%s_s%d.rds", variant, n, format(lambda), format(rho), seed))
 if (file.exists(f_out)) quit(save = "no", status = 0)
 
+# variant SEP: pigauto's opt-in residual_prior = "sep" (research branch research/mi-posterior-sep-prior); no patch
 old <- "S_E = diag(0.01 * prob$obs_var, K)"
+if (identical(variant, "SEP")) variant_control <- list(residual_prior = "sep") else variant_control <- list()
 new <- switch(variant,
-  base = old,
+  base = old, SEP = old,
   A = "S_E = diag(1e-04 * prob$obs_var, K)",
   C = "S_E = diag((0.1 / prob$n) * prob$obs_var, K)",
   B = paste0("S_E = { C0 <- stats::cov(prob$Y, use = \"pairwise.complete.obs\"); C0 <- (C0 + t(C0)) / 2; ",
@@ -41,7 +43,7 @@ cell <- make_cell("types_mixed", n, seed, miss_frac = 0.30, miss = "mcar", lambd
                   thresholds = "fixed", driver = TRUE)
 bt <- default_block_traits(cell)
 set.seed(seed + 909L); t0 <- proc.time()[["elapsed"]]
-pp <- mi_pig_post(cell, 20, seed = seed + 909L)
+pp <- mi_pig_post(cell, 20, seed = seed + 909L, control = variant_control)
 saveRDS(list(variant = variant, n = n, lambda = lambda, rho = rho, seed = seed, block_traits = bt,
              truth = cell$truth[, bt], mask = cell$mask[, bt], tree = cell$tree,
              pig_post = lapply(pp$datasets, function(d) d[, bt, drop = FALSE]),
