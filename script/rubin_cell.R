@@ -62,7 +62,7 @@ save_imp <- isTRUE(get_arg("--save_imp", FALSE))
 # 808), fill the same continuous draws with simulation v1's equal-rates models and are scored on discrete traits
 # only. Every arm is scored on bin, ord, cat3 and on c1 ~ bin.
 discrete <- isTRUE(get_arg("--discrete", FALSE))
-if (discrete && any(c("pig_post", "pig_conf") %in% arms)) stop("pig_post and pig_conf are continuous-only; run them without --discrete")
+if (discrete && any(c("pig_post", "pig_conf", "pig_sep") %in% arms)) stop("pig_post, pig_conf and pig_sep are continuous-only; run them without --discrete")
 bace_nitt   <- as.integer(get_arg("--bace_nitt", 50000L))
 bace_burnin <- as.integer(get_arg("--bace_burnin", 10000L))
 bace_thin   <- as.integer(get_arg("--bace_thin", 25L))
@@ -82,7 +82,7 @@ source(file.path(here, "campaign_gnn_off_lib.R"))
 source(file.path(here, "rubin_lib.R"))
 source(file.path(here, "rubin_freq.R"))
 source(file.path(here, "rubin_bace.R"))
-if (any(c("pig_post", "pig_conf") %in% arms)) source(file.path(here, "rubin_pigauto.R"))
+if (any(c("pig_post", "pig_conf", "pig_sep") %in% arms)) source(file.path(here, "rubin_pigauto.R"))
 if (discrete) source(file.path(here, "rubin_discrete.R"))
 
 git_hash <- tryCatch({
@@ -245,6 +245,16 @@ if ("pig_post" %in% arms) {
     if (!is.null(est_tab$pig_post)) est_tab$pig_post$converged <- isTRUE(pp$diag$converged)
   }
 }
+if ("pig_sep" %in% arms) {
+  # pigauto posterior MI with the experimental residual_prior = "sep" (#204). Same block, chain seed (offset 909) and
+  # extension rule as pig_post, so the two arms differ only in the residual prior and compare per dataset.
+  ctl_sep <- c(list(residual_prior = "sep"), if (is.null(pig_max_extend)) list() else list(max_extend = as.integer(pig_max_extend)))
+  arm_seed(909L); ps <- run_arm("pig_sep", mi_pig_post(cell, M, seed = seed + 909L, control = ctl_sep))
+  if (!is.null(ps)) {
+    score_arm_sets("pig_sep", ps$datasets); diag$pig_sep <- ps$diag
+    if (!is.null(est_tab$pig_sep)) est_tab$pig_sep$converged <- isTRUE(ps$diag$converged)
+  }
+}
 if ("pig_conf" %in% arms) {
   # opt-in negative control: pigauto's default conformal draws (known downstream attenuation); offset 1010
   arm_seed(1010L); pc <- run_arm("pig_conf", mi_pig_conf(cell, M, seed = seed + 1010L))
@@ -266,7 +276,7 @@ if (any(c("bace", "bace_resid", "bace_chain") %in% arms)) {
 }
 
 # pig_post rows carry a converged flag; give every other arm the column (NA) so the tables bind
-if (!is.null(est_tab$pig_post)) est_tab <- lapply(est_tab, function(e) { if (!"converged" %in% names(e)) e$converged <- NA; e })
+if (!is.null(est_tab$pig_post) || !is.null(est_tab$pig_sep)) est_tab <- lapply(est_tab, function(e) { if (!"converged" %in% names(e)) e$converged <- NA; e })
 cells_df <- do.call(rbind, cells_tab); est_df <- do.call(rbind, est_tab)
 res <- list(tag = tag, n = n, seed = seed, M = M, arms = arms, smoke = smoke, lambda = lambda, rho = rho,
             miss = miss, miss_frac = frac, realised_frac = cell$realised_frac,

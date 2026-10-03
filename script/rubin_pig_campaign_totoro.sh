@@ -14,7 +14,8 @@ set -euo pipefail
 
 PAR="${1:-110}"
 ROOT="${RUBIN_ROOT:-$HOME/pigauto_rubin}"
-OUT="$ROOT/results_pig"; LOG="$ROOT/logs"; mkdir -p "$OUT" "$LOG"
+ARMS="${ARMS:-pig_post}"; LIB="${LIB:-$ROOT/rlib}"   # pig_sep: ARMS=pig_sep LIB=$ROOT/rlib_sepf (#204)
+OUT="$ROOT/results_pig"; [ "$ARMS" = pig_post ] || OUT="$ROOT/results_$ARMS"; LOG="$ROOT/logs"; mkdir -p "$OUT" "$LOG"
 [ "$PAR" -le 110 ] || { echo "PAR=$PAR exceeds the 110 cores approved for this campaign"; exit 1; }
 
 free -g
@@ -22,7 +23,7 @@ BUSY=$(ps -u "$USER" -o pcpu= | awk '{s+=$1} END {printf "%d", s/100 + 0.5}')
 echo "cores already busy for $USER: $BUSY"
 [ $(( BUSY + PAR )) -le 150 ] || { echo "PAR=$PAR + $BUSY busy exceeds the 150-core cap (D-143); lower PAR to $(( 150 - BUSY ))"; exit 1; }
 
-export R_LIBS="$ROOT/rlib:${R_LIBS:-}"
+export R_LIBS="$LIB:$ROOT/rlib:${R_LIBS:-}"
 : "${PIGAUTO_SHA:?set PIGAUTO_SHA to the merged main sha}"
 Rscript -e "d <- utils::packageDescription('pigauto'); s <- if (is.null(d\$RemoteSha)) '' else d\$RemoteSha;
   stopifnot('installed pigauto is not the expected sha' = identical(s, '$PIGAUTO_SHA'),
@@ -37,17 +38,17 @@ grep -q 'pig_max_extend' "$ROOT/script/rubin_cell.R" || { echo "deployed rubin_c
 
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1
 
-JOBS="$LOG/campaign_pig_jobs.txt"; : > "$JOBS"
+JOBS="$LOG/campaign_${ARMS}_jobs.txt"; : > "$JOBS"
 for n in 1000 300 100; do
   extra=""; [ "$n" = 100 ] && extra="--pig_max_extend 6"
   for lambda in 0.3 0.7 1; do for rho in 0 0.5; do for seed in $(seq 1 200); do
-    echo "--n $n --seed $seed --lambda $lambda --rho $rho --M 20 --arms pig_post $extra --out $OUT" >> "$JOBS"
+    echo "--n $n --seed $seed --lambda $lambda --rho $rho --M 20 --arms $ARMS $extra --out $OUT" >> "$JOBS"
   done; done; done
 done
-echo "[$(date +%FT%T)] campaign_pig jobs=$(wc -l < "$JOBS") parallel=$PAR out=$OUT sha=$PIGAUTO_SHA" | tee -a "$LOG/campaign_pig.log"
+echo "[$(date +%FT%T)] campaign_pig jobs=$(wc -l < "$JOBS") parallel=$PAR out=$OUT sha=$PIGAUTO_SHA" | tee -a "$LOG/campaign_${ARMS}.log"
 
 setsid nohup bash -c "
-  xargs -P $PAR -L 1 -a '$JOBS' bash -c 'timeout 10800 Rscript \"$ROOT/script/rubin_cell.R\" \"\$@\" >> \"$LOG/campaign_pig_cells.log\" 2>&1' _
-  echo \"[\$(date +%FT%T)] campaign done\" >> '$LOG/campaign_pig.log'
+  xargs -P $PAR -L 1 -a '$JOBS' bash -c 'timeout 10800 Rscript \"$ROOT/script/rubin_cell.R\" \"\$@\" >> \"$LOG/campaign_${ARMS}_cells.log\" 2>&1' _
+  echo \"[\$(date +%FT%T)] campaign done\" >> '$LOG/campaign_${ARMS}.log'
 " > /dev/null 2>&1 &
 echo "launched; pgid $(ps -o pgid= $! | tr -d ' '); stop with: kill -- -<pgid>"
