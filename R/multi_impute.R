@@ -166,6 +166,15 @@
 #'     \item{`max_extend`}{`3L`. Maximum number of extensions, a whole
 #'       number from 0 to 10. The default allows at most 4 times `n_iter`
 #'       sweeps per chain after burn-in.}
+#'     \item{`residual_prior`}{`"iw"` (default) or `"sep"`. The prior on the
+#'       residual covariance. `"iw"` is an inverse-Wishart. `"sep"` is
+#'       experimental: half-Cauchy residual standard deviations and a uniform
+#'       (LKJ(1)) residual correlation, which lets the residual covariance
+#'       shrink towards 0 when traits are close to Brownian motion. In a
+#'       simulation screen it removed the downstream slope bias at lambda = 1
+#'       described under "Known limitation" and converged more reliably at
+#'       small n, but it has not yet passed the full validation; the default
+#'       is unchanged.}
 #'   }
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
 #'   [impute()]. See [fit_pigauto()] for the full list; the "Safety

@@ -179,6 +179,15 @@ affected. \code{FALSE} never extends.}
 \item{\code{max_extend}}{\code{3L}. Maximum number of extensions, a whole
 number from 0 to 10. The default allows at most 4 times \code{n_iter}
 sweeps per chain after burn-in.}
+\item{\code{residual_prior}}{\code{"iw"} (default) or \code{"sep"}. The prior on the
+residual covariance. \code{"iw"} is an inverse-Wishart. \code{"sep"} is
+experimental: half-Cauchy residual standard deviations and a uniform
+(LKJ(1)) residual correlation, which lets the residual covariance
+shrink towards 0 when traits are close to Brownian motion. In a
+simulation screen it removed the downstream slope bias at lambda = 1
+described under "Known limitation" and converged more reliably at
+small n, but it has not yet passed the full validation; the default
+is unchanged.}
 }}
 
 \item{...}{additional arguments forwarded to \code{\link[=fit_pigauto]{fit_pigauto()}} via
