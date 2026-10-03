@@ -505,3 +505,26 @@ test_that("the first run is pinned on a fixed fixture (re-pinned after the full-
   expect_equal(unname(f$params$lambda[1:3, ]), ref_lambda, tolerance = 1e-8)
   expect_false(isTRUE(attr(f$diagnostics, "converged")))
 })
+
+test_that("a proposal whose likelihood cannot be factorised is rejected, not fatal", {
+  # Rubin study (arc/rubin-freq-bace): 12 of 3,600 fits aborted when a scale move proposed a tiny alpha_k and the
+  # sparse Cholesky of the precision failed ("leading principal minor ... is not positive"). Every failure was at a
+  # proposal inside .mip_mh_moves(); the current state was valid. Such a proposal must count as a rejection.
+  d <- mip_sim(n = 25L, seed = 3L)
+  Y <- d$Y; Y[1:5, 1] <- NA; Y[4:9, 2] <- NA
+  prob <- .mip_problem(Y, d$tree)
+  K <- prob$K
+  hyper <- list(nu_W = 3, S_W = diag(K), V_alpha = 1000, nu_E = 3, S_E = diag(0.01 * prob$obs_var, K))
+  tpl <- .mip_template(prob, include_mu = TRUE)
+  alpha <- rep(1, K); Sigma_W <- d$SP; Sigma_E <- d$SE
+  local_mocked_bindings(.mip_collapsed_ll = function(...) stop("leading principal minor of order 5 is not positive"))
+  set.seed(1)
+  mv <- .mip_mh_moves(prob, tpl, alpha, Sigma_W, Sigma_E, hyper,
+                      step = matrix(0.5, K, 3L), step_off = matrix(0.2, K * (K - 1L) / 2L, 3L), cur_ll = -100)
+  # Likelihood-based moves are all rejected, so Sigma_E and Sigma_P are unchanged. (The prior-only rebalance can
+  # still rescale alpha_k and Sigma_W together, which leaves Sigma_P = diag(alpha) Sigma_W diag(alpha) fixed.)
+  expect_identical(mv$Sigma_E, Sigma_E)
+  expect_equal(.mip_px_sigma(mv$alpha, mv$Sigma_W), .mip_px_sigma(alpha, Sigma_W), tolerance = 1e-12)
+  expect_true(all(mv$acc == 0))
+  expect_true(all(mv$acc_off == 0))
+})

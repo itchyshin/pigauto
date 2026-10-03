@@ -401,6 +401,23 @@
 # y), and near lambda = 0 the same holds for Sigma_P; the expansion covers
 # only Sigma_P. Measured at n = 1000 without these moves: bulk ESS 20 to 41
 # for lambda from 4 x 10,000 sweeps at truth lambda = 1 and 0.95.
+# A Metropolis proposal can push Sigma_P or Sigma_E so close to singular
+# that the sparse Cholesky of the (a, mu) precision fails numerically
+# (CHOLMOD "not positive definite"), although the density is positive in
+# exact arithmetic. Such a proposal is rejected rather than aborting the fit:
+# the current state was evaluated successfully, so the chain stays where it
+# is. Only proposal evaluations go through this wrapper; a failure at the
+# current state still stops the fit. Rubin study (arc/rubin-freq-bace): 12 of
+# 3,600 fits aborted this way, every one at a proposal in the alpha_k scale
+# move, at lambda 0.3 or 0.7.
+.mip_try_collapsed_ll <- function(prob, tpl, Sigma_P, Sigma_E) {
+  tryCatch(.mip_collapsed_ll(prob, tpl, Sigma_P, Sigma_E),
+           error = function(e) {
+             if (grepl("not positive|positive definite|CHOLMOD", conditionMessage(e))) NULL
+             else stop(e)
+           })
+}
+
 .mip_mh_moves <- function(prob, tpl, alpha, Sigma_W, Sigma_E, hyper, step,
                           step_off, cur_ll = NULL) {
   K <- prob$K
@@ -423,7 +440,8 @@
         sc <- rep(1, K); sc[k] <- exp(ld)
         SE_new <- Sigma_E * tcrossprod(sc)
       }
-      pr <- .mip_collapsed_ll(prob, tpl, sP(al_new), SE_new)
+      pr <- .mip_try_collapsed_ll(prob, tpl, sP(al_new), SE_new)
+      if (is.null(pr)) next          # likelihood not evaluable here: reject
       tpl <- pr$tpl
       log_r <- pr$ll - cur_ll +
         stats::dnorm(al_new[k], 0, sdA, log = TRUE) -
@@ -504,8 +522,9 @@
             Sigma_W[k, l] + delta / (alpha[k] * alpha[l])
         }
         if (not_pd(SE_new) || not_pd(SW_new)) next
-        pr <- .mip_collapsed_ll(prob, tpl, .mip_px_sigma(alpha, SW_new),
-                                SE_new)
+        pr <- .mip_try_collapsed_ll(prob, tpl, .mip_px_sigma(alpha, SW_new),
+                                    SE_new)
+        if (is.null(pr)) next        # likelihood not evaluable here: reject
         tpl <- pr$tpl
         log_r <- pr$ll - cur_ll +
           .mip_log_iw(SE_new, hyper$nu_E, hyper$S_E) -
