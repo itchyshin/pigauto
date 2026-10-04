@@ -180,13 +180,91 @@ SEPF removes the lambda = 1 bias without the small-n convergence cost of the sca
 The n = 1000, lambda = 0.7 gap (-0.019, 2 datasets) needs the full run to settle. This is a screen (2 to 10 datasets
 per cell), not evidence; making "sep" the default needs the #189 acceptance sweep and the Rubin campaign re-run under it.
 
+## Full re-run under "sep" (pig_sep, 2026-10-03)
+
+Approved by Shinichi 2026-10-03 ("go validation"). Same driver (`ARMS=pig_sep`), 100 cores on Totoro, 05:16 to 18:17
+(13 h, run beside the 40-core acceptance sweep). pigauto cd3a4cb (`research/mi-posterior-sep-prior`, PR #204), private
+library `~/pigauto_rubin/rlib_sepf`; all 3,600 fits record that sha and `residual_prior = "sep"`. Same seed offset (909)
+and datasets as pig_post: the complete-data estimates agree exactly with freq on every pair (`sanity.txt`). Raw files
+`~/pigauto_rubin_pool/pig_sep/totoro/`; tables `script/rubin_study/data/agg_pig_sep/`.
+
+**Failures and convergence.** 3,600 of 3,600 fits, 0 sampler errors, 0 unconverged (pig_post: 12 errors and 107
+unconverged, all at n = 100 or 300, lambda 0.3 or 0.7). 6 fits needed one chain extension. Median max R-hat 1.004,
+median min ESS 1,270 to 1,450.
+
+**The lambda = 1, rho = 0.5 bias is gone.** Slope coverage (bias against complete data), 200 datasets per cell; the MC
+SE of a coverage near 0.95 is about 0.015:
+
+| lambda = 1, rho = 0.5 | n = 100 | n = 300 | n = 1000 |
+|---|---|---|---|
+| pig_post | 0.955 (-0.061) | 0.875 (-0.046) | 0.750 (-0.048) |
+| pig_sep | 0.955 (-0.037) | 0.940 (-0.015) | 0.965 (-0.009) |
+| freqA | 0.955 (-0.021) | 0.920 (-0.023) | 0.935 (-0.025) |
+| bace_chain | 0.945 (-0.092) | 0.953 (-0.048) | 0.968 (-0.031) |
+| correlation coverage, pig_post / pig_sep | 0.940 / 0.965 | 0.890 / 0.925 | 0.735 / 0.945 |
+
+Paired on the same datasets (pooled over rho), pig_sep minus pig_post slope coverage at n = 1000, lambda = 1 is +0.103
+(SE 0.018). The gain comes from removing the bias, not from wider intervals: pig_sep's slope CI widths are within 2% of
+pig_post's in every cell.
+
+**Elsewhere.** In the other 15 cells pig_sep covers 0.940 to 0.975 for both slope and correlation (pig_post 0.915 to
+0.980). No downstream paired contrast against pig_post is below zero by more than 1.3 SE. At n = 100, lambda 0.3 and
+0.7, pig_sep lifts pig_post's under-coverage (0.915 to 0.934 become 0.945 to 0.960). One change to watch: at n = 100,
+rho = 0.5, lambda 0.3 and 0.7, pig_sep's slope bias is -0.016 and -0.021 (pig_post +0.005, +0.007; freqA +0.007,
++0.005), with coverage 0.960. This looks like small-n shrinkage from the proper prior; BACE's is larger (-0.030, -0.037).
+
+**Per-cell imputation intervals** (c1 and c2 pooled; `cells.csv`) move toward 0.95 everywhere: pig_sep 0.942 to 0.959
+in all 18 cells, pig_post 0.914 to 0.963. pig_post's n = 100, lambda < 1 cells were 0.914 to 0.925 (now 0.942 to
+0.947); at lambda = 1 it over-covered at 0.960 to 0.963 (now 0.951 to 0.959).
+
+**Cost.** 1,294 core-hours against pig_post's 1,238. Median time per fit is 0 to 18% longer, most at n = 1000,
+lambda < 1. The two runs had different loads (110 cores alone; 140 with the sweep), so this is not a clean timing
+comparison, but the screen's "faster at n = 100" does not hold: 420 s against 380 s at lambda < 1.
+
+## #189 acceptance sweep under "sep" (2026-10-03)
+
+The 8,000-cell sweep that gated #189 (40 regimes x 200 reps, same seeds and masks), re-run at ebcd466 with
+`MI_POST_RESIDUAL_PRIOR=sep`, 40 cores on Totoro, 05:21 to 18:38: 8,000 of 8,000 cells, 0 failed. Evidence on the #204
+branch: `docs/dev-log/mi-posterior/sep_validation/` (summaries, gate logs, iw against sep comparison).
+
+| | iw (of record) | sep |
+|---|---|---|
+| G6 (`04_acceptance.R`) | pass | pass |
+| pooled relative SE ratio, band [0.95, 1.10] | 1.059 | 1.077 |
+| gated rows outside [0.90, 1.15] (reported) | 3 | 3 |
+| gated mean abs paired bias | 0.0052 | 0.0051 |
+| converged fits | 15,998 of 16,000 | 16,000 of 16,000 |
+| G7 (`05_cell_coverage.R`), gated per-cell coverage | pass, 0.933 to 0.955 | pass, 0.945 to 0.956 |
+
+The sweep's own lambda = 1 caveat (small negative bias in the twin rows) is about the same under "sep" (-0.002 to
+-0.016 against -0.004 to -0.014). That effect is a few thousandths and the sweep never showed the Rubin study's large
+lambda = 1 bias, so the sweep could not have caught it: the two checks answer different questions.
+
+## Verdict on making "sep" the default (#204)
+
+Evidence supports it. On the Rubin datasets it removes the one real failure of posterior MI (lambda = 1, rho = 0.5:
+slope coverage 0.750 to 0.965 at n = 1000), removes all 12 sampler errors and 107 unconverged fits, and moves per-cell
+coverage toward 0.95 in every cell, with no cell made worse beyond Monte Carlo noise. On the #189 sweep it passes both
+gates with numbers close to the current default. Costs and caveats, for the decision:
+
+1. A small negative slope bias at n = 100, rho = 0.5 (about -0.02; coverage still 0.96), absent under "iw".
+2. G6's pooled SE ratio moves from 1.059 to 1.077, closer to the 1.10 edge (MI SEs slightly conservative relative to
+   complete data).
+3. Not faster: about 5% more core-hours in the Rubin run.
+4. Continuous traits only, simulated data, MCAR and the sweep's MAR/MNAR regimes; no real-data re-run under "sep" yet
+   (the #189 G8 real-data cells ran under "iw").
+
+The default is Shinichi's decision (#204 stays draft). Flipping it means changing `residual_prior`'s default in
+`R/mi_posterior.R` and the docs, re-running the tests and `--as-cran` check, and updating the NEWS entry.
+
 ## Does NOT cover
 
-Discrete traits (posterior MI is continuous-only); MAR or clade missingness; real trees; the 12 sampler failures (a pigauto fix); `study.qmd` and the published report pages are not
-yet updated with the pig_post arm.
+Discrete traits (posterior MI is continuous-only); MAR or clade missingness in the Rubin study; real trees; real data
+under "sep"; `study.qmd` and the published report pages are not yet updated with the pig_post and pig_sep arms.
 
 ## Next
 
-1. pigauto: fix the Sigma_E prior behaviour at lambda = 1 (cause above) and the Cholesky failures; both are package
-   work for a separate lane.
-2. Study: add pig_post to `study.qmd` and the report pages once (1) says whether the lambda = 1 result is a bug.
+1. Shinichi: decide whether "sep" becomes the default (#204).
+2. If yes: flip the default on #204, tests and check locally, then merge; re-run the #189 real-data cells (G8) under
+   "sep" as a check.
+3. Study: add pig_post and pig_sep to `study.qmd` and the report pages.
