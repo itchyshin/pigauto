@@ -254,7 +254,7 @@ gates with numbers close to the current default. Costs and caveats, for the deci
 4. Continuous traits only, simulated data, MCAR and the sweep's MAR/MNAR regimes; no real-data re-run under "sep" yet
    (the #189 G8 real-data cells ran under "iw").
 
-The default is Shinichi's decision (#204 stays draft). Flipping it means changing `residual_prior`'s default in
+The default was Shinichi's decision: "sep" became the default on 2026-10-04 (#204 merged, 45011fc). Flipping it means changing `residual_prior`'s default in
 `R/mi_posterior.R` and the docs, re-running the tests and `--as-cran` check, and updating the NEWS entry.
 
 ## Does NOT cover
@@ -264,7 +264,7 @@ under "sep"; `study.qmd` and the published report pages are not yet updated with
 
 ## Next
 
-1. Shinichi: decide whether "sep" becomes the default (#204).
-2. If yes: flip the default on #204, tests and check locally, then merge; re-run the #189 real-data cells (G8) under
-   "sep" as a check.
+1. Done 2026-10-04: Shinichi chose "sep" as the default; #204 merged (45011fc) with local tests (0 failures),
+   `--as-cran` (0 errors, 0 warnings) and CI green.
+2. Re-run the #189 real-data cells (G8) under "sep" as a check (estimate first).
 3. Study: add pig_post and pig_sep to `study.qmd` and the report pages.
