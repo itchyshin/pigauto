@@ -136,8 +136,9 @@ confusion_matrix <- function(truth, predicted, levels = NULL) {
 #' each bin.  Useful for calibration plots of binary classifiers.
 #'
 #' @param truth numeric vector (0/1 or TRUE/FALSE).
-#' @param prob numeric vector of predicted probabilities.
-#' @param n_bins integer, number of bins (default 10).
+#' @param prob numeric vector of predicted probabilities in \code{[0, 1]}.
+#' @param n_bins integer, number of bins (default 10). Must be a positive
+#'   integer.
 #' @return A data.frame with columns \code{bin_mid}, \code{obs_freq},
 #'   \code{mean_pred}, \code{n}.
 #' @examples
@@ -148,9 +149,38 @@ confusion_matrix <- function(truth, predicted, levels = NULL) {
 #' )
 #' @export
 calibration_df <- function(truth, prob, n_bins = 10L) {
+  n_bins <- .check_positive_integer(n_bins, "n_bins")
+  if (is.factor(truth) || !(is.logical(truth) || is.numeric(truth))) {
+    stop("'truth' must be 0/1 or logical.", call. = FALSE)
+  }
+  if (!is.numeric(prob)) {
+    stop("'prob' must be a numeric vector of probabilities in [0, 1].",
+         call. = FALSE)
+  }
+  if (length(truth) != length(prob)) {
+    stop("'truth' and 'prob' must have the same length.", call. = FALSE)
+  }
+  if (length(truth) == 0L) {
+    stop("'truth' and 'prob' must have length greater than 0.", call. = FALSE)
+  }
+
   ok <- !is.na(truth) & !is.na(prob)
+  n_drop <- sum(!ok)
+  if (n_drop > 0L) {
+    warning(n_drop, " incomplete pair", if (n_drop == 1L) "" else "s",
+            " dropped.", call. = FALSE)
+  }
   truth <- as.numeric(truth[ok])
-  prob  <- prob[ok]
+  prob  <- as.numeric(prob[ok])
+  if (length(truth) == 0L) {
+    stop("no complete truth/prob pairs remain.", call. = FALSE)
+  }
+  if (any(!is.finite(truth)) || any(!truth %in% c(0, 1))) {
+    stop("'truth' must be 0/1 or logical.", call. = FALSE)
+  }
+  if (any(!is.finite(prob)) || any(prob < 0 | prob > 1)) {
+    stop("'prob' must be in [0, 1].", call. = FALSE)
+  }
 
   breaks <- seq(0, 1, length.out = n_bins + 1L)
   bins   <- cut(prob, breaks = breaks, include.lowest = TRUE, labels = FALSE)

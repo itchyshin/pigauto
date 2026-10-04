@@ -9,9 +9,10 @@ calibration_df(truth, prob, n_bins = 10L)
 \arguments{
 \item{truth}{numeric vector (0/1 or TRUE/FALSE).}
 
-\item{prob}{numeric vector of predicted probabilities.}
+\item{prob}{numeric vector of predicted probabilities in \code{[0, 1]}.}
 
-\item{n_bins}{integer, number of bins (default 10).}
+\item{n_bins}{integer, number of bins (default 10). Must be a positive
+integer.}
 }
 \value{
 A data.frame with columns \code{bin_mid}, \code{obs_freq},
