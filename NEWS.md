@@ -1,5 +1,12 @@
 # pigauto 0.11.0.9002 (dev)
 
+## `plot_comparison()` defaults match `evaluate()` / `compare_methods()`
+
+`plot_comparison()` now defaults to `methods = c("baseline", "pigauto")`,
+the labels that `evaluate()` and `compare_methods()` return. The previous
+default (`BM_baseline`, `pigauto_GNN`) made
+`plot_comparison(compare_methods(...))` error with no matching rows.
+
 ## New default residual prior for posterior draws (`residual_prior = "sep"`)
 
 `multi_impute(draws_method = "posterior")` now puts a separation-strategy

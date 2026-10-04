@@ -7,15 +7,15 @@
 plot_comparison(
   results,
   metric = NULL,
-  methods = c("BM_baseline", "pigauto_GNN"),
+  methods = c("baseline", "pigauto"),
   ...
 )
 }
 \arguments{
 \item{results}{A data.frame with columns \code{trait}, \code{type},
 \code{metric}, \code{method}, and \code{value}.  Typically the
-output of benchmark scripts or reshaped output from
-\code{\link{evaluate_imputation}}.}
+output of \code{\link{compare_methods}}, \code{\link{evaluate}},
+or reshaped output from \code{\link{evaluate_imputation}}.}
 
 \item{metric}{Character.  Which metric to compare.
 Default \code{NULL} auto-selects: \code{"rmse"} for
@@ -24,8 +24,9 @@ binary/categorical traits.  If a single metric name is supplied,
 only traits with that metric are shown.}
 
 \item{methods}{Character vector of length 2: the baseline method
-name and the GNN method name.  Default
-\code{c("BM_baseline", "pigauto_GNN")}.}
+name and the pigauto method name.  Default
+\code{c("baseline", "pigauto")}, matching the labels returned by
+\code{\link{compare_methods}} and \code{\link{evaluate}}.}
 
 \item{...}{Additional arguments passed to \code{plot()}.}
 }
@@ -48,7 +49,7 @@ When both RMSE and accuracy metrics are present and \code{metric} is
 \donttest{
 results <- data.frame(
   trait = rep("Mass", 2L), type = rep("continuous", 2L),
-  metric = rep("rmse", 2L), method = c("BM_baseline", "pigauto_GNN"),
+  metric = rep("rmse", 2L), method = c("baseline", "pigauto"),
   value = c(1, 0.8)
 )
 plot_comparison(results)

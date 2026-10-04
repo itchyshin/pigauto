@@ -693,23 +693,24 @@ plot.pigauto_pred <- function(x, data = NULL, splits = NULL,
 #'
 #' @param results A data.frame with columns \code{trait}, \code{type},
 #'   \code{metric}, \code{method}, and \code{value}.  Typically the
-#'   output of benchmark scripts or reshaped output from
-#'   \code{\link{evaluate_imputation}}.
+#'   output of \code{\link{compare_methods}}, \code{\link{evaluate}},
+#'   or reshaped output from \code{\link{evaluate_imputation}}.
 #' @param metric Character.  Which metric to compare.
 #'   Default \code{NULL} auto-selects: \code{"rmse"} for
 #'   continuous/count traits and \code{"accuracy"} for
 #'   binary/categorical traits.  If a single metric name is supplied,
 #'   only traits with that metric are shown.
 #' @param methods Character vector of length 2: the baseline method
-#'   name and the GNN method name.  Default
-#'   \code{c("BM_baseline", "pigauto_GNN")}.
+#'   name and the pigauto method name.  Default
+#'   \code{c("baseline", "pigauto")}, matching the labels returned by
+#'   \code{\link{compare_methods}} and \code{\link{evaluate}}.
 #' @param ... Additional arguments passed to \code{plot()}.
 #' @return Invisible \code{NULL}. Called for its side effect (plotting).
 #' @examples
 #' \donttest{
 #' results <- data.frame(
 #'   trait = rep("Mass", 2L), type = rep("continuous", 2L),
-#'   metric = rep("rmse", 2L), method = c("BM_baseline", "pigauto_GNN"),
+#'   metric = rep("rmse", 2L), method = c("baseline", "pigauto"),
 #'   value = c(1, 0.8)
 #' )
 #' plot_comparison(results)
@@ -720,7 +721,7 @@ plot.pigauto_pred <- function(x, data = NULL, splits = NULL,
 #' @importFrom grDevices adjustcolor
 #' @export
 plot_comparison <- function(results, metric = NULL,
-                            methods = c("BM_baseline", "pigauto_GNN"),
+                            methods = c("baseline", "pigauto"),
                             ...) {
   if (!is.data.frame(results)) {
     stop("'results' must be a data.frame.")
