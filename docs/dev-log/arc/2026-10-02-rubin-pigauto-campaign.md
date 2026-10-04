@@ -10,8 +10,8 @@ Results page (private): https://claude.ai/artifact/Y644K1sLxbrWsAmTQvZspC
 - Totoro, 110 cores, 2026-10-01 20:38 to 2026-10-02 07:59 (11 h 21 min). 3,600 of 3,600 cell files.
 - pigauto b565cad (#189 merged), private library. `multi_impute(draws_method = "posterior", m = 20, log_transform = FALSE)`
   on freqA's block (c1, c2, logit prp, driver d1). Option (b): `max_extend = 6` at n = 100, pigauto's default 3 elsewhere.
-- Same datasets as the stored freq and BACE campaign: the complete-data estimates agree exactly in all 7,200 pig/freq
-  pairs (`sanity.txt`).
+- Same datasets as the stored freq and BACE campaign: the complete-data estimates agree with the freq files to within
+  6.2e-10 in all 7,200 pig/freq pairs (`sanity.txt`; corrected 2026-10-04, see below).
 - Raw files: `~/pigauto_rubin_pool/pig/totoro/` (169 MB with logs; never delete). Tables:
   `script/rubin_study/data/agg_pig/` from `script/rubin_campaign_aggregate.R` (extended; the original tables are
   reproduced byte for byte when no `pig/` pool exists).
@@ -185,7 +185,8 @@ per cell), not evidence; making "sep" the default needs the #189 acceptance swee
 Approved by Shinichi 2026-10-03 ("go validation"). Same driver (`ARMS=pig_sep`), 100 cores on Totoro, 05:16 to 18:17
 (13 h, run beside the 40-core acceptance sweep). pigauto cd3a4cb (`research/mi-posterior-sep-prior`, PR #204), private
 library `~/pigauto_rubin/rlib_sepf`; all 3,600 fits record that sha and `residual_prior = "sep"`. Same seed offset (909)
-and datasets as pig_post: the complete-data estimates agree exactly with freq on every pair (`sanity.txt`). Raw files
+and datasets as pig_post: the complete-data estimates agree with freq to within 6.2e-10 on all 7,200 pairs
+(`sanity.txt`). Raw files
 `~/pigauto_rubin_pool/pig_sep/totoro/`; tables `script/rubin_study/data/agg_pig_sep/`.
 
 **Failures and convergence.** 3,600 of 3,600 fits, 0 sampler errors, 0 unconverged (pig_post: 12 errors and 107
@@ -204,7 +205,7 @@ SE of a coverage near 0.95 is about 0.015:
 | correlation coverage, pig_post / pig_sep | 0.940 / 0.965 | 0.890 / 0.925 | 0.735 / 0.945 |
 
 Paired on the same datasets (pooled over rho), pig_sep minus pig_post slope coverage at n = 1000, lambda = 1 is +0.103
-(SE 0.018). The gain comes from removing the bias, not from wider intervals: pig_sep's slope CI widths are within 2% of
+(SE 0.018). The gain comes from removing the bias, not from wider intervals: pig_sep's slope CI widths are within 3.5% (0.968 to 1.033 times) of
 pig_post's in every cell.
 
 **Elsewhere.** In the other 15 cells pig_sep covers 0.940 to 0.975 for both slope and correlation (pig_post 0.915 to
@@ -277,6 +278,14 @@ The real-data results are essentially unchanged. The PanTHERIA slope shifts reco
 length positive under MCAR masks, negative under structured masks; longevity ~ body mass) are the same under "sep", so
 the residual prior does not cause them. FishBase (10,484 species, about 21 h on one core under "iw") was not re-run;
 it waits for Shinichi's approval (over 3 h).
+
+## Correction (2026-10-04): the pig/freq identity check
+
+Until 2026-10-04 `script/rubin_campaign_aggregate.R` compared the pigauto files' complete-data estimates with the freq
+files after removing duplicate rows, which kept the BACE or freq copy of each dataset, so the reported "7,200 pairs, max
+|diff| 0" compared freq with itself. The check now reads each pigauto pool's own rows: pig and pig_sep both agree with
+freq to within 6.2e-10 on all 7,200 pairs (floating-point differences between machines). The datasets are the same;
+"exactly" was wrong. No table changed.
 
 ## Does NOT cover
 

@@ -42,12 +42,14 @@ mm <- merge(cb[!duplicated(paste(cb$ds, cb$estimand)), c("ds", "estimand", "esti
             cf[!duplicated(paste(cf$ds, cf$estimand)), c("ds", "estimand", "estimate")], by = c("ds", "estimand"))
 sanity <- sprintf("complete-data estimate, BACE files vs freq files, same dataset: %d pairs, max |diff| %.2e",
                   nrow(mm), if (nrow(mm)) max(abs(mm$estimate.x - mm$estimate.y)) else NA)
-if (length(P)) {
-  cp <- el[el$arm == "complete" & el$ds %in% vapply(P, key, ""), ]
+# each pigauto pool against the freq files, using the pool's OWN complete-data rows (est_long of that pool only;
+# the combined el would keep the BACE/freq copy first and compare freq with itself)
+for (pl in list(list(L = P, nm = "pig"), list(L = P2, nm = "pig_sep"))) if (length(pl$L)) {
+  cp <- est_long(pl$L); cp <- cp[cp$arm == "complete", ]
   mp <- merge(cp[!duplicated(paste(cp$ds, cp$estimand)), c("ds", "estimand", "estimate")],
               cf[!duplicated(paste(cf$ds, cf$estimand)), c("ds", "estimand", "estimate")], by = c("ds", "estimand"))
-  sanity <- c(sanity, sprintf("complete-data estimate, pig files vs freq files, same dataset: %d pairs, max |diff| %.2e",
-                              nrow(mp), if (nrow(mp)) max(abs(mp$estimate.x - mp$estimate.y)) else NA))
+  sanity <- c(sanity, sprintf("complete-data estimate, %s files vs freq files, same dataset: %d pairs, max |diff| %.2e",
+                              pl$nm, nrow(mp), if (nrow(mp)) max(abs(mp$estimate.x - mp$estimate.y)) else NA))
 }
 el <- el[!duplicated(paste(el$ds, el$arm, el$estimand)), ]
 

@@ -19,7 +19,7 @@ execute:
 ---
 
 ```{r setup}
-d <- "data"; ag <- file.path(d, "agg_pig"); disc_dir <- file.path(d, "discrete")
+d <- "data"; ag <- file.path(d, "agg_pig_sep"); disc_dir <- file.path(d, "discrete")
 rd <- function(f) utils::read.csv(file.path(ag, f), stringsAsFactors = FALSE)
 dd <- function(f) utils::read.csv(file.path(disc_dir, f), stringsAsFactors = FALSE)
 cells <- rd("cells.csv"); cells_l <- rd("cells_l.csv"); down <- rd("down.csv"); down_l <- rd("down_l.csv"); down_n <- rd("down_n.csv")
@@ -31,7 +31,7 @@ dpr <- dd("agg_disc_paired.csv"); rp <- dd("repro.csv"); tt <- dd("truth_slope_c
 # display labels: the frequentist methods are Rphylopars (continuous) and castor (discrete)
 lab <- c(complete = "complete data", freqA = "frequentist, proper", freqB = "frequentist, fixed parameters",
          bace = "BACE as shipped", bace_chain = "chained BACE", bace_resid = "BACE + extra residual (control)",
-         pig_post = "pigauto posterior")
+         pig_sep = "pigauto posterior", pig_post = "pigauto, former IW prior")
 labd <- c(lab, freqA_er = "frequentist proper, equal rates", mode_floor = "most frequent class")
 ord <- names(lab)
 f3 <- function(x) formatC(as.numeric(x), format = "f", digits = 3)
@@ -52,7 +52,7 @@ library(ggplot2)
 knitr::opts_chunk$set(dev = "ragg_png", dpi = 200)
 pal <- c("complete data" = "#7b8580", "frequentist, proper" = "#d4891a", "frequentist, fixed parameters" = "#b565a0",
          "BACE as shipped" = "#c4452b", "chained BACE" = "#2c6b59", "BACE + extra residual (control)" = "#5b82c0",
-         "pigauto posterior" = "#3b3b98")
+         "pigauto posterior" = "#3b3b98", "pigauto, former IW prior" = "#9a9ad0")
 theme_rubin <- theme_minimal(base_size = 12) +
   theme(panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(),
         strip.text = element_text(face = "bold", hjust = 0, size = 12), legend.position = "bottom",
@@ -116,12 +116,17 @@ wpart <- function(set, key, n) { s <- fits$wall_s[fits$set == set & fits$n == n 
 s5 <- down[down$estimand == "slope" & down$rho == 0.5, ]
 cshift <- merge(s5[s5$arm == "bace_chain", c("n", "lambda", "bias")], s5[s5$arm == "bace", c("n", "lambda", "bias")], by = c("n", "lambda"))
 cshift <- cshift$bias.x - cshift$bias.y
-# pigauto posterior MI (pig_post): paired differences against proper frequentist MI, and the fit record
+# pigauto posterior MI: pig_sep (separation-strategy residual prior, pigauto's default since #204) and pig_post (the
+# former inverse-Wishart prior): paired differences against proper frequentist MI and each other, and the fit records
 pr <- rd("paired.csv")
-pp <- function(e, n, l, v = "diff") pr[pr$contrast == "pig_post - freqA" & pr$measure %in% e & pr$n %in% n & pr$lambda %in% l, v]
+pp <- function(e, n, l, v = "diff", k = "pig_post - freqA") pr[pr$contrast == k & pr$measure %in% e & pr$n %in% n & pr$lambda %in% l, v]
 cells_n <- rd("cells_n.csv")
 cn1 <- function(a, n, v = "coverage") cells_n[cells_n$arm == a & cells_n$n == n, v]
-pf <- failures[failures$set == "pig", ]
+pf <- failures[failures$set == "pig", ]; ps <- failures[failures$set == "pig_sep", ]
+# pig_sep against pig_post on the same datasets: slope CI width ratio over all 18 scenarios
+wr <- merge(down[down$arm == "pig_sep" & down$estimand == "slope", c("n", "lambda", "rho", "ci_width")],
+            down[down$arm == "pig_post" & down$estimand == "slope", c("n", "lambda", "rho", "ci_width")], by = c("n", "lambda", "rho"))
+wr <- wr$ci_width.x / wr$ci_width.y
 ```
 
 # Abstract {.unnumbered}
@@ -140,11 +145,13 @@ at λ ≤ 0.7 and to `r f2(dv("bace", 1000, 0.7, 0, "cor"))` for the phylogeneti
 coverage to nominal or above (conservative at n = 1000) in every scenario except complete phylogenetic signal with
 correlated traits at n = 1000, where chained BACE and proper frequentist MI both covered the correlation
 `r f3(dv("bace_chain", 1000, 1, 0.5, "cor"))`; chained BACE was then more accurate per value than proper frequentist MI at n ≥ 300 and λ ≤ 0.7, and less accurate at n = 100. pigauto's posterior MI, a
-multivariate phylogenetic mixed model sampled by Markov chain Monte Carlo (`r big(sum(pf$files))` fits on the same
-continuous datasets), covered like proper frequentist MI at n ≥ 300 and λ ≤ 0.7 and slightly less at n = 100; with
-complete phylogenetic signal and correlated traits (λ = 1, ρ = 0.5) it pulled the slope toward zero at every n, and
-at n = 1000 its slope interval covered `r f2(dv("pig_post", 1000, 1, 0.5, "slope"))` against
-`r f2(dv("freqA", 1000, 1, 0.5, "slope"))`. For discrete traits (binary, ordinal, three-class; n = 100 and 300; the same
+multivariate phylogenetic mixed model sampled by Markov chain Monte Carlo (`r big(sum(ps$files))` fits on the same
+continuous datasets), covered the slope and the correlation
+`r rng(down$coverage[down$arm == "pig_sep" & down$estimand %in% c("slope", "cor")], f2)` in every scenario. With its
+former inverse-Wishart residual prior it had pulled the slope toward zero when phylogenetic signal was complete and
+traits correlated (λ = 1, ρ = 0.5), covering `r f2(dv("pig_post", 1000, 1, 0.5, "slope"))` at n = 1000 against
+`r f2(dv("freqA", 1000, 1, 0.5, "slope"))` for proper frequentist MI; a separation-strategy prior, now pigauto's
+default, raised this to `r f2(dv("pig_sep", 1000, 1, 0.5, "slope"))`. For discrete traits (binary, ordinal, three-class; n = 100 and 300; the same
 datasets), chained BACE's imputed classes were `r rng(lead, f2)` more accurate than those of castor, the frequentist
 tool that imputes one trait at a time, at λ ≤ 0.7. Imputing a trait without the other variable of a later
 regression biased that regression: at ρ = 0.5 and λ ≤ 0.7 the slope of a continuous trait on a binary trait was
@@ -187,9 +194,10 @@ performance measures; Morris, White & Crowther 2019) and the reporting items of 
    nominal except with complete phylogenetic signal (λ = 1) and correlated traits, where its shared λ biased the
    estimates, and took a median of `r f2(60 * wpart("freq", "freqA", 100))`, `r f2(60 * wpart("freq", "freqA", 300))`
    and `r f2(60 * wpart("freq", "freqA", 1000))` minutes per dataset.
-3. pigauto's posterior MI (`draws_method = "posterior"`) covered like proper frequentist MI except with complete
-   phylogenetic signal and correlated traits, where it pulled the slope toward zero and its intervals under-covered
-   at n ≥ 300 (@sec-pig).
+3. pigauto's posterior MI (`draws_method = "posterior"`, pigauto 0.11.0.9002 or later) covered at or near nominal
+   in every scenario, including complete phylogenetic signal with correlated traits. Earlier versions used an
+   inverse-Wishart residual prior that under-covered there at n ≥ 300; update, or set
+   `posterior_control = list(residual_prior = "sep")` (@sec-pig).
 4. Impute every variable of your planned analysis in one model. Imputing a trait without the other variable of a
    later regression biases the slope toward zero, and more data makes the interval more confidently wrong.
 5. Build intervals with Rubin's rules, never from the 2.5th and 97.5th percentiles of your imputations: with
@@ -236,11 +244,14 @@ performance measures; Morris, White & Crowther 2019) and the reporting items of 
 2. **Secondary.** Compare the accuracy and calibration of imputed classes, and the Rubin-pooled estimate of an
    association involving a discrete trait, between BACE and castor on the same datasets.
 
-3. **Added later.** Estimate the same coverage and bias for pigauto's posterior MI on the continuous traits.
+3. **Added later.** Estimate the same coverage and bias for pigauto's posterior MI on the continuous traits, under
+   its former and its current residual-covariance prior.
 
 The chained variant of BACE and the extra-residual control were added after a pre-run showed BACE as shipped
 under-covering, and they were evaluated on the same seeds; they were not validated on fresh seeds (Limitations).
-pigauto's posterior MI was run after the BACE and frequentist campaign, on the same datasets and seeds.
+pigauto's posterior MI was run after the BACE and frequentist campaign, on the same datasets and seeds, first with
+its inverse-Wishart residual prior and then, after that run showed a bias at λ = 1, with a separation-strategy prior
+(@sec-pig).
 
 ## Data-generating mechanism
 
@@ -269,7 +280,8 @@ numbers are the same in all six (λ, ρ) scenarios, so comparisons between scena
   a fit took a median of `r f2(median(h1000))` hours (90% between `r f2(quantile(h1000, 0.05))` and
   `r f2(quantile(h1000, 0.95))`).
 - **Pairing.** Each run rebuilds its dataset from (n, λ, ρ, seed) with R's L'Ecuyer-CMRG generator, so every
-  method sees the same datasets; complete-data estimates agreed exactly across all result files. Each method
+  method sees the same datasets; complete-data estimates agreed across all result files (exactly between BACE and
+  frequentist files, to within 10^−9^ for pigauto's, run on another machine). Each method
   re-seeds from the dataset seed plus a fixed offset, so its draws do not depend on which methods ran first.
 
 Under this mechanism c2 = ρ c1 + *e* with *e* ~ N(0, (1 − ρ²)*V*~λ~). A phylogenetic generalised least squares
@@ -327,13 +339,15 @@ Every method produced M = 20 completed datasets for every dataset.
   starts from the shared dataset.
 - **BACE + extra residual (control).** BACE as shipped plus a second, independent residual draw on the Gaussian
   traits. It adds noise without removing the shared start, to show that extra noise alone is not the cure.
-- **pigauto, posterior (continuous).** `pigauto::multi_impute(draws_method = "posterior", m = 20)` (pigauto commit
-  b565cad) on the same block as the proper frequentist method: c1, c2, logit(prp) and d1, on the same scale
+- **pigauto, posterior (continuous).** `pigauto::multi_impute(draws_method = "posterior", m = 20)` on the same block as the proper frequentist method: c1, c2, logit(prp) and d1, on the same scale
   (`log_transform = FALSE`). The block follows a multivariate phylogenetic mixed model,
   vec(*Y*) ~ N(**1**μ^⊤^, Σ~P~ ⊗ *R* + Σ~E~ ⊗ *I*~n~), with *R* the tree's correlation matrix and full 4 × 4
   phylogenetic (Σ~P~) and residual (Σ~E~) covariance matrices, so each trait has its own implied λ,
-  Σ~P,kk~ / (Σ~P,kk~ + Σ~E,kk~). Priors: a parameter-expanded inverse-Wishart on Σ~P~ and
-  Σ~E~ ~ IW(K + 1, 0.01 diag(*s*^2^)), with *s*^2^ the observed variances. A Markov chain Monte Carlo sampler draws
+  Σ~P,kk~ / (Σ~P,kk~ + Σ~E,kk~). Σ~P~ has a parameter-expanded inverse-Wishart prior. Σ~E~ was given two priors,
+  run as two methods: the **separation strategy** (pigauto commit cd3a4cb, pigauto's default since pull request
+  #204), Σ~E~ = diag(*σ*) Ω diag(*σ*) with each residual SD *σ*~k~ ~ half-Cauchy(0, *s*~k~), *s*~k~ the observed SD of
+  trait k, and the residual correlation Ω ~ LKJ(1), uniform over correlation matrices; and the **former default**
+  (commit b565cad), Σ~E~ ~ IW(K + 1, 0.01 diag(*s*^2^)). A Markov chain Monte Carlo sampler draws
   the parameters and the missing entries jointly; the 20 datasets are posterior predictive draws spaced across the
   kept sweeps, so the scheme is proper. Chains are extended when any split R-hat is at least 1.05 or any bulk
   effective sample size at most 400, up to 6 times at n = 100 and 3 times otherwise; a fit that still fails this
@@ -400,9 +414,10 @@ about `r big(round(sum(fits$wall_s_total[fits$set == "bace"]) / 3600))` hours fo
 `r big(round(sum(fits$wall_s_total[fits$set == "freq"]) / 3600))` for the frequentist methods in the continuous
 part, and `r big(round(sum(dfits$wall_s_total[dfits$set == "bace"]) / 3600))` and
 `r big(round(sum(dfits$wall_s_total[dfits$set == "freq"]) / 3600))` in the discrete part (supplementary table).
-The `r big(sum(pf$files))` pigauto fits ran on the University of Alberta server, 110 at a time, in 11 h 21 min of
-wall time; the complete-data estimates in their result files equal those of the frequentist files for all 7,200
-pairs of the same dataset and estimand. Peak memory of one BACE fit was 2.4 GB at n = 100, 6 GB at n = 300 and 19 GB at n = 1000. Software: R 4.5.0 on the
+The `r big(sum(pf$files))` pigauto fits under the former prior ran on the University of Alberta server, 110 at a
+time, in 11 h 21 min of wall time, and the `r big(sum(ps$files))` under the separation strategy 100 at a time in
+13 h; the complete-data estimates in their result files agree with those of the frequentist files to within
+`r sub('.*max \\|diff\\| ', '', readLines(file.path(ag, 'sanity.txt'))[3])` for every pair of the same dataset and estimand. Peak memory of one BACE fit was 2.4 GB at n = 100, 6 GB at n = 300 and 19 GB at n = 1000. Software: R 4.5.0 on the
 clusters and 4.5.3 on the server, BACE 0.1.0 (labelled 0.0.0.9000 on the server, with its fitting functions
 checked byte-identical), MCMCglmm 2.36, Rphylopars 0.3.10, castor 1.8.7, ape 5.8.1 (versions from the stored
 session information). Every result file stores its session information, the true data and the mask; the discrete
@@ -426,11 +441,12 @@ Chaining the final imputations brought coverage to nominal; the extra-residual c
 over-covered at n ≥ 300. Both frequentist methods were close to nominal throughout, including the
 fixed-parameter one, which confirms that per-value coverage checks calibration rather than properness. At λ = 1
 all methods were near nominal and chained BACE slightly conservative. pigauto's posterior MI covered single values
-like proper frequentist MI at n = 300 and 1000 (`r f3(cn1("pig_post", 300))` and `r f3(cn1("pig_post", 1000))`
-against `r f3(cn1("freqA", 300))` and `r f3(cn1("freqA", 1000))`, pooled over λ and ρ), with the same z-RMSE
-(supplement). At n = 100 it covered less at λ ≤ 0.7 (paired difference `r f3(pp("cell", 100, 0.3))` and
-`r f3(pp("cell", 100, 0.7))`, SE `r f3(max(pp("cell", 100, c(0.3, 0.7), "se")))`) and more at λ = 1
-(`r f3(pp("cell", 100, 1))`).
+`r rng(cells$coverage[cells$arm == "pig_sep"])` in every scenario (proper frequentist MI
+`r rng(cells$coverage[cells$arm == "freqA"])`), with the same z-RMSE (supplement). Under its former prior it covered
+like proper frequentist MI at n = 300 and 1000 but less at n = 100 and λ ≤ 0.7 (paired difference
+`r f3(pp("cell", 100, 0.3))` and `r f3(pp("cell", 100, 0.7))`, SE `r f3(max(pp("cell", 100, c(0.3, 0.7), "se")))`),
+which the separation-strategy prior removed (`r f3(pp("cell", 100, 0.3, k = "pig_sep - freqA"))` and
+`r f3(pp("cell", 100, 0.7, k = "pig_sep - freqA"))`).
 
 ```{r}
 #| label: tbl-cellcov
@@ -443,7 +459,7 @@ knitr::kable(wide(cells, "coverage", "coverage_se", rows = c("n", "lambda", "rho
 #| fig-cap: "Coverage of single missing values by n and λ (circles ρ = 0, triangles ρ = 0.5); whiskers ±2 Monte Carlo SE. Dashed line: nominal 0.95."
 #| fig-width: 9
 #| fig-height: 4.2
-s <- cells[cells$arm %in% c("freqA", "freqB", "bace", "bace_chain", "bace_resid", "pig_post"), ]
+s <- cells[cells$arm %in% c("freqA", "freqB", "bace", "bace_chain", "bace_resid", "pig_sep", "pig_post"), ]
 figcov(s, s$coverage, s$coverage_se, c(0.85, 1))
 ```
 
@@ -500,13 +516,13 @@ knitr::kable(w, align = "l", row.names = FALSE)
 #| fig-cap: "Coverage of ρ by the Rubin-pooled phylogenetic correlation, by n and λ (circles ρ = 0, triangles ρ = 0.5); whiskers ±2 Monte Carlo SE."
 #| fig-width: 9
 #| fig-height: 4.2
-s <- down[down$estimand == "cor" & down$arm %in% c("complete", "freqA", "freqB", "bace", "bace_chain", "pig_post"), ]
+s <- down[down$estimand == "cor" & down$arm %in% c("complete", "freqA", "freqB", "bace", "bace_chain", "pig_sep", "pig_post"), ]
 figcov(s, s$coverage, cse(s$coverage, s$datasets), c(0.7, 1))
 ```
 
-### pigauto's posterior MI with complete phylogenetic signal {#sec-pig}
+### pigauto's posterior MI and its residual prior {#sec-pig}
 
-At λ ≤ 0.7 pigauto's posterior MI covered the slope and the correlation about as often as proper frequentist MI at
+**Former prior.** At λ ≤ 0.7 pigauto's posterior MI with the inverse-Wishart residual prior covered the slope and the correlation about as often as proper frequentist MI at
 every n (paired differences in coverage `r rng(pp(c("slope", "cor"), c(100, 300, 1000), c(0.3, 0.7)))`, pooled over
 ρ; the largest, `r f3(pp("cor", 100, 0.7))` with SE `r f3(pp("cor", 100, 0.7, "se"))`, for the correlation at
 n = 100). At λ = 1 it did not (@tbl-down, @fig-down). At ρ = 0.5 its slope was too small at every n: bias
@@ -534,10 +550,28 @@ c2. At λ = 1 and n = 1000 the slope rests on differences between sister species
 attenuates it: adding pigauto's posterior Σ~E~ as noise to the exact draws moved their slope error from −0.004 to
 −0.028. At ρ = 0 there is no association to attenuate, and at λ < 1 Σ~E~ is real and estimated, which matches where
 the bias appeared. Smaller prior scales for Σ~E~ removed most of the bias at n = 1000 but worsened convergence at
-n = 100 in a screen of ten datasets per scenario, so none was adopted; pigauto's documentation states the caveat
-(pigauto pull request #201). pigauto's conformal draws, which are not meant for downstream inference, were tried
+n = 100 in a screen of ten datasets per scenario, so they were not adopted. pigauto's conformal draws, which are not meant for downstream inference, were tried
 only in a 36-fit pre-run and are not a method of this study: they biased the slope by −0.08 to −0.15 and covered it in
 half of the 12 datasets at each of n = 300 and 1000.
+
+**Separation-strategy prior.** The separation strategy puts no IW constraint on Σ~E~: each residual SD can approach
+zero and the residual correlation is uniform. Run on all `r big(sum(ps$files))` datasets, it removed the bias at
+λ = 1, ρ = 0.5: slope bias `r rng(dv("pig_sep", c(100, 300, 1000), 1, 0.5, "slope", "bias"))` at n = 100 to 1000 and
+slope coverage `r f3(dv("pig_sep", 100, 1, 0.5, "slope"))`, `r f3(dv("pig_sep", 300, 1, 0.5, "slope"))` and
+`r f3(dv("pig_sep", 1000, 1, 0.5, "slope"))` (correlation `r f3(dv("pig_sep", 100, 1, 0.5, "cor"))`,
+`r f3(dv("pig_sep", 300, 1, 0.5, "cor"))` and `r f3(dv("pig_sep", 1000, 1, 0.5, "cor"))`). Paired on the same
+datasets and pooled over ρ, its slope coverage at n = 1000 and λ = 1 exceeded the former prior's by
+`r f3(pp("slope", 1000, 1, k = "pig_sep - pig_post"))` (SE `r f3(pp("slope", 1000, 1, "se", k = "pig_sep - pig_post"))`).
+The gain came from removing the bias, not from wider intervals: its slope intervals were
+`r rng(wr, f2)` times as wide as the former prior's across the 18 scenarios. In every scenario it covered the slope and the
+correlation `r rng(down$coverage[down$arm == "pig_sep" & down$estimand %in% c("slope", "cor")])`. One cost appeared
+at n = 100 with correlated traits: at ρ = 0.5 and λ ≤ 0.7 its slope was biased by
+`r rng(dv("pig_sep", 100, c(0.3, 0.7), 0.5, "slope", "bias"))` (former prior
+`r rng(dv("pig_post", 100, c(0.3, 0.7), 0.5, "slope", "bias"))`, chained BACE
+`r rng(dv("bace_chain", 100, c(0.3, 0.7), 0.5, "slope", "bias"))`), with coverage
+`r rng(dv("pig_sep", 100, c(0.3, 0.7), 0.5, "slope"))`. pigauto adopted the separation strategy as its default
+(pull request #204) after this run and an 8,000-dataset acceptance simulation with a different data-generating
+mechanism (two traits, 40 scenarios), which it also passed.
 
 ## Discrete traits
 
@@ -652,7 +686,8 @@ datasets (`r paste(paste0(pf$pig_errors[pf$pig_errors > 0], " at n = ", pf$n[pf$
 which are not scored. A further `r sum(pf$pig_unconverged)` pigauto fits, all at n = `r paste(unique(pf$n[pf$pig_unconverged > 0]), collapse = ", ")`
 and λ ≤ 0.7, still failed its convergence rule after the last extension; they are scored and flagged, and at n = 100
 they covered at least as often as the converged fits (0.96 to 0.98 against 0.91 to 0.96), so they do not explain
-its lower coverage there. BACE returned no class
+its lower coverage there. Under the separation-strategy prior, with pigauto's fix for this Cholesky error not yet
+included, `r sum(ps$pig_errors)` fits stopped and `r sum(ps$pig_unconverged)` failed the convergence rule. BACE returned no class
 for about 1.6% of its three-class draws (non-finite class probabilities); scores use the remaining draws. BACE's
 own convergence check tests its deterministic settling phase and does not measure mixing, so it was not used to
 choose settings.
@@ -680,7 +715,10 @@ model, and this design cannot separate them.
 pigauto's posterior MI shows that a proper scheme can still be biased by its prior. Its imputations of single
 values matched the exact conditional distribution, yet a residual-covariance prior that cannot reach zero
 attenuated the slope where the true residual variance is zero (λ = 1) and the tree is large enough (n = 1000) for
-the slope to rest on small differences between close relatives.
+the slope to rest on small differences between close relatives. A prior that lets the residual variance approach zero
+and does not shrink the residual correlation removed the bias without widening the intervals, and the sampler also
+converged more reliably. The lesson for Bayesian imputers is that a weakly informative default prior on a covariance
+is not neutral at the boundary of the parameter space.
 
 The downstream result generalises beyond these tools. An imputation model that omits a variable of the analysis is
 uncongenial with it (Meng 1994): it pulls the association toward the value the imputer assumes (here zero), Rubin's
@@ -699,7 +737,8 @@ the box after the Introduction follow from these results.
 - Chained BACE and the extra-residual control were designed after a pre-run and tested on the same seeds.
 - pigauto's posterior MI was added after the main campaign and imputes the continuous block only. Its λ = 1
   diagnosis rests on eight refitted datasets, and the prior trials on eight datasets at n = 1000 and twenty at
-  n = 100.
+  n = 100. The separation-strategy prior was chosen after seeing the former prior's results on these datasets, so
+  its result here is not an independent test; the separate 8,000-dataset acceptance simulation is.
 - BACE at n = 1000 used 100 datasets per scenario (Monte Carlo SEs about 1.4 times the others'). The discrete part
   covers n = 100 and 300 only, so its trends in n rest on two sample sizes.
 - The discrete traits follow BACE's model family, and nominal traits generated from several liabilities were not
@@ -718,7 +757,7 @@ this study was run). This document is built from the tables in `data/`:
 | `data/fits.csv`, `data/discrete/fits.csv` | one row per fit: scenario, seed, cluster, node, time, wall times, errors, software versions |
 | `data/fit_cells.csv.gz`, `data/fit_estimands.csv.gz` | continuous part: per fit × method × trait (per-value scores) and × estimand (pooled estimates) |
 | `data/discrete/fit_disc_cells.csv.gz`, `fit_disc_estimands.csv.gz` | discrete part: per fit × method × trait and × estimand, with both targets |
-| `data/agg_pig/`, `data/discrete/agg_disc_*.csv` | aggregated tables used here; `data/agg_pig/` adds the pigauto rows to `data/agg/`, whose rows it reproduces exactly |
+| `data/agg_pig_sep/`, `data/discrete/agg_disc_*.csv` | aggregated tables used here; `data/agg_pig_sep/` adds both pigauto methods to `data/agg/`, whose rows it reproduces exactly |
 | `data/discrete/truth_slope_c1_bin.csv` | Monte Carlo population target of the slope of c1 on bin |
 | `data/discrete/repro.csv` | reproduction of the stored continuous fits by the discrete-part re-run |
 | `data/bace_diagnostics.csv`, `data/discrete/bace_diagnostics.csv` | BACE convergence verdicts, effective sample sizes, input cleaning |
@@ -767,7 +806,7 @@ knitr::kable(w, align = "l", row.names = FALSE)
 
 ```{r}
 #| label: tbl-s-fail
-#| tbl-cap: "Supplementary: continuous part by n and λ. files: result files; bace_errors: BACE fits that stopped; freq_errors: Rphylopars fits that failed; bace_cleaned: BACE fits whose inputs needed empty levels dropped or a trait left out; freqA refit columns: bootstrap refits redrawn. Rows labelled bace_asshipped_failed are first-pass BACE runs, before input cleaning, kept as records. Rows labelled pig are pigauto's posterior MI; pig_errors: fits that stopped; pig_unconverged: fits scored but flagged as unconverged."
+#| tbl-cap: "Supplementary: continuous part by n and λ. files: result files; bace_errors: BACE fits that stopped; freq_errors: Rphylopars fits that failed; bace_cleaned: BACE fits whose inputs needed empty levels dropped or a trait left out; freqA refit columns: bootstrap refits redrawn. Rows labelled bace_asshipped_failed are first-pass BACE runs, before input cleaning, kept as records. Rows labelled pig and pig_sep are pigauto's posterior MI under the former and the separation-strategy prior; pig_errors: fits that stopped; pig_unconverged: fits scored but flagged as unconverged."
 knitr::kable(failures, align = "l", row.names = FALSE)
 ```
 

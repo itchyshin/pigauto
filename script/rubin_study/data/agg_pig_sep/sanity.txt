@@ -1,4 +1,5 @@
 complete-data estimate, BACE files vs freq files, same dataset: 6000 pairs, max |diff| 0.00e+00
-complete-data estimate, pig files vs freq files, same dataset: 7200 pairs, max |diff| 0.00e+00
+complete-data estimate, pig files vs freq files, same dataset: 7200 pairs, max |diff| 6.18e-10
+complete-data estimate, pig_sep files vs freq files, same dataset: 7200 pairs, max |diff| 6.18e-10
 BACE files 3000, freq files 3600, as-shipped failure records 169, pig files 3600
 pig_sep files 3600
