@@ -1,0 +1,52 @@
+
+GATED 17-40 48 rows
+ |bias| mean iw 0.005200434 sep 0.005082203 ; max iw 0.01418986 sep 0.01609552 
+ coverage range iw 0.845 0.975 sep 0.865 0.97 
+ coverage - complete min iw -0.025 sep -0.03 
+ converged iw 9598 sep 9600 of 9600 
+
+STRESS 1-16 32 rows
+ |bias| mean iw 0.01001295 sep 0.01039847 ; max iw 0.02589176 sep 0.02880246 
+ coverage range iw 0.77 0.975 sep 0.795 0.965 
+ coverage - complete min iw -0.05 sep -0.045 
+ converged iw 6400 sep 6400 of 6400 
+
+lambda = 1 gated rows
+ regime_id downstream    n missing paired_bias.iw  z.iw paired_bias.sep  z.sep
+        25        gls  300  x_only       -0.01229 -8.67        -0.01422 -10.12
+        25    phylolm  300  x_only       -0.00993 -6.35        -0.01178  -7.75
+        27        gls 1000  x_only       -0.00588 -7.69        -0.00448  -5.76
+        27    phylolm 1000  x_only       -0.00472 -6.20        -0.00361  -4.65
+        29        gls  300  x_only       -0.00859 -6.15        -0.01011  -7.01
+        29    phylolm  300  x_only       -0.00612 -4.61        -0.00711  -5.25
+        31        gls 1000  x_only       -0.00459 -6.00        -0.00314  -4.21
+        31    phylolm 1000  x_only       -0.00363 -4.91        -0.00253  -3.53
+        33        gls  300    both       -0.01308 -5.20        -0.01610  -6.55
+        33    phylolm  300    both       -0.01119 -4.29        -0.01317  -5.11
+        35        gls 1000    both       -0.00792 -6.21        -0.00544  -4.26
+        35    phylolm 1000    both       -0.00621 -4.71        -0.00420  -3.20
+        37        gls  300    both       -0.01419 -5.80        -0.01545  -6.18
+        37    phylolm  300    both       -0.01115 -4.58        -0.01245  -5.09
+        39        gls 1000    both       -0.00515 -3.85        -0.00348  -2.59
+        39    phylolm 1000    both       -0.00361 -2.74        -0.00239  -1.80
+ coverage.iw coverage.sep
+       0.940        0.940
+       0.930        0.930
+       0.910        0.915
+       0.910        0.920
+       0.925        0.935
+       0.920        0.925
+       0.945        0.945
+       0.950        0.940
+       0.930        0.945
+       0.935        0.950
+       0.965        0.955
+       0.955        0.940
+       0.975        0.960
+       0.960        0.950
+       0.960        0.965
+       0.950        0.955
+
+lambda != 1 gated: bias iw NA NA  sep NA NA ; cov iw NA NA sep NA NA 
+
+G7 gated MCAR rows: iw 0.9328387 0.9548881  sep 0.9448318 0.9560519  n rows 20 20 
