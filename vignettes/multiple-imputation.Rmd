@@ -61,13 +61,17 @@ distribution of the missing cells. It currently requires:
 - one row per species (no `species_col`),
 - no `covariates`.
 
-Known limitation: with many species (about 1,000) and traits close to
-Brownian motion (Pagel's lambda near 1), posterior draws slightly attenuate
-correlations between traits, and Rubin-pooled intervals for a downstream
-slope or correlation can under-cover (about 0.86 instead of 0.95 in
-simulation at n = 1000, lambda = 1, trait correlation 0.5). Per-cell
-imputations are unaffected. The cause is the weak prior on the residual
-covariance; a fix is under study.
+Known limitation: when traits are correlated and close to Brownian motion
+(Pagel's lambda near 1), posterior draws attenuate the relationship between
+traits. In simulation at lambda = 1 with trait correlation 0.5, a
+Rubin-pooled downstream slope was biased by about -0.05 at every n, and its
+95% intervals covered 0.96, 0.88 and 0.75 at n = 100, 300 and 1000 (proper
+frequentist multiple imputation: 0.96, 0.92, 0.94); the phylogenetic
+correlation behaved the same way. At lambda 0.7 or below, or with
+uncorrelated traits, coverage was 0.93 to 0.98 with negligible bias.
+Per-cell imputations are unaffected. The cause is the prior on the residual
+covariance; a fix is under study. If your traits show lambda near 1 and you
+analyse their relationship, treat pooled intervals as too narrow.
 
 For one incomplete covariate in a Gaussian `lm`, a binomial `glm` or an
 `lmer` with one random intercept, `multi_impute_analysis()` provides a
