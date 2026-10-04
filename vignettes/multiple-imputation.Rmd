@@ -61,17 +61,17 @@ distribution of the missing cells. It currently requires:
 - one row per species (no `species_col`),
 - no `covariates`.
 
-Known limitation: when traits are correlated and close to Brownian motion
-(Pagel's lambda near 1), posterior draws attenuate the relationship between
-traits. In simulation at lambda = 1 with trait correlation 0.5, a
-Rubin-pooled downstream slope was biased by about -0.05 at every n, and its
-95% intervals covered 0.96, 0.88 and 0.75 at n = 100, 300 and 1000 (proper
-frequentist multiple imputation: 0.96, 0.92, 0.94); the phylogenetic
-correlation behaved the same way. At lambda 0.7 or below, or with
-uncorrelated traits, coverage was 0.93 to 0.98 with negligible bias.
-Per-cell imputations are unaffected. The cause is the prior on the residual
-covariance; a fix is under study. If your traits show lambda near 1 and you
-analyse their relationship, treat pooled intervals as too narrow.
+In simulation (continuous traits, 30% missing completely at random, 200
+datasets per cell, n = 100 to 1000, Pagel's lambda 0.3 to 1, trait
+correlation 0 or 0.5), a Rubin-pooled downstream PGLS slope and phylogenetic
+correlation had 95% interval coverage of 0.925 to 0.975 in every cell,
+including correlated traits at lambda = 1 (slope coverage 0.955, 0.940 and
+0.965 at n = 100, 300 and 1000). At n = 100 with correlated traits the
+pooled slope was biased by about -0.02 towards zero, with coverage still
+0.96. Before pigauto 0.11.0.9002 the sampler used an inverse-Wishart
+residual prior, which attenuated the relationship between correlated traits
+at lambda near 1 (coverage 0.75 at n = 1000); it is still available as
+`posterior_control = list(residual_prior = "iw")`.
 
 For one incomplete covariate in a Gaussian `lm`, a binomial `glm` or an
 `lmer` with one random intercept, `multi_impute_analysis()` provides a

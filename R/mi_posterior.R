@@ -401,6 +401,32 @@
 # y), and near lambda = 0 the same holds for Sigma_P; the expansion covers
 # only Sigma_P. Measured at n = 1000 without these moves: bulk ESS 20 to 41
 # for lambda from 4 x 10,000 sweeps at truth lambda = 1 and 0.95.
+# Log prior density of Sigma_E, up to a constant, on the scale of Sigma_E's
+# own entries (so the existing Metropolis Jacobians stay valid).
+#   "sep" (default since 2026-10-03, #204): separation strategy, Sigma_E = diag(s) R diag(s)
+#         with s_k ~ half-Cauchy(0, A_k), A_k = sd of trait k's observed
+#         latent values, and R ~ LKJ(1) (uniform over correlation matrices).
+#         The change of variables (s, R) -> Sigma_E has Jacobian
+#         2^K prod(s_k)^K, hence the -K sum(log s_k) term. Unlike the IW, it
+#         puts positive density on residual SDs near 0 and does not pull the
+#         residual correlation towards 0: the IW prior's pull was the cause of
+#         the downstream slope bias at lambda near 1 (Rubin study,
+#         arc/rubin-freq-bace). Under "sep" Sigma_E is updated only by the
+#         collapsed Metropolis moves.
+#   "iw"  (the default before #204): Sigma_E ~ IW(nu_E, S_E).
+.mip_log_prior_E <- function(S, hyper) {
+  if (!identical(hyper$E_prior, "sep")) return(.mip_log_iw(S, hyper$nu_E, hyper$S_E))
+  # Numerical floor: the standardised residual covariance keeps eigenvalues
+  # >= 1e-6, so the (a, mu) precision stays factorisable. Without it the
+  # half-Cauchy lets Sigma_E collapse at lambda = 1 and the sparse Cholesky
+  # of the current state fails (Rubin trial, n = 1000, lambda = 1: 6 of 6).
+  Z <- S / tcrossprod(hyper$A_E)
+  ev <- tryCatch(eigen(Z, symmetric = TRUE, only.values = TRUE)$values, error = function(e) -Inf)
+  if (min(ev) < 1e-6) return(-Inf)
+  s <- sqrt(diag(S))
+  sum(-log1p((s / hyper$A_E)^2)) - length(s) * sum(log(s))
+}
+
 # A Metropolis proposal can push Sigma_P or Sigma_E so close to singular
 # that the sparse Cholesky of the (a, mu) precision fails numerically
 # (CHOLMOD "not positive definite"), although the density is positive in
@@ -446,8 +472,8 @@
       log_r <- pr$ll - cur_ll +
         stats::dnorm(al_new[k], 0, sdA, log = TRUE) -
         stats::dnorm(alpha[k], 0, sdA, log = TRUE) + lc +
-        .mip_log_iw(SE_new, hyper$nu_E, hyper$S_E) -
-        .mip_log_iw(Sigma_E, hyper$nu_E, hyper$S_E) + (K + 1) * ld
+        .mip_log_prior_E(SE_new, hyper) -
+        .mip_log_prior_E(Sigma_E, hyper) + (K + 1) * ld
       if (is.finite(log_r) && log(stats::runif(1L)) < log_r) {
         alpha <- al_new; Sigma_E <- SE_new; cur_ll <- pr$ll
         acc[k, mv] <- 1
@@ -527,8 +553,8 @@
         if (is.null(pr)) next        # likelihood not evaluable here: reject
         tpl <- pr$tpl
         log_r <- pr$ll - cur_ll +
-          .mip_log_iw(SE_new, hyper$nu_E, hyper$S_E) -
-          .mip_log_iw(Sigma_E, hyper$nu_E, hyper$S_E) +
+          .mip_log_prior_E(SE_new, hyper) -
+          .mip_log_prior_E(Sigma_E, hyper) +
           .mip_log_iw(SW_new, hyper$nu_W, hyper$S_W) -
           .mip_log_iw(Sigma_W, hyper$nu_W, hyper$S_W) + log_jac
         if (is.finite(log_r) && log(stats::runif(1L)) < log_r) {
@@ -688,7 +714,12 @@
     Sigma_P <- .mip_px_sigma(alpha, Sigma_W)
     # 5. Sigma_E | e.
     e <- Rres - a[seq_len(n), , drop = FALSE]
-    Sigma_E <- .mip_riwish(hyper$nu_E + n, hyper$S_E + crossprod(e))
+    # Under the separation-strategy prior there is no conjugate draw; the
+    # collapsed Metropolis moves (scale, correlation, translation) update
+    # Sigma_E on their own.
+    if (!identical(hyper$E_prior, "sep")) {
+      Sigma_E <- .mip_riwish(hyper$nu_E + n, hyper$S_E + crossprod(e))
+    }
     }
     if (it > burnin) {
       j <- it - burnin             # post-burn-in sweep, counted across calls
@@ -908,7 +939,8 @@
 .mip_default_control <- function() {
   list(n_chains = 4L, n_iter = NULL, burnin = NULL, thin = NULL,
        keep_draws = 1000L, param_uncertainty = c("full", "none", "both"),
-       seed = NULL, auto_extend = TRUE, max_extend = 3L)
+       seed = NULL, auto_extend = TRUE, max_extend = 3L,
+       residual_prior = c("sep", "iw"))
 }
 
 .mip_resolve_control <- function(control, m) {
@@ -926,6 +958,7 @@
   ctl <- utils::modifyList(def, control)
   ctl$param_uncertainty <- match.arg(ctl$param_uncertainty,
                                      c("full", "none", "both"))
+  ctl$residual_prior <- match.arg(ctl$residual_prior, c("sep", "iw"))
   ctl$n_chains <- as.integer(ctl$n_chains)
   if (!is.finite(ctl$n_chains) || ctl$n_chains < 1L) {
     stop("`posterior_control$n_chains` must be a positive integer.",
@@ -986,7 +1019,8 @@
   prob <- .mip_problem(Y, tree)
   K <- prob$K
   hyper <- list(nu_W = K + 1, S_W = diag(K), V_alpha = 1000,
-                nu_E = K + 1, S_E = diag(0.01 * prob$obs_var, K))
+                nu_E = K + 1, S_E = diag(0.01 * prob$obs_var, K),
+                E_prior = ctl$residual_prior %||% "sep", A_E = sqrt(prob$obs_var))
   if (!is.null(ctl$seed)) set.seed(as.integer(ctl$seed))
   chain_seeds <- sample.int(.Machine$integer.max, ctl$n_chains)
   lam_reml <- .mip_reml_lambda(prob, tree)

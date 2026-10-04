@@ -1,5 +1,35 @@
 # pigauto 0.11.0.9002 (dev)
 
+## New default residual prior for posterior draws (`residual_prior = "sep"`)
+
+`multi_impute(draws_method = "posterior")` now puts a separation-strategy
+prior on the residual covariance: half-Cauchy residual standard deviations
+(scaled by each trait's observed SD) and a uniform (LKJ(1)) residual
+correlation. Posterior draws change. To reproduce earlier results, pass
+`posterior_control = list(residual_prior = "iw")`.
+
+Why. The inverse-Wishart prior kept the residual covariance away from 0
+and its correlation near 0 when traits are close to Brownian motion, which
+attenuated a downstream relationship between correlated traits. In the
+Rubin study simulation (continuous traits, 30% MCAR, 200 datasets per cell;
+`docs/dev-log/arc/2026-10-02-rubin-pigauto-campaign.md` on branch
+`arc/rubin-freq-bace`) at lambda = 1 and trait correlation 0.5, PGLS slope
+coverage was:
+
+| n | 100 | 300 | 1000 |
+|---|---|---|---|
+| `"iw"` (old default) | 0.955 | 0.875 | 0.750 |
+| `"sep"` (new default) | 0.955 | 0.940 | 0.965 |
+| frequentist MI | 0.955 | 0.920 | 0.935 |
+
+Over all 18 cells (n 100 to 1000, lambda 0.3 to 1, correlation 0 or 0.5)
+`"sep"` had 0 sampler errors and 0 unconverged fits in 3,600 (`"iw"`: 12
+and 107), downstream coverage 0.925 to 0.975 and per-cell coverage 0.942 to
+0.959. The #189 acceptance simulation (8,000 cells) passes both gates under
+`"sep"` (`docs/dev-log/mi-posterior/sep_validation/`). Costs: at n = 100
+with correlated traits the pooled slope is biased by about -0.02 (coverage
+0.96), and fits take about 5% more compute.
+
 ## New default: `multi_impute(draws_method = "auto")`
 
 `multi_impute()` now defaults to `draws_method = "auto"`. It uses
@@ -19,10 +49,6 @@ pooled slope towards zero by 0.20 to 0.46 with 0 to 17% interval coverage
 slower than conformal draws: about ten minutes per fit for 300 species and
 four traits on one core.
 
-Posterior draws have a known limitation for correlated traits with lambda
-near 1: in simulation at lambda = 1 and trait correlation 0.5, a downstream
-slope was biased by about -0.05 and 95% interval coverage fell to 0.88 at
-n = 300 and 0.75 at n = 1000; see `?multi_impute`.
 
 ## Breaking change: the GNN is off by default (`gnn = FALSE`)
 

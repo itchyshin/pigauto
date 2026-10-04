@@ -1,0 +1,6 @@
+EXPECTED_GRID regimes=all (40) reps=200
+SETTINGS 0 of 8000 rep file(s) use non-campaign settings (overrides, or m/keep_draws/n_chains != 20/1000/4)
+PROVENANCE code_sha=ebcd4666b0fd4f46bc2429b858d540c7f1351392 pigauto_version=0.11.0.9002
+wrote /home/snakagaw/hsq_work/mi_post/summary_sep_ebcd466/sim_summary.csv ( 208 rows )
+wrote /home/snakagaw/hsq_work/mi_post/summary_sep_ebcd466/sim_summary.md 
+wrote /home/snakagaw/hsq_work/mi_post/summary_sep_ebcd466/cell_coverage.csv ( 176 rows )

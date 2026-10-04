@@ -1,0 +1,274 @@
+EXPECTED_GRID regimes=all (40) reps=200 se_rule=pooled_relative
+PROVENANCE code_sha=ebcd4666b0fd4f46bc2429b858d540c7f1351392
+MEAN_SHORTFALL gated 0.0012 over 48 posterior_full rows (positive part; signed mean -0.0534)
+SE_RATIO regime=1 downstream=gls posterior_full=0.8962 complete=0.8716 relative=1.0282 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=1 complete=0.8716 downstream=gls
+SE_RATIO regime=1 downstream=phylolm posterior_full=0.9672 complete=0.9167 relative=1.0550 (stress test, rule=pooled_relative, not gated)
+SE_RATIO regime=2 downstream=gls posterior_full=0.6971 complete=0.5543 relative=1.2577 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=2 complete=0.5543 downstream=gls
+SE_RATIO regime=2 downstream=phylolm posterior_full=0.9810 complete=0.9200 relative=1.0664 (stress test, rule=pooled_relative, not gated)
+SE_RATIO regime=3 downstream=gls posterior_full=0.9050 complete=0.8865 relative=1.0208 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=3 complete=0.8865 downstream=gls
+SE_RATIO regime=3 downstream=phylolm posterior_full=0.9609 complete=0.9238 relative=1.0402 (stress test, rule=pooled_relative, not gated)
+SE_RATIO regime=4 downstream=gls posterior_full=0.7044 complete=0.5514 relative=1.2775 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=4 complete=0.5514 downstream=gls
+SE_RATIO regime=4 downstream=phylolm posterior_full=1.0925 complete=1.0462 relative=1.0443 (stress test, rule=pooled_relative, not gated)
+SE_RATIO regime=5 downstream=gls posterior_full=0.9408 complete=0.8930 relative=1.0536 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=5 complete=0.8930 downstream=gls
+SE_RATIO regime=5 downstream=phylolm posterior_full=0.9738 complete=0.9418 relative=1.0341 (stress test, rule=pooled_relative, not gated)
+SE_RATIO regime=6 downstream=gls posterior_full=0.6658 complete=0.5556 relative=1.1983 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=6 complete=0.5556 downstream=gls
+SE_RATIO regime=6 downstream=phylolm posterior_full=0.8771 complete=0.9275 relative=0.9457 (stress test, rule=pooled_relative, not gated)
+SE_RATIO regime=7 downstream=gls posterior_full=0.8545 complete=0.8805 relative=0.9705 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=7 complete=0.8805 downstream=gls
+SE_RATIO regime=7 downstream=phylolm posterior_full=0.8681 complete=0.9242 relative=0.9393 (stress test, rule=pooled_relative, not gated)
+SE_RATIO regime=8 downstream=gls posterior_full=0.7229 complete=0.4562 relative=1.5847 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=8 complete=0.4562 downstream=gls
+SE_RATIO regime=8 downstream=phylolm posterior_full=0.9160 complete=1.0257 relative=0.8931 (stress test, rule=pooled_relative, not gated)
+SE_RATIO regime=9 downstream=gls posterior_full=0.9701 complete=0.9024 relative=1.0750 (descriptive)
+SE_RATIO regime=9 downstream=phylolm posterior_full=1.0233 complete=0.9741 relative=1.0505 (stress test, rule=pooled_relative, not gated)
+SE_RATIO regime=10 downstream=gls posterior_full=0.8226 complete=0.5323 relative=1.5454 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=10 complete=0.5323 downstream=gls
+SE_RATIO regime=10 downstream=phylolm posterior_full=1.0435 complete=1.0616 relative=0.9830 (stress test, rule=pooled_relative, not gated)
+SE_RATIO regime=11 downstream=gls posterior_full=1.0509 complete=0.9062 relative=1.1598 (descriptive)
+SE_RATIO regime=11 downstream=phylolm posterior_full=1.0909 complete=0.9485 relative=1.1501 (stress test, rule=pooled_relative, not gated)
+SE_RATIO regime=12 downstream=gls posterior_full=0.8811 complete=0.5757 relative=1.5306 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=12 complete=0.5757 downstream=gls
+SE_RATIO regime=12 downstream=phylolm posterior_full=0.9986 complete=0.9128 relative=1.0940 (stress test, rule=pooled_relative, not gated)
+SE_RATIO regime=13 downstream=gls posterior_full=0.9745 complete=1.0130 relative=0.9620 (descriptive)
+SE_RATIO regime=13 downstream=phylolm posterior_full=0.9945 complete=1.0533 relative=0.9442 (stress test, rule=pooled_relative, not gated)
+SE_RATIO regime=14 downstream=gls posterior_full=0.9715 complete=0.5832 relative=1.6657 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=14 complete=0.5832 downstream=gls
+SE_RATIO regime=14 downstream=phylolm posterior_full=1.0402 complete=0.9418 relative=1.1044 (stress test, rule=pooled_relative, not gated)
+SE_RATIO regime=15 downstream=gls posterior_full=0.9587 complete=1.0460 relative=0.9165 (descriptive)
+SE_RATIO regime=15 downstream=phylolm posterior_full=0.9952 complete=1.1211 relative=0.8877 (stress test, rule=pooled_relative, not gated)
+SE_RATIO regime=16 downstream=gls posterior_full=0.8534 complete=0.5467 relative=1.5608 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=16 complete=0.5467 downstream=gls
+SE_RATIO regime=16 downstream=phylolm posterior_full=0.9537 complete=1.0109 relative=0.9433 (stress test, rule=pooled_relative, not gated)
+SE_RATIO regime=17 downstream=gls posterior_full=0.9667 complete=0.7530 relative=1.2838 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=17 complete=0.7530 downstream=gls
+SE_RATIO regime=17 downstream=phylolm posterior_full=0.9525 complete=0.9482 relative=1.0045 (gated, rule=pooled_relative)
+SE_RATIO regime=18 downstream=gls posterior_full=1.0147 complete=0.6663 relative=1.5228 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=18 complete=0.6663 downstream=gls
+SE_RATIO regime=18 downstream=phylolm posterior_full=0.9979 complete=0.9040 relative=1.1038 (gated, rule=pooled_relative)
+SE_RATIO regime=19 downstream=gls posterior_full=1.0089 complete=0.7379 relative=1.3672 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=19 complete=0.7379 downstream=gls
+SE_RATIO regime=19 downstream=phylolm posterior_full=1.0266 complete=0.9528 relative=1.0774 (gated, rule=pooled_relative)
+SE_RATIO regime=20 downstream=gls posterior_full=0.9047 complete=0.6377 relative=1.4187 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=20 complete=0.6377 downstream=gls
+SE_RATIO regime=20 downstream=phylolm posterior_full=0.9488 complete=0.8928 relative=1.0628 (gated, rule=pooled_relative)
+ANALYSIS_MODEL_SE_RATIO regime=20 complete=0.8928 downstream=phylolm
+SE_RATIO regime=21 downstream=gls posterior_full=0.9048 complete=0.6166 relative=1.4674 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=21 complete=0.6166 downstream=gls
+SE_RATIO regime=21 downstream=phylolm posterior_full=0.9778 complete=0.8224 relative=1.1889 (gated, rule=pooled_relative)
+ANALYSIS_MODEL_SE_RATIO regime=21 complete=0.8224 downstream=phylolm
+SE_RATIO regime=22 downstream=gls posterior_full=0.9721 complete=0.5898 relative=1.6482 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=22 complete=0.5898 downstream=gls
+SE_RATIO regime=22 downstream=phylolm posterior_full=0.9731 complete=0.8625 relative=1.1283 (gated, rule=pooled_relative)
+ANALYSIS_MODEL_SE_RATIO regime=22 complete=0.8625 downstream=phylolm
+SE_RATIO regime=23 downstream=gls posterior_full=0.9074 complete=0.6878 relative=1.3193 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=23 complete=0.6878 downstream=gls
+SE_RATIO regime=23 downstream=phylolm posterior_full=0.8394 complete=0.7994 relative=1.0500 (gated, rule=pooled_relative)
+ANALYSIS_MODEL_SE_RATIO regime=23 complete=0.7994 downstream=phylolm
+SE_RATIO regime=24 downstream=gls posterior_full=0.8781 complete=0.5633 relative=1.5587 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=24 complete=0.5633 downstream=gls
+SE_RATIO regime=24 downstream=phylolm posterior_full=0.8457 complete=0.7912 relative=1.0688 (gated, rule=pooled_relative)
+ANALYSIS_MODEL_SE_RATIO regime=24 complete=0.7912 downstream=phylolm
+SE_RATIO regime=25 downstream=gls posterior_full=0.9909 complete=0.9217 relative=1.0751 (descriptive)
+SE_RATIO regime=25 downstream=phylolm posterior_full=0.9589 complete=0.8656 relative=1.1078 (gated, rule=pooled_relative)
+ANALYSIS_MODEL_SE_RATIO regime=25 complete=0.8656 downstream=phylolm
+SE_RATIO regime=26 downstream=gls posterior_full=0.7406 complete=0.5857 relative=1.2645 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=26 complete=0.5857 downstream=gls
+SE_RATIO regime=26 downstream=phylolm posterior_full=0.9229 complete=0.8365 relative=1.1032 (gated, rule=pooled_relative)
+ANALYSIS_MODEL_SE_RATIO regime=26 complete=0.8365 downstream=phylolm
+SE_RATIO regime=27 downstream=gls posterior_full=0.9274 complete=0.9232 relative=1.0046 (descriptive)
+SE_RATIO regime=27 downstream=phylolm posterior_full=0.8908 complete=0.8700 relative=1.0239 (gated, rule=pooled_relative)
+ANALYSIS_MODEL_SE_RATIO regime=27 complete=0.8700 downstream=phylolm
+SE_RATIO regime=28 downstream=gls posterior_full=0.7660 complete=0.5899 relative=1.2985 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=28 complete=0.5899 downstream=gls
+SE_RATIO regime=28 downstream=phylolm posterior_full=1.0134 complete=0.9525 relative=1.0639 (gated, rule=pooled_relative)
+SE_RATIO regime=29 downstream=gls posterior_full=1.0135 complete=0.9389 relative=1.0795 (descriptive)
+SE_RATIO regime=29 downstream=phylolm posterior_full=0.9469 complete=0.8672 relative=1.0918 (gated, rule=pooled_relative)
+ANALYSIS_MODEL_SE_RATIO regime=29 complete=0.8672 downstream=phylolm
+SE_RATIO regime=30 downstream=gls posterior_full=0.7387 complete=0.6156 relative=1.1999 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=30 complete=0.6156 downstream=gls
+SE_RATIO regime=30 downstream=phylolm posterior_full=0.8621 complete=0.8703 relative=0.9905 (gated, rule=pooled_relative)
+ANALYSIS_MODEL_SE_RATIO regime=30 complete=0.8703 downstream=phylolm
+SE_RATIO regime=31 downstream=gls posterior_full=0.9538 complete=0.9266 relative=1.0294 (descriptive)
+SE_RATIO regime=31 downstream=phylolm posterior_full=0.9192 complete=0.8812 relative=1.0432 (gated, rule=pooled_relative)
+ANALYSIS_MODEL_SE_RATIO regime=31 complete=0.8812 downstream=phylolm
+SE_RATIO regime=32 downstream=gls posterior_full=0.8367 complete=0.5271 relative=1.5876 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=32 complete=0.5271 downstream=gls
+SE_RATIO regime=32 downstream=phylolm posterior_full=1.0004 complete=0.9601 relative=1.0420 (gated, rule=pooled_relative)
+SE_RATIO regime=33 downstream=gls posterior_full=1.0517 complete=0.9842 relative=1.0686 (descriptive)
+SE_RATIO regime=33 downstream=phylolm posterior_full=1.0391 complete=0.9801 relative=1.0603 (gated, rule=pooled_relative)
+SE_RATIO regime=34 downstream=gls posterior_full=0.8905 complete=0.5786 relative=1.5391 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=34 complete=0.5786 downstream=gls
+SE_RATIO regime=34 downstream=phylolm posterior_full=0.9890 complete=0.9773 relative=1.0120 (gated, rule=pooled_relative)
+SE_RATIO regime=35 downstream=gls posterior_full=1.0911 complete=0.9499 relative=1.1487 (descriptive)
+SE_RATIO regime=35 downstream=phylolm posterior_full=1.0549 complete=0.8961 relative=1.1772 (gated, rule=pooled_relative)
+ANALYSIS_MODEL_SE_RATIO regime=35 complete=0.8961 downstream=phylolm
+SE_RATIO regime=36 downstream=gls posterior_full=0.9287 complete=0.5958 relative=1.5587 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=36 complete=0.5958 downstream=gls
+SE_RATIO regime=36 downstream=phylolm posterior_full=0.9802 complete=0.8533 relative=1.1487 (gated, rule=pooled_relative)
+ANALYSIS_MODEL_SE_RATIO regime=36 complete=0.8533 downstream=phylolm
+SE_RATIO regime=37 downstream=gls posterior_full=1.0276 complete=1.0507 relative=0.9780 (descriptive)
+SE_RATIO regime=37 downstream=phylolm posterior_full=0.9629 complete=0.9106 relative=1.0574 (gated, rule=pooled_relative)
+SE_RATIO regime=38 downstream=gls posterior_full=0.9905 complete=0.6162 relative=1.6075 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=38 complete=0.6162 downstream=gls
+SE_RATIO regime=38 downstream=phylolm posterior_full=1.0000 complete=0.8567 relative=1.1672 (gated, rule=pooled_relative)
+ANALYSIS_MODEL_SE_RATIO regime=38 complete=0.8567 downstream=phylolm
+SE_RATIO regime=39 downstream=gls posterior_full=1.0936 complete=1.1182 relative=0.9780 (descriptive)
+SE_RATIO regime=39 downstream=phylolm posterior_full=1.0606 complete=1.0071 relative=1.0531 (gated, rule=pooled_relative)
+SE_RATIO regime=40 downstream=gls posterior_full=0.9162 complete=0.5629 relative=1.6275 (descriptive)
+ANALYSIS_MODEL_SE_RATIO regime=40 complete=0.5629 downstream=gls
+SE_RATIO regime=40 downstream=phylolm posterior_full=0.9611 complete=0.9457 relative=1.0163 (gated, rule=pooled_relative)
+SE_RATIO_ROW_OUTSIDE (reported, not gated) regime 8 phylolm relative=0.8931 outside [0.90, 1.15]
+SE_RATIO_ROW_OUTSIDE (reported, not gated) regime 11 phylolm relative=1.1501 outside [0.90, 1.15]
+SE_RATIO_ROW_OUTSIDE (reported, not gated) regime 15 phylolm relative=0.8877 outside [0.90, 1.15]
+SE_RATIO_ROW_OUTSIDE (reported, not gated) regime 21 phylolm relative=1.1889 outside [0.90, 1.15]
+SE_RATIO_ROW_OUTSIDE (reported, not gated) regime 35 phylolm relative=1.1772 outside [0.90, 1.15]
+SE_RATIO_ROW_OUTSIDE (reported, not gated) regime 38 phylolm relative=1.1672 outside [0.90, 1.15]
+POOLED_SE_RATIO gated mean relative=1.0768 over 24 phylolm rows, band [0.95, 1.10] (range 0.9905-1.1889; 3 row(s) outside [0.90, 1.15])
+POOLED_SE_RATIO stress mean relative=1.0110 over 16 phylolm rows, band [0.95, 1.10] (range 0.8877-1.1501; 3 row(s) outside [0.90, 1.15]) [stress test, not gated]
+SE_RATIO_PAIR regime=9 downstream=gls full=0.9701 none=0.8594
+SE_RATIO_PAIR regime=10 downstream=gls full=0.8226 none=0.7326
+SE_RATIO_PAIR regime=11 downstream=gls full=1.0509 none=0.8960
+SE_RATIO_PAIR regime=12 downstream=gls full=0.8811 none=0.8069
+SE_RATIO_PAIR regime=13 downstream=gls full=0.9745 none=0.8585
+SE_RATIO_PAIR regime=14 downstream=gls full=0.9715 none=0.8327
+SE_RATIO_PAIR regime=15 downstream=gls full=0.9587 none=0.8575
+SE_RATIO_PAIR regime=16 downstream=gls full=0.8534 none=0.7689
+SE_RATIO_ORDER (reported, not gated) regimes 9-16 gls [tree_raw]: mean posterior_full=0.9353 posterior_none=0.8266 proper_wider=TRUE (pairs 8 of 8 finite)
+SE_RATIO_PAIR regime=9 downstream=phylolm full=1.0233 none=0.9162
+SE_RATIO_PAIR regime=10 downstream=phylolm full=1.0435 none=0.9464
+SE_RATIO_PAIR regime=11 downstream=phylolm full=1.0909 none=0.9327
+SE_RATIO_PAIR regime=12 downstream=phylolm full=0.9986 none=0.9093
+SE_RATIO_PAIR regime=13 downstream=phylolm full=0.9945 none=0.8965
+SE_RATIO_PAIR regime=14 downstream=phylolm full=1.0402 none=0.9311
+SE_RATIO_PAIR regime=15 downstream=phylolm full=0.9952 none=0.9070
+SE_RATIO_PAIR regime=16 downstream=phylolm full=0.9537 none=0.8587
+SE_RATIO_ORDER (reported, not gated) regimes 9-16 phylolm [tree_raw]: mean posterior_full=1.0175 posterior_none=0.9122 proper_wider=TRUE (pairs 8 of 8 finite)
+SE_RATIO_PAIR regime=17 downstream=gls full=0.9667 none=0.7939
+SE_RATIO_PAIR regime=18 downstream=gls full=1.0147 none=0.8745
+SE_RATIO_PAIR regime=19 downstream=gls full=1.0089 none=0.8673
+SE_RATIO_PAIR regime=20 downstream=gls full=0.9047 none=0.7610
+SE_RATIO_PAIR regime=21 downstream=gls full=0.9048 none=0.7711
+SE_RATIO_PAIR regime=22 downstream=gls full=0.9721 none=0.8463
+SE_RATIO_PAIR regime=23 downstream=gls full=0.9074 none=0.7884
+SE_RATIO_PAIR regime=24 downstream=gls full=0.8781 none=0.7881
+SE_RATIO_ORDER (reported, not gated) regimes 17-24 gls [kronecker]: mean posterior_full=0.9447 posterior_none=0.8113 proper_wider=TRUE (pairs 8 of 8 finite)
+SE_RATIO_PAIR regime=17 downstream=phylolm full=0.9525 none=0.8138
+SE_RATIO_PAIR regime=18 downstream=phylolm full=0.9979 none=0.8669
+SE_RATIO_PAIR regime=19 downstream=phylolm full=1.0266 none=0.9036
+SE_RATIO_PAIR regime=20 downstream=phylolm full=0.9488 none=0.8235
+SE_RATIO_PAIR regime=21 downstream=phylolm full=0.9778 none=0.8372
+SE_RATIO_PAIR regime=22 downstream=phylolm full=0.9731 none=0.8307
+SE_RATIO_PAIR regime=23 downstream=phylolm full=0.8394 none=0.7262
+SE_RATIO_PAIR regime=24 downstream=phylolm full=0.8457 none=0.7567
+SE_RATIO_ORDER (reported, not gated) regimes 17-24 phylolm [kronecker]: mean posterior_full=0.9452 posterior_none=0.8198 proper_wider=TRUE (pairs 8 of 8 finite)
+SE_RATIO_PAIR regime=33 downstream=gls full=1.0517 none=0.9091
+SE_RATIO_PAIR regime=34 downstream=gls full=0.8905 none=0.7808
+SE_RATIO_PAIR regime=35 downstream=gls full=1.0911 none=0.9755
+SE_RATIO_PAIR regime=36 downstream=gls full=0.9287 none=0.8477
+SE_RATIO_PAIR regime=37 downstream=gls full=1.0276 none=0.9313
+SE_RATIO_PAIR regime=38 downstream=gls full=0.9905 none=0.8592
+SE_RATIO_PAIR regime=39 downstream=gls full=1.0936 none=0.9833
+SE_RATIO_PAIR regime=40 downstream=gls full=0.9162 none=0.8160
+SE_RATIO_ORDER (reported, not gated) regimes 33-40 gls [twin]: mean posterior_full=0.9987 posterior_none=0.8879 proper_wider=TRUE (pairs 8 of 8 finite)
+SE_RATIO_PAIR regime=33 downstream=phylolm full=1.0391 none=0.9243
+SE_RATIO_PAIR regime=34 downstream=phylolm full=0.9890 none=0.8850
+SE_RATIO_PAIR regime=35 downstream=phylolm full=1.0549 none=0.9586
+SE_RATIO_PAIR regime=36 downstream=phylolm full=0.9802 none=0.8765
+SE_RATIO_PAIR regime=37 downstream=phylolm full=0.9629 none=0.8841
+SE_RATIO_PAIR regime=38 downstream=phylolm full=1.0000 none=0.9031
+SE_RATIO_PAIR regime=39 downstream=phylolm full=1.0606 none=0.9693
+SE_RATIO_PAIR regime=40 downstream=phylolm full=0.9611 none=0.8703
+SE_RATIO_ORDER (reported, not gated) regimes 33-40 phylolm [twin]: mean posterior_full=1.0060 posterior_none=0.9089 proper_wider=TRUE (pairs 8 of 8 finite)
+GATED REGIMES (in-model: Kronecker 17-24, twins 25-40; Shinichi, CP2 follow-up 2026-09-24): 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40
+  RULES regime=17 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=17 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=18 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=18 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=19 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=19 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=20 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=20 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=21 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=21 downstream=phylolm bias=PASS coverage=PASS se_ratio=OUTSIDE(pooled) fit_fail=PASS converged=PASS(200/200)
+  RULES regime=22 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=22 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=23 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=23 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=24 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=24 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=25 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=25 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=26 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=26 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=27 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=27 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=28 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=28 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=29 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=29 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=30 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=30 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=31 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=31 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=32 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=32 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=33 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=33 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=34 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=34 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=35 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=35 downstream=phylolm bias=PASS coverage=PASS se_ratio=OUTSIDE(pooled) fit_fail=PASS converged=PASS(200/200)
+  RULES regime=36 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=36 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=37 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=37 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=38 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=38 downstream=phylolm bias=PASS coverage=PASS se_ratio=OUTSIDE(pooled) fit_fail=PASS converged=PASS(200/200)
+  RULES regime=39 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=39 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=40 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=40 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+STRESS TEST (reported, not gated): regimes 1-16, raw tree covariance outside the sampler's model
+  RULES regime=1 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=1 downstream=phylolm bias=FAIL coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=2 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=2 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=3 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=3 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=4 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=4 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=5 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=5 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=6 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=6 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=7 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=7 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=8 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=8 downstream=phylolm bias=PASS coverage=PASS se_ratio=OUTSIDE(pooled) fit_fail=PASS converged=PASS(200/200)
+  RULES regime=9 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=9 downstream=phylolm bias=FAIL coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=10 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=10 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=11 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=11 downstream=phylolm bias=PASS coverage=PASS se_ratio=OUTSIDE(pooled) fit_fail=PASS converged=PASS(200/200)
+  RULES regime=12 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=12 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=13 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=13 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=14 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=14 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  RULES regime=15 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=15 downstream=phylolm bias=PASS coverage=PASS se_ratio=OUTSIDE(pooled) fit_fail=PASS converged=PASS(200/200)
+  RULES regime=16 downstream=gls bias=PASS coverage=PASS se_ratio=n/a fit_fail=PASS converged=PASS(200/200)
+  RULES regime=16 downstream=phylolm bias=PASS coverage=PASS se_ratio=PASS fit_fail=PASS converged=PASS(200/200)
+  MEAN_SHORTFALL stress 0.0083 over 32 posterior_full rows (positive part; signed mean -0.0230) [stress test, not gated]
+  STRESS_VIOLATION bias: regime 1 phylolm |bias|=0.0288 > max(0.02, 2.5*MCSE=0.0016)
+  STRESS_VIOLATION bias: regime 9 phylolm |bias|=0.0243 > max(0.02, 2.5*MCSE=0.0025)
+  STRESS_SUMMARY 2 rule violation(s) in 2 of 16 stress-test regime(s); reported, not gated
+SIM_ACCEPT_PASS

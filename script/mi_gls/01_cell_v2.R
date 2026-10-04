@@ -281,6 +281,10 @@ run_posterior <- function(param_uncertainty) {
               param_uncertainty = param_uncertainty, seed = cell$seed)
   if (!is.null(n_iter_override)) ctl$n_iter <- n_iter_override
   if (!is.null(burnin_override)) ctl$burnin <- burnin_override
+  # Residual-covariance prior (#204): unset = the package default ("iw");
+  # "sep" = the experimental separation-strategy prior.
+  rp <- Sys.getenv("MI_POST_RESIDUAL_PRIOR", "")
+  if (nzchar(rp)) ctl$residual_prior <- rp
   t0 <- proc.time()[["elapsed"]]
   mi <- tryCatch(
     multi_impute(cell$df, cell$tree, m = m, draws_method = "posterior",
@@ -310,7 +314,7 @@ run_posterior <- function(param_uncertainty) {
   }
   pc <- mi$posterior$control
   list(res = res,
-       ctl = if (!is.null(pc)) pc[intersect(c("n_chains", "burnin", "n_iter", "thin", "keep_draws"),
+       ctl = if (!is.null(pc)) pc[intersect(c("n_chains", "burnin", "n_iter", "thin", "keep_draws", "residual_prior"),
                                             names(pc))] else NULL)
 }
 
