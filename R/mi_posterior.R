@@ -403,8 +403,7 @@
 # for lambda from 4 x 10,000 sweeps at truth lambda = 1 and 0.95.
 # Log prior density of Sigma_E, up to a constant, on the scale of Sigma_E's
 # own entries (so the existing Metropolis Jacobians stay valid).
-#   "iw"  (default): Sigma_E ~ IW(nu_E, S_E).
-#   "sep" (opt-in, research): separation strategy, Sigma_E = diag(s) R diag(s)
+#   "sep" (default since 2026-10-03, #204): separation strategy, Sigma_E = diag(s) R diag(s)
 #         with s_k ~ half-Cauchy(0, A_k), A_k = sd of trait k's observed
 #         latent values, and R ~ LKJ(1) (uniform over correlation matrices).
 #         The change of variables (s, R) -> Sigma_E has Jacobian
@@ -414,6 +413,7 @@
 #         the downstream slope bias at lambda near 1 (Rubin study,
 #         arc/rubin-freq-bace). Under "sep" Sigma_E is updated only by the
 #         collapsed Metropolis moves.
+#   "iw"  (the default before #204): Sigma_E ~ IW(nu_E, S_E).
 .mip_log_prior_E <- function(S, hyper) {
   if (!identical(hyper$E_prior, "sep")) return(.mip_log_iw(S, hyper$nu_E, hyper$S_E))
   # Numerical floor: the standardised residual covariance keeps eigenvalues
@@ -940,7 +940,7 @@
   list(n_chains = 4L, n_iter = NULL, burnin = NULL, thin = NULL,
        keep_draws = 1000L, param_uncertainty = c("full", "none", "both"),
        seed = NULL, auto_extend = TRUE, max_extend = 3L,
-       residual_prior = c("iw", "sep"))
+       residual_prior = c("sep", "iw"))
 }
 
 .mip_resolve_control <- function(control, m) {
@@ -958,7 +958,7 @@
   ctl <- utils::modifyList(def, control)
   ctl$param_uncertainty <- match.arg(ctl$param_uncertainty,
                                      c("full", "none", "both"))
-  ctl$residual_prior <- match.arg(ctl$residual_prior, c("iw", "sep"))
+  ctl$residual_prior <- match.arg(ctl$residual_prior, c("sep", "iw"))
   ctl$n_chains <- as.integer(ctl$n_chains)
   if (!is.finite(ctl$n_chains) || ctl$n_chains < 1L) {
     stop("`posterior_control$n_chains` must be a positive integer.",
@@ -1020,7 +1020,7 @@
   K <- prob$K
   hyper <- list(nu_W = K + 1, S_W = diag(K), V_alpha = 1000,
                 nu_E = K + 1, S_E = diag(0.01 * prob$obs_var, K),
-                E_prior = ctl$residual_prior %||% "iw", A_E = sqrt(prob$obs_var))
+                E_prior = ctl$residual_prior %||% "sep", A_E = sqrt(prob$obs_var))
   if (!is.null(ctl$seed)) set.seed(as.integer(ctl$seed))
   chain_seeds <- sample.int(.Machine$integer.max, ctl$n_chains)
   lam_reml <- .mip_reml_lambda(prob, tree)

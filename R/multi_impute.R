@@ -58,16 +58,19 @@
 #'       covariates. Fit a Bayesian multivariate phylogenetic mixed model by
 #'       MCMC and return `m` completions drawn from the posterior predictive
 #'       distribution of the missing cells. No GNN is fitted. See "Posterior
-#'       draws" below. Known limitation: when traits are correlated and
-#'       close to Brownian motion (Pagel's lambda near 1), posterior draws
-#'       attenuate the relationship between traits. In simulation at
-#'       lambda = 1 with trait correlation 0.5, a Rubin-pooled downstream
-#'       slope was biased by about -0.05 at every n, and its 95% intervals
-#'       covered 0.96, 0.88 and 0.75 at n = 100, 300 and 1000 (proper
-#'       frequentist multiple imputation: 0.96, 0.92, 0.94). At lambda 0.7 or
-#'       below, or with uncorrelated traits, coverage was 0.93 to 0.98 with
-#'       negligible bias. Per-cell imputations are unaffected. The cause is
-#'       the prior on the residual covariance; a fix is under study.}
+#'       draws" below. In simulation (continuous traits, 30% missing
+#'       completely at random, 200 datasets per cell, n = 100 to 1000,
+#'       lambda 0.3 to 1, trait correlation 0 or 0.5), a Rubin-pooled
+#'       downstream PGLS slope and phylogenetic correlation had 95% interval
+#'       coverage of 0.925 to 0.975 in every cell. At lambda = 1 with trait
+#'       correlation 0.5, slope coverage was 0.955, 0.940 and 0.965 at
+#'       n = 100, 300 and 1000 (proper frequentist multiple imputation:
+#'       0.955, 0.920, 0.935). At n = 100 with correlated traits the pooled
+#'       slope was biased by about -0.02 towards zero, with coverage still
+#'       0.96. The previous residual prior (`posterior_control =
+#'       list(residual_prior = "iw")`) attenuated the relationship between
+#'       correlated traits at lambda near 1: coverage 0.96, 0.88 and 0.75 at
+#'       the same three n.}
 #'   }
 #'   Conformal and MC-dropout draws perturb missing cells around a point
 #'   prediction rather than drawing them jointly from their conditional
@@ -166,15 +169,16 @@
 #'     \item{`max_extend`}{`3L`. Maximum number of extensions, a whole
 #'       number from 0 to 10. The default allows at most 4 times `n_iter`
 #'       sweeps per chain after burn-in.}
-#'     \item{`residual_prior`}{`"iw"` (default) or `"sep"`. The prior on the
-#'       residual covariance. `"iw"` is an inverse-Wishart. `"sep"` is
-#'       experimental: half-Cauchy residual standard deviations and a uniform
-#'       (LKJ(1)) residual correlation, which lets the residual covariance
-#'       shrink towards 0 when traits are close to Brownian motion. In a
-#'       simulation screen it removed the downstream slope bias at lambda = 1
-#'       described under "Known limitation" and converged more reliably at
-#'       small n, but it has not yet passed the full validation; the default
-#'       is unchanged.}
+#'     \item{`residual_prior`}{`"sep"` (default) or `"iw"`. The prior on the
+#'       residual covariance. `"sep"` (the separation strategy) gives each
+#'       residual standard deviation a half-Cauchy prior scaled by the
+#'       trait's observed standard deviation and the residual correlation a
+#'       uniform (LKJ(1)) prior, so the residual covariance can shrink
+#'       towards 0 when traits are close to Brownian motion. `"iw"` is the
+#'       inverse-Wishart prior used before pigauto 0.11.0.9002; it biases a
+#'       downstream relationship between correlated traits towards zero when
+#'       lambda is near 1 (see `draws_method`). Kept for reproducing earlier
+#'       results.}
 #'   }
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
 #'   [impute()]. See [fit_pigauto()] for the full list; the "Safety

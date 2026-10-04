@@ -481,7 +481,9 @@ test_that("the first run is pinned on a fixed fixture (re-pinned after the full-
   # this fixture from (0.694, 0.689) to (0.728, 0.727); the target posterior
   # is unchanged, only the initial point. Values re-pinned 2026-10-01 at the
   # merge of main into arc/mi-posterior. Tolerance 1e-8 allows last-bit BLAS
-  # differences across platforms.
+  # differences across platforms. The values are for residual_prior = "iw",
+  # the default until #204 (2026-10-03); it is named explicitly so the pin
+  # keeps guarding the "iw" path that users can still select.
   skip_on_cran()
   set.seed(11)
   tree <- ape::rtree(40)
@@ -493,7 +495,8 @@ test_that("the first run is pinned on a fixed fixture (re-pinned after the full-
   Y[c(3, 7, 12, 20, 31), 1] <- NA
   Y[c(5, 12, 18, 27), 2] <- NA
   ctl <- .mip_resolve_control(list(n_chains = 3L, burnin = 120L, n_iter = 90L,
-                                   keep_draws = 30L, seed = 9L), m = 5L)
+                                   keep_draws = 30L, seed = 9L,
+                                   residual_prior = "iw"), m = 5L)
   ctl$auto_extend <- FALSE
   f <- .mip_fit(Y, tree, ctl)
   ref_ymis <- matrix(c(-0.548692465076938, -0.24304626762921, -0.240534010112342,
@@ -529,9 +532,9 @@ test_that("a proposal whose likelihood cannot be factorised is rejected, not fat
   expect_true(all(mv$acc_off == 0))
 })
 
-test_that("residual_prior defaults to the inverse-Wishart and validates", {
-  expect_identical(.mip_resolve_control(list(), m = 5L)$residual_prior, "iw")
-  expect_identical(.mip_resolve_control(list(residual_prior = "sep"), m = 5L)$residual_prior, "sep")
+test_that("residual_prior defaults to the separation strategy and validates", {
+  expect_identical(.mip_resolve_control(list(), m = 5L)$residual_prior, "sep")
+  expect_identical(.mip_resolve_control(list(residual_prior = "iw"), m = 5L)$residual_prior, "iw")
   expect_error(.mip_resolve_control(list(residual_prior = "nope"), m = 5L))
 })
 
