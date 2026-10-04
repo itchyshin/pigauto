@@ -3,6 +3,7 @@
 S3method(plot,pigauto_benchmark)
 S3method(plot,pigauto_fit)
 S3method(plot,pigauto_pred)
+S3method(plot,pigauto_result)
 S3method(predict,pigauto_fit)
 S3method(print,pigauto_active)
 S3method(print,pigauto_analysis_mi)

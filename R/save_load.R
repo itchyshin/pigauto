@@ -10,7 +10,8 @@
 #' This function converts the model state to a portable raw format
 #' before saving.
 #'
-#' @param fit pigauto_fit object.
+#' @param fit pigauto_fit object, or a \code{pigauto_result} from
+#'   \code{\link{impute}} (its \code{$fit} is saved).
 #' @param path character.  File path to save to (recommended extension:
 #'   \code{.pigauto}).
 #' @param compress logical.  Use gzip compression (default \code{TRUE}).
@@ -30,8 +31,11 @@
 #' }
 #' @export
 save_pigauto <- function(fit, path, compress = TRUE) {
+  if (inherits(fit, "pigauto_result")) {
+    fit <- fit$fit
+  }
   if (!inherits(fit, "pigauto_fit")) {
-    stop("'fit' must be a pigauto_fit object.")
+    stop("'fit' must be a pigauto_fit or pigauto_result object.")
   }
 
   # Convert torch state_dict to a serialisable list of raw vectors

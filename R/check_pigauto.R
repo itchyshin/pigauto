@@ -336,3 +336,21 @@ print.pigauto_check <- function(x, ...) {
   }
   invisible(x)
 }
+
+# Shared argument guards used by impute() so bad scalars fail before a fit.
+.check_positive_integer <- function(x, name) {
+  if (is.character(x) || is.logical(x) || is.complex(x) ||
+      !is.numeric(x) || length(x) != 1L || is.na(x) || !is.finite(x) ||
+      x != suppressWarnings(as.integer(x)) || x < 1) {
+    stop("'", name, "' must be a positive integer.", call. = FALSE)
+  }
+  as.integer(x)
+}
+
+.check_open_unit <- function(x, name) {
+  if (!is.numeric(x) || length(x) != 1L || is.na(x) || !is.finite(x) ||
+      x <= 0 || x >= 1) {
+    stop("'", name, "' must be in (0, 1).", call. = FALSE)
+  }
+  x
+}

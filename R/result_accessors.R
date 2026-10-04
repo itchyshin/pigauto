@@ -44,11 +44,19 @@ summary.pigauto_result <- function(object, ...) {
     as.integer(colSums(successful_fills[target_rows, , drop = FALSE])), trait_cols
   ) else integer()
   unresolved <- if (length(trait_cols)) sum(is.na(completed_traits[target_rows, , drop = FALSE])) else NA_integer_
+  not_modeled <- 0L
+  if (length(trait_cols) && inherits(object$check, "pigauto_check")) {
+    data_only <- object$check$species$data_only$names %||% character()
+    if (length(data_only)) {
+      not_modeled <- sum(is.na(completed_traits[!target_rows, , drop = FALSE]))
+    }
+  }
   target_cells <- if (length(trait_cols)) sum(target_rows) * length(trait_cols) else NA_integer_
   filled <- if (length(per_trait)) sum(successful_fills[target_rows, , drop = FALSE]) else 0L
   observed <- if (is.na(target_cells)) NA_integer_ else target_cells - filled - unresolved
   structure(list(check = object$check %||% "Preflight check unavailable",
-                 counts = list(filled = filled, observed = observed, unresolved = unresolved),
+                 counts = list(filled = filled, observed = observed,
+                               unresolved = unresolved, not_modeled = not_modeled),
                  per_trait = data.frame(trait = names(per_trait), filled = unname(per_trait), stringsAsFactors = FALSE),
                  output_roles = .describe_pigauto_result(object), evaluation = object$evaluation),
             class = "summary_pigauto_result")
@@ -65,6 +73,7 @@ print.summary_pigauto_result <- function(x, ...) {
   cat("  observed cells:", x$counts$observed, "\n")
   cat("  filled cells:", x$counts$filled, "\n")
   cat("  unresolved cells:", x$counts$unresolved, "\n")
+  cat("  not-modeled cells:", x$counts$not_modeled %||% 0L, "\n")
   if (is.data.frame(x$output_roles)) cat("  roles: completed=filled data; prediction=diagnostic; inference=not authorized\n")
   invisible(x)
 }
