@@ -8,14 +8,16 @@
 #' @param fit A \code{pigauto_fit} object (or a \code{pigauto_result} from
 #'   \code{\link{impute}}).
 #' @param data Optional \code{pigauto_data} object.  Extracted automatically
-#'   when \code{fit} is a \code{pigauto_result}.
-#' @param splits Optional splits object.  Extracted automatically when
-#'   \code{fit} is a \code{pigauto_result}.
-#' @param output_path Character.  File path for the HTML report (default
-#'   \code{"pigauto_report.html"} in the working directory).
-#' @param title Character.  Report title.
-#' @param open Logical.  Open the report in a browser when done (default
-#'   \code{TRUE}).
+#'   when \code{fit} is a \code{pigauto_result}.  When supplied it must match
+#'   the fit (species and traits).
+#' @param splits Optional splits object from \code{\link{make_missing_splits}}.
+#'   Extracted automatically when \code{fit} is a \code{pigauto_result}.
+#'   When supplied it must match the fit.
+#' @param output_path Character of length 1.  File path for the HTML report
+#'   (default \code{"pigauto_report.html"} in the working directory).
+#' @param title Character of length 1.  Report title (HTML-escaped on write).
+#' @param open Logical of length 1.  Open the report in a browser when done
+#'   (default \code{TRUE}).
 #' @return The output path (invisibly).
 #' @examples
 #' \donttest{
@@ -35,6 +37,12 @@ pigauto_report <- function(fit, data = NULL, splits = NULL,
                            title = "pigauto Imputation Report",
                            open = TRUE) {
 
+  .check_report_title(title)
+  .check_report_output_path(output_path)
+  .check_report_open(open)
+  .check_report_data(data)
+  .check_report_splits(splits)
+
   # Unwrap pigauto_result
 
   if (inherits(fit, "pigauto_result")) {
@@ -50,6 +58,11 @@ pigauto_report <- function(fit, data = NULL, splits = NULL,
   } else {
     stop("'fit' must be a pigauto_fit or pigauto_result object.")
   }
+
+  .check_report_data(data)
+  .check_report_splits(splits)
+  .check_report_data_matches_fit(data, fit_obj)
+  .check_report_splits_match_fit(splits, fit_obj, data)
 
   trait_map <- fit_obj$trait_map
   if (is.null(trait_map)) stop("Report requires a trait_map (mixed-type fit).")
@@ -69,7 +82,7 @@ pigauto_report <- function(fit, data = NULL, splits = NULL,
 
   # ---- Build HTML ------------------------------------------------------------
   html <- build_report_html(
-    title     = title,
+    title     = .escape_report_html(title),
     fit_obj   = fit_obj,
     pred      = pred,
     metrics   = metrics,
@@ -93,6 +106,99 @@ pigauto_report <- function(fit, data = NULL, splits = NULL,
   x <- gsub(">", "&gt;", x, fixed = TRUE)
   x <- gsub("\"", "&quot;", x, fixed = TRUE)
   gsub("'", "&#39;", x, fixed = TRUE)
+}
+
+.check_report_title <- function(title) {
+  if (!is.character(title) || length(title) != 1L || is.na(title)) {
+    stop("'title' must be a single character string.")
+  }
+  invisible(title)
+}
+
+.check_report_output_path <- function(output_path) {
+  if (!is.character(output_path) || length(output_path) != 1L ||
+      is.na(output_path) || !nzchar(output_path)) {
+    stop("'output_path' must be a single non-empty character string.")
+  }
+  invisible(output_path)
+}
+
+.check_report_open <- function(open) {
+  if (!is.logical(open) || length(open) != 1L || is.na(open)) {
+    stop("'open' must be TRUE or FALSE.")
+  }
+  invisible(open)
+}
+
+.check_report_data <- function(data) {
+  if (is.null(data)) return(invisible(NULL))
+  if (!inherits(data, "pigauto_data")) {
+    stop("'data' must be a pigauto_data object.")
+  }
+  invisible(data)
+}
+
+.check_report_splits <- function(splits) {
+  if (is.null(splits)) return(invisible(NULL))
+  ok <- is.list(splits) && !is.data.frame(splits) &&
+    !is.null(splits$val_idx) && !is.null(splits$test_idx)
+  if (!ok) {
+    stop("'splits' must be a list from make_missing_splits().")
+  }
+  invisible(splits)
+}
+
+.report_latent_dims <- function(fit_obj) {
+  n <- if (isTRUE(fit_obj$multi_obs)) {
+    length(fit_obj$obs_to_species)
+  } else {
+    length(fit_obj$species_names)
+  }
+  p <- if (!is.null(fit_obj$baseline$mu)) {
+    ncol(as.matrix(fit_obj$baseline$mu))
+  } else {
+    sum(vapply(fit_obj$trait_map, function(tm) length(tm$latent_cols), integer(1)))
+  }
+  c(n = as.integer(n), p = as.integer(p))
+}
+
+.check_report_data_matches_fit <- function(data, fit_obj) {
+  if (is.null(data)) return(invisible(NULL))
+  same_sp <- identical(as.character(data$species_names),
+                       as.character(fit_obj$species_names))
+  same_tr <- identical(as.character(data$trait_names),
+                       as.character(fit_obj$trait_names))
+  dims <- .report_latent_dims(fit_obj)
+  same_dim <- is.matrix(data$X_scaled) &&
+    nrow(data$X_scaled) == dims[["n"]] &&
+    ncol(data$X_scaled) == dims[["p"]]
+  if (!isTRUE(same_sp) || !isTRUE(same_tr) || !isTRUE(same_dim)) {
+    stop("'data' does not match fit (species/traits).")
+  }
+  invisible(data)
+}
+
+.check_report_splits_match_fit <- function(splits, fit_obj, data = NULL) {
+  if (is.null(splits)) return(invisible(NULL))
+  dims <- .report_latent_dims(fit_obj)
+  if (!is.null(data) && is.matrix(data$X_scaled)) {
+    dims <- c(n = as.integer(nrow(data$X_scaled)),
+              p = as.integer(ncol(data$X_scaled)))
+  }
+  n_cells <- dims[["n"]] * dims[["p"]]
+  idx <- c(splits$val_idx, splits$test_idx)
+  if (!is.numeric(idx) || anyNA(idx) ||
+      length(idx) && (any(idx != as.integer(idx)) ||
+                      min(idx) < 1L || max(idx) > n_cells)) {
+    stop("'splits' do not match fit.")
+  }
+  if (!is.null(splits$n) && as.integer(splits$n) != dims[["n"]]) {
+    stop("'splits' do not match fit.")
+  }
+  if (!is.null(splits$p) && as.integer(splits$p) != dims[["p"]]) {
+    stop("'splits' do not match fit.")
+  }
+  invisible(splits)
 }
 
 .report_contract_html <- function(check, result = NULL) {

@@ -18,18 +18,20 @@ pigauto_report(
 \code{\link{impute}}).}
 
 \item{data}{Optional \code{pigauto_data} object.  Extracted automatically
-when \code{fit} is a \code{pigauto_result}.}
+when \code{fit} is a \code{pigauto_result}.  When supplied it must match
+the fit (species and traits).}
 
-\item{splits}{Optional splits object.  Extracted automatically when
-\code{fit} is a \code{pigauto_result}.}
+\item{splits}{Optional splits object from \code{\link{make_missing_splits}}.
+Extracted automatically when \code{fit} is a \code{pigauto_result}.
+When supplied it must match the fit.}
 
-\item{output_path}{Character.  File path for the HTML report (default
-\code{"pigauto_report.html"} in the working directory).}
+\item{output_path}{Character of length 1.  File path for the HTML report
+(default \code{"pigauto_report.html"} in the working directory).}
 
-\item{title}{Character.  Report title.}
+\item{title}{Character of length 1.  Report title (HTML-escaped on write).}
 
-\item{open}{Logical.  Open the report in a browser when done (default
-\code{TRUE}).}
+\item{open}{Logical of length 1.  Open the report in a browser when done
+(default \code{TRUE}).}
 }
 \value{
 The output path (invisibly).
