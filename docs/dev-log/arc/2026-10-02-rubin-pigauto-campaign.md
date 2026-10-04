@@ -254,17 +254,38 @@ gates with numbers close to the current default. Costs and caveats, for the deci
 4. Continuous traits only, simulated data, MCAR and the sweep's MAR/MNAR regimes; no real-data re-run under "sep" yet
    (the #189 G8 real-data cells ran under "iw").
 
-The default was Shinichi's decision: "sep" became the default on 2026-10-04 (#204 merged, 45011fc). Flipping it means changing `residual_prior`'s default in
-`R/mi_posterior.R` and the docs, re-running the tests and `--as-cran` check, and updating the NEWS entry.
+The default was Shinichi's decision: "sep" became the default on 2026-10-04 (#204 merged, 45011fc), with the docs,
+NEWS and tests updated in the same PR.
+
+## Real data under the new default (2026-10-04)
+
+9 of the 10 #189 real-data cells (PanTHERIA 4,027 species x 6 masks, AVONET 1,500 species x 3 masks; all but
+FishBase) re-run at pigauto main 45011fc, same masks and harness (`script/mi_realdata/01_run.R`, launcher and tables in
+`script/rubin_study/data/realdata_sep/`). Totoro, 9 cores, 04:31 to 06:01 (estimate 1.5 to 2 h). 9 of 9 cells ok.
+
+| | "iw" (#189, 69670d4) | "sep" (45011fc) |
+|---|---|---|
+| converged cells | 7 of 9 | 9 of 9 |
+| model coverage, PanTHERIA mean (range), 24 trait-cells | 0.931 (0.869 to 0.955) | 0.932 (0.873 to 0.970) |
+| model coverage, AVONET mean (range), 12 trait-cells | 0.957 (0.913 to 0.987) | 0.955 (0.917 to 0.980) |
+| interval width, sep / iw | | 0.993 to 1.011 |
+| pooled slopes within 5% of the complete-row reference | 20 of 27 | 20 of 27 |
+| largest slope shift, in reference SEs | 4.05 | 3.92 |
+| wall time per cell | 1.0 to 1.5 h | 0.6 to 1.5 h |
+
+The real-data results are essentially unchanged. The PanTHERIA slope shifts recorded under "iw" (body mass ~ head-body
+length positive under MCAR masks, negative under structured masks; longevity ~ body mass) are the same under "sep", so
+the residual prior does not cause them. FishBase (10,484 species, about 21 h on one core under "iw") was not re-run;
+it waits for Shinichi's approval (over 3 h).
 
 ## Does NOT cover
 
-Discrete traits (posterior MI is continuous-only); MAR or clade missingness in the Rubin study; real trees; real data
-under "sep"; `study.qmd` and the published report pages are not yet updated with the pig_post and pig_sep arms.
+Discrete traits (posterior MI is continuous-only); MAR or clade missingness in the Rubin study; real trees; the
+FishBase real-data cell under "sep"; `study.qmd` and the published report pages are not yet updated with the pig_post and pig_sep arms.
 
 ## Next
 
 1. Done 2026-10-04: Shinichi chose "sep" as the default; #204 merged (45011fc) with local tests (0 failures),
    `--as-cran` (0 errors, 0 warnings) and CI green.
-2. Re-run the #189 real-data cells (G8) under "sep" as a check (estimate first).
+2. Done 2026-10-04: 9 of 10 real-data cells under "sep" (above). FishBase awaits approval (about 21 to 25 h, 1 core).
 3. Study: add pig_post and pig_sep to `study.qmd` and the report pages.

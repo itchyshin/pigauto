@@ -1,0 +1,10 @@
+"dataset","arm","seed","name","max_rhat","min_ess","converged"
+"pantheria","mcar",20260818,"pantheria-mcar-m20260818",1.01041391416106,469.436405759185,TRUE
+"pantheria","mcar",20260819,"pantheria-mcar-m20260819",1.00947993023711,459.262140633633,TRUE
+"pantheria","mcar",20260820,"pantheria-mcar-m20260820",1.0011349217809,750.820220325589,TRUE
+"pantheria","structured",20260818,"pantheria-structured-m20260818",1.00345307975569,404.087187143664,TRUE
+"pantheria","structured",20260819,"pantheria-structured-m20260819",1.00721127324126,654.602018880806,TRUE
+"pantheria","structured",20260820,"pantheria-structured-m20260820",1.00803465520015,627.058013734438,TRUE
+"avonet","mcar",20260818,"avonet-mcar-m20260818",1.00811908949783,918.011435980041,TRUE
+"avonet","mcar",20260819,"avonet-mcar-m20260819",1.01164665602039,487.882992520819,TRUE
+"avonet","mcar",20260820,"avonet-mcar-m20260820",1.00681332255309,625.428340007501,TRUE
