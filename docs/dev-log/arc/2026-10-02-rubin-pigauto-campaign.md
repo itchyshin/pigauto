@@ -276,8 +276,26 @@ FishBase) re-run at pigauto main 45011fc, same masks and harness (`script/mi_rea
 
 The real-data results are essentially unchanged. The PanTHERIA slope shifts recorded under "iw" (body mass ~ head-body
 length positive under MCAR masks, negative under structured masks; longevity ~ body mass) are the same under "sep", so
-the residual prior does not cause them. FishBase (10,484 species, about 21 h on one core under "iw") was not re-run;
-it waits for Shinichi's approval (over 3 h).
+the residual prior does not cause them.
+
+**FishBase** (10,484 species, 5 traits, clade-structured mask; approved by Shinichi 2026-10-04, "run FishBase"): one
+core, 06:38 to 15:13, 8.6 h against 21.1 h under "iw" (estimate was 21 to 25 h). Converged (max R-hat 1.006, min ESS
+689).
+
+| Trait | model coverage, iw | model coverage, sep | split conformal | width, sep / iw |
+|---|---|---|---|---|
+| DepthRangeDeep | 0.957 | 0.957 | 0.966 | 1.00 |
+| Length | 0.942 | 0.942 | 0.939 | 1.00 |
+| Troph | 0.933 | 0.937 | 0.939 | 1.00 |
+| Vulnerability | 0.950 | 0.950 | 0.954 | 1.00 |
+| Weight | 0.939 | 0.942 | 0.950 | 0.94 |
+
+Pooled slopes against the complete-row reference: Weight ~ Length -0.6% (iw -0.7%), DepthRangeDeep ~ Length +0.8%
+(iw +1.1%), Troph ~ Length +2.6% (iw +2.9%).
+
+**G8 on all 10 cells under "sep"** (`03_acceptance.R`, `g8.log`): `REALDATA_COMPLETE`; every fit converged (under "iw"
+8 of 10; the two PanTHERIA cells short on ESS now reach 459 and 655); 23 of 30 pair-cells within 5% of the reference,
+as under "iw".
 
 ## Correction (2026-10-04): the pig/freq identity check
 
@@ -289,12 +307,12 @@ freq to within 6.2e-10 on all 7,200 pairs (floating-point differences between ma
 
 ## Does NOT cover
 
-Discrete traits (posterior MI is continuous-only); MAR or clade missingness in the Rubin study; real trees; the
-FishBase real-data cell under "sep"; `study.qmd` and the published report pages are not yet updated with the pig_post and pig_sep arms.
+Discrete traits (posterior MI is continuous-only); MAR or clade missingness in the Rubin study; real trees (the
+simulation); the real-data cells are one mask set per dataset, not a coverage study.
 
 ## Next
 
 1. Done 2026-10-04: Shinichi chose "sep" as the default; #204 merged (45011fc) with local tests (0 failures),
    `--as-cran` (0 errors, 0 warnings) and CI green.
-2. Done 2026-10-04: 9 of 10 real-data cells under "sep" (above). FishBase awaits approval (about 21 to 25 h, 1 core).
-3. Study: add pig_post and pig_sep to `study.qmd` and the report pages.
+2. Done 2026-10-04: all 10 real-data cells under "sep"; G8 `REALDATA_COMPLETE`, results unchanged (above).
+3. Done 2026-10-04: `study.qmd` reports pig_post and pig_sep (db2d32d).
