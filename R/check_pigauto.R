@@ -13,6 +13,8 @@
 #'   [preprocess_traits()].
 #' @param multi_proportion_groups Optional named composition groups passed to
 #'   [preprocess_traits()].
+#' @param covariates Optional environmental covariates passed to
+#'   [preprocess_traits()]. Non-finite values are an error.
 #' @return A list of class `pigauto_check` containing a schema version, status,
 #'   stable input fingerprint, input summaries, and structured messages.
 #' @examples
@@ -24,10 +26,11 @@
 #' @export
 check_pigauto <- function(traits, tree, species_col = NULL,
                           trait_types = NULL,
-                          multi_proportion_groups = NULL) {
+                          multi_proportion_groups = NULL,
+                          covariates = NULL) {
   .check_pigauto_internal(
     traits, tree, species_col, trait_types, multi_proportion_groups,
-    log_transform = TRUE, covariates = NULL
+    log_transform = TRUE, covariates = covariates
   )$check
 }
 
@@ -44,13 +47,15 @@ check_pigauto <- function(traits, tree, species_col = NULL,
 }
 
 .check_pigauto_fingerprint <- function(traits, tree, species_col, trait_types,
-                                        multi_proportion_groups) {
+                                        multi_proportion_groups,
+                                        covariates = NULL) {
   canonical <- list(
     traits = traits,
     tree = list(tip.label = tree$tip.label, edge = tree$edge,
                 edge.length = tree$edge.length, Nnode = tree$Nnode),
     species_col = species_col, trait_types = trait_types,
-    multi_proportion_groups = multi_proportion_groups
+    multi_proportion_groups = multi_proportion_groups,
+    covariates = covariates
   )
   path <- tempfile("pigauto-check-", fileext = ".xdr")
   on.exit(unlink(path), add = TRUE)
@@ -119,7 +124,7 @@ check_pigauto <- function(traits, tree, species_col = NULL,
   if (nrow(messages) > 0L) return(.check_pigauto_finish(messages, empty, empty, empty, empty, empty, NULL))
 
   fingerprint <- .check_pigauto_fingerprint(traits, tree, species_col, trait_types,
-                                             multi_proportion_groups)
+                                             multi_proportion_groups, covariates)
   input_n <- nrow(traits)
   if (!is.null(species_col)) {
     if (!species_col %in% names(traits)) {

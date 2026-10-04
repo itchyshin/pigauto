@@ -9,7 +9,8 @@ check_pigauto(
   tree,
   species_col = NULL,
   trait_types = NULL,
-  multi_proportion_groups = NULL
+  multi_proportion_groups = NULL,
+  covariates = NULL
 )
 }
 \arguments{
@@ -24,6 +25,9 @@ check_pigauto(
 
 \item{multi_proportion_groups}{Optional named composition groups passed to
 \code{\link[=preprocess_traits]{preprocess_traits()}}.}
+
+\item{covariates}{Optional environmental covariates passed to
+\code{\link[=preprocess_traits]{preprocess_traits()}}. Non-finite values are an error.}
 }
 \value{
 A list of class \code{pigauto_check} containing a schema version, status,
