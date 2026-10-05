@@ -276,7 +276,11 @@ FishBase) re-run at pigauto main 45011fc, same masks and harness (`script/mi_rea
 
 The real-data results are essentially unchanged. The PanTHERIA slope shifts recorded under "iw" (body mass ~ head-body
 length positive under MCAR masks, negative under structured masks; longevity ~ body mass) are the same under "sep", so
-the residual prior does not cause them.
+the residual prior does not cause them. The cause is pigauto's default `log_transform = TRUE`, which logs PanTHERIA's
+already-logged columns again (2026-10-05 sensitivity run, 6 cells, only `log_transform` changed): with
+`log_transform = FALSE` the mean absolute slope shift fell from 1.63 to 0.76 reference SEs (largest 3.92 to 1.75), the
+mask-dependent sign disappeared, and model coverage rose from 0.932 to 0.945. Evidence:
+`docs/dev-log/mi-posterior/pantheria_logtf/` on branch `analysis/pantheria-logtransform-sensitivity` (505374a).
 
 **FishBase** (10,484 species, 5 traits, clade-structured mask; approved by Shinichi 2026-10-04, "run FishBase"): one
 core, 06:38 to 15:13, 8.6 h against 21.1 h under "iw" (estimate was 21 to 25 h). Converged (max R-hat 1.006, min ESS
