@@ -291,7 +291,7 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
     # Add all-NA rows for tree tips missing from data
     missing_tips <- tree$tip.label[!in_data]
     if (length(missing_tips) > 0) {
-      na_rows <- traits[rep(NA, length(missing_tips)), , drop = FALSE]
+      na_rows <- traits[rep(NA_integer_, length(missing_tips)), , drop = FALSE]
       rownames(na_rows) <- NULL
       traits <- rbind(traits, na_rows)
       obs_species_raw <- c(obs_species_raw, missing_tips)
@@ -597,12 +597,45 @@ align_covariates_to_obs <- function(covariates,
 
 # ---- Internal: detect trait types -------------------------------------------
 
+.validate_declared_trait_type <- function(nm, x, tp) {
+  obs <- x[!is.na(x)]
+  ok <- switch(
+    tp,
+    binary = is.logical(x) ||
+      (is.factor(x) && nlevels(x) == 2L) ||
+      (is.numeric(x) && length(obs) > 0L && all(obs %in% c(0, 1))),
+    categorical = is.factor(x) && !is.ordered(x) && nlevels(x) > 2L,
+    ordinal = is.ordered(x),
+    continuous = is.numeric(x) && !is.factor(x),
+    count = is.numeric(x) && !is.factor(x),
+    proportion = is.numeric(x) && !is.factor(x),
+    zi_count = is.numeric(x) && !is.factor(x),
+    TRUE
+  )
+  if (!isTRUE(ok)) {
+    stop("Trait '", nm, "' is declared \"", tp, "\" but the column ",
+         "contradicts that type.", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 #' @keywords internal
 detect_trait_types <- function(traits, overrides = NULL) {
   types <- character(ncol(traits))
   names(types) <- colnames(traits)
   auto_count_cols <- character(0)
   neg_int_cols    <- character(0)
+
+  if (!is.null(overrides)) {
+    if (is.null(names(overrides)) || any(!nzchar(names(overrides)))) {
+      stop("'trait_types' must be a named character vector.", call. = FALSE)
+    }
+    unknown <- setdiff(names(overrides), colnames(traits))
+    if (length(unknown)) {
+      stop("'trait_types' names not found in trait columns: ",
+           paste(unknown, collapse = ", "), ".", call. = FALSE)
+    }
+  }
 
   for (nm in colnames(traits)) {
     x <- traits[[nm]]
@@ -611,6 +644,7 @@ detect_trait_types <- function(traits, overrides = NULL) {
                              c("continuous", "binary", "categorical",
                                "ordinal", "count", "proportion",
                                "zi_count"))
+      .validate_declared_trait_type(nm, x, types[nm])
       next
     }
     if (is.ordered(x)) {

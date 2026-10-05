@@ -32,10 +32,12 @@
 #' @param log_transform logical. Auto-log positive continuous columns
 #'   (default \code{TRUE}).
 #' @param missing_frac numeric. Fraction of observed cells held out for
-#'   validation/test evaluation (default \code{0.25}).  Set to \code{0}
-#'   to skip splitting (all cells used for training, no evaluation).
+#'   validation/test evaluation (default \code{0.25}). Must be in
+#'   \code{[0, 1)}. \code{0} adds no extra missingness (no val/test
+#'   hold-out).
 #' @param n_imputations integer. Number of MC-dropout imputation sets
-#'   (default \code{1}).  Values > 1 enable between-imputation uncertainty.
+#'   (default \code{1}). Must be a positive integer. Values > 1 enable
+#'   between-imputation uncertainty.
 #' @param covariates data.frame or matrix of environmental covariates
 #'   (fully observed — no NAs).  Covariates are conditioners: they inform
 #'   imputation but are not themselves imputed.  Numeric/integer columns are
@@ -47,6 +49,7 @@
 #'   Matching \code{nrow} alone does not pair species to environment.
 #'   Default \code{NULL} (no covariates).
 #' @param epochs integer. Maximum GNN training epochs (default \code{2000}).
+#'   Must be a positive integer.
 #' @param verbose logical. Print progress (default \code{TRUE}).
 #' @param seed optional integer. When supplied, makes the stochastic fitting
 #'   and prediction steps reproducible; the default \code{NULL} uses the
@@ -420,6 +423,9 @@ impute <- function(traits, tree, species_col = NULL,
   predict_method <- match.arg(predict_method)
   match_observed <- match.arg(match_observed)
   clamp_outliers <- isTRUE(clamp_outliers)
+  n_imputations <- .check_positive_integer(n_imputations, "n_imputations")
+  epochs <- .check_positive_integer(epochs, "epochs")
+  missing_frac <- .check_open_unit(missing_frac, "missing_frac")
   if (!is.logical(gnn) || length(gnn) != 1L || is.na(gnn)) {
     stop("'gnn' must be TRUE or FALSE.", call. = FALSE)
   }

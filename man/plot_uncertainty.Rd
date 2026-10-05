@@ -8,7 +8,8 @@ plot_uncertainty(pred_result, truth = NULL, trait_name)
 }
 \arguments{
 \item{pred_result}{list with \code{imputed} and \code{se} components
-(output of \code{predict.pigauto_fit}).}
+(output of \code{predict.pigauto_fit}), or a \code{pigauto_result}
+from \code{\link{impute}} (its \code{$prediction} is used).}
 
 \item{truth}{matrix or data.frame of true values (same scale as
 \code{pred_result$imputed}), or \code{NULL}.}

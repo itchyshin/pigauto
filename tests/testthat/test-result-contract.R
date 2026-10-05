@@ -54,7 +54,7 @@ test_that("summary partitions target cells into observed, filled, and unresolved
   mask <- matrix(c(FALSE, TRUE, FALSE, FALSE), ncol = 1, dimnames = list(NULL, "x"))
   check <- structure(list(species = list(species_col = "species", data_only = list(names = "ghost"))), class = c("pigauto_check", "list"))
   out <- summary(structure(list(completed = completed, imputed_mask = mask, check = check, evaluation = NULL), class = "pigauto_result"))
-  expect_identical(out$counts, list(filled = 1L, observed = 1L, unresolved = 1L))
+  expect_identical(out$counts, list(filled = 1L, observed = 1L, unresolved = 1L, not_modeled = 1L))
   expect_output(print(out), "observed cells.*1")
   expect_output(print(out), "inference=not authorized")
 })
@@ -66,7 +66,7 @@ test_that("summary treats an attempted but missing fill as unresolved", {
     list(completed = completed, imputed_mask = mask, check = NULL, evaluation = NULL),
     class = "pigauto_result"
   ))
-  expect_identical(out$counts, list(filled = 0L, observed = 1L, unresolved = 1L))
+  expect_identical(out$counts, list(filled = 0L, observed = 1L, unresolved = 1L, not_modeled = 0L))
   expect_identical(out$per_trait$filled, 0L)
   expect_identical(sum(unlist(out$counts)), 2L)
 })

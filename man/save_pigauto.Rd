@@ -7,7 +7,8 @@
 save_pigauto(fit, path, compress = TRUE)
 }
 \arguments{
-\item{fit}{pigauto_fit object.}
+\item{fit}{pigauto_fit object, or a \code{pigauto_result} from
+\code{\link{impute}} (its \code{$fit} is saved).}
 
 \item{path}{character.  File path to save to (recommended extension:
 \code{.pigauto}).}

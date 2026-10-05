@@ -219,6 +219,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
                                 ...) {
   pool_method <- match.arg(pool_method)
   match_observed <- match.arg(match_observed)
+  .pigauto_assert_predictable_state(object)
   clamp_outliers <- isTRUE(clamp_outliers)
   if (!is.numeric(clamp_factor) || length(clamp_factor) != 1L ||
       !is.finite(clamp_factor) || clamp_factor < 1) {
@@ -280,7 +281,14 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     # Loading CPU tensors directly into an MPS module can silently miss scalar
     # bias values on some libtorch/macOS combinations (the weight still loads),
     # which drops fixed-effect intercepts from prediction.
-    model$load_state_dict(object$model_state)
+    tryCatch(
+      model$load_state_dict(object$model_state),
+      error = function(e) {
+        stop("This pigauto_fit cannot be used after saveRDS()/readRDS(). ",
+             "Use save_pigauto() and load_pigauto() instead.",
+             call. = FALSE)
+      }
+    )
     model$to(device = device)
     # Some ARM/MPS libtorch builds expose the correct length-one bias after state
     # loading but omit it from nn_linear()'s forward result.  Preserve the saved
@@ -1577,4 +1585,28 @@ print.pigauto_pred <- function(x, ...) {
     cat("  Conformal 95% intervals: yes\n")
   }
   invisible(x)
+}
+
+.pigauto_assert_predictable_state <- function(object) {
+  state <- object$model_state
+  if (is.null(state) || !length(state)) return(invisible(NULL))
+  item <- state[[1L]]
+  rds_msg <- paste(
+    "This pigauto_fit cannot be used after saveRDS()/readRDS().",
+    "Use save_pigauto() and load_pigauto() instead."
+  )
+  if (is.raw(item)) {
+    stop("This pigauto_fit still has a serialised model_state. ",
+         "Load it with load_pigauto() after save_pigauto().",
+         call. = FALSE)
+  }
+  if (!inherits(item, "torch_tensor")) {
+    stop(rds_msg, call. = FALSE)
+  }
+  ok <- tryCatch({
+    item$device
+    TRUE
+  }, error = function(e) FALSE)
+  if (!ok) stop(rds_msg, call. = FALSE)
+  invisible(NULL)
 }

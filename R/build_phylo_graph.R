@@ -139,8 +139,11 @@ adj_symnorm_from_D <- function(D, sigma_mult) {
 #' @param tree object of class \code{"phylo"}.
 #' @param k_eigen integer or \code{"auto"}. Number of Laplacian eigenvectors
 #'   to use as node features.  When \code{"auto"} (default), scales with tree
-#'   size: \code{min(max(ceiling(n/20), 4), 32)}, giving 4 for very small
-#'   trees, 8 for 100-160 tips, 15 for 300 tips, and 32 for 640+ tips.
+#'   size: \code{min(max(ceiling(n/20), 4), 32)}, then clamped so
+#'   \code{k + 1 <= n}. That still gives 4 eigenvectors on trees with
+#'   5-80 tips, 8 for 100-160 tips, 15 for 300 tips, and 32 for 640+
+#'   tips. On 3- and 4-tip trees the floor of 4 is reduced so the
+#'   Laplacian eigen-decomposition stays well-defined.
 #' @param sigma_mult numeric. Bandwidth multiplier (call it \eqn{s}):
 #'   \eqn{\sigma = \mathrm{median}(D) \times s} (default \code{0.5}).
 #' @param cache_path character or \code{NULL}. Path to an \code{.rds} cache
@@ -182,6 +185,9 @@ build_phylo_graph <- function(tree, k_eigen = "auto", sigma_mult = 0.5,
 
   if (identical(k_eigen, "auto") || identical(k_eigen, "Auto")) {
     k_eigen <- as.integer(min(max(ceiling(n / 20), 4L), 32L))
+    # Need k+1 eigenvectors, so k <= n-1. The floor of 4 is too large
+    # for 3- and 4-tip trees.
+    k_eigen <- as.integer(min(k_eigen, max(n - 1L, 1L)))
   }
   k_eigen <- as.integer(k_eigen)
 

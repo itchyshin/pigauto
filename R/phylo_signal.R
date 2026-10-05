@@ -30,7 +30,9 @@ compute_phylo_signal_per_trait <- function(data, tree,
   method <- match.arg(method)
   if (!requireNamespace("phytools", quietly = TRUE)) {
     warning("phylo_signal_gate requires the 'phytools' package; ",
-            "returning NA for all traits.", call. = FALSE)
+            "returning NA for all traits. Install with ",
+            "install.packages(\"phytools\"). Phytools remains in Suggests.",
+            call. = FALSE)
     out <- rep(NA_real_, length(data$trait_map))
     names(out) <- vapply(data$trait_map, function(tm) tm$name,
                           character(1L))

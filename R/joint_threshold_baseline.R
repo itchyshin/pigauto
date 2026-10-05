@@ -58,14 +58,29 @@ aggregate_to_species <- function(data, splits = NULL, soft_aggregate = FALSE) {
 
   is_proportion_col <- rep(FALSE, ncol(X))
 
+  if (length(obs_to_sp) != nrow(X)) {
+    if (!is.null(data$obs_species) && length(data$obs_species) == nrow(X)) {
+      obs_to_sp <- match(data$obs_species, spp)
+    } else {
+      obs_to_sp <- match(rownames(X), spp)
+    }
+  }
+  obs_to_sp <- as.integer(obs_to_sp)
+  if (length(obs_to_sp) != nrow(X)) {
+    stop("Observation-to-species index length (", length(obs_to_sp),
+         ") does not match latent rows (", nrow(X), ").", call. = FALSE)
+  }
+
   for (j in seq_len(ncol(X))) {
     tp <- type_by_col[j]
-    sp_vals <- tapply(X[, j], obs_to_sp, function(v) {
+    # Mean by species without tapply(): NA groups and length mismatches
+    # previously died with "arguments must have same length" (#205).
+    sp_vals <- rep(NA_real_, n_species)
+    for (s in seq_len(n_species)) {
+      v <- X[which(obs_to_sp == s), j]
       v <- v[!is.na(v)]
-      if (length(v) == 0L) NA_real_ else mean(v)
-    })
-    # Reorder to spp order via integer index
-    sp_vals <- sp_vals[as.character(seq_len(n_species))]
+      if (length(v)) sp_vals[s] <- mean(v)
+    }
     if (tp == "binary") {
       if (soft_aggregate) {
         X_species[, j] <- unname(sp_vals)  # keep proportion

@@ -33,6 +33,10 @@ completed <- completed_data(result)
 pigauto_report(result)
 ```
 
+`check_pigauto()` and `completed_data()` are in the development version
+(>= 0.11.0). A CRAN 0.10.0 install does not have them: after
+`install.packages("pigauto")`, call `impute(traits, tree)` directly.
+
 `check_pigauto()` is fit-free. Resolve its structured errors before fitting;
 inspect `check$species$matched`, `$data_only`, and `$tree_only` when labels do
 not reconcile. `completed` preserves observed values and contains fills only
@@ -90,6 +94,9 @@ conditional imputation for continuous-family latent columns and
 phylogenetic label-propagation or threshold/liability candidates for
 discrete-family columns, with a per-trait Pagel's lambda. A held-out
 validation split calibrates the blend and the conformal intervals.
+Split conformal assumes the calibration cells resemble the scored
+cells. Masking a whole clade breaks that: calibration then comes from
+other clades, so nominal coverage need not hold on the held-out clade.
 
 An optional graph neural network (GNN) correction is trained when you
 set `gnn = TRUE`. It learns additional patterns from tree topology,
@@ -305,9 +312,10 @@ pred <- predict(fit, return_se = TRUE)
 head(pred$imputed)
 
 # Conformal prediction intervals (nominal held-out diagnostic)
-pred$conformal_lower[["Mass"]]    # lower bound per species (original units)
-pred$conformal_upper[["Mass"]]    # upper bound per species (original units)
-pred$conformal_coverage           # empirical coverage on val set (target ≈ 0.95)
+pred$conformal_lower[, "Mass"]    # lower bound per species (original units)
+pred$conformal_upper[, "Mass"]    # upper bound per species (original units)
+# Coverage is not stored on the prediction object. Score it with evaluate()
+# (or evaluate_imputation() on held-out cells).
 ```
 
 Expected output (values will vary by seed and convergence):

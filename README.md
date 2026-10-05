@@ -39,6 +39,10 @@ completed <- completed_data(result)
 pigauto_report(result)
 ```
 
+`check_pigauto()` and `completed_data()` need the development version
+(>= 0.11.0). A CRAN 0.10.0 user should call `impute(traits, tree)`
+directly; that release does not include `check_pigauto()`.
+
 `check_pigauto()` runs before fitting: it reports input errors, species/tree
 matching, trait declarations, runtime availability, and size. Resolve an
 `"error"` status before calling `impute()`; a fully observed target table
@@ -53,6 +57,9 @@ The output roles are deliberately separate:
 - `result$prediction$se` is type-dependent uncertainty; discrete values are
   not Gaussian standard errors. Conformal bounds are nominal held-out
   diagnostics.
+- Split conformal intervals assume the calibration cells resemble the
+  scored cells. Masking a whole clade breaks that assumption because
+  calibration then comes from other clades.
 - A `pigauto_result` does not itself authorize downstream inference. The
   supported pooling entries begin with `multi_impute_analysis()` in its
   documented narrow regime or, for continuous traits,

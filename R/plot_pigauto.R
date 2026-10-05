@@ -55,7 +55,8 @@ plot_history_gg <- function(x, ...) {
 #' traits, plots predicted probabilities with an uncertainty ribbon.
 #'
 #' @param pred_result list with \code{imputed} and \code{se} components
-#'   (output of \code{predict.pigauto_fit}).
+#'   (output of \code{predict.pigauto_fit}), or a \code{pigauto_result}
+#'   from \code{\link{impute}} (its \code{$prediction} is used).
 #' @param truth matrix or data.frame of true values (same scale as
 #'   \code{pred_result$imputed}), or \code{NULL}.
 #' @param trait_name character. Which trait to plot (must match column name).
@@ -72,6 +73,9 @@ plot_history_gg <- function(x, ...) {
 #' plot_uncertainty(pred, trait_name = "mass")
 #' @export
 plot_uncertainty <- function(pred_result, truth = NULL, trait_name) {
+  if (inherits(pred_result, "pigauto_result")) {
+    pred_result <- pred_result$prediction
+  }
   # Determine trait type from trait_map if available
   tm_info <- NULL
   if (!is.null(pred_result$trait_map)) {

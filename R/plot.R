@@ -85,6 +85,23 @@ plot.pigauto_fit <- function(x, type = "history", ...) {
 }
 
 
+#' Plot diagnostics for a pigauto result
+#'
+#' S3 \code{plot} method for \code{pigauto_result} objects. Delegates to
+#' \code{\link{plot.pigauto_fit}} on \code{x$fit}.
+#'
+#' @param x An object of class \code{"pigauto_result"}.
+#' @param ... Passed to \code{\link{plot.pigauto_fit}}.
+#' @return Invisible \code{NULL}. Called for its side effect (plotting).
+#' @export
+plot.pigauto_result <- function(x, ...) {
+  if (!inherits(x, "pigauto_result") || is.null(x$fit)) {
+    stop("'x' must be a pigauto_result with a $fit component.", call. = FALSE)
+  }
+  plot(x$fit, ...)
+}
+
+
 # -- History panel (2x2) -----------------------------------------------------
 
 .plot_history <- function(x, ...) {
