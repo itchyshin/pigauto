@@ -1,0 +1,61 @@
+trait-cells: 24 
+                trait model_coverage.T model_coverage.F split_coverage
+1         body_mass_g            0.916            0.963          0.937
+2         gestation_d            0.933            0.934          0.946
+3 head_body_length_mm            0.941            0.946          0.952
+4     max_longevity_m            0.938            0.937          0.955
+mean coverage T 0.932 F 0.945 split 0.948 
+range T 0.873 0.97 F 0.906 0.977 
+model below split: T 18  F 11 of 24 
+                trait mean_w med_w
+1         body_mass_g  0.984 1.106
+2         gestation_d  1.004 0.959
+3 head_body_length_mm  0.883 0.793
+4     max_longevity_m  0.895 0.858
+        response           predictor          mask ref_slope mi_slope.T
+     body_mass_g head_body_length_mm       mcar 18    2.8578     2.9184
+     body_mass_g head_body_length_mm       mcar 19    2.8578     2.9171
+     body_mass_g head_body_length_mm       mcar 20    2.8578     2.9486
+     body_mass_g head_body_length_mm structured 18    2.8578     2.8481
+     body_mass_g head_body_length_mm structured 19    2.8578     2.7845
+     body_mass_g head_body_length_mm structured 20    2.8578     2.7894
+     gestation_d         body_mass_g       mcar 18    0.0659     0.0604
+     gestation_d         body_mass_g       mcar 19    0.0659     0.0570
+     gestation_d         body_mass_g       mcar 20    0.0659     0.0526
+     gestation_d         body_mass_g structured 18    0.0659     0.0730
+     gestation_d         body_mass_g structured 19    0.0659     0.0657
+     gestation_d         body_mass_g structured 20    0.0659     0.0672
+ max_longevity_m         body_mass_g       mcar 18    0.1798     0.1507
+ max_longevity_m         body_mass_g       mcar 19    0.1798     0.1727
+ max_longevity_m         body_mass_g       mcar 20    0.1798     0.1530
+ max_longevity_m         body_mass_g structured 18    0.1798     0.1689
+ max_longevity_m         body_mass_g structured 19    0.1798     0.1777
+ max_longevity_m         body_mass_g structured 20    0.1798     0.1792
+ mi_slope.F diff_ref_se.T diff_ref_se.F mi_se.T mi_se.F
+     2.8361        2.6137       -0.9369 0.03955 0.02846
+     2.8719        2.5562        0.6049 0.04296 0.02732
+     2.8404        3.9168       -0.7540 0.04325 0.02721
+     2.8792       -0.4210        0.9232 0.03443 0.02716
+     2.8716       -3.1629        0.5925 0.03862 0.02482
+     2.8334       -2.9530       -1.0532 0.04093 0.02998
+     0.0726       -0.8666        1.0390 0.00764 0.00756
+     0.0690       -1.3970        0.4797 0.00692 0.00750
+     0.0674       -2.0762        0.2345 0.00766 0.00711
+     0.0772        1.1068        1.7544 0.00710 0.00766
+     0.0723       -0.0294        1.0004 0.00712 0.00660
+     0.0756        0.2005        1.5104 0.00741 0.00733
+     0.1792       -3.0500       -0.0643 0.01189 0.01075
+     0.1869       -0.7406        0.7457 0.01181 0.01043
+     0.1790       -2.8021       -0.0831 0.01040 0.00997
+     0.1735       -1.1362       -0.6617 0.01162 0.01015
+     0.1841       -0.2157        0.4518 0.01032 0.01034
+     0.1878       -0.0637        0.8439 0.01256 0.01121
+within 5%: T 11  F 14 of 18 
+mean |diff| in ref SEs: T 1.63  F 0.76 ; max T 3.92  F 1.75 
+         response        arm   T.1   T.2   F.1   F.2
+1     body_mass_g       mcar  2.56  3.92 -0.94  0.60
+2     gestation_d       mcar -2.08 -0.87  0.23  1.04
+3 max_longevity_m       mcar -3.05 -0.74 -0.08  0.75
+4     body_mass_g structured -3.16 -0.42 -1.05  0.92
+5     gestation_d structured -0.03  1.11  1.00  1.75
+6 max_longevity_m structured -1.14 -0.06 -0.66  0.84

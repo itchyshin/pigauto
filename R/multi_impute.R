@@ -92,8 +92,18 @@
 #'   trait groups (rows summing to 1), e.g.
 #'   `list(diet = c("plant", "invert", "vert"))`. Forwarded to
 #'   [impute()] / [preprocess_traits()]. Default `NULL`.
-#' @param log_transform logical. Auto-log positive continuous columns
-#'   (default `TRUE`).
+#' @param log_transform logical. Log-transform every continuous trait whose
+#'   observed values are all positive
+#'   (default `TRUE`), then back-transform the imputations. Set it to
+#'   `FALSE` when traits are already on a log scale (for example log body
+#'   mass): otherwise they are logged a second time and imputed on a
+#'   log(log) scale, which can bias analyses done on the log scale. With a
+#'   mix of raw and already-logged traits, log the raw ones yourself and set
+#'   `FALSE`. In a real-data check (PanTHERIA, 4,027 mammal species, four
+#'   already-logged traits, posterior draws), the default shifted
+#'   Rubin-pooled regression slopes by up to 3.9 standard errors of the
+#'   complete-data slope, in a direction that depended on which values were
+#'   missing; with `FALSE` the largest shift was 1.8.
 #' @param missing_frac numeric. Fraction of observed cells held out for
 #'   validation/test during training (default `0.25`). Passed through
 #'   to [impute()].

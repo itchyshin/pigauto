@@ -191,6 +191,11 @@ The object `pd` is a `pigauto_data` list containing:
 - `means`, `sds`: per-trait normalisation parameters (for back-transformation)
 - `log_transform`: `TRUE`, recorded so `predict()` can invert it automatically
 
+`log_transform = TRUE` (the default) logs every continuous trait whose observed
+values are all positive. If a trait is already on a log scale, such as log body
+mass, set `log_transform = FALSE` (and log any raw traits yourself), or it will be
+imputed on a log(log) scale; see `?impute`.
+
 ## Step 2: Create evaluation splits
 
 We designate 25% of all matrix cells as "missing" for evaluation. These cells
