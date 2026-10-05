@@ -278,7 +278,7 @@ test_that("check captures preprocessing messages and impute forwards warnings on
   )
   warnings <- character()
   expect_error(withCallingHandlers(
-    impute(data.frame(x = NA_real_, row.names = "a"), tree, missing_frac = 1),
+    impute(data.frame(x = NA_real_, row.names = "a"), tree, missing_frac = 0.5),
     warning = function(w) {
       warnings <<- c(warnings, conditionMessage(w))
       invokeRestart("muffleWarning")
