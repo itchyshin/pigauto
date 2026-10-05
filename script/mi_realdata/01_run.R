@@ -25,6 +25,12 @@
 #                          quick local smokes only. Unset means pigauto's
 #                          defaults. An override is recorded in the receipt
 #                          and makes the cell fail G8 (03_acceptance.R).
+#   MI_REALDATA_LOG_TRANSFORM
+#                          TRUE or FALSE: passed to multi_impute() as
+#                          log_transform (a sensitivity analysis; the PanTHERIA
+#                          columns are already logs, so pigauto's default TRUE
+#                          imputes them on a log(log) scale). Unset means
+#                          pigauto's default. Recorded in the receipt.
 # There is no n_cores control: the chains of one cell run sequentially in
 # one R process, so parallelise across cells (12_totoro_run.sh, or one
 # 1-CPU array task per cell in 10_fir.sbatch).
@@ -179,6 +185,12 @@ env_int <- function(var) {
 overrides <- Filter(Negate(is.null), list(n_iter = env_int("MI_POST_NITER"),
                                           burnin = env_int("MI_POST_BURNIN")))
 posterior_control <- c(list(keep_draws = 1000L), overrides)
+log_tf <- Sys.getenv("MI_REALDATA_LOG_TRANSFORM")
+if (nzchar(log_tf) && !(log_tf %in% c("TRUE", "FALSE"))) {
+  stop("MI_REALDATA_LOG_TRANSFORM must be TRUE or FALSE, got '", log_tf, "'", call. = FALSE)
+}
+log_tf <- if (nzchar(log_tf)) as.logical(log_tf) else NULL
+if (!is.null(log_tf)) cat(sprintf("[%s] log_transform = %s (MI_REALDATA_LOG_TRANSFORM)\n", name, log_tf))
 if (length(overrides)) {
   cat(sprintf("[%s] SAMPLER OVERRIDE (smoke only, fails G8): %s\n", name,
               paste(names(overrides), unlist(overrides), sep = " = ", collapse = ", ")))
@@ -186,11 +198,11 @@ if (length(overrides)) {
 
 t0 <- proc.time()[["elapsed"]]
 mi <- tryCatch(
-  pigauto::multi_impute(
-    traits_sub, tree, m = 20L, draws_method = "posterior",
-    posterior_control = posterior_control,
-    verbose = FALSE, seed = seed
-  ),
+  do.call(pigauto::multi_impute, c(
+    list(traits_sub, tree, m = 20L, draws_method = "posterior",
+         posterior_control = posterior_control, verbose = FALSE, seed = seed),
+    if (!is.null(log_tf)) list(log_transform = log_tf)
+  )),
   error = function(e) e
 )
 wall_time_s <- proc.time()[["elapsed"]] - t0
@@ -369,6 +381,7 @@ receipt <- list(
   wall_time_s = wall_time_s, model_coverage = model_coverage,
   split_conformal = split_conformal, mondrian_conformal = mondrian_conformal,
   conformal_source = conformal_source,
+  log_transform = if (is.null(log_tf)) "default" else log_tf,
   sampler = list(overrides = overrides,
                  control = ctl[intersect(c("n_chains", "n_iter", "burnin", "thin", "keep_draws",
                                            "param_uncertainty"), names(ctl))],
