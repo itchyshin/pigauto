@@ -39,7 +39,7 @@
 #' splits <- make_missing_splits(pd$X_scaled, trait_map = pd$trait_map)
 #' fit <- fit_pigauto(pd, tree, splits = splits, epochs = 5L,
 #'                    verbose = FALSE)
-#' eval_df <- evaluate(fit, data = pd)
+#' eval_df <- evaluate(fit)
 #' eval_df[eval_df$metric == "rmse", ]
 #' }
 #' @export
@@ -62,18 +62,18 @@ evaluate <- function(fit, data = NULL, splits = NULL) {
   # Get truth in latent scale
   trait_map <- fit$trait_map
 
-  # Truth in latent scale.  The fit does not store X_scaled directly,
-  # so the original pigauto_data object is required.
+  # Truth in latent scale. Current fits retain X_scaled (Phase G',
+  # 2026-05-01) so evaluate(fit) can score the stored test split
+  # without the original pigauto_data. Older saved fits still need
+  # `data`. An explicit pigauto_data wins when supplied.
   if (!is.null(data)) {
     if (!inherits(data, "pigauto_data")) {
       stop("'data' must be a pigauto_data object.")
     }
     truth_latent <- data$X_scaled
+  } else if (!is.null(fit$X_scaled)) {
+    truth_latent <- fit$X_scaled
   } else {
-    # Attempt to recover truth from the fit object.
-    # The fit does not store X_scaled, so we reconstruct what we can.
-    # evaluate_imputation() was the previous API for this -- but it
-    # required truth.  For the new API, data is strongly recommended.
     stop("'data' is required. Pass the pigauto_data object used for fitting.")
   }
 
