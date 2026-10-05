@@ -97,7 +97,9 @@
 #' @param log_transform logical.  Legacy parameter: if \code{TRUE} and
 #'   \code{log_cols} is \code{NULL}, log-transform all continuous traits
 #'   with all-positive values.  Overridden by \code{log_cols} when both
-#'   are supplied.
+#'   are supplied.  Traits already on a log scale should not be logged
+#'   again: set \code{log_transform = FALSE} or leave them out of
+#'   \code{log_cols} (see \code{\link{impute}}).
 #' @param center logical. Subtract column means for continuous/count/ordinal?
 #'   Default \code{TRUE}.
 #' @param scale logical. Divide by column SDs for continuous/count/ordinal?

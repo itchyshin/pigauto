@@ -1,5 +1,18 @@
 # pigauto 0.11.0.9002 (dev)
 
+## Documentation: `log_transform` and traits that are already logged
+
+`?impute`, `?multi_impute`, `?multi_impute_trees`, `?preprocess_traits` and the
+getting-started vignette now say that the default `log_transform = TRUE` logs
+every all-positive continuous trait, so traits that are already on a log scale
+are logged twice. Set `log_transform = FALSE` for such data. In a real-data
+check on PanTHERIA (4,027 species, four already-logged traits, posterior
+draws), the default shifted Rubin-pooled regression slopes by up to 3.9
+standard errors of the complete-data slope, in a direction that depended on
+which values were missing; with `FALSE` the largest shift was 1.8
+(`docs/dev-log/mi-posterior/pantheria_logtf/` on branch
+`analysis/pantheria-logtransform-sensitivity`). No behaviour changes.
+
 ## `plot_comparison()` defaults match `evaluate()` / `compare_methods()`
 
 `plot_comparison()` now defaults to `methods = c("baseline", "pigauto")`,
