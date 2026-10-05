@@ -74,7 +74,8 @@ Multi_proportion traits \emph{cannot} be declared through
 
 \item{missing_frac}{numeric. Fraction of observed cells held out for
 validation/test evaluation (default \code{0.25}). Must be in
-\code{(0, 1)}.}
+\code{[0, 1)}. \code{0} adds no extra missingness (no val/test
+hold-out).}
 
 \item{n_imputations}{integer. Number of MC-dropout imputation sets
 (default \code{1}). Must be a positive integer. Values > 1 enable

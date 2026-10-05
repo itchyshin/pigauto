@@ -348,9 +348,11 @@ print.pigauto_check <- function(x, ...) {
 }
 
 .check_open_unit <- function(x, name) {
+  # Half-open [0, 1): 0 is the documented "no extra missingness" value
+  # (impute() then skips make_missing_splits). Negative and >= 1 still error.
   if (!is.numeric(x) || length(x) != 1L || is.na(x) || !is.finite(x) ||
-      x <= 0 || x >= 1) {
-    stop("'", name, "' must be in (0, 1).", call. = FALSE)
+      x < 0 || x >= 1) {
+    stop("'", name, "' must be in [0, 1).", call. = FALSE)
   }
   x
 }

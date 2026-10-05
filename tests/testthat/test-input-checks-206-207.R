@@ -25,12 +25,17 @@ test_that("n_imputations and epochs must be positive integers before a fit", {
                "positive integer")
 })
 
-test_that("missing_frac must be in (0, 1) before a fit", {
+test_that("missing_frac must be in [0, 1) before a fit", {
   x <- tiny_input()
   expect_error(impute(x$df, x$tree, missing_frac = -0.1, verbose = FALSE),
-               "\\(0, 1\\)")
-  expect_error(impute(x$df, x$tree, missing_frac = 0, verbose = FALSE),
-               "\\(0, 1\\)")
+               "\\[0, 1\\)")
+  expect_error(impute(x$df, x$tree, missing_frac = 1, verbose = FALSE),
+               "\\[0, 1\\)")
+  expect_error(impute(x$df, x$tree, missing_frac = 1.5, verbose = FALSE),
+               "\\[0, 1\\)")
+  # 0 is the documented "no extra missingness" value; the (0, 1) lock
+  # made ordinary impute(..., missing_frac = 0) illegal and broke R CMD check.
+  expect_silent(pigauto:::.check_open_unit(0, "missing_frac"))
 })
 
 test_that("unknown trait_types names error before a fit", {
