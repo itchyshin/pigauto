@@ -7,8 +7,9 @@ log(log) scale while the pre-registered analysis (`script/mi_realdata/pairs.R`) 
 
 ## Run
 
-- Code: this branch at dbe3304 (main 45011fc plus the opt-in `MI_REALDATA_LOG_TRANSFORM` in
-  `script/mi_realdata/01_run.R`; unset keeps pigauto's default and the receipt records the value).
+- Code: dbe3304 on branch `analysis/pantheria-logtransform-sensitivity` (main 45011fc plus the opt-in
+  `MI_REALDATA_LOG_TRANSFORM` in `script/mi_realdata/01_run.R`, the same change this directory ships with; unset keeps
+  pigauto's default and the receipt records the value). The receipts record that SHA.
 - The 6 PanTHERIA cells of G8 (4,027 species, 4 traits; 3 MCAR and 3 clade-structured masks), the same masks as
   before, pigauto defaults (residual prior "sep"), `MI_REALDATA_LOG_TRANSFORM=FALSE`. Launcher `launch_logtf.sh`.
 - Totoro, 6 cores, 05:26 to 06:18 (52 min; estimate 1.5 h). 6 of 6 ok, all converged (max R-hat 1.012, min ESS 409).
