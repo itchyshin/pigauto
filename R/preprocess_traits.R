@@ -438,6 +438,17 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
            "instead so pigauto can impute it jointly.",
            call. = FALSE)
     }
+    for (j in seq_along(covariates)) {
+      col <- covariates[[j]]
+      if (!is.numeric(col)) next
+      bad <- which(!is.finite(col))
+      if (!length(bad)) next
+      nm <- names(covariates)[j]
+      if (is.null(nm) || is.na(nm) || !nzchar(nm)) nm <- paste0("[,", j, "]")
+      stop("Column '", nm, "' in `covariates` contains a non-finite value (",
+           col[[bad[[1L]]]], "). Covariates must be finite.",
+           call. = FALSE)
+    }
 
     # Encode each covariate column -----------------------------------------
     # numeric/integer  → z-score (1 column)
