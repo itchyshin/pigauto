@@ -51,8 +51,9 @@ test_that("evaluate returns a data.frame with expected columns", {
   expect_true(all(is.finite(eval_df$value) | is.na(eval_df$value)))
 })
 
-test_that("evaluate errors when data is missing", {
+test_that("evaluate errors when neither data nor stored X_scaled is available", {
   obj <- build_quick_fit(seed = 102)
+  obj$fit$X_scaled <- NULL
   expect_error(evaluate(obj$fit), "data.*required")
 })
 
