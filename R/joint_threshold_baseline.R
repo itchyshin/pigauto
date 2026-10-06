@@ -305,6 +305,9 @@ build_liability_matrix <- function(data, splits = NULL, soft_aggregate = FALSE,
 #'   columns always stay at lambda = 1 (section 7 B iii cut). `"cv"` /
 #'   `"bayes"` have no joint analogue; callers must translate those to
 #'   `"fixed_1"` before calling this function (see `fit_baseline.R`).
+#' @param discrete_lambda_mode internal; NULL (read `pigauto.discrete_lambda`)
+#'   or one of "fixed_1", "estimate", "auto" (binary only). See the PROTOTYPE
+#'   comment in the body.
 #' @param lambda_fixed optional named numeric vector (names = latent column
 #'   names) giving a fixed lambda per continuous-family column, overriding
 #'   `lambda_mode` entirely (spec 4.5 predict-time rebuild).
@@ -323,7 +326,8 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
                                         joint_refine_iter = 0L,
                                         lambda_mode = "fixed_1",
                                         lambda_fixed = NULL,
-                                        predict_method_explicit = NULL) {
+                                        predict_method_explicit = NULL,
+                                        discrete_lambda_mode = NULL) {
   if (is.null(predict_method_explicit)) {
     predict_method_explicit <- !missing(predict_method)
   }
@@ -371,9 +375,22 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
     # toward its overall prevalence rather than copy close relatives. Switched
     # on with options(pigauto.discrete_lambda = "estimate") while it is being
     # screened against BACE; becomes a real argument only if it earns it.
-    discrete_lambda <- getOption("pigauto.discrete_lambda", "fixed_1")
+    # `discrete_lambda_mode` (internal) overrides the option. Values:
+    #   "fixed_1"  : discrete columns at lambda = 1
+    #   "estimate" : estimate lambda for binary AND ordinal columns
+    #   "auto"     : estimate lambda for binary columns only (ordinal stays at
+    #                1); the caller (.fit_baseline_core, OVR) runs this next to
+    #                a "fixed_1" fit and keeps the better one per trait.
+    # With no explicit mode, only the option value "estimate" switches it on;
+    # option "auto" is resolved by the callers, so anywhere else it is "fixed_1".
+    discrete_lambda <- discrete_lambda_mode %||% {
+      opt <- getOption("pigauto.discrete_lambda", "fixed_1")
+      if (identical(opt, "estimate")) "estimate" else "fixed_1"
+    }
     discrete_idx <- if (identical(discrete_lambda, "estimate")) {
       which(liab_types[fit_cols] %in% c("binary", "ordinal"))
+    } else if (identical(discrete_lambda, "auto")) {
+      which(liab_types[fit_cols] == "binary")
     } else {
       integer(0)
     }
@@ -754,4 +771,31 @@ fit_joint_threshold_baseline_em <- function(data, tree, splits,
     em_offdiag     = isTRUE(em_offdiag)
   )
   base
+}
+
+# Per-trait choice between the lambda-fixed-at-1 and lambda-estimated fits
+# (options(pigauto.discrete_lambda = "auto")). Lower validation Brier wins;
+# ties, NA or no validation cells keep "fixed_1". Inputs are aligned numeric
+# vectors (one Brier per trait per fit).
+#' @keywords internal
+#' @noRd
+select_discrete_lambda <- function(brier_fixed, brier_est) {
+  est_wins <- is.finite(brier_fixed) & is.finite(brier_est) &
+    brier_est < brier_fixed
+  out <- ifelse(est_wins, "estimate", "fixed_1")
+  names(out) <- names(brier_fixed)
+  out
+}
+
+# Mean Brier score for `p` (n x K matrix or vector of probabilities) against
+# one-hot / 0-1 `truth` of the same shape over the given rows; NA if none.
+#' @keywords internal
+#' @noRd
+discrete_val_brier <- function(p, truth, rows) {
+  p <- as.matrix(p); truth <- as.matrix(truth)
+  if (length(rows) == 0L) return(NA_real_)
+  d <- (p[rows, , drop = FALSE] - truth[rows, , drop = FALSE])^2
+  ok <- stats::complete.cases(d)
+  if (!any(ok)) return(NA_real_)
+  mean(rowSums(d[ok, , drop = FALSE]))
 }

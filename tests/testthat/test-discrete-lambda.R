@@ -53,3 +53,58 @@ test_that("impute() runs end to end with discrete lambda on and fills every miss
   expect_false(anyNA(res$completed$bin))
   expect_false(anyNA(res$completed$cat3))
 })
+
+# ---- "auto": per-trait choice by validation Brier ---------------------------
+
+test_that("select_discrete_lambda: lower Brier wins, ties and NA keep fixed_1", {
+  bf <- c(a = 0.20, b = 0.20, c = 0.30, d = NA, e = 0.25)
+  be <- c(a = 0.15, b = 0.20, c = 0.35, d = 0.10, e = NA)
+  out <- select_discrete_lambda(bf, be)
+  expect_identical(out, c(a = "estimate", b = "fixed_1", c = "fixed_1",
+                          d = "fixed_1", e = "fixed_1"))
+})
+
+test_that("discrete_val_brier matches a hand calculation", {
+  p <- matrix(c(0.8, 0.2, 0.5, 0.5, 0.1, 0.9), ncol = 2, byrow = TRUE)
+  y <- matrix(c(1, 0, 0, 1, 0, 1), ncol = 2, byrow = TRUE)
+  # rows 1 and 2: (0.04+0.04) and (0.25+0.25) -> mean 0.29
+  expect_equal(discrete_val_brier(p, y, c(1L, 2L)), 0.29)
+  expect_true(is.na(discrete_val_brier(p, y, integer(0))))
+})
+
+test_that("auto records one choice per binary/categorical trait", {
+  skip_if_not(joint_mvn_available())
+  s <- sim_discrete_lambda(n = 150, lambda = 0.3)
+  pd <- preprocess_traits(s$d, s$tree)
+  set.seed(1)
+  sp <- make_missing_splits(pd$X_scaled, missing_frac = 0.25, val_frac = 0.5)
+  old <- options(pigauto.discrete_lambda = "auto"); on.exit(options(old), add = TRUE)
+  b <- suppressWarnings(fit_baseline(pd, s$tree, splits = sp))
+  ch <- b$discrete_lambda_chosen
+  expect_false(is.null(ch))
+  expect_setequal(names(ch), c("bin", "cat3"))
+  expect_length(ch, 2L)
+  expect_true(all(ch %in% c("fixed_1", "estimate")))
+})
+
+test_that("auto is a no-op relative to fixed_1 when it picks fixed_1 everywhere, and unset has no field", {
+  skip_if_not(joint_mvn_available())
+  s <- sim_discrete_lambda(n = 150, lambda = 1)
+  pd <- preprocess_traits(s$d, s$tree)
+  set.seed(2)
+  sp <- make_missing_splits(pd$X_scaled, missing_frac = 0.25, val_frac = 0.5)
+  old <- options(pigauto.discrete_lambda = NULL); on.exit(options(old), add = TRUE)
+  b0 <- suppressWarnings(fit_baseline(pd, s$tree, splits = sp))
+  expect_null(b0$discrete_lambda_chosen)
+})
+
+test_that("impute() under auto fills every discrete cell at strong and weak signal", {
+  skip_if_not(joint_mvn_available())
+  old <- options(pigauto.discrete_lambda = "auto"); on.exit(options(old), add = TRUE)
+  for (lam in c(1, 0.1)) {
+    s <- sim_discrete_lambda(n = 150, lambda = lam, seed = 11)
+    res <- suppressWarnings(impute(s$d, s$tree, verbose = FALSE))
+    expect_false(anyNA(res$completed$bin))
+    expect_false(anyNA(res$completed$cat3))
+  }
+})

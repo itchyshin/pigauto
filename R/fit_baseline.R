@@ -647,6 +647,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   } else {
     "fixed_1"
   }
+  auto_discrete_lambda <- identical(getOption("pigauto.discrete_lambda"), "auto")
+  discrete_lambda_chosen <- character(0)
   use_threshold_joint <- (length(binary_cols) + length(ordinal_cols)) >= 1L &&
     length(bm_cols) >= 1L &&
     !has_multi_proportion &&
@@ -704,10 +706,59 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                                     joint_refine_iter = joint_refine_iter,
                                     lambda_mode = lambda_mode_joint,
                                     lambda_fixed = lambda_fixed,
-                                    predict_method_explicit = predict_method_explicit)
+                                    predict_method_explicit = predict_method_explicit,
+                                    discrete_lambda_mode = if (auto_discrete_lambda) "fixed_1")
     }
     if (!is.null(jt$predict_method_used) && !is.na(jt$predict_method_used)) {
       predict_method_used_all <- c(predict_method_used_all, jt$predict_method_used)
+    }
+
+    # options(pigauto.discrete_lambda = "auto"): `jt` above ran with binary
+    # lambda fixed at 1 (see discrete_lambda_mode there). Refit once with binary
+    # lambda estimated and keep, per binary trait, whichever has the lower
+    # validation Brier. Only the binary liability columns are swapped; every
+    # other column stays from `jt`. Single-obs, non-EM, with validation cells.
+    if (auto_discrete_lambda && em_iterations < 1L && !multi_obs &&
+        !is.null(splits) && any(jt$liab_types == "binary")) {
+      jt_est <- tryCatch(
+        fit_joint_threshold_baseline(data, tree, splits = splits,
+                                      graph = graph,
+                                      soft_aggregate = soft_aggregate,
+                                      joint_solver = joint_solver, predict_method = predict_method,
+                                      joint_refine_iter = joint_refine_iter,
+                                      lambda_mode = lambda_mode_joint,
+                                      lambda_fixed = lambda_fixed,
+                                      predict_method_explicit = predict_method_explicit,
+                                      discrete_lambda_mode = "auto"),
+        error = function(e) NULL)
+      if (!is.null(jt_est) && identical(dim(jt_est$mu_liab), dim(jt$mu_liab))) {
+        n_rows_dl <- nrow(data$X_scaled)
+        vi <- splits$val_idx
+        v_col <- ((vi - 1L) %/% n_rows_dl) + 1L
+        v_row <- ((vi - 1L) %% n_rows_dl) + 1L
+        for (idx in which(jt$liab_types == "binary")) {
+          col <- jt$liab_cols[idx]
+          rows <- v_row[v_col == col]
+          rows <- rows[is.finite(data$X_scaled[rows, col])]
+          b <- vapply(list(jt, jt_est), function(f) {
+            if (all(is.na(f$mu_liab[, idx]))) return(NA_real_)
+            p <- decode_binary_liability(f$mu_liab[, idx], f$se_liab[, idx])$p
+            discrete_val_brier(p, data$X_scaled[, col], rows)
+          }, numeric(1L))
+          ch <- select_discrete_lambda(b[1], b[2])
+          discrete_lambda_chosen[colnames(data$X_scaled)[col]] <- ch
+          if (identical(unname(ch), "estimate")) {
+            jt$mu_liab[, idx] <- jt_est$mu_liab[, idx]
+            jt$se_liab[, idx] <- jt_est$se_liab[, idx]
+            nm <- colnames(data$X_scaled)[col]
+            if (!is.null(jt$lambda_per_trait_fit) &&
+                nm %in% names(jt$lambda_per_trait_fit) &&
+                nm %in% names(jt_est$lambda_per_trait_fit)) {
+              jt$lambda_per_trait_fit[nm] <- jt_est$lambda_per_trait_fit[nm]
+            }
+          }
+        }
+      }
     }
 
     populated_cols <- integer(0)
@@ -939,7 +990,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       # Extract the trait name from the "<name>=<level>" column names
       col_name_1 <- colnames(data$X_scaled)[k_cols[1]]
       trait_name <- sub("=.*$", "", col_name_1)
-      probs <- tryCatch(
+      ovr_call <- function(mode = NULL) tryCatch(
         if (em_iterations >= 1L) {
           fit_ovr_categorical_fits_em(data, tree, trait_name = trait_name,
                                        splits = splits, graph = graph,
@@ -955,10 +1006,32 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                                     soft_aggregate = soft_aggregate,
                                     joint_solver = joint_solver, predict_method = predict_method,
                                     joint_refine_iter = joint_refine_iter,
-                                    predict_method_explicit = predict_method_explicit)
+                                    predict_method_explicit = predict_method_explicit,
+                                    discrete_lambda_mode = mode)
         },
         error = function(e) NULL
       )
+      probs <- ovr_call(if (auto_discrete_lambda) "fixed_1")
+      # options(pigauto.discrete_lambda = "auto"): also fit with lambda
+      # estimated in each one-vs-rest call; keep the lower validation Brier.
+      if (auto_discrete_lambda && em_iterations < 1L && !multi_obs &&
+          !is.null(splits) && !is.null(probs) && !all(is.na(probs))) {
+        probs_est <- ovr_call("auto")
+        if (!is.null(probs_est) && !all(is.na(probs_est))) {
+          n_rows_dl <- nrow(data$X_scaled)
+          vi <- splits$val_idx
+          rows <- ((vi[((vi - 1L) %/% n_rows_dl) + 1L == k_cols[1]] - 1L) %% n_rows_dl) + 1L
+          truth_k <- data$X_scaled[, k_cols, drop = FALSE]
+          rows <- rows[stats::complete.cases(truth_k[rows, , drop = FALSE])]
+          b <- vapply(list(probs, probs_est), function(pm) {
+            if (anyNA(pm)) return(NA_real_)
+            discrete_val_brier(exp(decode_ovr_categorical(pm)), truth_k, rows)
+          }, numeric(1L))
+          ch <- select_discrete_lambda(b[1], b[2])
+          discrete_lambda_chosen[trait_name] <- ch
+          if (identical(unname(ch), "estimate")) probs <- probs_est
+        }
+      }
       if (is.null(probs)) next
       # If OVR came back all-NA (every class's fit failed), leave for LP.
       if (all(is.na(probs))) next
@@ -1292,6 +1365,9 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       length(ordinal_path_chosen) > 0L) {
     out$ordinal_path_chosen <- ordinal_path_chosen
   }
+  if (length(discrete_lambda_chosen) > 0L) {
+    out$discrete_lambda_chosen <- discrete_lambda_chosen
+  }
   out
 }
 
@@ -1603,6 +1679,9 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   if (!is.null(fit_exact$ordinal_path_chosen)) {
     out$ordinal_path_chosen <- fit_exact$ordinal_path_chosen
   }
+  if (!is.null(fit_exact$discrete_lambda_chosen)) {
+    out$discrete_lambda_chosen <- fit_exact$discrete_lambda_chosen
+  }
   out
 }
 
@@ -1672,6 +1751,9 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
               predict_method_by_trait = resolved)
   if (!is.null(base$ordinal_path_chosen)) {
     out$ordinal_path_chosen <- base$ordinal_path_chosen
+  }
+  if (!is.null(base$discrete_lambda_chosen)) {
+    out$discrete_lambda_chosen <- base$discrete_lambda_chosen
   }
   out
 }

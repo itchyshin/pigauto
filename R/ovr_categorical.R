@@ -39,7 +39,8 @@ fit_ovr_categorical_fits <- function(data, tree, trait_name,
                                       joint_solver = "inhouse",
                                       predict_method = "exact",
                                       joint_refine_iter = 0L,
-                                      predict_method_explicit = NULL) {
+                                      predict_method_explicit = NULL,
+                                      discrete_lambda_mode = NULL) {
   if (is.null(predict_method_explicit)) {
     predict_method_explicit <- !missing(predict_method)
   }
@@ -135,7 +136,8 @@ fit_ovr_categorical_fits <- function(data, tree, trait_name,
                                     joint_solver = joint_solver,
                                     predict_method = predict_method,
                                     joint_refine_iter = joint_refine_iter,
-                                    predict_method_explicit = predict_method_explicit),
+                                    predict_method_explicit = predict_method_explicit,
+                                    discrete_lambda_mode = discrete_lambda_mode),
       error = function(e) NULL
     )
     if (is.null(jt)) next
