@@ -5,27 +5,39 @@
 Two defaults change, and results change for anyone using the defaults.
 
 First, binary, ordinal and categorical traits now get their own Pagel's
-lambda in the baseline. Before, every discrete trait was held at lambda = 1.
-The new argument `discrete_lambda = c("estimate", "fixed_1")` (on `impute()`,
-`fit_pigauto()` and `fit_baseline()`, and through `...` on `multi_impute()` and
-`multi_impute_trees()`) defaults to `"estimate"`. The value is recorded in the
-fit's `model_config`, and the fitted discrete lambdas appear in
-`$lambda_per_trait`.
+lambda in the baseline (on the liability scale; categorical traits through
+their one-vs-rest fits). Before, categorical traits were held at lambda = 1 and
+binary and ordinal traits at 1, or at the joint lambda shared with the
+continuous traits on the "exact" route. The new argument
+`discrete_lambda = c("estimate", "fixed_1")` (on `impute()`, `fit_pigauto()`
+and `fit_baseline()`, and through `...` on `multi_impute()` and
+`multi_impute_trees()`) defaults to `"estimate"` and is recorded in the fit's
+`model_config`. Binary and ordinal lambdas appear in `$lambda_per_trait`; the
+categorical one-vs-rest lambdas do not. The zero-inflated-count gate column
+also gets its own lambda.
 
 Second, `safety_floor` and `phylo_signal_gate` now default to `FALSE` in
-`impute()` and `fit_pigauto()`. With lambda estimated for every trait type, the
-gate and the floor no longer improved accuracy in any tested setting; at Pagel's
-lambda of 0 to 0.1 the old defaults were worse than predicting the mean, and on
-the BIEN plant data they changed nothing.
+`impute()` and `fit_pigauto()`. With lambda estimated, the gate and the floor
+did not improve accuracy in any setting tested: at Pagel's lambda of 0 to 0.1
+the old defaults were worse than predicting the mean (continuous zRMSE 1.01
+against 0.89 to 0.91 with them off), and on the BIEN plant data (4,745
+species) that the floor was built for, turning them off changed error by
+-0.002 (SE 0.001). Fits
+are also 3 to 6 times faster at n = 1,000.
 
 To restore the previous behaviour, pass
 `discrete_lambda = "fixed_1", safety_floor = TRUE, phylo_signal_gate = TRUE`.
 
-Evidence: on the four-arm simulation, estimating discrete lambda raised discrete
-accuracy by 0.04 to 0.12 at Pagel's lambda of 0.3 or below and matched or beat
-BACE on binary and categorical traits, at a small cost in probability
-calibration when lambda is near 1 and n is 1,000 or more. See
-`docs/dev-log/discrete-lambda/README.md`.
+Evidence (`docs/dev-log/discrete-lambda/README.md`; simulated Brownian-motion
+and OU data, n = 100 to 1,000, plus AVONET300 and BIEN): estimating discrete
+lambda alone added about 0.01 to 0.04 discrete accuracy at Pagel's lambda of 0.3 or
+below; together with the gate and floor off the gain was 0.04 to 0.12, and on
+the four-arm study's datasets binary and categorical accuracy matched or beat
+BACE's. Costs: with lambda near 1 and n of 1,000 or more, accuracy -0.002 to
+-0.005 and Brier score +0.010 to +0.016; on AVONET300's two categorical
+traits, Brier +0.014 to +0.020 with accuracy unchanged or better. Ordinal
+accuracy still trails BACE's at Pagel's lambda of 0.3 (0.38 against 0.44 at
+n = 300).
 
 ## Documentation: `log_transform` and traits that are already logged
 

@@ -141,8 +141,11 @@ test_that("[exact-default] discrete accuracy under exact is not worse than per_c
     # (the new default) against per_column.
     # discrete_lambda = "fixed_1": the 0.411 / 0.396 measurement below was made
     # before discrete lambda was estimated by default; keep the regime it was
-    # measured in. (With the new default the same ten seeds give exact 0.396
-    # vs per_column 0.422 on this no-signal fixture, a noise-level gap.)
+    # measured in. With the new default the same ten seeds give exact 0.396
+    # vs per_column 0.422 on this no-signal n = 60 fixture; at 50 seeds the
+    # gap is -0.014 (SE 0.010), not significant but with the same sign (Rose
+    # review, docs/dev-log/discrete-lambda/rose-review.md). Follow-up: check
+    # the exact route's discrete accuracy under discrete_lambda = "estimate".
     bl_exact <- fit_baseline(pd, fx$tree, splits = spl, predict_method = "exact",
                              discrete_lambda = "fixed_1")
     bl_pc    <- fit_baseline(pd, fx$tree, splits = spl, predict_method = "per_column",
