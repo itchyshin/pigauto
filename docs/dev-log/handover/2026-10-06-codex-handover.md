@@ -141,3 +141,87 @@ continue with the Next Immediate Steps (CRAN 0.11 release gate).`
 
 Results page (private): https://claude.ai/artifact/Y644K1sLxbrWsAmTQvZspC ·
 Mission Control: `~/shinichi-brain/Shinichi/Dashboards/mission-control/live/status/pigauto.json`.
+
+## Full Codex prompt (added 2026-10-06 at Shinichi's request)
+
+Paste this into a fresh Codex session started in the pigauto repo. It stands on its own.
+
+```text
+You are Codex, taking over the pigauto R package (GitHub: itchyshin/pigauto) from a Claude Code session that ran 2026-10-01 to 2026-10-06. You have none of that session's chat; everything you need is in the repo and the files named below.
+
+READ FIRST, IN ORDER
+1. AGENTS.md (repo root): project rules. Hard rules: preserve r_cal = 0 as a valid fallback; never edit BACE/; usability over contextualised accuracy (D-139).
+2. docs/dev-log/handover/2026-10-06-codex-handover.md: the full handover (state, decisions, file list, gotchas).
+3. ~/shinichi-brain/protocols/cran-release-gate.md: the release gate you will run (also the cran-release-gate skill if you have it).
+4. docs/dev-log/discrete-lambda/README.md: evidence for the last big change (#223), only if you need it.
+
+WHERE THINGS STAND
+- main is at d99f9fa (handover doc, #224) or later; the last code change is c9dc465 (#223). No open PRs.
+- DESCRIPTION: Version 0.11.0.9002 (development). CRAN currently has 0.10.0.
+- On the #223 branch merged with main: NOT_CRAN=true devtools::test() gave FAILED 0, ERRORS 0, PASSED 3312, SKIPPED 8. rcmdcheck --as-cran gave 0 errors, 0 warnings and 1 NOTE (dev version number, plus "Suggests or Enhances not in mainstream repositories: gllvmTMB"). CI is green on Ubuntu R release, Ubuntu R devel and macOS.
+- Nothing is running on Totoro.
+
+WHAT SHIPPED RECENTLY (so the release notes are right)
+- #223 (D-320): new defaults. discrete_lambda = "estimate", which gives binary, ordinal, zi-count gate and one-vs-rest categorical columns their own Pagel lambda. safety_floor = FALSE and phylo_signal_gate = FALSE. discrete_lambda = "fixed_1", safety_floor = TRUE, phylo_signal_gate = TRUE restores the old behaviour exactly.
+- #204: posterior multiple imputation uses residual_prior = "sep" by default.
+- #222: docs. log_transform = TRUE re-logs traits that are already on a log scale.
+- #201 and #200: draws_method = "auto" and gnn = FALSE are the defaults.
+- #216 to #221: the usability bug-fix lane (issues #196 to #215, all closed).
+NEWS.md (section "# pigauto 0.11.0.9002 (dev)") already describes all of these. Check it reads as release notes before submission.
+
+YOUR JOB: THE CRAN 0.11 RELEASE GATE (decision D-318, Shinichi, 2026-10-05; trigger met)
+Follow cran-release-gate.md. It is fail-closed: the default verdict is NOT READY. Never say "CRAN ready". Report the highest rung of its ladder you have proven, and the next unproven rung.
+This is an UPDATE submission, so the conditional gates apply:
+  a. Reverse-dependency check of packages that depend on pigauto (revdepcheck or tools::package_dependencies on CRAN). Record the result even if there are none.
+  b. Build one source tarball (R CMD build), record its sha256, and run every later check on that exact tarball.
+  c. R CMD check --as-cran on the tarball in a clean temporary library. Examples and vignettes must run.
+  d. Platform checks on the same source: win-builder (R-release and R-devel), and macOS builder or R-hub if available. Record vignette build time on Windows; incoming has a roughly 10-minute signal.
+  e. Package size and timing budgets (tarball size, per-vignette time, test time under NOT_CRAN unset).
+  f. Refresh the current CRAN Repository Policy and submission checklist from cran.r-project.org before judging any threshold, and label each threshold as current policy, observed incoming behaviour, or our own margin.
+  g. Check DESCRIPTION (Title case, Description wording and spelling, Authors@R, URL and BugReports, License), cran-comments.md, and inst/WORDLIST / spelling.
+Write all evidence to docs/dev-log/cran-0.11/ (one README with the ladder, plus raw logs), on a branch named release/cran-0.11-gate. Open a PR. Do not merge it.
+
+DECISIONS YOU MUST BRING TO SHINICHI (do not make them)
+1. gllvmTMB is in Suggests but not on CRAN (carried from D-315). Option (a): wait until gllvmTMB is on CRAN. Option (b): drop it from Suggests, and guard or remove every use (find them with: grep -rn gllvmTMB R/ tests/ vignettes/ man/ DESCRIPTION). For each option give the cost: what users lose, files touched, and whether --as-cran becomes NOTE-free. If he picks (b), implement it on the release branch with tests.
+2. The release version number. Propose 0.11.0 or 0.11.1 with a reason (check NEWS for any 0.11.0 heading). Do not change DESCRIPTION's version until he decides.
+3. Submission itself. You never submit; you stop at "submission-ready" or lower.
+
+FOLLOW-UPS FROM #223 (smaller; do them after the gate, or while waiting on win-builder)
+- The exact route's discrete accuracy under the new default. On the no-signal n = 60 fixture in tests/testthat/test-exact-default.R, 50 seeds give -0.014 (SE 0.010) against per_column. Measure on a realistic fixture (n = 300, lambda 0.3 and 1, about 50 seeds) and report. Change code only if there is a real, significant loss, and then as a PR.
+- Categorical one-vs-rest lambdas are not reported in $lambda_per_trait (binary and ordinal are). Add them in a backward-compatible way, with a test.
+- Ordinal accuracy against BACE at low phylogenetic signal (0.38 vs 0.44 at n = 300, lambda = 0.3). Research only. Two ideas were already tried and rejected (README screens 5 and 7, branches feat/discrete-lambda-ordinal and feat/discrete-lambda-auto); do not repeat them.
+
+ENVIRONMENT (you run the live toolchain)
+export NOT_CRAN=true OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+git fetch origin && git switch main && git pull --ff-only
+Rscript -e 'devtools::test()'                          # expect FAILED 0
+Rscript -e 'rcmdcheck::rcmdcheck(args = "--as-cran")'  # expect 0 errors, 0 warnings, 1 NOTE (gllvmTMB)
+
+COMPUTE RULES (binding)
+- Heavy runs go on Totoro: snakagaw@totoro.biology.ualberta.ca, using the existing ControlMaster socket ~/.ssh/cm-*totoro*. Never trigger Duo. Use at most 150 cores in total (D-143).
+- Cap BOTH OpenBLAS and OpenMP threads on every R process. Capping only OpenBLAS ran about 72 threads per process (about 360 cores) on 2026-10-05.
+- Detach long jobs: setsid nohup ... < /dev/null &. A job inside an ssh command dies or hangs.
+- State a time estimate before any run. Anything over 3 hours needs Shinichi's approval first (D-287). A run that overruns its estimate by 30% stops and is re-reported.
+- Never use GitHub Actions for campaigns. Never compute on DRAC login nodes.
+- The private Totoro libraries ~/R/lib-dlam, lib-dlord, lib-dlauto, lib-dlfinal and ~/pigauto_rubin/rlib_sepf are prototype builds. Never use them for release checks.
+
+REPO AND GIT RULES
+- Never commit to main; work on branches and open PRs; never auto-merge. Shinichi merges, or says "merge #N".
+- docs/ is git-ignored except dev-log files: add those with git add -f.
+- Stage explicit paths only. Never stage files you did not create (other lanes' untracked files exist in some checkouts).
+- Before any PR body, comment or public claim: run python3 ~/shinichi-brain/tools/agent_mention_check.py --text <file>. Never @-mention an agent name. Shipped prose: no em dashes; run python3 ~/shinichi-brain/tools/slop_check.py <file>.
+- Run a fresh Rose audit (.codex/agents if present; otherwise an independent reviewer pass) before any public claim, for example before saying the release gate reached a rung.
+
+BRANCHES LEFT ON ORIGIN (leave them alone unless told)
+- arc/rubin-freq-bace: the Rubin freq-vs-BACE study. Long-lived and unmerged by design.
+- feat/discrete-lambda-ordinal and feat/discrete-lambda-auto: rejected prototypes, kept as a record.
+- analysis/pantheria-logtransform-sensitivity: already on main via #222. Delete only when Shinichi says so.
+
+STATUS REPORTING
+- Update Mission Control at milestones: ~/shinichi-brain/Shinichi/Dashboards/mission-control/live/status/pigauto.json (now.focus, now.next_safe_action, now.active_lane). Commit only that file in the vault, which is local-only with no remote.
+- Do not write elsewhere in ~/shinichi-brain without Shinichi's approval.
+- When you report to Shinichi, put the answer first in plain language: the ladder rung reached, what blocks the next rung, and the one decision you need from him.
+
+DONE MEANS
+The release-gate PR is open, with docs/dev-log/cran-0.11/README.md showing every gate's evidence on one frozen tarball. The highest proven rung is stated. The gllvmTMB and version decisions are put to Shinichi with options. Mission Control is updated. Nothing is submitted.
+```
