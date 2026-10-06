@@ -56,6 +56,47 @@ n = 100: 0.880 to 0.893). The September GNN-off campaign found the opposite on i
 safety machinery helped), when the continuous baseline still ran at lambda = 1; since D-278 lambda is estimated, which
 may make the gate redundant. That has not been tested on `bace_dgp`, OU or AVONET.
 
+## Screen 3: which part of the safety machinery blocks discrete lambda (`screen3_attribution.txt`)
+
+Same 1,197 paired datasets; new arm `gnn_off_nogate` (`phylo_signal_gate = FALSE`, safety floor on), added to a copy
+of the harness on Totoro (`~/pigauto_sim/dlam/script/campaign_gnn_off_lib.R`). With the floor off the gate cannot
+impose the mode (it falls back to the BM baseline), so "floor off, gate on" equals "both off".
+
+| n = 300, lambda = 0.3 | discrete accuracy | vs BACE (paired) | continuous zRMSE |
+|---|---|---|---|
+| gate + floor, lambda 1 (default) | 0.476 | -0.090 (0.004) | 0.930 |
+| floor only, lambda estimated | 0.529 | -0.036 (0.003) | 0.861 |
+| neither, lambda estimated | 0.546 | -0.020 (0.003) | 0.857 |
+| BACE | 0.566 | | 0.921 |
+
+The gate is the larger cost (most of both the discrete and the continuous gain); the floor costs more on top,
+largest at n = 100 (0.497 vs 0.526) and at lambda = 1 (binary 0.924 vs 0.959 at n = 100). Continuous coverage at
+n = 100: 0.874 to 0.880 with the floor, 0.883 without; at n = 300 all about 0.96.
+
+## Screen 5: cumulative ordinal decomposition (`screen5_ordinal.txt`, branch `feat/discrete-lambda-ordinal`, 8e99670)
+
+`options(pigauto.ordinal_method = "cumulative")`: K-1 "class >= k" binary liabilities through the threshold/one-vs-rest
+machinery, each with its own lambda, monotone-combined, mode taken. Paired against the current ordinal route (both
+with discrete lambda estimated, safety machinery off), ordinal accuracy:
+
+| | n = 100 | n = 300 |
+|---|---|---|
+| lambda = 0.3 | +0.066 (0.011) | +0.032 (0.006) |
+| lambda = 0.7 | -0.036 (0.010) | -0.067 (0.007) |
+| lambda = 1 | -0.005 (0.004) | 0.000 (0.001) |
+
+Macro-F1 is lower everywhere (it collapses toward the middle classes). Not adopted: a negative result. Ordinal stays
+on the current route; against BACE that is -0.053 / -0.064 at lambda = 0.3 and +0.016 / -0.025 at 0.7 (n = 100 / 300).
+
+## Incident: thread cap
+
+A hand-written timing smoke on Totoro (2026-10-05 ~20:14 to 20:25) set `OPENBLAS_NUM_THREADS=1` but not
+`OMP_NUM_THREADS`, so 5 R processes ran about 72 threads each (about 360 cores, over the 150-core cap) for about
+10 minutes before I killed them. The screens themselves use `run_one.sh`, which sets both; their timings (about 8 s per
+job) confirm one core each. Re-run with both caps: 4 to 11 s per job at n = 300, 55 s at n = 1000.
+
+ORD_SCREEN 1197 (gate GB2) · PAIRED 1197 (gate GA1)
+
 ## Does NOT cover
 
 One DGP family (the four-arm core: BM, MCAR, fixed thresholds); n = 1000; multi-observation data; the LP path
