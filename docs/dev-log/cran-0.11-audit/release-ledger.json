@@ -11,9 +11,9 @@
   "artifact": {},
   "evidence": {},
   "panel": {
-    "grace": "NOT_READY",
-    "rose": "NOT_READY",
-    "pat": "NOT_READY"
+    "grace": "READY",
+    "rose": "READY",
+    "pat": "READY"
   },
   "status_claim": "source-clean",
   "submission": {},

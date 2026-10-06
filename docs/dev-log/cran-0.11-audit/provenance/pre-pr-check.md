@@ -9,3 +9,14 @@ On macOS Tahoe with R 4.6.0, `R CMD check --as-cran --no-manual pigauto_0.11.0.t
 The local pkgdown build passed a crawl of 65 rendered pages and 3,621 local references, with all 34 retired direct pages absent. Desktop and mobile views were inspected. Public deployment will be checked after merge.
 
 The remaining gates are the nine gllvmTMB recovery seeds, which require approval for the measured run above three hours; the maintainer's audit-PR merge; a frozen post-merge tarball and platform checks; the open BirdTree redistribution-rights point; and the separate fresh release panel. Nothing has been submitted to CRAN.
+
+
+## Superseding post-merge status (2026-10-06)
+
+This is a pre-PR rehearsal record; its remaining-gates paragraph was true only at that
+point in the audit and is superseded by
+`../post-merge-verification-2026-10-06.md`. PR #226 is merged, the live deployment is
+verified, and the exact merged-source tarball plus its full macOS/R 4.6.0 check and
+merged-commit Ubuntu/macOS check jobs are recorded there. The earlier pre-PR artifact
+remains a distinct historical artifact. The BirdTree rights issue and fresh release
+panel remain open. Nothing has been submitted to CRAN.

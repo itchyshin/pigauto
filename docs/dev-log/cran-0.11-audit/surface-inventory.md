@@ -46,11 +46,11 @@ All 34 dated HTML benchmark pages and five supporting PNGs have been moved byte-
 
 The archived source files and corresponding `script/` drivers/results remain evidence-bearing snapshots. Their historical numbers were not edited.
 
-## Live deployment check (2026-10-06)
+## Pre-merge live deployment check (2026-10-06; superseded by post-merge proof)
 
 Direct browser inspection reached the live home page and `reference/multi_impute.html`. Both display version 0.11.0.9002. The home page matches the current README's auto-default description. The live help page is generated from the stale source material above and visibly says conformal is the default, discrete traits stay at lambda 1, residual covariance has an IW prior, and the safety floor defaults TRUE. This is direct deployment evidence, not a cache inference. The live continuous benchmark is directly reachable and confirms the May 30 / five-replicate / commit `794537121b` metadata. The web text fetch could not access the live multiple-imputation article, so its deployed state is not claimed. Direct archived walkthrough URL lookup was also inconclusive; treat redirect/404 behavior as unverified.
 
-## Local site validation and remaining deployment gate
+## Local site validation and pre-merge deployment gate (historical)
 
 `man/multi_impute.Rd` and `man/pool_mi.Rd` were regenerated from roxygen. The local help page visibly shows `draws_method = "auto"`, `gnn = FALSE`, the separation residual prior, estimated discrete lambda, and `safety_floor = FALSE` as the default. The first site render used the machine's previously installed pigauto, whose `fit_pigauto()` still defaulted to GNN on; it was stopped and discarded. The completed clean build used a separately installed 0.11.0 source copy with its version and `gnn = FALSE` formal verified before rendering.
 
@@ -64,4 +64,17 @@ A final surface read caught three more stale statements before this rebuild. The
 
 The final reader check found a stale generated `vignettes/getting-started.R` companion and a NEWS sentence calling GNN-on the default. The companion now matches a fresh normalized `knitr::purl()` extraction from its R Markdown source, including the optional torch setup and explicit GNN opt-in examples. NEWS now calls GNN-on opt-in. A full local rebuild, internal-page cleaning step, and crawl passed 65 rendered pages and 3,622 local references, with 34 retired direct pages absent. The corrected phrases were checked in the rendered getting-started and NEWS pages.
 
-The public deployment remains unchanged until merge and pkgdown deployment. Recheck the live home, help, article, sitemap, search, and retired direct URLs after the audit PR is merged. Until then the current live help page is stale.
+At the time of this pre-merge local check, the public deployment had not yet been updated. Post-merge live checks are recorded below.
+
+
+## Post-merge live deployment verification (2026-10-06)
+
+Pages workflow run #570 succeeded for merge commit
+`bb5835d1b214d783da7b0b414df99aa6ba926bc7`. The live homepage exposes Get started,
+Articles, Reference, and Changelog, with no per-trait benchmark links. The current
+getting-started default, separated-residual wording in the multiple-imputation article,
+and `multi_impute()` reference are live. Direct checks returned 404 for all 34 retired
+`/dev/` HTML pages and the four retired walkthrough articles. The sitemap has 64
+locations and zero retired routes; the 574-path search index also has zero retired routes.
+The exact URLs and statuses are retained in
+`provenance/public-deployment-live-check-2026-10-06.tsv`.

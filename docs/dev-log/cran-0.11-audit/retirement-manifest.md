@@ -1,6 +1,6 @@
 # Retired public static pages and assets
 
-These 34 HTML snapshots and five supporting PNGs were served from `pkgdown/assets/dev/` before the 0.11.0 audit. Their old direct `/dev/` URLs are retired from the new site. The files below were moved byte-for-byte to the build-excluded `dev/archive/cran-011-public-pages/`; the originating Git history and benchmark drivers/results under `script/` remain available. The measured figures describe their original regimes and have not been rerun or relabelled as 0.11.0 results. Public removal is pending deployment after the audit PR is merged.
+These 34 HTML snapshots and five supporting PNGs were served from `pkgdown/assets/dev/` before the 0.11.0 audit. Their old direct `/dev/` URLs are retired from the new site. The files below were moved byte-for-byte to the build-excluded `dev/archive/cran-011-public-pages/`; the originating Git history and benchmark drivers/results under `script/` remain available. The measured figures describe their original regimes and have not been rerun or relabelled as 0.11.0 results. At manifest creation, public removal was pending deployment. Post-merge checks on 2026-10-06 confirm all 34 direct /dev/ URLs return HTTP 404, with none of those routes in the live sitemap or search index; see `provenance/public-deployment-live-check-2026-10-06.tsv`.
 
 | Original source path | Archived source path | Bytes | SHA-256 |
 |---|---|---:|---|

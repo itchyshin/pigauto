@@ -11,4 +11,4 @@ This audit covers the proposed 0.11.0 source package. The current CRAN policy co
 
 The source-generator comments in `data-raw/make_avonet300.R`, `make_avonet_full.R`, and `make_trees300.R` now distinguish the megatrees package's MIT metadata from the unresolved BirdTree data rights. No bundled tree object changed.
 
-The current ledger remains `NOT_READY`. Its rights and artifact fields should stay unset until the exact source inventory, component notices, package size, and the open tree-data permission point have been resolved. No contact has been sent to an upstream holder.
+The release ledger remains `NOT_READY`. Per its fail-closed policy, its release artifact and rights fields remain unset while the BirdTree data-rights question is open. A distinct exact merged-source audit tarball and its check receipts are recorded in `post-merge-verification-2026-10-06.md`; this does not promote the package to release-ready. No contact has been sent to an upstream holder.
