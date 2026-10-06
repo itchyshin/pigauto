@@ -849,12 +849,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
         # continuous-family setting and would leak an estimated lambda into
         # this candidate even though `lambda_per_trait` keeps reporting 1
         # for ordinal columns (Rose review, 2026-09-23).
-        # PROTOTYPE (feat/discrete-lambda): under
-        # options(pigauto.discrete_lambda = "estimate") this candidate gets
-        # its own estimated lambda too, matching the threshold-joint column.
-        ord_lambda <- if (identical(getOption("pigauto.discrete_lambda", "fixed_1"),
-                                    "estimate")) "estimate" else 1.0
-        bm_res <- bm_impute_col(X[, col], R_phy_local, lambda = ord_lambda)
+        bm_res <- bm_impute_col(X[, col], R_phy_local, lambda = 1.0)
         # Val MSE for both paths.
         truth_j  <- truth_full[val_rows_j, col]
         finite_t <- is.finite(truth_j)
