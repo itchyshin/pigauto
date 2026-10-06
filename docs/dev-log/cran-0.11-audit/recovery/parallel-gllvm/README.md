@@ -1,4 +1,4 @@
-# Two-worker gllvmTMB feasibility check, 2026-10-06
+# Two-worker gllvmTMB recovery, 2026-10-06
 
 This bounded pre-run used two independent registered seeds, 2026100602 and
 2026100603, concurrently on Totoro. Each seed used n = 300, four genuine
@@ -22,11 +22,21 @@ branch's `script/cran-0.11-recovery/run.R`, `R/pool_mi.R`, and `DESCRIPTION`.
 The installed source is the audit's 0.11.0 adapter snapshot, not a frozen
 post-merge release tarball.
 
-The first registered gllvmTMB seed had taken 1,275.364 seconds alone. The two
-concurrent seeds therefore support a two-worker planning estimate of five
-waves for the original nine remaining seeds: about 109 minutes of wall time.
-Seven seeds remain after this pre-run, requiring four more waves, about 87
-minutes at the measured pace. Automatic sampler extension or later resource
-contention could lengthen that estimate. This pre-run is a mechanism and
-resource check, not a ten-seed bias or coverage result. No further gllvmTMB
-seed was launched here.
+The first registered gllvmTMB seed had taken 1,275.364 seconds alone. These
+two concurrent seeds supported a four-wave estimate of about 87 minutes for
+the remaining seven seeds. This pre-run was a mechanism and resource check.
+
+The remaining seeds, 2026100604 to 2026100610, completed in four supervised
+waves: seeds 04/05 in 1,332 seconds, 06/07 in 1,298 seconds, 08/09 in 1,321
+seconds, and seed 10 in 1,285 seconds. All seven supervisors exited zero. The
+continuation took 5,236 seconds (87.27 minutes), within its three-hour bound.
+All ten registered seeds passed posterior convergence, 20 genuine downstream
+fits per seed, independent coefficient/SE and Rubin checks, and saved-fit
+reload. The locked `gllvm-summary.csv` passed the prespecified ±0.15 mean-bias
+margin for all eight fixed effects. Coverage was 9/10 for two terms and 10/10
+for six terms; ten seeds do not certify nominal 95% coverage.
+
+`full-remote-sha256.txt` records ten retained raw-RDS digests and 21 copied
+CSV/log digests. All 21 local copies matched. The raw RDS files remain on
+Totoro. The summary is a bounded result for the audit source and is not
+exact-tarball release evidence.

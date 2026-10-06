@@ -4,7 +4,7 @@
 |---|---|---|
 | S0 | done | version and provenance recorded |
 | S1 | done | 33 exports, 126 assertions |
-| S2 | partial | ten drmTMB seeds passed; three gllvmTMB seeds passed, seven remain under a measured two-worker plan |
+| S2 | done | ten drmTMB and ten gllvmTMB seeds passed mechanism checks and preset fixed-effect bias margins; coverage remains descriptive |
 | S3 | done | active help, vignettes, README, NEWS and guidance reconciled |
 | S4 | done | 39 static files archived byte-for-byte |
 | S5 | done | local 65-page crawl and visual QA passed; deployment is later |
