@@ -1,0 +1,8 @@
+off --dgp types_mixed --evo BM --lambda 0.3 --rho 0 --miss clade --frac 0.3 --n 1000 --ncov 0 --seed 1 --driver --thresholds fixed --arms gnn_off,gnn_off_pure,floor --out a2_off
+on --dgp types_mixed --evo BM --lambda 0.3 --rho 0 --miss clade --frac 0.3 --n 1000 --ncov 0 --seed 1 --driver --thresholds fixed --arms gnn_off_nogate,gnn_off_pure --out a2_on
+752a753
+>       gnn_off_nogate      = list(gnn = FALSE, phylo_signal_gate = FALSE),
+800c801
+<       if (arm %in% c("gnn_on", "gnn_off", "gnn_off_pure", "gnn_off_rphylopars")) run_pigauto(arm)
+---
+>       if (arm %in% c("gnn_on", "gnn_off", "gnn_off_pure", "gnn_off_nogate", "gnn_off_rphylopars")) run_pigauto(arm)
