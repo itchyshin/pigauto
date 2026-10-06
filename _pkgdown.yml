@@ -213,6 +213,7 @@ reference:
       - pigauto_report
       - plot.pigauto_fit
       - plot.pigauto_pred
+      - plot.pigauto_result
       - plot.pigauto_benchmark
       - plot_comparison
       - plot_history_gg
