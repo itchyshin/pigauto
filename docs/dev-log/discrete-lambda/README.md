@@ -109,6 +109,28 @@ per-trait Brier and an n = 3000 cell; change defaults only if non-inferior on al
 
 VERDICT_WRITTEN (gate GA3)
 
+## Option-C tests (`screen6_optionC.txt`)
+
+types_mixed at lambda = 0 and 0.1 (n = 300 and 1000, 120 datasets per cell), all-discrete data (bin, ord, cat3 only:
+the label-propagation path; lambda 0.1 to 1, n = 300), `ou_mixed` with OU evolution (replacing the duplicated run),
+and one n = 3000, lambda = 1 cell (10 datasets). At lambda = 0 and 0.1, the regime the gate and floor were built
+for, the default is WORSE than the mean or mode (continuous zRMSE 1.008 to 1.020 vs 0.999 to 1.007; discrete
+accuracy 0.359 to 0.414 vs mode 0.363 to 0.426); gate and floor off with lambda estimated gives zRMSE 0.891 to 0.911
+and accuracy 0.470 to 0.509. All-discrete: +0.038 to +0.040 accuracy at lambda 0.1 to 0.3, +0.003 at lambda 1.
+ou_mixed (OU): +0.005 to +0.073 accuracy, continuous unchanged or better. n = 3000, lambda = 1: accuracy -0.003
+(SE 0.001), Brier +0.014 (SE 0.009).
+
+## Screen 7: "auto" (validation-chosen lambda per discrete trait; branch `feat/discrete-lambda-auto`, 6969a20)
+
+Per binary/categorical trait, fit lambda = 1 and lambda estimated and keep the lower validation Brier. Result
+(`screen7_auto.txt`, 2,635 datasets): accuracy never worse than the default; the AVONET Brier cost disappears (0.517
+vs default 0.516); but most of the low-signal Brier gain is lost (lambda 0.3, n = 1000: 0.518 vs estimate 0.483) and
+on bace_dgp it is worse than both candidates (0.531 vs 0.491 and 0.513). `auto_diag.R` shows why: (1) a bug, the
+recorded choice and the applied prediction can disagree (lambda = 1, seed 1: "fixed_1" recorded, estimated
+prediction applied); (2) the choice itself is noisy (it picked lambda = 1 for the binary trait in 3 of 3 datasets at
+lambda = 0.3), because 20 to 40 validation cells per trait cannot separate the two fits. Parked as a negative result.
+"floor + auto" matches the default at lambda = 1 and on AVONET, so the floor alone protects those cases.
+
 ## Incident: thread cap
 
 A hand-written timing smoke on Totoro (2026-10-05 ~20:14 to 20:25) set `OPENBLAS_NUM_THREADS=1` but not
