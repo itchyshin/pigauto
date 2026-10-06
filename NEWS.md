@@ -1,4 +1,4 @@
-# pigauto 0.11.0.9002 (dev)
+# pigauto 0.11.0
 
 ## New defaults: discrete traits get their own λ; safety gate and floor off
 
@@ -153,15 +153,16 @@ What to know.
   MCMCglmm, and points to `brms::brm_multiple()`. Previously a `brmsfit`
   fell through to `coef()` and `vcov()`, and `coef()` on a brmsfit does not
   return its fixed effects.
-- brms, drmTMB and gllvmTMB are added to Suggests. New end-to-end tests run
-  the posterior route through `with_imputations()` and `pool_mi()` for
-  glmmTMB, lme4, drmTMB and gllvmTMB.
+- brms was added to Suggests. The automatic drmTMB and gllvmTMB adapters
+  remain available when those packages are installed, without requiring
+  them as dependencies. Their real-package integration checks run from
+  `script/cran-0.11-integration/`, outside the built package.
 - README: a "Defaults, and when to change them" section.
 - Documentation fixes: `fit_pigauto()`'s `gate_method` default is
   `"cv_folds"` and `min_val_cells` defaults to 20; the help pages said
   `"single_split"` and 10.
-- No default changed. The defaults audit behind these edits, with proposals
-  for `draws_method`, `gnn` and `joint_solver`, is in
+- This documentation work preceded the default changes described above.
+  The defaults audit behind it is in
   `docs/dev-log/defaults-audit/2026-10-02-defaults-audit.md`.
 
 ## New: `multi_impute(draws_method = "posterior")` for continuous traits
@@ -226,7 +227,10 @@ the effects integrated out keep it mixing near lambda = 0 and lambda = 1.
   not used, and fitting arguments such as `gnn` and `epochs` are ignored
   with a message.
 
-The default draws method is unchanged (`"conformal"`).
+When this posterior method was introduced, the default draws method remained
+`"conformal"`. The 0.11.0 default is now `"auto"`, which selects posterior
+draws for eligible all-continuous data and otherwise falls back to conformal
+prediction-diagnostic draws.
 
 **Caveat for downstream inference with the other draws methods.** The
 `"conformal"` and `"mc_dropout"` draws perturb missing cells around a point
@@ -270,7 +274,7 @@ at true lambda 0.3 and by 6.1 to 9.4% at lambda 0.7. At lambda 1 it falls by 1.2
 coverage of the continuous traits rises by 0.003 to 0.010 at lambda 0.3 and 0.7. At lambda 1 with 100
 species, where the previous default already covered only 0.86 to 0.92 of cells, coverage falls by a further
 0.006 to 0.018 (largest for the count and proportion traits); with 300 species it falls by at most 0.008.
-The GNN-on default of `impute()` was not re-benchmarked for this change.
+The opt-in GNN-on arm of `impute()` was not re-benchmarked for this change.
 
 On 13 real-data cases (continuous traits, 5 seeds each, GNN off, no Monte Carlo error computed), z-RMSE falls
 by 17 to 51% on AVONET and PanTHERIA and by 2.5% on AmphiBIO (2,000 species); the other seven cases change by
@@ -395,7 +399,7 @@ sampling-design helper and the baseline it is meant to complement can now
 disagree on the phylogenetic correlation structure. Not changed in this
 release.
 
-# pigauto 0.11.0
+## Earlier development changes included in 0.11.0
 
 Local candidate after CRAN pigauto 0.10.0 (Date/Publication 2026-07-30).
 No CRAN submission or public release is implied. The installed BACE bridge has

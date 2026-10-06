@@ -41,7 +41,7 @@ When in doubt, prefer the smallest defensible claim and ask before extrapolating
 
 ## Project
 
-`pigauto` is an R package for phylogenetic trait imputation. It fits a gated ensemble of a phylogenetic baseline and an attention-based graph neural network correction. For continuous/count/ordinal traits the baseline is Brownian motion (via an internal conditional-MVN implementation using the phylogenetic correlation matrix `R = cov2cor(vcv(tree))`; see `R/bm_internal.R`); for binary/categorical traits it is phylogenetic label propagation. Optional environmental covariates are threaded through the GNN with gated safety. Prediction is the per-trait blend `(1 - r_cal) * baseline + r_cal * delta_GNN`, with `r_cal` calibrated on a held-out validation split. See `README.md` for the user-facing API; this file documents the internals.
+`pigauto` is an R package for phylogenetic trait imputation. Its default fit uses a phylogenetic baseline with estimated Pagel's lambda and no GNN (`gnn = FALSE`). With `gnn = TRUE`, an attention-based graph neural network can contribute through a calibrated per-trait gate. Continuous/count/ordinal baselines use Brownian motion (via the phylogenetic correlation matrix `R = cov2cor(vcv(tree))`; see `R/bm_internal.R`); binary/categorical paths include phylogenetic label propagation. User covariates are used by the GNN and ignored with a warning when it is off. See `README.md` for the user-facing API; this file documents the internals.
 
 <!-- This preamble intentionally states no current version number: this file is
      re-read every session and cannot be kept current, so it must make no current-state
@@ -405,13 +405,13 @@ After the training loop:
 - `R/` — package source. Everything with an `@export` tag is user-facing.
 - `tests/testthat/` — testthat 3rd edition, 558 tests total. One test file per broad area: preprocess, graph, masking, fit-predict, mixed-types, multi-impute, multi-proportion, new-features.
 - `BACE/` — a **separate, self-contained R package** (Bayesian phylogenetic imputation via MCMCglmm) kept in-tree as a reference implementation and comparison baseline. It has its own `R/`, `tests/`, `vignettes/`, and `DESCRIPTION`. `Grep` and `Glob` results for generic terms (`impute`, `phylo`, `trait`) will include BACE files — always check the path prefix. BACE is comparator-only: pigauto has no installed bridge, `Suggests` dependency, export, or help page for it. `^BACE$` is in `.Rbuildignore`, and BACE's own tests are not part of pigauto's test suite. Do not modify BACE as part of pigauto work.
-- `script/` — benchmark drivers, logs, and HTML/RDS outputs. Ignored by `R CMD build`. Key entries: `validate_avonet_full.{R,log,md,rds}` (full-scale validation), `bench_scaling_v031.{R,log,rds}` (scaling benchmark), `bench_avonet_missingness.{R,rds,md}` + `make_avonet_missingness_html.R` (missingness sweep), and the per-type benchmark suite: `bench_{continuous,binary,ordinal,count,categorical,proportion,zi_count,multi_proportion,missingness_mechanism}.R` (drivers) + `make_bench_*_html.R` (HTML generators). Each driver outputs `.rds` + `.md`; each HTML generator outputs to both `script/` and `pkgdown/assets/dev/`. Anything named `bench_v2.*`, `bench_v3.*`, `bench_v4.*`, or `benchmark_*` is a stale snapshot from earlier phases — do not treat them as reference implementations.
+- `script/`: benchmark drivers, logs, and HTML/RDS outputs. Ignored by `R CMD build`. Key entries: `validate_avonet_full.{R,log,md,rds}` (full-scale validation), `bench_scaling_v031.{R,log,rds}` (scaling benchmark), `bench_avonet_missingness.{R,rds,md}` + `make_avonet_missingness_html.R` (missingness sweep), and the per-type benchmark suite: `bench_{continuous,binary,ordinal,count,categorical,proportion,zi_count,multi_proportion,missingness_mechanism}.R` (drivers) + `make_bench_*_html.R` (HTML generators). Historical generated pages were removed from `pkgdown/assets/dev/` for 0.11.0 and preserved under `dev/archive/cran-011-public-pages/` with a hash manifest; do not rerun a generator into the public asset directory without a new source and claim review. Anything named `bench_v2.*`, `bench_v3.*`, `bench_v4.*`, or `benchmark_*` is a stale snapshot from earlier phases.
 - `dev/` — scratch experiments. Ignored by `R CMD build`.
 - `avonet/`, `data/`, `data-raw/` — the bundled AVONET 300-species dataset and its build scripts.
 
 ## Uncertainty quantification design
 
-pigauto uses **three distinct uncertainty mechanisms** — do not conflate them:
+pigauto reports **four distinct uncertainty quantities**; do not conflate them:
 
 ### 1. Baseline SE (analytic, BM conditional MVN)
 Source: `R/bm_internal.R` → `bm_impute_col()`.
@@ -423,13 +423,14 @@ For continuous/count/ordinal/proportion traits: standard conditional-MVN formula
 ### 2. Conformal prediction intervals (distribution-free, empirically calibrated)
 Source: `R/fit_helpers.R` → `compute_conformal_scores()`.
 After training, on the held-out validation set: `score_j = quantile(|truth - blended_pred|, ⌈(1−α)(1+1/n)⌉/n)`.
-**Validity**: split conformal guarantee — exactly ≥95% marginal coverage regardless of model assumptions or trait distribution. No Gaussianity needed.
-**Used in**: `pred$conformal_lower`, `pred$conformal_upper`. This is the primary 95% CI.
+**Validity**: a nominal marginal prediction-interval target under exchangeable calibration and scored cells; clade-structured missingness can violate that condition. No Gaussian model is needed. The package has not certified 95% coverage across its supported regimes.
+**Used in**: `pred$conformal_lower`, `pred$conformal_upper`. These are prediction bounds for individual cells, not confidence intervals for model parameters.
 
-### 3. Multiple-imputation prediction-diagnostic draws (`multi_impute()`)
-Two methods selectable via `draws_method`:
-- **`"conformal"` (default)**: Single pass; missing cells sampled from N(μ, conformal_score/1.96) on the appropriate transformed scale. Falls back to BM-SE-based Normal sampling when conformal scores are missing, and to Bernoulli/Categorical for discrete types. Preferred because conformal scores are calibrated against actual held-out residuals regardless of gate value.
-- **`"mc_dropout"`**: M GNN forward passes in training mode (dropout active). Each imputation `m` draws `t_BM_draw ~ N(BM_mu, BM_se)` on the latent scale (held fixed for all refine steps of that imputation), then blends `pred = (1 - r_cal) * t_BM_draw + r_cal * GNN_dropout(t_BM_draw)`. When `r_cal = 0` (gate closed — BM dominates): `pred = t_BM_draw` → between-imputation variance = BM posterior variance, non-zero ✓. When `r_cal > 0`: both BM draws and GNN dropout contribute variance. `BM_se = 0` for observed cells so they are never perturbed. **Note on conservatism**: BM-draw MI is wider than conformal MI (AVONET300: Mass MC SD ≈ 290 vs conformal/1.96 ≈ 23) because BM SE reflects prior uncertainty while conformal reflects actual prediction error. These diagnostic draws are not admitted to downstream pooling; use `multi_impute_analysis()` for the supported analysis-aware route. Implementation: `predict_pigauto.R` lines 168–211.
+### 3. Multiple-imputation draws (`multi_impute()`)
+The default `draws_method = "auto"` selects posterior draws for all-continuous traits with one row per species and no covariates or compositional groups. Otherwise it announces a fallback to conformal draws. Check `mi$draws_method` before fitting a downstream model.
+- **`"posterior"`**: Proper posterior imputations in that documented continuous-trait regime. `with_imputations()` and `pool_mi()` admit these draws for the analyses described in the help page.
+- **`"conformal"`**: Prediction-diagnostic draws centred on the fitted values, using the conformal residual quantile divided by 1.96 as a Normal standard deviation when available. This conversion does not make them proper multiple imputations.
+- **`"mc_dropout"`**: Prediction-diagnostic Brownian draws combined with stochastic GNN passes when `gnn = TRUE`; with the default GNN-off fit, only the Brownian term varies. Conformal and MC-dropout draws are refused by `with_imputations()` and must not be pooled. The separate `multi_impute_analysis()` backend admits its own narrow analysis-aware regime.
 
 ### 4. `pred$se` for discrete types — uncertainty scores, not SEs
 Binary: `min(p, 1-p)` — probability of being wrong (0 = certain, 0.5 = maximally uncertain).
@@ -439,15 +440,15 @@ Categorical: `1 - max(p_k)` — margin from certainty (0 = certain, (K-1)/K = ma
 ### What NOT to do
 - Do not use `pred$se` for binary/categorical as if it were a Normal SE.
 - Do not back-calculate a "±1.96×SE" interval for discrete types.
-- Do not use BM SE alone as a 95% CI — use the conformal interval instead (it is wider and better calibrated when the GNN adds prediction error beyond BM).
+- Do not use BM SE alone as a 95% interval. Inspect the conformal prediction bounds for a nominal held-out diagnostic, subject to their calibration assumptions.
 
 ## Tree uncertainty — prediction sensitivity
 
 `multi_impute_trees(traits, trees = trees300, m_per_tree = 5L)` runs pigauto on each posterior tree, producing `T × m_per_tree` completed datasets. Each completion is conditional on a tree and `mi$tree_index[i]` records that tree. Use these outputs descriptively to assess prediction sensitivity across the tree sample. Neither tree-draw mechanism is validated for downstream fitting or pooling, and `with_imputations()` / `pool_mi()` refuse them.
 
-**Compute cost is linear in T.** Rough budget: n=300 × T=50 ≈ 25–50 min, n=5,000 × T=50 ≈ 4–8 hr, n=10,000 × T=50 ≈ 17–33 hr. At n ≥ 5,000 reduce T to 10–20 (the 2019 paper's "relative efficiency" index typically converges well before T=50) or parallelise across machines.
+**Compute cost grows with T.** Earlier GNN-on planning estimates were n=300 × T=50 ≈ 25–50 min, n=5,000 × T=50 ≈ 4–8 hr, and n=10,000 × T=50 ≈ 17–33 hr. They are not measurements of the current GNN-off default. Estimate the actual tree/sample setting before a campaign.
 
-**Future work (not built): `share_gnn = TRUE`.** Train the GNN once on the MCC tree and reuse it across posterior trees while recomputing only the cheap baseline per tree. ~10–15× speedup for large n. Gate safety means worst case is "GNN is useless → per-tree BM fallback" — still tree-uncertainty-aware.
+**Implemented tree sharing:** `share_gnn = TRUE` trains one GNN on the reference tree when `gnn = TRUE`, then recomputes the baseline per tree. The default `gnn = FALSE` trains no GNN. All tree completions are descriptive prediction-sensitivity outputs and are refused by downstream pooling.
 
 ## Non-obvious gotchas
 

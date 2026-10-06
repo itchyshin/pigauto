@@ -42,7 +42,9 @@
 #'       cannot be pooled. The chosen method is stored in
 #'       `result$draws_method`. To get the previous default, set
 #'       `draws_method = "conformal"`.}
-#'     \item{`"conformal"`}{Run the model once, then sample each
+#'     \item{`"conformal"`}{Use this method when `"auto"` falls back
+#'       because the posterior sampler's requirements are not met, or when
+#'       explicitly requested. Run the model once, then sample each
 #'       originally-missing cell from a Normal distribution centred on the
 #'       point estimate with SD = conformal_score / 1.96. Converting a
 #'       split-conformal residual quantile to a Normal scale is a heuristic;
@@ -125,11 +127,11 @@
 #' @param lambda_mode character. Pagel-lambda mode for the BM baseline,
 #'   forwarded to [impute()] / [fit_pigauto()]. `"estimate"` (default) fits
 #'   a per-trait Pagel's lambda on each continuous-family (BM-eligible)
-#'   latent column; binary, ordinal and categorical traits get their own
-#'   lambda by default (`discrete_lambda = "estimate"`, passed through `...`
-#'   to [impute()]); with `discrete_lambda = "fixed_1"` they stay at
-#'   lambda = 1 unless routed to
-#'   `predict_method = "exact"`, where they share `lambda_block`. `"fixed_1"`
+#'   latent column. Discrete traits estimate their own lambda by default
+#'   (`discrete_lambda = "estimate"`, passed through `...` to [impute()]);
+#'   set `discrete_lambda = "fixed_1"` to retain lambda = 1 for their
+#'   baseline. Joint exact prediction can also use a shared `lambda_block`
+#'   for its cross-trait conditional. `"fixed_1"`
 #'   preserves the pre-lambda Brownian correlation matrix everywhere;
 #'   `"cv"` and `"bayes"` are alternative per-column estimators. See
 #'   [fit_pigauto()] for the full contract, including the
@@ -182,21 +184,18 @@
 #'     \item{`max_extend`}{`3L`. Maximum number of extensions, a whole
 #'       number from 0 to 10. The default allows at most 4 times `n_iter`
 #'       sweeps per chain after burn-in.}
-#'     \item{`residual_prior`}{`"sep"` (default) or `"iw"`. The prior on the
-#'       residual covariance. `"sep"` (the separation strategy) gives each
-#'       residual standard deviation a half-Cauchy prior scaled by the
-#'       trait's observed standard deviation and the residual correlation a
-#'       uniform (LKJ(1)) prior, so the residual covariance can shrink
-#'       towards 0 when traits are close to Brownian motion. `"iw"` is the
-#'       inverse-Wishart prior used before pigauto 0.11.0.9002; it biases a
-#'       downstream relationship between correlated traits towards zero when
-#'       lambda is near 1 (see `draws_method`). Kept for reproducing earlier
-#'       results.}
+#'     \item{`residual_prior`}{`"sep"` (default) or `"iw"`. The default
+#'       separation prior gives each residual standard deviation a
+#'       half-Cauchy prior scaled by the trait's observed standard deviation,
+#'       and gives the residual correlation a uniform (LKJ(1)) prior. This
+#'       allows residual covariance to approach zero when traits are close
+#'       to Brownian motion. `"iw"` selects the legacy inverse-Wishart prior
+#'       used before pigauto 0.11.0.9002; it is retained for reproducing
+#'       earlier results.}
 #'   }
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
-#'   [impute()]. See [fit_pigauto()] for the full list; the "Safety
-#'   floor" section below describes the relevant new v0.9.1.9002
-#'   argument.
+#'   [impute()]. See [fit_pigauto()] for the full list, including the
+#'   optional `safety_floor` control described below.
 #'
 #' @return An object of class `"pigauto_mi"` with components:
 #'   \describe{
@@ -262,6 +261,10 @@
 #'   }
 #'
 #' @details
+#' With the default \code{draws_method = "auto"}, eligible continuous-trait data
+#' use posterior draws; other inputs use conformal prediction-diagnostic
+#' draws. Check \code{result$draws_method} before downstream fitting.
+#'
 #' The conformal and MC-dropout draws do not condition on a declared
 #' substantive analysis model.
 #' Consequently, stochastic variation alone does not make them proper or
@@ -269,9 +272,9 @@
 #' analysis model before generating draws and dispatches only across its
 #' documented supported model classes.
 #'
-#' **`draws_method = "conformal"` (default)**: Run the model once; missing
+#' **`draws_method = "conformal"`**: Run the model once; missing
 #' cells are sampled from
-#' \eqn{x_{ij}^{(k)} \sim \mathrm{N}(\hat\mu_{ij},\; q_{j}/1.96)}
+#' \eqn{x_{ij}^{(k)} \sim \mathrm{N}(\hat\mu_{ij},\; (q_{j}/1.96)^2)}
 #' where \eqn{q_j} is the trait-level split-conformal residual quantile.
 #' Dividing this quantile by 1.96 is a pragmatic Normal-scale construction,
 #' not an inference consequence of a nominal held-out conformal diagnostic. For discrete traits (binary,
@@ -334,19 +337,15 @@
 #' The implied Pagel's lambda of trait \eqn{k} is
 #' \eqn{\Sigma_P[k,k] / (\Sigma_P[k,k] + \Sigma_E[k,k])}.
 #'
-#' Priors: \eqn{\Sigma_P = \mathrm{diag}(\alpha)\,\Sigma_W\,
-#' \mathrm{diag}(\alpha)} with \eqn{\Sigma_W \sim \mathrm{IW}(K+1, I_K)} and
-#' \eqn{\alpha \sim \mathrm{N}(0, 1000\, I_K)} (parameter expansion as in
-#' MCMCglmm; Hadfield 2010; Gelman 2006);
-#' \eqn{\Sigma_E \sim \mathrm{IW}(K+1,\, 0.01\,\mathrm{diag}(s^2))}, where
-#' \eqn{s^2} are the observed variances of the latent traits; and a flat
-#' prior on \eqn{\mu}. Here \eqn{\mathrm{IW}(\nu, S)} has density
-#' proportional to
-#' \eqn{|\Sigma|^{-(\nu+K+1)/2}\exp\{-\mathrm{tr}(S\Sigma^{-1})/2\}}.
-#' MCMCglmm parameterises the inverse-Wishart by \eqn{(V, \nu)} with scale
-#' matrix \eqn{\nu V}, so its equivalent of the \eqn{\Sigma_W} prior is
-#' \eqn{V = I_K/(K+1)}, \eqn{\nu = K+1}, not MCMCglmm's default prior. The
-#' prior settings used are returned in `mi$posterior$hyper`.
+#' The phylogenetic covariance uses a parameter-expanded inverse-Wishart
+#' prior on its standardized covariance matrix and Normal priors on the
+#' expansion parameters (Hadfield 2010; Gelman 2006). The default residual
+#' covariance prior uses a separation strategy: residual standard deviations
+#' have half-Cauchy priors scaled by the observed latent-trait standard
+#' deviations, and the residual correlation has an LKJ(1) prior. The legacy
+#' `posterior_control$residual_prior = "iw"` option instead uses an
+#' inverse-Wishart prior on the residual covariance. Prior settings are
+#' returned in `mi$posterior$hyper`.
 #'
 #' The sampler draws the phylogenetic effects, the trait means and the missing
 #' cells as one block with a sparse Cholesky factor of the Hadfield and
@@ -380,12 +379,13 @@
 #' `species_col`), `covariates`, and input with no missing cells in the rows
 #' of `traits` (tree tips absent from `traits` do not count) are errors.
 #'
-#' @section Safety floor (v0.9.1.9002+):
-#'   When \code{fit_pigauto()} was called with \code{safety_floor = TRUE}
-#'   (the default since v0.9.1.9002), the 3-way blend
+#' @section Optional safety floor:
+#'   When \code{fit_pigauto()} is called with \code{safety_floor = TRUE}
+#'   (opt-in; the default is \code{FALSE}), the 3-way blend
 #'   \code{r_BM * BM + r_GNN * GNN + r_MEAN * MEAN} propagates through
-#'   every imputation draw automatically via the updated
-#'   \code{predict.pigauto_fit()}.  For \code{draws_method = "mc_dropout"}
+#'   prediction-diagnostic draws through \code{predict.pigauto_fit()}.
+#'   The posterior sampler uses its own model and does not use this blend.
+#'   For \code{draws_method = "mc_dropout"}
 #'   the mean term contributes no between-draw variance (it is a
 #'   deterministic scalar per column); between-draw variance comes from the
 #'   BM-draw and GNN-dropout terms
@@ -405,7 +405,8 @@
 #'                 c("Mass", "Wing.Length"), drop = FALSE]
 #' rownames(df) <- tree$tip.label
 #' df$Mass[seq_len(3L)] <- NA_real_
-#' mi <- multi_impute(df, tree, m = 2L, epochs = 5L, verbose = FALSE)
+#' mi <- multi_impute(df, tree, m = 2L, draws_method = "conformal",
+#'                    epochs = 5L, verbose = FALSE)
 #' print(mi)
 #' lapply(mi$datasets, head)
 #' }

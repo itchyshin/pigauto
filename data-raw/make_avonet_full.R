@@ -20,8 +20,9 @@ csv_path  <- here("avonet", "AVONET3_BirdTree.csv")
 
 if (!file.exists(csv_path))  stop("CSV file not found: ", csv_path)
 
-# The upstream megatrees package and release assets are MIT-licensed. Record
-# the asset digest in inst/NOTICE and retain the Jetz et al. (2012) citation.
+# The megatrees package records an MIT license. Redistribution rights for the
+# underlying BirdTree data in pigauto remain unresolved. Record the asset
+# digest in inst/NOTICE and retain the Jetz et al. (2012) citation.
 tree   <- megatrees::get_tree_bird_n100()[[69L]]
 avonet <- read.csv(csv_path, stringsAsFactors = FALSE)
 avonet$Species_Key <- gsub(" ", "_", avonet$Species3)

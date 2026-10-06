@@ -1,0 +1,12 @@
+Package: pigauto
+Version: 0.10.0
+Depends: R (>= 4.1)
+Imports: torch, ape, ggplot2, Matrix, rlang, stats, utils, graphics,
+        grDevices, withr,
+Suggests: testthat, jsonlite, knitr, rmarkdown, pkgdown, RSpectra,
+        Rphylopars, jomo, MCMCglmm, glmmTMB, lme4, nlme, phangorn,
+        phylolm, rgbif, smcfcs, terra, phytools
+License: MIT + file LICENSE
+MD5sum: b9d9a50feb20fbd245cbfd5b0aea42c4
+NeedsCompilation: no
+Published: 2026-07-30 17:10:22 UTC

@@ -212,9 +212,9 @@ test_that("[lambda-default] estimated lambda is applied", {
   expect_equal(unname(pred_x1), unname(ref$mu), tolerance = 1e-3)
 })
 
-# ---- (vi) NEWS mentions lambda early --------------------------------------
+# ---- (vi) NEWS mentions lambda in the current release ----------------------
 
-test_that("[lambda-default] NEWS.md mentions lambda in the unreleased section", {
+test_that("[lambda-default] NEWS.md mentions lambda in the current release", {
   news_path <- system.file("..", "NEWS.md", package = "pigauto")
   if (!nzchar(news_path) || !file.exists(news_path)) {
     # Not installed with NEWS.md (e.g. devtools::load_all from source):
@@ -222,11 +222,13 @@ test_that("[lambda-default] NEWS.md mentions lambda in the unreleased section", 
     news_path <- testthat::test_path("..", "..", "NEWS.md")
   }
   skip_if_not(file.exists(news_path), "NEWS.md not found")
-  # The unreleased section runs from the top to the first released version
-  # header ("# pigauto x.y.z", no ".9xxx" development suffix). A fixed line
-  # count broke as soon as later entries were added above the lambda one.
+  # The first NEWS block is the current release (or development) entry. Stop
+  # before the next version header so older lambda notes cannot satisfy this.
   news <- readLines(news_path, warn = FALSE)
-  released <- grep("^# pigauto [0-9]+\\.[0-9]+\\.[0-9]+\\s*$", news)
-  dev_lines <- if (length(released)) news[seq_len(released[1] - 1L)] else news
-  expect_true(any(grepl("lambda", dev_lines, ignore.case = TRUE)))
+  headings <- grep("^# pigauto [0-9]+\\.[0-9]+\\.[0-9]+", news)
+  expect_true(length(headings) >= 1L)
+  expect_equal(headings[[1L]], 1L)
+  end <- if (length(headings) >= 2L) headings[[2L]] - 1L else length(news)
+  current_lines <- news[seq_len(end)]
+  expect_true(any(grepl("lambda", current_lines, ignore.case = TRUE)))
 })

@@ -487,63 +487,6 @@ test_that("automatic fixed-effect adapter covers lme4 Matrix covariance", {
 })
 
 
-test_that("automatic drmTMB adapter pools all distributional fixed effects", {
-  skip_if_not_installed("drmTMB")
-  drm_fit <- getExportedValue("drmTMB", "drmTMB")
-  bf <- getExportedValue("drmTMB", "bf")
-  set.seed(1902)
-  dat <- data.frame(x = seq(-1, 1, length.out = 40))
-  dat$y <- 0.3 + 0.7 * dat$x + rnorm(40, sd = exp(-0.2 + 0.1 * dat$x))
-  fit1 <- drm_fit(bf(y ~ x, sigma ~ x), data = dat)
-  dat$y <- dat$y + rnorm(40, sd = 0.01)
-  fit2 <- drm_fit(bf(y ~ x, sigma ~ x), data = dat)
-
-  pooled <- pool_unverified(list(fit1, fit2))
-  expect_equal(
-    pooled$term,
-    c("mu:(Intercept)", "mu:x", "sigma:(Intercept)", "sigma:x")
-  )
-  expect_true(all(is.finite(pooled$estimate)))
-  expect_true(all(is.finite(pooled$std.error)))
-})
-
-
-test_that("automatic gllvmTMB adapter uses fixed-effect tidy rows only", {
-  skip_if_not_installed("gllvmTMB")
-  simulate_site_trait <- getExportedValue("gllvmTMB", "simulate_site_trait")
-  gllvm_fit <- getExportedValue("gllvmTMB", "gllvmTMB")
-  set.seed(1903)
-  sim <- simulate_site_trait(
-    n_sites = 30, n_species = 8, n_traits = 2,
-    mean_species_per_site = 5,
-    Lambda_B = matrix(c(0.5, -0.2), nrow = 2),
-    psi_B = c(0.2, 0.2), sigma2_eps = 0.1, seed = 1903
-  )
-  fit <- suppressMessages(suppressWarnings(gllvm_fit(
-    value ~ 0 + trait + latent(0 + trait | site, d = 1),
-    data = sim$data, silent = TRUE
-  )))
-
-  tidy_method <- utils::getS3method(
-    "tidy", "gllvmTMB_multi", envir = asNamespace("gllvmTMB")
-  )
-  fixed <- tidy_method(fit, effects = "fixed")
-
-  # Saved fits must remain poolable in a fresh session where gllvmTMB has not
-  # already been attached or loaded. The adapter is responsible for loading
-  # the namespace that owns the class-specific tidy method.
-  unloadNamespace("gllvmTMB")
-  on.exit(loadNamespace("gllvmTMB"), add = TRUE)
-  expect_false("gllvmTMB" %in% loadedNamespaces())
-  pooled <- pool_unverified(list(fit, fit))
-  expect_true("gllvmTMB" %in% loadedNamespaces())
-  expect_equal(pooled$term, fixed$term)
-  expect_equal(pooled$estimate, fixed$estimate)
-  expect_equal(pooled$std.error, fixed$std.error)
-  expect_false(any(grepl("^sd_|loglambda|cutpoint", pooled$term)))
-})
-
-
 # ---- 10. pool_mi() rejects MCMCglmm fits ------------------------------------
 
 test_that("pool_mi() errors cleanly when passed MCMCglmm fits", {

@@ -31,7 +31,7 @@ message saying why.
 
 | `draws_method` | Use it for | Pass to `with_imputations()` and `pool_mi()`? |
 |---|---|---|
-| `"posterior"` | Downstream inference on continuous traits | Yes |
+| `"posterior"` | Linear analyses of imputed continuous traits on their imputation scale | Yes, for those analyses |
 | `"conformal"` (`"auto"` fallback) | Looking at the spread of plausible values | No, refused |
 | `"mc_dropout"` | Looking at the spread of plausible values | No, refused |
 
@@ -68,9 +68,12 @@ correlation had 95% interval coverage of 0.925 to 0.975 in every cell,
 including correlated traits at lambda = 1 (slope coverage 0.955, 0.940 and
 0.965 at n = 100, 300 and 1000). At n = 100 with correlated traits the
 pooled slope was biased by about -0.02 towards zero, with coverage still
-0.96. Before pigauto 0.11.0.9002 the sampler used an inverse-Wishart
-residual prior, which attenuated the relationship between correlated traits
-at lambda near 1 (coverage 0.75 at n = 1000); it is still available as
+0.96. The current residual prior separates standard deviations, with
+half-Cauchy priors scaled to the observed latent traits, from a residual
+correlation with an LKJ(1) prior. Before pigauto 0.11.0.9002 the sampler
+used an inverse-Wishart residual prior, which attenuated the relationship
+between correlated traits at lambda near 1 (coverage 0.75 at n = 1000);
+that prior remains available as
 `posterior_control = list(residual_prior = "iw")`.
 
 For one incomplete covariate in a Gaussian `lm`, a binomial `glm` or an
@@ -124,6 +127,16 @@ the fixed-effect estimates with Rubin's rules (Rubin 1987; Barnard and Rubin
 1999) and returns one row per coefficient with the pooled estimate, standard
 error, degrees of freedom, confidence interval and the fraction of missing
 information (`fmi`).
+
+The examples below show how each model class is fitted and how its fixed
+effects are extracted. Inferential validation of these posterior imputations
+is narrower: the analysis must be linear in the imputed continuous traits,
+use them on their imputation scale, and include no variables outside those
+traits. Check which traits `log_transform` transformed before fitting
+`log(...)`. The joined diet variable, distributional model, and latent-model
+structure in later examples are outside that validation. Their pooled tables
+demonstrate software compatibility; they do not establish calibrated
+inference for those analyses.
 
 The question in every example is the same: how does wing length scale with
 body mass?
@@ -213,18 +226,22 @@ to_long <- function(d) {
 }
 
 fits_gllvm <- with_imputations(mi, function(d) {
-  gllvmTMB::gllvmTMB(value ~ 0 + trait + latent(0 + trait | species, d = 1),
+  gllvmTMB::gllvmTMB(value ~ 0 + trait +
+                       latent(0 + trait | species, d = 1, unique = FALSE),
                      data = to_long(d), trait = "trait", unit = "species",
-                     silent = TRUE)
+                     family = gaussian(), REML = FALSE,
+                     engine = "tmb", silent = TRUE)
 })
 pool_mi(fits_gllvm)
 ```
 
 ### Other models
 
-Any fit with `coef()` and `vcov()` methods can be pooled. For other classes,
-pass extractor functions to `pool_mi()` through `coef_fun` and `vcov_fun`,
-or a `tidy_fun` returning `term`, `estimate` and `std.error`.
+For other model classes, pass extractor functions to `pool_mi()` through
+`coef_fun` and `vcov_fun`, or a `tidy_fun` returning `term`, `estimate`
+and `std.error`. The same named, finite fixed-effect terms must be
+available across the retained fits; inspect reported fit failures before
+using pooled estimates.
 
 ## Bayesian models: concatenate, do not pool
 

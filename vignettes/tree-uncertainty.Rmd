@@ -30,9 +30,11 @@ that sample.
 
 ## Prediction-sensitivity workflow
 
-With `share_gnn = TRUE` (the default), the GNN is trained once on a reference
-tree and the baseline is recomputed for every posterior tree. The returned
-datasets can be compared descriptively; do not pass them to `pool_mi()`.
+The default `gnn = FALSE` fits no network and recomputes the baseline
+across posterior trees. If you explicitly set `gnn = TRUE`,
+`share_gnn = TRUE` (the default) trains one GNN on a reference tree and
+shares it across trees. The returned datasets can be compared
+descriptively; do not pass them to `pool_mi()`.
 
 ```{r canonical, eval = FALSE}
 library(pigauto)
@@ -42,7 +44,7 @@ rownames(df) <- df$Species_Key
 df$Species_Key <- NULL
 
 mi <- multi_impute_trees(df, trees = trees300, m_per_tree = 1L)
-# share_gnn = TRUE, reference_tree = MCC via phangorn -- all default
+# gnn = FALSE by default; the baseline responds to each tree
 
 mass_by_tree <- vapply(mi$datasets, function(dat) dat$Mass, numeric(nrow(df)))
 apply(mass_by_tree, 1L, stats::sd)  # descriptive sensitivity, not an MI SE
@@ -51,9 +53,10 @@ apply(mass_by_tree, 1L, stats::sd)  # descriptive sensitivity, not an MI SE
 The code above is illustrative and left unevaluated because the tree loop is
 computationally expensive.
 
-## Why `share_gnn = TRUE` preserves tree signal
+## When the optional GNN is shared
 
-The calibrated gate `r_cal` controls how much of each prediction comes
+With `gnn = TRUE, share_gnn = TRUE`, the calibrated gate `r_cal`
+controls how much of each prediction comes
 from the baseline vs the GNN. In high-phylogenetic-signal regimes the
 gate often closes or nearly closes, so `pred = baseline(tree_t)` and the
 per-tree baseline carries the tree-uncertainty signal. When the gate is
@@ -67,8 +70,8 @@ comparison), set `share_gnn = FALSE`:
 
 ```{r opt_out, eval = FALSE}
 mi_slow <- multi_impute_trees(df, trees300, m_per_tree = 1L,
-                               share_gnn = FALSE)
-# fits T = length(trees300) full pigauto models -- ~10-15x slower.
+                               gnn = TRUE, share_gnn = FALSE)
+# Fits a separate GNN on each tree; runtime depends on tree size and hardware.
 ```
 
 ## What this does not establish

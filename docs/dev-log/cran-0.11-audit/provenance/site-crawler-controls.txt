@@ -1,0 +1,18 @@
+Valid control:
+{
+  "html_pages": 2,
+  "local_references_checked": 1,
+  "retired_pages": 0,
+  "errors": []
+}
+SITE_CRAWL_OK
+
+Planted missing-link control rejected:
+{
+  "html_pages": 2,
+  "local_references_checked": 1,
+  "retired_pages": 0,
+  "errors": [
+    "index.html: missing missing.html"
+  ]
+}

@@ -1,0 +1,6 @@
+FULL_DATA_OK drm elapsed_s 0.471 
+POSTERIOR_START drm at 2026-10-06 09:25:18 
+posterior: 4 chains x (1000 burn-in + 5000 sweeps, thin 20)
+POSTERIOR_OK drm wall 84.259 
+[1] 0
+RECOVERY_SEED_OK drm 2026100608 wall_s 84.66 

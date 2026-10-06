@@ -1,0 +1,6 @@
+FULL_DATA_OK gllvm elapsed_s 0.578 
+POSTERIOR_START gllvm at 2026-10-06 11:35:36 
+posterior: 4 chains x (1000 burn-in + 5000 sweeps, thin 20)
+POSTERIOR_OK gllvm wall 1280.833 
+[1] 0
+RECOVERY_SEED_OK gllvm 2026100610 wall_s 1282.813 

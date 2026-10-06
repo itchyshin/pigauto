@@ -33,9 +33,9 @@ completed <- completed_data(result)
 pigauto_report(result)
 ```
 
-`check_pigauto()` and `completed_data()` are in the development version
-(>= 0.11.0). A CRAN 0.10.0 install does not have them: after
-`install.packages("pigauto")`, call `impute(traits, tree)` directly.
+`check_pigauto()` and `completed_data()` were added in 0.11.0. If your
+installed version is 0.10.0, call `impute(traits, tree)` directly; that
+version does not include these helpers.
 
 `check_pigauto()` is fit-free. Resolve its structured errors before fitting;
 inspect `check$species$matched`, `$data_only`, and `$tree_only` when labels do
@@ -127,7 +127,7 @@ install.packages("pigauto")
 # Development version
 pak::pak("itchyshin/pigauto")
 
-# torch backend (required; ~1 GB first-time download)
+# Install the torch runtime only if you plan to use gnn = TRUE
 torch::install_torch()
 ```
 
@@ -409,8 +409,11 @@ terms such as `z_sq`. Fixed effects are the only supported pooling targets.
 Conformal-width, Brownian/MC-dropout, and PMM draws remain experimental
 prediction diagnostics. They failed the downstream fixed-effect gate and must
 not be passed to `with_imputations()`/`pool_mi()` for inference. For
-continuous traits with one row per species, `multi_impute()` with its
-default `draws_method = "auto"` uses posterior draws, which can be pooled.
+continuous traits with one row per species and no covariates,
+`multi_impute()` with its default `draws_method = "auto"` uses posterior
+draws. Downstream pooling is supported for linear analyses of the imputed
+traits on their imputation scale; see the
+[multiple imputation article](multiple-imputation.html) for the conditions.
 
 ## Phylogenetic tree uncertainty
 

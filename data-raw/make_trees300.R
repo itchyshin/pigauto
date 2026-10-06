@@ -3,8 +3,9 @@
 ## Run from the package root: Rscript data-raw/make_trees300.R
 ##
 ## Requires: megatrees (>= 1.0.0), ape, pigauto (for tree300 tip names).
-## Source: megatrees::get_tree_bird_n100() -- an MIT-licensed distribution of
-## 100 posterior trees from the BirdTree Hackett backbone (Jetz et al. 2012).
+## Source: megatrees::get_tree_bird_n100(), 100 posterior trees from the
+## BirdTree Hackett backbone (Jetz et al. 2012). The megatrees package records
+## an MIT license; BirdTree data redistribution rights in pigauto remain open.
 
 library(ape)
 library(megatrees)

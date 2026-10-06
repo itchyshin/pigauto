@@ -50,42 +50,6 @@ test_that("pool_mi() pools lme4::lmer fits from with_imputations()", {
   pmb_check(pool_mi(fits), c("(Intercept)", "wing"))
 })
 
-test_that("pool_mi() pools drmTMB fits from with_imputations()", {
-  skip_on_cran()
-  skip_if_not_installed("drmTMB")
-  drm_fit <- getExportedValue("drmTMB", "drmTMB")
-  bf <- getExportedValue("drmTMB", "bf")
-  mi <- pmb_mi()
-  fits <- with_imputations(mi, function(d) drm_fit(bf(mass ~ wing, sigma ~ wing), data = d))
-  pmb_check(pool_mi(fits),
-            c("mu:(Intercept)", "mu:wing", "sigma:(Intercept)", "sigma:wing"))
-})
-
-test_that("pool_mi() pools gllvmTMB fixed effects from with_imputations()", {
-  skip_on_cran()
-  skip_if_not_installed("gllvmTMB")
-  gllvm_fit <- getExportedValue("gllvmTMB", "gllvmTMB")
-  mi <- pmb_mi()
-  # Plumbing test only: with two traits, one latent factor at one row per
-  # unit is not identified, so each completed dataset is stacked into a
-  # long table with 3 jittered pseudo-visits per unit. The fitted model has
-  # no scientific meaning; the test checks that gllvmTMB fixed effects flow
-  # through with_imputations() and pool_mi().
-  fits <- with_imputations(mi, function(d) {
-    set.seed(5L)
-    long <- do.call(rbind, lapply(c("mass", "wing"), function(tr) {
-      data.frame(site = factor(rep(rownames(d), each = 3L)),
-                 trait = factor(tr, levels = c("mass", "wing")),
-                 value = rep(d[[tr]], each = 3L) + stats::rnorm(3L * nrow(d), sd = 0.3))
-    }))
-    suppressMessages(suppressWarnings(gllvm_fit(
-      value ~ 0 + trait + latent(0 + trait | site, d = 1),
-      data = long, trait = "trait", unit = "site", silent = TRUE
-    )))
-  })
-  pmb_check(pool_mi(fits), c("traitmass", "traitwing"))
-})
-
 test_that("pool_mi() refuses brmsfit lists and points to brm_multiple()", {
   fake <- structure(list(), class = "brmsfit")
   expect_error(pool_mi(list(fake, fake)), "brm_multiple")

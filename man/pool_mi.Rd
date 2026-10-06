@@ -102,7 +102,7 @@ supplied, Barnard--Rubin instead retains finite observed-data df and its
 small-sample FMI adjustment. A completely deterministic quantity
 (\code{B = W = 0}) always has zero FMI and infinite df.
 
-Only fixed-effect coefficients are pooled in version 0.10.0. Random-effect
+Only fixed-effect coefficients are pooled. Random-effect
 variances and correlations, BLUPs/conditional modes, latent loadings, and
 other structured parameters require parameter-specific transformations and
 are not supported by the automatic \code{pool_mi()} adapters. Custom extractors
@@ -111,7 +111,8 @@ select unsupported structured parameters is outside the documented scope.
 The \code{glmmTMB} adapter selects conditional fixed effects only. The \code{drmTMB}
 adapter includes named distributional fixed-effect blocks such as regression
 coefficients for \code{mu} and \code{sigma}; those are fixed coefficients, not
-random-effect variance components.
+random-effect variance components. \code{drmTMB} and \code{gllvmTMB} need to be
+installed and loadable only when their automatic adapters are used.
 
 \strong{Supported classes.} \code{lm}, \code{glm}, \code{gls}, \code{lme}, \code{merMod} (lme4),
 \code{glmmTMB} (conditional component), \code{drmTMB}, and \code{gllvmTMB_multi} are

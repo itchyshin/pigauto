@@ -40,7 +40,7 @@ knitr::opts_chunk$set(
 # # Development version
 # pak::pak("itchyshin/pigauto")
 #
-# # torch backend (required; ~1 GB first-time download)
+# # Install the torch runtime only if you plan to use gnn = TRUE
 # torch::install_torch()
 
 
@@ -118,7 +118,8 @@ cat("Kernel bandwidth sigma:", round(graph$sigma, 3), "\n")
 #   eval_every      = 100,
 #   patience        = 10,
 #   verbose         = TRUE,
-#   seed            = 1
+#   seed            = 1,
+#   gnn             = TRUE
 # )
 
 
@@ -134,13 +135,17 @@ cat("Kernel bandwidth sigma:", round(graph$sigma, 3), "\n")
 # head(pred$imputed)
 #
 # # Conformal prediction intervals (nominal held-out diagnostic)
-# pred$conformal_lower[["Mass"]]    # lower bound per species (original units)
-# pred$conformal_upper[["Mass"]]    # upper bound per species (original units)
-# pred$conformal_coverage           # empirical coverage on val set (target ≈ 0.95)
+# pred$conformal_lower[, "Mass"]    # lower bound per species (original units)
+# pred$conformal_upper[, "Mass"]    # upper bound per species (original units)
+# # Coverage is not stored on the prediction object. Score it with evaluate()
+# # (or evaluate_imputation() on held-out cells).
 
 
 ## ----evaluate, eval=FALSE-----------------------------------------------------
+# # Held-out scores (z-score RMSE for continuous traits)
 # evaluate_imputation(pred$imputed_latent, pd$X_scaled, splits)
+#
+# # Per-trait calibrated gate. 0 means baseline-only.
 # fit$r_cal
 
 
@@ -222,7 +227,7 @@ cat("Kernel bandwidth sigma:", round(graph$sigma, 3), "\n")
 # #> data.frame with bio1..bio19 medians + IQRs + n_extracted per species
 #
 # # Step 3: hand the whole climate frame to impute() as covariates
-# result <- impute(my_traits, my_tree, covariates = clim)
+# result <- impute(my_traits, my_tree, covariates = clim, gnn = TRUE)
 
 
 ## ----gpu, eval=FALSE----------------------------------------------------------

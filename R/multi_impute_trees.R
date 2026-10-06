@@ -90,13 +90,12 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #' @param seed optional integer. Base random seed; when supplied, each tree
 #'   uses `seed + t - 1` for reproducible results. The default `NULL` uses
 #'   the current RNG stream.
-#' @param share_gnn logical. If `TRUE` (default), fit the GNN once on a
-#'   reference tree and reuse it across all posterior trees, recomputing
-#'   only the BM baseline per tree. Gives a ~10-15x speedup at n=10k.
-#'   See the "Share-GNN" section below for tree-uncertainty propagation
-#'   details. Set `FALSE` to fit from scratch on every tree (the pre-v0.9.1
-#'   behaviour) when you need exact tree-by-tree model independence.
-#' @param reference_tree optional `phylo` used as the training tree when
+#' @param share_gnn logical. With `gnn = TRUE`, `TRUE` (the default) trains
+#'   one GNN on a reference tree and reuses it while recomputing the
+#'   baseline for each posterior tree. Set `FALSE` to refit the GNN on each
+#'   tree. With the default `gnn = FALSE`, no GNN is trained in either mode.
+#'   See the "Share-GNN" section below.
+#' @param reference_tree optional `phylo` used for the reference fit when
 #'   `share_gnn = TRUE`. Default `NULL` selects the maximum-clade-credibility
 #'   tree via `phangorn::maxCladeCred(trees)`. If `phangorn` is not
 #'   installed, falls back to `trees[[1]]` with a warning.
@@ -108,9 +107,10 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #' @param gnn logical. Passed through to [impute()] / [fit_pigauto()] for
 #'   every tree. When `TRUE`, the usual GNN correction is trained
 #'   (once, on the reference tree, when `share_gnn = TRUE`). When `FALSE`,
-#'   no GNN is used anywhere in the pipeline -- baseline-only fits
-#'   throughout (the default since 0.11.0.9001; see [impute()]). Under `share_gnn = TRUE`, each tree's per-tree baseline is
-#'   then fit tax-free (`splits = NULL`), matching the production
+#'   no GNN is used anywhere in the pipeline: baseline-only fits
+#'   throughout (the default since 0.11.0.9001; see [impute()]). With
+#'   `share_gnn = TRUE`, each tree's baseline is fit without held-out
+#'   splits (`splits = NULL`), matching the production
 #'   `baseline_full` semantics [fit_pigauto()] uses.
 #' @param ... additional arguments forwarded to [fit_pigauto()] via
 #'   [impute()].
@@ -137,11 +137,11 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'     \item{`mi_workflow`}{`"pigauto_tree_sensitivity_diagnostic"`,
 #'       recording that these are prediction-sensitivity completions and
 #'       cannot be passed to [with_imputations()] or [pool_mi()].}
-#'     \item{`fit`}{Single \code{pigauto_fit} trained on the reference
+#'     \item{`fit`}{Single \code{pigauto_fit} fitted on the reference
 #'       tree when `share_gnn = TRUE`; `NULL` otherwise.}
 #'     \item{`fits`}{List of `T` \code{pigauto_fit} objects (one per tree)
 #'       when `share_gnn = FALSE`; `NULL` when `share_gnn = TRUE`.}
-#'     \item{`reference_tree`}{The reference `phylo` used for GNN training
+#'     \item{`reference_tree`}{The reference `phylo` used for the shared fit
 #'       when `share_gnn = TRUE`; `NULL` otherwise.}
 #'     \item{`trees`}{The input posterior trees.}
 #'     \item{`species_col`}{Passed-through species column name.}
@@ -149,8 +149,8 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'
 #' @section Share-GNN (tree-sharing) mode:
 #'
-#' Under `share_gnn = TRUE` the GNN weights and spectral features are
-#' trained once on the reference tree (MCC by default). For each
+#' When `gnn = TRUE, share_gnn = TRUE`, the GNN weights and spectral features
+#' are trained once on the reference tree (MCC by default). For each
 #' posterior tree the BM / joint-MVN baseline is recomputed, and the
 #' prediction is the blend `(1 - r_cal) * baseline_t + r_cal * gnn_shared`.
 #' Because `r_cal` is calibrated once on held-out data at the reference
@@ -167,22 +167,25 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #' On every real dataset benchmarked in the v0.9.0 campaign the gate
 #' closed partially or fully. This evidence is specific to those benchmark
 #' regimes and does not guarantee tree-variance calibration elsewhere.
-#' Set `share_gnn = FALSE` if you need exact per-tree model independence.
+#' Set `share_gnn = FALSE` with `gnn = TRUE` if you need a separate GNN fit
+#' for each tree. With the default `gnn = FALSE`, there is no GNN channel.
 #'
 #' @details
-#' For each tree the function runs the full pigauto pipeline
-#' (preprocess -> baseline -> GNN -> predict) when `share_gnn = FALSE`.
-#' With the default `share_gnn = TRUE`, the GNN is trained once and only
-#' the baseline is recomputed per tree. Topologies and branch lengths vary
-#' across trees, so the phylogenetic baseline covariance differs for each
+#' For each tree the function runs preprocessing, baseline fitting and
+#' prediction. A GNN is also fitted only when `gnn = TRUE`; with
+#' `share_gnn = TRUE`, that GNN is trained once on a reference tree.
+#' Topologies and branch lengths vary across trees, so the phylogenetic
+#' baseline covariance differs for each
 #' tree.
 #'
 #' The returned datasets may be compared descriptively to assess sensitivity
 #' of point imputations to the tree sample. No calibrated downstream standard
 #' error or Rubin-pooling claim is made for this path.
 #'
-#' **Computation time.** With `share_gnn = TRUE` (default): one GNN fit
-#' + T cheap baseline passes. Rough budget on a modern CPU laptop:
+#' **Computation time.** The following historical planning estimates apply
+#' to `gnn = TRUE`, with one shared GNN fit plus T baseline passes when
+#' `share_gnn = TRUE`. They are not timings for the current GNN-off default;
+#' estimate the intended tree and sample setting before a campaign.
 #'
 #' \tabular{rrrr}{
 #'   Species n \tab 1 fit \tab T = 50 share_gnn=TRUE \tab T = 50 share_gnn=FALSE \cr
@@ -192,14 +195,16 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #' }
 #'
 #' @section Which draw mechanism this uses (and its limitation):
-#' Within each tree, the \code{m_per_tree} completions are **MC-dropout**
-#' draws: \code{n_imputations = m_per_tree} is passed to \code{\link{impute}},
-#' which runs the GNN forward repeatedly with dropout active and a fresh BM
-#' posterior draw per imputation.
+#' The default `draws_method = "mc_dropout"` passes
+#' `n_imputations = m_per_tree` to [impute()]. With `gnn = TRUE`, each draw
+#' combines a fresh baseline draw with a stochastic GNN pass. With the
+#' default `gnn = FALSE`, no GNN or dropout runs; only the baseline draw
+#' varies within each tree.
 #'
-#' This is **not** the same mechanism as \code{\link{multi_impute}}, whose
-#' default \code{draws_method = "conformal"} samples from calibrated
-#' conformal scores. MC-dropout + BM draws reflect model and prior uncertainty,
+#' This differs from the conformal option in [multi_impute()]. That
+#' function now defaults to `draws_method = "auto"`, selecting posterior
+#' draws for eligible continuous-trait inputs and conformal draws otherwise.
+#' Baseline and optional GNN draws reflect model and prior uncertainty,
 #' whereas conformal draws use held-out prediction residuals. Neither mechanism
 #' validates downstream pooling or inference for posterior-tree completions.
 #'

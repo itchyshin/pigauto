@@ -56,7 +56,7 @@ home:
 
 navbar:
   structure:
-    left:  [intro, articles, methodology, reference, news]
+    left:  [intro, articles, reference, news]
     right: [search, github]
   components:
     intro:
@@ -87,51 +87,10 @@ navbar:
         # needed, write a new source-backed vignette under vignettes/
         # rather than reanimating the archived HTML.  Audit detail:
         # useful/pkgdown_page_rethink.md.
-    methodology:
-      text: Methodology
-      menu:
-        - text: "Per-trait benches"
-        - text: "Continuous (BM / OU / regime / nonlinear)"
-          href: dev/bench_continuous.html
-        - text: "Binary (signal strength sweep)"
-          href: dev/bench_binary.html
-        - text: "Ordinal (level count sweep)"
-          href: dev/bench_ordinal.html
-        - text: "Count (Poisson / NegBin)"
-          href: dev/bench_count.html
-        - text: "Categorical (K-level sweep)"
-          href: dev/bench_categorical.html
-        - text: "Proportion (signal sweep)"
-          href: dev/bench_proportion.html
-        - text: "Zero-inflated counts (zero fraction sweep)"
-          href: dev/bench_zi_count.html
-        - text: "-------"
-        - text: "Cross-dataset benches and simulations"
-        - text: "AVONET missingness sweep (20 / 50 / 80 %)"
-          href: dev/bench_avonet_missingness.html
-        - text: "Missingness mechanisms (MCAR / MAR / MNAR)"
-          href: dev/bench_missingness_mechanism.html
-        - text: "Delhey 5,809-species birds"
-          href: dev/bench_delhey.html
-        - text: "Multi-observation imputation (CTmax-like)"
-          href: dev/bench_multi_obs.html
-        - text: "Covariate effectiveness (simulation sweep)"
-          href: dev/bench_covariate_sim.html
-        # -------- Phase 2 placeholder --------
-        # When Phase 2 ships, add an entry here for the math vignette:
-        #   - text: "Mathematical & algorithmic description"
-        #     href: articles/methodology.html
-        #
-        # -------- Historical benchmark evidence --------
-        # The following pre-v0.10 snapshot pages remain under _site/dev/ as
-        # historical benchmark evidence, but are intentionally absent from
-        # the release navbar. Re-add them only after their script/make_*_html.R
-        # driver has been rerun against the release code and the claims have
-        # been reviewed:
-        #   bench_multi_proportion, bench_scaling_v090, pantheria_summary,
-        #   phase8_summary, bench_signal_sweep, bench_correlation_sweep,
-        #   bench_evo_model_sweep, bench_clade_missingness,
-        #   bench_bace_avonet_head_to_head, bench_pantheria_bace_head_to_head.
+    # Dated static benchmark snapshots were retired from public navigation
+    # for 0.11.0. Their unchanged source files are archived under
+    # dev/archive/cran-011-public-pages/ with a hash manifest in
+    # docs/dev-log/cran-0.11-audit/retirement-manifest.md.
 
 reference:
   - title: "Start here"
@@ -145,26 +104,26 @@ reference:
       - print.pigauto_check
       - impute
       - completed_data
+      - plot.pigauto_result
       - summary.pigauto_result
       - print.summary_pigauto_result
 
-  - title: "Experimental analysis-aware MI for fixed effects"
+  - title: "Downstream fitting and fixed-effect pooling"
     desc: >
-      The analysis model is declared before imputations are drawn. Initial
-      support is one incomplete continuous covariate under MAR with lm,
-      binomial-logit glm, or one-random-intercept lmer. Fixed effects only;
-      the backend passed its package-level fixed-effect gate and remains an
-      experimental, deliberately narrow interface.
+      Pool posterior imputations from multi_impute() for their documented
+      continuous-trait analyses, or use multi_impute_analysis() for one
+      incomplete continuous covariate under MAR with lm, binomial-logit glm,
+      or one-random-intercept lmer. Fixed effects only.
     contents:
       - multi_impute_analysis
       - with_imputations
       - pool_mi
 
-  - title: "Stochastic prediction diagnostics"
+  - title: "Multiple imputation and prediction sensitivity"
     desc: >
-      Conformal-width, Brownian/MC-dropout, PMM, and posterior-tree draws.
-      These paths failed or were outside the downstream inferential gate and
-      must not be used as analysis-aware multiple imputations.
+      The default multi_impute() route selects posterior draws for eligible
+      continuous-trait input. Conformal, MC-dropout, PMM, and posterior-tree
+      draws remain prediction diagnostics and cannot enter Rubin pooling.
     contents:
       - multi_impute
       - multi_impute_trees
