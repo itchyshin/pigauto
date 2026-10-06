@@ -274,7 +274,7 @@ at true lambda 0.3 and by 6.1 to 9.4% at lambda 0.7. At lambda 1 it falls by 1.2
 coverage of the continuous traits rises by 0.003 to 0.010 at lambda 0.3 and 0.7. At lambda 1 with 100
 species, where the previous default already covered only 0.86 to 0.92 of cells, coverage falls by a further
 0.006 to 0.018 (largest for the count and proportion traits); with 300 species it falls by at most 0.008.
-The GNN-on default of `impute()` was not re-benchmarked for this change.
+The opt-in GNN-on arm of `impute()` was not re-benchmarked for this change.
 
 On 13 real-data cases (continuous traits, 5 seeds each, GNN off, no Monte Carlo error computed), z-RMSE falls
 by 17 to 51% on AVONET and PanTHERIA and by 2.5% on AmphiBIO (2,000 species); the other seven cases change by
