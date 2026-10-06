@@ -149,6 +149,22 @@ lambda <= 0.3 and matches or beats BACE on binary and categorical traits; ordina
 Costs: at lambda = 1 with n >= 1000, accuracy -0.002 to -0.005 and Brier +0.010 to +0.016; AVONET categorical
 Brier +0.014 to +0.020 (accuracy unchanged or better). The "auto" fix for those costs did not work (screen 7).
 
+## Implementation and confirmation (2026-10-06)
+
+Decision D-320 (Shinichi, 2026-10-06): `discrete_lambda = "estimate"`, `safety_floor = FALSE` and
+`phylo_signal_gate = FALSE` become the defaults; into CRAN 0.11 if merged before the release gate.
+Implemented on this branch (2051126 feature, e51c32c NEWS and vignettes, 4b1e37c tests, 4e5dd63 text fixes after
+review). Full local suite: FAILED 0, ERRORS 0, PASSED 3295, SKIPPED 8 (optional-data guards).
+
+Confirmation run (D1): `impute()` with nothing but its new defaults, built from 4b1e37c, on 5,475 datasets (core,
+factorial, bace_dgp, bm_mixed, AVONET, lambda 0 and 0.1). Every metric equals the prototype's "none,est" arm on the
+same dataset (5,475 of 5,475; maximum absolute difference 0), so the screen results above apply to the shipped code.
+
+Rose review (`rose-review.md`): PROCEED AFTER FIXES; both blocking items were in the shipped text (gain attribution,
+costs in numbers) and are fixed in 4e5dd63. Open follow-ups: the exact route's discrete accuracy under the new
+default (no-signal fixture, 50 seeds: -0.014, SE 0.010 against per_column); categorical one-vs-rest lambdas not in
+`$lambda_per_trait`; ordinal accuracy vs BACE at low signal.
+
 ## Incident: thread cap
 
 A hand-written timing smoke on Totoro (2026-10-05 ~20:14 to 20:25) set `OPENBLAS_NUM_THREADS=1` but not
