@@ -156,6 +156,15 @@ Discrete traits run the other way. BACE is ahead by 11 to 17 accuracy points whe
 low or moderate, and every other arm is at or below the mode floor at lambda = 0.3. At lambda = 1
 that reverses and the Mk and label-propagation paths reach 0.96 against BACE's 0.84.
 
+> These results used pigauto's defaults from before October 2026, under which every discrete trait
+> was imputed at lambda = 1 and the phylogenetic-signal gate and safety floor were on. From pigauto
+> 0.11.0.9002, discrete traits get their own Pagel's lambda and the gate and floor
+> are off by default. Re-run on the same core datasets, pigauto's discrete accuracy at lambda = 0.3
+> rises from 0.462 to 0.526 at n = 100 and from 0.476 to 0.546 at n = 300, against BACE's 0.526 and
+> 0.566, and it matches or beats BACE on binary and three-class traits in every cell. Ordinal traits
+> still trail BACE at low signal. Details: `docs/dev-log/discrete-lambda/README.md` in the
+> repository.
+
 The two pigauto solvers are not interchangeable. The Rphylopars joint solver returned a finite but
 absurd value on 50 of the 3,600 core replicates (28 at n = 100, 10 at n = 300, 12 at n = 1000),
 including a z-RMSE of 8.9 for one trait; under the scoring rule those replicates are floored and
