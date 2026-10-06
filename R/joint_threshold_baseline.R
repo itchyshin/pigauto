@@ -364,6 +364,19 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
     # liab_types[fit_cols] is aligned with X_fit's columns 1:length(fit_cols).
     lambda_family_idx <- which(liab_types[fit_cols] %in%
                                   c("continuous", "count", "proportion"))
+    # PROTOTYPE (feat/discrete-lambda, opt-in, default off): estimate Pagel's
+    # lambda on the binary / ordinal liability columns as well, instead of the
+    # section 7 B iii cut that holds them at 1. Under the threshold model the
+    # liability evolves under lambda, so a weak-signal trait should shrink
+    # toward its overall prevalence rather than copy close relatives. Switched
+    # on with options(pigauto.discrete_lambda = "estimate") while it is being
+    # screened against BACE; becomes a real argument only if it earns it.
+    discrete_lambda <- getOption("pigauto.discrete_lambda", "fixed_1")
+    discrete_idx <- if (identical(discrete_lambda, "estimate")) {
+      which(liab_types[fit_cols] %in% c("binary", "ordinal"))
+    } else {
+      integer(0)
+    }
     if (!is.null(lambda_fixed)) {
       # Columns missing from `lambda_fixed` default to lambda = 1, per the
       # documented contract on `fit_baseline()`'s `lambda_fixed` argument
@@ -390,9 +403,11 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
         attr(lam_arg, "lambda_block") <- lb_fixed
       }
       lam_cols_arg <- NULL   # full vector supplied; lambda_cols unused
-    } else if (identical(lambda_mode, "estimate")) {
+    } else if (identical(lambda_mode, "estimate") || length(discrete_idx)) {
       lam_arg <- "estimate"
-      lam_cols_arg <- lambda_family_idx
+      lam_cols_arg <- sort(unique(c(
+        if (identical(lambda_mode, "estimate")) lambda_family_idx,
+        discrete_idx)))
     } else {
       lam_arg <- "fixed_1"
       lam_cols_arg <- NULL
