@@ -41,7 +41,7 @@ Discrete accuracy pooled over binary, ordinal and three-class traits and rho:
 - Both parts are needed. Lambda alone (gate on) moves little, because the phylo-signal gate replaces weak-signal
   discrete predictions with the mode; gate off alone (lambda 1) leaves categorical below the mode floor at
   n = 300, lambda = 0.3 (0.448 vs 0.450).
-- Discrete Brier score: gate off, lambda estimated is the lowest of all arms in 5 of 6 cells, and below BACE in all 6.
+- Discrete Brier score: gate off, lambda estimated is the lowest of all arms in 4 of 6 cells (at lambda = 1 the lambda-1 arms are 0.006 to 0.009 lower), and below BACE in all 6.
 
 Turning the gate off also changes continuous traits (zRMSE pooled over c1, c2, cnt, prp; lower is better):
 
