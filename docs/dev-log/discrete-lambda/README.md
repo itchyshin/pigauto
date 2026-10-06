@@ -131,6 +131,24 @@ prediction applied); (2) the choice itself is noisy (it picked lambda = 1 for th
 lambda = 0.3), because 20 to 40 validation cells per trait cannot separate the two fits. Parked as a negative result.
 "floor + auto" matches the default at lambda = 1 and on AVONET, so the floor alone protects those cases.
 
+## Screen 8: BIEN plants (`screen8_bien.txt`)
+
+The data the safety floor was built for (April 2026): 4,745 species, 5 continuous traits, 20 MCAR 30% masks, about
+88 min per mask on one core. Gate and floor off vs default, zRMSE pooled over traits: -0.002 (SE 0.001); per trait
+height 0.741 = 0.741, leaf area 0.932 = 0.932, seed mass 0.938 vs 0.944, SLA 1.055 vs 1.060 (the mean is 1.055),
+wood density 0.699 = 0.699; coverage 0.953 both. The original failure (15 to 101% worse than the mean) does not
+reproduce at current main, where lambda is estimated by default; the floor no longer has work to do here.
+
+## Decision summary for Shinichi (2026-10-05)
+
+Evidence across 8 screens (core 1,197 paired with BACE; 56 factorial cells; lambda 0 and 0.1; all-discrete; OU;
+n = 3000; AVONET; BIEN): turning the phylo-signal gate and the safety floor off is never worse for continuous traits
+and helps most where signal is weak (zRMSE 1.01 -> 0.89 to 0.91 at lambda 0 to 0.1, where the default is worse
+than the mean). Estimating lambda for discrete traits, with gate and floor off, gains 0.04 to 0.12 accuracy at
+lambda <= 0.3 and matches or beats BACE on binary and categorical traits; ordinal still trails BACE at low signal.
+Costs: at lambda = 1 with n >= 1000, accuracy -0.002 to -0.005 and Brier +0.010 to +0.016; AVONET categorical
+Brier +0.014 to +0.020 (accuracy unchanged or better). The "auto" fix for those costs did not work (screen 7).
+
 ## Incident: thread cap
 
 A hand-written timing smoke on Totoro (2026-10-05 ~20:14 to 20:25) set `OPENBLAS_NUM_THREADS=1` but not
