@@ -1,0 +1,1 @@
+2026-10-06 primary https://cran.r-project.org/src/contrib/Archive/ downloaded 5561725 bytes; pigauto/ entry present: False. Direct pigauto archive directory returned HTTP 404. Current PACKAGES and package page: 0.10.0. GitHub release list latest v0.10.0. Approved rule selects 0.11.0.

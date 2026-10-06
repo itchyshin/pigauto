@@ -7,7 +7,7 @@
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
-> [!WARNING] **pigauto is experimental — use at your own risk.** It needs
+> [!WARNING] **pigauto is experimental; use at your own risk.** It needs
 > further validation. Point estimates are the supported claim. Prediction
 > intervals are nominal held-out diagnostics, not package-wide certification;
 > covariance routes have focused-test evidence only.
@@ -20,7 +20,7 @@ categorical, ordinal, proportion, zero-inflated-count, and compositional traits.
 
 ```r
 install.packages("pigauto")
-torch::install_torch() # once, after installing the package
+# torch::install_torch() # once, if you opt into gnn = TRUE
 ```
 
 ## Start here
@@ -39,9 +39,16 @@ completed <- completed_data(result)
 pigauto_report(result)
 ```
 
-`check_pigauto()` and `completed_data()` need the development version
-(>= 0.11.0). A CRAN 0.10.0 user should call `impute(traits, tree)`
-directly; that release does not include `check_pigauto()`.
+`impute()` now uses the phylogenetic baseline by default (`gnn = FALSE`),
+estimates Pagel's lambda for eligible traits, and leaves the mean safety
+floor and phylogenetic-signal gate off. To train the optional graph neural
+network, install the torch runtime once and call
+`impute(traits, tree, gnn = TRUE)`. The former GNN-on behaviour is an
+explicit choice in 0.11.0.
+
+`check_pigauto()` and `completed_data()` were added in 0.11.0. If your
+installed version is 0.10.0, call `impute(traits, tree)` directly; that
+version does not include `check_pigauto()`.
 
 `check_pigauto()` runs before fitting: it reports input errors, species/tree
 matching, trait declarations, runtime availability, and size. Resolve an

@@ -33,9 +33,9 @@ completed <- completed_data(result)
 pigauto_report(result)
 ```
 
-`check_pigauto()` and `completed_data()` are in the development version
-(>= 0.11.0). A CRAN 0.10.0 install does not have them: after
-`install.packages("pigauto")`, call `impute(traits, tree)` directly.
+`check_pigauto()` and `completed_data()` were added in 0.11.0. If your
+installed version is 0.10.0, call `impute(traits, tree)` directly; that
+version does not include these helpers.
 
 `check_pigauto()` is fit-free. Resolve its structured errors before fitting;
 inspect `check$species$matched`, `$data_only`, and `$tree_only` when labels do
@@ -127,7 +127,7 @@ install.packages("pigauto")
 # Development version
 pak::pak("itchyshin/pigauto")
 
-# torch backend (required; ~1 GB first-time download)
+# Install the torch runtime only if you plan to use gnn = TRUE
 torch::install_torch()
 ```
 

@@ -186,10 +186,11 @@ test_that("NEWS labels superseded public claims in their historical sections", {
   expect_match(news, "multi_impute_analysis()", fixed = TRUE)
 })
 
-test_that("unsafe historical development pages remain tombstones", {
-  root <- testthat::test_path("..", "..", "pkgdown", "assets", "dev")
-  if (!dir.exists(root)) {
-    skip("source-only pkgdown tombstones are excluded from the package tarball")
+test_that("unsafe historical development tombstones are archived off the public site", {
+  archive <- testthat::test_path("..", "..", "dev", "archive",
+                                 "cran-011-public-pages")
+  if (!dir.exists(archive)) {
+    skip("source-only development archive is excluded from the package tarball")
   }
   names <- c(
     "bench_avonet9993_bace.html",
@@ -204,8 +205,11 @@ test_that("unsafe historical development pages remain tombstones", {
     "phase8_summary.html",
     "tests_overview.html"
   )
-  paths <- file.path(root, names)
+  paths <- file.path(archive, names)
   expect_true(all(file.exists(paths)))
+  expect_false(any(file.exists(file.path(
+    testthat::test_path("..", "..", "pkgdown", "assets", "dev"), names
+  ))))
   pages <- vapply(paths, function(path) paste(readLines(path, warn = FALSE), collapse = "\n"), character(1))
   expect_true(all(grepl("Historical development page withdrawn", pages, fixed = TRUE)))
   expect_true(all(grepl("external-comparator gate remains open", pages, fixed = TRUE)))

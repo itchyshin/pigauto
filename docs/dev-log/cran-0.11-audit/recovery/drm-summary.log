@@ -1,0 +1,13 @@
+ backend              term seeds  m   n      truth mean_estimate         bias
+     drm    mu:(Intercept)    10 20 300  1.0000000     1.0011747  0.001174680
+     drm              mu:x    10 20 300  0.7000000     0.6755846 -0.024415433
+     drm sigma:(Intercept)    10 20 300 -0.2231436    -0.2256797 -0.002536113
+  bias_mcse    bias_low   bias_high empirical_sd mean_pooled_se coverage_count
+ 0.01786174 -0.03923138 0.041580736   0.05648377     0.05210450              9
+ 0.01156176 -0.05056994 0.001739079   0.03656149     0.05152987             10
+ 0.01354427 -0.03317539 0.028103161   0.04283075     0.04551515             10
+ coverage_n coverage_low coverage_high full_data_bias bias_margin_pass
+         10    0.5549839     0.9974714  -0.0002872233             TRUE
+         10    0.6915029     1.0000000  -0.0242998165             TRUE
+         10    0.6915029     1.0000000  -0.0082331891             TRUE
+BOUNDED_RECOVERY_OK; ten seeds are not a coverage certificate

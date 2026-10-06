@@ -1,0 +1,12 @@
+PAIR_OK 1 0.3 elapsed_s 0.7 
+PAIR_OK 1 1 elapsed_s 0.944 
+Warning messages:
+1: In qt(0.975, nrow(d) - 1) : NaNs produced
+2: In qt(0.975, nrow(d) - 1) : NaNs produced
+3: In qt(0.975, nrow(d) - 1) : NaNs produced
+4: In qt(0.975, nrow(d) - 1) : NaNs produced
+5: In qt(0.975, nrow(d) - 1) : NaNs produced
+6: In qt(0.975, nrow(d) - 1) : NaNs produced
+7: In qt(0.975, nrow(d) - 1) : NaNs produced
+8: In qt(0.975, nrow(d) - 1) : NaNs produced
+PREDICTIVE_PAIRS_OK 1 wall_s 0.953 

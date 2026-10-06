@@ -1,4 +1,4 @@
-# pigauto 0.11.0.9002 (dev)
+# pigauto 0.11.0
 
 ## New defaults: discrete traits get their own λ; safety gate and floor off
 
@@ -153,15 +153,16 @@ What to know.
   MCMCglmm, and points to `brms::brm_multiple()`. Previously a `brmsfit`
   fell through to `coef()` and `vcov()`, and `coef()` on a brmsfit does not
   return its fixed effects.
-- brms, drmTMB and gllvmTMB are added to Suggests. New end-to-end tests run
-  the posterior route through `with_imputations()` and `pool_mi()` for
-  glmmTMB, lme4, drmTMB and gllvmTMB.
+- brms was added to Suggests. The automatic drmTMB and gllvmTMB adapters
+  remain available when those packages are installed, without requiring
+  them as dependencies. Their real-package integration checks run from
+  `script/cran-0.11-integration/`, outside the built package.
 - README: a "Defaults, and when to change them" section.
 - Documentation fixes: `fit_pigauto()`'s `gate_method` default is
   `"cv_folds"` and `min_val_cells` defaults to 20; the help pages said
   `"single_split"` and 10.
-- No default changed. The defaults audit behind these edits, with proposals
-  for `draws_method`, `gnn` and `joint_solver`, is in
+- This documentation work preceded the default changes described above.
+  The defaults audit behind it is in
   `docs/dev-log/defaults-audit/2026-10-02-defaults-audit.md`.
 
 ## New: `multi_impute(draws_method = "posterior")` for continuous traits
@@ -226,7 +227,10 @@ the effects integrated out keep it mixing near lambda = 0 and lambda = 1.
   not used, and fitting arguments such as `gnn` and `epochs` are ignored
   with a message.
 
-The default draws method is unchanged (`"conformal"`).
+When this posterior method was introduced, the default draws method remained
+`"conformal"`. The 0.11.0 default is now `"auto"`, which selects posterior
+draws for eligible all-continuous data and otherwise falls back to conformal
+prediction-diagnostic draws.
 
 **Caveat for downstream inference with the other draws methods.** The
 `"conformal"` and `"mc_dropout"` draws perturb missing cells around a point
@@ -395,7 +399,7 @@ sampling-design helper and the baseline it is meant to complement can now
 disagree on the phylogenetic correlation structure. Not changed in this
 release.
 
-# pigauto 0.11.0
+## Earlier development changes included in 0.11.0
 
 Local candidate after CRAN pigauto 0.10.0 (Date/Publication 2026-07-30).
 No CRAN submission or public release is implied. The installed BACE bridge has

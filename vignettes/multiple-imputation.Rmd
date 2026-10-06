@@ -68,9 +68,12 @@ correlation had 95% interval coverage of 0.925 to 0.975 in every cell,
 including correlated traits at lambda = 1 (slope coverage 0.955, 0.940 and
 0.965 at n = 100, 300 and 1000). At n = 100 with correlated traits the
 pooled slope was biased by about -0.02 towards zero, with coverage still
-0.96. Before pigauto 0.11.0.9002 the sampler used an inverse-Wishart
-residual prior, which attenuated the relationship between correlated traits
-at lambda near 1 (coverage 0.75 at n = 1000); it is still available as
+0.96. The current residual prior separates standard deviations, with
+half-Cauchy priors scaled to the observed latent traits, from a residual
+correlation with an LKJ(1) prior. Before pigauto 0.11.0.9002 the sampler
+used an inverse-Wishart residual prior, which attenuated the relationship
+between correlated traits at lambda near 1 (coverage 0.75 at n = 1000);
+that prior remains available as
 `posterior_control = list(residual_prior = "iw")`.
 
 For one incomplete covariate in a Gaussian `lm`, a binomial `glm` or an
@@ -213,18 +216,22 @@ to_long <- function(d) {
 }
 
 fits_gllvm <- with_imputations(mi, function(d) {
-  gllvmTMB::gllvmTMB(value ~ 0 + trait + latent(0 + trait | species, d = 1),
+  gllvmTMB::gllvmTMB(value ~ 0 + trait +
+                       latent(0 + trait | species, d = 1, unique = FALSE),
                      data = to_long(d), trait = "trait", unit = "species",
-                     silent = TRUE)
+                     family = gaussian(), REML = FALSE,
+                     engine = "tmb", silent = TRUE)
 })
 pool_mi(fits_gllvm)
 ```
 
 ### Other models
 
-Any fit with `coef()` and `vcov()` methods can be pooled. For other classes,
-pass extractor functions to `pool_mi()` through `coef_fun` and `vcov_fun`,
-or a `tidy_fun` returning `term`, `estimate` and `std.error`.
+For other model classes, pass extractor functions to `pool_mi()` through
+`coef_fun` and `vcov_fun`, or a `tidy_fun` returning `term`, `estimate`
+and `std.error`. The same named, finite fixed-effect terms must be
+available across the retained fits; inspect reported fit failures before
+using pooled estimates.
 
 ## Bayesian models: concatenate, do not pool
 

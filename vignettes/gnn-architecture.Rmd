@@ -191,8 +191,8 @@ collapsing to hard class 1.
 
 ## 3. The GNN: ResidualPhyloDAE
 
-The GNN's job is to learn an *additive correction* on top of the
-phylogenetic baseline. It is a denoising autoencoder (DAE) trained with
+The optional GNN learns a full per-cell prediction that is blended with
+the phylogenetic baseline. It is a denoising autoencoder (DAE) trained with
 masked-cell reconstruction loss.
 
 > **Name note.** The torch class is `ResidualPhyloDAE` because its

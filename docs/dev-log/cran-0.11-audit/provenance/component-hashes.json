@@ -1,0 +1,62 @@
+[
+  {
+    "path": "data/avonet300.rda",
+    "sha256": "86af337b49cbe2a81ff7acb7245b75c9a00cd48bb9131d7f4eb5d2676af131be",
+    "bytes": 6508
+  },
+  {
+    "path": "data/avonet_full.rda",
+    "sha256": "29b47bccdf17233328321378b77e99e8d4aa515d9df4451e347c709b97568e81",
+    "bytes": 133160
+  },
+  {
+    "path": "data/ctmax_sim.rda",
+    "sha256": "987a05458b7f3e548f22c52b75d8b7463e29a281a48895303f564effb0b9cecc",
+    "bytes": 10084
+  },
+  {
+    "path": "data/tree300.rda",
+    "sha256": "6050855d2ae7de42fa0de239134aad8e8975a224610b8dffb48f3d7412bb383f",
+    "bytes": 64432
+  },
+  {
+    "path": "data/tree_full.rda",
+    "sha256": "5f7b36a4b9c02fd53c98d12fe4871e0f34098e3aa7a8f34f2db38a21a8dc09f5",
+    "bytes": 266848
+  },
+  {
+    "path": "data/trees300.rda",
+    "sha256": "8293e06503e89e79d9233abd1cbae98fc8d0c18e05ef5a41cca99a071fee9108",
+    "bytes": 1832412
+  },
+  {
+    "path": "inst/NOTICE",
+    "sha256": "8497325803c2f3f638a4d0424375e561eb0ca175f46e2b80fdf043a784fc7c42",
+    "bytes": 1907
+  },
+  {
+    "path": "inst/examples/novice-workflow.R",
+    "sha256": "b4c8aeb6124cc206a28a665c23b7302f0e0b0ccc8d28fdbc264fd786b10a6d6b",
+    "bytes": 342
+  },
+  {
+    "path": "inst/extdata/legacy_fit_v091.rds",
+    "sha256": "39a391346afcd1651c2f743abb5ab58509c1b0ec6d33d507965f79389cc0e721",
+    "bytes": 1180089
+  },
+  {
+    "path": "inst/extdata/novice_traits.csv",
+    "sha256": "6495eb3cec4f8e980603929b87ef7202aced45c9fbb27866797a54c824e56477",
+    "bytes": 149
+  },
+  {
+    "path": "inst/extdata/novice_tree.nwk",
+    "sha256": "2071750c4a26b08764f87967a1d9ab1b735c663e5cefb73a81519aaa7421174a",
+    "bytes": 83
+  },
+  {
+    "path": "man/figures/logo.png",
+    "sha256": "dc790433bc96a0c300c0206cd2dbfe544b99e987bb2df6e7026a8a475bdca602",
+    "bytes": 810344
+  }
+]

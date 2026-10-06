@@ -1,0 +1,21 @@
+{
+  "package": "pigauto",
+  "version": "0.11.0",
+  "release_type": "update",
+  "profile": {
+    "compiled_code": false,
+    "reverse_dependencies": false,
+    "system_or_external_services": true,
+    "large_data_or_vignettes": true
+  },
+  "artifact": {},
+  "evidence": {},
+  "panel": {
+    "grace": "NOT_READY",
+    "rose": "NOT_READY",
+    "pat": "NOT_READY"
+  },
+  "status_claim": "source-clean",
+  "submission": {},
+  "audit_verdict": "NOT_READY"
+}

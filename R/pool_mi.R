@@ -81,7 +81,7 @@
 #' small-sample FMI adjustment. A completely deterministic quantity
 #' (`B = W = 0`) always has zero FMI and infinite df.
 #'
-#' Only fixed-effect coefficients are pooled in version 0.10.0. Random-effect
+#' Only fixed-effect coefficients are pooled. Random-effect
 #' variances and correlations, BLUPs/conditional modes, latent loadings, and
 #' other structured parameters require parameter-specific transformations and
 #' are not supported by the automatic `pool_mi()` adapters. Custom extractors
@@ -90,7 +90,8 @@
 #' The `glmmTMB` adapter selects conditional fixed effects only. The `drmTMB`
 #' adapter includes named distributional fixed-effect blocks such as regression
 #' coefficients for `mu` and `sigma`; those are fixed coefficients, not
-#' random-effect variance components.
+#' random-effect variance components. `drmTMB` and `gllvmTMB` need to be
+#' installed and loadable only when their automatic adapters are used.
 #'
 #' **Supported classes.** `lm`, `glm`, `gls`, `lme`, `merMod` (lme4),
 #' `glmmTMB` (conditional component), `drmTMB`, and `gllvmTMB_multi` are
@@ -291,7 +292,8 @@ pool_mi <- function(fits,
   # Sanity: all elements must be numeric vectors with consistent names.
   coef_classes <- vapply(coefs, function(x) {
     is.numeric(x) && length(x) > 0L && !is.null(names(x)) &&
-      all(nzchar(names(x))) && !anyDuplicated(names(x)) && all(is.finite(x))
+      !anyNA(names(x)) && all(nzchar(names(x))) &&
+      !anyDuplicated(names(x)) && all(is.finite(x))
   }, logical(1))
   if (!all(coef_classes)) {
     stop("The coefficient extractor must return a finite, uniquely named ",
@@ -300,17 +302,18 @@ pool_mi <- function(fits,
   }
 
   nm_ref <- names(coefs[[1]])
-  nm_ok  <- vapply(coefs, function(x) identical(names(x), nm_ref),
+  nm_ok  <- vapply(coefs, function(x) setequal(names(x), nm_ref),
                    logical(1))
   if (!all(nm_ok)) {
     # Diagnostic: show which fits deviated.
     offenders <- which(!nm_ok)
     stop(
       "Coefficient names differ across fits. Rubin's rules require a ",
-      "common set of terms. First offending fit: index ", offenders[1],
-      ". Reference names: ", paste(nm_ref, collapse = ", "),
-      ". Offender names: ", paste(names(coefs[[offenders[1]]]),
+      "common set of terms. First offending fit: fit ", offenders[1],
+      ". Missing terms: ", paste(setdiff(nm_ref, names(coefs[[offenders[1]]])),
                                   collapse = ", "),
+      ". Extra terms: ", paste(setdiff(names(coefs[[offenders[1]]]), nm_ref),
+                                collapse = ", "),
       call. = FALSE
     )
   }
@@ -433,21 +436,28 @@ pool_mi <- function(fits,
 
 .pool_mi_auto_coef <- function(fit) {
   if (inherits(fit, "gllvmTMB_multi")) {
+    .pool_mi_validate_backend_status(fit, "gllvmTMB")
     td <- .pool_mi_gllvm_tidy(fit)
     return(stats::setNames(td$estimate, td$term))
   }
 
   if (inherits(fit, "drmTMB")) {
-    blocks <- stats::coef(fit)
+    .pool_mi_validate_backend_status(fit, "drmTMB")
+    blocks <- .pool_mi_drm_coef_blocks(fit)
     if (!is.list(blocks) || is.null(names(blocks))) {
       stop("The drmTMB fixed-effect adapter could not find named ",
            "distributional coefficient blocks.", call. = FALSE)
     }
-    values <- unlist(blocks, use.names = FALSE)
-    block_names <- rep(names(blocks), lengths(blocks))
-    term_names <- unlist(lapply(blocks, names), use.names = FALSE)
-    names(values) <- paste0(block_names, ":", term_names)
-    return(values)
+    if (!length(blocks) || anyNA(names(blocks)) || any(!nzchar(names(blocks))) ||
+        anyDuplicated(names(blocks)) || any(vapply(blocks, function(x) {
+          !is.numeric(x) || !length(x) || is.null(names(x)) ||
+            anyNA(names(x)) || any(!nzchar(names(x))) ||
+            anyDuplicated(names(x))
+        }, logical(1)))) {
+      stop("The drmTMB adapter requires uniquely named fixed-effect terms ",
+           "within uniquely named coefficient components.", call. = FALSE)
+    }
+    return(.pool_mi_drm_blocks_to_coef(blocks))
   }
 
   if (inherits(fit, "glmmTMB")) {
@@ -479,12 +489,9 @@ pool_mi <- function(fits,
 
 
 .pool_mi_gllvm_tidy <- function(fit) {
-  package <- sub("_multi$", "", class(fit)[[1L]])
-  namespace <- tryCatch(
-    asNamespace(package),
-    error = function(e) NULL
-  )
-  method <- if (is.null(namespace)) NULL else utils::getS3method(
+  package <- "gllvmTMB"
+  namespace <- .pool_mi_require_namespace(package)
+  method <- utils::getS3method(
     "tidy", "gllvmTMB_multi", optional = TRUE, envir = namespace
   )
   if (is.null(method)) {
@@ -493,6 +500,56 @@ pool_mi <- function(fits,
          call. = FALSE)
   }
   .pool_mi_validate_tidy(method(fit, effects = "fixed"), "gllvmTMB")
+}
+
+.pool_mi_require_namespace <- function(package) {
+  tryCatch(
+    loadNamespace(package),
+    error = function(e) {
+      stop("The automatic ", package, " adapter requires the package that ",
+           "created the fit to be installed and loadable at runtime: ",
+           conditionMessage(e), call. = FALSE)
+    }
+  )
+}
+
+.pool_mi_drm_coef_blocks <- function(fit) {
+  .pool_mi_require_namespace("drmTMB")
+  stats::coef(fit)
+}
+
+.pool_mi_drm_blocks_to_coef <- function(blocks) {
+  values <- unlist(blocks, use.names = FALSE)
+  block_names <- rep(names(blocks), lengths(blocks))
+  term_names <- unlist(lapply(blocks, names), use.names = FALSE)
+  names(values) <- paste0(block_names, ":", term_names)
+  values
+}
+
+.pool_mi_validate_backend_status <- function(fit, backend) {
+  if (identical(backend, "drmTMB")) {
+    convergence <- fit$opt$convergence
+    hessian_ok <- fit$sdr$pdHess
+  } else if (identical(backend, "gllvmTMB")) {
+    convergence <- fit$opt$convergence
+    hessian_ok <- fit$sd_report$pdHess
+  } else {
+    stop("Unknown optional backend: ", backend, call. = FALSE)
+  }
+  if (length(convergence) > 0L &&
+      (!is.numeric(convergence) || length(convergence) != 1L ||
+       is.na(convergence) || convergence != 0)) {
+    stop(backend, " fit has a non-zero or invalid convergence code; refusing ",
+         "to pool fixed effects from an unconverged fit.", call. = FALSE)
+  }
+  if (length(hessian_ok) > 0L &&
+      (!is.logical(hessian_ok) || length(hessian_ok) != 1L ||
+       is.na(hessian_ok) || !hessian_ok)) {
+    stop(backend, " fit does not report a positive-definite Hessian; refusing ",
+         "to pool fixed effects from an invalid covariance estimate.",
+         call. = FALSE)
+  }
+  invisible(TRUE)
 }
 
 

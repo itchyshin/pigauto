@@ -1,0 +1,11 @@
+CRAN PACKAGES snapshot retrieved 2026-10-06
+Fields: Depends,Imports,LinkingTo 
+$pigauto
+character(0)
+
+COUNT 0 
+Fields: Depends,Imports,LinkingTo,Suggests,Enhances 
+$pigauto
+character(0)
+
+COUNT 0 

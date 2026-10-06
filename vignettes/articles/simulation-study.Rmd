@@ -45,6 +45,11 @@ cat("> **This page is a placeholder.** The campaign behind it has not finished, 
 > the missingness mechanism and the missing fraction follows in its own section. The design was
 > fixed before any result was inspected.
 
+> **Historical source.** This article is excluded from the 0.11.0 package
+> build and public site. Its arm labels and measurements belong to the
+> registered campaign described here; they do not describe the current
+> `impute()` defaults.
+
 ## What this compares, and why
 
 Four ways of filling gaps in a species-by-trait matrix, scored against a known truth.
@@ -59,7 +64,8 @@ Four ways of filling gaps in a species-by-trait matrix, scored against a known t
    returns posterior predictive draws.
 3. **pigauto with the GNN off.** The phylogenetic baseline and pigauto's safety machinery, with no
    neural network. Reported with both of its joint solvers.
-4. **pigauto with the GNN on.** The shipped default.
+4. **pigauto with the GNN on.** An explicit comparison arm; `gnn = TRUE`
+   is opt-in under the 0.11.0 defaults.
 
 A mean or mode floor sits underneath, so that a method doing worse than ignoring the phylogeny
 entirely is visible as such rather than merely looking mediocre.

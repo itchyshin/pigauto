@@ -2,12 +2,12 @@
 
 | Slice | State | Gate |
 |---|---|---|
-| S0 | doing | none |
-| S1 | pending | none |
-| S2 | pending | none |
-| S3 | pending | none |
-| S4 | pending | none |
-| S5 | pending | none |
-| S6 | pending | human merge |
+| S0 | done | version and provenance recorded |
+| S1 | done | 33 exports, 126 assertions |
+| S2 | partial | ten drmTMB seeds passed; one gllvmTMB seed passed, nine await >3 h approval |
+| S3 | done | active help, vignettes, README, NEWS and guidance reconciled |
+| S4 | done | 39 static files archived byte-for-byte |
+| S5 | done | local 65-page crawl and visual QA passed; deployment is later |
+| S6 | preparing draft PR | human merge |
 | S7 | pending | none |
 | S8 | pending | none |
