@@ -323,10 +323,12 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
                                         joint_refine_iter = 0L,
                                         lambda_mode = "fixed_1",
                                         lambda_fixed = NULL,
-                                        predict_method_explicit = NULL) {
+                                        predict_method_explicit = NULL,
+                                        discrete_lambda = "estimate") {
   if (is.null(predict_method_explicit)) {
     predict_method_explicit <- !missing(predict_method)
   }
+  discrete_lambda <- match.arg(discrete_lambda, c("estimate", "fixed_1"))
   stopifnot(joint_mvn_available())
 
   built <- build_liability_matrix(data, splits = splits,
@@ -364,14 +366,13 @@ fit_joint_threshold_baseline <- function(data, tree, splits, graph = NULL,
     # liab_types[fit_cols] is aligned with X_fit's columns 1:length(fit_cols).
     lambda_family_idx <- which(liab_types[fit_cols] %in%
                                   c("continuous", "count", "proportion"))
-    # PROTOTYPE (feat/discrete-lambda, opt-in, default off): estimate Pagel's
-    # lambda on the binary / ordinal liability columns as well, instead of the
-    # section 7 B iii cut that holds them at 1. Under the threshold model the
-    # liability evolves under lambda, so a weak-signal trait should shrink
-    # toward its overall prevalence rather than copy close relatives. Switched
-    # on with options(pigauto.discrete_lambda = "estimate") while it is being
-    # screened against BACE; becomes a real argument only if it earns it.
-    discrete_lambda <- getOption("pigauto.discrete_lambda", "fixed_1")
+    # discrete_lambda = "estimate" (default) also estimates Pagel's lambda on
+    # the binary / ordinal liability columns (and the synthetic one-vs-rest
+    # binary column of each categorical trait). Under the threshold model the
+    # liability evolves under lambda, so a weak-signal trait shrinks toward
+    # its overall prevalence rather than copying close relatives.
+    # "fixed_1" holds them at lambda = 1 (the section 7 B iii cut of D-278,
+    # the behaviour before this argument existed).
     discrete_idx <- if (identical(discrete_lambda, "estimate")) {
       which(liab_types[fit_cols] %in% c("binary", "ordinal"))
     } else {
@@ -647,7 +648,8 @@ fit_joint_threshold_baseline_em <- function(data, tree, splits,
                                              joint_refine_iter = 0L,
                                              lambda_mode = "fixed_1",
                                              lambda_fixed = NULL,
-                                             predict_method_explicit = NULL) {
+                                             predict_method_explicit = NULL,
+                                             discrete_lambda = "estimate") {
   if (is.null(predict_method_explicit)) {
     predict_method_explicit <- !missing(predict_method)
   }
@@ -679,7 +681,8 @@ fit_joint_threshold_baseline_em <- function(data, tree, splits,
                                     joint_refine_iter = joint_refine_iter,
                                     lambda_mode = lambda_mode,
                                     lambda_fixed = lambda_fixed,
-                                    predict_method_explicit = predict_method_explicit),
+                                    predict_method_explicit = predict_method_explicit,
+                                    discrete_lambda = discrete_lambda),
       error = function(e) NULL
     )
 

@@ -13,6 +13,7 @@ fit_baseline(
   multi_obs_aggregation = c("hard", "soft"),
   lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
   lambda_fixed = NULL,
+  discrete_lambda = c("estimate", "fixed_1"),
   em_iterations = 0L,
   em_tol = 0.001,
   em_offdiag = FALSE,
@@ -64,8 +65,9 @@ separate per-column re-fit. \code{"fixed_1"} preserves the classic
 Brownian correlation matrix (lambda = 1 everywhere). \code{"cv"} and
 \code{"bayes"} have no joint analogue and force the per-column BM path
 for continuous-family columns (as before); binary/ordinal/categorical/
-zi_gate columns are unaffected by \code{lambda_mode} in every case and
-keep the threshold-joint / OVR-categorical baseline at lambda = 1.
+zi_gate columns are unaffected by \code{lambda_mode} in every case;
+their lambda is governed by \code{discrete_lambda} (below), and is 1
+when \code{discrete_lambda = "fixed_1"}.
 \strong{Covariate caveat}: when \code{data$covariates} is supplied,
 the per-column path switches to \code{bm_impute_col_with_cov()},
 which accepts a numeric lambda or \code{"estimate"} but not
@@ -81,6 +83,22 @@ fit's own \code{$lambda_per_trait}). Columns not present in
 \code{lambda_fixed} keep their lambda = 1 default. \code{NULL}
 (default) means every continuous-family column follows
 \code{lambda_mode} normally.}
+
+\item{discrete_lambda}{character, \code{"estimate"} (default) or
+\code{"fixed_1"}. With \code{"estimate"}, the binary and ordinal
+liability columns of the threshold-joint baseline, and the synthetic
+one-vs-rest binary column of each categorical class, get their own
+Pagel's lambda, so a weak-signal discrete trait shrinks toward its
+prevalence instead of copying close relatives. \code{"fixed_1"} holds
+them at lambda = 1 (the behaviour before this argument existed;
+byte-identical baseline). On the four-arm simulation, estimating it
+raised discrete accuracy by 0.04 to 0.12 at Pagel's lambda <= 0.3 and
+matched or beat BACE on binary and categorical traits, at a small cost
+in probability calibration when lambda is near 1 and n >= 1000
+(\code{docs/dev-log/discrete-lambda/README.md}). Recorded in the
+returned list and in a fit's \code{model_config}; fitted discrete
+lambdas appear in \code{$lambda_per_trait} and are replayed by
+\code{lambda_fixed}.}
 
 \item{em_iterations}{integer. Number of Phase 6 EM iterations for the
 threshold-joint baseline (binary + ordinal + OVR categorical). Default

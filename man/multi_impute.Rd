@@ -138,7 +138,10 @@ default changed from \code{TRUE} to \code{FALSE} in 0.11.0.9001; see \code{\link
 \item{lambda_mode}{character. Pagel-lambda mode for the BM baseline,
 forwarded to \code{\link[=impute]{impute()}} / \code{\link[=fit_pigauto]{fit_pigauto()}}. \code{"estimate"} (default) fits
 a per-trait Pagel's lambda on each continuous-family (BM-eligible)
-latent column; discrete traits stay at lambda = 1 unless routed to
+latent column; binary, ordinal and categorical traits get their own
+lambda by default (\code{discrete_lambda = "estimate"}, passed through \code{...}
+to \code{\link[=impute]{impute()}}); with \code{discrete_lambda = "fixed_1"} they stay at
+lambda = 1 unless routed to
 \code{predict_method = "exact"}, where they share \code{lambda_block}. \code{"fixed_1"}
 preserves the pre-lambda Brownian correlation matrix everywhere;
 \code{"cv"} and \code{"bayes"} are alternative per-column estimators. See

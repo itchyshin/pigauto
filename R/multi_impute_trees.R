@@ -583,6 +583,8 @@ run_shared_gnn <- function(traits, trees, m_per_tree,
       # threshold-joint baseline dispatch more often than the GNN-on
       # default):
       lambda_mode = baseline_arg("lambda_mode", "estimate"),
+      # Fits recorded before discrete_lambda existed used lambda = 1.
+      discrete_lambda = baseline_arg("discrete_lambda", "fixed_1"),
       multi_obs_aggregation = baseline_arg("multi_obs_aggregation", "hard"),
       em_iterations = baseline_arg("em_iterations", 0L),
       em_tol = baseline_arg("em_tol", 1e-3),

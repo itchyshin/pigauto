@@ -44,12 +44,13 @@ fit_pigauto(
   gate_method = c("cv_folds", "median_splits", "single_split"),
   gate_splits_B = 31L,
   gate_cv_folds = 5L,
-  safety_floor = TRUE,
-  phylo_signal_gate = TRUE,
+  safety_floor = FALSE,
+  phylo_signal_gate = FALSE,
   phylo_signal_threshold = 0.2,
   phylo_signal_method = c("lambda", "blomberg_k"),
   min_val_cells = 20L,
   lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
+  discrete_lambda = c("estimate", "fixed_1"),
   joint_solver = c("inhouse", "rphylopars"),
   predict_method = c("auto", "exact", "per_column"),
   joint_refine_iter = 0L,
@@ -78,8 +79,9 @@ optionally re-weighted against a grand-mean floor. \code{safety_floor}
 and \code{phylo_signal_gate} keep their usual semantics: the blend
 collapses to \eqn{r_{BM} \cdot \mu_{BM} + r_{MEAN} \cdot \mu_{MEAN}}
 (the GNN corner degenerates to the baseline, so its calibrated weight
-is folded into \eqn{r_{BM}}). The pure traditional-stats arm is
-\code{gnn = FALSE, safety_floor = FALSE, phylo_signal_gate = FALSE}.
+is folded into \eqn{r_{BM}}). With the defaults
+(\code{safety_floor = FALSE, phylo_signal_gate = FALSE}) this is the
+pure traditional-stats arm.
 \code{conformal_method = "mondrian"} is not supported when
 \code{gnn = FALSE} (its locality statistic conditions on a calibrated
 GNN prediction surface that does not exist here) and raises an error.
@@ -254,15 +256,23 @@ median is well-defined).}
 least 1 cell.  When effective K \code{< 2} (e.g. \code{n_val = 1}),
 the code falls back to a single split.}
 
-\item{safety_floor}{logical. When \code{TRUE} (default), post-training
+\item{safety_floor}{logical. Default \code{FALSE} (it was \code{TRUE}
+from v0.9.1.9002 until 0.11.0.9002). When \code{TRUE}, post-training
 calibration searches a 3-way simplex of BM, GNN, and grand-mean
 candidates. Because the grand-mean corner is always in the grid, the
 selected candidate cannot be worse than that corner on the validation
 cells under the calibration metric. When \code{FALSE}, the v0.9.1
-1-D calibration is used exactly (\code{r_MEAN = 0}).}
+1-D calibration is used exactly (\code{r_MEAN = 0}). The default
+changed because, with Pagel's \eqn{\lambda} now estimated for every
+trait type (see \code{discrete_lambda}), the floor no longer improved
+accuracy in any tested setting; at \eqn{\lambda} of 0 to 0.1 the old
+default was worse than predicting the mean, and on the BIEN plant
+data it changed nothing (\code{docs/dev-log/discrete-lambda/README.md}).
+Set \code{safety_floor = TRUE} to restore the old behaviour.}
 
-\item{phylo_signal_gate}{logical. When \code{TRUE} (default since
-v0.9.1.9003), compute per-trait Pagel's \eqn{\lambda} on
+\item{phylo_signal_gate}{logical. Default \code{FALSE} (it was
+\code{TRUE} from v0.9.1.9003 until 0.11.0.9002; same reasons as
+\code{safety_floor}; set \code{TRUE} to restore). When \code{TRUE}, compute per-trait Pagel's \eqn{\lambda} on
 training-observed cells before fitting; for traits with
 \code{lambda < phylo_signal_threshold}, force
 \code{(r_cal_bm = 0, r_cal_gnn = 0, r_cal_mean = 1)} directly
@@ -297,7 +307,10 @@ species.  See \strong{Calibration at small n} below.}
 continuous-family (BM-eligible) latent column -- continuous, count,
 proportion, and zi_count magnitude, via the joint MVN /
 threshold-joint baseline's own \code{lambda_cols} machinery when that
-joint path fires, or a per-column re-fit otherwise. Discrete traits
+joint path fires, or a per-column re-fit otherwise. Binary, ordinal and
+categorical traits get their own lambda by default
+(\code{discrete_lambda = "estimate"}); the rest of this paragraph
+describes \code{discrete_lambda = "fixed_1"}, where discrete traits
 (binary, categorical, zi gate) AND ordinal have no discrete-trait
 analogue of Pagel's lambda of their own -- there is no lambda_k to
 estimate for them. Under \code{predict_method = "per_column"} (see
@@ -327,6 +340,20 @@ c("estimate", "fixed_1")} reaches it and each covariate-aware
 BM-eligible column gets its own estimated lambda; it does NOT accept
 \code{"cv"} / \code{"bayes"}, which fall back to lambda = 1 for
 BM-eligible columns with a warning from \code{fit_baseline}.}
+
+\item{discrete_lambda}{character, \code{"estimate"} (default) or
+\code{"fixed_1"}. With \code{"estimate"}, binary and ordinal traits,
+and each class of a categorical trait (its one-vs-rest fit), get their
+own Pagel's \eqn{\lambda} in the threshold-joint baseline, so a
+weak-signal discrete trait shrinks toward its prevalence instead of
+copying close relatives. \code{"fixed_1"} holds them at \eqn{\lambda = 1}
+(the behaviour before this argument existed). On the four-arm
+simulation, estimating it raised discrete accuracy by 0.04 to 0.12 at
+Pagel's \eqn{\lambda <= 0.3} and matched or beat BACE on binary and
+categorical traits, at a small cost in probability calibration when
+\eqn{\lambda} is near 1 and \eqn{n >= 1000}
+(\code{docs/dev-log/discrete-lambda/README.md}). Passed to
+\code{\link{fit_baseline}} and stored in the fitted model config.}
 
 \item{joint_solver}{character. Which solver estimates the joint MVN /
 threshold-joint / OVR categorical baselines. \code{"inhouse"}

@@ -19,6 +19,7 @@ impute(
   seed = NULL,
   multi_obs_aggregation = c("hard", "soft"),
   lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
+  discrete_lambda = c("estimate", "fixed_1"),
   joint_solver = c("inhouse", "rphylopars"),
   predict_method = c("auto", "exact", "per_column"),
   joint_refine_iter = 0L,
@@ -30,8 +31,8 @@ impute(
   clamp_factor = 5,
   match_observed = c("none", "pmm"),
   pmm_K = 5L,
-  safety_floor = TRUE,
-  phylo_signal_gate = TRUE,
+  safety_floor = FALSE,
+  phylo_signal_gate = FALSE,
   phylo_signal_threshold = 0.2,
   phylo_signal_method = "lambda",
   conformal_split_val = FALSE,
@@ -124,7 +125,10 @@ contribute fractional liability evidence.  Passed to
 continuous-family (BM-eligible) latent column -- continuous, count,
 proportion, and zi_count magnitude, via the joint MVN /
 threshold-joint baseline's own \code{lambda_cols} machinery when that
-joint path fires, or a per-column re-fit otherwise. Discrete traits
+joint path fires, or a per-column re-fit otherwise. Binary, ordinal and
+categorical traits get their own lambda by default
+(\code{discrete_lambda = "estimate"}); the rest of this paragraph
+describes \code{discrete_lambda = "fixed_1"}, where discrete traits
 (binary, categorical, zi gate) AND ordinal have no discrete-trait
 analogue of Pagel's lambda of their own -- there is no lambda_k to
 estimate for them. Under \code{predict_method = "per_column"} (see
@@ -154,6 +158,17 @@ c("estimate", "fixed_1")} reaches it and each covariate-aware
 BM-eligible column gets its own estimated lambda; it does NOT accept
 \code{"cv"} / \code{"bayes"}, which fall back to lambda = 1 for
 BM-eligible columns with a warning from \code{fit_baseline}.}
+
+\item{discrete_lambda}{character, \code{"estimate"} (default) or
+\code{"fixed_1"}. With \code{"estimate"}, binary, ordinal and
+categorical traits get their own Pagel's \eqn{\lambda} in the baseline.
+\code{"fixed_1"} holds them at \eqn{\lambda = 1}, the previous
+behaviour. On the four-arm simulation, estimating it raised discrete
+accuracy by 0.04 to 0.12 at Pagel's \eqn{\lambda <= 0.3} and matched or
+beat BACE on binary and categorical traits, at a small cost in
+probability calibration when \eqn{\lambda} is near 1 and
+\eqn{n >= 1000} (\code{docs/dev-log/discrete-lambda/README.md}). See
+\code{\link[=fit_pigauto]{fit_pigauto()}}.}
 
 \item{joint_solver}{character. Which solver estimates the joint MVN /
 threshold-joint / OVR categorical baselines. \code{"inhouse"}
@@ -286,8 +301,9 @@ Default \code{"none"} preserves pre-G' behaviour.}
 \code{5L} (mice convention).  Ignored when
 \code{match_observed = "none"}.}
 
-\item{safety_floor}{logical. When \code{TRUE} (default since
-v0.9.1.9002), calibration searches the 3-way simplex
+\item{safety_floor}{logical. Default \code{FALSE} (it was \code{TRUE}
+from v0.9.1.9002 until 0.11.0.9002; see \code{\link[=fit_pigauto]{fit_pigauto()}} for why it
+changed; set \code{TRUE} to restore). When \code{TRUE}, calibration searches the 3-way simplex
 \code{r_BM * BM + r_GNN * GNN + r_MEAN * MEAN} so the grand mean is
 always in the candidate set. Under the validation metric used for
 calibration, the selected candidate cannot be worse than that
@@ -296,7 +312,13 @@ safeguard, not a guarantee about future held-out data. When
 \code{FALSE}, the v0.9.1 1-D calibration is used exactly. See the
 Safety floor section below.}
 
-\item{phylo_signal_gate, phylo_signal_threshold, phylo_signal_method}{Pass-through to \code{\link[=fit_pigauto]{fit_pigauto()}}. See that help page for details.}
+\item{phylo_signal_gate, phylo_signal_threshold, phylo_signal_method}{Pass-through to \code{\link[=fit_pigauto]{fit_pigauto()}}. See that help page for details.
+\code{phylo_signal_gate} now defaults to \code{FALSE} (it was \code{TRUE}
+from v0.9.1.9003 until 0.11.0.9002): with Pagel's \eqn{\lambda}
+estimated for every trait type the gate no longer improved accuracy in
+any tested setting, and at \eqn{\lambda} of 0 to 0.1 it was worse than
+predicting the mean. Set \code{phylo_signal_gate = TRUE} to restore the
+old behaviour.}
 
 \item{conformal_split_val}{logical. Default \code{FALSE}. When
 \code{TRUE}, the validation cells are split 50/50 per trait into a
@@ -310,10 +332,10 @@ on. Costs interval width at small validation sizes; see
 attention-based GNN correction (see \code{\link{fit_pigauto}}). When
 \code{FALSE} (default), no GNN is constructed or trained -- \code{impute()} makes
 no torch/GPU calls, and the fit is the phylogenetic baseline alone
-(optionally re-weighted against a grand-mean floor). \code{safety_floor}
-and \code{phylo_signal_gate} keep their usual semantics; the pure
-traditional-stats arm is \code{gnn = FALSE, safety_floor = FALSE,
-phylo_signal_gate = FALSE}. Production predictions
+(optionally re-weighted against a grand-mean floor when
+\code{safety_floor = TRUE}). With the defaults
+(\code{safety_floor = FALSE, phylo_signal_gate = FALSE}) this is the pure
+traditional-stats arm. Production predictions
 (\code{result$completed}, \code{result$prediction}) use a tax-free
 \code{baseline_full} fit on ALL observed cells (no val/test hold-out);
 \code{result$evaluation} and every other scorer keep using the
@@ -417,7 +439,8 @@ experimental treatment).
 
 \section{Safety floor (v0.9.1.9002+)}{
 
-With \code{safety_floor = TRUE} (the new default), the post-training
+With \code{safety_floor = TRUE} (opt-in since 0.11.0.9002; it was the
+default from v0.9.1.9002), the post-training
 calibration grid searches a 3-way convex combination of the
 Brownian-motion baseline, the GNN delta, and the per-trait grand
 mean.  The simplex is sampled at step 0.05 (231 candidates per latent
