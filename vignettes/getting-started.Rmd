@@ -509,12 +509,16 @@ predicts the column mean for those traits).  This protects against
 over-fitting noise on traits where the phylogeny carries little
 information.
 
-It is on by default since v0.9.1.9003.  The two arguments you can
-tune:
+It was on by default from v0.9.1.9003 until 0.11.0.9002; it is now
+**off by default** (`phylo_signal_gate = FALSE`, and likewise
+`safety_floor = FALSE`), because with Pagel's λ estimated for every trait
+type (`discrete_lambda = "estimate"`) the gate no longer improved accuracy in
+any tested setting (`docs/dev-log/discrete-lambda/README.md`).  To turn
+it on, use the arguments below:
 
 ```{r phylo-signal-gate, eval=FALSE}
 result <- impute(traits, tree,
-                 phylo_signal_gate     = TRUE,   # default
+                 phylo_signal_gate     = TRUE,   # opt-in (default FALSE)
                  phylo_signal_threshold = 0.2,   # default; min lambda to keep BM/GNN
                  phylo_signal_method   = "lambda")
 ```
@@ -523,8 +527,7 @@ If a trait's λ falls below `phylo_signal_threshold`, the calibrated
 gate routes it to the grand-mean corner.  `print(fit)` reports
 which traits triggered the gate and their λ values.
 
-To disable (e.g., when comparing against an older snapshot or for
-benchmarking purposes):
+To disable it explicitly (this is the default):
 
 ```{r phylo-signal-gate-off, eval=FALSE}
 result <- impute(traits, tree, phylo_signal_gate = FALSE)

@@ -1,5 +1,32 @@
 # pigauto 0.11.0.9002 (dev)
 
+## New defaults: discrete traits get their own λ; safety gate and floor off
+
+Two defaults change, and results change for anyone using the defaults.
+
+First, binary, ordinal and categorical traits now get their own Pagel's
+lambda in the baseline. Before, every discrete trait was held at lambda = 1.
+The new argument `discrete_lambda = c("estimate", "fixed_1")` (on `impute()`,
+`fit_pigauto()` and `fit_baseline()`, and through `...` on `multi_impute()` and
+`multi_impute_trees()`) defaults to `"estimate"`. The value is recorded in the
+fit's `model_config`, and the fitted discrete lambdas appear in
+`$lambda_per_trait`.
+
+Second, `safety_floor` and `phylo_signal_gate` now default to `FALSE` in
+`impute()` and `fit_pigauto()`. With lambda estimated for every trait type, the
+gate and the floor no longer improved accuracy in any tested setting; at Pagel's
+lambda of 0 to 0.1 the old defaults were worse than predicting the mean, and on
+the BIEN plant data they changed nothing.
+
+To restore the previous behaviour, pass
+`discrete_lambda = "fixed_1", safety_floor = TRUE, phylo_signal_gate = TRUE`.
+
+Evidence: on the four-arm simulation, estimating discrete lambda raised discrete
+accuracy by 0.04 to 0.12 at Pagel's lambda of 0.3 or below and matched or beat
+BACE on binary and categorical traits, at a small cost in probability
+calibration when lambda is near 1 and n is 1,000 or more. See
+`docs/dev-log/discrete-lambda/README.md`.
+
 ## Documentation: `log_transform` and traits that are already logged
 
 `?impute`, `?multi_impute`, `?multi_impute_trees`, `?preprocess_traits` and the
