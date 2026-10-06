@@ -88,6 +88,27 @@ with discrete lambda estimated, safety machinery off), ordinal accuracy:
 Macro-F1 is lower everywhere (it collapses toward the middle classes). Not adopted: a negative result. Ordinal stays
 on the current route; against BACE that is -0.053 / -0.064 at lambda = 0.3 and +0.016 / -0.025 at 0.7 (n = 100 / 300).
 
+## Screen 4 and the gate verdict (`screen4_crossdgp.txt`, `fisher-review.md`)
+
+Cross-DGP screen: 56 factorial cells (types_mixed, BM and OU, MAR 30%, clade 30%, MCAR 10%; lambda 0.3 and 1;
+n = 100 with 100 seeds, n = 1000 with up to 30, paired with stored BACE) plus bace_dgp, bm_mixed and AVONET300
+(20 seeds each). 3,785 of 3,785 job pairs usable. Continuous zRMSE with gate and floor off is never worse (best
+-0.094); discrete accuracy at lambda = 0.3 gains 0.043 to 0.085 in all 14 types_mixed cells; costs at lambda = 1,
+n = 1000 (accuracy -0.002 to -0.005, Brier +0.011 to +0.016) and on AVONET (Brier +0.017).
+
+Correction: the `ou_mixed` runs duplicated `bm_mixed` because the jobs passed `--evo BM`, overriding that DGP's
+OU default. OU evidence comes from the factorial OU cells only; `ou_mixed` is re-run with `--evo OU`.
+
+Independent statistical review (`fisher-review.md`, 2026-10-05): **not supported as a default change yet;
+supported as an opt-in.** Main points: the AVONET Brier loss removes about 90% of pigauto's probability skill over
+the mode on the only real dataset, and it comes from discrete lambda (floor,est also +0.017; none,l1 +0.001); the
+large-n Brier cost grows with n; the regime the floor and gate were built for (real weak-signal data, lambda near
+0, all-discrete data on the LP path) was not tested; "not flagged" in the small cells is a power problem, not
+evidence of no harm. Recommended next: (i) types_mixed at lambda = 0 and 0.1, (ii) BIEN plants, (iii) AVONET
+per-trait Brier and an n = 3000 cell; change defaults only if non-inferior on all three.
+
+VERDICT_WRITTEN (gate GA3)
+
 ## Incident: thread cap
 
 A hand-written timing smoke on Totoro (2026-10-05 ~20:14 to 20:25) set `OPENBLAS_NUM_THREADS=1` but not
