@@ -1,6 +1,6 @@
 # Component rights and current CRAN policy review, 2026-10-06
 
-This is an audit of the proposed 0.11.0 source package, not a submission approval. The current CRAN policy copies are `cran-policy.html` and `cran-checklist.html` in this directory. The policy requires clear ownership and redistribution rights for every shipped component, including data, and asks that source tarballs stay as small as possible. Final checks must use the frozen tarball, not the working tree.
+This audit covers the proposed 0.11.0 source package. The current CRAN policy copies are `cran-policy.html` and `cran-checklist.html` in this directory. The policy requires clear ownership and redistribution rights for every shipped component, including data, and asks that source tarballs stay as small as possible. Final checks use the frozen tarball.
 
 | Component | Evidence read | Present status |
 |---|---|---|
@@ -8,5 +8,7 @@ This is an audit of the proposed 0.11.0 source package, not a submission approva
 | AVONET-derived `avonet300` and `avonet_full` | The [AVONET Figshare record](https://figshare.com/s/b990722d72a26b5bfead) identifies CC BY 4.0; `inst/NOTICE` attributes Tobias et al. (2022) and identifies the derived objects. | Redistribution appears supported by CC BY with attribution. Verify the exact bundled data and notice in the frozen tarball. |
 | Bird phylogenies | The [megatrees release asset](https://github.com/daijiang/megatrees/releases/tag/large_multiPhylo) reports SHA-256 `71f6f712bf4c57c14570644f447c1e2eb0d76436a88075560afd4e85be1fcb78` for `tree_bird_n100.rda`, matching `inst/NOTICE`. The [CRAN 1.0.0 record](https://rdrr.io/cran/megatrees/) reports MIT + file LICENSE; the current upstream `DESCRIPTION` is version 1.0.2 and also says MIT. [BirdTree's downloads page](https://birdtree.org/downloads/) permits downloading full or partial trees and requires the Jetz et al. citation. | The upstream asset identity, package license metadata and citation are evidenced. Those records do not, by themselves, establish unambiguous redistribution rights for the underlying BirdTree data in a different CRAN source package. Keep this rights item open until the exact data distribution terms or direct permission are documented. |
 | Excluded comparators, raw inputs and development assets | `.Rbuildignore` excludes `BACE/`, `avonet/`, `data-raw/`, `useful/`, `script/`, `dev/`, `docs/`, `pkgdown/` and related development paths. The prior component ledger lists each intended ship/exclude decision. | Reconcile against the actual tarball file list and hashes before changing this to complete. |
+
+The source-generator comments in `data-raw/make_avonet300.R`, `make_avonet_full.R`, and `make_trees300.R` now distinguish the megatrees package's MIT metadata from the unresolved BirdTree data rights. No bundled tree object changed.
 
 The current ledger remains `NOT_READY`. Its rights and artifact fields should stay unset until the exact source inventory, component notices, package size, and the open tree-data permission point have been resolved. No contact has been sent to an upstream holder.
