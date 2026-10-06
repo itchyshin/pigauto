@@ -919,6 +919,33 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     bm_cols <- integer(0)
   }
 
+  # PROTOTYPE (feat/discrete-lambda-ordinal, opt-in, default off): replace each
+  # ordinal trait's baseline with a cumulative decomposition (K-1 binary
+  # "class >= k" threshold-joint fits, see R/ovr_ordinal.R). Enabled with
+  # options(pigauto.ordinal_method = "cumulative"). Output convention matches
+  # decode_ordinal_liability(): mu = (class_0based - mean) / sd, se = 0.
+  # Single-obs only.
+  if (identical(getOption("pigauto.ordinal_method", "route"), "cumulative") &&
+      joint_mvn_available() && !multi_obs) {
+    for (tm in trait_map) {
+      if (!identical(tm$type, "ordinal")) next
+      cum <- tryCatch(
+        fit_cumulative_ordinal_fits(data, tree, tm, splits = splits,
+                                     graph = graph,
+                                     soft_aggregate = soft_aggregate,
+                                     joint_solver = joint_solver,
+                                     predict_method = predict_method,
+                                     joint_refine_iter = joint_refine_iter,
+                                     predict_method_explicit = predict_method_explicit),
+        error = function(e) NULL)
+      if (is.null(cum)) next
+      dec <- decode_cumulative_ordinal(cum)
+      mu[, tm$latent_cols] <- (dec$class - tm$mean) / tm$sd
+      se[, tm$latent_cols] <- 0
+      col_path[tm$latent_cols] <- "cumulative_ordinal"
+    }
+  }
+
   # ---- Categorical -> K independent OVR fits (Phase 6) -------------------
   # Each categorical trait gets K separate threshold-joint fits, one per
   # class. This sidesteps the rank-(K-1) phylopars instability of the
