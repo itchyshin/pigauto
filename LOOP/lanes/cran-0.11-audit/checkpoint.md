@@ -8,4 +8,6 @@ S3 to S5 are complete in this worktree. Active reader surfaces and generated hel
 
 A pre-PR tarball built from the corrected worktree has SHA-256 `a9c7ce7b65aec751edd0c8246697ecb51eda9ffe19c874566ad246b4b67c4852`. `R CMD check --as-cran --no-manual` on macOS/R 4.6.0 finished `Status: OK`; the check log is in `docs/dev-log/cran-0.11-audit/provenance/pre-pr-check.log`. The exact release candidate must still be frozen from the merged source. The release ledger remains `NOT_READY`.
 
-Next: create the draft audit PR, keep human merge as a gate, and complete the nine gllvmTMB seeds only if Shinichi approves the measured run. After merge, verify the deployed site, freeze the exact tarball, run platform checks, resolve the open BirdTree redistribution-rights point, and prepare the separate evidence PR. No CRAN submission is authorized.
+Draft audit PR [#226](https://github.com/itchyshin/pigauto/pull/226) is open against `main` from commit `60195260c9ef2e74a60c3f9c41700b7b5dbb27da`. It remains a draft; human merge is a separate gate. The other active lane is the direct-to-main checkout, which this worktree has not touched.
+
+Next: review PR checks and complete the nine gllvmTMB seeds only if Shinichi approves the measured run. After human merge, verify the deployed site, freeze the exact tarball, run platform checks, resolve the open BirdTree redistribution-rights point, and prepare the separate evidence PR. No CRAN submission is authorized.
