@@ -166,8 +166,8 @@ the need in the left-hand column.
 |---|---|---|
 | Filled-in traits | `impute(traits, tree)` | Yes |
 | Uncertainty for one imputed value | the per-cell conformal interval in `result$prediction` | Yes |
-| A downstream model (regression, PGLS, mixed model) that accounts for imputation | `multi_impute(traits, tree)`, then `with_imputations()` and `pool_mi()` | Yes, when every trait is continuous, with one row per species and no covariates: the default `draws_method = "auto"` then uses posterior draws |
-| One incomplete covariate in `lm`, `glm` or `lmer` | `multi_impute_analysis()` | No |
+| A linear downstream analysis of imputed continuous traits on their imputation scale | `multi_impute(traits, tree)`, then `with_imputations()` and `pool_mi()` | Yes, when every trait is continuous, with one row per species and no covariates: the default `draws_method = "auto"` then uses posterior draws |
+| One incomplete covariate in `lm`, binomial-logit `glm`, or Gaussian random-intercept `lmer` | `multi_impute_analysis()` | No |
 
 For other data, `draws_method = "auto"` falls back to `"conformal"` draws
 and says so. Those draws, like `"mc_dropout"`, describe the spread of
@@ -178,6 +178,9 @@ combined by stacking posterior draws, for example with
 `brms::brm_multiple()`, not with `pool_mi()`. Worked examples for nlme,
 lme4, glmmTMB, drmTMB, gllvmTMB and brms are in the
 [multiple imputation article](https://itchyshin.github.io/pigauto/articles/multiple-imputation.html).
+The ability to fit and extract coefficients from a model class does not by
+itself validate the imputation model for that analysis; check the article's
+conditions before interpreting pooled estimates.
 
 ## Advanced controls
 
