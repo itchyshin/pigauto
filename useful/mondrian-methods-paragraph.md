@@ -38,7 +38,7 @@ background), empirical coverage of the nominal 95% interval fell to 0.923 at n =
 not diminish with sample size (`docs/dev-log/2026-08-16-mechanism-coverage-results.md`).
 
 To restore the condition where it fails, pigauto offers a locality-stratified variant
-(`conformal_method = "mondrian"`; Vovk 2012; Boström et al. 2021). For each validation cell a
+(`conformal_method = "mondrian"`; Vovk 2012; Boström & Johansson 2020). For each validation cell a
 locality statistic is computed as the mean cophenetic distance from its species to the five nearest
 species with an observed value for that trait. Validation cells are split at the median locality
 into a near and a far stratum, and a separate conformal quantile is computed within each stratum at
@@ -71,8 +71,8 @@ was first observed have been re-run with it.
   475–490. (Mondrian / label- and taxonomy-conditional conformal.)
 - Lei J, G'Sell M, Rinaldo A, Tibshirani RJ, Wasserman L (2018) Distribution-free predictive
   inference for regression. JASA 113(523), 1094–1111.
-- Boström H, Linusson H, Löfström T, Johansson U (2021) Mondrian conformal regressors. COPA 2021,
-  PMLR 152, 24–41.
+- Boström H, Johansson U (2020) Mondrian conformal regressors. COPA 2020, PMLR 128, 114–133.
+  (Corrected 2026-09-23 against the PMLR page; the earlier entry conflated a 2021 paper.)
 
 Citation years and venues are from memory and must be checked against the DOIs before submission;
 Garfield's rule applies.
