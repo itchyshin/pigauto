@@ -76,8 +76,11 @@ test_that("[lambda-dispatch] lambda_per_trait populated", {
   # exact-route exception (S3) -- it is not about what "auto" happens to
   # pick for b1 on this particular fixture/seed. Force the route explicitly
   # instead of relying on "auto" (the default) to land on "exact".
+  # discrete_lambda = "fixed_1": the new default estimates b1's own lambda,
+  # so the lambda_block / lambda = 1 assertions below test the old path.
   fit <- fit_dispatch_baseline(fx, lambda_mode = "estimate",
-                                predict_method = "exact")
+                                predict_method = "exact",
+                                discrete_lambda = "fixed_1")
   pd <- fit$pd; bl <- fit$bl
 
   expect_true(is.numeric(bl$lambda_per_trait))
@@ -116,8 +119,27 @@ test_that("[lambda-dispatch] lambda_per_trait populated", {
   expect_true(all(bl$lambda_per_trait[cat_names] == 1))
 
   bl_pc <- fit_dispatch_baseline(fx, lambda_mode = "estimate",
-                                  predict_method = "per_column")$bl
+                                  predict_method = "per_column",
+                                  discrete_lambda = "fixed_1")$bl
   expect_true(all(bl_pc$lambda_per_trait[disc_names] == 1))
+})
+
+# New default (discrete_lambda = "estimate"): the binary column carries its own
+# estimated lambda, in [0, 1] and below 1 at this fixture's low signal.
+test_that("[lambda-dispatch] discrete_lambda = 'estimate' (default) gives the binary column its own lambda", {
+  fx <- make_lambda_dispatch_fixture()
+  for (pm in c("exact", "per_column")) {
+    bl <- fit_dispatch_baseline(fx, lambda_mode = "estimate",
+                                 predict_method = pm)$bl
+    expect_identical(bl$discrete_lambda, "estimate")
+    lam_b <- unname(bl$lambda_per_trait["b1=yes"])
+    if (is.na(lam_b)) lam_b <- unname(bl$lambda_per_trait[grep("^b1", names(bl$lambda_per_trait))[1]])
+    expect_true(is.finite(lam_b) && lam_b >= 0 && lam_b <= 1, info = pm)
+  }
+  bl_pc <- fit_dispatch_baseline(fx, lambda_mode = "estimate",
+                                  predict_method = "per_column")$bl
+  bn <- grep("^b1", names(bl_pc$lambda_per_trait), value = TRUE)
+  expect_true(any(bl_pc$lambda_per_trait[bn] < 1))
 })
 
 # ---- covariates keep lambda --------------------------------------------
@@ -191,14 +213,18 @@ test_that("[lambda-dispatch] partial lambda_fixed defaults missing columns to 1 
 
   partial <- bl$lambda_per_trait["c1"]  # names only ONE of the three continuous columns
 
+  # discrete_lambda = "fixed_1" on both fits: under the new default the
+  # categorical one-vs-rest fits would estimate their own lambda and differ.
   bl_partial <- NULL
   expect_no_error(
     bl_partial <- fit_baseline(pd, fx$tree, splits = spl,
                                 lambda_fixed = partial,
-                                predict_method = "per_column")
+                                predict_method = "per_column",
+                                discrete_lambda = "fixed_1")
   )
   bl_fixed1 <- fit_baseline(pd, fx$tree, splits = spl, lambda_mode = "fixed_1",
-                             predict_method = "per_column")
+                             predict_method = "per_column",
+                             discrete_lambda = "fixed_1")
 
   other_cols <- setdiff(colnames(pd$X_scaled), names(partial))
   expect_equal(bl_partial$mu[, other_cols], bl_fixed1$mu[, other_cols],
@@ -332,8 +358,9 @@ test_that("[lambda-dispatch] fixed_1 dispatcher reference", {
   ref <- readRDS(testthat::test_path("fixtures",
                                       "lambda_fixed1_reference_ab02e31.rds"))
   pd <- preprocess_traits(ref$df, ref$tree)
+  # discrete_lambda = "fixed_1": the reference predates estimated discrete lambda.
   bl <- fit_baseline(pd, ref$tree, splits = ref$splits, lambda_mode = "fixed_1",
-                      predict_method = "per_column")
+                      predict_method = "per_column", discrete_lambda = "fixed_1")
 
   expect_equal(bl$mu, ref$baseline$mu, tolerance = 1e-12)
   expect_equal(bl$se, ref$baseline$se, tolerance = 1e-12)
@@ -389,10 +416,14 @@ test_that("[lambda-dispatch] ordinal stays at lambda = 1 under estimate", {
     spl <- make_missing_splits(pd$X_scaled, seed = seed,
                                 trait_map = pd$trait_map)
 
+    # discrete_lambda = "fixed_1": the new default estimates the ordinal
+    # liability's lambda; this test pins the old ordinal-at-1 contract.
     bl_fixed <- fit_baseline(pd, fx$tree, splits = spl, lambda_mode = "fixed_1",
-                              predict_method = "per_column")
+                              predict_method = "per_column",
+                              discrete_lambda = "fixed_1")
     bl_est   <- fit_baseline(pd, fx$tree, splits = spl, lambda_mode = "estimate",
-                              predict_method = "per_column")
+                              predict_method = "per_column",
+                              discrete_lambda = "fixed_1")
 
     o1_col <- colnames(pd$X_scaled)[pd$trait_map$o1$latent_cols]
 
@@ -433,8 +464,10 @@ test_that("[lambda-dispatch] ordinal mu is finite and reports lambda_block under
     # (unforced) expectation. That mislabelling is exactly what fix 3
     # corrects; pinning here keeps this test about the exact route's
     # contract instead of re-encoding the bug it fixed.
+    # discrete_lambda = "fixed_1": under the new default the ordinal column
+    # carries its own estimated lambda instead of lambda_block.
     bl_est <- fit_baseline(pd, fx$tree, splits = spl, lambda_mode = "estimate",
-                            predict_method = "exact")
+                            predict_method = "exact", discrete_lambda = "fixed_1")
     o1_col <- colnames(pd$X_scaled)[pd$trait_map$o1$latent_cols]
 
     expect_true(all(is.finite(bl_est$mu[, o1_col])), info = paste("seed", seed))
@@ -442,6 +475,23 @@ test_that("[lambda-dispatch] ordinal mu is finite and reports lambda_block under
       expect_equal(unname(bl_est$lambda_per_trait[o1_col]), bl_est$lambda_block,
                    info = paste("seed", seed))
     }
+  }
+})
+
+# New default (discrete_lambda = "estimate"): the ordinal liability column is in
+# the estimated set; its lambda is finite, in [0, 1], and mu stays finite.
+test_that("[lambda-dispatch] discrete_lambda = 'estimate' (default) estimates the ordinal lambda", {
+  for (seed in 900:902) {
+    fx <- make_ordinal_lambda_fixture(seed)
+    pd <- preprocess_traits(fx$df, fx$tree)
+    spl <- make_missing_splits(pd$X_scaled, seed = seed,
+                                trait_map = pd$trait_map)
+    bl <- fit_baseline(pd, fx$tree, splits = spl, lambda_mode = "estimate",
+                        predict_method = "exact")
+    o1_col <- colnames(pd$X_scaled)[pd$trait_map$o1$latent_cols]
+    lam <- unname(bl$lambda_per_trait[o1_col])
+    expect_true(all(is.finite(bl$mu[, o1_col])), info = paste("seed", seed))
+    expect_true(is.finite(lam) && lam >= 0 && lam <= 1, info = paste("seed", seed))
   }
 })
 

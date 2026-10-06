@@ -58,8 +58,9 @@
 #'   and \code{phylo_signal_gate} keep their usual semantics: the blend
 #'   collapses to \eqn{r_{BM} \cdot \mu_{BM} + r_{MEAN} \cdot \mu_{MEAN}}
 #'   (the GNN corner degenerates to the baseline, so its calibrated weight
-#'   is folded into \eqn{r_{BM}}). The pure traditional-stats arm is
-#'   \code{gnn = FALSE, safety_floor = FALSE, phylo_signal_gate = FALSE}.
+#'   is folded into \eqn{r_{BM}}). With the defaults
+#'   (\code{safety_floor = FALSE, phylo_signal_gate = FALSE}) this is the
+#'   pure traditional-stats arm.
 #'   \code{conformal_method = "mondrian"} is not supported when
 #'   \code{gnn = FALSE} (its locality statistic conditions on a calibrated
 #'   GNN prediction surface that does not exist here) and raises an error.
@@ -198,14 +199,22 @@
 #'   \code{>= 2}.  Capped at \code{n_val} per trait so each fold has at
 #'   least 1 cell.  When effective K \code{< 2} (e.g. \code{n_val = 1}),
 #'   the code falls back to a single split.
-#' @param safety_floor logical. When \code{TRUE} (default), post-training
+#' @param safety_floor logical. Default \code{FALSE} (it was \code{TRUE}
+#'   from v0.9.1.9002 until 0.11.0.9002). When \code{TRUE}, post-training
 #'   calibration searches a 3-way simplex of BM, GNN, and grand-mean
 #'   candidates. Because the grand-mean corner is always in the grid, the
 #'   selected candidate cannot be worse than that corner on the validation
 #'   cells under the calibration metric. When \code{FALSE}, the v0.9.1
-#'   1-D calibration is used exactly (\code{r_MEAN = 0}).
-#' @param phylo_signal_gate logical. When \code{TRUE} (default since
-#'   v0.9.1.9003), compute per-trait Pagel's \eqn{\lambda} on
+#'   1-D calibration is used exactly (\code{r_MEAN = 0}). The default
+#'   changed because, with Pagel's \eqn{\lambda} now estimated for every
+#'   trait type (see \code{discrete_lambda}), the floor no longer improved
+#'   accuracy in any tested setting; at \eqn{\lambda} of 0 to 0.1 the old
+#'   default was worse than predicting the mean, and on the BIEN plant
+#'   data it changed nothing (\code{docs/dev-log/discrete-lambda/README.md}).
+#'   Set \code{safety_floor = TRUE} to restore the old behaviour.
+#' @param phylo_signal_gate logical. Default \code{FALSE} (it was
+#'   \code{TRUE} from v0.9.1.9003 until 0.11.0.9002; same reasons as
+#'   \code{safety_floor}; set \code{TRUE} to restore). When \code{TRUE}, compute per-trait Pagel's \eqn{\lambda} on
 #'   training-observed cells before fitting; for traits with
 #'   \code{lambda < phylo_signal_threshold}, force
 #'   \code{(r_cal_bm = 0, r_cal_gnn = 0, r_cal_mean = 1)} directly
@@ -213,6 +222,27 @@
 #'   \code{phytools} package.  Falls back to safety-floor-only
 #'   behaviour (\code{phylo_signal_gate = FALSE} effective) when
 #'   \code{phytools} is absent.
+#' @param discrete_lambda character, \code{"estimate"} (default) or
+#'   \code{"fixed_1"}. With \code{"estimate"}, the binary, ordinal and
+#'   zero-inflated-count gate liability columns of the threshold-joint
+#'   baseline, and the one-vs-rest column of each categorical class, get
+#'   their own Pagel's lambda, so a weak-signal discrete trait shrinks toward
+#'   its prevalence instead of copying close relatives. \code{"fixed_1"}
+#'   restores the previous behaviour (binary and ordinal at lambda = 1, or at
+#'   the shared joint lambda on the "exact" route; categorical at 1).
+#'   Evidence (simulated Brownian-motion and OU data, n = 100 to 1000, 30\%
+#'   missing; \code{docs/dev-log/discrete-lambda/README.md}): estimating
+#'   discrete lambda alone added about 0.01 to 0.04 discrete accuracy at Pagel's
+#'   lambda of 0.3 or below; together with \code{safety_floor = FALSE} and
+#'   \code{phylo_signal_gate = FALSE} (also the defaults) the gain was 0.04
+#'   to 0.12, and binary and categorical accuracy matched or beat BACE's.
+#'   Costs: with lambda near 1 and n >= 1000, accuracy -0.002 to -0.005 and
+#'   Brier score +0.010 to +0.016; on AVONET300's categorical traits, Brier
+#'   +0.014 to +0.020 with accuracy unchanged or better. Ordinal accuracy
+#'   still trails BACE's at lambda = 0.3. The categorical one-vs-rest lambdas
+#'   are not reported in \code{$lambda_per_trait}.
+#'   Passed to \code{\link{fit_baseline}} and stored in the fitted model
+#'   config.
 #' @param phylo_signal_threshold numeric, default \code{0.2}.  Traits
 #'   with Pagel's \eqn{\lambda} below this value are routed to the
 #'   grand-mean corner of the safety-floor simplex.
@@ -236,7 +266,10 @@
 #'   continuous-family (BM-eligible) latent column -- continuous, count,
 #'   proportion, and zi_count magnitude, via the joint MVN /
 #'   threshold-joint baseline's own \code{lambda_cols} machinery when that
-#'   joint path fires, or a per-column re-fit otherwise. Discrete traits
+#'   joint path fires, or a per-column re-fit otherwise. Binary, ordinal and
+#'   categorical traits get their own lambda by default
+#'   (\code{discrete_lambda = "estimate"}); the rest of this paragraph
+#'   describes \code{discrete_lambda = "fixed_1"}, where discrete traits
 #'   (binary, categorical, zi gate) AND ordinal have no discrete-trait
 #'   analogue of Pagel's lambda of their own -- there is no lambda_k to
 #'   estimate for them. Under \code{predict_method = "per_column"} (see
@@ -395,12 +428,13 @@ fit_pigauto <- function(
     gate_method       = c("cv_folds", "median_splits", "single_split"),
     gate_splits_B     = 31L,
     gate_cv_folds     = 5L,
-    safety_floor      = TRUE,
-    phylo_signal_gate = TRUE,
+    safety_floor      = FALSE,
+    phylo_signal_gate = FALSE,
     phylo_signal_threshold = 0.2,
     phylo_signal_method = c("lambda", "blomberg_k"),
     min_val_cells     = 20L,
     lambda_mode       = c("estimate", "fixed_1", "cv", "bayes"),
+    discrete_lambda   = c("estimate", "fixed_1"),
     joint_solver      = c("inhouse", "rphylopars"),
     predict_method    = c("auto", "exact", "per_column"),
     joint_refine_iter = 0L,
@@ -413,6 +447,7 @@ fit_pigauto <- function(
   predict_method_explicit <- !missing(predict_method)
   conformal_method    <- match.arg(conformal_method)
   lambda_mode         <- match.arg(lambda_mode)
+  discrete_lambda     <- match.arg(discrete_lambda)
   joint_solver        <- match.arg(joint_solver)
   predict_method      <- match.arg(predict_method)
   gate_method         <- match.arg(gate_method)
@@ -480,6 +515,7 @@ fit_pigauto <- function(
     # calling ape::cophenetic.phylo() a second time on the same tree.
     baseline <- .fit_baseline_dispatch(data, tree, splits = splits, graph = graph,
                               lambda_mode = lambda_mode,
+                              discrete_lambda = discrete_lambda,
                               joint_solver = joint_solver, predict_method = predict_method,
                               joint_refine_iter = joint_refine_iter,
                               predict_method_explicit = predict_method_explicit,
@@ -575,6 +611,7 @@ fit_pigauto <- function(
       # `predict_method` unchanged when `baseline` predates this field.
       baseline_full <- .fit_baseline_dispatch(data, tree, splits = NULL, graph = graph,
                                      lambda_mode = lambda_mode,
+                                     discrete_lambda = discrete_lambda,
                                      joint_solver = joint_solver,
                                      predict_method = predict_method,
                                      joint_refine_iter = joint_refine_iter,
@@ -782,6 +819,7 @@ fit_pigauto <- function(
       n_trait_heads          = as.integer(n_trait_heads),
       trait_embed_dim        = as.integer(trait_embed_dim),
       lambda_mode            = lambda_mode,
+      discrete_lambda      = discrete_lambda,
       # gnn = FALSE production predictions use baseline_full (splits = NULL);
       # fall back to baseline if baseline_full wasn't computed for some
       # reason. NULL only for baselines built before this field existed.
@@ -1571,6 +1609,7 @@ fit_pigauto <- function(
     n_trait_heads          = as.integer(n_trait_heads),
     trait_embed_dim        = as.integer(trait_embed_dim),
     lambda_mode            = lambda_mode,
+    discrete_lambda      = discrete_lambda,
     # fit_baseline() returns these (NULL only for baselines built before the
     # lambda fields existed). GNN-on fits always use object$baseline for prediction (see
     # predict.pigauto_fit), so these come from `baseline`, not

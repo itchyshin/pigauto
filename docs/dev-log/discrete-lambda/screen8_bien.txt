@@ -1,0 +1,21 @@
+20
+0
+0
+masks: 20  median wall per mask (min): 87.7 
+        trait  mean default floor only  none
+     height_m 0.999   0.741      0.741 0.741
+    leaf_area 1.007   0.932      0.932 0.932
+    seed_mass 0.945   0.944      0.939 0.938
+          sla 1.055   1.060      1.060 1.055
+ wood_density 0.999   0.699      0.699 0.699
+none - default, zRMSE pooled over traits: -0.002 (SE 0.001) 
+floor only - default, zRMSE pooled over traits: -0.001 (SE 0.000) 
+   height_m : none - default +0.000 (SE 0.000) 
+   leaf_area : none - default -0.000 (SE 0.000) 
+   sla : none - default -0.005 (SE 0.003) 
+   seed_mass : none - default -0.005 (SE 0.002) 
+   wood_density : none - default +0.000 (SE 0.000) 
+         arm coverage
+1    default    0.953
+2 floor only    0.954
+3       none    0.953

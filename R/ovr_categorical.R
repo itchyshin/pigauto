@@ -28,6 +28,8 @@
 #' @param joint_refine_iter integer, default `0L`. Forwarded to each
 #'   per-class `fit_joint_threshold_baseline()` call. See
 #'   `fit_joint_solver()` in R/joint_mvn_solver.R.
+#' @param discrete_lambda `"estimate"` (default) or `"fixed_1"`; forwarded to
+#'   each per-class `fit_joint_threshold_baseline()` call.
 #' @return numeric matrix (n_species x K) of P(class_k) per species; NA
 #'   for classes whose fit failed.
 #' @keywords internal
@@ -39,7 +41,8 @@ fit_ovr_categorical_fits <- function(data, tree, trait_name,
                                       joint_solver = "inhouse",
                                       predict_method = "exact",
                                       joint_refine_iter = 0L,
-                                      predict_method_explicit = NULL) {
+                                      predict_method_explicit = NULL,
+                                      discrete_lambda = "estimate") {
   if (is.null(predict_method_explicit)) {
     predict_method_explicit <- !missing(predict_method)
   }
@@ -116,17 +119,10 @@ fit_ovr_categorical_fits <- function(data, tree, trait_name,
     which_synth <- which(built_k$liab_cols == synth_col)
     if (length(which_synth) == 1L) sdv[which_synth] <- sd_k
 
-    # S4 (dispatcher, feat/joint-lambda-default): deliberately NOT threading
-    # lambda_mode / lambda_fixed here -- fit_joint_threshold_baseline()'s
-    # default (lambda_mode = "fixed_1") always applies. With max_iter = 0
-    # and predict_method = "per_column" the synthetic one-vs-rest binary
-    # column's prediction does not depend on the continuous columns' own
-    # lambda, so estimating lambda per OVR call would be K wasted
-    # optimisations (K per-class fits per categorical trait) that change
-    # nothing about the categorical output; it would also make this trait's
-    # baseline depend on lambda_mode, which tests/testthat/test-lambda-per-
-    # type.R locks at lambda = 1 regardless of lambda_mode (the August
-    # arc/lambda-per-type fix, section 7 B iii of the alignment note).
+    # lambda_mode / lambda_fixed are deliberately NOT threaded here: the
+    # continuous columns of pd_k keep lambda = 1 (estimating them would be K
+    # wasted optimisations per categorical trait). Only the synthetic
+    # one-vs-rest binary column gets its own lambda, via `discrete_lambda`.
     jt <- tryCatch(
       fit_joint_threshold_baseline(pd_k, tree, splits = splits_k,
                                     graph = graph,
@@ -135,7 +131,8 @@ fit_ovr_categorical_fits <- function(data, tree, trait_name,
                                     joint_solver = joint_solver,
                                     predict_method = predict_method,
                                     joint_refine_iter = joint_refine_iter,
-                                    predict_method_explicit = predict_method_explicit),
+                                    predict_method_explicit = predict_method_explicit,
+                                    discrete_lambda = discrete_lambda),
       error = function(e) NULL
     )
     if (is.null(jt)) next
@@ -271,7 +268,8 @@ fit_ovr_categorical_fits_em <- function(data, tree, trait_name,
                                          joint_solver = "inhouse",
                                          predict_method = "exact",
                                          joint_refine_iter = 0L,
-                                         predict_method_explicit = NULL) {
+                                         predict_method_explicit = NULL,
+                                         discrete_lambda = "estimate") {
   if (is.null(predict_method_explicit)) {
     predict_method_explicit <- !missing(predict_method)
   }
@@ -285,7 +283,8 @@ fit_ovr_categorical_fits_em <- function(data, tree, trait_name,
                                      joint_solver = joint_solver,
                                      predict_method = predict_method,
                                      joint_refine_iter = joint_refine_iter,
-                                     predict_method_explicit = predict_method_explicit)
+                                     predict_method_explicit = predict_method_explicit,
+                                     discrete_lambda = discrete_lambda)
   K <- ncol(iter1)
   sigma_cat <- rep(1, K)
   probs     <- iter1
@@ -323,7 +322,8 @@ fit_ovr_categorical_fits_em <- function(data, tree, trait_name,
                                   joint_solver = joint_solver,
                                   predict_method = predict_method,
                                   joint_refine_iter = joint_refine_iter,
-                                  predict_method_explicit = predict_method_explicit),
+                                  predict_method_explicit = predict_method_explicit,
+                                  discrete_lambda = discrete_lambda),
         error = function(e) NULL
       )
       if (is.null(iter_probs)) {

@@ -13,6 +13,7 @@ fit_baseline(
   multi_obs_aggregation = c("hard", "soft"),
   lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
   lambda_fixed = NULL,
+  discrete_lambda = c("estimate", "fixed_1"),
   em_iterations = 0L,
   em_tol = 0.001,
   em_offdiag = FALSE,
@@ -64,8 +65,9 @@ separate per-column re-fit. \code{"fixed_1"} preserves the classic
 Brownian correlation matrix (lambda = 1 everywhere). \code{"cv"} and
 \code{"bayes"} have no joint analogue and force the per-column BM path
 for continuous-family columns (as before); binary/ordinal/categorical/
-zi_gate columns are unaffected by \code{lambda_mode} in every case and
-keep the threshold-joint / OVR-categorical baseline at lambda = 1.
+zi_gate columns are unaffected by \code{lambda_mode} in every case;
+their lambda is governed by \code{discrete_lambda} (below), and is 1
+when \code{discrete_lambda = "fixed_1"}.
 \strong{Covariate caveat}: when \code{data$covariates} is supplied,
 the per-column path switches to \code{bm_impute_col_with_cov()},
 which accepts a numeric lambda or \code{"estimate"} but not
@@ -81,6 +83,28 @@ fit's own \code{$lambda_per_trait}). Columns not present in
 \code{lambda_fixed} keep their lambda = 1 default. \code{NULL}
 (default) means every continuous-family column follows
 \code{lambda_mode} normally.}
+
+\item{discrete_lambda}{character, \code{"estimate"} (default) or
+\code{"fixed_1"}. With \code{"estimate"}, the binary, ordinal and
+zero-inflated-count gate liability columns of the threshold-joint
+baseline, and the one-vs-rest column of each categorical class, get
+their own Pagel's lambda, so a weak-signal discrete trait shrinks toward
+its prevalence instead of copying close relatives. \code{"fixed_1"}
+restores the previous behaviour (binary and ordinal at lambda = 1, or at
+the shared joint lambda on the "exact" route; categorical at 1).
+Evidence (simulated Brownian-motion and OU data, n = 100 to 1000, 30\\%
+missing; \code{docs/dev-log/discrete-lambda/README.md}): estimating
+discrete lambda alone added about 0.01 to 0.04 discrete accuracy at Pagel's
+lambda of 0.3 or below; together with \code{safety_floor = FALSE} and
+\code{phylo_signal_gate = FALSE} (also the defaults) the gain was 0.04
+to 0.12, and binary and categorical accuracy matched or beat BACE's.
+Costs: with lambda near 1 and n >= 1000, accuracy -0.002 to -0.005 and
+Brier score +0.010 to +0.016; on AVONET300's categorical traits, Brier
++0.014 to +0.020 with accuracy unchanged or better. Ordinal accuracy
+still trails BACE's at lambda = 0.3. The categorical one-vs-rest lambdas
+are not reported in \code{$lambda_per_trait}.
+Recorded in the returned list and in a fit's \code{model_config};
+binary and ordinal lambdas are replayed by \code{lambda_fixed}.}
 
 \item{em_iterations}{integer. Number of Phase 6 EM iterations for the
 threshold-joint baseline (binary + ordinal + OVR categorical). Default

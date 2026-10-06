@@ -197,7 +197,7 @@ cat("Kernel bandwidth sigma:", round(graph$sigma, 3), "\n")
 
 ## ----phylo-signal-gate, eval=FALSE--------------------------------------------
 # result <- impute(traits, tree,
-#                  phylo_signal_gate     = TRUE,   # default
+#                  phylo_signal_gate     = TRUE,   # opt-in (default FALSE)
 #                  phylo_signal_threshold = 0.2,   # default; min lambda to keep BM/GNN
 #                  phylo_signal_method   = "lambda")
 

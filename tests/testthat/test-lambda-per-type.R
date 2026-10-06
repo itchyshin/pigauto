@@ -76,8 +76,11 @@ test_that("[lambda-per-type] lambda_mode = 'fixed_1' is unchanged (numerical reg
   # prediction); predict_method = "exact" (now the default) legitimately
   # produces different numbers at imputed cells, so this regression pin
   # must fix the route it is testing rather than move with the default.
+  # discrete_lambda = "fixed_1": discrete lambda now defaults to "estimate"; this
+  # pin is of the old lambda = 1 discrete path.
   bl <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "fixed_1",
-                     predict_method = "per_column")
+                     predict_method = "per_column",
+                     discrete_lambda = "fixed_1")
 
   expect_true(is.matrix(bl$mu))
   expect_true(all(is.finite(bl$mu)))
@@ -126,10 +129,14 @@ test_that("[lambda-per-type] lambda_mode = 'estimate' leaves binary/categorical 
   # the discrete columns relative to fixed_1, which is exactly what this
   # test checks does NOT happen -- that invariant is a per-column-path
   # property now, not a global one.
+  # discrete_lambda = "fixed_1": the new default estimates discrete lambda, so the
+  # old-path invariant tested here needs it held at 1 explicitly.
   bl_fixed <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "fixed_1",
-                           predict_method = "per_column")
+                           predict_method = "per_column",
+                           discrete_lambda = "fixed_1")
   bl_est   <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "estimate",
-                           predict_method = "per_column")
+                           predict_method = "per_column",
+                           discrete_lambda = "fixed_1")
 
   migr_col  <- pd$trait_map$migr$latent_cols
   diet_cols <- pd$trait_map$diet$latent_cols
@@ -161,10 +168,14 @@ test_that("[lambda-per-type] lambda_mode = 'bayes' also leaves categorical basel
   # S3 default flip: pinned to predict_method = "per_column" -- same
   # reasoning as the "estimate" case above (discrete columns share
   # lambda_block under "exact" by design).
+  # discrete_lambda = "fixed_1": the new default estimates discrete lambda, so the
+  # old-path invariant tested here needs it held at 1 explicitly.
   bl_fixed <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "fixed_1",
-                           predict_method = "per_column")
+                           predict_method = "per_column",
+                           discrete_lambda = "fixed_1")
   bl_bayes <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "bayes",
-                           predict_method = "per_column")
+                           predict_method = "per_column",
+                           discrete_lambda = "fixed_1")
 
   diet_cols <- pd$trait_map$diet$latent_cols
   migr_col  <- pd$trait_map$migr$latent_cols
@@ -186,10 +197,14 @@ test_that("[lambda-per-type] lambda_mode = 'estimate' routes continuous columns 
   # predict_method = "exact" (now the default) the prediction is the joint
   # cross-trait conditional, which legitimately differs from a per-column
   # reference at imputed cells (observed cells still match exactly).
+  # discrete_lambda = "fixed_1": the new default estimates discrete lambda, so the
+  # old-path invariant tested here needs it held at 1 explicitly.
   bl_fixed <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "fixed_1",
-                           predict_method = "per_column")
+                           predict_method = "per_column",
+                           discrete_lambda = "fixed_1")
   bl_est   <- fit_baseline(pd, td$tree, splits = spl, lambda_mode = "estimate",
-                           predict_method = "per_column")
+                           predict_method = "per_column",
+                           discrete_lambda = "fixed_1")
 
   mass_col <- pd$trait_map$mass$latent_cols
   wing_col <- pd$trait_map$wing$latent_cols

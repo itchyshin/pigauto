@@ -79,8 +79,9 @@
 #'   Brownian correlation matrix (lambda = 1 everywhere). \code{"cv"} and
 #'   \code{"bayes"} have no joint analogue and force the per-column BM path
 #'   for continuous-family columns (as before); binary/ordinal/categorical/
-#'   zi_gate columns are unaffected by \code{lambda_mode} in every case and
-#'   keep the threshold-joint / OVR-categorical baseline at lambda = 1.
+#'   zi_gate columns are unaffected by \code{lambda_mode} in every case;
+#'   their lambda is governed by \code{discrete_lambda} (below), and is 1
+#'   when \code{discrete_lambda = "fixed_1"}.
 #'   \strong{Covariate caveat}: when \code{data$covariates} is supplied,
 #'   the per-column path switches to \code{bm_impute_col_with_cov()},
 #'   which accepts a numeric lambda or \code{"estimate"} but not
@@ -95,6 +96,27 @@
 #'   \code{lambda_fixed} keep their lambda = 1 default. \code{NULL}
 #'   (default) means every continuous-family column follows
 #'   \code{lambda_mode} normally.
+#' @param discrete_lambda character, \code{"estimate"} (default) or
+#'   \code{"fixed_1"}. With \code{"estimate"}, the binary, ordinal and
+#'   zero-inflated-count gate liability columns of the threshold-joint
+#'   baseline, and the one-vs-rest column of each categorical class, get
+#'   their own Pagel's lambda, so a weak-signal discrete trait shrinks toward
+#'   its prevalence instead of copying close relatives. \code{"fixed_1"}
+#'   restores the previous behaviour (binary and ordinal at lambda = 1, or at
+#'   the shared joint lambda on the "exact" route; categorical at 1).
+#'   Evidence (simulated Brownian-motion and OU data, n = 100 to 1000, 30\%
+#'   missing; \code{docs/dev-log/discrete-lambda/README.md}): estimating
+#'   discrete lambda alone added about 0.01 to 0.04 discrete accuracy at Pagel's
+#'   lambda of 0.3 or below; together with \code{safety_floor = FALSE} and
+#'   \code{phylo_signal_gate = FALSE} (also the defaults) the gain was 0.04
+#'   to 0.12, and binary and categorical accuracy matched or beat BACE's.
+#'   Costs: with lambda near 1 and n >= 1000, accuracy -0.002 to -0.005 and
+#'   Brier score +0.010 to +0.016; on AVONET300's categorical traits, Brier
+#'   +0.014 to +0.020 with accuracy unchanged or better. Ordinal accuracy
+#'   still trails BACE's at lambda = 0.3. The categorical one-vs-rest lambdas
+#'   are not reported in \code{$lambda_per_trait}.
+#'   Recorded in the returned list and in a fit's \code{model_config};
+#'   binary and ordinal lambdas are replayed by \code{lambda_fixed}.
 #' @param em_iterations integer. Number of Phase 6 EM iterations for the
 #'   threshold-joint baseline (binary + ordinal + OVR categorical). Default
 #'   \code{0L} disables the EM loop and preserves v0.9.1 output byte-for-byte.
@@ -297,6 +319,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                          multi_obs_aggregation = c("hard", "soft"),
                          lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
                          lambda_fixed = NULL,
+                         discrete_lambda = c("estimate", "fixed_1"),
                          em_iterations = 0L,
                          em_tol = 1e-3,
                          em_offdiag = FALSE,
@@ -316,7 +339,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   .fit_baseline_dispatch(
     data = data, tree = tree, splits = splits, model = model, graph = graph,
     multi_obs_aggregation = multi_obs_aggregation, lambda_mode = lambda_mode,
-    lambda_fixed = lambda_fixed, em_iterations = em_iterations, em_tol = em_tol,
+    lambda_fixed = lambda_fixed, discrete_lambda = discrete_lambda,
+    em_iterations = em_iterations, em_tol = em_tol,
     em_offdiag = em_offdiag, joint_solver = joint_solver,
     predict_method = predict_method, joint_refine_iter = joint_refine_iter,
     predict_method_explicit = predict_method_explicit,
@@ -338,6 +362,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                          multi_obs_aggregation = c("hard", "soft"),
                          lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
                          lambda_fixed = NULL,
+                         discrete_lambda = c("estimate", "fixed_1"),
                          em_iterations = 0L,
                          em_tol = 1e-3,
                          em_offdiag = FALSE,
@@ -363,7 +388,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     return(.fit_baseline_route(
       data = data, tree = tree, splits = splits, model = model, graph = graph,
       multi_obs_aggregation = multi_obs_aggregation, lambda_mode = lambda_mode,
-      lambda_fixed = lambda_fixed, em_iterations = em_iterations,
+      lambda_fixed = lambda_fixed, discrete_lambda = discrete_lambda,
+      em_iterations = em_iterations,
       em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,
       joint_refine_iter = joint_refine_iter, predict_route = predict_route))
   }
@@ -372,7 +398,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     return(.fit_baseline_auto(
       data = data, tree = tree, splits = splits, model = model, graph = graph,
       multi_obs_aggregation = multi_obs_aggregation, lambda_mode = lambda_mode,
-      lambda_fixed = lambda_fixed, em_iterations = em_iterations,
+      lambda_fixed = lambda_fixed, discrete_lambda = discrete_lambda,
+      em_iterations = em_iterations,
       em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,
       joint_refine_iter = joint_refine_iter, seed = seed))
   }
@@ -380,7 +407,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   .fit_baseline_core(
     data = data, tree = tree, splits = splits, model = model, graph = graph,
     multi_obs_aggregation = multi_obs_aggregation, lambda_mode = lambda_mode,
-    lambda_fixed = lambda_fixed, em_iterations = em_iterations, em_tol = em_tol,
+    lambda_fixed = lambda_fixed, discrete_lambda = discrete_lambda,
+    em_iterations = em_iterations, em_tol = em_tol,
     em_offdiag = em_offdiag, joint_solver = joint_solver,
     predict_method = predict_method, joint_refine_iter = joint_refine_iter,
     predict_method_explicit = predict_method_explicit)
@@ -392,6 +420,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                          multi_obs_aggregation = c("hard", "soft"),
                          lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
                          lambda_fixed = NULL,
+                         discrete_lambda = c("estimate", "fixed_1"),
                          em_iterations = 0L,
                          em_tol = 1e-3,
                          em_offdiag = FALSE,
@@ -413,6 +442,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
   soft_aggregate <- identical(multi_obs_aggregation, "soft")
   lambda_mode <- match.arg(lambda_mode)
+  discrete_lambda <- match.arg(discrete_lambda)
   joint_solver <- match.arg(joint_solver)
   predict_method <- match.arg(predict_method)
   if (!is.numeric(joint_refine_iter) || length(joint_refine_iter) != 1L ||
@@ -695,7 +725,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                                        joint_refine_iter = joint_refine_iter,
                                        lambda_mode = lambda_mode_joint,
                                        lambda_fixed = lambda_fixed,
-                                       predict_method_explicit = predict_method_explicit)
+                                       predict_method_explicit = predict_method_explicit,
+                                       discrete_lambda = discrete_lambda)
     } else {
       fit_joint_threshold_baseline(data, tree, splits = splits,
                                     graph = graph,
@@ -704,7 +735,8 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                                     joint_refine_iter = joint_refine_iter,
                                     lambda_mode = lambda_mode_joint,
                                     lambda_fixed = lambda_fixed,
-                                    predict_method_explicit = predict_method_explicit)
+                                    predict_method_explicit = predict_method_explicit,
+                                    discrete_lambda = discrete_lambda)
     }
     if (!is.null(jt$predict_method_used) && !is.na(jt$predict_method_used)) {
       predict_method_used_all <- c(predict_method_used_all, jt$predict_method_used)
@@ -752,6 +784,15 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       if (!is.null(jt$lambda_block) && is.finite(jt$lambda_block)) {
         lambda_block_out <- jt$lambda_block
       }
+    } else if (identical(discrete_lambda, "estimate") &&
+               !is.null(jt$lambda_per_trait_fit)) {
+      # "cv"/"bayes" discard the joint continuous columns (they are re-fit
+      # per column below), but the discrete columns were still estimated
+      # inside the joint fit and are used below: record their lambdas.
+      dnm <- colnames(data$X_scaled)[jt$liab_cols[jt$liab_types %in%
+                                                    c("binary", "ordinal")]]
+      dnm <- intersect(dnm, names(jt$lambda_per_trait_fit))
+      lambda_per_trait[dnm] <- jt$lambda_per_trait_fit[dnm]
     }
 
     # Binary -> logit(P)
@@ -948,14 +989,16 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
                                        em_tol = em_tol,
                                        joint_solver = joint_solver, predict_method = predict_method,
                                        joint_refine_iter = joint_refine_iter,
-                                       predict_method_explicit = predict_method_explicit)
+                                       predict_method_explicit = predict_method_explicit,
+                                       discrete_lambda = discrete_lambda)
         } else {
           fit_ovr_categorical_fits(data, tree, trait_name = trait_name,
                                     splits = splits, graph = graph,
                                     soft_aggregate = soft_aggregate,
                                     joint_solver = joint_solver, predict_method = predict_method,
                                     joint_refine_iter = joint_refine_iter,
-                                    predict_method_explicit = predict_method_explicit)
+                                    predict_method_explicit = predict_method_explicit,
+                                    discrete_lambda = discrete_lambda)
         },
         error = function(e) NULL
       )
@@ -1286,6 +1329,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
               lambda_per_trait = lambda_per_trait,
               lambda_block = lambda_block_out,
               lambda_mode = lambda_mode,
+              discrete_lambda = discrete_lambda,
               predict_method_used = predict_method_used,
               predict_method_by_trait = predict_method_by_trait)
   if (exists("ordinal_path_chosen", inherits = FALSE) &&
@@ -1512,7 +1556,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
 
 #' @noRd
 .fit_baseline_auto <- function(data, tree, splits, model, graph,
-                                multi_obs_aggregation, lambda_mode, lambda_fixed,
+                                multi_obs_aggregation, lambda_mode, lambda_fixed, discrete_lambda,
                                 em_iterations, em_tol, em_offdiag, joint_solver,
                                 joint_refine_iter, seed = NULL) {
   trait_map   <- data$trait_map
@@ -1524,6 +1568,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       data = data, tree = tree, splits = splits, model = model, graph = graph,
       multi_obs_aggregation = multi_obs_aggregation, lambda_mode = lambda_mode,
       lambda_fixed = .pigauto_lambda_fixed_for_route(lambda_fixed, "exact"),
+      discrete_lambda = discrete_lambda,
       em_iterations = em_iterations,
       em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,
       predict_method = "exact", joint_refine_iter = joint_refine_iter,
@@ -1546,6 +1591,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     data = data, tree = tree, splits = splits, model = model, graph = graph,
     multi_obs_aggregation = multi_obs_aggregation, lambda_mode = lambda_mode,
     lambda_fixed = .pigauto_lambda_fixed_for_route(lambda_fixed, "exact"),
+      discrete_lambda = discrete_lambda,
     em_iterations = em_iterations,
     em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,
     predict_method = "exact", joint_refine_iter = joint_refine_iter,
@@ -1554,6 +1600,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     data = data, tree = tree, splits = splits, model = model, graph = graph,
     multi_obs_aggregation = multi_obs_aggregation, lambda_mode = lambda_mode,
     lambda_fixed = .pigauto_lambda_fixed_for_route(lambda_fixed, "per_column"),
+      discrete_lambda = discrete_lambda,
     em_iterations = em_iterations,
     em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,
     predict_method = "per_column", joint_refine_iter = joint_refine_iter,
@@ -1595,6 +1642,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
               lambda_per_trait = lambda_per_trait,
               lambda_block = fit_exact$lambda_block,
               lambda_mode = fit_exact$lambda_mode,
+              discrete_lambda = fit_exact$discrete_lambda,
               predict_method_used = "auto",
               predict_method_by_trait = route,
               score_val_idx = rsplit$score_idx,
@@ -1608,7 +1656,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
 
 #' @noRd
 .fit_baseline_route <- function(data, tree, splits, model, graph,
-                                 multi_obs_aggregation, lambda_mode, lambda_fixed,
+                                 multi_obs_aggregation, lambda_mode, lambda_fixed, discrete_lambda,
                                  em_iterations, em_tol, em_offdiag, joint_solver,
                                  joint_refine_iter, predict_route) {
   trait_map   <- data$trait_map
@@ -1634,6 +1682,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       data = data, tree = tree, splits = splits, model = model, graph = graph,
       multi_obs_aggregation = multi_obs_aggregation, lambda_mode = lambda_mode,
       lambda_fixed = .pigauto_lambda_fixed_for_route(lambda_fixed, r),
+      discrete_lambda = discrete_lambda,
       em_iterations = em_iterations,
       em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,
       predict_method = r, joint_refine_iter = joint_refine_iter,
@@ -1668,6 +1717,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
               lambda_per_trait = lambda_per_trait,
               lambda_block = base$lambda_block,
               lambda_mode = base$lambda_mode,
+              discrete_lambda = base$discrete_lambda,
               predict_method_used = "auto",
               predict_method_by_trait = resolved)
   if (!is.null(base$ordinal_path_chosen)) {

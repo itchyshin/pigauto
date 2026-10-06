@@ -76,7 +76,10 @@
 #'   continuous-family (BM-eligible) latent column -- continuous, count,
 #'   proportion, and zi_count magnitude, via the joint MVN /
 #'   threshold-joint baseline's own \code{lambda_cols} machinery when that
-#'   joint path fires, or a per-column re-fit otherwise. Discrete traits
+#'   joint path fires, or a per-column re-fit otherwise. Binary, ordinal and
+#'   categorical traits get their own lambda by default
+#'   (\code{discrete_lambda = "estimate"}); the rest of this paragraph
+#'   describes \code{discrete_lambda = "fixed_1"}, where discrete traits
 #'   (binary, categorical, zi gate) AND ordinal have no discrete-trait
 #'   analogue of Pagel's lambda of their own -- there is no lambda_k to
 #'   estimate for them. Under \code{predict_method = "per_column"} (see
@@ -189,8 +192,9 @@
 #'   \code{"median"}.  Binary / categorical / multi_proportion traits
 #'   always pool by probability average; unaffected by this argument.  See
 #'   \href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.
-#' @param safety_floor logical. When \code{TRUE} (default since
-#'   v0.9.1.9002), calibration searches the 3-way simplex
+#' @param safety_floor logical. Default \code{FALSE} (it was \code{TRUE}
+#'   from v0.9.1.9002 until 0.11.0.9002; see [fit_pigauto()] for why it
+#'   changed; set \code{TRUE} to restore). When \code{TRUE}, calibration searches the 3-way simplex
 #'   \code{r_BM * BM + r_GNN * GNN + r_MEAN * MEAN} so the grand mean is
 #'   always in the candidate set. Under the validation metric used for
 #'   calibration, the selected candidate cannot be worse than that
@@ -200,14 +204,40 @@
 #'   Safety floor section below.
 #' @param phylo_signal_gate,phylo_signal_threshold,phylo_signal_method
 #'   Pass-through to [fit_pigauto()]. See that help page for details.
+#'   \code{phylo_signal_gate} now defaults to \code{FALSE} (it was \code{TRUE}
+#'   from v0.9.1.9003 until 0.11.0.9002): with Pagel's \eqn{\lambda}
+#'   estimated for every trait type the gate no longer improved accuracy in
+#'   any tested setting, and at \eqn{\lambda} of 0 to 0.1 it was worse than
+#'   predicting the mean. Set \code{phylo_signal_gate = TRUE} to restore the
+#'   old behaviour.
+#' @param discrete_lambda character, \code{"estimate"} (default) or
+#'   \code{"fixed_1"}. With \code{"estimate"}, the binary, ordinal and
+#'   zero-inflated-count gate liability columns of the threshold-joint
+#'   baseline, and the one-vs-rest column of each categorical class, get
+#'   their own Pagel's lambda, so a weak-signal discrete trait shrinks toward
+#'   its prevalence instead of copying close relatives. \code{"fixed_1"}
+#'   restores the previous behaviour (binary and ordinal at lambda = 1, or at
+#'   the shared joint lambda on the "exact" route; categorical at 1).
+#'   Evidence (simulated Brownian-motion and OU data, n = 100 to 1000, 30\%
+#'   missing; \code{docs/dev-log/discrete-lambda/README.md}): estimating
+#'   discrete lambda alone added about 0.01 to 0.04 discrete accuracy at Pagel's
+#'   lambda of 0.3 or below; together with \code{safety_floor = FALSE} and
+#'   \code{phylo_signal_gate = FALSE} (also the defaults) the gain was 0.04
+#'   to 0.12, and binary and categorical accuracy matched or beat BACE's.
+#'   Costs: with lambda near 1 and n >= 1000, accuracy -0.002 to -0.005 and
+#'   Brier score +0.010 to +0.016; on AVONET300's categorical traits, Brier
+#'   +0.014 to +0.020 with accuracy unchanged or better. Ordinal accuracy
+#'   still trails BACE's at lambda = 0.3. The categorical one-vs-rest lambdas
+#'   are not reported in \code{$lambda_per_trait}.
+#'   See [fit_pigauto()].
 #' @param gnn logical. When \code{TRUE}, trains the
 #'   attention-based GNN correction (see \code{\link{fit_pigauto}}). When
 #'   \code{FALSE} (default), no GNN is constructed or trained -- \code{impute()} makes
 #'   no torch/GPU calls, and the fit is the phylogenetic baseline alone
-#'   (optionally re-weighted against a grand-mean floor). \code{safety_floor}
-#'   and \code{phylo_signal_gate} keep their usual semantics; the pure
-#'   traditional-stats arm is \code{gnn = FALSE, safety_floor = FALSE,
-#'   phylo_signal_gate = FALSE}. Production predictions
+#'   (optionally re-weighted against a grand-mean floor when
+#'   \code{safety_floor = TRUE}). With the defaults
+#'   (\code{safety_floor = FALSE, phylo_signal_gate = FALSE}) this is the pure
+#'   traditional-stats arm. Production predictions
 #'   (\code{result$completed}, \code{result$prediction}) use a tax-free
 #'   \code{baseline_full} fit on ALL observed cells (no val/test hold-out);
 #'   \code{result$evaluation} and every other scorer keep using the
@@ -340,7 +370,8 @@
 #' experimental treatment).
 #'
 #' @section Safety floor (v0.9.1.9002+):
-#'   With \code{safety_floor = TRUE} (the new default), the post-training
+#'   With \code{safety_floor = TRUE} (opt-in since 0.11.0.9002; it was the
+#'   default from v0.9.1.9002), the post-training
 #'   calibration grid searches a 3-way convex combination of the
 #'   Brownian-motion baseline, the GNN delta, and the per-trait grand
 #'   mean.  The simplex is sampled at step 0.05 (231 candidates per latent
@@ -406,6 +437,7 @@ impute <- function(traits, tree, species_col = NULL,
                    epochs = 2000L, verbose = TRUE, seed = NULL,
                    multi_obs_aggregation = c("hard", "soft"),
                    lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
+                   discrete_lambda = c("estimate", "fixed_1"),
                    joint_solver = c("inhouse", "rphylopars"),
                    predict_method = c("auto", "exact", "per_column"),
                    joint_refine_iter = 0L,
@@ -417,8 +449,8 @@ impute <- function(traits, tree, species_col = NULL,
                    clamp_factor = 5,
                    match_observed = c("none", "pmm"),
                    pmm_K = 5L,
-                   safety_floor = TRUE,
-                   phylo_signal_gate = TRUE,
+                   safety_floor = FALSE,
+                   phylo_signal_gate = FALSE,
                    phylo_signal_threshold = 0.2,
                    phylo_signal_method = "lambda",
                    conformal_split_val = FALSE,
@@ -429,6 +461,7 @@ impute <- function(traits, tree, species_col = NULL,
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
   pool_method <- match.arg(pool_method)
   lambda_mode <- match.arg(lambda_mode)
+  discrete_lambda <- match.arg(discrete_lambda)
   joint_solver <- match.arg(joint_solver)
   predict_method <- match.arg(predict_method)
   match_observed <- match.arg(match_observed)
@@ -554,6 +587,7 @@ impute <- function(traits, tree, species_col = NULL,
                            em_tol = em_tol,
                            em_offdiag = em_offdiag,
                            lambda_mode = lambda_mode,
+                           discrete_lambda = discrete_lambda,
                            joint_solver = joint_solver, predict_method = predict_method,
                            joint_refine_iter = joint_refine_iter,
                            predict_method_explicit = predict_method_explicit,
@@ -578,6 +612,7 @@ impute <- function(traits, tree, species_col = NULL,
                                   em_tol = em_tol,
                                   em_offdiag = em_offdiag,
                                   lambda_mode = lambda_mode,
+                                  discrete_lambda = discrete_lambda,
                                   joint_solver = joint_solver, predict_method = predict_method,
                                   joint_refine_iter = joint_refine_iter,
                                   predict_method_explicit = predict_method_explicit,
@@ -618,6 +653,7 @@ impute <- function(traits, tree, species_col = NULL,
     phylo_signal_threshold = phylo_signal_threshold,
     phylo_signal_method    = phylo_signal_method,
     lambda_mode            = lambda_mode,
+    discrete_lambda      = discrete_lambda,
     joint_solver           = joint_solver,
     predict_method         = predict_method,
     joint_refine_iter      = joint_refine_iter,
