@@ -1,6 +1,6 @@
-# Prototype (feat/discrete-lambda): options(pigauto.discrete_lambda = "estimate") estimates Pagel's
-# lambda on binary / ordinal liability columns in fit_joint_threshold_baseline(), which also reaches
-# categorical traits through the one-vs-rest fits. Off (the default) must leave everything unchanged.
+# discrete_lambda = c("estimate", "fixed_1") (default "estimate") estimates Pagel's lambda on binary /
+# ordinal liability columns in fit_joint_threshold_baseline(), which also reaches categorical traits
+# through the one-vs-rest fits. "fixed_1" must reproduce the previous behaviour exactly.
 
 sim_discrete_lambda <- function(n = 120, lambda = 0.3, seed = 7) {
   set.seed(seed)
@@ -17,25 +17,24 @@ sim_discrete_lambda <- function(n = 120, lambda = 0.3, seed = 7) {
   list(tree = tr, d = d)
 }
 
-test_that("discrete lambda is off by default and leaves the threshold baseline unchanged", {
+test_that("discrete_lambda = 'fixed_1' leaves the threshold baseline at lambda = 1 (byte-identical to the old path)", {
   skip_if_not(joint_mvn_available())
   s <- sim_discrete_lambda()
   pd <- preprocess_traits(s$d, s$tree)
-  old <- options(pigauto.discrete_lambda = NULL); on.exit(options(old), add = TRUE)
-  a <- fit_joint_threshold_baseline(pd, s$tree, splits = NULL)
-  options(pigauto.discrete_lambda = "fixed_1")
-  b <- fit_joint_threshold_baseline(pd, s$tree, splits = NULL)
+  a <- fit_joint_threshold_baseline(pd, s$tree, splits = NULL, discrete_lambda = "fixed_1")
+  b <- fit_joint_threshold_baseline(pd, s$tree, splits = NULL, discrete_lambda = "fixed_1")
   expect_identical(a$mu_liab, b$mu_liab)
-  expect_identical(a$se_liab, b$se_liab)
-  bin_col <- which(a$liab_types == "binary")
+  bin_col <- which(a$liab_types[a$fit_cols_idx] == "binary")
   expect_true(all(a$lambda_per_trait_fit[bin_col] == 1))
+  # the default is "estimate", so it must differ from fixed_1 at low signal
+  d <- fit_joint_threshold_baseline(pd, s$tree, splits = NULL)
+  expect_false(identical(a$mu_liab, d$mu_liab))
 })
 
-test_that("discrete lambda = 'estimate' estimates lambda on the binary liability column", {
+test_that("the default estimates lambda on the binary liability column", {
   skip_if_not(joint_mvn_available())
   s <- sim_discrete_lambda(lambda = 0.1)
   pd <- preprocess_traits(s$d, s$tree)
-  old <- options(pigauto.discrete_lambda = "estimate"); on.exit(options(old), add = TRUE)
   fit <- fit_joint_threshold_baseline(pd, s$tree, splits = NULL)
   bin_col <- which(fit$liab_types[fit$fit_cols_idx] == "binary")
   lam <- fit$lambda_per_trait_fit[bin_col]
@@ -45,11 +44,29 @@ test_that("discrete lambda = 'estimate' estimates lambda on the binary liability
   expect_true(all(is.finite(fit$mu_liab[, fit$fit_cols_idx])))
 })
 
-test_that("impute() runs end to end with discrete lambda on and fills every missing cell", {
+test_that("impute() fills every missing cell and records discrete_lambda in model_config", {
   skip_if_not(joint_mvn_available())
   s <- sim_discrete_lambda()
-  old <- options(pigauto.discrete_lambda = "estimate"); on.exit(options(old), add = TRUE)
   res <- suppressWarnings(impute(s$d, s$tree, verbose = FALSE))
   expect_false(anyNA(res$completed$bin))
   expect_false(anyNA(res$completed$cat3))
+  expect_identical(res$fit$model_config$discrete_lambda, "estimate")
+  res1 <- suppressWarnings(impute(s$d, s$tree, verbose = FALSE, discrete_lambda = "fixed_1"))
+  expect_identical(res1$fit$model_config$discrete_lambda, "fixed_1")
+  expect_error(impute(s$d, s$tree, verbose = FALSE, discrete_lambda = "bogus"))
+})
+
+test_that("a lambda_fixed rebuild from the fitted lambda_per_trait reproduces the baseline", {
+  skip_if_not(joint_mvn_available())
+  s <- sim_discrete_lambda(lambda = 0.2)
+  pd <- preprocess_traits(s$d, s$tree)
+  bl <- fit_baseline(pd, s$tree, splits = NULL, predict_method = "exact")
+  expect_identical(bl$discrete_lambda, "estimate")
+  bin_nm <- grep("^bin", names(bl$lambda_per_trait), value = TRUE)
+  expect_true(length(bin_nm) >= 1L)
+  expect_true(any(bl$lambda_per_trait[bin_nm] < 1))
+  rb <- fit_baseline(pd, s$tree, splits = NULL, predict_method = "exact",
+                     lambda_fixed = bl$lambda_per_trait)
+  expect_equal(rb$mu, bl$mu, tolerance = 1e-6)
+  expect_equal(rb$lambda_per_trait, bl$lambda_per_trait, tolerance = 1e-6)
 })

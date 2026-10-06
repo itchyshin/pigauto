@@ -220,11 +220,11 @@ test_that("evaluate() on a GNN-off fit scores the held-out baseline (no leakage)
   expect_false(isTRUE(all.equal(held[test_mask], full[test_mask])),
                label = "held-out and full baselines must differ at test cells")
 
-  # The default gnn = FALSE arm keeps GNN-on's safety-floor blend (r_cal_mean
-  # can be > 0 even with no GNN), so pigauto's blended prediction need not
-  # equal the raw baseline mu there. The pigauto-rmse == baseline-rmse
-  # equality only holds on the PURE traditional-stats arm (safety_floor =
-  # FALSE, phylo_signal_gate = FALSE), where r_cal_bm is pinned to 1 and
+  # With safety_floor = TRUE the gnn = FALSE arm can have r_cal_mean > 0, so
+  # the blended prediction need not equal the raw baseline mu. The
+  # pigauto-rmse == baseline-rmse equality holds on the PURE traditional-stats
+  # arm (safety_floor = FALSE, phylo_signal_gate = FALSE; these are now the
+  # defaults, kept explicit here), where r_cal_bm is pinned to 1 and
   # evaluate()'s "baseline" row (fit$baseline$mu) is exactly what predict()
   # blends to.
   res_pure <- impute(fx$df, fx$tree, gnn = FALSE, safety_floor = FALSE,
@@ -429,6 +429,21 @@ test_that("gnn defaults: FALSE for the imputation entry points, TRUE for benchma
   # Benchmark helpers exist to compare the baseline with the GNN.
   expect_true(default_of(compare_methods))
   expect_true(default_of(simulate_benchmark))
+})
+
+test_that("safety_floor and phylo_signal_gate default to FALSE; discrete_lambda to 'estimate'", {
+  # New defaults (0.11.0.9002): with lambda estimated for every trait type the
+  # gate and floor no longer improve accuracy in any tested setting.
+  for (f in list(impute, fit_pigauto)) {
+    expect_false(eval(formals(f)$safety_floor))
+    expect_false(eval(formals(f)$phylo_signal_gate))
+    expect_identical(eval(formals(f)$discrete_lambda)[1], "estimate")
+  }
+  fx <- make_gnn_off_fixture()
+  res <- impute(fx$df, fx$tree, verbose = FALSE, seed = 5L)
+  expect_false(isTRUE(res$fit$safety_floor))
+  expect_true(all(is.na(res$fit$phylo_signal_per_trait)))
+  expect_identical(res$fit$model_config$discrete_lambda, "estimate")
 })
 
 test_that("impute() with no gnn argument equals impute(gnn = FALSE)", {

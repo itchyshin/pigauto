@@ -98,7 +98,9 @@ test_that("fit_pigauto gates weak-signal traits to (0, 0, 1) exactly", {
   expect_equal(as.numeric(fit$r_cal_mean["noise"]), 1, tolerance = 1e-10)
 })
 
-test_that("impute(phylo_signal_gate = TRUE) is the default and threads to fit", {
+test_that("phylo_signal_gate = TRUE is opt-in (default FALSE since 0.11.0.9002) and threads to fit", {
+  expect_false(eval(formals(pigauto::impute)$phylo_signal_gate))
+  expect_false(eval(formals(pigauto::fit_pigauto)$phylo_signal_gate))
   skip_if_not_installed("phytools")
   skip_if_no_libtorch()
   data("avonet300", package = "pigauto")
@@ -109,9 +111,16 @@ test_that("impute(phylo_signal_gate = TRUE) is the default and threads to fit", 
   }
   set.seed(2026L)
   df$Mass[sample(300, 30)] <- NA_real_
-  r1 <- pigauto::impute(df, tree300, epochs = 30L, n_imputations = 1L,
+  # Explicit TRUE: the gate used to be the default; this still tests that path.
+  r1 <- pigauto::impute(df, tree300, phylo_signal_gate = TRUE,
+                          epochs = 30L, n_imputations = 1L,
                           verbose = FALSE, seed = 2026L)
   expect_equal(r1$fit$phylo_signal_method, "lambda")
+  expect_false(all(is.na(r1$fit$phylo_signal_per_trait)))
+  # The new default (no phylo_signal_gate argument) leaves the gate off.
+  r0 <- pigauto::impute(df, tree300, epochs = 30L, n_imputations = 1L,
+                          verbose = FALSE, seed = 2026L)
+  expect_true(all(is.na(r0$fit$phylo_signal_per_trait)))
   r2 <- pigauto::impute(df, tree300, phylo_signal_gate = FALSE,
                           epochs = 30L, n_imputations = 1L,
                           verbose = FALSE, seed = 2026L)

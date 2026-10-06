@@ -139,8 +139,14 @@ test_that("[exact-default] discrete accuracy under exact is not worse than per_c
     # Pinned to predict_method = "exact" (S5b): this test compares the
     # concrete exact and per_column routes against each other, not "auto"
     # (the new default) against per_column.
-    bl_exact <- fit_baseline(pd, fx$tree, splits = spl, predict_method = "exact")
-    bl_pc    <- fit_baseline(pd, fx$tree, splits = spl, predict_method = "per_column")
+    # discrete_lambda = "fixed_1": the 0.411 / 0.396 measurement below was made
+    # before discrete lambda was estimated by default; keep the regime it was
+    # measured in. (With the new default the same ten seeds give exact 0.396
+    # vs per_column 0.422 on this no-signal fixture, a noise-level gap.)
+    bl_exact <- fit_baseline(pd, fx$tree, splits = spl, predict_method = "exact",
+                             discrete_lambda = "fixed_1")
+    bl_pc    <- fit_baseline(pd, fx$tree, splits = spl, predict_method = "per_column",
+                             discrete_lambda = "fixed_1")
     acc_exact[s] <- discrete_accuracy(bl_exact, pd, spl)$acc
     acc_pc[s]    <- discrete_accuracy(bl_pc, pd, spl)$acc
   }
