@@ -31,7 +31,7 @@ message saying why.
 
 | `draws_method` | Use it for | Pass to `with_imputations()` and `pool_mi()`? |
 |---|---|---|
-| `"posterior"` | Downstream inference on continuous traits | Yes |
+| `"posterior"` | Linear analyses of imputed continuous traits on their imputation scale | Yes, for those analyses |
 | `"conformal"` (`"auto"` fallback) | Looking at the spread of plausible values | No, refused |
 | `"mc_dropout"` | Looking at the spread of plausible values | No, refused |
 
@@ -127,6 +127,16 @@ the fixed-effect estimates with Rubin's rules (Rubin 1987; Barnard and Rubin
 1999) and returns one row per coefficient with the pooled estimate, standard
 error, degrees of freedom, confidence interval and the fraction of missing
 information (`fmi`).
+
+The examples below show how each model class is fitted and how its fixed
+effects are extracted. Inferential validation of these posterior imputations
+is narrower: the analysis must be linear in the imputed continuous traits,
+use them on their imputation scale, and include no variables outside those
+traits. Check which traits `log_transform` transformed before fitting
+`log(...)`. The joined diet variable, distributional model, and latent-model
+structure in later examples are outside that validation. Their pooled tables
+demonstrate software compatibility; they do not establish calibrated
+inference for those analyses.
 
 The question in every example is the same: how does wing length scale with
 body mass?
