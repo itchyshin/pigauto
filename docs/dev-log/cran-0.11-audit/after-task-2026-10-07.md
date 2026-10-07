@@ -40,6 +40,9 @@ No scientific default or pooling method changed. Optional model packages remain 
 - `docs/dev-log/cran-0.11-audit/provenance/installed-real-backend-drm-only-2026-10-07.log`
 - `docs/dev-log/cran-0.11-audit/provenance/installed-real-backend-gllvm-only-2026-10-07.log`
 - `docs/dev-log/cran-0.11-audit/provenance/installed-real-backend-both-2026-10-07.log`
+- `docs/dev-log/cran-0.11-audit/provenance/installed-defaults-install-2026-10-07.log`
+- `docs/dev-log/cran-0.11-audit/provenance/installed-defaults-run-2026-10-07.log`
+- `docs/dev-log/cran-0.11-audit/provenance/current-source-check-d2c2736.md`
 - `docs/dev-log/cran-0.11-audit/site-review-2026-10-07.md`
 - `docs/dev-log/cran-0.11-audit/surface-inventory.md`
 - `docs/dev-log/cran-0.11-audit/current-state-2026-10-07.md` (ignored local audit note)
@@ -59,6 +62,7 @@ No scientific default or pooling method changed. Optional model packages remain 
 ## 5. Checks Run
 
 - Focused regression batch: 224 passed, no failures, warnings, or skips.
+- Current I1 combined defaults/provenance/adapter fixture batch: 266 passed, 0 failures, 0 warnings, 0 skips in 5.6 seconds, with single-thread BLAS/OpenMP/MKL caps. The defaults subset contributed 169 checks, provenance 47, and adapter fixtures 50.
 - Defaults runner: 127 passed; printed `CRAN_DEFAULTS_AUDIT_OK`.
 - Adjacent route/fit suite: 860 passed, no failures, 27 small-validation warnings, 1 installed-smcfcs skip.
 - Real drmTMB/gllvmTMB analysis workflow: 16 expectations passed, including saved/reloaded fits and fresh-process pooling.
@@ -77,7 +81,10 @@ No scientific default or pooling method changed. Optional model packages remain 
 - Follow-up real-backend source harness: 50 expectations passed in 12.4 seconds. All six fits recorded convergence 0 and `pdHess=TRUE`; the drmTMB direct Gaussian coefficient/covariance oracle and independent Rubin arithmetic for drmTMB and gllvmTMB passed. Captured stdout is `provenance/real-backend-status-rubin-pass-2026-10-07.log` (SHA-256 `6f324f0429683b03af062fdced124c907e8d7d34ce74987635bcb9f93585ee94`). This test-source update was run atop `b3a31b8`; exact-tarball verification remains open.
 - Updated harness against the four isolated installed libraries built from package-source commit `9448bfa`: neither had the expected backend skips; drmTMB-only passed 28, gllvmTMB-only passed 22, and both passed 50 expectations. All four logs are retained with SHA-256 values in `adapters.md`. The installed package source is unchanged by the later docs and external harness edits.
 - Initial defaults follow-up at candidate head `3788c64` added the effective nonempty/all-zero `r_cal_gnn` assertion; its 129-pass run preceded the public-formal snapshot and real conformal-fallback test below.
-- Added a TSV snapshot of all 286 formals across the 33 exports and `predict.pigauto_fit()` and a regression check that compares every formal name/default expression with the loaded namespace. Added a real automatic conformal-fallback test for its warning, diagnostic-only class, and pooling refusal. The final focused defaults test passed 169 assertions, 0 failures, 0 warnings, and 0 skips in 4.9 seconds. The first fixture attempt failed due to CSV quoting; after switching to unquoted tab-delimited fields, the full comparison passed. Independent review confirmed the fixture and withdrew an initial `...` sentinel concern. G1 remains partial for downstream posterior/tree execution, legacy saved-GNN reconstruction, installed defaults coverage, and exact-artifact validation.
+- Added a TSV snapshot of all 286 formals across the 33 exports and `predict.pigauto_fit()` and a regression check that compares every formal name/default expression with the loaded namespace. Added a real automatic conformal-fallback test for its warning, diagnostic-only class, and pooling refusal. The focused defaults test passed 169 assertions, 0 failures, 0 warnings, and 0 skips in 4.9 seconds; the defaults runner also printed `CRAN_DEFAULTS_AUDIT_OK` after 169 passes. The first fixture attempt failed due to CSV quoting; after switching to unquoted tab-delimited fields, the full comparison passed. Independent review confirmed the fixture and withdrew an initial `...` sentinel concern.
+- Reinstalled committed source `d2c2736` with `R CMD INSTALL --install-tests` into `/private/tmp/pigauto-cran011-g1-defaults-lib`, an isolated R library where `drmTMB` and `gllvmTMB` both return unavailable. The installed defaults test passed 169, failed 0, warnings 0, skips 0, and errors 0. Retained installation log SHA-256: `5860f89a589bb6fc84e3be923188690550c0f67bb5f51c18228c3255925e3bef`; retained test log SHA-256: `0e32efebb93d4eb0666dad1c276cc807ce0ebb4e7501caa144da53e48a8c2dfa`.
+- Fresh current-source `devtools::check()` at `d2c2736` completed in 6m37.4s: 0 errors, 0 warnings, and 1 system-clock NOTE. Package tests and vignette rebuild passed. R 4.6.0 on macOS; this developer check set `NOT_CRAN=true` and force-Suggests off, so it remains source evidence and does not satisfy the strict artifact gate. Recorded in `provenance/current-source-check-d2c2736.md`.
+- G1 remains partial for automatic posterior and complete tree-analysis execution, legacy saved-GNN reconstruction, and exact-artifact validation.
 
 ## 6. Tests of the Tests
 
