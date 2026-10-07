@@ -77,7 +77,10 @@ test_that("gllvmTMB adapter recognizes fits with a leading wrapper class", {
     },
     .package = "pigauto"
   )
-  fit <- structure(list(), class = c("saved_fit_wrapper", "gllvmTMB_multi"))
+  fit <- structure(
+    list(opt = list(convergence = 0L), sd_report = list(pdHess = TRUE)),
+    class = c("saved_fit_wrapper", "gllvmTMB_multi")
+  )
   expect_identical(.pool_mi_auto_coef(fit), c(beta = 1))
 })
 
@@ -97,6 +100,78 @@ test_that("automatic drmTMB and gllvmTMB adapters reject failed convergence or H
   expect_error(.pool_mi_auto_coef(drm_bad_hessian), "positive-definite Hessian")
   expect_error(.pool_mi_auto_coef(gllvm_bad_convergence), "convergence code")
   expect_error(.pool_mi_auto_coef(gllvm_bad_hessian), "positive-definite Hessian")
+})
+
+test_that("optional backend status requires present scalar valid fields", {
+  make_fit <- function(backend, convergence = 0, hessian = TRUE) {
+    fit <- list(opt = list(convergence = convergence))
+    if (identical(backend, "drmTMB")) {
+      fit$sdr <- list(pdHess = hessian)
+      class(fit) <- "drmTMB"
+    } else {
+      fit$sd_report <- list(pdHess = hessian)
+      class(fit) <- "gllvmTMB_multi"
+    }
+    fit
+  }
+
+  for (backend in c("drmTMB", "gllvmTMB")) {
+    invalid_convergence <- list(NULL, numeric(), NA_real_, "0", c(0, 0), 1)
+    for (value in invalid_convergence) {
+      fit <- make_fit(backend, convergence = value)
+      expect_error(.pool_mi_validate_backend_status(fit, backend),
+                   "convergence code", info = backend)
+    }
+
+    invalid_hessian <- list(NULL, logical(), NA, 1, c(TRUE, TRUE), FALSE)
+    for (value in invalid_hessian) {
+      fit <- make_fit(backend, hessian = value)
+      expect_error(.pool_mi_validate_backend_status(fit, backend),
+                   "positive-definite Hessian", info = backend)
+    }
+
+    missing_convergence <- make_fit(backend)
+    missing_convergence$opt <- list()
+    expect_error(.pool_mi_validate_backend_status(missing_convergence, backend),
+                 "convergence code", info = backend)
+
+    missing_hessian <- make_fit(backend)
+    if (identical(backend, "drmTMB")) {
+      missing_hessian$sdr <- list()
+    } else {
+      missing_hessian$sd_report <- list()
+    }
+    expect_error(.pool_mi_validate_backend_status(missing_hessian, backend),
+                 "positive-definite Hessian", info = backend)
+  }
+})
+
+test_that("known backend status is checked with custom extractors", {
+  drm_bad <- structure(
+    list(opt = list(convergence = NULL), sdr = list(pdHess = TRUE),
+         beta = c(x = 1), V = matrix(0.04, 1L,
+           dimnames = list("x", "x"))),
+    class = "drmTMB"
+  )
+  drm_good <- drm_bad
+  drm_good$opt$convergence <- 0L
+  expect_error(pool_mi(
+    list(drm_bad, drm_good), coef_fun = function(fit) fit$beta,
+    vcov_fun = function(fit) fit$V
+  ), "convergence code")
+
+  gllvm_bad <- structure(
+    list(opt = list(convergence = 0L), sd_report = list(pdHess = NULL)),
+    class = "gllvmTMB_multi"
+  )
+  gllvm_good <- gllvm_bad
+  gllvm_good$sd_report$pdHess <- TRUE
+  expect_error(pool_mi(
+    list(gllvm_bad, gllvm_good),
+    tidy_fun = function(fit) data.frame(
+      term = "x", estimate = 1, std.error = 0.2
+    )
+  ), "positive-definite Hessian")
 })
 
 test_that("optional gllvm adapter reports its runtime namespace requirement", {

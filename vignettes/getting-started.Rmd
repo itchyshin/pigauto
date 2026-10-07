@@ -35,7 +35,7 @@ pigauto_report(result)
 
 `check_pigauto()` and `completed_data()` were added in 0.11.0. If your
 installed version is 0.10.0, call `impute(traits, tree)` directly; that
-version does not include these helpers.
+version does not have them.
 
 `check_pigauto()` is fit-free. Resolve its structured errors before fitting;
 inspect `check$species$matched`, `$data_only`, and `$tree_only` when labels do

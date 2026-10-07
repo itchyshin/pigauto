@@ -21,12 +21,17 @@
 #'   Bayesian fits (`brms`, `MCMCglmm`) are rejected; see Details.
 #'   Bare user-supplied fit lists are accepted with an explicit warning because
 #'   their imputation provenance cannot be verified.
+#'   pigauto workflow classes and markers are caller-controlled metadata; they
+#'   do not authenticate the fits or their history.
 #' @param conf.level Confidence level for the pooled interval (default
 #'   `0.95`).
 #' @param coef_fun Optional function extracting a named numeric fixed-effect
 #'   vector from one fit. `NULL` uses the automatic class adapter. Custom
 #'   coefficient and covariance extractors can be supplied independently;
 #'   callers must ensure custom extractors select fixed effects only.
+#'   For recognized `drmTMB` and `gllvmTMB_multi` fits, pigauto still requires
+#'   convergence code zero and a positive-definite Hessian, even when a custom
+#'   extractor is supplied.
 #' @param vcov_fun Optional function extracting the fixed-effect covariance
 #'   matrix. `NULL` uses the automatic class adapter. Base matrices and
 #'   `Matrix` objects are accepted; the selected covariance block must be
@@ -92,6 +97,9 @@
 #' coefficients for `mu` and `sigma`; those are fixed coefficients, not
 #' random-effect variance components. `drmTMB` and `gllvmTMB` need to be
 #' installed and loadable only when their automatic adapters are used.
+#' For either recognized backend class, pooling also requires the fit to report
+#' scalar convergence code `0` and `pdHess = TRUE`; missing or invalid status
+#' is rejected before coefficient extraction, including with custom extractors.
 #'
 #' **Supported classes.** `lm`, `glm`, `gls`, `lme`, `merMod` (lme4),
 #' `glmmTMB` (conditional component), `drmTMB`, and `gllvmTMB_multi` are
@@ -218,6 +226,16 @@ pool_mi <- function(fits,
             call. = FALSE)
     fits <- fits[!is_err]
     if (!is.null(tree_index)) tree_index <- tree_index[!is_err]
+  }
+
+  # Known optional backends must pass convergence and Hessian checks even
+  # when callers supply custom coefficient or tidy extractors.
+  for (fit in fits) {
+    if (inherits(fit, "drmTMB")) {
+      .pool_mi_validate_backend_status(fit, "drmTMB")
+    } else if (inherits(fit, "gllvmTMB_multi")) {
+      .pool_mi_validate_backend_status(fit, "gllvmTMB")
+    }
   }
 
   M <- length(fits)
@@ -536,15 +554,13 @@ pool_mi <- function(fits,
   } else {
     stop("Unknown optional backend: ", backend, call. = FALSE)
   }
-  if (length(convergence) > 0L &&
-      (!is.numeric(convergence) || length(convergence) != 1L ||
-       is.na(convergence) || convergence != 0)) {
+  if (!is.numeric(convergence) || length(convergence) != 1L ||
+      !is.finite(convergence) || convergence != 0) {
     stop(backend, " fit has a non-zero or invalid convergence code; refusing ",
          "to pool fixed effects from an unconverged fit.", call. = FALSE)
   }
-  if (length(hessian_ok) > 0L &&
-      (!is.logical(hessian_ok) || length(hessian_ok) != 1L ||
-       is.na(hessian_ok) || !hessian_ok)) {
+  if (!is.logical(hessian_ok) || length(hessian_ok) != 1L ||
+      is.na(hessian_ok) || !hessian_ok) {
     stop(backend, " fit does not report a positive-definite Hessian; refusing ",
          "to pool fixed effects from an invalid covariance estimate.",
          call. = FALSE)

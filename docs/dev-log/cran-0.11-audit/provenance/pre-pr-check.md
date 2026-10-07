@@ -9,3 +9,5 @@ On macOS Tahoe with R 4.6.0, `R CMD check --as-cran --no-manual pigauto_0.11.0.t
 The local pkgdown build passed a crawl of 65 rendered pages and 3,621 local references, with all 34 retired direct pages absent. Desktop and mobile views were inspected. Public deployment will be checked after merge.
 
 The remaining gates are the nine gllvmTMB recovery seeds, which require approval for the measured run above three hours; the maintainer's audit-PR merge; a frozen post-merge tarball and platform checks; the open BirdTree redistribution-rights point; and the separate fresh release panel. Nothing has been submitted to CRAN.
+
+**Superseded note (2026-10-07):** later bounded recovery evidence records all ten gllvmTMB seeds in `../recovery/RESULTS.md`. The old nine-seed count above is retained as a historical pre-PR rehearsal statement, not a current gate. The remaining merge, exact-artifact, rights, and release-panel gates must still be verified against current state.

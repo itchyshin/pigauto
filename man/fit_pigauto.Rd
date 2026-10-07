@@ -111,8 +111,9 @@ in which case it is stored but not used for training.}
 
 \item{hidden_dim}{integer. Hidden layer width (default \code{64}).}
 
-\item{k_eigen}{integer. Number of spectral node features (default
-\code{8}).}
+\item{k_eigen}{integer or \code{"auto"}. Number of spectral node
+features. The default \code{"auto"} scales with tree size; an integer
+specifies the dimension directly.}
 
 \item{n_gnn_layers}{integer. Number of graph message-passing layers
 (default \code{2}).  Each layer has its own learnable alpha gate,
@@ -436,7 +437,7 @@ refers to the ResNet-style skip connections in the GNN layers, not
 to a statistical residual). For continuous, count, and ordinal traits
 the baseline is Brownian motion (phylogenetic correlation matrix); for binary
 and categorical traits it is phylogenetic label propagation. Supports
-all five trait types via a unified latent space.
+all eight trait types via a unified latent space.
 }
 \details{
 \strong{Blend formulation:}

@@ -157,6 +157,10 @@ What to know.
   remain available when those packages are installed, without requiring
   them as dependencies. Their real-package integration checks run from
   `script/cran-0.11-integration/`, outside the built package.
+- `pool_mi()` now requires recognized drmTMB and gllvmTMB fits to report
+  convergence code zero and a positive-definite Hessian, including when
+  custom extractors are supplied. Workflow markers are caller-controlled
+  metadata and do not authenticate a fit list.
 - README: a "Defaults, and when to change them" section.
 - Documentation fixes: `fit_pigauto()`'s `gate_method` default is
   `"cv_folds"` and `min_val_cells` defaults to 20; the help pages said

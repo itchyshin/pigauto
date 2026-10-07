@@ -137,6 +137,17 @@ test_that("transformation and baseline route overrides are recorded", {
   expect_identical(unname(fallback$predict_method_by_trait), "per_column")
 })
 
+test_that("impute forwards explicit k_eigen to graph construction", {
+  fx <- cran_defaults_fixture()
+  result <- suppressWarnings(impute(
+    fx$traits[, "continuous", drop = FALSE], fx$tree,
+    k_eigen = 2L, gnn = FALSE, epochs = 1L,
+    verbose = FALSE, seed = 1108L
+  ))
+
+  expect_identical(result$fit$model_config$k_eigen, 2L)
+})
+
 test_that("multi-observation covariates warn under the default GNN-off path", {
   fx <- cran_defaults_fixture(n = 12L, seed = 1108L)
   dat <- data.frame(
