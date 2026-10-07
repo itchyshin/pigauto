@@ -94,9 +94,10 @@
 
 #' 50 posterior phylogenies for the 300 species in \code{avonet300}
 #'
-#' A \code{multiPhylo} list of 50 phylogenetic trees randomly sampled from the
-#' BirdTree Hackett backbone posterior (Jetz et al. 2012), each pruned to the
-#' 300 species in \code{\link{avonet300}}.  These trees capture phylogenetic
+#' A \code{multiPhylo} list of 50 phylogenetic trees sampled from the combined
+#' Ericson and Hackett backbone posterior samples provided by
+#' \code{megatrees::get_tree_bird_n100()} (Jetz et al. 2012), each pruned to
+#' the 300 species in \code{\link{avonet300}}. These trees capture phylogenetic
 #' uncertainty: topologies and branch lengths vary across the posterior sample.
 #'
 #' Use with \code{\link{multi_impute_trees}} for experimental sensitivity of
@@ -106,9 +107,13 @@
 #'
 #' @format An object of class \code{multiPhylo} containing 50 \code{phylo}
 #'   objects, each with 300 tips.
-#' @source Li (2026), \pkg{megatrees} 1.0.0, MIT licence; trees pruned from
-#'   \code{megatrees::get_tree_bird_n100()}. Underlying posterior from Jetz
-#'   et al. (2012), Hackett et al. backbone.
+#' @source Li (2026), \pkg{megatrees} 1.0.0, MIT licence; trees sampled from
+#'   \code{megatrees::get_tree_bird_n100()}. BirdTree posterior trees: Jetz W
+#'   et al. (2012), \emph{Nature} 491:444-448, doi:10.1038/nature11631.
+#'   Original backbone studies: Ericson PG et al. (2006), \emph{Biology
+#'   Letters} 2:543-547, doi:10.1098/rsbl.2006.0523; Hackett SJ et al. (2008),
+#'   \emph{Science} 320:1763-1768, doi:10.1126/science.1157704. Redistribution
+#'   rights for the underlying BirdTree data in pigauto remain unresolved.
 #' @seealso \code{\link{tree300}}, \code{\link{avonet300}},
 #'   \code{\link{multi_impute_trees}}
 "trees300"

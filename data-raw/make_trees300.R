@@ -3,9 +3,19 @@
 ## Run from the package root: Rscript data-raw/make_trees300.R
 ##
 ## Requires: megatrees (>= 1.0.0), ape, pigauto (for tree300 tip names).
-## Source: megatrees::get_tree_bird_n100(), 100 posterior trees from the
-## BirdTree Hackett backbone (Jetz et al. 2012). The megatrees package records
-## an MIT license; BirdTree data redistribution rights in pigauto remain open.
+## Source: megatrees::get_tree_bird_n100(), which contains 50 Ericson-backbone
+## and 50 Hackett-backbone BirdTree posterior trees (Jetz et al. 2012). This
+## script samples 50 from the combined set, so trees300 contains both
+## backbones. Original backbone citations:
+## - Ericson PG et al. 2006. Diversification of Neoaves: integration of
+##   molecular sequence data and fossils. Biology Letters 2:543-547.
+##   doi:10.1098/rsbl.2006.0523.
+## - Hackett SJ et al. 2008. A Phylogenomic Study of Birds Reveals Their
+##   Evolutionary History. Science 320:1763-1768. doi:10.1126/science.1157704.
+## BirdTree posterior-tree source: Jetz W et al. 2012. The global diversity
+## of birds in space and time. Nature 491:444-448. doi:10.1038/nature11631.
+## The megatrees package records an MIT license; redistribution rights for
+## the underlying BirdTree data in pigauto remain open.
 
 library(ape)
 library(megatrees)
