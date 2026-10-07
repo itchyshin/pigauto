@@ -34,16 +34,7 @@ home:
   logo: man/figures/logo.png
   title: "pigauto: Phylogenetic Imputation via Graph AUTO-encoders"
   sidebar:
-    structure: [status, links, license, citation, authors, dev]
-    components:
-      status:
-        title: Status
-        text: |
-          > [!WARNING] **Experimental — use at your own risk.** Not complete, not fully
-          > human-verified, needs extensive further validation. CRAN
-          > availability is not scientific maturity. Point estimates are the
-          > supported claim; no cell's interval coverage is certified, and
-          > covariance routes have focused-test evidence only.
+    structure: [links, license, citation, authors, dev]
   description: >
     Fill missing values in species trait data using a phylogenetic tree,
     information from other traits, and optional environmental data. Supports
