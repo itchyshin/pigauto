@@ -35,6 +35,11 @@ No scientific default or pooling method changed. Optional model packages remain 
 - `docs/dev-log/cran-0.11-audit/mi-review-2026-10-07.md`
 - `docs/dev-log/cran-0.11-audit/provenance/pre-pr-check.md`
 - `docs/dev-log/cran-0.11-audit/provenance/current-source-check-a23d0f6.log`
+- `docs/dev-log/cran-0.11-audit/provenance/real-backend-status-rubin-pass-2026-10-07.log`
+- `docs/dev-log/cran-0.11-audit/provenance/installed-real-backend-neither-2026-10-07.log`
+- `docs/dev-log/cran-0.11-audit/provenance/installed-real-backend-drm-only-2026-10-07.log`
+- `docs/dev-log/cran-0.11-audit/provenance/installed-real-backend-gllvm-only-2026-10-07.log`
+- `docs/dev-log/cran-0.11-audit/provenance/installed-real-backend-both-2026-10-07.log`
 - `docs/dev-log/cran-0.11-audit/site-review-2026-10-07.md`
 - `docs/dev-log/cran-0.11-audit/surface-inventory.md`
 - `docs/dev-log/cran-0.11-audit/current-state-2026-10-07.md` (ignored local audit note)
@@ -48,6 +53,7 @@ No scientific default or pooling method changed. Optional model packages remain 
 - `tests/testthat/test-mi-provenance.R`
 - `tests/testthat/test-pool-mi-adapter-fixtures.R`
 - `tests/testthat/test-check-pigauto.R`
+- `script/cran-0.11-integration/test-real-backends.R`
 - `vignettes/getting-started.Rmd`
 
 ## 5. Checks Run
@@ -68,10 +74,16 @@ No scientific default or pooling method changed. Optional model packages remain 
 - Unlazy reverified the implementation ledger: 5 runnable checks passed; the manual candidate-site visual gate remains open. Full task closeout also reports 5 unmet ledgers in the unrelated imputation-simulation campaign; those files were left untouched.
 - After-task structure check passed; aggregate closeout remained unmet because it also reverified five unrelated `.unlazy/imputation-sim/gates/` ledgers in this shared checkout. Those campaign ledgers were left untouched.
 - `git diff --check`: clean after this continuation.
+- Follow-up real-backend source harness: 50 expectations passed in 12.4 seconds. All six fits recorded convergence 0 and `pdHess=TRUE`; the drmTMB direct Gaussian coefficient/covariance oracle and independent Rubin arithmetic for drmTMB and gllvmTMB passed. Captured stdout is `provenance/real-backend-status-rubin-pass-2026-10-07.log` (SHA-256 `6f324f0429683b03af062fdced124c907e8d7d34ce74987635bcb9f93585ee94`). This test-source update was run atop `b3a31b8`; exact-tarball verification remains open.
+- Updated harness against the four isolated installed libraries built from package-source commit `9448bfa`: neither had the expected backend skips; drmTMB-only passed 28, gllvmTMB-only passed 22, and both passed 50 expectations. All four logs are retained with SHA-256 values in `adapters.md`. The installed package source is unchanged by the later docs and external harness edits.
 
 ## 6. Tests of the Tests
 
 The regression batch was first run against the unfixed source. It failed on ignored explicit `k_eigen`, accepted missing/invalid status fields, and let custom extractors bypass status checks. The same batch passed after the fixes. The preflight regression was also run before its implementation: it failed on the missing `gnn` argument and on the default torch probe, then passed after the change. These failures demonstrate that the tests detect the repaired behaviors.
+
+The real-backend harness initially failed because its direct Gaussian oracle compared an unnamed backend coefficient vector with a named matrix-calculation vector; the numeric values matched. The visible testthat report isolated the name-only difference. After comparing unnamed values, the complete driver passed and retained per-fit status plus both Rubin-oracle outputs.
+
+One installed drmTMB-only run first used the `real` driver mode, which correctly requires both optional packages; it failed at the availability guard before fitting. The corrected `drm-only installed` mode passed. No package change was needed.
 
 ## 7a. Issue Ledger
 
@@ -81,6 +93,8 @@ The regression batch was first run against the unfixed source. It failed on igno
 - Fixed: help generation warned on the `[0, 1]` range text.
 - Fixed: a docs test disagreed with the getting-started version note.
 - Fixed: default `check_pigauto()` could block a GNN-off `impute()` workflow when torch was unavailable; the explicit `gnn = TRUE` check remains.
+- Fixed: the real-backend harness header described posterior `multi_impute()` although the helper used `multi_impute_analysis()`; the harness now states and tests the route it actually exercises.
+- Fixed: the real-object adapter receipt lacked visible per-fit convergence/Hessian values and independent arithmetic checks; the harness now records those values and checks Gaussian and Rubin calculations at the bounded source-workflow scope.
 - Fixed: the MI audit addendum overgeneralized which forged fit lists the provenance checks refuse; it now distinguishes class/marker metadata from authentication.
 - Deferred: verify official CRAN publication history and choose a new version only from that result.
 - Deferred: complete live URL/sitemap and deployment-commit checks; investigate the live pkgdown badge that currently displays “failing.”
@@ -90,6 +104,10 @@ The regression batch was first run against the unfixed source. It failed on igno
 ## 8. Consistency Audit
 
 Reviewed package formals against generated help, MI adapter logic against real saved/reloaded drmTMB and gllvmTMB fits, installed operation without either optional package, NEWS and README-facing claims, getting-started wording, site inventory, retired-page controls, sitemap/search references, and neighbouring prediction/MI suites. The independent reviewer inspected the preflight source, tests, help, README, NEWS, and defaults inventory; no blocking issue was found. The new candidate site renders the matching GNN-off default. The deployed 0.11.0 homepage was previously viewed in Codex In-App Browser; it still reflects the old runtime wording because no merge or deployment has occurred. The local candidate has structural review but no browser visual review.
+
+For the real-object follow-up, the source harness now reads scalar status on each drmTMB and gllvmTMB fit before pooling, checks drmTMB Gaussian estimates/covariance using direct design-matrix equations, and recomputes Rubin pooled estimates/SEs from backend summaries. These checks cover a small synthetic analysis workflow only; they do not establish recovery or coverage.
+
+The same updated harness passed in installed-library mode with neither, each backend separately, and both backends. This confirms the installed package's optional runtime dispatch on those small analysis workflows; it does not validate the final tarball.
 
 ## 9. What Did Not Go Smoothly
 
@@ -110,4 +128,5 @@ Memory receipt: loaded the pigauto LOAD-FIRST manifest through route.py and the 
 - `impute(k_eigen)`: covers the public wrapper, graph construction, stored fit configuration, generated help, and explicit-override regression. Does NOT cover every graph-size regime or alter the automatic default.
 - `check_pigauto(gnn)`: covers default equivalence with `impute()`, no runtime probe with GNN off, explicit runtime failure reporting with GNN on, validation of the flag, generated help, README, NEWS, and getting-started. Does NOT cover a real accelerator probe or establish fit recovery.
 - drmTMB/gllvmTMB MI: covers object adapters, strict fit-status checks, custom extraction paths, serialized objects, fresh-process analysis pooling, and no-backend installation. Does NOT cover recovery, interval coverage, other backend classes, covariance pooling, or all model families.
+- Real-object arithmetic follow-up: covers scalar status recording and direct Gaussian coefficient/covariance plus independent Rubin calculations for three imputations. Does NOT cover the n=300 recovery campaign, broad gllvmTMB coefficient recovery, interval coverage, or the frozen tarball.
 - Documentation/site: covers changed help, the getting-started note, fresh pkgdown output, crawler, retirement controls, and current deployed homepage. Does NOT cover every live route, deployment identity, all retired URLs, or candidate-page visual rendering.
