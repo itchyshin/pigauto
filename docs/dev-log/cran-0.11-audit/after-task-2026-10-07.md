@@ -14,7 +14,7 @@ Implement authorized pigauto 0.11 release-preparation fixes and verify source be
 
 ## 3a. Decisions and Rejected Alternatives
 
-No scientific default or pooling method changed. Optional model packages remain absent from `DESCRIPTION`, while automatic adapters and the termwise fixed-effect pooling workflow remain. Joint covariance, loading, variance-component, and joint-test pooling were not added. The package version remains 0.11.0 until publication history is verified. No recovery campaign, push, PR update, merge, deployment, or CRAN submission was performed.
+No scientific default or pooling method changed. Optional model packages remain absent from `DESCRIPTION`, while automatic adapters and the termwise fixed-effect pooling workflow remain. Joint covariance, loading, variance-component, and joint-test pooling were not added. The package version remains 0.11.0 until publication history is verified. No recovery campaign, merge, deployment, or CRAN submission was performed.
 
 ## 4. Files Touched
 
@@ -31,10 +31,15 @@ No scientific default or pooling method changed. Optional model packages remain 
 - `docs/dev-log/cran-0.11-audit/after-task-assessment-2026-10-07-v2.json`
 - `docs/dev-log/cran-0.11-audit/after-task-assessment-2026-10-07-v3.json`
 - `docs/dev-log/cran-0.11-audit/defaults-review-2026-10-07.md`
+- `docs/dev-log/cran-0.11-audit/defaults-inventory.md`
 - `docs/dev-log/cran-0.11-audit/mi-review-2026-10-07.md`
 - `docs/dev-log/cran-0.11-audit/provenance/pre-pr-check.md`
+- `docs/dev-log/cran-0.11-audit/provenance/current-source-check-a23d0f6.log`
 - `docs/dev-log/cran-0.11-audit/site-review-2026-10-07.md`
 - `docs/dev-log/cran-0.11-audit/surface-inventory.md`
+- `docs/dev-log/cran-0.11-audit/current-state-2026-10-07.md` (ignored local audit note)
+- `.unlazy/cran-0.11-audit/GATES.md` (ignored local acceptance ledger)
+- `_site/` (generated candidate website output)
 - `man/fit_pigauto.Rd`
 - `man/check_pigauto.Rd`
 - `man/impute.Rd`
@@ -55,6 +60,7 @@ No scientific default or pooling method changed. Optional model packages remain 
 - `check_pigauto()` focused tests: 98 passed, 0 failures, warnings, or skips; the first run failed because the new argument was absent and the default runtime probe still fired.
 - Adjacent reader/input tests: 130 passed, 0 failures, warnings, or skips.
 - Complete source suite: 3,471 passed, 0 failures, 182 warnings, 8 skips in 255.0 seconds.
+- Current-source `devtools::check()` on clean commit `a23d0f6`: `Status: OK`, 0 errors, 0 warnings, 0 notes in 8m52.7s on R 4.6.0. Full output is retained in `provenance/current-source-check-a23d0f6.log` (SHA-256 `3285c4f42106d05deb577869c3158d0ac38b39b56393e3a0d3075ccac9e7d8c8`). This source result does not validate the final frozen artifact.
 - A prior console report recorded `devtools::check()` as 0 errors, 0 warnings, and 1 system-clock NOTE in 7m17.5s, with 3,318 installed-package tests passed. Its raw output and exact source identity are not retained, so this report does not count as verified check evidence. The retained clean-archive log is a different run on `ce438ff` at 6m03.3s with 0 errors, 0 warnings, and 1 NOTE. A separate temporary log with generated site files reports 4 NOTEs and is also excluded. The exact post-merge artifact check remains open.
 - Fresh pkgdown build and crawler after the preflight correction: 64 pages, 3,594 references, 34 retired pages absent, 0 errors; `SITE_CRAWL_OK`. Rendered homepage and getting-started wording agree with the new formal. The build emitted upstream Pandoc deprecation notices and two conditional-example notices.
 - `pkgdown::check_pkgdown()`: `No problems found.`
@@ -91,7 +97,7 @@ The first full test run caught an existing test/source wording mismatch; it was 
 
 ## 10. Known Residuals
 
-This work does not establish recovery or interval-coverage claims. A source package check after the latest default/doc changes remains pending; the earlier retained check predates them. The local candidate site passed structural checks but lacks browser visual review. G6 through G11 remain partly or wholly open; no final tarball is frozen and no publication has been authorized. Closeout remains blocked by the unrelated active imputation-simulation ledgers in this worktree.
+This work does not establish recovery or interval-coverage claims. The current-source package check passed, but the final exact-artifact gate remains open. The local candidate site passed structural checks but lacks browser visual review. G6 through G11 remain partly or wholly open; no final tarball is frozen and no publication has been authorized. Closeout remains blocked by the unrelated active imputation-simulation ledgers in this worktree.
 
 ## 11. Team Learning
 
