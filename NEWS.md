@@ -523,6 +523,9 @@ pre-registered campaign.
   `impute()`, and `completed_data()` is the documented completed-data
   extractor. The beginner journey reads traits and a tree, checks inputs,
   imputes, extracts completed data, and writes a report.
+- The preflight now defaults to `gnn = FALSE`, matching `impute()` and
+  skipping the torch runtime probe; pass `gnn = TRUE` to check runtime
+  availability when planning a GNN fit.
 - Public output guidance now distinguishes completed data, all-cell diagnostic
   predictions, type-dependent uncertainty, nominal held-out conformal
   diagnostics, and the narrow analysis-aware inference route.

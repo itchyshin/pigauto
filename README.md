@@ -51,9 +51,11 @@ installed version is 0.10.0, call `impute(traits, tree)` directly; that
 version does not include `check_pigauto()`.
 
 `check_pigauto()` runs before fitting: it reports input errors, species/tree
-matching, trait declarations, runtime availability, and size. Resolve an
-`"error"` status before calling `impute()`; a fully observed target table
-does not need fitting, so use `cross_validate()` instead.
+matching, trait declarations, and estimated size. Its default `gnn = FALSE`
+matches `impute()` and does not probe torch. Pass `gnn = TRUE` when planning a
+GNN fit to include runtime availability. Resolve an `"error"` status before
+fitting; a fully observed target table does not need imputation, so use
+`cross_validate()` instead.
 
 The output roles are deliberately separate:
 
