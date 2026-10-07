@@ -55,6 +55,14 @@ test_that("check_pigauto returns a structured no-fit preflight", {
 test_that("check_pigauto identifies a fully observed matched input as not needed", {
   tree <- make_p2_tree()
   traits <- data.frame(x = c(1, 2, 3), row.names = tree$tip.label)
+  testthat::local_mocked_bindings(
+    .check_pigauto_runtime = function() list(
+      torch_package = TRUE, torch_is_installed = FALSE,
+      device = "unavailable", unavailable = TRUE,
+      detail = "torch runtime is not installed"
+    ),
+    .package = "pigauto"
+  )
   check <- check_pigauto(traits, tree)
   expect_identical(check$status, "not_needed")
   expect_false(check$ready)
@@ -63,6 +71,23 @@ test_that("check_pigauto identifies a fully observed matched input as not needed
     impute(traits, tree),
     "All matched target cells are observed"
   )
+})
+
+test_that("runtime absence is not an error when no cells need imputation", {
+  tree <- make_p2_tree()
+  traits <- data.frame(x = c(1, 2, 3), row.names = tree$tip.label)
+  testthat::local_mocked_bindings(
+    .check_pigauto_runtime = function() list(
+      torch_package = TRUE, torch_is_installed = FALSE,
+      device = "unavailable", unavailable = TRUE,
+      detail = "torch runtime is not installed"
+    ),
+    .package = "pigauto"
+  )
+  check <- check_pigauto(traits, tree)
+  expect_identical(check$status, "not_needed")
+  expect_false(any(check$messages$code == "torch_unavailable"))
+  expect_false(check$runtime$torch_is_installed)
 })
 
 test_that("fingerprints are stable, input-sensitive, and survive RDS", {
@@ -241,6 +266,7 @@ test_that("runtime probes the selected accelerator and records failures", {
   expect_match(cuda_probe$detail, "broken CUDA")
 
   testthat::local_mocked_bindings(
+    .check_pigauto_torch_is_installed = function() TRUE,
     .check_pigauto_cuda_available = function() TRUE,
     .check_pigauto_mps_available = function() FALSE,
     .check_pigauto_probe_device = function(device, ...) {
@@ -290,6 +316,7 @@ test_that("check captures preprocessing messages and impute forwards warnings on
 test_that("a broken selected MPS runtime is not ready", {
   tree <- make_p2_tree()
   testthat::local_mocked_bindings(
+    .check_pigauto_torch_is_installed = function() TRUE,
     .check_pigauto_cuda_available = function() FALSE,
     .check_pigauto_mps_available = function() TRUE,
     .check_pigauto_probe_device = function(device, ...) {

@@ -85,12 +85,16 @@ check_pigauto <- function(traits, tree, species_col = NULL,
   list(ok = TRUE, detail = paste0(device, " scalar tensor probe succeeded"))
 }
 
+.check_pigauto_torch_is_installed <- function() {
+  tryCatch(torch::torch_is_installed(), error = function(e) e)
+}
+
 .check_pigauto_runtime <- function() {
   out <- list(torch_package = requireNamespace("torch", quietly = TRUE),
               torch_is_installed = FALSE, device = "unavailable",
               unavailable = TRUE, detail = "torch package is not installed")
   if (!out$torch_package) return(out)
-  installed <- tryCatch(torch::torch_is_installed(), error = function(e) e)
+  installed <- .check_pigauto_torch_is_installed()
   if (inherits(installed, "error") || !isTRUE(installed)) {
     out$detail <- if (inherits(installed, "error")) conditionMessage(installed) else "torch runtime is not installed"
     return(out)
@@ -238,7 +242,12 @@ check_pigauto <- function(traits, tree, species_col = NULL,
     list(torch_package = NA, torch_is_installed = NA, device = "not_probed",
          unavailable = FALSE, detail = "torch runtime not probed (gnn = FALSE)")
   }
-  if (isTRUE(probe_runtime) && (!isTRUE(runtime$torch_is_installed) || isTRUE(runtime$unavailable))) messages <- .check_pigauto_add(messages, "error", "torch_unavailable", "runtime", runtime$detail, "Install or repair torch before fitting.")
+  needs_imputation <- is.data.frame(trait_table) &&
+    nrow(trait_table) > 0L && any(trait_table$n_missing > 0L)
+  if (isTRUE(probe_runtime) && needs_imputation &&
+      (!isTRUE(runtime$torch_is_installed) || isTRUE(runtime$unavailable))) {
+    messages <- .check_pigauto_add(messages, "error", "torch_unavailable", "runtime", runtime$detail, "Install or repair torch before fitting.")
+  }
   n_species <- if (!is.null(prepared)) prepared$n_species else length(matched)
   n_obs <- if (!is.null(prepared)) prepared$n_obs else sum(ids %in% matched)
   p_latent <- if (!is.null(prepared)) prepared$p_latent else NA_integer_

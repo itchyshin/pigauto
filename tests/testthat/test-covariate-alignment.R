@@ -105,7 +105,7 @@ test_that("multi-obs nrow match but unmatched species names error", {
 })
 
 test_that("predict cov tensor follows species identity after trait shuffle", {
-  skip_if_not_installed("torch")
+  skip_if_no_libtorch()
 
   n <- 4L
   tree <- ape::rtree(n)

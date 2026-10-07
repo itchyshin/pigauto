@@ -43,6 +43,13 @@ test_that("installed novice fixture and script parse without fitting", {
   expect_s3_class(traits, "data.frame")
   expect_s3_class(tree, "phylo")
   expect_true(anyNA(traits))
+  testthat::local_mocked_bindings(
+    .check_pigauto_runtime = function() list(
+      torch_package = TRUE, torch_is_installed = TRUE,
+      device = "cpu", unavailable = FALSE, detail = "mock runtime ready"
+    ),
+    .package = "pigauto"
+  )
   check <- check_pigauto(traits, tree)
   expect_true(check$status %in% c("ready", "ready_with_warnings"))
   expect_identical(check$traits$type[check$traits$trait == "mass"], "continuous")

@@ -92,6 +92,13 @@ test_that("ordered factor declared ordinal still preprocesses", {
   expect_no_error(
     preprocess_traits(x$df, x$tree, trait_types = c(lik = "ordinal"))
   )
+  testthat::local_mocked_bindings(
+    .check_pigauto_runtime = function() list(
+      torch_package = TRUE, torch_is_installed = TRUE,
+      device = "cpu", unavailable = FALSE, detail = "mock runtime ready"
+    ),
+    .package = "pigauto"
+  )
   chk <- check_pigauto(x$df, x$tree, trait_types = c(lik = "ordinal"))
   expect_true(chk$status %in% c("ready", "ready_with_warnings"))
 })
