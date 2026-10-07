@@ -1,0 +1,159 @@
+
+R version 4.6.0 (2026-04-24) -- "Because it was There"
+Copyright (C) 2026 The R Foundation for Statistical Computing
+Platform: aarch64-apple-darwin23
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(testthat)
+> library(pigauto)
+> 
+> test_check("pigauto")
+pigauto: the exact ("exact") joint baseline route was not usable for a fit (fewer than 2 joint columns (K < 2)); used the per-column baseline for that fit instead. This happens either while predict_method = "auto" (the default) is comparing its "exact" candidate, or when "exact" is itself the resolved route and fell back. This message is shown at most once per R session; pass predict_method = "per_column" to use the per-column path throughout, or predict_method = "exact" explicitly if you want a warning every time this happens.
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): parasites. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(parasites = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): parasites. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(parasites = "continuous").
+
+1 tree tip(s) have no trait data and will have all-NA rows.
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): counts. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(counts = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): count. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(count = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): count, zi. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(count = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): count. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(count = "continuous").
+
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): count. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(count = "continuous").
+
+Building phylogenetic graph (reused across folds)...
+Rep 1/1, Fold 1/2 (seed=1)...
+Building phylogenetic graph (reused across folds)...
+Rep 1/1, Fold 1/2 (seed=1)...
+=== Replicate 1/1 (seed 1) ===
+Fitting baseline...
+Fitting pigauto...
+=== Replicate 1/1 (seed 1) ===
+Fitting baseline...
+Fitting pigauto...
+draws_method = "auto": using "conformal" because some traits are not continuous (binary: binary). These draws show the spread of plausible values but are not proper multiple imputations; with_imputations() and pool_mi() refuse them. See ?multi_impute.
+pigauto: the exact ("exact") joint baseline route was not usable for a fit (problem too large, or a numerically unusable Sigma); used the per-column baseline for that fit instead. This happens either while predict_method = "auto" (the default) is comparing its "exact" candidate, or when "exact" is itself the resolved route and fell back. This message is shown at most once per R session; pass predict_method = "per_column" to use the per-column path throughout, or predict_method = "exact" explicitly if you want a warning every time this happens.
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+pigauto: the exact ("exact") joint baseline route was not usable for a fit (fewer than 2 joint columns (K < 2)); used the per-column baseline for that fit instead. This happens either while predict_method = "auto" (the default) is comparing its "exact" candidate, or when "exact" is itself the resolved route and fell back. This message is shown at most once per R session; pass predict_method = "per_column" to use the per-column path throughout, or predict_method = "exact" explicitly if you want a warning every time this happens.
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+6 tree tip(s) have no trait data and will have all-NA rows.
+6 tree tip(s) have no trait data and will have all-NA rows.
+gnn = FALSE: mc_dropout draws are BM-posterior draws (no dropout).
+Model saved to /var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//Rtmprx2IS1/working_dir/RtmpMNYhx5/file12a61f464d45.pigauto (433,167 bytes)
+draws_method = "auto": using "conformal" because `covariates` were supplied. These draws show the spread of plausible values but are not proper multiple imputations; with_imputations() and pool_mi() refuse them. See ?multi_impute.
+
+  ml lambda_hat = 0.005, cv lambda_hat = 0.010 (true mix = 0.2)
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): count_trait. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(count_trait = "continuous").
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): cnt. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(cnt = "continuous").
+
+Model saved to /var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//Rtmprx2IS1/working_dir/RtmpMNYhx5/file12a63551379e.pigauto (3,680 bytes)
+Model saved to /var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//Rtmprx2IS1/working_dir/RtmpMNYhx5/file12a63a11b599.pigauto (3,680 bytes)
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): cnt. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(cnt = "continuous").
+c1: chosen=exact exact=0.1817 per_column=0.2215; c2: chosen=per_column exact=0.3039 per_column=0.2961
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): cnt. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(cnt = "continuous").
+
+mixed-route seeds (of 12): 1, 2, 4, 6, 7, 9, 10, 11, 12
+Note: model was saved with pigauto 0.9.1.9000; current version is 0.11.0
+draws_method = "auto": using "conformal" because some traits are not continuous (Trophic.Level: categorical, Primary.Lifestyle: categorical, Migration: ordinal). These draws show the spread of plausible values but are not proper multiple imputations; with_imputations() and pool_mi() refuse them. See ?multi_impute.
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): x_cnt. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(x_cnt = "continuous").
+
+Calibrating gates on validation set (baseline only)...
+Calibrated gates: Mass=0, Beak.Length_Culmen=0, Tarsus.Length=0, Wing.Length=0, Trophic.Level=Carnivore=0, Trophic.Level=Herbivore=0, Trophic.Level=Omnivore=0, Trophic.Level=Scavenger=0, Primary.Lifestyle=Aerial=0, Primary.Lifestyle=Aquatic=0, Primary.Lifestyle=Generalist=0, Primary.Lifestyle=Insessorial=0, Primary.Lifestyle=Terrestrial=0, Migration=0
+Conformal scores (latent scale, method=split): Mass=0.3485, Beak.Length_Culmen=0.7561, Tarsus.Length=0.9727, Wing.Length=0.6671, Migration=2.9202
+pigauto: the exact ("exact") joint baseline route was not usable for a fit (fewer than 2 joint columns (K < 2)); used the per-column baseline for that fit instead. This happens either while predict_method = "auto" (the default) is comparing its "exact" candidate, or when "exact" is itself the resolved route and fell back. This message is shown at most once per R session; pass predict_method = "per_column" to use the per-column path throughout, or predict_method = "exact" explicitly if you want a warning every time this happens.
+Calibrating gates on validation set (baseline only)...
+Calibrated gates: Dummy_Size=0
+Conformal scores (latent scale, method=split): Dummy_Size=1.4107
+gnn = FALSE: mc_dropout draws are BM-posterior draws (no dropout).
+3 tree tip(s) have no trait data and will have all-NA rows.
+
+8 tree tip(s) have no trait data and will have all-NA rows.
+
+gnn = FALSE: mc_dropout draws are BM-posterior draws (no dropout).
+[ FAIL 0 | WARN 161 | SKIP 86 | PASS 3066 ]
+
+══ Skipped tests (86) ══════════════════════════════════════════════════════════
+• BIEN cache not found (1): 'test-phylo-signal-gate.R:162:3'
+• BIEN cache not found -- run script/bench_bien.R once to build (1):
+  'test-safety-floor.R:509:3'
+• NEWS.md not found (1): 'test-lambda-default.R:224:3'
+• On CRAN (54): 'test-draws-auto.R:67:3', 'test-draws-auto.R:82:3',
+  'test-gnn-off.R:58:3', 'test-gnn-off.R:104:3', 'test-gnn-off.R:158:3',
+  'test-gnn-off.R:192:3', 'test-gnn-off.R:209:3', 'test-gnn-off.R:247:3',
+  'test-gnn-off.R:267:3', 'test-gnn-off.R:298:3', 'test-gnn-off.R:311:3',
+  'test-gnn-off.R:329:3', 'test-gnn-off.R:352:3', 'test-gnn-off.R:368:3',
+  'test-gnn-off.R:397:3', 'test-gnn-off.R:406:3', 'test-gnn-off.R:450:3',
+  'test-gnn-off.R:459:3', 'test-gnn-off.R:477:3', 'test-joint-baseline.R:12:3',
+  'test-joint-baseline.R:64:3', 'test-joint-baseline.R:107:3',
+  'test-joint-baseline.R:152:3', 'test-joint-baseline.R:189:3',
+  'test-joint-lambda.R:98:3', 'test-joint-lambda.R:130:3',
+  'test-joint-lambda.R:277:3', 'test-joint-refine-iter.R:27:3',
+  'test-joint-refine-iter.R:39:3', 'test-joint-refine-iter.R:66:3',
+  'test-joint-refine-iter.R:77:3', 'test-joint-refine-iter.R:88:3',
+  'test-joint-refine-iter.R:99:3', 'test-joint-refine-iter.R:110:3',
+  'test-joint-solver.R:27:3', 'test-joint-solver.R:39:3',
+  'test-joint-solver.R:58:3', 'test-joint-solver.R:74:3',
+  'test-joint-solver.R:95:3', 'test-lambda-covariates.R:98:3',
+  'test-lambda-dispatch.R:343:3', 'test-liability.R:132:3',
+  'test-mi-posterior.R:311:3', 'test-mi-posterior.R:487:3',
+  'test-mi-posterior.R:556:3', 'test-multi-impute-posterior.R:367:3',
+  'test-multi-impute-posterior.R:393:3', 'test-multi-proportion.R:76:3',
+  'test-new-features.R:605:3', 'test-new-features.R:628:3',
+  'test-pagel-eigendecomp.R:106:3', 'test-pagel-lambda.R:310:3',
+  'test-pool-mi-backends.R:35:3', 'test-pool-mi-backends.R:43:3'
+• rgbif IS installed; cannot test missing-rgbif branch (1):
+  'test-gbif-centroids.R:92:3'
+• script/gha helpers are not shipped in the built package (7):
+  'test-gha-helpers.R:19:3', 'test-gha-helpers.R:34:3',
+  'test-gha-helpers.R:68:3', 'test-gha-helpers.R:104:3',
+  'test-gha-helpers.R:147:3', 'test-gha-helpers.R:176:3',
+  'test-gha-helpers.R:214:3'
+• script/gha/_bace_compat.R not found at ../../script/gha/_bace_compat.R (4):
+  'test-bace-compat-eval.R:22:5', 'test-bace-compat-eval.R:85:5',
+  'test-bace-compat-eval.R:129:5', 'test-bace-compat-eval.R:177:5'
+• slow integration - set NOT_CRAN=TRUE to run (1):
+  'test-gbif-centroids.R:226:3'
+• slow integration -- NOT_CRAN=TRUE to run (2):
+  'test-worldclim-covariates.R:267:3', 'test-worldclim-covariates.R:362:3'
+• smcfcs is installed; integration test covers this route (1):
+  'test-multi-impute-analysis.R:244:3'
+• source file not installed during R CMD check: ../../R/phylo_signal.R (1):
+  'test-docs-phytools-warning.R:36:3'
+• source file not installed during R CMD check: ../../README.md (3):
+  'test-docs-phytools-warning.R:26:3', 'test-docs-phytools-warning.R:43:3',
+  'test-docs-phytools-warning.R:53:3'
+• source file not installed during R CMD check:
+  ../../vignettes/getting-started.Rmd (1): 'test-docs-phytools-warning.R:17:3'
+• source-only development archive is excluded from the package tarball (1):
+  'test-community-surface.R:193:5'
+• source-only pkgdown configuration is excluded from the package tarball (1):
+  'test-community-surface.R:75:5'
+• source-surface assertions run in the dedicated repository gate (5):
+  'test-community-surface.R:10:3', 'test-community-surface.R:57:3',
+  'test-community-surface.R:85:3', 'test-community-surface.R:97:3',
+  'test-community-surface.R:146:3'
+• terra IS installed; cannot test missing-terra branch (1):
+  'test-worldclim-covariates.R:175:3'
+
+[ FAIL 0 | WARN 161 | SKIP 86 | PASS 3066 ]
+> 
+> proc.time()
+   user  system elapsed 
+240.730  46.446 357.689 
