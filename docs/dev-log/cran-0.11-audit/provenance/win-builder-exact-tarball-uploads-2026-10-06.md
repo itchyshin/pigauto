@@ -29,3 +29,6 @@ R-release/R-devel builder terms. No matching message IDs were returned, and no
 email messages were opened. This records only that the two result messages were
 not found in the connected account at search time; it does not establish that
 either builder failed or completed. G7 remains partial pending the two logs.
+
+A second exact-filename search at 2026-10-06 19:52 MDT again returned no message
+IDs. No other messages or mailbox surfaces were inspected.
