@@ -46,7 +46,9 @@ runtime behavior:
 
 1. **Neither package:** install pigauto into a clean library with neither
    package available, then run the command above. The core package install
-   must succeed; optional adapter tests skip.
+   must succeed; optional adapter tests skip, while serialized class-shaped
+   fixtures for both backends must fail closed with a message naming the
+   package required to read the fit.
 2. **drmTMB only:** add `drmTMB` and its own dependencies to that library,
    leave `gllvmTMB` absent, and run the command. The `drmTMB` test must pass
    and the `gllvmTMB` test skips.

@@ -39,6 +39,12 @@ completed <- completed_data(result)
 pigauto_report(result)
 ```
 
+For bird trees, download a Newick or NEXUS file from [BirdTree](https://birdtree.org/downloads/)
+and read it with `read_tree()`. Cite Jetz et al. (2012) for the tree, and cite
+BirdTree.org when you use its website. pigauto uses the tree you provide and
+does not download BirdTree data automatically. The bundled `tree300` is a
+teaching example; it is not a consensus or recommended analysis tree.
+
 `impute()` now uses the phylogenetic baseline by default (`gnn = FALSE`),
 estimates Pagel's lambda for eligible traits, and leaves the mean safety
 floor and phylogenetic-signal gate off. To train the optional graph neural

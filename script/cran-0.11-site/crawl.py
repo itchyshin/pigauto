@@ -104,6 +104,23 @@ def main(site_root):
             for stem in internal:
                 if indexed_path.endswith("/" + stem + ".html"):
                     errors.append(f"{filename}: internal {stem}")
+            for route in (
+                "articles/simulation-study.html",
+                "articles/simulation-study.md",
+                "articles/articles/simulation-study.html",
+                "articles/articles/simulation-study.md",
+            ):
+                if indexed_path == route or indexed_path.endswith("/" + route):
+                    errors.append(f"{filename}: retired URL {route}")
+
+    for route in (
+        "articles/simulation-study.html",
+        "articles/simulation-study.md",
+        "articles/articles/simulation-study.html",
+        "articles/articles/simulation-study.md",
+    ):
+        if (root / route).exists():
+            errors.append(f"Retired historical page served: {route}")
 
     report = {
         "html_pages": len(pages),

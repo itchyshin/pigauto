@@ -163,7 +163,11 @@ pigauto ships with `avonet300`, a 300-species subset of the AVONET v3 bird
 morphology database (Tobias et al. 2022, *Ecology Letters*), and `tree300`,
 posterior member 69 from the BirdTree Hackett-backbone sample, pruned to those
 300 species. It is included as an example tree, not as an MCC or consensus tree
-or as a recommended tree for substantive analyses.
+or as a recommended tree for substantive analyses. For your own analysis,
+obtain a tree suited to your taxa and cite Jetz et al. (2012). If you use the
+BirdTree website, also cite BirdTree.org. You can download a tree file and
+read it with `read_tree()`; see [BirdTree downloads](https://birdtree.org/downloads/)
+and the [tree-uncertainty article](tree-uncertainty.html) for options.
 
 ```{r data}
 data(avonet300, tree300, package = "pigauto")
@@ -172,9 +176,9 @@ head(avonet300)
 ape::Ntip(tree300)
 ```
 
-The four morphological traits — body mass, beak length, tarsus length, and
-wing length — are all log-normally distributed and highly heritable, making
-them ideal test cases for phylogenetic imputation.
+The four morphological columns are included as example measurements for
+walking through the workflow. Their distributions and phylogenetic signal vary;
+this tutorial does not use them to establish a general performance claim.
 
 ## Step 1: Preprocess
 
