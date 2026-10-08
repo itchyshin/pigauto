@@ -8,12 +8,29 @@
     "system_or_external_services": true,
     "large_data_or_vignettes": true
   },
-  "artifact": {},
-  "evidence": {},
+  "artifact": {
+    "state": "candidate_not_release_final",
+    "filename": "pigauto_0.11.0.tar.gz",
+    "sha256": "1bfed5ad7be61437f4fdb09ece053d6a40211b5a5b7da4b2c947c3343493b719",
+    "size_bytes": 5128791,
+    "archive_entries": 248,
+    "inventory_sha256": "52192b529b009a47b9bc3e7f1687f543194994de42e9e508ee536ebbacc0deb5",
+    "source_commit": "0b0f71fee838c6ed51ef832ed819270eeafaf29b",
+    "frozen_path": "/private/tmp/pigauto-release/sha256-1bfed5ad7be61437f4fdb09ece053d6a40211b5a5b7da4b2c947c3343493b719/pigauto_0.11.0.tar.gz"
+  },
+  "evidence": {
+    "local_check_status": "OK",
+    "local_check_log": "provenance/exact-artifact-0b0f71f-2026-10-08-R-CMD-check.log",
+    "local_check_log_sha256": "4798992b15bcc845b7d99ca7b331d17cffcf72342882da9f4cda5a7b685568d1",
+    "testthat_output": "provenance/exact-artifact-0b0f71f-2026-10-08-testthat.Rout",
+    "windows_results_bound_to_hash": false,
+    "birdtree_redistribution_rights": "unresolved",
+    "exact_hash_independent_panel": "pending_for_1bfed5ad7be61437f4fdb09ece053d6a40211b5a5b7da4b2c947c3343493b719"
+  },
   "panel": {
-    "grace": "READY",
-    "rose": "READY",
-    "pat": "READY"
+    "grace": "READY_FOR_PRIOR_CANDIDATE_ONLY",
+    "rose": "READY_FOR_PRIOR_CANDIDATE_ONLY",
+    "pat": "READY_FOR_PRIOR_CANDIDATE_ONLY"
   },
   "status_claim": "source-clean",
   "submission": {},
