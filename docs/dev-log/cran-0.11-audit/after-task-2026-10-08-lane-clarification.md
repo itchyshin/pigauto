@@ -22,6 +22,7 @@ Kept the bundled trees as cited examples while describing how users can obtain t
 - `docs/dev-log/cran-0.11-audit/defaults-inventory.md`
 - `docs/dev-log/cran-0.11-audit/provenance/rights-and-policy.md`
 - `docs/dev-log/cran-0.11-audit/site-review-2026-10-08.md`
+- `docs/dev-log/cran-0.11-audit/provenance/site-crawler-simulation-retirement-control.txt`
 - `inst/NOTICE`
 - `pkgdown/clean-internal-pages.R`
 - `script/cran-0.11-integration/README.md`
@@ -37,7 +38,7 @@ Kept the bundled trees as cited examples while describing how users can obtain t
 
 ## 5. Checks Run
 
-- `UNLAZY_APPROVAL_DIR=/private/tmp/pigauto-cran011-unlazy-approvals node .../gate-check.mjs --reverify --approve --timeout 600 docs/dev-log/cran-0.11-audit/GATES.md`: G5 and G5b passed. The crawler reported 62 HTML pages, 3,441 local references, 34 retired routes, and zero errors.
+- `UNLAZY_APPROVAL_DIR=/private/tmp/pigauto-cran011-unlazy-approvals node .../gate-check.mjs --reverify --approve --timeout 600 docs/dev-log/cran-0.11-audit/GATES.md`: G5 and G5b passed. The crawler reported 62 HTML pages, 3,441 local references, 34 retired routes, and zero errors. The search index has 613 entries and 57 unique non-empty paths.
 - Rendered HTML assertions: `RENDERED_CONTENT_AND_RETIREMENT_OK`.
 - `Rscript --vanilla -e 'pkgdown::check_pkgdown()'`: no problems found.
 - `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 Rscript --vanilla -e 'devtools::test(filter = "cran-audit-defaults", stop_on_failure = TRUE)'`: 198 passed, 0 failures, 0 warnings, 0 skips.
@@ -63,7 +64,7 @@ Reviewed README, NOTICE, Getting Started, tree uncertainty, multiple imputation,
 
 ## 9. What Did Not Go Smoothly
 
-The offline build needed SRI-verified cached JavaScript and temporary font and network overrides. The first Unlazy reverify used its 120-second default and stopped during sitemap generation; the subsequent approved run used 600 seconds and passed. The report generator resolved a relative output path under the brain vault, so that erroneous draft was discarded and this repo-specific report was written directly.
+The offline build needed SRI-verified cached JavaScript and temporary font and network overrides. The first Unlazy reverify used its 120-second default and stopped during sitemap generation; the subsequent approved run used 600 seconds and passed. The report generator resolved a relative output path under the brain vault, so that erroneous draft was discarded and this repo-specific report was written directly. Independent reviewers caught one overstated NEWS attribution and one stale saved-site crawler result; both were corrected, and the latest site build and route check were rerun.
 
 ## 10. Known Residuals
 

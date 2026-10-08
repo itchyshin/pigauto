@@ -2,12 +2,12 @@
 
 ## BirdTree example and retrieval guidance
 
-The README and tutorials now identify `tree300` as a posterior sample tree,
-describe how to obtain and cite BirdTree trees, and distinguish the optional
-`megatrees` package licence from rights to the underlying data. The bundled
-`trees300` help documents its Ericson/Hackett mixture. The retired simulation
-study remains in the repository's history but is excluded from the public
-site, sitemap, and search index.
+The README and tutorials now identify `tree300` as a posterior sample tree and
+describe how to obtain and cite BirdTree trees. The installed NOTICE
+distinguishes the optional `megatrees` package licence from rights to the
+underlying data, and the bundled `trees300` help documents its Ericson/Hackett
+mixture. The retired simulation study remains in the repository's history but
+is excluded from the public site, sitemap, and search index.
 
 ## New defaults: discrete traits get their own λ; safety gate and floor off
 
