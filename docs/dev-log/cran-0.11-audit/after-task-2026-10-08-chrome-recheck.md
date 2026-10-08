@@ -23,6 +23,7 @@ Kept G4, G6, and G7 open. The successful pkgdown run binds the observed deployme
 - Chrome opened pkgdown Actions run #583. It completed successfully on `main` commit `0b0f71fee838c6ed51ef832ed819270eeafaf29b` and links to the public site.
 - Chrome opened the official CRAN record, which lists 0.10.0 published 2026-07-30.
 - PR #231 remains a draft, has no review, and reports no deployment for its branch.
+- Committed the evidence update as `96564f6` and pushed it to `release/cran-0.11-gate`. A fresh Chrome view confirms PR #228 now has 18 commits, no base conflicts, checks passed with one skipped check, no review, and no deployment; it remains Draft.
 - The shared lane lease was granted for only the three listed evidence files. `git diff --cached --check` passed after staging those paths; whitespace checks passed for both new files; the after-task structure check passed; and `slop_check.py` reported zero findings.
 - `node ~/shinichi-brain/skills/unlazy/scripts/gate-check.mjs --status docs/dev-log/cran-0.11-audit/GATES.md` parsed 11 gates and reported six open: G0, G4, G6, G7, G8, and G9. This status-only command reads checkboxes and runs no gate checks.
 - `closeout.py check` did not pass: its nested R validator reads the brain repository's unrelated acceptance ledgers and halts on their unmet gates. Running `check-after-task.R` directly from this pigauto worktree passed the report structure check; the pigauto release ledger remains separately open as recorded above.
