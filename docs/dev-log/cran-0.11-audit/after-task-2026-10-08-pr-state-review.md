@@ -4,7 +4,7 @@ Refresh the CRAN 0.11 release-evidence ledger from current Chrome PR states and 
 
 ## 2. Implemented
 
-Updated the G0 evidence summary with the latest cache-busted Chrome state of PR #228: Draft, 12 commits, zero checks, three conflicts, no review, and no deployment. The PR description labels `10573d4f…` as a previous audit artifact and says final source/site changes require a fresh tarball. It does not mention the separate local-check receipt for `1bfed5ad…` now in the branch.
+Updated the G0 evidence summary with the latest cache-busted Chrome state of PR #228 before this report correction: Draft, 13 commits, zero checks, three conflicts, no review, and no deployment. The PR description labels `10573d4f…` as a previous audit artifact and says final source/site changes require a fresh tarball. It does not mention the separate local-check receipt for `1bfed5ad…` now in the branch.
 
 Added the independent PR #231 review findings to the gate ledger. The single-tree and multi-tree import routes, prediction-sensitivity limit, attribution guidance, and software-licence/data-rights distinction are consistent. The unsupported Robinson-Foulds statement in `inst/NOTICE` and missing BirdTree download pointers in README and Getting Started remain open for the source lane.
 
@@ -21,7 +21,7 @@ Recorded review findings in the release-evidence lane instead of changing source
 
 - `~/shinichi-brain/tools/lane_preflight.sh "$PWD"`: confirmed a second Codex lane is active and an artifact-evidence lease is live. No other lane's files were edited.
 - `~/shinichi-brain/tools/lane_lease.sh --list pigauto`: confirmed the explicit artifact-receipt lease remains live for GATES.md and the artifact receipts.
-- Initial Chrome review of PR #228 showed seven commits. A fresh cache-busted reload after the evidence push showed 12 commits, zero checks, three conflicts, no review, and no deployment. The current description accurately calls `10573d4f…` a previous audit artifact but omits the branch's `1bfed5ad…` receipt.
+- Initial Chrome review of PR #228 showed seven commits. A cache-busted reload showed 12, then a later reload before this report correction showed 13 commits. The latest verified status was zero checks, three conflicts, no review, and no deployment. The current description accurately calls `10573d4f…` a previous audit artifact but omits the branch's `1bfed5ad…` receipt.
 - Chrome review of PR #231: Draft, nine commits, three successful checks, one skipped, no conflicts, reviews, or deployment.
 - `git diff --check`: passed for the ledger change.
 - Python JSON parse of `release-ledger.json`: passed (`RELEASE_LEDGER_JSON_OK`).
@@ -44,7 +44,7 @@ No package code or test code changed. The status checks were direct browser obse
 
 ## 8. Consistency Audit
 
-Compared the refreshed Chrome state of PR #228 with its branch receipt and release ledger. The description labels `10573d4f…` as a previous artifact but omits the separate `1bfed5ad…` receipt; recorded this gap without relabeling either archive. Compared the independent review summary for PR #231 with its stated source and help routes. The review found the import instructions and rights caveat consistent, while identifying the unsupported RF claim and missing download links as open issues. The local review does not establish deployed behavior.
+Compared the refreshed Chrome state of PR #228 with its branch receipt and release ledger. The description labels `10573d4f…` as a previous artifact but omits the separate `1bfed5ad…` receipt; recorded this gap without relabeling either archive. The commit count is a point-in-time observation and advances when this correction is pushed. Compared the independent review summary for PR #231 with its stated source and help routes. The review found the import instructions and rights caveat consistent, while identifying the unsupported RF claim and missing download links as open issues. The local review does not establish deployed behavior.
 
 ## 9. What Did Not Go Smoothly
 
