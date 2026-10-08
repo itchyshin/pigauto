@@ -79,10 +79,11 @@ def main(site_root):
                     and unquote(url.fragment) not in pages[target].ids):
                 errors.append(f"{path.relative_to(root)}: absent anchor {link}")
 
-    internal = ("AGENTS", "CLAUDE", "goodagents")
+    internal = ("AGENTS", "CLAUDE", "goodagents", "VALIDATION_LEDGER")
     for stem in internal:
-        if (root / f"{stem}.html").exists():
-            errors.append(f"Internal page served: {stem}")
+        for extension in ("html", "md"):
+            if (root / f"{stem}.{extension}").exists():
+                errors.append(f"Internal page served: {stem}.{extension}")
 
     repo = Path(__file__).resolve().parents[2]
     retired = list((repo / "dev/archive/cran-011-public-pages").glob("*.html"))

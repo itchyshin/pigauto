@@ -157,6 +157,10 @@ What to know.
   remain available when those packages are installed, without requiring
   them as dependencies. Their real-package integration checks run from
   `script/cran-0.11-integration/`, outside the built package.
+- `pool_mi()` now requires recognized drmTMB and gllvmTMB fits to report
+  convergence code zero and a positive-definite Hessian, including when
+  custom extractors are supplied. Workflow markers are caller-controlled
+  metadata and do not authenticate a fit list.
 - README: a "Defaults, and when to change them" section.
 - Documentation fixes: `fit_pigauto()`'s `gate_method` default is
   `"cv_folds"` and `min_val_cells` defaults to 20; the help pages said
@@ -519,6 +523,9 @@ pre-registered campaign.
   `impute()`, and `completed_data()` is the documented completed-data
   extractor. The beginner journey reads traits and a tree, checks inputs,
   imputes, extracts completed data, and writes a report.
+- The preflight now defaults to `gnn = FALSE`, matching `impute()` and
+  skipping the torch runtime probe; pass `gnn = TRUE` to check runtime
+  availability when planning a GNN fit.
 - Public output guidance now distinguishes completed data, all-cell diagnostic
   predictions, type-dependent uncertainty, nominal held-out conformal
   diagnostics, and the narrow analysis-aware inference route.

@@ -10,6 +10,7 @@ impute(
   species_col = NULL,
   trait_types = NULL,
   multi_proportion_groups = NULL,
+  k_eigen = "auto",
   log_transform = TRUE,
   missing_frac = 0.25,
   n_imputations = 1L,
@@ -69,6 +70,10 @@ simplex (rows summing to 1). Encoded via CLR + per-component z-score.
 Multi_proportion traits \emph{cannot} be declared through
 \code{trait_types} — use this argument instead. Default \code{NULL}
 (no multi_proportion groups).}
+
+\item{k_eigen}{integer or \code{"auto"}. Number of spectral node
+features used to build the phylogenetic graph. The default \code{"auto"}
+scales the dimension to tree size; an integer overrides that choice.}
 
 \item{log_transform}{logical. Log-transform every continuous trait whose
 observed values are all positive

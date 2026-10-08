@@ -2,6 +2,10 @@
 
 These 34 HTML snapshots and five supporting PNGs were served from `pkgdown/assets/dev/` before the 0.11.0 audit. Their old direct `/dev/` URLs are retired from the new site. The files below were moved byte-for-byte to the build-excluded `dev/archive/cran-011-public-pages/`; the originating Git history and benchmark drivers/results under `script/` remain available. The measured figures describe their original regimes and have not been rerun or relabelled as 0.11.0 results. Public removal is pending deployment after the audit PR is merged.
 
+## Additional root route retired from the public site
+
+`/VALIDATION_LEDGER.html` is not one of the 34 archived benchmark snapshots. A Codex in-app browser check on 2026-10-07 found it still live and showing historical 0.10.0 claims. The source `VALIDATION_LEDGER.md` remains in Git, but the Pages cleanup now removes its generated HTML and Markdown copies and filters the route from the sitemap and search index. Public removal remains pending a later approved deployment. The other coordination routes `/AGENTS.html`, `/CLAUDE.html`, and `/goodagents.html` returned pkgdown 404 pages in the same browser review.
+
 | Original source path | Archived source path | Bytes | SHA-256 |
 |---|---|---:|---|
 | `pkgdown/assets/dev/bench_amphibio.html` | `dev/archive/cran-011-public-pages/bench_amphibio.html` | 1554 | `ecbf9db9b7c0773ff5eff12d4168f992a7e61ae223aa5a1886377e378ac4cbd8` |

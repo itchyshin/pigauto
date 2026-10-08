@@ -10,7 +10,8 @@ check_pigauto(
   species_col = NULL,
   trait_types = NULL,
   multi_proportion_groups = NULL,
-  covariates = NULL
+  covariates = NULL,
+  gnn = FALSE
 )
 }
 \arguments{
@@ -28,6 +29,10 @@ check_pigauto(
 
 \item{covariates}{Optional environmental covariates passed to
 \code{\link[=preprocess_traits]{preprocess_traits()}}. Non-finite values are an error.}
+
+\item{gnn}{Whether the planned imputation will use the graph neural network.
+The default \code{FALSE} skips the torch runtime probe, matching \code{\link[=impute]{impute()}}'s
+default. Set \code{TRUE} to include the torch runtime in the preflight.}
 }
 \value{
 A list of class \code{pigauto_check} containing a schema version, status,

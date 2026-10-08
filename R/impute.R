@@ -13,6 +13,9 @@
 #'   \code{character} (factor → binary/categorical), \code{logical} (binary).
 #'   See the \strong{Trait type auto-detection} section below.
 #' @param tree object of class \code{"phylo"}.
+#' @param k_eigen integer or \code{"auto"}. Number of spectral node
+#'   features used to build the phylogenetic graph. The default \code{"auto"}
+#'   scales the dimension to tree size; an integer overrides that choice.
 #' @param species_col character. Name of the column in \code{traits} that
 #'   identifies species.  When supplied, multiple observations per species
 #'   are supported.  Default \code{NULL} uses row names (one row per species).
@@ -431,6 +434,7 @@
 impute <- function(traits, tree, species_col = NULL,
                    trait_types = NULL,
                    multi_proportion_groups = NULL,
+                   k_eigen = "auto",
                    log_transform = TRUE,
                    missing_frac = 0.25, n_imputations = 1L,
                    covariates = NULL,
@@ -578,7 +582,7 @@ impute <- function(traits, tree, species_col = NULL,
   #    The graph object carries the cophenetic distance matrix in
   #    graph$D; we pass it to fit_baseline() below so that it is
   #    computed exactly once for the whole pipeline.
-  graph <- build_phylo_graph(tree, k_eigen = "auto")
+  graph <- build_phylo_graph(tree, k_eigen = k_eigen)
 
   # 4. Fit phylogenetic baseline (reuses graph$D for label propagation)
   baseline <- .fit_baseline_dispatch(pd, tree, splits = splits, graph = graph,

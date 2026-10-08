@@ -1,13 +1,15 @@
 #!/usr/bin/env Rscript
 
 # pkgdown intentionally renders every top-level Markdown file. Remove internal
-# agent coordination pages from the deployable site, sitemap, and search index.
+# coordination and validation pages from the deployable site, sitemap, and
+# search index.
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
-# The site is built into _site/ (see `destination` in _pkgdown.yml).
-site <- "_site"
+# The site is built into _site/ (see `destination` in _pkgdown.yml). The
+# environment override lets the same cleanup run against a temporary build.
+site <- Sys.getenv("PIGAUTO_SITE_DIR", unset = "_site")
 
-stems <- c("AGENTS", "CLAUDE", "goodagents")
+stems <- c("AGENTS", "CLAUDE", "goodagents", "VALIDATION_LEDGER")
 unlink(file.path(site, c(paste0(stems, ".html"), paste0(stems, ".md"))))
 
 sitemap <- file.path(site, "sitemap.xml")

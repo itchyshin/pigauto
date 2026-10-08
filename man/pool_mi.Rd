@@ -21,7 +21,9 @@ adapters are provided for \code{\link[stats:lm]{stats::lm}}, \code{\link[stats:g
 also work. The output of \code{\link[=with_imputations]{with_imputations()}} is accepted directly.
 Bayesian fits (\code{brms}, \code{MCMCglmm}) are rejected; see Details.
 Bare user-supplied fit lists are accepted with an explicit warning because
-their imputation provenance cannot be verified.}
+their imputation provenance cannot be verified.
+pigauto workflow classes and markers are caller-controlled metadata; they
+do not authenticate the fits or their history.}
 
 \item{conf.level}{Confidence level for the pooled interval (default
 \code{0.95}).}
@@ -29,7 +31,10 @@ their imputation provenance cannot be verified.}
 \item{coef_fun}{Optional function extracting a named numeric fixed-effect
 vector from one fit. \code{NULL} uses the automatic class adapter. Custom
 coefficient and covariance extractors can be supplied independently;
-callers must ensure custom extractors select fixed effects only.}
+callers must ensure custom extractors select fixed effects only.
+For recognized \code{drmTMB} and \code{gllvmTMB_multi} fits, pigauto still requires
+convergence code zero and a positive-definite Hessian, even when a custom
+extractor is supplied.}
 
 \item{vcov_fun}{Optional function extracting the fixed-effect covariance
 matrix. \code{NULL} uses the automatic class adapter. Base matrices and
@@ -113,6 +118,9 @@ adapter includes named distributional fixed-effect blocks such as regression
 coefficients for \code{mu} and \code{sigma}; those are fixed coefficients, not
 random-effect variance components. \code{drmTMB} and \code{gllvmTMB} need to be
 installed and loadable only when their automatic adapters are used.
+For either recognized backend class, pooling also requires the fit to report
+scalar convergence code \code{0} and \code{pdHess = TRUE}; missing or invalid status
+is rejected before coefficient extraction, including with custom extractors.
 
 \strong{Supported classes.} \code{lm}, \code{glm}, \code{gls}, \code{lme}, \code{merMod} (lme4),
 \code{glmmTMB} (conditional component), \code{drmTMB}, and \code{gllvmTMB_multi} are

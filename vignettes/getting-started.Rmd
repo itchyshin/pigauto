@@ -35,9 +35,11 @@ pigauto_report(result)
 
 `check_pigauto()` and `completed_data()` were added in 0.11.0. If your
 installed version is 0.10.0, call `impute(traits, tree)` directly; that
-version does not include these helpers.
+version does not have them.
 
-`check_pigauto()` is fit-free. Resolve its structured errors before fitting;
+`check_pigauto()` is fit-free. Its default `gnn = FALSE` matches `impute()` and
+does not probe torch; pass `gnn = TRUE` when planning a GNN fit to include
+runtime availability. Resolve structured input errors before fitting, and
 inspect `check$species$matched`, `$data_only`, and `$tree_only` when labels do
 not reconcile. `completed` preserves observed values and contains fills only
 for modeled missing cells. `result$prediction` is an all-cell diagnostic
