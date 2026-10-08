@@ -600,14 +600,16 @@ writing the graph to disk:
 graph <- build_phylo_graph(tree300, k_eigen = 8, cache_path = "tree300_graph.rds")
 ```
 
-**Large trees (N > 2000).** `build_phylo_graph()` computes a dense N × N
-cophenetic distance matrix and a Laplacian eigendecomposition. The eigendecomposition
-is O(N³) in the worst case, but `k_eigen = "auto"` caps the number of eigenvectors
-at 32 (the default for all trees), which keeps computation tractable in practice —
-pigauto has been tested up to 10,000 species on a standard laptop. The main
-cost at very large N is memory for the N × N distance matrix (~800 MB at
-N = 10,000). If memory is tight, prune to a clade of interest or watch for a
-future release that switches to a sparse Lanczos eigensolver.
+**Large trees.** `build_phylo_graph()` creates dense N × N distance,
+adjacency, Laplacian, and phylogenetic-correlation matrices. Each double-
+precision matrix needs about 800 MB at N = 10,000, and several are live
+during graph construction, so memory use can be substantial. For trees with
+more than 7,500 tips, the spectral step uses the optional `RSpectra` Lanczos
+solver when it is installed; if it is unavailable or does not converge, the
+function falls back to dense eigendecomposition. `k_eigen = "auto"` limits
+the number of returned spectral features to 32, but this does not reduce the
+storage needed for the dense matrices. For very large trees or limited
+memory, consider pruning to the clade relevant to your analysis.
 
 **Supplying your own data.** The workflow above works for any phylogenetic tree
 and trait matrix:
