@@ -19,6 +19,7 @@ Kept G0, G4, G6, G7, G8, and G9 open. The latest Chrome view supersedes older PR
 
 - Ran lane preflight and the pigauto route manifest. Preflight found the source/docs lane on `codex/getting-started-birdtree-provenance`; a narrow lease was granted for the two evidence files only.
 - Reloaded PR #228 in Chrome: 17 commits, Draft, no conflicts, required checks passed with one skipped check, no review, no deployment.
+- After pushing evidence commit `4596157`, reloaded PR #228 again. Chrome showed 20 commits, all required checks passed with one skipped check, no conflicts, no review, no deployment, and Draft status. This later view supersedes the 17-commit snapshot above. The page did not explain the count difference, so no cause is inferred.
 - Reloaded PR #231 in Chrome: 9 commits, Draft, no conflicts, 3 successful checks and 1 skipped, no review, no deployment.
 - Read the current PR #231 description, which identifies its local source assertions, generated-help checks, two-tree Newick regression, and cleaned local pkgdown build. It explicitly leaves deployment verification open.
 - Checked the existing independent review at `c6235fa`: it confirms user-directed tree acquisition and citation guidance, and flags the unsupported Robinson-Foulds ranking in `inst/NOTICE` plus the missing upstream byte comparison.
@@ -37,7 +38,7 @@ The primary evidence was read directly from the current Chrome-rendered GitHub P
 
 ## 8. Consistency Audit
 
-Compared the new Chrome state with the older commit-count statements already present in GATES.md. The ledger now labels the latest 17- and 9-commit counts as current and treats older snapshots as historical. The PR #231 description's local build and test claims are not described as deployed or as closing release gates.
+Compared the new Chrome states with older commit-count statements already present in GATES.md. The post-push PR #228 count is recorded as a newer snapshot than the pre-push 17 count; PR #231 remains at the observed 9 commits. The PR #231 description's local build and test claims are not described as deployed or as closing release gates.
 
 ## 9. What Did Not Go Smoothly
 
