@@ -27,18 +27,32 @@ Example bird phylogenies
 
 Bundled objects: tree300, trees300, and tree_full.
 
-These objects are pruned derivatives of tree_bird_n100, distributed by the
-megatrees 1.0.0 R package under the MIT licence. The exact upstream release
-asset has SHA-256 digest
+These objects are pruned derivatives of tree_bird_n100, retrieved through the
+megatrees 1.0.0 R package. The package's MIT software licence does not
+establish redistribution rights for the underlying BirdTree data. The exact
+upstream release asset has SHA-256 digest
 71f6f712bf4c57c14570644f447c1e2eb0d76436a88075560afd4e85be1fcb78.
-The underlying posterior tree sample is from the BirdTree Hackett backbone.
-tree300 and tree_full use posterior member 69. It is tied for the smallest
-Robinson-Foulds distance to the former example topology and reproducibly
-retains the pre-existing AVONET safety-floor smoke criterion on the CPU path.
-trees300 records its own deterministic 50-member sample in
+That 100-tree BirdTree collection has 50 Ericson-backbone trees followed by 50
+Hackett-backbone trees. tree300 and tree_full use posterior member 69 from the
+Hackett-backbone set. trees300 is the deterministic seed-42 sample of 50 trees
+from the full collection: 28 Ericson and 22 Hackett, each pruned to the same
+300 AVONET species. These are posterior sample trees, not an MCC tree.
+
+tree300 and tree_full were selected as example trees. Member 69 is tied for the
+smallest Robinson-Foulds distance to the former example topology and
+reproducibly retains the pre-existing AVONET safety-floor smoke criterion on
+the CPU path. The trees300 sampling procedure is recorded in
 data-raw/make_trees300.R.
 
 Source and citation:
+
+Ericson PGP et al. (2006). Diversification of Neoaves: integration of molecular
+sequence data and fossils. Biology Letters 2(4):543-547.
+doi:10.1098/rsbl.2006.0523
+
+Hackett SJ et al. (2008). A phylogenomic study of birds reveals their
+evolutionary history. Science 320(5884):1763-1768.
+doi:10.1126/science.1157704
 
 Jetz W, Thomas GH, Joy JB, Hartmann K, Mooers AO (2012). The global diversity
 of birds in space and time. Nature 491:444-448.

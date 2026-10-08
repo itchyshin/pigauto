@@ -3,15 +3,17 @@
 ## Run from the package root: Rscript data-raw/make_trees300.R
 ##
 ## Requires: megatrees (>= 1.0.0), ape, pigauto (for tree300 tip names).
-## Source: megatrees::get_tree_bird_n100(), 100 posterior trees from the
-## BirdTree Hackett backbone (Jetz et al. 2012). The megatrees package records
-## an MIT license; BirdTree data redistribution rights in pigauto remain open.
+## Source: megatrees::get_tree_bird_n100(), a 100-tree BirdTree collection
+## with 50 Ericson-backbone trees followed by 50 Hackett-backbone trees.
+## The fixed sample below contains 28 Ericson and 22 Hackett trees. The
+## megatrees package is MIT-licensed software; that licence does not establish
+## rights to redistribute BirdTree data. Those rights remain a release gate.
 
 library(ape)
 library(megatrees)
 
 # ---- Get the 300 species names ------------------------------------------------
-# Load our bundled MCC tree to get the canonical species set
+# Load the bundled example tree to get the canonical species set
 tree300 <- get(load(here::here("data", "tree300.rda")))
 our_spp <- tree300$tip.label
 stopifnot(length(our_spp) == 300L)

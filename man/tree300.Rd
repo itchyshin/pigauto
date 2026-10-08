@@ -8,17 +8,30 @@
 An object of class \code{phylo} with 300 tips.
 }
 \source{
-Li (2026), \pkg{megatrees} 1.0.0, MIT licence; underlying tree
-sample from Jetz et al. (2012), Hackett et al. backbone.
+Li (2026), \pkg{megatrees} 1.0.0; member 69 of
+\code{megatrees::get_tree_bird_n100()} is from the Hackett-backbone set.
+The BirdTree distribution is described by Jetz et al. (2012).
 }
 \usage{
 tree300
 }
 \description{
-An object of class \code{'phylo'} from the \pkg{ape} package. The tree is a
-posterior Hackett-backbone sample distributed by the MIT-licensed
-\pkg{megatrees} package, pruned to the 300 species present in
-\code{\link{avonet300}}. It is intended for examples, not as a consensus
-or recommended tree for substantive analysis.
+An object of class \code{'phylo'} from the \pkg{ape} package. It is
+posterior sample member 69 from the Hackett-backbone half of BirdTree's
+100-tree bird collection, retrieved through the \pkg{megatrees} package
+and pruned to the 300 species in \code{\link{avonet300}}. The MIT software
+licence for \pkg{megatrees} does not establish rights for the underlying
+BirdTree data; see the installed \file{NOTICE}. This object is included for
+examples, not as an MCC or consensus tree or a recommended tree for
+substantive analysis.
+}
+\references{
+Hackett SJ, Kimball RT, Reddy S, et al. (2008). A phylogenomic
+study of birds reveals their evolutionary history. \emph{Science},
+320(5884), 1763-1768. \doi{10.1126/science.1157704}.
+
+Jetz W, Thomas GH, Joy JB, Hartmann K, Mooers AO (2012). The
+global diversity of birds in space and time. \emph{Nature}, 491, 444-448.
+\doi{10.1038/nature11631}.
 }
 \keyword{datasets}

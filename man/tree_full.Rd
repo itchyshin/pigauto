@@ -8,22 +8,36 @@
 An object of class \code{phylo} with 9,993 tips.
 }
 \source{
-Li (2026), \pkg{megatrees} 1.0.0, MIT licence; underlying tree
-sample from Jetz et al. (2012), Hackett et al. backbone.
+Li (2026), \pkg{megatrees} 1.0.0; member 69 of
+\code{megatrees::get_tree_bird_n100()} is from the Hackett-backbone set.
+The BirdTree distribution is described by Jetz et al. (2012).
 }
 \usage{
 tree_full
 }
 \description{
-An object of class \code{'phylo'} from the \pkg{ape} package. The tree is
-the same posterior Hackett-backbone sample used for \code{\link{tree300}},
-but pruned to the species present in \code{\link{avonet_full}} rather than
-a 300-species random subset.
+An object of class \code{'phylo'} from the \pkg{ape} package. It is
+posterior sample member 69 from the Hackett-backbone half of BirdTree's
+100-tree bird collection, pruned to the species present in
+\code{\link{avonet_full}} rather than the 300-species example subset.
+The MIT software licence for \pkg{megatrees} does not establish rights for
+the underlying BirdTree data; see the installed \file{NOTICE}. This object
+is included for examples, not as an MCC or consensus tree or a recommended
+tree for substantive analysis.
 }
 \details{
 Row order in \code{avonet_full} matches tip order in \code{tree_full}:
 \code{all(avonet_full$Species_Key == tree_full$tip.label)} returns
 \code{TRUE}.
+}
+\references{
+Hackett SJ, Kimball RT, Reddy S, et al. (2008). A phylogenomic
+study of birds reveals their evolutionary history. \emph{Science},
+320(5884), 1763-1768. \doi{10.1126/science.1157704}.
+
+Jetz W, Thomas GH, Joy JB, Hartmann K, Mooers AO (2012). The
+global diversity of birds in space and time. \emph{Nature}, 491, 444-448.
+\doi{10.1038/nature11631}.
 }
 \seealso{
 \code{\link{tree300}}, \code{\link{avonet_full}}

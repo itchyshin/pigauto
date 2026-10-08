@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "26e8daf229250ae9099a23c240e1d98f1c44b8b242d74850f6f990a28718c276",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex",
+  "method": "Read the full report, checked its claims against the current repository evidence and the official BirdTree download page, then ran slop_check.py.",
+  "genre": "Repository after-task evidence report",
+  "coverage": "Full report, including implementation, checks, residuals, and cross-product coverage",
+  "score": 2,
+  "style_status": "scored",
+  "score_reason": "The prose is concise, evidence-specific, and appropriately bounded, with some routine checklist phrasing.",
+  "confidence": "medium",
+  "confidence_reason": "The full short report was read, but the assessment is self-review and tree bytes were not checked against the upstream asset.",
+  "examples": [
+    {
+      "location": "Checks Run",
+      "cue": "working-tree smoke build, not the frozen release artifact",
+      "impact": "Keeps the package-build result from being mistaken for exact release-artifact evidence.",
+      "repair": "no change needed",
+      "line": 36,
+      "quote": "- `R CMD build --no-build-vignettes --no-manual --no-resave-data` succeeded. The fresh candidate source archive included the three tree manuals and `inst/NOTICE`. Its SHA-256 was `04a916fb317a2ff25150eb4c381a6ee7df34a11676c59c49b8e37e52b67d62f8`, size 5,048,555 bytes; it was a working-tree smoke build, not the frozen release artifact."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "not_applicable",
+  "science_gate_reason": "This slice changes provenance and documentation, not a scientific method or result.",
+  "facts_gate": "unknown",
+  "facts_gate_reason": "Source and documentation consistency were checked, but the saved tree bytes were not independently compared with the upstream asset.",
+  "references_gate": "pass",
+  "references_gate_reason": "The linked BirdTree download page was checked for the stated availability and citation instructions.",
+  "date": "2026-10-07",
+  "calibration_status": "No style controls or held-out examples were reviewed; this is a self-review.",
+  "interpretation": "perceived_style_not_authorship"
+}
