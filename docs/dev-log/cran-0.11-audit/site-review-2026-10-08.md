@@ -57,3 +57,16 @@ The cleanup implementation removes the article's HTML and Markdown outputs, pkgd
 The direct Chrome inspection of the public deployment confirms the current leak; it does not confirm a later deployment. Chrome's URL policy rejected the local `file://` preview, and the policy prohibits using a local server or another browser surface to reach the same files. Local candidate visual review therefore remains open. G4/G5 remain partial and G6 remains unmet until the source change is merged, deployed through the authorized process, and checked on the live routes and discovery surfaces.
 
 Naturalness assessment: 2/10, moderate confidence; concise technical audit note. Coverage: the complete report, including the historical article leak and its bounded candidate verification. Science: pass for the described interface and build behaviour; no claim about the benchmark's scientific validity. Facts: pass against the live Chrome page, `.Rbuildignore`, fresh pkgdown output, cleanup, crawler, and pkgdown check; no deployment after the source correction is claimed. References: pass for the direct public route and repository paths described above. Reviewer: Codex self-review, 2026-10-08.
+
+## Cache-busted live-route recheck in Chrome, 2026-10-08
+
+Chrome opened cache-busted versions of the homepage, article index, and historical simulation-study route using `?audit=20261008codexlead`.
+
+- The homepage returned the 0.11.0 badge and current reader guidance for the GNN-off default, explicit `gnn = TRUE`, continuous posterior MI, and analysis-aware MI limits. This checks visible text on the homepage; other retained pages still require review.
+- The live article index still lists “Four ways to impute a phylogenetic trait matrix” and links to `/articles/simulation-study.html`.
+- The direct route returned the full historical article. Its own text says it is excluded from the 0.11.0 package build and public site. This confirms that the route remains both discoverable and directly served on the live deployment.
+- The browser returned `net::ERR_BLOCKED_BY_CLIENT` for `/sitemap.xml`; no conclusion about the live sitemap is drawn from that attempt.
+
+These cache-busted responses confirm that the source branch's local route cleanup has not reached the deployed site. G7 remains unmet pending merge, deployment, and a fresh check of retained and retired routes and discovery files. The PR page showed source/docs PR #231 still Draft, with no reviews and no deployment. This observation does not identify the current Pages deployment commit.
+
+Assessment for the cache-busted Chrome addition: 2/10, medium confidence; technical audit record, limited to the added section. “Still lists” and “returned the full historical article” give specific browser outcomes; no repair needed. Science = not applicable; facts = pass for the observed pages and direct route; references = not applicable, no external citation added. Codex self-review, 2026-10-08; the earlier route-control evidence was already known, and these cache-busted responses are new.
