@@ -23,7 +23,8 @@ Kept the BirdTree redistribution gate open because citation and download access 
 - The required naturalness scan found zero hits in this report.
 - Confirmed no conflict markers remain in the three resolved files.
 - Confirmed the current release ledger identifies the 1bfed5ad candidate and still marks the release `NOT_READY`.
-- Chrome review of PR #228 showed Draft status, 14 commits, zero checks, three conflicts, no reviews, and no deployment before this resolution was pushed.
+- Before the push, Chrome showed Draft status, 14 commits, zero checks, three conflicts, no reviews, and no deployment.
+- After the push, Chrome showed Draft status, 15 commits, no conflicts, passing checks with one skipped, no reviews, and no deployment. The PR description was refreshed with the 1bfed5ad receipt and current open gates.
 
 ## 6. Tests of the Tests
 
@@ -53,4 +54,4 @@ For an evidence branch that trails main, reconcile dated snapshots against the c
 
 ## 12. Cross-Product Coverage
 
-Checked PR #228's live GitHub state in Chrome and compared the UI's conflicts and branch state with the local merge worktree. The live state will be checked again after the resolution push.
+Checked PR #228's live GitHub state in Chrome and compared the UI's conflicts and branch state with the local merge worktree. After the push, refreshed PR #228 in Chrome and confirmed the merge-conflict panel says there are no conflicts, the checks panel reports all checks passed with one skipped, the PR remains Draft, and no deployment is listed. Updated the stale PR evidence description and verified the rendered candidate hash and open gates.
