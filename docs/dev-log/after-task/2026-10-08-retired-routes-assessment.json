@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "88e3aef59752318aeb4647b779d85618f4a5e776d0db413ee3f5221bbb5699e7",
+  "draft_version": "2026-10-08-v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex",
+  "method": "Read the exact report and compare its route counts and claims against the browser observations and receipt validation output.",
+  "genre": "Technical after-task report",
+  "coverage": "Whole report, including scope, checks, limits, and cross-product coverage.",
+  "score": 2,
+  "style_status": "assessed",
+  "score_reason": "The report uses concrete route counts and states the measurement limits in plain language.",
+  "confidence": "medium",
+  "confidence_reason": "The route observations and row checks are direct, but no browser screenshot was retained in the repository.",
+  "examples": [
+    {
+      "location": "Section 5, line 23",
+      "line": 23,
+      "quote": "- Opened every route in the Codex In-app Browser with `?audit=20261008-live-routes`: 38 of 38 showed the visible title `Page not found (404) • pigauto`.",
+      "cue": "Specific count and observed outcome make the check easy to assess.",
+      "impact": "Readers can see exactly what the browser pass established.",
+      "repair": "No change needed."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "not_applicable",
+  "science_gate_reason": "The report does not interpret a scientific model or result.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Route count and visible titles were compared with the browser observations and receipt structure check.",
+  "references_gate": "not_applicable",
+  "references_gate_reason": "The report makes no external citation claims.",
+  "date": "2026-10-08",
+  "calibration_status": "Previously seen local style controls; no benchmark run.",
+  "interpretation": "perceived_style_not_authorship"
+}
