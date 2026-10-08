@@ -15,6 +15,7 @@ Kept the BirdTree redistribution gate open because citation and download access 
 - `docs/dev-log/cran-0.11-audit/provenance/pre-pr-check.md`
 - `docs/dev-log/cran-0.11-audit/provenance/rights-and-policy.md`
 - `docs/dev-log/cran-0.11-audit/surface-inventory.md`
+- `docs/dev-log/cran-0.11-audit/GATES.md`
 - This report.
 
 ## 5. Checks Run
@@ -24,7 +25,7 @@ Kept the BirdTree redistribution gate open because citation and download access 
 - Confirmed no conflict markers remain in the three resolved files.
 - Confirmed the current release ledger identifies the 1bfed5ad candidate and still marks the release `NOT_READY`.
 - Before the push, Chrome showed Draft status, 14 commits, zero checks, three conflicts, no reviews, and no deployment.
-- After the push, Chrome showed Draft status, 15 commits, no conflicts, passing checks with one skipped, no reviews, and no deployment. The PR description was refreshed with the 1bfed5ad receipt and current open gates.
+- After the conflict-resolution push, Chrome showed Draft status, 15 commits, no conflicts, passing checks with one skipped, no reviews, and no deployment. After the ledger update push, Chrome showed the same state at 16 commits. The PR description was refreshed with the 1bfed5ad receipt and current open gates.
 
 ## 6. Tests of the Tests
 
@@ -38,7 +39,7 @@ Not applicable. This documentation-only merge-resolution slice did not alter exe
 
 ## 8. Consistency Audit
 
-Compared the resolved claims with `GATES.md`, the candidate receipt, the BirdTree rights evidence, and the post-merge deployment record. No resolved text claims that citation establishes redistribution rights or that the old local candidate validates subsequent source or documentation edits.
+Compared the resolved claims with `GATES.md`, the candidate receipt, the BirdTree rights evidence, and the post-merge deployment record. No resolved text claims that citation establishes redistribution rights or that the old local candidate validates subsequent source or documentation edits. Memory receipt: used the pigauto LOAD-FIRST manifest, especially source provenance and user-surface consistency. Golden Set: not run because no code defect class was in scope.
 
 ## 9. What Did Not Go Smoothly
 
@@ -54,4 +55,4 @@ For an evidence branch that trails main, reconcile dated snapshots against the c
 
 ## 12. Cross-Product Coverage
 
-Checked PR #228's live GitHub state in Chrome and compared the UI's conflicts and branch state with the local merge worktree. After the push, refreshed PR #228 in Chrome and confirmed the merge-conflict panel says there are no conflicts, the checks panel reports all checks passed with one skipped, the PR remains Draft, and no deployment is listed. Updated the stale PR evidence description and verified the rendered candidate hash and open gates.
+Checked PR #228's live GitHub state in Chrome and compared the UI's conflicts and branch state with the local merge worktree. After the pushes, refreshed PR #228 in Chrome and confirmed it remained Draft, no conflicts were listed, all checks passed with one skipped, no reviews were present, and no deployment was listed. Updated the stale PR evidence description and verified the rendered candidate hash and open gates. This documentation-only conflict-resolution slice does NOT cover source correctness, exact-final-tarball checks, rights clearance, deployed-site verification, or independent artifact review.

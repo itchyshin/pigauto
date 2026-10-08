@@ -151,3 +151,6 @@ The independent read-only review of PR #231 at `c6235fa` found its single-tree/m
 ## PR #228 post-conflict Chrome verification, 2026-10-08
 
 After pushing merge commit `49a52aa` to `release/cran-0.11-gate`, Chrome showed PR #228 Draft with 15 commits, no conflicts with `main`, all checks passed with one skipped check, no reviews, and no deployment. The page still disables merge because the PR remains Draft. The branch contains the updated evidence description, which now identifies the separate 1bfed5ad locally checked candidate and keeps the final artifact, exact-hash Windows/platform checks, BirdTree redistribution rights, final site verification, and exact-artifact review open. No merge, deployment, or CRAN submission occurred. This is a point-in-time PR check; it does not close G7, G8, or the rights gate.
+
+
+The evidence-ledger follow-up commit `2f42c4e` updated the audit record only. A second cache refresh in Chrome showed PR #228 at 16 commits with the same clean merge state, passing checks with one skipped, Draft status, no reviews, and no deployment. The PR description still says the release is `NOT READY` and identifies the 1bfed5ad hash as a prior local candidate; no exact-final-artifact or rights gate was closed by this docs-only update.
