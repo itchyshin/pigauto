@@ -15,6 +15,7 @@ The receipt records the visible page title. This browser pass did not measure HT
 ## 4. Files Touched
 
 - `docs/dev-log/cran-0.11-audit/provenance/live-retired-routes-2026-10-08.tsv`
+- `docs/dev-log/cran-0.11-audit/retirement-manifest.md`
 - `docs/dev-log/after-task/2026-10-08-retired-routes.md`
 - `docs/dev-log/after-task/2026-10-08-retired-routes-assessment.json`
 
