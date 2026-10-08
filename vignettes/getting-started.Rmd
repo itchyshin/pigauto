@@ -161,7 +161,9 @@ control, want to cache intermediate objects, or are benchmarking components.
 
 pigauto ships with `avonet300`, a 300-species subset of the AVONET v3 bird
 morphology database (Tobias et al. 2022, *Ecology Letters*), and `tree300`,
-a matching pruned Hackett MCC phylogeny from BirdTree.org.
+posterior member 69 from the BirdTree Hackett-backbone sample, pruned to those
+300 species. It is included as an example tree, not as an MCC or consensus tree
+or as a recommended tree for substantive analyses.
 
 ```{r data}
 data(avonet300, tree300, package = "pigauto")
@@ -633,6 +635,9 @@ overlap is allowed; unmatched species are dropped with a warning).
   geographical data for all birds. *Ecology Letters*, 25, 581–597.
 - Jetz, W. et al. (2012). The global diversity of birds in space and time.
   *Nature*, 491, 444–448.
+- Hackett, S.J. et al. (2008). A phylogenomic study of birds reveals their
+  evolutionary history. *Science*, 320(5884), 1763–1768.
+  https://doi.org/10.1126/science.1157704
 - Goolsby, E.W., Bruggeman, J. & Ané, C. (2017). Rphylopars: fast
   multivariate phylogenetic comparative methods for missing data and
   within-species variation. *Methods in Ecology and Evolution*, 8, 22–27.
