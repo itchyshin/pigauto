@@ -24,7 +24,7 @@ Expanded `read_tree()` help to explain BirdTree's subset and full-tree downloads
 
 ## 5. Checks Run
 
-- `node ~/.codex/skills/unlazy/scripts/gate-check.mjs --reverify --approve --root <worktree> .unlazy/birdtree-reader/GATES.md`: **4/4 runnable gates passed; 1/1 manual gate reviewed; 5/5 total met**. The runnable checks covered 20 source/help assertions, roxygen regeneration, Rd parsing, and existing Newick/NEXUS `read_tree()` smoke tests.
+- `node ~/.codex/skills/unlazy/scripts/gate-check.mjs --reverify --approve --root <worktree> .unlazy/birdtree-reader/GATES.md`: **5/5 runnable gates passed; 1/1 manual gate reviewed; 6/6 total met**. The runnable checks covered 20 source/help assertions, roxygen regeneration, Rd parsing, existing Newick/NEXUS `read_tree()` smoke tests, and removal of internal pages from fresh site output.
 - Official [BirdTree downloads](https://birdtree.org/downloads/), [subset instructions](https://birdtree.org/subsets/), and [FAQ](https://birdtree.org/faq/) reviewed. The site requests citation of Jetz et al. (2012) for full or partial tree data, asks users of its web tool to cite BirdTree.org, documents the subset tool's 2,500-species limit and user-requested download workflow, says the tree distributions are Newick, and recommends a reasonable number of draws (more than 100) for full-tree analyses.
 - Independent help review approved the wording after the Newick/FAQ addition and flagged the risk of implying a single tree is enough. The help now distinguishes the one-file reader from BirdTree's tree distributions and states the current scope limit of pigauto's experimental multi-tree workflow.
 - Opened the deployed [`read_tree` help](https://itchyshin.github.io/pigauto/reference/read_tree.html) in Chrome on 2026-10-08. It still shows version 0.11.0 and only the generic Newick/NEXUS reader description; the BirdTree guidance is absent, as expected before this PR is merged and deployed.
@@ -38,7 +38,7 @@ Expanded `read_tree()` help to explain BirdTree's subset and full-tree downloads
 
 ## 6. Tests of the Tests
 
-The updated checker first falsely failed because Rd wrapped the Newick sentence across lines. Normalizing whitespace fixed that. A later assertion caught the source's line-broken “prediction-sensitivity” phrase; the help was reworded plainly as “descriptive checks of prediction sensitivity.” After regeneration, all 20 assertions passed. The Newick/NEXUS smoke test ran with `stop_on_failure = TRUE` and emitted a success marker only after completion. The required report validator then exposed unrelated unmet ledgers elsewhere in the worktree, so its full command did not exit successfully even though this slice's own five gates passed.
+The updated checker first falsely failed because Rd wrapped the Newick sentence across lines. Normalizing whitespace fixed that. A later assertion caught the source's line-broken “prediction-sensitivity” phrase; the help was reworded plainly as “descriptive checks of prediction sensitivity.” After regeneration, all 20 assertions passed. The Newick/NEXUS smoke test ran with `stop_on_failure = TRUE` and emitted a success marker only after completion. The required report validator then exposed unrelated unmet ledgers elsewhere in the worktree, so its full command did not exit successfully even though this slice's own six gates passed.
 
 ## 7a. Issue Ledger
 
@@ -55,7 +55,7 @@ Checked the README's six-line local-file workflow, the Getting Started vignette'
 
 ## 9. What Did Not Go Smoothly
 
-The first gate run checked generated Rd before running roxygen and correctly caught the stale page. The test gate initially lacked a success-only output token; it was changed to use `stop_on_failure = TRUE` and rerun. The brain closeout generator targets the brain repository rather than this worktree, so its `new` command was not usable for this repo; no file was written by that failed attempt.
+The first gate run checked generated Rd before running roxygen and correctly caught the stale page. The test gate initially lacked a success-only output token; it was changed to use `stop_on_failure = TRUE` and rerun. The brain closeout generator targets the brain repository rather than this worktree, so its `new` command was not usable for this repo; no file was written by that failed attempt. The local site-output check became the fifth runnable gate after the initial four source/help checks and the official-source review were recorded. The slice's six gates now consist of those five runnable checks and the reviewed-source gate.
 
 ## 10. Known Residuals
 
