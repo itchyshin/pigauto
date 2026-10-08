@@ -156,6 +156,10 @@ Chrome shows evidence PR [#228](https://github.com/itchyshin/pigauto/pull/228) r
 
 Opening the current local `_site/index.html` directly in Chrome was rejected because the browser permits only HTTP/HTTPS URLs and prohibits local-file workarounds. G6 remains unmet. At that point, the PR and workflow checks left the gate tally at 5 met and 6 unmet (G0, G4, G6, G7, G8, G9). No merge, deployment, or CRAN submission occurred.
 
+## Candidate-source CI matrix refresh, 2026-10-08
+
+Lane preflight reported one pigauto lane, the current Codex lane. Chrome rechecked source/docs PR [#231](https://github.com/itchyshin/pigauto/pull/231) and workflow run [#37848354578](https://github.com/itchyshin/pigauto/actions/runs/37848354578) at candidate commit `7cbbcbc`. Ubuntu R release passed in 9m16s, Ubuntu R-devel passed in 11m49s, and macOS R release passed in 19m57s; the macOS job included the focused MPS prediction test (5m14s) and `R CMD check` (11m06s). The pkgdown workflow is skipped on pull requests by repository design; local fresh-build evidence is recorded under G5/G5b. GitHub reported one Ubuntu 26 migration notice, with no failed check. This is candidate-source CI only and is not evidence for a frozen tarball. The earlier external-state snapshot at `621d44b` / 12 commits is superseded by this 13-commit candidate snapshot. G8 and G9 remain unmet, and G6/G7 still require their separate visual-review and deployed-site gates. No merge, deployment, or CRAN submission occurred.
+
 ## Reader-format correction and fresh local build, 2026-10-08
 
 The current-head documentation reviewer found that README called BirdTree downloads “Newick or NEXUS,” conflating BirdTree's Newick distribution format with the additional NEXUS format accepted by `read_tree()`. The official [BirdTree FAQ](https://birdtree.org/faq/) says its distributions are stored as Newick. README and the 0.11.0 NEWS entry now distinguish the provider's format from pigauto's parser support; `R/read_tree.R` and its generated help already made that distinction. The reviewer rechecked the edited source and rendered pages and found no remaining format mismatch.
