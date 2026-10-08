@@ -214,9 +214,27 @@ test_that("all-missing, constant, composition, and runtime failures are explicit
                                                detail = "mock runtime unavailable"),
     .package = "pigauto"
   )
-  runtime <- check_pigauto(data.frame(x = c(1, NA, 3), row.names = tree$tip.label), tree)
+  runtime <- check_pigauto(data.frame(x = c(1, NA, 3), row.names = tree$tip.label),
+                           tree, gnn = TRUE)
   expect_identical(runtime$status, "error")
   expect_true(any(runtime$messages$code == "torch_unavailable"))
+})
+
+test_that("default preflight matches the GNN-off imputation requirement", {
+  tree <- make_p2_tree()
+  dat <- data.frame(x = c(1, NA_real_, 3), row.names = tree$tip.label)
+
+  expect_identical(formals(check_pigauto)$gnn, formals(impute)$gnn)
+
+  testthat::local_mocked_bindings(
+    .check_pigauto_runtime = function() stop("runtime should not be probed"),
+    .package = "pigauto"
+  )
+  check <- check_pigauto(dat, tree)
+
+  expect_true(check$ready)
+  expect_identical(check$runtime$device, "not_probed")
+  expect_false(any(check$messages$code == "torch_unavailable"))
 })
 
 test_that("runtime probes the selected accelerator and records failures", {
@@ -249,7 +267,8 @@ test_that("runtime probes the selected accelerator and records failures", {
     },
     .package = "pigauto"
   )
-  broken <- check_pigauto(data.frame(x = c(1, NA_real_, 3), row.names = make_p2_tree()$tip.label), make_p2_tree())
+  broken <- check_pigauto(data.frame(x = c(1, NA_real_, 3), row.names = make_p2_tree()$tip.label),
+                          make_p2_tree(), gnn = TRUE)
   expect_true(broken$runtime$unavailable)
   expect_identical(broken$runtime$device, "cuda")
   expect_identical(broken$status, "error")
@@ -298,10 +317,21 @@ test_that("a broken selected MPS runtime is not ready", {
     },
     .package = "pigauto"
   )
-  broken <- check_pigauto(data.frame(x = c(1, NA_real_, 3), row.names = tree$tip.label), tree)
+  broken <- check_pigauto(data.frame(x = c(1, NA_real_, 3), row.names = tree$tip.label),
+                          tree, gnn = TRUE)
   expect_identical(broken$runtime$device, "mps")
   expect_true(broken$runtime$unavailable)
   expect_identical(broken$status, "error")
+})
+
+test_that("check_pigauto validates the requested GNN setting", {
+  tree <- make_p2_tree()
+  dat <- data.frame(x = c(1, NA_real_, 3), row.names = tree$tip.label)
+
+  expect_error(check_pigauto(dat, tree, gnn = NA), "`gnn` must be TRUE or FALSE")
+  expect_error(check_pigauto(dat, tree, gnn = 1), "`gnn` must be TRUE or FALSE")
+  expect_error(check_pigauto(dat, tree, gnn = c(TRUE, FALSE)),
+                "`gnn` must be TRUE or FALSE")
 })
 
 test_that("zi-count and composition trait descriptions state their semantics", {

@@ -1,5 +1,5 @@
-# End-to-end pool_mi() backend tests: multi_impute(draws_method = "posterior")
-# -> with_imputations() -> pool_mi(), so the provenance path is exercised
+# End-to-end pool_mi() backend tests: multi_impute_analysis()
+# -> with_imputations() -> pool_mi(), so the analysis-aware provenance path is exercised
 # (the backend tests in test-multi-impute.R pass bare lists of fits).
 
 pmb_mi <- function(n = 60L, m = 3L) {
@@ -31,6 +31,89 @@ pmb_check <- function(pooled, terms) {
   expect_true(all(pooled$riv[pooled$term %in% terms] > 0))
 }
 
+pmb_check_status <- function(fits, backend) {
+  for (i in seq_along(fits)) {
+    fit <- fits[[i]]
+    convergence <- fit$opt$convergence
+    pd_hess <- if (identical(backend, "drmTMB")) {
+      fit$sdr$pdHess
+    } else {
+      fit$sd_report$pdHess
+    }
+    expect_true(is.numeric(convergence) && length(convergence) == 1L &&
+                  is.finite(convergence))
+    expect_identical(as.numeric(convergence), 0)
+    expect_true(is.logical(pd_hess) && length(pd_hess) == 1L &&
+                  !is.na(pd_hess))
+    expect_identical(pd_hess, TRUE)
+    message(sprintf("REAL_FIT_STATUS backend=%s imputation=%d convergence=%s pdHess=%s",
+                    backend, i, format(convergence), format(pd_hess)))
+  }
+  invisible(TRUE)
+}
+
+pmb_public_estimates_and_variances <- function(fit, backend) {
+  if (identical(backend, "drmTMB")) {
+    blocks <- stats::coef(fit)
+    estimates <- unlist(lapply(names(blocks), function(component) {
+      block <- blocks[[component]]
+      stats::setNames(block, paste0(component, ":", names(block)))
+    }), use.names = TRUE)
+    covariance <- stats::vcov(fit)
+    variances <- stats::setNames(diag(covariance), rownames(covariance))
+  } else {
+    tidy <- broom::tidy(fit, effects = "fixed")
+    estimates <- stats::setNames(tidy$estimate, tidy$term)
+    variances <- stats::setNames(tidy$std.error^2, tidy$term)
+  }
+  list(estimates = estimates, variances = variances)
+}
+
+pmb_rubin_oracle <- function(fits, pooled, backend) {
+  summaries <- lapply(fits, pmb_public_estimates_and_variances,
+                      backend = backend)
+  terms <- names(summaries[[1L]]$estimates)
+  stopifnot(all(vapply(summaries, function(x) {
+    setequal(names(x$estimates), terms) &&
+      setequal(names(x$variances), terms)
+  }, logical(1))))
+  q <- do.call(rbind, lapply(summaries, function(x) {
+    unname(x$estimates[terms])
+  }))
+  u <- do.call(rbind, lapply(summaries, function(x) {
+    unname(x$variances[terms])
+  }))
+  estimate <- colMeans(q)
+  between <- apply(q, 2L, stats::var)
+  std_error <- sqrt(colMeans(u) + (1 + 1 / nrow(q)) * between)
+  observed <- pooled[match(terms, pooled$term), , drop = FALSE]
+  expect_equal(observed$estimate, unname(estimate), tolerance = 1e-8)
+  expect_equal(observed$std.error, unname(std_error), tolerance = 1e-8)
+  message(sprintf("RUBIN_ORACLE_OK backend=%s terms=%d imputations=%d",
+                  backend, length(terms), nrow(q)))
+  invisible(TRUE)
+}
+
+pmb_drm_gaussian_oracle <- function(fits, datasets) {
+  for (i in seq_along(fits)) {
+    fit <- fits[[i]]
+    dat <- datasets[[i]]
+    X <- stats::model.matrix(~ x, data = dat)
+    y <- dat$y1
+    beta <- solve(crossprod(X), crossprod(X, y))
+    residual <- y - drop(X %*% beta)
+    sigma2_mle <- sum(residual^2) / length(y)
+    covariance <- sigma2_mle * solve(crossprod(X))
+    mu_terms <- paste0("mu:", colnames(X))
+    fit_mu <- stats::coef(fit, dpar = "mu")
+    fit_vcov <- stats::vcov(fit)[mu_terms, mu_terms, drop = FALSE]
+    expect_equal(unname(fit_mu), unname(drop(beta)), tolerance = 1e-5)
+    expect_equal(unname(fit_vcov), unname(covariance), tolerance = 1e-5)
+  }
+  message("GAUSSIAN_ORACLE_OK backend=drmTMB fits=", length(fits))
+  invisible(TRUE)
+}
+
 pmb_reload_check <- function(fits, backend) {
   fit_path <- tempfile(fileext = ".rds")
   saveRDS(fits, fit_path)
@@ -60,9 +143,13 @@ test_that("pool_mi() pools drmTMB fits from with_imputations()", {
   drm_fit <- getExportedValue("drmTMB", "drmTMB")
   bf <- getExportedValue("drmTMB", "bf")
   mi <- pmb_mi()
-  fits <- with_imputations(mi, function(d) drm_fit(bf(y1 ~ x, sigma ~ x), data = d))
-  pmb_check(pool_mi(fits),
-            c("mu:(Intercept)", "mu:x", "sigma:(Intercept)", "sigma:x"))
+  fits <- with_imputations(mi, function(d) drm_fit(bf(y1 ~ x, sigma ~ 1), data = d))
+  pmb_check_status(fits, "drmTMB")
+  pmb_drm_gaussian_oracle(fits, mi$datasets)
+  pooled <- pool_mi(fits)
+  pmb_check(pooled,
+            c("mu:(Intercept)", "mu:x", "sigma:(Intercept)"))
+  pmb_rubin_oracle(fits, pooled, "drmTMB")
   pmb_reload_check(fits, "drmTMB")
 })
 
@@ -89,7 +176,9 @@ test_that("pool_mi() pools gllvmTMB fixed effects from with_imputations()", {
       REML = FALSE, engine = "tmb", silent = TRUE
     )))
   }, .on_error = "stop")
+  pmb_check_status(fits, "gllvmTMB")
   pmb_reload_check(fits, "gllvmTMB")
   pooled <- pool_mi(fits)
   pmb_check(pooled, c(paste0("traity", 1:4), paste0("traity", 1:4, ":x")))
+  pmb_rubin_oracle(fits, pooled, "gllvmTMB")
 })

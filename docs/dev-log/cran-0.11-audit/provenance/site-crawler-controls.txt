@@ -16,3 +16,23 @@ Planted missing-link control rejected:
     "index.html: missing missing.html"
   ]
 }
+
+2026-10-07 fresh candidate after cleanup:
+{
+  "html_pages": 64,
+  "local_references_checked": 3590,
+  "retired_pages": 34,
+  "errors": []
+}
+SITE_CRAWL_OK
+
+Planted internal-page controls rejected by the updated crawler (exit 1):
+{
+  "html_pages": 65,
+  "local_references_checked": 3590,
+  "retired_pages": 34,
+  "errors": [
+    "Internal page served: AGENTS.md",
+    "Internal page served: VALIDATION_LEDGER.html"
+  ]
+}

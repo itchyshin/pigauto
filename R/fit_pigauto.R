@@ -7,7 +7,7 @@
 #' to a statistical residual). For continuous, count, and ordinal traits
 #' the baseline is Brownian motion (phylogenetic correlation matrix); for binary
 #' and categorical traits it is phylogenetic label propagation. Supports
-#' all five trait types via a unified latent space.
+#' all eight trait types via a unified latent space.
 #'
 #' @details
 #' **Blend formulation:**
@@ -87,8 +87,9 @@
 #'   \code{gnn = TRUE} unless explicitly supplied (e.g. by \code{impute()}),
 #'   in which case it is stored but not used for training.
 #' @param hidden_dim integer. Hidden layer width (default \code{64}).
-#' @param k_eigen integer. Number of spectral node features (default
-#'   \code{8}).
+#' @param k_eigen integer or \code{"auto"}. Number of spectral node
+#'   features. The default \code{"auto"} scales with tree size; an integer
+#'   specifies the dimension directly.
 #' @param dropout numeric. Dropout rate (default \code{0.10}).
 #' @param lr numeric. AdamW learning rate (default \code{0.003}).
 #' @param weight_decay numeric. AdamW weight decay (default \code{1e-4}).

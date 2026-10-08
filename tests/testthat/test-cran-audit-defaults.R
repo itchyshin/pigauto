@@ -22,6 +22,38 @@ test_that("exported entry points resolve and policy defaults stay aligned", {
   expect_false(formals(impute)$phylo_signal_gate)
 })
 
+test_that("all audited public formals match the reviewed default inventory", {
+  expected <- utils::read.delim(
+    testthat::test_path("fixtures", "cran-audit-exported-formals.tsv"),
+    quote = "", stringsAsFactors = FALSE, check.names = FALSE
+  )
+  expected_entries <- c(sort(getNamespaceExports("pigauto")),
+                        "S3::predict.pigauto_fit")
+  expect_setequal(unique(expected$entry), expected_entries)
+
+  for (entry in expected_entries) {
+    fun <- if (identical(entry, "S3::predict.pigauto_fit")) {
+      getS3method("predict", "pigauto_fit")
+    } else {
+      getExportedValue("pigauto", entry)
+    }
+    actual_formals <- formals(fun)
+    actual <- data.frame(
+      entry = entry,
+      formal = names(actual_formals),
+      default = vapply(as.list(actual_formals), function(value) {
+        if (identical(value, quote(expr = ))) "<required>" else
+          paste(deparse(value, width.cutoff = 500L), collapse = "")
+      }, character(1)),
+      stringsAsFactors = FALSE
+    )
+    rownames(actual) <- NULL
+    expected_entry <- expected[expected$entry == entry, , drop = FALSE]
+    rownames(expected_entry) <- NULL
+    expect_identical(actual, expected_entry, info = entry)
+  }
+})
+
 cran_defaults_fixture <- function(n = 24L, seed = 1106L) {
   set.seed(seed)
   tree <- ape::rtree(n)
@@ -98,6 +130,10 @@ test_that("default mixed imputation preserves observations and masks composition
   ))
 
   expect_false(isTRUE(result$fit$model_config$gnn))
+  # The GNN-off default must be reflected in the effective calibrated blend,
+  # not only in the stored configuration.
+  expect_gt(length(result$fit$r_cal_gnn), 0L)
+  expect_true(all(result$fit$r_cal_gnn == 0))
   expect_false(result$fit$safety_floor)
   expect_false(any(result$fit$phylo_gate_triggered))
   expect_identical(result$fit$model_config$lambda_mode, "estimate")
@@ -135,6 +171,17 @@ test_that("transformation and baseline route overrides are recorded", {
   pd <- preprocess_traits(fx$traits[, "continuous", drop = FALSE], fx$tree)
   fallback <- fit_baseline(pd, fx$tree, predict_method = "auto")
   expect_identical(unname(fallback$predict_method_by_trait), "per_column")
+})
+
+test_that("impute forwards explicit k_eigen to graph construction", {
+  fx <- cran_defaults_fixture()
+  result <- suppressWarnings(impute(
+    fx$traits[, "continuous", drop = FALSE], fx$tree,
+    k_eigen = 2L, gnn = FALSE, epochs = 1L,
+    verbose = FALSE, seed = 1108L
+  ))
+
+  expect_identical(result$fit$model_config$k_eigen, 2L)
 })
 
 test_that("multi-observation covariates warn under the default GNN-off path", {
@@ -275,4 +322,21 @@ test_that("multi_impute actually dispatches the automatic route", {
                             fx$tree, m = 2L, verbose = FALSE),
                "conformal route captured")
   expect_identical(reached, "conformal")
+})
+
+test_that("automatic conformal fallback warns users and remains diagnostic", {
+  fx <- cran_defaults_fixture(n = 12L, seed = 1115L)
+  expect_message(
+    mi <- suppressWarnings(multi_impute(
+      fx$traits[, c("continuous", "binary"), drop = FALSE], fx$tree,
+      m = 2L, epochs = 1L, verbose = FALSE, seed = 1115L
+    )),
+    "draws_method = \\\"auto\\\": using \\\"conformal\\\" because some traits are not continuous"
+  )
+  expect_s3_class(mi, "pigauto_diagnostic_mi")
+  expect_identical(mi$draws_method, "conformal")
+  expect_identical(mi$mi_workflow, "pigauto_diagnostic_mi")
+  expect_error(with_imputations(mi, function(data) stats::lm(continuous ~ binary,
+                                                              data = data)),
+               "diagnostic")
 })

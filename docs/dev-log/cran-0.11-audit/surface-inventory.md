@@ -62,10 +62,13 @@ The multiple-imputation article received the same scope correction: its posterio
 
 A final surface read caught three more stale statements before this rebuild. The generated tree help now makes GNN training conditional on `gnn = TRUE`, describes the GNN-off default draw path, and states that `multi_impute()` defaults to `"auto"`. The getting-started install block now makes the torch runtime conditional on opting into the GNN. The current NEWS entry states that drmTMB and gllvmTMB are optional without Suggests entries, places their real checks outside the built package, and distinguishes the earlier conformal default from the final 0.11.0 automatic default. The rebuilt tree help, getting-started article, and NEWS page contain those corrections.
 
+### 2026-10-07 live-site correction
+
+The earlier sentence that the current live help page is stale has been superseded by a fresh read of the homepage, `multi_impute()` reference, and multiple-imputation article: those pages report the corrected 0.11.0 behavior. Search for `bench_continuous` returned no suggestion, and direct requests to `/dev/bench_continuous.html` and `/articles/pigauto_workflow_mixed.html` returned pkgdown 404 pages. This establishes those sampled controls only. Sitemap access, every route in the 34-page retirement manifest, and a deployment commit/build identity remain unverified; G6 stays open.
+
 The final reader check found a stale generated `vignettes/getting-started.R` companion and a NEWS sentence calling GNN-on the default. The companion now matches a fresh normalized `knitr::purl()` extraction from its R Markdown source, including the optional torch setup and explicit GNN opt-in examples. NEWS now calls GNN-on opt-in. A full local rebuild, internal-page cleaning step, and crawl passed 65 rendered pages and 3,622 local references, with 34 retired direct pages absent. The corrected phrases were checked in the rendered getting-started and NEWS pages.
 
-At the time of this pre-merge local check, the public deployment had not yet been updated. Post-merge live checks are recorded below.
-
+At the time of the pre-merge local check, the public deployment had not yet been updated. The following post-merge verification supersedes that snapshot.
 
 ## Post-merge live deployment verification (2026-10-06)
 
@@ -78,3 +81,13 @@ and `multi_impute()` reference are live. Direct checks returned 404 for all 34 r
 locations and zero retired routes; the 574-path search index also has zero retired routes.
 The exact URLs and statuses are retained in
 `provenance/public-deployment-live-check-2026-10-06.tsv`.
+
+## Historical live-site and candidate-source observations through 2026-10-07
+
+The detailed 2026-10-07 observations from both sides of the merge are retained in the
+branch history and summarized in `GATES.md`. They record successive deployed mismatches,
+source fixes, and bounded checks. Those snapshots are not the current deployed-state
+verdict: the 2026-10-08 cache-busted Chrome checks in `GATES.md` are the latest site
+assessment and still leave the named tree/help corrections and full sitemap/retired-route
+verification open. Candidate-source checks and the 2026-10-07 rebuild do not establish
+deployed behavior or validate the final release artifact.

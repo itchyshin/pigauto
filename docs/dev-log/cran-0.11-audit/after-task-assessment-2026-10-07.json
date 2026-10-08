@@ -1,0 +1,44 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "a39742f4a50e5ac69da30c2821bf1f7e7c6091562c5760e51f29c3ccc7be177b",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex self-review",
+  "method": "Read the saved report against writing-naturalness.md, the test and check receipts, and the changed-source diff; then ran slop_check.py.",
+  "genre": "Repository after-task engineering report",
+  "coverage": "Entire after-task-2026-10-07.md draft, all 12 required sections",
+  "score": 2,
+  "style_status": "scored",
+  "score_reason": "The report is specific and evidence-led, with some unavoidable checklist structure. Confidence is limited because this is self-review, not human validation.",
+  "confidence": "medium",
+  "confidence_reason": "The exact draft and supporting command receipts were checked, but perceived-style scoring is subjective and no independent reviewer assessed this report.",
+  "examples": [
+    {
+      "location": "Section 2, line 7",
+      "line": 7,
+      "quote": "- Added the `k_eigen = \"auto\"` argument to `impute()` and forwarded it to graph construction, so explicit values now affect the fitted model.",
+      "cue": "Names the exact API behavior change.",
+      "impact": "A maintainer can connect the claim to code and the regression test.",
+      "repair": "no change needed"
+    },
+    {
+      "location": "Section 5, line 47",
+      "line": 48,
+      "quote": "0 errors, 0 warnings, 1 NOTE about unavailable remote system-clock verification",
+      "cue": "Separates the check summary from environment settings and test counts.",
+      "impact": "The reader can see why this result does not close the later exact-artifact gate.",
+      "repair": "no change needed"
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "not_applicable",
+  "science_gate_reason": "This report records software behavior and explicitly declines scientific recovery or interval-coverage claims.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "The stated outputs were checked against command results, generated-site crawler output, and source changes in this task.",
+  "references_gate": "not_applicable",
+  "references_gate_reason": "The report cites no literature or external factual references.",
+  "date": "2026-10-07",
+  "calibration_status": "Read the protocol calibration summary; no original controls or independent examples were reviewed.",
+  "interpretation": "perceived_style_not_authorship"
+}

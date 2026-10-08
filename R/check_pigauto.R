@@ -15,6 +15,9 @@
 #'   [preprocess_traits()].
 #' @param covariates Optional environmental covariates passed to
 #'   [preprocess_traits()]. Non-finite values are an error.
+#' @param gnn Whether the planned imputation will use the graph neural network.
+#'   The default `FALSE` skips the torch runtime probe, matching [impute()]'s
+#'   default. Set `TRUE` to include the torch runtime in the preflight.
 #' @return A list of class `pigauto_check` containing a schema version, status,
 #'   stable input fingerprint, input summaries, and structured messages.
 #' @examples
@@ -27,10 +30,15 @@
 check_pigauto <- function(traits, tree, species_col = NULL,
                           trait_types = NULL,
                           multi_proportion_groups = NULL,
-                          covariates = NULL) {
+                          covariates = NULL,
+                          gnn = FALSE) {
+  if (!is.logical(gnn) || length(gnn) != 1L || is.na(gnn)) {
+    stop("`gnn` must be TRUE or FALSE.", call. = FALSE)
+  }
   .check_pigauto_internal(
     traits, tree, species_col, trait_types, multi_proportion_groups,
-    log_transform = TRUE, covariates = covariates
+    log_transform = TRUE, covariates = covariates,
+    probe_runtime = isTRUE(gnn)
   )$check
 }
 

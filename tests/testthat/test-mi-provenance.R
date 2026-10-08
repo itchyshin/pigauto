@@ -168,6 +168,17 @@ test_that("pool_mi rejects forged and legacy provenance before extractors", {
   expect_invalid(unknown, "unknown")
 })
 
+test_that("provenance markers describe workflow but do not authenticate origin", {
+  fitted <- lapply(make_mi_provenance_datasets(), function(d) stats::lm(y ~ x, data = d))
+  forged_marker <- structure(
+    fitted, mi_workflow = "pigauto_analysis_mi_v1",
+    class = c("pigauto_mi_fits", "list")
+  )
+
+  # These attributes are caller-controlled workflow labels, not a signature.
+  expect_s3_class(pool_mi(forged_marker), "pigauto_pooled")
+})
+
 test_that("bare lists warn only after successful pooling", {
   fitted <- lapply(make_mi_provenance_datasets(), function(d) stats::lm(y ~ x, data = d))
   warnings <- character()

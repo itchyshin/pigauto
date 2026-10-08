@@ -1002,7 +1002,7 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
 #'   \code{joint_solver = "inhouse"} (including the fallback path when
 #'   \code{joint_solver = "rphylopars"} fails).
 #' @param lambda \code{"fixed_1"} (default), \code{"estimate"}, or a
-#'   numeric scalar in [0, 1]. Forwarded to \code{fit_mvn_bm_inhouse()}
+#'   numeric scalar in \code{[0, 1]}. Forwarded to \code{fit_mvn_bm_inhouse()}
 #'   when \code{joint_solver = "inhouse"} (including its fallback path).
 #'   When \code{joint_solver = "rphylopars"}, only whether \code{lambda}
 #'   is \code{"fixed_1"} matters: it selects \code{model = "BM"} vs

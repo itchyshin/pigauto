@@ -13,4 +13,9 @@ On 2026-10-06, the current [BirdTree downloads page](https://birdtree.org/downlo
 
 The source-generator comments in `data-raw/make_avonet300.R`, `make_avonet_full.R`, and `make_trees300.R` now distinguish the megatrees package's MIT metadata from the unresolved BirdTree data rights. No bundled tree object changed.
 
-The release ledger remains `NOT_READY`. Per its fail-closed policy, its release artifact and rights fields remain unset while the BirdTree data-rights question is open. A distinct exact merged-source audit tarball and its check receipts are recorded in `post-merge-verification-2026-10-06.md`; this does not promote the package to release-ready. No contact has been sent to an upstream holder.
+The release ledger remains `NOT_READY`. It records a distinct exact local candidate built from merged main, SHA-256 `1bfed5ad7be61437f4fdb09ece053d6a40211b5a5b7da4b2c947c3343493b719`; that candidate is not the final post-documentation artifact. BirdTree rights remain unresolved, so the candidate receipt does not promote the package to release-ready. No contact has been sent to an upstream holder.
+## 2026-10-07 targeted BirdTree source recheck
+
+The official [BirdTree downloads page](https://birdtree.org/downloads/) and [subset tool](https://birdtree.org/subsets/) were rechecked. They describe downloading full or partial tree data and require citation of Jetz et al. (2012), plus citation of BirdTree when using its web tool. The pages accessed do not state a redistribution licence or grant permission to bundle these data in a separate package. This supports the existing distinction between download access and redistribution rights; it does not resolve the rights question. No contact was sent, and the item remains open pending explicit terms or permission.
+
+The current ledger remains `NOT_READY`. The artifact field records the 1bfed5ad local candidate; it must be replaced by the final exact artifact after source and documentation changes. The rights field remains unresolved pending explicit tree-data terms or permission. No contact has been sent to an upstream holder.

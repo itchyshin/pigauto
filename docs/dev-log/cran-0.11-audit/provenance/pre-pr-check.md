@@ -11,6 +11,7 @@ The local pkgdown build passed a crawl of 65 rendered pages and 3,621 local refe
 The remaining gates are the nine gllvmTMB recovery seeds, which require approval for the measured run above three hours; the maintainer's audit-PR merge; a frozen post-merge tarball and platform checks; the open BirdTree redistribution-rights point; and the separate fresh release panel. Nothing has been submitted to CRAN.
 
 
+
 ## Superseding post-merge status (2026-10-06)
 
 This is a pre-PR rehearsal record; its remaining-gates paragraph was true only at that
@@ -20,3 +21,9 @@ verified, and the exact merged-source tarball plus its full macOS/R 4.6.0 check 
 merged-commit Ubuntu/macOS check jobs are recorded there. The earlier pre-PR artifact
 remains a distinct historical artifact. The BirdTree rights issue and fresh release
 panel remain open. Nothing has been submitted to CRAN.
+
+The 2026-10-07 source/site checks and their raw logs are retained in this file's prior
+merge history and summarized in `../GATES.md`. Their statements about the then-current
+live site and absence of a post-edit tarball are historical; the 2026-10-08 ledger
+records subsequent main, candidate, and site checks. The nine-seed recovery count above
+is likewise a pre-PR snapshot; `../recovery/RESULTS.md` records the later ten-seed result.

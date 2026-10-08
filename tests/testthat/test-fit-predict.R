@@ -170,7 +170,9 @@ test_that("predict.pigauto_fit can mask held-out cells from DAE context", {
   expect_equal(pred_shifted, pred_ref, tolerance = 1e-6)
 })
 
-test_that("predict.pigauto_fit adds cov_linear fixed effects outside the blend", {
+# This synthetic fixture has the shape of a pre-transformer saved fit. It does
+# not load an object serialized by an older package version.
+test_that("predict.pigauto_fit reconstructs legacy-shaped attention fits", {
   skip_if_no_libtorch()
 
   n <- 4L
@@ -181,7 +183,7 @@ test_that("predict.pigauto_fit adds cov_linear fixed effects outside the blend",
   model <- ResidualPhyloDAE(
     input_dim = 1L, hidden_dim = 4L, coord_dim = 1L, cov_dim = 3L,
     per_column_rs = TRUE, n_gnn_layers = 1L, gate_cap = 0.8,
-    use_attention = FALSE, n_user_cov = 1L, dropout = 0,
+    use_attention = TRUE, n_user_cov = 1L, dropout = 0,
     use_transformer_blocks = FALSE, n_heads = 1L, ffn_mult = 1L
   )
   torch::with_no_grad({
@@ -202,9 +204,8 @@ test_that("predict.pigauto_fit adds cov_linear fixed effects outside the blend",
       model_config = list(
         input_dim = 1L, hidden_dim = 4L, k_eigen = 1L, cov_dim = 3L,
         per_column_rs = TRUE, n_gnn_layers = 1L, gate_cap = 0.8,
-        use_attention = FALSE, n_user_cov = 1L, dropout = 0,
-        refine_steps = 1L, use_transformer_blocks = FALSE,
-        n_heads = 1L, ffn_mult = 1L
+        use_attention = TRUE, n_user_cov = 1L, dropout = 0,
+        refine_steps = 1L
       ),
       graph = list(coords = matrix(0, n, 1), adj = diag(n), D_sq = NULL),
       baseline = list(
@@ -237,6 +238,10 @@ test_that("predict.pigauto_fit adds cov_linear fixed effects outside the blend",
     ),
     class = "pigauto_fit"
   )
+
+  expect_false("use_transformer_blocks" %in% names(fit$model_config))
+  expect_false("n_heads" %in% names(fit$model_config))
+  expect_false("ffn_mult" %in% names(fit$model_config))
 
   pred <- predict(fit, return_se = FALSE)
   expected <- as.numeric(1 + 2 * covariates[, 1])
