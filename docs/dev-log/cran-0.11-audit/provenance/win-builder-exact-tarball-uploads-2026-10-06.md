@@ -32,3 +32,32 @@ either builder failed or completed. G7 remains partial pending the two logs.
 
 A second exact-filename search at 2026-10-06 19:52 MDT again returned no message
 IDs. No other messages or mailbox surfaces were inspected.
+
+## Recheck of older Windows results, 2026-10-08
+
+The current PR #228 conversation records two Win-builder result notices dated
+2026-10-07 at 17:40 and 17:48 UTC for older R-release and R-devel uploads. The
+R-release result at
+https://win-builder.r-project.org/98A2ziQk5Ob4/00check.log identifies pigauto
+0.11.0 on Windows Server 2022 with R 4.6.1 and ends with `Status: 1 ERROR`.
+Its test output reports two failures in `test-check-pigauto.R` lines 47-48:
+the default `check_pigauto()` result was not ready. The paired R-devel log
+directory is recorded in the PR conversation as
+https://win-builder.r-project.org/DHFjzzWXlqui; its result notice also reports
+one error. I opened and inspected the R-release check log in the browser. The
+R-devel result is recorded from the PR conversation; direct navigation to its
+log was blocked by the browser.
+
+These results cannot be tied to a tarball checksum or source commit. The PR
+conversation says both predate the later `5fbbec8c...` uploads; they therefore
+also predate the `10573d4f...` candidate. The current source on `main` has the
+`check_pigauto(gnn = FALSE)` default and skips the torch runtime probe unless
+`gnn = TRUE`, recorded in the merged PR #229. That makes the earlier failure
+consistent with pre-fix source, but does not prove which source was checked.
+
+Do not use these older results as either a pass or a failure verdict for the
+`10573d4f...` candidate. The exact-artifact Windows-results gate remains open:
+rerun R-release and R-devel on the
+final post-merge tarball, and retain the upload and result receipts with its
+SHA-256. The existing 10573 artifact is itself not final while documentation
+and provenance edits remain outstanding.
