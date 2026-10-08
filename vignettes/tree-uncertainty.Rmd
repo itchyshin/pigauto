@@ -28,6 +28,14 @@ Use this article only when you have a posterior sample of trees (from BEAST,
 MrBayes, BirdTree.org, etc.) and want to see how point imputations change across
 that sample.
 
+The bundled `trees300` object contains 50 trees sampled from the 100-tree
+BirdTree collection retrieved by `megatrees::get_tree_bird_n100()` and pruned
+to the 300 AVONET species. That collection includes trees built with either
+the Ericson or Hackett backbone; the original studies are Ericson et al. (2006)
+and Hackett et al. (2008). Jetz et al. (2012) describes the BirdTree
+distributions. These are posterior-sample trees, not a maximum-clade-credibility
+tree.
+
 ## Prediction-sensitivity workflow
 
 The default `gnn = FALSE` fits no network and recomputes the baseline
@@ -84,5 +92,11 @@ campaign.
 
 ## References
 
+- Ericson PG et al. (2006). Diversification of Neoaves: integration of
+  molecular sequence data and fossils. *Biology Letters* 2(4):543-547.
+  doi:10.1098/rsbl.2006.0523.
+- Hackett SJ et al. (2008). A phylogenomic study of birds reveals their
+  evolutionary history. *Science* 320(5884):1763-1768.
+  doi:10.1126/science.1157704.
 - Jetz W et al. (2012). The global diversity of birds in space and
-  time. *Nature* 491: 444-448.
+  time. *Nature* 491:444-448. doi:10.1038/nature11631.
