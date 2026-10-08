@@ -1,0 +1,10 @@
+Injected retired Markdown route into an isolated minimal site. Expected crawler failure was observed (exit 1).
+Command: python3 script/cran-0.11-site/crawl.py /private/tmp/pigauto-cran011-retirement-control/site
+{
+  "html_pages": 1,
+  "local_references_checked": 0,
+  "retired_pages": 34,
+  "errors": [
+    "Retired historical page served: articles/simulation-study.md"
+  ]
+}
