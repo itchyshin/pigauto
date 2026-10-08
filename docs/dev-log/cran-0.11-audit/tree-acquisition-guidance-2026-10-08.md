@@ -30,10 +30,11 @@ Expanded `read_tree()` help to explain BirdTree's subset and full-tree downloads
 - Opened the deployed [`read_tree` help](https://itchyshin.github.io/pigauto/reference/read_tree.html) in Chrome on 2026-10-08. It still shows version 0.11.0 and only the generic Newick/NEXUS reader description; the BirdTree guidance is absent, as expected before this PR is merged and deployed.
 - Built the complete pkgdown site with pkgdown 2.2.0 in a clean source copy at `/private/tmp/pigauto-pr231-site.AAt8TD`. The build completed, including URL, favicon, OpenGraph, article/reference metadata, sitemap, redirects, and search-index checks. The copy's `R/read_tree.R`, `vignettes/getting-started.Rmd`, `_pkgdown.yml`, and `DESCRIPTION` match this worktree.
 - The raw build rendered `AGENTS.md`, `CLAUDE.md`, `VALIDATION_LEDGER.md`, and `goodagents.md` as public HTML and included them in `sitemap.xml` and `search.json`. The Pages workflow already runs `pkgdown/clean-internal-pages.R` after building. I ran that same script against the clean site, then verified all four files and routes were absent from the output, sitemap, and search index while `read_tree.html` remained. The cleanup script in the source copy matches the worktree version.
+- A second independent review of the current PR diff found two `inst/NOTICE` claims unsupported by the checked-in records: the named upstream-asset digest has no asset filename/checksum receipt or tree-byte comparison, and the Robinson-Foulds/safety-floor selection rationale has no recorded comparison or selection run. The reviewer confirmed the generation scripts select member 69 and use seed 42 for 50 trees, and independently reproduced the 28/22 backbone split. These two NOTICE claims need evidence or removal. The same NOTICE file has work on `release/cran-0.11-audit`, so this slice did not edit it.
 - Local visual review remains unmet: Chrome refused the generated `file://` page because its browser policy permits only HTTP/HTTPS and blocks serving the file through a workaround. Generated HTML and sitemap/search entries were inspected as text.
 - `git diff --check`: passed.
-- `Rscript ~/shinichi-brain/tools/check-after-task.R <report>`: structure check passed, then the repository-wide ledger recheck exited 1 because six unmet gates exist outside this slice's owned paths: `.unlazy/imputation-sim/gates/leaf-campaign.md`, `leaf-env.md`, `leaf-prerun.md`, `leaf-results.md`, `leaf-runner.md`, and `.unlazy/tree-provenance/GATES.md`. The BirdTree ledger itself reverified as 5/5 met. Those other ledgers were left untouched.
-- The local source diff is limited to the `read_tree()` source help and generated help page. The ignored unlazy ledger and checker also record the official evidence. No package tarball was built or frozen in this slice.
+- The after-task structure check passed. The BirdTree unlazy ledger reverified all six gates: five runnable checks passed and the official-source review remains the completed manual gate. Six other unmet gates exist in `.unlazy/imputation-sim/gates/leaf-campaign.md`, `leaf-env.md`, `leaf-prerun.md`, `leaf-results.md`, `leaf-runner.md`, and `.unlazy/tree-provenance/GATES.md`; they are outside this slice and remain untouched.
+- This slice's source diff is limited to the `read_tree()` source help and generated help page. The ignored unlazy ledger and checker also record the official evidence. No package tarball was built or frozen in this slice.
 
 ## 6. Tests of the Tests
 
@@ -43,6 +44,7 @@ The updated checker first falsely failed because Rd wrapped the Newick sentence 
 
 - Fixed: `read_tree()` did not direct bird-tree users to BirdTree's download workflow or state the citation request.
 - Open: the current README and Getting Started article already show generic local-file tree input. This help slice leaves those pages for the separate public-surface inventory and reconciliation.
+- Open: resolve the two unsupported provenance statements in `inst/NOTICE` by adding reproducible evidence or removing the claims; ownership is shared with the release-audit lane.
 - Met for the local build: the Pages workflow's cleanup step removes all four internal coordination pages from rendered files, sitemap, and search index. Deployed-route verification remains open.
 - Open: rendered HTML was inspected as text but not visually in a browser because Chrome blocks local `file://` pages and the permitted workflow offers no HTTP-serving workaround.
 - Open: package-level release rights and exact-artifact gates remain separate and unmet.
@@ -57,7 +59,7 @@ The first gate run checked generated Rd before running roxygen and correctly cau
 
 ## 10. Known Residuals
 
-This slice updates help source. The deployed website remains unchanged until deployment. The local build and existing post-processing confirmed the four internal coordination pages are removed from deploy output and discovery files. Visual review, post-deployment verification, formal redistribution terms, the full retired-URL audit, optional model-object MI workflows, and the final 0.11 tarball remain open. The live reader page is still the pre-change version until merge and deployment; the release ledger remains `NOT_READY` with no frozen artifact identity. The repo-wide after-task gate check is also still unmet because of the six separate ledgers listed above.
+This slice updates help source. The deployed website remains unchanged until deployment. The local build and existing post-processing confirmed the four internal coordination pages are removed from deploy output and discovery files. The independent review leaves two provenance statements in the concurrently edited NOTICE unresolved. Visual review, post-deployment verification, formal redistribution terms, the full retired-URL audit, optional model-object MI workflows, and the final 0.11 tarball remain open. The live reader page is still the pre-change version until merge and deployment; the release ledger remains `NOT_READY` with no frozen artifact identity. The repo-wide after-task gate check is also still unmet because of the six separate ledgers listed above.
 
 ## 11. Team Learning
 
@@ -65,4 +67,4 @@ Memory receipt: loaded the pigauto `LOAD-FIRST` route, `AGENTS.md`, brain index 
 
 ## 12. Cross-Product Coverage
 
-Covers `read_tree()` source help, regenerated Rd, BirdTree download guidance, existing local Newick/NEXUS smoke coverage, and a fresh pkgdown build with the deployment cleanup and sitemap/search inspection. This does NOT cover visual page review, the README, complete Getting Started reader surface, deployed updates, retired-route verification, formal data-rights classification, optional drmTMB/gllvmTMB integration, or frozen-tarball checks.
+Covers `read_tree()` source help, regenerated Rd, BirdTree download guidance, existing local Newick/NEXUS smoke coverage, and a fresh pkgdown build with the deployment cleanup and sitemap/search inspection. This does NOT cover visual page review, the README, complete Getting Started reader surface, the two unsupported NOTICE claims, deployed updates, retired-route verification, formal data-rights classification, optional drmTMB/gllvmTMB integration, or frozen-tarball checks.
