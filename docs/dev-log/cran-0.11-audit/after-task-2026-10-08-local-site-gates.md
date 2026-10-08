@@ -6,7 +6,7 @@ Bind the local site build and route checks to the current PR #231 source candida
 
 ## 2. Implemented
 
-Updated G4 evidence and G5/G5b commands for source commit `2f7305c7ce4d13e03f676f4e48818f3a259d5473`, then approved and reran both site gates through unlazy. Recorded the fresh build and crawl results. Tried the local rendered page in Chrome for G6; browser policy rejected its `file:` URL and prohibited workarounds.
+Updated G4 evidence and G5/G5b commands for source commit `2f7305c7ce4d13e03f676f4e48818f3a259d5473`, then approved and reran both site gates through unlazy. Recorded the fresh build and crawl results, removed the stale lane claim from the gate evidence, and refreshed PR #228's status description. Tried the local rendered page in Chrome for G6; browser policy rejected its `file:` URL and prohibited workarounds.
 
 ## 3a. Decisions and Rejected Alternatives
 
@@ -24,6 +24,8 @@ Kept the site checks bound to the exact source commit. Did not start a local ser
 - The crawler reported 62 HTML pages, 3,443 local references, 34 retired routes, zero errors, and `SITE_CRAWL_OK`.
 - Rendered-content inspection found the updated BirdTree download guidance, tree provenance, and legacy-only inverse-Wishart wording.
 - Chrome refused the local `file:` URL under browser policy. G6 remains unmet.
+- PR #228's description was updated and rechecked in Chrome; it remains Draft and unmerged.
+- `gate-check --status` reports 6 met and 5 unmet gates: G0, G6, G7, G8, and G9.
 - No package tests ran; this was an evidence and site-verification update.
 
 ## 6. Tests of the Tests
