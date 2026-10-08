@@ -39,9 +39,11 @@ completed <- completed_data(result)
 pigauto_report(result)
 ```
 
-For bird trees, download a Newick or NEXUS file from [BirdTree](https://birdtree.org/downloads/)
-and read it with `read_tree()`. Cite Jetz et al. (2012) for the tree, and cite
-BirdTree.org when you use its website. pigauto uses the tree you provide and
+BirdTree distributes its tree files in Newick format. Download one from
+[BirdTree](https://birdtree.org/downloads/) and read it with `read_tree()`;
+`read_tree()` also accepts NEXUS files from other sources. Cite Jetz et al.
+(2012) for the tree, and cite BirdTree.org when you use its website. pigauto uses
+the tree you provide and
 does not download BirdTree data automatically. The bundled `tree300` is a
 teaching example; it is not a consensus or recommended analysis tree.
 

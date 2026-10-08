@@ -3,7 +3,9 @@
 ## BirdTree example and retrieval guidance
 
 The README and tutorials now identify `tree300` as a posterior sample tree and
-describe how to obtain and cite BirdTree trees. The installed NOTICE
+describe how to obtain and cite BirdTree trees. The README clarifies that
+BirdTree distributes Newick files and `read_tree()` also accepts NEXUS files.
+The installed NOTICE
 distinguishes the optional `megatrees` package licence from rights to the
 underlying data, and the bundled `trees300` help documents its Ericson/Hackett
 mixture. The retired simulation study remains in the repository's history but
