@@ -22,7 +22,8 @@ Followed the current ledger decision: treat the maintainer's statement as the ba
 - Confirmed in the GitHub browser that `itchyshin/pigauto` is public; the `gh repo view` API request failed to connect, so no CLI visibility result is claimed.
 - The rights-summary style check reported 0 findings; `git diff --check` passed.
 - The after-task structure check passed. The repository-wide closeout still reports five unmet `.unlazy/imputation-sim` gates outside this CRAN audit.
-- No package tests, push, or new Actions run occurred in this slice. The package code, bundled objects, installed NOTICE, generated help, and website files were not changed.
+- An independent ledger reviewer confirmed the rights-summary wording and found that the closure sentence overstated merge status because PR #229 had merged. The sentence now names the still-unmerged audit PRs and does not imply that no unrelated merge occurred.
+- No package tests, push, or new Actions run had occurred when this report was first committed. The package code, bundled objects, installed NOTICE, generated help, and website files were not changed in the slice.
 
 ## 6. Tests of the Tests
 
@@ -36,7 +37,7 @@ Still open: G7 deployed-site verification; G8 exact post-merge tarball, includin
 
 ## 8. Consistency Audit
 
-Compared the rights summary's current row, its dated historical assessments, the 2026-10-09 warranty record, `inst/NOTICE`, and the current G0/G8 wording. Current statements now agree. Dated earlier open-gate findings remain identified as historical. No gate status changed.
+Compared the rights summary's current row, its dated historical assessments, the 2026-10-09 warranty record, `inst/NOTICE`, and the current G0/G8 wording. Current statements now agree. Dated earlier open-gate findings remain identified as historical. The independent review confirmed this reconciliation and prompted the corrected merge-status sentence. No gate status changed.
 
 ## 9. What Did Not Go Smoothly
 
@@ -44,7 +45,7 @@ The shell GitHub API request could not connect. Repository visibility was verifi
 
 ## 10. Known Residuals
 
-The public BirdTree pages reviewed do not state a separate redistribution licence. This report records the maintainer's confirmation as the warranty basis and does not make an independent legal determination. Exact shipped tree bytes and NOTICE remain to be inspected in the final frozen tarball. No merge, deployment, artifact freeze, or CRAN submission occurred.
+The public BirdTree pages reviewed do not state a separate redistribution licence. This report records the maintainer's confirmation as the warranty basis and does not make an independent legal determination. Exact shipped tree bytes and NOTICE remain to be inspected in the final frozen tarball. PR #229 had already merged to main; PRs #231 and #228 remain unmerged. This slice did not verify a deployment, freeze the final artifact, or submit to CRAN.
 
 ## 11. Team Learning
 
