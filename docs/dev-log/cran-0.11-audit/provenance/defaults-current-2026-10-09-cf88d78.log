@@ -1,0 +1,47 @@
+ℹ Testing pigauto
+✔ | F W  S  OK | Context
+
+⠏ |          0 | cran-audit-defaults                                            
+⠋ |         11 | cran-audit-defaults                                            
+⠼ |         35 | cran-audit-defaults                                            
+⠴ |         56 | cran-audit-defaults                                            
+⠏ |         80 | cran-audit-defaults                                            Auto-detected trait type "count" (log1p-encoded) for integer column(s): count. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(count = "continuous").
+
+⠴ |         86 | cran-audit-defaults                                            
+⠦ |         87 | cran-audit-defaults                                            pigauto: the exact ("exact") joint baseline route was not usable for a fit (fewer than 2 joint columns (K < 2)); used the per-column baseline for that fit instead. This happens either while predict_method = "auto" (the default) is comparing its "exact" candidate, or when "exact" is itself the resolved route and fell back. This message is shown at most once per R session; pass predict_method = "per_column" to use the per-column path throughout, or predict_method = "exact" explicitly if you want a warning every time this happens.
+
+⠹ |         93 | cran-audit-defaults                                            Auto-detected trait type "count" (log1p-encoded) for integer column(s): count, zi. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(count = "continuous").
+
+
+⠦ |        107 | cran-audit-defaults                                            
+⠇ |        129 | cran-audit-defaults                                            
+⠼ |        135 | cran-audit-defaults                                            
+⠴ |        136 | cran-audit-defaults                                            Auto-detected trait type "count" (log1p-encoded) for integer column(s): count. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(count = "continuous").
+
+
+⠇ |        139 | cran-audit-defaults                                            Auto-detected trait type "count" (log1p-encoded) for integer column(s): count. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(count = "continuous").
+
+
+⠏ |        150 | cran-audit-defaults                                            Building phylogenetic graph (reused across folds)...
+Rep 1/1, Fold 1/2 (seed=1)...
+Building phylogenetic graph (reused across folds)...
+Rep 1/1, Fold 1/2 (seed=1)...
+=== Replicate 1/1 (seed 1) ===
+Fitting baseline...
+Fitting pigauto...
+=== Replicate 1/1 (seed 1) ===
+Fitting baseline...
+Fitting pigauto...
+
+⠋ |        161 | cran-audit-defaults                                            draws_method = "auto": using "conformal" because some traits are not continuous (binary: binary). These draws show the spread of plausible values but are not proper multiple imputations; with_imputations() and pool_mi() refuse them. See ?multi_impute.
+
+⠦ |        177 | cran-audit-defaults                                            
+⠇ |        179 | cran-audit-defaults                                            
+⠹ |        193 | cran-audit-defaults                                            
+✔ |        198 | cran-audit-defaults [4.6s]
+
+══ Results ═════════════════════════════════════════════════════════════════════
+Duration: 4.6 s
+
+[ FAIL 0 | WARN 0 | SKIP 0 | PASS 198 ]
+CRAN_DEFAULTS_AUDIT_OK

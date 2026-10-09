@@ -1,0 +1,135 @@
+ℹ Testing pigauto
+✔ | F W  S  OK | Context
+
+⠏ |          0 | multi-impute-posterior                                         
+⠋ |          1 | multi-impute-posterior                                         
+⠙ |         22 | multi-impute-posterior                                         
+⠹ |         33 | multi-impute-posterior                                         
+⠋ |         41 | multi-impute-posterior                                         
+⠸ |         44 | multi-impute-posterior                                         Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+⠸ |         54 | multi-impute-posterior                                         
+⠼ |         55 | multi-impute-posterior                                         
+⠴ |         56 | multi-impute-posterior                                         
+⠋ |         61 | multi-impute-posterior                                         
+⠼ |         65 | multi-impute-posterior                                         
+⠧ |         68 | multi-impute-posterior                                         
+⠇ |         69 | multi-impute-posterior                                         
+⠋ |         71 | multi-impute-posterior                                         
+⠇ |         79 | multi-impute-posterior                                         
+⠧ |         88 | multi-impute-posterior                                         6 tree tip(s) have no trait data and will have all-NA rows.
+6 tree tip(s) have no trait data and will have all-NA rows.
+
+⠋ |        101 | multi-impute-posterior                                         
+⠸ |        104 | multi-impute-posterior                                         
+⠙ |        112 | multi-impute-posterior                                         
+⠹ |        113 | multi-impute-posterior                                         
+⠸ |        134 | multi-impute-posterior                                         
+⠙ |        142 | multi-impute-posterior                                         
+⠇ |        149 | multi-impute-posterior                                         
+⠴ |        166 | multi-impute-posterior                                         
+⠸ |        184 | multi-impute-posterior                                         
+⠼ |        185 | multi-impute-posterior                                         
+⠦ |        187 | multi-impute-posterior                                         
+⠧ |        188 | multi-impute-posterior                                         
+⠹ |        193 | multi-impute-posterior                                         
+✔ |        196 | multi-impute-posterior [27.7s]
+
+⠏ |          0 | multi-impute-trees                                             
+⠙ |   2      0 | multi-impute-trees                                             
+⠹ |   2      1 | multi-impute-trees                                             
+⠹ |   3     10 | multi-impute-trees                                             
+⠸ |   4     10 | multi-impute-trees                                             
+⠹ |   6     27 | multi-impute-trees                                             
+⠸ |   7     27 | multi-impute-trees                                             
+⠴ |   9     37 | multi-impute-trees                                             
+✔ |   9     38 | multi-impute-trees [1.9s]
+────────────────────────────────────────────────────────────────────────────────
+Warning ('test-multi-impute-trees.R:52:3'): multi_impute_trees defaults to draws_method = 'mc_dropout'
+Few tree-sensitivity draws (T * m_per_tree = 4). Descriptive sensitivity summaries may be unstable.
+Backtrace:
+    ▆
+ 1. └─pigauto (local) quick_mit(seed = 11L) at test-multi-impute-trees.R:52:3
+ 2.   └─pigauto::multi_impute_trees(...) at test-multi-impute-trees.R:35:3
+
+Warning ('test-multi-impute-trees.R:52:3'): multi_impute_trees defaults to draws_method = 'mc_dropout'
+Small validation set for 2 trait(s): tr1 (n=2), tr2 (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=2), tr2 (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+Backtrace:
+    ▆
+ 1. └─pigauto (local) quick_mit(seed = 11L) at test-multi-impute-trees.R:52:3
+ 2.   └─pigauto::multi_impute_trees(...) at test-multi-impute-trees.R:35:3
+ 3.     └─pigauto:::run_shared_gnn(...) at pigauto/R/multi_impute_trees.R:327:5
+ 4.       └─pigauto::impute(...) at pigauto/R/multi_impute_trees.R:521:3
+ 5.         └─pigauto::fit_pigauto(...) at pigauto/R/impute.R:644:3
+ 6.           └─pigauto:::calibrate_gates(...) at pigauto/R/fit_pigauto.R:676:7
+
+Warning ('test-multi-impute-trees.R:69:3'): draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = TRUE)
+Few tree-sensitivity draws (T * m_per_tree = 4). Descriptive sensitivity summaries may be unstable.
+Backtrace:
+    ▆
+ 1. └─pigauto (local) quick_mit(draws_method = "conformal", share_gnn = TRUE, seed = 12L) at test-multi-impute-trees.R:69:3
+ 2.   └─pigauto::multi_impute_trees(...) at test-multi-impute-trees.R:35:3
+
+Warning ('test-multi-impute-trees.R:69:3'): draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = TRUE)
+Small validation set for 2 trait(s): tr1 (n=4), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=4), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+Backtrace:
+    ▆
+ 1. └─pigauto (local) quick_mit(draws_method = "conformal", share_gnn = TRUE, seed = 12L) at test-multi-impute-trees.R:69:3
+ 2.   └─pigauto::multi_impute_trees(...) at test-multi-impute-trees.R:35:3
+ 3.     └─pigauto:::run_shared_gnn(...) at pigauto/R/multi_impute_trees.R:327:5
+ 4.       └─pigauto::impute(...) at pigauto/R/multi_impute_trees.R:521:3
+ 5.         └─pigauto::fit_pigauto(...) at pigauto/R/impute.R:644:3
+ 6.           └─pigauto:::calibrate_gates(...) at pigauto/R/fit_pigauto.R:676:7
+
+Warning ('test-multi-impute-trees.R:101:3'): draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE)
+Few tree-sensitivity draws (T * m_per_tree = 4). Descriptive sensitivity summaries may be unstable.
+Backtrace:
+    ▆
+ 1. └─pigauto (local) quick_mit(draws_method = "conformal", share_gnn = FALSE, seed = 13L) at test-multi-impute-trees.R:101:3
+ 2.   └─pigauto::multi_impute_trees(...) at test-multi-impute-trees.R:35:3
+
+Warning ('test-multi-impute-trees.R:101:3'): draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE)
+Small validation set for 2 trait(s): tr1 (n=5), tr2 (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=5), tr2 (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+Backtrace:
+    ▆
+ 1. └─pigauto (local) quick_mit(draws_method = "conformal", share_gnn = FALSE, seed = 13L) at test-multi-impute-trees.R:101:3
+ 2.   └─pigauto::multi_impute_trees(...) at test-multi-impute-trees.R:35:3
+ 3.     └─pigauto:::run_per_tree(...) at pigauto/R/multi_impute_trees.R:340:5
+ 4.       └─pigauto::impute(...) at pigauto/R/multi_impute_trees.R:393:5
+ 5.         └─pigauto::fit_pigauto(...) at pigauto/R/impute.R:644:3
+ 6.           └─pigauto:::calibrate_gates(...) at pigauto/R/fit_pigauto.R:676:7
+
+Warning ('test-multi-impute-trees.R:101:3'): draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE)
+Small validation set for 2 trait(s): tr1 (n=4), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=4), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+Backtrace:
+    ▆
+ 1. └─pigauto (local) quick_mit(draws_method = "conformal", share_gnn = FALSE, seed = 13L) at test-multi-impute-trees.R:101:3
+ 2.   └─pigauto::multi_impute_trees(...) at test-multi-impute-trees.R:35:3
+ 3.     └─pigauto:::run_per_tree(...) at pigauto/R/multi_impute_trees.R:340:5
+ 4.       └─pigauto::impute(...) at pigauto/R/multi_impute_trees.R:393:5
+ 5.         └─pigauto::fit_pigauto(...) at pigauto/R/impute.R:644:3
+ 6.           └─pigauto:::calibrate_gates(...) at pigauto/R/fit_pigauto.R:676:7
+
+Warning ('test-multi-impute-trees.R:125:3'): print.pigauto_mi_trees reports the draws_method actually used
+Few tree-sensitivity draws (T * m_per_tree = 4). Descriptive sensitivity summaries may be unstable.
+Backtrace:
+    ▆
+ 1. └─pigauto (local) quick_mit(draws_method = "conformal", share_gnn = TRUE, seed = 14L) at test-multi-impute-trees.R:125:3
+ 2.   └─pigauto::multi_impute_trees(...) at test-multi-impute-trees.R:35:3
+
+Warning ('test-multi-impute-trees.R:125:3'): print.pigauto_mi_trees reports the draws_method actually used
+Small validation set for 2 trait(s): tr1 (n=4), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=4), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+Backtrace:
+    ▆
+ 1. └─pigauto (local) quick_mit(draws_method = "conformal", share_gnn = TRUE, seed = 14L) at test-multi-impute-trees.R:125:3
+ 2.   └─pigauto::multi_impute_trees(...) at test-multi-impute-trees.R:35:3
+ 3.     └─pigauto:::run_shared_gnn(...) at pigauto/R/multi_impute_trees.R:327:5
+ 4.       └─pigauto::impute(...) at pigauto/R/multi_impute_trees.R:521:3
+ 5.         └─pigauto::fit_pigauto(...) at pigauto/R/impute.R:644:3
+ 6.           └─pigauto:::calibrate_gates(...) at pigauto/R/fit_pigauto.R:676:7
+────────────────────────────────────────────────────────────────────────────────
+
+══ Results ═════════════════════════════════════════════════════════════════════
+Duration: 29.7 s
+
+[ FAIL 0 | WARN 9 | SKIP 0 | PASS 234 ]
