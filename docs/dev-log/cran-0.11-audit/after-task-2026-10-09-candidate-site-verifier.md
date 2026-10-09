@@ -29,6 +29,7 @@ The static parser verifies blockquote/strong-label structure, required body text
 - `python3 script/cran-0.11-site/verify_candidate_site.py --site-dir /private/tmp/pigauto-warning-callout-site --manifest docs/dev-log/cran-0.11-audit/provenance/live-retired-routes-2026-10-09-v2.tsv`: exit 0; 44 unique retired routes absent, 62 sitemap entries matching all 62 HTML files, 613 search entries, 568 in-sitemap paths, `CANDIDATE_SITE_OK`.
 - `git diff --check`: passed after the verifier changes.
 - After commit `1872bd7` was pushed to `release/cran-0.11-gate`, Chrome verified PR #228 remained Draft at 50 commits with no deployment. Workflow run `38001692992` was skipped under the configured pull-request pkgdown guard. It produced no site build or deployment result.
+- Follow-up commit `74d5a9a` was pushed to the same branch. Chrome verified it as the current PR head; PR #228 remains Draft and unmerged, with all checks passing and one skipped check. The PR page showed no deployments.
 - Candidate build log: 46,943 bytes, SHA-256 `b776a7a5a88dd6c61b07295dc5ffb5d2cca6a5960758f2639c1ab268b4a3188d`. Candidate source is `45df106ba58f5bc97d7a274bc0a22a19d202fa17`, parent `d76804e768bf77f430f43dcf591633f9cd900dab`.
 - Captured verifier output: SHA-256 `444b18fca2d969928bea89643c803009d63379226d3de97e3240689f6dbf75f4`.
 

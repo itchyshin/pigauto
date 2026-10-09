@@ -253,6 +253,10 @@ After Pat found two further false-pass cases in the bounded static verifier, the
 
 This is candidate-source output only. The complete GitHub Pages wrapper attempt was interrupted while rendering the mixed-types vignette after exceeding its estimate; the direct `build_site()` plus production cleanup completed. A browser policy rejected local `file:` preview, so no visual review of this unmerged candidate is claimed. The live deployed site has not changed, and its homepage still shows the old marker until the source fix is merged and deployed. This evidence does not change the deployed-site G7 verdict or close G8/G9.
 
+## Candidate verifier follow-up push, 2026-10-09
+
+Commit `74d5a9a` adds regression tests for decimal-zero opacity and comma-separated `:is()` / `:where()` selectors, with Pat's bounded static-check verdict and the refreshed local test receipt. The commit is on `release/cran-0.11-gate`. Chrome shows PR #228 at this head, still Draft and unmerged; all checks pass with one skipped, and the page lists no deployment. This push updates evidence only. It does not deploy the candidate or close the exact-artifact and independent-review gates.
+
 ## Candidate-site verifier push check, 2026-10-09
 
 Commit `1872bd7` was pushed to `release/cran-0.11-gate`. Chrome then showed PR #228 at 50 commits, still Draft, with the new commit visible. Pull-request workflow run [#38001692992](https://github.com/itchyshin/pigauto/actions/runs/38001692992) was skipped in one second under the configured pkgdown pull-request guard. The PR page showed no deployments. This verifies the evidence push only; it does not run pkgdown in GitHub Actions, deploy the candidate, or change G8/G9.
