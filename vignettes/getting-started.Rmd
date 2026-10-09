@@ -578,10 +578,8 @@ Both helpers return one row per requested species; alignment is
 enforced by name where names are present, so pass `species =` and
 keep the returned `species` column intact rather than reordering it.
 
-For a worked end-to-end example with covariates, use this section alongside
-`?impute`, `?pull_gbif_centroids`, and `?pull_worldclim_per_species`. The old
-static covariate walk-through is being refreshed and is not the current source
-of truth.
+For argument details, see `?impute`, `?pull_gbif_centroids`, and
+`?pull_worldclim_per_species`.
 
 ## Tips and next steps
 
