@@ -1,40 +1,21 @@
 {
-  "source_commit": "bb5835d1b214d783da7b0b414df99aa6ba926bc7",
+  "entry_count": 250,
+  "forbidden_path_scan": "passed",
+  "notice_present": true,
+  "notice_sha256": "9cc7fa419cacea99dbb0b822c59d6fffad514ee072e119a1ce1c7f365883ba02",
+  "optional_backend_dependency_scan": "passed",
   "package": "pigauto",
-  "version": "0.11.0",
-  "filename": "pigauto_0.11.0.tar.gz",
-  "local_artifact_path": "/private/tmp/pigauto-cran-011-gate-artifacts/pigauto-0.11.0-bb5835d-d34d4699/pigauto_0.11.0.tar.gz",
-  "sha256": "d34d469981386546b4ad03b9c7aab81674556708eeaf524c1c7365b6c68dec26",
-  "size_bytes": 5122013,
-  "member_count": 247,
-  "forbidden_development_paths": [],
-  "macos_check": {
-    "command": "R CMD check --as-cran --no-manual pigauto_0.11.0.tar.gz",
-    "R_version": "4.6.0 (2026-04-24)",
-    "platform": "aarch64-apple-darwin23; macOS Tahoe 26.7",
-    "result": "Status: OK",
-    "testthat_summary": "[ FAIL 0 | WARN 161 | SKIP 86 | PASS 3066 ]",
-    "check_log": "post-merge-R-CMD-check-macos.log",
-    "check_log_sha256": "657a19dc6584f1475f78f35d96824304be45b1279459f72bfa5f1c72113d41a0",
-    "test_output": "post-merge-testthat-macos.Rout",
-    "test_output_sha256": "2f97450cb9b7eebbf4c89d0ece75b59f3447f778382901294d916f2e9db29613"
+  "sha256": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",
+  "shipped_rda_sha256": {
+    "pigauto/data/avonet300.rda": "86af337b49cbe2a81ff7acb7245b75c9a00cd48bb9131d7f4eb5d2676af131be",
+    "pigauto/data/avonet_full.rda": "29b47bccdf17233328321378b77e99e8d4aa515d9df4451e347c709b97568e81",
+    "pigauto/data/ctmax_sim.rda": "987a05458b7f3e548f22c52b75d8b7463e29a281a48895303f564effb0b9cecc",
+    "pigauto/data/tree300.rda": "6050855d2ae7de42fa0de239134aad8e8975a224610b8dffb48f3d7412bb383f",
+    "pigauto/data/tree_full.rda": "5f7b36a4b9c02fd53c98d12fe4871e0f34098e3aa7a8f34f2db38a21a8dc09f5",
+    "pigauto/data/trees300.rda": "8293e06503e89e79d9233abd1cbae98fc8d0c18e05ef5a41cca99a071fee9108"
   },
-  "merged_source_platform_checks": {
-    "workflow_run": "37526171411",
-    "url": "https://github.com/itchyshin/pigauto/actions/runs/37526171411",
-    "commit": "bb5835d1b214d783da7b0b414df99aa6ba926bc7",
-    "jobs": {
-      "ubuntu-latest (R release)": "success",
-      "ubuntu-latest (R devel)": "success",
-      "macos-latest (R release)": "success"
-    },
-    "scope_note": "These checks ran on the exact merged source commit. The frozen tarball itself has the full macOS check above."
-  },
-  "pages_deployment": {
-    "workflow_run": "37526171317",
-    "url": "https://github.com/itchyshin/pigauto/actions/runs/37526171317",
-    "commit": "bb5835d1b214d783da7b0b414df99aa6ba926bc7",
-    "result": "Success",
-    "artifact_sha256": "3f19414b98f9a143de213af85dd1f7172e3504a33b8525d90a24db50ff1394f2"
-  }
+  "size_bytes": 5135324,
+  "source_commit": "d76804e768bf77f430f43dcf591633f9cd900dab",
+  "tarball": "/private/tmp/pigauto-release-candidate/sha256-f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4/pigauto_0.11.0.tar.gz",
+  "version": "0.11.0"
 }

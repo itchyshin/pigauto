@@ -9,36 +9,51 @@
     "large_data_or_vignettes": true
   },
   "artifact": {
-    "state": "candidate_not_release_final",
+    "state": "frozen_post_merge_exact_hash_local_check_passed_platform_results_pending",
     "filename": "pigauto_0.11.0.tar.gz",
-    "sha256": "1bfed5ad7be61437f4fdb09ece053d6a40211b5a5b7da4b2c947c3343493b719",
-    "size_bytes": 5128791,
-    "archive_entries": 248,
-    "inventory_sha256": "52192b529b009a47b9bc3e7f1687f543194994de42e9e508ee536ebbacc0deb5",
-    "source_commit": "0b0f71fee838c6ed51ef832ed819270eeafaf29b",
-    "frozen_path": "/private/tmp/pigauto-release/sha256-1bfed5ad7be61437f4fdb09ece053d6a40211b5a5b7da4b2c947c3343493b719/pigauto_0.11.0.tar.gz"
+    "sha256": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",
+    "size_bytes": 5135324,
+    "archive_entries": 250,
+    "inventory_sha256": "10a31a50b2504f42514b0ec8b5368861543cf1f902d9ae075ebb5279cd5a777e",
+    "source_commit": "d76804e768bf77f430f43dcf591633f9cd900dab",
+    "frozen_path": "/private/tmp/pigauto-release-candidate/sha256-f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4/pigauto_0.11.0.tar.gz"
   },
   "evidence": {
     "local_check_status": "OK",
-    "local_check_log": "provenance/exact-artifact-0b0f71f-2026-10-08-R-CMD-check.log",
-    "local_check_log_sha256": "4798992b15bcc845b7d99ca7b331d17cffcf72342882da9f4cda5a7b685568d1",
-    "testthat_output": "provenance/exact-artifact-0b0f71f-2026-10-08-testthat.Rout",
+    "local_check_log": "provenance/post-merge-R-CMD-check.log",
+    "local_check_log_sha256": "f8f3d07f6a9a18af29ef521cd2a4bd5f9e6430c33f177977911619a23222552c",
+    "testthat_output": "provenance/post-merge-testthat.Rout",
     "windows_results_bound_to_hash": false,
-    "birdtree_redistribution_rights": "separate_published_redistribution_terms_not_found",
+    "birdtree_redistribution_rights": "maintainer_warranty_recorded;no_separate_published_redistribution_terms_found;not_a_legal_determination",
     "birdtree_rights_basis": {
-      "maintainer_warranty": "Shinichi confirmed the bundled trees may be used with citation and credit; recorded as the maintainer-warranty basis for this inclusion.",
+      "maintainer_warranty": "Shinichi confirmed the bundled trees may be used with citation and credit; this is the maintainer-warranty basis.",
       "published_redistribution_terms": "not_found_on_reviewed_birdtree_pages",
       "notice_distinction": "inst/NOTICE distinguishes BirdTree data from the megatrees software licence",
-      "exact_tarball_inspection": "pending_G8"
+      "exact_tarball_inspection": "passed; NOTICE and shipped tree object hashes recorded in provenance/post-merge-artifact-identity.json"
     },
-    "exact_hash_independent_panel": "pending_for_1bfed5ad7be61437f4fdb09ece053d6a40211b5a5b7da4b2c947c3343493b719"
+    "exact_hash_independent_panel": "pending_for_f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",
+    "local_check_command": "env -u NOT_CRAN _R_CHECK_FORCE_SUGGESTS_=true R CMD check --as-cran --run-donttest pigauto_0.11.0.tar.gz",
+    "local_check_platform": "macOS arm64, R 4.6.0",
+    "testthat_output_sha256": "b4afb3d9e63942b5d41e74385b9d72f7300c38efc1780dce59c0c464761a05ea",
+    "testthat_summary": {
+      "pass": 3190,
+      "fail": 0,
+      "warn": 161,
+      "skip": 86
+    },
+    "win_builder_upload_state": "accepted_for_R_release_and_R_devel;results_not_yet_retrieved_or_hash_bound",
+    "site_deployment_commit": "d76804e768bf77f430f43dcf591633f9cd900dab",
+    "site_deployment_run": "37975894397",
+    "site_retirement_check": "44_direct_routes_404;search_613_entries_no_retired_targets;prior_sitemap_count_62_but_coordination_routes_not_filtered;corrected_live_sitemap_recheck_pending",
+    "site_g7_status": "open_pending_corrected_live_sitemap_capture_for_AGENTS_CLAUDE_goodagents",
+    "site_verifier_source_sha256": "97ba33f3dfb27fa9c05273c18922a409f00aa0f321fd9631104b5afb6d2bc90f"
   },
   "panel": {
     "grace": "READY_FOR_PRIOR_CANDIDATE_ONLY",
     "rose": "READY_FOR_PRIOR_CANDIDATE_ONLY",
     "pat": "READY_FOR_PRIOR_CANDIDATE_ONLY"
   },
-  "status_claim": "source-clean",
+  "status_claim": "not_ready_live_sitemap_recheck_windows_results_and_independent_review_pending",
   "submission": {},
   "audit_verdict": "NOT_READY"
 }
