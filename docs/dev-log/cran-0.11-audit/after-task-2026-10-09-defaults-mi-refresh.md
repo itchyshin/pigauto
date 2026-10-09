@@ -101,3 +101,12 @@ Run #37934989398 passed on PR #231 source head `248a18abc66fe8a3d261a519f8573f10
 This workflow sets `NOT_CRAN=true` and `_R_CHECK_FORCE_SUGGESTS_=false`; it verifies candidate source only and does not satisfy G8. The pkgdown PR workflow was skipped by design. The tested source delta from `ad28685` contains only audit evidence files, with no changes to package behavior, bundled data, generated help, reader-facing documentation, or website inputs. G0–G6 remain met and G7–G9 remain open. Both PRs remain Draft and unmerged; no merge, deployment, final tarball, or CRAN submission occurred.
 
 Files updated: `GATES.md`, this report, and the retained raw workflow log. `git diff --check` passed and the naturalness checker reported zero findings. No package or site tests were rerun because this update records completed source CI only.
+
+
+## Follow-up: exact-head CI completion on PR #231, 2026-10-09
+
+Run #37937268183 passed on PR #231 source head `00e5055bf1d8bc0fbfe30b8493c57412fc230382`, through synthetic merge `e9e7e20` into base `0b0f71f`. Ubuntu R-release, Ubuntu R-devel, and macOS arm64 R-release all reported `R CMD check Status: OK`; each full suite reported 3,196 passes, 0 failures, 175 warnings, and 83 skips. The focused macOS MPS test reported 201 passes, 0 failures, 50 warnings, and 0 skips in 337.2 seconds. The consolidated log is `provenance/source-ci-37937268183.log`, 5,971,875 bytes, SHA-256 `cb03d9f7114fcc4c438e41889622a0affced034cae37a0b7188c031e583e90da`.
+
+The workflow sets `NOT_CRAN=true` and `_R_CHECK_FORCE_SUGGESTS_=false`; it verifies candidate source only and does not satisfy G8. The pkgdown PR workflow was skipped by design. The tested delta from `248a18a` contains only audit evidence files, with no product source, bundled data, generated help, user-facing pages, or website inputs changed. G0–G6 remain met and G7–G9 remain open. Both PRs remain Draft and unmerged; no merge, deployment, final tarball, or submission occurred.
+
+Files updated: `GATES.md`, this report, and the retained raw workflow log. `git diff --check` passed and the naturalness checker reported zero findings. The after-task structure check is expected to pass its report structure but still reports five unmet gates under `.unlazy/imputation-sim/gates/`, outside this CRAN release slice. No package or site tests were rerun because this update records completed source CI only.
