@@ -45,7 +45,7 @@ The Actions run, three job records, and raw logs agree on the successful result 
 
 ## 9. What Did Not Go Smoothly
 
-The first log-transfer attempt used a terminal input path that could not safely carry large logs. It was stopped, and the logs were transferred in bounded chunks with per-job hashes and a verified gzip round trip. The GitHub blob and contents API endpoints returned 403. The ledger update remains staged in the scoped leased evidence worktree, and its push is pending. The two Draft PR descriptions were refreshed or verified through the Codex browser.
+The first log-transfer attempt used a terminal input path that could not safely carry large logs. It was stopped, and the logs were transferred in bounded chunks with per-job hashes and a verified gzip round trip. The GitHub blob and contents API endpoints returned 403, so the PR description was refreshed through the Codex browser. The original ledger, report, and compressed logs were committed as `71038b6` and pushed to `release/cran-0.11-gate`. The post-push browser check confirmed PR #228 remains Draft, its commit list includes `71038b6`, the updated description is rendered, and the branch has no deployment.
 
 ## 10. Known Residuals
 
