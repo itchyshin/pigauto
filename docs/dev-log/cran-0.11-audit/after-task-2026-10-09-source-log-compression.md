@@ -70,3 +70,9 @@ Golden Set: no package source or runtime behavior changed; no source known-mista
 Covers six source-CI log artifacts and the ledger references in PR #231.
 
 Does NOT cover package behavior, defaults, MI adapter correctness, rendered or deployed pages, the final frozen tarball, platform checks on that tarball, or CRAN submission.
+
+## Follow-up: exact-head source-CI completion, 2026-10-09
+
+The current-head workflow that was in progress when the compression receipt was written has now completed. Chrome showed run #37965714452 succeeded on PR #231 head `cff6ea685d2788687d085e24c2a8ef83ce50f7bb` in 17m58s. All three platform jobs passed; each log reports `R CMD check Status: OK` and 3,196 passes, 0 failures, 175 warnings, and 83 skips. The macOS-focused MPS test reports 201 passes, 0 failures, 50 warnings, and 0 skips. The environment used `NOT_CRAN=true` and `_R_CHECK_FORCE_SUGGESTS_=false`; pkgdown run #37965714410 was skipped by repository design. This is source-CI evidence only. It does not close the exact-artifact G8 gate.
+
+The audit ledger now records this completed run and keeps the tally at 8/11, with G7–G9 open. PR #231 and #228 remain Draft and unmerged. The GitHub PR descriptions still need their prior in-progress wording refreshed to this result. No code, site input, default, data, or release artifact changed.
