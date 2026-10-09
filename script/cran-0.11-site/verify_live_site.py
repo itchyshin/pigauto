@@ -9,6 +9,8 @@ import re
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
+from concurrent.futures import ThreadPoolExecutor
+from urllib.parse import urlsplit
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -46,9 +48,9 @@ class TitleParser(HTMLParser):
             self.parts.append(data)
 
 
-def fetch(base: str, path: str) -> tuple[int, bytes, str]:
+def fetch_url(url: str) -> tuple[int, bytes, str]:
     request = urllib.request.Request(
-        base.rstrip("/") + path,
+        url,
         headers={"User-Agent": "pigauto-CRAN-0.11-release-audit"},
     )
     try:
@@ -56,6 +58,22 @@ def fetch(base: str, path: str) -> tuple[int, bytes, str]:
             return response.status, response.read(), response.geturl()
     except urllib.error.HTTPError as error:
         return error.code, error.read(), error.geturl()
+
+
+def fetch(base: str, path: str) -> tuple[int, bytes, str]:
+    return fetch_url(base.rstrip("/") + path)
+
+
+def check_retained_url(url: str) -> tuple[str, int, str, str]:
+    status, body, final_url = fetch_url(url)
+    title_parser = TitleParser()
+    title_parser.feed(body.decode("utf-8", errors="replace"))
+    title = " ".join(" ".join(title_parser.parts).split())
+    return url, status, final_url, title
+
+
+def is_expected_utility_route(url: str, status: int, title: str) -> bool:
+    return urlsplit(url).path.endswith("/404.html") and status == 200 and "Page not found" in title
 
 
 def main() -> int:
@@ -107,6 +125,25 @@ def main() -> int:
     ]
     sitemap_retired = find_retired_sitemap_targets(locations)
 
+    base_parts = urlsplit(args.base)
+    site_prefix = f"{base_parts.scheme}://{base_parts.netloc}{base_parts.path.rstrip('/')}/"
+    if any(not location.startswith(site_prefix) for location in locations):
+        raise ValueError("Sitemap contains a URL outside the requested site prefix")
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        retained_results = list(executor.map(check_retained_url, locations))
+    retained_rows = ["url\tstatus\tfinal_url\ttitle"]
+    retained_failures = []
+    expected_utility_routes = []
+    for url, status, final_url, title in retained_results:
+        retained_rows.append(f"{url}\t{status}\t{final_url}\t{title}")
+        if is_expected_utility_route(url, status, title):
+            expected_utility_routes.append({"url": url, "status": status, "title": title})
+        elif status != 200 or "Page not found" in title:
+            retained_failures.append({"url": url, "status": status, "title": title})
+    (output_dir / "retained-route-statuses.tsv").write_text(
+        "\n".join(retained_rows) + "\n", encoding="utf-8"
+    )
+
     search_status, search_body, _ = fetch(args.base, "/search.json")
     search = json.loads(search_body)
     entries = search if isinstance(search, list) else search.get("results", search.get("docs", []))
@@ -126,6 +163,9 @@ def main() -> int:
     summary = {
         "routes_checked": len(routes),
         "route_failures": failures,
+        "retained_routes_checked": len(retained_results),
+        "retained_route_failures": retained_failures,
+        "expected_utility_routes": expected_utility_routes,
         "sitemap_status": sitemap_status,
         "sitemap_entries": len(locations),
         "sitemap_retired_targets": sitemap_retired,
@@ -138,7 +178,7 @@ def main() -> int:
         json.dumps(summary, indent=2) + "\n", encoding="utf-8"
     )
     print(json.dumps(summary, indent=2))
-    if failures or sitemap_status != 200 or search_status != 200 or sitemap_retired or search_retired:
+    if failures or retained_failures or sitemap_status != 200 or search_status != 200 or sitemap_retired or search_retired:
         print("LIVE_SITE_RETIREMENT_CHECK_FAILED")
         return 1
     print("LIVE_SITE_RETIREMENT_CHECK_OK")

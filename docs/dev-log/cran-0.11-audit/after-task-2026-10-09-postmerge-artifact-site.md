@@ -4,7 +4,7 @@ Record the current deployed-site retirement result and freeze one post-merge 0.1
 
 ## 2. Implemented
 
-Updated the gate ledger, retirement manifest, and release-ledger JSON to bind the deployment to `d76804e` and the frozen tarball to its SHA-256. Added the build receipt. G7 was reopened after an independent review found that the first sitemap filter omitted three named coordination routes; G8 and G9 also remain open.
+Updated the gate ledger, retirement manifest, and release-ledger JSON to bind the deployment to `d76804e` and the frozen tarball to its SHA-256. Added the build receipt. Added the corrected live-site verifier and its full route capture after an independent review found that the first sitemap filter omitted three named coordination routes. The corrected recheck closes G7; G8 and G9 remain open.
 
 ## 3a. Decisions and Rejected Alternatives
 
@@ -21,15 +21,22 @@ Kept the accepted artifact as the single candidate and discarded the earlier arc
 - `docs/dev-log/cran-0.11-audit/provenance/post-merge-R-CMD-check.log`
 - `docs/dev-log/cran-0.11-audit/provenance/post-merge-testthat.Rout`
 - `docs/dev-log/cran-0.11-audit/provenance/live-retired-routes-2026-10-09.tsv`
-- `docs/dev-log/cran-0.11-audit/provenance/live-site-discovery-2026-10-09.json`
+- `docs/dev-log/cran-0.11-audit/provenance/live-site-discovery-2026-10-09.json` (initial filter, superseded)
+- `docs/dev-log/cran-0.11-audit/provenance/live-retired-routes-2026-10-09-v2.tsv`
+- `docs/dev-log/cran-0.11-audit/provenance/live-retained-routes-2026-10-09-v2.tsv`
+- `docs/dev-log/cran-0.11-audit/provenance/live-site-discovery-2026-10-09-v2.json`
+- `docs/dev-log/cran-0.11-audit/provenance/live-site-verification-2026-10-09-v2.log`
+- `docs/dev-log/cran-0.11-audit/provenance/live-site-verifier-tests-2026-10-09.log`
+- `docs/dev-log/cran-0.11-audit/provenance/live-site-recheck-2026-10-09-v2.md`
 - `script/cran-0.11-site/verify_live_site.py`
+- `script/cran-0.11-site/test_verify_live_site.py`
 - This after-task report.
 
 ## 5. Checks Run
 
 - Exact tarball: `env -u NOT_CRAN _R_CHECK_FORCE_SUGGESTS_=true R CMD check --as-cran --run-donttest pigauto_0.11.0.tar.gz`; macOS arm64/R 4.6.0; `Status: OK`; 3,190 passes, 0 failures, 161 warnings, 86 skips.
 - Artifact inspection: 250 archive entries; exact SHA-256 and inventory recorded; hidden-path, forbidden-path, optional-backend dependency, and shipped NOTICE/tree-object scans passed.
-- Live site: 44 direct retired-route checks returned 404, and search reported 613 entries with no retired route targets. The saved discovery summary reports 62 sitemap entries, but its filter omitted `/AGENTS.html`, `/CLAUDE.html`, and `/goodagents.html`; its empty sitemap-target result is not sufficient. A corrected offline filter test passes, but live sitemap verification remains pending because browser access is blocked and shell DNS failed before requests.
+- Live site: the corrected verifier checked 44 retired routes (all 404), all 62 sitemap URLs (60 content pages, the intentionally retained noindex `validation_suite.html` tombstone, and the expected `/404.html` utility route), and 613 search entries, with no retired sitemap or search targets. The first summary had an incomplete sitemap filter; the corrected filter and fresh successful capture are retained in `provenance/live-site-recheck-2026-10-09-v2.md`.
 - Deployment: Pages workflow run #37975894397 succeeded on merged commit `d76804e`.
 - `git diff --cached --check` passed before this update.
 
@@ -40,22 +47,21 @@ The exact-artifact R CMD check exercised package installation, examples, documen
 ## 7a. Issue Ledger
 
 - Resolved: the first post-merge archive included the build log as a hidden file and produced a NOTE; discarded and rebuilt cleanly.
-- Open: corrected live sitemap capture for the three coordination routes.
 - Open: checksum-bound Win-builder R-release and R-devel result logs.
 - Open: independent exact-artifact and deployed-site verdicts from Grace, Rose, and Pat.
 - Open: any separate rights evidence beyond the maintainer warranty; no separate published redistribution grant was found.
 
 ## 8. Consistency Audit
 
-Cross-checked GATES, release-ledger, retirement-manifest, archive identity, check log, and the partial deployed-site receipt. The original empty sitemap-target list was downgraded because its filter omitted three named routes. The source version is 0.11.0 at merged commit `d76804e`. Both optional model packages remain absent from DESCRIPTION dependency fields. The artifact includes `inst/NOTICE`; its hashes identify the shipped tree objects. Historical page and search text remains in Git/changelog history while retired route targets are absent from live sitemap/search.
+Cross-checked GATES, release-ledger, retirement-manifest, archive identity, check log, and corrected deployed-site receipt. The first empty sitemap-target list was superseded after its filter omission was found; the corrected capture checks all 62 live sitemap URLs. The source version is 0.11.0 at merged commit `d76804e`. Both optional model packages remain absent from DESCRIPTION dependency fields. The artifact includes `inst/NOTICE`; its hashes identify the shipped tree objects. Historical page and search text remains in Git/changelog history while retired route targets are absent from live sitemap/search.
 
 ## 9. What Did Not Go Smoothly
 
-The initial build embedded `.-00build.log` and had to be discarded. Shell DNS then prevented rerunning the live verifier. The managed worktree is outside the default writable root, so file updates require the approved sandbox escalation path. The closeout compiler also reported unmet checks in separate imputation-simulation ledgers in the brain root; those belong to another project lane and were left untouched.
+The initial build embedded `.-00build.log` and had to be discarded. The sandboxed shell could not resolve DNS, but the approved read-only network check succeeded and produced the corrected live-site capture. The managed worktree is outside the default writable root, so file updates require the approved sandbox escalation path. The closeout compiler also reported unmet checks in separate imputation-simulation ledgers in the brain root; those belong to another project lane and were left untouched.
 
 ## 10. Known Residuals
 
-G7 remains open until the three coordination routes are checked against a captured live sitemap with the corrected filter. G8 is incomplete until the exact artifact's Windows results are available and bound to its hash. G9 has not passed. The release-evidence PR remains Draft and unmerged. Nothing has been submitted to CRAN.
+G7 is met for the checked deployment, with 44 retired routes and all 62 sitemap routes verified. G8 is incomplete until the exact artifact's Windows results are available and bound to its hash. G9 has not passed. The release-evidence PR remains Draft and unmerged. Nothing has been submitted to CRAN.
 
 ## 11. Team Learning
 
@@ -67,4 +73,9 @@ Golden Set: Not run; no package behavior changed and no known-mistake code class
 
 ## 12. Cross-Product Coverage
 
-This update covers one merged macOS/R 4.6.0 artifact check and one deployed pkgdown site. It does NOT cover checksum-bound Windows output, future site deployments, CRAN acceptance, or statistical validity outside the previously bounded MI recovery regimes.
+This update covers one merged macOS/R 4.6.0 artifact check and one deployed pkgdown site, including all 62 sitemap routes and 44 retired routes. It does NOT cover checksum-bound Windows output, future site deployments, CRAN acceptance, or statistical validity outside the previously bounded MI recovery regimes.
+
+
+## Current reconciliation update (2026-10-09)
+
+Recorded the current R-release and R-devel Win-builder logs, preserving their raw bytes in deterministic gzip files with both raw and compressed SHA-256 values. Both report `Status: 1 ERROR` and five failed expectations; neither identifies the uploaded archive hash. Updated the release ledger to keep G8 and G9 open and to record Grace/Rose as NOT READY and Pat as NOT ASSESSED for durable site evidence. The live-site v2 receipts were ignored by the repository ignore rule, so this update force-adds those specific receipts to the evidence branch. The homepage warning rendering remains an unresolved reader-facing discrepancy. No source change, merge, or CRAN submission was made.

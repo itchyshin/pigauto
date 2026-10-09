@@ -41,19 +41,38 @@
       "warn": 161,
       "skip": 86
     },
-    "win_builder_upload_state": "accepted_for_R_release_and_R_devel;results_not_yet_retrieved_or_hash_bound",
+    "win_builder_upload_state": "R_release_and_R_devel_results_received;both_status_1_error_five_test_failures_each;logs_not_checksum_bound_to_frozen_artifact",
     "site_deployment_commit": "d76804e768bf77f430f43dcf591633f9cd900dab",
     "site_deployment_run": "37975894397",
-    "site_retirement_check": "44_direct_routes_404;search_613_entries_no_retired_targets;prior_sitemap_count_62_but_coordination_routes_not_filtered;corrected_live_sitemap_recheck_pending",
-    "site_g7_status": "open_pending_corrected_live_sitemap_capture_for_AGENTS_CLAUDE_goodagents",
-    "site_verifier_source_sha256": "97ba33f3dfb27fa9c05273c18922a409f00aa0f321fd9631104b5afb6d2bc90f"
+    "site_retirement_check": "44_direct_routes_404;62_sitemap_urls_checked;60_retained_content_routes_http_200;validation_suite_noindex_tombstone_http_200;404_html_expected_utility_page;zero_retired_sitemap_or_search_targets",
+    "site_g7_status": "met_for_deployment_d76804e;not_a_future_permanence_claim",
+    "site_verifier_source_sha256": "fbba18e851bad34fd6d22fcf803bdd04fd1730632a84243ada98aab2d77e7a15",
+    "site_retired_routes_sha256": "5414f6cb69e9d140c38d0a6308f8e0ddbe8952834eea01b6b861a78eecb807e1",
+    "site_retained_routes_sha256": "7288c1c2984c760f11a672f406311016ccefd193bc449402a4bbd645038f8ff1",
+    "site_discovery_sha256": "2db884b26493dc295846bf51f9a9f5c8c29b63860edacafc55fb609285d46262",
+    "site_verification_log_sha256": "7f8eee37739f522088bdd11b3975dcc9c1d204a3a433c1af7995e61bca04f944",
+    "site_verifier_tests_sha256": "33060fd73862c5e1af97335504d5b45211fce6d229657f556d8deceeadc52ce4",
+    "win_builder_logs": {
+      "r_release": {
+        "path": "provenance/winbuilder-r-release-2026-10-09.log.gz",
+        "sha256": "dc69a974ea7e693a632d063ca6d205b9c4d61b2eb171f6068c4e8aff8aa19fb7",
+        "result": "1_ERROR_five_test_failures_unbound_to_archive_hash",
+        "raw_sha256": "575179ab3b680d9ea23e54e8c0550bd49d817dee2e652ab11aeacc5ed03af971"
+      },
+      "r_devel": {
+        "path": "provenance/winbuilder-r-devel-2026-10-09.log.gz",
+        "sha256": "6242c79102333744dab7e14d86237614a51dea51247888cae188eda25a9fb9b2",
+        "result": "1_ERROR_five_test_failures_unbound_to_archive_hash",
+        "raw_sha256": "23cc52068814203057efa2862110f9c08eaab62e4fcf4a62985390975849be54"
+      }
+    }
   },
   "panel": {
-    "grace": "READY_FOR_PRIOR_CANDIDATE_ONLY",
-    "rose": "READY_FOR_PRIOR_CANDIDATE_ONLY",
-    "pat": "READY_FOR_PRIOR_CANDIDATE_ONLY"
+    "grace": "NOT_READY_frozen_artifact_windows_diagnostic_failures_unbound_to_hash",
+    "rose": "NOT_READY_frozen_artifact_windows_diagnostic_failures_unbound_to_hash",
+    "pat": "NOT_ASSESSED_durable_site_receipts_were_ignored_by_git"
   },
-  "status_claim": "not_ready_live_sitemap_recheck_windows_results_and_independent_review_pending",
+  "status_claim": "not_ready_windows_failures_not_hash_bound_and_independent_closure_open",
   "submission": {},
   "audit_verdict": "NOT_READY"
 }
