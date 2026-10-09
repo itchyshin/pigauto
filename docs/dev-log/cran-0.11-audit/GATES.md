@@ -201,3 +201,9 @@ Chrome verified GitHub Actions run [#37952599321](https://github.com/itchyshin/p
 ## PR #228 BirdTree-review receipt check, 2026-10-09
 
 Chrome verified the push of evidence commit `5ad0bf9` to PR #228. GitHub Actions run [#37960057428](https://github.com/itchyshin/pigauto/actions/runs/37960057428) was triggered by the pull request and skipped in 8 seconds under the configured pkgdown pull-request guard; it produced no job result or artifact and did not deploy the site. PR #228 remains Draft and unmerged. This check confirms the evidence commit is present on the PR branch only; it does not change the 8-of-11 gate tally or close G7, G8, or G9.
+
+## Fresh live article-index and retired-route check, 2026-10-09
+
+Chrome opened the deployed article index at `https://itchyshin.github.io/pigauto/articles/index.html?audit=20261009lead2`. It still lists “Four ways to impute a phylogenetic trait matrix” linking to `/articles/simulation-study.html`. Opening `https://itchyshin.github.io/pigauto/articles/simulation-study.html?audit=20261009lead` served the full historical article, including its comparison tables, results, reproduction section, and notice that it is excluded from the intended 0.11.0 package build and public site. This confirms the route is both discoverable and directly served on the current deployment.
+
+Chrome returned `net::ERR_BLOCKED_BY_CLIENT` for the live `/sitemap.xml` and `/search.json` endpoints; their contents remain unverified. The local candidate crawler's retired-route result remains local build evidence only. PR #231 remains Draft and unmerged at `dee8f02888fd2c4c22d426e595ea6451a28a280e`, so this mismatch is expected to remain until merge and deployment. G7 remains open alongside G8 (final frozen artifact and exact checks) and G9 (independent review). The tally remains 8 of 11 gates met.
