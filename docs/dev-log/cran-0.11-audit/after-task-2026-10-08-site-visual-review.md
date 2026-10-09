@@ -4,7 +4,7 @@ Close local site review for the pigauto 0.11 candidate and refresh the release l
 
 ## 2. Implemented
 
-Updated `GATES.md` with the fresh site build and crawl evidence for commit `34e1e3cd5a128d309782bcf43fd92a94298b175e`, Chrome visual review of five reader pages, and the live PR #231 head and CI state. Corrected the earlier G6 note that wrongly treated loopback HTTP review as prohibited. G6 now has machine-readable manual evidence and the ledger reports 7 met and 4 unmet gates.
+Updated `GATES.md` with the fresh site build and crawl evidence for commit `4a724399ada88eff6a4b347b94e9047c2e0163d4`, Chrome visual review, and current PR #231 CI state. The exact-head output has 62 HTML pages, 613 search entries, 3,443 checked local references, and 34 retired routes, with no crawl errors. Chrome reviewed Getting Started and `trees300` directly; the other three pages checked earlier are byte-identical to this build. Corrected old “current” snapshots in G0 and G7 to label them historical. The lane census reports one active pigauto lane. G6 is met; G0, G7, G8, and G9 remain unmet.
 
 ## 3a. Decisions and Rejected Alternatives
 
@@ -19,8 +19,9 @@ Used Chrome with the existing loopback-only site server after direct `file://` n
 
 - `bash ~/shinichi-brain/tools/lane_preflight.sh /Users/z3437171/Dropbox/Github\ Local/pigauto` reported one active lane and 58 total worktrees.
 - Checked the retained exact-head pkgdown build and crawl logs. Build output records 62 HTML pages, 613 search entries, 3,443 local references, 34 retired routes, zero crawl errors, `SITE_CRAWL_OK`, and a clean `pkgdown::check_pkgdown()` result. Both log checksums are recorded in `GATES.md`.
+- Compared rendered HTML hashes against the preceding visually inspected output: `index.html` `63f96fd4e932a45b8789c6844a00b792c94e868254108c68388cc9f7df131b99`; `articles/getting-started.html` `33c9ea9cbbe4fca0c230ca082f94e89cab3c612dac13c58bbaff58639d0e24e6`; `articles/multiple-imputation.html` `4124a2e181083812e00fc4f9790f30f4024af111fcccc68fcb3b2cf0a602e4b5`; `articles/tree-uncertainty.html` `e92e5c69fbb5b34bd8de39e03b487150a7f62074b82d28b0a4e6ac57e403bffc`; `reference/trees300.html` `82aa732d24ea848a4bce76da8716f16271f39113a382d03d0ca7e6bcccae54ea`.
 - Reviewed the local rendered home page, Getting Started, multiple-imputation, tree-uncertainty, and `trees300` reference pages in Chrome.
-- Chrome showed PR #231 remains Draft at 21 commits and head `34e1e3c`. Its run #37867499185 completed successfully: Ubuntu R release passed in 10m00, Ubuntu R-devel in 11m42, and macOS R release in 17m18, including MPS prediction tests and `R CMD check`.
+- Chrome showed PR #231 remains Draft at 22 commits and head `4a72439`. Run #37867499185 passed on predecessor `34e1e3c`; the exact-head run #37869600607 was still in progress at 0/3 jobs at the time of review. No result is claimed for the new run.
 - `node ~/.codex/skills/unlazy/scripts/gate-check.mjs --status docs/dev-log/cran-0.11-audit/GATES.md` reports 7 met and 4 unmet gates. It parses the ledger; it does not rerun the gate commands.
 - `git diff --check` passed.
 
@@ -37,7 +38,7 @@ The site crawler has a retained planted retirement negative control at `provenan
 
 ## 8. Consistency Audit
 
-Compared G6 and G5/G5b claims with the fresh build logs, crawler output, and the rendered Chrome pages. The pages show the corrected tree provenance and retrieval guidance, fixed-effect MI boundaries, and current reader-facing navigation. The G0 rights question and G7 deployment requirement remain separate.
+Compared G6 and G5/G5b claims with the 4a72439 build logs, crawler output, rendered Chrome pages, and page hashes. The exact-head local output contains the corrected tree provenance and retrieval guidance, fixed-effect MI boundaries, and current reader-facing navigation. G0 rights and G7 deployment remain separate gates. The old deployed-site record and old PR snapshot are now explicitly marked historical in GATES.md.
 
 ## 9. What Did Not Go Smoothly
 
