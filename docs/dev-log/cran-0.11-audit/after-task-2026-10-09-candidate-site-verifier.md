@@ -31,6 +31,7 @@ The static parser verifies blockquote/strong-label structure, required body text
 - After commit `1872bd7` was pushed to `release/cran-0.11-gate`, Chrome verified PR #228 remained Draft at 50 commits with no deployment. Workflow run `38001692992` was skipped under the configured pull-request pkgdown guard. It produced no site build or deployment result.
 - Follow-up commit `74d5a9a` was pushed to the same branch. Chrome verified it as the current PR head; PR #228 remains Draft and unmerged, with all checks passing and one skipped check. The PR page showed no deployments.
 - The evidence was later refreshed through commit `8fa149a`; Chrome showed PR #228 at 52 commits, Draft and unmerged. Workflow run `38003919177` was skipped under the pull-request pkgdown guard, and the PR page listed no deployment. This confirms an evidence push only; it does not establish a new site build or deployment.
+- Commit `41ddecc` later added the raw portability-smoke log and report. Chrome showed PR #228 at 53 commits, still Draft; workflow run `38004504745` was skipped in one second, with no artifact or deployment.
 - Candidate build log: 46,943 bytes, SHA-256 `b776a7a5a88dd6c61b07295dc5ffb5d2cca6a5960758f2639c1ab268b4a3188d`. Candidate source is `45df106ba58f5bc97d7a274bc0a22a19d202fa17`, parent `d76804e768bf77f430f43dcf591633f9cd900dab`.
 - Captured verifier output: SHA-256 `444b18fca2d969928bea89643c803009d63379226d3de97e3240689f6dbf75f4`.
 

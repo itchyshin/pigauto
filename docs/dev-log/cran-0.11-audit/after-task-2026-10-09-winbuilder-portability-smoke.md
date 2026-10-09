@@ -27,6 +27,7 @@ Treat this only as a focused source-commit smoke. It does not validate Windows b
 - Environment: macOS arm64, R 4.6.0.
 - `Rscript -e 'source("~/shinichi-brain/tools/check-after-task.R"); check_after_task("docs/dev-log/cran-0.11-audit/after-task-2026-10-09-winbuilder-portability-smoke.md")'`: required section and negative-space structure passed after the headings were aligned with the validator.
 - Chrome verified PR #228 at commit `8fa149a`, 52 commits, Draft and unmerged; workflow run `38003919177` was skipped by the pull-request pkgdown guard, and no deployment was listed.
+- The report and log were pushed as commit `41ddecc`. Chrome then showed PR #228 at 53 commits, Draft and unmerged; workflow run `38004504745` was skipped in one second and produced no artifact or deployment.
 
 ## 6. Tests of the Tests
 

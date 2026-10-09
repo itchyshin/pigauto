@@ -265,3 +265,7 @@ Commit `1872bd7` was pushed to `release/cran-0.11-gate`. Chrome then showed PR #
 ## Candidate verifier and portability-smoke evidence push, 2026-10-09
 
 Commit `8fa149a` records Pat's bounded static-verifier verdict and the local macOS smoke of separate-lane commit `45bf230`; the smoke is explicitly not a Windows or frozen-artifact result. Chrome showed PR #228 at this head with 52 commits, still Draft and unmerged. Workflow run [#38003919177](https://github.com/itchyshin/pigauto/actions/runs/38003919177) was skipped under the configured pull-request pkgdown guard; no deployment was listed. This evidence-only push does not deploy the candidate or change G8/G9. The exact artifact remains NOT READY because both Windows logs report five failed expectations and one error without a checksum binding. No merge or CRAN submission has occurred.
+
+## Portability-smoke evidence commit, 2026-10-09
+
+Commit `41ddecc` adds the raw smoke log and its after-task report to PR #228. Chrome confirmed the PR remained Draft with 53 commits and showed workflow run [#38004504745](https://github.com/itchyshin/pigauto/actions/runs/38004504745) as skipped in one second under the pull-request pkgdown guard; no artifact or deployment was produced. This receipt confirms that the evidence is present on the PR branch only. G8 and G9 remain open, and no merge or CRAN submission has occurred.
