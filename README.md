@@ -26,7 +26,7 @@ install.packages("pigauto")
 ## Start here
 
 Put a CSV trait table (with a unique `species` column) and a Newick or NEXUS
-tree beside your R script. Then use this six-line journey:
+tree beside your R script. Then start with this short workflow:
 
 ```r
 library(pigauto)

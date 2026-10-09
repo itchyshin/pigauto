@@ -140,7 +140,7 @@ library(ape)
 
 ## Inspecting the internal pipeline
 
-The six-line journey above is the primary interface. The following is the
+The workflow above is the primary interface. The following is the
 fine-grained pipeline for inspection, caching, or benchmarking.
 
 ```{r quickstart, eval=FALSE}
