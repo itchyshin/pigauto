@@ -63,3 +63,9 @@ Golden Set: no package source behavior changed; no source known-mistake class wa
 Covers current-source default inventory comparison, named effective routes, optional drmTMB/gllvmTMB fixed-effect MI extraction and pooling, and focused posterior/tree MI tests.
 
 Does NOT cover every interaction among public formals, scientific optimality of all defaults, joint covariance pooling, broad inferential validity, final-artifact installation, deployed-site behavior, platform release checks, or CRAN submission.
+
+## Follow-up: exact-head CI ledger reconciliation, 2026-10-09
+
+Two independent reviewers found that the PR descriptions had advanced beyond the durable ledger: GATES.md still stopped at run #37913439649 on `017e0a6`, and its G0 scope statement stopped at the earlier site commit. I updated GATES.md to record the passing #37916716258 receipt on `cf88d78` and the latest #37924160198 receipt on `dbe1248`, with the three platform durations and the candidate-source/force-Suggests limits. I also bound the G0 carry-forward to the exact six-file `cf88d78..dbe1248` audit-record delta. That delta contains no package, user-facing documentation, data, generated-help, or website-input changes.
+
+Validation: `git diff --check` passed. The after-task structure check passed; its overall exit remains 1 because five unmet gates under `.unlazy/imputation-sim/gates/` belong to another acceptance ledger and were not changed here. The naturalness checker passed with zero findings. No package/site tests were rerun because this was an evidence-only correction. The PR description text previously verified in Chrome already records #37924160198 and retains the 8-of-11 tally. G7 (deployed-site verification), G8 (final post-merge tarball and checks), and G9 (independent final artifact review) remain open. Merge, deployment, and submission remain Shinichi's decisions.
