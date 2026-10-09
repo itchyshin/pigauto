@@ -8,7 +8,7 @@ Updated G1 to distinguish inventory-wide declared-formal/default matching from s
 
 ## 3a. Decisions and Rejected Alternatives
 
-Followed Shinichi's direction that the checkouts belong to one pigauto audit lane. The branch/worktree is the evidence checkout for this slice, not a competing lane. Kept drmTMB and gllvmTMB optional, retained automatic extraction adapters and termwise fixed-effect pooling, and recorded the earlier installed-backend matrix as supporting evidence. Did not claim joint covariance pooling, broad inferential validity, scientific optimality of defaults, or exact-tarball verification. Did not merge, deploy, or submit.
+Followed Shinichi's direction that the checkouts belong to one pigauto audit lane. This checkout is the sole active pigauto lane for this slice. Kept drmTMB and gllvmTMB optional, retained automatic extraction adapters and termwise fixed-effect pooling, and recorded the earlier installed-backend matrix as supporting evidence. Did not claim joint covariance pooling, broad inferential validity, scientific optimality of defaults, or exact-tarball verification. Did not merge, deploy, or submit.
 
 ## 4. Files Touched
 
@@ -110,3 +110,11 @@ Run #37937268183 passed on PR #231 source head `00e5055bf1d8bc0fbfe30b8493c57412
 The workflow sets `NOT_CRAN=true` and `_R_CHECK_FORCE_SUGGESTS_=false`; it verifies candidate source only and does not satisfy G8. The pkgdown PR workflow was skipped by design. The tested delta from `248a18a` contains only audit evidence files, with no product source, bundled data, generated help, user-facing pages, or website inputs changed. G0–G6 remain met and G7–G9 remain open. Both PRs remain Draft and unmerged; no merge, deployment, final tarball, or submission occurred.
 
 Files updated: `GATES.md`, this report, and the retained raw workflow log. `git diff --check` passed and the naturalness checker reported zero findings. The after-task structure check is expected to pass its report structure but still reports five unmet gates under `.unlazy/imputation-sim/gates/`, outside this CRAN release slice. No package or site tests were rerun because this update records completed source CI only.
+
+## Follow-up: current gate-count reconciliation and exact-head CI
+
+The current ledger defines eleven gates: G0–G6, G5b, and G7–G9. Eight are met (G0–G6 and G5b) and three remain open (G7–G9), so the current tally is 8 of 11. The Unlazy status check independently returned 11 gates, 8 met, and 3 unmet. The user confirmed that this Codex task is the sole active pigauto audit lane; the preflight's additional branch/worktree labels do not identify another active owner.
+
+Chrome confirmed that GitHub Actions run #37940225845 completed successfully on PR #231 head `a93fc80db76a0c94724031f9ea6be091dd3e1ca4`, through synthetic merge `63427c1` into base `0b0f71f`. Ubuntu R-release, Ubuntu R-devel, and macOS arm64 R-release all reported `R CMD check Status: OK`; each full suite reported 3,196 passes, 0 failures, 175 warnings, and 83 skips. The focused macOS MPS tests reported 201 passes, 0 failures, 50 warnings, and 0 skips in 6m01s. The combined raw log is 3,073,045 bytes with SHA-256 `e956e7acf06d69adbc969e2db74f2fc7ff9297c84416b6442afbafd318dcbf28`.
+
+This remains candidate-source CI: `NOT_CRAN=true`, `_R_CHECK_FORCE_SUGGESTS_=false`, and the pkgdown pull-request workflow was skipped by design. G8's frozen post-merge tarball checks remain open. PR #231 and PR #228 remain Draft and unmerged; there was no merge, deployment, final tarball, or CRAN submission. No package or website checks were rerun for this evidence-only reconciliation.
