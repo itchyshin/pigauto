@@ -28,6 +28,7 @@ fi
 
 PIGAUTO_SITE_DIR="$site_root/_site" \
   Rscript --vanilla "$site_root/pkgdown/clean-internal-pages.R"
+python3 "$site_root/script/cran-0.11-site/test_crawl.py"
 if ! (cd "$site_root" && \
   python3 script/cran-0.11-site/crawl.py _site > "$crawl_log"); then
   cat "$crawl_log" >&2

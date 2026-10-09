@@ -10,11 +10,50 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 
+CSS_URL = re.compile(r"url\(\s*(?:(['\"])(.*?)\1|([^)]*?))\s*\)", re.I | re.S)
+CSS_IMPORT = re.compile(r"@import\s+(['\"])(.*?)\1", re.I | re.S)
+CSS_COMMENT = re.compile(r"/\*.*?\*/", re.S)
+
+
+def srcset_references(value):
+    """Return candidate URLs from an HTML srcset attribute."""
+    references = []
+    position = 0
+    while position < len(value):
+        while position < len(value) and (value[position].isspace() or value[position] == ","):
+            position += 1
+        start = position
+        while position < len(value) and not value[position].isspace():
+            position += 1
+        candidate = value[start:position].rstrip(",")
+        if candidate:
+            references.append(candidate)
+        while position < len(value) and value[position] != ",":
+            position += 1
+        if position < len(value):
+            position += 1
+    return references
+
+
+def css_references(text):
+    """Return local or remote URLs referenced by CSS url() and string @import."""
+    text = CSS_COMMENT.sub("", text)
+    matches = []
+    for match in CSS_URL.finditer(text):
+        url = (match.group(2) if match.group(1) else match.group(3)).strip().strip("'\"")
+        if url:
+            matches.append((match.start(), url))
+    for match in CSS_IMPORT.finditer(text):
+        matches.append((match.start(), match.group(2)))
+    return [url for _, url in sorted(matches)]
+
+
 class Page(HTMLParser):
     def __init__(self):
         super().__init__()
         self.links = []
         self.ids = set()
+        self.in_style = False
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
@@ -25,6 +64,20 @@ class Page(HTMLParser):
         for key in ("href", "src"):
             if attrs.get(key):
                 self.links.append(attrs[key])
+        if attrs.get("srcset"):
+            self.links.extend(srcset_references(attrs["srcset"]))
+        if attrs.get("style"):
+            self.links.extend(css_references(attrs["style"]))
+        if tag == "style":
+            self.in_style = True
+
+    def handle_endtag(self, tag):
+        if tag == "style":
+            self.in_style = False
+
+    def handle_data(self, data):
+        if self.in_style:
+            self.links.extend(css_references(data))
 
 
 def indexed_urls(path):
@@ -55,29 +108,38 @@ def main(site_root):
 
     errors = []
     checked = 0
+    processed_css = set()
     for path, page in pages.items():
-        for link in page.links:
+        pending = [(path, link) for link in page.links]
+        while pending:
+            source, link = pending.pop()
             url = urlsplit(link)
             if url.scheme or url.netloc:
                 continue
             if not url.path:
-                target = path
+                target = source
             elif url.path.startswith("/"):
                 target = (root / unquote(url.path.lstrip("/"))).resolve()
             else:
-                target = (path.parent / unquote(url.path)).resolve()
+                target = (source.parent / unquote(url.path)).resolve()
             checked += 1
             if not target.is_relative_to(root):
-                errors.append(f"{path.relative_to(root)}: outside site {link}")
+                errors.append(f"{source.relative_to(root)}: outside site {link}")
                 continue
             if target.is_dir():
                 target /= "index.html"
             if not target.exists():
-                errors.append(f"{path.relative_to(root)}: missing {link}")
+                errors.append(f"{source.relative_to(root)}: missing {link}")
                 continue
             if (url.fragment and target.suffix == ".html" and target in pages
                     and unquote(url.fragment) not in pages[target].ids):
-                errors.append(f"{path.relative_to(root)}: absent anchor {link}")
+                errors.append(f"{source.relative_to(root)}: absent anchor {link}")
+            if target.suffix.lower() == ".css" and target not in processed_css:
+                processed_css.add(target)
+                pending.extend(
+                    (target, reference)
+                    for reference in css_references(target.read_text(errors="replace"))
+                )
 
     internal = ("AGENTS", "CLAUDE", "goodagents", "VALIDATION_LEDGER")
     for stem in internal:
