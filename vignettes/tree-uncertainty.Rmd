@@ -36,6 +36,27 @@ and Hackett et al. (2008). Jetz et al. (2012) describes the BirdTree
 distributions. These are posterior-sample trees, not a maximum-clade-credibility
 tree.
 
+### Supplying posterior trees
+
+pigauto uses the tree or trees you provide. It does not download tree data
+while imputing. For the 100-tree BirdTree sample available through the optional
+`megatrees` package, install the package and request the sample explicitly:
+
+```{r birdtree-download, eval = FALSE}
+install.packages("megatrees")
+bird_trees <- megatrees::get_tree_bird_n100()
+```
+
+An uncached request downloads the release asset through `megatrees` and needs
+internet access. For a species-specific sample, use the
+[BirdTree subset tool](https://birdtree.org/subsets/), then read the downloaded
+Newick file with `read_tree()`. The subset tool asks for an email address and
+job ID to check when the request is ready. Cite Jetz et al. (2012) for the tree
+and BirdTree.org when you use its website. Record the `megatrees` version and
+preserve the tree object with your analysis. For a single tree, pass the object
+to `impute()`; pass a posterior sample to `multi_impute_trees()` for the
+prediction-sensitivity workflow described below.
+
 ## Prediction-sensitivity workflow
 
 The default `gnn = FALSE` fits no network and recomputes the baseline

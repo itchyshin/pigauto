@@ -224,6 +224,39 @@ test_that("two-tree diagnostic runs with the default GNN-off fit", {
                                                               data = data)))
 })
 
+test_that("tree diagnostic forwards explicit baseline options to each fit", {
+  fx <- cran_defaults_fixture(n = 8L, seed = 1116L)
+  tree2 <- ape::rtree(length(fx$tree$tip.label))
+  tree2$tip.label <- fx$tree$tip.label
+  seen <- NULL
+  warnings <- character()
+  testthat::local_mocked_bindings(
+    impute = function(...) {
+      seen <<- list(...)
+      stop("tree fit captured", call. = FALSE)
+    }, .package = "pigauto"
+  )
+
+  withCallingHandlers(
+    expect_error(multi_impute_trees(
+      fx$traits[, "continuous", drop = FALSE], list(fx$tree, tree2),
+      m_per_tree = 1L, share_gnn = FALSE, verbose = FALSE,
+      lambda_mode = "fixed_1", predict_method = "per_column",
+      joint_solver = "inhouse"
+    ), "tree fit captured"),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_true(any(grepl("Few tree-sensitivity draws", warnings,
+                        fixed = TRUE)))
+  expect_identical(seen$lambda_mode, "fixed_1")
+  expect_identical(seen$predict_method, "per_column")
+  expect_identical(seen$joint_solver, "inhouse")
+  expect_false(seen$gnn)
+})
+
 test_that("saved default GNN-off fit reloads and predicts", {
   fx <- cran_defaults_fixture()
   res <- suppressWarnings(impute(
@@ -304,6 +337,7 @@ test_that("automatic multiple-imputation route resolves without sampling", {
 test_that("multi_impute actually dispatches the automatic route", {
   fx <- cran_defaults_fixture(n = 12L, seed = 1114L)
   reached <- NULL
+  seen <- NULL
   testthat::local_mocked_bindings(
     .multi_impute_posterior = function(...) {
       reached <<- "posterior"
@@ -311,6 +345,7 @@ test_that("multi_impute actually dispatches the automatic route", {
     },
     impute = function(...) {
       reached <<- "conformal"
+      seen <<- list(...)
       stop("conformal route captured", call. = FALSE)
     }, .package = "pigauto"
   )
@@ -319,9 +354,26 @@ test_that("multi_impute actually dispatches the automatic route", {
   expect_identical(out$route, "posterior")
   expect_identical(reached, "posterior")
   expect_error(multi_impute(fx$traits[, c("continuous", "binary"), drop = FALSE],
-                            fx$tree, m = 2L, verbose = FALSE),
+                            fx$tree, m = 2L, verbose = FALSE,
+                            gnn = TRUE,
+                            lambda_mode = "fixed_1",
+                            predict_method = "per_column",
+                            joint_solver = "inhouse"),
                "conformal route captured")
   expect_identical(reached, "conformal")
+  expect_identical(seen$lambda_mode, "fixed_1")
+  expect_identical(seen$predict_method, "per_column")
+  expect_identical(seen$joint_solver, "inhouse")
+  expect_true(isTRUE(seen$gnn))
+
+  expect_error(multi_impute(
+    fx$traits[, "continuous", drop = FALSE], fx$tree,
+    m = 2L, draws_method = "mc_dropout", gnn = TRUE, verbose = FALSE,
+    lambda_mode = "fixed_1"
+  ), "conformal route captured")
+  expect_identical(reached, "conformal")
+  expect_true(isTRUE(seen$gnn))
+  expect_identical(seen$lambda_mode, "fixed_1")
 })
 
 test_that("automatic conformal fallback warns users and remains diagnostic", {
@@ -339,4 +391,76 @@ test_that("automatic conformal fallback warns users and remains diagnostic", {
   expect_error(with_imputations(mi, function(data) stats::lm(continuous ~ binary,
                                                               data = data)),
                "diagnostic")
+})
+
+test_that("analysis-aware MI defaults to Bayesian Normal with 50 draws", {
+  mi <- withr::with_seed(1120L, {
+    n <- 40L
+    z <- stats::rnorm(n)
+    x <- 0.4 * z + stats::rnorm(n, sd = 0.8)
+    y <- 0.5 + 0.7 * x - 0.35 * z + stats::rnorm(n, sd = 0.9)
+    x[seq(3L, n, by = 4L)] <- NA_real_
+    data <- data.frame(y = y, x = x, z = z)
+
+    multi_impute_analysis(data, y ~ x + z, missing = "x")
+  })
+
+  expect_identical(mi$model, "lm")
+  expect_identical(mi$engine, "bayes_norm")
+  expect_identical(mi$m, 50L)
+  expect_identical(mi$draws_method, "analysis_aware")
+  expect_null(mi$seed)
+  expect_identical(mi$auxiliary, character())
+  expect_identical(mi$control, list())
+  expect_length(mi$datasets, 50L)
+})
+
+test_that("with_imputations defaults to retaining failed fits across imputations", {
+  mi <- structure(
+    list(
+      datasets = list(data.frame(x = 1), data.frame(x = 2)),
+      mi_workflow = "pigauto_analysis_mi_v1"
+    ),
+    class = "pigauto_analysis_mi"
+  )
+
+  warnings <- character()
+  fits <- withCallingHandlers(
+    with_imputations(mi, function(data) stop("planned fit failure"),
+                     .progress = FALSE),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  expect_true(any(grepl("2 of 2 fits failed", warnings, fixed = TRUE)))
+  expect_identical(attr(fits, "n_fits"), 2L)
+  expect_identical(attr(fits, "n_failed"), 2L)
+  expect_identical(attr(fits, "failed"), 1:2)
+  expect_true(all(vapply(fits, inherits, logical(1), "pigauto_mi_error")))
+})
+
+test_that("with_imputations forwards extra arguments to every model fit", {
+  mi <- structure(
+    list(
+      datasets = list(data.frame(x = 1), data.frame(x = 2)),
+      mi_workflow = "pigauto_analysis_mi_v1"
+    ),
+    class = "pigauto_analysis_mi"
+  )
+  received <- character()
+
+  fits <- with_imputations(
+    mi,
+    function(data, marker) {
+      received <<- c(received, marker)
+      data$x + 10
+    },
+    marker = "forwarded",
+    .progress = FALSE
+  )
+
+  expect_identical(received, c("forwarded", "forwarded"))
+  expect_identical(unname(unlist(fits)), c(11, 12))
 })

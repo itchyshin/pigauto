@@ -65,6 +65,36 @@ if (mode == "dependencies") {
         if (installed) " against installed pigauto" else " against source pigauto",
         "\n", sep = "")
   }
+  if (identical(mode, "neither")) {
+    check_missing_backend_for_saved_class <- function(package, fit) {
+      fit_path <- tempfile(fileext = ".rds")
+      on.exit(unlink(fit_path), add = TRUE)
+      saveRDS(list(fit, fit), fit_path)
+      fits <- readRDS(fit_path)
+      stopifnot(identical(class(fits[[1L]]), class(fit)),
+                !requireNamespace(package, quietly = TRUE))
+      error <- tryCatch(pool_mi(fits), error = identity)
+      stopifnot(inherits(error, "error"),
+                grepl(paste0("automatic ", package,
+                             " adapter requires the package"),
+                      conditionMessage(error), fixed = TRUE))
+    }
+    check_missing_backend_for_saved_class(
+      "drmTMB",
+      structure(list(opt = list(convergence = 0L),
+                     sdr = list(pdHess = TRUE),
+                     beta = c(x = 1),
+                     V = matrix(0.04, 1L, dimnames = list("x", "x"))),
+                class = "drmTMB")
+    )
+    check_missing_backend_for_saved_class(
+      "gllvmTMB",
+      structure(list(opt = list(convergence = 0L),
+                     sd_report = list(pdHess = TRUE)),
+                class = "gllvmTMB_multi")
+    )
+    cat("SAVED_OPTIONAL_CLASS_MISSING_PACKAGE_OK\n")
+  }
   cat(switch(mode,
              fixtures = "ADAPTER_FIXTURES_OK\n",
              real = "REAL_ADAPTERS_OK\n",

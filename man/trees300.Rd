@@ -9,24 +9,42 @@ An object of class \code{multiPhylo} containing 50 \code{phylo}
 objects, each with 300 tips.
 }
 \source{
-Li (2026), \pkg{megatrees} 1.0.0, MIT licence; trees pruned from
-\code{megatrees::get_tree_bird_n100()}. Underlying posterior from Jetz
-et al. (2012), Hackett et al. backbone.
+Li (2026), \pkg{megatrees} 1.0.0; trees pruned from
+\code{megatrees::get_tree_bird_n100()}. The source collection and its
+Ericson and Hackett backbones are described by Ericson et al. (2006),
+Hackett et al. (2008), and Jetz et al. (2012).
 }
 \usage{
 trees300
 }
 \description{
-A \code{multiPhylo} list of 50 phylogenetic trees randomly sampled from the
-BirdTree Hackett backbone posterior (Jetz et al. 2012), each pruned to the
-300 species in \code{\link{avonet300}}.  These trees capture phylogenetic
-uncertainty: topologies and branch lengths vary across the posterior sample.
+A \code{multiPhylo} list of 50 phylogenetic trees sampled from the 100-tree
+BirdTree bird collection retrieved through \pkg{megatrees}. The collection's
+first 50 trees use the Ericson backbone and its next 50 use the Hackett
+backbone. The fixed sample generated with seed 42 contains 28 Ericson and
+22 Hackett trees, each pruned to the 300 species in \code{\link{avonet300}}.
+Topologies and branch lengths vary across this posterior sample. The MIT
+software licence for \pkg{megatrees} does not establish rights for the
+underlying BirdTree data; see the installed \file{NOTICE}.
 }
 \details{
 Use with \code{\link{multi_impute_trees}} for experimental sensitivity of
 point imputations to posterior-tree choice. Tree uncertainty is not
 supported by the analysis-aware MI backend, and these stochastic datasets
 are not validated for downstream inference.
+}
+\references{
+Ericson PGP, Anderson CL, Britton T, et al. (2006). Diversification
+of Neoaves: integration of molecular sequence data and fossils.
+\emph{Biology Letters}, 2(4), 543-547. \doi{10.1098/rsbl.2006.0523}.
+
+Hackett SJ, Kimball RT, Reddy S, et al. (2008). A phylogenomic
+study of birds reveals their evolutionary history. \emph{Science},
+320(5884), 1763-1768. \doi{10.1126/science.1157704}.
+
+Jetz W, Thomas GH, Joy JB, Hartmann K, Mooers AO (2012). The
+global diversity of birds in space and time. \emph{Nature}, 491, 444-448.
+\doi{10.1038/nature11631}.
 }
 \seealso{
 \code{\link{tree300}}, \code{\link{avonet300}},

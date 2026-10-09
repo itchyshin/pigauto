@@ -23,6 +23,8 @@ if (!file.exists(csv_path))  stop("CSV file not found: ", csv_path)
 # The megatrees package records an MIT license. Redistribution rights for the
 # underlying BirdTree data in pigauto remain unresolved. Record the asset
 # digest in inst/NOTICE and retain the Jetz et al. (2012) citation.
+# Member 69 is a posterior sample from the Hackett-backbone half of the
+# 100-tree BirdTree collection (the first 50 use the Ericson backbone).
 tree   <- megatrees::get_tree_bird_n100()[[69L]]
 avonet <- read.csv(csv_path, stringsAsFactors = FALSE)
 avonet$Species_Key <- gsub(" ", "_", avonet$Species3)
