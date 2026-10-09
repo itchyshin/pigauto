@@ -29,15 +29,25 @@
 
 #' Example bird phylogeny for the 300 species in \code{avonet300}
 #'
-#' An object of class \code{'phylo'} from the \pkg{ape} package. The tree is a
-#' posterior Hackett-backbone sample distributed by the MIT-licensed
-#' \pkg{megatrees} package, pruned to the 300 species present in
-#' \code{\link{avonet300}}. It is intended for examples, not as a consensus
-#' or recommended tree for substantive analysis.
+#' An object of class \code{'phylo'} from the \pkg{ape} package. It is
+#' posterior sample member 69 from the Hackett-backbone half of BirdTree's
+#' 100-tree bird collection, retrieved through the \pkg{megatrees} package
+#' and pruned to the 300 species in \code{\link{avonet300}}. The MIT software
+#' licence for \pkg{megatrees} does not establish rights for the underlying
+#' BirdTree data; see the installed \file{NOTICE}. This object is included for
+#' examples, not as an MCC or consensus tree or a recommended tree for
+#' substantive analysis.
 #'
 #' @format An object of class \code{phylo} with 300 tips.
-#' @source Li (2026), \pkg{megatrees} 1.0.0, MIT licence; underlying tree
-#'   sample from Jetz et al. (2012), Hackett et al. backbone.
+#' @source Li (2026), \pkg{megatrees} 1.0.0; member 69 of
+#'   \code{megatrees::get_tree_bird_n100()} is from the Hackett-backbone set.
+#'   The BirdTree distribution is described by Jetz et al. (2012).
+#' @references Hackett SJ, Kimball RT, Reddy S, et al. (2008). A phylogenomic
+#'   study of birds reveals their evolutionary history. \emph{Science},
+#'   320(5884), 1763-1768. \doi{10.1126/science.1157704}.
+#' @references Jetz W, Thomas GH, Joy JB, Hartmann K, Mooers AO (2012). The
+#'   global diversity of birds in space and time. \emph{Nature}, 491, 444-448.
+#'   \doi{10.1038/nature11631}.
 "tree300"
 
 
@@ -76,28 +86,43 @@
 
 #' Example bird phylogeny for the species in \code{avonet_full}
 #'
-#' An object of class \code{'phylo'} from the \pkg{ape} package. The tree is
-#' the same posterior Hackett-backbone sample used for \code{\link{tree300}},
-#' but pruned to the species present in \code{\link{avonet_full}} rather than
-#' a 300-species random subset.
+#' An object of class \code{'phylo'} from the \pkg{ape} package. It is
+#' posterior sample member 69 from the Hackett-backbone half of BirdTree's
+#' 100-tree bird collection, pruned to the species present in
+#' \code{\link{avonet_full}} rather than the 300-species example subset.
+#' The MIT software licence for \pkg{megatrees} does not establish rights for
+#' the underlying BirdTree data; see the installed \file{NOTICE}. This object
+#' is included for examples, not as an MCC or consensus tree or a recommended
+#' tree for substantive analysis.
 #'
 #' Row order in \code{avonet_full} matches tip order in \code{tree_full}:
 #' \code{all(avonet_full$Species_Key == tree_full$tip.label)} returns
 #' \code{TRUE}.
 #'
 #' @format An object of class \code{phylo} with 9,993 tips.
-#' @source Li (2026), \pkg{megatrees} 1.0.0, MIT licence; underlying tree
-#'   sample from Jetz et al. (2012), Hackett et al. backbone.
+#' @source Li (2026), \pkg{megatrees} 1.0.0; member 69 of
+#'   \code{megatrees::get_tree_bird_n100()} is from the Hackett-backbone set.
+#'   The BirdTree distribution is described by Jetz et al. (2012).
+#' @references Hackett SJ, Kimball RT, Reddy S, et al. (2008). A phylogenomic
+#'   study of birds reveals their evolutionary history. \emph{Science},
+#'   320(5884), 1763-1768. \doi{10.1126/science.1157704}.
+#' @references Jetz W, Thomas GH, Joy JB, Hartmann K, Mooers AO (2012). The
+#'   global diversity of birds in space and time. \emph{Nature}, 491, 444-448.
+#'   \doi{10.1038/nature11631}.
 #' @seealso \code{\link{tree300}}, \code{\link{avonet_full}}
 "tree_full"
 
 
 #' 50 posterior phylogenies for the 300 species in \code{avonet300}
 #'
-#' A \code{multiPhylo} list of 50 phylogenetic trees randomly sampled from the
-#' BirdTree Hackett backbone posterior (Jetz et al. 2012), each pruned to the
-#' 300 species in \code{\link{avonet300}}.  These trees capture phylogenetic
-#' uncertainty: topologies and branch lengths vary across the posterior sample.
+#' A \code{multiPhylo} list of 50 phylogenetic trees sampled from the 100-tree
+#' BirdTree bird collection retrieved through \pkg{megatrees}. The collection's
+#' first 50 trees use the Ericson backbone and its next 50 use the Hackett
+#' backbone. The fixed sample generated with seed 42 contains 28 Ericson and
+#' 22 Hackett trees, each pruned to the 300 species in \code{\link{avonet300}}.
+#' Topologies and branch lengths vary across this posterior sample. The MIT
+#' software licence for \pkg{megatrees} does not establish rights for the
+#' underlying BirdTree data; see the installed \file{NOTICE}.
 #'
 #' Use with \code{\link{multi_impute_trees}} for experimental sensitivity of
 #' point imputations to posterior-tree choice. Tree uncertainty is not
@@ -106,9 +131,19 @@
 #'
 #' @format An object of class \code{multiPhylo} containing 50 \code{phylo}
 #'   objects, each with 300 tips.
-#' @source Li (2026), \pkg{megatrees} 1.0.0, MIT licence; trees pruned from
-#'   \code{megatrees::get_tree_bird_n100()}. Underlying posterior from Jetz
-#'   et al. (2012), Hackett et al. backbone.
+#' @source Li (2026), \pkg{megatrees} 1.0.0; trees pruned from
+#'   \code{megatrees::get_tree_bird_n100()}. The source collection and its
+#'   Ericson and Hackett backbones are described by Ericson et al. (2006),
+#'   Hackett et al. (2008), and Jetz et al. (2012).
+#' @references Ericson PGP, Anderson CL, Britton T, et al. (2006). Diversification
+#'   of Neoaves: integration of molecular sequence data and fossils.
+#'   \emph{Biology Letters}, 2(4), 543-547. \doi{10.1098/rsbl.2006.0523}.
+#' @references Hackett SJ, Kimball RT, Reddy S, et al. (2008). A phylogenomic
+#'   study of birds reveals their evolutionary history. \emph{Science},
+#'   320(5884), 1763-1768. \doi{10.1126/science.1157704}.
+#' @references Jetz W, Thomas GH, Joy JB, Hartmann K, Mooers AO (2012). The
+#'   global diversity of birds in space and time. \emph{Nature}, 491, 444-448.
+#'   \doi{10.1038/nature11631}.
 #' @seealso \code{\link{tree300}}, \code{\link{avonet300}},
 #'   \code{\link{multi_impute_trees}}
 "trees300"

@@ -1,5 +1,21 @@
 # pigauto 0.11.0
 
+## BirdTree example and retrieval guidance
+
+The README and tutorials now identify `tree300` as a posterior sample tree and
+describe how to obtain and cite BirdTree trees. The README clarifies that
+BirdTree distributes Newick files and `read_tree()` also accepts NEXUS files.
+The installed NOTICE
+distinguishes the optional `megatrees` package licence from rights to the
+underlying data, and the bundled `trees300` help documents its Ericson/Hackett
+mixture. The retired simulation study remains in the repository's history but
+is excluded from the public site, sitemap, and search index.
+
+The package description no longer makes an unqualified claim that the current
+release has been tested at 10,000 species. The historical scaling note below
+now distinguishes the completed 9,993-species missingness study from the
+v0.9.0 timing run, which stopped at 5,000 tips.
+
 ## New defaults: discrete traits get their own λ; safety gate and floor off
 
 Two defaults change, and results change for anyone using the defaults.
@@ -2634,9 +2650,10 @@ improvements: (a) **tree-sharing GNN is now the default** in
 calibration smoothers** (bootstrap conformal, median-over-splits gate,
 low-val-cells warning) for small-n regimes. This release also ships the
 three post-0.9.0 feature branches (B1 soft-liability, B2 rate-aware
-attention, B3 full-threshold ordinal baseline), scaling validation up
-to 10,000 species, and a clean `R CMD check` (0 errors / 0 warnings /
-1 note, down from 1 / 4 / 3 on v0.9.0).
+attention, B3 full-threshold ordinal baseline), a 9,993-species AVONET
+missingness sweep, a separate single-replicate timing curve through 5,000
+tips, and a clean `R CMD check` (0 errors / 0 warnings / 1 note, down from
+1 / 4 / 3 on v0.9.0).
 
 ## Calibration diagnostics and opt-in smoothing for small-n regimes
 
@@ -2730,22 +2747,26 @@ to 10,000 species, and a clean `R CMD check` (0 errors / 0 warnings /
   signal but mixed results at moderate/low signal (hard threshold
   sometimes snaps to the correct majority class by luck).
 
-## Scaling validation (up to 10,000 species)
+## Large-dataset and scaling validation
 
 - **AVONET 9,993 + BirdTree missingness sweep** (`script/bench_avonet_missingness.R`).
   Mean / mode vs BM baseline vs pigauto at 20% / 50% / 80% missing, run
-  from Compute Canada (Narval). pigauto beats the BM baseline on every
-  continuous trait at 80% missing; discrete accuracy stays within ≈1pp
-  of BM across the sweep. Output: `bench_avonet_missingness.rds` +
+  from Compute Canada (Narval; one run per missingness setting). At 80%
+  missing, continuous RMSE matches BM for all four traits. Across the two
+  categorical traits and three settings, pigauto accuracy differs from BM
+  by −4.1 to +4.2 percentage points; the direction varies by trait and
+  setting. These are descriptive results from this run, with no uncertainty
+  estimates from repeated runs. Output: `bench_avonet_missingness.rds` +
   `bench_avonet_missingness.md`, rendered into the pkgdown validation
   suite.
-- **Scaling curve to n = 10,000** (`script/bench_scaling_v090_extended.R`).
-  Per-stage wall-clock + peak memory at
-  n ∈ {100, 300, 1000, 3000, 5000, 7500, 10000}. Confirms sub-quadratic
-  growth for the baseline and the expected O(n²) scaling of the GNN
-  attention. At n = 10,000 the full pipeline completes in ~30–60 min on
-  a single CPU node. Output: scaling table + curve PNG in the pkgdown
-  validation suite.
+- **Single-replicate timing curve** (`script/bench_scaling_v090.R`).
+  This v0.9.0 run measured per-stage wall time and R heap use at
+  n ∈ {100, 300, 1,000, 3,000, 5,000}, with four traits and 25% MCAR
+  missingness. It completed the 5,000-tip case in 23.1 minutes overall;
+  graph construction used about 1,971 MB of R heap at that size. The
+  recorded run did not include 7,500 or 10,000 tips, so it does not support
+  a current 10,000-tip runtime claim. Results are in
+  `script/bench_scaling_v090.md` and `script/bench_scaling_v090.log`.
 
 ## Benchmarks
 

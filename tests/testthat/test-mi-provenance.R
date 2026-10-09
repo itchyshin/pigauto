@@ -233,6 +233,48 @@ test_that("analysis-aware fitting retains captured failures for pooling", {
   expect_s3_class(pooled, "pigauto_pooled")
 })
 
+test_that("pool_mi refuses when failures leave fewer than two fits", {
+  mi <- make_analysis_mi_provenance_fixture(m = 2L)
+  calls <- 0L
+  fit_warnings <- character()
+  fits <- withCallingHandlers(
+    with_imputations(
+      mi,
+      function(d) {
+        calls <<- calls + 1L
+        if (calls == 2L) stop("synthetic failure")
+        stats::lm(y ~ x + z, data = d)
+      },
+      .progress = FALSE,
+      .on_error = "continue"
+    ),
+    warning = function(w) {
+      fit_warnings <<- c(fit_warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  expect_length(fit_warnings, 1L)
+  expect_match(fit_warnings, "1 of 2 fits failed")
+  expect_s3_class(fits[[2]], "pigauto_mi_error")
+  expect_equal(attr(fits, "n_fits"), 2L)
+  expect_equal(attr(fits, "n_failed"), 1L)
+
+  pool_warnings <- character()
+  expect_error(
+    withCallingHandlers(
+      pool_mi(fits),
+      warning = function(w) {
+        pool_warnings <<- c(pool_warnings, conditionMessage(w))
+        invokeRestart("muffleWarning")
+      }
+    ),
+    "Need at least 2 fits to pool; got 1."
+  )
+  expect_length(pool_warnings, 1L)
+  expect_match(pool_warnings, "Dropping 1 fit")
+})
+
 test_that("diagnostic and tree provenance survive RDS refusal", {
   datasets <- make_mi_provenance_datasets()
   objects <- list(

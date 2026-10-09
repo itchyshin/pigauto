@@ -26,7 +26,7 @@ install.packages("pigauto")
 ## Start here
 
 Put a CSV trait table (with a unique `species` column) and a Newick or NEXUS
-tree beside your R script. Then use this six-line journey:
+tree beside your R script. Then start with this short workflow:
 
 ```r
 library(pigauto)
@@ -38,6 +38,14 @@ result <- impute(traits, tree)
 completed <- completed_data(result)
 pigauto_report(result)
 ```
+
+BirdTree distributes its tree files in Newick format. Download one from
+[BirdTree](https://birdtree.org/downloads/) and read it with `read_tree()`;
+`read_tree()` also accepts NEXUS files from other sources. Cite Jetz et al.
+(2012) for the tree, and cite BirdTree.org when you use its website. pigauto uses
+the tree you provide and
+does not download BirdTree data automatically. The bundled `tree300` is a
+teaching example; it is not a consensus or recommended analysis tree.
 
 `impute()` now uses the phylogenetic baseline by default (`gnn = FALSE`),
 estimates Pagel's lambda for eligible traits, and leaves the mean safety
