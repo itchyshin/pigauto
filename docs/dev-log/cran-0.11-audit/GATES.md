@@ -61,6 +61,7 @@ ADDITIONAL EXACT LOCAL CANDIDATE 2026-10-08: A clean detached worktree at merged
 
 - [ ] G9: Independent reviewers approve the exact release artifact and site evidence; the release-evidence PR remains unmerged.
   EVIDENCE: Earlier reviews cover plan, defaults, adapters, and prior site state, but not the final exact artifact. After evidence commit `96564f6`, Chrome showed PR #228 with 18 commits, Draft, no conflicts, checks passed with one skipped check, no reviews, and no deployment. The PR contains the 1bfed5ad exact local candidate receipt, which is not the final post-documentation artifact. Exact-hash panel review, final source/site correction, deployment, and platform results remain open. Merge and submission remain Shinichi's authority.
+  CURRENT PR CHECK (2026-10-09, Chrome): After pushing evidence commit `41dbdc041e26a3665a6d8d8012eecf17c242c7e6`, the PR commits page showed it as the latest commit, 57 commits total, and Draft status. The PR remains unmerged. This confirms receipt publication only; G8 platform results, final deployed-site verification, and exact-artifact independent verdicts remain open.
 
 ## 2026-10-07 release recommendation on tree access
 

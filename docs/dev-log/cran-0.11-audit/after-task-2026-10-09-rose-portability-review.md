@@ -21,6 +21,7 @@ The reviewer’s source-level assessment is recorded as support for the patch’
 
 - Lane preflight for `/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto`: lease present for the audit ledger and site verifier paths; the global census also reported other active lanes.
 - `git diff --check`: clean before this documentation-only update.
+- Chrome post-push verification: PR #228 remained Draft and unmerged; commit `41dbdc041e26a3665a6d8d8012eecf17c242c7e6` appeared as the latest commit (57 commits total).
 - Rose’s bounded review: reviewed the patch and prior failure evidence; did not run tests.
 - No Windows, libtorch-enabled, full-suite, exact-artifact, deployment, or CRAN check was run in this slice.
 
@@ -45,7 +46,7 @@ The task opened in a separate dirty handover checkout, and lane preflight found 
 
 ## 10. Known Residuals
 
-The current exact artifact’s Windows result logs remain outstanding. The README warning fix remains on its source branch pending the user’s decision on the proposed PR title and body. PR #228 remains Draft and unmerged.
+The current exact artifact’s Windows result logs remain outstanding. The README warning fix remains on its source branch pending the user’s decision on the proposed PR title and body. PR #228 remains Draft and unmerged. Chrome confirmed commit `41dbdc0` as its latest commit after the push.
 
 ## 11. Team Learning
 
