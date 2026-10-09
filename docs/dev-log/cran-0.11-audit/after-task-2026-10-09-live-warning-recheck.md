@@ -24,7 +24,7 @@ The homepage display defect remains separate from G7’s bounded route-verificat
 - `git show origin/main:README.md`: merged README still uses `[!WARNING]` callout syntax.
 - Existing local fix evidence remains the exact-head pkgdown build at `45df106ba58f5bc97d7a274bc0a22a19d202fa17`, with the corrected `<blockquote>` render and build-log SHA-256 `ba7e2f361fa0c6980bbbbcca9fb342388602968edeee60963450e540f3c49db6`.
 - This check did not rerun the retired-route, sitemap, or search-index audit; the existing G7 receipt is bounded to the same deployment commit.
-- `slop_check.py` and `check-after-task.R`: pending final validation.
+- `slop_check.py`: 0 findings. `check-after-task.R`: required report structure passed; the overall Unlazy audit remains open on exact-artifact and independent-review gates, and the repo-wide checker also reports separate imputation-sim leaves.
 
 ## 6. Tests of the Tests
 
