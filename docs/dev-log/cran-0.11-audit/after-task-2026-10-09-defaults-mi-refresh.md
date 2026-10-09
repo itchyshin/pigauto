@@ -92,3 +92,12 @@ Run #37932930957 passed on PR #231 source head `ad28685cd216ee402f775fef7c031852
 This run sets `NOT_CRAN=true` and `_R_CHECK_FORCE_SUGGESTS_=false`; it verifies candidate-source CI only and does not satisfy G8. The pkgdown PR workflow was skipped by repository design. Relative to the previously passing source head `2b56c64`, the tested delta contains only audit evidence files. G0–G6 remain met and G7–G9 remain open. The sole pigauto audit driver owns this evidence checkout; no competing pigauto lane is being treated as active. Both PRs remain Draft and unmerged. No merge, deployment, frozen final tarball, or CRAN submission occurred.
 
 Files updated: `GATES.md`, this report, and the retained raw workflow log. `git diff --check` passed and the naturalness checker reported zero findings. The after-task structure check passed; full closeout still reports five unmet gates in `.unlazy/imputation-sim/gates/`, outside the CRAN 0.11 release-evidence scope. No package or site tests were rerun because this update records the completed source-CI run only.
+
+
+## Follow-up: current PR-head source CI completion, 2026-10-09
+
+Run #37934989398 passed on PR #231 source head `248a18abc66fe8a3d261a519f8573f100a0ee96c`, through synthetic merge `e9e7e20` into base `0b0f71f`. Ubuntu R-release, Ubuntu R-devel, and macOS arm64 R-release all reported `R CMD check Status: OK`; each full suite reported 3,196 passes, 0 failures, 175 warnings, and 83 skips. The focused macOS MPS test reported 201 passes, 0 failures, 50 warnings, and 0 skips in 209.2 seconds. The consolidated log is `provenance/source-ci-37934989398.log`, 5,971,880 bytes, SHA-256 `904b6a55bf5d8b80adaeab934b21e7e7c0c10a309f5d8d94685a306ce0217184`.
+
+This workflow sets `NOT_CRAN=true` and `_R_CHECK_FORCE_SUGGESTS_=false`; it verifies candidate source only and does not satisfy G8. The pkgdown PR workflow was skipped by design. The tested source delta from `ad28685` contains only audit evidence files, with no changes to package behavior, bundled data, generated help, reader-facing documentation, or website inputs. G0–G6 remain met and G7–G9 remain open. Both PRs remain Draft and unmerged; no merge, deployment, final tarball, or CRAN submission occurred.
+
+Files updated: `GATES.md`, this report, and the retained raw workflow log. `git diff --check` passed and the naturalness checker reported zero findings. No package or site tests were rerun because this update records completed source CI only.
