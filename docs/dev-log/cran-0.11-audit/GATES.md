@@ -232,3 +232,8 @@ Independent closure: Grace and Rose return NOT READY for the exact artifact beca
 ## Pat independent site re-review, 2026-10-09
 
 Pat has now independently reviewed the committed v2 receipts and passes G7 for the checked deployment (`d76804e768bf77f430f43dcf591633f9cd900dab`, Pages run `37975894397`). The earlier NOT ASSESSED status is superseded. The 44 retired-route checks, 62 sitemap URLs, 613 search entries, and three verifier tests are documented in `provenance/pat-independent-site-review-2026-10-09-v2.md`. Pat still observed the literal `[!WARNING]` token on the homepage; direct live sitemap access was blocked during the re-review. This pass is limited to the checked deployment. G8 and G9 remain open: Windows logs fail and are not bound to the frozen archive hash, and Grace/Rose remain NOT READY. Overall NOT READY; PR #228 remains Draft and unmerged.
+
+
+## Evidence PR refresh, 2026-10-09
+
+The Pat G7 re-review receipt and refreshed NOT READY description are committed to PR #228 at `b04efdcb09eed9149196ace5e137c6b4a954508e`. Chrome confirms the current head, the revised description, Draft state, and passing PR checks (one skipped). G5 is met. G3 and G4 remain open; PR #228 is not merged.

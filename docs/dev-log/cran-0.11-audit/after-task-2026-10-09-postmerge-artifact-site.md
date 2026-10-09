@@ -84,3 +84,8 @@ Recorded the current R-release and R-devel Win-builder logs, preserving their ra
 ## Pat re-review update (2026-10-09)
 
 Pat independently reviewed the now-committed site receipts and passes G7 for the checked deployment. This supersedes the prior NOT ASSESSED verdict on receipt durability. The review confirms the receipt hashes, Pages run `37975894397` at deployment commit `d76804e768bf77f430f43dcf591633f9cd900dab`, the 44 retired routes, 62 sitemap URLs, 613 search entries, and three verifier tests. Chrome still shows a literal `[!WARNING]` token on the homepage; Pat could not directly fetch the live sitemap in this re-review, so that check is supported by the committed verifier capture. G8/G9 remain open because Windows logs fail without binding to the frozen artifact hash and Grace/Rose remain NOT READY. PR #228 stays Draft and unmerged; no CRAN submission occurred.
+
+
+## Evidence PR refresh verification (2026-10-09)
+
+Committed Pat's G7 re-review and updated the ledger and PR description. Chrome shows PR #228 at `b04efdcb09eed9149196ace5e137c6b4a954508e`, Draft and unmerged, with the revised NOT READY description and all checks passed (one skipped). The description now reports Pat's G7 pass for the checked deployment while retaining the homepage warning, failed/unbound Windows diagnostics, and open G8/G9 status. No merge or submission occurred.

@@ -88,5 +88,13 @@
         "point_in_time_deployment_only"
       ]
     }
+  },
+  "evidence_pr": {
+    "number": 228,
+    "branch": "release/cran-0.11-gate",
+    "head": "b04efdcb09eed9149196ace5e137c6b4a954508e",
+    "state": "draft",
+    "merged": false,
+    "description_refreshed_after_pat_g7_review": true
   }
 }
