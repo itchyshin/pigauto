@@ -6,7 +6,7 @@ Reconcile PR #228's gate ledger with current evidence from the single pigauto CR
 
 ## 2. Implemented
 
-Marked G0 and G6 met with dated evidence tied to source-review records. Added the verified site build and crawl logs to the evidence branch. Clarified in `release-ledger.json` that maintainer warranty is recorded, separately published BirdTree redistribution terms were not found on reviewed pages, and exact shipped-file inspection remains pending under G8. The ledger verdict stays `NOT_READY`.
+Marked G0 and G6 met with dated evidence tied to source-review records. Added the verified site build and crawl logs to the evidence branch. Clarified in `release-ledger.json` that maintainer warranty is recorded, separately published BirdTree redistribution terms were not found on reviewed pages, and exact shipped-file inspection remains pending under G8. A follow-up aligned G1's title with the actual coverage and refreshed its source-head pointer to `dbe1248`; the focused default and MI receipts remain explicitly bound to `cf88d78`. The ledger verdict stays `NOT_READY`.
 
 ## 3a. Decisions and Rejected Alternatives
 
@@ -29,6 +29,7 @@ Followed Shinichi's clarification that this is one pigauto lane; multiple worktr
 - The retained crawl output records 62 HTML pages, 3,584 references, 34 retired pages, zero errors, and `SITE_CRAWL_OK`.
 - `node ~/.codex/skills/unlazy/scripts/gate-check.mjs --status <absolute GATES.md path>` reports 8 met and 3 unmet: G7, G8, and G9. It notes two checked gates with runnable commands lack approval records, so those commands remain unexecuted by the checker.
 - `python3 -m json.tool docs/dev-log/cran-0.11-audit/release-ledger.json` passed. `git diff --cached --check` passes when excluding the verbatim build log; on the full staged diff it reports two trailing spaces in the raw build log's generated conditional-example lines 585-586. Those bytes are preserved so the recorded raw-output SHA-256 stays valid.
+- The G1 heading now distinguishes the inventory-wide declared-default comparison from named effective-route tests. The G0 pointer names current source PR head `dbe1248`; its only changes since the reviewed source candidate are audit-ledger and test-receipt records. The PR page showed its fresh source-CI matrix still in progress, so no passing result is attributed to `dbe1248` yet.
 - `CHECK_AFTER_TASK_ACTIVE=1 python3 ~/shinichi-brain/tools/closeout.py check <absolute report path>` passed. `slop_check.py` found zero issues and zero em dashes.
 - `Rscript ~/shinichi-brain/tools/check-after-task.R <absolute report path>` passed its structure check, then reported five unmet `.unlazy/imputation-sim` gates outside this pigauto audit. Those files were left untouched.
 
@@ -46,7 +47,7 @@ Open: G7 deployed-site verification, G8 exact post-merge tarball and platform ev
 
 ## 8. Consistency Audit
 
-Compared the current source PR G0/G6 evidence with PR #228's gate file and the retained build/crawl logs. The source reviewer found the changes after the reviewed site commit were confined to audit records; the site evidence therefore still matches the candidate's website inputs. The release ledger remains fail-closed with empty final-artifact controls and `audit_verdict: NOT_READY`. The PR description already reports 8 of 11 gates met, which matches the two reconciled checkboxes.
+Compared the current source PR G0/G6 evidence with PR #228's gate file and the retained build/crawl logs. The source reviewer found the changes after the reviewed site commit were confined to audit records; the site evidence therefore still matches the candidate's website inputs. The source PR advanced from `cf88d78` to `dbe1248` with only audit-ledger, after-task, and receipt records; the test receipts remain pinned to the source they exercised. The release ledger remains fail-closed with empty final-artifact controls and `audit_verdict: NOT_READY`. The PR description reports 8 of 11 gates met, matching the reconciled checkboxes.
 
 ## 9. What Did Not Go Smoothly
 
