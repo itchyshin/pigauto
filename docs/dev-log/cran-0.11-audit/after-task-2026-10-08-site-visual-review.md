@@ -4,7 +4,7 @@ Close local site review for the pigauto 0.11 candidate and refresh the release l
 
 ## 2. Implemented
 
-Updated `GATES.md` with the fresh site build and crawl evidence for commit `4a724399ada88eff6a4b347b94e9047c2e0163d4`, Chrome visual review, and current PR #231 CI state. The exact-head output has 62 HTML pages, 613 search entries, 3,443 checked local references, and 34 retired routes, with no crawl errors. Chrome reviewed Getting Started and `trees300` directly; the other three pages checked earlier are byte-identical to this build. Corrected old “current” snapshots in G0 and G7 to label them historical. The lane census reports one active pigauto lane. G6 is met; G0, G7, G8, and G9 remain unmet.
+Updated `GATES.md` with the fresh site build and crawl evidence for commit `4a724399ada88eff6a4b347b94e9047c2e0163d4`, Chrome visual review, and current PR #231 CI state. The exact-head output has 62 HTML pages, 613 search entries, 3,443 checked local references, and 34 retired routes, with no crawl errors. Chrome reviewed Getting Started and `trees300` directly; the other three pages checked earlier are byte-identical to this build. Corrected old “current” snapshots in G0 and G7 to label them historical. The lane census reports one active pigauto lane. A later exact-head matrix on `dcdf0366cc6b99729cb7dc85045d224edab7d4b8` passed Ubuntu R release, Ubuntu R-devel, and macOS R release in 19m42s total. It is candidate-source CI only. G6 is met; G0, G7, G8, and G9 remain unmet.
 
 ## 3a. Decisions and Rejected Alternatives
 
@@ -21,7 +21,7 @@ Used Chrome with the existing loopback-only site server after direct `file://` n
 - Checked the retained exact-head pkgdown build and crawl logs. Build output records 62 HTML pages, 613 search entries, 3,443 local references, 34 retired routes, zero crawl errors, `SITE_CRAWL_OK`, and a clean `pkgdown::check_pkgdown()` result. Both log checksums are recorded in `GATES.md`.
 - Compared rendered HTML hashes against the preceding visually inspected output: `index.html` `63f96fd4e932a45b8789c6844a00b792c94e868254108c68388cc9f7df131b99`; `articles/getting-started.html` `33c9ea9cbbe4fca0c230ca082f94e89cab3c612dac13c58bbaff58639d0e24e6`; `articles/multiple-imputation.html` `4124a2e181083812e00fc4f9790f30f4024af111fcccc68fcb3b2cf0a602e4b5`; `articles/tree-uncertainty.html` `e92e5c69fbb5b34bd8de39e03b487150a7f62074b82d28b0a4e6ac57e403bffc`; `reference/trees300.html` `82aa732d24ea848a4bce76da8716f16271f39113a382d03d0ca7e6bcccae54ea`.
 - Reviewed the local rendered home page, Getting Started, multiple-imputation, tree-uncertainty, and `trees300` reference pages in Chrome.
-- Chrome showed PR #231 remains Draft at 22 commits and head `4a72439`. Run #37867499185 passed on predecessor `34e1e3c`; the exact-head run #37869600607 was still in progress at 0/3 jobs at the time of review. No result is claimed for the new run.
+- Chrome showed PR #231 remains Draft at head `dcdf036`. Run #37870408831 passed all three platform jobs in 19m42s: Ubuntu R release 10m24s, Ubuntu R-devel 12m33s, and macOS R release 19m10s (MPS-focused tests 4m52s; `R CMD check` 10m43s). The macOS job displayed one runner-capacity notice; Ubuntu jobs displayed runner-image migration notices. This does not validate a frozen tarball or force-Suggests check.
 - `node ~/.codex/skills/unlazy/scripts/gate-check.mjs --status docs/dev-log/cran-0.11-audit/GATES.md` reports 7 met and 4 unmet gates. It parses the ledger; it does not rerun the gate commands.
 - `git diff --check` passed.
 
