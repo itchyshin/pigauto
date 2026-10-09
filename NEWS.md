@@ -2751,9 +2751,12 @@ tips, and a clean `R CMD check` (0 errors / 0 warnings / 1 note, down from
 
 - **AVONET 9,993 + BirdTree missingness sweep** (`script/bench_avonet_missingness.R`).
   Mean / mode vs BM baseline vs pigauto at 20% / 50% / 80% missing, run
-  from Compute Canada (Narval). pigauto beats the BM baseline on every
-  continuous trait at 80% missing; discrete accuracy stays within ≈1pp
-  of BM across the sweep. Output: `bench_avonet_missingness.rds` +
+  from Compute Canada (Narval; one run per missingness setting). At 80%
+  missing, continuous RMSE matches BM for all four traits. Across the two
+  categorical traits and three settings, pigauto accuracy differs from BM
+  by −4.1 to +4.2 percentage points; the direction varies by trait and
+  setting. These are descriptive results from this run, with no uncertainty
+  estimates from repeated runs. Output: `bench_avonet_missingness.rds` +
   `bench_avonet_missingness.md`, rendered into the pkgdown validation
   suite.
 - **Single-replicate timing curve** (`script/bench_scaling_v090.R`).
