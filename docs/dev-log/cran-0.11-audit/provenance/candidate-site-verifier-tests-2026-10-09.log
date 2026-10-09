@@ -1,0 +1,11 @@
+Command: python3 script/cran-0.11-site/test_candidate_site.py
+Working directory: repository root
+Exit status: 0
+
+................
+----------------------------------------------------------------------
+Ran 16 tests in 0.929s
+
+OK
+
+The suite covers 35 negative-control scenarios and a positive candidate fixture. A second positive check against the retained cleaned candidate output is recorded in candidate-site-warning-callout-2026-10-09.log.
