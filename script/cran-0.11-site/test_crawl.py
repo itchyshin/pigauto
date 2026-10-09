@@ -77,6 +77,25 @@ class PageReferenceTests(unittest.TestCase):
         self.assertEqual(result, 1)
         self.assertIn("missing.html", output.getvalue())
 
+    def test_crawl_rejects_html_symlinks_outside_site_root(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir) / "site"
+            outside = Path(temp_dir) / "outside.html"
+            root.mkdir()
+            (root / "index.html").write_text("<h1>Site</h1>")
+            outside.write_text('<img src="secret.png">')
+            (root / "outside.html").symlink_to(outside)
+            (root / "search.json").write_text("[]")
+            (root / "sitemap.xml").write_text("<urlset></urlset>")
+
+            output = StringIO()
+            with redirect_stdout(output):
+                result = crawl.main(root)
+
+        self.assertEqual(result, 1)
+        self.assertIn("outside.html: HTML page resolves outside site root", output.getvalue())
+        self.assertNotIn("secret.png", output.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()

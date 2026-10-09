@@ -103,7 +103,13 @@ def main(site_root, base_url=None):
         raise ValueError(f"Site directory missing: {root}")
 
     pages = {}
+    errors = []
     for path in root.rglob("*.html"):
+        if not path.resolve().is_relative_to(root):
+            errors.append(
+                f"{path.relative_to(root)}: HTML page resolves outside site root"
+            )
+            continue
         page = Page()
         page.feed(path.read_text(errors="replace"))
         pages[path] = page
@@ -112,7 +118,6 @@ def main(site_root, base_url=None):
     base = urlsplit(base_url) if base_url else None
     base_path = base.path.rstrip("/") if base else ""
 
-    errors = []
     checked = 0
     processed_css = set()
     for path, page in pages.items():
