@@ -62,3 +62,7 @@ For each candidate-source matrix, record the exact head and completion duration.
 ## 12. Cross-Product Coverage
 
 This slice covers one completed three-platform candidate-source matrix, two PR description refreshes, and their local audit receipt. It does not cover merge, deployment, an exact final tarball, platform checks for that tarball, independent artifact review, or CRAN submission.
+
+## Follow-up, 2026-10-09
+
+Chrome verified run [#37897100223](https://github.com/itchyshin/pigauto/actions/runs/37897100223) on PR #231 head `8a00ce59382c7e7ba22845425299127d861d66e2`: the run succeeded in 17m48s and its Ubuntu R release, Ubuntu R-devel, and macOS arm64 R release jobs all completed successfully. The workflow sets `_R_CHECK_FORCE_SUGGESTS_=false`; this remains candidate-source evidence, not the exact-artifact force-Suggests gate. The run-page title identifies head `8a00ce5`, and the PR descriptions already reflect this receipt. The ledger now records it while preserving the 8-of-11 tally and open G7–G9 gates. No package source, user-facing documentation, bundled data, or website input changed in this receipt update.
