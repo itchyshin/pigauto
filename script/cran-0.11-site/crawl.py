@@ -2,6 +2,7 @@
 """Check local site links, assets, anchors, and retired public URLs."""
 
 import json
+import argparse
 import re
 import sys
 from html import unescape
@@ -25,9 +26,12 @@ def srcset_references(value):
         start = position
         while position < len(value) and not value[position].isspace():
             position += 1
-        candidate = value[start:position].rstrip(",")
+        raw_candidate = value[start:position]
+        candidate = raw_candidate.rstrip(",")
         if candidate:
             references.append(candidate)
+        if raw_candidate.endswith(","):
+            continue
         while position < len(value) and value[position] != ",":
             position += 1
         if position < len(value):
@@ -93,7 +97,7 @@ def indexed_urls(path):
             yield unescape(url)
 
 
-def main(site_root):
+def main(site_root, base_url=None):
     root = site_root.resolve()
     if not root.is_dir():
         raise ValueError(f"Site directory missing: {root}")
@@ -105,6 +109,8 @@ def main(site_root):
         pages[path] = page
     if not pages:
         raise ValueError("Site has no HTML pages")
+    base = urlsplit(base_url) if base_url else None
+    base_path = base.path.rstrip("/") if base else ""
 
     errors = []
     checked = 0
@@ -114,9 +120,23 @@ def main(site_root):
         while pending:
             source, link = pending.pop()
             url = urlsplit(link)
+            same_origin = bool(
+                base
+                and url.netloc == base.netloc
+                and (url.scheme or base.scheme) == base.scheme
+            )
             if url.scheme or url.netloc:
-                continue
-            if not url.path:
+                if not same_origin:
+                    continue
+                if base_path and url.path.rstrip("/") != base_path \
+                        and not url.path.startswith(base_path + "/"):
+                    continue
+                relative_url_path = url.path[len(base_path):] if base_path else url.path
+                if not relative_url_path.strip("/"):
+                    target = root / "index.html"
+                else:
+                    target = (root / unquote(relative_url_path.lstrip("/"))).resolve()
+            elif not url.path:
                 target = source
             elif url.path.startswith("/"):
                 target = (root / unquote(url.path.lstrip("/"))).resolve()
@@ -198,4 +218,8 @@ def main(site_root):
 
 
 if __name__ == "__main__":
-    sys.exit(main(Path(sys.argv[1])))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("site_root", type=Path)
+    parser.add_argument("--base-url", help="deployed site URL used to resolve same-origin absolute links")
+    arguments = parser.parse_args()
+    sys.exit(main(arguments.site_root, base_url=arguments.base_url))

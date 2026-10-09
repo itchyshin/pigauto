@@ -29,8 +29,20 @@ fi
 PIGAUTO_SITE_DIR="$site_root/_site" \
   Rscript --vanilla "$site_root/pkgdown/clean-internal-pages.R"
 python3 "$site_root/script/cran-0.11-site/test_crawl.py"
+site_base_url=$(python3 - "$site_root/_pkgdown.yml" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+text = Path(sys.argv[1]).read_text()
+match = re.search(r"(?m)^url:\s*['\"]?([^'\"\s]+)", text)
+if not match:
+    raise SystemExit("Could not read site URL from _pkgdown.yml")
+print(match.group(1).rstrip("/") + "/")
+PY
+)
 if ! (cd "$site_root" && \
-  python3 script/cran-0.11-site/crawl.py _site > "$crawl_log"); then
+  python3 script/cran-0.11-site/crawl.py --base-url "$site_base_url" _site > "$crawl_log"); then
   cat "$crawl_log" >&2
   exit 1
 fi
