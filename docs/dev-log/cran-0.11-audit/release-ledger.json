@@ -24,7 +24,13 @@
     "local_check_log_sha256": "4798992b15bcc845b7d99ca7b331d17cffcf72342882da9f4cda5a7b685568d1",
     "testthat_output": "provenance/exact-artifact-0b0f71f-2026-10-08-testthat.Rout",
     "windows_results_bound_to_hash": false,
-    "birdtree_redistribution_rights": "unresolved",
+    "birdtree_redistribution_rights": "separate_published_redistribution_terms_not_found",
+    "birdtree_rights_basis": {
+      "maintainer_warranty": "Shinichi confirmed the bundled trees may be used with citation and credit; recorded as the maintainer-warranty basis for this inclusion.",
+      "published_redistribution_terms": "not_found_on_reviewed_birdtree_pages",
+      "notice_distinction": "inst/NOTICE distinguishes BirdTree data from the megatrees software licence",
+      "exact_tarball_inspection": "pending_G8"
+    },
     "exact_hash_independent_panel": "pending_for_1bfed5ad7be61437f4fdb09ece053d6a40211b5a5b7da4b2c947c3343493b719"
   },
   "panel": {
