@@ -19,6 +19,8 @@ Kept this as a status correction in the release-evidence lane. Did not alter sou
 
 - Opened PR #231 in the Codex in-app browser and verified the saved rendered description after the update.
 - Re-read the current `GATES.md` before the update; G7, G8, and G9 remain unmet.
+- After the push, verified PR #228 at head `cf23da2` in the browser. It remains Draft and undeployed. Its pull-request pkgdown run #37950876425 was skipped by the configured guard.
+- The after-task structure and style checks pass. The global closeout remains open because five `.unlazy/imputation-sim` gates are unmet outside this CRAN audit.
 - Updated the existing `codex:cran-011-single-driver` lease to include this evidence report. No other lane paths were changed.
 
 ## 6. Tests of the Tests
@@ -33,7 +35,7 @@ Still open: deployed-site verification, one final frozen artifact with exact che
 
 ## 8. Consistency Audit
 
-Compared the updated PR description with the current gate ledger and the displayed Actions result. The commit, run number, three job results, environment limitations, Draft status, and exact-artifact boundary agree. No release gate was closed by this change.
+Compared the updated PR description with the current gate ledger and the displayed Actions result. The source commit, run number, three job results, environment limitations, Draft status, and exact-artifact boundary agree. The evidence PR page confirms commit `cf23da2`, Draft status, and no deployment; its only check was the expected skipped pkgdown workflow. No release gate was closed by this change.
 
 ## 9. What Did Not Go Smoothly
 
