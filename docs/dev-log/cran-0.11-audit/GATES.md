@@ -227,3 +227,7 @@ Chrome confirms GitHub Actions run [#37888439948](https://github.com/itchyshin/p
 ## Exact-head CI refresh, 2026-10-09
 
 GitHub Actions run [#37890462685](https://github.com/itchyshin/pigauto/actions/runs/37890462685) completed successfully for PR #231 source head `24d32858c211c1eed543a9f8ec53f3b3d34567f7` in 17m49s. Ubuntu R release, Ubuntu R-devel, and macOS arm64 R release all succeeded. The local Chrome run and job pages showed three successful jobs; GitHub displayed two Ubuntu runner-image migration notices and one macOS arm64 capacity notice. The pull-request pkgdown job was skipped by design. This is candidate-source CI only and does not provide force-Suggests or exact-tarball evidence for G8. G0–G6 remain met and G7–G9 remain open. PR #231 is Draft and unmerged; there is no deployment. No merge, deployment, or CRAN submission occurred.
+
+## Exact-head CI completion, 2026-10-09
+
+Chrome confirms GitHub Actions run [#37892292581](https://github.com/itchyshin/pigauto/actions/runs/37892292581) passed on PR #231 source head `6167084636a563bb1fe32b1c4db068897de60803` in 19m31s. Ubuntu R release, Ubuntu R-devel, and macOS arm64 R release all succeeded. The workflow used `NOT_CRAN=true` and `_R_CHECK_FORCE_SUGGESTS_=false`; it therefore establishes candidate-source CI only, not force-Suggests or exact-tarball evidence for G8. The pkgdown pull-request workflow was skipped by repository design. The gate tally remains 8 of 11: G0–G6 met and G7–G9 open. PR #231 remains Draft and unmerged; no deployment, merge, or CRAN submission occurred.
