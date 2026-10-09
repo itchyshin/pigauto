@@ -43,7 +43,7 @@ The round-trip check compares every decompressed archive to the original bytes b
 
 ## 7a. Issue Ledger
 
-Resolved: raw logs previously added 267,919 visible lines and 32.9 MB to PR #231, obscuring the substantive source and reader-surface changes. Preserved: all six exact CI logs and their checksums. Resolved six stale raw-log paths and two unavailable site-evidence paths in `OWNS`. The dated site-review file named by the older after-task report is absent from current source history and accessible worktrees; the current exact-head visual findings remain recorded directly in `GATES.md`. The latest source matrix passed, while deployment and exact final-artifact gates G7–G9 remain open.
+Resolved: raw logs previously added 267,919 visible lines and 32.9 MB to PR #231, obscuring the substantive source and reader-surface changes. Preserved: all six exact CI logs and their checksums. Resolved six stale raw-log paths and two unavailable site-evidence paths in `OWNS`. The dated site-review file named by the older after-task report is absent from current source history and accessible worktrees; the current exact-head visual findings remain recorded directly in `GATES.md`. The source matrix passed, while deployment and exact final-artifact gates G7–G9 remain open; the newer exact-head receipt is recorded below.
 
 ## 8. Consistency Audit
 
@@ -75,4 +75,4 @@ Does NOT cover package behavior, defaults, MI adapter correctness, rendered or d
 
 The current-head workflow that was in progress when the compression receipt was written has now completed. Chrome showed run #37965714452 succeeded on PR #231 head `cff6ea685d2788687d085e24c2a8ef83ce50f7bb` in 17m58s. All three platform jobs passed; each log reports `R CMD check Status: OK` and 3,196 passes, 0 failures, 175 warnings, and 83 skips. The macOS-focused MPS test reports 201 passes, 0 failures, 50 warnings, and 0 skips. The environment used `NOT_CRAN=true` and `_R_CHECK_FORCE_SUGGESTS_=false`; pkgdown run #37965714410 was skipped by repository design. This is source-CI evidence only. It does not close the exact-artifact G8 gate.
 
-The audit ledger now records this completed run and keeps the tally at 8/11, with G7–G9 open. PR #231 and #228 remain Draft and unmerged. The GitHub PR descriptions still need their prior in-progress wording refreshed to this result. No code, site input, default, data, or release artifact changed.
+The audit ledger now records this completed run and keeps the tally at 8/11, with G7–G9 open. PR #231 and #228 remain Draft and unmerged. Both Draft PR descriptions were refreshed through the Codex in-app browser. GitHub readback confirms they cite run #37965714452 and distinguish that completed result from the new ledger-only head, which has no check result listed yet. No code, site input, default, data, or release artifact changed.
