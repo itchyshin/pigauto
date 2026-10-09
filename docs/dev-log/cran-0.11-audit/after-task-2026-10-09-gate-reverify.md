@@ -43,7 +43,7 @@ Confirmed the source checkout remained clean at `cf88d78e37d08130bd33823e1fd4594
 
 ## 9. What Did Not Go Smoothly
 
-The first Unlazy attempt printed the entire build log, exceeded its output pipe, and failed before writing a site-root receipt. G5b then failed because that prerequisite was absent. The corrected wrapper emitted only the success marker. The sandbox also required a scoped write escalation for the managed worktree and Unlazy approval receipt.
+The first Unlazy attempt printed the entire build log, exceeded its output pipe, and failed before writing a site-root receipt. G5b then failed because that prerequisite was absent. The corrected wrapper emitted only the success marker. The sandbox also required a scoped write escalation for the managed worktree and Unlazy approval receipt. `git diff --cached --check` flags two trailing-space lines repeated in the wrapper and pkgdown logs because the raw output is preserved byte-for-byte for its SHA-256; the edited Markdown files pass the whitespace check.
 
 ## 10. Known Residuals
 
