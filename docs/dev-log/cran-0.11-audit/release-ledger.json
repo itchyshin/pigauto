@@ -70,9 +70,23 @@
   "panel": {
     "grace": "NOT_READY_frozen_artifact_windows_diagnostic_failures_unbound_to_hash",
     "rose": "NOT_READY_frozen_artifact_windows_diagnostic_failures_unbound_to_hash",
-    "pat": "NOT_ASSESSED_durable_site_receipts_were_ignored_by_git"
+    "pat": "G7_PASS_deployment_d76804e;homepage_warning_token_remains;direct_sitemap_recheck_blocked"
   },
-  "status_claim": "not_ready_windows_failures_not_hash_bound_and_independent_closure_open",
+  "status_claim": "not_ready_windows_failures_not_hash_bound_and_exact_artifact_independent_closure_open",
   "submission": {},
-  "audit_verdict": "NOT_READY"
+  "audit_verdict": "NOT_READY",
+  "panel_evidence": {
+    "pat": {
+      "verdict": "G7_PASS_for_checked_deployment",
+      "review": "provenance/pat-independent-site-review-2026-10-09-v2.md",
+      "reviewed_evidence_commit": "7752956",
+      "deployment_commit": "d76804e768bf77f430f43dcf591633f9cd900dab",
+      "pages_run": "37975894397",
+      "limitations": [
+        "homepage_literal_WARNING_token_remains",
+        "direct_live_sitemap_fetch_blocked_in_recheck",
+        "point_in_time_deployment_only"
+      ]
+    }
+  }
 }

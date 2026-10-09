@@ -79,3 +79,8 @@ This update covers one merged macOS/R 4.6.0 artifact check and one deployed pkgd
 ## Current reconciliation update (2026-10-09)
 
 Recorded the current R-release and R-devel Win-builder logs, preserving their raw bytes in deterministic gzip files with both raw and compressed SHA-256 values. Both report `Status: 1 ERROR` and five failed expectations; neither identifies the uploaded archive hash. Updated the release ledger to keep G8 and G9 open and to record Grace/Rose as NOT READY and Pat as NOT ASSESSED for durable site evidence. The live-site v2 receipts were ignored by the repository ignore rule, so this update force-adds those specific receipts to the evidence branch. The homepage warning rendering remains an unresolved reader-facing discrepancy. No source change, merge, or CRAN submission was made.
+
+
+## Pat re-review update (2026-10-09)
+
+Pat independently reviewed the now-committed site receipts and passes G7 for the checked deployment. This supersedes the prior NOT ASSESSED verdict on receipt durability. The review confirms the receipt hashes, Pages run `37975894397` at deployment commit `d76804e768bf77f430f43dcf591633f9cd900dab`, the 44 retired routes, 62 sitemap URLs, 613 search entries, and three verifier tests. Chrome still shows a literal `[!WARNING]` token on the homepage; Pat could not directly fetch the live sitemap in this re-review, so that check is supported by the committed verifier capture. G8/G9 remain open because Windows logs fail without binding to the frozen artifact hash and Grace/Rose remain NOT READY. PR #228 stays Draft and unmerged; no CRAN submission occurred.
