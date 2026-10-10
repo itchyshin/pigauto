@@ -65,6 +65,19 @@
         "result": "1_ERROR_five_test_failures_unbound_to_archive_hash",
         "raw_sha256": "23cc52068814203057efa2862110f9c08eaab62e4fcf4a62985390975849be54"
       }
+    },
+    "site_browser_review": {
+      "date": "2026-10-09",
+      "receipt": "provenance/live-reader-recheck-2026-10-09.md",
+      "artifact_sha256": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",
+      "pages": [
+        "home",
+        "getting-started",
+        "multiple-imputation",
+        "tree-uncertainty"
+      ],
+      "result": "MI_and_tree_claims_within_audited_scope;homepage_WARNING_marker_remains;getting_started_device_qualification_and_delta_definition_need_clarification",
+      "direct_sitemap": "blocked_by_chrome_client;prior_HTTP_verifier_receipt_remains_authoritative"
     }
   },
   "panel": {
