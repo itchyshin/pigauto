@@ -583,8 +583,10 @@ For argument details, see `?impute`, `?pull_gbif_centroids`, and
 
 ## Tips and next steps
 
-**Use GPU if available.** pigauto automatically selects CUDA > MPS > CPU. Check
-availability with:
+**Optional GNN: use a GPU if available.** When you set `gnn = TRUE`, pigauto
+selects CUDA when available, then Apple MPS, and otherwise CPU. The default
+`gnn = FALSE` fits the phylogenetic baseline only and does not call torch. To
+check runtime availability before opting into GNN training:
 
 ```{r gpu, eval=FALSE}
 torch::cuda_is_available()       # NVIDIA GPU
