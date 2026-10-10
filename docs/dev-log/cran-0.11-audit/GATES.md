@@ -266,6 +266,10 @@ This is candidate-source output only. The complete GitHub Pages wrapper attempt 
 
 Commit `74d5a9a` adds regression tests for decimal-zero opacity and comma-separated `:is()` / `:where()` selectors, with Pat's bounded static-check verdict and the refreshed local test receipt. The commit is on `release/cran-0.11-gate`. Chrome shows PR #228 at this head, still Draft and unmerged; all checks pass with one skipped, and the page lists no deployment. This push updates evidence only. It does not deploy the candidate or close the exact-artifact and independent-review gates.
 
+## Current evidence PR state, 2026-10-09
+
+Chrome confirms PR #228 is Draft and unmerged, has 61 commits, and includes latest commit `325e3cd5a95325413d0adeca7b1707fc41714b3a`. The last commit records the live homepage warning recheck and its report validation. PR #229 is already merged; its conversation confirms the defaults and optional MI integration changes, along with the internal-page retirement, are in `main`. PR #231's merged source and deployed-site evidence remain as recorded above. The local acceptance ledger now matches the current #228 head. This browser check does not validate the exact tarball, produce a Windows result, close the reviewer gate, or authorize merge/deployment/submission. G8 and G9 remain open; no CRAN submission has occurred.
+
 ## Candidate-site verifier push check, 2026-10-09
 
 Commit `1872bd7` was pushed to `release/cran-0.11-gate`. Chrome then showed PR #228 at 50 commits, still Draft, with the new commit visible. Pull-request workflow run [#38001692992](https://github.com/itchyshin/pigauto/actions/runs/38001692992) was skipped in one second under the configured pkgdown pull-request guard. The PR page showed no deployments. This verifies the evidence push only; it does not run pkgdown in GitHub Actions, deploy the candidate, or change G8/G9.
