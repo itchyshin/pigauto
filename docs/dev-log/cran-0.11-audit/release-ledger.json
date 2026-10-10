@@ -78,6 +78,28 @@
       ],
       "result": "MI_and_tree_claims_within_audited_scope;homepage_WARNING_marker_remains;getting_started_device_qualification_and_delta_definition_need_clarification",
       "direct_sitemap": "blocked_by_chrome_client;prior_HTTP_verifier_receipt_remains_authoritative"
+    },
+    "exact_artifact_optional_backend_matrix": {
+      "status": "PASS_bounded_installed_integration_four_cells",
+      "receipt": "provenance/exact-mi-backend-matrix-2026-10-09.md",
+      "artifact_sha256": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",
+      "cells": [
+        "neither",
+        "drmTMB_only",
+        "gllvmTMB_only",
+        "both"
+      ],
+      "logs": {
+        "both": "provenance/exact-mi-both-backends-2026-10-09.log",
+        "neither_fixtures": "provenance/exact-mi-neither-fixtures-2026-10-09.log",
+        "neither_saved_object": "provenance/exact-mi-neither-reload-2026-10-09.log",
+        "drmTMB_only": "provenance/exact-mi-drmTMB-only-2026-10-09.log",
+        "gllvmTMB_only": "provenance/exact-mi-gllvmTMB-only-2026-10-09.log"
+      },
+      "does_not_close": [
+        "G8_windows_platform_results",
+        "G9_independent_exact_artifact_verdict"
+      ]
     }
   },
   "panel": {
