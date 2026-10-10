@@ -96,6 +96,24 @@
         "drmTMB_only": "provenance/exact-mi-drmTMB-only-2026-10-09.log",
         "gllvmTMB_only": "provenance/exact-mi-gllvmTMB-only-2026-10-09.log"
       },
+      "run_manifest": "provenance/exact-mi-original-manifest-2026-10-09.json",
+      "run_manifest_sha256": "fb9af9cbd7337358497ac8c72ecfcb8256f9504d01f8f696fac8ccdd39fb062e",
+      "original_run_logs": {
+        "neither": "provenance/exact-mi-original-neither-2026-10-09.log",
+        "drmTMB_only": "provenance/exact-mi-original-drmTMB-only-2026-10-09.log",
+        "gllvmTMB_only": "provenance/exact-mi-original-gllvmTMB-only-2026-10-09.log",
+        "both": "provenance/exact-mi-original-both-2026-10-09.log"
+      },
+      "original_run_log_sha256": {
+        "neither": "4bb5735cd580de0410b16ec3268b1f52cb756393f858cafe66aee8c264985d0f",
+        "drmTMB_only": "fc0385d9aa199457fe021079acfb37d582db7762de2a71e69e9f9d86738c8e1c",
+        "gllvmTMB_only": "67c1e5126ba261fa75e682da9ab7f3b7e8e5f7c2b00dd202550bb81951a982a7",
+        "both": "45dc91f0acb44796fbb92054ad797cf24d191d8a4fb35b914b336f34b4ac58b9"
+      },
+      "review": {
+        "grace": "PASS_bounded_optional_adapter_matrix",
+        "rose": "PASS_bounded_optional_adapter_matrix"
+      },
       "does_not_close": [
         "G8_windows_platform_results",
         "G9_independent_exact_artifact_verdict"

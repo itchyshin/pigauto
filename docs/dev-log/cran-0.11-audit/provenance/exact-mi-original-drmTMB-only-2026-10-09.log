@@ -1,0 +1,42 @@
+artifact=/private/tmp/pigauto-release-candidate/sha256-f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4/pigauto_0.11.0.tar.gz
+sha256_before=f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4
+library=/private/tmp/pigauto-cran011-frozen-mi-matrix/drm-only
+mode=drm-only
+install_command=R CMD INSTALL -l /private/tmp/pigauto-cran011-frozen-mi-matrix/drm-only /private/tmp/pigauto-release-candidate/sha256-f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4/pigauto_0.11.0.tar.gz
+fixture_command=Rscript --vanilla /Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/script/cran-0.11-integration/check-adapters.R fixtures installed /private/tmp/pigauto-cran011-frozen-mi-matrix/drm-only
+backend_command=Rscript --vanilla /Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/script/cran-0.11-integration/check-adapters.R drm-only installed /private/tmp/pigauto-cran011-frozen-mi-matrix/drm-only
+
+--- INSTALL exit=0 ---
+* installing *source* package ‘pigauto’ ...
+** this is package ‘pigauto’ version ‘0.11.0’
+** using staged installation
+** R
+** data
+*** moving datasets to lazyload DB
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+*** copying figures
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (pigauto)
+
+--- fixtures exit=0 ---
+tests/testthat/test-pool-mi-adapter-fixtures.R: 50 expectations passed against installed pigauto
+tests/testthat/test-mi-provenance.R: 55 expectations passed against installed pigauto
+ADAPTER_FIXTURES_OK
+
+--- drm-only exit=0 ---
+REAL_FIT_STATUS backend=drmTMB imputation=1 convergence=0 pdHess=TRUE
+REAL_FIT_STATUS backend=drmTMB imputation=2 convergence=0 pdHess=TRUE
+REAL_FIT_STATUS backend=drmTMB imputation=3 convergence=0 pdHess=TRUE
+GAUSSIAN_ORACLE_OK backend=drmTMB fits=3
+RUBIN_ORACLE_OK backend=drmTMB terms=3 imputations=3
+script/cran-0.11-integration/test-real-backends.R: 28 expectations passed against installed pigauto
+DRM_ONLY_OK
+
+sha256_after=f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4
