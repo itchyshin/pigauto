@@ -259,6 +259,7 @@ test_that("runtime probes the selected accelerator and records failures", {
   expect_match(cuda_probe$detail, "broken CUDA")
 
   testthat::local_mocked_bindings(
+    .check_pigauto_torch_is_installed = function() TRUE,
     .check_pigauto_cuda_available = function() TRUE,
     .check_pigauto_mps_available = function() FALSE,
     .check_pigauto_probe_device = function(device, ...) {
@@ -309,6 +310,7 @@ test_that("check captures preprocessing messages and impute forwards warnings on
 test_that("a broken selected MPS runtime is not ready", {
   tree <- make_p2_tree()
   testthat::local_mocked_bindings(
+    .check_pigauto_torch_is_installed = function() TRUE,
     .check_pigauto_cuda_available = function() FALSE,
     .check_pigauto_mps_available = function() TRUE,
     .check_pigauto_probe_device = function(device, ...) {
