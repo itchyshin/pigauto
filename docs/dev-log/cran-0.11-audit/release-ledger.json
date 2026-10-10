@@ -191,13 +191,13 @@
   "evidence_pr": {
     "number": 228,
     "branch": "release/cran-0.11-gate",
-    "head": "2921f94d1227a08ebcdbb960c386db338e914c05",
-    "observed_at": "2026-10-10T17:17:42Z",
+    "head": "4a87a53b83d617054978a94363086bd2e122683f",
+    "observed_at": "2026-10-10T17:26:27Z",
     "state": "draft",
     "merged": false,
     "description_refreshed_after_pat_g7_review": true,
-    "commit_count": 68,
-    "latest_workflow_run": "38070572404",
+    "commit_count": 69,
+    "latest_workflow_run": "38071388358",
     "latest_workflow_status": "skipped_by_pull_request_pkgdown_guard",
     "deployment": "none"
   }
