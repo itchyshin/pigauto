@@ -326,3 +326,9 @@ The two retained Win-builder logs each show the same five failures: the CUDA and
 Grace rechecked the specific concern about the local `skip_if_no_torch()` helper in `test-gnn-train-cal-symmetry.R` against both archived Win-builder logs. In each log, decompressed lines 150-152 list the four symmetry tests as skipped with `libtorch not installed`; they are not among the five failures. The five failures are at lines 232, 238, 244, 264, and 276, in the two mocked accelerator probes and the three direct tensor tests already changed by PR #233. Grace's bounded verdict is PASS for that five-failure scope. The concern remains hypothetical for a future runtime where `torch_is_installed()` is true but tensor setup fails. No source changes are justified by these logs. This does not substitute for Windows checks on a newly frozen exact artifact; PR #233 remains open and G8/G9 remain unmet.
 
 See `after-task-2026-10-10-symmetry-skip-review.md` for the full review receipt and limits.
+
+## Primary CRAN publication-history recheck, 2026-10-10
+
+Chrome checked the current primary [CRAN pigauto package page](https://cran.r-project.org/web/packages/pigauto/index.html). It lists version 0.10.0, published 2026-07-30. The working `DESCRIPTION` and `cran-comments.md` select 0.11.0 as the next version, consistent with the release plan. Keep 0.11.0; there is no current reason to increment to 0.11.1. The archived CRAN-index receipt from 2026-10-06 also lists 0.10.0. This verifies the current published version only; artifact, Windows, and exact-artifact review gates remain open.
+
+See `after-task-2026-10-10-version-history.md` for the verification record.
