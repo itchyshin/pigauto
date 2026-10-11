@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "c30daf4d53194e07be24ff2df5ef0dc53b92112499debe061250e20b6a302dfd",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex self-review",
+  "method": "Read the whole saved note against the live pages inspected in Codex In-app Browser, the local generator, the deterministic R output, and the linked source records; then assess style separately.",
+  "genre": "Technical release-audit evidence note",
+  "coverage": "Whole draft, 476 words (slop-check token count)",
+  "score": 2,
+  "style_status": "scored",
+  "score_reason": "The note uses concrete page names and observed claims, with a bounded scope and explicit incomplete gates. Some long table cells make the prose dense, but the detail is useful for audit traceability.",
+  "confidence": "medium",
+  "confidence_reason": "Live page content and the local sample calculation were directly observed; the style score is subjective and has no calibrated threshold.",
+  "examples": [
+    {
+      "location": "Opening scope paragraph",
+      "cue": "Names the exact topic, browser, live site, and audit boundary.",
+      "impact": "Lets a reviewer tell what this check covers and what it leaves open.",
+      "repair": "No change needed.",
+      "line": 3,
+      "quote": "This is a focused check of the BirdTree examples and nearby novice guidance, not a full-site audit. Pages were opened directly in Codex In-app Browser on the live `itchyshin.github.io/pigauto` site. The navigation identifies the site as version 0.11.0."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "not_applicable",
+  "science_gate_reason": "The note reports page content and provenance observations, not a scientific performance result.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "The four named pages were inspected live; the local generator, seeded sample counts, and cited source records were checked within the stated scope.",
+  "references_gate": "pass",
+  "references_gate_reason": "The links identify the official megatrees manual, BirdTree downloads page, and the cited papers' DOI records; their relevance is stated in the note.",
+  "date": "2026-10-07",
+  "calibration_status": "Calibration examples were not used to assign the style score; no calibrated scale exists for this note.",
+  "interpretation": "perceived_style_not_authorship"
+}

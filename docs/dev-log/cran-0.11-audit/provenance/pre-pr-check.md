@@ -10,12 +10,20 @@ The local pkgdown build passed a crawl of 65 rendered pages and 3,621 local refe
 
 The remaining gates are the nine gllvmTMB recovery seeds, which require approval for the measured run above three hours; the maintainer's audit-PR merge; a frozen post-merge tarball and platform checks; the open BirdTree redistribution-rights point; and the separate fresh release panel. Nothing has been submitted to CRAN.
 
-**Superseded note (2026-10-07):** later bounded recovery evidence records all ten gllvmTMB seeds in `../recovery/RESULTS.md`. The old nine-seed count above is retained as a historical pre-PR rehearsal statement, not a current gate. The remaining merge, exact-artifact, rights, and release-panel gates must still be verified against current state.
 
-## Fresh source and site checks after reader fixes, 2026-10-07
 
-`devtools::check()` ran from a clean archive of implementation commit `ce438ff` with the current `vignettes/multiple-imputation.Rmd`. The matching raw output is retained in `devtools-source-check.log` (SHA-256 `87e421580f428b56877df6215e8ed6a23654a8ff5edc30ffad406713572fa7e4`). It completed in 6m03.3s with 0 errors, 0 warnings, and one environment NOTE because the remote system clock could not be verified. The test suite, package vignettes, and vignette rebuild all passed. A separate four-NOTE log found during review came from a different temporary copy containing generated site and log files; it is not the log for this clean-archive run. This source check used the local development configuration; it does not replace the exact post-merge tarball check.
+## Superseding post-merge status (2026-10-06)
 
-A fresh standard pkgdown build used the current vignette and `_pkgdown.yml` in an isolated source copy. The normal Pages cleanup and crawler then passed with 64 HTML pages, 3,590 local references, all 34 archived benchmark pages absent, and zero structural errors. A planted `VALIDATION_LEDGER.html` and `AGENTS.md` made the updated crawler fail as expected. The generated multiple-imputation article contains the separate optional-package installation instructions. The homepage HTML retains its full experimental warning in the main text and omits the duplicate sidebar warning.
+This is a pre-PR rehearsal record; its remaining-gates paragraph was true only at that
+point in the audit and is superseded by
+`../post-merge-verification-2026-10-06.md`. PR #226 is merged, the live deployment is
+verified, and the exact merged-source tarball plus its full macOS/R 4.6.0 check and
+merged-commit Ubuntu/macOS check jobs are recorded there. The earlier pre-PR artifact
+remains a distinct historical artifact. The BirdTree rights issue and fresh release
+panel remain open. Nothing has been submitted to CRAN.
 
-The live deployment still shows the old sidebar and `VALIDATION_LEDGER.html` route until merge and deployment. The live sitemap and local candidate visual review remain open. The CRAN index currently lists 0.10.0, published 2026-07-30, so 0.11.0 remains the unpublished candidate version at this check. No tarball was frozen from these source edits, and no release submission occurred.
+The 2026-10-07 source/site checks and their raw logs are retained in this file's prior
+merge history and summarized in `../GATES.md`. Their statements about the then-current
+live site and absence of a post-edit tarball are historical; the 2026-10-08 ledger
+records subsequent main, candidate, and site checks. The nine-seed recovery count above
+is likewise a pre-PR snapshot; `../recovery/RESULTS.md` records the later ten-seed result.

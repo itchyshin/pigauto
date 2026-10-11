@@ -8,14 +8,197 @@
     "system_or_external_services": true,
     "large_data_or_vignettes": true
   },
-  "artifact": {},
-  "evidence": {},
+  "artifact": {
+    "state": "previous_frozen_candidate_stale_after_source_merge_rebuild_required",
+    "filename": "pigauto_0.11.0.tar.gz",
+    "sha256": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",
+    "size_bytes": 5135324,
+    "archive_entries": 250,
+    "inventory_sha256": "10a31a50b2504f42514b0ec8b5368861543cf1f902d9ae075ebb5279cd5a777e",
+    "source_commit": "d76804e768bf77f430f43dcf591633f9cd900dab",
+    "frozen_path": "/private/tmp/pigauto-release-candidate/sha256-f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4/pigauto_0.11.0.tar.gz",
+    "path": "/private/tmp/pigauto-release-candidate/sha256-f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4/pigauto_0.11.0.tar.gz",
+    "clean_worktree": true,
+    "clean_worktree_evidence": {
+      "kind": "file",
+      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-source-checkout-status-2026-10-10.txt"
+    },
+    "inventory_evidence": {
+      "kind": "file",
+      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-tarball-inventory.txt"
+    },
+    "forbidden_entries": []
+  },
+  "evidence": {
+    "product_contract": {
+      "kind": "file",
+      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/GATES.md"
+    },
+    "rights_and_consent": {
+      "kind": "file",
+      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/rights-and-policy.md"
+    },
+    "current_cran_policy": {
+      "kind": "file",
+      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/after-task-2026-10-08-g0-refresh.md"
+    },
+    "rendered_site": {
+      "kind": "file",
+      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/GATES.md"
+    },
+    "local_as_cran": {
+      "kind": "file",
+      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-R-CMD-check.log"
+    },
+    "incoming_feasibility": {
+      "kind": "file",
+      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-R-CMD-check.log"
+    },
+    "installed_package": {
+      "kind": "file",
+      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-testthat.Rout"
+    },
+    "timing": {
+      "kind": "file",
+      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-R-CMD-check.log"
+    },
+    "local_check_status": "OK",
+    "local_check_log": "provenance/post-merge-R-CMD-check.log",
+    "local_check_log_sha256": "f8f3d07f6a9a18af29ef521cd2a4bd5f9e6430c33f177977911619a23222552c",
+    "testthat_output": "provenance/post-merge-testthat.Rout",
+    "windows_results_bound_to_hash": false,
+    "birdtree_redistribution_rights": "maintainer_warranty_recorded;no_separate_published_redistribution_terms_found;not_a_legal_determination",
+    "birdtree_rights_basis": {
+      "maintainer_warranty": "Shinichi confirmed the bundled trees may be used with citation and credit; this is the maintainer-warranty basis.",
+      "published_redistribution_terms": "not_found_on_reviewed_birdtree_pages",
+      "notice_distinction": "inst/NOTICE distinguishes BirdTree data from the megatrees software licence",
+      "exact_tarball_inspection": "passed; NOTICE and shipped tree object hashes recorded in provenance/post-merge-artifact-identity.json"
+    },
+    "exact_hash_independent_panel": "pending_for_f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",
+    "local_check_command": "env -u NOT_CRAN _R_CHECK_FORCE_SUGGESTS_=true R CMD check --as-cran --run-donttest pigauto_0.11.0.tar.gz",
+    "local_check_platform": "macOS arm64, R 4.6.0",
+    "testthat_output_sha256": "b4afb3d9e63942b5d41e74385b9d72f7300c38efc1780dce59c0c464761a05ea",
+    "testthat_summary": {
+      "pass": 3190,
+      "fail": 0,
+      "warn": 161,
+      "skip": 86
+    },
+    "win_builder_upload_state": "R_release_and_R_devel_results_received;both_status_1_error_five_test_failures_each;logs_not_checksum_bound_to_frozen_artifact",
+    "site_deployment_commit": "4f60a18ae72e836b6c3e15b65abb1faa7409e731",
+    "site_deployment_run": "38063988962",
+    "site_retirement_check": "source_build_62_html_3584_references_34_retired_absent_from_output_sitemap_search;live_62_local_sitemap_paths_render_expected_headings;34_retired_routes_and_validation_ledger_show_not_found;live_search_retired_ledger_no_result;direct_live_json_blocked_and_http_codes_not_exposed",
+    "site_g7_status": "met_for_deployment_4f60a18_bounded_rendered_page_check_no_permanence_claim",
+    "site_verifier_source_sha256": "fbba18e851bad34fd6d22fcf803bdd04fd1730632a84243ada98aab2d77e7a15",
+    "site_retired_routes_sha256": "5414f6cb69e9d140c38d0a6308f8e0ddbe8952834eea01b6b861a78eecb807e1",
+    "site_retained_routes_sha256": "7288c1c2984c760f11a672f406311016ccefd193bc449402a4bbd645038f8ff1",
+    "site_discovery_sha256": "2db884b26493dc295846bf51f9a9f5c8c29b63860edacafc55fb609285d46262",
+    "site_verification_log_sha256": "7f8eee37739f522088bdd11b3975dcc9c1d204a3a433c1af7995e61bca04f944",
+    "site_verifier_tests_sha256": "33060fd73862c5e1af97335504d5b45211fce6d229657f556d8deceeadc52ce4",
+    "win_builder_logs": {
+      "r_release": {
+        "path": "provenance/winbuilder-r-release-2026-10-09.log.gz",
+        "sha256": "dc69a974ea7e693a632d063ca6d205b9c4d61b2eb171f6068c4e8aff8aa19fb7",
+        "result": "1_ERROR_five_test_failures_unbound_to_archive_hash",
+        "raw_sha256": "575179ab3b680d9ea23e54e8c0550bd49d817dee2e652ab11aeacc5ed03af971"
+      },
+      "r_devel": {
+        "path": "provenance/winbuilder-r-devel-2026-10-09.log.gz",
+        "sha256": "6242c79102333744dab7e14d86237614a51dea51247888cae188eda25a9fb9b2",
+        "result": "1_ERROR_five_test_failures_unbound_to_archive_hash",
+        "raw_sha256": "23cc52068814203057efa2862110f9c08eaab62e4fcf4a62985390975849be54"
+      }
+    },
+    "site_browser_review": {
+      "date": "2026-10-10",
+      "receipt": "GATES.md#current-deployed-site-recheck-2026-10-10",
+      "source_commit": "4f60a18ae72e836b6c3e15b65abb1faa7409e731",
+      "deployment_run": "38063988962",
+      "artifact_sha256": null,
+      "pages": [
+        "home",
+        "getting-started",
+        "all_62_local_sitemap_paths"
+      ],
+      "result": "Pat_independent_G7_pass_for_checked_deployment;62_rendered_paths;34_retired_routes_and_ledger_not_found;live_search_query_clear",
+      "direct_sitemap": "blocked_by_chrome_client;direct_search_json_blocked;numeric_http_status_not_exposed",
+      "permanence_claim": false
+    },
+    "exact_artifact_optional_backend_matrix": {
+      "status": "PASS_bounded_installed_integration_four_cells",
+      "receipt": "provenance/exact-mi-backend-matrix-2026-10-09.md",
+      "artifact_sha256": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",
+      "cells": [
+        "neither",
+        "drmTMB_only",
+        "gllvmTMB_only",
+        "both"
+      ],
+      "logs": {
+        "both": "provenance/exact-mi-both-backends-2026-10-09.log",
+        "neither_fixtures": "provenance/exact-mi-neither-fixtures-2026-10-09.log",
+        "neither_saved_object": "provenance/exact-mi-neither-reload-2026-10-09.log",
+        "drmTMB_only": "provenance/exact-mi-drmTMB-only-2026-10-09.log",
+        "gllvmTMB_only": "provenance/exact-mi-gllvmTMB-only-2026-10-09.log"
+      },
+      "run_manifest": "provenance/exact-mi-original-manifest-2026-10-09.json",
+      "run_manifest_sha256": "fb9af9cbd7337358497ac8c72ecfcb8256f9504d01f8f696fac8ccdd39fb062e",
+      "original_run_logs": {
+        "neither": "provenance/exact-mi-original-neither-2026-10-09.log",
+        "drmTMB_only": "provenance/exact-mi-original-drmTMB-only-2026-10-09.log",
+        "gllvmTMB_only": "provenance/exact-mi-original-gllvmTMB-only-2026-10-09.log",
+        "both": "provenance/exact-mi-original-both-2026-10-09.log"
+      },
+      "original_run_log_sha256": {
+        "neither": "4bb5735cd580de0410b16ec3268b1f52cb756393f858cafe66aee8c264985d0f",
+        "drmTMB_only": "fc0385d9aa199457fe021079acfb37d582db7762de2a71e69e9f9d86738c8e1c",
+        "gllvmTMB_only": "67c1e5126ba261fa75e682da9ab7f3b7e8e5f7c2b00dd202550bb81951a982a7",
+        "both": "45dc91f0acb44796fbb92054ad797cf24d191d8a4fb35b914b336f34b4ac58b9"
+      },
+      "review": {
+        "grace": "PASS_bounded_optional_adapter_matrix",
+        "rose": "PASS_bounded_optional_adapter_matrix"
+      },
+      "does_not_close": [
+        "G8_windows_platform_results",
+        "G9_independent_exact_artifact_verdict"
+      ]
+    }
+  },
   "panel": {
-    "grace": "NOT_READY",
-    "rose": "NOT_READY",
-    "pat": "NOT_READY"
+    "grace": "NOT_READY_frozen_artifact_windows_diagnostic_failures_unbound_to_hash",
+    "rose": "NOT_READY_frozen_artifact_windows_diagnostic_failures_unbound_to_hash",
+    "pat": "G7_PASS_bounded_deployment_4f60a18;direct_sitemap_and_search_json_blocked;numeric_http_status_not_exposed"
   },
   "status_claim": "source-clean",
+  "next_unproven_rung": "tarball-clean",
   "submission": {},
-  "audit_verdict": "NOT_READY"
+  "audit_verdict": "NOT_READY",
+  "panel_evidence": {
+    "pat": {
+      "verdict": "G7_PASS_for_checked_deployment",
+      "review": "provenance/pat-independent-site-review-2026-10-09-v2.md",
+      "reviewed_evidence_commit": "7752956",
+      "deployment_commit": "d76804e768bf77f430f43dcf591633f9cd900dab",
+      "pages_run": "37975894397",
+      "limitations": [
+        "homepage_literal_WARNING_token_remains",
+        "direct_live_sitemap_fetch_blocked_in_recheck",
+        "point_in_time_deployment_only"
+      ]
+    }
+  },
+  "evidence_pr": {
+    "number": 228,
+    "branch": "release/cran-0.11-gate",
+    "head": "4a87a53b83d617054978a94363086bd2e122683f",
+    "observed_at": "2026-10-10T17:26:27Z",
+    "state": "draft",
+    "merged": false,
+    "description_refreshed_after_pat_g7_review": true,
+    "commit_count": 69,
+    "latest_workflow_run": "38071388358",
+    "latest_workflow_status": "skipped_by_pull_request_pkgdown_guard",
+    "deployment": "none"
+  }
 }

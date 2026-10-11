@@ -1,0 +1,13 @@
+Verification time: 2026-10-10 00:40:23 UTC
+Source path named by build receipt: /Users/z3437171/.codex/worktrees/cran-011-postmerge-artifact/pigauto
+Source commit: d76804e768bf77f430f43dcf591633f9cd900dab
+git status --porcelain=v1 --untracked-files=all: empty
+
+Frozen archive: /private/tmp/pigauto-release-candidate/sha256-f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4/pigauto_0.11.0.tar.gz
+Frozen archive SHA-256: f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4
+Frozen archive size: 5135324 bytes
+Inventory: provenance/post-merge-tarball-inventory.txt
+Inventory SHA-256: 10a31a50b2504f42514b0ec8b5368861543cf1f902d9ae075ebb5279cd5a777e
+Inventory entry count: 250
+
+The frozen build receipt identifies the same source path and commit. This status capture records the source checkout at the verification time above; it does not claim that a status command was captured during the original build.

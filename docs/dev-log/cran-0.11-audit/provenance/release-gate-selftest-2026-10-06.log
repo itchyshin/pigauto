@@ -1,0 +1,15 @@
+PASS: source-clean does not require later-rung evidence
+PASS: negative control failed closed: unlicensed-data
+PASS: negative control failed closed: predecessor-hash
+PASS: negative control failed closed: forbidden-tarball-entry
+PASS: negative control failed closed: incoming-preflight-missing
+PASS: negative control failed closed: missing-timing
+PASS: negative control failed closed: unconfirmed-upload
+PASS: negative control failed closed: public-page-404
+PASS: negative control failed closed: compiled-gate-omitted
+PASS: negative control failed closed: fictional-live-url
+PASS: negative control failed closed: reachable-non-cran-live-url
+PASS: negative control failed closed: panel-not-ready
+PASS: negative control failed closed: invalid-release-type
+PASS: negative control failed closed: large-vignette-budget-omitted
+PASS: CRAN release gate selftest

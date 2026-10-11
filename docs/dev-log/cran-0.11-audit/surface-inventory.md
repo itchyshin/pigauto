@@ -46,11 +46,11 @@ All 34 dated HTML benchmark pages and five supporting PNGs have been moved byte-
 
 The archived source files and corresponding `script/` drivers/results remain evidence-bearing snapshots. Their historical numbers were not edited.
 
-## Live deployment check (2026-10-06)
+## Pre-merge live deployment check (2026-10-06; superseded by post-merge proof)
 
 Direct browser inspection reached the live home page and `reference/multi_impute.html`. Both display version 0.11.0.9002. The home page matches the current README's auto-default description. The live help page is generated from the stale source material above and visibly says conformal is the default, discrete traits stay at lambda 1, residual covariance has an IW prior, and the safety floor defaults TRUE. This is direct deployment evidence, not a cache inference. The live continuous benchmark is directly reachable and confirms the May 30 / five-replicate / commit `794537121b` metadata. The web text fetch could not access the live multiple-imputation article, so its deployed state is not claimed. Direct archived walkthrough URL lookup was also inconclusive; treat redirect/404 behavior as unverified.
 
-## Local site validation and remaining deployment gate
+## Local site validation and pre-merge deployment gate (historical)
 
 `man/multi_impute.Rd` and `man/pool_mi.Rd` were regenerated from roxygen. The local help page visibly shows `draws_method = "auto"`, `gnn = FALSE`, the separation residual prior, estimated discrete lambda, and `safety_floor = FALSE` as the default. The first site render used the machine's previously installed pigauto, whose `fit_pigauto()` still defaulted to GNN on; it was stopped and discarded. The completed clean build used a separately installed 0.11.0 source copy with its version and `gnn = FALSE` formal verified before rendering.
 
@@ -68,34 +68,26 @@ The earlier sentence that the current live help page is stale has been supersede
 
 The final reader check found a stale generated `vignettes/getting-started.R` companion and a NEWS sentence calling GNN-on the default. The companion now matches a fresh normalized `knitr::purl()` extraction from its R Markdown source, including the optional torch setup and explicit GNN opt-in examples. NEWS now calls GNN-on opt-in. A full local rebuild, internal-page cleaning step, and crawl passed 65 rendered pages and 3,622 local references, with 34 retired direct pages absent. The corrected phrases were checked in the rendered getting-started and NEWS pages.
 
-The public deployment remains unchanged until merge and pkgdown deployment. Recheck the live home, help, article, sitemap, search, and retired direct URLs after the audit PR is merged. The earlier stale-help finding was corrected on the sampled live pages by the 2026-10-07 check above; broad route, sitemap, and deployment-identity verification remains open.
+At the time of the pre-merge local check, the public deployment had not yet been updated. The following post-merge verification supersedes that snapshot.
 
-### 2026-10-07 correction: root coordination pages
+## Post-merge live deployment verification (2026-10-06)
 
-The earlier local-crawl statement that no internal coordination pages were served was too broad. The crawler checked `AGENTS.html`, `CLAUDE.html`, and `goodagents.html` but omitted `VALIDATION_LEDGER.html`. A fresh build produced all four pages; the previous cleanup removed only the first three. The live `/VALIDATION_LEDGER.html` route returned a page containing historical 0.10.0 claims, while the other three routes returned pkgdown 404 pages in Codex's in-app browser.
+Pages workflow run #570 succeeded for merge commit
+`bb5835d1b214d783da7b0b414df99aa6ba926bc7`. The live homepage exposes Get started,
+Articles, Reference, and Changelog, with no per-trait benchmark links. The current
+getting-started default, separated-residual wording in the multiple-imputation article,
+and `multi_impute()` reference are live. Direct checks returned 404 for all 34 retired
+`/dev/` HTML pages and the four retired walkthrough articles. The sitemap has 64
+locations and zero retired routes; the 574-path search index also has zero retired routes.
+The exact URLs and statuses are retained in
+`provenance/public-deployment-live-check-2026-10-06.tsv`.
 
-Disposition: retain the source Markdown files in Git for project operations and historical evidence; retire all four generated public pages and their root Markdown copies. `pkgdown/clean-internal-pages.R` now removes them from the site, sitemap, and search index. The updated crawler rejects both `.html` and `.md` copies. After applying the cleanup to a fresh candidate build, the crawler passed with 64 HTML pages, 3,590 local references, all 34 retired benchmark pages absent, and zero errors. The live ledger route remains public until the source fix is merged and the site is deployed. Local candidate visual review and live sitemap verification remain open.
+## Historical live-site and candidate-source observations through 2026-10-07
 
-The same in-app browser review found the full experimental warning repeated in the narrow homepage sidebar. `_pkgdown.yml` now omits that duplicate sidebar component; the complete warning remains in the main homepage text. A fresh standard pkgdown build confirms the body warning remains and the sidebar `Status` block is absent. This is structural HTML evidence only; local visual review remains open, and the deployed page will change only after merge and deployment.
-
-### 2026-10-07 fresh Codex browser recheck
-
-The current deployment still shows the duplicated homepage `Status` block, as expected before merge and deployment. Its first-screen workflow tells users to resolve a `check_pigauto()` error before `impute()`, then says the preflight reports runtime availability. The live `check_pigauto()` reference lists no `gnn` argument. Since `impute()` defaults to `gnn = FALSE`, this leaves the torch requirement ambiguous on the default path. This user-facing contract issue belongs to the active portability lane; this audit records it without changing that lane's source files.
-
-The live multiple-imputation article still lacks the separate `drmTMB` installation instruction now present in the candidate source. The live `/VALIDATION_LEDGER.html` route still serves historical 0.10.0-era claims. Direct sitemap navigation in Codex's in-app browser returned `net::ERR_BLOCKED_BY_CLIENT`; that is an access failure, not evidence that the sitemap is absent or clean. These observations confirm the pending public-site changes require a later approved deployment. The local candidate crawler and HTML checks remain separate from this deployed-state review.
-
-## Current deployed-home and preflight check recheck: 2026-10-07
-
-The Codex In-App Browser loaded the public homepage and `check_pigauto()` reference directly. GitHub's `main` commit history still identifies `bb5835d` as the latest merge, matching Pages run #570 recorded above. The homepage shows version 0.11.0 and the current defaults: GNN off, estimated lambda for eligible traits, and the safety floor and phylogenetic-signal gate off. It still says `check_pigauto()` reports runtime availability and instructs readers to resolve every error before default `impute()`.
-
-The live `check_pigauto()` reference usage has no `gnn` argument. Its description says the check inspects inputs without constructing a graph or fitting a model; it does not define whether runtime availability is required. The implementation at `origin/main` runs the runtime probe by default, while `impute()` defaults to `gnn = FALSE` and skips that probe. The check-then-impute error policy therefore remains inconsistent with the default workflow. This is a reproduced public contract defect, not a wording-only concern. The candidate fix remains with the portability lane until ownership is released or explicitly transferred.
-
-The homepage accessibility tree contains both the main experimental warning and a footer Status warning with overlapping caveats; the earlier observation of a narrow right-hand sidebar is not present in this rendered layout. The current `/sitemap.xml` request again failed with `net::ERR_BLOCKED_BY_CLIENT`, so sitemap contents remain unverified. This check does not establish the status of all retired direct routes or a new Pages artifact identity.
-
-The live multiple-imputation article was also opened again. It has the current `draws_method = "auto"` description, the current separation residual prior, and a historical note about the old inverse-Wishart residual prior. It still gives a GitHub install command for gllvmTMB but no install instruction for drmTMB. This confirms the MI article source update is still needed on the deployed site, with public change pending merge and deployment.
-
-A bounded source workflow check reproduced the preflight mismatch at implementation commit `2123ec4`: with an 8-tip tree, one missing numeric value, and the runtime probe mocked unavailable, default `check_pigauto()` returned `status = "error"` with `torch_unavailable`, while default `impute()` returned a `pigauto_result`, preserved all seven observed values, and filled the missing value finitely. The test took about three seconds and changed no source files. This is direct evidence that the check-then-impute contract blocks a supported GNN-off workflow. The fix remains assigned to the portability lane; this audit branch has not changed its source path.
-
-### Candidate-source correction: 2026-10-07
-
-The isolated implementation branch now adds `gnn = FALSE` to `check_pigauto()`, validates the flag, and skips the runtime probe by default. `gnn = TRUE` keeps the explicit torch/runtime check. The focused preflight test file passes 97 assertions with no warnings, including the default-no-probe case and explicit runtime-failure case. README, getting-started, NEWS, and generated help now describe the same contract. This is candidate-source evidence only; the live website still reflects the deployed mismatch until a later approved merge and deployment.
+The detailed 2026-10-07 observations from both sides of the merge are retained in the
+branch history and summarized in `GATES.md`. They record successive deployed mismatches,
+source fixes, and bounded checks. Those snapshots are not the current deployed-state
+verdict: the 2026-10-08 cache-busted Chrome checks in `GATES.md` are the latest site
+assessment and still leave the named tree/help corrections and full sitemap/retired-route
+verification open. Candidate-source checks and the 2026-10-07 rebuild do not establish
+deployed behavior or validate the final release artifact.

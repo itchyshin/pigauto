@@ -1,0 +1,42 @@
+PKGDOWN_CACHE_SEEDED_OK: 7 verified assets
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.033s
+
+OK
+SITE_CRAWL_OK
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+✔ No problems found.
+SITE_BUILD_AND_RETIREMENT_OK: source=cf88d78e37d08130bd33823e1fd4594f3afa2d4f html=62 search=613
+── Finished building pkgdown site for package pigauto ──────────────────────────
+── Building sitemap ────────────────────────────────────────────────────────────
+Writing `sitemap.xml`
+── Building docs for llms ──────────────────────────────────────────────────────
+── Building redirects ──────────────────────────────────────────────────────────
+Adding redirect from articles/articles/simulation-study.html to
+articles/simulation-study.html.
+── Building search index ───────────────────────────────────────────────────────
+── Checking for problems ───────────────────────────────────────────────────────
+── Finished building pkgdown site for package pigauto ──────────────────────────
+Warning messages:
+1: @examplesIf condition "interactive()" is "FALSE" 
+2: @examplesIf condition "interactive()" is "FALSE" 
+SITE_ROOT=/private/tmp/pigauto-cran011-site-cf88d78.qYDhuF
+BUILD_LOG=/private/tmp/pigauto-cran011-site-cf88d78.qYDhuF.build.log
+CRAWL_LOG=/private/tmp/pigauto-cran011-site-cf88d78.qYDhuF.crawl.log

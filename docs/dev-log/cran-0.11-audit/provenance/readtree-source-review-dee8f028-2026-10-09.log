@@ -1,0 +1,61 @@
+ℹ Testing pigauto
+✔ | F W  S  OK | Context
+
+⠏ |          0 | read-tree-multiphlo                                            
+✔ |          3 | read-tree-multiphlo
+
+⠏ |          0 | shipping-coverage                                              
+⠙ |         22 | shipping-coverage                                              
+⠧ |   1     27 | shipping-coverage                                              
+⠇ |   1     28 | shipping-coverage                                              
+⠏ |   2     28 | shipping-coverage                                              
+⠋ |   2     29 | shipping-coverage                                              gnn = FALSE: mc_dropout draws are BM-posterior draws (no dropout).
+
+⠙ |   3     29 | shipping-coverage                                              
+⠹ |   3     30 | shipping-coverage                                              
+⠋ |   5     46 | shipping-coverage                                              
+✔ |   5     49 | shipping-coverage [3.7s]
+────────────────────────────────────────────────────────────────────────────────
+Warning ('test-shipping-coverage.R:108:3'): [T2A] plot_history_gg returns a ggplot for a fit with $history
+Small validation set for 2 trait(s): cont (n=1), bin (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+Backtrace:
+    ▆
+ 1. └─pigauto::fit_pigauto(...) at test-shipping-coverage.R:108:3
+ 2.   └─pigauto:::calibrate_gates(...) at pigauto/R/fit_pigauto.R:1392:5
+
+Warning ('test-shipping-coverage.R:120:3'): [T2A] plot_uncertainty returns a ggplot for a continuous trait
+Small validation set for 2 trait(s): cont (n=3), bin (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+Backtrace:
+    ▆
+ 1. └─pigauto::impute(...) at test-shipping-coverage.R:120:3
+ 2.   └─pigauto::fit_pigauto(...) at pigauto/R/impute.R:644:3
+ 3.     └─pigauto:::calibrate_gates(...) at pigauto/R/fit_pigauto.R:676:7
+
+Warning ('test-shipping-coverage.R:136:3'): [T2B] multi_impute(draws_method = 'mc_dropout') returns m completed datasets
+Small validation set for 2 trait(s): cont (n=3), bin (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+Backtrace:
+    ▆
+ 1. └─pigauto::multi_impute(...) at test-shipping-coverage.R:136:3
+ 2.   └─pigauto::impute(...) at pigauto/R/multi_impute.R:478:5
+ 3.     └─pigauto::fit_pigauto(...) at pigauto/R/impute.R:644:3
+ 4.       └─pigauto:::calibrate_gates(...) at pigauto/R/fit_pigauto.R:676:7
+
+Warning ('test-shipping-coverage.R:152:3'): [T2B] fit_pigauto(use_attention = FALSE) runs end-to-end and predicts
+Small validation set for 2 trait(s): cont (n=2), bin (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+Backtrace:
+    ▆
+ 1. └─pigauto::fit_pigauto(...) at test-shipping-coverage.R:152:3
+ 2.   └─pigauto:::calibrate_gates(...) at pigauto/R/fit_pigauto.R:676:7
+
+Warning ('test-shipping-coverage.R:168:3'): [T2B] fit_pigauto(conformal_method = 'bootstrap') stores conformal scores
+Small validation set for 2 trait(s): cont (n=1), bin (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+Backtrace:
+    ▆
+ 1. └─pigauto::fit_pigauto(...) at test-shipping-coverage.R:168:3
+ 2.   └─pigauto:::calibrate_gates(...) at pigauto/R/fit_pigauto.R:676:7
+────────────────────────────────────────────────────────────────────────────────
+
+══ Results ═════════════════════════════════════════════════════════════════════
+Duration: 3.8 s
+
+[ FAIL 0 | WARN 5 | SKIP 0 | PASS 52 ]
