@@ -12,6 +12,10 @@
 #' @param verbose logical.  Print progress (default TRUE).
 #' @param ... Additional arguments passed to \code{\link{fit_pigauto}}
 #'   (e.g. \code{hidden_dim}, \code{k_eigen}, \code{use_attention}).
+#'   \code{cross_validate()} precomputes one graph shared across folds and uses
+#'   \code{k_eigen = 8L} for that graph when \code{k_eigen} is omitted. An
+#'   explicit \code{k_eigen} is used for the shared graph and forwarded to
+#'   \code{fit_pigauto()}.
 #' @return A list of class \code{"pigauto_cv"} with:
 #'   \describe{
 #'     \item{results}{Data.frame with columns: fold, rep, trait, type,

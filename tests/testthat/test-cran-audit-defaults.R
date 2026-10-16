@@ -274,7 +274,12 @@ test_that("wrapper gnn defaults and overrides reach fit_pigauto", {
   fx <- cran_defaults_fixture(n = 12L, seed = 1111L)
   pd <- preprocess_traits(fx$traits[, "continuous", drop = FALSE], fx$tree)
   seen <- NULL
+  graph_k_eigen <- NULL
   testthat::local_mocked_bindings(
+    build_phylo_graph = function(tree, k_eigen = "auto", ...) {
+      graph_k_eigen <<- k_eigen
+      list(k_eigen = k_eigen)
+    },
     fit_pigauto = function(...) {
       seen <<- list(...)
       stop("forwarding captured", call. = FALSE)
@@ -283,9 +288,14 @@ test_that("wrapper gnn defaults and overrides reach fit_pigauto", {
 
   expect_error(cross_validate(pd, fx$tree, k = 2L, seeds = 1L),
                "forwarding captured")
+  expect_identical(graph_k_eigen, 8L)
+  expect_identical(seen$graph$k_eigen, 8L)
   expect_null(seen$gnn)
   expect_error(cross_validate(pd, fx$tree, k = 2L, seeds = 1L,
-                              gnn = TRUE), "forwarding captured")
+                              gnn = TRUE, k_eigen = 4L),
+               "forwarding captured")
+  expect_identical(graph_k_eigen, 4L)
+  expect_identical(seen$graph$k_eigen, 4L)
   expect_true(isTRUE(seen$gnn))
   expect_error(compare_methods(pd, fx$tree, seeds = 1L),
                "forwarding captured")
