@@ -74,8 +74,8 @@
       "notice_distinction": "inst/NOTICE distinguishes BirdTree data from the megatrees software licence",
       "exact_tarball_inspection": "passed for current hash 4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f; NOTICE and all six shipped R data-object hashes recalculated in provenance/post-merge-final-artifact-identity-2026-10-15.json; hashes match the prior candidate, but matching bytes do not establish third-party redistribution terms"
     },
-    "exact_hash_independent_panel": "Grace verified artifact/log identity; Rose found platform hash binding unmet; Pat passed bounded current-site review; no unanimous submission-ready verdict",
-    "local_check_command": "env -u NOT_CRAN _R_CHECK_FORCE_SUGGESTS_=true R CMD check --run-donttest --timings exact frozen tarball; separate --as-cran attempt stopped at incoming feasibility due DNS",
+    "exact_hash_independent_panel": "Grace PASS for current 0fccf4bb exact archive identity and local check log (no rerun); Rose NOT READY because current Win-builder results are absent and no server SHA attestation was returned; Pat PASS for current deployed-site receipt within stated scope; platform-clean and submission-ready remain unproven.",
+    "local_check_command": "env -u NOT_CRAN _R_CHECK_FORCE_SUGGESTS_=true R CMD check --as-cran --run-donttest --timings on /private/tmp/pigauto_0.11.0.tar.gz (SHA-256 0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d); provenance/exact-artifact-780c084-macos-as-cran.log reports incoming feasibility OK and Status: OK. An earlier sandboxed attempt stopped at DNS before package checks.",
     "local_check_platform": "macOS arm64, R 4.6.0",
     "testthat_output_sha256": "3a1ae96caa1136c03e360dcb1017ab029970120d9f929293f8f2aec83e87f3a8",
     "testthat_summary": {
@@ -121,23 +121,24 @@
     },
     "exact_artifact_optional_backend_matrix": {
       "status": "PASS_bounded_installed_integration_four_cells_on_current_exact_tarball",
-      "receipt": "provenance/post-merge-final-artifact-2026-10-15.md",
-      "manifest": "provenance/post-merge-final-mi-matrix-2026-10-15.json",
-      "artifact_sha256": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f",
+      "receipt": "after-task-2026-10-16-exact-artifact-gate.md",
+      "manifest": "provenance/mi-matrix-0fccf4bb-provenance-complete/manifest.json",
+      "manifest_sha256": "7e9ed19659b075257fa98dbc101307487ea1c5ea279c114293d1e15fb95c836c",
+      "artifact_sha256": "0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d",
       "cells": [
         "neither",
-        "drmTMB_only",
-        "gllvmTMB_only",
+        "drm-only",
+        "gllvm-only",
         "both"
       ],
-      "review": {
-        "grace": "pending_current_hash",
-        "rose": "pending_current_hash"
-      },
+      "steps": 12,
+      "review": "PASS; independent reviewer rehashed archive, runner, harness, five executed sources, and 12 logs; confirmed all four states and unchanged archive hash",
       "does_not_close": [
-        "as_cran_incoming_feasibility",
-        "Windows_platform_results",
-        "independent_exact_artifact_verdict"
+        "clean-room dependency installation",
+        "broad statistical recovery or interval coverage",
+        "joint covariance, loading, or variance-component pooling",
+        "checksum-bound Windows results",
+        "overall release readiness"
       ]
     },
     "as_cran_block_log": "provenance/post-merge-final-as-cran-network-block-2026-10-15.log",
@@ -194,33 +195,57 @@
         "does not close platform-clean or final independent release verdict"
       ],
       "independent_review": "PASS; reviewer rehashed archive, runner, harness, all five executed sources, and all 12 logs; confirmed four states and unchanged archive hash; no material discrepancy"
-    }
+    },
+    "win_builder_latest_recheck": {
+      "checked_utc": "2026-10-16T23:00:17Z",
+      "result_email_found": false,
+      "upload_acknowledgement": "filename_and_size_only",
+      "server_sha256_attestation": false,
+      "effect": "platform-clean remains open"
+    },
+    "exact_tarball_inspection": "passed for current hash 0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d; NOTICE and all six shipped R data-object streams were hashed directly from this archive; their bytes match the preceding inspected candidate, which does not establish third-party redistribution terms",
+    "current_shipped_data_hashes": {
+      "archive_sha256": "0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d",
+      "method": "SHA-256 of NOTICE and each R data object streamed from the frozen tarball",
+      "notice_sha256": "9cc7fa419cacea99dbb0b822c59d6fffad514ee072e119a1ce1c7f365883ba02",
+      "shipped_rda_sha256": {
+        "pigauto/data/avonet300.rda": "86af337b49cbe2a81ff7acb7245b75c9a00cd48bb9131d7f4eb5d2676af131be",
+        "pigauto/data/avonet_full.rda": "29b47bccdf17233328321378b77e99e8d4aa515d9df4451e347c709b97568e81",
+        "pigauto/data/ctmax_sim.rda": "987a05458b7f3e548f22c52b75d8b7463e29a281a48895303f564effb0b9cecc",
+        "pigauto/data/tree300.rda": "6050855d2ae7de42fa0de239134aad8e8975a224610b8dffb48f3d7412bb383f",
+        "pigauto/data/tree_full.rda": "5f7b36a4b9c02fd53c98d12fe4871e0f34098e3aa7a8f34f2db38a21a8dc09f5",
+        "pigauto/data/trees300.rda": "8293e06503e89e79d9233abd1cbae98fc8d0c18e05ef5a41cca99a071fee9108"
+      }
+    },
+    "as_cran_block_log_status": "historical sandboxed attempt; superseded by the current exact-archive pass"
   },
   "panel": {
-    "grace": "PASS_bounded_review_of_4b32f669_pre_PR234_artifact;overall_NOT_READY_platform_as_cran_rights_and_final_artifact_gates_open",
-    "rose": "PASS_bounded_review_of_4b32f669_pre_PR234_artifact;overall_NOT_DONE_final_panel_and_release_gates_open",
-    "pat": "retirement_controls_pass_on_deployment_5e46c46_run_38099234402;reader_consistency_NOT_READY_PR234_pending;final_corrected_deployment_review_pending"
+    "grace": "PASS_bounded_current_exact_artifact_identity_and_local_check_log; did not rerun; other platform gates remain open",
+    "rose": "NOT_READY_current_Windows_results_absent_and_not_checksum_bound; Win-builder acknowledged filename_and_size_only",
+    "pat": "PASS_bounded_current_site_receipt; 44 retired routes 404, 62 retained routes 200, sitemap/search have no retired targets; did not replay all routes or inspect all retained-page content"
   },
   "reader_surface_correction": {
     "pull_request": "https://github.com/itchyshin/pigauto/pull/234",
     "branch": "codex/cran-011-getting-started-correction",
     "commit": "6ebc67636f31fa8ff324ddd4a327d5cd808fba99",
-    "source_status": "open_checks_pending_not_merged",
-    "local_vignette_knit": "passed_55_chunks",
-    "focused_article_build": "passed",
-    "independent_review": "passed_source_and_render_behavior_check",
-    "full_site_build": "blocked_before_article_generation_by_CRAN_metadata_DNS_and_protected_cache_writes",
-    "chrome_visual_review": "blocked_by_browser_file_url_policy",
-    "after_task": "/Users/z3437171/.codex/worktrees/cran-011-final-artifact/pigauto/docs/dev-log/cran-0.11-audit/after-task-2026-10-15-getting-started-correction.md"
+    "merge_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
+    "source_status": "merged_and_ancestor_of_frozen_source_commit_780c084",
+    "local_vignette_knit": "passed_55_chunks_before_merge",
+    "focused_article_build": "passed_before_merge",
+    "independent_review": "passed_source_and_render_behavior_check_before_merge",
+    "deployment": "included_in_site_deployment_commit_780c084_run_38970604986",
+    "current_site_review": "Pat_passed_bounded_current_site_receipt; all-retained-page-content review not claimed",
+    "historical_build_limitation": "the pre-merge full-site attempt was blocked by metadata/cache access; a later merged-source Pages deployment and fresh site receipts are recorded for 780c084",
+    "after_task": "after-task-2026-10-15-getting-started-correction.md"
   },
   "status_claim": "tarball-clean",
   "next_unproven_rung": "platform-clean",
   "submission": {},
   "audit_verdict": "NOT_READY",
   "panel_evidence": [
-    "Grace exact artifact scope",
-    "Rose platform binding scope",
-    "Pat live site scope"
+    "provenance/independent-reviews-780c084-2026-10-16.md",
+    "provenance/mi-matrix-0fccf4bb-provenance-complete/manifest.json",
+    "after-task-2026-10-16-exact-artifact-gate.md"
   ],
   "evidence_pr": {
     "number": 236,
