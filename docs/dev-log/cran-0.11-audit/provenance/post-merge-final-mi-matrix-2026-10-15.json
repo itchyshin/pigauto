@@ -1,0 +1,157 @@
+{
+  "archive": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/pigauto_0.11.0.tar.gz",
+  "archive_sha256": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f",
+  "harness": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/script/cran-0.11-integration/check-adapters.R",
+  "harness_sha256": "d2b0b5f01e3470ce1f0f0d2116cadbd1a9a2beffcd864a5644e71c0b7d53fb7d",
+  "source_commit": "5e46c46b6970bf153a3b4bd00d55c9ace69225b0",
+  "created_utc": "2026-10-16T01:26:47.031285+00:00",
+  "cells": [
+    {
+      "cell": "neither",
+      "mode": "neither",
+      "library": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/neither",
+      "expected_optional": [],
+      "steps": [
+        {
+          "step": "install",
+          "exit_code": 0,
+          "started_utc": "2026-10-16T01:26:47.316651+00:00",
+          "elapsed_seconds": 15.92,
+          "log": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/neither-install.log",
+          "log_sha256": "56d25750e9bd9469c671ed737bbbd43f189a172f2b2146998ef69582ccce2cd9",
+          "archive_sha256_after": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f"
+        },
+        {
+          "step": "fixtures",
+          "exit_code": 0,
+          "started_utc": "2026-10-16T01:27:03.242354+00:00",
+          "elapsed_seconds": 2.863,
+          "log": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/neither-fixtures.log",
+          "log_sha256": "a5f3459a27886089f3a2b736178d3a29caa03f4f4ffd9abea4ea442559ad07a6",
+          "archive_sha256_after": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f"
+        },
+        {
+          "step": "real",
+          "exit_code": 0,
+          "started_utc": "2026-10-16T01:27:06.111326+00:00",
+          "elapsed_seconds": 2.297,
+          "log": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/neither-real.log",
+          "log_sha256": "d28f38d7b545d4c17d0f9aedc86e45d24a5441ab29490bcbda2c9214309c2707",
+          "archive_sha256_after": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f"
+        }
+      ]
+    },
+    {
+      "cell": "drm-only",
+      "mode": "drm-only",
+      "library": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/drm-only",
+      "expected_optional": [
+        "drmTMB"
+      ],
+      "steps": [
+        {
+          "step": "install",
+          "exit_code": 0,
+          "started_utc": "2026-10-16T01:27:08.540997+00:00",
+          "elapsed_seconds": 15.628,
+          "log": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/drm-only-install.log",
+          "log_sha256": "b2741584d3ea6848817abadfdde76d602b5b5b7a215416c612b4e5491eaa5bec",
+          "archive_sha256_after": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f"
+        },
+        {
+          "step": "fixtures",
+          "exit_code": 0,
+          "started_utc": "2026-10-16T01:27:24.175234+00:00",
+          "elapsed_seconds": 2.794,
+          "log": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/drm-only-fixtures.log",
+          "log_sha256": "ca9b551525c2b97d8cf53994e4c995895706ca060672a8594ba22048ec07977a",
+          "archive_sha256_after": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f"
+        },
+        {
+          "step": "real",
+          "exit_code": 0,
+          "started_utc": "2026-10-16T01:27:26.975638+00:00",
+          "elapsed_seconds": 5.931,
+          "log": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/drm-only-real.log",
+          "log_sha256": "1bb7c668d792cd0bd3174ef5270e397319b16de34c7552ea9c446fbbb30b5d3a",
+          "archive_sha256_after": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f"
+        }
+      ]
+    },
+    {
+      "cell": "gllvm-only",
+      "mode": "gllvm-only",
+      "library": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/gllvm-only",
+      "expected_optional": [
+        "gllvmTMB"
+      ],
+      "steps": [
+        {
+          "step": "install",
+          "exit_code": 0,
+          "started_utc": "2026-10-16T01:27:33.025180+00:00",
+          "elapsed_seconds": 15.173,
+          "log": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/gllvm-only-install.log",
+          "log_sha256": "ca03f15205c65e1140c6e9a2d9750a5cbdfb22c9a73a50fe1b90a9479d0155d7",
+          "archive_sha256_after": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f"
+        },
+        {
+          "step": "fixtures",
+          "exit_code": 0,
+          "started_utc": "2026-10-16T01:27:48.204269+00:00",
+          "elapsed_seconds": 2.778,
+          "log": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/gllvm-only-fixtures.log",
+          "log_sha256": "6f18e6b6ccfb471231ed223bf624935e3095bd147b87d44cb88ee17353486524",
+          "archive_sha256_after": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f"
+        },
+        {
+          "step": "real",
+          "exit_code": 0,
+          "started_utc": "2026-10-16T01:27:50.988458+00:00",
+          "elapsed_seconds": 6.278,
+          "log": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/gllvm-only-real.log",
+          "log_sha256": "3d7b6ecf4c5ab55aee8fe4a31b78265494eda1ae53f2739b509064a49fcb9cbc",
+          "archive_sha256_after": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f"
+        }
+      ]
+    },
+    {
+      "cell": "both",
+      "mode": "real",
+      "library": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/both",
+      "expected_optional": [
+        "drmTMB",
+        "gllvmTMB"
+      ],
+      "steps": [
+        {
+          "step": "install",
+          "exit_code": 0,
+          "started_utc": "2026-10-16T01:27:57.430719+00:00",
+          "elapsed_seconds": 15.162,
+          "log": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/both-install.log",
+          "log_sha256": "04353e77c1589a88be213097c5d8c21bd9eacb4c8f290908668c08f3a15c7a95",
+          "archive_sha256_after": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f"
+        },
+        {
+          "step": "fixtures",
+          "exit_code": 0,
+          "started_utc": "2026-10-16T01:28:12.598000+00:00",
+          "elapsed_seconds": 2.66,
+          "log": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/both-fixtures.log",
+          "log_sha256": "1305eca03c313c5a7e168fe9d6fbfc4808ce5462690804b4fd2240e2d11f406f",
+          "archive_sha256_after": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f"
+        },
+        {
+          "step": "real",
+          "exit_code": 0,
+          "started_utc": "2026-10-16T01:28:15.264428+00:00",
+          "elapsed_seconds": 10.215,
+          "log": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/both-real.log",
+          "log_sha256": "3e8a9c5ca088b502a42069e4192209afcc5cc40633be801889ed58dde0ff630a",
+          "archive_sha256_after": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f"
+        }
+      ]
+    }
+  ]
+}

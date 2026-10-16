@@ -1,0 +1,6 @@
+COMMAND=["Rscript", "--vanilla", "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/script/cran-0.11-integration/check-adapters.R", "neither", "installed", "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/neither"]
+CWD=/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto
+ARCHIVE_SHA256=4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f
+script/cran-0.11-integration/test-real-backends.R: 0 expectations passed against installed pigauto
+SAVED_OPTIONAL_CLASS_MISSING_PACKAGE_OK
+NEITHER_BACKEND_OK

@@ -1,0 +1,22 @@
+{
+  "package": "pigauto",
+  "version": "0.11.0",
+  "tarball": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/pigauto_0.11.0.tar.gz",
+  "sha256": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f",
+  "size_bytes": 5142383,
+  "source_commit": "5e46c46b6970bf153a3b4bd00d55c9ace69225b0",
+  "entry_count": 251,
+  "forbidden_path_scan": "passed",
+  "notice_present": true,
+  "notice_sha256": "9cc7fa419cacea99dbb0b822c59d6fffad514ee072e119a1ce1c7f365883ba02",
+  "optional_backend_dependency_scan": "passed",
+  "shipped_rda_sha256": {
+    "pigauto/data/avonet_full.rda": "29b47bccdf17233328321378b77e99e8d4aa515d9df4451e347c709b97568e81",
+    "pigauto/data/avonet300.rda": "86af337b49cbe2a81ff7acb7245b75c9a00cd48bb9131d7f4eb5d2676af131be",
+    "pigauto/data/ctmax_sim.rda": "987a05458b7f3e548f22c52b75d8b7463e29a281a48895303f564effb0b9cecc",
+    "pigauto/data/tree_full.rda": "5f7b36a4b9c02fd53c98d12fe4871e0f34098e3aa7a8f34f2db38a21a8dc09f5",
+    "pigauto/data/tree300.rda": "6050855d2ae7de42fa0de239134aad8e8975a224610b8dffb48f3d7412bb383f",
+    "pigauto/data/trees300.rda": "8293e06503e89e79d9233abd1cbae98fc8d0c18e05ef5a41cca99a071fee9108"
+  },
+  "note": "All six shipped R data-object hashes and the NOTICE hash were recalculated from the current frozen tarball. They match the prior candidate byte for byte. Matching bytes do not independently establish third-party redistribution terms."
+}

@@ -1,0 +1,24 @@
+COMMAND=["R", "CMD", "INSTALL", "--library", "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/neither", "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/pigauto_0.11.0.tar.gz"]
+CWD=/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto
+ARCHIVE_SHA256=4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f
+Warning: unknown option ‘--library’
+Warning: invalid package ‘/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/neither’
+* installing to library ‘/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/neither’
+* installing *source* package ‘pigauto’ ...
+** this is package ‘pigauto’ version ‘0.11.0’
+** package ‘pigauto’ successfully unpacked and MD5 sums checked
+** using staged installation
+** R
+** data
+*** moving datasets to lazyload DB
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+*** copying figures
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (pigauto)
