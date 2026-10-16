@@ -1,0 +1,50 @@
+{
+  "source_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
+  "site_root": "/private/tmp/pigauto-cran011-site-8082ef8.e8beZU",
+  "site_html": 62,
+  "sitemap_entries": 62,
+  "search_records": 613,
+  "search_records_with_nonempty_string_path": 567,
+  "empty_path_records": 46,
+  "unique_nonempty_search_paths": 57,
+  "retired_routes": 44,
+  "crawler": {
+    "local_references_checked": 3584,
+    "retired_pages": 34,
+    "errors": 0,
+    "status": "SITE_CRAWL_OK",
+    "tests_passed": 6
+  },
+  "candidate_site_audit": {
+    "status": "CANDIDATE_SITE_OK",
+    "verifier_source": "script/cran-0.11-site/verify_candidate_site.py",
+    "expected_nonempty_path_count": 567,
+    "unit_tests_passed": 16
+  },
+  "old_verifier_negative_control": {
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "failure": "candidate search index expected 568 paths; found 567"
+  },
+  "reviewed_verifier_fix_commit": "7c4d60d2b5993d944345c6fe0585b1853e90320c",
+  "pkgdown_check": "No problems found; two interactive() examples skipped in non-interactive build",
+  "retired_manifest_sha256": "5414f6cb69e9d140c38d0a6308f8e0ddbe8952834eea01b6b861a78eecb807e1",
+  "verifier_sha256": "f922eef1b3f764d83afb751e92a438414bf916486ea103568271e951c1bcdd7a",
+  "test_source_sha256": "cb05a428fa5dfc7840bac4a4bdfa8567faa5d65358af82cf0656fceacb146e59",
+  "raw_logs_sha256": {
+    "site-build-2026-10-15-8082ef8.log": "6fd5bd89803a923785443d7cc210d732cae80e53d30d97329fa40fd95a9ce911",
+    "site-crawl-2026-10-15-8082ef8.log": "666b188ae633c31388a96b76c6b704ae575a69281e6606c220539e00f8f159d4",
+    "candidate-site-tests-2026-10-15-8082ef8.log": "7fc2ead236b8027109752d0dc0fe46c39b31118260c58e90a2e0f67e34d211c9",
+    "candidate-site-verify-2026-10-15-8082ef8.log": "cff33162e02e900237f7a3110d6471956702e7333d14a2293875985840f908dd",
+    "candidate-site-old-verifier-negative-control-2026-10-15-8082ef8.log": "fd02593905f2d94e2e1c958fd68f05e2d1488d44c176b534fd2482db83c1cc41"
+  },
+  "compressed_logs_sha256": {
+    "site-build-2026-10-15-8082ef8.log.gz": "42d346fe86531111c6ba0b16cf2a17ef886ec7e54d20bbe9c8eea241f41f3b21",
+    "site-crawl-2026-10-15-8082ef8.log.gz": "424e99cb8523b84542e65909e6a943e1d9cd15428df52ab45c49b711be33c3b8",
+    "candidate-site-tests-2026-10-15-8082ef8.log.gz": "942d2786062a88357c62c57f93258e88bd99598bec81d6b62beb783d677e8d2e",
+    "candidate-site-verify-2026-10-15-8082ef8.log.gz": "e61f65c945e438b7f702b63223062da4b1c2819c24f3b785d9059d80da293d6e",
+    "candidate-site-old-verifier-negative-control-2026-10-15-8082ef8.log.gz": "cd277f518e41b33d0ae034d6b6a5abd820216890a85d8c5b5d55635e990792e9"
+  },
+  "build_log_sha256_gzip": "42d346fe86531111c6ba0b16cf2a17ef886ec7e54d20bbe9c8eea241f41f3b21",
+  "crawl_log_sha256_gzip": "424e99cb8523b84542e65909e6a943e1d9cd15428df52ab45c49b711be33c3b8"
+}

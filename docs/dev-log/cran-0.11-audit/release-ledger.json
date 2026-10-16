@@ -27,9 +27,7 @@
       "kind": "file",
       "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-final-tarball-inventory-2026-10-15.txt"
     },
-    "forbidden_entries": [
-
-    ]
+    "forbidden_entries": []
   },
   "evidence": {
     "product_contract": {
@@ -91,8 +89,8 @@
     "win_builder_upload_state": "older_hash_unbound_R_release_and_R_devel_logs_report_errors;no_checksum_bound_results_for_final_candidate",
     "site_deployment_commit": "5e46c46b6970bf153a3b4bd00d55c9ace69225b0",
     "site_deployment_run": "38099234402",
-    "site_retirement_check": "Pat_independently_verified_44_retired_routes_404_62_sitemap_routes_200_613_search_entries_no_retired_target;getting_started_reader_mismatch_found_PR234_pending",
-    "site_g7_status": "retirement_controls_pass_reader_consistency_not_ready_pending_PR234_merge_and_redeploy",
+    "site_retirement_check": "PASS_local_candidate_8082ef_62_html_3584_refs_34_retired_zero_errors;live_deployment_stale_after_merge",
+    "site_g7_status": "NOT_MET_live_deployment_still_pre_8082ef;corrected_source_not_deployed;main_pkgdown_run_38843648852_queued",
     "site_verifier_source_sha256": "fbba18e851bad34fd6d22fcf803bdd04fd1730632a84243ada98aab2d77e7a15",
     "site_retired_routes_sha256": "5414f6cb69e9d140c38d0a6308f8e0ddbe8952834eea01b6b861a78eecb807e1",
     "site_retained_routes_sha256": "7288c1c2984c760f11a672f406311016ccefd193bc449402a4bbd645038f8ff1",
@@ -150,7 +148,46 @@
       ]
     },
     "as_cran_block_log": "provenance/post-merge-final-as-cran-network-block-2026-10-15.log",
-    "as_cran_block_log_sha256": "92d867104f3324c635351094b101f2f58dff74ea155a38edfd40d598ec4ae8cd"
+    "as_cran_block_log_sha256": "92d867104f3324c635351094b101f2f58dff74ea155a38edfd40d598ec4ae8cd",
+    "full_site_current_source": {
+      "status": "PASS_local_candidate_only",
+      "source_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
+      "pkgdown_version": "2.2.1",
+      "html_pages": 62,
+      "search_entries": 613,
+      "search_entries_with_nonempty_paths": 567,
+      "crawler_references": 3584,
+      "retired_pages_absent": 34,
+      "pkgdown_check": "No problems found",
+      "candidate_verifier": "CANDIDATE_SITE_OK",
+      "candidate_verifier_tests": "16 passed",
+      "visual_review": "Chrome reviewed Getting Started, tree uncertainty, and multiple imputation pages; no visible layout breakage",
+      "receipt": "provenance/current-site-receipt-2026-10-15-8082ef8.json",
+      "logs": {
+        "build": "provenance/site-build-2026-10-15-8082ef8.log.gz",
+        "crawl": "provenance/site-crawl-2026-10-15-8082ef8.log.gz",
+        "tests": "provenance/candidate-site-tests-2026-10-15-8082ef8.log.gz",
+        "verifier": "provenance/candidate-site-verify-2026-10-15-8082ef8.log.gz",
+        "negative_control": "provenance/candidate-site-old-verifier-negative-control-2026-10-15-8082ef8.log.gz",
+        "visual_review": "provenance/site-review-chrome-2026-10-15-8082ef8.md"
+      },
+      "sha256": {
+        "build": "42d346fe86531111c6ba0b16cf2a17ef886ec7e54d20bbe9c8eea241f41f3b21",
+        "crawl": "424e99cb8523b84542e65909e6a943e1d9cd15428df52ab45c49b711be33c3b8",
+        "tests": "942d2786062a88357c62c57f93258e88bd99598bec81d6b62beb783d677e8d2e",
+        "verifier": "e61f65c945e438b7f702b63223062da4b1c2819c24f3b785d9059d80da293d6e",
+        "negative_control": "cd277f518e41b33d0ae034d6b6a5abd820216890a85d8c5b5d55635e990792e9",
+        "receipt": "3418903760a8f4dc6bb6afee18a531e4d7c64b7eb920c9468f9e2e1a81800ea6",
+        "visual_review": "4aaca4826c614eec0dca3314a7e5c920639794dca1f48bd59ca8b6780f9eba59"
+      },
+      "raw_log_sha256": {
+        "site-build-2026-10-15-8082ef8.log": "6fd5bd89803a923785443d7cc210d732cae80e53d30d97329fa40fd95a9ce911",
+        "site-crawl-2026-10-15-8082ef8.log": "666b188ae633c31388a96b76c6b704ae575a69281e6606c220539e00f8f159d4",
+        "candidate-site-tests-2026-10-15-8082ef8.log": "7fc2ead236b8027109752d0dc0fe46c39b31118260c58e90a2e0f67e34d211c9",
+        "candidate-site-verify-2026-10-15-8082ef8.log": "cff33162e02e900237f7a3110d6471956702e7333d14a2293875985840f908dd",
+        "candidate-site-old-verifier-negative-control-2026-10-15-8082ef8.log": "fd02593905f2d94e2e1c958fd68f05e2d1488d44c176b534fd2482db83c1cc41"
+      }
+    }
   },
   "panel": {
     "grace": "PASS_bounded_review_of_4b32f669_pre_PR234_artifact;overall_NOT_READY_platform_as_cran_rights_and_final_artifact_gates_open",
@@ -161,12 +198,12 @@
     "pull_request": "https://github.com/itchyshin/pigauto/pull/234",
     "branch": "codex/cran-011-getting-started-correction",
     "commit": "6ebc67636f31fa8ff324ddd4a327d5cd808fba99",
-    "source_status": "merged_to_main;post_merge_R_and_pkgdown_runs_queued",
+    "source_status": "merged_to_main_at_8082ef8273177ff664d49ac4bd643f7def671f20",
     "local_vignette_knit": "passed_55_chunks",
     "focused_article_build": "passed",
     "independent_review": "passed_source_and_render_behavior_check",
-    "full_site_build": "passed_offline_with_production_pkgdown_2.2.1_on_2026-10-16_candidate_site_receipt",
-    "chrome_visual_review": "rendered_accessibility_content_checked_pixel_review_open",
+    "full_site_build": "PASS_full_merged_source_build_pkgdown_2.2.1;62_html;pkgdown_check_clean;crawler_3584_refs_34_retired_zero_errors;candidate_verifier_567_nonempty_paths",
+    "chrome_visual_review": "PASS_full_local_rendered_page_review_of_getting_started_tree_uncertainty_and_MI;live_site_remains_stale",
     "latest_check_run": "38836566041",
     "latest_check_state": "ubuntu_r_release_queued;ubuntu_r_devel_queued;macos_r_release_queued;pkgdown_pr_job_skipped_by_design",
     "after_task": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/after-task-2026-10-16-gate-refresh.md",
@@ -176,9 +213,10 @@
     "post_merge_runs": {
       "r_cmd_check": "38843648553",
       "pkgdown_deployment": "38843648852",
-      "observed_state": "all_four_jobs_queued;GitHub_Status_Actions_operational"
+      "observed_state": "all_four_jobs_queued_runner_id_0_at_latest_check;GitHub_Status_Actions_operational;cause_unknown"
     },
-    "live_site_after_merge": "pre_correction_getting_started_300x4_claim_still_visible_at_last_check;deployment_not_yet_verified"
+    "live_site_after_merge": "NOT_MET_live_page_still_says_unmatched_species_dropped_and_displays_300x4_example",
+    "merged_source_site_receipt": "provenance/current-site-receipt-2026-10-15-8082ef8.json"
   },
   "latest_source_defaults": {
     "source_commit": "b8c444876a5cdcb3e0d4a6101a56c431b538a2cf",
@@ -199,8 +237,7 @@
   },
   "status_claim": "source-clean",
   "next_unproven_rung": "tarball-clean",
-  "submission": {
-  },
+  "submission": {},
   "audit_verdict": "NOT_READY",
   "panel_evidence": {
     "pat": {
@@ -250,8 +287,6 @@
       "kind": "file",
       "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-tarball-inventory.txt"
     },
-    "forbidden_entries": [
-
-    ]
+    "forbidden_entries": []
   }
 }
