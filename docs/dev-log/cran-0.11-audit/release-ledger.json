@@ -9,63 +9,63 @@
     "large_data_or_vignettes": true
   },
   "artifact": {
-    "state": "historical_pre_PR234_candidate_checks_complete_final_candidate_pending_source_and_site_correction",
+    "state": "frozen_exact_post_PR234_tarball_local_as_cran_pass_windows_R_release_pass_R_devel_platform_results_pending",
     "filename": "pigauto_0.11.0.tar.gz",
-    "sha256": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f",
-    "size_bytes": 5142383,
-    "archive_entries": 251,
-    "inventory_sha256": "3934bd7d60734627060bd952980db374541890428d42499cae73e62e48a1a2f6",
-    "source_commit": "5e46c46b6970bf153a3b4bd00d55c9ace69225b0",
-    "frozen_path": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/pigauto_0.11.0.tar.gz",
-    "path": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/pigauto_0.11.0.tar.gz",
+    "sha256": "4bdf4de71650716b158824f545ad92c4d125fe1601adefab97eeb5f301c5debe",
+    "size_bytes": 5135816,
+    "archive_entries": 250,
+    "inventory_sha256": "8ebf3335cb54a779dbaed0b10fd46844c2d96f05a10830aefb4aa7bda573e93d",
+    "source_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
+    "frozen_path": "/private/tmp/pigauto-release-candidate/sha256-4bdf4de71650716b158824f545ad92c4d125fe1601adefab97eeb5f301c5debe/pigauto_0.11.0.tar.gz",
+    "path": "/private/tmp/pigauto-release-candidate/sha256-4bdf4de71650716b158824f545ad92c4d125fe1601adefab97eeb5f301c5debe/pigauto_0.11.0.tar.gz",
     "clean_worktree": true,
     "clean_worktree_evidence": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-final-tarball-freeze-2026-10-15.json"
+      "value": "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/cran-011-gate-refresh-clone/docs/dev-log/cran-0.11-audit/provenance/final-source-checkout-status-2026-10-16.txt"
     },
     "inventory_evidence": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-final-tarball-inventory-2026-10-15.txt"
+      "value": "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/cran-011-gate-refresh-clone/docs/dev-log/cran-0.11-audit/provenance/exact-tarball-inventory-4bdf4de7.txt"
     },
     "forbidden_entries": []
   },
   "evidence": {
     "product_contract": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/GATES.md"
+      "value": "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/cran-011-gate-refresh-clone/docs/dev-log/cran-0.11-audit/GATES.md"
     },
     "rights_and_consent": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/rights-and-policy.md"
+      "value": "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/cran-011-gate-refresh-clone/docs/dev-log/cran-0.11-audit/provenance/rights-and-policy.md"
     },
     "current_cran_policy": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/rights-and-policy.md"
+      "value": "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/cran-011-gate-refresh-clone/docs/dev-log/cran-0.11-audit/provenance/rights-and-policy.md"
     },
     "rendered_site": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/GATES.md"
+      "value": "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/cran-011-gate-refresh-clone/docs/dev-log/cran-0.11-audit/provenance/live-site-verification-2026-10-16.json"
     },
     "local_as_cran": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-final-as-cran-network-block-2026-10-15.log"
+      "value": "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/cran-011-gate-refresh-clone/docs/dev-log/cran-0.11-audit/provenance/exact-main-R-CMD-check-as-cran-2026-10-16.log"
     },
     "incoming_feasibility": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-final-as-cran-network-block-2026-10-15.log"
+      "value": "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/cran-011-gate-refresh-clone/docs/dev-log/cran-0.11-audit/provenance/exact-main-R-CMD-check-as-cran-2026-10-16.log"
     },
     "installed_package": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-final-mi-matrix-2026-10-15.json"
+      "value": "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/cran-011-gate-refresh-clone/docs/dev-log/cran-0.11-audit/provenance/exact-mi-matrix-4bdf4de7.json"
     },
     "timing": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-final-offline-check-2026-10-15.log"
+      "value": "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/cran-011-gate-refresh-clone/docs/dev-log/cran-0.11-audit/provenance/exact-main-testthat-Rout-2026-10-16.txt"
     },
-    "local_check_status": "offline_exact_tarball_OK;as_cran_incoming_blocked_by_DNS",
-    "local_check_log": "provenance/post-merge-final-offline-check-2026-10-15.log",
-    "local_check_log_sha256": "b4717df63e46a61fb125a6878c04090666b11a1caef2748e65f594fd15246341",
-    "testthat_output": "provenance/post-merge-testthat-macos.Rout",
+    "local_check_status": "exact_tarball_R_CMD_check_as_cran_OK_macos_arm64_R_4.6.0;Status_OK",
+    "local_check_log": "provenance/exact-main-R-CMD-check-as-cran-2026-10-16.log",
+    "local_check_log_sha256": "7d154d0d2364a2666b8ec4129dda1480707cb553d9991f24eab5a49c1ad0ed8e",
+    "testthat_output": "provenance/exact-main-testthat-Rout-2026-10-16.txt",
     "windows_results_bound_to_hash": false,
     "birdtree_redistribution_rights": "maintainer_directly_confirmed_use_with_citation_and_credit;no_separate_published_terms_identified;not_an_independent_legal_opinion",
     "birdtree_rights_basis": {
@@ -73,24 +73,24 @@
       "published_redistribution_terms": "not_found_on_reviewed_birdtree_pages",
       "latest_primary_source_recheck": "2026-10-16;official_BirdTree_downloads_page_requires_Jetz_2012_and_BirdTree_tool_citation_but_states_no_separate_redistribution_licence;current_CRAN_policy_includes_package_data_and_places_the_inclusion_warranty_on_the_maintainer",
       "notice_distinction": "inst/NOTICE distinguishes BirdTree data from the megatrees software licence",
-      "exact_tarball_inspection": "passed_for_historical_pre_PR234_candidate_4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f;NOTICE_and_all_six_shipped_R_data_object_hashes_were_recorded;final_post_PR234_tarball_must_repeat_object_and_NOTICE_reconciliation",
-      "final_artifact_recheck_required": true
+      "exact_tarball_inspection": "passed for exact post-PR234 hash 4bdf4de71650716b158824f545ad92c4d125fe1601adefab97eeb5f301c5debe; seven critical data and NOTICE paths byte-identical to predecessor; maintainer authorization remains warranty basis, not legal opinion",
+      "final_artifact_recheck_required": false
     },
-    "exact_hash_independent_panel": "pending_for_4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f",
-    "local_check_command": "env -u NOT_CRAN _R_CHECK_FORCE_SUGGESTS_=true R CMD check --run-donttest --timings exact frozen tarball; separate --as-cran attempt stopped at incoming feasibility due DNS",
+    "exact_hash_independent_panel": "PASS_bounded_three_independent_reviews; see provenance/exact-artifact-independent-review-2026-10-16.md; not platform-clean",
+    "local_check_command": "env -u NOT_CRAN _R_CHECK_FORCE_SUGGESTS_=true R CMD check --as-cran --run-donttest --timings exact frozen tarball",
     "local_check_platform": "macOS arm64, R 4.6.0",
-    "testthat_output_sha256": "2f97450cb9b7eebbf4c89d0ece75b59f3447f778382901294d916f2e9db29613",
+    "testthat_output_sha256": "4130bddf16e7bfe7577a4499137c928a5679c6b16d3101222d2a5e18e4ef4208",
     "testthat_summary": {
       "pass": 3190,
       "fail": 0,
       "warn": 161,
       "skip": 86
     },
-    "win_builder_upload_state": "older_hash_unbound_R_release_and_R_devel_logs_report_errors;no_checksum_bound_results_for_final_candidate",
-    "site_deployment_commit": "5e46c46b6970bf153a3b4bd00d55c9ace69225b0",
-    "site_deployment_run": "38099234402",
-    "site_retirement_check": "PASS_local_candidate_8082ef_62_html_3584_refs_34_retired_zero_errors;live_deployment_stale_after_merge",
-    "site_g7_status": "NOT_MET_live_deployment_still_pre_8082ef;corrected_source_not_deployed;main_pkgdown_run_38843648852_queued",
+    "win_builder_upload_state": "R-release_Status_OK_on_Windows_Server_2022_R_4.6.1; unique_result_URL_and_matching_filename_size; local_SHA256_checked_before_after_upload; log_does_not_echo_hash; R-devel_pending",
+    "site_deployment_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
+    "site_deployment_run": "38843648852",
+    "site_retirement_check": "PASS_fresh_live_HTTP_2026-10-16;44_retired_404;62_retained_200;sitemap_62_and_search_613_no_retired_targets",
+    "site_g7_status": "PASS_deployment_success_bounded_Chrome_review_and_fresh_retired_retained_sitemap_search_audit",
     "site_verifier_source_sha256": "fbba18e851bad34fd6d22fcf803bdd04fd1730632a84243ada98aab2d77e7a15",
     "site_retired_routes_sha256": "5414f6cb69e9d140c38d0a6308f8e0ddbe8952834eea01b6b861a78eecb807e1",
     "site_retained_routes_sha256": "7288c1c2984c760f11a672f406311016ccefd193bc449402a4bbd645038f8ff1",
@@ -99,38 +99,45 @@
     "site_verifier_tests_sha256": "33060fd73862c5e1af97335504d5b45211fce6d229657f556d8deceeadc52ce4",
     "win_builder_logs": {
       "r_release": {
-        "path": "provenance/winbuilder-r-release-2026-10-09.log.gz",
-        "sha256": "dc69a974ea7e693a632d063ca6d205b9c4d61b2eb171f6068c4e8aff8aa19fb7",
-        "result": "1_ERROR_five_test_failures_unbound_to_archive_hash",
-        "raw_sha256": "575179ab3b680d9ea23e54e8c0550bd49d817dee2e652ab11aeacc5ed03af971"
+        "path": "provenance/winbuilder-release-4bdf4de7-2026-10-16.log.gz",
+        "result": "Status_OK",
+        "platform": "Windows Server 2022 x64; R 4.6.1",
+        "sha256": "a770d0f1e26748fd7951ea8aff1004431b3157cde93376fb215f90bb66c358d6",
+        "size_bytes": 3128,
+        "result_url": "https://win-builder.r-project.org/2uMjHkJ4Uw3F/",
+        "archive_hash_echoed": false,
+        "association": "unique submission URL; filename and size matched; local archive SHA-256 checked before and after upload",
+        "log": "provenance/winbuilder-release-4bdf4de7-2026-10-16.log.gz",
+        "raw_log_sha256": "056ea23d31efc6fcaebd06530ffbdf51c92c8ca6c6f4adb3450fb1c86c1d0340",
+        "raw_log_size_bytes": 3128,
+        "compression": "gzip -n; gunzip reproduces raw fetched log bytes",
+        "log_size_bytes": 1034
       },
       "r_devel": {
-        "path": "provenance/winbuilder-r-devel-2026-10-09.log.gz",
-        "sha256": "6242c79102333744dab7e14d86237614a51dea51247888cae188eda25a9fb9b2",
-        "result": "1_ERROR_five_test_failures_unbound_to_archive_hash",
-        "raw_sha256": "23cc52068814203057efa2862110f9c08eaab62e4fcf4a62985390975849be54"
+        "path": "",
+        "result": "PENDING_RESULT_FOR_EXACT_HASH"
       }
     },
     "site_browser_review": {
-      "date": "2026-10-10",
-      "receipt": "GATES.md#current-deployed-site-recheck-2026-10-10",
-      "source_commit": "4f60a18ae72e836b6c3e15b65abb1faa7409e731",
-      "deployment_run": "38063988962",
-      "artifact_sha256": null,
+      "date": "2026-10-16",
+      "receipt": "provenance/live-site-verification-2026-10-16.json",
+      "source_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
+      "deployment_run": "38843648852",
       "pages": [
         "home",
         "getting-started",
-        "all_62_local_sitemap_paths"
+        "multiple-imputation",
+        "tree-uncertainty",
+        "tree300-reference"
       ],
-      "result": "Pat_independent_G7_pass_for_checked_deployment;62_rendered_paths;34_retired_routes_and_ledger_not_found;live_search_query_clear",
-      "direct_sitemap": "blocked_by_chrome_client;direct_search_json_blocked;numeric_http_status_not_exposed",
+      "result": "PASS_bounded_current_live_content_review_plus_fresh_HTTP_retirement_and_discovery_checks",
+      "fresh_route_status_codes": "44_retired_404;62_retained_200; sitemap_200_62_entries; search_200_613_entries; no retired targets",
       "permanence_claim": false
     },
     "exact_artifact_optional_backend_matrix": {
       "status": "PASS_bounded_installed_integration_four_cells_on_current_exact_tarball",
-      "receipt": "provenance/post-merge-final-artifact-2026-10-15.md",
-      "manifest": "provenance/post-merge-final-mi-matrix-2026-10-15.json",
-      "artifact_sha256": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f",
+      "receipt": "provenance/exact-mi-matrix-4bdf4de7.json",
+      "artifact_sha256": "4bdf4de71650716b158824f545ad92c4d125fe1601adefab97eeb5f301c5debe",
       "cells": [
         "neither",
         "drmTMB_only",
@@ -138,17 +145,16 @@
         "both"
       ],
       "review": {
-        "grace": "pending_current_hash",
-        "rose": "pending_current_hash"
+        "grace": "PASS_bounded_exact_hash_review;platform_completion_not_assessed",
+        "rose": "PASS_bounded_raw_checks_final_receipt_and_ledger_reconciliation"
       },
       "does_not_close": [
-        "as_cran_incoming_feasibility",
-        "Windows_platform_results",
-        "independent_exact_artifact_verdict"
-      ]
+        "joint_covariance_or_loading_pooling",
+        "general_inferential_validity",
+        "platform_checks"
+      ],
+      "manifest": "provenance/exact-mi-matrix-4bdf4de7.json"
     },
-    "as_cran_block_log": "provenance/post-merge-final-as-cran-network-block-2026-10-15.log",
-    "as_cran_block_log_sha256": "92d867104f3324c635351094b101f2f58dff74ea155a38edfd40d598ec4ae8cd",
     "full_site_current_source": {
       "status": "PASS_local_candidate_only",
       "source_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
@@ -218,12 +224,39 @@
       },
       "superseded_by": "provenance/exact-main-site-reproduction-2026-10-15.json",
       "receipt_hash_note": "The recorded receipt hash did not match the receipt bytes. The new receipt has an external ledger hash and does not self-hash."
-    }
+    },
+    "live_site_current_source": {
+      "deployment_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
+      "pages_run": "38843648852",
+      "deployment": "success",
+      "content_review": "five current Chrome pages; provenance/live-site-verification-2026-10-16.json",
+      "fresh_all_route_sitemap_search_audit": "PASS",
+      "route_receipt": "provenance/live-site-discovery-2026-10-16.json"
+    },
+    "live_site_after_merge": "PASS_bounded_current_Chrome_content_review_and_fresh_live_HTTP_route_discovery;see_provenance/live-site-verification-2026-10-16.json",
+    "fresh_live_site_route_receipt_sha256": "2db884b26493dc295846bf51f9a9f5c8c29b63860edacafc55fb609285d46262",
+    "post_merge_runs": {
+      "r_cmd_check": "38843648553",
+      "pages_deployment": "38843648852",
+      "observed_state": "R-release jobs on Ubuntu and macOS succeeded; R-devel queued at 2026-10-16 follow-up; Pages deployment succeeded for 8082ef8273177ff664d49ac4bd643f7def671f20"
+    },
+    "latest_check_run": "38843648553",
+    "latest_check_state": "Ubuntu_R_release_success;macOS_R_release_success;R_devel_queued_at_last_check",
+    "site_verification_log": "provenance/live-site-verifier-stdout-2026-10-16-final.log",
+    "historical_as_cran_block_log_2026_10_15": "provenance/post-merge-final-as-cran-network-block-2026-10-15.log",
+    "historical_as_cran_block_log_sha256_2026_10_15": "92d867104f3324c635351094b101f2f58dff74ea155a38edfd40d598ec4ae8cd",
+    "historical_2026_10_15_platform_snapshot": "SUPERSEDED: post-merge run 38843648553 later showed Ubuntu/macOS R-release successful and R-devel queued; Pages 38843648852 succeeded.",
+    "live_site_http_run_manifest": {
+      "kind": "file",
+      "value": "/Users/z3437171/Dropbox/Github Local/pigauto/.worktrees/cran-011-gate-refresh-clone/docs/dev-log/cran-0.11-audit/provenance/live-site-http-run-2026-10-16.json"
+    },
+    "live_site_http_run_manifest_sha256": "71399fe36b0355b74ce6f5b1a4a4796c8f718dc473d4243578318fcaaa65fc5d",
+    "exact_hash_independent_panel_receipt_sha256": "9820eda6f542e934067ece69ad7acc349fa25ccfcc5843aeffc9001c888234e7"
   },
   "panel": {
-    "grace": "PASS_bounded_review_of_4b32f669_pre_PR234_artifact;overall_NOT_READY_platform_as_cran_rights_and_final_artifact_gates_open",
-    "rose": "PASS_bounded_review_of_4b32f669_pre_PR234_artifact;overall_NOT_DONE_final_panel_and_release_gates_open",
-    "pat": "retirement_controls_pass_on_deployment_5e46c46_run_38099234402;reader_consistency_NOT_READY_premerge_historical;exact_main_local_receipt_independently_reviewed;final_corrected_deployment_review_pending"
+    "grace": "PASS_bounded_exact_hash_review;platform_completion_not_assessed",
+    "rose": "PASS_bounded_adversarial_archive_check_MI_attribution_site_and_receipt_reconciliation",
+    "pat": "PASS_bounded_exact_artifact_MI_and_site_receipt_review;platform_completion_not_assessed"
   },
   "reader_surface_correction": {
     "pull_request": "https://github.com/itchyshin/pigauto/pull/234",
@@ -234,19 +267,19 @@
     "focused_article_build": "passed",
     "independent_review": "passed_source_and_render_behavior_check",
     "full_site_build": "PASS_exact_origin_main_archive_8082ef8_pkgdown_2.2.0;62_html;62_sitemap;613_search_records;567_paths;3584_refs;34_retired_crawl;44_retired_manifest;16_tests;pkgdown_check_clean",
-    "chrome_visual_review": "PASS_bounded_three_key_pages;HTML_byte_identical_to_reviewed_build;not_whole_site;live_site_remains_stale",
-    "latest_check_run": "38836566041",
-    "latest_check_state": "ubuntu_r_release_queued;ubuntu_r_devel_queued;macos_r_release_queued;pkgdown_pr_job_skipped_by_design",
+    "chrome_visual_review": "PASS_bounded_five_page_current_content_review;not_whole_site_visual_or_accessibility_review",
+    "latest_check_run": "38843648553",
+    "latest_check_state": "Ubuntu_R_release_success;macOS_R_release_success;R_devel_queued_at_last_check",
     "after_task": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/after-task-2026-10-16-gate-refresh.md",
     "merge_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
     "merged_on": "2026-10-16",
     "checks_at_merge": "1_of_7_passed;three_R_checks_queued;pkgdown_PR_check_skipped",
     "post_merge_runs": {
       "r_cmd_check": "38843648553",
-      "pkgdown_deployment": "38843648852",
-      "observed_state": "rechecked_2026-10-16_00:01_MDT;R-CMD-check_overall_queued;macos_r_release_running_check-r-package;ubuntu_r_release_and_devel_queued;pkgdown_job_queued;GitHub_Status_actions_and_pages_operational;queue_cause_unknown"
+      "pages_deployment": "38843648852",
+      "state": "R-release Ubuntu/macOS succeeded; R-devel queued at last observation; Pages success"
     },
-    "live_site_after_merge": "NOT_MET_rechecked_2026-10-16_00:00_MDT_in_Chrome;live_Getting_Started_still_displays_X_scaled_300x4_and_says_unmatched_species_are_dropped_with_warning;Pages_run_38843648852_queued",
+    "live_site_after_merge": "PASS_bounded_Chrome_review_and_fresh_live_HTTP_route_discovery_2026-10-16",
     "evidence_branch_push": "PUSHED_2026-10-16_00:00_MDT;codex/cran-011-gate-refresh_at_26048be2405960318b164a3f3912bc01ebd77c05;verified_ssh_over_port_443;origin_main_to_head_pack_119KB;no_final_PR_opened_pending_exact_artifact_platform_results_and_final_independent_review",
     "merged_source_site_receipt": "provenance/exact-main-site-reproduction-2026-10-15.json",
     "site_reproduction_receipt_sha256": "e2660cb021d0fe7ec3da197bb2b9db6c61a1b9cdcff96d8c7303d98a2063de6f"
@@ -266,25 +299,46 @@
     "structural_verification": "44_retired_routes_absent;62_sitemap_html_pages;613_search_records;567_nonempty_paths;16_verifier_tests_passed",
     "chrome_content_review": "current exact-main reproduction is recorded under evidence.full_site_current_source; three previously reviewed HTML pages are byte-identical",
     "receipt": "provenance/site-search-index-candidate-2026-10-16.md",
-    "deployment": "not_deployed",
-    "snapshot_status": "HISTORICAL_PREMERGE_CANDIDATE"
+    "deployment": "DEPLOYED_via_8082ef_after_candidate_build",
+    "snapshot_status": "PREMERGE_CANDIDATE_RECORD_SUPERSEDED_BY_CURRENT_DEPLOYMENT_AND_LIVE_CHECK"
   },
-  "status_claim": "source-clean",
-  "next_unproven_rung": "tarball-clean",
+  "status_claim": "tarball-clean",
+  "next_unproven_rung": "platform-clean",
   "submission": {},
   "audit_verdict": "NOT_READY",
   "panel_evidence": {
     "pat": {
-      "verdict": "HISTORICAL_review_of_5e46c46_deployment_only;current_post_merge_deployment_and_reader_review_pending",
-      "review": "provenance/pat-independent-site-review-2026-10-09-v2.md plus live Chrome review summarized in GATES.md#reader-correction-follow-up-2026-10-15",
-      "reviewed_evidence_commit": "5e46c46b6970bf153a3b4bd00d55c9ace69225b0",
-      "deployment_commit": "5e46c46b6970bf153a3b4bd00d55c9ace69225b0",
-      "pages_run": "38099234402",
+      "verdict": "PASS_bounded_exact_artifact_MI_and_site_receipt_review;platform_completion_not_assessed",
+      "review": "provenance/exact-artifact-independent-review-2026-10-16.md",
+      "reviewed_evidence_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
+      "deployment_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
+      "pages_run": "38843648852",
       "limitations": [
-        "direct_live_sitemap_fetch_blocked_in_recheck",
-        "point_in_time_deployment_only"
+        "Win-builder R-release association is traceable but log does not echo archive digest",
+        "Win-builder and GitHub R-devel pending",
+        "no whole-site visual/accessibility claim"
       ],
-      "snapshot_status": "PRE_PR234"
+      "snapshot_status": "CURRENT_DEPLOYMENT_8082ef",
+      "route_audit_manifest": "provenance/live-site-http-run-2026-10-16.json",
+      "route_audit_manifest_sha256": "71399fe36b0355b74ce6f5b1a4a4796c8f718dc473d4243578318fcaaa65fc5d"
+    },
+    "grace": {
+      "verdict": "PASS_bounded_exact_hash_review;platform_completion_not_assessed",
+      "review": "provenance/exact-artifact-independent-review-2026-10-16.md",
+      "artifact_sha256": "4bdf4de71650716b158824f545ad92c4d125fe1601adefab97eeb5f301c5debe",
+      "limitations": [
+        "Win-builder R-release log does not echo archive SHA-256",
+        "Win-builder and GitHub R-devel pending"
+      ]
+    },
+    "rose": {
+      "verdict": "PASS_bounded_adversarial_archive_check_MI_attribution_site_and_receipt_reconciliation",
+      "review": "provenance/exact-artifact-independent-review-2026-10-16.md",
+      "artifact_sha256": "4bdf4de71650716b158824f545ad92c4d125fe1601adefab97eeb5f301c5debe",
+      "limitations": [
+        "platform completion pending",
+        "final evidence PR deferred"
+      ]
     }
   },
   "exact_main_site_receipt_review": {
@@ -296,42 +350,73 @@
       "Independent site auditor: verified exact-main marker, receipt/log hashes, pkgdown identity, and three page hashes; found no other current-field contradiction"
     ],
     "visual_scope": "three byte-identical reviewed pages only; not a whole-site visual review",
-    "deployment_status": "OPEN_live_site_stale_on_2026-10-15_22:44_MDT_and_pages_run_38843648852_queued"
+    "deployment_status": "PASS_Pages_38843648852_deployed_8082ef;fresh_live_HTTP_route_sitemap_search_check_2026-10-16_pass"
   },
   "evidence_pr": {
-    "number": 228,
-    "branch": "release/cran-0.11-gate",
-    "head": "4a87a53b83d617054978a94363086bd2e122683f",
-    "observed_at": "2026-10-16T01:47:00Z",
-    "state": "merged",
-    "merged": true,
-    "merge_commit": "b8c444876a5cdcb3e0d4a6101a56c431b538a2cf",
-    "merge_note": "Merged at the user's explicit request; evidence-only and does not close the CRAN audit gates.",
-    "description_refreshed_after_pat_g7_review": true,
-    "commit_count": 69,
-    "latest_workflow_run": "38071388358",
-    "latest_workflow_status": "skipped_by_pull_request_pkgdown_guard",
-    "deployment": "none"
+    "number": null,
+    "branch": "codex/cran-011-gate-refresh",
+    "state": "not_created",
+    "merged": false,
+    "note": "Create the final unmerged evidence PR after pending R-devel platform results are available; include the traceable R-release upload association and disclose that win-builder does not echo the uploaded tarball digest. No CRAN submission."
   },
   "superseded_previous_artifact": {
-    "state": "previous_frozen_candidate_stale_after_source_merge_rebuild_required",
+    "state": "superseded_by_post_PR234_clean_source_freeze",
     "filename": "pigauto_0.11.0.tar.gz",
-    "sha256": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",
-    "size_bytes": 5135324,
-    "archive_entries": 250,
-    "inventory_sha256": "10a31a50b2504f42514b0ec8b5368861543cf1f902d9ae075ebb5279cd5a777e",
-    "source_commit": "d76804e768bf77f430f43dcf591633f9cd900dab",
-    "frozen_path": "/private/tmp/pigauto-release-candidate/sha256-f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4/pigauto_0.11.0.tar.gz",
-    "path": "/private/tmp/pigauto-release-candidate/sha256-f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4/pigauto_0.11.0.tar.gz",
+    "sha256": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f",
+    "size_bytes": 5142383,
+    "archive_entries": 251,
+    "inventory_sha256": "3934bd7d60734627060bd952980db374541890428d42499cae73e62e48a1a2f6",
+    "source_commit": "5e46c46b6970bf153a3b4bd00d55c9ace69225b0",
+    "frozen_path": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/pigauto_0.11.0.tar.gz",
+    "path": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/pigauto_0.11.0.tar.gz",
     "clean_worktree": true,
     "clean_worktree_evidence": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-source-checkout-status-2026-10-10.txt"
+      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-final-tarball-freeze-2026-10-15.json"
     },
     "inventory_evidence": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-tarball-inventory.txt"
+      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-final-tarball-inventory-2026-10-15.txt"
     },
     "forbidden_entries": []
+  },
+  "windows_results_bound_to_hash": false,
+  "win_builder_upload_state": "R-release_Status_OK_on_Windows_Server_2022_R_4.6.1; unique_result_URL_and_matching_filename_size; local_SHA256_checked_before_after_upload; win-builder_log_does_not_echo_hash; R-devel_pending",
+  "win_builder_logs": {
+    "r_release": {
+      "result": "Status_OK",
+      "platform": "Windows Server 2022 x64; R 4.6.1 (2026-06-24 ucrt)",
+      "log": "provenance/winbuilder-release-4bdf4de7-2026-10-16.log.gz",
+      "sha256": "a770d0f1e26748fd7951ea8aff1004431b3157cde93376fb215f90bb66c358d6",
+      "result_url": "https://win-builder.r-project.org/2uMjHkJ4Uw3F/",
+      "check_seconds": 452,
+      "archive_hash_echoed_by_log": false,
+      "association_basis": "unique upload result URL, matching filename/size, and local archive SHA-256 check before/after upload",
+      "raw_log_sha256": "056ea23d31efc6fcaebd06530ffbdf51c92c8ca6c6f4adb3450fb1c86c1d0340",
+      "raw_log_size_bytes": 3128,
+      "compression": "gzip -n; gunzip reproduces raw fetched log bytes",
+      "path": "provenance/winbuilder-release-4bdf4de7-2026-10-16.log.gz",
+      "log_size_bytes": 1034
+    },
+    "r_devel": {
+      "result": "PENDING"
+    }
+  },
+  "exact_hash_independent_panel_detail": {
+    "status": "PASS_bounded_independent_review",
+    "artifact_sha256": "4bdf4de71650716b158824f545ad92c4d125fe1601adefab97eeb5f301c5debe",
+    "review_receipt": "provenance/exact-artifact-independent-review-2026-10-16.md",
+    "reviewers": {
+      "grace": "PASS_bounded_exact_hash_review",
+      "pat": "PASS_bounded_exact_artifact_MI_and_site_receipt_review",
+      "rose": "PASS_bounded_adversarial_archive_check_MI_attribution_site_and_receipt_reconciliation"
+    },
+    "limitations": [
+      "Win-builder R-release log does not echo archive SHA-256; traceable upload association only",
+      "Win-builder R-devel pending",
+      "GitHub R-devel pending",
+      "does not establish platform-clean or CRAN acceptance"
+    ],
+    "review_receipt_sha256": "9820eda6f542e934067ece69ad7acc349fa25ccfcc5843aeffc9001c888234e7"
   }
 }
