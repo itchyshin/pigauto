@@ -7,7 +7,7 @@
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
-> [!WARNING] **pigauto is experimental; use at your own risk.** It needs
+> **Warning:** pigauto is experimental; use at your own risk. It needs
 > further validation. Point estimates are the supported claim. Prediction
 > intervals are nominal held-out diagnostics, not package-wide certification;
 > covariance routes have focused-test evidence only.

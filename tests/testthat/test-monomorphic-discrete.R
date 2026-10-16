@@ -33,6 +33,7 @@ make_monomorphic <- function(n, levs, seed = 7L, ordered = FALSE) {
 }
 
 test_that("compute_mixed_loss keeps the K axis for a single-level categorical", {
+  skip_if_no_libtorch()
   # Tightest regression on the root cause: a K = 1 one-hot block must not
   # lose its trailing dimension before argmax(dim = 2L).
   n <- 6L
@@ -52,6 +53,7 @@ test_that("compute_mixed_loss keeps the K axis for a single-level categorical", 
 })
 
 test_that("composite_val_loss keeps the K axis for a single-level categorical", {
+  skip_if_no_libtorch()
   n <- 6L
   trait_map <- list(disc = list(
     type = "categorical", n_latent = 1L, latent_cols = 1L, levels = "a"

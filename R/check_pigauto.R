@@ -93,12 +93,16 @@ check_pigauto <- function(traits, tree, species_col = NULL,
   list(ok = TRUE, detail = paste0(device, " scalar tensor probe succeeded"))
 }
 
+.check_pigauto_torch_is_installed <- function() {
+  tryCatch(torch::torch_is_installed(), error = function(e) e)
+}
+
 .check_pigauto_runtime <- function() {
   out <- list(torch_package = requireNamespace("torch", quietly = TRUE),
               torch_is_installed = FALSE, device = "unavailable",
               unavailable = TRUE, detail = "torch package is not installed")
   if (!out$torch_package) return(out)
-  installed <- tryCatch(torch::torch_is_installed(), error = function(e) e)
+  installed <- .check_pigauto_torch_is_installed()
   if (inherits(installed, "error") || !isTRUE(installed)) {
     out$detail <- if (inherits(installed, "error")) conditionMessage(installed) else "torch runtime is not installed"
     return(out)
