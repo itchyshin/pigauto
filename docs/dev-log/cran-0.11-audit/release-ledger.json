@@ -244,10 +244,10 @@
     "post_merge_runs": {
       "r_cmd_check": "38843648553",
       "pkgdown_deployment": "38843648852",
-      "observed_state": "rechecked_2026-10-15_23:33_MDT;R-CMD-check_0_of_3_jobs_and_pkgdown_job_queued;deployments_page_8082ef8_ready_to_deploy_idle;cause_unknown"
+      "observed_state": "rechecked_2026-10-16_00:01_MDT;R-CMD-check_overall_queued;macos_r_release_running_check-r-package;ubuntu_r_release_and_devel_queued;pkgdown_job_queued;GitHub_Status_actions_and_pages_operational;queue_cause_unknown"
     },
-    "live_site_after_merge": "NOT_MET_rechecked_2026-10-15_23:33_MDT;live_Getting_Started_still_displays_X_scaled_300x4_and_says_unmatched_species_are_dropped_with_warning",
-    "evidence_branch_push": "NOT_PUSHED_rechecked_2026-10-15_23:33_MDT;remote_ref_absent;authorized_retry_rejected_remote_early_EOF_index_pack_failed",
+    "live_site_after_merge": "NOT_MET_rechecked_2026-10-16_00:00_MDT_in_Chrome;live_Getting_Started_still_displays_X_scaled_300x4_and_says_unmatched_species_are_dropped_with_warning;Pages_run_38843648852_queued",
+    "evidence_branch_push": "PUSHED_2026-10-16_00:00_MDT;codex/cran-011-gate-refresh_at_26048be2405960318b164a3f3912bc01ebd77c05;verified_ssh_over_port_443;origin_main_to_head_pack_119KB;no_final_PR_opened_pending_exact_artifact_platform_results_and_final_independent_review",
     "merged_source_site_receipt": "provenance/exact-main-site-reproduction-2026-10-15.json",
     "site_reproduction_receipt_sha256": "e2660cb021d0fe7ec3da197bb2b9db6c61a1b9cdcff96d8c7303d98a2063de6f"
   },

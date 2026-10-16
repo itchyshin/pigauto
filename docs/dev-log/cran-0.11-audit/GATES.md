@@ -1,5 +1,13 @@
 # Gates: pigauto CRAN 0.11 audit
 
+## External gate refresh, 2026-10-16 00:01 MDT
+
+The evidence branch `codex/cran-011-gate-refresh` is now present on GitHub at `26048be2405960318b164a3f3912bc01ebd77c05`. The successful push used the verified SSH-over-port-443 transport; its projected pack for `origin/main..HEAD` was 119 KB. This resolves the branch-transport issue, but no final evidence PR is open because the exact tarball, platform results, and final independent review are still pending.
+
+Post-merge R-CMD-check run [#38843648553](https://github.com/itchyshin/pigauto/actions/runs/38843648553) remains queued overall: macOS R-release is running `check-r-package`, while Ubuntu R-release and R-devel remain queued. GitHub reports that logs will be available after the running job completes. Pages deployment run [#38843648852](https://github.com/itchyshin/pigauto/actions/runs/38843648852) remains queued. The current live Getting Started page was freshly opened in Chrome and still prints `X_scaled (300 × 4)` and says unmatched species are dropped with a warning. GitHub Status reports Actions and Pages operational; the queue cause is unknown. Therefore deployed-site verification and exact-artifact gates remain unmet; no tarball has been frozen and no CRAN submission has occurred.
+
+The repository lane preflight flags the PR #234 source branch as a second Codex lane, but direct Git evidence shows its commit `6ebc676` is an ancestor of `origin/main` (`8082ef8`), and the associated PR is merged. No open PR exists for the current evidence branch. This snapshot does not alter the previous 4/7 scoped gate count: G3/G4/G5 remain unmet.
+
 ## External-state refresh, 2026-10-15 23:33 MDT
 
 Chrome rechecked the post-merge Actions runs: R-CMD-check `38843648553` still shows 0/3 jobs started and Pages `38843648852` is still queued. The GitHub Deployments page marks `8082ef8` “Ready to deploy (idle)”; the live Getting Started page still contains the obsolete `X_scaled` 300 × 4 output and says unmatched species are dropped with a warning. The exact-main local-site receipt remains valid and the scoped Unlazy G7 stays met; the separate deployed-site gate in the release ledger stays open pending deployment and live-route checks. A remote read confirms there is no `codex/cran-011-gate-refresh` ref. One authorized push retry after remote access recovered was rejected with `remote: fatal: early EOF` / `index-pack failed`; no branch update or PR creation occurred. No source or artifact gate changed: 4/7 scoped gates met, G3/G4/G5 unmet; highest proven rung remains `source-clean`, next rung `tarball-clean`.
