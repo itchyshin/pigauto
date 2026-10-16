@@ -40,7 +40,7 @@
     },
     "current_cran_policy": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/after-task-2026-10-08-g0-refresh.md"
+      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/rights-and-policy.md"
     },
     "rendered_site": {
       "kind": "file",
@@ -71,8 +71,10 @@
     "birdtree_rights_basis": {
       "maintainer_warranty": "Shinichi directly confirmed in this task that the trees may be used with citation and credit; recorded as the maintainer authorization and warranty for this package release.",
       "published_redistribution_terms": "not_found_on_reviewed_birdtree_pages",
+      "latest_primary_source_recheck": "2026-10-16;official_BirdTree_downloads_page_requires_Jetz_2012_and_BirdTree_tool_citation_but_states_no_separate_redistribution_licence;current_CRAN_policy_includes_package_data_and_places_the_inclusion_warranty_on_the_maintainer",
       "notice_distinction": "inst/NOTICE distinguishes BirdTree data from the megatrees software licence",
-      "exact_tarball_inspection": "passed for current hash 4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f; NOTICE and all six shipped R data-object hashes recalculated in provenance/post-merge-final-artifact-identity-2026-10-15.json; hashes match the prior candidate, but matching bytes do not establish third-party redistribution terms"
+      "exact_tarball_inspection": "passed_for_historical_pre_PR234_candidate_4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f;NOTICE_and_all_six_shipped_R_data_object_hashes_were_recorded;final_post_PR234_tarball_must_repeat_object_and_NOTICE_reconciliation",
+      "final_artifact_recheck_required": true
     },
     "exact_hash_independent_panel": "pending_for_4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f",
     "local_check_command": "env -u NOT_CRAN _R_CHECK_FORCE_SUGGESTS_=true R CMD check --run-donttest --timings exact frozen tarball; separate --as-cran attempt stopped at incoming feasibility due DNS",
