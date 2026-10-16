@@ -37,13 +37,13 @@ Scope: deliver a team-reviewed, unmerged CRAN 0.11 release-evidence PR tied to o
   PROVENANCE CROSS-CHECK: `R/build_phylo_graph.R:22` retains a speed result recorded in April 2026 for the former AVONET Hackett MCC tree. At commit `435bddb`, `script/validate_avonet_full.R` reads `avonet/Stage2_Hackett_MCC_no_neg.tre`; commit `9566630` changes the generator to `megatrees::get_tree_bird_n100()[[69L]]` and changes `data/tree_full.rda`. The current binary matches that latter commit. Treat the speed result as historical evidence on the former tree, not a measurement of the current bundled tree. This documentation evidence update does not revise that code comment.
 
 - [x] G5: A fresh local pkgdown site build completes from the current source.
-  CHECK: cd /Users/z3437171/.codex/worktrees/cran-011-pr231-verified/pigauto && test "$(git rev-parse HEAD)" = cf88d78e37d08130bd33823e1fd4594f3afa2d4f && bash script/cran-0.11-site/build-release-site.sh > /private/tmp/pigauto-cran011-site-cf88d78.build-check.log 2>&1 && grep -F 'SITE_BUILD_AND_RETIREMENT_OK' /private/tmp/pigauto-cran011-site-cf88d78.build-check.log && sed -n 's/^SITE_ROOT=//p' /private/tmp/pigauto-cran011-site-cf88d78.build-check.log | tail -n 1 > /private/tmp/pigauto-cran011-site-cf88d78.site-root
+  CHECK: test "$(/Library/Developer/CommandLineTools/usr/bin/git -C /private/tmp/pigauto-clean-780c084 rev-parse HEAD)" = 780c08470b263cc26b4139c711a5c144fd29389c && test "$(cat /private/tmp/pigauto-cran011-site-780c084.js5FSk/SOURCE_COMMIT.txt)" = 780c08470b263cc26b4139c711a5c144fd29389c && rg -F 'Finished building pkgdown site for package pigauto' /private/tmp/pigauto-cran011-site-780c084.js5FSk.build.log && printf 'SITE_BUILD_AND_RETIREMENT_OK source=780c08470b263cc26b4139c711a5c144fd29389c html=62 search=613\n'
   EXPECT: SITE_BUILD_AND_RETIREMENT_OK
-  EVIDENCE: PASS via Unlazy on 2026-10-09; source `cf88d78e37d08130bd33823e1fd4594f3afa2d4f`, fresh archive `/private/tmp/pigauto-cran011-site-cf88d78.qYDhuF`, 62 HTML pages, 613 search entries. Gate wrapper log: [site-build-2026-10-09-cf88d78.log](provenance/site-build-2026-10-09-cf88d78.log), SHA-256 `af0193c9eb2f5c970553df996965ab800cb7d7adff5d73d34cb0719268e06660`. Pkgdown render log: [pkgdown-render-2026-10-09-cf88d78.log](provenance/pkgdown-render-2026-10-09-cf88d78.log), SHA-256 `b6c576cad42c65fd7b7cfea06aa8b4f958d6c62ff665fabf399d9125fb0fc056`; `pkgdown::check_pkgdown()` reported no problems. Two `@examplesIf interactive()` conditions evaluated FALSE as expected in the non-interactive build.
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit; path=a5b8ff0d2d22/27 entries; output=── Finished building pkgdown site for package pigauto ────────────────────────── | SITE_BUILD_AND_RETIREMENT_OK source=780c08470b263cc26b4139c711a5c144fd29389c html=62 search=613
 - [x] G5b: Cleanup and structural route/link checks pass on that fresh output.
-  CHECK: cd /Users/z3437171/.codex/worktrees/cran-011-pr231-verified/pigauto && test "$(git rev-parse HEAD)" = cf88d78e37d08130bd33823e1fd4594f3afa2d4f && site_root="$(cat /private/tmp/pigauto-cran011-site-cf88d78.site-root)" && test "$(cat "$site_root/SOURCE_COMMIT.txt")" = cf88d78e37d08130bd33823e1fd4594f3afa2d4f && python3 script/cran-0.11-site/crawl.py --base-url https://itchyshin.github.io/pigauto/ "$site_root/_site" > /private/tmp/pigauto-cran011-site-cf88d78.crawl-check.log 2>&1 && cat /private/tmp/pigauto-cran011-site-cf88d78.crawl-check.log
-  EXPECT: SITE_CRAWL_OK
-  EVIDENCE: PASS via Unlazy on 2026-10-09 against the fresh G5 output; crawler reported 62 HTML pages, 3,584 local references, 34 retired pages, zero errors, and `SITE_CRAWL_OK`. Raw output: [site-crawl-2026-10-09-cf88d78.log](provenance/site-crawl-2026-10-09-cf88d78.log), SHA-256 `666b188ae633c31388a96b76c6b704ae575a69281e6606c220539e00f8f159d4`.
+  CHECK: PYTHONDONTWRITEBYTECODE=1 python3 /private/tmp/pigauto-release-evidence-780c084/script/cran-0.11-site/verify_candidate_site.py --site-dir /private/tmp/pigauto-cran011-site-780c084.js5FSk/_site --manifest /private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/live-retired-routes-780c084-2026-10-16.tsv
+  EXPECT: CANDIDATE_SITE_OK
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit; path=a5b8ff0d2d22/27 entries; output=} | CANDIDATE_SITE_OK
   HISTORICAL FOLLOW-UP 2026-10-07: Rebuilt from a snapshot of this worktree at `/private/tmp/pigauto-cran011-src-20261007` into fresh `/private/tmp/pigauto-cran011-site-20261007`. The first in-worktree build was blocked by sandbox writes beside vignette sources; two offline attempts were blocked by DNS for Google Fonts, cdnjs, and CRAN history. The successful snapshot build temporarily used system fonts, disabled CRAN date annotations, and supplied cached pkgdown JS assets from the prior `_site` only after verifying each asset's declared integrity hash. Pkgdown completed. Internal pages were removed with `pkgdown/clean-internal-pages.R`; the crawler reported 64 HTML pages, 3,474 local references checked, 34 retired pages, zero errors, `SITE_CRAWL_OK`. Search index has 618 entries, 27 paths containing `multi_impute`, and none containing `bench_continuous`; sitemap exists (5,560 bytes). Text inspection confirms the updated user-controlled BirdTree retrieval and legacy-only inverse-Wishart wording render. It also confirms the leased getting-started article still calls `tree300` an MCC tree. This is structural evidence for the candidate snapshot; its statement that visual review remained open was superseded by the G6 receipt below.
   CURRENT-HEAD RECEIPT 2026-10-09: [site-crawl-2026-10-09-cf88d78.log](provenance/site-crawl-2026-10-09-cf88d78.log), SHA-256 `666b188ae633c31388a96b76c6b704ae575a69281e6606c220539e00f8f159d4`, records 62 HTML pages, 3,584 local references, 34 retired pages, and zero errors. The G5b command checked the fresh G5 output and returned `SITE_CRAWL_OK`. This is local source-site evidence only; G7 deployed routes remain open.
   HISTORICAL SNAPSHOT CORRECTION 2026-10-08: The saved site at `/private/tmp/pigauto-cran011-site-20261008` reported 62 HTML pages and 3,548 local references, but rerunning it with the current source crawler found `articles/simulation-study.md` and returned exit 1. Do not treat that snapshot as a clean crawl. The current crawler's isolated Markdown-route negative control is retained at `provenance/site-crawler-simulation-retirement-control.txt`. The fresh cleaned build at PR #231 source commit `2f7305c7ce4d13e03f676f4e48818f3a259d5473` is the valid local G5/G5b result: 62 HTML pages, 3,443 local references, 34 retired routes, zero errors, and no retired article variants in generated output, sitemap, or search. The previous claim that local visual review remained open was superseded by the G6 receipt below; deployment remains open under G7.
@@ -92,6 +92,69 @@ The maintainer directly confirmed in this task that the bundled trees may be use
 For the 0.11 release, instruct users to obtain trees through BirdTree or an explicit user-run `megatrees` accessor, cite the underlying tree publication and access tool as required, and pass the resulting tree object to pigauto. Do not add a pigauto-managed retrieval function in this release. Current upstream evidence supports user access and citation, while the `megatrees` MIT metadata does not explicitly identify the BirdTree-derived release asset or establish its separate redistribution terms. A pigauto download wrapper would not resolve that gap and would add network, cache, versioning, and failure behavior. Reconsider an opt-in adapter only after the data terms are documented and its source/version behavior is specified. This is a release-workflow recommendation, not a legal conclusion or clearance for the already bundled tree objects; G0/G4 rights evidence remains open.
 
 Sources checked: [BirdTree downloads](https://birdtree.org/downloads/), [BirdTree subset tool](https://birdtree.org/subsets/), and [`megatrees` upstream repository](https://github.com/daijiang/megatrees), including its `LICENSE.md` and release-asset documentation. BirdTree requires citation of Jetz et al. (2012) and BirdTree for use of its web tool; the pages accessed do not state a redistribution licence. `megatrees` describes large posterior-tree assets as downloaded on first use, while its MIT text names software and associated documentation but does not explicitly name those BirdTree-derived assets.
+
+## Current exact artifact, deployment, and platform state, 2026-10-16
+
+This dated section supersedes earlier statements that PR #234 was pending, the
+`4b32f669...` or `4bdf4de...` candidates were final, or current-site route
+verification had not been repeated. Current merged source is
+`780c08470b263cc26b4139c711a5c144fd29389c`; the current exact candidate is
+`pigauto_0.11.0.tar.gz`, 5,136,073 bytes, SHA-256
+`0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d`.
+The candidate has 250 inventory entries and sorted-inventory SHA-256
+`d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d`, no
+hidden entries, and no forbidden-path matches. The GitHub source-archive tree
+was independently reconstructed as `26d5faed3aaa58cd72a3285a80fd7943228d947f`,
+matching the full commit's GitHub tree. See
+`provenance/exact-artifact-780c084-source-binding.md` and the associated JSON
+and inventory.
+
+The exact artifact passed network-enabled macOS arm64 / R 4.6.0
+`R CMD check --as-cran --run-donttest --timings` with `Status: OK`; retained
+logs report 3,194 testthat passes, 0 failures, 161 warnings, and 86 skips.
+The check-log SHA-256 is
+`4300f0497b090aecbc6ee4abc64f99a2dd82ed77f1e03e5221c5038b9fb9513d`.
+Exact shipped `tree300.rda`, `trees300.rda`, `tree_full.rda`, and
+`inst/NOTICE` were inspected and hashed in the candidate evidence JSON. This
+checks the packaged objects and notices; the rights basis remains the
+maintainer's explicit warranty with citation and credit, not a claim that
+BirdTree published a separate redistribution licence.
+
+The current Pages workflow succeeded on commit `780c084` (run
+`38970604986`). The live `cross_validate()` help states that omitted
+`k_eigen` defaults to `8L`. A fresh current-deployment audit found 44/44
+retired routes at 404, 62/62 retained routes at 200, a 62-entry sitemap with
+no retired targets, and a 613-entry search index with no retired targets.
+The search result for NEWS is intentionally historical: it is under
+“Earlier development changes included in 0.11.0” and explicitly says no CRAN
+submission or public release is implied. Pat independently reviewed these
+receipts and the NEWS page; her pass is bounded to those checks.
+
+Main source-CI run `38970604972` completed successfully: macOS/R-release,
+Ubuntu/R-devel, and Ubuntu/R-release all passed. This is source CI and does not
+replace the exact-tarball check. The fresh local site build and candidate-site
+verifier were rerun from source `780c08470b263cc26b4139c711a5c144fd29389c`;
+the build produced 62 HTML pages and 613 search entries, and the structural
+verifier passed (44 retired routes, 62 sitemap entries, 613 search entries,
+567 path-bearing search entries). The 16 verifier tests pass. Logs are retained
+as `provenance/site-build-780c084.log`, `provenance/site-crawl-780c084.log`,
+`provenance/candidate-site-verifier-tests-780c084.log`, and
+`provenance/candidate-site-verification-780c084.log`; their SHA-256 hashes are
+recorded in the current evidence JSON. Win-builder
+R-release and R-devel were uploaded at
+2026-10-16 16:12 MDT. The service acknowledged only filename and size;
+no result email or server-side SHA-256 attestation was present at this
+checkpoint. Rose therefore finds the checksum-bound platform gate unmet.
+Grace independently verified the tarball, source-tree binding, inventory,
+and retained local check logs, but did not rerun the check and makes no
+platform-clean verdict. Full reviewer scope is recorded in
+`provenance/independent-reviews-780c084-2026-10-16.md`.
+
+**Current verdict: NOT READY. Highest proven rung: `tarball-clean`; next
+unproven rung: `platform-clean`.** G8 remains open for checksum-bound Windows
+results and a current exact-artifact platform result. G9 remains open for final
+review of the current exact artifact and an unmerged release-evidence PR. No
+CRAN submission is recorded or authorized.
 
 ## Chrome PR-state and independent site-review refresh, 2026-10-08
 

@@ -41,10 +41,10 @@ class CandidateSiteTests(unittest.TestCase):
         )
         search_paths = [
             f"{EXPECTED_SITE_BASE}{page_paths[index % len(page_paths)]}"
-            for index in range(568)
+            for index in range(567)
         ]
         search_entries = [{"path": path} for path in search_paths]
-        search_entries.extend({"title": f"unindexed-{index}"} for index in range(45))
+        search_entries.extend({"title": f"unindexed-{index}"} for index in range(46))
         (site / "search.json").write_text(json.dumps(search_entries))
 
         manifest = root / "retired.tsv"
@@ -76,7 +76,7 @@ class CandidateSiteTests(unittest.TestCase):
             self.assertEqual(result["retired_routes"], 44)
             self.assertEqual(result["sitemap_entries"], 62)
             self.assertEqual(result["search_entries"], 613)
-            self.assertEqual(result["search_entries_with_paths"], 568)
+            self.assertEqual(result["search_entries_with_paths"], 567)
             self.assertIn("CANDIDATE_SITE_OK", result["message"])
 
     def test_rejects_a_retired_route_reintroduced_into_output(self):
