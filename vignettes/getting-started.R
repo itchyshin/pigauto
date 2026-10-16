@@ -130,8 +130,9 @@ cat("Kernel bandwidth sigma:", round(graph$sigma, 3), "\n")
 ## ----predict, eval=FALSE------------------------------------------------------
 # pred <- predict(fit, return_se = TRUE)
 #
-# # pred$imputed: 300 x 4 matrix in original units
-# # pred$se:      300 x 4 uncertainty matrix (original units)
+# # pred$imputed: 300-row data.frame with the 7 original trait columns
+# # pred$imputed_latent: 300 x 14 matrix on the latent scale
+# # pred$se: 300 x 7 per-trait uncertainty matrix
 # head(pred$imputed)
 #
 # # Conformal prediction intervals (nominal held-out diagnostic)

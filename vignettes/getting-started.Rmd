@@ -176,9 +176,11 @@ head(avonet300)
 ape::Ntip(tree300)
 ```
 
-The four morphological columns are included as example measurements for
-walking through the workflow. Their distributions and phylogenetic signal vary;
-this tutorial does not use them to establish a general performance claim.
+The four morphological columns are example measurements. The dataset also
+includes two categorical traits and one ordinal trait, so this walk-through
+uses seven original traits in total. Their distributions and phylogenetic
+signal vary; this tutorial does not use them to establish a general performance
+claim.
 
 ## Step 1: Preprocess
 
@@ -195,7 +197,9 @@ print(pd)
 
 The object `pd` is a `pigauto_data` list containing:
 
-- `X_scaled`: the z-scored, log-transformed trait matrix (300 × 4)
+- `X_scaled`: the z-scored, log-transformed latent matrix (300 × 14). The four
+  continuous traits and the ordinal trait each use one latent column; the two
+  categorical traits expand to one column per level.
 - `means`, `sds`: per-trait normalisation parameters (for back-transformation)
 - `log_transform`: `TRUE`, recorded so `predict()` can invert it automatically
 
@@ -301,14 +305,10 @@ Early stopping at epoch 900 (no improvement for 10 evals).
 print(fit)
 ```
 
-```
-<pigauto_fit>
-  Species  : 300
-  Traits   : 4 -- Mass, Beak.Length_Culmen, Tarsus.Length, Wing.Length
-  Architecture: hidden_dim = 64, k_eigen = 8, dropout = 0.1
-  Val RMSE : 0.828 (z-score)
-  Test RMSE: 0.831 (z-score)
-```
+The fit contains seven original traits and 14 latent columns. Its summary
+reports the original trait names and the mix of continuous, categorical, and
+ordinal types. Do not interpret the latent-column count as the number of input
+traits.
 
 ## Step 6: Predict
 
@@ -320,8 +320,9 @@ for uncertainty quantification. The result is back-transformed to the original
 ```{r predict, eval=FALSE}
 pred <- predict(fit, return_se = TRUE)
 
-# pred$imputed: 300 x 4 matrix in original units
-# pred$se:      300 x 4 uncertainty matrix (original units)
+# pred$imputed: 300-row data.frame with the 7 original trait columns
+# pred$imputed_latent: 300 x 14 matrix on the latent scale
+# pred$se: 300 x 7 per-trait uncertainty matrix
 head(pred$imputed)
 
 # Conformal prediction intervals (nominal held-out diagnostic)
@@ -331,14 +332,10 @@ pred$conformal_upper[, "Mass"]    # upper bound per species (original units)
 # (or evaluate_imputation() on held-out cells).
 ```
 
-Expected output (values will vary by seed and convergence):
-
-```
-       Mass Beak.Length_Culmen Tarsus.Length Wing.Length
-t1  28.4150           14.2316       18.0923     136.421
-t2  41.2031           18.5034       21.3441     154.832
-...
-```
+The categorical columns in `pred$imputed` are returned as factors. For those
+traits, `pred$se` contains uncertainty scores rather than Gaussian standard
+errors. The latent prediction has one column per encoded category, while the
+decoded data frame has one column per original trait.
 
 ## Step 7: Evaluate — and read the gate
 
@@ -632,8 +629,10 @@ zero-inflated counts; and K `numeric` columns declared via the
 `multi_proportion_groups` argument for compositional (simplex) data
 whose rows sum to 1. pigauto reads column classes to decide how each
 trait is encoded and imputed. The
-species names in `traits` must overlap with tip labels in `tree` (partial
-overlap is allowed; unmatched species are dropped with a warning).
+species names in `traits` should overlap with tip labels in `tree`. Partial
+overlap is allowed: unmatched input species remain in `completed` but are not
+modeled or filled. Tree tips with no input row can still be used during model
+fitting.
 
 ## References
 
