@@ -1,0 +1,15 @@
+pandoc: '3.12'
+pkgdown: 2.2.1
+pkgdown_sha: ~
+articles:
+  common-pitfalls: common-pitfalls.html
+  getting-started: getting-started.html
+  gnn-architecture: gnn-architecture.html
+  mixed-types: mixed-types.html
+  multiple-imputation: multiple-imputation.html
+  articles/simulation-study: simulation-study.html
+  tree-uncertainty: tree-uncertainty.html
+last_built: 2026-10-16T02:14Z
+urls:
+  reference: https://itchyshin.github.io/pigauto/reference
+  article: https://itchyshin.github.io/pigauto/articles
