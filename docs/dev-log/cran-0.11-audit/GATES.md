@@ -1,5 +1,9 @@
 # Gates: pigauto CRAN 0.11 audit
 
+## Current post-merge state, 2026-10-16
+
+PR #234 merged to `main` as `8082ef8273177ff664d49ac4bd643f7def671f20`. At merge, GitHub showed 1 of 7 checks passed; the three R checks had not started. Main-branch runs `38843648553` (R-CMD-check matrix) and `38843648852` (pkgdown deployment) were still queued at the latest check. GitHub Status showed Actions operational. The deployed Getting Started page still rendered the pre-correction `X_scaled` 300 × 4 statement. G7 remains open and the release remains NOT READY.
+
 ## Current continuation, 2026-10-16
 
 The prior section's statement that a full site build stopped is superseded: the exact PR #234 source snapshot was built with the deployed pkgdown 2.2.1 version. The full build, `pkgdown::check_pkgdown()`, local crawl, 16 candidate-verifier tests, and strict candidate-site check pass; see [the bound receipt](provenance/site-search-index-candidate-2026-10-16.md). This resolves the old 568-path expectation to the reproduced 567 non-empty references. It is local candidate evidence only. A fresh Chrome check on 2026-10-16 showed PR #234 open with Ubuntu R-release, Ubuntu R-devel, and macOS R-release queued (run #38836566041); the pkgdown PR workflow is skipped by design. Chrome still shows the old Getting Started dimension error on the deployed site. PR #228 is merged as an evidence-only PR; it does not close the audit or authorize CRAN submission. The release remains NOT READY.

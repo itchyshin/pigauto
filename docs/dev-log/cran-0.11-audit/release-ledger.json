@@ -27,7 +27,9 @@
       "kind": "file",
       "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-final-tarball-inventory-2026-10-15.txt"
     },
-    "forbidden_entries": []
+    "forbidden_entries": [
+
+    ]
   },
   "evidence": {
     "product_contract": {
@@ -159,7 +161,7 @@
     "pull_request": "https://github.com/itchyshin/pigauto/pull/234",
     "branch": "codex/cran-011-getting-started-correction",
     "commit": "6ebc67636f31fa8ff324ddd4a327d5cd808fba99",
-    "source_status": "open_checks_pending_not_merged",
+    "source_status": "merged_to_main;post_merge_R_and_pkgdown_runs_queued",
     "local_vignette_knit": "passed_55_chunks",
     "focused_article_build": "passed",
     "independent_review": "passed_source_and_render_behavior_check",
@@ -167,7 +169,16 @@
     "chrome_visual_review": "rendered_accessibility_content_checked_pixel_review_open",
     "latest_check_run": "38836566041",
     "latest_check_state": "ubuntu_r_release_queued;ubuntu_r_devel_queued;macos_r_release_queued;pkgdown_pr_job_skipped_by_design",
-    "after_task": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/after-task-2026-10-16-gate-refresh.md"
+    "after_task": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/after-task-2026-10-16-gate-refresh.md",
+    "merge_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
+    "merged_on": "2026-10-16",
+    "checks_at_merge": "1_of_7_passed;three_R_checks_queued;pkgdown_PR_check_skipped",
+    "post_merge_runs": {
+      "r_cmd_check": "38843648553",
+      "pkgdown_deployment": "38843648852",
+      "observed_state": "all_four_jobs_queued;GitHub_Status_Actions_operational"
+    },
+    "live_site_after_merge": "pre_correction_getting_started_300x4_claim_still_visible_at_last_check;deployment_not_yet_verified"
   },
   "latest_source_defaults": {
     "source_commit": "b8c444876a5cdcb3e0d4a6101a56c431b538a2cf",
@@ -188,7 +199,8 @@
   },
   "status_claim": "source-clean",
   "next_unproven_rung": "tarball-clean",
-  "submission": {},
+  "submission": {
+  },
   "audit_verdict": "NOT_READY",
   "panel_evidence": {
     "pat": {
@@ -238,6 +250,8 @@
       "kind": "file",
       "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-tarball-inventory.txt"
     },
-    "forbidden_entries": []
+    "forbidden_entries": [
+
+    ]
   }
 }
