@@ -152,6 +152,35 @@
     "full_site_current_source": {
       "status": "PASS_local_candidate_only",
       "source_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
+      "pkgdown_version": "2.2.0",
+      "html_pages": 62,
+      "sitemap_entries": 62,
+      "search_entries": 613,
+      "search_entries_with_nonempty_paths": 567,
+      "crawler_references": 3584,
+      "retired_routes_manifest_entries": 44,
+      "crawler_retired_pages": 34,
+      "crawler_errors": 0,
+      "pkgdown_check": "No problems found",
+      "candidate_verifier": "CANDIDATE_SITE_OK",
+      "candidate_verifier_tests": 16,
+      "rendered_content_assertions": 4,
+      "chrome_page_visual_review": "three previously reviewed pages are byte-identical in this exact-main build; not a whole-site review",
+      "receipt": "provenance/exact-main-site-reproduction-2026-10-15.json",
+      "receipt_sha256": "e2660cb021d0fe7ec3da197bb2b9db6c61a1b9cdcff96d8c7303d98a2063de6f",
+      "logs": {
+        "build": "provenance/site-build-exact-main-8082ef8-2026-10-15.log.gz",
+        "crawl": "provenance/site-crawl-exact-main-8082ef8-2026-10-15.log",
+        "pkgdown_check": "provenance/pkgdown-check-exact-main-8082ef8-2026-10-15.log",
+        "candidate_tests": "provenance/candidate-site-tests-exact-main-8082ef8-2026-10-15.log",
+        "candidate_verifier": "provenance/candidate-site-verifier-exact-main-8082ef8-2026-10-15.log",
+        "rendered_content_check": "provenance/rendered-content-check-exact-main-8082ef8-2026-10-15.log",
+        "source_marker": "provenance/site-source-commit-exact-main-8082ef8-2026-10-15.txt"
+      }
+    },
+    "historical_site_snapshot_2026_10_15": {
+      "status": "SUPERSEDED_BY_EXACT_MAIN_REPRODUCTION",
+      "source_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
       "pkgdown_version": "2.2.1",
       "html_pages": 62,
       "search_entries": 613,
@@ -186,13 +215,15 @@
         "candidate-site-tests-2026-10-15-8082ef8.log": "7fc2ead236b8027109752d0dc0fe46c39b31118260c58e90a2e0f67e34d211c9",
         "candidate-site-verify-2026-10-15-8082ef8.log": "cff33162e02e900237f7a3110d6471956702e7333d14a2293875985840f908dd",
         "candidate-site-old-verifier-negative-control-2026-10-15-8082ef8.log": "fd02593905f2d94e2e1c958fd68f05e2d1488d44c176b534fd2482db83c1cc41"
-      }
+      },
+      "superseded_by": "provenance/exact-main-site-reproduction-2026-10-15.json",
+      "receipt_hash_note": "The recorded receipt hash did not match the receipt bytes. The new receipt has an external ledger hash and does not self-hash."
     }
   },
   "panel": {
     "grace": "PASS_bounded_review_of_4b32f669_pre_PR234_artifact;overall_NOT_READY_platform_as_cran_rights_and_final_artifact_gates_open",
     "rose": "PASS_bounded_review_of_4b32f669_pre_PR234_artifact;overall_NOT_DONE_final_panel_and_release_gates_open",
-    "pat": "retirement_controls_pass_on_deployment_5e46c46_run_38099234402;reader_consistency_NOT_READY_PR234_pending;final_corrected_deployment_review_pending"
+    "pat": "retirement_controls_pass_on_deployment_5e46c46_run_38099234402;reader_consistency_NOT_READY_premerge_historical;exact_main_local_receipt_independently_reviewed;final_corrected_deployment_review_pending"
   },
   "reader_surface_correction": {
     "pull_request": "https://github.com/itchyshin/pigauto/pull/234",
@@ -202,8 +233,8 @@
     "local_vignette_knit": "passed_55_chunks",
     "focused_article_build": "passed",
     "independent_review": "passed_source_and_render_behavior_check",
-    "full_site_build": "PASS_full_merged_source_build_pkgdown_2.2.1;62_html;pkgdown_check_clean;crawler_3584_refs_34_retired_zero_errors;candidate_verifier_567_nonempty_paths",
-    "chrome_visual_review": "PASS_full_local_rendered_page_review_of_getting_started_tree_uncertainty_and_MI;live_site_remains_stale",
+    "full_site_build": "PASS_exact_origin_main_archive_8082ef8_pkgdown_2.2.0;62_html;62_sitemap;613_search_records;567_paths;3584_refs;34_retired_crawl;44_retired_manifest;16_tests;pkgdown_check_clean",
+    "chrome_visual_review": "PASS_bounded_three_key_pages;HTML_byte_identical_to_reviewed_build;not_whole_site;live_site_remains_stale",
     "latest_check_run": "38836566041",
     "latest_check_state": "ubuntu_r_release_queued;ubuntu_r_devel_queued;macos_r_release_queued;pkgdown_pr_job_skipped_by_design",
     "after_task": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/after-task-2026-10-16-gate-refresh.md",
@@ -213,10 +244,11 @@
     "post_merge_runs": {
       "r_cmd_check": "38843648553",
       "pkgdown_deployment": "38843648852",
-      "observed_state": "all_four_jobs_queued_runner_id_0_at_latest_check;GitHub_Status_Actions_operational;cause_unknown"
+      "observed_state": "rechecked_2026-10-15_22:44_MDT;R-CMD-check_0_of_3_jobs_and_pkgdown_job_queued;GitHub_Status_Actions_operational;cause_unknown"
     },
-    "live_site_after_merge": "NOT_MET_live_page_still_says_unmatched_species_dropped_and_displays_300x4_example",
-    "merged_source_site_receipt": "provenance/current-site-receipt-2026-10-15-8082ef8.json"
+    "live_site_after_merge": "NOT_MET_rechecked_2026-10-15_22:44_MDT;live_Getting_Started_still_displays_X_scaled_300x4_and_says_unmatched_species_are_dropped_with_warning",
+    "merged_source_site_receipt": "provenance/exact-main-site-reproduction-2026-10-15.json",
+    "site_reproduction_receipt_sha256": "e2660cb021d0fe7ec3da197bb2b9db6c61a1b9cdcff96d8c7303d98a2063de6f"
   },
   "latest_source_defaults": {
     "source_commit": "b8c444876a5cdcb3e0d4a6101a56c431b538a2cf",
@@ -231,9 +263,10 @@
     "pkgdown_version": "2.2.1",
     "build": "passed_offline_full_site",
     "structural_verification": "44_retired_routes_absent;62_sitemap_html_pages;613_search_records;567_nonempty_paths;16_verifier_tests_passed",
-    "chrome_content_review": "getting_started_and_multiple_imputation_rendered;pixel_review_open",
+    "chrome_content_review": "current exact-main reproduction is recorded under evidence.full_site_current_source; three previously reviewed HTML pages are byte-identical",
     "receipt": "provenance/site-search-index-candidate-2026-10-16.md",
-    "deployment": "not_deployed"
+    "deployment": "not_deployed",
+    "snapshot_status": "HISTORICAL_PREMERGE_CANDIDATE"
   },
   "status_claim": "source-clean",
   "next_unproven_rung": "tarball-clean",
@@ -241,17 +274,28 @@
   "audit_verdict": "NOT_READY",
   "panel_evidence": {
     "pat": {
-      "verdict": "retirement_controls_pass_reader_consistency_not_ready_pending_PR234",
+      "verdict": "HISTORICAL_review_of_5e46c46_deployment_only;current_post_merge_deployment_and_reader_review_pending",
       "review": "provenance/pat-independent-site-review-2026-10-09-v2.md plus live Chrome review summarized in GATES.md#reader-correction-follow-up-2026-10-15",
       "reviewed_evidence_commit": "5e46c46b6970bf153a3b4bd00d55c9ace69225b0",
       "deployment_commit": "5e46c46b6970bf153a3b4bd00d55c9ace69225b0",
       "pages_run": "38099234402",
       "limitations": [
-        "homepage_literal_WARNING_token_remains",
         "direct_live_sitemap_fetch_blocked_in_recheck",
         "point_in_time_deployment_only"
-      ]
+      ],
+      "snapshot_status": "PRE_PR234"
     }
+  },
+  "exact_main_site_receipt_review": {
+    "status": "PASS_bounded_independent_receipt_and_source_identity_review",
+    "receipt": "provenance/exact-main-site-reproduction-2026-10-15.json",
+    "receipt_sha256": "e2660cb021d0fe7ec3da197bb2b9db6c61a1b9cdcff96d8c7303d98a2063de6f",
+    "reviewers": [
+      "Rose: verified exact-main marker, receipt/log hashes, pkgdown identity, and bounded page transfer; requested two stale narrative corrections, now applied",
+      "Independent site auditor: verified exact-main marker, receipt/log hashes, pkgdown identity, and three page hashes; found no other current-field contradiction"
+    ],
+    "visual_scope": "three byte-identical reviewed pages only; not a whole-site visual review",
+    "deployment_status": "OPEN_live_site_stale_on_2026-10-15_22:44_MDT_and_pages_run_38843648852_queued"
   },
   "evidence_pr": {
     "number": 228,

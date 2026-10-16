@@ -1,0 +1,94 @@
+{
+  "observed_at": "2026-10-15 MDT / 2026-10-16 UTC",
+  "source_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
+  "source_method": "git archive of origin/main; exact source SHA written to SOURCE_COMMIT.txt before build",
+  "site_root": "/private/tmp/pigauto-cran011-main-site-8082ef8.EPDSkY",
+  "environment": {
+    "r_version": "4.6.0",
+    "pkgdown_version": "2.2.0",
+    "pandoc_version": "'3.12'"
+  },
+  "results": {
+    "html_pages": 62,
+    "sitemap_entries": 62,
+    "search_entries": 613,
+    "nonempty_path_count": 567,
+    "retired_route_manifest_entries": 44,
+    "crawler_status": "SITE_CRAWL_OK",
+    "crawler_references": 3584,
+    "crawler_retired_pages": 34,
+    "crawler_errors": 0,
+    "pkgdown_check": "No problems found",
+    "candidate_verifier": "CANDIDATE_SITE_OK",
+    "candidate_verifier_tests": 16,
+    "rendered_content_assertions": "4 passed"
+  },
+  "rendered_page_review": {
+    "basis": "Three pages previously reviewed in Chrome; their HTML bytes in this exact-main build match that reviewed build. Six total site files differ, none of the reviewed pages or shared visual assets.",
+    "pages": {
+      "articles/getting-started.html": {
+        "sha256": "7dc4f66bc69ce49d260352867dd50237f5cdb1050767b3505180f6819ee8e6c2",
+        "byte_identical_to_reviewed_prior_build": true
+      },
+      "articles/tree-uncertainty.html": {
+        "sha256": "d7175831e99c6558633ab054ecf20b12f54f8c485ff0a6e233d5068e4f281bc3",
+        "byte_identical_to_reviewed_prior_build": true
+      },
+      "articles/multiple-imputation.html": {
+        "sha256": "919e85c0bf6f990f6bde39c93da8e25b2ceaa888c80c315f18b16e4653b6322c",
+        "byte_identical_to_reviewed_prior_build": true
+      }
+    },
+    "review_record": "site-review-chrome-2026-10-15-8082ef8.md",
+    "limitation": "No new browser session against this build; browser policy blocks file:// and localhost. This is a bounded three-page transfer by byte identity, not a whole-site visual review."
+  },
+  "deployment": {
+    "status": "NOT_VERIFIED",
+    "known_live_getting_started": "stale 300 x 4 dimensions and unmatched-species dropped claim",
+    "pages_run": "38843648852",
+    "observed_state": "queued"
+  },
+  "release": {
+    "highest_verified_rung": "source-clean",
+    "next_unproven_rung": "tarball-clean",
+    "tarball_frozen": false,
+    "cran_submitted": false
+  },
+  "logs": {
+    "build": {
+      "file": "site-build-exact-main-8082ef8-2026-10-15.log.gz",
+      "bytes": 3147,
+      "sha256": "9aaab9160c054963f8b1711aa549a2901979c36361c6fde43f2b82fbf695f3e7"
+    },
+    "crawl": {
+      "file": "site-crawl-exact-main-8082ef8-2026-10-15.log",
+      "bytes": 112,
+      "sha256": "666b188ae633c31388a96b76c6b704ae575a69281e6606c220539e00f8f159d4"
+    },
+    "pkgdown_check": {
+      "file": "pkgdown-check-exact-main-8082ef8-2026-10-15.log",
+      "bytes": 1145,
+      "sha256": "185c343f1a2840edf7ffa46f14d630a231588798fc69e090638ab273a58a7065"
+    },
+    "candidate_tests": {
+      "file": "candidate-site-tests-exact-main-8082ef8-2026-10-15.log",
+      "bytes": 115,
+      "sha256": "892ec5488180509c4012503144779a930d5765fc4d5d28b51def388635df2379"
+    },
+    "candidate_verifier": {
+      "file": "candidate-site-verifier-exact-main-8082ef8-2026-10-15.log",
+      "bytes": 185,
+      "sha256": "cff33162e02e900237f7a3110d6471956702e7333d14a2293875985840f908dd"
+    },
+    "rendered_content_check": {
+      "file": "rendered-content-check-exact-main-8082ef8-2026-10-15.log",
+      "bytes": 135,
+      "sha256": "54e1d7a7c7b753423c236e3a607503fe3bdebfde51ba3730e520bc3c990f3ea2"
+    },
+    "source_commit_marker": {
+      "file": "site-source-commit-exact-main-8082ef8-2026-10-15.txt",
+      "bytes": 41,
+      "sha256": "db915052d44f78bdb64ee18584879142bb719de5ba6d3d1e56021362e93cd0a8"
+    }
+  }
+}

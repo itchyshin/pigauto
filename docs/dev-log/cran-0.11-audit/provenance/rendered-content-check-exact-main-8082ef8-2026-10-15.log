@@ -1,0 +1,4 @@
+PASS dimension is 300 by 14
+PASS no stale 300 by 4 claim
+PASS partial-overlap behavior preserved
+PASS old dropped-species claim absent
