@@ -49,7 +49,7 @@ The candidate-site verifier tests had previously failed against the real 613-ent
 - Fixed: candidate-site verifier off-by-one expectation for path-bearing search records (568 expected, 567 observed).
 - Open: Win-builder result arrival and checksum binding for the exact tarball.
 - Open: final exact-artifact independent verdict and current platform-clean rung.
-- Open: create the evidence PR and retain it unmerged for review.
+- Open: draft evidence PR #236 is published and intentionally remains unmerged for review.
 
 ## 8. Consistency Audit
 
@@ -61,7 +61,7 @@ The first terminal invocation hit the Xcode Git shim's unaccepted-license messag
 
 ## 10. Known Residuals
 
-The exact tarball is locally clean and its macOS `R CMD check --as-cran` result is `Status: OK`, but Windows results are not present or digest-bound. Exact-artifact platform coverage and the final independent panel remain open. No CRAN submission, merge, or deployment is claimed by this report.
+The exact tarball is locally clean and its macOS `R CMD check --as-cran` result is `Status: OK`, but Windows results are not present or digest-bound. Exact-artifact platform coverage and the final independent panel remain open. Draft evidence PR #236 is open and unmerged. No CRAN submission or merge is claimed by this report.
 
 ## 11. Team Learning
 

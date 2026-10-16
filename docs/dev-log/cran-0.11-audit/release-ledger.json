@@ -172,7 +172,7 @@
     },
     "next_unproven_rung": "platform-clean",
     "audit_verdict": "NOT_READY",
-    "new_evidence_pr": "not yet created; current artifact records completed local/site/source-CI checks and explicitly open platform gate"
+    "new_evidence_pr": "draft PR #236 open; current artifact records completed local/site/source-CI checks and explicitly open platform gate"
   },
   "panel": {
     "grace": "PASS_bounded_review_of_4b32f669_pre_PR234_artifact;overall_NOT_READY_platform_as_cran_rights_and_final_artifact_gates_open",
@@ -201,9 +201,10 @@
     "Pat live site scope"
   ],
   "evidence_pr": {
-    "number": null,
+    "number": 236,
+    "url": "https://github.com/itchyshin/pigauto/pull/236",
     "branch": "release/cran-0.11-gate-780c084",
-    "state": "not yet opened",
+    "state": "open_draft_NOT_READY",
     "merged": false
   },
   "superseded_previous_artifact": {
