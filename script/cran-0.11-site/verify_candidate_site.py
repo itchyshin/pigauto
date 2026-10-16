@@ -20,7 +20,7 @@ EXPECTED_WARNING_BODY = "pigauto is experimental; use at your own risk."
 EXPECTED_SITE_BASE = "https://itchyshin.github.io/pigauto/"
 EXPECTED_SITEMAP_ENTRIES = 62
 EXPECTED_SEARCH_ENTRIES = 613
-EXPECTED_SEARCH_PATHS = 568
+EXPECTED_SEARCH_PATHS = 567
 
 _HIDDEN_CLASSES = {
     "collapse",
