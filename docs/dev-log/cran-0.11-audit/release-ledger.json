@@ -161,9 +161,28 @@
     "local_vignette_knit": "passed_55_chunks",
     "focused_article_build": "passed",
     "independent_review": "passed_source_and_render_behavior_check",
-    "full_site_build": "blocked_before_article_generation_by_CRAN_metadata_DNS_and_protected_cache_writes",
-    "chrome_visual_review": "blocked_by_browser_file_url_policy",
-    "after_task": "/Users/z3437171/.codex/worktrees/cran-011-final-artifact/pigauto/docs/dev-log/cran-0.11-audit/after-task-2026-10-15-getting-started-correction.md"
+    "full_site_build": "passed_offline_with_production_pkgdown_2.2.1_on_2026-10-16_candidate_site_receipt",
+    "chrome_visual_review": "rendered_accessibility_content_checked_pixel_review_open",
+    "latest_check_run": "38836566041",
+    "latest_check_state": "ubuntu_r_release_queued;ubuntu_r_devel_queued;macos_r_release_queued;pkgdown_pr_job_skipped_by_design",
+    "after_task": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/after-task-2026-10-16-gate-refresh.md"
+  },
+  "latest_source_defaults": {
+    "source_commit": "b8c444876a5cdcb3e0d4a6101a56c431b538a2cf",
+    "runner": "script/cran-0.11-defaults/run.R",
+    "result": "PASS_198_FAIL_0_WARN_0_SKIP_0_CRAN_DEFAULTS_AUDIT_OK",
+    "log": "provenance/defaults-current-2026-10-16-b8c4448.log",
+    "sha256": "571daba3d6a56e2cb7ec6f4e851683dac1b92084ad3eac47df07934820695406",
+    "scope_limit": "declared_defaults_and_named_effective_routes_not_all_formal_interactions_or_scientific_optimality"
+  },
+  "candidate_site": {
+    "source_commit": "6ebc67636f31fa8ff324ddd4a327d5cd808fba99",
+    "pkgdown_version": "2.2.1",
+    "build": "passed_offline_full_site",
+    "structural_verification": "44_retired_routes_absent;62_sitemap_html_pages;613_search_records;567_nonempty_paths;16_verifier_tests_passed",
+    "chrome_content_review": "getting_started_and_multiple_imputation_rendered;pixel_review_open",
+    "receipt": "provenance/site-search-index-candidate-2026-10-16.md",
+    "deployment": "not_deployed"
   },
   "status_claim": "source-clean",
   "next_unproven_rung": "tarball-clean",
