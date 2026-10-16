@@ -197,7 +197,7 @@
       "independent_review": "PASS; reviewer rehashed archive, runner, harness, all five executed sources, and all 12 logs; confirmed four states and unchanged archive hash; no material discrepancy"
     },
     "win_builder_latest_recheck": {
-      "checked_utc": "2026-10-16T23:00:17Z",
+      "checked_utc": "2026-10-16T23:49:04Z",
       "result_email_found": false,
       "upload_acknowledgement": "filename_and_size_only",
       "server_sha256_attestation": false,
@@ -252,7 +252,13 @@
     "url": "https://github.com/itchyshin/pigauto/pull/236",
     "branch": "release/cran-0.11-gate-780c084",
     "state": "open_draft_NOT_READY",
-    "merged": false
+    "merged": false,
+    "last_rechecked_utc": "2026-10-16T23:48:52Z",
+    "draft": true,
+    "mergeable": true,
+    "last_observed_head_sha": "a4f64c0240e39923a31bc9b7110fa2a43fcbae63",
+    "last_observed_commit_count": 6,
+    "observation_note": "GitHub readback at 2026-10-16T23:48:52Z; later evidence-only ledger update may advance the branch head"
   },
   "superseded_previous_artifact": {
     "state": "previous_frozen_candidate_stale_after_source_merge_rebuild_required",

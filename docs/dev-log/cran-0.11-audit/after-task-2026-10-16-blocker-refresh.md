@@ -30,8 +30,8 @@ Continue the approved CRAN 0.11 audit without publishing the frozen tarball. Rec
 - Confirmed PR #234's merge commit `8082ef8273177ff664d49ac4bd643f7def671f20` is an ancestor of source commit `780c08470b263cc26b4139c711a5c144fd29389c`.
 - Read the exact-artifact check log: incoming feasibility is `OK`; final `Status: OK`.
 - Streamed the current tarball's `inst/NOTICE` and six `.rda` objects through SHA-256; their hashes match the previously inspected candidate's bytes.
-- Searched Gmail `in:anywhere` for current Win-builder results at 2026-10-16 23:00 UTC: no result email found.
-- Refreshed PR #236 metadata: open, Draft, unmerged, head `e88bd63ed62b6e4d262d9015b5136e0d3425eb5a`.
+- Searched Gmail `in:anywhere` for current Win-builder results at 2026-10-16 23:00 UTC and again at 23:49 UTC: no result email found.
+- Pushed evidence-only commit `a4f64c02` to PR #236 and verified GitHub readback: open, Draft, unmerged, head `a4f64c0240e39923a31bc9b7110fa2a43fcbae63`, six commits. The frozen tarball hash is unchanged.
 - Reviewed current independent receipts: Grace passes bounded local archive/check identity; Rose finds Windows hash binding unmet; Pat passes the supplied current-site receipt within stated scope.
 - The last recorded unlazy status remains 9/11 gates met, G8/G9 open; this refresh does not change those gate outcomes.
 - `cran_release_gate.py --selftest`: all planted negative controls passed; ledger validation: `READY FOR CLAIMED RUNG` (`tarball-clean` only).
