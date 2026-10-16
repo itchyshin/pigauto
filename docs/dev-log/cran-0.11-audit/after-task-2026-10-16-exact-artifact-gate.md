@@ -38,7 +38,8 @@ Refresh the exact-artifact/site evidence for the pigauto 0.11 release audit and 
 - `python3 .../cran_release_gate.py release-ledger.json`: `READY FOR CLAIMED RUNG` (tarball-clean only).
 - Main source-CI run `38970604972`: Ubuntu R-release, Ubuntu R-devel, and macOS R-release passed. These checks are not exact-tarball platform results.
 - Gmail search for current Win-builder result messages: none returned.
-- `git diff --check`: passed before the final report update; rerun before commit.
+- PR #236 is open as a draft; its pkgdown job is intentionally skipped on pull requests by the repository workflow. The PR is unmerged.
+- Staged source/document edits pass `git -c core.whitespace=-blank-at-eol diff --cached --check`. Raw R/test and pkgdown logs retain their original trailing whitespace and were kept byte-for-byte.
 
 ## 6. Tests of the Tests
 
