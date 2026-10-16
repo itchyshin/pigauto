@@ -1,0 +1,21 @@
+{
+  "entry_count": 250,
+  "forbidden_path_scan": "passed",
+  "notice_present": true,
+  "notice_sha256": "9cc7fa419cacea99dbb0b822c59d6fffad514ee072e119a1ce1c7f365883ba02",
+  "optional_backend_dependency_scan": "passed",
+  "package": "pigauto",
+  "sha256": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",
+  "shipped_rda_sha256": {
+    "pigauto/data/avonet300.rda": "86af337b49cbe2a81ff7acb7245b75c9a00cd48bb9131d7f4eb5d2676af131be",
+    "pigauto/data/avonet_full.rda": "29b47bccdf17233328321378b77e99e8d4aa515d9df4451e347c709b97568e81",
+    "pigauto/data/ctmax_sim.rda": "987a05458b7f3e548f22c52b75d8b7463e29a281a48895303f564effb0b9cecc",
+    "pigauto/data/tree300.rda": "6050855d2ae7de42fa0de239134aad8e8975a224610b8dffb48f3d7412bb383f",
+    "pigauto/data/tree_full.rda": "5f7b36a4b9c02fd53c98d12fe4871e0f34098e3aa7a8f34f2db38a21a8dc09f5",
+    "pigauto/data/trees300.rda": "8293e06503e89e79d9233abd1cbae98fc8d0c18e05ef5a41cca99a071fee9108"
+  },
+  "size_bytes": 5135324,
+  "source_commit": "d76804e768bf77f430f43dcf591633f9cd900dab",
+  "tarball": "/private/tmp/pigauto-release-candidate/sha256-f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4/pigauto_0.11.0.tar.gz",
+  "version": "0.11.0"
+}

@@ -1,0 +1,10 @@
+{
+  "path": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/pigauto_0.11.0.tar.gz",
+  "sha256": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f",
+  "size_bytes": 5142383,
+  "entries": 251,
+  "inventory_sha256": "3934bd7d60734627060bd952980db374541890428d42499cae73e62e48a1a2f6",
+  "source_commit": "5e46c46b6970bf153a3b4bd00d55c9ace69225b0",
+  "clean_source": true,
+  "forbidden_entries": []
+}

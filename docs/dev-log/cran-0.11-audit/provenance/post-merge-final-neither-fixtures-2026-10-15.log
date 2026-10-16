@@ -1,0 +1,6 @@
+COMMAND=["Rscript", "--vanilla", "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/script/cran-0.11-integration/check-adapters.R", "fixtures", "installed", "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/mi-matrix/neither"]
+CWD=/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto
+ARCHIVE_SHA256=4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f
+tests/testthat/test-pool-mi-adapter-fixtures.R: 50 expectations passed against installed pigauto
+tests/testthat/test-mi-provenance.R: 55 expectations passed against installed pigauto
+ADAPTER_FIXTURES_OK

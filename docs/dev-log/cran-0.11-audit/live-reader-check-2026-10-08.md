@@ -1,0 +1,18 @@
+# Live reader-surface check, 2026-10-07 MDT
+
+This is a focused check of the BirdTree examples and nearby novice guidance, not a full-site audit. Pages were opened directly in Codex In-app Browser on the live `itchyshin.github.io/pigauto` site. The navigation identifies the site as version 0.11.0.
+
+| Live page | Observed state | Gate result |
+|---|---|---|
+| [Getting started](https://itchyshin.github.io/pigauto/articles/getting-started.html) | Calls `tree300` a pruned Hackett MCC tree; describes a shrinkage penalty on `delta - baseline`; says pigauto automatically selects CUDA, MPS, then CPU without limiting this to `gnn = TRUE`; references Tobias et al. and Jetz et al. but omits Hackett et al. | Open. Source and rendered article need reconciliation. |
+| [Tree uncertainty](https://itchyshin.github.io/pigauto/articles/tree-uncertainty.html) | Correctly describes `trees300` as a 50-tree sample from the combined Ericson/Hackett collection, says these are posterior-sample trees rather than an MCC tree, limits the workflow to descriptive prediction sensitivity, and cites Ericson et al. (2006), Hackett et al. (2008), and Jetz et al. (2012). | Pass for this page's checked claims. |
+| [tree300 help](https://itchyshin.github.io/pigauto/reference/tree300.html) | Calls the object a Hackett-backbone sample distributed by MIT-licensed `megatrees`; source line attributes it to Li (2026), the package's MIT licence, and Jetz et al. | Open. It omits the member-69 provenance and does not distinguish package licence metadata from underlying tree-data rights. |
+| [trees300 help](https://itchyshin.github.io/pigauto/reference/trees300.html) | Calls all 50 trees a Hackett-only sample and attributes the MIT licence to `megatrees`; source line credits Li (2026), Jetz et al. (2012), and Hackett et al. (2008), but omits Ericson et al. (2006). | Open. It needs the mixed-backbone description and complete source attribution. |
+
+The generator calls `set.seed(42)` before sampling 50 indices from the 100-tree `megatrees` collection. A local deterministic R check returned 28 indices from the first 50 (Ericson) and 22 from the second 50 (Hackett), matching the upstream accessor's documented ordering. The live `tree-uncertainty` article now reports the combined collection and all three relevant papers. `tree300` and `tree_full` use member 69, which belongs to the Hackett half; they are posterior members, not MCC trees.
+
+Source records checked: [`megatrees` reference manual](https://cran.r-project.org/web/packages/megatrees/refman/megatrees.html), [BirdTree downloads and citation guidance](https://birdtree.org/downloads/), [Ericson et al. (2006)](https://doi.org/10.1098/rsbl.2006.0523), [Hackett et al. (2008)](https://doi.org/10.1126/science.1157704), and [Jetz et al. (2012)](https://doi.org/10.1038/nature11631).
+
+The working audit source has updated the tree descriptions and NOTICE. These local changes have not yet been checked in the final merged source, rebuilt into the package site, or verified in a new deployment. Shinichi affirmed that the trees may be used with citation and credit, but the record still needs to identify whether redistribution rests on BirdTree terms, written permission, or an existing agreement before the CRAN warranty can be evidenced.
+
+This check did not audit navigation, search, sitemap entries, or other public pages. The separate retirement and site inventory remains responsible for those surfaces. G4 stays open until the stale source pages are corrected, generated help and the fresh local build agree, and the deployed pages are checked after the authorized merge and deployment.

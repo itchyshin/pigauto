@@ -1,0 +1,26 @@
+* using log directory ‘/private/tmp/pigauto-cran011-final/pigauto.Rcheck’
+* using R version 4.6.0 (2026-04-24)
+* using platform: aarch64-apple-darwin23
+* R was compiled by
+    Apple clang version 17.0.0 (clang-1700.3.19.1)
+    GNU Fortran (GCC) 14.2.0
+* running under: macOS Tahoe 26.7.1
+* using session charset: UTF-8
+* current time: 2026-10-16 01:19:14 UTC
+* using options ‘--run-donttest --as-cran’
+* checking for file ‘pigauto/DESCRIPTION’ ... OK
+* this is package ‘pigauto’ version ‘0.11.0’
+* package encoding: UTF-8
+* checking CRAN incoming feasibility ...Warning: unable to access index for repository https://CRAN.R-project.org/src/contrib:
+  cannot open URL 'https://CRAN.R-project.org/src/contrib/PACKAGES'
+Warning: unable to access index for repository https://bioconductor.org/packages/3.23/bioc/src/contrib:
+  cannot open URL 'https://bioconductor.org/packages/3.23/bioc/src/contrib/PACKAGES'
+Warning: unable to access index for repository https://bioconductor.org/packages/3.23/data/annotation/src/contrib:
+  cannot open URL 'https://bioconductor.org/packages/3.23/data/annotation/src/contrib/PACKAGES'
+Warning: unable to access index for repository https://bioconductor.org/packages/3.23/data/experiment/src/contrib:
+  cannot open URL 'https://bioconductor.org/packages/3.23/data/experiment/src/contrib/PACKAGES'
+Warning in read.dcf(con) :
+  URL 'https://CRAN.R-project.org/src/contrib/PACKAGES.in': status was 'Couldn't resolve host name'
+Error in read.dcf(con) : 
+  cannot open the connection to 'https://CRAN.R-project.org/src/contrib/PACKAGES.in'
+Execution halted

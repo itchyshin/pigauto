@@ -1,0 +1,7 @@
+Source revision with defaults and focused MI audit: cf88d78e37d08130bd33823e1fd4594f3afa2d4f
+Merged source revision used for the frozen tarball: d76804e768bf77f430f43dcf591633f9cd900dab
+Scope compared: R tests DESCRIPTION NAMESPACE man
+Command: git diff --quiet d76804e768bf77f430f43dcf591633f9cd900dab cf88d78e37d08130bd33823e1fd4594f3afa2d4f -- R tests DESCRIPTION NAMESPACE man
+Exit status: 0
+Result: no differences in package source, tests, dependency metadata, namespace, or generated help.
+Limit: this source equivalence supports the source-mode audit receipts; it does not validate an installed exact tarball or platform results.

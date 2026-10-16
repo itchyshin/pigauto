@@ -1,0 +1,46 @@
+# Source commit bb5835d1b214d783da7b0b414df99aa6ba926bc7; Pages run #570 Success.
+path	http_status	observed
+sitemap.xml	200	application/xml; 64 locations; 0 retired URLs
+search.json	200	application/json; charset=utf-8; 574 indexed paths; 0 retired URLs
+/	200	text/html; charset=utf-8; bytes=27979; per-trait benchmark nav/hrefs=0; expected navbar labels=Get started,Articles,Reference,Changelog
+articles/getting-started.html	200	text/html; charset=utf-8; bytes=68390; phylo_signal_gate marker=yes; FALSE marker=yes
+articles/multiple-imputation.html	200	text/html; charset=utf-8; bytes=38004; current separated-residual wording marker=yes
+reference/multi_impute.html	200	text/html; charset=utf-8; bytes=46768; draws_method marker=yes; auto marker=yes
+dev/bench_amphibio.html	404	retired direct URL
+dev/bench_avonet9993_bace.html	404	retired direct URL
+dev/bench_avonet9993_bace_index.html	404	retired direct URL
+dev/bench_avonet9993_bace_n3000.html	404	retired direct URL
+dev/bench_avonet_full_local.html	404	retired direct URL
+dev/bench_avonet_missingness.html	404	retired direct URL
+dev/bench_bace_avonet_head_to_head.html	404	retired direct URL
+dev/bench_bien.html	404	retired direct URL
+dev/bench_binary.html	404	retired direct URL
+dev/bench_categorical.html	404	retired direct URL
+dev/bench_clade_missingness.html	404	retired direct URL
+dev/bench_continuous.html	404	retired direct URL
+dev/bench_correlation_sweep.html	404	retired direct URL
+dev/bench_count.html	404	retired direct URL
+dev/bench_covariate_sim.html	404	retired direct URL
+dev/bench_delhey.html	404	retired direct URL
+dev/bench_evo_model_sweep.html	404	retired direct URL
+dev/bench_fishbase.html	404	retired direct URL
+dev/bench_missingness_mechanism.html	404	retired direct URL
+dev/bench_multi_obs.html	404	retired direct URL
+dev/bench_multi_proportion.html	404	retired direct URL
+dev/bench_ordinal.html	404	retired direct URL
+dev/bench_pantheria_bace_head_to_head.html	404	retired direct URL
+dev/bench_pantheria_full.html	404	retired direct URL
+dev/bench_proportion.html	404	retired direct URL
+dev/bench_scaling_v090.html	404	retired direct URL
+dev/bench_signal_sweep.html	404	retired direct URL
+dev/bench_tree_uncertainty.html	404	retired direct URL
+dev/bench_zi_count.html	404	retired direct URL
+dev/calibration_grid.html	404	retired direct URL
+dev/pantheria_summary.html	404	retired direct URL
+dev/phase8_summary.html	404	retired direct URL
+dev/scaling.html	404	retired direct URL
+dev/tests_overview.html	404	retired direct URL
+articles/pigauto_intro.html	404	retired direct URL
+articles/pigauto_workflow_mixed.html	404	retired direct URL
+articles/pigauto_walkthrough_covariates.html	404	retired direct URL
+articles/pigauto_walkthrough_multi_obs.html	404	retired direct URL

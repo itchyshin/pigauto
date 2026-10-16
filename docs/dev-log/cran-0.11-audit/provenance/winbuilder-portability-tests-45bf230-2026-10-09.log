@@ -1,0 +1,38 @@
+Source commit: 45bf230c7a10f56d0357b7fd5f5403a263eb72d4
+Source snapshot: /private/tmp/pigauto-winbuilder-fix-45bf230 (git archive)
+Host: macOS-26.7-arm64-arm-64bit-Mach-O
+R: R version 4.6.0 (2026-04-24) | aarch64-apple-darwin23
+Command: Rscript -e devtools::test(filter = "check-pigauto|covariate-alignment|monomorphic-discrete", reporter = "summary")
+Exit status: 0
+
+check-pigauto: ..................................................................................................
+covariate-alignment: .............
+monomorphic-discrete: ...WW.....WWWW...WW......WW........W....
+
+══ Warnings ════════════════════════════════════════════════════════════════════
+1. impute() predicts the single class for a one-level factor ('test-monomorphic-discrete.R:73:3') - At least one matched trait is constant.
+
+2. impute() predicts the single class for a one-level factor ('test-monomorphic-discrete.R:73:3') - Small validation set for 2 trait(s): disc (n=5), cont (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+3. impute() predicts the single class for a one-level ordered factor ('test-monomorphic-discrete.R:90:3') - At least one matched trait is constant.
+
+4. impute() predicts the single class for a one-level ordered factor ('test-monomorphic-discrete.R:90:3') - Small validation set for 2 trait(s): disc (n=5), cont (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (disc (n=5), cont (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+5. impute() predicts the single class for a one-level ordered factor ('test-monomorphic-discrete.R:90:3') - the standard deviation is zero
+
+6. impute() predicts the single class for a one-level ordered factor ('test-monomorphic-discrete.R:90:3') - the standard deviation is zero
+
+7. impute() handles a K-level factor monomorphic among observed cells ('test-monomorphic-discrete.R:105:5') - At least one matched trait is constant.
+
+8. impute() handles a K-level factor monomorphic among observed cells ('test-monomorphic-discrete.R:105:5') - Small validation set for 2 trait(s): disc (n=5), cont (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+9. impute() handles a K-level factor monomorphic among observed cells ('test-monomorphic-discrete.R:105:5') - At least one matched trait is constant.
+
+10. impute() handles a K-level factor monomorphic among observed cells ('test-monomorphic-discrete.R:105:5') - Small validation set for 2 trait(s): disc (n=5), cont (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+11. the whole pipeline survives a single-level categorical trait ('test-monomorphic-discrete.R:135:3') - Small validation set for 2 trait(s): disc (n=3), cont (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+😸
+ℹ Testing pigauto
+1 tree tip(s) have no trait data and will have all-NA rows.

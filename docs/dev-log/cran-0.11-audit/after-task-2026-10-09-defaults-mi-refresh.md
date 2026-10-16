@@ -8,12 +8,11 @@ Updated G1 to distinguish inventory-wide declared-formal/default matching from s
 
 ## 3a. Decisions and Rejected Alternatives
 
-Followed Shinichi's direction that the checkouts belong to one pigauto audit lane. This checkout is the sole active pigauto lane for this slice. Kept drmTMB and gllvmTMB optional, retained automatic extraction adapters and termwise fixed-effect pooling, and recorded the earlier installed-backend matrix as supporting evidence. Did not claim joint covariance pooling, broad inferential validity, scientific optimality of defaults, or exact-tarball verification. Did not merge, deploy, or submit.
+Followed Shinichi's direction that the checkouts belong to one pigauto audit lane. The branch/worktree is the evidence checkout for this slice, not a competing lane. Kept drmTMB and gllvmTMB optional, retained automatic extraction adapters and termwise fixed-effect pooling, and recorded the earlier installed-backend matrix as supporting evidence. Did not claim joint covariance pooling, broad inferential validity, scientific optimality of defaults, or exact-tarball verification. Did not merge, deploy, or submit.
 
 ## 4. Files Touched
 
 - `docs/dev-log/cran-0.11-audit/GATES.md`
-- `docs/dev-log/cran-0.11-audit/defaults-inventory.md`
 - `docs/dev-log/cran-0.11-audit/after-task-2026-10-09-defaults-mi-refresh.md`
 - `docs/dev-log/cran-0.11-audit/provenance/defaults-current-2026-10-09-cf88d78.log`
 - `docs/dev-log/cran-0.11-audit/provenance/mi-real-current-2026-10-09-cf88d78.log`
@@ -63,58 +62,3 @@ Golden Set: no package source behavior changed; no source known-mistake class wa
 Covers current-source default inventory comparison, named effective routes, optional drmTMB/gllvmTMB fixed-effect MI extraction and pooling, and focused posterior/tree MI tests.
 
 Does NOT cover every interaction among public formals, scientific optimality of all defaults, joint covariance pooling, broad inferential validity, final-artifact installation, deployed-site behavior, platform release checks, or CRAN submission.
-
-## Follow-up: exact-head CI ledger reconciliation, 2026-10-09
-
-Two independent reviewers found that the PR descriptions had advanced beyond the durable ledger: GATES.md still stopped at run #37913439649 on `017e0a6`, and its G0 scope statement stopped at the earlier site commit. I updated GATES.md to record the passing #37916716258 receipt on `cf88d78` and the latest #37924160198 receipt on `dbe1248`, with the three platform durations and the candidate-source/force-Suggests limits. I also bound the G0 carry-forward to the exact six-file `cf88d78..dbe1248` audit-record delta. That delta contains no package, user-facing documentation, data, generated-help, or website-input changes.
-
-Validation: `git diff --check` passed. The after-task structure check passed; its overall exit remains 1 because five unmet gates under `.unlazy/imputation-sim/gates/` belong to another acceptance ledger and were not changed here. The naturalness checker passed with zero findings. No package/site tests were rerun because this was an evidence-only correction. The PR description text previously verified in Chrome already records #37924160198 and retains the 8-of-11 tally. G7 (deployed-site verification), G8 (final post-merge tarball and checks), and G9 (independent final artifact review) remain open. Merge, deployment, and submission remain Shinichi's decisions.
-
-
-## Follow-up: exact-head CI completion, 2026-10-09
-
-Run #37927503719 completed successfully for PR #231 source head `7c2a3c361de64709864cfd2f6f63264cd91d2f11`, through synthetic merge `b9c86d8` into base `0b0f71f`. Ubuntu R-release, Ubuntu R-devel, and macOS arm64 R-release all reported `R CMD check Status: OK`; the full suite reported 3,196 passes, 0 failures, 175 warnings, and 83 skips on every platform. The macOS focused MPS test reported 201 passes, 0 failures, 50 warnings, and 0 skips in 273 seconds. The preserved consolidated log is 5,971,990 bytes with SHA-256 `1353b224fc8c7a4ba7ecf1936833e2d9b547d1fdc328eb3eeb8b5735b4d361f5`. This workflow used `NOT_CRAN=true` and `_R_CHECK_FORCE_SUGGESTS_=false`; it is source-candidate evidence only and does not satisfy G8.
-
-Files touched in this follow-up: `GATES.md`, this after-task report, and the retained consolidated workflow log `provenance/source-ci-37927503719.log`. The source delta after the previously checked `dbe1248` contains only audit-evidence records; no package behavior, bundled data, user-facing pages, generated help, or website inputs changed. G0–G6 remain met; G7–G9 remain open. No merge, deployment, or submission occurred. `git diff --check` passed. No package or site checks were rerun because this follow-up records completed CI evidence only.
-
-
-## Follow-up: current-head CI completion, 2026-10-09
-
-Run #37930221718 passed on PR #231 source head `2b56c64592e4920403fa5cdd78656cd805f2e0e5`, through synthetic merge `5b4f979` into base `0b0f71f`. Ubuntu R-release, Ubuntu R-devel, and macOS arm64 R-release all reported `R CMD check Status: OK`; each full suite reported 3,196 passes, 0 failures, 175 warnings, and 83 skips. The focused macOS MPS test reported 201 passes, 0 failures, 50 warnings, and 0 skips in 350.7 seconds. The retained consolidated log is 5,971,540 bytes with SHA-256 `d3d94372cbcc503f2d0dd4ec84ba577d075320bb7727121b83ef0726ac27b1e6`. This workflow set `NOT_CRAN=true` and `_R_CHECK_FORCE_SUGGESTS_=false`; it does not satisfy G8.
-
-Files touched in this follow-up: `GATES.md`, this report, and `provenance/source-ci-37930221718.log`. These are evidence-only updates; no package code, data, user-facing pages, generated help, or website inputs changed. G0–G6 remain met and G7–G9 remain open. `git diff --check` passed for the two Markdown records; the verbatim raw log retains upstream trailing whitespace. No package or site checks were rerun because this follow-up records completed CI evidence only.
-
-
-## Follow-up: exact-head CI completion on the sole pigauto lane, 2026-10-09
-
-Run #37932930957 passed on PR #231 source head `ad28685cd216ee402f775fef7c031852a8809fcd`, through synthetic merge `52ba97e` into base `0b0f71f`. Ubuntu R-release, Ubuntu R-devel, and macOS arm64 R-release all reported `R CMD check Status: OK`; each full suite reported 3,196 passes, 0 failures, 175 warnings, and 83 skips. The focused macOS MPS test reported 201 passes, 0 failures, 50 warnings, and 0 skips in 186.4 seconds. The consolidated log is `provenance/source-ci-37932930957.log`, 5,970,929 bytes, SHA-256 `0e10eba521c1d2e4bc45f6fde94987a924148f5790bf6215cd8a5ac1423049f9`.
-
-This run sets `NOT_CRAN=true` and `_R_CHECK_FORCE_SUGGESTS_=false`; it verifies candidate-source CI only and does not satisfy G8. The pkgdown PR workflow was skipped by repository design. Relative to the previously passing source head `2b56c64`, the tested delta contains only audit evidence files. G0–G6 remain met and G7–G9 remain open. The sole pigauto audit driver owns this evidence checkout; no competing pigauto lane is being treated as active. Both PRs remain Draft and unmerged. No merge, deployment, frozen final tarball, or CRAN submission occurred.
-
-Files updated: `GATES.md`, this report, and the retained raw workflow log. `git diff --check` passed and the naturalness checker reported zero findings. The after-task structure check passed; full closeout still reports five unmet gates in `.unlazy/imputation-sim/gates/`, outside the CRAN 0.11 release-evidence scope. No package or site tests were rerun because this update records the completed source-CI run only.
-
-
-## Follow-up: current PR-head source CI completion, 2026-10-09
-
-Run #37934989398 passed on PR #231 source head `248a18abc66fe8a3d261a519f8573f100a0ee96c`, through synthetic merge `e9e7e20` into base `0b0f71f`. Ubuntu R-release, Ubuntu R-devel, and macOS arm64 R-release all reported `R CMD check Status: OK`; each full suite reported 3,196 passes, 0 failures, 175 warnings, and 83 skips. The focused macOS MPS test reported 201 passes, 0 failures, 50 warnings, and 0 skips in 209.2 seconds. The consolidated log is `provenance/source-ci-37934989398.log`, 5,971,880 bytes, SHA-256 `904b6a55bf5d8b80adaeab934b21e7e7c0c10a309f5d8d94685a306ce0217184`.
-
-This workflow sets `NOT_CRAN=true` and `_R_CHECK_FORCE_SUGGESTS_=false`; it verifies candidate source only and does not satisfy G8. The pkgdown PR workflow was skipped by design. The tested source delta from `ad28685` contains only audit evidence files, with no changes to package behavior, bundled data, generated help, reader-facing documentation, or website inputs. G0–G6 remain met and G7–G9 remain open. Both PRs remain Draft and unmerged; no merge, deployment, final tarball, or CRAN submission occurred.
-
-Files updated: `GATES.md`, this report, and the retained raw workflow log. `git diff --check` passed and the naturalness checker reported zero findings. No package or site tests were rerun because this update records completed source CI only.
-
-
-## Follow-up: exact-head CI completion on PR #231, 2026-10-09
-
-Run #37937268183 passed on PR #231 source head `00e5055bf1d8bc0fbfe30b8493c57412fc230382`, through synthetic merge `e9e7e20` into base `0b0f71f`. Ubuntu R-release, Ubuntu R-devel, and macOS arm64 R-release all reported `R CMD check Status: OK`; each full suite reported 3,196 passes, 0 failures, 175 warnings, and 83 skips. The focused macOS MPS test reported 201 passes, 0 failures, 50 warnings, and 0 skips in 337.2 seconds. The consolidated log is `provenance/source-ci-37937268183.log`, 5,971,875 bytes, SHA-256 `cb03d9f7114fcc4c438e41889622a0affced034cae37a0b7188c031e583e90da`.
-
-The workflow sets `NOT_CRAN=true` and `_R_CHECK_FORCE_SUGGESTS_=false`; it verifies candidate source only and does not satisfy G8. The pkgdown PR workflow was skipped by design. The tested delta from `248a18a` contains only audit evidence files, with no product source, bundled data, generated help, user-facing pages, or website inputs changed. G0–G6 remain met and G7–G9 remain open. Both PRs remain Draft and unmerged; no merge, deployment, final tarball, or submission occurred.
-
-Files updated: `GATES.md`, this report, and the retained raw workflow log. `git diff --check` passed and the naturalness checker reported zero findings. The after-task structure check is expected to pass its report structure but still reports five unmet gates under `.unlazy/imputation-sim/gates/`, outside this CRAN release slice. No package or site tests were rerun because this update records completed source CI only.
-
-## Follow-up: current gate-count reconciliation and exact-head CI
-
-The current ledger defines eleven gates: G0–G6, G5b, and G7–G9. Eight are met (G0–G6 and G5b) and three remain open (G7–G9), so the current tally is 8 of 11. The Unlazy status check independently returned 11 gates, 8 met, and 3 unmet. The user confirmed that this Codex task is the sole active pigauto audit lane; the preflight's additional branch/worktree labels do not identify another active owner.
-
-Chrome confirmed that GitHub Actions run #37940225845 completed successfully on PR #231 head `a93fc80db76a0c94724031f9ea6be091dd3e1ca4`, through synthetic merge `63427c1` into base `0b0f71f`. Ubuntu R-release, Ubuntu R-devel, and macOS arm64 R-release all reported `R CMD check Status: OK`; each full suite reported 3,196 passes, 0 failures, 175 warnings, and 83 skips. The focused macOS MPS tests reported 201 passes, 0 failures, 50 warnings, and 0 skips in 6m01s. The combined raw log is 3,073,045 bytes with SHA-256 `e956e7acf06d69adbc969e2db74f2fc7ff9297c84416b6442afbafd318dcbf28`.
-
-This remains candidate-source CI: `NOT_CRAN=true`, `_R_CHECK_FORCE_SUGGESTS_=false`, and the pkgdown pull-request workflow was skipped by design. G8's frozen post-merge tarball checks remain open. PR #231 and PR #228 remain Draft and unmerged; there was no merge, deployment, final tarball, or CRAN submission. No package or website checks were rerun for this evidence-only reconciliation.

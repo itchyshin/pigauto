@@ -1,0 +1,586 @@
+── Installing package pigauto into temporary library ───────────────────────────
+── Initialising site ───────────────────────────────────────────────────────────
+Copying <pkgdown>/BS5/assets/katex-auto.js to katex-auto.js
+Copying <pkgdown>/BS5/assets/lightswitch.js to lightswitch.js
+Copying <pkgdown>/BS5/assets/link.svg to link.svg
+Copying <pkgdown>/BS5/assets/pkgdown.js to pkgdown.js
+Copying pkgdown/extra.css to extra.css
+Copying pkgdown/extra.js to extra.js
+Copying pkgdown/assets/validation_suite.html to validation_suite.html
+Updating deps/bootstrap-5.3.8/bootstrap.bundle.min.js
+Updating deps/bootstrap-5.3.8/bootstrap.bundle.min.js.map
+Updating deps/bootstrap-5.3.8/bootstrap.min.css
+Updating deps/bootstrap-5.3.8/font.css
+Updating deps/bootstrap-5.3.8/fonts/07d40e985ad7c747025dabb9f22142c4.woff2
+Updating deps/bootstrap-5.3.8/fonts/1Ptug8zYS_SKggPNyC0ITw.woff2
+Updating deps/bootstrap-5.3.8/fonts/1Ptug8zYS_SKggPNyCAIT5lu.woff2
+Updating deps/bootstrap-5.3.8/fonts/1Ptug8zYS_SKggPNyCIIT5lu.woff2
+Updating deps/bootstrap-5.3.8/fonts/1Ptug8zYS_SKggPNyCMIT5lu.woff2
+Updating deps/bootstrap-5.3.8/fonts/1Ptug8zYS_SKggPNyCkIT5lu.woff2
+Updating deps/bootstrap-5.3.8/fonts/1f5e011d6aae0d98fc0518e1a303e99a.woff2
+Updating deps/bootstrap-5.3.8/fonts/4iCs6KVjbNBYlgoKcQ72j00.woff2
+Updating deps/bootstrap-5.3.8/fonts/4iCs6KVjbNBYlgoKcg72j00.woff2
+Updating deps/bootstrap-5.3.8/fonts/4iCs6KVjbNBYlgoKcw72j00.woff2
+Updating deps/bootstrap-5.3.8/fonts/4iCs6KVjbNBYlgoKew72j00.woff2
+Updating deps/bootstrap-5.3.8/fonts/4iCs6KVjbNBYlgoKfA72j00.woff2
+Updating deps/bootstrap-5.3.8/fonts/4iCs6KVjbNBYlgoKfw72.woff2
+Updating deps/bootstrap-5.3.8/fonts/4iCv6KVjbNBYlgoCxCvjs2yNL4U.woff2
+Updating deps/bootstrap-5.3.8/fonts/4iCv6KVjbNBYlgoCxCvjsGyN.woff2
+Updating deps/bootstrap-5.3.8/fonts/4iCv6KVjbNBYlgoCxCvjtGyNL4U.woff2
+Updating deps/bootstrap-5.3.8/fonts/4iCv6KVjbNBYlgoCxCvjvGyNL4U.woff2
+Updating deps/bootstrap-5.3.8/fonts/4iCv6KVjbNBYlgoCxCvjvWyNL4U.woff2
+Updating deps/bootstrap-5.3.8/fonts/4iCv6KVjbNBYlgoCxCvjvmyNL4U.woff2
+Updating deps/bootstrap-5.3.8/fonts/626330658504e338ee86aec8e957426b.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xK1dSBYKcSV-LCoeQqfX1RYOo3qPZ7jsDJT9g.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xK1dSBYKcSV-LCoeQqfX1RYOo3qPZ7ksDJT9g.woff2
+Updating deps/bootstrap-5.3.8/fonts/6xK1dSBYKcSV-LCoeQqfX1RYOo3qPZ7nsDI.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xK1dSBYKcSV-LCoeQqfX1RYOo3qPZ7osDJT9g.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xK1dSBYKcSV-LCoeQqfX1RYOo3qPZ7psDJT9g.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xK1dSBYKcSV-LCoeQqfX1RYOo3qPZ7qsDJT9g.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xK1dSBYKcSV-LCoeQqfX1RYOo3qPZ7rsDJT9g.woff2
+Updating deps/bootstrap-5.3.8/fonts/6xK3dSBYKcSV-LCoeQqfX1RYOo3qN67lqDY.woff2
+Updating deps/bootstrap-5.3.8/fonts/6xK3dSBYKcSV-LCoeQqfX1RYOo3qNK7lqDY.woff2
+Updating deps/bootstrap-5.3.8/fonts/6xK3dSBYKcSV-LCoeQqfX1RYOo3qNa7lqDY.woff2
+Updating deps/bootstrap-5.3.8/fonts/6xK3dSBYKcSV-LCoeQqfX1RYOo3qNq7lqDY.woff2
+Updating deps/bootstrap-5.3.8/fonts/6xK3dSBYKcSV-LCoeQqfX1RYOo3qO67lqDY.woff2
+Updating deps/bootstrap-5.3.8/fonts/6xK3dSBYKcSV-LCoeQqfX1RYOo3qOK7l.woff2
+Updating deps/bootstrap-5.3.8/fonts/6xK3dSBYKcSV-LCoeQqfX1RYOo3qPK7lqDY.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3i54rwkxduz8A.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3i54rwlBduz8A.woff2
+Updating deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3i54rwlxdu.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3i54rwmBduz8A.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3i54rwmRduz8A.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3i54rwmhduz8A.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3i54rwmxduz8A.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3ig4vwkxduz8A.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3ig4vwlBduz8A.woff2
+Updating deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3ig4vwlxdu.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3ig4vwmBduz8A.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3ig4vwmRduz8A.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3ig4vwmhduz8A.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3ig4vwmxduz8A.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3ik4zwkxduz8A.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3ik4zwlBduz8A.woff2
+Updating deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3ik4zwlxdu.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3ik4zwmBduz8A.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3ik4zwmRduz8A.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3ik4zwmhduz8A.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/6xKydSBYKcSV-LCoeQqfX1RYOo3ik4zwmxduz8A.woff2
+Updating deps/bootstrap-5.3.8/fonts/CSR54z1Qlv-GDxkbKVQ_dFsvWNBeudwk.woff2
+Updating deps/bootstrap-5.3.8/fonts/CSR54z1Qlv-GDxkbKVQ_dFsvWNReuQ.woff2
+Updating deps/bootstrap-5.3.8/fonts/CSR54z1Qlv-GDxkbKVQ_dFsvWNdeudwk.woff2
+Updating deps/bootstrap-5.3.8/fonts/CSR54z1Qlv-GDxkbKVQ_dFsvWNheudwk.woff2
+Updating deps/bootstrap-5.3.8/fonts/CSR54z1Qlv-GDxkbKVQ_dFsvWNleudwk.woff2
+Updating deps/bootstrap-5.3.8/fonts/CSR54z1Qlv-GDxkbKVQ_dFsvWNpeudwk.woff2
+Updating deps/bootstrap-5.3.8/fonts/CSR54z1Qlv-GDxkbKVQ_dFsvWNteudwk.woff2
+Updating deps/bootstrap-5.3.8/fonts/CSR64z1Qlv-GDxkbKVQ_fO0KTet_.woff2
+Updating deps/bootstrap-5.3.8/fonts/CSR64z1Qlv-GDxkbKVQ_fO4KTet_.woff2
+Updating deps/bootstrap-5.3.8/fonts/CSR64z1Qlv-GDxkbKVQ_fO8KTet_.woff2
+Updating deps/bootstrap-5.3.8/fonts/CSR64z1Qlv-GDxkbKVQ_fOAKTQ.woff2
+Updating deps/bootstrap-5.3.8/fonts/CSR64z1Qlv-GDxkbKVQ_fOMKTet_.woff2
+Updating deps/bootstrap-5.3.8/fonts/CSR64z1Qlv-GDxkbKVQ_fOQKTet_.woff2
+Updating deps/bootstrap-5.3.8/fonts/CSR64z1Qlv-GDxkbKVQ_fOwKTet_.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/HI_QiYsKILxRpg3hIP6sJ7fM7PqlONvQlMIXxw.woff2
+Updating deps/bootstrap-5.3.8/fonts/HI_QiYsKILxRpg3hIP6sJ7fM7PqlONvUlMI.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/HI_QiYsKILxRpg3hIP6sJ7fM7PqlONvXlMIXxw.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/HI_QiYsKILxRpg3hIP6sJ7fM7PqlONvYlMIXxw.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/HI_QiYsKILxRpg3hIP6sJ7fM7PqlONvZlMIXxw.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/HI_QiYsKILxRpg3hIP6sJ7fM7PqlONvalMIXxw.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/HI_QiYsKILxRpg3hIP6sJ7fM7PqlONvblMIXxw.woff2
+Updating deps/bootstrap-5.3.8/fonts/HI_SiYsKILxRpg3hIP6sJ7fM7PqlM-vWjMY.woff2
+Updating deps/bootstrap-5.3.8/fonts/HI_SiYsKILxRpg3hIP6sJ7fM7PqlMOvWjMY.woff2
+Updating deps/bootstrap-5.3.8/fonts/HI_SiYsKILxRpg3hIP6sJ7fM7PqlMevWjMY.woff2
+Updating deps/bootstrap-5.3.8/fonts/HI_SiYsKILxRpg3hIP6sJ7fM7PqlMuvWjMY.woff2
+Updating deps/bootstrap-5.3.8/fonts/HI_SiYsKILxRpg3hIP6sJ7fM7PqlOevWjMY.woff2
+Updating deps/bootstrap-5.3.8/fonts/HI_SiYsKILxRpg3hIP6sJ7fM7PqlPevW.woff2
+Updating deps/bootstrap-5.3.8/fonts/HI_SiYsKILxRpg3hIP6sJ7fM7PqlPuvWjMY.woff2
+Updating deps/bootstrap-5.3.8/fonts/JTUSjIg1_i6t8kCHKm459W1hyzbi.woff2
+Updating deps/bootstrap-5.3.8/fonts/JTUSjIg1_i6t8kCHKm459WRhyzbi.woff2
+Updating deps/bootstrap-5.3.8/fonts/JTUSjIg1_i6t8kCHKm459WZhyzbi.woff2
+Updating deps/bootstrap-5.3.8/fonts/JTUSjIg1_i6t8kCHKm459Wdhyzbi.woff2
+Updating deps/bootstrap-5.3.8/fonts/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3-UBGEe.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3CUBGEe.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3GUBGEe.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3KUBGEe.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3OUBGEe.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3iUBGEe.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBA.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMawCUBGEe.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMaxKUBGEe.woff2
+Updating deps/bootstrap-5.3.8/fonts/QGYpz_kZZAGCONcK2A4bGOj8mNhN.woff2
+Updating deps/bootstrap-5.3.8/fonts/S6u8w4BMUTPHjxsAUi-qJCY.woff2
+Updating deps/bootstrap-5.3.8/fonts/S6u8w4BMUTPHjxsAXC-q.woff2
+Updating deps/bootstrap-5.3.8/fonts/S6u9w4BMUTPHh6UVSwaPGR_p.woff2
+Updating deps/bootstrap-5.3.8/fonts/S6u9w4BMUTPHh6UVSwiPGQ.woff2
+Updating deps/bootstrap-5.3.8/fonts/S6u9w4BMUTPHh7USSwaPGR_p.woff2
+Updating deps/bootstrap-5.3.8/fonts/S6u9w4BMUTPHh7USSwiPGQ.woff2
+Updating deps/bootstrap-5.3.8/fonts/S6uyw4BMUTPHjx4wXg.woff2
+Updating deps/bootstrap-5.3.8/fonts/S6uyw4BMUTPHjxAwXjeu.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7SUc.woff2
+Updating deps/bootstrap-5.3.8/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7SUc.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7SUc.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7SUc.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7SUc.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7SUc.woff2
+Updating deps/bootstrap-5.3.8/fonts/XRXV3I6Li01BKofIMeaBXso.woff2
+Updating deps/bootstrap-5.3.8/fonts/XRXV3I6Li01BKofINeaB.woff2
+Updating deps/bootstrap-5.3.8/fonts/XRXV3I6Li01BKofIO-aBXso.woff2
+Updating deps/bootstrap-5.3.8/fonts/XRXV3I6Li01BKofIOOaBXso.woff2
+Updating deps/bootstrap-5.3.8/fonts/XRXV3I6Li01BKofIOuaBXso.woff2
+Updating deps/bootstrap-5.3.8/fonts/c2f002b3a87d3f9bfeebb23d32cfd9f8.woff2
+Updating deps/bootstrap-5.3.8/fonts/ee91700cdbf7ce16c054c2bb8946c736.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memtYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWqW106F15M.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memtYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWqWt06F15M.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memtYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWqWtE6F15M.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memtYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWqWtU6F15M.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memtYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWqWtk6F15M.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memtYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWqWu06F15M.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memtYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWqWuU6F.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memtYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWqWuk6F15M.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memtYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWqWvU6F15M.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memtYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWqWxU6F15M.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTS-muw.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTS2mu1aB.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTSCmu1aB.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTSGmu1aB.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTSKmu1aB.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTSOmu1aB.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTSumu1aB.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTSymu1aB.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTUGmu1aB.woff2
+Updating
+deps/bootstrap-5.3.8/fonts/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTVOmu1aB.woff2
+Updating deps/bootstrap-5.3.8/fonts/q5uGsou0JOdh94bfuQltOxU.woff2
+Updating deps/bootstrap-5.3.8/fonts/q5uGsou0JOdh94bfvQlt.woff2
+Updating deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js
+Updating deps/clipboard.js-2.0.11/clipboard.min.js
+Updating deps/font-awesome-6.5.2/css/all.css
+Updating deps/font-awesome-6.5.2/css/all.min.css
+Updating deps/font-awesome-6.5.2/css/v4-shims.css
+Updating deps/font-awesome-6.5.2/css/v4-shims.min.css
+Updating deps/font-awesome-6.5.2/webfonts/fa-brands-400.ttf
+Updating deps/font-awesome-6.5.2/webfonts/fa-brands-400.woff2
+Updating deps/font-awesome-6.5.2/webfonts/fa-regular-400.ttf
+Updating deps/font-awesome-6.5.2/webfonts/fa-regular-400.woff2
+Updating deps/font-awesome-6.5.2/webfonts/fa-solid-900.ttf
+Updating deps/font-awesome-6.5.2/webfonts/fa-solid-900.woff2
+Updating deps/font-awesome-6.5.2/webfonts/fa-v4compatibility.ttf
+Updating deps/font-awesome-6.5.2/webfonts/fa-v4compatibility.woff2
+Updating deps/headroom-0.11.0/headroom.min.js
+Updating deps/headroom-0.11.0/jQuery.headroom.min.js
+Updating deps/jquery-3.6.0/jquery-3.6.0.js
+Updating deps/jquery-3.6.0/jquery-3.6.0.min.js
+Updating deps/jquery-3.6.0/jquery-3.6.0.min.map
+Updating deps/search-1.0.0/autocomplete.jquery.min.js
+Updating deps/search-1.0.0/fuse.min.js
+Updating deps/search-1.0.0/mark.min.js
+Copying pkgdown/favicon/apple-touch-icon.png to apple-touch-icon.png
+Copying pkgdown/favicon/favicon-96x96.png to favicon-96x96.png
+Copying pkgdown/favicon/favicon.ico to favicon.ico
+Copying pkgdown/favicon/favicon.svg to favicon.svg
+Copying pkgdown/favicon/site.webmanifest to site.webmanifest
+Copying pkgdown/favicon/web-app-manifest-192x192.png to
+web-app-manifest-192x192.png
+Copying pkgdown/favicon/web-app-manifest-512x512.png to
+web-app-manifest-512x512.png
+Copying logo.png
+── Building pkgdown site for package pigauto ───────────────────────────────────
+Reading from: /private/tmp/pigauto-cran011-site-cf88d78.qYDhuF
+Writing to: /private/tmp/pigauto-cran011-site-cf88d78.qYDhuF/_site
+── Sitrep ──────────────────────────────────────────────────────────────────────
+✔ URLs ok.
+✔ Favicons ok.
+✔ Open graph metadata ok.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+✔ Articles metadata ok.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+✔ Reference metadata ok.
+── Initialising site ───────────────────────────────────────────────────────────
+── Building home ───────────────────────────────────────────────────────────────
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `authors.html`
+Reading AGENTS.md
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `AGENTS.html`
+Reading CLAUDE.md
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `CLAUDE.html`
+Reading VALIDATION_LEDGER.md
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `VALIDATION_LEDGER.html`
+Reading goodagents.md
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `goodagents.html`
+Reading .github/404.md
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `404.html`
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `LICENSE-text.html`
+Reading README.md
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `index.html`
+── Building function reference ─────────────────────────────────────────────────
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/index.html`
+Copying man/figures/logo.png to reference/figures/logo.png
+Reading man/avonet300.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/avonet300.html`
+Reading man/avonet_full.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/avonet_full.html`
+Reading man/build_phylo_graph.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/build_phylo_graph.html`
+Reading man/calibration_df.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/calibration_df.html`
+Reading man/check_pigauto.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/check_pigauto.html`
+Reading man/compare_methods.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/compare_methods.html`
+Reading man/completed_data.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/completed_data.html`
+Reading man/confusion_matrix.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/confusion_matrix.html`
+Reading man/cross_validate.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/cross_validate.html`
+Reading man/ctmax_sim.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/ctmax_sim.html`
+Reading man/evaluate.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/evaluate.html`
+Reading man/evaluate_imputation.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/evaluate_imputation.html`
+Reading man/fit_baseline.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/fit_baseline.html`
+Reading man/fit_pigauto.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/fit_pigauto.html`
+Reading man/impute.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/impute.html`
+Reading man/load_pigauto.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/load_pigauto.html`
+Reading man/make_missing_splits.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/make_missing_splits.html`
+Reading man/mask_missing.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/mask_missing.html`
+Reading man/multi_impute.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/multi_impute.html`
+Reading man/multi_impute_analysis.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/multi_impute_analysis.html`
+Reading man/multi_impute_trees.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/multi_impute_trees.html`
+Reading man/pigauto_report.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/pigauto_report.html`
+Reading man/plot.pigauto_benchmark.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/plot.pigauto_benchmark.html`
+Reading man/plot.pigauto_fit.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/plot.pigauto_fit.html`
+Reading man/plot.pigauto_pred.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/plot.pigauto_pred.html`
+Reading man/plot.pigauto_result.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/plot.pigauto_result.html`
+Reading man/plot_comparison.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/plot_comparison.html`
+Reading man/plot_history_gg.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/plot_history_gg.html`
+Reading man/plot_uncertainty.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/plot_uncertainty.html`
+Reading man/pool_mi.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/pool_mi.html`
+Reading man/predict.pigauto_fit.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/predict.pigauto_fit.html`
+Reading man/preprocess_traits.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/preprocess_traits.html`
+Reading man/print.pigauto_check.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/print.pigauto_check.html`
+Reading man/print.summary_pigauto_result.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/print.summary_pigauto_result.html`
+Reading man/pull_gbif_centroids.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/pull_gbif_centroids.html`
+Reading man/pull_worldclim_per_species.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/pull_worldclim_per_species.html`
+Reading man/read_traits.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/read_traits.html`
+Reading man/read_tree.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/read_tree.html`
+Reading man/save_pigauto.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/save_pigauto.html`
+Reading man/simulate_benchmark.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/simulate_benchmark.html`
+Reading man/simulate_non_bm.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/simulate_non_bm.html`
+Reading man/suggest_next_observation.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/suggest_next_observation.html`
+Reading man/summary.pigauto_fit.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/summary.pigauto_fit.html`
+Reading man/summary.pigauto_result.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/summary.pigauto_result.html`
+Reading man/tree300.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/tree300.html`
+Reading man/tree_full.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/tree_full.html`
+Reading man/trees300.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/trees300.html`
+Reading man/with_imputations.Rd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `reference/with_imputations.html`
+── Building articles ───────────────────────────────────────────────────────────
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `articles/index.html`
+Reading vignettes/common-pitfalls.Rmd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `articles/common-pitfalls.html`
+[WARNING] Deprecated: --mathjax. Use --math-method=mathjax[:URL] instead.
+Reading vignettes/getting-started.Rmd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `articles/getting-started.html`
+[WARNING] Deprecated: --mathjax. Use --math-method=mathjax[:URL] instead.
+Reading vignettes/gnn-architecture.Rmd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `articles/gnn-architecture.html`
+[WARNING] Deprecated: --mathjax. Use --math-method=mathjax[:URL] instead.
+Reading vignettes/mixed-types.Rmd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `articles/mixed-types.html`
+[WARNING] Deprecated: --mathjax. Use --math-method=mathjax[:URL] instead.
+Reading vignettes/multiple-imputation.Rmd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `articles/multiple-imputation.html`
+[WARNING] Deprecated: --mathjax. Use --math-method=mathjax[:URL] instead.
+Reading vignettes/articles/simulation-study.Rmd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `articles/simulation-study.html`
+[WARNING] Deprecated: --mathjax. Use --math-method=mathjax[:URL] instead.
+Reading vignettes/tree-uncertainty.Rmd
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `articles/tree-uncertainty.html`
+[WARNING] Deprecated: --mathjax. Use --math-method=mathjax[:URL] instead.
+── Building news ───────────────────────────────────────────────────────────────
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+[WARNING] Deprecated: --mathml. Use --math-method=mathml instead.
+Writing `news/index.html`
+── Building sitemap ────────────────────────────────────────────────────────────
+Writing `sitemap.xml`
+── Building docs for llms ──────────────────────────────────────────────────────
+── Building redirects ──────────────────────────────────────────────────────────
+Adding redirect from articles/articles/simulation-study.html to
+articles/simulation-study.html.
+── Building search index ───────────────────────────────────────────────────────
+── Checking for problems ───────────────────────────────────────────────────────
+── Finished building pkgdown site for package pigauto ──────────────────────────
+Warning messages:
+1: @examplesIf condition "interactive()" is "FALSE" 
+2: @examplesIf condition "interactive()" is "FALSE" 

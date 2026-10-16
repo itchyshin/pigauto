@@ -1,0 +1,47 @@
+{
+  "created_utc": "2026-10-09T21:52:13.636691+00:00",
+  "archive": "/private/tmp/pigauto-release-candidate/sha256-f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4/pigauto_0.11.0.tar.gz",
+  "archive_size_bytes": 5135324,
+  "archive_sha256": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",
+  "r_version": "R version 4.6.0 (2026-04-24) -- \"Because it was There\"",
+  "harness": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/script/cran-0.11-integration/check-adapters.R",
+  "harness_sha256": "d2b0b5f01e3470ce1f0f0d2116cadbd1a9a2beffcd864a5644e71c0b7d53fb7d",
+  "cells": [
+    {
+      "cell": "neither",
+      "mode": "neither",
+      "library": "/private/tmp/pigauto-cran011-frozen-mi-matrix/neither",
+      "log": "/private/tmp/pigauto-cran011-frozen-mi-matrix/neither.log",
+      "log_sha256": "4bb5735cd580de0410b16ec3268b1f52cb756393f858cafe66aee8c264985d0f",
+      "archive_sha256_before": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",
+      "archive_sha256_after": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4"
+    },
+    {
+      "cell": "drm-only",
+      "mode": "drm-only",
+      "library": "/private/tmp/pigauto-cran011-frozen-mi-matrix/drm-only",
+      "log": "/private/tmp/pigauto-cran011-frozen-mi-matrix/drm-only.log",
+      "log_sha256": "fc0385d9aa199457fe021079acfb37d582db7762de2a71e69e9f9d86738c8e1c",
+      "archive_sha256_before": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",
+      "archive_sha256_after": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4"
+    },
+    {
+      "cell": "gllvm-only",
+      "mode": "gllvm-only",
+      "library": "/private/tmp/pigauto-cran011-frozen-mi-matrix/gllvm-only",
+      "log": "/private/tmp/pigauto-cran011-frozen-mi-matrix/gllvm-only.log",
+      "log_sha256": "67c1e5126ba261fa75e682da9ab7f3b7e8e5f7c2b00dd202550bb81951a982a7",
+      "archive_sha256_before": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",
+      "archive_sha256_after": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4"
+    },
+    {
+      "cell": "both",
+      "mode": "real",
+      "library": "/private/tmp/pigauto-cran011-frozen-mi-matrix/both",
+      "log": "/private/tmp/pigauto-cran011-frozen-mi-matrix/both.log",
+      "log_sha256": "45dc91f0acb44796fbb92054ad797cf24d191d8a4fb35b914b336f34b4ac58b9",
+      "archive_sha256_before": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",
+      "archive_sha256_after": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4"
+    }
+  ]
+}
