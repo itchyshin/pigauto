@@ -1,5 +1,9 @@
 # Gates: pigauto CRAN 0.11 audit
 
+## External-state refresh, 2026-10-15 23:33 MDT
+
+Chrome rechecked the post-merge Actions runs: R-CMD-check `38843648553` still shows 0/3 jobs started and Pages `38843648852` is still queued. The GitHub Deployments page marks `8082ef8` “Ready to deploy (idle)”; the live Getting Started page still contains the obsolete `X_scaled` 300 × 4 output and says unmatched species are dropped with a warning. The exact-main local-site receipt remains valid and the scoped Unlazy G7 stays met; the separate deployed-site gate in the release ledger stays open pending deployment and live-route checks. A remote read confirms there is no `codex/cran-011-gate-refresh` ref. One authorized push retry after remote access recovered was rejected with `remote: fatal: early EOF` / `index-pack failed`; no branch update or PR creation occurred. No source or artifact gate changed: 4/7 scoped gates met, G3/G4/G5 unmet; highest proven rung remains `source-clean`, next rung `tarball-clean`.
+
 ## Current checkpoint, 2026-10-15 MDT / 2026-10-16 UTC
 
 PR #234 is merged to main as 8082ef8273177ff664d49ac4bd643f7def671f20. At the latest Chrome check, main R-CMD-check run [#38843648553](https://github.com/itchyshin/pigauto/actions/runs/38843648553) and Pages deployment run [#38843648852](https://github.com/itchyshin/pigauto/actions/runs/38843648852) were still queued without assigned runners. The run pages expose the three R jobs and the pkgdown job, respectively; GitHub Status reported Actions operational, while the queue cause remains unknown.

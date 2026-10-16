@@ -244,9 +244,10 @@
     "post_merge_runs": {
       "r_cmd_check": "38843648553",
       "pkgdown_deployment": "38843648852",
-      "observed_state": "rechecked_2026-10-15_22:44_MDT;R-CMD-check_0_of_3_jobs_and_pkgdown_job_queued;GitHub_Status_Actions_operational;cause_unknown"
+      "observed_state": "rechecked_2026-10-15_23:33_MDT;R-CMD-check_0_of_3_jobs_and_pkgdown_job_queued;deployments_page_8082ef8_ready_to_deploy_idle;cause_unknown"
     },
-    "live_site_after_merge": "NOT_MET_rechecked_2026-10-15_22:44_MDT;live_Getting_Started_still_displays_X_scaled_300x4_and_says_unmatched_species_are_dropped_with_warning",
+    "live_site_after_merge": "NOT_MET_rechecked_2026-10-15_23:33_MDT;live_Getting_Started_still_displays_X_scaled_300x4_and_says_unmatched_species_are_dropped_with_warning",
+    "evidence_branch_push": "NOT_PUSHED_rechecked_2026-10-15_23:33_MDT;remote_ref_absent;authorized_retry_rejected_remote_early_EOF_index_pack_failed",
     "merged_source_site_receipt": "provenance/exact-main-site-reproduction-2026-10-15.json",
     "site_reproduction_receipt_sha256": "e2660cb021d0fe7ec3da197bb2b9db6c61a1b9cdcff96d8c7303d98a2063de6f"
   },
