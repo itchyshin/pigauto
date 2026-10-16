@@ -192,7 +192,8 @@
         "does not establish broad statistical recovery or coverage",
         "does not pool joint covariance, loadings, or variance components",
         "does not close platform-clean or final independent release verdict"
-      ]
+      ],
+      "independent_review": "PASS; reviewer rehashed archive, runner, harness, all five executed sources, and all 12 logs; confirmed four states and unchanged archive hash; no material discrepancy"
     }
   },
   "panel": {
