@@ -86,7 +86,7 @@
       "warn": 161,
       "skip": 86
     },
-    "win_builder_upload_state": "R-release_Status_OK_on_Windows_Server_2022_R_4.6.1; unique_result_URL_and_matching_filename_size; local_SHA256_checked_before_after_upload; log_does_not_echo_hash; R-devel_pending",
+    "win_builder_upload_state": "R-release_Status_OK_on_Windows_Server_2022_R_4.6.1; unique_result_URL_and_matching_filename_size; local_SHA256_checked_before_after_upload; log_does_not_echo_hash; Windows_R-devel_pending",
     "site_deployment_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
     "site_deployment_run": "38843648852",
     "site_retirement_check": "PASS_fresh_live_HTTP_2026-10-16;44_retired_404;62_retained_200;sitemap_62_and_search_613_no_retired_targets",
@@ -238,10 +238,10 @@
     "post_merge_runs": {
       "r_cmd_check": "38843648553",
       "pages_deployment": "38843648852",
-      "observed_state": "R-release jobs on Ubuntu and macOS succeeded; R-devel queued at 2026-10-16 follow-up; Pages deployment succeeded for 8082ef8273177ff664d49ac4bd643f7def671f20"
+      "observed_state": "Ubuntu and macOS R-release plus Ubuntu R-devel source-CI succeeded in run 38843648553 at source commit 8082ef8273177ff664d49ac4bd643f7def671f20; Windows R-devel from Win-builder remains pending; Pages deployment 38843648852 succeeded."
     },
     "latest_check_run": "38843648553",
-    "latest_check_state": "Ubuntu_R_release_success;macOS_R_release_success;R_devel_queued_at_last_check",
+    "latest_check_state": "Ubuntu_R_release_success;macOS_R_release_success;Ubuntu_R_devel_source_CI_success_not_tarball-bound;Windows_Win-builder_R_devel_pending",
     "site_verification_log": "provenance/live-site-verifier-stdout-2026-10-16-final.log",
     "historical_as_cran_block_log_2026_10_15": "provenance/post-merge-final-as-cran-network-block-2026-10-15.log",
     "historical_as_cran_block_log_sha256_2026_10_15": "92d867104f3324c635351094b101f2f58dff74ea155a38edfd40d598ec4ae8cd",
@@ -269,7 +269,7 @@
     "full_site_build": "PASS_exact_origin_main_archive_8082ef8_pkgdown_2.2.0;62_html;62_sitemap;613_search_records;567_paths;3584_refs;34_retired_crawl;44_retired_manifest;16_tests;pkgdown_check_clean",
     "chrome_visual_review": "PASS_bounded_five_page_current_content_review;not_whole_site_visual_or_accessibility_review",
     "latest_check_run": "38843648553",
-    "latest_check_state": "Ubuntu_R_release_success;macOS_R_release_success;R_devel_queued_at_last_check",
+    "latest_check_state": "Ubuntu_R_release_success;macOS_R_release_success;Ubuntu_R_devel_source_CI_success_not_tarball-bound;Windows_Win-builder_R_devel_pending",
     "after_task": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/after-task-2026-10-16-gate-refresh.md",
     "merge_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
     "merged_on": "2026-10-16",
@@ -277,7 +277,7 @@
     "post_merge_runs": {
       "r_cmd_check": "38843648553",
       "pages_deployment": "38843648852",
-      "state": "R-release Ubuntu/macOS succeeded; R-devel queued at last observation; Pages success"
+      "state": "Ubuntu/macOS R-release and Ubuntu R-devel source-CI succeeded; Windows Win-builder R-devel pending; Pages success"
     },
     "live_site_after_merge": "PASS_bounded_Chrome_review_and_fresh_live_HTTP_route_discovery_2026-10-16",
     "evidence_branch_push": "PUSHED_2026-10-16_00:00_MDT;codex/cran-011-gate-refresh_at_26048be2405960318b164a3f3912bc01ebd77c05;verified_ssh_over_port_443;origin_main_to_head_pack_119KB;no_final_PR_opened_pending_exact_artifact_platform_results_and_final_independent_review",
@@ -315,8 +315,8 @@
       "pages_run": "38843648852",
       "limitations": [
         "Win-builder R-release association is traceable but log does not echo archive digest",
-        "Win-builder and GitHub R-devel pending",
-        "no whole-site visual/accessibility claim"
+        "no whole-site visual/accessibility claim",
+        "Win-builder R-devel pending; GitHub R-devel source CI passed but is not archive-bound"
       ],
       "snapshot_status": "CURRENT_DEPLOYMENT_8082ef",
       "route_audit_manifest": "provenance/live-site-http-run-2026-10-16.json",
@@ -328,7 +328,7 @@
       "artifact_sha256": "4bdf4de71650716b158824f545ad92c4d125fe1601adefab97eeb5f301c5debe",
       "limitations": [
         "Win-builder R-release log does not echo archive SHA-256",
-        "Win-builder and GitHub R-devel pending"
+        "Win-builder R-devel pending; GitHub R-devel source CI is not archive-bound"
       ]
     },
     "rose": {
@@ -337,7 +337,8 @@
       "artifact_sha256": "4bdf4de71650716b158824f545ad92c4d125fe1601adefab97eeb5f301c5debe",
       "limitations": [
         "platform completion pending",
-        "final evidence PR deferred"
+        "final evidence PR deferred",
+        "Win-builder R-devel pending; GitHub R-devel source CI is not archive-bound"
       ]
     }
   },
@@ -357,7 +358,7 @@
     "branch": "codex/cran-011-gate-refresh",
     "state": "not_created",
     "merged": false,
-    "note": "Create the final unmerged evidence PR after pending R-devel platform results are available; include the traceable R-release upload association and disclose that win-builder does not echo the uploaded tarball digest. No CRAN submission."
+    "note": "Create the final unmerged evidence PR only after the checksum-bound R-release and R-devel platform criterion is met and the final independent review is recorded. Current Win-builder R-release is traceable but does not echo the tarball digest; Windows R-devel remains pending. No CRAN submission."
   },
   "superseded_previous_artifact": {
     "state": "superseded_by_post_PR234_clean_source_freeze",
@@ -381,7 +382,7 @@
     "forbidden_entries": []
   },
   "windows_results_bound_to_hash": false,
-  "win_builder_upload_state": "R-release_Status_OK_on_Windows_Server_2022_R_4.6.1; unique_result_URL_and_matching_filename_size; local_SHA256_checked_before_after_upload; win-builder_log_does_not_echo_hash; R-devel_pending",
+  "win_builder_upload_state": "R-release_Status_OK_traceable_upload_association;R-devel_pending;GitHub_R-devel_source-CI_pass_not_tarball-bound",
   "win_builder_logs": {
     "r_release": {
       "result": "Status_OK",
@@ -414,9 +415,48 @@
     "limitations": [
       "Win-builder R-release log does not echo archive SHA-256; traceable upload association only",
       "Win-builder R-devel pending",
-      "GitHub R-devel pending",
-      "does not establish platform-clean or CRAN acceptance"
+      "does not establish platform-clean or CRAN acceptance",
+      "Win-builder R-devel pending; GitHub R-devel source CI pass is recorded separately and does not establish platform-clean"
     ],
     "review_receipt_sha256": "9820eda6f542e934067ece69ad7acc349fa25ccfcc5843aeffc9001c888234e7"
+  },
+  "github_actions_r_devel": {
+    "result": "PASS_SOURCE_CI_NOT_TARBALL",
+    "run_id": 38843648553,
+    "run_url": "https://github.com/itchyshin/pigauto/actions/runs/38843648553",
+    "job_id": 116789146589,
+    "job": "ubuntu-latest (R devel)",
+    "source_commit": "8082ef8273177ff664d49ac4bd643f7def671f20",
+    "r_version": "R Under development (unstable) (2026-10-14 r90673); R 4.7.0",
+    "check_status": "Status: OK",
+    "testthat": "FAIL 0; WARN 175; SKIP 83; PASS 3196",
+    "environment": {
+      "_R_CHECK_FORCE_SUGGESTS_": false,
+      "NOT_CRAN": true
+    },
+    "receipt": "provenance/github-r-devel-source-ci-2026-10-16.md",
+    "limitations": [
+      "GitHub workflow checks source at commit, not frozen tarball",
+      "workflow NOT_CRAN=true and force-suggests=false; not the exact local --as-cran command",
+      "Windows R-devel still pending"
+    ],
+    "receipt_sha256": "30c025b00d7c411a3fc962014b1d9f90f27938ee3e518a6ae2cac3f93e9d0245"
+  },
+  "source_ci_followup_review": {
+    "status": "PASS_bounded_receipt_and_gate_consistency_review",
+    "review_receipt": "provenance/source-ci-followup-independent-review-2026-10-16.md",
+    "review_receipt_sha256": "71d2316f90c8773c3302a8db11924cda992f0bfc154c3e2d10e4c2c3dfe403a2",
+    "reviewers": [
+      "Pat",
+      "Rose",
+      "artifact-status reviewer"
+    ],
+    "artifact_sha256": "4bdf4de71650716b158824f545ad92c4d125fe1601adefab97eeb5f301c5debe",
+    "limitations": [
+      "follow-up reviewed the source-CI receipt and gate consistency; it does not add an exact-tarball platform result",
+      "Windows R-release log does not echo the artifact digest",
+      "Windows R-devel remains pending",
+      "platform-clean and CRAN readiness remain unproven"
+    ]
   }
 }
