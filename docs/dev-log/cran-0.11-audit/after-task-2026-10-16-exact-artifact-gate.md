@@ -72,4 +72,9 @@ Memory receipt: used the supplied pigauto LOAD-FIRST manifest (effective default
 
 ## 12. Cross-Product Coverage
 
-This refresh changed evidence and candidate-site verification only; it did not alter package behavior, trait families, backend adapters, or defaults. It covers local-site generation, retirement controls, search/sitemap structure, and release-ledger linkage. It does NOT cover Windows/macOS exact-tarball matrix results, every retained public page's content, or CRAN acceptance.
+This follow-up changed the exact-artifact matrix runner and its documentation, plus retained evidence; it did not alter the package archive, package behavior, trait families, backend adapters, or defaults. It covers bounded exact-artifact optional-backend MI interoperability, including all four backend-availability states and termwise fixed-effect pooling, as well as the previously recorded local-site generation, retirement controls, and search/sitemap checks. It does NOT cover clean-room dependency installation, broad recovery or interval coverage, joint covariance/loading/variance-component pooling, checksum-bound Windows results, every retained public page's content, or CRAN acceptance.
+
+
+## Follow-up: complete optional MI matrix receipt
+
+Repaired the matrix runner receipt after independent review found that it omitted hashes for indirect R sources and did not record its working directory. Focused Python runner tests pass (2/2). Reran the exact frozen tarball SHA-256 `0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d`; all four cells and 12 steps passed, with unchanged archive hash throughout. Manifest and logs are retained under `provenance/mi-matrix-0fccf4bb-provenance-complete/`. The bounded claim and exclusions are recorded in `GATES.md` and the release ledger. Independent reviewer recheck passed with no material discrepancy after rehashing the artifact, runner, all five executed sources, and all 12 logs. Shared dependency symlinks mean this is not a clean-room installation test. This adds bounded adapter evidence only; platform-clean and overall release readiness remain unmet.

@@ -172,7 +172,28 @@
     },
     "next_unproven_rung": "platform-clean",
     "audit_verdict": "NOT_READY",
-    "new_evidence_pr": "draft PR #236 open; current artifact records completed local/site/source-CI checks and explicitly open platform gate"
+    "new_evidence_pr": "draft PR #236 open; current artifact records completed local/site/source-CI checks and explicitly open platform gate",
+    "optional_backend_mi_exact_artifact": {
+      "status": "PASS_bounded_exact_artifact_installed_workflow",
+      "archive_sha256": "0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d",
+      "manifest": "provenance/mi-matrix-0fccf4bb-provenance-complete/manifest.json",
+      "manifest_sha256": "7e9ed19659b075257fa98dbc101307487ea1c5ea279c114293d1e15fb95c836c",
+      "cells": [
+        "neither",
+        "drm-only",
+        "gllvm-only",
+        "both"
+      ],
+      "steps": 12,
+      "cell_logs_directory": "provenance/mi-matrix-0fccf4bb-provenance-complete/",
+      "scope": "bounded analysis-aware multi-imputation workflow; termwise fixed-effect pooling; all four backend availability states; successful real fits in available-backend cells; independent Gaussian and Rubin arithmetic oracles; saved-fit reload",
+      "limits": [
+        "shared dependency symlinks; not clean-room dependency installation",
+        "does not establish broad statistical recovery or coverage",
+        "does not pool joint covariance, loadings, or variance components",
+        "does not close platform-clean or final independent release verdict"
+      ]
+    }
   },
   "panel": {
     "grace": "PASS_bounded_review_of_4b32f669_pre_PR234_artifact;overall_NOT_READY_platform_as_cran_rights_and_final_artifact_gates_open",
