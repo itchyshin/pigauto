@@ -9,23 +9,23 @@
     "large_data_or_vignettes": true
   },
   "artifact": {
-    "state": "current exact 780c084 candidate; local tarball-clean; platform results pending/unbound",
+    "state": "replacement exact candidate from clean source 780c084; exact-hash R CMD check --as-cran completed with one timing NOTE; R-release and R-devel upload acknowledgements recorded but no check results yet; NOT_READY pending platform results",
     "filename": "pigauto_0.11.0.tar.gz",
-    "sha256": "0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d",
-    "size_bytes": 5136073,
+    "sha256": "fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a",
+    "size_bytes": 5136083,
     "archive_entries": 250,
     "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
     "source_commit": "780c08470b263cc26b4139c711a5c144fd29389c",
-    "frozen_path": "/private/tmp/pigauto_0.11.0.tar.gz",
-    "path": "/private/tmp/pigauto_0.11.0.tar.gz",
+    "frozen_path": "/private/tmp/pigauto-release-candidate/sha256-fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a/pigauto_0.11.0.tar.gz",
+    "path": "/private/tmp/pigauto-release-candidate/sha256-fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a/pigauto_0.11.0.tar.gz",
     "clean_worktree": true,
     "clean_worktree_evidence": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/clean-source-checkout-780c084.txt"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/clean-source-checkout-780c084.txt"
     },
     "inventory_evidence": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-780c084.inventory.txt"
+      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-fe1600d7-source-binding.md"
     },
     "forbidden_entries": []
   },
@@ -48,43 +48,43 @@
     },
     "local_as_cran": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-780c084-macos-as-cran.log"
+      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-fe1600d7-as-cran-check.log"
     },
     "incoming_feasibility": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-780c084-macos-as-cran.log"
+      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-fe1600d7-as-cran-check.log"
     },
     "installed_package": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-780c084-testthat.Rout"
+      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-fe1600d7-as-cran-testthat.Rout"
     },
     "timing": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-780c084-macos-as-cran.log"
+      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-fe1600d7-as-cran-check.log"
     },
-    "local_check_status": "exact_tarball_as_cran_Status_OK",
-    "local_check_log": "provenance/exact-artifact-780c084-macos-as-cran.log",
-    "local_check_log_sha256": "4300f0497b090aecbc6ee4abc64f99a2dd82ed77f1e03e5221c5038b9fb9513d",
-    "testthat_output": "provenance/exact-artifact-780c084-testthat.Rout",
+    "local_check_status": "exact_tarball_as_cran_complete_Status_1_NOTE_timing_example; incoming_feasibility_OK; manual_PDF_and_HTML_OK",
+    "local_check_log": "provenance/exact-artifact-fe1600d7-as-cran-check.log",
+    "local_check_log_sha256": "35524a843ebe50d4b85f1653767597960a7c5ea81ff238de651582a20459d2c0",
+    "testthat_output": "provenance/exact-artifact-fe1600d7-as-cran-testthat.Rout",
     "windows_results_bound_to_hash": false,
     "birdtree_redistribution_rights": "maintainer_directly_confirmed_use_with_citation_and_credit;no_separate_published_terms_identified;not_an_independent_legal_opinion",
     "birdtree_rights_basis": {
       "maintainer_warranty": "Shinichi directly confirmed in this task that the trees may be used with citation and credit; recorded as the maintainer authorization and warranty for this package release.",
       "published_redistribution_terms": "not_found_on_reviewed_birdtree_pages",
       "notice_distinction": "inst/NOTICE distinguishes BirdTree data from the megatrees software licence",
-      "exact_tarball_inspection": "passed for current hash 4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f; NOTICE and all six shipped R data-object hashes recalculated in provenance/post-merge-final-artifact-identity-2026-10-15.json; hashes match the prior candidate, but matching bytes do not establish third-party redistribution terms"
+      "exact_tarball_inspection": "Recomputed directly from frozen archive SHA-256 fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a on 2026-10-17: inst/NOTICE and all six shipped .rda object streams are individually hashed in provenance/exact-artifact-fe1600d7-rights-data-hashes.txt; this confirms the current artifact contents, not third-party redistribution terms."
     },
-    "exact_hash_independent_panel": "Grace PASS for current 0fccf4bb exact archive identity and local check log (no rerun); Rose NOT READY because current Win-builder results are absent and no server SHA attestation was returned; Pat PASS for current deployed-site receipt within stated scope; platform-clean and submission-ready remain unproven.",
-    "local_check_command": "env -u NOT_CRAN _R_CHECK_FORCE_SUGGESTS_=true R CMD check --as-cran --run-donttest --timings on /private/tmp/pigauto_0.11.0.tar.gz (SHA-256 0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d); provenance/exact-artifact-780c084-macos-as-cran.log reports incoming feasibility OK and Status: OK. An earlier sandboxed attempt stopped at DNS before package checks.",
+    "exact_hash_independent_panel": "Grace PASS bounded replacement exact-hash as-cran check review (incoming feasibility and manual OK; one timing NOTE); MI reviewer PASS bounded replacement matrix; Rose NOT READY for platform-clean because current Windows results are absent and prior response byte size differs; Pat PASS bounded deployed-site receipt for unchanged source commit.",
+    "local_check_command": "env -u NOT_CRAN _R_CHECK_FORCE_SUGGESTS_=true R CMD check --as-cran --run-donttest --timings --output=/private/tmp/pigauto-ascran-fe1600d7-network /private/tmp/pigauto-release-candidate/sha256-fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a/pigauto_0.11.0.tar.gz; incoming feasibility OK; PDF/HTML manual OK; Status: 1 NOTE from compare_methods elapsed 6.142 sec > 5 sec; testthat 3194 pass / 0 fail / 161 warning / 86 skip",
     "local_check_platform": "macOS arm64, R 4.6.0",
-    "testthat_output_sha256": "3a1ae96caa1136c03e360dcb1017ab029970120d9f929293f8f2aec83e87f3a8",
+    "testthat_output_sha256": "f868df437cb7cc69d474baec4321878541c59fed1fb0433d45d279374fca93af",
     "testthat_summary": {
       "pass": 3194,
       "fail": 0,
       "warn": 161,
       "skip": 86
     },
-    "win_builder_upload_state": "R-release-and-R-devel-uploaded; filename/size acknowledged; result pending; no server sha attestation",
+    "win_builder_upload_state": "current-hash R-release and R-devel forms both returned HTTP 200 and displayed exact filename/size; no Windows check result yet; R-devel form marked currently unavailable; no server SHA attestation",
     "site_deployment_commit": "780c08470b263cc26b4139c711a5c144fd29389c",
     "site_deployment_run": "38970604986",
     "site_retirement_check": "fresh current deployment: 44 retired 404, 62 retained 200, sitemap 62, search 613, no retired targets",
@@ -120,11 +120,11 @@
       "scope_limit": "did not replay all 106 routes or inspect all retained page contents"
     },
     "exact_artifact_optional_backend_matrix": {
-      "status": "PASS_bounded_installed_integration_four_cells_on_current_exact_tarball",
-      "receipt": "after-task-2026-10-16-exact-artifact-gate.md",
-      "manifest": "provenance/mi-matrix-0fccf4bb-provenance-complete/manifest.json",
-      "manifest_sha256": "7e9ed19659b075257fa98dbc101307487ea1c5ea279c114293d1e15fb95c836c",
-      "artifact_sha256": "0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d",
+      "status": "PASS_bounded_installed_integration_four_cells_on_replacement_exact_tarball",
+      "receipt": "after-task-2026-10-17-artifact-replacement.md",
+      "manifest": "provenance/mi-matrix-fe1600d7-provenance-complete/manifest.json",
+      "manifest_sha256": "e81c14f45d3d3837a25999f21d4f83f60276a918f532adfd5c9f2ddba0bb1991",
+      "artifact_sha256": "fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a",
       "cells": [
         "neither",
         "drm-only",
@@ -132,7 +132,7 @@
         "both"
       ],
       "steps": 12,
-      "review": "PASS; independent reviewer rehashed archive, runner, harness, five executed sources, and 12 logs; confirmed all four states and unchanged archive hash",
+      "review": "PASS; independent reviewer verified archive, runner, harness, five executed sources, manifest and all 12 logs; all four cells and 12 steps pass; scope/limits recorded in provenance/independent-review-fe1600d7-2026-10-17.md",
       "does_not_close": [
         "clean-room dependency installation",
         "broad statistical recovery or interval coverage",
@@ -141,8 +141,8 @@
         "overall release readiness"
       ]
     },
-    "as_cran_block_log": "provenance/post-merge-final-as-cran-network-block-2026-10-15.log",
-    "as_cran_block_log_sha256": "92d867104f3324c635351094b101f2f58dff74ea155a38edfd40d598ec4ae8cd",
+    "as_cran_block_log": "provenance/exact-artifact-fe1600d7-as-cran-network-block.log",
+    "as_cran_block_log_sha256": "ba0a3373b7b8dc9f5a757b80a0a7840790839f4975730c5e666a2a73e12eb09c",
     "rights_exact_artifact": {
       "NOTICE_sha256": "9cc7fa419cacea99dbb0b822c59d6fffad514ee072e119a1ce1c7f365883ba02",
       "tree300_sha256": "6050855d2ae7de42fa0de239134aad8e8975a224610b8dffb48f3d7412bb383f",
@@ -175,10 +175,10 @@
     "audit_verdict": "NOT_READY",
     "new_evidence_pr": "draft PR #236 open; current artifact records completed local/site/source-CI checks and explicitly open platform gate",
     "optional_backend_mi_exact_artifact": {
-      "status": "PASS_bounded_exact_artifact_installed_workflow",
-      "archive_sha256": "0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d",
-      "manifest": "provenance/mi-matrix-0fccf4bb-provenance-complete/manifest.json",
-      "manifest_sha256": "7e9ed19659b075257fa98dbc101307487ea1c5ea279c114293d1e15fb95c836c",
+      "status": "PASS_bounded_exact_artifact_installed_workflow_on_replacement_hash",
+      "archive_sha256": "fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a",
+      "manifest": "provenance/mi-matrix-fe1600d7-provenance-complete/manifest.json",
+      "manifest_sha256": "e81c14f45d3d3837a25999f21d4f83f60276a918f532adfd5c9f2ddba0bb1991",
       "cells": [
         "neither",
         "drm-only",
@@ -186,26 +186,18 @@
         "both"
       ],
       "steps": 12,
-      "cell_logs_directory": "provenance/mi-matrix-0fccf4bb-provenance-complete/",
-      "scope": "bounded analysis-aware multi-imputation workflow; termwise fixed-effect pooling; all four backend availability states; successful real fits in available-backend cells; independent Gaussian and Rubin arithmetic oracles; saved-fit reload",
+      "independent_review": "PASS_bounded_replacement_hash; see provenance/independent-review-fe1600d7-2026-10-17.md",
+      "scope": "bounded analysis-aware multi-imputation workflow; termwise fixed-effect pooling; all four backend availability states; 12/12 install, fixture, and real-workflow steps passed",
       "limits": [
         "shared dependency symlinks; not clean-room dependency installation",
         "does not establish broad statistical recovery or coverage",
         "does not pool joint covariance, loadings, or variance components",
         "does not close platform-clean or final independent release verdict"
-      ],
-      "independent_review": "PASS; reviewer rehashed archive, runner, harness, all five executed sources, and all 12 logs; confirmed four states and unchanged archive hash; no material discrepancy"
+      ]
     },
-    "win_builder_latest_recheck": {
-      "checked_utc": "2026-10-16T23:49:04Z",
-      "result_email_found": false,
-      "upload_acknowledgement": "filename_and_size_only",
-      "server_sha256_attestation": false,
-      "effect": "platform-clean remains open"
-    },
-    "exact_tarball_inspection": "passed for current hash 0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d; NOTICE and all six shipped R data-object streams were hashed directly from this archive; their bytes match the preceding inspected candidate, which does not establish third-party redistribution terms",
+    "exact_tarball_inspection": "For new hash fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a, direct archive streaming confirms the prior SHA-256 values for inst/NOTICE and all six .rda objects; this is byte identity for those paths only, not third-party redistribution terms.",
     "current_shipped_data_hashes": {
-      "archive_sha256": "0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d",
+      "archive_sha256": "fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a",
       "method": "SHA-256 of NOTICE and each R data object streamed from the frozen tarball",
       "notice_sha256": "9cc7fa419cacea99dbb0b822c59d6fffad514ee072e119a1ce1c7f365883ba02",
       "shipped_rda_sha256": {
@@ -217,12 +209,69 @@
         "pigauto/data/trees300.rda": "8293e06503e89e79d9233abd1cbae98fc8d0c18e05ef5a41cca99a071fee9108"
       }
     },
-    "as_cran_block_log_status": "historical sandboxed attempt; superseded by the current exact-archive pass"
+    "as_cran_block_log_status": "historical prior attempt on the replacement hash stopped before package checks during DNS failure; superseded by exact-hash as-cran completion recorded at local_check_log",
+    "current_exact_candidate_source_binding": "provenance/exact-artifact-fe1600d7-source-binding.md",
+    "current_exact_candidate_source_binding_sha256": "724208eff44e572a2bba0845efb3b0f5bb9d66d3c6846240677cd17454daeb0e",
+    "current_exact_candidate_check": {
+      "artifact_sha256": "fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a",
+      "check_log": "provenance/exact-artifact-fe1600d7-as-cran-check.log",
+      "check_log_sha256": "35524a843ebe50d4b85f1653767597960a7c5ea81ff238de651582a20459d2c0",
+      "command": "R CMD check --as-cran --run-donttest --timings; NOT_CRAN unset; force-Suggests true; exact frozen file path recorded in source-binding receipt",
+      "status": "1_NOTE",
+      "note": "compare_methods elapsed 6.142 seconds; CRAN timing threshold is 5 seconds",
+      "incoming_feasibility": "OK",
+      "manual_pdf": "OK; 83 pages; generated PDF retained and hashed",
+      "manual_html": "OK",
+      "testthat": {
+        "pass": 3194,
+        "fail": 0,
+        "warn": 161,
+        "skip": 86
+      },
+      "testthat_output": "provenance/exact-artifact-fe1600d7-as-cran-testthat.Rout",
+      "testthat_output_sha256": "f868df437cb7cc69d474baec4321878541c59fed1fb0433d45d279374fca93af",
+      "manual_pdf_sha256": "7f35acb0001c21f22ea05c78d69f2b301b2715152a74cdcc70a464960f6f50e9",
+      "artifact_input_tree_independent_review": "all 236 regular archive files byte-match the check 00_pkg_src tree"
+    },
+    "independent_review_replacement_hash": "provenance/independent-review-fe1600d7-2026-10-17.md",
+    "independent_review_replacement_hash_sha256": "8ed8966697aba0aba9c78750c8dece35565932327f4e6d0c500b72c76a073c5e",
+    "manual_pdf_evidence": {
+      "kind": "file",
+      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-fe1600d7-pigauto-manual.pdf"
+    },
+    "manual_pdf_sha256": "7f35acb0001c21f22ea05c78d69f2b301b2715152a74cdcc70a464960f6f50e9",
+    "winbuilder_upload_acknowledgements": {
+      "kind": "file",
+      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/winbuilder-upload-fe1600d7-2026-10-17.md",
+      "r_release": "HTTP_200_exact_filename_and_5136083_byte_acknowledgement_result_pending",
+      "r_devel": "HTTP_200_exact_filename_and_5136083_byte_acknowledgement_form_marked_currently_unavailable_result_pending",
+      "server_sha256_attestation": false
+    },
+    "rights_data_hashes": {
+      "kind": "file",
+      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-fe1600d7-rights-data-hashes.txt"
+    },
+    "win_builder_previous_recheck_2026_10_16": {
+      "checked_utc": "2026-10-16T23:49:04Z",
+      "result_email_found": false,
+      "upload_acknowledgement": "filename_and_size_only",
+      "server_sha256_attestation": false,
+      "effect": "Current candidate fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a has no checksum-bound Windows result; prior upload was for superseded hash 0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d",
+      "note": "Historical mailbox/form recheck before replacement-hash submissions; it does not describe a recheck after the 2026-10-17 submissions."
+    },
+    "win_builder_submission_2026_10_17": {
+      "checked_utc": "2026-10-17T00:40Z (approximate; upload completed before 00:53 UTC)",
+      "receipt": "provenance/winbuilder-upload-fe1600d7-2026-10-17.md",
+      "r_release": "HTTP_200_filename_and_size_acknowledged_result_pending",
+      "r_devel": "HTTP_200_filename_and_size_acknowledged_form_marked_currently_unavailable_result_pending",
+      "mailbox_rechecked_after_upload": false,
+      "server_sha256_attestation": false
+    }
   },
   "panel": {
-    "grace": "PASS_bounded_current_exact_artifact_identity_and_local_check_log; did not rerun; other platform gates remain open",
-    "rose": "NOT_READY_current_Windows_results_absent_and_not_checksum_bound; Win-builder acknowledged filename_and_size_only",
-    "pat": "PASS_bounded_current_site_receipt; 44 retired routes 404, 62 retained routes 200, sitemap/search have no retired targets; did not replay all routes or inspect all retained-page content"
+    "grace": "PASS_bounded_replacement_artifact_identity_source_binding_and_exact_as_cran_check; one timing NOTE recorded",
+    "rose": "NOT_READY_platform_clean; current-hash upload acknowledgements exist, but no check result or server SHA attestation",
+    "pat": "PASS_bounded_site_receipt_for_source_780c084; not an archive/platform review"
   },
   "reader_surface_correction": {
     "pull_request": "https://github.com/itchyshin/pigauto/pull/234",
@@ -243,9 +292,13 @@
   "submission": {},
   "audit_verdict": "NOT_READY",
   "panel_evidence": [
-    "provenance/independent-reviews-780c084-2026-10-16.md",
-    "provenance/mi-matrix-0fccf4bb-provenance-complete/manifest.json",
-    "after-task-2026-10-16-exact-artifact-gate.md"
+    "provenance/exact-artifact-fe1600d7-source-binding.md",
+    "docs/dev-log/cran-0.11-audit/provenance/exact-artifact-fe1600d7-macos-check.log",
+    "docs/dev-log/cran-0.11-audit/provenance/exact-artifact-fe1600d7-testthat.Rout",
+    "docs/dev-log/cran-0.11-audit/provenance/exact-artifact-fe1600d7-as-cran-network-block.log",
+    "provenance/mi-matrix-fe1600d7-provenance-complete/manifest.json",
+    "provenance/independent-review-fe1600d7-2026-10-17.md",
+    "provenance/winbuilder-upload-fe1600d7-2026-10-17.md"
   ],
   "evidence_pr": {
     "number": 236,
@@ -256,11 +309,34 @@
     "last_rechecked_utc": "2026-10-16T23:48:52Z",
     "draft": true,
     "mergeable": true,
-    "last_observed_head_sha": "a4f64c0240e39923a31bc9b7110fa2a43fcbae63",
-    "last_observed_commit_count": 6,
-    "observation_note": "GitHub readback at 2026-10-16T23:48:52Z; later evidence-only ledger update may advance the branch head"
+    "last_observed_head_sha": "5faef431995d4eb55391fd83557025d56c80c116",
+    "last_observed_commit_count": 7,
+    "observation_note": "Local release-evidence branch was observed at 5faef431995d4eb55391fd83557025d56c80c116; live GitHub PR status not refreshed after the artifact incident."
   },
   "superseded_previous_artifact": {
+    "state": "superseded_archive_overwritten_by_rebuild; no surviving copy found",
+    "filename": "pigauto_0.11.0.tar.gz",
+    "sha256": "0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d",
+    "size_bytes": 5136073,
+    "archive_entries": 250,
+    "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+    "source_commit": "780c08470b263cc26b4139c711a5c144fd29389c",
+    "frozen_path": "/private/tmp/pigauto_0.11.0.tar.gz",
+    "path": "/private/tmp/pigauto_0.11.0.tar.gz",
+    "clean_worktree": true,
+    "clean_worktree_evidence": {
+      "kind": "file",
+      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/clean-source-checkout-780c084.txt"
+    },
+    "inventory_evidence": {
+      "kind": "file",
+      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-780c084.inventory.txt"
+    },
+    "forbidden_entries": [],
+    "replacement_sha256": "fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a",
+    "superseded_reason": "A reproducibility build wrote to the conventional path and replaced this file; searches found no surviving copy. Its bound checks and reviews are historical only."
+  },
+  "historical_superseded_artifact_before_0fccf4bb": {
     "state": "previous_frozen_candidate_stale_after_source_merge_rebuild_required",
     "filename": "pigauto_0.11.0.tar.gz",
     "sha256": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",

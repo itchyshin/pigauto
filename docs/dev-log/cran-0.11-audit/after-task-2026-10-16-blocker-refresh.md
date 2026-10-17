@@ -1,3 +1,5 @@
+> **Superseded by `after-task-2026-10-17-artifact-replacement.md`:** this earlier report recorded SHA `0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d` as unchanged. A later rebuild overwrote that path; the old tarball is unavailable. Its bound checks, upload lineage, and review do not apply to the replacement hash.
+
 # After-task: release-ledger reconciliation and platform blocker recheck, 2026-10-16
 
 ## 1. Goal
