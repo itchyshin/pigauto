@@ -306,12 +306,12 @@
     "branch": "release/cran-0.11-gate-780c084",
     "state": "open_draft_NOT_READY",
     "merged": false,
-    "last_rechecked_utc": "2026-10-16T23:48:52Z",
+    "last_rechecked_utc": "2026-10-17T00:58:00Z",
     "draft": true,
     "mergeable": true,
-    "last_observed_head_sha": "5faef431995d4eb55391fd83557025d56c80c116",
-    "last_observed_commit_count": 7,
-    "observation_note": "Local release-evidence branch was observed at 5faef431995d4eb55391fd83557025d56c80c116; live GitHub PR status not refreshed after the artifact incident."
+    "last_observed_head_sha": "1605fb9a86be875971f3667d1069bad8da4e095c",
+    "last_observed_commit_count": 8,
+    "observation_note": "Chrome readback after pushing the evidence-only refresh: PR remains Draft and unmerged; 8 commits at head 1605fb9a86be875971f3667d1069bad8da4e095c; all checks passed with one skipped, no conflicts, no deployment. Description was updated to the replacement artifact hash and current evidence. This is a UI observation, not a merge authorization."
   },
   "superseded_previous_artifact": {
     "state": "superseded_archive_overwritten_by_rebuild; no surviving copy found",
