@@ -21,58 +21,58 @@
     "clean_worktree": true,
     "clean_worktree_evidence": {
       "kind": "file",
-      "value": "docs/dev-log/cran-0.11-audit/provenance/clean-source-checkout-780c084.txt"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-correction-2026-10-17.md"
     },
     "inventory_evidence": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-c2e768ad-source-binding.md"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
     },
     "forbidden_entries": []
   },
   "evidence": {
     "product_contract": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/GATES.md"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
     },
     "rights_and_consent": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/rights-and-policy.md"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
     },
     "current_cran_policy": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/rights-and-policy.md"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
     },
     "rendered_site": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/site-9a457eb-review.md"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
     },
     "local_as_cran": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-c2e768ad-as-cran-check.log"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
     },
     "incoming_feasibility": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-c2e768ad-as-cran-check.log"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
     },
     "installed_package": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-c2e768ad-testthat.Rout"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
     },
     "timing": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-c2e768ad-as-cran-check.log"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
     },
     "local_check_status": "exact_frozen_tarball_as_cran_Status_OK_incoming_OK; full donttest examples; 3195 pass 0 fail 161 warn 86 skip",
-    "local_check_log": "provenance/exact-artifact-c2e768ad-as-cran-check.log",
+    "local_check_log": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
     "local_check_log_sha256": "93180d66bf6ee3ddeed26806ef1a998849d9759bc6eea5e2abda6292e4d48478",
-    "testthat_output": "provenance/exact-artifact-c2e768ad-as-cran-testthat.Rout",
+    "testthat_output": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
     "windows_results_bound_to_hash": false,
     "birdtree_redistribution_rights": "maintainer_directly_confirmed_use_with_citation_and_credit;no_separate_published_terms_identified;not_an_independent_legal_opinion",
     "birdtree_rights_basis": {
       "maintainer_warranty": "Shinichi directly confirmed in this task that the trees may be used with citation and credit; recorded as the maintainer authorization and warranty for this package release.",
       "published_redistribution_terms": "not_found_on_reviewed_birdtree_pages",
       "notice_distinction": "inst/NOTICE distinguishes BirdTree data from the megatrees software licence",
-      "exact_tarball_inspection": "Recomputed directly from frozen archive SHA-256 fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a on 2026-10-17: inst/NOTICE and all six shipped .rda object streams are individually hashed in provenance/exact-artifact-fe1600d7-rights-data-hashes.txt; this confirms the current artifact contents, not third-party redistribution terms."
+      "exact_tarball_inspection": "Direct archive inspection for the current frozen c2e768ad artifact confirms inst/NOTICE and all six shipped .rda object hashes, as reproduced in the public c2 evidence bundle. This confirms shipped bytes, not third-party redistribution terms."
     },
     "exact_hash_independent_panel": "Grace and Rose independently verified exact upload object identity and both Windows logs; local site reviewer verified the 9a457eb build, rendered example, retirements, sitemap and search; site review is local only; overall release validator and deployed-site gate remain open",
     "local_check_command": "env -u NOT_CRAN _R_CHECK_FORCE_SUGGESTS_=true R CMD check --as-cran --run-donttest --timings --output=/private/tmp/pigauto-ascran-c2e768ad-network /private/tmp/pigauto-release-candidate/sha256-c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2/pigauto_0.11.0.tar.gz",
@@ -128,11 +128,11 @@
       "scope_limit": "did not replay all 106 routes or inspect all retained page contents"
     },
     "exact_artifact_optional_backend_matrix": {
-      "status": "PASS_bounded_installed_integration_four_cells_on_replacement_exact_tarball",
-      "receipt": "after-task-2026-10-17-artifact-replacement.md",
-      "manifest": "provenance/mi-matrix-fe1600d7-provenance-complete/manifest.json",
-      "manifest_sha256": "e81c14f45d3d3837a25999f21d4f83f60276a918f532adfd5c9f2ddba0bb1991",
-      "artifact_sha256": "fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a",
+      "status": "PASS_bounded_installed_integration_four_cells_on_current_exact_tarball",
+      "receipt": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
+      "manifest": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
+      "manifest_sha256": "bc29ddc1ba91dd7619ac44e2553c19588bd3cacceed1477fce68ffb84c94c525",
+      "artifact_sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
       "cells": [
         "neither",
         "drm-only",
@@ -140,7 +140,7 @@
         "both"
       ],
       "steps": 12,
-      "review": "PASS; independent reviewer verified archive, runner, harness, five executed sources, manifest and all 12 logs; all four cells and 12 steps pass; scope/limits recorded in provenance/independent-review-fe1600d7-2026-10-17.md",
+      "review": "PASS; independent review verified the c2e768ad manifest and all 12 logs across four installation states. This supports bounded model-object interoperability and termwise fixed-effect pooling only.",
       "does_not_close": [
         "clean-room dependency installation",
         "broad statistical recovery or interval coverage",
@@ -160,11 +160,11 @@
     },
     "site_local_refresh": {
       "source_commit": "9a457eb6b3363d413dbc502de88ff5bc602ed98a",
-      "build_log": "provenance/site-build-9a457eb.log",
+      "build_log": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
       "build_log_sha256": "97469ccfb06af9074366ef61b939be1c55fe1057d4a1168ba18fff774a5d7364",
-      "crawl_log": "provenance/site-crawl-9a457eb.log",
+      "crawl_log": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
       "crawl_log_sha256": "1bf804fb25425e4bbe6138f82646bb8c323a79094ae352ea399f41790e765128",
-      "review_receipt": "provenance/site-9a457eb-review.md",
+      "review_receipt": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
       "review_receipt_sha256": "e60aa37a8bf265d1f75ab7bdc14b8286c7dce8b72d4e976e1df18c7502d6fe00",
       "build": "PASS_62_html_614_search_pkgdown_clean",
       "crawl": "PASS_3588_refs_34_retired_zero_errors",
@@ -177,13 +177,13 @@
       "ubuntu_r_release": "success; source CI only",
       "overall": "success"
     },
-    "next_unproven_rung": "deployed-site-verified-and-release-validator-closure",
+    "next_unproven_rung": "platform-clean",
     "audit_verdict": "NOT_READY",
     "new_evidence_pr": "draft PR #236 open, unmerged; updated artifact and review receipts; site deployment gate open",
     "optional_backend_mi_exact_artifact": {
       "status": "PASS_bounded_installed_integration_on_current_frozen_hash",
       "archive_sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
-      "manifest": "provenance/mi-matrix-c2e768ad/manifest.json",
+      "manifest": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
       "manifest_sha256": "bc29ddc1ba91dd7619ac44e2553c19588bd3cacceed1477fce68ffb84c94c525",
       "cells": [
         "neither",
@@ -200,9 +200,9 @@
         "does not pool joint covariance, latent loadings or variance components"
       ]
     },
-    "exact_tarball_inspection": "For new hash fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a, direct archive streaming confirms the prior SHA-256 values for inst/NOTICE and all six .rda objects; this is byte identity for those paths only, not third-party redistribution terms.",
+    "exact_tarball_inspection": "For frozen hash c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2, direct archive streaming confirms the prior SHA-256 values for inst/NOTICE and all six .rda objects; this is byte identity for those paths only, not third-party redistribution terms.",
     "current_shipped_data_hashes": {
-      "archive_sha256": "fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a",
+      "archive_sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
       "method": "SHA-256 of NOTICE and each R data object streamed from the frozen tarball",
       "notice_sha256": "9cc7fa419cacea99dbb0b822c59d6fffad514ee072e119a1ce1c7f365883ba02",
       "shipped_rda_sha256": {
@@ -215,11 +215,11 @@
       }
     },
     "as_cran_block_log_status": "historical prior attempt on the replacement hash stopped before package checks during DNS failure; superseded by exact-hash as-cran completion recorded at local_check_log",
-    "current_exact_candidate_source_binding": "provenance/exact-artifact-c2e768ad-source-binding.md",
+    "current_exact_candidate_source_binding": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
     "current_exact_candidate_source_binding_sha256": "9dfe9c5d43feed2d7bf156f7edb3136c25d6d72e15201093b67797cdac474f6c",
     "current_exact_candidate_check": {
       "artifact_sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
-      "check_log": "provenance/exact-artifact-c2e768ad-as-cran-check.log",
+      "check_log": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
       "check_log_sha256": "93180d66bf6ee3ddeed26806ef1a998849d9759bc6eea5e2abda6292e4d48478",
       "status": "Status_OK",
       "incoming_feasibility": "OK",
@@ -229,26 +229,26 @@
         "warn": 161,
         "skip": 86
       },
-      "testthat_output": "provenance/exact-artifact-c2e768ad-as-cran-testthat.Rout",
+      "testthat_output": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
       "testthat_output_sha256": "54590c0e9219591cf4c7e19947d660e599cdf575c0669889623731a76f6621fb"
     },
-    "independent_review_replacement_hash": "provenance/independent-review-fe1600d7-2026-10-17.md",
+    "independent_review_replacement_hash": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
     "independent_review_replacement_hash_sha256": "8ed8966697aba0aba9c78750c8dece35565932327f4e6d0c500b72c76a073c5e",
     "manual_pdf_evidence": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-fe1600d7-pigauto-manual.pdf"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
     },
     "manual_pdf_sha256": "7f35acb0001c21f22ea05c78d69f2b301b2715152a74cdcc70a464960f6f50e9",
     "winbuilder_upload_acknowledgements": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/winbuilder-upload-fe1600d7-2026-10-17.md",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
       "r_release": "HTTP_200_exact_filename_and_5136083_byte_acknowledgement; subsequent official log Status_OK; operational attribution, no server digest",
       "r_devel": "HTTP_200_exact_filename_and_5136083_byte_acknowledgement; subsequent official log Status_OK despite earlier form unavailable notice; operational attribution, no server digest",
       "server_sha256_attestation": false
     },
     "rights_data_hashes": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-fe1600d7-rights-data-hashes.txt"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
     },
     "win_builder_previous_recheck_2026_10_16": {
       "checked_utc": "2026-10-16T23:49:04Z",
@@ -266,9 +266,9 @@
       "mailbox_rechecked_after_upload": true,
       "server_sha256_attestation": false
     },
-    "win_builder_results_receipt": "provenance/windows-rhub-c2e768ad-2026-10-17.md",
+    "win_builder_results_receipt": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
     "site_deployment_current": false,
-    "windows_results_receipt": "provenance/windows-rhub-c2e768ad-2026-10-17.md",
+    "windows_results_receipt": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
     "windows_object_sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
     "windows_object_bytes": 5136713,
     "windows_source_commit": "9386c07717bc7a2dc63f072fcfbea2345b6e1e15",
@@ -295,12 +295,13 @@
     },
     "external_logs": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/windows-rhub-c2e768ad-2026-10-17.md"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
     },
     "platform_matrix": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/windows-rhub-c2e768ad-2026-10-17.md"
-    }
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
+    },
+    "status_claim": "tarball-clean"
   },
   "panel": {
     "grace": "PASS bounded exact artifact/source binding and local check; confirms Windows checks are downstream of exact uploaded tarball extraction",
@@ -321,17 +322,17 @@
     "historical_build_limitation": "the pre-merge full-site attempt was blocked by metadata/cache access; a later merged-source Pages deployment and fresh site receipts are recorded for 780c084",
     "after_task": "after-task-2026-10-15-getting-started-correction.md"
   },
-  "status_claim": "platform-clean",
-  "next_unproven_rung": "deployed-site-verified-and-release-validator-closure",
+  "status_claim": "tarball-clean",
+  "next_unproven_rung": "platform-clean",
   "submission": {},
   "audit_verdict": "NOT_READY",
   "panel_evidence": [
-    "provenance/exact-artifact-c2e768ad-source-binding.md",
-    "provenance/exact-artifact-c2e768ad-as-cran-check.log",
-    "provenance/exact-artifact-c2e768ad-as-cran-testthat.Rout",
-    "provenance/mi-matrix-c2e768ad/manifest.json",
-    "provenance/windows-rhub-c2e768ad-2026-10-17.md",
-    "provenance/site-9a457eb-review.md"
+    "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
+    "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
+    "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
+    "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
+    "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
+    "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
   ],
   "evidence_pr": {
     "number": 236,
@@ -342,9 +343,9 @@
     "last_rechecked_utc": "2026-10-17T17:03:00Z",
     "draft": true,
     "mergeable": true,
-    "last_observed_head_sha": "9a457eb6b3363d413dbc502de88ff5bc602ed98a",
+    "last_observed_head_sha": "awaiting-this-ledger-commit",
     "last_observed_commit_count": 8,
-    "observation_note": "Current artifact c2e768ad is frozen from clean source commit 9a457eb. Exact local macOS check and MI matrix pass. R-hub object readback matches hash; both Windows jobs pass after rebuilding source extracted from that object. Fresh local site review passes. Draft remains unmerged; current deployment and release-validator closure remain open."
+    "observation_note": "Current frozen c2e768ad artifact: exact local macOS check and bounded optional-backend MI matrix pass; R-hub readback was byte-identical, then Windows release/devel checks rebuilt extracted source; fresh local site build and route checks pass. Pixel review, deployed-site verification, post-merge freeze, and release-validator closure remain open. Draft unmerged; NOT READY."
   },
   "superseded_previous_artifact": {
     "state": "superseded_archive_overwritten_by_rebuild; no surviving copy found",
@@ -359,11 +360,11 @@
     "clean_worktree": true,
     "clean_worktree_evidence": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/clean-source-checkout-780c084.txt"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
     },
     "inventory_evidence": {
       "kind": "file",
-      "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/exact-artifact-780c084.inventory.txt"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
     },
     "forbidden_entries": [],
     "replacement_sha256": "fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a",
