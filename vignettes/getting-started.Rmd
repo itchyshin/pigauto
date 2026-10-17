@@ -18,6 +18,10 @@ knitr::opts_chunk$set(
 
 ## Start here
 
+These examples use functions and defaults from pigauto 0.11.0. Check
+`packageVersion("pigauto")`: if CRAN has an earlier version, use the GitHub
+installation described below before following this workflow.
+
 The beginner workflow reads files, checks them before fitting, and keeps the
 completed-data, diagnostic-prediction, uncertainty, and inference roles
 separate.
@@ -122,11 +126,16 @@ The phylogenetic structure is encoded as:
 
 ## Installation
 
+The CRAN release can lag behind the GitHub version described on this site.
+Check your installed version before running the examples above.
+
 ```{r install, eval=FALSE}
 # CRAN release
 install.packages("pigauto")
+packageVersion("pigauto")
 
-# Development version
+# GitHub version, if CRAN has an earlier version
+# install.packages("pak") # once, if needed
 pak::pak("itchyshin/pigauto")
 
 # Install the torch runtime only if you plan to use gnn = TRUE

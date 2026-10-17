@@ -36,8 +36,10 @@ knitr::opts_chunk$set(
 ## ----install, eval=FALSE------------------------------------------------------
 # # CRAN release
 # install.packages("pigauto")
+# packageVersion("pigauto")
 #
-# # Development version
+# # GitHub version, if CRAN has an earlier version
+# # install.packages("pak") # once, if needed
 # pak::pak("itchyshin/pigauto")
 #
 # # Install the torch runtime only if you plan to use gnn = TRUE
