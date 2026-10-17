@@ -9,7 +9,7 @@
     "large_data_or_vignettes": true
   },
   "artifact": {
-    "state": "replacement exact candidate from clean source 780c084; exact-hash R CMD check --as-cran completed with one timing NOTE; R-release and R-devel upload acknowledgements recorded but no check results yet; NOT_READY pending platform results",
+    "state": "replacement exact candidate from clean source 780c084; exact-hash R CMD check --as-cran completed with one timing NOTE; R-release and R-devel Win-builder logs report Status OK and are operationally attributed by upload filename/size/timing; server digest unavailable; NOT_READY under strict platform hash-binding gate",
     "filename": "pigauto_0.11.0.tar.gz",
     "sha256": "fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a",
     "size_bytes": 5136083,
@@ -74,7 +74,7 @@
       "notice_distinction": "inst/NOTICE distinguishes BirdTree data from the megatrees software licence",
       "exact_tarball_inspection": "Recomputed directly from frozen archive SHA-256 fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a on 2026-10-17: inst/NOTICE and all six shipped .rda object streams are individually hashed in provenance/exact-artifact-fe1600d7-rights-data-hashes.txt; this confirms the current artifact contents, not third-party redistribution terms."
     },
-    "exact_hash_independent_panel": "Grace PASS bounded replacement exact-hash as-cran check review (incoming feasibility and manual OK; one timing NOTE); MI reviewer PASS bounded replacement matrix; Rose NOT READY for platform-clean because current Windows results are absent and prior response byte size differs; Pat PASS bounded deployed-site receipt for unchanged source commit.",
+    "exact_hash_independent_panel": "Grace PASS bounded exact-hash local check review; MI reviewer PASS bounded replacement matrix; Rose PASS bounded deployed-site receipt; Grace and Rose independently confirm R-release and R-devel Status OK, operationally attributed but not cryptographically hash-bound; strict platform-clean remains NOT READY",
     "local_check_command": "env -u NOT_CRAN _R_CHECK_FORCE_SUGGESTS_=true R CMD check --as-cran --run-donttest --timings --output=/private/tmp/pigauto-ascran-fe1600d7-network /private/tmp/pigauto-release-candidate/sha256-fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a/pigauto_0.11.0.tar.gz; incoming feasibility OK; PDF/HTML manual OK; Status: 1 NOTE from compare_methods elapsed 6.142 sec > 5 sec; testthat 3194 pass / 0 fail / 161 warning / 86 skip",
     "local_check_platform": "macOS arm64, R 4.6.0",
     "testthat_output_sha256": "f868df437cb7cc69d474baec4321878541c59fed1fb0433d45d279374fca93af",
@@ -84,7 +84,7 @@
       "warn": 161,
       "skip": 86
     },
-    "win_builder_upload_state": "current-hash R-release and R-devel forms both returned HTTP 200 and displayed exact filename/size; no Windows check result yet; R-devel form marked currently unavailable; no server SHA attestation",
+    "win_builder_upload_state": "R-release and R-devel results received; both official logs Status OK; upload acknowledgement matches exact filename and 5,136,083-byte candidate and results follow upload; no server-side SHA or checked-archive size, so operationally attributed but not cryptographically bound",
     "site_deployment_commit": "780c08470b263cc26b4139c711a5c144fd29389c",
     "site_deployment_run": "38970604986",
     "site_retirement_check": "fresh current deployment: 44 retired 404, 62 retained 200, sitemap 62, search 613, no retired targets",
@@ -97,16 +97,24 @@
     "site_verifier_tests_sha256": "33060fd73862c5e1af97335504d5b45211fce6d229657f556d8deceeadc52ce4",
     "win_builder_logs": {
       "r_release": {
-        "path": "provenance/winbuilder-r-release-2026-10-09.log.gz",
-        "sha256": "dc69a974ea7e693a632d063ca6d205b9c4d61b2eb171f6068c4e8aff8aa19fb7",
-        "result": "1_ERROR_five_test_failures_unbound_to_archive_hash",
-        "raw_sha256": "575179ab3b680d9ea23e54e8c0550bd49d817dee2e652ab11aeacc5ed03af971"
+        "url": "https://win-builder.r-project.org/ys47lC1Ld715/00check.log",
+        "result_url": "https://win-builder.r-project.org/ys47lC1Ld715/",
+        "r_version": "R 4.6.1 (2026-06-24 ucrt)",
+        "platform": "Windows Server 2022 x64",
+        "started_utc": "2026-10-17T00:55:24Z",
+        "elapsed_seconds": 271,
+        "status": "OK",
+        "association": "operationally_attributed_to_fe1600d7_by_upload_filename_size_and_timing;server_digest_unavailable"
       },
       "r_devel": {
-        "path": "provenance/winbuilder-r-devel-2026-10-09.log.gz",
-        "sha256": "6242c79102333744dab7e14d86237614a51dea51247888cae188eda25a9fb9b2",
-        "result": "1_ERROR_five_test_failures_unbound_to_archive_hash",
-        "raw_sha256": "23cc52068814203057efa2862110f9c08eaab62e4fcf4a62985390975849be54"
+        "url": "https://win-builder.r-project.org/m53luBDZqnM7/00check.log",
+        "result_url": "https://win-builder.r-project.org/m53luBDZqnM7/",
+        "r_version": "R-devel r90686 (2026-10-16 ucrt)",
+        "platform": "Windows Server 2022 x64",
+        "started_utc": "2026-10-17T01:04:23Z",
+        "elapsed_seconds": 271,
+        "status": "OK",
+        "association": "operationally_attributed_to_fe1600d7_by_upload_filename_size_and_timing;server_digest_unavailable"
       }
     },
     "site_browser_review": {
@@ -243,8 +251,8 @@
     "winbuilder_upload_acknowledgements": {
       "kind": "file",
       "value": "/private/tmp/pigauto-release-evidence-780c084/docs/dev-log/cran-0.11-audit/provenance/winbuilder-upload-fe1600d7-2026-10-17.md",
-      "r_release": "HTTP_200_exact_filename_and_5136083_byte_acknowledgement_result_pending",
-      "r_devel": "HTTP_200_exact_filename_and_5136083_byte_acknowledgement_form_marked_currently_unavailable_result_pending",
+      "r_release": "HTTP_200_exact_filename_and_5136083_byte_acknowledgement; subsequent official log Status_OK; operational attribution, no server digest",
+      "r_devel": "HTTP_200_exact_filename_and_5136083_byte_acknowledgement; subsequent official log Status_OK despite earlier form unavailable notice; operational attribution, no server digest",
       "server_sha256_attestation": false
     },
     "rights_data_hashes": {
@@ -262,15 +270,16 @@
     "win_builder_submission_2026_10_17": {
       "checked_utc": "2026-10-17T00:40Z (approximate; upload completed before 00:53 UTC)",
       "receipt": "provenance/winbuilder-upload-fe1600d7-2026-10-17.md",
-      "r_release": "HTTP_200_filename_and_size_acknowledged_result_pending",
-      "r_devel": "HTTP_200_filename_and_size_acknowledged_form_marked_currently_unavailable_result_pending",
-      "mailbox_rechecked_after_upload": false,
+      "r_release": "HTTP_200_filename_and_size_acknowledged; subsequent R-release log Status_OK at 2026-10-17T00:55:24Z",
+      "r_devel": "HTTP_200_filename_and_size_acknowledged; subsequent R-devel log Status_OK at 2026-10-17T01:04:23Z despite form unavailable notice",
+      "mailbox_rechecked_after_upload": true,
       "server_sha256_attestation": false
-    }
+    },
+    "win_builder_results_receipt": "provenance/winbuilder-results-fe1600d7-2026-10-17.md"
   },
   "panel": {
-    "grace": "PASS_bounded_replacement_artifact_identity_source_binding_and_exact_as_cran_check; one timing NOTE recorded",
-    "rose": "NOT_READY_platform_clean; current-hash upload acknowledgements exist, but no check result or server SHA attestation",
+    "grace": "PASS_bounded_exact_hash_local_check_and_MI reviews; independently confirms R-release/R-devel Status OK and operational attribution to fe1600d7; no server SHA attestation so strict exact-hash gate remains open",
+    "rose": "NOT_READY_platform_clean; independently confirms R-release/R-devel Status OK and operational attribution to fe1600d7; no server SHA attestation so strict exact-hash gate remains open",
     "pat": "PASS_bounded_site_receipt_for_source_780c084; not an archive/platform review"
   },
   "reader_surface_correction": {
