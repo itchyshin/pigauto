@@ -9,7 +9,7 @@
     "large_data_or_vignettes": true
   },
   "artifact": {
-    "state": "frozen exact candidate from clean source 9a457eb6; macOS exact-archive R CMD check Status OK; R-hub Windows release and devel check source extracted from byte-identical uploaded object and rebuilt; exact-hash installed MI matrix PASS; NOT_READY because candidate site has not been deployed and final release-validator/maintainer gates remain open",
+    "state": "frozen original c2e768ad gzip from clean source9a457eb6; exact local macOS and direct Windows release/devel plus Linux as-cran checks Status OK; source CI359 all three jobs passed; NOT_READY for submission pending deployed site, final post-merge freeze and final release closure including timing approval",
     "filename": "pigauto_0.11.0.tar.gz",
     "sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
     "size_bytes": 5136713,
@@ -60,13 +60,13 @@
     },
     "timing": {
       "kind": "file",
-      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/platform-c2e768ad-direct-2026-10-17/README.md"
     },
     "local_check_status": "exact_frozen_tarball_as_cran_Status_OK_incoming_OK; full donttest examples; 3195 pass 0 fail 161 warn 86 skip",
     "local_check_log": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
     "local_check_log_sha256": "93180d66bf6ee3ddeed26806ef1a998849d9759bc6eea5e2abda6292e4d48478",
     "testthat_output": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
-    "windows_results_bound_to_hash": false,
+    "windows_results_bound_to_hash": true,
     "birdtree_redistribution_rights": "maintainer_directly_confirmed_use_with_citation_and_credit;no_separate_published_terms_identified;not_an_independent_legal_opinion",
     "birdtree_rights_basis": {
       "maintainer_warranty": "Shinichi directly confirmed in this task that the trees may be used with citation and credit; recorded as the maintainer authorization and warranty for this package release.",
@@ -74,7 +74,7 @@
       "notice_distinction": "inst/NOTICE distinguishes BirdTree data from the megatrees software licence",
       "exact_tarball_inspection": "Direct archive inspection for the current frozen c2e768ad artifact confirms inst/NOTICE and all six shipped .rda object hashes, as reproduced in the public c2 evidence bundle. This confirms shipped bytes, not third-party redistribution terms."
     },
-    "exact_hash_independent_panel": "Grace and Rose independently verified exact upload object identity and both Windows logs; local site reviewer verified the 9a457eb build, rendered example, retirements, sitemap and search; site review is local only; overall release validator and deployed-site gate remain open",
+    "exact_hash_independent_panel": "Fresh independent direct-original-archive matrix review PASS; source CI359 all three jobs passed; portable validator passed the platform-clean rung. Final independent release panel, deployed site and submission timing approval remain open. See direct_original_archive_platform.review.",
     "local_check_command": "env -u NOT_CRAN _R_CHECK_FORCE_SUGGESTS_=true R CMD check --as-cran --run-donttest --timings --output=/private/tmp/pigauto-ascran-c2e768ad-network /private/tmp/pigauto-release-candidate/sha256-c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2/pigauto_0.11.0.tar.gz",
     "local_check_platform": "macOS arm64, R 4.6.0",
     "testthat_output_sha256": "54590c0e9219591cf4c7e19947d660e599cdf575c0669889623731a76f6621fb",
@@ -104,7 +104,9 @@
         "started_utc": "2026-10-17T00:55:24Z",
         "elapsed_seconds": 271,
         "status": "OK",
-        "association": "operationally_attributed_to_fe1600d7_by_upload_filename_size_and_timing;server_digest_unavailable"
+        "association": "operationally_attributed_to_fe1600d7_by_upload_filename_size_and_timing;server_digest_unavailable",
+        "historical_artifact_sha256": "fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a",
+        "current_candidate_evidence": false
       },
       "r_devel": {
         "url": "https://win-builder.r-project.org/m53luBDZqnM7/00check.log",
@@ -114,7 +116,9 @@
         "started_utc": "2026-10-17T01:04:23Z",
         "elapsed_seconds": 271,
         "status": "OK",
-        "association": "operationally_attributed_to_fe1600d7_by_upload_filename_size_and_timing;server_digest_unavailable"
+        "association": "operationally_attributed_to_fe1600d7_by_upload_filename_size_and_timing;server_digest_unavailable",
+        "historical_artifact_sha256": "fe1600d7d5629212063802a72dd4083bbd14c453ab5786d1d0e871e0ccfeff9a",
+        "current_candidate_evidence": false
       }
     },
     "site_browser_review": {
@@ -154,7 +158,7 @@
     "rights_exact_artifact": {
       "NOTICE_sha256": "9cc7fa419cacea99dbb0b822c59d6fffad514ee072e119a1ce1c7f365883ba02",
       "tree300_sha256": "6050855d2ae7de42fa0de239134aad8e8975a224610b8dffb48f3d7412bb383f",
-      "trees300_sha256": "8293e06503e89e79d9233abd1cbae98fc8d0c18e05ef5a41cca99a071fee910a",
+      "trees300_sha256": "8293e06503e89e79d9233abd1cbae98fc8d0c18e05ef5a41cca99a071fee9108",
       "tree_full_sha256": "5f7b36a4b9c02fd53c98d12fe4871e0f34098e3aa7a8f34f2db38a21a8dc09f5",
       "basis": "maintainer warranty with citation/credit; no independent legal opinion"
     },
@@ -177,9 +181,9 @@
       "ubuntu_r_release": "success; source CI only",
       "overall": "success"
     },
-    "next_unproven_rung": "platform-clean",
+    "next_unproven_rung": "submission-ready",
     "audit_verdict": "NOT_READY",
-    "new_evidence_pr": "draft PR #236 open, unmerged; updated artifact and review receipts; site deployment gate open",
+    "new_evidence_pr": "draft PR236 open and unmerged; platform-clean candidate evidence; overall NOT_READY; no merge/deployment/submission",
     "optional_backend_mi_exact_artifact": {
       "status": "PASS_bounded_installed_integration_on_current_frozen_hash",
       "archive_sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
@@ -295,13 +299,66 @@
     },
     "external_logs": {
       "kind": "file",
-      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/platform-c2e768ad-direct-2026-10-17/README.md"
     },
     "platform_matrix": {
       "kind": "file",
-      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/platform-c2e768ad-direct-2026-10-17/README.md"
     },
-    "status_claim": "tarball-clean"
+    "status_claim": "platform-clean",
+    "windows_results_binding_scope": "Direct GitHub original-gzip checks in run39070922656 only, with matching download/pre/post SHA/size/inventory; historical predecessor Win-builder service logs remain digest-unverified and R-hub rebuilt-source logs retain that qualification.",
+    "candidate_source_ci": {
+      "run": "39070922883",
+      "head_sha": "a5500712b771cb4e34401fb5d9b7681a13219cf4",
+      "url": "https://github.com/itchyshin/pigauto/actions/runs/39070922883",
+      "overall": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest (R release)",
+          "conclusion": "success",
+          "databaseId": 117508214402,
+          "url": "https://github.com/itchyshin/pigauto/actions/runs/39070922883/job/117508214402"
+        },
+        {
+          "name": "macos-latest (R release)",
+          "conclusion": "success",
+          "databaseId": 117508214610,
+          "url": "https://github.com/itchyshin/pigauto/actions/runs/39070922883/job/117508214610"
+        },
+        {
+          "name": "ubuntu-latest (R devel)",
+          "conclusion": "success",
+          "databaseId": 117508214718,
+          "url": "https://github.com/itchyshin/pigauto/actions/runs/39070922883/job/117508214718"
+        }
+      ],
+      "receipt": "docs/dev-log/cran-0.11-audit/provenance/platform-c2e768ad-direct-2026-10-17/source-ci-359.json",
+      "scope": "candidate source CI; direct frozen gzip checks recorded separately; later evidence-only commit requires its applicable checks/readback"
+    },
+    "direct_original_archive_platform": {
+      "run": "39070922656",
+      "url": "https://github.com/itchyshin/pigauto/actions/runs/39070922656",
+      "head_sha": "a5500712b771cb4e34401fb5d9b7681a13219cf4",
+      "workflow_merge_sha": "f78a42c4329e3249ed91ed6bb54ab4c39a4da8b8",
+      "archive_sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
+      "matrix": "docs/dev-log/cran-0.11-audit/provenance/platform-c2e768ad-direct-2026-10-17/attempt4-matrix.json",
+      "raw_manifest": "docs/dev-log/cran-0.11-audit/provenance/platform-c2e768ad-direct-2026-10-17/attempt4-retained-manifest.json",
+      "review": "docs/dev-log/cran-0.11-audit/provenance/platform-c2e768ad-direct-2026-10-17/independent-review.md",
+      "status": "PASS_3_OF_3_Status_OK",
+      "timings_seconds": {
+        "windows-latest-release": 599.377222061157,
+        "windows-latest-devel": 656.047114849091,
+        "ubuntu-latest-release": 324.047611951828
+      },
+      "does_not_close": [
+        "submission timing approval",
+        "deployed candidate site",
+        "final post-merge freeze",
+        "final independent release closure",
+        "CRAN submission"
+      ]
+    },
+    "historical_exact_hash_panel_rhub": "Grace and Rose independently verified exact upload object identity and both Windows logs; local site reviewer verified the 9a457eb build, rendered example, retirements, sitemap and search; site review is local only; overall release validator and deployed-site gate remain open"
   },
   "panel": {
     "grace": "PASS bounded exact artifact/source binding and local check; confirms Windows checks are downstream of exact uploaded tarball extraction",
@@ -322,8 +379,8 @@
     "historical_build_limitation": "the pre-merge full-site attempt was blocked by metadata/cache access; a later merged-source Pages deployment and fresh site receipts are recorded for 780c084",
     "after_task": "after-task-2026-10-15-getting-started-correction.md"
   },
-  "status_claim": "tarball-clean",
-  "next_unproven_rung": "platform-clean",
+  "status_claim": "platform-clean",
+  "next_unproven_rung": "submission-ready",
   "submission": {},
   "audit_verdict": "NOT_READY",
   "panel_evidence": [
@@ -332,7 +389,8 @@
     "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
     "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
     "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
-    "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
+    "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md",
+    "docs/dev-log/cran-0.11-audit/provenance/platform-c2e768ad-direct-2026-10-17/independent-review.md"
   ],
   "evidence_pr": {
     "number": 236,
@@ -340,12 +398,12 @@
     "branch": "release/cran-0.11-gate-780c084",
     "state": "open_draft_NOT_READY",
     "merged": false,
-    "last_rechecked_utc": "2026-10-17T17:03:00Z",
+    "last_rechecked_utc": "2026-10-17T21:46:56.148569+00:00",
     "draft": true,
     "mergeable": true,
-    "last_observed_head_sha": "awaiting-this-ledger-commit",
+    "last_observed_head_sha": "a5500712b771cb4e34401fb5d9b7681a13219cf4",
     "last_observed_commit_count": 8,
-    "observation_note": "Current frozen c2e768ad artifact: exact local macOS check and bounded optional-backend MI matrix pass; R-hub readback was byte-identical, then Windows release/devel checks rebuilt extracted source; fresh local site build and route checks pass. Pixel review, deployed-site verification, post-merge freeze, and release-validator closure remain open. Draft unmerged; NOT READY."
+    "observation_note": "Direct original-gzip matrix and candidate source CI359 pass; receipts will follow in an evidence-only commit. The final PR head/check state is read back separately in the PR body. Draft/unmerged; NOT_READY."
   },
   "superseded_previous_artifact": {
     "state": "superseded_archive_overwritten_by_rebuild; no surviving copy found",
@@ -392,6 +450,25 @@
     "forbidden_entries": []
   },
   "validator_check": {
+    "checked_utc": "2026-10-17T21:46:56.149151+00:00",
+    "validator_commit_local_only": "1b5598eb05971ccde3020dd07295891b9b3caee8",
+    "validator_sha256": "81a897cc6c3351e36d082099663aa3255f780d698a377c35f201c1b41768572f",
+    "tests_sha256": "12542f73787a9f25d6eee0dd22145977cd22d004eb5dd996a77dc9894736acab",
+    "status_claim": "platform-clean",
+    "result": "READY FOR CLAIMED RUNG",
+    "receipt": "docs/dev-log/cran-0.11-audit/provenance/platform-c2e768ad-direct-2026-10-17/README.md",
+    "does_not_close": [
+      "submission-ready",
+      "deployed-site verification",
+      "post-merge artifact freeze",
+      "final independent release closure",
+      "CRAN submission"
+    ],
+    "log_sha256": "7e9fabd9da9478b0e1fa2544fcc7a29224865b825443e03b986304a4713478f3",
+    "log": "docs/dev-log/cran-0.11-audit/provenance/platform-c2e768ad-direct-2026-10-17/platform-validator.txt",
+    "independent_review": "Portable validator previously independently reviewed and all eight regression tests/selftest rerun; direct platform evidence independently reviewed PASS."
+  },
+  "historical_validator_check_tarball_clean": {
     "checked_utc": "2026-10-17T20:32:02.098462+00:00",
     "public_input_head": "3bba584c53dc2ff93f2dbed2812faa8fe64b4515",
     "input_ledger_sha256": "7b0f512905b86d087fab09b422377256e1464be63a93e5816668beffa856811b",

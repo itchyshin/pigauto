@@ -1,5 +1,7 @@
 # pigauto 0.11 current artifact evidence bundle
 
+Current hash correction, 2026-10-17: the reproduced older ledger snapshot contains a one-character typo for trees300. The frozen c2e768ad archive measures `8293e06503e89e79d9233abd1cbae98fc8d0c18e05ef5a41cca99a071fee9108`, ending 9108. The current release ledger and `platform-c2e768ad-direct-2026-10-17/current-data-hash-audit.json` contain the measured value. Embedded snapshots below remain verbatim historical records.
+
 Source checkout: `9a457eb6b3363d413dbc502de88ff5bc602ed98a`. Frozen tarball SHA-256: `c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2`. The sections below reproduce each named local receipt file as text. The bundle consolidates them because direct browser file selection requires a persistent local-file permission that was not granted.
 
 ## `docs/dev-log/cran-0.11-audit/GATES.md`
