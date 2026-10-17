@@ -281,13 +281,14 @@ test_that("cross_validate print and summary methods work", {
 test_that("simulate_benchmark runs and returns expected structure", {
   bench <- simulate_benchmark(
     n_species = 20, n_traits = 2, scenarios = "BM",
-    n_reps = 1, epochs = 20L, verbose = FALSE
+    n_reps = 1, epochs = 20L, verbose = FALSE, gnn = FALSE
   )
 
   expect_s3_class(bench, "pigauto_benchmark")
   expect_true("results" %in% names(bench))
   expect_true("summary" %in% names(bench))
   expect_s3_class(bench$results, "data.frame")
+  expect_gt(nrow(bench$results), 0L)
   expect_true(all(c("scenario", "method", "trait", "metric", "value")
                   %in% names(bench$results)))
   expect_equal(bench$n_species, 20L)
