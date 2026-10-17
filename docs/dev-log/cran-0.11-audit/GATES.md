@@ -2,7 +2,11 @@
 
 ## Current correction, 2026-10-17
 
-The current artifact and gate record are corrected in [the public c2e768ad correction receipt](provenance/current-artifact-c2e768ad-correction-2026-10-17.md). That receipt supersedes inconsistent current-state fields below and in the JSON ledger. Use source commit 9a457eb6b3363d413dbc502de88ff5bc602ed98a and tarball SHA-256 c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2 as the current candidate. Highest proven rung is tarball-clean; platform-clean remains unproven under the exact artifact gate. Gate count: 5 met (G0-G4), 4 unmet (G5 pixel review, G6 deployed site, G7 post-merge freeze, G8 independent closure), 0 abandoned. The Windows result is from source extracted from the byte-identical uploaded object and rebuilt, not execution of the original compressed archive in place. Current PR checks are pending. Overall NOT READY.
+
+
+The current frozen candidate is source commit 9a457eb6b3363d413dbc502de88ff5bc602ed98a, archive SHA-256 c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2. The current plan gate count is G0-G5 met (6), G6 deployed-site verification, G7 post-merge artifact freeze, and G8 independent release closure unmet (3), 0 abandoned. Highest proven rung is tarball-clean; next unproven rung is platform-clean. Windows R-hub checks rebuilt source extracted from the byte-identical uploaded object, not the original gzip in place; no server digest attestation is available. A bounded Chrome review of five key local candidate pages is recorded in provenance/candidate-site-visual-review-9a457eb-2026-10-17.md. The current release validator has not passed because its local file-evidence rule requires absolute paths while the public ledger uses repository-relative paths; G8 remains open pending a portable resolution and clean re-verification. Current-head R-CMD-check is running and pkgdown is skipped by the pull-request guard. Overall NOT READY; no merge, deployment, or CRAN submission occurred.
+
+
 
 
 
