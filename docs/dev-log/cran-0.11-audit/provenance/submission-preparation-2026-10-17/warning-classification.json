@@ -1,0 +1,19 @@
+{
+  "scope": "one exact-archive local CRAN-layout replay; not a direct capture of Windows warning objects",
+  "counts": {
+    "small_validation": 119,
+    "undefined_constant_correlation": 9,
+    "constant_matched_trait": 4,
+    "few_tree_draws": 5,
+    "covariates_joint_baseline": 5,
+    "covariates_gnn_off": 3,
+    "imbalanced_ordinal": 12,
+    "signal_gate_fallback": 1,
+    "conformal_sample_limit": 2,
+    "species_dropped": 1
+  },
+  "total": 161,
+  "unclassified": 0,
+  "negative_control": "PASS: planted unknown warning refused",
+  "independent_consequence_review_receipt": "independent-warning-review.md"
+}

@@ -9,7 +9,7 @@
     "large_data_or_vignettes": true
   },
   "artifact": {
-    "state": "frozen original c2e768ad gzip from clean source9a457eb6; exact local macOS and direct Windows release/devel plus Linux as-cran checks Status OK; source CI359 all three jobs passed; NOT_READY for submission pending deployed site, final post-merge freeze and final release closure including timing approval",
+    "state": "PREDECESSOR c2e768ad original gzip remains platform-clean for source9a457eb; the later README and getting-started installation guidance changes installed bytes. Updated source awaits approved merge, deployment, clean post-merge freeze and new artifact-dependent checks. NOT_READY.",
     "filename": "pigauto_0.11.0.tar.gz",
     "sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
     "size_bytes": 5136713,
@@ -27,7 +27,8 @@
       "kind": "file",
       "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
     },
-    "forbidden_entries": []
+    "forbidden_entries": [],
+    "current_candidate": false
   },
   "evidence": {
     "product_contract": {
@@ -40,11 +41,12 @@
     },
     "current_cran_policy": {
       "kind": "file",
-      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/submission-preparation-2026-10-17/README.md"
     },
     "rendered_site": {
-      "kind": "file",
-      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
+      "scope": "Fresh local updated-guide snapshot, font/news overrides recorded; deployed site remains pending PR237 approval and matching Pages success.",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/submission-preparation-2026-10-17/site-review.md",
+      "kind": "file"
     },
     "local_as_cran": {
       "kind": "file",
@@ -181,9 +183,9 @@
       "ubuntu_r_release": "success; source CI only",
       "overall": "success"
     },
-    "next_unproven_rung": "submission-ready",
+    "next_unproven_rung": "tarball-clean",
     "audit_verdict": "NOT_READY",
-    "new_evidence_pr": "draft PR236 open and unmerged; platform-clean candidate evidence; overall NOT_READY; no merge/deployment/submission",
+    "new_evidence_pr": "PR236 remains draft/unmerged. Installation guidance now distinguishes released CRAN and GitHub versions; c2 platform evidence is predecessor-only for this updated source. Fresh head CI is read back in the PR description. Final post-merge candidate not frozen; no submission.",
     "optional_backend_mi_exact_artifact": {
       "status": "PASS_bounded_installed_integration_on_current_frozen_hash",
       "archive_sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
@@ -305,7 +307,7 @@
       "kind": "file",
       "value": "docs/dev-log/cran-0.11-audit/provenance/platform-c2e768ad-direct-2026-10-17/README.md"
     },
-    "status_claim": "platform-clean",
+    "status_claim": "source-clean",
     "windows_results_binding_scope": "Direct GitHub original-gzip checks in run39070922656 only, with matching download/pre/post SHA/size/inventory; historical predecessor Win-builder service logs remain digest-unverified and R-hub rebuilt-source logs retain that qualification.",
     "candidate_source_ci": {
       "run": "39070922883",
@@ -358,7 +360,11 @@
         "CRAN submission"
       ]
     },
-    "historical_exact_hash_panel_rhub": "Grace and Rose independently verified exact upload object identity and both Windows logs; local site reviewer verified the 9a457eb build, rendered example, retirements, sitemap and search; site review is local only; overall release validator and deployed-site gate remain open"
+    "historical_exact_hash_panel_rhub": "Grace and Rose independently verified exact upload object identity and both Windows logs; local site reviewer verified the 9a457eb build, rendered example, retirements, sitemap and search; site review is local only; overall release validator and deployed-site gate remain open",
+    "local_warning_classification_predecessor_c2": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/submission-preparation-2026-10-17/README.md"
+    }
   },
   "panel": {
     "grace": "PASS bounded exact artifact/source binding and local check; confirms Windows checks are downstream of exact uploaded tarball extraction",
@@ -379,8 +385,8 @@
     "historical_build_limitation": "the pre-merge full-site attempt was blocked by metadata/cache access; a later merged-source Pages deployment and fresh site receipts are recorded for 780c084",
     "after_task": "after-task-2026-10-15-getting-started-correction.md"
   },
-  "status_claim": "platform-clean",
-  "next_unproven_rung": "submission-ready",
+  "status_claim": "source-clean",
+  "next_unproven_rung": "tarball-clean",
   "submission": {},
   "audit_verdict": "NOT_READY",
   "panel_evidence": [
@@ -398,12 +404,9 @@
     "branch": "release/cran-0.11-gate-780c084",
     "state": "open_draft_NOT_READY",
     "merged": false,
-    "last_rechecked_utc": "2026-10-17T21:46:56.148569+00:00",
     "draft": true,
-    "mergeable": true,
-    "last_observed_head_sha": "a5500712b771cb4e34401fb5d9b7681a13219cf4",
-    "last_observed_commit_count": 8,
-    "observation_note": "Direct original-gzip matrix and candidate source CI359 pass; receipts will follow in an evidence-only commit. The final PR head/check state is read back separately in the PR body. Draft/unmerged; NOT_READY."
+    "preparation_parent_head": "d0b3b2516b4ab8f60d60a07c2ffe2b83cd21f313",
+    "observation_note": "Final published head, check states and timestamps are recorded in the PR body after publication to avoid self-referential commit fields. PR236 remains unmerged; source fixes use PR237."
   },
   "superseded_previous_artifact": {
     "state": "superseded_archive_overwritten_by_rebuild; no surviving copy found",
@@ -450,13 +453,9 @@
     "forbidden_entries": []
   },
   "validator_check": {
-    "checked_utc": "2026-10-17T21:46:56.149151+00:00",
     "validator_commit_local_only": "1b5598eb05971ccde3020dd07295891b9b3caee8",
     "validator_sha256": "81a897cc6c3351e36d082099663aa3255f780d698a377c35f201c1b41768572f",
     "tests_sha256": "12542f73787a9f25d6eee0dd22145977cd22d004eb5dd996a77dc9894736acab",
-    "status_claim": "platform-clean",
-    "result": "READY FOR CLAIMED RUNG",
-    "receipt": "docs/dev-log/cran-0.11-audit/provenance/platform-c2e768ad-direct-2026-10-17/README.md",
     "does_not_close": [
       "submission-ready",
       "deployed-site verification",
@@ -464,9 +463,13 @@
       "final independent release closure",
       "CRAN submission"
     ],
-    "log_sha256": "7e9fabd9da9478b0e1fa2544fcc7a29224865b825443e03b986304a4713478f3",
-    "log": "docs/dev-log/cran-0.11-audit/provenance/platform-c2e768ad-direct-2026-10-17/platform-validator.txt",
-    "independent_review": "Portable validator previously independently reviewed and all eight regression tests/selftest rerun; direct platform evidence independently reviewed PASS."
+    "checked_utc": "2026-10-17T23:32:35.166633+00:00",
+    "status_claim": "source-clean",
+    "result": "READY FOR CLAIMED RUNG",
+    "receipt": "docs/dev-log/cran-0.11-audit/provenance/submission-preparation-2026-10-17/README.md",
+    "log": "docs/dev-log/cran-0.11-audit/provenance/submission-preparation-2026-10-17/source-validator.txt",
+    "independent_review": "Prior validator regression/selftest receipts retained; this invocation validates source-clean only, not final submission readiness.",
+    "log_sha256": "7e9fabd9da9478b0e1fa2544fcc7a29224865b825443e03b986304a4713478f3"
   },
   "historical_validator_check_tarball_clean": {
     "checked_utc": "2026-10-17T20:32:02.098462+00:00",
@@ -487,5 +490,55 @@
       "final independent release closure",
       "CRAN submission"
     ]
+  },
+  "source_candidate": {
+    "base_for_preparation": "d0b3b2516b4ab8f60d60a07c2ffe2b83cd21f313",
+    "change": "README and getting-started installation-version guidance; no scientific defaults or R code changes",
+    "artifact_state": "awaiting clean post-merge freeze",
+    "candidate_current": false,
+    "predecessor_sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
+    "publication_head": "Record in PR description after publishing, avoiding self-referential commit fields.",
+    "source_commit": "259d7e98c86dd5aa7680367d9e621ad76037d323",
+    "source_pr": 237,
+    "source_pr_url": "https://github.com/itchyshin/pigauto/pull/237",
+    "evidence_pr_kept_unmerged": 236
+  },
+  "historical_observations": {
+    "evidence_pr_before_submission_preparation": {
+      "number": 236,
+      "url": "https://github.com/itchyshin/pigauto/pull/236",
+      "branch": "release/cran-0.11-gate-780c084",
+      "state": "open_draft_NOT_READY",
+      "merged": false,
+      "last_rechecked_utc": "2026-10-17T21:46:56.148569+00:00",
+      "draft": true,
+      "mergeable": true,
+      "last_observed_head_sha": "a5500712b771cb4e34401fb5d9b7681a13219cf4",
+      "last_observed_commit_count": 8,
+      "observation_note": "Direct original-gzip matrix and candidate source CI359 pass; receipts will follow in an evidence-only commit. The final PR head/check state is read back separately in the PR body. Draft/unmerged; NOT_READY."
+    },
+    "validator_predecessor_c2": {
+      "checked_utc": "2026-10-17T21:46:56.149151+00:00",
+      "validator_commit_local_only": "1b5598eb05971ccde3020dd07295891b9b3caee8",
+      "validator_sha256": "81a897cc6c3351e36d082099663aa3255f780d698a377c35f201c1b41768572f",
+      "tests_sha256": "12542f73787a9f25d6eee0dd22145977cd22d004eb5dd996a77dc9894736acab",
+      "status_claim": "platform-clean",
+      "result": "READY FOR CLAIMED RUNG",
+      "receipt": "docs/dev-log/cran-0.11-audit/provenance/platform-c2e768ad-direct-2026-10-17/README.md",
+      "does_not_close": [
+        "submission-ready",
+        "deployed-site verification",
+        "post-merge artifact freeze",
+        "final independent release closure",
+        "CRAN submission"
+      ],
+      "log_sha256": "7e9fabd9da9478b0e1fa2544fcc7a29224865b825443e03b986304a4713478f3",
+      "log": "docs/dev-log/cran-0.11-audit/provenance/platform-c2e768ad-direct-2026-10-17/platform-validator.txt",
+      "independent_review": "Portable validator previously independently reviewed and all eight regression tests/selftest rerun; direct platform evidence independently reviewed PASS."
+    },
+    "rendered_site_predecessor_c2": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/current-artifact-c2e768ad-evidence-bundle.md"
+    }
   }
 }

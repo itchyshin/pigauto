@@ -1,0 +1,43 @@
+{
+  "sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
+  "compressed_bytes": 5136713,
+  "regular_file_bytes": 7148405,
+  "group_bytes": {
+    "build": 502,
+    "data": 2313444,
+    "DESCRIPTION": 2557,
+    "inst": 1497652,
+    "LICENSE": 47,
+    "man": 1026612,
+    "NAMESPACE": 3121,
+    "NEWS.md": 174960,
+    "R": 1130871,
+    "README.md": 9271,
+    "tests": 907220,
+    "vignettes": 82148
+  },
+  "largest_files": [
+    {
+      "path": "pigauto/data/trees300.rda",
+      "bytes": 1832412
+    },
+    {
+      "path": "pigauto/inst/extdata/legacy_fit_v091.rds",
+      "bytes": 1180089
+    },
+    {
+      "path": "pigauto/man/figures/logo.png",
+      "bytes": 810344
+    },
+    {
+      "path": "pigauto/data/tree_full.rda",
+      "bytes": 266848
+    },
+    {
+      "path": "pigauto/NEWS.md",
+      "bytes": 174960
+    }
+  ],
+  "src_files": [],
+  "forbidden_files": []
+}

@@ -18,8 +18,22 @@ categorical, ordinal, proportion, zero-inflated-count, and compositional traits.
 
 ## Installation
 
+The workflow below uses functions and defaults from pigauto 0.11.0. Check
+`packageVersion("pigauto")` after installation: the CRAN release can lag
+behind the GitHub version described on this site.
+
+For the released version:
+
 ```r
 install.packages("pigauto")
+packageVersion("pigauto")
+```
+
+If CRAN has an earlier version, install the GitHub version to use this workflow:
+
+```r
+# install.packages("pak") # once, if needed
+pak::pak("itchyshin/pigauto")
 # torch::install_torch() # once, if you opt into gnn = TRUE
 ```
 
