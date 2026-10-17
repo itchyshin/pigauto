@@ -66,7 +66,7 @@
     "local_check_log": "provenance/exact-artifact-c2e768ad-as-cran-check.log",
     "local_check_log_sha256": "93180d66bf6ee3ddeed26806ef1a998849d9759bc6eea5e2abda6292e4d48478",
     "testthat_output": "provenance/exact-artifact-c2e768ad-as-cran-testthat.Rout",
-    "windows_results_bound_to_hash": true,
+    "windows_results_bound_to_hash": false,
     "birdtree_redistribution_rights": "maintainer_directly_confirmed_use_with_citation_and_credit;no_separate_published_terms_identified;not_an_independent_legal_opinion",
     "birdtree_rights_basis": {
       "maintainer_warranty": "Shinichi directly confirmed in this task that the trees may be used with citation and credit; recorded as the maintainer authorization and warranty for this package release.",
