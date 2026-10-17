@@ -14,4 +14,6 @@ Before trusting results, download all three `frozen-c2e768ad-*` artifacts from t
 
 These checks do not close the deployed website, final post-merge freeze, rights/consent, or submission gates. No submission or merge is performed by this workflow.
 
-The manual-tool preflight compiles a small T1/TS1 Courier and URL document and exercises V8 before checking. The prior Windows failure named missing `pcrr8t.tfm` and `pcrr8c.tfm`; Linux reported missing Tidy and V8. These are runner repairs. The package archive stays unchanged, and the complete PDF/HTML manual checks remain enabled.
+The manual-tool preflight compiles a small indexed T1/TS1 Courier and URL document through R's own PDF tools and exercises V8 before checking. The prior Windows failure named missing `pcrr8t.tfm` and `pcrr8c.tfm`; Linux reported missing Tidy and V8. These are runner repairs. The package archive stays unchanged, and the complete PDF/HTML manual checks remain enabled.
+
+The index preflight records initial command paths and a real makeindex probe. It installs makeindex only when its executable is absent, retains the failed initial probe, and requires a nonempty index plus a successfully compiled indexed PDF before the full package check. A present but failing executable stops the preflight for diagnosis.
