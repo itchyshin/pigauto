@@ -48,7 +48,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y ghostscript libgdal-dev libgeos-dev libglpk-dev libproj-dev qpdf
+          sudo apt-get install -y ghostscript libgdal-dev libgeos-dev libglpk-dev libproj-dev libnode-dev qpdf tidy
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.r }}
@@ -62,7 +62,13 @@ jobs:
         with:
           working-directory: frozen-deps
           dependencies: '"all"'
+          extra-packages: |
+            any::V8
+            any::tinytex
           cache-version: frozen-c2e768ad
+      - name: Install and verify manual-check tools
+        shell: Rscript {0}
+        run: source('script/cran-0.11-platform/manual-tools.R', echo = TRUE)
       - name: Install and exercise the CPU torch backend
         shell: Rscript {0}
         run: |
