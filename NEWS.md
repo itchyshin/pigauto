@@ -2,9 +2,12 @@
 
 ## Example portability
 
-The `compare_methods()` example now checks that the optional torch and Lantern
-runtime can create a tensor before fitting the GNN. It reports a skip when the
-runtime is unavailable, while `compare_methods()` keeps its documented
+The `plot.pigauto_fit()` example now follows the package default and fits without
+the optional GNN runtime, while still demonstrating the gate and conformal plots.
+
+The `compare_methods()` example now checks that torch and its Lantern runtime
+can create a tensor before fitting the GNN. It reports a skip when the runtime
+is unavailable, while `compare_methods()` keeps its documented
 `gnn = TRUE` default.
 
 ## BirdTree example and retrieval guidance

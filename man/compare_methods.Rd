@@ -57,8 +57,8 @@ For each seed the function:
 }
 
 The default comparison trains the optional torch GNN. The example
-checks that torch and its Lantern runtime are usable before fitting; it
-reports a skip when that runtime is unavailable.
+checks that torch can create a tensor before fitting; it reports a skip
+when the Lantern runtime is unavailable.
 }
 \examples{
 \donttest{

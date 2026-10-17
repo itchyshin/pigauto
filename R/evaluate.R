@@ -519,8 +519,8 @@ eval_test_cells_legacy <- function(pred_latent, truth_latent,
 #' @return A \code{data.frame} with columns: \code{method}, \code{trait},
 #'   \code{type}, \code{metric}, \code{value}, \code{rep}.
 #' @details The default comparison trains the optional torch GNN. The example
-#'   checks that torch and its Lantern runtime are usable before fitting; it
-#'   reports a skip when that runtime is unavailable.
+#'   checks that torch can create a tensor before fitting; it reports a skip
+#'   when the Lantern runtime is unavailable.
 #' @examples
 #' \donttest{
 #' data(avonet300, tree300)
