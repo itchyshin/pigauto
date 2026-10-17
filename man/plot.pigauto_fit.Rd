@@ -40,10 +40,11 @@ traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
 rownames(traits) <- tree$tip.label
 data <- preprocess_traits(traits, tree)
 splits <- make_missing_splits(data$X_scaled, trait_map = data$trait_map)
+# The package default disables the optional GNN, so this example works
+# without torch or its Lantern runtime.
 fit <- fit_pigauto(data, tree, splits = splits, epochs = 5L,
-                   eval_every = 1L, verbose = FALSE, gnn = TRUE)
+                   eval_every = 1L, verbose = FALSE, gnn = FALSE)
 plot(fit)
-plot(fit, type = "history")
 plot(fit, type = "gates")
 plot(fit, type = "conformal")
 }

@@ -55,6 +55,10 @@ For each seed the function:
 \item Evaluates both methods on the test split.
 \item Collects results into a single data.frame.
 }
+
+The default comparison trains the optional torch GNN. The example
+checks that torch can create a tensor before fitting; it reports a skip
+when the Lantern runtime is unavailable.
 }
 \examples{
 \donttest{
@@ -63,8 +67,18 @@ tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
 traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
                      c("Mass", "Wing.Length"), drop = FALSE]
 rownames(traits) <- tree$tip.label
-cmp <- compare_methods(preprocess_traits(traits, tree), tree, seeds = 1L,
-                       epochs = 5L, verbose = FALSE)
-aggregate(value ~ method + trait + metric, data = cmp, FUN = mean)
+torch_ready <- requireNamespace("torch", quietly = TRUE) &&
+  isTRUE(tryCatch(torch::torch_is_installed(), error = function(e) FALSE)) &&
+  isTRUE(tryCatch({
+    probe <- torch::torch_tensor(1)
+    as.numeric(probe$item()) == 1
+  }, error = function(e) FALSE))
+if (torch_ready) {
+  cmp <- compare_methods(preprocess_traits(traits, tree), tree, seeds = 1L,
+                         epochs = 5L, verbose = FALSE, gnn = TRUE)
+  aggregate(value ~ method + trait + metric, data = cmp, FUN = mean)
+} else {
+  message("Skipping GNN comparison: install torch and its Lantern runtime.")
+}
 }
 }
