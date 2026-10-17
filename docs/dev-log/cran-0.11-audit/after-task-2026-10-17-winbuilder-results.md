@@ -25,6 +25,7 @@ Kept `platform-clean` unmet because the release plan requires checksum-bound pla
 - `git diff --check`: passed.
 - `python3 -m json.tool docs/dev-log/cran-0.11-audit/release-ledger.json`: passed.
 - `node /Users/z3437171/.codex/skills/unlazy/scripts/gate-check.mjs --status docs/dev-log/cran-0.11-audit/GATES.md`: 11 gates; G8 and G9 remain unmet. Status mode ran no checks.
+- `Rscript /Users/z3437171/shinichi-brain/tools/check-after-task.R <absolute report path>`: structural check passed; its embedded acceptance gate then reported five unmet `imputation-sim` leaf gates, which are outside this evidence slice. The closeout compiler could not generate into this worktree because it hard-codes the brain vault as its output root, outside writable roots.
 
 ## 6. Tests of the Tests
 
