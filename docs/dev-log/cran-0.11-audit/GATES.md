@@ -1,5 +1,11 @@
 # Gates: pigauto CRAN 0.11 audit
 
+## Current correction, 2026-10-17
+
+The current artifact and gate record are corrected in [the public c2e768ad correction receipt](provenance/current-artifact-c2e768ad-correction-2026-10-17.md). That receipt supersedes inconsistent current-state fields below and in the JSON ledger. Use source commit 9a457eb6b3363d413dbc502de88ff5bc602ed98a and tarball SHA-256 c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2 as the current candidate. Highest proven rung is tarball-clean; platform-clean remains unproven under the exact artifact gate. Gate count: 5 met (G0-G4), 4 unmet (G5 pixel review, G6 deployed site, G7 post-merge freeze, G8 independent closure), 0 abandoned. The Windows result is from source extracted from the byte-identical uploaded object and rebuilt, not execution of the original compressed archive in place. Current PR checks are pending. Overall NOT READY.
+
+
+
 ## Frozen artifact c2e768ad and current-source completion refresh, 2026-10-17
 
 This section supersedes the preceding current-artifact checkpoint. The frozen `pigauto_0.11.0.tar.gz` was built from clean source commit `9a457eb6b3363d413dbc502de88ff5bc602ed98a`; SHA-256 is `c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2`, size 5,136,713 bytes, 250 archive entries, and inventory SHA-256 `d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d`. The retained source-binding receipt compares the package archive to this exact source commit.
