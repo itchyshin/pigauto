@@ -518,6 +518,9 @@ eval_test_cells_legacy <- function(pred_latent, truth_latent,
 #' @param ... additional arguments passed to \code{\link{fit_pigauto}}.
 #' @return A \code{data.frame} with columns: \code{method}, \code{trait},
 #'   \code{type}, \code{metric}, \code{value}, \code{rep}.
+#' @details The default comparison trains the optional torch GNN. The example
+#'   checks that torch and its Lantern runtime are usable before fitting; it
+#'   reports a skip when that runtime is unavailable.
 #' @examples
 #' \donttest{
 #' data(avonet300, tree300)
@@ -525,9 +528,19 @@ eval_test_cells_legacy <- function(pred_latent, truth_latent,
 #' traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
 #'                      c("Mass", "Wing.Length"), drop = FALSE]
 #' rownames(traits) <- tree$tip.label
-#' cmp <- compare_methods(preprocess_traits(traits, tree), tree, seeds = 1L,
-#'                        epochs = 5L, verbose = FALSE)
-#' aggregate(value ~ method + trait + metric, data = cmp, FUN = mean)
+#' torch_ready <- requireNamespace("torch", quietly = TRUE) &&
+#'   isTRUE(tryCatch(torch::torch_is_installed(), error = function(e) FALSE)) &&
+#'   isTRUE(tryCatch({
+#'     probe <- torch::torch_tensor(1)
+#'     as.numeric(probe$item()) == 1
+#'   }, error = function(e) FALSE))
+#' if (torch_ready) {
+#'   cmp <- compare_methods(preprocess_traits(traits, tree), tree, seeds = 1L,
+#'                          epochs = 5L, verbose = FALSE, gnn = TRUE)
+#'   aggregate(value ~ method + trait + metric, data = cmp, FUN = mean)
+#' } else {
+#'   message("Skipping GNN comparison: install torch and its Lantern runtime.")
+#' }
 #' }
 #' @export
 compare_methods <- function(data, tree, splits = NULL, seeds = NULL,

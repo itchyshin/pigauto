@@ -1,5 +1,12 @@
 # pigauto 0.11.0
 
+## Example portability
+
+The `compare_methods()` example now checks that the optional torch and Lantern
+runtime can create a tensor before fitting the GNN. It reports a skip when the
+runtime is unavailable, while `compare_methods()` keeps its documented
+`gnn = TRUE` default.
+
 ## BirdTree example and retrieval guidance
 
 The README and tutorials now identify `tree300` as a posterior sample tree and
