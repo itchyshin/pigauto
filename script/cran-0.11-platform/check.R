@@ -9,7 +9,7 @@ desc <- read.dcf("frozen-deps/DESCRIPTION")
 fields <- intersect(c("Depends", "Imports", "LinkingTo", "Suggests"), colnames(desc))
 required <- trimws(unlist(strsplit(paste(desc[1, fields], collapse = ","), ",")))
 required <- unique(sub("[[:space:]]*\\(.*", "", required))
-required <- setdiff(required, "R")
+required <- setdiff(required, c("R", ""))
 available <- vapply(required, requireNamespace, logical(1), quietly = TRUE)
 write.csv(data.frame(package = required, available = available),
           "platform-evidence/declared-dependencies.csv", row.names = FALSE)

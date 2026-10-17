@@ -53,6 +53,9 @@ jobs:
         with:
           r-version: ${{ matrix.r }}
           use-public-rspm: ${{ runner.os == 'Linux' }}
+      - name: Test dependency parsing against R's parser
+        shell: Rscript {0}
+        run: source('script/cran-0.11-platform/test-dependencies.R', echo = TRUE)
       - uses: r-lib/actions/setup-pandoc@v2
       - uses: r-lib/actions/setup-tinytex@v2
       - uses: r-lib/actions/setup-r-dependencies@v2
