@@ -390,5 +390,25 @@
       "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-tarball-inventory.txt"
     },
     "forbidden_entries": []
+  },
+  "validator_check": {
+    "checked_utc": "2026-10-17T20:32:02.098462+00:00",
+    "public_input_head": "3bba584c53dc2ff93f2dbed2812faa8fe64b4515",
+    "input_ledger_sha256": "7b0f512905b86d087fab09b422377256e1464be63a93e5816668beffa856811b",
+    "validator_commit_local_only": "1b5598eb05971ccde3020dd07295891b9b3caee8",
+    "validator_sha256": "81a897cc6c3351e36d082099663aa3255f780d698a377c35f201c1b41768572f",
+    "tests_sha256": "12542f73787a9f25d6eee0dd22145977cd22d004eb5dd996a77dc9894736acab",
+    "log_sha256": "fcfbde9ecfd80fc085e5ee5be9cf65b9827c5ca2105ad12715a6c969e34c950b",
+    "result": "READY FOR CLAIMED RUNG",
+    "status_claim": "tarball-clean",
+    "independent_review": "PASS after fixing rootless artifact regression; reviewed hashes match these snapshots",
+    "receipt": "docs/dev-log/cran-0.11-audit/provenance/validator-2026-10-17/README.md",
+    "does_not_close": [
+      "platform-clean",
+      "deployed-site verification",
+      "post-merge artifact freeze",
+      "final independent release closure",
+      "CRAN submission"
+    ]
   }
 }
