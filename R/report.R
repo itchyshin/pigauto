@@ -1,9 +1,11 @@
-#' Generate an HTML benchmark report from a pigauto fit
+#' Generate an HTML imputation report from a pigauto fit
 #'
 #' Produces an HTML file with interactive charts (loading Chart.js from its
-#' public CDN) comparing the GNN against the phylogenetic baseline. The report
-#' includes per-trait metrics, gate values, held-out diagnostic conformal
-#' coverage, and training history.
+#' public CDN). For fits created with the default \code{gnn = FALSE}, the
+#' report describes baseline-only imputation. For fits created with
+#' \code{gnn = TRUE}, it also compares the GNN against the phylogenetic
+#' baseline and includes training history. Per-trait metrics, gate values,
+#' and held-out diagnostic conformal coverage are included when available.
 #'
 #' @param fit A \code{pigauto_fit} object (or a \code{pigauto_result} from
 #'   \code{\link{impute}}).

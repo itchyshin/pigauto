@@ -2,7 +2,7 @@
 % Please edit documentation in R/report.R
 \name{pigauto_report}
 \alias{pigauto_report}
-\title{Generate an HTML benchmark report from a pigauto fit}
+\title{Generate an HTML imputation report from a pigauto fit}
 \usage{
 pigauto_report(
   fit,
@@ -38,9 +38,11 @@ The output path (invisibly).
 }
 \description{
 Produces an HTML file with interactive charts (loading Chart.js from its
-public CDN) comparing the GNN against the phylogenetic baseline. The report
-includes per-trait metrics, gate values, held-out diagnostic conformal
-coverage, and training history.
+public CDN). For fits created with the default \code{gnn = FALSE}, the
+report describes baseline-only imputation. For fits created with
+\code{gnn = TRUE}, it also compares the GNN against the phylogenetic
+baseline and includes training history. Per-trait metrics, gate values,
+and held-out diagnostic conformal coverage are included when available.
 }
 \examples{
 \donttest{
