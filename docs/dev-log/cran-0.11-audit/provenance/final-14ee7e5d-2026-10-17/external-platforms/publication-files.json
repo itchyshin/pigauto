@@ -1,0 +1,650 @@
+{
+  "README.md": {
+    "sha256": "1985e3cae1074b1ebbdd0a708c638a55b9606f650d9f00e7d28b0c6a6f41de97",
+    "size_bytes": 1719
+  },
+  "artifact-FINAL.json": {
+    "sha256": "7b5ad22788112add8afb42351f7ecb0ed5d4fd6a475bf6623222b9684bfb656b",
+    "size_bytes": 10230
+  },
+  "attempt1-packaging-failure.txt": {
+    "sha256": "21d297233e0920e291d8d0db13108c9c9b76d58c2892726a6b464e3494de6f81",
+    "size_bytes": 278
+  },
+  "bundle.py": {
+    "sha256": "742dd6dec3de4adf77fc21b0b38833ecf7aa58b5cb778a5b652d18ee8a775c1e",
+    "size_bytes": 13966
+  },
+  "manifests/ubuntu-latest-release.json": {
+    "sha256": "90665fae7ee52eebe920ab1e64fb8d8bc849754a159ade9a013be550065ed634",
+    "size_bytes": 15222
+  },
+  "manifests/windows-latest-devel.json": {
+    "sha256": "9c5ff7d5210e088d314abf6af224972e17c9e33a54a0b9e261c6c07b065e8128",
+    "size_bytes": 15177
+  },
+  "manifests/windows-latest-release.json": {
+    "sha256": "e030030e48a4b59e290d4c796ba0afe6d47377f590062de60e7287eef8e4f93b",
+    "size_bytes": 15265
+  },
+  "metadata-sources.json": {
+    "sha256": "9ceb296fd49b41a8e4de32301e6aa6fd9982fe35033eb078d6533895ce005011",
+    "size_bytes": 375
+  },
+  "monitor-manifest.json": {
+    "sha256": "1302f31830dba99fd5befd4c6a91a46c6cf15ce9536010dc63d747fa615bb528",
+    "size_bytes": 1895
+  },
+  "monitor-originals/00-closure-receipt.txt": {
+    "sha256": "39835439bf5bd4f6827aaac622c44cea42093433c5838da5b198ec30b6b5e7af",
+    "size_bytes": 2647
+  },
+  "monitor-originals/01-verify-results.out": {
+    "sha256": "7633f58fbbdefb3c225bc07b890b9d835863814ab819c3189e842a90338faa7f",
+    "size_bytes": 2488
+  },
+  "monitor-originals/02-root-final-direct-reverify.log": {
+    "sha256": "7633f58fbbdefb3c225bc07b890b9d835863814ab819c3189e842a90338faa7f",
+    "size_bytes": 2488
+  },
+  "monitor-originals/03-run.json": {
+    "sha256": "f6e8cb4322870456df275619f20d8c6b6f7556f013f9f75272b55a382a526120",
+    "size_bytes": 12780
+  },
+  "monitor-originals/04-jobs.json": {
+    "sha256": "a46ca11f201823b36dfe9a5f131b94d32a0f2d1ea01c308c336fe8c7b3f0c601",
+    "size_bytes": 13480
+  },
+  "monitor-originals/05-artifacts.json": {
+    "sha256": "8542b3b1047718d1aa481323c3b4d4df49134e597204abe382cffd5f1679f223",
+    "size_bytes": 2209
+  },
+  "monitor-originals/06-snapshot.json": {
+    "sha256": "e0224e37871302d6f19978da3348de9b742157615ad87bdd548db5de2be70410",
+    "size_bytes": 202
+  },
+  "packaging-execution.json": {
+    "sha256": "8c6187179f0902c8969fd100cc1ec8626fc255863c166e61ae46eab32288a28a",
+    "size_bytes": 1120
+  },
+  "platform-summary.json": {
+    "sha256": "d379f4c2f82624ea051bfc845fcd43630b6a4595c5916faa19577d024cacc1d0",
+    "size_bytes": 5523
+  },
+  "publication-result.json": {
+    "sha256": "5c2f5205148f1808f34a96d3eb1b7a5b075fcbd8a4f59881bee64b0a8d5f9e1c",
+    "size_bytes": 1821
+  },
+  "raw/ubuntu-latest-release.evidence.tar.gz": {
+    "sha256": "1a10dc086e114da76bf8423fd1709961a39aeeff956df2ee322adfbba865aac7",
+    "size_bytes": 2060387
+  },
+  "raw/windows-latest-devel.evidence.tar.gz": {
+    "sha256": "f27c1c0ca4b4d8da0a2696a99f8e569c5b4b2e84e965fd2218a88e49b828241f",
+    "size_bytes": 2055577
+  },
+  "raw/windows-latest-release.evidence.tar.gz": {
+    "sha256": "a22cb98b47c2d12a9ea0b5b5d510a1de01cde8db3407ca4f45b6c8cbb173bab9",
+    "size_bytes": 2055550
+  },
+  "readback-result.json": {
+    "sha256": "3a0801bf87a74317ef99f3843a14ddf11755b2208937e1c752a36b05701c4693",
+    "size_bytes": 538
+  },
+  "readback.py": {
+    "sha256": "148f9d31337069c07bdec8d0d44474170199ca2cb6027c7f573e69ba8bedd93b",
+    "size_bytes": 3308
+  },
+  "timing-correction-receipt.json": {
+    "sha256": "a9e7bab2ad494f0349a4b50f0b697552ab642118f7200b1cdfb91f9efd1c024e",
+    "size_bytes": 1687
+  },
+  "timing-parser-controls.json": {
+    "sha256": "764655d14f548ddb79b33513de5f1ce281a352d3493ab7f49e8fb1928f6b4204",
+    "size_bytes": 1638
+  },
+  "timing-parser-controls.py": {
+    "sha256": "f8b09c03a64a9ebb04ce4431c411915d2728d89c0ec8c89784a6e9da121fd871",
+    "size_bytes": 2437
+  },
+  "timing-parser-independent-reference.json": {
+    "sha256": "9829f33514b3d0ea29a2b277b6a1895796c312b401775d91881d84a84fca8c39",
+    "size_bytes": 2827
+  },
+  "views-manifest.json": {
+    "sha256": "8b745c95de98db7896125a60ef7f1c4e2d0bd0c595ccfe2726e9af37c9f7bdf9",
+    "size_bytes": 48139
+  },
+  "views/ubuntu-latest-release/frozen-check/pigauto.Rcheck/00check.log": {
+    "sha256": "a835496d417cb72f416f5113153b02fa5022a0db1d1bdd8ea0b05112be2c9135",
+    "size_bytes": 3640
+  },
+  "views/ubuntu-latest-release/frozen-check/pigauto.Rcheck/00install.out": {
+    "sha256": "7f8a73b86b7d03565ff3003762e097a22aabf7fce7f9737a57df3161adc95993",
+    "size_bytes": 579
+  },
+  "views/ubuntu-latest-release/frozen-check/pigauto.Rcheck/Rdlatex.log": {
+    "sha256": "7fa34fd750fbb4cfdf1e98873e120e8852ab20a1b83c1b7e728f2f3167c85a99",
+    "size_bytes": 129451
+  },
+  "views/ubuntu-latest-release/frozen-check/pigauto.Rcheck/build_vignettes.log": {
+    "sha256": "a43f66a25ce23a4c37eebceeff62b0973e1bee67f277ae119e452a608039c2ff",
+    "size_bytes": 664
+  },
+  "views/ubuntu-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.Rout": {
+    "sha256": "f12854c3a98af4b34d3fa1de9ef8f29381c5d512c133bcec19e8826926d4567e",
+    "size_bytes": 63089
+  },
+  "views/ubuntu-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.timings": {
+    "sha256": "3085a7c010896d22e7c2fdb51c032a36e44606024f80e2e1199c8c12a44ec725",
+    "size_bytes": 1302
+  },
+  "views/ubuntu-latest-release/frozen-check/pigauto.Rcheck/pigauto-manual.log": {
+    "sha256": "fa188cfb9f602e6072575ff8b87255e90fdb141694c289fefe1d2d5149c24583",
+    "size_bytes": 57640
+  },
+  "views/ubuntu-latest-release/frozen-check/pigauto.Rcheck/tests/testthat.Rout": {
+    "sha256": "a9f6d7fca0552ec3be29e957b34de4e924820ce8a7ff568abfab41535a955c25",
+    "size_bytes": 13705
+  },
+  "views/ubuntu-latest-release/platform-evidence/check-command.txt": {
+    "sha256": "0abc7069e31ff3fea631129a75557932aba26c06adadc19471c2c4d7cd35ea5c",
+    "size_bytes": 209
+  },
+  "views/ubuntu-latest-release/platform-evidence/check-environment.txt": {
+    "sha256": "69f8ec3efe18db937896b33a5841d24da1acfedc1045687760edb8bbc767841a",
+    "size_bytes": 472
+  },
+  "views/ubuntu-latest-release/platform-evidence/check-exit.txt": {
+    "sha256": "73712eb6d550de0214c2604b626c4b0bacc1ef5b9b9ff333f8942f7ebd54dc8b",
+    "size_bytes": 40
+  },
+  "views/ubuntu-latest-release/platform-evidence/declared-dependencies.csv": {
+    "sha256": "da620bb55999537b678b44cc61708a167d54583d3bfd05e45d626cf63567a44b",
+    "size_bytes": 437
+  },
+  "views/ubuntu-latest-release/platform-evidence/identity-download.json": {
+    "sha256": "06c5e7f583bc4e8c72a5488acaa6a5e095978af2052f1e2fa2d3fe88da1b53cd",
+    "size_bytes": 556
+  },
+  "views/ubuntu-latest-release/platform-evidence/identity-post.json": {
+    "sha256": "bb847831096aa2dd98276341d02c91691b56283988885920dc2a7aeef684064b",
+    "size_bytes": 552
+  },
+  "views/ubuntu-latest-release/platform-evidence/identity-pre.json": {
+    "sha256": "750181f715ae5ba9a58e5c2ac58ee97b5fc9695857a8283c8fe44c7b8772cdf9",
+    "size_bytes": 551
+  },
+  "views/ubuntu-latest-release/platform-evidence/index-after-exit.txt": {
+    "sha256": "a98b6e5c561734573064072eff35d807aef8b295e2c67f6eb6b00b96fe421322",
+    "size_bytes": 66
+  },
+  "views/ubuntu-latest-release/platform-evidence/index-after-stderr.txt": {
+    "sha256": "39123455fc7865cd8d21b0a1d3ad139dec733d11d2e1cd0fc551bf5b30dc1912",
+    "size_bytes": 345
+  },
+  "views/ubuntu-latest-release/platform-evidence/index-after-stdout.txt": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size_bytes": 0
+  },
+  "views/ubuntu-latest-release/platform-evidence/index-before-exit.txt": {
+    "sha256": "80e184c8130c77360957a79a32bf613c08f4869adee944323fdb32bb231ad673",
+    "size_bytes": 9
+  },
+  "views/ubuntu-latest-release/platform-evidence/index-before-stderr.txt": {
+    "sha256": "37425d4ba011c14015648dc46cde3ec89eecadab72e3e8df9b606eb9939fb071",
+    "size_bytes": 28
+  },
+  "views/ubuntu-latest-release/platform-evidence/index-before-stdout.txt": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size_bytes": 0
+  },
+  "views/ubuntu-latest-release/platform-evidence/index-tools-before.txt": {
+    "sha256": "64936188840418908d1034ec39f4a6eef50a9aa6fc7e8632110ff42b4d706bc8",
+    "size_bytes": 552
+  },
+  "views/ubuntu-latest-release/platform-evidence/installed-packages.csv": {
+    "sha256": "10dc14422afb69fdf328551faa5b1d9f5df706771545cb177377e27dc17fd96e",
+    "size_bytes": 10812
+  },
+  "views/ubuntu-latest-release/platform-evidence/manual-tools.txt": {
+    "sha256": "90aaf3f34d510d9356bb8b0f0bfc6b4d6b8ae92a4e638933359209503dcc98a2",
+    "size_bytes": 303
+  },
+  "views/ubuntu-latest-release/platform-evidence/session-info.txt": {
+    "sha256": "fc826d12f3aff27a7396b6f71273381e829dba6579c416182e78b3fb6a76bf8b",
+    "size_bytes": 4287
+  },
+  "views/ubuntu-latest-release/platform-evidence/warning-details.csv": {
+    "sha256": "8b6709f11d5925be9b0abd7e5adf143a2ebd77a431d10204ba7e8c18b57a2fc2",
+    "size_bytes": 145174
+  },
+  "views/ubuntu-latest-release/platform-evidence/warning-replay.json": {
+    "sha256": "539fc780dfa846a8bebb80ee6c6f6120ef11baf322fc4d2eb59564ccc8c659fa",
+    "size_bytes": 515
+  },
+  "views/ubuntu-latest-release/platform-evidence/warning-session.txt": {
+    "sha256": "02ef84351209cb7636f59d51fd78bac9dcdd3b017dba50974d504d78a96af51b",
+    "size_bytes": 3801
+  },
+  "views/windows-latest-devel/frozen-check/pigauto.Rcheck/00check.log": {
+    "sha256": "c771746a9c994cc033e3ce44721a3f8dfd5e6a036ab224aa4865bf2c75427784",
+    "size_bytes": 3454
+  },
+  "views/windows-latest-devel/frozen-check/pigauto.Rcheck/00check.log.raw.gz": {
+    "sha256": "a253e1138290130357f034f891a7f1e3cbe2bd153a0f5b819d590c432130a027",
+    "size_bytes": 1169
+  },
+  "views/windows-latest-devel/frozen-check/pigauto.Rcheck/00install.out": {
+    "sha256": "4c044d63dfbea31a8ce02b598eb99ce08de4992bf9352e04e098627219bc84a9",
+    "size_bytes": 567
+  },
+  "views/windows-latest-devel/frozen-check/pigauto.Rcheck/00install.out.raw.gz": {
+    "sha256": "9f0e9720fee1ed1e81916339ecb5227de51399cc0dd4fae18206e7b8c73ae018",
+    "size_bytes": 289
+  },
+  "views/windows-latest-devel/frozen-check/pigauto.Rcheck/Rdlatex.log": {
+    "sha256": "271267f73aa9c4ed5f27a50dc4b5ae0666b8c54438f56b571f33dd8675b4d351",
+    "size_bytes": 134539
+  },
+  "views/windows-latest-devel/frozen-check/pigauto.Rcheck/Rdlatex.log.raw.gz": {
+    "sha256": "4eb3e8b351c413da60fa47f49d35492467461ad8b88aea636bd055467f2c6147",
+    "size_bytes": 29482
+  },
+  "views/windows-latest-devel/frozen-check/pigauto.Rcheck/build_vignettes.log": {
+    "sha256": "5a6dc2261f5516a3177ac0bde1f80cfa41d4a544d83e0d9df8f93fedd15de0c4",
+    "size_bytes": 616
+  },
+  "views/windows-latest-devel/frozen-check/pigauto.Rcheck/build_vignettes.log.raw.gz": {
+    "sha256": "5b5ac702e599993a24d08824c9095656f70f97ec05f1af60a0416e34b4cf3e18",
+    "size_bytes": 174
+  },
+  "views/windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-Ex.Rout": {
+    "sha256": "fda83ba57014a1c18baeb7099b1d98846006bd0dfc8ff7b4fc58558579a526ce",
+    "size_bytes": 63291
+  },
+  "views/windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-Ex.Rout.raw.gz": {
+    "sha256": "a496c484769fbe1ed0c71ad46d80c5bd7ae1b45553b1c580ab773bc126dc20bc",
+    "size_bytes": 9817
+  },
+  "views/windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-Ex.timings": {
+    "sha256": "a4fa561c9d6bbf6f21f4a11002c04c46d8d9b0cde8afef55c5c8e1fe88528ac4",
+    "size_bytes": 1170
+  },
+  "views/windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-Ex.timings.raw.gz": {
+    "sha256": "c1c97f8788770bf7129e325d0399c34054865eba1246ef659d310b970f66f49b",
+    "size_bytes": 497
+  },
+  "views/windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-manual.log": {
+    "sha256": "83f933b1c0c6f54bfbf8a234d3046a5b8c1eb9cb56ce6cc51b7a0e969c89df35",
+    "size_bytes": 59182
+  },
+  "views/windows-latest-devel/frozen-check/pigauto.Rcheck/tests/testthat.Rout": {
+    "sha256": "55dae885777d9841f2757499fb29457f92553a582a2302048bb3fe5e92cebf80",
+    "size_bytes": 13842
+  },
+  "views/windows-latest-devel/frozen-check/pigauto.Rcheck/tests/testthat.Rout.raw.gz": {
+    "sha256": "964551ffbb58b3af8100a486d1688fff7c0534b4eb4a7512f30f47d79b73404d",
+    "size_bytes": 3094
+  },
+  "views/windows-latest-devel/platform-evidence/check-command.txt": {
+    "sha256": "63fd294dedb4a28288da5232faf9920a6eed2b02c0d059a1363b40e9309e63d5",
+    "size_bytes": 190
+  },
+  "views/windows-latest-devel/platform-evidence/check-command.txt.raw.gz": {
+    "sha256": "35f91b523c31d5350ec62f957e10b4255af62d469f5077e6ef8ec63f3dabe205",
+    "size_bytes": 172
+  },
+  "views/windows-latest-devel/platform-evidence/check-environment.txt": {
+    "sha256": "e0d3bbf432e5cf205da703176490b616a3752f60f03606edb8a0834bffe5dd0b",
+    "size_bytes": 431
+  },
+  "views/windows-latest-devel/platform-evidence/check-environment.txt.raw.gz": {
+    "sha256": "f1721274595cf806ffd5ecf094de782399c3622e3294aa59c7f5a1cb85e24a17",
+    "size_bytes": 302
+  },
+  "views/windows-latest-devel/platform-evidence/check-exit.txt": {
+    "sha256": "4c9e14c33cb386c936b7b70e18f15bc44ae87bfc5f7be0056e2a99befd88af7b",
+    "size_bytes": 40
+  },
+  "views/windows-latest-devel/platform-evidence/check-exit.txt.raw.gz": {
+    "sha256": "098046bcc3a51c1927af3d6d48ef5e5bc01d67c3f3e7ffd11f199dfd92b7e543",
+    "size_bytes": 62
+  },
+  "views/windows-latest-devel/platform-evidence/declared-dependencies.csv": {
+    "sha256": "da620bb55999537b678b44cc61708a167d54583d3bfd05e45d626cf63567a44b",
+    "size_bytes": 437
+  },
+  "views/windows-latest-devel/platform-evidence/declared-dependencies.csv.raw.gz": {
+    "sha256": "e653bfa758a300728e03061672045b9ff9c3091a7a426b3571d6ebf98dda18f2",
+    "size_bytes": 218
+  },
+  "views/windows-latest-devel/platform-evidence/identity-download.json": {
+    "sha256": "000ccdf7d9dc84e84c69bc6d5c5565dea597dc74d788ef649ff4cdf78e4b0892",
+    "size_bytes": 536
+  },
+  "views/windows-latest-devel/platform-evidence/identity-download.json.raw.gz": {
+    "sha256": "d846bfb8344f6836a407f114d2d48bffc4eda7b641d9da2ba5569175363f7c33",
+    "size_bytes": 365
+  },
+  "views/windows-latest-devel/platform-evidence/identity-post.json": {
+    "sha256": "2e658f11b35fa0a69c78605974f49b28799a9b2e8ac1f239f858f18b8c3f9584",
+    "size_bytes": 532
+  },
+  "views/windows-latest-devel/platform-evidence/identity-post.json.raw.gz": {
+    "sha256": "274c6842e077673c6439cbdfc4bbede2cd9795e32d4b5781b8f5e6b849cdc11e",
+    "size_bytes": 362
+  },
+  "views/windows-latest-devel/platform-evidence/identity-pre.json": {
+    "sha256": "2ce6f0e23142451e424e73006ad300b46658ebdd0e1a2ab99e891eca2063a792",
+    "size_bytes": 531
+  },
+  "views/windows-latest-devel/platform-evidence/identity-pre.json.raw.gz": {
+    "sha256": "cd627537e50aa1bf5de86abfc43aef743ab327c08b0da70cd980b6107a76254f",
+    "size_bytes": 361
+  },
+  "views/windows-latest-devel/platform-evidence/index-after-exit.txt": {
+    "sha256": "5776e2627054ec943d3afc238987fac59ac21af3629db4760bb910e11a92593b",
+    "size_bytes": 84
+  },
+  "views/windows-latest-devel/platform-evidence/index-after-exit.txt.raw.gz": {
+    "sha256": "d362236e78eb47cbc93ecb6c3221aab76f704e94986c6312cbcc083dcba63ddf",
+    "size_bytes": 105
+  },
+  "views/windows-latest-devel/platform-evidence/index-after-stderr.txt": {
+    "sha256": "39123455fc7865cd8d21b0a1d3ad139dec733d11d2e1cd0fc551bf5b30dc1912",
+    "size_bytes": 345
+  },
+  "views/windows-latest-devel/platform-evidence/index-after-stderr.txt.raw.gz": {
+    "sha256": "6b7e2eee6c824b6216a58b8841def60b156af8c7dadc97e82896551108f5e5fc",
+    "size_bytes": 227
+  },
+  "views/windows-latest-devel/platform-evidence/index-after-stdout.txt": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size_bytes": 0
+  },
+  "views/windows-latest-devel/platform-evidence/index-before-exit.txt": {
+    "sha256": "80e184c8130c77360957a79a32bf613c08f4869adee944323fdb32bb231ad673",
+    "size_bytes": 9
+  },
+  "views/windows-latest-devel/platform-evidence/index-before-exit.txt.raw.gz": {
+    "sha256": "49f36775772aff87d41fd51cedb642b532d954f68f7c8c155d60f0aa82a5e366",
+    "size_bytes": 30
+  },
+  "views/windows-latest-devel/platform-evidence/index-before-stderr.txt": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size_bytes": 0
+  },
+  "views/windows-latest-devel/platform-evidence/index-before-stdout.txt": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size_bytes": 0
+  },
+  "views/windows-latest-devel/platform-evidence/index-tools-before.txt": {
+    "sha256": "f2f40a3f74e8e273596bd2a5c3ae8b2b61d37184a38c7918d8b5c175a3ac8103",
+    "size_bytes": 738
+  },
+  "views/windows-latest-devel/platform-evidence/index-tools-before.txt.raw.gz": {
+    "sha256": "667e14b609e9e76d4669c4cf152f27d42ef112cf61c2a2015d6003c8be1ec22b",
+    "size_bytes": 198
+  },
+  "views/windows-latest-devel/platform-evidence/installed-packages.csv": {
+    "sha256": "48f3fc96e86621503d8289768bdc23411a150b2e550c139a594f1f4e215611c9",
+    "size_bytes": 8091
+  },
+  "views/windows-latest-devel/platform-evidence/installed-packages.csv.raw.gz": {
+    "sha256": "c7c2203252ab7463787184f7e4b5f5d1de9b59d7c2798a1856c6b2ab6dadbec9",
+    "size_bytes": 1877
+  },
+  "views/windows-latest-devel/platform-evidence/manual-tools.txt": {
+    "sha256": "e50d31e5395d0e34f6a78b666eb98727a85437705594c15b52dbf17f4185bbbb",
+    "size_bytes": 345
+  },
+  "views/windows-latest-devel/platform-evidence/manual-tools.txt.raw.gz": {
+    "sha256": "a1d732a6816ec501ff5ccea8c6d300f72db4b5fcaac482840b5563044b863e6f",
+    "size_bytes": 187
+  },
+  "views/windows-latest-devel/platform-evidence/session-info.txt": {
+    "sha256": "8bee79dee9f3d03d87a77cb457d7564de0d23a6e6810799770c11d6f8c135fd5",
+    "size_bytes": 4085
+  },
+  "views/windows-latest-devel/platform-evidence/session-info.txt.raw.gz": {
+    "sha256": "1b4b6752ac7f6c46999aeee27d0de916913d7b4b0cbf7f3d8e394b91f0ae38b3",
+    "size_bytes": 1760
+  },
+  "views/windows-latest-devel/platform-evidence/warning-details.csv": {
+    "sha256": "8b6709f11d5925be9b0abd7e5adf143a2ebd77a431d10204ba7e8c18b57a2fc2",
+    "size_bytes": 145174
+  },
+  "views/windows-latest-devel/platform-evidence/warning-details.csv.raw.gz": {
+    "sha256": "91c9b220d7223d6fab8f5c34e50fb591af789c378f269ba2e711bb03056069d8",
+    "size_bytes": 8748
+  },
+  "views/windows-latest-devel/platform-evidence/warning-replay.json": {
+    "sha256": "89634649d72b67a65a59341fe11ce6766954eb47fc5ef9345026c695bd84d68f",
+    "size_bytes": 507
+  },
+  "views/windows-latest-devel/platform-evidence/warning-replay.json.raw.gz": {
+    "sha256": "7a68f661e51cabbf2746eb5bb255c5f3720e100c3ae8d49b4a19d0f9f2e5a799",
+    "size_bytes": 286
+  },
+  "views/windows-latest-devel/platform-evidence/warning-session.txt": {
+    "sha256": "79f615dffb60e1e2bc34c83a22256c69beb02b2bff8ea253849ec024d0b2f685",
+    "size_bytes": 3599
+  },
+  "views/windows-latest-devel/platform-evidence/warning-session.txt.raw.gz": {
+    "sha256": "d1030df73b809664d27b5bb545885482866f8372a22ffc09eeebfb700323d9f9",
+    "size_bytes": 1564
+  },
+  "views/windows-latest-release/frozen-check/pigauto.Rcheck/00check.log": {
+    "sha256": "ed6969241d3854f48fc3acdfde949707fcbcfec77280944d7e1e7312a1f4cd4d",
+    "size_bytes": 3433
+  },
+  "views/windows-latest-release/frozen-check/pigauto.Rcheck/00check.log.raw.gz": {
+    "sha256": "201fc12152d5ba28559c7c038f019c162e0c11fed01fbb9b490171f863764a22",
+    "size_bytes": 1159
+  },
+  "views/windows-latest-release/frozen-check/pigauto.Rcheck/00install.out": {
+    "sha256": "4c044d63dfbea31a8ce02b598eb99ce08de4992bf9352e04e098627219bc84a9",
+    "size_bytes": 567
+  },
+  "views/windows-latest-release/frozen-check/pigauto.Rcheck/00install.out.raw.gz": {
+    "sha256": "9f0e9720fee1ed1e81916339ecb5227de51399cc0dd4fae18206e7b8c73ae018",
+    "size_bytes": 289
+  },
+  "views/windows-latest-release/frozen-check/pigauto.Rcheck/Rdlatex.log": {
+    "sha256": "bc4e85ffbab8942c4d5b213f30ca15dfe772f70a8d7d371a129561f5508f8fb9",
+    "size_bytes": 134539
+  },
+  "views/windows-latest-release/frozen-check/pigauto.Rcheck/Rdlatex.log.raw.gz": {
+    "sha256": "7979d0a9f93f13ed455304c9add30c82ed2f5654c30bbad161487b45ba6e7ea6",
+    "size_bytes": 29483
+  },
+  "views/windows-latest-release/frozen-check/pigauto.Rcheck/build_vignettes.log": {
+    "sha256": "5a6dc2261f5516a3177ac0bde1f80cfa41d4a544d83e0d9df8f93fedd15de0c4",
+    "size_bytes": 616
+  },
+  "views/windows-latest-release/frozen-check/pigauto.Rcheck/build_vignettes.log.raw.gz": {
+    "sha256": "5b5ac702e599993a24d08824c9095656f70f97ec05f1af60a0416e34b4cf3e18",
+    "size_bytes": 174
+  },
+  "views/windows-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.Rout": {
+    "sha256": "fd13f3c9a120a1d45d6c7bb1c14deab162e594c4e17e613a7ccbeb99e9e2664f",
+    "size_bytes": 63259
+  },
+  "views/windows-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.Rout.raw.gz": {
+    "sha256": "226b75b6fa862cede9d0671bef5c77b6e5729ec2a8a2b5358b03903c904a0c70",
+    "size_bytes": 9796
+  },
+  "views/windows-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.timings": {
+    "sha256": "4362240bae875e2fba5d119bcca1a7d9472b346d86a389deee62c1a8918659fb",
+    "size_bytes": 1140
+  },
+  "views/windows-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.timings.raw.gz": {
+    "sha256": "00dda32d7e27526519e8d4eb9812892c8f9502d3eb646670201c03db529f14f0",
+    "size_bytes": 491
+  },
+  "views/windows-latest-release/frozen-check/pigauto.Rcheck/pigauto-manual.log": {
+    "sha256": "9d167fd36d727e9434f5fff24cfef58ab910f0cadb583456ddf04e04e4e4cc57",
+    "size_bytes": 59182
+  },
+  "views/windows-latest-release/frozen-check/pigauto.Rcheck/tests/testthat.Rout": {
+    "sha256": "b7f0159f60cf458dcc6a0af006a7153ce14273eaeb8539126698b52b0b742b04",
+    "size_bytes": 13809
+  },
+  "views/windows-latest-release/frozen-check/pigauto.Rcheck/tests/testthat.Rout.raw.gz": {
+    "sha256": "8eeeaa2e46297b43960d4211fd83bef8e206700644337efb9575bd8d8117806a",
+    "size_bytes": 3072
+  },
+  "views/windows-latest-release/platform-evidence/check-command.txt": {
+    "sha256": "63fd294dedb4a28288da5232faf9920a6eed2b02c0d059a1363b40e9309e63d5",
+    "size_bytes": 190
+  },
+  "views/windows-latest-release/platform-evidence/check-command.txt.raw.gz": {
+    "sha256": "35f91b523c31d5350ec62f957e10b4255af62d469f5077e6ef8ec63f3dabe205",
+    "size_bytes": 172
+  },
+  "views/windows-latest-release/platform-evidence/check-environment.txt": {
+    "sha256": "e0d3bbf432e5cf205da703176490b616a3752f60f03606edb8a0834bffe5dd0b",
+    "size_bytes": 431
+  },
+  "views/windows-latest-release/platform-evidence/check-environment.txt.raw.gz": {
+    "sha256": "f1721274595cf806ffd5ecf094de782399c3622e3294aa59c7f5a1cb85e24a17",
+    "size_bytes": 302
+  },
+  "views/windows-latest-release/platform-evidence/check-exit.txt": {
+    "sha256": "35cde01038394b48e2103d7bc857c4297dede565250ba95ed31ceba0cfbf302a",
+    "size_bytes": 40
+  },
+  "views/windows-latest-release/platform-evidence/check-exit.txt.raw.gz": {
+    "sha256": "b1768810e94b16a2ee2833a276d13d6d55f9534611bed62c3285f6c293267ff9",
+    "size_bytes": 62
+  },
+  "views/windows-latest-release/platform-evidence/declared-dependencies.csv": {
+    "sha256": "da620bb55999537b678b44cc61708a167d54583d3bfd05e45d626cf63567a44b",
+    "size_bytes": 437
+  },
+  "views/windows-latest-release/platform-evidence/declared-dependencies.csv.raw.gz": {
+    "sha256": "e653bfa758a300728e03061672045b9ff9c3091a7a426b3571d6ebf98dda18f2",
+    "size_bytes": 218
+  },
+  "views/windows-latest-release/platform-evidence/identity-download.json": {
+    "sha256": "000ccdf7d9dc84e84c69bc6d5c5565dea597dc74d788ef649ff4cdf78e4b0892",
+    "size_bytes": 536
+  },
+  "views/windows-latest-release/platform-evidence/identity-download.json.raw.gz": {
+    "sha256": "d846bfb8344f6836a407f114d2d48bffc4eda7b641d9da2ba5569175363f7c33",
+    "size_bytes": 365
+  },
+  "views/windows-latest-release/platform-evidence/identity-post.json": {
+    "sha256": "2e658f11b35fa0a69c78605974f49b28799a9b2e8ac1f239f858f18b8c3f9584",
+    "size_bytes": 532
+  },
+  "views/windows-latest-release/platform-evidence/identity-post.json.raw.gz": {
+    "sha256": "274c6842e077673c6439cbdfc4bbede2cd9795e32d4b5781b8f5e6b849cdc11e",
+    "size_bytes": 362
+  },
+  "views/windows-latest-release/platform-evidence/identity-pre.json": {
+    "sha256": "2ce6f0e23142451e424e73006ad300b46658ebdd0e1a2ab99e891eca2063a792",
+    "size_bytes": 531
+  },
+  "views/windows-latest-release/platform-evidence/identity-pre.json.raw.gz": {
+    "sha256": "cd627537e50aa1bf5de86abfc43aef743ab327c08b0da70cd980b6107a76254f",
+    "size_bytes": 361
+  },
+  "views/windows-latest-release/platform-evidence/index-after-exit.txt": {
+    "sha256": "5776e2627054ec943d3afc238987fac59ac21af3629db4760bb910e11a92593b",
+    "size_bytes": 84
+  },
+  "views/windows-latest-release/platform-evidence/index-after-exit.txt.raw.gz": {
+    "sha256": "d362236e78eb47cbc93ecb6c3221aab76f704e94986c6312cbcc083dcba63ddf",
+    "size_bytes": 105
+  },
+  "views/windows-latest-release/platform-evidence/index-after-stderr.txt": {
+    "sha256": "39123455fc7865cd8d21b0a1d3ad139dec733d11d2e1cd0fc551bf5b30dc1912",
+    "size_bytes": 345
+  },
+  "views/windows-latest-release/platform-evidence/index-after-stderr.txt.raw.gz": {
+    "sha256": "6b7e2eee6c824b6216a58b8841def60b156af8c7dadc97e82896551108f5e5fc",
+    "size_bytes": 227
+  },
+  "views/windows-latest-release/platform-evidence/index-after-stdout.txt": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size_bytes": 0
+  },
+  "views/windows-latest-release/platform-evidence/index-before-exit.txt": {
+    "sha256": "80e184c8130c77360957a79a32bf613c08f4869adee944323fdb32bb231ad673",
+    "size_bytes": 9
+  },
+  "views/windows-latest-release/platform-evidence/index-before-exit.txt.raw.gz": {
+    "sha256": "49f36775772aff87d41fd51cedb642b532d954f68f7c8c155d60f0aa82a5e366",
+    "size_bytes": 30
+  },
+  "views/windows-latest-release/platform-evidence/index-before-stderr.txt": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size_bytes": 0
+  },
+  "views/windows-latest-release/platform-evidence/index-before-stdout.txt": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size_bytes": 0
+  },
+  "views/windows-latest-release/platform-evidence/index-tools-before.txt": {
+    "sha256": "f2f40a3f74e8e273596bd2a5c3ae8b2b61d37184a38c7918d8b5c175a3ac8103",
+    "size_bytes": 738
+  },
+  "views/windows-latest-release/platform-evidence/index-tools-before.txt.raw.gz": {
+    "sha256": "667e14b609e9e76d4669c4cf152f27d42ef112cf61c2a2015d6003c8be1ec22b",
+    "size_bytes": 198
+  },
+  "views/windows-latest-release/platform-evidence/installed-packages.csv": {
+    "sha256": "48e98ffc325fdc637af5d7264d7134c639435723476180a520a0372e42fdf1b4",
+    "size_bytes": 8090
+  },
+  "views/windows-latest-release/platform-evidence/installed-packages.csv.raw.gz": {
+    "sha256": "2e2e674154d67c8d10febfc779f45d53108f6dab536cec311ea89a45a43e0a82",
+    "size_bytes": 1878
+  },
+  "views/windows-latest-release/platform-evidence/manual-tools.txt": {
+    "sha256": "e50d31e5395d0e34f6a78b666eb98727a85437705594c15b52dbf17f4185bbbb",
+    "size_bytes": 345
+  },
+  "views/windows-latest-release/platform-evidence/manual-tools.txt.raw.gz": {
+    "sha256": "a1d732a6816ec501ff5ccea8c6d300f72db4b5fcaac482840b5563044b863e6f",
+    "size_bytes": 187
+  },
+  "views/windows-latest-release/platform-evidence/session-info.txt": {
+    "sha256": "9e1119d467a3cd3d43939d218deccfa0b1742b99b32f4bf27a3d5ea111b950de",
+    "size_bytes": 4063
+  },
+  "views/windows-latest-release/platform-evidence/session-info.txt.raw.gz": {
+    "sha256": "ec4d4cd371e7340dbba1cb902d6d7beb499b05b3aba92ab99f67fd356fe8f25b",
+    "size_bytes": 1745
+  },
+  "views/windows-latest-release/platform-evidence/warning-details.csv": {
+    "sha256": "8b6709f11d5925be9b0abd7e5adf143a2ebd77a431d10204ba7e8c18b57a2fc2",
+    "size_bytes": 145174
+  },
+  "views/windows-latest-release/platform-evidence/warning-details.csv.raw.gz": {
+    "sha256": "91c9b220d7223d6fab8f5c34e50fb591af789c378f269ba2e711bb03056069d8",
+    "size_bytes": 8748
+  },
+  "views/windows-latest-release/platform-evidence/warning-replay.json": {
+    "sha256": "a4aabb80a797f21045b2495655712f7f1ca946e95f9844759a21192cda5edbee",
+    "size_bytes": 507
+  },
+  "views/windows-latest-release/platform-evidence/warning-replay.json.raw.gz": {
+    "sha256": "5682064795ba0eb6d3cd4e684460268ef5cbe45884597c7033c92094591d5970",
+    "size_bytes": 286
+  },
+  "views/windows-latest-release/platform-evidence/warning-session.txt": {
+    "sha256": "bd29701ae159f6539b0818cc301bc2d26a399d61f61e07f28576a4f3c4240333",
+    "size_bytes": 3577
+  },
+  "views/windows-latest-release/platform-evidence/warning-session.txt.raw.gz": {
+    "sha256": "ddaee7815894b2f25983189ff397bcc91712e7c3c749504f8f88bb9c7cbf9dee",
+    "size_bytes": 1546
+  },
+  "zip-digest-readback.json": {
+    "sha256": "a39df4ce5a1a61ffdf1069c3481f711074f642b76d6a32362576f8ed7995b922",
+    "size_bytes": 1068
+  }
+}

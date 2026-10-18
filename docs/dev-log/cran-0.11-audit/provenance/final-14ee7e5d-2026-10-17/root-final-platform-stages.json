@@ -1,0 +1,112 @@
+{
+  "frozen-14ee7e5d-ubuntu-latest-release": {
+    "check_log_sha256": "a835496d417cb72f416f5113153b02fa5022a0db1d1bdd8ea0b05112be2c9135",
+    "stages": [
+      {
+        "raw_line": "* checking examples ... [14s/14s] OK",
+        "timing": {
+          "cpu_seconds": 14,
+          "elapsed_seconds": 14
+        }
+      },
+      {
+        "raw_line": "* checking tests ... [206s/206s] OK",
+        "timing": {
+          "cpu_seconds": 206,
+          "elapsed_seconds": 206
+        }
+      },
+      {
+        "raw_line": "* checking re-building of vignette outputs ... [11s/11s] OK",
+        "timing": {
+          "cpu_seconds": 11,
+          "elapsed_seconds": 11
+        }
+      },
+      {
+        "raw_line": "* checking PDF version of manual ... [2s/2s] OK",
+        "timing": {
+          "cpu_seconds": 2,
+          "elapsed_seconds": 2
+        }
+      },
+      {
+        "raw_line": "* checking HTML version of manual ... [2s/2s] OK",
+        "timing": {
+          "cpu_seconds": 2,
+          "elapsed_seconds": 2
+        }
+      }
+    ]
+  },
+  "frozen-14ee7e5d-windows-latest-devel": {
+    "check_log_sha256": "4e3b819ef8fc32ef76003006114973a6c533d1944f4bf9a321d8fc7247aa835c",
+    "stages": [
+      {
+        "raw_line": "* checking examples ... [16s] OK",
+        "timing": {
+          "reported_seconds": 16
+        }
+      },
+      {
+        "raw_line": "* checking tests ... [404s] OK",
+        "timing": {
+          "reported_seconds": 404
+        }
+      },
+      {
+        "raw_line": "* checking re-building of vignette outputs ... [22s] OK",
+        "timing": {
+          "reported_seconds": 22
+        }
+      },
+      {
+        "raw_line": "* checking PDF version of manual ... [4s] OK",
+        "timing": {
+          "reported_seconds": 4
+        }
+      },
+      {
+        "raw_line": "* checking HTML version of manual ... [4s] OK",
+        "timing": {
+          "reported_seconds": 4
+        }
+      }
+    ]
+  },
+  "frozen-14ee7e5d-windows-latest-release": {
+    "check_log_sha256": "2e0dd69a839964ff2bb2425f8343b685dee6b091ff70a2ac5e942bbfa2184a95",
+    "stages": [
+      {
+        "raw_line": "* checking examples ... [17s] OK",
+        "timing": {
+          "reported_seconds": 17
+        }
+      },
+      {
+        "raw_line": "* checking tests ... [415s] OK",
+        "timing": {
+          "reported_seconds": 415
+        }
+      },
+      {
+        "raw_line": "* checking re-building of vignette outputs ... [22s] OK",
+        "timing": {
+          "reported_seconds": 22
+        }
+      },
+      {
+        "raw_line": "* checking PDF version of manual ... [4s] OK",
+        "timing": {
+          "reported_seconds": 4
+        }
+      },
+      {
+        "raw_line": "* checking HTML version of manual ... [13s] OK",
+        "timing": {
+          "reported_seconds": 13
+        }
+      }
+    ]
+  }
+}

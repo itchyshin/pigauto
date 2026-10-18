@@ -1,0 +1,66 @@
+{
+  "workflow_tree_binding": {
+    "status": "PASS",
+    "read_utc": "2026-10-18T01:08:38.450661+00:00",
+    "public_endpoint": "https://api.github.com/repos/itchyshin/pigauto/git/commits/e94e40a2f66a7f27dcc69b515d762d69c6eadf66",
+    "primary_file_sha256": "2bdcfce8d0f76182781f617c1902fd26a67c71cfe8b36d5621227e14a1146218",
+    "workflow_merge_sha": "e94e40a2f66a7f27dcc69b515d762d69c6eadf66",
+    "checker_head": "6cd5f65b06d0c3ee32ce4b2d5a67a22c06028116",
+    "archive_source": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+    "synthetic_tree": "f10989373c12981c0be52c7a33a665b73e0c6fce",
+    "checker_tree": "f10989373c12981c0be52c7a33a665b73e0c6fce",
+    "parents": [
+      "8e275ca738129c8d608f06ffc407b8141c1a2636",
+      "6cd5f65b06d0c3ee32ce4b2d5a67a22c06028116"
+    ],
+    "scope": "Synthetic workflow tree byte-identical to checker head tree; package archive source is separate. No refs or source files changed."
+  },
+  "verdict": "PASS_BOUNDED_CURATED_COPY_MECHANICS",
+  "archive_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+  "trees": {
+    "checks-and-integration": {
+      "index_schema": "files_wrapper",
+      "indexed_files": 40,
+      "copied_files": 41,
+      "bundles": 4,
+      "raw_members": 99,
+      "readable_views": 24,
+      "normalized_views": 3,
+      "source_and_target_exact": true,
+      "raw_members_equal_retained_sources": true
+    },
+    "external-platforms": {
+      "index_schema": "direct_map",
+      "indexed_files": 162,
+      "copied_files": 163,
+      "bundles": 3,
+      "raw_members": 129,
+      "readable_views": 84,
+      "normalized_views": 48,
+      "source_and_target_exact": true,
+      "raw_members_equal_retained_sources": true
+    }
+  },
+  "totals": {
+    "indexed": 202,
+    "bundles": 7,
+    "members": 228,
+    "views": 108
+  },
+  "negative_controls": [
+    "changed-hash refused",
+    "changed-size refused",
+    "traversal refused",
+    "absolute-path refused"
+  ],
+  "limits": [
+    "No R/check execution or network used.",
+    "No final release-panel, warning-consequence or timing-adjudication verdict.",
+    "Source-file equality proves retained-copy binding; remote executed merge/head tree binding is separately noted."
+  ],
+  "workflow_primary_binding_independently_verified": true,
+  "package_file_diff_from_archive_source_exit": 0,
+  "Rbuildignore_docs_exclusion": "^docs$",
+  "nonblocking_reader_correction": "Checks-and-integration README reproduction command names ../bundle.py, which is not in copied target; retained helper is packaging-helper.py and requires original scratch evidence inputs."
+}

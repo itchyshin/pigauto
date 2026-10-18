@@ -1,0 +1,144 @@
+{
+  "generated_utc": "2026-10-18T01:45:08.327129+00:00",
+  "artifact_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+  "archive_size_bytes": 5137648,
+  "archive_entries": 250,
+  "warning_audit": {
+    "status": "PASS_4_OF_4_WARNING_AUDIT_ONLY",
+    "result": "warning-audit/actual-results-null-error-fix/audit.json",
+    "initial_failed_result_retained": "warning-audit/actual-results-with-native-note/audit.json",
+    "scope": "Actual objects from separate native-layout replays; native totals agree. Original native reporter retained totals, not individual objects."
+  },
+  "native_cells": [
+    {
+      "cell": "local-macos",
+      "native_verdict": {
+        "status": "NOTE",
+        "adjudication": "UNADJUDICATED",
+        "exit": 0,
+        "typed_note": {
+          "kind": "exact_local_example_timing_note",
+          "method": "compare_methods",
+          "user_seconds": 2.532,
+          "system_seconds": 0.992,
+          "elapsed_seconds": 18.406,
+          "raw_section": "* checking examples ... [13s/63s] NOTE\nExamples with CPU (user + system) or elapsed time > 5s\n                 user system elapsed\ncompare_methods 2.532  0.992  18.406"
+        },
+        "scope": "Allowed only to classify warning objects. Timing/native release verdict remains UNADJUDICATED."
+      },
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "warning_categories": {
+        "small_validation": 119,
+        "undefined_constant_correlation": 9,
+        "constant_matched_trait": 4,
+        "few_tree_draws": 5,
+        "covariates_joint_baseline": 5,
+        "covariates_gnn_off": 3,
+        "imbalanced_ordinal": 12,
+        "signal_gate_fallback": 1,
+        "conformal_sample_limit": 2,
+        "species_dropped": 1
+      }
+    },
+    {
+      "cell": "windows-latest-release",
+      "native_verdict": {
+        "status": "OK",
+        "adjudication": "native_Status_OK",
+        "exit": 0
+      },
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "warning_categories": {
+        "small_validation": 119,
+        "undefined_constant_correlation": 9,
+        "constant_matched_trait": 4,
+        "few_tree_draws": 5,
+        "covariates_joint_baseline": 5,
+        "covariates_gnn_off": 3,
+        "imbalanced_ordinal": 12,
+        "signal_gate_fallback": 1,
+        "conformal_sample_limit": 2,
+        "species_dropped": 1
+      }
+    },
+    {
+      "cell": "windows-latest-devel",
+      "native_verdict": {
+        "status": "OK",
+        "adjudication": "native_Status_OK",
+        "exit": 0
+      },
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "warning_categories": {
+        "small_validation": 119,
+        "undefined_constant_correlation": 9,
+        "constant_matched_trait": 4,
+        "few_tree_draws": 5,
+        "covariates_joint_baseline": 5,
+        "covariates_gnn_off": 3,
+        "imbalanced_ordinal": 12,
+        "signal_gate_fallback": 1,
+        "conformal_sample_limit": 2,
+        "species_dropped": 1
+      }
+    },
+    {
+      "cell": "ubuntu-latest-release",
+      "native_verdict": {
+        "status": "OK",
+        "adjudication": "native_Status_OK",
+        "exit": 0
+      },
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "warning_categories": {
+        "small_validation": 119,
+        "undefined_constant_correlation": 9,
+        "constant_matched_trait": 4,
+        "few_tree_draws": 5,
+        "covariates_joint_baseline": 5,
+        "covariates_gnn_off": 3,
+        "imbalanced_ordinal": 12,
+        "signal_gate_fallback": 1,
+        "conformal_sample_limit": 2,
+        "species_dropped": 1
+      }
+    }
+  ],
+  "timing_disposition": "Grace technical-preparation acceptance scoped to predecessor; human timing/upload decision remains pending",
+  "reader_rule": "This summary and current GATES/release-ledger are authoritative current records. Snapshot bundle pending/NOT_DONE/UNADJUDICATED statements retain their original point-in-time state; the current actual warning audit supersedes the earlier NULL serialization failure only.",
+  "source_pr237": "merged_with_explicit_approval_and_deployed",
+  "evidence_pr236": "open_draft_unmerged",
+  "cran_submission": "not_submitted_not_authorized",
+  "current_candidate": false,
+  "artifact_disposition": "WITHDRAWN_AS_SUBMISSION_CANDIDATE",
+  "withdrawal_reason": "Pat found installed impute and pigauto_report help descriptions promising GNN training/comparison unconditionally despite default gnn=FALSE.",
+  "successor_source_pr": 238,
+  "successor_source_head": "816987fd160c1d2c5c58b020b07357ff17c077e5",
+  "successor_archive_frozen": false,
+  "panel_verdicts": {
+    "grace": "READY for predecessor14ee technical preparation only; human timing/upload conditions remain",
+    "rose": "NOT_READY predecessor14ee record reconciliation and human timing disposition",
+    "pat": "NOT_READY predecessor14ee installed-help blocker; separate proposed-source fix PASS"
+  }
+}

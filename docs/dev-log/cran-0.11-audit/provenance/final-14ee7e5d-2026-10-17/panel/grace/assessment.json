@@ -1,0 +1,52 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "c02b8e6aa371311bd4ceeaa634b8409c0333811c6feb3338b2bd4951f6154660",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Grace Codex independent release reviewer",
+  "method": "Separate post-draft factual/reference and naturalness read of the saved report, against opened raw native logs, own readbacks, retained receipts and current primary CRAN guidance. No personal voice selected.",
+  "genre": "Technical release-panel report",
+  "coverage": "Whole README.md exact saved draft",
+  "score": 3,
+  "style_status": "assessed",
+  "score_reason": "Specific measured claims and limits; headings and repeated evidence boundaries are somewhat formal but appropriate to a release verdict.",
+  "confidence": "moderate",
+  "confidence_reason": "Editorial self-judgment, not a detector or independent authorship finding.",
+  "examples": [
+    {
+      "location": "Opening verdict",
+      "cue": "Scope appears before evidence",
+      "impact": "Reader can distinguish a technical vote from upload authority immediately.",
+      "repair": "no change needed",
+      "line": 3,
+      "quote": "**READY for technical submission preparation within the scope below.** No concrete technical blocker was found for this frozen archive. This is not an upload authorization or an overall submission-ready declaration. The highest technical rung supported by this review is **platform-clean, with the local timing NOTE explicitly adjudicated below**. The next unproven rung is **submission-ready**: final evidence consolidation, all fresh panel verdicts, validator readback and the separate human timing/upload decision remain necessary."
+    },
+    {
+      "location": "Timing adjudication",
+      "cue": "Measured totals and conditional decision are distinct",
+      "impact": "Keeps the material timing risk visible without inventing a CRAN hard threshold.",
+      "repair": "no change needed",
+      "line": 32,
+      "quote": "The two Windows totals exceed the protocol's 600-second observed incoming signal. This is an update from published 0.10.0, not a first submission; native statuses are OK and vignettes take 22 seconds. The current [CRAN policy](https://cran.r-project.org/web/packages/policies.html) asks for minimal CPU/check time and examples of a few seconds; it does not give an immutable 600-second total limit. This is a material submission risk for the maintainer to accept or decline explicitly, not proof of CRAN acceptance and not a technical fault waived by approval. The strict first-submission timing prohibition does not describe this release profile. Individual vignette diagnostics all exit 0; their 74.8865-second render sum and 308.2825-second R-process sum are separate measurements, not replacement native timings. Disabled teaching chunks remain disabled."
+    },
+    {
+      "location": "Warnings",
+      "cue": "Replay provenance explicit",
+      "impact": "Prevents saved replay objects from being mistaken for native-execution objects.",
+      "repair": "no change needed",
+      "line": 38,
+      "quote": "The 161 warning identities comprise 119 small-validation diagnostics, 9 undefined constant correlations, 4 constant matched traits, 5 few-tree-draw diagnostics, 5 ignored joint-baseline covariate diagnostics, 3 GNN-off covariate diagnostics, 12 ordinal-imbalance diagnostics, 1 documented signal-gate fallback, 2 conformal sample-limit diagnostics and 1 deliberately unmatched-species diagnostic. These are fixture limitations with real scientific consequences; they do not certify coverage or broad inferential validity. Warning objects originate in separate native-layout replays on the checked installations. Native logs retain totals, not these saved replay objects. This disclosure is required and appears in the comments draft."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "No new scientific result claimed. Warning consequences and bounded fixture/recovery limitations match retained actual objects and audit; no general coverage certificate inferred.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Numbers and identities compared to raw logs/receipts and fresh readbacks. Source equivalence confirmed by predecessor-source-comparison.json; no pending wrapper treated as absent raw proof. Human decisions remain conditions.",
+  "references_gate": "pass",
+  "references_gate_reason": "Primary CRAN policy/checklist/URL guidance opened in this review; linked policy supports timing/size and exception-disclosure distinctions. Rights and DOI facts explicitly scoped to retained primary-source records, not new legal clearance.",
+  "date": "2026-10-18T01:30:18.482646+00:00",
+  "calibration_status": "Protocol examples were seen; no held-out style evaluation claimed.",
+  "interpretation": "perceived_style_not_authorship"
+}

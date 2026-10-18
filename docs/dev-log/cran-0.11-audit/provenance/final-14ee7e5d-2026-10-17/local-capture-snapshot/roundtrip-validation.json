@@ -1,0 +1,178 @@
+{
+  "planted_hash_failure": {
+    "reason": "member hash/size mismatch: local-macos/frozen-check/pigauto.Rcheck/00check.log",
+    "rejected": true
+  },
+  "planted_path_failure": {
+    "reason": "unsafe member path: '../escape.txt'",
+    "rejected": true
+  },
+  "positive_roundtrip": {
+    "manifest_member_count": 31,
+    "manifest_sha256": "9dcbb312fe655809c6f5ee392e9f631942a7258de33e17615b3b67759f365f6d",
+    "member_count": 32,
+    "members": [
+      {
+        "path": "local-macos/frozen-check/pigauto.Rcheck/00check.log",
+        "sha256": "0bccf901390812f7c425a249881edccd68e56c1a9857fa6e8439b1d5b25bfceb",
+        "size_bytes": 3851
+      },
+      {
+        "path": "local-macos/frozen-check/pigauto.Rcheck/00install.out",
+        "sha256": "7f8a73b86b7d03565ff3003762e097a22aabf7fce7f9737a57df3161adc95993",
+        "size_bytes": 579
+      },
+      {
+        "path": "local-macos/frozen-check/pigauto.Rcheck/Rdlatex.log",
+        "sha256": "50d49029610c0c6dd1439edd76bea07ff54532932ce1889203d2d15af38f9cf7",
+        "size_bytes": 174448
+      },
+      {
+        "path": "local-macos/frozen-check/pigauto.Rcheck/build_vignettes.log",
+        "sha256": "2438c81c7f030c36096064dd8cb5f462f2ba9687a863f31385f25d29ba32d255",
+        "size_bytes": 1108
+      },
+      {
+        "path": "local-macos/frozen-check/pigauto.Rcheck/pigauto-Ex.R",
+        "sha256": "a5ab731a4425f56a090acbb821cf7c7acd7cb856af2426a1ed46dfe2eaabfdb9",
+        "size_bytes": 36184
+      },
+      {
+        "path": "local-macos/frozen-check/pigauto.Rcheck/pigauto-Ex.Rout",
+        "sha256": "d9cb2e9322f43bfe697bee9f28f665645a63feb3ed80777ad37b42d449b451d9",
+        "size_bytes": 63255
+      },
+      {
+        "path": "local-macos/frozen-check/pigauto.Rcheck/pigauto-Ex.pdf",
+        "sha256": "10d7f3d3eaab3f26240877da79c9befc68cbe5b3e7f3b920d8f5d12c1a88d587",
+        "size_bytes": 24993
+      },
+      {
+        "path": "local-macos/frozen-check/pigauto.Rcheck/pigauto-Ex.timings",
+        "sha256": "8bfc4ff319d61ad7b2b8b01691e7a4a0e81e4b49e94f8de28e7a3cfcc88c5d64",
+        "size_bytes": 1332
+      },
+      {
+        "path": "local-macos/frozen-check/pigauto.Rcheck/pigauto-manual.log",
+        "sha256": "796aa671c1761df90b1feb6cad6ac1cc35d953a984467e4cac21a653cfc243bb",
+        "size_bytes": 58589
+      },
+      {
+        "path": "local-macos/frozen-check/pigauto.Rcheck/pigauto-manual.pdf",
+        "sha256": "be2691492366c0d54408f3ce08b6c07a073ed6a726dba10abf6828afd9e6870a",
+        "size_bytes": 429598
+      },
+      {
+        "path": "local-macos/frozen-check/pigauto.Rcheck/tests/testthat.Rout",
+        "sha256": "3ae2cfd207464df1337dfc87ff7ba93830e6c2e3582e612b9fbd157444fb5120",
+        "size_bytes": 13862
+      },
+      {
+        "path": "local-macos/local-note-diagnostic.json",
+        "sha256": "a862f1e37ca514a4fd3a7576e4ce20477db8e23b89fc347329f119f2449faef4",
+        "size_bytes": 1055
+      },
+      {
+        "path": "local-macos/local-receipt.json",
+        "sha256": "03ff286de5c3cafb450381ed52358e0caf25eaca4ff220182b677643df301ab0",
+        "size_bytes": 795
+      },
+      {
+        "path": "local-macos/native-check.log",
+        "sha256": "9934bf0e235a464f8d146ed9d001e5b98d891b0f8ba6d1e84b3f841645d8cfe8",
+        "size_bytes": 4137
+      },
+      {
+        "path": "local-macos/platform-evidence/check-command.txt",
+        "sha256": "0e19fc7eacd3b6ea5191a5426ed3db82db232701d1a4591d3af681f17e426c13",
+        "size_bytes": 293
+      },
+      {
+        "path": "local-macos/platform-evidence/check-console.log",
+        "sha256": "b57cad26cc7895f54158a6dd03ab18f544fcec7b4a0f77689eaf542f8d8d1559",
+        "size_bytes": 4042
+      },
+      {
+        "path": "local-macos/platform-evidence/check-environment.txt",
+        "sha256": "f22ddc5feb391d728ea44c3052c4699ee41b6c4b9343b3a1968313d04cde5368",
+        "size_bytes": 347
+      },
+      {
+        "path": "local-macos/platform-evidence/check-exit.txt",
+        "sha256": "e9d084e5346d8829772519d67716687ee190535d32242b36c2532141436844db",
+        "size_bytes": 40
+      },
+      {
+        "path": "local-macos/platform-evidence/declared-dependencies.csv",
+        "sha256": "da620bb55999537b678b44cc61708a167d54583d3bfd05e45d626cf63567a44b",
+        "size_bytes": 437
+      },
+      {
+        "path": "local-macos/platform-evidence/installed-packages.csv",
+        "sha256": "26fac060ca1cb1014ab22a365107ad6fc14002464ced645f4fa5008a3955788c",
+        "size_bytes": 33789
+      },
+      {
+        "path": "local-macos/platform-evidence/session-info.txt",
+        "sha256": "2b7530bb35f37eb2240acb026b37f2e79e045bcfbc19a9fd59a94457bf245cd3",
+        "size_bytes": 4220
+      },
+      {
+        "path": "local-macos/platform-evidence/warning-details.csv",
+        "sha256": "8b6709f11d5925be9b0abd7e5adf143a2ebd77a431d10204ba7e8c18b57a2fc2",
+        "size_bytes": 145174
+      },
+      {
+        "path": "local-macos/platform-evidence/warning-objects.rds",
+        "sha256": "dfa186d174e78fa3052c9ae238456285bd0a17ec1dd10c2065a64c655283faa8",
+        "size_bytes": 1621193
+      },
+      {
+        "path": "local-macos/platform-evidence/warning-replay.json",
+        "sha256": "9be702eb006b2f1c1b4a8fb348aed852b2818bdf9829f5641bbbf88ac56ae25c",
+        "size_bytes": 604
+      },
+      {
+        "path": "local-macos/platform-evidence/warning-session.txt",
+        "sha256": "0d1c3b0222d789fcc1e0903c4a2075a1a8eca8af798d084e4d96853ddb8b79e5",
+        "size_bytes": 3782
+      },
+      {
+        "path": "local-macos/warning-replay.log",
+        "sha256": "b1b8f147530b7b035b56d7ae1bf63e1497f0ad45503a354390be49350742f6c1",
+        "size_bytes": 13101
+      },
+      {
+        "path": "publication/README.md",
+        "sha256": "94c282154aa863127a7ac6d0799ddd34d58e11b0b8cc049b3136c9d1b1ae705b",
+        "size_bytes": 2349
+      },
+      {
+        "path": "publication/build.py",
+        "sha256": "cdb799c0187a86e77fd9b8bf5091612a039fed27ef5500891456c7b8306895f8",
+        "size_bytes": 11188
+      },
+      {
+        "path": "publication/member-manifest.json",
+        "sha256": "9dcbb312fe655809c6f5ee392e9f631942a7258de33e17615b3b67759f365f6d",
+        "size_bytes": 11773
+      },
+      {
+        "path": "publication/producer-identity.json",
+        "sha256": "376fd17d7d21a293844c81315ae73a2b841157fbeaf02aaa0112e07f2134da60",
+        "size_bytes": 1970
+      },
+      {
+        "path": "publication/readable-summary.txt",
+        "sha256": "f890e4674604277ed0b17c254f4ef82a6e1b6dfa8d25c8baf04d4deec3fcfb15",
+        "size_bytes": 1064
+      },
+      {
+        "path": "publication/readback.py",
+        "sha256": "9b17958317fd31ac19924b767c06efdbd5d5e53414f967303710fc331eb31a8d",
+        "size_bytes": 4111
+      }
+    ],
+    "status": "PASS"
+  }
+}

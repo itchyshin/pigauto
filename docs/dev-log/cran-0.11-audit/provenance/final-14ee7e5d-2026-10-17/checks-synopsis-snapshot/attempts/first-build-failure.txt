@@ -1,0 +1,1 @@
+First synopsis execution stopped before output generation: Missing native installed-size INFO. Cause: footprint parser accepted LF only; original Windows log is CRLF. Parser changed to accept CRLF while preserving native text bytes. No R/check/network activity or raw proof edits.

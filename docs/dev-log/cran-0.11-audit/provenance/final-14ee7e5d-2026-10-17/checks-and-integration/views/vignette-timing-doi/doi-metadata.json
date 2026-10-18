@@ -1,0 +1,58 @@
+{
+  "url": "https://api.crossref.org/works/10.1126/science.1157704",
+  "method": "GET",
+  "no_retry": true,
+  "http_status": 200,
+  "final_url": "https://api.crossref.org/works/10.1126/science.1157704",
+  "sha256": "d3eae4736e61ac7b16fc81b7f96b00f6ba57f726fe7800291d1d9b420c6aa1f4",
+  "doi": "10.1126/science.1157704",
+  "title": [
+    "A Phylogenomic Study of Birds Reveals Their Evolutionary History"
+  ],
+  "journal": [
+    "Science"
+  ],
+  "volume": "320",
+  "issue": "5884",
+  "page": "1763-1768",
+  "published": {
+    "date-parts": [
+      [
+        2008,
+        6,
+        27
+      ]
+    ]
+  },
+  "first_author": {
+    "given": "Shannon J.",
+    "family": "Hackett",
+    "sequence": "first",
+    "affiliation": [
+      {
+        "name": "Zoology Department, Field Museum of Natural History, 1400 South Lake Shore Drive, Chicago, IL 60605, USA."
+      },
+      {
+        "name": "Department of Zoology, University of Florida, Gainesville, FL 32611, USA."
+      },
+      {
+        "name": "Museum of Vertebrate Zoology and Department of Integrative Biology, University of California, Berkeley, CA 94720, USA."
+      },
+      {
+        "name": "Department of Science and Technology\u2013National Research Foundation Centre of Excellence at the Percy FitzPatrick Institute, Department of Botany and Zoology, Stellenbosch University, Matieland 7602, South Africa."
+      },
+      {
+        "name": "Department of Vertebrate Zoology, Smithsonian Institution, 4210 Silver Hill Road, Suitland, MD 20746, USA."
+      }
+    ],
+    "role": [
+      {
+        "vocabulary": "crossref",
+        "role": "author"
+      }
+    ]
+  },
+  "identity_matches": true,
+  "elapsed_seconds": 0.8038984999875538,
+  "doi_url_access": "Original exact-source URL check returned403; this metadata query does not erase that finding."
+}

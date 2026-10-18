@@ -1,0 +1,45 @@
+{
+  "final_archive": {
+    "path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/pigauto_0.11.0.tar.gz",
+    "sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+    "size_bytes": 5137648
+  },
+  "format": "pigauto-final-local-evidence-producer-v1",
+  "native_verdict": {
+    "adjudication": "UNADJUDICATED",
+    "check_exit": 0,
+    "status": "Status: 1 NOTE",
+    "wrapper_exit": 1
+  },
+  "producer_sha256": {
+    "README.md": "94c282154aa863127a7ac6d0799ddd34d58e11b0b8cc049b3136c9d1b1ae705b",
+    "build.py": "cdb799c0187a86e77fd9b8bf5091612a039fed27ef5500891456c7b8306895f8",
+    "readback.py": "9b17958317fd31ac19924b767c06efdbd5d5e53414f967303710fc331eb31a8d"
+  },
+  "separate_replay": {
+    "counts": {
+      "fail": 0,
+      "pass": 3195,
+      "skips": 86,
+      "warnings": 161
+    },
+    "driver_elapsed_seconds": 687.196,
+    "exit": 0,
+    "reporter_elapsed_seconds": 669.225
+  },
+  "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+  "source_hashes": {
+    "FINAL.json": "7b5ad22788112add8afb42351f7ecb0ed5d4fd6a475bf6623222b9684bfb656b",
+    "capture_warnings_script": "02ec8e2e5555a73e55982387633754b15a9b8af26dce919f7d475cbb92b28453",
+    "direct_verifier_script": "f014c380a2118ae7c7f8ef2ced6e8b52e8890239dad9966614ccb04b5fe3e4b8",
+    "local_note_diagnostic": "a862f1e37ca514a4fd3a7576e4ce20477db8e23b89fc347329f119f2449faef4",
+    "local_receipt": "03ff286de5c3cafb450381ed52358e0caf25eaca4ff220182b677643df301ab0",
+    "native_check_00check": "0bccf901390812f7c425a249881edccd68e56c1a9857fa6e8439b1d5b25bfceb",
+    "native_check_log": "9934bf0e235a464f8d146ed9d001e5b98d891b0f8ba6d1e84b3f841645d8cfe8",
+    "warning_replay_log": "b1b8f147530b7b035b56d7ae1bf63e1497f0ad45503a354390be49350742f6c1"
+  },
+  "warning_audit": {
+    "reason": "Audit reader requires null error field; replay receipt encodes empty object.",
+    "status": "NOT_DONE"
+  }
+}

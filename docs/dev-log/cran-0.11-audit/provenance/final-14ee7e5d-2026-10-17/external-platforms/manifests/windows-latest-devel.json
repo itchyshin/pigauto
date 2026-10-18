@@ -1,0 +1,268 @@
+{
+  "bundle": "raw/windows-latest-devel.evidence.tar.gz",
+  "bundle_sha256": "f27c1c0ca4b4d8da0a2696a99f8e569c5b4b2e84e965fd2218a88e49b828241f",
+  "bundle_size_bytes": 2055577,
+  "kind": "evidence_bundle_not_release_archive",
+  "member_count": 43,
+  "members": [
+    {
+      "member": "frozen-check/pigauto.Rcheck/00check.log",
+      "sha256": "4e3b819ef8fc32ef76003006114973a6c533d1944f4bf9a321d8fc7247aa835c",
+      "size_bytes": 3533,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/00check.log"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/00install.out",
+      "sha256": "27ceff6e4b795be92c0c426cccd61799b8feacfad9fdbfada03195dd6328ea6b",
+      "size_bytes": 584,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/00install.out"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/Rdlatex.log",
+      "sha256": "cbb102ec3609a24b9370a1ee01f7fdbe4fca6c1e4ade451a21c897d29153058a",
+      "size_bytes": 136061,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/Rdlatex.log"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/build_vignettes.log",
+      "sha256": "3145443a4178a2e0edd8ab71b038dc435a813988bf6ed164949dc2a96f2d3394",
+      "size_bytes": 634,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/build_vignettes.log"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/pigauto-Ex.R",
+      "sha256": "cba5d9a07f5b74704f9437d578a0d75cacaddbd7fee3702f0e0070d4d40e6b46",
+      "size_bytes": 37294,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-Ex.R"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/pigauto-Ex.Rout",
+      "sha256": "a1995643ddeeb065930ada75ee4e52b6a531b00fa167dc4d18c7cabcb437eba0",
+      "size_bytes": 64781,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-Ex.Rout"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/pigauto-Ex.pdf",
+      "sha256": "0bd8ecc30b3eea4991246177fc6b971072fe188be72d90372531e48e9835bc03",
+      "size_bytes": 24993,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-Ex.pdf"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/pigauto-Ex.timings",
+      "sha256": "ff4b15cc03d0883371b42a479ee466d1d0707393b46c8e985c22b0b2331c1692",
+      "size_bytes": 1209,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-Ex.timings"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/pigauto-manual.log",
+      "sha256": "83f933b1c0c6f54bfbf8a234d3046a5b8c1eb9cb56ce6cc51b7a0e969c89df35",
+      "size_bytes": 59182,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-manual.log"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/pigauto-manual.pdf",
+      "sha256": "ceed904c5a9bd040f2e97b4f03a305e93b1ed163f85d054be7646c0b9d645c4c",
+      "size_bytes": 407888,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-manual.pdf"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/tests/testthat.Rout",
+      "sha256": "62e0abe8310d9a774e839225a173162bdb3472c78b61875296aee4fd73bc414b",
+      "size_bytes": 13930,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/tests/testthat.Rout"
+    },
+    {
+      "member": "platform-evidence/check-command.txt",
+      "sha256": "7dce5c2196c872d2144c60a0dd5ce7bc491826f3cb4be36af8d4e5da8f39a20a",
+      "size_bytes": 192,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/check-command.txt"
+    },
+    {
+      "member": "platform-evidence/check-console.log",
+      "sha256": "03493c3667e5db855d734d43c0119b09f9599dcb22e64d1fc34746e2ae7fc3fc",
+      "size_bytes": 3539,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/check-console.log"
+    },
+    {
+      "member": "platform-evidence/check-environment.txt",
+      "sha256": "d171549d9ab5e75346e95032d0a62c5af355cb112d352e0e39bfd20ab343e3ae",
+      "size_bytes": 447,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/check-environment.txt"
+    },
+    {
+      "member": "platform-evidence/check-exit.txt",
+      "sha256": "52ff3bb11f7c0e64bfc442188851a7dfb0f494e735b254ece967903b61962156",
+      "size_bytes": 42,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/check-exit.txt"
+    },
+    {
+      "member": "platform-evidence/courier-canary.aux",
+      "sha256": "be3d8a27ab932481a725a941648e689be09cacdcfca75e9f47d30bb4c40cc38b",
+      "size_bytes": 32,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/courier-canary.aux"
+    },
+    {
+      "member": "platform-evidence/courier-canary.idx",
+      "sha256": "05d861deb1ec04a8bbd4a4e9b4458d9916d4d4fa7e1df507da0b8338a696f748",
+      "size_bytes": 24,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/courier-canary.idx"
+    },
+    {
+      "member": "platform-evidence/courier-canary.ilg",
+      "sha256": "4a26b12f27d802063ef0a8e5c1b1f11b9cd4f253fd9c3dcfb2c10f4c321f2bae",
+      "size_bytes": 357,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/courier-canary.ilg"
+    },
+    {
+      "member": "platform-evidence/courier-canary.ind",
+      "sha256": "bbdf5de01e41931199c31432a95061d4629eb1a9f8ec3e14727e5c9f5f6a5bf9",
+      "size_bytes": 53,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/courier-canary.ind"
+    },
+    {
+      "member": "platform-evidence/courier-canary.log",
+      "sha256": "76468ffa8f547bcadfc7d4d41681b5ec1417840eae8fe58f7a28c172b4476cb5",
+      "size_bytes": 4736,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/courier-canary.log"
+    },
+    {
+      "member": "platform-evidence/courier-canary.pdf",
+      "sha256": "a536b3d018283e6f9545506a7e38916228c87f315db051bd8756b43e6d246d8d",
+      "size_bytes": 16185,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/courier-canary.pdf"
+    },
+    {
+      "member": "platform-evidence/courier-canary.tex",
+      "sha256": "785e906142597ce7bf94dc973423be94116b1b9c5ad8eaeecf7ce475b560f76c",
+      "size_bytes": 267,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/courier-canary.tex"
+    },
+    {
+      "member": "platform-evidence/declared-dependencies.csv",
+      "sha256": "8c36e8d024418d2c45a61a8569ababb79c6c58a613f73eff4e8b3a97c712c2df",
+      "size_bytes": 467,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/declared-dependencies.csv"
+    },
+    {
+      "member": "platform-evidence/identity-download.json",
+      "sha256": "702c5d5f3f303db3616fba34967626167b52a198b38d191feefe10cb53184edb",
+      "size_bytes": 550,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/identity-download.json"
+    },
+    {
+      "member": "platform-evidence/identity-post.json",
+      "sha256": "99da854eedfd21a9c1d90945131dbfabe9342926099c7ec25736d43a73bd423c",
+      "size_bytes": 546,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/identity-post.json"
+    },
+    {
+      "member": "platform-evidence/identity-pre.json",
+      "sha256": "8f556278f01dce595c26a64f3ad95ad2a0743b02721e7c1ec89313e87620cf6b",
+      "size_bytes": 545,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/identity-pre.json"
+    },
+    {
+      "member": "platform-evidence/index-after-exit.txt",
+      "sha256": "2e7f47b6eef33663f1aae9cbbdc5704d6732655d845428eade81a4051bd27802",
+      "size_bytes": 86,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-after-exit.txt"
+    },
+    {
+      "member": "platform-evidence/index-after-stderr.txt",
+      "sha256": "884cdfb6a95e0bf0ae26e60d9063d3c5a3e033afcc2ae69bebe190e9a1bf9bbb",
+      "size_bytes": 351,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-after-stderr.txt"
+    },
+    {
+      "member": "platform-evidence/index-after-stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-after-stdout.txt"
+    },
+    {
+      "member": "platform-evidence/index-before-exit.txt",
+      "sha256": "09ec5bb78802069d1eb9a2e396944a9e852f438f2d75ea9685d023df6bdf7462",
+      "size_bytes": 10,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-before-exit.txt"
+    },
+    {
+      "member": "platform-evidence/index-before-stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-before-stderr.txt"
+    },
+    {
+      "member": "platform-evidence/index-before-stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-before-stdout.txt"
+    },
+    {
+      "member": "platform-evidence/index-probe.idx",
+      "sha256": "f91fb140af257bad1abc3507b98d14a402b62cc475a9bd6d3cc5bd163686e97b",
+      "size_bytes": 25,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-probe.idx"
+    },
+    {
+      "member": "platform-evidence/index-probe.ilg",
+      "sha256": "39123455fc7865cd8d21b0a1d3ad139dec733d11d2e1cd0fc551bf5b30dc1912",
+      "size_bytes": 345,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-probe.ilg"
+    },
+    {
+      "member": "platform-evidence/index-probe.ind",
+      "sha256": "bbdf5de01e41931199c31432a95061d4629eb1a9f8ec3e14727e5c9f5f6a5bf9",
+      "size_bytes": 53,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-probe.ind"
+    },
+    {
+      "member": "platform-evidence/index-tools-before.txt",
+      "sha256": "b00295770b7dd451ffc8ed62914d59cd78773254d766c8626c15be91b7409566",
+      "size_bytes": 752,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-tools-before.txt"
+    },
+    {
+      "member": "platform-evidence/installed-packages.csv",
+      "sha256": "c8e67be6fe716a8eadb2d63e7e9f9fb1f05aff02f131ae6288cc21c4cce34dc6",
+      "size_bytes": 8303,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/installed-packages.csv"
+    },
+    {
+      "member": "platform-evidence/manual-tools.txt",
+      "sha256": "e5405c76a3bd8781f0a0c5a8e031bd9388706c0727ffd6bddfef402a8c2f3b63",
+      "size_bytes": 361,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/manual-tools.txt"
+    },
+    {
+      "member": "platform-evidence/session-info.txt",
+      "sha256": "4583f3d2928778328fe300da45c6a07e74454f22683cfbe3502be2b64de7fba1",
+      "size_bytes": 4151,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/session-info.txt"
+    },
+    {
+      "member": "platform-evidence/warning-details.csv",
+      "sha256": "cf5ffd389ae7ece3d2b339cabeeea52ba63bf4c93832a8ec73936ff82e927137",
+      "size_bytes": 145360,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/warning-details.csv"
+    },
+    {
+      "member": "platform-evidence/warning-objects.rds",
+      "sha256": "a63c8ae79336b17c5c8a0ad3bcf4fa8541eac91b4c3e0cfa048ff2484779689a",
+      "size_bytes": 1617058,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/warning-objects.rds"
+    },
+    {
+      "member": "platform-evidence/warning-replay.json",
+      "sha256": "ba348eeff7dadb7bac3a4014d7e0808788b8d43416ddadd7276126f23bac5740",
+      "size_bytes": 529,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/warning-replay.json"
+    },
+    {
+      "member": "platform-evidence/warning-session.txt",
+      "sha256": "8d3dd01a2cf468dd7bd1cb686c4b5ed58bbae17762ed3ffd178f5f9ce9170b93",
+      "size_bytes": 3661,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/warning-session.txt"
+    }
+  ],
+  "release_archive_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb"
+}

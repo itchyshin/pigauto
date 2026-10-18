@@ -1,0 +1,3 @@
+after-task structure check passed
+sh: line 1: 78886 Terminated: 15          'node' /Users/z3437171/shinichi-brain/skills/unlazy/scripts/gate-check.mjs --root . --cwd . --reverify ./.unlazy/imputation-sim/gates/leaf-env.md 2>&1
+sh: line 1: 80296 Killed: 9               'node' /Users/z3437171/shinichi-brain/skills/unlazy/scripts/gate-check.mjs --root . --cwd . --reverify ./.unlazy/imputation-sim/gates/leaf-prerun.md 2>&1

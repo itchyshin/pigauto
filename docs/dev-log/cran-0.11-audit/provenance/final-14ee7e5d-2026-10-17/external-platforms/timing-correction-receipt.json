@@ -1,0 +1,45 @@
+{
+  "assessment": "NOTASSESSED",
+  "error": "Single-format parser failed to recognize native Linux paired CPU/elapsed stage timings; earlier absence claim was false.",
+  "no_R_checks_or_network": true,
+  "note": "First scratch correction orchestration stopped before summary rewrite because exec namespace omitted __file__; corrected to runpy; no raw data touched.",
+  "previous_derived_version": "/private/tmp/pigauto-final-closure-20261017/final-platform-publication/attempt2-derived-timing-parser-error",
+  "raw_bundle_sha256_after": {
+    "ubuntu-latest-release.evidence.tar.gz": "1a10dc086e114da76bf8423fd1709961a39aeeff956df2ee322adfbba865aac7",
+    "windows-latest-devel.evidence.tar.gz": "f27c1c0ca4b4d8da0a2696a99f8e569c5b4b2e84e965fd2218a88e49b828241f",
+    "windows-latest-release.evidence.tar.gz": "a22cb98b47c2d12a9ea0b5b5d510a1de01cde8db3407ca4f45b6c8cbb173bab9"
+  },
+  "raw_bundle_sha256_before": {
+    "ubuntu-latest-release.evidence.tar.gz": "1a10dc086e114da76bf8423fd1709961a39aeeff956df2ee322adfbba865aac7",
+    "windows-latest-devel.evidence.tar.gz": "f27c1c0ca4b4d8da0a2696a99f8e569c5b4b2e84e965fd2218a88e49b828241f",
+    "windows-latest-release.evidence.tar.gz": "a22cb98b47c2d12a9ea0b5b5d510a1de01cde8db3407ca4f45b6c8cbb173bab9"
+  },
+  "raw_bundles_unchanged": true,
+  "rounded_native_linux_cpu_elapsed_seconds": {
+    "HTML": [
+      2,
+      2
+    ],
+    "PDF": [
+      2,
+      2
+    ],
+    "examples": [
+      14,
+      14
+    ],
+    "tests": [
+      206,
+      206
+    ],
+    "vignettes": [
+      11,
+      11
+    ]
+  },
+  "status": "DERIVED_TIMING_CORRECTION_VERIFIED",
+  "unrounded_Rout_elapsed_seconds": {
+    "examples": 13.466,
+    "tests": 205.75
+  }
+}

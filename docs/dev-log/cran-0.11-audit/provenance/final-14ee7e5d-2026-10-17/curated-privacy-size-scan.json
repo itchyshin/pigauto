@@ -1,0 +1,29 @@
+{
+  "scope": "Pattern scan of curated readable and raw bundle bytes; not a universal secret-detection guarantee",
+  "files": 212,
+  "objects_scanned": 440,
+  "total_file_bytes": 9476796,
+  "largest_files": [
+    {
+      "path": "external-platforms/raw/ubuntu-latest-release.evidence.tar.gz",
+      "bytes": 2060387
+    },
+    {
+      "path": "external-platforms/raw/windows-latest-devel.evidence.tar.gz",
+      "bytes": 2055577
+    },
+    {
+      "path": "external-platforms/raw/windows-latest-release.evidence.tar.gz",
+      "bytes": 2055550
+    },
+    {
+      "path": "checks-and-integration/views/spelling-review/source-contexts.csv",
+      "bytes": 458063
+    },
+    {
+      "path": "checks-and-integration/views/final-mi/mi-matrix/manifest.json",
+      "bytes": 158633
+    }
+  ],
+  "findings": []
+}

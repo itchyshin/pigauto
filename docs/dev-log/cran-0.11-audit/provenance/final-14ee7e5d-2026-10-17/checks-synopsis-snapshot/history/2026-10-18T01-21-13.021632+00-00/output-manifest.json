@@ -1,0 +1,69 @@
+{
+  "files": {
+    "README.md": {
+      "sha256": "71882592487103d8425aec7f4d7c02d647c3f3c6b4f9311236ff81fa6b18a4c1",
+      "size_bytes": 6699
+    },
+    "assessment-check.txt": {
+      "sha256": "c6ae827966d7cd056004efcf585d1319e62c02d80cd42a1c171a2635c40c2796",
+      "size_bytes": 460
+    },
+    "assessment-status.json": {
+      "sha256": "03e7e4b5af87a3d159c60faefad5da819100186a2be8395c1a1ac32f581af678",
+      "size_bytes": 389
+    },
+    "assessment.json": {
+      "sha256": "10880d8d92d06de59b0df05e42847922b2de84e38a8838816547563398394839",
+      "size_bytes": 4829
+    },
+    "build-synopsis.py": {
+      "sha256": "612985d3f819677831ef3a62d572cf561d767c905b368adb7012ec66548e6378",
+      "size_bytes": 28154
+    },
+    "inputs.json": {
+      "sha256": "ac78820085bd420a58d78a7ae58282ea53670e1104799c79b0f8b666ba5600a1",
+      "size_bytes": 36245
+    },
+    "local-snapshots/00check.log": {
+      "sha256": "0bccf901390812f7c425a249881edccd68e56c1a9857fa6e8439b1d5b25bfceb",
+      "size_bytes": 3851
+    },
+    "local-snapshots/STATE.json": {
+      "sha256": "f23a51e005cb84b5a159c331871e931b6d8a05f50eaf7f61b3f146cd9c0c6438",
+      "size_bytes": 6848
+    },
+    "local-snapshots/check-exit.txt": {
+      "sha256": "e9d084e5346d8829772519d67716687ee190535d32242b36c2532141436844db",
+      "size_bytes": 40
+    },
+    "local-snapshots/declared-dependencies.csv": {
+      "sha256": "da620bb55999537b678b44cc61708a167d54583d3bfd05e45d626cf63567a44b",
+      "size_bytes": 437
+    },
+    "local-snapshots/local-receipt.json": {
+      "sha256": "03ff286de5c3cafb450381ed52358e0caf25eaca4ff220182b677643df301ab0",
+      "size_bytes": 795
+    },
+    "local-snapshots/pigauto-Ex.timings": {
+      "sha256": "8bfc4ff319d61ad7b2b8b01691e7a4a0e81e4b49e94f8de28e7a3cfcc88c5d64",
+      "size_bytes": 1332
+    },
+    "local-snapshots/testthat.Rout": {
+      "sha256": "3ae2cfd207464df1337dfc87ff7ba93830e6c2e3582e612b9fbd157444fb5120",
+      "size_bytes": 13862
+    },
+    "synopsis.json": {
+      "sha256": "50d907eb95a608422c8d732b0a0f36f310b16cdf95b3647e2f95d346dd3a2a5d",
+      "size_bytes": 31243
+    },
+    "verification.json": {
+      "sha256": "73681ed124c499793b6a50aa4d0fe1016642f66ea352ec72a72f4012773ca156",
+      "size_bytes": 657
+    },
+    "verify-synopsis.py": {
+      "sha256": "b27d6661043e8ee3bbed50cb2c8dbf7b8b92042146bded92e0446c15257df25c",
+      "size_bytes": 5263
+    }
+  },
+  "scope": "Current synopsis/helper/assessment/local snapshots; historical and failed attempts retained separately"
+}

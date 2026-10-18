@@ -1,0 +1,166 @@
+{
+  "files": {
+    "README.md": {
+      "sha256": "6014e14b12841780754b74a01db21670ac6ac55907b329864d2b492b9792a549",
+      "size_bytes": 1932
+    },
+    "artifact-FINAL.json": {
+      "sha256": "7b5ad22788112add8afb42351f7ecb0ed5d4fd6a475bf6623222b9684bfb656b",
+      "size_bytes": 10230
+    },
+    "manifests/final-mi.json": {
+      "sha256": "cb4b51d417c544790e7af3e90c52320584a5406d706cfc790eafd2e33c62ccc7",
+      "size_bytes": 5123
+    },
+    "manifests/service-url-spelling-absence.json": {
+      "sha256": "553838c800f5d616a738bf15ee26678644c175e89703cfa7ee92f11ed1da7c4e",
+      "size_bytes": 8706
+    },
+    "manifests/spelling-review.json": {
+      "sha256": "141dd6f9d536489f29b9c15940feff612ac702b8ff7e478bd2dec85029b2f0ee",
+      "size_bytes": 1894
+    },
+    "manifests/vignette-timing-doi.json": {
+      "sha256": "5170fe338d8cbc0f50e6290400e2a189f705609788b94613b751c255071a614b",
+      "size_bytes": 13980
+    },
+    "packaging-helper.py": {
+      "sha256": "6a8900e8e94196bab4818f898f6b1ec6c8ce1a199fcc7fb783e6a7f51e5e8bb9",
+      "size_bytes": 12306
+    },
+    "publication-result.json": {
+      "sha256": "a829f6c435a3d44353eb3abd70dbd0cac0ff08af6ea2fee7a812574ef6eb6bac",
+      "size_bytes": 3687
+    },
+    "raw/final-mi.evidence.tar.gz": {
+      "sha256": "3576cddf151faae6d6246f8f5fe878cc3bd88ba9b3bf75517bf1e1312283982e",
+      "size_bytes": 72301
+    },
+    "raw/service-url-spelling-absence.evidence.tar.gz": {
+      "sha256": "6bfb8dcf4bcfcd9cee6c3efda3129171c03506d899d76f3c6734d3a0f1eccc4b",
+      "size_bytes": 144606
+    },
+    "raw/spelling-review.evidence.tar.gz": {
+      "sha256": "5d6387c888716f562bfaf8958f170243c1c5c73f15a9a92b98f56506ceae53a1",
+      "size_bytes": 156131
+    },
+    "raw/vignette-timing-doi.evidence.tar.gz": {
+      "sha256": "225d71fe0e0b3f4375e9a42a01c691ff03e3135cda095a5eea2a566aa8d8d34e",
+      "size_bytes": 98819
+    },
+    "views-manifest.json": {
+      "sha256": "b6c406fb5e4e5dcbf96f189027791ae0089e86676bb271dfd9df0edf7e98b9a5",
+      "size_bytes": 8947
+    },
+    "views/final-mi/final-mi-verification.json": {
+      "sha256": "37725dbbca29d9fad149667cb9e2889ad8f4cbc4cd8e8b36ca4cd9f79a1d2709",
+      "size_bytes": 126954
+    },
+    "views/final-mi/mi-matrix/manifest.json": {
+      "sha256": "b9df2c6aab9c611af36020190c189cc893687d8554db695a982373795ab529b8",
+      "size_bytes": 158633
+    },
+    "views/service-url-spelling-absence/README.md": {
+      "sha256": "f3a636ac168fc1610e2062ae1488e35bc9ccafb93cfef3860643f255b854ff33",
+      "size_bytes": 1590
+    },
+    "views/service-url-spelling-absence/absence-summary.json": {
+      "sha256": "41b610077071dea8ce559542e1a9280c43bdeedbe1aa6e7766a6c30f564976c1",
+      "size_bytes": 184
+    },
+    "views/service-url-spelling-absence/adjudication.json": {
+      "sha256": "865f9b1ab39fc11f10b5bbc422438fc5efa67bcb12a19646640b8fd75a417043",
+      "size_bytes": 5582
+    },
+    "views/service-url-spelling-absence/execution-summary.json": {
+      "sha256": "d81ad8c47a1d6b27575c9abdb6027f0bdb6d3b65931405acbb15ee627e93c683",
+      "size_bytes": 1015
+    },
+    "views/service-url-spelling-absence/identity.json": {
+      "sha256": "26adcf21e912be0369fda26cd31c186f2c6c5befee31960b0327d2be35f95c33",
+      "size_bytes": 317
+    },
+    "views/service-url-spelling-absence/proof-manifest.json": {
+      "sha256": "81abc037e6c88a93cb5904f8217de90fb3ff2336d4c59cda1f3b9c54d47e3314",
+      "size_bytes": 2820
+    },
+    "views/service-url-spelling-absence/spelling-results-flat.csv": {
+      "sha256": "d4e8303301d17841c6b8a47a3a3c6246837b6fe0393f3aa287aff2125401e8bf",
+      "size_bytes": 24991
+    },
+    "views/service-url-spelling-absence/spelling-results.csv": {
+      "sha256": "bd1ecd12e727644cce90880ea8e7b54b39685a0ee31e0c0d6eb329955b963d08",
+      "size_bytes": 21
+    },
+    "views/service-url-spelling-absence/url-network-results-flat.csv": {
+      "sha256": "89eb6a15328373da91bfccc4b0be21032ee6d69570d43c2d0d57249ce9c1e287",
+      "size_bytes": 288
+    },
+    "views/service-url-spelling-absence/url-results.csv": {
+      "sha256": "e7d7a8ff40f52a88b97d3b6190577f5e7e8bf8425758d5fe68ae745d4128837a",
+      "size_bytes": 99
+    },
+    "views/spelling-review/README.md": {
+      "sha256": "a9ab1b9e4efda1fd1a83e698eeb7dae63e3ed9293b65d1572141fd3a2b53be93",
+      "size_bytes": 2598
+    },
+    "views/spelling-review/receipt.json": {
+      "sha256": "23c77e6f4da89770f62a15bb67f8da6a8eebcf8e874a35f792df72e715a2dbd3",
+      "size_bytes": 5410
+    },
+    "views/spelling-review/source-contexts.csv": {
+      "sha256": "8e1f071560054b439085721e89f20d5ac517b176ca91c4817006940e9eb9f284",
+      "size_bytes": 458063
+    },
+    "views/spelling-review/source-contexts.csv.raw.gz": {
+      "sha256": "6952f68635e31bbda3a6110c867e7f90d12940aeb5053ab845576468918a28ee",
+      "size_bytes": 131278
+    },
+    "views/spelling-review/token-adjudication.csv": {
+      "sha256": "c163b43f577be1427930413d50554b03a57db74449fe571dd56c4bdd17dabea4",
+      "size_bytes": 142550
+    },
+    "views/spelling-review/token-adjudication.csv.raw.gz": {
+      "sha256": "411d25449dc406b84b205c38897bf898e71e3b8e742d7d7be3e4754329d930c3",
+      "size_bytes": 17007
+    },
+    "views/vignette-timing-doi/README.md": {
+      "sha256": "a276dc2900b4ac9eceae96f3032008492b390696bb0660d9500a94b6a0a64e11",
+      "size_bytes": 1997
+    },
+    "views/vignette-timing-doi/doi-adjudication.md": {
+      "sha256": "f41f25b57414fd6545e10500c4d1397983d2882518528ac2425b32bd9e4974f0",
+      "size_bytes": 1239
+    },
+    "views/vignette-timing-doi/doi-metadata.json": {
+      "sha256": "80b7bde9ee828db6982f0a87ab0f67aed3d260ed037b07e8613ff38f0edd22ee",
+      "size_bytes": 1812
+    },
+    "views/vignette-timing-doi/eval-false-proof.json": {
+      "sha256": "20c5eda39db53d968141cc4ebbe400a31d0e7b8b73bb201ded6c188f885c9c97",
+      "size_bytes": 143
+    },
+    "views/vignette-timing-doi/identity-after.json": {
+      "sha256": "dd4e5c2dd63db265a7294f25ee228f8f96861b5682a90b28f55f1dab2ea4e555",
+      "size_bytes": 226
+    },
+    "views/vignette-timing-doi/receipt-manifest.json": {
+      "sha256": "7a1f07b63d0c6e245b22124727855ae8299b8921caf595383a04e67c6d9c02c7",
+      "size_bytes": 4811
+    },
+    "views/vignette-timing-doi/timing-summary.csv": {
+      "sha256": "ee8f5ac47d7ab2a0993fbf6503a73b20ca4fee767f1c24e6e1148fb43492ddf8",
+      "size_bytes": 552
+    },
+    "views/vignette-timing-doi/timing-summary.csv.raw.gz": {
+      "sha256": "31c5d4fa9e9978207fff6b4544d8c5b0ae8f4cc4f1686d0e9acbbc409562703d",
+      "size_bytes": 322
+    },
+    "views/vignette-timing-doi/timing-summary.json": {
+      "sha256": "7c65963d2257eca3517617d412a348455be28752002a6e22f586345fe99253c2",
+      "size_bytes": 5141
+    }
+  },
+  "original_members_checked": 99,
+  "status": "PASS_SAVED_OUTPUT_READBACK"
+}
