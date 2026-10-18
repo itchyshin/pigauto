@@ -1,7 +1,9 @@
 #' Impute missing phylogenetic traits (convenience wrapper)
 #'
-#' One-call interface to the full pigauto pipeline: preprocessing, baseline
-#' fitting, GNN training, and prediction.  For fine-grained control, use the
+#' One-call interface for preprocessing, phylogenetic baseline fitting, and
+#' prediction. The default \code{gnn = FALSE} uses the baseline alone. Set
+#' \code{gnn = TRUE} to also train a GNN and calibrate its contribution.
+#' For fine-grained control, use the
 #' individual functions (\code{\link{preprocess_traits}},
 #' \code{\link{fit_baseline}}, \code{\link{fit_pigauto}}, etc.) directly.
 #'
