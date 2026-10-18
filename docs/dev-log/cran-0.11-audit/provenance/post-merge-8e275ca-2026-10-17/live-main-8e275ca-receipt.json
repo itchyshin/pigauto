@@ -1,0 +1,28 @@
+{
+  "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+  "source_pr": 237,
+  "pages_run": 39080327369,
+  "pages_status": "success",
+  "live_verifier": "LIVE_SITE_RETIREMENT_CHECK_OK",
+  "retired_routes": 44,
+  "retained_routes": 62,
+  "sitemap_entries": 62,
+  "search_entries": 614,
+  "browser": "Codex own in-app browser",
+  "reviewed_pages": [
+    "/",
+    "/articles/getting-started.html",
+    "/news/index.html",
+    "/reference/compare_methods.html",
+    "/reference/plot.pigauto_fit.html",
+    "/reference/simulate_benchmark.html"
+  ],
+  "visual_scope": "Rendered text and pixels for six changed pages; new guide version note, runtime guard and baseline examples verified. Code blocks have horizontal scrolling; some long NEWS sidebar labels truncate at this narrow viewport. No whole-site visual or broad scientific performance certification.",
+  "screenshot_scope": "Screenshots in tool transcript only; no exported file hash claimed.",
+  "checked_utc": "2026-10-17T23:54:07.260809+00:00",
+  "files": {
+    "live-main-8e275ca/retained-route-statuses.tsv": "7288c1c2984c760f11a672f406311016ccefd193bc449402a4bbd645038f8ff1",
+    "live-main-8e275ca/discovery-check.json": "479c4a2b0a42d8ad99778509053a6aaea216ef5761895cb737dfbcfd76e0ee00",
+    "live-main-8e275ca/retired-route-statuses.tsv": "5414f6cb69e9d140c38d0a6308f8e0ddbe8952834eea01b6b861a78eecb807e1"
+  }
+}

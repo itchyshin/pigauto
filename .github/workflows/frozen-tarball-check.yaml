@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: frozen-c2e768ad-${{ github.ref }}
+  group: frozen-14ee7e5d-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -79,6 +79,11 @@ jobs:
       - name: Check the original archive with manuals and all Suggests
         shell: Rscript {0}
         run: source('script/cran-0.11-platform/check.R', echo = TRUE)
+      - name: Retain warning objects in a separate native-layout replay
+        shell: Rscript {0}
+        run: |
+          Sys.unsetenv('NOT_CRAN')
+          source('script/cran-0.11-platform/capture-warnings.R', echo = TRUE)
       - name: Verify the archive after check, including failures
         if: always() && steps.download.outcome == 'success'
         run: python script/cran-0.11-platform/artifact.py post
@@ -86,7 +91,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: frozen-c2e768ad-${{ matrix.os }}-${{ matrix.r }}
+          name: frozen-14ee7e5d-${{ matrix.os }}-${{ matrix.r }}
           path: |
             platform-evidence/
             frozen-check/
