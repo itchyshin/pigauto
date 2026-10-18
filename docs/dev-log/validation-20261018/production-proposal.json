@@ -1,0 +1,13 @@
+{
+  "approved": false,
+  "source_identity": "67ea5121b8e9e6db4009f562ebf3758384deeff7f16a01685e61f5e20761dcfa",
+  "runtime_identity": "a50c788faed4f6054ecce03be61ccae13209729186c16556c67a74c33ffab0c4",
+  "jobs_hash": "0adafdb698ecce426f75ca09e9c6ba6028829ae98495f5453ba919e5b61d8769",
+  "workers": 48,
+  "budget_sec": 54000,
+  "job_timeout_sec": 1800,
+  "execution_context": "totoro",
+  "estimated_elapsed_hours": [5.5, 14.8],
+  "planned_attempts": 32240,
+  "note": "Proposal only; human approval and fresh host/runtime checks required. No production receipt exists."
+}
