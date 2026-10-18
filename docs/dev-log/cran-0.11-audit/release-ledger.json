@@ -4,7 +4,7 @@
   "release_type": "update",
   "status_claim": "source-clean",
   "next_unproven_rung": "tarball-clean",
-  "audit_verdict": "NOT_READY_SOURCE_HELP_FIX_PR238_REQUIRES_MERGE_NEW_ARTIFACT_AND_CHECKS",
+  "audit_verdict": "NOT_READY_SUCCESSOR_DEPLOYMENT_FREEZE_CHECKS_AND_FINAL_PANEL_PENDING",
   "artifact": {
     "path": "/Users/z3437171/.codex/artifacts/pigauto-cran-0.11.0/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/pigauto_0.11.0.tar.gz",
     "sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
@@ -101,8 +101,10 @@
   },
   "submission": {
     "state": "not_submitted",
-    "cran_upload_authorized": false,
-    "maintainer_confirmation_authorized": false
+    "cran_upload_authorized": true,
+    "maintainer_confirmation_authorized": true,
+    "authorization_scope": "Conditional user approval: submit pigauto0.11 release after help fix and all applicable exact-artifact/platform/independent release gates pass; no waiver of technical findings or scientific scope expansion",
+    "user_approval_text": "After this I approve CRAN submission"
   },
   "evidence_pr": {
     "number": 236,
@@ -112,22 +114,24 @@
     "publication_head_policy": "Actual published head and final CI readback recorded in PR body to avoid self-reference"
   },
   "source_candidate": {
-    "source_commit": "816987fd160c1d2c5c58b020b07357ff17c077e5",
+    "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
     "source_pr": 238,
-    "source_pr_merged": false,
+    "source_pr_merged": true,
     "source_ci": 39087559368,
     "source_ci_state": "PASS_ALL3_EXACT_HEAD",
-    "pages_run": null,
-    "deployed_site_gate": "PENDING_EXPLICIT_MERGE_APPROVAL_AND_DEPLOYMENT"
+    "pages_run": 39090594794,
+    "deployed_site_gate": "PENDING_MATCHING_DEPLOYMENT",
+    "approved_pr_head": "816987fd160c1d2c5c58b020b07357ff17c077e5",
+    "main_source_ci": 39090594763
   },
   "approvals": {
-    "source_merge_and_automatic_deployment": "Explicit user approval received and exercised for PR237",
+    "source_merge_and_automatic_deployment": "Explicit Merge238 approval exercised; merged b2e6054; actual deployment verification pending",
     "public_builder_upload": "Previously explicitly authorized for this0.11 audit; existing validated account used, no new token request",
-    "cran_upload": "Separate exact-archive approval still required",
+    "cran_upload": "Conditionally approved after all release gates pass; not performed",
     "evidence_pr236_merge": "Not authorized; remains unmerged"
   },
   "historical_ledger": "docs/dev-log/cran-0.11-audit/historical-release-ledger-pre-14ee7e5d-2026-10-17.json",
-  "updated_utc": "2026-10-18T02:02:13.632847+00:00",
+  "updated_utc": "2026-10-18T02:56:50.061478+00:00",
   "final_proof_summary": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/closure-summary.json",
   "timing_decision": {
     "technical_preparation_review": "Grace accepts disclosed predecessor14ee sole Mac NOTE for technical preparation; raw native NOTE/strict-driver failure unchanged",
@@ -139,7 +143,7 @@
       "elapsed_seconds": 18.406
     }
   },
-  "claim_scope": "Source-clean for proposed816987fd: all3source CI jobs, installed-help/novice checks, independent source review and local-site review pass. Not merged/deployed; no current frozen archive or release-ready claim.",
+  "claim_scope": "Approved source238 merged b2e6054; premerge exactheadCI/source/local-site PASS. Matching mainCI/deployment pending; no current successor archive.",
   "panel_evidence": {
     "grace": {
       "kind": "file",
@@ -163,7 +167,7 @@
     "successor_source_head": "816987fd160c1d2c5c58b020b07357ff17c077e5",
     "successor_archive_frozen": false,
     "source_fix_review": "PASS provisional installed help and novice workflow; not a release verdict",
-    "merge_and_automatic_deployment_authorized": false,
+    "merge_and_automatic_deployment_authorized": true,
     "cran_upload_authorized": false,
     "maintainer_confirmation_authorized": false,
     "recorded_utc": "2026-10-18T01:45:08.327129+00:00",
@@ -186,7 +190,8 @@
     "pr_state": {
       "kind": "file",
       "value": "docs/dev-log/cran-0.11-audit/provenance/help-fix-816987fd-2026-10-18/pr238-final.json"
-    }
+    },
+    "merged_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18"
   },
   "last_merged_source": {
     "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
@@ -195,5 +200,17 @@
     "main_source_ci": 39080327341,
     "pages_run": 39080327369,
     "deployed_site_gate": "PASS"
+  },
+  "successor_candidate": {
+    "sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+    "size_bytes": 5137837,
+    "state": "frozen; exact artifact gates pending",
+    "evidence_directory": "docs/dev-log/cran-0.11-audit/provenance/successor-a93fece7-2026-10-18",
+    "mi_matrix": "PASS 12 steps across4cells",
+    "native_macos": "running",
+    "direct_platform_matrix": "not yet launched",
+    "final_panel": "not yet reviewed",
+    "cran_submission": "not submitted"
   }
 }

@@ -13,7 +13,7 @@ def verify(root):
     for os_name, r_version in [("windows-latest", "release"),
                                 ("windows-latest", "devel"),
                                 ("ubuntu-latest", "release")]:
-        folder = root / f"frozen-14ee7e5d-{os_name}-{r_version}"
+        folder = root / f"frozen-a93fece7-{os_name}-{r_version}"
         evidence = folder / "platform-evidence"
         identities = []
         for phase in ["download", "pre", "post"]:

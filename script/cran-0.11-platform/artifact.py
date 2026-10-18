@@ -13,10 +13,10 @@ import tempfile
 import urllib.request
 
 
-URL = "http://builder2.rhub.io/api/-/package/46ba317ee4d4723712b5e5962f1e992d"
-SHA = "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb"
-SIZE = 5137648
-INVENTORY = "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d"
+URL = 'http://builder2.rhub.io/api/-/package/062a7517bd61fe3fd188ab5f0fd12254'
+SHA = 'a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb'
+SIZE = 5137837
+INVENTORY = 'd7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d'
 ARCHIVE = Path("frozen-artifact/pigauto_0.11.0.tar.gz")
 EVIDENCE = Path("platform-evidence")
 

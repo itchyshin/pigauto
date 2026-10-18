@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: frozen-14ee7e5d-${{ github.ref }}
+  group: frozen-a93fece7-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -91,7 +91,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: frozen-14ee7e5d-${{ matrix.os }}-${{ matrix.r }}
+          name: frozen-a93fece7-${{ matrix.os }}-${{ matrix.r }}
           path: |
             platform-evidence/
             frozen-check/
