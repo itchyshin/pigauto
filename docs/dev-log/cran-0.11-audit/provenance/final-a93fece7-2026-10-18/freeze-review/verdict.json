@@ -1,0 +1,33 @@
+{
+  "reviewer": "pat",
+  "verdict": "PASS",
+  "scope": "Read-only source identity and prepared builder/freeze script preflight for successor commit b2e6054.",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "source_worktree": "/Users/z3437171/.codex/worktrees/cran-011-final-artifact/pigauto",
+  "blockers": [],
+  "conditions": [
+    "Before executing the build, read back matching main CI run 39090594763 at exact commit b2e6054685e6bdedb073ba46e058af2c0a619a18; successor GATES.md still leaves S1 pending and build-successor.py does not itself assert this CI receipt.",
+    "This verdict covers scripts only; the actual archive must receive a separate independent identity, inventory, rights, and exact-check review.",
+    "Keep all previous 14ee votes and bytes unchanged."
+  ],
+  "checked_evidence": [
+    "Source worktree is clean, detached at b2e6054685e6bdedb073ba46e058af2c0a619a18, and diff from 8e275ca changes exactly R/impute.R, R/report.R, man/impute.Rd, man/pigauto_report.Rd.",
+    "All four committed file hashes match the previously reviewed Pat source-fix receipt.",
+    "`git diff --check` passes.",
+    "Builder script enforces exact commit, clean source, same-commit Rose PASS, one numerical thread, fresh output directory, 600-second cap, and post-build source cleanliness.",
+    "Freeze script enforces the same clean exact source commit; uses content-addressed gzip storage, refuses conflicting existing bytes, writes exclusively and marks read-only; checks path roots/traversal/member types/forbidden content; compares included files with commit blobs; validates the permitted DESCRIPTION normalization and generated-file set; and verifies data/NOTICE carry-forward hashes.",
+    "Compared with predecessor freeze-final.py, successor freeze script changes only TASK directory and COMMIT identity.",
+    "Matching Rose live-site receipt exists and reports PASS for exact b2e6054 with Pages success and route checks passing.",
+    "Host Python 3.10.12 tarfile.extractall signature supports the script's filter keyword."
+  ],
+  "limits": [
+    "Neither build-successor.py nor freeze-successor.py was run.",
+    "No archive was created, copied, hashed, or modified during this review.",
+    "No fit, package check, external communication, upload, merge, source edit, or release action was performed."
+  ],
+  "reviewed_script_sha256": {
+    "build-successor.py": "0249566d9f7096fc1fcd7eb5c43ed96cc7fbc2980218d8eaf9ae5541e881d597",
+    "freeze-successor.py": "6b16763707651d4a383efe1fa727462335f4d223ebde62679044b053860f9341",
+    "predecessor-freeze-final.py": "95f517e91662c251ff7bdcdf3e4372c3fcf1ff2c54f53f94428757e1790e5573"
+  }
+}

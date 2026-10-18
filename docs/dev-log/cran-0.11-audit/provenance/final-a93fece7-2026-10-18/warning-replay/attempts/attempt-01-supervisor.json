@@ -1,0 +1,12 @@
+{
+  "attempt": 1,
+  "exit_code": 1,
+  "elapsed_seconds": 0.21335612499387935,
+  "failure": "testthat package unavailable because R_LIBS_USER was initially limited to the native Rcheck installation",
+  "command": [
+    "Rscript",
+    "--vanilla",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/capture.R",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay"
+  ]
+}

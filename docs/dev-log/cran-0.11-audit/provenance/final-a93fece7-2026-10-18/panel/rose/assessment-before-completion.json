@@ -1,0 +1,11 @@
+{
+  "draft": "panel/rose/README.md",
+  "style_score": 2,
+  "style_scale": "1 is plain and natural; 10 is strongly formulaic or AI-like",
+  "confidence": "moderate",
+  "slop_check": "PASS: specific claims, concrete evidence, no canned transitions, no em dash",
+  "scientific_gate": "PASS: no new scientific performance claim; scope and limits are explicit",
+  "factual_gate": "PASS: statements checked against the frozen archive and retained receipts",
+  "reference_gate": "PASS: evidence paths and sources identify the records reviewed",
+  "exact_draft_completion": "PASS: assessment applies to the saved README.md draft"
+}

@@ -1,0 +1,52 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "d52c2cc0b3d5cc799a0672562d0eab1ae429a8fae5fbbf19f2a9be7d7c168384",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Grace final CRAN reviewer",
+  "method": "Separate post-draft read of the complete saved verdict against archive and source readbacks, actual native logs, downloaded ZIP digests, warning amendment, ancillary receipts, ledger, comments and retained current CRAN pages.",
+  "genre": "Technical CRAN release review",
+  "coverage": "Whole saved README.md, lines 1 through 17",
+  "score": 3,
+  "style_status": "assessed",
+  "score_reason": "Specific numbers and consequences dominate; the repeated scope limits are necessary for a release vote and do not obscure the finding.",
+  "confidence": "moderate",
+  "confidence_reason": "This is a self-review of perceived style, not an authorship test or independent human judgment.",
+  "examples": [
+    {
+      "location": "README.md paragraph 1",
+      "cue": "READY for the frozen pigauto 0.11.0 archive",
+      "impact": "The vote and exact object are visible before the supporting detail.",
+      "repair": "no change needed",
+      "line": 3,
+      "quote": "**Verdict: READY for the frozen pigauto 0.11.0 archive.**"
+    },
+    {
+      "location": "README.md timing paragraph",
+      "cue": "627.141 seconds, including a 406-second test stage and a 20-second vignette rebuild stage",
+      "impact": "Separates whole-check risk from the short vignette rebuild, which is the relevant observed incoming concern.",
+      "repair": "no change needed",
+      "line": 9,
+      "quote": "The longest native check was Windows release at 627.141 seconds, including a 406-second test stage and a 20-second vignette rebuild stage."
+    },
+    {
+      "location": "README.md warning provenance paragraph",
+      "cue": "unique process attribution is unresolved",
+      "impact": "Keeps a meaningful provenance limit visible without turning byte-identical warning content into a made-up failure.",
+      "repair": "no change needed",
+      "line": 13,
+      "quote": "The audited RDS bytes match both successful captures, so the unique process attribution is unresolved."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "The draft makes no new recovery or coverage claim; it explicitly limits the warning and optional-model evidence to tested paths.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Archive identity, source state, four check statuses and hashes, downloaded ZIP digests, timing, spelling, URL and capture figures were compared with the named source records. The current ledger was read for rung and PR state.",
+  "references_gate": "pass",
+  "references_gate_reason": "The retained current primary CRAN policy, checklist and URL guidance support the stated size, CPU-use and 403 interpretation; current Crossref metadata supports article identity only, as drafted.",
+  "date": "2026-10-18",
+  "calibration_status": "Protocol examples and earlier release receipts were seen; this is not a held-out benchmark.",
+  "interpretation": "perceived_style_not_authorship"
+}

@@ -1,0 +1,7 @@
+file,render_elapsed_seconds,process_elapsed_seconds,exit,start_utc
+common-pitfalls.Rmd,0.7715,4.065,0,2026-10-18T07:10:11.764321+00:00
+getting-started.Rmd,2.719,5.502,0,2026-10-18T07:10:15.832634+00:00
+gnn-architecture.Rmd,0.5053,3.353,0,2026-10-18T07:10:21.336904+00:00
+mixed-types.Rmd,1.6557,4.992,0,2026-10-18T07:10:24.693101+00:00
+multiple-imputation.Rmd,0.8086,3.966,0,2026-10-18T07:10:29.687179+00:00
+tree-uncertainty.Rmd,0.6678,3.434,0,2026-10-18T07:10:33.655300+00:00

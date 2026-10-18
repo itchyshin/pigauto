@@ -1,0 +1,54 @@
+{
+  "state": "UPLOAD_HELPER_RETURNED",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "archive_before": {
+    "path": "/private/tmp/pigauto-release-candidate/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/pigauto_0.11.0.tar.gz",
+    "sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "size_bytes": 5137837,
+    "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18"
+  },
+  "command": [
+    "Rscript",
+    "--vanilla",
+    "/private/tmp/pigauto-final-closure-20261017/upload-final-rhub.R",
+    "/private/tmp/pigauto-release-candidate/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/pigauto_0.11.0.tar.gz",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/rhub-upload.json"
+  ],
+  "helper_sha256": "2d549f256ad3d96dd8d517d1a27baa1fd302143d25ccd27c514f5ef05f850f74",
+  "wrapper_sha256": "fe642bbf57c1819911ffc47b2865673cb9b89b21340668b96a2130621cb93809",
+  "final_receipt_sha256": "781c6cf956656399abc1dc6363e6f64afe57672b11a73027dea982ed31576a8f",
+  "ci_receipt_sha256": "e82c5b5ea756a65273577f49b099785306dc99d47c9b696ed3197afa7a84b92c",
+  "timeout_seconds": 300,
+  "thread_caps": {
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "R_NUM_THREADS": "1",
+    "JULIA_NUM_THREADS": "1"
+  },
+  "started_utc": "2026-10-18T02:54:56.977779+00:00",
+  "existing_account_only": true,
+  "new_token_or_email_request": false,
+  "raw_child_output_persisted": false,
+  "confirmation": true,
+  "owned_process_group": 42362,
+  "exit_code": 0,
+  "timed_out": false,
+  "elapsed_seconds": 5.763,
+  "archive_after": {
+    "sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "size_bytes": 5137837
+  },
+  "archive_unchanged": true,
+  "result_files": {
+    "rhub-upload.json": {
+      "sha256": "458d308350b84d91e4c06260fc4678cd2c44a4e1750ddca5f7fbd59231125198",
+      "size_bytes": 218
+    },
+    "rhub-upload.json.rds": {
+      "sha256": "427a4740340ab6837c19cd197df6031365bf16524faf931e04b23c6630bf13d3",
+      "size_bytes": 196
+    }
+  }
+}

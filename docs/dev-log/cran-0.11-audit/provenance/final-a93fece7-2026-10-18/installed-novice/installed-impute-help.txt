@@ -1,0 +1,507 @@
+Imputmissinphylogenetitrait conveniencwrappe)
+Descriptio:
+
+    Oncalinterfacfopreprocessin,phylogenetibaselin
+    fittin,anpredictio.Thdefaul gn =FALS’useth
+    baselinalon.Se gn =TRU’talstraiGNancalibrat
+    itcontributio.Fofingrainecontro,usthindividua
+    function (preprocess_trait’, fit_baselin’, fit_pigaut’,
+    et.)directl.
+Usag:
+
+    imput(
+      trait,
+      tre,
+      species_co =NUL,
+      trait_type =NUL,
+      multi_proportion_group =NUL,
+      k_eige = aut",
+      log_transfor =TRU,
+      missing_fra =2,
+      n_imputation =1,
+      covariate =NUL,
+      epoch =2000,
+      verbos =TRU,
+      see =NUL,
+      multi_obs_aggregatio =(har", sof"),
+      lambda_mod =(estimat", fixed_", c", baye"),
+      discrete_lambd =(estimat", fixed_"),
+      joint_solve =(inhous", rphylopar"),
+      predict_metho =(aut", exac", per_colum"),
+      joint_refine_ite =0,
+      em_iteration =0,
+      em_to =00,
+      em_offdia =FALS,
+      pool_metho =(media", mea", mod"),
+      clamp_outlier =FALS,
+      clamp_facto =,
+      match_observe =(non", pm"),
+      pmm_ =5,
+      safety_floo =FALS,
+      phylo_signal_gat =FALS,
+      phylo_signal_threshol =,
+      phylo_signal_metho = lambd",
+      conformal_split_va =FALS,
+      gn =FALS,
+       ...
+     )
+     Argument:
+
+ trait:datframwitspeciearownameantraicolumn,o
+          whe species_co’isupplie)datframwitspecie
+         columthamahavmultiplrowpespecie.Supporte
+         columtype: numeri’ continuou), intege’ coun),
+          facto’ binarcategorica), ordere’ ordina),
+          characte’ facto →binarcategorica), logica’
+          binar).Seth Traitypautdetectio*sectiobelo.
+
+   tre:objecoclas ‘phyl"’.
+species_co:characte.Namothcolumi trait’thaidentifie
+         specie. Whesupplie,multiplobservationpespecie
+         arsupporte. Defaul NUL’useroname onrope
+         specie).
+trait_type:namecharactevectooverridinthautdetectetyp
+         fospecifitraicolumn,. Surviva = proportio",
+         Parasite = zi_coun")’.Requirefothtwtypetha
+         cannobinferrefroclas se Traityp
+         autdetectio*belo).Defaul NUL’ aut).
+multi_proportion_group:namelisdeclarincompositiona
+          (multi_proportio’)trait,. liscolou =(blac",
+          blu", re", yello"))’.Eacliselemennamegrou
+         angivethtraicolumnthaforsimple row
+         summint).EncodeviCL +pecomponenscor.
+         Multi_proportiotrait_cannotbdeclarethroug
+          trait_type’ —usthiargumeninstea.Defaul NUL’ n
+         multi_proportiogroup).
+
+k_eige:integeo ‘aut"’.Numbeospectranodfeatureuset
+         builthphylogenetigrap.Thdefaul ‘aut"’scaleth
+         dimensiottresiz;aintegeoverridethachoic.
+log_transfor:logica.Lotransforevercontinuoutraiwhos
+         observevaluearalpositiv defaul TRU’),the
+         bactransforthimputation.Seit FALS’whetrait
+         aralreadoloscal foexampllobodmas):
+         otherwisthearloggesecontimanimputeo
+         lolo)scal,whiccabiaanalysedonothlo
+         scal.Witmioraanalreadloggetrait,loth
+         raoneyourselanse FALS’.Ireadatchec
+          PanTHERI,02mammaspecie,foualreadloggetrait,
+         posteriodraw),thdefaulshifteRubipooleregressio
+         slopebutstandarerrorothcompletdat
+         slop,idirectiothadependeowhicvaluewer
+         missin;wit FALS’thlargesshifwa.
+missing_fra:numeri.Fractiooobservecellheloufo
+         validatiotesevaluatio defaul 2’).Musbi ‘,
+         )’. ’addnextrmissingnes nvatesholou).
+n_imputation:intege.NumbeoMdropouimputatioset defaul
+          ’).Musbpositivintege.Value >enabl
+         betweeimputatiouncertaint.
+covariate:datframomatrioenvironmentacovariate full
+         observe —nNA). Covariatearconditioner:theinfor
+         imputatiobuarnothemselveimpute. Numeriintege
+         columnarscore;factoorderecolumnaronho
+         encodeautomaticall.Ivariablhamissinvalue,
+         includii trait’instea.Rowaralignetthsam
+         specie /observatioordea trait’aftetrematchin
+          singlob:rownamevtilabel;multob: species_co’
+         ipresen,otherwisinpuroorde).Matchin nro’alon
+         doenopaispecietenvironmen.Defaul NUL’ n
+         covariate).
+
+ epoch:intege.MaximuGNtraininepoch defaul 200’).Mus
+         bpositivintege.
+
+verbos:logica.Prinprogres defaul TRU’).
+
+   see:optionaintege.Whesupplie,makethstochastifittin
+         anpredictiostepreproducibl;thdefaul NUL’use
+         thcurrenRNstrea.
+multi_obs_aggregatio:characte.Hotaggregatmultipl
+         observationpespeciebeforthLevebaselin.
+          ‘har"’ defaul)thresholdbinarproportionaan
+         useargmafocategorica.  ‘sof"’preserve
+         specieleveproportionandispatchesofstes
+         thaintermediatclasfrequenciecontributfractiona
+         liabilitevidenc. Passet fit_baselin’.
+lambda_mod:characte.PagelambdmodfothBbaselin.
+          ‘estimat"’ defaul)fitpetraiPagelambdo
+         eaccontinuoufamil Beligibl)latencolum -
+         continuou,coun,proportio,anzi_counmagnitud,vi
+         thjoinMV /thresholjoinbaselinow lambda_col’
+         machinerwhethajoinpatfire,opecolumrfi
+         otherwis.Binar,ordinaancategoricatraitgethei
+         owlambdbdefaul (discrete_lambd = estimat"’);th
+         resothiparagrapdescribe discrete_lambd =
+          fixed_"’,wherdiscrettrait binar,categorica,z
+         gat)ANordinahavndiscrettraianaloguoPage
+         lambdotheiow -therinlambda_testimatfo
+         the.Unde predict_metho = per_colum"’ sebelo)the
+         stafixealambd =ieverpat,matchinprS
+         behaviou.Unde predict_metho = exac"’ anfotrait
+         thdefaul ‘aut"’routet ‘exac"’)theinsteashar
+         thjoinfi lambda_bloc’ -thexacconditiona
+         covariancmodeuseONsharephylogeneticorrelatio
+         matri lambda_bloc)’foevercolum,sthSigm
+         estimatfeedinimusitselcomfroainternall
+         consistenini,nomio )’fodiscretcolumnan
+          lambda_)’focontinuouone Shinichdecisio,
+         docdeloexacdefaulSdefaulreporm). ‘fixed_"’
+         preservethprlambdBrowniacorrelatiomatri
+         everywher; ‘c"’an ‘baye"’aralternativpecolum
+         estimatorthaforccontinuoufamilcolumnontth
+         pecolumBpat njoinanalogu).Whe predict_metho
+          = exac"’o joint_refine_ite >’,thjoin
+          multtrai)predictiopatadditionallusethsingl
+         share lambda_bloc’focrostraicomputationthanee
+         oncommophylogeneticorrelatiomatri,neveoverridin
+         continuoufamilcolumowestimatelambda_.Passe
+         t fit_baselin’anstoreithfittemodeconfi.Whe
+          covariate’arsupplie,thcovariatawarBpat
+          (bm_impute_col_with_co()’)acceptnumerilambdo
+          ‘estimat"’,s lambda_mod i%(estimat", fixed_")’
+         reacheianeaccovariatawarBeligiblcolumget
+         itowestimatelambd;idoeNOaccep ‘c"’ /
+          ‘baye"’,whicfalbactlambd =foBeligibl
+         columnwitwarninfro fit_baselin’.
+discrete_lambd:characte, ‘estimat"’ defaul)o ‘fixed_"’.Wit
+          ‘estimat"’,thbinar,ordinaanzerinflatecoun
+         gatliabilitcolumnoththresholjoinbaselin,an
+         thonvrescolumoeaccategoricaclas,gethei
+         owPagelambd,sweasignadiscrettraishrink
+         towaritprevalencinsteaocopyinclosrelative.
+          ‘fixed_"’restorethprevioubehaviou binaran
+         ordinaalambd =,oathsharejoinlambdoth
+          exac"rout;categoricaa).Evidenc simulate
+         BrowniamotioanOdat, =10t100,3\missin;
+          docdelodiscretlambdREADMm’):estimatin
+         discretlambdalonaddeabou0t0discret
+         accuracaPagelambdoobelo;togethewit
+          safety_floo =FALS’an phylo_signal_gat =FALS’ als
+         thdefault)thgaiwa0t1,anbinaran
+         categoricaaccuracmatcheobeaBAC.Cost:wit
+         lambdneaan >=100,accurac 00t 00an
+         Briescor 01t 01;oAVONET30categorica
+         trait,Brie 01t 02witaccuracunchangeo
+         bette.OrdinaaccuracstiltrailBACalambd =.
+         Thcategoricaonvreslambdaarnoreportei
+          ‘lambda_per_trai’.Se fit_pigaut()’.
+joint_solve:characte.WhicsolveestimatethjoinMV /
+         thresholjoin /OVcategoricabaseline. ‘inhous"’
+          defaul)ibytidenticatpriorelease; ‘rphylopar"’
+         delegatet Rphylopar:phylopar()’convergeREMfi,
+         witautomatifallbact ‘inhous"’ofailur.Passet
+          fit_baselin’anstoreithfittemodeconfi.Se
+          docdelo20201continuougadiagnosim’.
+predict_metho:characte.Predictioroutfothihousjoin
+         solve,passet fit_baselin’. ‘aut"’ defaul,S5)
+         fitthbaselinwitbotth ‘exac"’an ‘per_colum"’
+         routeanpick,petrai,whichevehathloweloso
+         thatraivalidatiocell measquareerrooth
+         scorelatenscalfo
+         continuoucounproportioordinazi_counmagnitud;mea
+         lolosfobinarzi_coungat;meamultinomialolos
+         focategorica),fallinbact ‘exac"’otiowhe
+         fewethavalidatiocellbelontthatrai includin
+         whetherinvalidatiospliaal). ‘exac"’useth
+         fulcrostraiconditionameaanvarianco ve) ~
+         MV,Sigm %lambda_bloc))’ Hadfiel &Nakagaw,201
+         sparsprecisiofor),eaccolumGLmeacentrea
+          lambda_bloc’beforthsolv;discretliabilitcolumn
+         shar lambda_bloc’undethirout se lambda_mod’
+         abov).Fallbact ‘per_colum"’abovroughl2000
+         unknowcell roughl400specieatrait),o
+         singulaunusablSigm,owhefewethajoincolumn
+         onHendersosparsprecisioaravailabl;print
+         ontim messag()’pesessiowhe predict_metho’wa
+         lefaitdefaul,o warnin()’evertimwhe
+          ‘exac"’warequesteexplicitl. ‘per_colum"’retain
+         thoriginapecolumconditionapredictiorout n
+         crostraiborrowinithpredictioste).Nonoth
+         threoptionchangcovariancestimatiooth
+          ‘rphylopar"’solve.Throutactualluseirecordei
+          fimodel_confipredict_method_use’ (‘exac"’,
+          ‘per_colum"’,o ‘aut"’)an,petrai,i
+          fimodel_confipredict_method_by_trai’.Unde ‘aut"’
+         witreavalidatiocell, fimodel_confi route_val_’ /
+          ‘score_val_’recor,petrai,homanoitvalidatio
+         cellchosthroutversuwerreservefogat
+         calibratioanconformascorin se fit_baselin’
+          predict_metho’doc).
+joint_refine_ite:intege,defaul 0’.Enablecrostrai
+         refinemenothjoinbaselincelimputationusinth
+         estimateSigm thihoussolve max_ite’E
+         celrefinemen; joint_mvn_solve’). 0’preserve
+         currenbehavioubytfobyt.Threfinemeniguarde:
+         thSigmstemusshrineaciteratio,othlooroll
+         bactthlasgooiteratanset ‘diverge’.Asses
+         thiopicontrowithelouevaluatioothintende
+         dat.Haneffecoantraipredictebth ‘exac"’
+         rout se fit_baselin’ predict_metho’doc);undeth
+         defaul predict_metho = aut"’ithereforonlapplie
+         ttrait ‘aut"’routet ‘per_colum"’.Passet
+          fit_baselin’anstoreithfittemodeconfi.
+em_iteration:intege.PhasEiterationfoththresholjoin
+         baselin binar +ordina +OVcategorica).Defaul 0’
+         preservevbehavioubytfobyt.Whe ‘>=2’,th
+         BratSigmlearnebthjoinsolve (joint_solve’;
+         thihoussolvebdefaul)aiteratioifebaca
+         thpetraiprioSaiteratio,ut
+          em_iteration’timeounti em_to’convergenc.Passe
+         t fit_baselin’.
+
+ em_to:numeri.RelativFrobeniuconvergenctolerancfoth
+         Phas /Eloo.Defaul 1’.
+em_offdia:logica.Phasopi:whe TRU’AN em_iteration >=
+         2’,eacliabilitcelpriousethful
+         conditionaMVfroSigmofdiagonaentrie,stha
+         observinondiscrettraishift nojustighten)th
+         prioocorrelateothetrait. Binar +ordinaonl;OV
+         categoricastayoPhasdiagona. Defaul FALS’.
+         Passet fit_baselin’.
+pool_metho:characte.Hotpoomultiplimputatiodraw
+          (n_imputation >’)focoun,proportio,anzi_coun
+         magnitudtrait: ‘media"’ defaul)takethpecel
+         mediaoth ’decodedraw —robustdropounois
+         latentamplifieb expm()’ / plogi()’decoder.
+          ‘mea"’restorethprvarithmetimeapoolin.
+          ‘mod"’ Phas,v901+)iintendefoordina
+         trait:pecelmajoritvotacrosth ’draw,avoidin
+         thintegemearounbiatowarmiddlclasse. Fo
+         continuoufamiltrait, ‘mod"’fallbact ‘media"’.
+         Binar /categorica /multi_proportiotraitalwaypoob
+         probabilitaverag;unaffectebthiargumen. Seissu
+          4.
+clamp_outlier:logica. Phas v901+). Whe TRU’,
+         posbactransforpredictionfolotransforme
+         continuou,coun,anzi_counmagnitudtraitarcappe
+         a tobs_ma *clamp_facto’ an tobs_ma’ith
+         observemaximuothoriginascal,recordea
+         preprocestim). TargetthAVONEMastaiextrapolatio
+         moddocumentei
+          usefuMEMO_202001_avonet_mass_diam’wher 
+         sigmlatenovershoobecome50100valuerroafte
+          expm()’. Defaul FALS’preservevbehaviou
+         exactl.
+clamp_facto:numeriscala (>=). Multiplicativfactooth
+         observemaximuuseb clamp_outlier’. Defaul ’
+          Tukestyloutliedefinitio:anythin >=5thobserve
+         maiimplausibl). Ignorewhe clamp_outlier =FALS’.
+match_observe:characte,ono (non", pm")’.Phas'
+          v901+). Pasthrougt predicpigauto_fi’. Whe
+          ‘pm"’,usePredictivMeaMatchinfolotransforme
+         continuou,coun,zi_counmagnitud,anproportiotrait:
+         imputevalueardrawfrothobservevalupoo,neve
+         extrapolate.
+
+          Whetus:*PMinichfeatur. pigautalread
+         provideconformapredictiointervalcalibrateagains
+         helouresidualanstochastipredictiodrawfo
+         diagnostic.PMionlwortenablinfo: )
+         methodologicacomparisoagainsmic,o )workflowtha
+         specificallrequirimputevaluetcomfrothobserve
+         datpoo.Fotaisafet,prefe clamp_outlier =TRU’.
+         PMfailethdownstreafixeeffecredesigpiloani
+         unsupportefoinferenc;se multi_impute_analysi()’fo
+         thanalysiawarbacken.
+
+         Defaul ‘non"’preservepr'behaviou.
+
+  pmm_:intege (>=). DonopoosizfoPM. Defaul 5’ mic
+         conventio). Ignorewhe match_observe = non"’.
+safety_floo:logica.Defaul FALS’ iwa TRU’frov900
+         unti1900;se fit_pigaut()’fowhichange;
+         se TRU’trestor).Whe TRU’,calibratiosearcheth
+         wasimple r_B *B +r_GN *GN +r_MEA *MEA’s
+         thgranmeaialwayithcandidatse.Undeth
+         validatiometriusefocalibratio,thselecte
+         candidatcannobworsthathagranmeacorneoth
+         validatiocell.Thiivalidatiosafeguar,no
+         guaranteaboufuturheloudat.Whe FALS’,th
+         vcalibratioiuseexactl.SethSafetfloo
+         sectiobelo.
+phylo_signal_gat,phylo_signal_threshol,phylo_signal_metho:
+         Pasthrougt fit_pigaut()’.Sethahelpagfo
+         detail. phylo_signal_gat’nodefaultt FALS’ iwa
+          TRU’frov900unti1900):witPage
+         lambdestimatefoevertraitypthgatnlonge
+         improveaccuraciantestesettin,analambdo
+         tiwaworsthapredictinthmea.Se
+          phylo_signal_gat =TRU’trestortholbehaviou.
+conformal_split_va:logica.Defaul FALS’.Whe TRU’,th
+         validatiocellarspli55petraiint
+         gatcalibratiohalanconformascorinhal,sth
+         conformaquantilinoposselecteothsamcellth
+         gatwatuneo.Costintervawidtasmalvalidatio
+         size;se fit_pigaut’fodetail.Previouslreachabl
+         onlvi ‘...’;exposeherfodiscoverabilit.
+
+    gn:logica.Whe TRU’,trainthattentiobaseGN
+         correctio se fit_pigaut’).Whe FALS’ defaul),n
+         GNiconstructeotraine - imput()’makentorcGP
+         call,anthfiithphylogenetibaselinalon
+          optionallrweighteagainsgranmeafloowhe
+          safety_floo =TRU’).Witthdefault (safety_floo =
+         FALS,phylo_signal_gat =FALS’)thiithpur
+         traditionastatar.Productioprediction
+          (resulcomplete’, resulpredictio’)ustafre
+          baseline_ful’fioALobservecell nvates
+         holou); resulevaluatio’aneverothescorekee
+         usinthhelou baselin’,sevaluationeveleaktes
+         cell.Use covariate’entepigautonlthrougthGN,
+         sunde gn =FALS’thearignore witwarnin);
+         withouvalidatiospli (missing_fra =’)thfii
+         purbaselinancarrienconformascore.Defaul
+          FALS’sincpigaut1900:osimulateanreadat
+         athcurrenbaselindefaultthGNdinolowe
+         imputatioerroantoo2t9timelongetfi
+          (docdeloar20210campaiggnrerum’).Se
+          gn =TRU’ttraii,foexampltus covariate’,
+         whiconlthGNuse,otrestorthbehaviouo
+         earlieversion.
+
+     ...:additionaargumentpasset fit_pigaut’.
+Valu:
+
+    Aobjecoclas ‘pigauto_resul"’witcomponent:
+
+    complete
+         Thinpu trait’datframwitobservevaluepreserve
+         anonlmissincellfillei. Thiithprimaroutpu
+          -typicallwhauserwan.
+
+    imputed_mas
+         Logicamatri samshapa complete’)thai TRU’fo
+         cellthawerimpute originall N’)an FALS’fo
+         observecell.
+
+    predictio
+          pigauto_pre’objecfro predicpigauto_fi’containin
+         ramodepredictionfoevercel observe +missin),
+         peceluncertaint (‘s’ -se predicpigauto_fi’
+          Wha ‘s’meanpetraityp"sectio;ii no*
+         uniformlstandarerro),clasprobabilitie,an
+         conformainterval.
+
+    fi
+         Thtraine pigauto_fi’objec.
+
+    baselin
+         Thphylogenetibaselin.
+
+    dat
+         Thpreprocesse pigauto_dat’objec.
+
+    split
+         Thvatessplit o NUL’i missing_fra =’).
+
+    evaluatio
+         Evaluatiometricotesse o NUL’).
+
+    chec
+         compac pigauto_chec’preflighsummar.
+Traitypautdetectio:
+
+    pigautinfereactraitypfroitclas —n
+     trait_type’argumenineedefomosdat:
+
+       clas*                                  pigauttyp*                        
+       numeri’                                 continuou autloialpositiv) 
+       intege’                                 coun                                 
+       facto’witlevel                    binar                                
+       facto’ unordere)wit level       categorica                           
+       ordere’ / facto(...,ordere =TRU)’ ordina                               
+       characte’                                →facto →binarocategorica      
+       logica’                                 binar                                
+      
+    Twtypecannobinferrefroclasalonan_mustb
+    declarevi trait_type’:
+
+     ‘proportio"’
+          numeri’bounde,.survivarat: trait_type =
+         Surviva = proportio")’.
+
+     ‘zi_coun"’
+         A intege’witexceszero,.parasitcoun:
+          trait_type =Parasite = zi_coun")’.
+
+    Usth trait_type’argumendirectl iiaexplici
+    paramete,no ‘...’pasthroug).
+Traitvcovariate:
+
+    Thdistinctioi functiona,noontologica*:traii
+    somethinyowantimput Nvalueallowei trait’);
+    covariatisomethinyoustsharpeimputatioaccurac
+     musbfullobserve,passevi covariate’). Thsam
+    variablcabeithedependinothscientifiquestio.
+
+    Example:
+
+        • IUCstatuwitDatDeficienspecie* →puii
+          trait’a ordere(L",N",V",E",C"))’spigaut
+         predictthunknowcategorie.
+
+        • IUCstatufullknowfoalspecie* →pasa
+         covariattinforimputatiooothetrait .bod
+         mas,rangsiz).
+
+        • Real /biom facto)* →pasacovariat;pigaut
+         onhoencodefactocolumnautomaticall v+).
+
+    Variablethabeloni trait’:anythinwitmissinvalue
+    yocaraboupredictin. Variablethabeloni covariate’:
+    fullobserve,exogenoutthtraispac geograph,climat,
+    habita,experimentatreatmen).
+Safetfloo v900+):
+
+    Wit safety_floo =TRU’ opisinc1900;iwath
+    defaulfrov900),thpostrainincalibratiogri
+    searchewaconvecombinatioothBrowniamotio
+    baselin,thGNdelt,anthpetraigranmea. Th
+    simpleisampleaste0 23candidatepelaten
+    colum). Becausthcorne ‘,,)’ —purgranmea —i
+    alwayithgri,thselectecandidatcannobworstha
+    thgranmeacorneothvalidatiocellundeth
+    calibratiometri. Thfiobjecgainfouneslot:
+     r_cal_b’, r_cal_gn’, r_cal_mea’ eacnamenumerio
+    lengt p_laten’),an mean_baseline_per_co’.
+
+    Se safety_floo =FALS’treproducthprv900
+    calibratiobiidenticall nmeater; r_cal_mea =’;
+     r_cal_b = -r_cal_gn’). Se
+     spec20202safetfloomeagatdesigm’fothdesig
+    rationalan plan20202safetfloomeagatm’foth
+    implementatiopla.
+Whagetimpute reathifirs):
+
+    pigautonl_imputescellthaar N’ithinpu.Observe
+    cellarpreserveaii resulcomplete’. Thslo
+     resulpredictioimpute’containthmodepredictiofo
+     ever*cel -observeanmissinalik -aniintendefo
+    diagnostic .checkincalibratiootrainincell),_not
+    athimputevalueoutpu. Thimputevaluethemselvear
+     resulcompleteresulimputed_mas]’.
+
+     Commopitfal.*Iyocal imput()’ofullobservetrai
+    matri n Namonmatchetargerow),therinothint
+    imput. imput()’stopbeforgrapconstructiootraininan
+    directyot cross_validat()’fopredictivassessmen.T
+    exercisimputatio,supplreamissintargecel.
+
+     Imbalanceclastrait.*Adefaulsetting (n_imputation =
+    1’, pool_metho = media"’),smalordina /categorica
+    traiwhosmarginadistributioiheavilskewe .AVONE
+     Migratio’i 7\ 1\collapsontcornethapredictth
+    majoritclaseverywher.Comparcandidatsetting,includin
+     pool_metho = mod"’,wit cross_validat()’othintende
+    traitablrathethaapplyingenerisettin.
+Example:
+
+    datavonet30,tree30)
+    tre <-ap:keetitree30,tree30tilabeseq_le30)])
+    d <-avonet30matctretilabe,avonet30Species_Ke),
+                    (Mas", WinLengt"),dro =FALS]
+    rownamed) <-tretilabe
+    dMasseq_le3)] <-NA_real
+    resul <-imputd,tre,epoch =5,verbos =FALS)
+    hearesulcomplete)
+    

@@ -1,0 +1,74 @@
+{
+  "reviewer": "pat",
+  "verdict": "PASS_TO_LAUNCH",
+  "scope": "Bounded six-vignette successor diagnostic command and script review",
+  "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "estimate_minutes": "5-8",
+  "total_hard_cap_seconds": 600,
+  "per_vignette_hard_cap_seconds": 120,
+  "main_command": [
+    "python3",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/run-timings.py"
+  ],
+  "workdir": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+  "commands_reviewed": [
+    [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+      "common-pitfalls.Rmd"
+    ],
+    [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+      "getting-started.Rmd"
+    ],
+    [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+      "gnn-architecture.Rmd"
+    ],
+    [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+      "mixed-types.Rmd"
+    ],
+    [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+      "multiple-imputation.Rmd"
+    ],
+    [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+      "tree-uncertainty.Rmd"
+    ]
+  ],
+  "reviewed_controls": [
+    "fresh extraction of the exact frozen archive; all six source Rmd hashes recorded",
+    "new successor mi-matrix/neither library is identified by the successful install receipt for the exact archive hash",
+    "drmTMB and gllvmTMB absent from that library; no user-library fallthrough permitted",
+    "NOT_CRAN removed; explicit library paths and one-thread caps; force suggests true",
+    "process group created per vignette; TERM and then KILL cleanup; no retry or warning replay",
+    "knitr option hook logs eval settings and returns options unmodified; no global eval override",
+    "render errors and nonzero exits stop the sequence and remain failures"
+  ],
+  "script_hashes_before_launch": {
+    "run-timings.py": "ffd67779ba081ec47c96832d860c6eda69a2532a51a0775dc34510d3b5119dfc",
+    "render-one.R": "aa18ac3f067c35b0aacbdf183201507ed6b3ad36b29e7f6aafcb2b8b50f27ef7",
+    "input.json": "3631427e9218e4c1e094484a1f09ca50320d7660d88022ba972784daa8a47f7e"
+  },
+  "execution": "not yet launched"
+}

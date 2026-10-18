@@ -1,0 +1,62 @@
+{
+  "reviewer": "rose",
+  "verdict": "PASS",
+  "scope": "Installed help and bundled novice workflow against the exact frozen 0.11.0 archive in the successor matrix neither-cell library.",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "archive": "/private/tmp/pigauto-release-candidate/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/pigauto_0.11.0.tar.gz",
+  "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "artifact_size_bytes": 5137837,
+  "installed_library": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither",
+  "installed_package_version": "0.11.0",
+  "build_exit_code": 0,
+  "elapsed_seconds": 3.065,
+  "hard_cap_seconds": 300,
+  "command": [
+    "Rscript",
+    "--vanilla",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/attempt3/check-installed.R"
+  ],
+  "script_sha256": "6936758ec881a728bd319e1c746ae1fafafab341a34803bc8081a2908115ec3b",
+  "supervisor_sha256": "f22d2cd90d0f036c75cc82fc9585d243f19af25373b65651e4e81f9acda7c13a",
+  "archive_sha256_after": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "archive_unchanged": true,
+  "checks": {
+    "impute_help_default_false_and_explicit_true": "PASS",
+    "pigauto_report_help_describes_false_default_and_true_fit": "PASS",
+    "novice_input_missing": 2,
+    "novice_output_missing": 0,
+    "observed_values_and_classes_preserved": true,
+    "configured_gnn": false,
+    "browser_suppression_process_local_only": true
+  },
+  "outputs": {
+    "run_receipt": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/attempt3/run-receipt.json",
+    "run_log": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/attempt3/run.log",
+    "workflow_receipt": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/attempt3/installed-workflow-receipt.json",
+    "impute_help": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/attempt3/installed-impute-help.txt",
+    "report_help": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/attempt3/installed-pigauto_report-help.txt",
+    "generated_report": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/attempt3/novice-run/pigauto_report.html",
+    "session_info": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/attempt3/installed-session.txt"
+  },
+  "preserved_failed_attempts": [
+    {
+      "attempt": 1,
+      "result": "Stopped before workflow execution: invalid Rd2txt overstrike cleanup treated backspace as a regex word boundary.",
+      "log": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/run.log",
+      "receipt": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/run-receipt.json"
+    },
+    {
+      "attempt": 2,
+      "result": "Stopped before workflow execution: help phrase assertion did not normalize wrapped line breaks.",
+      "log": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/attempt2/run.log",
+      "receipt": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/attempt2/run-receipt.json"
+    }
+  ],
+  "limits": [
+    "The package imports torch and its namespace loaded; this confirms the GNN fit configuration is false, not torch-free installation or absence of torch namespace initialization.",
+    "The small 8-species example emitted its documented small-validation warning (one held-out cell for affected traits); this check does not establish conformal coverage or general performance.",
+    "This is an installed-help and one bundled example check only; it is not an R CMD check, a platform matrix, or CRAN acceptance."
+  ],
+  "no_source_or_archive_edits": true,
+  "no_external_actions": true
+}

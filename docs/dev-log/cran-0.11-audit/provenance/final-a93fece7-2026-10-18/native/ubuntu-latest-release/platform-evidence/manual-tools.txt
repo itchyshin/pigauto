@@ -1,0 +1,16 @@
+$courier_metrics
+$courier_metrics$pcrr8t.tfm
+[1] "/home/runner/.TinyTeX/texmf-dist/fonts/tfm/adobe/courier/pcrr8t.tfm"
+
+$courier_metrics$pcrr8c.tfm
+[1] "/home/runner/.TinyTeX/texmf-dist/fonts/tfm/adobe/courier/pcrr8c.tfm"
+
+
+$V8
+$V8$version
+[1] "12.4.254.21"
+
+$V8$numeric_version
+[1] ‘12.4.254.21’
+
+

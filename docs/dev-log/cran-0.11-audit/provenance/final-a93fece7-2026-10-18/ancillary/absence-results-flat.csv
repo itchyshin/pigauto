@@ -1,0 +1,29 @@
+"file","test","failed","skipped","error","warning","passed"
+"test-gbif-centroids.R",".gbif_cache_key sanitises species names for filesystem",0,FALSE,FALSE,0,4
+"test-gbif-centroids.R",".gbif_centroid_one aggregates valid records to median lat/lon",0,FALSE,FALSE,0,5
+"test-gbif-centroids.R",".gbif_centroid_one filters geospatial-issue + fossil records",0,FALSE,FALSE,0,3
+"test-gbif-centroids.R",".gbif_centroid_one returns NA when no valid records",0,FALSE,FALSE,0,3
+"test-gbif-centroids.R",".gbif_centroid_one rejects coords out of range",0,FALSE,FALSE,0,3
+"test-gbif-centroids.R",".gbif_fetch_one uses cache when present",0,FALSE,FALSE,0,3
+"test-gbif-centroids.R",".gbif_fetch_one reports helpful error when rgbif missing",0,FALSE,FALSE,0,1
+"test-gbif-centroids.R","pull_gbif_centroids returns data.frame with expected columns from cache",0,FALSE,FALSE,0,6
+"test-gbif-centroids.R","pull_gbif_centroids handles species with no GBIF hits gracefully",0,FALSE,FALSE,0,4
+"test-gbif-centroids.R","pull_gbif_centroids(store_points = TRUE) writes points field",0,TRUE,FALSE,0,0
+"test-gbif-centroids.R","pull_gbif_centroids(store_points = FALSE) omits points (default)",0,TRUE,FALSE,0,0
+"test-gbif-centroids.R","legacy GBIF cache (no points field) still reads cleanly",0,FALSE,FALSE,0,3
+"test-gbif-centroids.R","end-to-end: GBIF centroids don't regress plants RMSE (>=1.10x guardrail on env traits)",0,TRUE,FALSE,0,0
+"test-worldclim-covariates.R",".wc_cache_key sanitises species names for filesystem",0,FALSE,FALSE,0,4
+"test-worldclim-covariates.R",".wc_aggregate_one computes median + IQR per column",0,FALSE,FALSE,0,7
+"test-worldclim-covariates.R",".wc_aggregate_one returns NA bio values when all rows NA",0,FALSE,FALSE,0,3
+"test-worldclim-covariates.R",".wc_aggregate_one handles single-point species (IQR = 0)",0,FALSE,FALSE,0,3
+"test-worldclim-covariates.R",".wc_download_rasters is a no-op when sentinel + rasters present",0,FALSE,FALSE,0,1
+"test-worldclim-covariates.R",".wc_download_rasters detects missing sentinel and would re-download",0,FALSE,FALSE,0,1
+"test-worldclim-covariates.R",".wc_download_rasters errors cleanly for unsupported resolution",0,FALSE,FALSE,0,1
+"test-worldclim-covariates.R",".wc_extract_one reads from cache when present",0,FALSE,FALSE,0,2
+"test-worldclim-covariates.R",".wc_extract_one returns NA row when species has no GBIF cache",0,FALSE,FALSE,0,2
+"test-worldclim-covariates.R","pull_worldclim_per_species returns data.frame with 38 bio cols + n_extracted",0,TRUE,FALSE,0,0
+"test-worldclim-covariates.R","pull_worldclim_per_species stops with clear error when terra absent",0,FALSE,FALSE,0,1
+"test-worldclim-covariates.R",".wc_extract_one uses points when available (per-occurrence)",0,TRUE,FALSE,0,0
+"test-worldclim-covariates.R",".wc_extract_one falls back to centroid when points field absent",0,TRUE,FALSE,0,0
+"test-worldclim-covariates.R","end-to-end: bioclim lifts plants RMSE >= 10% on sla/leaf_area at n=200 (NOT_CRAN)",0,TRUE,FALSE,0,0
+"test-worldclim-covariates.R","per-occurrence bioclim lifts plants SLA >= 10% over centroid-only at n=200 (NOT_CRAN)",0,TRUE,FALSE,0,0
