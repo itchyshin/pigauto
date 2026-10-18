@@ -1,0 +1,20 @@
+{
+  "observed_utc": "2026-10-18T07:45:18.051332+00:00",
+  "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "command": [
+    "Rscript",
+    "--vanilla",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/cran-additional-issue/check-guard.R"
+  ],
+  "script_sha256": "02fdbb32e3b753a03625ae63dfeedb7785a7abb723a8b4bd0ab8323086cb336f",
+  "log_sha256": "1f67d75824172c93914d4431fc60901c452a94c837a25b135b4a5744a832f632",
+  "exit_code": 0,
+  "scope": "Actual installed Rd example, no GNN fits. Private-session public testthat mocks exercise unavailable indicator and Lantern-throwing probe. Current0.10 CRANadditionaldonttest issue is an unguarded runtime call; shipped0.11 example guard skips both cases. No package or archive byte change.",
+  "conditions": [
+    "runtime indicator FALSE, tensor must never be called",
+    "runtime indicator TRUE, tensor raises simulated Lantern error"
+  ],
+  "result": "PASS_BOTH_SKIP_PATHS",
+  "actual_runtime_absence": "simulated, not a machine uninstall"
+}

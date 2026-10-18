@@ -26,7 +26,9 @@ The approved nine preparation gates are closed for frozen a93fece7 from clean me
   CHECK: python3 /private/tmp/pigauto-final-closure-20261017/successor-b2e6054/verify-successor.py panel
   EXPECT: SUCCESSOR_FINAL_PANEL_AND_EXACT_PROOF_VERIFIED
   EVIDENCE: exit=0; shell=/bin/sh; cwd=/private/tmp/pigauto-pr236-validator-20261017; path=6df32789272f/34 entries; output=SUCCESSOR_FINAL_PANEL_AND_EXACT_PROOF_VERIFIED
-- [ ] G9: Authorized exact archive submitted and maintainer confirmation retained.
-  EVIDENCE: pending; submission-ready does not prove upload, confirmation, incoming pass, acceptance or live CRAN availability.
+- [x] G9: Authorized exact archive submitted and maintainer confirmation retained.
+  CHECK: python3 /private/tmp/pigauto-final-closure-20261017/successor-b2e6054/verify-successor.py confirmation
+  EXPECT: SUCCESSOR_EXACT_ARCHIVE_SUBMITTED_AND_CONFIRMED
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/private/tmp/pigauto-pr236-validator-20261017; path=6df32789272f/34 entries; output=SUCCESSOR_EXACT_ARCHIVE_SUBMITTED_AND_CONFIRMED
 
-Current extended-goal count:9met,1unmet,0abandoned. The original nine preparation gates are met; submission remains pending. Nothing has been submitted to CRAN.
+Current extended-goal count:10met,0unmet,0abandoned. Submitted and confirmed, not accepted or live.

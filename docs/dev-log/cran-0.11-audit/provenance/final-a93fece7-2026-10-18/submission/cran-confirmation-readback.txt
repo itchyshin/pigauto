@@ -1,0 +1,66 @@
+Browser tab: 11, Title: "CRAN package Submission", URL: "https://xmpalantir.wu.ac.at/cransubmit/index.php?strErr=5".
+1 AXWebArea CRAN package Submission, URL: xmpalantir.wu.ac.at/cransubmit/index.php?strErr=5
+	2 container
+		3 container Submit a package to CRAN Step 1 (Upload) Step 2 (Submission) Step 3 (Confirmation) This submission has already been confirmed, you cannot edit it, you can however make a new submission.
+			4 container
+				5 container Submit a package to CRAN
+					6 heading Submit a package to CRAN, Value: 1
+						7 text Submit a package to CRAN
+				8 container Step 1 (Upload)
+					9 text Step 1
+					10 text (Upload)
+				11 container Step 2 (Submission)
+					12 text Step 2
+					13 text (Submission)
+				14 container Step 3 (Confirmation)
+					15 text Step 3
+					16 text (Confirmation)
+				17 container This submission has already been confirmed, you cannot edit it, you can however make a new submission.
+					18 text This submission has already been confirmed, you cannot edit it, you can however make a new submission.
+		19 container
+			20 container
+				21 container Your name*:
+					22 text Your name*:
+				23 text field (settable)
+			24 container
+				25 container Your email*:
+					26 text Your email*:
+				27 text field (settable)
+			28 container
+				29 container Package*:
+					30 text Package*:
+				31 container Choose file: No file chosen (*.tar.gz files only, max 100 MB size)
+					32 button Choose file, ID: userfile
+					33 text (*.tar.gz files only, max 100 MB size)
+			34 container
+				35 container Optional comment:
+					36 text Optional comment:
+				37 text entry area (settable)
+			38 container *: Required Fields Before uploading please ensure the following: The package contains a DESCRIPTION file. DESCRIPTION file contains the valid maintainer field "NAME <EMAIL>". You submit a tar.gz created with R CMD build. You are familiar with the rest of the CRAN policies
+				39 text *: Required Fields
+				40 text Before uploading please ensure the following:
+				41 content list
+					42 container
+						43 AXListMarker • 
+						44 text The package contains a DESCRIPTION file.
+					45 container
+						46 AXListMarker • 
+						47 text DESCRIPTION file contains the valid maintainer field "NAME <EMAIL>".
+					48 container
+						49 AXListMarker • 
+						50 text You submit a tar.gz created with  R CMD build .
+					51 container
+						52 AXListMarker • 
+						53 text You are familiar with the rest of the 
+						54 link Description: CRAN policies, Value: cran.r-project.org/web/packages/policies.html
+			55 container
+				56 container Upload the package
+					57 button Upload the package
+			58 text In case of technical problems regarding the website or the submission interface, contact the 
+			59 link Description: CRAN sysadmin team, Value: mailto:cran-sysadmin@r-project.org
+			60 text .
+			61 text In case of problems related to the package, its check results or the partly automated check system, contact the 
+			62 link Description: CRAN team, Value: mailto:cran-submissions@r-project.org
+			63 text .
+
+The focused UI element is 1 AXWebArea CRAN package Submission, URL: xmpalantir.wu.ac.at/cransubmit/index.php?strErr=5

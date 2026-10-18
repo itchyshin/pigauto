@@ -1,7 +1,7 @@
 {
   "assessment_performed": true,
-  "draft_sha256": "be992462bccc642186629c6b95daa21f0f8d8aa353165adf4a008cfff39a9012",
-  "draft_version": "v1",
+  "draft_sha256": "20689f2600d7090bc528696b761ae0a43be3bf4a9eb8625892aeb3dc2e0398a9",
+  "draft_version": "v2",
   "requested_mode": "independent",
   "assessor_type": "self",
   "reviewer": "Root release driver",
@@ -38,7 +38,7 @@
   "facts_gate_reason": "Archive identity, status, timing measures, counts, disclosures and approvals compared with the actual retained sources and current state; incomplete replay history is explicit.",
   "references_gate": "pass",
   "references_gate_reason": "Exact DOI identity checked against retained current primary Crossref metadata; policy files and dated rights records are distinguished from licence grants or legal opinions.",
-  "date": "2026-10-18T07:32:37.429508+00:00",
+  "date": "2026-10-18T07:51:18.003763+00:00",
   "calibration_status": "Protocol examples and earlier technical receipts were seen; no held-out evaluation.",
   "interpretation": "perceived_style_not_authorship"
 }

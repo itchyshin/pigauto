@@ -1,0 +1,196 @@
+Browser tab: 8, Title: "CRAN package Submission", URL: "https://xmpalantir.wu.ac.at/cransubmit/index.php?strErr=99&edit=1&pkg_id=359257".
+1 AXWebArea CRAN package Submission, URL: xmpalantir.wu.ac.at/cransubmit/index.php?strErr=99&edit=1&pkg_id=359257
+	2 container
+		3 container Submit a package to CRAN Step 1 (Upload) Step 2 (Submission) Step 3 (Confirmation) Please review and submit.
+			4 container
+				5 container Submit a package to CRAN
+					6 heading Submit a package to CRAN, Value: 1
+						7 text Submit a package to CRAN
+				8 container Step 1 (Upload)
+					9 text Step 1
+					10 text (Upload)
+				11 container Step 2 (Submission)
+					12 text Step 2
+					13 text (Submission)
+				14 container Step 3 (Confirmation)
+					15 text Step 3
+					16 text (Confirmation)
+				17 container Please review and submit.
+					18 text Please review and submit.
+		19 container
+			20 table
+				21 row
+					22 cell
+						23 text Your name:
+					24 cell
+						25 text field (settable) Shinichi Nakagawa
+				26 row
+					27 cell
+						28 text Your email:
+					29 cell
+						30 text field (settable) <redacted>
+				31 row
+					32 cell
+						33 text Package:
+					34 cell
+						35 button Choose file, ID: userfile
+						36 text (*.tar.gz files only, max 100 MB size)
+				37 row
+					38 cell
+						39 text Optional comment:
+					40 cell
+						41 text entry area (settable) ## Update scope
+
+pigauto 0.11.0 updates CRAN 0.10.0. The default imputation route uses the
+phylogenetic baseline with the GNN off. Discrete traits estimate their own
+phylogenetic signal; the optional safety floor and signal gate default off.
+For eligible continuous, single-observation data without covariates,
+automatic multiple imputation selects posterior draws with a separation
+prior for residual covariance. Other automatic completions remain
+prediction diagnostics and are refused by downstream fitting and pooling.
+
+The optional drmTMB and gllvmTMB adapters support termwise fixed-effect
+pooling. Neither model package is an installation dependency of pigauto.
+Users install their chosen model package. Extraction and arithmetic tests
+ship with pigauto; real-package integration checks use a build-excluded
+harness. No joint covariance, loading or variance-component pooling is claimed.
+
+No licence or maintainer change is proposed. Third-party data credits and
+phylogeny provenance remain in inst/NOTICE. The primary CRAN index checked
+on 18 October 2026 contained no reverse dependencies across Depends,
+Imports, LinkingTo, Suggests or Enhances. The package has no compiled source.
+
+## Exact archive checks
+
+The candidate was built from clean merged source
+b2e6054685e6bdedb073ba46e058af2c0a619a18. The archive is 5,137,837 bytes,
+with SHA-256
+a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb.
+
+The original compressed archive was checked directly, without rebuilding,
+on macOS arm64/R 4.6.0, Windows R-release 4.6.1, Windows R-devel and
+Linux R-release 4.6.1. All four reported Status: OK, with zero errors,
+zero warnings and zero NOTEs. Checks used --as-cran --run-donttest
+--timings, NOT_CRAN unset, force-Suggests enabled and all 29 declared
+dependencies available. PDF and HTML manuals were included.
+
+Native check times were 452.674 seconds on macOS, 627.141 seconds on
+Windows release, 516.487 seconds on Windows devel and 534.689 seconds on
+Linux. The respective vignette rebuild stages reported 12/15 seconds
+CPU/elapsed, 20 seconds, 17 seconds and 19/19 seconds CPU/elapsed.
+Windows single-value timings are reported as logged. These observations
+are not timing guarantees for CRAN machines.
+
+Each native test suite recorded 3,195 passing expectations, zero failures,
+161 fixture warnings and 86 skips. Separate native-layout replays capture
+individual diagnostic objects for consequence review; their times are not
+part of native check timing. The fixtures exercise small validation sets,
+constant traits, route-specific ignored covariates, ordinal imbalance,
+few tree draws, documented fallbacks and unmatched species. Passing these
+checks does not establish general inferential validity or nominal coverage.
+
+Installed help and the bundled beginner workflow passed with the GNN off;
+observed values and classes were preserved and both missing values filled.
+The optional-model installation matrix passed all 12 steps across neither
+backend, each backend separately, and both. All six vignette render
+diagnostics passed with authored disabled teaching chunks still disabled.
+Installed size was INFO, not WARNING, at 7.0 MB locally and 5.9 MB remotely.
+
+## URLs, spelling and external services
+
+The URL check found one distinct HTTP 403 at
+https://doi.org/10.1126/science.1157704, repeated in Getting Started source
+and rendered documentation. Fresh primary Crossref metadata returned HTTP
+200 and matched the cited Hackett et al. 2008 Science article. The DOI is
+retained; automated resolver access remained denied during this check.
+
+All 404 flagged spelling tokens were reviewed in 1,886 source contexts.
+No ordinary-word typo was identified among those flags. DESCRIPTION flags
+were technical terms, names or DOI fragments.
+
+An isolated installed-package check without rgbif or terra passed 60
+expectations with zero failures or warnings and eight explicit skips.
+This verifies the tested missing-package and offline paths; it does not
+establish live external-service availability.
+
+				42 row
+					43 cell
+						44 button Re-upload the package/Edit information
+				45 row
+					46 cell
+						47 text Detected package information [non-editable]
+						48 text In case of errors reupload the package or contact cran team
+				49 row
+					50 cell
+						51 text Package:
+					52 cell
+						53 text field pigauto
+				54 row
+					55 cell
+						56 text Version:
+					57 cell
+						58 text field 0.11.0
+				59 row
+					60 cell
+						61 text Title:
+					62 cell
+						63 text entry area Fill in Missing Species Traits Using a Phylogenetic Tree
+				64 row
+					65 cell
+						66 text Description:
+					67 cell
+						68 text entry area Imputes missing species trait data for comparative analyses by combining three sources of information: phylogenetic similarity (closely related species share similar traits), cross-trait correlations (observed traits inform missing ones), and optional environmental covariates (climate, habitat, geography). Handles continuous measurements, counts, binary variables, ordered categories, unordered categories, bounded proportions, zero-inflated counts, and compositional multi-proportion data in a single call. The default method is a phylogenetic baseline calibrated on held-out data; an optional graph neural network correction, which is needed to use covariates, is blended in through a per-trait gate that retains a baseline fallback. Provides conformal prediction intervals for continuous, count, ordinal, and proportion traits and an experimental analysis-aware multiple-imputation workflow for one missing continuous covariate in Gaussian linear, binomial-logit, and Gaussian random-intercept models, with Rubin pooling limited to fixed effects. Stochastic graph-network and posterior-tree completions are prediction diagnostics rather than validated inferential imputations. Bundled datasets include 300-species and 9,993-species bird-trait subsets with matching example phylogenetic trees. Rubin (1987, ISBN:978-0-471-08705-2); Vovk et al. (2005, ISBN:978-0-387-25061-8); Nakagawa and de Villemereuil (2019) <doi:10.1093/sysbio/syy089>.
+				69 row
+					70 cell
+						71 text Author(s):
+					72 cell
+						73 text field Shinichi Nakagawa [aut, cre, cph]
+				74 row
+					75 cell
+						76 text Maintainer Name:
+					77 cell
+						78 text field Shinichi Nakagawa
+				79 row
+					80 cell
+						81 text Maintainer Email:
+					82 cell
+						83 text field itchyshin@gmail.com
+				84 row
+					85 cell
+						86 text License:
+					87 cell
+						88 text field MIT + file LICENSE
+				89 row
+					90 cell
+						91 text Depends:
+					92 cell
+						93 text entry area R (>= 4.1)
+				94 row
+					95 cell
+						96 text Suggests:
+					97 cell
+						98 text entry area testthat, jsonlite, knitr, rmarkdown, pkgdown, RSpectra, Rphylopars, jomo, MCMCglmm, brms, glmmTMB, lme4, nlme, phangorn, phylolm, rgbif, smcfcs, terra, phytools
+				99 row
+					100 cell
+						101 text Imports:
+					102 cell
+						103 text entry area torch, ape, ggplot2, Matrix, rlang, stats, utils, graphics, grDevices, withr,
+				104 row
+					105 cell
+						106 text Linking To:
+					107 cell
+						108 text entry area
+				109 row
+					110 cell
+						111 text Submit the package here if the above information is correct
+				112 row
+					113 cell
+						114 button Submit package
+			115 text In case of technical problems regarding the website or the submission interface, contact the 
+			116 link Description: CRAN sysadmin team, Value: mailto:cran-sysadmin@r-project.org
+			117 text .
+			118 text In case of problems related to the package, its check results or the partly automated check system, contact the 
+			119 link Description: CRAN team, Value: mailto:cran-submissions@r-project.org
+			120 text .
+
+The focused UI element is 1 AXWebArea CRAN package Submission, URL: xmpalantir.wu.ac.at/cransubmit/index.php?strErr=99&edit=1&pkg_id=359257

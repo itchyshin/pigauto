@@ -2,9 +2,9 @@
   "package": "pigauto",
   "version": "0.11.0",
   "release_type": "update",
-  "status_claim": "submission-ready",
-  "next_unproven_rung": "submitted",
-  "audit_verdict": "READY_FOR_EXACT_SUBMISSION_SCOPE",
+  "status_claim": "confirmed",
+  "next_unproven_rung": "incoming-passed",
+  "audit_verdict": "SUBMITTED_AND_CONFIRMED_CRAN_REVIEW_PENDING",
   "artifact": {
     "sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
     "size_bytes": 5137837,
@@ -106,11 +106,24 @@
     }
   },
   "submission": {
-    "state": "not_submitted",
+    "state": "confirmed",
     "cran_upload_authorized": true,
     "maintainer_confirmation_authorized": true,
     "authorization_scope": "Conditional user approval: submit pigauto0.11 release after help fix and all applicable exact-artifact/platform/independent release gates pass; no waiver of technical findings or scientific scope expansion",
-    "user_approval_text": "After this I approve CRAN submission"
+    "user_approval_text": "After this I approve CRAN submission",
+    "uploaded_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "uploaded_size_bytes": 5137837,
+    "timestamp": "2026-10-18T07:37:49.893Z",
+    "submission_id": "359257",
+    "receipt_evidence": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/submission/cran-submission-receipt.json"
+    },
+    "confirmation_observed_utc": "2026-10-18T07:47:17.358Z",
+    "confirmation_evidence": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/submission/cran-confirmation-receipt.json"
+    }
   },
   "evidence_pr": {
     "number": 236,
@@ -142,8 +155,8 @@
     "sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
     "state": "withdrawn and immutable; old panel votes not promoted"
   },
-  "updated_utc": "2026-10-18T07:30:08.926168+00:00",
-  "claim_scope": "Exact frozen archive submission preparation cleared by all3fresh scoped reviewers and currentproofs; not submitted, confirmed or accepted.",
+  "updated_utc": "2026-10-18T07:48:32.234491+00:00",
+  "claim_scope": "Exact reviewed archive submitted and maintainer-confirmed; no incoming success, acceptance, scheduled publication or live0.11 claim.",
   "replay_provenance_limit": "Two successful supporting captures retained with separate coherent timing pairs; prior mixed derived timing corrected by amendment. Identical warning-object bytes match both, so unique capture attribution is unresolved. Native checks were not rerun.",
   "final_proof_summary": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/README.md",
   "timing_decision": {

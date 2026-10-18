@@ -1,0 +1,24 @@
+{
+  "observed_utc": "2026-10-18T07:47:17.358Z",
+  "package": "pigauto",
+  "version": "0.11.0",
+  "submission_id": "359257",
+  "state": "confirmed",
+  "uploaded_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "uploaded_size_bytes": 5137837,
+  "maintainer": "itchyshin@gmail.com",
+  "confirmation_email_subject": "CRAN Submission of pigauto 0.11.0 - Confirmation Link",
+  "confirmation_email_received": "2026-10-18 01:37 America/Edmonton",
+  "confirmation_source": "Newest matching message in itchyshin@gmail.com, verified package/version/metadata and current submitted archive hash in comments",
+  "attestations": [
+    "CRAN policies read and submit requested",
+    "R CMD check --as-cran with current R-devel performed",
+    "Existing check-page issues addressed, with independent missing-Lantern guard supplement"
+  ],
+  "result_message": "This submission has already been confirmed, you cannot edit it, you can however make a new submission.",
+  "endpoint": "https://xmpalantir.wu.ac.at/cransubmit/index.php?strErr=5",
+  "incoming_passed": false,
+  "accepted": false,
+  "live_version_verified": false,
+  "confirmation_token_published": false
+}

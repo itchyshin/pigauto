@@ -2,7 +2,7 @@
 
 The original gzip archive has SHA-256 `a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb`, size 5,137,837 bytes and 250 entries. It was built from clean merged source `b2e6054685e6bdedb073ba46e058af2c0a619a18` after PR238's approved merge and verified website deployment. The permanent content-addressed copy is read-only. `FINAL.json`, `persistent-readback.json` and the independent `freeze-review/actual-verdict.json` bind those identities.
 
-The highest proven rung is submission-ready. Fresh Grace, Rose and Pat reviews all returned READY with no blockers for this exact archive. The executable closure checks and current release ledger retain that scope. CRAN upload and maintainer confirmation have conditional user approval after all applicable gates pass. They have not happened. PR236 remains draft and unmerged. No tag or announcement is authorized.
+The highest proven rung is confirmed. Fresh Grace, Rose and Pat reviews all returned READY with no blockers for this exact archive. The executable closure checks and current release ledger retain that scope. CRAN submission359257 and maintainer confirmation were completed under the existing user approval. The endpoint explicitly reports that this submission has already been confirmed. Incoming checks, acceptance and public0.11 availability remain unproven. PR236 remains draft and unmerged. No tag or announcement is authorized.
 
 ## Product, rights and source
 
