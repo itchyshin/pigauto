@@ -9,5 +9,5 @@
   "execution_context": "totoro",
   "estimated_elapsed_hours": [5.5, 14.8],
   "planned_attempts": 32240,
-  "note": "Proposal only; human approval and fresh host/runtime checks required. No production receipt exists."
+  "note": "Pre-approval proposal snapshot. Direct user authorization is retained in receipts/production-approval.rds and production-approval-resume.rds. The proposal remains approved=false because authorization is represented by those separate exact receipts."
 }

@@ -1,0 +1,44 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "12a136792113940e1809f81dd5029367ad2b4fe7bfc8cdc295c12f9ae787415f",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex",
+  "method": "Separate full-draft self-review; source, receipts and review cross-check for factual and scientific gates; repository prose checker.",
+  "genre": "Engineering after-task report",
+  "coverage": "Whole draft, all sections",
+  "score": 3,
+  "style_status": "scored",
+  "score_reason": "Concrete checks and residual limitations make the report useful; the long checks paragraph is dense.",
+  "confidence": "medium",
+  "confidence_reason": "The complete report and linked task evidence were checked; style remains an editorial judgment.",
+  "examples": [
+    {
+      "location": "line 130",
+      "line": 130,
+      "quote": "The main-source Totoro baseline suite passed 3,554 expectations, with zero failures, 182 warnings and nine skips, in 4m04s at peak 1.17 GiB. New public contract fixtures passed four tests and 86 expectations with zero failures/errors/skips and two small-calibration warnings. Harness, adapter, approval, source, summary and expected-roster controls pass their bounded checks. The local roster test includes malformed probability-bin, interval, status and denominator controls, and passes. All 82 prediction scenarios construct without fitting, including MAR. Linux process-group timeout regression passes on Totoro. Production completed 32,240 attempts in 6:12:02 and retained 1,122,060 metric rows: 876,017 ok, 246,040 unavailable and three failed. The expected roster contains 5,697 groups and 1,122,060 planned job-level output keys, all present; zero were absent, partial, unexpected or unrostered. A fresh Totoro BIEN comparison matches the retained roster. Independent replay of 4,000 posterior DGP cells matches all 8,000 interval denominators, and the deliberate corruption is detected.",
+      "cue": "Production completed 32,240 attempts in 6:12:02",
+      "impact": "Gives a verifiable result in one sentence.",
+      "repair": "no change needed"
+    },
+    {
+      "location": "line 152",
+      "line": 152,
+      "quote": "Production is complete. No inferential row met the support criteria: 12 failed and 32 indeterminate. Four complete-data posterior controls also fail. The 40 unavailable real-data jobs are PanTHERIA and FishBase because inputs were absent. Six installed-package inventory identities occurred; each of the 151 scenario/adapter contexts has one captured session fingerprint, with `posterior_001` spanning six inventories. The independent runner-contract roster covers all 1,122,060 planned job-level method/estimand keys, with zero absent, partial, unexpected or unrostered rows; strict metric-payload checks found zero missing or failed groups. The fresh BIEN roster check and all 8,000 posterior mask-denominator comparisons pass. Independent review confirmed invalid statuses are rejected and Totoro proof content matches the retained roster. Optional brms and rgbif are absent on this host. DRAC was not used.",
+      "cue": "No inferential row met the support criteria",
+      "impact": "Makes the primary limitation easy to find.",
+      "repair": "no change needed"
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "The report distinguishes validation outcomes from broader scientific claims.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Implementation, test counts, run accounting, retained receipts and review outcomes were checked against task artifacts.",
+  "references_gate": "not_applicable",
+  "references_gate_reason": "No external references are cited in this draft.",
+  "date": "2026-10-18",
+  "calibration_status": "Relevant published human-control examples were seen before this assessment; this is not independent human validation or an authorship judgment.",
+  "interpretation": "perceived_style_not_authorship"
+}

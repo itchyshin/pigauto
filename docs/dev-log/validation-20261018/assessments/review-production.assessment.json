@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "a537d5cf49e5c090e6576a2c1481336e95985f2c280d86ab7659f73c3e0ab570",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex",
+  "method": "Separate full-draft self-review; source, receipts and review cross-check for factual and scientific gates; repository prose checker.",
+  "genre": "Independent production review record",
+  "coverage": "Whole draft, all sections",
+  "score": 2,
+  "style_status": "scored",
+  "score_reason": "Specific accounting and bounded verdicts avoid generic approval language.",
+  "confidence": "medium",
+  "confidence_reason": "The complete review record was checked against production receipts and the follow-up reviewer evidence.",
+  "examples": [
+    {
+      "location": "line 29",
+      "line": 29,
+      "quote": "The run accounting and observed-key summary are verified. The scientific result is not a general endorsement: no inferential scenario is supported, and twelve fail the prespecified assessment. Prediction coverage and other descriptive recovery results must remain regime-specific. The runtime inventory variation is disclosed and retained rather than collapsed into one identity.",
+      "cue": "no inferential scenario is supported",
+      "impact": "States the evidence verdict without extending it beyond tested regimes.",
+      "repair": "no change needed"
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "Classifications and inferential limits are checked against the stated criteria and result tables.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Job counts, result counts, classifications and follow-up receipts match retained evidence.",
+  "references_gate": "not_applicable",
+  "references_gate_reason": "No external references are cited in this draft.",
+  "date": "2026-10-18",
+  "calibration_status": "Relevant published human-control examples were seen before this assessment; this is not independent human validation or an authorship judgment.",
+  "interpretation": "perceived_style_not_authorship"
+}

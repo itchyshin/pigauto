@@ -1,4 +1,4 @@
-# Independent final evidence review
+# Independent pilot evidence review before production
 
 Reviewer was separate from the runner implementation. Read-only raw-record inspection; no fits run by reviewer.
 
@@ -10,4 +10,4 @@ The MAR case retained sixty reliability-bin rows. ECE is descriptive fixed-bin c
 
 Scalar summaries are descriptive or indeterminate. Paired contrasts have at most one independent pair. No replicated calibration or scientific superiority conclusion is supported by this pilot.
 
-Verdict: implementation and bounded-pilot slice supported by the retained evidence. Production scientific assessment remains unapproved and unrun. Revised estimate is 265.9 CPU-hours, 5.5 to 14.8 hours at 48 workers, with timing pooling and unavailable-data caveats retained.
+This review covers only the pilot evidence and production estimate. Production approval, execution, and scientific outcomes are recorded in `review-production.md` and `scientific-report.md`.

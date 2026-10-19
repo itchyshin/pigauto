@@ -1,0 +1,44 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "efaa604052bf9bbe6c8a8e0a5b97f6181c7981331444766c7b0836ed0d740e73",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex",
+  "method": "Separate full-draft self-review; source, receipts and review cross-check for factual and scientific gates; repository prose checker.",
+  "genre": "Scientific validation report",
+  "coverage": "Whole draft, all sections",
+  "score": 2,
+  "style_status": "scored",
+  "score_reason": "Specific measured counts, explicit regimes, and restrained claims keep the prose direct; a few repeated scope statements remain.",
+  "confidence": "medium",
+  "confidence_reason": "The complete report and source tables, receipts, and review were checked; style remains an editorial judgment.",
+  "examples": [
+    {
+      "location": "line 49",
+      "line": 49,
+      "quote": "The production summary contains 5,697 scenario/method/estimand rows: 5,630 recovery rows and 23 descriptive rows, plus 44 inferential rows. Of the inferential rows, none is supported; 12 are classified failed and 32 indeterminate under the prespecified bands and Monte Carlo uncertainty. This includes complete-data controls, so some failures arise even without imputation. These are findings for the frozen simulation regimes, not universal claims about all uses of pigauto.",
+      "cue": "none is supported; 12 are classified failed and 32 indeterminate under the prespecified bands and Monte Carlo uncertainty.",
+      "impact": "States the central inferential result directly.",
+      "repair": "no change needed"
+    },
+    {
+      "location": "line 84",
+      "line": 84,
+      "quote": "Writing assessment: perceived AI-like style 2/10 (medium confidence), based on the report's specific counts and bounded claims. Evidence: \u201cno inferential scenario met the prespecified support criteria\u201d states the measured result directly; no change needed. \u201cIt does not establish broad guarantees outside these regimes\u201d keeps the scope clear; no change needed. Scientific gate: pass, classifications and calibration summaries checked against retained production tables and prespecified criteria. Factual gate: pass, run accounting, source identities, BIEN roster and denominator replay checked against receipts and independent review. Reference gate: not applicable, no external references are cited. Assessment provenance: self-review by Codex, whole scientific report, independent mode, version v1, 2026-10-18; relevant human-control examples were seen before assessment.",
+      "cue": "no inferential scenario met the prespecified support criteria",
+      "impact": "Keeps the review claim tied to the measured criteria.",
+      "repair": "no change needed"
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "Scientific outcomes and uncertainty are checked against the retained production tables and prespecified criteria.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Counts, runtime, source identities, BIEN roster and regenerated denominators were checked against retained receipts and independent review.",
+  "references_gate": "not_applicable",
+  "references_gate_reason": "No external references are cited in this draft.",
+  "date": "2026-10-18",
+  "calibration_status": "Relevant published human-control examples were seen before this assessment; this is not independent human validation or an authorship judgment.",
+  "interpretation": "perceived_style_not_authorship"
+}
