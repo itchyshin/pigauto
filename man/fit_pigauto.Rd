@@ -273,18 +273,20 @@ Set \code{safety_floor = TRUE} to restore the old behaviour.}
 
 \item{phylo_signal_gate}{logical. Default \code{FALSE} (it was
 \code{TRUE} from v0.9.1.9003 until 0.11.0.9002; same reasons as
-\code{safety_floor}; set \code{TRUE} to restore). When \code{TRUE}, compute per-trait Pagel's \eqn{\lambda} on
-training-observed cells before fitting; for traits with
-\code{lambda < phylo_signal_threshold}, force
-\code{(r_cal_bm = 0, r_cal_gnn = 0, r_cal_mean = 1)} directly
-and skip BM + GNN training on those traits.  Requires the
-\code{phytools} package.  Falls back to safety-floor-only
-behaviour (\code{phylo_signal_gate = FALSE} effective) when
-\code{phytools} is absent.}
+\code{safety_floor}; set \code{TRUE} to restore). When \code{TRUE},
+estimate per-trait Pagel's \eqn{\lambda} from training-observed cells;
+validation and test cells are excluded. After model training and gate
+calibration, traits with \code{lambda < phylo_signal_threshold} are
+routed to the mean corner when \code{safety_floor = TRUE}, or to the
+Brownian baseline corner otherwise. This changes the calibrated blend;
+it does not skip GNN training. Requires the \code{phytools} package.
+If \code{phytools} is absent, the signal estimate is unavailable and no
+phylogenetic-signal override is applied.}
 
-\item{phylo_signal_threshold}{numeric, default \code{0.2}.  Traits
-with Pagel's \eqn{\lambda} below this value are routed to the
-grand-mean corner of the safety-floor simplex.}
+\item{phylo_signal_threshold}{numeric, default \code{0.2}. Traits
+with Pagel's \eqn{\lambda} below this value are routed to the mean
+corner when the safety floor is enabled, or to the Brownian baseline
+corner otherwise.}
 
 \item{phylo_signal_method}{character, currently only \code{"lambda"}
 is fully implemented.  Reserved \code{"blomberg_k"} path returns
