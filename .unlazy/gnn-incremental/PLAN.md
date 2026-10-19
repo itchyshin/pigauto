@@ -8,7 +8,8 @@ Status: IN PROGRESS. Main-based isolated worktree is ready. A narrow lease is he
 | DGP, efficient phylogenetic GLS, oracle tests | Builder / GPT-6.1 Sol medium | Complete | Design freeze | `script/gnn_incremental/dgp.R`, comparator and harness tests |
 | Pigauto fit, same-fit neural ablation, resumable runner | Builder / GPT-6.1 Sol medium | Complete | Harness API | Runner, manifests, per-replicate records |
 | Bounded pilot v2 | Ada / GPT-6.1 Sol low | Complete, all gates passed | Harness gates; live Totoro capacity verified | Five datasets, one per frozen scenario, both gate arms; four single-thread workers; 18.5 minutes end-to-end |
-| Production | Ada / GPT-6.1 Sol low | Awaiting explicit approval; estimate 8.8 h raw compute / 10–10.5 h budget | Valid pilot and compute estimate | Five scenarios × 500 replicates, 48 single-thread workers on Totoro after a fresh capacity check |
+| Production launcher | Ada / GPT-6.1 Sol low | Prepared and refusal-tested; not launched | Valid pilot, approval gate, fresh Totoro check | `totoro_production.sh` requires approval and a fresh-capacity marker, exact source hash, unique persistent run dir, 500 replicates per scenario, and ≤48 workers |
+| Production | Ada / GPT-6.1 Sol low | Awaiting explicit approval; estimate 8 h 49 min raw compute / 10–10.5 h budget | Valid pilot and compute estimate | Five scenarios × 500 replicates, up to 48 single-thread workers on Totoro after a fresh capacity check |
 | Report and pkgdown update | Writer / GPT-6 Luna medium | Not started | Production results; lane release for article | Scientific report and short results table |
 | Independent review and closeout | Statistical reviewer / GPT-6.1 Sol high; Rose / GPT-6 Luna medium; Melissa / GPT-6 Luna low | Not started | Report and results | Gate re-verification, after-task, reconciliation |
 

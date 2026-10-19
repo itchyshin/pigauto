@@ -21,10 +21,10 @@ OWNS: `script/gnn_incremental/**`, `docs/dev-log/gnn-incremental/**`, `.unlazy/g
   EXPECT: `RUN_ACCOUNTING_PASS`
   EVIDENCE: Totoro `logs/audit.log`; pilot receipt `docs/dev-log/gnn-incremental/PILOT-20261019.md`.
 
-- [ ] G4: Production contains exactly 500 requested datasets per frozen scenario only after the post-pilot runtime estimate checkpoint is explicitly approved; no duplicates, silent skips, or stale-result reuse are allowed, and all attempts are accounted for, including comparator-specific failures.
+- [ ] G4: The guarded Totoro production launcher refuses to run without explicit approval and a fresh capacity-check marker, accepts only a unique persistent run directory and the exact source-bundle hash, limits concurrency to at most 48 single-thread workers, and initializes exactly 500 datasets per frozen scenario. Production then contains all attempts with no duplicates, silent skips, or stale reuse, and accounts for comparator-specific failures.
   CHECK: `Rscript --vanilla script/gnn_incremental/audit_run.R --run-dir results/production`
   EXPECT: `RUN_ACCOUNTING_PASS`
-  EVIDENCE: Pending valid pilot and user approval if the measured production estimate exceeds three hours.
+  EVIDENCE: `bash script/gnn_incremental/test_production_launcher.sh` returns `PRODUCTION_LAUNCHER_GUARD_PASS`; production run remains pending user approval (pilot estimate 8 h 49 min raw compute; budget 10–10.5 h).
 
 - [ ] G5: Production scientific summaries regenerate from retained replicate-level results and report paired uncertainty across datasets, both missingness strata, gate behavior, failures, and convergence. Pilot summary reproduction passed, but five datasets cannot support efficacy inference.
   CHECK: `Rscript --vanilla script/gnn_incremental/summarise.R --verify --run-dir results/production`
