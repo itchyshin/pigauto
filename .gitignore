@@ -79,3 +79,8 @@ submit_v090_vulcan/
 # pigauto CI bench results — committed only via per-run summary PR
 script/gha/results/*
 !script/gha/results/.gitkeep
+
+# Local validation execution state
+.unlazy/
+script/validation_20261018/results/
+script/validation_20261018/logs/

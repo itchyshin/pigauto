@@ -1,0 +1,115 @@
+---
+title: "What the October 2026 validation found"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{What the October 2026 validation found}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This page reports a bounded validation campaign of pigauto's existing
+implementation. It describes the tested source, simulation settings, run
+accounting, and scientific results. The evidence is specific to these
+settings; it does not certify performance for every dataset or use.
+
+## What was tested
+
+The campaign used a frozen manifest of 151 configurations and 32,240
+independent dataset attempts. It covered the eight supported trait types,
+mixed-type input, prediction under several evolutionary and missingness
+conditions, zero-inflated counts, compositions, repeated observations,
+covariates, posterior-tree workflows, posterior inference, analysis-aware
+inference, and available real-data examples. Most simulation scenarios used
+200 replicates; selected inferential scenarios used 500. The complete
+scenario definitions and data-generating contract are retained with the
+campaign records.
+
+The package contract tests exercised type encoding and decoding, preservation
+of observed values, valid ranges and simplex constraints, alignment, seed
+reproducibility, prediction, and save/reload behaviour. The Totoro development
+test suite reported 3,554 passes, no failures, 182 warnings, and 9 skips. The
+skips were retained as skips; they are not evidence of passing optional
+integrations.
+
+## Run accounting
+
+Of the 32,240 production attempts, 32,199 completed successfully, one was
+retained as failed, and 40 were unavailable because the registered PanTHERIA
+and FishBase inputs were absent. The available AVONET and configured BIEN
+examples each completed 20 masks. The production results contain 1,122,060
+metric rows, including expected unavailable metrics where a measure does not
+apply.
+
+The single failed attempt was an OU prediction scenario with 100 species,
+phylogenetic signal parameter 0.3, trait correlation 0.5, observed-variable
+MAR missingness, and 30% missing values. Some GNN-off conformal interval
+metrics were non-finite or absent. It remains in the denominator and is not
+counted as a package crash.
+
+## Prediction interval results
+
+Across 82 prediction scenarios with 200 replicates each, the equal-weighted
+mean scenario-level 95% conformal coverage was 91.2% for the first continuous
+trait, 91.1% for the second continuous trait, 92.3% for counts, and 92.1% for
+proportions. Scenario means ranged from 69.5% to 97.7% across these four trait
+families.
+
+These observed rates are below nominal 95% on average. They show that the
+split-conformal intervals did not attain nominal coverage in every tested
+regime. Phylogenetic dependence and structured missingness can violate the
+exchangeability conditions behind the usual split-conformal guarantee, so
+these results do not support a blanket distribution-free coverage claim.
+
+## Inferential results
+
+The assessment used prespecified bands for nominal 95% coverage, reported
+standard-error calibration, and standardized bias. No inferential scenario
+met all support criteria. Of 44 inferential rows, 12 were classified as
+failed and 32 as indeterminate. This includes complete-data controls, so the
+observed failures are not all attributable to imputation.
+
+For the eight posterior slope regimes with an independently defined truth,
+five were classified as failed and three as indeterminate. Empirical 95%
+coverage ranged from 86.2% to 95.2%; reported-to-empirical standard-error
+ratios ranged from 0.750 to 1.039. In the analysis-aware simulations, 23 of
+24 rows were indeterminate and one binomial-logit GLM row failed. None was
+classified as supported.
+
+These classifications describe the registered regimes and criteria. They do
+not establish that every use of pigauto will fail, nor do the indeterminate
+rows establish calibration. Users should treat inferential use as requiring
+further evidence for their model, data, and missingness process.
+
+## Package-check scope
+
+The package built with its vignettes. A strict check stopped because the
+suggested packages `brms` and `rgbif` were unavailable in the environment. A
+separately labelled check with forced suggested packages disabled completed
+with `Status: OK`; it reported 3,272 passes, no failures, 163 warnings, and
+87 skips. This is not an all-dependency, manual, cross-platform, or CRAN
+submission check.
+
+## Reproducibility and limits
+
+The full scenario manifest, result tables, per-attempt receipts, runtime
+identities, hashes, and independent review are retained in the campaign
+record. Its source identity is
+`67ea5121b8e9e6db4009f562ebf3758384deeff7f16a01685e61f5e20761dcfa`, and its
+frozen job-list hash is
+`0adafdb698ecce426f75ca09e9c6ba6028829ae98495f5453ba919e5b61d8769`.
+Production used 48 single-thread workers on Totoro and completed in 6 hours
+12 minutes. The records preserve one failed attempt, 40 unavailable attempts,
+and host package-inventory variation; no earlier run was silently substituted.
+
+The [full scientific report](https://github.com/itchyshin/pigauto/blob/da71711cdc6fcb587babaf4d5b323c4468cb4492/docs/dev-log/validation-20261018/scientific-report.md),
+[scenario manifest](https://github.com/itchyshin/pigauto/blob/da71711cdc6fcb587babaf4d5b323c4468cb4492/docs/dev-log/validation-20261018/scenarios.csv),
+[validation ledger](https://github.com/itchyshin/pigauto/blob/da71711cdc6fcb587babaf4d5b323c4468cb4492/docs/dev-log/validation-20261018/validation-ledger.md),
+and [scenario-level summary table](https://github.com/itchyshin/pigauto/blob/da71711cdc6fcb587babaf4d5b323c4468cb4492/docs/dev-log/validation-20261018/receipts/production-summary.csv.gz)
+are available at the exact validation commit.
