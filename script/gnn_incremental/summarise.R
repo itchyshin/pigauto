@@ -224,6 +224,11 @@ for (gate_setting in "FALSE") {
     }
   }
 }
+pilot_confirmatory <- paired_summary$scenario_id %in% confirmatory &
+  paired_summary$stratum == "all_outer_holdouts" &
+  paired_summary$n_requested < 500L
+paired_summary$classification[pilot_confirmatory] <-
+  "indeterminate: pilot sample below 500"
 
 method_summary <- if (nrow(method_metrics)) {
   groups <- split(method_metrics,

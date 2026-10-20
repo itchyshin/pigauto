@@ -135,4 +135,11 @@ if (!any(dataset_metrics$phylo_signal_gate == "TRUE" &
         dataset_metrics$gate_triggered %in% FALSE)) {
   stop("Signal-estimation status or unknown gate trigger was not retained.")
 }
+paired_summary <- read.csv(file.path(run_dir, "summaries", "paired_summary.csv"))
+pilot_confirmatory <- paired_summary$scenario_id %in%
+  c("nonlinear_primary", "interactive_secondary") &
+  paired_summary$stratum == "all_outer_holdouts"
+if (any(grepl("^supported$|^failed$", paired_summary$classification[pilot_confirmatory]))) {
+  stop("Pilot-size data were incorrectly assigned an efficacy classification.")
+}
 cat("ACCOUNTING_AND_SUMMARY_VALIDATION_PASS\n")
