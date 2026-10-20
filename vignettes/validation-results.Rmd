@@ -1,8 +1,8 @@
 ---
-title: "What the October 2026 validation found"
+title: "Pigauto validation results and limits"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{What the October 2026 validation found}
+  %\VignetteIndexEntry{Pigauto validation results and limits}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -14,10 +14,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-This page reports a bounded validation campaign of pigauto's existing
-implementation. It describes the tested source, simulation settings, run
-accounting, and scientific results. The evidence is specific to these
-settings; it does not certify performance for every dataset or use.
+This article summarizes pigauto's validation evidence, including a campaign
+completed in October 2026. It describes the tested source, simulation
+settings, run accounting, and scientific findings. Each result applies to
+the stated scenarios; it does not certify performance for every dataset or
+use.
 
 ## What was tested
 
@@ -67,20 +68,25 @@ regime. Phylogenetic dependence and structured missingness can violate the
 exchangeability conditions behind the usual split-conformal guarantee, so
 these results do not support a blanket distribution-free coverage claim.
 
-## GNN contribution in repeated observations
+## When does the neural component add predictive value?
 
-A separate simulation tested whether the gated neural correction adds
-predictive value when each species has repeated observations and each
-observation has ten environmental covariates. Each scenario used 500
-independent datasets with 500 species, about five observations per species,
-a Brownian species effect, and independent observation error. Half the
-species were fully withheld; 20% of observations among the remaining species
-were masked. The primary policy used the current `impute()` defaults,
-including `phylo_signal_gate = FALSE` and `lambda_mode = "estimate"`.
+Pigauto combines a phylogenetic baseline with a gated neural component. The
+broader question is whether the neural component improves predictions for
+unobserved data. The evidence here addresses one candidate setting: repeated
+observations with environmental covariates for a continuous response. Each
+scenario used 500 independent datasets with 500 species, about five
+observations per species, ten covariates per observation, a Brownian species effect, and independent
+observation error. Half the species were fully withheld; 20% of observations
+among the remaining species were masked. The confirmatory policy used
+`phylo_signal_gate = FALSE` and `lambda_mode = "estimate"`, the current
+defaults for these settings. It set `gnn = TRUE` explicitly to test the neural component; the package
+default is `gnn = FALSE`.
 
 The primary comparison uses the same fitted pigauto model twice. The
-counterfactual sets the neural gate weight to zero while preserving the
-Brownian and mean-baseline weights and the fitted linear covariate effect.
+counterfactual sets the neural gate weight to zero and transfers that weight
+to the Brownian baseline, while preserving the mean-baseline weight and fitted
+linear covariate effect. This compares the full neural contribution; it does
+not isolate graph message passing from the observation-level neural network.
 The confirmatory scenarios were nonlinear and interactive covariate signals
 at a Brownian variance multiplier of 0.3. Both met the prespecified support
 rule: the Holm-adjusted paired tests and simultaneous Bonferroni 95% intervals
@@ -111,8 +117,8 @@ pooled RMSE was near parity (0.764 for pigauto and 0.768 for GLS). For fully
 withheld species, pooled RMSE was 0.756 for pigauto and 0.771 for GLS; among
 partly observed species it was 0.802 for pigauto and 0.750 for GLS.
 
-Within the default policy, relative RMSE reductions for fully withheld versus
-partly observed species were 15.1% and 25.4% in the nonlinear scenario, and
+Under the confirmatory policy, relative RMSE reductions for fully withheld
+versus partly observed species were 15.1% and 25.4% in the nonlinear scenario, and
 23.7% and 29.7% in the interactive scenario. These stratum-specific results
 are descriptive. A separate `phylo_signal_gate = TRUE` policy-sensitivity arm
 triggered in 8.6% of nonlinear, 12.2% of interactive, and 89.6% of low-signal
@@ -121,10 +127,24 @@ completed 500/500 datasets. The audit reconciled 2,500 datasets, 5,000 gate
 fits, and 30,000 method attempts with no failures or nonconvergence, and the
 summary regenerated from retained replicate records.
 
-This is evidence for incremental value over this same-fit neural-off
-counterfactual in the two stated covariate scenarios. It does not establish
-general superiority over non-neural methods, performance on other data
-generating processes, or uncertainty calibration. The [full GNN report](https://github.com/itchyshin/pigauto/blob/main/docs/dev-log/gnn-incremental/RESULTS-20261020.md)
+These results suggest a candidate setting in which to test pigauto: prediction
+from repeated observations when observation-level covariates carry signal,
+including nonlinear or interactive signal. In the tested signal scenarios,
+the neural component improved predictions relative to the same fitted model
+with that contribution removed. The no-signal control showed a small loss.
+This within-fit gain does not mean pigauto will outperform a well-specified
+non-neural model. GLS and polynomial regression performed better in some
+comparisons, and GLS did better for partly observed species in the nonlinear
+scenario.
+
+For an applied dataset, compare pigauto with a covariate-aware non-neural
+model using held-out data that match the intended prediction task. Report
+fully withheld and partly observed species separately. A direct test of
+whether graph message passing adds value would compare this branch with a matched observation-level neural network without graph message
+passing. Broader recommendations require testing other sample sizes, numbers
+of repeat observations, covariate signal strengths, and missingness patterns.
+These results do not establish performance for those settings or uncertainty
+calibration. The [full GNN report](https://github.com/itchyshin/pigauto/blob/main/docs/dev-log/gnn-incremental/RESULTS-20261020.md)
 and [paired summary table](https://github.com/itchyshin/pigauto/blob/main/script/gnn_incremental/results/production-20261019-v1-summary/summaries/paired_summary.csv)
 give the scenario criteria, paired uncertainty, gate behaviour, and
 reproducibility records.
