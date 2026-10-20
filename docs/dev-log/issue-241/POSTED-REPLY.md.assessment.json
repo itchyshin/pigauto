@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "8f9907131dc5a564f83e444b7f679423863afba921151875efff14d628658a29",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex",
+  "method": "Separate source and prose review after drafting",
+  "genre": "Authorized GitHub issue reply",
+  "coverage": "Whole final comment",
+  "score": 2,
+  "style_status": "known",
+  "score_reason": "Concrete reproduction, mechanism and current delivery status; no generic praise or claims beyond the tests.",
+  "confidence": "moderate",
+  "confidence_reason": "Self assessment, not an independent human judgment.",
+  "examples": [
+    {
+      "location": "Paragraph 4",
+      "cue": "Explicit delivery status",
+      "impact": "Avoids implying the fix has shipped.",
+      "repair": "no change needed",
+      "line": 7,
+      "quote": "The fix is local for now and has not been merged, so it is not yet on CRAN or the website. Until it is available, `evaluate(fit)` remains the workaround."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "Claims are limited to held-out scoring and the exercised GNN input path; no calibration or general performance claim.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Verified reporter handle from GitHub; all three reproductions and final 3672-pass suite receipt read; current local diff remains unmerged.",
+  "references_gate": "not_applicable",
+  "references_gate_reason": "No bibliographic citations or external links in this draft.",
+  "date": "2026-10-20",
+  "calibration_status": "Protocol examples seen; no held-out calibration claim.",
+  "interpretation": "perceived_style_not_authorship"
+}
