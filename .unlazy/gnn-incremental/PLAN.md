@@ -57,3 +57,6 @@ Production progress (2026-10-19, 22:35 MDT): 384 of 500 primary-scenario records
 
 
 Scenario-label correction (2026-10-19, 23:02 MDT): the first shell count used incorrect labels for four frozen scenarios. Rechecking with the manifest IDs found 499 `nonlinear_primary` records and 4 `interactive_secondary` records, with none yet in `nonlinear_low_phylo`, `linear_recovery`, or `null_covariate`. A read-only R integrity check found 503 unique scenario/replicate keys, all six method-status fields present per record, 1,006 completed gate-fit statuses, and no launcher failures. This is partial evidence only; `audit_run.R` still must validate full manifest identity and fingerprints before summary.
+
+
+Production checkpoint (2026-10-19, 23:04 MDT): the primary nonlinear scenario reached 500/500 saved records and the interactive confirmatory scenario began, with 11 records saved. There were 511 records total and zero launcher failures. Totoro retained about 373 GiB available memory. Cumulative throughput projects around 705 minutes for the complete campaign before closeout, still above the approved 630-minute cap.
