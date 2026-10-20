@@ -1,0 +1,67 @@
+{
+  "reviewer": "grace",
+  "verdict": "READY",
+  "artifact_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+  "scope": "Independent frozen-artifact CRAN/platform/dependency/manual/incoming/timing/inventory/reproducibility review supporting technical submission preparation only",
+  "blockers": [],
+  "conditions": [
+    {
+      "kind": "governance",
+      "condition": "Finalize durable evidence wrapper, comments and typed conditional rows; incorporate fresh whole-panel votes and pass the claimed-rung validator before submission-ready."
+    },
+    {
+      "kind": "human_decision",
+      "condition": "Explicit maintainer timing decision covering Windows645.813/622.432seconds and Mac sole timing NOTE/3564.464seconds; retain these observations."
+    },
+    {
+      "kind": "authorization",
+      "condition": "Separate approval for exact-archive CRAN upload and maintainer confirmation; PR236 merge/tag/announcement remain unauthorized."
+    }
+  ],
+  "checked_evidence": [
+    "independent-readback.json",
+    "raw-warning-readback.json",
+    "/private/tmp/pigauto-final-closure-20261017/FINAL.json",
+    "/private/tmp/pigauto-final-closure-20261017/synthetic-workflow-tree-binding.json",
+    "/private/tmp/pigauto-final-closure-20261017/final-warning-audit/actual-results-null-error-fix/audit.json",
+    "/private/tmp/pigauto-final-closure-20261017/replay-null-serialization-fix/independent/README.md",
+    "/private/tmp/pigauto-final-closure-20261017/final-platform-publication/publication/readback-result.json",
+    "/private/tmp/pigauto-final-closure-20261017/final-mi-verification.json",
+    "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/absence-summary.json",
+    "/private/tmp/pigauto-final-closure-20261017/final-spelling-review/receipt.json",
+    "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d/timing-summary.json",
+    "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d/doi-metadata.json",
+    "/private/tmp/pigauto-final-closure-20261017/cran-comments-final-draft.md",
+    "/private/tmp/pigauto-final-closure-20261017/cran-publication-and-revdeps.json",
+    "https://cran.r-project.org/web/packages/policies.html",
+    "https://cran.r-project.org/web/packages/submission_checklist.html",
+    "https://cran.r-project.org/web/packages/URL_checks.html"
+  ],
+  "limits": [
+    "Highest supported technical rung platform-clean with disclosed/adjudicated local timing NOTE; overall submission-ready not yet established.",
+    "No fit, native-check rerun, source/archive mutation, external message, merge, upload or setting change.",
+    "Separate warning replay objects are not original native-execution objects; raw native/replay totals agree.",
+    "R-hub rebuilds source; no Win-builder server digest claimed.",
+    "No broad scientific/coverage, joint-covariance/loadings/variance-component pooling, clean-room dependency build, GPU/MPS or live service certificate.",
+    "BirdTree inclusion retains recorded direct maintainer warranty and attribution, not independent legal assurance or newly published rights."
+  ],
+  "highest_supported_rung": "platform-clean",
+  "next_unproven_rung": "submission-ready",
+  "technical_timing_adjudication": {
+    "local_native_status": "1 NOTE",
+    "native_exit": 0,
+    "strict_driver_exit": 1,
+    "method": "compare_methods",
+    "user_seconds": 2.532,
+    "system_seconds": 0.992,
+    "elapsed_seconds": 18.406,
+    "decision": "Accept sole disclosed timing NOTE for technical preparation; human timing/upload risk decision separate",
+    "windows_total_seconds": [
+      645.812567949295,
+      622.432008981705
+    ],
+    "local_total_seconds": 3564.46431493759
+  },
+  "reviewed_utc": "2026-10-18T01:29:51.163808+00:00"
+}

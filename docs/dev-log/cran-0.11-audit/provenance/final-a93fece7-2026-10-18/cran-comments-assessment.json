@@ -1,0 +1,44 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "26267bd4a9fdb42b01a42722126e9a242f0ba97d7071329a234f0e38e25d5fb2",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Root release driver",
+  "method": "Separate post-draft reading against actual frozen identity, four native raw logs and independent timing readback, MI/novice/vignette/ancillary receipts, current policy, rights disposition, replay amendment and three fresh panel votes.",
+  "genre": "CRAN submission comments",
+  "coverage": "Whole exact saved draft",
+  "score": 3,
+  "style_status": "assessed",
+  "score_reason": "Concrete release observations with explicit limits; the structured receipt format necessarily repeats scope and identity.",
+  "confidence": "moderate",
+  "confidence_reason": "Editorial self-assessment, with no calibrated human or authorship inference.",
+  "examples": [
+    {
+      "location": "Line 63",
+      "cue": "Concrete observation and its scope are explicit",
+      "impact": "Makes the evidence and remaining limitation visible without inferring acceptance or general scientific validity.",
+      "repair": "no change needed",
+      "line": 63,
+      "quote": "200 and matched the cited Hackett et al. 2008 Science article. The DOI is"
+    },
+    {
+      "location": "Line 29",
+      "cue": "Concrete observation and its scope are explicit",
+      "impact": "Makes the evidence and remaining limitation visible without inferring acceptance or general scientific validity.",
+      "repair": "no change needed",
+      "line": 29,
+      "quote": "The original compressed archive was checked directly, without rebuilding,"
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "No new scientific result or default change is asserted; bounded checks do not become general recovery or nominal-coverage claims.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Archive identity, status, timing measures, counts, disclosures and approvals compared with the actual retained sources and current state; incomplete replay history is explicit.",
+  "references_gate": "pass",
+  "references_gate_reason": "Exact DOI identity checked against retained current primary Crossref metadata; policy files and dated rights records are distinguished from licence grants or legal opinions.",
+  "date": "2026-10-18T07:51:18.073891+00:00",
+  "calibration_status": "Protocol examples and earlier technical receipts were seen; no held-out evaluation.",
+  "interpretation": "perceived_style_not_authorship"
+}

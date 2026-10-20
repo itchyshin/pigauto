@@ -1,0 +1,44 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "7dd14e6f38b39d5eb180f9b24e967f40237fbbb61970d3772308fed6c6d5df54",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex driver",
+  "method": "Separate post-draft review against exact run metadata, raw results, independent reviewer findings and measured archive hashes.",
+  "genre": "technical after-task report",
+  "coverage": "whole draft",
+  "score": 3,
+  "style_status": "known",
+  "score_reason": "Concrete file, failure and verification details dominate; the required twelve-section template creates some repetitive structure.",
+  "confidence": "medium",
+  "confidence_reason": "Technical clarity and specificity can be assessed here; this is an editorial judgment, not an authorship test.",
+  "examples": [
+    {
+      "location": "line 11",
+      "cue": "The dependency parser now removes empty fields",
+      "impact": "Names the measured input defect and repair in plain terms.",
+      "repair": "no change needed",
+      "line": 11,
+      "quote": "The dependency parser now removes empty fields from the frozen DESCRIPTION's trailing comma and is tested against R's dependency parser. Manual-tool setup explicitly supplies missing Courier metrics, V8 and Linux HTML Tidy. A font compilation canary and JavaScript engine canary fail before the package check if those tools do not work. The later index probe records executable paths and command results, conditionally installs makeindex only when absent, and requires a nonempty index and an indexed PDF through R's own tools."
+    },
+    {
+      "location": "line 52",
+      "cue": "There are 161 testthat warnings",
+      "impact": "States the remaining uncertainty directly instead of implying warning-free results.",
+      "repair": "no change needed",
+      "line": 52,
+      "quote": "There are 161 testthat warnings whose messages the CRAN-mode reporter suppresses; the counts remain visible and messages are unclassified. The 86 skips comprise 54 explicit CRAN exclusions, 2 unavailable BIEN-cache tests, 3 slow/live integration tests, 24 source-only documentation/helper tests and 3 alternate missing-dependency branches in environments where the dependencies are installed. No claim of full feature coverage or warning-free tests follows."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "not_applicable",
+  "science_gate_reason": "No new statistical default, simulation conclusion or inference is proposed. Scientific coverage limits remain explicit.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Checked declared results against run39070922656, sourceCI359, all three raw logs, measured timing/dependency/hash records, validator output and review findings. Final publication/readback is explicitly a later external receipt.",
+  "references_gate": "pass",
+  "references_gate_reason": "Named run IDs, hashes and relative evidence paths match retained records. The report makes no new bibliographic or legal claim.",
+  "date": "2026-10-17",
+  "calibration_status": "Existing protocol examples were seen; no held-out authorship evaluation is claimed.",
+  "interpretation": "perceived_style_not_authorship"
+}

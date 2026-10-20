@@ -1,0 +1,63 @@
+{
+  "reviewer": "pat",
+  "verdict": "PASS",
+  "scope": "Independent read-only verification of successor frozen source/archive identity, inventory, build normalization and rights/data stream hashes; excludes package/platform check results and CRAN submission.",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "source_checkout": "/Users/z3437171/.codex/worktrees/cran-011-final-artifact/pigauto",
+  "source_head": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "source_worktree_status": "",
+  "archive_path": "/private/tmp/pigauto-release-candidate/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/pigauto_0.11.0.tar.gz",
+  "artifact_sha256_actual": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "artifact_size_bytes_actual": 5137837,
+  "archive_mode_octal": "0o444",
+  "archive_entries_actual": 250,
+  "inventory_sha256_actual": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+  "tracked_packaged_files_compared": 216,
+  "tracked_packaged_files_identical": 215,
+  "source_file_differences": [
+    "DESCRIPTION"
+  ],
+  "rights_stream_count": 7,
+  "main_ci_run_id": 39090594763,
+  "main_ci_conclusion": "success",
+  "main_ci_job_conclusions": {
+    "ubuntu-latest (R release)": "success",
+    "macos-latest (R release)": "success",
+    "ubuntu-latest (R devel)": "success"
+  },
+  "checks": {
+    "freeze_receipt_matches_FINAL": true,
+    "archive_sha256_matches_FINAL": true,
+    "archive_size_matches_FINAL": true,
+    "archive_mode_readonly": true,
+    "content_addressed_directory": true,
+    "source_HEAD_matches_commit": true,
+    "source_worktree_clean": true,
+    "main_CI_success_same_commit": true,
+    "inventory_sha256_matches_FINAL": true,
+    "actual_archive_inventory_matches_file": true,
+    "actual_archive_entry_count_matches": true,
+    "all_tar_members_regular_or_directories": true,
+    "frozen_forbidden_entries_empty": true,
+    "all_packaged_tracked_files_match_commit_except_description": true,
+    "expected_only_SOURCE_DIFF_DESCRIPTION": true,
+    "DESCRIPTION_common_fields_equal_after_whitespace_normalization": true,
+    "DESCRIPTION_build_added_fields_only": true,
+    "rights_hashes_match_frozen_archive": true,
+    "rights_hashes_equal_predecessor": true,
+    "rights_unchanged_flag_true": true
+  },
+  "blockers": [],
+  "conditions": [
+    "This is an artifact/source identity review only; it does not adjudicate native runner 27253 or MI runner 38340, the separate human review of Mac timing, CRAN account/submission authority, CRAN upload, or acceptance."
+  ],
+  "checked_evidence": [
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/FINAL.json",
+    "/private/tmp/pigauto-release-candidate/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/freeze-receipt.json",
+    "/private/tmp/pigauto-release-candidate/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/inventory.txt",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/main-ci-final.json",
+    "/private/tmp/pigauto-final-closure-20261017/FINAL.json",
+    "git source commit tree via cat-file"
+  ],
+  "reviewed_at_utc": "2026-10-18T02:54:35.309370+00:00"
+}

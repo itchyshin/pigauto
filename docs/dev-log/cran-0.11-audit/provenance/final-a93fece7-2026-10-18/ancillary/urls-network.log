@@ -1,0 +1,66 @@
+[1] ‘1.0.1’
+$version
+[1] "8.14.1"
+
+$headers
+[1] "8.14.1"
+
+$ssl_version
+[1] "LibreSSL/3.3.6 (SecureTransport)"
+
+$libz_version
+[1] "1.2.12"
+
+$libssh_version
+[1] NA
+
+$libidn_version
+[1] NA
+
+$host
+[1] "aarch64-apple-darwin23.6.0"
+
+$protocols
+ [1] "dict"    "file"    "ftp"     "ftps"    "gopher"  "gophers" "http"   
+ [8] "https"   "imap"    "imaps"   "ldap"    "ldaps"   "mqtt"    "pop3"   
+[15] "pop3s"   "rtsp"    "smb"     "smbs"    "smtp"    "smtps"   "telnet" 
+[22] "tftp"    "ws"      "wss"    
+
+$ipv6
+[1] TRUE
+
+$http2
+[1] TRUE
+
+$idn
+[1] FALSE
+
+$url_parser
+[1] TRUE
+
+R version 4.6.0 (2026-04-24)
+Platform: aarch64-apple-darwin23
+Running under: macOS Tahoe 26.7.1
+
+Matrix products: default
+BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+
+locale:
+[1] C.UTF-8/C.UTF-8/C.UTF-8/C/C.UTF-8/C.UTF-8
+
+time zone: America/Edmonton
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+[1] compiler_4.6.0 curl_7.1.0    
+✖ Error: inst/doc/getting-started.html:949:78 403: Forbidden
+their evolutionary history. <em>Science</em>, 320(5884), 1763–1768. <a href="https://doi.org/10.1126/science.1157704" class="uri">https://doi.org/10.1126/science.1157704</a></li>
+                                                                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: vignettes/getting-started.Rmd:654:3 403: Forbidden
+  https://doi.org/10.1126/science.1157704
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+URL_CHECK_AND_FLAT_EXPORT_COMPLETED

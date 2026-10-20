@@ -1,0 +1,8 @@
+{
+  "pass": 60,
+  "fail": 0,
+  "warnings": 0,
+  "skips": 8,
+  "tests": 28,
+  "scope": "Read retained actual result objects only; no tests rerun"
+}

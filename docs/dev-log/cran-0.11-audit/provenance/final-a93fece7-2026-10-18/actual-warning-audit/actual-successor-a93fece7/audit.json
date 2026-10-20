@@ -1,0 +1,323 @@
+{
+  "verdict": "PASS warning identities and consequences only",
+  "native_check_adjudication": "all_native_Status_OK",
+  "exact_local_timing_note_opt_in": false,
+  "archive_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "archive_size_bytes": 5137837,
+  "direct_run": "39091958419",
+  "passed_cells": 4,
+  "records": [
+    {
+      "cell": "local-macos",
+      "status": "PASS",
+      "input_sha256": {
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-replay.json": "c1f759a30a97195184e7b52b40363bbd1a5fe67062c3a6fc70f6ffe3fe65713b",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-details.csv": "4029dd8a615f8363cde3198b2d6526a16fad53924b6671162f6f019d192954e4",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-objects.rds": "a01ed64252886a8f4f2bb0c5bb817f58b908c0d008f0c70d8f9f229e5520e852",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-session.txt": "0d1c3b0222d789fcc1e0903c4a2075a1a8eca8af798d084e4d96853ddb8b79e5",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/check-command.txt": "54499b6b550a5849ab94643f931013466f898bcf5500e993cc7cd9ae995c587a",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/check-environment.txt": "f22ddc5feb391d728ea44c3052c4699ee41b6c4b9343b3a1968313d04cde5368",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/check-exit.txt": "51450b4515a2b080cff9cb39c3a1911ac49f51f2d0e6d1abdc3cfb629695e3b4",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/frozen-check/pigauto.Rcheck/00check.log": "a031c1eea52c73ebb6c24289c4fc250a831979b35d3c8d143bb41e3f4316bba4",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/frozen-check/pigauto.Rcheck/tests/testthat.Rout": "f28f4671ec2cb4dc9f6ef10a6a4005fa1a87017a289e62f895d0ab77314635df",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/frozen-artifact/pigauto_0.11.0.tar.gz": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb"
+      },
+      "paths": [
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-replay.json",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-details.csv",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-objects.rds",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-session.txt",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/check-command.txt",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/check-environment.txt",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/check-exit.txt",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/frozen-check/pigauto.Rcheck/00check.log",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/frozen-check/pigauto.Rcheck/tests/testthat.Rout",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/frozen-artifact/pigauto_0.11.0.tar.gz"
+      ],
+      "identity": {
+        "sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+        "size_bytes": 5137837,
+        "archive": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/frozen-artifact/pigauto_0.11.0.tar.gz"
+      },
+      "native_verdict": {
+        "status": "OK",
+        "adjudication": "native_Status_OK",
+        "exit": 0
+      },
+      "rds_reader_stderr": "",
+      "warning_audit_status": "PASS",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "warning_categories": {
+        "small_validation": 119,
+        "undefined_constant_correlation": 9,
+        "constant_matched_trait": 4,
+        "few_tree_draws": 5,
+        "covariates_joint_baseline": 5,
+        "covariates_gnn_off": 3,
+        "imbalanced_ordinal": 12,
+        "signal_gate_fallback": 1,
+        "conformal_sample_limit": 2,
+        "species_dropped": 1
+      },
+      "warnings_identity_sha256": "08a65a41292b371cbe7bf218a5f494e29838640fc9f93c496114b461853ea91b",
+      "diagnostic_elapsed_seconds": 168.258,
+      "native_check_exit_and_timing": [
+        "exit=0",
+        "elapsed_seconds=452.674129962921"
+      ],
+      "skipped_scope": "All raw skip message/test/file/line identities equal the previously reviewed scope; no missing-runtime skips added."
+    },
+    {
+      "cell": "windows-latest-release",
+      "status": "PASS",
+      "input_sha256": {
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/warning-replay.json": "589cfadd114bc85772b320f6d776257ef900b6de383834eb7a4353fd2079df7b",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/warning-details.csv": "cf5ffd389ae7ece3d2b339cabeeea52ba63bf4c93832a8ec73936ff82e927137",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/warning-objects.rds": "7f35b1e270a8b9327a2dc797faa07e86b2e6e15e9498e661eeb9990984925409",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/warning-session.txt": "2abb40e0aebab486e8149732082f29745e4a2df51aa57f75b433fa18a3ad7cdd",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/check-command.txt": "7dce5c2196c872d2144c60a0dd5ce7bc491826f3cb4be36af8d4e5da8f39a20a",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/check-environment.txt": "cfb8a0c243fd32750ba2aa83f51b567b3db831db1b2437745aa539a81cf41ab2",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/check-exit.txt": "978a8110a9856b36e03968c2a5efd222853a447de32b212b77aecad13de30a64",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/frozen-check/pigauto.Rcheck/00check.log": "96b6dd43245abb3149f7c83e6862f396c076ae8d0e01f1a4cc9f096a840b74fb",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/frozen-check/pigauto.Rcheck/tests/testthat.Rout": "eb28252632f338b2bc8b4ba043c595bdf4c1490aca3f64004b63b5c8e303a92c",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/identity-download.json": "043ad715121e1aa6266ccee85e3c7039965d91b168f9c5e51c0f93b03bfaf42c",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/identity-pre.json": "e243cc443441f05f74e07bad38dac6e38e037850012411e69a76572b06c3bad9",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/identity-post.json": "727fd530251e5fda981f6deb66c619891b0429b2b96d30c9cdf4b96d4095848c"
+      },
+      "paths": [
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/warning-replay.json",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/warning-details.csv",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/warning-objects.rds",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/warning-session.txt",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/check-command.txt",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/check-environment.txt",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/check-exit.txt",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/frozen-check/pigauto.Rcheck/00check.log",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/frozen-check/pigauto.Rcheck/tests/testthat.Rout",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/identity-download.json",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/identity-pre.json",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-release/platform-evidence/identity-post.json"
+      ],
+      "identity": {
+        "archive": "D:\\a\\pigauto\\pigauto\\frozen-artifact\\pigauto_0.11.0.tar.gz",
+        "sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+        "size_bytes": 5137837,
+        "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+        "archive_entries": 250,
+        "package": "pigauto",
+        "version": "0.11.0",
+        "phase": "pre",
+        "platform": "Windows-2025Server-10.0.26100-SP0",
+        "workflow_sha": "999645fae22107d838e73e90e33996c025f2575a",
+        "run_id": "39091958419",
+        "run_attempt": "1"
+      },
+      "native_verdict": {
+        "status": "OK",
+        "adjudication": "native_Status_OK",
+        "exit": 0
+      },
+      "rds_reader_stderr": "",
+      "warning_audit_status": "PASS",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "warning_categories": {
+        "small_validation": 119,
+        "undefined_constant_correlation": 9,
+        "constant_matched_trait": 4,
+        "few_tree_draws": 5,
+        "covariates_joint_baseline": 5,
+        "covariates_gnn_off": 3,
+        "imbalanced_ordinal": 12,
+        "signal_gate_fallback": 1,
+        "conformal_sample_limit": 2,
+        "species_dropped": 1
+      },
+      "warnings_identity_sha256": "08a65a41292b371cbe7bf218a5f494e29838640fc9f93c496114b461853ea91b",
+      "diagnostic_elapsed_seconds": 407.38,
+      "native_check_exit_and_timing": [
+        "exit=0",
+        "elapsed_seconds=627.140662193298"
+      ],
+      "skipped_scope": "All raw skip message/test/file/line identities equal the previously reviewed scope; no missing-runtime skips added."
+    },
+    {
+      "cell": "windows-latest-devel",
+      "status": "PASS",
+      "input_sha256": {
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/warning-replay.json": "e37131e83b1dde65777d62ccc5ac56160b86595fd94b7f044dbb726d490e8e4d",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/warning-details.csv": "cf5ffd389ae7ece3d2b339cabeeea52ba63bf4c93832a8ec73936ff82e927137",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/warning-objects.rds": "5ae32218df48e7db4fd80cbda515d089133d0382f015b11425b756509c5e7a2a",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/warning-session.txt": "8d3dd01a2cf468dd7bd1cb686c4b5ed58bbae17762ed3ffd178f5f9ce9170b93",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/check-command.txt": "7dce5c2196c872d2144c60a0dd5ce7bc491826f3cb4be36af8d4e5da8f39a20a",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/check-environment.txt": "cfb8a0c243fd32750ba2aa83f51b567b3db831db1b2437745aa539a81cf41ab2",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/check-exit.txt": "573fbad276d2b051690015a1231c7e39d19ea95ae4d58a7070c9ccb31db0f192",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/frozen-check/pigauto.Rcheck/00check.log": "4467940f612baaaf1d7e192bfa79376c018b64577157f80ef138e788925235e1",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/frozen-check/pigauto.Rcheck/tests/testthat.Rout": "4175390b1a37ea09e3da27b1160fe3bdcc316da7062fe812b2c43cc49a979617",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/identity-download.json": "043ad715121e1aa6266ccee85e3c7039965d91b168f9c5e51c0f93b03bfaf42c",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/identity-pre.json": "e243cc443441f05f74e07bad38dac6e38e037850012411e69a76572b06c3bad9",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/identity-post.json": "727fd530251e5fda981f6deb66c619891b0429b2b96d30c9cdf4b96d4095848c"
+      },
+      "paths": [
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/warning-replay.json",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/warning-details.csv",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/warning-objects.rds",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/warning-session.txt",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/check-command.txt",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/check-environment.txt",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/check-exit.txt",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/frozen-check/pigauto.Rcheck/00check.log",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/frozen-check/pigauto.Rcheck/tests/testthat.Rout",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/identity-download.json",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/identity-pre.json",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-windows-latest-devel/platform-evidence/identity-post.json"
+      ],
+      "identity": {
+        "archive": "D:\\a\\pigauto\\pigauto\\frozen-artifact\\pigauto_0.11.0.tar.gz",
+        "sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+        "size_bytes": 5137837,
+        "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+        "archive_entries": 250,
+        "package": "pigauto",
+        "version": "0.11.0",
+        "phase": "pre",
+        "platform": "Windows-2025Server-10.0.26100-SP0",
+        "workflow_sha": "999645fae22107d838e73e90e33996c025f2575a",
+        "run_id": "39091958419",
+        "run_attempt": "1"
+      },
+      "native_verdict": {
+        "status": "OK",
+        "adjudication": "native_Status_OK",
+        "exit": 0
+      },
+      "rds_reader_stderr": "",
+      "warning_audit_status": "PASS",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "warning_categories": {
+        "small_validation": 119,
+        "undefined_constant_correlation": 9,
+        "constant_matched_trait": 4,
+        "few_tree_draws": 5,
+        "covariates_joint_baseline": 5,
+        "covariates_gnn_off": 3,
+        "imbalanced_ordinal": 12,
+        "signal_gate_fallback": 1,
+        "conformal_sample_limit": 2,
+        "species_dropped": 1
+      },
+      "warnings_identity_sha256": "08a65a41292b371cbe7bf218a5f494e29838640fc9f93c496114b461853ea91b",
+      "diagnostic_elapsed_seconds": 312.97,
+      "native_check_exit_and_timing": [
+        "exit=0",
+        "elapsed_seconds=516.487149000168"
+      ],
+      "skipped_scope": "All raw skip message/test/file/line identities equal the previously reviewed scope; no missing-runtime skips added."
+    },
+    {
+      "cell": "ubuntu-latest-release",
+      "status": "PASS",
+      "input_sha256": {
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/warning-replay.json": "fd9253b8e2bdd5c884ef39b1ed1b71f7615f37f14a7faac4c1338c7e00ad4957",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/warning-details.csv": "8b6709f11d5925be9b0abd7e5adf143a2ebd77a431d10204ba7e8c18b57a2fc2",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/warning-objects.rds": "e84cf2ff1fd3e9b553e28c3424a99165ece878e74f8c8f4c2d6c0392d2b09cd6",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/warning-session.txt": "02ef84351209cb7636f59d51fd78bac9dcdd3b017dba50974d504d78a96af51b",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/check-command.txt": "0abc7069e31ff3fea631129a75557932aba26c06adadc19471c2c4d7cd35ea5c",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/check-environment.txt": "a9e6644b05fabf99326e087c5313bc3b2fd8b3bd17cd842f4a381897421747af",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/check-exit.txt": "ef7328c33fa91cd29ccea8bc1f7d3aa7cd708f29d309b8eda62e8ebba15e003d",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/frozen-check/pigauto.Rcheck/00check.log": "468a652fe6124cf56a4c6cceac8c01f22ba845da76dd2ed2948c4fbf649231af",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/frozen-check/pigauto.Rcheck/tests/testthat.Rout": "eb04aa0e2b885a44da064060d6635795a969fad8b425ce4138aee75a88d9a45a",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/identity-download.json": "c10e8aeaf07b445f447c71d73269363375b01ead86fd45bbb3ae92c9b4d4293a",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/identity-pre.json": "13f278901cadafa837417cb687e5fb19645a71e8c936c96809f683f13f0c6798",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/identity-post.json": "9e59394e9dfea79ef137f76102a171726e68697e5541103146ca9e14c8be81a2"
+      },
+      "paths": [
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/warning-replay.json",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/warning-details.csv",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/warning-objects.rds",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/warning-session.txt",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/check-command.txt",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/check-environment.txt",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/check-exit.txt",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/frozen-check/pigauto.Rcheck/00check.log",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/frozen-check/pigauto.Rcheck/tests/testthat.Rout",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/identity-download.json",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/identity-pre.json",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/frozen-a93fece7-ubuntu-latest-release/platform-evidence/identity-post.json"
+      ],
+      "identity": {
+        "archive": "/home/runner/work/pigauto/pigauto/frozen-artifact/pigauto_0.11.0.tar.gz",
+        "sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+        "size_bytes": 5137837,
+        "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+        "archive_entries": 250,
+        "package": "pigauto",
+        "version": "0.11.0",
+        "phase": "pre",
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "workflow_sha": "999645fae22107d838e73e90e33996c025f2575a",
+        "run_id": "39091958419",
+        "run_attempt": "1"
+      },
+      "native_verdict": {
+        "status": "OK",
+        "adjudication": "native_Status_OK",
+        "exit": 0
+      },
+      "rds_reader_stderr": "",
+      "warning_audit_status": "PASS",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "warning_categories": {
+        "small_validation": 119,
+        "undefined_constant_correlation": 9,
+        "constant_matched_trait": 4,
+        "few_tree_draws": 5,
+        "covariates_joint_baseline": 5,
+        "covariates_gnn_off": 3,
+        "imbalanced_ordinal": 12,
+        "signal_gate_fallback": 1,
+        "conformal_sample_limit": 2,
+        "species_dropped": 1
+      },
+      "warnings_identity_sha256": "08a65a41292b371cbe7bf218a5f494e29838640fc9f93c496114b461853ea91b",
+      "diagnostic_elapsed_seconds": 322.939,
+      "native_check_exit_and_timing": [
+        "exit=0",
+        "elapsed_seconds=534.689439296722"
+      ],
+      "skipped_scope": "All raw skip message/test/file/line identities equal the previously reviewed scope; no missing-runtime skips added."
+    }
+  ],
+  "category_consequences": {
+    "small_validation": "Small calibration samples leave gates/scores noisy; no coverage certification.",
+    "conformal_sample_limit": "The stated finite-sample size cannot attain 95% split-conformal coverage.",
+    "constant_matched_trait": "The deliberately constant matched trait does not identify phylogenetic signal.",
+    "few_tree_draws": "Few tree draws can make tree-sensitivity summaries unstable.",
+    "covariates_joint_baseline": "Covariates do not contribute through the selected joint-baseline route.",
+    "covariates_gnn_off": "Covariates do not contribute when the GNN is disabled.",
+    "imbalanced_ordinal": "Ordinal class imbalance limits the tested prediction/calibration regime.",
+    "signal_gate_fallback": "The opt-in signal gate selected its documented BM fallback.",
+    "species_dropped": "The three deliberately unmatched species are dropped and not modeled.",
+    "undefined_constant_correlation": "Correlation is undefined for the constant values in this fixture."
+  },
+  "scope": "Separate actual warning-object review. Not a final release-panel READY vote, coverage certification, timing approval or submission authorization."
+}

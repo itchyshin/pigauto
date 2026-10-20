@@ -1,0 +1,2 @@
+TIMING_NOTE_SELFTEST_PASS: exact local NOTE retained UNADJUDICATED; 14 negative controls rejected
+SELFTEST_PASS: known warning accepted; unknown warning, changed caller/source, missing summary, count mismatch and unexpected skip rejected; no old PASS-count pin

@@ -1,0 +1,1 @@
+First --refresh-local stopped at missing identity-pre.json. Local driver uses local-receipt.json archive_before/archive_after, unlike remote artifact.py JSON. Changed refresh to validate actual local driver receipt/hash/command binding; no synthetic identity files created. Native source and outputs unchanged.

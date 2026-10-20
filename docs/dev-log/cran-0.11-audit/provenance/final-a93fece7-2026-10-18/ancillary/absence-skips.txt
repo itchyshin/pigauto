@@ -1,0 +1,96 @@
+List of 6
+ $ message    : chr "Reason: {rgbif} is not installed"
+ $ srcref     : 'srcref' int [1:8] 146 3 146 32 3 32 146 146
+  ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0xa965d83c0> 
+ $ trace      : NULL
+ $ start_frame: int 37
+ $ end_frame  : num 42
+ $ test       : chr "pull_gbif_centroids(store_points = TRUE) writes points field"
+ - attr(*, "class")= chr [1:3] "expectation_skip" "expectation" "condition"
+List of 6
+ $ message    : chr "Reason: {rgbif} is not installed"
+ $ srcref     : 'srcref' int [1:8] 181 3 181 32 3 32 181 181
+  ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0xa965d83c0> 
+ $ trace      : NULL
+ $ start_frame: int 37
+ $ end_frame  : num 42
+ $ test       : chr "pull_gbif_centroids(store_points = FALSE) omits points (default)"
+ - attr(*, "class")= chr [1:3] "expectation_skip" "expectation" "condition"
+List of 6
+ $ message    : chr "Reason: slow integration - set NOT_CRAN=TRUE to run"
+ $ srcref     : 'srcref' int [1:8] 226 3 226 86 3 86 226 226
+  ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0xa965d83c0> 
+ $ trace      : NULL
+ $ start_frame: int 37
+ $ end_frame  : num 38
+ $ test       : chr "end-to-end: GBIF centroids don't regress plants RMSE (>=1.10x guardrail on env traits)"
+ - attr(*, "class")= chr [1:3] "expectation_skip" "expectation" "condition"
+List of 6
+ $ message    : chr "Reason: {terra} is not installed"
+ $ srcref     : 'srcref' int [1:8] 130 3 130 32 3 32 130 130
+  ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0xa9873c350> 
+ $ trace      : NULL
+ $ start_frame: int 37
+ $ end_frame  : num 42
+ $ test       : chr "pull_worldclim_per_species returns data.frame with 38 bio cols + n_extracted"
+ - attr(*, "class")= chr [1:3] "expectation_skip" "expectation" "condition"
+List of 6
+ $ message    : chr "Reason: {terra} is not installed"
+ $ srcref     : 'srcref' int [1:8] 189 3 189 32 3 32 189 189
+  ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0xa9873c350> 
+ $ trace      : NULL
+ $ start_frame: int 37
+ $ end_frame  : num 42
+ $ test       : chr ".wc_extract_one uses points when available (per-occurrence)"
+ - attr(*, "class")= chr [1:3] "expectation_skip" "expectation" "condition"
+List of 6
+ $ message    : chr "Reason: {terra} is not installed"
+ $ srcref     : 'srcref' int [1:8] 230 3 230 32 3 32 230 230
+  ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0xa9873c350> 
+ $ trace      : NULL
+ $ start_frame: int 37
+ $ end_frame  : num 42
+ $ test       : chr ".wc_extract_one falls back to centroid when points field absent"
+ - attr(*, "class")= chr [1:3] "expectation_skip" "expectation" "condition"
+List of 6
+ $ message    : chr "Reason: slow integration -- NOT_CRAN=TRUE to run"
+ $ srcref     : 'srcref' int [1:8] 267 3 267 83 3 83 267 267
+  ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0xa9873c350> 
+ $ trace      : NULL
+ $ start_frame: int 37
+ $ end_frame  : num 38
+ $ test       : chr "end-to-end: bioclim lifts plants RMSE >= 10% on sla/leaf_area at n=200 (NOT_CRAN)"
+ - attr(*, "class")= chr [1:3] "expectation_skip" "expectation" "condition"
+List of 6
+ $ message    : chr "Reason: slow integration -- NOT_CRAN=TRUE to run"
+ $ srcref     : 'srcref' int [1:8] 362 3 362 83 3 83 362 362
+  ..- attr(*, "srcfile")=Classes 'srcfilecopy', 'srcfile' <environment: 0xa9873c350> 
+ $ trace      : NULL
+ $ start_frame: int 37
+ $ end_frame  : num 38
+ $ test       : chr "per-occurrence bioclim lifts plants SLA >= 10% over centroid-only at n=200 (NOT_CRAN)"
+ - attr(*, "class")= chr [1:3] "expectation_skip" "expectation" "condition"
+[[1]]
+NULL
+
+[[2]]
+NULL
+
+[[3]]
+NULL
+
+[[4]]
+NULL
+
+[[5]]
+NULL
+
+[[6]]
+NULL
+
+[[7]]
+NULL
+
+[[8]]
+NULL
+

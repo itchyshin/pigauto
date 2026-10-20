@@ -1,0 +1,1937 @@
+#' Fit a pigauto model for trait imputation
+#'
+#' Trains a pigauto model: a gated ensemble of a phylogenetic baseline
+#' and an attention-based graph neural network correction, implemented
+#' as an internal torch module (\code{ResidualPhyloDAE}; "Residual" here
+#' refers to the ResNet-style skip connections in the GNN layers, not
+#' to a statistical residual). For continuous, count, and ordinal traits
+#' the baseline is Brownian motion (phylogenetic correlation matrix); for binary
+#' and categorical traits it is phylogenetic label propagation. Supports
+#' all eight trait types via a unified latent space.
+#'
+#' @details
+#' **Blend formulation:**
+#' The prediction is \eqn{\hat{x} = (1-r)\mu + r\delta}, where \eqn{\mu} is
+#' the BM baseline, \eqn{\delta} is the model's direct prediction, and
+#' \eqn{r = \sigma(\rho) \times \mathrm{cap}} is a per-column learnable gate
+#' bounded in \eqn{(0, \mathrm{gate\_cap})}.  When \eqn{r = 0}, the prediction
+#' collapses to the baseline.
+#' The gate is regularised toward zero via the shrinkage penalty on
+#' \eqn{\delta - \mu}, so the model defaults to the baseline unless the
+#' GNN's correction demonstrably helps on the validation set.
+#'
+#' **Training objective** (per epoch):
+#' \enumerate{
+#'   \item A random subset of observed cells is corrupted with a learnable
+#'     mask token.
+#'   \item The model predicts \eqn{\delta} from graph context.
+#'   \item Loss = type-specific reconstruction on corrupted cells +
+#'     \code{lambda_shrink} * MSE(\eqn{\delta - \mu}) +
+#'     \code{lambda_gate} * MSE(\eqn{r}).
+#' }
+#'
+#' The gate penalty on \eqn{r} is necessary because when \eqn{\delta =
+#' \mu} (the BM-optimal solution for observed cells), the reconstruction
+#' and shrinkage losses both equal zero regardless of \eqn{r}, leaving no
+#' gradient to close the gate.  The explicit penalty ensures gates default
+#' toward zero when the GNN correction provides no benefit.
+#'
+#' **Type-specific losses:**
+#' \describe{
+#'   \item{continuous/count/ordinal}{MSE}
+#'   \item{binary}{BCE with logits}
+#'   \item{categorical}{cross-entropy over K latent columns}
+#' }
+#'
+#' @param data object of class \code{"pigauto_data"}.
+#' @param tree object of class \code{"phylo"}.
+#' @param splits list (output of \code{\link{make_missing_splits}}) or
+#'   \code{NULL}.
+#' @param graph list (output of \code{\link{build_phylo_graph}}) or
+#'   \code{NULL}.
+#' @param baseline list (output of \code{\link{fit_baseline}}) or \code{NULL}.
+#' @param gnn logical. When \code{TRUE}, trains the attention-based
+#'   GNN correction as described above. When \code{FALSE} (default), no GNN is
+#'   constructed or trained and \code{fit_pigauto()} makes \strong{zero}
+#'   \code{torch::} calls -- the fit is the phylogenetic baseline alone,
+#'   optionally re-weighted against a grand-mean floor. \code{safety_floor}
+#'   and \code{phylo_signal_gate} keep their usual semantics: the blend
+#'   collapses to \eqn{r_{BM} \cdot \mu_{BM} + r_{MEAN} \cdot \mu_{MEAN}}
+#'   (the GNN corner degenerates to the baseline, so its calibrated weight
+#'   is folded into \eqn{r_{BM}}). With the defaults
+#'   (\code{safety_floor = FALSE, phylo_signal_gate = FALSE}) this is the
+#'   pure traditional-stats arm.
+#'   \code{conformal_method = "mondrian"} is not supported when
+#'   \code{gnn = FALSE} (its locality statistic conditions on a calibrated
+#'   GNN prediction surface that does not exist here) and raises an error.
+#'   User \code{covariates} enter pigauto only through the GNN, so under
+#'   \code{gnn = FALSE} they are ignored (with a warning). Without a
+#'   validation split (\code{splits = NULL}) the fit is pure baseline
+#'   (\eqn{r_{BM} = 1}) and carries no conformal scores.
+#'   Default \code{FALSE} since pigauto 0.11.0.9001: on simulated and real
+#'   data at the current baseline defaults the GNN did not lower
+#'   imputation error and took 20 to 90 times longer to fit
+#'   (\code{docs/dev-log/arc/2026-10-02-campaign-gnn-rerun.md}). Set
+#'   \code{gnn = TRUE} to train it, for example to use \code{covariates},
+#'   which only the GNN uses, or to restore the behaviour of earlier
+#'   versions.
+#' @param baseline_full list (output of \code{\link{fit_baseline}} with
+#'   \code{splits = NULL}) or \code{NULL}. Only used when \code{gnn = FALSE}:
+#'   the production-mode baseline, fit on ALL observed cells (no val/test
+#'   hold-out), used by \code{predict.pigauto_fit()} for ordinary
+#'   (non-evaluation) predictions. \code{baseline} itself always stays the
+#'   held-out fit and is what every scorer (\code{val_rmse}, \code{test_rmse},
+#'   \code{conformal_scores}, \code{evaluate()}) reads. When \code{NULL}
+#'   (default) and \code{gnn = FALSE}, it is computed internally via
+#'   \code{fit_baseline(data, tree, splits = NULL, ...)}; ignored when
+#'   \code{gnn = TRUE} unless explicitly supplied (e.g. by \code{impute()}),
+#'   in which case it is stored but not used for training.
+#' @param hidden_dim integer. Hidden layer width (default \code{64}).
+#' @param k_eigen integer or \code{"auto"}. Number of spectral node
+#'   features. The default \code{"auto"} scales with tree size; an integer
+#'   specifies the dimension directly.
+#' @param dropout numeric. Dropout rate (default \code{0.10}).
+#' @param lr numeric. AdamW learning rate (default \code{0.003}).
+#' @param weight_decay numeric. AdamW weight decay (default \code{1e-4}).
+#' @param epochs integer. Maximum training epochs (default \code{3000}).
+#' @param n_gnn_layers integer. Number of graph message-passing layers
+#'   (default \code{2}).  Each layer has its own learnable alpha gate,
+#'   layer normalisation, and ResNet-style skip connection.
+#' @param gate_cap numeric. Upper bound for the per-column blend gate
+#'   (default \code{0.8}).  Safety comes from regularisation, not the cap.
+#' @param use_attention logical. Use attention in the GNN layers (default
+#'   \code{TRUE}).
+#' @param use_transformer_blocks logical. Replace the legacy attention
+#'   stack with pre-norm transformer-encoder blocks (multi-head attention
+#'   + FFN + two residual skips). Default \code{TRUE}. Set \code{FALSE}
+#'   to reconstruct pre-v0.9.0 fits (single-head attention with a
+#'   learnable alpha gate per layer).
+#' @param n_heads integer. Number of attention heads when
+#'   \code{use_transformer_blocks = TRUE} (default \code{4}). Each head
+#'   learns its own phylogenetic bandwidth (B2 rate-aware attention).
+#' @param ffn_mult integer. Feed-forward width multiplier inside each
+#'   transformer block (default \code{4}, giving \code{hidden_dim * 4}).
+#' @param use_trait_attention logical. Opt-in within-row cross-trait
+#'   self-attention (B3, v0.9.3). When \code{TRUE} (default \code{FALSE}),
+#'   the model builds per-trait tokens from each row's latent values
+#'   (linear projection + learnable positional embedding), applies one
+#'   multi-head self-attention block over the trait sequence, mean-pools
+#'   to a \code{trait_embed_dim} feature, and concatenates it alongside
+#'   \code{(x, coords, covs)} at the encoder input. Intended for trait
+#'   sets with within-row functional coupling not represented by the selected
+#'   baseline. Assess this opt-in architecture with held-out evaluation on the
+#'   intended data. Default \code{FALSE} preserves v0.9.2 behaviour exactly.
+#' @param n_trait_heads integer. Number of attention heads in the within-row
+#'   self-attention block when \code{use_trait_attention = TRUE}. Default
+#'   \code{2}. Ignored when \code{use_trait_attention = FALSE}.
+#' @param trait_embed_dim integer. Embedding dim per trait token in the
+#'   within-row self-attention block. Default \code{32}. Ignored when
+#'   \code{use_trait_attention = FALSE}.
+#' @param corruption_rate numeric. Final corruption fraction if
+#'   \code{corruption_ramp > 0}; otherwise the fixed corruption rate per
+#'   epoch (default \code{0.55}).
+#' @param corruption_start numeric. Initial corruption fraction for the
+#'   curriculum schedule (default \code{0.20}).  Ignored if
+#'   \code{corruption_ramp = 0}.
+#' @param corruption_ramp integer. Epochs over which corruption linearly
+#'   ramps from \code{corruption_start} to \code{corruption_rate}
+#'   (default \code{500}).  Set to \code{0} for fixed corruption.
+#' @param refine_steps integer. Iterative refinement steps at inference
+#'   (default \code{8}). Gate calibration and conformal scoring use the
+#'   same number of steps so the calibrated surface matches predict.
+#' @param lambda_shrink numeric. Weight on the shrinkage penalty
+#'   \code{||delta - baseline||^2} that keeps the GNN correction close
+#'   to the phylogenetic baseline (default \code{0.03}).
+#' @param lambda_gate numeric. Weight on the gate regularisation penalty
+#'   that pushes learnable gates toward zero.  Prevents gates from staying
+#'   open when the GNN provides no useful correction (default \code{0.01}).
+#' @param warmup_epochs integer. Linear learning-rate warmup over the first
+#'   N epochs (default \code{200}).  After warmup, a cosine schedule decays
+#'   the LR to \code{1e-5}.
+#' @param edge_dropout numeric. Fraction of adjacency edges randomly zeroed
+#'   each training epoch for graph regularisation (default \code{0.1}).
+#'   Set to \code{0} to disable.
+#' @param eval_every integer. Evaluate on val every N epochs (default
+#'   \code{100}).
+#' @param patience integer. Early-stopping patience in eval cycles (default
+#'   \code{10}).
+#' @param clip_norm numeric. Gradient clip norm (default \code{1.0}).
+#' @param conformal_method character. How the conformal residual score is
+#'   estimated from held-out validation cells. \code{"split"} (default,
+#'   backward-compatible) takes a sample quantile; \code{"bootstrap"}
+#'   averages quantiles from \code{conformal_bootstrap_B} bootstrap resamples;
+#'   and \code{"mondrian"} stratifies validation cells by phylogenetic
+#'   sampling locality before estimating a score per stratum. These choices
+#'   support nominal held-out diagnostics, not package-certified coverage.
+#'   \code{"mondrian"} is single-observation only because its locality is
+#'   species-level. If either stratum is too small, that trait uses the global
+#'   \code{"split"} score instead.
+#' @param conformal_bootstrap_B integer. Bootstrap resamples used when
+#'   \code{conformal_method = "bootstrap"}; default \code{500}.  Ignored
+#'   otherwise.
+#' @param conformal_split_val logical. Default \code{FALSE}: gate selection
+#'   and residual-score estimation share validation cells. When \code{TRUE},
+#'   each eligible latent column separates those tasks into calibration and
+#'   residual-estimation subsets. This separation does not certify package-wide coverage.
+#'   Columns without enough validation cells retain the
+#'   shared-data path. With either setting, use \code{cross_validate()} and
+#'   report held-out diagnostics for the intended data.
+#' @param gate_method character. How the per-trait calibrated gate is
+#'   chosen.  \code{"single_split"} runs
+#'   the grid search on a single random half-A / half-B split of the val
+#'   rows; \code{"median_splits"} repeats the whole procedure for
+#'   \code{gate_splits_B} random splits and takes the median
+#'   \code{best_g}.  \code{"cv_folds"} (default since PR #102, 2026-05-17) partitions val cells
+#'   into \code{gate_cv_folds} (default 5) deterministic non-overlapping
+#'   folds and runs the grid + half-B-verify procedure once per fold
+#'   (training set = K-1 folds, held-out = remaining fold), taking the
+#'   componentwise median of K winning weight vectors.  \code{"cv_folds"}
+#'   uses larger training sets per split (K-1/K vs 1/2 in
+#'   \code{median_splits}) and has a standard cross-validation
+#'   interpretation, motivated by the open val→test drift observed on
+#'   4/32 binary cells in the discrete-bench memo.
+#'   \code{"median_splits"} repeats the split procedure before taking a
+#'   componentwise median. Assess calibration settings on held-out data.
+#' @param gate_splits_B integer. Random splits used when
+#'   \code{gate_method = "median_splits"}; default \code{31} (odd so the
+#'   median is well-defined).
+#' @param gate_cv_folds integer. Number of CV folds when
+#'   \code{gate_method = "cv_folds"}; default \code{5}, must be
+#'   \code{>= 2}.  Capped at \code{n_val} per trait so each fold has at
+#'   least 1 cell.  When effective K \code{< 2} (e.g. \code{n_val = 1}),
+#'   the code falls back to a single split.
+#' @param safety_floor logical. Default \code{FALSE} (it was \code{TRUE}
+#'   from v0.9.1.9002 until 0.11.0.9002). When \code{TRUE}, post-training
+#'   calibration searches a 3-way simplex of BM, GNN, and grand-mean
+#'   candidates. Because the grand-mean corner is always in the grid, the
+#'   selected candidate cannot be worse than that corner on the validation
+#'   cells under the calibration metric. When \code{FALSE}, the v0.9.1
+#'   1-D calibration is used exactly (\code{r_MEAN = 0}). The default
+#'   changed because, with Pagel's \eqn{\lambda} now estimated for every
+#'   trait type (see \code{discrete_lambda}), the floor no longer improved
+#'   accuracy in any tested setting; at \eqn{\lambda} of 0 to 0.1 the old
+#'   default was worse than predicting the mean, and on the BIEN plant
+#'   data it changed nothing (\code{docs/dev-log/discrete-lambda/README.md}).
+#'   Set \code{safety_floor = TRUE} to restore the old behaviour.
+#' @param phylo_signal_gate logical. Default \code{FALSE} (it was
+#'   \code{TRUE} from v0.9.1.9003 until 0.11.0.9002; same reasons as
+#'   \code{safety_floor}; set \code{TRUE} to restore). When \code{TRUE}, compute per-trait Pagel's \eqn{\lambda} on
+#'   training-observed cells before fitting; for traits with
+#'   \code{lambda < phylo_signal_threshold}, force
+#'   \code{(r_cal_bm = 0, r_cal_gnn = 0, r_cal_mean = 1)} directly
+#'   and skip BM + GNN training on those traits.  Requires the
+#'   \code{phytools} package.  Falls back to safety-floor-only
+#'   behaviour (\code{phylo_signal_gate = FALSE} effective) when
+#'   \code{phytools} is absent.
+#' @param discrete_lambda character, \code{"estimate"} (default) or
+#'   \code{"fixed_1"}. With \code{"estimate"}, the binary, ordinal and
+#'   zero-inflated-count gate liability columns of the threshold-joint
+#'   baseline, and the one-vs-rest column of each categorical class, get
+#'   their own Pagel's lambda, so a weak-signal discrete trait shrinks toward
+#'   its prevalence instead of copying close relatives. \code{"fixed_1"}
+#'   restores the previous behaviour (binary and ordinal at lambda = 1, or at
+#'   the shared joint lambda on the "exact" route; categorical at 1).
+#'   Evidence (simulated Brownian-motion and OU data, n = 100 to 1000, 30\%
+#'   missing; \code{docs/dev-log/discrete-lambda/README.md}): estimating
+#'   discrete lambda alone added about 0.01 to 0.04 discrete accuracy at Pagel's
+#'   lambda of 0.3 or below; together with \code{safety_floor = FALSE} and
+#'   \code{phylo_signal_gate = FALSE} (also the defaults) the gain was 0.04
+#'   to 0.12, and binary and categorical accuracy matched or beat BACE's.
+#'   Costs: with lambda near 1 and n >= 1000, accuracy -0.002 to -0.005 and
+#'   Brier score +0.010 to +0.016; on AVONET300's categorical traits, Brier
+#'   +0.014 to +0.020 with accuracy unchanged or better. Ordinal accuracy
+#'   still trails BACE's at lambda = 0.3. The categorical one-vs-rest lambdas
+#'   are not reported in \code{$lambda_per_trait}.
+#'   Passed to \code{\link{fit_baseline}} and stored in the fitted model
+#'   config.
+#' @param phylo_signal_threshold numeric, default \code{0.2}.  Traits
+#'   with Pagel's \eqn{\lambda} below this value are routed to the
+#'   grand-mean corner of the safety-floor simplex.
+#' @param phylo_signal_method character, currently only \code{"lambda"}
+#'   is fully implemented.  Reserved \code{"blomberg_k"} path returns
+#'   Blomberg's K via \code{phytools::phylosig()} but uses the same
+#'   threshold --- which is NOT dimensionally comparable; users
+#'   selecting K must supply a K-appropriate threshold.
+#' @param min_val_cells integer. Warn at fit time if any trait has fewer
+#'   than \code{min_val_cells} validation cells available for gate
+#'   calibration and conformal-score estimation.  Default \code{20}: with
+#'   fewer than 19 cells the split-conformal level \eqn{n/(n+1)} is below
+#'   0.95; with 38 or fewer cells the conformal score is the largest
+#'   validation residual; and with very few cells gate calibration becomes
+#'   essentially a coin flip between \code{0} and \code{gate_cap}.
+#'   Recommended operational target is \code{n_val >= 20-30} per trait;
+#'   achieve this by increasing \code{missing_frac} or collecting more
+#'   species.  See \strong{Calibration at small n} below.
+#' @param lambda_mode character. Pagel-lambda mode for the BM baseline.
+#'   \code{"estimate"} (default) fits a per-trait Pagel's lambda on each
+#'   continuous-family (BM-eligible) latent column -- continuous, count,
+#'   proportion, and zi_count magnitude, via the joint MVN /
+#'   threshold-joint baseline's own \code{lambda_cols} machinery when that
+#'   joint path fires, or a per-column re-fit otherwise. Binary, ordinal and
+#'   categorical traits get their own lambda by default
+#'   (\code{discrete_lambda = "estimate"}); the rest of this paragraph
+#'   describes \code{discrete_lambda = "fixed_1"}, where discrete traits
+#'   (binary, categorical, zi gate) AND ordinal have no discrete-trait
+#'   analogue of Pagel's lambda of their own -- there is no lambda_k to
+#'   estimate for them. Under \code{predict_method = "per_column"} (see
+#'   below) they stay fixed at lambda = 1 in every path, matching pre-S3
+#'   behaviour. Under \code{predict_method = "exact"} (and for traits the
+#'   default \code{"auto"} routes to \code{"exact"}) they
+#'   instead share the joint fit's \code{lambda_block} -- the exact
+#'   conditional's covariance model uses ONE shared phylogenetic
+#'   correlation matrix \code{R(lambda_block)} for every column, so the
+#'   Sigma estimate feeding it must itself come from an internally
+#'   consistent init, not a mix of \code{R(1)} for discrete columns and
+#'   \code{R(lambda_k)} for continuous ones (Shinichi's decision,
+#'   docs/dev-log/exact-default/S3-default-report.md). \code{"fixed_1"}
+#'   preserves the pre-lambda Brownian correlation matrix everywhere;
+#'   \code{"cv"} and \code{"bayes"} are alternative per-column estimators
+#'   that force continuous-family columns onto the per-column BM path (no
+#'   joint analogue). When \code{predict_method = "exact"} or
+#'   \code{joint_refine_iter > 0}, the joint (multi-trait) prediction path
+#'   additionally uses the single shared \code{lambda_block} for
+#'   cross-trait computations that need one common phylogenetic
+#'   correlation matrix, never overriding a continuous-family column's own
+#'   estimated lambda_k. Passed to \code{\link{fit_baseline}} and stored in
+#'   the fitted model config. When \code{covariates} are supplied, the
+#'   covariate-aware BM path (\code{bm_impute_col_with_cov()}) accepts a
+#'   numeric lambda or \code{"estimate"}, so \code{lambda_mode \%in\%
+#'   c("estimate", "fixed_1")} reaches it and each covariate-aware
+#'   BM-eligible column gets its own estimated lambda; it does NOT accept
+#'   \code{"cv"} / \code{"bayes"}, which fall back to lambda = 1 for
+#'   BM-eligible columns with a warning from \code{fit_baseline}.
+#' @param joint_solver character. Which solver estimates the joint MVN /
+#'   threshold-joint / OVR categorical baselines. \code{"inhouse"}
+#'   (default) is byte-identical to prior releases; \code{"rphylopars"}
+#'   delegates to \code{Rphylopars::phylopars()}'s converged REML fit,
+#'   with automatic fallback to \code{"inhouse"} on failure. Passed to
+#'   \code{\link{fit_baseline}} and stored in the fitted model config.
+#'   See \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}.
+#' @param predict_method character. Prediction route for the in-house joint
+#'   solver, passed to \code{\link{fit_baseline}}. \code{"auto"} (default,
+#'   S5b) fits the baseline with both the \code{"exact"} and
+#'   \code{"per_column"} routes and picks, per trait, whichever has the
+#'   lower loss on that trait's validation cells (mean squared error on the
+#'   z-scored latent scale for continuous/count/proportion/ordinal/zi_count
+#'   magnitude; mean log-loss for binary/zi_count gate; mean multinomial
+#'   log-loss for categorical), falling back to \code{"exact"} on a tie or
+#'   when fewer than 5 validation cells belong to that trait (including
+#'   when there is no validation split at all). \code{"exact"} uses the
+#'   full cross-trait conditional
+#'   mean and variance of \code{vec(L) ~ MVN(0, Sigma \%x\% R(lambda_block))}
+#'   (Hadfield & Nakagawa, 2010 sparse precision form), each column
+#'   GLS-mean-centred at \code{lambda_block} before the solve; discrete
+#'   liability columns share \code{lambda_block} under this route (see
+#'   \code{lambda_mode} above). Falls back to \code{"per_column"} above
+#'   roughly 20000 unknown cells (roughly 4000 species at 5 traits), on a
+#'   singular/unusable Sigma, or when fewer than 2 joint columns or no
+#'   Henderson sparse precision are available; prints a one-time
+#'   \code{message()} per R session when \code{predict_method} was left at
+#'   its default, or a \code{warning()} every time when \code{"exact"} was
+#'   requested explicitly. \code{"per_column"} retains the original
+#'   per-column conditional prediction route (no cross-trait borrowing in
+#'   the prediction step). None of the three options change covariance
+#'   estimation or the \code{"rphylopars"} solver. The route actually used
+#'   is recorded in \code{$model_config$predict_method_used}
+#'   (\code{"exact"}, \code{"per_column"}, or \code{"auto"}) and, per
+#'   trait, in \code{$model_config$predict_method_by_trait}. Under
+#'   \code{"auto"} with real validation cells, \code{$model_config
+#'   $route_val_n} / \code{$score_val_n} record, per trait, how many of
+#'   its validation cells chose the route versus were reserved for gate
+#'   calibration and conformal scoring (see \code{\link{fit_baseline}}'s
+#'   \code{predict_method} docs); both are \code{NULL} under an explicit
+#'   \code{"exact"}/\code{"per_column"} request.
+#' @param joint_refine_iter integer, default \code{0L}. Enables
+#'   cross-trait refinement of the joint baseline's cell imputations
+#'   using the estimated Sigma (the in-house solver's \code{max_iter}
+#'   EM cell-refinement; \code{R/joint_mvn_solver.R}). \code{0L} preserves
+#'   current behaviour byte-for-byte. The refinement is guarded: the
+#'   Sigma step must shrink each iteration, or the loop rolls back to the
+#'   last good iterate and sets \code{$diverged}. Assess this opt-in control
+#'   with held-out evaluation on the intended data. Has no effect on any
+#'   trait predicted by the \code{"exact"} route (see
+#'   \code{\link{fit_baseline}}'s \code{predict_method} docs); under the
+#'   default \code{predict_method = "auto"} it therefore only applies to
+#'   traits \code{"auto"} routes to \code{"per_column"}.
+#' @param verbose logical. Print training progress (default \code{TRUE}).
+#' @param seed optional integer. When supplied, makes stochastic training and
+#'   calibration reproducible; the default \code{NULL} uses the current RNG
+#'   stream.
+#' @section Calibration at small n:
+#'
+#' Conformal bounds use the empirical \code{(1 - alpha)} quantile of
+#' \eqn{|y - \hat y|} on held-out validation cells. They are nominal
+#' held-out diagnostics and do not certify package-wide coverage.
+#'
+#' Small validation sets make both the residual quantile and gate selection
+#' unstable. The \code{min_val_cells} warning identifies traits where this is
+#' especially relevant. \code{conformal_split_val = TRUE} can separate gate
+#' selection from residual estimation for eligible columns, but it does not
+#' remove the small-sample limitation. Use \code{cross_validate()} on the
+#' intended data and report the resulting held-out diagnostics rather than
+#' treating an interval target as certified.
+#'
+#' @return An object of class \code{"pigauto_fit"}.
+#' @importFrom torch torch_tensor torch_float torch_bool torch_long
+#' @importFrom torch optim_adam with_no_grad nn_utils_clip_grad_norm_
+#' @importFrom torch nnf_mse_loss torch_rand_like torch_where torch_zeros_like
+#' @examples
+#' \donttest{
+#' data(avonet300, tree300)
+#' tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+#' traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+#'                      c("Mass", "Wing.Length"), drop = FALSE]
+#' rownames(traits) <- tree$tip.label
+#' data <- preprocess_traits(traits, tree)
+#' splits <- make_missing_splits(data$X_scaled, trait_map = data$trait_map,
+#'                               seed = 1)
+#' fit <- fit_pigauto(data, tree, splits = splits, epochs = 5L,
+#'                    verbose = FALSE, seed = 1)
+#' }
+#' @export
+fit_pigauto <- function(
+    data,
+    tree,
+    splits            = NULL,
+    graph             = NULL,
+    baseline          = NULL,
+    gnn               = FALSE,
+    baseline_full     = NULL,
+    hidden_dim        = 64L,
+    k_eigen           = "auto",
+    n_gnn_layers      = 2L,
+    gate_cap          = 0.8,
+    use_attention     = TRUE,
+    use_transformer_blocks = TRUE,
+    n_heads           = 4L,
+    ffn_mult          = 4L,
+    use_trait_attention = FALSE,
+    n_trait_heads     = 2L,
+    trait_embed_dim   = 32L,
+    dropout           = 0.10,
+    lr                = 0.003,
+    weight_decay      = 1e-4,
+    epochs            = 3000L,
+    corruption_rate   = 0.55,
+    corruption_start  = 0.20,
+    corruption_ramp   = 500L,
+    refine_steps      = 8L,
+    lambda_shrink     = 0.03,
+    lambda_gate       = 0.01,
+    warmup_epochs     = 200L,
+    edge_dropout      = 0.1,
+    eval_every        = 100L,
+    patience          = 10L,
+    clip_norm         = 1.0,
+    conformal_method  = c("split", "bootstrap", "mondrian"),
+    conformal_bootstrap_B = 500L,
+    conformal_split_val = FALSE,
+    gate_method       = c("cv_folds", "median_splits", "single_split"),
+    gate_splits_B     = 31L,
+    gate_cv_folds     = 5L,
+    safety_floor      = FALSE,
+    phylo_signal_gate = FALSE,
+    phylo_signal_threshold = 0.2,
+    phylo_signal_method = c("lambda", "blomberg_k"),
+    min_val_cells     = 20L,
+    lambda_mode       = c("estimate", "fixed_1", "cv", "bayes"),
+    discrete_lambda   = c("estimate", "fixed_1"),
+    joint_solver      = c("inhouse", "rphylopars"),
+    predict_method    = c("auto", "exact", "per_column"),
+    joint_refine_iter = 0L,
+    verbose           = TRUE,
+    seed = NULL
+) {
+  # S3 default flip: capture BEFORE match.arg() reassigns predict_method
+  # (see fit_baseline()'s identical comment for why order matters here but
+  # reassignment afterwards does not).
+  predict_method_explicit <- !missing(predict_method)
+  conformal_method    <- match.arg(conformal_method)
+  lambda_mode         <- match.arg(lambda_mode)
+  discrete_lambda     <- match.arg(discrete_lambda)
+  joint_solver        <- match.arg(joint_solver)
+  predict_method      <- match.arg(predict_method)
+  gate_method         <- match.arg(gate_method)
+  phylo_signal_method <- match.arg(phylo_signal_method)
+  if (!is.numeric(joint_refine_iter) || length(joint_refine_iter) != 1L ||
+      !is.finite(joint_refine_iter) ||
+      joint_refine_iter != as.integer(joint_refine_iter) ||
+      joint_refine_iter < 0L) {
+    stop("'joint_refine_iter' must be a non-negative integer scalar.",
+         call. = FALSE)
+  }
+  joint_refine_iter <- as.integer(joint_refine_iter)
+  if (!inherits(data, "pigauto_data")) {
+    stop("'data' must be a pigauto_data object.")
+  }
+
+  if (!is.null(seed)) set.seed(seed)
+
+  # ---- Phylogenetic-signal gate -----------------------------------------------
+  # Compute per-trait Pagel's lambda on training-observed cells. Traits with
+  # lambda < phylo_signal_threshold are routed to the grand-mean corner (0,0,1)
+  # of the safety-floor simplex after calibration. Pure R (no torch calls) --
+  # computed before the gnn = FALSE branch below so both paths share it.
+  if (phylo_signal_gate) {
+    phylo_signal_per_trait <- compute_phylo_signal_per_trait(
+      data = data, tree = tree,
+      method = phylo_signal_method, min_tips = 20L)
+  } else {
+    phylo_signal_per_trait <- rep(NA_real_, length(data$trait_map))
+    names(phylo_signal_per_trait) <- vapply(data$trait_map,
+                                              function(tm) tm$name,
+                                              character(1L))
+  }
+  phylo_gate_triggered <- phylo_signal_gate &
+    !is.na(phylo_signal_per_trait) &
+    (phylo_signal_per_trait < phylo_signal_threshold)
+  names(phylo_gate_triggered) <- names(phylo_signal_per_trait)
+  # Build a latent-column-level index vector for downstream overrides.
+  gated_latent_cols <- integer(0L)
+  if (any(phylo_gate_triggered)) {
+    gated_trait_names <- names(phylo_gate_triggered)[phylo_gate_triggered]
+    for (tm in data$trait_map) {
+      if (tm$name %in% gated_trait_names) {
+        gated_latent_cols <- c(gated_latent_cols, tm$latent_cols)
+      }
+    }
+  }
+
+  # ---- Graph ----------------------------------------------------------------
+  # Pure R (no torch calls) -- computed before the gnn = FALSE branch below
+  # so both paths share it.
+  if (is.null(graph)) {
+    if (verbose) message("Computing phylogenetic graph...")
+    graph <- build_phylo_graph(tree, k_eigen = k_eigen)
+  }
+  # Use the actual k_eigen from the graph (may differ from input if "auto")
+  k_eigen <- ncol(graph$coords)
+
+  # ---- Baseline -------------------------------------------------------------
+  # Pure R (no torch calls) -- computed before the gnn = FALSE branch below
+  # so both paths share it.
+  if (is.null(baseline)) {
+    if (verbose) message("Fitting baseline...")
+    # Pass graph through so fit_baseline can reuse graph$D instead of
+    # calling ape::cophenetic.phylo() a second time on the same tree.
+    baseline <- .fit_baseline_dispatch(data, tree, splits = splits, graph = graph,
+                              lambda_mode = lambda_mode,
+                              discrete_lambda = discrete_lambda,
+                              joint_solver = joint_solver, predict_method = predict_method,
+                              joint_refine_iter = joint_refine_iter,
+                              predict_method_explicit = predict_method_explicit,
+                              seed = seed)
+  }
+
+  # ---- Trait map ------------------------------------------------------------
+  trait_map <- data$trait_map
+  has_trait_map <- !is.null(trait_map)
+
+  # ---- Multi-obs handling --------------------------------------------------
+  multi_obs  <- isTRUE(data$multi_obs)
+  n_obs      <- nrow(data$X_scaled)
+  n_species  <- data$n_species %||% n_obs
+  obs_to_sp  <- data$obs_to_species  # NULL when single-obs
+
+  # conformal_method = "mondrian" is single-obs only: locality is defined
+  # at species level via graph$D_sq, and multi-obs' per-observation val
+  # cells don't map onto species distances cleanly (B2, 2026-08-16). Fail
+  # fast, before spending a full training run.
+  if (multi_obs && identical(conformal_method, "mondrian")) {
+    stop(
+      "conformal_method = \"mondrian\" is not supported for multi-",
+      "observation data. Locality is defined at species level via ",
+      "graph$D_sq, and multi-obs validation cells are per-observation, ",
+      "not per-species. Use conformal_method = \"split\" or ",
+      "\"bootstrap\" instead.",
+      call. = FALSE
+    )
+  }
+  # "mondrian"'s locality statistic conditions on the calibrated GNN
+  # prediction surface, which does not exist under gnn = FALSE (see
+  # "Semantics of gnn = FALSE" in the gnn-off contract). Fail fast rather
+  # than relying on compute_conformal_scores() to notice.
+  if (!is.logical(gnn) || length(gnn) != 1L || is.na(gnn)) {
+    stop("'gnn' must be TRUE or FALSE.", call. = FALSE)
+  }
+  if (isFALSE(gnn) && identical(conformal_method, "mondrian")) {
+    stop(
+      "conformal_method = \"mondrian\" is not supported when gnn = FALSE: ",
+      "its locality statistic conditions on the calibrated GNN prediction ",
+      "surface, which does not exist without a trained GNN. Use ",
+      "conformal_method = \"split\" or \"bootstrap\", or set gnn = TRUE.",
+      call. = FALSE
+    )
+  }
+
+  # ---- Data preparation ----------------------------------------------------
+  # Pure R (no torch calls) -- MU and X_truth are needed by both paths, so
+  # they are computed here, before the gnn = FALSE branch below.
+  n <- n_obs                           # n = n_obs (rows in X)
+  p <- ncol(data$X_scaled)
+
+  X_truth <- data$X_scaled             # n_obs x p_latent
+
+  # Baseline mu is at species level (n_species x p).
+  # For multi-obs, expand to observation level.
+  MU_species <- baseline$mu            # n_species x p_latent
+  if (multi_obs) {
+    MU <- MU_species[obs_to_sp, , drop = FALSE]
+    rownames(MU) <- NULL
+  } else {
+    MU <- MU_species
+  }
+  has_val <- !is.null(splits)
+
+  # ===========================================================================
+  # gnn = FALSE: pure phylogenetic-baseline path (S1,
+  # docs/dev-log/arc/2026-09-18-gnn-off-contract.md). No GNN is constructed
+  # or trained. This branch sits ABOVE `device <- get_device()` and
+  # `torch::torch_manual_seed()` below and makes ZERO torch:: calls -- gate
+  # calibration and conformal scoring reuse the SAME plain-R
+  # `calibrate_gates()` / `compute_conformal_scores()` machinery the GNN
+  # path uses, just with delta_cal = mu_cal (the GNN corner degenerates to
+  # the baseline) and fixed_cal = NULL.
+  # ===========================================================================
+  if (isFALSE(gnn)) {
+    # User covariates enter pigauto only through the GNN (obs_refine MLP /
+    # cov_linear fixed effect). With no GNN they contribute nothing; say so
+    # rather than let them vanish silently.
+    if (!is.null(data$covariates) && ncol(data$covariates) > 0L) {
+      warning("gnn = FALSE (the default): user covariates are used only by the ",
+              "GNN and are ignored for this fit. Set gnn = TRUE to use them.",
+              call. = FALSE)
+    }
+    if (is.null(baseline_full)) {
+      if (verbose) message("Fitting production baseline (splits = NULL)...")
+      # S5b: a splits = NULL refit has no validation cells of its own, so
+      # "auto" can't re-decide anything here -- reuse the per-trait route
+      # `baseline` (above, fit WITH splits) already chose on real held-out
+      # evidence, via `predict_route` (which takes precedence over
+      # `predict_method` inside fit_baseline()). Falls back to
+      # `predict_method` unchanged when `baseline` predates this field.
+      baseline_full <- .fit_baseline_dispatch(data, tree, splits = NULL, graph = graph,
+                                     lambda_mode = lambda_mode,
+                                     discrete_lambda = discrete_lambda,
+                                     joint_solver = joint_solver,
+                                     predict_method = predict_method,
+                                     joint_refine_iter = joint_refine_iter,
+                                     predict_method_explicit = predict_method_explicit,
+                                     predict_route = baseline$predict_method_by_trait)
+      # A forced predict_route always reports predict_method_used = "auto"
+      # (fit_baseline() has no way to tell a genuine "auto" request from a
+      # uniform forced route from here); relabel with `baseline`'s own
+      # verdict (its splits-based fit, which actually ran "auto" / "exact" /
+      # "per_column" per the top-level request) so an explicit
+      # predict_method = "exact"/"per_column" request is not misreported as
+      # "auto" once replayed onto baseline_full.
+      if (!is.null(baseline$predict_method_used)) {
+        baseline_full$predict_method_used <- baseline$predict_method_used
+      }
+    }
+    graph$D <- NULL
+
+    calibrated_gates      <- NULL
+    calibrated_gates_list <- NULL
+    mean_baseline_per_col <- NULL
+    conformal_scores      <- NULL
+    conformal_mondrian    <- NULL
+    val_rmse  <- NA_real_
+    test_rmse <- NA_real_
+
+    if (has_val && has_trait_map) {
+      if (verbose) {
+        message("Calibrating gates on validation set (baseline only)...")
+      }
+
+      # The GNN corner degenerates to the baseline: no trained delta
+      # exists, so delta_cal = mu_cal and fixed_cal = NULL, exactly as
+      # the contract specifies.
+      mu_cal    <- MU
+      delta_cal <- MU
+      fixed_cal <- NULL
+
+      X_truth_r    <- X_truth
+      val_mask_mat <- matrix(FALSE, n, p)
+      val_mask_mat[splits$val_idx] <- TRUE
+
+      # S5c required change 1: calibrate_gates()/compute_conformal_scores()
+      # must not see the cells that (under "auto") chose the per-trait
+      # route -- restrict THEIR OWN input mask to the SCORE half. The
+      # safety-floor mean and val_rmse reporting below still use the FULL
+      # `val_mask_mat` (every held-out cell stays excluded from the
+      # training mean regardless of which half scored it).
+      val_mask_score <- matrix(FALSE, n, p)
+      val_mask_score[.pigauto_calibration_val_idx(splits, baseline, predict_method)] <- TRUE
+
+      split_res     <- split_val_cal_conf(val_mask_score, conformal_split_val,
+                                           min_val_cells, seed)
+      val_mask_cal  <- split_res$val_mask_cal
+      val_mask_conf <- split_res$val_mask_conf
+
+      mean_baseline_per_col <- compute_safety_floor_means(
+        data, val_mask_mat, splits, safety_floor
+      )
+
+      calibrated_gates_list <- calibrate_gates(
+        trait_map             = trait_map,
+        mu_cal                = mu_cal,
+        delta_cal             = delta_cal,
+        X_truth_r             = X_truth_r,
+        val_mask_mat          = val_mask_cal,
+        gate_grid             = seq(0, gate_cap, length.out = 9L),
+        gate_cap              = gate_cap,
+        gate_method           = gate_method,
+        gate_splits_B         = gate_splits_B,
+        gate_cv_folds         = gate_cv_folds,
+        safety_floor          = safety_floor,
+        mean_baseline_per_col = mean_baseline_per_col,
+        simplex_step          = 0.05,
+        min_val_cells         = min_val_cells,
+        fixed_cal             = fixed_cal,
+        seed                  = seed,
+        latent_names          = data$latent_names,
+        verbose               = verbose
+      )
+      calibrated_gates <- calibrated_gates_list$r_cal_gnn   # legacy scalar slot
+
+      # B2: phylo-signal override, identical to the GNN path.
+      if (length(gated_latent_cols) > 0L && !is.null(calibrated_gates_list)) {
+        if (isTRUE(safety_floor) && !is.null(mean_baseline_per_col)) {
+          calibrated_gates_list$r_cal_bm[gated_latent_cols]   <- 0
+          calibrated_gates_list$r_cal_gnn[gated_latent_cols]  <- 0
+          calibrated_gates_list$r_cal_mean[gated_latent_cols] <- 1
+        } else {
+          warning(
+            "phylo_signal_gate triggered for ",
+            length(gated_latent_cols),
+            " latent column(s) but safety_floor = FALSE (or mean baseline ",
+            "unavailable); falling back to BM (r_cal_bm = 1) instead of the ",
+            "mean corner, which would become latent 0 at predict time.",
+            call. = FALSE
+          )
+          calibrated_gates_list$r_cal_bm[gated_latent_cols]   <- 1
+          calibrated_gates_list$r_cal_gnn[gated_latent_cols]  <- 0
+          calibrated_gates_list$r_cal_mean[gated_latent_cols] <- 0
+        }
+        calibrated_gates <- calibrated_gates_list$r_cal_gnn
+      }
+
+      # Fold r_cal_gnn into r_cal_bm (contract "Semantics of gnn = FALSE"):
+      # under gnn = FALSE the GNN corner IS the baseline, so any weight
+      # calibrate_gates() assigned to it is baseline weight in disguise.
+      # There is no separate refined delivered-surface to re-check
+      # afterwards the way the GNN path's "Post-refine delivered-surface
+      # floor" block does a few hundred lines up -- that block exists only
+      # to correct for refine_steps moving delta away from the
+      # calibration-time surface, which cannot happen here since mu_cal
+      # == delta_cal everywhere.
+      calibrated_gates_list$r_cal_bm <-
+        calibrated_gates_list$r_cal_bm + calibrated_gates_list$r_cal_gnn
+      calibrated_gates_list$r_cal_gnn[] <- 0
+      calibrated_gates <- calibrated_gates_list$r_cal_gnn
+
+      conformal_scores <- compute_conformal_scores(
+        trait_map        = trait_map,
+        calibrated_gates = calibrated_gates,
+        mu_cal           = mu_cal,
+        delta_cal        = delta_cal,
+        r_cal_bm         = calibrated_gates_list$r_cal_bm,
+        r_cal_gnn        = calibrated_gates_list$r_cal_gnn,
+        r_cal_mean       = calibrated_gates_list$r_cal_mean,
+        mean_baseline_per_col = mean_baseline_per_col,
+        fixed_cal        = fixed_cal,
+        X_truth_r        = X_truth_r,
+        val_mask_mat     = val_mask_conf,
+        method           = conformal_method,
+        bootstrap_B      = conformal_bootstrap_B,
+        verbose          = verbose
+      )
+      conformal_mondrian <- if (identical(conformal_method, "mondrian")) {
+        attr(conformal_scores, "mondrian")
+      } else {
+        NULL
+      }
+
+      # ---- val / test RMSE: plain-R blend, r_gnn is always 0 ------------
+      mean_vec <- if (!is.null(mean_baseline_per_col)) {
+        as.numeric(mean_baseline_per_col)
+      } else {
+        rep(0, p)
+      }
+      pred_mat <- sweep(MU, 2, calibrated_gates_list$r_cal_bm, `*`) +
+        matrix(calibrated_gates_list$r_cal_mean * mean_vec,
+               nrow = n, ncol = p, byrow = TRUE)
+      resid_all <- pred_mat - X_truth
+
+      val_cells <- resid_all[val_mask_mat]
+      val_cells <- val_cells[is.finite(val_cells)]
+      val_rmse  <- if (length(val_cells) == 0L) {
+        NA_real_
+      } else {
+        sqrt(mean(val_cells^2))
+      }
+
+      if (!is.null(splits) && length(splits$test_idx) > 0L) {
+        test_mask_mat <- matrix(FALSE, n, p)
+        test_mask_mat[splits$test_idx] <- TRUE
+        test_cells <- resid_all[test_mask_mat]
+        test_cells <- test_cells[is.finite(test_cells)]
+        test_rmse  <- if (length(test_cells) == 0L) {
+          NA_real_
+        } else {
+          sqrt(mean(test_cells^2))
+        }
+      }
+    }
+
+    # No validation split (missing_frac = 0, splits = NULL) or no trait_map:
+    # calibration cannot run, so the fit is pure baseline (r_bm = 1). The
+    # GNN path reaches predict() with calibrated_gates = NULL and falls back
+    # to the learned gate; there is no learned gate here, so make the
+    # weights explicit instead of leaving predict() to reject the object.
+    if (is.null(calibrated_gates_list)) {
+      latent_nm <- colnames(data$X_scaled)
+      one  <- stats::setNames(rep(1, p), latent_nm)
+      zero <- stats::setNames(rep(0, p), latent_nm)
+      calibrated_gates_list <- list(r_cal_bm = one, r_cal_gnn = zero,
+                                    r_cal_mean = zero)
+      calibrated_gates <- zero
+      mean_baseline_per_col <- NULL
+    }
+
+    history <- data.frame(
+      epoch = integer(0), loss_rec = double(0),
+      loss_shrink = double(0), loss_gate = double(0),
+      val_loss = double(0), lr = double(0)
+    )
+
+    n_cov_cols_off <- if (!is.null(data$covariates)) ncol(data$covariates) else 0L
+    model_config <- list(
+      hidden_dim             = hidden_dim,
+      k_eigen                = k_eigen,
+      n_gnn_layers           = n_gnn_layers,
+      gate_cap               = gate_cap,
+      use_attention          = use_attention,
+      use_transformer_blocks = use_transformer_blocks,
+      n_heads                = as.integer(n_heads),
+      ffn_mult               = as.integer(ffn_mult),
+      use_trait_attention    = isTRUE(use_trait_attention),
+      n_trait_heads          = as.integer(n_trait_heads),
+      trait_embed_dim        = as.integer(trait_embed_dim),
+      lambda_mode            = lambda_mode,
+      discrete_lambda      = discrete_lambda,
+      # gnn = FALSE production predictions use baseline_full (splits = NULL);
+      # fall back to baseline if baseline_full wasn't computed for some
+      # reason. NULL only for baselines built before this field existed.
+      lambda_per_trait       = baseline_full$lambda_per_trait %||%
+        baseline$lambda_per_trait %||% NULL,
+      lambda_block           = baseline_full$lambda_block %||%
+        baseline$lambda_block %||% NULL,
+      # S3 default flip: the route actually used by the joint baseline
+      # fit(s), aggregated by fit_baseline() -- "exact" or "per_column".
+      # Same baseline_full-over-baseline precedence as lambda_block above.
+      predict_method_used    = baseline_full$predict_method_used %||%
+        baseline$predict_method_used %||% NULL,
+      predict_method_by_trait = baseline_full$predict_method_by_trait %||%
+        baseline$predict_method_by_trait %||% NULL,
+      # S5c required change 1: per-trait validation-cell counts recording
+      # which cells chose the route ("auto" only; NULL under an explicit
+      # "exact"/"per_column" request, or a baseline built before this
+      # field existed). Always read from `baseline` (the splits-based fit
+      # that actually did the route choice); `baseline_full` has no
+      # validation cells of its own.
+      route_val_n            = baseline$route_val_n %||% NULL,
+      score_val_n            = baseline$score_val_n %||% NULL,
+      joint_solver           = joint_solver,
+      joint_refine_iter      = joint_refine_iter,
+      dropout                = dropout,
+      refine_steps           = refine_steps,
+      cal_refine_steps       = as.integer(refine_steps),
+      train_mask_heldout     = TRUE,
+      cov_dim                = p + 1L + n_cov_cols_off,
+      input_dim              = p,
+      per_column_rs          = TRUE,
+      n_user_cov             = n_cov_cols_off,
+      seed                   = if (is.null(seed)) NULL else as.integer(seed),
+      gnn                    = FALSE
+    )
+
+    return(build_pigauto_fit(
+      model_state    = list(),
+      model_config   = model_config,
+      graph          = graph,
+      baseline       = baseline,
+      baseline_full  = baseline_full,
+      norm           = list(
+        means         = data$means,
+        sds           = data$sds,
+        log_transform = data$log_transform
+      ),
+      species_names  = data$species_names,
+      obs_species    = data$obs_species,
+      obs_to_species = data$obs_to_species,
+      X_scaled       = data$X_scaled,
+      n_species      = n_species,
+      n_obs          = n_obs,
+      multi_obs      = multi_obs,
+      trait_names    = data$trait_names,
+      latent_names   = data$latent_names,
+      trait_map      = trait_map,
+      splits         = splits,
+      history        = history,
+      val_rmse       = val_rmse,
+      test_rmse      = test_rmse,
+      calibrated_gates = calibrated_gates,
+      r_cal      = if (!is.null(calibrated_gates_list)) {
+        calibrated_gates_list$r_cal_gnn
+      } else {
+        NULL
+      },
+      r_cal_bm   = if (!is.null(calibrated_gates_list)) {
+        calibrated_gates_list$r_cal_bm
+      } else {
+        NULL
+      },
+      r_cal_gnn  = if (!is.null(calibrated_gates_list)) {
+        calibrated_gates_list$r_cal_gnn
+      } else {
+        NULL
+      },
+      r_cal_mean = if (!is.null(calibrated_gates_list)) {
+        calibrated_gates_list$r_cal_mean
+      } else {
+        NULL
+      },
+      mean_baseline_per_col  = mean_baseline_per_col,
+      safety_floor           = safety_floor,
+      phylo_signal_per_trait = phylo_signal_per_trait,
+      phylo_gate_triggered   = phylo_gate_triggered,
+      phylo_signal_method    = phylo_signal_method,
+      phylo_signal_threshold = phylo_signal_threshold,
+      conformal_scores   = conformal_scores,
+      conformal_method   = conformal_method,
+      conformal_mondrian = conformal_mondrian,
+      covariates       = data$covariates,
+      cov_means        = data$cov_means,
+      cov_sds          = data$cov_sds,
+      cov_names        = data$cov_names
+    ))
+  }
+
+  if (!is.null(seed)) torch::torch_manual_seed(seed)
+
+  device <- get_device()
+  if (verbose) message("Using device: ", as.character(device))
+
+  # Fill missing cells with baseline predictions
+  X_fill <- X_truth
+  X_fill[is.na(X_fill)] <- MU[is.na(X_fill)]
+
+  DELTA_tgt <- X_fill - MU            # observed - baseline (legacy
+                                       # tensor t_DELTA below; kept for
+                                       # backward compatibility, not
+                                       # used as a training target)
+
+  # Observed mask (TRUE = actually observed, not just filled)
+  M_obs_mat <- !is.na(X_truth)
+  if (!is.null(splits)) M_obs_mat[c(splits$val_idx, splits$test_idx)] <- FALSE
+
+  # Held-out-masked input: like X_fill but with val/test cells replaced
+  # with the baseline prediction.  Used for TRAINING, val eval, and gate
+  # calibration so held-out truth never appears as DAE context (B1).
+  hold_idx <- if (!is.null(splits)) {
+    c(splits$val_idx, splits$test_idx)
+  } else {
+    integer(0L)
+  }
+  X_fill_heldout <- mask_heldout_with_baseline(X_fill, MU, hold_idx)
+
+  # ---- Trait-level corruption mask expansion --------------------------------
+  # For categorical traits: corrupt all K latent columns together
+  if (has_trait_map) {
+    # Build mapping from latent column -> trait index (for grouped corruption)
+    latent_to_trait <- integer(p)
+    for (i in seq_along(trait_map)) {
+      latent_to_trait[trait_map[[i]]$latent_cols] <- i
+    }
+    n_orig_traits <- length(trait_map)
+  }
+
+  # ---- Tensors ---------------------------------------------------------------
+  t_X      <- torch::torch_tensor(X_fill,    dtype = torch::torch_float(),
+                                  device = device)
+  t_X_eval <- torch::torch_tensor(X_fill_heldout, dtype = torch::torch_float(),
+                                  device = device)
+  t_MU     <- torch::torch_tensor(MU,        dtype = torch::torch_float(),
+                                  device = device)
+  t_DELTA  <- torch::torch_tensor(DELTA_tgt, dtype = torch::torch_float(),
+                                  device = device)
+  t_M_obs  <- torch::torch_tensor(M_obs_mat, dtype = torch::torch_bool(),
+                                  device = device)
+  t_adj    <- torch::torch_tensor(graph$adj,    dtype = torch::torch_float(),
+                                  device = device)
+  t_coords <- torch::torch_tensor(graph$coords, dtype = torch::torch_float(),
+                                  device = device)
+
+  # Squared cophenetic distances for B2 rate-aware attention.
+  # graph$D_sq is set by build_phylo_graph() and is NOT freed in impute.R's
+  # cleanup block (only D and R_phy are freed there), so it is available here.
+  # Falls back to NULL if the graph was built before B2.1 (old cache).
+  t_D_sq <- if (!is.null(graph$D_sq)) {
+    torch::torch_tensor(graph$D_sq, dtype = torch::torch_float(),
+                        device = device)
+  } else {
+    NULL
+  }
+
+  # Drop the cophenetic distance matrix from fit_pigauto's local view of
+  # the graph now that we have the torch tensors we need. This keeps the
+  # fit object slim on disk (predict() only reads $adj and $coords), but
+  # does NOT free memory at the caller's scope -- R's copy-on-modify
+  # means the caller still holds the original list. Callers that want
+  # to free memory during training should set graph$D <- NULL before
+  # calling fit_pigauto(); impute() already does this, and the
+  # bundled benchmark scripts do the same.
+  graph$D <- NULL
+
+  # Observation-to-species mapping for multi-obs (1-indexed for torch-R)
+  if (multi_obs) {
+    t_obs_to_sp <- torch::torch_tensor(
+      as.integer(obs_to_sp),
+      dtype = torch::torch_long(), device = device
+    )
+  } else {
+    t_obs_to_sp <- NULL
+  }
+
+  # Val / test masks (has_val is already set in the shared block above)
+  if (has_val) {
+    val_mat <- matrix(FALSE, n, p); val_mat[splits$val_idx]  <- TRUE
+    t_val   <- torch::torch_tensor(val_mat, dtype = torch::torch_bool(),
+                                   device = device)
+    t_truth <- torch::torch_tensor(X_truth, dtype = torch::torch_float(),
+                                   device = device)
+    # Replace NaN in truth with 0 (won't affect masked evaluation)
+    t_truth_safe <- t_truth$clone()
+    t_truth_safe[t_truth$isnan()] <- 0
+  }
+
+  # ---- Covariates (environmental conditioners) ------------------------------
+  has_covariates <- !is.null(data$covariates)
+  n_cov_cols     <- if (has_covariates) ncol(data$covariates) else 0L
+  t_covariates   <- NULL
+  if (has_covariates) {
+    t_covariates <- torch::torch_tensor(
+      data$covariates, dtype = torch::torch_float(), device = device
+    )
+  }
+
+  # ---- Model ----------------------------------------------------------------
+  cov_dim <- p + 1L + n_cov_cols
+  # n_user_cov tells the model how many user covariates exist (the last
+  # n_cov_cols columns of the covs tensor). The model's obs_refine MLP
+  # re-injects these covariates after species-level GNN message passing
+  # via a residual connection so the GNN's delta is conditioned on the
+  # raw covariates rather than only on the species-level hidden state
+  # (which has been propagated through phylogeny-only graph layers).
+  #
+  # Historical note (pre-2026-04-25): n_user_cov was forced to 0 in
+  # single-obs mode, which meant user covariates entered the model only
+  # via the input encoder and were diluted through the GNN layers. The
+  # GNN had no path to extract nonlinear covariate-effect signal beyond
+  # what a single linear projection could carry. Fixed by feeding the
+  # raw user covariates back into the obs_refine MLP in single-obs mode
+  # too, so single-obs imputation can finally exploit nonlinear
+  # covariate structure.
+  n_user_cov <- n_cov_cols
+  model <- ResidualPhyloDAE(
+    input_dim              = p,
+    hidden_dim             = as.integer(hidden_dim),
+    coord_dim              = as.integer(k_eigen),
+    cov_dim                = as.integer(cov_dim),
+    per_column_rs          = TRUE,
+    n_gnn_layers           = as.integer(n_gnn_layers),
+    gate_cap               = gate_cap,
+    use_attention          = use_attention,
+    n_user_cov             = as.integer(n_user_cov),
+    dropout                = dropout,
+    use_transformer_blocks = use_transformer_blocks,
+    n_heads                = as.integer(n_heads),
+    ffn_mult               = as.integer(ffn_mult),
+    use_trait_attention    = use_trait_attention,
+    n_trait_heads          = as.integer(n_trait_heads),
+    trait_embed_dim        = as.integer(trait_embed_dim)
+  )
+
+  # Type-aware gate init: set res_raw so effective gate starts at a
+  # non-trivial value for all trait types.  Discrete traits previously
+  # started near 0 (disc_target = 0.001), which killed gradient flow
+  # through the sigmoid and prevented the GNN from learning discrete
+  # corrections.  Starting at 0.10 gives a healthy gradient in both
+  # directions.  logit(target / gate_cap) gives the correct res_raw.
+  cont_target <- 0.135
+  disc_target <- 0.10
+  cont_raw <- log(cont_target / gate_cap / (1 - cont_target / gate_cap))
+  disc_raw <- log(disc_target / gate_cap / (1 - disc_target / gate_cap))
+
+  if (has_trait_map) {
+    init_vals <- rep(cont_raw, p)
+    for (tm in trait_map) {
+      if (tm$type %in% c("binary", "categorical", "ordinal")) {
+        init_vals[tm$latent_cols] <- disc_raw
+      } else if (tm$type == "zi_count") {
+        # Gate column (col 1): like binary (start closed)
+        init_vals[tm$latent_cols[1]] <- disc_raw
+        # Magnitude column (col 2): like count (start slightly open)
+        init_vals[tm$latent_cols[2]] <- cont_raw
+      }
+      # proportion: uses cont_raw (default), no special case needed
+    }
+  } else {
+    init_vals <- rep(cont_raw, p)
+  }
+  torch::with_no_grad({
+    model$res_raw$copy_(
+      torch::torch_tensor(init_vals, dtype = torch::torch_float())
+    )
+  })
+
+  model$to(device = device)
+  opt <- torch::optim_adamw(model$parameters, lr = lr,
+                             weight_decay = weight_decay)
+
+  gpu_mem_checkpoint("after model$to(device) + optimizer")
+
+  # ---- Training loop --------------------------------------------------------
+  best_val      <- Inf
+  best_state    <- NULL
+  patience_left <- patience
+  history       <- data.frame(
+    epoch = integer(0), loss_rec = double(0),
+    loss_shrink = double(0), loss_gate = double(0),
+    val_loss = double(0), lr = double(0)
+  )
+
+  for (epoch in seq_len(epochs)) {
+    model$train()
+    opt$zero_grad()
+
+    # ---- Learning rate schedule (warmup + cosine decay) --------------------
+    scheduled_lr <- cosine_lr(epoch, warmup_epochs, epochs, lr)
+    opt$param_groups[[1]]$lr <- scheduled_lr
+
+    # ---- Adaptive corruption rate ------------------------------------------
+    if (corruption_ramp > 0L) {
+      eff_corruption <- corruption_start +
+        (corruption_rate - corruption_start) *
+        min(epoch / corruption_ramp, 1.0)
+    } else {
+      eff_corruption <- corruption_rate
+    }
+
+    # ---- Edge dropout (graph regularisation) --------------------------------
+    if (edge_dropout > 0 && model$training) {
+      edge_mask <- torch::torch_rand_like(t_adj) > edge_dropout
+      t_adj_train <- t_adj * edge_mask$to(dtype = torch::torch_float())
+      # Renormalise rows to maintain expected message scale
+      row_sums <- t_adj_train$sum(dim = 2L, keepdim = TRUE)$clamp(min = 1e-8)
+      orig_sums <- t_adj$sum(dim = 2L, keepdim = TRUE)$clamp(min = 1e-8)
+      t_adj_train <- t_adj_train * (orig_sums / row_sums)
+    } else {
+      t_adj_train <- t_adj
+    }
+
+    # ---- Corruption masking -------------------------------------------------
+    if (has_trait_map) {
+      # Corrupt at trait level, then expand to latent columns
+      u_trait <- matrix(stats::runif(n * n_orig_traits), n, n_orig_traits)
+      corrupt_trait <- u_trait < eff_corruption
+      # Only corrupt where observed
+      obs_trait <- matrix(FALSE, n, n_orig_traits)
+      for (i in seq_along(trait_map)) {
+        lc <- trait_map[[i]]$latent_cols
+        obs_trait[, i] <- as.logical(M_obs_mat[, lc[1]])
+      }
+      corrupt_trait <- corrupt_trait & obs_trait
+      # Expand to latent columns
+      corrupt_latent <- matrix(FALSE, n, p)
+      for (i in seq_along(trait_map)) {
+        for (lc in trait_map[[i]]$latent_cols) {
+          corrupt_latent[, lc] <- corrupt_trait[, i]
+        }
+      }
+      masked_bool <- torch::torch_tensor(corrupt_latent, dtype = torch::torch_bool(),
+                                          device = device)
+    } else {
+      u           <- torch::torch_rand_like(t_X)
+      masked_bool <- (u < eff_corruption) & t_M_obs
+    }
+
+    if (as.numeric(masked_bool$sum()$cpu()$item()) == 0L) next
+
+    Mask_t  <- masked_bool$to(dtype = torch::torch_float())
+    mask_ind <- Mask_t$any(dim = 2L, keepdim = TRUE)$to(
+      dtype = torch::torch_float()
+    )
+
+    covs_t <- make_covs_tensor(t_MU, mask_ind, t_covariates)
+
+    tok   <- model$mask_token$expand(c(n, p))
+    # B1: visible context is t_X_eval (holdouts → BM), not t_X (holdout truth).
+    # Corruption still replaces train-observed cells with the mask token;
+    # loss targets remain t_X on those corrupted cells only.
+    X_in  <- torch::torch_where(masked_bool, tok, t_X_eval)
+
+    out   <- model(X_in, t_coords, covs_t, t_adj_train, t_obs_to_sp,
+                   D_sq = t_D_sq)
+    delta <- out$delta
+    rs    <- out$rs
+    fixed <- out$fixed_effects
+    delta_pred <- if (!is.null(fixed)) delta + fixed else delta
+
+    # Direct prediction loss: train delta to predict the truth directly.
+    # This gives delta a full-strength gradient signal on every corrupted
+    # cell, unlike the earlier blend formulation where the effective
+    # gradient on delta was scaled by rs (approx 0.1 to 0.2), causing
+    # delta to stay close to the baseline and calibration to fall back
+    # to gate = 0.
+    if (has_trait_map) {
+      loss_rec <- compute_mixed_loss(delta_pred, t_X, masked_bool, trait_map)
+    } else {
+      loss_rec <- torch::nnf_mse_loss(
+        delta_pred[masked_bool], t_X[masked_bool]
+      )
+    }
+
+    # Auxiliary blend loss: (1-rs)*mu + rs*delta against the truth.
+    # This gives rs a gradient signal so that the model can learn which
+    # columns benefit from the GNN, but with a small weight so it doesn't
+    # dominate the direct supervision on delta.  Post-hoc calibration on
+    # the validation set still has the final say over the gate.
+    pred_blend <- (1 - rs) * t_MU + rs * delta
+    if (!is.null(fixed)) pred_blend <- pred_blend + fixed
+    if (has_trait_map) {
+      loss_blend <- compute_mixed_loss(pred_blend, t_X, masked_bool, trait_map)
+    } else {
+      loss_blend <- torch::nnf_mse_loss(
+        pred_blend[masked_bool], t_X[masked_bool]
+      )
+    }
+
+    # Shrinkage: keep delta from drifting to extreme values on cells with
+    # very weak supervision.  Lighter than before because direct
+    # supervision handles most of the regularisation.
+    deviation <- (delta - t_MU)[masked_bool]
+    loss_shrink <- torch::torch_mean(deviation$pow(2))
+
+    # Gate regularisation pushes rs toward zero by default, so the model
+    # only opens a gate when the direct delta signal is clearly helpful.
+    loss_gate <- torch::torch_mean(rs$pow(2))
+
+    loss <- loss_rec + 0.1 * loss_blend +
+            lambda_shrink * loss_shrink + lambda_gate * loss_gate
+    loss$backward()
+
+    if (!all_grads_finite(model$parameters)) {
+      opt$zero_grad(); next
+    }
+    torch::nn_utils_clip_grad_norm_(model$parameters, max_norm = clip_norm)
+    opt$step()
+
+    # ---- Evaluation ---------------------------------------------------------
+    if (epoch %% eval_every == 0L) {
+      val_loss_val <- NA_real_
+      if (has_val) {
+        model$eval()
+        torch::with_no_grad({
+          mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
+          covs0     <- make_covs_tensor(t_MU, mask_ind0, t_covariates)
+          # Use t_X_eval (val/test cells replaced with baseline) so
+          # that held-out truth does not leak into the model input.
+          out0      <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp,
+                             D_sq = t_D_sq)
+          pred0     <- (1 - out0$rs) * t_MU + out0$rs * out0$delta
+          if (!is.null(out0$fixed_effects)) {
+            pred0 <- pred0 + out0$fixed_effects
+          }
+        })
+        if (has_trait_map) {
+          val_loss_val <- composite_val_loss(pred0, t_truth_safe, t_val,
+                                             trait_map)
+        } else {
+          val_loss_val <- as.numeric(
+            rmse_torch(pred0, t_truth_safe, t_val)$cpu()$item()
+          )
+        }
+      }
+
+      history <- rbind(history, data.frame(
+        epoch       = epoch,
+        loss_rec    = as.numeric(loss_rec$item()),
+        loss_shrink = as.numeric(loss_shrink$item()),
+        loss_gate   = as.numeric(loss_gate$item()),
+        val_loss    = if (is.na(val_loss_val)) NA_real_ else val_loss_val,
+        lr          = scheduled_lr
+      ))
+
+      if (verbose) {
+        msg <- sprintf(
+          "epoch %4d | rec %.4f | shrink %.4f | gate %.4f | lr %.1e",
+          epoch, as.numeric(loss_rec$item()),
+          as.numeric(loss_shrink$item()),
+          as.numeric(loss_gate$item()),
+          scheduled_lr
+        )
+        if (!is.na(val_loss_val)) {
+          msg <- paste0(msg, sprintf(" | val %.4f | best %.4f | pat %d",
+                                     val_loss_val, best_val, patience_left))
+        }
+        message(msg)
+      }
+
+      if (!is.na(val_loss_val)) {
+        if (val_loss_val + 1e-6 < best_val) {
+          best_val      <- val_loss_val
+          best_state    <- model$state_dict()
+          patience_left <- patience
+        } else {
+          patience_left <- patience_left - 1L
+        }
+        if (patience_left <= 0L) {
+          if (verbose) message("Early stopping at epoch ", epoch)
+          break
+        }
+      }
+    }
+  }
+
+  gpu_mem_checkpoint("end of training loop (before restoring best state)")
+  if (!is.null(best_state)) model$load_state_dict(best_state)
+  gpu_mem_checkpoint("after model$load_state_dict(best_state)")
+
+  # ---- Post-training gate calibration (validation set) --------------------
+  calibrated_gates <- NULL
+  calibrated_gates_list <- NULL
+  mean_baseline_per_col <- NULL
+  if (has_val && has_trait_map) {
+    if (verbose) message("Calibrating gates on validation set...")
+    gpu_mem_checkpoint("entering gate calibration")
+    model$eval()
+
+    # B3: refine with the same refine_steps predict() will use. Pin
+    # training-observed cells; holdouts start at BM via t_X_eval.
+    # Blend uses learned rs here (gates not yet calibrated).
+    refined_cal <- pigauto_refine_forward(
+      model          = model,
+      X_init         = t_X_eval,
+      t_coords       = t_coords,
+      t_adj          = t_adj,
+      t_obs_to_sp    = t_obs_to_sp,
+      t_D_sq         = t_D_sq,
+      t_MU           = t_MU,
+      t_covariates   = t_covariates,
+      pin_mask       = t_M_obs,
+      refine_steps   = refine_steps,
+      device         = device,
+      blend          = "learned_rs"
+    )
+    delta_cal_gates <- refined_cal$delta_mat
+    fixed_cal_gates <- refined_cal$fixed_mat
+    mu_cal          <- as.matrix(t_MU$cpu())
+    delta_cal       <- delta_cal_gates
+    fixed_cal       <- fixed_cal_gates
+
+    X_truth_r    <- X_truth
+    val_mask_mat <- matrix(FALSE, n, p)
+    val_mask_mat[splits$val_idx] <- TRUE
+
+    # S5c required change 1: calibrate_gates()/compute_conformal_scores()
+    # must not see the cells that (under "auto") chose the per-trait route
+    # -- restrict THEIR OWN input mask to the SCORE half via
+    # `val_mask_score` below. The safety-floor mean still uses the FULL
+    # `val_mask_mat` (every held-out cell stays excluded from the training
+    # mean regardless of which half scored it).
+    val_mask_score <- matrix(FALSE, n, p)
+    val_mask_score[.pigauto_calibration_val_idx(splits, baseline, predict_method)] <- TRUE
+
+    # Fix C.3 (Opus 2026-04-28): split val into a CALIBRATION half (used by
+    # `calibrate_gates()` to pick per-trait blend weights) and a CONFORMAL
+    # half (used by `compute_conformal_scores()` to estimate residual
+    # quantiles). Reusing the same val cells for both breaks split-conformal
+    # exchangeability — the gate is selected to minimise val residual MSE,
+    # which post-selects the very residuals that drive the conformal
+    # quantile, producing systematic undercoverage. The split is per
+    # latent column to avoid wasting cells on traits with already-tiny
+    # val sets.
+    #
+    # Min-val safeguard: only split a column when its val set has at
+    # least `2 * min_val_cells` cells.  Below that threshold the half-A /
+    # half-B cross-check inside `calibrate_gates()` (which itself halves
+    # the input) becomes too noisy and the calibrated gate degrades in
+    # ways that show up as a +2-25% RMSE regression on benches like the
+    # AVONET300 safety-floor smoke test.  Columns under the threshold
+    # silently fall back to the legacy single-set behaviour for that
+    # column (calibration uses the full val cells; conformal also uses
+    # them but accepts the modest undercoverage risk).  Set
+    # `conformal_split_val = FALSE` to disable splitting everywhere.
+    # Factored into split_val_cal_conf() (S1) so the gnn = FALSE path
+    # shares the identical halving logic.
+    split_res     <- split_val_cal_conf(val_mask_score, conformal_split_val,
+                                         min_val_cells, seed)
+    val_mask_cal  <- split_res$val_mask_cal
+    val_mask_conf <- split_res$val_mask_conf
+
+    # Safety-floor: per-latent-column grand mean on training-observed cells
+    # only (excludes val + test hold-out). Factored into
+    # compute_safety_floor_means() (S1) so the gnn = FALSE path shares it.
+    mean_baseline_per_col <- compute_safety_floor_means(
+      data, val_mask_mat, splits, safety_floor
+    )
+
+    calibrated_gates_list <- calibrate_gates(
+      trait_map             = trait_map,
+      mu_cal                = mu_cal,
+      delta_cal             = delta_cal_gates,
+      X_truth_r             = X_truth_r,
+      val_mask_mat          = val_mask_cal,
+      gate_grid             = seq(0, gate_cap, length.out = 9L),
+      gate_cap              = gate_cap,
+      gate_method           = gate_method,
+      gate_splits_B         = gate_splits_B,
+      gate_cv_folds         = gate_cv_folds,
+      safety_floor          = safety_floor,
+      mean_baseline_per_col = mean_baseline_per_col,
+      simplex_step          = 0.05,
+      min_val_cells         = min_val_cells,
+      fixed_cal             = fixed_cal_gates,
+      seed                  = seed,
+      latent_names          = data$latent_names,
+      verbose               = verbose
+    )
+    calibrated_gates <- calibrated_gates_list$r_cal_gnn   # legacy scalar slot
+
+    # B2: phylo-signal override. Mean corner (0,0,1) is only valid when
+    # safety_floor computed a real mean_baseline_per_col. Otherwise the
+    # predict fallback is latent 0 — force BM (1,0,0) instead.
+    if (length(gated_latent_cols) > 0L && !is.null(calibrated_gates_list)) {
+      if (isTRUE(safety_floor) && !is.null(mean_baseline_per_col)) {
+        calibrated_gates_list$r_cal_bm[gated_latent_cols]   <- 0
+        calibrated_gates_list$r_cal_gnn[gated_latent_cols]  <- 0
+        calibrated_gates_list$r_cal_mean[gated_latent_cols] <- 1
+      } else {
+        warning(
+          "phylo_signal_gate triggered for ",
+          length(gated_latent_cols),
+          " latent column(s) but safety_floor = FALSE (or mean baseline ",
+          "unavailable); falling back to BM (r_cal_bm = 1) instead of the ",
+          "mean corner, which would become latent 0 at predict time.",
+          call. = FALSE
+        )
+        calibrated_gates_list$r_cal_bm[gated_latent_cols]   <- 1
+        calibrated_gates_list$r_cal_gnn[gated_latent_cols]  <- 0
+        calibrated_gates_list$r_cal_mean[gated_latent_cols] <- 0
+      }
+      calibrated_gates <- calibrated_gates_list$r_cal_gnn
+    }
+
+    # B3 (conformal): re-refine with the calibrated blend so residual
+    # quantiles match the surface predict() delivers.
+    mean_vec_cal <- if (!is.null(mean_baseline_per_col)) {
+      as.numeric(mean_baseline_per_col)
+    } else {
+      rep(0, p)
+    }
+    t_w_bm_cal <- torch::torch_tensor(
+      as.numeric(calibrated_gates_list$r_cal_bm),
+      dtype = torch::torch_float(), device = device
+    )$unsqueeze(1L)
+    t_w_gnn_cal <- torch::torch_tensor(
+      as.numeric(calibrated_gates_list$r_cal_gnn),
+      dtype = torch::torch_float(), device = device
+    )$unsqueeze(1L)
+    t_w_mean_cal <- torch::torch_tensor(
+      as.numeric(calibrated_gates_list$r_cal_mean),
+      dtype = torch::torch_float(), device = device
+    )$unsqueeze(1L)
+    t_mean_cal <- torch::torch_tensor(
+      mean_vec_cal, dtype = torch::torch_float(), device = device
+    )$unsqueeze(1L)
+    refined_conf <- pigauto_refine_forward(
+      model            = model,
+      X_init           = t_X_eval,
+      t_coords         = t_coords,
+      t_adj            = t_adj,
+      t_obs_to_sp      = t_obs_to_sp,
+      t_D_sq           = t_D_sq,
+      t_MU             = t_MU,
+      t_covariates     = t_covariates,
+      pin_mask         = t_M_obs,
+      refine_steps     = refine_steps,
+      device           = device,
+      blend            = "calibrated",
+      t_w_bm           = t_w_bm_cal,
+      t_w_gnn          = t_w_gnn_cal,
+      t_w_mean         = t_w_mean_cal,
+      t_mean_baseline  = t_mean_cal
+    )
+    delta_cal <- refined_conf$delta_mat
+    fixed_cal <- refined_conf$fixed_mat
+
+    # ---- Post-refine delivered-surface floor (issue #157) -----------------
+    # calibrate_gates() enforces its floor on the PRE-refine calibration
+    # surface (single learned-rs forward).  The refined delta above is the
+    # surface predict() actually delivers (calibrated blend, refine_steps,
+    # val/test hidden).  A gate that legitimately won on the pre-refine
+    # surface can lose to pure BM here — measured +2.0% on the #157
+    # fixture — so the same margin-based floor runs once more on the
+    # refined surface.  Same family policy as calibrate_gates(): the
+    # continuous-family BM comparison uses a relative margin (near-ties
+    # survive, per the 2026-04-29 AVONET Mass case); discrete is strict.
+    # Traits forced by the B2 phylo-signal override are skipped — that
+    # gate already made its own decision.  No extra forward pass is
+    # needed: a closed gate multiplies delta by zero downstream.
+    post_refine_bm_margin <- 0.01  # = calibrate_gates() cal_min_rel_gain / 2
+    for (tm in trait_map) {
+      lc <- tm$latent_cols
+      if (length(gated_latent_cols) > 0L && any(lc %in% gated_latent_cols)) next
+      is_cont <- tm$type %in% c("continuous", "count", "ordinal", "proportion")
+      is_disc <- tm$type %in% c("binary", "categorical", "zi_count")
+      if (!is_cont && !is_disc) next  # multi_proportion: skipped by design
+      rows <- which(val_mask_cal[, lc[1]] & !is.na(X_truth_r[, lc[1]]))
+      if (length(rows) == 0L) next
+      w_tm <- c(calibrated_gates_list$r_cal_bm[lc[1]],
+                calibrated_gates_list$r_cal_gnn[lc[1]],
+                calibrated_gates_list$r_cal_mean[lc[1]])
+      if (w_tm[2] == 0) next  # gate already closed; corners are refine-invariant
+      corner_loss <- function(g) {
+        out <- compute_corner_loss(
+          g, rows, tm, mu_cal, delta_cal, X_truth_r,
+          safety_floor = safety_floor,
+          mean_baseline_per_col = mean_baseline_per_col,
+          fixed_cal = fixed_cal
+        )
+        if (is.finite(out)) out else Inf
+      }
+      lb    <- corner_loss(w_tm)
+      lm_bm <- corner_loss(if (safety_floor) c(1, 0, 0) else 0)
+      lm_mn <- if (safety_floor) corner_loss(c(0, 0, 1)) else Inf
+      bm_threshold <- if (is_cont) lm_bm * (1 + post_refine_bm_margin) else lm_bm + 1e-12
+      if (lb > bm_threshold || lb > lm_mn + 1e-12) {
+        # On ties, BM wins via `<=` (same rule as calibrate_gates()).
+        w_new <- if (lm_bm <= lm_mn) c(1, 0, 0) else c(0, 0, 1)
+        calibrated_gates_list$r_cal_bm[lc]   <- w_new[1]
+        calibrated_gates_list$r_cal_gnn[lc]  <- w_new[2]
+        calibrated_gates_list$r_cal_mean[lc] <- w_new[3]
+        calibrated_gates[lc] <- w_new[2]
+        if (verbose) {
+          message(sprintf(
+            "Post-refine floor (#157): trait %s blend lost to %s on the refined val surface (%.4g > %.4g); gate closed.",
+            tm$name, if (w_new[1] == 1) "pure BM" else "pure MEAN", lb,
+            if (w_new[1] == 1) lm_bm else lm_mn))
+        }
+      }
+    }
+  }
+
+  # ---- Conformal prediction scores (validation set) -----------------------
+  conformal_scores <- NULL
+  if (has_val && has_trait_map && !is.null(calibrated_gates)) {
+    gpu_mem_checkpoint("entering compute_conformal_scores")
+    conformal_scores <- compute_conformal_scores(
+      trait_map        = trait_map,
+      calibrated_gates = calibrated_gates,
+      mu_cal           = mu_cal,
+      delta_cal        = delta_cal,
+      r_cal_bm         = calibrated_gates_list$r_cal_bm,
+      r_cal_gnn        = calibrated_gates_list$r_cal_gnn,
+      r_cal_mean       = calibrated_gates_list$r_cal_mean,
+      mean_baseline_per_col = mean_baseline_per_col,
+      fixed_cal        = fixed_cal,
+      X_truth_r        = X_truth_r,
+      val_mask_mat     = val_mask_conf,
+      method           = conformal_method,
+      bootstrap_B      = conformal_bootstrap_B,
+      # Mondrian-only; ignored by compute_conformal_scores() for other
+      # methods. D_sq is species-level and multi_obs is blocked above, so
+      # M_obs_mat (also species-level here) lines up with it directly.
+      D_sq             = graph$D_sq,
+      obs_mask_mat     = M_obs_mat,
+      verbose          = verbose
+    )
+  }
+  conformal_mondrian <- if (identical(conformal_method, "mondrian")) {
+    attr(conformal_scores, "mondrian")
+  } else {
+    NULL
+  }
+
+  # ---- Final test loss -------------------------------------------------------
+  test_loss <- NA_real_
+  if (!is.null(splits) && length(splits$test_idx) > 0L) {
+    test_mat <- matrix(FALSE, n, p); test_mat[splits$test_idx] <- TRUE
+    t_test   <- torch::torch_tensor(test_mat, dtype = torch::torch_bool(),
+                                    device = device)
+    model$eval()
+    torch::with_no_grad({
+      mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
+      covs0     <- make_covs_tensor(t_MU, mask_ind0, t_covariates)
+      # Use t_X_eval so held-out test cells are not leaked to the model.
+      out0      <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp,
+                         D_sq = t_D_sq)
+      pred0     <- (1 - out0$rs) * t_MU + out0$rs * out0$delta
+      if (!is.null(out0$fixed_effects)) {
+        pred0 <- pred0 + out0$fixed_effects
+      }
+      t_truth_f <- torch::torch_tensor(X_truth, dtype = torch::torch_float(),
+                                       device = device)
+      t_truth_f[t_truth_f$isnan()] <- 0
+    })
+    if (has_trait_map) {
+      test_loss <- composite_val_loss(pred0, t_truth_f, t_test, trait_map)
+    } else {
+      test_loss <- as.numeric(
+        rmse_torch(pred0, t_truth_f, t_test)$cpu()$item()
+      )
+    }
+  }
+
+  # ---- Build result object ---------------------------------------------------
+  model_config <- list(
+    hidden_dim             = hidden_dim,
+    k_eigen                = k_eigen,
+    n_gnn_layers           = n_gnn_layers,
+    gate_cap               = gate_cap,
+    use_attention          = use_attention,
+    use_transformer_blocks = use_transformer_blocks,
+    n_heads                = as.integer(n_heads),
+    ffn_mult               = as.integer(ffn_mult),
+    use_trait_attention    = isTRUE(use_trait_attention),
+    n_trait_heads          = as.integer(n_trait_heads),
+    trait_embed_dim        = as.integer(trait_embed_dim),
+    lambda_mode            = lambda_mode,
+    discrete_lambda      = discrete_lambda,
+    # fit_baseline() returns these (NULL only for baselines built before the
+    # lambda fields existed). GNN-on fits always use object$baseline for prediction (see
+    # predict.pigauto_fit), so these come from `baseline`, not
+    # `baseline_full`.
+    lambda_per_trait       = baseline$lambda_per_trait %||% NULL,
+    lambda_block           = baseline$lambda_block %||% NULL,
+    predict_method_used    = baseline$predict_method_used %||% NULL,
+    predict_method_by_trait = baseline$predict_method_by_trait %||% NULL,
+    # S5c required change 1: per-trait validation-cell counts recording
+    # which cells chose the route ("auto" only).
+    route_val_n            = baseline$route_val_n %||% NULL,
+    score_val_n            = baseline$score_val_n %||% NULL,
+    joint_solver           = joint_solver,
+    joint_refine_iter      = joint_refine_iter,
+    dropout                = dropout,
+    refine_steps           = refine_steps,
+    cal_refine_steps       = as.integer(refine_steps),
+    train_mask_heldout     = TRUE,
+    cov_dim                = cov_dim,
+    input_dim              = p,
+    per_column_rs          = TRUE,
+    n_user_cov             = n_user_cov,
+    seed                   = if (is.null(seed)) NULL else as.integer(seed),
+    gnn                    = TRUE
+  )
+
+  # Move model state to CPU before returning. Otherwise the returned
+  # fit object holds GPU tensor references and the training-time
+  # activations / optimizer state cannot be released by torch's CUDA
+  # caching allocator. At n >= 5000 this keeps ~40 GB live on GPU, and
+  # the downstream predict() path then OOMs on any card < 80 GB. See
+  # GPU bundle jobs 4741993/4741994/4742888/4742889 on 2026-04-21 for
+  # the Vulcan L40S reproducer.
+  gpu_mem_checkpoint("before state_dict CPU move")
+  model_state_cpu <- lapply(model$state_dict(),
+                             function(t) t$detach()$cpu())
+  gpu_mem_checkpoint("after state_dict CPU move (before rm + empty_cache)")
+
+  # Drop all local GPU tensor refs, then force torch's caching
+  # allocator to reclaim by calling cuda_empty_cache().  R's `rm`
+  # removes the bindings; the underlying tensors become unreachable
+  # and torch can release them at the next empty_cache() call.
+  local_gpu_tensors <- grep("^t_", ls(), value = TRUE)
+  if (length(local_gpu_tensors)) rm(list = local_gpu_tensors)
+  rm(model)
+  invisible(gc(full = TRUE, verbose = FALSE))
+  if (torch::cuda_is_available()) {
+    try(torch::cuda_empty_cache(), silent = TRUE)
+  }
+  gpu_mem_checkpoint("end of fit_pigauto (after rm + gc + empty_cache)")
+
+  # Backward-compat: store val_rmse and test_rmse names
+  # (graph$D was stripped earlier, right after tensor creation, so the
+  # graph stored here is already the slim version without the cophenetic
+  # distance matrix.)
+  build_pigauto_fit(
+    model_state    = model_state_cpu,
+    model_config   = model_config,
+    graph          = graph,
+    baseline       = baseline,
+    baseline_full  = baseline_full,
+    norm           = list(
+      means         = data$means,
+      sds           = data$sds,
+      log_transform = data$log_transform
+    ),
+    species_names  = data$species_names,
+    obs_species    = data$obs_species,
+    obs_to_species = data$obs_to_species,
+    # Phase G' (2026-05-01): retain X_scaled so predict.pigauto_fit
+    # can recover original-units observed values for PMM
+    # (match_observed = "pmm").  The matrix is n_obs x p_latent with
+    # NA at originally-missing cells; PMM uses non-NA cells as the
+    # donor pool.  Adds ~8 * n_obs * p_latent bytes to the fit object;
+    # at AVONET full (n=10k, p~7) that's ~600 KB -- negligible.
+    X_scaled       = data$X_scaled,
+    n_species      = n_species,
+    n_obs          = n_obs,
+    multi_obs      = multi_obs,
+    trait_names    = data$trait_names,
+    latent_names   = data$latent_names,
+    trait_map      = trait_map,
+    splits         = splits,
+    history        = history,
+    val_rmse         = best_val,
+    test_rmse        = test_loss,
+    calibrated_gates = calibrated_gates,
+    r_cal      = if (!is.null(calibrated_gates_list))
+                   calibrated_gates_list$r_cal_gnn else NULL,
+    r_cal_bm   = if (!is.null(calibrated_gates_list))
+                   calibrated_gates_list$r_cal_bm  else NULL,
+    r_cal_gnn  = if (!is.null(calibrated_gates_list))
+                   calibrated_gates_list$r_cal_gnn else NULL,
+    r_cal_mean = if (!is.null(calibrated_gates_list))
+                   calibrated_gates_list$r_cal_mean else NULL,
+    mean_baseline_per_col  = mean_baseline_per_col,
+    safety_floor           = safety_floor,
+    phylo_signal_per_trait = phylo_signal_per_trait,
+    phylo_gate_triggered   = phylo_gate_triggered,
+    phylo_signal_method    = phylo_signal_method,
+    phylo_signal_threshold = phylo_signal_threshold,
+    conformal_scores   = conformal_scores,
+    conformal_method   = conformal_method,
+    conformal_mondrian = conformal_mondrian,
+    covariates       = data$covariates,
+    cov_means        = data$cov_means,
+    cov_sds          = data$cov_sds,
+    cov_names        = data$cov_names
+  )
+}
+
+# ---------------------------------------------------------------------------
+# build_pigauto_fit()
+# ---------------------------------------------------------------------------
+#
+# Assembles the pigauto_fit S3 object. Factored out of fit_pigauto() (S1,
+# docs/dev-log/arc/2026-09-18-gnn-off-contract.md) so the GNN-on training
+# path and the gnn = FALSE pure-baseline path build the SAME slot list and
+# cannot drift apart. Not exported; a thin, side-effect-free `structure()`
+# wrapper -- see fit_pigauto()'s roxygen for what each slot means.
+build_pigauto_fit <- function(
+    model_state, model_config, graph, baseline, baseline_full,
+    norm, species_names, obs_species, obs_to_species, X_scaled,
+    n_species, n_obs, multi_obs, trait_names, latent_names, trait_map,
+    splits, history, val_rmse, test_rmse,
+    calibrated_gates, r_cal, r_cal_bm, r_cal_gnn, r_cal_mean,
+    mean_baseline_per_col, safety_floor,
+    phylo_signal_per_trait, phylo_gate_triggered, phylo_signal_method,
+    phylo_signal_threshold,
+    conformal_scores, conformal_method, conformal_mondrian,
+    covariates, cov_means, cov_sds, cov_names
+) {
+  structure(
+    list(
+      model_state    = model_state,
+      model_config   = model_config,
+      graph          = graph,
+      baseline       = baseline,
+      baseline_full  = baseline_full,
+      norm           = norm,
+      species_names  = species_names,
+      obs_species    = obs_species,
+      obs_to_species = obs_to_species,
+      X_scaled       = X_scaled,
+      n_species      = n_species,
+      n_obs          = n_obs,
+      multi_obs      = multi_obs,
+      trait_names    = trait_names,
+      latent_names   = latent_names,
+      trait_map      = trait_map,
+      splits         = splits,
+      history        = history,
+      val_rmse         = val_rmse,
+      test_rmse        = test_rmse,
+      calibrated_gates = calibrated_gates,
+      r_cal      = r_cal,
+      r_cal_bm   = r_cal_bm,
+      r_cal_gnn  = r_cal_gnn,
+      r_cal_mean = r_cal_mean,
+      mean_baseline_per_col  = mean_baseline_per_col,
+      safety_floor           = safety_floor,
+      phylo_signal_per_trait = phylo_signal_per_trait,
+      phylo_gate_triggered   = phylo_gate_triggered,
+      phylo_signal_method    = phylo_signal_method,
+      phylo_signal_threshold = phylo_signal_threshold,
+      conformal_scores   = conformal_scores,
+      conformal_method   = conformal_method,
+      conformal_mondrian = conformal_mondrian,
+      covariates       = covariates,
+      cov_means        = cov_means,
+      cov_sds          = cov_sds,
+      cov_names        = cov_names
+    ),
+    class = "pigauto_fit"
+  )
+}
+
+# ---------------------------------------------------------------------------
+# .pigauto_calibration_val_idx()
+# ---------------------------------------------------------------------------
+#
+# S5c (rose-review.md required change 1): under predict_method = "auto"
+# with real validation cells, `baseline` (fit_baseline()'s "auto" fit) has
+# already split each trait's validation cells into a ROUTE half (used only
+# to choose that trait's route) and a SCORE half
+# (`baseline$score_val_idx`). Gate calibration and conformal scoring must
+# use the SCORE half, not the full validation set -- otherwise the same
+# cells that picked the route also calibrate the gate and score the
+# conformal residuals, making those residuals optimistic (the mechanism
+# the review's finding 1 measured as undercoverage at lambda = 1, small
+# n). Under an explicit "exact"/"per_column" request (no routing decision
+# was made) this returns the full validation set unchanged, matching
+# pre-S5c behaviour exactly.
+#
+# @param splits list (output of make_missing_splits()) or NULL.
+# @param baseline list, fit_baseline()'s return value.
+# @param predict_method character, the top-level resolved request ("auto",
+#   "exact", or "per_column").
+# @return integer vector of linear indices into the n_obs x p_latent
+#   matrix (same format as `splits$val_idx`).
+.pigauto_calibration_val_idx <- function(splits, baseline, predict_method) {
+  if (identical(predict_method, "auto") && !is.null(baseline$score_val_idx) &&
+      all(baseline$score_val_idx %in% splits$val_idx)) {
+    return(baseline$score_val_idx)
+  }
+  splits$val_idx
+}
+
+# ---------------------------------------------------------------------------
+# split_val_cal_conf()
+# ---------------------------------------------------------------------------
+#
+# Splits val-set cells into a CALIBRATION half (used by calibrate_gates() to
+# pick per-trait blend weights) and a CONFORMAL half (used by
+# compute_conformal_scores() to estimate residual quantiles) -- C.3
+# (Opus 2026-04-28); the rationale is at the call site in fit_pigauto().
+# Factored out (S1,
+# docs/dev-log/arc/2026-09-18-gnn-off-contract.md) so the GNN-on and
+# gnn = FALSE paths share the identical halving logic. Not exported.
+#
+# @param val_mask_mat logical n x p matrix, TRUE = val cell.
+# @param conformal_split_val logical; FALSE returns both halves equal to
+#   val_mask_mat (legacy shared-data behaviour).
+# @param min_val_cells integer; a column is only split when it has at least
+#   `2 * min_val_cells` val cells -- below that, both halves get the full
+#   val set for that column (see fit_pigauto()'s roxygen for why).
+# @param seed optional integer; seeds the random half-A/half-B assignment
+#   (via `seed + 23L`), matching fit_pigauto()'s prior inline behaviour.
+# @return list(val_mask_cal, val_mask_conf), each an n x p logical matrix.
+split_val_cal_conf <- function(val_mask_mat, conformal_split_val,
+                                min_val_cells, seed) {
+  n <- nrow(val_mask_mat)
+  p <- ncol(val_mask_mat)
+  if (!isTRUE(conformal_split_val)) {
+    return(list(val_mask_cal = val_mask_mat, val_mask_conf = val_mask_mat))
+  }
+  if (!is.null(seed)) set.seed(seed + 23L)
+  val_mask_cal    <- matrix(FALSE, n, p)
+  val_mask_conf   <- matrix(FALSE, n, p)
+  split_threshold <- 2L * as.integer(min_val_cells)
+  for (jcol in seq_len(p)) {
+    idx_j <- which(val_mask_mat[, jcol])
+    n_j   <- length(idx_j)
+    if (n_j == 0L) next
+    if (n_j < split_threshold) {
+      # Below threshold: do not split -- both halves get the full val
+      # cells.  Documented downside: conformal scores for this column
+      # are post-selected on the gate calibration cells, undercovering
+      # by an amount bounded by the size of the gate-grid search
+      # (small in practice).
+      val_mask_cal[idx_j, jcol]  <- TRUE
+      val_mask_conf[idx_j, jcol] <- TRUE
+      next
+    }
+    cal_n   <- ceiling(n_j / 2)
+    cal_idx <- sample(idx_j, cal_n)
+    val_mask_cal[cal_idx, jcol]                  <- TRUE
+    val_mask_conf[setdiff(idx_j, cal_idx), jcol] <- TRUE
+  }
+  list(val_mask_cal = val_mask_cal, val_mask_conf = val_mask_conf)
+}
+
+# ---------------------------------------------------------------------------
+# compute_safety_floor_means()
+# ---------------------------------------------------------------------------
+#
+# Per-latent-column grand mean on training-observed cells only (excludes
+# val + test hold-out), used as the safety-floor MEAN corner in
+# calibrate_gates(). Works in both single-obs and multi-obs mode
+# (data$X_scaled is obs-level either way). Factored out (S1,
+# docs/dev-log/arc/2026-09-18-gnn-off-contract.md) so the GNN-on and
+# gnn = FALSE paths share the identical computation. Not exported.
+#
+# @param data pigauto_data object (for X_scaled and trait_map).
+# @param val_mask_mat logical n x p matrix, TRUE = val cell.
+# @param splits list (output of make_missing_splits()) or NULL.
+# @param safety_floor logical; FALSE returns NULL (no MEAN corner).
+# @return numeric vector length p (names = latent column names), or NULL.
+compute_safety_floor_means <- function(data, val_mask_mat, splits,
+                                        safety_floor) {
+  if (!safety_floor) return(NULL)
+  p         <- ncol(data$X_scaled)
+  mb        <- numeric(p)
+  latent_nm <- colnames(data$X_scaled)
+  if (!is.null(latent_nm)) names(mb) <- latent_nm
+
+  # Build per-column trait-type lookup by walking trait_map.
+  # multi_proportion CLR columns are treated as "continuous" on the latent
+  # scale (each component is a z-scored CLR value).
+  col_type <- character(p)
+  for (tm_entry in data$trait_map) {
+    for (idx in seq_along(tm_entry$latent_cols)) {
+      lc <- tm_entry$latent_cols[idx]
+      col_type[lc] <- if (tm_entry$type == "zi_count") {
+        if (idx == 1L) "binary" else "zi_mag"
+      } else if (tm_entry$type == "multi_proportion") {
+        "continuous"
+      } else {
+        tm_entry$type
+      }
+    }
+  }
+
+  # Build test mask to exclude test cells (val already in val_mask_mat).
+  n <- nrow(data$X_scaled)
+  test_mask_mat_sf <- matrix(FALSE, n, p)
+  if (!is.null(splits) && length(splits$test_idx) > 0L) {
+    test_mask_mat_sf[splits$test_idx] <- TRUE
+  }
+  # Training-observed = not val, not test, not NA.
+  train_mask_mat <- !val_mask_mat & !test_mask_mat_sf & !is.na(data$X_scaled)
+
+  for (j in seq_len(p)) {
+    mb[j] <- mean_baseline_scalar(
+      x_col      = data$X_scaled[, j],
+      train_mask = train_mask_mat[, j],
+      trait_type = col_type[j]
+    )
+  }
+  # Guard: replace any NA that slipped through with 0 (e.g. columns with
+  # no training observations at all -- degenerate but possible).
+  mb[is.na(mb)] <- 0
+  mb
+}

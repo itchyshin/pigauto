@@ -1,0 +1,23 @@
+{
+  "scope": "Landing check before writing source approval handover; full historical branch inventory remains local because unrelated branches are outside this publication scope",
+  "initial_attempt": "INCONCLUSIVE: restricted PATH lacked Node; no acceptance claim",
+  "corrected_attempt_exit_code": 1,
+  "corrected_attempt": "UNMET: inspected adapter refuses inherited historical ledgers without executing commands. Current source merge and release gates remain open.",
+  "adapter": "handoff-refuse-unowned.mjs",
+  "owned_source": "docs/cran-011-baseline-help at816987fd; pushed; PR238 deliberately open pending merge approval",
+  "owned_evidence": "release/cran-0.11-gate-780c084; PR236 deliberately draft and unmerged; final published head in PR body",
+  "raw_local_receipts": {
+    "handoff-gate-before-checkpoint.log": {
+      "sha256": "d35370cb0145b7294ce216f03d89530255729edb145f425221dc2a152a16cda3",
+      "retained_local_original": "/private/tmp/pigauto-final-closure-20261017/help-fix/handoff-gate-before-checkpoint.log"
+    },
+    "handoff-gate-current-open.log": {
+      "sha256": "d8752d18ae6e0ebfe50591ef6f6ac2ecb191777e8d0e20ce740e927b9d85fc91",
+      "retained_local_original": "/private/tmp/pigauto-final-closure-20261017/help-fix/handoff-gate-current-open.log"
+    },
+    "handoff-gate-current-open.json": {
+      "sha256": "3336b108637d3ece2c180cdc907cd3a77df55755268b2e3fdd43b9c27f983b1b",
+      "retained_local_original": "/private/tmp/pigauto-final-closure-20261017/help-fix/handoff-gate-current-open.json"
+    }
+  }
+}

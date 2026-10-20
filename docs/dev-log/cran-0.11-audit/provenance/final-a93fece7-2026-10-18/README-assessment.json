@@ -1,0 +1,44 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "20689f2600d7090bc528696b761ae0a43be3bf4a9eb8625892aeb3dc2e0398a9",
+  "draft_version": "v2",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Root release driver",
+  "method": "Separate post-draft reading against actual frozen identity, four native raw logs and independent timing readback, MI/novice/vignette/ancillary receipts, current policy, rights disposition, replay amendment and three fresh panel votes.",
+  "genre": "Frozen release evidence report",
+  "coverage": "Whole exact saved draft",
+  "score": 3,
+  "style_status": "assessed",
+  "score_reason": "Concrete release observations with explicit limits; the structured receipt format necessarily repeats scope and identity.",
+  "confidence": "moderate",
+  "confidence_reason": "Editorial self-assessment, with no calibrated human or authorship inference.",
+  "examples": [
+    {
+      "location": "Line 15",
+      "cue": "Concrete observation and its scope are explicit",
+      "impact": "Makes the evidence and remaining limitation visible without inferring acceptance or general scientific validity.",
+      "repair": "no change needed",
+      "line": 15,
+      "quote": "The original compressed archive was checked directly on macOS arm64, Windows release, Windows devel and Linux release. All four native checks reported Status: OK with no errors, warnings or NOTEs. Each used CRAN settings, all 29 declared dependencies and full PDF/HTML manual checks. Each native test log records 3,195 passes, zero failures, 161 fixture warnings and 86 skips. Those fixture diagnostics are distinct from the final R CMD check status."
+    },
+    {
+      "location": "Line 27",
+      "cue": "Concrete observation and its scope are explicit",
+      "impact": "Makes the evidence and remaining limitation visible without inferring acceptance or general scientific validity.",
+      "repair": "no change needed",
+      "line": 27,
+      "quote": "Supporting captures are separate from native check timing. Two successful capture records survive: A has 171.199674 seconds supervisor and 168.258 seconds diagnostic; B has 167.394193 and 164.807 seconds. Two failed setup attempts also remain. The initial derived verdict incorrectly combined B's supervisor time with A's diagnostic time. The original derived files and the correction are retained in `actual-warning-audit/timing-provenance-amendment/`. The audited replay JSON is A's record. Both surviving object copies have the same audited RDS bytes, so their unique capture attribution cannot be determined. Overwritten concurrent history may be incomplete; no claim of an exact invocation total is made. The content audit remains bound to its input hashes, and the native checks were not changed or repeated."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "No new scientific result or default change is asserted; bounded checks do not become general recovery or nominal-coverage claims.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Archive identity, status, timing measures, counts, disclosures and approvals compared with the actual retained sources and current state; incomplete replay history is explicit.",
+  "references_gate": "pass",
+  "references_gate_reason": "Exact DOI identity checked against retained current primary Crossref metadata; policy files and dated rights records are distinguished from licence grants or legal opinions.",
+  "date": "2026-10-18T07:51:18.003763+00:00",
+  "calibration_status": "Protocol examples and earlier technical receipts were seen; no held-out evaluation.",
+  "interpretation": "perceived_style_not_authorship"
+}

@@ -1,0 +1,209 @@
+{
+  "amendment": "timing and capture provenance correction",
+  "amended_utc_local_record": "2026-10-18",
+  "scope": "Corrects capture-run count and timing provenance in derived receipt only. Does not change the warning-object audit result or native platform evidence.",
+  "archive_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "successful_captures": [
+    {
+      "name": "successful capture A",
+      "supervisor": {
+        "command": [
+          "Rscript",
+          "--vanilla",
+          "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/capture.R",
+          "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay"
+        ],
+        "cwd": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay",
+        "elapsed_seconds": 171.19967400000314,
+        "timeout_seconds": 1200,
+        "exit_code": 0,
+        "process_group": 94837,
+        "killed_own_group_on_timeout": false,
+        "capture_script_sha256": "99d01b0fe7bf96bcf2298d6111fde9b2afb8d8821bf38c41a61959aca38ecc74"
+      },
+      "supervisor_file": {
+        "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/attempts/attempt-03-supervisor.json",
+        "sha256": "39c9908db1e4e8db6fee2126eecec108680d20c819fcacdb16a31d2244dc560b",
+        "size_bytes": 568
+      },
+      "log": {
+        "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/attempts/attempt-03-capture.log",
+        "sha256": "48f9938cc20133be2aeba43377b1cbc8ca51738acdce5d6e1746f335a11e4e73",
+        "size_bytes": 13101
+      },
+      "raw_json_used_by_local_audit": {
+        "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-replay.json",
+        "sha256": "c1f759a30a97195184e7b52b40363bbd1a5fe67062c3a6fc70f6ffe3fe65713b",
+        "size_bytes": 543
+      },
+      "raw_objects_current_and_audit_input": {
+        "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-objects.rds",
+        "sha256": "a01ed64252886a8f4f2bb0c5bb817f58b908c0d008f0c70d8f9f229e5520e852",
+        "size_bytes": 1618836
+      },
+      "timing": {
+        "supervisor_elapsed_seconds": 171.19967400000314,
+        "diagnostic_elapsed_seconds": 168.258
+      }
+    },
+    {
+      "name": "successful capture B",
+      "supervisor": {
+        "command": [
+          "Rscript",
+          "--vanilla",
+          "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/capture.R",
+          "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay"
+        ],
+        "cwd": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay",
+        "elapsed_seconds": 167.39419266601908,
+        "timeout_seconds": 1200,
+        "exit_code": 0,
+        "process_group": 3616,
+        "killed_own_group_on_timeout": false,
+        "capture_script_sha256": "99d01b0fe7bf96bcf2298d6111fde9b2afb8d8821bf38c41a61959aca38ecc74"
+      },
+      "supervisor_file": {
+        "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/supervisor.json",
+        "sha256": "e2ae6e1f39ba49b86fc0fffabab19b97d26348af67d257b53d9fdf21041680af",
+        "size_bytes": 567
+      },
+      "log": {
+        "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/capture.log",
+        "sha256": "984e4e509a06af70427a78c044d7b8d3acb2cf1625426db1dd7b707c9003112e",
+        "size_bytes": 13095
+      },
+      "raw_json_current": {
+        "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/warning-replay.json",
+        "sha256": "db229812e0522b0507240bc389f14fadf5733ffb455462dc7c563c3758078b5f",
+        "size_bytes": 340
+      },
+      "raw_objects_current": {
+        "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/warning-objects.rds",
+        "sha256": "a01ed64252886a8f4f2bb0c5bb817f58b908c0d008f0c70d8f9f229e5520e852",
+        "size_bytes": 1618836
+      },
+      "timing": {
+        "supervisor_elapsed_seconds": 167.39419266601908,
+        "diagnostic_elapsed_seconds": 164.807
+      }
+    }
+  ],
+  "failed_setup_attempts": [
+    {
+      "attempt": 1,
+      "exit_code": 1,
+      "elapsed_seconds": 0.21335612499387935,
+      "failure": "testthat package unavailable on the initial restricted library path",
+      "evidence": {
+        "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/attempts/attempt-01-capture.log",
+        "sha256": "04135d064644dd40fcb63d45df9baec1677d01ffffc697e01074cee937fed808",
+        "size_bytes": 132
+      }
+    },
+    {
+      "attempt": 2,
+      "exit_code": 1,
+      "elapsed_seconds": 1.6431184580142144,
+      "failure": "capture working directory absent because copied test tree was one level too shallow",
+      "evidence": {
+        "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/attempts/attempt-02-capture.log",
+        "sha256": "47fbf7810209fcafe6895551a899e9df2a67ebbde07ef3f6b62be4b7a97578d8",
+        "size_bytes": 117
+      }
+    }
+  ],
+  "audited_local_input_binding": {
+    "audit_record_status": "PASS",
+    "warning_audit_status": "PASS",
+    "native_counts": {
+      "fail": 0,
+      "warnings": 161,
+      "skips": 86,
+      "pass": 3195
+    },
+    "input_sha256": {
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-replay.json": "c1f759a30a97195184e7b52b40363bbd1a5fe67062c3a6fc70f6ffe3fe65713b",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-details.csv": "4029dd8a615f8363cde3198b2d6526a16fad53924b6671162f6f019d192954e4",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-objects.rds": "a01ed64252886a8f4f2bb0c5bb817f58b908c0d008f0c70d8f9f229e5520e852",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-session.txt": "0d1c3b0222d789fcc1e0903c4a2075a1a8eca8af798d084e4d96853ddb8b79e5",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/check-command.txt": "54499b6b550a5849ab94643f931013466f898bcf5500e993cc7cd9ae995c587a",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/check-environment.txt": "f22ddc5feb391d728ea44c3052c4699ee41b6c4b9343b3a1968313d04cde5368",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/check-exit.txt": "51450b4515a2b080cff9cb39c3a1911ac49f51f2d0e6d1abdc3cfb629695e3b4",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/frozen-check/pigauto.Rcheck/00check.log": "a031c1eea52c73ebb6c24289c4fc250a831979b35d3c8d143bb41e3f4316bba4",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/frozen-check/pigauto.Rcheck/tests/testthat.Rout": "f28f4671ec2cb4dc9f6ef10a6a4005fa1a87017a289e62f895d0ab77314635df",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/frozen-artifact/pigauto_0.11.0.tar.gz": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb"
+    },
+    "replay_json_used": {
+      "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-replay.json",
+      "sha256": "c1f759a30a97195184e7b52b40363bbd1a5fe67062c3a6fc70f6ffe3fe65713b",
+      "size_bytes": 543
+    },
+    "warning_objects_used": {
+      "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-objects.rds",
+      "sha256": "a01ed64252886a8f4f2bb0c5bb817f58b908c0d008f0c70d8f9f229e5520e852",
+      "size_bytes": 1618836
+    },
+    "same_warning_rds_bytes_in_capture_B": true,
+    "unique_rds_run_attribution": "not distinguishable by SHA-256 because both surviving capture object copies are byte-identical"
+  },
+  "timing_correction": "There were two successful captures. Capture A pairs 171.199674 s supervisor time with 168.258 s diagnostic time. Capture B pairs 167.394193 s supervisor time with 164.807 s diagnostic time. The previous current verdict accidentally combined capture B supervisor time with capture A diagnostic time; that pair is invalid. Both coherent pairs are retained; no single replacement timing is selected.",
+  "conclusion": "Warning identity audit remains PASS for the exact audited inputs and all four cells. Timing provenance is corrected; no replay was performed during this amendment. The exact raw warning RDS bytes used in the local audit are hash-bound, and are byte-identical in both retained successful capture outputs; unique process attribution of those identical bytes is not available.",
+  "limitations": [
+    "The auditor receipt does not independently hash-bind the local replay JSON to the capture supervisor file; the amendment binds the surviving exact evidence files and records the two-run discrepancy.",
+    "No claim is made that only two capture invocations occurred; two successful diagnostic capture records and two failed setup records are retained, while overwritten concurrent invocation history may be incomplete."
+  ],
+  "hashes": {
+    "audit_json": {
+      "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/actual-warning-audit/actual-successor-a93fece7/audit.json",
+      "sha256": "f8c07ebfc623e15a0a2a2ed6c2e1c0ad8997b8544ac565ab5b347ff2f5cdba77",
+      "size_bytes": 26191
+    },
+    "amended_verdict_before": {
+      "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/actual-warning-audit/timing-provenance-amendment/verdict.json.before-amendment",
+      "sha256": "d16f76b0140ec82b2858679c1198e5742898d5ab7734e6954bf17d23c82a7d55",
+      "size_bytes": 6530
+    },
+    "attemptA_log": {
+      "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/attempts/attempt-03-capture.log",
+      "sha256": "48f9938cc20133be2aeba43377b1cbc8ca51738acdce5d6e1746f335a11e4e73",
+      "size_bytes": 13101
+    },
+    "attemptA_supervisor": {
+      "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/attempts/attempt-03-supervisor.json",
+      "sha256": "39c9908db1e4e8db6fee2126eecec108680d20c819fcacdb16a31d2244dc560b",
+      "size_bytes": 568
+    },
+    "attemptB_log": {
+      "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/capture.log",
+      "sha256": "984e4e509a06af70427a78c044d7b8d3acb2cf1625426db1dd7b707c9003112e",
+      "size_bytes": 13095
+    },
+    "attemptB_supervisor": {
+      "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/supervisor.json",
+      "sha256": "e2ae6e1f39ba49b86fc0fffabab19b97d26348af67d257b53d9fdf21041680af",
+      "size_bytes": 567
+    },
+    "A_native_evidence_json": {
+      "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-replay.json",
+      "sha256": "c1f759a30a97195184e7b52b40363bbd1a5fe67062c3a6fc70f6ffe3fe65713b",
+      "size_bytes": 543
+    },
+    "B_current_json": {
+      "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/warning-replay.json",
+      "sha256": "db229812e0522b0507240bc389f14fadf5733ffb455462dc7c563c3758078b5f",
+      "size_bytes": 340
+    },
+    "A_audit_rds": {
+      "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/warning-objects.rds",
+      "sha256": "a01ed64252886a8f4f2bb0c5bb817f58b908c0d008f0c70d8f9f229e5520e852",
+      "size_bytes": 1618836
+    },
+    "B_current_rds": {
+      "path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/warning-objects.rds",
+      "sha256": "a01ed64252886a8f4f2bb0c5bb817f58b908c0d008f0c70d8f9f229e5520e852",
+      "size_bytes": 1618836
+    }
+  }
+}

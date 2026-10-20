@@ -1,0 +1,31 @@
+{
+  "archive_sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
+  "current_head": "a5500712b771cb4e34401fb5d9b7681a13219cf4",
+  "byte_identical_regular_files": 215,
+  "different_common_files": [
+    "DESCRIPTION"
+  ],
+  "build_generated_files_not_in_checkout": [
+    "build/partial.rdb",
+    "build/vignette.rds",
+    "inst/doc/common-pitfalls.html",
+    "inst/doc/common-pitfalls.R",
+    "inst/doc/common-pitfalls.Rmd",
+    "inst/doc/getting-started.html",
+    "inst/doc/getting-started.R",
+    "inst/doc/getting-started.Rmd",
+    "inst/doc/gnn-architecture.html",
+    "inst/doc/gnn-architecture.R",
+    "inst/doc/gnn-architecture.Rmd",
+    "inst/doc/mixed-types.html",
+    "inst/doc/mixed-types.R",
+    "inst/doc/mixed-types.Rmd",
+    "inst/doc/multiple-imputation.html",
+    "inst/doc/multiple-imputation.R",
+    "inst/doc/multiple-imputation.Rmd",
+    "inst/doc/tree-uncertainty.html",
+    "inst/doc/tree-uncertainty.R",
+    "inst/doc/tree-uncertainty.Rmd"
+  ],
+  "scope": "Reconfirms checked-out package files match frozen source, except expected built DESCRIPTION normalization. Workflow/scripts/dev-log remain build-excluded."
+}

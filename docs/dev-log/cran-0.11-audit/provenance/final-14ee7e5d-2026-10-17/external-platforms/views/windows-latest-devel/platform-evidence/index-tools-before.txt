@@ -1,0 +1,14 @@
+$paths
+                                                                    pdflatex 
+"C:\\Users\\RUNNER~1\\AppData\\Roaming\\TinyTeX\\bin\\windows\\pdflatex.exe" 
+                                                                   makeindex 
+                                                                          "" 
+                                                                    texi2dvi 
+                                                                          "" 
+                                                                      texify 
+                                                                          "" 
+
+$environment
+     MAKEINDEX R_MAKEINDEXCMD  R_TEXI2DVICMD 
+            ""             ""             "" 
+

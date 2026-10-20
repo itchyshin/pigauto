@@ -1,0 +1,81 @@
+diff --git a/R/impute.R b/R/impute.R
+index 129d0166..abf4d532 100644
+--- a/R/impute.R
++++ b/R/impute.R
+@@ -1,7 +1,9 @@
+ #' Impute missing phylogenetic traits (convenience wrapper)
+ #'
+-#' One-call interface to the full pigauto pipeline: preprocessing, baseline
+-#' fitting, GNN training, and prediction.  For fine-grained control, use the
++#' One-call interface for preprocessing, phylogenetic baseline fitting, and
++#' prediction. The default \code{gnn = FALSE} uses the baseline alone. Set
++#' \code{gnn = TRUE} to also train a GNN and calibrate its contribution.
++#' For fine-grained control, use the
+ #' individual functions (\code{\link{preprocess_traits}},
+ #' \code{\link{fit_baseline}}, \code{\link{fit_pigauto}}, etc.) directly.
+ #'
+diff --git a/R/report.R b/R/report.R
+index f242f724..2572b743 100644
+--- a/R/report.R
++++ b/R/report.R
+@@ -1,9 +1,11 @@
+-#' Generate an HTML benchmark report from a pigauto fit
++#' Generate an HTML imputation report from a pigauto fit
+ #'
+ #' Produces an HTML file with interactive charts (loading Chart.js from its
+-#' public CDN) comparing the GNN against the phylogenetic baseline. The report
+-#' includes per-trait metrics, gate values, held-out diagnostic conformal
+-#' coverage, and training history.
++#' public CDN). For fits created with the default \code{gnn = FALSE}, the
++#' report describes baseline-only imputation. For fits created with
++#' \code{gnn = TRUE}, it also compares the GNN against the phylogenetic
++#' baseline and includes training history. Per-trait metrics, gate values,
++#' and held-out diagnostic conformal coverage are included when available.
+ #'
+ #' @param fit A \code{pigauto_fit} object (or a \code{pigauto_result} from
+ #'   \code{\link{impute}}).
+diff --git a/man/impute.Rd b/man/impute.Rd
+index 7c7e7979..8d8e8de6 100644
+--- a/man/impute.Rd
++++ b/man/impute.Rd
+@@ -395,8 +395,10 @@ conformal intervals.}
+ }
+ }
+ \description{
+-One-call interface to the full pigauto pipeline: preprocessing, baseline
+-fitting, GNN training, and prediction.  For fine-grained control, use the
++One-call interface for preprocessing, phylogenetic baseline fitting, and
++prediction. The default \code{gnn = FALSE} uses the baseline alone. Set
++\code{gnn = TRUE} to also train a GNN and calibrate its contribution.
++For fine-grained control, use the
+ individual functions (\code{\link{preprocess_traits}},
+ \code{\link{fit_baseline}}, \code{\link{fit_pigauto}}, etc.) directly.
+ }
+diff --git a/man/pigauto_report.Rd b/man/pigauto_report.Rd
+index fb34b6d6..b4e368d8 100644
+--- a/man/pigauto_report.Rd
++++ b/man/pigauto_report.Rd
+@@ -2,7 +2,7 @@
+ % Please edit documentation in R/report.R
+ \name{pigauto_report}
+ \alias{pigauto_report}
+-\title{Generate an HTML benchmark report from a pigauto fit}
++\title{Generate an HTML imputation report from a pigauto fit}
+ \usage{
+ pigauto_report(
+   fit,
+@@ -38,9 +38,11 @@ The output path (invisibly).
+ }
+ \description{
+ Produces an HTML file with interactive charts (loading Chart.js from its
+-public CDN) comparing the GNN against the phylogenetic baseline. The report
+-includes per-trait metrics, gate values, held-out diagnostic conformal
+-coverage, and training history.
++public CDN). For fits created with the default \code{gnn = FALSE}, the
++report describes baseline-only imputation. For fits created with
++\code{gnn = TRUE}, it also compares the GNN against the phylogenetic
++baseline and includes training history. Per-trait metrics, gate values,
++and held-out diagnostic conformal coverage are included when available.
+ }
+ \examples{
+ \donttest{

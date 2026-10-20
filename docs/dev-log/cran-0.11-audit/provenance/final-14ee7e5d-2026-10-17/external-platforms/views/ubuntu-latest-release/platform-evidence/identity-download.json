@@ -1,0 +1,14 @@
+{
+  "archive": "/home/runner/work/pigauto/pigauto/frozen-artifact/pigauto_0.11.0.tar.gz",
+  "sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "size_bytes": 5137648,
+  "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+  "archive_entries": 250,
+  "package": "pigauto",
+  "version": "0.11.0",
+  "phase": "download",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "workflow_sha": "e94e40a2f66a7f27dcc69b515d762d69c6eadf66",
+  "run_id": "39082452558",
+  "run_attempt": "1"
+}

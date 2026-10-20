@@ -1,0 +1,56 @@
+{
+  "verdict": "PASS",
+  "scope": "Bounded local source-site verification for the committed four-file baseline-default help correction; not release-archive, merged-main, or production-site validation.",
+  "source_commit": "816987fd160c1d2c5c58b020b07357ff17c077e5",
+  "source_pr": 238,
+  "build_exit_code": 0,
+  "site_root": "/private/tmp/pigauto-cran011-site-816987f.DEUFDP/_site",
+  "build_log": "/private/tmp/pigauto-final-closure-20261017/help-fix/site-review/site-build.log",
+  "crawl_log": "/private/tmp/pigauto-final-closure-20261017/help-fix/site-review/site-crawl.log",
+  "first_attempt": {
+    "exit_code": 127,
+    "reason": "Rscript was not found because /usr/local/bin was omitted from the restricted PATH",
+    "log": "/private/tmp/pigauto-final-closure-20261017/help-fix/site-review/site-build-first-attempt.log",
+    "resolved_by": "Rerun with /usr/bin first for CLT git and /usr/local/bin included for Rscript; same source commit and builder"
+  },
+  "execution": {
+    "command": "bash script/cran-0.11-site/build-release-site.sh",
+    "estimated_minutes": "5-10",
+    "hard_cap_minutes": 15,
+    "successful_attempt_elapsed_minutes": "approximately 6",
+    "killed_for_timeout": false,
+    "threads": 1,
+    "cache_source": "/private/tmp/pigauto-final-closure-20261017/site-source/_site"
+  },
+  "site_counts": {
+    "html_pages": 62,
+    "local_references_checked": 3588,
+    "retired_pages": 34,
+    "crawl_errors": 0,
+    "search_entries": 614,
+    "sitemap_locations": 62,
+    "retired_simulation_routes_absent": true
+  },
+  "pages_reviewed": [
+    "http://127.0.0.1:8765/reference/impute.html",
+    "http://127.0.0.1:8765/reference/pigauto_report.html",
+    "http://127.0.0.1:8765/articles/getting-started.html"
+  ],
+  "page_findings": [
+    "impute help says gnn=FALSE is the baseline-only default and gnn=TRUE opts into training and calibration; rendered usage shows gnn=FALSE",
+    "pigauto_report help accurately describes baseline-only default reports and GNN-specific comparison/history when gnn=TRUE",
+    "adjacent Getting Started guidance agrees with the default, labels GNN training opt-in, and limits torch installation/runtime guidance to gnn=TRUE",
+    "body text and code are readable without overlap at 1200-pixel viewport; long reference titles wrap beside logo but remain legible"
+  ],
+  "local_server_stop_confirmation": "Temporary Python server bound to 127.0.0.1:8765; stopped with Ctrl-C and process exited 0.",
+  "limitations": [
+    "Source-branch and local site evidence only; no new tarball or validation of the withdrawn 14ee archive.",
+    "No R CMD check, source-CI completion, merge, live-site check, or production deployment.",
+    "Visual screenshots were inspected in Chrome but no image files were exported."
+  ],
+  "log_sha256": {
+    "site-build.log": "3d57f9a73a78524df55ca0c4b48862eea6caea6e61cf3bfa4f46a4b8732fc6e8",
+    "site-crawl.log": "1bf804fb25425e4bbe6138f82646bb8c323a79094ae352ea399f41790e765128",
+    "site-build-first-attempt.log": "9b8ea3615aed619c40e5ff7ce4b1f0bbd327e3da11a7867ae8ea5c5e5f5c3e51"
+  }
+}

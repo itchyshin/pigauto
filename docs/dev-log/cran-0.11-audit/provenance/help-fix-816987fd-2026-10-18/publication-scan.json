@@ -1,0 +1,8 @@
+{
+  "scope": "All current predecessor/help packet regular files and retained tar/gzip member contents; pattern-based scan only, not general privacy certification",
+  "files_scanned": 411,
+  "objects_scanned_including_unpacked": 727,
+  "file_bytes": 15285737,
+  "credential_pattern_hits": 0,
+  "symlinks": 0
+}

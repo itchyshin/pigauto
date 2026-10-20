@@ -1,0 +1,16 @@
+{
+  "scope": "Preserved predecessor raw/derived evidence staged before final help packet; generated evidence bytes must not be normalized to satisfy a source whitespace check",
+  "findings": 1955,
+  "file_types": {
+    ".Rout": 991,
+    ".txt": 313,
+    ".timings": 266,
+    ".csv": 199,
+    ".log": 186
+  },
+  "authored_wrapper_check_exit": 0,
+  "staged_blob_worktree_comparisons": 339,
+  "staged_blob_mismatches": 0,
+  "full_diagnostic_path": "/private/tmp/pigauto-final-closure-20261017/help-fix/staged-raw-whitespace.log",
+  "full_diagnostic_sha256": "93cc296dd4f1f74ec5dddb5b0d906064acebe44729efe09e6d17c9d2753e41f7"
+}

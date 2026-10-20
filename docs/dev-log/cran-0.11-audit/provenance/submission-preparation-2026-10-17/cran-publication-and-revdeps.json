@@ -1,0 +1,6 @@
+{
+  "version": "0.10.0",
+  "reverse_dependencies": [],
+  "records": 25421,
+  "fields": ["Depends", "Imports", "LinkingTo", "Suggests", "Enhances"]
+}

@@ -1,0 +1,13 @@
+{
+  "scope": "Provisional source install, not a frozen release archive",
+  "package_path": "/private/tmp/pigauto-final-closure-20261017/help-fix/installed-library/pigauto",
+  "version": "0.11.0",
+  "gnn_default": false,
+  "configured_gnn": false,
+  "input_missing": 2,
+  "output_missing": 0,
+  "observed_values_and_classes_preserved": true,
+  "browser_requests": "pigauto_report.html",
+  "browser_scope": "Suppressed only in this headless R process; no browser or extension settings changed",
+  "seed": 20261018
+}

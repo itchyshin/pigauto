@@ -1,0 +1,32 @@
+{
+  "source_commit": "816987fd160c1d2c5c58b020b07357ff17c077e5",
+  "site_root": "/private/tmp/pigauto-cran011-site-816987f.DEUFDP/_site",
+  "bounded_rendered_files": {
+    "reference/impute.html": {
+      "sha256": "d5a548a91d0b68b2bd73386fcf832409281bb7f58d024b62c839cf1ec35fc2be",
+      "size_bytes": 47712,
+      "retained_gzip": "rendered-samples/reference--impute.html.gz"
+    },
+    "reference/pigauto_report.html": {
+      "sha256": "e98b4e317c033ce7a399a2f5a65bb79c002d01b980b914c0dfbc6aef98d5031a",
+      "size_bytes": 13784,
+      "retained_gzip": "rendered-samples/reference--pigauto_report.html.gz"
+    },
+    "articles/getting-started.html": {
+      "sha256": "5f74800c6ae9f57bf64a24a95a1fba8f70cbd3714fb46c0a57106675fb444ed6",
+      "size_bytes": 70290,
+      "retained_gzip": "rendered-samples/articles--getting-started.html.gz"
+    },
+    "search.json": {
+      "sha256": "ce54d60ddbcb1067aa9d7fcf5dbe5f35bfa1863c3be3dfa70b45fcdcdf2330a9",
+      "size_bytes": 537604,
+      "retained_gzip": "rendered-samples/search.json.gz"
+    },
+    "sitemap.xml": {
+      "sha256": "7e3baec137cd33c41080be51cf5627de369055395a4af0b21048c4dd75ef9945",
+      "size_bytes": 5471,
+      "retained_gzip": "rendered-samples/sitemap.xml.gz"
+    }
+  },
+  "scope": "Independent Rose visual receipt plus root local-file identities; live deployment still pending"
+}

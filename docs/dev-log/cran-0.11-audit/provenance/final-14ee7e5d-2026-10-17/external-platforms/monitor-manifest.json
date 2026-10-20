@@ -1,0 +1,44 @@
+[
+  {
+    "copy": "monitor-originals/00-closure-receipt.txt",
+    "sha256": "39835439bf5bd4f6827aaac622c44cea42093433c5838da5b198ec30b6b5e7af",
+    "size_bytes": 2647,
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/closure-receipt.txt"
+  },
+  {
+    "copy": "monitor-originals/01-verify-results.out",
+    "sha256": "7633f58fbbdefb3c225bc07b890b9d835863814ab819c3189e842a90338faa7f",
+    "size_bytes": 2488,
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/verify-results.out"
+  },
+  {
+    "copy": "monitor-originals/02-root-final-direct-reverify.log",
+    "sha256": "7633f58fbbdefb3c225bc07b890b9d835863814ab819c3189e842a90338faa7f",
+    "size_bytes": 2488,
+    "source": "/private/tmp/pigauto-final-closure-20261017/root-final-direct-reverify.log"
+  },
+  {
+    "copy": "monitor-originals/03-run.json",
+    "sha256": "f6e8cb4322870456df275619f20d8c6b6f7556f013f9f75272b55a382a526120",
+    "size_bytes": 12780,
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-platform-primary-metadata/run.json"
+  },
+  {
+    "copy": "monitor-originals/04-jobs.json",
+    "sha256": "a46ca11f201823b36dfe9a5f131b94d32a0f2d1ea01c308c336fe8c7b3f0c601",
+    "size_bytes": 13480,
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-platform-primary-metadata/jobs.json"
+  },
+  {
+    "copy": "monitor-originals/05-artifacts.json",
+    "sha256": "8542b3b1047718d1aa481323c3b4d4df49134e597204abe382cffd5f1679f223",
+    "size_bytes": 2209,
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-platform-primary-metadata/artifacts.json"
+  },
+  {
+    "copy": "monitor-originals/06-snapshot.json",
+    "sha256": "e0224e37871302d6f19978da3348de9b742157615ad87bdd548db5de2be70410",
+    "size_bytes": 202,
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-platform-primary-metadata/snapshot.json"
+  }
+]

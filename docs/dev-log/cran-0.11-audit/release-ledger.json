@@ -2,219 +2,168 @@
   "package": "pigauto",
   "version": "0.11.0",
   "release_type": "update",
+  "status_claim": "confirmed",
+  "next_unproven_rung": "incoming-passed",
+  "audit_verdict": "SUBMITTED_AND_CONFIRMED_CRAN_REVIEW_PENDING",
+  "artifact": {
+    "sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "size_bytes": 5137837,
+    "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+    "clean_worktree": true,
+    "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+    "archive_entries": 250,
+    "forbidden_entries": [],
+    "path": "/Users/z3437171/.codex/artifacts/pigauto-cran-0.11.0/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/pigauto_0.11.0.tar.gz",
+    "original_checked_path": "/private/tmp/pigauto-release-candidate/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/pigauto_0.11.0.tar.gz",
+    "inventory_evidence": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/inventory.txt"
+    },
+    "current_candidate": true,
+    "state": "Frozen successor; four native checks StatusOK; final panel pending"
+  },
   "profile": {
     "compiled_code": false,
     "reverse_dependencies": false,
     "system_or_external_services": true,
     "large_data_or_vignettes": true
   },
-  "artifact": {
-    "state": "historical_pre_PR234_candidate_checks_complete_final_candidate_pending_source_and_site_correction",
-    "filename": "pigauto_0.11.0.tar.gz",
-    "sha256": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f",
-    "size_bytes": 5142383,
-    "archive_entries": 251,
-    "inventory_sha256": "3934bd7d60734627060bd952980db374541890428d42499cae73e62e48a1a2f6",
-    "source_commit": "5e46c46b6970bf153a3b4bd00d55c9ace69225b0",
-    "frozen_path": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/pigauto_0.11.0.tar.gz",
-    "path": "/private/tmp/pigauto-release-candidate/sha256-4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f/pigauto_0.11.0.tar.gz",
-    "clean_worktree": true,
-    "clean_worktree_evidence": {
-      "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-final-tarball-freeze-2026-10-15.json"
-    },
-    "inventory_evidence": {
-      "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-final-tarball-inventory-2026-10-15.txt"
-    },
-    "forbidden_entries": []
-  },
   "evidence": {
     "product_contract": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/GATES.md"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/README.md"
     },
     "rights_and_consent": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/rights-and-policy.md"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/README.md"
     },
     "current_cran_policy": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/after-task-2026-10-08-g0-refresh.md"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/policy-refresh/receipt.json"
     },
     "rendered_site": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/GATES.md"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/site/verdict.json"
     },
     "local_as_cran": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-final-as-cran-network-block-2026-10-15.log"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/native/macos-arm64/Rcheck/00check.log"
     },
     "incoming_feasibility": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-final-as-cran-network-block-2026-10-15.log"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/native-platform-summary.json"
     },
     "installed_package": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-final-mi-matrix-2026-10-15.json"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/installed-novice/verdict.json"
     },
     "timing": {
       "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-final-offline-check-2026-10-15.log"
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/native-platform-summary.json"
     },
-    "local_check_status": "offline_exact_tarball_OK;as_cran_incoming_blocked_by_DNS",
-    "local_check_log": "provenance/post-merge-final-offline-check-2026-10-15.log",
-    "local_check_log_sha256": "b4717df63e46a61fb125a6878c04090666b11a1caef2748e65f594fd15246341",
-    "testthat_output": "provenance/post-merge-testthat-macos.Rout",
-    "windows_results_bound_to_hash": false,
-    "birdtree_redistribution_rights": "maintainer_directly_confirmed_use_with_citation_and_credit;no_separate_published_terms_identified;not_an_independent_legal_opinion",
-    "birdtree_rights_basis": {
-      "maintainer_warranty": "Shinichi directly confirmed in this task that the trees may be used with citation and credit; recorded as the maintainer authorization and warranty for this package release.",
-      "published_redistribution_terms": "not_found_on_reviewed_birdtree_pages",
-      "notice_distinction": "inst/NOTICE distinguishes BirdTree data from the megatrees software licence",
-      "exact_tarball_inspection": "passed for current hash 4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f; NOTICE and all six shipped R data-object hashes recalculated in provenance/post-merge-final-artifact-identity-2026-10-15.json; hashes match the prior candidate, but matching bytes do not establish third-party redistribution terms"
+    "platform_matrix": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/native/direct-verification.log"
     },
-    "exact_hash_independent_panel": "pending_for_4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f",
-    "local_check_command": "env -u NOT_CRAN _R_CHECK_FORCE_SUGGESTS_=true R CMD check --run-donttest --timings exact frozen tarball; separate --as-cran attempt stopped at incoming feasibility due DNS",
-    "local_check_platform": "macOS arm64, R 4.6.0",
-    "testthat_output_sha256": "2f97450cb9b7eebbf4c89d0ece75b59f3447f778382901294d916f2e9db29613",
-    "testthat_summary": {
-      "pass": 3190,
-      "fail": 0,
-      "warn": 161,
-      "skip": 86
+    "external_logs": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/native/server-digest-binding.json"
     },
-    "win_builder_upload_state": "older_hash_unbound_R_release_and_R_devel_logs_report_errors;no_checksum_bound_results_for_final_candidate",
-    "site_deployment_commit": "5e46c46b6970bf153a3b4bd00d55c9ace69225b0",
-    "site_deployment_run": "38099234402",
-    "site_retirement_check": "Pat_independently_verified_44_retired_routes_404_62_sitemap_routes_200_613_search_entries_no_retired_target;getting_started_reader_mismatch_found_PR234_pending",
-    "site_g7_status": "retirement_controls_pass_reader_consistency_not_ready_pending_PR234_merge_and_redeploy",
-    "site_verifier_source_sha256": "fbba18e851bad34fd6d22fcf803bdd04fd1730632a84243ada98aab2d77e7a15",
-    "site_retired_routes_sha256": "5414f6cb69e9d140c38d0a6308f8e0ddbe8952834eea01b6b861a78eecb807e1",
-    "site_retained_routes_sha256": "7288c1c2984c760f11a672f406311016ccefd193bc449402a4bbd645038f8ff1",
-    "site_discovery_sha256": "2db884b26493dc295846bf51f9a9f5c8c29b63860edacafc55fb609285d46262",
-    "site_verification_log_sha256": "7f8eee37739f522088bdd11b3975dcc9c1d204a3a433c1af7995e61bca04f944",
-    "site_verifier_tests_sha256": "33060fd73862c5e1af97335504d5b45211fce6d229657f556d8deceeadc52ce4",
-    "win_builder_logs": {
-      "r_release": {
-        "path": "provenance/winbuilder-r-release-2026-10-09.log.gz",
-        "sha256": "dc69a974ea7e693a632d063ca6d205b9c4d61b2eb171f6068c4e8aff8aa19fb7",
-        "result": "1_ERROR_five_test_failures_unbound_to_archive_hash",
-        "raw_sha256": "575179ab3b680d9ea23e54e8c0550bd49d817dee2e652ab11aeacc5ed03af971"
-      },
-      "r_devel": {
-        "path": "provenance/winbuilder-r-devel-2026-10-09.log.gz",
-        "sha256": "6242c79102333744dab7e14d86237614a51dea51247888cae188eda25a9fb9b2",
-        "result": "1_ERROR_five_test_failures_unbound_to_archive_hash",
-        "raw_sha256": "23cc52068814203057efa2862110f9c08eaab62e4fcf4a62985390975849be54"
-      }
+    "external_service_behaviour": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/ancillary/verdict.json"
     },
-    "site_browser_review": {
-      "date": "2026-10-10",
-      "receipt": "GATES.md#current-deployed-site-recheck-2026-10-10",
-      "source_commit": "4f60a18ae72e836b6c3e15b65abb1faa7409e731",
-      "deployment_run": "38063988962",
-      "artifact_sha256": null,
-      "pages": [
-        "home",
-        "getting-started",
-        "all_62_local_sitemap_paths"
-      ],
-      "result": "Pat_independent_G7_pass_for_checked_deployment;62_rendered_paths;34_retired_routes_and_ledger_not_found;live_search_query_clear",
-      "direct_sitemap": "blocked_by_chrome_client;direct_search_json_blocked;numeric_http_status_not_exposed",
-      "permanence_claim": false
+    "size_and_vignette_budget": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/vignette-timing/verdict.json"
     },
-    "exact_artifact_optional_backend_matrix": {
-      "status": "PASS_bounded_installed_integration_four_cells_on_current_exact_tarball",
-      "receipt": "provenance/post-merge-final-artifact-2026-10-15.md",
-      "manifest": "provenance/post-merge-final-mi-matrix-2026-10-15.json",
-      "artifact_sha256": "4b32f669bb92474f6ec9acb45eb7c7806467ed104bb4338371e4b14369cf230f",
-      "cells": [
-        "neither",
-        "drmTMB_only",
-        "gllvmTMB_only",
-        "both"
-      ],
-      "review": {
-        "grace": "pending_current_hash",
-        "rose": "pending_current_hash"
-      },
-      "does_not_close": [
-        "as_cran_incoming_feasibility",
-        "Windows_platform_results",
-        "independent_exact_artifact_verdict"
-      ]
+    "reverse_dependencies": {
+      "kind": "rationale",
+      "value": "NOT_APPLICABLE: primary CRAN PACKAGES.gz read on 2026-10-18 measured zero reverse dependencies across Depends, Imports, LinkingTo, Suggests and Enhances; exact source receipt docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/cran-publication-and-revdeps.json"
     },
-    "as_cran_block_log": "provenance/post-merge-final-as-cran-network-block-2026-10-15.log",
-    "as_cran_block_log_sha256": "92d867104f3324c635351094b101f2f58dff74ea155a38edfd40d598ec4ae8cd"
+    "compiled_diagnostics": {
+      "kind": "rationale",
+      "value": "NOT_APPLICABLE: frozen inventory and source-size binding show no package-owned src or compiled binaries; dependency runtimes were tested separately."
+    }
   },
   "panel": {
-    "grace": "PASS_bounded_review_of_4b32f669_pre_PR234_artifact;overall_NOT_READY_platform_as_cran_rights_and_final_artifact_gates_open",
-    "rose": "PASS_bounded_review_of_4b32f669_pre_PR234_artifact;overall_NOT_DONE_final_panel_and_release_gates_open",
-    "pat": "retirement_controls_pass_on_deployment_5e46c46_run_38099234402;reader_consistency_NOT_READY_PR234_pending;final_corrected_deployment_review_pending"
+    "grace": "READY",
+    "rose": "READY",
+    "pat": "READY"
   },
-  "reader_surface_correction": {
-    "pull_request": "https://github.com/itchyshin/pigauto/pull/234",
-    "branch": "codex/cran-011-getting-started-correction",
-    "commit": "6ebc67636f31fa8ff324ddd4a327d5cd808fba99",
-    "source_status": "open_checks_pending_not_merged",
-    "local_vignette_knit": "passed_55_chunks",
-    "focused_article_build": "passed",
-    "independent_review": "passed_source_and_render_behavior_check",
-    "full_site_build": "blocked_before_article_generation_by_CRAN_metadata_DNS_and_protected_cache_writes",
-    "chrome_visual_review": "blocked_by_browser_file_url_policy",
-    "after_task": "/Users/z3437171/.codex/worktrees/cran-011-final-artifact/pigauto/docs/dev-log/cran-0.11-audit/after-task-2026-10-15-getting-started-correction.md"
-  },
-  "status_claim": "source-clean",
-  "next_unproven_rung": "tarball-clean",
-  "submission": {},
-  "audit_verdict": "NOT_READY",
   "panel_evidence": {
+    "grace": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/panel/grace/verdict.json"
+    },
+    "rose": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/panel/rose/verdict.json"
+    },
     "pat": {
-      "verdict": "retirement_controls_pass_reader_consistency_not_ready_pending_PR234",
-      "review": "provenance/pat-independent-site-review-2026-10-09-v2.md plus live Chrome review summarized in GATES.md#reader-correction-follow-up-2026-10-15",
-      "reviewed_evidence_commit": "5e46c46b6970bf153a3b4bd00d55c9ace69225b0",
-      "deployment_commit": "5e46c46b6970bf153a3b4bd00d55c9ace69225b0",
-      "pages_run": "38099234402",
-      "limitations": [
-        "homepage_literal_WARNING_token_remains",
-        "direct_live_sitemap_fetch_blocked_in_recheck",
-        "point_in_time_deployment_only"
-      ]
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/panel/pat/verdict.json"
+    }
+  },
+  "submission": {
+    "state": "confirmed",
+    "cran_upload_authorized": true,
+    "maintainer_confirmation_authorized": true,
+    "authorization_scope": "Conditional user approval: submit pigauto0.11 release after help fix and all applicable exact-artifact/platform/independent release gates pass; no waiver of technical findings or scientific scope expansion",
+    "user_approval_text": "After this I approve CRAN submission",
+    "uploaded_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "uploaded_size_bytes": 5137837,
+    "timestamp": "2026-10-18T07:37:49.893Z",
+    "submission_id": "359257",
+    "receipt_evidence": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/submission/cran-submission-receipt.json"
+    },
+    "confirmation_observed_utc": "2026-10-18T07:47:17.358Z",
+    "confirmation_evidence": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/submission/cran-confirmation-receipt.json"
     }
   },
   "evidence_pr": {
-    "number": 228,
-    "branch": "release/cran-0.11-gate",
-    "head": "4a87a53b83d617054978a94363086bd2e122683f",
-    "observed_at": "2026-10-10T17:26:27Z",
-    "state": "draft",
+    "number": 236,
+    "url": "https://github.com/itchyshin/pigauto/pull/236",
+    "state": "open_draft",
     "merged": false,
-    "description_refreshed_after_pat_g7_review": true,
-    "commit_count": 69,
-    "latest_workflow_run": "38071388358",
-    "latest_workflow_status": "skipped_by_pull_request_pkgdown_guard",
-    "deployment": "none"
+    "publication_head_policy": "Actual published head and final CI readback recorded in PR body to avoid self-reference"
   },
-  "superseded_previous_artifact": {
-    "state": "previous_frozen_candidate_stale_after_source_merge_rebuild_required",
-    "filename": "pigauto_0.11.0.tar.gz",
-    "sha256": "f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4",
-    "size_bytes": 5135324,
-    "archive_entries": 250,
-    "inventory_sha256": "10a31a50b2504f42514b0ec8b5368861543cf1f902d9ae075ebb5279cd5a777e",
-    "source_commit": "d76804e768bf77f430f43dcf591633f9cd900dab",
-    "frozen_path": "/private/tmp/pigauto-release-candidate/sha256-f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4/pigauto_0.11.0.tar.gz",
-    "path": "/private/tmp/pigauto-release-candidate/sha256-f8fee9f631460a1a49fa7ef78b4256e0861ea1929f25cba5093d0ea034f5a9c4/pigauto_0.11.0.tar.gz",
-    "clean_worktree": true,
-    "clean_worktree_evidence": {
-      "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-source-checkout-status-2026-10-10.txt"
-    },
-    "inventory_evidence": {
-      "kind": "file",
-      "value": "/Users/z3437171/.codex/worktrees/cran-011-gate-reconcile/pigauto/docs/dev-log/cran-0.11-audit/provenance/post-merge-tarball-inventory.txt"
-    },
-    "forbidden_entries": []
+  "source_candidate": {
+    "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+    "source_pr": 238,
+    "source_pr_merged": true,
+    "approved_pr_head": "816987fd160c1d2c5c58b020b07357ff17c077e5",
+    "main_source_ci": 39090594763,
+    "source_ci_state": "PASS_ALL3_MERGED_HEAD",
+    "pages_run": 39090594794,
+    "deployed_site_gate": "PASS"
+  },
+  "approvals": {
+    "source_merge_and_automatic_deployment": "Explicit Merge238 approval exercised and actual deployment verified at b2e6054",
+    "public_builder_upload": "Explicitly authorized; existing validated R-hub account used, no new token request; public original gzip fullhash/size match",
+    "cran_upload": "Conditional approval after all gates pass; not submitted",
+    "maintainer_confirmation": "Included in conditional submission authority; not performed",
+    "evidence_pr236_merge": "Not authorized; remain open draft unmerged",
+    "tag_and_announcement": "Not authorized; not performed"
+  },
+  "historical_ledger": "docs/dev-log/cran-0.11-audit/historical-release-ledger-pre-a93fece7-2026-10-18.json",
+  "predecessor": {
+    "sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+    "state": "withdrawn and immutable; old panel votes not promoted"
+  },
+  "updated_utc": "2026-10-18T07:48:32.234491+00:00",
+  "claim_scope": "Exact reviewed archive submitted and maintainer-confirmed; no incoming success, acceptance, scheduled publication or live0.11 claim.",
+  "replay_provenance_limit": "Two successful supporting captures retained with separate coherent timing pairs; prior mixed derived timing corrected by amendment. Identical warning-object bytes match both, so unique capture attribution is unresolved. Native checks were not rerun.",
+  "final_proof_summary": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/README.md",
+  "timing_decision": {
+    "native_status": "OK on all4, noNOTE",
+    "native_timing_evidence": "docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/native-platform-summary.json",
+    "vignette_rebuilds": "15secondsMac elapsed,20secondsWindowsrelease,17secondsWindowsdevel,19secondsLinux elapsed",
+    "separate_replay_timing": "Two pairs disclosed in actual-warning-audit/timing-provenance-amendment; excluded from native check duration",
+    "independent_final_disposition": "All3freshreviewersREADY, disclosed Windowsrelease whole627.141s/vignettes20s; no nativeNOTE or selected rerun"
   }
 }

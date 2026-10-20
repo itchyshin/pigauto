@@ -1,0 +1,202 @@
+{
+  "bundle": "raw/service-url-spelling-absence.evidence.tar.gz",
+  "bundle_sha256": "6bfb8dcf4bcfcd9cee6c3efda3129171c03506d899d76f3c6734d3a0f1eccc4b",
+  "bundle_size_bytes": 144606,
+  "kind": "evidence_bundle_not_release_archive",
+  "member_count": 32,
+  "members": [
+    {
+      "member": "README.md",
+      "sha256": "f3a636ac168fc1610e2062ae1488e35bc9ccafb93cfef3860643f255b854ff33",
+      "size_bytes": 1590,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/README.md"
+    },
+    {
+      "member": "absence-execution.json",
+      "sha256": "e579f15d5e1302a867c562e5967229535bf1c4c89f05c2804d06b8e5ee17edf9",
+      "size_bytes": 301,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/absence-execution.json"
+    },
+    {
+      "member": "absence-results.rds",
+      "sha256": "80bb442c7f18b668328915915646bd632d09b5cbb5b62f5a6406185bbe5899b9",
+      "size_bytes": 102630,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/absence-results.rds"
+    },
+    {
+      "member": "absence-session.txt",
+      "sha256": "361dcada340e233494412f955015e79fc4d4caefdf9184115cb8e6232d2fb92c",
+      "size_bytes": 1799,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/absence-session.txt"
+    },
+    {
+      "member": "absence-skips.txt",
+      "sha256": "dbc50ea5530622765bfdb60b31a66eecfa8fadc9af239723ee7e596ca785fb4f",
+      "size_bytes": 3745,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/absence-skips.txt"
+    },
+    {
+      "member": "absence-summary.json",
+      "sha256": "41b610077071dea8ce559542e1a9280c43bdeedbe1aa6e7766a6c30f564976c1",
+      "size_bytes": 184,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/absence-summary.json"
+    },
+    {
+      "member": "absence-warnings.txt",
+      "sha256": "4cfb26dd63ec9f01679ef8293c4e03d94907354c95ada1dc92c2dee155e5a74b",
+      "size_bytes": 7,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/absence-warnings.txt"
+    },
+    {
+      "member": "absence.R",
+      "sha256": "4fe4187f0f7d8099ec33c64bdd577f7229185e2673b09d97d596ed67ec930a21",
+      "size_bytes": 2124,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/absence.R"
+    },
+    {
+      "member": "absence.log",
+      "sha256": "202ebd5f3c781da1c7ab4820f79d345d1029ce962776d1cbfde20524c3625d0f",
+      "size_bytes": 1244,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/absence.log"
+    },
+    {
+      "member": "adjudication.json",
+      "sha256": "865f9b1ab39fc11f10b5bbc422438fc5efa67bcb12a19646640b8fd75a417043",
+      "size_bytes": 5582,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/adjudication.json"
+    },
+    {
+      "member": "execution-summary.json",
+      "sha256": "d81ad8c47a1d6b27575c9abdb6027f0bdb6d3b65931405acbb15ee627e93c683",
+      "size_bytes": 1015,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/execution-summary.json"
+    },
+    {
+      "member": "identity.json",
+      "sha256": "26adcf21e912be0369fda26cd31c186f2c6c5befee31960b0327d2be35f95c33",
+      "size_bytes": 317,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/identity.json"
+    },
+    {
+      "member": "library-links.json",
+      "sha256": "ae47fb02e94bd1d7437cef124ae710b48d6d31d03e837e8fc5e7700e858492e9",
+      "size_bytes": 33022,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/library-links.json"
+    },
+    {
+      "member": "proof-manifest.json",
+      "sha256": "81abc037e6c88a93cb5904f8217de90fb3ff2336d4c59cda1f3b9c54d47e3314",
+      "size_bytes": 2820,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/proof-manifest.json"
+    },
+    {
+      "member": "run-network.py",
+      "sha256": "3c412b44eb718696deba2d2e0de0d68b846dd7341586d9ef99f418e889329788",
+      "size_bytes": 735,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/run-network.py"
+    },
+    {
+      "member": "run-proof.py",
+      "sha256": "58df5a65d5152604a2d1c42e7b335a32b65f934766a468fc72efc5f4f6ae713f",
+      "size_bytes": 1401,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/run-proof.py"
+    },
+    {
+      "member": "spelling-execution.json",
+      "sha256": "edc3500a56a1ac713d653c32bf2508a8256cf2ff7e7ea680f644e3cdeefa1994",
+      "size_bytes": 305,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/spelling-execution.json"
+    },
+    {
+      "member": "spelling-results-flat.csv",
+      "sha256": "d4e8303301d17841c6b8a47a3a3c6246837b6fe0393f3aa287aff2125401e8bf",
+      "size_bytes": 24991,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/spelling-results-flat.csv"
+    },
+    {
+      "member": "spelling-results.csv",
+      "sha256": "bd1ecd12e727644cce90880ea8e7b54b39685a0ee31e0c0d6eb329955b963d08",
+      "size_bytes": 21,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/spelling-results.csv"
+    },
+    {
+      "member": "spelling-results.rds",
+      "sha256": "3b5a14c43036222ffbf7f72109eb55f6bc7a4a5058d4097399cdfad2c5524b6f",
+      "size_bytes": 9331,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/spelling-results.rds"
+    },
+    {
+      "member": "spelling.R",
+      "sha256": "8242c667b5e61ab7d38a759d3d9b668d29259d207dc54585e39da6c6371fb763",
+      "size_bytes": 411,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/spelling.R"
+    },
+    {
+      "member": "spelling.log",
+      "sha256": "4dc0c29e12daaccfdca2e13bd050d40d1a112082e4fbeed2765fec1b18eafbc0",
+      "size_bytes": 38671,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/spelling.log"
+    },
+    {
+      "member": "url-network-results-flat.csv",
+      "sha256": "89eb6a15328373da91bfccc4b0be21032ee6d69570d43c2d0d57249ce9c1e287",
+      "size_bytes": 288,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/url-network-results-flat.csv"
+    },
+    {
+      "member": "url-network-results.rds",
+      "sha256": "e71e3ba193a4a5a7279db58cae4a1042d36528a5c594f74d6dde5ee50dcfc639",
+      "size_bytes": 361,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/url-network-results.rds"
+    },
+    {
+      "member": "url-results.csv",
+      "sha256": "e7d7a8ff40f52a88b97d3b6190577f5e7e8bf8425758d5fe68ae745d4128837a",
+      "size_bytes": 99,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/url-results.csv"
+    },
+    {
+      "member": "url-results.rds",
+      "sha256": "0cc4cde36eb1db737238aea4e6a169d7c6fba6a6a291e8caf711b133553d53cf",
+      "size_bytes": 1035,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/url-results.rds"
+    },
+    {
+      "member": "urls-execution.json",
+      "sha256": "c16bd405cbc2c5e058f18301ce8ea67188591df2d81dc3b27d750ed78a07d091",
+      "size_bytes": 300,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/urls-execution.json"
+    },
+    {
+      "member": "urls-network-execution.json",
+      "sha256": "18e93c687f6ae36e89137f3a7fd5d87f558cb1ca4518fa6886a2f06fc7ddcbbd",
+      "size_bytes": 285,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/urls-network-execution.json"
+    },
+    {
+      "member": "urls-network.R",
+      "sha256": "401336da06a96399fddcfad063e57a915e97d1873ff9596a44e5b6ec6da7e729",
+      "size_bytes": 560,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/urls-network.R"
+    },
+    {
+      "member": "urls-network.log",
+      "sha256": "19258f17ed1851c82654120f53cb3c2cdb99b0c1a6773f5532724cda0423efc8",
+      "size_bytes": 1745,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/urls-network.log"
+    },
+    {
+      "member": "urls.R",
+      "sha256": "caef218a8d91bf037678d8d9fec56eac74bff9a8a591fe61bf76654e1a54a77f",
+      "size_bytes": 460,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/urls.R"
+    },
+    {
+      "member": "urls.log",
+      "sha256": "2c0883ba160d7d9892804305e040cb8841211e52e5d4808799fc2188e246939e",
+      "size_bytes": 12626,
+      "source": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/urls.log"
+    }
+  ],
+  "release_archive_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb"
+}

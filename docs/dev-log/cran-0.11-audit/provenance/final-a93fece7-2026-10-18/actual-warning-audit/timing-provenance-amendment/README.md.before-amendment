@@ -1,0 +1,11 @@
+# Successor actual warning-object audit
+
+Verdict: **PASS** for warning identity and consequence classification across all four actual cells.
+
+The audit is bound to source `b2e6054685e6bdedb073ba46e058af2c0a619a18` and archive `a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb` (5137837 bytes), direct run `39091958419`. The frozen warning contract was copied byte-for-byte from the prior adjudicated audit; its SHA-256 is `597555df543a712e43ede71cf85abd1cf20910dcb22dd6ab588a8cea67bab123`. Strict audit self-tests passed, then the actual audit passed local macOS, Windows release, Windows devel and Ubuntu release.
+
+The replay produced 161 warnings, 86 skips, zero failures and 3,195 passes in 167.39 seconds under a 1,200-second supervisor cap. Native and replay counts matched in all four cells. Category counts were: {"conformal_sample_limit": 2, "constant_matched_trait": 4, "covariates_gnn_off": 3, "covariates_joint_baseline": 5, "few_tree_draws": 5, "imbalanced_ordinal": 12, "signal_gate_fallback": 1, "small_validation": 119, "species_dropped": 1, "undefined_constant_correlation": 9}. Native check status was `Status: OK` with exit 0.
+
+Two setup attempts failed before measurement: attempt 1 lacked `testthat` because the user dependency library was not on the library path; attempt 2 had the copied test directory one level too shallow. Both were corrected; the third capture completed. No native check was rerun.
+
+This PASS covers warning/skip identities and bounded consequences only. It does not establish general inference quality, coverage, latent-parameter recovery, GPU capability, timing approval, CRAN upload or CRAN acceptance. See `verdict.json`, `actual-successor-a93fece7/audit.json`, and `actual-successor-a93fece7/report.md`.

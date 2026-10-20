@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "8d7808a338402834e04f0aa8b6ddbc3e37fbb7b595ef876db5e2bf021a62c090",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Grace ancillary checker",
+  "method": "Separate post-draft review against actual RDS/CSV/receipts, source hashes, current primary metadata and changed contexts.",
+  "genre": "Bounded ancillary evidence report",
+  "coverage": "Whole saved README.md",
+  "score": 3,
+  "style_status": "assessed",
+  "score_reason": "Concrete findings and consequences; some necessary repeated limits in a technical release receipt.",
+  "confidence": "moderate",
+  "confidence_reason": "Self-assessed perceived style, not authorship detection.",
+  "examples": [
+    {
+      "location": "URL finding",
+      "cue": "DNS, access and identifier claims distinguished",
+      "impact": "Keeps the observed403 visible without treating transport failure or metadata success as URL cleanliness.",
+      "repair": "no change needed",
+      "line": 11,
+      "quote": "The first URL run returned 26 sandbox DNS failures and is preserved unchanged. Those failures do not establish broken URLs. One authorized read-only network rerun completed in 4.547 seconds and retained one distinct finding: `https://doi.org/10.1126/science.1157704` returned 403 in `vignettes/getting-started.Rmd` and `inst/doc/getting-started.html`. No other finding was reported by that scan. A single current primary Crossref metadata GET returned 200 and matched Hackett's 2008 Science paper, title, DOI, volume 320(5884) and pages 1763\u20131768. That verifies identifier identity, not resolver accessibility or CRAN acceptance. The denial remains in the actual result; it has not been fixed or relabelled clean. `doi-metadata.json` and `crossref-raw.json` retain the primary response."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "No new scientific results; optional-service fixtures and skips are bounded and no recovery/coverage inferred.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Numbers, timings, identities and limitations compared to actual new CSV/RDS readbacks, execution receipts and final-integrity hashes.",
+  "references_gate": "pass",
+  "references_gate_reason": "Fresh primary Crossref response matches exact DOI/title/author/year/volume/pages; access-denial status remains separate.",
+  "date": "2026-10-18T07:14:32.326146+00:00",
+  "calibration_status": "Protocol examples and predecessor reports were seen; no held-out evaluation.",
+  "interpretation": "perceived_style_not_authorship"
+}

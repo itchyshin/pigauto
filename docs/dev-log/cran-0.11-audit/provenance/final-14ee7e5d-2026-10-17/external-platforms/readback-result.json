@@ -1,0 +1,14 @@
+{
+  "status": "PASS_REMOTE_PLATFORM_PACKAGING_READBACK",
+  "original_members_verified": 129,
+  "timing_parser_controls": "PASS_TIMING_PARSER_KNOWN_ANSWER_AND_INDEPENDENT_REFERENCE",
+  "native_stages_independently_checked": 15,
+  "negative_controls": [
+    "rejected",
+    "rejected",
+    "missing refused"
+  ],
+  "release_archive_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "release_archive_bytes": 5137648,
+  "scope": "Remote3 only; no warning-consequence, local timing or final panel adjudication."
+}

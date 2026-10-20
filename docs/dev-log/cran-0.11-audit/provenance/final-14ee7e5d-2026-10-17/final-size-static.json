@@ -1,0 +1,78 @@
+{
+  "artifact_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "compressed_bytes": 5137648,
+  "regular_uncompressed_bytes": 7150500,
+  "regular_file_count": 236,
+  "largest_files": [
+    {
+      "path": "pigauto/data/trees300.rda",
+      "bytes": 1832412
+    },
+    {
+      "path": "pigauto/inst/extdata/legacy_fit_v091.rds",
+      "bytes": 1180089
+    },
+    {
+      "path": "pigauto/man/figures/logo.png",
+      "bytes": 810344
+    },
+    {
+      "path": "pigauto/data/tree_full.rda",
+      "bytes": 266848
+    },
+    {
+      "path": "pigauto/NEWS.md",
+      "bytes": 174960
+    },
+    {
+      "path": "pigauto/data/avonet_full.rda",
+      "bytes": 133160
+    },
+    {
+      "path": "pigauto/R/fit_pigauto.R",
+      "bytes": 92511
+    },
+    {
+      "path": "pigauto/R/fit_baseline.R",
+      "bytes": 85906
+    },
+    {
+      "path": "pigauto/R/predict_pigauto.R",
+      "bytes": 74523
+    },
+    {
+      "path": "pigauto/inst/doc/getting-started.html",
+      "bytes": 64763
+    },
+    {
+      "path": "pigauto/data/tree300.rda",
+      "bytes": 64432
+    },
+    {
+      "path": "pigauto/R/mi_posterior.R",
+      "bytes": 58158
+    },
+    {
+      "path": "pigauto/R/joint_mvn_solver.R",
+      "bytes": 53140
+    },
+    {
+      "path": "pigauto/tests/testthat/test-safety-floor.R",
+      "bytes": 50634
+    },
+    {
+      "path": "pigauto/R/multi_impute.R",
+      "bytes": 48989
+    }
+  ],
+  "vignettes": [
+    "pigauto/inst/doc/common-pitfalls.html",
+    "pigauto/inst/doc/getting-started.html",
+    "pigauto/inst/doc/gnn-architecture.html",
+    "pigauto/inst/doc/mixed-types.html",
+    "pigauto/inst/doc/multiple-imputation.html",
+    "pigauto/inst/doc/tree-uncertainty.html"
+  ],
+  "recorded_utc": "2026-10-18T00:25:26.952283+00:00",
+  "scope": "Static archive budget; installed size and final native timings must be added before submission-ready"
+}

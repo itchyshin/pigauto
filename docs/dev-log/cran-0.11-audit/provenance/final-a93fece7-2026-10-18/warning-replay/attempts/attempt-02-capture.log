@@ -1,0 +1,2 @@
+Error in setwd(file.path(root, "warning-replay.Rcheck", "tests")) : cannot change working directory
+Execution halted

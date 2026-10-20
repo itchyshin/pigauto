@@ -1,0 +1,23 @@
+[
+  {
+    "original_closure_receipt": "monitor-originals/00-closure-receipt.txt",
+    "original_zip": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release.zip",
+    "sha256": "12a9e31f579b914c58a6221320c7192d142a99648d1cb30cf403f7954b9ece2c",
+    "size_bytes": 13409927,
+    "zip_included": false
+  },
+  {
+    "original_closure_receipt": "monitor-originals/00-closure-receipt.txt",
+    "original_zip": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel.zip",
+    "sha256": "f16a0de8b68dddc0a246e04397de31610fb7fcf00c80d4c2e84aa3c1a370cd68",
+    "size_bytes": 13399068,
+    "zip_included": false
+  },
+  {
+    "original_closure_receipt": "monitor-originals/00-closure-receipt.txt",
+    "original_zip": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release.zip",
+    "sha256": "ff8f7b5e9a6b87c193c0ab98835b4ba4dbac41e8bbcd4b93e93bed4f56436da2",
+    "size_bytes": 13403460,
+    "zip_included": false
+  }
+]

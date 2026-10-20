@@ -1,0 +1,2235 @@
+{
+  "basis": "Adjudicated predecessor identities are a strict comparison contract, not final-archive evidence.",
+  "baseline_csv": "/private/tmp/pigauto-pr236-validator-20261017/docs/dev-log/cran-0.11-audit/provenance/submission-preparation-2026-10-17/warning-classification.csv",
+  "baseline_csv_sha256": "7b0e1b7c3e6a279000badd0d18661ce00adeab05cfe90dc0f441f76c3032859b",
+  "baseline_rds": "/private/tmp/pigauto-final-closure-20261017/warning-objects.rds",
+  "baseline_rds_sha256": "f3158e63667584757d18fb5a8156740ff31df25c1e0d90fbc010fbbac9cbd6c5",
+  "warnings": [
+    {
+      "id": "1",
+      "message": "Small validation set for 2 trait(s): cont1 (n=5), cont2 (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (cont1 (n=5), cont2 (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[active] suggest_next_observation returns top-N by descending delta_var_total",
+      "file": "test-active-impute.R",
+      "line": "158",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "2",
+      "message": "Small validation set for 2 trait(s): cont1 (n=4), cont2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (cont1 (n=4), cont2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[active] suggest_next_observation by = 'species' aggregates across traits",
+      "file": "test-active-impute.R",
+      "line": "189",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "3",
+      "message": "Small validation set for 1 trait(s): cont (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[active] suggest_next_observation returns empty when no missing cells",
+      "file": "test-active-impute.R",
+      "line": "219",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "4",
+      "message": "Small validation set for 2 trait(s): cont (n=2), bin (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[active] suggest_next_observation handles binary trait via entropy reduction",
+      "file": "test-active-impute.R",
+      "line": "262",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "5",
+      "message": "Small validation set for 2 trait(s): cont (n=2), bin (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[active] suggest_next_observation skips discrete when types excludes them",
+      "file": "test-active-impute.R",
+      "line": "287",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "6",
+      "message": "Small validation set for 1 trait(s): cat3 (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[active] suggest_next_observation handles K=3 categorical via entropy reduction",
+      "file": "test-active-impute.R",
+      "line": "306",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "7",
+      "message": "Small validation set for 1 trait(s): cont (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[active] suggest_next_observation returns 'pigauto_active' class",
+      "file": "test-active-impute.R",
+      "line": "382",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "8",
+      "message": "Small validation set for 1 trait(s): parasites (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (parasites (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[active v2] zi_count: hybrid variance + entropy populated",
+      "file": "test-active-impute.R",
+      "line": "404",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "9",
+      "message": "Small validation set for 2 trait(s): parasites (n=3), cont (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (parasites (n=3), cont (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[active v2] zi_count: types argument can exclude zi_count",
+      "file": "test-active-impute.R",
+      "line": "436",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "10",
+      "message": "Small validation set for 1 trait(s): colour (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (colour (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[active v2] multi_proportion: per-component BM variance summed",
+      "file": "test-active-impute.R",
+      "line": "462",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "11",
+      "message": "Small validation set for 1 trait(s): colour (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (colour (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[active v2] multi_proportion: delta equals K-component sum",
+      "file": "test-active-impute.R",
+      "line": "497",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "12",
+      "message": "Small validation set for 3 trait(s): parasites (n=7), stage (n=1), p (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (parasites (n=7), stage (n=1), p (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[active T1] suggest_next_observation handles count + ordinal + proportion in one mixed fixture",
+      "file": "test-active-impute.R",
+      "line": "572",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "13",
+      "message": "Small validation set for 3 trait(s): parasites (n=3), stage (n=4), p (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (parasites (n=3), stage (n=4), p (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[active T1] suggest_next_observation respects types argument for count/ordinal/proportion",
+      "file": "test-active-impute.R",
+      "line": "616",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "14",
+      "message": "the standard deviation is zero",
+      "test": "[active T1] suggest_next_observation respects types argument for count/ordinal/proportion",
+      "file": "test-active-impute.R",
+      "line": "616",
+      "last_call": "stats::cor(t_j[ok], p_j[ok], method = \"spearman\")",
+      "category": "undefined_constant_correlation"
+    },
+    {
+      "id": "15",
+      "message": "the standard deviation is zero",
+      "test": "[active T1] suggest_next_observation respects types argument for count/ordinal/proportion",
+      "file": "test-active-impute.R",
+      "line": "616",
+      "last_call": "stats::cor(t_j[ok], p_j[ok], method = \"spearman\")",
+      "category": "undefined_constant_correlation"
+    },
+    {
+      "id": "16",
+      "message": "Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[Phase G] clamp_outliers = FALSE is the default and is a no-op",
+      "file": "test-clamp-outliers.R",
+      "line": "80",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "17",
+      "message": "Small validation set for 2 trait(s): x (n=1), y (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (x (n=1), y (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "evaluate(fit) with data = NULL matches evaluate(fit, data = pd)",
+      "file": "test-evaluate-null.R",
+      "line": "15",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "18",
+      "message": "Small validation set for 1 trait(s): x (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (x (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "evaluate(fit) still requires data when the fit has no X_scaled",
+      "file": "test-evaluate-null.R",
+      "line": "37",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "19",
+      "message": "Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "fit_pigauto returns a pigauto_fit object",
+      "file": "test-fit-predict.R",
+      "line": "20",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "20",
+      "message": "Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "predict.pigauto_fit returns pigauto_pred with correct dimensions",
+      "file": "test-fit-predict.R",
+      "line": "46",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "21",
+      "message": "Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "predicted values are finite",
+      "file": "test-fit-predict.R",
+      "line": "62",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "22",
+      "message": "Small validation set for 2 trait(s): tr1 (n=1), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=1), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "predict with n_imputations > 1 returns multiple datasets",
+      "file": "test-fit-predict.R",
+      "line": "84",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "23",
+      "message": "Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "fit_pigauto and predict work with multi-obs data",
+      "file": "test-fit-predict.R",
+      "line": "274",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "24",
+      "message": "Small validation set for 2 trait(s): tr1 (n=2), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=2), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "impute() works end-to-end with rownames (single-obs)",
+      "file": "test-fit-predict.R",
+      "line": "297",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "25",
+      "message": "Small validation set for 1 trait(s): x (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (x (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "impute() works with species_col (multi-obs)",
+      "file": "test-fit-predict.R",
+      "line": "312",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "26",
+      "message": "Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "fit_pigauto with attention produces valid fit",
+      "file": "test-fit-predict.R",
+      "line": "376",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "27",
+      "message": "Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "fit_pigauto stores calibrated_gates and conformal_scores",
+      "file": "test-fit-predict.R",
+      "line": "390",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "28",
+      "message": "Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "predict with conformal scores returns intervals",
+      "file": "test-fit-predict.R",
+      "line": "404",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "29",
+      "message": "Small validation set for 1 trait(s): prop (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (prop (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "predict returns conformal intervals for proportion traits",
+      "file": "test-fit-predict.R",
+      "line": "426",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "30",
+      "message": "Small validation set for 7 trait(s): Mass (n=1), Beak.Length_Culmen (n=3), Tarsus.Length (n=2), Wing.Length (n=3), Trophic.Level (n=2), Primary.Lifestyle (n=6), Migration (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 5 trait(s) with fewer than 19 validation cells (Mass (n=1), Beak.Length_Culmen (n=3), Tarsus.Length (n=2), Wing.Length (n=3), Migration (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "attention + calibration + conformal work with mixed types",
+      "file": "test-fit-predict.R",
+      "line": "499",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "31",
+      "message": "Small validation set for 4 trait(s): mass (n=3), clutch (n=6), nocturnal (n=5), diet (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (mass (n=3), clutch (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "safety_floor and phylo_signal_gate default to FALSE; discrete_lambda to 'estimate'",
+      "file": "test-gnn-off.R",
+      "line": "443",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "32",
+      "message": "Small validation set for 2 trait(s): x1 (n=4), x2 (n=5). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (x1 (n=4), x2 (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "training forward does not see held-out truth (B1 smoke)",
+      "file": "test-gnn-train-cal-symmetry.R",
+      "line": "38",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "33",
+      "message": "Small validation set for 1 trait(s): noise (n=8). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (noise (n=8)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "phylo_signal_gate + safety_floor=FALSE falls back to BM, not mean/zero",
+      "file": "test-gnn-train-cal-symmetry.R",
+      "line": "65",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "34",
+      "message": "Small validation set for 1 trait(s): y (n=5). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (y (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "gate calibration uses refine_steps matching predict (B3)",
+      "file": "test-gnn-train-cal-symmetry.R",
+      "line": "99",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "35",
+      "message": "Small validation set for 1 trait(s): y (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (y (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "pigauto_refine_forward() returns delta_mat with refine_steps >= 1",
+      "file": "test-gnn-train-cal-symmetry.R",
+      "line": "121",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "36",
+      "message": "Small validation set for 2 trait(s): x1 (n=3), x2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (x1 (n=3), x2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[lambda-default] predict rebuild: predict() reproduces the fit-time baseline at estimated lambda",
+      "file": "test-lambda-default.R",
+      "line": "71",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "37",
+      "message": "the standard deviation is zero",
+      "test": "evaluate_imputation returns type-specific metrics",
+      "file": "test-mixed-types.R",
+      "line": "68",
+      "last_call": "stats::cor(t_j[ok], p_j[ok], method = \"spearman\")",
+      "category": "undefined_constant_correlation"
+    },
+    {
+      "id": "38",
+      "message": "At least one matched trait is constant.",
+      "test": "impute() predicts the single class for a one-level factor",
+      "file": "test-monomorphic-discrete.R",
+      "line": "73",
+      "last_call": "impute(fx$df, fx$tree, epochs = 20L, verbose = FALSE, seed = 1L)",
+      "category": "constant_matched_trait"
+    },
+    {
+      "id": "39",
+      "message": "Small validation set for 2 trait(s): disc (n=5), cont (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "impute() predicts the single class for a one-level factor",
+      "file": "test-monomorphic-discrete.R",
+      "line": "73",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "40",
+      "message": "At least one matched trait is constant.",
+      "test": "impute() predicts the single class for a one-level ordered factor",
+      "file": "test-monomorphic-discrete.R",
+      "line": "90",
+      "last_call": "impute(fx$df, fx$tree, epochs = 20L, verbose = FALSE, seed = 1L)",
+      "category": "constant_matched_trait"
+    },
+    {
+      "id": "41",
+      "message": "Small validation set for 2 trait(s): disc (n=5), cont (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (disc (n=5), cont (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "impute() predicts the single class for a one-level ordered factor",
+      "file": "test-monomorphic-discrete.R",
+      "line": "90",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "42",
+      "message": "the standard deviation is zero",
+      "test": "impute() predicts the single class for a one-level ordered factor",
+      "file": "test-monomorphic-discrete.R",
+      "line": "90",
+      "last_call": "stats::cor(t_j[ok], p_j[ok], method = \"spearman\")",
+      "category": "undefined_constant_correlation"
+    },
+    {
+      "id": "43",
+      "message": "the standard deviation is zero",
+      "test": "impute() predicts the single class for a one-level ordered factor",
+      "file": "test-monomorphic-discrete.R",
+      "line": "90",
+      "last_call": "stats::cor(t_j[ok], p_j[ok], method = \"spearman\")",
+      "category": "undefined_constant_correlation"
+    },
+    {
+      "id": "44",
+      "message": "At least one matched trait is constant.",
+      "test": "impute() handles a K-level factor monomorphic among observed cells",
+      "file": "test-monomorphic-discrete.R",
+      "line": "105",
+      "last_call": "impute(fx$df, fx$tree, epochs = 20L, verbose = FALSE, seed = 1L)",
+      "category": "constant_matched_trait"
+    },
+    {
+      "id": "45",
+      "message": "Small validation set for 2 trait(s): disc (n=5), cont (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "impute() handles a K-level factor monomorphic among observed cells",
+      "file": "test-monomorphic-discrete.R",
+      "line": "105",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "46",
+      "message": "At least one matched trait is constant.",
+      "test": "impute() handles a K-level factor monomorphic among observed cells",
+      "file": "test-monomorphic-discrete.R",
+      "line": "105",
+      "last_call": "impute(fx$df, fx$tree, epochs = 20L, verbose = FALSE, seed = 1L)",
+      "category": "constant_matched_trait"
+    },
+    {
+      "id": "47",
+      "message": "Small validation set for 2 trait(s): disc (n=5), cont (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "impute() handles a K-level factor monomorphic among observed cells",
+      "file": "test-monomorphic-discrete.R",
+      "line": "105",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "48",
+      "message": "Small validation set for 2 trait(s): disc (n=3), cont (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "the whole pipeline survives a single-level categorical trait",
+      "file": "test-monomorphic-discrete.R",
+      "line": "135",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "49",
+      "message": "Few tree-sensitivity draws (T * m_per_tree = 4). Descriptive sensitivity summaries may be unstable.",
+      "test": "multi_impute_trees defaults to draws_method = 'mc_dropout'",
+      "file": "test-multi-impute-trees.R",
+      "line": "52",
+      "last_call": "multi_impute_trees(traits = td$df, trees = td$trees, m_per_tree = m_per_tree,      draws_method = draws_method, share_gnn = share_gnn, epochs = 5L,      missing_frac = 0.25, verbose = FALSE, seed = seed)",
+      "category": "few_tree_draws"
+    },
+    {
+      "id": "50",
+      "message": "Small validation set for 2 trait(s): tr1 (n=2), tr2 (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=2), tr2 (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "multi_impute_trees defaults to draws_method = 'mc_dropout'",
+      "file": "test-multi-impute-trees.R",
+      "line": "52",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "51",
+      "message": "Few tree-sensitivity draws (T * m_per_tree = 4). Descriptive sensitivity summaries may be unstable.",
+      "test": "draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = TRUE)",
+      "file": "test-multi-impute-trees.R",
+      "line": "69",
+      "last_call": "multi_impute_trees(traits = td$df, trees = td$trees, m_per_tree = m_per_tree,      draws_method = draws_method, share_gnn = share_gnn, epochs = 5L,      missing_frac = 0.25, verbose = FALSE, seed = seed)",
+      "category": "few_tree_draws"
+    },
+    {
+      "id": "52",
+      "message": "Small validation set for 2 trait(s): tr1 (n=4), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=4), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = TRUE)",
+      "file": "test-multi-impute-trees.R",
+      "line": "69",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "53",
+      "message": "Few tree-sensitivity draws (T * m_per_tree = 4). Descriptive sensitivity summaries may be unstable.",
+      "test": "draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE)",
+      "file": "test-multi-impute-trees.R",
+      "line": "101",
+      "last_call": "multi_impute_trees(traits = td$df, trees = td$trees, m_per_tree = m_per_tree,      draws_method = draws_method, share_gnn = share_gnn, epochs = 5L,      missing_frac = 0.25, verbose = FALSE, seed = seed)",
+      "category": "few_tree_draws"
+    },
+    {
+      "id": "54",
+      "message": "Small validation set for 2 trait(s): tr1 (n=5), tr2 (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=5), tr2 (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE)",
+      "file": "test-multi-impute-trees.R",
+      "line": "101",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "55",
+      "message": "Small validation set for 2 trait(s): tr1 (n=4), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=4), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "draws_method = 'conformal' returns m datasets per tree, correct shape, non-identical draws (share_gnn = FALSE)",
+      "file": "test-multi-impute-trees.R",
+      "line": "101",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "56",
+      "message": "Few tree-sensitivity draws (T * m_per_tree = 4). Descriptive sensitivity summaries may be unstable.",
+      "test": "print.pigauto_mi_trees reports the draws_method actually used",
+      "file": "test-multi-impute-trees.R",
+      "line": "125",
+      "last_call": "multi_impute_trees(traits = td$df, trees = td$trees, m_per_tree = m_per_tree,      draws_method = draws_method, share_gnn = share_gnn, epochs = 5L,      missing_frac = 0.25, verbose = FALSE, seed = seed)",
+      "category": "few_tree_draws"
+    },
+    {
+      "id": "57",
+      "message": "Small validation set for 2 trait(s): tr1 (n=4), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=4), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "print.pigauto_mi_trees reports the draws_method actually used",
+      "file": "test-multi-impute-trees.R",
+      "line": "125",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "58",
+      "message": "Small validation set for 3 trait(s): tr1 (n=3), tr2 (n=6), tr3 (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=6), tr3 (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "multi_impute returns pigauto_mi with M datasets of the right shape",
+      "file": "test-multi-impute.R",
+      "line": "88",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "59",
+      "message": "Small validation set for 3 trait(s): tr1 (n=1), tr2 (n=3), tr3 (n=8). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=1), tr2 (n=3), tr3 (n=8)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "all M datasets have matching rownames, colnames, and column classes",
+      "file": "test-multi-impute.R",
+      "line": "117",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "60",
+      "message": "Small validation set for 3 trait(s): tr1 (n=5), tr2 (n=2), tr3 (n=5). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=5), tr2 (n=2), tr3 (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "cells that were observed in the input are identical across datasets",
+      "file": "test-multi-impute.R",
+      "line": "136",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "61",
+      "message": "Small validation set for 3 trait(s): tr1 (n=5), tr2 (n=3), tr3 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=5), tr2 (n=3), tr3 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "cells that were originally missing vary across at least some datasets",
+      "file": "test-multi-impute.R",
+      "line": "160",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "62",
+      "message": "Small validation set for 3 trait(s): tr1 (n=4), tr2 (n=6), tr3 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=4), tr2 (n=6), tr3 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "draws_method='conformal' stores method and produces non-zero between-dataset variance",
+      "file": "test-multi-impute.R",
+      "line": "602",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "63",
+      "message": "Small validation set for 1 trait(s): tr2 (n=5). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (tr2 (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "evaluate returns a data.frame with expected columns",
+      "file": "test-new-features.R",
+      "line": "36",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "64",
+      "message": "Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "evaluate errors when neither data nor stored X_scaled is available",
+      "file": "test-new-features.R",
+      "line": "55",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "65",
+      "message": "Small validation set for 2 trait(s): tr1 (n=1), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=1), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "summary.pigauto_fit runs without error and prints header",
+      "file": "test-new-features.R",
+      "line": "64",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "66",
+      "message": "Small validation set for 2 trait(s): tr1 (n=2), tr2 (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=2), tr2 (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "summary.pigauto_fit with data prints trait metrics",
+      "file": "test-new-features.R",
+      "line": "70",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "67",
+      "message": "Small validation set for 2 trait(s): tr1 (n=4), tr2 (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=4), tr2 (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "summary.pigauto_fit returns evaluation invisibly",
+      "file": "test-new-features.R",
+      "line": "80",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "68",
+      "message": "Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "plot.pigauto_fit history produces plots without error",
+      "file": "test-new-features.R",
+      "line": "94",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "69",
+      "message": "Small validation set for 2 trait(s): tr1 (n=1), tr2 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=1), tr2 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "plot.pigauto_fit gates produces plots without error",
+      "file": "test-new-features.R",
+      "line": "103",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "70",
+      "message": "Small validation set for 2 trait(s): tr1 (n=2), tr2 (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=2), tr2 (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "plot.pigauto_fit conformal produces plots without error",
+      "file": "test-new-features.R",
+      "line": "115",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "71",
+      "message": "Small validation set for 2 trait(s): tr1 (n=1), tr2 (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=1), tr2 (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "pigauto_report creates an HTML file from pigauto_result",
+      "file": "test-new-features.R",
+      "line": "132",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "72",
+      "message": "Small validation set for 2 trait(s): tr1 (n=3), tr2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=3), tr2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "pigauto_report works with a pigauto_fit object and data",
+      "file": "test-new-features.R",
+      "line": "151",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "73",
+      "message": "Small validation set for 3 trait(s): tr1 (n=17), tr2 (n=17), tr3 (n=17). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=17), tr2 (n=17), tr3 (n=17)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "cross_validate returns pigauto_cv object",
+      "file": "test-new-features.R",
+      "line": "212",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "74",
+      "message": "Small validation set for 3 trait(s): tr1 (n=16), tr2 (n=16), tr3 (n=16). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=16), tr2 (n=16), tr3 (n=16)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "cross_validate returns pigauto_cv object",
+      "file": "test-new-features.R",
+      "line": "212",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "75",
+      "message": "Small validation set for 3 trait(s): tr1 (n=17), tr2 (n=17), tr3 (n=17). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=17), tr2 (n=17), tr3 (n=17)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "cross_validate returns pigauto_cv object",
+      "file": "test-new-features.R",
+      "line": "212",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "76",
+      "message": "Small validation set for 3 trait(s): tr1 (n=17), tr2 (n=17), tr3 (n=17). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=17), tr2 (n=17), tr3 (n=17)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "cross_validate results have expected structure",
+      "file": "test-new-features.R",
+      "line": "236",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "77",
+      "message": "Small validation set for 3 trait(s): tr1 (n=16), tr2 (n=16), tr3 (n=16). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=16), tr2 (n=16), tr3 (n=16)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "cross_validate results have expected structure",
+      "file": "test-new-features.R",
+      "line": "236",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "78",
+      "message": "Small validation set for 3 trait(s): tr1 (n=17), tr2 (n=17), tr3 (n=17). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=17), tr2 (n=17), tr3 (n=17)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "cross_validate results have expected structure",
+      "file": "test-new-features.R",
+      "line": "236",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "79",
+      "message": "Small validation set for 3 trait(s): tr1 (n=17), tr2 (n=17), tr3 (n=17). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=17), tr2 (n=17), tr3 (n=17)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "cross_validate print and summary methods work",
+      "file": "test-new-features.R",
+      "line": "270",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "80",
+      "message": "Small validation set for 3 trait(s): tr1 (n=16), tr2 (n=16), tr3 (n=16). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=16), tr2 (n=16), tr3 (n=16)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "cross_validate print and summary methods work",
+      "file": "test-new-features.R",
+      "line": "270",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "81",
+      "message": "Small validation set for 3 trait(s): tr1 (n=17), tr2 (n=17), tr3 (n=17). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (tr1 (n=17), tr2 (n=17), tr3 (n=17)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "cross_validate print and summary methods work",
+      "file": "test-new-features.R",
+      "line": "270",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "82",
+      "message": "Small validation set for 2 trait(s): trait1 (n=1), trait2 (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (trait1 (n=1), trait2 (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "simulate_benchmark runs and returns expected structure",
+      "file": "test-new-features.R",
+      "line": "282",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "83",
+      "message": "Small validation set for 2 trait(s): tr1 (n=4), tr2 (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (tr1 (n=4), tr2 (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "save_pigauto and load_pigauto round-trip correctly",
+      "file": "test-new-features.R",
+      "line": "305",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "84",
+      "message": "Small validation set for 4 trait(s): cont1 (n=1), cont2 (n=1), binary_trait (n=1), cat_trait (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (cont1 (n=1), cont2 (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "simulate_benchmark mixed scenario handles discrete traits",
+      "file": "test-new-features.R",
+      "line": "327",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "85",
+      "message": "'covariates' are ignored by the joint MVN baseline (Rphylopars has no covariate design). The baseline is covariate-free; covariates still reach the GNN correction. To get a covariate-aware baseline, force the per-column path (e.g. supply a single BM-eligible trait, or uninstall/mask Rphylopars).",
+      "test": "impute() accepts covariates and threads them through the pipeline",
+      "file": "test-new-features.R",
+      "line": "359",
+      "last_call": ".fit_baseline_core(data = data, tree = tree, splits = splits,      model = model, graph = graph, multi_obs_aggregation = multi_obs_aggregation,      lambda_mode = lambda_mode, lambda_fixed = .pigauto_lambda_fixed_for_route(lambda_fixed,          \"exact\"), discrete_lambda = discrete_lambda, em_iterations = em_iterations,      em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,      predict_method = \"exact\", joint_refine_iter = joint_refine_iter,      predict_method_explicit = FALSE)",
+      "category": "covariates_joint_baseline"
+    },
+    {
+      "id": "86",
+      "message": "'covariates' are ignored by the joint MVN baseline (Rphylopars has no covariate design). The baseline is covariate-free; covariates still reach the GNN correction. To get a covariate-aware baseline, force the per-column path (e.g. supply a single BM-eligible trait, or uninstall/mask Rphylopars).",
+      "test": "impute() accepts covariates and threads them through the pipeline",
+      "file": "test-new-features.R",
+      "line": "359",
+      "last_call": ".fit_baseline_core(data = data, tree = tree, splits = splits,      model = model, graph = graph, multi_obs_aggregation = multi_obs_aggregation,      lambda_mode = lambda_mode, lambda_fixed = .pigauto_lambda_fixed_for_route(lambda_fixed,          \"per_column\"), discrete_lambda = discrete_lambda, em_iterations = em_iterations,      em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,      predict_method = \"per_column\", joint_refine_iter = joint_refine_iter,      predict_method_explicit = FALSE)",
+      "category": "covariates_joint_baseline"
+    },
+    {
+      "id": "87",
+      "message": "Small validation set for 2 trait(s): y (n=3), x1 (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (y (n=3), x1 (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "impute() accepts covariates and threads them through the pipeline",
+      "file": "test-new-features.R",
+      "line": "359",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "88",
+      "message": "'covariates' are ignored by the joint MVN baseline (Rphylopars has no covariate design). The baseline is covariate-free; covariates still reach the GNN correction. To get a covariate-aware baseline, force the per-column path (e.g. supply a single BM-eligible trait, or uninstall/mask Rphylopars).",
+      "test": "impute() with species_col + covariates runs end-to-end",
+      "file": "test-new-features.R",
+      "line": "442",
+      "last_call": ".fit_baseline_core(data = data, tree = tree, splits = splits,      model = model, graph = graph, multi_obs_aggregation = multi_obs_aggregation,      lambda_mode = lambda_mode, lambda_fixed = .pigauto_lambda_fixed_for_route(lambda_fixed,          \"exact\"), discrete_lambda = discrete_lambda, em_iterations = em_iterations,      em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,      predict_method = \"exact\", joint_refine_iter = joint_refine_iter,      predict_method_explicit = FALSE)",
+      "category": "covariates_joint_baseline"
+    },
+    {
+      "id": "89",
+      "message": "'covariates' are ignored by the joint MVN baseline (Rphylopars has no covariate design). The baseline is covariate-free; covariates still reach the GNN correction. To get a covariate-aware baseline, force the per-column path (e.g. supply a single BM-eligible trait, or uninstall/mask Rphylopars).",
+      "test": "impute() with species_col + covariates runs end-to-end",
+      "file": "test-new-features.R",
+      "line": "442",
+      "last_call": ".fit_baseline_core(data = data, tree = tree, splits = splits,      model = model, graph = graph, multi_obs_aggregation = multi_obs_aggregation,      lambda_mode = lambda_mode, lambda_fixed = .pigauto_lambda_fixed_for_route(lambda_fixed,          \"per_column\"), discrete_lambda = discrete_lambda, em_iterations = em_iterations,      em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,      predict_method = \"per_column\", joint_refine_iter = joint_refine_iter,      predict_method_explicit = FALSE)",
+      "category": "covariates_joint_baseline"
+    },
+    {
+      "id": "90",
+      "message": "'covariates' are ignored by the joint MVN baseline (Rphylopars has no covariate design). The baseline is covariate-free; covariates still reach the GNN correction. To get a covariate-aware baseline, force the per-column path (e.g. supply a single BM-eligible trait, or uninstall/mask Rphylopars).",
+      "test": "impute() with species_col + covariates runs end-to-end",
+      "file": "test-new-features.R",
+      "line": "442",
+      "last_call": ".fit_baseline_core(data = data, tree = tree, splits = splits,      model = model, graph = graph, multi_obs_aggregation = multi_obs_aggregation,      lambda_mode = lambda_mode, lambda_fixed = .pigauto_lambda_fixed_for_route(lambda_fixed,          r), discrete_lambda = discrete_lambda, em_iterations = em_iterations,      em_tol = em_tol, em_offdiag = em_offdiag, joint_solver = joint_solver,      predict_method = r, joint_refine_iter = joint_refine_iter,      predict_method_explicit = FALSE)",
+      "category": "covariates_joint_baseline"
+    },
+    {
+      "id": "91",
+      "message": "gnn = FALSE (the default): user covariates are used only by the GNN and are ignored for this fit. Set gnn = TRUE to use them.",
+      "test": "impute() with species_col + covariates runs end-to-end",
+      "file": "test-new-features.R",
+      "line": "442",
+      "last_call": "fit_pigauto(data = pd, tree = tree, splits = splits, graph = graph,      baseline = baseline, gnn = gnn, baseline_full = baseline_full,      epochs = as.integer(epochs), verbose = verbose, seed = if (is.null(seed)) NULL else as.integer(seed),      safety_floor = safety_floor, phylo_signal_gate = phylo_signal_gate,      phylo_signal_threshold = phylo_signal_threshold, phylo_signal_method = phylo_signal_method,      lambda_mode = lambda_mode, discrete_lambda = discrete_lambda,      joint_solver = joint_solver, predict_method = predict_method,      joint_refine_iter = joint_refine_iter, conformal_split_val = conformal_split_val,      ...)",
+      "category": "covariates_gnn_off"
+    },
+    {
+      "id": "92",
+      "message": "Small validation set for 2 trait(s): y1 (n=6), y2 (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (y1 (n=6), y2 (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "impute() with species_col + covariates runs end-to-end",
+      "file": "test-new-features.R",
+      "line": "442",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "93",
+      "message": "gnn = FALSE (the default): user covariates are used only by the GNN and are ignored for this fit. Set gnn = TRUE to use them.",
+      "test": "multi_impute() with species_col + covariates runs end-to-end",
+      "file": "test-new-features.R",
+      "line": "486",
+      "last_call": "fit_pigauto(data = pd, tree = tree, splits = splits, graph = graph,      baseline = baseline, gnn = gnn, baseline_full = baseline_full,      epochs = as.integer(epochs), verbose = verbose, seed = if (is.null(seed)) NULL else as.integer(seed),      safety_floor = safety_floor, phylo_signal_gate = phylo_signal_gate,      phylo_signal_threshold = phylo_signal_threshold, phylo_signal_method = phylo_signal_method,      lambda_mode = lambda_mode, discrete_lambda = discrete_lambda,      joint_solver = joint_solver, predict_method = predict_method,      joint_refine_iter = joint_refine_iter, conformal_split_val = conformal_split_val,      ...)",
+      "category": "covariates_gnn_off"
+    },
+    {
+      "id": "94",
+      "message": "Small validation set for 1 trait(s): trait1 (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (trait1 (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "multi_impute() with species_col + covariates runs end-to-end",
+      "file": "test-new-features.R",
+      "line": "486",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "95",
+      "message": "Small validation set for 1 trait(s): y (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (y (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "multi-obs + covariates: obs-level refinement produces within-species variation",
+      "file": "test-new-features.R",
+      "line": "525",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "96",
+      "message": "Small validation set for 1 trait(s): y (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (y (n=4)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "multi-obs WITHOUT covariates: within-species predictions are uniform",
+      "file": "test-new-features.R",
+      "line": "558",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "97",
+      "message": "gnn = FALSE (the default): user covariates are used only by the GNN and are ignored for this fit. Set gnn = TRUE to use them.",
+      "test": "multi-obs + covariates: fit stores multi_obs flag and obs metadata",
+      "file": "test-new-features.R",
+      "line": "585",
+      "last_call": "fit_pigauto(data = pd, tree = tree, splits = splits, graph = graph,      baseline = baseline, gnn = gnn, baseline_full = baseline_full,      epochs = as.integer(epochs), verbose = verbose, seed = if (is.null(seed)) NULL else as.integer(seed),      safety_floor = safety_floor, phylo_signal_gate = phylo_signal_gate,      phylo_signal_threshold = phylo_signal_threshold, phylo_signal_method = phylo_signal_method,      lambda_mode = lambda_mode, discrete_lambda = discrete_lambda,      joint_solver = joint_solver, predict_method = predict_method,      joint_refine_iter = joint_refine_iter, conformal_split_val = conformal_split_val,      ...)",
+      "category": "covariates_gnn_off"
+    },
+    {
+      "id": "98",
+      "message": "Small validation set for 1 trait(s): val (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (val (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "multi-obs + covariates: fit stores multi_obs flag and obs metadata",
+      "file": "test-new-features.R",
+      "line": "585",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "99",
+      "message": "Small validation set for 3 trait(s): x (n=1), y (n=2), z (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (x (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "fit_pigauto end-to-end works with OVR categorical baseline",
+      "file": "test-ovr-categorical.R",
+      "line": "84",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "100",
+      "message": "Small validation set for 2 trait(s): trait1 (n=5), trait2 (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (trait1 (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "em_iterations = 0L via impute() matches default impute() baseline",
+      "file": "test-phase6-em.R",
+      "line": "126",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "101",
+      "message": "Small validation set for 2 trait(s): trait1 (n=5), trait2 (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (trait1 (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "em_iterations = 0L via impute() matches default impute() baseline",
+      "file": "test-phase6-em.R",
+      "line": "128",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "102",
+      "message": "Small validation set for 2 trait(s): x (n=1), z (n=4). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (x (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "fit_pigauto end-to-end with transformer blocks on synthetic data",
+      "file": "test-phase9-integration.R",
+      "line": "128",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "103",
+      "message": "Small validation set for 2 trait(s): x (n=1), y (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (x (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "legacy architecture (use_transformer_blocks = FALSE) still trains",
+      "file": "test-phase9-integration.R",
+      "line": "165",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "104",
+      "message": "Small validation set for 5 trait(s): Mass (n=17), Beak.Length_Culmen (n=18), Trophic.Level (n=17), Primary.Lifestyle (n=19), Migration (n=15). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (Mass (n=17), Beak.Length_Culmen (n=18), Migration (n=15)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "fit_pigauto end-to-end converges with transformer blocks on small data",
+      "file": "test-phase9-integration.R",
+      "line": "193",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "105",
+      "message": "Small validation set for 5 trait(s): Mass (n=17), Beak.Length_Culmen (n=18), Trophic.Level (n=17), Primary.Lifestyle (n=19), Migration (n=15). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (Mass (n=17), Beak.Length_Culmen (n=18), Migration (n=15)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "fit_pigauto end-to-end converges with transformer blocks on small data",
+      "file": "test-phase9-integration.R",
+      "line": "210",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "106",
+      "message": "Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.\nConsider setting: n_imputations = 20L, pool_method = 'mode'.\nSee ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').",
+      "test": "fit_pigauto(phylo_signal_gate = TRUE) stores phylo_signal slots",
+      "file": "test-phylo-signal-gate.R",
+      "line": "61",
+      "last_call": "pigauto::impute(df, tree300, phylo_signal_gate = TRUE, phylo_signal_threshold = 0.2,      safety_floor = TRUE, epochs = 50L, n_imputations = 1L, verbose = FALSE,      seed = 2026L)",
+      "category": "imbalanced_ordinal"
+    },
+    {
+      "id": "107",
+      "message": "the standard deviation is zero",
+      "test": "fit_pigauto gates weak-signal traits to (0, 0, 1) exactly",
+      "file": "test-phylo-signal-gate.R",
+      "line": "87",
+      "last_call": "stats::cor(t_j[ok], p_j[ok])",
+      "category": "undefined_constant_correlation"
+    },
+    {
+      "id": "108",
+      "message": "the standard deviation is zero",
+      "test": "fit_pigauto gates weak-signal traits to (0, 0, 1) exactly",
+      "file": "test-phylo-signal-gate.R",
+      "line": "87",
+      "last_call": "stats::cor(t_j[ok], p_j[ok])",
+      "category": "undefined_constant_correlation"
+    },
+    {
+      "id": "109",
+      "message": "Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.\nConsider setting: n_imputations = 20L, pool_method = 'mode'.\nSee ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').",
+      "test": "phylo_signal_gate = TRUE is opt-in (default FALSE since 0.11.0.9002) and threads to fit",
+      "file": "test-phylo-signal-gate.R",
+      "line": "115",
+      "last_call": "pigauto::impute(df, tree300, phylo_signal_gate = TRUE, epochs = 30L,      n_imputations = 1L, verbose = FALSE, seed = 2026L)",
+      "category": "imbalanced_ordinal"
+    },
+    {
+      "id": "110",
+      "message": "Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.\nConsider setting: n_imputations = 20L, pool_method = 'mode'.\nSee ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').",
+      "test": "phylo_signal_gate = TRUE is opt-in (default FALSE since 0.11.0.9002) and threads to fit",
+      "file": "test-phylo-signal-gate.R",
+      "line": "121",
+      "last_call": "pigauto::impute(df, tree300, epochs = 30L, n_imputations = 1L,      verbose = FALSE, seed = 2026L)",
+      "category": "imbalanced_ordinal"
+    },
+    {
+      "id": "111",
+      "message": "Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.\nConsider setting: n_imputations = 20L, pool_method = 'mode'.\nSee ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').",
+      "test": "phylo_signal_gate = TRUE is opt-in (default FALSE since 0.11.0.9002) and threads to fit",
+      "file": "test-phylo-signal-gate.R",
+      "line": "124",
+      "last_call": "pigauto::impute(df, tree300, phylo_signal_gate = FALSE, epochs = 30L,      n_imputations = 1L, verbose = FALSE, seed = 2026L)",
+      "category": "imbalanced_ordinal"
+    },
+    {
+      "id": "112",
+      "message": "phylo_signal_gate triggered for 1 latent column(s) but safety_floor = FALSE (or mean baseline unavailable); falling back to BM (r_cal_bm = 1) instead of the mean corner, which would become latent 0 at predict time.",
+      "test": "print.pigauto_fit shows phylogenetic-signal section when gate triggered",
+      "file": "test-phylo-signal-gate.R",
+      "line": "140",
+      "last_call": "fit_pigauto(data = pd, tree = tree, splits = splits, graph = graph,      baseline = baseline, gnn = gnn, baseline_full = baseline_full,      epochs = as.integer(epochs), verbose = verbose, seed = if (is.null(seed)) NULL else as.integer(seed),      safety_floor = safety_floor, phylo_signal_gate = phylo_signal_gate,      phylo_signal_threshold = phylo_signal_threshold, phylo_signal_method = phylo_signal_method,      lambda_mode = lambda_mode, discrete_lambda = discrete_lambda,      joint_solver = joint_solver, predict_method = predict_method,      joint_refine_iter = joint_refine_iter, conformal_split_val = conformal_split_val,      ...)",
+      "category": "signal_gate_fallback"
+    },
+    {
+      "id": "113",
+      "message": "Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[Phase G' L3] PMM imputed values are EXACTLY in the observed value set",
+      "file": "test-pmm.R",
+      "line": "154",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "114",
+      "message": "Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[Phase G' L3] PMM never produces values outside observed range",
+      "file": "test-pmm.R",
+      "line": "177",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "115",
+      "message": "Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[Phase G' L3] PMM does NOT modify observed values",
+      "file": "test-pmm.R",
+      "line": "198",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "116",
+      "message": "Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[Phase G' L4] match_observed = 'none' default preserves backward compat",
+      "file": "test-pmm.R",
+      "line": "221",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "117",
+      "message": "Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[Phase G' L4] match_observed = 'none' default preserves backward compat",
+      "file": "test-pmm.R",
+      "line": "224",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "118",
+      "message": "Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[Phase G' L4] match_observed = 'pmm' and clamp_outliers = TRUE coexist",
+      "file": "test-pmm.R",
+      "line": "244",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "119",
+      "message": "Small validation set for 1 trait(s): bin (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[Phase G' L4] non-eligible trait types pass through PMM unchanged",
+      "file": "test-pmm.R",
+      "line": "264",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "120",
+      "message": "Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[Phase G' L5] PMM with K=1 is fully deterministic given a seed",
+      "file": "test-pmm.R",
+      "line": "308",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "121",
+      "message": "Small validation set for 1 trait(s): mass (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[Phase G' L5] PMM with K=1 is fully deterministic given a seed",
+      "file": "test-pmm.R",
+      "line": "312",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "122",
+      "message": "Small validation set for 1 trait(s): mass (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[Phase G' acceptance] PMM caps a synthetic tail blow-up better than no-clamp",
+      "file": "test-pmm.R",
+      "line": "343",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "123",
+      "message": "Small validation set for 1 trait(s): mass (n=6). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=6)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[Phase G' acceptance] PMM caps a synthetic tail blow-up better than no-clamp",
+      "file": "test-pmm.R",
+      "line": "348",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "124",
+      "message": "Small validation set for 5 trait(s): cont (n=2), cnt (n=1), bin (n=5), cat3 (n=2), prop (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (cont (n=2), cnt (n=1), prop (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "impute() preserves observed (non-NA) cells exactly for every trait type",
+      "file": "test-property-invariants.R",
+      "line": "52",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "125",
+      "message": "Small validation set for 1 trait(s): range (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (range (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "pigauto_report rejects bad data, splits, title, output_path, and open",
+      "file": "test-report-213.R",
+      "line": "39",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "126",
+      "message": "Small validation set for 1 trait(s): range (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (range (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "pigauto_report HTML-escapes a title that contains markup",
+      "file": "test-report-213.R",
+      "line": "83",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "127",
+      "message": "Small validation set for 1 trait(s): mass (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "plot, plot_uncertainty, and save_pigauto accept a pigauto_result",
+      "file": "test-result-save-209.R",
+      "line": "15",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "128",
+      "message": "Small validation set for 1 trait(s): mass (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "load_pigauto() then predict() works",
+      "file": "test-result-save-209.R",
+      "line": "28",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "129",
+      "message": "Small validation set for 1 trait(s): mass (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (mass (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "raw saveRDS/readRDS then predict names save_pigauto",
+      "file": "test-result-save-209.R",
+      "line": "39",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "130",
+      "message": "95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (x1 (n=10)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "calibrate_gates() returns list with r_cal_bm/r_cal_gnn/r_cal_mean",
+      "file": "test-safety-floor.R",
+      "line": "104",
+      "last_call": "pigauto:::calibrate_gates(trait_map = tm, mu_cal = mu, delta_cal = delta,      X_truth_r = truth, val_mask_mat = val, gate_grid = c(0, 0.25,          0.5, 0.75, 1), gate_cap = 1, latent_names = \"x1\", verbose = FALSE,      seed = 2026L)",
+      "category": "conformal_sample_limit"
+    },
+    {
+      "id": "131",
+      "message": "Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.\nConsider setting: n_imputations = 20L, pool_method = 'mode'.\nSee ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').",
+      "test": "fit_pigauto(safety_floor = TRUE) stores mean_baseline_per_col + simplex weights on fit",
+      "file": "test-safety-floor.R",
+      "line": "195",
+      "last_call": "pigauto::impute(df, tree300, safety_floor = TRUE, epochs = 50L,      n_imputations = 1L, verbose = FALSE, seed = 2026L)",
+      "category": "imbalanced_ordinal"
+    },
+    {
+      "id": "132",
+      "message": "Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.\nConsider setting: n_imputations = 20L, pool_method = 'mode'.\nSee ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').",
+      "test": "fit_pigauto(safety_floor = FALSE) reproduces v0.9.1 behaviour (r_mean = 0, mean_baseline_per_col NULL or 0)",
+      "file": "test-safety-floor.R",
+      "line": "219",
+      "last_call": "pigauto::impute(df, tree300, safety_floor = FALSE, epochs = 50L,      n_imputations = 1L, verbose = FALSE, seed = 2026L)",
+      "category": "imbalanced_ordinal"
+    },
+    {
+      "id": "133",
+      "message": "95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (x1 (n=15)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "calibrate_gates(safety_floor = TRUE, median_splits) produces finite weights",
+      "file": "test-safety-floor.R",
+      "line": "241",
+      "last_call": "pigauto:::calibrate_gates(trait_map = tm, mu_cal = mu, delta_cal = delta,      X_truth_r = truth, val_mask_mat = val, gate_grid = seq(0,          1, 0.1), gate_cap = 1, safety_floor = TRUE, mean_baseline_per_col = c(x1 = 0),      simplex_step = 0.05, gate_method = \"median_splits\", gate_splits_B = 31L,      latent_names = \"x1\", verbose = FALSE, seed = 7L)",
+      "category": "conformal_sample_limit"
+    },
+    {
+      "id": "134",
+      "message": "Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.\nConsider setting: n_imputations = 20L, pool_method = 'mode'.\nSee ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').",
+      "test": "predict.pigauto_fit uses 3-way blend when r_cal_mean > 0",
+      "file": "test-safety-floor.R",
+      "line": "270",
+      "last_call": "pigauto::impute(df, tree300, safety_floor = TRUE, epochs = 50L,      n_imputations = 1L, verbose = FALSE, seed = 2026L)",
+      "category": "imbalanced_ordinal"
+    },
+    {
+      "id": "135",
+      "message": "Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.\nConsider setting: n_imputations = 20L, pool_method = 'mode'.\nSee ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').",
+      "test": "predict.pigauto_fit falls back to 2-way blend on legacy v0.9.1 fits (null r_cal_mean)",
+      "file": "test-safety-floor.R",
+      "line": "295",
+      "last_call": "pigauto::impute(df, tree300, safety_floor = FALSE, epochs = 50L,      n_imputations = 1L, verbose = FALSE, seed = 2026L)",
+      "category": "imbalanced_ordinal"
+    },
+    {
+      "id": "136",
+      "message": "Few tree-sensitivity draws (T * m_per_tree = 3). Descriptive sensitivity summaries may be unstable.",
+      "test": "multi_impute_trees(share_gnn = TRUE, safety_floor = TRUE) reuses safety weights across trees",
+      "file": "test-safety-floor.R",
+      "line": "331",
+      "last_call": "pigauto::multi_impute_trees(df, trees300[1:3], m_per_tree = 1L,      share_gnn = TRUE, safety_floor = TRUE, epochs = 50L, verbose = FALSE,      seed = 2026L)",
+      "category": "few_tree_draws"
+    },
+    {
+      "id": "137",
+      "message": "Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.\nConsider setting: n_imputations = 20L, pool_method = 'mode'.\nSee ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').",
+      "test": "multi_impute_trees(share_gnn = TRUE, safety_floor = TRUE) reuses safety weights across trees",
+      "file": "test-safety-floor.R",
+      "line": "331",
+      "last_call": "impute(traits = traits, tree = reference_tree, species_col = species_col,      trait_types = trait_types, multi_proportion_groups = multi_proportion_groups,      log_transform = log_transform, missing_frac = missing_frac,      n_imputations = m_per_tree, covariates = covariates, epochs = as.integer(epochs),      verbose = FALSE, seed = if (is.null(seed)) NULL else as.integer(seed),      gnn = gnn, ...)",
+      "category": "imbalanced_ordinal"
+    },
+    {
+      "id": "138",
+      "message": "Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.\nConsider setting: n_imputations = 20L, pool_method = 'mode'.\nSee ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').",
+      "test": "multi_impute(safety_floor = TRUE) pooled point + SE are finite",
+      "file": "test-safety-floor.R",
+      "line": "382",
+      "last_call": "impute(traits = traits, tree = tree, species_col = species_col,      trait_types = trait_types, multi_proportion_groups = multi_proportion_groups,      log_transform = log_transform, missing_frac = missing_frac,      n_imputations = 1L, covariates = covariates, epochs = as.integer(epochs),      verbose = verbose, seed = if (is.null(seed)) NULL else as.integer(seed),      gnn = gnn, lambda_mode = lambda_mode, ...)",
+      "category": "imbalanced_ordinal"
+    },
+    {
+      "id": "139",
+      "message": "Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.\nConsider setting: n_imputations = 20L, pool_method = 'mode'.\nSee ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').",
+      "test": "safety_floor = TRUE preserves vertebrate lift on AVONET300 (within +2% RMSE / -1pp acc)",
+      "file": "test-safety-floor.R",
+      "line": "439",
+      "last_call": "pigauto::impute(df, tree300, safety_floor = FALSE, epochs = 80L,      n_imputations = 1L, verbose = FALSE, seed = 2026L)",
+      "category": "imbalanced_ordinal"
+    },
+    {
+      "id": "140",
+      "message": "Small validation set for 1 trait(s): Mass (n=18). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (Mass (n=18)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "safety_floor = TRUE preserves vertebrate lift on AVONET300 (within +2% RMSE / -1pp acc)",
+      "file": "test-safety-floor.R",
+      "line": "439",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "141",
+      "message": "Imbalanced K>=3 ordinal trait 'Migration' with a small validation set may collapse to the majority class.\nConsider setting: n_imputations = 20L, pool_method = 'mode'.\nSee ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').",
+      "test": "safety_floor = TRUE preserves vertebrate lift on AVONET300 (within +2% RMSE / -1pp acc)",
+      "file": "test-safety-floor.R",
+      "line": "442",
+      "last_call": "pigauto::impute(df, tree300, safety_floor = TRUE, epochs = 80L,      n_imputations = 1L, verbose = FALSE, seed = 2026L)",
+      "category": "imbalanced_ordinal"
+    },
+    {
+      "id": "142",
+      "message": "Small validation set for 1 trait(s): Mass (n=18). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (Mass (n=18)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "safety_floor = TRUE preserves vertebrate lift on AVONET300 (within +2% RMSE / -1pp acc)",
+      "file": "test-safety-floor.R",
+      "line": "442",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "143",
+      "message": "Small validation set for 4 trait(s): x_cont (n=10), x_bin (n=9), x_cat (n=14), x_cnt (n=14). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (x_cont (n=10), x_cnt (n=14)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "strict val-floor: pigauto val-loss <= baseline val-loss per trait, all types",
+      "file": "test-safety-floor.R",
+      "line": "647",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "144",
+      "message": "Small validation set for 1 trait(s): b (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[B4] discrete strict floor: BM wins ties over MEAN in corner selection",
+      "file": "test-safety-floor.R",
+      "line": "813",
+      "last_call": "pigauto:::calibrate_gates(trait_map = tm, mu_cal = mu, delta_cal = delta,      X_truth_r = truth, val_mask_mat = val, gate_grid = seq(0,          1, 0.1), gate_cap = 1, safety_floor = TRUE, mean_baseline_per_col = mean_per_col,      simplex_step = 0.1, latent_names = \"b\", verbose = FALSE,      seed = 2031L)",
+      "category": "small_validation"
+    },
+    {
+      "id": "145",
+      "message": "Small validation set for 1 trait(s): x (n=5). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (x (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[CV] cv_folds with n_val < K folds back to single_split-like behaviour",
+      "file": "test-safety-floor.R",
+      "line": "1033",
+      "last_call": "pigauto:::calibrate_gates(trait_map = tm, mu_cal = mu, delta_cal = delta,      X_truth_r = truth, val_mask_mat = val, gate_grid = seq(0,          1, 0.1), gate_cap = 1, safety_floor = TRUE, mean_baseline_per_col = c(x = 0),      simplex_step = 0.1, gate_method = \"cv_folds\", gate_cv_folds = 10L,      latent_names = \"x\", verbose = FALSE, seed = 2052L)",
+      "category": "small_validation"
+    },
+    {
+      "id": "146",
+      "message": "the standard deviation is zero",
+      "test": "Phase B3 warning stays silent for balanced K=5 ordinal trait",
+      "file": "test-safety-nets.R",
+      "line": "40",
+      "last_call": "stats::cor(t_j[ok], p_j[ok], method = \"spearman\")",
+      "category": "undefined_constant_correlation"
+    },
+    {
+      "id": "147",
+      "message": "the standard deviation is zero",
+      "test": "Phase B3 warning stays silent for balanced K=5 ordinal trait",
+      "file": "test-safety-nets.R",
+      "line": "40",
+      "last_call": "stats::cor(t_j[ok], p_j[ok], method = \"spearman\")",
+      "category": "undefined_constant_correlation"
+    },
+    {
+      "id": "148",
+      "message": "Small validation set for 2 trait(s): trait1 (n=1), trait2 (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (trait1 (n=1), trait2 (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "predict.pigauto_fit accepts baseline_override and uses it in place of object$baseline",
+      "file": "test-share-gnn.R",
+      "line": "13",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "149",
+      "message": "Small validation set for 2 trait(s): cont (n=1), bin (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[T2A] plot_history_gg returns a ggplot for a fit with $history",
+      "file": "test-shipping-coverage.R",
+      "line": "108",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal_gates,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal_gates,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "150",
+      "message": "Small validation set for 2 trait(s): cont (n=3), bin (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[T2A] plot_uncertainty returns a ggplot for a continuous trait",
+      "file": "test-shipping-coverage.R",
+      "line": "120",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "151",
+      "message": "Small validation set for 2 trait(s): cont (n=3), bin (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[T2B] multi_impute(draws_method = 'mc_dropout') returns m completed datasets",
+      "file": "test-shipping-coverage.R",
+      "line": "136",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "152",
+      "message": "Small validation set for 2 trait(s): cont (n=2), bin (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[T2B] fit_pigauto(use_attention = FALSE) runs end-to-end and predicts",
+      "file": "test-shipping-coverage.R",
+      "line": "152",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "153",
+      "message": "Small validation set for 2 trait(s): cont (n=1), bin (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[T2B] fit_pigauto(conformal_method = 'bootstrap') stores conformal scores",
+      "file": "test-shipping-coverage.R",
+      "line": "168",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "154",
+      "message": "3 species in traits not found in tree -- dropped.",
+      "test": "species_col imputes when 3 of 20 data species are missing from the tree",
+      "file": "test-species-mismatch-205.R",
+      "line": "24",
+      "last_call": "impute(d$dfa, d$tree, species_col = \"species\", epochs = 8L, verbose = FALSE,      seed = 20261004)",
+      "category": "species_dropped"
+    },
+    {
+      "id": "155",
+      "message": "Small validation set for 2 trait(s): x (n=2), y (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (x (n=2), y (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "species_col imputes when 3 of 20 data species are missing from the tree",
+      "file": "test-species-mismatch-205.R",
+      "line": "24",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "156",
+      "message": "Small validation set for 1 trait(s): x (n=2). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (x (n=2)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "species_col imputes when 8 of 20 tree tips have no data",
+      "file": "test-species-mismatch-205.R",
+      "line": "40",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "157",
+      "message": "Small validation set for 2 trait(s): x (n=1), y (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (x (n=1), y (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "summary() keeps r_cal = 0 as a legal fallback",
+      "file": "test-species-mismatch-205.R",
+      "line": "48",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "158",
+      "message": "Small validation set for 2 trait(s): z (n=8), x (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (z (n=8), x (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "zi_count fit produces finite conformal bounds where magnitude is defined",
+      "file": "test-zi-count-conformal-intervals.R",
+      "line": "28",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "159",
+      "message": "Small validation set for 2 trait(s): z (n=8), x (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (z (n=8), x (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "zi_count conformal bounds back-transform monotonically with the score width",
+      "file": "test-zi-count-conformal-intervals.R",
+      "line": "47",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "160",
+      "message": "Small validation set for 2 trait(s): z (n=8), x (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (z (n=8), x (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "zi_count conformal interval is conditional -- not an E[X] interval -- and the gate stays separately available",
+      "file": "test-zi-count-conformal-intervals.R",
+      "line": "77",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    },
+    {
+      "id": "161",
+      "message": "Small validation set for 2 trait(s): z (n=6), x (n=5). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (z (n=6), x (n=5)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.",
+      "test": "[P1-9] a zi_count fit still runs end to end with zeros held out",
+      "file": "test-zi-count-splits.R",
+      "line": "70",
+      "last_call": "calibrate_gates(trait_map = trait_map, mu_cal = mu_cal, delta_cal = delta_cal,      X_truth_r = X_truth_r, val_mask_mat = val_mask_cal, gate_grid = seq(0,          gate_cap, length.out = 9L), gate_cap = gate_cap, gate_method = gate_method,      gate_splits_B = gate_splits_B, gate_cv_folds = gate_cv_folds,      safety_floor = safety_floor, mean_baseline_per_col = mean_baseline_per_col,      simplex_step = 0.05, min_val_cells = min_val_cells, fixed_cal = fixed_cal,      seed = seed, latent_names = data$latent_names, verbose = verbose)",
+      "category": "small_validation"
+    }
+  ],
+  "skips": [
+    {
+      "id": 1,
+      "message": "Reason: script/gha/_bace_compat.R not found at ../../script/gha/_bace_compat.R",
+      "test": "BACE-compat eval pools discrete-type accuracy via pooled_point",
+      "file": "test-bace-compat-eval.R",
+      "line": 22,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 2,
+      "message": "Reason: script/gha/_bace_compat.R not found at ../../script/gha/_bace_compat.R",
+      "test": "BACE-compat eval computes coverage_95 + interval_width from conformal bounds",
+      "file": "test-bace-compat-eval.R",
+      "line": 85,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 3,
+      "message": "Reason: script/gha/_bace_compat.R not found at ../../script/gha/_bace_compat.R",
+      "test": "BACE-compat eval computes Brier score from per-class probabilities",
+      "file": "test-bace-compat-eval.R",
+      "line": 129,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 4,
+      "message": "Reason: script/gha/_bace_compat.R not found at ../../script/gha/_bace_compat.R",
+      "test": "BACE-compat eval pools continuous RMSE via pooled_point under auto mode",
+      "file": "test-bace-compat-eval.R",
+      "line": 177,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 5,
+      "message": "Reason: source-surface assertions run in the dedicated repository gate",
+      "test": "canonical novice journey is present in the public sources",
+      "file": "test-community-surface.R",
+      "line": 10,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 6,
+      "message": "Reason: source-surface assertions run in the dedicated repository gate",
+      "test": "recipes, advanced controls, and bounded claims remain visible",
+      "file": "test-community-surface.R",
+      "line": 57,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 7,
+      "message": "Reason: source-only pkgdown configuration is excluded from the package tarball",
+      "test": "public preflight and result methods are indexed by pkgdown",
+      "file": "test-community-surface.R",
+      "line": 75,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 8,
+      "message": "Reason: source-surface assertions run in the dedicated repository gate",
+      "test": "current public claim surfaces retain their stated boundaries",
+      "file": "test-community-surface.R",
+      "line": 85,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 9,
+      "message": "Reason: source-surface assertions run in the dedicated repository gate",
+      "test": "tree benchmark and interval help retain current boundaries",
+      "file": "test-community-surface.R",
+      "line": 97,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 10,
+      "message": "Reason: source-surface assertions run in the dedicated repository gate",
+      "test": "NEWS labels superseded public claims in their historical sections",
+      "file": "test-community-surface.R",
+      "line": 146,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 11,
+      "message": "Reason: source-only development archive is excluded from the package tarball",
+      "test": "unsafe historical development tombstones are archived off the public site",
+      "file": "test-community-surface.R",
+      "line": 193,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 12,
+      "message": "Reason: source file not installed during R CMD check: ../../vignettes/getting-started.Rmd",
+      "test": "getting-started Step 6 uses matrix indexing and evaluate() for coverage",
+      "file": "test-docs-phytools-warning.R",
+      "line": 17,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 13,
+      "message": "Reason: source file not installed during R CMD check: ../../README.md",
+      "test": "install text does not send a CRAN 0.10.0 user into check_pigauto()",
+      "file": "test-docs-phytools-warning.R",
+      "line": 26,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 14,
+      "message": "Reason: source file not installed during R CMD check: ../../R/phylo_signal.R",
+      "test": "phytools-missing warning names an install step",
+      "file": "test-docs-phytools-warning.R",
+      "line": 36,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 15,
+      "message": "Reason: source file not installed during R CMD check: ../../README.md",
+      "test": "docs state the split-conformal clade assumption",
+      "file": "test-docs-phytools-warning.R",
+      "line": 43,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 16,
+      "message": "Reason: source file not installed during R CMD check: ../../README.md",
+      "test": "Wave 2 coverage figures are not quoted as a new measurement",
+      "file": "test-docs-phytools-warning.R",
+      "line": 53,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 17,
+      "message": "Reason: On CRAN",
+      "test": "default multi_impute() on continuous data gives poolable posterior draws",
+      "file": "test-draws-auto.R",
+      "line": 67,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 18,
+      "message": "Reason: On CRAN",
+      "test": "default multi_impute() on mixed-type data falls back to conformal",
+      "file": "test-draws-auto.R",
+      "line": 82,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 19,
+      "message": "Reason: rgbif IS installed; cannot test missing-rgbif branch",
+      "test": ".gbif_fetch_one reports helpful error when rgbif missing",
+      "file": "test-gbif-centroids.R",
+      "line": 92,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 20,
+      "message": "Reason: slow integration - set NOT_CRAN=TRUE to run",
+      "test": "end-to-end: GBIF centroids don't regress plants RMSE (>=1.10x guardrail on env traits)",
+      "file": "test-gbif-centroids.R",
+      "line": 226,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 21,
+      "message": "Reason: script/gha helpers are not shipped in the built package",
+      "test": "[gha-config] PIGAUTO_CI_CONFIG loads with documented defaults",
+      "file": "test-gha-helpers.R",
+      "line": 19,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 22,
+      "message": "Reason: script/gha helpers are not shipped in the built package",
+      "test": "[gha-config] .normalize_eval() projects to the canonical schema",
+      "file": "test-gha-helpers.R",
+      "line": 34,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 23,
+      "message": "Reason: script/gha helpers are not shipped in the built package",
+      "test": "[gha-mask] latent-cell -> user-col mask projection is correct",
+      "file": "test-gha-helpers.R",
+      "line": 68,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 24,
+      "message": "Reason: script/gha helpers are not shipped in the built package",
+      "test": "[gha-snapshot] snapshot_bace_one() projects BACE summary to canonical schema",
+      "file": "test-gha-helpers.R",
+      "line": 104,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 25,
+      "message": "Reason: script/gha helpers are not shipped in the built package",
+      "test": "[gha-stage] stage_ci_run() copies the right files into useful/ci_runs/",
+      "file": "test-gha-helpers.R",
+      "line": 147,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 26,
+      "message": "Reason: script/gha helpers are not shipped in the built package",
+      "test": "[gha-h2h] build_h2h_report produces report.md + summary tbl",
+      "file": "test-gha-helpers.R",
+      "line": 176,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 27,
+      "message": "Reason: script/gha helpers are not shipped in the built package",
+      "test": "[gha-eval] .eval_per_imputation() emits canonical long-format rows",
+      "file": "test-gha-helpers.R",
+      "line": 214,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 28,
+      "message": "Reason: On CRAN",
+      "test": "fit_pigauto(gnn = FALSE) returns a contract-conformant fit with zero torch calls",
+      "file": "test-gnn-off.R",
+      "line": 58,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 29,
+      "message": "Reason: On CRAN",
+      "test": "predict() on a GNN-off fit builds no model and reproduces the blended baseline",
+      "file": "test-gnn-off.R",
+      "line": 104,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 30,
+      "message": "Reason: On CRAN",
+      "test": "predict(n_imputations = 5) on a GNN-off fit yields BM-posterior draws",
+      "file": "test-gnn-off.R",
+      "line": 158,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 31,
+      "message": "Reason: On CRAN",
+      "test": "impute(gnn = FALSE) runs the whole pipeline fast",
+      "file": "test-gnn-off.R",
+      "line": 192,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 32,
+      "message": "Reason: On CRAN",
+      "test": "evaluate() on a GNN-off fit scores the held-out baseline (no leakage)",
+      "file": "test-gnn-off.R",
+      "line": 209,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 33,
+      "message": "Reason: On CRAN",
+      "test": "multi_impute(gnn = FALSE) works with both draw methods",
+      "file": "test-gnn-off.R",
+      "line": 247,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 34,
+      "message": "Reason: On CRAN",
+      "test": "multi_impute_trees(gnn = FALSE) works and calls no torch",
+      "file": "test-gnn-off.R",
+      "line": 267,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 35,
+      "message": "Reason: On CRAN",
+      "test": "cross_validate(gnn = FALSE) runs",
+      "file": "test-gnn-off.R",
+      "line": 298,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 36,
+      "message": "Reason: On CRAN",
+      "test": "save_pigauto / load_pigauto round-trip a GNN-off fit",
+      "file": "test-gnn-off.R",
+      "line": 311,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 37,
+      "message": "Reason: On CRAN",
+      "test": "gnn = TRUE path is unchanged",
+      "file": "test-gnn-off.R",
+      "line": 329,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 38,
+      "message": "Reason: On CRAN",
+      "test": "gnn = FALSE without a validation split falls back to pure baseline and predicts",
+      "file": "test-gnn-off.R",
+      "line": 352,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 39,
+      "message": "Reason: On CRAN",
+      "test": "gnn = FALSE warns that user covariates are ignored",
+      "file": "test-gnn-off.R",
+      "line": 368,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 40,
+      "message": "Reason: On CRAN",
+      "test": "print() and summary() announce a GNN-off fit",
+      "file": "test-gnn-off.R",
+      "line": 397,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 41,
+      "message": "Reason: On CRAN",
+      "test": "pure traditional-stats arm: gnn = FALSE with safety_floor = FALSE and phylo_signal_gate = FALSE",
+      "file": "test-gnn-off.R",
+      "line": 406,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 42,
+      "message": "Reason: On CRAN",
+      "test": "impute() with no gnn argument equals impute(gnn = FALSE)",
+      "file": "test-gnn-off.R",
+      "line": 450,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 43,
+      "message": "Reason: On CRAN",
+      "test": "covariates under the default gnn = FALSE warn and say how to use them",
+      "file": "test-gnn-off.R",
+      "line": 459,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 44,
+      "message": "Reason: On CRAN",
+      "test": "plot() on a default (gnn = FALSE) fit shows gates; history explains why it is absent",
+      "file": "test-gnn-off.R",
+      "line": 477,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 45,
+      "message": "Reason: On CRAN",
+      "test": "fit_joint_mvn_baseline recovers cross-trait structure on correlated BM",
+      "file": "test-joint-baseline.R",
+      "line": 12,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 46,
+      "message": "Reason: On CRAN",
+      "test": "joint baseline matches per-column BM on single-trait data",
+      "file": "test-joint-baseline.R",
+      "line": 64,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 47,
+      "message": "Reason: On CRAN",
+      "test": "joint baseline does not leak val/test cells into BM fit",
+      "file": "test-joint-baseline.R",
+      "line": 107,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 48,
+      "message": "Reason: On CRAN",
+      "test": "fit_baseline dispatches to joint MVN when trait count >= 2",
+      "file": "test-joint-baseline.R",
+      "line": 152,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 49,
+      "message": "Reason: On CRAN",
+      "test": "fit_baseline falls back cleanly when joint_mvn_available() is FALSE",
+      "file": "test-joint-baseline.R",
+      "line": 189,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 50,
+      "message": "Reason: On CRAN",
+      "test": "[joint-lambda] recovery: per-trait lambda_hat is not badly biased",
+      "file": "test-joint-lambda.R",
+      "line": 98,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 51,
+      "message": "Reason: On CRAN",
+      "test": "[joint-lambda] negative control: the estimator distinguishes lambda = 1 from lambda = 0.3",
+      "file": "test-joint-lambda.R",
+      "line": 130,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 52,
+      "message": "Reason: On CRAN",
+      "test": "[joint-lambda] rphylopars model: lambda = 'estimate' returns finite anc_recon and NA lambda_per_trait",
+      "file": "test-joint-lambda.R",
+      "line": 277,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 53,
+      "message": "Reason: On CRAN",
+      "test": "joint_refine_iter default (0L) is byte-identical whether passed explicitly or not",
+      "file": "test-joint-refine-iter.R",
+      "line": 27,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 54,
+      "message": "Reason: On CRAN",
+      "test": "joint_refine_iter = 3L runs, returns finite mu/se of identical shape, and differs from 0L",
+      "file": "test-joint-refine-iter.R",
+      "line": 39,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 55,
+      "message": "Reason: On CRAN",
+      "test": "joint_refine_iter validation rejects a negative value",
+      "file": "test-joint-refine-iter.R",
+      "line": 66,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 56,
+      "message": "Reason: On CRAN",
+      "test": "joint_refine_iter validation rejects a non-numeric value",
+      "file": "test-joint-refine-iter.R",
+      "line": 77,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 57,
+      "message": "Reason: On CRAN",
+      "test": "fit_pigauto() validates joint_refine_iter",
+      "file": "test-joint-refine-iter.R",
+      "line": 88,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 58,
+      "message": "Reason: On CRAN",
+      "test": "impute() validates joint_refine_iter",
+      "file": "test-joint-refine-iter.R",
+      "line": 99,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 59,
+      "message": "Reason: On CRAN",
+      "test": "impute() threads joint_refine_iter = 2L through to a working fit",
+      "file": "test-joint-refine-iter.R",
+      "line": 110,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 60,
+      "message": "Reason: On CRAN",
+      "test": "joint_solver default ('inhouse') is unchanged whether passed explicitly or not",
+      "file": "test-joint-solver.R",
+      "line": 27,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 61,
+      "message": "Reason: On CRAN",
+      "test": "joint_solver = 'rphylopars' runs and returns finite mu/se of the right shape",
+      "file": "test-joint-solver.R",
+      "line": 39,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 62,
+      "message": "Reason: On CRAN",
+      "test": "joint_solver = 'rphylopars' output shape/colnames match the in-house contract",
+      "file": "test-joint-solver.R",
+      "line": 58,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 63,
+      "message": "Reason: On CRAN",
+      "test": "joint_solver = 'rphylopars' falls back to in-house with a warning on failure",
+      "file": "test-joint-solver.R",
+      "line": 74,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 64,
+      "message": "Reason: On CRAN",
+      "test": "impute() threads joint_solver = 'rphylopars' through to a working fit",
+      "file": "test-joint-solver.R",
+      "line": 95,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 65,
+      "message": "Reason: On CRAN",
+      "test": "[lambda-cov] recovers lambda with covariates: mean bias at n = 300",
+      "file": "test-lambda-covariates.R",
+      "line": 98,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 66,
+      "message": "Reason: NEWS.md not found",
+      "test": "[lambda-default] NEWS.md mentions lambda in the current release",
+      "file": "test-lambda-default.R",
+      "line": 224,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 67,
+      "message": "Reason: On CRAN",
+      "test": "[lambda-dispatch] cv and bayes still per-column",
+      "file": "test-lambda-dispatch.R",
+      "line": 343,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 68,
+      "message": "Reason: On CRAN",
+      "test": "whole trait_map can be processed via estep_liability",
+      "file": "test-liability.R",
+      "line": 132,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 69,
+      "message": "Reason: On CRAN",
+      "test": "the Metropolis-only and Gibbs-only kernels target the same posterior",
+      "file": "test-mi-posterior.R",
+      "line": 311,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 70,
+      "message": "Reason: On CRAN",
+      "test": "the first run is pinned on a fixed fixture (re-pinned after the full-REML lambda start, #191)",
+      "file": "test-mi-posterior.R",
+      "line": 487,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 71,
+      "message": "Reason: On CRAN",
+      "test": "a short run under residual_prior = 'sep' returns finite, positive-definite draws",
+      "file": "test-mi-posterior.R",
+      "line": 556,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 72,
+      "message": "Reason: smcfcs is installed; integration test covers this route",
+      "test": "glm route has an informative optional-package guard",
+      "file": "test-multi-impute-analysis.R",
+      "line": 244,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 73,
+      "message": "Reason: On CRAN",
+      "test": "a fit that converges first time is unchanged by auto_extend",
+      "file": "test-multi-impute-posterior.R",
+      "line": 367,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 74,
+      "message": "Reason: On CRAN",
+      "test": "extension stops at the first extension that meets the rule",
+      "file": "test-multi-impute-posterior.R",
+      "line": 393,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 75,
+      "message": "Reason: On CRAN",
+      "test": "impute() end-to-end on simulated multi_proportion data",
+      "file": "test-multi-proportion.R",
+      "line": 76,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 76,
+      "message": "Reason: On CRAN",
+      "test": "use_trait_attention=TRUE builds, trains, and predicts (smoke)",
+      "file": "test-new-features.R",
+      "line": 606,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 77,
+      "message": "Reason: On CRAN",
+      "test": "use_trait_attention default FALSE is backward compatible",
+      "file": "test-new-features.R",
+      "line": 629,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 78,
+      "message": "Reason: On CRAN",
+      "test": "[pagel-perf] 11-point grid evaluation at n=600 completes in under 3 sec",
+      "file": "test-pagel-eigendecomp.R",
+      "line": 106,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 79,
+      "message": "Reason: On CRAN",
+      "test": "[pagel] full REML term reduces the low bias at weak signal",
+      "file": "test-pagel-lambda.R",
+      "line": 310,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 80,
+      "message": "Reason: BIEN cache not found",
+      "test": "plants smoke: BIEN plant traits with weak phylo signal are gated",
+      "file": "test-phylo-signal-gate.R",
+      "line": 162,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 81,
+      "message": "Reason: On CRAN",
+      "test": "pool_mi() pools glmmTMB fits from with_imputations()",
+      "file": "test-pool-mi-backends.R",
+      "line": 35,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 82,
+      "message": "Reason: On CRAN",
+      "test": "pool_mi() pools lme4::lmer fits from with_imputations()",
+      "file": "test-pool-mi-backends.R",
+      "line": 43,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 83,
+      "message": "Reason: BIEN cache not found -- run script/bench_bien.R once to build",
+      "test": "safety_floor = TRUE keeps plants continuous RMSE <= 1.02 * mean_RMSE on cached BIEN subset",
+      "file": "test-safety-floor.R",
+      "line": 509,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 84,
+      "message": "Reason: terra IS installed; cannot test missing-terra branch",
+      "test": "pull_worldclim_per_species stops with clear error when terra absent",
+      "file": "test-worldclim-covariates.R",
+      "line": 175,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 85,
+      "message": "Reason: slow integration -- NOT_CRAN=TRUE to run",
+      "test": "end-to-end: bioclim lifts plants RMSE >= 10% on sla/leaf_area at n=200 (NOT_CRAN)",
+      "file": "test-worldclim-covariates.R",
+      "line": 267,
+      "last_call": null,
+      "calls": []
+    },
+    {
+      "id": 86,
+      "message": "Reason: slow integration -- NOT_CRAN=TRUE to run",
+      "test": "per-occurrence bioclim lifts plants SLA >= 10% over centroid-only at n=200 (NOT_CRAN)",
+      "file": "test-worldclim-covariates.R",
+      "line": 362,
+      "last_call": null,
+      "calls": []
+    }
+  ],
+  "reader_stderr": ""
+}

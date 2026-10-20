@@ -1,0 +1,81 @@
+{
+  "files": {
+    "README.md": {
+      "sha256": "7f017756385ef04eb54405c4236a0182cd0ead3eaa990dfc0909d23c76a79687",
+      "size_bytes": 6714
+    },
+    "assessment-check.txt": {
+      "sha256": "c6ae827966d7cd056004efcf585d1319e62c02d80cd42a1c171a2635c40c2796",
+      "size_bytes": 460
+    },
+    "assessment-status.json": {
+      "sha256": "68537e1d294f40e275d3b143baf8c5c07023933cc55527c51b94a668266ac552",
+      "size_bytes": 272
+    },
+    "assessment.json": {
+      "sha256": "10880d8d92d06de59b0df05e42847922b2de84e38a8838816547563398394839",
+      "size_bytes": 4829
+    },
+    "build-synopsis.py": {
+      "sha256": "612985d3f819677831ef3a62d572cf561d767c905b368adb7012ec66548e6378",
+      "size_bytes": 28154
+    },
+    "inputs.json": {
+      "sha256": "a945dbcaeefd7734f9de0eb7ca2495bc68458b9da2cd4493f4181d874f424d0a",
+      "size_bytes": 37340
+    },
+    "local-snapshots/00check.log": {
+      "sha256": "0bccf901390812f7c425a249881edccd68e56c1a9857fa6e8439b1d5b25bfceb",
+      "size_bytes": 3851
+    },
+    "local-snapshots/STATE.json": {
+      "sha256": "5d7f3921abc48faced495e8df93c1e0bc6f0bd0b201cd7b3950f37b2a507fedc",
+      "size_bytes": 7062
+    },
+    "local-snapshots/check-exit.txt": {
+      "sha256": "e9d084e5346d8829772519d67716687ee190535d32242b36c2532141436844db",
+      "size_bytes": 40
+    },
+    "local-snapshots/declared-dependencies.csv": {
+      "sha256": "da620bb55999537b678b44cc61708a167d54583d3bfd05e45d626cf63567a44b",
+      "size_bytes": 437
+    },
+    "local-snapshots/local-note-diagnostic.json": {
+      "sha256": "a862f1e37ca514a4fd3a7576e4ce20477db8e23b89fc347329f119f2449faef4",
+      "size_bytes": 1055
+    },
+    "local-snapshots/local-receipt.json": {
+      "sha256": "03ff286de5c3cafb450381ed52358e0caf25eaca4ff220182b677643df301ab0",
+      "size_bytes": 795
+    },
+    "local-snapshots/pigauto-Ex.timings": {
+      "sha256": "8bfc4ff319d61ad7b2b8b01691e7a4a0e81e4b49e94f8de28e7a3cfcc88c5d64",
+      "size_bytes": 1332
+    },
+    "local-snapshots/testthat.Rout": {
+      "sha256": "3ae2cfd207464df1337dfc87ff7ba93830e6c2e3582e612b9fbd157444fb5120",
+      "size_bytes": 13862
+    },
+    "local-snapshots/warning-details.csv": {
+      "sha256": "8b6709f11d5925be9b0abd7e5adf143a2ebd77a431d10204ba7e8c18b57a2fc2",
+      "size_bytes": 145174
+    },
+    "local-snapshots/warning-replay.json": {
+      "sha256": "9be702eb006b2f1c1b4a8fb348aed852b2818bdf9829f5641bbbf88ac56ae25c",
+      "size_bytes": 604
+    },
+    "synopsis.json": {
+      "sha256": "7b31676cb9d8fda9e4e127988d07c0adacddcf7c97a97aa588562a0111cafd22",
+      "size_bytes": 33143
+    },
+    "verification.json": {
+      "sha256": "23da8d055e5d94d33b7834d231503255e454932b0d3afb1394501c2f9ee62a61",
+      "size_bytes": 672
+    },
+    "verify-synopsis.py": {
+      "sha256": "b27d6661043e8ee3bbed50cb2c8dbf7b8b92042146bded92e0446c15257df25c",
+      "size_bytes": 5263
+    }
+  },
+  "scope": "Current synopsis/helper/assessment/local snapshots; historical and failed attempts retained separately"
+}

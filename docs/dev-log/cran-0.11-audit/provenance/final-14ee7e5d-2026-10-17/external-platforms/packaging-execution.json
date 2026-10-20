@@ -1,0 +1,17 @@
+{
+  "estimated_minutes": "3-5",
+  "observed_start_utc": "2026-10-18T00:48:29Z",
+  "readback_completed_utc": "2026-10-18T00:55:00Z",
+  "observed_wall_seconds": 391,
+  "estimate_exceeded": true,
+  "overrun_reported": true,
+  "cause": "Shell/file-read and compression responses slowed on shared host; no extra proof scope. One helper-only raw CRLF parser assertion was corrected after fail-closed stop.",
+  "commands": [
+    "python3 /private/tmp/pigauto-final-closure-20261017/final-platform-publication/bundle.py (first failed at helper exit-code regex; partial output retained outside curated directory)",
+    "python3 /private/tmp/pigauto-final-closure-20261017/final-platform-publication/bundle.py (completed after exact splitlines fix)",
+    "python3 /private/tmp/pigauto-final-closure-20261017/final-platform-publication/readback.py /private/tmp/pigauto-final-closure-20261017/final-platform-publication/publication"
+  ],
+  "no_R_or_network": true,
+  "failed_attempt_retained_at": "/private/tmp/pigauto-final-closure-20261017/final-platform-publication/attempt1-partial-publication",
+  "assessment": "NOTASSESSED"
+}

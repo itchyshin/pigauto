@@ -1,0 +1,30 @@
+[
+  {
+    "path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/local-macos/platform-evidence/warning-replay.json",
+    "error": {},
+    "not_cran": "UNSET",
+    "force_suggests": "true",
+    "old_guard_passes": false
+  },
+  {
+    "path": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/warning-replay.json",
+    "error": {},
+    "not_cran": "UNSET",
+    "force_suggests": "true",
+    "old_guard_passes": false
+  },
+  {
+    "path": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/warning-replay.json",
+    "error": {},
+    "not_cran": "UNSET",
+    "force_suggests": "true",
+    "old_guard_passes": false
+  },
+  {
+    "path": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/warning-replay.json",
+    "error": {},
+    "not_cran": "UNSET",
+    "force_suggests": "true",
+    "old_guard_passes": false
+  }
+]

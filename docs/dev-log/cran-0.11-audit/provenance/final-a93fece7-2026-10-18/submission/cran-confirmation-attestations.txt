@@ -1,0 +1,71 @@
+Browser tab: 11, Title: "CRAN package Submission", URL: "https://xmpalantir.wu.ac.at/cransubmit/conf_mail.php?code=[REDACTED]".
+0 AXWebArea CRAN package Submission, URL: xmpalantir.wu.ac.at/cransubmit/conf_mail.php?code=[REDACTED]
+	1 table
+		2 row
+			3 cell
+				4 AXWebArea R Logo, URL: cran.r-project.org/logo.html
+					5 link Description: R logo, Value: cran.r-project.org/index.html
+			6 cell
+				7 container
+					8 container Submit package to CRAN Step 1 (Upload) Step 2 (Submission) Step 3 (Confirmation)
+						9 container
+							10 container Submit package to CRAN
+								11 heading Submit package to CRAN, Value: 1
+									12 text Submit package to CRAN
+							13 container Step 1 (Upload)
+								14 text Step 1
+								15 text (Upload)
+							16 container Step 2 (Submission)
+								17 text Step 2
+								18 text (Submission)
+							19 container Step 3 (Confirmation)
+								20 text Step 3
+								21 text (Confirmation)
+					22 container I have read the CRAN policies and would like to submit this package to CRAN.
+						23 container
+							24 checkbox (settable, integer) Description: I have read the CRAN policies and would like to submit this package to CRAN., Value: 1
+							25 text I have read the 
+							26 link Description: CRAN policies, Value: cran.r-project.org/web/packages/policies.html
+							27 text  and would like to submit this package to CRAN.
+					28 container I have checked the submission using R CMD check --as-cran and a current version of r-devel, as mandated by the CRAN Repository Policy. (You could do so using the win-builder service at https://win-builder.r-project.org)
+						29 container
+							30 checkbox (settable, integer) Value: 1, Description: I have checked the submission using R CMD check --as-cran and a current version of r-devel, as mandated by the CRAN Repository Policy. (You could do so using the win-builder service at https://win-builder.r-project.org)
+							31 text I have checked the submission using  R CMD check --as-cran  and a  current version of r-devel , as mandated by the CRAN Repository Policy. (You could do so using the win-builder service at 
+							32 link Description: https://win-builder.r-project.org, Value: win-builder.r-project.org/
+							33 text )
+					34 container I have fixed all problems shown on the package check page.
+						35 container
+							36 checkbox (settable, integer) Description: I have fixed all problems shown on the package check page., Value: 1
+							37 text I have fixed all problems shown on the 
+							38 link Description: package check page, Value: cran.r-project.org/web/checks/check_results_pigauto.html
+							39 text .
+					40 container Upload the Package to CRAN
+						41 button Upload the Package to CRAN
+		42 row
+			43 cell
+				44 AXWebArea R Contents, URL: cran.r-project.org/navbar.html
+					45 text CRAN
+					46 link Description: Mirrors, Value: cran.r-project.org/mirrors.html
+					47 link Description: What's new?, Value: r-project.org/news.html
+					48 link Description: Search, Value: cran.r-project.org/search.html
+					49 link Description: CRAN Team, Value: cran.r-project.org/CRAN_team.htm
+					50 container
+						51 text About R
+						52 link Description: R Homepage, Value: r-project.org/
+						53 link Description: The R Journal, Value: journal.r-project.org/
+					54 container
+						55 text Software
+						56 link Description: R Sources, Value: cran.r-project.org/sources.html
+						57 link Description: R Binaries, Value: cran.r-project.org/bin/
+						58 link Description: Packages, Value: cran.r-project.org/web/packages/index.html
+						59 link Description: Task Views, Value: cran.r-project.org/web/views/
+						60 link Description: Other, Value: cran.r-project.org/other-software.html
+					61 container
+						62 text Documentation
+						63 link Description: Manuals, Value: cran.r-project.org/manuals.html
+						64 link Description: FAQs, Value: cran.r-project.org/faqs.html
+					65 container
+						66 text Donations
+						67 link Description: Donate, Value: r-project.org/foundation/donations.html#one-off-donation-form
+
+The focused UI element is 36 checkbox (settable, integer) Description: I have fixed all problems shown on the package check page., Value: 1

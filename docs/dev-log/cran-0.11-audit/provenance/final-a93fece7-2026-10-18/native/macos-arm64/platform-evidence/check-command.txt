@@ -1,0 +1,2 @@
+'/Library/Frameworks/R.framework/Resources/bin/R' CMD check --as-cran --run-donttest --timings '/private/tmp/pigauto-release-candidate/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/pigauto_0.11.0.tar.gz'
+No R CMD build: checking the downloaded gzip archive directly.

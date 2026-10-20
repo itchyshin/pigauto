@@ -1,0 +1,14 @@
+{
+  "status": "WITHDRAWN_AS_SUBMISSION_CANDIDATE",
+  "reason": "Pat found installed impute and pigauto_report help descriptions promising GNN training/comparison unconditionally despite default gnn=FALSE.",
+  "artifact_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+  "successor_source_pr": 238,
+  "successor_source_head": "816987fd160c1d2c5c58b020b07357ff17c077e5",
+  "successor_archive_frozen": false,
+  "source_fix_review": "PASS provisional installed help and novice workflow; not a release verdict",
+  "merge_and_automatic_deployment_authorized": false,
+  "cran_upload_authorized": false,
+  "maintainer_confirmation_authorized": false,
+  "recorded_utc": "2026-10-18T01:45:08.327129+00:00"
+}

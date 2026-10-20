@@ -1,0 +1,36 @@
+{
+  "reviewer": "rose",
+  "verdict": "READY",
+  "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "blockers": [],
+  "findings": [
+    "Permanent archive copy independently hashes to the frozen SHA-256 and recorded size of 5137837 bytes.",
+    "Package DESCRIPTION, inst/NOTICE, release notes and cran-comments are consistent with the bounded product and release claims.",
+    "The BirdTree-derived example-data basis is presented as the recorded maintainer warranty with attribution; no separate redistribution licence or independent legal opinion is asserted.",
+    "The DOI HTTP 403 is disclosed, and Crossref HTTP 200 supports identity only.",
+    "The warning-capture timing amendment preserves the original records and clearly states the unresolved unique attribution and incomplete overwritten history.",
+    "The merged source, main CI, Pages deployment, route retirement checks, and draft/unmerged state of PR 236 are represented consistently."
+  ],
+  "checked_evidence": [
+    "Permanent content-addressed archive SHA-256 and byte size, independently computed.",
+    "Actual frozen archive DESCRIPTION and inst/NOTICE bytes.",
+    "Current cran-comments.md and successor README.md.",
+    "release-ledger.json and successor FINAL.json.",
+    "freeze-review/actual-verdict.json and persistent-readback.json.",
+    "native-platform-summary.json and native/direct-verification.log.",
+    "actual-warning-audit/verdict.json, report.md, and timing-provenance-amendment records.",
+    "ancillary/verdict.json and Crossref identity receipt.",
+    "policy-refresh/receipt.json and the retained policy HTML.",
+    "site/verdict.json and installed-novice/verdict.json."
+  ],
+  "limitations": [
+    "This is Rose's scoped review vote. The release ledger still records other panel/closure work as pending, so this vote alone does not establish overall submission readiness.",
+    "The recorded tree-data warranty is not an independently verified BirdTree redistribution licence or legal opinion.",
+    "The DOI resolver returned HTTP 403; Crossref metadata confirms identity only.",
+    "Two warning captures survive, but identical warning-object bytes prevent unique capture attribution; overwritten concurrent history may be incomplete.",
+    "Native checks were not rerun during this review. Their retained receipts report Status OK on four platforms for this exact archive.",
+    "No CRAN upload, maintainer confirmation, tag, announcement, or CRAN acceptance is claimed."
+  ],
+  "date": "2026-10-18"
+}

@@ -1,0 +1,29 @@
+{
+  "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "size_bytes": 5137837,
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "all_extracted_regular_files_unchanged": 236,
+  "all_installed_pigauto_files_unchanged": 52,
+  "url_actual_network_rows": [
+    {
+      "URL": "https://doi.org/10.1126/science.1157704",
+      "From": "inst/doc/getting-started.html; vignettes/getting-started.Rmd",
+      "Status": "403",
+      "Message": "Forbidden",
+      "New": "",
+      "CRAN": "",
+      "Spaces": "",
+      "R": "",
+      "root": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/ancillary/exact-source/pigauto"
+    }
+  ],
+  "absence_rds_flat_counts_agree": true,
+  "archive_unchanged": true,
+  "script_sha256_after": {
+    "spelling.R": "41c934ae1ea7248e60004545424dd08a44c8d3ade238fe6b7c875c6407821300",
+    "urls.R": "fa832d6c6e0afbcc86761a2d7826ca5914fbb67006f017127e6e08a10abcb1f5",
+    "absence.R": "e0b340c92335ec5675dd62f7a48bd3fef6496951869d7daaf4c35100071a5de0",
+    "spelling-template.R": "30250779d09913de1f125016cf00fbf717e9662314176bbda8ee243ac0dc2770",
+    "urls-template.R": "8dc3d35a58fd1e9dc00609684f5b1de5a844f79a0cc695bbf8c0333956dc06ec"
+  }
+}

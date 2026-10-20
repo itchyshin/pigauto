@@ -1,0 +1,6 @@
+PASS positive matrix
+PASS negative control: wrong archive hash
+PASS negative control: failed check status
+PASS negative control: wrong CRAN mode
+PASS negative control: wrong check command
+MATRIX_CONTROLS_PASS positive and four negative controls; originals unchanged

@@ -1,0 +1,85 @@
+{
+  "reviewer": "grace",
+  "read_utc": "2026-10-18T01:27:21.581124+00:00",
+  "archive_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "size_bytes": 5137648,
+  "entries": 250,
+  "regular_files": 236,
+  "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+  "byte_identical_source_files": 215,
+  "changed_source_files": [
+    "DESCRIPTION"
+  ],
+  "build_generated_files": [
+    "build/partial.rdb",
+    "build/vignette.rds",
+    "inst/doc/common-pitfalls.html",
+    "inst/doc/common-pitfalls.R",
+    "inst/doc/common-pitfalls.Rmd",
+    "inst/doc/getting-started.html",
+    "inst/doc/getting-started.R",
+    "inst/doc/getting-started.Rmd",
+    "inst/doc/gnn-architecture.html",
+    "inst/doc/gnn-architecture.R",
+    "inst/doc/gnn-architecture.Rmd",
+    "inst/doc/mixed-types.html",
+    "inst/doc/mixed-types.R",
+    "inst/doc/mixed-types.Rmd",
+    "inst/doc/multiple-imputation.html",
+    "inst/doc/multiple-imputation.R",
+    "inst/doc/multiple-imputation.Rmd",
+    "inst/doc/tree-uncertainty.html",
+    "inst/doc/tree-uncertainty.R",
+    "inst/doc/tree-uncertainty.Rmd"
+  ],
+  "rights_data_NOTICE_streams_match": 7,
+  "inherited_problems_fixture_sha256": "73a7cf60cd133ed7884ea0ed5f6d7980154cfcec48180321acfb65830554ba81",
+  "persistent_retained_copy_matches": true,
+  "remote_native": [
+    {
+      "zip": "frozen-14ee7e5d-ubuntu-latest-release.zip",
+      "zip_sha256": "12a9e31f579b914c58a6221320c7192d142a99648d1cb30cf403f7954b9ece2c",
+      "check_log_sha256": "a835496d417cb72f416f5113153b02fa5022a0db1d1bdd8ea0b05112be2c9135",
+      "native_counts": [
+        "0",
+        "161",
+        "86",
+        "3195"
+      ],
+      "native_exit": "exit=0\nelapsed_seconds=336.330481529236",
+      "declared_dependencies_available": 29,
+      "incoming": "OK",
+      "manuals": "PDF/HTML OK"
+    },
+    {
+      "zip": "frozen-14ee7e5d-windows-latest-devel.zip",
+      "zip_sha256": "f16a0de8b68dddc0a246e04397de31610fb7fcf00c80d4c2e84aa3c1a370cd68",
+      "check_log_sha256": "4e3b819ef8fc32ef76003006114973a6c533d1944f4bf9a321d8fc7247aa835c",
+      "native_counts": [
+        "0",
+        "161",
+        "86",
+        "3195"
+      ],
+      "native_exit": "exit=0\r\nelapsed_seconds=622.432008981705",
+      "declared_dependencies_available": 29,
+      "incoming": "OK",
+      "manuals": "PDF/HTML OK"
+    },
+    {
+      "zip": "frozen-14ee7e5d-windows-latest-release.zip",
+      "zip_sha256": "ff8f7b5e9a6b87c193c0ab98835b4ba4dbac41e8bbcd4b93e93bed4f56436da2",
+      "check_log_sha256": "2e0dd69a839964ff2bb2425f8343b685dee6b091ff70a2ac5e942bbfa2184a95",
+      "native_counts": [
+        "0",
+        "161",
+        "86",
+        "3195"
+      ],
+      "native_exit": "exit=0\r\nelapsed_seconds=645.812567949295",
+      "declared_dependencies_available": 29,
+      "incoming": "OK",
+      "manuals": "PDF/HTML OK"
+    }
+  ]
+}

@@ -1,0 +1,287 @@
+entry	formal	default
+build_phylo_graph	tree	<required>
+build_phylo_graph	k_eigen	"auto"
+build_phylo_graph	sigma_mult	0.5
+build_phylo_graph	cache_path	NULL
+calibration_df	truth	<required>
+calibration_df	prob	<required>
+calibration_df	n_bins	10L
+check_pigauto	traits	<required>
+check_pigauto	tree	<required>
+check_pigauto	species_col	NULL
+check_pigauto	trait_types	NULL
+check_pigauto	multi_proportion_groups	NULL
+check_pigauto	covariates	NULL
+check_pigauto	gnn	FALSE
+compare_methods	data	<required>
+compare_methods	tree	<required>
+compare_methods	splits	NULL
+compare_methods	seeds	NULL
+compare_methods	epochs	500L
+compare_methods	verbose	TRUE
+compare_methods	gnn	TRUE
+compare_methods	...	<required>
+completed_data	result	<required>
+confusion_matrix	truth	<required>
+confusion_matrix	predicted	<required>
+confusion_matrix	levels	NULL
+cross_validate	data	<required>
+cross_validate	tree	<required>
+cross_validate	k	5L
+cross_validate	seeds	NULL
+cross_validate	epochs	500L
+cross_validate	verbose	TRUE
+cross_validate	...	<required>
+evaluate	fit	<required>
+evaluate	data	NULL
+evaluate	splits	NULL
+evaluate_imputation	pred	<required>
+evaluate_imputation	truth	<required>
+evaluate_imputation	splits	<required>
+evaluate_imputation	pred_se	NULL
+evaluate_imputation	trait_map	NULL
+fit_baseline	data	<required>
+fit_baseline	tree	<required>
+fit_baseline	splits	NULL
+fit_baseline	model	"BM"
+fit_baseline	graph	NULL
+fit_baseline	multi_obs_aggregation	c("hard", "soft")
+fit_baseline	lambda_mode	c("estimate", "fixed_1", "cv", "bayes")
+fit_baseline	lambda_fixed	NULL
+fit_baseline	discrete_lambda	c("estimate", "fixed_1")
+fit_baseline	em_iterations	0L
+fit_baseline	em_tol	0.001
+fit_baseline	em_offdiag	FALSE
+fit_baseline	joint_solver	c("inhouse", "rphylopars")
+fit_baseline	predict_method	c("auto", "exact", "per_column")
+fit_baseline	joint_refine_iter	0L
+fit_baseline	predict_route	NULL
+fit_baseline	seed	NULL
+fit_pigauto	data	<required>
+fit_pigauto	tree	<required>
+fit_pigauto	splits	NULL
+fit_pigauto	graph	NULL
+fit_pigauto	baseline	NULL
+fit_pigauto	gnn	FALSE
+fit_pigauto	baseline_full	NULL
+fit_pigauto	hidden_dim	64L
+fit_pigauto	k_eigen	"auto"
+fit_pigauto	n_gnn_layers	2L
+fit_pigauto	gate_cap	0.8
+fit_pigauto	use_attention	TRUE
+fit_pigauto	use_transformer_blocks	TRUE
+fit_pigauto	n_heads	4L
+fit_pigauto	ffn_mult	4L
+fit_pigauto	use_trait_attention	FALSE
+fit_pigauto	n_trait_heads	2L
+fit_pigauto	trait_embed_dim	32L
+fit_pigauto	dropout	0.1
+fit_pigauto	lr	0.003
+fit_pigauto	weight_decay	1e-04
+fit_pigauto	epochs	3000L
+fit_pigauto	corruption_rate	0.55
+fit_pigauto	corruption_start	0.2
+fit_pigauto	corruption_ramp	500L
+fit_pigauto	refine_steps	8L
+fit_pigauto	lambda_shrink	0.03
+fit_pigauto	lambda_gate	0.01
+fit_pigauto	warmup_epochs	200L
+fit_pigauto	edge_dropout	0.1
+fit_pigauto	eval_every	100L
+fit_pigauto	patience	10L
+fit_pigauto	clip_norm	1
+fit_pigauto	conformal_method	c("split", "bootstrap", "mondrian")
+fit_pigauto	conformal_bootstrap_B	500L
+fit_pigauto	conformal_split_val	FALSE
+fit_pigauto	gate_method	c("cv_folds", "median_splits", "single_split")
+fit_pigauto	gate_splits_B	31L
+fit_pigauto	gate_cv_folds	5L
+fit_pigauto	safety_floor	FALSE
+fit_pigauto	phylo_signal_gate	FALSE
+fit_pigauto	phylo_signal_threshold	0.2
+fit_pigauto	phylo_signal_method	c("lambda", "blomberg_k")
+fit_pigauto	min_val_cells	20L
+fit_pigauto	lambda_mode	c("estimate", "fixed_1", "cv", "bayes")
+fit_pigauto	discrete_lambda	c("estimate", "fixed_1")
+fit_pigauto	joint_solver	c("inhouse", "rphylopars")
+fit_pigauto	predict_method	c("auto", "exact", "per_column")
+fit_pigauto	joint_refine_iter	0L
+fit_pigauto	verbose	TRUE
+fit_pigauto	seed	NULL
+impute	traits	<required>
+impute	tree	<required>
+impute	species_col	NULL
+impute	trait_types	NULL
+impute	multi_proportion_groups	NULL
+impute	k_eigen	"auto"
+impute	log_transform	TRUE
+impute	missing_frac	0.25
+impute	n_imputations	1L
+impute	covariates	NULL
+impute	epochs	2000L
+impute	verbose	TRUE
+impute	seed	NULL
+impute	multi_obs_aggregation	c("hard", "soft")
+impute	lambda_mode	c("estimate", "fixed_1", "cv", "bayes")
+impute	discrete_lambda	c("estimate", "fixed_1")
+impute	joint_solver	c("inhouse", "rphylopars")
+impute	predict_method	c("auto", "exact", "per_column")
+impute	joint_refine_iter	0L
+impute	em_iterations	0L
+impute	em_tol	0.001
+impute	em_offdiag	FALSE
+impute	pool_method	c("median", "mean", "mode")
+impute	clamp_outliers	FALSE
+impute	clamp_factor	5
+impute	match_observed	c("none", "pmm")
+impute	pmm_K	5L
+impute	safety_floor	FALSE
+impute	phylo_signal_gate	FALSE
+impute	phylo_signal_threshold	0.2
+impute	phylo_signal_method	"lambda"
+impute	conformal_split_val	FALSE
+impute	gnn	FALSE
+impute	...	<required>
+load_pigauto	path	<required>
+make_missing_splits	X	<required>
+make_missing_splits	missing_frac	0.25
+make_missing_splits	val_frac	0.25
+make_missing_splits	seed	NULL
+make_missing_splits	trait_map	NULL
+make_missing_splits	mechanism	c("MCAR", "MAR_trait", "MAR_phylo", "MNAR")
+make_missing_splits	mechanism_args	list()
+make_missing_splits	tree	NULL
+mask_missing	X	<required>
+multi_impute	traits	<required>
+multi_impute	tree	<required>
+multi_impute	m	100L
+multi_impute	draws_method	c("auto", "conformal", "mc_dropout", "posterior")
+multi_impute	species_col	NULL
+multi_impute	trait_types	NULL
+multi_impute	multi_proportion_groups	NULL
+multi_impute	log_transform	TRUE
+multi_impute	missing_frac	0.25
+multi_impute	covariates	NULL
+multi_impute	epochs	2000L
+multi_impute	verbose	TRUE
+multi_impute	seed	NULL
+multi_impute	gnn	FALSE
+multi_impute	lambda_mode	c("estimate", "fixed_1", "cv", "bayes")
+multi_impute	posterior_control	list()
+multi_impute	...	<required>
+multi_impute_analysis	data	<required>
+multi_impute_analysis	formula	<required>
+multi_impute_analysis	missing	<required>
+multi_impute_analysis	model	c("lm", "glm", "lmer")
+multi_impute_analysis	m	50L
+multi_impute_analysis	auxiliary	character()
+multi_impute_analysis	seed	NULL
+multi_impute_analysis	control	list()
+multi_impute_trees	traits	<required>
+multi_impute_trees	trees	<required>
+multi_impute_trees	m_per_tree	1L
+multi_impute_trees	species_col	NULL
+multi_impute_trees	trait_types	NULL
+multi_impute_trees	multi_proportion_groups	NULL
+multi_impute_trees	log_transform	TRUE
+multi_impute_trees	missing_frac	0.25
+multi_impute_trees	covariates	NULL
+multi_impute_trees	epochs	2000L
+multi_impute_trees	verbose	TRUE
+multi_impute_trees	seed	NULL
+multi_impute_trees	share_gnn	TRUE
+multi_impute_trees	reference_tree	NULL
+multi_impute_trees	draws_method	c("mc_dropout", "conformal")
+multi_impute_trees	gnn	FALSE
+multi_impute_trees	...	<required>
+pigauto_report	fit	<required>
+pigauto_report	data	NULL
+pigauto_report	splits	NULL
+pigauto_report	output_path	"pigauto_report.html"
+pigauto_report	title	"pigauto Imputation Report"
+pigauto_report	open	TRUE
+plot_comparison	results	<required>
+plot_comparison	metric	NULL
+plot_comparison	methods	c("baseline", "pigauto")
+plot_comparison	...	<required>
+plot_history_gg	x	<required>
+plot_history_gg	...	<required>
+plot_uncertainty	pred_result	<required>
+plot_uncertainty	truth	NULL
+plot_uncertainty	trait_name	<required>
+pool_mi	fits	<required>
+pool_mi	conf.level	0.95
+pool_mi	coef_fun	NULL
+pool_mi	vcov_fun	NULL
+pool_mi	df_fun	NULL
+pool_mi	tidy_fun	NULL
+preprocess_traits	traits	<required>
+preprocess_traits	tree	<required>
+preprocess_traits	species_col	NULL
+preprocess_traits	trait_types	NULL
+preprocess_traits	multi_proportion_groups	NULL
+preprocess_traits	log_cols	NULL
+preprocess_traits	log_transform	TRUE
+preprocess_traits	center	TRUE
+preprocess_traits	scale	TRUE
+preprocess_traits	covariates	NULL
+pull_gbif_centroids	species	<required>
+pull_gbif_centroids	cache_dir	NULL
+pull_gbif_centroids	occurrence_limit	500L
+pull_gbif_centroids	sleep_ms	100L
+pull_gbif_centroids	verbose	TRUE
+pull_gbif_centroids	refresh_cache	FALSE
+pull_gbif_centroids	store_points	FALSE
+pull_worldclim_per_species	species	<required>
+pull_worldclim_per_species	gbif_cache_dir	<required>
+pull_worldclim_per_species	worldclim_cache_dir	<required>
+pull_worldclim_per_species	resolution	"10m"
+pull_worldclim_per_species	verbose	TRUE
+pull_worldclim_per_species	refresh_cache	FALSE
+read_traits	x	<required>
+read_traits	species_col	"species"
+read_traits	trait_cols	NULL
+read_traits	factor_cols	NULL
+read_traits	ordered_cols	NULL
+read_tree	path	<required>
+save_pigauto	fit	<required>
+save_pigauto	path	<required>
+save_pigauto	compress	TRUE
+simulate_benchmark	n_species	100L
+simulate_benchmark	n_traits	4L
+simulate_benchmark	scenarios	c("BM", "OU", "regime_shift", "nonlinear", "mixed")
+simulate_benchmark	missing_frac	0.25
+simulate_benchmark	n_reps	3L
+simulate_benchmark	epochs	500L
+simulate_benchmark	verbose	TRUE
+simulate_benchmark	seed	NULL
+simulate_benchmark	gnn	TRUE
+simulate_benchmark	...	<required>
+simulate_non_bm	tree	<required>
+simulate_non_bm	n_traits	4
+simulate_non_bm	scenario	c("OU", "regime_shift", "nonlinear")
+simulate_non_bm	alpha	2
+simulate_non_bm	theta	0
+simulate_non_bm	sigma	1
+simulate_non_bm	shift_magnitude	2
+simulate_non_bm	seed	NULL
+suggest_next_observation	result	<required>
+suggest_next_observation	top_n	10L
+suggest_next_observation	by	c("cell", "species")
+suggest_next_observation	types	c("continuous", "count", "ordinal", "proportion", "binary", "categorical", "zi_count", "multi_proportion")
+with_imputations	mi	<required>
+with_imputations	.f	<required>
+with_imputations	...	<required>
+with_imputations	.progress	interactive()
+with_imputations	.on_error	c("continue", "stop")
+S3::predict.pigauto_fit	object	<required>
+S3::predict.pigauto_fit	newdata	NULL
+S3::predict.pigauto_fit	return_se	TRUE
+S3::predict.pigauto_fit	n_imputations	1L
+S3::predict.pigauto_fit	baseline_override	NULL
+S3::predict.pigauto_fit	pool_method	c("median", "mean", "mode")
+S3::predict.pigauto_fit	clamp_outliers	FALSE
+S3::predict.pigauto_fit	clamp_factor	5
+S3::predict.pigauto_fit	match_observed	c("none", "pmm")
+S3::predict.pigauto_fit	pmm_K	5L
+S3::predict.pigauto_fit	...	<required>

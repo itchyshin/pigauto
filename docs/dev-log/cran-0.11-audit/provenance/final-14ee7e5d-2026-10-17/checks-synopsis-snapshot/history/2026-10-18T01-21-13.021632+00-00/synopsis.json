@@ -1,0 +1,822 @@
+{
+  "artifact": {
+    "archive_entries": 250,
+    "clean_worktree": true,
+    "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+    "path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/pigauto_0.11.0.tar.gz",
+    "sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+    "size_bytes": 5137648,
+    "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636"
+  },
+  "contradictions_and_repairs": [
+    {
+      "finding": "Earlier Linux timing absence claim was false",
+      "resolution": "Corrected paired CPU/elapsed parser, ten known-answer controls and15independent stage comparisons; raw log and bundles unchanged.",
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-platform-publication/publication/timing-correction-receipt.json"
+    },
+    {
+      "finding": "Original service adjudication still describes broad spelling review as open",
+      "resolution": "Keep original historical receipt; final-spelling-review now covers all404flagged tokens, with scoped limitations.",
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-spelling-review/receipt.json"
+    },
+    {
+      "finding": "STATE warning_capture refers to predecessor c2 and new_checker/active_build text is historical",
+      "resolution": "Use final14ee receipts for artifact-dependent conclusions; do not transfer predecessor warning consequences or old running-state wording.",
+      "source": "/private/tmp/pigauto-final-closure-20261017/STATE.json"
+    },
+    {
+      "finding": "MI manifest source_commit is a checker identity, not the artifact generating source",
+      "resolution": "Artifact source8e275ca and checker identities are recorded separately by final-mi-verification.json.",
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-mi-verification.json"
+    },
+    {
+      "finding": "Large Windows total is distinct from vignette rebuild duration",
+      "resolution": "Retain645.8126/622.4320second native totals and22second vignette stages; no claim that vignette rebuilding exceeds600seconds. Timing decision remains open.",
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-platform-publication/publication/platform-summary.json"
+    },
+    {
+      "finding": "Earlier310.170second process-total wording conflates enclosing-loop duration with summed six R-process durations",
+      "resolution": "Retain308.282456584seconds summed R processes versus310.169622875seconds enclosing sequential loop; render sum 74.8865 seconds.",
+      "source": "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d/identity-after.json"
+    }
+  ],
+  "external_service_absence": {
+    "counts": {
+      "fail": 0,
+      "files": [
+        "test-gbif-centroids.R",
+        "test-worldclim-covariates.R"
+      ],
+      "not_cran": "UNSET",
+      "pass": 60,
+      "rgbif": false,
+      "skip": 8,
+      "terra": false,
+      "warn": 0
+    },
+    "expected_skips": {
+      "CRAN-excluded live/slow integrations": 3,
+      "rgbif-dependent mocked/storage tests": 2,
+      "terra-dependent cache/extraction tests": 3
+    },
+    "limits": "No live GBIF/WorldClim availability or download success; terra-dependent raster extraction and rgbif-dependent stored-points mocks skipped in this absence cell. Dependencies use measured symlinks, not clean-room compilation.",
+    "live_availability": "NOT_PROVEN",
+    "verified_scope": "Helpful missing-rgbif and missing-terra error branches plus cache/helper/failure intent tests. Library paths restricted to scratch symlink library plus base R; no user/site-library fallthrough. Test files copied from frozen archive to native .Rcheck-like layout."
+  },
+  "footprint": {
+    "archive_entries": 250,
+    "compressed_bytes": 5137648,
+    "largest_files": [
+      {
+        "bytes": 1832412,
+        "path": "pigauto/data/trees300.rda"
+      },
+      {
+        "bytes": 1180089,
+        "path": "pigauto/inst/extdata/legacy_fit_v091.rds"
+      },
+      {
+        "bytes": 810344,
+        "path": "pigauto/man/figures/logo.png"
+      },
+      {
+        "bytes": 266848,
+        "path": "pigauto/data/tree_full.rda"
+      },
+      {
+        "bytes": 174960,
+        "path": "pigauto/NEWS.md"
+      }
+    ],
+    "native_INFO_is_not_WARNING": true,
+    "package_owned_src": [],
+    "regular_files": 236,
+    "regular_uncompressed_bytes": 7150500
+  },
+  "generated_utc": "2026-10-18T01:12:02.165863+00:00",
+  "governance": {
+    "CRAN_submission_authorized": false,
+    "STATE_overall_snapshot": "NOT_READY; final14ee frozen from mergedmain8e, G7/G8 pending",
+    "evidence_PR236": "UNMERGED per retained authority; not live reverified here",
+    "source_PR237": "MERGED"
+  },
+  "individual_vignette_diagnostic": {
+    "disabled_chunks": {
+      "all_checked_disabled": true,
+      "explicit_eval_false_chunks_preserved": 32,
+      "multiple_imputation_global_eval_false_also_checked": true
+    },
+    "enclosing_loop_elapsed_seconds": 310.16962287499337,
+    "render_elapsed_sum_seconds": 74.8865,
+    "rows": [
+      {
+        "chunk_trace": "rendered/common-pitfalls/chunk-options.jsonl",
+        "command": [
+          "Rscript",
+          "--vanilla",
+          "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d/render-one.R",
+          "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d",
+          "common-pitfalls.Rmd"
+        ],
+        "disabled_chunks": 8,
+        "enabled_chunks": 1,
+        "exit": 0,
+        "file": "common-pitfalls.Rmd",
+        "process_elapsed_seconds": 39.06071133300429,
+        "render_elapsed_seconds": 5.8116,
+        "render_start_utc": "2026-10-18 00:30:37 UTC",
+        "source_rmd_sha256": "a545207dac3d063e124b8612e1a39ae0ab2ed08a55e5ba48a6b881ffb8876a19",
+        "start_utc": "2026-10-18T00:30:05.111766+00:00"
+      },
+      {
+        "chunk_trace": "rendered/getting-started/chunk-options.jsonl",
+        "command": [
+          "Rscript",
+          "--vanilla",
+          "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d/render-one.R",
+          "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d",
+          "getting-started.Rmd"
+        ],
+        "disabled_chunks": 20,
+        "enabled_chunks": 7,
+        "exit": 0,
+        "file": "getting-started.Rmd",
+        "process_elapsed_seconds": 64.07528816600097,
+        "render_elapsed_seconds": 23.6822,
+        "render_start_utc": "2026-10-18 00:31:23 UTC",
+        "source_rmd_sha256": "2e18561af8173140e82cde783bd7ee2fcdf0a060ab19627caeb13ba51b880bd8",
+        "start_utc": "2026-10-18T00:30:44.320057+00:00"
+      },
+      {
+        "chunk_trace": "rendered/gnn-architecture/chunk-options.jsonl",
+        "command": [
+          "Rscript",
+          "--vanilla",
+          "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d/render-one.R",
+          "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d",
+          "gnn-architecture.Rmd"
+        ],
+        "disabled_chunks": 0,
+        "enabled_chunks": 1,
+        "exit": 0,
+        "file": "gnn-architecture.Rmd",
+        "process_elapsed_seconds": 43.36521229200298,
+        "render_elapsed_seconds": 9.878,
+        "render_start_utc": "2026-10-18 00:32:20 UTC",
+        "source_rmd_sha256": "e152c1f08b7f91c79c0506f2806b6e907d753a81d63e5dc663b6de450f5f9ec0",
+        "start_utc": "2026-10-18T00:31:48.534717+00:00"
+      },
+      {
+        "chunk_trace": "rendered/mixed-types/chunk-options.jsonl",
+        "command": [
+          "Rscript",
+          "--vanilla",
+          "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d/render-one.R",
+          "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d",
+          "mixed-types.Rmd"
+        ],
+        "disabled_chunks": 1,
+        "enabled_chunks": 11,
+        "exit": 0,
+        "file": "mixed-types.Rmd",
+        "process_elapsed_seconds": 64.05447420899873,
+        "render_elapsed_seconds": 16.6452,
+        "render_start_utc": "2026-10-18 00:33:18 UTC",
+        "source_rmd_sha256": "c1b7585bd5ad44a6ff252ee081461c7fa6e3224fca3901baab8ea32983cb5615",
+        "start_utc": "2026-10-18T00:32:32.421220+00:00"
+      },
+      {
+        "chunk_trace": "rendered/multiple-imputation/chunk-options.jsonl",
+        "command": [
+          "Rscript",
+          "--vanilla",
+          "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d/render-one.R",
+          "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d",
+          "multiple-imputation.Rmd"
+        ],
+        "disabled_chunks": 8,
+        "enabled_chunks": 1,
+        "exit": 0,
+        "file": "multiple-imputation.Rmd",
+        "process_elapsed_seconds": 52.372303792013554,
+        "render_elapsed_seconds": 10.7013,
+        "render_start_utc": "2026-10-18 00:34:17 UTC",
+        "source_rmd_sha256": "549dc43ad8e382b81ced1badb18491186ecdd464c53d24e47e539403e957286d",
+        "start_utc": "2026-10-18T00:33:36.750831+00:00"
+      },
+      {
+        "chunk_trace": "rendered/tree-uncertainty/chunk-options.jsonl",
+        "command": [
+          "Rscript",
+          "--vanilla",
+          "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d/render-one.R",
+          "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d",
+          "tree-uncertainty.Rmd"
+        ],
+        "disabled_chunks": 3,
+        "enabled_chunks": 1,
+        "exit": 0,
+        "file": "tree-uncertainty.Rmd",
+        "process_elapsed_seconds": 45.35446679199231,
+        "render_elapsed_seconds": 8.1682,
+        "render_start_utc": "2026-10-18 00:35:04 UTC",
+        "source_rmd_sha256": "c42a05ab7cb75a3a489496da8fefbf0642afa300fd8ec2d17a278ff3eb794f39",
+        "start_utc": "2026-10-18T00:34:29.232877+00:00"
+      }
+    ],
+    "scope": "Exact Rmd hashes/installed final package, CPU torch, explicit libpaths, NOT_CRAN unset/threadcaps1. No evalFALSE teaching chunks enabled.",
+    "separate_from_native_and_Windows_timing": true,
+    "whole_R_process_elapsed_sum_seconds": 308.28245658401283
+  },
+  "installed_MI": {
+    "artifact_source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+    "backend_packages": {
+      "drmTMB": {
+        "files_modified_since_matrix_start": [],
+        "source_commit": "Not embedded in installed package; installed package bytes, version, build metadata and paths retained",
+        "version": "0.7.1"
+      },
+      "gllvmTMB": {
+        "files_modified_since_matrix_start": [],
+        "source_commit": "Not embedded in installed package; installed package bytes, version, build metadata and paths retained",
+        "version": "0.7.1"
+      }
+    },
+    "cells": [
+      {
+        "cell": "neither",
+        "expected_optional_packages": [],
+        "steps": [
+          {
+            "elapsed_seconds": 233.571,
+            "exit_code": 0,
+            "log": "neither-install.log",
+            "step": "install"
+          },
+          {
+            "elapsed_seconds": 69.793,
+            "exit_code": 0,
+            "log": "neither-fixtures.log",
+            "step": "fixtures"
+          },
+          {
+            "elapsed_seconds": 40.644,
+            "exit_code": 0,
+            "log": "neither-real.log",
+            "step": "real"
+          }
+        ]
+      },
+      {
+        "cell": "drm-only",
+        "expected_optional_packages": [
+          "drmTMB"
+        ],
+        "steps": [
+          {
+            "elapsed_seconds": 233.533,
+            "exit_code": 0,
+            "log": "drm-only-install.log",
+            "step": "install"
+          },
+          {
+            "elapsed_seconds": 41.95,
+            "exit_code": 0,
+            "log": "drm-only-fixtures.log",
+            "step": "fixtures"
+          },
+          {
+            "elapsed_seconds": 89.87,
+            "exit_code": 0,
+            "log": "drm-only-real.log",
+            "step": "real"
+          }
+        ]
+      },
+      {
+        "cell": "gllvm-only",
+        "expected_optional_packages": [
+          "gllvmTMB"
+        ],
+        "steps": [
+          {
+            "elapsed_seconds": 175.957,
+            "exit_code": 0,
+            "log": "gllvm-only-install.log",
+            "step": "install"
+          },
+          {
+            "elapsed_seconds": 47.711,
+            "exit_code": 0,
+            "log": "gllvm-only-fixtures.log",
+            "step": "fixtures"
+          },
+          {
+            "elapsed_seconds": 49.583,
+            "exit_code": 0,
+            "log": "gllvm-only-real.log",
+            "step": "real"
+          }
+        ]
+      },
+      {
+        "cell": "both",
+        "expected_optional_packages": [
+          "drmTMB",
+          "gllvmTMB"
+        ],
+        "steps": [
+          {
+            "elapsed_seconds": 269.195,
+            "exit_code": 0,
+            "log": "both-install.log",
+            "step": "install"
+          },
+          {
+            "elapsed_seconds": 60.982,
+            "exit_code": 0,
+            "log": "both-fixtures.log",
+            "step": "fixtures"
+          },
+          {
+            "elapsed_seconds": 141.347,
+            "exit_code": 0,
+            "log": "both-real.log",
+            "step": "real"
+          }
+        ]
+      }
+    ],
+    "checker_start_commit": "e67a783cd6dd7dbc97ef8471e1986e69777c2ff0",
+    "limits": "Measured dependency symlink matrix, not clean-room dependency installation. Three downstream fits per real fixture, not the prior ten-seed M20 recovery campaign.",
+    "published_checker_commit": "6cd5f65b06d0c3ee32ce4b2d5a67a22c06028116",
+    "result": "FINAL_MI_MATRIX_12_STEPS_VERIFIED",
+    "steps_passed": 12,
+    "summed_step_seconds": 1454.136
+  },
+  "local_macos": {
+    "check_driver_exit": 1,
+    "check_driver_receipt": {
+      "artifact_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+      "records": [
+        {
+          "archive_after": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+          "archive_before": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+          "command": [
+            "Rscript",
+            "--vanilla",
+            "/private/tmp/pigauto-pr236-validator-20261017/script/cran-0.11-platform/check.R"
+          ],
+          "elapsed_seconds": 3687.675,
+          "exit_code": 1,
+          "log": "native-check.log",
+          "script_sha256": "1e641c87e699fba2846aaa9c8958fa77348ecd22221b5ed08e1ccf31c2de9fb0",
+          "started_utc": "2026-10-18T00:04:27.278390+00:00",
+          "step": "native-check"
+        }
+      ],
+      "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636"
+    },
+    "declared_dependencies_available": 29,
+    "example_timings": {
+      "compare_methods": {
+        "elapsed_seconds": 18.406,
+        "name": "compare_methods",
+        "system_seconds": 0.992,
+        "user_seconds": 2.532
+      },
+      "measured_examples": 38,
+      "over_five_cpu_or_elapsed_seconds": [
+        {
+          "elapsed_seconds": 18.406,
+          "name": "compare_methods",
+          "system_seconds": 0.992,
+          "user_seconds": 2.532
+        }
+      ]
+    },
+    "identity_binding": "Actual local driver receipt before/after archive SHA and executed checker script SHA; separate remote-style identity-pre/post JSON files are not produced by this local driver.",
+    "installed_size_INFO": {
+      "interpretation": "Native informational size output, not a warning or a release-budget adjudication.",
+      "raw_block": "* checking installed package size ... INFO\n  installed size is  7.0Mb\n  sub-directories of 1Mb or more:\n    data      3.2Mb\n    extdata   1.1Mb\n    help      1.1Mb\n",
+      "reported_installed_size": "7.0Mb",
+      "status": "INFO"
+    },
+    "known_note": {
+      "cpu_user_plus_system_seconds": 3.524,
+      "disposition": "UNADJUDICATED; preserved, no faster rerun",
+      "elapsed_seconds": 18.406,
+      "example": "compare_methods",
+      "system_seconds": 0.992,
+      "user_seconds": 2.532
+    },
+    "native_process_exit": 0,
+    "native_state": "COMPLETED_UNADJUDICATED",
+    "native_status_line": "Status: 1 NOTE",
+    "observation_only": false,
+    "observed_native_test_counts": {
+      "fail": 0,
+      "pass": 3195,
+      "skips": 86,
+      "warnings": 161
+    },
+    "snapshot_check_log_sha256": "0bccf901390812f7c425a249881edccd68e56c1a9857fa6e8439b1d5b25bfceb",
+    "stage_timings": {
+      "HTML": {
+        "check_result": "OK",
+        "cpu_seconds": 3.0,
+        "elapsed_seconds": 27.0,
+        "format": "rounded_CPU_elapsed",
+        "raw_line": "* checking HTML version of manual ... [3s/27s] OK"
+      },
+      "PDF": {
+        "check_result": "OK",
+        "cpu_seconds": 8.0,
+        "elapsed_seconds": 69.0,
+        "format": "rounded_CPU_elapsed",
+        "raw_line": "* checking PDF version of manual ... [8s/69s] OK"
+      },
+      "examples": {
+        "check_result": "NOTE",
+        "cpu_seconds": 13.0,
+        "elapsed_seconds": 63.0,
+        "format": "rounded_CPU_elapsed",
+        "raw_line": "* checking examples ... [13s/63s] NOTE"
+      },
+      "tests": {
+        "check_result": "OK",
+        "cpu_seconds": 300.0,
+        "elapsed_seconds": 1860.0,
+        "format": "rounded_CPU_elapsed",
+        "raw_line": "* checking tests ... [5m/31m] OK"
+      },
+      "vignettes": {
+        "check_result": "OK",
+        "cpu_seconds": 17.0,
+        "elapsed_seconds": 120.0,
+        "format": "rounded_CPU_elapsed",
+        "raw_line": "* checking re-building of vignette outputs ... [17s/120s] OK"
+      }
+    },
+    "thread_runtime_probe": {
+      "cpu_tensor_device": "cpu",
+      "cuda": false,
+      "mps": false,
+      "scope": "Runtime probe, not instrumentation of the already running native test process",
+      "threads": 1,
+      "torch": "0.17.0"
+    },
+    "total_native_check_seconds": 3564.46431493759,
+    "warning_consequences": "PENDING",
+    "warning_replay_state": "PENDING_NOT_YET_PROVEN"
+  },
+  "not_authorized_or_claimed": [
+    "new R runs or live network checks",
+    "warning consequence acceptance",
+    "local timing NOTE acceptance",
+    "final panel verdict",
+    "merge of evidence PR 236",
+    "CRAN upload or confirmation"
+  ],
+  "overall": "NOT_READY_PENDING_LOCAL_TIMING_WARNING_REVIEW_AND_FINAL_PANEL",
+  "profile": {
+    "release_type": "update",
+    "retained_CRAN_version": "0.10.0",
+    "retained_reverse_dependencies": [],
+    "scope": "Retained CRAN snapshot, not a new network query."
+  },
+  "refresh_command": "python3 /private/tmp/pigauto-final-closure-20261017/final-checks-synopsis/build-synopsis.py --refresh-local",
+  "remote_native_checks": [
+    {
+      "Rout_process_timings": {
+        "examples_Rout_elapsed_seconds": 13.466,
+        "scope": "Rout-reported process times, distinct from check-stage elapsed brackets and separate warning replay.",
+        "tests_Rout_elapsed_seconds": 205.75
+      },
+      "all_declared_dependencies_available": 29,
+      "check_log_sha256": "a835496d417cb72f416f5113153b02fa5022a0db1d1bdd8ea0b05112be2c9135",
+      "example_timings": {
+        "compare_methods": {
+          "elapsed_seconds": 1.371,
+          "name": "compare_methods",
+          "system_seconds": 0.052,
+          "user_seconds": 1.319
+        },
+        "measured_examples": 38,
+        "over_five_cpu_or_elapsed_seconds": []
+      },
+      "installed_size_INFO": {
+        "interpretation": "Native informational size output, not a warning or a release-budget adjudication.",
+        "raw_block": "* checking installed package size ... INFO\n  installed size is  5.9Mb\n  sub-directories of 1Mb or more:\n    data      2.2Mb\n    extdata   1.1Mb\n    help      1.1Mb\n",
+        "reported_installed_size": "5.9Mb",
+        "status": "INFO"
+      },
+      "native_counts": {
+        "fail": 0,
+        "pass": 3195,
+        "skips": 86,
+        "warnings": 161
+      },
+      "native_status": "OK",
+      "native_total_over_600_seconds": false,
+      "native_total_seconds": 336.330481529236,
+      "platform": "ubuntu-latest-release",
+      "separate_warning_replay_seconds": 196.181,
+      "stage_timings": {
+        "HTML": {
+          "check_result": "OK",
+          "cpu_seconds": 2.0,
+          "elapsed_seconds": 2.0,
+          "format": "rounded_CPU_elapsed",
+          "raw_line": "* checking HTML version of manual ... [2s/2s] OK"
+        },
+        "PDF": {
+          "check_result": "OK",
+          "cpu_seconds": 2.0,
+          "elapsed_seconds": 2.0,
+          "format": "rounded_CPU_elapsed",
+          "raw_line": "* checking PDF version of manual ... [2s/2s] OK"
+        },
+        "examples": {
+          "check_result": "OK",
+          "cpu_seconds": 14.0,
+          "elapsed_seconds": 14.0,
+          "format": "rounded_CPU_elapsed",
+          "raw_line": "* checking examples ... [14s/14s] OK"
+        },
+        "tests": {
+          "check_result": "OK",
+          "cpu_seconds": 206.0,
+          "elapsed_seconds": 206.0,
+          "format": "rounded_CPU_elapsed",
+          "raw_line": "* checking tests ... [206s/206s] OK"
+        },
+        "vignettes": {
+          "check_result": "OK",
+          "cpu_seconds": 11.0,
+          "elapsed_seconds": 11.0,
+          "format": "rounded_CPU_elapsed",
+          "raw_line": "* checking re-building of vignette outputs ... [11s/11s] OK"
+        }
+      },
+      "warning_consequences": "PENDING_EXACT_FINAL_AUDIT"
+    },
+    {
+      "Rout_process_timings": {
+        "examples_Rout_elapsed_seconds": 15.56,
+        "scope": "Rout-reported process times, distinct from check-stage elapsed brackets and separate warning replay.",
+        "tests_Rout_elapsed_seconds": 403.4
+      },
+      "all_declared_dependencies_available": 29,
+      "check_log_sha256": "4e3b819ef8fc32ef76003006114973a6c533d1944f4bf9a321d8fc7247aa835c",
+      "example_timings": {
+        "compare_methods": {
+          "elapsed_seconds": 2.47,
+          "name": "compare_methods",
+          "system_seconds": 0.19,
+          "user_seconds": 2.27
+        },
+        "measured_examples": 38,
+        "over_five_cpu_or_elapsed_seconds": []
+      },
+      "installed_size_INFO": {
+        "interpretation": "Native informational size output, not a warning or a release-budget adjudication.",
+        "raw_block": "* checking installed package size ... INFO\r\n  installed size is  5.9Mb\r\n  sub-directories of 1Mb or more:\r\n    data      2.2Mb\r\n    extdata   1.1Mb\r\n    help      1.1Mb\r\n",
+        "reported_installed_size": "5.9Mb",
+        "status": "INFO"
+      },
+      "native_counts": {
+        "fail": 0,
+        "pass": 3195,
+        "skips": 86,
+        "warnings": 161
+      },
+      "native_status": "OK",
+      "native_total_over_600_seconds": true,
+      "native_total_seconds": 622.432008981705,
+      "platform": "windows-latest-devel",
+      "separate_warning_replay_seconds": 409.41,
+      "stage_timings": {
+        "HTML": {
+          "check_result": "OK",
+          "format": "single_reported",
+          "raw_line": "* checking HTML version of manual ... [4s] OK",
+          "reported_seconds": 4.0
+        },
+        "PDF": {
+          "check_result": "OK",
+          "format": "single_reported",
+          "raw_line": "* checking PDF version of manual ... [4s] OK",
+          "reported_seconds": 4.0
+        },
+        "examples": {
+          "check_result": "OK",
+          "format": "single_reported",
+          "raw_line": "* checking examples ... [16s] OK",
+          "reported_seconds": 16.0
+        },
+        "tests": {
+          "check_result": "OK",
+          "format": "single_reported",
+          "raw_line": "* checking tests ... [404s] OK",
+          "reported_seconds": 404.0
+        },
+        "vignettes": {
+          "check_result": "OK",
+          "format": "single_reported",
+          "raw_line": "* checking re-building of vignette outputs ... [22s] OK",
+          "reported_seconds": 22.0
+        }
+      },
+      "warning_consequences": "PENDING_EXACT_FINAL_AUDIT"
+    },
+    {
+      "Rout_process_timings": {
+        "examples_Rout_elapsed_seconds": 16.31,
+        "scope": "Rout-reported process times, distinct from check-stage elapsed brackets and separate warning replay.",
+        "tests_Rout_elapsed_seconds": 414.62
+      },
+      "all_declared_dependencies_available": 29,
+      "check_log_sha256": "2e0dd69a839964ff2bb2425f8343b685dee6b091ff70a2ac5e942bbfa2184a95",
+      "example_timings": {
+        "compare_methods": {
+          "elapsed_seconds": 2.71,
+          "name": "compare_methods",
+          "system_seconds": 0.09,
+          "user_seconds": 2.58
+        },
+        "measured_examples": 38,
+        "over_five_cpu_or_elapsed_seconds": []
+      },
+      "installed_size_INFO": {
+        "interpretation": "Native informational size output, not a warning or a release-budget adjudication.",
+        "raw_block": "* checking installed package size ... INFO\r\n  installed size is  5.9Mb\r\n  sub-directories of 1Mb or more:\r\n    data      2.2Mb\r\n    extdata   1.1Mb\r\n    help      1.1Mb\r\n",
+        "reported_installed_size": "5.9Mb",
+        "status": "INFO"
+      },
+      "native_counts": {
+        "fail": 0,
+        "pass": 3195,
+        "skips": 86,
+        "warnings": 161
+      },
+      "native_status": "OK",
+      "native_total_over_600_seconds": true,
+      "native_total_seconds": 645.812567949295,
+      "platform": "windows-latest-release",
+      "separate_warning_replay_seconds": 423.25,
+      "stage_timings": {
+        "HTML": {
+          "check_result": "OK",
+          "format": "single_reported",
+          "raw_line": "* checking HTML version of manual ... [13s] OK",
+          "reported_seconds": 13.0
+        },
+        "PDF": {
+          "check_result": "OK",
+          "format": "single_reported",
+          "raw_line": "* checking PDF version of manual ... [4s] OK",
+          "reported_seconds": 4.0
+        },
+        "examples": {
+          "check_result": "OK",
+          "format": "single_reported",
+          "raw_line": "* checking examples ... [17s] OK",
+          "reported_seconds": 17.0
+        },
+        "tests": {
+          "check_result": "OK",
+          "format": "single_reported",
+          "raw_line": "* checking tests ... [415s] OK",
+          "reported_seconds": 415.0
+        },
+        "vignettes": {
+          "check_result": "OK",
+          "format": "single_reported",
+          "raw_line": "* checking re-building of vignette outputs ... [22s] OK",
+          "reported_seconds": 22.0
+        }
+      },
+      "warning_consequences": "PENDING_EXACT_FINAL_AUDIT"
+    }
+  ],
+  "scope": "Evidence synopsis only; no release rung promoted, final panel or readiness adjudication.",
+  "spelling": {
+    "categories": {
+      "accepted_British_variant": 52,
+      "mathematical_code_DOI_token": 144,
+      "proper_taxon_package_name": 110,
+      "valid_computing_ordinary_compound": 33,
+      "valid_scientific_statistical_term": 65
+    },
+    "flag_rows": 404,
+    "limitations": [
+      "Triage covers only the 404 flagged tokens, not all unflagged prose.",
+      "Names and bibliographic fragments were assessed as spelling tokens, not independently reference-verified.",
+      "Spelling checker line references can mark a paragraph rather than the exact token; source-contexts.csv retains original and nearest actual lines.",
+      "No dictionary, package source, archive, workflow or warning audit was edited."
+    ],
+    "ordinary_word_typos_identified": [],
+    "resolved_context_rows": 1886,
+    "scopes": {
+      "current_reader_documentation": 137,
+      "current_reader_documentation;historical_NEWS": 113,
+      "historical_NEWS": 154
+    },
+    "uncertain_flags": [],
+    "unique_tokens": 404
+  },
+  "spelling_archive_source_files_verified": 43,
+  "timing_decision": {
+    "local_note_preserved": true,
+    "native_totals_do_not_include_separate_warning_replay": true,
+    "no_faster_rerun": true,
+    "observed_signal_seconds": 600,
+    "state": "OPEN_MAINTAINER_AND_FINAL_PANEL_DECISION",
+    "threshold_type": "Observed incoming signal/conservative release review, not an immutable policy limit. Protocol strict first-submission wording is distinct; retained CRAN version0.10.0 makes this an update."
+  },
+  "urls": {
+    "access_state": "403_FORBIDDEN_RETAINED_NOT_URL_CLEAN",
+    "bibliographic_identity": "SUPPORTED_BY_RETAINED_CROSSREF_HTTP200",
+    "finding": {
+      "CRAN": "",
+      "From": "inst/doc/getting-started.html; vignettes/getting-started.Rmd",
+      "Message": "Forbidden",
+      "New": "",
+      "R": "",
+      "Spaces": "",
+      "Status": "403",
+      "URL": "https://doi.org/10.1126/science.1157704",
+      "root": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/exact-source/pigauto"
+    },
+    "limits": "Metadata supports identifier identity, not automated DOI access, general reference quality or live GBIF/WorldClim service availability.",
+    "primary_metadata": {
+      "doi": "10.1126/science.1157704",
+      "doi_url_access": "Original exact-source URL check returned403; this metadata query does not erase that finding.",
+      "elapsed_seconds": 0.8038984999875538,
+      "final_url": "https://api.crossref.org/works/10.1126/science.1157704",
+      "first_author": {
+        "affiliation": [
+          {
+            "name": "Zoology Department, Field Museum of Natural History, 1400 South Lake Shore Drive, Chicago, IL 60605, USA."
+          },
+          {
+            "name": "Department of Zoology, University of Florida, Gainesville, FL 32611, USA."
+          },
+          {
+            "name": "Museum of Vertebrate Zoology and Department of Integrative Biology, University of California, Berkeley, CA 94720, USA."
+          },
+          {
+            "name": "Department of Science and Technology\u2013National Research Foundation Centre of Excellence at the Percy FitzPatrick Institute, Department of Botany and Zoology, Stellenbosch University, Matieland 7602, South Africa."
+          },
+          {
+            "name": "Department of Vertebrate Zoology, Smithsonian Institution, 4210 Silver Hill Road, Suitland, MD 20746, USA."
+          }
+        ],
+        "family": "Hackett",
+        "given": "Shannon J.",
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ],
+        "sequence": "first"
+      },
+      "http_status": 200,
+      "identity_matches": true,
+      "issue": "5884",
+      "journal": [
+        "Science"
+      ],
+      "method": "GET",
+      "no_retry": true,
+      "page": "1763-1768",
+      "published": {
+        "date-parts": [
+          [
+            2008,
+            6,
+            27
+          ]
+        ]
+      },
+      "sha256": "d3eae4736e61ac7b16fc81b7f96b00f6ba57f726fe7800291d1d9b420c6aa1f4",
+      "title": [
+        "A Phylogenomic Study of Birds Reveals Their Evolutionary History"
+      ],
+      "url": "https://api.crossref.org/works/10.1126/science.1157704",
+      "volume": "320"
+    }
+  },
+  "warnings": {
+    "consequences": "PENDING_FINAL_WARNING_AUDIT",
+    "predecessor_classification_is_not_final_evidence": true,
+    "remote_each": {
+      "fail": 0,
+      "pass": 3195,
+      "skips": 86,
+      "warnings": 161
+    }
+  }
+}

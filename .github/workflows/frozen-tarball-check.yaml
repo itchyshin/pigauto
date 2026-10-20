@@ -1,0 +1,99 @@
+name: Frozen CRAN tarball
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/frozen-tarball-check.yaml'
+      - 'script/cran-0.11-platform/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frozen-a93fece7-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  exact-archive:
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'release/cran-0.11-gate-780c084'
+    name: Frozen archive ${{ matrix.os }} R-${{ matrix.r }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: windows-latest, r: release}
+          - {os: windows-latest, r: devel}
+          - {os: ubuntu-latest, r: release}
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      _R_CHECK_FORCE_SUGGESTS_: 'true'
+      _R_CHECK_TIMINGS_: '0'
+      _R_CHECK_ALWAYS_LOG_VIGNETTE_OUTPUT_: 'true'
+      _R_CHECK_LIMIT_CORES_: 'true'
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      TORCH_INSTALL: '1'
+    steps:
+      - uses: actions/checkout@v6
+      - name: Download and verify the frozen archive
+        id: download
+        run: python script/cran-0.11-platform/artifact.py download
+      - name: Exercise identity negative controls
+        run: python script/cran-0.11-platform/artifact.py selftest
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ghostscript libgdal-dev libgeos-dev libglpk-dev libproj-dev libnode-dev qpdf tidy
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r }}
+          use-public-rspm: ${{ runner.os == 'Linux' }}
+      - name: Test dependency parsing against R's parser
+        shell: Rscript {0}
+        run: source('script/cran-0.11-platform/test-dependencies.R', echo = TRUE)
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-tinytex@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: frozen-deps
+          dependencies: '"all"'
+          extra-packages: |
+            any::V8
+            any::tinytex
+          cache-version: frozen-c2e768ad
+      - name: Install and verify manual-check tools
+        shell: Rscript {0}
+        run: source('script/cran-0.11-platform/manual-tools.R', echo = TRUE)
+      - name: Install and exercise the CPU torch backend
+        shell: Rscript {0}
+        run: |
+          torch::install_torch()
+          stopifnot(torch::torch_tensor(1)$item() == 1)
+      - name: Verify the archive immediately before check
+        run: python script/cran-0.11-platform/artifact.py pre
+      - name: Check the original archive with manuals and all Suggests
+        shell: Rscript {0}
+        run: source('script/cran-0.11-platform/check.R', echo = TRUE)
+      - name: Retain warning objects in a separate native-layout replay
+        shell: Rscript {0}
+        run: |
+          Sys.unsetenv('NOT_CRAN')
+          source('script/cran-0.11-platform/capture-warnings.R', echo = TRUE)
+      - name: Verify the archive after check, including failures
+        if: always() && steps.download.outcome == 'success'
+        run: python script/cran-0.11-platform/artifact.py post
+      - name: Retain platform evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frozen-a93fece7-${{ matrix.os }}-${{ matrix.r }}
+          path: |
+            platform-evidence/
+            frozen-check/
+          if-no-files-found: error
+          retention-days: 30

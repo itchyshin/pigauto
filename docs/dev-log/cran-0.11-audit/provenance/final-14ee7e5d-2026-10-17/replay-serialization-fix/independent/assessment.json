@@ -1,0 +1,52 @@
+{
+  "assessment_performed": true,
+  "assessor_type": "self",
+  "calibration_status": "Task controls and prior examples seen; no held-out calibration or extra model call.",
+  "confidence": "medium",
+  "confidence_reason": "Self-review of a technical memo; not a calibrated style detector or authorship judgment.",
+  "coverage": "Whole README.md exact bytes",
+  "date": "2026-10-18T01:24:37.266826+00:00",
+  "draft_sha256": "6e528d185aa6239a4dafb79162b8005e0d59e8b2d83c6a79e2019357ea2441e7",
+  "draft_version": "v1",
+  "evidence_none_reason": null,
+  "examples": [
+    {
+      "cue": "Narrow verdict",
+      "impact": "States the useful next step and retains the release and timing boundaries.",
+      "line": 3,
+      "location": "README.md:3",
+      "quote": "PASS for the narrow checker fix. No blocker was found to running a new four-cell warning audit into a new output directory. This verdict does not accept the warnings, the local timing NOTE or release readiness.",
+      "repair": "No change needed."
+    },
+    {
+      "cue": "Concrete acceptance rules",
+      "impact": "Names the accepted encodings and refused malformed values instead of claiming generic safety.",
+      "line": 7,
+      "location": "README.md:7",
+      "quote": "The revised guard requires the error field and accepts JSON null or an empty object only. It rejects empty arrays, false, zero, empty/whitespace strings, stringified null/object values and nonempty error objects, including objects whose message is null, false or empty. Both CRAN environment fields remain exact string comparisons. Missing fields, wrong types, case changes, whitespace and lookalike characters are refused.",
+      "repair": "No change needed."
+    },
+    {
+      "cue": "Bounded evidence",
+      "impact": "Separates proof of unchanged downstream checks from the still-required actual audit.",
+      "line": 11,
+      "location": "README.md:11",
+      "quote": "A whole-module structural comparison allows exactly one added function and replacement of the old inline guard with its call. All other executable syntax is identical. Raw problems, native/replay counts, warning/caller/source identity, skip scope, archive/run/install provenance and the exact local-NOTE opt-in are unchanged. Accepting this serialization does not establish that those downstream checks pass; the actual audit still must perform them.",
+      "repair": "No change needed."
+    }
+  ],
+  "facts_gate": "pass",
+  "facts_gate_reason": "All assertions checked against producer code at committed6cd5f65, retained serializer/actual receipts,142guard controls, existing selftests, whole-module AST comparison and138protected file hashes before/after. Actual audit and RDS reader explicitly not run.",
+  "genre": "Independent engineering validator review",
+  "interpretation": "perceived_style_not_authorship",
+  "method": "Separate post-draft read of the entire narrow-review README against the executed control results, structural comparison, producer/commit byte binding and protected input hashes.",
+  "references_gate": "pass",
+  "references_gate_reason": "Local primary code, original/current audit and receipt identities verified by exact hashes; producer working bytes matched the Git object. No external bibliographic claim.",
+  "requested_mode": "independent",
+  "reviewer": "platform_gate_review",
+  "science_gate": "not_applicable",
+  "science_gate_reason": "No scientific inference or model-performance claim; review concerns serialization and validator logic.",
+  "score": 2,
+  "score_reason": "Concrete cause, accepted/refused values, counts and hashes make the review specific. Repeated technical paragraph openings remain slightly formal.",
+  "style_status": "known"
+}

@@ -1,0 +1,686 @@
+[
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/00check.log",
+    "source_sha256": "a835496d417cb72f416f5113153b02fa5022a0db1d1bdd8ea0b05112be2c9135",
+    "view": "views/ubuntu-latest-release/frozen-check/pigauto.Rcheck/00check.log",
+    "view_sha256": "a835496d417cb72f416f5113153b02fa5022a0db1d1bdd8ea0b05112be2c9135"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/00install.out",
+    "source_sha256": "7f8a73b86b7d03565ff3003762e097a22aabf7fce7f9737a57df3161adc95993",
+    "view": "views/ubuntu-latest-release/frozen-check/pigauto.Rcheck/00install.out",
+    "view_sha256": "7f8a73b86b7d03565ff3003762e097a22aabf7fce7f9737a57df3161adc95993"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/Rdlatex.log",
+    "source_sha256": "7fa34fd750fbb4cfdf1e98873e120e8852ab20a1b83c1b7e728f2f3167c85a99",
+    "view": "views/ubuntu-latest-release/frozen-check/pigauto.Rcheck/Rdlatex.log",
+    "view_sha256": "7fa34fd750fbb4cfdf1e98873e120e8852ab20a1b83c1b7e728f2f3167c85a99"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/build_vignettes.log",
+    "source_sha256": "a43f66a25ce23a4c37eebceeff62b0973e1bee67f277ae119e452a608039c2ff",
+    "view": "views/ubuntu-latest-release/frozen-check/pigauto.Rcheck/build_vignettes.log",
+    "view_sha256": "a43f66a25ce23a4c37eebceeff62b0973e1bee67f277ae119e452a608039c2ff"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.Rout",
+    "source_sha256": "f12854c3a98af4b34d3fa1de9ef8f29381c5d512c133bcec19e8826926d4567e",
+    "view": "views/ubuntu-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.Rout",
+    "view_sha256": "f12854c3a98af4b34d3fa1de9ef8f29381c5d512c133bcec19e8826926d4567e"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.timings",
+    "source_sha256": "3085a7c010896d22e7c2fdb51c032a36e44606024f80e2e1199c8c12a44ec725",
+    "view": "views/ubuntu-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.timings",
+    "view_sha256": "3085a7c010896d22e7c2fdb51c032a36e44606024f80e2e1199c8c12a44ec725"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/pigauto-manual.log",
+    "source_sha256": "fa188cfb9f602e6072575ff8b87255e90fdb141694c289fefe1d2d5149c24583",
+    "view": "views/ubuntu-latest-release/frozen-check/pigauto.Rcheck/pigauto-manual.log",
+    "view_sha256": "fa188cfb9f602e6072575ff8b87255e90fdb141694c289fefe1d2d5149c24583"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/tests/testthat.Rout",
+    "source_sha256": "a9f6d7fca0552ec3be29e957b34de4e924820ce8a7ff568abfab41535a955c25",
+    "view": "views/ubuntu-latest-release/frozen-check/pigauto.Rcheck/tests/testthat.Rout",
+    "view_sha256": "a9f6d7fca0552ec3be29e957b34de4e924820ce8a7ff568abfab41535a955c25"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/check-command.txt",
+    "source_sha256": "0abc7069e31ff3fea631129a75557932aba26c06adadc19471c2c4d7cd35ea5c",
+    "view": "views/ubuntu-latest-release/platform-evidence/check-command.txt",
+    "view_sha256": "0abc7069e31ff3fea631129a75557932aba26c06adadc19471c2c4d7cd35ea5c"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/check-environment.txt",
+    "source_sha256": "69f8ec3efe18db937896b33a5841d24da1acfedc1045687760edb8bbc767841a",
+    "view": "views/ubuntu-latest-release/platform-evidence/check-environment.txt",
+    "view_sha256": "69f8ec3efe18db937896b33a5841d24da1acfedc1045687760edb8bbc767841a"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/check-exit.txt",
+    "source_sha256": "73712eb6d550de0214c2604b626c4b0bacc1ef5b9b9ff333f8942f7ebd54dc8b",
+    "view": "views/ubuntu-latest-release/platform-evidence/check-exit.txt",
+    "view_sha256": "73712eb6d550de0214c2604b626c4b0bacc1ef5b9b9ff333f8942f7ebd54dc8b"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/declared-dependencies.csv",
+    "source_sha256": "da620bb55999537b678b44cc61708a167d54583d3bfd05e45d626cf63567a44b",
+    "view": "views/ubuntu-latest-release/platform-evidence/declared-dependencies.csv",
+    "view_sha256": "da620bb55999537b678b44cc61708a167d54583d3bfd05e45d626cf63567a44b"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/identity-download.json",
+    "source_sha256": "06c5e7f583bc4e8c72a5488acaa6a5e095978af2052f1e2fa2d3fe88da1b53cd",
+    "view": "views/ubuntu-latest-release/platform-evidence/identity-download.json",
+    "view_sha256": "06c5e7f583bc4e8c72a5488acaa6a5e095978af2052f1e2fa2d3fe88da1b53cd"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/identity-post.json",
+    "source_sha256": "bb847831096aa2dd98276341d02c91691b56283988885920dc2a7aeef684064b",
+    "view": "views/ubuntu-latest-release/platform-evidence/identity-post.json",
+    "view_sha256": "bb847831096aa2dd98276341d02c91691b56283988885920dc2a7aeef684064b"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/identity-pre.json",
+    "source_sha256": "750181f715ae5ba9a58e5c2ac58ee97b5fc9695857a8283c8fe44c7b8772cdf9",
+    "view": "views/ubuntu-latest-release/platform-evidence/identity-pre.json",
+    "view_sha256": "750181f715ae5ba9a58e5c2ac58ee97b5fc9695857a8283c8fe44c7b8772cdf9"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-after-exit.txt",
+    "source_sha256": "a98b6e5c561734573064072eff35d807aef8b295e2c67f6eb6b00b96fe421322",
+    "view": "views/ubuntu-latest-release/platform-evidence/index-after-exit.txt",
+    "view_sha256": "a98b6e5c561734573064072eff35d807aef8b295e2c67f6eb6b00b96fe421322"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-after-stderr.txt",
+    "source_sha256": "39123455fc7865cd8d21b0a1d3ad139dec733d11d2e1cd0fc551bf5b30dc1912",
+    "view": "views/ubuntu-latest-release/platform-evidence/index-after-stderr.txt",
+    "view_sha256": "39123455fc7865cd8d21b0a1d3ad139dec733d11d2e1cd0fc551bf5b30dc1912"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-after-stdout.txt",
+    "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "view": "views/ubuntu-latest-release/platform-evidence/index-after-stdout.txt",
+    "view_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-before-exit.txt",
+    "source_sha256": "80e184c8130c77360957a79a32bf613c08f4869adee944323fdb32bb231ad673",
+    "view": "views/ubuntu-latest-release/platform-evidence/index-before-exit.txt",
+    "view_sha256": "80e184c8130c77360957a79a32bf613c08f4869adee944323fdb32bb231ad673"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-before-stderr.txt",
+    "source_sha256": "37425d4ba011c14015648dc46cde3ec89eecadab72e3e8df9b606eb9939fb071",
+    "view": "views/ubuntu-latest-release/platform-evidence/index-before-stderr.txt",
+    "view_sha256": "37425d4ba011c14015648dc46cde3ec89eecadab72e3e8df9b606eb9939fb071"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-before-stdout.txt",
+    "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "view": "views/ubuntu-latest-release/platform-evidence/index-before-stdout.txt",
+    "view_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-tools-before.txt",
+    "source_sha256": "64936188840418908d1034ec39f4a6eef50a9aa6fc7e8632110ff42b4d706bc8",
+    "view": "views/ubuntu-latest-release/platform-evidence/index-tools-before.txt",
+    "view_sha256": "64936188840418908d1034ec39f4a6eef50a9aa6fc7e8632110ff42b4d706bc8"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/installed-packages.csv",
+    "source_sha256": "10dc14422afb69fdf328551faa5b1d9f5df706771545cb177377e27dc17fd96e",
+    "view": "views/ubuntu-latest-release/platform-evidence/installed-packages.csv",
+    "view_sha256": "10dc14422afb69fdf328551faa5b1d9f5df706771545cb177377e27dc17fd96e"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/manual-tools.txt",
+    "source_sha256": "90aaf3f34d510d9356bb8b0f0bfc6b4d6b8ae92a4e638933359209503dcc98a2",
+    "view": "views/ubuntu-latest-release/platform-evidence/manual-tools.txt",
+    "view_sha256": "90aaf3f34d510d9356bb8b0f0bfc6b4d6b8ae92a4e638933359209503dcc98a2"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/session-info.txt",
+    "source_sha256": "fc826d12f3aff27a7396b6f71273381e829dba6579c416182e78b3fb6a76bf8b",
+    "view": "views/ubuntu-latest-release/platform-evidence/session-info.txt",
+    "view_sha256": "fc826d12f3aff27a7396b6f71273381e829dba6579c416182e78b3fb6a76bf8b"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/warning-details.csv",
+    "source_sha256": "8b6709f11d5925be9b0abd7e5adf143a2ebd77a431d10204ba7e8c18b57a2fc2",
+    "view": "views/ubuntu-latest-release/platform-evidence/warning-details.csv",
+    "view_sha256": "8b6709f11d5925be9b0abd7e5adf143a2ebd77a431d10204ba7e8c18b57a2fc2"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/warning-replay.json",
+    "source_sha256": "539fc780dfa846a8bebb80ee6c6f6120ef11baf322fc4d2eb59564ccc8c659fa",
+    "view": "views/ubuntu-latest-release/platform-evidence/warning-replay.json",
+    "view_sha256": "539fc780dfa846a8bebb80ee6c6f6120ef11baf322fc4d2eb59564ccc8c659fa"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/warning-session.txt",
+    "source_sha256": "02ef84351209cb7636f59d51fd78bac9dcdd3b017dba50974d504d78a96af51b",
+    "view": "views/ubuntu-latest-release/platform-evidence/warning-session.txt",
+    "view_sha256": "02ef84351209cb7636f59d51fd78bac9dcdd3b017dba50974d504d78a96af51b"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/frozen-check/pigauto.Rcheck/00check.log.raw.gz",
+    "raw_gzip_sha256": "a253e1138290130357f034f891a7f1e3cbe2bd153a0f5b819d590c432130a027",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/00check.log",
+    "source_sha256": "4e3b819ef8fc32ef76003006114973a6c533d1944f4bf9a321d8fc7247aa835c",
+    "view": "views/windows-latest-devel/frozen-check/pigauto.Rcheck/00check.log",
+    "view_sha256": "c771746a9c994cc033e3ce44721a3f8dfd5e6a036ab224aa4865bf2c75427784"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/frozen-check/pigauto.Rcheck/00install.out.raw.gz",
+    "raw_gzip_sha256": "9f0e9720fee1ed1e81916339ecb5227de51399cc0dd4fae18206e7b8c73ae018",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/00install.out",
+    "source_sha256": "27ceff6e4b795be92c0c426cccd61799b8feacfad9fdbfada03195dd6328ea6b",
+    "view": "views/windows-latest-devel/frozen-check/pigauto.Rcheck/00install.out",
+    "view_sha256": "4c044d63dfbea31a8ce02b598eb99ce08de4992bf9352e04e098627219bc84a9"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/frozen-check/pigauto.Rcheck/Rdlatex.log.raw.gz",
+    "raw_gzip_sha256": "4eb3e8b351c413da60fa47f49d35492467461ad8b88aea636bd055467f2c6147",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/Rdlatex.log",
+    "source_sha256": "cbb102ec3609a24b9370a1ee01f7fdbe4fca6c1e4ade451a21c897d29153058a",
+    "view": "views/windows-latest-devel/frozen-check/pigauto.Rcheck/Rdlatex.log",
+    "view_sha256": "271267f73aa9c4ed5f27a50dc4b5ae0666b8c54438f56b571f33dd8675b4d351"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/frozen-check/pigauto.Rcheck/build_vignettes.log.raw.gz",
+    "raw_gzip_sha256": "5b5ac702e599993a24d08824c9095656f70f97ec05f1af60a0416e34b4cf3e18",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/build_vignettes.log",
+    "source_sha256": "3145443a4178a2e0edd8ab71b038dc435a813988bf6ed164949dc2a96f2d3394",
+    "view": "views/windows-latest-devel/frozen-check/pigauto.Rcheck/build_vignettes.log",
+    "view_sha256": "5a6dc2261f5516a3177ac0bde1f80cfa41d4a544d83e0d9df8f93fedd15de0c4"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-Ex.Rout.raw.gz",
+    "raw_gzip_sha256": "a496c484769fbe1ed0c71ad46d80c5bd7ae1b45553b1c580ab773bc126dc20bc",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-Ex.Rout",
+    "source_sha256": "a1995643ddeeb065930ada75ee4e52b6a531b00fa167dc4d18c7cabcb437eba0",
+    "view": "views/windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-Ex.Rout",
+    "view_sha256": "fda83ba57014a1c18baeb7099b1d98846006bd0dfc8ff7b4fc58558579a526ce"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-Ex.timings.raw.gz",
+    "raw_gzip_sha256": "c1c97f8788770bf7129e325d0399c34054865eba1246ef659d310b970f66f49b",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-Ex.timings",
+    "source_sha256": "ff4b15cc03d0883371b42a479ee466d1d0707393b46c8e985c22b0b2331c1692",
+    "view": "views/windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-Ex.timings",
+    "view_sha256": "a4fa561c9d6bbf6f21f4a11002c04c46d8d9b0cde8afef55c5c8e1fe88528ac4"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-manual.log",
+    "source_sha256": "83f933b1c0c6f54bfbf8a234d3046a5b8c1eb9cb56ce6cc51b7a0e969c89df35",
+    "view": "views/windows-latest-devel/frozen-check/pigauto.Rcheck/pigauto-manual.log",
+    "view_sha256": "83f933b1c0c6f54bfbf8a234d3046a5b8c1eb9cb56ce6cc51b7a0e969c89df35"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/frozen-check/pigauto.Rcheck/tests/testthat.Rout.raw.gz",
+    "raw_gzip_sha256": "964551ffbb58b3af8100a486d1688fff7c0534b4eb4a7512f30f47d79b73404d",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/frozen-check/pigauto.Rcheck/tests/testthat.Rout",
+    "source_sha256": "62e0abe8310d9a774e839225a173162bdb3472c78b61875296aee4fd73bc414b",
+    "view": "views/windows-latest-devel/frozen-check/pigauto.Rcheck/tests/testthat.Rout",
+    "view_sha256": "55dae885777d9841f2757499fb29457f92553a582a2302048bb3fe5e92cebf80"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/check-command.txt.raw.gz",
+    "raw_gzip_sha256": "35f91b523c31d5350ec62f957e10b4255af62d469f5077e6ef8ec63f3dabe205",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/check-command.txt",
+    "source_sha256": "7dce5c2196c872d2144c60a0dd5ce7bc491826f3cb4be36af8d4e5da8f39a20a",
+    "view": "views/windows-latest-devel/platform-evidence/check-command.txt",
+    "view_sha256": "63fd294dedb4a28288da5232faf9920a6eed2b02c0d059a1363b40e9309e63d5"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/check-environment.txt.raw.gz",
+    "raw_gzip_sha256": "f1721274595cf806ffd5ecf094de782399c3622e3294aa59c7f5a1cb85e24a17",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/check-environment.txt",
+    "source_sha256": "d171549d9ab5e75346e95032d0a62c5af355cb112d352e0e39bfd20ab343e3ae",
+    "view": "views/windows-latest-devel/platform-evidence/check-environment.txt",
+    "view_sha256": "e0d3bbf432e5cf205da703176490b616a3752f60f03606edb8a0834bffe5dd0b"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/check-exit.txt.raw.gz",
+    "raw_gzip_sha256": "098046bcc3a51c1927af3d6d48ef5e5bc01d67c3f3e7ffd11f199dfd92b7e543",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/check-exit.txt",
+    "source_sha256": "52ff3bb11f7c0e64bfc442188851a7dfb0f494e735b254ece967903b61962156",
+    "view": "views/windows-latest-devel/platform-evidence/check-exit.txt",
+    "view_sha256": "4c9e14c33cb386c936b7b70e18f15bc44ae87bfc5f7be0056e2a99befd88af7b"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/declared-dependencies.csv.raw.gz",
+    "raw_gzip_sha256": "e653bfa758a300728e03061672045b9ff9c3091a7a426b3571d6ebf98dda18f2",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/declared-dependencies.csv",
+    "source_sha256": "8c36e8d024418d2c45a61a8569ababb79c6c58a613f73eff4e8b3a97c712c2df",
+    "view": "views/windows-latest-devel/platform-evidence/declared-dependencies.csv",
+    "view_sha256": "da620bb55999537b678b44cc61708a167d54583d3bfd05e45d626cf63567a44b"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/identity-download.json.raw.gz",
+    "raw_gzip_sha256": "d846bfb8344f6836a407f114d2d48bffc4eda7b641d9da2ba5569175363f7c33",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/identity-download.json",
+    "source_sha256": "702c5d5f3f303db3616fba34967626167b52a198b38d191feefe10cb53184edb",
+    "view": "views/windows-latest-devel/platform-evidence/identity-download.json",
+    "view_sha256": "000ccdf7d9dc84e84c69bc6d5c5565dea597dc74d788ef649ff4cdf78e4b0892"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/identity-post.json.raw.gz",
+    "raw_gzip_sha256": "274c6842e077673c6439cbdfc4bbede2cd9795e32d4b5781b8f5e6b849cdc11e",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/identity-post.json",
+    "source_sha256": "99da854eedfd21a9c1d90945131dbfabe9342926099c7ec25736d43a73bd423c",
+    "view": "views/windows-latest-devel/platform-evidence/identity-post.json",
+    "view_sha256": "2e658f11b35fa0a69c78605974f49b28799a9b2e8ac1f239f858f18b8c3f9584"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/identity-pre.json.raw.gz",
+    "raw_gzip_sha256": "cd627537e50aa1bf5de86abfc43aef743ab327c08b0da70cd980b6107a76254f",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/identity-pre.json",
+    "source_sha256": "8f556278f01dce595c26a64f3ad95ad2a0743b02721e7c1ec89313e87620cf6b",
+    "view": "views/windows-latest-devel/platform-evidence/identity-pre.json",
+    "view_sha256": "2ce6f0e23142451e424e73006ad300b46658ebdd0e1a2ab99e891eca2063a792"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/index-after-exit.txt.raw.gz",
+    "raw_gzip_sha256": "d362236e78eb47cbc93ecb6c3221aab76f704e94986c6312cbcc083dcba63ddf",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-after-exit.txt",
+    "source_sha256": "2e7f47b6eef33663f1aae9cbbdc5704d6732655d845428eade81a4051bd27802",
+    "view": "views/windows-latest-devel/platform-evidence/index-after-exit.txt",
+    "view_sha256": "5776e2627054ec943d3afc238987fac59ac21af3629db4760bb910e11a92593b"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/index-after-stderr.txt.raw.gz",
+    "raw_gzip_sha256": "6b7e2eee6c824b6216a58b8841def60b156af8c7dadc97e82896551108f5e5fc",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-after-stderr.txt",
+    "source_sha256": "884cdfb6a95e0bf0ae26e60d9063d3c5a3e033afcc2ae69bebe190e9a1bf9bbb",
+    "view": "views/windows-latest-devel/platform-evidence/index-after-stderr.txt",
+    "view_sha256": "39123455fc7865cd8d21b0a1d3ad139dec733d11d2e1cd0fc551bf5b30dc1912"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-after-stdout.txt",
+    "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "view": "views/windows-latest-devel/platform-evidence/index-after-stdout.txt",
+    "view_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/index-before-exit.txt.raw.gz",
+    "raw_gzip_sha256": "49f36775772aff87d41fd51cedb642b532d954f68f7c8c155d60f0aa82a5e366",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-before-exit.txt",
+    "source_sha256": "09ec5bb78802069d1eb9a2e396944a9e852f438f2d75ea9685d023df6bdf7462",
+    "view": "views/windows-latest-devel/platform-evidence/index-before-exit.txt",
+    "view_sha256": "80e184c8130c77360957a79a32bf613c08f4869adee944323fdb32bb231ad673"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-before-stderr.txt",
+    "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "view": "views/windows-latest-devel/platform-evidence/index-before-stderr.txt",
+    "view_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-before-stdout.txt",
+    "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "view": "views/windows-latest-devel/platform-evidence/index-before-stdout.txt",
+    "view_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/index-tools-before.txt.raw.gz",
+    "raw_gzip_sha256": "667e14b609e9e76d4669c4cf152f27d42ef112cf61c2a2015d6003c8be1ec22b",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/index-tools-before.txt",
+    "source_sha256": "b00295770b7dd451ffc8ed62914d59cd78773254d766c8626c15be91b7409566",
+    "view": "views/windows-latest-devel/platform-evidence/index-tools-before.txt",
+    "view_sha256": "f2f40a3f74e8e273596bd2a5c3ae8b2b61d37184a38c7918d8b5c175a3ac8103"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/installed-packages.csv.raw.gz",
+    "raw_gzip_sha256": "c7c2203252ab7463787184f7e4b5f5d1de9b59d7c2798a1856c6b2ab6dadbec9",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/installed-packages.csv",
+    "source_sha256": "c8e67be6fe716a8eadb2d63e7e9f9fb1f05aff02f131ae6288cc21c4cce34dc6",
+    "view": "views/windows-latest-devel/platform-evidence/installed-packages.csv",
+    "view_sha256": "48f3fc96e86621503d8289768bdc23411a150b2e550c139a594f1f4e215611c9"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/manual-tools.txt.raw.gz",
+    "raw_gzip_sha256": "a1d732a6816ec501ff5ccea8c6d300f72db4b5fcaac482840b5563044b863e6f",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/manual-tools.txt",
+    "source_sha256": "e5405c76a3bd8781f0a0c5a8e031bd9388706c0727ffd6bddfef402a8c2f3b63",
+    "view": "views/windows-latest-devel/platform-evidence/manual-tools.txt",
+    "view_sha256": "e50d31e5395d0e34f6a78b666eb98727a85437705594c15b52dbf17f4185bbbb"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/session-info.txt.raw.gz",
+    "raw_gzip_sha256": "1b4b6752ac7f6c46999aeee27d0de916913d7b4b0cbf7f3d8e394b91f0ae38b3",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/session-info.txt",
+    "source_sha256": "4583f3d2928778328fe300da45c6a07e74454f22683cfbe3502be2b64de7fba1",
+    "view": "views/windows-latest-devel/platform-evidence/session-info.txt",
+    "view_sha256": "8bee79dee9f3d03d87a77cb457d7564de0d23a6e6810799770c11d6f8c135fd5"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/warning-details.csv.raw.gz",
+    "raw_gzip_sha256": "91c9b220d7223d6fab8f5c34e50fb591af789c378f269ba2e711bb03056069d8",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/warning-details.csv",
+    "source_sha256": "cf5ffd389ae7ece3d2b339cabeeea52ba63bf4c93832a8ec73936ff82e927137",
+    "view": "views/windows-latest-devel/platform-evidence/warning-details.csv",
+    "view_sha256": "8b6709f11d5925be9b0abd7e5adf143a2ebd77a431d10204ba7e8c18b57a2fc2"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/warning-replay.json.raw.gz",
+    "raw_gzip_sha256": "7a68f661e51cabbf2746eb5bb255c5f3720e100c3ae8d49b4a19d0f9f2e5a799",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/warning-replay.json",
+    "source_sha256": "ba348eeff7dadb7bac3a4014d7e0808788b8d43416ddadd7276126f23bac5740",
+    "view": "views/windows-latest-devel/platform-evidence/warning-replay.json",
+    "view_sha256": "89634649d72b67a65a59341fe11ce6766954eb47fc5ef9345026c695bd84d68f"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-devel/platform-evidence/warning-session.txt.raw.gz",
+    "raw_gzip_sha256": "d1030df73b809664d27b5bb545885482866f8372a22ffc09eeebfb700323d9f9",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/warning-session.txt",
+    "source_sha256": "8d3dd01a2cf468dd7bd1cb686c4b5ed58bbae17762ed3ffd178f5f9ce9170b93",
+    "view": "views/windows-latest-devel/platform-evidence/warning-session.txt",
+    "view_sha256": "79f615dffb60e1e2bc34c83a22256c69beb02b2bff8ea253849ec024d0b2f685"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/frozen-check/pigauto.Rcheck/00check.log.raw.gz",
+    "raw_gzip_sha256": "201fc12152d5ba28559c7c038f019c162e0c11fed01fbb9b490171f863764a22",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/frozen-check/pigauto.Rcheck/00check.log",
+    "source_sha256": "2e0dd69a839964ff2bb2425f8343b685dee6b091ff70a2ac5e942bbfa2184a95",
+    "view": "views/windows-latest-release/frozen-check/pigauto.Rcheck/00check.log",
+    "view_sha256": "ed6969241d3854f48fc3acdfde949707fcbcfec77280944d7e1e7312a1f4cd4d"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/frozen-check/pigauto.Rcheck/00install.out.raw.gz",
+    "raw_gzip_sha256": "9f0e9720fee1ed1e81916339ecb5227de51399cc0dd4fae18206e7b8c73ae018",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/frozen-check/pigauto.Rcheck/00install.out",
+    "source_sha256": "27ceff6e4b795be92c0c426cccd61799b8feacfad9fdbfada03195dd6328ea6b",
+    "view": "views/windows-latest-release/frozen-check/pigauto.Rcheck/00install.out",
+    "view_sha256": "4c044d63dfbea31a8ce02b598eb99ce08de4992bf9352e04e098627219bc84a9"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/frozen-check/pigauto.Rcheck/Rdlatex.log.raw.gz",
+    "raw_gzip_sha256": "7979d0a9f93f13ed455304c9add30c82ed2f5654c30bbad161487b45ba6e7ea6",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/frozen-check/pigauto.Rcheck/Rdlatex.log",
+    "source_sha256": "5b9523e6fc0692f91550e6304e80b188642b8ba243b4e92d9ad5d6262418aa2e",
+    "view": "views/windows-latest-release/frozen-check/pigauto.Rcheck/Rdlatex.log",
+    "view_sha256": "bc4e85ffbab8942c4d5b213f30ca15dfe772f70a8d7d371a129561f5508f8fb9"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/frozen-check/pigauto.Rcheck/build_vignettes.log.raw.gz",
+    "raw_gzip_sha256": "5b5ac702e599993a24d08824c9095656f70f97ec05f1af60a0416e34b4cf3e18",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/frozen-check/pigauto.Rcheck/build_vignettes.log",
+    "source_sha256": "3145443a4178a2e0edd8ab71b038dc435a813988bf6ed164949dc2a96f2d3394",
+    "view": "views/windows-latest-release/frozen-check/pigauto.Rcheck/build_vignettes.log",
+    "view_sha256": "5a6dc2261f5516a3177ac0bde1f80cfa41d4a544d83e0d9df8f93fedd15de0c4"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.Rout.raw.gz",
+    "raw_gzip_sha256": "226b75b6fa862cede9d0671bef5c77b6e5729ec2a8a2b5358b03903c904a0c70",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.Rout",
+    "source_sha256": "a3c69a6325071b7ef20359664c7111536a096bf6a5c6a2a3ed08331ed8f80040",
+    "view": "views/windows-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.Rout",
+    "view_sha256": "fd13f3c9a120a1d45d6c7bb1c14deab162e594c4e17e613a7ccbeb99e9e2664f"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.timings.raw.gz",
+    "raw_gzip_sha256": "00dda32d7e27526519e8d4eb9812892c8f9502d3eb646670201c03db529f14f0",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.timings",
+    "source_sha256": "1d65213d5dbc13b90bd4ea3e5fa096413dfdb7f992d3f0df6dd39b0847a27b8a",
+    "view": "views/windows-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.timings",
+    "view_sha256": "4362240bae875e2fba5d119bcca1a7d9472b346d86a389deee62c1a8918659fb"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/frozen-check/pigauto.Rcheck/pigauto-manual.log",
+    "source_sha256": "9d167fd36d727e9434f5fff24cfef58ab910f0cadb583456ddf04e04e4e4cc57",
+    "view": "views/windows-latest-release/frozen-check/pigauto.Rcheck/pigauto-manual.log",
+    "view_sha256": "9d167fd36d727e9434f5fff24cfef58ab910f0cadb583456ddf04e04e4e4cc57"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/frozen-check/pigauto.Rcheck/tests/testthat.Rout.raw.gz",
+    "raw_gzip_sha256": "8eeeaa2e46297b43960d4211fd83bef8e206700644337efb9575bd8d8117806a",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/frozen-check/pigauto.Rcheck/tests/testthat.Rout",
+    "source_sha256": "d7535a349a7f786b1a7ef3a0b318544f36edca4b2ed7dedf6472eb13c6d3d51e",
+    "view": "views/windows-latest-release/frozen-check/pigauto.Rcheck/tests/testthat.Rout",
+    "view_sha256": "b7f0159f60cf458dcc6a0af006a7153ce14273eaeb8539126698b52b0b742b04"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/check-command.txt.raw.gz",
+    "raw_gzip_sha256": "35f91b523c31d5350ec62f957e10b4255af62d469f5077e6ef8ec63f3dabe205",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/check-command.txt",
+    "source_sha256": "7dce5c2196c872d2144c60a0dd5ce7bc491826f3cb4be36af8d4e5da8f39a20a",
+    "view": "views/windows-latest-release/platform-evidence/check-command.txt",
+    "view_sha256": "63fd294dedb4a28288da5232faf9920a6eed2b02c0d059a1363b40e9309e63d5"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/check-environment.txt.raw.gz",
+    "raw_gzip_sha256": "f1721274595cf806ffd5ecf094de782399c3622e3294aa59c7f5a1cb85e24a17",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/check-environment.txt",
+    "source_sha256": "d171549d9ab5e75346e95032d0a62c5af355cb112d352e0e39bfd20ab343e3ae",
+    "view": "views/windows-latest-release/platform-evidence/check-environment.txt",
+    "view_sha256": "e0d3bbf432e5cf205da703176490b616a3752f60f03606edb8a0834bffe5dd0b"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/check-exit.txt.raw.gz",
+    "raw_gzip_sha256": "b1768810e94b16a2ee2833a276d13d6d55f9534611bed62c3285f6c293267ff9",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/check-exit.txt",
+    "source_sha256": "c4b393d32649a1387e8d35db895c102ffbea0d943a61e14768f3ed3558824e2b",
+    "view": "views/windows-latest-release/platform-evidence/check-exit.txt",
+    "view_sha256": "35cde01038394b48e2103d7bc857c4297dede565250ba95ed31ceba0cfbf302a"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/declared-dependencies.csv.raw.gz",
+    "raw_gzip_sha256": "e653bfa758a300728e03061672045b9ff9c3091a7a426b3571d6ebf98dda18f2",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/declared-dependencies.csv",
+    "source_sha256": "8c36e8d024418d2c45a61a8569ababb79c6c58a613f73eff4e8b3a97c712c2df",
+    "view": "views/windows-latest-release/platform-evidence/declared-dependencies.csv",
+    "view_sha256": "da620bb55999537b678b44cc61708a167d54583d3bfd05e45d626cf63567a44b"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/identity-download.json.raw.gz",
+    "raw_gzip_sha256": "d846bfb8344f6836a407f114d2d48bffc4eda7b641d9da2ba5569175363f7c33",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/identity-download.json",
+    "source_sha256": "702c5d5f3f303db3616fba34967626167b52a198b38d191feefe10cb53184edb",
+    "view": "views/windows-latest-release/platform-evidence/identity-download.json",
+    "view_sha256": "000ccdf7d9dc84e84c69bc6d5c5565dea597dc74d788ef649ff4cdf78e4b0892"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/identity-post.json.raw.gz",
+    "raw_gzip_sha256": "274c6842e077673c6439cbdfc4bbede2cd9795e32d4b5781b8f5e6b849cdc11e",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/identity-post.json",
+    "source_sha256": "99da854eedfd21a9c1d90945131dbfabe9342926099c7ec25736d43a73bd423c",
+    "view": "views/windows-latest-release/platform-evidence/identity-post.json",
+    "view_sha256": "2e658f11b35fa0a69c78605974f49b28799a9b2e8ac1f239f858f18b8c3f9584"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/identity-pre.json.raw.gz",
+    "raw_gzip_sha256": "cd627537e50aa1bf5de86abfc43aef743ab327c08b0da70cd980b6107a76254f",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/identity-pre.json",
+    "source_sha256": "8f556278f01dce595c26a64f3ad95ad2a0743b02721e7c1ec89313e87620cf6b",
+    "view": "views/windows-latest-release/platform-evidence/identity-pre.json",
+    "view_sha256": "2ce6f0e23142451e424e73006ad300b46658ebdd0e1a2ab99e891eca2063a792"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/index-after-exit.txt.raw.gz",
+    "raw_gzip_sha256": "d362236e78eb47cbc93ecb6c3221aab76f704e94986c6312cbcc083dcba63ddf",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/index-after-exit.txt",
+    "source_sha256": "2e7f47b6eef33663f1aae9cbbdc5704d6732655d845428eade81a4051bd27802",
+    "view": "views/windows-latest-release/platform-evidence/index-after-exit.txt",
+    "view_sha256": "5776e2627054ec943d3afc238987fac59ac21af3629db4760bb910e11a92593b"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/index-after-stderr.txt.raw.gz",
+    "raw_gzip_sha256": "6b7e2eee6c824b6216a58b8841def60b156af8c7dadc97e82896551108f5e5fc",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/index-after-stderr.txt",
+    "source_sha256": "884cdfb6a95e0bf0ae26e60d9063d3c5a3e033afcc2ae69bebe190e9a1bf9bbb",
+    "view": "views/windows-latest-release/platform-evidence/index-after-stderr.txt",
+    "view_sha256": "39123455fc7865cd8d21b0a1d3ad139dec733d11d2e1cd0fc551bf5b30dc1912"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/index-after-stdout.txt",
+    "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "view": "views/windows-latest-release/platform-evidence/index-after-stdout.txt",
+    "view_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/index-before-exit.txt.raw.gz",
+    "raw_gzip_sha256": "49f36775772aff87d41fd51cedb642b532d954f68f7c8c155d60f0aa82a5e366",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/index-before-exit.txt",
+    "source_sha256": "09ec5bb78802069d1eb9a2e396944a9e852f438f2d75ea9685d023df6bdf7462",
+    "view": "views/windows-latest-release/platform-evidence/index-before-exit.txt",
+    "view_sha256": "80e184c8130c77360957a79a32bf613c08f4869adee944323fdb32bb231ad673"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/index-before-stderr.txt",
+    "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "view": "views/windows-latest-release/platform-evidence/index-before-stderr.txt",
+    "view_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "normalization": "none",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/index-before-stdout.txt",
+    "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "view": "views/windows-latest-release/platform-evidence/index-before-stdout.txt",
+    "view_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/index-tools-before.txt.raw.gz",
+    "raw_gzip_sha256": "667e14b609e9e76d4669c4cf152f27d42ef112cf61c2a2015d6003c8be1ec22b",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/index-tools-before.txt",
+    "source_sha256": "b00295770b7dd451ffc8ed62914d59cd78773254d766c8626c15be91b7409566",
+    "view": "views/windows-latest-release/platform-evidence/index-tools-before.txt",
+    "view_sha256": "f2f40a3f74e8e273596bd2a5c3ae8b2b61d37184a38c7918d8b5c175a3ac8103"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/installed-packages.csv.raw.gz",
+    "raw_gzip_sha256": "2e2e674154d67c8d10febfc779f45d53108f6dab536cec311ea89a45a43e0a82",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/installed-packages.csv",
+    "source_sha256": "5f6a14327e3772d4b881ce162ae1ba6f3015f4926fba8fe929ce13538776a22d",
+    "view": "views/windows-latest-release/platform-evidence/installed-packages.csv",
+    "view_sha256": "48e98ffc325fdc637af5d7264d7134c639435723476180a520a0372e42fdf1b4"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/manual-tools.txt.raw.gz",
+    "raw_gzip_sha256": "a1d732a6816ec501ff5ccea8c6d300f72db4b5fcaac482840b5563044b863e6f",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/manual-tools.txt",
+    "source_sha256": "e5405c76a3bd8781f0a0c5a8e031bd9388706c0727ffd6bddfef402a8c2f3b63",
+    "view": "views/windows-latest-release/platform-evidence/manual-tools.txt",
+    "view_sha256": "e50d31e5395d0e34f6a78b666eb98727a85437705594c15b52dbf17f4185bbbb"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/session-info.txt.raw.gz",
+    "raw_gzip_sha256": "ec4d4cd371e7340dbba1cb902d6d7beb499b05b3aba92ab99f67fd356fe8f25b",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/session-info.txt",
+    "source_sha256": "99708a4f3626cc77a2df9b3ca3a22b78315bbb98ea6760b5714d54b1872dd094",
+    "view": "views/windows-latest-release/platform-evidence/session-info.txt",
+    "view_sha256": "9e1119d467a3cd3d43939d218deccfa0b1742b99b32f4bf27a3d5ea111b950de"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/warning-details.csv.raw.gz",
+    "raw_gzip_sha256": "91c9b220d7223d6fab8f5c34e50fb591af789c378f269ba2e711bb03056069d8",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/warning-details.csv",
+    "source_sha256": "cf5ffd389ae7ece3d2b339cabeeea52ba63bf4c93832a8ec73936ff82e927137",
+    "view": "views/windows-latest-release/platform-evidence/warning-details.csv",
+    "view_sha256": "8b6709f11d5925be9b0abd7e5adf143a2ebd77a431d10204ba7e8c18b57a2fc2"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/warning-replay.json.raw.gz",
+    "raw_gzip_sha256": "5682064795ba0eb6d3cd4e684460268ef5cbe45884597c7033c92094591d5970",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/warning-replay.json",
+    "source_sha256": "0e3c4def8a10c333b3f974ea5b403bda6be29e4b5f7cef1f5af42106e3782b7d",
+    "view": "views/windows-latest-release/platform-evidence/warning-replay.json",
+    "view_sha256": "a4aabb80a797f21045b2495655712f7f1ca946e95f9844759a21192cda5edbee"
+  },
+  {
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/windows-latest-release/platform-evidence/warning-session.txt.raw.gz",
+    "raw_gzip_sha256": "ddaee7815894b2f25983189ff397bcc91712e7c3c749504f8f88bb9c7cbf9dee",
+    "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/warning-session.txt",
+    "source_sha256": "2abb40e0aebab486e8149732082f29745e4a2df51aa57f75b433fa18a3ad7cdd",
+    "view": "views/windows-latest-release/platform-evidence/warning-session.txt",
+    "view_sha256": "bd29701ae159f6539b0818cc301bc2d26a399d61f61e07f28576a4f3c4240333"
+  }
+]

@@ -1,0 +1,38 @@
+{
+  "spelling": {
+    "command": [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/spelling.R",
+      "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d"
+    ],
+    "exit": 1,
+    "elapsed_seconds": 15.497186166991014,
+    "thread_cap": 1,
+    "NOT_CRAN": "UNSET"
+  },
+  "urls": {
+    "command": [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/urls.R",
+      "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d"
+    ],
+    "exit": 1,
+    "elapsed_seconds": 32.81265500001609,
+    "thread_cap": 1,
+    "NOT_CRAN": "UNSET"
+  },
+  "absence": {
+    "command": [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/absence.R",
+      "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 70.866800082993,
+    "thread_cap": 1,
+    "NOT_CRAN": "UNSET"
+  }
+}

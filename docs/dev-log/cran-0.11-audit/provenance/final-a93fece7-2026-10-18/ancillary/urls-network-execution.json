@@ -1,0 +1,34 @@
+{
+  "command": [
+    "Rscript",
+    "--vanilla",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/ancillary/urls-network.R",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/ancillary"
+  ],
+  "script_sha256": "2a67ed47606bb2943360572de473b157f77875d64c9170f05da69651ffb549cb",
+  "started_utc": "2026-10-18T07:10:56.655647+00:00",
+  "archive_sha256_before": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "hard_cap_seconds": 180,
+  "environment": {
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "R_NUM_THREADS": "1",
+    "JULIA_NUM_THREADS": "1",
+    "TORCH_NUM_THREADS": "1",
+    "R_LIBS": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither",
+    "R_LIBS_USER": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither",
+    "R_LIBS_SITE": "/nonexistent",
+    "_R_CHECK_FORCE_SUGGESTS_": "true"
+  },
+  "NOT_CRAN": "UNSET",
+  "owned_process_group": 90481,
+  "exit_code": 0,
+  "timed_out": false,
+  "elapsed_seconds": 4.547,
+  "archive_sha256_after": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "archive_size_bytes_after": 5137837,
+  "script_sha256_after": "2a67ed47606bb2943360572de473b157f77875d64c9170f05da69651ffb549cb",
+  "archive_unchanged": true
+}
