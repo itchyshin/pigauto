@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "4550b2cb52b738c8121c7a997773b8dea38700ed3341921053dbd5dcb62de06c",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex self-review",
+  "method": "Read the full saved draft, checked scientific and factual claims against retained evidence, and made a separate editorial assessment under writing-naturalness guidance.",
+  "genre": "scientific validation report",
+  "coverage": "Read the complete saved report; checked numbers against retained production tables and the independent review.",
+  "score": 3,
+  "style_status": "judged",
+  "score_reason": "The prose is direct and specific with little repeated scaffolding; this subjective score does not estimate authorship.",
+  "confidence": "medium",
+  "confidence_reason": "The complete draft was reviewed, but style judgments remain subjective and are not human-calibrated.",
+  "examples": [
+    {
+      "location": "line 7",
+      "cue": "The result applies to the current `impute()` default (`phylo_signal_gate = FALSE`) in these repeated-observation covariate simulations. It does not establish that the full pigauto model beats non-neural alternatives in every scenario. In particular, the separately fitted phylogenetic GLS had substantially lower RMSE than pigauto in the interactive scenario.",
+      "impact": "The sentence bounds the result to the tested workflow and default. No change needed.",
+      "repair": "No change needed.",
+      "line": 7,
+      "quote": "The result applies to the current `impute()` default (`phylo_signal_gate = FALSE`) in these repeated-observation covariate simulations. It does not establish that the full pigauto model beats non-neural alternatives in every scenario. In particular, the separately fitted phylogenetic GLS had substantially lower RMSE than pigauto in the interactive scenario."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "The two confirmatory scenarios are clearly separated from controls; the inference is limited to their stated scope.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Counts, RMSEs, intervals, scenarios, runtime, hashes and accounting match the retained outputs and run configuration.",
+  "references_gate": "pass",
+  "references_gate_reason": "The ADEMP and manifest links resolve to local files included in this worktree.",
+  "date": "2026-10-20",
+  "calibration_status": "Previously seen controls were not held out for a style benchmark; no independent human calibration was performed.",
+  "interpretation": "perceived_style_not_authorship"
+}
