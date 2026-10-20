@@ -38,7 +38,7 @@ OWNS: `script/gnn_incremental/**`, `docs/dev-log/gnn-incremental/**`, `.unlazy/g
 
 - [ ] G7: Independent statistical review confirms each claim matches its measured regime and that limitations, deviations, and unsupported outcomes remain visible.
   REVIEWER: Fresh statistical-review lens; review the frozen manifest, retained result tables, and final report.
-  EVIDENCE: pending
+  EVIDENCE: Pre-production read-only review of committed HEAD `9bd2f134abd6fa59d3516c16c69789b1a1f551d2` found no code/design blocker. Reviewer confirmed the variance-multiplier label, paired data/seeds, held-out response isolation, confirmatory vs sensitivity policies, dataset-level uncertainty, status accounting, and visible comparator failures. This does not validate production outcomes. Closeout must run `audit_run.R` successfully before `summarise.R`; the summary script alone accepts any nonempty replicate directory and does not enforce completeness. Final data-dependent review remains pending.
 
 - [ ] G8: The after-task report and plan-versus-actual reconciliation are complete; all gates are reverified and local changes are committed.
   CHECK: `Rscript --vanilla script/gnn_incremental/check_closeout.R`
