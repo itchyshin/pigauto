@@ -75,12 +75,13 @@ broader question is whether the neural component improves predictions for
 unobserved data. The evidence here addresses one candidate setting: repeated
 observations with environmental covariates for a continuous response. Each
 scenario used 500 independent datasets with 500 species, about five
-observations per species, ten covariates per observation, a Brownian species effect, and independent
-observation error. Half the species were fully withheld; 20% of observations
-among the remaining species were masked. The confirmatory policy used
-`phylo_signal_gate = FALSE` and `lambda_mode = "estimate"`, the current
-defaults for these settings. It set `gnn = TRUE` explicitly to test the neural component; the package
-default is `gnn = FALSE`.
+observations per species, ten covariates per observation, a Brownian species
+effect, and independent observation error. Half the species were fully
+withheld; 20% of observations among the remaining species were masked. The
+confirmatory policy used `phylo_signal_gate = FALSE` and
+`lambda_mode = "estimate"`, the current defaults for these settings. It set
+`gnn = TRUE` explicitly to test the neural component; the package default is
+`gnn = FALSE`.
 
 The primary comparison uses the same fitted pigauto model twice. The
 counterfactual sets the neural gate weight to zero and transfers that weight
@@ -93,13 +94,27 @@ rule: the Holm-adjusted paired tests and simultaneous Bonferroni 95% intervals
 for dataset-level MSE differences favoured the full model, and the relative
 RMSE reductions exceeded 2%.
 
-| Scenario | Pigauto RMSE, neural on / off | Relative RMSE reduction (95% dataset-bootstrap interval) | Phylogenetic GLS RMSE |
-|:--|--:|--:|--:|
-| Nonlinear, variance multiplier 0.3 | 0.764 / 0.924 | 17.3% (17.2%, 17.5%) | 0.768 |
-| Interactive, variance multiplier 0.3 | 0.911 / 1.213 | 24.9% (24.8%, 25.0%) | 0.602 |
-| Nonlinear, variance multiplier 0.05 | 0.709 / 0.882 | 19.7% (19.5%, 19.8%) | 0.720 |
-| Linear recovery | 0.654 / 0.787 | 16.8% (16.7%, 17.0%) | 0.603 |
-| No covariate signal | 0.593 / 0.591 | -0.2% (-0.3%, -0.2%) | 0.603 |
+<div class="table-responsive">
+<table class="table">
+<caption>Held-out observation-level RMSE by simulated scenario. Lower values indicate better prediction. Neural on and off are paired predictions from the same fitted pigauto model.</caption>
+<thead>
+<tr>
+<th scope="col">Scenario</th>
+<th scope="col">Pigauto, neural on</th>
+<th scope="col">Pigauto, neural off</th>
+<th scope="col">Relative RMSE reduction (95% dataset-bootstrap interval)</th>
+<th scope="col">Phylogenetic GLS</th>
+</tr>
+</thead>
+<tbody>
+<tr><th scope="row">Nonlinear, variance multiplier 0.3</th><td>0.764</td><td>0.924</td><td>17.3% (17.2%, 17.5%)</td><td>0.768</td></tr>
+<tr><th scope="row">Interactive, variance multiplier 0.3</th><td>0.911</td><td>1.213</td><td>24.9% (24.8%, 25.0%)</td><td>0.602</td></tr>
+<tr><th scope="row">Nonlinear, variance multiplier 0.05</th><td>0.709</td><td>0.882</td><td>19.7% (19.5%, 19.8%)</td><td>0.720</td></tr>
+<tr><th scope="row">Linear recovery</th><td>0.654</td><td>0.787</td><td>16.8% (16.7%, 17.0%)</td><td>0.603</td></tr>
+<tr><th scope="row">No covariate signal</th><td>0.593</td><td>0.591</td><td>-0.2% (-0.3%, -0.2%)</td><td>0.603</td></tr>
+</tbody>
+</table>
+</div>
 
 RMSE is the square root of mean dataset-level MSE, giving equal weight to
 independent datasets. The reduction interval resamples datasets.
@@ -108,14 +123,16 @@ The first two rows are confirmatory; the other rows are descriptive controls.
 The no-signal control shows a small deterioration from the neural branch.
 The separately fitted phylogenetic GLS uses the same observed rows, tree, and
 linear, quadratic, and pairwise-interaction covariate basis. It is a reference
-method; it does not define a universal performance ceiling. In the interactive scenario,
-the polynomial OLS basis exactly represented the generated covariate function;
-GLS RMSE was 0.602 and polynomial OLS RMSE was 0.742, both below pigauto's
-0.911. This study therefore does not show that the neural model outperforms
-these non-neural references in every setting. In the nonlinear scenario, overall
-pooled RMSE was near parity (0.764 for pigauto and 0.768 for GLS). For fully
-withheld species, pooled RMSE was 0.756 for pigauto and 0.771 for GLS; among
-partly observed species it was 0.802 for pigauto and 0.750 for GLS.
+method; it does not define a universal performance ceiling. In the interactive
+scenario, the polynomial OLS basis exactly represented the generated covariate
+function. GLS RMSE was 0.602 and polynomial OLS RMSE was 0.742, both below
+pigauto's 0.911. This study therefore does not show that the neural model
+outperforms these non-neural references in every setting.
+
+In the nonlinear scenario, overall pooled RMSE was near parity (0.764 for
+pigauto and 0.768 for GLS). For fully withheld species, pooled RMSE was 0.756
+for pigauto and 0.771 for GLS; among partly observed species it was 0.802 for
+pigauto and 0.750 for GLS.
 
 Under the confirmatory policy, relative RMSE reductions for fully withheld
 versus partly observed species were 15.1% and 25.4% in the nonlinear scenario, and
@@ -132,6 +149,7 @@ from repeated observations when observation-level covariates carry signal,
 including nonlinear or interactive signal. In the tested signal scenarios,
 the neural component improved predictions relative to the same fitted model
 with that contribution removed. The no-signal control showed a small loss.
+
 This within-fit gain does not mean pigauto will outperform a well-specified
 non-neural model. GLS and polynomial regression performed better in some
 comparisons, and GLS did better for partly observed species in the nonlinear
@@ -140,9 +158,10 @@ scenario.
 For an applied dataset, compare pigauto with a covariate-aware non-neural
 model using held-out data that match the intended prediction task. Report
 fully withheld and partly observed species separately. A direct test of
-whether graph message passing adds value would compare this branch with a matched observation-level neural network without graph message
-passing. Broader recommendations require testing other sample sizes, numbers
-of repeat observations, covariate signal strengths, and missingness patterns.
+whether graph message passing adds value would compare this branch with a
+matched observation-level neural network without graph message passing.
+Broader recommendations require testing other sample sizes, numbers of repeat
+observations, covariate signal strengths, and missingness patterns.
 These results do not establish performance for those settings or uncertainty
 calibration. The [full GNN report](https://github.com/itchyshin/pigauto/blob/main/docs/dev-log/gnn-incremental/RESULTS-20261020.md)
 and [paired summary table](https://github.com/itchyshin/pigauto/blob/main/script/gnn_incremental/results/production-20261019-v1-summary/summaries/paired_summary.csv)
