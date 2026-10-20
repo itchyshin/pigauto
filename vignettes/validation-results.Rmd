@@ -107,8 +107,8 @@ the polynomial OLS basis exactly represented the generated covariate function;
 GLS RMSE was 0.602 and polynomial OLS RMSE was 0.742, both below pigauto's
 0.911. This study therefore does not show that the neural model outperforms
 these non-neural references in every setting. In the nonlinear scenario, overall
-RMSE was near parity (0.764 for pigauto and 0.767 for GLS), but among partly
-observed species it was 0.801 for pigauto and 0.749 for GLS.
+pooled RMSE was near parity (0.764 for pigauto and 0.768 for GLS), but among
+partly observed species pooled RMSE was 0.802 for pigauto and 0.750 for GLS.
 
 Within the default policy, relative RMSE reductions for fully withheld versus
 partly observed species were 15.1% and 25.4% in the nonlinear scenario, and
