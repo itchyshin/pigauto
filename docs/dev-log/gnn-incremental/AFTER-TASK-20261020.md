@@ -8,7 +8,7 @@ Added a frozen five-scenario ADEMP contract, manifest, resumable campaign runner
 
 ## 3a. Decisions and Rejected Alternatives
 
-The confirmatory policy is the public `impute()` default, `phylo_signal_gate = FALSE`; `TRUE` is a sensitivity arm. Both use `lambda_mode = "estimate"`. The primary comparison is paired within the exact same fit and changes only the neural contribution. GLS and regression models are reference comparisons; they do not define a universal ceiling. We made no public API, default, or method change. We did not run on DRAC or Kohaku: the measured Totoro CPU lane completed the approved campaign within its cap, and this R/torch workload did not require a GPU. We did not deploy or publish the site.
+The confirmatory policy is the public `impute()` default, `phylo_signal_gate = FALSE`; `TRUE` is a sensitivity arm. Both use `lambda_mode = "estimate"`. The primary comparison is paired within the exact same fit and changes only the neural contribution. GLS and regression models are reference comparisons; they do not define a universal ceiling. We made no public API, default, or method change. We did not run on DRAC or Kohaku: the measured Totoro CPU lane completed the approved campaign within its cap, and this R/torch workload did not require a GPU. The approved update was deployed from `main` through GitHub Pages on 2026-10-20 after PR #240 merged. Verification is recorded in `DEPLOYMENT-20261020.md`.
 
 ## 4. Files Touched
 
@@ -17,7 +17,7 @@ The confirmatory policy is the public `impute()` default, `phylo_signal_gate = F
 - `.unlazy/gnn-incremental/PLAN.md`, `.unlazy/gnn-incremental/GATES.md`
 - `docs/dev-log/gnn-incremental/ADEMP.md`, `GOAL.md`, `PILOT-20261019.md`, `RESULTS-20261020.md`, `PLAN-VS-ACTUAL-20261020.md`, `AFTER-TASK-20261020.md`
 - `script/gnn_incremental/` runner, manifest, accounting, test, pilot and production outputs, including `results/production-20261019-v1-summary/` and its compact archive
-- `vignettes/validation-results.Rmd`
+- `vignettes/validation-results.Rmd`, `docs/dev-log/gnn-incremental/DEPLOYMENT-20261020.md`, `.unlazy/gnn-incremental/DEPLOY-GATES.md`
 
 The 278 MB full replicate archive remains on Totoro persistent home storage. Its path and SHA-256 are recorded in the results report. The old untracked article in the other active-validation worktree was not touched.
 
@@ -49,7 +49,7 @@ Two early pilot issues were retained and diagnosed: the comparator used a quadra
 
 ## 10. Known Residuals
 
-The positive result applies to the two stated repeated-observation covariate scenarios, 500 species, ten standard-normal covariates, Gaussian observation errors, this tree process, missingness design, and current public `impute()` default. It does not establish general superiority over non-neural methods, other trait types, single-observation workflows, empirical datasets, uncertainty calibration, downstream inference, or distribution-free coverage. The no-signal control had a small within-fit loss. Eight package tests were skipped for unprovisioned optional data/dependency conditions. The local package check result is recorded above. The article source is local and has not been deployed.
+The positive result applies to the two stated repeated-observation covariate scenarios, 500 species, ten standard-normal covariates, Gaussian observation errors, this tree process, missingness design, and current public `impute()` default. It does not establish general superiority over non-neural methods, other trait types, single-observation workflows, empirical datasets, uncertainty calibration, downstream inference, or distribution-free coverage. The no-signal control had a small within-fit loss. Eight package tests were skipped for unprovisioned optional data/dependency conditions. The local package check result is recorded above. The article is deployed at https://itchyshin.github.io/pigauto/articles/validation-results.html; the live content and merge commit are recorded in the deployment record.
 
 ## 11. Team Learning
 
@@ -61,4 +61,4 @@ Golden Set: the external Golden Set was not in scope; adversarial controls were 
 
 Covers: R source and regression tests, reproducible simulation runner and manifest, Totoro production evidence, retained summaries and provenance, scientific report, and local pkgdown article source.
 
-Does NOT cover: deployment or publication, public API/default/method changes, other trait families, single-observation prediction, uncertainty calibration, downstream analyses, external-data validation, or cross-machine independent reproduction of the neural fits.
+Does NOT cover: external publication, public API/default/method changes, other trait families, single-observation prediction, uncertainty calibration, downstream analyses, external-data validation, or cross-machine independent reproduction of the neural fits.
