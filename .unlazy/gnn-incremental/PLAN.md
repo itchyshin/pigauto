@@ -60,3 +60,6 @@ Scenario-label correction (2026-10-19, 23:02 MDT): the first shell count used in
 
 
 Production checkpoint (2026-10-19, 23:04 MDT): the primary nonlinear scenario reached 500/500 saved records and the interactive confirmatory scenario began, with 11 records saved. There were 511 records total and zero launcher failures. Totoro retained about 373 GiB available memory. Cumulative throughput projects around 705 minutes for the complete campaign before closeout, still above the approved 630-minute cap.
+
+
+Production checkpoint (2026-10-19, 23:25 MDT): all 500 primary nonlinear replicates were saved and the interactive confirmatory scenario had 106/500 records. There were 606 total and zero launcher failures. Totoro load was around 65/384 with 381 GiB available. Cumulative throughput projects about 681 minutes before closeout, slightly above the approved 630-minute boundary. Keep that boundary unless the user extends approval.
