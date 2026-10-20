@@ -118,6 +118,23 @@ utils::write.csv(tampered_tasks, file.path(tampered_tasks_dir, "tasks.csv"),
                  row.names = FALSE)
 audit_must_reject(tampered_tasks_dir, "noncanonical task_index")
 
+tamper_method_status <- function(status_value, remove = FALSE, label) {
+  parent <- tempfile("gnn-tampered-method-")
+  dir.create(parent)
+  file.copy(run_dir, parent, recursive = TRUE)
+  path <- file.path(parent, basename(run_dir), "replicates",
+    sprintf("%s__rep_%04d.rds", tasks$scenario_id[1L], tasks$replicate[1L]))
+  record <- readRDS(path)
+  status <- record$gate_results[[1L]]$fit_diagnostics$method_status
+  if (remove) status <- status[names(status) != "mean"] else status["mean"] <- status_value
+  record$gate_results[[1L]]$fit_diagnostics$method_status <- status
+  saveRDS(record, path)
+  audit_must_reject(file.path(parent, basename(run_dir)), label)
+}
+tamper_method_status(NA_character_, remove = TRUE,
+                     label = "missing method status")
+tamper_method_status("mystery", label = "unknown method status")
+
 summary_out <- system2("Rscript", c("--vanilla", "script/gnn_incremental/summarise.R",
   "--verify", "--run-dir", run_dir), stdout = TRUE, stderr = TRUE)
 if (!any(grepl("SUMMARY_REGENERATION_PASS", summary_out, fixed = TRUE))) {

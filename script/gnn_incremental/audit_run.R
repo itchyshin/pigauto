@@ -148,14 +148,33 @@ method_statuses <- setNames(lapply(method_names, function(method) {
   vapply(records, function(rec) {
     unlist(lapply(rec$gate_results, function(g) {
       status <- g$fit_diagnostics$method_status
-      if (is.null(status)) "not_attempted" else unname(status[method])
+      if (is.null(status) || is.null(names(status)) || !method %in% names(status)) {
+        NA_character_
+      } else {
+        value <- unname(status[[method]])
+        if (length(value) != 1L || is.na(value) || !nzchar(value)) {
+          NA_character_
+        } else as.character(value)
+      }
     }), use.names = FALSE)
   }, character(2L))
 }), method_names)
+known_method_status <- function(status) {
+  !is.na(status) & grepl(
+    "^(ok|not_attempted|invalid_output|nonconverged|failed([_:].*)?)$",
+    status
+  )
+}
 method_accounting <- do.call(rbind, lapply(method_names, function(method) {
   status <- unlist(method_statuses[[method]], use.names = FALSE)
+  if (length(status) != expected_fits || any(!known_method_status(status))) {
+    stop("Method statuses are missing or unrecognized for ", method,
+         "; each requested method attempt needs an explicit terminal status.",
+         call. = FALSE)
+  }
   data.frame(method = method, requested = expected_fits,
     attempted = sum(status != "not_attempted"),
+    not_attempted = sum(status == "not_attempted"),
     successful = sum(status == "ok"), failed = sum(grepl("failed|invalid_output", status)),
     nonconverged = sum(status == "nonconverged"),
     stringsAsFactors = FALSE)
