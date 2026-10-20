@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "2e3232718ab0b5a1f52762abf4cacc014e0d12360a2b6e246083827124173d6e",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex self-review",
+  "method": "Read the full saved draft, checked scientific and factual claims against retained evidence, and made a separate editorial assessment under writing-naturalness guidance.",
+  "genre": "pkgdown validation article",
+  "coverage": "Read the whole article and checked the new GNN section, table values and linked local result artifacts against the report and CSVs.",
+  "score": 3,
+  "style_status": "judged",
+  "score_reason": "The prose is direct and specific with little repeated scaffolding; this subjective score does not estimate authorship.",
+  "confidence": "medium",
+  "confidence_reason": "The complete draft was reviewed, but style judgments remain subjective and are not human-calibrated.",
+  "examples": [
+    {
+      "location": "line 101",
+      "cue": "The first two rows are confirmatory; the other rows are descriptive controls.",
+      "impact": "The sentence distinguishes the evidence status of the five scenarios. No change needed.",
+      "repair": "No change needed.",
+      "line": 101,
+      "quote": "The first two rows are confirmatory; the other rows are descriptive controls."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "The short summary presents confirmatory outcomes and comparator limits.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Displayed values, scenario counts, policies and limitations match retained summaries.",
+  "references_gate": "unknown",
+  "references_gate_reason": "The full report and paired-table GitHub URLs point to files in this local branch. Their remote destinations cannot be verified until the branch is pushed and merged; the site was not deployed.",
+  "date": "2026-10-20",
+  "calibration_status": "Previously seen controls were not held out for a style benchmark; no independent human calibration was performed.",
+  "interpretation": "perceived_style_not_authorship"
+}

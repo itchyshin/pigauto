@@ -67,6 +67,67 @@ regime. Phylogenetic dependence and structured missingness can violate the
 exchangeability conditions behind the usual split-conformal guarantee, so
 these results do not support a blanket distribution-free coverage claim.
 
+## GNN contribution in repeated observations
+
+A separate simulation tested whether the gated neural correction adds
+predictive value when each species has repeated observations and each
+observation has ten environmental covariates. Each scenario used 500
+independent datasets with 500 species, about five observations per species,
+a Brownian species effect, and independent observation error. Half the
+species were fully withheld; 20% of observations among the remaining species
+were masked. The primary policy used the current `impute()` defaults,
+including `phylo_signal_gate = FALSE` and `lambda_mode = "estimate"`.
+
+The primary comparison uses the same fitted pigauto model twice. The
+counterfactual sets the neural gate weight to zero while preserving the
+Brownian and mean-baseline weights and the fitted linear covariate effect.
+The confirmatory scenarios were nonlinear and interactive covariate signals
+at a Brownian variance multiplier of 0.3. Both met the prespecified support
+rule: the Holm-adjusted paired tests and simultaneous Bonferroni 95% intervals
+for dataset-level MSE differences favoured the full model, and the relative
+RMSE reductions exceeded 2%.
+
+| Scenario | Pigauto RMSE, neural on / off | Relative RMSE reduction (95% dataset-bootstrap interval) | Phylogenetic GLS RMSE |
+|:--|--:|--:|--:|
+| Nonlinear, variance multiplier 0.3 | 0.764 / 0.924 | 17.3% (17.2%, 17.5%) | 0.768 |
+| Interactive, variance multiplier 0.3 | 0.911 / 1.213 | 24.9% (24.8%, 25.0%) | 0.602 |
+| Nonlinear, variance multiplier 0.05 | 0.709 / 0.882 | 19.7% (19.5%, 19.8%) | 0.720 |
+| Linear recovery | 0.654 / 0.787 | 16.8% (16.7%, 17.0%) | 0.603 |
+| No covariate signal | 0.593 / 0.591 | -0.2% (-0.3%, -0.2%) | 0.603 |
+
+RMSE is the square root of mean dataset-level MSE, giving equal weight to
+independent datasets. The reduction interval resamples datasets.
+
+The first two rows are confirmatory; the other rows are descriptive controls.
+The no-signal control shows a small deterioration from the neural branch.
+The separately fitted phylogenetic GLS uses the same observed rows, tree, and
+linear, quadratic, and pairwise-interaction covariate basis. It is a reference
+method; it does not define a universal performance ceiling. In the interactive scenario,
+the polynomial OLS basis exactly represented the generated covariate function;
+GLS RMSE was 0.602 and polynomial OLS RMSE was 0.742, both below pigauto's
+0.911. This study therefore does not show that the neural model outperforms
+these non-neural references in every setting. In the nonlinear scenario, overall
+RMSE was near parity (0.764 for pigauto and 0.767 for GLS), but among partly
+observed species it was 0.801 for pigauto and 0.749 for GLS.
+
+Within the default policy, relative RMSE reductions for fully withheld versus
+partly observed species were 15.1% and 25.4% in the nonlinear scenario, and
+23.7% and 29.7% in the interactive scenario. These stratum-specific results
+are descriptive. A separate `phylo_signal_gate = TRUE` policy-sensitivity arm
+triggered in 8.6% of nonlinear, 12.2% of interactive, and 89.6% of low-signal
+datasets; it is not a second confirmatory analysis. All five scenarios
+completed 500/500 datasets. The audit reconciled 2,500 datasets, 5,000 gate
+fits, and 30,000 method attempts with no failures or nonconvergence, and the
+summary regenerated from retained replicate records.
+
+This is evidence for incremental value over this same-fit neural-off
+counterfactual in the two stated covariate scenarios. It does not establish
+general superiority over non-neural methods, performance on other data
+generating processes, or uncertainty calibration. The [full GNN report](https://github.com/itchyshin/pigauto/blob/main/docs/dev-log/gnn-incremental/RESULTS-20261020.md)
+and [paired summary table](https://github.com/itchyshin/pigauto/blob/main/script/gnn_incremental/results/production-20261019-v1-summary/summaries/paired_summary.csv)
+give the scenario criteria, paired uncertainty, gate behaviour, and
+reproducibility records.
+
 ## Inferential results
 
 The assessment used prespecified bands for nominal 95% coverage, reported

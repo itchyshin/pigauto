@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "1b515098c1062d078423df4698910b03323890347ac4fa5fb191dac214ea2e6e",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex self-review",
+  "method": "Read the complete saved release record and checked its status statements against the current branch, production audit, pkgdown workflow and release gate file.",
+  "genre": "technical deployment record",
+  "coverage": "Whole 261-word draft; status is explicitly pending at this checkpoint.",
+  "score": 3,
+  "style_status": "judged",
+  "score_reason": "The prose is concise and specific to this release; this subjective score does not estimate authorship.",
+  "confidence": "medium",
+  "confidence_reason": "The measured starting state was checked, while final remote outcomes remain pending.",
+  "examples": [
+    {
+      "location": "line 15",
+      "cue": "No deployment will be reported from a local render alone.",
+      "impact": "This sets a clear evidence boundary for the release claim.",
+      "repair": "No change needed.",
+      "line": 15,
+      "quote": "No deployment will be reported from a local render alone."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "The record does not extend scientific claims beyond the campaign's stated limits.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Production counts, completion time, ledger status, branch base and workflow route were checked against retained evidence.",
+  "references_gate": "not_applicable",
+  "references_gate_reason": "The short record makes no external citation claims.",
+  "date": "2026-10-20",
+  "calibration_status": "No independent human calibration was performed.",
+  "interpretation": "perceived_style_not_authorship"
+}

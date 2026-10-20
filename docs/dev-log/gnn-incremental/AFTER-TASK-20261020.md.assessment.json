@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "35f4d2ae7d63b024143daf8c0865210791a9eb536bf049f477e4cf722af8c449",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex self-review",
+  "method": "Read the full saved draft, checked scientific and factual claims against retained evidence, and made a separate editorial assessment under writing-naturalness guidance.",
+  "genre": "after-task report",
+  "coverage": "Read all 12 required sections; updated test counts and final R CMD check result against the rebased suite output; checked production totals and repo-wide gate limitation against retained artifacts.",
+  "score": 3,
+  "style_status": "judged",
+  "score_reason": "The prose is direct and specific with little repeated scaffolding; this subjective score does not estimate authorship.",
+  "confidence": "medium",
+  "confidence_reason": "The complete draft was reviewed, but style judgments remain subjective and are not human-calibrated.",
+  "examples": [
+    {
+      "location": "line 11",
+      "cue": "The confirmatory policy is the public `impute()` default, `phylo_signal_gate = FALSE`; `TRUE` is a sensitivity arm. Both use `lambda_mode = \"estimate\"`. The primary comparison is paired within the exact same fit and changes only the neural contribution. GLS and regression models are reference comparisons; they do not define a universal ceiling. We made no public API, default, or method change. We did not run on DRAC or Kohaku: the measured Totoro CPU lane completed the approved campaign within its cap, and this R/torch workload did not require a GPU. We did not deploy or publish the site.",
+      "impact": "The sentence identifies the tested policy and its role. No change needed.",
+      "repair": "No change needed.",
+      "line": 11,
+      "quote": "The confirmatory policy is the public `impute()` default, `phylo_signal_gate = FALSE`; `TRUE` is a sensitivity arm. Both use `lambda_mode = \"estimate\"`. The primary comparison is paired within the exact same fit and changes only the neural contribution. GLS and regression models are reference comparisons; they do not define a universal ceiling. We made no public API, default, or method change. We did not run on DRAC or Kohaku: the measured Totoro CPU lane completed the approved campaign within its cap, and this R/torch workload did not require a GPU. We did not deploy or publish the site."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "It states exactly which policy is confirmatory and avoids extrapolation to other use cases.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Test counts, run totals and skipped optional checks match captured output.",
+  "references_gate": "pass",
+  "references_gate_reason": "No external scholarly references are used.",
+  "date": "2026-10-20",
+  "calibration_status": "Previously seen controls were not held out for a style benchmark; no independent human calibration was performed.",
+  "interpretation": "perceived_style_not_authorship"
+}

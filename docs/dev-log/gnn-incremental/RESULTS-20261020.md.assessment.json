@@ -1,0 +1,44 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "3aaab7b8ffd3b3748253f4fc44a74ed4415c217d8acbf8f6d910485a1ea999e8",
+  "draft_version": "v2",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex self-review",
+  "method": "Read the full saved draft, checked scientific and factual claims against retained evidence, and made a separate editorial assessment under writing-naturalness guidance.",
+  "genre": "scientific validation report",
+  "coverage": "Read the complete saved report after correcting its acceptance-status paragraph; checked campaign counts, committed source identity, and the separately authorized release scope against retained evidence.",
+  "score": 3,
+  "style_status": "judged",
+  "score_reason": "The prose is direct and specific with little repeated scaffolding; this subjective score does not estimate authorship.",
+  "confidence": "medium",
+  "confidence_reason": "The complete draft was reviewed, but style judgments remain subjective and are not human-calibrated.",
+  "examples": [
+    {
+      "location": "line 7",
+      "cue": "The result applies to the current `impute()` default (`phylo_signal_gate = FALSE`) in these repeated-observation covariate simulations. It does not establish that the full pigauto model beats non-neural alternatives in every scenario. In particular, the separately fitted phylogenetic GLS had substantially lower RMSE than pigauto in the interactive scenario.",
+      "impact": "The sentence bounds the result to the tested workflow and default. No change needed.",
+      "repair": "No change needed.",
+      "line": 7,
+      "quote": "The result applies to the current `impute()` default (`phylo_signal_gate = FALSE`) in these repeated-observation covariate simulations. It does not establish that the full pigauto model beats non-neural alternatives in every scenario. In particular, the separately fitted phylogenetic GLS had substantially lower RMSE than pigauto in the interactive scenario."
+    },
+    {
+      "location": "line 65",
+      "cue": "A subsequent user instruction on 2026-10-20 separately authorized pushing and deploying the pkgdown update; those release steps are tracked in `DEPLOYMENT-20261020.md`.",
+      "impact": "The sentence records the later scope change without implying that a local render is a deployment.",
+      "repair": "No change needed.",
+      "line": 65,
+      "quote": "A subsequent user instruction on 2026-10-20 separately authorized pushing and deploying the pkgdown update; those release steps are tracked in `DEPLOYMENT-20261020.md`."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "The two confirmatory scenarios are clearly separated from controls; the inference is limited to their stated scope.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Campaign counts and validation claims match retained outputs; the report distinguishes completed local validation from the separately tracked push and deployment follow-up.",
+  "references_gate": "pass",
+  "references_gate_reason": "ADEMP and manifest links resolve within the repository; the deployment follow-up record exists beside this report.",
+  "date": "2026-10-20",
+  "calibration_status": "Previously seen controls were not held out for a style benchmark; no independent human calibration was performed.",
+  "interpretation": "perceived_style_not_authorship"
+}

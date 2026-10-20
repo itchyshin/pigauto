@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "c8a9da46db9f92985a8ff2ab4d8823b7125d0bebe78a7cc39b4c8baffcc5e68b",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex self-review",
+  "method": "Read the full saved draft, checked scientific and factual claims against retained evidence, and made a separate editorial assessment under writing-naturalness guidance.",
+  "genre": "plan-versus-actual report",
+  "coverage": "Read the full report; checked production and final test/check results against logs, and verified the rebase base and clean comparison with current main.",
+  "score": 3,
+  "style_status": "judged",
+  "score_reason": "The prose is direct and specific with little repeated scaffolding; this subjective score does not estimate authorship.",
+  "confidence": "medium",
+  "confidence_reason": "The complete draft was reviewed, but style judgments remain subjective and are not human-calibrated.",
+  "examples": [
+    {
+      "location": "line 15",
+      "cue": "Totoro ran production with 48 single-thread workers from 2026-10-19 20:40 MDT to 2026-10-20 05:20 MDT. Elapsed time was about 520 minutes (8 h 40 min), within the approved 630-minute cap. The run completed 5,000 pigauto fits and 30,000 method attempts. Capacity snapshots showed substantial memory headroom and total owned CPU use below 150. DRAC and Kohaku were not needed for this CPU workload.",
+      "impact": "The paragraph distinguishes measured runtime from unmeasured total task time. No change needed.",
+      "repair": "No change needed.",
+      "line": 15,
+      "quote": "Totoro ran production with 48 single-thread workers from 2026-10-19 20:40 MDT to 2026-10-20 05:20 MDT. Elapsed time was about 520 minutes (8 h 40 min), within the approved 630-minute cap. The run completed 5,000 pigauto fits and 30,000 method attempts. Capacity snapshots showed substantial memory headroom and total owned CPU use below 150. DRAC and Kohaku were not needed for this CPU workload."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "It preserves the boundary between the production duration and the total project duration.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Times, compute route, worker count and counts match the production receipts.",
+  "references_gate": "pass",
+  "references_gate_reason": "References identify local campaign records and the merged article-lane record.",
+  "date": "2026-10-20",
+  "calibration_status": "Previously seen controls were not held out for a style benchmark; no independent human calibration was performed.",
+  "interpretation": "perceived_style_not_authorship"
+}

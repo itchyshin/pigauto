@@ -1,0 +1,6 @@
+scenario_id,f_type,variance_multiplier,beta_strength,role,n_replicates,gate_policies
+nonlinear_primary,nonlinear,0.3,1.0,confirmatory,500,"FALSE;TRUE"
+interactive_secondary,interactive,0.3,1.0,confirmatory,500,"FALSE;TRUE"
+nonlinear_low_phylo,nonlinear,0.05,1.0,control,500,"FALSE;TRUE"
+linear_recovery,linear,0.3,1.0,control,500,"FALSE;TRUE"
+null_covariate,linear,0.3,0.0,control,500,"FALSE;TRUE"
