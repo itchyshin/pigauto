@@ -63,3 +63,6 @@ Production checkpoint (2026-10-19, 23:04 MDT): the primary nonlinear scenario re
 
 
 Production checkpoint (2026-10-19, 23:25 MDT): all 500 primary nonlinear replicates were saved and the interactive confirmatory scenario had 106/500 records. There were 606 total and zero launcher failures. Totoro load was around 65/384 with 381 GiB available. Cumulative throughput projects about 681 minutes before closeout, slightly above the approved 630-minute boundary. Keep that boundary unless the user extends approval.
+
+
+Production checkpoint (2026-10-20, 00:04 MDT): 790 of 2,500 records were saved: 500 primary nonlinear and 290 interactive confirmatory. No launcher failures were recorded and all 48 workers remained active. Totoro load was near 52/384 with about 432 GiB available. The cumulative-throughput estimate is now about 646 minutes before closeout, close to but still above the approved 630-minute cap. Re-estimate from later completed batches and stop at the cap unless the user extends approval.
