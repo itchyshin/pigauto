@@ -78,7 +78,8 @@ head(pred$se)
 
 
 ## ----evaluate-----------------------------------------------------------------
-ev <- evaluate_imputation(pred, pd$X_scaled, spl)
+pred_eval <- predict(fit, evaluation = TRUE)
+ev <- evaluate_imputation(pred_eval, pd$X_scaled, spl)
 print(ev)
 
 

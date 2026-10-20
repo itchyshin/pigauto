@@ -15,6 +15,7 @@
   clamp_factor = 5,
   match_observed = c("none", "pmm"),
   pmm_K = 5L,
+  evaluation = FALSE,
   ...
 )
 }
@@ -96,7 +97,13 @@ multi_proportion) and un-log continuous: no-op.  Default
 Default \code{5L} (mice convention).  Ignored when
 \code{match_observed = "none"}.}
 
-\item{...}{ignored.}
+\item{evaluation}{Logical. Use \code{TRUE} to predict validation and test
+cells using the fit's held-out baseline and masked input context. Requires
+stored splits and \code{newdata = NULL}. Default \code{FALSE} uses all
+observed data for production imputation. Use \code{evaluation = TRUE}
+before passing predictions to \code{\link{evaluate_imputation}}.}
+
+\item{...}{Internal compatibility arguments.}
 }
 \value{
 A list of class \code{"pigauto_pred"} with:
@@ -119,6 +126,8 @@ downstream inference.}
 \item{species_names}{Character vector.}
 \item{trait_names}{Character vector.}
 \item{n_imputations}{Integer, number of imputations performed.}
+\item{evaluation_safe_idx}{Latent indices excluded from fitting and
+prediction input, used to check held-out scoring.}
 }
 }
 \description{
@@ -154,10 +163,9 @@ function makes no \code{torch::} calls at all -- prediction is the
 calibrated baseline blend \code{r_cal_bm * baseline + r_cal_mean *
 mean_baseline_per_col} (\code{r_cal_gnn} is always zero) computed on
 plain R matrices. Two baselines are available: in production mode (the
-default, no \code{.mask_observed_idx}) predictions use \code{baseline_full}
+default, \code{evaluation = FALSE}) predictions use \code{baseline_full}
 -- fit with \code{splits = NULL}, so every observed cell can inform every
-other cell; in evaluation mode (\code{.mask_observed_idx} supplied, as
-used internally for val/test scoring) predictions use the held-out
+other cell; in evaluation mode (\code{evaluation = TRUE}) predictions use the held-out
 \code{baseline} instead, so scored cells never see their own value.
 \code{n_imputations > 1} draws are BM posterior samples
 \code{MU_m ~ N(baseline_mu, baseline_se)} at originally-missing cells

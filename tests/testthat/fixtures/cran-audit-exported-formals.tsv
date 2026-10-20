@@ -284,4 +284,5 @@ S3::predict.pigauto_fit	clamp_outliers	FALSE
 S3::predict.pigauto_fit	clamp_factor	5
 S3::predict.pigauto_fit	match_observed	c("none", "pmm")
 S3::predict.pigauto_fit	pmm_K	5L
+S3::predict.pigauto_fit	evaluation	FALSE
 S3::predict.pigauto_fit	...	<required>

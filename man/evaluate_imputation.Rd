@@ -35,6 +35,14 @@ trait type; otherwise the function falls back to continuous-only metrics
 (RMSE, Pearson r, 95\% coverage).
 }
 \details{
+Predictions must exclude the cells being scored from both fitting and
+prediction inputs. Use \code{predict(fit, evaluation = TRUE)} or
+\code{\link{evaluate}(fit)}. Plain \code{predict(fit)} uses observed
+values for production imputation and must not be scored as held-out data.
+Predictions with provenance are rejected if scored indices were not held out.
+For raw matrices or older prediction objects this cannot be checked; callers
+must ensure the cells were held out themselves.
+
 \strong{Metrics by trait type:}
 \describe{
 \item{continuous}{RMSE, Pearson r, 95\\% interval coverage (if SE

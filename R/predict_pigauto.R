@@ -32,10 +32,9 @@
 #' calibrated baseline blend \code{r_cal_bm * baseline + r_cal_mean *
 #' mean_baseline_per_col} (\code{r_cal_gnn} is always zero) computed on
 #' plain R matrices. Two baselines are available: in production mode (the
-#' default, no \code{.mask_observed_idx}) predictions use \code{baseline_full}
+#' default, \code{evaluation = FALSE}) predictions use \code{baseline_full}
 #' -- fit with \code{splits = NULL}, so every observed cell can inform every
-#' other cell; in evaluation mode (\code{.mask_observed_idx} supplied, as
-#' used internally for val/test scoring) predictions use the held-out
+#' other cell; in evaluation mode (\code{evaluation = TRUE}) predictions use the held-out
 #' \code{baseline} instead, so scored cells never see their own value.
 #' \code{n_imputations > 1} draws are BM posterior samples
 #' \code{MU_m ~ N(baseline_mu, baseline_se)} at originally-missing cells
@@ -142,7 +141,12 @@
 #' @param pmm_K integer scalar (>= 1).  Donor pool size for PMM.
 #'   Default \code{5L} (mice convention).  Ignored when
 #'   \code{match_observed = "none"}.
-#' @param ... ignored.
+#' @param evaluation Logical. Use \code{TRUE} to predict validation and test
+#'   cells using the fit's held-out baseline and masked input context. Requires
+#'   stored splits and \code{newdata = NULL}. Default \code{FALSE} uses all
+#'   observed data for production imputation. Use \code{evaluation = TRUE}
+#'   before passing predictions to \code{\link{evaluate_imputation}}.
+#' @param ... Internal compatibility arguments.
 #' @return A list of class \code{"pigauto_pred"} with:
 #'   \describe{
 #'     \item{imputed}{data.frame of imputed values in original scale with
@@ -163,6 +167,8 @@
 #'     \item{species_names}{Character vector.}
 #'     \item{trait_names}{Character vector.}
 #'     \item{n_imputations}{Integer, number of imputations performed.}
+#'     \item{evaluation_safe_idx}{Latent indices excluded from fitting and
+#'       prediction input, used to check held-out scoring.}
 #'   }
 #' @section What \code{$se} means per trait type:
 #' \code{pred$se} is a single \code{n x n_original_traits} matrix, but its
@@ -215,7 +221,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
                                 clamp_outliers = FALSE,
                                 clamp_factor = 5,
                                 match_observed = c("none", "pmm"),
-                                pmm_K = 5L,
+                                pmm_K = 5L, evaluation = FALSE,
                                 ...) {
   pool_method <- match.arg(pool_method)
   match_observed <- match.arg(match_observed)
@@ -232,6 +238,21 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   }
   dots <- list(...)
   mask_observed_idx <- dots[[".mask_observed_idx"]]
+  if (!is.logical(evaluation) || length(evaluation) != 1L || is.na(evaluation)) {
+    stop("'evaluation' must be TRUE or FALSE.", call. = FALSE)
+  }
+  if (evaluation) {
+    if (!is.null(newdata) || !is.null(baseline_override)) {
+      stop("'evaluation = TRUE' requires newdata = NULL and no baseline_override.",
+           call. = FALSE)
+    }
+    held <- c(object$splits$val_idx, object$splits$test_idx)
+    if (!length(held)) {
+      stop("'evaluation = TRUE' requires stored validation or test splits.",
+           call. = FALSE)
+    }
+    mask_observed_idx <- unique(c(held, mask_observed_idx))
+  }
   cfg       <- object$model_config
   # gnn = FALSE fits (gnn-off contract, S2): the GNN was never constructed or
   # trained, so this function must make ZERO torch:: calls in that path --
@@ -945,7 +966,12 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
       obs_to_species   = obs_to_sp,
       multi_obs        = multi_obs,
       trait_names      = object$trait_names,
-      n_imputations    = n_imp
+      n_imputations    = n_imp,
+      evaluation_safe_idx = if (is.null(baseline_override)) {
+        as.integer(union(which(is.na(object$X_scaled)),
+          intersect(mask_observed_idx,
+                    c(object$splits$val_idx, object$splits$test_idx))))
+      } else integer(0)
     ),
     class = "pigauto_pred"
   )

@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "1597a8dc6a0acfa0d3e3d56fc96c0e19323c3750b1c08b475605c38d7c13cb22",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex",
+  "method": "Separate source and prose review after drafting",
+  "genre": "Unposted GitHub maintainer reply",
+  "coverage": "Whole draft",
+  "score": 2,
+  "style_status": "known",
+  "score_reason": "Concrete reproduction, mechanism and current delivery status; no generic praise or claims beyond the tests.",
+  "confidence": "moderate",
+  "confidence_reason": "Self assessment, not an independent human judgment.",
+  "examples": [
+    {
+      "location": "Paragraph 1",
+      "cue": "Concrete admission",
+      "impact": "Explains the failure without blaming the reporter.",
+      "repair": "no change needed",
+      "line": 1,
+      "quote": "You are right: the vignette workflow scored production predictions at cells whose true values were still available, so those perfect scores were misleading."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "Claims are limited to held-out scoring and the exercised GNN input path; no calibration or general performance claim.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "All three before/after scripts ran, the rendered results match the reported numbers, and 17 issue assertions passed; local-only status verified.",
+  "references_gate": "not_applicable",
+  "references_gate_reason": "No bibliographic citations or external links in this draft.",
+  "date": "2026-10-20",
+  "calibration_status": "Protocol examples seen; no held-out calibration claim.",
+  "interpretation": "perceived_style_not_authorship"
+}

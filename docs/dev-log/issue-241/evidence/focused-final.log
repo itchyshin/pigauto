@@ -1,0 +1,266 @@
+ℹ Loading pigauto
+✔ | F W  S  OK | Context
+
+⠏ |          0 | cran-audit-defaults                                            
+⠧ |          8 | cran-audit-defaults                                            
+⠙ |         22 | cran-audit-defaults                                            
+⠇ |         39 | cran-audit-defaults                                            
+⠴ |         56 | cran-audit-defaults                                            
+⠙ |         72 | cran-audit-defaults                                            
+⠹ |         83 | cran-audit-defaults                                            Auto-detected trait type "count" (log1p-encoded) for integer column(s): count. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(count = "continuous").
+
+⠴ |         86 | cran-audit-defaults                                            
+⠦ |         87 | cran-audit-defaults                                            pigauto: the exact ("exact") joint baseline route was not usable for a fit (fewer than 2 joint columns (K < 2)); used the per-column baseline for that fit instead. This happens either while predict_method = "auto" (the default) is comparing its "exact" candidate, or when "exact" is itself the resolved route and fell back. This message is shown at most once per R session; pass predict_method = "per_column" to use the per-column path throughout, or predict_method = "exact" explicitly if you want a warning every time this happens.
+
+⠹ |         93 | cran-audit-defaults                                            
+⠴ |        106 | cran-audit-defaults                                            Auto-detected trait type "count" (log1p-encoded) for integer column(s): count, zi. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(count = "continuous").
+
+
+⠦ |        107 | cran-audit-defaults                                            
+⠼ |        115 | cran-audit-defaults                                            
+⠇ |        129 | cran-audit-defaults                                            
+⠼ |        135 | cran-audit-defaults                                            
+⠴ |        136 | cran-audit-defaults                                            Auto-detected trait type "count" (log1p-encoded) for integer column(s): count. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(count = "continuous").
+
+
+⠇ |        139 | cran-audit-defaults                                            Auto-detected trait type "count" (log1p-encoded) for integer column(s): count. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(count = "continuous").
+
+
+⠏ |        150 | cran-audit-defaults                                            
+⠋ |        151 | cran-audit-defaults                                            Building phylogenetic graph (reused across folds)...
+Rep 1/1, Fold 1/2 (seed=1)...
+
+⠙ |        152 | cran-audit-defaults                                            Building phylogenetic graph (reused across folds)...
+Rep 1/1, Fold 1/2 (seed=1)...
+
+⠦ |        157 | cran-audit-defaults                                            === Replicate 1/1 (seed 1) ===
+Fitting baseline...
+Fitting pigauto...
+
+⠋ |        161 | cran-audit-defaults                                            === Replicate 1/1 (seed 1) ===
+Fitting baseline...
+Fitting pigauto...
+
+⠸ |        164 | cran-audit-defaults                                            
+⠴ |        166 | cran-audit-defaults                                            
+⠏ |        170 | cran-audit-defaults                                            draws_method = "auto": using "conformal" because some traits are not continuous (binary: binary). These draws show the spread of plausible values but are not proper multiple imputations; with_imputations() and pool_mi() refuse them. See ?multi_impute.
+
+⠹ |        173 | cran-audit-defaults                                            
+⠹ |        183 | cran-audit-defaults                                            
+⠧ |        188 | cran-audit-defaults                                            
+⠴ |        196 | cran-audit-defaults                                            
+✔ |        202 | cran-audit-defaults [6.8s]
+
+⠏ |          0 | evaluation-gnn                                                 
+⠋ |          1 | evaluation-gnn                                                 
+⠹ |          3 | evaluation-gnn                                                 
+✔ |          3 | evaluation-gnn [1.0s]
+
+⠏ |          0 | evaluation-mode                                                
+⠋ |          1 | evaluation-mode                                                
+⠙ |          2 | evaluation-mode                                                
+✔ |         14 | evaluation-mode
+
+⠏ |          0 | monomorphic-discrete                                           
+⠼ |   2      3 | monomorphic-discrete                                           
+⠙ |   4      8 | monomorphic-discrete                                           
+⠇ |   8     11 | monomorphic-discrete                                           
+⠦ |   10     17 | monomorphic-discrete                                          
+⠴ |   11     25 | monomorphic-discrete                                          
+✔ |   11     29 | monomorphic-discrete [1.1s]
+────────────────────────────────────────────────────────────────────────────────
+Warning ('test-monomorphic-discrete.R:73:3'): impute() predicts the single class for a one-level factor
+At least one matched trait is constant.
+Backtrace:
+     ▆
+  1. ├─testthat::expect_no_error(...) at test-monomorphic-discrete.R:73:3
+  2. │ └─testthat:::expect_no_(...)
+  3. │   └─testthat:::quasi_capture(enquo(object), NULL, capture)
+  4. │     ├─testthat (local) .capture(...)
+  5. │     │ ├─base::withRestarts(...)
+  6. │     │ │ └─base (local) withOneRestart(expr, restarts[[1L]])
+  7. │     │ │   └─base (local) doWithOneRestart(return(expr), restart)
+  8. │     │ └─base::withCallingHandlers(...)
+  9. │     └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 10. └─pigauto::impute(...)
+
+Warning ('test-monomorphic-discrete.R:73:3'): impute() predicts the single class for a one-level factor
+Small validation set for 2 trait(s): disc (n=5), cont (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+Backtrace:
+     ▆
+  1. ├─testthat::expect_no_error(...) at test-monomorphic-discrete.R:73:3
+  2. │ └─testthat:::expect_no_(...)
+  3. │   └─testthat:::quasi_capture(enquo(object), NULL, capture)
+  4. │     ├─testthat (local) .capture(...)
+  5. │     │ ├─base::withRestarts(...)
+  6. │     │ │ └─base (local) withOneRestart(expr, restarts[[1L]])
+  7. │     │ │   └─base (local) doWithOneRestart(return(expr), restart)
+  8. │     │ └─base::withCallingHandlers(...)
+  9. │     └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 10. └─pigauto::impute(...)
+ 11.   └─pigauto::fit_pigauto(...) at pigauto241-current/R/impute.R:646:3
+ 12.     └─pigauto:::calibrate_gates(...) at pigauto241-current/R/fit_pigauto.R:678:7
+
+Warning ('test-monomorphic-discrete.R:90:3'): impute() predicts the single class for a one-level ordered factor
+At least one matched trait is constant.
+Backtrace:
+     ▆
+  1. ├─testthat::expect_no_error(...) at test-monomorphic-discrete.R:90:3
+  2. │ └─testthat:::expect_no_(...)
+  3. │   └─testthat:::quasi_capture(enquo(object), NULL, capture)
+  4. │     ├─testthat (local) .capture(...)
+  5. │     │ ├─base::withRestarts(...)
+  6. │     │ │ └─base (local) withOneRestart(expr, restarts[[1L]])
+  7. │     │ │   └─base (local) doWithOneRestart(return(expr), restart)
+  8. │     │ └─base::withCallingHandlers(...)
+  9. │     └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 10. └─pigauto::impute(...)
+
+Warning ('test-monomorphic-discrete.R:90:3'): impute() predicts the single class for a one-level ordered factor
+Small validation set for 2 trait(s): disc (n=5), cont (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 2 trait(s) with fewer than 19 validation cells (disc (n=5), cont (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+Backtrace:
+     ▆
+  1. ├─testthat::expect_no_error(...) at test-monomorphic-discrete.R:90:3
+  2. │ └─testthat:::expect_no_(...)
+  3. │   └─testthat:::quasi_capture(enquo(object), NULL, capture)
+  4. │     ├─testthat (local) .capture(...)
+  5. │     │ ├─base::withRestarts(...)
+  6. │     │ │ └─base (local) withOneRestart(expr, restarts[[1L]])
+  7. │     │ │   └─base (local) doWithOneRestart(return(expr), restart)
+  8. │     │ └─base::withCallingHandlers(...)
+  9. │     └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 10. └─pigauto::impute(...)
+ 11.   └─pigauto::fit_pigauto(...) at pigauto241-current/R/impute.R:646:3
+ 12.     └─pigauto:::calibrate_gates(...) at pigauto241-current/R/fit_pigauto.R:678:7
+
+Warning ('test-monomorphic-discrete.R:90:3'): impute() predicts the single class for a one-level ordered factor
+the standard deviation is zero
+Backtrace:
+     ▆
+  1. ├─testthat::expect_no_error(...) at test-monomorphic-discrete.R:90:3
+  2. │ └─testthat:::expect_no_(...)
+  3. │   └─testthat:::quasi_capture(enquo(object), NULL, capture)
+  4. │     ├─testthat (local) .capture(...)
+  5. │     │ ├─base::withRestarts(...)
+  6. │     │ │ └─base (local) withOneRestart(expr, restarts[[1L]])
+  7. │     │ │   └─base (local) doWithOneRestart(return(expr), restart)
+  8. │     │ └─base::withCallingHandlers(...)
+  9. │     └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 10. └─pigauto::impute(...)
+ 11.   ├─base::tryCatch(...) at pigauto241-current/R/impute.R:717:5
+ 12.   │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 13.   │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 14.   │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 15.   └─pigauto::evaluate_imputation(eval_pred, pd$X_scaled, splits) at pigauto241-current/R/impute.R:717:5
+ 16.     └─pigauto (local) eval_split(splits$val_idx, "val") at pigauto241-current/R/evaluate_imputation.R:361:5
+ 17.       └─stats::cor(t_j[ok], p_j[ok], method = "spearman") at pigauto241-current/R/evaluate_imputation.R:159:13
+
+Warning ('test-monomorphic-discrete.R:90:3'): impute() predicts the single class for a one-level ordered factor
+the standard deviation is zero
+Backtrace:
+     ▆
+  1. ├─testthat::expect_no_error(...) at test-monomorphic-discrete.R:90:3
+  2. │ └─testthat:::expect_no_(...)
+  3. │   └─testthat:::quasi_capture(enquo(object), NULL, capture)
+  4. │     ├─testthat (local) .capture(...)
+  5. │     │ ├─base::withRestarts(...)
+  6. │     │ │ └─base (local) withOneRestart(expr, restarts[[1L]])
+  7. │     │ │   └─base (local) doWithOneRestart(return(expr), restart)
+  8. │     │ └─base::withCallingHandlers(...)
+  9. │     └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 10. └─pigauto::impute(...)
+ 11.   ├─base::tryCatch(...) at pigauto241-current/R/impute.R:717:5
+ 12.   │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 13.   │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 14.   │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 15.   └─pigauto::evaluate_imputation(eval_pred, pd$X_scaled, splits) at pigauto241-current/R/impute.R:717:5
+ 16.     └─pigauto (local) eval_split(splits$test_idx, "test") at pigauto241-current/R/evaluate_imputation.R:364:5
+ 17.       └─stats::cor(t_j[ok], p_j[ok], method = "spearman") at pigauto241-current/R/evaluate_imputation.R:159:13
+
+Warning ('test-monomorphic-discrete.R:105:5'): impute() handles a K-level factor monomorphic among observed cells
+At least one matched trait is constant.
+Backtrace:
+     ▆
+  1. ├─testthat::expect_no_error(...) at test-monomorphic-discrete.R:105:5
+  2. │ └─testthat:::expect_no_(...)
+  3. │   └─testthat:::quasi_capture(enquo(object), NULL, capture)
+  4. │     ├─testthat (local) .capture(...)
+  5. │     │ ├─base::withRestarts(...)
+  6. │     │ │ └─base (local) withOneRestart(expr, restarts[[1L]])
+  7. │     │ │   └─base (local) doWithOneRestart(return(expr), restart)
+  8. │     │ └─base::withCallingHandlers(...)
+  9. │     └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 10. └─pigauto::impute(...)
+
+Warning ('test-monomorphic-discrete.R:105:5'): impute() handles a K-level factor monomorphic among observed cells
+Small validation set for 2 trait(s): disc (n=5), cont (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+Backtrace:
+     ▆
+  1. ├─testthat::expect_no_error(...) at test-monomorphic-discrete.R:105:5
+  2. │ └─testthat:::expect_no_(...)
+  3. │   └─testthat:::quasi_capture(enquo(object), NULL, capture)
+  4. │     ├─testthat (local) .capture(...)
+  5. │     │ ├─base::withRestarts(...)
+  6. │     │ │ └─base (local) withOneRestart(expr, restarts[[1L]])
+  7. │     │ │   └─base (local) doWithOneRestart(return(expr), restart)
+  8. │     │ └─base::withCallingHandlers(...)
+  9. │     └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 10. └─pigauto::impute(...)
+ 11.   └─pigauto::fit_pigauto(...) at pigauto241-current/R/impute.R:646:3
+ 12.     └─pigauto:::calibrate_gates(...) at pigauto241-current/R/fit_pigauto.R:678:7
+
+Warning ('test-monomorphic-discrete.R:105:5'): impute() handles a K-level factor monomorphic among observed cells
+At least one matched trait is constant.
+Backtrace:
+     ▆
+  1. ├─testthat::expect_no_error(...) at test-monomorphic-discrete.R:105:5
+  2. │ └─testthat:::expect_no_(...)
+  3. │   └─testthat:::quasi_capture(enquo(object), NULL, capture)
+  4. │     ├─testthat (local) .capture(...)
+  5. │     │ ├─base::withRestarts(...)
+  6. │     │ │ └─base (local) withOneRestart(expr, restarts[[1L]])
+  7. │     │ │   └─base (local) doWithOneRestart(return(expr), restart)
+  8. │     │ └─base::withCallingHandlers(...)
+  9. │     └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 10. └─pigauto::impute(...)
+
+Warning ('test-monomorphic-discrete.R:105:5'): impute() handles a K-level factor monomorphic among observed cells
+Small validation set for 2 trait(s): disc (n=5), cont (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+Backtrace:
+     ▆
+  1. ├─testthat::expect_no_error(...) at test-monomorphic-discrete.R:105:5
+  2. │ └─testthat:::expect_no_(...)
+  3. │   └─testthat:::quasi_capture(enquo(object), NULL, capture)
+  4. │     ├─testthat (local) .capture(...)
+  5. │     │ ├─base::withRestarts(...)
+  6. │     │ │ └─base (local) withOneRestart(expr, restarts[[1L]])
+  7. │     │ │   └─base (local) doWithOneRestart(return(expr), restart)
+  8. │     │ └─base::withCallingHandlers(...)
+  9. │     └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 10. └─pigauto::impute(...)
+ 11.   └─pigauto::fit_pigauto(...) at pigauto241-current/R/impute.R:646:3
+ 12.     └─pigauto:::calibrate_gates(...) at pigauto241-current/R/fit_pigauto.R:678:7
+
+Warning ('test-monomorphic-discrete.R:135:3'): the whole pipeline survives a single-level categorical trait
+Small validation set for 2 trait(s): disc (n=3), cont (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (cont (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+Backtrace:
+     ▆
+  1. ├─testthat::expect_no_error(...) at test-monomorphic-discrete.R:135:3
+  2. │ └─testthat:::expect_no_(...)
+  3. │   └─testthat:::quasi_capture(enquo(object), NULL, capture)
+  4. │     ├─testthat (local) .capture(...)
+  5. │     │ ├─base::withRestarts(...)
+  6. │     │ │ └─base (local) withOneRestart(expr, restarts[[1L]])
+  7. │     │ │   └─base (local) doWithOneRestart(return(expr), restart)
+  8. │     │ └─base::withCallingHandlers(...)
+  9. │     └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 10. └─pigauto::fit_pigauto(...)
+ 11.   └─pigauto:::calibrate_gates(...) at pigauto241-current/R/fit_pigauto.R:678:7
+────────────────────────────────────────────────────────────────────────────────
+
+══ Results ═════════════════════════════════════════════════════════════════════
+Duration: 9.6 s
+
+[ FAIL 0 | WARN 11 | SKIP 0 | PASS 248 ]
+
+😸

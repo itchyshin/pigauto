@@ -1,0 +1,265 @@
+ℹ Loading pigauto
+pigauto version: 0.11.0 
+torch installed (libtorch): TRUE 
+
+==================== PART A: mixed-types vignette ====================
+Val cells (latent): 21 
+Test cells (latent): 57 
+Any NA in pd$X_scaled?  FALSE 
+Warnings/messages emitted by the documented workflow: 
+  MESSAGE: Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+  WARNING: Small validation set for 5 trait(s): mass (n=2), clutch (n=4), migr (n=3), diet (n=3), threat (n=3). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (mass (n=2), clutch (n=4), threat (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options. 
+
+[A1] Documented workflow: evaluate_imputation(pred, pd$X_scaled, spl)
+
+--- as printed by the vignette ---
+ split  trait        type  n rmse pearson_r spearman_rho accuracy  brier
+   val   mass  continuous  2    0         1           NA       NA     NA
+   val clutch       count  4    0         1           NA       NA     NA
+   val   migr      binary  3   NA        NA           NA        1 0.0451
+   val   diet categorical  3   NA        NA           NA        1     NA
+   val threat     ordinal  3    0        NA            1       NA     NA
+  test   mass  continuous 13    0         1           NA       NA     NA
+  test clutch       count 10    0         1           NA       NA     NA
+  test   migr      binary 10   NA        NA           NA        1 0.0451
+  test   diet categorical  6   NA        NA           NA        1     NA
+  test threat     ordinal  6    0        NA            1       NA     NA
+
+[A2] Held-out (val + test) predictions vs truth, per trait
+  mass    continuous  held-out n=15  max |latent pred - truth| = 0
+  clutch  count       held-out n=14  max |latent pred - truth| = 0
+  migr    binary      held-out n=13  decoded class == truth: 1.000
+  diet    categorical held-out n= 9  decoded class == truth: 1.000
+  threat  ordinal     held-out n= 9  max |latent pred - truth| = 0
+Decoded `mass` on test species: pred$imputed vs original traits
+ species   truth imputed
+     t21 19.5655 19.5655
+     t25 16.7539 16.7539
+     t55 38.2383 38.2383
+     t33 16.3310 16.3310
+     t40 15.3829 15.3829
+     t23 35.2140 35.2140
+     t59 26.9776 26.9776
+     t38 12.8862 12.8862
+     t24 20.0862 20.0862
+     t20 28.4581 28.4581
+     t19 25.2121 25.2121
+     t16 36.0024 36.0024
+     t11 19.6809 19.6809
+
+[A3] Which internal objects does predict() use?
+fit$model_config$gnn: FALSE 
+fit$X_scaled identical to pd$X_scaled (held-out cells NOT masked): TRUE 
+continuous/count/ordinal held-out cells: 38 
+  max |fit$baseline_full$mu - truth| on them: 0 
+  max |fit$baseline$mu      - truth| on them: 2.437 
+  fit$r_cal_bm:   1 1 1 1 1 1 1 
+  fit$r_cal_mean: 0 0 0 0 0 0 0 
+
+[A4] Honest alternatives on the SAME fit and splits
+(stats::cor() 'standard deviation is zero' warnings from constant
+ predictions are suppressed from here on; they show up as NA correlations)
+
+--- predict(fit, .mask_observed_idx = c(val, test)) -> evaluate_imputation() ---
+ split  trait        type  n   rmse pearson_r spearman_rho accuracy  brier
+   val   mass  continuous  2 0.7717   -1.0000           NA       NA     NA
+   val clutch       count  4 1.0864    0.7509           NA       NA     NA
+   val   migr      binary  3     NA        NA           NA   0.6667 0.2420
+   val   diet categorical  3     NA        NA           NA   0.3333     NA
+   val threat     ordinal  3 0.7035        NA           NA       NA     NA
+  test   mass  continuous 13 0.9285    0.2566           NA       NA     NA
+  test clutch       count 10 0.6581    0.0661           NA       NA     NA
+  test   migr      binary 10     NA        NA           NA   0.5000 0.2488
+  test   diet categorical  6     NA        NA           NA   0.3333     NA
+  test threat     ordinal  6 1.4071        NA      -0.4243       NA     NA
+
+--- naive training-mean / majority-class predictor ---
+ split  trait        type  n   rmse accuracy  brier
+   val   mass  continuous  2 0.6997       NA     NA
+   val clutch       count  4 1.0938       NA     NA
+   val   migr      binary  3     NA   0.3333 0.2617
+   val   diet categorical  3     NA   0.3333     NA
+   val threat     ordinal  3 0.6771       NA     NA
+  test   mass  continuous 13 0.9333       NA     NA
+  test clutch       count 10 0.7249       NA     NA
+  test   migr      binary 10     NA   0.5000 0.2510
+  test   diet categorical  6     NA   0.1667     NA
+  test threat     ordinal  6 1.1047       NA     NA
+
+--- exported evaluate(fit) (masks val+test internally) ---
+  method  trait        type                metric   value n_test
+ pigauto   mass  continuous                  rmse  0.9285     13
+ pigauto   mass  continuous             pearson_r  0.2566     13
+ pigauto   mass  continuous                   mae  0.7610     13
+ pigauto   mass  continuous conformal_coverage_95  0.6154     13
+ pigauto clutch       count                  rmse  0.6581     10
+ pigauto clutch       count                   mae  0.5029     10
+ pigauto clutch       count             pearson_r  0.0661     10
+ pigauto clutch       count conformal_coverage_95  1.0000     10
+ pigauto   migr      binary              accuracy  0.5000     10
+ pigauto   migr      binary                 brier  0.2488     10
+ pigauto   diet categorical              accuracy  0.3333      6
+ pigauto   diet categorical         accuracy_carn  0.0000      1
+ pigauto   diet categorical         accuracy_herb  0.2500      4
+ pigauto   diet categorical         accuracy_omni  1.0000      1
+ pigauto threat     ordinal                  rmse  1.4071      6
+ pigauto threat     ordinal          spearman_rho -0.4243      6
+ pigauto threat     ordinal conformal_coverage_95  0.8333      6
+
+fit$test_rmse: 1.1277   fit$val_rmse: 1.169 
+
+==================== PART B: continuous-only minimal ====================
+Warning message:
+Small validation set for 3 trait(s): a (n=5), b (n=3), c (n=7). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3 trait(s) with fewer than 19 validation cells (a (n=5), b (n=3), c (n=7)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options. 
+
+--- documented: predict(fit2) -> evaluate_imputation() ---
+ split trait       type  n rmse pearson_r
+   val     a continuous  5    0         1
+   val     b continuous  3    0         1
+   val     c continuous  7    0         1
+  test     a continuous 15    0         1
+  test     b continuous 15    0         1
+  test     c continuous 15    0         1
+max |pred - truth| on held-out cells: 2.22e-16 
+
+--- honest: predict(fit2, .mask_observed_idx = held-out) ---
+ split trait       type  n   rmse pearson_r
+   val     a continuous  5 1.1061   -0.6511
+   val     b continuous  3 0.4344    0.9987
+   val     c continuous  7 1.1141   -0.1654
+  test     a continuous 15 0.7173   -0.0273
+  test     b continuous 15 0.8747    0.0549
+  test     c continuous 15 0.9069    0.3274
+
+--- naive training-mean predictor ---
+ split trait       type  n   rmse
+   val     a continuous  5 1.0832
+   val     b continuous  3 0.4670
+   val     c continuous  7 1.1027
+  test     a continuous 15 0.7145
+  test     b continuous 15 0.8730
+  test     c continuous 15 0.8986
+
+==================== PART C: getting-started pattern ====================
+Warning message:
+Small validation set for 4 trait(s): Beak.Length_Culmen (n=16), Tarsus.Length (n=19), Trophic.Level (n=7), Primary.Lifestyle (n=9). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (Beak.Length_Culmen (n=16)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options. 
+continuous/ordinal held-out (observed) latent cells: 395 
+  max |pred - truth| on them: 2.22e-16 
+
+--- documented call (note: no trait_map, so every latent column is scored as continuous) ---
+ split                         trait       type  n   rmse pearson_r
+   val                          Mass continuous 24 0.0000         1
+   val            Beak.Length_Culmen continuous 16 0.0000         1
+   val                 Tarsus.Length continuous 19 0.0000         1
+   val                   Wing.Length continuous 21 0.0000         1
+   val       Trophic.Level=Carnivore continuous 13 1.6945         1
+   val       Trophic.Level=Herbivore continuous 17 1.8521         1
+   val        Trophic.Level=Omnivore continuous 20 1.8599         1
+   val       Trophic.Level=Scavenger continuous 20 1.9031        NA
+   val      Primary.Lifestyle=Aerial continuous 15 2.0229         1
+   val     Primary.Lifestyle=Aquatic continuous 19 2.0421        NA
+   val  Primary.Lifestyle=Generalist continuous 19 1.9963         1
+   val Primary.Lifestyle=Insessorial continuous 15 1.9240         1
+   val Primary.Lifestyle=Terrestrial continuous 16 1.9126         1
+   val                     Migration continuous 28 0.0000         1
+  test                          Mass continuous 54 0.0000         1
+  test            Beak.Length_Culmen continuous 54 0.0000         1
+  test                 Tarsus.Length continuous 69 0.0000         1
+  test                   Wing.Length continuous 58 0.0000         1
+  test       Trophic.Level=Carnivore continuous 61 1.7574         1
+  test       Trophic.Level=Herbivore continuous 56 1.8358         1
+  test        Trophic.Level=Omnivore continuous 51 1.8636         1
+  test       Trophic.Level=Scavenger continuous 66 1.9031        NA
+  test      Primary.Lifestyle=Aerial continuous 55 2.0053         1
+  test     Primary.Lifestyle=Aquatic continuous 61 2.0421        NA
+  test  Primary.Lifestyle=Generalist continuous 63 2.0192         1
+  test Primary.Lifestyle=Insessorial continuous 39 1.8574         1
+  test Primary.Lifestyle=Terrestrial continuous 48 1.9567         1
+  test                     Migration continuous 52 0.0000         1
+
+--- honest: same call on predict(fit, .mask_observed_idx = c(val, test)) ---
+ split                         trait       type  n   rmse pearson_r
+   val                          Mass continuous 24 0.3081    0.9284
+   val            Beak.Length_Culmen continuous 16 0.2443    0.9250
+   val                 Tarsus.Length continuous 19 0.2648    0.9830
+   val                   Wing.Length continuous 21 0.3306    0.9673
+   val       Trophic.Level=Carnivore continuous 13 1.6797    0.9841
+   val       Trophic.Level=Herbivore continuous 17 1.5821    0.7963
+   val        Trophic.Level=Omnivore continuous 20 1.6693    0.8512
+   val       Trophic.Level=Scavenger continuous 20 1.9071        NA
+   val      Primary.Lifestyle=Aerial continuous 15 1.9378    0.6582
+   val     Primary.Lifestyle=Aquatic continuous 19 2.0039        NA
+   val  Primary.Lifestyle=Generalist continuous 19 1.9429    0.7245
+   val Primary.Lifestyle=Insessorial continuous 15 1.6351    0.6090
+   val Primary.Lifestyle=Terrestrial continuous 16 2.0308    0.8488
+   val                     Migration continuous 28 0.8565    0.6077
+  test                          Mass continuous 54 0.2739    0.9812
+  test            Beak.Length_Culmen continuous 54 0.2696    0.9462
+  test                 Tarsus.Length continuous 69 0.2435    0.9586
+  test                   Wing.Length continuous 58 0.2961    0.9500
+  test       Trophic.Level=Carnivore continuous 61 1.6008    0.8252
+  test       Trophic.Level=Herbivore continuous 56 1.6767    0.8600
+  test        Trophic.Level=Omnivore continuous 51 1.6615    0.7943
+  test       Trophic.Level=Scavenger continuous 66 1.9312        NA
+  test      Primary.Lifestyle=Aerial continuous 55 1.9464    0.8525
+  test     Primary.Lifestyle=Aquatic continuous 61 1.9964        NA
+  test  Primary.Lifestyle=Generalist continuous 63 1.9080    0.4979
+  test Primary.Lifestyle=Insessorial continuous 39 1.7518    0.8919
+  test Primary.Lifestyle=Terrestrial continuous 48 1.9155    0.7794
+  test                     Migration continuous 52 0.8417    0.6354
+
+--- type-aware, documented predict(fit), test split ---
+ split              trait        type  n rmse pearson_r spearman_rho accuracy
+  test               Mass  continuous 54    0         1           NA       NA
+  test Beak.Length_Culmen  continuous 54    0         1           NA       NA
+  test      Tarsus.Length  continuous 69    0         1           NA       NA
+  test        Wing.Length  continuous 58    0         1           NA       NA
+  test      Trophic.Level categorical 61   NA        NA           NA        1
+  test  Primary.Lifestyle categorical 55   NA        NA           NA        1
+  test          Migration     ordinal 52    0        NA            1       NA
+
+--- type-aware, predict(fit, .mask_observed_idx = ...), test split ---
+ split              trait        type  n   rmse pearson_r spearman_rho accuracy
+  test               Mass  continuous 54 0.2739    0.9812           NA       NA
+  test Beak.Length_Culmen  continuous 54 0.2696    0.9462           NA       NA
+  test      Tarsus.Length  continuous 69 0.2435    0.9586           NA       NA
+  test        Wing.Length  continuous 58 0.2961    0.9500           NA       NA
+  test      Trophic.Level categorical 61     NA        NA           NA   0.9508
+  test  Primary.Lifestyle categorical 55     NA        NA           NA   0.9636
+  test          Migration     ordinal 52 0.8417        NA       0.5123       NA
+
+==================== sessionInfo() ====================
+R version 4.6.0 (2026-04-24)
+Platform: aarch64-apple-darwin23
+Running under: macOS Tahoe 26.7.1
+
+Matrix products: default
+BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+
+locale:
+[1] C.UTF-8/C.UTF-8/C.UTF-8/C/C.UTF-8/C.UTF-8
+
+time zone: America/Edmonton
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] ape_5.8-1      pigauto_0.11.0 testthat_3.3.2
+
+loaded via a namespace (and not attached):
+ [1] generics_0.1.4     lattice_0.22-9     digest_0.6.39      magrittr_2.0.5    
+ [5] grid_4.6.0         RColorBrewer_1.1-3 pkgload_1.5.3      fastmap_1.2.0     
+ [9] rprojroot_2.1.1    Matrix_1.7-5       processx_3.9.0     pkgbuild_1.4.8    
+[13] sessioninfo_1.2.4  brio_1.1.5         torch_0.17.0       purrr_1.2.2       
+[17] scales_1.4.0       coro_1.1.0         cli_3.6.6          rlang_1.2.0       
+[21] ellipsis_0.3.3     bit64_4.8.2        withr_3.0.3        cachem_1.1.0      
+[25] devtools_2.5.2     otel_0.2.0         tools_4.6.0        parallel_4.6.0    
+[29] memoise_2.0.1      dplyr_1.2.1        ggplot2_4.0.3      vctrs_0.7.3       
+[33] R6_2.6.1           lifecycle_1.0.5    fs_2.1.0           bit_4.6.0         
+[37] usethis_3.2.1      pkgconfig_2.0.3    desc_1.4.3         callr_3.8.0       
+[41] pillar_1.11.1      gtable_0.3.6       glue_1.8.1         Rcpp_1.1.1-1.1    
+[45] tibble_3.3.1       tidyselect_1.2.1   rstudioapi_0.19.0  farver_2.1.2      
+[49] nlme_3.1-169       compiler_4.6.0     S7_0.2.2          

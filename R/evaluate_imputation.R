@@ -6,6 +6,14 @@
 #' (RMSE, Pearson r, 95% coverage).
 #'
 #' @details
+#' Predictions must exclude the cells being scored from both fitting and
+#' prediction inputs. Use \code{predict(fit, evaluation = TRUE)} or
+#' \code{\link{evaluate}(fit)}. Plain \code{predict(fit)} uses observed
+#' values for production imputation and must not be scored as held-out data.
+#' Predictions with provenance are rejected if scored indices were not held out.
+#' For raw matrices or older prediction objects this cannot be checked; callers
+#' must ensure the cells were held out themselves.
+#'
 #' **Metrics by trait type:**
 #' \describe{
 #'   \item{continuous}{RMSE, Pearson r, 95\% interval coverage (if SE
@@ -50,6 +58,13 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
                                 trait_map = NULL) {
   # Extract from pigauto_pred if supplied
   if (inherits(pred, "pigauto_pred")) {
+    if (!is.null(pred$evaluation_safe_idx)) {
+      scored <- unique(c(splits$val_idx, splits$test_idx))
+      if (length(setdiff(scored, pred$evaluation_safe_idx))) {
+        stop("Predictions include cells not held out for evaluation. Use ",
+             "predict(fit, evaluation = TRUE) or evaluate(fit).", call. = FALSE)
+      }
+    }
     trait_map <- pred$trait_map
     probs     <- pred$probabilities
     pred_mat  <- pred$imputed_latent
