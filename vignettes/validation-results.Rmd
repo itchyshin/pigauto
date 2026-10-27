@@ -20,10 +20,23 @@ settings, run accounting, and scientific findings. Each result applies to
 the stated scenarios; it does not certify performance for every dataset or
 use.
 
+## Quick guide to the results
+
+<dl class="row gy-3">
+<dt class="col-md-4">Can I assume the prediction intervals give 95% coverage?</dt>
+<dd class="col-md-8">No. Across the tested scenarios, mean coverage was below 95% when the GNN was off (`gnn = FALSE`, the package default) for continuous traits, counts, and proportions. The results varied by scenario. <strong>For your analysis:</strong> check coverage for a prediction task like yours in <a href="#prediction-interval-results">Prediction interval results</a>.</dd>
+
+<dt class="col-md-4">Did the optional GNN improve prediction?</dt>
+<dd class="col-md-8">It improved predictions over the same fitted model with its neural contribution removed in two confirmatory repeated-observation scenarios with covariates. It did not consistently beat non-neural reference methods. <strong>For your analysis:</strong> compare methods on held-out data that match your task in <a href="#when-does-the-neural-component-add-predictive-value">When does the neural component add predictive value?</a>.</dd>
+
+<dt class="col-md-4">Do these results validate downstream inference?</dt>
+<dd class="col-md-8">None of the tested scenarios for downstream inference met all criteria for support. Some failures also occurred in complete-data controls. <strong>For your analysis:</strong> treat inference as requiring further evidence for your model and missingness process. See <a href="#inferential-results">Inferential results</a>.</dd>
+</dl>
+
 ## What was tested
 
 The campaign used a frozen manifest of 151 configurations and 32,240
-independent dataset attempts. It covered the eight supported trait types,
+dataset-generation or masking attempts. It covered the eight supported trait types,
 mixed-type input, prediction under several evolutionary and missingness
 conditions, zero-inflated counts, compositions, repeated observations,
 covariates, posterior-tree workflows, posterior inference, analysis-aware
@@ -44,7 +57,8 @@ integrations.
 Of the 32,240 production attempts, 32,199 completed successfully, one was
 retained as failed, and 40 were unavailable because the registered PanTHERIA
 and FishBase inputs were absent. The available AVONET and configured BIEN
-examples each completed 20 masks. The production results contain 1,122,060
+examples each contributed 20 repeated masks; these are not independent
+dataset generations. The production results contain 1,122,060
 metric rows, including expected unavailable metrics where a measure does not
 apply.
 
@@ -56,11 +70,14 @@ counted as a package crash.
 
 ## Prediction interval results
 
-Across 82 prediction scenarios with 200 replicates each, the equal-weighted
-mean scenario-level 95% conformal coverage was 91.2% for the first continuous
-trait, 91.1% for the second continuous trait, 92.3% for counts, and 92.1% for
-proportions. Scenario means ranged from 69.5% to 97.7% across these four trait
-families.
+Across 82 prediction scenarios with 200 planned replicates each, the equal-weighted
+mean scenario-level 95% conformal coverage for GNN-off fits was 91.2% for the
+first simulated continuous trait, 91.1% for the second simulated continuous trait,
+92.3% for
+counts, and 92.1% for proportions. Scenario means ranged from 69.5% to 97.7%
+across these four trait families.
+
+Coverage is the fraction of held-out values that fall inside their prediction intervals. The percentages above average that fraction across the 82 tested scenarios. They do not guarantee coverage for a new dataset.
 
 These observed rates are below nominal 95% on average. They show that the
 split-conformal intervals did not attain nominal coverage in every tested
@@ -83,16 +100,22 @@ confirmatory policy used `phylo_signal_gate = FALSE` and
 `gnn = TRUE` explicitly to test the neural component; the package default is
 `gnn = FALSE`.
 
-The primary comparison uses the same fitted pigauto model twice. The
-counterfactual sets the neural gate weight to zero and transfers that weight
-to the Brownian baseline, while preserving the mean-baseline weight and fitted
-linear covariate effect. This compares the full neural contribution; it does
-not isolate graph message passing from the observation-level neural network.
-The confirmatory scenarios were nonlinear and interactive covariate signals
-at a Brownian variance multiplier of 0.3. Both met the prespecified support
-rule: the Holm-adjusted paired tests and simultaneous Bonferroni 95% intervals
-for dataset-level MSE differences favoured the full model, and the relative
-RMSE reductions exceeded 2%.
+We compare predictions from the same fitted pigauto model with the neural
+component switched on and off. When it is off, its weight is reassigned to the
+Brownian baseline; the mean-baseline weight and fitted linear covariate effect
+stay the same. This tests the full neural branch, including the
+observation-level network, rather than graph message passing alone.
+
+The two confirmatory scenarios use curved covariate effects and effects that
+depend on combinations of covariates. A Brownian variance multiplier of 0.3
+sets the variance of the simulated Brownian species effect; it is not Pagel's
+lambda. For each scenario, we compare prediction errors on the same 500
+simulated datasets. The paired tests and simultaneous 95% intervals quantify
+uncertainty in the average difference in mean squared error (MSE). Both
+scenarios met the prespecified support rule: the Holm-adjusted paired tests
+and Bonferroni intervals favoured the full model, and its root mean squared
+error (RMSE) was more than 2% lower than with the neural component switched
+off. This result applies to these simulated settings, not every dataset.
 
 <div class="table-responsive">
 <table class="table">
@@ -171,15 +194,20 @@ reproducibility records.
 ## Inferential results
 
 The assessment used prespecified bands for nominal 95% coverage, reported
-standard-error calibration, and standardized bias. No inferential scenario
-met all support criteria. Of 44 inferential rows, 12 were classified as
-failed and 32 as indeterminate. This includes complete-data controls, so the
-observed failures are not all attributable to imputation.
+standard-error calibration, and standardized bias. None of the tested
+scenarios for downstream inference met all criteria for support. Of 44
+inferential results, 12 were classified as failed and 32 as indeterminate.
+“Indeterminate” means the simulation was too imprecise to decide whether its
+criteria were met. This includes complete-data controls, so the observed
+failures are not all attributable to imputation.
 
 For the eight posterior slope regimes with an independently defined truth,
 five were classified as failed and three as indeterminate. Empirical 95%
 coverage ranged from 86.2% to 95.2%; reported-to-empirical standard-error
-ratios ranged from 0.750 to 1.039. In the analysis-aware simulations, 23 of
+ratios ranged from 0.750 to 1.039. This ratio compares the model-reported
+standard errors with the observed variation in estimates across repeated
+simulated datasets; values below 1 mean the reported errors were smaller
+than that variation. In the analysis-aware simulations, 23 of
 24 rows were indeterminate and one binomial-logit GLM row failed. None was
 classified as supported.
 

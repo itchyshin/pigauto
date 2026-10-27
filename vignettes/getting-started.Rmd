@@ -16,60 +16,197 @@ knitr::opts_chunk$set(
 )
 ```
 
+## Install pigauto
+
+Install the package before running the examples. The optional torch runtime is
+needed only if you plan to fit the graph neural network with `gnn = TRUE`.
+
+```{r install, eval=FALSE}
+install.packages("pigauto")
+packageVersion("pigauto")
+```
+
+If CRAN has an earlier version than the one described here, install the GitHub
+version instead:
+
+```{r install-github, eval=FALSE}
+install.packages("pak") # only needed once
+pak::pak("itchyshin/pigauto")
+```
+
+Install torch only if you plan to use `gnn = TRUE`:
+
+```{r install-torch, eval=FALSE}
+torch::install_torch()
+```
+
 ## Start here
 
 These examples use functions and defaults from pigauto 0.11.0. Check
 `packageVersion("pigauto")`: if CRAN has an earlier version, use the GitHub
-installation described below before following this workflow.
+installation above before following this workflow.
+See [the installation steps](#install-pigauto) if you have not installed the
+package yet.
 
-The beginner workflow reads files, checks them before fitting, and keeps the
-completed-data, diagnostic-prediction, uncertainty, and inference roles
-separate.
+Start with the bundled bird data so you can try the workflow before preparing
+your own files. The example below hides one measured body-mass value, checks
+the inputs, runs the baseline without the optional GNN, and compares the
+completed value with the measurement you held back.
 
-```{r canonical-journey, eval=FALSE}
+This is a mechanics check, not an accuracy assessment: one held-back value is
+too little to measure predictive accuracy. For an accuracy assessment, hide a
+prespecified set of measured values and compare predictions with all of their
+saved measurements. The [validation article](validation-results.html) explains
+the package's current evidence and its limits.
+
+```{r first-run, eval=FALSE}
 library(pigauto)
+data(avonet300, tree300)
 
-traits <- read_traits("traits.csv")
+traits <- avonet300
+rownames(traits) <- traits$Species_Key
+traits$Species_Key <- NULL
+target <- which(!is.na(traits$Mass))[1L]
+truth <- traits$Mass[target]
+traits$Mass[target] <- NA_real_
+
+check <- check_pigauto(traits, tree300)
+print(check)
+if (!check$ready) stop("Fix the input problems reported by check_pigauto().")
+result <- impute(traits, tree300, gnn = FALSE)
+completed <- completed_data(result)
+data.frame(
+  species = rownames(traits)[target],
+  measured_mass = truth,
+  imputed_mass = completed$Mass[target]
+)
+```
+
+To use your own files instead, prepare a CSV with one row per species and a
+unique column that identifies each species. Species names must use the same
+spelling as the tree's tip labels, but the two sets do not have to be identical.
+Rows for species present only in your data remain in `completed` unchanged;
+they are not modeled or filled. Tree tips without a data row can still inform
+the fit. This example expects one tree: `read_tree()` returns a
+`multiPhylo` collection when the file contains several trees, and
+`impute()` requires one `phylo` tree. For a posterior tree sample, use `multi_impute_trees()` in the
+experimental [tree-sensitivity workflow](tree-uncertainty.html); its outputs
+are prediction diagnostics and have not been validated for downstream
+inference. Then replace the bundled objects above with:
+
+```{r file-input-route, eval=FALSE}
+traits <- read_traits("traits.csv", species_col = "species")
 tree <- read_tree("tree.nwk")
-check_pigauto(traits, tree)
-result <- impute(traits, tree)
+check <- check_pigauto(traits, tree)
+print(check)
+if (identical(check$status, "not_needed")) {
+  message("All matched target cells are observed; no imputation is needed.")
+} else if (identical(check$status, "error")) {
+  stop("Fix the input problems reported by check_pigauto().")
+}
+```
+
+If the status is `not_needed`, stop here: there are no missing matched cells to
+fill. For `error`, fix the reported input problems and run the check again. If
+the status is `ready_with_warnings`, read `check$messages` and decide whether
+the warnings need attention before fitting. When the status is `ready`, or you
+have decided to proceed after reviewing warnings, fit the imputation model:
+
+```{r file-input-fit, eval=FALSE}
+result <- impute(traits, tree, gnn = FALSE)
 completed <- completed_data(result)
 pigauto_report(result)
 ```
+
+The report gives a compact view of the fitted workflow and its diagnostics.
+Read it alongside `completed`; it does not replace checking the values or
+assessing prediction accuracy against held-back measurements.
 
 `check_pigauto()` and `completed_data()` were added in 0.11.0. If your
 installed version is 0.10.0, call `impute(traits, tree)` directly; that
 version does not have them.
 
-`check_pigauto()` is fit-free. Its default `gnn = FALSE` matches `impute()` and
-does not probe torch; pass `gnn = TRUE` when planning a GNN fit to include
-runtime availability. Resolve structured input errors before fitting, and
-inspect `check$species$matched`, `$data_only`, and `$tree_only` when labels do
-not reconcile. `completed` preserves observed values and contains fills only
+`check_pigauto()` is fit-free. Read its printed result before fitting; it
+reports readiness and any warnings or input problems. Its default `gnn = FALSE`
+matches `impute()` and does not probe torch; pass `gnn = TRUE` when planning a
+GNN fit to include runtime availability. Resolve structured input errors before fitting, and
+inspect `check$species$matched`, `check$species$data_only`, and
+`check$species$tree_only` when labels do not reconcile. `completed` preserves observed values and contains fills only
 for modeled missing cells. `result$prediction` is an all-cell diagnostic
 output; its uncertainty is type-dependent, and conformal bounds are nominal
-held-out diagnostics. A `pigauto_result` does not authorize downstream
-inference: use `multi_impute_analysis()` only in its documented narrow regime.
+held-out diagnostics. A `pigauto_result` by itself does not establish that
+downstream inference is reliable. For continuous-only data with one row per
+species and no user covariates,
+`multi_impute(draws_method = "posterior")` provides the documented posterior
+route. For one incomplete continuous covariate in a specified regression,
+`multi_impute_analysis()` provides a separate experimental route. Read the
+[multiple-imputation guide](multiple-imputation.html) for eligibility,
+assumptions, and the current validation limits of both routes.
 
 `read_traits()` requires unique species identifiers. For repeated observations,
 use `read.csv()` and supply `species_col = "species"` to both the check and
 `impute()`.
 
-### Common declarations
+### Common declarations for your own data
 
-```{r declarations, eval=FALSE}
-# Ordered ecological states
-traits$threat <- ordered(traits$threat, levels = c("LC", "NT", "VU", "EN", "CR"))
+These are separate templates, not additional steps in the bundled bird
+example. Choose only the pattern that matches your data, and replace the
+example column names with columns in your own trait table. Each example assumes
+that `traits` and `tree` are already loaded.
 
-# Integer-valued continuous measurement; integer otherwise means count
-result <- impute(traits, tree, trait_types = c(length_mm = "continuous"))
+**Ordered categories**
 
-# Numeric 0-1 proportion and zero-inflated count require explicit declarations
-result <- impute(traits, tree, trait_types = c(cover = "proportion", parasites = "zi_count"))
+```{r declaration-ordinal, eval=FALSE}
+traits$threat <- ordered(
+  traits$threat,
+  levels = c(
+    "LC", "NT", "VU", "EN", "CR"
+  )
+)
+result <- impute(traits, tree)
+```
 
-# A composition is complete by row and its observed components sum to one
-result <- impute(traits, tree,
-  multi_proportion_groups = list(diet = c("diet_insect", "diet_fruit", "diet_seed")))
+**An integer-valued measurement treated as continuous**
+
+```{r declaration-integer-continuous, eval=FALSE}
+result <- impute(
+  traits, tree,
+  trait_types = c(
+    length_mm = "continuous"
+  )
+)
+```
+
+**Proportions and zero-inflated counts**
+
+Numeric proportions and zero-inflated counts need explicit type declarations.
+
+```{r declaration-proportion-zi-count, eval=FALSE}
+result <- impute(
+  traits, tree,
+  trait_types = c(
+    cover = "proportion",
+    parasites = "zi_count"
+  )
+)
+```
+
+**Compositional data**
+
+These grouped columns must be observed or missing together by row and sum to
+one when observed.
+
+```{r declaration-composition, eval=FALSE}
+result <- impute(
+  traits, tree,
+  multi_proportion_groups = list(
+    diet = c(
+      "diet_insect",
+      "diet_fruit",
+      "diet_seed"
+    )
+  )
+)
 ```
 
 ## What pigauto does
@@ -97,25 +234,35 @@ single call to `impute()`.
 
 By default pigauto fits a phylogenetic baseline: Brownian-motion
 conditional imputation for continuous-family latent columns and
-phylogenetic label-propagation or threshold/liability candidates for
-discrete-family columns, with a per-trait Pagel's lambda. A held-out
+phylogenetic label propagation or a threshold model for discrete traits,
+with a per-trait Pagel's lambda. The architecture article explains how
+pigauto selects among these baselines. A held-out
 validation split calibrates the blend and the conformal intervals.
 Split conformal assumes the calibration cells resemble the scored
-cells. Masking a whole clade breaks that: calibration then comes from
-other clades, so nominal coverage need not hold on the held-out clade.
+cells. Masking a whole clade can violate that assumption: residuals from
+other clades may not represent the held-out clade, so nominal coverage
+need not hold there.
+For the current implementation, treat these intervals as nominal diagnostics,
+not a general 95% coverage guarantee: validation data also inform model
+selection and gate calibration. See the [interval limitations](gnn-architecture.html#uncertainty-quantification).
 
-An optional graph neural network (GNN) correction is trained when you
-set `gnn = TRUE`. It learns additional patterns from tree topology,
-cross-trait structure and user `covariates` (which only the GNN uses). A
-per-trait gate controls how much the GNN contributes: when the baseline
-is already good enough, the gate closes and the GNN stays out of the
-way. The GNN has been off by default since version 0.11.0.9001 because,
-at the current baseline defaults, it did not lower imputation error on
-simulated or real benchmark data and took 20 to 90 times longer to fit.
-
-> **Technical note.** The internal class name `ResidualPhyloDAE` refers
-> to the ResNet-style skip connections inside the GNN layers, not to a
-> statistical residual `y - baseline`.
+An optional graph neural network (GNN) is trained when you set `gnn = TRUE`.
+It can learn additional patterns from tree topology, cross-trait structure,
+and user `covariates`. Covariates can also enter a covariate-aware per-column
+numeric baseline when that fallback is selected. Joint MVN and threshold-joint
+routes omit them and emit a separate baseline warning. One-versus-rest
+categorical routes also omit covariates but do not trigger that warning
+themselves. In a mixed fit, another selected joint route can still trigger it. Validation selects how much the GNN contributes
+for each trait. The default is `gnn = FALSE`. In the tested
+single-observation benchmarks, adding the GNN did not improve held-out
+prediction and took longer to fit. A later repeated-observation study with
+covariates found gains over the same fitted model without its neural
+contribution in two prespecified scenarios, but not in a no-signal control;
+separately fitted GLS had lower error in the interactive scenario. These are
+different settings and comparisons, not evidence of general GNN superiority.
+See the [validation results and their limits](validation-results.html#when-does-the-neural-component-add-predictive-value)
+for details. For the implementation name and code map, see the optional
+[architecture article](gnn-architecture.html#where-to-look-in-the-code).
 
 The phylogenetic structure is encoded as:
 
@@ -124,40 +271,33 @@ The phylogenetic structure is encoded as:
 - *k* Laplacian eigenvectors as node positional features — these encode
   phylogenetic clusters at multiple scales.
 
-## Installation
-
-The CRAN release can lag behind the GitHub version described on this site.
-Check your installed version before running the examples above.
-
-```{r install, eval=FALSE}
-# CRAN release
-install.packages("pigauto")
-packageVersion("pigauto")
-
-# GitHub version, if CRAN has an earlier version
-# install.packages("pak") # once, if needed
-pak::pak("itchyshin/pigauto")
-
-# Install the torch runtime only if you plan to use gnn = TRUE
-torch::install_torch()
-```
-
 ```{r load}
 library(pigauto)
 library(ape)
 ```
 
-## Inspecting the internal pipeline
+## Optional technical walkthrough
+
+The sections below trace each stage for readers who want more control than the
+single-call example in **Start here**. You can use that example without
+following this walkthrough.
+
+### How the imputation pipeline works
 
 The workflow above is the primary interface. The following is the
 fine-grained pipeline for inspection, caching, or benchmarking.
 
+This template assumes you already have a trait data frame named `traits` and
+a matching phylogenetic tree named `tree`. If you are following the bundled
+bird example, run the AVONET setup in the next section first and use
+`avonet300` and `tree300` in place of those placeholders.
+
 ```{r quickstart, eval=FALSE}
 result <- impute(traits, tree)
 
-result$completed    # data.frame: observed values preserved, NAs filled
-result$imputed_mask # logical matrix: TRUE where a cell was imputed
-result$prediction$se # per-cell uncertainty (original units)
+result$completed    # observed values preserved; some missing values may remain NA
+result$imputed_mask # TRUE marks missing targets in fitted rows, not successful fills
+result$prediction$se # per-cell, type-dependent uncertainty summaries
 ```
 
 `impute()` runs the full pipeline internally: preprocessing, baseline fitting,
@@ -166,15 +306,18 @@ graph construction, calibration, and prediction (plus GNN training when
 vignette walks through each step individually for users who need fine-grained
 control, want to cache intermediate objects, or are benchmarking components.
 
-## The AVONET bird data
+### The AVONET bird data
 
 pigauto ships with `avonet300`, a 300-species subset of the AVONET v3 bird
-morphology database (Tobias et al. 2022, *Ecology Letters*), and `tree300`,
-posterior member 69 from the BirdTree Hackett-backbone sample, pruned to those
-300 species. It is included as an example tree, not as an MCC or consensus tree
-or as a recommended tree for substantive analyses. For your own analysis,
-obtain a tree suited to your taxa and cite Jetz et al. (2012). If you use the
-BirdTree website, also cite BirdTree.org. You can download a tree file and
+morphology database (Tobias et al. 2022, *Ecology Letters*), and `tree300`.
+The bundled tree is member 69 of the 100-tree BirdTree collection, from the
+Hackett-backbone set, and pruned to those 300 species; see `?tree300` for the
+package-specific extraction record. Hackett et al. (2008) describes the
+backbone. The tree is an example, not an MCC or
+consensus tree or a recommendation for substantive analyses. For your own
+analysis, obtain a tree suited to your taxa and cite Jetz et al. (2012) for
+the BirdTree distribution. If you use the BirdTree website, also cite
+BirdTree.org. You can download a tree file and
 read it with `read_tree()`; see [BirdTree downloads](https://birdtree.org/downloads/)
 and the [tree-uncertainty article](tree-uncertainty.html) for options.
 
@@ -191,7 +334,7 @@ uses seven original traits in total. Their distributions and phylogenetic
 signal vary; this tutorial does not use them to establish a general performance
 claim.
 
-## Step 1: Preprocess
+### Step 1: Preprocess
 
 `preprocess_traits()` log-transforms and z-scores the traits, and reorders
 rows to match the phylogeny's tip order (required by the graph operations).
@@ -217,25 +360,29 @@ values are all positive. If a trait is already on a log scale, such as log body
 mass, set `log_transform = FALSE` (and log any raw traits yourself), or it will be
 imputed on a log(log) scale; see `?impute`.
 
-## Step 2: Create evaluation splits
+### Step 2: Create evaluation splits
 
-We designate 25% of all matrix cells as "missing" for evaluation. These cells
-are *not* used during training or baseline fitting; they provide an honest
-estimate of imputation error.
+We hold out 25% of eligible observed species-by-trait entries for evaluation.
+All latent columns that encode a selected trait are held out together. These
+values are *not* used during training or baseline fitting; they let you assess
+prediction error under this masking design. The scores may differ when
+real-world missingness follows another pattern.
 
 ```{r splits}
 splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.25, seed = 42,
                               trait_map = pd$trait_map)
 
-cat("Total held-out cells:", length(splits$val_idx) + length(splits$test_idx), "\n")
+cat("Held-out latent cells:", length(splits$val_idx) + length(splits$test_idx), "\n")
 cat("  Validation:", length(splits$val_idx), "\n")
 cat("  Test:      ", length(splits$test_idx), "\n")
 ```
 
-The missing cells are split further: validation cells guide early stopping,
-test cells provide the final unbiased performance estimate.
+The missing cells are split further: validation cells guide model selection,
+while test cells assess predictions under this masking design. Test scores can
+differ from performance on naturally missing values if the masking design does
+not resemble the real pattern of missingness.
 
-## Step 3: Fit the BM baseline
+### Step 3: Fit the BM baseline
 
 `fit_baseline()` fits the phylogenetic BM baseline after masking the held-out cells. This
 gives the benchmark against which an optional GNN would be compared.
@@ -248,7 +395,7 @@ cat("  mu matrix:", nrow(baseline$mu), "x", ncol(baseline$mu), "\n")
 cat("  se matrix:", nrow(baseline$se), "x", ncol(baseline$se), "\n")
 ```
 
-## Step 4: Build the phylogenetic graph
+### Step 4: Build the phylogenetic graph
 
 `build_phylo_graph()` computes the adjacency matrix and Laplacian spectral
 features from the tree. The result can be cached to disk for reuse.
@@ -269,15 +416,16 @@ cat("Kernel bandwidth sigma:", round(graph$sigma, 3), "\n")
 For repeated runs, supply `cache_path = "graph_cache.rds"` to skip
 recomputation.
 
-## Step 5: Train the model
+### Step 5: Train the model
 
 With the default `gnn = FALSE`, `fit_pigauto()` fits no network and makes
 no torch calls; it calibrates the baseline and the conformal intervals.
 The chunk below sets `gnn = TRUE` to show the optional GNN. Its training loop corrupts a random 55% of observed cells each epoch with a
-learnable mask token, then minimises the type-appropriate loss on the
-corrupted cells plus a shrinkage penalty on `delta - baseline` that
-pulls the GNN toward the baseline. Early stopping is based on held-out
-validation RMSE.
+learnable mask token, then minimises a type-appropriate loss on those
+known values. A shrinkage penalty keeps GNN predictions closer to the
+phylogenetic baseline. For typed data, early stopping monitors a composite held-out validation
+loss: each trait contributes a loss suited to its type. Lower is better.
+This value is not an RMSE in the original trait units.
 
 ```{r train, eval=FALSE}
 fit <- fit_pigauto(
@@ -301,15 +449,12 @@ fit <- fit_pigauto(
 )
 ```
 
-Example console output during training:
-
-```
-Epoch  100 | train loss: 0.8431 | val RMSE: 0.8852
-Epoch  200 | train loss: 0.7215 | val RMSE: 0.8601
-...
-Epoch  900 | train loss: 0.6108 | val RMSE: 0.8289
-Early stopping at epoch 900 (no improvement for 10 evals).
-```
+With `verbose = TRUE`, each evaluation reports training-loss components
+(`rec`, `shrink`, and `gate`), the learning rate, and, when validation
+data are available, the current and best validation loss and remaining
+patience.
+The exact values depend on your data and settings. For this mixed-type
+example, `val` is a composite loss, not an RMSE in Mass units.
 
 ```{r print-fit, eval=FALSE}
 print(fit)
@@ -320,12 +465,14 @@ reports the original trait names and the mix of continuous, categorical, and
 ordinal types. Do not interpret the latent-column count as the number of input
 traits.
 
-## Step 6: Predict
+### Step 6: Predict
 
-`predict.pigauto_fit()` runs a single forward pass through the trained model,
-optionally repeated with MC dropout to generate multiple stochastic completions
-for uncertainty quantification. The result is back-transformed to the original
-(non-log) scale.
+`predict.pigauto_fit()` returns predictions on the original (non-log) scale.
+If you request `n_imputations > 1`, it also returns stochastic
+prediction-diagnostic draws. These draws are not validated multiple
+imputations for downstream inference. For that question, first check whether
+your analysis meets a supported route in the
+[multiple-imputation guide](multiple-imputation.html).
 
 ```{r predict, eval=FALSE}
 pred <- predict(fit, return_se = TRUE)
@@ -347,13 +494,16 @@ traits, `pred$se` contains uncertainty scores rather than Gaussian standard
 errors. The latent prediction has one column per encoded category, while the
 decoded data frame has one column per original trait.
 
-## Step 7: Evaluate — and read the gate
+### Step 7: Evaluate — and read the gate
 
 `evaluate_imputation()` scores held-out cells on the scale that matches
-the trait type. On **high-signal morphometrics** (AVONET-like mass,
-beak, tarsus, wing) the calibrated gate often **closes**
-(`r_cal = 0`). Then the shipped prediction *is* the phylogenetic
-baseline; the GNN is a no-op, not a guaranteed improvement.
+the trait type. For a single latent column in this mixed-trait fit, no direct covariates
+are supplied and the mean safety floor is off. On **high-signal
+morphometrics** (AVONET-like mass, beak, tarsus, wing), the calibrated neural
+weight for a latent column can be zero (`fit$r_cal_gnn = 0`), leaving the
+phylogenetic baseline in this example. In other routes, a zero neural weight closes only the GNN component;
+inspect the BM, GNN, and mean weights and any direct covariate terms to
+understand the full prediction.
 
 ```{r evaluate, eval=FALSE}
 # Held-out scores (z-score RMSE for continuous traits)
@@ -371,18 +521,19 @@ the ensemble beat BM on the test cells you ship. How much (if anything)
 the GNN adds depends on the trait, clade, missingness pattern, and
 whether calibration left the gate open.
 
-## Step 8: Visualise
+### Step 8: Visualise
 
-### Training history
+#### Training history
 
 ```{r plot-history, eval=FALSE}
 plot(fit, type = "history")
 ```
 
-This plots the validation RMSE over epochs, showing where early stopping
-triggered.
+This plot shows the validation loss used for early stopping. For this
+mixed-type fit, it is a composite loss, not RMSE in the original trait
+units.
 
-### Uncertainty ribbons
+#### Uncertainty ribbons
 
 ```{r plot-uncertainty, eval=FALSE}
 plot(pred, type = "intervals", trait = "Mass")
@@ -392,14 +543,27 @@ Species are sorted by predicted mass. The blue ribbon shows the conformal
 prediction interval when conformal scores are available. Grey points (if
 `truth` is supplied) show known values — a useful visual check of calibration.
 
-## Experimental analysis-aware multiple imputation
+## Further workflows
+
+Use these sections after completing the basic or technical walkthrough.
+
+### Experimental analysis-aware multiple imputation
 
 Downstream inference requires imputations compatible with the substantive
 analysis. `multi_impute_analysis()` therefore receives the formula and model
 class before drawing one incomplete continuous covariate under MAR.
 
-This validates only the documented narrow scope; the interface remains
-experimental.
+This interface implements a narrow, experimental workflow. In the
+registered analysis-aware tests, 23 of 24 method-by-scenario results were
+indeterminate and one binomial-logit GLM result failed; none was classified
+as supported. These 24 results include 12 complete-data controls. See the
+[registered inferential results](validation-results.html#inferential-results).
+
+This is a template, not a standalone example: `analysis_data` must contain a
+continuous outcome `y`, one incomplete continuous predictor `x`, and a fully
+observed continuous predictor `z`. This example selects the Gaussian `lm`
+route; change both the outcome and model setting if your analysis uses another
+supported outcome type.
 
 ```{r mi-workflow, eval=FALSE}
 analysis_data$z_sq <- analysis_data$z^2
@@ -425,28 +589,36 @@ terms such as `z_sq`. Fixed effects are the only supported pooling targets.
 
 Conformal-width, Brownian/MC-dropout, and PMM draws remain experimental
 prediction diagnostics. They failed the downstream fixed-effect gate and must
-not be passed to `with_imputations()`/`pool_mi()` for inference. For
-continuous traits with one row per species and no covariates,
-`multi_impute()` with its default `draws_method = "auto"` uses posterior
-draws. Downstream pooling is supported for linear analyses of the imputed
-traits on their imputation scale; see the
-[multiple imputation article](multiple-imputation.html) for the conditions.
+not be passed to `with_imputations()`/`pool_mi()` for inference. For continuous traits with one row per species and no covariates,
+`multi_impute()` with its default `draws_method = "auto"` selects posterior
+draws when the data meet its eligibility conditions. This is a software
+capability. The documented downstream route fits analyses linear in the
+imputed continuous traits on their imputation scale and uses variables
+among those traits; it does not establish calibrated inference. In the
+registered validation, five of eight posterior slope regimes failed and
+three were indeterminate; no inferential scenario was classified as
+supported. See the
+[registered inferential results](validation-results.html#inferential-results)
+and [multiple imputation article](multiple-imputation.html) for scope and
+conditions.
 
-## Phylogenetic tree uncertainty
 
-Tree uncertainty was outside the analysis-aware validation campaign.
-`multi_impute_trees()` may be used descriptively to examine point-prediction
-sensitivity, but its stochastic datasets are unsupported for downstream
-inference and cannot currently be combined with `multi_impute_analysis()`.
+### Phylogenetic tree uncertainty
 
-## Active imputation: where to measure next
+Use `multi_impute_trees()` to see whether point predictions change across a
+posterior sample of trees. This is a prediction-sensitivity check only; its
+outputs do not provide inferential uncertainty for downstream estimates and
+cannot be pooled for inference. See the
+[tree-sensitivity guide](tree-uncertainty.html) for a step-by-step example.
+
+### Active imputation: where to measure next
 
 `suggest_next_observation()` returns model-based BM/label-propagation proxy
 rankings under its stated assumptions. It is not an optimal sampling guarantee
 or a demonstrated field gain.
 
 ```{r active-impute, eval=FALSE}
-res <- impute(traits, tree)
+res <- impute(traits, tree300)
 
 # Top-10 individual (species, trait) cells, ordered by expected
 # total variance reduction:
@@ -491,8 +663,8 @@ For `zi_count` rows the output populates BOTH `delta_var_total`
 column is set to `"variance"` so rows sort on the magnitude scale.
 See `?suggest_next_observation` for full details.
 
-**Variance vs entropy are not directly comparable** — the cross-
-metric ordering by `delta_var_total` is approximate.  When you
+**Variance vs entropy are not directly comparable** — ordering across
+metrics by `delta_var_total` is approximate. When you
 want a strict ranking on a single metric, filter by `metric`
 first or restrict `types` to continuous-family-only or
 discrete-only.
@@ -500,9 +672,13 @@ discrete-only.
 Multi-obs (multiple observations per species) inputs are not
 supported and error with a clear message.
 
-## Advanced controls
+### Advanced controls
 
-### Solver, calibration, EM, and refinement
+These templates assume your own trait table is named `traits` and its
+matching phylogeny is named `tree`. In the bundled bird walkthrough above,
+use `tree300` in place of `tree`.
+
+#### Solver, calibration, EM, and refinement
 
 ```{r advanced-controls, eval=FALSE}
 result <- impute(
@@ -514,37 +690,40 @@ result <- impute(
 )
 ```
 
-### Exact conditional prediction route
+#### Exact conditional prediction route
 
 ```{r exact-route, eval=FALSE}
 result <- impute(traits, tree, predict_method = "exact")
 ```
 
-### Phylogenetic-signal gating
+#### Phylogenetic-signal gating
 
-`impute()` runs a per-trait Pagel's-λ check before training and
-routes traits with very weak phylogenetic signal to the
-**grand-mean corner** of the safety-floor simplex (i.e., it
-predicts the column mean for those traits).  This protects against
+`impute()` can run a per-trait Pagel's-λ check before training when
+`phylo_signal_gate = TRUE`. Traits below the threshold are routed to the
+grand-mean corner when `safety_floor = TRUE`, or to the Brownian-baseline
+corner when it is `FALSE`. This is a calibration choice, not evidence that
+the trait has no predictive structure, and it does not skip model training.
+This can protect against
 over-fitting noise on traits where the phylogeny carries little
 information.
 
-It was on by default from v0.9.1.9003 until 0.11.0.9002; it is now
-**off by default** (`phylo_signal_gate = FALSE`, and likewise
-`safety_floor = FALSE`), because with Pagel's λ estimated for every trait
-type (`discrete_lambda = "estimate"`) the gate no longer improved accuracy in
-any tested setting (`docs/dev-log/discrete-lambda/README.md`).  To turn
-it on, use the arguments below:
+It is **off by default** (`phylo_signal_gate = FALSE`, and likewise
+`safety_floor = FALSE`). In the tested settings with Pagel's λ estimated
+for every trait type (`discrete_lambda = "estimate"`), the gate did not
+improve accuracy; this result is specific to those settings and is not a
+general performance claim. To turn it on, use the arguments below:
 
 ```{r phylo-signal-gate, eval=FALSE}
 result <- impute(traits, tree,
                  phylo_signal_gate     = TRUE,   # opt-in (default FALSE)
+                 safety_floor          = TRUE,   # enables the grand-mean fallback
                  phylo_signal_threshold = 0.2,   # default; min lambda to keep BM/GNN
                  phylo_signal_method   = "lambda")
 ```
 
 If a trait's λ falls below `phylo_signal_threshold`, the calibrated
-gate routes it to the grand-mean corner.  `print(fit)` reports
+gate routes it to the mean when `safety_floor = TRUE` and to the Brownian
+baseline when `safety_floor = FALSE`. `print(fit)` reports
 which traits triggered the gate and their λ values.
 
 To disable it explicitly (this is the default):
@@ -553,7 +732,7 @@ To disable it explicitly (this is the default):
 result <- impute(traits, tree, phylo_signal_gate = FALSE)
 ```
 
-### Assembling covariates from public data
+#### Assembling covariates from public data
 
 Two helpers are bundled for the common case of building a
 covariate matrix from species-level environmental data:
@@ -562,7 +741,9 @@ covariate matrix from species-level environmental data:
 # Step 1: GBIF occurrence centroids (median lat/lon across cleaned points)
 gbif <- pull_gbif_centroids(species          = rownames(my_traits),
                             cache_dir        = "cache/gbif",
-                            occurrence_limit = 500L)
+                            occurrence_limit = 500L,
+                            store_points     = TRUE,
+                            refresh_cache    = TRUE)
 #> data.frame with columns species, centroid_lat, centroid_lon, n_occurrences
 
 # Step 2: WorldClim bioclim summaries (median + IQR of all 19 bio variables
@@ -570,22 +751,31 @@ gbif <- pull_gbif_centroids(species          = rownames(my_traits),
 clim <- pull_worldclim_per_species(species             = rownames(my_traits),
                                     gbif_cache_dir      = "cache/gbif",
                                     worldclim_cache_dir = "cache/worldclim",
-                                    resolution          = "10m")
+                                    resolution          = "10m",
+                                    refresh_cache       = TRUE)
 #> data.frame with bio1..bio19 medians + IQRs + n_extracted per species
 
-# Step 3: hand the whole climate frame to impute() as covariates
-result <- impute(my_traits, my_tree, covariates = clim, gnn = TRUE)
+# Check the species order before fitting: covariate rows must match trait rows.
+stopifnot(identical(clim$species, rownames(my_traits)))
+
+# Step 3: keep the intended numeric climate summaries, not species or count
+climate_cols <- grep("^bio[0-9]+_(median|iqr)$", names(clim), value = TRUE)
+clim_cov <- clim[, climate_cols, drop = FALSE]
+if (anyNA(clim_cov)) stop("Resolve missing climate values before fitting")
+result <- impute(my_traits, my_tree, covariates = clim_cov, gnn = TRUE)
 ```
 
-Caching is on by default — both helpers write to the
-`cache_dir` you supply and re-use existing extracts on subsequent
-runs.  GBIF requires no API key.  WorldClim raster downloads are
+The example refreshes both caches so older centroid-only GBIF extracts are not
+mistaken for per-occurrence point data. For routine repeated runs, remove
+`refresh_cache = TRUE` after refreshing the caches once. Once you supply
+cache directories, both helpers reuse stored extracts on subsequent runs.
+GBIF requires no API key. WorldClim raster downloads are
 ~50–500 MB depending on resolution and are cached in
 `worldclim_cache_dir`.  Both functions error with a clear message
 if the optional dependencies (`rgbif`, `terra`) are not installed.
-Both helpers return one row per requested species; alignment is
-enforced by name where names are present, so pass `species =` and
-keep the returned `species` column intact rather than reordering it.
+Both helpers return one row per requested species. The `species` column is an
+alignment key, not a model covariate; use only the numeric climate columns as
+shown above, and do not reorder them independently:
 
 For argument details, see `?impute`, `?pull_gbif_centroids`, and
 `?pull_worldclim_per_species`.
@@ -609,10 +799,12 @@ writing the graph to disk:
 graph <- build_phylo_graph(tree300, k_eigen = 8, cache_path = "tree300_graph.rds")
 ```
 
-**Large trees.** `build_phylo_graph()` creates dense N × N distance,
-adjacency, Laplacian, and phylogenetic-correlation matrices. Each double-
-precision matrix needs about 800 MB at N = 10,000, and several are live
-during graph construction, so memory use can be substantial. For trees with
+**Large trees.** `build_phylo_graph()` creates several dense N × N matrices:
+cophenetic distances and their squares, adjacency, a Laplacian, and
+phylogenetic correlations. A 10,000 × 10,000 matrix stored in double
+precision needs about 800 MB for its values alone. Several matrices coexist
+while the graph is built, and the squared-distance matrix is retained during
+GNN training when enabled, so memory use can be substantial. For trees with
 more than 7,500 tips, the spectral step uses the optional `RSpectra` Lanczos
 solver when it is installed; if it is unavailable or does not converge, the
 function falls back to dense eigendecomposition. `k_eigen = "auto"` limits
@@ -635,9 +827,11 @@ auto-detected from R column class: `numeric` (continuous), `integer`
 (count), `factor` with 2 levels (binary), `factor` with >2 levels
 (categorical), and `ordered` (ordinal). Three require an explicit
 declaration because they cannot be inferred from class alone:
-`numeric` (0–1) with `trait_types = "proportion"` for bounded
-proportions; `integer` with `trait_types = "zi_count"` for
-zero-inflated counts; and K `numeric` columns declared via the
+`numeric` (0–1) with a named override such as
+`trait_types = c(cover = "proportion")` for bounded proportions; `integer`
+with a named override such as `trait_types = c(parasite_load = "zi_count")`
+for zero-inflated counts. The override names must match trait-column names.
+K `numeric` columns are declared via the
 `multi_proportion_groups` argument for compositional (simplex) data
 whose rows sum to 1. pigauto reads column classes to decide how each
 trait is encoded and imputed. The
@@ -658,9 +852,13 @@ fitting.
 - Goolsby, E.W., Bruggeman, J. & Ané, C. (2017). Rphylopars: fast
   multivariate phylogenetic comparative methods for missing data and
   within-species variation. *Methods in Ecology and Evolution*, 8, 22–27.
-  (pigauto's internal BM baseline implements the same conditional-MVN
-  approach.)
+  (This provides broad context for conditional multivariate phylogenetic
+  models with missing data. pigauto's Brownian baseline uses its own internal
+  conditional-MVN implementation; the default route does not call
+  `Rphylopars`.)
 - Cohn, D.A., Ghahramani, Z. & Jordan, M.I. (1996). Active learning
   with statistical models. *Journal of Artificial Intelligence Research*,
-  4, 129–145. (Variance-reduction framework that
-  `suggest_next_observation()` adapts to the phylogenetic setting.)
+  4, 129–145. The paper discusses selecting observations to reduce expected
+  model variance. This is general active-learning background; it does not
+  validate pigauto's phylogenetic variance-reduction calculation or guarantee
+  better field sampling.

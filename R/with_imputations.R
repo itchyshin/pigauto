@@ -2,23 +2,29 @@
 #'
 #' Apply a user-supplied model-fitting function `.f` to each of the `M`
 #' complete datasets stored in an analysis-aware MI object and return the list
-#' of fits. This is the supported fitting entry for
+#' of fits. This is the documented software fitting entry for
 #' [multi_impute_analysis()] and for
 #' [multi_impute()] with `draws_method = "posterior"`. Prediction-diagnostic
 #' (`"conformal"`, `"mc_dropout"`) and posterior-tree sensitivity completions
 #' stop with an actionable error before any model is fitted. The workflow is
 #' experimental and limited to fixed-effect coefficients and their covariance
-#' matrices.
+#' matrices. Passing software eligibility checks means the package permits
+#' fitting; it does not establish inferential performance across tested
+#' regimes or compatibility with every downstream model.
 #'
 #' @section Posterior draws and congeniality:
 #' The `draws_method = "posterior"` completions come from a linear-Gaussian
 #' phylogenetic mixed model of the imputed traits only, on the scale where
 #' they were imputed (the log scale for traits log-transformed by
-#' `log_transform`). They are proper imputations for analyses that are
-#' linear in the imputed traits on that scale and whose variables are all
-#' among the imputed traits, for example a phylogenetic regression of one
-#' imputed trait on others (on the log scale for log-transformed traits).
-#' Not covered: covariates from outside the imputed traits, nonlinear terms
+#' `log_transform`). The documented software route permits fitting analyses
+#' that are linear in the imputed traits on that scale and whose variables
+#' are among the imputed traits. This eligibility does not establish that an
+#' analysis model is compatible with the imputation model or that inference
+#' is calibrated. In the registered validation, five tested posterior slope
+#' regimes failed and three were indeterminate; see the
+#' [registered inferential results](https://itchyshin.github.io/pigauto/articles/validation-results.html#inferential-results).
+#' The route has not established support outside its measured regimes. Not
+#' covered: covariates from outside the imputed traits, nonlinear terms
 #' (such as squares) or interactions among imputed traits, and analysing a
 #' log-transformed trait on its raw scale. The formula passed to `.f` is not
 #' checked; this is the analyst's responsibility. Plug-in draws from
@@ -60,6 +66,9 @@
 #' dat <- data.frame(y = stats::rnorm(30L), x = stats::rnorm(30L),
 #'                   z = stats::rnorm(30L))
 #' dat$x[seq(3L, 30L, by = 5L)] <- NA_real_
+#' # Workflow example only: m = 2L is not an analysis recommendation.
+#' # Choose enough imputations to make Monte Carlo error small relative to
+#' # the standard errors you report.
 #' mi <- multi_impute_analysis(
 #'   data = dat, formula = y ~ x + z, missing = "x",
 #'   model = "lm", m = 2L
@@ -175,6 +184,11 @@ with_imputations <- function(mi, .f, ...,
 }
 
 
+#' @rdname with_imputations
+#' @param x A list of downstream imputation fits.
+#' @section Printing:
+#' Prints successful and failed fit counts and the first successful fit class. Failed elements remain in the list until pooling removes them. The `...` argument is currently unused.
+#' @return The print method returns `x` invisibly.
 #' @export
 print.pigauto_mi_fits <- function(x, ...) {
   n <- attr(x, "n_fits") %||% length(x)

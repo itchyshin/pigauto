@@ -14,13 +14,19 @@
 #'
 #' @param tree Object of class \code{"phylo"}.
 #' @param n_traits Integer. Number of traits to simulate (default 4).
+#'   Use at least 2 for `scenario = "nonlinear"`: the current generator
+#'   always returns `trait1` and `trait2`, even if a smaller number is requested.
 #' @param scenario Character. One of \code{"OU"}, \code{"regime_shift"},
 #'   \code{"nonlinear"}.
 #' @param alpha Numeric. OU pull strength (only for \code{"OU"}).
-#' @param theta Numeric. OU optimum (only for \code{"OU"}).
+#' @param theta Numeric. Base OU optimum (only for \code{"OU"}). Trait j
+#'   uses \code{theta + 0.5 * (j - 1)} for both its optimum and root value.
 #' @param sigma Numeric. BM diffusion rate.
-#' @param shift_magnitude Numeric. Regime shift size in SD units
-#'   (only for \code{"regime_shift"}).
+#' @param shift_magnitude Numeric. Raw additive regime offset (only for
+#'   \code{"regime_shift"}). Trait j uses
+#'   \code{shift_magnitude * (1 + 0.2 * (j - 1))}, added to one clade and
+#'   subtracted from the other. It is not multiplied by a trait SD;
+#'   \code{sigma} separately controls the underlying BM diffusion.
 #' @param seed Integer seed or \code{NULL}.
 #' @return A data.frame with species as rownames.
 #' @importFrom ape rtree rTraitCont

@@ -13,14 +13,16 @@ from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urljoin, urlsplit
 
+import yaml
+
 
 EXPECTED_RETIRED_ROUTE_COUNT = 44
 EXPECTED_RETIRED_MANIFEST_SHA256 = "5414f6cb69e9d140c38d0a6308f8e0ddbe8952834eea01b6b861a78eecb807e1"
 EXPECTED_WARNING_BODY = "pigauto is experimental; use at your own risk."
 EXPECTED_SITE_BASE = "https://itchyshin.github.io/pigauto/"
 EXPECTED_SITEMAP_ENTRIES = 62
-EXPECTED_SEARCH_ENTRIES = 613
-EXPECTED_SEARCH_PATHS = 568
+EXPECTED_SEARCH_ENTRIES = 641
+EXPECTED_SEARCH_PATHS = 595
 
 _HIDDEN_CLASSES = {
     "collapse",
@@ -61,6 +63,28 @@ class LinkParser(HTMLParser):
 
     def handle_starttag(self, tag: str, attrs) -> None:
         self.hrefs.extend(value for name, value in attrs if name.lower() == "href" and value)
+
+
+class RedirectParser(HTMLParser):
+    """Collect the meta refresh and canonical target from an alias stub."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.refresh: list[str] = []
+        self.canonical: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        values = {name.lower(): value for name, value in attrs if name and value}
+        if tag.lower() == "meta" and values.get("http-equiv", "").lower() == "refresh":
+            match = re.match(
+                r"\s*\d+\s*;\s*url\s*=\s*['\"]?([^'\"]+)['\"]?\s*$",
+                values.get("content", ""),
+                re.IGNORECASE,
+            )
+            if match:
+                self.refresh.append(match.group(1).strip())
+        elif tag.lower() == "link" and "canonical" in values.get("rel", "").lower().split():
+            self.canonical.append(values.get("href", ""))
 
 
 class WarningCalloutParser(HTMLParser):
@@ -497,7 +521,10 @@ def audit_candidate_site(
     expected_manifest_sha256: str | None = None,
 ) -> dict:
     site_dir = site_dir.resolve()
-    required = [site_dir / name for name in ("index.html", "sitemap.xml", "search.json", "articles/index.html")]
+    required = [
+        site_dir / name
+        for name in ("index.html", "sitemap.xml", "search.json", "articles/index.html", "pkgdown.yml")
+    ]
     missing = [str(path.relative_to(site_dir)) for path in required if not path.is_file()]
     if missing:
         raise ValueError("candidate site is missing required files: " + ", ".join(missing))
@@ -510,6 +537,44 @@ def audit_candidate_site(
     output_files = [route for route in retired if _site_target(site_dir, route).is_file()]
     if output_files:
         raise ValueError("retired output files: " + ", ".join(output_files))
+
+    try:
+        metadata = yaml.safe_load((site_dir / "pkgdown.yml").read_text(encoding="utf-8"))
+    except yaml.YAMLError as error:
+        raise ValueError("candidate pkgdown metadata is not valid YAML") from error
+    if not isinstance(metadata, dict) or not isinstance(metadata.get("articles"), dict):
+        raise ValueError("candidate pkgdown metadata has no article mapping")
+    articles = metadata["articles"]
+    urls = metadata.get("urls")
+    article_base = urls.get("article") if isinstance(urls, dict) else None
+    if not articles or not isinstance(article_base, str) or not article_base:
+        raise ValueError("candidate pkgdown metadata has no article entries or article URL")
+    expected_article_base = EXPECTED_SITE_BASE + "articles"
+    if article_base != expected_article_base:
+        raise ValueError(
+            f"unexpected pkgdown article base URL: {article_base!r}; "
+            f"expected {expected_article_base!r}"
+        )
+    if "articles/simulation-study" in articles:
+        raise ValueError("retired pkgdown article metadata key: articles/simulation-study")
+    for key, value in articles.items():
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"invalid pkgdown article metadata value: {key}")
+        # downlit concatenates urls.article + "/" + VALUE without URL resolution.
+        # Restrict generated values to relative file paths rather than accepting
+        # absolute/root-relative values that urljoin() would resolve differently.
+        value_url = urlsplit(value)
+        if (value_url.scheme or value_url.netloc or value.startswith(("/", "\\"))
+                or value_url.query or value_url.fragment):
+            raise ValueError(f"non-relative pkgdown article metadata value: {key}: {value}")
+        target_url = article_base + "/" + value
+        route = _site_url_path(target_url)
+        relative_route = route[len(urlsplit(EXPECTED_SITE_BASE).path):]
+        if any(route.endswith(retired_route) for retired_route in retired):
+            raise ValueError(f"retired pkgdown article metadata target: {key}: {value}")
+        target = _site_target(site_dir, relative_route)
+        if target.suffix != ".html" or not target.is_file():
+            raise ValueError(f"missing pkgdown article HTML target: {key}: {value}")
 
     sitemap = ET.parse(site_dir / "sitemap.xml").getroot()
     sitemap_paths = [
@@ -526,14 +591,28 @@ def audit_candidate_site(
         raise ValueError(
             f"candidate sitemap expected {EXPECTED_SITEMAP_ENTRIES} locations; found {len(sitemap_paths)}"
         )
-    sitemap_files = {path[len("/pigauto/"):] for path in sitemap_paths}
+    sitemap_files = {path[len(urlsplit(EXPECTED_SITE_BASE).path):] for path in sitemap_paths}
+    if "404.html" in sitemap_files:
+        raise ValueError("candidate sitemap must not include the 404 page")
     html_files = {str(path.relative_to(site_dir)) for path in site_dir.rglob("*.html")}
-    if sitemap_files != html_files:
-        missing = sorted(html_files - sitemap_files)
+    if sitemap_files - html_files:
         absent = sorted(sitemap_files - html_files)
         raise ValueError(
-            f"candidate sitemap and HTML inventory differ; missing={missing}; absent={absent}"
+            f"candidate sitemap points to missing HTML files: {absent}"
         )
+    for relative in sorted(html_files - sitemap_files):
+        if relative == "404.html":
+            continue
+        parser = RedirectParser()
+        parser.feed((site_dir / relative).read_text(encoding="utf-8"))
+        if len(parser.refresh) != 1 or len(parser.canonical) != 1:
+            raise ValueError(f"non-sitemap HTML is not a canonical redirect stub: {relative}")
+        refresh_route = _site_url_path(urljoin(EXPECTED_SITE_BASE, parser.refresh[0]))
+        canonical_route = _site_url_path(parser.canonical[0])
+        if refresh_route != canonical_route:
+            raise ValueError(f"redirect and canonical targets differ: {relative}")
+        if refresh_route not in sitemap_paths:
+            raise ValueError(f"redirect target is absent from sitemap: {relative} -> {refresh_route}")
     search = json.loads((site_dir / "search.json").read_text(encoding="utf-8"))
     if isinstance(search, list):
         search_entries = search

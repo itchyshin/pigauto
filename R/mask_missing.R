@@ -1,10 +1,15 @@
 #' Create an observed/missing mask matrix
 #'
-#' Returns a logical matrix of the same dimensions as \code{X}, with
-#' \code{TRUE} where values are observed (not \code{NA}).
+#' Returns a logical matrix of the same dimensions as \code{X}. Here
+#' \code{TRUE} means the value in \code{X} is observed (non-missing), and
+#' \code{FALSE} means it is an existing \code{NA}. This is different from
+#' the \code{mask} returned by \code{make_missing_splits()}, where
+#' \code{TRUE} means a cell was not artificially held out and can include
+#' cells that were already \code{NA}. Combine that split mask with
+#' \code{!is.na(X)} to identify observed training cells.
 #'
 #' @param X numeric matrix (species x traits or species x latent columns).
-#' @return Logical matrix, \code{TRUE} = observed.
+#' @return Logical matrix, \code{TRUE} = observed (non-missing) in \code{X}.
 #' @examples
 #' X <- matrix(c(1, NA, 3, 4), nrow = 2)
 #' mask_missing(X)
@@ -15,8 +20,14 @@ mask_missing <- function(X) {
 
 #' Split cells into train/val/test for imputation evaluation
 #'
-#' Randomly designates a fraction of cells as "missing" and splits them into
-#' validation and test sets.  When a \code{trait_map} is supplied, masking
+#' Randomly selects a fixed number of originally observed trait units,
+#' designates them as missing, and splits them into validation and test sets.
+#' The requested holdout count is the floor of \code{missing_frac} times
+#' the number of eligible observed units. Mechanism-specific weights affect
+#' selection among those units; they are not per-cell Bernoulli
+#' probabilities. For a \code{"MAR_trait"} design, keep the driver trait
+#' observed if interpreting the design as missing at random.
+#' When a \code{trait_map} is supplied, masking
 #' operates at the **original trait level** -- all latent columns belonging
 #' to one trait are held out together (important for categorical traits).
 #'
@@ -25,9 +36,12 @@ mask_missing <- function(X) {
 #' \code{trait_map} is present.
 #'
 #' @param X numeric matrix (species x latent columns from
-#'   \code{\link{preprocess_traits}}).  Used only for dimensions.
+#'   \code{\link{preprocess_traits}}). Existing missing values are excluded
+#'   from the eligible holdout units. Values also determine weights for
+#'   \code{"MAR_trait"} and \code{"MNAR"}.
 #' @param missing_frac numeric. Fraction of all (species, trait) cells to
-#'   designate as missing (default \code{0.25}).
+#'   designate as missing (default \code{0.25}); the realised count is fixed
+#'   from the eligible observed cells.
 #' @param val_frac numeric. Fraction of missing cells for validation
 #'   (default \code{0.25}); the rest become the test set.
 #' @param seed optional integer. When supplied, makes split construction
@@ -44,15 +58,17 @@ mask_missing <- function(X) {
 #'     \item{For \code{"MAR_trait"}:}{
 #'       \code{driver_col} (integer, column index in \code{X} that drives
 #'         missingness; default 1),
-#'       \code{beta} (numeric, severity; default 2.0).
+#'       \code{beta} (numeric, severity; default 2.0). Selection weights
+#'       depend on the observed driver values; keep the driver trait observed
+#'       when interpreting the design as MAR.
 #'     }
 #'     \item{For \code{"MAR_phylo"}:}{
-#'       \code{n_clades} (integer, number of high-missingness clades;
-#'         default 2),
-#'       \code{p_clade} (numeric, within-clade missingness probability;
-#'         default 0.7),
-#'       \code{p_base} (numeric, background missingness probability;
-#'         default 0.1).
+#'       \code{n_clades} (integer, number of selected clades; default 2),
+#'       \code{p_clade} (numeric, relative selection weight for cells
+#'         within selected clades; default 0.7),
+#'       \code{p_base} (numeric, relative selection weight for other cells;
+#'         default 0.1). The fixed overall holdout count is sampled without
+#'       replacement using these weights.
 #'     }
 #'     \item{For \code{"MNAR"}:}{
 #'       \code{beta} (numeric, severity; default 2.0).
@@ -71,7 +87,10 @@ mask_missing <- function(X) {
 #'     \item{n}{Number of species (rows).}
 #'     \item{p}{Number of latent columns.}
 #'     \item{n_traits}{Number of original traits.}
-#'     \item{mask}{Logical matrix (n x p_latent). \code{TRUE} = observed.}
+#'     \item{mask}{Logical matrix (n x p_latent). \code{TRUE} means not
+#'       artificially held out; it includes cells that were originally
+#'       missing in \code{X}. Combine with \code{!is.na(X)} to identify
+#'       observed training cells.}
 #'     \item{mechanism}{Character string of the mechanism used.}
 #'   }
 #' @examples

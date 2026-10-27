@@ -2,6 +2,7 @@
 % Please edit documentation in R/multi_impute.R
 \name{multi_impute}
 \alias{multi_impute}
+\alias{print.pigauto_mi}
 \title{Generate experimental stochastic completion datasets}
 \usage{
 multi_impute(
@@ -23,6 +24,8 @@ multi_impute(
   posterior_control = list(),
   ...
 )
+
+\method{print}{pigauto_mi}(x, ...)
 }
 \arguments{
 \item{traits}{data.frame with species as rownames and trait columns.
@@ -52,13 +55,24 @@ originally-missing cell from a Normal distribution centred on the
 point estimate with SD = conformal_score / 1.96. Converting a
 split-conformal residual quantile to a Normal scale is a heuristic;
 a nominal held-out conformal diagnostic does not establish that these
-draws are proper multiple imputations. Falls back to BM-SE-based Normal sampling
-when conformal scores are unavailable, and to Bernoulli / Categorical
-draws for discrete traits.}
-\item{\code{"mc_dropout"}}{Run \code{M} stochastic GNN forward passes in training
-mode (dropout active) on top of stochastic Brownian-motion baseline
-draws. Brownian draws still contribute between-draw variation
-when a calibrated GNN gate is zero.}
+draws are suitable for downstream multiple-imputation inference.
+For continuous, count, ordinal, and proportion traits, when no finite
+conformal score is available, pigauto uses the reported \code{pred$se} as a
+scale input for fallback draws. For
+log-transformed continuous traits, log1p-transformed counts, and
+logit-transformed proportions, \code{pred$se} is reported on the original
+scale, but the draw is made on the transformed scale. Pigauto does
+not fully convert \code{pred$se} between these scales, so diagnostic draw
+spread may be too wide or too narrow. Fitted point predictions are
+unchanged. Binary and
+categorical traits use Bernoulli /
+categorical draws from predicted probabilities.}
+\item{\code{"mc_dropout"}}{Add independent Gaussian perturbations per latent
+cell, scaled by selected baseline SD. This returns \code{M} stochastic
+draws; when the GNN is enabled, its network runs use dropout in
+training mode. These prediction-diagnostic draws are not joint
+phylogenetic BM posterior draws and are unsupported for downstream
+inference.}
 \item{\code{"posterior"}}{Continuous traits only, one row per species, no
 covariates. Fit a Bayesian multivariate phylogenetic mixed model by
 MCMC and return \code{m} completions drawn from the posterior predictive
@@ -69,10 +83,14 @@ lambda 0.3 to 1, trait correlation 0 or 0.5), a Rubin-pooled
 downstream PGLS slope and phylogenetic correlation had 95\% interval
 coverage of 0.925 to 0.975 in every cell. At lambda = 1 with trait
 correlation 0.5, slope coverage was 0.955, 0.940 and 0.965 at
-n = 100, 300 and 1000 (proper frequentist multiple imputation:
+n = 100, 300 and 1000 (reference frequentist MI:
 0.955, 0.920, 0.935). At n = 100 with correlated traits the pooled
 slope was biased by about -0.02 towards zero, with coverage still
-0.96. The previous residual prior (\code{posterior_control = list(residual_prior = "iw")}) attenuated the relationship between
+0.96. These results concern only the stated simulation regimes and
+do not establish inferential performance elsewhere. The registered
+validation found five tested posterior slope regimes failed and
+three indeterminate; see the \href{https://itchyshin.github.io/pigauto/articles/validation-results.html#inferential-results}{registered inferential results}.
+The previous residual prior (\code{posterior_control = list(residual_prior = "iw")}) attenuated the relationship between
 correlated traits at lambda near 1: coverage 0.96, 0.88 and 0.75 at
 the same three n.}
 }
@@ -83,8 +101,15 @@ downstream phylogenetic regression (PGLS slope, two traits, 120
 replicates per regime), conformal draws biased the pooled slope by
 -0.20 to -0.46, and the pooled 95\% intervals covered the truth in 0 to
 17\% of replicates, in all 16 regimes; MC-dropout draws biased it by
--0.03 to -0.38. For downstream inference on continuous traits use
-\code{"posterior"}.}
+-0.03 to -0.38. For continuous traits, the documented route permits
+eligible \code{"posterior"} draws to be fitted with
+\code{\link[=with_imputations]{with_imputations()}} and pooled with \code{\link[=pool_mi]{pool_mi()}} under the conditions
+below. Software eligibility does not show that the resulting estimates
+and uncertainty are reliable. In the registered validation, five of
+eight tested posterior-slope regimes failed the prespecified criteria
+and three were indeterminate; none was supported. These results apply
+to those tested regimes. Other analyses need evidence for their model,
+data, and missingness process; see the \href{https://itchyshin.github.io/pigauto/articles/validation-results.html#inferential-results}{registered inferential results}.}
 
 \item{species_col}{character or \code{NULL}. If set, marks the column
 in \code{traits} containing species identifiers and enables multiple
@@ -117,9 +142,19 @@ missing; with \code{FALSE} the largest shift was 1.8.}
 validation/test during training (default \code{0.25}). Passed through
 to \code{\link[=impute]{impute()}}.}
 
-\item{covariates}{data.frame or matrix of environmental covariates
-(fully observed, numeric). Passed through to \code{\link[=impute]{impute()}}.
-Default \code{NULL} (no covariates).}
+\item{covariates}{data.frame or matrix of fully observed environmental
+covariates. For \code{"mc_dropout"} and \code{"conformal"} diagnostic
+draws, forwarded to \code{\link[=impute]{impute()}}: a selected per-column numeric BM
+baseline may use them even with \code{gnn = FALSE}. Joint MVN and
+threshold-joint baselines omit them and emit a separate baseline warning.
+One-versus-rest categorical baselines also omit them but do not trigger that
+warning themselves. In a mixed fit, another selected joint route can still
+trigger it. With
+\code{gnn = TRUE}, they also
+enter the GNN and additive linear component. Choosing
+\code{predict_method = "per_column"} within a joint fit does not enable
+covariate regression. The posterior sampler is a separate model route;
+see its eligibility requirements below. Default \code{NULL}.}
 
 \item{epochs}{integer. Maximum GNN training epochs (default \code{2000}).}
 
@@ -131,11 +166,12 @@ draws reproducible; the default \code{NULL} uses the current RNG stream.}
 \item{gnn}{logical. Passed through to \code{\link[=impute]{impute()}} / \code{\link[=fit_pigauto]{fit_pigauto()}}. When
 \code{TRUE}, the usual GNN correction is trained. When \code{FALSE} (default),
 no GNN is used (baseline-only fit; see \code{\link[=fit_pigauto]{fit_pigauto()}}). With
-\code{draws_method = "mc_dropout"} this degrades gracefully to BM-posterior
-draws (there is no dropout to run) and a one-time message is printed;
-\code{draws_method = "conformal"} is unaffected. User \code{covariates} are
-ignored under \code{gnn = FALSE} (with a warning), as in \code{\link[=impute]{impute()}}. The
-default changed from \code{TRUE} to \code{FALSE} in 0.11.0.9001; see \code{\link[=impute]{impute()}}.}
+\code{draws_method = "mc_dropout"} this uses independent latent-cell Gaussian
+perturbations scaled by baseline SD, with no GNN dropout; an explanatory
+message is printed for that call. These are not joint BM posterior draws;
+\code{draws_method = "conformal"} is unaffected. Covariate use is
+route-dependent as described above; the warning under \code{gnn = FALSE}
+does not rule out covariate-aware per-column BM predictions/draws.}
 
 \item{lambda_mode}{character. Pagel-lambda mode for the BM baseline,
 forwarded to \code{\link[=impute]{impute()}} / \code{\link[=fit_pigauto]{fit_pigauto()}}. \code{"estimate"} (default) fits
@@ -197,11 +233,14 @@ affected. \code{FALSE} never extends.}
 number from 0 to 10. The default allows at most 4 times \code{n_iter}
 sweeps per chain after burn-in.}
 \item{\code{residual_prior}}{\code{"sep"} (default) or \code{"iw"}. The default
-separation prior gives each residual standard deviation a
-half-Cauchy prior scaled by the trait's observed standard deviation,
-and gives the residual correlation a uniform (LKJ(1)) prior. This
-allows residual covariance to approach zero when traits are close
-to Brownian motion. \code{"iw"} selects the legacy inverse-Wishart prior
+separation strategy uses half-Cauchy priors for residual standard
+deviations, scaled by the trait's observed latent-trait standard
+deviation, and an LKJ(1) prior for the full residual-correlation
+matrix. Before applying the numerical cutoff, the LKJ(1) prior does
+not give each pairwise correlation a uniform distribution when there
+are more than two traits. The cutoff also narrows the prior support;
+see the posterior-draw details. \code{"iw"}
+selects the legacy inverse-Wishart prior
 used before pigauto 0.11.0.9002; it is retained for reproducing
 earlier results.}
 }}
@@ -209,14 +248,17 @@ earlier results.}
 \item{...}{additional arguments forwarded to \code{\link[=fit_pigauto]{fit_pigauto()}} via
 \code{\link[=impute]{impute()}}. See \code{\link[=fit_pigauto]{fit_pigauto()}} for the full list, including the
 optional \code{safety_floor} control described below.}
+
+\item{x}{A stochastic-completion or posterior MI object.}
 }
 \value{
 An object of class \code{"pigauto_mi"} with components:
 \describe{
 \item{\code{datasets}}{A list of length \code{m}. Each element is a
 data.frame with the same shape and column types as the input
-\code{traits}; observed cells are preserved and missing cells are
-filled with the corresponding stochastic draw. These datasets are
+\code{traits}; observed cells are preserved. Missing cells are filled
+with stochastic draws where available. A cell marked for imputation
+can remain \code{NA} if no prediction is available. These datasets are
 for prediction diagnostics, not downstream inference, except with
 \code{draws_method = "posterior"} (unless
 \code{posterior_control$param_uncertainty = "none"}), whose datasets are
@@ -224,23 +266,61 @@ posterior imputations: fit the analysis to them with
 \code{\link[=with_imputations]{with_imputations()}} and pool the fits with \code{\link[=pool_mi]{pool_mi()}} (see
 \code{posterior} below and "Posterior draws").}
 \item{\code{m}}{Number of stochastic completion datasets.}
-\item{\code{pooled_point}}{A single data.frame whose missing cells
-are replaced by the MC-averaged point estimate. Convenient for
-reporting but does \emph{not} provide a valid downstream MI analysis.}
-\item{\code{se}}{Matrix of per-cell uncertainty summaries combining the
-baseline SE and the between-draw standard deviation. A
-\strong{descriptive spread for reporting and ranking only} — it is
-\strong{not} a Rubin's-rules pooled standard error (it contains no
-within-imputation variance component and no small-sample df
-correction) and must not be used for downstream pooling.}
-\item{\code{mi_workflow}}{\code{"pigauto_diagnostic_mi"}, recording that these
-are prediction-diagnostic completions and cannot be passed to
-\code{\link[=with_imputations]{with_imputations()}} or \code{\link[=pool_mi]{pool_mi()}}.}
-\item{\code{imputed_mask}}{Logical matrix; \code{TRUE} where a cell was
-originally missing.}
+\item{\code{pooled_point}}{A single data.frame of observed values and point
+completions for reporting; missing cells can remain \code{NA} when no
+prediction is available. It is
+the point completion returned by the selected route, not generally
+an average of the \code{m} decoded datasets. Use \code{datasets} for an
+eligible downstream multiple-imputation analysis.}
+\item{\code{se}}{Matrix of per-cell uncertainty summaries. For the
+conformal and MC-dropout routes, these come from the prediction step;
+for posterior draws, they are original-scale posterior predictive
+standard deviations calculated from all retained draws. Their
+meaning depends on the method and trait type, and they need not
+describe the spread among the returned datasets. They are
+descriptive, not Rubin's-rules pooled standard errors, and must not
+be used for downstream pooling.}
+\item{\code{draws_method}}{The method actually used, including the selected
+method when \code{draws_method = "auto"}.}
+\item{Diagnostic prediction outputs}{The \code{conformal_lower},
+\code{conformal_upper}, \code{probabilities}, and \code{evaluation} components are
+returned for the conformal and MC-dropout routes, not the posterior
+route.}
+\item{\code{conformal_lower}, \code{conformal_upper}}{For diagnostic routes,
+lower and upper prediction-bound matrices when conformal scores are
+available. A bound matrix may contain \code{NA} for traits without scores;
+both components are \code{NULL} when no score object is available. See
+\code{\link[=predict.pigauto_fit]{predict.pigauto_fit()}} for scale and trait-specific interpretation.}
+\item{\code{probabilities}}{For diagnostic routes, a named list of class
+probabilities and, for a \code{multi_proportion} trait when only one prediction run is returned,
+component proportions. See \code{\link[=predict.pigauto_fit]{predict.pigauto_fit()}} for the per-type shapes.}
+\item{\code{evaluation}}{For diagnostic routes, validation- and test-set
+evaluation metrics
+from the underlying imputation fit. This is \code{NULL} when there are no
+test cells or when evaluation fails.}
+\item{Prediction row order}{On diagnostic routes, \code{se}, the bound
+matrices, and probability rows follow the fitted model's internal row
+order. \code{data$input_row_order[k]} gives the original input row placed
+at internal row \code{k}; \code{NA} marks a tree tip without an input row; use \code{order(data$input_row_order, na.last = NA)} to restore input-row order.
+\code{datasets} and \code{pooled_point} use original input row order. Posterior-
+route \code{se} uses original input row order.}
+\item{\code{mi_workflow}}{Method-dependent provenance. Prediction-diagnostic
+conformal and MC-dropout draws use \code{"pigauto_diagnostic_mi"}.
+Eligible posterior draws with parameter uncertainty use
+\code{"pigauto_posterior_mi_v1"} and can enter \code{\link[=with_imputations]{with_imputations()}} and
+\code{\link[=pool_mi]{pool_mi()}} under the documented posterior-route conditions.
+Posterior draws with \code{param_uncertainty = "none"} use
+\code{"pigauto_posterior_plugin_diagnostic"}: covariance matrices are
+fixed while trait means and missing cells are drawn, and these
+draws remain ineligible for downstream pooling.}
+\item{\code{imputed_mask}}{Logical matrix aligned to the input rows and
+trait columns; \code{TRUE} marks an originally missing target in a row
+included in the fit, not necessarily a successful fill. A marked
+cell can remain \code{NA} if no prediction was available. When
+\code{species_col} is supplied, its column is excluded.}
 \item{\code{fit}}{The underlying \code{\link[=fit_pigauto]{pigauto_fit}}
-object, retained for diagnostics and for calls to \code{\link[=predict]{predict()}}
-on new data.}
+object, retained for diagnostics and calls to \code{\link[=predict]{predict()}} on the
+fitted data. New-species prediction is not implemented.}
 \item{\code{data}}{The \code{\link[=preprocess_traits]{pigauto_data}} object.}
 \item{\code{tree}}{The input phylogeny.}
 \item{\code{species_col}}{Passed-through species-column name or
@@ -267,26 +347,38 @@ the posterior predictive SD of each imputed cell, the class is
 \code{\link[=with_imputations]{with_imputations()}} and \code{\link[=pool_mi]{pool_mi()}} refuse).}
 \item{\code{posterior_improper}}{Only with
 \code{posterior_control$param_uncertainty = "both"} (validation only). A
-list with \code{datasets} (\code{m} completed data.frames drawn with the
-covariance matrices fixed at their posterior means, from the same
+list with \code{datasets} (\code{m} data.frames drawn with the covariance
+matrices fixed at their posterior means, with the same missing-cell
+limits described above, from the same
 chain run as \code{datasets}), \code{cell_interval} (same columns as
 \code{posterior$cell_interval}), and the fixed \code{Sigma_P} and \code{Sigma_E}.
 Not for downstream inference: it ignores parameter uncertainty.}
 }
+
+The print method returns \code{x} invisibly.
 }
 \description{
 Run pigauto's full imputation pipeline and return \code{M} stochastic
 completions of the trait matrix instead of a single point estimate.
-The conformal-width and Brownian/MC-dropout draws returned here are
-experimental prediction-diagnostic draws. Do not use these datasets for
-downstream inference or Rubin pooling. For continuous traits,
-\code{draws_method = "posterior"} instead returns proper Bayesian posterior
-imputations for the analyses described in "Posterior draws" below: fit
-the analysis to them with \code{\link[=with_imputations]{with_imputations()}} and pool the resulting
-fits with \code{\link[=pool_mi]{pool_mi()}}. The separate analysis-aware backend,
-\code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, covers its own documented narrow regime.
+The conformal-width and mc_dropout draws returned here are experimental
+prediction diagnostics. The mc_dropout route uses independent Gaussian
+perturbations per latent cell, scaled by selected baseline SD, and adds GNN
+dropout variation only when the GNN is enabled. Do not use these datasets for
+downstream inference or Rubin pooling.
 }
 \details{
+For continuous traits, \code{draws_method = "posterior"} instead returns
+posterior predictive draws that the documented software route permits
+analysts to fit and pool under the conditions below.
+
+\strong{Validation boundary:} the registered validation found five of eight
+tested posterior-slope regimes failed and three were indeterminate; none
+met the support criteria. These results are limited to the tested regimes
+and do not establish performance for a new analysis. See \href{https://itchyshin.github.io/pigauto/articles/validation-results.html#inferential-results}{the registered inferential results}
+before using \code{\link[=with_imputations]{with_imputations()}} and \code{\link[=pool_mi]{pool_mi()}}. The separate
+analysis-aware backend,
+\code{\link[=multi_impute_analysis]{multi_impute_analysis()}}, covers its own documented narrow regime.
+
 With the default \code{draws_method = "auto"}, eligible continuous-trait data
 use posterior draws; other inputs use conformal prediction-diagnostic
 draws. Check \code{result$draws_method} before downstream fitting.
@@ -298,11 +390,15 @@ congenial multiple imputations. The analysis-aware backend requires the
 analysis model before generating draws and dispatches only across its
 documented supported model classes.
 
-\strong{\code{draws_method = "conformal"}}: Run the model once; missing
-cells are sampled from
-\eqn{x_{ij}^{(k)} \sim \mathrm{N}(\hat\mu_{ij},\; (q_{j}/1.96)^2)}
-where \eqn{q_j} is the trait-level split-conformal residual quantile.
-Dividing this quantile by 1.96 is a pragmatic Normal-scale construction,
+\strong{\code{draws_method = "conformal"}}: Run the model once. For a
+continuous latent column standardized to mean zero and unit variance,
+missing values are sampled as
+\eqn{z_{ij}^{(k)} \sim \mathrm{N}(\hat z_{ij},\; (q_{ij}/1.96)^2)}.
+Here \eqn{q_{ij}} is the available split-conformal score: the global
+trait score or, with Mondrian calibration, the near/far score for cell
+\eqn{i}. Other trait types use their type-specific latent representation
+and decoding described below. Dividing the score by 1.96 is a pragmatic
+Normal-scale construction,
 not an inference consequence of a nominal held-out conformal diagnostic. For discrete traits (binary,
 categorical) it uses Bernoulli / categorical draws from the estimated
 probability vector. For \code{zi_count} the gate is Bernoulli from
@@ -313,16 +409,19 @@ scores are unavailable) — not the reported SE of expected count. For
 K CLR latent columns with their BM latent SEs, projects back to
 sum-zero CLR space, and decodes to the simplex.
 
-\strong{\code{draws_method = "mc_dropout"}}: Run \code{M} GNN forward passes in
-training mode (dropout active) on top of stochastic BM baseline draws.
-When \code{r_cal = 0}, the GNN-dropout term disappears but the BM draw still
-contributes between-draw variance.
+\strong{\code{draws_method = "mc_dropout"}}: Add independent Gaussian perturbations
+per latent cell, scaled by selected baseline SD. This returns \code{M} stochastic
+draws; when the GNN is enabled, its network runs use dropout in training
+mode. These are prediction-diagnostic draws, not joint phylogenetic
+BM posterior draws or validated downstream-inference imputations. A
+baseline perturbation can contribute variation when the GNN weight is zero,
+but this does not guarantee non-zero variation.
 
 \strong{\code{draws_method = "posterior"}}: see the "Posterior draws" section.
 
-Nakagawa & Freckleton (2008, 2011) review the consequences of
-ignoring missing data in ecological and comparative analyses and
-argue for multiple imputation as the default.
+Nakagawa & Freckleton (2008, 2011) provide ecological missing-data context.
+Their full-text passages were not verified for a blanket recommendation
+about this workflow; they do not establish validity of pigauto draws.
 }
 \section{When to use this}{
 
@@ -330,48 +429,101 @@ argue for multiple imputation as the default.
 With \code{draws_method = "conformal"} or \code{"mc_dropout"}, this function is
 useful for comparing stochastic prediction behavior from one tree; those
 draws are not for downstream inference. With \code{draws_method = "posterior"}
-(continuous traits), it returns proper posterior imputations for the
-analyses described in "Posterior draws": \code{\link[=with_imputations]{with_imputations()}} fits the
-analysis to them and \code{\link[=pool_mi]{pool_mi()}} pools those fits.
+(continuous traits), it returns posterior predictive draws that the
+documented software route permits analysts to fit and pool under the
+conditions in "Posterior draws". This software eligibility does not
+establish model compatibility or inferential performance across regimes;
+the registered validation had five tested slope regimes fail and three
+remain indeterminate. \code{\link[=with_imputations]{with_imputations()}} fits eligible analyses and
+\code{\link[=pool_mi]{pool_mi()}} pools those fits.
 \code{\link[=multi_impute_analysis]{multi_impute_analysis()}} is the separate analysis-aware backend for its
 own documented regime.
 
 \code{\link[=multi_impute_trees]{multi_impute_trees()}} provides an experimental posterior-tree sensitivity
-path, but tree uncertainty is not supported by \code{\link[=multi_impute_analysis]{multi_impute_analysis()}}.
+check. Its outputs are diagnostic and are not accepted by
+\code{\link[=with_imputations]{with_imputations()}} or \code{\link[=pool_mi]{pool_mi()}}, so tree-aware downstream inference is
+not currently supported.
 }
 
 \section{Posterior draws}{
 
 With \code{draws_method = "posterior"}, the latent (z-scored, optionally
 log-transformed) traits follow the multivariate phylogenetic mixed model
-\deqn{\mathrm{vec}(Y) \sim \mathrm{N}(1\mu^\top,\;
-  \Sigma_P \otimes R + \Sigma_E \otimes I_n),}
-with \eqn{R} the phylogenetic correlation matrix of the tree, full
-\eqn{K \times K} phylogenetic (\eqn{\Sigma_P}) and residual
-(\eqn{\Sigma_E}) covariance matrices, and a flat prior on \eqn{\mu}.
+\deqn{\begin{aligned}
+\mathrm{vec}(Y) &\sim \mathrm{N}(\mathrm{vec}(1_n\mu^\top),\\
+&\quad \Sigma_P \otimes R + \Sigma_E \otimes I_n),
+\end{aligned}}
+where \eqn{Y} is the \eqn{n}-species by \eqn{K}-trait matrix,
+\eqn{\mu} is the vector of \eqn{K} trait means, and \eqn{\mathrm{vec}}
+stacks matrix columns. Here \eqn{1_n} is an \eqn{n}-vector of ones,
+\eqn{R} is the phylogenetic correlation matrix of the tree, and
+\eqn{I_n} is the \eqn{n \times n} identity matrix. The model uses full
+\eqn{K \times K} phylogenetic (\eqn{\Sigma_P}) and
+residual (\eqn{\Sigma_E}) covariance matrices, with a flat prior on
+\eqn{\mu}.
 The implied Pagel's lambda of trait \eqn{k} is
 \eqn{\Sigma_P[k,k] / (\Sigma_P[k,k] + \Sigma_E[k,k])}.
 
 The phylogenetic covariance uses a parameter-expanded inverse-Wishart
 prior on its standardized covariance matrix and Normal priors on the
-expansion parameters (Hadfield 2010; Gelman 2006). The default residual
+expansion parameters. The default residual
 covariance prior uses a separation strategy: residual standard deviations
 have half-Cauchy priors scaled by the observed latent-trait standard
-deviations, and the residual correlation has an LKJ(1) prior. The legacy
+deviations, and the full residual-correlation matrix has an LKJ(1) prior.
+Before applying the numerical cutoff, the LKJ(1) prior does not give each
+pairwise correlation a uniform distribution when there are more than two
+traits. For numerical stability, the sampler gives zero prior density if
+the smallest eigenvalue of the residual covariance matrix, standardized by
+observed latent-trait standard deviations, is below 0.000001. In plain
+language, on this standardized scale, variance along every unit-length
+direction must be at least 0.000001. This cutoff narrows the prior support. The legacy
 \code{posterior_control$residual_prior = "iw"} option instead uses an
 inverse-Wishart prior on the residual covariance. Prior settings are
 returned in \code{mi$posterior$hyper}.
 
 The sampler draws the phylogenetic effects, the trait means and the missing
-cells as one block with a sparse Cholesky factor of the Hadfield and
-Nakagawa (2010) node precision, and updates the covariance matrices by
+cells as one block using the implementation's sparse phylogenetic
+node-precision Cholesky factor, and updates the covariance matrices by
 parameter-expanded Gibbs steps plus Metropolis moves with the
-phylogenetic effects integrated out. Convergence is checked with
+phylogenetic effects integrated out. Mixing is monitored with
 rank-normalised split R-hat and bulk effective sample size (Vehtari et
-al. 2021); \code{mi$posterior$diagnostics} reports them. When any R-hat is at
-least 1.05 or any ESS is at most 400, the chains are extended
+al. 2021); \code{mi$posterior$diagnostics} reports them. Vehtari et al.
+recommend R-hat below 1.01. Pigauto's R-hat cutoff of 1.05 is less strict
+than the paper's recommendation; its bulk-ESS cutoff is 400. When any
+R-hat is at least 1.05 or any ESS is at most 400, the chains are extended
 automatically (\code{posterior_control$auto_extend} and \code{max_extend}), and a
 warning is raised if the rule still fails after the last extension.
+These diagnostics cover the monitored elements of \code{Sigma_P}, \code{Sigma_E}
+and \code{lambda}; they do not establish adequate precision for every posterior
+quantile or validate the sampler.
+
+Before fitting a downstream model, check
+\code{attr(mi$posterior$diagnostics, "converged")}. If it is not \code{TRUE}, inspect
+the per-parameter diagnostics and sampling controls, then refit and check
+again. Do not interpret or pool the draws while the flag is false or
+unavailable. Passing this package-specific convergence rule does not
+establish calibrated downstream inference.
+
+\strong{Evidence scope.} The earlier
+\href{https://github.com/itchyshin/pigauto/blob/abf1229417fea75478205c7f7dfd7e96a6de09b2/docs/dev-log/arc/2026-10-02-rubin-pigauto-campaign.md}{Rubin-study campaign}
+used pigauto b565cad and subsequent separation-prior refits, 200 datasets
+per cell, n = 100, 300 or 1000, lambda = 0.3, 0.7 or 1, trait correlation
+0 or 0.5, and 30\% MCAR missingness. Its downstream targets were PGLS
+slopes and phylogenetic correlations; the coverage claims above belong
+to that study and distinguish the legacy IW from the separation prior.
+The separate
+\href{https://github.com/itchyshin/pigauto/blob/main/docs/dev-log/mi-posterior/sep_validation/README.md}{posterior acceptance sweep}
+used 40 regimes and its own gate rules. The later
+\href{https://github.com/itchyshin/pigauto/blob/da71711cdc6fcb587babaf4d5b323c4468cb4492/docs/dev-log/validation-20261018/scientific-report.md}{registered validation}
+froze a different source and used the default separation prior. Its eight
+posterior slope regimes used Brownian GLS, n = 300 or 1000, lambda = 0.5
+or 1, trait correlation 0.7, 30\% missingness under MCAR or phylogenetic MAR,
+and 500 replicates per regime. Five failed and three were indeterminate;
+empirical 95\% coverage ranged from 86.2\% to 95.2\%. No inferential scenario
+met all prespecified support criteria. These campaigns should be compared
+within their stated models, priors, missingness and acceptance rules.
+Bayesian properness under the stated model does not by itself establish
+that an applied analysis is calibrated.
 
 The \code{m} datasets are posterior predictive draws spaced evenly across the
 kept sweeps of all chains. Per-cell 95\% intervals in
@@ -380,14 +532,22 @@ them by default), never from the \code{m} datasets.
 
 These draws come from a linear-Gaussian model of the imputed traits on
 the scale where they were imputed (the log scale for traits
-log-transformed by \code{log_transform}). They are proper imputations for
-analyses that are linear in the imputed traits on that scale and whose
-variables are all among the imputed traits, for example a phylogenetic
-regression of one imputed trait on others (on the log scale for
-log-transformed traits). Not covered: covariates from outside the imputed
-traits, because the imputation model does not contain them; nonlinear
-terms (such as squares) or interactions among imputed traits; and
-analysing a log-transformed trait on its raw scale. The GNN is not used,
+log-transformed by \code{log_transform}). The documented software route permits
+downstream fitting only under the stated eligibility conditions: analyses
+must be linear in the imputed traits on that scale and use variables among
+the imputed traits. This fitting eligibility does not establish model
+compatibility or inferential performance across analyses or tested
+regimes. In the registered validation, five posterior slope regimes
+failed and three were indeterminate; see
+\href{https://itchyshin.github.io/pigauto/articles/validation-results.html#inferential-results}{the registered inferential results}.
+Each imputed trait must also have at least two observed values among the
+rows being fitted; otherwise posterior mode stops and names the affected
+traits. This minimum is a software requirement, not evidence that two
+observations are enough for reliable estimation.
+Not covered: covariates from outside the imputed traits, because the
+imputation model does not contain them; nonlinear terms (such as squares)
+or interactions among imputed traits; and analysing a log-transformed
+trait on its raw scale. The GNN is not used,
 and \code{gnn}, \code{epochs}, \code{missing_frac}, \code{lambda_mode} and other fitting
 arguments are ignored (a message lists any that were supplied).
 Non-continuous traits, multiple observations per species (or any
@@ -405,10 +565,18 @@ The posterior sampler uses its own model and does not use this blend.
 For \code{draws_method = "mc_dropout"}
 the mean term contributes no between-draw variance (it is a
 deterministic scalar per column); between-draw variance comes from the
-BM-draw and GNN-dropout terms
+independent baseline perturbations and, when enabled, GNN-dropout terms
 only.  For \code{draws_method = "conformal"} the blend centre is the
 3-way prediction and conformal scores remain calibrated on the
 blended residuals.
+}
+
+\section{Printing}{
+
+Prints diagnostic or posterior/convergence summaries. Cell counts refer to
+targeted cells; a targeted cell can remain missing if a prediction is
+unavailable. Displaying an object does not authorize downstream pooling.
+The \code{...} argument is currently unused.
 }
 
 \examples{
@@ -454,6 +622,12 @@ assessing convergence of MCMC." \emph{Bayesian Analysis} 16(2): 667-718.
 Nakagawa S, Freckleton RP (2011). "Model averaging, missing data and
 multiple imputation: a case study for behavioural ecology."
 \emph{Behavioral Ecology and Sociobiology} 65(1): 103-116.
+
+The references provide methodological context for priors, phylogenetic
+models and MCMC diagnostics. They do not establish pigauto's exact prior
+specification, sampler correctness or package-specific diagnostic
+thresholds. The "Posterior draws" section describes the implementation
+and retained campaign evidence separately.
 }
 \seealso{
 \code{\link[=impute]{impute()}} for point imputation and \code{\link[=multi_impute_analysis]{multi_impute_analysis()}}

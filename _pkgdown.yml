@@ -8,6 +8,7 @@ destination: _site
 template:
   bootstrap: 5
   bootswatch: flatly    # gives a coloured (bg-primary) navbar, matching drmTMB/symbolizer
+  math-rendering: mathjax
   bslib:
     primary: "#2c5e4f"   # brand green; matches prepR4pcm/_pkgdown.yml
     base_font: {google: "Inter"}
@@ -40,7 +41,7 @@ navbar:
     articles:
       text: Articles
       menu:
-        - text: "Knitted vignettes"
+        - text: "Tutorials and technical guides"
         - text: "Get started"
           href: articles/getting-started.html
         - text: "Common pitfalls / FAQ"
@@ -49,7 +50,7 @@ navbar:
           href: articles/mixed-types.html
         - text: "Multiple imputation and downstream models"
           href: articles/multiple-imputation.html
-        - text: "Tree sensitivity (not inferentially validated)"
+        - text: "Tree sensitivity (prediction only)"
           href: articles/tree-uncertainty.html
         - text: "GNN architecture and the math behind pigauto"
           href: articles/gnn-architecture.html

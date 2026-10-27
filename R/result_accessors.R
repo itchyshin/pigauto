@@ -1,7 +1,11 @@
 #' Extract completed trait data
 #'
 #' @param result A `pigauto_result`.
-#' @return Exactly the stored `result$completed` data.frame.
+#' @return The input-shaped data frame returned by [impute()], with observed
+#'   trait values and non-trait columns retained. Predictions fill modeled
+#'   missing trait cells when available; cells that could not be filled remain
+#'   `NA`.
+#' @seealso [impute()]
 #' @examples
 #' \dontrun{completed_data(result)}
 #' @export
@@ -26,8 +30,22 @@ completed_data <- function(result) {
 #'
 #' @param object A `pigauto_result`.
 #' @param ... Unused.
-#' @return A small `summary_pigauto_result` object containing input-check,
-#'   completion, output-role, and evaluation summaries.
+#' @return Visibly returns a `summary_pigauto_result` list with:
+#'   \describe{
+#'     \item{`check`}{The stored input check, or a notice when unavailable.}
+#'     \item{`counts`}{`filled`: successfully filled target trait cells;
+#'       `observed`: observed target trait cells; `unresolved`: target trait
+#'       cells still missing; `not_modeled`: missing trait cells in excluded
+#'       data-only rows.}
+#'     \item{`per_trait`}{A data.frame of per-trait successful fill counts.}
+#'     \item{`output_roles`}{Descriptions of completed data, prediction,
+#'       uncertainty, conformal, and inference roles.}
+#'     \item{`evaluation`}{The stored evaluation results.}
+#'   }
+#' @details The summary object is returned visibly. Its print method shows
+#'   only the four aggregate counts and a generic role notice. Inspect the
+#'   corresponding fields for per-trait counts, check details, and evaluation
+#'   metrics; these are not printed. The dots argument is unused.
 #' @export
 summary.pigauto_result <- function(object, ...) {
   mask <- object$imputed_mask
@@ -67,6 +85,10 @@ summary.pigauto_result <- function(object, ...) {
 #' @param x A `summary_pigauto_result` object.
 #' @param ... Unused.
 #' @return `x`, invisibly.
+#' @details Prints the four aggregate counts and, when available, a generic
+#'   output-role notice. It does not print the per-trait table, check details,
+#'   or evaluation metrics. Inspect \code{x$per_trait}, \code{x$check}, and
+#'   \code{x$evaluation} for those fields. The dots argument is unused.
 #' @export
 print.summary_pigauto_result <- function(x, ...) {
   cat("pigauto result summary\n")

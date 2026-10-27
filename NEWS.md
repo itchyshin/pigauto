@@ -112,7 +112,16 @@ and 107), downstream coverage 0.925 to 0.975 and per-cell coverage 0.942 to
 0.959. The #189 acceptance simulation (8,000 cells) passes both gates under
 `"sep"` (`docs/dev-log/mi-posterior/sep_validation/`). Costs: at n = 100
 with correlated traits the pooled slope is biased by about -0.02 (coverage
-0.96), and fits take about 5% more compute.
+0.96), and fits take about 5% more compute. These results come from this
+campaign's design. A later registered assessment used eight different
+Brownian-GLS slope regimes (n = 300 or 1,000; lambda = 0.5 or 1; trait
+correlation 0.7; 30% MCAR or phylogenetic MAR; 500 replicates per regime).
+Five regimes failed and three were indeterminate; empirical coverage ranged
+from 86.2% to 95.2%, and no inferential scenario met the support criteria.
+See the [registered results and limits](../articles/validation-results.html#inferential-results).
+This does not negate posterior properness under the imputation model, nor show
+that every use fails; it reports measured calibration only for the tested
+regimes.
 
 ## New default: `multi_impute(draws_method = "auto")`
 
@@ -156,8 +165,14 @@ defaults (`docs/dev-log/arc/2026-10-02-campaign-gnn-rerun.md`; Totoro,
 
 What to know.
 
-- User `covariates` are used only by the GNN. With `gnn = FALSE` they are
-  ignored, and the warning now says to set `gnn = TRUE` to use them.
+- Covariate use depends on the selected route. The GNN and its direct linear
+  component use them when enabled; a selected covariate-aware per-column
+  numeric BM route can also use them when `gnn = FALSE`. Joint MVN and
+  threshold-joint routes omit covariates and emit a separate baseline warning.
+  One-versus-rest categorical routes also omit them but do not trigger that
+  warning themselves. In a mixed fit, another selected joint route can still
+  trigger it. `predict_method = "per_column"` within a joint fit
+  does not turn on covariate regression.
 - `conformal_method = "mondrian"` needs the GNN; its error now says so.
 - `multi_impute(draws_method = "mc_dropout")` and the
   `multi_impute_trees()` default draw from the baseline posterior when
@@ -270,8 +285,14 @@ downstream phylogenetic regression (PGLS slope; branch
 `arc/mi-gls-attenuation`, `docs/dev-log/mi-gls/results.md`), conformal
 draws biased the pooled slope by -0.20 to -0.46, and the pooled 95%
 intervals covered the truth in 0 to 17% of replicates, in all 16 regimes;
-MC-dropout draws biased it by -0.03 to -0.38. For downstream inference on
-continuous traits, use `draws_method = "posterior"`.
+MC-dropout draws biased it by -0.03 to -0.38. For downstream inference, use
+`draws_method = "posterior"` only when its documented eligibility conditions
+are met (continuous traits, one row per species, and no covariates; see
+[posterior-draw eligibility and limits](../articles/validation-results.html#inferential-results)).
+This is a proper posterior-imputation procedure under its model, not evidence
+that downstream frequentist coverage is calibrated in every setting. In the
+later registered assessment, five of eight tested regimes failed and three
+were indeterminate; no inferential scenario met support criteria.
 
 ## New default: `predict_method = "auto"` (cross-trait prediction, chosen per trait)
 
@@ -305,6 +326,7 @@ coverage of the continuous traits rises by 0.003 to 0.010 at lambda 0.3 and 0.7.
 species, where the previous default already covered only 0.86 to 0.92 of cells, coverage falls by a further
 0.006 to 0.018 (largest for the count and proportion traits); with 300 species it falls by at most 0.008.
 The opt-in GNN-on arm of `impute()` was not re-benchmarked for this change.
+Full benchmark detail is in the [commit-pinned round-four record](https://github.com/itchyshin/pigauto/blob/13bd3e61f5960ef18dcdb3824f7cc68076dae72f/docs/dev-log/exact-default/S5-benchmark-round4.md).
 
 On 13 real-data cases (continuous traits, 5 seeds each, GNN off, no Monte Carlo error computed), z-RMSE falls
 by 17 to 51% on AVONET and PanTHERIA and by 2.5% on AmphiBIO (2,000 species); the other seven cases change by
@@ -457,7 +479,8 @@ coverage in all 18 trait-by-arm rows at the cost of wider intervals there, and
 it lowered near-stratum coverage by 1 to 2 points, in six trait rows to below
 0.95. Users whose missing cells sit in undersampled clades may prefer that
 trade; the study measured it on masked observed cells, not on real missing
-cells.
+cells. The [commit-pinned registered report](https://github.com/itchyshin/pigauto/blob/5a38dcb6594b692e4251ee3a4746e7372142fe91/docs/dev-log/mondrian-realdata/results.md)
+contains the detailed results.
 
 `compute_conformal_scores()` now records `n_val`, `n_near` and `n_far` for each
 Mondrian trait, and a verbose fit names the trait and its stratum sizes when
@@ -531,8 +554,12 @@ term:
 - Without a validation split (`missing_frac = 0`, or `fit_pigauto(splits =
   NULL)`) the GNN-off fit is pure baseline (`r_cal_bm = 1`) with no
   conformal scores, and still predicts.
-- User `covariates` enter pigauto only through the GNN; under `gnn = FALSE`
-  they are ignored, with a warning.
+- Covariate use depends on the selected route; see “What to know” above.
+  A covariate-aware per-column numeric BM path may use them with
+  `gnn = FALSE`. Joint MVN and threshold-joint routes omit covariates and
+  emit a separate baseline warning. One-versus-rest categorical routes also omit
+  them but do not trigger that warning themselves. In a mixed fit, another
+  selected joint route can still trigger it.
 
 Scope note: for continuous-only data at `lambda_mode = "fixed_1"` the
 GNN-off arm is a phylopars-style joint BM fit by construction, so a
@@ -568,8 +595,14 @@ All chronological entries below are historical unless this 0.11 section says
 otherwise. In particular, older instructions to pass `multi_impute()` or
 `multi_impute_trees()` completions to `with_imputations()` or `pool_mi()`, and
 older claims of Rubin-valid downstream standard errors for those diagnostic or
-tree-sensitivity completions, are superseded. The current supported downstream
-route begins with `multi_impute_analysis()` in its documented narrow regime.
+tree-sensitivity completions, are superseded. Two current downstream routes
+have narrower support: `multi_impute_analysis()` for its documented
+non-phylogenetic model classes and conditions; and
+`multi_impute(draws_method = "posterior")` followed by
+`with_imputations()` and `pool_mi()` for continuous traits with one row per
+species and no covariates, after reviewing convergence diagnostics. Neither
+route makes an arbitrary imputation model congenial to a downstream analysis;
+see the multiple-imputation article for the assumptions and limits.
 Older chronological statements about broad interval coverage, active-selection
 optimality or novelty, and solver performance comparisons are historical
 context, not current package-wide claims; use the current README and vignettes
@@ -604,7 +637,7 @@ output is unchanged (see `tests/testthat/test-lambda-per-type.R`).
 `fit_baseline()`, `fit_pigauto()`, and `impute()` gain a new `joint_solver`
 argument, `c("inhouse", "rphylopars")`. The default, `"inhouse"`, is
 byte-identical to prior releases. `"rphylopars"` routes the joint MVN,
-threshold-joint, and OVR categorical baselines through `Rphylopars::phylopars()`
+threshold-joint, and one-versus-rest categorical baselines through `Rphylopars::phylopars()`
 instead, whose output contract (`$anc_recon` / `$anc_var` / `$pars$phylocov`)
 the in-house solver was built to match. If the phylopars call errors or
 produces a non-finite tip prediction, pigauto warns and falls back to the
@@ -2908,7 +2941,7 @@ correlation carries signal.
 ## Multi-observation unlock
 
 - **Multi-obs data now uses Level-C paths**. Previously the joint MVN,
-  threshold-joint, and OVR categorical paths refused multi-obs input via
+  threshold-joint, and one-versus-rest categorical paths refused multi-obs input via
   four `!multi_obs` guards in `fit_baseline()`. Those guards are all
   removed; multi-obs data is aggregated to species level inside each
   Level-C helper via a new internal `aggregate_to_species()` helper.

@@ -2,6 +2,8 @@
 % Please edit documentation in R/simulate_benchmark.R
 \name{simulate_benchmark}
 \alias{simulate_benchmark}
+\alias{print.pigauto_benchmark}
+\alias{summary.pigauto_benchmark}
 \title{Run a simulation benchmark for pigauto}
 \usage{
 simulate_benchmark(
@@ -16,6 +18,10 @@ simulate_benchmark(
   gnn = TRUE,
   ...
 )
+
+\method{print}{pigauto_benchmark}(x, ...)
+
+\method{summary}{pigauto_benchmark}(object, ...)
 }
 \arguments{
 \item{n_species}{integer.  Number of tips in the simulated tree
@@ -48,43 +54,87 @@ GNN-corrected model even though \code{\link{fit_pigauto}} and
 \code{\link{impute}} default to \code{gnn = FALSE}.}
 
 \item{...}{additional arguments passed to \code{\link{fit_pigauto}}.}
+
+\item{x}{A benchmark object.}
+
+\item{object}{A benchmark object to summarize.}
 }
 \value{
 An object of class \code{"pigauto_benchmark"} with:
 \describe{
 \item{results}{data.frame with columns: \code{scenario},
 \code{rep}, \code{method}, \code{trait}, \code{type},
-\code{metric}, \code{value}, \code{n_test}.}
-\item{summary}{data.frame averaged across replicates.}
+\code{metric}, \code{value}, \code{n_test}. Failed attempts are
+caught and omitted; their messages are suppressed when
+\code{verbose = FALSE}. There is no returned attempt/failure table.}
+\item{summary}{data.frame averaged over surviving metric rows.
+Its \code{n_reps} column counts non-missing values for that metric,
+rather than all requested attempts.}
 \item{scenarios}{character vector of scenarios run.}
-\item{n_reps}{integer.}
+\item{n_reps}{integer: requested replicates per scenario.}
 \item{n_species}{integer.}
 }
+For scientific method comparisons, retain a separate attempt/failure
+table and reconcile every requested replicate before interpreting the
+returned summaries; this function alone does not preserve that denominator.
+
+The print method returns \code{x} invisibly.
+
+The summary method returns \code{object$summary} invisibly.
 }
 \description{
 Generates trait data under various evolutionary models, introduces
-missing data, fits both the Brownian motion baseline and the full
-pigauto GNN, and compares performance.  This is the recommended way
-to assess pigauto on data with known properties before applying it
-to real data.
+missing data, fits the Brownian motion baseline and a pigauto model,
+and compares performance. GNN training in the pigauto model is controlled
+by the \code{gnn} argument. Use it for exploratory comparisons
+and workflow checks. Its default of three replicates, and the one-replicate
+example, do not by themselves establish performance. For consequential
+performance claims, pre-specify a design, use replication suited to the
+question, and account for every requested attempt, including failures.
+The result summary alone does not preserve that denominator. The baseline
+is fitted first with \code{fit_baseline()}'s
+defaults: estimated continuous-family and discrete-trait lambda,
+\code{joint_solver = "inhouse"}, and automatic exact/per-column routing
+where the joint path is eligible. Arguments in \code{...} are forwarded
+only to \code{fit_pigauto()} after the baseline is fitted; they do not
+change its settings. To compare another baseline configuration, construct
+that baseline explicitly in a custom evaluation workflow.
 }
 \details{
 \strong{Available scenarios:}
 \describe{
-\item{\code{"BM"}}{Pure Brownian motion -- the baseline is exact,
-so the GNN should tie or slightly improve via inter-trait
-correlations.}
-\item{\code{"OU"}}{Ornstein-Uhlenbeck -- stabilising selection
-constrains variation.  BM over-estimates evolutionary variance.}
-\item{\code{"regime_shift"}}{Two-regime BM -- clade-specific optima
-create bimodal distributions that BM cannot capture.}
-\item{\code{"nonlinear"}}{Non-linear inter-trait relationships --
-the GNN's multi-layer message passing can capture quadratic and
-interaction effects that BM's linear covariance misses.}
+\item{\code{"BM"}}{Independent-trait Brownian-motion control. Each
+trait is generated separately; no cross-trait covariance is imposed.
+The fitted baseline estimates parameters rather than using known
+generating values. Finite-sample changes in GNN performance are
+measured outcomes, not a promised benefit from cross-trait correlation.}
+\item{\code{"OU"}}{Ornstein-Uhlenbeck traits with a specified
+stabilising-selection parameterisation. This differs from the BM
+control; the scenario definition alone does not establish which
+method predicts better.}
+\item{\code{"regime_shift"}}{Two-regime BM with opposite additive
+offsets for two clades. The resulting distribution depends on the
+tree and offset; bimodality is not guaranteed.}
+\item{\code{"nonlinear"}}{Traits are generated with non-linear
+inter-trait relationships. Any difference in predictive performance
+is an empirical outcome, not a guaranteed advantage for either method.}
 \item{\code{"mixed"}}{Mixed trait types: 2 continuous + 1 binary +
-1 categorical (3 levels).  Tests the full type pipeline.}
+1 categorical trait (3 levels). This scenario exercises these three
+types together; it does not cover every supported trait type.}
 }
 }
+\section{Printing}{
+
+Prints requested replicates and aggregate metrics from surviving result rows. The \code{...} argument is currently unused.
+}
+
+\section{Summary method}{
+
+\code{summary()} prints scenario metrics and relative RMSE changes using the
+surviving rows. Relative changes can be undefined for a zero baseline RMSE.
+Its \code{...} argument is unused.
+}
+
 \examples{
 \donttest{
 bench <- simulate_benchmark(n_species = 20L, n_traits = 2L,

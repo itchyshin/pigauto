@@ -39,9 +39,11 @@
 #'     \code{plot(fit)} then shows \code{"gates"} instead.
 #'   \code{"gates"}: bar plot of calibrated gate values per trait,
 #'     coloured by trait type (green = continuous, blue = count,
-#'     orange = ordinal, red = binary, purple = categorical).
+#'     orange = ordinal, red = binary, purple = categorical). When
+#'     \code{gnn = FALSE}, gate values are zero, so no bars may be visible;
+#'     that is expected for a baseline-only fit.
 #'   \code{"conformal"}: bar plot of conformal prediction scores per
-#'     trait with a reference line at the median score.
+#'     trait with a dashed median line and its value labelled above the bars.
 #' @param ... Additional arguments passed to base plotting functions.
 #' @return Invisible \code{NULL}. Called for its side effect (plotting).
 #' @examples
@@ -252,8 +254,9 @@ plot.pigauto_result <- function(x, ...) {
   # Reference line at median
   med <- stats::median(cs)
   abline(h = med, lty = 2, col = "#636363", lwd = 0.8)
-  mtext(paste0("median = ", round(med, 3)), side = 4, at = med,
-        las = 1, cex = 0.7, col = "#636363", line = 0.3)
+  text(x = max(bp), y = max(cs) * 1.08,
+       labels = paste0("Median: ", round(med, 3)), adj = 1,
+       cex = 0.7, col = "#636363")
 }
 
 
@@ -268,10 +271,18 @@ plot.pigauto_result <- function(x, ...) {
 #'
 #' @param x An object of class \code{"pigauto_pred"}.
 #' @param data Optional numeric matrix or data.frame of observed values
-#'   in original scale.  When supplied, observed values are overlaid on
-#'   scatter and interval plots.
+#'   in original scale. Rows must match the predictions in \code{x} one-for-one
+#'   and in the same order; rows are paired by position, not matched by row
+#'   names or species identifiers. Trait columns are selected by name. Values
+#'   are overlaid on scatter and interval plots. For probability plots, class
+#'   labels are used to group predictions; rows with missing or unrecognized
+#'   labels are omitted from these groups.
 #' @param splits Optional list (output of \code{\link{make_missing_splits}}).
-#'   Used to identify which cells were held out for evaluation.
+#'   Currently unused by this plotting method. All finite pairs in
+#'   \code{data} and \code{x$imputed} are plotted, so the scatter is not a
+#'   held-out performance estimate. To display held-out cells, obtain
+#'   \code{predict(fit, evaluation = TRUE)}, and supply a truth frame with
+#'   every cell outside the desired validation/test subset set to NA.
 #' @param type Character.
 #'   \code{"scatter"} (default): grid of observed-vs-predicted scatter
 #'     plots for continuous, count, and proportion traits, with 1:1 line and
@@ -279,9 +290,21 @@ plot.pigauto_result <- function(x, ...) {
 #'   \code{"intervals"}: for each trait, species sorted by predicted
 #'     value with conformal-interval ribbon; observed values shown in
 #'     red where available.
-#'   \code{"probabilities"}: for binary traits, boxplot of predicted
-#'     probabilities grouped by true class; for categorical traits,
-#'     stacked bar chart of mean predicted probabilities by true class.
+#'   \code{"probabilities"}: for binary traits, the probability of the
+#'     second class level is shown in boxplots grouped by observed class when
+#'     usable labels are present; otherwise a histogram shows the
+#'     probabilities. For categorical traits, usable labels give stacked
+#'     bars of mean predicted probabilities by observed class; without usable
+#'     labels, stacked bars show up to 100 observations, ordered by their
+#'     most probable class. These plots are descriptive: grouping by observed
+#'     class does not itself assess calibration. Unless the predictions are
+#'     for cells held out from fitting and \code{data} supplies their truth,
+#'     they are not held-out performance assessments. To inspect held-out
+#'     predictions, use \code{predict(fit, evaluation = TRUE)} and provide a
+#'     truth frame with all other cells set to \code{NA}. Select only
+#'     traits with at least one usable held-out class label; otherwise the
+#'     fallback plot uses predictions without restricting them to held-out
+#'     cells.
 #' @param trait Character vector of trait names to plot.  If \code{NULL}
 #'   (default), all traits appropriate for the chosen \code{type} are
 #'   plotted.
@@ -295,10 +318,18 @@ plot.pigauto_result <- function(x, ...) {
 #'                      c("Mass", "Wing.Length"), drop = FALSE]
 #' rownames(traits) <- tree$tip.label
 #' traits$Mass[seq_len(3L)] <- NA_real_
-#' pred <- impute(traits, tree, epochs = 5L, verbose = FALSE)$prediction
+#' result <- impute(traits, tree, epochs = 5L, verbose = FALSE)
+#' pred <- result$prediction
 #' plot(pred)
-#' plot(pred, type = "scatter", data = traits)
+#' plot(pred, type = "scatter", data = traits) # descriptive all-finite pairs
 #' plot(pred, type = "intervals", trait = "Mass")
+#' # These two continuous traits each occupy one latent column.
+#' evaluation_pred <- predict(result$fit, evaluation = TRUE)
+#' heldout_truth <- as.matrix(traits)
+#' heldout_truth[] <- NA_real_
+#' idx <- result$fit$splits$test_idx
+#' heldout_truth[idx] <- as.matrix(traits)[idx]
+#' plot(evaluation_pred, type = "scatter", data = heldout_truth)
 #' }
 #' @importFrom graphics par plot points lines abline barplot axis text
 #' @importFrom graphics legend mtext segments arrows rect polygon boxplot hist

@@ -8,18 +8,19 @@ source_root_or_skip <- function() {
 
 test_that("canonical novice journey is present in the public sources", {
   root <- source_root_or_skip()
-  journey <- c(
-    'traits <- read_traits("traits.csv")',
-    'tree <- read_tree("tree.nwk")',
-    "check_pigauto(traits, tree)",
-    "result <- impute(traits, tree)",
-    "completed <- completed_data(result)",
-    "pigauto_report(result)"
-  )
-  for (path in c("README.md", file.path("vignettes", "getting-started.Rmd"))) {
-    text <- paste(readLines(file.path(root, path), warn = FALSE), collapse = "\n")
-    expect_true(all(vapply(journey, grepl, logical(1), x = text, fixed = TRUE)), info = path)
-  }
+  readme <- paste(readLines(file.path(root, "README.md"), warn = FALSE), collapse = "\n")
+  getting <- paste(readLines(file.path(root, "vignettes", "getting-started.Rmd"), warn = FALSE), collapse = "\n")
+  expect_true(all(vapply(c(
+    'traits <- read_traits("traits.csv")', 'tree <- read_tree("tree.nwk")',
+    "check_pigauto(traits, tree)", "result <- impute(traits, tree)",
+    "completed <- completed_data(result)", "pigauto_report(result)"
+  ), grepl, logical(1), x = readme, fixed = TRUE)), info = "README.md")
+  expect_true(all(vapply(c(
+    'traits <- read_traits("traits.csv", species_col = "species")',
+    'tree <- read_tree("tree.nwk")', "check_pigauto(traits, tree)",
+    "result <- impute(traits, tree, gnn = FALSE)",
+    "completed <- completed_data(result)", "pigauto_report(result)"
+  ), grepl, logical(1), x = getting, fixed = TRUE)), info = "getting-started.Rmd")
 })
 
 test_that("installed novice fixture and script parse without fitting", {
@@ -89,7 +90,8 @@ test_that("current public claim surfaces retain their stated boundaries", {
   expect_false(grepl("0\\.14-1\\.27|lower z-RMSE|~13%", read_text("R", "fit_baseline.R")))
   expect_false(grepl("\\+6\\.6|will outperform|materially outperforms|typically helps|λ > 0\\.7", read_text("vignettes", "common-pitfalls.Rmd"), ignore.case = TRUE))
   expect_false(grepl("confirmed .* beats|z-RMSE 1\\.038|giving \\>= 95", read_text("vignettes", "gnn-architecture.Rmd"), ignore.case = TRUE))
-  expect_match(read_text("R", "active_impute.R"), "model-based BM/label-propagation proxy", fixed = TRUE)
+  expect_match(read_text("R", "active_impute.R"), "These are model-based screening scores", fixed = TRUE)
+  expect_match(read_text("R", "active_impute.R"), "field-sampling or downstream-analysis gains", fixed = TRUE)
   expect_match(read_text("vignettes", "getting-started.Rmd"), "nominal\\s+held-out diagnostics")
 })
 
@@ -97,6 +99,7 @@ test_that("tree benchmark and interval help retain current boundaries", {
   root <- source_root_or_skip()
   read_text <- function(...) paste(readLines(file.path(root, ...), warn = FALSE), collapse = "\n")
   tree_vignette <- read_text("vignettes", "tree-uncertainty.Rmd")
+  tree_plain <- gsub("[[:space:]]+", " ", tree_vignette)
   predict_source <- read_text("R", "predict_pigauto.R")
   predict_rd <- read_text("man", "predict.pigauto_fit.Rd")
   fit_source <- read_text("R", "fit_pigauto.R")
@@ -114,13 +117,17 @@ test_that("tree benchmark and interval help retain current boundaries", {
     expect_match(tombstone, "not MI, Rubin pooling, SE, or FMI", fixed = TRUE)
     expect_false(grepl("Pooled estimates|Rubin's rules", tombstone, fixed = TRUE))
   }
-  expect_match(tree_vignette, "descriptive prediction sensitivity only", fixed = TRUE)
-  expect_match(tree_vignette, "do not pass them to `pool_mi()`", fixed = TRUE)
+  expect_match(tree_vignette, "prediction-sensitivity diagnostic", fixed = TRUE)
+  expect_match(tree_plain, "does not measure uncertainty in a downstream effect estimate", fixed = TRUE)
+  expect_match(tree_vignette, "Do not use them for downstream inference", fixed = TRUE)
+  expect_match(tree_vignette, "pass them to", fixed = TRUE)
+  expect_match(tree_vignette, "`pool_mi()`", fixed = TRUE)
 
   for (text in list(predict_source, predict_rd)) {
-    expect_false(grepl("safe for interval arithmetic", text, fixed = TRUE))
-    expect_match(text, "model-dependent BM/joint conditional SD", fixed = TRUE)
-    expect_match(text, "not total final blended-prediction uncertainty", fixed = TRUE)
+    plain <- gsub("[[:space:]]+", " ", gsub("#' ?", "", text))
+    expect_false(grepl("safe for interval arithmetic", plain, fixed = TRUE))
+    expect_match(plain, "model-dependent BM/joint conditional SD", fixed = TRUE)
+    expect_match(plain, "not total final blended-prediction uncertainty", fixed = TRUE)
   }
   for (text in list(fit_source, fit_rd)) {
     plain <- gsub("[[:space:]]+", " ", text)

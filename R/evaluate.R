@@ -1,31 +1,48 @@
 #' Evaluate a fitted pigauto model on its test set
 #'
 #' Computes type-specific performance metrics for each trait.  By default
-#' the model is evaluated on the test split stored in the fit object, but
-#' an alternative \code{data} / \code{splits} can be supplied.
+#' the model is evaluated on the test split stored in the fit object. An
+#' alternative \code{data} can provide the truth matrix, and alternative
+#' \code{splits} can select compatible held-out cells from the original fit;
+#' evaluation does not refit the baseline or GNN for a new holdout design.
 #'
 #' @details
 #' **Metrics by trait type:**
 #' \describe{
-#'   \item{continuous}{RMSE, Pearson r, MAE}
-#'   \item{count}{RMSE, MAE, Pearson r}
+#'   \item{continuous}{RMSE, Pearson r, and MAE on the z-scored latent scale}
+#'   \item{count}{RMSE, MAE, and Pearson r on the z-scored log1p latent scale}
 #'   \item{binary}{Accuracy, Brier score}
 #'   \item{categorical}{Accuracy (overall)}
-#'   \item{ordinal}{RMSE (on integer scale), Spearman rho}
+#'   \item{ordinal}{RMSE on the z-scored latent scale, Spearman rho}
+#'   \item{proportion}{RMSE and MAE on the transformed latent scale, Pearson r}
+#'   \item{zi_count}{RMSE, MAE, and Pearson r on the original count scale,
+#'     comparing observed counts with predicted expected counts; zero-accuracy
+#'     and Brier score are computed for the zero/nonzero gate}
+#'   \item{multi_proportion}{Aitchison distance in CLR space, z-scored CLR
+#'     RMSE, and decoded simplex MAE}
 #' }
 #'
-#' When conformal scores are present in the fit, conformal coverage at
-#' the 95\% nominal level is also reported for continuous, count, and
-#' ordinal traits.
+#' When conformal scores are present in the fit, \code{conformal_coverage_95}
+#' is reported for continuous, count, ordinal, and proportion traits. This is
+#' the empirical fraction of test predictions inside the same trait-level
+#' conformal radius around each prediction. It uses one score per trait, not
+#' cell-specific or Mondrian bounds.
+#' Cross-validation and model reports can also report coverage of their
+#' actual per-cell bounds.
 #'
 #' When the fit includes a baseline, baseline metrics are appended with
-#' \code{method = "baseline"} for direct comparison.
+#' \code{method = "baseline"} for direct comparison. This uses the baseline
+#' already stored in the fit and its selected defaults; \code{evaluate()} has
+#' no argument for alternative baseline settings. To compare another
+#' baseline, construct it explicitly in a separate evaluation workflow.
 #'
 #' @param fit pigauto_fit object.
 #' @param data pigauto_data object (default: \code{NULL}, uses the
 #'   training data stored in the fit via \code{predict()}).
 #' @param splits splits object (default: \code{NULL}, uses
-#'   \code{fit$splits}).
+#'   \code{fit$splits}). Alternative indices must be a compatible subset of
+#'   the cells held out when the fit was made; this argument does not refit
+#'   for a new holdout design.
 #' @return A \code{data.frame} with columns: \code{method}, \code{trait},
 #'   \code{type}, \code{metric}, \code{value}, \code{n_test}.
 #' @examples
@@ -489,9 +506,13 @@ eval_test_cells_legacy <- function(pred_latent, truth_latent,
 
 #' Compare BM baseline and pigauto methods across replicates
 #'
-#' Runs a full comparison of the BM baseline and pigauto (with attention +
-#' calibration) over multiple random seeds.  Returns a tidy data.frame
-#' suitable for plotting or downstream analysis.
+#' Compares the BM baseline and pigauto (with attention and calibration).
+#' The default performs one run using the current random-number state; supply a
+#' vector of seeds for replicated runs. Returns a tidy data.frame
+#' suitable for plotting or downstream analysis. This helper uses the default
+#' baseline controls, including estimated continuous-family lambda and
+#' automatic exact/per-column prediction routing. Arguments in `...` do not
+#' change the already-fitted baseline used for the held-out comparison.
 #'
 #' @details
 #' For each seed the function:
@@ -508,7 +529,7 @@ eval_test_cells_legacy <- function(pred_latent, truth_latent,
 #' @param splits pre-computed splits (applied to all reps) or \code{NULL}
 #'   to create fresh splits per seed.
 #' @param seeds optional integer vector of random seeds for replication. The
-#'   default \code{NULL} performs one run using the current RNG stream.
+#'   default \code{NULL} performs one run using the current random-number state.
 #' @param epochs number of training epochs.
 #' @param verbose logical.
 #' @param gnn logical. Whether the pigauto arm trains the GNN. Default
@@ -516,6 +537,8 @@ eval_test_cells_legacy <- function(pred_latent, truth_latent,
 #'   GNN-corrected model even though \code{\link{fit_pigauto}} and
 #'   \code{\link{impute}} default to \code{gnn = FALSE}.
 #' @param ... additional arguments passed to \code{\link{fit_pigauto}}.
+#'   Baseline controls supplied here do not change the already fitted
+#'   baseline used for held-out comparison.
 #' @return A \code{data.frame} with columns: \code{method}, \code{trait},
 #'   \code{type}, \code{metric}, \code{value}, \code{rep}.
 #' @details The default comparison trains the optional torch GNN. The example
@@ -615,15 +638,19 @@ compare_methods <- function(data, tree, splits = NULL, seeds = NULL,
 #' Summary method for pigauto_fit objects
 #'
 #' Prints a formatted evaluation table including per-trait metrics,
-#' gate calibration, and conformal coverage.  Requires the original
+#' gate calibration, and conformal coverage. For a trait represented by
+#' multiple latent columns, the displayed gate uses its first latent column.
+#' Requires the original
 #' \code{pigauto_data} object to compute test-set performance.
 #'
 #' @param object pigauto_fit object.
 #' @param data pigauto_data object used for fitting (optional; when
 #'   \code{NULL} the summary skips per-trait test metrics).
 #' @param ... ignored.
-#' @return Invisibly returns the evaluation data.frame (or \code{NULL} if
-#'   \code{data} is not supplied).
+#' @return Invisibly returns the evaluation data.frame, or \code{NULL} if
+#'   \code{data} is not supplied, the fit has no test cells, or evaluation
+#'   fails. If evaluation fails, the method prints a message and returns
+#'   \code{NULL}.
 #' @examples
 #' \donttest{
 #' data(avonet300, tree300)
@@ -635,6 +662,10 @@ compare_methods <- function(data, tree, splits = NULL, seeds = NULL,
 #' splits <- make_missing_splits(pd$X_scaled, trait_map = pd$trait_map)
 #' fit <- fit_pigauto(pd, tree, splits = splits, epochs = 5L,
 #'                    verbose = FALSE)
+#' # This small test set illustrates the output; it is too small for a
+#' # stable performance conclusion. Use a held-out design sized for your
+#' # question. Repeated splits or seeds assess split/training variability,
+#' # but do not by themselves establish generalisation.
 #' summary(fit, data = pd)
 #' }
 #' @export

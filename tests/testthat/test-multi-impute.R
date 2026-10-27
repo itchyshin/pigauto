@@ -171,7 +171,8 @@ test_that("cells that were originally missing vary across at least some datasets
   expect_equal(nrow(mat_stack), 3L)
 
   # At least one missing cell should have non-zero variance across M draws.
-  # (BM posterior draws guarantee this even when calibrated gates are 0.)
+  # This fixture has nonzero baseline SD at missing cells, so at least one
+  # per-cell perturbation should vary even when the GNN gate is 0.
   col_sds <- apply(mat_stack, 2, stats::sd, na.rm = TRUE)
   expect_true(any(col_sds > 1e-10),
               info = "draws should produce varying imputations")

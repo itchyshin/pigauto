@@ -16,9 +16,15 @@ from \code{\link{predict.pigauto_fit}}.}
 
 \item{splits}{list (output of \code{\link{make_missing_splits}}).}
 
-\item{pred_se}{numeric matrix of prediction SEs (same scale as
-\code{pred}).  Used for 95\\% coverage of continuous traits.  Ignored
-when \code{pred} is a \code{pigauto_pred} (uses \code{pred$se}).}
+\item{pred_se}{numeric matrix of prediction SEs on the scale of the
+predictions being evaluated. For a \code{pigauto_pred}, this means
+the latent predictions in \code{pred$imputed_latent}; it does not
+accept original-scale SEs as an override. Used for empirical coverage of the symmetric
+\eqn{\hat y +/- 1.96 SE} interval on the latent scale for continuous
+and proportion traits. This \code{coverage_95} is distinct from the
+conformal bound coverage metric reported by \code{evaluate()}. When
+\code{pred} is a \code{pigauto_pred}, an explicit \code{pred_se} takes
+precedence; otherwise its \code{se_latent} is used when available.}
 
 \item{trait_map}{list of trait descriptors (from \code{pigauto_data}).
 If \code{NULL} and \code{pred} is not a \code{pigauto_pred}, the
@@ -45,16 +51,20 @@ must ensure the cells were held out themselves.
 
 \strong{Metrics by trait type:}
 \describe{
-\item{continuous}{RMSE, Pearson r, 95\\% interval coverage (if SE
-supplied)}
-\item{proportion}{RMSE, Pearson r, 95\\% interval coverage (if SE
-supplied)}
-\item{count}{RMSE, MAE, Pearson r}
-\item{ordinal}{RMSE, Spearman rho}
+\item{continuous}{RMSE on the latent scale, Pearson r, and
+\code{coverage_95}: empirical coverage of the symmetric
+\eqn{\hat y +/- 1.96 SE} interval on that scale, when SE is supplied}
+\item{proportion}{RMSE on the latent scale, Pearson r, and
+\code{coverage_95} on that scale, when SE is supplied}
+\item{count}{RMSE, MAE, and Pearson r on the z-scored log1p latent scale}
+\item{ordinal}{RMSE on the z-scored latent scale, Spearman rho}
 \item{binary}{Accuracy, Brier score}
 \item{categorical}{Accuracy}
-\item{zi_count}{RMSE, MAE, Pearson r, zero-accuracy, Brier score
-(on gate)}
+\item{zi_count}{RMSE, MAE, and Pearson r on the original count scale,
+comparing observed counts with predicted expected counts;
+zero-accuracy and Brier score on the zero/nonzero gate}
+\item{multi_proportion}{Aitchison distance in CLR space, RMSE on the
+z-scored CLR latent scale, and MAE on the decoded simplex}
 }
 
 For binary and categorical traits the function accepts either a
@@ -65,6 +75,9 @@ raw matrices (latent scale).
 \donttest{
 truth <- matrix(c(1, 2, 3, 4), nrow = 2L)
 splits <- list(test_idx = 1L, val_idx = 2L, n = 2L, p = 2L)
+# Equal inputs illustrate the interface and output shape only: RMSE is zero
+# by construction, correlation is unavailable with one cell per split, and
+# this is not a performance evaluation.
 evaluate_imputation(truth, truth, splits)
 }
 }

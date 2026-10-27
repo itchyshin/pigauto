@@ -11,8 +11,12 @@ confusion_matrix(truth, predicted, levels = NULL)
 
 \item{predicted}{factor or character vector of predicted classes.}
 
-\item{levels}{character vector of class levels (default: union of
-truth and predicted levels).}
+\item{levels}{character vector of class labels (default: sorted union of
+labels observed in truth and predicted). If you supply this, include
+every label
+you want counted. Any truth or prediction label not listed is treated
+as missing; that pair is omitted from the confusion table and the
+denominator used to calculate accuracy.}
 }
 \value{
 A list with:
@@ -24,6 +28,13 @@ A list with:
 }
 \description{
 Compute a confusion matrix for categorical or binary predictions
+}
+\details{
+Pairs with a missing truth or prediction are omitted from the
+confusion table and accuracy denominator. If no complete pairs remain,
+accuracy is \code{NaN} (undefined). Per-class precision or recall is
+\code{NA} when its denominator is zero. F1 is \code{NA} when precision
+or recall is \code{NA}, or when both are zero.
 }
 \examples{
 confusion_matrix(

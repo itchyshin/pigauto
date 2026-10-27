@@ -19,13 +19,37 @@
 #'   The default `FALSE` skips the torch runtime probe, matching [impute()]'s
 #'   default. Set `TRUE` to include the torch runtime in the preflight.
 #' @return A list of class `pigauto_check` containing a schema version, status,
-#'   stable input fingerprint, input summaries, and structured messages.
+#'   readiness flag, stable input fingerprint, input summaries, and structured
+#'   messages.
+#' @section Reading the result:
+#' Printing the result shows its status and, when present, up to three
+#' message/action pairs. Inspect `check$messages` for the complete table and
+#' follow its `action` column. The four status values mean:
+#'
+#' * `"ready"`: the implemented checks found no errors or warnings.
+#' * `"ready_with_warnings"`: review the warnings before deciding to fit.
+#' * `"error"`: repair the reported problems before calling [impute()].
+#' * `"not_needed"`: all matched target cells are observed, so no imputation
+#'   is needed. Use [cross_validate()] to assess prediction instead.
+#'
+#' `check$ready` is `TRUE` for `"ready"` and `"ready_with_warnings"`: the
+#' current input checks found no errors, though warnings may remain. It is
+#' `FALSE` for `"error"` and `"not_needed"`. Review any warnings and assess
+#' whether a model is scientifically suitable for your data separately.
+#' Inspect `check$species` and `check$traits` to confirm species matching
+#' and trait declarations.
 #' @examples
-#' \donttest{
 #' tree <- ape::read.tree(text = "((a:1,b:1):1,c:2);")
 #' traits <- data.frame(x = c(1, NA, 3), row.names = tree$tip.label)
-#' check_pigauto(traits, tree)
-#' }
+#' check <- check_pigauto(traits, tree)
+#' check
+#' check$ready
+#' check$messages
+#'
+#' # An input error is returned as a report with a suggested action.
+#' bad_tree <- tree
+#' bad_tree$edge.length <- NULL
+#' check_pigauto(traits, bad_tree)
 #' @export
 check_pigauto <- function(traits, tree, species_col = NULL,
                           trait_types = NULL,
@@ -344,6 +368,11 @@ check_pigauto <- function(traits, tree, species_col = NULL,
 #' @param x A `pigauto_check` object.
 #' @param ... Unused.
 #' @return `x`, invisibly.
+#' @section Printing:
+#' Always prints the status line. When messages are present, also prints
+#' their count and at most the first three text/action pairs. With no
+#' messages, only the status line is printed. Inspect \code{x$messages}
+#' for the complete structured message table; \code{...} is unused.
 #' @export
 print.pigauto_check <- function(x, ...) {
   cat("pigauto input check:", x$status, "\n")

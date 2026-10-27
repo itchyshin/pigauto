@@ -26,7 +26,7 @@ test_that("auto resolves to posterior for continuous-only, one-row-per-species d
       x$df, x$tree, species_col = NULL, trait_types = NULL,
       multi_proportion_groups = NULL, log_transform = TRUE,
       covariates = NULL, verbose = TRUE),
-    "using \"posterior\"")
+    "input conditions for \"posterior\" draws.*does not establish downstream inferential validity")
   expect_identical(out, "posterior")
   expect_silent(pigauto:::.mi_resolve_draws_auto(
     x$df, x$tree, species_col = NULL, trait_types = NULL,

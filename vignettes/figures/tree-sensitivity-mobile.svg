@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="900" viewBox="0 0 420 900" role="img" aria-labelledby="tree-check-mobile-title tree-check-mobile-desc">
+  <title id="tree-check-mobile-title">What the posterior-tree check measures</title>
+  <desc id="tree-check-mobile-desc">Prediction error compares the average of available tree predictions with the measured value that was hidden. Tree sensitivity summarizes the spread of predictions for that hidden value across trees, using standard deviation. Neither quantity estimates uncertainty in a downstream model effect.</desc>
+  <style>
+    .label { font: 700 25px Arial, sans-serif; fill: #243b32; }
+    .detail { font: 22px Arial, sans-serif; fill: #243b32; }
+    .small { font: 20px Arial, sans-serif; fill: #243b32; }
+    .box { fill: #f3f7f5; stroke: #477260; stroke-width: 3; }
+    .note { fill: #fff8e8; stroke: #806b35; stroke-width: 3; }
+    .rule { stroke: #8ba99a; stroke-width: 2; }
+  </style>
+  <rect aria-hidden="true" x="0" y="0" width="420" height="900" fill="#ffffff" />
+  <text class="label" x="20" y="38">Two summaries from the same</text>
+  <text class="label" x="20" y="68">tree-specific predictions</text>
+  <rect class="box" x="14" y="94" width="392" height="192" rx="12" />
+  <text class="label" x="30" y="132">Prediction error</text>
+  <text class="detail" x="30" y="170">Compare their average</text>
+  <text class="detail" x="30" y="202">with hidden measurement</text>
+  <text class="detail" x="30" y="244">Error: RMSE or MAE</text>
+  <text class="small" x="30" y="324">Same predictions, separate summaries</text>
+  <rect class="box" x="14" y="344" width="392" height="204" rx="12" />
+  <text class="label" x="30" y="384">Tree sensitivity</text>
+  <text class="detail" x="30" y="422">Spread for one hidden value</text>
+  <text class="detail" x="30" y="454">across the supplied trees</text>
+  <text class="detail" x="30" y="496">Summarise with standard</text>
+  <text class="detail" x="30" y="526">deviation (SD)</text>
+  <line class="rule" x1="14" y1="572" x2="406" y2="572" />
+  <rect class="note" x="14" y="596" width="392" height="250" rx="12" />
+  <text class="label" x="30" y="636">Downstream model effects</text>
+  <text class="detail" x="30" y="678">Not estimated here. Validate</text>
+  <text class="detail" x="30" y="710">bias and interval coverage</text>
+  <text class="detail" x="30" y="742">in a separate workflow.</text>
+  <text class="small" x="30" y="790">This check does not establish</text>
+  <text class="small" x="30" y="818">inferential validity.</text>
+</svg>

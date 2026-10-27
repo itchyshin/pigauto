@@ -17,3 +17,9 @@
 \description{
 Print a pigauto result summary
 }
+\details{
+Prints the four aggregate counts and, when available, a generic
+output-role notice. It does not print the per-trait table, check details,
+or evaluation metrics. Inspect \code{x$per_trait}, \code{x$check}, and
+\code{x$evaluation} for those fields. The dots argument is unused.
+}

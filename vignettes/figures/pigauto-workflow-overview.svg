@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="808" viewBox="0 0 720 808" role="img" aria-labelledby="title description">
+  <title id="title">A typical pigauto run</title>
+  <desc id="description">Six stages: match the trait table to the tree; prepare each type of trait for modelling; select a suitable phylogenetic baseline; optionally add a graph neural network, which is off by default; use held-out validation observations to choose weights for the baseline, GNN, and optional mean; a direct covariate effect may also contribute; return completed data, predictions and uncertainty summaries.</desc>
+  <style>
+    text { font-family: Inter, Arial, sans-serif; fill: #26352f; }
+    .heading { font-size: 34px; font-weight: 700; }
+    .step { font-size: 25px; font-weight: 700; fill: #245044; }
+    .detail { font-size: 24px; }
+    .box { fill: #f6f8f7; stroke: #b8c8c1; stroke-width: 2; }
+    .badge { fill: #245044; }
+    .number { font-size: 17px; font-weight: 700; fill: #fff; text-anchor: middle; }
+    .arrow { stroke: #58796d; stroke-width: 3; fill: none; }
+    @media (max-width: 600px) {
+      .heading { font-size: 36px; }
+      .step { font-size: 27px; }
+      .detail { font-size: 25px; }
+      .number { font-size: 22px; }
+      .box { stroke-width: 3; }
+      .arrow { stroke-width: 4; }
+    }
+  </style>
+  <defs>
+    <marker id="arrowhead" markerWidth="9" markerHeight="9" refX="4.5" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#58796d" />
+    </marker>
+  </defs>
+  <text class="heading" x="24" y="36">A typical pigauto run</text>
+
+  <g aria-hidden="true">
+    <rect class="box" x="20" y="58" width="680" height="96" rx="8" />
+    <circle class="badge" cx="55" cy="106" r="20" />
+    <text class="number" x="55" y="112">1</text>
+    <text class="step" x="88" y="96">Align traits and tree</text>
+    <text class="detail" x="88" y="122">Match species; mark the missing cells.</text>
+
+    <path class="arrow" d="M360 156 L360 176" marker-end="url(#arrowhead)" />
+    <rect class="box" x="20" y="186" width="680" height="96" rx="8" />
+    <circle class="badge" cx="55" cy="234" r="20" />
+    <text class="number" x="55" y="240">2</text>
+    <text class="step" x="88" y="224">Prepare each type of trait</text>
+    <text class="detail" x="88" y="250">Transform and scale measurements for modelling.</text>
+
+    <path class="arrow" d="M360 284 L360 304" marker-end="url(#arrowhead)" />
+    <rect class="box" x="20" y="314" width="680" height="96" rx="8" />
+    <circle class="badge" cx="55" cy="362" r="20" />
+    <text class="number" x="55" y="368">3</text>
+    <text class="step" x="88" y="352">Select a baseline</text>
+    <text class="detail" x="88" y="378">Type and settings select BM, label propagation, or an</text>
+    <text class="detail" x="88" y="401">eligible joint fit; covariate support varies by route.</text>
+
+    <path class="arrow" d="M360 412 L360 432" marker-end="url(#arrowhead)" />
+    <rect class="box" x="20" y="442" width="680" height="96" rx="8" />
+    <circle class="badge" cx="55" cy="490" r="20" />
+    <text class="number" x="55" y="496">4</text>
+    <text class="step" x="88" y="480">Optionally add the GNN</text>
+    <text class="detail" x="88" y="506">Off by default; when enabled, adds a learned component.</text>
+
+    <path class="arrow" d="M360 540 L360 560" marker-end="url(#arrowhead)" />
+    <rect class="box" x="20" y="570" width="680" height="96" rx="8" />
+    <circle class="badge" cx="55" cy="618" r="20" />
+    <text class="number" x="55" y="624">5</text>
+    <text class="step" x="88" y="608">Compare predictions with held-back data</text>
+    <text class="detail" x="88" y="634">Validation selects model weights per trait.</text>
+    <text class="detail" x="88" y="658">Mean is optional; covariates act separately.</text>
+
+    <path class="arrow" d="M360 668 L360 688" marker-end="url(#arrowhead)" />
+    <rect class="box" x="20" y="698" width="680" height="96" rx="8" />
+    <circle class="badge" cx="55" cy="746" r="20" />
+    <text class="number" x="55" y="752">6</text>
+    <text class="step" x="88" y="736">Return results</text>
+    <text class="detail" x="88" y="762">Completed data, predictions, and uncertainty.</text>
+  </g>
+</svg>
