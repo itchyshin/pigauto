@@ -18,6 +18,8 @@
 ^pkgdown$
 ^docs$
 ^_site$
+^_site-audit-final$
+^_site-c2-clean$
 ^\.github$
 ^DOCS\.md$
 ^CLAUDE\.md$

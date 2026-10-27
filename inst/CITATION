@@ -1,0 +1,8 @@
+bibentry(
+  bibtype = "Manual",
+  title = "pigauto: Fill in Missing Species Traits Using a Phylogenetic Tree",
+  author = person("Shinichi", "Nakagawa"),
+  year = "2026",
+  note = "R package version 0.11.0",
+  url = "https://itchyshin.github.io/pigauto/"
+)

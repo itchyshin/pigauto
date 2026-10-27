@@ -9,9 +9,9 @@ An object of class \code{multiPhylo} containing 50 \code{phylo}
 objects, each with 300 tips.
 }
 \source{
-Li (2026), \pkg{megatrees} 1.0.0; trees pruned from
-\code{megatrees::get_tree_bird_n100()}. The source collection and its
-Ericson and Hackett backbones are described by Ericson et al. (2006),
+Example phylogenies drawn from the BirdTree collection. The source
+collection and its Ericson and Hackett backbones are described by Ericson
+et al. (2006),
 Hackett et al. (2008), and Jetz et al. (2012).
 }
 \usage{
@@ -28,10 +28,9 @@ software licence for \pkg{megatrees} does not establish rights for the
 underlying BirdTree data; see the installed \file{NOTICE}.
 }
 \details{
-Use with \code{\link{multi_impute_trees}} for experimental sensitivity of
-point imputations to posterior-tree choice. Tree uncertainty is not
-supported by the analysis-aware MI backend, and these stochastic datasets
-are not validated for downstream inference.
+Use with \code{\link{multi_impute_trees}} to compare point predictions
+across posterior-tree choices. This is a prediction-sensitivity check only;
+the resulting datasets cannot be pooled for downstream inference.
 }
 \references{
 Ericson PGP, Anderson CL, Britton T, et al. (2006). Diversification

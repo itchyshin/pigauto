@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_pigauto.R
 \name{plot_uncertainty}
 \alias{plot_uncertainty}
-\title{Plot uncertainty ribbons for imputed trait values}
+\title{Plot predictions and uncertainty displays for imputed trait values}
 \usage{
 plot_uncertainty(pred_result, truth = NULL, trait_name)
 }
@@ -20,11 +20,18 @@ from \code{\link{impute}} (its \code{$prediction} is used).}
 A \code{ggplot} object.
 }
 \description{
-Plots conformal prediction intervals when present, otherwise an
-approximate \code{prediction +/- 1.96 * SE} ribbon, sorted by predicted
-value.  If \code{truth} is supplied, observed values are overlaid as
-points.  Works for continuous, count, and ordinal traits.  For binary
-traits, plots predicted probabilities with an uncertainty ribbon.
+For continuous, count, and ordinal traits, plots conformal prediction
+intervals when present; otherwise it shows an approximate
+\code{prediction +/- 1.96 * SE} ribbon, sorted by predicted value.
+If \code{truth} is supplied, observed values are overlaid as points.
+For binary traits, the centre line is the predicted probability when
+available. Binary predictions have no conformal bounds here. If bounds
+are absent, this function still draws a ribbon using
+\code{min(p, 1-p)}, a probability-of-error score, as if it were an SE.
+This binary ribbon is only a visual score display: it is not a calibrated
+interval and has no stated coverage. Interpret the centre line as the
+probability; do not interpret the ribbon as an uncertainty interval. See
+\code{\link{predict.pigauto_fit}} for type-specific uncertainty meanings.
 }
 \examples{
 pred <- list(

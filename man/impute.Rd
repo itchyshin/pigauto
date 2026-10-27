@@ -2,6 +2,7 @@
 % Please edit documentation in R/impute.R
 \name{impute}
 \alias{impute}
+\alias{print.pigauto_result}
 \title{Impute missing phylogenetic traits (convenience wrapper)}
 \usage{
 impute(
@@ -40,6 +41,8 @@ impute(
   gnn = FALSE,
   ...
 )
+
+\method{print}{pigauto_result}(x, ...)
 }
 \arguments{
 \item{traits}{data.frame with species as rownames and trait columns,
@@ -93,9 +96,15 @@ validation/test evaluation (default \code{0.25}). Must be in
 \code{[0, 1)}. \code{0} adds no extra missingness (no val/test
 hold-out).}
 
-\item{n_imputations}{integer. Number of MC-dropout imputation sets
-(default \code{1}). Must be a positive integer. Values > 1 enable
-between-imputation uncertainty.}
+\item{n_imputations}{integer. Number of stochastic prediction-diagnostic
+draws (default \code{1}). Must be a positive integer. With multiple
+draws, prediction adds independent Gaussian perturbations per latent cell
+using the selected baseline SD; GNN dropout also varies across runs when
+\code{gnn = TRUE}. \code{pool_method} combines decoded draws for the
+returned point prediction. Despite this legacy argument name, these are
+not joint phylogenetic posterior draws or validated imputations for
+downstream inference. See \code{\link{multi_impute}} and the multiple-
+imputation article for the separate workflows and their limits.}
 
 \item{covariates}{data.frame or matrix of environmental covariates
 (fully observed — no NAs).  Covariates are conditioners: they inform
@@ -106,7 +115,15 @@ Rows are aligned to the same species / observation order as
 \code{traits} after tree matching (single-obs: rownames vs tip labels;
 multi-obs: \code{species_col} if present, otherwise input-row order).
 Matching \code{nrow} alone does not pair species to environment.
-Default \code{NULL} (no covariates).}
+Covariate use depends on the selected route: a covariate-aware
+per-column BM path may use them. Joint MVN and threshold-joint baselines
+omit them and emit a separate baseline warning. One-versus-rest categorical
+baselines also omit them but do not trigger the separate baseline warning
+themselves. In a mixed fit, another selected joint route can still trigger
+it. With \code{gnn = TRUE}, covariates also
+enter the GNN and its additive linear component. \code{predict_method = "per_column"}
+selects predictions within a joint fit; it does not activate
+covariate regression. Default \code{NULL} (no covariates).}
 
 \item{epochs}{integer. Maximum GNN training epochs (default \code{2000}).
 Must be a positive integer.}
@@ -118,91 +135,56 @@ and prediction steps reproducible; the default \code{NULL} uses the
 current RNG stream.}
 
 \item{multi_obs_aggregation}{character. How to aggregate multiple
-observations per species before the Level-C baseline.  \code{"hard"}
+observations per species before a joint baseline.  \code{"hard"}
 (default) thresholds binary proportions at 0.5 and uses argmax for
 categorical.  \code{"soft"} preserves species-level proportions and
 dispatches a soft E-step so that intermediate class frequencies
 contribute fractional liability evidence.  Passed to
 \code{\link{fit_baseline}}.}
 
-\item{lambda_mode}{character. Pagel-lambda mode for the BM baseline.
-\code{"estimate"} (default) fits a per-trait Pagel's lambda on each
-continuous-family (BM-eligible) latent column -- continuous, count,
-proportion, and zi_count magnitude, via the joint MVN /
-threshold-joint baseline's own \code{lambda_cols} machinery when that
-joint path fires, or a per-column re-fit otherwise. Binary, ordinal and
-categorical traits get their own lambda by default
-(\code{discrete_lambda = "estimate"}); the rest of this paragraph
-describes \code{discrete_lambda = "fixed_1"}, where discrete traits
-(binary, categorical, zi gate) AND ordinal have no discrete-trait
-analogue of Pagel's lambda of their own -- there is no lambda_k to
-estimate for them. Under \code{predict_method = "per_column"} (see
-below) they stay fixed at lambda = 1 in every path, matching pre-S3
-behaviour. Under \code{predict_method = "exact"} (and for traits the
-default \code{"auto"} routes to \code{"exact"}) they
-instead share the joint fit's \code{lambda_block} -- the exact
-conditional's covariance model uses ONE shared phylogenetic
-correlation matrix \code{R(lambda_block)} for every column, so the
-Sigma estimate feeding it must itself come from an internally
-consistent init, not a mix of \code{R(1)} for discrete columns and
-\code{R(lambda_k)} for continuous ones (Shinichi's decision,
-docs/dev-log/exact-default/S3-default-report.md). \code{"fixed_1"}
-preserves the pre-lambda Brownian correlation matrix everywhere;
-\code{"cv"} and \code{"bayes"} are alternative per-column estimators
-that force continuous-family columns onto the per-column BM path (no
-joint analogue). When \code{predict_method = "exact"} or
-\code{joint_refine_iter > 0}, the joint (multi-trait) prediction path
-additionally uses the single shared \code{lambda_block} for
-cross-trait computations that need one common phylogenetic
-correlation matrix, never overriding a continuous-family column's own
-estimated lambda_k. Passed to \code{\link{fit_baseline}} and stored in
-the fitted model config. When \code{covariates} are supplied, the
-covariate-aware BM path (\code{bm_impute_col_with_cov()}) accepts a
-numeric lambda or \code{"estimate"}, so \code{lambda_mode \%in\%
-c("estimate", "fixed_1")} reaches it and each covariate-aware
-BM-eligible column gets its own estimated lambda; it does NOT accept
-\code{"cv"} / \code{"bayes"}, which fall back to lambda = 1 for
-BM-eligible columns with a warning from \code{fit_baseline}.}
+\item{lambda_mode}{character. Pagel-lambda mode for continuous-family
+baseline columns (continuous, count, proportion, and zi_count magnitude).
+\code{"estimate"} (default) estimates each eligible column's lambda
+within its selected joint or per-column fit. \code{"fixed_1"} uses
+lambda = 1. \code{"cv"} and \code{"bayes"} use alternative per-column
+estimators and cannot use the joint numeric route. Discrete-liability
+lambda is controlled separately by \code{discrete_lambda}. Exact joint
+prediction and optional cross-trait cell refinement also use a shared
+\code{lambda_block} for cross-trait computations, without replacing
+continuous-family column-specific lambdas. A covariate-aware per-column
+BM fit accepts \code{"estimate"} or fixed lambda; unsupported
+\code{"cv"}/\code{"bayes"} requests warn and use lambda = 1. See
+\code{\link{fit_baseline}} for route details and fixed-lambda controls.}
 
 \item{discrete_lambda}{character, \code{"estimate"} (default) or
-\code{"fixed_1"}. With \code{"estimate"}, the binary, ordinal and
-zero-inflated-count gate liability columns of the threshold-joint
-baseline, and the one-vs-rest column of each categorical class, get
-their own Pagel's lambda, so a weak-signal discrete trait shrinks toward
-its prevalence instead of copying close relatives. \code{"fixed_1"}
-restores the previous behaviour (binary and ordinal at lambda = 1, or at
-the shared joint lambda on the "exact" route; categorical at 1).
-Evidence (simulated Brownian-motion and OU data, n = 100 to 1000, 30\\%
-missing; \code{docs/dev-log/discrete-lambda/README.md}): estimating
-discrete lambda alone added about 0.01 to 0.04 discrete accuracy at Pagel's
-lambda of 0.3 or below; together with \code{safety_floor = FALSE} and
-\code{phylo_signal_gate = FALSE} (also the defaults) the gain was 0.04
-to 0.12, and binary and categorical accuracy matched or beat BACE's.
-Costs: with lambda near 1 and n >= 1000, accuracy -0.002 to -0.005 and
-Brier score +0.010 to +0.016; on AVONET300's categorical traits, Brier
-+0.014 to +0.020 with accuracy unchanged or better. Ordinal accuracy
-still trails BACE's at lambda = 0.3. The categorical one-vs-rest lambdas
-are not reported in \code{$lambda_per_trait}.
-See \code{\link[=fit_pigauto]{fit_pigauto()}}.}
+\code{"fixed_1"}. Controls lambda for binary, ordinal, and zi_count gate
+liabilities in threshold-joint fits and for each categorical one-vs-rest
+fit. Exact joint predictions share \code{lambda_block}; categorical
+class-fit lambdas are not reported in \code{$lambda_per_trait}. See
+\code{\link{fit_baseline}} for route-specific behavior and the evaluated
+benefits and costs. Stored in the fitted model configuration.}
 
-\item{joint_solver}{character. Which solver estimates the joint MVN /
-threshold-joint / OVR categorical baselines. \code{"inhouse"}
-(default) is byte-identical to prior releases; \code{"rphylopars"}
-delegates to \code{Rphylopars::phylopars()}'s converged REML fit,
-with automatic fallback to \code{"inhouse"} on failure. Passed to
-\code{\link{fit_baseline}} and stored in the fitted model config.
-See \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}.}
+\item{joint_solver}{character. Solver for the joint MVN,
+threshold-joint, and categorical one-vs-rest baselines.
+\code{"inhouse"} (default) uses pigauto's joint solver.
+\code{"rphylopars"} delegates to \code{Rphylopars::phylopars()},
+using its lambda model under \code{lambda_mode = "estimate"}, with
+automatic fallback to \code{"inhouse"} on failure or implausible
+output. This does not affect routes outside these joint fits.
+\code{"cv"}/\code{"bayes"} lambda modes instead use per-column
+numeric fits. See \code{\link{fit_baseline}} for dispatch and fallbacks.}
 
 \item{predict_method}{character. Prediction route for the in-house joint
-solver, passed to \code{\link{fit_baseline}}. \code{"auto"} (default,
-S5b) fits the baseline with both the \code{"exact"} and
+solver, passed to \code{\link{fit_baseline}}. \code{"auto"} (default)
+fits the baseline with both the \code{"exact"} and
 \code{"per_column"} routes and picks, per trait, whichever has the
 lower loss on that trait's validation cells (mean squared error on the
 z-scored latent scale for continuous/count/proportion/ordinal/zi_count
 magnitude; mean log-loss for binary/zi_count gate; mean multinomial
 log-loss for categorical), falling back to \code{"exact"} on a tie or
-when fewer than 5 validation cells belong to that trait (including
-when there is no validation split at all). \code{"exact"} uses the
+when fewer than 5 validation cells belong to that trait. With no
+validation split, exact prediction is requested but route-specific
+per-column fallbacks remain possible. \code{"exact"} uses the
 full cross-trait conditional
 mean and variance of \code{vec(L) ~ MVN(0, Sigma \%x\% R(lambda_block))}
 (Hadfield & Nakagawa, 2010 sparse precision form), each column
@@ -227,47 +209,50 @@ its validation cells chose the route versus were reserved for gate
 calibration and conformal scoring (see \code{\link{fit_baseline}}'s
 \code{predict_method} docs).}
 
-\item{joint_refine_iter}{integer, default \code{0L}. Enables
-cross-trait refinement of the joint baseline's cell imputations
-using the estimated Sigma (the in-house solver's \code{max_iter}
-EM cell-refinement; \code{R/joint_mvn_solver.R}). \code{0L} preserves
-current behaviour byte-for-byte. The refinement is guarded: the
-Sigma step must shrink each iteration, or the loop rolls back to the
-last good iterate and sets \code{$diverged}. Assess this opt-in control
-with held-out evaluation on the intended data. Has no effect on any
-trait predicted by the \code{"exact"} route (see
-\code{\link{fit_baseline}}'s \code{predict_method} docs); under the
-default \code{predict_method = "auto"} it therefore only applies to
-traits \code{"auto"} routes to \code{"per_column"}. Passed to
-\code{\link{fit_baseline}} and stored in the fitted model config.}
+\item{joint_refine_iter}{integer, default \code{0L}. Maximum passes of
+optional cross-trait refinement of joint-baseline cell imputations
+using the estimated covariance matrix. \code{0L} disables this
+refinement. The covariance step must shrink each iteration; otherwise
+the last accepted iterate is restored and \code{$diverged} is set.
+This has no effect on traits predicted by the \code{"exact"} route,
+which returns the analytic conditional directly. Under
+\code{predict_method = "auto"}, it can therefore affect only traits
+routed to \code{"per_column"}. Evaluate this opt-in setting on held-out
+cells from the intended data.}
 
-\item{em_iterations}{integer. Phase 6 EM iterations for the
-threshold-joint baseline (binary + ordinal + OVR categorical).
-Default \code{0L} preserves v0.9.1 behaviour byte-for-byte. When
-\code{>= 2L}, the BM rate \eqn{\Sigma} learned by the joint solver
-(\code{joint_solver}; the in-house solver by default) at iteration
-\eqn{k} is fed back as the per-trait prior SD at iteration \eqn{k+1}, up to
-\code{em_iterations} times or until \code{em_tol} convergence.
+\item{em_iterations}{integer. Maximum passes through each liability-prior
+refinement loop for binary, ordinal, and one-vs-rest categorical
+baselines. Default \code{0L} disables iterative refinement and uses a
+single-pass baseline. \code{1L} also permits only the initial pass;
+\code{2L} permits at most one feedback pass. After each pass, estimated
+liability variances inform the next prior. Refinement can stop early
+on convergence or a later fit failure. A categorical pass may require
+K one-vs-rest fits; \code{predict_method = "auto"} may fit two route
+candidates. Continuous-only joint MVN fits are unaffected.
 Passed to \code{\link{fit_baseline}}.}
 
 \item{em_tol}{numeric. Relative-Frobenius convergence tolerance for
-the Phase 6 / 7 EM loop. Default \code{1e-3}.}
+liability-prior refinement (default \code{1e-3}). The binary/ordinal
+threshold-joint loop compares the variance diagonal by default, or the
+full covariance matrix when \code{em_offdiag = TRUE}. Categorical
+one-vs-rest refinement compares the vector of class variances.
+Passed to \code{\link{fit_baseline}}.}
 
-\item{em_offdiag}{logical. Phase 7 opt-in: when \code{TRUE} AND
-\code{em_iterations >= 2L}, each liability cell's prior uses the
-full conditional-MVN from \eqn{\Sigma}'s off-diagonal entries, so that
-observing one discrete trait shifts (not just tightens) the prior
-on correlated other traits.  Binary + ordinal only; OVR categorical
-stays on Phase 6 diagonal.  Default \code{FALSE}.  Passed to
-\code{\link{fit_baseline}}.}
+\item{em_offdiag}{logical. When \code{TRUE} and
+\code{em_iterations >= 2L}, binary/ordinal liability priors use
+conditional-MVN means and SDs based on the other traits and the full
+covariance matrix from the preceding pass. With the default
+\code{FALSE}, refinement updates per-trait prior SDs only. This option
+does not change categorical one-vs-rest refinement.
+Passed to \code{\link{fit_baseline}}.}
 
-\item{pool_method}{character. How to pool multiple imputation draws
-(\code{n_imputations > 1}) for count, proportion, and zi_count
+\item{pool_method}{character. How to pool stochastic prediction-diagnostic
+draws (\code{n_imputations > 1}) for count, proportion, and zi_count
 magnitude traits: \code{"median"} (default) takes the per-cell
 median of the \code{M} decoded draws — robust to dropout-noisy
 latents amplified by \code{expm1()} / \code{plogis()} decoders.
-\code{"mean"} restores the pre-v0.9.2 arithmetic-mean pooling.
-\code{"mode"} (Phase H, v0.9.1.9010+) is intended for ordinal
+\code{"mean"} takes the arithmetic mean.
+\code{"mode"} is intended for ordinal
 traits: per-cell majority vote across the \code{M} draws,
 avoiding the integer-mean-round bias toward middle classes.  For
 continuous-family traits, \code{"mode"} falls back to
@@ -275,26 +260,20 @@ continuous-family traits, \code{"mode"} falls back to
 always pool by probability average; unaffected by this argument.  See
 \href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.}
 
-\item{clamp_outliers}{logical.  Phase G (v0.9.1.9011+).  When
-\code{TRUE}, post-back-transform predictions for log-transformed
-continuous, count, and zi_count magnitude traits are capped at
-\code{tm$obs_max * clamp_factor} (and \code{tm$obs_max} is the
-observed maximum on the original scale, recorded at preprocess
-time).  Targets the AVONET Mass tail-extrapolation mode
-documented in
-\code{useful/MEMO_2026-05-01_avonet_mass_diag.md} where a
-\eqn{+3}-\eqn{4 \sigma} latent overshoot becomes a 50x-100x
-value error after \code{expm1()}.  Default \code{FALSE}
-preserves v0.9.1 behaviour exactly.}
+\item{clamp_outliers}{logical. When \code{TRUE}, cap back-transformed
+predictions for log-transformed continuous, count, and zi_count
+magnitude traits at \code{tm$obs_max * clamp_factor}, where
+\code{tm$obs_max} is the observed maximum on the original scale,
+recorded during preprocessing. This optional cap limits extrapolation
+after \code{exp()} or \code{expm1()}; it is not an uncertainty bound.
+Default \code{FALSE} leaves these predictions uncapped.}
 
-\item{clamp_factor}{numeric scalar (>= 1).  Multiplicative factor
-on the observed maximum used by \code{clamp_outliers}.  Default
-\code{5} (Tukey-style outlier definition: anything >= 5x the
-observed max is implausible).  Ignored when
-\code{clamp_outliers = FALSE}.}
+\item{clamp_factor}{numeric scalar (>= 1). User-selected multiplier
+of the observed maximum for the upper cap when clamping is enabled.
+Default \code{5}. Ignored when \code{clamp_outliers = FALSE}.}
 
 \item{match_observed}{character, one of \code{c("none", "pmm")}.
-Phase G' (v0.9.1.9012+).  Pass-through to
+Pass-through to
 \code{\link{predict.pigauto_fit}}.  When \code{"pmm"}, uses
 Predictive Mean Matching for log-transformed continuous, count,
 zi_count magnitude, and proportion traits: imputed values are
@@ -310,30 +289,26 @@ For tail safety, prefer \code{clamp_outliers = TRUE}. PMM failed the
 downstream fixed-effect redesign pilot and is unsupported for inference;
 see \code{multi_impute_analysis()} for the analysis-aware backend.
 
-Default \code{"none"} preserves pre-G' behaviour.}
+Default \code{"none"} leaves predictions unmatched.}
 
 \item{pmm_K}{integer (>= 1).  Donor pool size for PMM.  Default
 \code{5L} (mice convention).  Ignored when
 \code{match_observed = "none"}.}
 
-\item{safety_floor}{logical. Default \code{FALSE} (it was \code{TRUE}
-from v0.9.1.9002 until 0.11.0.9002; see \code{\link[=fit_pigauto]{fit_pigauto()}} for why it
-changed; set \code{TRUE} to restore). When \code{TRUE}, calibration searches the 3-way simplex
-\code{r_BM * BM + r_GNN * GNN + r_MEAN * MEAN} so the grand mean is
-always in the candidate set. Under the validation metric used for
-calibration, the selected candidate cannot be worse than that
-grand-mean corner on the validation cells. This is a validation
-safeguard, not a guarantee about future held-out data. When
-\code{FALSE}, the v0.9.1 1-D calibration is used exactly. See the
-Safety floor section below.}
+\item{safety_floor}{logical. Default \code{FALSE}. When \code{TRUE},
+calibration searches a three-way convex combination of phylogenetic
+baseline, GNN, and grand-mean candidates. The selected candidate is no
+worse than the mean-corner candidate on the validation cells under
+the calibration metric. An additive fixed-effect term remains when
+present, so that corner is not always a pure grand mean;
+\code{multi_proportion} groups are excluded. This is a validation-set
+safeguard, not a guarantee for future data. With \code{FALSE},
+calibration uses the baseline/GNN line with \code{r_cal_mean = 0}.}
 
-\item{phylo_signal_gate, phylo_signal_threshold, phylo_signal_method}{Pass-through to \code{\link[=fit_pigauto]{fit_pigauto()}}. See that help page for details.
-\code{phylo_signal_gate} now defaults to \code{FALSE} (it was \code{TRUE}
-from v0.9.1.9003 until 0.11.0.9002): with Pagel's \eqn{\lambda}
-estimated for every trait type the gate no longer improved accuracy in
-any tested setting, and at \eqn{\lambda} of 0 to 0.1 it was worse than
-predicting the mean. Set \code{phylo_signal_gate = TRUE} to restore the
-old behaviour.}
+\item{phylo_signal_gate, phylo_signal_threshold, phylo_signal_method}{Pass-through to
+\code{\link[=fit_pigauto]{fit_pigauto()}}. \code{phylo_signal_gate = FALSE} by default; enable it
+to apply the documented training-data signal override after calibration.
+Assess the selected setting on held-out data.}
 
 \item{conformal_split_val}{logical. Default \code{FALSE}. When
 \code{TRUE}, the validation cells are split 50/50 per trait into a
@@ -351,33 +326,43 @@ no torch/GPU calls, and the fit is the phylogenetic baseline alone
 \code{safety_floor = TRUE}). With the defaults
 (\code{safety_floor = FALSE, phylo_signal_gate = FALSE}) this is the pure
 traditional-stats arm. Production predictions
-(\code{result$completed}, \code{result$prediction}) use a tax-free
-\code{baseline_full} fit on ALL observed cells (no val/test hold-out);
+(\code{result$completed}, \code{result$prediction}) use a full-data
+baseline fitted using all observed cells (\code{baseline_full}, with
+no validation/test hold-out);
 \code{result$evaluation} and every other scorer keep using the
 held-out \code{baseline}, so evaluation never leaks test cells.
-User \code{covariates} enter pigauto only through the GNN, so under
-\code{gnn = FALSE} they are ignored (with a warning); without a
+User \code{covariates} enter the GNN and its additive fixed-effect term,
+and may also enter a selected per-column numeric BM fallback, including
+when \code{gnn = FALSE}. Joint MVN and threshold-joint routes omit covariates and emit a separate
+baseline warning. One-versus-rest categorical routes also omit them but do
+not trigger that warning themselves. In a mixed fit, another selected joint
+route can still trigger it. Covariate use does not imply improved
+predictions. Without a
 validation split (\code{missing_frac = 0}) the fit is pure baseline
 and carries no conformal scores.
-Default \code{FALSE} since pigauto 0.11.0.9001: on simulated and real
-data at the current baseline defaults the GNN did not lower
-imputation error and took 20 to 90 times longer to fit
-(\code{docs/dev-log/arc/2026-10-02-campaign-gnn-rerun.md}). Set
-\code{gnn = TRUE} to train it, for example to use \code{covariates},
-which only the GNN uses, or to restore the behaviour of earlier
-versions.}
+In the reported simulated and real-data comparison at the evaluated
+baseline settings, GNN-on did not lower imputation error and took
+20 to 90 times longer to fit (see the
+\href{https://itchyshin.github.io/pigauto/news/index.html}{changelog}
+for that study). These results do not establish performance on new data.}
 
-\item{...}{additional arguments passed to \code{\link{fit_pigauto}}.}
+\item{...}{Additional arguments passed by \code{impute()} to \code{fit_pigauto()}; ignored by \code{print.pigauto_result()}.}
+
+\item{x}{A \code{pigauto_result} object returned by \code{impute()}.}
 }
 \value{
 An object of class \code{"pigauto_result"} with components:
 \describe{
-\item{completed}{The input \code{traits} data.frame with observed
-values preserved and only missing cells filled in.  This is the
-primary output -- typically what users want.}
-\item{imputed_mask}{Logical matrix (same shape as \code{completed})
-that is \code{TRUE} for cells that were imputed (originally
-\code{NA}) and \code{FALSE} for observed cells.}
+\item{completed}{The input \code{traits} data.frame. Observed values
+are preserved. Missing cells are filled when the input row is
+included in the fit and a prediction is available; other missing
+cells remain \code{NA}.}
+\item{imputed_mask}{Logical matrix in original input row order, with
+one column per input trait. The \code{species_col} column, when
+supplied, is excluded. \code{TRUE} marks an originally missing
+target in a row matched to the fitted data; a marked cell can remain
+\code{NA} if no prediction is available. Observed cells and rows
+outside the fitted tree are \code{FALSE}.}
 \item{prediction}{A \code{pigauto_pred} object from
 \code{\link{predict.pigauto_fit}} containing raw model
 predictions for every cell (observed + missing), per-cell
@@ -393,6 +378,8 @@ conformal intervals.}
 \item{evaluation}{Evaluation metrics on test set (or \code{NULL}).}
 \item{check}{A compact \code{pigauto_check} preflight summary.}
 }
+
+Invisibly returns \code{x}.
 }
 \description{
 One-call interface for preprocessing, phylogenetic baseline fitting, and
@@ -406,15 +393,19 @@ individual functions (\code{\link{preprocess_traits}},
 
 pigauto infers each trait's type from its R class — no \code{trait_types}
 argument is needed for most data:
-\tabular{ll}{
-\strong{R class} \tab \strong{pigauto type} \cr
-\code{numeric} \tab continuous (auto-log if all-positive) \cr
-\code{integer} \tab count \cr
-\code{factor} with 2 levels \tab binary \cr
-\code{factor} (unordered) with >2 levels \tab categorical \cr
-\code{ordered} / \code{factor(..., ordered = TRUE)} \tab ordinal \cr
-\code{character} \tab → factor → binary or categorical \cr
-\code{logical} \tab binary \cr
+The defaults are:
+\itemize{
+\item \code{numeric}: continuous (automatically log-transformed when all
+observed values are positive)
+\item \code{integer}: count, except that columns with any negative
+observed value are detected as continuous
+\item \code{factor} with two levels: binary
+\item unordered \code{factor} with more than two levels: categorical
+\item ordered \code{factor} with two levels: binary; ordered factors
+with other numbers of levels: ordinal
+\item \code{character}: converted to a factor, then treated as binary or
+categorical according to its number of levels
+\item \code{logical}: binary
 }
 Two types cannot be inferred from class alone and \emph{must} be declared
 via \code{trait_types}:
@@ -424,8 +415,9 @@ rate: \code{trait_types = c(Survival = "proportion")}.}
 \item{\code{"zi_count"}}{An \code{integer} with excess zeros, e.g.
 parasite count: \code{trait_types = c(Parasites = "zi_count")}.}
 }
-Use the \code{trait_types} argument directly (it is an explicit
-parameter, not a \code{...} pass-through).
+Use a named \code{trait_types} override when the inferred type does not
+match the measurement. This is an explicit parameter, not a \code{...}
+pass-through.
 }
 
 \section{Traits vs covariates}{
@@ -445,7 +437,7 @@ pigauto predicts the unknown categories.
 covariate to inform imputation of other traits (e.g. body mass,
 range size).
 \item \strong{Realm / biome (factor)} → pass as a covariate; pigauto
-one-hot encodes factor columns automatically (v0.6.1+).
+one-hot encodes factor columns automatically.
 }
 
 Variables that belong in \code{traits}: anything with missing values you
@@ -454,28 +446,26 @@ observed, exogenous to the trait space (geography, climate, habitat,
 experimental treatment).
 }
 
-\section{Safety floor (v0.9.1.9002+)}{
+\section{Safety floor}{
 
-With \code{safety_floor = TRUE} (opt-in since 0.11.0.9002; it was the
-default from v0.9.1.9002), the post-training
+With \code{safety_floor = TRUE}, post-training
 calibration grid searches a 3-way convex combination of the
-Brownian-motion baseline, the GNN delta, and the per-trait grand
-mean.  The simplex is sampled at step 0.05 (231 candidates per latent
-column).  Because the corner \code{(0, 0, 1)} — pure grand mean —
-is always in the grid, the selected candidate cannot be worse than
-the grand-mean corner on the validation cells under the calibration
-metric.  The fit object gains four new slots:
+Brownian-motion baseline, the GNN delta, and the mean baseline.
+The simplex is sampled at step 0.05 (231 candidates per latent
+column). Because the corner \code{(0, 0, 1)} is always in the grid,
+the selected candidate cannot be worse than
+the mean-corner candidate on the validation cells under the calibration
+metric. An additive fixed-effect term is retained when present, so this
+is not always a pure grand mean; \code{multi_proportion} groups are
+excluded. This safeguard applies only to the validation cells used for
+calibration. The fit object stores:
 \code{r_cal_bm}, \code{r_cal_gnn}, \code{r_cal_mean} (each a named
 numeric of length \code{p_latent}), and
 \code{mean_baseline_per_col}.
 
-Set \code{safety_floor = FALSE} to reproduce the pre-v0.9.1.9002
-1-D calibration bit-identically (no mean term; \code{r_cal_mean = 0};
-\code{r_cal_bm = 1 - r_cal_gnn}).  See
-\code{specs/2026-04-23-safety-floor-mean-gate-design.md} for the
-design rationale and
-\code{plans/2026-04-23-safety-floor-mean-gate.md} for the
-implementation plan.
+With the default \code{safety_floor = FALSE}, calibration uses no
+mean term: \code{r_cal_mean = 0} and
+\code{r_cal_bm = 1 - r_cal_gnn}.
 }
 
 \section{What gets imputed (read this first)}{
@@ -485,8 +475,19 @@ Observed cells are preserved as-is in \code{result$completed}.  The
 slot \code{result$prediction$imputed} contains the model's
 prediction for \strong{every} cell -- observed and missing alike --
 and is intended for diagnostics (e.g. checking calibration on
-training cells), \emph{not} as the imputed-values output.  The
-imputed values themselves are \code{result$completed[result$imputed_mask]}.
+training cells), \emph{not} as the imputed-values output. The mask marks
+originally missing targets in fitted rows; some selected cells can
+remain \code{NA} when no prediction was available. To extract target
+values by trait without coercing mixed columns:
+\preformatted{
+  mask <- result$imputed_mask
+  imputed_values <- lapply(colnames(mask), function(nm) {
+    result$completed[[nm]][mask[, nm]]
+  })
+  names(imputed_values) <- colnames(mask)
+  }
+For successful fills only, also exclude \code{NA} values from each
+trait vector.
 
 \strong{Common pitfall.}  If you call \code{impute()} on a fully
 observed trait matrix (no \code{NA}s among matched target rows), there
@@ -497,12 +498,27 @@ assessment. To exercise imputation, supply a real missing target cell.
 \strong{Imbalanced K-class traits.}  At default settings
 (\code{n_imputations = 1L}, \code{pool_method = "median"}), a
 small ordinal / categorical trait whose marginal distribution is
-heavily skewed (e.g. AVONET \code{Migration} is ~78\\% Resident /
-~14\\% Partial / ~8\\% Full at n=300) can have its calibrated gate
+heavily skewed (e.g. AVONET \code{Migration} is about 78 percent Resident,
+14 percent Partial, and 8 percent Full at n=300) can have its calibrated gate
 collapse onto a corner that predicts the majority class
 everywhere. Compare candidate settings, including
 \code{pool_method = "mode"}, with \code{cross_validate()} on the
 intended trait table rather than applying a generic setting.
+}
+
+\section{Printing}{
+
+\code{print.pigauto_result()} reports species, traits and types, the
+total and per-trait targeted-cell counts, and a route-specific inference
+note. Held-out test metrics are shown for continuous and count traits
+(RMSE and, when available, Pearson correlation), ordinal traits (Spearman
+correlation), and binary and categorical traits (accuracy). The printout
+does not show metrics for proportion, zero-inflated count, or
+multi-proportion traits; see \code{result$evaluation} or
+\code{evaluate_imputation()} for the available evaluation metrics.
+Completed values are stored in \code{result$completed}. Some targeted
+cells can remain \code{NA} when a prediction is unavailable.
+The method ignores \code{...} and returns \code{x} invisibly.
 }
 
 \examples{

@@ -23,8 +23,8 @@ pigauto on their own data. Each section follows the same template:
 - **Why this happens** — the mechanism in 2–3 sentences.
 - **Diagnose** — 1–3 R commands that confirm the pattern.
 - **Fix** — concrete code change with a short explanation.
-- **See also** — links to the relevant `?function`, design memo, or
-  Methodology bench under the Methodology navbar dropdown.
+- **See also** — links to the relevant help topic, article, or public
+  validation results.
 
 If you hit something that isn't here and feels surprising, please
 [open an issue](https://github.com/itchyshin/pigauto/issues/new) — most
@@ -35,11 +35,12 @@ of the items below were added because real users tripped on them.
 **Symptom.** You call `impute(df, tree)` on a fully-observed dataset and
 it stops before training.
 
-**Why this happens.** `impute()` only *imputes* cells that are `NA`
-in matched target rows. A fully observed input now stops before training
-and directs you to `cross_validate()` for predictive assessment. Supply a
-real missing target cell to use the imputation path. A complete data set is
-for predictive assessment, not an imputation result.
+**Why this happens.** `impute()` fills `NA` cells in rows matched to the
+tree. It stops before fitting only when the entire matched target table has
+no missing cells; one complete column is not enough to trigger the stop if
+another matched target cell is missing. For predictive assessment, hide
+known values before fitting and compare predictions with the held-out truth,
+or use `cross_validate()`.
 
 **Diagnose.**
 
@@ -56,21 +57,42 @@ sum(is.na(df))                  # if 0, there's nothing for impute() to do
 predictions only on the held-out cells:
 
 ```{r section1-fix, eval = FALSE}
+library(pigauto)
+data(avonet300, tree300)
+df <- avonet300
+rownames(df) <- df$Species_Key
+df$Species_Key <- NULL
+
 set.seed(1L)
-hide   <- sample(which(!is.na(df$Mass)), 30L)
+n_hide <- min(30L, sum(!is.na(df$Mass)))
+if (n_hide == 0L) stop("No observed Mass values are available to hide.")
+hide   <- sample(which(!is.na(df$Mass)), n_hide)
 df_obs <- df
-df_obs$Mass[hide] <- NA          # hide 30 mass values
+df_obs$Mass[hide] <- NA          # hide up to 30 mass values
 
 result <- impute(df_obs, tree300)
 
 result$completed$Mass[hide]      # pigauto's imputations
 df$Mass[hide]                    # held-out truth, for comparison
-sum(result$imputed_mask[, "Mass"])  # 30
+sum(result$imputed_mask[, "Mass"])  # number of values hidden above
 ```
 
-For your own data with real `NA`s, the imputed values you actually
-care about are `result$completed[result$imputed_mask]`, not
-`result$prediction$imputed`.
+For your own data with real `NA`s, the mask marks cells targeted for
+imputation; a marked cell can still be `NA` if no prediction was available.
+Extract by trait to preserve mixed column types:
+
+```{r, eval=FALSE}
+mask <- result$imputed_mask
+imputed_values <- lapply(colnames(mask), function(nm) {
+  result$completed[[nm]][mask[, nm]]
+})
+names(imputed_values) <- colnames(mask)
+```
+
+Check the selected values for remaining `NA`s. To keep only successful fills
+for one trait, add `!is.na(result$completed[[nm]])` to that trait's mask.
+The full-cell prediction in `result$prediction$imputed` is for diagnostics,
+not a replacement for the completed data.
 
 **See also.** `?impute` ("What gets imputed (read this first)"),
 [issue #67](https://github.com/itchyshin/pigauto/issues/67).
@@ -83,8 +105,9 @@ majority class for every species. For example, on `avonet300$Migration`
 
 **Why this happens.** Two things compound:
 
-1. If your input has no `NA`s in that column, `impute()` stops before fitting;
-   use `cross_validate()` instead (see Pitfall 1).
+1. If the whole matched target table has no `NA`s, `impute()` stops before
+   fitting; use `cross_validate()` or mask known values for assessment (see
+   Pitfall 1). A complete `Migration` column alone does not cause the stop.
 2. At default settings (`n_imputations = 1L`, `pool_method = "median"`),
    a small ordinal trait whose marginal distribution is heavily skewed
    (AVONET `Migration` is ~78 % Resident / 14 % Partial / 8 % Full at
@@ -105,14 +128,33 @@ result <- impute(df, tree300, verbose = FALSE)
 table(result$completed$Migration[hide])
 ```
 
-**Fix.** Compare candidate settings with `cross_validate()` on your own
-trait table and report the held-out result. For an imbalanced ordinal trait,
-one candidate is more draws with `pool_method = "mode"`; it is not a
-package-wide recommendation.
+**Fix.** Use `cross_validate()` to assess model-level fit settings on your own
+preprocessed trait table. It does not compare the number of imputations or
+pooling rule. To compare those `impute()` choices, score each result against
+the same prespecified, hidden measurements, as in the example below. First
+prepare the input for the model-level cross-validation check:
+
+```r
+pd <- preprocess_traits(df, tree300)
+cv <- cross_validate(pd, tree300)
+```
+
+A closed gate is a calibration
+outcome on the validation data; it does not by itself establish high
+phylogenetic signal or explain why the GNN failed to help. Check validation
+size and compare candidate predictions under the same held-out design. For
+an imbalanced ordinal trait, more draws with `pool_method = "mode"` is one
+candidate to evaluate, not a resolution or package-wide recommendation.
 
 ```{r section2-fix, eval = FALSE}
+library(pigauto)
+data(avonet300, tree300)
+df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
+
 set.seed(1L)
-hide   <- sample(which(!is.na(df$Migration)), 30L)
+n_hide <- min(30L, sum(!is.na(df$Migration)))
+if (n_hide == 0L) stop("No observed Migration values are available to hide.")
+hide   <- sample(which(!is.na(df$Migration)), n_hide)
 df_obs <- df
 df_obs$Migration[hide] <- NA
 
@@ -120,15 +162,16 @@ df_obs$Migration[hide] <- NA
 result <- impute(df_obs, tree300, verbose = FALSE)
 table(result$completed$Migration[hide], df$Migration[hide])
 
-# Recommended for K = 3 ordinal: more draws + mode pooling
+# Candidate for K = 3 ordinal: more draws + mode pooling
 result_mode <- impute(df_obs, tree300, n_imputations = 20L,
                       pool_method = "mode", verbose = FALSE)
 table(result_mode$completed$Migration[hide], df$Migration[hide])
 ```
 
-**See also.** `?impute` ("Imbalanced K-class traits"),
-[Phase H memo](https://github.com/itchyshin/pigauto/blob/main/useful/MEMO_2026-05-01_phase_h_results.md),
-[issue #68](https://github.com/itchyshin/pigauto/issues/68).
+**See also.** `?impute` ("Imbalanced K-class traits") and
+[issue #68](https://github.com/itchyshin/pigauto/issues/68). The mode-pooling
+comparison was a three-seed study on an AVONET subset; its result is specific
+to that design.
 
 ## 3. "The gate stays closed and the GNN seems to do nothing"
 
@@ -136,30 +179,41 @@ This section applies when you fit with `gnn = TRUE`. With the default
 `gnn = FALSE` no GNN is trained, so `r_cal_gnn` is 0 by construction and
 predictions come from the calibrated baseline.
 
-**Symptom.** You expected the GNN to dominate, but inspecting the
+**Symptom.** You expected the GNN to improve predictions, but inspecting the
 fitted model shows the calibrated gate is fully or near-fully closed
-(`r_cal_gnn` ≈ 0) — predictions equal the BM baseline.
+(`r_cal_gnn` ≈ 0) — the GNN contributes little or nothing to the calibrated
+prediction.
 
-**Why this happens.** This is the gate's design behaviour, not a
-bug (with the default `safety_floor = FALSE` the mean term is absent and
-`r_cal_mean` is 0; the next sentence describes `safety_floor = TRUE`). After training, pigauto picks the per-latent-column gate that
-minimises validation loss across the simplex
-$r_\text{BM} \cdot \text{BM} + r_\text{GNN} \cdot \text{GNN} + r_\text{MEAN} \cdot \text{MEAN}$.
-When the GNN cannot beat BM on the held-out validation set, the
-optimum can be `r_cal_gnn = 0`. In that case the calibrated prediction
-stays on the validation-supported baseline or mean corner instead of
-forcing a GNN contribution. This is what the package was designed to do
-on high-phylogenetic-signal traits where BM is already hard to beat.
+**Why this happens.** This is a possible calibration outcome, not by itself
+a sign of high phylogenetic signal. With `safety_floor = FALSE`, the mean
+candidate is absent; with `safety_floor = TRUE`, calibration can also choose
+the grand mean. After training, pigauto compares the baseline and GNN
+predictions on held-out validation cells. When `safety_floor = TRUE`, it also
+compares a grand-mean prediction. These candidates receive nonnegative weights
+that add to one. If adding the GNN does not improve the best available
+combination of the baseline and, when enabled, the grand mean, its weight can
+be `r_cal_gnn = 0`. The grand mean is not a candidate when
+`safety_floor = FALSE`.
+The result depends on the validation data and metric; inspect validation size
+and compare the baseline, GNN, and any mean candidate before interpreting it.
 
 **Diagnose.**
+
+This diagnostic fits a GNN, so the optional torch runtime must be installed
+and available. The explicit `gnn = TRUE` argument matters: without it,
+the default fit trains no network and its GNN gate is zero by construction.
 
 ```{r section3-diag, eval = FALSE}
 library(pigauto)
 data(avonet300, tree300)
 df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
-fit <- impute(df, tree300, verbose = FALSE)$fit
+set.seed(1L)
+hide <- sample(which(!is.na(df$Migration)), 30L)
+df_obs <- df
+df_obs$Migration[hide] <- NA
+fit <- impute(df_obs, tree300, gnn = TRUE, verbose = FALSE)$fit
 
-# Per-latent-column calibrated gates (since v0.9.1.9002):
+# Per-latent-column calibrated gates:
 fit$r_cal_bm        # r assigned to the BM baseline
 fit$r_cal_gnn       # r assigned to the GNN delta
 fit$r_cal_mean      # r assigned to the grand mean
@@ -168,20 +222,29 @@ fit$r_cal_mean      # r assigned to the grand mean
 A row where `r_cal_gnn` is small (< 0.1) means the gate has effectively
 closed for that latent column.
 
-**Fix.** Often there is nothing to fix — the closed gate is
-**evidence of high phylogenetic signal**, not a problem. If you suspect
-the GNN should be helping (e.g. you've added covariates, or the trait
-has known cross-trait structure) but the gate is closed:
+**Fix.** First treat the closed gate as the calibration result for this
+validation split, not as evidence about signal strength. Compare held-out
+predictions from the baseline and GNN under the same data split; check that
+the validation set is large enough for the comparison. If you suspect the GNN
+should help (for example, you added covariates or expect cross-trait
+structure), also check that those inputs vary and are available:
+
+For the paired comparison, run `cross_validate()` twice on the same prepared
+data, with the same `seeds` value and `gnn = FALSE` and `gnn = TRUE`. This
+reuses the same held-out folds for both fits. The [GNN guide's comparison
+example](gnn-architecture.html#run-and-check-your-own-data) shows the setup,
+code, and how to compare the returned metrics.
 
 - Check the validation set is not pathologically small (the
   "small validation set" warning during fitting is a red flag — see
   `?fit_pigauto` "Calibration at small n").
 - Verify covariates are not all-NA or constant after preprocessing.
-- For ordinal / categorical traits, see Pitfall 2 — the gate may be
-  closing onto a majority-class corner that mode pooling resolves.
+- For ordinal / categorical traits, see Pitfall 2. Mode pooling is a
+  candidate to compare on held-out data, not a guaranteed remedy.
 
-**See also.** `?fit_pigauto` (`phylo_signal_gate`, "Safety floor"),
-[design spec](https://github.com/itchyshin/pigauto/blob/main/specs/2026-04-23-safety-floor-mean-gate-design.md).
+**See also.** `?fit_pigauto` (`phylo_signal_gate`, "Safety floor") and
+[the validation results](validation-results.html), which report tested
+settings and their limits.
 
 ## 4. "How do I know if my dataset has enough phylogenetic signal?"
 
@@ -202,7 +265,11 @@ library(pigauto)
 data(avonet300, tree300)
 df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
 
-fit <- impute(df, tree300, phylo_signal_gate = TRUE)$fit
+set.seed(1L)
+hide <- sample(which(!is.na(df$Mass)), 30L)
+df_obs <- df
+df_obs$Mass[hide] <- NA
+fit <- impute(df_obs, tree300, phylo_signal_gate = TRUE)$fit
 fit$phylo_signal_per_trait
 ```
 
@@ -211,12 +278,25 @@ traits use the package's internal continuous proxy on the latent/liability
 scale.
 
 **Fix.** Use the lambda estimate as a diagnostic, then run
-`cross_validate()` on the input and compare the candidate workflows under the
-same held-out design. If phylogenetic structure is weak, consider whether a
-non-phylogenetic analysis is more appropriate for your scientific question.
+`cross_validate()` on a preprocessed input and compare candidate workflows
+under the same held-out design. If phylogenetic structure is weak, consider
+whether a non-phylogenetic analysis is more appropriate for your scientific
+question:
 
-**See also.** `?fit_pigauto` (`phylo_signal_gate`),
-[Phase 8 signal sweep memo](https://github.com/itchyshin/pigauto/blob/main/script/bench_signal_sweep.md).
+```r
+library(pigauto)
+data(avonet300, tree300)
+df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
+
+pd <- preprocess_traits(df, tree300)
+cv <- cross_validate(pd, tree300)
+```
+
+**See also.** `?fit_pigauto` (`phylo_signal_gate`) and the
+[validation results](validation-results.html) for tested settings and
+limitations. The [historical Pagel’s λ signal-sweep results](https://github.com/itchyshin/pigauto/blob/main/script/bench_signal_sweep.md)
+report one design with 300 species, 30% missingness, and three replicates;
+they do not establish general expected performance.
 
 ## 5. "Predictions are way bigger than anything I observed"
 
@@ -225,15 +305,20 @@ seed mass, fish weight) predicts a value 50–100× larger than anything
 observed. On AVONET, the canonical case is the cassowary: truth ≈ 35 kg,
 predicted up to ~540 kg.
 
-**Why this happens.** For log-transformed traits, the GNN's
-MC-dropout draws are on the log scale. A latent ~+3-4 σ above the
-training distribution survives as a ~50-100× value error after
-`expm1()` back-transformation. With `n_imputations = 1`, a single
-unlucky dropout pattern can produce this; with `pool_method = "median"`
-(default) the median of M draws is robust to one bad draw, but a small
-M (≤ 5) on the long tail of the latent distribution can still mis-pool.
+**Why this happens.** A single prediction can be far beyond the observed
+range because a modest extrapolation on the transformed latent scale becomes
+large after inverse transformation. Log-transformed continuous traits use
+`exp()`; log1p-transformed count and positive `zi_count` magnitudes use
+`expm1()`. A single `impute()` prediction is not an MC-dropout draw.
+Stochastic tail variation can arise when you request multiple imputations
+with `draws_method = "mc_dropout"`; a small number of draws can then leave
+the pooled value sensitive to a rare tail draw.
 
 **Diagnose.**
+
+This diagnostic assumes you have already created `df` and `result` by
+running `impute()`; here, `df` is the original trait table and `result` is
+the returned `pigauto_result`.
 
 ```{r section5-diag, eval = FALSE}
 # After running impute(), check whether any imputation exceeds the
@@ -245,19 +330,32 @@ sum(predicted_mass > 5 * obs_max)
 
 A non-zero count is a signal of tail extrapolation.
 
-**Fix.** Phase G `clamp_outliers = TRUE` caps post-back-transform
+**Fix.** `clamp_outliers = TRUE` caps post-back-transform
 predictions for log-transformed continuous, count, and `zi_count`
 magnitude traits at `obs_max * clamp_factor` (default 5). This is
-opt-in because for legitimate growth-curve datasets where 5× the
-observed maximum is plausible, you don't want it.
+opt-in because a cap changes imputed values and can hide genuinely extreme
+species. Check units and species-name matching first. Assess the prediction
+rule by hiding known values and comparing predictions with their truth. Use a
+cap only when the chosen limit is defensible for the trait and study system,
+and report the selected multiplier.
 
 ```{r section5-fix, eval = FALSE}
+library(pigauto)
+data(avonet300, tree300)
+df <- avonet300; rownames(df) <- df$Species_Key; df$Species_Key <- NULL
+set.seed(1L)
+n_hide <- min(30L, sum(!is.na(df$Mass)))
+if (n_hide == 0L) stop("No observed Mass values are available to hide.")
+hide <- sample(which(!is.na(df$Mass)), n_hide)
+df_obs <- df
+df_obs$Mass[hide] <- NA
+
 result <- impute(df_obs, tree300,
                  clamp_outliers = TRUE,
-                 clamp_factor   = 5,    # Tukey-style outlier cap
+                 clamp_factor   = 5,
                  verbose = FALSE)
 ```
 
-**See also.** `?impute` (`clamp_outliers`, `clamp_factor` arguments),
-[AVONET Mass diagnosis memo](https://github.com/itchyshin/pigauto/blob/main/useful/MEMO_2026-05-01_avonet_mass_diag.md),
-[Phase G results](https://github.com/itchyshin/pigauto/blob/main/useful/MEMO_2026-05-01_phase_g_results.md).
+**See also.** `?impute` (`clamp_outliers`, `clamp_factor` arguments). The
+Mass diagnosis and clamp comparison were historical analyses on specific
+data and settings; they do not establish a general prediction rule.

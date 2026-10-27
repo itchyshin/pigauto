@@ -71,6 +71,46 @@ test_that("summary treats an attempted but missing fill as unresolved", {
   expect_identical(sum(unlist(out$counts)), 2L)
 })
 
+test_that("print methods describe targeted cells and tree rows accurately", {
+  data <- list(
+    species_names = c("a", "b"),
+    trait_map = list(x = list(name = "x", type = "continuous"))
+  )
+  mask <- matrix(c(FALSE, TRUE), ncol = 1, dimnames = list(c("a", "b"), "x"))
+  completed <- data.frame(x = c(1, NA_real_))
+
+  result <- structure(list(completed = completed, imputed_mask = mask,
+                           check = NULL, evaluation = NULL, fit = NULL,
+                           data = data), class = "pigauto_result")
+  result_text <- paste(capture.output(print(result)), collapse = "\n")
+  expect_match(result_text, "1 targeted / 2 total")
+  expect_match(result_text, "Per-trait targeted cell counts")
+  expect_false(grepl("imputed /", result_text, fixed = TRUE))
+
+  mi <- structure(list(data = data, imputed_mask = mask,
+                       draws_method = "conformal", m = 1L),
+                  class = "pigauto_mi")
+  mi_text <- paste(capture.output(print(mi)), collapse = "\n")
+  expect_match(mi_text, "1 targeted / 2 total")
+  expect_false(grepl("imputed /", mi_text, fixed = TRUE))
+
+  tree_mi <- structure(
+    list(n_trees = 2L, m_per_tree = 1L, m = 2L,
+         datasets = list(data.frame(species = c("a", "a", "b"),
+                                   x = c(1, NA_real_, 3))),
+         species_col = "species",
+         imputed_mask = matrix(c(FALSE, TRUE, FALSE), ncol = 1,
+                               dimnames = list(NULL, "x")),
+         draws_method = "mc_dropout"),
+    class = "pigauto_mi_trees"
+  )
+  tree_text <- paste(capture.output(print(tree_mi)), collapse = "\n")
+  expect_match(tree_text, "Rows\\s+: 3")
+  expect_match(tree_text, "1 targeted / 3 total")
+  expect_false(grepl("Species", tree_text, fixed = TRUE))
+  expect_false(grepl("imputed /", tree_text, fixed = TRUE))
+})
+
 test_that("report contract handles legacy checks and escapes input messages", {
   result <- structure(list(completed = data.frame(x = 1),
                            check = list(status = "ready<script>",

@@ -43,20 +43,18 @@ allocations. When \code{NULL} (default), both matrices are computed
 here.}
 
 \item{multi_obs_aggregation}{character. How to aggregate multiple
-observations per species before the Level-C joint baseline:
-\code{"hard"} (default) thresholds binary proportions at 0.5 and uses
-argmax for categorical, matching Phase 10 behaviour.  \code{"soft"}
-preserves species-level proportions and dispatches the truncated-Gaussian
-soft E-step (\code{estep_liability_binary_soft}) so that intermediate
-class frequencies contribute fractional liability evidence.  Only
-relevant for multi-obs data with binary or categorical traits when the
-Level-C joint baseline is active.}
+observations per species before a joint baseline. \code{"hard"}
+(default) thresholds binary proportions at 0.5 and uses the most
+frequent categorical class. \code{"soft"} preserves species-level
+proportions and combines truncated-Gaussian liability expectations,
+so intermediate class frequencies retain fractional evidence. Only
+relevant to multi-observation binary/categorical joint baselines.}
 
 \item{lambda_mode}{character. Pagel-lambda mode for the CONTINUOUS-FAMILY
 baseline (continuous, count, proportion, zi_count magnitude columns;
 NOT ordinal, which the threshold-joint path treats as a liability
 column via \code{estep_liability_ordinal()} -- see \dQuote{Per-type
-lambda dispatch} in Details). \code{"estimate"} (default, S4) fits
+lambda dispatch} in Details). \code{"estimate"} (default) fits
 each continuous-family column's own Pagel's lambda via profile REML;
 when the joint MVN or threshold-joint baseline fires, this now runs
 INSIDE that joint fit (\code{R/joint_mvn_solver.R}'s per-column
@@ -71,15 +69,15 @@ when \code{discrete_lambda = "fixed_1"}.
 \strong{Covariate caveat}: when \code{data$covariates} is supplied,
 the per-column path switches to \code{bm_impute_col_with_cov()},
 which accepts a numeric lambda or \code{"estimate"} but not
-\code{"cv"} / \code{"bayes"}; those two modes are silently ignored
-(fit at lambda = 1) for BM-eligible columns and a warning is emitted.}
+\code{"cv"} / \code{"bayes"}. When \code{lambda_fixed = NULL},
+requesting either unsupported mode issues a warning and fits these
+columns at lambda = 1. An explicit \code{lambda_fixed} takes precedence.}
 
 \item{lambda_fixed}{optional named numeric vector (names = latent column
 names, i.e. \code{colnames(data$X_scaled)}) giving a FIXED lambda per
 continuous-family column, overriding \code{lambda_mode} entirely for
-those columns (spec 4.5: reproduce a previous fit's exact per-trait
-lambda at predict time without re-estimating -- typically supply that
-fit's own \code{$lambda_per_trait}). Columns not present in
+those columns. To replay a previous fit's per-trait lambda without
+re-estimating it, supply that fit's \code{$lambda_per_trait}. Columns not present in
 \code{lambda_fixed} keep their lambda = 1 default. \code{NULL}
 (default) means every continuous-family column follows
 \code{lambda_mode} normally.}
@@ -92,8 +90,10 @@ their own Pagel's lambda, so a weak-signal discrete trait shrinks toward
 its prevalence instead of copying close relatives. \code{"fixed_1"}
 restores the previous behaviour (binary and ordinal at lambda = 1, or at
 the shared joint lambda on the "exact" route; categorical at 1).
-Evidence (simulated Brownian-motion and OU data, n = 100 to 1000, 30\\%
-missing; \code{docs/dev-log/discrete-lambda/README.md}): estimating
+In the reported simulated Brownian-motion and OU comparison (n = 100
+to 1000, 30 percent missing; see the
+\href{https://itchyshin.github.io/pigauto/news/index.html}{changelog}),
+estimating
 discrete lambda alone added about 0.01 to 0.04 discrete accuracy at Pagel's
 lambda of 0.3 or below; together with \code{safety_floor = FALSE} and
 \code{phylo_signal_gate = FALSE} (also the defaults) the gain was 0.04
@@ -106,56 +106,41 @@ are not reported in \code{$lambda_per_trait}.
 Recorded in the returned list and in a fit's \code{model_config};
 binary and ordinal lambdas are replayed by \code{lambda_fixed}.}
 
-\item{em_iterations}{integer. Number of Phase 6 EM iterations for the
-threshold-joint baseline (binary + ordinal + OVR categorical). Default
-\code{0L} disables the EM loop and preserves v0.9.1 output byte-for-byte.
-When \code{>= 1}, the BM rate \eqn{\Sigma} learned by the in-house
-joint solver (\code{R/joint_mvn_solver.R}) at iteration \eqn{k} is fed back as the
-per-trait prior SD at iteration \eqn{k+1}, up to \code{em_iterations}
-times or until \code{em_tol} convergence.  \code{em_iterations = 1L} is
-a degenerate single-pass run and produces the same baseline output as
-\code{0L}; \code{>= 2L} is needed for actual iteration. Only affects
-the threshold-joint path (continuous-only traits pass through the
-existing joint MVN path unchanged).}
+\item{em_iterations}{integer. Maximum passes through each liability-prior
+refinement loop for binary, ordinal, and one-vs-rest categorical
+baselines. Default \code{0L} disables iterative refinement and uses a
+single-pass baseline. \code{1L} also permits only the initial pass;
+\code{2L} permits at most one feedback pass. After each pass, estimated
+liability variances inform the next prior. Refinement can stop early
+on convergence or a later fit failure. A categorical pass may require
+K one-vs-rest fits; \code{predict_method = "auto"} may fit two route
+candidates. Continuous-only joint MVN fits are unaffected.}
 
-\item{em_tol}{numeric. Relative-Frobenius convergence tolerance for the
-Phase 6 / 7 EM loop. Early-stops when
-\eqn{||\Sigma_k - \Sigma_{k-1}||_F / ||\Sigma_{k-1}||_F < }
-\code{em_tol}.  Default \code{1e-3}.}
+\item{em_tol}{numeric. Relative-Frobenius convergence tolerance for
+liability-prior refinement (default \code{1e-3}). The binary/ordinal
+threshold-joint loop compares the variance diagonal by default, or the
+full covariance matrix when \code{em_offdiag = TRUE}. Categorical
+one-vs-rest refinement compares the vector of class variances.}
 
-\item{em_offdiag}{logical. Phase 7 opt-in: when \code{TRUE} AND
-\code{em_iterations >= 2L}, each liability cell's prior at iteration
-\eqn{k+1} is the conditional-MVN \eqn{(\mu, sd)} given the posterior
-liability of other traits at iteration \eqn{k}, using the full off-
-diagonal entries of \eqn{\Sigma}. Binary + ordinal only (OVR categorical
-stays on Phase 6 diagonal). Default \code{FALSE} preserves Phase 6
-behaviour.}
+\item{em_offdiag}{logical. When \code{TRUE} and
+\code{em_iterations >= 2L}, binary/ordinal liability priors use
+conditional-MVN means and SDs based on the other traits and the full
+covariance matrix from the preceding pass. With the default
+\code{FALSE}, refinement updates per-trait prior SDs only. This option
+does not change categorical one-vs-rest refinement.}
 
-\item{joint_solver}{character. Which solver estimates the joint
-Sigma / posterior for the joint MVN, threshold-joint, and OVR
-categorical baselines. \code{"inhouse"} (default) uses the
-single-pass in-house solver (\code{R/joint_mvn_solver.R}); under
-\code{lambda_mode = "fixed_1"} it is byte-identical to prior
-releases, but \code{lambda_mode = "estimate"} (the current default)
-is new behaviour, not a byte-compatibility guarantee.
-\code{"rphylopars"} delegates to \code{Rphylopars::phylopars()};
-under \code{"estimate"} this calls it with \code{model = "lambda"}
-(substantially slower than \code{model = "BM"}), with automatic
-fallback to \code{"inhouse"} on failure or implausible output (a
-plausibility guard that also fires under \code{lambda_mode =
-"fixed_1"} -- see NEWS). Only affects the joint MVN / threshold-joint
-/ OVR categorical paths above; ignored when those paths don't fire.
-\code{lambda_mode} does NOT disable the continuous-only joint MVN
-path: both \code{fit_joint_mvn_baseline()} and
-\code{fit_joint_threshold_baseline()} accept a \code{lambda_mode} /
-\code{lambda_fixed} argument and estimate lambda inside the joint fit
-via \code{lambda_cols} -- see \dQuote{Per-type lambda dispatch} in
-Details. Only \code{"cv"} / \code{"bayes"} force continuous-family
-columns off the joint path entirely (no joint analogue for those two
-modes).}
+\item{joint_solver}{character. Solver for the joint MVN,
+threshold-joint, and categorical one-vs-rest baselines.
+\code{"inhouse"} (default) uses pigauto's joint solver.
+\code{"rphylopars"} delegates to \code{Rphylopars::phylopars()},
+using its lambda model under \code{lambda_mode = "estimate"}, with
+automatic fallback to \code{"inhouse"} on failure or implausible
+output. This does not affect routes outside these joint fits.
+\code{"cv"}/\code{"bayes"} lambda modes instead use per-column
+numeric fits. See \code{\link{fit_baseline}} for dispatch and fallbacks.}
 
 \item{predict_method}{character. Prediction route for the in-house joint
-solver. \code{"auto"} (default, S5b/S5c) fits the baseline once with
+solver. \code{"auto"} (default) fits the baseline once with
 the \code{"exact"} route and once with the \code{"per_column"} route,
 then for each TRAIT (each \code{trait_map} entry; a categorical
 trait's K latent columns and a zi_count trait's gate + magnitude
@@ -169,22 +154,26 @@ rows (species in multi-observation data) are split into two halves
 (seeded via \code{seed}, or the ambient RNG state when
 \code{seed = NULL}) when the trait has at least 38 of them and the two
 candidate fits predict it differently. The route choice sees only half
-A; half B is reserved so \code{fit_pigauto()}/\code{impute()} calibrate
-the GNN gate and compute conformal scores on rows that never informed
-the choice. Below 38 rows each half would keep fewer than the 19 a 95\\%
-split-conformal interval needs, so the same rows both choose the route
+A for this outer exact-versus-per-column choice; half B is reserved
+for gate calibration and conformal scoring. This separation applies
+only to that outer choice. For ordinal traits, each candidate fit's
+inner threshold-joint-versus-BM selector has already used the full
+validation split, including half B. Below 38 rows each half would keep
+fewer than the 19 cells needed for a 95 percent split-conformal interval,
+so the same rows both choose the route
 and calibrate; when both fits agree, no choice is made and all rows
 calibrate. With fewer than 5 validation cells, or on a genuine tie, a
-trait keeps \code{"exact"}, as it does when \code{splits} is
-\code{NULL} (no validation cells at all makes every trait
-\code{"exact"}). The chosen route per trait is returned as
+trait requests \code{"exact"}. With \code{splits = NULL}, no
+validation comparison is possible, so every trait requests exact
+prediction; unsupported or unusable exact fits may still fall back
+to per-column prediction. The chosen route per trait is returned as
 \code{$predict_method_by_trait}. \code{"exact"} uses the full
 cross-trait conditional
 mean and variance of \code{vec(L) ~ MVN(0, Sigma \%x\% R(lambda_block))}
 in the sparse precision form (Hadfield & Nakagawa, 2010), with each
 column centred at its own GLS phylogenetic mean at \code{lambda_block}
-before the solve (mean-model consistency; see
-\code{docs/dev-log/exact-default/}). Discrete liability columns
+before the solve so the mean and covariance models use the same
+phylogenetic correlation. Discrete liability columns
 (binary, zi gate, ordinal-via-OVR synthetic columns) share
 \code{lambda_block} under \code{"exact"} rather than staying fixed at
 lambda = 1, so the whole joint fit uses one internally-consistent
@@ -201,19 +190,16 @@ borrowing in the prediction step; \code{se} is that column's own
 conditional SE). Neither option changes covariance estimation or the
 \code{"rphylopars"} solver.}
 
-\item{joint_refine_iter}{integer, default \code{0L}. Enables
-cross-trait refinement of the joint baseline's cell imputations
-using the estimated Sigma (the in-house solver's \code{max_iter}
-EM cell-refinement; \code{R/joint_mvn_solver.R}). \code{0L} preserves
-current behaviour byte-for-byte. The refinement is guarded: the
-Sigma step must shrink each iteration, or the loop rolls back to the
-last good iterate and sets \code{$diverged}. \strong{Has no effect on
-any trait predicted by the \code{"exact"} route}: the exact
-conditional solve returns its analytic posterior directly and never
-enters this EM loop. Under the default \code{predict_method =
-"auto"}, \code{joint_refine_iter} therefore only ever applies to
-traits that \code{"auto"} routes to \code{"per_column"} (see
-\code{$predict_method_by_trait} below).}
+\item{joint_refine_iter}{integer, default \code{0L}. Maximum passes of
+optional cross-trait refinement of joint-baseline cell imputations
+using the estimated covariance matrix. \code{0L} disables this
+refinement. The covariance step must shrink each iteration; otherwise
+the last accepted iterate is restored and \code{$diverged} is set.
+This has no effect on traits predicted by the \code{"exact"} route,
+which returns the analytic conditional directly. Under
+\code{predict_method = "auto"}, it can therefore affect only traits
+routed to \code{"per_column"}. Evaluate this opt-in setting on held-out
+cells from the intended data.}
 
 \item{predict_route}{optional named character vector (names = trait
 names, i.e. \code{vapply(data$trait_map, function(tm) tm$name,
@@ -246,21 +232,26 @@ A list with:
 \describe{
 \item{mu}{Numeric matrix (n_species x p_latent), baseline means in
 latent scale.}
-\item{se}{Numeric matrix (n_species x p_latent), standard errors.}
+\item{se}{Numeric matrix (n_species x p_latent) with route-specific
+uncertainty values. Brownian-motion conditional-MVN routes return
+conditional standard deviations; the zero-inflated-count constant
+magnitude fallback returns its observed-sample SD. Decoded
+threshold, one-vs-rest categorical, and label-propagation routes may
+store zero placeholders, which do not indicate certainty. A zero can
+also be genuine conditional uncertainty for a numeric observation.
+These baseline values are distinct from the type-specific
+uncertainties in \code{pred$se}.}
 \item{path}{Named character vector, one entry per \code{trait_map}
 entry (name = trait/group name), recording which dispatch branch
-produced that trait's baseline: \code{"joint_mvn"} (Phase 2
-continuous-only joint), \code{"threshold_joint"} (Phase 3/5 binary +
-ordinal + continuous-family liability joint), \code{"ovr_categorical"}
-(Phase 6 one-vs-rest K-fits), \code{"per_column_bm"} (per-column
-Brownian-motion conditional MVN, including the lambda-aware path and
-the per-trait ordinal fallback that beats threshold-joint on held-out
-val MSE), \code{"multi_proportion_bm"} (per-component
-\code{per_column_bm} on the CLR columns of a multi_proportion group
--- same kernel as \code{"per_column_bm"}, labelled separately because
-multi_proportion is architecturally distinct), \code{"label_propagation"}
-(phylogenetic label propagation for binary/categorical/ordinal, and
-the per-trait ordinal fallback that beats the other two candidates),
+produced that trait's baseline: \code{"joint_mvn"} (continuous-family
+joint MVN), \code{"threshold_joint"} (binary, ordinal, and
+continuous-family liability joint), \code{"ovr_categorical"}
+(K one-vs-rest categorical fits), \code{"per_column_bm"}
+(per-column Brownian-motion conditional MVN, including lambda-aware
+fits and an ordinal candidate selected by fit-specific validation
+MSE against threshold-joint), \code{"multi_proportion_bm"}
+(component-wise BM on CLR columns), \code{"label_propagation"}
+(phylogenetic label propagation for eligible discrete columns),
 \code{"zi_gate_lp"} (label propagation for a zero-inflated count's
 gate column), or \code{"zi_mag_constant"} (global mean/sd fallback
 for a zero-inflated count's magnitude column when fewer than 5
@@ -269,16 +260,14 @@ columns: gate then magnitude), \code{path} reports the GATE column's
 dispatch -- the magnitude column can independently land on
 \code{"joint_mvn"}, \code{"threshold_joint"}, \code{"per_column_bm"},
 or \code{"zi_mag_constant"} and is not separately surfaced here.}
-\item{lambda_per_trait}{Named numeric vector (length \code{p_latent},
-names = \code{colnames(data$X_scaled)}), the lambda actually used
-for each latent column: 1 for every column not eligible for lambda
-estimation (all discrete columns; continuous-family columns under
-\code{lambda_mode \%in\% c("cv", "bayes")}), else the estimated or
-fixed value.}
+\item{lambda_per_trait}{Named numeric vector with one entry per latent
+column, named by \code{colnames(data$X_scaled)}. Entries report
+values available for each column; exact joint prediction also uses
+the shared \code{lambda_block}; categorical one-vs-rest fit lambdas
+are not reported in this vector.}
 \item{lambda_block}{Numeric scalar, the shared lambda used internally
-by whichever joint fit ran for its Sigma M-step / opt-in exact
-conditional / opt-in EM refine (see \code{R/joint_mvn_solver.R}'s
-\code{$lambda_block}); \code{NA} when no joint fit ran.}
+by the joint fit for covariance estimation and cross-trait
+conditional calculations; \code{NA} when no joint fit ran.}
 \item{lambda_mode}{Character, echoes the resolved \code{lambda_mode}
 argument.}
 \item{predict_method_used}{Character scalar, \code{"exact"},
@@ -311,40 +300,43 @@ conditions as \code{\link{fit_pigauto}}.
 
 Continuous-family columns use Brownian-motion conditional MVN baselines on
 the phylogenetic correlation matrix, either independently or through the
-joint MVN path when the data and optional dependencies support it. Binary,
+joint MVN path when the data meet its route requirements. The default
+in-house joint solver does not require Rphylopars; that package is an
+optional alternative solver. Binary,
 ordinal, categorical, and zero-inflated gate columns use the appropriate
 label-propagation or threshold/liability baseline candidates, with
 per-column fallbacks when a joint path is not available.
 
-\strong{Covariates and the joint baseline (P1-8)}: \code{data$covariates}
-is only used by the per-column BM path (\code{bm_impute_col_with_cov()}).
-The joint MVN and threshold-joint (Rphylopars) baselines do not accept a
-covariate design matrix, so when a joint path is selected (BM-eligible
-columns >= 2, or binary/ordinal cols present, with Rphylopars available)
-any supplied covariates are ignored for the BASELINE and a warning is
-emitted; covariates still reach the GNN correction via
-\code{\link{fit_pigauto}} regardless of which baseline path fires.
+\strong{Covariates and baseline routes}: \code{data$covariates} are
+used by the per-column BM path (a separate Brownian-motion fit for each
+eligible numeric trait). Joint MVN paths fit eligible numeric traits
+together; threshold-joint paths add discrete liabilities to a joint fit.
+Joint MVN and threshold-joint fits both omit the covariate design and emit
+a warning. One-versus-rest categorical fits omit covariates but do not
+trigger the separate baseline warning themselves. In a mixed fit, another
+selected joint route can still trigger it. Each category gets its own
+class-versus-rest fit.
+In a mixed fit, per-column numeric BM fallbacks can still use covariates
+for the columns they handle. The warning applies to the selected joint
+baseline only. GNN covariate use is separate and occurs only when a GNN
+correction is enabled in \code{fit_pigauto()}. These inputs do not
+guarantee improved predictions.
 
-\strong{Per-type lambda dispatch (arc/lambda-per-type; corrected in S4/S6,
-feat/joint-lambda-default)}: \code{lambda_mode} only ever governs the
-baseline for CONTINUOUS-FAMILY columns (continuous, count, proportion,
-zi_count magnitude) -- NOT ordinal. Binary, ordinal, categorical, and
-zero-inflated gate columns always stay at lambda = 1 in EVERY path
-(threshold-joint, OVR-categorical, label propagation, and the per-trait
-ordinal path-selection fallback below), regardless of \code{lambda_mode}
--- there is no discrete-trait analogue of Pagel's lambda, and previously
-forcing these columns onto label propagation any time \code{lambda_mode
-!= "fixed_1"} cost 19pp of Trophic.Level accuracy on AVONET (0.789 ->
-0.600; see \code{docs/dev-log/2026-08-16-external-comparison-results.md}).
-When \code{lambda_mode != "fixed_1"} and the threshold-joint baseline
-fires for a dataset with binary/ordinal AND continuous-family columns,
-the joint liability fit's own continuous-column OUTPUT is now USED
-(each continuous-family column gets its own \code{lambda_k} via the
-joint solver's \code{lambda_cols}), rather than being discarded for a
-separate lambda-aware per-column BM re-fit as in the pre-S4 design.
-Ordinal liability columns inside that same joint fit, and the
-BM-via-MVN / K-class-OVR-LP alternatives the "Per-trait ordinal path
-selection" block below compares against it, all stay at lambda = 1.
+\strong{Per-type lambda dispatch}: \code{lambda_mode} controls the
+continuous-family columns (continuous, count, proportion, and zi_count
+magnitude). Under \code{"estimate"}, the selected joint or per-column
+numeric route estimates each eligible column's lambda; \code{"cv"} and
+\code{"bayes"} use the per-column route and are unsupported by the
+covariate-aware per-column fallback, which uses lambda 1 and warns
+when no explicit \code{lambda_fixed} was supplied.
+Ordinal, binary, and zi_count gate liabilities are handled by the
+discrete-liability rules instead of this numeric-column setting.
+\code{discrete_lambda} controls their route-specific behavior: estimated
+values may be used in threshold-joint fits, while exact joint predictions
+share the fit's \code{lambda_block}. Label-propagation and categorical
+one-vs-rest routes have additional reporting limits. Covariance estimates
+alone do not imply that returned predictions used cross-trait conditioning;
+see \code{predict_method} below.
 }
 \examples{
 \donttest{

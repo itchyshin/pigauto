@@ -154,7 +154,7 @@ test_that("predict() on a GNN-off fit builds no model and reproduces the blended
 })
 
 
-test_that("predict(n_imputations = 5) on a GNN-off fit yields BM-posterior draws", {
+test_that("predict(n_imputations = 5) on a GNN-off fit yields per-cell baseline-SD diagnostics", {
   skip_on_cran()
   fx  <- make_gnn_off_fixture()
   pd  <- preprocess_traits(fx$df, fx$tree)
@@ -256,7 +256,7 @@ test_that("multi_impute(gnn = FALSE) works with both draw methods", {
     mi2 <- multi_impute(fx$df, fx$tree, m = 2L, gnn = FALSE,
                          draws_method = "mc_dropout", verbose = FALSE,
                          seed = 5L),
-    "BM-posterior"
+    "independent latent-cell baseline-SD perturbations"
   )
   expect_s3_class(mi2, "pigauto_mi")
   expect_length(mi2$datasets, 2L)
@@ -276,14 +276,14 @@ test_that("multi_impute_trees(gnn = FALSE) works and calls no torch", {
               silent = TRUE), add = TRUE)
 
   # Two expected warnings on this tiny fixture, neither about the GNN-off path:
-  # "Few tree-sensitivity draws" (T * m_per_tree = 4) and the per-trait
+  # "Few tree-sensitivity datasets" (T * m_per_tree = 4) and the per-trait
   # "Small validation set" calibration warning.
   expect_warning(
     expect_warning(
       mi_t <- multi_impute_trees(
         fx$df, trees, m_per_tree = 2L, gnn = FALSE, verbose = FALSE, seed = 5L
       ),
-      "Few tree-sensitivity draws"
+      "Few tree-sensitivity datasets"
     ),
     "Small validation set"
   )
@@ -364,7 +364,7 @@ test_that("gnn = FALSE without a validation split falls back to pure baseline an
 })
 
 
-test_that("gnn = FALSE warns that user covariates are ignored", {
+test_that("gnn = FALSE explains route-dependent covariate use", {
   skip_on_cran()
   fx <- make_gnn_off_fixture()
   covs <- data.frame(temp = rnorm(nrow(fx$df)), row.names = rownames(fx$df))
@@ -376,15 +376,44 @@ test_that("gnn = FALSE warns that user covariates are ignored", {
       impute(fx$df, fx$tree, gnn = FALSE, covariates = covs,
              verbose = FALSE, seed = 5L),
       warning = function(w) {
-        if (!grepl("covariates are used only by the", conditionMessage(w))) {
+        if (!grepl("the GNN is off", conditionMessage(w))) {
           invokeRestart("muffleWarning")
         }
       }
     ),
-    "covariates are used only by the"
+    "A selected per-column numeric BM baseline may still use supplied covariates"
   )
 })
 
+
+test_that("gnn-off single-trait numeric BM still uses covariates", {
+  skip_on_cran()
+  set.seed(81L)
+  n <- 30L
+  tree <- ape::rcoal(n)
+  df <- data.frame(x = stats::rnorm(n), row.names = tree$tip.label)
+  df$x[c(2L, 8L, 14L)] <- NA_real_
+  covs <- data.frame(temp = stats::rnorm(n), row.names = tree$tip.label)
+  cov_fit_calls <- 0L
+  trace("bm_impute_col_with_cov",
+        tracer = function() cov_fit_calls <<- cov_fit_calls + 1L,
+        print = FALSE, where = asNamespace("pigauto"))
+  on.exit(try(untrace("bm_impute_col_with_cov", where = asNamespace("pigauto")),
+              silent = TRUE), add = TRUE)
+  warnings <- character()
+  res <- withCallingHandlers(
+    impute(df, tree, covariates = covs, gnn = FALSE, verbose = FALSE,
+           seed = 81L),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_identical(unname(res$fit$baseline_full$path[["x"]]), "per_column_bm")
+  expect_gt(cov_fit_calls, 0L)
+  expect_true(any(grepl("per-column numeric BM baseline may still use supplied covariates", warnings)))
+  expect_false(any(grepl("ignored for this fit", warnings)))
+})
 
 test_that("gnn must be TRUE or FALSE", {
   fx <- make_gnn_off_fixture()
@@ -455,7 +484,7 @@ test_that("impute() with no gnn argument equals impute(gnn = FALSE)", {
   expect_equal(res_default$completed, res_off$completed)
 })
 
-test_that("covariates under the default gnn = FALSE warn and say how to use them", {
+test_that("covariates under the default gnn = FALSE warning gives route guidance", {
   skip_on_cran()
   fx <- make_gnn_off_fixture()
   set.seed(3L)
@@ -464,12 +493,12 @@ test_that("covariates under the default gnn = FALSE warn and say how to use them
     withCallingHandlers(
       impute(fx$df, fx$tree, covariates = covs, verbose = FALSE, seed = 5L),
       warning = function(w) {
-        if (!grepl("Set gnn = TRUE", conditionMessage(w))) {
+        if (!grepl("the GNN is off", conditionMessage(w))) {
           invokeRestart("muffleWarning")
         }
       }
     ),
-    "Set gnn = TRUE to use them"
+    "fit_baseline.*help for route details"
   )
 })
 

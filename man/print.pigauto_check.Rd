@@ -17,3 +17,11 @@
 \description{
 Print a pigauto input check
 }
+\section{Printing}{
+
+Always prints the status line. When messages are present, also prints
+their count and at most the first three text/action pairs. With no
+messages, only the status line is printed. Inspect \code{x$messages}
+for the complete structured message table; \code{...} is unused.
+}
+

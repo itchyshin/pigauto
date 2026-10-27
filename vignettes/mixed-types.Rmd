@@ -23,6 +23,28 @@ Real comparative datasets contain many kinds of traits: body mass
 handles all of them in a single model — you do not need separate
 imputation runs for different column types.
 
+### Choose a workflow
+
+- **Fill missing cells in one trait table:** start with `impute()`. The GNN
+  is off by default. Review the returned predictions and the limits for each
+  trait type.
+- **Inspect preprocessing, fit stages, or validation scores:** follow this
+  article's lower-level workflow. Keep validation and test cells separate
+  from predictions, and check each metric's scale and sample size.
+- **Carry missing-data uncertainty into a downstream model:** start with the
+  [multiple imputation guide](multiple-imputation.html). Choose a route that
+  matches your data and analysis, then check its eligibility and validation
+  limits. Random variation among completed tables alone does not establish
+  valid inference.
+- **Compare predictions across posterior trees:** use the
+  [tree sensitivity guide](tree-uncertainty.html). This is a
+  prediction-sensitivity check; tree-aware downstream inference is not
+  supported by this workflow.
+
+The mixed-type example below teaches the lower-level steps. For a first
+analysis with your own data, check the species names and trait declarations
+before fitting; the checklist below shows what to verify.
+
 | Type | R class | Example | Notes |
 |------|---------|---------|-------|
 | Continuous | `numeric` | Body mass, wing length | Auto-detected |
@@ -30,24 +52,41 @@ imputation runs for different column types.
 | Binary | `factor` (2 levels) | Migratory yes/no | Auto-detected |
 | Categorical | `factor` (>2 levels) | Diet type, lifestyle | Auto-detected |
 | Ordinal | `ordered` | Threat status (LC < VU < EN) | Auto-detected |
-| Proportion | `numeric` (0–1) | Habitat cover, diet fraction | Requires `trait_types = "proportion"` override |
-| ZI count | `integer` (zero-inflated) | Parasite load, rare behaviour | Requires `trait_types = "zi_count"` override; experimental — accuracy more variable than other types |
+| Proportion | `numeric` (0–1) | Habitat cover, diet fraction | Requires a named override, e.g. `trait_types = c(cover = "proportion")` |
+| ZI count | `integer` (zero-inflated) | Parasite load, rare behaviour | Requires a named override, e.g. `trait_types = c(parasite_load = "zi_count")`; experimental |
 | Multi-proportion | K `numeric` columns summing to 1 | Diet composition, plumage-colour fractions, microbiome relative abundances | Requires `multi_proportion_groups = list(<name> = c("col1", ..., "colK"))`; encoded via centred log-ratio (CLR) + per-component z-score |
 
-The first five rows in this table are auto-detected from R column class;
-`proportion`, `zi_count`, and `multi_proportion` must be declared explicitly
-(`trait_types` or
-`multi_proportion_groups`). All eight share the same latent space — the
-phylogenetic baseline and GNN correction both operate in this space,
-and type-specific logic appears only at encoding, loss computation,
-and decoding.
+The first five rows in this table are generally inferred from R column
+class, subject to the exceptions below. `proportion`, `zi_count`, and
+`multi_proportion` must be declared explicitly (`trait_types` or
+`multi_proportion_groups`). Two-level ordered factors are detected as binary;
+integer columns with negative observed values are treated as continuous, while
+other integer columns are treated as counts. Use a named `trait_types` override
+when that inference does not match the measurement. All eight types share a
+latent representation, but type also determines baseline eligibility and
+dispatch, masking rules, loss, calibration, uncertainty summaries, and
+back-transformation. For examples, see the [baseline section](#baseline-fitting)
+and [prediction and decoding](#prediction-and-decoding). Names in `trait_types`
+must match the corresponding trait columns.
 
 Before fitting a mixed table, use `check_pigauto(traits, tree)`. Its trait
 table records the detected type, declaration source, usable matched rows, and
 copy-ready corrections; its species report distinguishes matched, data-only,
 and tree-only identities.
 
+For a real dataset, first confirm that row names (or the declared species
+column) match the tree tips. Set factor levels in the intended order, explicitly
+declare proportions and zero-inflated counts, and declare compositional groups
+with `multi_proportion_groups`. Then resolve any issues reported by
+`check_pigauto()` before fitting.
+
 ## Synthetic example
+
+This is a teaching example with 60 simulated species, not a validation study.
+The validation and test splits can contain only a few cells for some traits,
+so their scores and calibration are imprecise. For a real analysis, use enough
+observed values to support the validation split and inspect the reported `n`
+before interpreting a score.
 
 ```{r simulate}
 library(pigauto)
@@ -88,8 +127,12 @@ pd$trait_map$diet
 ## Creating splits
 
 When `trait_map` is supplied, `make_missing_splits()` operates at the
-original-trait level.  For categorical traits, all K one-hot columns
-are held out together:
+original-trait level. For categorical traits, all K one-hot columns are held
+out together. A zero-inflated count uses two latent columns: a recorded zero
+has an observed zero/non-zero gate and no magnitude, while a genuinely missing
+count has no observed gate. The split uses the gate to identify observed cells;
+the missing magnitude for a recorded zero does not mean the raw count was
+missing.
 
 ```{r splits}
 spl <- make_missing_splits(pd$X_scaled, missing_frac = 0.20,
@@ -100,9 +143,11 @@ cat("Test cells (latent):", length(spl$test_idx), "\n")
 
 ## Baseline fitting
 
-The baseline uses phylogenetic conditional MVN for continuous-family latent
-columns, and label-propagation or threshold/liability candidates for
-discrete-family columns:
+The baseline depends on trait type. Continuous-family latent columns use
+phylogenetic conditional multivariate-normal imputation. Discrete traits
+use phylogenetic label propagation or, for eligible combinations of traits,
+a threshold model. The architecture article describes the dispatch and its
+fallbacks:
 
 ```{r baseline}
 bl <- fit_baseline(pd, tree, splits = spl)
@@ -111,16 +156,26 @@ dim(bl$mu)
 
 ## Fitting
 
-`fit_pigauto()` calibrates the phylogenetic baseline for every trait
-type on the validation cells and computes the conformal intervals. With
-the default `gnn = FALSE` no network is trained. With `gnn = TRUE` it also
-trains the GNN correction, using type-specific losses and trait-level
-corruption masking when a `trait_map` is present.
+`fit_pigauto()` calibrates the phylogenetic baseline for each trait type on
+validation cells. It computes conformal scores for continuous, count, ordinal,
+and proportion traits, and for the positive-count magnitude of a zero-inflated
+count. That last score describes magnitude conditional on a non-zero count; it
+does not describe uncertainty about whether the count is zero. Binary,
+categorical, and multi-proportion traits do not receive these conformal scores.
+The lower-level fitter defaults to `gnn = FALSE`, so this example fits the
+baseline without constructing a network. Set `gnn = TRUE` to train the GNN
+correction as well. The example fixes both continuous and discrete Pagel's
+lambda at 1 to keep this small illustration quick; it does not compare
+lambda settings. The `impute()` convenience function also defaults to the
+baseline-only route.
 
 ```{r train, message = FALSE}
 fit <- fit_pigauto(
   pd, tree,
   splits = spl,
+  gnn = FALSE,
+  lambda_mode = "fixed_1",
+  discrete_lambda = "fixed_1",
   verbose = FALSE,
   seed = 1
 )
@@ -146,9 +201,27 @@ head(pred$probabilities$migr)
 head(pred$probabilities$diet)
 ```
 
-The SE matrix provides type-appropriate uncertainty (see the
-uncertainty-mechanisms table in the GNN architecture vignette for what
-each column's SE does and does not guarantee):
+The uncertainty matrix is type-dependent. Entries for binary and categorical
+traits are uncertainty scores, not Gaussian standard errors or measurement
+units. In this example, the ordinal `threat` column uses the threshold-joint
+baseline, which currently returns zero in `pred$se`; that zero is a placeholder,
+not evidence of certainty or an ordinal standard error. Continuous-family
+columns have scale-specific standard errors; see the
+[uncertainty guide](gnn-architecture.html#uncertainty-quantification) before using
+them:
+
+- **Class probabilities (`pred$probabilities`):** predicted probabilities for
+  binary and categorical classes. Compare classes or report their
+  probabilities.
+- **Uncertainty scores (`pred$se` for binary or categorical traits):**
+  type-specific scores, not standard errors. Use them to rank predictions by
+  uncertainty; do not form a normal interval from them.
+- **Model-based standard errors (`pred$se` for supported continuous-family
+  traits):** values on a trait-specific scale. Check the scale and assumptions
+  in the uncertainty guide; these are not conformal intervals.
+- **Conformal bounds (`pred$conformal_lower` and `pred$conformal_upper`):**
+  held-out residual-calibrated prediction bounds for supported traits. They
+  are not Rubin-pooled uncertainty for a downstream model.
 
 ```{r se}
 head(pred$se)
@@ -166,12 +239,29 @@ ev <- evaluate_imputation(pred_eval, pd$X_scaled, spl)
 print(ev)
 ```
 
+Read `split` to distinguish validation from test results and `n` for the number
+of scored cells. For continuous and count traits, RMSE is on a transformed
+latent scale; for zero-inflated counts, RMSE and MAE are on the original count
+scale. Lower error scores and Brier scores indicate closer predictions;
+higher accuracy and correlation indicate better agreement. `coverage_95` here
+uses a symmetric standard-error interval on a latent scale, not the separate
+conformal-bound coverage reported by `evaluate()`. `NA` means that metric is not
+available for that trait and split.
+
 ## Experimental analysis-aware multiple imputation
 
 `multi_impute_analysis()` requires the downstream formula before imputation.
 The initial backend supports exactly one incomplete continuous covariate under
 MAR. It does not yet impute the mixed discrete and compositional outcomes shown
 earlier in this vignette for downstream inference.
+
+This code is a template, not a standalone example. `analysis_data` must
+contain a binary outcome `y`, one incomplete continuous predictor `x`, and
+a fully observed continuous predictor `z`; here `model = "glm"` specifies
+a binomial-logit model. For a runnable minimal example, see the
+[`multi_impute_analysis()` function reference](../reference/multi_impute_analysis.html).
+The [multiple-imputation guide](multiple-imputation.html) explains eligibility
+and the current validation limits.
 
 ```{r mi_workflow, eval=FALSE}
 # Precompute nonlinear auxiliaries explicitly when required.
@@ -210,3 +300,11 @@ These are not supported for downstream inference. The analysis-aware
 to `with_imputations()` and `pool_mi()`; the posterior route from
 `multi_impute()` supports the separately documented continuous-trait
 analyses.
+
+The analysis-aware backend is implemented, but implementation alone does not
+establish validated inferential performance. In the registered tests, 23 of
+24 method-by-scenario results were indeterminate and one binomial-logit GLM
+result failed; none was classified as supported, and 12 controls used complete
+data. See the [registered inferential results](validation-results.html#inferential-results)
+and the [multiple-imputation guide](multiple-imputation.html) before choosing
+an inferential route.

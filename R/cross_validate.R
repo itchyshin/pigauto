@@ -1,7 +1,9 @@
 #' k-fold cross-validation for pigauto trait imputation
 #'
-#' Performs stratified k-fold cross-validation by rotating which cells
-#' serve as the test set.  Returns per-fold and aggregated metrics.
+#' Evaluates trait-imputation performance by rotating observed cells within
+#' each trait through k test folds. Folds do not hold out whole species or
+#' clades, and they are not stratified by outcome class. Returns per-fold
+#' and aggregated metrics.
 #'
 #' @param data pigauto_data object (output of \code{\link{preprocess_traits}}).
 #' @param tree phylo object.
@@ -12,10 +14,16 @@
 #' @param verbose logical.  Print progress (default TRUE).
 #' @param ... Additional arguments passed to \code{\link{fit_pigauto}}
 #'   (e.g. \code{hidden_dim}, \code{k_eigen}, \code{use_attention}).
-#'   \code{cross_validate()} precomputes one graph shared across folds and uses
-#'   \code{k_eigen = 8L} for that graph when \code{k_eigen} is omitted. An
-#'   explicit \code{k_eigen} is used for the shared graph and forwarded to
-#'   \code{fit_pigauto()}.
+#' @details
+#' \code{cross_validate()} precomputes one graph shared across folds and uses
+#' \code{k_eigen = 8L} for that graph when \code{k_eigen} is omitted. An
+#' explicit \code{k_eigen} is used for the shared graph and forwarded to
+#' \code{fit_pigauto()}. Folds divide observed cells within each trait; they
+#' do not hold out whole species or clades or stratify by outcome class.
+#' Interpret each metric on its documented scale in
+#' \code{\link{evaluate_imputation}}; continuous and count RMSE use latent
+#' scales. Conformal coverage is calculated separately after predictions are
+#' decoded.
 #' @return A list of class \code{"pigauto_cv"} with:
 #'   \describe{
 #'     \item{results}{Data.frame with columns: fold, rep, trait, type,
@@ -364,6 +372,23 @@ compute_conformal_coverage_fold <- function(pred, X_scaled, test_idx,
 
 # ---- Print and summary methods -----------------------------------------------
 
+#' Print a cross-validation summary.
+#'
+#' Displays the number of folds and replicates, then reports each trait's
+#' mean and standard deviation for every metric. Returns \code{x} invisibly.
+#' Additional arguments are ignored by this print method.
+#'
+#' @param x A \code{pigauto_cv} object returned by \code{cross_validate()}.
+#' @rdname cross_validate
+#' @section Printing:
+#' \code{print.pigauto_cv()} reports \code{k} folds and the replicate count,
+#' followed by each trait's metric means and SDs. Displayed \code{n} is the
+#' number of represented fold-by-replicate metric rows, not just the fold
+#' count. This count includes rows with missing metric values; means and
+#' SDs omit those values. When available, a separate conformal block shows
+#' mean coverage and its SD against a nominal 95% target; the target is
+#' not a guarantee. Empty summaries print \dQuote{No results.} The method
+#' ignores \code{...} and returns \code{x} invisibly.
 #' @export
 print.pigauto_cv <- function(x, ...) {
   cat(sprintf("%d-fold cross-validation (%d replicate%s)\n",
@@ -411,6 +436,25 @@ print.pigauto_cv <- function(x, ...) {
   invisible(x)
 }
 
+#' Print a compact summary of cross-validation results
+#'
+#' @rdname cross_validate
+#' @aliases summary.pigauto_cv
+#' @usage \method{summary}{pigauto_cv}(object, ...)
+#' @param object A \code{pigauto_cv} object returned by
+#'   \code{cross_validate()}.
+#' @param ... Additional arguments forwarded by \code{cross_validate()} to \code{fit_pigauto()}; ignored by the print and summary methods.
+#' @return Invisibly returns the summary data frame stored in
+#'   \code{object$summary}.
+#' @section Summary method:
+#' \code{summary.pigauto_cv()} prints a compact per-trait table with RMSE,
+#' Pearson \eqn{r} for continuous traits, Spearman \eqn{\rho} for ordinal
+#' traits, and accuracy when returned (binary/categorical accuracy or
+#' multi-proportion dominant-component accuracy). A dash means the metric
+#' row is absent. A present but nonfinite metric may display \code{NA} or
+#' \code{NaN}. An empty summary prints \dQuote{No results.} The full
+#' \code{object$summary} data frame, which can contain metrics omitted from
+#' this display, is returned invisibly. The method ignores \code{...}.
 #' @export
 summary.pigauto_cv <- function(object, ...) {
   cat(sprintf("%d-fold cross-validation (%d replicate%s)\n",

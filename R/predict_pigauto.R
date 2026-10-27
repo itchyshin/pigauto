@@ -1,26 +1,35 @@
 #' Impute missing traits using a fitted pigauto model
 #'
-#' Runs a single forward pass through the fitted model and returns imputed
-#' trait values back-transformed to the original scale.  Supports all
-#' trait types (continuous, binary, categorical, ordinal, count, proportion,
-#' zero-inflated count, multi-proportion)
-#' and MC dropout for stochastic prediction diagnostics (when
-#' \code{n_imputations > 1}). The fitted model is a gated ensemble
-#' of a phylogenetic baseline and a graph neural network correction;
-#' prediction is the per-trait blend
-#' \code{(1 - r_cal) * baseline + r_cal * delta_GNN}.
+#' @description
+#' Returns imputed trait values on the original scale for data used to fit the
+#' model. Supports continuous, binary, categorical, ordinal, count, proportion,
+#' zero-inflated count, and multi-proportion traits.
+#'
+#' **Multiple draws are diagnostic only.** With \code{n_imputations > 1},
+#' returned draws are not supported for downstream inference. For
+#' multi-proportion traits, pooled point values and simplex probabilities are
+#' omitted; use a single-run prediction when you need the simplex output.
 #'
 #' @details
-#' When \code{n_imputations > 1}, each imputation \code{m} draws a BM
-#' posterior sample \code{t_BM_draw ~ N(BM_mu, BM_se)} on the latent scale
-#' for originally-missing cells (\code{BM_se = 0} for observed cells so they
-#' are never perturbed).  The model runs in train mode (GNN dropout active)
-#' using \code{t_BM_draw} as input.  The final blend is
-#' \code{(1 - r_cal) * t_BM_draw + r_cal * GNN_delta(t_BM_draw)}: when the
-#' calibrated gate is zero the imputation is a pure BM posterior draw; when
-#' \code{r_cal > 0} both BM draws and GNN dropout contribute variance.  Point
-#' estimates are the mean (continuous, count) or mode (binary, categorical,
-#' ordinal) across passes.  The M complete datasets are returned in
+#' With \code{n_imputations > 1}, predictions include stochastic diagnostic
+#' draws, not joint phylogenetic BM posterior draws. On each run, independent
+#' Gaussian perturbations are added per latent cell to the selected baseline
+#' component, scaled by that component's standard deviation (the second
+#' parameter in \code{N(mu, sd)} is an SD, not a variance). A route that
+#' supplies zero uncertainty placeholders adds no Gaussian perturbation for
+#' those cells; a zero placeholder does not indicate certainty. When the GNN
+#' is enabled, dropout also varies across runs. Because predictions use the
+#' phylogenetic graph, predictions across species need not be independent.
+#' The calibrated latent prediction combines the selected baseline, GNN
+#' prediction and optional mean baseline using their calibrated weights;
+#' an applicable direct covariate contribution is then added. In stochastic
+#' runs the selected baseline term uses its perturbed value.
+#' A zero GNN weight removes only the neural contribution. The output equals
+#' the baseline draw only when the baseline weight is one and every other
+#' contribution is absent. Point predictions and these stochastic diagnostic
+#' draws are distinct outputs.
+#' Point estimates follow the type-specific "Pooling decoded draws" table
+#' below. The M complete datasets are returned in
 #' \code{imputed_datasets} for prediction diagnostics. These datasets are not
 #' supported for downstream inference. Use \code{multi_impute_analysis()} for
 #' the narrow analysis-aware backend after consulting its supported-model and
@@ -36,10 +45,11 @@
 #' -- fit with \code{splits = NULL}, so every observed cell can inform every
 #' other cell; in evaluation mode (\code{evaluation = TRUE}) predictions use the held-out
 #' \code{baseline} instead, so scored cells never see their own value.
-#' \code{n_imputations > 1} draws are BM posterior samples
-#' \code{MU_m ~ N(baseline_mu, baseline_se)} at originally-missing cells
-#' (observed cells are always restored to their true value), with no GNN
-#' dropout contribution.
+#' \code{n_imputations > 1} adds independent Gaussian perturbations per
+#' latent cell, scaled by the selected baseline standard deviation. Cells
+#' with zero selected baseline SD receive no Gaussian perturbation. These
+#' are stochastic prediction diagnostics, not joint phylogenetic BM posterior
+#' draws. The \code{gnn = FALSE} path has no GNN-dropout contribution.
 #'
 #' **Decoding per type:**
 #' \describe{
@@ -55,8 +65,9 @@
 #' (\code{\link{fit_pigauto}}). For \code{"mondrian"}, the half-width is not
 #' constant across rows: each target cell's phylogenetic locality (mean
 #' cophenetic distance to its 5 nearest training-observed species for that
-#' trait) picks the near- or far-stratum score stored on the fit, so
-#' predictions in undersampled clades get wider intervals. See
+#' trait) picks the near- or far-stratum score stored on the fit.
+#' These are stratum-specific intervals; the far-stratum score is not
+#' necessarily larger than the near-stratum score. See
 #' \code{\link{fit_pigauto}}'s \code{conformal_method} argument for details.
 #'
 #' **\code{zi_count} conformal intervals are conditional on non-zero.**
@@ -75,41 +86,38 @@
 #' conditional interval yourself if you need an \code{E[X]}-scale bound.
 #'
 #' @param object object of class \code{"pigauto_fit"}.
-#' @param newdata \code{NULL} (use the training data) or a
-#'   \code{"pigauto_data"} object for new species.
-#' @param return_se logical. Compute standard errors? (default \code{TRUE}).
-#' @param n_imputations integer. Number of stochastic imputation draws —
-#'   BM posterior samples plus GNN dropout — (default \code{1L}).  Set to
-#'   e.g. 10 or 20 to inspect stochastic prediction variation. These are not
-#'   validated analysis-aware multiple imputations.
+#' @param newdata Must be \code{NULL}: predictions use the fitted data.
+#'   Any non-NULL value is rejected; new-species prediction is not implemented.
+#' @param return_se logical. Return type-dependent uncertainty summaries?
+#'   Default \code{TRUE}; see the \code{se} return description below.
+#' @param n_imputations integer. Number of stochastic prediction-diagnostic
+#'   draws (default \code{1L}). With multiple draws, independent Gaussian
+#'   perturbations are added per latent cell using the selected baseline SD;
+#'   cells with zero selected baseline SD receive no perturbation. GNN dropout
+#'   also varies across runs when the GNN is enabled. These are not joint
+#'   phylogenetic BM posterior draws or validated analysis-aware imputations.
 #' @param baseline_override optional `list(mu, se)` with the same shape as
 #'   `object$baseline`. When supplied, predictions use this baseline instead
 #'   of the one saved in the fit. Used internally by [multi_impute_trees()]
 #'   to reuse a trained GNN across posterior trees. Most users can ignore
 #'   this. Default `NULL` (use the fit's own baseline).
-#' @param pool_method character.  How to pool the M decoded draws when
-#'   \code{n_imputations > 1}: \code{"median"} (default) takes the per-cell
-#'   median for count / proportion / zi_count magnitude traits — robust to
-#'   single dropout-noisy draws amplified by non-linear decoders
-#'   (\code{expm1} / \code{plogis}).  \code{"mean"} restores the
-#'   pre-v0.9.2 arithmetic-mean pooling.  Continuous / ordinal / binary /
-#'   categorical pooling is unchanged (linear / probability-averaged).
-#'   See
-#'   \href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.
-#' @param clamp_outliers logical.  Phase G (v0.9.1.9011+).  When
-#'   \code{TRUE}, post-back-transform predictions for log-transformed
-#'   continuous, count, and zi_count magnitude traits are capped at
-#'   \code{tm$obs_max * clamp_factor} (\code{tm$obs_max} is the
-#'   observed maximum on the original scale, set at preprocess time).
-#'   Targets tail-extrapolation modes amplified by \code{exp()} /
-#'   \code{expm1()} back-transforms.  Default \code{FALSE} preserves
-#'   v0.9.1 behaviour exactly.
-#' @param clamp_factor numeric scalar (>= 1).  Multiplicative factor
-#'   on the observed maximum used by \code{clamp_outliers}.  Default
-#'   \code{5}.  Ignored when \code{clamp_outliers = FALSE}.
+#' @param pool_method character. One of \code{"median"} (default),
+#'   \code{"mean"}, or \code{"mode"}. Controls pooling when
+#'   \code{n_imputations > 1}; see "Pooling decoded draws" below.
+#'   Some types use the same rule for every setting.
+#' @param clamp_outliers logical. When \code{TRUE}, cap back-transformed
+#'   predictions for log-transformed continuous, count, and zi_count
+#'   magnitude traits at \code{tm$obs_max * clamp_factor}, where
+#'   \code{tm$obs_max} is the observed maximum on the original scale,
+#'   recorded during preprocessing. This optional cap limits extrapolation
+#'   after \code{exp()} or \code{expm1()}; it is not an uncertainty bound.
+#'   Default \code{FALSE} leaves these predictions uncapped.
+#' @param clamp_factor numeric scalar (>= 1). User-selected multiplier
+#'   of the observed maximum for the upper cap when clamping is enabled.
+#'   Default \code{5}. Ignored when \code{clamp_outliers = FALSE}.
 #' @param match_observed character, one of \code{c("none", "pmm")}.
-#'   Phase G' (v0.9.1.9012+).  When \code{"pmm"}, uses Predictive
-#'   Mean Matching (Little 1988; Buuren mice) on the at-risk types
+#'   When \code{"pmm"}, uses predictive
+#'   Mean Matching (Little 1988; see References) on the at-risk types
 #'   (log-transformed continuous, count, zi_count magnitude,
 #'   proportion).  For each missing cell, finds the \code{pmm_K}
 #'   observed cells whose own predictions are closest to the missing
@@ -120,7 +128,7 @@
 #'   \strong{When to use:} PMM is a niche feature in pigauto.  The
 #'   package already provides conformal prediction intervals
 #'   (calibrated against held-out residuals) and
-#'   stochastic conformal-width and Brownian/MC-dropout prediction draws. PMM is
+#'   stochastic conformal-width and mc_dropout prediction-diagnostic draws. PMM is
 #'   only worth enabling for: (a) methodological comparison against
 #'   mice / equivalent packages, or (b) workflows that specifically
 #'   require imputed values to come from the observed data pool.
@@ -128,16 +136,12 @@
 #'   \code{clamp_outliers = TRUE}. PMM failed the downstream fixed-effect
 #'   redesign pilot and is unsupported for inference.
 #'
-#'   The Phase G' acceptance bench
-#'   (\code{useful/MEMO_2026-05-01_phase_g_prime_results.md})
-#'   confirmed PMM does not strictly improve point-estimate RMSE
-#'   over the no-PMM default: it wins on extrapolating cells (e.g.
-#'   AVONET Casuarius) but loses on cells where the GNN's prediction
-#'   is already accurate (donor-mismatch noise).
+#'   Donor matching can reduce extrapolation but also replaces accurate
+#'   predictions with donor values, so it is not a general RMSE improvement.
 #'
 #'   Discrete-class types (binary / categorical / ordinal /
 #'   multi_proportion) and un-log continuous: no-op.  Default
-#'   \code{"none"} preserves v0.9.1.9011 behaviour exactly.
+#'   \code{"none"} leaves predictions unmatched.
 #' @param pmm_K integer scalar (>= 1).  Donor pool size for PMM.
 #'   Default \code{5L} (mice convention).  Ignored when
 #'   \code{match_observed = "none"}.
@@ -149,17 +153,43 @@
 #' @param ... Internal compatibility arguments.
 #' @return A list of class \code{"pigauto_pred"} with:
 #'   \describe{
-#'     \item{imputed}{data.frame of imputed values in original scale with
-#'       proper R types (numeric, integer, factor, ordered).}
+#'     \item{imputed}{data.frame of model predictions for every fitted row
+#'       (observed and missing cells), on the original scale with proper R
+#'       types (numeric, integer, factor, ordered). Observed values are not
+#'       retained in this component. Use \code{impute()} and its
+#'       \code{$completed} component for a data.frame that preserves observed
+#'       values and fills missing cells when predictions are available.}
 #'     \item{imputed_latent}{Numeric matrix (n x p_latent) of predictions in
 #'       latent scale.}
 #'     \item{se}{Numeric matrix (n x n_original_traits) of per-cell
 #'       uncertainty. See the "What \code{$se} means per trait type" section
-#'       below for what each trait type's column actually contains.
-#'       \code{NULL} if \code{return_se = FALSE}.}
-#'     \item{probabilities}{Named list.  Binary traits: numeric probability
-#'       vector.  Categorical traits: n x K probability matrix.  Other
-#'       types: not present.}
+#'       below. Single-run and multi-draw constructions differ. These
+#'       are diagnostic summaries, not calibrated total predictive SDs or
+#'       valid inputs to downstream pooling. \code{NULL} if
+#'       \code{return_se = FALSE}.}
+#'     \item{se_latent}{Numeric matrix on the latent scale, with one column
+#'       per latent trait column. Returned when \code{return_se = TRUE} for
+#'       current trait-map fits; otherwise \code{NULL}. Binary and categorical
+#'       entries are \code{NA}; for \code{zi_count}, only the magnitude
+#'       column has a summary.}
+#'     \item{probabilities}{Named list. Binary traits: numeric probability
+#'       vector; categorical traits: n x K class-probability matrix;
+#'       zi_count traits: probability of nonzero. A single-run
+#'       multi_proportion prediction includes its n x K simplex matrix.
+#'       Compositional entries are absent from pooled multi-draw output.}
+#'     \item{conformal_lower, conformal_upper}{Matrices of lower and upper
+#'       conformal limits when the fitted model has conformal scores. Values
+#'       are on the original trait scale except for ordinal traits, whose
+#'       bounds are rounded zero-based indices. The lower limit is floored at
+#'       0 and the upper limit capped at K - 1; these one-sided limits do not
+#'       guarantee both endpoints are in range or that the interval is
+#'       non-empty. Check bounds before mapping an index to a label using the
+#'       corresponding ordered factor levels (index + 1 in R). Entries can be
+#'       \code{NA} for
+#'       unsupported traits or unavailable scores; both are \code{NULL} when
+#'       scores are absent.}
+#'     \item{conformal_scores}{Named numeric vector of the scores stored in
+#'       the fitted model, or \code{NULL} when the fit has no scores.}
 #'     \item{imputed_datasets}{List of M stochastic prediction data.frames when
 #'       \code{n_imputations > 1}; \code{NULL} otherwise. Not supported for
 #'       downstream inference.}
@@ -170,30 +200,105 @@
 #'     \item{evaluation_safe_idx}{Latent indices excluded from fitting and
 #'       prediction input, used to check held-out scoring.}
 #'   }
-#' @section What \code{$se} means per trait type:
-#' \code{pred$se} is a single \code{n x n_original_traits} matrix, but its
-#' per-column meaning differs by trait type — do not treat every column as
-#' a Gaussian standard error. This table is the definitive reference; other
-#' pigauto documentation (e.g. \code{\link{impute}}'s return value) points
-#' here instead of repeating it.
+#' @section Pooling decoded draws:
+#' These rules apply to \code{n_imputations > 1}, on the decoded scale.
+#' \ifelse{html}{\out{
+#' <table>
+#' <thead><tr><th scope="col">Type</th><th scope="col">median</th><th scope="col">mean</th><th scope="col">mode</th></tr></thead>
+#' <tbody>
+#' <tr><td>continuous, unlogged</td><td>mean</td><td>mean</td><td>mean</td></tr>
+#' <tr><td>continuous, logged</td><td>median</td><td>median</td><td>median</td></tr>
+#' <tr><td>count / proportion / zi_count</td><td>median</td><td>mean</td><td>median</td></tr>
+#' <tr><td>ordinal</td><td>rounded mean class index</td><td>rounded mean class index</td><td>modal class</td></tr>
+#' <tr><td>binary</td><td>mean probability, then threshold 0.5</td><td>same</td><td>same</td></tr>
+#' <tr><td>categorical</td><td>mean class-probability vector, then argmax</td><td>same</td><td>same</td></tr>
+#' <tr><td>multi_proportion</td><td>pooled output unavailable</td><td>unavailable</td><td>unavailable</td></tr>
+#' </tbody>
+#' </table>
+#' }}{
+#' \tabular{llll}{
+#'   Type \tab median \tab mean \tab mode \cr
+#'   continuous, unlogged \tab mean \tab mean \tab mean \cr
+#'   continuous, logged \tab median \tab median \tab median \cr
+#'   count / proportion / zi_count \tab median \tab mean \tab median \cr
+#'   ordinal \tab rounded mean class index \tab rounded mean class index \tab modal class \cr
+#'   binary \tab mean probability, then threshold 0.5 \tab same \tab same \cr
+#'   categorical \tab mean class-probability vector, then argmax \tab same \tab same \cr
+#'   multi_proportion \tab pooled output unavailable \tab unavailable \tab unavailable
+#' }
+#' }
+#' Counts and zi_count values are rounded and clipped to nonnegative integers;
+#' the zi_count nonzero probability is always averaged separately. Single-run
+#' compositional output is a simplex vector; its pooled MC-dropout counterpart
+#' is not populated, although individual decoded compositions are returned in
+#' \code{imputed_datasets}. Do not interpret this omission as simplex averaging.
 #'
-#' \tabular{lll}{
-#'   \strong{Type} \tab \strong{Value} \tab \strong{Is it a Gaussian SE?} \cr
-#'   continuous / count / ordinal / proportion \tab model-dependent BM/joint conditional SD, delta-method back-transformed to original scale \tab It is not total final blended-prediction uncertainty and not a package-certified interval input. \cr
-#'   binary \tab \code{min(p, 1-p)} \tab No. Probability of being wrong (0 = certain, 0.5 = maximally uncertain). \cr
-#'   categorical \tab \code{1 - max(p_k)} \tab No. Margin from certainty (0 = certain, (K-1)/K = maximally uncertain). \cr
-#'   zi_count \tab delta-method SE of \code{E[X] = P(nonzero) * E[count | nonzero]} \tab No. Mixes gate and magnitude uncertainty into one number; not a magnitude-scale SE. Use \code{conformal_lower} / \code{conformal_upper} (conditional-on-nonzero; see above) plus \code{probabilities} (the gate) for interval-scale zi_count uncertainty instead. \cr
-#'   multi_proportion \tab \code{NA} \tab Not computed; use the CLR latent SE (\code{se_latent}) instead. \cr
+#' @references
+#' Little RJA (1988). "Missing-Data Adjustments in Large Surveys."
+#' \emph{Journal of Business & Economic Statistics} 6(3): 287-296.
+#' \doi{10.1080/07350015.1988.10509663}. This is a source for predictive
+#' mean matching, not validation of pigauto's implementation.
+#'
+#' van Buuren S, Groothuis-Oudshoorn K (2011). "mice: Multivariate
+#' Imputation by Chained Equations in R." \emph{Journal of Statistical
+#' Software} 45(3), 1-67. \doi{10.18637/jss.v045.i03}. The
+#' \href{https://amices.org/mice/reference/mice.impute.pmm.html}{official mice PMM documentation}
+#' describes that software's method; it does not validate pigauto's PMM.
+#'
+#' @section What \code{$se} means per trait type:
+#' For fits with a \code{trait_map}, \code{pred$se} is an
+#' \code{n x n_original_traits} matrix of type-dependent diagnostic summaries.
+#' Its construction also depends on \code{n_imputations}. It is not a
+#' uniformly Gaussian standard error, a calibrated total predictive SD, or
+#' an input to Rubin pooling.
+#'
+#' \ifelse{html}{\out{
+#' <table>
+#' <thead><tr><th scope="col">Type</th><th scope="col">Single run</th><th scope="col">More than one draw</th></tr></thead>
+#' <tbody>
+#' <tr><td>continuous / count / ordinal / proportion</td><td>Selected-baseline latent uncertainty scaled to the original scale, using delta-method back-transformation where applicable.</td><td>Square root of transformed baseline variance plus the between-decoded-draw variance. Logged continuous, count, and proportion transformations use the first latent run as their anchor.</td></tr>
+#' <tr><td>binary</td><td><code>min(p, 1-p)</code></td><td>The same score using the probability averaged across draws.</td></tr>
+#' <tr><td>categorical</td><td><code>1 - max(p_k)</code></td><td>The same score using the class-probability vector averaged across draws.</td></tr>
+#' <tr><td>zi_count</td><td>A delta-method product summary for <code>P(nonzero) * E[count | nonzero]</code>, combining gate and magnitude terms.</td><td>Between-draw SD of decoded expected counts, without an additional baseline-variance term.</td></tr>
+#' <tr><td>multi_proportion</td><td><code>NA</code></td><td><code>NA</code></td></tr>
+#' </tbody>
+#' </table>
+#' }}{
+#' \describe{
+#'   \item{continuous/count/ordinal/proportion}{Single run: selected-baseline
+#'     latent uncertainty scaled/back-transformed to the original scale.
+#'     Multiple draws: square root of transformed baseline variance plus
+#'     between-decoded-draw variance; logged continuous, count, and proportion
+#'     transformations use the first latent run as their anchor.}
+#'   \item{binary}{\code{min(p, 1-p)}, using the mean probability across
+#'     draws when \code{n_imputations > 1}.}
+#'   \item{categorical}{\code{1 - max(p_k)}, using the mean class-probability
+#'     vector across draws when \code{n_imputations > 1}.}
+#'   \item{zi_count}{Single run: a delta-method product summary combining
+#'     gate and magnitude terms. Multiple draws: between-draw SD of decoded
+#'     expected counts, with no additional baseline-variance term.}
+#'   \item{multi_proportion}{\code{NA} for either setting.}
+#' }
 #' }
 #'
-#' These families are \strong{incompatible objects sharing one column name}:
-#' only the continuous-family entries are standard errors in the Gaussian
-#' sense, and \strong{none} of the binary / categorical / zi_count entries
-#' may be used in Rubin's-rules arithmetic. The supported downstream
-#' multiple-imputation routes start with
-#' \code{\link{multi_impute_analysis}} or, for continuous traits,
-#' \code{\link{multi_impute}} with \code{draws_method = "posterior"}, then
-#' use \code{\link{with_imputations}} and \code{\link{pool_mi}}.
+#' For a BM Gaussian baseline, the single-run continuous-family source is a
+#' model-dependent BM/joint conditional SD. It is not total final
+#' blended-prediction uncertainty: it describes uncertainty under the
+#' selected baseline, not prediction error in the final baseline--GNN blend.
+#' Other route summaries do not inherit that interpretation automatically.
+#' Discrete scores measure distance from a
+#' certain class prediction, not a Gaussian SE. For compositions, inspect
+#' the separate CLR latent summary in \code{se_latent}. The multi-draw
+#' construction can contain baseline-draw variation with \code{gnn = FALSE};
+#' it should not generally be described as an MC-dropout SE.
+#'
+#' Older saved fits without a \code{trait_map} use a separate continuous-only
+#' legacy prediction path and are not described by this table. For supported
+#' downstream multiple-imputation routes, consult
+#' \code{\link{multi_impute_analysis}} or \code{\link{multi_impute}} with
+#' \code{draws_method = "posterior"}, then use
+#' \code{\link{with_imputations}} and \code{\link{pool_mi}} under their
+#' documented eligibility conditions.
 #' @examples
 #' \donttest{
 #' data(avonet300, tree300)
@@ -504,10 +609,10 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
                                                device = device)
     }
 
-    # ---- Covariates (environmental conditioners) ----------------------------
-    # Skipped entirely under gnn = FALSE: covariates only enter prediction via
-    # the GNN's obs_refine MLP / cov_linear fixed-effect term, neither of
-    # which exists when the GNN was never trained.
+    # ---- GNN covariates (environmental conditioners) ------------------------
+    # These inputs condition GNN-specific prediction terms. With gnn = FALSE,
+    # this GNN input block is absent; any covariate-aware per-column BM effect
+    # is already represented in the baseline means supplied to prediction.
     n_cov_cols <- 0L
     if (has_covariates) {
       covariates <- as.matrix(object$covariates)
@@ -595,16 +700,12 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
          call. = FALSE)
   }
 
-  # BM SE (latent / z-score scale) for MC dropout / MI BM-draw injection.
-  # BM_SE = 0 for observed cells → observed values never perturbed.
-  # BM_SE > 0 for originally-missing cells → BM_draw ~ N(BM_mu, BM_se)
-  # per imputation, held fixed across refine steps (GNN-on) or used directly
-  # as the single-shot blend input (gnn = FALSE) so each m draws ONE
-  # consistent BM posterior sample.  The blend then uses BM_draw instead
-  # of MU in the r_bm term:
-  #   pred = r_bm*BM_draw + r_gnn*delta_dropout + r_mean*MEAN
-  # → when gate=0: pred = BM_draw  ← proper BM posterior draw, non-zero variance
-  # → when gate>0 (GNN-on only): both BM draws and GNN dropout contribute variance
+  # Baseline SD (latent / z-score scale) for stochastic prediction diagnostics.
+  # Independent Gaussian perturbations are added per latent cell, not drawn
+  # jointly from the phylogenetic BM posterior. Cells with zero selected
+  # baseline SD receive no Gaussian perturbation. In the GNN path, one
+  # perturbed baseline matrix is held fixed across refinement steps; GNN
+  # dropout adds further variation when enabled.
   if (n_imp > 1L) {
     bse_mat <- effective_baseline$se            # n_species x p_latent
     if (multi_obs) bse_mat <- bse_mat[obs_to_sp, , drop = FALSE]
@@ -656,8 +757,8 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
       if (n_imp == 1L) {
         MU_m <- MU
       } else {
-        # Draw one BM posterior sample for this imputation. BM_SE = 0 for
-        # observed cells → MU_m unchanged at observed positions.
+        # Add independent Gaussian perturbations per latent cell, scaled by
+        # baseline SD. Zero SD means no Gaussian perturbation for that cell.
         noise <- matrix(stats::rnorm(n * p), nrow = n, ncol = p)
         MU_m  <- MU + noise * bse_mat
       }
@@ -679,8 +780,8 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
         # t_BM_draw stays as t_MU  → blend is identical to original single-pass
       } else {
         model$train()   # activates dropout on GNN hidden layers
-        # Draw one BM posterior sample for this imputation.
-        # BM_SE = 0 for observed cells → X_iter unchanged at observed positions.
+        # Add independent Gaussian perturbations per latent cell, scaled by
+        # baseline SD. Zero SD means no Gaussian perturbation for that cell.
         noise     <- torch::torch_randn(c(n, p), dtype = torch::torch_float(),
                                        device = device)
         t_BM_draw <- t_MU + noise * t_BM_SE   # fixed BM draw for this m
@@ -695,8 +796,8 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
           covs0 <- make_covs_tensor(t_MU, mask_ind0, t_covariates)
           out   <- model(X_iter, t_coords, covs0, t_adj, t_obs_to_sp,
                          D_sq = t_D_sq)
-          # Use t_BM_draw (the BM posterior sample) in the baseline term so that
-          # between-imputation variance is non-zero even when the gate is 0.
+          # Use this run's perturbed baseline value in the blend. The baseline
+          # perturbation can contribute variation even when the GNN weight is 0.
           if (use_calibrated) {
             pred <- t_w_bm * t_BM_draw + t_w_gnn * out$delta +
                     t_w_mean * t_mean_baseline
@@ -1523,6 +1624,13 @@ latent_names_from_map <- function(trait_map) {
 
 # ---- Print methods ---------------------------------------------------------------
 
+#' @rdname fit_pigauto
+#' @param x A fitted pigauto model.
+#' @param ... Ignored. Included for compatibility with the base \code{print()}
+#'   generic.
+#' @section Printing:
+#' Prints configuration, losses, gates and signal summaries. A printed signal label does not verify that a mean fallback was enabled. The `...` argument is currently unused.
+#' @return The print method returns `x` invisibly.
 #' @export
 print.pigauto_fit <- function(x, ...) {
   cat("pigauto_fit\n")
@@ -1578,6 +1686,11 @@ print.pigauto_fit <- function(x, ...) {
 }
 
 
+#' @rdname predict.pigauto_fit
+#' @param x A pigauto prediction object.
+#' @section Printing:
+#' Prints dimensions, trait types, draw count and available probability/bounds components. Component presence does not establish interval coverage. The `...` argument is currently unused.
+#' @return The print method returns `x` invisibly.
 #' @export
 print.pigauto_pred <- function(x, ...) {
   cat("pigauto_pred\n")
