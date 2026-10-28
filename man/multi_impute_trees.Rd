@@ -31,8 +31,13 @@ multi_impute_trees(
 \item{traits}{data.frame. Same format as \code{\link[=multi_impute]{multi_impute()}} and \code{\link[=impute]{impute()}}.}
 
 \item{trees}{list of \code{phylo} objects (class \code{multiPhylo} or plain list).
-Each tree must contain the species in \code{traits} as tips. Posterior
-samples from BirdTree.org (Jetz et al. 2012) are ideal; the bundled
+For the default shared-reference workflow, supply trees with a common
+tip set, including the reference tree if supplied. With \code{share_gnn = FALSE},
+tip sets may differ. Input species absent from the modeled tree, or from
+the reference tree in the shared workflow, remain in returned datasets
+but are not imputed there. Modeled tree tips without trait rows are
+represented internally as all-missing rows. Posterior samples from BirdTree.org
+(Jetz et al. 2012) are an example; the bundled
 \link{trees300} dataset provides 50 posterior trees for \link{avonet300}.}
 
 \item{m_per_tree}{integer. Number of completed datasets returned per
@@ -68,8 +73,11 @@ missing; with \code{FALSE} the largest shift was 1.8.}
 during training (default \code{0.25}).}
 
 \item{covariates}{data.frame or matrix of environmental covariates
-(fully observed, numeric). Passed through to \code{\link[=impute]{impute()}}.
-Default \code{NULL} (no covariates).}
+(fully observed), passed through to \code{\link[=impute]{impute()}}. Numeric and integer
+columns are standardized; factor and ordered columns are one-hot
+encoded. Follow the row-alignment rules in \code{\link[=impute]{impute()}} and provide
+covariates for modeled species or observations, including tree tips
+without trait rows. Default \code{NULL} (no covariates).}
 
 \item{epochs}{integer. Maximum GNN training epochs per tree (default
 \code{2000}).}

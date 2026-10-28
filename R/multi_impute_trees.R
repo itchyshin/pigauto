@@ -60,8 +60,13 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #'
 #' @param traits data.frame. Same format as [multi_impute()] and [impute()].
 #' @param trees list of `phylo` objects (class `multiPhylo` or plain list).
-#'   Each tree must contain the species in `traits` as tips. Posterior
-#'   samples from BirdTree.org (Jetz et al. 2012) are ideal; the bundled
+#'   For the default shared-reference workflow, supply trees with a common
+#'   tip set, including the reference tree if supplied. With `share_gnn = FALSE`,
+#'   tip sets may differ. Input species absent from the modeled tree, or from
+#'   the reference tree in the shared workflow, remain in returned datasets
+#'   but are not imputed there. Modeled tree tips without trait rows are
+#'   represented internally as all-missing rows. Posterior samples from BirdTree.org
+#'   (Jetz et al. 2012) are an example; the bundled
 #'   [trees300] dataset provides 50 posterior trees for [avonet300].
 #' @param m_per_tree integer. Number of completed datasets returned per
 #'   tree (default `1`). Total datasets = `length(trees) * m_per_tree`.
@@ -90,8 +95,11 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #' @param missing_frac numeric. Fraction held out for validation/test
 #'   during training (default `0.25`).
 #' @param covariates data.frame or matrix of environmental covariates
-#'   (fully observed, numeric). Passed through to [impute()].
-#'   Default `NULL` (no covariates).
+#'   (fully observed), passed through to [impute()]. Numeric and integer
+#'   columns are standardized; factor and ordered columns are one-hot
+#'   encoded. Follow the row-alignment rules in [impute()] and provide
+#'   covariates for modeled species or observations, including tree tips
+#'   without trait rows. Default `NULL` (no covariates).
 #' @param epochs integer. Maximum GNN training epochs per tree (default
 #'   `2000`).
 #' @param verbose logical. Print progress (default `TRUE`).
