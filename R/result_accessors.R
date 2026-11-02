@@ -5,13 +5,52 @@
 #'   trait values and non-trait columns retained. Predictions fill modeled
 #'   missing trait cells when available; cells that could not be filled remain
 #'   `NA`.
-#' @seealso [impute()]
+#' @seealso [impute()]. For analyses that should carry imputation
+#'   uncertainty, use [multi_impute()] and extract its `m` datasets with
+#'   [get_imputed_datasets()] instead of a single completion.
 #' @examples
 #' \dontrun{completed_data(result)}
 #' @export
 completed_data <- function(result) {
   if (!inherits(result, "pigauto_result")) stop("`result` must be a pigauto_result.", call. = FALSE)
   result$completed
+}
+
+#' Extract the imputed datasets from a multiple-imputation object
+#'
+#' Returns the list of completed datasets stored in a multiple-imputation
+#' object, equivalent to `mi$datasets`.
+#'
+#' @param mi A `pigauto_mi` object from [multi_impute()],
+#'   [multi_impute_analysis()], or [multi_impute_trees()].
+#' @return A list of `mi$m` input-shaped data frames. Observed cells are
+#'   preserved; missing trait cells vary across datasets according to the
+#'   draw mechanism. Check `mi$draws_method` before analysing them:
+#'   `"posterior"` draws support the documented pooling workflow via
+#'   [with_imputations()] and [pool_mi()], while `"conformal"` and
+#'   `"mc_dropout"` draws are prediction diagnostics that describe the
+#'   spread of plausible imputed values and are refused by the pooling
+#'   functions. Datasets from [multi_impute_trees()] are tree-sensitivity
+#'   diagnostics; `mi$tree_index` records the tree behind each one.
+#' @seealso [multi_impute()], [with_imputations()], [pool_mi()], and
+#'   [completed_data()] for the single completion returned by [impute()].
+#' @examples
+#' \dontrun{
+#' mi <- multi_impute(traits, tree, m = 20)
+#' datasets <- get_imputed_datasets(mi)
+#' }
+#' @export
+get_imputed_datasets <- function(mi) {
+  if (inherits(mi, "pigauto_result")) {
+    stop("`mi` is a pigauto_result from impute(), which holds a single ",
+         "completion; use completed_data(), or call multi_impute() for m ",
+         "imputed datasets.", call. = FALSE)
+  }
+  if (!inherits(mi, "pigauto_mi")) {
+    stop("`mi` must be a pigauto_mi object from multi_impute(), ",
+         "multi_impute_analysis(), or multi_impute_trees().", call. = FALSE)
+  }
+  mi$datasets
 }
 
 .describe_pigauto_result <- function(result) {

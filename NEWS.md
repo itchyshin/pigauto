@@ -1,3 +1,13 @@
+# pigauto (development version)
+
+## New accessor: get_imputed_datasets()
+
+`get_imputed_datasets(mi)` extracts the list of completed datasets from a
+`pigauto_mi` object (`multi_impute()`, `multi_impute_analysis()`,
+`multi_impute_trees()`), mirroring `completed_data()` for the single
+completion returned by `impute()`. Its help page directs users to check
+`mi$draws_method` before analysing the datasets.
+
 # pigauto 0.11.0
 
 ## Example portability
