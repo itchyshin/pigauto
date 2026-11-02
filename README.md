@@ -10,9 +10,7 @@
 <!-- badges: end -->
 
 > **Warning:** pigauto is experimental; use at your own risk. It needs
-> further validation. Point estimates are the supported claim. Prediction
-> intervals are nominal held-out diagnostics, not package-wide certification;
-> covariance routes have focused-test evidence only.
+> further validation.
 
 pigauto fills missing species trait values using a phylogenetic tree, other
 traits, and optional covariates. It supports continuous, count, binary,
