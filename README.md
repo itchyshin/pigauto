@@ -39,19 +39,42 @@ pak::pak("itchyshin/pigauto")
 
 ## Start here
 
-Put a CSV trait table (with a unique `species` column) and a Newick or NEXUS
-tree beside your R script. Then start with this short workflow:
+Start with this short workflow on the dataset and tree shipped with pigauto
+(300 bird species from AVONET and a matching BirdTree phylogeny):
 
 ```r
 library(pigauto)
 
-traits <- read_traits("traits.csv")
-tree <- read_tree("tree.nwk")
-check_pigauto(traits, tree)
-result <- impute(traits, tree)
-completed <- completed_data(result)
-pigauto_report(result)
+# Load the data and tree shipped with pigauto and assign to common objects
+traits <- avonet300
+tree   <- tree300
+
+# Alternatively, read your own trait table (a CSV with a unique `species`
+# column) and a Newick or NEXUS phylogenetic tree:
+# traits <- read_traits("traits.csv")
+# tree   <- read_tree("tree.nwk")
+
+# Check the traits and tree match and are ready to impute
+check_pigauto(traits, tree, species_col = "Species_Key")
+
+# Fill in missing trait values m times, using the tree and the other
+# traits, so your downstream analyses carry imputation uncertainty
+mi <- multi_impute(traits, tree, species_col = "Species_Key", m = 20)
+
+# The m completed datasets: fit your analysis to each one, rather
+# than to a single completed dataset
+datasets <- get_imputed_datasets(mi)
+
+# Write an HTML report on the fitted imputation model behind the
+# datasets (mi$fit): how well it predicted each trait on held-out data
+pigauto_report(mi$fit)
 ```
+
+Check `mi$draws_method` before analysing the datasets: for mixed-type data
+like `avonet300` the draws describe the spread of plausible imputed values
+(method `"conformal"`), and Rubin's-rules pooling via `with_imputations()` and
+`pool_mi()` is reserved for the proper-imputation routes documented in
+`?multi_impute` and `?multi_impute_analysis`.
 
 BirdTree distributes its tree files in Newick format. Download one from
 [BirdTree](https://birdtree.org/downloads/) and read it with `read_tree()`;
@@ -59,8 +82,8 @@ BirdTree distributes its tree files in Newick format. Download one from
 BirdTree tree, cite Jetz et al. (2012) and BirdTree.org. pigauto uses
 the tree you provide and
 does not download BirdTree data automatically. The bundled `tree300` is a
-teaching example, not a consensus or recommended analysis tree. Its provenance
-is specific to this package and documented with the data help. Jetz et al. describe
+teaching example, not a consensus or recommended analysis tree. Its was built
+specifically for this package and documented with the data help. Jetz et al. describe
 the BirdTree source collection; cite BirdTree.org when you use that site.
 
 `impute()` now uses the phylogenetic baseline by default (`gnn = FALSE`),
@@ -122,7 +145,7 @@ Tiny installed example inputs are available at
 matching installed six-expression script is
 `system.file("examples", "novice-workflow.R", package = "pigauto")`.
 
-## Copy-ready data recipes
+## Example Imputations with Different Traits
 
 ### Ordered ecological states
 
