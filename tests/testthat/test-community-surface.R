@@ -1,4 +1,9 @@
 source_root_or_skip <- function() {
+  # Under covr the tests run against the instrumented installed package,
+  # which carries DESCRIPTION and README.md but none of the source-only
+  # files these audits read (vignette .Rmd sources, _pkgdown.yml, ...).
+  # The surface audits are enforced by R CMD check, not the coverage run.
+  testthat::skip_on_covr()
   root <- testthat::test_path("..", "..")
   if (!file.exists(file.path(root, "DESCRIPTION"))) {
     skip("source-surface assertions run in the dedicated repository gate")
