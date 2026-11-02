@@ -74,7 +74,8 @@ reference:
   - title: "Start here"
     desc: >
       Read traits and a tree, inspect the fit-free input check, run the
-      one-call imputation entry point, and extract completed data.
+      one-call imputation entry points, and extract completed data or the
+      multiple-imputation datasets.
     contents:
       - read_traits
       - read_tree
@@ -82,6 +83,7 @@ reference:
       - print.pigauto_check
       - impute
       - completed_data
+      - get_imputed_datasets
       - plot.pigauto_result
       - summary.pigauto_result
       - print.summary_pigauto_result
