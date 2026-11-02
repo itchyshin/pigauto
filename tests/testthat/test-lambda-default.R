@@ -222,13 +222,18 @@ test_that("[lambda-default] NEWS.md mentions lambda in the current release", {
     news_path <- testthat::test_path("..", "..", "NEWS.md")
   }
   skip_if_not(file.exists(news_path), "NEWS.md not found")
-  # The first NEWS block is the current release (or development) entry. Stop
-  # before the next version header so older lambda notes cannot satisfy this.
+  # The current release block must mention lambda. An unreleased
+  # "# pigauto (development version)" block may sit above it; the release
+  # block then starts at the first numbered version header. Stop before the
+  # next version header so older lambda notes cannot satisfy this.
   news <- readLines(news_path, warn = FALSE)
   headings <- grep("^# pigauto [0-9]+\\.[0-9]+\\.[0-9]+", news)
   expect_true(length(headings) >= 1L)
-  expect_equal(headings[[1L]], 1L)
+  dev_heading <- grep("^# pigauto \\(development version\\)", news)
+  expect_true(headings[[1L]] == 1L ||
+                (length(dev_heading) == 1L && dev_heading == 1L &&
+                   dev_heading < headings[[1L]]))
   end <- if (length(headings) >= 2L) headings[[2L]] - 1L else length(news)
-  current_lines <- news[seq_len(end)]
+  current_lines <- news[seq(headings[[1L]], end)]
   expect_true(any(grepl("lambda", current_lines, ignore.case = TRUE)))
 })

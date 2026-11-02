@@ -108,6 +108,7 @@ fit_pigauto	predict_method	c("auto", "exact", "per_column")
 fit_pigauto	joint_refine_iter	0L
 fit_pigauto	verbose	TRUE
 fit_pigauto	seed	NULL
+get_imputed_datasets	mi	<required>
 impute	traits	<required>
 impute	tree	<required>
 impute	species_col	NULL
