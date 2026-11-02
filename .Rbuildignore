@@ -21,6 +21,7 @@
 ^_site-audit-final$
 ^_site-c2-clean$
 ^\.github$
+^codecov\.yml$
 ^DOCS\.md$
 ^CLAUDE\.md$
 ^AGENTS\.md$
