@@ -1,5 +1,5 @@
 ℹ Loading pigauto
-factor/treatment lambda: 0.5015374 0.5015374 
-max completed difference: 2.467754e-10 
-data-only rows preserved: 5 ; accurate warning: TRUE 
-report: /tmp/pigauto-issues-baseline-report.html 
+factor/treatment lambda: 0.5015374 0.5015374
+max completed difference: 2.467754e-10
+data-only rows preserved: 5 ; accurate warning: TRUE
+report: /tmp/pigauto-issues-baseline-report.html

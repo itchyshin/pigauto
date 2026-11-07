@@ -107,4 +107,3 @@ Thank you for the careful cross-validation. The reported GNN improvement and see
 Does this address your documentation question? If you are satisfied, please close this issue, with #259 retaining the separate bug discussion.
 
 The changes are in a draft PR and are not yet merged or released on CRAN.
-
