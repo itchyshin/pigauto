@@ -8,7 +8,8 @@
 #'
 #' @param traits A data.frame of traits, with row names or a species column.
 #' @param tree A `phylo` tree.
-#' @param species_col Optional column naming species identities.
+#' @param species_col Optional name of the column in the \code{traits} data
+#'   frame that contains species identities.
 #' @param trait_types Optional named type overrides passed to
 #'   [preprocess_traits()].
 #' @param multi_proportion_groups Optional named composition groups passed to

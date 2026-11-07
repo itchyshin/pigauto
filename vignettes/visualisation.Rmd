@@ -1,0 +1,42 @@
+---
+title: "Visualising missingness and imputation"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Visualising missingness and imputation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, message=FALSE}
+library(pigauto)
+data(avonet300, tree300)
+tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30)])
+traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+                    c("Mass", "Wing.Length"), drop = FALSE]
+rownames(traits) <- tree$tip.label
+traits$Mass[1:5] <- NA
+traits$Wing.Length[4:8] <- NA
+x <- preprocess_traits(traits, tree)
+```
+
+Before fitting, compare missing fractions and inspect the observation-by-trait matrix. Labels include trait types; each expanded categorical trait is represented once.
+
+```{r, fig.height=6, fig.width=8, out.width="100%"}
+plot_missingness(x, "summary")
+plot_missingness(x, "matrix")
+```
+
+The tree-ordered matrix places related tips close together, helping reveal clades with more missing data. The co-missingness map reports the fraction of all observations missing each pair of traits, including the marginal fraction on its diagonal. Such patterns guide investigation; neither plot establishes the missingness mechanism or proves data are missing completely at random.
+
+```{r, fig.height=6, fig.width=8, out.width="100%"}
+plot_missingness(x, "phylo", tree)
+plot_missingness(x, "co_missing")
+```
+
+After fitting, conformal scores summarise validation residuals on the latent scale. Held-out evaluation assesses predictions on deliberately masked cells, and should be interpreted with its test-set size. These diagnostics do not by themselves validate uncertainty or downstream inference.
+
+```{r fit-plots, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+result <- impute(traits, tree, gnn = FALSE, verbose = FALSE, seed = 7)
+plot(result$fit, type = "conformal")
+evaluate(result$fit)
+```

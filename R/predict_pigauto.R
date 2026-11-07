@@ -150,7 +150,8 @@
 #'   stored splits and \code{newdata = NULL}. Default \code{FALSE} uses all
 #'   observed data for production imputation. Use \code{evaluation = TRUE}
 #'   before passing predictions to \code{\link{evaluate_imputation}}.
-#' @param ... Internal compatibility arguments.
+#' @param ... Internal compatibility arguments. Unrecognised arguments are an
+#'   error, including misspelled argument names.
 #' @return A list of class \code{"pigauto_pred"} with:
 #'   \describe{
 #'     \item{imputed}{data.frame of model predictions for every fitted row
@@ -328,6 +329,15 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
                                 match_observed = c("none", "pmm"),
                                 pmm_K = 5L, evaluation = FALSE,
                                 ...) {
+  dots <- list(...)
+  unused <- setdiff(names(dots), ".mask_observed_idx")
+  if (length(unused) || (length(dots) &&
+      (is.null(names(dots)) || any(!nzchar(names(dots)))))) {
+    stop("Unused argument(s) in predict(): ",
+         paste(c(unused, if (is.null(names(dots)) ||
+                              any(!nzchar(names(dots)))) "<unnamed>"), collapse = ", "),
+         call. = FALSE)
+  }
   pool_method <- match.arg(pool_method)
   match_observed <- match.arg(match_observed)
   .pigauto_assert_predictable_state(object)
@@ -341,7 +351,6 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   if (length(pmm_K) != 1L || is.na(pmm_K) || pmm_K < 1L) {
     stop("'pmm_K' must be a single positive integer.", call. = FALSE)
   }
-  dots <- list(...)
   mask_observed_idx <- dots[[".mask_observed_idx"]]
   if (!is.logical(evaluation) || length(evaluation) != 1L || is.na(evaluation)) {
     stop("'evaluation' must be TRUE or FALSE.", call. = FALSE)

@@ -19,7 +19,8 @@ check_pigauto(
 
 \item{tree}{A \code{phylo} tree.}
 
-\item{species_col}{Optional column naming species identities.}
+\item{species_col}{Optional name of the column in the \code{traits} data
+frame that contains species identities.}
 
 \item{trait_types}{Optional named type overrides passed to
 \code{\link[=preprocess_traits]{preprocess_traits()}}.}

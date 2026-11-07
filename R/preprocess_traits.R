@@ -296,7 +296,8 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
 
   n_dropped_sp <- sum(!in_tree)
   if (n_dropped_sp > 0) {
-    warning(n_dropped_sp, " species in traits not found in tree -- dropped.")
+    warning(n_dropped_sp, " species in traits not found in tree: excluded from modeling; ",
+            "impute() keeps their input rows unchanged in completed data.", call. = FALSE)
     keep_rows <- obs_species_raw %in% tree$tip.label
     traits <- traits[keep_rows, , drop = FALSE]
     obs_species_raw <- obs_species_raw[keep_rows]

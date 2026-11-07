@@ -1,5 +1,24 @@
 # pigauto (development version)
 
+## Issue review: input, evaluation and missingness
+
+- Factor and redundant covariates use a full-rank observed-row design for
+  lambda estimation and baseline prediction; the GNN encoding is unchanged.
+- `predict()` rejects unused arguments instead of silently ignoring them.
+- CRAN 0.11.0 users are directed to `evaluate(fit)` for held-out scoring.
+  GitHub development builds are now numbered 0.11.0.9000.
+- `read_traits(ordinal_levels = list(...))` accepts explicit ecological level
+  orders and rejects observed values omitted from those declarations.
+- Data-only species warnings distinguish exclusion from modeling from the
+  unchanged rows retained by `impute()`.
+- `plot_missingness()` shows trait summaries, observation matrices, tree-order
+  maps and co-missingness. A worked visualisation article explains each view.
+- Baseline-only HTML reports include offline held-out metric and conformal
+  score charts. GNN report charts still require an internet connection.
+- Multiple-imputation help distinguishes point prediction, draw scoring,
+  posterior summaries, and the limits of downstream inference.
+
+
 ## New accessor: get_imputed_datasets()
 
 `get_imputed_datasets(mi)` extracts the list of completed datasets from a

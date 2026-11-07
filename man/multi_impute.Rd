@@ -271,7 +271,9 @@ completions for reporting; missing cells can remain \code{NA} when no
 prediction is available. It is
 the point completion returned by the selected route, not generally
 an average of the \code{m} decoded datasets. Use \code{datasets} for an
-eligible downstream multiple-imputation analysis.}
+eligible downstream multiple-imputation analysis. For the posterior
+route, missing-cell values decode the mean latent value over retained
+posterior predictive draws, not necessarily the \code{m} returned datasets.}
 \item{\code{se}}{Matrix of per-cell uncertainty summaries. For the
 conformal and MC-dropout routes, these come from the prediction step;
 for posterior draws, they are original-scale posterior predictive

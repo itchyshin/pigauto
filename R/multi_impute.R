@@ -270,7 +270,9 @@
 #'       prediction is available. It is
 #'       the point completion returned by the selected route, not generally
 #'       an average of the `m` decoded datasets. Use `datasets` for an
-#'       eligible downstream multiple-imputation analysis.}
+#'       eligible downstream multiple-imputation analysis. For the posterior
+#'       route, missing-cell values decode the mean latent value over retained
+#'       posterior predictive draws, not necessarily the `m` returned datasets.}
 #'     \item{`se`}{Matrix of per-cell uncertainty summaries. For the
 #'       conformal and MC-dropout routes, these come from the prediction step;
 #'       for posterior draws, they are original-scale posterior predictive

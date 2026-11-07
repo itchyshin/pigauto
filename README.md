@@ -15,12 +15,18 @@
 pigauto fills missing species trait values using a phylogenetic tree, other
 traits, and optional covariates. It supports continuous, count, binary,
 categorical, ordinal, proportion, zero-inflated-count, and compositional traits.
+Traits are encoded on numeric latent scales. The phylogenetic baseline borrows
+information across relatives and, on eligible joint routes, across traits. An
+optional graph neural network (`gnn = TRUE`) predicts an alternative that is
+blended with the baseline using weights calibrated on held-out cells.
 
 ## Installation
 
-The workflow below uses functions and defaults from pigauto 0.11.0. Check
-`packageVersion("pigauto")` after installation: the CRAN release can lag
-behind the GitHub version described on this site.
+This page describes the GitHub development version, 0.11.0.9000. CRAN
+0.11.0 lacks some functions shown here, including `get_imputed_datasets()`
+and the `predict(..., evaluation = TRUE)` argument. Use `evaluate(fit)`
+for honest held-out evaluation on CRAN 0.11.0. A matching version number
+alone did not distinguish earlier GitHub fixes from that CRAN build.
 
 For the released version:
 
@@ -29,7 +35,7 @@ install.packages("pigauto")
 packageVersion("pigauto")
 ```
 
-If CRAN has an earlier version, install the GitHub version to use this workflow:
+Install the GitHub version to use the development workflow below:
 
 ```r
 # install.packages("pak") # once, if needed
@@ -58,11 +64,11 @@ tree   <- tree300
 check_pigauto(traits, tree, species_col = "Species_Key")
 
 # Fill in missing trait values m times, using the tree and the other
-# traits, so your downstream analyses carry imputation uncertainty
+# traits, to inspect variation among completed datasets
 mi <- multi_impute(traits, tree, species_col = "Species_Key", m = 20)
 
-# The m completed datasets: fit your analysis to each one, rather
-# than to a single completed dataset
+# Extract all m datasets. Before fitting downstream models, check the
+# draw method and inference limitations described below.
 datasets <- get_imputed_datasets(mi)
 
 # Write an HTML report on the fitted imputation model behind the
@@ -82,62 +88,33 @@ BirdTree distributes its tree files in Newick format. Download one from
 BirdTree tree, cite Jetz et al. (2012) and BirdTree.org. pigauto uses
 the tree you provide and
 does not download BirdTree data automatically. The bundled `tree300` is a
-teaching example, not a consensus or recommended analysis tree. Its was built
+teaching example, not a consensus or recommended analysis tree. It was built
 specifically for this package and documented with the data help. Jetz et al. describe
 the BirdTree source collection; cite BirdTree.org when you use that site.
 
-`impute()` now uses the phylogenetic baseline by default (`gnn = FALSE`),
-estimates Pagel's lambda for eligible traits, and leaves the mean safety
-floor and phylogenetic-signal gate off. To train the optional graph neural
-network, install the torch runtime once and call
-`impute(traits, tree, gnn = TRUE)`. The former GNN-on behaviour is an
-explicit choice in 0.11.0.
+### What happens in a fit?
 
-These controls answer different questions: `safety_floor = TRUE` lets
-validation calibration choose the grand mean as a fallback, while
-`phylo_signal_gate = TRUE` routes traits with a low estimated lambda to a
-fallback selected by `safety_floor` (the mean when it is on, the Brownian
-baseline when it is off). Both are off by default; the signal gate is a
-calibration rule, not a test that establishes whether a trait is predictable.
+1. Traits are encoded on numeric scales, with a map for decoding them back to
+   their original types. The tree supplies the relationships among species.
+2. Known cells are held out for validation and testing. Baseline models use
+   the remaining observations to predict these cells. Joint routes can borrow
+   information from other traits as well as relatives; fallback routes differ.
+3. With `gnn = TRUE`, a graph neural network is trained and its contribution
+   is calibrated by trait. A zero neural weight keeps the baseline contribution.
+   The default, `gnn = FALSE`, fits no neural network.
+4. Held-out prediction errors provide diagnostics and, for supported traits,
+   conformal prediction bounds. These bounds have assumptions and are not a
+   package-wide coverage guarantee.
+5. Predictions are decoded to the original trait scales. `impute()` returns
+   one completed table; `multi_impute()` returns several completed tables and
+   records how the draws were generated. For downstream inference, check software eligibility and fit the analysis
+   separately to each dataset. The posterior route uses no GNN; eligibility
+   does not establish inferential calibration.
 
-`check_pigauto()` and `completed_data()` were added in 0.11.0. If your
-installed version is 0.10.0, call `impute(traits, tree)` directly; that
-version does not include `check_pigauto()`.
-
-`check_pigauto()` runs before fitting: it reports input errors, species/tree
-matching, trait declarations, and estimated size. Its default `gnn = FALSE`
-matches `impute()` and does not probe torch. Pass `gnn = TRUE` when planning a
-GNN fit to include runtime availability. Resolve an `"error"` status before
-fitting; a fully observed target table does not need imputation, so use
-`cross_validate()` instead.
-
-The output roles are deliberately separate:
-
-- `completed` is the input-shaped trait data with observed values retained and
-  modeled missing cells filled.
-- `result$prediction` contains all-cell diagnostic predictions, not a second
-  completed dataset.
-- `result$prediction$se` is type-dependent uncertainty; discrete values are
-  not Gaussian standard errors. When available, nominal held-out conformal
-  bounds are returned for continuous, count, ordinal, and proportion traits.
-  For binary and categorical traits, inspect the class probabilities instead.
-  For `zi_count`, bounds describe the positive-count magnitude and must be
-  read with the probability of a nonzero value. Compositional
-  `multi_proportion` traits do not currently have conformal bounds.
-- Split conformal intervals assume the calibration cells resemble the
-  scored cells. Masking a whole clade can violate that assumption when
-  calibration residuals from other clades do not represent the held-out clade.
-  For the current implementation, treat these intervals as nominal diagnostics,
-  not a general 95% coverage guarantee: validation data also inform model
-  selection and gate calibration. See the [interval limitations](https://itchyshin.github.io/pigauto/articles/gnn-architecture.html#uncertainty-quantification).
-- A `pigauto_result` does not itself authorize downstream inference. The
-  implemented pooling workflows begin with `multi_impute_analysis()` in its
-  documented narrow regime or, for continuous traits,
-  `multi_impute(draws_method = "posterior")`. `multi_impute()`'s default,
-  `draws_method = "auto"`, picks `"posterior"` whenever the data allow it
-  and otherwise says why it fell back to non-poolable conformal draws.
-  Eligibility identifies when the software can generate draws; it does
-  not establish that downstream inference is calibrated.
+See [Multiple imputation](https://itchyshin.github.io/pigauto/articles/multiple-imputation.html)
+for the difference between diagnostic draws and inferential imputations, and
+[Visualisation](https://itchyshin.github.io/pigauto/articles/visualisation.html)
+for missingness patterns and held-out checks.
 
 Tiny installed example inputs are available at
 `system.file("extdata", "novice_traits.csv", package = "pigauto")` and
@@ -148,6 +125,17 @@ matching installed six-expression script is
 ## Example Imputations with Different Traits
 
 ### Ordered ecological states
+
+For CSV input, declare the order explicitly when reading:
+
+```r
+# traits <- read_traits("traits.csv", ordinal_levels = list(
+#   threat_status = c("LC", "NT", "VU", "EN", "CR")))
+```
+
+For a data frame already in memory, construct an ordered factor as below.
+`trait_types = c(threat_status = "ordinal")` alone cannot supply its order.
+
 
 Use an ordered factor when states have a known order.
 
@@ -205,24 +193,11 @@ ID column name to both the input check and `impute()`:
 
 ```r
 traits_obs <- read.csv("traits_repeated.csv", stringsAsFactors = FALSE)
-check <- check_pigauto(traits_obs, tree, species_col = "species")
-print(check)
-if (identical(check$status, "not_needed")) {
-  message("All matched target cells are observed; no imputation is needed.")
-} else if (identical(check$status, "error")) {
-  stop("Fix the input problems reported by check_pigauto().")
-}
-```
-
-If the status is `not_needed`, stop here: there are no missing matched cells to
-fill. For `error`, fix the reported input problems and run the check again. If
-the status is `ready_with_warnings`, read `check$messages`, address any warnings
-that apply, and then decide whether to fit. When the status is `ready`, or you
-have decided to proceed after reviewing warnings, fit the model:
-
-```r
+check_pigauto(traits_obs, tree, species_col = "species")
 result <- impute(traits_obs, tree, species_col = "species")
 ```
+
+Read and resolve input errors or relevant warnings before fitting.
 
 The phylogenetic baseline combines rows at the species level using rules for
 each trait type. By default, continuous values are averaged and discrete
@@ -230,7 +205,10 @@ values are reduced to a modal class. If discrete measurements vary within a
 species, this default can hide that variation. The optional
 `multi_obs_aggregation = "soft"` setting retains more class evidence during
 baseline aggregation. When observation-level covariates are supplied, the
-optional GNN can also use differences between rows.
+optional GNN can also use differences between rows. With `gnn = FALSE`,
+continuous observations are collapsed to species means; missing observations
+of a partly observed species receive its species-level prediction, rather
+than predictions adjusted to their individual covariates.
 
 ### Reconciling species names
 
@@ -291,6 +269,36 @@ data settings and comparisons. They do not establish general superiority of
 the GNN or change the default. See the [validation results and their
 limits](https://itchyshin.github.io/pigauto/articles/validation-results.html#when-does-the-neural-component-add-predictive-value)
 for the repeated-observation study.
+
+## Prediction outputs and uncertainty
+
+The output roles are deliberately separate:
+
+- `completed` is the input-shaped trait data with observed values retained and
+  modeled missing cells filled.
+- `result$prediction` contains all-cell diagnostic predictions, not a second
+  completed dataset.
+- `result$prediction$se` is type-dependent uncertainty; discrete values are
+  not Gaussian standard errors. When available, nominal held-out conformal
+  bounds are returned for continuous, count, ordinal, and proportion traits.
+  For binary and categorical traits, inspect the class probabilities instead.
+  For `zi_count`, bounds describe the positive-count magnitude and must be
+  read with the probability of a nonzero value. Compositional
+  `multi_proportion` traits do not currently have conformal bounds.
+- Split conformal intervals assume the calibration cells resemble the
+  scored cells. Masking a whole clade can violate that assumption when
+  calibration residuals from other clades do not represent the held-out clade.
+  For the current implementation, treat these intervals as nominal diagnostics,
+  not a general 95% coverage guarantee: validation data also inform model
+  selection and gate calibration. See the [interval limitations](https://itchyshin.github.io/pigauto/articles/gnn-architecture.html#uncertainty-quantification).
+- A `pigauto_result` does not itself authorize downstream inference. The
+  implemented pooling workflows begin with `multi_impute_analysis()` in its
+  documented narrow regime or, for continuous traits,
+  `multi_impute(draws_method = "posterior")`. `multi_impute()`'s default,
+  `draws_method = "auto"`, picks `"posterior"` whenever the data allow it
+  and otherwise says why it fell back to non-poolable conformal draws.
+  Eligibility identifies when the software can generate draws; it does
+  not establish that downstream inference is calibrated.
 
 ## Advanced controls
 

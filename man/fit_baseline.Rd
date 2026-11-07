@@ -264,7 +264,10 @@ or \code{"zi_mag_constant"} and is not separately surfaced here.}
 column, named by \code{colnames(data$X_scaled)}. Entries report
 values available for each column; exact joint prediction also uses
 the shared \code{lambda_block}; categorical one-vs-rest fit lambdas
-are not reported in this vector.}
+are not reported in this vector. For covariate-aware columns where
+lambda could not be estimated, the effective fallback is 1 and the
+latent column names are recorded in the vector's
+\code{lambda_unestimated} attribute.}
 \item{lambda_block}{Numeric scalar, the shared lambda used internally
 by the joint fit for covariance estimation and cross-trait
 conditional calculations; \code{NA} when no joint fit ran.}
