@@ -1,6 +1,6 @@
 Package: pigauto
 Title: Fill in Missing Species Traits Using a Phylogenetic Tree
-Version: 0.11.0
+Version: 0.11.0.9000
 Authors@R:
     person("Shinichi", "Nakagawa", role = c("aut", "cre", "cph"), email = "itchyshin@gmail.com")
 Description: Imputes missing species trait data for comparative analyses
@@ -12,9 +12,9 @@ Description: Imputes missing species trait data for comparative analyses
     unordered categories, bounded proportions, zero-inflated counts, and
     compositional multi-proportion data in a single call. The default
     method is a phylogenetic baseline calibrated on held-out data; an
-    optional graph neural network correction, which is needed to use
-    covariates, is blended in through a per-trait gate that retains a
-    baseline fallback. Provides conformal
+    optional graph neural network prediction is blended in through a
+    per-trait gate that retains a baseline fallback. Covariates can inform
+    the network and selected baseline paths. Provides conformal
     prediction intervals for continuous, count, ordinal, and proportion
     traits and an experimental analysis-aware multiple-imputation workflow
     for one missing continuous covariate in Gaussian linear, binomial-logit,

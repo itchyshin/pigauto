@@ -99,7 +99,8 @@ stored splits and \code{newdata = NULL}. Default \code{FALSE} uses all
 observed data for production imputation. Use \code{evaluation = TRUE}
 before passing predictions to \code{\link{evaluate_imputation}}.}
 
-\item{...}{Internal compatibility arguments.}
+\item{...}{Internal compatibility arguments. Unrecognised arguments are an
+error, including misspelled argument names.}
 
 \item{x}{A pigauto prediction object.}
 }

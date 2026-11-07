@@ -55,7 +55,8 @@
 #'   draws, prediction adds independent Gaussian perturbations per latent cell
 #'   using the selected baseline SD; GNN dropout also varies across runs when
 #'   \code{gnn = TRUE}. \code{pool_method} combines decoded draws for the
-#'   returned point prediction. Despite this legacy argument name, these are
+#'   returned point prediction: `completed` is one data frame, not a list
+#'   of completed datasets. Despite this legacy argument name, these are
 #'   not joint phylogenetic posterior draws or validated imputations for
 #'   downstream inference. See \code{\link{multi_impute}} and the multiple-
 #'   imputation article for the separate workflows and their limits.
@@ -76,13 +77,17 @@
 #'   it. With \code{gnn = TRUE}, covariates also
 #'   enter the GNN and its additive linear component. \code{predict_method = "per_column"}
 #'   selects predictions within a joint fit; it does not activate
-#'   covariate regression. Default \code{NULL} (no covariates).
+#'   covariate regression. In multi-observation data the baseline aggregates
+#'   observations and covariates to species level; with \code{gnn = FALSE}
+#'   it does not predict observation-specific covariate effects within a
+#'   species. Default \code{NULL} (no covariates).
 #' @param epochs integer. Maximum GNN training epochs (default \code{2000}).
 #'   Must be a positive integer.
 #' @param verbose logical. Print progress (default \code{TRUE}).
 #' @param seed optional integer. When supplied, makes the stochastic fitting
 #'   and prediction steps reproducible; the default \code{NULL} uses the
-#'   current RNG stream.
+#'   current RNG stream. Predictions can vary between seeds; a fixed seed
+#'   supports reproducibility, not a measure of predictive uncertainty.
 #' @param multi_obs_aggregation character. How to aggregate multiple
 #'   observations per species before a joint baseline.  \code{"hard"}
 #'   (default) thresholds binary proportions at 0.5 and uses argmax for
@@ -296,7 +301,10 @@
 #'       uncertainty (\code{$se} -- see \code{\link{predict.pigauto_fit}}'s
 #'       "What \code{$se} means per trait type" section; it is
 #'       \strong{not} uniformly a standard error), class probabilities, and
-#'       conformal intervals.}
+#'       conformal intervals. For an untransformed continuous trait, the
+#'       usual global per-trait score yields the same interval width across
+#'       rows; it does not adapt to each species' number of observations.
+#'       Other scoring methods or transformations can change this pattern.}
 #'     \item{fit}{The trained \code{pigauto_fit} object.}
 #'     \item{baseline}{The phylogenetic baseline.}
 #'     \item{data}{The preprocessed \code{pigauto_data} object.}

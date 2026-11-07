@@ -1,7 +1,7 @@
 #' Generate an HTML imputation report from a pigauto fit
 #'
-#' Produces an HTML file with interactive charts (loading Chart.js from its
-#' public CDN). For fits created with the default \code{gnn = FALSE}, the
+#' Produces an HTML file with charts. Baseline-only figures are embedded as
+#' SVG and work offline; GNN charts load Chart.js from its public CDN. For fits created with the default \code{gnn = FALSE}, the
 #' report describes baseline-only imputation. For fits created with
 #' \code{gnn = TRUE}, it also compares the GNN against the phylogenetic
 #' baseline and includes training history. Per-trait metrics, gate values,
@@ -10,10 +10,11 @@
 #' @param fit A \code{pigauto_fit} object (or a \code{pigauto_result} from
 #'   \code{\link{impute}}).
 #' @param data Optional \code{pigauto_data} object.  Extracted automatically
-#'   when \code{fit} is a \code{pigauto_result}.  When supplied it must match
+#'   when \code{fit} is a \code{pigauto_result}, or reconstructed from a fit
+#'   that retains its scaled observations. When supplied it must match
 #'   the fit (species and traits).
 #' @param splits Optional splits object from \code{\link{make_missing_splits}}.
-#'   Extracted automatically when \code{fit} is a \code{pigauto_result}.
+#'   Extracted automatically from the result or fit when available.
 #'   When supplied it must match the fit.
 #' @param output_path Character of length 1.  File path for the HTML report
 #'   (default \code{"pigauto_report.html"} in the working directory).
@@ -60,6 +61,17 @@ pigauto_report <- function(fit, data = NULL, splits = NULL,
   } else {
     stop("'fit' must be a pigauto_fit or pigauto_result object.")
   }
+
+  # Current fits retain their input matrix and holdout split. Older saved fits
+  # may not; in that case the report remains available without test metrics.
+  if (is.null(data) && is.matrix(fit_obj$X_scaled)) {
+    data <- structure(list(
+      X_scaled = fit_obj$X_scaled, species_names = fit_obj$species_names,
+      trait_names = fit_obj$trait_names, trait_map = fit_obj$trait_map,
+      obs_species = fit_obj$obs_species, obs_to_species = fit_obj$obs_to_species
+    ), class = "pigauto_data")
+  }
+  if (is.null(splits)) splits <- fit_obj$splits
 
   .check_report_data(data)
   .check_report_splits(splits)
@@ -370,7 +382,7 @@ build_report_html <- function(title, fit_obj, pred, metrics, trait_map) {
 
     gate_val <- if (!is.null(m$gate)) sprintf("%.3f", m$gate) else "&mdash;"
 
-    if (tp %in% c("continuous", "count", "ordinal")) {
+    if (tp %in% c("continuous", "count", "ordinal", "proportion")) {
       bm_rmse  <- if (!is.null(m$rmse_bm))  sprintf("%.4f", m$rmse_bm)  else "&mdash;"
       gnn_rmse <- if (!is.null(m$rmse_gnn)) sprintf("%.4f", m$rmse_gnn) else "&mdash;"
       bm_r     <- if (!is.null(m$r_bm))     sprintf("%.3f", m$r_bm)     else "&mdash;"
@@ -465,6 +477,17 @@ build_report_html <- function(title, fit_obj, pred, metrics, trait_map) {
     hist_val    <- ""
   }
 
+  # Static figures for the default baseline-only fit. Each measure has its
+  # own scale: continuous latent-scale RMSE and discrete accuracy are not
+  # directly comparable, so they are displayed in separate panels.
+  baseline_figures <- if (gnn_off) {
+    paste0('<div class="chart-grid">',
+      .report_svg_metrics(metrics, "rmse_gnn", "Held-out RMSE (latent scale)"),
+      .report_svg_metrics(metrics, "accuracy_gnn", "Held-out accuracy", percent = TRUE),
+      .report_svg_metrics(metrics, "conformal_score", "Conformal scores (latent scale)"),
+      '</div>')
+  } else NULL
+
   # Features list
   features <- c(
     if (gnn_off) "GNN off: phylogenetic baseline only (no torch)" else
@@ -479,7 +502,7 @@ build_report_html <- function(title, fit_obj, pred, metrics, trait_map) {
   timestamp <- format(Sys.time(), "%d %B %Y, %H:%M")
 
   # Assemble HTML
-  sprintf('<!DOCTYPE html>
+  html <- sprintf('<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -581,4 +604,36 @@ if(hEp.length>0){new Chart(document.getElementById("histChart"),{type:"line",dat
     gate_labels_js, gate_values_js, gate_colors_js,      # gate chart
     hist_epochs, hist_rec, hist_val                       # history chart
   )
+  if (gnn_off) {
+    start <- regexpr('<div class="chart-grid">', html, fixed = TRUE)[1]
+    end <- regexpr('<div class="footer">', html, fixed = TRUE)[1]
+    html <- paste0(substr(html, 1, start - 1L), baseline_figures, substr(html, end, nchar(html)))
+    html <- sub('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>', '', html, fixed = TRUE)
+    script <- regexpr('<script>\nChart.defaults', html)[1]
+    if (script > 0L) html <- paste0(substr(html, 1, script - 1L), '</body></html>')
+  }
+  html
+}
+
+.report_svg_metrics <- function(metrics, field, heading, percent = FALSE) {
+  vals <- vapply(metrics, function(m) {
+    v <- m[[field]]
+    if (is.null(v) || length(v) != 1L || !is.finite(v)) NA_real_ else as.numeric(v)
+  }, numeric(1))
+  keep <- which(is.finite(vals) & vals >= 0)
+  if (!length(keep)) return(paste0('<div class="chart-box"><h3>', heading,
+                                    '</h3><p>No data available.</p></div>'))
+  vals <- vals[keep]
+  labs <- vapply(metrics[keep], function(m) .escape_report_html(m$name), character(1))
+  scale <- if (percent) 1 else max(vals, 1e-12)
+  height <- 35 + 30 * length(vals)
+  bars <- vapply(seq_along(vals), function(i) {
+    y <- 15 + (i - 1L) * 30
+    sprintf('<text x="5" y="%d">%s</text><rect x="160" y="%d" width="%.2f" height="16" fill="#397a9b"/><text x="%.2f" y="%d">%s</text>',
+            y + 13, labs[i], y, 240 * vals[i] / scale, 165 + 240 * vals[i] / scale,
+            y + 13, if (percent) sprintf("%.1f%%", 100 * vals[i]) else sprintf("%.3f", vals[i]))
+  }, character(1))
+  paste0('<div class="chart-box"><h3>', heading, '</h3><svg role="img" aria-label="', heading,
+         '" viewBox="0 0 480 ', height, '" xmlns="http://www.w3.org/2000/svg">',
+         paste(bars, collapse = ""), '</svg></div>')
 }

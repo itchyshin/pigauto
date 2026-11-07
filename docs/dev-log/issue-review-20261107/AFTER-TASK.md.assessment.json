@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "cfc212bf17bec0bd33e5e3a2ea87c8d0f85d3c8cfa71b8a85b8adf5667b99b24",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex",
+  "method": "Separate reading against source, test/check logs, posted comment receipts and independent review findings",
+  "genre": "software change report",
+  "coverage": "whole document",
+  "score": 3,
+  "style_status": "known",
+  "score_reason": "Concrete source and evidence details; required section structure accounts for repeated report scaffolding",
+  "confidence": "moderate",
+  "confidence_reason": "Self-assessment with inspected source evidence; no calibrated style benchmark",
+  "examples": [
+    {
+      "location": "line 99",
+      "cue": "Located concrete verification or scope statement",
+      "impact": "Limits the claim to what was checked",
+      "repair": "No change needed",
+      "line": 105,
+      "quote": "Final source suite at implementation commit 7e542057: 854 tests, 3,761"
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "No claim of broad calibration or method superiority; unresolved scientific questions remain explicit",
+  "facts_gate": "pass",
+  "facts_gate_reason": "File list, source/check outcomes and issue comments compared with retained evidence; CI remains explicitly pending",
+  "references_gate": "not_applicable",
+  "references_gate_reason": "No external literature claim; repository pointers and PR identity checked as facts",
+  "date": "2026-11-07",
+  "calibration_status": "No calibration examples consulted",
+  "interpretation": "perceived_style_not_authorship"
+}

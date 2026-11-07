@@ -108,6 +108,7 @@ fit_pigauto	predict_method	c("auto", "exact", "per_column")
 fit_pigauto	joint_refine_iter	0L
 fit_pigauto	verbose	TRUE
 fit_pigauto	seed	NULL
+get_imputed_datasets	mi	<required>
 impute	traits	<required>
 impute	tree	<required>
 impute	species_col	NULL
@@ -243,6 +244,7 @@ read_traits	species_col	"species"
 read_traits	trait_cols	NULL
 read_traits	factor_cols	NULL
 read_traits	ordered_cols	NULL
+read_traits	ordinal_levels	NULL
 read_tree	path	<required>
 save_pigauto	fit	<required>
 save_pigauto	path	<required>
@@ -286,3 +288,6 @@ S3::predict.pigauto_fit	match_observed	c("none", "pmm")
 S3::predict.pigauto_fit	pmm_K	5L
 S3::predict.pigauto_fit	evaluation	FALSE
 S3::predict.pigauto_fit	...	<required>
+plot_missingness	x	<required>
+plot_missingness	type	c("summary", "matrix", "phylo", "co_missing")
+plot_missingness	tree	NULL

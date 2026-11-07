@@ -22,5 +22,7 @@ Extract completed trait data
 \dontrun{completed_data(result)}
 }
 \seealso{
-\code{\link[=impute]{impute()}}
+\code{\link[=impute]{impute()}}. For analyses that should carry imputation
+uncertainty, use \code{\link[=multi_impute]{multi_impute()}} and extract its \code{m} datasets with
+\code{\link[=get_imputed_datasets]{get_imputed_datasets()}} instead of a single completion.
 }

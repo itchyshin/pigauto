@@ -19,16 +19,18 @@ knitr::opts_chunk$set(
 This vignette collects the questions early users most often hit when running
 pigauto on their own data. Each section follows the same template:
 
-- **Symptom** — the surprising output, in user voice.
-- **Why this happens** — the mechanism in 2–3 sentences.
-- **Diagnose** — 1–3 R commands that confirm the pattern.
-- **Fix** — concrete code change with a short explanation.
-- **See also** — links to the relevant help topic, article, or public
+- **Symptom**: the surprising output, in user voice.
+- **Why this happens**: the mechanism in 2–3 sentences.
+- **Diagnose**: 1–3 R commands that confirm the pattern.
+- **Fix**: concrete code change with a short explanation.
+- **See also**: links to the relevant help topic, article, or public
   validation results.
 
 If you hit something that isn't here and feels surprising, please
-[open an issue](https://github.com/itchyshin/pigauto/issues/new) — most
+[open an issue](https://github.com/itchyshin/pigauto/issues/new): most
 of the items below were added because real users tripped on them.
+
+<!-- slop-ok: Repeated Symptom/Why/Diagnose/Fix headings support scanning this FAQ. -->
 
 ## 1. "`impute()` stopped because my input is fully observed"
 
@@ -181,7 +183,7 @@ predictions come from the calibrated baseline.
 
 **Symptom.** You expected the GNN to improve predictions, but inspecting the
 fitted model shows the calibrated gate is fully or near-fully closed
-(`r_cal_gnn` ≈ 0) — the GNN contributes little or nothing to the calibrated
+(`r_cal_gnn` ≈ 0): the GNN contributes little or nothing to the calibrated
 prediction.
 
 **Why this happens.** This is a possible calibration outcome, not by itself
@@ -236,7 +238,7 @@ example](gnn-architecture.html#run-and-check-your-own-data) shows the setup,
 code, and how to compare the returned metrics.
 
 - Check the validation set is not pathologically small (the
-  "small validation set" warning during fitting is a red flag — see
+  "small validation set" warning during fitting is a red flag: see
   `?fit_pigauto` "Calibration at small n").
 - Verify covariates are not all-NA or constant after preprocessing.
 - For ordinal / categorical traits, see Pitfall 2. Mode pooling is a
@@ -245,6 +247,22 @@ code, and how to compare the returned metrics.
 **See also.** `?fit_pigauto` (`phylo_signal_gate`, "Safety floor") and
 [the validation results](validation-results.html), which report tested
 settings and their limits.
+
+### Repeated observations, seeds and interval widths
+
+With multiple rows per species, the baseline aggregates observations and
+covariates to species level. With `gnn = FALSE`, it cannot use row-specific
+covariate differences to refine predictions within a species. Joint baseline
+routes can omit covariates altogether; check the selected route and warnings.
+The GNN can use row-level covariates, but fitted predictions can vary with the
+seed. Compare several seeds on the same held-out cells to assess stability;
+a fixed seed makes a run repeatable, not necessarily representative.
+
+For an untransformed continuous trait, a global per-trait conformal score gives
+the same interval width for all rows in a fit. It does not adapt the width to
+how many observations a species has. Transformations and other scoring methods
+can produce a different pattern. Held-out coverage is useful to report, but
+coverage in one dataset does not establish conditional coverage for each species.
 
 ## 4. "How do I know if my dataset has enough phylogenetic signal?"
 
