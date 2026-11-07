@@ -1,0 +1,1 @@
+{"source_commit":"7e542057ab21f4cf85314947e4a2db6cb549c903","tests":854,"passed":3761,"failed":0,"errors":0,"warnings":184,"skipped":8,"command":"OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 Rscript: torch::torch_set_num_threads(2); devtools::test(reporter=summary, stop_on_failure=TRUE)"}

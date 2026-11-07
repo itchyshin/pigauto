@@ -1,0 +1,22 @@
+devtools::load_all()
+set.seed(1)
+n <- 200L
+tr <- ape::rtree(n); tr$tip.label <- paste0('sp', seq_len(n))
+R <- ape::vcv(tr); R <- R / max(diag(R))
+g <- factor(sample(c('a', 'b'), n, replace=TRUE))
+y <- as.numeric(t(chol(.5*R+.5*diag(n))) %*% rnorm(n)) + 1.5*(g=='b')
+y[sample(n,40)] <- NA
+traits <- data.frame(y=y, row.names=tr$tip.label)
+run <- function(cov) suppressWarnings(impute(traits,tr,covariates=cov, log_transform=FALSE,seed=1,gnn=FALSE,verbose=FALSE))
+a <- run(data.frame(g=g,row.names=tr$tip.label))
+b <- run(data.frame(g_b=as.numeric(g=='b'),row.names=tr$tip.label))
+stopifnot(isTRUE(all.equal(a$baseline$lambda_per_trait,b$baseline$lambda_per_trait,tolerance=1e-6)))
+cat('factor/treatment lambda:',unname(a$baseline$lambda_per_trait),unname(b$baseline$lambda_per_trait),'\n')
+cat('max completed difference:',max(abs(a$completed$y-b$completed$y)),'\n')
+small <- traits[1:40,,drop=FALSE]; tree <- ape::keep.tip(tr,rownames(small)[1:35]); small$y[36:40] <- NA
+warn <- character()
+z <- withCallingHandlers(impute(small,tree,gnn=FALSE,log_transform=FALSE,verbose=FALSE,seed=1),warning=function(w){warn <<- c(warn,conditionMessage(w));invokeRestart('muffleWarning')})
+stopifnot(identical(z$completed[36:40,,drop=FALSE],small[36:40,,drop=FALSE]))
+cat('data-only rows preserved:',5L,'; accurate warning:',any(grepl('excluded from modeling',warn,fixed=TRUE)),'\n')
+report <- pigauto_report(z, output_path='/tmp/pigauto-issues-baseline-report.html',open=FALSE)
+cat('report:',report,'\n')
