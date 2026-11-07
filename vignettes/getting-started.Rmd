@@ -26,8 +26,8 @@ install.packages("pigauto")
 packageVersion("pigauto")
 ```
 
-This page describes GitHub development version 0.11.0.9000. Install it to
-use all examples below:
+This page describes pigauto 0.11.1. Until that version is available on
+CRAN, install the GitHub version to use all examples below:
 
 ```{r install-github, eval=FALSE}
 install.packages("pak") # only needed once
@@ -44,7 +44,7 @@ torch::install_torch()
 
 CRAN 0.11.0 does not include every GitHub fix described here. In particular,
 use `evaluate(fit)` for held-out scoring on CRAN 0.11.0; see Step 7.
-Check `packageVersion("pigauto")` after installing the development version.
+Check `packageVersion("pigauto")` after installing pigauto 0.11.1 or later.
 See [the installation steps](#install-pigauto) if you have not installed the
 package yet.
 
@@ -494,7 +494,7 @@ traits, `pred$se` contains uncertainty scores rather than Gaussian standard
 errors. The latent prediction has one column per encoded category, while the
 decoded data frame has one column per original trait.
 
-### Step 7: Evaluate: and read the gate
+### Step 7: Evaluate and read the gate
 
 `evaluate_imputation()` scores held-out cells on the scale that matches
 the trait type. For a single latent column in this mixed-trait fit, no direct covariates
