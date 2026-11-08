@@ -1,5 +1,12 @@
 # pigauto 0.11.1
 
+## GBIF lookup failures
+
+- `pull_gbif_centroids()` stops on a failed GBIF name or occurrence request
+  instead of caching a false no-match or an incomplete centroid. A failed
+  refresh leaves any existing cache entry unchanged. An absent `basisOfRecord`
+  column no longer discards the stored occurrence points.
+
 ## Ordinal level declarations on every entry point
 
 - `impute()`, `multi_impute()`, `multi_impute_trees()`, `check_pigauto()` and
