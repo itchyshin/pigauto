@@ -1,8 +1,8 @@
-# pigauto (development version)
+# pigauto 0.11.1
+
+## Cross-validation by species and clade
 
 - `cross_validate()` supports whole-species and rooted-clade holdouts, in addition to the existing cell-level folds. Grouped folds recompute trait scaling from training observations and report their species assignments.
-
-# pigauto 0.11.1
 
 ## GBIF lookup failures
 
