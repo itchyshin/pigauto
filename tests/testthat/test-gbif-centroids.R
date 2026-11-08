@@ -404,3 +404,20 @@ test_that("failed occurrence refresh preserves a previous cache", {
     "GBIF.*occurrence.*failed")
   expect_identical(readRDS(cache), original)
 })
+
+test_that("GBIF occurrence failures are retried and do not write a cache", {
+  skip_if_not_installed("rgbif")
+  tmp <- tempfile("gbif_retry_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  sp <- "TestSpecies retry"
+  attempts <- 0L
+  testthat::local_mocked_bindings(
+    name_backbone = function(...) list(usageKey = 1L, matchType = "EXACT"),
+    occ_search = function(...) { attempts <<- attempts + 1L; stop("offline") },
+    .package = "rgbif")
+  expect_error(pigauto::pull_gbif_centroids(sp, cache_dir = tmp,
+    occurrence_limit = 2L, sleep_ms = 0L, verbose = FALSE),
+    "GBIF.*occurrence.*failed")
+  expect_equal(attempts, 3L)
+  expect_false(file.exists(file.path(tmp, paste0(pigauto:::.gbif_cache_key(sp), ".rds"))))
+})

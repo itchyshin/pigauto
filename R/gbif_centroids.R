@@ -238,11 +238,13 @@
 #' A cached result can still contain an \code{NA} centroid. That can mean
 #' pigauto could not match the species name, GBIF returned no records, or
 #' all records were excluded by pigauto's filters. Older cache entries may
-#' also reflect failed requests. To retry a cached \code{NA} centroid, set
-#' \code{refresh_cache = TRUE}; this requires a live GBIF query and the
-#' optional \code{rgbif} package. A failed name lookup or occurrence request
-#' now stops with an error without caching a partial result or replacing an
-#' existing cache entry. Occurrence requests are retried before stopping.
+#' also reflect failed requests, including incomplete non-\code{NA} centroids
+#' or points when a later occurrence page failed. Set
+#' \code{refresh_cache = TRUE} to retry affected entries; this requires a
+#' live GBIF query and the optional \code{rgbif} package. A failed name
+#' lookup or occurrence request now stops with an error without caching a
+#' partial result or replacing an existing cache entry. Occurrence requests
+#' are retried before stopping.
 #'
 #' @param species           non-empty character vector of unique species names.
 #'   Do not include missing or empty names. These names are used for
