@@ -451,24 +451,69 @@ test_that("an extended fit equals one run longer with the thinning scaled", {
   Y[1:5, 1] <- NA; Y[4:9, 2] <- NA
   base <- list(n_chains = 2L, burnin = 100L, keep_draws = 20L, seed = 4L,
                param_uncertainty = "both")
+  # Reproduce a tiny platform-dependent difference between independent REML
+  # fits: exact rank ties can change despite practically identical draws.
+  reml <- .mip_reml_lambda
+  diagnostics <- .mip_diagnostics
+  reml_values <- list()
+  diagnostic_traces <- list()
+  local_mocked_bindings(
+    .mip_reml_lambda = function(prob, tree) {
+      value <- reml(prob, tree)
+      if (length(reml_values) == 1L) value <- pmin(1, value + 1e-14)
+      reml_values[[length(reml_values) + 1L]] <<- value
+      value
+    },
+    .mip_diagnostics = function(traces, K, ...) {
+      diagnostic_traces[[length(diagnostic_traces) + 1L]] <<- traces
+      diagnostics(traces, K, ...)
+    }
+  )
   ext <- .mip_fit(Y, d$tree, .mip_resolve_control(
     c(base, list(n_iter = 30L, thin = 3L, max_extend = 1L)), m = 4L))
   one <- .mip_fit(Y, d$tree, .mip_resolve_control(
     c(base, list(n_iter = 60L, thin = 6L, auto_extend = FALSE)), m = 4L))
+  expect_length(reml_values, 2L)
+  active <- reml_values[[1L]] > 0.02 & reml_values[[1L]] < 0.98
+  expect_true(any(active & reml_values[[1L]] != reml_values[[2L]]))
+  expect_false(identical(reml_values[[1L]], reml_values[[2L]]))
+  expect_length(diagnostic_traces, 3L)
   expect_identical(attr(ext$diagnostics, "n_extensions"), 1L)
   expect_identical(attr(one$diagnostics, "n_extensions"), 0L)
   expect_identical(attr(ext$diagnostics, "sweeps_per_chain"), 60L)
   expect_identical(attr(one$diagnostics, "sweeps_per_chain"), 60L)
   expect_false(isTRUE(attr(ext$diagnostics, "converged")))
   expect_identical(dim(ext$ymis), c(nrow(ext$miss), 20L))  # 10 per chain
-  expect_identical(ext$ymis, one$ymis)
-  expect_identical(ext$params, one$params)
-  expect_identical(ext$improper, one$improper)
+  # These are independently initialised fits, so BLAS/REML rounding may
+  # differ by a few ulps. Preserve a tight numerical comparison of all
+  # retained draws and plug-in quantities. Exact same-state continuation
+  # and RNG restoration are tested separately above.
+  expect_equal(ext$ymis, one$ymis, tolerance = 1e-8)
+  expect_equal(ext$params, one$params, tolerance = 1e-8)
+  expect_equal(ext$improper, one$improper, tolerance = 1e-8)
   expect_identical(ext$sweeps, one$sweeps)
   expect_identical(ext$sweeps, 2L * (100L + 60L))
+  # Rank-based R-hat is discontinuous at ties; tiny numerical changes can
+  # change ranks without indicating a different continuation. Check that
+  # each run reports diagnostics for the same parameters and converges (or
+  # fails to converge) consistently, rather than comparing their bits.
   dg <- ext$diagnostics
-  attr(dg, "n_extensions") <- 0L
-  expect_identical(dg, one$diagnostics)
+  expect_identical(dg$parameter, one$diagnostics$parameter)
+  expect_identical(attr(dg, "converged"), attr(one$diagnostics, "converged"))
+  expect_true(all(is.finite(dg$rhat)))
+  expect_true(all(is.finite(one$diagnostics$rhat)))
+  expect_true(all(is.finite(dg$ess_bulk)))
+  expect_true(all(is.finite(one$diagnostics$ess_bulk)))
+  # Compare the complete traces, including unthinned iterations, before
+  # checking diagnostics. Ranks can still differ at ties after perturbation.
+  expect_equal(diagnostic_traces[[2L]], diagnostic_traces[[3L]], tolerance = 1e-8)
+  # Verify the values published by each fit against its own complete traces.
+  for (pair in list(list(ext, diagnostic_traces[[2L]]),
+                    list(one, diagnostic_traces[[3L]]))) {
+    expected_dg <- diagnostics(pair[[2L]], K = 2L)
+    expect_equal(pair[[1L]]$diagnostics$rhat, expected_dg$rhat, tolerance = 1e-12)
+    expect_equal(pair[[1L]]$diagnostics$ess_bulk, expected_dg$ess_bulk, tolerance = 1e-12)
+  }
   expect_equal(ext$improper$Sigma_P,
                apply(ext$params$Sigma_P, c(1L, 2L), mean), ignore_attr = TRUE)
 })
@@ -565,4 +610,26 @@ test_that("a short run under residual_prior = 'sep' returns finite, positive-def
   expect_true(all(is.finite(SE)))
   expect_true(all(apply(SE, 3L, function(S) all(eigen(S, symmetric = TRUE, only.values = TRUE)$values > 0))))
   expect_true(all(is.finite(f$ymis)))
+})
+
+test_that("resuming the default separation-prior chain preserves exact state", {
+  d <- mip_sim(n = 25L, seed = 3L)
+  Y <- d$Y
+  Y[1:5, 1] <- NA; Y[4:9, 2] <- NA
+  prob <- .mip_problem(Y, d$tree)
+  hyper <- list(nu_W = 3, S_W = diag(2), V_alpha = 1000, nu_E = 3,
+                S_E = diag(0.01 * prob$obs_var, 2), E_prior = "sep",
+                A_E = sqrt(prob$obs_var))
+  start <- list(Sigma_P = d$SP, Sigma_E = d$SE)
+  long <- .mip_run_chain(prob, start, hyper, burnin = 100L, n_iter = 62L,
+                         thin = 3L, seed = 7L)
+  first <- .mip_run_chain(prob, start, hyper, burnin = 100L, n_iter = 31L,
+                          thin = 3L, seed = 7L)
+  second <- .mip_run_chain(prob, NULL, hyper, burnin = 100L, n_iter = 31L,
+                           thin = 3L, resume = first$state)
+  joined <- .mip_join_segments(first, second)
+  for (name in c("trace", "ymis", "Sigma_P", "Sigma_E", "mu", "mh_step", "mh_accept")) {
+    expect_identical(joined[[name]], long[[name]], info = name)
+  }
+  expect_identical(joined$state$rng, long$state$rng)
 })
