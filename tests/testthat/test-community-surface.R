@@ -1,7 +1,9 @@
-source_root_or_skip <- function(root = testthat::test_path("..", "..")) {
+source_root_or_skip <- function(root = testthat::test_path("..", ".."),
+                                require_source = identical(Sys.getenv("PIGAUTO_REQUIRE_SOURCE"), "true")) {
   source_files <- c("DESCRIPTION", "README.md", "R/active_impute.R",
                     "vignettes/getting-started.Rmd")
   if (!all(file.exists(file.path(root, source_files)))) {
+    if (require_source) stop("Required source checkout files are missing", call. = FALSE)
     skip("source-surface assertions run in the dedicated repository gate")
   }
   root
@@ -12,8 +14,10 @@ test_that("source checks distinguish installed package layout from checkout", {
   installed <- tempfile("installed-pigauto-")
   dir.create(installed)
   writeLines("Package: pigauto", file.path(installed, "DESCRIPTION"))
-  result <- tryCatch(source_root_or_skip(installed), skip = identity)
+  result <- tryCatch(source_root_or_skip(installed, require_source = FALSE), skip = identity)
   expect_s3_class(result, "skip")
+  expect_error(source_root_or_skip(installed, require_source = TRUE),
+               "source checkout")
   if (file.exists(file.path(root, "R", "active_impute.R"))) {
     expect_identical(source_root_or_skip(root), root)
   }

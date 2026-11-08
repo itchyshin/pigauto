@@ -72,6 +72,8 @@ jobs:
       # These checks read repository source files that are absent from covr's
       # installed package layout, so run them against the checkout first.
       - name: Check public source surfaces
+        env:
+          PIGAUTO_REQUIRE_SOURCE: "true"
         run: testthat::test_local(filter = "community-surface", stop_on_failure = TRUE)
         shell: Rscript {0}
 
