@@ -72,9 +72,8 @@
 # Cache the result (including n_occ = 0 cases so we don't re-hit the API
 # for a species with no records).
 #
-# On network error: retry 3x with exponential backoff; if still failing,
-# cache as (NA, NA, 0, fetched_at = NA) so subsequent calls short-circuit
-# until refresh_cache = TRUE.
+# Failed queries stop without writing a cache entry. Existing entries survive
+# a failed refresh. Occurrence page requests retry 3 times with backoff.
 #
 # @noRd
 .gbif_fetch_one <- function(sp, cache_dir = NULL,
@@ -112,8 +111,10 @@
          "install.packages('rgbif')", call. = FALSE)
   }
   # Resolve taxon
-  bbone <- tryCatch(rgbif::name_backbone(name = sp),
-                     error = function(e) NULL)
+  bbone <- tryCatch(rgbif::name_backbone(name = sp), error = function(e) {
+    stop("GBIF name lookup failed for '", sp, "': ", conditionMessage(e),
+         call. = FALSE)
+  })
   if (is.null(bbone) || is.null(bbone$usageKey)) {
     res <- list(species = sp, centroid_lat = NA_real_, centroid_lon = NA_real_,
                  n_occurrences = 0L)
@@ -132,7 +133,11 @@
     limit  <- min(per_call, occurrence_limit - offset)
     if (limit <= 0L) break
     ret <- .gbif_fetch_page(bbone$usageKey, offset, limit)
-    if (is.null(ret) || nrow(ret) == 0L) break
+    if (is.null(ret)) {
+      stop("GBIF occurrence request failed for '", sp,
+           "' after retries; no partial result was cached.", call. = FALSE)
+    }
+    if (nrow(ret) == 0L) break
     records <- rbind(records, ret)
     if (sleep_ms > 0L) Sys.sleep(sleep_ms / 1000)
   }
@@ -155,8 +160,10 @@
     has_issue <- records$hasGeospatialIssues
     if (is.null(has_issue)) has_issue <- rep(FALSE, nrow(records))
     has_issue[is.na(has_issue)] <- TRUE
+    bor <- records$basisOfRecord
+    if (is.null(bor)) bor <- rep("UNKNOWN", nrow(records))
     ok <- ok & !has_issue &
-           !(records$basisOfRecord %in% c("FOSSIL_SPECIMEN", "LIVING_SPECIMEN"))
+           !(bor %in% c("FOSSIL_SPECIMEN", "LIVING_SPECIMEN"))
     kept <- records[ok, , drop = FALSE]
     if (nrow(kept) > 0L) {
       points_df <- data.frame(
@@ -229,12 +236,13 @@
 #' cache. These live-query paths require the optional \code{rgbif} package.
 #'
 #' A cached result can still contain an \code{NA} centroid. That can mean
-#' pigauto could not match the species name, or could not obtain usable
-#' occurrence records because GBIF returned no records, requests failed
-#' after retries, or all records were excluded by pigauto's filters. The
-#' \code{NA} itself does not identify which cause occurred. To retry a
-#' cached \code{NA} centroid, set \code{refresh_cache = TRUE}; this requires
-#' a live GBIF query and the optional \code{rgbif} package.
+#' pigauto could not match the species name, GBIF returned no records, or
+#' all records were excluded by pigauto's filters. Older cache entries may
+#' also reflect failed requests. To retry a cached \code{NA} centroid, set
+#' \code{refresh_cache = TRUE}; this requires a live GBIF query and the
+#' optional \code{rgbif} package. A failed name lookup or occurrence request
+#' now stops with an error without caching a partial result or replacing an
+#' existing cache entry. Occurrence requests are retried before stopping.
 #'
 #' @param species           non-empty character vector of unique species names.
 #'   Do not include missing or empty names. These names are used for

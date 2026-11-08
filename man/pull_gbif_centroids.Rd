@@ -86,12 +86,13 @@ for that species when \code{store_points = TRUE} and the saved
 cache. These live-query paths require the optional \code{rgbif} package.
 
 A cached result can still contain an \code{NA} centroid. That can mean
-pigauto could not match the species name, or could not obtain usable
-occurrence records because GBIF returned no records, requests failed
-after retries, or all records were excluded by pigauto's filters. The
-\code{NA} itself does not identify which cause occurred. To retry a
-cached \code{NA} centroid, set \code{refresh_cache = TRUE}; this requires
-a live GBIF query and the optional \code{rgbif} package.
+pigauto could not match the species name, GBIF returned no records, or
+all records were excluded by pigauto's filters. Older cache entries may
+also reflect failed requests. To retry a cached \code{NA} centroid, set
+\code{refresh_cache = TRUE}; this requires a live GBIF query and the
+optional \code{rgbif} package. A failed name lookup or occurrence request
+now stops with an error without caching a partial result or replacing an
+existing cache entry. Occurrence requests are retried before stopping.
 }
 \examples{
 \dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
