@@ -13,6 +13,7 @@
 #' @details
 #' **Automatic type detection** (when \code{trait_types = NULL}) follows the
 #' R class of each column — no user input is required for most data:
+#'
 #' \ifelse{html}{\out{
 #' <table>
 #' <thead><tr><th scope="col"><strong>R class</strong></th><th scope="col"><strong>pigauto type</strong></th></tr></thead>

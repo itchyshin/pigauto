@@ -22,8 +22,8 @@ blended with the baseline using weights calibrated on held-out cells.
 
 ## Installation
 
-This page describes the GitHub development version, 0.11.0.9000. CRAN
-0.11.0 lacks some functions shown here, including `get_imputed_datasets()`
+This page describes pigauto 0.11.1. CRAN 0.11.0 lacks some functions
+shown here, including `get_imputed_datasets()`
 and the `predict(..., evaluation = TRUE)` argument. Use `evaluate(fit)`
 for honest held-out evaluation on CRAN 0.11.0. A matching version number
 alone did not distinguish earlier GitHub fixes from that CRAN build.
@@ -35,7 +35,7 @@ install.packages("pigauto")
 packageVersion("pigauto")
 ```
 
-Install the GitHub version to use the development workflow below:
+Until CRAN offers 0.11.1, install the GitHub version to use the workflow below:
 
 ```r
 # install.packages("pak") # once, if needed
