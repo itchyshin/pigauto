@@ -12,7 +12,6 @@ multi_impute(
   draws_method = c("auto", "conformal", "mc_dropout", "posterior"),
   species_col = NULL,
   trait_types = NULL,
-  ordinal_levels = NULL,
   multi_proportion_groups = NULL,
   log_transform = TRUE,
   missing_frac = 0.25,
@@ -23,7 +22,8 @@ multi_impute(
   gnn = FALSE,
   lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
   posterior_control = list(),
-  ...
+  ...,
+  ordinal_levels = NULL
 )
 
 \method{print}{pigauto_mi}(x, ...)
@@ -120,13 +120,6 @@ observations per species. See \code{\link[=impute]{impute()}} for details.}
 trait types for specific columns. Required for \code{"proportion"} and
 \code{"zi_count"}. See \code{\link[=impute]{impute()}} and \code{\link[=preprocess_traits]{preprocess_traits()}}. Default
 \code{NULL} (auto-detect).}
-
-\item{ordinal_levels}{named list giving the scientific order of ordinal
-levels, e.g. \code{list(status = c("LC", "NT", "VU", "EN", "CR"))}. Each
-named column is coerced to an ordered factor with exactly those levels
-before type detection, and the completed datasets return it as an
-ordered factor. Observed values absent from the declared levels are an
-error. See \code{\link[=impute]{impute()}} / \code{\link[=read_traits]{read_traits()}}. Default \code{NULL}.}
 
 \item{multi_proportion_groups}{named list declaring compositional
 trait groups (rows summing to 1), e.g.
@@ -256,6 +249,13 @@ earlier results.}
 \item{...}{additional arguments forwarded to \code{\link[=fit_pigauto]{fit_pigauto()}} via
 \code{\link[=impute]{impute()}}. See \code{\link[=fit_pigauto]{fit_pigauto()}} for the full list, including the
 optional \code{safety_floor} control described below.}
+
+\item{ordinal_levels}{named list giving the scientific order of ordinal
+levels, e.g. \code{list(status = c("LC", "NT", "VU", "EN", "CR"))}. Each
+named column is coerced to an ordered factor with exactly those levels
+before type detection, and the completed datasets return it as an
+ordered factor. Observed values absent from the declared levels are an
+error. See \code{\link[=impute]{impute()}} / \code{\link[=read_traits]{read_traits()}}. Default \code{NULL}.}
 
 \item{x}{A stochastic-completion or posterior MI object.}
 }

@@ -223,11 +223,11 @@
 #' @export
 preprocess_traits <- function(traits, tree, species_col = NULL,
                               trait_types = NULL,
-                              ordinal_levels = NULL,
                               multi_proportion_groups = NULL,
                               log_cols = NULL, log_transform = TRUE,
                               center = TRUE, scale = TRUE,
-                              covariates = NULL) {
+                              covariates = NULL,
+                              ordinal_levels = NULL) {
   if (!is.data.frame(traits)) stop("'traits' must be a data.frame.")
   if (!inherits(tree, "phylo")) stop("'tree' must be a phylo object.")
   traits <- .apply_ordinal_levels(traits, ordinal_levels)
@@ -684,7 +684,7 @@ align_covariates_to_obs <- function(covariates,
   if (!isTRUE(ok)) {
     if (identical(unname(tp), "ordinal")) {
       # Backtick-quote non-syntactic names so the suggested code is valid R.
-      nm_code <- if (make.names(nm) == nm) nm else paste0("`", nm, "`")
+      nm_code <- deparse1(as.name(nm), backtick = TRUE)
       stop("Trait '", nm, "' is declared \"ordinal\", but you have not ",
            "provided the order of its levels. Pass ordinal_levels = list(",
            nm_code, " = c(...)) listing the levels from lowest to highest, ",

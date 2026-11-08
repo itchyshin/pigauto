@@ -9,10 +9,10 @@ check_pigauto(
   tree,
   species_col = NULL,
   trait_types = NULL,
-  ordinal_levels = NULL,
   multi_proportion_groups = NULL,
   covariates = NULL,
-  gnn = FALSE
+  gnn = FALSE,
+  ordinal_levels = NULL
 )
 }
 \arguments{
@@ -26,11 +26,6 @@ frame that contains species identities.}
 \item{trait_types}{Optional named type overrides passed to
 \code{\link[=preprocess_traits]{preprocess_traits()}}.}
 
-\item{ordinal_levels}{Optional named list giving the order of ordinal
-levels, applied before type detection so the report shows the same
-types the matching \code{\link[=impute]{impute()}} call will use. Invalid declarations are
-reported as errors rather than thrown. See \code{\link[=impute]{impute()}} / \code{\link[=read_traits]{read_traits()}}.}
-
 \item{multi_proportion_groups}{Optional named composition groups passed to
 \code{\link[=preprocess_traits]{preprocess_traits()}}.}
 
@@ -40,6 +35,11 @@ reported as errors rather than thrown. See \code{\link[=impute]{impute()}} / \co
 \item{gnn}{Whether the planned imputation will use the graph neural network.
 The default \code{FALSE} skips the torch runtime probe, matching \code{\link[=impute]{impute()}}'s
 default. Set \code{TRUE} to include the torch runtime in the preflight.}
+
+\item{ordinal_levels}{Optional named list giving the order of ordinal
+levels, applied before type detection so the report shows the same
+types the matching \code{\link[=impute]{impute()}} call will use. Invalid declarations are
+reported as errors rather than thrown. See \code{\link[=impute]{impute()}} / \code{\link[=read_traits]{read_traits()}}.}
 }
 \value{
 A list of class \code{pigauto_check} containing a schema version, status,

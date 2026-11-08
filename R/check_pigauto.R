@@ -58,10 +58,10 @@
 #' @export
 check_pigauto <- function(traits, tree, species_col = NULL,
                           trait_types = NULL,
-                          ordinal_levels = NULL,
                           multi_proportion_groups = NULL,
                           covariates = NULL,
-                          gnn = FALSE) {
+                          gnn = FALSE,
+                          ordinal_levels = NULL) {
   if (!is.logical(gnn) || length(gnn) != 1L || is.na(gnn)) {
     stop("`gnn` must be TRUE or FALSE.", call. = FALSE)
   }

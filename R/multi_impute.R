@@ -587,8 +587,7 @@ multi_impute <- function(traits, tree, m = 100L,
                                           "posterior"),
                          species_col = NULL,
                          trait_types = NULL,
-                         ordinal_levels = NULL,
-                         multi_proportion_groups = NULL,
+                               multi_proportion_groups = NULL,
                          log_transform = TRUE,
                          missing_frac = 0.25,
                          covariates = NULL,
@@ -596,7 +595,7 @@ multi_impute <- function(traits, tree, m = 100L,
                          gnn = FALSE,
                          lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
                          posterior_control = list(),
-                         ...) {
+                         ..., ordinal_levels = NULL) {
 
   # Recorded before match.arg() reassigns lambda_mode (used only by
   # draws_method = "posterior" to report ignored fitting arguments).

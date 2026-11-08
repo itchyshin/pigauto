@@ -10,7 +10,6 @@ impute(
   tree,
   species_col = NULL,
   trait_types = NULL,
-  ordinal_levels = NULL,
   multi_proportion_groups = NULL,
   k_eigen = "auto",
   log_transform = TRUE,
@@ -40,7 +39,8 @@ impute(
   phylo_signal_method = "lambda",
   conformal_split_val = FALSE,
   gnn = FALSE,
-  ...
+  ...,
+  ordinal_levels = NULL
 )
 
 \method{print}{pigauto_result}(x, ...)
@@ -65,15 +65,6 @@ type for specific trait columns, e.g.
 \code{c(Survival = "proportion", Parasites = "zi_count")}. Required for
 the two types that cannot be inferred from R class (see
 \strong{Trait type auto-detection} below). Default \code{NULL} (auto).}
-
-\item{ordinal_levels}{named list giving the scientific order of ordinal
-levels, e.g. \code{list(status = c("LC", "NT", "VU", "EN", "CR"))}.
-Each named column is coerced to an ordered factor with exactly those
-levels before type detection (so no \code{trait_types} entry is
-needed), and \code{$completed} returns it as an ordered factor.
-Observed values absent from the declared levels are an error. Same
-semantics as the \code{ordinal_levels} argument of
-\code{\link{read_traits}}. Default \code{NULL}.}
 
 \item{multi_proportion_groups}{named list declaring compositional
 (\code{multi_proportion}) traits, e.g.
@@ -219,7 +210,7 @@ is recorded in \code{fit$model_config$predict_method_used}
 (\code{"exact"}, \code{"per_column"}, or \code{"auto"}) and, per
 trait, in \code{fit$model_config$predict_method_by_trait}. Under
 \code{"auto"} with real validation cells, \code{fit$model_config
-  $route_val_n} / \code{$score_val_n} record, per trait, how many of
+$route_val_n} / \code{$score_val_n} record, per trait, how many of
 its validation cells chose the route versus were reserved for gate
 calibration and conformal scoring (see \code{\link{fit_baseline}}'s
 \code{predict_method} docs).}
@@ -362,6 +353,15 @@ baseline settings, GNN-on did not lower imputation error and took
 for that study). These results do not establish performance on new data.}
 
 \item{...}{Additional arguments passed by \code{impute()} to \code{fit_pigauto()}; ignored by \code{print.pigauto_result()}.}
+
+\item{ordinal_levels}{named list giving the scientific order of ordinal
+levels, e.g. \code{list(status = c("LC", "NT", "VU", "EN", "CR"))}.
+Each named column is coerced to an ordered factor with exactly those
+levels before type detection (so no \code{trait_types} entry is
+needed), and \code{$completed} returns it as an ordered factor.
+Observed values absent from the declared levels are an error. Same
+semantics as the \code{ordinal_levels} argument of
+\code{\link{read_traits}}. Default \code{NULL}.}
 
 \item{x}{A \code{pigauto_result} object returned by \code{impute()}.}
 }
