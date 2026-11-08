@@ -40,17 +40,27 @@ coverage_workflow_safe <- function(producer_text, uploader_text) {
       grepl('stop_on_failure = TRUE', gate$run, fixed = TRUE) &&
       identical(artifact[["if"]], "github.event_name == 'push' && github.ref == 'refs/heads/main'") &&
       identical(artifact$with$name, "main-coverage") &&
+      identical(artifact$with$path, "cobertura.xml") &&
       identical(artifact$with$`if-no-files-found`, "error") &&
       identical(checkout$with$ref, "${{ github.event.workflow_run.head_sha }}") &&
       identical(checkout$with$`persist-credentials`, FALSE) &&
       identical(download$with$name, "main-coverage") &&
+      identical(download$with$path, "${{ runner.temp }}/coverage") &&
       identical(download$with$`run-id`, "${{ github.event.workflow_run.id }}") &&
+      identical(download$with$`github-token`, "${{ github.token }}") &&
       identical(upload$with$override_commit, "${{ github.event.workflow_run.head_sha }}") &&
       identical(upload$with$override_branch, "main") &&
       identical(upload$with$use_oidc, TRUE) && identical(upload$with$fail_ci_if_error, TRUE) &&
+      identical(upload$with$disable_search, TRUE) && identical(upload$with$plugins, "noop") &&
+      identical(upload$with$version, "v11.3.2") &&
       identical(upload$with$files, "${{ runner.temp }}/coverage/cobertura.xml") &&
-      all(vapply(job$steps, function(x) grepl("@[0-9a-f]{40}$", x$uses), logical(1))) &&
-      grepl("@[0-9a-f]{40}$", artifact$uses)
+      identical(vapply(job$steps, `[[`, character(1), "name"),
+                c("Check out the tested commit", "Download the trusted coverage artifact", "Upload coverage to Codecov")) &&
+      identical(vapply(job$steps, `[[`, character(1), "uses"), c(
+        "actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+        "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+        "codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac")) &&
+      identical(artifact$uses, "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02")
   }, error = function(e) FALSE)
 }
 
@@ -79,4 +89,22 @@ test_that("coverage uploads require a successful trusted main push", {
   expect_false(coverage_workflow_safe(privileged_producer, u))
   secret_producer <- sub("GITHUB_PAT:", "CODECOV: ${{ secrets.CODECOV_TOKEN }}\n      GITHUB_PAT:", p, fixed = TRUE)
   expect_false(coverage_workflow_safe(secret_producer, u))
+  evil_uploader <- sub("codecov/codecov-action@", "evil/uploader@", u, fixed = TRUE)
+  expect_false(coverage_workflow_safe(p, evil_uploader))
+  evil_downloader <- sub("actions/download-artifact@", "evil/downloader@", u, fixed = TRUE)
+  expect_false(coverage_workflow_safe(p, evil_downloader))
+  evil_checkout <- sub("actions/checkout@", "evil/checkout@", u, fixed = TRUE)
+  expect_false(coverage_workflow_safe(p, evil_checkout))
+  evil_artifact <- sub("actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02", "evil/artifact@ea165f8d65b6e75b540449e92b4886f43607fa02", p, fixed = TRUE)
+  expect_false(coverage_workflow_safe(evil_artifact, u))
+  extra_step <- sub("      - name: Upload coverage to Codecov", "      - name: Untrusted step\n        run: echo bad\n      - name: Upload coverage to Codecov", u, fixed = TRUE)
+  expect_false(coverage_workflow_safe(p, extra_step))
+  searches_files <- sub("disable_search: true", "disable_search: false", u, fixed = TRUE)
+  expect_false(coverage_workflow_safe(p, searches_files))
+  altered_plugins <- sub("plugins: noop", "plugins: gcov", u, fixed = TRUE)
+  expect_false(coverage_workflow_safe(p, altered_plugins))
+  wrong_producer_path <- sub("path: cobertura.xml", "path: other.xml", p, fixed = TRUE)
+  expect_false(coverage_workflow_safe(wrong_producer_path, u))
+  wrong_download_path <- sub("path: ${{ runner.temp }}/coverage", "path: .", u, fixed = TRUE)
+  expect_false(coverage_workflow_safe(p, wrong_download_path))
 })
