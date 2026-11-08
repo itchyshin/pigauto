@@ -1,0 +1,68 @@
+name: MKL Intel exact reproduction
+on:
+  push:
+    branches: [codex/mkl-intel-repro-0111]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        attempt: [1, 2, 3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    container:
+      image: ghcr.io/r-hub/containers/mkl@sha256:ba4d46e9409219837057a0de2965117a860476a2e713e2d3e619107ac251428b
+    env:
+      MKL_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      NOT_CRAN: 'false'
+      R_COMPILE_AND_INSTALL_PACKAGES: 'always'
+    steps:
+      - name: Record CPU and verify archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          grep -m1 'model name' /proc/cpuinfo | tee evidence/cpu.txt
+          cat /etc/os-release > evidence/os.txt
+          Rscript --vanilla -e 'print(sessionInfo()); print(extSoftVersion()); print(R.version)' > evidence/r.txt
+          ldd "$(R RHOME)/lib/libR.so" > evidence/linkage.txt
+          grep -qi 'intel' evidence/cpu.txt || { echo 'Not an Intel runner: no reproduction attempted.' | tee evidence/skipped.txt; exit 0; }
+          touch evidence/intel.txt
+          curl -fsSL https://cloud.r-project.org/src/contrib/pigauto_0.11.0.tar.gz -o /tmp/cran.tar.gz
+          echo '5296214aca1905081748e6b8dec6facf227a38da6f2ca5a7020b94199bc324e2  /tmp/cran.tar.gz' | sha256sum -c - | tee evidence/hashes.txt
+          curl -fsSL https://raw.githubusercontent.com/itchyshin/pigauto/98f9a2c66cd4e6e3f4ba4daa6dfc41c986900cf1/rhub-payload/pigauto_0.11.1.tar.gz -o /tmp/candidate.tar.gz
+          echo '5da2b3c633ff3388f98abfed6cd5f6b15d1fa89807470c8debef5976757e4a78  /tmp/candidate.tar.gz' | sha256sum -c - | tee -a evidence/hashes.txt
+          mkdir -p /tmp/v0110 /tmp/v0111
+          tar -xzf /tmp/cran.tar.gz -C /tmp/v0110
+          tar -xzf /tmp/candidate.tar.gz -C /tmp/v0111
+      - name: Install focused dependencies
+        shell: bash
+        run: |
+          test -f evidence/intel.txt || exit 0
+          set -o pipefail
+          Rscript --vanilla -e 'pak::pkg_install(c("any::torch", "any::ape", "any::ggplot2", "any::Matrix", "any::rlang", "any::withr", "any::testthat", "any::pkgload"), ask=FALSE)' 2>&1 | tee evidence/dependencies.log
+      - name: Compare both versions repeatedly
+        shell: bash
+        run: |
+          test -f evidence/intel.txt || exit 0
+          set -u
+          for version in v0110 v0111; do
+            for repeat in 1 2 3; do
+              set -o pipefail
+              Rscript --vanilla -e "testthat::test_local('/tmp/$version/pigauto', filter='mi-posterior', reporter='summary', stop_on_failure=TRUE)" > "evidence/${version}-${repeat}.log" 2>&1
+              code=$?
+              printf '%s %s exit=%s\n' "$version" "$repeat" "$code" | tee -a evidence/results.txt
+            done
+          done
+      - name: Retain evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mkl-intel-${{ matrix.attempt }}
+          path: evidence/
+          if-no-files-found: warn
+          retention-days: 30
