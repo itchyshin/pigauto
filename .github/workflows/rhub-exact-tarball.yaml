@@ -1,0 +1,115 @@
+name: R-hub exact CRAN archive
+
+on:
+  push:
+    branches:
+      - codex/rhub-v8-95998faf
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      containers: ${{ steps.rhub.outputs.containers }}
+    steps:
+      - id: rhub
+        uses: r-hub/actions/setup@02be5ffbeae2b0d553da66acded089da11a1fb8f # v1
+        with:
+          config: '{"platforms":["ubuntu-release","ubuntu-clang"]}'
+      - name: Require both intended R-hub platforms
+        env:
+          CONTAINERS_JSON: ${{ steps.rhub.outputs.containers }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -c 'import json,os; x=json.loads(os.environ["CONTAINERS_JSON"]); assert len(x)==2 and {i["name"] for i in x}=={"ubuntu-release","ubuntu-clang"}, x'
+
+  exact-archive:
+    needs: setup
+    runs-on: ubuntu-latest
+    name: ${{ matrix.config.label }} exact archive
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        config: ${{ fromJson(needs.setup.outputs.containers) }}
+    container:
+      image: ${{ matrix.config.container }}
+    env:
+      EXPECTED_SHA256: 95998faf7cf7ee0ae5246407853aa153593626664e441bb931e7bb4e4c7ed903
+      EXPECTED_SIZE: '5397254'
+      ARCHIVE: /tmp/pigauto_0.11.1.tar.gz
+      _R_CHECK_FORCE_SUGGESTS_: 'true'
+      _R_CHECK_LIMIT_CORES_: 'true'
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - name: Download and verify the frozen archive
+        env:
+          PAYLOAD_COMMIT: 809a960ed8c0307605ac722647ac766ecc4eb649
+          RHUB_PLATFORM: ${{ matrix.config.label }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          source_url="https://raw.githubusercontent.com/itchyshin/pigauto/$PAYLOAD_COMMIT/rhub-payload/pigauto_0.11.1.tar.gz"
+          printf 'source_url=%s\npayload_commit=%s\nplatform=%s\nrun_id=%s\nexpected_bytes=%s\n' "$source_url" "$PAYLOAD_COMMIT" "$RHUB_PLATFORM" "$GITHUB_RUN_ID" "$EXPECTED_SIZE" > evidence/provenance.txt
+          curl --fail --silent --show-error --location --proto '=https' "$source_url" -o "$ARCHIVE"
+          test "$(wc -c < "$ARCHIVE" | tr -d ' ')" = "$EXPECTED_SIZE"
+          printf '%s  %s\n' "$EXPECTED_SHA256" "$ARCHIVE" | sha256sum --check
+          sha256sum "$ARCHIVE" | tee evidence/sha256-before.txt
+          tar -tzf "$ARCHIVE" > evidence/inventory.txt
+          tar -xzf "$ARCHIVE" -C "$GITHUB_WORKSPACE" --strip-components=1
+      - uses: r-hub/actions/platform-info@02be5ffbeae2b0d553da66acded089da11a1fb8f # v1
+        with:
+          job-config: ${{ matrix.config.job-config }}
+      - name: Install V8 system library
+        shell: bash
+        run: |
+          set -euo pipefail
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends libnode-dev
+      - uses: r-hub/actions/setup-deps@02be5ffbeae2b0d553da66acded089da11a1fb8f # v1
+        with:
+          job-config: ${{ matrix.config.job-config }}
+          extra-packages: |
+            any::rcmdcheck
+            any::V8
+      - name: Verify V8 math-rendering support
+        shell: Rscript {0}
+        run: |
+          stopifnot(requireNamespace("V8", quietly = TRUE))
+          stopifnot(identical(as.numeric(V8::v8()$eval("1 + 1")), 2))
+      - name: Check the original archive
+        uses: r-hub/actions/run-check@02be5ffbeae2b0d553da66acded089da11a1fb8f # v1
+        with:
+          job-config: ${{ matrix.config.job-config }}
+        env:
+          RHUB_ACTIONS_CHECK_SCRIPT: >-
+            set -euo pipefail;
+            mkdir -p "$GITHUB_WORKSPACE/check";
+            R CMD check --as-cran --run-donttest --output="$GITHUB_WORKSPACE/check" "$ARCHIVE" 2>&1 | tee "$GITHUB_WORKSPACE/evidence/check.log";
+            test -f "$GITHUB_WORKSPACE/check/pigauto.Rcheck/00check.log";
+            grep -q '^Status: OK' "$GITHUB_WORKSPACE/check/pigauto.Rcheck/00check.log"
+      - name: Verify archive after checking
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "$ARCHIVE"
+          test "$(wc -c < "$ARCHIVE" | tr -d ' ')" = "$EXPECTED_SIZE"
+          printf '%s  %s\n' "$EXPECTED_SHA256" "$ARCHIVE" | sha256sum --check
+          sha256sum "$ARCHIVE" | tee evidence/sha256-after.txt
+      - name: Retain check evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: rhub-exact-${{ matrix.config.label }}
+          path: |
+            evidence/
+            check/
+          if-no-files-found: error
+          retention-days: 30
