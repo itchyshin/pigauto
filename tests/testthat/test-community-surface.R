@@ -1,10 +1,23 @@
-source_root_or_skip <- function() {
-  root <- testthat::test_path("..", "..")
-  if (!file.exists(file.path(root, "DESCRIPTION"))) {
+source_root_or_skip <- function(root = testthat::test_path("..", "..")) {
+  source_files <- c("DESCRIPTION", "README.md", "R/active_impute.R",
+                    "vignettes/getting-started.Rmd")
+  if (!all(file.exists(file.path(root, source_files)))) {
     skip("source-surface assertions run in the dedicated repository gate")
   }
   root
 }
+
+test_that("source checks distinguish installed package layout from checkout", {
+  root <- testthat::test_path("..", "..")
+  installed <- tempfile("installed-pigauto-")
+  dir.create(installed)
+  writeLines("Package: pigauto", file.path(installed, "DESCRIPTION"))
+  result <- tryCatch(source_root_or_skip(installed), skip = identity)
+  expect_s3_class(result, "skip")
+  if (file.exists(file.path(root, "R", "active_impute.R"))) {
+    expect_identical(source_root_or_skip(root), root)
+  }
+})
 
 test_that("canonical novice journey is present in the public sources", {
   root <- source_root_or_skip()
