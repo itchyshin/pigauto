@@ -1,7 +1,7 @@
-name: R-hub MKL frozen candidate
+name: R-hub threaded MKL frozen candidate
 on:
   push:
-    branches: [codex/rhub-mkl-5da2-exact]
+    branches: [codex/rhub-mkl-thread4-5da2]
 permissions:
   contents: read
 jobs:
@@ -25,12 +25,26 @@ jobs:
     container:
       image: ${{ needs.image.outputs.image }}
     env:
-      MKL_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '4'
       OPENBLAS_NUM_THREADS: '1'
-      OMP_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '4'
+      MKL_DYNAMIC: 'FALSE'
       NOT_CRAN: 'false'
       R_COMPILE_AND_INSTALL_PACKAGES: 'always'
     steps:
+      - name: Switch disposable R to threaded MKL
+        shell: bash
+        run: |
+          set -euo pipefail
+          dnf install -y patchelf
+          RHOME=$(R RHOME)
+          target="$RHOME/lib/libR.so"
+          patchelf --print-needed "$target" | grep -Fx libmkl_sequential.so.2
+          test -f /opt/intel/oneapi/mkl/2025.3/lib/libmkl_gnu_thread.so.2
+          patchelf --replace-needed libmkl_sequential.so.2 libmkl_gnu_thread.so.2 "$target"
+          patchelf --print-needed "$target" | grep -Fx libmkl_gnu_thread.so.2
+          ldd "$target" | grep -F libmkl_gnu_thread.so.2
+          if ldd "$target" | grep -F libmkl_sequential.so.2; then exit 1; fi
       - name: Verify input and identify environment
         shell: bash
         env:
@@ -48,6 +62,8 @@ jobs:
           ldd "$RHOME/lib/libRblas.so" | tee -a evidence/environment.txt
           ldd "$RHOME/lib/libR.so" | tee -a evidence/environment.txt
           Rscript --vanilla -e 'stopifnot(grepl("mkl", extSoftVersion()[["BLAS"]], ignore.case=TRUE))'
+          MKL_VERBOSE=1 Rscript --vanilla -e 'set.seed(1); x <- matrix(rnorm(1000L * 1000L), 1000L); invisible(x %*% x)' 2>&1 | tee evidence/mkl-thread-check.txt
+          grep -E 'MKL_VERBOSE.*DGEMM.*NThr:4' evidence/mkl-thread-check.txt
           rpm -qa | grep -i mkl | tee -a evidence/environment.txt
           curl -fsSL https://raw.githubusercontent.com/itchyshin/pigauto/98f9a2c66cd4e6e3f4ba4daa6dfc41c986900cf1/rhub-payload/pigauto_0.11.1.tar.gz -o /tmp/pigauto_0.11.1.tar.gz
           echo '5da2b3c633ff3388f98abfed6cd5f6b15d1fa89807470c8debef5976757e4a78  /tmp/pigauto_0.11.1.tar.gz' | sha256sum -c - | tee evidence/hash.txt
@@ -67,7 +83,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: rhub-mkl-focused-evidence
+          name: rhub-mkl-thread4-focused-evidence
           path: evidence/
           if-no-files-found: warn
           retention-days: 30
