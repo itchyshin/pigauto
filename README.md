@@ -136,7 +136,8 @@ does not make that procedure suitable for inference.
 
 | Your task | Function | What you receive or do next |
 |---|---|---|
-| Read files and check species names, trait types and missing values | `read_traits()`, `read_tree()`, then `check_pigauto()` | An input check; no model is fitted. |
+| Read trait and tree files | `read_traits()`, `read_tree()` | A trait data frame and a phylogenetic tree. |
+| Check species names, trait types and missing values | `check_pigauto(traits, tree)` | An input-check report; no imputation model is fitted. |
 | Inspect where values are missing | `preprocess_traits()`, then `plot_missingness()` | Trait summaries, matrices, tree-ordered rows or co-missingness fractions. |
 | Obtain one point completion for reporting or exploration | `impute()`, then `completed_data(result)` | One table with observed values preserved and modeled missing cells filled. |
 | Inspect variation across several completed tables | `multi_impute(m = 20)`, then `get_imputed_datasets(mi)` | A list of 20 tables. Check `mi$draws_method` and the restrictions below before fitting analyses. |
@@ -303,9 +304,18 @@ for the same trait and species receive the same species-level prediction.
 To let point predictions reflect each observation's covariates, supply
 per-row covariates (for example, measurement temperature) and use
 `gnn = TRUE`. Whether those predictions differ depends on the fitted network
-and its calibrated weight. With `gnn = FALSE`, covariates are ignored with a
-warning. Stochastic completion draws can differ between rows even without
-covariates; that draw variation is not an observation-specific covariate effect.
+and its calibrated weight.
+
+With `gnn = FALSE`, covariate use depends on the baseline route. A selected
+per-column numeric Brownian-motion fit can use covariates averaged within
+species. This can change a species-level prediction when that species has
+no remaining observations of the trait. Joint MVN, threshold-joint and
+one-versus-rest categorical baselines omit covariates; a numeric fallback
+within the same mixed fit may still use them. These baseline routes do not
+use per-row covariates to distinguish observations within a species. Read
+the route-specific warnings and `?fit_baseline` when supplying covariates.
+Stochastic completion draws can differ between rows even without covariates;
+that draw variation is not an observation-specific covariate effect.
 
 ### When data and tree species names do not match
 
