@@ -245,6 +245,7 @@ conditional interval yourself if you need an \code{E[X]}-scale bound.
 \section{Pooling decoded draws}{
 
 These rules apply to \code{n_imputations > 1}, on the decoded scale.
+
 \ifelse{html}{\out{
 <table>
 <thead><tr><th scope="col">Type</th><th scope="col">median</th><th scope="col">mean</th><th scope="col">mode</th></tr></thead>
