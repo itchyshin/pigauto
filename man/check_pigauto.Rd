@@ -9,6 +9,7 @@ check_pigauto(
   tree,
   species_col = NULL,
   trait_types = NULL,
+  ordinal_levels = NULL,
   multi_proportion_groups = NULL,
   covariates = NULL,
   gnn = FALSE
@@ -24,6 +25,11 @@ frame that contains species identities.}
 
 \item{trait_types}{Optional named type overrides passed to
 \code{\link[=preprocess_traits]{preprocess_traits()}}.}
+
+\item{ordinal_levels}{Optional named list giving the order of ordinal
+levels, applied before type detection so the report shows the same
+types the matching \code{\link[=impute]{impute()}} call will use. Invalid declarations are
+reported as errors rather than thrown. See \code{\link[=impute]{impute()}} / \code{\link[=read_traits]{read_traits()}}.}
 
 \item{multi_proportion_groups}{Optional named composition groups passed to
 \code{\link[=preprocess_traits]{preprocess_traits()}}.}

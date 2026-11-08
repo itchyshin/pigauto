@@ -12,6 +12,10 @@
 #'   frame that contains species identities.
 #' @param trait_types Optional named type overrides passed to
 #'   [preprocess_traits()].
+#' @param ordinal_levels Optional named list giving the order of ordinal
+#'   levels, applied before type detection so the report shows the same
+#'   types the matching [impute()] call will use. Invalid declarations are
+#'   reported as errors rather than thrown. See [impute()] / [read_traits()].
 #' @param multi_proportion_groups Optional named composition groups passed to
 #'   [preprocess_traits()].
 #' @param covariates Optional environmental covariates passed to
@@ -54,6 +58,7 @@
 #' @export
 check_pigauto <- function(traits, tree, species_col = NULL,
                           trait_types = NULL,
+                          ordinal_levels = NULL,
                           multi_proportion_groups = NULL,
                           covariates = NULL,
                           gnn = FALSE) {
@@ -63,7 +68,8 @@ check_pigauto <- function(traits, tree, species_col = NULL,
   .check_pigauto_internal(
     traits, tree, species_col, trait_types, multi_proportion_groups,
     log_transform = TRUE, covariates = covariates,
-    probe_runtime = isTRUE(gnn)
+    probe_runtime = isTRUE(gnn),
+    ordinal_levels = ordinal_levels
   )$check
 }
 
@@ -146,7 +152,8 @@ check_pigauto <- function(traits, tree, species_col = NULL,
                                     trait_types = NULL,
                                     multi_proportion_groups = NULL,
                                     log_transform = TRUE, covariates = NULL,
-                                    probe_runtime = TRUE) {
+                                    probe_runtime = TRUE,
+                                    ordinal_levels = NULL) {
   messages <- .check_pigauto_messages()
   empty <- list(names = character(), examples = character(), count = 0L,
                 consequence = "")
@@ -159,6 +166,23 @@ check_pigauto <- function(traits, tree, species_col = NULL,
                                     "`tree` must inherit from `phylo`.", "Supply an ape phylo tree.")
   }
   if (nrow(messages) > 0L) return(.check_pigauto_finish(messages, empty, empty, empty, empty, empty, NULL))
+
+  # Apply declared ordinal orders before fingerprinting and preprocessing, so
+  # the report describes the same coerced input the matching impute() call
+  # will fit. check_pigauto() reports input problems instead of throwing, so
+  # a bad declaration becomes an error entry here.
+  if (!is.null(ordinal_levels)) {
+    coerced <- tryCatch(.apply_ordinal_levels(traits, ordinal_levels),
+                        error = function(e) e)
+    if (inherits(coerced, "error")) {
+      messages <- .check_pigauto_add(
+        messages, "error", "ordinal_levels_invalid", "ordinal_levels",
+        conditionMessage(coerced),
+        "Repair `ordinal_levels` and run check_pigauto() again.")
+      return(.check_pigauto_finish(messages, empty, empty, empty, empty, empty, NULL))
+    }
+    traits <- coerced
+  }
 
   fingerprint <- .check_pigauto_fingerprint(traits, tree, species_col, trait_types,
                                              multi_proportion_groups, covariates)

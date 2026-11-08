@@ -10,6 +10,7 @@ check_pigauto	traits	<required>
 check_pigauto	tree	<required>
 check_pigauto	species_col	NULL
 check_pigauto	trait_types	NULL
+check_pigauto	ordinal_levels	NULL
 check_pigauto	multi_proportion_groups	NULL
 check_pigauto	covariates	NULL
 check_pigauto	gnn	FALSE
@@ -113,6 +114,7 @@ impute	traits	<required>
 impute	tree	<required>
 impute	species_col	NULL
 impute	trait_types	NULL
+impute	ordinal_levels	NULL
 impute	multi_proportion_groups	NULL
 impute	k_eigen	"auto"
 impute	log_transform	TRUE
@@ -159,6 +161,7 @@ multi_impute	m	100L
 multi_impute	draws_method	c("auto", "conformal", "mc_dropout", "posterior")
 multi_impute	species_col	NULL
 multi_impute	trait_types	NULL
+multi_impute	ordinal_levels	NULL
 multi_impute	multi_proportion_groups	NULL
 multi_impute	log_transform	TRUE
 multi_impute	missing_frac	0.25
@@ -183,6 +186,7 @@ multi_impute_trees	trees	<required>
 multi_impute_trees	m_per_tree	1L
 multi_impute_trees	species_col	NULL
 multi_impute_trees	trait_types	NULL
+multi_impute_trees	ordinal_levels	NULL
 multi_impute_trees	multi_proportion_groups	NULL
 multi_impute_trees	log_transform	TRUE
 multi_impute_trees	missing_frac	0.25
@@ -220,6 +224,7 @@ preprocess_traits	traits	<required>
 preprocess_traits	tree	<required>
 preprocess_traits	species_col	NULL
 preprocess_traits	trait_types	NULL
+preprocess_traits	ordinal_levels	NULL
 preprocess_traits	multi_proportion_groups	NULL
 preprocess_traits	log_cols	NULL
 preprocess_traits	log_transform	TRUE
