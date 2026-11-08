@@ -22,26 +22,24 @@ blended with the baseline using weights calibrated on held-out cells.
 
 ## Installation
 
-This page describes the current GitHub development version. CRAN 0.11.0
-lacks some functions shown here, including `get_imputed_datasets()`
-and the `predict(..., evaluation = TRUE)` argument. Use `evaluate(fit)`
-for honest held-out evaluation on CRAN 0.11.0. A matching version number
-alone did not distinguish earlier GitHub fixes from that CRAN build.
-
-For the released version:
+The workflow below requires pigauto 0.11.1 or later. Install the CRAN
+release and check the version:
 
 ```r
 install.packages("pigauto")
 packageVersion("pigauto")
 ```
 
-Until CRAN offers 0.11.1, install the GitHub version to use the workflow below:
+If CRAN still provides an older version, or you want the development version,
+install from GitHub:
 
 ```r
 # install.packages("pak") # once, if needed
 pak::pak("itchyshin/pigauto")
-# torch::install_torch() # once, if you opt into gnn = TRUE
 ```
+
+The optional neural network also requires `torch::install_torch()` once.
+The default `gnn = FALSE` workflow does not require the torch runtime.
 
 ### How pigauto works
 
