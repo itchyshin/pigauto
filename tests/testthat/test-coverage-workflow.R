@@ -2,9 +2,11 @@ coverage_workflow_safe <- function(producer_text, uploader_text) {
   tryCatch({
     p <- yaml::yaml.load(producer_text)
     u <- yaml::yaml.load(uploader_text)
-    event <- u[["on"]] %||% u[["TRUE"]]
+    event_key <- if ("on" %in% names(u)) "on" else "TRUE"
+    event <- u[[event_key]]
     job <- u$jobs$upload
     norm <- function(x) gsub("[[:space:]]+", " ", trimws(x))
+    exact_names <- function(x, expected) length(names(x)) == length(expected) && setequal(names(x), expected)
     step <- function(steps, name) {
       found <- Filter(function(x) identical(x$name, name), steps)
       if (length(found) != 1L) stop("Expected one named step")
@@ -29,7 +31,10 @@ coverage_workflow_safe <- function(producer_text, uploader_text) {
       identical(event$workflow_run$workflows, "test-coverage") &&
       identical(event$workflow_run$types, "completed") &&
       identical(event$workflow_run$branches, "main") &&
+      exact_names(u, c("name", event_key, "permissions", "jobs")) &&
       length(u$permissions) == 0L && identical(names(u$jobs), "upload") &&
+      exact_names(job, c("if", "runs-on", "permissions", "steps")) &&
+      identical(job$`runs-on`, "ubuntu-latest") &&
       identical(norm(job[["if"]]), expected_if) &&
       identical(job$permissions, list(actions = "read", contents = "read", `id-token` = "write")) &&
       !contains_key(p, "id-token") &&
@@ -39,9 +44,15 @@ coverage_workflow_safe <- function(producer_text, uploader_text) {
       grepl('community-surface|coverage-workflow', gate$run, fixed = TRUE) &&
       grepl('stop_on_failure = TRUE', gate$run, fixed = TRUE) &&
       identical(artifact[["if"]], "github.event_name == 'push' && github.ref == 'refs/heads/main'") &&
+      exact_names(artifact, c("name", "if", "uses", "with")) &&
+      exact_names(artifact$with, c("name", "path", "if-no-files-found", "retention-days")) &&
       identical(artifact$with$name, "main-coverage") &&
       identical(artifact$with$path, "cobertura.xml") &&
       identical(artifact$with$`if-no-files-found`, "error") &&
+      all(vapply(job$steps, exact_names, logical(1), expected = c("name", "uses", "with"))) &&
+      exact_names(checkout$with, c("ref", "persist-credentials")) &&
+      exact_names(download$with, c("name", "path", "run-id", "github-token")) &&
+      exact_names(upload$with, c("use_oidc", "fail_ci_if_error", "files", "disable_search", "plugins", "version", "override_branch", "override_commit", "override_build_url")) &&
       identical(checkout$with$ref, "${{ github.event.workflow_run.head_sha }}") &&
       identical(checkout$with$`persist-credentials`, FALSE) &&
       identical(download$with$name, "main-coverage") &&
@@ -50,6 +61,7 @@ coverage_workflow_safe <- function(producer_text, uploader_text) {
       identical(download$with$`github-token`, "${{ github.token }}") &&
       identical(upload$with$override_commit, "${{ github.event.workflow_run.head_sha }}") &&
       identical(upload$with$override_branch, "main") &&
+      identical(upload$with$override_build_url, "${{ github.event.workflow_run.html_url }}") &&
       identical(upload$with$use_oidc, TRUE) && identical(upload$with$fail_ci_if_error, TRUE) &&
       identical(upload$with$disable_search, TRUE) && identical(upload$with$plugins, "noop") &&
       identical(upload$with$version, "v11.3.2") &&
@@ -107,4 +119,10 @@ test_that("coverage uploads require a successful trusted main push", {
   expect_false(coverage_workflow_safe(wrong_producer_path, u))
   wrong_download_path <- sub("path: ${{ runner.temp }}/coverage", "path: unexpected-dir", u, fixed = TRUE)
   expect_false(coverage_workflow_safe(p, wrong_download_path))
+  malicious_url <- sub("use_oidc: true", "url: https://example.invalid\n          use_oidc: true", u, fixed = TRUE)
+  expect_false(coverage_workflow_safe(p, malicious_url))
+  malicious_env <- sub("    runs-on: ubuntu-latest", "    env:\n      UNTRUSTED: yes\n    runs-on: ubuntu-latest", u, fixed = TRUE)
+  expect_false(coverage_workflow_safe(p, malicious_env))
+  other_repo <- sub("          ref: ${{ github.event.workflow_run.head_sha }}", "          repository: example/other\n          ref: ${{ github.event.workflow_run.head_sha }}", u, fixed = TRUE)
+  expect_false(coverage_workflow_safe(p, other_repo))
 })
