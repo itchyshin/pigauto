@@ -876,12 +876,12 @@ procedure or its inferential validity.
 - Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez,
   A. N., Kaiser, Ł., & Polosukhin, I. (2017). *Attention is all you need.*
   Advances in Neural Information Processing Systems, 30.
-  [Proceedings paper](https://proceedings.neurips.cc/paper_files/paper/2017/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html).
+  [Author preprint](https://arxiv.org/abs/1706.03762).
 - Ying, C., Cai, T., Luo, S., Zheng, S., Ke, G., He, D., Shen, Y., & Liu,
   T.-Y. (2021). *Do Transformers Really Perform Badly for Graph
   Representation?* Advances in Neural Information Processing Systems, 34,
   28877–28888.
-  [Proceedings paper](https://proceedings.neurips.cc/paper_files/paper/2021/hash/f1c1592588411002af340cbaedd6fc33-Abstract.html).
+  [Author preprint](https://arxiv.org/abs/2106.05234).
   This paper provides graph-structural attention context; pigauto's
   Gaussian phylogenetic-distance bias and learned bandwidths are
   package-specific.
