@@ -328,8 +328,7 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 multi_impute_trees <- function(traits, trees, m_per_tree = 1L,
                                species_col = NULL,
                                trait_types = NULL,
-                               ordinal_levels = NULL,
-                               multi_proportion_groups = NULL,
+                                           multi_proportion_groups = NULL,
                                log_transform = TRUE,
                                missing_frac = 0.25,
                                covariates = NULL,
@@ -339,7 +338,7 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 1L,
                                reference_tree = NULL,
                                draws_method = c("mc_dropout", "conformal"),
                                gnn = FALSE,
-                               ...) {
+                               ..., ordinal_levels = NULL) {
 
   draws_method <- match.arg(draws_method)
   traits <- .apply_ordinal_levels(traits, ordinal_levels)

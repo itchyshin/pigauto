@@ -35,7 +35,7 @@ install.packages("pigauto")
 packageVersion("pigauto")
 ```
 
-Install the GitHub version to use the development workflow below:
+Until CRAN offers 0.11.1, install the GitHub version to use the workflow below:
 
 ```r
 # install.packages("pak") # once, if needed

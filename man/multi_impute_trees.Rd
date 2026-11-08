@@ -11,7 +11,6 @@ multi_impute_trees(
   m_per_tree = 1L,
   species_col = NULL,
   trait_types = NULL,
-  ordinal_levels = NULL,
   multi_proportion_groups = NULL,
   log_transform = TRUE,
   missing_frac = 0.25,
@@ -23,7 +22,8 @@ multi_impute_trees(
   reference_tree = NULL,
   draws_method = c("mc_dropout", "conformal"),
   gnn = FALSE,
-  ...
+  ...,
+  ordinal_levels = NULL
 )
 
 \method{print}{pigauto_mi_trees}(x, ...)
@@ -52,10 +52,6 @@ setting does not estimate within-tree variation.}
 \item{trait_types}{named character vector overriding auto-detected
 trait types. Required for \code{"proportion"} and \code{"zi_count"}. See
 \code{\link[=impute]{impute()}} / \code{\link[=preprocess_traits]{preprocess_traits()}}. Default \code{NULL} (auto-detect).}
-
-\item{ordinal_levels}{named list giving the scientific order of ordinal
-levels, coerced to ordered factors before fitting. See \code{\link[=impute]{impute()}} /
-\code{\link[=read_traits]{read_traits()}}. Default \code{NULL}.}
 
 \item{multi_proportion_groups}{named list declaring compositional
 trait groups (rows summing to 1), forwarded to \code{\link[=impute]{impute()}} /
@@ -121,6 +117,10 @@ splits (\code{splits = NULL}), matching the production
 
 \item{...}{additional arguments forwarded to \code{\link[=fit_pigauto]{fit_pigauto()}} via
 \code{\link[=impute]{impute()}}.}
+
+\item{ordinal_levels}{named list giving the scientific order of ordinal
+levels, coerced to ordered factors before fitting. See \code{\link[=impute]{impute()}} /
+\code{\link[=read_traits]{read_traits()}}. Default \code{NULL}.}
 
 \item{x}{A posterior-tree prediction-sensitivity object.}
 }

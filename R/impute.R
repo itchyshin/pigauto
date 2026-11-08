@@ -449,7 +449,6 @@
 #' @export
 impute <- function(traits, tree, species_col = NULL,
                    trait_types = NULL,
-                   ordinal_levels = NULL,
                    multi_proportion_groups = NULL,
                    k_eigen = "auto",
                    log_transform = TRUE,
@@ -476,7 +475,7 @@ impute <- function(traits, tree, species_col = NULL,
                    phylo_signal_method = "lambda",
                    conformal_split_val = FALSE,
                    gnn = FALSE,
-                   ...) {
+                   ..., ordinal_levels = NULL) {
   # S3 default flip: capture BEFORE match.arg() reassigns predict_method.
   predict_method_explicit <- !missing(predict_method)
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)

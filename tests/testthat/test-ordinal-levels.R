@@ -197,3 +197,45 @@ test_that("multi_impute_trees(ordinal_levels) coerces before each tree fit", {
   expect_s3_class(datasets[[1L]]$status, "ordered")
   expect_identical(levels(datasets[[1L]]$status), fx$levels)
 })
+
+test_that("new argument preserves the existing positional API", {
+  # Calls written before ordinal_levels existed must continue to bind the
+  # composition declaration to multi_proportion_groups on every entry point.
+  legacy_calls <- list(
+    list(fun = impute, call = quote(impute(d, tree, NULL, NULL, groups))),
+    list(fun = preprocess_traits, call = quote(preprocess_traits(d, tree, NULL, NULL, groups))),
+    list(fun = check_pigauto, call = quote(check_pigauto(d, tree, NULL, NULL, groups))),
+    list(fun = multi_impute, call = quote(multi_impute(d, tree, 2L, "conformal", NULL, NULL, groups))),
+    list(fun = multi_impute_trees, call = quote(multi_impute_trees(d, trees, 1L, NULL, NULL, groups)))
+  )
+  for (case in legacy_calls) {
+    matched <- match.call(definition = case$fun, call = case$call)
+    expect_identical(matched$multi_proportion_groups, quote(groups))
+    expect_null(matched$ordinal_levels)
+  }
+
+  set.seed(42)
+  tree <- ape::rtree(6)
+  d <- data.frame(a = c(.2,.3,.4,.5,.6,NA),
+                  b = c(.8,.7,.6,.5,.4,NA), row.names = tree$tip.label)
+  groups <- list(comp = c("a", "b"))
+  named <- suppressWarnings(preprocess_traits(d, tree, multi_proportion_groups = groups))
+  positional <- suppressWarnings(preprocess_traits(d, tree, NULL, NULL, groups))
+  expect_identical(positional$trait_map, named$trait_map)
+  expect_identical(positional$X_scaled, named$X_scaled)
+})
+
+test_that("suggested ordinal declaration parses for difficult names", {
+  fx <- ordinal_fixture()
+  for (tricky in c("body`size", "body\\size")) {
+    df <- fx$chr
+    names(df)[names(df) == "status"] <- tricky
+    msg <- tryCatch(preprocess_traits(df, fx$tree,
+      trait_types = stats::setNames("ordinal", tricky)), error = conditionMessage)
+    code <- sub(".*ordinal_levels = (.*) listing the levels.*", "\\1", msg)
+    code <- sub("c(...)", "c('low', 'mid', 'high')", code, fixed = TRUE)
+    declaration <- eval(parse(text = code))
+    expect_identical(names(declaration), tricky)
+    expect_identical(declaration[[1]], c("low", "mid", "high"))
+  }
+})

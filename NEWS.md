@@ -1,4 +1,4 @@
-# pigauto (development version)
+# pigauto 0.11.1
 
 ## Ordinal level declarations on every entry point
 
@@ -21,7 +21,7 @@
   lambda estimation and baseline prediction; the GNN encoding is unchanged.
 - `predict()` rejects unused arguments instead of silently ignoring them.
 - CRAN 0.11.0 users are directed to `evaluate(fit)` for held-out scoring.
-  GitHub development builds are now numbered 0.11.0.9000.
+  The evaluation argument is available in 0.11.1.
 - `read_traits(ordinal_levels = list(...))` accepts explicit ecological level
   orders and rejects observed values omitted from those declarations.
 - Data-only species warnings distinguish exclusion from modeling from the
@@ -162,7 +162,7 @@ Brownian-GLS slope regimes (n = 300 or 1,000; lambda = 0.5 or 1; trait
 correlation 0.7; 30% MCAR or phylogenetic MAR; 500 replicates per regime).
 Five regimes failed and three were indeterminate; empirical coverage ranged
 from 86.2% to 95.2%, and no inferential scenario met the support criteria.
-See the [registered results and limits](../articles/validation-results.html#inferential-results).
+See the [registered results and limits](https://itchyshin.github.io/pigauto/articles/validation-results.html#inferential-results).
 This does not negate posterior properness under the imputation model, nor show
 that every use fails; it reports measured calibration only for the tested
 regimes.
@@ -332,7 +332,7 @@ intervals covered the truth in 0 to 17% of replicates, in all 16 regimes;
 MC-dropout draws biased it by -0.03 to -0.38. For downstream inference, use
 `draws_method = "posterior"` only when its documented eligibility conditions
 are met (continuous traits, one row per species, and no covariates; see
-[posterior-draw eligibility and limits](../articles/validation-results.html#inferential-results)).
+[posterior-draw eligibility and limits](https://itchyshin.github.io/pigauto/articles/validation-results.html#inferential-results)).
 This is a proper posterior-imputation procedure under its model, not evidence
 that downstream frequentist coverage is calibrated in every setting. In the
 later registered assessment, five of eight tested regimes failed and three

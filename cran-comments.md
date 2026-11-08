@@ -1,35 +1,24 @@
 ## Update scope
 
-pigauto 0.11.0 updates the published CRAN 0.10.0 release. The default
-imputation route now uses the phylogenetic baseline with the GNN off;
-discrete traits estimate their own phylogenetic signal, and the optional
-safety floor and signal gate default off. For eligible continuous,
-single-observation data without covariates, automatic multiple imputation
-selects posterior draws with a separation prior for residual covariance.
-Other automatic completions remain prediction diagnostics and are refused
-by the downstream fitting and pooling interfaces.
+The proposed update changes 0.11.0 to 0.11.1. It fixes rank-deficient
+covariate designs in baseline lambda estimation, rejects unused prediction
+arguments, and corrects released-version guidance for held-out evaluation.
+It also adds explicit ordinal level input, missingness visualisations,
+baseline report figures and clarifications for multiple-imputation outputs.
 
-The optional drmTMB and gllvmTMB adapters remain available for termwise
-fixed-effect pooling. Neither external model package is a pigauto installation
-dependency; users install the package needed by their chosen model. Their
-real-package integration checks live in a build-excluded harness, with
-package-independent extractor and arithmetic fixtures in the shipped tests.
+Daniel Noble is credited as a contributor for the multiple-imputation
+accessor and quick-start changes from PRs #252 and #253, incorporated
+through PR #262. There are no
+intended changes to the package licence or bundled datasets.
+The package uses the optional torch runtime only for GNN-enabled fits.
 
-No change to the software licence is intended. Third-party data attribution
-and phylogeny provenance remain in inst/NOTICE.
+## Release evidence and submission status
 
-## Release evidence
+Release review is in progress. Submission has not occurred.
+The clean post-merge source, exact tarball hash and inventory, local CRAN
+checks, platform results, timing, rights, consent and independent review must
+be recorded before any submission. No platform-clean or submission-ready
+claim is made yet.
 
-The pre-CRAN audit is in progress. No final candidate tarball has been frozen,
-and no platform, incoming, or submission-ready claim is made here. The source,
-site deployment, and final installed-artifact identities will be recorded
-separately after the audit PR is merged by the maintainer.
-
-Current CRAN package-index metadata (2026-10-06) lists no direct reverse
-dependencies in Depends, Imports, LinkingTo, Suggests or Enhances.
-
-## Submission status
-
-Nothing has been submitted for version 0.11.0. Exact-candidate check results,
-platform logs, timing, spelling, URL checks and inventory will replace the
-pending release-evidence paragraph before any maintainer submission.
+The CRAN package index queried on 7 November 2026 listed no reverse
+Depends, Imports, LinkingTo, Suggests or Enhances for pigauto.
