@@ -203,7 +203,7 @@ cells from the intended data.}
 
 \item{predict_route}{optional named character vector (names = trait
 names, i.e. \code{vapply(data$trait_map, function(tm) tm$name,
-character(1))}; values \code{"exact"} or \code{"per_column"}). Forces
+  character(1))}; values \code{"exact"} or \code{"per_column"}). Forces
 the prediction route for each named trait, bypassing the
 \code{"auto"} validation-loss comparison entirely (and overriding
 \code{predict_method}, if a value other than \code{"auto"} was also

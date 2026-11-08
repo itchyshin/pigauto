@@ -156,7 +156,14 @@ that `traits` and `tree` are already loaded.
 
 **Ordered categories**
 
+Declare the scientific order of the levels; pigauto never guesses it.
+
 ```{r declaration-ordinal, eval=FALSE}
+result <- impute(traits, tree, ordinal_levels = list(
+  threat = c("LC", "NT", "VU", "EN", "CR")
+))
+
+# Equivalent: construct the ordered factor yourself.
 traits$threat <- ordered(
   traits$threat,
   levels = c(
