@@ -3,7 +3,7 @@ name: R-hub exact CRAN archive
 on:
   push:
     branches:
-      - codex/rhub-exact-artifact-fallback
+      - codex/rhub-v8-fix
 
 permissions:
   contents: read
@@ -66,9 +66,23 @@ jobs:
       - uses: r-hub/actions/platform-info@02be5ffbeae2b0d553da66acded089da11a1fb8f # v1
         with:
           job-config: ${{ matrix.config.job-config }}
+      - name: Install V8 system library
+        shell: bash
+        run: |
+          set -euo pipefail
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends libnode-dev
       - uses: r-hub/actions/setup-deps@02be5ffbeae2b0d553da66acded089da11a1fb8f # v1
         with:
           job-config: ${{ matrix.config.job-config }}
+          extra-packages: |
+            any::rcmdcheck
+            any::V8
+      - name: Verify V8 math-rendering support
+        shell: Rscript {0}
+        run: |
+          stopifnot(requireNamespace("V8", quietly = TRUE))
+          stopifnot(identical(as.numeric(V8::v8()$eval("1 + 1")), 2))
       - name: Check the original archive
         uses: r-hub/actions/run-check@02be5ffbeae2b0d553da66acded089da11a1fb8f # v1
         with:
