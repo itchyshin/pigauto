@@ -397,6 +397,12 @@ For fine-grained control, use the
 individual functions (\code{\link{preprocess_traits}},
 \code{\link{fit_baseline}}, \code{\link{fit_pigauto}}, etc.) directly.
 }
+\details{
+A single completed data set is useful for point prediction, but analysing
+it as if its imputed values were observed ignores imputation uncertainty and
+can also change estimates. See \code{\link{multi_impute}} and the
+multiple-imputation article for downstream workflows and their limitations.
+}
 \section{Trait type auto-detection}{
 
 pigauto infers each trait's type from its R class — no \code{trait_types}

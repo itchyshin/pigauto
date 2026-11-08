@@ -3,14 +3,14 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/itchyshin/pigauto/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/itchyshin/pigauto/actions/workflows/R-CMD-check.yaml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/itchyshin/pigauto/test-coverage.yaml?branch=main&label=tests&logo=github)](https://github.com/itchyshin/pigauto/actions/workflows/test-coverage.yaml)
+[![Coverage](https://img.shields.io/codecov/c/github/itchyshin/pigauto?label=coverage&logo=codecov)](https://app.codecov.io/gh/itchyshin/pigauto)
 [![pkgdown](https://github.com/itchyshin/pigauto/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/itchyshin/pigauto/actions/workflows/pkgdown.yaml)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
 > **Warning:** pigauto is experimental; use at your own risk. It needs
-> further validation. Point estimates are the supported claim. Prediction
-> intervals are nominal held-out diagnostics, not package-wide certification;
-> covariance routes have focused-test evidence only.
+> further validation.
 
 pigauto fills missing species trait values using a phylogenetic tree, other
 traits, and optional covariates. It supports continuous, count, binary,

@@ -1,0 +1,115 @@
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'R/**'
+      - 'tests/**'
+      - 'DESCRIPTION'
+      - 'NAMESPACE'
+      - '.github/workflows/test-coverage.yaml'
+  pull_request:
+    # Mirror the push filter so docs-only PRs don't pay for a coverage run.
+    paths:
+      - 'R/**'
+      - 'tests/**'
+      - 'DESCRIPTION'
+      - 'NAMESPACE'
+      - '.github/workflows/test-coverage.yaml'
+  workflow_dispatch:
+
+name: test-coverage
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-coverage-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      # Auto-install the libtorch backend non-interactively when torch is
+      # first loaded (fallback if the explicit install step below is skipped).
+      TORCH_INSTALL: 1
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgdal-dev \
+            libgeos-dev \
+            libglpk40 \
+            libglpk-dev \
+            libproj-dev
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      # Default dependencies ("all") include Suggests, so suggests-gated test
+      # files (Rphylopars joint baselines, pool_mi backends, ...) actually run
+      # instead of skipping — otherwise their R/ files would report 0% coverage.
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::covr, any::xml2
+          needs: coverage
+
+      # torch is a hard dependency, but the R package alone is not enough:
+      # the libtorch/lantern C++ backend must be downloaded, or every test
+      # that touches a tensor errors instead of running.
+      - name: Install libtorch backend
+        run: Rscript -e 'torch::install_torch()'
+
+      # These checks read repository source files that are absent from covr's
+      # installed package layout, so run them against the checkout first.
+      - name: Check public source surfaces
+        env:
+          PIGAUTO_REQUIRE_SOURCE: "true"
+        run: testthat::test_local(filter = "community-surface", stop_on_failure = TRUE)
+        shell: Rscript {0}
+
+      - name: Test coverage
+        run: |
+          cov <- covr::package_coverage(
+            quiet = FALSE,
+            clean = FALSE,
+            install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
+          )
+          print(cov)
+          covr::to_cobertura(cov)
+        shell: Rscript {0}
+
+      # fail_ci_if_error is FALSE on purpose: the "tests" badge reads this
+      # workflow's status, so it should flip red only when the test suite
+      # fails, not when a Codecov upload hiccups. A failed upload shows up as
+      # a stale/unknown coverage badge instead.
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          fail_ci_if_error: false
+          files: ./cobertura.xml
+          plugins: noop
+          disable_search: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Show testthat output
+        if: always()
+        run: |
+          find '${{ runner.temp }}/package' -name 'testthat.Rout*' -exec cat '{}' \; || true
+        shell: bash
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-test-failures
+          path: ${{ runner.temp }}/package
