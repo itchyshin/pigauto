@@ -62,8 +62,22 @@ jobs:
           ldd "$RHOME/lib/libRblas.so" | tee -a evidence/environment.txt
           ldd "$RHOME/lib/libR.so" | tee -a evidence/environment.txt
           Rscript --vanilla -e 'stopifnot(grepl("mkl", extSoftVersion()[["BLAS"]], ignore.case=TRUE))'
-          MKL_VERBOSE=1 Rscript --vanilla -e 'set.seed(1); x <- matrix(rnorm(1000L * 1000L), 1000L); invisible(x %*% x)' 2>&1 | tee evidence/mkl-thread-check.txt
-          grep -E 'MKL_VERBOSE.*DGEMM.*NThr:4' evidence/mkl-thread-check.txt
+          MKL_VERBOSE=1 Rscript --vanilla -e 'set.seed(1); x <- matrix(rnorm(2000L * 2000L), 2000L); for (i in 1:8) invisible(x %*% x)' > evidence/mkl-thread-check.txt 2>&1 &
+          pid=$!
+          max_threads=0
+          while kill -0 "$pid" 2>/dev/null; do
+            if test -d "/proc/$pid/task"; then
+              count=$(find "/proc/$pid/task" -mindepth 1 -maxdepth 1 -type d | wc -l)
+              if (( count > max_threads )); then max_threads=$count; fi
+            fi
+            sleep 0.05
+          done
+          wait "$pid"
+          cat evidence/mkl-thread-check.txt
+          echo "max_R_process_threads=$max_threads" | tee -a evidence/mkl-thread-check.txt
+          grep -E 'MKL_VERBOSE.*gnu_thread' evidence/mkl-thread-check.txt
+          grep -E 'MKL_VERBOSE.*DGEMM' evidence/mkl-thread-check.txt
+          test "$max_threads" -ge 4
           rpm -qa | grep -i mkl | tee -a evidence/environment.txt
           curl -fsSL https://raw.githubusercontent.com/itchyshin/pigauto/98f9a2c66cd4e6e3f4ba4daa6dfc41c986900cf1/rhub-payload/pigauto_0.11.1.tar.gz -o /tmp/pigauto_0.11.1.tar.gz
           echo '5da2b3c633ff3388f98abfed6cd5f6b15d1fa89807470c8debef5976757e4a78  /tmp/pigauto_0.11.1.tar.gz' | sha256sum -c - | tee evidence/hash.txt
