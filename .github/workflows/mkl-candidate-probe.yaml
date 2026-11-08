@@ -48,7 +48,7 @@ jobs:
           readlink -f "$CONDA_PREFIX/lib/libblas.so.3" | tee -a evidence/environment.txt
           readlink -f "$CONDA_PREFIX/lib/liblapack.so.3" | tee -a evidence/environment.txt
           ldd "$CONDA_PREFIX/lib/R/lib/libR.so" | tee -a evidence/environment.txt
-          micromamba list | grep -E '^libblas +.*mkl' || exit 1
+          micromamba list | grep -E '^[[:space:]]*libblas +.*mkl' || exit 1
           readlink -f "$CONDA_PREFIX/lib/libblas.so.3" | grep -i mkl || exit 1
       - name: Install exact archive
         run: |
