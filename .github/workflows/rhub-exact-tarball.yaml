@@ -35,8 +35,8 @@ jobs:
     container:
       image: ${{ matrix.config.container }}
     env:
-      EXPECTED_SHA256: 157f0edea109ee8fdaece1f3c8fbf5c0cc27f04de5e00c722c44fe625f6f58a3
-      EXPECTED_SIZE: '5434762'
+      EXPECTED_SHA256: e4596a58ac2495de59d48d1a0b18e878156544a7d7eab4684be9bbf1339f48ad
+      EXPECTED_SIZE: '5434793'
       ARCHIVE: /tmp/pigauto_0.11.1.tar.gz
       _R_CHECK_FORCE_SUGGESTS_: 'true'
       _R_CHECK_LIMIT_CORES_: 'true'
