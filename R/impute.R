@@ -31,6 +31,14 @@
 #'   \code{c(Survival = "proportion", Parasites = "zi_count")}. Required for
 #'   the two types that cannot be inferred from R class (see
 #'   \strong{Trait type auto-detection} below). Default \code{NULL} (auto).
+#' @param ordinal_levels named list giving the scientific order of ordinal
+#'   levels, e.g. \code{list(status = c("LC", "NT", "VU", "EN", "CR"))}.
+#'   Each named column is coerced to an ordered factor with exactly those
+#'   levels before type detection (so no \code{trait_types} entry is
+#'   needed), and \code{$completed} returns it as an ordered factor.
+#'   Observed values absent from the declared levels are an error. Same
+#'   semantics as the \code{ordinal_levels} argument of
+#'   \code{\link{read_traits}}. Default \code{NULL}.
 #' @param multi_proportion_groups named list declaring compositional
 #'   (\code{multi_proportion}) traits, e.g.
 #'   \code{list(colour = c("black", "blue", "red", "yellow"))}. Each list
@@ -441,6 +449,7 @@
 #' @export
 impute <- function(traits, tree, species_col = NULL,
                    trait_types = NULL,
+                   ordinal_levels = NULL,
                    multi_proportion_groups = NULL,
                    k_eigen = "auto",
                    log_transform = TRUE,
@@ -501,6 +510,13 @@ impute <- function(traits, tree, species_col = NULL,
          call. = FALSE)
   }
   joint_refine_iter <- as.integer(joint_refine_iter)
+
+  # Apply declared ordinal orders before ANY consumer of trait columns —
+  # including the Phase B3 advisory below, which keys on is.ordered() — so the
+  # ordinal_levels route behaves identically to a user-constructed ordered()
+  # column. build_completed() later fills this same coerced frame, so
+  # `$completed` carries the ordered factors.
+  traits <- .apply_ordinal_levels(traits, ordinal_levels)
 
   # Phase B3 Safety Check
   if (n_imputations == 1L && pool_method == "median") {

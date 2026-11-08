@@ -10,6 +10,7 @@ preprocess_traits(
   tree,
   species_col = NULL,
   trait_types = NULL,
+  ordinal_levels = NULL,
   multi_proportion_groups = NULL,
   log_cols = NULL,
   log_transform = TRUE,
@@ -41,6 +42,17 @@ Proportion and zi_count are override-only (not auto-detected).
 Unspecified traits are auto-detected.  Note that
 \code{"multi_proportion"} is NOT set here — use
 \code{multi_proportion_groups} instead.}
+
+\item{ordinal_levels}{named list giving the scientific order of ordinal
+levels, e.g. \code{list(status = c("LC", "NT", "VU", "EN", "CR"))}.
+Each named column is coerced to an ordered factor with exactly those
+levels before type detection, so no \code{trait_types} entry is needed:
+the coerced column detects as \code{"ordinal"}, or as \code{"binary"}
+(order preserved) when exactly two levels are declared — the same
+detection an \code{ordered()} column with those levels receives.
+Observed values absent from the declared levels are an error.  Same
+semantics as the \code{ordinal_levels} argument of
+\code{\link{read_traits}}.  Default \code{NULL}.}
 
 \item{multi_proportion_groups}{named list declaring compositional
 (multi-proportion) trait groups.  Each element is a character vector

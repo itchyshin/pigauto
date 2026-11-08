@@ -77,6 +77,9 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 #' @param trait_types named character vector overriding auto-detected
 #'   trait types. Required for `"proportion"` and `"zi_count"`. See
 #'   [impute()] / [preprocess_traits()]. Default `NULL` (auto-detect).
+#' @param ordinal_levels named list giving the scientific order of ordinal
+#'   levels, coerced to ordered factors before fitting. See [impute()] /
+#'   [read_traits()]. Default `NULL`.
 #' @param multi_proportion_groups named list declaring compositional
 #'   trait groups (rows summing to 1), forwarded to [impute()] /
 #'   [preprocess_traits()]. Default `NULL`.
@@ -325,6 +328,7 @@ resolve_reference_tree <- function(trees, reference_tree = NULL) {
 multi_impute_trees <- function(traits, trees, m_per_tree = 1L,
                                species_col = NULL,
                                trait_types = NULL,
+                               ordinal_levels = NULL,
                                multi_proportion_groups = NULL,
                                log_transform = TRUE,
                                missing_frac = 0.25,
@@ -338,6 +342,7 @@ multi_impute_trees <- function(traits, trees, m_per_tree = 1L,
                                ...) {
 
   draws_method <- match.arg(draws_method)
+  traits <- .apply_ordinal_levels(traits, ordinal_levels)
 
   # ---- Validate inputs -------------------------------------------------------
   m_per_tree <- as.integer(m_per_tree)
