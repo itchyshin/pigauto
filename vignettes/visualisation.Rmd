@@ -40,3 +40,38 @@ result <- impute(traits, tree, gnn = FALSE, verbose = FALSE, seed = 7)
 plot(result$fit, type = "conformal")
 evaluate(result$fit)
 ```
+
+## Reading the prediction metrics
+
+The test values are observations that pigauto deliberately hid before fitting.
+Their true values remain available for checking predictions. They are different
+from the genuinely missing values, whose prediction errors we cannot measure
+without collecting new observations. Use `evaluate(result$fit)` for this check.
+If you need a prediction object for lower-level scoring, request
+`predict(result$fit, evaluation = TRUE)`; production predictions may use the
+observed values you would otherwise be treating as hidden.
+
+| Metric | Meaning | How to read it |
+|---|---|---|
+| RMSE on the standardized latent scale (zRMSE) | Square root of the average squared difference between predictions and hidden values, after the trait's transformation and standardization. | Smaller is better; zero means exact agreement on these cells. A value of 0.5 is half a preprocessing standard deviation on this scale, not half an original measurement unit. Squaring gives larger errors more weight. |
+| Accuracy for binary or categorical traits | Fraction of hidden class labels predicted correctly. | Larger is better; 0.8 means 80% correct. Compare with the majority-class prediction: 80% accuracy is uninformative if predicting the commonest class already achieves 90%. |
+| Correlation | How predictions and hidden values vary together. | High correlation does not rule out a systematic shift or an incorrect prediction scale. Inspect error measures too. |
+| Conformal score | A high quantile of absolute validation errors, used to set prediction-bound width for supported traits. | It is measured on the encoded trait scale. A larger value gives wider bounds; it does not by itself demonstrate that those bounds cover missing values at the nominal rate. |
+| Held-out coverage | Fraction of hidden test values inside the reported bounds. | Read it with the number of test values and interval width. A small test set gives an imprecise coverage estimate; broad bounds can cover many values without being useful. |
+
+For continuous, count, ordinal and proportion traits, `evaluate()` reports
+RMSE on the encoded scale. Depending on the trait, that scale uses log,
+log1p, integer ranks or logit before standardization. The HTML report labels
+this "RMSE (latent scale)". The standardization makes units explicit but
+provides no universal good/bad threshold: compare predictions on the same
+hidden cells with a suitable simple reference and consider the biological
+cost of an error. Other metrics, such as zero-inflated-count RMSE and
+compositional errors, have their own scales; see `?evaluate_imputation`.
+
+A point prediction and an individual completed-data draw answer different
+questions. Score the point prediction to assess its error. To assess a
+predictive distribution, consider coverage together with width or a suitable
+distributional score. Scoring each stochastic completion adds its draw
+variation to prediction error; that alone does not establish whether the
+uncertainty is appropriate. `mi$pooled_point` is the selected route's point
+completion, not generally an average of the returned `m` datasets.
