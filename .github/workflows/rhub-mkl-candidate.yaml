@@ -62,19 +62,48 @@ jobs:
           ldd "$RHOME/lib/libRblas.so" | tee -a evidence/environment.txt
           ldd "$RHOME/lib/libR.so" | tee -a evidence/environment.txt
           Rscript --vanilla -e 'stopifnot(grepl("mkl", extSoftVersion()[["BLAS"]], ignore.case=TRUE))'
-          MKL_VERBOSE=1 Rscript --vanilla -e 'set.seed(1); x <- matrix(rnorm(2000L * 2000L), 2000L); for (i in 1:8) invisible(x %*% x)' > evidence/mkl-thread-check.txt 2>&1 &
-          pid=$!
+          cat > /tmp/omp_probe.c <<'C_EOF'
+          #include <omp.h>
+          void omp_team(int *out) {
+            #pragma omp parallel
+            {
+              #pragma omp single
+              *out = omp_get_num_threads();
+            }
+          }
+          C_EOF
+          gcc -shared -fPIC -fopenmp /tmp/omp_probe.c -o /tmp/omp_probe.so
+          cat > /tmp/thread-probe.R <<'R_EOF'
+          cat(Sys.getpid(), file="/tmp/thread-probe.pid")
+          dyn.load("/tmp/omp_probe.so")
+          cat("omp_parallel_team=", .C("omp_team", as.integer(0))[[1]], "\n", sep="")
+          Sys.sleep(3)
+          set.seed(1)
+          x <- matrix(rnorm(2000L * 2000L), 2000L)
+          for (i in 1:8) invisible(x %*% x)
+          R_EOF
+          OMP_DISPLAY_ENV=VERBOSE MKL_VERBOSE=1 Rscript --vanilla /tmp/thread-probe.R > evidence/mkl-thread-check.txt 2>&1 &
+          launch_pid=$!
+          for i in $(seq 1 100); do test -s /tmp/thread-probe.pid && break; sleep 0.1; done
+          test -s /tmp/thread-probe.pid
+          r_pid=$(cat /tmp/thread-probe.pid)
+          echo "launch_pid=$launch_pid in_R_pid=$r_pid" | tee evidence/process.txt
+          cat "/proc/$r_pid/status" | tee -a evidence/process.txt
+          cat "/proc/$r_pid/cgroup" | tee -a evidence/process.txt
+          for p in /sys/fs/cgroup/cpu.max /sys/fs/cgroup/cpuset.cpus.effective; do test ! -r "$p" || cat "$p" | tee -a evidence/process.txt; done
           max_threads=0
-          while kill -0 "$pid" 2>/dev/null; do
-            if test -d "/proc/$pid/task"; then
-              count=$(find "/proc/$pid/task" -mindepth 1 -maxdepth 1 -type d | wc -l)
+          while kill -0 "$r_pid" 2>/dev/null; do
+            if test -r "/proc/$r_pid/status"; then
+              count=$(awk '/^Threads:/ {print $2}' "/proc/$r_pid/status")
+              echo "$(date +%s.%N) pid=$r_pid Threads=$count" >> evidence/thread-samples.txt
               if (( count > max_threads )); then max_threads=$count; fi
             fi
             sleep 0.05
           done
-          wait "$pid"
+          wait "$launch_pid"
           cat evidence/mkl-thread-check.txt
           echo "max_R_process_threads=$max_threads" | tee -a evidence/mkl-thread-check.txt
+          grep -E 'omp_parallel_team=4' evidence/mkl-thread-check.txt
           grep -E 'MKL_VERBOSE.*gnu_thread' evidence/mkl-thread-check.txt
           grep -E 'MKL_VERBOSE.*DGEMM' evidence/mkl-thread-check.txt
           test "$max_threads" -ge 4
