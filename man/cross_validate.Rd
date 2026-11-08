@@ -13,6 +13,7 @@ cross_validate(
   seeds = NULL,
   epochs = 500L,
   verbose = TRUE,
+  holdout = c("cell", "species", "clade"),
   ...
 )
 
@@ -34,6 +35,11 @@ cross_validate(
 
 \item{verbose}{logical.  Print progress (default TRUE).}
 
+\item{holdout}{One of \code{"cell"} (default), \code{"species"},
+or \code{"clade"}. Species and clade modes mask every trait and
+every observation of each held-out species. They require at least three
+folds and retain the full tree, including held-out tips.}
+
 \item{...}{Additional arguments forwarded by \code{cross_validate()} to \code{fit_pigauto()}; ignored by the print and summary methods.}
 
 \item{x}{A \code{pigauto_cv} object returned by \code{cross_validate()}.}
@@ -52,16 +58,18 @@ each trait + metric.}
 folds (if available).}
 \item{k}{Number of folds.}
 \item{n_reps}{Number of replicates.}
+\item{holdout}{The chosen holdout mode.}
+\item{fold_assignments}{For grouped modes, a data frame identifying the
+held-out species for each fold and replicate; NULL for cell mode.}
 }
 
 Invisibly returns the summary data frame stored in
 \code{object$summary}.
 }
 \description{
-Evaluates trait-imputation performance by rotating observed cells within
-each trait through k test folds. Folds do not hold out whole species or
-clades, and they are not stratified by outcome class. Returns per-fold
-and aggregated metrics.
+Evaluates trait-imputation performance by rotating held-out values through
+k test folds. Hold out trait cells, whole species, or rooted clades.
+Returns per-fold and aggregated metrics.
 
 Displays the number of folds and replicates, then reports each trait's
 mean and standard deviation for every metric. Returns \code{x} invisibly.
@@ -71,12 +79,32 @@ Additional arguments are ignored by this print method.
 \code{cross_validate()} precomputes one graph shared across folds and uses
 \code{k_eigen = 8L} for that graph when \code{k_eigen} is omitted. An
 explicit \code{k_eigen} is used for the shared graph and forwarded to
-\code{fit_pigauto()}. Folds divide observed cells within each trait; they
-do not hold out whole species or clades or stratify by outcome class.
+\code{fit_pigauto()}. Cell folds divide observed cells within each trait.
+Species folds assign entire species at random; clade folds partition the
+rooted tree into k disjoint rooted subtrees by repeatedly splitting the
+largest eligible subtree. A rooted \code{ape::phylo} representation is
+required, as determined by \code{ape::is.rooted()}; a root polytomy may
+require a root edge. Clade folds can be unequal in size. Multifurcating
+trees can defeat this greedy partition even when a partition exists. None
+of the modes are
+stratified by outcome class. The next fold is used for validation, and the
+rest for training. Grouped folds require at least two training observations
+and two training species for each trait.
+
+In species and clade modes, trait centering, scaling, observed ranges, and
+other trait-map statistics are recalculated using the training rows only.
+The trait types, factor levels and log-transform choices from the supplied
+preprocessed data remain fixed across folds. Specify these in advance when
+they would otherwise be inferred from held-out values. The phylogeny and
+any supplied covariates remain available for held-out species. Grouped
+modes require data freshly constructed by the current preprocess_traits().
+Cell-mode
+preprocessing retains its existing whole-data behaviour.
 Interpret each metric on its documented scale in
 \code{\link{evaluate_imputation}}; continuous and count RMSE use latent
 scales. Conformal coverage is calculated separately after predictions are
-decoded.
+decoded. Clade-structured holdouts need not be exchangeable with the
+validation cells, so nominal conformal coverage is not guaranteed.
 }
 \section{Printing}{
 
@@ -115,5 +143,10 @@ cv <- cross_validate(preprocess_traits(traits, tree), tree, k = 3L,
                      use_transformer_blocks = FALSE)
 print(cv)
 summary(cv)
+# Whole-species validation, with the full tree retained:
+cv_species <- cross_validate(preprocess_traits(traits, tree), tree,
+                             k = 3L, seeds = 1L, holdout = "species",
+                             gnn = FALSE, verbose = FALSE)
+cv_species$fold_assignments
 }
 }

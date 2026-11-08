@@ -32,6 +32,7 @@ cross_validate	k	5L
 cross_validate	seeds	NULL
 cross_validate	epochs	500L
 cross_validate	verbose	TRUE
+cross_validate	holdout	c("cell", "species", "clade")
 cross_validate	...	<required>
 evaluate	fit	<required>
 evaluate	data	NULL
