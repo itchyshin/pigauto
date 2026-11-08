@@ -151,8 +151,15 @@ the prediction report in that case.
 | Obtain one point completion for reporting or exploration | `impute()`, then `completed_data(result)` | One table with observed values preserved and modeled missing cells filled. |
 | Inspect variation across several completed tables | `multi_impute(m = 20)`, then `get_imputed_datasets(mi)` | A list of 20 tables. Check `mi$draws_method` and the restrictions below before fitting analyses. |
 | Check predictions against hidden known values | `evaluate(fit)` or `cross_validate()`; `pigauto_report(fit)` for an HTML report | Held-out metrics. For lower-level scoring, use `predict(fit, evaluation = TRUE)`. |
+
 | Fit an analysis separately to eligible imputations and combine fixed-effect estimates | `with_imputations()` then `pool_mi()` | A pooled analysis under the documented conditions, not certification that the imputation model suits your analysis. |
 | Impute one incomplete continuous predictor while accounting for a specified analysis | `multi_impute_analysis()` | A separate analysis-aware route for its documented `lm`, binomial-logit `glm`, or Gaussian random-intercept `lmer` settings. |
+
+`cross_validate()` supports `holdout = "cell"` (the default), `"species"`,
+and `"clade"`. The grouped modes hide all traits and observations for the
+held-out species while retaining their tree tips. Use `cv$fold_assignments`
+to inspect the groups; see `?cross_validate` for preprocessing and coverage
+limitations.
 
 `impute(n_imputations = 20)` still returns **one** completed table. That
 legacy argument requests stochastic prediction-diagnostic draws and combines
