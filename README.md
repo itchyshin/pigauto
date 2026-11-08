@@ -43,6 +43,30 @@ pak::pak("itchyshin/pigauto")
 # torch::install_torch() # once, if you opt into gnn = TRUE
 ```
 
+### How pigauto works?
+
+1. Traits are encoded on numeric scales, with a map for decoding them back to
+   their original types. The tree supplies the relationships among species.
+2. Known cells are held out for validation and testing. Baseline models use
+   the remaining observations to predict these cells. Joint routes can borrow
+   information from other traits as well as relatives; fallback routes differ.
+3. With `gnn = TRUE`, a graph neural network is trained and its contribution
+   is calibrated by trait. A zero neural weight keeps the baseline contribution.
+   The default, `gnn = FALSE`, fits no neural network.
+4. Held-out prediction errors provide diagnostics and, for supported traits,
+   conformal prediction bounds. These bounds have assumptions and are not a
+   package-wide coverage guarantee.
+5. Predictions are decoded to the original trait scales. `impute()` returns
+   one completed table; `multi_impute()` returns several completed tables and
+   records how the draws were generated. For downstream inference, check software eligibility and fit the analysis
+   separately to each dataset. The posterior route uses no GNN; eligibility
+   does not establish inferential calibration.
+
+See [Multiple imputation](https://itchyshin.github.io/pigauto/articles/multiple-imputation.html)
+for the difference between diagnostic draws and inferential imputations, and
+[Visualisation](https://itchyshin.github.io/pigauto/articles/visualisation.html)
+for missingness patterns and held-out checks.
+
 ## Start here
 
 Start with this short workflow on the dataset and tree shipped with pigauto
@@ -92,31 +116,7 @@ teaching example, not a consensus or recommended analysis tree. It was built
 specifically for this package and documented with the data help. Jetz et al. describe
 the BirdTree source collection; cite BirdTree.org when you use that site.
 
-### What happens in a fit?
-
-1. Traits are encoded on numeric scales, with a map for decoding them back to
-   their original types. The tree supplies the relationships among species.
-2. Known cells are held out for validation and testing. Baseline models use
-   the remaining observations to predict these cells. Joint routes can borrow
-   information from other traits as well as relatives; fallback routes differ.
-3. With `gnn = TRUE`, a graph neural network is trained and its contribution
-   is calibrated by trait. A zero neural weight keeps the baseline contribution.
-   The default, `gnn = FALSE`, fits no neural network.
-4. Held-out prediction errors provide diagnostics and, for supported traits,
-   conformal prediction bounds. These bounds have assumptions and are not a
-   package-wide coverage guarantee.
-5. Predictions are decoded to the original trait scales. `impute()` returns
-   one completed table; `multi_impute()` returns several completed tables and
-   records how the draws were generated. For downstream inference, check software eligibility and fit the analysis
-   separately to each dataset. The posterior route uses no GNN; eligibility
-   does not establish inferential calibration.
-
-See [Multiple imputation](https://itchyshin.github.io/pigauto/articles/multiple-imputation.html)
-for the difference between diagnostic draws and inferential imputations, and
-[Visualisation](https://itchyshin.github.io/pigauto/articles/visualisation.html)
-for missingness patterns and held-out checks.
-
-Tiny installed example inputs are available at
+Users can also run other, tiny installed examples. These are available at
 `system.file("extdata", "novice_traits.csv", package = "pigauto")` and
 `system.file("extdata", "novice_tree.nwk", package = "pigauto")`. The
 matching installed six-expression script is
