@@ -16,8 +16,9 @@ jobs:
     container:
       image: ghcr.io/r-hub/containers/mkl@sha256:ba4d46e9409219837057a0de2965117a860476a2e713e2d3e619107ac251428b
     env:
-      MKL_NUM_THREADS: '1'
-      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '4'
+      OMP_NUM_THREADS: '4'
+      MKL_DYNAMIC: 'FALSE'
       NOT_CRAN: 'false'
       R_COMPILE_AND_INSTALL_PACKAGES: 'always'
     steps:
@@ -39,6 +40,18 @@ jobs:
           mkdir -p /tmp/v0110 /tmp/v0111
           tar -xzf /tmp/cran.tar.gz -C /tmp/v0110
           tar -xzf /tmp/candidate.tar.gz -C /tmp/v0111
+      - name: Switch disposable R to threaded MKL
+        shell: bash
+        run: |
+          test -f evidence/intel.txt || exit 0
+          set -euo pipefail
+          dnf install -y patchelf > evidence/patchelf.log 2>&1
+          target="$(R RHOME)/lib/libR.so"
+          patchelf --print-needed "$target" | grep -Fx libmkl_sequential.so.2
+          patchelf --replace-needed libmkl_sequential.so.2 libmkl_gnu_thread.so.2 "$target"
+          ldd "$target" | tee evidence/threaded-linkage.txt
+          ldd "$target" | grep -F libmkl_gnu_thread.so.2
+          MKL_VERBOSE=1 Rscript --vanilla -e 'set.seed(1); x <- matrix(rnorm(4000000),2000); invisible(x %*% x)' > evidence/mkl-verbose.txt 2>&1
       - name: Install focused dependencies
         shell: bash
         run: |
@@ -49,15 +62,19 @@ jobs:
         shell: bash
         run: |
           test -f evidence/intel.txt || exit 0
+          set +e
           set -u
+          failed=0
           for version in v0110 v0111; do
             for repeat in 1 2 3; do
               set -o pipefail
               Rscript --vanilla -e "testthat::test_local('/tmp/$version/pigauto', filter='mi-posterior', reporter='summary', stop_on_failure=TRUE)" > "evidence/${version}-${repeat}.log" 2>&1
               code=$?
+              if [ "$code" -ne 0 ]; then failed=1; fi
               printf '%s %s exit=%s\n' "$version" "$repeat" "$code" | tee -a evidence/results.txt
             done
           done
+          exit "$failed"
       - name: Retain evidence
         if: always()
         uses: actions/upload-artifact@v4
