@@ -1,0 +1,67 @@
+name: MKL exact candidate probe
+on:
+  push:
+    branches: [codex/mkl-probe-5da2b3c]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: bash -el {0}
+    env:
+      MKL_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      NOT_CRAN: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 98f9a2c66cd4e6e3f4ba4daa6dfc41c986900cf1
+          path: payload
+      - uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-name: mkl-probe
+          create-args: >-
+            -c conda-forge
+            r-base
+            r-torch
+            r-ape
+            r-ggplot2
+            r-matrix
+            r-rlang
+            r-withr
+            r-testthat
+            r-pkgload
+            libblas=*=*mkl
+            liblapack=*=*mkl
+      - name: Verify archive and numerical backend
+        run: |
+          mkdir -p evidence
+          echo '5da2b3c633ff3388f98abfed6cd5f6b15d1fa89807470c8debef5976757e4a78  payload/rhub-payload/pigauto_0.11.1.tar.gz' | tee evidence/hash.txt | sha256sum -c -
+          uname -a | tee evidence/environment.txt
+          micromamba list | tee -a evidence/environment.txt
+          Rscript --vanilla -e 'print(sessionInfo()); print(extSoftVersion())' | tee -a evidence/environment.txt
+          readlink -f "$CONDA_PREFIX/lib/libblas.so.3" | tee -a evidence/environment.txt
+          readlink -f "$CONDA_PREFIX/lib/liblapack.so.3" | tee -a evidence/environment.txt
+          ldd "$CONDA_PREFIX/lib/R/lib/libR.so" | tee -a evidence/environment.txt
+          micromamba list | grep -E '^libblas +.*mkl' || exit 1
+          readlink -f "$CONDA_PREFIX/lib/libblas.so.3" | grep -i mkl || exit 1
+      - name: Install exact archive
+        run: |
+          set -o pipefail
+          R CMD INSTALL payload/rhub-payload/pigauto_0.11.1.tar.gz 2>&1 | tee evidence/install.log
+      - name: Run posterior test file from exact archive
+        run: |
+          set -o pipefail
+          tar -xzf payload/rhub-payload/pigauto_0.11.1.tar.gz
+          Rscript --vanilla -e 'testthat::test_local("pigauto", filter="mi-posterior", reporter="summary", stop_on_failure=TRUE)' 2>&1 | tee evidence/test.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mkl-candidate-evidence
+          path: evidence/
+          if-no-files-found: warn
