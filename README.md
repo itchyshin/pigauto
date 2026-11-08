@@ -22,8 +22,8 @@ blended with the baseline using weights calibrated on held-out cells.
 
 ## Installation
 
-This page describes the GitHub development version, 0.11.0.9000. CRAN
-0.11.0 lacks some functions shown here, including `get_imputed_datasets()`
+This page describes the current GitHub development version. CRAN 0.11.0
+lacks some functions shown here, including `get_imputed_datasets()`
 and the `predict(..., evaluation = TRUE)` argument. Use `evaluate(fit)`
 for honest held-out evaluation on CRAN 0.11.0. A matching version number
 alone did not distinguish earlier GitHub fixes from that CRAN build.
@@ -63,8 +63,8 @@ The optional neural network adds another source of predictions. In the
    connections between species and any supplied covariates. On the validation
    set, pigauto chooses how much weight to give its predictions for each
    trait. The neural weight can be zero. With the default `gnn = FALSE`, no
-   network is fitted; validation can still choose a blend of the phylogenetic
-   prediction and a simple mean or class-frequency prediction.
+   network is fitted. If `safety_floor = TRUE`, validation may also choose
+   a mean or class-frequency fallback; this option is off by default.
 4. The differences between predictions and hidden values measure prediction
    error. For supported traits, validation errors also set the width of
    *conformal prediction bounds*: lower and upper limits intended to contain
@@ -98,11 +98,6 @@ library(pigauto)
 traits <- avonet300
 tree   <- tree300
 
-# Alternatively, read your own trait table (a CSV with a unique `species`
-# column) and a Newick or NEXUS phylogenetic tree:
-# traits <- read_traits("traits.csv")
-# tree   <- read_tree("tree.nwk")
-
 # Check the traits and tree match and are ready to impute
 check_pigauto(traits, tree, species_col = "Species_Key")
 
@@ -131,6 +126,22 @@ prediction diagnostics. Compare them to see how the sampled missing values
 vary; `with_imputations()` and `pool_mi()` refuse these draws for downstream
 inference. Increasing `m` supplies more draws from the same procedure; it
 does not make that procedure suitable for inference.
+
+For your own files with one row per species, `read_traits()` moves the
+species column into row names. Check and impute those data without a
+`species_col` argument:
+
+```r
+traits <- read_traits("traits.csv", species_col = "species")
+tree <- read_tree("tree.nwk")
+check_pigauto(traits, tree)
+result <- impute(traits, tree)
+```
+
+For several completed tables, use `multi_impute(traits, tree, m = 20)` and
+inspect its `draws_method` as described below. A posterior result does not
+contain a fitted prediction model in `mi$fit`; use an `impute()` result for
+the prediction report in that case.
 
 ### Which function should I use?
 
@@ -286,25 +297,30 @@ result <- impute(traits_obs, tree, species_col = "species")
 Read and resolve input errors or relevant warnings before fitting.
 
 Each row is one *observation*: one measurement of that species. The
-phylogenetic baseline combines available observations into a species summary
-using a rule for each trait type:
+phylogenetic baseline combines available observations into species summaries,
+using rules that depend on the trait type and baseline route:
 
 - numeric traits (continuous, count, ordinal, proportion): the mean on the
   encoded scale, after any log, log1p, rank or logit transformation and
   standardization; this need not equal the raw-data arithmetic mean;
-- class traits (binary, categorical): the most common class across the rows.
+- binary and categorical traits: the joint threshold and one-versus-rest
+  routes use the most common class by default. Label-propagation fallback
+  routes instead retain within-species class proportions.
 
-Taking the most common class can hide real variation within a species: a bird
-recorded as "migratory" in 6 of 10 rows is treated exactly like one recorded
-as "migratory" in all 10. Set `multi_obs_aggregation = "soft"` to keep that
-6-out-of-10 as partial evidence instead of rounding it to a single class.
+In the joint routes, taking the most common class can hide real variation:
+a bird recorded as "migratory" in 6 of 10 rows is treated like one recorded
+as "migratory" in all 10. For these routes, set
+`multi_obs_aggregation = "soft"` to retain the 6-out-of-10 proportion as
+partial evidence instead of rounding it to a single class. Label propagation
+already uses observed proportions in its species summaries.
 
 With the default baseline fit and a single prediction draw, missing cells
 for the same trait and species receive the same species-level prediction.
 To let point predictions reflect each observation's covariates, supply
 per-row covariates (for example, measurement temperature) and use
-`gnn = TRUE`. Whether those predictions differ depends on the fitted network
-and its calibrated weight.
+`gnn = TRUE`. The network and a separate learned linear covariate term can
+both affect predictions. The calibrated weight controls the network's
+prediction blend, not every covariate contribution.
 
 With `gnn = FALSE`, covariate use depends on the baseline route. A selected
 per-column numeric Brownian-motion fit can use covariates averaged within
@@ -358,7 +374,7 @@ validation limits.
 |---|---|---|
 | Filled-in traits | `impute(traits, tree)` | Yes |
 | A lower and upper bound around one imputed value | the conformal bounds in the prediction output, available for continuous, count, ordinal and proportion traits. For zero-inflated counts the bounds describe how large a *nonzero* count would be, and must be read together with the predicted probability that the count is zero | When scores are available for the trait |
-| To fit a linear model to imputed continuous traits | `multi_impute(traits, tree)`, then `with_imputations()` and `pool_mi()` | Yes, when every trait is continuous with one row per species and no covariates or compositional groups, using species row names; the default `draws_method = "auto"` then uses posterior draws |
+| To fit a linear-Gaussian model using imputed continuous traits | `multi_impute(traits, tree)`, then `with_imputations()` and `pool_mi()` | Under the documented input restrictions, for variables included in the imputation model and analysed on their imputation scale; `"auto"` then selects posterior draws |
 | To fit `lm`, binomial-logit `glm`, or Gaussian random-intercept `lmer` where one predictor has missing values | `multi_impute_analysis()` | No |
 
 **Why only some draws may be combined.** Rubin's rules combine estimates
