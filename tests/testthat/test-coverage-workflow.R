@@ -105,6 +105,6 @@ test_that("coverage uploads require a successful trusted main push", {
   expect_false(coverage_workflow_safe(p, altered_plugins))
   wrong_producer_path <- sub("path: cobertura.xml", "path: other.xml", p, fixed = TRUE)
   expect_false(coverage_workflow_safe(wrong_producer_path, u))
-  wrong_download_path <- sub("path: ${{ runner.temp }}/coverage", "path: .", u, fixed = TRUE)
+  wrong_download_path <- sub("path: ${{ runner.temp }}/coverage", "path: unexpected-dir", u, fixed = TRUE)
   expect_false(coverage_workflow_safe(p, wrong_download_path))
 })
