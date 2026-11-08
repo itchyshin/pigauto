@@ -1,12 +1,9 @@
 name: R-hub exact CRAN archive
 
 on:
-  workflow_dispatch:
-    inputs:
-      release_asset_id:
-        description: Numeric asset ID of the frozen pigauto_0.11.1.tar.gz in this repository
-        required: true
-        type: string
+  push:
+    branches:
+      - codex/rhub-exact-artifact-fallback
 
 permissions:
   contents: read
@@ -21,10 +18,16 @@ jobs:
         uses: r-hub/actions/setup@02be5ffbeae2b0d553da66acded089da11a1fb8f # v1
         with:
           config: '{"platforms":["ubuntu-release","ubuntu-clang"]}'
+      - name: Require both intended R-hub platforms
+        env:
+          CONTAINERS_JSON: ${{ steps.rhub.outputs.containers }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -c 'import json,os; x=json.loads(os.environ["CONTAINERS_JSON"]); assert len(x)==2 and {i["name"] for i in x}=={"ubuntu-release","ubuntu-clang"}, x'
 
   exact-archive:
     needs: setup
-    if: ${{ needs.setup.outputs.containers != '[]' }}
     runs-on: ubuntu-latest
     name: ${{ matrix.config.label }} exact archive
     timeout-minutes: 90
@@ -46,19 +49,15 @@ jobs:
     steps:
       - name: Download and verify the frozen archive
         env:
-          GH_TOKEN: ${{ github.token }}
-          ASSET_ID: ${{ inputs.release_asset_id }}
+          PAYLOAD_COMMIT: 57164c40902960ed1b8ad7043bf0191d1bc136e2
+          RHUB_PLATFORM: ${{ matrix.config.label }}
         shell: bash
         run: |
           set -euo pipefail
-          [[ "$ASSET_ID" =~ ^[0-9]+$ ]]
           mkdir -p evidence
-          curl --fail --silent --show-error --location \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H 'Accept: application/octet-stream' \
-            -H 'X-GitHub-Api-Version: 2022-11-28' \
-            "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/assets/$ASSET_ID" \
-            -o "$ARCHIVE"
+          source_url="https://raw.githubusercontent.com/itchyshin/pigauto/$PAYLOAD_COMMIT/rhub-payload/pigauto_0.11.1.tar.gz"
+          printf 'source_url=%s\npayload_commit=%s\nplatform=%s\nrun_id=%s\nexpected_bytes=%s\n' "$source_url" "$PAYLOAD_COMMIT" "$RHUB_PLATFORM" "$GITHUB_RUN_ID" "$EXPECTED_SIZE" > evidence/provenance.txt
+          curl --fail --silent --show-error --location --proto '=https' "$source_url" -o "$ARCHIVE"
           test "$(wc -c < "$ARCHIVE" | tr -d ' ')" = "$EXPECTED_SIZE"
           printf '%s  %s\n' "$EXPECTED_SHA256" "$ARCHIVE" | sha256sum --check
           sha256sum "$ARCHIVE" | tee evidence/sha256-before.txt
