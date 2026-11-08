@@ -32,6 +32,8 @@ On base 30ab1e1b50b34a732485f6cccb195e9fa75299fc, R 4.6.0:
 
 No exports or roxygen changed; no documentation regeneration needed. After the user authorized commit and PR creation, a staged-source export passed devtools::check with zero errors, warnings or notes in 14 minutes 30 seconds. That run included the package test suite and examples, including donttest examples; manual generation and vignette rebuilding were excluded. The initial dirty-directory check was stopped after it included untracked Graft caches; the clean export excluded those files. No site rebuild or release submission occurred.
 
+The full testthat summary was 3,726 passing assertions, 34 skips and 184 warning conditions, with zero failures. These warning conditions are distinct from R CMD check's zero-warning status; this follow-up did not triage every full-suite warning. The new test file and final affected test run had zero warning conditions.
+
 ## 6. Tests of the Tests
 The Python audit rejects a missing seed-cell, nonfinite prediction and inconsistent truth. A fresh read-only reviewer found no actionable issues in the R tests or Python summary and independently reproduced the attachment summary. A separate process temporarily removed independent-column selection: three assertions in the factor-coding regression failed while the retained-row test passed. The process restored the original function before exiting. No package file was mutated.
 
