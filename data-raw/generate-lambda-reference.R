@@ -1,14 +1,21 @@
 # Generate a synthetic fixed-lambda regression oracle using historical pigauto.
 # Run from the repository root with:
-#   mkdir -p /tmp/pigauto-ab02e31
-#   git archive ab02e316ec72eabb57dad5607d9f43fb0a6fbcc1 | tar -x -C /tmp/pigauto-ab02e31
-#   Rscript data-raw/generate-lambda-reference.R /tmp/pigauto-ab02e31
+#   Rscript data-raw/generate-lambda-reference.R
+# The required historical commit must be available in this repository.
 # This replaces a historical fixture whose input provenance was not recorded.
 # The seed, generated inputs, and historical solver output are retained in the
 # fixture. Exact floating-point output may vary with R/BLAS/package versions.
-args <- commandArgs(trailingOnly = TRUE)
-stopifnot(length(args) == 1L, dir.exists(args[1L]))
-pkgload::load_all(args[1L], quiet = TRUE)
+stopifnot(length(commandArgs(trailingOnly = TRUE)) == 0L)
+oracle_commit <- "ab02e316ec72eabb57dad5607d9f43fb0a6fbcc1"
+archive <- tempfile(fileext = ".tar")
+oracle_dir <- tempfile("pigauto-oracle-")
+dir.create(oracle_dir)
+archive_status <- system2("git", c("archive", "--format=tar", oracle_commit),
+                          stdout = archive)
+if (!identical(archive_status, 0L)) stop("Failed to archive the pinned oracle commit")
+extract_status <- system2("tar", c("-xf", shQuote(archive), "-C", shQuote(oracle_dir)))
+if (!identical(extract_status, 0L)) stop("Failed to extract the pinned oracle commit")
+pkgload::load_all(oracle_dir, quiet = TRUE)
 set.seed(20261108L)
 n <- 60L
 tree <- ape::rtree(n)
@@ -39,3 +46,4 @@ ref <- list(commit = "ab02e31", seed = 20261108L, split_seed = 20261109L,
                             path = baseline$path))
 saveRDS(ref, "tests/testthat/fixtures/lambda_fixed1_reference_ab02e31.rds",
         version = 3)
+unlink(c(archive, oracle_dir), recursive = TRUE)
