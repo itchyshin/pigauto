@@ -49,6 +49,7 @@ Imports:
 Suggests:
     testthat,
     covr,
+    yaml,
     jsonlite,
     knitr,
     rmarkdown,
