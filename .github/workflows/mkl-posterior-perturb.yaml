@@ -1,0 +1,54 @@
+name: MKL posterior perturbation verification
+on:
+  push:
+    branches: [codex/mkl-intel-repro-0111]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  posterior:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    container:
+      image: ghcr.io/r-hub/containers/mkl@sha256:ba4d46e9409219837057a0de2965117a860476a2e713e2d3e619107ac251428b
+    env:
+      MKL_NUM_THREADS: '4'
+      OMP_NUM_THREADS: '4'
+      MKL_DYNAMIC: 'FALSE'
+      NOT_CRAN: 'false'
+      R_COMPILE_AND_INSTALL_PACKAGES: 'always'
+    steps:
+      - name: Prepare threaded MKL and record inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          grep -m1 'model name' /proc/cpuinfo | tee evidence/cpu.txt
+          dnf install -y patchelf > evidence/patchelf.log 2>&1
+          target="$(R RHOME)/lib/libR.so"
+          patchelf --replace-needed libmkl_sequential.so.2 libmkl_gnu_thread.so.2 "$target"
+          ldd "$target" | tee evidence/linkage.txt
+          ldd "$target" | grep -F libmkl_gnu_thread.so.2
+          Rscript --vanilla -e 'print(sessionInfo()); print(extSoftVersion()); print(R.version)' > evidence/r.txt
+          curl -fsSL https://cloud.r-project.org/src/contrib/pigauto_0.11.0.tar.gz -o /tmp/cran.tar.gz
+          echo '5296214aca1905081748e6b8dec6facf227a38da6f2ca5a7020b94199bc324e2  /tmp/cran.tar.gz' | sha256sum -c - | tee evidence/hash.txt
+          tar -xzf /tmp/cran.tar.gz
+          curl -fsSL https://raw.githubusercontent.com/itchyshin/pigauto/7c9e03c9/tests/testthat/test-mi-posterior.R -o pigauto/tests/testthat/test-mi-posterior.R
+          sha256sum pigauto/tests/testthat/test-mi-posterior.R | tee evidence/test-hash.txt
+      - name: Install test dependencies
+        shell: bash
+        run: |
+          set -o pipefail
+          Rscript --vanilla -e 'pak::pkg_install(c("any::torch", "any::ape", "any::ggplot2", "any::Matrix", "any::rlang", "any::withr", "any::testthat", "any::pkgload"), ask=FALSE)' 2>&1 | tee evidence/dependencies.log
+      - name: Test seeded perturbation and exact continuation under MKL
+        shell: bash
+        run: |
+          set -o pipefail
+          Rscript --vanilla -e 'testthat::test_local("pigauto", filter="mi-posterior", reporter="summary", stop_on_failure=TRUE)' 2>&1 | tee evidence/test.log
+      - name: Preserve results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mkl-perturbed-posterior
+          path: evidence/
+          retention-days: 30
