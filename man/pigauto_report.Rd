@@ -39,11 +39,12 @@ The output path (invisibly).
 }
 \description{
 Produces an HTML file with charts. Baseline-only figures are embedded as
-SVG and work offline; GNN charts load Chart.js from its public CDN. For fits created with the default \code{gnn = FALSE}, the
-report describes baseline-only imputation. For fits created with
-\code{gnn = TRUE}, it also compares the GNN against the phylogenetic
-baseline and includes training history. Per-trait metrics, gate values,
-and held-out diagnostic conformal coverage are included when available.
+SVG and work offline; GNN charts load Chart.js from its public CDN. The
+report compares the fitted baseline with the calibrated blend, which may
+include the neural component and other baseline contributions. This is not
+a comparison isolating the neural component. With \code{gnn = FALSE},
+no neural network is fitted. Per-trait metrics, gate values, and held-out
+diagnostic conformal coverage are included when available.
 }
 \examples{
 \donttest{
