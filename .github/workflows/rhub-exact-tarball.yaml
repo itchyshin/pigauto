@@ -3,7 +3,7 @@ name: R-hub exact CRAN archive
 on:
   push:
     branches:
-      - codex/rhub-v8-fix
+      - codex/rhub-v8-3a08d0cc
 
 permissions:
   contents: read
@@ -38,8 +38,8 @@ jobs:
     container:
       image: ${{ matrix.config.container }}
     env:
-      EXPECTED_SHA256: e4596a58ac2495de59d48d1a0b18e878156544a7d7eab4684be9bbf1339f48ad
-      EXPECTED_SIZE: '5434793'
+      EXPECTED_SHA256: 3a08d0cce1650ed5e15c3baf72dbce9736b26e8e55067a685add18d8d796fb5c
+      EXPECTED_SIZE: '5435788'
       ARCHIVE: /tmp/pigauto_0.11.1.tar.gz
       _R_CHECK_FORCE_SUGGESTS_: 'true'
       _R_CHECK_LIMIT_CORES_: 'true'
@@ -49,7 +49,7 @@ jobs:
     steps:
       - name: Download and verify the frozen archive
         env:
-          PAYLOAD_COMMIT: 57164c40902960ed1b8ad7043bf0191d1bc136e2
+          PAYLOAD_COMMIT: 9a6f2e7764fc965749a8cfe581667f4cc4d1f537
           RHUB_PLATFORM: ${{ matrix.config.label }}
         shell: bash
         run: |
