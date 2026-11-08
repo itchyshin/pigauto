@@ -361,15 +361,17 @@ are.
   compositional (`multi_proportion`) traits have no bounds yet. Details:
   [interval limitations](https://itchyshin.github.io/pigauto/articles/gnn-architecture.html#uncertainty-quantification).
 
-- **One completed dataset is not a license for inference.** However rich the
+- **Do not do inference on one completed dataset!** However rich the
   uncertainty columns look, a single filled-in dataset cannot carry the
   uncertainty of the imputation itself, so a model fitted to it overstates
   certainty. Analyses that need that uncertainty go through `multi_impute()`
-  — whose default `draws_method = "auto"` uses posterior draws when the data
-  allow and says why when it falls back to non-poolable conformal draws — or
-  through `multi_impute_analysis()` in its documented narrow setting. And as
-  the warning box above explains, being *able* to generate and pool draws
-  still does not establish that the resulting inference is calibrated.
+  or, in its documented narrow setting, `multi_impute_analysis()`.
+  `multi_impute()` defaults to `draws_method = "auto"`, which uses posterior
+  draws when the data allow; with any other data it falls back to conformal
+  draws and prints the reason. Those fallback draws cannot be pooled — see
+  "Why only some draws may be combined" above. And as the warning box above
+  explains, being *able* to generate and pool draws still does not establish
+  that the resulting inference is calibrated.
 
 ## Advanced controls
 
