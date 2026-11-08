@@ -14,7 +14,7 @@ jobs:
         shell: bash -el {0}
     env:
       MKL_NUM_THREADS: '4'
-      OMP_NUM_THREADS: '4'
+      OMP_NUM_THREADS: '1'
       OPENBLAS_NUM_THREADS: '4'
       NOT_CRAN: 'false'
     steps:
