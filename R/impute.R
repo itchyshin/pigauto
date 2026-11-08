@@ -7,6 +7,11 @@
 #' individual functions (\code{\link{preprocess_traits}},
 #' \code{\link{fit_baseline}}, \code{\link{fit_pigauto}}, etc.) directly.
 #'
+#' A single completed data set is useful for point prediction, but analysing
+#' it as if its imputed values were observed ignores imputation uncertainty and
+#' can also change estimates. See \code{\link{multi_impute}} and the
+#' multiple-imputation article for downstream workflows and their limitations.
+#'
 #' @param traits data.frame with species as rownames and trait columns,
 #'   or (when \code{species_col} is supplied) a data.frame with a species
 #'   column that may have multiple rows per species.
