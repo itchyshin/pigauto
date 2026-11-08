@@ -13,8 +13,8 @@ jobs:
       run:
         shell: bash -el {0}
     env:
-      MKL_NUM_THREADS: '1'
-      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '2'
+      OMP_NUM_THREADS: '2'
       OPENBLAS_NUM_THREADS: '1'
       NOT_CRAN: 'false'
     steps:
