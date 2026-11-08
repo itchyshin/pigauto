@@ -39,7 +39,8 @@ impute(
   phylo_signal_method = "lambda",
   conformal_split_val = FALSE,
   gnn = FALSE,
-  ...
+  ...,
+  ordinal_levels = NULL
 )
 
 \method{print}{pigauto_result}(x, ...)
@@ -352,6 +353,15 @@ baseline settings, GNN-on did not lower imputation error and took
 for that study). These results do not establish performance on new data.}
 
 \item{...}{Additional arguments passed by \code{impute()} to \code{fit_pigauto()}; ignored by \code{print.pigauto_result()}.}
+
+\item{ordinal_levels}{named list giving the scientific order of ordinal
+levels, e.g. \code{list(status = c("LC", "NT", "VU", "EN", "CR"))}.
+Each named column is coerced to an ordered factor with exactly those
+levels before type detection (so no \code{trait_types} entry is
+needed), and \code{$completed} returns it as an ordered factor.
+Observed values absent from the declared levels are an error. Same
+semantics as the \code{ordinal_levels} argument of
+\code{\link{read_traits}}. Default \code{NULL}.}
 
 \item{x}{A \code{pigauto_result} object returned by \code{impute()}.}
 }
