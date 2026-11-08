@@ -1,5 +1,20 @@
 # pigauto 0.11.1
 
+## Ordinal level declarations on every entry point
+
+- `impute()`, `multi_impute()`, `multi_impute_trees()`, `check_pigauto()` and
+  `preprocess_traits()` gain an `ordinal_levels` argument with the same
+  semantics as `read_traits()`: named columns are coerced to ordered factors
+  with exactly the declared levels before type detection, so character
+  columns impute as ordered traits without constructing the factor by hand
+  (ordinal for three or more declared levels; binary, order preserved, for
+  exactly two).
+  Observed values absent from a declaration remain an error, and
+  `check_pigauto()` reports an invalid declaration instead of throwing.
+- Declaring `trait_types = c(x = "ordinal")` on a column that is not an
+  ordered factor now explains that a type label cannot supply the level
+  order and points at `ordinal_levels`.
+
 ## Issue review: input, evaluation and missingness
 
 - Factor and redundant covariates use a full-rank observed-row design for

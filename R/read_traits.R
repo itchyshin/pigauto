@@ -69,28 +69,43 @@ read_traits <- function(x, species_col = "species", trait_cols = NULL,
     out[[nm]] <- factor(out[[nm]], ordered = TRUE)
   }
 
-  if (!is.null(ordinal_levels)) {
-    if (!is.list(ordinal_levels) || is.null(names(ordinal_levels)) ||
-        anyNA(names(ordinal_levels)) || any(!nzchar(names(ordinal_levels))) ||
-        anyDuplicated(names(ordinal_levels))) {
-      stop("'ordinal_levels' must be a uniquely named list.", call. = FALSE)
-    }
-    absent <- setdiff(names(ordinal_levels), names(out))
-    if (length(absent)) stop("Ordinal columns not found: ",
-                             paste(absent, collapse = ", "), call. = FALSE)
-    for (nm in names(ordinal_levels)) {
-      lev <- ordinal_levels[[nm]]
-      if (!is.character(lev) || length(lev) < 2L || anyNA(lev) ||
-          any(!nzchar(lev)) || anyDuplicated(lev)) {
-        stop("Levels for '", nm, "' must be unique, nonmissing strings (at least two).",
-             call. = FALSE)
-      }
-      unknown <- setdiff(as.character(out[[nm]][!is.na(out[[nm]])]), lev)
-      if (length(unknown)) stop("Values in '", nm, "' not included in ordinal_levels: ",
-                                paste(unknown, collapse = ", "), call. = FALSE)
-      out[[nm]] <- ordered(as.character(out[[nm]]), levels = lev)
-    }
-  }
+  out <- .apply_ordinal_levels(out, ordinal_levels)
 
   out
+}
+
+
+#' Internal: coerce declared ordinal columns to ordered factors
+#'
+#' Shared by read_traits(), preprocess_traits(), impute(), multi_impute(),
+#' multi_impute_trees() and check_pigauto() so a declared level order means
+#' the same thing on every entry point. Observed values absent from the
+#' declared levels are an error, so a misspelling cannot silently become
+#' missing.
+#'
+#' @keywords internal
+#' @noRd
+.apply_ordinal_levels <- function(traits, ordinal_levels) {
+  if (is.null(ordinal_levels)) return(traits)
+  if (!is.list(ordinal_levels) || is.null(names(ordinal_levels)) ||
+      anyNA(names(ordinal_levels)) || any(!nzchar(names(ordinal_levels))) ||
+      anyDuplicated(names(ordinal_levels))) {
+    stop("'ordinal_levels' must be a uniquely named list.", call. = FALSE)
+  }
+  absent <- setdiff(names(ordinal_levels), names(traits))
+  if (length(absent)) stop("Ordinal columns not found: ",
+                           paste(absent, collapse = ", "), call. = FALSE)
+  for (nm in names(ordinal_levels)) {
+    lev <- ordinal_levels[[nm]]
+    if (!is.character(lev) || length(lev) < 2L || anyNA(lev) ||
+        any(!nzchar(lev)) || anyDuplicated(lev)) {
+      stop("Levels for '", nm, "' must be unique, nonmissing strings (at least two).",
+           call. = FALSE)
+    }
+    unknown <- setdiff(as.character(traits[[nm]][!is.na(traits[[nm]])]), lev)
+    if (length(unknown)) stop("Values in '", nm, "' not included in ordinal_levels: ",
+                              paste(unknown, collapse = ", "), call. = FALSE)
+    traits[[nm]] <- ordered(as.character(traits[[nm]]), levels = lev)
+  }
+  traits
 }

@@ -130,6 +130,12 @@
 #'   trait types for specific columns. Required for `"proportion"` and
 #'   `"zi_count"`. See [impute()] and [preprocess_traits()]. Default
 #'   `NULL` (auto-detect).
+#' @param ordinal_levels named list giving the scientific order of ordinal
+#'   levels, e.g. `list(status = c("LC", "NT", "VU", "EN", "CR"))`. Each
+#'   named column is coerced to an ordered factor with exactly those levels
+#'   before type detection, and the completed datasets return it as an
+#'   ordered factor. Observed values absent from the declared levels are an
+#'   error. See [impute()] / [read_traits()]. Default `NULL`.
 #' @param multi_proportion_groups named list declaring compositional
 #'   trait groups (rows summing to 1), e.g.
 #'   `list(diet = c("plant", "invert", "vert"))`. Forwarded to
@@ -581,7 +587,7 @@ multi_impute <- function(traits, tree, m = 100L,
                                           "posterior"),
                          species_col = NULL,
                          trait_types = NULL,
-                         multi_proportion_groups = NULL,
+                               multi_proportion_groups = NULL,
                          log_transform = TRUE,
                          missing_frac = 0.25,
                          covariates = NULL,
@@ -589,7 +595,7 @@ multi_impute <- function(traits, tree, m = 100L,
                          gnn = FALSE,
                          lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
                          posterior_control = list(),
-                         ...) {
+                         ..., ordinal_levels = NULL) {
 
   # Recorded before match.arg() reassigns lambda_mode (used only by
   # draws_method = "posterior" to report ignored fitting arguments).
@@ -599,6 +605,9 @@ multi_impute <- function(traits, tree, m = 100L,
                          if (!missing(lambda_mode)) "lambda_mode")
   draws_method <- match.arg(draws_method)
   lambda_mode <- match.arg(lambda_mode)
+  # Coerce once, before route resolution and the per-draw impute() calls,
+  # so every downstream consumer sees the ordered factors.
+  traits <- .apply_ordinal_levels(traits, ordinal_levels)
   if (draws_method == "auto") {
     draws_method <- .mi_resolve_draws_auto(
       traits = traits, tree = tree, species_col = species_col,

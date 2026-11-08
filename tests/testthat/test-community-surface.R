@@ -29,7 +29,8 @@ test_that("canonical novice journey is present in the public sources", {
   getting <- paste(readLines(file.path(root, "vignettes", "getting-started.Rmd"), warn = FALSE), collapse = "\n")
   expect_true(all(vapply(c(
     "traits <- avonet300", "tree   <- tree300",
-    'traits <- read_traits("traits.csv")', 'tree   <- read_tree("tree.nwk")',
+    'traits <- read_traits("traits.csv", species_col = "species")',
+    'tree <- read_tree("tree.nwk")',
     'check_pigauto(traits, tree, species_col = "Species_Key")',
     'mi <- multi_impute(traits, tree, species_col = "Species_Key", m = 20)',
     "datasets <- get_imputed_datasets(mi)", "pigauto_report(mi$fit)"
@@ -80,7 +81,7 @@ test_that("recipes, advanced controls, and bounded claims remain visible", {
   mixed <- paste(readLines(file.path(root, "vignettes", "mixed-types.Rmd"), warn = FALSE), collapse = "\n")
   expect_match(readme, "Ordered ecological states")
   expect_match(readme, "Integer-valued continuous")
-  expect_match(readme, "Repeated observations")
+  expect_match(readme, "Repeated species observations")
   expect_match(readme, "check\\$species")
   expect_match(readme, "## Advanced controls", fixed = TRUE)
   expect_match(readme, 'predict_method = "exact"', fixed = TRUE)
