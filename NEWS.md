@@ -1,4 +1,4 @@
-# pigauto (development version)
+# pigauto 0.11.1
 
 ## Issue review: input, evaluation and missingness
 
@@ -6,7 +6,7 @@
   lambda estimation and baseline prediction; the GNN encoding is unchanged.
 - `predict()` rejects unused arguments instead of silently ignoring them.
 - CRAN 0.11.0 users are directed to `evaluate(fit)` for held-out scoring.
-  GitHub development builds are now numbered 0.11.0.9000.
+  The evaluation argument is available in 0.11.1.
 - `read_traits(ordinal_levels = list(...))` accepts explicit ecological level
   orders and rejects observed values omitted from those declarations.
 - Data-only species warnings distinguish exclusion from modeling from the

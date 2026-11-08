@@ -1,3 +1,9 @@
+> Update, 7 November 2026: PR #262 merged as 0731a3bf. The merge gate saw only
+> a skipped job before platform checks registered, so it merged too early.
+> The PR and main platform checks are running. Nine issue authors received
+> verified @mention updates after the merge. The CRAN patch and the broader
+> benchmark remain open. The sections below retain the earlier checkpoint.
+
 ## 1. Goal
 
 Address the ten open pigauto issue threads, verify actionable repairs and
