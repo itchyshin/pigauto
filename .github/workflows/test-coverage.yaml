@@ -74,7 +74,9 @@ jobs:
       - name: Check public source surfaces
         env:
           PIGAUTO_REQUIRE_SOURCE: "true"
-        run: testthat::test_local(filter = "community-surface", stop_on_failure = TRUE)
+        run: |
+          stopifnot(requireNamespace("yaml", quietly = TRUE))
+          testthat::test_local(filter = "community-surface|coverage-workflow", stop_on_failure = TRUE)
         shell: Rscript {0}
 
       - name: Test coverage
