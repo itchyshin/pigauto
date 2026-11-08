@@ -1,0 +1,72 @@
+name: R-hub MKL frozen candidate
+on:
+  push:
+    branches: [codex/rhub-mkl-5da2-exact]
+permissions:
+  contents: read
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      image: ${{ steps.pin.outputs.image }}
+    steps:
+      - id: pin
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull ghcr.io/r-hub/containers/mkl:latest
+          image=$(docker image inspect --format '{{index .RepoDigests 0}}' ghcr.io/r-hub/containers/mkl:latest)
+          echo "image=$image" | tee -a "$GITHUB_OUTPUT"
+  focused:
+    needs: image
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    container:
+      image: ${{ needs.image.outputs.image }}
+    env:
+      MKL_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      NOT_CRAN: 'false'
+      R_COMPILE_AND_INSTALL_PACKAGES: 'always'
+    steps:
+      - name: Verify input and identify environment
+        shell: bash
+        env:
+          IMAGE: ${{ needs.image.outputs.image }}
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          printf 'image=%s\nMKL_NUM_THREADS=%s\nOPENBLAS_NUM_THREADS=%s\nOMP_NUM_THREADS=%s\n' "$IMAGE" "$MKL_NUM_THREADS" "$OPENBLAS_NUM_THREADS" "$OMP_NUM_THREADS" | tee evidence/environment.txt
+          uname -a | tee -a evidence/environment.txt
+          cat /etc/os-release | tee -a evidence/environment.txt
+          cat /proc/cpuinfo | grep -m1 'model name' | tee -a evidence/environment.txt
+          Rscript --vanilla -e 'print(sessionInfo()); print(extSoftVersion()); print(R.version)' | tee -a evidence/environment.txt
+          RHOME=$(R RHOME)
+          ls -l "$RHOME/lib/libRblas.so" "$RHOME/lib/libRlapack.so" | tee -a evidence/environment.txt
+          ldd "$RHOME/lib/libRblas.so" | tee -a evidence/environment.txt
+          ldd "$RHOME/lib/libRblas.so" | grep -qi mkl
+          rpm -qa | grep -i mkl | tee -a evidence/environment.txt
+          curl -fsSL https://raw.githubusercontent.com/itchyshin/pigauto/98f9a2c66cd4e6e3f4ba4daa6dfc41c986900cf1/rhub-payload/pigauto_0.11.1.tar.gz -o /tmp/pigauto_0.11.1.tar.gz
+          echo '5da2b3c633ff3388f98abfed6cd5f6b15d1fa89807470c8debef5976757e4a78  /tmp/pigauto_0.11.1.tar.gz' | sha256sum -c - | tee evidence/hash.txt
+          tar -xzf /tmp/pigauto_0.11.1.tar.gz
+      - name: Install focused dependencies
+        shell: bash
+        run: |
+          set -o pipefail
+          Rscript --vanilla -e 'pak::pkg_install(c("any::torch", "any::ape", "any::ggplot2", "any::Matrix", "any::rlang", "any::withr", "any::testthat", "any::pkgload"), ask=FALSE)' 2>&1 | tee evidence/dependencies.log
+      - name: Install candidate and run focused test
+        shell: bash
+        run: |
+          set -o pipefail
+          R CMD INSTALL /tmp/pigauto_0.11.1.tar.gz 2>&1 | tee evidence/install.log
+          Rscript --vanilla -e 'testthat::test_local("pigauto", filter="mi-posterior", reporter="summary", stop_on_failure=TRUE)' 2>&1 | tee evidence/test.log
+      - name: Retain evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rhub-mkl-focused-evidence
+          path: evidence/
+          if-no-files-found: warn
+          retention-days: 30
