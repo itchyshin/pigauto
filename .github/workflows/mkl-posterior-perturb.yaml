@@ -30,10 +30,9 @@ jobs:
           ldd "$target" | tee evidence/linkage.txt
           ldd "$target" | grep -F libmkl_gnu_thread.so.2
           Rscript --vanilla -e 'print(sessionInfo()); print(extSoftVersion()); print(R.version)' > evidence/r.txt
-          curl -fsSL https://cloud.r-project.org/src/contrib/pigauto_0.11.0.tar.gz -o /tmp/cran.tar.gz
-          echo '5296214aca1905081748e6b8dec6facf227a38da6f2ca5a7020b94199bc324e2  /tmp/cran.tar.gz' | sha256sum -c - | tee evidence/hash.txt
+          curl -fsSL https://raw.githubusercontent.com/itchyshin/pigauto/809a960ed8c0307605ac722647ac766ecc4eb649/rhub-payload/pigauto_0.11.1.tar.gz -o /tmp/cran.tar.gz
+          echo '95998faf7cf7ee0ae5246407853aa153593626664e441bb931e7bb4e4c7ed903  /tmp/cran.tar.gz' | sha256sum -c - | tee evidence/hash.txt
           tar -xzf /tmp/cran.tar.gz
-          curl -fsSL https://raw.githubusercontent.com/itchyshin/pigauto/7c9e03c9/tests/testthat/test-mi-posterior.R -o pigauto/tests/testthat/test-mi-posterior.R
           sha256sum pigauto/tests/testthat/test-mi-posterior.R | tee evidence/test-hash.txt
       - name: Install test dependencies
         shell: bash
