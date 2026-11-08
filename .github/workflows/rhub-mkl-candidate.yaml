@@ -46,7 +46,8 @@ jobs:
           RHOME=$(R RHOME)
           ls -l "$RHOME/lib/libRblas.so" "$RHOME/lib/libRlapack.so" | tee -a evidence/environment.txt
           ldd "$RHOME/lib/libRblas.so" | tee -a evidence/environment.txt
-          ldd "$RHOME/lib/libRblas.so" | grep -qi mkl
+          ldd "$RHOME/lib/libR.so" | tee -a evidence/environment.txt
+          Rscript --vanilla -e 'stopifnot(grepl("mkl", extSoftVersion()[["BLAS"]], ignore.case=TRUE))'
           rpm -qa | grep -i mkl | tee -a evidence/environment.txt
           curl -fsSL https://raw.githubusercontent.com/itchyshin/pigauto/98f9a2c66cd4e6e3f4ba4daa6dfc41c986900cf1/rhub-payload/pigauto_0.11.1.tar.gz -o /tmp/pigauto_0.11.1.tar.gz
           echo '5da2b3c633ff3388f98abfed6cd5f6b15d1fa89807470c8debef5976757e4a78  /tmp/pigauto_0.11.1.tar.gz' | sha256sum -c - | tee evidence/hash.txt
