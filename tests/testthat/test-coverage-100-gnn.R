@@ -557,3 +557,32 @@ test_that("GPU debug checkpoint stays silent on CPU", {
   expect_false(result$visible)
   expect_null(result$value)
 })
+
+test_that("GNN compositional safety floor retains a valid simplex", {
+  skip_if_no_libtorch()
+  testthat::local_mocked_bindings(cuda_is_available = function() FALSE,
+    backends_mps_is_available = function() FALSE, .package = "torch")
+  set.seed(62)
+  tree <- ape::rtree(20)
+  p <- seq(.15, .85, length.out = 20)
+  traits <- data.frame(p = p, q = 1 - p, row.names = tree$tip.label)
+  traits[c(3, 7), ] <- NA_real_
+  data <- preprocess_traits(traits, tree, multi_proportion_groups = list(comp = c("p", "q")))
+  splits <- make_missing_splits(data$X_scaled, missing_frac = .25, val_frac = .5,
+                                seed = 41, trait_map = data$trait_map)
+  expect_warning(fit <- fit_pigauto(data, tree, splits = splits, gnn = TRUE,
+    epochs = 2L, eval_every = 1L, hidden_dim = 8L, n_gnn_layers = 1L,
+    corruption_rate = .8, corruption_ramp = 0L, dropout = 0, edge_dropout = 0,
+    use_transformer_blocks = FALSE, use_attention = TRUE, verbose = FALSE,
+    seed = 41, predict_method = "per_column", refine_steps = 2L,
+    safety_floor = TRUE), "Small validation set")
+  expect_identical(fit$trait_map[[1]]$type, "multi_proportion")
+  expect_equal(unname(fit$r_cal_bm), c(1, 1))
+  expect_equal(unname(fit$r_cal_gnn), c(0, 0))
+  expect_equal(unname(fit$r_cal_mean), c(0, 0))
+  pred <- predict(fit, return_se = FALSE)$imputed
+  expect_identical(names(pred), c("p", "q"))
+  expect_equal(dim(pred), c(20L, 2L))
+  expect_true(all(is.finite(as.matrix(pred))) && all(as.matrix(pred) >= 0))
+  expect_equal(unname(rowSums(pred)), rep(1, 20), tolerance = 1e-8)
+})

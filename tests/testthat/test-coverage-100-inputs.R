@@ -834,3 +834,93 @@ test_that("observed-data likelihood penalizes a singular covariance", {
   # singular covariance and must not be accepted as a finite optimum.
   expect_identical(.mvn_obs_nll(-1000, L, 1L, eps = 0), .Machine$double.xmax)
 })
+
+test_that("non-Brownian benchmark reports its actual held-out results", {
+  messages <- warnings <- character()
+  result <- withCallingHandlers(
+    simulate_benchmark(n_species = 16L, n_traits = 2L, scenarios = "OU", n_reps = 1L,
+                       seed = 71L, gnn = FALSE, verbose = TRUE, k_eigen = 3L),
+    message = function(m) { messages <<- c(messages, conditionMessage(m)); invokeRestart("muffleMessage") },
+    warning = function(w) { warnings <<- c(warnings, conditionMessage(w)); invokeRestart("muffleWarning") })
+  expect_true(any(grepl("Scenario: OU", messages, fixed = TRUE)))
+  expect_true(any(grepl("Rep 1/1 (seed 173)", messages, fixed = TRUE)))
+  expect_true(any(grepl("Small validation set", warnings)))
+  expect_true(all(grepl("Small validation set", warnings)))
+  expect_s3_class(result, "pigauto_benchmark")
+  expect_identical(unique(result$results$scenario), "OU")
+  expect_setequal(unique(result$results$method), c("pigauto", "baseline"))
+  expect_true(all(result$results$n_test > 0L))
+  expect_true(any(is.finite(result$results$value[result$results$metric == "rmse"])))
+})
+
+test_that("GBIF progress counts cached species with valid centroids", {
+  root <- tempfile("gbif-progress-"); dir.create(root)
+  on.exit(unlink(root, recursive = TRUE))
+  saveRDS(list(species = "bird A", centroid_lat = 2, centroid_lon = 3,
+               n_occurrences = 2L), file.path(root, "bird_A.rds"))
+  saveRDS(list(species = "bird B", centroid_lat = NA_real_, centroid_lon = NA_real_,
+               n_occurrences = 0L), file.path(root, "bird_B.rds"))
+  expect_output(result <- pull_gbif_centroids(c("bird A", "bird B"), root,
+                                              verbose = TRUE),
+                "2/2 species fetched, 1 with valid centroids", fixed = TRUE)
+  expect_identical(result$species, c("bird A", "bird B"))
+  expect_equal(result$n_occurrences, c(2L, 0L))
+  expect_equal(result$centroid_lat[1], 2)
+  expect_true(is.na(result$centroid_lat[2]))
+})
+
+test_that("cross-validation with the default seed runs one full replicate", {
+  tree <- ape::read.tree(text = "(((a:1,b:1):1,(c:1,d:1):1):1,((e:1,f:1):1,(g:1,h:1):1):1);")
+  d <- data.frame(x = as.numeric(1:8), y = c(1, 3, 2, 5, 4, 8, 7, 6),
+                  row.names = tree$tip.label)
+  pd <- preprocess_traits(d, tree, log_transform = FALSE)
+  warnings <- character()
+  set.seed(91)
+  cv <- withCallingHandlers(cross_validate(pd, tree, k = 3L, gnn = FALSE,
+                                           verbose = FALSE, k_eigen = 3L),
+    warning = function(w) { warnings <<- c(warnings, conditionMessage(w)); invokeRestart("muffleWarning") })
+  expect_true(length(warnings) > 0L)
+  expect_true(all(grepl("Small validation set", warnings)))
+  expect_equal(cv$n_reps, 1L)
+  expect_setequal(unique(cv$results$fold), 1:3)
+  expect_identical(unique(cv$results$rep), 1L)
+  expect_setequal(unique(cv$results$trait), c("x", "y"))
+  expect_true(all(is.finite(cv$results$value[cv$results$metric == "rmse"])))
+})
+
+test_that("input check reports duplicated row identities", {
+  tree <- ape::read.tree(text = "((a:1,b:1):1,c:2);")
+  d <- data.frame(x = as.numeric(1:3))
+  # A malformed data frame can be supplied when row-name attributes are
+  # assigned directly rather than through the checked rownames setter.
+  attr(d, "row.names") <- c("a", "a", "c")
+  check <- .check_pigauto_internal(d, tree, probe_runtime = FALSE)$check
+  expect_identical(check$status, "error")
+  expect_true("duplicate_or_missing_rownames" %in% check$messages$code)
+})
+
+test_that("benchmark plot handles a scenario with no finite scores", {
+  obj <- structure(list(summary = data.frame(scenario = "OU", method = "baseline",
+                                              trait = "x", metric = "rmse", mean = NA_real_)),
+                   class = "pigauto_benchmark")
+  path <- tempfile(fileext = ".pdf")
+  grDevices::pdf(path)
+  device <- grDevices::dev.cur()
+  on.exit({ if (device %in% grDevices::dev.list()) grDevices::dev.off(device); unlink(path) })
+  expect_null(plot(obj, metric = "rmse"))
+  grDevices::dev.off()
+  expect_true(file.exists(path))
+  expect_gt(file.info(path)$size, 0)
+})
+
+test_that("seeded mixed-trait simulation is reproducible and preserves its schema", {
+  tree <- ape::read.tree(text = "(((a:1,b:1):1,(c:1,d:1):1):1,((e:1,f:1):1,(g:1,h:1):1):1);")
+  one <- simulate_mixed_traits(tree, seed = 25L)
+  two <- simulate_mixed_traits(tree, seed = 25L)
+  expect_identical(one, two)
+  expect_identical(rownames(one), tree$tip.label)
+  expect_identical(names(one), c("cont1", "cont2", "binary_trait", "cat_trait"))
+  expect_true(all(one$cont1 > 0 & one$cont2 > 0))
+  expect_identical(levels(one$binary_trait), c("no", "yes"))
+  expect_identical(levels(one$cat_trait), c("A", "B", "C"))
+})
