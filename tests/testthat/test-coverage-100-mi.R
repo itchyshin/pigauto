@@ -611,3 +611,11 @@ test_that("gllvm adapter reports an unavailable tidy method", {
   }, .package = "utils")
   expect_error(.pool_mi_gllvm_tidy(NULL), "provide tidy.gllvmTMB_multi")
 })
+
+test_that("exact conditional refuses singular covariance without a ridge", {
+  tree <- ape::read.tree(text = "((a:1,b:1):1,(c:1,d:1):1);")
+  henderson <- build_henderson_S_inv(tree)
+  L <- matrix(c(NA, 1, 2, 3, NA, 2, 1, 4), 4, 2,
+              dimnames = list(tree$tip.label, c("x", "y")))
+  expect_null(exact_conditional_mvn(L, matrix(0, 2, 2), henderson, eps = 0))
+})

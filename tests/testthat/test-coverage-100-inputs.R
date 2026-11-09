@@ -578,8 +578,12 @@ test_that("WorldClim raster failure falls back to cached extraction", {
     saveRDS(cached, file.path(extracts, "bird.rds"))
     testthat::local_mocked_bindings(rast = function(...) stop("invalid raster fixture"),
                                     .package = "terra")
-    expect_warning(out <- pull_worldclim_per_species("bird", root, root, verbose = FALSE),
-                   "terra::rast failed.*cache-only")
+    messages <- character()
+    expect_warning(out <- withCallingHandlers(
+      pull_worldclim_per_species("bird", root, root, verbose = TRUE),
+      message = function(m) { messages <<- c(messages, conditionMessage(m)); invokeRestart("muffleMessage") }),
+      "terra::rast failed.*cache-only")
+    expect_true(any(grepl("1/1 extracted, 1 with valid bioclim", messages, fixed = TRUE)))
     expect_equal(unname(unlist(out[1, paste0("bio", 1:19, "_median")])), unname(med))
     expect_equal(out$n_extracted, 3L)
     expect_identical(readRDS(file.path(extracts, "bird.rds")), cached)
@@ -766,4 +770,59 @@ test_that("multi-observation evaluation expands the held-out species baseline", 
   expect_message(capture.output(answer <- summary(fit, data = list())),
                  "Could not compute test metrics")
   expect_null(answer)
+})
+
+test_that("fit summary presents mixed held-out metrics for both methods", {
+  set.seed(23)
+  tree <- ape::rtree(20)
+  d <- data.frame(x = rnorm(20),
+                  grade = ordered(rep(c("lo", "mid", "hi", "lo", "hi"), 4),
+                                  levels = c("lo", "mid", "hi")),
+                  flag = factor(rep(c("N", "Y"), 10)), row.names = tree$tip.label)
+  d$x[1] <- NA_real_
+  warnings <- character()
+  result <- withCallingHandlers(impute(d, tree, gnn = FALSE, seed = 2,
+                                       verbose = FALSE, log_transform = FALSE),
+    warning = function(w) { warnings <<- c(warnings, conditionMessage(w)); invokeRestart("muffleWarning") })
+  expect_true(any(grepl("Small validation set", warnings)))
+  expect_true(all(grepl("Small validation set|standard deviation is zero", warnings)))
+  printed <- capture.output(scores <- summary(result$fit, data = result$data))
+  text <- paste(printed, collapse = "\n")
+  expect_match(text, "rho.*Acc.*Brier")
+  expect_match(text, "Baseline \\(BM\\) for comparison")
+  expect_setequal(unique(scores$trait), c("x", "grade", "flag"))
+  expect_setequal(unique(scores$method), c("pigauto", "baseline"))
+  expect_true(all(c("spearman_rho", "accuracy", "brier") %in% scores$metric))
+  legacy <- result$fit
+  legacy$trait_map <- NULL
+  legacy_text <- paste(capture.output(summary(legacy)), collapse = "\n")
+  expect_match(legacy_text, "Gate Calibration")
+  for (nm in legacy$trait_names) expect_match(legacy_text, paste0(nm, ":"), fixed = TRUE)
+})
+
+test_that("univariate solver uses a finite variance fallback for a constant trait", {
+  L <- matrix(c(2, 2, NA, 2), ncol = 1, dimnames = list(letters[1:4], "x"))
+  R <- diag(4); dimnames(R) <- list(rownames(L), rownames(L))
+  fit <- fit_mvn_bm_inhouse(L, R = R, predict_method = "per_column")
+  expect_equal(unname(fit$pars$phylocov), matrix(1, 1, 1))
+  expect_equal(fit$anc_recon[3, 1], 2)
+  expect_equal(fit$n_iter, 0L)
+})
+
+test_that("trait-map defaults stay defined with absent observations", {
+  d <- data.frame(count = c(NA_real_, NA_real_), zero = c(0, 0),
+                  binary = c("b", "a"), category = c("c", "a"),
+                  part1 = c(NA_real_, NA_real_), part2 = c(NA_real_, NA_real_))
+  map <- build_trait_map(d, c(count = "count", zero = "zi_count",
+                              binary = "binary", category = "categorical"),
+                         log_set = character(), center = TRUE, scale = TRUE,
+                         multi_proportion_groups = list(composition = c("part1", "part2")))
+  expect_true(is.na(map$count$obs_min) && is.na(map$count$obs_max))
+  expect_true(is.na(map$zero$obs_min) && is.na(map$zero$obs_max))
+  expect_equal(map$zero$zero_frac, 1)
+  expect_identical(map$binary$levels, c("a", "b"))
+  expect_identical(map$category$levels, c("a", "c"))
+  expect_equal(map$composition$mean, c(0, 0))
+  expect_equal(map$composition$sd, c(1, 1))
+  expect_length(map$composition$latent_cols, 2L)
 })
