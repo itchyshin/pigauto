@@ -1,0 +1,67 @@
+name: Windows exact release archive
+on:
+  push:
+    branches: [codex/windows-exact-95998faf]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        r: [release, devel]
+    name: Windows R ${{ matrix.r }} exact archive
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      _R_CHECK_FORCE_SUGGESTS_: 'true'
+      _R_CHECK_LIMIT_CORES_: 'true'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      TORCH_INSTALL: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 4d910813abf286a15742b144d00afb9217d3b9d1
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r }}
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"all"'
+          extra-packages: any::rcmdcheck
+      - name: Download and verify the frozen archive
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force evidence | Out-Null
+          Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/itchyshin/pigauto/809a960ed8c0307605ac722647ac766ecc4eb649/rhub-payload/pigauto_0.11.1.tar.gz' -OutFile evidence/pigauto_0.11.1.tar.gz
+          $hash = (Get-FileHash evidence/pigauto_0.11.1.tar.gz -Algorithm SHA256).Hash.ToLower()
+          $hash | Set-Content evidence/sha256-before.txt
+          if ($hash -ne '95998faf7cf7ee0ae5246407853aa153593626664e441bb931e7bb4e4c7ed903') { throw 'Archive hash mismatch' }
+          if ((Get-Item evidence/pigauto_0.11.1.tar.gz).Length -ne 5397254) { throw 'Archive size mismatch' }
+          Rscript --vanilla -e 'print(sessionInfo()); print(R.version)' | Out-File evidence/session.txt
+      - name: Check the original archive
+        shell: pwsh
+        run: |
+          R CMD check --as-cran --run-donttest --output=evidence evidence/pigauto_0.11.1.tar.gz 2>&1 | Tee-Object -FilePath evidence/check-console.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $log = Get-Content evidence/pigauto.Rcheck/00check.log -Raw
+          if ($log -notmatch '(?m)^Status: OK\s*$') { throw 'R CMD check is not Status OK' }
+          $hash = (Get-FileHash evidence/pigauto_0.11.1.tar.gz -Algorithm SHA256).Hash.ToLower()
+          $hash | Set-Content evidence/sha256-after.txt
+          if ($hash -ne '95998faf7cf7ee0ae5246407853aa153593626664e441bb931e7bb4e4c7ed903') { throw 'Archive hash changed' }
+      - name: Retain check evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exact-${{ matrix.r }}
+          path: |
+            evidence/check-console.log
+            evidence/session.txt
+            evidence/sha256-before.txt
+            evidence/sha256-after.txt
+            evidence/pigauto.Rcheck/
+          if-no-files-found: warn
+          retention-days: 30
