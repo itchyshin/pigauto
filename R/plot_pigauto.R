@@ -130,7 +130,7 @@ plot_uncertainty <- function(pred_result, truth = NULL, trait_name) {
   idx <- order(pred_j)
 
   df <- data.frame(
-    i     = seq_along(pred_j)[idx],
+    i     = seq_along(pred_j),
     pred  = pred_j[idx],
     lower = lower_j[idx],
     upper = upper_j[idx]
