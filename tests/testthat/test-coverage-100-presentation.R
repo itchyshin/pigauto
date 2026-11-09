@@ -264,3 +264,13 @@ test_that("continuous uncertainty fallback uses matching SEs and matrix truth", 
   expect_equal(p$data$upper, c(1 + 1.96 * .2, 2 + 1.96 * .3, 3 + 1.96 * .1))
   expect_equal(p$layers[[3]]$data$truth, c(10, 30))
 })
+
+test_that("uncertainty plots omit truth overlays for an unrelated matrix column", {
+  pred <- .p100_pred()
+  truth <- matrix(c(30, 10, 20), 3, dimnames = list(NULL, "other_trait"))
+  p <- plot_uncertainty(pred, truth = truth, trait_name = "mass")
+  expect_length(p$layers, 2L)
+  expect_equal(p$data$pred, c(1, 2, 3))
+  expect_equal(p$data$lower, c(0, 1, 2))
+  expect_equal(p$data$upper, c(2, 3, 4))
+})

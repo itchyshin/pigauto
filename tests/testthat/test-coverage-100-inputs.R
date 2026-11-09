@@ -668,3 +668,102 @@ test_that("zero requested CV repetitions returns a typed empty summary", {
   expect_type(cv$results$value, "double")
   expect_equal(nrow(cv$summary), 0L)
 })
+
+test_that("test-cell scoring omits missing truth across mixed trait types", {
+  types <- c("continuous", "binary", "categorical", "zi_count", "multi_proportion")
+  cols <- list(1L, 2L, 3:4, 5:6, 7:8)
+  map <- Map(function(type, lc) list(name = type, type = type, latent_cols = lc,
+                                    levels = c("a", "b"), mean = 0, sd = 1,
+                                    n_latent = length(lc)), types, cols)
+  truth <- matrix(NA_real_, 2, 8)
+  pred <- matrix(0, 2, 8)
+  for (j in c(1L, 2L, 3L, 5L, 7L)) {
+    expect_null(eval_test_cells(pred, NULL, truth, 1L, j, map, 2L, "fixture"))
+  }
+  expect_null(eval_test_cells(pred, NULL, truth, 1L, 1L, NULL, 2L, "legacy"))
+  truth[1, 5:6] <- c(1, log(4))
+  pred[1, 6] <- log(4)
+  supplied <- list(probabilities = list(zi_count = c(.8, .2)))
+  out <- eval_test_cells(pred, supplied, truth, 1L, 5L, map, 2L, "fixture")
+  expect_equal(out$value[out$metric == "brier"], .04)
+  expect_equal(out$value[out$metric == "rmse"], .6)
+  expect_equal(unique(out$n_test), 1L)
+})
+
+test_that("trait-level masking rejects entirely missing traits", {
+  map <- list(list(name = "count", type = "zi_count", latent_cols = 1:2),
+              list(name = "composition", type = "multi_proportion", latent_cols = 3:4))
+  expect_error(make_missing_splits(matrix(NA_real_, 3, 4), trait_map = map),
+               "No observed \\(species, trait\\) cells")
+  expect_error(make_missing_splits(data.frame(x = 1:3)), "must be a matrix")
+})
+
+test_that("runtime selects no MPS when torch does not export the probe", {
+  real_exports <- base::getNamespaceExports
+  testthat::local_mocked_bindings(getNamespaceExports = function(ns) {
+    if (identical(ns, "torch")) return(character())
+    real_exports(ns)
+  }, .package = "base")
+  expect_false(.check_pigauto_mps_available())
+})
+
+test_that("local WorldClim archive is unpacked and reused without downloading", {
+  if (nzchar(Sys.which("zip"))) {
+    root <- tempfile("wc-archive-"); dir.create(root)
+    on.exit(unlink(root, recursive = TRUE))
+    fixture <- file.path(root, "fixture"); dir.create(fixture)
+    paths <- file.path(fixture, sprintf("wc2.1_10m_bio_%d.tif", 1:19))
+    invisible(lapply(paths, function(p) writeLines("local fixture", p)))
+    archive <- file.path(root, "local.zip")
+    invisible(capture.output(utils::zip(archive, paths, flags = "-jq")))
+    fetch <- function(url, destfile, mode) {
+      expect_match(url, "wc2.1_10m_bio.zip", fixed = TRUE)
+      expect_identical(mode, "wb")
+      expect_true(file.copy(archive, destfile))
+    }
+    messages <- character()
+    dir <- withCallingHandlers(.wc_download_rasters(root, verbose = TRUE, .download_fn = fetch),
+      message = function(m) { messages <<- c(messages, conditionMessage(m)); invokeRestart("muffleMessage") })
+    expect_true(any(grepl("downloading", messages)))
+    expect_true(any(grepl("ready at", messages)))
+    expect_true(file.exists(file.path(dir, ".wc_complete")))
+    expect_true(all(file.exists(file.path(dir, basename(paths)))))
+    expect_identical(readLines(file.path(dir, basename(paths[1]))), "local fixture")
+    expect_message(again <- .wc_download_rasters(root, verbose = TRUE,
+                    .download_fn = function(...) stop("unexpected download")), "rasters present")
+    expect_identical(again, dir)
+  }
+})
+
+test_that("invalid tree files report the underlying parser failure", {
+  path <- tempfile(fileext = ".tre")
+  on.exit(unlink(path))
+  writeLines("definitely not a tree", path)
+  expect_warning(expect_error(read_tree(path), "Could not read tree file as Newick or NEXUS"),
+                 "no semicolon")
+})
+
+test_that("multi-observation evaluation expands the held-out species baseline", {
+  tree <- ape::read.tree(text = "(((a:1,b:1):1,(c:1,d:1):1):1,((e:1,f:1):1,(g:1,h:1):1):1);")
+  d <- data.frame(species = rep(tree$tip.label, each = 2),
+                  x = c(1, NA, 2, 1.8, 4, 4.1, 3, 3.2, 6, 6.2, 5, 5.2, 8, 8.1, 7, 7.2))
+  expect_warning(result <- impute(d, tree, species_col = "species", gnn = FALSE,
+                                  seed = 9, verbose = FALSE, log_transform = FALSE),
+                 "Small validation set")
+  fit <- result$fit
+  scored <- evaluate(fit)
+  idx <- fit$splits$test_idx
+  n <- nrow(fit$X_scaled)
+  row <- ((idx - 1L) %% n) + 1L
+  col <- ((idx - 1L) %/% n) + 1L
+  mu <- fit$baseline$mu[fit$obs_to_species, , drop = FALSE]
+  truth <- fit$X_scaled[cbind(row, col)]
+  predicted <- mu[cbind(row, col)]
+  expect_equal(scored$value[scored$method == "baseline" & scored$metric == "rmse"],
+               sqrt(mean((truth - predicted)^2)))
+  expect_equal(unique(scored$n_test[scored$method == "baseline"]), length(idx))
+  expect_error(evaluate(fit, data = list()), "data.*pigauto_data")
+  expect_message(capture.output(answer <- summary(fit, data = list())),
+                 "Could not compute test metrics")
+  expect_null(answer)
+})
