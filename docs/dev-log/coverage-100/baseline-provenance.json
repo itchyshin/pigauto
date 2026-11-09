@@ -1,0 +1,14 @@
+{
+  "baseline_source_sha": "033649b93115c6d8191e791f06b1ddf52eb82d19",
+  "start_source_sha": "f9e3777a9e51bfa5d999853471daec14bde35441",
+  "workflow_run": 42537328573,
+  "baseline_xml_sha256": "f14dbf1f8a5df32d8600b6a34bd62bf10a3011d0f53c69e7e3166e232ce6d4f5",
+  "coverage_config_sha256": {
+    "codecov.yml": "20ef75856df6faa9c25fb2d9b22ec7c4b7929df1ffbfb62b26204ea19bf6f40c",
+    ".github/workflows/test-coverage.yaml": "981d9a7afd6d392eb33a635ea22db18ce765870a8332832e8e1c10440edad1ce"
+  },
+  "expected_covered": 10845,
+  "expected_total": 12749,
+  "expected_missing": 1904,
+  "expected_missing_files": 47
+}
