@@ -712,31 +712,31 @@ test_that("runtime selects no MPS when torch does not export the probe", {
 })
 
 test_that("local WorldClim archive is unpacked and reused without downloading", {
-  if (nzchar(Sys.which("zip"))) {
-    root <- tempfile("wc-archive-"); dir.create(root)
-    on.exit(unlink(root, recursive = TRUE))
-    fixture <- file.path(root, "fixture"); dir.create(fixture)
-    paths <- file.path(fixture, sprintf("wc2.1_10m_bio_%d.tif", 1:19))
-    invisible(lapply(paths, function(p) writeLines("local fixture", p)))
-    archive <- file.path(root, "local.zip")
-    invisible(capture.output(utils::zip(archive, paths, flags = "-jq")))
-    fetch <- function(url, destfile, mode) {
-      expect_match(url, "wc2.1_10m_bio.zip", fixed = TRUE)
-      expect_identical(mode, "wb")
-      expect_true(file.copy(archive, destfile))
-    }
-    messages <- character()
-    dir <- withCallingHandlers(.wc_download_rasters(root, verbose = TRUE, .download_fn = fetch),
-      message = function(m) { messages <<- c(messages, conditionMessage(m)); invokeRestart("muffleMessage") })
-    expect_true(any(grepl("downloading", messages)))
-    expect_true(any(grepl("ready at", messages)))
-    expect_true(file.exists(file.path(dir, ".wc_complete")))
-    expect_true(all(file.exists(file.path(dir, basename(paths)))))
-    expect_identical(readLines(file.path(dir, basename(paths[1]))), "local fixture")
-    expect_message(again <- .wc_download_rasters(root, verbose = TRUE,
-                    .download_fn = function(...) stop("unexpected download")), "rasters present")
-    expect_identical(again, dir)
-  }
+  skip_if(!nzchar(Sys.which("zip")), "zip executable is not available")
+  root <- tempfile("wc-archive-"); dir.create(root)
+  on.exit(unlink(root, recursive = TRUE))
+  fixture <- file.path(root, "fixture"); dir.create(fixture)
+  paths <- file.path(fixture, sprintf("wc2.1_10m_bio_%d.tif", 1:19))
+  invisible(lapply(paths, function(p) writeLines("local fixture", p)))
+  archive <- file.path(root, "local.zip")
+  invisible(capture.output(utils::zip(archive, paths, flags = "-jq")))
+  testthat::local_mocked_bindings(download.file = function(url, destfile, mode, quiet) {
+    expect_match(url, "wc2.1_10m_bio.zip", fixed = TRUE)
+    expect_identical(mode, "wb")
+    expect_false(quiet)
+    expect_true(file.copy(archive, destfile))
+  }, .package = "utils")
+  messages <- character()
+  dir <- withCallingHandlers(.wc_download_rasters(root, verbose = TRUE),
+    message = function(m) { messages <<- c(messages, conditionMessage(m)); invokeRestart("muffleMessage") })
+  expect_true(any(grepl("downloading", messages)))
+  expect_true(any(grepl("ready at", messages)))
+  expect_true(file.exists(file.path(dir, ".wc_complete")))
+  expect_true(all(file.exists(file.path(dir, basename(paths)))))
+  expect_identical(readLines(file.path(dir, basename(paths[1]))), "local fixture")
+  expect_message(again <- .wc_download_rasters(root, verbose = TRUE,
+                  .download_fn = function(...) stop("unexpected download")), "rasters present")
+  expect_identical(again, dir)
 })
 
 test_that("invalid tree files report the underlying parser failure", {
@@ -923,4 +923,20 @@ test_that("seeded mixed-trait simulation is reproducible and preserves its schem
   expect_true(all(one$cont1 > 0 & one$cont2 > 0))
   expect_identical(levels(one$binary_trait), c("no", "yes"))
   expect_identical(levels(one$cat_trait), c("A", "B", "C"))
+})
+
+test_that("GBIF occurrence fetching handles a short configured pause", {
+  skip_if_not_installed("rgbif")
+  root <- tempfile("gbif-paged-"); dir.create(root)
+  on.exit(unlink(root, recursive = TRUE))
+  testthat::local_mocked_bindings(
+    name_backbone = function(...) list(usageKey = 1L, matchType = "EXACT"),
+    occ_search = function(...) list(data = data.frame(decimalLatitude = c(10, 12),
+                                                       decimalLongitude = c(20, 22))),
+    .package = "rgbif")
+  result <- .gbif_fetch_one("test bird", root, occurrence_limit = 2L, sleep_ms = 1L)
+  expect_equal(result$centroid_lat, 11)
+  expect_equal(result$centroid_lon, 21)
+  expect_equal(result$n_occurrences, 2L)
+  expect_true(file.exists(file.path(root, "test_bird.rds")))
 })

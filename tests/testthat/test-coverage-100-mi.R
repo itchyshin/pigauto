@@ -692,3 +692,25 @@ test_that("posterior likelihood rejects singular proposals but propagates other 
   expect_error(.mip_try_collapsed_ll(prob, .mip_template(prob), diag(2), matrix(1, 1, 1)),
                "subscript out of bounds")
 })
+
+test_that("conditional BM draws refuse data with no observed cells", {
+  tree <- ape::read.tree(text = "((a:1,b:1):1,(c:1,d:1):1);")
+  d <- data.frame(x = rep(NA_real_, 4), y = rep(NA_real_, 4), row.names = tree$tip.label)
+  data <- preprocess_traits(d, tree, log_transform = FALSE)
+  expect_error(draw_conditional_bm(list(data = data, tree = tree), m = 2L,
+                                   sigma_method = "inhouse"),
+               "no observed cells to condition on")
+})
+
+test_that("conditional BM refuses singular trait covariance without a ridge", {
+  tree <- ape::read.tree(text = "((a:1,b:1):1,(c:1,d:1):1);")
+  d <- data.frame(x = as.numeric(1:4), y = as.numeric(1:4), row.names = tree$tip.label)
+  data <- preprocess_traits(d, tree, log_transform = FALSE)
+  obj <- list(data = data, tree = tree)
+  expect_error(draw_conditional_bm(obj, m = 2L, sigma_method = "em", eps = 0),
+               "Sigma is numerically singular")
+  regularized <- draw_conditional_bm(obj, m = 2L, sigma_method = "em")
+  expect_s3_class(regularized, "pigauto_draws_conditional_bm")
+  expect_identical(regularized$datasets[[1]], d)
+  expect_false(any(regularized$imputed_mask))
+})

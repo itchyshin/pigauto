@@ -586,3 +586,43 @@ test_that("GNN compositional safety floor retains a valid simplex", {
   expect_true(all(is.finite(as.matrix(pred))) && all(as.matrix(pred) >= 0))
   expect_equal(unname(rowSums(pred)), rep(1, 20), tolerance = 1e-8)
 })
+
+test_that("three distinct split winners use the safe median fallback", {
+  y <- c(-1.66710909640267, 1.08876938532769, -.415842429402306,
+         -.36465927826914, 1.85592940783941, .541907004893235,
+         1.23523793516361, -2.45768633900871, 1.35019298381003,
+         .1148686074746, -1.18289480967858, -.110135472269955)
+  bm <- c(1.39086793809816, -1.15463082528809, .653747855091367,
+          .476129787419971, 1.15577388971215, .791322284128638,
+          -1.54766181366128, -.582397211304587, -1.47146001603008,
+          -.501436242579701, -1.10450956093243, .0777423526095165)
+  gnn <- c(-.750401151450222, -.523861568989111, .258239919840661,
+           .328866790235863, .44891244654269, 1.70632216263598,
+           -1.36811575877369, -1.86155299553292, -.146869572432759,
+           .766836998051743, -.0036644962697545, -.36653236855842)
+  corners <- list(bm, gnn, rep(0, length(y)))
+  # Independent calculations of the three half-A winners and half-B checks.
+  winners <- vapply(seq_len(3L), function(k) {
+    set.seed(100L + 17L + k - 1L)
+    perm <- sample(length(y))
+    a <- perm[1:6]; b <- perm[7:12]
+    loss <- function(idx) vapply(corners, function(pred) mean((pred[idx] - y[idx])^2), numeric(1))
+    la <- loss(a); lb <- loss(b)
+    best <- which.min(la)
+    gain <- (lb[1] - lb[best]) / max(lb[1], 1e-12)
+    if (!is.finite(gain) || gain < .02) {
+      best <- if (lb[3] <= lb[1]) 3L else 1L
+    }
+    best
+  }, integer(1))
+  expect_identical(winners, c(3L, 1L, 2L))
+  weights <- diag(3)[winners, , drop = FALSE]
+  expect_equal(apply(weights, 2L, stats::median), c(0, 0, 0))
+  expect_lte(mean(y^2), mean((bm - y)^2))
+  tm <- list(list(name = "x", type = "continuous", latent_cols = 1L))
+  expect_warning(cal <- calibrate_gates(tm, matrix(bm), matrix(gnn), matrix(y),
+    matrix(TRUE, length(y), 1), gate_grid = c(0, 1), gate_cap = 1,
+    gate_method = "median_splits", gate_splits_B = 3L, seed = 100L,
+    safety_floor = TRUE, mean_baseline_per_col = 0, simplex_step = 1), "95%")
+  expect_equal(unname(c(cal$r_cal_bm, cal$r_cal_gnn, cal$r_cal_mean)), c(0, 0, 1))
+})
