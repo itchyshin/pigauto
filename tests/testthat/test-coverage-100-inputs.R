@@ -940,3 +940,24 @@ test_that("GBIF occurrence fetching handles a short configured pause", {
   expect_equal(result$n_occurrences, 2L)
   expect_true(file.exists(file.path(root, "test_bird.rds")))
 })
+
+test_that("benchmark NULL seed respects the ambient random stream", {
+  run <- function(seed) {
+    warnings <- character()
+    result <- withr::with_seed(seed, withCallingHandlers(
+      simulate_benchmark(n_species = 12L, n_traits = 2L, scenarios = "BM", n_reps = 1L,
+                         seed = NULL, gnn = FALSE, verbose = FALSE, k_eigen = 3L),
+      warning = function(w) { warnings <<- c(warnings, conditionMessage(w)); invokeRestart("muffleWarning") }))
+    list(results = result$results, warnings = warnings)
+  }
+  first <- run(11L)
+  repeat_run <- run(11L)
+  other <- run(29L)
+  for (one in list(first, repeat_run, other)) {
+    expect_true(length(one$warnings) > 0L)
+    expect_true(all(grepl("Small validation set", one$warnings)))
+    expect_true(any(is.finite(one$results$value[one$results$metric == "rmse"])))
+  }
+  expect_identical(first$results, repeat_run$results)
+  expect_false(isTRUE(all.equal(first$results, other$results)))
+})
