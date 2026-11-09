@@ -129,6 +129,65 @@ test_that("tiny GNN fit returns finite predictions and bounded gates", {
   expect_equal(dim(pred$imputed_latent), c(20L, 1L))
 })
 
+test_that("CPU GNN survives successful and failing CUDA cleanup boundaries", {
+  skip_if_no_libtorch()
+  previous_threads <- torch::torch_get_num_threads()
+  on.exit(torch::torch_set_num_threads(previous_threads))
+  torch::torch_set_num_threads(1L)
+  run <- function(fail_cleanup) {
+    withr::local_seed(171L)
+    torch::torch_manual_seed(171L)
+    tree <- ape::rtree(20L)
+    traits <- data.frame(x = seq_len(20) / 10, row.names = tree$tip.label)
+    traits$x[c(3, 7)] <- NA_real_
+    events <- new.env(parent = emptyenv()); events$labels <- character()
+    withr::local_envvar(c(PIGAUTO_DEBUG_GPU_MEM = "0"))
+    testthat::local_mocked_bindings(
+      get_device = function() torch::torch_device("cpu"),
+      .check_pigauto_select_device = function(...) "cpu", .package = "pigauto")
+    # The two device-routing adapters select real CPU; the external CUDA
+    # availability/cache APIs are mocked. The scalar tensor probe, fitting,
+    # and prediction remain real CPU work.
+    testthat::local_mocked_bindings(
+      cuda_is_available = function() TRUE,
+      cuda_empty_cache = function() {
+        frames <- lapply(seq_along(sys.calls()), sys.function)
+        has <- function(nm) any(vapply(frames, function(f) {
+          identical(f, get(nm, envir = asNamespace("pigauto")))
+        }, logical(1)))
+        label <- if (has("fit_pigauto")) "fit" else if (has("predict.pigauto_fit")) "predict" else if (has("impute")) "impute" else "other"
+        events$labels <- c(events$labels, label)
+        if (fail_cleanup) stop("fixture cache failure")
+        NULL
+      }, .package = "torch")
+    warnings <- character()
+    result <- withCallingHandlers(
+      impute(traits, tree, gnn = TRUE, n_imputations = 1L, hidden_dim = 8L,
+             n_gnn_layers = 1L, epochs = 1L, eval_every = 1L, patience = 1L,
+             dropout = 0, refine_steps = 1L, verbose = FALSE, seed = NULL,
+             log_transform = FALSE, predict_method = "per_column"),
+      warning = function(w) { warnings <<- c(warnings, conditionMessage(w)); invokeRestart("muffleWarning") })
+    list(result = result, traits = traits, events = events$labels, warnings = warnings)
+  }
+  for (fail_cleanup in c(FALSE, TRUE)) {
+    out <- run(fail_cleanup)
+    expect_true(any(grepl("Small validation set", out$warnings)))
+    expect_true(all(grepl("Small validation set", out$warnings)))
+    expect_equal(sum(out$events == "fit"), 1L)
+    expect_equal(sum(out$events == "impute"), 1L)
+    expect_gte(sum(out$events == "predict"), 1L)
+    expect_false(any(out$events == "other"))
+    expect_s3_class(out$result, "pigauto_result")
+    expect_identical(out$result$check$runtime$device, "cpu")
+    expect_match(out$result$check$runtime$detail, "cpu scalar tensor probe succeeded", fixed = TRUE)
+    expect_true(all(is.finite(out$result$completed$x[is.na(out$traits$x)])))
+    expect_identical(out$result$completed$x[!is.na(out$traits$x)], out$traits$x[!is.na(out$traits$x)])
+    gates <- c(out$result$fit$r_cal_bm, out$result$fit$r_cal_gnn, out$result$fit$r_cal_mean)
+    expect_true(length(gates) == 3L && all(is.finite(gates)) && all(gates >= 0 & gates <= 1))
+    expect_equal(sum(gates), 1, tolerance = 1e-6)
+  }
+})
+
 test_that("attachment explains how to install a missing torch dependency", {
   attach <- .onAttach
   env <- new.env(parent = environment(attach))

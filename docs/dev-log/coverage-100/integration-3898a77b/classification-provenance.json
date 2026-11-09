@@ -1,0 +1,32 @@
+{
+  "source_sha": "3898a77b1a953341a414b377c16a3e0e4e95ba5c",
+  "rows": 125,
+  "categories": {
+    "failure-fallback": 74,
+    "reachable": 19,
+    "suspected-unreachable": 12,
+    "legacy": 3,
+    "dependency-platform": 17
+  },
+  "inputs": [
+    {
+      "file": "pigauto-3898-prediction-classification.csv",
+      "sha256": "d954555c4dd02087e613db6320d42dc30c04a5559bf751654c4626e4a7346ceb",
+      "rows": 77
+    },
+    {
+      "file": "pigauto-3898-inputs-mi-classification.csv",
+      "sha256": "790225f8de5fc56474b23348cb10c94d287844a3f6254a0c81bd63150f270741",
+      "rows": 31
+    },
+    {
+      "file": "pigauto-3898-gnn-classification.csv",
+      "sha256": "a7de2e6e7c5cd8139fe4d5d5e477fdedd033c32c77af29d8a85ea1540ea6016e",
+      "rows": 17
+    }
+  ],
+  "classification_sha256": "1fc4875d148f190e244ae552716fa228092956bf721cab553e28cb2ccbf1fe23",
+  "complete": false,
+  "limitation": "Manual source triage; suspected unreachability is not proof. Later targets carry no integrated coverage credit.",
+  "review_refinements": "Two CUDA cleanup rows distinguish allowed software-boundary mocks from separate actual-CUDA validation requirements."
+}

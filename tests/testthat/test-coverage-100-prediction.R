@@ -1195,3 +1195,62 @@ test_that("mixed threshold fits report one lambda per fitted liability", {
     expect_true(all(is.na(fit$lambda_per_trait_fit)))
   }
 })
+test_that("extreme trait scales fail safely or preserve exact BM conditioning", {
+  tree <- ape::read.tree(text = "((a:1,b:1):1,(c:1,d:1):1);")
+  h <- build_henderson_S_inv(tree)
+  L <- cbind(x = c(1, NA, -1, .5), y = c(NA, .2, .3, .4))
+  rownames(L) <- tree$tip.label
+  missing <- is.na(L)
+  check <- function(out, scale) {
+    expect_false(is.null(out))
+    expect_identical(dim(out$mu), dim(L))
+    expect_identical(dim(out$var), dim(L))
+    expect_identical(dimnames(out$mu), dimnames(L))
+    expect_identical(dimnames(out$var), dimnames(L))
+    expect_equal(unname(out$var[!missing]), rep(0, sum(!missing)))
+    expect_equal(unname(out$mu[missing]), c(.5, .1), tolerance = 1e-7)
+    expect_equal(unname(out$var[missing] / scale), c(.75, .75), tolerance = 1e-7)
+    expect_equal(unname(out$mu[!missing]), unname(L[!missing]))
+    expect_true(all(is.finite(out$mu)) && all(is.finite(out$var)))
+  }
+  control <- exact_conditional_mvn(L, diag(1e300, 2), h, eps = 0)
+  check(control, 1e300)
+  warnings <- character()
+  stress <- withCallingHandlers(exact_conditional_mvn(L, diag(1e308, 2), h, eps = 0),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    })
+  expect_true(all(grepl("CHOLMOD warning.*not positive definite", warnings)))
+  if (!is.null(stress)) check(stress, 1e308)
+})
+
+
+test_that("extreme observed values fail safely or retain exact conditional means", {
+  tree <- ape::read.tree(text = "((a:1,b:1,c:1):1,(d:1,e:1):1);")
+  h <- build_henderson_S_inv(tree)
+  fixture <- function(v) {
+    L <- cbind(x = c(v, v, NA, 0, 0), y = c(1, 0, -1, NA, .5))
+    rownames(L) <- tree$tip.label
+    L
+  }
+  check <- function(out, L, v) {
+    expect_false(is.null(out))
+    expect_identical(dim(out$mu), dim(L))
+    expect_identical(dim(out$var), dim(L))
+    expect_identical(dimnames(out$mu), dimnames(L))
+    expect_identical(dimnames(out$var), dimnames(L))
+    expect_true(all(is.finite(out$mu)) && all(is.finite(out$var)))
+    expect_equal(unname(out$mu[3, 1] / v), 2 / 3, tolerance = 1e-7)
+    expect_equal(unname(out$mu[4, 2]), .25, tolerance = 1e-7)
+    expect_equal(unname(out$var[cbind(c(3, 4), c(1, 2))]), c(2 / 3, .75), tolerance = 1e-7)
+    expect_equal(unname(out$mu[!is.na(L)]), unname(L[!is.na(L)]))
+    expect_equal(unname(out$var[!is.na(L)]), rep(0, sum(!is.na(L))))
+  }
+  L <- fixture(1e100)
+  control <- exact_conditional_mvn(L, diag(2), h, eps = 0)
+  check(control, L, 1e100)
+  L <- fixture(1e308)
+  stress <- exact_conditional_mvn(L, diag(2), h, eps = 0)
+  if (!is.null(stress)) check(stress, L, 1e308)
+})
