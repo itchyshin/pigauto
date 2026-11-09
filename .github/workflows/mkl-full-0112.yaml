@@ -18,7 +18,7 @@ jobs:
       _R_CHECK_FORCE_SUGGESTS_: 'true'
       _R_CHECK_LIMIT_CORES_: 'true'
       ARCHIVE: /tmp/pigauto_0.11.2.tar.gz
-      EXPECTED_SHA256: 391bc6c2debbbfbc5b5c8f57a36481c9f3c805f48db421e27c30d0eb053e9b6f
+      EXPECTED_SHA256: b0fdd3b63bd3f084ca1d45c272a8b3cebf603151dbea6c5f7586cefabb71d311
     steps:
       - uses: actions/checkout@v4
       - name: Verify archive and prepare source
