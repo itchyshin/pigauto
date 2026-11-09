@@ -289,3 +289,20 @@ test_that("report labels a worse continuous blend using paired RMSE", {
   expect_match(html, "Baseline better", fixed = TRUE)
   expect_match(html, "paired n=2", fixed = TRUE)
 })
+
+test_that("comparison plots return invisibly when NA traits aggregate to no groups", {
+  withr::local_options(na.action = "na.pass")
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  device <- grDevices::dev.cur()
+  metrics <- data.frame(trait = rep(NA_character_, 2), type = "continuous",
+    metric = "rmse", method = c("baseline", "pigauto"), value = c(1, 2))
+  grouped <- stats::aggregate(value ~ trait + type + method,
+    data = metrics, FUN = mean)
+  expect_equal(nrow(grouped), 0L)
+  expect_length(unique(grouped$trait), 0L)
+  result <- withVisible(plot_comparison(metrics, metric = "rmse"))
+  expect_null(result$value)
+  expect_false(result$visible)
+  expect_identical(grDevices::dev.cur(), device)
+})

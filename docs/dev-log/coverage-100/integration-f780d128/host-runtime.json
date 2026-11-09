@@ -1,0 +1,7 @@
+{
+  "source_sha": "f780d128fc135c53f7e9f9bd914f1142d30912fc",
+  "torch_version": "0.17.0",
+  "cuda_available": false,
+  "mps_available": false,
+  "tensor_device": "cpu"
+}
