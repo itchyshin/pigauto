@@ -1254,3 +1254,30 @@ test_that("extreme observed values fail safely or retain exact conditional means
   stress <- exact_conditional_mvn(L, diag(2), h, eps = 0)
   if (!is.null(stress)) check(stress, L, 1e308)
 })
+test_that("exact conditional refuses an unrepresentable conditional mean", {
+  tree <- ape::read.tree(text = "((a:1,b:1):1,(c:1,d:1):1);")
+  tree$edge.length <- tree$edge.length * 1e-4
+  henderson <- build_henderson_S_inv(tree)
+  Sigma <- matrix(c(1e100, .5e98, .5e98, 1e96), 2, 2)
+  L <- cbind(x = c(NA, 0, 0, 0), y = c(1e100, NA, NA, NA))
+  rownames(L) <- tree$tip.label
+  expect_silent(out <- exact_conditional_mvn(L, Sigma, henderson, eps = 0))
+  expect_false(is.null(out))
+  expect_identical(dim(out$mu), dim(L))
+  expect_identical(dim(out$var), dim(L))
+  expect_identical(dimnames(out$mu), dimnames(L))
+  expect_identical(dimnames(out$var), dimnames(L))
+  expect_true(all(is.finite(out$mu)))
+  expect_true(all(is.finite(out$var)))
+  observed <- !is.na(L)
+  expect_identical(out$mu[observed], L[observed])
+  expect_equal(out$var[observed], rep(0, sum(observed)))
+  missing <- which(is.na(L), arr.ind = TRUE)
+  expect_equal(unname(out$mu[missing] / 1e100), c(40, .4, 0, 0), tolerance = 1e-8)
+  expect_equal(unname(out$var[missing] / c(1e100, 1e96, 1e96, 1e96)),
+               c(.6, .6, .75, .75), tolerance = 1e-8)
+  # With observed y_a = 1e308, its conditional x_a mean is 40e308,
+  # which cannot be represented as a finite double.
+  L[1, "y"] <- 1e308
+  expect_silent(expect_null(exact_conditional_mvn(L, Sigma, henderson, eps = 0)))
+})
