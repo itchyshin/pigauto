@@ -139,7 +139,7 @@ compute_phylo_signal_per_trait <- function(data, tree,
     as.numeric(res$lambda)
   } else {
     res <- phytools::phylosig(tr, vals, method = "K", test = FALSE)
-    as.numeric(res$K)
+    as.numeric(if (is.list(res)) res$K else res)
   }
 }
 
