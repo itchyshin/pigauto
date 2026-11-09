@@ -81,6 +81,13 @@ compute_corner_loss <- function(
     return(Inf)
   }
   lc <- tm$latent_cols
+  r_gnn <- if (length(g) == 1L) g else g[2L]
+  # A non-finite neural output cannot improve a positive-weight candidate.
+  # For an exactly closed gate the neural output is unused.
+  if (r_gnn != 0 && any(!is.finite(delta_cal[rows, lc, drop = FALSE]))) {
+    return(Inf)
+  }
+  if (r_gnn == 0) delta_cal[rows, lc] <- 0
   fixed_mat <- if (is.null(fixed_cal)) {
     matrix(0, nrow = nrow(mu_cal), ncol = ncol(mu_cal))
   } else {
@@ -92,6 +99,7 @@ compute_corner_loss <- function(
     }
     fixed_cal
   }
+  if (any(!is.finite(fixed_mat[rows, lc, drop = FALSE]))) return(Inf)
 
   # Per-column latent blend.  When safety_floor = TRUE the caller passes
   # the column-specific mean explicitly via `mean_scalar`; the default
@@ -840,7 +848,7 @@ compute_conformal_scores <- function(
   for (j in seq_len(p)) {
     pred_cal[, j] <- fixed_mat[, j] +
       w_bm[j] * mu_cal[, j] +
-      w_gnn[j] * delta_cal[, j] +
+      (if (w_gnn[j] == 0) 0 else w_gnn[j] * delta_cal[, j]) +
       w_mean[j] * mean_vec[j]
   }
 
@@ -1123,6 +1131,11 @@ mask_heldout_with_baseline <- function(X_fill, MU, hold_idx) {
 #' @return list with `out` (last model output), `pred` (last blend), `delta_mat`,
 #'   `fixed_mat` (matrix or NULL)
 #' @noRd
+# A closed gate contributes zero even when the unused neural output is NaN.
+weighted_gnn_delta <- function(weight, delta) {
+  weight * torch::torch_where(weight == 0, torch::torch_zeros_like(delta), delta)
+}
+
 pigauto_refine_forward <- function(
   model,
   X_init,
@@ -1171,12 +1184,16 @@ pigauto_refine_forward <- function(
       covs0 <- make_covs_tensor(t_MU, mask_ind0, t_covariates)
       out <- model(X_iter, t_coords, covs0, t_adj, t_obs_to_sp, D_sq = t_D_sq)
       if (identical(blend, "learned_rs")) {
-        pred <- (1 - out$rs) * t_MU + out$rs * out$delta
+        pred <- (1 - out$rs) * t_MU + weighted_gnn_delta(out$rs, out$delta)
       } else {
-        pred <- t_w_bm * t_MU + t_w_gnn * out$delta + t_w_mean * t_mean_baseline
+        pred <- t_w_bm * t_MU + weighted_gnn_delta(t_w_gnn, out$delta) + t_w_mean * t_mean_baseline
       }
       if (!is.null(out$fixed_effects)) {
         pred <- pred + out$fixed_effects
+      }
+      if (!isTRUE(as.logical(torch::torch_isfinite(pred)$all()$item()))) {
+        stop("GNN refinement produced non-finite output; try a lower learning rate (`lr`).",
+             call. = FALSE)
       }
       if (!is.null(pin_mask)) {
         X_iter <- torch::torch_where(pin_mask, X_init, pred)
