@@ -108,10 +108,14 @@ test_that("tiny GNN fit returns finite predictions and bounded gates", {
   data <- preprocess_traits(traits, tree)
   splits <- make_missing_splits(data$X_scaled, missing_frac = 0.25,
                                 seed = 3, trait_map = data$trait_map)
-  expect_warning(fit <- fit_pigauto(data, tree, splits = splits, gnn = TRUE,
-    hidden_dim = 8L, n_gnn_layers = 1L, epochs = 2L, eval_every = 1L,
-    patience = 2L, dropout = 0, refine_steps = 1L, verbose = FALSE, seed = 4),
+  messages <- character()
+  expect_warning(fit <- withCallingHandlers(
+    fit_pigauto(data, tree, splits = splits, gnn = TRUE,
+      hidden_dim = 8L, n_gnn_layers = 1L, epochs = 2L, eval_every = 1L,
+      patience = 2L, dropout = 0, refine_steps = 1L, verbose = TRUE, seed = 4),
+    message = function(m) { messages <<- c(messages, conditionMessage(m)); invokeRestart("muffleMessage") }),
     "Small validation set")
+  expect_true(any(grepl("Calibrating gates on validation set...", messages, fixed = TRUE)))
   expect_s3_class(fit, "pigauto_fit")
   expect_true(isTRUE(fit$model_config$gnn))
   expect_gt(length(fit$model_state), 0L)

@@ -1146,3 +1146,52 @@ test_that("large-tree memory warning precedes graph allocation", {
   expect_match(warning_text, "cophenetic() requires O(n^2) memory (~800 MB)", fixed = TRUE)
   expect_match(warning_text, "Consider subsetting your tree", fixed = TRUE)
 })
+
+test_that("mixed threshold fits report one lambda per fitted liability", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(21)
+  tree <- ape::rtree(8)
+  traits <- data.frame(x = rnorm(8), y = factor(rep(c("A", "B"), 4)),
+                       row.names = tree$tip.label)
+  traits$x[c(3, 7)] <- NA_real_
+  traits$y[c(5, 6)] <- NA
+  data <- preprocess_traits(traits, tree,
+                            trait_types = c(x = "continuous", y = "binary"),
+                            log_transform = FALSE)
+  liability <- build_liability_matrix(data, splits = NULL)$X_liab
+  fallback <- character()
+  fit <- withCallingHandlers(
+    fit_joint_threshold_baseline(data, tree, splits = NULL,
+      joint_solver = "rphylopars", predict_method = "per_column",
+      lambda_mode = "fixed_1"),
+    warning = function(w) {
+      msg <- conditionMessage(w)
+      if (grepl('fit_joint_solver: joint_solver = "rphylopars" failed', msg, fixed = TRUE) &&
+          grepl("falling back to the in-house solver", msg, fixed = TRUE)) {
+        fallback <<- c(fallback, msg)
+        invokeRestart("muffleWarning")
+      }
+    })
+  expect_identical(colnames(fit$mu_liab), colnames(liability))
+  expect_equal(dim(fit$mu_liab), c(8L, 2L))
+  expect_true(all(is.finite(fit$mu_liab)))
+  expect_true(all(is.finite(fit$se_liab)) && all(fit$se_liab >= 0))
+  expect_equal(unname(fit$mu_liab[!is.na(liability)]),
+               unname(liability[!is.na(liability)]), tolerance = 1e-6)
+  expected_names <- colnames(liability)[fit$fit_cols_idx]
+  expect_identical(names(fit$lambda_per_trait_fit), expected_names)
+  backend_lambda <- fit$phylopars_fit$lambda_per_trait
+  expected_lambda <- if (length(backend_lambda) == length(expected_names)) {
+    unname(backend_lambda)
+  } else {
+    rep(unname(backend_lambda[1]), length(expected_names))
+  }
+  expect_equal(unname(fit$lambda_per_trait_fit), expected_lambda)
+  if (length(fallback)) {
+    expect_identical(fit$predict_method_used, "per_column")
+  } else {
+    # Rphylopars currently leaves lambda untracked; one NA is broadcast.
+    expect_identical(unname(backend_lambda), NA_real_)
+    expect_true(all(is.na(fit$lambda_per_trait_fit)))
+  }
+})
