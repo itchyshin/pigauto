@@ -120,6 +120,22 @@ test_that("preprocessing rejects malformed groups, values and covariates", {
   expect_error(make_missing_splits(matrix(NA_real_, 3, 2)), "No observed")
 })
 
+test_that("nonfinite covariates with missing names identify their position", {
+  tree <- ape::read.tree(text = "((a:1,b:1):1,c:2);")
+  dat <- data.frame(x = c(1, 2, 3), row.names = tree$tip.label)
+  for (nm in c("", NA_character_)) {
+    cov <- data.frame(z = c(1, Inf, 3), row.names = tree$tip.label)
+    names(cov) <- nm
+    expect_error(preprocess_traits(dat, tree, covariates = cov),
+                 "Column '\\[,1\\]' in `covariates` contains a non-finite value")
+  }
+  cov <- data.frame(z = c(1, 2, 3), row.names = tree$tip.label)
+  result <- preprocess_traits(dat, tree, covariates = cov)
+  expect_equal(unname(result$covariates[, "z"]), c(-1, 0, 1))
+  expect_equal(unname(result$cov_means[["z"]]), 2)
+  expect_equal(unname(result$cov_sds[["z"]]), 1)
+})
+
 test_that("wide evaluation scores each held-out trait and legacy matrix", {
   truth <- cbind(x = 1:3, cnt = 1:3, ord = 1:3, bin = c(0, 1, 1),
                  a = c(1, 0, 0), b = c(0, 1, 1), gate = c(0, 1, 1),
