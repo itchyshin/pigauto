@@ -882,7 +882,6 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
   # return the last good iterate rather than the diverged one. `prev_delta`
   # starts at Inf so the first iteration can never trip the guard.
   prev_delta <- Inf
-  L_hat_prev <- L_hat; L_var_prev <- L_var; Sigma_prev <- Sigma
   for (k in seq_len(max(max_iter, 1L))) {
     iter <- k
     refined <- .mvn_estep_refine(L_obs_mask, L_hat, L_var, Sigma, eps = eps,
@@ -917,12 +916,11 @@ fit_mvn_bm_inhouse <- function(L, tree = NULL, R = NULL,
       # Running away (or non-finite): discard this iterate, keep the last
       # good one. This is the guard that makes max_iter > 0 safe to expose.
       diverged <- TRUE
-      L_hat <- L_hat_prev; L_var <- L_var_prev; Sigma <- Sigma_prev
+      # Current values still hold the last accepted iterate.
       iter <- k - 1L
       break
     }
     prev_delta <- delta
-    L_hat_prev <- L_hat; L_var_prev <- L_var; Sigma_prev <- Sigma
     L_hat <- refined$L_hat
     L_var <- refined$L_var
     Sigma <- Sigma_new
