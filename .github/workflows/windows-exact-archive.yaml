@@ -37,7 +37,7 @@ jobs:
             any::V8
             any::tinytex
       - name: Install manual font metrics
-        run: Rscript -e 'tinytex::tlmgr_install(c("courier", "times", "helvetic", "ec"))'
+        run: Rscript -e 'tinytex::tlmgr_install(c("collection-latexrecommended", "collection-latexextra", "collection-fontsrecommended", "nameref", "refcount", "gettitlestring"))'
       - name: Download and verify the frozen archive
         shell: pwsh
         run: |
@@ -48,6 +48,13 @@ jobs:
           if ($hash -ne '95998faf7cf7ee0ae5246407853aa153593626664e441bb931e7bb4e4c7ed903') { throw 'Archive hash mismatch' }
           if ((Get-Item evidence/pigauto_0.11.1.tar.gz).Length -ne 5397254) { throw 'Archive size mismatch' }
           Rscript --vanilla -e 'print(sessionInfo()); print(R.version)' | Out-File evidence/session.txt
+      - name: Verify PDF manual prerequisites
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force evidence/source | Out-Null
+          tar -xzf evidence/pigauto_0.11.1.tar.gz -C evidence/source
+          R.exe CMD Rd2pdf --no-preview --output=evidence/manual.pdf evidence/source/pigauto
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Check the original archive
         shell: pwsh
         run: |
