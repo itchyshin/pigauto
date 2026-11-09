@@ -42,3 +42,16 @@ Set `PIGAUTO_COVERAGE_RECORD_TESTS=true` for a collection that also retains covr
 ```sh
 Rscript script/coverage_audit/test_evidence_selftest.R
 ```
+
+For a candidate that includes unmerged runtime repairs, keep the strict verifier unchanged and produce a separate line-accounting report:
+
+```sh
+python3 script/coverage_audit/reconcile_repairs.py selftest
+python3 script/coverage_audit/reconcile_repairs.py reconcile \
+  --candidate OUTPUT_DIR/cobertura.xml --manifest OUTPUT_DIR/manifest.json \
+  --expected-sha FULL_SHA --git-root REPOSITORY --out RECONCILIATION_DIR
+```
+
+This maps only unchanged lines outside zero-context Git diff hunks, checks their exact text, and retains changed or removed baseline entries as unresolved pending repair approval. It accounts for the original 12,749 locations and the 253 previously omitted neural locations, and lists added current locations separately. It always reports `complete: false` and cannot satisfy G7. The current implementation fails closed if an entire source file has been removed; the present repairs modify existing files.
+
+Optional `--named-tests FILE --named-tests-provenance RECEIPT` inputs add named test sets. Retain a receipt with `source_sha` and `csv_sha256` from the same frozen collection; an absent receipt, wrong source identity or modified CSV is rejected. Retain the source collection manifest and raw counter RDS alongside it for independent inspection. A collective test set must not be described as a single test witness.

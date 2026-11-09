@@ -25,13 +25,13 @@ def inventory(text):
             refs = re.findall(r"'([^']+)'", locations)
             if len(refs) != int(n):
                 raise ValueError('Skip location count mismatch: ' + flat)
-            if 'BIEN cache' in reason:
+            if 'BIEN cache' in reason or 'fixture not found' in reason.lower():
                 category = 'missing_fixture'
             elif 'HTML Tidy' in reason:
                 category = 'missing_optional_tool'
             elif 'installed' in reason and ('cannot test' in reason or 'integration test covers' in reason):
                 category = 'dependency_absence_control'
-            elif any(s in reason for s in ('source', 'not shipped', 'script/gha/')):
+            elif reason == 'NEWS.md not found' or any(s in reason for s in ('source', 'not shipped', 'script/gha/')):
                 category = 'source_only_assertion'
             else:
                 category = 'unclassified'
