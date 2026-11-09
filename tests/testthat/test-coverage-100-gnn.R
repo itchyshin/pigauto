@@ -547,3 +547,13 @@ test_that("phylogenetic signal gate selects the available safe corner", {
     expect_equal(unname(latent), unname(expected), tolerance = 1e-6)
   }
 })
+
+test_that("GPU debug checkpoint stays silent on CPU", {
+  testthat::local_mocked_bindings(cuda_is_available = function() FALSE,
+                                  .package = "torch")
+  withr::local_envvar(c(PIGAUTO_DEBUG_GPU_MEM = "1"))
+  expect_identical(gpu_mem_str(), "")
+  expect_silent(result <- withVisible(gpu_mem_checkpoint("CPU checkpoint")))
+  expect_false(result$visible)
+  expect_null(result$value)
+})
