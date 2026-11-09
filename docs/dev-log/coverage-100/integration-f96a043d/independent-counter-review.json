@@ -1,0 +1,67 @@
+{
+  "review": "independent read-only mechanical reconciliation",
+  "source_sha": "f96a043db32ebf795b34eee348aa997109d92a9c",
+  "baseline_sha": "033649b93115c6d8191e791f06b1ddf52eb82d19",
+  "result": "partial evidence consistent; acceptance unmet",
+  "xml": {
+    "locations": 13000,
+    "covered": 12902,
+    "uncovered": 98,
+    "unique": true,
+    "sha256_matches_manifest": true
+  },
+  "reconciliation": {
+    "catalog": 13002,
+    "covered_named": 12828,
+    "uncovered": 96,
+    "changed_or_removed_pending_approval": 78,
+    "original_misses": 1904,
+    "original_named": 1779,
+    "original_uncovered": 96,
+    "original_changed_pending": 29,
+    "new_locations": 76,
+    "new_covered": 74,
+    "new_uncovered": [
+      "R/preprocess_traits.R:553",
+      "R/preprocess_traits.R:554"
+    ],
+    "mapped_and_new_partition_xml_exactly": true,
+    "mapped_hit_regressions": 0
+  },
+  "named_evidence": {
+    "rows": 12902,
+    "single_test": 12889,
+    "collective_only": 13,
+    "matches_all_xml_covered_locations_and_hits": true,
+    "csv_sha256_matches_provenance": true,
+    "limitation": "Raw coverage RDS is remote; its declared hash and named-test attribution were not independently rehashed or replayed."
+  },
+  "source": {
+    "manifest_git_blob_sha256_matches": 189,
+    "torch_inventory_tracked_covered": 253,
+    "note": "provenance source_manifest_sha256 matches manifest.json, not the distinct source-manifest.json; latter is source test summary."
+  },
+  "previous_ae15_comparison": {
+    "new_old_miss_gains": [
+      "R/exact_conditional.R:125",
+      "R/exact_conditional.R:156",
+      "R/fit_baseline.R:371",
+      "R/fit_baseline.R:435",
+      "R/fit_baseline.R:1726"
+    ],
+    "fit_helpers_355_360_moved_to_changed_pending": 6
+  },
+  "strict_verifier": {
+    "failures": 73,
+    "source_identity_verified": false,
+    "complete": false
+  },
+  "logs": {
+    "instrumented": "FAIL 0 WARN 192 SKIP 33 PASS 5683",
+    "installed": "FAIL 0 WARN 192 SKIP 34 PASS 5680",
+    "check_summary": "0 errors, 0 warnings, 0 notes",
+    "source_summary": "192 assertions, 0 failures, 0 warnings, 0 skips"
+  },
+  "gates": "G7 and final G8 unmet; changed locations require separate approval; no post-f96 work credited",
+  "scope": "No tests rerun, no remote work, no independent review of every named test or code change."
+}

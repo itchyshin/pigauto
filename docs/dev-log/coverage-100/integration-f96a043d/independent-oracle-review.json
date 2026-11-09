@@ -1,0 +1,35 @@
+{
+  "source_sha": "f96a043db32ebf795b34eee348aa997109d92a9c",
+  "scope": "bounded independent read-only test-oracle and claims review; no full suite or remote job",
+  "verdict": "coverage gate unmet; reviewed focused claims supported with limitations",
+  "findings": [
+    {
+      "severity": "blocker",
+      "finding": "Cobertura records 12902/13000 instrumented lines, 98 missed, 99.246%; G7 and final G8 unmet."
+    },
+    {
+      "severity": "limitation",
+      "finding": "CV preservation fixture uses identical outcomes in every validation cell; it does not independently establish balanced or disjoint folds. This rests on source proof, not 27 assertions. Retained n=1 fallback verified as comparison only. Approval-held deletion does not earn coverage."
+    },
+    {
+      "severity": "limitation",
+      "finding": "Bounded resource test permits either NULL or a correct finite result; it does not require low-memory failure on every host. Frozen installed and instrumented receipts actually show NULL followed by healthy K=1000 completion. Vector heap cap is not RSS cap."
+    },
+    {
+      "severity": "limitation",
+      "finding": "Rout records installed 0 failures, 192 warnings, 34 skips, 5680 passes; instrumented 0 failures, 192 warnings, 33 skips, 5683 passes. Check summary zero warnings refers to check-level conditions, not absence of test warnings."
+    },
+    {
+      "severity": "limitation",
+      "finding": "Covariate diagnostics test mean and SD overflow, ordinary and constant encoding, and tiny SD fallback; post-encoding guard lines 553-554 remain untested and singleton behavior is not claimed."
+    }
+  ],
+  "positive_evidence": [
+    "Independent dense 8x8 Kronecker Gaussian calculation reproduces scaled means 40,0.4,0,0 and scaled variances 0.6,0.6,0.75,0.75. Huge mean 40e308 is unrepresentable.",
+    "Default-vs-exact real two-trait fixture and mutated-default negative control detected three failures; availability-only mock is isolated boundary.",
+    "Resource fixture SHA-256 prefixes b1ca86df d3fc8921 d90a5443 match frozen commit; source/body/namespace identity checked before probe and large allocation; wrong identity failed and malformed MemAvailable negative checks passed.",
+    "Covariate red/green logs 2 expected failures before and 16 assertions after; CV before/after logs 27 assertions each."
+  ],
+  "excluded": "post-f96 MPS/input tests, repair 306, general GPU, statistical calibration, singleton claims, releases",
+  "graft_estimated_tokens_saved": 46822
+}
