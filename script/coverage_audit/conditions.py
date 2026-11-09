@@ -8,6 +8,21 @@ from collections import Counter
 from pathlib import Path
 
 
+RESOURCE_SKIP_CATEGORIES = {
+    'resource child requires Linux or macOS': 'platform_test_prerequisite',
+    'resource child requires /usr/bin/time': 'missing_optional_tool',
+    'resource child requires ps': 'missing_optional_tool',
+    'resource child requires Rscript': 'missing_optional_tool',
+    'resource child requires mem.maxVSize': 'missing_runtime_feature',
+    'resource child requires system2 timeout': 'missing_runtime_feature',
+    'resource child requires macOS memory tools': 'missing_optional_tool',
+    'resource child cannot verify memory headroom': 'unverifiable_runtime_capacity',
+    'resource child insufficient memory headroom': 'insufficient_runtime_capacity',
+    'resource child source fingerprint unavailable': 'source_provenance_prerequisite',
+    'resource child vector heap limit unavailable': 'missing_runtime_feature',
+}
+
+
 def inventory(text):
     summary = re.search(r'\[ FAIL (\d+) \| WARN (\d+) \| SKIP (\d+) \| PASS (\d+) \]', text)
     if not summary:
@@ -25,13 +40,17 @@ def inventory(text):
             refs = re.findall(r"'([^']+)'", locations)
             if len(refs) != int(n):
                 raise ValueError('Skip location count mismatch: ' + flat)
-            if 'BIEN cache' in reason or 'fixture not found' in reason.lower():
+            if reason in RESOURCE_SKIP_CATEGORIES:
+                category = RESOURCE_SKIP_CATEGORIES[reason]
+            elif reason.startswith('resource child'):
+                category = 'unclassified'
+            elif 'BIEN cache' in reason or 'fixture not found' in reason.lower():
                 category = 'missing_fixture'
             elif 'HTML Tidy' in reason or reason == 'zip executable is not available':
                 category = 'missing_optional_tool'
             elif 'installed' in reason and ('cannot test' in reason or 'integration test covers' in reason):
                 category = 'dependency_absence_control'
-            elif reason == 'NEWS.md not found' or any(s in reason for s in ('source', 'not shipped', 'script/gha/')):
+            elif reason == 'NEWS.md not found' or re.search(r'\bsource(?:s)?\b', reason) or any(s in reason for s in ('not shipped', 'script/gha/')):
                 category = 'source_only_assertion'
             else:
                 category = 'unclassified'
@@ -93,6 +112,13 @@ def main():
         unknown_sample = sample.replace('HTML Tidy is not installed',
                                         'unrecognised prerequisite')
         assert inventory(unknown_sample)[1][0]['category'] == 'unclassified'
+        for reason, category in RESOURCE_SKIP_CATEGORIES.items():
+            resource_sample = sample.replace('HTML Tidy is not installed', reason)
+            assert inventory(resource_sample)[1][0]['category'] == category
+        for reason in ('resource child requires Unicorn',
+                       'resource child source proof is surprising'):
+            resource_sample = sample.replace('HTML Tidy is not installed', reason)
+            assert inventory(resource_sample)[1][0]['category'] == 'unclassified'
         for invalid in ('', sample.replace('WARN 1', 'WARN 2'),
                         sample.replace("'test-html.R:3:3'", '')):
             try:
