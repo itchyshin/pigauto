@@ -13,7 +13,6 @@
 .gbif_cache_key <- function(sp) {
   stopifnot(is.character(sp), length(sp) == 1L, nzchar(sp))
   key <- gsub("[^A-Za-z0-9_-]", "_", sp)
-  if (!nzchar(key)) key <- "unnamed"
   key
 }
 
