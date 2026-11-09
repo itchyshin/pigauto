@@ -45,7 +45,7 @@ jobs:
       - name: Check the original archive
         shell: pwsh
         run: |
-          R CMD check --as-cran --run-donttest --output=evidence evidence/pigauto_0.11.1.tar.gz 2>&1 | Tee-Object -FilePath evidence/check-console.log
+          R.exe CMD check --as-cran --run-donttest --output=evidence evidence/pigauto_0.11.1.tar.gz 2>&1 | Tee-Object -FilePath evidence/check-console.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $log = Get-Content evidence/pigauto.Rcheck/00check.log -Raw
           if ($log -notmatch '(?m)^Status: OK\s*$') { throw 'R CMD check is not Status OK' }
