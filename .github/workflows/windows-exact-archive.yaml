@@ -35,6 +35,9 @@ jobs:
           extra-packages: |
             any::rcmdcheck
             any::V8
+            any::tinytex
+      - name: Install manual font metrics
+        run: Rscript -e 'tinytex::tlmgr_install(c("courier", "times", "helvetic", "ec"))'
       - name: Download and verify the frozen archive
         shell: pwsh
         run: |
