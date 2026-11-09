@@ -1,0 +1,15 @@
+{
+  "source_sha": "848a595b5b6cf62df30c9d321ed566bec9e9aa15",
+  "derived_from_source_sha": "3898a77b1a953341a414b377c16a3e0e4e95ba5c",
+  "prior_classification_sha256": "1fc4875d148f190e244ae552716fa228092956bf721cab553e28cb2ccbf1fe23",
+  "rows": 108,
+  "categories": {
+    "failure-fallback": 73,
+    "reachable": 4,
+    "suspected-unreachable": 11,
+    "dependency-platform": 17,
+    "legacy": 3
+  },
+  "complete": false,
+  "limitation": "Reprojected only unchanged mapped source rows. Triage is not unreachability proof; subsequent tests carry no credit here."
+}
