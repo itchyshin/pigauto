@@ -341,3 +341,82 @@ test_that("unsupported compositional mean corner falls back safely", {
   expect_equal(unname(cal$r_cal_gnn), c(0, 0))
   expect_equal(unname(cal$r_cal_mean), c(0, 0))
 })
+
+test_that("unsplit CPU training retains its legacy graph and uncalibrated state", {
+  skip_if_no_libtorch()
+  testthat::local_mocked_bindings(cuda_is_available = function() FALSE,
+    backends_mps_is_available = function() FALSE, .package = "torch")
+  set.seed(41)
+  tree <- ape::rtree(12)
+  traits <- data.frame(x = seq_len(12) / 10, row.names = tree$tip.label)
+  data <- preprocess_traits(traits, tree)
+  graph <- build_phylo_graph(tree)
+  graph$D_sq <- NULL
+  messages <- capture.output(fit <- fit_pigauto(data, tree, graph = graph,
+    gnn = TRUE, epochs = 2L, eval_every = 1L, patience = 2L,
+    hidden_dim = 8L, n_gnn_layers = 1L, use_transformer_blocks = FALSE,
+    use_attention = TRUE, corruption_ramp = 0L, edge_dropout = 0,
+    corruption_rate = 0.8, dropout = 0, verbose = TRUE, seed = 41),
+    type = "message")
+  expect_true(isTRUE(fit$model_config$gnn))
+  expect_gt(length(fit$model_state), 0L)
+  expect_gt(nrow(fit$history), 0L)
+  expect_true(all(is.finite(fit$history$loss_rec)))
+  expect_true(all(is.na(fit$history$val_loss)))
+  expect_null(fit$r_cal_gnn)
+  expect_null(fit$conformal_scores)
+  expect_null(fit$graph$D_sq)
+  expect_true(any(grepl("Using device: cpu", messages, fixed = TRUE)))
+  expect_true(any(grepl("epoch", messages, fixed = TRUE)))
+})
+
+test_that("no-split baseline fit uses the baseline corner", {
+  set.seed(32)
+  tree <- ape::rtree(8)
+  data <- preprocess_traits(data.frame(x = seq_len(8) / 10,
+                                      row.names = tree$tip.label), tree)
+  fit <- fit_pigauto(data, tree, gnn = FALSE, verbose = FALSE)
+  expect_false(fit$model_config$gnn)
+  expect_equal(unname(fit$r_cal_bm), 1)
+  expect_equal(unname(fit$r_cal_gnn), 0)
+  expect_equal(unname(fit$r_cal_mean), 0)
+  expect_null(fit$conformal_scores)
+})
+
+test_that("zero-inflated trait trains both latent columns on CPU", {
+  skip_if_no_libtorch()
+  testthat::local_mocked_bindings(cuda_is_available = function() FALSE,
+    backends_mps_is_available = function() FALSE, .package = "torch")
+  expect_identical(get_device()$type, "cpu")
+  set.seed(52)
+  tree <- ape::rtree(16)
+  traits <- data.frame(parasites = rep(c(0L, 1L, 2L, 4L), 4),
+                       row.names = tree$tip.label)
+  data <- preprocess_traits(traits, tree, trait_types = c(parasites = "zi_count"))
+  fit <- fit_pigauto(data, tree, gnn = TRUE, hidden_dim = 8L,
+    n_gnn_layers = 1L, epochs = 2L, eval_every = 1L, patience = 2L,
+    corruption_rate = 0.8, corruption_ramp = 0L, dropout = 0,
+    use_transformer_blocks = FALSE, verbose = FALSE, seed = 52)
+  expect_identical(data$trait_map[[1]]$type, "zi_count")
+  expect_length(data$trait_map[[1]]$latent_cols, 2L)
+  expect_true(isTRUE(fit$model_config$gnn))
+  expect_gt(nrow(fit$history), 0L)
+  expect_true(all(is.finite(fit$history$loss_rec)))
+  expect_equal(fit$model_config$input_dim, 2L)
+  expect_true(all(is.finite(predict(fit, return_se = FALSE)$imputed_latent)))
+})
+
+test_that("discrete split verification keeps an accurate baseline", {
+  tm <- list(type = "binary", latent_cols = 1L, name = "binary")
+  truth <- matrix(rep(c(0, 1), 10), ncol = 1)
+  mu <- matrix(ifelse(truth == 1, 2, -2), ncol = 1)
+  delta <- -mu
+  mask <- matrix(TRUE, 20, 1)
+  for (method in c("single_split", "median_splits", "cv_folds")) {
+    cal <- calibrate_gates(list(tm), mu, delta, truth, mask,
+      gate_grid = c(0, 0.5, 1), gate_cap = 1, gate_method = method,
+      gate_splits_B = 3L, gate_cv_folds = 3L, seed = 23)
+    expect_equal(unname(cal$r_cal_bm), 1, info = method)
+    expect_equal(unname(cal$r_cal_gnn), 0, info = method)
+  }
+})

@@ -390,6 +390,9 @@ test_that("joint solver validates inputs and uses dense covariance without a tre
   expect_equal(unname(out$anc_recon[!is.na(L)]), unname(L[!is.na(L)]))
   expect_true(all(is.finite(out$anc_recon)))
   expect_true(all(diag(out$pars$phylocov) > 0))
+  notified_before <- .pigauto_exact_fallback_env$notified
+  withr::defer(.pigauto_exact_fallback_env$notified <- notified_before)
+  .pigauto_exact_fallback_reset()
   expect_message(fallback <- fit_mvn_bm_inhouse(L, R = R), "no Henderson")
   expect_identical(fallback$predict_method_used, "per_column")
   sigma <- .mvn_sigma_ml(matrix(c(1, 2, 3, 4), 2), matrix(0, 2, 2), diag(2))

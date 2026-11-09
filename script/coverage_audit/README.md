@@ -19,3 +19,12 @@ python3 -B script/coverage_audit/audit.py verify --candidate OUTPUT_DIR/cobertur
 A partial report may exit zero only with explicit --allow-partial; it keeps complete=false and lists missing lines, missing source classes, regressions and source-identity changes. To prove completion, use --require-complete instead. That mode requires Git binding, all executable source classes, unchanged baseline R source identities, matching coverage configuration, a successful collection manifest and every candidate line covered. No source-line mapping for repairs is implemented: changed R files receive no baseline credit, so repair candidates remain separate.
 
 The collection runner retains coverage RDS/XML, line-level CSV, source/test/configuration hashes, installed packages, session records and process output. The package checker disables only the PDF manual, records notes separately, and rejects errors or warnings. These are development checks, not a CRAN release gate or exact-artifact release evidence.
+
+Inventory warnings and skips from the retained installed-package output:
+
+```sh
+python3 script/coverage_audit/conditions.py --selftest
+python3 script/coverage_audit/conditions.py /path/to/testthat.Rout /path/to/conditions
+```
+
+The parser reconciles every individual warning and skip with the final testthat counts. Its categories describe the fixture or prerequisite; they do not establish that a skipped path was exercised. Any unclassified condition remains available for review in the CSV. The audit summary's `uncovered` field is the unique tracked-line deficit; `failures` also counts overlapping provenance and neural-method diagnostics.

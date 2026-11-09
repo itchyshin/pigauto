@@ -367,3 +367,38 @@ test_that("preprocessing encodes covariates and reports malformed inputs", {
   expect_error(preprocess_traits(dat, tree, covariates=bad), "unsupported class")
   expect_error(detect_trait_types(data.frame(x=I(list(1,2,3)))), "Cannot determine")
 })
+
+test_that("trait and tree readers reject absent or incompatible input", {
+  expect_error(read_traits(tempfile()), "Trait file not found")
+  expect_error(read_traits(matrix(1, 2, 2)), "data.frame or a path")
+  expect_error(read_traits(data.frame(x = 1)), "Column 'species' not found")
+  converted <- read_traits(data.frame(species = c("a", "b", "c"),
+                                     group = c("z", "a", "z"), rank = c("low", "high", "low")),
+                           factor_cols = "group", ordered_cols = "rank")
+  expect_identical(rownames(converted), c("a", "b", "c"))
+  expect_identical(levels(converted$group), c("a", "z"))
+  expect_true(is.ordered(converted$rank))
+  expect_identical(as.character(converted$rank), c("low", "high", "low"))
+})
+
+test_that("preprocessing validates basic objects and encodes constant scales", {
+  tree <- ape::read.tree(text = "((a:1,b:1):1,c:2);")
+  d <- data.frame(x = c(2, 2, 2), row.names = tree$tip.label)
+  expect_error(preprocess_traits(as.matrix(d), tree), "must be a data.frame")
+  expect_error(preprocess_traits(d, list()), "must be a phylo object")
+  for (type in c("count", "proportion")) {
+    values <- if (type == "count") c(2, 2, 2) else c(.4, .4, .4)
+    p <- preprocess_traits(data.frame(x = values, row.names = tree$tip.label), tree,
+                           trait_types = c(x = type))
+    expect_identical(p$trait_map[[1]]$sd, 1)
+    expect_equal(as.numeric(p$X_scaled), rep(0, 3))
+  }
+  ord <- preprocess_traits(data.frame(x = ordered(rep("low", 3), levels = c("low", "medium", "high")),
+                                      row.names = tree$tip.label), tree)
+  expect_identical(ord$trait_map[[1]]$sd, 1)
+  expect_equal(as.numeric(ord$X_scaled), rep(0, 3))
+  covd <- preprocess_traits(d, tree, trait_types = c(x = "continuous"),
+                            covariates = data.frame(flag = c(TRUE, FALSE, TRUE), row.names = tree$tip.label))
+  expect_true(all(is.finite(covd$covariates)))
+  expect_equal(nrow(covd$covariates), 3L)
+})

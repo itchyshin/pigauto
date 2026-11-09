@@ -297,3 +297,111 @@ test_that("joint conditional draws preserve cross-trait covariance", {
     expect_identical(one$y[!is.na(d$y)], d$y[!is.na(d$y)])
   }
 })
+
+test_that("single-draw posterior blocks agree with a dense conditional mean", {
+  f <- mi_cov_tree_data(); Y <- as.matrix(f$data)
+  Y[2, 1] <- NA_real_; Y[5, 2] <- NA_real_
+  prob <- .mip_problem(Y, f$tree)
+  SP <- matrix(c(1, 0.3, 0.3, 0.7), 2)
+  SE <- matrix(c(0.5, 0.1, 0.1, 0.4), 2)
+  mu <- c(2, 3)
+  R <- cov2cor(ape::vcv(f$tree))[rownames(Y), rownames(Y)]
+  C <- kronecker(SP, R) + kronecker(SE, diag(nrow(Y)))
+  v <- as.vector(Y); missing <- which(is.na(v)); observed <- which(!is.na(v))
+  mu_vec <- rep(mu, each = nrow(Y))
+  reference <- mu_vec[missing] + C[missing, observed, drop = FALSE] %*%
+    solve(C[observed, observed, drop = FALSE], v[observed] - mu_vec[observed])
+  expect_equal(.mip_cond_mean(prob, SP, SE, mu), as.vector(reference), tolerance = 1e-8)
+  set.seed(125)
+  one <- .mip_fixed_draws(prob, SP, SE, n_draws = 1L, mu = mu, block = 1L)
+  set.seed(125)
+  again <- .mip_fixed_draws(prob, SP, SE, n_draws = 1L, mu = mu, block = 1L)
+  expect_identical(one, again)
+  expect_equal(dim(one$ymis), c(2L, 1L))
+  expect_true(all(is.finite(one$ymis)))
+  expect_equal(as.numeric(one$mu), mu)
+  expect_null(.mip_reml_lambda(prob, f$tree, reml_max_n = 7L))
+})
+
+test_that("analysis validation detects one group and ill-conditioned inputs", {
+  d <- mi_cov_data(); d$group <- factor(rep("only", nrow(d)))
+  expect_error(multi_impute_analysis(d, y ~ x + z + (1 | group), "x",
+                                     model = "lmer", m = 2), "at least two groups")
+  expect_length(.analysis_mi_findbars_safe(y ~ x + (1 | group)), 1)
+  # Rescaling a non-collinear auxiliary keeps QR rank while making the
+  # design condition number exceed the numerical stability cutoff.
+  d$tiny <- d$z * 1e-10
+  expect_error(.analysis_mi_bayes_norm(d, y ~ x, "x", "tiny", 2, 1), "ill-conditioned")
+})
+
+test_that("pool printing highlights large missing-information fractions", {
+  base <- data.frame(x = 1:8, noise = c(.02, -.01, .03, -.02, .01, -.03, .02, -.01))
+  fits <- lapply(c(-2, 0, 2), function(shift) {
+    lm(y ~ x, transform(base, y = 1 + 0.3 * x + shift + noise))
+  })
+  expect_warning(pooled <- pool_mi(fits), "unverified provenance")
+  expect_gt(pooled$fmi[pooled$term == "(Intercept)"], 0.5)
+  expect_match(paste(capture.output(print(pooled)), collapse = " "), "Consider M >=")
+})
+
+test_that("diagnostic sampling skips absent traits and decodes zero-inflated counts", {
+  pred <- list(imputed = data.frame(count = c(99L, 7L), a = c(0.4, 0.2), b = c(0.6, 0.8)),
+               se = matrix(0, 2, 3, dimnames = list(NULL, c("count", "a", "b"))),
+               probabilities = list(count = c(1, 1)), conformal_scores = NULL,
+               imputed_latent = cbind(gate = c(0, 0), magnitude = c(log1p(3), 0)))
+  mask <- matrix(FALSE, 2, 3, dimnames = list(NULL, c("count", "a", "b")))
+  mask[1, "count"] <- TRUE
+  traits <- list(
+    list(name = "not_present", type = "continuous"),
+    list(name = "count", type = "zi_count", latent_cols = 1:2, mean = 0, sd = 1),
+    list(name = "bad_group", type = "multi_proportion", input_cols = c("a", "missing")),
+    list(name = "unmasked_group", type = "multi_proportion", input_cols = c("a", "b"))
+  )
+  out <- .sample_conformal_draw(pred, mask, traits, seed_i = 30)
+  expect_identical(out$count, c(3L, 7L))
+  expect_identical(out$a, pred$imputed$a)
+  expect_identical(out$b, pred$imputed$b)
+  # Present in predictions but absent from the input mask: no draw is made.
+  mask2 <- mask[, "count", drop = FALSE]
+  traits2 <- list(list(name = "a", type = "continuous"),
+                  list(name = "partial", type = "multi_proportion", input_cols = c("a", "b")))
+  expect_identical(.sample_conformal_draw(pred, mask2, traits2, seed_i = 30), pred$imputed)
+})
+
+test_that("conditional draws restore missing latent row names from data", {
+  f <- mi_cov_tree_data(); d <- f$data; d$x[c(1, 2)] <- NA_real_
+  data <- suppressMessages(preprocess_traits(d, f$tree, log_transform = FALSE))
+  reference <- draw_conditional_bm(list(data = data, tree = f$tree), m = 2, seed = 21)
+  rownames(data$X_scaled) <- NULL
+  restored <- draw_conditional_bm(list(data = data, tree = f$tree), m = 2, seed = 21)
+  expect_equal(restored$mu_cond, reference$mu_cond)
+  expect_identical(restored$datasets, reference$datasets)
+  expect_identical(rownames(restored$mu_cond), data$species_names)
+})
+
+test_that("posterior output assembles a single missing cell", {
+  f <- mi_cov_tree_data(); d <- f$data; d$x[2] <- NA_real_
+  # Deliberately short: this tests shape and preservation, not convergence.
+  ctl <- list(n_chains = 1L, burnin = 2L, n_iter = 8L, thin = 1L,
+              keep_draws = 8L, auto_extend = FALSE)
+  warnings <- character()
+  mi <- withCallingHandlers(
+    multi_impute(d, f$tree, m = 2L, draws_method = "posterior",
+                 log_transform = FALSE, posterior_control = ctl, seed = 3,
+                 verbose = FALSE),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_true(any(grepl("did not meet the convergence rule", warnings)))
+  expect_false(mi$posterior$converged)
+  expect_equal(nrow(mi$posterior$cell_interval), 1L)
+  expect_equal(mi$posterior$cell_interval$row, 2L)
+  expect_identical(mi$posterior$cell_interval$trait, "x")
+  expect_true(all(is.finite(unlist(mi$posterior$cell_interval[c("lower", "median", "upper")]))))
+  expect_lte(mi$posterior$cell_interval$lower, mi$posterior$cell_interval$median)
+  expect_lte(mi$posterior$cell_interval$median, mi$posterior$cell_interval$upper)
+  expect_true(all(vapply(mi$datasets, function(z) identical(z$x[-2], d$x[-2]) &&
+                           identical(z$y, d$y), logical(1))))
+})
