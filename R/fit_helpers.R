@@ -352,12 +352,7 @@ calibrate_gates <- function(trait_map, mu_cal, delta_cal,
         lapply(seq_len(K_eff), function(k) {
           train_local <- val_row_idx[fold_id != k]
           held_out <- val_row_idx[fold_id == k]
-          if (length(train_local) == 0L) {
-            train_local <- val_row_idx
-          }
-          if (length(held_out) == 0L) {
-            held_out <- val_row_idx
-          }
+          # 2 <= K_eff <= n_val, so every balanced fold and complement is nonempty.
           list(half_a = train_local, half_b = held_out)
         })
       }
