@@ -53,7 +53,7 @@ test_that("comparison plots aggregate replicates and sort traits by baseline", {
   expect_equal(pts[[1]]$x, c(2, 3, 5))
   expect_equal(pts[[2]]$x, c(1, 4, NA))
   expect_equal(seg[[1]], c(2, 1, 1, 1))
-  expect_equal(legends[[1]], c("baseline", "pigauto", "GNN better", "GNN worse"))
+  expect_equal(legends[[1]][1:2], c("baseline", "pigauto"))
   d2 <- transform(d, metric = "accuracy")
   expect_invisible(plot_comparison(rbind(d, d2)))
   expect_invisible(plot_comparison(d2))

@@ -4,6 +4,7 @@ stopifnot(length(args) == 3L)
 root <- normalizePath(args[1], mustWork = TRUE)
 out <- args[2]
 expected_sha <- args[3]
+stopifnot(identical(tolower(Sys.getenv("NOT_CRAN")), "true"))
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
 out <- normalizePath(out)
 marker <- file.path(root, "SOURCE_SHA")
@@ -20,7 +21,9 @@ hashes <- setNames(lapply(source_paths, function(p)
 metadata <- list(source_sha = expected_sha,
   baseline_source_sha = "033649b93115c6d8191e791f06b1ddf52eb82d19",
   source_hashes = hashes, status = "running", started_at = format(Sys.time(), tz = "UTC"),
-  r_version = R.version.string, threads = threads)
+  r_version = R.version.string, threads = threads,
+  environment = as.list(Sys.getenv(c("NOT_CRAN", "R_KEEP_PKG_SOURCE", "OMP_NUM_THREADS",
+                                    "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"))))
 write_manifest <- function() jsonlite::write_json(metadata,
   file.path(out, "manifest.json"), pretty = TRUE, auto_unbox = TRUE, null = "null")
 write_manifest()
@@ -44,6 +47,12 @@ stopifnot(isTRUE(torch::torch_is_installed()),
 result <- tryCatch({
   cov <- covr::package_coverage(path = root, type = "tests", quiet = FALSE,
     clean = FALSE, install_path = file.path(out, "package"))
+  saveRDS(cov, file.path(out, "coverage-primary.rds"))
+  source(file.path(root, "script", "coverage_audit", "trace_torch.R"), local = TRUE)
+  graph_cov <- coverage_trace_graph(root)
+  saveRDS(graph_cov, file.path(out, "coverage-graph.rds"))
+  cov <- coverage_combine_graph(cov, graph_cov, root)
+  metadata$collection_components <- c("package_coverage", "graph_transformer_R6")
   saveRDS(cov, file.path(out, "coverage.rds"))
   covr::to_cobertura(cov, filename = file.path(out, "cobertura.xml"))
   write.csv(as.data.frame(cov), file.path(out, "line-coverage.csv"), row.names = FALSE)

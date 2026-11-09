@@ -21,3 +21,11 @@ In R/plot_pigauto.R, the missing-SE guard follows matrix indexing. A NULL SE or 
 ## Prepared repairs
 
 PR 284 contains the sorted-rank fix and its regression. PR 285 contains the single-candidate clade fix and its regression, including the no-candidate control. Both remain drafts and require separate merge approval. The masking regression and existing masking suite passed 35 assertions with no warnings or skips.
+
+## Method attribution in comparison legends
+
+The default comparison plot labels improvement as GNN better/worse even though the pigauto method can use the default GNN-off fit. Coverage tests retain checks for the two actual method labels but do not endorse that component attribution. A separate repair should use the supplied method name in the improvement legend.
+
+## Coverage measurement omission
+
+The original coverage XML contains 48 R source classes, while the source tree contains 50 files. data.R contains six character-literal documentation anchors and no calls or function definitions. graph_transformer_block.R contains executable torch module methods, which covr's ordinary namespace traversal does not discover through the factory's module attribute. The supplemental collector exposes that actual R6 generator to covr's R6 traversal, runs the existing transformer tests, and adds the disjoint file to the denominator. The first probe covered 60 of 64 tracked lines, with four covariate-injection lines unexercised. This is measurement evidence, not a new model-validation claim.
