@@ -1,6 +1,15 @@
 # Post-hoc diagnostic after the predeclared summaries; no fitting or tuning.
 args <- commandArgs(TRUE)
 stopifnot(length(args)==3L)
+script_file <- sub("^--file=", "", commandArgs()[grepl("^--file=", commandArgs())])
+audit_dir <- tempfile("seed260-strata-audit-")
+audit <- suppressWarnings(system2("Rscript", c(
+  shQuote(file.path(dirname(script_file), "summarize.R")),
+  shQuote(args[1]), shQuote(args[2]), shQuote(audit_dir)),
+  stdout=TRUE, stderr=TRUE))
+unlink(audit_dir, recursive=TRUE)
+if (!is.null(attr(audit,"status")))
+  stop("Subgroup input validation failed: ", paste(audit,collapse="\n"))
 p <- readRDS(args[1])
 seen <- logical(nrow(p$data))
 for(f in 1:5) seen[p$fold==f] <- p$data$species[p$fold==f] %in% p$data$species[p$fold!=f]

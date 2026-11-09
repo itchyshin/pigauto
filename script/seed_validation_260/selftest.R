@@ -58,4 +58,20 @@ stopifnot(is.null(attr(x,"status")),any(grepl('"queued": 1',x,fixed=TRUE)))
 writeLines("wrong",file.path(src,"SOURCE_SHA"))
 x <- suppressWarnings(plan())
 stopifnot(attr(x,"status")!=0)
+saveRDS(orig,path)
+run_strata <- function(label) system2("Rscript",c(
+  shQuote("script/seed_validation_260/stratify.R"),shQuote(pp),shQuote(res),
+  shQuote(file.path(a,paste0(label,".csv")))),stdout=TRUE,stderr=TRUE)
+stopifnot(is.null(attr(run_strata("strata-good"),"status")))
+for(kind in c("source","runner","truth","interval")) {
+  r <- orig
+  if(kind=="source") r$source_sha <- "wrong"
+  if(kind=="runner") r$runner_md5 <- "wrong"
+  if(kind=="truth") r$predictions$observed[1] <- -99
+  if(kind=="interval") r$predictions$lower[1] <- Inf
+  saveRDS(r,path)
+  x <- suppressWarnings(run_strata(paste0("strata-",kind)))
+  stopifnot(!is.null(attr(x,"status")),attr(x,"status")!=0)
+}
+saveRDS(orig,path)
 cat("HARNESS SELFTEST PASS: complete summary, four invalid/missing controls, resume, source gate\n")

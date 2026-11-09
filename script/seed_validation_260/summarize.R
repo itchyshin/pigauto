@@ -34,7 +34,11 @@ for(i in seq_len(nrow(jobs))) {
     pred <- r$predictions
     stopifnot(nrow(pred)==nrow(expected),!anyDuplicated(pred$row_n),
       identical(pred$row_n,expected$row_n),identical(pred$species,expected$species),
-      identical(pred$observed,expected$CTmax),all(is.finite(pred$predicted)))
+      identical(pred$observed,expected$CTmax),all(is.finite(pred$predicted)),
+      is.numeric(pred$lower),length(pred$lower)==nrow(expected),
+      is.numeric(pred$upper),length(pred$upper)==nrow(expected),
+      all(is.finite(pred$lower)),all(is.finite(pred$upper)),
+      all(pred$lower<=pred$upper))
     }
     r
   },error=function(e)e)
