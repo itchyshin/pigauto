@@ -316,7 +316,7 @@ generate_missing_probs <- function(X, n, p, mechanism, args, tree,
     if (length(candidates) < n_clades) {
       n_clades <- length(candidates)
     }
-    selected <- sample(candidates, n_clades)
+    selected <- candidates[sample.int(length(candidates), n_clades)]
 
     # Find descendant tips for each selected node
     clade_tips <- character(0)
