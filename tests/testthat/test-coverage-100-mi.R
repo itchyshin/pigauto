@@ -619,3 +619,76 @@ test_that("exact conditional refuses singular covariance without a ridge", {
               dimnames = list(tree$tip.label, c("x", "y")))
   expect_null(exact_conditional_mvn(L, matrix(0, 2, 2), henderson, eps = 0))
 })
+
+test_that("real drmTMB fits pool both mean and scale coefficients", {
+  # This checks adapter arithmetic, including a fixed log-scale coefficient.
+  # It does not validate downstream inference or random-effect uncertainty.
+  skip_if_not_installed("drmTMB", "0.7.0")
+  set.seed(407)
+  n <- 80L
+  d <- data.frame(x = rnorm(n))
+  d$y <- 1 + .4 * d$x + rnorm(n, sd = .7)
+  d$x[c(3, 11, 26)] <- NA_real_
+  mi <- multi_impute_analysis(d, y ~ x, "x", model = "lm", m = 2L, seed = 3L)
+  drm_fit <- getExportedValue("drmTMB", "drmTMB")
+  drm_formula <- getExportedValue("drmTMB", "drm_formula")
+  fits <- with_imputations(mi, function(z) drm_fit(drm_formula(y ~ x), data = z,
+                                                   family = gaussian()), .progress = FALSE)
+  expect_true(all(vapply(fits, function(f) identical(f$opt$convergence, 0L) &&
+                           isTRUE(f$sdr$pdHess), logical(1))))
+  pooled <- pool_mi(fits)
+  terms <- c("mu:(Intercept)", "mu:x", "sigma:(Intercept)")
+  coefficients <- vapply(fits, function(f) {
+    blocks <- coef(f)
+    setNames(c(blocks$mu, blocks$sigma), terms)
+  }, numeric(3))
+  variances <- vapply(fits, function(f) diag(vcov(f))[terms], numeric(3))
+  expect_identical(pooled$term, terms)
+  expect_equal(pooled$estimate, unname(rowMeans(coefficients)))
+  expect_equal(pooled$std.error,
+               unname(sqrt(rowMeans(variances) + 1.5 * apply(coefficients, 1, var))))
+})
+
+test_that("real gllvmTMB fits pool aligned trait-specific fixed effects", {
+  # This is an adapter and Rubin-arithmetic fixture. Its imputation formula
+  # omits trait-specific terms; congeniality and inferential validity are
+  # not established. The tidy interface supplies the backend estimates/SEs.
+  skip_if_not_installed("gllvmTMB", "0.7.1")
+  set.seed(408)
+  n <- 100L
+  d <- data.frame(x = rnorm(n), trait = factor(rep(c("a", "b"), each = n / 2)),
+                  unit = seq_len(n))
+  d$y <- ifelse(d$trait == "a", 1, 2) + .4 * d$x + rnorm(n, sd = .7)
+  d$x[c(3, 11, 26)] <- NA_real_
+  mi <- multi_impute_analysis(d, y ~ x, "x", model = "lm", m = 2L, seed = 3L)
+  gllvm_fit <- getExportedValue("gllvmTMB", "gllvmTMB")
+  fits <- with_imputations(mi, function(z) {
+    gllvm_fit(y ~ 0 + trait + (0 + trait):x, data = z, trait = "trait",
+              unit = "unit", family = gaussian())
+  }, .progress = FALSE)
+  expect_true(all(vapply(fits, function(f) identical(f$opt$convergence, 0L) &&
+                           isTRUE(f$sd_report$pdHess), logical(1))))
+  pooled <- pool_mi(fits)
+  tidy <- utils::getS3method("tidy", "gllvmTMB_multi", envir = asNamespace("gllvmTMB"))
+  tables <- lapply(fits, tidy, effects = "fixed")
+  terms <- tables[[1]]$term
+  coefficients <- vapply(tables, function(z) setNames(z$estimate, z$term)[terms], numeric(length(terms)))
+  variances <- vapply(tables, function(z) setNames(z$std.error^2, z$term)[terms], numeric(length(terms)))
+  expect_setequal(terms, c("traita", "traitb", "traita:x", "traitb:x"))
+  expect_identical(pooled$term, terms)
+  expect_equal(pooled$estimate, unname(rowMeans(coefficients)))
+  expect_equal(pooled$std.error,
+               unname(sqrt(rowMeans(variances) + 1.5 * apply(coefficients, 1, var))))
+})
+
+test_that("posterior likelihood rejects singular proposals but propagates other errors", {
+  f <- mi_cov_tree_data()
+  Y <- as.matrix(f$data)
+  Y[2, 1] <- NA_real_; Y[5, 2] <- NA_real_
+  prob <- .mip_problem(Y, f$tree)
+  valid <- .mip_try_collapsed_ll(prob, .mip_template(prob), diag(2), diag(2))
+  expect_true(is.finite(valid$ll))
+  expect_null(.mip_try_collapsed_ll(prob, .mip_template(prob), matrix(0, 2, 2), diag(2)))
+  expect_error(.mip_try_collapsed_ll(prob, .mip_template(prob), diag(2), matrix(1, 1, 1)),
+               "subscript out of bounds")
+})

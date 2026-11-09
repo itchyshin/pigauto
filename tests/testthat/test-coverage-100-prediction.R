@@ -724,3 +724,151 @@ test_that("inconsistent legacy GNN configuration reports a model loading error",
   inconsistent$model_config$hidden_dim <- 16L
   expect_error(predict(inconsistent, return_se = FALSE), "save_pigauto.*load_pigauto")
 })
+
+test_that("ordinal baseline keeps threshold route without ordinal validation cells", {
+  set.seed(28)
+  tree <- ape::rtree(20)
+  i <- seq_len(20)
+  traits <- data.frame(x = sin(i / 2),
+    grade = ordered(rep(c("low", "mid", "high", "mid"), 5),
+                    levels = c("low", "mid", "high")),
+    row.names = tree$tip.label)
+  d <- preprocess_traits(traits, tree, trait_types = c(x = "continuous", grade = "ordinal"),
+                         log_transform = FALSE)
+  ordinal_col <- d$trait_map$grade$latent_cols
+  expect_identical(ordinal_col, 2L)
+  # Only the continuous column has held-out cells; ordinal has no validation data.
+  splits <- list(val_idx = 2L, test_idx = 3L)
+  for (method in c("per_column", "auto")) {
+    out <- fit_baseline(d, tree, splits = splits, predict_method = method,
+                        lambda_mode = "fixed_1", seed = 42)
+    expect_identical(unname(out$ordinal_path_chosen[as.character(ordinal_col)]),
+                     "threshold_joint", info = method)
+    expect_identical(unname(out$path["grade"]), "threshold_joint", info = method)
+    expect_identical(dimnames(out$mu), dimnames(d$X_scaled), info = method)
+    expect_true(all(is.finite(out$mu)) && all(is.finite(out$se)), info = method)
+    expect_true(all(out$se >= 0), info = method)
+  }
+})
+
+
+test_that("pooling one decoded row preserves count median and ordinal mode", {
+  tm <- list(list(name = "count", type = "count", latent_cols = 1L, mean = 0, sd = 1),
+             list(name = "grade", type = "ordinal", latent_cols = 2L, mean = 0, sd = 1,
+                  levels = c("low", "mid", "high")))
+  draws <- lapply(list(c(log1p(1), 0), c(log1p(3), 1), c(log1p(7), 1)),
+    function(x) matrix(x, nrow = 1, dimnames = list("tip", c("count", "grade"))))
+  decoded <- lapply(draws, decode_from_latent, trait_map = tm, species_names = "tip")
+  pooled <- pool_imputations(decoded, draws, tm, pool_method = "mode")
+  expect_equal(dim(pooled$imputed), c(1L, 2L))
+  expect_identical(rownames(pooled$imputed), "tip")
+  expect_identical(pooled$imputed$count, 3L)
+  expect_true(is.ordered(pooled$imputed$grade))
+  expect_identical(as.character(pooled$imputed$grade), "mid")
+  expect_equal(pooled$latent_mean, Reduce(`+`, draws) / 3)
+})
+
+test_that("baseline draws restore an absent R random seed", {
+  local({
+    had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+    old_seed <- if (had_seed) get(".Random.seed", envir = .GlobalEnv) else NULL
+    on.exit({
+      if (had_seed) assign(".Random.seed", old_seed, envir = .GlobalEnv) else if
+        (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+          rm(list = ".Random.seed", envir = .GlobalEnv)
+    }, add = TRUE)
+    set.seed(41)
+    tree <- ape::rtree(12)
+    traits <- data.frame(x = seq_len(12) / 10, row.names = tree$tip.label)
+    traits$x[2] <- NA_real_
+    data <- preprocess_traits(traits, tree, trait_types = c(x = "continuous"),
+                              log_transform = FALSE)
+    fit <- fit_pigauto(data, tree, gnn = FALSE, seed = 41, verbose = FALSE,
+                       predict_method = "per_column")
+    rm(list = ".Random.seed", envir = .GlobalEnv)
+    first <- predict(fit, n_imputations = 3L, return_se = TRUE)
+    expect_false(exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+    second <- predict(fit, n_imputations = 3L, return_se = TRUE)
+    expect_false(exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+    expect_equal(first$imputed_datasets, second$imputed_datasets)
+    expect_true(all(is.finite(first$imputed_latent)))
+    expect_gt(first$se_latent[2, 1], 0)
+  })
+})
+
+test_that("missing optional phytools returns named unavailable signal values", {
+  set.seed(52)
+  tree <- ape::rtree(8)
+  traits <- data.frame(x = seq_len(8) / 10, y = cos(seq_len(8)),
+                       row.names = tree$tip.label)
+  data <- preprocess_traits(traits, tree, trait_types = c(x = "continuous", y = "continuous"),
+                            log_transform = FALSE)
+  fn <- compute_phylo_signal_per_trait
+  env <- new.env(parent = environment(fn))
+  env$requireNamespace <- function(package, ...) {
+    if (identical(package, "phytools")) FALSE else base::requireNamespace(package, ...)
+  }
+  environment(fn) <- env
+  expect_warning(out <- fn(data, tree), "requires the 'phytools' package")
+  expect_identical(names(out), c("x", "y"))
+  expect_identical(unname(out), c(NA_real_, NA_real_))
+})
+
+test_that("exact conditional refuses singular trait covariance without a ridge", {
+  tree <- ape::read.tree(text = "((a:1,b:1):1,(c:1,d:1):1);")
+  h <- build_henderson_S_inv(tree)
+  L <- cbind(x = c(1, NA, -1, .5), y = c(1, NA, -1, .5))
+  rownames(L) <- tree$tip.label
+  Sigma <- matrix(1, 2, 2)
+  expect_equal(qr(Sigma)$rank, 1L)
+  expect_null(exact_conditional_mvn(L, Sigma, h, eps = 0))
+  regularized <- exact_conditional_mvn(L, Sigma, h, eps = 1e-6)
+  expect_false(is.null(regularized))
+  expect_true(all(is.finite(regularized$mu)) && all(is.finite(regularized$var)))
+  expect_equal(regularized$mu[!is.na(L)], L[!is.na(L)])
+  expect_true(all(regularized$var >= 0))
+})
+
+test_that("categorical OVR retains unavailable class fits when all cells are held out", {
+  set.seed(51)
+  tree <- ape::rtree(9)
+  traits <- data.frame(cat = factor(rep(c("a", "b", "c"), 3)),
+                       row.names = tree$tip.label)
+  data <- preprocess_traits(traits, tree)
+  # All one-hot cells are held out, leaving no observed category to fit.
+  splits <- list(val_idx = seq_along(data$X_scaled), test_idx = integer())
+  out <- fit_ovr_categorical_fits_em(data, tree, "cat", splits = splits,
+                                    predict_method = "per_column", em_iterations = 2L)
+  expect_equal(dim(out), c(9L, 3L))
+  expect_identical(rownames(out), tree$tip.label)
+  expect_identical(colnames(out), colnames(data$X_scaled))
+  expect_true(all(is.na(out)))
+  fits <- attr(out, "per_class_fits")
+  expect_length(fits, 3L)
+  expect_true(all(vapply(fits, function(x) is.null(x$jt$phylopars_fit), logical(1))))
+  expect_true(is.na(attr(out, "predict_method_used")))
+  expect_equal(attr(out, "em_state")$sigma_cat, rep(1, 3))
+  expect_identical(attr(out, "em_state")$iterations_run, 2L)
+})
+
+test_that("active composition ranking requires five observed compositions", {
+  set.seed(60)
+  tree <- ape::rtree(8)
+  p <- seq(.15, .85, length.out = 8)
+  for (n_observed in c(4L, 5L)) {
+    traits <- data.frame(p = p, q = 1 - p, row.names = tree$tip.label)
+    traits[seq.int(n_observed + 1L, 8L), c("p", "q")] <- NA_real_
+    fit <- impute(traits, tree, multi_proportion_groups = list(comp = c("p", "q")),
+                  gnn = FALSE, missing_frac = 0, verbose = FALSE, seed = 40,
+                  predict_method = "per_column")
+    ranked <- suggest_next_observation(fit, top_n = 20, types = "multi_proportion")
+    expect_s3_class(ranked, "pigauto_active")
+    expect_equal(nrow(ranked), if (n_observed == 4L) 0L else 3L)
+    if (n_observed == 5L) {
+      expect_setequal(ranked$species, tree$tip.label[6:8])
+      expect_true(all(ranked$trait == "comp"))
+      expect_true(all(is.finite(ranked$delta)) && all(ranked$delta >= 0))
+      expect_equal(ranked$delta, ranked$delta_var_total)
+    }
+  }
+})

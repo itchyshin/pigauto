@@ -826,3 +826,11 @@ test_that("trait-map defaults stay defined with absent observations", {
   expect_equal(map$composition$sd, c(1, 1))
   expect_length(map$composition$latent_cols, 2L)
 })
+
+test_that("observed-data likelihood penalizes a singular covariance", {
+  L <- matrix(c(1, 2), ncol = 1)
+  expect_equal(.mvn_obs_nll(0, L, 1L, eps = 0), 2.5)
+  # exp(-1000) underflows to zero, so disabling the ridge yields a
+  # singular covariance and must not be accepted as a finite optimum.
+  expect_identical(.mvn_obs_nll(-1000, L, 1L, eps = 0), .Machine$double.xmax)
+})
