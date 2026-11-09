@@ -1,0 +1,23 @@
+{
+  "counts": {
+    "fail": 0,
+    "warn": 192,
+    "skip": 34,
+    "pass": 5349
+  },
+  "categories": {
+    "missing_fixture": 5,
+    "missing_optional_tool": 1,
+    "source_only_assertion": 25,
+    "dependency_absence_control": 3,
+    "small_calibration_fixture": 143,
+    "constant_trait_fixture": 21,
+    "deliberate_solver_failure_fixture": 1,
+    "small_tree_sensitivity_fixture": 5,
+    "covariate_route_notice": 8,
+    "imbalanced_ordinal_fixture": 12,
+    "signal_gate_fallback_notice": 1,
+    "unmatched_species_fixture": 1
+  },
+  "source": "/private/tmp/pigauto-integration-a89152a3/testthat.Rout"
+}
