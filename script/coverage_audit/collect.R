@@ -18,7 +18,9 @@ source_paths <- c(
   "DESCRIPTION", "NAMESPACE", "codecov.yml", ".github/workflows/test-coverage.yaml")
 hashes <- setNames(lapply(source_paths, function(p)
   digest::digest(file = file.path(root, p), algo = "sha256")), source_paths)
-metadata <- list(source_sha = expected_sha,
+record_tests <- identical(Sys.getenv("PIGAUTO_COVERAGE_RECORD_TESTS"), "true")
+options(covr.record_tests = record_tests)
+metadata <- list(record_tests = record_tests, source_sha = expected_sha,
   baseline_source_sha = "033649b93115c6d8191e791f06b1ddf52eb82d19",
   source_hashes = hashes, status = "running", started_at = format(Sys.time(), tz = "UTC"),
   r_version = R.version.string, threads = threads,
@@ -52,6 +54,11 @@ result <- tryCatch({
   metadata$torch_method_inventory <- coverage_torch_inventory(cov, root)
   metadata$collection_components <- c("package_coverage", "torch_R6_registration")
   saveRDS(cov, file.path(out, "coverage.rds"))
+  if (record_tests) {
+    source(file.path(root, "script", "coverage_audit", "test_evidence.R"), local = TRUE)
+    evidence <- coverage_test_evidence(cov, file.path(out, "named-test-evidence.csv"))
+    metadata$covered_lines_with_named_test <- sum(evidence$named_test)
+  }
   covr::to_cobertura(cov, filename = file.path(out, "cobertura.xml"))
   write.csv(as.data.frame(cov), file.path(out, "line-coverage.csv"), row.names = FALSE)
   print(cov)

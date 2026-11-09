@@ -28,3 +28,17 @@ python3 script/coverage_audit/conditions.py /path/to/testthat.Rout /path/to/cond
 ```
 
 The parser reconciles every individual warning and skip with the final testthat counts. Its categories describe the fixture or prerequisite; they do not establish that a skipped path was exercised. Any unclassified condition remains available for review in the CSV. The audit summary's `uncovered` field is the unique tracked-line deficit; `failures` also counts overlapping provenance and neural-method diagnostics.
+
+Run the source-only assertions from a frozen export with its `SOURCE_SHA` marker:
+
+```sh
+Rscript script/coverage_audit/source_check.R SOURCE_ROOT OUTPUT_DIR FULL_SHA
+```
+
+This separate gate retains individual test results and requires zero failures, warnings and skips. Its output supplements the installed-package suite, where repository files are intentionally unavailable.
+
+Set `PIGAUTO_COVERAGE_RECORD_TESTS=true` for a collection that also retains covr's test-call records and writes `named-test-evidence.csv`. The CSV lists named test witnesses for covered locations. Setup-only calls remain labelled separately. The raw RDS retains the full counter-to-test traces for independent inspection. Recording these traces can increase collection time and memory; retain the 30-minute run limit.
+
+```sh
+Rscript script/coverage_audit/test_evidence_selftest.R
+```

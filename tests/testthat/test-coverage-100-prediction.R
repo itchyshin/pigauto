@@ -548,3 +548,36 @@ test_that("legacy auto route defaults to exact when held-out evidence is absent"
   route <- .pigauto_choose_predict_route(dat, list(val_idx = integer()), fit, fit)
   expect_identical(route, c(x = "exact"))
 })
+
+test_that("Henderson tip-only algebra matches direct precision calculations", {
+  Q <- Matrix::Matrix(matrix(c(2, -.25, -.25, 3), 2), sparse = TRUE)
+  h <- list(Q = Q, tip_idx = 1:2, int_idx = integer(), tip_sqrt_d = c(2, 3))
+  b <- cbind(c(1, 4), c(-2, 3))
+  expect_equal(henderson_R_inv_apply(b, h), as.matrix(Q %*% b))
+  expected_cor <- diag(c(2, 3)) %*% as.matrix(Q) %*% diag(c(2, 3)) %*% b
+  expect_equal(henderson_R_inv_apply(b, h, cor_scale = TRUE), expected_cor)
+  expect_equal(henderson_log_det_R(h), -as.numeric(determinant(as.matrix(Q), logarithm = TRUE)$modulus))
+})
+
+test_that("observed likelihood omits fully missing rows and failed GLS uses the mean", {
+  L <- rbind(c(1, 2), c(3, NA), c(NA, NA))
+  par <- .mvn_chol_to_par(diag(2))
+  expect_equal(.mvn_obs_nll(par, L, 2), .mvn_obs_nll(par, L[1:2, ], 2))
+  expect_equal(.mvn_obs_nll(par, L[3, , drop = FALSE], 2), 0)
+  bad_R <- matrix(c(1, 2, 2, 1), 2)
+  expect_equal(.mvn_gls_mean_at_lambda(c(2, 6), bad_R, 1), 4)
+  expect_equal(.mvn_gls_mean_at_lambda(c(NA, NA), diag(2), 1), 0)
+})
+
+test_that("legacy observation aggregation recovers species indices from row names", {
+  X <- matrix(c(2, 4, 6, 8), 4, 1,
+              dimnames = list(c("a", "a", "b", "b"), "x"))
+  d <- list(X_scaled = X, n_obs = 4L, n_species = 2L, species_names = c("a", "b"),
+            multi_obs = TRUE, trait_map = list(list(type = "continuous", latent_cols = 1L)))
+  got <- aggregate_to_species(d)
+  expect_equal(unname(got$X_species), matrix(c(3, 7), 2, 1))
+  expect_identical(rownames(got$X_species), c("a", "b"))
+  expect_identical(d$X_scaled, X)
+  dimnames(d$X_scaled) <- NULL
+  expect_error(aggregate_to_species(d), "Observation-to-species index length")
+})

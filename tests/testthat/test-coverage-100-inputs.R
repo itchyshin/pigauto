@@ -402,3 +402,22 @@ test_that("preprocessing validates basic objects and encodes constant scales", {
   expect_true(all(is.finite(covd$covariates)))
   expect_equal(nrow(covd$covariates), 3L)
 })
+
+test_that("scalar metric helpers preserve empty-pair and trait-map contracts", {
+  expect_equal(accuracy_vec(c(1, NA, 0), c(1, 1, 1)), .5)
+  expect_identical(accuracy_vec(NA_real_, 1), NA_real_)
+  expect_identical(brier_vec(NA_real_, .5), NA_real_)
+  expect_identical(mae_vec(c(NA, Inf), c(1, 2)), NA_real_)
+  expect_equal(mae_vec(c(1, 3, Inf), c(2, 5, 0)), 1.5)
+  map <- list(list(name = "x", type = "continuous", latent_cols = 1L),
+              list(name = "class", type = "categorical", latent_cols = 2:4))
+  expect_identical(get_trait_for_latent_col(3, map), map[[2]])
+  expect_null(get_trait_for_latent_col(5, map))
+  expect_identical(get_latent_cols_by_type(map, "categorical"), 2:4)
+  expect_identical(get_latent_cols_by_type(map, "binary"), integer())
+  expect_error(calibration_df(factor(c(0, 1)), c(.1, .9)), "0/1 or logical")
+  expect_error(calibration_df(c(0, 1), c("low", "high")), "numeric vector")
+  expect_error(calibration_df(c(0, 1), .5), "same length")
+  expect_warning(expect_error(calibration_df(c(NA, NA), c(.1, .9)),
+                             "no complete"), "2 incomplete pairs")
+})
