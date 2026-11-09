@@ -421,3 +421,250 @@ test_that("scalar metric helpers preserve empty-pair and trait-map contracts", {
   expect_warning(expect_error(calibration_df(c(NA, NA), c(.1, .9)),
                              "no complete"), "2 incomplete pairs")
 })
+test_that("empty metric inputs and latent map lookups retain their contracts", {
+  expect_true(is.na(accuracy_vec(c(NA, 1), c(0, NA))))
+  expect_true(is.na(brier_vec(c(NA, 1), c(0, NA))))
+  expect_true(is.na(mae_vec(c(Inf, NA), c(0, 1))))
+  map <- list(list(type = "continuous", latent_cols = 1L),
+              list(type = "categorical", latent_cols = 2:4),
+              list(type = "continuous", latent_cols = 5L))
+  expect_identical(get_trait_for_latent_col(3L, map), map[[2]])
+  expect_null(get_trait_for_latent_col(6L, map))
+  expect_identical(get_latent_cols_by_type(map, "continuous"), c(1L, 5L))
+  expect_identical(get_latent_cols_by_type(map, "binary"), integer())
+  x <- matrix(c(NA_real_, 2), ncol = 1)
+  result <- evaluate_continuous_legacy(x, x, list(val_idx = 1L, test_idx = integer()), NULL)
+  expect_null(result)
+  cv <- structure(list(k = 2L, n_reps = 1L, summary = data.frame()), class = "pigauto_cv")
+  expect_output(expect_identical(print(cv), cv), "No results")
+})
+
+test_that("mixed evaluation skips traits with no selected or usable truth", {
+  types <- c("continuous", "binary", "categorical", "zi_count", "multi_proportion")
+  cols <- list(1L, 2L, 3:4, 5:6, 7:8)
+  map <- Map(function(type, lc) list(name = type, type = type, latent_cols = lc,
+                                    mean = 0, sd = 1, n_latent = length(lc)), types, cols)
+  truth <- matrix(NA_real_, 2, 8)
+  pred <- matrix(0, 2, 8)
+  for (j in c(1L, 2L, 3L, 5L, 7L)) {
+    idx <- 1L + (j - 1L) * 2L
+    out <- evaluate_imputation(pred, truth, list(val_idx = idx, test_idx = integer()), trait_map = map)
+    expect_equal(nrow(out), 0L)
+  }
+  truth[2, 1] <- 4
+  pred[2, 1] <- 5
+  out <- evaluate_imputation(pred, truth, list(val_idx = 2L, test_idx = integer()), trait_map = map)
+  expect_identical(out$trait, "continuous")
+  expect_equal(out$rmse, 1)
+  expect_true(is.na(out$pearson_r))
+})
+
+test_that("sparse folds and conformal scoring omit unavailable cells", {
+  x <- cbind(empty = c(NA, NA, NA), one = c(2, NA, NA))
+  map <- list(list(name = "empty", type = "continuous", latent_cols = 1L, mean = 0, sd = 1),
+              list(name = "one", type = "continuous", latent_cols = 2L, mean = 0, sd = 1))
+  folds <- make_cv_folds(x, k = 3L, seed = 42, trait_map = map)
+  expect_equal(sort(unlist(folds)), 4L)
+  expect_equal(sum(lengths(folds) == 0L), 2L)
+  bounds <- list(conformal_lower = matrix(0, 3, 2, dimnames = list(NULL, colnames(x))),
+                 conformal_upper = matrix(3, 3, 2, dimnames = list(NULL, colnames(x))))
+  expect_null(compute_conformal_coverage_fold(bounds, x, 1L, map, 1L, 1L))
+  result <- compute_conformal_coverage_fold(bounds, x, c(1L, 4L), map, 2L, 3L)
+  expect_identical(result$trait, "one")
+  expect_equal(result$coverage, 1)
+  expect_equal(result$n, 1L)
+  expect_equal(result$fold, 2L)
+  expect_equal(result$rep, 3L)
+  cv <- structure(list(k = 3L, n_reps = 1L, summary = data.frame(
+    trait = c("grade", "flag"), type = c("ordinal", "binary"),
+    metric = c("spearman_rho", "accuracy"), mean = c(.7, .8), sd = c(.1, .2), n_folds = 3L)),
+    class = "pigauto_cv")
+  txt <- paste(capture.output(summary(cv)), collapse = " ")
+  expect_match(txt, "0.700.*rho")
+  expect_match(txt, "0.800")
+  empty <- cv; empty$summary <- cv$summary[FALSE, ]
+  expect_output(expect_identical(summary(empty), empty$summary), "No results")
+})
+
+test_that("evaluation entry points reject invalid inputs before fitting", {
+  expect_error(evaluate(list()), "pigauto_fit")
+  expect_error(evaluate(structure(list(), class = "pigauto_fit")), "No test split")
+  expect_error(compare_methods(list(), NULL), "pigauto_data")
+  data <- structure(list(), class = "pigauto_data")
+  expect_error(compare_methods(data, NULL), "phylo")
+  tree <- ape::read.tree(text = "((a:1,b:1):1,c:2);")
+  expect_error(compare_methods(data, tree, seeds = c(1, Inf)), "finite numeric")
+})
+
+test_that("empty occurrence and raster summaries retain their named shape", {
+  rejected <- data.frame(decimalLatitude = c(100, NA_real_),
+                         decimalLongitude = c(10, 20))
+  expect_identical(.gbif_centroid_one(rejected),
+                   list(centroid_lat = NA_real_, centroid_lon = NA_real_, n_occurrences = 0L))
+  values <- data.frame(bio1 = numeric(), bio2 = numeric())
+  result <- .wc_aggregate_one(values)
+  expect_identical(result$bio_median, c(bio1 = NA_real_, bio2 = NA_real_))
+  expect_identical(result$bio_iqr, c(bio1 = NA_real_, bio2 = NA_real_))
+  expect_identical(result$n_extracted, 0L)
+})
+
+test_that("method comparison scores a supplied holdout with a null seed", {
+  tree <- ape::read.tree(text = "(((a:1,b:1):1,(c:1,d:1):1):1,((e:1,f:1):1,(g:1,h:1):1):1);")
+  d <- data.frame(x = as.numeric(1:8), y = c(1,3,2,5,4,8,7,6), row.names = tree$tip.label)
+  pd <- preprocess_traits(d, tree, log_transform = FALSE)
+  splits <- make_missing_splits(pd$X_scaled, seed = 41, trait_map = pd$trait_map)
+  messages <- character()
+  expect_warning(out <- withCallingHandlers(
+    compare_methods(pd, tree, splits = splits, seeds = NULL, gnn = FALSE,
+                    verbose = TRUE, k_eigen = 3),
+    message = function(m) {
+      messages <<- c(messages, conditionMessage(m))
+      invokeRestart("muffleMessage")
+    }), "Small validation set")
+  expect_true(any(grepl("Evaluating", messages)))
+  expect_setequal(unique(out$method), c("pigauto", "baseline"))
+  expect_identical(unique(out$rep), 1L)
+  expect_true(all(out$n_test > 0L))
+  expect_true(any(is.finite(out$value[out$metric == "rmse"])))
+})
+
+test_that("missing external packages fail without network access or cache damage", {
+  root <- tempfile("external-boundary-"); dir.create(root)
+  on.exit(unlink(root, recursive = TRUE))
+  sp <- "Example species"
+  path <- file.path(root, paste0(.gbif_cache_key(sp), ".rds"))
+  original <- list(species = sp, centroid_lat = 2, centroid_lon = 3, n_occurrences = 1L)
+  saveRDS(original, path)
+  real_require <- base::requireNamespace
+  testthat::local_mocked_bindings(
+    requireNamespace = function(package, ...) {
+      if (package %in% c("rgbif", "terra")) return(FALSE)
+      real_require(package, ...)
+    }, .package = "base")
+  expect_error(.gbif_fetch_one(sp, root, refresh_cache = TRUE), "requires the 'rgbif' package")
+  expect_identical(readRDS(path), original)
+  expect_error(pull_worldclim_per_species(sp, root, file.path(root, "wc")),
+               "requires the 'terra' package")
+})
+
+test_that("failed WorldClim download leaves existing cache intact", {
+  root <- tempfile("wc-failure-"); dir.create(root)
+  on.exit(unlink(root, recursive = TRUE))
+  wc <- file.path(root, "wc2.1_10m"); dir.create(wc)
+  existing <- file.path(wc, "wc2.1_10m_bio_1.tif")
+  writeLines("previous bytes", existing)
+  calls <- 0L
+  expect_message(expect_error(.wc_download_rasters(root, verbose = TRUE,
+    .download_fn = function(url, destfile, mode) {
+      calls <<- calls + 1L
+      stop("offline fixture")
+    }), "offline fixture"), "downloading")
+  expect_identical(calls, 1L)
+  expect_identical(readLines(existing), "previous bytes")
+  expect_false(file.exists(file.path(wc, ".wc_complete")))
+})
+
+test_that("WorldClim raster failure falls back to cached extraction", {
+  if (requireNamespace("terra", quietly = TRUE)) {
+    root <- tempfile("wc-raster-"); dir.create(root)
+    on.exit(unlink(root, recursive = TRUE))
+    wc <- file.path(root, "wc2.1_10m"); dir.create(wc)
+    paths <- file.path(wc, sprintf("wc2.1_10m_bio_%d.tif", 1:19))
+    invisible(vapply(paths, function(path) { writeLines("invalid raster", path); TRUE }, logical(1)))
+    file.create(file.path(wc, ".wc_complete"))
+    extracts <- file.path(root, "extracts"); dir.create(extracts)
+    med <- setNames(as.numeric(1:19), paste0("bio", 1:19))
+    cached <- list(species = "bird", bio_median = med, bio_iqr = med / 2, n_extracted = 3L)
+    saveRDS(cached, file.path(extracts, "bird.rds"))
+    testthat::local_mocked_bindings(rast = function(...) stop("invalid raster fixture"),
+                                    .package = "terra")
+    expect_warning(out <- pull_worldclim_per_species("bird", root, root, verbose = FALSE),
+                   "terra::rast failed.*cache-only")
+    expect_equal(unname(unlist(out[1, paste0("bio", 1:19, "_median")])), unname(med))
+    expect_equal(out$n_extracted, 3L)
+    expect_identical(readRDS(file.path(extracts, "bird.rds")), cached)
+  }
+})
+
+test_that("GBIF occurrence failure preserves a previous cache entry", {
+  if (requireNamespace("rgbif", quietly = TRUE)) {
+    root <- tempfile("gbif-offline-"); dir.create(root)
+    on.exit(unlink(root, recursive = TRUE))
+    sp <- "Example species"
+    path <- file.path(root, paste0(.gbif_cache_key(sp), ".rds"))
+    old <- list(species = sp, centroid_lat = 1, centroid_lon = 2, n_occurrences = 1L)
+    saveRDS(old, path)
+    testthat::local_mocked_bindings(name_backbone = function(...) list(usageKey = 1L),
+                                    .package = "rgbif")
+    testthat::local_mocked_bindings(.gbif_fetch_page = function(...) NULL,
+                                    .package = "pigauto")
+    expect_error(.gbif_fetch_one(sp, root, refresh_cache = TRUE, sleep_ms = 0L),
+                 "occurrence request failed")
+    expect_identical(readRDS(path), old)
+  }
+})
+
+test_that("requesting GBIF points refreshes a centroid-only cache", {
+  if (requireNamespace("rgbif", quietly = TRUE)) {
+    root <- tempfile("gbif-points-"); dir.create(root)
+    on.exit(unlink(root, recursive = TRUE))
+    sp <- "Example species"
+    path <- file.path(root, paste0(.gbif_cache_key(sp), ".rds"))
+    saveRDS(list(species = sp, centroid_lat = 1, centroid_lon = 2, n_occurrences = 1L), path)
+    testthat::local_mocked_bindings(name_backbone = function(...) list(matchType = "NONE"),
+                                    .package = "rgbif")
+    expect_message(out <- .gbif_fetch_one(sp, root, store_points = TRUE, sleep_ms = 0L),
+                   "per-occurrence points requested but not found")
+    expect_equal(out$n_occurrences, 0L)
+    expect_identical(readRDS(path)$match_type, "NO_MATCH")
+  }
+})
+
+test_that("runtime check reports an absent torch package", {
+  real_require <- base::requireNamespace
+  testthat::local_mocked_bindings(requireNamespace = function(package, ...) {
+    if (package == "torch") return(FALSE)
+    real_require(package, ...)
+  }, .package = "base")
+  result <- .check_pigauto_runtime()
+  expect_false(result$torch_package)
+  expect_true(result$unavailable)
+  expect_identical(result$device, "unavailable")
+  expect_match(result$detail, "package is not installed")
+})
+
+test_that("runtime check reports a missing torch runtime", {
+  real_require <- base::requireNamespace
+  testthat::local_mocked_bindings(requireNamespace = function(package, ...) {
+    if (package == "torch") return(TRUE)
+    real_require(package, ...)
+  }, .package = "base")
+  testthat::local_mocked_bindings(.check_pigauto_torch_is_installed = function() FALSE,
+                                  .package = "pigauto")
+  result <- .check_pigauto_runtime()
+  expect_true(result$torch_package)
+  expect_false(result$torch_is_installed)
+  expect_true(result$unavailable)
+  expect_identical(result$detail, "torch runtime is not installed")
+})
+
+test_that("tree check identifies an unrooted polytomy", {
+  tree <- ape::read.tree(text = "(a:1,b:1,c:1,d:1);")
+  d <- data.frame(x = c(1, 2, 3, 4), row.names = tree$tip.label)
+  result <- .check_pigauto_internal(d, tree, probe_runtime = FALSE)$check
+  expect_true("tree_unrooted" %in% result$messages$code)
+  expect_true("tree_polytomy" %in% result$messages$code)
+})
+
+test_that("zero requested CV repetitions returns a typed empty summary", {
+  tree <- ape::read.tree(text = "((a:1,b:1):1,(c:1,d:1):1);")
+  d <- data.frame(x = c(1, 2, 4, 3), row.names = tree$tip.label)
+  pd <- preprocess_traits(d, tree, log_transform = FALSE)
+  cv <- cross_validate(pd, tree, k = 2L, seeds = numeric(), verbose = FALSE,
+                       gnn = FALSE, k_eigen = 2L)
+  expect_s3_class(cv, "pigauto_cv")
+  expect_equal(nrow(cv$results), 0L)
+  expect_identical(names(cv$results), c("fold", "rep", "trait", "type", "metric", "value"))
+  expect_type(cv$results$value, "double")
+  expect_equal(nrow(cv$summary), 0L)
+})

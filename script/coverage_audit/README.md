@@ -37,7 +37,7 @@ Rscript script/coverage_audit/source_check.R SOURCE_ROOT OUTPUT_DIR FULL_SHA
 
 This separate gate retains individual test results and requires zero failures, warnings and skips. Its output supplements the installed-package suite, where repository files are intentionally unavailable.
 
-Set `PIGAUTO_COVERAGE_RECORD_TESTS=true` for a collection that also retains covr's test-call records and writes `named-test-evidence.csv`. The CSV lists named test witnesses for covered locations. Setup-only calls remain labelled separately. The raw RDS retains the full counter-to-test traces for independent inspection. Recording these traces can increase collection time and memory; retain the 30-minute run limit.
+Set `PIGAUTO_COVERAGE_RECORD_TESTS=true` for a collection that also retains covr's test-call records and writes `named-test-evidence.csv`. The CSV separates single-test witnesses from collective test sets for covered locations. A single-test witness must hit every overlapping counter on that function line; entry into the parent expression alone is insufficient. Setup-only calls remain labelled separately. The raw RDS retains the full counter-to-test traces for independent inspection. Recording these traces can increase collection time and memory; retain the 30-minute run limit.
 
 ```sh
 Rscript script/coverage_audit/test_evidence_selftest.R

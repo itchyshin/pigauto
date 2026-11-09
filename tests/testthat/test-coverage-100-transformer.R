@@ -50,6 +50,12 @@ test_that("covariates refine observations sharing a species", {
   expect_false(isTRUE(all.equal(as.array(out$delta[1, ]), as.array(out$delta[2, ]))))
   expect_equal(as.array(out$delta[1, ]), as.array(out$delta[3, ]), tolerance = 1e-6)
   expect_equal(as.array(out$fixed_effects[1, ]), as.array(out$fixed_effects[3, ]), tolerance = 1e-6)
+  expect_equal(as.array(out$fixed_effects), matrix(rep(c(0, 0.25, 0, 0.25), 2), 4, 2), tolerance = 1e-6)
+  baseline <- torch::torch_ones(c(4L, 2L))
+  blended <- model(x, coords, covs, torch::torch_eye(2L),
+                   obs_to_species = species, baseline_mu = baseline)
+  expected <- (1 - out$rs) * baseline + out$rs * out$delta + out$fixed_effects
+  expect_equal(as.array(blended), as.array(expected), tolerance = 1e-6)
 })
 
 test_that("trait attention and per-column gates return finite differentiable output", {

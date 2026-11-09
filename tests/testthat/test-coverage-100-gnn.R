@@ -420,3 +420,15 @@ test_that("discrete split verification keeps an accurate baseline", {
     expect_equal(unname(cal$r_cal_gnn), 0, info = method)
   }
 })
+
+test_that("unsupported corner types return infinite loss and unnamed gates are labelled", {
+  x <- matrix(rep(c(0, 1), 10), ncol = 1)
+  unsupported <- list(type = "unsupported", latent_cols = 1L, name = "x")
+  expect_identical(compute_corner_loss(0, 1:20, unsupported, x, x, x, FALSE), Inf)
+  binary <- list(type = "binary", latent_cols = 1L, name = "x")
+  messages <- capture.output(cal <- calibrate_gates(list(binary), x, x, x,
+    matrix(TRUE, 20, 1), gate_grid = c(0, 1), gate_cap = 1,
+    gate_method = "single_split", seed = NULL, verbose = TRUE), type = "message")
+  expect_true(any(grepl("col1=", messages, fixed = TRUE)))
+  expect_equal(unname(cal$r_cal_bm + cal$r_cal_gnn), 1)
+})

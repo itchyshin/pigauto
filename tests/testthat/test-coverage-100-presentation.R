@@ -225,3 +225,42 @@ test_that("report open requests the written report once", {
   expect_match(paste(readLines(path, warn = FALSE), collapse = "\n"), "Open test", fixed = TRUE)
   expect_identical(opened, path)
 })
+
+test_that("unnamed category probabilities receive stable labels and ordering", {
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  heights <- NULL
+  labels <- NULL
+  testthat::local_mocked_bindings(
+    barplot = function(height, ...) {
+      heights <<- height
+      graphics::barplot(height, ...)
+    },
+    legend = function(x, legend, ...) {
+      labels <<- legend
+      graphics::legend(x, legend = legend, ...)
+    }, .package = "pigauto")
+  probabilities <- rbind(c(.8, .2), c(.1, .9), c(.6, .4))
+  .plot_categorical_probs("class", probabilities, NULL, NULL)
+  expect_identical(labels, c("C2", "C1"))
+  expect_equal(heights, t(probabilities[c(1, 3, 2), ]))
+  expect_equal(colSums(heights), rep(1, 3))
+})
+
+test_that("uncertainty plots reject absent dataframe traits", {
+  pred <- .p100_pred()
+  expect_error(plot_uncertainty(pred, trait_name = "absent"),
+               "'absent' not found in pred_result\\$imputed")
+})
+
+test_that("continuous uncertainty fallback uses matching SEs and matrix truth", {
+  pred <- .p100_pred()
+  pred$conformal_lower <- pred$conformal_upper <- NULL
+  pred$se <- matrix(c(.1, .2, .3), 3, dimnames = list(NULL, "mass"))
+  truth <- matrix(c(30, 10, NA), 3, dimnames = list(NULL, "mass"))
+  p <- plot_uncertainty(pred, truth = truth, trait_name = "mass")
+  expect_equal(p$data$pred, c(1, 2, 3))
+  expect_equal(p$data$lower, c(1 - 1.96 * .2, 2 - 1.96 * .3, 3 - 1.96 * .1))
+  expect_equal(p$data$upper, c(1 + 1.96 * .2, 2 + 1.96 * .3, 3 + 1.96 * .1))
+  expect_equal(p$layers[[3]]$data$truth, c(10, 30))
+})

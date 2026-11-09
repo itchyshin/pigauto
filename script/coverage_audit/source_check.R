@@ -9,9 +9,16 @@ dir.create(out, recursive = TRUE, showWarnings = FALSE)
 out <- normalizePath(out)
 setwd(root)
 Sys.setenv(PIGAUTO_REQUIRE_SOURCE = "true", NOT_CRAN = "true")
-r <- devtools::test(
+jsonlite::write_json(list(source_sha = sha, status = "running"),
+  file.path(out, "manifest.json"), pretty = TRUE, auto_unbox = TRUE)
+r <- tryCatch(devtools::test(
   filter = "^(community-surface|coverage-workflow|gha-helpers|docs-phytools-warning|bace-compat-eval)$",
-  reporter = "summary", stop_on_failure = FALSE)
+  reporter = "summary", stop_on_failure = FALSE), error = function(e) {
+    jsonlite::write_json(list(source_sha = sha, status = "failed",
+      error = conditionMessage(e)), file.path(out, "manifest.json"),
+      pretty = TRUE, auto_unbox = TRUE)
+    stop(e)
+  })
 saveRDS(r, file.path(out, "results.rds"))
 d <- as.data.frame(r)
 d$result <- NULL
