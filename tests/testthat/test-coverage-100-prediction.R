@@ -581,3 +581,60 @@ test_that("legacy observation aggregation recovers species indices from row name
   dimnames(d$X_scaled) <- NULL
   expect_error(aggregate_to_species(d), "Observation-to-species index length")
 })
+
+test_that("decoding respects missing caps and reports probability traits", {
+  latent <- cbind(count = log1p(c(3, 20)), binary = c(-2, 2))
+  count <- list(name = "count", type = "count", latent_cols = 1L,
+                mean = 0, sd = 1)
+  binary <- list(name = "binary", type = "binary", latent_cols = 2L,
+                 levels = c("no", "yes"))
+  decode <- function(tm) decode_from_latent(latent, list(tm, binary),
+    c("a", "b"), clamp_outliers = TRUE, clamp_factor = 2)
+  a <- decode(count)
+  expect_equal(a$imputed$count, c(3L, 20L))
+  count$obs_max <- Inf
+  expect_equal(decode(count)$imputed$count, c(3L, 20L))
+  count$obs_max <- 4
+  capped <- decode(count)
+  expect_equal(capped$imputed$count, c(3L, 8L))
+  expect_equal(unname(capped$probabilities$binary), plogis(c(-2, 2)))
+  pred <- structure(c(capped, list(species_names = c("a", "b"),
+    trait_names = c("count", "binary"), n_imputations = 1L)), class = "pigauto_pred")
+  expect_output(print(pred), "Probability traits: binary", fixed = TRUE)
+})
+
+test_that("fit print reports ungated phylogenetic signal", {
+  fit <- structure(list(model_config = list(gnn = FALSE, hidden_dim = 8L, k_eigen = 2L),
+    species_names = c("a", "b"), trait_names = "x", val_rmse = NA_real_,
+    test_rmse = NA_real_, phylo_gate_triggered = c(x = FALSE),
+    phylo_signal_per_trait = c(x = .8), phylo_signal_threshold = .2,
+    phylo_signal_method = "lambda"), class = "pigauto_fit")
+  expect_output(print(fit), "all 1 traits have lambda >= 0.20", fixed = TRUE)
+  fit$phylo_signal_method <- "K"
+  expect_output(print(fit), "all 1 traits have K >= 0.20", fixed = TRUE)
+})
+
+test_that("lambda likelihood refuses singular covariance and exact zero residuals", {
+  R <- matrix(1, 3, 3)
+  ordinary <- build_pagel_nll_cache(c(1, 2, 4), R, nugget = 0)
+  expect_identical(ordinary$nll(1), .Machine$double.xmax)
+  expect_true(is.na(ordinary$mu_at(1)))
+  covariate <- build_pagel_nll_cache(c(1, 2, 4), R, nugget = 0,
+                                    X = matrix(1, 3, 1))
+  expect_identical(covariate$nll(1), .Machine$double.xmax)
+  exact <- build_pagel_nll_cache(rep(0, 3), diag(3), X = matrix(1, 3, 1))
+  expect_identical(exact$nll(.5), .Machine$double.xmax)
+})
+
+test_that("Fisher-ML refinement retains observed cells on a small dense correlation", {
+  L <- cbind(a = c(1, 2, NA, 4, 5, 6), b = c(2, NA, 3, 5, 7, 9))
+  rownames(L) <- paste0("s", seq_len(nrow(L)))
+  R <- diag(6); dimnames(R) <- list(rownames(L), rownames(L))
+  out <- fit_mvn_bm_inhouse(L, R = R, sigma_method = "fisher_ml",
+                            max_iter = 1L, tol = 1e6, predict_method = "per_column")
+  expect_true(out$converged)
+  expect_true(all(is.finite(out$anc_recon)))
+  expect_equal(unname(out$anc_recon[!is.na(L)]), unname(L[!is.na(L)]))
+  expect_equal(out$pars$phylocov, t(out$pars$phylocov), tolerance = 1e-10)
+  expect_true(all(eigen(out$pars$phylocov, symmetric = TRUE)$values > 0))
+})

@@ -10,9 +10,17 @@ writeLines(c(
   'testthat::test_that("false branch", { testthat::expect_equal(tiny(FALSE), 0) })'), t)
 x <- covr::file_coverage(s, t)
 d <- coverage_test_evidence(x, o)
-stopifnot(nrow(d) > 0, all(d$named_test),
-          any(grepl("true branch", d$test_evidence)),
-          any(grepl("false branch", d$test_evidence)))
+stopifnot(nrow(d) > 0, !any(d$named_test),
+          any(grepl("true branch", d$collective_test_evidence)),
+          any(grepl("false branch", d$collective_test_evidence)))
+# A single call to the parent must not claim both branches on a shared line.
+stopifnot(all(d$single_test_evidence == ""))
+writeLines(c("plain <- function(x) {", "  x + 1", "}"), s)
+writeLines('testthat::test_that("plain plus", { testthat::expect_equal(plain(1), 2) })', t)
+y <- covr::file_coverage(s, t)
+positive <- coverage_test_evidence(y, o)
+stopifnot(nrow(positive) > 0, all(positive$named_test),
+          all(grepl("plain plus", positive$single_test_evidence)))
 attr(x, "tests") <- NULL
 stopifnot(inherits(tryCatch(coverage_test_evidence(x, o), error = identity), "error"))
 unlink(c(s, t, o))

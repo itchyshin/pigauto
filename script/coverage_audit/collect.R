@@ -42,11 +42,11 @@ if (length(missing)) {
   write_manifest()
   stop("Missing Suggests: ", paste(missing, collapse = ", "))
 }
-torch::torch_set_num_threads(threads)
+result <- tryCatch({
+  torch::torch_set_num_threads(threads)
 torch::torch_set_num_interop_threads(1L)
 stopifnot(isTRUE(torch::torch_is_installed()),
           identical(as.numeric(torch::torch_tensor(1)$item()), 1))
-result <- tryCatch({
   cov <- covr::package_coverage(path = root, type = "tests", quiet = FALSE,
     clean = FALSE, install_path = file.path(out, "package"))
   saveRDS(cov, file.path(out, "coverage-primary.rds"))
@@ -57,7 +57,8 @@ result <- tryCatch({
   if (record_tests) {
     source(file.path(root, "script", "coverage_audit", "test_evidence.R"), local = TRUE)
     evidence <- coverage_test_evidence(cov, file.path(out, "named-test-evidence.csv"))
-    metadata$covered_lines_with_named_test <- sum(evidence$named_test)
+    metadata$covered_lines_with_named_test <- sum(tapply(evidence$named_test,
+      paste(evidence$filename, evidence$line, sep = ":"), any))
   }
   covr::to_cobertura(cov, filename = file.path(out, "cobertura.xml"))
   write.csv(as.data.frame(cov), file.path(out, "line-coverage.csv"), row.names = FALSE)

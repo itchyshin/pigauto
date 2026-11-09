@@ -405,3 +405,160 @@ test_that("posterior output assembles a single missing cell", {
   expect_true(all(vapply(mi$datasets, function(z) identical(z$x[-2], d$x[-2]) &&
                            identical(z$y, d$y), logical(1))))
 })
+test_that("analysis imputation rejects missing auxiliaries and other incomplete inputs", {
+  d <- mi_cov_data()
+  expect_error(multi_impute_analysis(d, y ~ x + z, "x", auxiliary = "absent",
+                                     model = "lm", m = 2), "Unknown.*absent")
+  d$z[1] <- NA_real_
+  expect_error(multi_impute_analysis(d, y ~ x + z, "x", model = "lm", m = 2),
+               "incomplete columns: z")
+  expect_error(multi_impute_analysis(d, absent ~ x, "x", model = "lm", m = 2),
+               "incomplete columns: z")
+  d$z[1] <- 0
+  expect_error(multi_impute_analysis(d, absent ~ x, "x", model = "lm", m = 2),
+               "Formula variables not found.*absent")
+})
+
+test_that("optional SMCFCS draws preserve observations and support real pooling", {
+  if (requireNamespace("smcfcs", quietly = TRUE)) {
+    set.seed(41)
+    n <- 100L
+    d <- data.frame(x = rnorm(n), z = rnorm(n))
+    d$y <- rbinom(n, 1, plogis(.2 + .4 * d$x - .2 * d$z))
+    d$x[seq(3, n, by = 9)] <- NA_real_
+    mi <- multi_impute_analysis(d, y ~ x + z, "x", model = "glm", m = 2L,
+                                seed = 12L, control = list(numit = 3L))
+    expect_identical(mi$engine, "smcfcs")
+    expect_length(mi$datasets, 2L)
+    for (one in mi$datasets) {
+      expect_identical(one$x[!is.na(d$x)], d$x[!is.na(d$x)])
+      expect_identical(one$y, d$y)
+      expect_identical(one$z, d$z)
+      expect_true(all(is.finite(one$x)))
+    }
+    fits <- with_imputations(mi, function(z) glm(y ~ x + z, z, family = binomial()),
+                             .progress = FALSE)
+    pooled <- pool_mi(fits)
+    coefs <- vapply(fits, coef, numeric(3))
+    vars <- vapply(fits, function(f) diag(as.matrix(vcov(f))), numeric(3))
+    expect_equal(pooled$estimate, unname(rowMeans(coefs)))
+    expect_equal(pooled$std.error,
+                 unname(sqrt(rowMeans(vars) + 1.5 * apply(coefs, 1, var))))
+  }
+})
+
+test_that("optional jomo draws preserve the rows of a real mixed model", {
+  if (requireNamespace("jomo", quietly = TRUE) && requireNamespace("lme4", quietly = TRUE)) {
+    set.seed(52)
+    n <- 120L
+    d <- data.frame(x = rnorm(n), z = rnorm(n), group = factor(rep(1:12, each = 10)))
+    intercept <- rnorm(12, sd = .5)
+    d$y <- 1 + .4 * d$x + .2 * d$z + intercept[d$group] + rnorm(n)
+    d$x[seq(3, n, by = 9)] <- NA_real_
+    mi <- multi_impute_analysis(d, y ~ x + z + (1 | group), "x", model = "lmer",
+                                m = 2L, seed = 12L,
+                                control = list(nburn = 5L, nbetween = 2L))
+    expect_identical(mi$engine, "jomo")
+    expect_length(mi$datasets, 2L)
+    for (one in mi$datasets) {
+      expect_identical(one$x[!is.na(d$x)], d$x[!is.na(d$x)])
+      expect_identical(one[c("y", "z", "group")], d[c("y", "z", "group")])
+      expect_true(all(is.finite(one$x)))
+    }
+    fits <- with_imputations(mi, function(z) lme4::lmer(y ~ x + z + (1 | group), z),
+                             .progress = FALSE)
+    pooled <- pool_mi(fits)
+    coefs <- vapply(fits, lme4::fixef, numeric(3))
+    vars <- vapply(fits, function(f) diag(as.matrix(vcov(f))), numeric(3))
+    expect_equal(pooled$estimate, unname(rowMeans(coefs)))
+    expect_equal(pooled$std.error,
+                 unname(sqrt(rowMeans(vars) + 1.5 * apply(coefs, 1, var))))
+  }
+})
+
+test_that("pooling keeps aligned metadata after a failed bare-list fit", {
+  # Artificial attributes exercise alignment only; these are not tree draws.
+  d <- data.frame(x = 1:8, y = c(1.2, 2.1, 2.7, 4.1, 4.8, 6.2, 6.8, 8.1))
+  fits <- list(lm(y ~ x, d), structure("failed", class = "try-error"),
+               lm(y ~ x, transform(d, y = y + .5)))
+  attr(fits, "tree_index") <- c(1L, 1L, 2L)
+  attr(fits, "n_trees") <- 2L
+  attr(fits, "m_per_tree") <- 2L
+  warnings <- character()
+  pooled <- withCallingHandlers(pool_mi(fits), warning = function(w) {
+    warnings <<- c(warnings, conditionMessage(w))
+    invokeRestart("muffleWarning")
+  })
+  expect_true(any(grepl("Dropping 1 fit", warnings)))
+  expect_true(any(grepl("unverified provenance", warnings)))
+  expect_length(warnings, 2L)
+  expect_identical(attr(pooled, "tree_index"), c(1L, 2L))
+  expect_identical(attr(pooled, "n_trees"), 2L)
+  expect_identical(attr(pooled, "m_per_tree"), 2L)
+  expect_equal(attr(pooled, "m"), 2L)
+})
+
+test_that("analysis imputation reports a missing optional engine", {
+  real_require <- base::requireNamespace
+  testthat::local_mocked_bindings(
+    requireNamespace = function(package, ...) {
+      if (package == "smcfcs") return(FALSE)
+      real_require(package, ...)
+    }, .package = "base")
+  d <- mi_cov_data(); d$y <- as.integer(seq_len(nrow(d)) %% 2L)
+  expect_error(multi_impute_analysis(d, y ~ x + z, "x", model = "glm", m = 2),
+               "requires optional package 'smcfcs'")
+})
+
+test_that("SMCFCS adapter refuses malformed external completions", {
+  if (requireNamespace("smcfcs", quietly = TRUE)) {
+    d <- mi_cov_data(); d$y <- as.integer(seq_len(nrow(d)) %% 2L)
+    control <- list(numit = 2L, rjlimit = 100L)
+    testthat::local_mocked_bindings(smcfcs = function(...) list(impDatasets = list(d)),
+                                    .package = "smcfcs")
+    expect_error(.analysis_mi_smcfcs(d, y ~ x + z, "x", character(), 2L, 1L, control),
+                 "requested number")
+  }
+})
+
+test_that("SMCFCS adapter refuses completion with wrong row count", {
+  if (requireNamespace("smcfcs", quietly = TRUE)) {
+    d <- mi_cov_data(); d$y <- as.integer(seq_len(nrow(d)) %% 2L)
+    control <- list(numit = 2L, rjlimit = 100L)
+    testthat::local_mocked_bindings(smcfcs = function(...) list(impDatasets = list(d[-1, ], d)),
+                                    .package = "smcfcs")
+    expect_error(.analysis_mi_smcfcs(d, y ~ x + z, "x", character(), 2L, 1L, control),
+                 "incompatible rows")
+  }
+})
+
+test_that("jomo adapter refuses malformed long-format output", {
+  if (requireNamespace("jomo", quietly = TRUE)) {
+    d <- mi_cov_data(); d$group <- rep(1:4, each = 6)
+    control <- list(nburn = 2L, nbetween = 1L)
+    testthat::local_mocked_bindings(jomo.smc = function(...) data.frame(x = 1),
+                                    .package = "jomo")
+    expect_error(.analysis_mi_jomo(d, y ~ x + z + (1 | group), "x", character(),
+                                   "group", 2L, 1L, control), "incompatible long-format")
+  }
+})
+
+test_that("jomo adapter rejects duplicate external row identifiers", {
+  if (requireNamespace("jomo", quietly = TRUE)) {
+    d <- mi_cov_data(); d$group <- rep(1:4, each = 6)
+    control <- list(nburn = 2L, nbetween = 1L)
+    bad <- data.frame(Imputation = rep(1L, nrow(d)), id = rep(1L, nrow(d)), x = 1)
+    testthat::local_mocked_bindings(jomo.smc = function(...) bad, .package = "jomo")
+    expect_error(.analysis_mi_jomo(d, y ~ x + z + (1 | group), "x", character(),
+                                   "group", 2L, 1L, control), "incompatible row identifiers")
+  }
+})
+
+test_that("conditional BM draws report a missing Matrix dependency", {
+  real_require <- base::requireNamespace
+  testthat::local_mocked_bindings(requireNamespace = function(package, ...) {
+    if (package == "Matrix") return(FALSE)
+    real_require(package, ...)
+  }, .package = "base")
+  expect_error(draw_conditional_bm(list()), "requires the 'Matrix' package")
+})
