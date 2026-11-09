@@ -1,0 +1,14 @@
+{
+  "source_sha": "ae15cda0816c84d549b2aa623014c1fa4c26e5db",
+  "derived_from_source_sha": "848a595b5b6cf62df30c9d321ed566bec9e9aa15",
+  "rows": 103,
+  "categories": {
+    "failure-fallback": 71,
+    "reachable": 4,
+    "suspected-unreachable": 11,
+    "legacy": 3,
+    "dependency-platform": 14
+  },
+  "complete": false,
+  "limitation": "Unchanged mapped rows only; triage is not unreachability proof. Later resource and final-mean tests carry no credit."
+}
