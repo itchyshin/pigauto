@@ -10,14 +10,28 @@ vignette: >
 ```{r setup, message=FALSE}
 library(pigauto)
 data(avonet300, tree300)
-tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30)])
+set.seed(42)
+tree <- ape::keep.tip(tree300, sample(tree300$tip.label, 80))
 traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
-                    c("Mass", "Wing.Length"), drop = FALSE]
+                    c("Mass", "Wing.Length", "Trophic.Level",
+                      "Primary.Lifestyle"), drop = FALSE]
 rownames(traits) <- tree$tip.label
-traits$Mass[1:5] <- NA
-traits$Wing.Length[4:8] <- NA
+traits$Mass[1:8] <- NA
+traits$Wing.Length[6:13] <- NA
+traits$Trophic.Level[4:11] <- NA
+traits$Primary.Lifestyle[10:17] <- NA
 x <- preprocess_traits(traits, tree)
 ```
+
+Imagine assembling a comparative dataset of bird body mass, wing length,
+trophic level and lifestyle. The first two are continuous measurements; the
+last two are categorical traits. Here we use 80 birds from the bundled AVONET
+data and deliberately remove some entries to make the example reproducible.
+The gaps are assigned by position in the tree's tip order, so they can cluster
+among relatives. They illustrate the plots; they do not reproduce a known
+real-world missingness process. Start with the missingness plots to decide
+whether the available measurements are distributed across the tree or
+concentrated in particular groups.
 
 Before fitting, compare missing fractions and inspect the observation-by-trait matrix. Labels include trait types; each expanded categorical trait is represented once.
 
@@ -33,11 +47,113 @@ plot_missingness(x, "phylo", tree)
 plot_missingness(x, "co_missing")
 ```
 
-After fitting, conformal scores summarise validation residuals on the latent scale. Held-out evaluation assesses predictions on deliberately masked cells, and should be interpreted with its test-set size. These diagnostics do not by themselves validate uncertainty or downstream inference.
+## Inspecting individual predictions
 
-```{r fit-plots, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+Fit the mixed traits together, then inspect the predicted mass and its
+conformal bounds for a few birds whose mass we removed. The bounds are on the
+original mass scale, so they can be read alongside the prediction. They give
+an exploratory sense of the range of plausible values for an individual
+missing measurement, which can help decide which values need closer scrutiny.
+The same dataset also contains categorical traits, but these numeric
+conformal bounds are not categorical confidence intervals. Here the true
+mass is known because we removed it ourselves; in a real application it would
+need to be measured independently to check an individual prediction.
+
+```{r fit-plots, message=FALSE, fig.width=8, fig.height=5}
 result <- impute(traits, tree, gnn = FALSE, verbose = FALSE, seed = 7)
-plot(result$fit, type = "conformal")
+missing_mass <- which(is.na(traits$Mass))
+mass_predictions <- data.frame(
+  species = rownames(traits)[missing_mass],
+  predicted_mass_g = result$prediction$imputed[missing_mass, "Mass"],
+  lower_g = result$prediction$conformal_lower[missing_mass, "Mass"],
+  upper_g = result$prediction$conformal_upper[missing_mass, "Mass"],
+  hidden_mass_g = avonet300$Mass[match(rownames(traits)[missing_mass],
+                                       avonet300$Species_Key)],
+  row.names = NULL
+)
+mass_predictions
+```
+
+Plot just the missing masses, using a log scale because bird masses span a
+wide range. The dot is the point prediction, the line its exploratory
+conformal interval, and the cross the measurement we deliberately hid. In an
+actual dataset the cross would be unavailable for a genuinely missing value.
+An especially broad interval, or a hidden value outside its interval, prompts
+closer investigation rather than unquestioning reliance on the imputation.
+
+```{r mass-intervals, fig.width=8, fig.height=5}
+ggplot2::ggplot(mass_predictions,
+  ggplot2::aes(x = predicted_mass_g, y = species,
+               xmin = lower_g, xmax = upper_g)) +
+  ggplot2::geom_pointrange(orientation = "y") +
+  ggplot2::geom_point(ggplot2::aes(x = hidden_mass_g),
+                      shape = 4, colour = "#B33A3A", size = 2.5) +
+  ggplot2::scale_x_log10() +
+  ggplot2::labs(x = "Predicted body mass (g; log scale)", y = NULL,
+                title = "Missing body masses: predictions and exploratory intervals") +
+  ggplot2::theme_minimal()
+```
+
+In this particular example, none of the eight hidden masses falls inside its
+interval. The greater rhea's hidden mass is 23,000 g, while its predicted mass
+is about 1,529 g. The eight were chosen by tree position and include very large
+and very small birds: the rhea is larger than every remaining observed bird,
+and one hummingbird is smaller than all of them. Their prediction errors are
+large relative to the calibration errors. These eight selected gaps are not
+an independent random sample, so their 0/8 coverage is not an estimate of
+general performance. The red crosses are possible here only because we started
+with recorded values and hid them ourselves.
+
+The fit also warns that only **six mass observations** were available to
+calibrate the interval score. That is too few to support the usual finite-sample
+95% split-conformal guarantee with a finite empirical bound, even before
+considering whether the calibration and missing species are exchangeable.
+We show the warning deliberately: inspect it when interpreting your own fit.
+
+These are prediction intervals for missing trait values, not confidence
+intervals for a regression coefficient. Their nominal 95% coverage is not
+certified for this dataset. Standard conformal coverage depends on calibration
+and future cases being exchangeable; related species, clade-structured
+missingness and differences between observed and missing species can make
+that assumption questionable. A small calibration set also makes the bounds
+unstable, and wide bounds can cover values while offering little practical
+precision. Examine held-out coverage **and** interval width, using the number
+of test values and species- or clade-level holdouts relevant to your question.
+The single fit above does not establish 95% coverage.
+
+For a categorical trait, inspect the predicted class separately. Here are the
+birds with an artificially missing trophic level. These labels are point
+predictions; a numeric mass interval does not quantify their class uncertainty.
+
+```{r categorical-predictions}
+missing_diet <- which(is.na(traits$Trophic.Level))
+data.frame(
+  species = rownames(traits)[missing_diet],
+  predicted_trophic_level = result$prediction$imputed[missing_diet, "Trophic.Level"],
+  hidden_trophic_level = avonet300$Trophic.Level[
+    match(rownames(traits)[missing_diet], avonet300$Species_Key)],
+  row.names = NULL
+)
+```
+
+The hidden labels let us see individual mistakes in this demonstration. In
+practice, use a separate held-out evaluation to assess accuracy and compare it
+with a simple baseline; do not read these eight examples as a performance study.
+
+Conformal scores are quantiles of held-out errors on an encoded trait scale;
+they help construct bounds but do not measure prediction accuracy or establish
+coverage on their own. Conformal-based multiple-imputation draws are for
+prediction diagnostics, not Rubin pooling. For downstream estimates and
+confidence intervals, use a supported analysis-aware or posterior multiple-
+imputation route, and check its documented scope and validation limitations.
+Eligibility for pooling does not itself establish reliable inference for your
+analysis; see the [validation results](validation-results.html).
+
+## Checking prediction accuracy
+
+Use held-out observed values to assess point predictions. For example:
+
+```{r evaluation, message=FALSE}
 evaluate(result$fit)
 ```
 
