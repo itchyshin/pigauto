@@ -43,7 +43,7 @@ def coverage(path: Path) -> tuple[dict[str, dict[int, int]], dict[str, int]]:
         if not name.endswith(".R"):
             raise ValueError(f"non-R source path in Cobertura XML: {name}")
         dest = files.setdefault(name, {})
-        for line in cls.findall(".//lines/line"):
+        for line in cls.findall("./lines/line"):
             n, hits = int(line.get("number", "0")), int(line.get("hits", "0"))
             if n < 1 or hits < 0:
                 raise ValueError(f"invalid line record in {path}: {name}:{n} hits={hits}")
@@ -172,6 +172,71 @@ def git_source_hashes(git_root: Path, commit: str, hashes: dict[str, str]) -> se
     return tracked_r
 
 
+def validate_torch_inventory(expected: object, observed: object) -> tuple[bool, dict[tuple[str, str], dict]]:
+    if not isinstance(expected, list) or not expected or not isinstance(observed, list) or len(observed) != len(expected):
+        return False, {}
+    expected_by_key = {}
+    for row in expected:
+        if not isinstance(row, dict):
+            return False, {}
+        key = (row.get("factory"), row.get("method"))
+        tracked = row.get("tracked_lines")
+        first, last, file = row.get("first_line"), row.get("last_line"), row.get("file")
+        if (not all(isinstance(x, str) and x for x in key) or not isinstance(file, str) or not file.startswith("R/") or
+            not isinstance(first, int) or not isinstance(last, int) or first < 1 or last < first or
+            not isinstance(tracked, list) or not tracked or any(not isinstance(n, int) or n < first or n > last for n in tracked)):
+            return False, {}
+        if key in expected_by_key:
+            return False, {}
+        expected_by_key[key] = row
+    observed_by_key = {}
+    for row in observed:
+        if not isinstance(row, dict):
+            return False, {}
+        key = (row.get("factory"), row.get("method"))
+        if key in observed_by_key:
+            return False, {}
+        observed_by_key[key] = row
+    if set(expected_by_key) != set(observed_by_key):
+        return False, {}
+    for key, exp in expected_by_key.items():
+        got = observed_by_key[key]
+        expected_lines = set(exp["tracked_lines"])
+        actual_lines = got.get("tracked_lines")
+        if (not isinstance(got.get("file"), str) or got.get("file") != exp.get("file") or got.get("first_line") != exp.get("first_line") or
+            got.get("last_line") != exp.get("last_line") or not isinstance(actual_lines, list) or
+            any(not isinstance(n, int) or n < exp["first_line"] or n > exp["last_line"] for n in actual_lines) or not expected_lines <= set(actual_lines)):
+            return False, {}
+    return True, observed_by_key
+
+
+def torch_method_gaps(expected: list[dict], observed_by_key: dict[tuple[str, str], dict], inventory_ok: bool,
+                      candidate: dict[str, dict[int, int]], changed_sources: set[str]) -> tuple[list[str], list[dict]]:
+    missing_lines = []
+    missing_methods = []
+    for exp in expected:
+        key = (exp["factory"], exp["method"])
+        obs = observed_by_key.get(key, {})
+        line_numbers = sorted(set(exp.get("tracked_lines", [])) | set(obs.get("tracked_lines", [])))
+        method_missing = not inventory_ok
+        for line in line_numbers:
+            hit = candidate.get(exp["file"], {}).get(line)
+            if exp["file"] in changed_sources:
+                state = "source_changed_unmapped"
+                method_missing = True
+                missing_lines.append({"factory": key[0], "method": key[1], "file": exp["file"], "line": line, "status": state})
+            elif not inventory_ok:
+                state = "inventory_unverified"
+                missing_lines.append({"factory": key[0], "method": key[1], "file": exp["file"], "line": line, "status": state})
+            elif hit is None or hit <= 0:
+                state = "missing" if hit is None else "uncovered"
+                method_missing = True
+                missing_lines.append({"factory": key[0], "method": key[1], "file": exp["file"], "line": line, "status": state})
+        if method_missing:
+            missing_methods.append(f"{key[0]}.{key[1]}")
+    return missing_methods, missing_lines
+
+
 def verify(candidate: Path, manifest_path: Path, expected_sha: str, source_root: Path | None, git_root: Path | None, outdir: Path | None, require_complete: bool, allow_partial: bool) -> dict:
     manifest = json.loads(manifest_path.read_text())
     if manifest.get("status") != "ok":
@@ -193,7 +258,17 @@ def verify(candidate: Path, manifest_path: Path, expected_sha: str, source_root:
         raise ValueError("manifest source_sha differs from expected SHA")
     if manifest.get("baseline_source_sha") != BASE_SOURCE_SHA or prov.get("baseline_source_sha") != BASE_SOURCE_SHA:
         raise ValueError("baseline source SHA is not the pinned 033649b baseline")
-    expected_configs = prov.get("coverage_config_sha256", {})
+    baseline_configs = prov.get("coverage_config_sha256", {})
+    if not isinstance(baseline_configs, dict) or not baseline_configs:
+        raise ValueError("baseline provenance lacks coverage_config_sha256")
+    approved_configs = prov.get("candidate_coverage_config_sha256")
+    if approved_configs is not None:
+        if (not isinstance(approved_configs, dict) or set(approved_configs) != set(baseline_configs) or
+            any(not isinstance(v, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", v) for v in approved_configs.values())):
+            raise ValueError("candidate_coverage_config_sha256 must whitelist all baseline config paths with SHA256 values")
+        expected_configs = approved_configs
+    else:
+        expected_configs = baseline_configs
     hashes = manifest.get("source_hashes")
     baseline_r_hashes = prov.get("r_source_hashes")
     if not isinstance(baseline_r_hashes, dict) or not baseline_r_hashes:
@@ -210,8 +285,6 @@ def verify(candidate: Path, manifest_path: Path, expected_sha: str, source_root:
     base, _ = coverage(baseline)
     base_files = set(base)
     hash_files = {k for k in hashes if k.startswith("R/")} if isinstance(hashes, dict) else set()
-    if not isinstance(hashes, dict) or not set(baseline_r_hashes) <= hash_files:
-        raise ValueError("manifest source_hashes must include every baseline R source file")
     if not base_files <= set(baseline_r_hashes):
         raise ValueError("baseline XML contains an R source absent from r_source_hashes")
     if any(hashes.get(k) != v for k, v in expected_configs.items()):
@@ -230,6 +303,10 @@ def verify(candidate: Path, manifest_path: Path, expected_sha: str, source_root:
     cand, totals = coverage(candidate)
     if not set(cand) <= hash_files:
         raise ValueError("candidate contains R source files absent from manifest source_hashes")
+    expected_methods = prov.get("expected_torch_methods")
+    torch_inventory_ok, observed_methods = validate_torch_inventory(expected_methods, manifest.get("torch_method_inventory"))
+    safe_expected_methods = expected_methods if isinstance(expected_methods, list) else []
+    missing_torch_methods, missing_torch_method_lines = torch_method_gaps(safe_expected_methods, observed_methods, torch_inventory_ok, cand, set(changed_r_files))
     executable_sources = set(baseline_r_hashes) - non_executable
     missing_source_files = sorted(executable_sources - set(cand))
     failures = []
@@ -237,6 +314,9 @@ def verify(candidate: Path, manifest_path: Path, expected_sha: str, source_root:
         failures.append(("", 0, "git_source_binding_missing"))
     failures.extend((file, 0, "source_changed_unmapped") for file in changed_r_files)
     failures.extend((file, 0, "missing_source_file") for file in missing_source_files)
+    if not torch_inventory_ok:
+        failures.append(("", 0, "torch_method_inventory_unverified"))
+    failures.extend((row["file"], row["line"], f"torch_method_{row['status']}") for row in missing_torch_method_lines)
     regressions = []
     for f, lines in base.items():
         for n, h in lines.items():
@@ -253,14 +333,16 @@ def verify(candidate: Path, manifest_path: Path, expected_sha: str, source_root:
     cand_ids = {(f, n) for f, ls in cand.items() for n in ls}
     source_identity = {f for f in base_files if f not in changed_r_files}
     source_identity_ok = bool(git_root) and not changed_r_files and tracked_r == set(baseline_r_hashes)
-    complete = source_identity_ok and not failures and not missing_source_files and totals["valid"] > 0 and totals["covered"] == totals["valid"] and len(base_ids - cand_ids) == 0
+    complete = source_identity_ok and torch_inventory_ok and not missing_torch_methods and not failures and not missing_source_files and totals["valid"] > 0 and totals["covered"] == totals["valid"] and len(base_ids - cand_ids) == 0
     summary = {"candidate_xml_sha256": sha(candidate), "source_sha": manifest["source_sha"], "covered": totals["covered"], "valid": totals["valid"],
                "baseline_lines": len(base_ids), "baseline_lines_covered": sum(1 for f,n in base_ids if f in source_identity and f in cand and cand[f].get(n, 0) > 0),
                "baseline_missed_lines": sum(1 for f,ls in base.items() for h in ls.values() if h == 0),
                "baseline_missed_lines_covered": sum(1 for f,ls in base.items() for n,h in ls.items() if h == 0 and f in source_identity and f in cand and cand[f].get(n, 0) > 0),
                "new_lines": len(cand_ids - base_ids), "failures": len(failures), "regressions": len(regressions),
                "source_changed_files": changed_r_files, "source_identity_verified": source_identity_ok,
-               "missing_source_files": missing_source_files, "complete": complete}
+               "missing_source_files": missing_source_files, "torch_method_inventory_verified": torch_inventory_ok,
+               "missing_torch_methods": missing_torch_methods, "missing_torch_method_lines": missing_torch_method_lines,
+               "complete": complete}
     if failures and allow_partial:
         summary["partial_report"] = True
     if outdir:
@@ -280,6 +362,8 @@ def verify(candidate: Path, manifest_path: Path, expected_sha: str, source_root:
                 w.writerow([*row, ""])
             for file in missing_source_files:
                 w.writerow([file, 0, "missing_source_file", ""])
+            for row in missing_torch_method_lines:
+                w.writerow([row["file"], row["line"], f"torch_method_{row['status']}", ""])
     if failures and not allow_partial:
         raise ValueError(f"coverage failures={len(failures)} (see disposition.csv if --out supplied)")
     if require_complete and not summary["complete"]:
@@ -311,14 +395,24 @@ def selftest() -> None:
         subprocess.run(["git","-C",str(checkout),"commit","-qm","fixture"],check=True)
         git_sha=subprocess.run(["git","-C",str(checkout),"rev-parse","HEAD"],check=True,text=True,capture_output=True).stdout.strip()
         config_hashes={p:hashlib.sha256((checkout/p).read_bytes()).hexdigest() for p in ("codecov.yml",".github/workflows/test-coverage.yaml")}
+        # Class-level lines are authoritative. Method summaries can repeat or
+        # misattribute locations when different classes share a method name.
+        noise=d/"method-summary.xml"; xml(noise,{"R/a.R":{1:1,2:0}})
+        tree=ET.parse(noise); cls=tree.find(".//class")
+        methods=ET.SubElement(cls,"methods"); method=ET.SubElement(methods,"method")
+        lines=ET.SubElement(method,"lines")
+        ET.SubElement(lines,"line",{"number":"999","hits":"10"})
+        tree.write(noise)
+        assert coverage(noise)[1] == {"covered":1,"valid":2}
         b=d/"baseline.xml"; xml(b,{"R/a.R":{1:1,2:0},"R/b.R":{1:0}})
         prov_path=d/"baseline-provenance.json"
         baseline_r_hashes={p:hashlib.sha256((checkout/p).read_bytes()).hexdigest() for p in ("R/a.R","R/b.R","R/c.R")}
-        prov={"baseline_source_sha":BASE_SOURCE_SHA,"baseline_xml_sha256":sha(b),"coverage_config_sha256":config_hashes,"r_source_hashes":baseline_r_hashes,"non_executable_sources":[]}
+        torch_methods=[{"factory":"Toy","method":"forward","file":"R/a.R","first_line":1,"last_line":2,"tracked_lines":[1,2]}]
+        prov={"baseline_source_sha":BASE_SOURCE_SHA,"baseline_xml_sha256":sha(b),"coverage_config_sha256":config_hashes,"r_source_hashes":baseline_r_hashes,"non_executable_sources":[],"expected_torch_methods":torch_methods}
         prov_path.write_text(json.dumps(prov))
         hashes={p:hashlib.sha256((checkout/p).read_bytes()).hexdigest() for p in ("R/a.R","R/b.R","R/c.R","tests/testthat/test_a.R","DESCRIPTION","NAMESPACE","codecov.yml",".github/workflows/test-coverage.yaml")}
         def candidate(name: str, entries: dict[str,dict[int,int]], manifest_changes: dict | None=None) -> tuple[Path,Path]:
-            x=d/name; xml(x,entries); m={"source_sha":"right","xml_sha256":sha(x),"baseline_source_sha":BASE_SOURCE_SHA,"source_hashes":hashes,"status":"ok"}; m.update(manifest_changes or {})
+            x=d/name; xml(x,entries); m={"source_sha":"right","xml_sha256":sha(x),"baseline_source_sha":BASE_SOURCE_SHA,"source_hashes":hashes,"status":"ok","torch_method_inventory":torch_methods}; m.update(manifest_changes or {})
             mp=d/(name+".json"); mp.write_text(json.dumps(m)); return x,mp
         good=candidate("good.xml",{"R/a.R":{1:3,2:1},"R/b.R":{1:2},"R/c.R":{1:4}})
         gm=json.loads(good[1].read_text()); gm["source_sha"]=git_sha; good[1].write_text(json.dumps(gm))
@@ -331,6 +425,14 @@ def selftest() -> None:
         missing_result=verify(*missing_class,git_sha,None,checkout,d/"missing-class-report",False,True)
         assert not missing_result["complete"] and missing_result["missing_source_files"]==["R/c.R"]
         assert any(r["file"]=="R/c.R" and r["disposition"]=="missing_source_file" for r in csv.DictReader((d/"missing-class-report"/"disposition.csv").open()))
+        partial_method=candidate("partial-method.xml",{"R/a.R":{1:3},"R/b.R":{1:2},"R/c.R":{1:4}})
+        pm=json.loads(partial_method[1].read_text()); pm["source_sha"]=git_sha; partial_method[1].write_text(json.dumps(pm))
+        pm_result=verify(*partial_method,git_sha,None,checkout,d/"partial-method-report",False,True)
+        assert "Toy.forward" in pm_result["missing_torch_methods"] and any(x["line"]==2 and x["status"]=="missing" for x in pm_result["missing_torch_method_lines"])
+        bad_method_inventory=candidate("bad-method-inventory.xml",{"R/a.R":{1:3,2:1},"R/b.R":{1:2},"R/c.R":{1:4}})
+        bi=json.loads(bad_method_inventory[1].read_text()); bi["source_sha"]=git_sha; bi["torch_method_inventory"]=[]; bad_method_inventory[1].write_text(json.dumps(bi))
+        bi_result=verify(*bad_method_inventory,git_sha,None,checkout,d/"bad-method-inventory-report",False,True)
+        assert not bi_result["torch_method_inventory_verified"] and "Toy.forward" in bi_result["missing_torch_methods"]
         bad_tree=d/"bad-tree.json"; bad_manifest={**gm,"source_hashes":{**hashes,"R/a.R":"0"*64}}; bad_tree.write_text(json.dumps(bad_manifest))
         try: verify(good[0],bad_tree,git_sha,None,checkout,None,False,False)
         except ValueError: pass
@@ -339,12 +441,38 @@ def selftest() -> None:
         try: verify(good[0],path_manifest,git_sha,None,checkout,None,False,False)
         except ValueError: pass
         else: raise AssertionError("manifest traversal path unexpectedly passed")
+        (checkout/"codecov.yml").write_text("coverage: reviewed-addition\n")
+        subprocess.run(["git","-C",str(checkout),"add","codecov.yml"],check=True)
+        subprocess.run(["git","-C",str(checkout),"commit","-qm","reviewed config fixture"],check=True)
+        config_sha=subprocess.run(["git","-C",str(checkout),"rev-parse","HEAD"],check=True,text=True,capture_output=True).stdout.strip()
+        reviewed_config_hash=hashlib.sha256((checkout/"codecov.yml").read_bytes()).hexdigest()
+        current_hashes={**hashes,"codecov.yml":reviewed_config_hash}
+        config_manifest={**gm,"source_sha":config_sha,"source_hashes":current_hashes}
+        config_manifest_path=d/"config-change.json"; config_manifest_path.write_text(json.dumps(config_manifest))
+        try: verify(good[0],config_manifest_path,config_sha,None,checkout,None,False,False)
+        except ValueError: pass
+        else: raise AssertionError("unwhitelisted config change unexpectedly passed")
+        prov["candidate_coverage_config_sha256"]={**config_hashes,"codecov.yml":reviewed_config_hash}
+        prov_path.write_text(json.dumps(prov))
+        assert verify(good[0],config_manifest_path,config_sha,None,checkout,None,True,False)["complete"]
+        (checkout/".github/workflows/test-coverage.yaml").write_text("name: unapproved\n")
+        subprocess.run(["git","-C",str(checkout),"add",".github/workflows/test-coverage.yaml"],check=True)
+        subprocess.run(["git","-C",str(checkout),"commit","-qm","unapproved config fixture"],check=True)
+        unapproved_sha=subprocess.run(["git","-C",str(checkout),"rev-parse","HEAD"],check=True,text=True,capture_output=True).stdout.strip()
+        unapproved_hashes={**current_hashes,".github/workflows/test-coverage.yaml":hashlib.sha256((checkout/".github/workflows/test-coverage.yaml").read_bytes()).hexdigest()}
+        unapproved_path=d/"unapproved-config.json"; unapproved_path.write_text(json.dumps({**config_manifest,"source_sha":unapproved_sha,"source_hashes":unapproved_hashes}))
+        try: verify(good[0],unapproved_path,unapproved_sha,None,checkout,None,False,False)
+        except ValueError: pass
+        else: raise AssertionError("config outside candidate whitelist unexpectedly passed")
+        subprocess.run(["git","-C",str(checkout),"reset","--hard",config_sha],check=True,capture_output=True)
+        hashes=current_hashes
         gm["source_sha"]="right"; good[1].write_text(json.dumps(gm))
         (checkout/"R/a.R").write_text("a <- 1L\n")
         subprocess.run(["git","-C",str(checkout),"add","R/a.R"],check=True)
         subprocess.run(["git","-C",str(checkout),"commit","-qm","changed source"],check=True)
         changed_sha=subprocess.run(["git","-C",str(checkout),"rev-parse","HEAD"],check=True,text=True,capture_output=True).stdout.strip()
         changed_hashes={**hashes,"R/a.R":hashlib.sha256((checkout/"R/a.R").read_bytes()).hexdigest()}
+        hashes=changed_hashes
         changed_manifest={**gm,"source_sha":changed_sha,"source_hashes":changed_hashes}
         changed_manifest_path=d/"changed-source.json"; changed_manifest_path.write_text(json.dumps(changed_manifest))
         changed_result=verify(good[0],changed_manifest_path,changed_sha,None,checkout,d/"changed-source-report",False,True)
@@ -353,6 +481,17 @@ def selftest() -> None:
         assert changed_result["baseline_lines_covered"]==baseline_b_lines
         changed_rows=list(csv.DictReader((d/"changed-source-report"/"disposition.csv").open()))
         assert any(r["file"]=="R/a.R" and r["line"]=="2" and r["disposition"]=="unresolved" and not r["test_evidence"] for r in changed_rows)
+        assert any(x["file"]=="R/a.R" and x["status"]=="source_changed_unmapped" for x in changed_result["missing_torch_method_lines"])
+        (checkout/"R/c.R").unlink()
+        subprocess.run(["git","-C",str(checkout),"add","-u","R/c.R"],check=True)
+        subprocess.run(["git","-C",str(checkout),"commit","-qm","remove source fixture"],check=True)
+        deleted_sha=subprocess.run(["git","-C",str(checkout),"rev-parse","HEAD"],check=True,text=True,capture_output=True).stdout.strip()
+        deleted_hashes={k:v for k,v in changed_hashes.items() if k!="R/c.R"}
+        deleted_xml=d/"deleted-source.xml"; xml(deleted_xml,{"R/a.R":{1:3,2:1},"R/b.R":{1:2}})
+        deleted_manifest={**changed_manifest,"source_sha":deleted_sha,"xml_sha256":sha(deleted_xml),"source_hashes":deleted_hashes}
+        deleted_manifest_path=d/"deleted-source.json"; deleted_manifest_path.write_text(json.dumps(deleted_manifest))
+        deleted_result=verify(deleted_xml,deleted_manifest_path,deleted_sha,None,checkout,d/"deleted-source-report",False,True)
+        assert "R/c.R" in deleted_result["source_changed_files"] and deleted_result["missing_source_files"]==["R/c.R"]
         partial=candidate("partial.xml",{"R/a.R":{1:3,2:0},"R/b.R":{1:2}})
         partial_out=d/"partial-report"
         result=verify(*partial,"right",None,None,partial_out,False,True)
@@ -360,6 +499,14 @@ def selftest() -> None:
         report=json.loads((partial_out/"summary.json").read_text())
         dispositions=list(csv.DictReader((partial_out/"disposition.csv").open()))
         assert report.get("partial_report") and any(r["disposition"]=="covered" and r["test_evidence"]=="integrated suite@right" for r in dispositions)
+        missing_method=candidate("missing-method-line.xml",{"R/a.R":{1:3},"R/b.R":{1:2},"R/c.R":{1:4}})
+        mr=json.loads(missing_method[1].read_text()); mr["source_sha"]=changed_sha; missing_method[1].write_text(json.dumps(mr))
+        method_result=verify(*missing_method,changed_sha,None,checkout,d/"missing-method-report",False,True)
+        assert "Toy.forward" in method_result["missing_torch_methods"] and any(x["line"]==2 and x["status"]=="source_changed_unmapped" for x in method_result["missing_torch_method_lines"])
+        unverified_inventory=candidate("unverified-method-inventory.xml",{"R/a.R":{1:3,2:1},"R/b.R":{1:2},"R/c.R":{1:4}})
+        ui=json.loads(unverified_inventory[1].read_text()); ui["source_sha"]=changed_sha; ui.pop("torch_method_inventory"); unverified_inventory[1].write_text(json.dumps(ui))
+        inventory_result=verify(*unverified_inventory,changed_sha,None,checkout,d/"unverified-method-report",False,True)
+        assert not inventory_result["torch_method_inventory_verified"] and "Toy.forward" in inventory_result["missing_torch_methods"]
         cases=[
             ("uncovered.xml",{"R/a.R":{1:3,2:0},"R/b.R":{1:2}},None),
             ("missingfile.xml",{"R/a.R":{1:3,2:1}},None),

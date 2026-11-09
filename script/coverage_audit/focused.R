@@ -3,7 +3,7 @@ stopifnot(length(args) == 1L)
 filters <- c(presentation = "^(plot-contract|coverage-100-presentation)$",
              inputs = "^coverage-100-inputs$",
              prediction = "^coverage-100-prediction$",
-             gnn = "^coverage-100-gnn$", mi = "^coverage-100-mi$")
+             gnn = "^coverage-100-(gnn|transformer)$", mi = "^coverage-100-mi$")
 stopifnot(args[1] %in% names(filters))
 r <- devtools::test(filter = filters[[args[1]]], stop_on_failure = TRUE,
                     reporter = "summary")
