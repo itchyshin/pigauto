@@ -10,10 +10,11 @@ marker <- file.path(root, "SOURCE_SHA")
 stopifnot(file.exists(marker), identical(readLines(marker, warn = FALSE), expected_sha))
 threads <- as.integer(Sys.getenv("OMP_NUM_THREADS", "1"))
 stopifnot(is.finite(threads), threads >= 1L, threads <= 12L)
-source_paths <- c(list.files(file.path(root, "R"), pattern = "\\.R$", full.names = FALSE),
-                  "codecov.yml", ".github/workflows/test-coverage.yaml")
-source_paths <- c(paste0("R/", source_paths[seq_len(length(source_paths) - 2L)]),
-                  tail(source_paths, 2L))
+source_paths <- c(
+  paste0("R/", list.files(file.path(root, "R"), pattern = "\\.R$")),
+  paste0("tests/", list.files(file.path(root, "tests"), recursive = TRUE,
+                            pattern = "\\.R$")),
+  "DESCRIPTION", "NAMESPACE", "codecov.yml", ".github/workflows/test-coverage.yaml")
 hashes <- setNames(lapply(source_paths, function(p)
   digest::digest(file = file.path(root, p), algo = "sha256")), source_paths)
 metadata <- list(source_sha = expected_sha,
