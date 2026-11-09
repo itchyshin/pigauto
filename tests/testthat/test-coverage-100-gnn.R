@@ -432,3 +432,118 @@ test_that("unsupported corner types return infinite loss and unnamed gates are l
   expect_true(any(grepl("col1=", messages, fixed = TRUE)))
   expect_equal(unname(cal$r_cal_bm + cal$r_cal_gnn), 1)
 })
+
+test_that("CPU GNN prediction pools reproducible stochastic draws", {
+  skip_if_no_libtorch()
+  testthat::local_mocked_bindings(cuda_is_available = function() FALSE,
+    backends_mps_is_available = function() FALSE, .package = "torch")
+  expect_identical(get_device()$type, "cpu")
+  set.seed(41)
+  tree <- ape::rtree(12)
+  traits <- data.frame(x = seq_len(12) / 10, row.names = tree$tip.label)
+  traits$x[c(2, 5)] <- NA_real_
+  d <- preprocess_traits(traits, tree, trait_types = c(x = "continuous"),
+                         log_transform = FALSE,
+                         covariates = data.frame(z = cos(seq_len(12))))
+  fit <- fit_pigauto(d, tree, gnn = TRUE, epochs = 2L, eval_every = 1L,
+    hidden_dim = 8L, n_gnn_layers = 1L, corruption_rate = .8, corruption_ramp = 0L,
+    dropout = .2, edge_dropout = 0, use_transformer_blocks = FALSE,
+    use_attention = TRUE, verbose = FALSE, seed = 41, predict_method = "per_column",
+    refine_steps = 2L)
+  first <- predict(fit, n_imputations = 3L, return_se = TRUE)
+  torch::torch_manual_seed(1234)
+  second <- predict(fit, n_imputations = 3L, return_se = TRUE)
+  expect_identical(first$n_imputations, 3L)
+  expect_length(first$imputed_datasets, 3L)
+  expect_equal(dim(first$imputed_latent), c(12L, 1L))
+  expect_true(all(is.finite(first$imputed_latent)))
+  expect_equal(first$imputed_latent, second$imputed_latent)
+  expect_equal(first$imputed_datasets, second$imputed_datasets)
+  draws <- vapply(first$imputed_datasets, function(x) x$x, numeric(12L))
+  expect_equal(first$imputed$x, rowMeans(draws), tolerance = 1e-8)
+  expect_true(all(is.finite(draws)))
+  expect_gt(stats::sd(draws[2, ]), 0)
+  expect_gt(first$se_latent[2, 1], 0)
+  malformed <- fit
+  malformed$covariates <- fit$covariates[-1, , drop = FALSE]
+  expect_error(predict(malformed, return_se = FALSE),
+               "Stored covariates have 11 row")
+})
+
+test_that("legacy trait-map-free training uses finite continuous losses", {
+  skip_if_no_libtorch()
+  testthat::local_mocked_bindings(cuda_is_available = function() FALSE,
+    backends_mps_is_available = function() FALSE, .package = "torch")
+  set.seed(42)
+  tree <- ape::rtree(20)
+  traits <- data.frame(x = seq_len(20) / 10, row.names = tree$tip.label)
+  data <- preprocess_traits(traits, tree, trait_types = c(x = "continuous"),
+                            log_transform = FALSE)
+  splits <- make_missing_splits(data$X_scaled, missing_frac = .25,
+                                val_frac = .5, seed = 41)
+  graph <- build_phylo_graph(tree)
+  baseline <- fit_baseline(data, tree, splits = splits, predict_method = "per_column")
+  # Mimic the older continuous-only pigauto_data contract, retaining a real
+  # baseline computed from the same observed data and held-out mask.
+  data$trait_map <- NULL
+  messages <- capture.output(fit <- fit_pigauto(data, tree, graph = graph,
+    baseline = baseline, splits = splits, gnn = TRUE, epochs = 3L, eval_every = 1L,
+    patience = 1L, warmup_epochs = 10000000L,
+    hidden_dim = 8L, n_gnn_layers = 1L, corruption_rate = .8, corruption_ramp = 0L,
+    dropout = 0, edge_dropout = 0, use_transformer_blocks = FALSE,
+    use_attention = TRUE, verbose = TRUE, seed = 41, predict_method = "per_column",
+    refine_steps = 1L), type = "message")
+  expect_null(fit$trait_map)
+  expect_identical(nrow(fit$history), 2L)
+  expect_true(all(is.finite(fit$history$loss_rec)))
+  expect_true(all(is.finite(fit$history$val_loss)))
+  expect_true(is.finite(fit$val_rmse) && fit$val_rmse >= 0)
+  expect_true(is.finite(fit$test_rmse) && fit$test_rmse >= 0)
+  expect_true(any(grepl(" | val ", messages, fixed = TRUE)))
+  expect_true(any(grepl("Early stopping at epoch 2", messages, fixed = TRUE)))
+  pred <- predict(fit, return_se = FALSE)
+  expect_equal(dim(pred$imputed), c(20L, 1L))
+  expect_true(all(is.finite(pred$imputed)))
+})
+
+test_that("phylogenetic signal gate selects the available safe corner", {
+  skip_if_no_libtorch()
+  skip_if_not_installed("phytools")
+  testthat::local_mocked_bindings(cuda_is_available = function() FALSE,
+    backends_mps_is_available = function() FALSE, .package = "torch")
+  set.seed(71)
+  tree <- ape::rtree(30)
+  traits <- data.frame(x = sin(seq_len(30) * 1.7), row.names = tree$tip.label)
+  data <- preprocess_traits(traits, tree, trait_types = c(x = "continuous"),
+                            log_transform = FALSE)
+  splits <- make_missing_splits(data$X_scaled, missing_frac = .2,
+                                val_frac = .5, seed = 41)
+  graph <- build_phylo_graph(tree)
+  for (floor in c(TRUE, FALSE)) {
+    warnings <- character()
+    fit <- withCallingHandlers(fit_pigauto(data, tree, graph = graph, splits = splits,
+      gnn = TRUE, epochs = 2L, eval_every = 1L, hidden_dim = 8L, n_gnn_layers = 1L,
+      corruption_rate = .8, corruption_ramp = 0L, dropout = 0, edge_dropout = 0,
+      use_transformer_blocks = FALSE, use_attention = TRUE, verbose = FALSE,
+      seed = 41, predict_method = "per_column", refine_steps = 1L,
+      safety_floor = floor, phylo_signal_gate = TRUE, phylo_signal_threshold = 1),
+      warning = function(w) {
+        msg <- conditionMessage(w)
+        if (grepl("Small validation set", msg, fixed = TRUE) ||
+            grepl("phylo_signal_gate triggered", msg, fixed = TRUE)) {
+          warnings <<- c(warnings, msg)
+          invokeRestart("muffleWarning")
+        }
+      })
+    expect_true(is.finite(fit$phylo_signal_per_trait[[1]]))
+    expect_lt(fit$phylo_signal_per_trait[[1]], 1)
+    expect_true(fit$phylo_gate_triggered[[1]])
+    expect_true(any(grepl("Small validation set", warnings, fixed = TRUE)))
+    expect_identical(any(grepl("phylo_signal_gate triggered", warnings, fixed = TRUE)), !floor)
+    expect_equal(unname(c(fit$r_cal_bm, fit$r_cal_gnn, fit$r_cal_mean)),
+                 if (floor) c(0, 0, 1) else c(1, 0, 0))
+    latent <- predict(fit, return_se = FALSE)$imputed_latent
+    expected <- if (floor) matrix(fit$mean_baseline_per_col[[1]], 30, 1) else fit$baseline$mu
+    expect_equal(unname(latent), unname(expected), tolerance = 1e-6)
+  }
+})
