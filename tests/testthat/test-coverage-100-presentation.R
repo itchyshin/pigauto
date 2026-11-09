@@ -274,3 +274,18 @@ test_that("uncertainty plots omit truth overlays for an unrelated matrix column"
   expect_equal(p$data$lower, c(0, 1, 2))
   expect_equal(p$data$upper, c(2, 3, 4))
 })
+
+test_that("report labels a worse continuous blend using paired RMSE", {
+  tm <- list(name = "mass", type = "continuous", latent_cols = 1L)
+  fit <- list(species_names = c("a", "b"), trait_map = list(tm),
+              model_config = list(gnn = TRUE, k_eigen = 1L),
+              val_rmse = 0, test_rmse = 0)
+  # Truth (0, 1), baseline (1, 2), blend (2, 3) have RMSE 1 and 2.
+  metrics <- list(name = "mass", type = "continuous", n_test = 2L,
+    n_bm = 2L, n_gnn = 2L, n_paired = 2L, rmse_bm = 1, rmse_gnn = 2,
+    rmse_paired_bm = 1, rmse_paired_gnn = 2, r_bm = 1, r_gnn = 1)
+  html <- pigauto:::build_report_html("report", fit, list(), list(metrics), list(tm))
+  expect_match(html, "-100.0%", fixed = TRUE)
+  expect_match(html, "Baseline better", fixed = TRUE)
+  expect_match(html, "paired n=2", fixed = TRUE)
+})

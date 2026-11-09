@@ -638,3 +638,89 @@ test_that("Fisher-ML refinement retains observed cells on a small dense correlat
   expect_equal(out$pars$phylocov, t(out$pars$phylocov), tolerance = 1e-10)
   expect_true(all(eigen(out$pars$phylocov, symmetric = TRUE)$values > 0))
 })
+
+test_that("joint solver handles healthy, constant, and collinear continuous traits", {
+  skip_if_not_installed("Rphylopars")
+  set.seed(241)
+  tree <- ape::rtree(12)
+  i <- seq_len(12)
+  x <- as.numeric(i / 10 + sin(i) / 4)
+  for (kind in c("healthy", "constant", "collinear")) {
+    y <- switch(kind, healthy = cos(i / 2) + i / 20,
+                constant = rep(3, 12), collinear = 2 * x + 3)
+    traits <- data.frame(x = x, y = y, row.names = tree$tip.label)
+    traits$x[c(2, 7)] <- NA_real_
+    traits$y[if (kind == "collinear") c(2, 7) else c(3, 9)] <- NA_real_
+    d <- preprocess_traits(traits, tree, trait_types = c(x = "continuous", y = "continuous"),
+                           log_transform = FALSE)
+    expect_identical(vapply(d$trait_map, `[[`, character(1), "type"),
+                     c(x = "continuous", y = "continuous"), info = kind)
+    if (kind == "constant") {
+      expect_true(all(d$X_scaled[!is.na(d$X_scaled[, "y"]), "y"] == 0))
+    } else if (kind == "collinear") {
+      observed_both <- complete.cases(d$X_scaled)
+      expect_equal(unname(d$X_scaled[observed_both, "x"]),
+                   unname(d$X_scaled[observed_both, "y"]), tolerance = 1e-12)
+    }
+    run_capturing_fallback <- function(expr) {
+      fallback <- character()
+      value <- withCallingHandlers(expr, warning = function(w) {
+        msg <- conditionMessage(w)
+        if (grepl('fit_joint_solver: joint_solver = "rphylopars" failed', msg, fixed = TRUE) &&
+            grepl("falling back to the in-house solver", msg, fixed = TRUE)) {
+          fallback <<- c(fallback, msg)
+          invokeRestart("muffleWarning")
+        }
+      })
+      list(value = value, fallback = fallback)
+    }
+    joint <- run_capturing_fallback(fit_joint_solver(d$X_scaled, tree,
+      joint_solver = "rphylopars", predict_method = "per_column", lambda = "fixed_1"))
+    out <- joint$value
+    tips <- out$anc_recon[match(tree$tip.label, rownames(out$anc_recon)), , drop = FALSE]
+    expect_equal(dim(tips), c(12L, 2L), info = kind)
+    expect_identical(rownames(tips), tree$tip.label, info = kind)
+    expect_identical(colnames(tips), colnames(d$X_scaled), info = kind)
+    expect_true(all(is.finite(tips)), info = kind)
+    expect_equal(unname(tips[!is.na(d$X_scaled)]),
+                 unname(d$X_scaled[!is.na(d$X_scaled)]), tolerance = 1e-6, info = kind)
+    if (length(joint$fallback)) {
+      expect_identical(out$predict_method_used, "per_column", info = kind)
+    }
+    dispatched <- run_capturing_fallback(fit_baseline(d, tree, joint_solver = "rphylopars",
+      predict_method = "per_column", lambda_mode = "fixed_1"))
+    base <- dispatched$value
+    expect_equal(dim(base$mu), c(12L, 2L), info = kind)
+    expect_identical(dimnames(base$mu), dimnames(d$X_scaled), info = kind)
+    expect_identical(dimnames(base$se), dimnames(base$mu), info = kind)
+    expect_true(all(is.finite(base$mu)) && all(is.finite(base$se)), info = kind)
+    expect_equal(unname(base$mu[!is.na(d$X_scaled)]),
+                 unname(d$X_scaled[!is.na(d$X_scaled)]), tolerance = 1e-6, info = kind)
+    expect_identical(unname(base$path), c("joint_mvn", "joint_mvn"), info = kind)
+    if (length(dispatched$fallback)) {
+      expect_identical(base$predict_method_used, "per_column", info = kind)
+    }
+  }
+})
+
+test_that("inconsistent legacy GNN configuration reports a model loading error", {
+  skip_if_no_libtorch()
+  testthat::local_mocked_bindings(cuda_is_available = function() FALSE,
+    backends_mps_is_available = function() FALSE, .package = "torch")
+  expect_identical(get_device()$type, "cpu")
+  set.seed(41)
+  tree <- ape::rtree(12)
+  traits <- data.frame(x = seq_len(12) / 10, row.names = tree$tip.label)
+  traits$x[2] <- NA_real_
+  d <- preprocess_traits(traits, tree, trait_types = c(x = "continuous"),
+                         log_transform = FALSE)
+  fit <- fit_pigauto(d, tree, gnn = TRUE, epochs = 2L, eval_every = 1L,
+    hidden_dim = 8L, n_gnn_layers = 1L, corruption_rate = .8, corruption_ramp = 0L,
+    dropout = 0, edge_dropout = 0, use_transformer_blocks = FALSE,
+    use_attention = TRUE, verbose = FALSE, seed = 41, predict_method = "per_column",
+    refine_steps = 1L)
+  expect_true(all(is.finite(predict(fit, return_se = FALSE)$imputed_latent)))
+  inconsistent <- fit
+  inconsistent$model_config$hidden_dim <- 16L
+  expect_error(predict(inconsistent, return_se = FALSE), "save_pigauto.*load_pigauto")
+})
