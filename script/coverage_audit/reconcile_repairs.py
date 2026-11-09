@@ -6,8 +6,10 @@ import json
 import re
 import subprocess
 import tempfile
+import sys
 from collections import Counter
 from pathlib import Path
+sys.dont_write_bytecode = True
 from audit import BASE_SOURCE_SHA, coverage, sha, verify
 
 

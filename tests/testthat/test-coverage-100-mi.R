@@ -562,3 +562,53 @@ test_that("conditional BM draws report a missing Matrix dependency", {
   }, .package = "base")
   expect_error(draw_conditional_bm(list()), "requires the 'Matrix' package")
 })
+
+test_that("real fits pool by term name after an imputation fit fails", {
+  mi <- multi_impute_analysis(mi_cov_data(), y ~ x + z, "x", model = "lm", m = 3, seed = 17)
+  i <- 0L
+  expect_warning(fits <- with_imputations(mi, function(d) {
+    i <<- i + 1L
+    if (i == 2L) stop("fixture fit failure")
+    if (i == 1L) lm(y ~ x + z, d) else lm(y ~ z + x, d)
+  }, .progress = FALSE), "1 of 3 fits failed")
+  expect_identical(attr(fits, "failed"), 2L)
+  expect_warning(out <- pool_mi(fits), "Dropping 1 fit")
+  terms <- names(coef(fits[[1]]))
+  estimates <- cbind(coef(fits[[1]])[terms], coef(fits[[3]])[terms])
+  variances <- cbind(diag(vcov(fits[[1]]))[terms], diag(vcov(fits[[3]]))[terms])
+  expect_identical(out$term, terms)
+  expect_equal(out$estimate, unname(rowMeans(estimates)))
+  expect_equal(out$std.error, unname(sqrt(rowMeans(variances) + 1.5 * apply(estimates, 1, var))))
+  expect_equal(attr(out, "m"), 2L)
+})
+
+test_that("random-effect syntax is recognized when optional lme4 is absent", {
+  real_require <- base::requireNamespace
+  testthat::local_mocked_bindings(requireNamespace = function(package, ...) {
+    if (package == "lme4") return(FALSE)
+    real_require(package, ...)
+  }, .package = "base")
+  expect_length(.analysis_mi_findbars_safe(y ~ x + (1 | group)), 1L)
+  expect_error(multi_impute_analysis(mi_cov_data(), y ~ x + (1 | z), "x", model = "lm", m = 2),
+               "Random-effect terms")
+})
+
+test_that("gllvm adapter reports an unavailable model namespace", {
+  real_load <- base::loadNamespace
+  testthat::local_mocked_bindings(loadNamespace = function(package, ...) {
+    if (identical(package, "gllvmTMB")) stop("fixture namespace unavailable")
+    real_load(package, ...)
+  }, .package = "base")
+  expect_error(.pool_mi_gllvm_tidy(NULL), "automatic gllvmTMB adapter requires.*fixture namespace unavailable")
+})
+
+test_that("gllvm adapter reports an unavailable tidy method", {
+  if (requireNamespace("gllvmTMB", quietly = TRUE)) {
+    real_method <- utils::getS3method
+    testthat::local_mocked_bindings(getS3method = function(f, class, ...) {
+      if (identical(f, "tidy") && identical(class, "gllvmTMB_multi")) return(NULL)
+      real_method(f, class, ...)
+    }, .package = "utils")
+    expect_error(.pool_mi_gllvm_tidy(NULL), "provide tidy.gllvmTMB_multi")
+  }
+})
