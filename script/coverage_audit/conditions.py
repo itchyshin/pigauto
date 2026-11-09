@@ -27,7 +27,7 @@ def inventory(text):
                 raise ValueError('Skip location count mismatch: ' + flat)
             if 'BIEN cache' in reason or 'fixture not found' in reason.lower():
                 category = 'missing_fixture'
-            elif 'HTML Tidy' in reason:
+            elif 'HTML Tidy' in reason or reason == 'zip executable is not available':
                 category = 'missing_optional_tool'
             elif 'installed' in reason and ('cannot test' in reason or 'integration test covers' in reason):
                 category = 'dependency_absence_control'
@@ -85,6 +85,14 @@ def main():
         assert len(rows) == 2 and counts['pass'] == 2
         assert rows[0]['category'] == 'missing_optional_tool'
         assert rows[1]['message'] == 'the standard deviation is zero'
+        zip_sample = sample.replace('HTML Tidy is not installed',
+                                    'zip executable is not available')
+        zip_counts, zip_rows = inventory(zip_sample)
+        assert zip_counts == counts
+        assert zip_rows[0]['category'] == 'missing_optional_tool'
+        unknown_sample = sample.replace('HTML Tidy is not installed',
+                                        'unrecognised prerequisite')
+        assert inventory(unknown_sample)[1][0]['category'] == 'unclassified'
         for invalid in ('', sample.replace('WARN 1', 'WARN 2'),
                         sample.replace("'test-html.R:3:3'", '')):
             try:

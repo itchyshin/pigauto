@@ -1001,3 +1001,88 @@ test_that("Fisher covariance falls back safely on collinear real inputs", {
     }
   }
 })
+
+test_that("sparse helpers handle an unavailable Matrix namespace", {
+  tree <- ape::read.tree(text = "((a:1,b:1):1,(c:1,d:1):1);")
+  h <- build_henderson_S_inv(tree)
+  L <- matrix(c(1, NA, -1, .5), ncol = 1,
+              dimnames = list(tree$tip.label, "x"))
+  available <- exact_conditional_mvn(L, matrix(2, 1), h)
+  expect_true(all(is.finite(available$mu)))
+  # Fault injection is limited to the namespace availability check; tree,
+  # precision and numerical solvers are real. Matrix is normally an Import.
+  namespace_unavailable <- function(fun) {
+    env <- new.env(parent = environment(fun))
+    env$requireNamespace <- function(package, ...) {
+      if (identical(package, "Matrix")) FALSE else base::requireNamespace(package, ...)
+    }
+    environment(fun) <- env
+    fun
+  }
+  conditional <- namespace_unavailable(exact_conditional_mvn)
+  henderson <- namespace_unavailable(build_henderson_S_inv)
+  expect_null(conditional(L, matrix(2, 1), h))
+  expect_error(henderson(tree), "requires the 'Matrix' package")
+})
+
+test_that("Pagel likelihood retains a better boundary grid point", {
+  i <- seq_len(50)
+  y <- sin(i / 7) + i / 20
+  R <- .8^abs(outer(i, i, "-"))
+  nugget <- 1e-6
+  cache <- build_pagel_nll_cache(y, R, nugget = nugget)
+  grid <- seq(.1, .9, length.out = 11L)
+  # Dense restricted-likelihood calculation independent of the eigen cache.
+  dense <- function(lambda) {
+    S <- lambda * R
+    diag(S) <- lambda * diag(R) + (1 - lambda) + nugget
+    u <- solve(S, cbind(1, y))
+    mu <- sum(u[, 2]) / sum(u[, 1])
+    e <- y - mu
+    variance <- as.numeric(crossprod(e, solve(S, e))) / (length(y) - 1L)
+    nll <- .5 * ((length(y) - 1L) * log(variance) +
+                  as.numeric(determinant(S, logarithm = TRUE)$modulus) + log(sum(u[, 1])))
+    c(nll = nll, mu = mu)
+  }
+  direct <- vapply(grid, dense, numeric(2L))
+  from_cache <- vapply(grid, cache$nll, numeric(1L))
+  expect_equal(unname(from_cache), unname(direct["nll", ]), tolerance = 1e-7)
+  expect_true(all(diff(direct["nll", ]) < 0))
+  inside <- stats::optimize(cache$nll, interval = tail(grid, 2), tol = 1e-4)
+  expect_gt(inside$objective - tail(from_cache, 1), 1e-8)
+  fit <- .pagel_lambda_from_cache(cache, lambda_grid = c(.1, .9))
+  expect_equal(fit$lambda_hat, .9)
+  expect_equal(fit$mu_hat, unname(direct["mu", 11]), tolerance = 1e-7)
+  # Alternating values favour the opposite boundary on the same correlation.
+  y <- rep(c(-1, 1), 25)
+  cache <- build_pagel_nll_cache(y, R, nugget = nugget)
+  direct <- vapply(grid, dense, numeric(2L))
+  from_cache <- vapply(grid, cache$nll, numeric(1L))
+  expect_equal(unname(from_cache), unname(direct["nll", ]), tolerance = 1e-7)
+  expect_true(all(diff(direct["nll", ]) > 0))
+  inside <- stats::optimize(cache$nll, interval = head(grid, 2), tol = 1e-4)
+  expect_gt(inside$objective - from_cache[1], 1e-8)
+  fit <- .pagel_lambda_from_cache(cache, lambda_grid = c(.1, .9))
+  expect_equal(fit$lambda_hat, .1)
+  expect_equal(fit$mu_hat, unname(direct["mu", 1]), tolerance = 1e-7)
+})
+
+test_that("torch state from a separate raw RDS process reports the portable-save remedy", {
+  skip_if_no_libtorch()
+  dir <- tempfile("pigauto-external-state-")
+  dir.create(dir)
+  on.exit(unlink(dir, recursive = TRUE), add = TRUE)
+  script <- file.path(dir, "write-state.R")
+  payload <- file.path(dir, "state.rds")
+  writeLines(c(paste0(".libPaths(", paste(deparse(.libPaths()), collapse = ""), ")"),
+               "saveRDS(torch::torch_tensor(c(1, 2)), commandArgs(TRUE)[1])"), script)
+  rscript <- file.path(R.home("bin"), "Rscript")
+  result <- system2(rscript, c("--vanilla", shQuote(script), shQuote(payload)),
+                    stdout = TRUE, stderr = TRUE)
+  status <- attr(result, "status")
+  expect_true(is.null(status) || identical(status, 0L), info = paste(result, collapse = "\n"))
+  state <- readRDS(payload)
+  expect_true(inherits(state, "torch_tensor"))
+  expect_error(.pigauto_assert_predictable_state(list(model_state = list(state))),
+               "save_pigauto.*load_pigauto")
+})
