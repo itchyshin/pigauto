@@ -8,6 +8,12 @@ from collections import Counter
 from pathlib import Path
 
 
+DEVICE_SKIP_CATEGORIES = {
+    'real MPS runtime unavailable': 'missing_runtime_feature',
+    'real MPS device unavailable': 'missing_device_backend',
+}
+
+
 RESOURCE_SKIP_CATEGORIES = {
     'resource child requires Linux or macOS': 'platform_test_prerequisite',
     'resource child requires /usr/bin/time': 'missing_optional_tool',
@@ -40,7 +46,11 @@ def inventory(text):
             refs = re.findall(r"'([^']+)'", locations)
             if len(refs) != int(n):
                 raise ValueError('Skip location count mismatch: ' + flat)
-            if reason in RESOURCE_SKIP_CATEGORIES:
+            if reason in DEVICE_SKIP_CATEGORIES:
+                category = DEVICE_SKIP_CATEGORIES[reason]
+            elif reason.startswith('real MPS'):
+                category = 'unclassified'
+            elif reason in RESOURCE_SKIP_CATEGORIES:
                 category = RESOURCE_SKIP_CATEGORIES[reason]
             elif reason.startswith('resource child'):
                 category = 'unclassified'
@@ -112,11 +122,12 @@ def main():
         unknown_sample = sample.replace('HTML Tidy is not installed',
                                         'unrecognised prerequisite')
         assert inventory(unknown_sample)[1][0]['category'] == 'unclassified'
-        for reason, category in RESOURCE_SKIP_CATEGORIES.items():
+        for reason, category in {**RESOURCE_SKIP_CATEGORIES, **DEVICE_SKIP_CATEGORIES}.items():
             resource_sample = sample.replace('HTML Tidy is not installed', reason)
             assert inventory(resource_sample)[1][0]['category'] == category
         for reason in ('resource child requires Unicorn',
-                       'resource child source proof is surprising'):
+                       'resource child source proof is surprising',
+                       'real MPS unknown source failure'):
             resource_sample = sample.replace('HTML Tidy is not installed', reason)
             assert inventory(resource_sample)[1][0]['category'] == 'unclassified'
         for invalid in ('', sample.replace('WARN 1', 'WARN 2'),
