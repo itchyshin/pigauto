@@ -1286,6 +1286,25 @@ fit_pigauto <- function(
   if (!is.null(best_state)) model$load_state_dict(best_state)
   gpu_mem_checkpoint("after model$load_state_dict(best_state)")
 
+  # Check the restored model on the same masked inputs used for calibration.
+  # This also covers fits without validation, which have no final forward pass.
+  model$eval()
+  torch::with_no_grad({
+    mask_ind0 <- torch::torch_zeros(c(n, 1L), device = device)
+    covs0 <- make_covs_tensor(t_MU, mask_ind0, t_covariates)
+    final_check <- model(t_X_eval, t_coords, covs0, t_adj, t_obs_to_sp,
+                         D_sq = t_D_sq)
+    finite_output <- function(x) {
+      is.null(x) || isTRUE(as.logical(torch::torch_isfinite(x)$all()$item()))
+    }
+    if (!finite_output(final_check$delta) || !finite_output(final_check$rs) ||
+        !finite_output(final_check$fixed_effects)) {
+      stop("Final GNN output is non-finite; try a lower learning rate (`lr`).",
+           call. = FALSE)
+    }
+    rm(final_check, covs0, mask_ind0)
+  })
+
   # ---- Post-training gate calibration (validation set) --------------------
   calibrated_gates <- NULL
   calibrated_gates_list <- NULL
