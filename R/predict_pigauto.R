@@ -368,6 +368,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     }
     mask_observed_idx <- unique(c(held, mask_observed_idx))
   }
+  n_imp <- .check_positive_integer(n_imputations, "n_imputations")
   cfg       <- object$model_config
   # gnn = FALSE fits (gnn-off contract, S2): the GNN was never constructed or
   # trained, so this function must make ZERO torch:: calls in that path --
@@ -376,6 +377,9 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   # `isFALSE()` (not `!isTRUE()`) so old saves without a `gnn` field
   # (implicitly GNN-on) fall through to the unchanged torch path.
   gnn_off   <- isFALSE(cfg$gnn)
+  if (!gnn_off) {
+    cfg$refine_steps <- .check_positive_integer(cfg$refine_steps, "refine_steps")
+  }
   device    <- if (!gnn_off) get_device() else NULL
   trait_map <- object$trait_map
   has_trait_map <- !is.null(trait_map)
@@ -541,7 +545,6 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
 
   n <- n_obs   # rows in output
   p <- ncol(MU)
-  n_imp <- as.integer(n_imputations)
   if (is.null(p) || is.na(p) || p != expected_p) {
     stop("`", baseline_label, "$mu` has ", p,
          " latent column(s), but the model expects ", expected_p, ".",
