@@ -345,14 +345,15 @@ draw_conditional_bm <- function(fit_or_result, m = 20L, seed = NULL,
   trait_of <- ((seq_along(v) - 1L) %/% n) + 1L
   for (it in seq_len(max_iter)) {
     C <- kronecker(Sigma, R)
-    C_oo <- C[o_idx, o_idx]; C_mo <- C[m_idx, o_idx]
+    C_oo <- C[o_idx, o_idx, drop = FALSE]
+    C_mo <- C[m_idx, o_idx, drop = FALSE]
     A <- t(solve(C_oo, t(C_mo)))                 # C_mo C_oo^{-1}
     mu_m <- as.vector(A %*% v[o_idx])
-    V_m <- C[m_idx, m_idx] - A %*% t(C_mo)
+    V_m <- C[m_idx, m_idx, drop = FALSE] - A %*% t(C_mo)
     Lhat <- L; Lhat[miss] <- mu_m
     S_new <- crossprod(Lhat, Rinv %*% Lhat)
     ta <- tip_of[m_idx]; tr <- trait_of[m_idx]
-    W <- Rinv[ta, ta] * V_m                      # R^{-1}_ab V[(a,j),(b,k)]
+    W <- Rinv[ta, ta, drop = FALSE] * V_m                      # R^{-1}_ab V[(a,j),(b,k)]
     for (j in seq_len(K)) for (k in seq_len(K)) {
       S_new[j, k] <- S_new[j, k] + sum(W[tr == j, tr == k, drop = FALSE])
     }
