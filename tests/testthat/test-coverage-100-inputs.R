@@ -961,3 +961,36 @@ test_that("benchmark NULL seed respects the ambient random stream", {
   expect_identical(first$results, repeat_run$results)
   expect_false(isTRUE(all.equal(first$results, other$results)))
 })
+
+test_that("ordinal CV summary leaves correlation undefined for single-cell folds", {
+  tree <- ape::read.tree(text = "(((a:1,b:1):1,(c:1,d:1):1):1,((e:1,f:1):1,(g:1,h:1):1):1);")
+  d <- data.frame(grade = ordered(c("lo", "mid", "hi", "lo", "hi", "mid", "hi", "lo"),
+                                  levels = c("lo", "mid", "hi")), row.names = tree$tip.label)
+  pd <- preprocess_traits(d, tree, log_transform = FALSE)
+  warnings <- character()
+  cv <- withCallingHandlers(cross_validate(pd, tree, k = 8L, seeds = 1L,
+                                           gnn = FALSE, k_eigen = 3L, verbose = FALSE,
+                                           predict_method = "per_column"),
+    warning = function(w) { warnings <<- c(warnings, conditionMessage(w)); invokeRestart("muffleWarning") })
+  expect_true(length(warnings) > 0L)
+  expect_true(all(grepl("Small validation set", warnings)))
+  expect_setequal(unique(cv$results$fold), 1:8)
+  folds <- make_cv_folds(pd$X_scaled, k = 8L, seed = 1L, trait_map = pd$trait_map)
+  expect_identical(lengths(folds), rep(1L, 8L))
+  rmse <- cv$results[cv$results$metric == "rmse", ]
+  expect_equal(nrow(rmse), 8L)
+  expect_true(all(is.finite(rmse$value)))
+  # The long CV output omits NA metrics, so check the raw evaluator's
+  # single-cell contract separately on the same latent trait and split.
+  one <- evaluate_imputation(pd$X_scaled, pd$X_scaled,
+                             list(val_idx = integer(), test_idx = folds[[1]]),
+                             trait_map = pd$trait_map)
+  expect_equal(one$n, 1L)
+  expect_true(is.na(one$spearman_rho))
+  expect_equal(one$rmse, 0)
+  expect_false(any(cv$summary$metric == "spearman_rho"))
+  expect_true(any(cv$summary$metric == "rmse"))
+  output <- paste(capture.output(summary(cv)), collapse = "\n")
+  expect_match(output, "grade.*ordinal")
+  expect_false(grepl("(rho)", output, fixed = TRUE))
+})

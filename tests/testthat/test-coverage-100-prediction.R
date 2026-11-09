@@ -1086,3 +1086,63 @@ test_that("torch state from a separate raw RDS process reports the portable-save
   expect_error(.pigauto_assert_predictable_state(list(model_state = list(state))),
                "save_pigauto.*load_pigauto")
 })
+
+test_that("tree-based Fisher refinement returns valid values on collinear traits", {
+  set.seed(87)
+  tree <- ape::rtree(12)
+  x <- as.numeric(scale(seq_len(9)))
+  L <- rbind(cbind(x = x, y = 2 * x, z = rep(1, 9)), matrix(NA_real_, 3, 3))
+  rownames(L) <- tree$tip.label
+  expect_equal(qr(L[complete.cases(L), ])$rank, 2L)
+  warnings <- character()
+  fit <- withCallingHandlers(fit_mvn_bm_inhouse(L, tree = tree, sigma_method = "fisher_ml",
+    predict_method = "per_column", max_iter = 1L), warning = function(w) {
+      msg <- conditionMessage(w)
+      if (grepl('sigma_method = "fisher_ml" optim() did not converge', msg, fixed = TRUE) &&
+          grepl("falling back to the single_pass", msg, fixed = TRUE)) {
+        warnings <<- c(warnings, msg)
+        invokeRestart("muffleWarning")
+      }
+    })
+  expect_equal(fit$n_iter, 1L)
+  expect_identical(dimnames(fit$anc_recon), dimnames(L))
+  expect_true(all(is.finite(fit$anc_recon)))
+  expect_true(all(is.finite(fit$anc_var)) && all(fit$anc_var >= 0))
+  expect_equal(unname(fit$anc_recon[!is.na(L)]), unname(L[!is.na(L)]))
+  expect_equal(fit$pars$phylocov, t(fit$pars$phylocov), tolerance = 1e-8)
+  expect_true(all(eigen(fit$pars$phylocov, symmetric = TRUE)$values > 0))
+  # Optimizer convergence is platform-dependent. When both calls fall back,
+  # compare the result with the real tree-based single-pass implementation.
+  if (length(warnings) == 2L) {
+    ref <- fit_mvn_bm_inhouse(L, tree = tree, sigma_method = "single_pass",
+                              predict_method = "per_column", max_iter = 1L)
+    expect_equal(fit$pars$phylocov, ref$pars$phylocov, tolerance = 1e-8)
+    expect_equal(fit$anc_recon, ref$anc_recon, tolerance = 1e-8)
+  }
+})
+
+test_that("large-tree memory warning precedes graph allocation", {
+  tree <- ape::stree(10001L, type = "star")
+  expect_s3_class(tree, "phylo")
+  expect_length(tree$tip.label, 10001L)
+  # If the warning disappears or moves past cache loading, this invalid
+  # cache is a safety fuse: readRDS errors before dense graph construction.
+  cache <- tempfile(fileext = ".rds")
+  on.exit(unlink(cache), add = TRUE)
+  writeLines("not an RDS file", cache)
+  warning_text <- NULL
+  stopped <- tryCatch(
+    withCallingHandlers({
+      build_phylo_graph(tree, cache_path = cache)
+      FALSE
+    }, warning = function(w) {
+      warning_text <<- conditionMessage(w)
+      stop(errorCondition("stop before graph allocation", class = "pigauto_warning_probe"))
+    }),
+    pigauto_warning_probe = function(e) TRUE
+  )
+  expect_true(stopped)
+  expect_match(warning_text, "tree has 10001 tips", fixed = TRUE)
+  expect_match(warning_text, "cophenetic() requires O(n^2) memory (~800 MB)", fixed = TRUE)
+  expect_match(warning_text, "Consider subsetting your tree", fixed = TRUE)
+})

@@ -714,3 +714,31 @@ test_that("conditional BM refuses singular trait covariance without a ridge", {
   expect_identical(regularized$datasets[[1]], d)
   expect_false(any(regularized$imputed_mask))
 })
+
+test_that("shared GNN tree completions preserve observed cells and remain descriptive", {
+  skip_if_not_installed("torch")
+  skip_if_not(isTRUE(torch::torch_is_installed()), "torch runtime is unavailable")
+  previous_threads <- torch::torch_get_num_threads()
+  on.exit(torch::torch_set_num_threads(previous_threads))
+  torch::torch_set_num_threads(1L)
+  f <- mi_cov_tree_data()
+  d <- f$data; d$x[c(2, 5)] <- NA_real_
+  warnings <- character()
+  output <- capture.output(result <- withCallingHandlers(
+    multi_impute_trees(d, list(f$tree, f$tree), m_per_tree = 1L,
+                       draws_method = "conformal", share_gnn = TRUE, gnn = TRUE,
+                       epochs = 1L, hidden_dim = 8L, n_gnn_layers = 1L, k_eigen = 3L,
+                       log_transform = FALSE, seed = 7L, verbose = TRUE),
+    warning = function(w) { warnings <<- c(warnings, conditionMessage(w)); invokeRestart("muffleWarning") }))
+  expect_true(any(grepl("Few tree-sensitivity", warnings)))
+  expect_true(all(grepl("Few tree-sensitivity|Small validation set", warnings)))
+  expect_equal(sum(grepl("Training GNN once on reference tree", output, fixed = TRUE)), 1L)
+  expect_identical(result$tree_index, c(1L, 2L))
+  expect_length(result$datasets, 2L)
+  for (one in result$datasets) {
+    expect_true(all(is.finite(one$x[is.na(d$x)])))
+    expect_identical(one$x[!is.na(d$x)], d$x[!is.na(d$x)])
+    expect_identical(one$y, d$y)
+  }
+  expect_error(with_imputations(result, function(z) lm(y ~ x, z)), "tree-sensitivity")
+})
