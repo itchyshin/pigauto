@@ -872,3 +872,132 @@ test_that("active composition ranking requires five observed compositions", {
     }
   }
 })
+
+test_that("a single-value Pagel grid retains its fixed lambda and GLS mean", {
+  y <- c(1, 2, 4, 3, 5, NA_real_)
+  cache <- build_pagel_nll_cache(y, diag(6))
+  fit <- .pagel_lambda_from_cache(cache, lambda_grid = c(.5, .5))
+  expect_identical(fit$lambda_hat, .5)
+  expect_equal(fit$mu_hat, mean(y, na.rm = TRUE), tolerance = 1e-8)
+  expect_equal(fit$mu_hat, cache$mu_at(.5))
+})
+
+test_that("Pagel CV skips empty folds without changing leave-one-out selection", {
+  i <- seq_len(50)
+  y <- sin(i / 7) + i / 20
+  R <- .8^abs(outer(i, i, "-"))
+  grid <- c(.1, .5, .9)
+  nugget <- 1e-6
+  # Independent GLS conditioning: recreate the fold assignment, then solve
+  # the held-out mean directly rather than calling bm_impute_col().
+  heldout_sse <- function(k) {
+    set.seed(17)
+    fold_id <- sample(rep(seq_len(k), length.out = length(y)))
+    total <- numeric(length(grid))
+    for (f in seq_len(k)) {
+      held <- which(fold_id == f)
+      if (!length(held)) next
+      obs <- setdiff(i, held)
+      for (j in seq_along(grid)) {
+        lambda <- grid[j]
+        R_lambda <- lambda * R
+        diag(R_lambda) <- lambda * diag(R) + (1 - lambda)
+        R_oo <- R_lambda[obs, obs, drop = FALSE] + diag(nugget, length(obs))
+        weights <- solve(R_oo, cbind(1, y[obs]))
+        mu <- sum(weights[, 2]) / sum(weights[, 1])
+        prediction <- mu + as.vector(R_lambda[held, obs, drop = FALSE] %*%
+                                      solve(R_oo, y[obs] - mu))
+        total[j] <- total[j] + sum((prediction - y[held])^2)
+      }
+    }
+    total
+  }
+  sse_50 <- heldout_sse(50L)
+  sse_55 <- heldout_sse(55L)
+  expect_equal(sse_55, sse_50, tolerance = 1e-10)
+  expect_true(all(is.finite(sse_50)))
+  expect_identical(which.min(sse_50), 3L)
+  expect_gt(sort(sse_50)[2] - min(sse_50), 1)
+  expected <- grid[which.min(sse_50)]
+  expect_equal(cv_lambda_for_col(y, R, nugget = nugget, lambda_grid = grid,
+                                  k = 50L, seed = 17), expected)
+  expect_equal(cv_lambda_for_col(y, R, nugget = nugget, lambda_grid = grid,
+                                  k = 55L, seed = 17), expected)
+})
+
+test_that("Pagel CV falls back when finite inputs overflow squared errors", {
+  y <- (seq_len(50) - 25) * 1e155
+  R <- diag(50)
+  grid <- c(.1, .9)
+  expect_true(all(is.finite(y)))
+  expect_true(is.infinite(sum(y^2)))
+  expect_identical(cv_lambda_for_col(y, R, lambda_grid = grid, k = 5L, seed = 17), 1)
+  expect_true(cv_lambda_for_col(y / 1e155, R, lambda_grid = grid,
+                                k = 5L, seed = 17) %in% grid)
+})
+
+test_that("joint baseline falls back when discrete traits are entirely held out", {
+  set.seed(72)
+  tree <- ape::rtree(12)
+  i <- seq_len(12)
+  traits <- data.frame(x = sin(i), b = factor(rep(c("no", "yes"), 6)),
+    o = ordered(rep(c("lo", "mid", "hi"), 4), levels = c("lo", "mid", "hi")),
+    row.names = tree$tip.label)
+  data <- preprocess_traits(traits, tree, trait_types = c(x = "continuous"),
+                            log_transform = FALSE)
+  held <- which(col(data$X_scaled) > 1L)
+  splits <- list(val_idx = held, test_idx = integer())
+  joint <- fit_joint_threshold_baseline(data, tree, splits = splits,
+                                         predict_method = "per_column")
+  b <- which(joint$liab_types == "binary")
+  o <- which(joint$liab_types == "ordinal")
+  expect_length(b, 1L)
+  expect_length(o, 1L)
+  expect_true(all(is.na(joint$mu_liab[, b])))
+  expect_true(all(is.na(joint$mu_liab[, o])))
+  base <- fit_baseline(data, tree, splits = splits, predict_method = "per_column")
+  expect_identical(unname(base$path), c("threshold_joint", "label_propagation", "per_column_bm"))
+  expect_identical(dimnames(base$mu), dimnames(data$X_scaled))
+  expect_true(all(is.finite(base$mu)) && all(is.finite(base$se)))
+  expect_equal(unname(base$mu[, "x"]), unname(data$X_scaled[, "x"]), tolerance = 1e-6)
+  expect_equal(unname(base$mu[, "b"]), rep(0, 12))
+  expect_equal(unname(base$mu[, "o"]), rep(0, 12))
+})
+
+test_that("Fisher covariance falls back safely on collinear real inputs", {
+  L <- cbind(x = c(1, 2, 3, 4, 5, 6, 7, 8, NA, NA),
+             y = c(2, 4, 6, 8, 10, 12, 14, 16, NA, NA),
+             z = c(rep(1, 8), NA, NA))
+  rownames(L) <- paste0("s", seq_len(nrow(L)))
+  R <- diag(10)
+  dimnames(R) <- list(rownames(L), rownames(L))
+  expect_equal(qr(L[complete.cases(L), ])$rank, 2L)
+  for (iterations in c(0L, 1L)) {
+    warnings <- character()
+    fit <- withCallingHandlers(fit_mvn_bm_inhouse(L, R = R,
+      sigma_method = "fisher_ml", predict_method = "per_column", max_iter = iterations),
+      warning = function(w) {
+        msg <- conditionMessage(w)
+        if (grepl('sigma_method = "fisher_ml" optim() did not converge', msg, fixed = TRUE) &&
+            grepl("falling back to the single_pass", msg, fixed = TRUE)) {
+          warnings <<- c(warnings, msg)
+          invokeRestart("muffleWarning")
+        }
+      })
+    expect_true(all(is.finite(fit$anc_recon)), info = iterations)
+    expect_true(all(is.finite(fit$pars$phylocov)), info = iterations)
+    expect_equal(fit$pars$phylocov, t(fit$pars$phylocov), tolerance = 1e-8, info = iterations)
+    expect_true(all(eigen(fit$pars$phylocov, symmetric = TRUE)$values > 0), info = iterations)
+    expect_equal(unname(fit$anc_recon[!is.na(L)]), unname(L[!is.na(L)]), info = iterations)
+    # If every attempted optimizer call falls back, compare against the real
+    # single-pass solver. A future optimizer may converge on this input.
+    if (length(warnings) == iterations + 1L) {
+      reference <- fit_mvn_bm_inhouse(L, R = R, sigma_method = "single_pass",
+                                       predict_method = "per_column", max_iter = iterations)
+      expect_equal(fit$pars$phylocov, reference$pars$phylocov, tolerance = 1e-8,
+                   info = iterations)
+      expect_equal(fit$anc_recon, reference$anc_recon, tolerance = 1e-8,
+                   info = iterations)
+    }
+  }
+})
