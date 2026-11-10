@@ -32,12 +32,14 @@ jobs:
           tar -tzf "$ARCHIVE" > evidence/inventory.txt
           tar -xzf "$ARCHIVE" -C "$GITHUB_WORKSPACE" --strip-components=1
           grep -m1 'model name' /proc/cpuinfo | tee evidence/cpu.txt
+          grep -qi intel evidence/cpu.txt || { echo 'An Intel runner is required'; exit 1; }
           Rscript --vanilla -e 'print(sessionInfo()); print(extSoftVersion())' > evidence/r.txt
       - name: Enable threaded MKL
         shell: bash
         run: |
           set -euo pipefail
-          dnf install -y patchelf > evidence/patchelf.log 2>&1
+          dnf install -y patchelf texinfo texlive-scheme-small texlive-collection-latexrecommended texlive-collection-fontsrecommended nodejs-devel > evidence/system-dependencies.log 2>&1
+          command -v pdflatex
           target="$(R RHOME)/lib/libR.so"
           patchelf --print-needed "$target" | grep -Fx libmkl_sequential.so.2
           patchelf --replace-needed libmkl_sequential.so.2 libmkl_gnu_thread.so.2 "$target"
@@ -46,7 +48,9 @@ jobs:
           MKL_VERBOSE=1 Rscript --vanilla -e 'set.seed(1); x <- matrix(rnorm(4000000),2000); invisible(x %*% x)' > evidence/mkl-verbose.txt 2>&1
       - uses: r-hub/actions/setup-deps@02be5ffbeae2b0d553da66acded089da11a1fb8f
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: |
+            any::rcmdcheck
+            any::V8
       - name: Run full check on exact archive
         shell: bash
         run: |
@@ -54,7 +58,10 @@ jobs:
           mkdir -p check
           R CMD check --as-cran --run-donttest --no-stop-on-test-error --output="$GITHUB_WORKSPACE/check" "$ARCHIVE" 2>&1 | tee evidence/check.log
           test -f check/pigauto.Rcheck/00check.log
-          grep -q '^Status: OK' check/pigauto.Rcheck/00check.log
+          grep -Eq '^Status: (OK|1 NOTE)$' check/pigauto.Rcheck/00check.log
+          if grep -q '^Status: 1 NOTE$' check/pigauto.Rcheck/00check.log; then
+            grep -q 'Days since last update:' check/pigauto.Rcheck/00check.log
+          fi
       - name: Verify archive after check
         if: always()
         shell: bash
