@@ -727,6 +727,7 @@ test_that("shared GNN tree completions preserve observed cells and remain descri
   output <- capture.output(result <- withCallingHandlers(
     multi_impute_trees(d, list(f$tree, f$tree), m_per_tree = 1L,
                        draws_method = "conformal", share_gnn = TRUE, gnn = TRUE,
+                       reference_tree = f$tree,
                        epochs = 1L, hidden_dim = 8L, n_gnn_layers = 1L, k_eigen = 3L,
                        log_transform = FALSE, seed = 7L, verbose = TRUE),
     warning = function(w) { warnings <<- c(warnings, conditionMessage(w)); invokeRestart("muffleWarning") }))
@@ -734,6 +735,7 @@ test_that("shared GNN tree completions preserve observed cells and remain descri
   expect_true(all(grepl("Few tree-sensitivity|Small validation set", warnings)))
   expect_equal(sum(grepl("Training GNN once on reference tree", output, fixed = TRUE)), 1L)
   expect_identical(result$tree_index, c(1L, 2L))
+  expect_identical(result$reference_tree, f$tree)
   expect_length(result$datasets, 2L)
   for (one in result$datasets) {
     expect_true(all(is.finite(one$x[is.na(d$x)])))

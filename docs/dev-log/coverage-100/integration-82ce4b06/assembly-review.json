@@ -1,0 +1,65 @@
+{
+  "status": "BOUNDED_FINAL_ASSEMBLY_PASS",
+  "base": "f96a043db32ebf795b34eee348aa997109d92a9c",
+  "candidate": "82ce4b0625a679026a6f9a9e0494aaa43da31ecf",
+  "runtime_changed": [
+    "R/check_pigauto.R",
+    "R/predict_pigauto.R"
+  ],
+  "combined_predict_sha256": "38ec4e39455af5528d7cd5e1bce462845cd009350ccf3a71ff6a0f08d2c469ee",
+  "exact_reviewed_runtime_transformations": true,
+  "reviewed_test_tool_hashes": {
+    "R/check_pigauto.R": "2b3a488d3abf7829da47fa6eefd031f8d11af1e4b4c41d569cb6cde7287292ce",
+    "script/coverage_audit/conditions.py": "8b577080ed05113d9b563d8018f2d60d72ef4b631fd3c34269b393ac0b9e8f05",
+    "tests/testthat/test-prediction-count-validation.R": "e4d7e9af547e058614fc2d304af953b474eea06229b413282e8321b6fb01d488",
+    "tests/testthat/test-coverage-100-mps.R": "50eec2bf6c3230beeb66ff222e724af6e5509d356f75423db481c84cd490ce91",
+    "tests/testthat/test-coverage-100-inputs.R": "0eb1999980637d6ee273d9f78c946f9c954ec2bd86ee9e50b53857ec59453231"
+  },
+  "preserved_exact_files": [
+    "R/fit_helpers.R",
+    "R/preprocess_traits.R",
+    "R/fit_pigauto.R",
+    "R/exact_conditional.R",
+    "R/model_residual_dae.R",
+    "R/graph_transformer_block.R",
+    "tests/testthat/test-coverage-100-resource.R",
+    "tests/testthat/fixtures/resource-child-driver.R",
+    "tests/testthat/fixtures/resource-child-test.R",
+    "tests/testthat/test-calibration-fold-contract.R",
+    "tests/testthat/test-covariate-scaling-overflow.R",
+    "tests/testthat/test-coverage-100-baseline-defaults.R",
+    "tests/testthat/test-coverage-100-prediction.R",
+    "codecov.yml",
+    ".Rbuildignore",
+    ".github/workflows/test-coverage.yaml",
+    "script/coverage_audit/collect.R",
+    "script/coverage_audit/test_evidence.R",
+    "script/coverage_audit/audit.py",
+    "script/coverage_audit/reconcile_repairs.py"
+  ],
+  "constituents": [
+    {
+      "commit": "2ba384ef82cb1ae3eb654606532d1a629fd423ed",
+      "title": "fix: validate prediction counts before selecting a device"
+    },
+    {
+      "commit": "dcc1fb7f985e882a23b53d30f2aaf83b68ed3bd2",
+      "title": "test: cover covariate name diagnostics and real MPS fixed effects"
+    },
+    {
+      "commit": "a16468ef59974302c137dc39c2401e5b9e39ee10",
+      "title": "docs: retain reviewed coverage evidence and exact unresolved remainder"
+    },
+    {
+      "commit": "82ce4b0625a679026a6f9a9e0494aaa43da31ecf",
+      "title": "docs: record approved delivery scope and retain the unmet coverage gate"
+    }
+  ],
+  "acceptance_document": "docs/dev-log/coverage-100/DELIVERY-ACCEPTANCE.md",
+  "delivery_acceptance": "prepared fixes/tests and exact documented remainder; historical 100% gate unmet and no longer delivery condition",
+  "new_coverage_credit": 0,
+  "tests_run_by_reviewer": false,
+  "final_exact_CPU_check_source_and_same_source_MPS": "PENDING",
+  "PR_CI_review": "PENDING",
+  "merges_release_or_aggregation": "NOT_AUTHORIZED"
+}
