@@ -1,13 +1,13 @@
 # Prepared pull requests
 
-All listed code PRs are drafts and require separate approval before merging. The final evidence closeout is a docs-only draft stacked on #288; its PR body links this report. Code heads below are independent of the documentation publication commit.
+All listed code PRs are drafts and require separate approval before merging. The final evidence closeout is a docs-only draft stacked on #288; [#307](https://github.com/itchyshin/pigauto/pull/307) publishes this report. Code heads below are independent of the documentation publication commit.
 
 ## Coverage and test infrastructure
 
 | PR | Exact code head | CI snapshot | Scope |
 |---|---|---|---|
 | [#287](https://github.com/itchyshin/pigauto/pull/287) | `bd6a643a9be222a23af54b311df374c98e2f5cdd` | Green; pkgdown intentionally skipped | Audit coverage gaps and test presentation and evaluation contracts |
-| [#288](https://github.com/itchyshin/pigauto/pull/288) | `638445a002ce5118f78561c81cf35c2f313a514c` | Pending runner/checks | test: extend prediction fitting and imputation coverage |
+| [#288](https://github.com/itchyshin/pigauto/pull/288) | `638445a002ce5118f78561c81cf35c2f313a514c` | Green; pkgdown intentionally skipped | test: extend prediction fitting and imputation coverage |
 
 ## Separate runtime repairs
 
@@ -34,6 +34,6 @@ All listed code PRs are drafts and require separate approval before merging. The
 | [#305](https://github.com/itchyshin/pigauto/pull/305) | `0ba4ec0df598a43c29515b9e84a990b645411b8f` | Green; pkgdown intentionally skipped | Remove unreachable empty calibration fold fallbacks |
 | [#306](https://github.com/itchyshin/pigauto/pull/306) | `b913036942ad0aa73ee48c62c08343bf66c82ab7` | Green; pkgdown intentionally skipped | Validate prediction counts before device selection |
 
-Snapshot UTC: 2026-11-10T00:30:11.586019+00:00.
+Snapshot UTC: 2026-11-10T00:59:34.813703+00:00.
 
 PR #288 stacks on #287. The combined verification branch includes all twenty repairs but is separate from main and the coverage-only PR head. The docs-only closeout does not change runtime files, tests, coverage configuration or workflows. Scientific calibration, general GPU correctness, singleton limitations and CRAN release remain separate.
