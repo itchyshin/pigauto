@@ -1,0 +1,75 @@
+{
+  "source_sha": "82ce4b0625a679026a6f9a9e0494aaa43da31ecf",
+  "scope": "Independent read-only mechanical artifact review; no tests or remote RDS replay",
+  "xml": {
+    "valid": 13002,
+    "covered": 12905,
+    "uncovered": 97,
+    "all_unique": true,
+    "hash_matches_manifest": true
+  },
+  "named_evidence": {
+    "rows": 12905,
+    "single": 12892,
+    "collective_only": 13,
+    "all_covered_xml_locations_and_hits_match": true,
+    "csv_hash_matches": true,
+    "remote_rds_sha256_receipt": "dbdbf11a3b5a45cf6c3276b9cf3cc8d4d62bcfe8f065ab18f91a6230126231c0",
+    "raw_rds_independently_rehashed": false
+  },
+  "source_hashes": {
+    "git_blobs_checked": 191,
+    "mismatches": 0
+  },
+  "r6_inventory": {
+    "tracked": 253,
+    "covered": 253
+  },
+  "accounting": {
+    "catalog": 13002,
+    "named": 12827,
+    "miss": 95,
+    "changed_pending": 80,
+    "original_miss_catalog": 1904,
+    "original_named": 1780,
+    "original_miss": 95,
+    "original_changed_pending": 29,
+    "new": 80,
+    "new_covered": 78,
+    "new_uncovered": [
+      "R/preprocess_traits.R:553",
+      "R/preprocess_traits.R:554"
+    ],
+    "partition_exact": true,
+    "hit_mismatch": 0
+  },
+  "vs_f96": {
+    "mapped_covered_to_miss": 0,
+    "unmapped_changed_old_locations": [
+      "R/check_pigauto.R:415",
+      "R/predict_pigauto.R:544"
+    ],
+    "old_miss_gain": [
+      "R/preprocess_traits.R:506"
+    ]
+  },
+  "strict_audit": {
+    "failures": 77,
+    "source_identity_verified": false,
+    "complete": false
+  },
+  "logs": {
+    "instrumented": "FAIL 0 WARN 192 SKIP 34 PASS 5740",
+    "installed": "FAIL 0 WARN 192 SKIP 35 PASS 5737",
+    "same_source_mac_focused": "1960 pass, 31 files; MPS file shows 12 dots",
+    "check": "0 errors, 0 warnings, 0 notes",
+    "source": "192 assertions, 0 failures, warnings or skips"
+  },
+  "limits": [
+    "100 percent historical gate remains unmet and user accepted stopping it as delivery condition",
+    "Changed/removed locations pending separate approval",
+    "MPS tested in focused Mac log; CPU full run skips MPS",
+    "No inference of merge or main state",
+    "Named-test attribution and raw RDS not independently replayed"
+  ]
+}
