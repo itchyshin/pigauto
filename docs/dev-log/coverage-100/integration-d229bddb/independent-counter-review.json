@@ -1,0 +1,69 @@
+{
+  "source_sha": "d229bddb1f280d2537e2753976fbd369af4fff4c",
+  "scope": "Independent read-only artifact and accounting review; no tests or remote RDS replay",
+  "xml": {
+    "valid": 13002,
+    "covered": 12905,
+    "uncovered": 97,
+    "unique": true,
+    "hash_matches_manifest": true,
+    "vs_82ce": "same locations and covered/uncovered status, zero regressions"
+  },
+  "source": {
+    "manifest_git_blobs_checked": 191,
+    "mismatches": 0,
+    "delta_from_82ce": "two inserted lines in one MI test; no R or config changes"
+  },
+  "named_evidence": {
+    "covered_rows": 12905,
+    "single": 12892,
+    "collective_only": 13,
+    "locations_and_hits_match_xml": true,
+    "csv_hash_matches": true,
+    "updated_test_is_single_witness": [
+      "R/multi_impute_trees.R:583",
+      "R/multi_impute_trees.R:647"
+    ],
+    "remote_rds_sha256_receipt": "8b2998deb08b3c1862f01c6ade94c9cca7dd9009167df73772139615a609d0e5",
+    "independently_rehashed_or_replayed": false
+  },
+  "r6_inventory": {
+    "tracked": 253,
+    "covered": 253
+  },
+  "accounting": {
+    "catalog": 13002,
+    "named": 12827,
+    "miss": 95,
+    "changed_pending": 80,
+    "original_misses": 1904,
+    "original_named": 1780,
+    "original_miss": 95,
+    "original_changed_pending": 29,
+    "new": 80,
+    "new_covered": 78,
+    "new_misses": [
+      "R/preprocess_traits.R:553",
+      "R/preprocess_traits.R:554"
+    ],
+    "partition_exact": true,
+    "hit_mismatches": 0,
+    "mapped_baseline_regressions": 0
+  },
+  "strict_audit": {
+    "failures": 77,
+    "source_identity_verified": false,
+    "complete": false
+  },
+  "logs": {
+    "instrumented": "FAIL 0 WARN 192 SKIP 34 PASS 5741",
+    "installed": "FAIL 0 WARN 192 SKIP 35 PASS 5738",
+    "check": "0 errors, 0 warnings, 0 notes",
+    "source": "192 assertions, 0 failures, warnings or skips"
+  },
+  "limits": [
+    "Historical 100 percent gate remains unmet; user accepted stopping as delivery condition",
+    "Changed or removed baseline locations remain pending separate approval",
+    "No independent RDS replay; no claims about merge or main"
+  ]
+}

@@ -1,0 +1,98 @@
+file,current_line,hits,kind,baseline_line,source_sha,source_line
+R/bm_internal.R,433,0,mapped_original,433,d229bddb1f280d2537e2753976fbd369af4fff4c,"      warning(""GLS solve failed; falling back to OLS."", call. = FALSE)"
+R/bm_internal.R,434,0,mapped_original,434,d229bddb1f280d2537e2753976fbd369af4fff4c,"      solve(crossprod(X_o) + diag(ridge_diag + 1e-8, rank_x), crossprod(X_o, y_o))"
+R/build_phylo_graph.R,72,0,mapped_original,72,d229bddb1f280d2537e2753976fbd369af4fff4c,"    warning(""RSpectra::eigs_sym did not converge with k = "", k + 1L,"
+R/build_phylo_graph.R,73,0,mapped_original,73,d229bddb1f280d2537e2753976fbd369af4fff4c,"            "" eigenvalues; falling back to dense eigen()."","
+R/build_phylo_graph.R,74,0,mapped_original,74,d229bddb1f280d2537e2753976fbd369af4fff4c,            call. = FALSE)
+R/cross_validate.R,578,0,mapped_original,578,d229bddb1f280d2537e2753976fbd369af4fff4c,"    if (length(roots) != 1L) stop(""A rooted tree is required for clade holdouts."", call. = FALSE)"
+R/cross_validate.R,661,0,mapped_original,661,d229bddb1f280d2537e2753976fbd369af4fff4c,"    stop(""Grouped fold changed the trait schema."", call. = FALSE)"
+R/draws_conditional.R,266,0,mapped_original,265,d229bddb1f280d2537e2753976fbd369af4fff4c,"    stop(""draw_conditional_bm(): sparse Cholesky of the conditional "","
+R/draws_conditional.R,267,0,mapped_original,266,d229bddb1f280d2537e2753976fbd369af4fff4c,"         ""precision failed (Sigma or the tree may be degenerate)."","
+R/draws_conditional.R,268,0,mapped_original,267,d229bddb1f280d2537e2753976fbd369af4fff4c,         call. = FALSE)
+R/draws_conditional.R,287,0,mapped_original,286,d229bddb1f280d2537e2753976fbd369af4fff4c,"    stop(""draw_conditional_bm(): non-finite draw produced (numerical "","
+R/draws_conditional.R,288,0,mapped_original,287,d229bddb1f280d2537e2753976fbd369af4fff4c,"         ""failure)."", call. = FALSE)"
+R/evaluate.R,756,0,mapped_original,756,d229bddb1f280d2537e2753976fbd369af4fff4c,        if (nrow(sub) == 0L) next
+R/evaluate.R,786,0,mapped_original,786,d229bddb1f280d2537e2753976fbd369af4fff4c,          if (nrow(sub) == 0L) next
+R/exact_conditional.R,142,0,mapped_original,142,d229bddb1f280d2537e2753976fbd369af4fff4c,  if (is.null(var_unit)) return(NULL)
+R/fit_baseline.R,820,0,mapped_original,820,d229bddb1f280d2537e2753976fbd369af4fff4c,      if (is.null(tm_ord)) next
+R/fit_baseline.R,894,0,mapped_original,894,d229bddb1f280d2537e2753976fbd369af4fff4c,"          ordinal_path_chosen[as.character(col)] <- ""threshold_joint"""
+R/fit_baseline.R,895,0,mapped_original,895,d229bddb1f280d2537e2753976fbd369af4fff4c,          next
+R/fit_baseline.R,917,0,mapped_original,917,d229bddb1f280d2537e2753976fbd369af4fff4c,"          ordinal_path_chosen[as.character(col)] <- ""threshold_joint"""
+R/fit_baseline.R,975,0,mapped_original,975,d229bddb1f280d2537e2753976fbd369af4fff4c,      if (!all(k_cols %in% cat_cols)) next  # already handled
+R/fit_baseline.R,1001,0,mapped_original,1001,d229bddb1f280d2537e2753976fbd369af4fff4c,      if (is.null(probs)) next
+R/fit_baseline.R,1078,0,mapped_original,1078,d229bddb1f280d2537e2753976fbd369af4fff4c,"        if (any(bad)) cov_design[bad, j] <- mean(cov_design[!bad, j])"
+R/fit_helpers.R,927,0,mapped_original,924,d229bddb1f280d2537e2753976fbd369af4fff4c,          fallback <- TRUE
+R/fit_pigauto.R,1484,0,mapped_original,1489,d229bddb1f280d2537e2753976fbd369af4fff4c,        if (is.finite(out)) out else Inf
+R/fit_pigauto.R,1492,0,mapped_original,1497,d229bddb1f280d2537e2753976fbd369af4fff4c,"        w_new <- if (lm_bm <= lm_mn) c(1, 0, 0) else c(0, 0, 1)"
+R/fit_pigauto.R,1493,0,mapped_original,1498,d229bddb1f280d2537e2753976fbd369af4fff4c,        calibrated_gates_list$r_cal_bm[lc]   <- w_new[1]
+R/fit_pigauto.R,1494,0,mapped_original,1499,d229bddb1f280d2537e2753976fbd369af4fff4c,        calibrated_gates_list$r_cal_gnn[lc]  <- w_new[2]
+R/fit_pigauto.R,1495,0,mapped_original,1500,d229bddb1f280d2537e2753976fbd369af4fff4c,        calibrated_gates_list$r_cal_mean[lc] <- w_new[3]
+R/fit_pigauto.R,1496,0,mapped_original,1501,d229bddb1f280d2537e2753976fbd369af4fff4c,        calibrated_gates[lc] <- w_new[2]
+R/fit_pigauto.R,1497,0,mapped_original,1502,d229bddb1f280d2537e2753976fbd369af4fff4c,        if (verbose) {
+R/fit_pigauto.R,1498,0,mapped_original,1503,d229bddb1f280d2537e2753976fbd369af4fff4c,          message(sprintf(
+R/fit_pigauto.R,1499,0,mapped_original,1504,d229bddb1f280d2537e2753976fbd369af4fff4c,"            ""Post-refine floor (#157): trait %s blend lost to %s on the refined val surface (%.4g > %.4g); gate closed."","
+R/fit_pigauto.R,1500,0,mapped_original,1505,d229bddb1f280d2537e2753976fbd369af4fff4c,"            tm$name, if (w_new[1] == 1) ""pure BM"" else ""pure MEAN"", lb,"
+R/fit_pigauto.R,1501,0,mapped_original,1506,d229bddb1f280d2537e2753976fbd369af4fff4c,            if (w_new[1] == 1) lm_bm else lm_mn))
+R/gbif_centroids.R,133,0,mapped_original,134,d229bddb1f280d2537e2753976fbd369af4fff4c,    if (limit <= 0L) break
+R/henderson_s_inv.R,93,0,mapped_original,93,d229bddb1f280d2537e2753976fbd369af4fff4c,"    stop(""build_henderson_S_inv: tree must have exactly one root."","
+R/henderson_s_inv.R,94,0,mapped_original,94,d229bddb1f280d2537e2753976fbd369af4fff4c,         call. = FALSE)
+R/joint_mvn_solver.R,449,0,mapped_original,449,d229bddb1f280d2537e2753976fbd369af4fff4c,      1.0
+R/joint_threshold_baseline.R,434,0,mapped_original,434,d229bddb1f280d2537e2753976fbd369af4fff4c,"      stop(""fit_joint_threshold_baseline: in-house solver returned "","
+R/joint_threshold_baseline.R,435,0,mapped_original,435,d229bddb1f280d2537e2753976fbd369af4fff4c,"           ncol(mu_fit), "" columns but "", length(fit_cols),"
+R/joint_threshold_baseline.R,436,0,mapped_original,436,d229bddb1f280d2537e2753976fbd369af4fff4c,"           "" were passed. Column alignment would be ambiguous."","
+R/joint_threshold_baseline.R,437,0,mapped_original,437,d229bddb1f280d2537e2753976fbd369af4fff4c,           call. = FALSE)
+R/joint_threshold_baseline.R,690,0,mapped_original,690,d229bddb1f280d2537e2753976fbd369af4fff4c,      if (is.null(base)) {
+R/joint_threshold_baseline.R,691,0,mapped_original,691,d229bddb1f280d2537e2753976fbd369af4fff4c,"        stop(""fit_joint_threshold_baseline_em: phylopars failed on iter 1; "","
+R/joint_threshold_baseline.R,692,0,mapped_original,692,d229bddb1f280d2537e2753976fbd369af4fff4c,"             ""no fallback available. Try em_iterations = 0L."", call. = FALSE)"
+R/joint_threshold_baseline.R,694,0,mapped_original,694,d229bddb1f280d2537e2753976fbd369af4fff4c,"      warning(""fit_joint_threshold_baseline_em: phylopars failed at iter "","
+R/joint_threshold_baseline.R,695,0,mapped_original,695,d229bddb1f280d2537e2753976fbd369af4fff4c,"              iter, "". Returning previous iteration's baseline."","
+R/joint_threshold_baseline.R,696,0,mapped_original,696,d229bddb1f280d2537e2753976fbd369af4fff4c,              call. = FALSE)
+R/joint_threshold_baseline.R,697,0,mapped_original,697,d229bddb1f280d2537e2753976fbd369af4fff4c,      break
+R/joint_threshold_baseline.R,711,0,mapped_original,711,d229bddb1f280d2537e2753976fbd369af4fff4c,    if (is.null(Sigma_new)) Sigma_new <- new_base$phylopars_fit$pars$sigma2
+R/joint_threshold_baseline.R,712,0,mapped_original,712,d229bddb1f280d2537e2753976fbd369af4fff4c,    if (!is.matrix(Sigma_new)) Sigma_new <- as.matrix(Sigma_new)
+R/mi_posterior.R,203,0,mapped_original,203,d229bddb1f280d2537e2753976fbd369af4fff4c,"  if (anyNA(pos)) stop(""mi_posterior: template indexing failed (internal)."","
+R/mi_posterior.R,204,0,mapped_original,204,d229bddb1f280d2537e2753976fbd369af4fff4c,                       call. = FALSE)
+R/mi_posterior.R,534,0,mapped_original,534,d229bddb1f280d2537e2753976fbd369af4fff4c,          if (abs(r_old) >= 1) next
+R/mi_posterior.R,902,0,mapped_original,902,d229bddb1f280d2537e2753976fbd369af4fff4c,  if (is.null(res)) return(NULL)
+R/mi_posterior.R,1205,0,mapped_original,1205,d229bddb1f280d2537e2753976fbd369af4fff4c,"    tree_use <- ape::keep.tip(tree, rownames(X))"
+R/multi_impute.R,671,0,mapped_original,671,d229bddb1f280d2537e2753976fbd369af4fff4c,"      stop(""predict.pigauto_fit() did not return "", m,"
+R/multi_impute.R,672,0,mapped_original,672,d229bddb1f280d2537e2753976fbd369af4fff4c,"           "" imputed datasets. This is an internal error -- please report."","
+R/multi_impute.R,673,0,mapped_original,673,d229bddb1f280d2537e2753976fbd369af4fff4c,           call. = FALSE)
+R/multi_impute_trees.R,499,0,mapped_original,499,d229bddb1f280d2537e2753976fbd369af4fff4c,"        stop(""Tree "", t, "": predict() did not return "", m_per_tree,"
+R/multi_impute_trees.R,500,0,mapped_original,500,d229bddb1f280d2537e2753976fbd369af4fff4c,"             "" imputed datasets. This is an internal error."", call. = FALSE)"
+R/ovr_categorical.R,138,0,mapped_original,138,d229bddb1f280d2537e2753976fbd369af4fff4c,    if (is.null(jt)) next
+R/ovr_categorical.R,144,0,mapped_original,144,d229bddb1f280d2537e2753976fbd369af4fff4c,    if (length(bin_idx) == 0L) next
+R/ovr_categorical.R,163,0,mapped_original,163,d229bddb1f280d2537e2753976fbd369af4fff4c,    if (is.null(cf) || is.null(cf$jt)) return(NA_character_)
+R/ovr_categorical.R,301,0,mapped_original,301,d229bddb1f280d2537e2753976fbd369af4fff4c,    if (length(v) == 0L) return(NA_real_)
+R/ovr_categorical.R,307,0,mapped_original,307,d229bddb1f280d2537e2753976fbd369af4fff4c,    if (is.na(fit_idx_pos)) return(NA_real_)
+R/ovr_categorical.R,330,0,mapped_original,330,d229bddb1f280d2537e2753976fbd369af4fff4c,"        warning(""fit_ovr_categorical_fits_em: OVR K-loop failed at iter "","
+R/ovr_categorical.R,331,0,mapped_original,331,d229bddb1f280d2537e2753976fbd369af4fff4c,"                iter, ""; returning previous iter's fits."", call. = FALSE)"
+R/ovr_categorical.R,332,0,mapped_original,332,d229bddb1f280d2537e2753976fbd369af4fff4c,        break
+R/ovr_categorical.R,343,0,mapped_original,343,d229bddb1f280d2537e2753976fbd369af4fff4c,        if (is.na(fit_idx_pos) || length(v) == 0L) return(NA_real_)
+R/pagel_lambda.R,242,0,mapped_original,240,d229bddb1f280d2537e2753976fbd369af4fff4c,      if (!is.finite(sum_a) || sum_a <= 0) return(.Machine$double.xmax)
+R/pagel_lambda.R,279,0,mapped_original,277,d229bddb1f280d2537e2753976fbd369af4fff4c,    if (is.null(beta) || !all(is.finite(beta))) return(.Machine$double.xmax)
+R/pagel_lambda.R,292,0,mapped_original,290,d229bddb1f280d2537e2753976fbd369af4fff4c,    if (!is.finite(log_det_x)) return(.Machine$double.xmax)
+R/pagel_lambda.R,319,0,mapped_original,317,d229bddb1f280d2537e2753976fbd369af4fff4c,"    return(list(lambda_hat = 1.0, mu_hat = NA_real_))"
+R/pagel_lambda.R,332,0,mapped_original,330,d229bddb1f280d2537e2753976fbd369af4fff4c,      lambda_hat <- grid[best_idx]
+R/pool_mi.R,497,0,mapped_original,501,d229bddb1f280d2537e2753976fbd369af4fff4c,"      stop(""The drmTMB fixed-effect adapter could not find named "","
+R/pool_mi.R,498,0,mapped_original,502,d229bddb1f280d2537e2753976fbd369af4fff4c,"           ""distributional coefficient blocks."", call. = FALSE)"
+R/predict_pigauto.R,441,0,mapped_original,437,d229bddb1f280d2537e2753976fbd369af4fff4c,      mps_cov_linear <- list(
+R/predict_pigauto.R,442,0,mapped_original,438,d229bddb1f280d2537e2753976fbd369af4fff4c,"        weight = as.matrix(as.array(cov_weight$detach()$cpu())),"
+R/predict_pigauto.R,443,0,mapped_original,439,d229bddb1f280d2537e2753976fbd369af4fff4c,        bias = as.numeric(as.array(cov_bias$detach()$cpu()))
+R/predict_pigauto.R,444,0,mapped_original,440,d229bddb1f280d2537e2753976fbd369af4fff4c,      )
+R/predict_pigauto.R,643,0,mapped_original,640,d229bddb1f280d2537e2753976fbd369af4fff4c,      mps_fixed_effects <- covariates %*% t(mps_cov_linear$weight)
+R/predict_pigauto.R,644,0,mapped_original,641,d229bddb1f280d2537e2753976fbd369af4fff4c,      mps_fixed_effects <- sweep(
+R/predict_pigauto.R,645,0,mapped_original,642,d229bddb1f280d2537e2753976fbd369af4fff4c,"        mps_fixed_effects, 2L, mps_cov_linear$bias, FUN = ""+"""
+R/predict_pigauto.R,646,0,mapped_original,643,d229bddb1f280d2537e2753976fbd369af4fff4c,      )
+R/predict_pigauto.R,647,0,mapped_original,644,d229bddb1f280d2537e2753976fbd369af4fff4c,      t_mps_cov_fixed_effects <- torch::torch_tensor(
+R/predict_pigauto.R,648,0,mapped_original,645,d229bddb1f280d2537e2753976fbd369af4fff4c,"        mps_fixed_effects, dtype = torch::torch_float(), device = device"
+R/predict_pigauto.R,649,0,mapped_original,646,d229bddb1f280d2537e2753976fbd369af4fff4c,      )
+R/predict_pigauto.R,821,0,mapped_original,818,d229bddb1f280d2537e2753976fbd369af4fff4c,            pred <- pred + t_mps_cov_fixed_effects
+R/predict_pigauto.R,857,0,mapped_original,850,d229bddb1f280d2537e2753976fbd369af4fff4c,      if (is.null(last_pred)) last_pred <- X_iter
+R/predict_pigauto.R,1347,0,mapped_original,1340,d229bddb1f280d2537e2753976fbd369af4fff4c,          if (length(row) == 0L) return(NA_integer_)
+R/preprocess_traits.R,300,0,mapped_original,300,d229bddb1f280d2537e2753976fbd369af4fff4c,"      stop(""'traits' must have species as row names (or supply species_col)."")"
+R/preprocess_traits.R,491,0,mapped_original,491,d229bddb1f280d2537e2753976fbd369af4fff4c,"      stop(""`covariates` has "", nrow(covariates), "" rows but traits has "","
+R/preprocess_traits.R,492,0,mapped_original,492,d229bddb1f280d2537e2753976fbd369af4fff4c,"           n_obs, "" rows after alignment. They must match."", call. = FALSE)"
+R/preprocess_traits.R,522,0,mapped_original,522,d229bddb1f280d2537e2753976fbd369af4fff4c,"      raw_names <- paste0(""cov"", seq_len(ncol(covariates)))"
+R/preprocess_traits.R,553,0,new_current,,d229bddb1f280d2537e2753976fbd369af4fff4c,"          stop(""Column '"", nm, ""' in `covariates` could not be scaled to finite values. "","
+R/preprocess_traits.R,554,0,new_current,,d229bddb1f280d2537e2753976fbd369af4fff4c,"               ""Rescale this covariate and try again."", call. = FALSE)"

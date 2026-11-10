@@ -1,0 +1,24 @@
+{
+  "status": "STATIC_ASSEMBLY_PASS",
+  "base": "82ce4b0625a679026a6f9a9e0494aaa43da31ecf",
+  "candidate": "d229bddb1f280d2537e2753976fbd369af4fff4c",
+  "coverage_PR_source": "638445a002ce5118f78561c81cf35c2f313a514c",
+  "only_non_documentation_change": "tests/testthat/test-coverage-100-mi.R",
+  "reviewed_MI_sha256": "160c30abe343c8c7dcadabbba3185a952c3d1e1f481ff35ed44ea8140badfbeb",
+  "exact_reviewed_two_insertions": true,
+  "all_R_source_files_unchanged": 50,
+  "configs_and_tools_unchanged": true,
+  "prior_coverage_counts_attribution": "82ce4b0625a679026a6f9a9e0494aaa43da31ecf",
+  "new_candidate_suite_counts": "PENDING_NOT_INFERRED",
+  "same_source_MPS": {
+    "receipt": "/tmp/pigauto-d229-mps-focused.log",
+    "passed": 12,
+    "conditions": 0,
+    "coordinator_prechecked_HEAD": "d229bddb1f280d2537e2753976fbd369af4fff4c",
+    "embedded_log_git_sha": false,
+    "coverage_credit": false
+  },
+  "final_CPU_collection_check_source": "IN_PROGRESS_AS_REPORTED",
+  "PR_CI": "PENDING",
+  "no_new_tests_or_repairs_by_reviewer": true
+}
