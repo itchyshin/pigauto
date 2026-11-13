@@ -49,6 +49,7 @@ Imports:
 Suggests:
     testthat,
     callr,
+    pkgload,
     covr,
     yaml,
     jsonlite,
