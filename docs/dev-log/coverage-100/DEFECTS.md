@@ -10,7 +10,7 @@ In R/mask_missing.R, generate_missing_probs() calls sample(candidates, n_clades)
 
 ## Empty forest panel
 
-In R/plot.R, the empty-trait guard follows aggregate(), which errors on a zero-row input first. The guard is not safely reachable by passing an empty data frame through the existing implementation. Keep its uncovered lines unresolved. Do not remove or exclude them solely to raise coverage. Any change to the desired empty-input contract belongs in a separately reviewed repair.
+The initial empty-data-frame probe errored in aggregate() before the guard. Independent review later found a real supported input: with na.action set to "na.pass", finite metrics whose trait labels are all missing aggregate successfully into zero groups. The public plot_comparison() call then returns invisible NULL through the guard. Preserve this guard. The dedicated real-input test is committed in coverage head 0942bf9c and included in the frozen 3015dbe1 profile now running; its line hits have not yet been measured.
 
 These are pre-existing findings, not regressions introduced by PR 283. They do not change the CTmax study's findings or justify a new scientific recommendation.
 
@@ -29,3 +29,9 @@ The default comparison plot labels improvement as GNN better/worse even though t
 ## Coverage measurement omission
 
 The original coverage XML contains 48 R source classes, while the source tree contains 50 files. data.R contains six character-literal documentation anchors and no calls or function definitions. graph_transformer_block.R contains executable torch module methods, which covr's ordinary namespace traversal does not discover through the factory's module attribute. The supplemental collector exposes that actual R6 generator to covr's R6 traversal, runs the existing transformer tests, and adds the disjoint file to the denominator. The first probe covered 60 of 64 tracked lines, with four covariate-injection lines unexercised. This is measurement evidence, not a new model-validation claim.
+
+## Proof-backed obsolete branches
+
+Draft PR 294 removes only the invalid Bayesian weight-sum fallback in R/pagel_lambda.R. Once any finite likelihood exists, subtracting the finite maximum gives at least one exact zero log weight and hence a unit weight; every other exponential weight lies in [0, 1]. Their sum must be finite and positive for any addressable R vector. Sparse-data and empty-grid fallbacks remain. Independent review checked the numerical argument and preservation tests. The original removed location remains unresolved pending approval.
+
+Draft PR 295 contains a second separate cleanup. In the GNN-off fit path, Mondrian requests are rejected before metadata extraction, so its Mondrian attribute arm cannot run. In pool_mi(), fewer than two retained fits are rejected before Rubin arithmetic, so the later one-fit between-imputation fallback cannot run. Independent review found no supported-input counterexample. All 18 real supported-method and two-fit arithmetic assertions pass before removal. The related GNN-off and pooling run records 165 passing assertions and 17 existing small-calibration warnings, with no skips or failures. Its total of 182 testthat records includes the warnings. These are control-flow cleanups, not fixes to scientific validity, and their removed locations will remain unresolved until approved.

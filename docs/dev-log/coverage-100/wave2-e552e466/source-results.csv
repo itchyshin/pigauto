@@ -1,0 +1,27 @@
+"file","context","test","nb","failed","skipped","error","warning","user","system","real","passed"
+"test-bace-compat-eval.R","bace-compat-eval","BACE-compat eval pools discrete-type accuracy via pooled_point",6,0,FALSE,FALSE,0,0.0829999999999997,0.002,0.085,6
+"test-bace-compat-eval.R","bace-compat-eval","BACE-compat eval computes coverage_95 + interval_width from conformal bounds",4,0,FALSE,FALSE,0,0.0119999999999996,0,0.012,4
+"test-bace-compat-eval.R","bace-compat-eval","BACE-compat eval computes Brier score from per-class probabilities",3,0,FALSE,FALSE,0,0.00599999999999978,0.001,0.00699999999999967,3
+"test-bace-compat-eval.R","bace-compat-eval","BACE-compat eval pools continuous RMSE via pooled_point under auto mode",7,0,FALSE,FALSE,0,0.0150000000000001,0,0.0150000000000001,7
+"test-community-surface.R","community-surface","source checks distinguish installed package layout from checkout",3,0,FALSE,FALSE,0,0.00800000000000001,0,0.00800000000000001,3
+"test-community-surface.R","community-surface","canonical novice journey is present in the public sources",2,0,FALSE,FALSE,0,0.00600000000000023,0,0.00600000000000023,2
+"test-community-surface.R","community-surface","installed novice fixture and script parse without fitting",19,0,FALSE,FALSE,0,0.0459999999999998,0,0.0449999999999999,19
+"test-community-surface.R","community-surface","recipes, advanced controls, and bounded claims remain visible",9,0,FALSE,FALSE,0,0.0089999999999999,0,0.0089999999999999,9
+"test-community-surface.R","community-surface","public preflight and result methods are indexed by pkgdown",3,0,FALSE,FALSE,0,0.0100000000000002,0,0.0100000000000002,3
+"test-community-surface.R","community-surface","current public claim surfaces retain their stated boundaries",8,0,FALSE,FALSE,0,0.0169999999999999,0,0.0169999999999999,8
+"test-community-surface.R","community-surface","tree benchmark and interval help retain current boundaries",26,0,FALSE,FALSE,0,0.032,0,0.0329999999999999,26
+"test-community-surface.R","community-surface","NEWS labels superseded public claims in their historical sections",17,0,FALSE,FALSE,0,0.0379999999999998,0.002,0.04,17
+"test-community-surface.R","community-surface","unsafe historical development tombstones are archived off the public site",5,0,FALSE,FALSE,0,0.00600000000000023,0.001,0.00700000000000012,5
+"test-coverage-workflow.R","coverage-workflow","coverage uploads require a successful trusted main push",18,0,FALSE,FALSE,0,0.105,0.003,0.108,18
+"test-docs-phytools-warning.R","docs-phytools-warning","getting-started Step 6 uses matrix indexing and evaluate() for coverage",4,0,FALSE,FALSE,0,0.00600000000000023,0.001,0.00700000000000012,4
+"test-docs-phytools-warning.R","docs-phytools-warning","install text identifies the required version and development fallback",8,0,FALSE,FALSE,0,0.00499999999999989,0,0.00499999999999989,8
+"test-docs-phytools-warning.R","docs-phytools-warning","phytools-missing warning names an install step",3,0,FALSE,FALSE,0,0.00299999999999967,0.001,0.004,3
+"test-docs-phytools-warning.R","docs-phytools-warning","docs state the split-conformal clade assumption",5,0,FALSE,FALSE,0,0.00600000000000023,0,0.00599999999999978,5
+"test-docs-phytools-warning.R","docs-phytools-warning","Wave 2 coverage figures are not quoted as a new measurement",1,0,FALSE,FALSE,0,0.00499999999999989,0,0.00500000000000034,1
+"test-gha-helpers.R","gha-helpers","[gha-config] PIGAUTO_CI_CONFIG loads with documented defaults",9,0,FALSE,FALSE,0,0.012,0,0.012,9
+"test-gha-helpers.R","gha-helpers","[gha-config] .normalize_eval() projects to the canonical schema",4,0,FALSE,FALSE,0,0.00599999999999978,0.002,0.00700000000000012,4
+"test-gha-helpers.R","gha-helpers","[gha-mask] latent-cell -> user-col mask projection is correct",3,0,FALSE,FALSE,0,0.203,0,0.203,3
+"test-gha-helpers.R","gha-helpers","[gha-snapshot] snapshot_bace_one() projects BACE summary to canonical schema",7,0,FALSE,FALSE,0,0.00800000000000001,0.003,0.0110000000000001,7
+"test-gha-helpers.R","gha-helpers","[gha-stage] stage_ci_run() copies the right files into useful/ci_runs/",5,0,FALSE,FALSE,0,0.0129999999999999,0.002,0.016,5
+"test-gha-helpers.R","gha-helpers","[gha-h2h] build_h2h_report produces report.md + summary tbl",5,0,FALSE,FALSE,0,0.0300000000000002,0.002,0.032,5
+"test-gha-helpers.R","gha-helpers","[gha-eval] .eval_per_imputation() emits canonical long-format rows",8,0,FALSE,FALSE,0,0.0249999999999999,0.001,0.0250000000000004,8

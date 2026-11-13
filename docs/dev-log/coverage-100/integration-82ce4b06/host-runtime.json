@@ -1,0 +1,13 @@
+{
+  "source_sha": "82ce4b0625a679026a6f9a9e0494aaa43da31ecf",
+  "torch": "0.17.0",
+  "cuda": false,
+  "mps": false,
+  "tensor_device": "cpu",
+  "native_tools_available": [
+    true,
+    true,
+    true
+  ],
+  "observed_at": "2026-11-09 23:33:42"
+}

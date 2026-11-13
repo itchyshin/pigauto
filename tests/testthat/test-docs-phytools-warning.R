@@ -22,13 +22,14 @@ test_that("getting-started Step 6 uses matrix indexing and evaluate() for covera
   expect_true(grepl("evaluate\\(\\)", text))
 })
 
-test_that("install text distinguishes 0.11.1 fixes from CRAN 0.11.0", {
+test_that("install text identifies the required version and development fallback", {
   rd <- paste(readLines(skip_if_no_pkg_src("README.md")), collapse = "\n")
   gs <- paste(readLines(skip_if_no_pkg_src("vignettes", "getting-started.Rmd")),
               collapse = "\n")
   for (text in c(rd, gs)) {
     expect_match(text, "0.11.1", fixed = TRUE)
-    expect_match(text, "CRAN 0.11.0", fixed = TRUE)
+    expect_match(text, 'packageVersion("pigauto")', fixed = TRUE)
+    expect_match(text, "itchyshin/pigauto", fixed = TRUE)
     expect_match(text, "evaluate(fit)", fixed = TRUE)
   }
 })
@@ -46,7 +47,8 @@ test_that("docs state the split-conformal clade assumption", {
               collapse = "\n")
   expect_true(grepl("clade", rd, ignore.case = TRUE))
   expect_true(grepl("clade", gs, ignore.case = TRUE))
-  expect_true(grepl("resemble", rd, ignore.case = TRUE))
+  expect_match(rd, "represent errors at the predicted cells", fixed = TRUE)
+  expect_match(rd, "exchangeability", fixed = TRUE)
   expect_true(grepl("resemble", gs, ignore.case = TRUE))
 })
 

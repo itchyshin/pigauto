@@ -1,0 +1,2 @@
+"file","context","test","nb","failed","skipped","error","warning","user","system","real","passed"
+"test-lambda-default.R","lambda-default","[lambda-default] NEWS.md mentions lambda in the current release",3,0,FALSE,FALSE,0,0.00900000000000034,0,0.00900000000000034,3

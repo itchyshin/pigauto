@@ -1,0 +1,7 @@
+{
+  "source_sha": "e71e5ddbf37d5bcd1770fc02e7be7ff48290c5fe",
+  "status": "ok",
+  "scope": "NEWS source assertion only",
+  "assertions": 3,
+  "whole_file_strict_status": "failed_due_to_other_test_warnings"
+}

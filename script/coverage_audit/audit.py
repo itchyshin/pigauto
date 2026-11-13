@@ -335,6 +335,7 @@ def verify(candidate: Path, manifest_path: Path, expected_sha: str, source_root:
     source_identity_ok = bool(git_root) and not changed_r_files and tracked_r == set(baseline_r_hashes)
     complete = source_identity_ok and torch_inventory_ok and not missing_torch_methods and not failures and not missing_source_files and totals["valid"] > 0 and totals["covered"] == totals["valid"] and len(base_ids - cand_ids) == 0
     summary = {"candidate_xml_sha256": sha(candidate), "source_sha": manifest["source_sha"], "covered": totals["covered"], "valid": totals["valid"],
+               "uncovered": totals["valid"] - totals["covered"],
                "baseline_lines": len(base_ids), "baseline_lines_covered": sum(1 for f,n in base_ids if f in source_identity and f in cand and cand[f].get(n, 0) > 0),
                "baseline_missed_lines": sum(1 for f,ls in base.items() for h in ls.values() if h == 0),
                "baseline_missed_lines_covered": sum(1 for f,ls in base.items() for n,h in ls.items() if h == 0 and f in source_identity and f in cand and cand[f].get(n, 0) > 0),
