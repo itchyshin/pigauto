@@ -40,6 +40,11 @@
 #'     types together; it does not cover every supported trait type.}
 #' }
 #'
+#' If the replicate loop finishes without evaluations, an error reports the attempted
+#' replicate count and the first pipeline failure, when available, even
+#' when \code{verbose = FALSE}. With no attempted replicates, the error
+#' states that no fits were run.
+#'
 #' @param n_species integer.  Number of tips in the simulated tree
 #'   (default 100).
 #' @param n_traits integer.  Number of continuous traits (default 4).
@@ -65,9 +70,10 @@
 #'   \describe{
 #'     \item{results}{data.frame with columns: \code{scenario},
 #'       \code{rep}, \code{method}, \code{trait}, \code{type},
-#'       \code{metric}, \code{value}, \code{n_test}. Failed attempts are
-#'       caught and omitted; their messages are suppressed when
-#'       \code{verbose = FALSE}. There is no returned attempt/failure table.}
+#'       \code{metric}, \code{value}, \code{n_test}. When some replicates
+#'       succeed, failed pipeline attempts are caught and omitted; their messages are
+#'       suppressed when \code{verbose = FALSE}. There is no returned
+#'       attempt/failure table.}
 #'     \item{summary}{data.frame averaged over surviving metric rows.
 #'       Its \code{n_reps} column counts non-missing values for that metric,
 #'       rather than all requested attempts.}
@@ -104,11 +110,14 @@ simulate_benchmark <- function(
 
   all_results <- list()
   idx <- 0L
+  n_attempted <- 0L
+  first_failure <- NULL
 
   for (scen in scenarios) {
     if (verbose) message("\n=== Scenario: ", scen, " ===")
 
     for (rep in seq_len(n_reps)) {
+      n_attempted <- n_attempted + 1L
       rep_seed <- if (is.null(seed)) NULL else as.integer(seed) +
         rep * 100L + match(scen, all_scenarios)
       if (verbose) message("  Rep ", rep, "/", n_reps,
@@ -141,6 +150,10 @@ simulate_benchmark <- function(
         ev$rep <- rep
         ev
       }, error = function(e) {
+        if (is.null(first_failure)) {
+          first_failure <<- sprintf("%s replicate %d: %s", scen, rep,
+                                     conditionMessage(e))
+        }
         if (verbose) message("    ERROR: ", conditionMessage(e))
         NULL
       })
@@ -150,6 +163,13 @@ simulate_benchmark <- function(
         all_results[[idx]] <- result
       }
     }
+  }
+
+  if (length(all_results) == 0L) {
+    detail <- if (is.null(first_failure)) "No fits were run." else
+      paste0("First failure: ", first_failure)
+    stop(sprintf("No benchmark replicates succeeded (0 of %d). %s",
+                 n_attempted, detail), call. = FALSE)
   }
 
   results <- do.call(rbind, all_results)
