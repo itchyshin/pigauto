@@ -1,8 +1,15 @@
-# pigauto 0.11.1
+# pigauto 0.11.2
 
 ## Cross-validation by species and clade
 
 - `cross_validate()` supports whole-species and rooted-clade holdouts, in addition to the existing cell-level folds. Grouped folds recompute trait scaling from training observations and report their species assignments.
+
+## Check portability and visualisation
+
+- The posterior-imputation tests tolerate small numerical differences across BLAS implementations, including Intel MKL.
+- The visualisation article uses a mixed-trait example and explains the uses and limitations of conformal prediction intervals.
+
+# pigauto 0.11.1
 
 ## GBIF lookup failures
 
