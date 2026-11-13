@@ -340,9 +340,6 @@
 #' treating an interval target as certified.
 #'
 #' @return An object of class \code{"pigauto_fit"}.
-#' @importFrom torch torch_tensor torch_float torch_bool torch_long
-#' @importFrom torch optim_adam with_no_grad nn_utils_clip_grad_norm_
-#' @importFrom torch nnf_mse_loss torch_rand_like torch_where torch_zeros_like
 #' @examples
 #' \donttest{
 #' data(avonet300, tree300)
