@@ -37,6 +37,8 @@
 ^\.unlazy$
 ^VALIDATION_LEDGER\.md$
 ^cran-comments\.md$
+^tests/testthat/fixtures/gbif_plants_300\.rds$
+^tests/testthat/fixtures/worldclim_plants_300\.rds$
 ^LOOP$
 ^vignettes/articles$
-^noble_review\.md$
+noble_review.md

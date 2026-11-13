@@ -7,6 +7,11 @@
 #' individual functions (\code{\link{preprocess_traits}},
 #' \code{\link{fit_baseline}}, \code{\link{fit_pigauto}}, etc.) directly.
 #'
+#' A single completed data set is useful for point prediction, but analysing
+#' it as if its imputed values were observed ignores imputation uncertainty and
+#' can also change estimates. See \code{\link{multi_impute}} and the
+#' multiple-imputation article for downstream workflows and their limitations.
+#'
 #' @param traits data.frame with species as rownames and trait columns,
 #'   or (when \code{species_col} is supplied) a data.frame with a species
 #'   column that may have multiple rows per species.
@@ -26,6 +31,14 @@
 #'   \code{c(Survival = "proportion", Parasites = "zi_count")}. Required for
 #'   the two types that cannot be inferred from R class (see
 #'   \strong{Trait type auto-detection} below). Default \code{NULL} (auto).
+#' @param ordinal_levels named list giving the scientific order of ordinal
+#'   levels, e.g. \code{list(status = c("LC", "NT", "VU", "EN", "CR"))}.
+#'   Each named column is coerced to an ordered factor with exactly those
+#'   levels before type detection (so no \code{trait_types} entry is
+#'   needed), and \code{$completed} returns it as an ordered factor.
+#'   Observed values absent from the declared levels are an error. Same
+#'   semantics as the \code{ordinal_levels} argument of
+#'   \code{\link{read_traits}}. Default \code{NULL}.
 #' @param multi_proportion_groups named list declaring compositional
 #'   (\code{multi_proportion}) traits, e.g.
 #'   \code{list(colour = c("black", "blue", "red", "yellow"))}. Each list
@@ -55,7 +68,8 @@
 #'   draws, prediction adds independent Gaussian perturbations per latent cell
 #'   using the selected baseline SD; GNN dropout also varies across runs when
 #'   \code{gnn = TRUE}. \code{pool_method} combines decoded draws for the
-#'   returned point prediction. Despite this legacy argument name, these are
+#'   returned point prediction: `completed` is one data frame, not a list
+#'   of completed datasets. Despite this legacy argument name, these are
 #'   not joint phylogenetic posterior draws or validated imputations for
 #'   downstream inference. See \code{\link{multi_impute}} and the multiple-
 #'   imputation article for the separate workflows and their limits.
@@ -76,13 +90,17 @@
 #'   it. With \code{gnn = TRUE}, covariates also
 #'   enter the GNN and its additive linear component. \code{predict_method = "per_column"}
 #'   selects predictions within a joint fit; it does not activate
-#'   covariate regression. Default \code{NULL} (no covariates).
+#'   covariate regression. In multi-observation data the baseline aggregates
+#'   observations and covariates to species level; with \code{gnn = FALSE}
+#'   it does not predict observation-specific covariate effects within a
+#'   species. Default \code{NULL} (no covariates).
 #' @param epochs integer. Maximum GNN training epochs (default \code{2000}).
 #'   Must be a positive integer.
 #' @param verbose logical. Print progress (default \code{TRUE}).
 #' @param seed optional integer. When supplied, makes the stochastic fitting
 #'   and prediction steps reproducible; the default \code{NULL} uses the
-#'   current RNG stream.
+#'   current RNG stream. Predictions can vary between seeds; a fixed seed
+#'   supports reproducibility, not a measure of predictive uncertainty.
 #' @param multi_obs_aggregation character. How to aggregate multiple
 #'   observations per species before a joint baseline.  \code{"hard"}
 #'   (default) thresholds binary proportions at 0.5 and uses argmax for
@@ -296,7 +314,10 @@
 #'       uncertainty (\code{$se} -- see \code{\link{predict.pigauto_fit}}'s
 #'       "What \code{$se} means per trait type" section; it is
 #'       \strong{not} uniformly a standard error), class probabilities, and
-#'       conformal intervals.}
+#'       conformal intervals. For an untransformed continuous trait, the
+#'       usual global per-trait score yields the same interval width across
+#'       rows; it does not adapt to each species' number of observations.
+#'       Other scoring methods or transformations can change this pattern.}
 #'     \item{fit}{The trained \code{pigauto_fit} object.}
 #'     \item{baseline}{The phylogenetic baseline.}
 #'     \item{data}{The preprocessed \code{pigauto_data} object.}
@@ -454,7 +475,7 @@ impute <- function(traits, tree, species_col = NULL,
                    phylo_signal_method = "lambda",
                    conformal_split_val = FALSE,
                    gnn = FALSE,
-                   ...) {
+                   ..., ordinal_levels = NULL) {
   # S3 default flip: capture BEFORE match.arg() reassigns predict_method.
   predict_method_explicit <- !missing(predict_method)
   multi_obs_aggregation <- match.arg(multi_obs_aggregation)
@@ -488,6 +509,13 @@ impute <- function(traits, tree, species_col = NULL,
          call. = FALSE)
   }
   joint_refine_iter <- as.integer(joint_refine_iter)
+
+  # Apply declared ordinal orders before ANY consumer of trait columns —
+  # including the Phase B3 advisory below, which keys on is.ordered() — so the
+  # ordinal_levels route behaves identically to a user-constructed ordered()
+  # column. build_completed() later fills this same coerced frame, so
+  # `$completed` carries the ordered factors.
+  traits <- .apply_ordinal_levels(traits, ordinal_levels)
 
   # Phase B3 Safety Check
   if (n_imputations == 1L && pool_method == "median") {

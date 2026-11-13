@@ -1,0 +1,23 @@
+{
+  "source_sha256": "76b6cffd17046fa8329ba977c1aa051e796fa75ccc4b03a0851a1e2233929a6e",
+  "input_rows": 1281,
+  "scored_cells": 375,
+  "scored_species": 77,
+  "median_seed_range": 0.8523405826814994,
+  "cells_range_over_3": 30,
+  "seed_scores": {
+    "2026": {
+      "rmse": 1.7886926703547836,
+      "covered": 354
+    },
+    "3026": {
+      "rmse": 1.74793076717178,
+      "covered": 352
+    },
+    "4026": {
+      "rmse": 1.6914572291755632,
+      "covered": 359
+    }
+  },
+  "limits": "Published cached predictions from old source; no current-source fit, independent validation, baseline comparison or ensemble recommendation."
+}

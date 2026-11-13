@@ -370,7 +370,7 @@ is recorded in \code{$model_config$predict_method_used}
 (\code{"exact"}, \code{"per_column"}, or \code{"auto"}) and, per
 trait, in \code{$model_config$predict_method_by_trait}. Under
 \code{"auto"} with real validation cells, \code{$model_config
-$route_val_n} / \code{$score_val_n} record, per trait, how many of
+  $route_val_n} / \code{$score_val_n} record, per trait, how many of
 its validation cells chose the route versus were reserved for gate
 calibration and conformal scoring (see \code{\link{fit_baseline}}'s
 \code{predict_method} docs); both are \code{NULL} under an explicit

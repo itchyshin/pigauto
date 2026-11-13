@@ -84,8 +84,6 @@ script/gha/results/*
 .unlazy/
 script/validation_20261018/results/
 script/validation_20261018/logs/
-
-# Local reviewer notes and scratch outputs
 noble_review.md
 pigauto_report.html
 noble-test.qmd

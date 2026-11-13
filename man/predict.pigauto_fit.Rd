@@ -99,7 +99,8 @@ stored splits and \code{newdata = NULL}. Default \code{FALSE} uses all
 observed data for production imputation. Use \code{evaluation = TRUE}
 before passing predictions to \code{\link{evaluate_imputation}}.}
 
-\item{...}{Internal compatibility arguments.}
+\item{...}{Internal compatibility arguments. Unrecognised arguments are an
+error, including misspelled argument names.}
 
 \item{x}{A pigauto prediction object.}
 }
@@ -244,6 +245,7 @@ conditional interval yourself if you need an \code{E[X]}-scale bound.
 \section{Pooling decoded draws}{
 
 These rules apply to \code{n_imputations > 1}, on the decoded scale.
+
 \ifelse{html}{\out{
 <table>
 <thead><tr><th scope="col">Type</th><th scope="col">median</th><th scope="col">mean</th><th scope="col">mode</th></tr></thead>

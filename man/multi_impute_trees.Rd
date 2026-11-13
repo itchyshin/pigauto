@@ -22,7 +22,8 @@ multi_impute_trees(
   reference_tree = NULL,
   draws_method = c("mc_dropout", "conformal"),
   gnn = FALSE,
-  ...
+  ...,
+  ordinal_levels = NULL
 )
 
 \method{print}{pigauto_mi_trees}(x, ...)
@@ -116,6 +117,10 @@ splits (\code{splits = NULL}), matching the production
 
 \item{...}{additional arguments forwarded to \code{\link[=fit_pigauto]{fit_pigauto()}} via
 \code{\link[=impute]{impute()}}.}
+
+\item{ordinal_levels}{named list giving the scientific order of ordinal
+levels, coerced to ordered factors before fitting. See \code{\link[=impute]{impute()}} /
+\code{\link[=read_traits]{read_traits()}}. Default \code{NULL}.}
 
 \item{x}{A posterior-tree prediction-sensitivity object.}
 }

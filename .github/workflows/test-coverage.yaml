@@ -69,6 +69,16 @@ jobs:
       - name: Install libtorch backend
         run: Rscript -e 'torch::install_torch()'
 
+      # These checks read repository source files that are absent from covr's
+      # installed package layout, so run them against the checkout first.
+      - name: Check public source surfaces
+        env:
+          PIGAUTO_REQUIRE_SOURCE: "true"
+        run: |
+          stopifnot(requireNamespace("yaml", quietly = TRUE))
+          testthat::test_local(filter = "community-surface|coverage-workflow", stop_on_failure = TRUE)
+        shell: Rscript {0}
+
       - name: Test coverage
         run: |
           cov <- covr::package_coverage(
@@ -80,18 +90,16 @@ jobs:
           covr::to_cobertura(cov)
         shell: Rscript {0}
 
-      # fail_ci_if_error is FALSE on purpose: the "tests" badge reads this
-      # workflow's status, so it should flip red only when the test suite
-      # fails, not when a Codecov upload hiccups. A failed upload shows up as
-      # a stale/unknown coverage badge instead.
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+      # Only trusted main-branch pushes publish the coverage artifact.
+      # Pull requests run tests but never obtain upload credentials.
+      - name: Save coverage report for trusted upload
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          fail_ci_if_error: false
-          files: ./cobertura.xml
-          plugins: noop
-          disable_search: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: main-coverage
+          path: cobertura.xml
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Show testthat output
         if: always()

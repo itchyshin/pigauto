@@ -13,6 +13,7 @@
 #' @details
 #' **Automatic type detection** (when \code{trait_types = NULL}) follows the
 #' R class of each column — no user input is required for most data:
+#'
 #' \ifelse{html}{\out{
 #' <table>
 #' <thead><tr><th scope="col"><strong>R class</strong></th><th scope="col"><strong>pigauto type</strong></th></tr></thead>
@@ -115,6 +116,16 @@
 #'   Unspecified traits are auto-detected.  Note that
 #'   \code{"multi_proportion"} is NOT set here — use
 #'   \code{multi_proportion_groups} instead.
+#' @param ordinal_levels named list giving the scientific order of ordinal
+#'   levels, e.g. \code{list(status = c("LC", "NT", "VU", "EN", "CR"))}.
+#'   Each named column is coerced to an ordered factor with exactly those
+#'   levels before type detection, so no \code{trait_types} entry is needed:
+#'   the coerced column detects as \code{"ordinal"}, or as \code{"binary"}
+#'   (order preserved) when exactly two levels are declared — the same
+#'   detection an \code{ordered()} column with those levels receives.
+#'   Observed values absent from the declared levels are an error.  Same
+#'   semantics as the \code{ordinal_levels} argument of
+#'   \code{\link{read_traits}}.  Default \code{NULL}.
 #' @param multi_proportion_groups named list declaring compositional
 #'   (multi-proportion) trait groups.  Each element is a character vector
 #'   of column names whose row-wise values sum to 1 (e.g.
@@ -216,9 +227,11 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
                               multi_proportion_groups = NULL,
                               log_cols = NULL, log_transform = TRUE,
                               center = TRUE, scale = TRUE,
-                              covariates = NULL) {
+                              covariates = NULL,
+                              ordinal_levels = NULL) {
   if (!is.data.frame(traits)) stop("'traits' must be a data.frame.")
   if (!inherits(tree, "phylo")) stop("'tree' must be a phylo object.")
+  traits <- .apply_ordinal_levels(traits, ordinal_levels)
 
   # Keep input identity before dropping data-only species.  Internal rows are
   # later reordered to tree order, while build_completed() must always target
@@ -296,7 +309,8 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
 
   n_dropped_sp <- sum(!in_tree)
   if (n_dropped_sp > 0) {
-    warning(n_dropped_sp, " species in traits not found in tree -- dropped.")
+    warning(n_dropped_sp, " species in traits not found in tree: excluded from modeling; ",
+            "impute() keeps their input rows unchanged in completed data.", call. = FALSE)
     keep_rows <- obs_species_raw %in% tree$tip.label
     traits <- traits[keep_rows, , drop = FALSE]
     obs_species_raw <- obs_species_raw[keep_rows]
@@ -557,6 +571,8 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
       X_scaled       = latent$X,
       X_raw          = X_raw,
       X_original     = X_original,
+      preprocess_center = center,
+      preprocess_scale = scale,
       means          = all_means,
       sds            = all_sds,
       species_names  = species_names,
@@ -669,6 +685,15 @@ align_covariates_to_obs <- function(covariates,
     TRUE
   )
   if (!isTRUE(ok)) {
+    if (identical(unname(tp), "ordinal")) {
+      # Backtick-quote non-syntactic names so the suggested code is valid R.
+      nm_code <- deparse1(as.name(nm), backtick = TRUE)
+      stop("Trait '", nm, "' is declared \"ordinal\", but you have not ",
+           "provided the order of its levels. Pass ordinal_levels = list(",
+           nm_code, " = c(...)) listing the levels from lowest to highest, ",
+           "or make the column an ordered factor with ordered().",
+           call. = FALSE)
+    }
     stop("Trait '", nm, "' is declared \"", tp, "\" but the column ",
          "contradicts that type.", call. = FALSE)
   }

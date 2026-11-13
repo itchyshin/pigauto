@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 Real comparative datasets contain many kinds of traits: body mass
 (continuous), clutch size (count), migratory status (yes/no), diet type
 (carnivore/herbivore/omnivore), threat status (LC < VU < EN). pigauto
-handles all of them in a single model — you do not need separate
+handles all of them in a single model: you do not need separate
 imputation runs for different column types.
 
 ### Choose a workflow
@@ -82,7 +82,7 @@ with `multi_proportion_groups`. Then resolve any issues reported by
 
 ## Synthetic example
 
-This is a teaching example with 60 simulated species, not a validation study.
+This teaching example uses 60 simulated species. Validation evidence is described separately.
 The validation and test splits can contain only a few cells for some traits,
 so their scores and calibration are imprecise. For a real analysis, use enough
 observed values to support the validation split and inspect the reported `n`
@@ -232,6 +232,14 @@ head(pred$se)
 `evaluate_imputation()` dispatches type-specific metrics. Use
 `evaluation = TRUE` to keep validation and test values out of prediction:
 
+
+**CRAN 0.11.0:** use `evaluate(fit)` for held-out scores. That release silently
+ignores `evaluation = TRUE` in `predict()`, so the call below would score
+production predictions and can give misleading results. The GitHub version
+supports the argument. `evaluate(fit)` returns a long table
+(`method`, `trait`, `type`, `metric`, `value`, `n_test`), whereas
+`evaluate_imputation()` returns a wide table. Do not compare production
+`predict(fit)` values with held-out truth as an evaluation shortcut.
 
 ```{r evaluate}
 pred_eval <- predict(fit, evaluation = TRUE)
