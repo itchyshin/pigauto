@@ -1265,7 +1265,8 @@ fit_pigauto <- function(
       if (!is.na(val_loss_val)) {
         if (val_loss_val + 1e-6 < best_val) {
           best_val      <- val_loss_val
-          best_state    <- model$state_dict()
+          # Snapshot tensors: state_dict() references change on later optimizer steps.
+          best_state    <- lapply(model$state_dict(), function(x) x$detach()$clone())
           patience_left <- patience
         } else {
           patience_left <- patience_left - 1L
