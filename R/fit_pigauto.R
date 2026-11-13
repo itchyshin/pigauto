@@ -719,11 +719,8 @@ fit_pigauto <- function(
         bootstrap_B      = conformal_bootstrap_B,
         verbose          = verbose
       )
-      conformal_mondrian <- if (identical(conformal_method, "mondrian")) {
-        attr(conformal_scores, "mondrian")
-      } else {
-        NULL
-      }
+      # GNN-off Mondrian requests are rejected before this branch.
+      conformal_mondrian <- NULL
 
       # ---- val / test RMSE: plain-R blend, r_gnn is always 0 ------------
       mean_vec <- if (!is.null(mean_baseline_per_col)) {
