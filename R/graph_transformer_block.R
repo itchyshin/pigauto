@@ -18,8 +18,10 @@
 #' @param dropout Numeric in [0, 1). Applied to attention and FFN outputs.
 #' @keywords internal
 #' @noRd
-GraphTransformerBlock <- function(...) {
-  module <- torch::nn_module(
+GraphTransformerBlock_module <- local({
+  module <- NULL
+  function() {
+    if (is.null(module)) module <<- torch::nn_module(
   "GraphTransformerBlock",
 
   initialize = function(hidden_dim, n_heads = 4L, ffn_mult = 4L,
@@ -158,6 +160,9 @@ GraphTransformerBlock <- function(...) {
 
     h3
   }
-  )
-  module(...)
-}
+    )
+    module
+  }
+})
+
+GraphTransformerBlock <- function(...) GraphTransformerBlock_module()(...)
