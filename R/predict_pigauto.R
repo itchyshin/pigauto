@@ -319,8 +319,6 @@
 #' pred2 <- predict(fit, n_imputations = 2L)
 #' pred2$imputed_datasets
 #' }
-#' @importFrom torch torch_tensor torch_float with_no_grad torch_zeros
-#' @importFrom torch torch_cat
 #' @export
 predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
                                 n_imputations = 1L, baseline_override = NULL,
