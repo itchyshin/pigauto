@@ -2,6 +2,7 @@
 % Please edit documentation in R/pool_mi.R
 \name{pool_mi}
 \alias{pool_mi}
+\alias{print.pigauto_pooled}
 \title{Pool downstream model fits across multiple imputations (Rubin's rules)}
 \usage{
 pool_mi(
@@ -12,6 +13,8 @@ pool_mi(
   df_fun = NULL,
   tidy_fun = NULL
 )
+
+\method{print}{pigauto_pooled}(x, digits = 4, ...)
 }
 \arguments{
 \item{fits}{A list of model fits of length \code{M >= 2}. Automatic fixed-effect
@@ -23,7 +26,10 @@ Bayesian fits (\code{brms}, \code{MCMCglmm}) are rejected; see Details.
 Bare user-supplied fit lists are accepted with an explicit warning because
 their imputation provenance cannot be verified.
 pigauto workflow classes and markers are caller-controlled metadata; they
-do not authenticate the fits or their history.}
+do not authenticate the fits or their history. Failed \code{try-error} and
+\code{pigauto_mi_error} elements are removed with a warning; at least two
+retained fits are required. Inspect these failures before interpreting
+results: dropping analyses can change the imputation sample.}
 
 \item{conf.level}{Confidence level for the pooled interval (default
 \code{0.95}).}
@@ -42,16 +48,24 @@ matrix. \code{NULL} uses the automatic class adapter. Base matrices and
 square, finite, symmetric, and have non-negative diagonal entries.}
 
 \item{df_fun}{Optional function returning the complete-data residual
-degrees of freedom \code{nu_com} from one fit. When supplied, pooled
-degrees of freedom use the Barnard & Rubin (1999) small-sample
-correction, which is less biased for short series. When \code{NULL} (the
-default) the classical Rubin (1987) formula is used.}
+degrees of freedom \code{nu_com}. Called once on the first retained fit after
+failures are removed; it must return one finite positive number assumed
+appropriate for the common analysis. Supplying it selects the Barnard &
+Rubin (1999) correction for finite complete-data degrees of freedom.
+When \code{NULL} (the default), the classical Rubin (1987) formula is used.}
 
 \item{tidy_fun}{Optional function returning a data.frame with unique
 \code{term}, numeric \code{estimate}, and non-negative finite \code{std.error} columns.
 This is an alternative to \code{coef_fun} and \code{vcov_fun}, not a supplement;
 combining them is an error. Callers must ensure it selects fixed effects
 only.}
+
+\item{x}{A pooled coefficient table.}
+
+\item{digits}{Number of significant digits used for the displayed table.}
+
+\item{...}{Ignored. Included for compatibility with the base \code{print()}
+generic.}
 }
 \value{
 A data.frame with one row per coefficient and columns:
@@ -68,25 +82,30 @@ supplied, else classical Rubin).}
 \item{\code{fmi}}{Fraction of missing information.}
 \item{\code{riv}}{Relative increase in variance due to non-response.}
 }
+The \code{m} attribute records the retained fit count used in all pooling
+calculations; it can be smaller than the supplied list.
+
+The print method returns \code{x} invisibly.
 }
 \description{
 Combine regression coefficients from \code{M} model fits -- one per imputed
 dataset -- into a single pooled table using Rubin's rules. The pooled
 standard errors combine within-imputation sampling variance and
 between-imputation variance. Correct Rubin arithmetic does not make an
-incompatible imputation model inferentially valid. For pigauto inference,
-fits should come from the documented \code{\link[=multi_impute_analysis]{multi_impute_analysis()}} workflow,
-or, for continuous traits, from \code{\link[=multi_impute]{multi_impute()}} with
-\code{draws_method = "posterior"} (see \code{\link[=with_imputations]{with_imputations()}} for the analyses
-those draws cover), via \code{\link[=with_imputations]{with_imputations()}}.
-The backend is experimental and supports fixed-effect coefficients only. Variance
+incompatible imputation model inferentially valid. To pool an analysis,
+first use \code{\link[=with_imputations]{with_imputations()}} to fit one eligible downstream model to each
+completed dataset, then pass those fits here. Start with the analysis-aware
+\code{\link[=multi_impute_analysis]{multi_impute_analysis()}} workflow or, for eligible continuous-trait data,
+\code{\link[=multi_impute]{multi_impute()}} with \code{draws_method = "posterior"}. Check those help topics
+for input restrictions and inferential limits. This pooling function is
+experimental and supports fixed-effect coefficients only. Variance
 components, correlations, random-effect predictions, BLUPs/conditional
 modes, latent loadings, and other structured parameters are unsupported.
 }
 \details{
 Let \eqn{\hat\theta_i} be the coefficient vector from fit \emph{i} and
 \eqn{U_i = \mathrm{vcov}(\mathrm{fit}_i)}, for \eqn{i = 1, \ldots, M}.
-Rubin's rules (Rubin 1987) give
+The implementation uses the following Rubin-style pooling equations:
 \deqn{\bar\theta = M^{-1} \sum_i \hat\theta_i}
 \deqn{W = M^{-1} \sum_i \mathrm{diag}(U_i)}
 \deqn{B = (M-1)^{-1} \sum_i (\hat\theta_i - \bar\theta)^2}
@@ -96,16 +115,29 @@ variance is \eqn{r = (1 + 1/M) B / W}, the classical pooled df is
 \eqn{\nu_{\text{old}} = (M-1)(1 + 1/r)^2}, and the fraction of missing
 information is
 \deqn{\mathrm{fmi} = (r + 2/(\nu + 3)) / (r + 1).}
-When \code{df_fun} returns finite complete-data df \code{nu_com}, the
-Barnard-Rubin (1999) correction combines
+Here \code{nu} is the pooled degrees of freedom returned in \code{df}: the classical
+value when \code{df_fun = NULL}, or the finite-complete-data adjustment below
+when \code{df_fun} is supplied.
+When \code{df_fun} returns finite complete-data df \code{nu_com}, pigauto applies a
+finite-df adjustment motivated by Barnard and Rubin (1999). The equations
+below specify pigauto's implementation. It uses
+\eqn{\lambda = (1 + 1/M) B / T}, the proportion of total variance from
+between-imputation uncertainty, which differs from the finite-df \code{fmi}
+above. It combines
 \eqn{\nu_{\text{obs}} = ((\nu_{\text{com}}+1)/(\nu_{\text{com}}+3))
 \nu_{\text{com}} (1 - \lambda)} with \code{nu_old} via
 \eqn{\nu_{\text{BR}} = 1/(1/\nu_{\text{old}} + 1/\nu_{\text{obs}})}.
 With no between-imputation variation (\code{B = 0}), the classical limit is
 \code{df = Inf}, \code{riv = 0}, and \code{fmi = 0}. If finite complete-data df are
 supplied, Barnard--Rubin instead retains finite observed-data df and its
-small-sample FMI adjustment. A completely deterministic quantity
-(\code{B = W = 0}) always has zero FMI and infinite df.
+small-sample FMI adjustment. For a coefficient with \code{W = 0} and \code{B > 0},
+all total variance is between imputations: the pooled coefficient estimates
+differ across imputed datasets, while each fit reports zero variance. This
+implementation returns \code{df = M - 1} and \code{fmi = 1}, including when
+\code{df_fun} returns a finite positive complete-data df. The observed-data df
+term is zero in this limit, so the harmonic adjustment is skipped. When both
+variance components are zero (\code{W = B = 0}), it returns \code{df = Inf} and
+\code{fmi = 0}.
 
 Only fixed-effect coefficients are pooled. Random-effect
 variances and correlations, BLUPs/conditional modes, latent loadings, and
@@ -129,18 +161,38 @@ handled automatically. Other classes are pooled through their
 \code{tidy_fun}.
 
 \strong{Bayesian fits (brms, MCMCglmm) are rejected} because Rubin's rules are
-not the right tool for posterior samples: they are pooled by concatenating
-posterior draws across imputations. For brms, use
+not the right tool for posterior samples. Posterior-draw combination is a
+separate procedure, not a blanket recommendation: use it only with an
+eligible imputation method and a compatible downstream model, check
+convergence for every imputation-specific fit, and give each imputed dataset
+equal representation in the combined draws. For brms, use
 \code{brms::brm_multiple(formula, data = mi$datasets)}, or
 \code{brms::combine_models()} on a list of existing fits. For MCMCglmm,
-concatenate the \code{Sol} samples across fits. No Bayesian downstream
-workflow is supported by the analysis-aware backend.
+concatenate equally represented \code{Sol} samples only after checking each fit.
+Combined draws do not establish calibrated inference for pigauto. See the
+\href{https://itchyshin.github.io/pigauto/articles/multiple-imputation.html}{multiple-imputation guide}
+for workflow limits and the current
+\href{https://paulbuerkner.com/brms/reference/brm_multiple.html}{brms diagnostics guidance}.
+No Bayesian downstream workflow is supported by the analysis-aware backend.
+
+The references below provide general multiple-imputation and ecological
+context. The exact book passages for these equations and the ecological
+review passages have not been checked against the primary full texts;
+these citations do not validate pigauto's imputation workflows.
 }
+\section{Printing}{
+
+Prints coefficients, retained-fit count, confidence level and an FMI-based imputation-count suggestion. That suggestion is a stability heuristic, not a validity check. The \code{...} argument is currently unused.
+}
+
 \examples{
 \donttest{
 dat <- data.frame(y = stats::rnorm(30L), x = stats::rnorm(30L),
                   z = stats::rnorm(30L))
 dat$x[seq(3L, 30L, by = 5L)] <- NA_real_
+# Workflow example only: m = 2L is not an analysis recommendation.
+# Choose enough imputations to make Monte Carlo error small relative to
+# the standard errors you report.
 mi <- multi_impute_analysis(
   data = dat, formula = y ~ x + z, missing = "x",
   model = "lm", m = 2L

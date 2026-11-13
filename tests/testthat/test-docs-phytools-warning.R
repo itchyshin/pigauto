@@ -22,14 +22,15 @@ test_that("getting-started Step 6 uses matrix indexing and evaluate() for covera
   expect_true(grepl("evaluate\\(\\)", text))
 })
 
-test_that("install text does not send a CRAN 0.10.0 user into check_pigauto()", {
+test_that("install text distinguishes 0.11.1 fixes from CRAN 0.11.0", {
   rd <- paste(readLines(skip_if_no_pkg_src("README.md")), collapse = "\n")
   gs <- paste(readLines(skip_if_no_pkg_src("vignettes", "getting-started.Rmd")),
               collapse = "\n")
-  expect_true(grepl("0\\.10\\.0", rd))
-  expect_true(grepl("0\\.10\\.0", gs))
-  expect_true(grepl("does not include `check_pigauto", rd))
-  expect_true(grepl("does not have them", gs))
+  for (text in c(rd, gs)) {
+    expect_match(text, "0.11.1", fixed = TRUE)
+    expect_match(text, "CRAN 0.11.0", fixed = TRUE)
+    expect_match(text, "evaluate(fit)", fixed = TRUE)
+  }
 })
 
 test_that("phytools-missing warning names an install step", {

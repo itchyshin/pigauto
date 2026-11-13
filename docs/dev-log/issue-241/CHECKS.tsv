@@ -1,0 +1,10 @@
+check	result	evidence
+Full devtools::test	PASS: 3672 passed; 0 failed; 184 warnings; 8 skips	evidence/suite-final.log
+Issue regressions	PASS: 17 assertions; zero failures or warnings	/private/tmp/issue241-final-regression.log
+Affected tests and API inventory	PASS: 248 assertions; zero failures; 11 small-validation warnings	evidence/focused-final.log
+Package check without vignette building or repeated tests	0 errors; 2 skipped-vignette warnings; 1 online-clock note	evidence/package-check.log
+Original and corrected reporter Parts A-C	Reproduced and corrected scores match masked path	evidence/reporter-before.log; evidence/reporter-after.log
+Mixed-types rendering and pkgdown	PASS	evidence/render.log; evidence/mixed-types.html
+Source diff whitespace	PASS: R, man, tests, vignettes	git diff --check -- R man tests vignettes
+Source equivalence	PASS: all 12 tested files byte-identical to managed review branch	local file comparison
+Closeout wrapper	Report structure passes; wrapper blocked by unrelated inherited ledgers	AFTER-TASK.md section 8

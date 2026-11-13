@@ -258,6 +258,13 @@ ml_lambda_and_mu_for_col <- function(y, R, nugget = 1e-6,
 
 # ---- bm_impute_col_with_cov -------------------------------------------------
 
+# Keep a common, deterministic observed-row basis for likelihood and prediction.
+# The QR pivot leaves dependent coefficients at zero in the original basis.
+.bm_independent_columns <- function(X) {
+  q <- qr(X, tol = 1e-7, LAPACK = FALSE)
+  if (q$rank == 0L) integer(0) else sort(q$pivot[seq_len(q$rank)])
+}
+
 #' Univariate BM conditional imputation with covariates as fixed effects.
 #'
 #' Extends \code{\link{bm_impute_col}} to a GLS regression model
@@ -313,16 +320,28 @@ bm_impute_col_with_cov <- function(y, X, R, nugget = 1e-6,
   n <- length(y)
   stopifnot(is.matrix(X), nrow(X) == n)
   p_x <- ncol(X)
+  obs_idx <- which(!is.na(y))
+  miss_idx <- which(is.na(y))
+  n_o <- length(obs_idx)
+  n_m <- length(miss_idx)
+  keep <- if (n_o > 0L) .bm_independent_columns(X[obs_idx, , drop = FALSE]) else integer(0)
+  rank_x <- length(keep)
 
   # Pagel's lambda: same transform as bm_impute_col() (lines ~107-111).
   # At lambda = 1 this branch does not execute, so the rest of the
   # function is untouched and bit-identical to the pre-lambda version.
   lambda_hat <- NULL
   if (identical(lambda, "estimate")) {
-    cache <- build_pagel_nll_cache(y, R, nugget = nugget, X = X)
-    opt <- stats::optimize(cache$nll, interval = c(0.01, 0.99), tol = 1e-4)
-    lambda_hat <- opt$minimum
-    lambda <- lambda_hat
+    # The small-sample fallback does not fit GLS, so no lambda is estimated.
+    lambda_hat <- NA_real_
+    if (rank_x > 0L && n_o >= max(rank_x + 5L, 10L)) {
+      cache <- build_pagel_nll_cache(y, R, nugget = nugget, X = X)
+      opt <- stats::optimize(cache$nll, interval = c(0.01, 0.99), tol = 1e-4)
+      if (is.finite(opt$objective) && opt$objective < .Machine$double.xmax) {
+        lambda_hat <- opt$minimum
+      }
+    }
+    lambda <- if (is.na(lambda_hat)) 1 else lambda_hat
   }
   if (!is.numeric(lambda) || length(lambda) != 1L || !is.finite(lambda) ||
       lambda < 0 || lambda > 1) {
@@ -338,29 +357,44 @@ bm_impute_col_with_cov <- function(y, X, R, nugget = 1e-6,
   mu_out <- numeric(n)
   se_out <- numeric(n)
 
-  obs_idx  <- which(!is.na(y))
-  miss_idx <- which(is.na(y))
-  n_o <- length(obs_idx)
-  n_m <- length(miss_idx)
-
   if (n_m == 0L) {
-    return(list(mu = y, se = se_out, beta_hat = rep(NA_real_, p_x)))
+    out <- list(mu = y, se = se_out, beta_hat = rep(NA_real_, p_x))
+    if (!is.null(lambda_hat)) out$lambda_hat <- lambda_hat
+    return(out)
   }
 
   # Too few observations for GLS regression: fall back to global mean
-  if (n_o < max(p_x + 5L, 10L)) {
+  if (rank_x == 0L || n_o < max(rank_x + 5L, 10L)) {
     y_obs <- y[obs_idx]
     global_mu <- if (n_o > 0L) mean(y_obs) else 0
     global_sd <- if (n_o > 1L) stats::sd(y_obs) else 1
     mu_out[obs_idx]  <- y_obs
     mu_out[miss_idx] <- global_mu
     se_out[miss_idx] <- global_sd
-    return(list(mu = mu_out, se = se_out, beta_hat = rep(NA_real_, p_x)))
+    out <- list(mu = mu_out, se = se_out, beta_hat = rep(NA_real_, p_x))
+    if (!is.null(lambda_hat)) out$lambda_hat <- lambda_hat
+    return(out)
+  }
+
+  # Aliased coefficients are set to zero. If the observed-row alias does
+  # not also hold for missing rows (e.g. an unseen factor level), the
+  # resulting predictions are basis-dependent and the effect is unidentified.
+  dropped <- setdiff(seq_len(p_x), keep)
+  if (length(dropped)) {
+    alias <- qr.coef(qr(X[obs_idx, keep, drop = FALSE]),
+                     X[obs_idx, dropped, drop = FALSE])
+    predicted <- X[miss_idx, keep, drop = FALSE] %*% alias
+    actual <- X[miss_idx, dropped, drop = FALSE]
+    if (any(abs(actual - predicted) > 1e-7 * pmax(1, abs(actual)))) {
+      warning("Some covariate effects are not identifiable from observed traits; ",
+              "aliased coefficients are set to zero and predictions depend on the retained basis.",
+              call. = FALSE)
+    }
   }
 
   y_o  <- y[obs_idx]
-  X_o  <- X[obs_idx, , drop = FALSE]
-  X_m  <- X[miss_idx, , drop = FALSE]
+  X_o  <- X[obs_idx, keep, drop = FALSE]
+  X_m  <- X[miss_idx, keep, drop = FALSE]
   R_oo <- R[obs_idx, obs_idx, drop = FALSE]
   R_mo <- R[miss_idx, obs_idx, drop = FALSE]
 
@@ -391,13 +425,13 @@ bm_impute_col_with_cov <- function(y, X, R, nugget = 1e-6,
   Rinv_y <- chol_solve(y_o)
   XtRinvX <- crossprod(X_o, Rinv_X)
   XtRinvy <- crossprod(X_o, Rinv_y)
-  ridge_diag <- rep(ridge, p_x)
-  ridge_diag[1] <- 0           # don't penalise the intercept
+  ridge_diag <- rep(ridge, rank_x)
+  ridge_diag[keep == 1L] <- 0  # don't penalise the intercept
   beta_hat <- tryCatch(
-    solve(XtRinvX + diag(ridge_diag + 1e-8, p_x), XtRinvy),
+    solve(XtRinvX + diag(ridge_diag + 1e-8, rank_x), XtRinvy),
     error = function(e) {
       warning("GLS solve failed; falling back to OLS.", call. = FALSE)
-      solve(crossprod(X_o) + diag(ridge_diag + 1e-8, p_x), crossprod(X_o, y_o))
+      solve(crossprod(X_o) + diag(ridge_diag + 1e-8, rank_x), crossprod(X_o, y_o))
     })
   beta_hat <- as.numeric(beta_hat)
 
@@ -405,7 +439,7 @@ bm_impute_col_with_cov <- function(y, X, R, nugget = 1e-6,
   e_cov       <- y_o - as.numeric(X_o %*% beta_hat)
   e_cov_solve <- chol_solve(e_cov)
   sigma2_cov  <- as.numeric(crossprod(e_cov, e_cov_solve)) /
-                  max(n_o - p_x, 1L)
+                  max(n_o - rank_x, 1L)
 
   # Likelihood-ratio gate: compare cov fit to intercept-only fit.
   # If covariates barely reduce residual variance, fall back to no-cov
@@ -426,7 +460,8 @@ bm_impute_col_with_cov <- function(y, X, R, nugget = 1e-6,
     if (!is.finite(rel_red) || rel_red < lrt_threshold) {
       used_cov <- FALSE
       # Use intercept-only solution
-      beta_hat <- c(mu_int, rep(0, p_x - 1L))
+      beta_hat <- numeric(rank_x)
+      beta_hat[keep == 1L] <- mu_int
       e_cov_solve <- e_int_solve
       sigma2_cov  <- sigma2_int
     }
@@ -445,7 +480,9 @@ bm_impute_col_with_cov <- function(y, X, R, nugget = 1e-6,
   mu_out[miss_idx] <- mu_m
   se_out[miss_idx] <- sqrt(cond_var)
 
-  out <- list(mu = mu_out, se = se_out, beta_hat = beta_hat, used_cov = used_cov)
+  beta_full <- numeric(p_x)
+  beta_full[keep] <- beta_hat
+  out <- list(mu = mu_out, se = se_out, beta_hat = beta_full, used_cov = used_cov)
   if (!is.null(lambda_hat)) out$lambda_hat <- lambda_hat
   out
 }

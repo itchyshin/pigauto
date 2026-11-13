@@ -28,9 +28,10 @@ Example bird phylogenies
 Bundled objects: tree300, trees300, and tree_full.
 
 These objects are pruned derivatives of tree_bird_n100, retrieved through the
-megatrees 1.0.0 R package. The package's MIT software licence does not
-establish redistribution rights for the underlying BirdTree data. The exact
-upstream release asset has SHA-256 digest
+megatrees R package. The package release version used to retrieve the source
+is not confirmed. The package's MIT software licence does not establish
+redistribution rights for the underlying BirdTree data. The recorded upstream
+release asset has SHA-256 digest
 71f6f712bf4c57c14570644f447c1e2eb0d76436a88075560afd4e85be1fcb78.
 That 100-tree BirdTree collection has 50 Ericson-backbone trees followed by 50
 Hackett-backbone trees. tree300 and tree_full use posterior member 69 from the

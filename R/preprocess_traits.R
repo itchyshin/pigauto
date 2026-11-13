@@ -13,16 +13,39 @@
 #' @details
 #' **Automatic type detection** (when \code{trait_types = NULL}) follows the
 #' R class of each column — no user input is required for most data:
+#'
+#' \ifelse{html}{\out{
+#' <table>
+#' <thead><tr><th scope="col"><strong>R class</strong></th><th scope="col"><strong>pigauto type</strong></th></tr></thead>
+#' <tbody>
+#' <tr><td><code>numeric</code> (non-integer)</td><td>continuous</td></tr>
+#' <tr><td><code>integer</code>, all nonnegative</td><td>count</td></tr>
+#' <tr><td><code>integer</code>, any negative value</td><td>continuous</td></tr>
+#' <tr><td><code>factor</code> with 2 levels</td><td>binary</td></tr>
+#' <tr><td><code>factor</code> (unordered) with &gt;2 levels</td><td>categorical</td></tr>
+#' <tr><td><code>ordered</code> with 2 levels</td><td>binary</td></tr>
+#' <tr><td><code>ordered</code> with &gt;2 levels</td><td>ordinal</td></tr>
+#' <tr><td><code>character</code></td><td>converted to <code>factor</code>, then binary or categorical</td></tr>
+#' <tr><td><code>logical</code></td><td>binary (FALSE = 0, TRUE = 1)</td></tr>
+#' </tbody>
+#' </table>
+#' }}{
 #' \tabular{ll}{
 #'   \strong{R class} \tab \strong{pigauto type} \cr
 #'   \code{numeric} (non-integer) \tab continuous \cr
-#'   \code{integer} \tab count \cr
+#'   \code{integer}, all nonnegative \tab count \cr
+#'   \code{integer}, any negative value \tab continuous \cr
 #'   \code{factor} with 2 levels \tab binary \cr
 #'   \code{factor} (unordered) with >2 levels \tab categorical \cr
-#'   \code{ordered} / \code{factor(..., ordered = TRUE)} \tab ordinal \cr
+#'   \code{ordered} with 2 levels \tab binary \cr
+#'   \code{ordered} with >2 levels \tab ordinal \cr
 #'   \code{character} \tab converted to \code{factor}, then binary or categorical \cr
 #'   \code{logical} \tab binary (FALSE = 0, TRUE = 1) \cr
 #' }
+#' }
+#'
+#' Whole-number measurements can still be scientifically continuous. Use
+#' `trait_types = c(measurement = "continuous")` to override count detection.
 #'
 #' **Two types require an explicit override** because they cannot be
 #' distinguished from their R class alone:
@@ -52,6 +75,15 @@
 #'   \item Survival rate (\code{numeric}, values in 0 to 1) → needs
 #'     \code{trait_types = c(Survival = "proportion")}.
 #' }
+#'
+#' **Species and composition alignment:** trait rows whose species are absent
+#' from the tree are dropped with a warning. Tree tips without trait rows
+#' remain in the aligned data with all trait values missing; no shared species
+#' is an error. For a \code{multi_proportion_groups} composition, a row is
+#' used only when every component is present, so a partly missing composition
+#' is treated as missing as a whole. Complete compositions must be
+#' non-negative and sum to 1 within 1 percent; zero components are replaced
+#' by a small positive value for the log-ratio transform.
 #'
 #' **Latent encoding** per type:
 #' \describe{
@@ -84,6 +116,16 @@
 #'   Unspecified traits are auto-detected.  Note that
 #'   \code{"multi_proportion"} is NOT set here — use
 #'   \code{multi_proportion_groups} instead.
+#' @param ordinal_levels named list giving the scientific order of ordinal
+#'   levels, e.g. \code{list(status = c("LC", "NT", "VU", "EN", "CR"))}.
+#'   Each named column is coerced to an ordered factor with exactly those
+#'   levels before type detection, so no \code{trait_types} entry is needed:
+#'   the coerced column detects as \code{"ordinal"}, or as \code{"binary"}
+#'   (order preserved) when exactly two levels are declared — the same
+#'   detection an \code{ordered()} column with those levels receives.
+#'   Observed values absent from the declared levels are an error.  Same
+#'   semantics as the \code{ordinal_levels} argument of
+#'   \code{\link{read_traits}}.  Default \code{NULL}.
 #' @param multi_proportion_groups named list declaring compositional
 #'   (multi-proportion) trait groups.  Each element is a character vector
 #'   of column names whose row-wise values sum to 1 (e.g.
@@ -100,10 +142,14 @@
 #'   are supplied.  Traits already on a log scale should not be logged
 #'   again: set \code{log_transform = FALSE} or leave them out of
 #'   \code{log_cols} (see \code{\link{impute}}).
-#' @param center logical. Subtract column means for continuous/count/ordinal?
-#'   Default \code{TRUE}.
-#' @param scale logical. Divide by column SDs for continuous/count/ordinal?
-#'   Default \code{TRUE}.
+#' @param center logical. Subtract column means for continuous traits, log1p
+#'   counts, ordinal scores, logit proportions, nonzero zero-inflated-count
+#'   magnitudes, and each compositional CLR component. Binary/categorical
+#'   indicators and the zero-inflation gate are unchanged. Default
+#'   \code{TRUE}.
+#' @param scale logical. Divide those same transformed values by their column
+#'   SDs; binary/categorical indicators and the zero-inflation gate are
+#'   unchanged. Default \code{TRUE}.
 #' @param covariates data.frame or numeric matrix of environmental covariates.
 #'   Covariates are conditioners: they inform imputation but are not themselves
 #'   imputed, so they must be \strong{fully observed} (no NAs — if a variable
@@ -111,8 +157,12 @@
 #'   to the same species / observation order as \code{X_scaled} after traits
 #'   are matched to the tree.  Single-obs: rownames should match
 #'   \code{tree$tip.label} (they are reordered to tip order).  Multi-obs:
-#'   include the same \code{species_col} to match observation rows by species
-#'   identity.  Unnamed covariates are assumed to share the input-row order of
+#'   include the same \code{species_col} and keep observations in the same
+#'   order within each species in both frames. Repeated species labels alone
+#'   do not identify individual observations: matching takes the next unused
+#'   covariate row for each species. Align by an explicit observation ID before
+#'   calling if within-species rows were shuffled independently.
+#'   Unnamed covariates are assumed to share the input-row order of
 #'   \code{traits} and receive the same drop / reorder.  Matching
 #'   \code{nrow} alone is not enough — unmatched species names are an error.
 #'   \describe{
@@ -129,9 +179,13 @@
 #'     \item{X_raw}{Numeric matrix of continuous traits after optional log
 #'       but before z-scoring (for backward compatibility).}
 #'     \item{X_original}{Original data.frame (aligned to tree, before encoding).}
-#'     \item{means}{Named numeric vector of column means used for z-scoring
-#'       (continuous/count/ordinal traits only).}
-#'     \item{sds}{Named numeric vector of column SDs.}
+#'     \item{means}{Named numeric vector of scalar means used for centering
+#'       continuous, count, ordinal, proportion, and zero-inflated-count
+#'       magnitude traits. Multi-proportion component means are vectors stored
+#'       in the corresponding \code{trait_map} entry.}
+#'     \item{sds}{Named numeric vector of scalar SDs for those same traits.
+#'       Multi-proportion component SDs are vectors stored in the corresponding
+#'       \code{trait_map} entry.}
 #'     \item{species_names}{Character vector of unique species matching
 #'       \code{tree$tip.label} order (length = n_species).}
 #'     \item{obs_species}{Character vector of species labels per observation
@@ -143,8 +197,8 @@
 #'     \item{n_species}{Integer, number of unique species.}
 #'     \item{n_obs}{Integer, number of observations (= n_species when
 #'       single-obs).}
-#'     \item{multi_obs}{Logical, \code{TRUE} when multiple observations
-#'       per species are present.}
+#'     \item{multi_obs}{Logical, \code{TRUE} whenever \code{species_col}
+#'       is supplied, including with exactly one observation per species.}
 #'     \item{trait_names}{Character vector of original trait names.}
 #'     \item{latent_names}{Character vector of latent column names.}
 #'     \item{trait_map}{List of trait descriptors (see Details).}
@@ -173,9 +227,11 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
                               multi_proportion_groups = NULL,
                               log_cols = NULL, log_transform = TRUE,
                               center = TRUE, scale = TRUE,
-                              covariates = NULL) {
+                              covariates = NULL,
+                              ordinal_levels = NULL) {
   if (!is.data.frame(traits)) stop("'traits' must be a data.frame.")
   if (!inherits(tree, "phylo")) stop("'tree' must be a phylo object.")
+  traits <- .apply_ordinal_levels(traits, ordinal_levels)
 
   # Keep input identity before dropping data-only species.  Internal rows are
   # later reordered to tree order, while build_completed() must always target
@@ -253,7 +309,8 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
 
   n_dropped_sp <- sum(!in_tree)
   if (n_dropped_sp > 0) {
-    warning(n_dropped_sp, " species in traits not found in tree -- dropped.")
+    warning(n_dropped_sp, " species in traits not found in tree: excluded from modeling; ",
+            "impute() keeps their input rows unchanged in completed data.", call. = FALSE)
     keep_rows <- obs_species_raw %in% tree$tip.label
     traits <- traits[keep_rows, , drop = FALSE]
     obs_species_raw <- obs_species_raw[keep_rows]
@@ -514,6 +571,8 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
       X_scaled       = latent$X,
       X_raw          = X_raw,
       X_original     = X_original,
+      preprocess_center = center,
+      preprocess_scale = scale,
       means          = all_means,
       sds            = all_sds,
       species_names  = species_names,
@@ -626,6 +685,15 @@ align_covariates_to_obs <- function(covariates,
     TRUE
   )
   if (!isTRUE(ok)) {
+    if (identical(unname(tp), "ordinal")) {
+      # Backtick-quote non-syntactic names so the suggested code is valid R.
+      nm_code <- deparse1(as.name(nm), backtick = TRUE)
+      stop("Trait '", nm, "' is declared \"ordinal\", but you have not ",
+           "provided the order of its levels. Pass ordinal_levels = list(",
+           nm_code, " = c(...)) listing the levels from lowest to highest, ",
+           "or make the column an ordered factor with ordered().",
+           call. = FALSE)
+    }
     stop("Trait '", nm, "' is declared \"", tp, "\" but the column ",
          "contradicts that type.", call. = FALSE)
   }
@@ -1074,6 +1142,20 @@ encode_to_latent <- function(traits, trait_map) {
 }
 
 
+#' @rdname preprocess_traits
+#' @param x A preprocessed trait-data object.
+#' @param ... Ignored. Included for compatibility with the base \code{print()}
+#'   generic.
+#' @section Printing:
+#' Reports species and trait counts, and observation counts plus the
+#' observation-per-species range and median in multi-observation mode.
+#' With \code{trait_map}, it reports type counts and the latent-column
+#' count. Without \code{trait_map}, it reports column names and log-transform
+#' status. The latent-cell missing fraction is printed only when greater
+#' than zero and can differ from original-cell missingness. Covariates are
+#' stored in \code{x$covariates}, not displayed by this method. The dots
+#' argument is unused.
+#' @return The print method returns `x` invisibly.
 #' @export
 print.pigauto_data <- function(x, ...) {
   cat("pigauto_data\n")

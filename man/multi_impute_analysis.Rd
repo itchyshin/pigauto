@@ -2,6 +2,7 @@
 % Please edit documentation in R/multi_impute_analysis.R
 \name{multi_impute_analysis}
 \alias{multi_impute_analysis}
+\alias{print.pigauto_analysis_mi}
 \title{Analysis-aware multiple imputation for narrow regression models}
 \usage{
 multi_impute_analysis(
@@ -14,6 +15,8 @@ multi_impute_analysis(
   seed = NULL,
   control = list()
 )
+
+\method{print}{pigauto_analysis_mi}(x, ...)
 }
 \arguments{
 \item{data}{A data frame containing the analysis variables.}
@@ -21,9 +24,11 @@ multi_impute_analysis(
 \item{formula}{A two-sided additive model formula. For \code{model = "lmer"},
 exactly one random-intercept term of the form \code{(1 | group)} is required.}
 
-\item{missing}{A single character string naming the continuous numeric
-covariate to impute. It must occur as a main-effect predictor in
-\code{formula} and must be the only column in \code{data} containing missing values.}
+\item{missing}{A single character string naming the double-precision
+continuous covariate to impute. Integer storage is rejected: for a
+scientifically continuous whole-number measurement, convert it first
+with \code{data$x <- as.numeric(data$x)}. It must occur as a main-effect
+predictor in \code{formula} and be the only column containing missing values.}
 
 \item{model}{One of \code{"lm"}, \code{"glm"}, or \code{"lmer"}. The \code{"glm"} route is
 restricted to binomial-logit regression. The \code{"lmer"} route is restricted
@@ -44,24 +49,35 @@ RNG stream.}
 controls. The \code{"glm"} route accepts \code{numit} (default 20) and \code{rjlimit}
 (default 100000). The \code{"lmer"} route accepts \code{nburn} (default 1000) and
 \code{nbetween} (default 100).}
+
+\item{x}{An analysis-aware MI object.}
+
+\item{...}{Ignored. Included for compatibility with the base \code{print()}
+generic.}
 }
 \value{
 An object with classes \code{"pigauto_analysis_mi"} and \code{"pigauto_mi"}.
 Its \code{datasets} component is a list of \code{m} completed data frames compatible
 with \code{\link[=with_imputations]{with_imputations()}} and \code{\link[=pool_mi]{pool_mi()}}. The object also records the
 analysis model, formula, engine, controls, engine version, seed, runtime
-provenance, and imputed-variable metadata. Any engine warning aborts the
-call instead of returning an inference-ready object. \code{mi_workflow} is a
+provenance, and imputed-variable metadata. For the \code{"glm"} and \code{"lmer"}
+routes, any engine warning aborts the call instead of returning an object.
+The \code{"lm"} route does not apply this rule. \code{mi_workflow} is a
 stable analysis-aware provenance marker propagated by \code{\link[=with_imputations]{with_imputations()}}
 and checked by \code{\link[=pool_mi]{pool_mi()}}.
+
+The print method returns \code{x} invisibly.
 }
 \description{
 Generate multiple imputations conditional on a specified downstream
-regression model. Validity requires MAR, a correctly specified conditional
-imputation model, and adequate SMCFCS or jomo convergence. This experimental
-interface is deliberately narrow: exactly one continuous covariate may
-contain missing values, while the outcome, all other predictors, auxiliary
-variables, and any grouping variable must be fully observed.
+regression model. All routes rely on missing at random (MAR) and a correctly
+specified conditional imputation model. The \code{glm} and \code{lmer} routes use
+SMCFCS and jomo, respectively, so their sampler convergence must also be
+checked. The \code{lm} route uses a separate Bayesian Normal-regression sampler.
+This experimental interface is deliberately narrow: exactly one continuous
+covariate may contain missing values, while the outcome, all other
+predictors, auxiliary variables, and any grouping variable must be fully
+observed.
 }
 \section{Experimental scope}{
 
@@ -72,6 +88,11 @@ optional \code{smcfcs} package, and the \code{"lmer"} route requires the optiona
 \code{jomo} and \code{lme4} packages. Interactions, transformed terms, random slopes,
 nested or crossed random effects, multiple incomplete variables, missing
 outcomes, and pooling of variance components or BLUPs are unsupported.
+}
+
+\section{Printing}{
+
+Prints the dataset count, engine, formula and metadata. This display does not validate an analysis. The \code{...} argument is currently unused.
 }
 
 \examples{

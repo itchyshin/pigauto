@@ -13,7 +13,9 @@ evaluate(fit, data = NULL, splits = NULL)
 training data stored in the fit via \code{predict()}).}
 
 \item{splits}{splits object (default: \code{NULL}, uses
-\code{fit$splits}).}
+\code{fit$splits}). Alternative indices must be a compatible subset of
+the cells held out when the fit was made; this argument does not refit
+for a new holdout design.}
 }
 \value{
 A \code{data.frame} with columns: \code{method}, \code{trait},
@@ -21,25 +23,40 @@ A \code{data.frame} with columns: \code{method}, \code{trait},
 }
 \description{
 Computes type-specific performance metrics for each trait.  By default
-the model is evaluated on the test split stored in the fit object, but
-an alternative \code{data} / \code{splits} can be supplied.
+the model is evaluated on the test split stored in the fit object. An
+alternative \code{data} can provide the truth matrix, and alternative
+\code{splits} can select compatible held-out cells from the original fit;
+evaluation does not refit the baseline or GNN for a new holdout design.
 }
 \details{
 \strong{Metrics by trait type:}
 \describe{
-\item{continuous}{RMSE, Pearson r, MAE}
-\item{count}{RMSE, MAE, Pearson r}
+\item{continuous}{RMSE, Pearson r, and MAE on the z-scored latent scale}
+\item{count}{RMSE, MAE, and Pearson r on the z-scored log1p latent scale}
 \item{binary}{Accuracy, Brier score}
 \item{categorical}{Accuracy (overall)}
-\item{ordinal}{RMSE (on integer scale), Spearman rho}
+\item{ordinal}{RMSE on the z-scored latent scale, Spearman rho}
+\item{proportion}{RMSE and MAE on the transformed latent scale, Pearson r}
+\item{zi_count}{RMSE, MAE, and Pearson r on the original count scale,
+comparing observed counts with predicted expected counts; zero-accuracy
+and Brier score are computed for the zero/nonzero gate}
+\item{multi_proportion}{Aitchison distance in CLR space, z-scored CLR
+RMSE, and decoded simplex MAE}
 }
 
-When conformal scores are present in the fit, conformal coverage at
-the 95\\% nominal level is also reported for continuous, count, and
-ordinal traits.
+When conformal scores are present in the fit, \code{conformal_coverage_95}
+is reported for continuous, count, ordinal, and proportion traits. This is
+the empirical fraction of test predictions inside the same trait-level
+conformal radius around each prediction. It uses one score per trait, not
+cell-specific or Mondrian bounds.
+Cross-validation and model reports can also report coverage of their
+actual per-cell bounds.
 
 When the fit includes a baseline, baseline metrics are appended with
-\code{method = "baseline"} for direct comparison.
+\code{method = "baseline"} for direct comparison. This uses the baseline
+already stored in the fit and its selected defaults; \code{evaluate()} has
+no argument for alternative baseline settings. To compare another
+baseline, construct it explicitly in a separate evaluation workflow.
 }
 \examples{
 \donttest{

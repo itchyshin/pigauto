@@ -1,0 +1,40 @@
+Scenario accounting:
+                                scenario_id requested dataset_records
+nonlinear_primary         nonlinear_primary       500             500
+interactive_secondary interactive_secondary       500             500
+nonlinear_low_phylo     nonlinear_low_phylo       500             500
+linear_recovery             linear_recovery       500             500
+null_covariate               null_covariate       500             500
+                      complete_paired_gate_fits
+nonlinear_primary                           500
+interactive_secondary                       500
+nonlinear_low_phylo                         500
+linear_recovery                             500
+null_covariate                              500
+Run accounting:
+  requested_datasets completed_dataset_records missing_datasets
+1               2500                      2500                0
+  unexpected_results requested_gate_fits recorded_gate_fits completed_gate_fits
+1                  0                5000               5000                5000
+  invalid_output_gate_fits failed_gate_fits nonconverged_gate_fits
+1                        0                0                      0
+  infrastructure_skips gls_nonconverged_attempts gate_true_signal_estimated
+1                    0                         0                       2500
+  gate_true_signal_unestimable gate_true_signal_missing
+1                            0                        0
+Method accounting:
+               method requested attempted not_attempted successful failed
+1        pigauto_full      5000      5000             0       5000      0
+2  pigauto_neural_off      5000      5000             0       5000      0
+3                mean      5000      5000             0       5000      0
+4           lm_linear      5000      5000             0       5000      0
+5 lm_poly_interaction      5000      5000             0       5000      0
+6           phylo_gls      5000      5000             0       5000      0
+  nonconverged
+1            0
+2            0
+3            0
+4            0
+5            0
+6            0
+RUN_ACCOUNTING_PASS

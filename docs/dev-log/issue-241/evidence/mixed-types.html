@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Mixed-Type Trait Imputation</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Mixed-Type Trait Imputation</h1>
+
+
+
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p>Real comparative datasets contain many kinds of traits: body mass
+(continuous), clutch size (count), migratory status (yes/no), diet type
+(carnivore/herbivore/omnivore), threat status (LC &lt; VU &lt; EN).
+pigauto handles all of them in a single model — you do not need separate
+imputation runs for different column types.</p>
+<table>
+<colgroup>
+<col width="19%" />
+<col width="29%" />
+<col width="29%" />
+<col width="22%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Type</th>
+<th>R class</th>
+<th>Example</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Continuous</td>
+<td><code>numeric</code></td>
+<td>Body mass, wing length</td>
+<td>Auto-detected</td>
+</tr>
+<tr class="even">
+<td>Count</td>
+<td><code>integer</code></td>
+<td>Clutch size, litter size</td>
+<td>Auto-detected</td>
+</tr>
+<tr class="odd">
+<td>Binary</td>
+<td><code>factor</code> (2 levels)</td>
+<td>Migratory yes/no</td>
+<td>Auto-detected</td>
+</tr>
+<tr class="even">
+<td>Categorical</td>
+<td><code>factor</code> (&gt;2 levels)</td>
+<td>Diet type, lifestyle</td>
+<td>Auto-detected</td>
+</tr>
+<tr class="odd">
+<td>Ordinal</td>
+<td><code>ordered</code></td>
+<td>Threat status (LC &lt; VU &lt; EN)</td>
+<td>Auto-detected</td>
+</tr>
+<tr class="even">
+<td>Proportion</td>
+<td><code>numeric</code> (0–1)</td>
+<td>Habitat cover, diet fraction</td>
+<td>Requires <code>trait_types = &quot;proportion&quot;</code> override</td>
+</tr>
+<tr class="odd">
+<td>ZI count</td>
+<td><code>integer</code> (zero-inflated)</td>
+<td>Parasite load, rare behaviour</td>
+<td>Requires <code>trait_types = &quot;zi_count&quot;</code> override;
+experimental — accuracy more variable than other types</td>
+</tr>
+<tr class="even">
+<td>Multi-proportion</td>
+<td>K <code>numeric</code> columns summing to 1</td>
+<td>Diet composition, plumage-colour fractions, microbiome relative
+abundances</td>
+<td>Requires
+<code>multi_proportion_groups = list(&lt;name&gt; = c(&quot;col1&quot;, ..., &quot;colK&quot;))</code>;
+encoded via centred log-ratio (CLR) + per-component z-score</td>
+</tr>
+</tbody>
+</table>
+<p>The first five rows in this table are auto-detected from R column
+class; <code>proportion</code>, <code>zi_count</code>, and
+<code>multi_proportion</code> must be declared explicitly
+(<code>trait_types</code> or <code>multi_proportion_groups</code>). All
+eight share the same latent space — the phylogenetic baseline and GNN
+correction both operate in this space, and type-specific logic appears
+only at encoding, loss computation, and decoding.</p>
+<p>Before fitting a mixed table, use
+<code>check_pigauto(traits, tree)</code>. Its trait table records the
+detected type, declaration source, usable matched rows, and copy-ready
+corrections; its species report distinguishes matched, data-only, and
+tree-only identities.</p>
+</div>
+<div id="synthetic-example" class="section level2">
+<h2>Synthetic example</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(pigauto)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(ape)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">60</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>tree <span class="ot">&lt;-</span> <span class="fu">rtree</span>(n)</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>traits <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>  <span class="at">row.names =</span> tree<span class="sc">$</span>tip.label,</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>  <span class="at">mass      =</span> <span class="fu">exp</span>(<span class="fu">rnorm</span>(n, <span class="dv">3</span>, <span class="fl">0.5</span>)),</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>  <span class="at">clutch    =</span> <span class="fu">as.integer</span>(<span class="fu">rpois</span>(n, <span class="dv">3</span>) <span class="sc">+</span> <span class="dv">1</span><span class="dt">L</span>),</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>  <span class="at">migr      =</span> <span class="fu">factor</span>(<span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;no&quot;</span>, <span class="st">&quot;yes&quot;</span>), n, <span class="at">replace =</span> <span class="cn">TRUE</span>)),</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>  <span class="at">diet      =</span> <span class="fu">factor</span>(<span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;herb&quot;</span>, <span class="st">&quot;carn&quot;</span>, <span class="st">&quot;omni&quot;</span>), n, <span class="at">replace =</span> <span class="cn">TRUE</span>)),</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>  <span class="at">threat    =</span> <span class="fu">ordered</span>(<span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">&quot;LC&quot;</span>, <span class="st">&quot;VU&quot;</span>, <span class="st">&quot;EN&quot;</span>), n, <span class="at">replace =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>                      <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">&quot;LC&quot;</span>, <span class="st">&quot;VU&quot;</span>, <span class="st">&quot;EN&quot;</span>))</span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="preprocessing" class="section level2">
+<h2>Preprocessing</h2>
+<p><code>preprocess_traits()</code> auto-detects column types from R
+classes:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>pd <span class="ot">&lt;-</span> <span class="fu">preprocess_traits</span>(traits, tree)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="co">#&gt; Auto-detected trait type &quot;count&quot; (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = &quot;continuous&quot;).</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">print</span>(pd)</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt; pigauto_data</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt;   Species: 60 </span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt;   Traits:  5 </span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt;   Types:   binary=1, categorical=1, continuous=1, count=1, ordinal=1 </span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt;   Latent columns: 7</span></span></code></pre></div>
+<p>The <code>trait_map</code> records each trait’s type, levels, latent
+column indices, and normalisation parameters:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">str</span>(pd<span class="sc">$</span>trait_map, <span class="at">max.level =</span> <span class="dv">1</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; List of 5</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt;  $ mass  :List of 9</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt;  $ clutch:List of 9</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt;  $ migr  :List of 8</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt;  $ diet  :List of 8</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt;  $ threat:List of 8</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>pd<span class="sc">$</span>trait_map<span class="sc">$</span>diet</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt; $name</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt; [1] &quot;diet&quot;</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; $type</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; [1] &quot;categorical&quot;</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; $n_latent</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; [1] 3</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; $latent_cols</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; [1] 4 5 6</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; $levels</span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; [1] &quot;carn&quot; &quot;herb&quot; &quot;omni&quot;</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; $log_transform</span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt; [1] FALSE</span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt; $mean</span></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt; [1] NA</span></span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt; $sd</span></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt; [1] NA</span></span></code></pre></div>
+</div>
+<div id="creating-splits" class="section level2">
+<h2>Creating splits</h2>
+<p>When <code>trait_map</code> is supplied,
+<code>make_missing_splits()</code> operates at the original-trait level.
+For categorical traits, all K one-hot columns are held out together:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>spl <span class="ot">&lt;-</span> <span class="fu">make_missing_splits</span>(pd<span class="sc">$</span>X_scaled, <span class="at">missing_frac =</span> <span class="fl">0.20</span>,</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>                           <span class="at">seed =</span> <span class="dv">1</span>, <span class="at">trait_map =</span> pd<span class="sc">$</span>trait_map)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Val cells (latent):&quot;</span>, <span class="fu">length</span>(spl<span class="sc">$</span>val_idx), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; Val cells (latent): 21</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Test cells (latent):&quot;</span>, <span class="fu">length</span>(spl<span class="sc">$</span>test_idx), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; Test cells (latent): 57</span></span></code></pre></div>
+</div>
+<div id="baseline-fitting" class="section level2">
+<h2>Baseline fitting</h2>
+<p>The baseline uses phylogenetic conditional MVN for continuous-family
+latent columns, and label-propagation or threshold/liability candidates
+for discrete-family columns:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>bl <span class="ot">&lt;-</span> <span class="fu">fit_baseline</span>(pd, tree, <span class="at">splits =</span> spl)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">dim</span>(bl<span class="sc">$</span>mu)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; [1] 60  7</span></span></code></pre></div>
+</div>
+<div id="fitting" class="section level2">
+<h2>Fitting</h2>
+<p><code>fit_pigauto()</code> calibrates the phylogenetic baseline for
+every trait type on the validation cells and computes the conformal
+intervals. With the default <code>gnn = FALSE</code> no network is
+trained. With <code>gnn = TRUE</code> it also trains the GNN correction,
+using type-specific losses and trait-level corruption masking when a
+<code>trait_map</code> is present.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">fit_pigauto</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  pd, tree,</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">splits =</span> spl,</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">verbose =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">1</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt; Warning: Small validation set for 5 trait(s): mass (n=2), clutch (n=4), migr</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; (n=3), diet (n=3), threat (n=3). Calibrated gate and conformal scores will be</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 3</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; trait(s) with fewer than 19 validation cells (mass (n=2), clutch (n=4), threat</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt; (n=3)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; at n_val &gt;= 19. See `?fit_pigauto` under &#39;Calibration at small n&#39; for smoothing</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt; options.</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="fu">print</span>(fit)</span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; pigauto_fit</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt;   GNN     : off (baseline only)</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt;   Species : 60 </span></span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt;   Traits  : 5 -- mass, clutch, migr, diet, threat </span></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt;   Types   : binary=1, categorical=1, continuous=1, count=1, ordinal=1 </span></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt;   Architecture: hidden_dim = 64 | k_eigen = 4 </span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt;   Best val loss : 1.169 </span></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt;   Test loss     : 1.1277 </span></span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="co">#&gt;   Gate calibration: yes</span></span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a><span class="co">#&gt;   Conformal scores: 3 traits</span></span></code></pre></div>
+</div>
+<div id="prediction-and-decoding" class="section level2">
+<h2>Prediction and decoding</h2>
+<p><code>predict()</code> decodes latent predictions back to original
+types:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(fit, <span class="at">return_se =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">head</span>(pred<span class="sc">$</span>imputed)</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt;          mass clutch migr diet threat</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; t58  9.518026      4  yes carn     LC</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt; t8   9.629026      5  yes carn     LC</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; t36 21.377761      3  yes herb     VU</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt; t4  12.202983      8  yes carn     LC</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; t22 20.067241      4   no herb     VU</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; t18 16.213927      4   no omni     EN</span></span></code></pre></div>
+<p>For binary and categorical traits, class probabilities are
+available:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># Binary: probability of &quot;yes&quot;</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="fu">head</span>(pred<span class="sc">$</span>probabilities<span class="sc">$</span>migr)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co">#&gt;       t58        t8       t36        t4       t22       t18 </span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="co">#&gt; 0.7875313 0.7875313 0.7875313 0.7875313 0.2124687 0.2124687</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="co"># Categorical: probability of each diet class</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="fu">head</span>(pred<span class="sc">$</span>probabilities<span class="sc">$</span>diet)</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co">#&gt;          carn      herb      omni</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt; t58 0.6495271 0.1752365 0.1752365</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt; t8  0.6495271 0.1752365 0.1752365</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt; t36 0.1752365 0.6495271 0.1752365</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co">#&gt; t4  0.6495271 0.1752365 0.1752365</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="co">#&gt; t22 0.1752365 0.6495271 0.1752365</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="co">#&gt; t18 0.1752365 0.1752365 0.6495271</span></span></code></pre></div>
+<p>The SE matrix provides type-appropriate uncertainty (see the
+uncertainty-mechanisms table in the GNN architecture vignette for what
+each column’s SE does and does not guarantee):</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">head</span>(pred<span class="sc">$</span>se)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="co">#&gt;     mass clutch      migr      diet threat</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt; t58    0      0 0.2124687 0.3504729      0</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt; t8     0      0 0.2124687 0.3504729      0</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt; t36    0      0 0.2124687 0.3504729      0</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt; t4     0      0 0.2124687 0.3504729      0</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt; t22    0      0 0.2124687 0.3504729      0</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt; t18    0      0 0.2124687 0.3504729      0</span></span></code></pre></div>
+</div>
+<div id="evaluation" class="section level2">
+<h2>Evaluation</h2>
+<p><code>evaluate_imputation()</code> dispatches type-specific metrics.
+Use <code>evaluation = TRUE</code> to keep validation and test values
+out of prediction:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>pred_eval <span class="ot">&lt;-</span> <span class="fu">predict</span>(fit, <span class="at">evaluation =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>ev <span class="ot">&lt;-</span> <span class="fu">evaluate_imputation</span>(pred_eval, pd<span class="sc">$</span>X_scaled, spl)</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="co">#&gt; Warning in stats::cor(t_j[ok], p_j[ok], method = &quot;spearman&quot;): the standard</span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co">#&gt; deviation is zero</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="fu">print</span>(ev)</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co">#&gt;    split  trait        type  n      rmse   pearson_r coverage_95       mae</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co">#&gt; 1    val   mass  continuous  2 0.7717314 -1.00000000           1        NA</span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="co">#&gt; 2    val clutch       count  4 1.0864233  0.75091997          NA 0.9432548</span></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="co">#&gt; 3    val   migr      binary  3        NA          NA          NA        NA</span></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="co">#&gt; 4    val   diet categorical  3        NA          NA          NA        NA</span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="co">#&gt; 5    val threat     ordinal  3 0.7035385          NA          NA        NA</span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a><span class="co">#&gt; 6   test   mass  continuous 13 0.9284875  0.25661819           1        NA</span></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a><span class="co">#&gt; 7   test clutch       count 10 0.6580699  0.06614603          NA 0.5029186</span></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a><span class="co">#&gt; 8   test   migr      binary 10        NA          NA          NA        NA</span></span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a><span class="co">#&gt; 9   test   diet categorical  6        NA          NA          NA        NA</span></span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a><span class="co">#&gt; 10  test threat     ordinal  6 1.4070770          NA          NA        NA</span></span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a><span class="co">#&gt;    spearman_rho  accuracy     brier zero_accuracy aitchison rmse_clr</span></span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a><span class="co">#&gt; 1            NA        NA        NA            NA        NA       NA</span></span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a><span class="co">#&gt; 2            NA        NA        NA            NA        NA       NA</span></span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a><span class="co">#&gt; 3            NA 0.6666667 0.2419530            NA        NA       NA</span></span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a><span class="co">#&gt; 4            NA 0.3333333        NA            NA        NA       NA</span></span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a><span class="co">#&gt; 5            NA        NA        NA            NA        NA       NA</span></span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a><span class="co">#&gt; 6            NA        NA        NA            NA        NA       NA</span></span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a><span class="co">#&gt; 7            NA        NA        NA            NA        NA       NA</span></span>
+<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a><span class="co">#&gt; 8            NA 0.5000000 0.2487776            NA        NA       NA</span></span>
+<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a><span class="co">#&gt; 9            NA 0.3333333        NA            NA        NA       NA</span></span>
+<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a><span class="co">#&gt; 10   -0.4242641        NA        NA            NA        NA       NA</span></span>
+<span id="cb10-28"><a href="#cb10-28" tabindex="-1"></a><span class="co">#&gt;    simplex_mae</span></span>
+<span id="cb10-29"><a href="#cb10-29" tabindex="-1"></a><span class="co">#&gt; 1           NA</span></span>
+<span id="cb10-30"><a href="#cb10-30" tabindex="-1"></a><span class="co">#&gt; 2           NA</span></span>
+<span id="cb10-31"><a href="#cb10-31" tabindex="-1"></a><span class="co">#&gt; 3           NA</span></span>
+<span id="cb10-32"><a href="#cb10-32" tabindex="-1"></a><span class="co">#&gt; 4           NA</span></span>
+<span id="cb10-33"><a href="#cb10-33" tabindex="-1"></a><span class="co">#&gt; 5           NA</span></span>
+<span id="cb10-34"><a href="#cb10-34" tabindex="-1"></a><span class="co">#&gt; 6           NA</span></span>
+<span id="cb10-35"><a href="#cb10-35" tabindex="-1"></a><span class="co">#&gt; 7           NA</span></span>
+<span id="cb10-36"><a href="#cb10-36" tabindex="-1"></a><span class="co">#&gt; 8           NA</span></span>
+<span id="cb10-37"><a href="#cb10-37" tabindex="-1"></a><span class="co">#&gt; 9           NA</span></span>
+<span id="cb10-38"><a href="#cb10-38" tabindex="-1"></a><span class="co">#&gt; 10          NA</span></span></code></pre></div>
+</div>
+<div id="experimental-analysis-aware-multiple-imputation" class="section level2">
+<h2>Experimental analysis-aware multiple imputation</h2>
+<p><code>multi_impute_analysis()</code> requires the downstream formula
+before imputation. The initial backend supports exactly one incomplete
+continuous covariate under MAR. It does not yet impute the mixed
+discrete and compositional outcomes shown earlier in this vignette for
+downstream inference.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="co"># Precompute nonlinear auxiliaries explicitly when required.</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>analysis_data<span class="sc">$</span>z_sq <span class="ot">&lt;-</span> analysis_data<span class="sc">$</span>z<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>mi <span class="ot">&lt;-</span> <span class="fu">multi_impute_analysis</span>(</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  <span class="at">data =</span> analysis_data, <span class="at">formula =</span> y <span class="sc">~</span> x <span class="sc">+</span> z,</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="at">missing =</span> <span class="st">&quot;x&quot;</span>, <span class="at">model =</span> <span class="st">&quot;glm&quot;</span>, <span class="at">m =</span> <span class="dv">50</span><span class="dt">L</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  <span class="at">auxiliary =</span> <span class="st">&quot;z_sq&quot;</span>, <span class="at">seed =</span> <span class="dv">1</span><span class="dt">L</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>)</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="co"># Fit a downstream model to each</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>fits <span class="ot">&lt;-</span> <span class="fu">with_imputations</span>(mi, <span class="cf">function</span>(d) {</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a>  <span class="fu">glm</span>(y <span class="sc">~</span> x <span class="sc">+</span> z, <span class="at">data =</span> d, <span class="at">family =</span> binomial)</span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>})</span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a><span class="co"># Pool with Rubin&#39;s rules</span></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a><span class="fu">pool_mi</span>(fits)</span></code></pre></div>
+<p><code>pool_mi()</code> returns a tidy data.frame with
+<code>estimate</code>, <code>std.error</code>, <code>p.value</code>,
+<code>df</code> (classical Rubin degrees of freedom by default, or
+Barnard-Rubin when <code>df_fun</code> supplies complete-data residual
+degrees of freedom), <code>fmi</code> (fraction of missing information),
+and <code>riv</code> (relative increase in variance) per
+coefficient.</p>
+<p>The <code>&quot;lm&quot;</code> branch uses proper Bayesian normal-regression
+MI, <code>&quot;glm&quot;</code> uses <code>smcfcs</code> for a binomial-logit
+model, and <code>&quot;lmer&quot;</code> uses <code>jomo.smc</code> for one
+Gaussian random intercept. Fixed effects only: multiple incomplete
+columns, missing discrete covariates, MNAR, interactions/nonlinear terms
+involving the incomplete covariate, random slopes, variance components,
+correlations, BLUPs/conditional modes, and latent loadings are
+unsupported.</p>
+<p>For prediction diagnostics, the lower-level
+<code>predict(fit, n_imputations = 5L)</code> interface returns
+stochastic datasets. These are not supported for downstream inference.
+The analysis-aware <code>multi_impute_analysis()</code> route admits its
+own narrow class of objects to <code>with_imputations()</code> and
+<code>pool_mi()</code>; the posterior route from
+<code>multi_impute()</code> supports the separately documented
+continuous-trait analyses.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

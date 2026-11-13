@@ -24,7 +24,7 @@ compare_methods(
 to create fresh splits per seed.}
 
 \item{seeds}{optional integer vector of random seeds for replication. The
-default \code{NULL} performs one run using the current RNG stream.}
+default \code{NULL} performs one run using the current random-number state.}
 
 \item{epochs}{number of training epochs.}
 
@@ -35,16 +35,22 @@ default \code{NULL} performs one run using the current RNG stream.}
 GNN-corrected model even though \code{\link{fit_pigauto}} and
 \code{\link{impute}} default to \code{gnn = FALSE}.}
 
-\item{...}{additional arguments passed to \code{\link{fit_pigauto}}.}
+\item{...}{additional arguments passed to \code{\link{fit_pigauto}}.
+Baseline controls supplied here do not change the already fitted
+baseline used for held-out comparison.}
 }
 \value{
 A \code{data.frame} with columns: \code{method}, \code{trait},
 \code{type}, \code{metric}, \code{value}, \code{rep}.
 }
 \description{
-Runs a full comparison of the BM baseline and pigauto (with attention +
-calibration) over multiple random seeds.  Returns a tidy data.frame
-suitable for plotting or downstream analysis.
+Compares the BM baseline and pigauto (with attention and calibration).
+The default performs one run using the current random-number state; supply a
+vector of seeds for replicated runs. Returns a tidy data.frame
+suitable for plotting or downstream analysis. This helper uses the default
+baseline controls, including estimated continuous-family lambda and
+automatic exact/per-column prediction routing. Arguments in \code{...} do not
+change the already-fitted baseline used for the held-out comparison.
 }
 \details{
 For each seed the function:

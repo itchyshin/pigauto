@@ -1,18 +1,23 @@
 #' Analysis-aware multiple imputation for narrow regression models
 #'
 #' Generate multiple imputations conditional on a specified downstream
-#' regression model. Validity requires MAR, a correctly specified conditional
-#' imputation model, and adequate SMCFCS or jomo convergence. This experimental
-#' interface is deliberately narrow: exactly one continuous covariate may
-#' contain missing values, while the outcome, all other predictors, auxiliary
-#' variables, and any grouping variable must be fully observed.
+#' regression model. All routes rely on missing at random (MAR) and a correctly
+#' specified conditional imputation model. The `glm` and `lmer` routes use
+#' SMCFCS and jomo, respectively, so their sampler convergence must also be
+#' checked. The `lm` route uses a separate Bayesian Normal-regression sampler.
+#' This experimental interface is deliberately narrow: exactly one continuous
+#' covariate may contain missing values, while the outcome, all other
+#' predictors, auxiliary variables, and any grouping variable must be fully
+#' observed.
 #'
 #' @param data A data frame containing the analysis variables.
 #' @param formula A two-sided additive model formula. For `model = "lmer"`,
 #'   exactly one random-intercept term of the form `(1 | group)` is required.
-#' @param missing A single character string naming the continuous numeric
-#'   covariate to impute. It must occur as a main-effect predictor in
-#'   `formula` and must be the only column in `data` containing missing values.
+#' @param missing A single character string naming the double-precision
+#'   continuous covariate to impute. Integer storage is rejected: for a
+#'   scientifically continuous whole-number measurement, convert it first
+#'   with `data$x <- as.numeric(data$x)`. It must occur as a main-effect
+#'   predictor in `formula` and be the only column containing missing values.
 #' @param model One of `"lm"`, `"glm"`, or `"lmer"`. The `"glm"` route is
 #'   restricted to binomial-logit regression. The `"lmer"` route is restricted
 #'   to a Gaussian random-intercept model.
@@ -33,8 +38,9 @@
 #'   Its `datasets` component is a list of `m` completed data frames compatible
 #'   with [with_imputations()] and [pool_mi()]. The object also records the
 #'   analysis model, formula, engine, controls, engine version, seed, runtime
-#'   provenance, and imputed-variable metadata. Any engine warning aborts the
-#'   call instead of returning an inference-ready object. `mi_workflow` is a
+#'   provenance, and imputed-variable metadata. For the `"glm"` and `"lmer"`
+#'   routes, any engine warning aborts the call instead of returning an object.
+#'   The `"lm"` route does not apply this rule. `mi_workflow` is a
 #'   stable analysis-aware provenance marker propagated by [with_imputations()]
 #'   and checked by [pool_mi()].
 #'
@@ -579,6 +585,13 @@ multi_impute_analysis <- function(data, formula, missing,
   invisible(TRUE)
 }
 
+#' @rdname multi_impute_analysis
+#' @param x An analysis-aware MI object.
+#' @param ... Ignored. Included for compatibility with the base \code{print()}
+#'   generic.
+#' @section Printing:
+#' Prints the dataset count, engine, formula and metadata. This display does not validate an analysis. The `...` argument is currently unused.
+#' @return The print method returns `x` invisibly.
 #' @export
 print.pigauto_analysis_mi <- function(x, ...) {
   warning_count <- length(x$diagnostics$warnings %||% character())

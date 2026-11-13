@@ -2,6 +2,7 @@
 % Please edit documentation in R/with_imputations.R
 \name{with_imputations}
 \alias{with_imputations}
+\alias{print.pigauto_mi_fits}
 \title{Fit a downstream model on every imputed dataset}
 \usage{
 with_imputations(
@@ -11,6 +12,8 @@ with_imputations(
   .progress = interactive(),
   .on_error = c("continue", "stop")
 )
+
+\method{print}{pigauto_mi_fits}(x, ...)
 }
 \arguments{
 \item{mi}{A \code{pigauto_analysis_mi} object returned by
@@ -38,6 +41,8 @@ unlisted analysis model has passed the analysis-aware validation gate.}
 \code{"continue"}, errors from \code{.f} are captured per imputation and the
 loop proceeds; a warning at the end summarises failures. When
 \code{"stop"}, the first error aborts the entire run.}
+
+\item{x}{A list of downstream imputation fits.}
 }
 \value{
 A list of length \code{M} with class \code{"pigauto_mi_fits"}. Each
@@ -45,28 +50,36 @@ element is either a model fit or, if \code{.f} errored on that
 imputation and \code{.on_error = "continue"}, an object of class
 \code{"pigauto_mi_error"} containing the captured condition. \code{\link[=pool_mi]{pool_mi()}}
 filters error elements automatically.
+
+The print method returns \code{x} invisibly.
 }
 \description{
 Apply a user-supplied model-fitting function \code{.f} to each of the \code{M}
 complete datasets stored in an analysis-aware MI object and return the list
-of fits. This is the supported fitting entry for
+of fits. This is the documented software fitting entry for
 \code{\link[=multi_impute_analysis]{multi_impute_analysis()}} and for
 \code{\link[=multi_impute]{multi_impute()}} with \code{draws_method = "posterior"}. Prediction-diagnostic
 (\code{"conformal"}, \code{"mc_dropout"}) and posterior-tree sensitivity completions
 stop with an actionable error before any model is fitted. The workflow is
 experimental and limited to fixed-effect coefficients and their covariance
-matrices.
+matrices. Passing software eligibility checks means the package permits
+fitting; it does not establish inferential performance across tested
+regimes or compatibility with every downstream model.
 }
 \section{Posterior draws and congeniality}{
 
 The \code{draws_method = "posterior"} completions come from a linear-Gaussian
 phylogenetic mixed model of the imputed traits only, on the scale where
 they were imputed (the log scale for traits log-transformed by
-\code{log_transform}). They are proper imputations for analyses that are
-linear in the imputed traits on that scale and whose variables are all
-among the imputed traits, for example a phylogenetic regression of one
-imputed trait on others (on the log scale for log-transformed traits).
-Not covered: covariates from outside the imputed traits, nonlinear terms
+\code{log_transform}). The documented software route permits fitting analyses
+that are linear in the imputed traits on that scale and whose variables
+are among the imputed traits. This eligibility does not establish that an
+analysis model is compatible with the imputation model or that inference
+is calibrated. In the registered validation, five tested posterior slope
+regimes failed and three were indeterminate; see the
+\href{https://itchyshin.github.io/pigauto/articles/validation-results.html#inferential-results}{registered inferential results}.
+The route has not established support outside its measured regimes. Not
+covered: covariates from outside the imputed traits, nonlinear terms
 (such as squares) or interactions among imputed traits, and analysing a
 log-transformed trait on its raw scale. The formula passed to \code{.f} is not
 checked; this is the analyst's responsibility. Plug-in draws from
@@ -74,11 +87,19 @@ checked; this is the analyst's responsibility. Plug-in draws from
 refused.
 }
 
+\section{Printing}{
+
+Prints successful and failed fit counts and the first successful fit class. Failed elements remain in the list until pooling removes them. The \code{...} argument is currently unused.
+}
+
 \examples{
 \donttest{
 dat <- data.frame(y = stats::rnorm(30L), x = stats::rnorm(30L),
                   z = stats::rnorm(30L))
 dat$x[seq(3L, 30L, by = 5L)] <- NA_real_
+# Workflow example only: m = 2L is not an analysis recommendation.
+# Choose enough imputations to make Monte Carlo error small relative to
+# the standard errors you report.
 mi <- multi_impute_analysis(
   data = dat, formula = y ~ x + z, missing = "x",
   model = "lm", m = 2L

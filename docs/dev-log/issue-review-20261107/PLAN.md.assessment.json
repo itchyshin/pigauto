@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "f9679824987bfc879ebb59cdc56bcbd194b3ac4b0aed30d83aa13363e4314c92",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex",
+  "method": "Separate reading against source, test/check logs, posted comment receipts and independent review findings",
+  "genre": "execution scope record",
+  "coverage": "whole document",
+  "score": 3,
+  "style_status": "known",
+  "score_reason": "Concrete source and evidence details; required section structure accounts for repeated report scaffolding",
+  "confidence": "moderate",
+  "confidence_reason": "Self-assessment with inspected source evidence; no calibrated style benchmark",
+  "examples": [
+    {
+      "location": "line 34",
+      "cue": "Located concrete verification or scope statement",
+      "impact": "Limits the claim to what was checked",
+      "repair": "No change needed",
+      "line": 34,
+      "quote": "Acceptance: tests and source checks support each claimed fix, documentation"
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "No claim of broad calibration or method superiority; unresolved scientific questions remain explicit",
+  "facts_gate": "pass",
+  "facts_gate_reason": "File list, source/check outcomes and issue comments compared with retained evidence; CI remains explicitly pending",
+  "references_gate": "not_applicable",
+  "references_gate_reason": "No external literature claim; repository pointers and PR identity checked as facts",
+  "date": "2026-11-07",
+  "calibration_status": "No calibration examples consulted",
+  "interpretation": "perceived_style_not_authorship"
+}

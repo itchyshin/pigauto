@@ -11,7 +11,8 @@ check_pigauto(
   trait_types = NULL,
   multi_proportion_groups = NULL,
   covariates = NULL,
-  gnn = FALSE
+  gnn = FALSE,
+  ordinal_levels = NULL
 )
 }
 \arguments{
@@ -19,7 +20,8 @@ check_pigauto(
 
 \item{tree}{A \code{phylo} tree.}
 
-\item{species_col}{Optional column naming species identities.}
+\item{species_col}{Optional name of the column in the \code{traits} data
+frame that contains species identities.}
 
 \item{trait_types}{Optional named type overrides passed to
 \code{\link[=preprocess_traits]{preprocess_traits()}}.}
@@ -33,10 +35,16 @@ check_pigauto(
 \item{gnn}{Whether the planned imputation will use the graph neural network.
 The default \code{FALSE} skips the torch runtime probe, matching \code{\link[=impute]{impute()}}'s
 default. Set \code{TRUE} to include the torch runtime in the preflight.}
+
+\item{ordinal_levels}{Optional named list giving the order of ordinal
+levels, applied before type detection so the report shows the same
+types the matching \code{\link[=impute]{impute()}} call will use. Invalid declarations are
+reported as errors rather than thrown. See \code{\link[=impute]{impute()}} / \code{\link[=read_traits]{read_traits()}}.}
 }
 \value{
 A list of class \code{pigauto_check} containing a schema version, status,
-stable input fingerprint, input summaries, and structured messages.
+readiness flag, stable input fingerprint, input summaries, and structured
+messages.
 }
 \description{
 Inspect declared inputs without constructing a phylogenetic graph or fitting
@@ -45,10 +53,37 @@ scale visible before calling \code{\link[=impute]{impute()}}. Its fingerprint id
 declared input object for comparison within a workflow; it is not a security
 hash.
 }
+\section{Reading the result}{
+
+Printing the result shows its status and, when present, up to three
+message/action pairs. Inspect \code{check$messages} for the complete table and
+follow its \code{action} column. The four status values mean:
+\itemize{
+\item \code{"ready"}: the implemented checks found no errors or warnings.
+\item \code{"ready_with_warnings"}: review the warnings before deciding to fit.
+\item \code{"error"}: repair the reported problems before calling \code{\link[=impute]{impute()}}.
+\item \code{"not_needed"}: all matched target cells are observed, so no imputation
+is needed. Use \code{\link[=cross_validate]{cross_validate()}} to assess prediction instead.
+}
+
+\code{check$ready} is \code{TRUE} for \code{"ready"} and \code{"ready_with_warnings"}: the
+current input checks found no errors, though warnings may remain. It is
+\code{FALSE} for \code{"error"} and \code{"not_needed"}. Review any warnings and assess
+whether a model is scientifically suitable for your data separately.
+Inspect \code{check$species} and \code{check$traits} to confirm species matching
+and trait declarations.
+}
+
 \examples{
-\donttest{
 tree <- ape::read.tree(text = "((a:1,b:1):1,c:2);")
 traits <- data.frame(x = c(1, NA, 3), row.names = tree$tip.label)
-check_pigauto(traits, tree)
-}
+check <- check_pigauto(traits, tree)
+check
+check$ready
+check$messages
+
+# An input error is returned as a report with a suggested action.
+bad_tree <- tree
+bad_tree$edge.length <- NULL
+check_pigauto(traits, bad_tree)
 }

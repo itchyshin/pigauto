@@ -1,7 +1,8 @@
 #' k-fold cross-validation for pigauto trait imputation
 #'
-#' Performs stratified k-fold cross-validation by rotating which cells
-#' serve as the test set.  Returns per-fold and aggregated metrics.
+#' Evaluates trait-imputation performance by rotating held-out values through
+#' k test folds. Hold out trait cells, whole species, or rooted clades.
+#' Returns per-fold and aggregated metrics.
 #'
 #' @param data pigauto_data object (output of \code{\link{preprocess_traits}}).
 #' @param tree phylo object.
@@ -10,12 +11,42 @@
 #'   \code{NULL} performs one run using the current RNG stream.
 #' @param epochs integer.  Training epochs per fold (default 500).
 #' @param verbose logical.  Print progress (default TRUE).
+#' @param holdout One of \code{"cell"} (default), \code{"species"},
+#'   or \code{"clade"}. Species and clade modes mask every trait and
+#'   every observation of each held-out species. They require at least three
+#'   folds and retain the full tree, including held-out tips.
 #' @param ... Additional arguments passed to \code{\link{fit_pigauto}}
 #'   (e.g. \code{hidden_dim}, \code{k_eigen}, \code{use_attention}).
-#'   \code{cross_validate()} precomputes one graph shared across folds and uses
-#'   \code{k_eigen = 8L} for that graph when \code{k_eigen} is omitted. An
-#'   explicit \code{k_eigen} is used for the shared graph and forwarded to
-#'   \code{fit_pigauto()}.
+#' @details
+#' \code{cross_validate()} precomputes one graph shared across folds and uses
+#' \code{k_eigen = 8L} for that graph when \code{k_eigen} is omitted. An
+#' explicit \code{k_eigen} is used for the shared graph and forwarded to
+#' \code{fit_pigauto()}. Cell folds divide observed cells within each trait.
+#' Species folds assign entire species at random; clade folds partition the
+#' rooted tree into k disjoint rooted subtrees by repeatedly splitting the
+#' largest eligible subtree. A rooted \code{ape::phylo} representation is
+#' required, as determined by \code{ape::is.rooted()}; a root polytomy may
+#' require a root edge. Clade folds can be unequal in size. Multifurcating
+#' trees can defeat this greedy partition even when a partition exists. None
+#' of the modes are
+#' stratified by outcome class. The next fold is used for validation, and the
+#' rest for training. Grouped folds require at least two training observations
+#' and two training species for each trait.
+#'
+#' In species and clade modes, trait centering, scaling, observed ranges, and
+#' other trait-map statistics are recalculated using the training rows only.
+#' The trait types, factor levels and log-transform choices from the supplied
+#' preprocessed data remain fixed across folds. Specify these in advance when
+#' they would otherwise be inferred from held-out values. The phylogeny and
+#' any supplied covariates remain available for held-out species. Grouped
+#' modes require data freshly constructed by the current preprocess_traits().
+#' Cell-mode
+#' preprocessing retains its existing whole-data behaviour.
+#' Interpret each metric on its documented scale in
+#' \code{\link{evaluate_imputation}}; continuous and count RMSE use latent
+#' scales. Conformal coverage is calculated separately after predictions are
+#' decoded. Clade-structured holdouts need not be exchangeable with the
+#' validation cells, so nominal conformal coverage is not guaranteed.
 #' @return A list of class \code{"pigauto_cv"} with:
 #'   \describe{
 #'     \item{results}{Data.frame with columns: fold, rep, trait, type,
@@ -26,6 +57,9 @@
 #'       folds (if available).}
 #'     \item{k}{Number of folds.}
 #'     \item{n_reps}{Number of replicates.}
+#'     \item{holdout}{The chosen holdout mode.}
+#'     \item{fold_assignments}{For grouped modes, a data frame identifying the
+#'       held-out species for each fold and replicate; NULL for cell mode.}
 #'   }
 #' @examples
 #' \donttest{
@@ -40,16 +74,24 @@
 #'                      use_transformer_blocks = FALSE)
 #' print(cv)
 #' summary(cv)
+#' # Whole-species validation, with the full tree retained:
+#' cv_species <- cross_validate(preprocess_traits(traits, tree), tree,
+#'                              k = 3L, seeds = 1L, holdout = "species",
+#'                              gnn = FALSE, verbose = FALSE)
+#' cv_species$fold_assignments
 #' }
 #' @export
 cross_validate <- function(data, tree, k = 5L, seeds = NULL,
-                           epochs = 500L, verbose = TRUE, ...) {
+                           epochs = 500L, verbose = TRUE,
+                           holdout = c("cell", "species", "clade"), ...) {
+  holdout <- match.arg(holdout)
   if (!inherits(data, "pigauto_data")) {
     stop("'data' must be a pigauto_data object (output of preprocess_traits).")
   }
   if (!inherits(tree, "phylo")) stop("'tree' must be a phylo object.")
   k <- as.integer(k)
   if (k < 2L) stop("'k' must be >= 2.")
+  if (holdout != "cell" && k < 3L) stop("Grouped holdouts require k >= 3.", call. = FALSE)
   if (is.null(seeds)) {
     seeds <- list(NULL)
   } else {
@@ -74,12 +116,22 @@ cross_validate <- function(data, tree, k = 5L, seeds = NULL,
 
   all_results   <- list()
   all_conformal <- list()
+  all_assignments <- list()
 
   for (rep_i in seq_along(seeds)) {
     seed <- seeds[[rep_i]]
 
     # Create k non-overlapping folds from observed cells
-    folds <- make_cv_folds(X_scaled, k, seed, trait_map)
+    folds <- if (holdout == "cell") make_cv_folds(X_scaled, k, seed, trait_map) else
+      make_grouped_cv_folds(data, tree, k, seed, holdout)
+    if (holdout != "cell") {
+      species_folds <- attr(folds, "species_folds")
+      for (i in seq_len(k)) {
+        spp <- data$species_names[sort(species_folds[[i]])]
+        all_assignments[[length(all_assignments) + 1L]] <- data.frame(
+          rep = rep_i, fold = i, species = spp, stringsAsFactors = FALSE)
+      }
+    }
 
     for (fold_i in seq_len(k)) {
       if (verbose) {
@@ -100,9 +152,14 @@ cross_validate <- function(data, tree, k = 5L, seeds = NULL,
         p        = p
       )
 
+      # Re-estimate trait scaling on training rows for grouped holdouts.
+      fold_data <- if (holdout == "cell") data else prepare_grouped_cv_data(data, splits)
+      fold_truth <- fold_data$X_scaled
+      fold_trait_map <- fold_data$trait_map
+
       # Fit pigauto for this fold
       fit <- fit_pigauto(
-        data    = data,
+        data    = fold_data,
         tree    = tree,
         splits  = splits,
         graph   = graph,
@@ -120,7 +177,7 @@ cross_validate <- function(data, tree, k = 5L, seeds = NULL,
       # Evaluate using evaluate_imputation (test split)
       eval_df <- evaluate_imputation(
         pred   = pred,
-        truth  = X_scaled,
+        truth  = fold_truth,
         splits = splits
       )
 
@@ -136,7 +193,7 @@ cross_validate <- function(data, tree, k = 5L, seeds = NULL,
       # Conformal coverage (if available)
       if (!is.null(fit$conformal_scores) && !is.null(trait_map)) {
         cov_df <- compute_conformal_coverage_fold(
-          pred, X_scaled, splits$test_idx, trait_map, fold_i, rep_i
+          pred, fold_truth, splits$test_idx, fold_trait_map, fold_i, rep_i
         )
         if (!is.null(cov_df)) {
           all_conformal[[length(all_conformal) + 1L]] <- cov_df
@@ -173,7 +230,9 @@ cross_validate <- function(data, tree, k = 5L, seeds = NULL,
       summary            = summary_df,
       conformal_coverage = conformal_coverage,
       k                  = k,
-      n_reps             = length(seeds)
+      n_reps             = length(seeds),
+      holdout            = holdout,
+      fold_assignments   = if (length(all_assignments)) do.call(rbind, all_assignments) else NULL
     ),
     class = "pigauto_cv"
   )
@@ -237,7 +296,9 @@ make_cv_folds <- function(X_scaled, k, seed, trait_map = NULL) {
 
 pivot_eval_to_long <- function(eval_df, fold, rep) {
   metric_cols <- c("rmse", "pearson_r", "coverage_95", "mae",
-                   "spearman_rho", "accuracy", "brier")
+                   "spearman_rho", "accuracy", "brier", "zero_accuracy",
+                   "aitchison", "rmse_clr", "simplex_mae")
+  metric_cols <- intersect(metric_cols, names(eval_df))
   rows <- list()
 
   for (i in seq_len(nrow(eval_df))) {
@@ -364,6 +425,23 @@ compute_conformal_coverage_fold <- function(pred, X_scaled, test_idx,
 
 # ---- Print and summary methods -----------------------------------------------
 
+#' Print a cross-validation summary.
+#'
+#' Displays the number of folds and replicates, then reports each trait's
+#' mean and standard deviation for every metric. Returns \code{x} invisibly.
+#' Additional arguments are ignored by this print method.
+#'
+#' @param x A \code{pigauto_cv} object returned by \code{cross_validate()}.
+#' @rdname cross_validate
+#' @section Printing:
+#' \code{print.pigauto_cv()} reports \code{k} folds and the replicate count,
+#' followed by each trait's metric means and SDs. Displayed \code{n} is the
+#' number of represented fold-by-replicate metric rows, not just the fold
+#' count. This count includes rows with missing metric values; means and
+#' SDs omit those values. When available, a separate conformal block shows
+#' mean coverage and its SD against a nominal 95% target; the target is
+#' not a guarantee. Empty summaries print \dQuote{No results.} The method
+#' ignores \code{...} and returns \code{x} invisibly.
 #' @export
 print.pigauto_cv <- function(x, ...) {
   cat(sprintf("%d-fold cross-validation (%d replicate%s)\n",
@@ -411,6 +489,25 @@ print.pigauto_cv <- function(x, ...) {
   invisible(x)
 }
 
+#' Print a compact summary of cross-validation results
+#'
+#' @rdname cross_validate
+#' @aliases summary.pigauto_cv
+#' @usage \method{summary}{pigauto_cv}(object, ...)
+#' @param object A \code{pigauto_cv} object returned by
+#'   \code{cross_validate()}.
+#' @param ... Additional arguments forwarded by \code{cross_validate()} to \code{fit_pigauto()}; ignored by the print and summary methods.
+#' @return Invisibly returns the summary data frame stored in
+#'   \code{object$summary}.
+#' @section Summary method:
+#' \code{summary.pigauto_cv()} prints a compact per-trait table with RMSE,
+#' Pearson \eqn{r} for continuous traits, Spearman \eqn{\rho} for ordinal
+#' traits, and accuracy when returned (binary/categorical accuracy or
+#' multi-proportion dominant-component accuracy). A dash means the metric
+#' row is absent. A present but nonfinite metric may display \code{NA} or
+#' \code{NaN}. An empty summary prints \dQuote{No results.} The full
+#' \code{object$summary} data frame, which can contain metrics omitted from
+#' this display, is returned invisibly. The method ignores \code{...}.
 #' @export
 summary.pigauto_cv <- function(object, ...) {
   cat(sprintf("%d-fold cross-validation (%d replicate%s)\n",
@@ -460,4 +557,112 @@ summary.pigauto_cv <- function(object, ...) {
   }
 
   invisible(object$summary)
+}
+
+# Assign complete species or complete rooted subtrees to folds. Every latent
+# column and every observation belonging to a selected species is masked.
+make_grouped_cv_folds <- function(data, tree, k, seed, holdout) {
+  if (!is.null(seed)) set.seed(seed)
+  if (!identical(data$species_names, tree$tip.label)) {
+    stop("Data species must match tree tips in the same order.", call. = FALSE)
+  }
+  n_tip <- length(tree$tip.label)
+  if (k > n_tip) stop("k cannot exceed the number of species.", call. = FALSE)
+  if (holdout == "species") {
+    assignment <- sample(rep(seq_len(k), length.out = n_tip))
+    species_folds <- lapply(seq_len(k), function(i) which(assignment == i))
+  } else {
+    if (!ape::is.rooted(tree)) stop("A rooted tree is required for clade holdouts.", call. = FALSE)
+    edge <- tree$edge
+    roots <- setdiff(unique(edge[, 1L]), edge[, 2L])
+    if (length(roots) != 1L) stop("A rooted tree is required for clade holdouts.", call. = FALSE)
+    children <- split(edge[, 2L], edge[, 1L])
+    descendants <- function(node) {
+      stack <- integer(nrow(edge) + 1L)
+      stack[1L] <- node
+      top <- 1L
+      tips <- integer(n_tip)
+      n_found <- 0L
+      while (top > 0L) {
+        current <- stack[top]
+        top <- top - 1L
+        if (current <= n_tip) {
+          n_found <- n_found + 1L
+          tips[n_found] <- current
+        } else {
+          ch <- children[[as.character(current)]]
+          stack[top + seq_along(ch)] <- ch
+          top <- top + length(ch)
+        }
+      }
+      tips[seq_len(n_found)]
+    }
+    nodes <- roots
+    while (length(nodes) < k) {
+      possible <- which(vapply(nodes, function(node) {
+        ch <- children[[as.character(node)]]
+        length(ch) >= 2L && length(nodes) + length(ch) - 1L <= k
+      }, logical(1)))
+      if (!length(possible)) stop("The greedy clade partition did not find k rooted clades; choose another k or resolve polytomies.", call. = FALSE)
+      sizes <- vapply(nodes[possible], function(node) length(descendants(node)), integer(1))
+      choice <- possible[which.max(sizes)]
+      nodes <- c(nodes[-choice], children[[as.character(nodes[choice])]])
+    }
+    species_folds <- lapply(nodes, descendants)
+  }
+  n <- nrow(data$X_scaled)
+  p <- ncol(data$X_scaled)
+  row_species <- if (isTRUE(data$multi_obs)) data$obs_to_species else seq_len(n)
+  folds <- lapply(species_folds, function(species) {
+    rows <- which(row_species %in% species)
+    idx <- as.integer(as.vector(outer(rows, seq_len(p) - 1L, function(r, j) r + j * n)))
+    idx <- idx[!is.na(data$X_scaled[idx])]
+    if (!length(idx)) {
+      stop("A grouped fold has no observed trait values; use fewer folds or a different seed.", call. = FALSE)
+    }
+    idx
+  })
+  attr(folds, "species_folds") <- species_folds
+  folds
+}
+
+# Holdout rows are hidden when estimating trait-specific transformations.
+# The original trait types, factor levels, and log-transform choices are
+# treated as an input schema; the numerical scaling is learned per fold.
+prepare_grouped_cv_data <- function(data, splits) {
+  if (is.null(data$X_original) || is.null(data$preprocess_center) || is.null(data$preprocess_scale)) {
+    stop("Grouped cross-validation requires a freshly preprocessed data object; rerun preprocess_traits().", call. = FALSE)
+  }
+  n <- nrow(data$X_scaled)
+  held_rows <- unique(((c(splits$val_idx, splits$test_idx) - 1L) %% n) + 1L)
+  training <- data$X_original
+  training[held_rows, ] <- NA
+  tmap <- data$trait_map
+  for (tm in tmap) {
+    cols <- if (tm$type == "multi_proportion") tm$input_cols else tm$name
+    observed <- stats::complete.cases(training[, cols, drop = FALSE])
+    if (sum(observed) < 2L) {
+      stop("Trait ", sQuote(tm$name), " has fewer than two training observations in a grouped fold.", call. = FALSE)
+    }
+    row_species <- if (isTRUE(data$multi_obs)) data$obs_to_species else seq_len(n)
+    if (length(unique(row_species[observed])) < 2L) {
+      stop("Trait ", sQuote(tm$name), " has fewer than two training species in a grouped fold.", call. = FALSE)
+    }
+  }
+  standalone <- tmap[vapply(tmap, function(x) x$type != "multi_proportion", logical(1))]
+  types <- vapply(standalone, `[[`, character(1), "type")
+  groups <- lapply(tmap[vapply(tmap, function(x) x$type == "multi_proportion", logical(1))], `[[`, "input_cols")
+  logs <- vapply(standalone, function(x) isTRUE(x$log_transform), logical(1))
+  new_map <- build_trait_map(training, types, names(logs)[logs],
+                             data$preprocess_center, data$preprocess_scale,
+                             multi_proportion_groups = groups)
+  if (!identical(vapply(tmap, `[[`, integer(1), "n_latent"),
+                 vapply(new_map, `[[`, integer(1), "n_latent"))) {
+    stop("Grouped fold changed the trait schema.", call. = FALSE)
+  }
+  data$trait_map <- new_map
+  data$X_scaled <- encode_to_latent(data$X_original, new_map)$X
+  data$means <- vapply(new_map, function(x) if (length(x$mean) == 1L) x$mean else NA_real_, numeric(1))
+  data$sds <- vapply(new_map, function(x) if (length(x$sd) == 1L) x$sd else NA_real_, numeric(1))
+  data
 }

@@ -8,9 +8,14 @@
 #'
 #' @param traits A data.frame of traits, with row names or a species column.
 #' @param tree A `phylo` tree.
-#' @param species_col Optional column naming species identities.
+#' @param species_col Optional name of the column in the \code{traits} data
+#'   frame that contains species identities.
 #' @param trait_types Optional named type overrides passed to
 #'   [preprocess_traits()].
+#' @param ordinal_levels Optional named list giving the order of ordinal
+#'   levels, applied before type detection so the report shows the same
+#'   types the matching [impute()] call will use. Invalid declarations are
+#'   reported as errors rather than thrown. See [impute()] / [read_traits()].
 #' @param multi_proportion_groups Optional named composition groups passed to
 #'   [preprocess_traits()].
 #' @param covariates Optional environmental covariates passed to
@@ -19,26 +24,52 @@
 #'   The default `FALSE` skips the torch runtime probe, matching [impute()]'s
 #'   default. Set `TRUE` to include the torch runtime in the preflight.
 #' @return A list of class `pigauto_check` containing a schema version, status,
-#'   stable input fingerprint, input summaries, and structured messages.
+#'   readiness flag, stable input fingerprint, input summaries, and structured
+#'   messages.
+#' @section Reading the result:
+#' Printing the result shows its status and, when present, up to three
+#' message/action pairs. Inspect `check$messages` for the complete table and
+#' follow its `action` column. The four status values mean:
+#'
+#' * `"ready"`: the implemented checks found no errors or warnings.
+#' * `"ready_with_warnings"`: review the warnings before deciding to fit.
+#' * `"error"`: repair the reported problems before calling [impute()].
+#' * `"not_needed"`: all matched target cells are observed, so no imputation
+#'   is needed. Use [cross_validate()] to assess prediction instead.
+#'
+#' `check$ready` is `TRUE` for `"ready"` and `"ready_with_warnings"`: the
+#' current input checks found no errors, though warnings may remain. It is
+#' `FALSE` for `"error"` and `"not_needed"`. Review any warnings and assess
+#' whether a model is scientifically suitable for your data separately.
+#' Inspect `check$species` and `check$traits` to confirm species matching
+#' and trait declarations.
 #' @examples
-#' \donttest{
 #' tree <- ape::read.tree(text = "((a:1,b:1):1,c:2);")
 #' traits <- data.frame(x = c(1, NA, 3), row.names = tree$tip.label)
-#' check_pigauto(traits, tree)
-#' }
+#' check <- check_pigauto(traits, tree)
+#' check
+#' check$ready
+#' check$messages
+#'
+#' # An input error is returned as a report with a suggested action.
+#' bad_tree <- tree
+#' bad_tree$edge.length <- NULL
+#' check_pigauto(traits, bad_tree)
 #' @export
 check_pigauto <- function(traits, tree, species_col = NULL,
                           trait_types = NULL,
                           multi_proportion_groups = NULL,
                           covariates = NULL,
-                          gnn = FALSE) {
+                          gnn = FALSE,
+                          ordinal_levels = NULL) {
   if (!is.logical(gnn) || length(gnn) != 1L || is.na(gnn)) {
     stop("`gnn` must be TRUE or FALSE.", call. = FALSE)
   }
   .check_pigauto_internal(
     traits, tree, species_col, trait_types, multi_proportion_groups,
     log_transform = TRUE, covariates = covariates,
-    probe_runtime = isTRUE(gnn)
+    probe_runtime = isTRUE(gnn),
+    ordinal_levels = ordinal_levels
   )$check
 }
 
@@ -121,7 +152,8 @@ check_pigauto <- function(traits, tree, species_col = NULL,
                                     trait_types = NULL,
                                     multi_proportion_groups = NULL,
                                     log_transform = TRUE, covariates = NULL,
-                                    probe_runtime = TRUE) {
+                                    probe_runtime = TRUE,
+                                    ordinal_levels = NULL) {
   messages <- .check_pigauto_messages()
   empty <- list(names = character(), examples = character(), count = 0L,
                 consequence = "")
@@ -134,6 +166,23 @@ check_pigauto <- function(traits, tree, species_col = NULL,
                                     "`tree` must inherit from `phylo`.", "Supply an ape phylo tree.")
   }
   if (nrow(messages) > 0L) return(.check_pigauto_finish(messages, empty, empty, empty, empty, empty, NULL))
+
+  # Apply declared ordinal orders before fingerprinting and preprocessing, so
+  # the report describes the same coerced input the matching impute() call
+  # will fit. check_pigauto() reports input problems instead of throwing, so
+  # a bad declaration becomes an error entry here.
+  if (!is.null(ordinal_levels)) {
+    coerced <- tryCatch(.apply_ordinal_levels(traits, ordinal_levels),
+                        error = function(e) e)
+    if (inherits(coerced, "error")) {
+      messages <- .check_pigauto_add(
+        messages, "error", "ordinal_levels_invalid", "ordinal_levels",
+        conditionMessage(coerced),
+        "Repair `ordinal_levels` and run check_pigauto() again.")
+      return(.check_pigauto_finish(messages, empty, empty, empty, empty, empty, NULL))
+    }
+    traits <- coerced
+  }
 
   fingerprint <- .check_pigauto_fingerprint(traits, tree, species_col, trait_types,
                                              multi_proportion_groups, covariates)
@@ -344,6 +393,11 @@ check_pigauto <- function(traits, tree, species_col = NULL,
 #' @param x A `pigauto_check` object.
 #' @param ... Unused.
 #' @return `x`, invisibly.
+#' @section Printing:
+#' Always prints the status line. When messages are present, also prints
+#' their count and at most the first three text/action pairs. With no
+#' messages, only the status line is printed. Inspect \code{x$messages}
+#' for the complete structured message table; \code{...} is unused.
 #' @export
 print.pigauto_check <- function(x, ...) {
   cat("pigauto input check:", x$status, "\n")

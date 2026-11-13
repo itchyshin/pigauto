@@ -1,8 +1,10 @@
 #' Plot training history (ggplot2, deprecated)
 #'
 #' @description
-#' Deprecated. Use the base-R S3 method instead:
-#' \code{plot(fit, type = "history")}.
+#' Deprecated. If the fit has GNN training history, use the base-R S3 method
+#' with \code{type = "history"}. The default \code{gnn = FALSE} fit has no
+#' training history; for that fit, use \code{plot(fit)} to show its gates or
+#' request \code{type = "gates"} explicitly.
 #'
 #' Produces a ggplot2 validation loss training curve.
 #'
@@ -45,14 +47,21 @@ plot_history_gg <- function(x, ...) {
 }
 
 
-#' Plot uncertainty ribbons for imputed trait values
+#' Plot predictions and uncertainty displays for imputed trait values
 #'
 #' @description
-#' Plots conformal prediction intervals when present, otherwise an
-#' approximate \code{prediction +/- 1.96 * SE} ribbon, sorted by predicted
-#' value.  If \code{truth} is supplied, observed values are overlaid as
-#' points.  Works for continuous, count, and ordinal traits.  For binary
-#' traits, plots predicted probabilities with an uncertainty ribbon.
+#' For continuous, count, and ordinal traits, plots conformal prediction
+#' intervals when present; otherwise it shows an approximate
+#' \code{prediction +/- 1.96 * SE} ribbon, sorted by predicted value.
+#' If \code{truth} is supplied, observed values are overlaid as points.
+#' For binary traits, the centre line is the predicted probability when
+#' available. Binary predictions have no conformal bounds here. If bounds
+#' are absent, this function still draws a ribbon using
+#' \code{min(p, 1-p)}, a probability-of-error score, as if it were an SE.
+#' This binary ribbon is only a visual score display: it is not a calibrated
+#' interval and has no stated coverage. Interpret the centre line as the
+#' probability; do not interpret the ribbon as an uncertainty interval. See
+#' \code{\link{predict.pigauto_fit}} for type-specific uncertainty meanings.
 #'
 #' @param pred_result list with \code{imputed} and \code{se} components
 #'   (output of \code{predict.pigauto_fit}), or a \code{pigauto_result}

@@ -10,11 +10,19 @@
 \item{x}{An object of class \code{"pigauto_pred"}.}
 
 \item{data}{Optional numeric matrix or data.frame of observed values
-in original scale.  When supplied, observed values are overlaid on
-scatter and interval plots.}
+in original scale. Rows must match the predictions in \code{x} one-for-one
+and in the same order; rows are paired by position, not matched by row
+names or species identifiers. Trait columns are selected by name. Values
+are overlaid on scatter and interval plots. For probability plots, class
+labels are used to group predictions; rows with missing or unrecognized
+labels are omitted from these groups.}
 
 \item{splits}{Optional list (output of \code{\link{make_missing_splits}}).
-Used to identify which cells were held out for evaluation.}
+Currently unused by this plotting method. All finite pairs in
+\code{data} and \code{x$imputed} are plotted, so the scatter is not a
+held-out performance estimate. To display held-out cells, obtain
+\code{predict(fit, evaluation = TRUE)}, and supply a truth frame with
+every cell outside the desired validation/test subset set to NA.}
 
 \item{type}{Character.
 \code{"scatter"} (default): grid of observed-vs-predicted scatter
@@ -23,9 +31,21 @@ conformal interval bands where available.
 \code{"intervals"}: for each trait, species sorted by predicted
 value with conformal-interval ribbon; observed values shown in
 red where available.
-\code{"probabilities"}: for binary traits, boxplot of predicted
-probabilities grouped by true class; for categorical traits,
-stacked bar chart of mean predicted probabilities by true class.}
+\code{"probabilities"}: for binary traits, the probability of the
+second class level is shown in boxplots grouped by observed class when
+usable labels are present; otherwise a histogram shows the
+probabilities. For categorical traits, usable labels give stacked
+bars of mean predicted probabilities by observed class; without usable
+labels, stacked bars show up to 100 observations, ordered by their
+most probable class. These plots are descriptive: grouping by observed
+class does not itself assess calibration. Unless the predictions are
+for cells held out from fitting and \code{data} supplies their truth,
+they are not held-out performance assessments. To inspect held-out
+predictions, use \code{predict(fit, evaluation = TRUE)} and provide a
+truth frame with all other cells set to \code{NA}. Select only
+traits with at least one usable held-out class label; otherwise the
+fallback plot uses predictions without restricting them to held-out
+cells.}
 
 \item{trait}{Character vector of trait names to plot.  If \code{NULL}
 (default), all traits appropriate for the chosen \code{type} are
@@ -50,9 +70,17 @@ traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
                      c("Mass", "Wing.Length"), drop = FALSE]
 rownames(traits) <- tree$tip.label
 traits$Mass[seq_len(3L)] <- NA_real_
-pred <- impute(traits, tree, epochs = 5L, verbose = FALSE)$prediction
+result <- impute(traits, tree, epochs = 5L, verbose = FALSE)
+pred <- result$prediction
 plot(pred)
-plot(pred, type = "scatter", data = traits)
+plot(pred, type = "scatter", data = traits) # descriptive all-finite pairs
 plot(pred, type = "intervals", trait = "Mass")
+# These two continuous traits each occupy one latent column.
+evaluation_pred <- predict(result$fit, evaluation = TRUE)
+heldout_truth <- as.matrix(traits)
+heldout_truth[] <- NA_real_
+idx <- result$fit$splits$test_idx
+heldout_truth[idx] <- as.matrix(traits)[idx]
+plot(evaluation_pred, type = "scatter", data = heldout_truth)
 }
 }

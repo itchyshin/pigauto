@@ -630,3 +630,14 @@ test_that("[active T1] suggest_next_observation respects types argument for coun
   expect_true(any(sug_ord_prop$type == "ordinal"))
   expect_true(any(sug_ord_prop$type == "proportion"))
 })
+
+
+test_that("[active] empty print message reports eligibility, not completeness", {
+  x <- structure(data.frame(), class = c("pigauto_active", "data.frame"))
+  attr(x, "by") <- "cell"
+
+  out <- capture.output(print(x))
+  expect_true(any(grepl("No eligible candidates under the selected settings",
+                        out, fixed = TRUE)))
+  expect_false(any(grepl("fully observed", out, fixed = TRUE)))
+})

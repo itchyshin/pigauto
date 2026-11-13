@@ -124,5 +124,23 @@ test_that("draws_method = 'conformal' returns m datasets per tree, correct shape
 test_that("print.pigauto_mi_trees reports the draws_method actually used", {
   setup <- quick_mit(draws_method = "conformal", share_gnn = TRUE, seed = 14L)
   out <- capture.output(print(setup$mi))
-  expect_true(any(grepl("conformal-width sampling", out, fixed = TRUE)))
+  expect_true(any(grepl("conformal method; trait-specific sampling", out, fixed = TRUE)))
+  expect_true(any(grepl("2 dataset(s)", out, fixed = TRUE)))
+  expect_true(any(grepl("Access datasets:", out, fixed = TRUE)))
+})
+
+test_that("shared-path progress text reflects whether the GNN is enabled", {
+  td <- make_trees_test_data(n = 20L, miss_frac = 0.15, seed = 15L)
+  out <- suppressWarnings(capture.output(multi_impute_trees(
+      traits = td$df,
+      trees = td$trees,
+      m_per_tree = 1L,
+      share_gnn = TRUE,
+      gnn = FALSE,
+      verbose = TRUE,
+      seed = 15L
+    )))
+
+  expect_true(any(grepl("GNN disabled; fitting the reference-tree baseline only", out, fixed = TRUE)))
+  expect_false(any(grepl("Training GNN once", out, fixed = TRUE)))
 })

@@ -27,12 +27,17 @@ has multiple measurements of critical thermal maximum (CTmax) taken at
 different acclimation temperatures.  The data-generating process is
 }
 \details{
-\deqn{CTmax_{ij} = 38 + phylo_i + 0.50 \times acclim\_temp_{ij} + \epsilon_{ij}}
+\deqn{\begin{aligned}
+&CTmax_{ij} = 38 + phylo_i \\
+&\quad + 0.50 \times acclim\_temp_{ij} \\
+&\quad + \epsilon_{ij}
+\end{aligned}}
 
 where \eqn{phylo_i} follows Brownian motion on \code{\link{tree300}},
 the within-species acclimation response ratio is 0.50, and
-\eqn{\epsilon_{ij} \sim N(0, 1.5)}.  Thirty percent of species are entirely
-unobserved (all CTmax values are NA), and an additional 15\\% of remaining
+\eqn{\epsilon_{ij} \sim N(0, 1.5^2)}, where the residual standard
+deviation is 1.5 degrees Celsius. Thirty percent of species are entirely
+unobserved (all CTmax values are NA), and an additional 15\% of remaining
 observations are missing at random.
 
 This dataset demonstrates pigauto's multi-observation and observation-level

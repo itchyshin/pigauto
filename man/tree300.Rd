@@ -8,9 +8,10 @@
 An object of class \code{phylo} with 300 tips.
 }
 \source{
-Li (2026), \pkg{megatrees} 1.0.0; member 69 of
-\code{megatrees::get_tree_bird_n100()} is from the Hackett-backbone set.
-The BirdTree distribution is described by Jetz et al. (2012).
+Example phylogeny drawn from the BirdTree Hackett-backbone
+collection. The underlying BirdTree distribution is described by Jetz
+et al. (2012); see the installed \file{NOTICE} for data provenance and
+reuse information.
 }
 \usage{
 tree300

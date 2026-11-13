@@ -6,8 +6,7 @@
 #    conformal target is arithmetically unreachable (ceiling is
 #    n_val / (n_val + 1)); the warning must say so, not just "noisy".
 
-test_that("[P1-8] joint MVN baseline warns that covariates are ignored", {
-  skip_if_not_installed("Rphylopars")
+test_that("joint MVN baseline warning describes covariate omission", {
   set.seed(42L)
   n <- 24L
   tree <- ape::rcoal(n)
@@ -20,14 +19,19 @@ test_that("[P1-8] joint MVN baseline warns that covariates are ignored", {
   covs <- data.frame(env = stats::rnorm(n), row.names = tree$tip.label)
   pd <- preprocess_traits(df, tree, covariates = covs)
 
-  expect_warning(
-    fit_baseline(pd, tree),
-    regexp = "covariates.*ignored by the joint"
+  warnings <- character()
+  fit <- withCallingHandlers(
+    fit_baseline(pd, tree, joint_solver = "inhouse"),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
   )
+  expect_true(any(grepl("omitted from the selected joint MVN baseline route", warnings)))
+  expect_true(all(fit$path == "joint_mvn"))
 })
 
-test_that("[P1-8] joint MVN baseline is silent without covariates", {
-  skip_if_not_installed("Rphylopars")
+test_that("joint MVN baseline is silent without covariates", {
   set.seed(43L)
   n <- 24L
   tree <- ape::rcoal(n)
@@ -38,6 +42,83 @@ test_that("[P1-8] joint MVN baseline is silent without covariates", {
   pd <- preprocess_traits(df, tree)
 
   expect_no_warning(fit_baseline(pd, tree))
+})
+
+test_that("threshold-joint baseline warning names its route", {
+  set.seed(451L)
+  n <- 36L
+  tree <- ape::rcoal(n)
+  df <- data.frame(x = stats::rnorm(n),
+                   b = factor(ifelse(stats::rnorm(n) > 0, "yes", "no")),
+                   row.names = tree$tip.label)
+  df$x[c(3L, 10L)] <- NA_real_
+  df$b[c(5L, 12L)] <- NA
+  covs <- data.frame(env = stats::rnorm(n), row.names = tree$tip.label)
+  pd <- preprocess_traits(df, tree, covariates = covs)
+  warnings <- character()
+  fit <- withCallingHandlers(
+    fit_baseline(pd, tree, joint_solver = "inhouse"),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_true(any(grepl("omitted from the selected joint threshold-joint baseline route", warnings)))
+  expect_true(any(fit$path == "threshold_joint"))
+})
+
+test_that("OVR-only categorical baseline omits covariates without the joint warning", {
+  set.seed(452L)
+  n <- 36L
+  tree <- ape::rcoal(n)
+  df <- data.frame(cat = factor(sample(c("a", "b", "c"), n, replace = TRUE)),
+                   row.names = tree$tip.label)
+  df$cat[c(4L, 13L)] <- NA
+  covs <- data.frame(env = stats::rnorm(n), row.names = tree$tip.label)
+  pd <- preprocess_traits(df, tree, covariates = covs)
+  warnings <- character()
+  fit <- withCallingHandlers(
+    fit_baseline(pd, tree, joint_solver = "inhouse"),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_true(all(fit$path == "ovr_categorical"))
+  expect_false(any(grepl("omitted from the selected joint", warnings)))
+})
+
+test_that("mixed numeric and threshold routes retain covariates on the numeric fallback", {
+  set.seed(453L)
+  n <- 36L
+  tree <- ape::rcoal(n)
+  df <- data.frame(x = stats::rnorm(n),
+                   b = factor(ifelse(stats::rnorm(n) > 0, "yes", "no")),
+                   row.names = tree$tip.label)
+  df$x[c(3L, 10L)] <- NA_real_
+  df$b[c(5L, 12L)] <- NA
+  covs <- data.frame(env = stats::rnorm(n), row.names = tree$tip.label)
+  pd <- preprocess_traits(df, tree, covariates = covs)
+  cov_fit_calls <- 0L
+  trace("bm_impute_col_with_cov",
+        tracer = function() cov_fit_calls <<- cov_fit_calls + 1L,
+        print = FALSE, where = asNamespace("pigauto"))
+  on.exit(try(untrace("bm_impute_col_with_cov", where = asNamespace("pigauto")),
+              silent = TRUE), add = TRUE)
+  warnings <- character()
+  fit <- withCallingHandlers(
+    fit_baseline(pd, tree, lambda_mode = "cv", lambda_fixed = c(x = 1),
+                 discrete_lambda = "fixed_1", joint_solver = "inhouse",
+                 predict_method = "per_column"),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_identical(unname(fit$path[["x"]]), "per_column_bm")
+  expect_identical(unname(fit$path[["b"]]), "threshold_joint")
+  expect_gt(cov_fit_calls, 0L)
+  expect_true(any(grepl("omitted from the selected joint threshold-joint baseline route", warnings)))
 })
 
 test_that("[conformal-ceiling] calibrate_gates names the n_val < 19 ceiling", {

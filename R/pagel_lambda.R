@@ -256,7 +256,14 @@ build_pagel_nll_cache <- function(y, R, nugget = 1e-6, X = NULL) {
   # into the same basis as c_y / c_1 above, so beta(lambda), like mu_hat(lambda)
   # above, is O(n_o) per evaluation after this one-off O(n_o * p) rotation.
   X_o <- X[obs, , drop = FALSE]
+  # Select columns on the observed rows: full dummy encodings and other
+  # redundant covariates otherwise make the GLS normal matrix singular.
+  X_o <- X_o[, .bm_independent_columns(X_o), drop = FALSE]
   p_x <- ncol(X_o)
+  if (p_x == 0L || n_o <= p_x) {
+    return(list(nll = function(lambda) .Machine$double.xmax,
+                mu_at = NULL, n_o = n_o))
+  }
   c_X <- crossprod(U, X_o)  # n_o x p_x
 
   nll_at_x <- function(lambda) {

@@ -3,7 +3,7 @@
 
 test_that("exported entry points resolve and policy defaults stay aligned", {
   exports <- getNamespaceExports("pigauto")
-  expect_length(exports, 33L)
+  expect_length(exports, 35L)
   for (name in exports) {
     expect_true(is.function(getExportedValue("pigauto", name)), info = name)
   }
@@ -202,7 +202,7 @@ test_that("multi-observation covariates warn under the default GNN-off path", {
       warnings <<- c(warnings, conditionMessage(w))
       invokeRestart("muffleWarning")
     })
-  expect_true(any(grepl("covariates are used only by the GNN", warnings)))
+  expect_true(any(grepl("the GNN is off", warnings)))
   expect_false(isTRUE(res$fit$model_config$gnn))
   expect_true(res$data$multi_obs)
 })
@@ -249,7 +249,7 @@ test_that("tree diagnostic forwards explicit baseline options to each fit", {
       invokeRestart("muffleWarning")
     }
   )
-  expect_true(any(grepl("Few tree-sensitivity draws", warnings,
+  expect_true(any(grepl("Few tree-sensitivity datasets", warnings,
                         fixed = TRUE)))
   expect_identical(seen$lambda_mode, "fixed_1")
   expect_identical(seen$predict_method, "per_column")

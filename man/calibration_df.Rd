@@ -9,14 +9,18 @@ calibration_df(truth, prob, n_bins = 10L)
 \arguments{
 \item{truth}{numeric vector (0/1 or TRUE/FALSE).}
 
-\item{prob}{numeric vector of predicted probabilities in \code{[0, 1]}.}
+\item{prob}{numeric vector of predicted probabilities in \code{[0, 1]}.
+Pairs with an \code{NA} in either vector are dropped with a warning;
+an error is raised if no complete pairs remain.}
 
 \item{n_bins}{integer, number of bins (default 10). Must be a positive
 integer.}
 }
 \value{
 A data.frame with columns \code{bin_mid}, \code{obs_freq},
-\code{mean_pred}, \code{n}.
+\code{mean_pred}, and \code{n}. Empty bins are omitted. For each
+returned bin, \code{n} counts the complete \code{truth}/\code{prob}
+pairs assigned to that bin.
 }
 \description{
 Bins predicted probabilities and computes observed frequencies within

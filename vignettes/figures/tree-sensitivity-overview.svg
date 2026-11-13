@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="650" viewBox="0 0 760 650" role="img" aria-labelledby="tree-check-title tree-check-desc">
+  <title id="tree-check-title">What the posterior-tree check measures</title>
+  <desc id="tree-check-desc">Prediction error compares the average of available tree predictions with the measured value that was hidden. Tree sensitivity summarizes the spread of predictions for that hidden value across trees, for example with standard deviation. Neither quantity estimates uncertainty in a downstream model effect.</desc>
+  <style>
+    .label { font: 700 27px Arial, sans-serif; fill: #243b32; }
+    .detail { font: 23px Arial, sans-serif; fill: #243b32; }
+    .small { font: 21px Arial, sans-serif; fill: #243b32; }
+    .box { fill: #f3f7f5; stroke: #477260; stroke-width: 3; }
+    .note { fill: #fff8e8; stroke: #806b35; stroke-width: 3; }
+    .rule { stroke: #8ba99a; stroke-width: 2; }
+  </style>
+  <rect aria-hidden="true" x="0" y="0" width="760" height="650" fill="#ffffff" />
+  <text class="label" x="34" y="42">Two summaries from the same predictions</text>
+  <rect class="box" x="28" y="68" width="704" height="160" rx="12" />
+  <text class="label" x="52" y="108">Prediction error</text>
+  <text class="detail" x="52" y="146">Compare their average with hidden truth</text>
+  <text class="detail" x="52" y="180">Summarise error with RMSE or MAE</text>
+  <text class="small" x="52" y="258">Same tree-specific predictions, a separate summary</text>
+  <rect class="box" x="28" y="278" width="704" height="142" rx="12" />
+  <text class="label" x="52" y="318">Tree sensitivity</text>
+  <text class="detail" x="52" y="356">Spread for one hidden value across supplied trees</text>
+  <text class="detail" x="52" y="390">Summarise with standard deviation (SD)</text>
+  <line class="rule" x1="28" y1="442" x2="732" y2="442" />
+  <rect class="note" x="28" y="466" width="704" height="164" rx="12" />
+  <text class="label" x="52" y="508">Downstream model effects</text>
+  <text class="detail" x="52" y="548">Not estimated here. Validate bias and interval</text>
+  <text class="detail" x="52" y="582">coverage in a separate downstream workflow.</text>
+  <text class="small" x="52" y="614">This check does not establish inferential validity.</text>
+</svg>

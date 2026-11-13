@@ -136,7 +136,7 @@ test_that("the whole pipeline survives a single-level categorical trait", {
     fit_pigauto(pd, fx$tree, splits = splits, graph = graph, baseline = bl,
                 epochs = 20L, verbose = FALSE, seed = 1L)
   )
-  pr <- expect_no_error(predict(ft))
+  pr <- expect_no_error(predict(ft, evaluation = TRUE))
   ev <- expect_no_error(
     evaluate_imputation(pr, pd$X_scaled, splits, trait_map = pd$trait_map)
   )

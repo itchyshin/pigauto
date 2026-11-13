@@ -202,28 +202,42 @@
 #' @description
 #' Extends \code{\link{pull_gbif_centroids}} by extracting 19 WorldClim
 #' v2.1 bioclim variables at each species' GBIF occurrence points,
-#' aggregating per species (median + IQR), and returning a data.frame
-#' ready for \code{\link{impute}} via its \code{covariates} argument.
+#' aggregating per species (median + IQR), and returning species-level
+#' summaries. For one row per species, select the numeric \code{bio*}
+#' columns for climate predictors and keep row names matching species names
+#' in the trait data and tree. For repeated observations, see
+#' \code{\link{preprocess_traits}} for observation-level covariate
+#' alignment. Species with no usable GBIF points can have missing climate
+#' values. This helper does not fill missing or non-finite climate values:
+#' \code{preprocess_traits} rejects covariates containing \code{NA},
+#' \code{Inf}, or \code{-Inf}, so handle them before fitting. The
+#' \code{species} column is an identifier and \code{n_extracted} is a
+#' diagnostic, so do not include them as climate predictors.
 #'
-#' On first call, downloads the WorldClim 10-arc-minute raster stack
-#' (~130 MB compressed, ~500 MB unzipped) to \code{worldclim_cache_dir}.
-#' A sentinel file makes subsequent calls fully offline.
+#' Rasters are checked and loaded for the requested \code{resolution}; if
+#' its cache lacks the completion marker or any of the 19 raster files, the
+#' function attempts to download the stack. Per-species extracts are cached
+#' by species name, not resolution. When changing resolution, use a separate
+#' \code{worldclim_cache_dir} or set \code{refresh_cache = TRUE} to avoid
+#' reusing extracts made at another resolution. Refreshing extracts does not
+#' force raster downloads. If loading the stack fails, existing cached
+#' extracts can still be used; a new extraction at usable GBIF locations
+#' needs a readable raster stack.
 #'
-#' Per-species extracts are also cached (one RDS per species in
-#' \code{worldclim_cache_dir/extracts/}), so repeated calls for the
-#' same species list are instantaneous.
-#'
-#' Since v0.9.1.9006 (2026-04-30) extraction operates on the raw
-#' per-occurrence point list when \code{\link{pull_gbif_centroids}}
-#' was called with \code{store_points = TRUE}.  For legacy caches
-#' written by older \code{pull_gbif_centroids} (centroid-only) calls,
-#' extraction silently falls back to the species centroid.
+#' Extraction uses the raw per-occurrence point list when the GBIF cache
+#' contains it (request it with \code{store_points = TRUE} in
+#' \code{\link{pull_gbif_centroids}}). A centroid-only cache falls back to
+#' the species centroid. Requesting points refetches a centroid-only GBIF
+#' cache, but an existing WorldClim extract remains cached until
+#' \code{refresh_cache = TRUE} is used here.
 #'
 #' Requires the optional \code{terra} package (in DESCRIPTION
 #' \code{Suggests}).  If \code{terra} is not installed the function
 #' errors with an installation message.
 #'
-#' @param species character vector of species binomials.
+#' @param species Supply a non-empty character vector of unique species
+#'   names. Do not include missing or empty names; names are used to create cache keys and
+#'   output row names.
 #' @param gbif_cache_dir character path, GBIF per-species cache
 #'   directory (as written by \code{\link{pull_gbif_centroids}}).
 #' @param worldclim_cache_dir character path, directory for WorldClim
@@ -253,16 +267,34 @@
 #'   International Journal of Climatology 37, 4302--4315.
 #'
 #' @examplesIf interactive()
+#' # With fresh caches, this example contacts GBIF and may download the 19
+#' # global WorldClim rasters. It needs internet access and the optional
+#' # rgbif and terra packages.
 #' sp <- c("Quercus alba", "Pinus taeda", "Acer saccharum")
+#' # Use temporary caches for this R session. Choose a persistent directory
+#' # if you want to reuse downloaded data after R restarts.
+#' cache_root <- file.path(tempdir(), "pigauto-worldclim-example")
+#' gbif_cache <- file.path(cache_root, "gbif")
+#' worldclim_cache <- file.path(cache_root, "worldclim")
+#' # store_points = TRUE refetches centroid-only GBIF entries when needed.
 #' gbif_df <- pull_gbif_centroids(sp,
-#'   cache_dir = "script/data-cache/gbif")
-#' wc_df   <- pull_worldclim_per_species(
-#'   species             = sp,
-#'   gbif_cache_dir      = "script/data-cache/gbif",
-#'   worldclim_cache_dir = "script/data-cache/worldclim")
-#' # Combine for impute()
-#' cov <- cbind(gbif_df[, c("centroid_lat", "centroid_lon")],
-#'              wc_df[, grep("^bio", colnames(wc_df))])
+#'   cache_dir = gbif_cache, store_points = TRUE)
+#' # Refresh old climate extracts. Occurrence points are used when available;
+#' # centroid-only GBIF cache entries fall back to the species centroid.
+#' wc_df <- pull_worldclim_per_species(
+#'   species = sp,
+#'   gbif_cache_dir = gbif_cache,
+#'   worldclim_cache_dir = worldclim_cache,
+#'   refresh_cache = TRUE)
+#' # For one row per species, select climate columns and align by species.
+#' wc_cov <- wc_df[, grep("^bio", names(wc_df)), drop = FALSE]
+#' rownames(wc_cov) <- wc_df$species
+#' gbif_cov <- gbif_df[match(wc_df$species, gbif_df$species),
+#'                     c("centroid_lat", "centroid_lon"), drop = FALSE]
+#' rownames(gbif_cov) <- wc_df$species
+#' cov <- cbind(gbif_cov, wc_cov)
+#' # This helper does not fill missing values. Resolve NA/Inf/-Inf before
+#' # passing cov to impute().
 #'
 #' @export
 pull_worldclim_per_species <- function(species,

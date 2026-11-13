@@ -15,8 +15,10 @@ plot_history_gg(x, ...)
 A \code{ggplot} object.
 }
 \description{
-Deprecated. Use the base-R S3 method instead:
-\code{plot(fit, type = "history")}.
+Deprecated. If the fit has GNN training history, use the base-R S3 method
+with \code{type = "history"}. The default \code{gnn = FALSE} fit has no
+training history; for that fit, use \code{plot(fit)} to show its gates or
+request \code{type = "gates"} explicitly.
 
 Produces a ggplot2 validation loss training curve.
 }

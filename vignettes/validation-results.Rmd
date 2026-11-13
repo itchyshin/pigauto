@@ -1,0 +1,244 @@
+---
+title: "Pigauto validation results and limits"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Pigauto validation results and limits}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This article summarizes pigauto's validation evidence, including a campaign
+completed in October 2026. It describes the tested source, simulation
+settings, run accounting, and scientific findings. Each result applies to
+the stated scenarios; it does not certify performance for every dataset or
+use.
+
+## Quick guide to the results
+
+<dl class="row gy-3">
+<dt class="col-md-4">Can I assume the prediction intervals give 95% coverage?</dt>
+<dd class="col-md-8">No. Across the tested scenarios, mean coverage was below 95% when the GNN was off (`gnn = FALSE`, the package default) for continuous traits, counts, and proportions. The results varied by scenario. <strong>For your analysis:</strong> check coverage for a prediction task like yours in <a href="#prediction-interval-results">Prediction interval results</a>.</dd>
+
+<dt class="col-md-4">Did the optional GNN improve prediction?</dt>
+<dd class="col-md-8">It improved predictions over the same fitted model with its neural contribution removed in two confirmatory repeated-observation scenarios with covariates. It did not consistently beat non-neural reference methods. <strong>For your analysis:</strong> compare methods on held-out data that match your task in <a href="#when-does-the-neural-component-add-predictive-value">When does the neural component add predictive value?</a>.</dd>
+
+<dt class="col-md-4">Do these results validate downstream inference?</dt>
+<dd class="col-md-8">None of the tested scenarios for downstream inference met all criteria for support. Some failures also occurred in complete-data controls. <strong>For your analysis:</strong> treat inference as requiring further evidence for your model and missingness process. See <a href="#inferential-results">Inferential results</a>.</dd>
+</dl>
+
+## What was tested
+
+The campaign used a frozen manifest of 151 configurations and 32,240
+dataset-generation or masking attempts. It covered the eight supported trait types,
+mixed-type input, prediction under several evolutionary and missingness
+conditions, zero-inflated counts, compositions, repeated observations,
+covariates, posterior-tree workflows, posterior inference, analysis-aware
+inference, and available real-data examples. Most simulation scenarios used
+200 replicates; selected inferential scenarios used 500. The complete
+scenario definitions and data-generating contract are retained with the
+campaign records.
+
+The package contract tests exercised type encoding and decoding, preservation
+of observed values, valid ranges and simplex constraints, alignment, seed
+reproducibility, prediction, and save/reload behaviour. The Totoro development
+test suite reported 3,554 passes, no failures, 182 warnings, and 9 skips. The
+skips were retained as skips; they are not evidence of passing optional
+integrations.
+
+## Run accounting
+
+Of the 32,240 production attempts, 32,199 completed successfully, one was
+retained as failed, and 40 were unavailable because the registered PanTHERIA
+and FishBase inputs were absent. The available AVONET and configured BIEN
+examples each contributed 20 repeated masks; these are not independent
+dataset generations. The production results contain 1,122,060
+metric rows, including expected unavailable metrics where a measure does not
+apply.
+
+The single failed attempt was an OU prediction scenario with 100 species,
+phylogenetic signal parameter 0.3, trait correlation 0.5, observed-variable
+MAR missingness, and 30% missing values. Some GNN-off conformal interval
+metrics were non-finite or absent. It remains in the denominator and is not
+counted as a package crash.
+
+## Prediction interval results
+
+Across 82 prediction scenarios with 200 planned replicates each, the equal-weighted
+mean scenario-level 95% conformal coverage for GNN-off fits was 91.2% for the
+first simulated continuous trait, 91.1% for the second simulated continuous trait,
+92.3% for
+counts, and 92.1% for proportions. Scenario means ranged from 69.5% to 97.7%
+across these four trait families.
+
+Coverage is the fraction of held-out values that fall inside their prediction intervals. The percentages above average that fraction across the 82 tested scenarios. They do not guarantee coverage for a new dataset.
+
+These observed rates are below nominal 95% on average. They show that the
+split-conformal intervals did not attain nominal coverage in every tested
+regime. Phylogenetic dependence and structured missingness can violate the
+exchangeability conditions behind the usual split-conformal guarantee, so
+these results do not support a blanket distribution-free coverage claim.
+
+## When does the neural component add predictive value?
+
+Pigauto combines a phylogenetic baseline with a gated neural component. The
+broader question is whether the neural component improves predictions for
+unobserved data. The evidence here addresses one candidate setting: repeated
+observations with environmental covariates for a continuous response. Each
+scenario used 500 independent datasets with 500 species, about five
+observations per species, ten covariates per observation, a Brownian species
+effect, and independent observation error. Half the species were fully
+withheld; 20% of observations among the remaining species were masked. The
+confirmatory policy used `phylo_signal_gate = FALSE` and
+`lambda_mode = "estimate"`, the current defaults for these settings. It set
+`gnn = TRUE` explicitly to test the neural component; the package default is
+`gnn = FALSE`.
+
+We compare predictions from the same fitted pigauto model with the neural
+component switched on and off. When it is off, its weight is reassigned to the
+Brownian baseline; the mean-baseline weight and fitted linear covariate effect
+stay the same. This tests the full neural branch, including the
+observation-level network, rather than graph message passing alone.
+
+The two confirmatory scenarios use curved covariate effects and effects that
+depend on combinations of covariates. A Brownian variance multiplier of 0.3
+sets the variance of the simulated Brownian species effect; it is not Pagel's
+lambda. For each scenario, we compare prediction errors on the same 500
+simulated datasets. The paired tests and simultaneous 95% intervals quantify
+uncertainty in the average difference in mean squared error (MSE). Both
+scenarios met the prespecified support rule: the Holm-adjusted paired tests
+and Bonferroni intervals favoured the full model, and its root mean squared
+error (RMSE) was more than 2% lower than with the neural component switched
+off. This result applies to these simulated settings, not every dataset.
+
+<div class="table-responsive">
+<table class="table">
+<caption>Held-out observation-level RMSE by simulated scenario. Lower values indicate better prediction. Neural on and off are paired predictions from the same fitted pigauto model.</caption>
+<thead>
+<tr>
+<th scope="col">Scenario</th>
+<th scope="col">Pigauto, neural on</th>
+<th scope="col">Pigauto, neural off</th>
+<th scope="col">Relative RMSE reduction (95% dataset-bootstrap interval)</th>
+<th scope="col">Phylogenetic GLS</th>
+</tr>
+</thead>
+<tbody>
+<tr><th scope="row">Nonlinear, variance multiplier 0.3</th><td>0.764</td><td>0.924</td><td>17.3% (17.2%, 17.5%)</td><td>0.768</td></tr>
+<tr><th scope="row">Interactive, variance multiplier 0.3</th><td>0.911</td><td>1.213</td><td>24.9% (24.8%, 25.0%)</td><td>0.602</td></tr>
+<tr><th scope="row">Nonlinear, variance multiplier 0.05</th><td>0.709</td><td>0.882</td><td>19.7% (19.5%, 19.8%)</td><td>0.720</td></tr>
+<tr><th scope="row">Linear recovery</th><td>0.654</td><td>0.787</td><td>16.8% (16.7%, 17.0%)</td><td>0.603</td></tr>
+<tr><th scope="row">No covariate signal</th><td>0.593</td><td>0.591</td><td>-0.2% (-0.3%, -0.2%)</td><td>0.603</td></tr>
+</tbody>
+</table>
+</div>
+
+RMSE is the square root of mean dataset-level MSE, giving equal weight to
+independent datasets. The reduction interval resamples datasets.
+
+The first two rows are confirmatory; the other rows are descriptive controls.
+The no-signal control shows a small deterioration from the neural branch.
+The separately fitted phylogenetic GLS uses the same observed rows, tree, and
+linear, quadratic, and pairwise-interaction covariate basis. It is a reference
+method; it does not define a universal performance ceiling. In the interactive
+scenario, the polynomial OLS basis exactly represented the generated covariate
+function. GLS RMSE was 0.602 and polynomial OLS RMSE was 0.742, both below
+pigauto's 0.911. This study therefore does not show that the neural model
+outperforms these non-neural references in every setting.
+
+In the nonlinear scenario, overall pooled RMSE was near parity (0.764 for
+pigauto and 0.768 for GLS). For fully withheld species, pooled RMSE was 0.756
+for pigauto and 0.771 for GLS; among partly observed species it was 0.802 for
+pigauto and 0.750 for GLS.
+
+Under the confirmatory policy, relative RMSE reductions for fully withheld
+versus partly observed species were 15.1% and 25.4% in the nonlinear scenario, and
+23.7% and 29.7% in the interactive scenario. These stratum-specific results
+are descriptive. A separate `phylo_signal_gate = TRUE` policy-sensitivity arm
+triggered in 8.6% of nonlinear, 12.2% of interactive, and 89.6% of low-signal
+datasets; it is not a second confirmatory analysis. All five scenarios
+completed 500/500 datasets. The audit reconciled 2,500 datasets, 5,000 gate
+fits, and 30,000 method attempts with no failures or nonconvergence, and the
+summary regenerated from retained replicate records.
+
+These results suggest a candidate setting in which to test pigauto: prediction
+from repeated observations when observation-level covariates carry signal,
+including nonlinear or interactive signal. In the tested signal scenarios,
+the neural component improved predictions relative to the same fitted model
+with that contribution removed. The no-signal control showed a small loss.
+
+This within-fit gain does not mean pigauto will outperform a well-specified
+non-neural model. GLS and polynomial regression performed better in some
+comparisons, and GLS did better for partly observed species in the nonlinear
+scenario.
+
+For an applied dataset, compare pigauto with a covariate-aware non-neural
+model using held-out data that match the intended prediction task. Report
+fully withheld and partly observed species separately. A direct test of
+whether graph message passing adds value would compare this branch with a
+matched observation-level neural network without graph message passing.
+Broader recommendations require testing other sample sizes, numbers of repeat
+observations, covariate signal strengths, and missingness patterns.
+These results do not establish performance for those settings or uncertainty
+calibration. The [full GNN report](https://github.com/itchyshin/pigauto/blob/main/docs/dev-log/gnn-incremental/RESULTS-20261020.md)
+and [paired summary table](https://github.com/itchyshin/pigauto/blob/main/script/gnn_incremental/results/production-20261019-v1-summary/summaries/paired_summary.csv)
+give the scenario criteria, paired uncertainty, gate behaviour, and
+reproducibility records.
+
+## Inferential results
+
+The assessment used prespecified bands for nominal 95% coverage, reported
+standard-error calibration, and standardized bias. None of the tested
+scenarios for downstream inference met all criteria for support. Of 44
+inferential results, 12 were classified as failed and 32 as indeterminate.
+“Indeterminate” means the simulation was too imprecise to decide whether its
+criteria were met. This includes complete-data controls, so the observed
+failures are not all attributable to imputation.
+
+For the eight posterior slope regimes with an independently defined truth,
+five were classified as failed and three as indeterminate. Empirical 95%
+coverage ranged from 86.2% to 95.2%; reported-to-empirical standard-error
+ratios ranged from 0.750 to 1.039. This ratio compares the model-reported
+standard errors with the observed variation in estimates across repeated
+simulated datasets; values below 1 mean the reported errors were smaller
+than that variation. In the analysis-aware simulations, 23 of
+24 rows were indeterminate and one binomial-logit GLM row failed. None was
+classified as supported.
+
+These classifications describe the registered regimes and criteria. They do
+not establish that every use of pigauto will fail, nor do the indeterminate
+rows establish calibration. Users should treat inferential use as requiring
+further evidence for their model, data, and missingness process.
+
+## Package-check scope
+
+The package built with its vignettes. A strict check stopped because the
+suggested packages `brms` and `rgbif` were unavailable in the environment. A
+separately labelled check with forced suggested packages disabled completed
+with `Status: OK`; it reported 3,272 passes, no failures, 163 warnings, and
+87 skips. This is not an all-dependency, manual, cross-platform, or CRAN
+submission check.
+
+## Reproducibility and limits
+
+The full scenario manifest, result tables, per-attempt receipts, runtime
+identities, hashes, and independent review are retained in the campaign
+record. Its source identity is
+`67ea5121b8e9e6db4009f562ebf3758384deeff7f16a01685e61f5e20761dcfa`, and its
+frozen job-list hash is
+`0adafdb698ecce426f75ca09e9c6ba6028829ae98495f5453ba919e5b61d8769`.
+Production used 48 single-thread workers on Totoro and completed in 6 hours
+12 minutes. The records preserve one failed attempt, 40 unavailable attempts,
+and host package-inventory variation; no earlier run was silently substituted.
+
+The [full scientific report](https://github.com/itchyshin/pigauto/blob/da71711cdc6fcb587babaf4d5b323c4468cb4492/docs/dev-log/validation-20261018/scientific-report.md),
+[scenario manifest](https://github.com/itchyshin/pigauto/blob/da71711cdc6fcb587babaf4d5b323c4468cb4492/docs/dev-log/validation-20261018/scenarios.csv),
+[validation ledger](https://github.com/itchyshin/pigauto/blob/da71711cdc6fcb587babaf4d5b323c4468cb4492/docs/dev-log/validation-20261018/validation-ledger.md),
+and [scenario-level summary table](https://github.com/itchyshin/pigauto/blob/da71711cdc6fcb587babaf4d5b323c4468cb4492/docs/dev-log/validation-20261018/receipts/production-summary.csv.gz)
+are available at the exact validation commit.

@@ -1,0 +1,44 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "b59108ce5a2513d0a0fe642cc02329e878960c776295a63406af683de2514091",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex",
+  "method": "Whole-draft self-review against protocols/writing-naturalness.md; scientific claims checked against the retained report, manifest, and production summary tables.",
+  "genre": "Public scientific validation vignette",
+  "coverage": "Whole 670-word vignette, including the result claims, links, and limitations.",
+  "score": 3,
+  "style_status": "scored",
+  "score_reason": "The prose is mostly specific and source-bound. Some short paragraphs repeat scope cautions, but that repetition keeps the scientific limits visible.",
+  "confidence": "medium",
+  "confidence_reason": "The assessment covers the complete short article; perceived style remains a subjective editorial judgment.",
+  "examples": [
+    {
+      "location": "Opening scope paragraph",
+      "line": 19,
+      "quote": "The evidence is specific to these",
+      "cue": "Names the evidence boundary early.",
+      "impact": "Readers are less likely to treat the results as a universal package guarantee.",
+      "repair": "no change needed"
+    },
+    {
+      "location": "Prediction interval results",
+      "line": 64,
+      "quote": "These observed rates are below nominal 95% on average.",
+      "cue": "States the measured result directly before interpreting it.",
+      "impact": "The practical result is clear without an inflated claim.",
+      "repair": "no change needed"
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "Prediction and inferential conclusions are limited to the registered scenarios; classifications and calibration summaries match the retained production report and summary table.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "The 151-scenario manifest, attempt statuses, result-row counts, inferential classifications, and four prediction-coverage averages were checked against the retained scenario and production CSV files; package-check details match the scientific report.",
+  "references_gate": "pass",
+  "references_gate_reason": "All four GitHub links target retained files at the exact validation commit da71711cdc6fcb587babaf4d5b323c4468cb4492.",
+  "date": "2026-10-19",
+  "calibration_status": "No relevant human calibration examples were used.",
+  "interpretation": "perceived_style_not_authorship"
+}

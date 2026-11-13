@@ -10,11 +10,19 @@ completed_data(result)
 \item{result}{A \code{pigauto_result}.}
 }
 \value{
-Exactly the stored \code{result$completed} data.frame.
+The input-shaped data frame returned by \code{\link[=impute]{impute()}}, with observed
+trait values and non-trait columns retained. Predictions fill modeled
+missing trait cells when available; cells that could not be filled remain
+\code{NA}.
 }
 \description{
 Extract completed trait data
 }
 \examples{
 \dontrun{completed_data(result)}
+}
+\seealso{
+\code{\link[=impute]{impute()}}. For analyses that should carry imputation
+uncertainty, use \code{\link[=multi_impute]{multi_impute()}} and extract its \code{m} datasets with
+\code{\link[=get_imputed_datasets]{get_imputed_datasets()}} instead of a single completion.
 }

@@ -26,8 +26,10 @@
 # @noRd
 compute_phylo_signal_per_trait <- function(data, tree,
                                             method = c("lambda", "blomberg_k"),
-                                            min_tips = 20L) {
+                                            min_tips = 20L,
+                                            splits = NULL) {
   method <- match.arg(method)
+  data <- .phylo_signal_training_data(data, splits)
   if (!requireNamespace("phytools", quietly = TRUE)) {
     warning("phylo_signal_gate requires the 'phytools' package; ",
             "returning NA for all traits. Install with ",
@@ -49,6 +51,27 @@ compute_phylo_signal_per_trait <- function(data, tree,
     out[i] <- lambda
   }
   out
+}
+
+# Keep the optional phylogenetic-signal policy from inspecting the validation
+# and test outcomes that are reserved for calibration and assessment.
+.phylo_signal_training_data <- function(data, splits = NULL) {
+  if (is.null(splits)) return(data)
+  if (is.null(data$X_scaled) || !is.matrix(data$X_scaled)) {
+    stop("data$X_scaled must be a matrix when splits are supplied.",
+         call. = FALSE)
+  }
+  heldout <- unlist(splits[c("val_idx", "test_idx")],
+                    recursive = TRUE, use.names = FALSE)
+  heldout <- unique(as.integer(heldout))
+  if (anyNA(heldout) || any(heldout < 1L | heldout > length(data$X_scaled))) {
+    stop("Split indices must be valid linear indices into data$X_scaled.",
+         call. = FALSE)
+  }
+  if (length(heldout)) {
+    data$X_scaled[heldout] <- NA
+  }
+  data
 }
 
 .phylo_signal_one_trait <- function(tm, data, tree, method, min_tips) {

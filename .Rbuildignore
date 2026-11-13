@@ -18,7 +18,10 @@
 ^pkgdown$
 ^docs$
 ^_site$
+^_site-audit-final$
+^_site-c2-clean$
 ^\.github$
+^codecov\.yml$
 ^DOCS\.md$
 ^CLAUDE\.md$
 ^AGENTS\.md$
@@ -34,5 +37,8 @@
 ^\.unlazy$
 ^VALIDATION_LEDGER\.md$
 ^cran-comments\.md$
+^tests/testthat/fixtures/gbif_plants_300\.rds$
+^tests/testthat/fixtures/worldclim_plants_300\.rds$
 ^LOOP$
 ^vignettes/articles$
+noble_review.md

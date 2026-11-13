@@ -76,8 +76,17 @@ get_latent_cols_by_type <- function(trait_map, type) {
 #'
 #' @param truth factor or character vector of true classes.
 #' @param predicted factor or character vector of predicted classes.
-#' @param levels character vector of class levels (default: union of
-#'   truth and predicted levels).
+#' @param levels character vector of class labels (default: sorted union of
+#'   labels observed in truth and predicted). If you supply this, include
+#'   every label
+#'   you want counted. Any truth or prediction label not listed is treated
+#'   as missing; that pair is omitted from the confusion table and the
+#'   denominator used to calculate accuracy.
+#' @details Pairs with a missing truth or prediction are omitted from the
+#'   confusion table and accuracy denominator. If no complete pairs remain,
+#'   accuracy is \code{NaN} (undefined). Per-class precision or recall is
+#'   \code{NA} when its denominator is zero. F1 is \code{NA} when precision
+#'   or recall is \code{NA}, or when both are zero.
 #' @return A list with:
 #'   \describe{
 #'     \item{table}{Confusion matrix (rows = truth, columns = predicted).}
@@ -137,10 +146,14 @@ confusion_matrix <- function(truth, predicted, levels = NULL) {
 #'
 #' @param truth numeric vector (0/1 or TRUE/FALSE).
 #' @param prob numeric vector of predicted probabilities in \code{[0, 1]}.
+#'   Pairs with an \code{NA} in either vector are dropped with a warning;
+#'   an error is raised if no complete pairs remain.
 #' @param n_bins integer, number of bins (default 10). Must be a positive
 #'   integer.
 #' @return A data.frame with columns \code{bin_mid}, \code{obs_freq},
-#'   \code{mean_pred}, \code{n}.
+#'   \code{mean_pred}, and \code{n}. Empty bins are omitted. For each
+#'   returned bin, \code{n} counts the complete \code{truth}/\code{prob}
+#'   pairs assigned to that bin.
 #' @examples
 #' calibration_df(
 #'   truth = c(0, 0, 1, 1),

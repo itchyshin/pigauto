@@ -12,9 +12,25 @@
 \item{...}{Unused.}
 }
 \value{
-A small \code{summary_pigauto_result} object containing input-check,
-completion, output-role, and evaluation summaries.
+Visibly returns a \code{summary_pigauto_result} list with:
+\describe{
+\item{\code{check}}{The stored input check, or a notice when unavailable.}
+\item{\code{counts}}{\code{filled}: successfully filled target trait cells;
+\code{observed}: observed target trait cells; \code{unresolved}: target trait
+cells still missing; \code{not_modeled}: missing trait cells in excluded
+data-only rows.}
+\item{\code{per_trait}}{A data.frame of per-trait successful fill counts.}
+\item{\code{output_roles}}{Descriptions of completed data, prediction,
+uncertainty, conformal, and inference roles.}
+\item{\code{evaluation}}{The stored evaluation results.}
+}
 }
 \description{
 Summarise a pigauto result
+}
+\details{
+The summary object is returned visibly. Its print method shows
+only the four aggregate counts and a generic role notice. Inspect the
+corresponding fields for per-trait counts, check details, and evaluation
+metrics; these are not printed. The dots argument is unused.
 }

@@ -15,7 +15,10 @@ pull_gbif_centroids(
 )
 }
 \arguments{
-\item{species}{character vector of species names.}
+\item{species}{non-empty character vector of unique species names.
+Do not include missing or empty names. These names are used for
+GBIF lookups, output row names, and (when caching) cache-key
+generation.}
 
 \item{cache_dir}{directory to cache per-species RDS files.
 \code{NULL} (default) disables caching — not recommended for
@@ -36,8 +39,9 @@ exists.}
 filtered lat/lon occurrence points in each species' cache RDS
 under the \code{points} field.  Used by
 \code{\link{pull_worldclim_per_species}} for per-occurrence
-bioclim extraction.  Default \code{FALSE} preserves the
-pre-v0.9.1.9006 cache format.}
+bioclim extraction. Default \code{FALSE} stores centroid summaries
+without the raw point list. Requesting points refetches an existing
+centroid-only GBIF cache when the point list is absent.}
 }
 \value{
 A data.frame with columns \code{species}, \code{centroid_lat},
@@ -49,13 +53,15 @@ drop or impute).
 \description{
 Pulls occurrence records from the Global Biodiversity Information
 Facility (GBIF) for each species in \code{species}, aggregates them
-to a median lat / lon centroid, and returns a data.frame ready to
-be passed to \code{\link{impute}} via its \code{covariates} argument.
+to a median latitude / longitude centroid. The returned data.frame
+contains species identifiers, centroid coordinates, and occurrence
+counts.
 }
 \details{
-Caching is strongly recommended — GBIF rate-limits anonymous calls
-and the per-species fetch is expensive. With \code{cache_dir} set,
-each species gets one RDS file; subsequent calls skip the API.
+With the default \code{cache_dir = NULL}, results are not cached, so a
+later call queries GBIF again for each species. Set \code{cache_dir}
+to a writable directory to reuse stored results; the example below uses
+\code{"script/data-cache/gbif"}.
 
 For each species: resolve taxon via
 \code{\link[rgbif]{name_backbone}}, fetch up to
@@ -70,9 +76,25 @@ Species with zero post-filter records receive \code{NA} centroids;
 their rows are still included in the returned data.frame so it
 aligns with the input species list.
 
-Requires the optional \code{rgbif} package (in DESCRIPTION
-\code{Suggests}).  If \code{rgbif} is not installed the function
-errors with an installation message.
+For cache files written by pigauto, \code{refresh_cache = FALSE}
+reuses a readable entry when its saved species name exactly matches the
+request. A live GBIF query is needed when no matching cache entry is
+available or \code{refresh_cache = TRUE}. GBIF is also queried again
+for that species when \code{store_points = TRUE} and the saved
+\code{points} field is absent or \code{NULL}. With
+\code{cache_dir = NULL}, each call queries GBIF instead of using a
+cache. These live-query paths require the optional \code{rgbif} package.
+
+A cached result can still contain an \code{NA} centroid. That can mean
+pigauto could not match the species name, GBIF returned no records, or
+all records were excluded by pigauto's filters. Older cache entries may
+also reflect failed requests, including incomplete non-\code{NA} centroids
+or points when a later occurrence page failed. Set
+\code{refresh_cache = TRUE} to retry affected entries; this requires a
+live GBIF query and the optional \code{rgbif} package. A failed name
+lookup or occurrence request now stops with an error without caching a
+partial result or replacing an existing cache entry. Occurrence requests
+are retried before stopping.
 }
 \examples{
 \dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
@@ -82,6 +104,10 @@ cov_num <- cov[, c("centroid_lat", "centroid_lon"), drop = FALSE]
 \dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link{impute}} (pass the return value as
-\code{covariates}).
+\code{\link{impute}}. For geographic covariates, select only
+\code{centroid_lat} and \code{centroid_lon}. With one row per species,
+keep species row names so coordinates match the species in the traits and
+tree. With repeated
+observations, repeat each species' coordinates in trait-row order. Resolve
+missing or non-finite coordinates before fitting.
 }

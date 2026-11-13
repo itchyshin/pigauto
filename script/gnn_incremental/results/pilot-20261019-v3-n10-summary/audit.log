@@ -1,0 +1,33 @@
+Scenario accounting:
+                                scenario_id requested dataset_records
+nonlinear_primary         nonlinear_primary        10              10
+interactive_secondary interactive_secondary        10              10
+nonlinear_low_phylo     nonlinear_low_phylo        10              10
+linear_recovery             linear_recovery        10              10
+null_covariate               null_covariate        10              10
+                      complete_paired_gate_fits
+nonlinear_primary                            10
+interactive_secondary                        10
+nonlinear_low_phylo                          10
+linear_recovery                              10
+null_covariate                               10
+Run accounting:
+  requested_datasets completed_dataset_records missing_datasets
+1                 50                        50                0
+  unexpected_results requested_gate_fits recorded_gate_fits completed_gate_fits
+1                  0                 100                100                 100
+  invalid_output_gate_fits failed_gate_fits nonconverged_gate_fits
+1                        0                0                      0
+  infrastructure_skips gls_nonconverged_attempts gate_true_signal_estimated
+1                    0                         0                         50
+  gate_true_signal_unestimable gate_true_signal_missing
+1                            0                        0
+Method accounting:
+               method requested attempted successful failed nonconverged
+1        pigauto_full       100       100        100      0            0
+2  pigauto_neural_off       100       100        100      0            0
+3                mean       100       100        100      0            0
+4           lm_linear       100       100        100      0            0
+5 lm_poly_interaction       100       100        100      0            0
+6           phylo_gls       100       100        100      0            0
+RUN_ACCOUNTING_PASS

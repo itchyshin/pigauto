@@ -11,18 +11,23 @@ build_phylo_graph(tree, k_eigen = "auto", sigma_mult = 0.5, cache_path = NULL)
 
 \item{k_eigen}{integer or \code{"auto"}. Number of Laplacian eigenvectors
 to use as node features.  When \code{"auto"} (default), scales with tree
-size: \code{min(max(ceiling(n/20), 4), 32)}, then clamped so
-\code{k + 1 <= n}. That still gives 4 eigenvectors on trees with
-5-80 tips, 8 for 100-160 tips, 15 for 300 tips, and 32 for 640+
-tips. On 3- and 4-tip trees the floor of 4 is reduced so the
-Laplacian eigen-decomposition stays well-defined.}
+size using \code{min(max(ceiling(n/20), 4), 32)}, then clamps the result
+to at most \code{max(n - 1, 1)} for the tree size. For example, the
+formula gives 5 for 100 tips, 8 for 160, 15 for 300, and 32 for 640 or
+more. For a one-tip tree the clamp yields one, but the eigendecomposition
+rank guard still stops because no non-trivial eigenvector is available.
+An explicitly supplied integer is not reduced by this automatic clamp.}
 
 \item{sigma_mult}{numeric. Bandwidth multiplier (call it \eqn{s}):
 \eqn{\sigma = \mathrm{median}(D) \times s} (default \code{0.5}).}
 
 \item{cache_path}{character or \code{NULL}. Path to an \code{.rds} cache
 file. If the file exists and dimensions match, it is loaded instead of
-recomputing. \code{NULL} disables caching (default).}
+recomputing; matching dimensions do not establish that the tree tip
+identities/order or bandwidth are the same. Use a distinct cache path
+for each unchanged tree, tip order, and \code{sigma_mult} combination,
+and remove or refresh the cache after changing any of them.
+\code{NULL} disables caching (default).}
 }
 \value{
 A list with:
@@ -36,9 +41,10 @@ between tips, row/column-ordered by \code{tree$tip.label}.
 Returned so downstream functions can reuse it instead of calling
 \code{ape::cophenetic.phylo()} again.}
 \item{D_sq}{Numeric matrix (n x n). Element-wise squared cophenetic
-distances (\code{D * D}).  Used by \code{GraphTransformerBlock} for
-the learnable per-head Gaussian bandwidth (B2 rate-aware attention).
-Not freed during \code{impute()} training — only \code{D} is freed.}
+distances (\code{D * D}). Used to add a learnable per-head
+Gaussian distance bias to attention scores. During \code{impute()}
+training, \code{D_sq} remains allocated while \code{D} and
+\code{R_phy} are cleared before model fitting.}
 \item{R_phy}{Numeric matrix (n x n). Phylogenetic correlation matrix
 \code{cov2cor(ape::vcv(tree))} (diagonal = 1). Used by
 \code{\link{fit_baseline}} for BM conditional imputation.}
@@ -63,21 +69,16 @@ cluster structure of the phylogeny.
 }
 \section{Scaling}{
 
-For trees with more than 7500 tips, \code{build_phylo_graph()} uses
-\pkg{RSpectra}'s sparse Lanczos eigensolver (\code{eigs_sym}) instead
-of the dense \code{base::eigen()}. This reduces the spectral step
-from \eqn{O(n^3)} (hours at \eqn{n = 10{,}000}) to \eqn{O(n \cdot k
-\cdot \mathrm{iters})} (seconds to a minute). The threshold is
-conservative because the dense eigensolver is competitive on small
-and mid-size trees, and on pathological ultrametric simulations
-(\code{ape::rcoal}) the Laplacian spectrum has tight degenerate
-clusters that slow down Lanczos until the tree is fairly large. On
-realistic asymmetric phylogenies with variable branch lengths
-(e.g. the AVONET BirdTree Stage2 Hackett tree) the sparse path wins
-much earlier, and at \eqn{n = 9{,}993} it delivers a ~10x speedup
-over dense. The dense path is kept as the default for smaller trees
-and as a fallback when \pkg{RSpectra} is not installed, or if
-Lanczos fails to converge. The cophenetic distance matrix is
+The implementation stores the dense cophenetic-distance, adjacency,
+and Laplacian matrices, so memory use remains \eqn{O(n^2)}. For trees
+with more than 7500 tips, \pkg{RSpectra}'s iterative Lanczos eigensolver
+(\code{eigs_sym}) requests a partial spectrum from the dense Laplacian;
+it reduces the eigen-decomposition work, but does not make graph storage
+sparse. The dense \code{base::eigen()} path is used below this threshold
+and as a fallback when \pkg{RSpectra} is unavailable or Lanczos fails.
+Runtime depends on tree structure, hardware, and convergence. A benchmark
+on one 9,993-tip AVONET tree is a fixture-specific result, not a general
+timing guarantee. The cophenetic distance matrix is
 computed once per call and reused for both the adjacency and the
 spectral features; it is also returned in the result so that
 downstream consumers (notably \code{\link{fit_baseline}}) can skip

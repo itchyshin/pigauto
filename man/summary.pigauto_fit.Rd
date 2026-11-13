@@ -15,12 +15,16 @@
 \code{NULL} the summary skips per-trait test metrics).}
 }
 \value{
-Invisibly returns the evaluation data.frame (or \code{NULL} if
-\code{data} is not supplied).
+Invisibly returns the evaluation data.frame, or \code{NULL} if
+\code{data} is not supplied, the fit has no test cells, or evaluation
+fails. If evaluation fails, the method prints a message and returns
+\code{NULL}.
 }
 \description{
 Prints a formatted evaluation table including per-trait metrics,
-gate calibration, and conformal coverage.  Requires the original
+gate calibration, and conformal coverage. For a trait represented by
+multiple latent columns, the displayed gate uses its first latent column.
+Requires the original
 \code{pigauto_data} object to compute test-set performance.
 }
 \examples{
@@ -34,6 +38,10 @@ pd <- preprocess_traits(traits, tree)
 splits <- make_missing_splits(pd$X_scaled, trait_map = pd$trait_map)
 fit <- fit_pigauto(pd, tree, splits = splits, epochs = 5L,
                    verbose = FALSE)
+# This small test set illustrates the output; it is too small for a
+# stable performance conclusion. Use a held-out design sized for your
+# question. Repeated splits or seeds assess split/training variability,
+# but do not by themselves establish generalisation.
 summary(fit, data = pd)
 }
 }

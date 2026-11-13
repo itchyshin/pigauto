@@ -1,0 +1,42 @@
+ℹ Loading pigauto
+
+══ Testing test-evaluation-mode.R ══════════════════════════════════════════════
+
+[ FAIL 0 | WARN 0 | SKIP 0 | PASS 0 ]
+[ FAIL 1 | WARN 0 | SKIP 0 | PASS 0 ]
+[ FAIL 2 | WARN 0 | SKIP 0 | PASS 0 ]
+[ FAIL 2 | WARN 0 | SKIP 0 | PASS 1 ]
+[ FAIL 2 | WARN 0 | SKIP 0 | PASS 2 ]
+[ FAIL 3 | WARN 0 | SKIP 0 | PASS 2 ]
+[ FAIL 3 | WARN 0 | SKIP 0 | PASS 3 ]
+
+── Failure ('test-evaluation-mode.R:22:3'): production predictions cannot silently score their observed cells ──
+Expected `evaluate_imputation(pred, z$pd$X_scaled, z$spl)` to throw a error.
+
+── Failure ('test-evaluation-mode.R:31:3'): public evaluation mode agrees with masked prediction ──
+Expected `pred$imputed_latent` to equal `masked$imputed_latent`.
+Differences:
+actual vs expected
+                        [,1]         [,2]        [,3]       [,4]       [,5]       [,6]        [,7]
+- actual[1, ]    -1.53812922  0.237965668  1.31010818 -0.4315108 -1.7416190 -1.7416190 -1.29980208
++ expected[1, ]  -1.53812922  0.237965668  0.06963090 -0.4315108 -1.7416190 -1.7416190 -1.29980208
+  actual[2, ]    -1.51178757  0.763380546  1.31010818 -0.4315108 -1.7416190 -1.7416190 -1.29980208
+  actual[3, ]     0.30019118 -0.405090172  1.31010818 -1.7416190 -0.4315108 -1.7416190 -0.08123763
+  actual[4, ]    -0.97358378  1.931851265  1.31010818 -0.4315108 -1.7416190 -1.7416190 -1.29980208
+  actual[5, ]     0.15646657  0.237965668 -1.31010818 -1.7416190 -0.4315108 -1.7416190 -0.08123763
+  actual[6, ]    -0.32793879  0.237965668 -1.31010818 -1.7416190 -1.7416190 -0.4315108  1.13732682
+- actual[7, ]    -0.53855624  0.237965668  1.31010818 -1.7416190 -0.4315108 -1.7416190 -1.29980208
++ expected[7, ]  -0.53855624  0.237965668  1.31010818 -0.9133944 -1.1759638 -1.2367774 -1.29980208
+- actual[8, ]    -2.14137249  1.592423715 -1.31010818 -0.4315108 -1.7416190 -1.7416190  1.13732682
++ expected[8, ]  -2.14137249  1.592423715 -1.31010818 -0.4315108 -1.7416190 -1.7416190 -1.29980208
+- actual[9, ]    -1.23270136 -0.405090172 -1.31010818 -0.4315108 -1.7416190 -1.7416190 -0.08123763
++ expected[9, ]  -1.23270136 -0.405090172  0.09212278 -0.4315108 -1.7416190 -1.7416190 -0.08123763
+- actual[10, ]    0.36245657 -0.405090172  1.31010818 -1.7416190 -1.7416190 -0.4315108 -0.08123763
++ expected[10, ]  0.36245657  0.011391215  0.07797921 -1.7416190 -1.7416190 -0.4315108 -0.08123763
+and 49 more ...
+
+
+── Failure ('test-evaluation-mode.R:34:3'): public evaluation mode agrees with masked prediction ──
+Expected `predict(z$fit, evaluation = NA)` to throw a error.
+
+[ FAIL 3 | WARN 0 | SKIP 0 | PASS 3 ]

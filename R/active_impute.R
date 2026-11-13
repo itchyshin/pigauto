@@ -1,25 +1,19 @@
 # R/active_impute.R
 #
-# Active imputation: suggest which currently-missing cell, if observed
-# next, would most reduce TOTAL predictive variance across all
-# remaining missing cells.  Built on the BM conditional-MVN
-# variance-update formula derived via a Sherman-Morrison rank-1
-# inverse update.
+# Active imputation: rank currently-missing cells or species as candidates
+# for follow-up measurement. Continuous-family and multi-proportion traits
+# use BM variance-reduction scores; binary, categorical, and zero-inflated
+# count traits use label-propagation entropy scores, with an additional BM
+# magnitude score for zero-inflated counts.
 #
-# Inferential target: phylogenetically-informed sampling-design
-# guidance for partially-observed datasets.  When you can measure k
-# more species, which ones?  Higher delta_var_total means observing
-# that cell most reduces uncertainty across the rest of your tree.
+# These are model-based screening scores, not validated predictions of
+# field-sampling or downstream-analysis gains.
 #
-# Scope (v1, 2026-04-30):
-#   * Continuous-family traits only (continuous, count, ordinal,
-#     proportion).  These share the BM-via-conditional-MVN baseline
-#     where the variance update has a closed form.
-#   * Single-obs only.  Multi-obs would require species-level
-#     aggregation of the variance update; deferred.
-#   * Discrete traits (binary, categorical, zi_count) skipped silently
-#     in the public API.  Discrete uncertainty reduction would use
-#     expected-entropy-reduction (defer to v2).
+# Scope:
+#   * Single-observation data only; multi-observation inputs are rejected.
+#   * multi_proportion scores treat each composition as a whole row.
+#   * Scores use the implemented BM and label-propagation proxies; they do
+#     not evaluate the fitted GNN or a field design.
 #
 # References:
 #   Hansen, T.F. (1997). Stabilizing selection and the comparative
@@ -298,24 +292,42 @@ lp_entropy_reduction_categorical <- function(oh, sim) {
 
 # ---- suggest_next_observation -----------------------------------------------
 
-#' Suggest model-based candidate observations
+#' Rank currently missing cells or species for follow-up observation
 #'
-#' For a fitted \code{pigauto_result} (returned by \code{\link{impute}}),
-#' compute model-based BM/label-propagation proxy reductions in predictive
-#' variance or entropy across currently-missing cells if each candidate cell
-#' were observed next. Use the returned ranking as sampling-design guidance
-#' under those model assumptions; it is not an optimal-design guarantee or a
-#' demonstrated field gain.
+#' Use this function with a fitted \code{pigauto_result} (returned by
+#' \code{\link{impute}}) to shortlist currently missing species-trait cells
+#' or species for follow-up measurement. It estimates expected BM variance
+#' reduction for continuous-family traits and label-propagation entropy
+#' reduction for discrete traits. These model-based scores can guide a
+#' shortlist, but they do not guarantee a gain in a field study or downstream
+#' analysis and have not been validated against field-sampling outcomes.
+#' They use the BM or label-propagation baseline formulas, not predictions
+#' from the fitted GNN.
 #'
 #' @details
+#' \strong{A practical reading guide}
+#' \enumerate{
+#'   \item Choose \code{by = "cell"} for species-trait candidates or
+#'     \code{by = "species"} for a species-level shortlist.
+#'   \item For cell results, compare scores only within the same trait and
+#'     metric. Variance and entropy use different units, and variance scores
+#'     for different traits may use different transformed scales. Species
+#'     totals are approximate across-trait rankings.
+#'   \item Set \code{top_n} large enough before filtering; the function
+#'     truncates the ranking first. Use the scores to shortlist candidates,
+#'     then choose field measurements using feasibility and biological
+#'     priorities. The scores have not been validated against field outcomes.
+#' }
+#'
 #' Two metrics are supported, dispatched by trait type:
 #'
 #' \strong{Continuous-family traits} (continuous, count, ordinal,
-#' proportion) use the BM variance-reduction formula.  The variance-
-#' reduction formula is derived from a Sherman-Morrison rank-1 inverse
+#' proportion) use the BM variance-reduction formula. This formula is derived
+#' from a Sherman-Morrison rank-1 inverse
 #' update on the BM conditional MVN: adding species \eqn{s} to the
 #' observed set updates the inverse correlation matrix by a known
-#' closed form.  For each candidate cell \eqn{(s, t)},
+#' closed form. The equation below gives the expected total variance
+#' reduction when candidate cell \eqn{(s, t)} is observed.
 #' \deqn{
 #'   \Delta V(s, t) = \sigma_t^2
 #'     \sum_{i \in \mathrm{miss}_t} \frac{D_{ik}^2}{\alpha_k}
@@ -324,9 +336,19 @@ lp_entropy_reduction_categorical <- function(oh, sim) {
 #' matrix at currently-missing cells, \eqn{\alpha_k = D_{kk}} is the
 #' current relative leverage of cell \eqn{k}, and \eqn{\sigma_t^2} is
 #' the REML BM variance for trait \eqn{t}.
+#' Within one trait, a larger \eqn{\Delta V} means the model expects a
+#' greater reduction in the remaining BM prediction variance across missing
+#' cells if that candidate is measured.
 #'
-#' \strong{Discrete traits} (binary, categorical) use a label-
-#' propagation expected-entropy-reduction formula.  The current LP
+#' These variance scores use the untransformed tree correlation (Pagel's
+#' \eqn{\lambda = 1}), even when the fitted baseline used another value, so
+#' their candidate ranking may differ from one calculated under the fitted
+#' baseline. Treat them as screening scores.
+#'
+#' \strong{Discrete traits} (binary, categorical) use a
+#' label-propagation expected-entropy-reduction formula. Here \code{sim} contains
+#' phylogenetic similarity weights between species; observed classes with
+#' larger weights contribute more to the LP probabilities. The current LP
 #' probability at species \eqn{i} is
 #' \eqn{p_i = \mathrm{sim}[i, \mathrm{obs}] y_{\mathrm{obs}} /
 #' \sum \mathrm{sim}[i, \mathrm{obs}]}, with entropy
@@ -338,27 +360,38 @@ lp_entropy_reduction_categorical <- function(oh, sim) {
 #' across all currently-missing cells (the entropy at
 #' \eqn{s_{\mathrm{new}}} itself drops to 0).
 #'
-#' \strong{Variance and entropy are NOT directly comparable.}  The
-#' output sorts within each metric and the cross-metric ordering by
-#' \code{delta} is approximate.  When you want a strict ranking,
-#' filter by \code{metric} first.
+#' Scores require at least one missing cell. Continuous-family and
+#' multi-proportion variance scores require at least five observed cells.
+#' Binary and categorical entropy scores require at least one observed
+#' class. For \code{zi_count}, gate entropy requires at least one observed
+#' gate value; its magnitude variance contribution is zero when fewer than
+#' five non-zero magnitudes are observed. Traits that do not meet these
+#' conditions are omitted, so the result can be empty.
 #'
-#' Reductions are summed across the included traits for each species
-#' when \code{by = "species"}, supporting the typical use case where
-#' measuring a species observes all of its currently-missing traits
-#' at once.  At \code{by = "species"}, the per-trait variance and
-#' entropy reductions are summed separately into
-#' \code{delta_var_total} and \code{delta_entropy_total} columns; the
-#' \code{delta} column is whichever is non-NA (or
-#' \code{delta_var_total} when both are populated).  Cross-type
-#' species-level ranking is approximate -- see the variance-vs-
-#' entropy caveat above.
+#' \strong{Variance and entropy are not directly comparable.} For
+#' \code{by = "cell"}, rows are sorted globally by \code{delta} and then
+#' truncated to \code{top_n}, including across metrics. Compare candidates
+#' within the same trait and metric. If you plan to filter the returned rows,
+#' set \code{top_n} large enough to retain the candidates you want; filtering
+#' cannot recover rows already removed by the limit. For \code{by = "species"},
+#' output has four columns:
+#' \code{species}, \code{delta_var_total}, \code{delta_entropy_total}, and
+#' \code{n_traits_missing}; the two totals are summed separately across that
+#' species' included missing traits. Species are ranked by
+#' \code{delta_var_total} when it is positive, otherwise by
+#' \code{delta_entropy_total}; this is only an approximate cross-metric
+#' ranking because the measures have different units.
 #'
-#' The ranking is conditional on the fitted BM or label-propagation proxy and
-#' its missing-data assumptions. It does not establish that collecting a
-#' selected observation improves a future field study or downstream analysis.
+#' Variance reductions across traits can also be measured on different
+#' transformed scales, so variance-only species totals are not a common
+#' measure of biological value. Treat these outputs as model-based screening
+#' scores: compare cell candidates within the same trait and metric, and use
+#' cross-trait species rankings to shortlist candidates rather than to claim
+#' equal sampling value. Choose among shortlisted candidates using field
+#' feasibility and biological priorities. The package does not validate these
+#' rankings against field-sampling outcomes.
 #'
-#' \code{zi_count} (v2): observing a missing zi_count cell reveals
+#' \code{zi_count}: observing a missing zi_count cell reveals
 #' the gate value (entropy reduction at the gate column, computed via
 #' the LP binary formula) AND, with probability \eqn{p_{\mathrm{gate}}}
 #' (current LP estimate at \eqn{s_{\mathrm{new}}}), reveals a
@@ -369,9 +402,13 @@ lp_entropy_reduction_categorical <- function(oh, sim) {
 #' V_{\mathrm{mag}}}) AND \code{delta_entropy_total} (= gate entropy
 #' reduction).  \code{metric} is set to \code{"variance"} so the row
 #' sorts on the magnitude scale; \code{delta_entropy_total} is
-#' available for users who care about gate-uncertainty separately.
+#' available for users who care about gate-uncertainty separately. The
+#' current magnitude calculation also treats structurally missing magnitudes
+#' for species with an observed zero gate as targets, although those values
+#' cannot be observed. Thus the total can overstate variance reduction across
+#' magnitudes that could actually be measured.
 #'
-#' \code{multi_proportion} (v2): observing a row reveals all K
+#' \code{multi_proportion}: observing a row reveals all K
 #' simplex components simultaneously.  Per-component variance
 #' reductions are computed via BM Sherman-Morrison on each CLR-z
 #' latent column, summed across components.  \code{metric} is
@@ -380,26 +417,38 @@ lp_entropy_reduction_categorical <- function(oh, sim) {
 #' @param result A \code{pigauto_result} object returned by
 #'   \code{\link{impute}}.  Must have been produced from single-obs
 #'   data; multi-obs inputs error with a clear message.
-#' @param top_n integer, default \code{10L}.  Number of suggestions to
-#'   return (descending by \code{delta}).
+#' @param top_n integer, default \code{10L}. Number of suggestions to
+#'   return. With \code{by = "cell"}, rows are sorted globally by decreasing
+#'   \code{delta} and truncated to the first \code{top_n} rows after applying
+#'   the \code{types} filter. Set \code{top_n} large enough to retain the
+#'   candidates you need before applying any further filters, then compare candidates within
+#'   the same trait and metric; cross-trait or cross-metric scores do not
+#'   represent a common biological sampling value. With \code{by = "species"},
+#'   species are ranked by summed variance reduction when positive, otherwise
+#'   by summed entropy reduction.
 #' @param by character, one of \code{"cell"} (default) or
-#'   \code{"species"}.  \code{"cell"} returns individual
-#'   \code{(species, trait)} pairs.  \code{"species"} aggregates by
-#'   species (summing reductions across the species' currently-missing
-#'   traits).
+#'   \code{"species"}. \code{"cell"} returns individual
+#'   \code{(species, trait)} pairs. \code{"species"} returns
+#'   \code{species}, \code{delta_var_total},
+#'   \code{delta_entropy_total}, and \code{n_traits_missing}, with the
+#'   two reductions summed separately across currently missing traits.
 #' @param types character vector of pigauto trait types to include.
 #'   Default includes all eight supported types: \code{continuous},
 #'   \code{count}, \code{ordinal}, \code{proportion}, \code{binary},
-#'   \code{categorical}, \code{zi_count} (added v2, 2026-05-01),
-#'   \code{multi_proportion} (added v2).
+#'   \code{categorical}, \code{zi_count}, and \code{multi_proportion}.
 #' @return A data.frame of class \code{"pigauto_active"}.  Columns
 #'   when \code{by = "cell"}: \code{species}, \code{trait},
 #'   \code{type}, \code{metric} (\code{"variance"} or \code{"entropy"}),
-#'   \code{delta}, \code{delta_var_total} (NA for discrete rows), and
-#'   \code{delta_entropy_total} (NA for continuous rows), sorted by
-#'   \code{delta} descending.  When \code{by = "species"}:
+#'   \code{delta}, \code{delta_var_total} (NA for entropy-only rows), and
+#'   \code{delta_entropy_total} (NA for variance-only rows), sorted globally
+#'   by decreasing \code{delta}, including across metrics. Cross-metric order
+#'   is approximate because the metrics have different units. When
+#'   \code{by = "species"} and rows are returned, columns are:
 #'   \code{species}, \code{delta_var_total}, \code{delta_entropy_total},
-#'   \code{n_traits_missing}, sorted by the SUM of available metrics.
+#'   \code{n_traits_missing}, sorted by \code{delta_var_total} when positive
+#'   and otherwise by \code{delta_entropy_total}. If no candidates remain,
+#'   the empty result instead has the seven cell-mode columns and does not
+#'   include \code{n_traits_missing}.
 #' @examples
 #' \donttest{
 #' data(avonet300, tree300, package = "pigauto")
@@ -409,7 +458,9 @@ lp_entropy_reduction_categorical <- function(oh, sim) {
 #' rownames(traits) <- tree$tip.label
 #' traits$Mass[seq_len(3L)] <- NA_real_
 #' res <- impute(traits, tree, epochs = 5L, verbose = FALSE)
-#' suggest_next_observation(res, top_n = 5L)
+#' # Request enough rows before filtering to one trait.
+#' ranked <- suggest_next_observation(res, top_n = 50L)
+#' subset(ranked, trait == "Mass")
 #' suggest_next_observation(res, top_n = 5L, by = "species")
 #' }
 #' @seealso \code{\link{impute}}
@@ -727,6 +778,30 @@ suggest_next_observation <- function(result, top_n = 10L,
   structure(out, class = c("pigauto_active", "data.frame"), by = by)
 }
 
+#' Print a compact summary of active-imputation rankings
+#'
+#' @rdname suggest_next_observation
+#' @aliases print.pigauto_active
+#' @usage \method{print}{pigauto_active}(x, ...)
+#' @param x A \code{pigauto_active} object returned by
+#'   \code{suggest_next_observation()}.
+#' @param ... Further arguments passed to the data-frame print method when
+#'   rankings are nonempty.
+#' @return Invisibly returns \code{x}. For nonempty rankings, the printed
+#'   object is converted to a plain data frame, so the returned object no
+#'   longer has the \code{"pigauto_active"} class or its \code{"by"}
+#'   attribute. An empty result returns the original object unchanged.
+#' @section Printing:
+#' The print method always reports the ranking mode and number of rows.
+#' Nonempty rankings are printed as a plain data frame, with \code{...}
+#' forwarded to its print method, followed by the proxy-ranking caution.
+#' An empty result means no eligible candidates under the selected trait
+#' types and scoring requirements. Missing cells may remain when their trait
+#' does not meet a minimum-observation requirement. The console message reports
+#' candidate eligibility; it does not mean that the whole dataset is complete.
+#' The nonempty branch invisibly returns the plain data frame without the
+#' \code{by} attribute; the empty branch invisibly returns the original
+#' \code{x}.
 #' @export
 print.pigauto_active <- function(x, ...) {
   by <- attr(x, "by")
@@ -734,7 +809,7 @@ print.pigauto_active <- function(x, ...) {
   cat("Active-imputation suggestions (",
       sprintf("by = %s, n = %d", by, nrow(x)), ")\n", sep = "")
   if (nrow(x) == 0L) {
-    cat("  No candidates -- dataset is fully observed on continuous-family traits.\n")
+    cat("  No eligible candidates under the selected settings.\n")
     return(invisible(x))
   }
   attrs <- attributes(x)

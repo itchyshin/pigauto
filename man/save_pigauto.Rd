@@ -20,14 +20,20 @@ Invisible \code{path}.
 }
 \description{
 Serialises a \code{pigauto_fit} object to disk, including the torch
-model state.  The saved file can be loaded on any machine with the
-same pigauto version.
+model state, for later loading with \code{load_pigauto()}. Matching
+pigauto versions alone do not guarantee cross-version or cross-platform
+compatibility.
 }
 \details{
-Standard \code{saveRDS()} does not work for pigauto fits because
-torch tensor states cannot be serialised by R's native mechanism.
-This function converts the model state to a portable raw format
-before saving.
+Use \code{save_pigauto()} and \code{load_pigauto()} as the package's
+save/load interface. For GNN fits containing torch tensors, native
+\code{saveRDS()} / \code{readRDS()} does not preserve a usable tensor
+state; this function serialises that state before saving. pigauto checks
+its package version after loading the tensors, but does not check R,
+torch/LibTorch, or operating-system compatibility. Retain the software
+environment used to save the fit and verify loading and predictions in
+the destination environment. GNN-off fits have an empty model state and
+do not use this tensor serialization path.
 }
 \examples{
 \donttest{
@@ -39,7 +45,7 @@ rownames(traits) <- tree$tip.label
 traits$Mass[seq_len(3L)] <- NA_real_
 fit <- impute(traits, tree, epochs = 5L, verbose = FALSE)$fit
 path <- tempfile(fileext = ".pigauto")
-save_pigauto(fit, path)
+suppressMessages(save_pigauto(fit, path))
 fit2 <- load_pigauto(path)
 }
 }

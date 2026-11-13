@@ -75,7 +75,8 @@ print(pd)
 
 
 ## ----splits-------------------------------------------------------------------
-splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.25, seed = 42)
+splits <- make_missing_splits(pd$X_scaled, missing_frac = 0.25, seed = 42,
+                              trait_map = pd$trait_map)
 
 cat("Total held-out cells:", length(splits$val_idx) + length(splits$test_idx), "\n")
 cat("  Validation:", length(splits$val_idx), "\n")
@@ -146,7 +147,8 @@ cat("Kernel bandwidth sigma:", round(graph$sigma, 3), "\n")
 
 ## ----evaluate, eval=FALSE-----------------------------------------------------
 # # Held-out scores (z-score RMSE for continuous traits)
-# evaluate_imputation(pred$imputed_latent, pd$X_scaled, splits)
+# pred_eval <- predict(fit, evaluation = TRUE)
+# evaluate_imputation(pred_eval, pd$X_scaled, splits)
 #
 # # Per-trait calibrated gate. 0 means baseline-only.
 # fit$r_cal

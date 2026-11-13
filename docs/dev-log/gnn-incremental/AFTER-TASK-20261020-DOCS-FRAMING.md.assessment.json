@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "79c37cca377f6fccdd780789d1ddd587145a4e8593b3fd33cc483a3f74c2d92c",
+  "draft_version": "v2",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex self-review",
+  "method": "Read the complete after-task report and checked its scope, validation claims, linked metric correction, and output records against the saved diff and command results.",
+  "genre": "software after-task report",
+  "coverage": "Whole report after adding the general article title and the pooled RMSE correction.",
+  "score": 3,
+  "style_status": "judged",
+  "score_reason": "The report uses concrete actions, checks, and limits with little repeated scaffolding; style score is subjective and not an authorship measure.",
+  "confidence": "medium",
+  "confidence_reason": "The small report was read in full and its technical statements were checked; style judgment remains uncalibrated.",
+  "examples": [
+    {
+      "location": "section 10",
+      "cue": "The evidence still comes from one repeated-observation design",
+      "impact": "The sentence states the key limit before listing untested dimensions.",
+      "repair": "No change needed.",
+      "line": 57,
+      "quote": "The evidence still comes from one repeated-observation design with 500 species, about five observations per species, ten covariates, and the registered missingness pattern."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "The report separates observed campaign evidence from proposed future work.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Scope and validation statements reflect the article, linked report correction, and final command outputs; the full reverify limitations are stated.",
+  "references_gate": "not_applicable",
+  "references_gate_reason": "No references are cited in the report.",
+  "date": "2026-10-20",
+  "calibration_status": "No independent human calibration was performed; no style benchmark claim is made.",
+  "interpretation": "perceived_style_not_authorship"
+}

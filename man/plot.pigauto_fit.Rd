@@ -17,9 +17,11 @@ regularisation) and validation loss over epochs. A fit with
 \code{plot(fit)} then shows \code{"gates"} instead.
 \code{"gates"}: bar plot of calibrated gate values per trait,
 coloured by trait type (green = continuous, blue = count,
-orange = ordinal, red = binary, purple = categorical).
+orange = ordinal, red = binary, purple = categorical). When
+\code{gnn = FALSE}, gate values are zero, so no bars may be visible;
+that is expected for a baseline-only fit.
 \code{"conformal"}: bar plot of conformal prediction scores per
-trait with a reference line at the median score.}
+trait with a dashed median line and its value labelled above the bars.}
 
 \item{...}{Additional arguments passed to base plotting functions.}
 }

@@ -9,7 +9,8 @@ read_traits(
   species_col = "species",
   trait_cols = NULL,
   factor_cols = NULL,
-  ordered_cols = NULL
+  ordered_cols = NULL,
+  ordinal_levels = NULL
 )
 }
 \arguments{
@@ -23,7 +24,13 @@ read_traits(
 
 \item{factor_cols}{character vector of columns to coerce to \code{factor}.}
 
-\item{ordered_cols}{character vector of columns to coerce to \code{ordered}.}
+\item{ordered_cols}{character vector of columns to coerce to \code{ordered}.
+Without \code{ordinal_levels}, levels follow R's default sorting order.}
+
+\item{ordinal_levels}{named list specifying the scientific order of ordinal
+levels, for example \code{list(status = c("LC", "NT", "VU", "EN", "CR"))}.
+Each named column is converted to an ordered factor. Unlisted observed
+values are an error, so a misspelling cannot silently become missing.}
 }
 \value{
 A \code{data.frame} with unique species names as row names.

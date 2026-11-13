@@ -10,11 +10,16 @@ mask_missing(X)
 \item{X}{numeric matrix (species x traits or species x latent columns).}
 }
 \value{
-Logical matrix, \code{TRUE} = observed.
+Logical matrix, \code{TRUE} = observed (non-missing) in \code{X}.
 }
 \description{
-Returns a logical matrix of the same dimensions as \code{X}, with
-\code{TRUE} where values are observed (not \code{NA}).
+Returns a logical matrix of the same dimensions as \code{X}. Here
+\code{TRUE} means the value in \code{X} is observed (non-missing), and
+\code{FALSE} means it is an existing \code{NA}. This is different from
+the \code{mask} returned by \code{make_missing_splits()}, where
+\code{TRUE} means a cell was not artificially held out and can include
+cells that were already \code{NA}. Combine that split mask with
+\code{!is.na(X)} to identify observed training cells.
 }
 \examples{
 X <- matrix(c(1, NA, 3, 4), nrow = 2)

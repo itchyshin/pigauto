@@ -26,7 +26,7 @@ rownames(traits) <- tree$tip.label
 traits$Mass[seq_len(3L)] <- NA_real_
 fit <- impute(traits, tree, epochs = 5L, verbose = FALSE)$fit
 path <- tempfile(fileext = ".pigauto")
-save_pigauto(fit, path)
+suppressMessages(save_pigauto(fit, path))
 pred <- predict(load_pigauto(path))
 }
 }

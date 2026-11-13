@@ -71,6 +71,46 @@ test_that("summary treats an attempted but missing fill as unresolved", {
   expect_identical(sum(unlist(out$counts)), 2L)
 })
 
+test_that("print methods describe targeted cells and tree rows accurately", {
+  data <- list(
+    species_names = c("a", "b"),
+    trait_map = list(x = list(name = "x", type = "continuous"))
+  )
+  mask <- matrix(c(FALSE, TRUE), ncol = 1, dimnames = list(c("a", "b"), "x"))
+  completed <- data.frame(x = c(1, NA_real_))
+
+  result <- structure(list(completed = completed, imputed_mask = mask,
+                           check = NULL, evaluation = NULL, fit = NULL,
+                           data = data), class = "pigauto_result")
+  result_text <- paste(capture.output(print(result)), collapse = "\n")
+  expect_match(result_text, "1 targeted / 2 total")
+  expect_match(result_text, "Per-trait targeted cell counts")
+  expect_false(grepl("imputed /", result_text, fixed = TRUE))
+
+  mi <- structure(list(data = data, imputed_mask = mask,
+                       draws_method = "conformal", m = 1L),
+                  class = "pigauto_mi")
+  mi_text <- paste(capture.output(print(mi)), collapse = "\n")
+  expect_match(mi_text, "1 targeted / 2 total")
+  expect_false(grepl("imputed /", mi_text, fixed = TRUE))
+
+  tree_mi <- structure(
+    list(n_trees = 2L, m_per_tree = 1L, m = 2L,
+         datasets = list(data.frame(species = c("a", "a", "b"),
+                                   x = c(1, NA_real_, 3))),
+         species_col = "species",
+         imputed_mask = matrix(c(FALSE, TRUE, FALSE), ncol = 1,
+                               dimnames = list(NULL, "x")),
+         draws_method = "mc_dropout"),
+    class = "pigauto_mi_trees"
+  )
+  tree_text <- paste(capture.output(print(tree_mi)), collapse = "\n")
+  expect_match(tree_text, "Rows\\s+: 3")
+  expect_match(tree_text, "1 targeted / 3 total")
+  expect_false(grepl("Species", tree_text, fixed = TRUE))
+  expect_false(grepl("imputed /", tree_text, fixed = TRUE))
+})
+
 test_that("report contract handles legacy checks and escapes input messages", {
   result <- structure(list(completed = data.frame(x = 1),
                            check = list(status = "ready<script>",
@@ -86,4 +126,31 @@ test_that("report contract handles legacy checks and escapes input messages", {
   expect_match(html, "multi_impute_analysis() only in its documented narrow route", fixed = TRUE)
   legacy <- .report_contract_html(NULL, NULL)
   expect_match(legacy, "Preflight check unavailable", fixed = TRUE)
+})
+
+test_that("get_imputed_datasets returns the stored datasets exactly", {
+  d <- data.frame(x = c(1, 2), row.names = c("a", "b"))
+  mi <- structure(list(datasets = list(d, d), m = 2L),
+                  class = c("pigauto_diagnostic_mi", "pigauto_mi", "list"))
+  expect_identical(get_imputed_datasets(mi), mi$datasets)
+})
+
+test_that("get_imputed_datasets accepts analysis and tree-sensitivity objects", {
+  d <- data.frame(x = 1)
+  analysis <- structure(list(datasets = list(d)),
+                        class = c("pigauto_analysis_mi", "pigauto_mi", "list"))
+  trees <- structure(list(datasets = list(d, d, d)),
+                     class = c("pigauto_tree_sensitivity_diagnostic",
+                               "pigauto_mi_trees", "pigauto_mi"))
+  expect_identical(get_imputed_datasets(analysis), analysis$datasets)
+  expect_identical(get_imputed_datasets(trees), trees$datasets)
+})
+
+test_that("get_imputed_datasets rejects non-mi inputs with guidance", {
+  result <- structure(list(completed = data.frame(x = 1)),
+                      class = "pigauto_result")
+  expect_error(get_imputed_datasets(result), "completed_data")
+  expect_error(get_imputed_datasets(result), "multi_impute")
+  expect_error(get_imputed_datasets(list()), "pigauto_mi")
+  expect_error(get_imputed_datasets(data.frame(x = 1)), "pigauto_mi")
 })
