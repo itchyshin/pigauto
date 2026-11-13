@@ -1,0 +1,103 @@
+{
+  "all_dispositions": {
+    "changed_or_removed_by_unmerged_repair": 80,
+    "covered_with_named_test_set": 12827,
+    "uncovered": 95
+  },
+  "catalog": 13002,
+  "collective_only": 13,
+  "complete": false,
+  "coverage_percent": 99.25396092908784,
+  "current": {
+    "covered": 12905,
+    "valid": 13002
+  },
+  "mapped_regressions": [],
+  "missing_torch_methods": [],
+  "new_current": 80,
+  "new_current_covered": 78,
+  "new_current_uncovered": 2,
+  "original_miss_dispositions": {
+    "changed_or_removed_by_unmerged_repair": 29,
+    "covered_with_named_test_set": 1780,
+    "uncovered": 95
+  },
+  "raw_RDS_bytes": "not locally recomputed",
+  "result": "INDEPENDENT_PROFILE_REVIEW_PASS",
+  "single_named": 12892,
+  "source_sha": "d229bddb1f280d2537e2753976fbd369af4fff4c",
+  "strict_regressions": 0,
+  "torch_methods_verified": true,
+  "original_misses_unresolved": 124,
+  "current_misses": 97,
+  "new_uncovered_locations": [
+    [
+      "R/preprocess_traits.R",
+      553
+    ],
+    [
+      "R/preprocess_traits.R",
+      554
+    ]
+  ],
+  "recorded_source_hashes_verified": 191,
+  "source_hash_delta_vs82ce": [
+    "tests/testthat/test-coverage-100-mi.R"
+  ],
+  "reviewed_MI_sha256": "160c30abe343c8c7dcadabbba3185a952c3d1e1f481ff35ed44ea8140badfbeb",
+  "runtime_and_configs_equal82ce": true,
+  "comparison_to82ce": {
+    "same_executable_keys": 13002,
+    "same_uncovered_keys": 97,
+    "catalog_mapping_disposition_changes": 0,
+    "named_keyset_changes": 0,
+    "single_keyset_changes": 0,
+    "coverage_loss_vs82ce": 0,
+    "comparison_kind": "independently measured, not inferred"
+  },
+  "raw_log_counts": {
+    "instrumented": {
+      "pass": 5741,
+      "warn": 192,
+      "skip": 34,
+      "fail": 0
+    },
+    "installed": {
+      "pass": 5738,
+      "warn": 192,
+      "skip": 35,
+      "fail": 0
+    }
+  },
+  "all_raw_conditions_classified": true,
+  "every_raw_condition_row_matches": true,
+  "all_witness_filenames_in_manifest": true,
+  "cpu_MPS_witnesses": 0,
+  "check_summary_errors_warnings_notes": [
+    0,
+    0,
+    0
+  ],
+  "manual": false,
+  "source_gate_raw_assertions": 192,
+  "cpu_only": true,
+  "recorded_elapsed_seconds": 1082,
+  "raw_RDS_remote_receipt_sha256": "8b2998deb08b3c1862f01c6ade94c9cca7dd9009167df73772139615a609d0e5",
+  "same_source_MPS": {
+    "receipt": "/tmp/pigauto-d229-mps-focused.log",
+    "passed": 12,
+    "conditions": 0,
+    "coordinator_prechecked_HEAD": "d229bddb1f280d2537e2753976fbd369af4fff4c",
+    "embedded_log_full_git_sha": false,
+    "coverage_aggregation": false
+  },
+  "exact_uncovered_inventory": "/tmp/pigauto-sol-d229-uncovered.csv",
+  "source_runtime_artifact_delivery_leg": "NO_BLOCKER",
+  "historical100gate": "UNMET_NOT_A_DELIVERY_CONDITION",
+  "remaining_delivery_gates": [
+    "D3 docs-only publication",
+    "D4 PR/CI verification"
+  ],
+  "PR_CI": "not independently refreshed in this artifact review",
+  "new_work_or_aggregation": "NONE"
+}
