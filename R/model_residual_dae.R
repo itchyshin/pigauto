@@ -34,7 +34,8 @@
 # effective gate; discrete columns init near 0.  Safety comes from
 # lambda_gate regularisation, not the architectural cap.
 
-ResidualPhyloDAE <- torch::nn_module(
+ResidualPhyloDAE <- function(...) {
+  module <- torch::nn_module(
   "ResidualPhyloDAE",
   initialize = function(input_dim = NULL, hidden_dim = NULL, coord_dim = NULL,
                         cov_dim,
@@ -430,7 +431,9 @@ ResidualPhyloDAE <- torch::nn_module(
             fixed_effects = if (!is.null(fixed_effects)) fixed_effects else NULL)
     }
   }
-)
+  )
+  module(...)
+}
 
 
 # ---- Internal: scatter_mean for aggregation ----------------------------------

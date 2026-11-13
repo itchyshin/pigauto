@@ -18,8 +18,10 @@ knitr::opts_chunk$set(
 
 ## Install pigauto
 
-Install the package before running the examples. The optional torch runtime is
-needed only if you plan to fit the graph neural network with `gnn = TRUE`.
+Install the package before running the examples. The R package `torch` is an
+installation dependency, but the separate torch runtime is needed only for the
+graph neural network with `gnn = TRUE`. Starting pigauto and fitting the default
+baseline do not load torch or prompt to download that runtime.
 
 ```{r install, eval=FALSE}
 install.packages("pigauto")
@@ -34,7 +36,7 @@ install.packages("pak") # only needed once
 pak::pak("itchyshin/pigauto")
 ```
 
-Install torch only if you plan to use `gnn = TRUE`:
+Install the torch runtime if you plan to use `gnn = TRUE`:
 
 ```{r install-torch, eval=FALSE}
 torch::install_torch()
