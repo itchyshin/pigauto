@@ -216,3 +216,80 @@ test_that("[lambda-cov] transform_tree_pagel is exact on the correlation scale f
 
   expect_equal(R_out, expected, tolerance = 1e-10, ignore_attr = TRUE)
 })
+
+test_that("rank-deficient covariates match an equivalent treatment design", {
+  n <- 36L
+  group <- factor(rep(letters[1:3], length.out = n))
+  x <- seq(-1, 1, length.out = n)
+  X_ref <- cbind(1, model.matrix(~ group)[, -1, drop = FALSE], x)
+  X_full <- cbind(1, model.matrix(~ group - 1), x, 2 * x)
+  R <- 0.7 ^ abs(outer(seq_len(n), seq_len(n), "-"))
+  y <- 2 + as.numeric(group) + x + sin(seq_len(n)) / 3
+  y[c(4, 8, 15, 22, 29, 34)] <- NA_real_
+  ref <- pigauto:::build_pagel_nll_cache(y, R, X = X_ref)
+  full <- pigauto:::build_pagel_nll_cache(y, R, X = X_full)
+  grid <- c(0.1, 0.4, 0.8)
+  nll_ref <- vapply(grid, ref$nll, numeric(1))
+  nll_full <- vapply(grid, full$nll, numeric(1))
+  expect_true(all(is.finite(nll_full) & nll_full < 1e100))
+  expect_equal(nll_full - nll_full[1], nll_ref - nll_ref[1], tolerance = 1e-7)
+  a <- pigauto:::bm_impute_col_with_cov(y, X_ref, R, lambda = "estimate", lrt_threshold = 0)
+  b <- pigauto:::bm_impute_col_with_cov(y, X_full, R, lambda = "estimate", lrt_threshold = 0)
+  expect_equal(b$lambda_hat, a$lambda_hat, tolerance = 1e-5)
+  expect_equal(b$mu, a$mu, tolerance = 1e-6)
+  expect_equal(b$se, a$se, tolerance = 1e-6)
+  expect_equal(as.numeric(X_full %*% b$beta_hat), as.numeric(X_ref %*% a$beta_hat), tolerance = 1e-6)
+})
+
+test_that("covariate baseline handles no observed traits", {
+  y <- rep(NA_real_, 12)
+  X <- cbind(1, rep(c(0, 1), 6))
+  result <- pigauto:::bm_impute_col_with_cov(y, X, diag(12))
+  expect_equal(result$mu, rep(0, 12))
+  expect_equal(result$se, rep(1, 12))
+})
+
+test_that("lambda diagnostic is unavailable when covariate GLS falls back", {
+  X <- cbind(1, seq_len(12))
+  empty <- pigauto:::bm_impute_col_with_cov(rep(NA_real_, 12), X, diag(12),
+                                            lambda = "estimate")
+  expect_true(is.na(empty$lambda_hat))
+  y <- c(seq_len(10), NA, NA)
+  saturated <- pigauto:::bm_impute_col_with_cov(y, diag(12), diag(12),
+                                                lambda = "estimate")
+  expect_true(is.na(saturated$lambda_hat))
+  zero <- pigauto:::bm_impute_col_with_cov(y, matrix(0, 12, 1), diag(12),
+                                           lambda = "estimate")
+  expect_true(is.na(zero$lambda_hat))
+})
+
+test_that("missing-only factor levels warn that their effects are unidentified", {
+  group <- factor(c(rep(c("a", "b"), 8), "c", "c"), levels = c("a", "b", "c"))
+  X <- cbind(1, model.matrix(~ group - 1))
+  y <- c(seq_len(16) / 4 + sin(seq_len(16)), NA, NA)
+  expect_warning(result <- pigauto:::bm_impute_col_with_cov(y, X, diag(18),
+                            lambda = "estimate", lrt_threshold = 0),
+                 "not identifiable")
+  expect_true(all(is.finite(result$mu)))
+  expect_equal(result$beta_hat[4], 0)
+})
+
+test_that("sparse covariate baseline stores a replayable fallback lambda", {
+  set.seed(258L)
+  tree <- ape::rtree(18)
+  traits <- data.frame(y = c(seq_len(8), rep(NA_real_, 10)), row.names = tree$tip.label)
+  covs <- data.frame(group = factor(rep(c("a", "b", "c"), 6)), row.names = tree$tip.label)
+  data <- preprocess_traits(traits, tree, covariates = covs)
+  baseline <- fit_baseline(data, tree, predict_method = "per_column")
+  expect_equal(unname(baseline$lambda_per_trait[1]), 1)
+  expect_true("y" %in% attr(baseline$lambda_per_trait, "lambda_unestimated"))
+  replay <- fit_baseline(data, tree, predict_method = "per_column", lambda_fixed = baseline$lambda_per_trait)
+  expect_equal(replay$mu, baseline$mu)
+  expect_equal(replay$se, baseline$se)
+  expect_warning(result <- impute(traits, tree, covariates = covs, missing_frac = 0,
+                   predict_method = "per_column", verbose = FALSE, gnn = FALSE),
+                 "GNN is off")
+  pred <- predict(result$fit)
+  expect_true(all(is.finite(pred$imputed$y)))
+  expect_error(fit_baseline(data, tree, lambda_fixed = c(y = NA_real_)), "finite")
+})

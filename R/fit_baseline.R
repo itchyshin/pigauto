@@ -269,7 +269,10 @@
 #'       column, named by \code{colnames(data$X_scaled)}. Entries report
 #'       values available for each column; exact joint prediction also uses
 #'       the shared \code{lambda_block}; categorical one-vs-rest fit lambdas
-#'       are not reported in this vector.}
+#'       are not reported in this vector. For covariate-aware columns where
+#'       lambda could not be estimated, the effective fallback is 1 and the
+#'       latent column names are recorded in the vector's
+#'       \code{lambda_unestimated} attribute.}
 #'     \item{lambda_block}{Numeric scalar, the shared lambda used internally
 #'       by the joint fit for covariance estimation and cross-trait
 #'       conditional calculations; \code{NA} when no joint fit ran.}
@@ -562,6 +565,7 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
   # `lambda_block_out` is the block value from whichever joint fit ran
   # (NA if none did); see R/joint_mvn_solver.R's $lambda_block.
   lambda_per_trait <- stats::setNames(rep(1, p), colnames(X))
+  lambda_unestimated <- character(0)
   lambda_block_out <- NA_real_
 
   # ---- Identify BM-eligible columns (continuous in latent space) -----------
@@ -1112,7 +1116,10 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
       mu[, bm_cols[j]] <- res_j$mu
       se[, bm_cols[j]] <- res_j$se
       lambda_per_trait[bm_cols[j]] <- if (!is.null(res_j$lambda_hat)) {
-        res_j$lambda_hat
+        if (is.finite(res_j$lambda_hat)) res_j$lambda_hat else {
+          lambda_unestimated <- c(lambda_unestimated, col_name_j)
+          1
+        }
       } else if (is.numeric(lam_j)) {
         lam_j
       } else if (identical(lam_j, "estimate") && sum(!is.na(X_sp[, j])) >= 10L) {
@@ -1317,6 +1324,9 @@ fit_baseline <- function(data, tree, splits = NULL, model = "BM",
     trait_map, function(tm) trait_route[tm$latent_cols[1]], character(1))
   names(predict_method_by_trait) <- trait_names_path
 
+  if (length(lambda_unestimated)) {
+    attr(lambda_per_trait, "lambda_unestimated") <- unique(lambda_unestimated)
+  }
   out <- list(mu = mu, se = se, path = path,
               lambda_per_trait = lambda_per_trait,
               lambda_block = lambda_block_out,

@@ -1,4 +1,56 @@
-# pigauto (development version)
+# pigauto 0.11.2
+
+## Cross-validation by species and clade
+
+- `cross_validate()` supports whole-species and rooted-clade holdouts, in addition to the existing cell-level folds. Grouped folds recompute trait scaling from training observations and report their species assignments.
+
+## Check portability and visualisation
+
+- The posterior-imputation tests tolerate small numerical differences across BLAS implementations, including Intel MKL.
+- The visualisation article uses a mixed-trait example and explains the uses and limitations of conformal prediction intervals.
+
+# pigauto 0.11.1
+
+## GBIF lookup failures
+
+- `pull_gbif_centroids()` stops on a failed GBIF name or occurrence request
+  instead of caching a false no-match or an incomplete centroid. A failed
+  refresh leaves any existing cache entry unchanged. An absent `basisOfRecord`
+  column no longer discards the stored occurrence points.
+
+## Ordinal level declarations on every entry point
+
+- `impute()`, `multi_impute()`, `multi_impute_trees()`, `check_pigauto()` and
+  `preprocess_traits()` gain an `ordinal_levels` argument with the same
+  semantics as `read_traits()`: named columns are coerced to ordered factors
+  with exactly the declared levels before type detection, so character
+  columns impute as ordered traits without constructing the factor by hand
+  (ordinal for three or more declared levels; binary, order preserved, for
+  exactly two).
+  Observed values absent from a declaration remain an error, and
+  `check_pigauto()` reports an invalid declaration instead of throwing.
+- Declaring `trait_types = c(x = "ordinal")` on a column that is not an
+  ordered factor now explains that a type label cannot supply the level
+  order and points at `ordinal_levels`.
+
+## Issue review: input, evaluation and missingness
+
+- Factor and redundant covariates use a full-rank observed-row design for
+  lambda estimation and baseline prediction; the GNN encoding is unchanged.
+- `predict()` rejects unused arguments instead of silently ignoring them.
+- CRAN 0.11.0 users are directed to `evaluate(fit)` for held-out scoring.
+  The evaluation argument is available in 0.11.1.
+- `read_traits(ordinal_levels = list(...))` accepts explicit ecological level
+  orders and rejects observed values omitted from those declarations.
+- Data-only species warnings distinguish exclusion from modeling from the
+  unchanged rows retained by `impute()`.
+- `plot_missingness()` shows trait summaries, observation matrices, tree-order
+  maps and co-missingness. A worked visualisation article explains each view.
+- Baseline-only HTML reports include offline held-out metric and conformal
+  score charts. GNN report charts still require an internet connection.
+- Multiple-imputation help distinguishes point prediction, draw scoring,
+  posterior summaries, and the limits of downstream inference.
+
 
 ## New accessor: get_imputed_datasets()
 
@@ -128,7 +180,7 @@ Brownian-GLS slope regimes (n = 300 or 1,000; lambda = 0.5 or 1; trait
 correlation 0.7; 30% MCAR or phylogenetic MAR; 500 replicates per regime).
 Five regimes failed and three were indeterminate; empirical coverage ranged
 from 86.2% to 95.2%, and no inferential scenario met the support criteria.
-See the [registered results and limits](../articles/validation-results.html#inferential-results).
+See the [registered results and limits](https://itchyshin.github.io/pigauto/articles/validation-results.html#inferential-results).
 This does not negate posterior properness under the imputation model, nor show
 that every use fails; it reports measured calibration only for the tested
 regimes.
@@ -298,7 +350,7 @@ intervals covered the truth in 0 to 17% of replicates, in all 16 regimes;
 MC-dropout draws biased it by -0.03 to -0.38. For downstream inference, use
 `draws_method = "posterior"` only when its documented eligibility conditions
 are met (continuous traits, one row per species, and no covariates; see
-[posterior-draw eligibility and limits](../articles/validation-results.html#inferential-results)).
+[posterior-draw eligibility and limits](https://itchyshin.github.io/pigauto/articles/validation-results.html#inferential-results)).
 This is a proper posterior-imputation procedure under its model, not evidence
 that downstream frequentist coverage is calibrated in every setting. In the
 later registered assessment, five of eight tested regimes failed and three

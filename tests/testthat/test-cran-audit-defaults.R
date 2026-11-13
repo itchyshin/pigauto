@@ -3,7 +3,7 @@
 
 test_that("exported entry points resolve and policy defaults stay aligned", {
   exports <- getNamespaceExports("pigauto")
-  expect_length(exports, 34L)
+  expect_length(exports, 35L)
   for (name in exports) {
     expect_true(is.function(getExportedValue("pigauto", name)), info = name)
   }

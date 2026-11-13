@@ -39,7 +39,8 @@ impute(
   phylo_signal_method = "lambda",
   conformal_split_val = FALSE,
   gnn = FALSE,
-  ...
+  ...,
+  ordinal_levels = NULL
 )
 
 \method{print}{pigauto_result}(x, ...)
@@ -101,7 +102,8 @@ draws (default \code{1}). Must be a positive integer. With multiple
 draws, prediction adds independent Gaussian perturbations per latent cell
 using the selected baseline SD; GNN dropout also varies across runs when
 \code{gnn = TRUE}. \code{pool_method} combines decoded draws for the
-returned point prediction. Despite this legacy argument name, these are
+returned point prediction: \code{completed} is one data frame, not a list
+of completed datasets. Despite this legacy argument name, these are
 not joint phylogenetic posterior draws or validated imputations for
 downstream inference. See \code{\link{multi_impute}} and the multiple-
 imputation article for the separate workflows and their limits.}
@@ -123,7 +125,10 @@ themselves. In a mixed fit, another selected joint route can still trigger
 it. With \code{gnn = TRUE}, covariates also
 enter the GNN and its additive linear component. \code{predict_method = "per_column"}
 selects predictions within a joint fit; it does not activate
-covariate regression. Default \code{NULL} (no covariates).}
+covariate regression. In multi-observation data the baseline aggregates
+observations and covariates to species level; with \code{gnn = FALSE}
+it does not predict observation-specific covariate effects within a
+species. Default \code{NULL} (no covariates).}
 
 \item{epochs}{integer. Maximum GNN training epochs (default \code{2000}).
 Must be a positive integer.}
@@ -132,7 +137,8 @@ Must be a positive integer.}
 
 \item{seed}{optional integer. When supplied, makes the stochastic fitting
 and prediction steps reproducible; the default \code{NULL} uses the
-current RNG stream.}
+current RNG stream. Predictions can vary between seeds; a fixed seed
+supports reproducibility, not a measure of predictive uncertainty.}
 
 \item{multi_obs_aggregation}{character. How to aggregate multiple
 observations per species before a joint baseline.  \code{"hard"}
@@ -348,6 +354,15 @@ for that study). These results do not establish performance on new data.}
 
 \item{...}{Additional arguments passed by \code{impute()} to \code{fit_pigauto()}; ignored by \code{print.pigauto_result()}.}
 
+\item{ordinal_levels}{named list giving the scientific order of ordinal
+levels, e.g. \code{list(status = c("LC", "NT", "VU", "EN", "CR"))}.
+Each named column is coerced to an ordered factor with exactly those
+levels before type detection (so no \code{trait_types} entry is
+needed), and \code{$completed} returns it as an ordered factor.
+Observed values absent from the declared levels are an error. Same
+semantics as the \code{ordinal_levels} argument of
+\code{\link{read_traits}}. Default \code{NULL}.}
+
 \item{x}{A \code{pigauto_result} object returned by \code{impute()}.}
 }
 \value{
@@ -369,7 +384,10 @@ predictions for every cell (observed + missing), per-cell
 uncertainty (\code{$se} -- see \code{\link{predict.pigauto_fit}}'s
 "What \code{$se} means per trait type" section; it is
 \strong{not} uniformly a standard error), class probabilities, and
-conformal intervals.}
+conformal intervals. For an untransformed continuous trait, the
+usual global per-trait score yields the same interval width across
+rows; it does not adapt to each species' number of observations.
+Other scoring methods or transformations can change this pattern.}
 \item{fit}{The trained \code{pigauto_fit} object.}
 \item{baseline}{The phylogenetic baseline.}
 \item{data}{The preprocessed \code{pigauto_data} object.}
@@ -388,6 +406,12 @@ prediction. The default \code{gnn = FALSE} uses the baseline alone. Set
 For fine-grained control, use the
 individual functions (\code{\link{preprocess_traits}},
 \code{\link{fit_baseline}}, \code{\link{fit_pigauto}}, etc.) directly.
+}
+\details{
+A single completed data set is useful for point prediction, but analysing
+it as if its imputed values were observed ignores imputation uncertainty and
+can also change estimates. See \code{\link{multi_impute}} and the
+multiple-imputation article for downstream workflows and their limitations.
 }
 \section{Trait type auto-detection}{
 

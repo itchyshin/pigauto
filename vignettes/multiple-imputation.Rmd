@@ -31,6 +31,29 @@ site build therefore does not verify that these examples run.
 > eligibility is not evidence that an analysis is validated. See the
 > [registered inferential results](validation-results.html#inferential-results).
 
+## What to score
+
+A point prediction and a draw answer different questions. To assess point
+prediction, hide known values before fitting and compare `pooled_point` with
+the held-out truth using an appropriate metric, such as RMSE or correlation
+for continuous traits. A single completed dataset also contains draw-to-draw
+variation, so its point error combines prediction error and that variation.
+A lower error for `pooled_point` is not cheating; it evaluates a different
+target. For uncertainty, assess the predictive distribution using coverage and
+width or a proper distributional score on held-out values. For downstream
+inference, assess the estimand and its interval across replicated datasets;
+point accuracy alone cannot establish valid inference.
+
+A single `impute()` completion is useful for point prediction but treating its
+filled values as observed in a subsequent analysis ignores imputation
+uncertainty and can also change estimates. The posterior route provides
+`pooled_point` by decoding the mean latent draw, and `se` from decoded
+retained posterior predictive draws. `posterior$cell_interval` gives per-cell intervals and medians from those draws;
+these summaries need not be calculated from only the `m` returned datasets.
+The posterior parameters are in `posterior$params`. Model assumptions and
+convergence remain relevant, and software eligibility does not establish
+inferential validity.
+
 ## Which imputations can be pooled
 
 ### Choose a route

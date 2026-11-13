@@ -312,3 +312,112 @@ test_that("end-to-end: GBIF centroids don't regress plants RMSE (>=1.10x guardra
   expect_true(any_within_guardrail,
               info = "at least one of sla/leaf_area should be within 10% of no-cov RMSE (centroids not catastrophically hurting)")
 })
+
+test_that("failed name lookup does not overwrite an existing cache", {
+  skip_if_not_installed("rgbif")
+  tmp <- tempfile("gbif_failure_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  sp <- "TestSpecies transient"
+  cache <- file.path(tmp, paste0(pigauto:::.gbif_cache_key(sp), ".rds"))
+  original <- list(species = sp, centroid_lat = 5, centroid_lon = 6,
+                   n_occurrences = 1L, match_type = "EXACT")
+  saveRDS(original, cache)
+  testthat::local_mocked_bindings(
+    name_backbone = function(...) stop("connection failed"),
+    .package = "rgbif")
+  expect_error(pigauto::pull_gbif_centroids(sp, cache_dir = tmp,
+    refresh_cache = TRUE, sleep_ms = 0L, verbose = FALSE),
+    "GBIF.*name.*connection failed")
+  expect_identical(readRDS(cache), original)
+})
+
+test_that("failed occurrence pages do not return or cache partial results", {
+  skip_if_not_installed("rgbif")
+  tmp <- tempfile("gbif_failure_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  sp <- "TestSpecies partial"
+  testthat::local_mocked_bindings(
+    name_backbone = function(...) list(usageKey = 1L, matchType = "EXACT"),
+    .package = "rgbif")
+  testthat::local_mocked_bindings(
+    .gbif_fetch_page = function(taxon_key, offset, limit) {
+      if (offset > 0L) return(NULL)
+      data.frame(decimalLatitude = 10, decimalLongitude = 20)
+    }, .package = "pigauto")
+  expect_error(pigauto::pull_gbif_centroids(sp, cache_dir = tmp,
+    occurrence_limit = 301L, sleep_ms = 0L, verbose = FALSE),
+    "GBIF.*occurrence.*failed")
+  expect_false(file.exists(file.path(tmp, paste0(pigauto:::.gbif_cache_key(sp), ".rds"))))
+})
+
+test_that("GBIF point cache uses centroid filters when basisOfRecord is absent", {
+  skip_if_not_installed("rgbif")
+  tmp <- tempfile("gbif_points_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  sp <- "TestSpecies missingbasis"
+  records <- data.frame(decimalLatitude = c(10, 12), decimalLongitude = c(20, 22))
+  testthat::local_mocked_bindings(
+    name_backbone = function(...) list(usageKey = 1L, matchType = "EXACT"),
+    occ_search = function(...) list(data = records), .package = "rgbif")
+  out <- pigauto::pull_gbif_centroids(sp, cache_dir = tmp,
+    occurrence_limit = 2L, sleep_ms = 0L, verbose = FALSE, store_points = TRUE)
+  cache <- readRDS(file.path(tmp, paste0(pigauto:::.gbif_cache_key(sp), ".rds")))
+  expect_equal(out$n_occurrences, 2L)
+  expect_equal(nrow(cache$points), 2L)
+})
+
+test_that("genuine unmatched names and empty occurrence pages remain cacheable", {
+  skip_if_not_installed("rgbif")
+  tmp <- tempfile("gbif_empty_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  testthat::local_mocked_bindings(
+    name_backbone = function(name, ...) {
+      if (name == "No match") list(matchType = "NONE")
+      else list(usageKey = 1L, matchType = "EXACT")
+    },
+    occ_search = function(...) list(data = data.frame()), .package = "rgbif")
+  out <- pigauto::pull_gbif_centroids(c("No match", "Empty records"),
+    cache_dir = tmp, occurrence_limit = 2L, sleep_ms = 0L, verbose = FALSE)
+  expect_true(all(is.na(out$centroid_lat)))
+  expect_equal(out$n_occurrences, c(0L, 0L))
+  for (sp in out$species) {
+    expect_true(file.exists(file.path(tmp, paste0(pigauto:::.gbif_cache_key(sp), ".rds"))))
+  }
+})
+
+test_that("failed occurrence refresh preserves a previous cache", {
+  skip_if_not_installed("rgbif")
+  tmp <- tempfile("gbif_refresh_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  sp <- "TestSpecies refresh"
+  cache <- file.path(tmp, paste0(pigauto:::.gbif_cache_key(sp), ".rds"))
+  original <- list(species = sp, centroid_lat = 5, centroid_lon = 6,
+                   n_occurrences = 1L, match_type = "EXACT")
+  saveRDS(original, cache)
+  testthat::local_mocked_bindings(
+    name_backbone = function(...) list(usageKey = 1L, matchType = "EXACT"),
+    .package = "rgbif")
+  testthat::local_mocked_bindings(.gbif_fetch_page = function(...) NULL,
+                                  .package = "pigauto")
+  expect_error(pigauto::pull_gbif_centroids(sp, cache_dir = tmp,
+    refresh_cache = TRUE, sleep_ms = 0L, verbose = FALSE),
+    "GBIF.*occurrence.*failed")
+  expect_identical(readRDS(cache), original)
+})
+
+test_that("GBIF occurrence failures are retried and do not write a cache", {
+  skip_if_not_installed("rgbif")
+  tmp <- tempfile("gbif_retry_"); dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  sp <- "TestSpecies retry"
+  attempts <- 0L
+  testthat::local_mocked_bindings(
+    name_backbone = function(...) list(usageKey = 1L, matchType = "EXACT"),
+    occ_search = function(...) { attempts <<- attempts + 1L; stop("offline") },
+    .package = "rgbif")
+  expect_error(pigauto::pull_gbif_centroids(sp, cache_dir = tmp,
+    occurrence_limit = 2L, sleep_ms = 0L, verbose = FALSE),
+    "GBIF.*occurrence.*failed")
+  expect_equal(attempts, 3L)
+  expect_false(file.exists(file.path(tmp, paste0(pigauto:::.gbif_cache_key(sp), ".rds"))))
+})
