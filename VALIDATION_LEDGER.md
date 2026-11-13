@@ -7,6 +7,7 @@ parameterization.
 
 | Claim | Evidence | Tier | Date |
 |---|---|---|---|
+| Species- and clade-held-out CV evaluates imputation with grouped test and validation species | Group assignment, held-out-value perturbation, mixed-type, repeated-observation, optional-GNN and one 64-species Brownian-motion smoke in `tests/testthat/test-grouped-cv.R`; this is not a coverage or general performance campaign | experimental | 2026-11-08 |
 | Rubin pooling for downstream `lm`/`glm` fixed effects has calibrated bias, SE, and 95% coverage after pigauto MI | Full 500-replicate-per-cell campaign at `800e0cb` failed every conformal and MC-dropout core cell; see `script/mi-validation-v010/FULL_RESULTS_2026-07-11.md` | experimental | 2026-07-11 |
 | Rubin pooling for downstream random-intercept `lmer` fixed effects has calibrated bias, SE, and 95% coverage after pigauto MI | Full 500-replicate-per-cell campaign at `800e0cb` failed the joint fixed-effect gate; variance components were diagnostic only and showed no boundary/singularity flags | experimental | 2026-07-11 |
 | Conformal-width Normal draws form an inferentially valid imputation distribution | Full paired campaign: 0/12 core cells passed; coverage 35.4% to 93.6% | experimental | 2026-07-11 |

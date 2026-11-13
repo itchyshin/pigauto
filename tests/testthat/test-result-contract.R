@@ -127,3 +127,30 @@ test_that("report contract handles legacy checks and escapes input messages", {
   legacy <- .report_contract_html(NULL, NULL)
   expect_match(legacy, "Preflight check unavailable", fixed = TRUE)
 })
+
+test_that("get_imputed_datasets returns the stored datasets exactly", {
+  d <- data.frame(x = c(1, 2), row.names = c("a", "b"))
+  mi <- structure(list(datasets = list(d, d), m = 2L),
+                  class = c("pigauto_diagnostic_mi", "pigauto_mi", "list"))
+  expect_identical(get_imputed_datasets(mi), mi$datasets)
+})
+
+test_that("get_imputed_datasets accepts analysis and tree-sensitivity objects", {
+  d <- data.frame(x = 1)
+  analysis <- structure(list(datasets = list(d)),
+                        class = c("pigauto_analysis_mi", "pigauto_mi", "list"))
+  trees <- structure(list(datasets = list(d, d, d)),
+                     class = c("pigauto_tree_sensitivity_diagnostic",
+                               "pigauto_mi_trees", "pigauto_mi"))
+  expect_identical(get_imputed_datasets(analysis), analysis$datasets)
+  expect_identical(get_imputed_datasets(trees), trees$datasets)
+})
+
+test_that("get_imputed_datasets rejects non-mi inputs with guidance", {
+  result <- structure(list(completed = data.frame(x = 1)),
+                      class = "pigauto_result")
+  expect_error(get_imputed_datasets(result), "completed_data")
+  expect_error(get_imputed_datasets(result), "multi_impute")
+  expect_error(get_imputed_datasets(list()), "pigauto_mi")
+  expect_error(get_imputed_datasets(data.frame(x = 1)), "pigauto_mi")
+})

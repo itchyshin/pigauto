@@ -18,23 +18,25 @@ knitr::opts_chunk$set(
 
 ## Install pigauto
 
-Install the package before running the examples. The optional torch runtime is
-needed only if you plan to fit the graph neural network with `gnn = TRUE`.
+Install the package before running the examples. The R package `torch` is an
+installation dependency, but the separate torch runtime is needed only for the
+graph neural network with `gnn = TRUE`. Starting pigauto and fitting the default
+baseline do not load torch or prompt to download that runtime.
 
 ```{r install, eval=FALSE}
 install.packages("pigauto")
 packageVersion("pigauto")
 ```
 
-If CRAN has an earlier version than the one described here, install the GitHub
-version instead:
+This page describes pigauto 0.11.1. Until that version is available on
+CRAN, install the GitHub version to use all examples below:
 
 ```{r install-github, eval=FALSE}
 install.packages("pak") # only needed once
 pak::pak("itchyshin/pigauto")
 ```
 
-Install torch only if you plan to use `gnn = TRUE`:
+Install the torch runtime if you plan to use `gnn = TRUE`:
 
 ```{r install-torch, eval=FALSE}
 torch::install_torch()
@@ -42,9 +44,9 @@ torch::install_torch()
 
 ## Start here
 
-These examples use functions and defaults from pigauto 0.11.0. Check
-`packageVersion("pigauto")`: if CRAN has an earlier version, use the GitHub
-installation above before following this workflow.
+CRAN 0.11.0 does not include every GitHub fix described here. In particular,
+use `evaluate(fit)` for held-out scoring on CRAN 0.11.0; see Step 7.
+Check `packageVersion("pigauto")` after installing pigauto 0.11.1 or later.
 See [the installation steps](#install-pigauto) if you have not installed the
 package yet.
 
@@ -156,7 +158,14 @@ that `traits` and `tree` are already loaded.
 
 **Ordered categories**
 
+Declare the scientific order of the levels; pigauto never guesses it.
+
 ```{r declaration-ordinal, eval=FALSE}
+result <- impute(traits, tree, ordinal_levels = list(
+  threat = c("LC", "NT", "VU", "EN", "CR")
+))
+
+# Equivalent: construct the ordered factor yourself.
 traits$threat <- ordered(
   traits$threat,
   levels = c(
@@ -227,7 +236,7 @@ in those gaps using three sources of information:
 
 The package handles continuous measurements, counts, binary variables,
 ordered categories, unordered categories, bounded proportions,
-zero-inflated counts, and compositional multi-proportion data — all in a
+zero-inflated counts, and compositional multi-proportion data: all in a
 single call to `impute()`.
 
 ### How it works (briefly)
@@ -268,7 +277,7 @@ The phylogenetic structure is encoded as:
 
 - A symmetric-normalised Gaussian-kernel adjacency matrix derived from
   cophenetic (patristic) distances.
-- *k* Laplacian eigenvectors as node positional features — these encode
+- *k* Laplacian eigenvectors as node positional features: these encode
   phylogenetic clusters at multiple scales.
 
 ```{r load}
@@ -494,7 +503,7 @@ traits, `pred$se` contains uncertainty scores rather than Gaussian standard
 errors. The latent prediction has one column per encoded category, while the
 decoded data frame has one column per original trait.
 
-### Step 7: Evaluate — and read the gate
+### Step 7: Evaluate and read the gate
 
 `evaluate_imputation()` scores held-out cells on the scale that matches
 the trait type. For a single latent column in this mixed-trait fit, no direct covariates
@@ -504,6 +513,14 @@ weight for a latent column can be zero (`fit$r_cal_gnn = 0`), leaving the
 phylogenetic baseline in this example. In other routes, a zero neural weight closes only the GNN component;
 inspect the BM, GNN, and mean weights and any direct covariate terms to
 understand the full prediction.
+
+**CRAN 0.11.0:** use `evaluate(fit)` for held-out scores. That release silently
+ignores `evaluation = TRUE` in `predict()`, so the call below would score
+production predictions and can give misleading results. The GitHub version
+supports the argument. `evaluate(fit)` returns a long table
+(`method`, `trait`, `type`, `metric`, `value`, `n_test`), whereas
+`evaluate_imputation()` returns a wide table. Do not compare production
+`predict(fit)` values with held-out truth as an evaluation shortcut.
 
 ```{r evaluate, eval=FALSE}
 # Held-out scores (z-score RMSE for continuous traits)
@@ -529,7 +546,9 @@ whether calibration left the gate open.
 plot(fit, type = "history")
 ```
 
-This plot shows the validation loss used for early stopping. For this
+The history plot requires `gnn = TRUE`; baseline-only fits have no training
+history. Use the gate or conformal plots for those fits. This plot shows the
+validation loss used for early stopping. For this
 mixed-type fit, it is a composite loss, not RMSE in the original trait
 units.
 
@@ -541,7 +560,7 @@ plot(pred, type = "intervals", trait = "Mass")
 
 Species are sorted by predicted mass. The blue ribbon shows the conformal
 prediction interval when conformal scores are available. Grey points (if
-`truth` is supplied) show known values — a useful visual check of calibration.
+`truth` is supplied) show known values: a useful visual check of calibration.
 
 ## Further workflows
 
@@ -663,7 +682,7 @@ For `zi_count` rows the output populates BOTH `delta_var_total`
 column is set to `"variance"` so rows sort on the magnitude scale.
 See `?suggest_next_observation` for full details.
 
-**Variance vs entropy are not directly comparable** — ordering across
+**Variance vs entropy are not directly comparable**: ordering across
 metrics by `delta_var_total` is approximate. When you
 want a strict ranking on a single metric, filter by `metric`
 first or restrict `types` to continuous-family-only or

@@ -1,19 +1,21 @@
 #' Generate an HTML imputation report from a pigauto fit
 #'
-#' Produces an HTML file with interactive charts (loading Chart.js from its
-#' public CDN). For fits created with the default \code{gnn = FALSE}, the
-#' report describes baseline-only imputation. For fits created with
-#' \code{gnn = TRUE}, it also compares the GNN against the phylogenetic
-#' baseline and includes training history. Per-trait metrics, gate values,
-#' and held-out diagnostic conformal coverage are included when available.
+#' Produces an HTML file with charts. Baseline-only figures are embedded as
+#' SVG and work offline; GNN charts load Chart.js from its public CDN. The
+#' report compares the fitted baseline with the calibrated blend, which may
+#' include the neural component and other baseline contributions. This is not
+#' a comparison isolating the neural component. With \code{gnn = FALSE},
+#' no neural network is fitted. Per-trait metrics, gate values, and held-out
+#' diagnostic conformal coverage are included when available.
 #'
 #' @param fit A \code{pigauto_fit} object (or a \code{pigauto_result} from
 #'   \code{\link{impute}}).
 #' @param data Optional \code{pigauto_data} object.  Extracted automatically
-#'   when \code{fit} is a \code{pigauto_result}.  When supplied it must match
+#'   when \code{fit} is a \code{pigauto_result}, or reconstructed from a fit
+#'   that retains its scaled observations. When supplied it must match
 #'   the fit (species and traits).
 #' @param splits Optional splits object from \code{\link{make_missing_splits}}.
-#'   Extracted automatically when \code{fit} is a \code{pigauto_result}.
+#'   Extracted automatically from the result or fit when available.
 #'   When supplied it must match the fit.
 #' @param output_path Character of length 1.  File path for the HTML report
 #'   (default \code{"pigauto_report.html"} in the working directory).
@@ -61,6 +63,17 @@ pigauto_report <- function(fit, data = NULL, splits = NULL,
     stop("'fit' must be a pigauto_fit or pigauto_result object.")
   }
 
+  # Current fits retain their input matrix and holdout split. Older saved fits
+  # may not; in that case the report remains available without test metrics.
+  if (is.null(data) && is.matrix(fit_obj$X_scaled)) {
+    data <- structure(list(
+      X_scaled = fit_obj$X_scaled, species_names = fit_obj$species_names,
+      trait_names = fit_obj$trait_names, trait_map = fit_obj$trait_map,
+      obs_species = fit_obj$obs_species, obs_to_species = fit_obj$obs_to_species
+    ), class = "pigauto_data")
+  }
+  if (is.null(splits)) splits <- fit_obj$splits
+
   .check_report_data(data)
   .check_report_splits(splits)
   .check_report_data_matches_fit(data, fit_obj)
@@ -90,9 +103,6 @@ pigauto_report <- function(fit, data = NULL, splits = NULL,
     metrics   = metrics,
     trait_map = trait_map
   )
-  # Column label for the non-BM arm: "GNN", or the calibrated blend when gnn = FALSE.
-  html <- gsub("ARM_LABEL", if (isFALSE(fit_obj$model_config$gnn)) "Blend (GNN off)" else "GNN",
-               html, fixed = TRUE)
   html <- sub("</body>", paste0(.report_contract_html(saved_check, fit), "</body>"),
               html, fixed = TRUE)
 
@@ -108,6 +118,18 @@ pigauto_report <- function(fit, data = NULL, splits = NULL,
   x <- gsub(">", "&gt;", x, fixed = TRUE)
   x <- gsub("\"", "&quot;", x, fixed = TRUE)
   gsub("'", "&#39;", x, fixed = TRUE)
+}
+
+# Encode labels as JavaScript strings without allowing a closing script tag.
+.report_js_string <- function(x) {
+  chars <- utf8ToInt(enc2utf8(x))
+  escaped <- vapply(chars, function(cp) {
+    if (cp <= 0xffffL) return(sprintf("\\u%04x", cp))
+    cp <- cp - 0x10000L
+    paste0(sprintf("\\u%04x", 0xd800L + cp %/% 1024L),
+           sprintf("\\u%04x", 0xdc00L + cp %% 1024L))
+  }, character(1))
+  paste0('"', paste0(escaped, collapse = ""), '"')
 }
 
 .check_report_title <- function(title) {
@@ -226,123 +248,102 @@ pigauto_report <- function(fit, data = NULL, splits = NULL,
 
 collect_report_metrics <- function(fit_obj, pred, data, splits) {
   trait_map <- fit_obj$trait_map
-  baseline  <- fit_obj$baseline
-
+  baseline <- fit_obj$baseline
   results <- list()
   for (tm in trait_map) {
     nm <- tm$name
     tp <- tm$type
     entry <- list(name = nm, type = tp)
-
-    # Gate value
     if (!is.null(fit_obj$calibrated_gates)) {
       entry$gate <- mean(fit_obj$calibrated_gates[tm$latent_cols])
     }
-
-    # Conformal score
     if (!is.null(fit_obj$conformal_scores) && nm %in% names(fit_obj$conformal_scores)) {
       entry$conformal_score <- fit_obj$conformal_scores[nm]
     }
-
-    # Test-set evaluation (when data + splits available)
     if (!is.null(data) && !is.null(splits) && length(splits$test_idx) > 0) {
       X_truth <- data$X_scaled
       n <- nrow(X_truth)
-      p <- ncol(X_truth)
       lc <- tm$latent_cols
-
-      # Extract test cells for this trait
-      test_mat <- matrix(FALSE, n, p)
+      test_mat <- matrix(FALSE, n, ncol(X_truth))
       test_mat[splits$test_idx] <- TRUE
       test_rows <- which(test_mat[, lc[1]])
-
       if (length(test_rows) > 0) {
         entry$n_test <- length(test_rows)
-
+        bm <- baseline$mu
+        if (!is.null(bm) && isTRUE(fit_obj$multi_obs)) {
+          bm <- bm[fit_obj$obs_to_species, , drop = FALSE]
+        }
         if (tp %in% c("continuous", "count", "ordinal", "proportion")) {
-          truth_latent <- X_truth[test_rows, lc[1]]
-          pred_latent  <- pred$imputed_latent[test_rows, lc[1]]
-
-          # BM baseline latent
-          bm_latent <- baseline$mu
-          if (isTRUE(fit_obj$multi_obs)) {
-            bm_latent <- bm_latent[fit_obj$obs_to_species, , drop = FALSE]
+          truth <- X_truth[test_rows, lc[1]]
+          gnn <- if (is.null(pred$imputed_latent)) rep(NA_real_, length(test_rows)) else pred$imputed_latent[test_rows, lc[1]]
+          base <- if (is.null(bm)) rep(NA_real_, length(test_rows)) else bm[test_rows, lc[1]]
+          valid_gnn <- is.finite(truth) & is.finite(gnn)
+          valid_bm <- is.finite(truth) & is.finite(base)
+          paired <- valid_gnn & valid_bm
+          entry$n_gnn <- sum(valid_gnn); entry$n_bm <- sum(valid_bm); entry$n_paired <- sum(paired)
+          if (entry$n_gnn) {
+            entry$rmse_gnn <- sqrt(mean((truth[valid_gnn] - gnn[valid_gnn])^2))
+            if (entry$n_gnn >= 2L) entry$r_gnn <- suppressWarnings(stats::cor(truth[valid_gnn], gnn[valid_gnn]))
           }
-          bm_pred <- bm_latent[test_rows, lc[1]]
-
-          entry$rmse_gnn <- rmse_vec(truth_latent, pred_latent)
-          entry$rmse_bm  <- rmse_vec(truth_latent, bm_pred)
-          entry$r_gnn    <- tryCatch(stats::cor(truth_latent, pred_latent,
-                                                 use = "complete.obs"),
-                                      error = function(e) NA_real_)
-          entry$r_bm     <- tryCatch(stats::cor(truth_latent, bm_pred,
-                                                 use = "complete.obs"),
-                                      error = function(e) NA_real_)
-
-          # Conformal coverage
-          if (!is.null(pred$conformal_lower) && nm %in% colnames(pred$conformal_lower)) {
-            low  <- pred$conformal_lower[test_rows, nm]
+          if (entry$n_bm) {
+            entry$rmse_bm <- sqrt(mean((truth[valid_bm] - base[valid_bm])^2))
+            if (entry$n_bm >= 2L) entry$r_bm <- suppressWarnings(stats::cor(truth[valid_bm], base[valid_bm]))
+          }
+          if (entry$n_paired) {
+            entry$rmse_paired_bm <- sqrt(mean((truth[paired] - base[paired])^2))
+            entry$rmse_paired_gnn <- sqrt(mean((truth[paired] - gnn[paired])^2))
+          }
+          entry$n_coverage <- 0L
+          if (!is.null(pred$conformal_lower) && !is.null(pred$conformal_upper) &&
+              nm %in% colnames(pred$conformal_lower) && nm %in% colnames(pred$conformal_upper)) {
+            low <- pred$conformal_lower[test_rows, nm]
             high <- pred$conformal_upper[test_rows, nm]
-            # Need truth in original scale
-            if (tp == "continuous") {
-              truth_orig <- truth_latent * tm$sd + tm$mean
-              if (isTRUE(tm$log_transform)) truth_orig <- exp(truth_orig)
-            } else if (tp == "count") {
-              truth_orig <- expm1(truth_latent * tm$sd + tm$mean)
-            } else if (tp == "proportion") {
-              truth_orig <- stats::plogis(truth_latent * tm$sd + tm$mean)
-            } else {
-              truth_orig <- truth_latent * tm$sd + tm$mean
-            }
-            valid <- !is.na(low) & !is.na(high) & !is.na(truth_orig)
-            if (sum(valid) > 0) {
-              entry$conformal_coverage <- mean(
-                truth_orig[valid] >= low[valid] & truth_orig[valid] <= high[valid]
-              )
-            }
+            truth_orig <- truth * tm$sd + tm$mean
+            if (tp == "continuous" && isTRUE(tm$log_transform)) truth_orig <- exp(truth_orig)
+            if (tp == "count") truth_orig <- round(expm1(truth_orig))
+            if (tp == "ordinal") truth_orig <- round(truth_orig)
+            if (tp == "proportion") truth_orig <- stats::plogis(truth_orig)
+            valid <- is.finite(low) & is.finite(high) & is.finite(truth_orig) & low <= high
+            entry$n_coverage <- sum(valid)
+            if (entry$n_coverage) entry$conformal_coverage <- mean(truth_orig[valid] >= low[valid] & truth_orig[valid] <= high[valid])
           }
-
-        } else if (tp == "binary") {
-          truth_val <- X_truth[test_rows, lc[1]]
-          pred_prob <- pred$probabilities[[nm]][test_rows]
-          if (!is.null(pred_prob)) {
-            pred_class <- ifelse(pred_prob >= 0.5, 1, 0)
-            entry$accuracy_gnn <- mean(pred_class == truth_val, na.rm = TRUE)
-            entry$brier_gnn    <- mean((pred_prob - truth_val)^2, na.rm = TRUE)
+        } else if (tp %in% c("binary", "categorical")) {
+          if (tp == "binary") {
+            truth <- X_truth[test_rows, lc[1]]
+            prob <- pred$probabilities[[nm]]
+            gnn <- if (is.null(prob)) rep(NA_real_, length(test_rows)) else ifelse(is.finite(prob[test_rows]), as.numeric(prob[test_rows] >= 0.5), NA_real_)
+            base <- if (is.null(bm)) rep(NA_real_, length(test_rows)) else ifelse(is.finite(bm[test_rows, lc[1]]), as.numeric(bm[test_rows, lc[1]] >= 0), NA_real_)
+          } else {
+            # A row with an unavailable class score cannot be assigned a class.
+            classes <- function(x) vapply(seq_len(nrow(x)), function(i) {
+              if (any(!is.finite(x[i, ]))) NA_integer_ else which.max(x[i, ])
+            }, integer(1))
+            truth <- classes(X_truth[test_rows, lc, drop = FALSE])
+            probs <- pred$probabilities[[nm]]
+            gnn <- if (is.null(probs) || !is.matrix(probs)) rep(NA_integer_, length(test_rows)) else classes(probs[test_rows, , drop = FALSE])
+            base <- if (is.null(bm)) rep(NA_integer_, length(test_rows)) else classes(bm[test_rows, lc, drop = FALSE])
           }
-          # BM baseline accuracy
-          bm_logit <- baseline$mu[, lc[1]]
-          if (isTRUE(fit_obj$multi_obs)) {
-            bm_logit <- bm_logit[fit_obj$obs_to_species]
+          valid_gnn <- is.finite(truth) & is.finite(gnn)
+          valid_bm <- is.finite(truth) & is.finite(base)
+          paired <- valid_gnn & valid_bm
+          entry$n_gnn <- sum(valid_gnn); entry$n_bm <- sum(valid_bm); entry$n_paired <- sum(paired)
+          if (entry$n_gnn) entry$accuracy_gnn <- mean(gnn[valid_gnn] == truth[valid_gnn])
+          if (entry$n_bm) entry$accuracy_bm <- mean(base[valid_bm] == truth[valid_bm])
+          if (entry$n_paired) {
+            entry$accuracy_paired_bm <- mean(base[paired] == truth[paired])
+            entry$accuracy_paired_gnn <- mean(gnn[paired] == truth[paired])
           }
-          bm_prob  <- 1 / (1 + exp(-bm_logit[test_rows]))
-          bm_class <- ifelse(bm_prob >= 0.5, 1, 0)
-          entry$accuracy_bm <- mean(bm_class == truth_val, na.rm = TRUE)
-
-        } else if (tp == "categorical") {
-          truth_oh <- X_truth[test_rows, lc, drop = FALSE]
-          truth_class <- apply(truth_oh, 1, which.max)
-          pred_probs  <- pred$probabilities[[nm]]
-          if (!is.null(pred_probs) && is.matrix(pred_probs)) {
-            pred_class <- apply(pred_probs[test_rows, , drop = FALSE], 1, which.max)
-            entry$accuracy_gnn <- mean(pred_class == truth_class, na.rm = TRUE)
+          if (tp == "binary" && !is.null(prob)) {
+            valid_prob <- is.finite(truth) & is.finite(prob[test_rows])
+            if (any(valid_prob)) entry$brier_gnn <- mean((prob[test_rows][valid_prob] - truth[valid_prob])^2)
           }
-          # BM baseline
-          bm_logprobs <- baseline$mu[, lc, drop = FALSE]
-          if (isTRUE(fit_obj$multi_obs)) {
-            bm_logprobs <- bm_logprobs[fit_obj$obs_to_species, , drop = FALSE]
-          }
-          bm_class <- apply(bm_logprobs[test_rows, , drop = FALSE], 1, which.max)
-          entry$accuracy_bm <- mean(bm_class == truth_class, na.rm = TRUE)
         }
       }
     }
-
     results[[nm]] <- entry
   }
   results
 }
-
 
 # ---- Internal: build HTML string -------------------------------------------
 
@@ -358,9 +359,8 @@ build_report_html <- function(title, fit_obj, pred, metrics, trait_map) {
   has_conformal   <- !is.null(fit_obj$conformal_scores)
   k_eigen <- fit_obj$model_config$k_eigen
 
-  # Under gnn = FALSE there is no GNN: the second column is the calibrated baseline
-  # blend (BM, optionally re-weighted against the grand-mean floor), so the header
-  # and the verdict must not read as a BM-vs-GNN comparison.
+  # The final prediction is a calibrated blend, not an isolated GNN prediction.
+  # With gnn = FALSE the blend may still differ from the baseline.
   gnn_off <- isFALSE(fit_obj$model_config$gnn)
   # Build metrics table rows
   trait_rows <- ""
@@ -370,66 +370,68 @@ build_report_html <- function(title, fit_obj, pred, metrics, trait_map) {
 
     gate_val <- if (!is.null(m$gate)) sprintf("%.3f", m$gate) else "&mdash;"
 
-    if (tp %in% c("continuous", "count", "ordinal")) {
-      bm_rmse  <- if (!is.null(m$rmse_bm))  sprintf("%.4f", m$rmse_bm)  else "&mdash;"
-      gnn_rmse <- if (!is.null(m$rmse_gnn)) sprintf("%.4f", m$rmse_gnn) else "&mdash;"
-      bm_r     <- if (!is.null(m$r_bm))     sprintf("%.3f", m$r_bm)     else "&mdash;"
-      gnn_r    <- if (!is.null(m$r_gnn))    sprintf("%.3f", m$r_gnn)    else "&mdash;"
+    if (tp %in% c("continuous", "count", "ordinal", "proportion")) {
+      bm_rmse  <- if (isTRUE(is.finite(m$rmse_bm))) sprintf("%.4f (n=%d)", m$rmse_bm, m$n_bm) else "&mdash;"
+      gnn_rmse <- if (isTRUE(is.finite(m$rmse_gnn))) sprintf("%.4f (n=%d)", m$rmse_gnn, m$n_gnn) else "&mdash;"
+      bm_r     <- if (isTRUE(is.finite(m$r_bm))) sprintf("%.3f", m$r_bm) else "&mdash;"
+      gnn_r    <- if (isTRUE(is.finite(m$r_gnn))) sprintf("%.3f", m$r_gnn) else "&mdash;"
       n_test   <- if (!is.null(m$n_test))   m$n_test                     else "&mdash;"
 
       pct <- ""
       verdict <- '<span class="pill pill-neutral">no data</span>'
-      if (!is.null(m$rmse_bm) && !is.null(m$rmse_gnn) && m$rmse_bm > 0) {
-        pct_val <- (m$rmse_bm - m$rmse_gnn) / m$rmse_bm * 100
+      if (isTRUE(is.finite(m$rmse_paired_bm)) && isTRUE(is.finite(m$rmse_paired_gnn)) && m$rmse_paired_bm > 0) {
+        pct_val <- (m$rmse_paired_bm - m$rmse_paired_gnn) / m$rmse_paired_bm * 100
         if (pct_val > 0.5) {
           pct <- sprintf('<span class="pos">+%.1f%%</span>', pct_val)
-          verdict <- '<span class="pill pill-green">GNN better</span>'
+          verdict <- '<span class="pill pill-green">Blend better</span>'
         } else if (pct_val < -0.5) {
           pct <- sprintf('<span class="neg">%.1f%%</span>', pct_val)
-          verdict <- '<span class="pill pill-red">BM better</span>'
+          verdict <- '<span class="pill pill-red">Baseline better</span>'
         } else {
           pct <- sprintf('<span class="zero">%.1f%%</span>', pct_val)
           verdict <- '<span class="pill pill-neutral">tied</span>'
         }
+        pct <- paste0(pct, sprintf(" (paired n=%d)", m$n_paired))
         if (gnn_off) verdict <- '<span class="pill pill-neutral">GNN off</span>'
       }
 
       cov <- "&mdash;"
-      if (!is.null(m$conformal_coverage)) {
+      if (isTRUE(is.finite(m$conformal_coverage))) {
         cov_val <- m$conformal_coverage * 100
-        cov <- sprintf('%.1f%% (held-out diagnostic)', cov_val)
+        cov <- sprintf('%.1f%% (coverage n=%d)', cov_val, m$n_coverage)
       }
 
       trait_rows <- paste0(trait_rows, sprintf(
         '<tr><td>%s</td><td>%s</td><td class="num">%s</td><td class="num">%s</td><td class="num">%s</td><td class="num">%s</td><td class="num">%s</td><td class="num">%s</td><td class="num">%s</td><td>%s</td></tr>\n',
-        nm, tp, n_test, bm_rmse, gnn_rmse, pct, bm_r, gnn_r, cov, verdict
+        .escape_report_html(nm), .escape_report_html(tp), n_test, bm_rmse, gnn_rmse, pct, bm_r, gnn_r, cov, verdict
       ))
 
     } else {
-      bm_acc  <- if (!is.null(m$accuracy_bm))  sprintf("%.1f%%", m$accuracy_bm * 100)  else "&mdash;"
-      gnn_acc <- if (!is.null(m$accuracy_gnn)) sprintf("%.1f%%", m$accuracy_gnn * 100) else "&mdash;"
+      bm_acc  <- if (isTRUE(is.finite(m$accuracy_bm))) sprintf("%.1f%% (n=%d)", m$accuracy_bm * 100, m$n_bm) else "&mdash;"
+      gnn_acc <- if (isTRUE(is.finite(m$accuracy_gnn))) sprintf("%.1f%% (n=%d)", m$accuracy_gnn * 100, m$n_gnn) else "&mdash;"
       n_test  <- if (!is.null(m$n_test))       m$n_test                                 else "&mdash;"
 
       pct <- ""
       verdict <- '<span class="pill pill-neutral">no data</span>'
-      if (!is.null(m$accuracy_bm) && !is.null(m$accuracy_gnn)) {
-        diff <- (m$accuracy_gnn - m$accuracy_bm) * 100
+      if (isTRUE(is.finite(m$accuracy_paired_bm)) && isTRUE(is.finite(m$accuracy_paired_gnn))) {
+        diff <- (m$accuracy_paired_gnn - m$accuracy_paired_bm) * 100
         if (diff > 0.5) {
           pct <- sprintf('<span class="pos">+%.1f pp</span>', diff)
-          verdict <- '<span class="pill pill-green">GNN better</span>'
+          verdict <- '<span class="pill pill-green">Blend better</span>'
         } else if (diff < -0.5) {
           pct <- sprintf('<span class="neg">%.1f pp</span>', diff)
-          verdict <- '<span class="pill pill-red">BM better</span>'
+          verdict <- '<span class="pill pill-red">Baseline better</span>'
         } else {
-          pct <- '<span class="zero">0.0 pp</span>'
+          pct <- sprintf('<span class="zero">%.1f pp</span>', diff)
           verdict <- '<span class="pill pill-neutral">tied</span>'
         }
+        pct <- paste0(pct, sprintf(" (paired n=%d)", m$n_paired))
         if (gnn_off) verdict <- '<span class="pill pill-neutral">GNN off</span>'
       }
 
       trait_rows <- paste0(trait_rows, sprintf(
         '<tr><td>%s</td><td>%s</td><td class="num">%s</td><td class="num">%s</td><td class="num">%s</td><td class="num">%s</td><td class="num" colspan="2">&mdash;</td><td class="num">&mdash;</td><td>%s</td></tr>\n',
-        nm, tp, n_test, bm_acc, gnn_acc, pct, verdict
+        .escape_report_html(nm), .escape_report_html(tp), n_test, bm_acc, gnn_acc, pct, verdict
       ))
     }
   }
@@ -448,7 +450,7 @@ build_report_html <- function(title, fit_obj, pred, metrics, trait_map) {
                  ifelse(gate_types == "binary",     "'rgba(220,53,69,0.7)'",
                                                     "'rgba(111,66,193,0.7)'"))))
 
-  gate_labels_js <- paste0("[", paste0("'", gate_names, "'", collapse = ","), "]")
+  gate_labels_js <- paste0("[", paste(vapply(gate_names, .report_js_string, character(1)), collapse = ","), "]")
   gate_values_js <- paste0("[", paste(sprintf("%.4f", gate_values), collapse = ","), "]")
   gate_colors_js <- paste0("[", paste(gate_colors, collapse = ","), "]")
 
@@ -465,6 +467,17 @@ build_report_html <- function(title, fit_obj, pred, metrics, trait_map) {
     hist_val    <- ""
   }
 
+  # Static figures for the default baseline-only fit. Each measure has its
+  # own scale: continuous latent-scale RMSE and discrete accuracy are not
+  # directly comparable, so they are displayed in separate panels.
+  baseline_figures <- if (gnn_off) {
+    paste0('<div class="chart-grid">',
+      .report_svg_metrics(metrics, "rmse_gnn", "Held-out RMSE (latent scale)"),
+      .report_svg_metrics(metrics, "accuracy_gnn", "Held-out accuracy", percent = TRUE),
+      .report_svg_metrics(metrics, "conformal_score", "Conformal scores (latent scale)"),
+      '</div>')
+  } else NULL
+
   # Features list
   features <- c(
     if (gnn_off) "GNN off: phylogenetic baseline only (no torch)" else
@@ -479,7 +492,7 @@ build_report_html <- function(title, fit_obj, pred, metrics, trait_map) {
   timestamp <- format(Sys.time(), "%d %B %Y, %H:%M")
 
   # Assemble HTML
-  sprintf('<!DOCTYPE html>
+  html <- sprintf('<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -543,8 +556,10 @@ tr:hover{background:#f8f9fa;}
 </div>
 
 <h2>Per-Trait Performance</h2>
+<p>The baseline column shows the fitted baseline; the calibrated blend may include neural and other baseline contributions. This comparison does not isolate the neural component.</p>
+<p>Held-out cells are known values hidden during fitting. The root mean squared error (RMSE) measures prediction error on the transformed, standardised scale; lower is better. Accuracy is the percentage of held-out binary or categorical values predicted correctly. Each metric shows the number of finite values scored. Differences compare only cells scored by both methods. Coverage is the percentage of held-out values within the prediction bounds; its count may differ from the prediction counts.</p>
 <table>
-<thead><tr><th>Trait</th><th>Type</th><th class="num">n test</th><th class="num">BM</th><th class="num">ARM_LABEL</th><th class="num">%%&Delta;</th><th class="num">r (BM)</th><th class="num">r (ARM_LABEL)</th><th class="num">Held-out coverage (diagnostic)</th><th>Verdict</th></tr></thead>
+<thead><tr><th>Trait</th><th>Type</th><th class="num">n held out</th><th class="num">Baseline</th><th class="num">ARM_LABEL</th><th class="num">%%&Delta;</th><th class="num">r (Baseline)</th><th class="num">r (ARM_LABEL)</th><th class="num">Held-out coverage (diagnostic)</th><th>Verdict</th></tr></thead>
 <tbody>%s</tbody>
 </table>
 
@@ -581,4 +596,37 @@ if(hEp.length>0){new Chart(document.getElementById("histChart"),{type:"line",dat
     gate_labels_js, gate_values_js, gate_colors_js,      # gate chart
     hist_epochs, hist_rec, hist_val                       # history chart
   )
+  if (gnn_off) {
+    start <- regexpr('<div class="chart-grid">', html, fixed = TRUE)[1]
+    end <- regexpr('<div class="footer">', html, fixed = TRUE)[1]
+    html <- paste0(substr(html, 1, start - 1L), baseline_figures, substr(html, end, nchar(html)))
+    html <- sub('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>', '', html, fixed = TRUE)
+    script <- regexpr('<script>\nChart.defaults', html)[1]
+    if (script > 0L) html <- paste0(substr(html, 1, script - 1L), '</body></html>')
+  }
+  gsub("ARM_LABEL", if (gnn_off) "Calibrated blend (GNN off)" else "Calibrated blend",
+       html, fixed = TRUE)
+}
+
+.report_svg_metrics <- function(metrics, field, heading, percent = FALSE) {
+  vals <- vapply(metrics, function(m) {
+    v <- m[[field]]
+    if (is.null(v) || length(v) != 1L || !is.finite(v)) NA_real_ else as.numeric(v)
+  }, numeric(1))
+  keep <- which(is.finite(vals) & vals >= 0)
+  if (!length(keep)) return(paste0('<div class="chart-box"><h3>', heading,
+                                    '</h3><p>No data available.</p></div>'))
+  vals <- vals[keep]
+  labs <- vapply(metrics[keep], function(m) .escape_report_html(m$name), character(1))
+  scale <- if (percent) 1 else max(vals, 1e-12)
+  height <- 35 + 30 * length(vals)
+  bars <- vapply(seq_along(vals), function(i) {
+    y <- 15 + (i - 1L) * 30
+    sprintf('<text x="5" y="%d">%s</text><rect x="160" y="%d" width="%.2f" height="16" fill="#397a9b"/><text x="%.2f" y="%d">%s</text>',
+            y + 13, labs[i], y, 240 * vals[i] / scale, 165 + 240 * vals[i] / scale,
+            y + 13, if (percent) sprintf("%.1f%%", 100 * vals[i]) else sprintf("%.3f", vals[i]))
+  }, character(1))
+  paste0('<div class="chart-box"><h3>', heading, '</h3><svg role="img" aria-label="', heading,
+         '" viewBox="0 0 480 ', height, '" xmlns="http://www.w3.org/2000/svg">',
+         paste(bars, collapse = ""), '</svg></div>')
 }

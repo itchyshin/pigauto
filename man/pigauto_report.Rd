@@ -18,11 +18,12 @@ pigauto_report(
 \code{\link{impute}}).}
 
 \item{data}{Optional \code{pigauto_data} object.  Extracted automatically
-when \code{fit} is a \code{pigauto_result}.  When supplied it must match
+when \code{fit} is a \code{pigauto_result}, or reconstructed from a fit
+that retains its scaled observations. When supplied it must match
 the fit (species and traits).}
 
 \item{splits}{Optional splits object from \code{\link{make_missing_splits}}.
-Extracted automatically when \code{fit} is a \code{pigauto_result}.
+Extracted automatically from the result or fit when available.
 When supplied it must match the fit.}
 
 \item{output_path}{Character of length 1.  File path for the HTML report
@@ -37,12 +38,13 @@ When supplied it must match the fit.}
 The output path (invisibly).
 }
 \description{
-Produces an HTML file with interactive charts (loading Chart.js from its
-public CDN). For fits created with the default \code{gnn = FALSE}, the
-report describes baseline-only imputation. For fits created with
-\code{gnn = TRUE}, it also compares the GNN against the phylogenetic
-baseline and includes training history. Per-trait metrics, gate values,
-and held-out diagnostic conformal coverage are included when available.
+Produces an HTML file with charts. Baseline-only figures are embedded as
+SVG and work offline; GNN charts load Chart.js from its public CDN. The
+report compares the fitted baseline with the calibrated blend, which may
+include the neural component and other baseline contributions. This is not
+a comparison isolating the neural component. With \code{gnn = FALSE},
+no neural network is fitted. Per-trait metrics, gate values, and held-out
+diagnostic conformal coverage are included when available.
 }
 \examples{
 \donttest{

@@ -13,6 +13,7 @@ check_pigauto	trait_types	NULL
 check_pigauto	multi_proportion_groups	NULL
 check_pigauto	covariates	NULL
 check_pigauto	gnn	FALSE
+check_pigauto	ordinal_levels	NULL
 compare_methods	data	<required>
 compare_methods	tree	<required>
 compare_methods	splits	NULL
@@ -31,6 +32,7 @@ cross_validate	k	5L
 cross_validate	seeds	NULL
 cross_validate	epochs	500L
 cross_validate	verbose	TRUE
+cross_validate	holdout	c("cell", "species", "clade")
 cross_validate	...	<required>
 evaluate	fit	<required>
 evaluate	data	NULL
@@ -108,6 +110,7 @@ fit_pigauto	predict_method	c("auto", "exact", "per_column")
 fit_pigauto	joint_refine_iter	0L
 fit_pigauto	verbose	TRUE
 fit_pigauto	seed	NULL
+get_imputed_datasets	mi	<required>
 impute	traits	<required>
 impute	tree	<required>
 impute	species_col	NULL
@@ -142,6 +145,7 @@ impute	phylo_signal_method	"lambda"
 impute	conformal_split_val	FALSE
 impute	gnn	FALSE
 impute	...	<required>
+impute	ordinal_levels	NULL
 load_pigauto	path	<required>
 make_missing_splits	X	<required>
 make_missing_splits	missing_frac	0.25
@@ -169,6 +173,7 @@ multi_impute	gnn	FALSE
 multi_impute	lambda_mode	c("estimate", "fixed_1", "cv", "bayes")
 multi_impute	posterior_control	list()
 multi_impute	...	<required>
+multi_impute	ordinal_levels	NULL
 multi_impute_analysis	data	<required>
 multi_impute_analysis	formula	<required>
 multi_impute_analysis	missing	<required>
@@ -194,6 +199,7 @@ multi_impute_trees	reference_tree	NULL
 multi_impute_trees	draws_method	c("mc_dropout", "conformal")
 multi_impute_trees	gnn	FALSE
 multi_impute_trees	...	<required>
+multi_impute_trees	ordinal_levels	NULL
 pigauto_report	fit	<required>
 pigauto_report	data	NULL
 pigauto_report	splits	NULL
@@ -225,6 +231,7 @@ preprocess_traits	log_transform	TRUE
 preprocess_traits	center	TRUE
 preprocess_traits	scale	TRUE
 preprocess_traits	covariates	NULL
+preprocess_traits	ordinal_levels	NULL
 pull_gbif_centroids	species	<required>
 pull_gbif_centroids	cache_dir	NULL
 pull_gbif_centroids	occurrence_limit	500L
@@ -243,6 +250,7 @@ read_traits	species_col	"species"
 read_traits	trait_cols	NULL
 read_traits	factor_cols	NULL
 read_traits	ordered_cols	NULL
+read_traits	ordinal_levels	NULL
 read_tree	path	<required>
 save_pigauto	fit	<required>
 save_pigauto	path	<required>
@@ -286,3 +294,6 @@ S3::predict.pigauto_fit	match_observed	c("none", "pmm")
 S3::predict.pigauto_fit	pmm_K	5L
 S3::predict.pigauto_fit	evaluation	FALSE
 S3::predict.pigauto_fit	...	<required>
+plot_missingness	x	<required>
+plot_missingness	type	c("summary", "matrix", "phylo", "co_missing")
+plot_missingness	tree	NULL

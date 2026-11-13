@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "0cff2f8bf564d0e506a534c09f3fda8bf27936e086e97bd3732b438e0fc265d2",
+  "draft_version": "v2",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex",
+  "method": "Separate reading against source, test/check logs, posted comment receipts and independent review findings",
+  "genre": "software change report",
+  "coverage": "whole report including the merge-status correction",
+  "score": 3,
+  "style_status": "known",
+  "score_reason": "Concrete source and evidence details; required section structure accounts for repeated report scaffolding",
+  "confidence": "moderate",
+  "confidence_reason": "Self-assessment with inspected source evidence; no calibrated style benchmark",
+  "examples": [
+    {
+      "location": "line 99",
+      "cue": "Located concrete verification or scope statement",
+      "impact": "Limits the claim to what was checked",
+      "repair": "No change needed",
+      "line": 111,
+      "quote": "Final source suite at implementation commit 7e542057: 854 tests, 3,761"
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "No claim of broad calibration or method superiority; unresolved scientific questions remain explicit",
+  "facts_gate": "pass",
+  "facts_gate_reason": "File list, source/check outcomes and issue comments compared with retained evidence; CI remains explicitly pending The later merge status and check-registration race were verified against GitHub timestamps.",
+  "references_gate": "not_applicable",
+  "references_gate_reason": "No external literature claim; repository pointers and PR identity checked as facts",
+  "date": "2026-11-07",
+  "calibration_status": "No calibration examples consulted",
+  "interpretation": "perceived_style_not_authorship"
+}

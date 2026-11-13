@@ -1,10 +1,27 @@
-source_root_or_skip <- function() {
-  root <- testthat::test_path("..", "..")
-  if (!file.exists(file.path(root, "DESCRIPTION"))) {
+source_root_or_skip <- function(root = testthat::test_path("..", ".."),
+                                require_source = identical(Sys.getenv("PIGAUTO_REQUIRE_SOURCE"), "true")) {
+  source_files <- c("DESCRIPTION", "README.md", "R/active_impute.R",
+                    "vignettes/getting-started.Rmd")
+  if (!all(file.exists(file.path(root, source_files)))) {
+    if (require_source) stop("Required source checkout files are missing", call. = FALSE)
     skip("source-surface assertions run in the dedicated repository gate")
   }
   root
 }
+
+test_that("source checks distinguish installed package layout from checkout", {
+  root <- testthat::test_path("..", "..")
+  installed <- tempfile("installed-pigauto-")
+  dir.create(installed)
+  writeLines("Package: pigauto", file.path(installed, "DESCRIPTION"))
+  result <- tryCatch(source_root_or_skip(installed, require_source = FALSE), skip = identity)
+  expect_s3_class(result, "skip")
+  expect_error(source_root_or_skip(installed, require_source = TRUE),
+               "source checkout")
+  if (file.exists(file.path(root, "R", "active_impute.R"))) {
+    expect_identical(source_root_or_skip(root), root)
+  }
+})
 
 test_that("canonical novice journey is present in the public sources", {
   root <- source_root_or_skip()
@@ -12,7 +29,8 @@ test_that("canonical novice journey is present in the public sources", {
   getting <- paste(readLines(file.path(root, "vignettes", "getting-started.Rmd"), warn = FALSE), collapse = "\n")
   expect_true(all(vapply(c(
     "traits <- avonet300", "tree   <- tree300",
-    'traits <- read_traits("traits.csv")', 'tree   <- read_tree("tree.nwk")',
+    'traits <- read_traits("traits.csv", species_col = "species")',
+    'tree <- read_tree("tree.nwk")',
     'check_pigauto(traits, tree, species_col = "Species_Key")',
     'mi <- multi_impute(traits, tree, species_col = "Species_Key", m = 20)',
     "datasets <- get_imputed_datasets(mi)", "pigauto_report(mi$fit)"
@@ -63,7 +81,7 @@ test_that("recipes, advanced controls, and bounded claims remain visible", {
   mixed <- paste(readLines(file.path(root, "vignettes", "mixed-types.Rmd"), warn = FALSE), collapse = "\n")
   expect_match(readme, "Ordered ecological states")
   expect_match(readme, "Integer-valued continuous")
-  expect_match(readme, "Repeated observations")
+  expect_match(readme, "Repeated species observations")
   expect_match(readme, "check\\$species")
   expect_match(readme, "## Advanced controls", fixed = TRUE)
   expect_match(readme, 'predict_method = "exact"', fixed = TRUE)

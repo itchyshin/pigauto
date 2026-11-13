@@ -46,6 +46,8 @@ navbar:
           href: articles/getting-started.html
         - text: "Common pitfalls / FAQ"
           href: articles/common-pitfalls.html
+        - text: "Visualisation and missingness"
+          href: articles/visualisation.html
         - text: "Mixed-type traits"
           href: articles/mixed-types.html
         - text: "Multiple imputation and downstream models"
@@ -74,7 +76,8 @@ reference:
   - title: "Start here"
     desc: >
       Read traits and a tree, inspect the fit-free input check, run the
-      one-call imputation entry point, and extract completed data.
+      one-call imputation entry points, and extract completed data or the
+      multiple-imputation datasets.
     contents:
       - read_traits
       - read_tree
@@ -82,6 +85,8 @@ reference:
       - print.pigauto_check
       - impute
       - completed_data
+      - get_imputed_datasets
+      - plot_missingness
       - plot.pigauto_result
       - summary.pigauto_result
       - print.summary_pigauto_result

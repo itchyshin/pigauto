@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "24c2013af725ccadc1926f209e5545ab909ccfab8193f8afc0295c58b1f50984",
+  "draft_version": "v3",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex",
+  "method": "Separate source and evidence review after drafting; independent scientific reviewer checked claim scope",
+  "genre": "GitHub issue responses",
+  "coverage": "all ten posted reply bodies, including the draft/release disclaimer",
+  "score": 3,
+  "style_status": "known",
+  "score_reason": "Specific issue mechanisms and explicit limits; closure wording repeats to honor the request",
+  "confidence": "moderate",
+  "confidence_reason": "Editorial self-assessment with independent claim review, not calibrated human style scoring",
+  "examples": [
+    {
+      "location": "#259 paragraph 1",
+      "cue": "Exact public reproduction result",
+      "impact": "Gives the reporter a concrete result to check",
+      "repair": "No change needed",
+      "line": 17,
+      "quote": "Thanks, Patrice. I reproduced the factor-versus-numeric discrepancy. [PR #262](https://github.com/itchyshin/pigauto/pull/262) selects independent columns from the observed covariate design for both lambda estimation and prediction, while retaining the full one-hot encoding for the GNN. The regression also checks redundant numeric columns. On your n = 200, seed = 1 example, the factor and treatment-coded covariates now both give lambda = 0.5015374; their completed values differ by less than 3e-10."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "Numerical claims bounded to one n=200 seed or published 500-replicate scenarios; private results attributed as reported; unknown ties and narrowing not assigned a cause",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Changes compared with source and focused regression logs; lambda and preserved rows compared with retained smoke log. Private mammal analyses are reported observations, not independent reproductions. Draft release status is explicit. All ten posted comments were read back through the connector and their issue states remained open.",
+  "references_gate": "pass",
+  "references_gate_reason": "PR262 exists; public validation-results article checked and supports the stated scoped GNN numbers",
+  "date": "2026-11-07",
+  "calibration_status": "No calibration examples consulted",
+  "interpretation": "perceived_style_not_authorship"
+}

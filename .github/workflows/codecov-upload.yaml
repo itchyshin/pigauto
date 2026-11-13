@@ -1,0 +1,49 @@
+name: Upload main coverage
+
+# workflow_run is loaded from the default branch, not the pull-request head.
+on:
+  workflow_run:
+    workflows: [test-coverage]
+    types: [completed]
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  upload:
+    # Never consume a pull-request artifact with an OIDC-capable job.
+    if: >-
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out the tested commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - name: Download the trusted coverage artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: main-coverage
+          path: ${{ runner.temp }}/coverage
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5
+        with:
+          use_oidc: true
+          fail_ci_if_error: true
+          files: ${{ runner.temp }}/coverage/cobertura.xml
+          disable_search: true
+          plugins: noop
+          version: v11.3.2
+          override_branch: main
+          override_commit: ${{ github.event.workflow_run.head_sha }}
+          override_build_url: ${{ github.event.workflow_run.html_url }}
