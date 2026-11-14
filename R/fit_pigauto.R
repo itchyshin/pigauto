@@ -1282,6 +1282,19 @@ fit_pigauto <- function(
   if (!is.null(best_state)) model$load_state_dict(best_state)
   gpu_mem_checkpoint("after model$load_state_dict(best_state)")
 
+  # Validation fits already run this refinement during calibration. Fits
+  # without validation still need to check their configured prediction path.
+  if (!has_val || !has_trait_map) {
+    model$eval()
+    checked_refinement <- pigauto_refine_forward(
+      model = model, X_init = t_X_eval, t_coords = t_coords, t_adj = t_adj,
+      t_obs_to_sp = t_obs_to_sp, t_D_sq = t_D_sq, t_MU = t_MU,
+      t_covariates = t_covariates, pin_mask = t_M_obs,
+      refine_steps = refine_steps, device = device, blend = "learned_rs"
+    )
+    rm(checked_refinement)
+  }
+
   # ---- Post-training gate calibration (validation set) --------------------
   calibrated_gates <- NULL
   calibrated_gates_list <- NULL

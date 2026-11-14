@@ -807,15 +807,19 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
           # Use this run's perturbed baseline value in the blend. The baseline
           # perturbation can contribute variation even when the GNN weight is 0.
           if (use_calibrated) {
-            pred <- t_w_bm * t_BM_draw + t_w_gnn * out$delta +
+            pred <- t_w_bm * t_BM_draw + weighted_gnn_delta(t_w_gnn, out$delta) +
                     t_w_mean * t_mean_baseline
           } else {
-            pred <- (1 - out$rs) * t_BM_draw + out$rs * out$delta
+            pred <- (1 - out$rs) * t_BM_draw + weighted_gnn_delta(out$rs, out$delta)
           }
           if (!is.null(t_mps_cov_fixed_effects)) {
             pred <- pred + t_mps_cov_fixed_effects
           } else if (!is.null(out$fixed_effects)) {
             pred <- pred + out$fixed_effects
+          }
+          if (!isTRUE(as.logical(torch::torch_isfinite(pred)$all()$item()))) {
+            stop("GNN refinement produced non-finite output; refit with a lower learning rate (`lr`).",
+                 call. = FALSE)
           }
           last_pred <- pred
           # Drop the previous X_iter before binding the new one so that the
