@@ -54,14 +54,10 @@ plot_history_gg <- function(x, ...) {
 #' intervals when present; otherwise it shows an approximate
 #' \code{prediction +/- 1.96 * SE} ribbon, sorted by predicted value.
 #' If \code{truth} is supplied, observed values are overlaid as points.
-#' For binary traits, the centre line is the predicted probability when
-#' available. Binary predictions have no conformal bounds here. If bounds
-#' are absent, this function still draws a ribbon using
-#' \code{min(p, 1-p)}, a probability-of-error score, as if it were an SE.
-#' This binary ribbon is only a visual score display: it is not a calibrated
-#' interval and has no stated coverage. Interpret the centre line as the
-#' probability; do not interpret the ribbon as an uncertainty interval. See
-#' \code{\link{predict.pigauto_fit}} for type-specific uncertainty meanings.
+#' Binary and categorical predictions are refused because their uncertainty
+#' scores are not standard errors. Their probability plots are available
+#' through \code{plot(prediction, type = "probabilities")}.
+#' See \code{\link{predict.pigauto_fit}} for type-specific uncertainty meanings.
 #'
 #' @param pred_result list with \code{imputed} and \code{se} components
 #'   (output of \code{predict.pigauto_fit}), or a \code{pigauto_result}
@@ -69,6 +65,12 @@ plot_history_gg <- function(x, ...) {
 #' @param truth matrix or data.frame of true values (same scale as
 #'   \code{pred_result$imputed}), or \code{NULL}.
 #' @param trait_name character. Which trait to plot (must match column name).
+#'   Binary and categorical traits are not supported by this interval plot:
+#'   their uncertainty scores are not Gaussian standard errors. Use
+#'   \code{plot(prediction, type = "probabilities")} for those traits.
+#' @details Uses conformal bounds when supplied. Otherwise the displayed
+#'   bands use an analytic standard error and a Normal approximation; these
+#'   bands do not establish calibrated prediction coverage.
 #' @return A \code{ggplot} object.
 #' @importFrom ggplot2 ggplot aes geom_ribbon geom_line geom_point
 #' @importFrom ggplot2 theme_minimal labs geom_hline
@@ -93,19 +95,22 @@ plot_uncertainty <- function(pred_result, truth = NULL, trait_name) {
     }
   }
 
+  discrete <- !is.null(tm_info) && tm_info$type %in% c("binary", "categorical")
+  factor_output <- is.data.frame(pred_result$imputed) &&
+    is.factor(pred_result$imputed[[trait_name]]) &&
+    !is.ordered(pred_result$imputed[[trait_name]])
+  if (discrete || factor_output) {
+    stop("Binary/categorical uncertainty scores are not Gaussian standard errors. ",
+         "Use plot(prediction, type = \"probabilities\") instead.", call. = FALSE)
+  }
+
   # Get predicted values (numeric)
   if (is.data.frame(pred_result$imputed)) {
     pred_j <- pred_result$imputed[[trait_name]]
     if (is.null(pred_j)) {
       stop("'", trait_name, "' not found in pred_result$imputed.")
     }
-    # For binary: use probabilities if available
-    if (!is.null(tm_info) && tm_info$type == "binary" &&
-        !is.null(pred_result$probabilities[[trait_name]])) {
-      pred_j <- pred_result$probabilities[[trait_name]]
-    } else {
-      pred_j <- as.numeric(pred_j)
-    }
+    pred_j <- as.numeric(pred_j)
   } else {
     if (!trait_name %in% colnames(pred_result$imputed)) {
       stop("'", trait_name, "' not found in pred_result$imputed.")
@@ -121,8 +126,11 @@ plot_uncertainty <- function(pred_result, truth = NULL, trait_name) {
     lower_j <- pred_result$conformal_lower[, trait_name]
     upper_j <- pred_result$conformal_upper[, trait_name]
   } else {
+    if (is.null(pred_result$se) || is.null(dim(pred_result$se)) ||
+        !trait_name %in% colnames(pred_result$se)) {
+      stop("No SE available for trait '", trait_name, "'.", call. = FALSE)
+    }
     se_j <- pred_result$se[, trait_name]
-    if (is.null(se_j)) stop("No SE available for trait '", trait_name, "'.")
     lower_j <- pred_j - 1.96 * se_j
     upper_j <- pred_j + 1.96 * se_j
   }
@@ -138,10 +146,6 @@ plot_uncertainty <- function(pred_result, truth = NULL, trait_name) {
 
   # Determine y-axis label
   y_label <- trait_name
-  if (!is.null(tm_info)) {
-    if (tm_info$type == "binary") y_label <- paste(trait_name, "(probability)")
-    if (tm_info$type == "categorical") y_label <- paste(trait_name, "(entropy)")
-  }
 
   p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$i)) +
     ggplot2::geom_ribbon(
@@ -155,12 +159,6 @@ plot_uncertainty <- function(pred_result, truth = NULL, trait_name) {
       title = paste("Imputation uncertainty:", trait_name),
       x = "Species (sorted by prediction)", y = y_label
     )
-
-  # Add reference line for binary
-  if (!is.null(tm_info) && tm_info$type == "binary") {
-    p <- p + ggplot2::geom_hline(yintercept = 0.5, linetype = "dashed",
-                                  colour = "grey40")
-  }
 
   if (!is.null(truth)) {
     if (is.data.frame(truth)) {
